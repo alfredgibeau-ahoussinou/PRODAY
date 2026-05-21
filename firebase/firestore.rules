@@ -1,0 +1,70 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && request.auth.token.admin == true;
+    }
+
+    function userDoc(uid) {
+      return get(/databases/$(database)/documents/users/$(uid));
+    }
+
+    function isVerifiedUser() {
+      return userDoc(request.auth.uid).data.is_verified == true;
+    }
+
+    function verificationFieldsUnchanged() {
+      return !request.resource.data.diff(resource.data).affectedKeys()
+        .hasAny(['is_verified', 'verification_status', 'verification_date']);
+    }
+
+    match /users/{userId} {
+      allow read: if isSignedIn();
+      allow create: if isOwner(userId)
+        && request.resource.data.is_verified == false
+        && request.resource.data.verification_status in ['PENDING', 'NOT_REQUIRED'];
+      allow update: if isAdmin()
+        || (isOwner(userId) && verificationFieldsUnchanged());
+      allow delete: if isAdmin();
+    }
+
+    match /users/{userId}/documents/{docId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId);
+      allow update, delete: if isAdmin();
+    }
+
+    match /messages/{msgId} {
+      allow create: if isSignedIn() && isVerifiedUser();
+      allow read: if isSignedIn()
+        && (resource.data.sender_id == request.auth.uid
+            || resource.data.receiver_id == request.auth.uid);
+    }
+
+    match /tournaments/{tournamentId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isSignedIn()
+        && (resource.data.organizer_id == request.auth.uid || isAdmin());
+    }
+
+    match /friendly_matches/{matchId} {
+      allow read: if isSignedIn();
+      allow create, update: if isSignedIn();
+    }
+
+    match /sponsor_offers/{offerId} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+  }
+}

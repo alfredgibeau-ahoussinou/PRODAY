@@ -1,5 +1,7 @@
 # Architecture ProDay — Documentation Technique
 
+> Sources Mermaid exportables : `assets/diagrams/architecture.mmd`, `verification-flow.mmd`, `navigation.mmd`
+
 ## 1. Diagramme d'architecture globale
 
 ```mermaid
