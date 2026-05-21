@@ -22,7 +22,7 @@ export const MAIN_TABS: {
   screen: React.ComponentType;
 }[] = [
   { id: 'home', label: 'Accueil', icon: 'home', screen: HomeScreen },
-  { id: 'recrutement', label: 'Recrutement', icon: 'search', screen: MercatoScreen },
+  { id: 'recrutement', label: 'Recrutement', icon: 'recruitment', screen: MercatoScreen },
   { id: 'matchs', label: 'Matchs', icon: 'handshake', screen: MatchsScreen },
   { id: 'messages', label: 'Messages', icon: 'chat', screen: MessagesScreen },
   { id: 'profil', label: 'Profil', icon: 'user', screen: AuthScreen },

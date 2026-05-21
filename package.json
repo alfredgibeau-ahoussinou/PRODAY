@@ -2,17 +2,38 @@
   "name": "proday",
   "version": "0.1.0",
   "private": true,
+  "main": "index.js",
   "description": "ProDay — plateforme mobile recrutement, tournois, matchs amicaux et sponsoring",
   "scripts": {
+    "start": "expo start",
+    "web": "expo start --web",
+    "ios": "expo start --ios",
+    "android": "expo start --android",
     "typecheck": "tsc --noEmit",
-    "docs:pdf": "pandoc docs/ProDay_Brief_NonDev.md -o docs/ProDay_Brief_NonDev.pdf --pdf-engine=pdflatex -V geometry:margin=2cm 2>/dev/null || pandoc docs/ProDay_Brief_NonDev.md -o docs/ProDay_Brief_NonDev.pdf"
+    "seed": "node scripts/seed-firestore.mjs",
+    "docs:pdf": "pandoc docs/ProDay_Brief_NonDev.md -o docs/ProDay_Brief_NonDev.pdf -V lang=fr 2>/dev/null || true"
   },
   "dependencies": {
-    "firebase": "^11.0.0"
+    "@expo/metro-config": "~0.19.0",
+    "@expo/metro-runtime": "~4.0.1",
+    "@react-native/js-polyfills": "^0.84.1",
+    "expo": "~52.0.0",
+    "expo-document-picker": "~13.0.0",
+    "expo-status-bar": "~2.0.0",
+    "firebase": "^11.0.0",
+    "metro": "^0.81.0",
+    "metro-config": "^0.83.7",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "react-native": "0.76.9",
+    "react-native-safe-area-context": "4.12.0",
+    "react-native-web": "~0.19.13"
   },
   "devDependencies": {
-    "typescript": "^5.4.0",
-    "@types/react": "^18.2.0",
-    "@types/react-native": "^0.73.0"
+    "@babel/core": "^7.25.0",
+    "@types/react": "~18.3.0",
+    "babel-preset-expo": "~12.0.0",
+    "firebase-admin": "^13.10.0",
+    "typescript": "^5.4.0"
   }
 }

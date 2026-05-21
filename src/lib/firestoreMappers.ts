@@ -8,6 +8,9 @@ import type {
   ProfileReview,
 } from '../models/User';
 import type { RecruitmentPost } from '../models/Player';
+import type { Tournament, TournamentAwards } from '../models/Tournament';
+import type { FriendlyMatch } from '../models/FriendlyMatch';
+import type { SponsorOffer, ClubFundingGoal } from '../models/SponsorOffer';
 
 function toDate(value: unknown): Date {
   if (
@@ -112,5 +115,109 @@ export function recruitmentPostFromFirestore(
     description: String(data.description ?? ''),
     created_at: toDate(data.created_at),
     status: (data.status as RecruitmentPost['status']) ?? 'OPEN',
+  };
+}
+
+export function tournamentFromFirestore(
+  id: string,
+  data: Record<string, unknown>
+): Tournament {
+  const awards = data.awards as Record<string, string> | undefined;
+  return {
+    id,
+    name: String(data.name ?? ''),
+    organizer_id: String(data.organizer_id ?? ''),
+    location: toGeoPoint(data.location) ?? { latitude: 0, longitude: 0 },
+    city: String(data.city ?? ''),
+    date_start: toDate(data.date_start),
+    date_end: toDate(data.date_end),
+    categories: (data.categories as string[]) ?? [],
+    status: (data.status as Tournament['status']) ?? 'OPEN',
+    subscriber_uids: (data.subscriber_uids as string[]) ?? [],
+    awards: awards
+      ? {
+          best_player_uid: awards.best_player ?? '',
+          top_scorer_uid: awards.top_scorer ?? '',
+          best_goalkeeper_uid: awards.best_goalkeeper ?? '',
+        }
+      : undefined,
+    awards_names: data.awards_names as Tournament['awards_names'],
+  };
+}
+
+export function friendlyMatchFromFirestore(
+  id: string,
+  data: Record<string, unknown>
+): FriendlyMatch {
+  return {
+    id,
+    requester_club_id: String(data.requester_club_id ?? ''),
+    requester_club_name: String(data.requester_club_name ?? ''),
+    opponent_club_id: data.opponent_club_id as string | undefined,
+    opponent_club_name: data.opponent_club_name as string | undefined,
+    location: toGeoPoint(data.location),
+    city: String(data.city ?? ''),
+    date: toDate(data.date),
+    time_label: data.time_label as string | undefined,
+    category: String(data.category ?? ''),
+    level: String(data.level ?? ''),
+    level_type: (data.level_type as FriendlyMatch['level_type']) ?? 'loisir',
+    has_pitch: Boolean(data.has_pitch),
+    message: data.message as string | undefined,
+    status: (data.status as FriendlyMatch['status']) ?? 'OPEN',
+    created_at: toDate(data.created_at),
+  };
+}
+
+export function sponsorOfferFromFirestore(
+  id: string,
+  data: Record<string, unknown>
+): SponsorOffer {
+  return {
+    id,
+    company_name: String(data.company_name ?? ''),
+    logo_url: String(data.logo_url ?? ''),
+    offer_type: (data.offer_type as SponsorOffer['offer_type']) ?? 'equipment',
+    description: String(data.description ?? ''),
+    value: String(data.value ?? ''),
+    target_categories: (data.target_categories as string[]) ?? [],
+    city: String(data.city ?? ''),
+    active: data.active !== false,
+    created_at: toDate(data.created_at),
+  };
+}
+
+export function fundingGoalFromFirestore(
+  id: string,
+  data: Record<string, unknown>
+): ClubFundingGoal {
+  return {
+    id,
+    club_id: String(data.club_id ?? ''),
+    title: String(data.title ?? ''),
+    target_amount_eur: Number(data.target_amount_eur ?? 0),
+    raised_amount_eur: Number(data.raised_amount_eur ?? 0),
+    description: String(data.description ?? ''),
+  };
+}
+
+export interface MessageThread {
+  id: string;
+  participant_name: string;
+  last_message: string;
+  updated_at: Date;
+  unread: boolean;
+}
+
+export function messageThreadFromFirestore(
+  id: string,
+  data: Record<string, unknown>
+): MessageThread {
+  return {
+    id,
+    participant_name: String(data.participant_name ?? 'Utilisateur'),
+    last_message: String(data.last_message ?? ''),
+    updated_at: toDate(data.updated_at),
+    unread: Boolean(data.unread),
   };
 }

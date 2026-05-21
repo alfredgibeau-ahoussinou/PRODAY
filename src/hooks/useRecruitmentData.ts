@@ -118,25 +118,22 @@ export function useMercatoHome() {
   const [posts, setPosts] = useState<RecruitmentPost[]>([]);
   const [loadingExtra, setLoadingExtra] = useState(true);
 
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      const [coaches, players, openPosts] = await Promise.all([
-        usersService.listPopularStaff('coach'),
-        usersService.listRecentPlayers(),
-        recruitmentService.listOpenPosts(5),
-      ]);
-      if (!cancelled) {
-        setPopularCoaches(coaches);
-        setRecentPlayers(players);
-        setPosts(openPosts);
-        setLoadingExtra(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
+  const refreshLists = useCallback(async () => {
+    setLoadingExtra(true);
+    const [coaches, players, openPosts] = await Promise.all([
+      usersService.listPopularStaff('coach'),
+      usersService.listRecentPlayers(),
+      recruitmentService.listOpenPosts(5),
+    ]);
+    setPopularCoaches(coaches);
+    setRecentPlayers(players);
+    setPosts(openPosts);
+    setLoadingExtra(false);
   }, []);
+
+  useEffect(() => {
+    refreshLists();
+  }, [refreshLists]);
 
   return {
     ...statsHook,
@@ -144,5 +141,6 @@ export function useMercatoHome() {
     recentPlayers,
     posts,
     loadingLists: loadingExtra,
+    refreshLists,
   };
 }

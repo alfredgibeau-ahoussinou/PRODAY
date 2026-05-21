@@ -1,7 +1,14 @@
 // src/services/profile.service.ts
 // Logique métier : gestion des profils et validation des documents
 
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import {
+  doc,
+  setDoc,
+  updateDoc,
+  collection,
+  addDoc,
+  serverTimestamp,
+} from 'firebase/firestore';
 import {
   User,
   UserRole,
@@ -9,6 +16,7 @@ import {
   ROLES_REQUIRING_VERIFICATION,
 } from '../models/User';
 import { getDb } from '../lib/firebase';
+import { storageService, type UploadFileInput } from './storage.service';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -98,34 +106,25 @@ export const profileService = {
    */
   async uploadVerificationDocument(
     uid: string,
-    file: File | Blob,
+    file: UploadFileInput,
     documentType: 'diploma' | 'license' | 'id'
   ): Promise<DocumentUploadResult> {
     try {
-      const fileName = `documents/${uid}/${documentType}_${Date.now()}.jpg`;
-      
-      // [FIREBASE] const ref = storage.ref(fileName);
-      // [FIREBASE] await ref.put(file);
-      // [FIREBASE] const url = await ref.getDownloadURL();
-      const url = `https://storage.proday.app/${fileName}`; // placeholder
+      const url = await storageService.uploadUserDocument(uid, file, documentType);
 
-      const docRecord = {
-        id: `doc_${Date.now()}`,
-        type: documentType,
-        storage_url: url,
-        uploaded_at: new Date(),
-      };
-
-      // [FIREBASE] await db.collection('users').doc(uid)
-      //   .collection('documents').add(docRecord);
-      
-      // Mettre à jour le statut du profil principal
-      // [FIREBASE] await db.collection('users').doc(uid).update({
-      //   verification_status: 'PENDING',
-      //   updated_at: new Date(),
-      // });
-
-      console.log(`[ProfileService] Document uploaded for ${uid}: ${documentType}`);
+      const database = getDb();
+      if (database) {
+        await addDoc(collection(database, 'users', uid, 'documents'), {
+          type: documentType,
+          storage_url: url,
+          uploaded_at: serverTimestamp(),
+        });
+        await updateDoc(doc(database, 'users', uid), {
+          verification_status: 'PENDING',
+          is_verified: false,
+          updated_at: serverTimestamp(),
+        });
+      }
       return { success: true, storage_url: url };
 
     } catch (error) {
@@ -162,7 +161,15 @@ export const profileService = {
         update.verification_status = 'REJECTED';
       }
 
-      // [FIREBASE] await db.collection('users').doc(targetUid).update(update);
+      const database = getDb();
+      if (database) {
+        await updateDoc(doc(database, 'users', targetUid), {
+          is_verified: update.is_verified,
+          verification_status: update.verification_status,
+          verification_date: serverTimestamp(),
+          updated_at: serverTimestamp(),
+        });
+      }
 
       // Envoyer notification push
       await this._sendVerificationNotification(targetUid, action, rejectionReason);

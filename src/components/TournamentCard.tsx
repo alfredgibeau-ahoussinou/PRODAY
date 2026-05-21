@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import type { Tournament } from '../models/Tournament';
+import { colors, spacing, radius } from '../theme/designTokens';
 
 interface TournamentCardProps {
   tournament: Tournament;
@@ -13,7 +14,7 @@ export const TournamentCard: React.FC<TournamentCardProps> = ({
   onPress,
   onRegister,
 }) => (
-  <TouchableOpacity style={styles.card} onPress={() => onPress?.(tournament)}>
+  <TouchableOpacity style={styles.card} onPress={() => onPress?.(tournament)} activeOpacity={0.9}>
     <Text style={styles.name}>{tournament.name}</Text>
     <Text style={styles.meta}>
       {tournament.city} · {formatDate(tournament.date_start)}
@@ -36,20 +37,22 @@ function formatDate(d: Date): string {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#1E293B',
-    borderRadius: 16,
-    padding: 16,
-    marginVertical: 6,
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    padding: spacing.lg,
+    marginVertical: spacing.xs,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
-  name: { color: '#F8FAFC', fontSize: 17, fontWeight: '700' },
-  meta: { color: '#94A3B8', fontSize: 13, marginTop: 4 },
-  categories: { color: '#3B82F6', fontSize: 12, marginTop: 8 },
+  name: { color: colors.text, fontSize: 17, fontWeight: '700' },
+  meta: { color: colors.textSecondary, fontSize: 13, marginTop: 4 },
+  categories: { color: colors.brand, fontSize: 12, marginTop: spacing.sm },
   btn: {
-    marginTop: 12,
-    backgroundColor: '#1A56DB',
-    borderRadius: 10,
+    marginTop: spacing.md,
+    backgroundColor: colors.brand,
+    borderRadius: radius.md,
     paddingVertical: 10,
     alignItems: 'center',
   },
-  btnText: { color: '#F8FAFC', fontWeight: '700' },
+  btnText: { color: '#FFFFFF', fontWeight: '700' },
 });

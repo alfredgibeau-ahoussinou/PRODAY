@@ -2,52 +2,77 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   StyleSheet,
   ScrollView,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
+import { recruitmentService, formatTimeAgo } from '../services/recruitment.service';
 import { colors, spacing, radius, shadows } from '../theme/designTokens';
-import type { RecruitmentFilters } from '../models/Player';
+import { ScreenHeader } from '../components/ui/ScreenHeader';
+import { SearchBar } from '../components/ui/SearchBar';
+import { QuickAccessCard } from '../components/ui/QuickAccessCard';
+import { RecruitmentAdCard } from '../components/ui/RecruitmentAdCard';
 import { PlayersListScreen } from './PlayersListScreen';
 import { PlayerProfileScreen } from './PlayerProfileScreen';
 import { CoachesListScreen } from './CoachesListScreen';
 import { CoachProfileScreen } from './CoachProfileScreen';
-import { CoachListCard } from '../components/CoachListCard';
-import { DataState } from '../components/DataState';
 import { useMercatoHome, useUserProfile } from '../hooks/useRecruitmentData';
-import { formatTimeAgo } from '../services/recruitment.service';
-import { isFirebaseConfigured } from '../config/firebase';
+import { useAuth } from '../context/AuthContext';
+import { formatCount } from '../services/stats.service';
 
 type MercatoView =
   | 'home'
   | 'players'
   | 'player_profile'
-  | 'staff'
+  | 'clubs'
   | 'staff_profile';
 
 export const MercatoScreen: React.FC = () => {
   const [view, setView] = useState<MercatoView>('home');
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
   const [selectedStaffId, setSelectedStaffId] = useState<string | null>(null);
-  const [filters, setFilters] = useState<RecruitmentFilters>({});
+  const [search, setSearch] = useState('');
 
   const { user: selectedPlayer, loading: loadingPlayer } =
     useUserProfile(selectedPlayerId);
   const { user: selectedStaff, loading: loadingStaff } =
     useUserProfile(selectedStaffId);
 
-  const {
-    stats,
-    labels,
-    loading: loadingStats,
-    configured,
-    popularCoaches,
-    recentPlayers,
-    posts,
-    loadingLists,
-  } = useMercatoHome();
+  const { profile } = useAuth();
+  const { stats, loading: loadingStats, posts, loadingLists, refreshLists } =
+    useMercatoHome();
+  const [creatingPost, setCreatingPost] = useState(false);
+
+  const handleCreatePost = async () => {
+    if (!profile) {
+      Alert.alert('Connexion requise', 'Connectez-vous depuis l’onglet Profil pour publier.');
+      return;
+    }
+    setCreatingPost(true);
+    try {
+      await recruitmentService.createPost({
+        club_id: profile.profile.club_id ?? 'seed_club_1',
+        club_name: profile.display_name,
+        title: 'Recherche joueur',
+        position: 'Milieu',
+        category: 'Seniors',
+        level: 'R2',
+        city: 'Marseille',
+        description: 'Annonce publiée depuis l’application ProDay.',
+      });
+      await refreshLists();
+      Alert.alert('Annonce créée', 'Votre annonce est visible dans Recrutements populaires.');
+    } catch (e) {
+      Alert.alert(
+        'Erreur',
+        e instanceof Error ? e.message : 'Connexion Firebase requise pour publier.'
+      );
+    } finally {
+      setCreatingPost(false);
+    }
+  };
 
   if (view === 'players') {
     return (
@@ -62,20 +87,10 @@ export const MercatoScreen: React.FC = () => {
   }
 
   if (view === 'player_profile' && selectedPlayerId) {
-    if (loadingPlayer) {
+    if (loadingPlayer || !selectedPlayer) {
       return (
         <View style={styles.loader}>
-          <ActivityIndicator size="large" color={colors.bluePrimary} />
-        </View>
-      );
-    }
-    if (!selectedPlayer) {
-      return (
-        <View style={styles.loader}>
-          <Text style={styles.muted}>Joueur introuvable.</Text>
-          <TouchableOpacity onPress={() => setView('players')}>
-            <Text style={styles.link}>Retour</Text>
-          </TouchableOpacity>
+          <ActivityIndicator size="large" color={colors.brand} />
         </View>
       );
     }
@@ -83,12 +98,11 @@ export const MercatoScreen: React.FC = () => {
       <PlayerProfileScreen
         player={selectedPlayer}
         onBack={() => setView('players')}
-        onContact={(p) => console.log('[Mercato] Contacter joueur', p.display_name)}
       />
     );
   }
 
-  if (view === 'staff') {
+  if (view === 'clubs') {
     return (
       <CoachesListScreen
         onBack={() => setView('home')}
@@ -101,256 +115,141 @@ export const MercatoScreen: React.FC = () => {
   }
 
   if (view === 'staff_profile' && selectedStaffId) {
-    if (loadingStaff) {
+    if (loadingStaff || !selectedStaff) {
       return (
         <View style={styles.loader}>
-          <ActivityIndicator size="large" color={colors.bluePrimary} />
-        </View>
-      );
-    }
-    if (!selectedStaff) {
-      return (
-        <View style={styles.loader}>
-          <Text style={styles.muted}>Profil introuvable.</Text>
-          <TouchableOpacity onPress={() => setView('staff')}>
-            <Text style={styles.link}>Retour</Text>
-          </TouchableOpacity>
+          <ActivityIndicator size="large" color={colors.brand} />
         </View>
       );
     }
     return (
       <CoachProfileScreen
         staff={selectedStaff}
-        onBack={() => setView('staff')}
-        onContact={(u) => console.log('[Mercato] Contacter', u.display_name)}
-        onHire={(u) => console.log('[Mercato] Engager', u.display_name)}
+        onBack={() => setView('home')}
       />
     );
   }
 
-  const statsLoading = loadingStats || loadingLists;
+  const loading = loadingStats || loadingLists;
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.title}>Recrutement</Text>
+    <View style={styles.root}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
+        <ScreenHeader
+          title="Recrutement"
+          subtitle="Le bon profil pour le bon projet."
+        />
+        <SearchBar
+          placeholder="Rechercher un joueur, un poste…"
+          value={search}
+          onChangeText={setSearch}
+        />
 
-      {!configured && (
-        <DataState firebaseMissing>
-          <></>
-        </DataState>
-      )}
-
-      <TextInput
-        style={styles.search}
-        placeholder="Rechercher un joueur, un coach…"
-        placeholderTextColor={colors.textMuted}
-        value={filters.position ?? ''}
-        onChangeText={(position) => setFilters((f) => ({ ...f, position }))}
-      />
-
-      <View style={styles.quickRow}>
-        <TouchableOpacity
-          style={[styles.quickCard, shadows.card]}
-          onPress={() => setView('players')}
-        >
-          <Text style={styles.quickEmoji}>👤</Text>
-          <Text style={styles.quickTitle}>Joueurs</Text>
-          {statsLoading ? (
-            <ActivityIndicator size="small" color={colors.bluePrimary} />
-          ) : (
-            <Text style={styles.quickCount}>
-              {labels?.players ?? '0 profil'}
-            </Text>
-          )}
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.quickCard, shadows.card]}
-          onPress={() => setView('staff')}
-        >
-          <Text style={styles.quickEmoji}>📋</Text>
-          <Text style={styles.quickTitle}>Coachs & Agents</Text>
-          {statsLoading ? (
-            <ActivityIndicator size="small" color={colors.bluePrimary} />
-          ) : (
-            <Text style={styles.quickCount}>
-              {labels?.staff ?? '0 profil'}
-              {stats
-                ? ` (${stats.coaches} coachs · ${stats.agents} agents)`
-                : ''}
-            </Text>
-          )}
-        </TouchableOpacity>
-      </View>
-
-      {stats && stats.clubs > 0 && (
-        <Text style={styles.clubsMeta}>{labels?.clubs} inscrits</Text>
-      )}
-
-      <Text style={styles.section}>Coachs populaires</Text>
-      {statsLoading ? (
-        <ActivityIndicator color={colors.bluePrimary} />
-      ) : popularCoaches.length === 0 ? (
-        <Text style={styles.empty}>
-          {isFirebaseConfigured()
-            ? 'Aucun coach pour le moment.'
-            : 'Connectez Firebase pour afficher les profils.'}
-        </Text>
-      ) : (
-        popularCoaches.map((c) => (
-          <CoachListCard
-            key={c.uid}
-            user={c}
-            onPress={(u) => {
-              setSelectedStaffId(u.uid);
-              setView('staff_profile');
-            }}
+        <View style={styles.quickRow}>
+          <QuickAccessCard
+            icon="👤"
+            title="Joueurs"
+            count={
+              stats
+                ? formatCount(stats.players, 'profil')
+                : loading
+                  ? '…'
+                  : '0 profil'
+            }
+            loading={loading}
+            onPress={() => setView('players')}
           />
-        ))
-      )}
+          <QuickAccessCard
+            icon="🏟️"
+            title="Clubs"
+            count={
+              stats
+                ? formatCount(stats.clubs, 'club')
+                : loading
+                  ? '…'
+                  : '0 club'
+            }
+            loading={loading}
+            onPress={() => setView('clubs')}
+          />
+        </View>
 
-      <Text style={styles.section}>Joueurs récents</Text>
-      {statsLoading ? (
-        <ActivityIndicator color={colors.bluePrimary} />
-      ) : recentPlayers.length === 0 ? (
-        <Text style={styles.empty}>Aucun joueur inscrit.</Text>
-      ) : (
-        recentPlayers.map((p) => (
-          <TouchableOpacity
-            key={p.uid}
-            style={[styles.playerPreview, shadows.card]}
-            onPress={() => {
-              setSelectedPlayerId(p.uid);
-              setView('player_profile');
-            }}
-          >
-            <View style={styles.previewAvatar}>
-              <Text style={styles.previewInitial}>
-                {p.display_name.charAt(0)}
-              </Text>
-            </View>
-            <View style={styles.previewInfo}>
-              <Text style={styles.previewName}>{p.display_name}</Text>
-              <Text style={styles.previewMeta}>
-                {[p.profile.position, p.profile.level, p.city]
-                  .filter(Boolean)
-                  .join(' · ')}
-              </Text>
-            </View>
-            <Text style={styles.previewArrow}>›</Text>
-          </TouchableOpacity>
-        ))
-      )}
+        <Text style={styles.sectionTitle}>Recrutements populaires</Text>
+        {loading ? (
+          <ActivityIndicator color={colors.brand} style={styles.loaderInline} />
+        ) : posts.length === 0 ? (
+          <RecruitmentAdCard
+            clubName="US Marseille"
+            roleLine="Recherche Attaquant"
+            meta="U19 · R1 · Publiez une annonce pour commencer"
+          />
+        ) : (
+          posts.map((ad) => (
+            <RecruitmentAdCard
+              key={ad.id}
+              clubName={ad.club_name}
+              roleLine={ad.title || `Recherche ${ad.position}`}
+              meta={`${ad.category} · ${ad.level} · ${formatTimeAgo(ad.created_at)}`}
+            />
+          ))
+        )}
+        <View style={styles.bottomSpacer} />
+      </ScrollView>
 
-      <Text style={styles.section}>Annonces ouvertes</Text>
-      {statsLoading ? (
-        <ActivityIndicator color={colors.bluePrimary} />
-      ) : posts.length === 0 ? (
-        <Text style={styles.empty}>Aucune annonce de recrutement.</Text>
-      ) : (
-        posts.map((ad) => (
-          <View key={ad.id} style={[styles.adCard, shadows.card]}>
-            <Text style={styles.adClub}>{ad.club_name}</Text>
-            <Text style={styles.adRole}>
-              {ad.title || `Recherche ${ad.position}`} · {ad.category}
-            </Text>
-            <Text style={styles.adMeta}>
-              {ad.level} · {formatTimeAgo(ad.created_at)}
-            </Text>
-          </View>
-        ))
-      )}
-
-      <TouchableOpacity style={[styles.fab, shadows.fab]}>
-        <Text style={styles.fabText}>+ Créer une annonce</Text>
+      <TouchableOpacity
+        style={[styles.fab, shadows.fab, creatingPost && styles.fabDisabled]}
+        onPress={handleCreatePost}
+        disabled={creatingPost}
+      >
+        {creatingPost ? (
+          <ActivityIndicator color="#FFF" />
+        ) : (
+          <Text style={styles.fabText}>+ Créer une annonce</Text>
+        )}
       </TouchableOpacity>
-    </ScrollView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
-  content: { padding: spacing.lg, paddingBottom: 100 },
-  title: { fontSize: 24, fontWeight: '800', color: colors.text, marginBottom: spacing.md },
-  search: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.md,
-    padding: spacing.md,
-    color: colors.text,
-    borderWidth: 1,
-    borderColor: colors.border,
-    marginBottom: spacing.lg,
-  },
-  quickRow: { flexDirection: 'row', gap: spacing.md, marginBottom: spacing.sm },
-  quickCard: {
-    flex: 1,
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    padding: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    minHeight: 110,
-  },
-  quickEmoji: { fontSize: 24 },
-  quickTitle: { color: colors.text, fontWeight: '700', fontSize: 16, marginTop: spacing.sm },
-  quickCount: { color: colors.textMuted, fontSize: 11, marginTop: 6, lineHeight: 16 },
-  clubsMeta: { color: colors.textSecondary, fontSize: 12, marginBottom: spacing.lg },
-  section: {
-    color: colors.textSecondary,
-    fontWeight: '600',
-    marginBottom: spacing.sm,
-    marginTop: spacing.md,
-  },
-  empty: { color: colors.textMuted, fontSize: 13, marginBottom: spacing.md },
-  playerPreview: {
+  root: { flex: 1, backgroundColor: colors.background },
+  scroll: { flex: 1 },
+  content: { paddingBottom: spacing.md },
+  quickRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    padding: spacing.md,
-    marginBottom: spacing.sm,
-    borderWidth: 1,
-    borderColor: colors.border,
+    gap: spacing.md,
+    paddingHorizontal: spacing.lg,
+    marginBottom: spacing.xl,
   },
-  previewAvatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: colors.successBg,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: spacing.md,
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: colors.text,
+    paddingHorizontal: spacing.lg,
+    marginBottom: spacing.md,
   },
-  previewInitial: { fontSize: 20, fontWeight: '700', color: colors.bluePrimary },
-  previewInfo: { flex: 1 },
-  previewName: { color: colors.text, fontWeight: '700', fontSize: 15 },
-  previewMeta: { color: colors.textMuted, fontSize: 12, marginTop: 2 },
-  previewArrow: { color: colors.textMuted, fontSize: 22 },
-  adCard: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    padding: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    marginBottom: spacing.sm,
-  },
-  adClub: { color: colors.text, fontWeight: '700', fontSize: 15 },
-  adRole: { color: colors.bluePrimary, marginTop: 4, fontSize: 14 },
-  adMeta: { color: colors.textMuted, fontSize: 12, marginTop: 6 },
+  bottomSpacer: { height: 88 },
   fab: {
-    marginTop: spacing.xl,
-    backgroundColor: colors.bluePrimary,
+    position: 'absolute',
+    left: spacing.lg,
+    right: spacing.lg,
+    bottom: spacing.md,
+    backgroundColor: colors.brand,
     borderRadius: radius.md,
     paddingVertical: 16,
     alignItems: 'center',
   },
-  fabText: { color: '#FFFFFF', fontWeight: '700', fontSize: 15 },
+  fabText: { color: '#FFFFFF', fontWeight: '700', fontSize: 16 },
+  fabDisabled: { opacity: 0.75 },
   loader: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: colors.background,
-    padding: spacing.xl,
   },
-  muted: { color: colors.textMuted },
-  link: { color: colors.bluePrimary, marginTop: spacing.md, fontWeight: '600' },
+  loaderInline: { marginVertical: spacing.lg },
 });

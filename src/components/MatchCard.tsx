@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { colors, spacing, radius, shadows } from '../theme/designTokens';
 
 export interface FriendlyMatchPreview {
   id: string;
@@ -17,7 +18,7 @@ interface MatchCardProps {
 }
 
 export const MatchCard: React.FC<MatchCardProps> = ({ match, onAccept }) => (
-  <View style={styles.card}>
+  <View style={[styles.card, shadows.card]}>
     <Text style={styles.club}>{match.club_name}</Text>
     <Text style={styles.line}>
       {match.category} {match.level} — {match.city}
@@ -42,21 +43,23 @@ export const MatchCard: React.FC<MatchCardProps> = ({ match, onAccept }) => (
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#1E293B',
-    borderRadius: 16,
-    padding: 16,
-    marginVertical: 6,
-  },
-  club: { color: '#F8FAFC', fontSize: 16, fontWeight: '700' },
-  line: { color: '#94A3B8', fontSize: 13, marginTop: 4 },
-  date: { color: '#3B82F6', fontSize: 12, marginTop: 6 },
-  btn: {
-    marginTop: 12,
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    padding: spacing.lg,
+    marginVertical: spacing.xs,
     borderWidth: 1,
-    borderColor: '#1A56DB',
-    borderRadius: 10,
+    borderColor: colors.border,
+  },
+  club: { color: colors.text, fontSize: 16, fontWeight: '700' },
+  line: { color: colors.textSecondary, fontSize: 13, marginTop: 4 },
+  date: { color: colors.brand, fontSize: 12, marginTop: 6, fontWeight: '600' },
+  btn: {
+    marginTop: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.brand,
+    borderRadius: radius.md,
     paddingVertical: 10,
     alignItems: 'center',
   },
-  btnText: { color: '#3B82F6', fontWeight: '700' },
+  btnText: { color: colors.brand, fontWeight: '700' },
 });

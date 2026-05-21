@@ -1,10 +1,12 @@
 import {
   collection,
   getDocs,
+  addDoc,
   query,
   where,
   orderBy,
   limit,
+  serverTimestamp,
 } from 'firebase/firestore';
 import { getDb } from '../lib/firebase';
 import { isFirebaseConfigured } from '../config/firebase';
@@ -32,6 +34,27 @@ export const recruitmentService = {
       console.error('[recruitmentService] listOpenPosts:', error);
       return [];
     }
+  },
+
+  async createPost(input: {
+    club_id: string;
+    club_name: string;
+    title: string;
+    position: string;
+    category: string;
+    level: string;
+    city: string;
+    description?: string;
+  }): Promise<string> {
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+
+    const ref = await addDoc(collection(database, 'recruitment_posts'), {
+      ...input,
+      status: 'OPEN',
+      created_at: serverTimestamp(),
+    });
+    return ref.id;
   },
 };
 

@@ -19,8 +19,8 @@
 
 | Token | Hex | Usage |
 |-------|-----|--------|
-| `blueBright` | `#2563EB` | CTA, « Day », liens actifs |
-| `bluePrimary` | `#1D4ED8` | Boutons pleins |
+| `brand` / `bluePrimary` | `#003399` | CTA, boutons pleins, onglet actif |
+| `blueBright` | `#2563EB` | Accents secondaires |
 | `navy` | `#0F172A` | Titres, « Pro » |
 | `background` | `#F1F5F9` | Fond écran |
 | `surface` | `#FFFFFF` | Cartes |

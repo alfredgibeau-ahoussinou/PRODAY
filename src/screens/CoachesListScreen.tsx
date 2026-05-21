@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
-  TextInput,
   FlatList,
   TouchableOpacity,
   StyleSheet,
@@ -10,10 +9,14 @@ import {
 import type { User } from '../models/User';
 import { CoachListCard } from '../components/CoachListCard';
 import { DataState } from '../components/DataState';
+import { ScreenHeader } from '../components/ui/ScreenHeader';
+import { SearchBar } from '../components/ui/SearchBar';
 import { useUsersByRole } from '../hooks/useRecruitmentData';
 import type { StaffType } from '../services/users.service';
 import { isFirebaseConfigured } from '../config/firebase';
-import { colors, spacing, radius } from '../theme/designTokens';
+import { colors, spacing, radius, shadows } from '../theme/designTokens';
+
+const FILTER_CHIPS = ['Spécialité', 'Niveau', 'Localisation', 'Filtres'] as const;
 
 interface CoachesListScreenProps {
   initialType?: StaffType;
@@ -28,6 +31,7 @@ export const CoachesListScreen: React.FC<CoachesListScreenProps> = ({
 }) => {
   const [staffType, setStaffType] = useState<StaffType>(initialType);
   const [query, setQuery] = useState('');
+  const [activeChip, setActiveChip] = useState<string | null>(null);
   const [bookmarks, setBookmarks] = useState<Set<string>>(new Set());
   const { users, loading } = useUsersByRole(staffType, query);
 
@@ -42,12 +46,20 @@ export const CoachesListScreen: React.FC<CoachesListScreenProps> = ({
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={onBack}>
-          <Text style={styles.back}>←</Text>
-        </TouchableOpacity>
-        <Text style={styles.title}>Recrutement</Text>
-      </View>
+      <ScreenHeader
+        title="Recrutement"
+        subtitle={
+          staffType === 'coach'
+            ? `${users.length} coachs`
+            : `${users.length} agents`
+        }
+        onBack={onBack}
+        rightAction={
+          <TouchableOpacity>
+            <Text style={styles.bell}>🔔</Text>
+          </TouchableOpacity>
+        }
+      />
 
       <View style={styles.toggle}>
         <TouchableOpacity
@@ -78,15 +90,35 @@ export const CoachesListScreen: React.FC<CoachesListScreenProps> = ({
         </TouchableOpacity>
       </View>
 
-      <TextInput
-        style={styles.search}
-        placeholder="Rechercher un coach, un agent…"
-        placeholderTextColor={colors.textMuted}
+      <SearchBar
+        placeholder={
+          staffType === 'coach'
+            ? 'Rechercher un coach…'
+            : 'Rechercher un agent…'
+        }
         value={query}
         onChangeText={setQuery}
       />
 
-      <Text style={styles.section}>Populaires</Text>
+      <View style={styles.chips}>
+        {FILTER_CHIPS.map((chip) => (
+          <TouchableOpacity
+            key={chip}
+            style={[styles.chip, activeChip === chip && styles.chipActive]}
+            onPress={() => setActiveChip(activeChip === chip ? null : chip)}
+          >
+            <Text
+              style={[styles.chipText, activeChip === chip && styles.chipTextActive]}
+            >
+              {chip}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      <Text style={styles.section}>
+        {staffType === 'coach' ? 'Coachs populaires' : 'Agents en avant'}
+      </Text>
 
       <DataState
         loading={loading}
@@ -113,7 +145,7 @@ export const CoachesListScreen: React.FC<CoachesListScreenProps> = ({
         />
       </DataState>
 
-      <TouchableOpacity style={styles.fab}>
+      <TouchableOpacity style={[styles.fab, shadows.fab]}>
         <Text style={styles.fabText}>+ Publier une annonce</Text>
       </TouchableOpacity>
     </View>
@@ -122,14 +154,7 @@ export const CoachesListScreen: React.FC<CoachesListScreenProps> = ({
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: spacing.lg,
-    paddingBottom: spacing.sm,
-  },
-  back: { fontSize: 22, color: colors.bluePrimary, marginRight: spacing.md },
-  title: { fontSize: 22, fontWeight: '800', color: colors.text },
+  bell: { fontSize: 20 },
   toggle: {
     flexDirection: 'row',
     marginHorizontal: spacing.lg,
@@ -146,21 +171,30 @@ const styles = StyleSheet.create({
   },
   toggleActive: { backgroundColor: colors.surface },
   toggleText: { color: colors.textSecondary, fontWeight: '600' },
-  toggleTextActive: { color: colors.bluePrimary },
-  search: {
-    marginHorizontal: spacing.lg,
-    backgroundColor: colors.surface,
-    borderRadius: radius.md,
-    padding: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    color: colors.text,
+  toggleTextActive: { color: colors.brand, fontWeight: '700' },
+  chips: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+    paddingHorizontal: spacing.lg,
     marginBottom: spacing.md,
   },
+  chip: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: radius.pill,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  chipActive: { backgroundColor: colors.brand, borderColor: colors.brand },
+  chipText: { fontSize: 12, fontWeight: '600', color: colors.textSecondary },
+  chipTextActive: { color: '#FFFFFF' },
   section: {
     paddingHorizontal: spacing.lg,
-    color: colors.textSecondary,
-    fontWeight: '600',
+    color: colors.text,
+    fontWeight: '700',
+    fontSize: 16,
     marginBottom: spacing.sm,
   },
   list: { paddingHorizontal: spacing.lg, paddingBottom: 88 },
@@ -169,7 +203,7 @@ const styles = StyleSheet.create({
     bottom: spacing.lg,
     left: spacing.lg,
     right: spacing.lg,
-    backgroundColor: colors.bluePrimary,
+    backgroundColor: colors.brand,
     borderRadius: radius.md,
     paddingVertical: 16,
     alignItems: 'center',

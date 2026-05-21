@@ -13,6 +13,12 @@ export interface Tournament {
   categories: string[];
   status: TournamentStatus;
   subscriber_uids: string[];
+  awards?: TournamentAwards;
+  awards_names?: {
+    best_player?: string;
+    top_scorer?: string;
+    best_goalkeeper?: string;
+  };
 }
 
 export interface TournamentAwards {

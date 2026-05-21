@@ -20,6 +20,22 @@ Régénérer le PDF : `npm run docs:pdf`
 
 ---
 
+## Lancer la démo (voir l’app)
+
+```bash
+cd /Users/gibeau--ahoussinou/PRODAY
+npm install
+npm run web
+```
+
+Le navigateur s’ouvre avec ProDay (5 onglets : Accueil, Recrutement, Matchs, Messages, Profil).
+
+Autres commandes :
+- `npm start` — menu Expo (QR code téléphone avec app Expo Go)
+- `npm run ios` / `npm run android` — simulateur
+
+---
+
 ## Pour les développeurs
 
 | Document | Description |

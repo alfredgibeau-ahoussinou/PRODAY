@@ -9,8 +9,16 @@
     "jsx": "react-native",
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": [
+        "src/*"
+      ]
     }
   },
-  "include": ["src/**/*", "functions/src/**/*"]
+  "include": [
+    "App.tsx",
+    "index.js",
+    "src/**/*",
+    "functions/src/**/*"
+  ],
+  "extends": "expo/tsconfig.base"
 }

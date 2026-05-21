@@ -66,5 +66,26 @@ service cloud.firestore {
       allow read: if true;
       allow write: if isSignedIn();
     }
+
+    match /clubs/{clubId} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+
+    match /recruitment_posts/{postId} {
+      allow read: if true;
+      allow create: if isSignedIn();
+      allow update, delete: if isSignedIn();
+    }
+
+    match /club_funding_goals/{goalId} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+
+    match /message_threads/{threadId} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn();
+    }
   }
 }

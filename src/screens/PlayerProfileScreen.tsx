@@ -131,7 +131,7 @@ export const PlayerProfileScreen: React.FC<PlayerProfileScreenProps> = ({
 
         {stats && (
           <View style={[styles.block, shadows.card]}>
-            <Text style={styles.blockTitle}>Stats saison</Text>
+            <Text style={styles.blockTitle}>Stats saison 23/24</Text>
             <View style={styles.seasonRow}>
               <SeasonStat value={stats.matches} label="Matchs" />
               <SeasonStat value={stats.goals} label="Buts" />
@@ -188,7 +188,7 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.border,
   },
   backBtn: { padding: spacing.sm, marginRight: spacing.sm },
-  backText: { fontSize: 22, color: colors.bluePrimary, fontWeight: '600' },
+  backText: { fontSize: 22, color: colors.brand, fontWeight: '600' },
   headerTitle: {
     flex: 1,
     fontSize: 17,
@@ -196,7 +196,7 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   shareBtn: { padding: spacing.sm },
-  shareText: { color: colors.bluePrimary, fontWeight: '600', fontSize: 14 },
+  shareText: { color: colors.brand, fontWeight: '600', fontSize: 14 },
   scroll: { flex: 1 },
   content: { padding: spacing.lg, paddingBottom: 120 },
   hero: { alignItems: 'center', marginBottom: spacing.lg },
@@ -211,7 +211,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  avatarLetter: { fontSize: 48, fontWeight: '800', color: colors.bluePrimary },
+  avatarLetter: { fontSize: 48, fontWeight: '800', color: colors.brand },
   name: { fontSize: 26, fontWeight: '800', color: colors.text },
   subtitle: { color: colors.textSecondary, fontSize: 15, marginTop: 4 },
   availBadge: {
@@ -262,7 +262,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
   },
   seasonItem: { alignItems: 'center' },
-  seasonValue: { fontSize: 28, fontWeight: '800', color: colors.bluePrimary },
+  seasonValue: { fontSize: 28, fontWeight: '800', color: colors.brand },
   seasonLabel: { color: colors.textMuted, fontSize: 12, marginTop: 4 },
   footer: {
     flexDirection: 'row',
@@ -276,7 +276,7 @@ const styles = StyleSheet.create({
   btnOutline: {
     flex: 1,
     borderWidth: 2,
-    borderColor: colors.bluePrimary,
+    borderColor: colors.brand,
     borderRadius: radius.md,
     paddingVertical: 14,
     alignItems: 'center',

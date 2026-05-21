@@ -2,12 +2,19 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { colors, spacing, radius } from '../theme/designTokens';
 
-const STEPS = [
+type VerificationStep = {
+  id: number;
+  label: string;
+  done: boolean;
+  active?: boolean;
+};
+
+const STEPS: VerificationStep[] = [
   { id: 1, label: 'Document reçu', done: true },
   { id: 2, label: 'Authenticité du document', done: true },
   { id: 3, label: "Vérification auprès de l'établissement", done: false, active: true },
   { id: 4, label: 'Résultat', done: false },
-] as const;
+];
 
 /**
  * Écran « Vérification en cours » — timeline maquette coach/agent

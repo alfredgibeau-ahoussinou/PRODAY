@@ -1,26 +1,56 @@
 import React from 'react';
-import { View, Text, ScrollView, StyleSheet } from 'react-native';
+import {
+  View,
+  Text,
+  ScrollView,
+  StyleSheet,
+  ActivityIndicator,
+} from 'react-native';
 import { TournamentCard } from '../components/TournamentCard';
+import { ScreenHeader } from '../components/ui/ScreenHeader';
+import { useArenaData } from '../hooks/useAppData';
+import { colors, spacing, radius } from '../theme/designTokens';
 
-/**
- * Onglet 2 — Arena (tournois)
- * Calendrier, inscription clubs, tableau d'honneur (meilleur joueur / buteur / gardien).
- */
-export const ArenaScreen: React.FC = () => (
-  <ScrollView style={styles.container}>
-    <Text style={styles.title}>Arena</Text>
-    <Text style={styles.section}>Tournois proches</Text>
-    {/* [FIREBASE] liste tournaments orderBy date_start */}
-    <Text style={styles.hint}>Aucun tournoi chargé — branchez Firestore.</Text>
+interface ArenaScreenProps {
+  onBack?: () => void;
+}
 
-    <Text style={[styles.section, styles.mt]}>Tableau d&apos;honneur</Text>
-    <View style={styles.honor}>
-      <HonorSlot label="Meilleur joueur" name="—" />
-      <HonorSlot label="Buteur" name="—" />
-      <HonorSlot label="Gardien" name="—" />
-    </View>
-  </ScrollView>
-);
+export const ArenaScreen: React.FC<ArenaScreenProps> = ({ onBack }) => {
+  const { tournaments, honorTournament, loading } = useArenaData();
+  const awards = honorTournament?.awards_names;
+
+  return (
+    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      {onBack ? (
+        <ScreenHeader title="Arena" subtitle="Tournois & tableau d'honneur" onBack={onBack} />
+      ) : (
+        <Text style={styles.title}>Arena</Text>
+      )}
+
+      <Text style={styles.section}>Tournois proches</Text>
+      {loading ? (
+        <ActivityIndicator color={colors.brand} style={styles.loader} />
+      ) : tournaments.length === 0 ? (
+        <Text style={styles.hint}>
+          Aucun tournoi — lancez{' '}
+          <Text style={styles.hintCode}>npm run seed</Text> puis rechargez.
+        </Text>
+      ) : (
+        tournaments.map((t) => <TournamentCard key={t.id} tournament={t} />)
+      )}
+
+      <Text style={[styles.section, styles.mt]}>Tableau d&apos;honneur</Text>
+      <View style={styles.honor}>
+        <HonorSlot label="Meilleur joueur" name={awards?.best_player ?? '—'} />
+        <HonorSlot label="Buteur" name={awards?.top_scorer ?? '—'} />
+        <HonorSlot label="Gardien" name={awards?.best_goalkeeper ?? '—'} />
+      </View>
+      {!loading && !honorTournament && (
+        <Text style={styles.hintSmall}>Publié après clôture d&apos;un tournoi.</Text>
+      )}
+    </ScrollView>
+  );
+};
 
 const HonorSlot: React.FC<{ label: string; name: string }> = ({ label, name }) => (
   <View style={styles.honorItem}>
@@ -30,20 +60,32 @@ const HonorSlot: React.FC<{ label: string; name: string }> = ({ label, name }) =
 );
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0F172A', padding: 16 },
-  title: { color: '#F8FAFC', fontSize: 24, fontWeight: '800' },
-  section: { color: '#94A3B8', fontSize: 14, marginTop: 20, marginBottom: 8 },
-  mt: { marginTop: 32 },
-  hint: { color: '#64748B', fontSize: 13 },
-  honor: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  container: { flex: 1, backgroundColor: colors.background },
+  content: { padding: spacing.lg, paddingBottom: spacing.xxl },
+  title: { fontSize: 24, fontWeight: '800', color: colors.text },
+  section: {
+    color: colors.textSecondary,
+    fontSize: 14,
+    marginTop: spacing.lg,
+    marginBottom: spacing.sm,
+    fontWeight: '600',
+  },
+  mt: { marginTop: spacing.xl },
+  hint: { color: colors.textMuted, fontSize: 13, lineHeight: 20 },
+  hintCode: { fontFamily: 'monospace', color: colors.brand },
+  hintSmall: { color: colors.textMuted, fontSize: 12, marginTop: spacing.sm },
+  loader: { marginVertical: spacing.lg },
+  honor: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },
   honorItem: {
     flex: 1,
     minWidth: 100,
-    backgroundColor: '#1E293B',
-    borderRadius: 12,
-    padding: 14,
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    padding: spacing.lg,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.border,
   },
-  honorLabel: { color: '#94A3B8', fontSize: 11 },
-  honorName: { color: '#F8FAFC', fontSize: 16, fontWeight: '700', marginTop: 4 },
+  honorLabel: { color: colors.textMuted, fontSize: 11 },
+  honorName: { color: colors.text, fontSize: 16, fontWeight: '700', marginTop: 4 },
 });

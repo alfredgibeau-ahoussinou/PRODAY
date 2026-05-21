@@ -1,12 +1,13 @@
 import { initializeApp, getApps, type FirebaseApp } from 'firebase/app';
-import {
-  getFirestore,
-  type Firestore,
-} from 'firebase/firestore';
+import { getAuth, type Auth } from 'firebase/auth';
+import { getFirestore, type Firestore } from 'firebase/firestore';
+import { getStorage, type FirebaseStorage } from 'firebase/storage';
 import { firebaseConfig, isFirebaseConfigured } from '../config/firebase';
 
 let app: FirebaseApp | undefined;
 let db: Firestore | undefined;
+let auth: Auth | undefined;
+let storage: FirebaseStorage | undefined;
 
 export function getFirebaseApp(): FirebaseApp | null {
   if (!isFirebaseConfigured()) return null;
@@ -26,4 +27,24 @@ export function getDb(): Firestore | null {
     db = getFirestore(firebaseApp);
   }
   return db;
+}
+
+export function getFirebaseAuth(): Auth | null {
+  if (!isFirebaseConfigured()) return null;
+  if (!auth) {
+    const firebaseApp = getFirebaseApp();
+    if (!firebaseApp) return null;
+    auth = getAuth(firebaseApp);
+  }
+  return auth;
+}
+
+export function getFirebaseStorage(): FirebaseStorage | null {
+  if (!isFirebaseConfigured() || !firebaseConfig.storageBucket) return null;
+  if (!storage) {
+    const firebaseApp = getFirebaseApp();
+    if (!firebaseApp) return null;
+    storage = getStorage(firebaseApp);
+  }
+  return storage;
 }

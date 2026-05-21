@@ -2,17 +2,16 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
-  TextInput,
   FlatList,
   TouchableOpacity,
   StyleSheet,
+  ActivityIndicator,
 } from 'react-native';
 import type { User } from '../models/User';
-import { ProfileCard } from '../components/ProfileCard';
-import { DataState } from '../components/DataState';
+import { ScreenHeader } from '../components/ui/ScreenHeader';
+import { SearchBar } from '../components/ui/SearchBar';
+import { PlayerRowCard } from '../components/ui/PlayerRowCard';
 import { useUsersByRole } from '../hooks/useRecruitmentData';
-import { usersService } from '../services/users.service';
-import { isFirebaseConfigured } from '../config/firebase';
 import { colors, spacing, radius } from '../theme/designTokens';
 
 const FILTER_CHIPS = ['Poste', 'Niveau', 'Localisation', 'Filtres'] as const;
@@ -28,24 +27,22 @@ export const PlayersListScreen: React.FC<PlayersListScreenProps> = ({
 }) => {
   const [query, setQuery] = useState('');
   const [activeChip, setActiveChip] = useState<string | null>(null);
+  const [bookmarks, setBookmarks] = useState<Set<string>>(new Set());
   const { users, loading } = useUsersByRole('player', query);
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={onBack}>
-          <Text style={styles.back}>←</Text>
-        </TouchableOpacity>
-        <Text style={styles.title}>Joueurs</Text>
-        <TouchableOpacity>
-          <Text style={styles.filterIcon}>⚙</Text>
-        </TouchableOpacity>
-      </View>
-
-      <TextInput
-        style={styles.search}
+      <ScreenHeader
+        title="Joueurs"
+        onBack={onBack}
+        rightAction={
+          <TouchableOpacity>
+            <Text style={styles.filterIcon}>⚙</Text>
+          </TouchableOpacity>
+        }
+      />
+      <SearchBar
         placeholder="Rechercher…"
-        placeholderTextColor={colors.textMuted}
         value={query}
         onChangeText={setQuery}
       />
@@ -58,10 +55,7 @@ export const PlayersListScreen: React.FC<PlayersListScreenProps> = ({
             onPress={() => setActiveChip(activeChip === chip ? null : chip)}
           >
             <Text
-              style={[
-                styles.chipText,
-                activeChip === chip && styles.chipTextActive,
-              ]}
+              style={[styles.chipText, activeChip === chip && styles.chipTextActive]}
             >
               {chip}
             </Text>
@@ -69,57 +63,40 @@ export const PlayersListScreen: React.FC<PlayersListScreenProps> = ({
         ))}
       </View>
 
-      <DataState
-        loading={loading}
-        empty={!loading && users.length === 0}
-        emptyMessage={
-          isFirebaseConfigured()
-            ? 'Aucun joueur inscrit pour le moment.'
-            : undefined
-        }
-        firebaseMissing={!isFirebaseConfigured()}
-      >
+      {loading ? (
+        <ActivityIndicator color={colors.brand} style={styles.loader} />
+      ) : (
         <FlatList
           data={users}
           keyExtractor={(item) => item.uid}
-          renderItem={({ item }) => (
-            <View>
-              <ProfileCard user={item} onViewProfile={onSelectPlayer} compact />
-              {usersService.isNewProfile(item) && (
-                <View style={styles.newBadge}>
-                  <Text style={styles.newBadgeText}>Nouveau</Text>
-                </View>
-              )}
-            </View>
-          )}
           contentContainerStyle={styles.list}
+          renderItem={({ item }) => (
+            <PlayerRowCard
+              user={item}
+              onPress={onSelectPlayer}
+              bookmarked={bookmarks.has(item.uid)}
+              onBookmark={() =>
+                setBookmarks((prev) => {
+                  const next = new Set(prev);
+                  if (next.has(item.uid)) next.delete(item.uid);
+                  else next.add(item.uid);
+                  return next;
+                })
+              }
+            />
+          )}
+          ListEmptyComponent={
+            <Text style={styles.empty}>Aucun joueur inscrit.</Text>
+          }
         />
-      </DataState>
+      )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: spacing.lg,
-    paddingBottom: spacing.sm,
-  },
-  back: { fontSize: 22, color: colors.bluePrimary, marginRight: spacing.md },
-  title: { flex: 1, fontSize: 22, fontWeight: '800', color: colors.text },
-  filterIcon: { fontSize: 20, color: colors.textSecondary },
-  search: {
-    marginHorizontal: spacing.lg,
-    backgroundColor: colors.surface,
-    borderRadius: radius.md,
-    padding: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    color: colors.text,
-    marginBottom: spacing.md,
-  },
+  filterIcon: { fontSize: 22, color: colors.textSecondary },
   chips: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -135,21 +112,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
-  chipActive: {
-    backgroundColor: colors.bluePrimary,
-    borderColor: colors.bluePrimary,
-  },
+  chipActive: { backgroundColor: colors.brand, borderColor: colors.brand },
   chipText: { color: colors.textSecondary, fontSize: 12, fontWeight: '600' },
   chipTextActive: { color: '#FFFFFF' },
   list: { paddingHorizontal: spacing.lg, paddingBottom: spacing.xxl },
-  newBadge: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    backgroundColor: colors.blueBright,
-    borderRadius: 6,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-  },
-  newBadgeText: { color: '#FFF', fontSize: 10, fontWeight: '700' },
+  empty: { textAlign: 'center', color: colors.textMuted, marginTop: 40 },
+  loader: { marginTop: 40 },
 });
