@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, TextInput, StyleSheet } from 'react-native';
 import { colors, spacing, radius } from '../../theme/designTokens';
+import { Icon } from './Icon';
 
 interface SearchBarProps {
   placeholder?: string;
@@ -14,7 +15,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
   onChangeText,
 }) => (
   <View style={styles.wrap}>
-    <Text style={styles.icon}>🔍</Text>
+    <Icon name="search" size={18} color={colors.textMuted} />
     <TextInput
       style={styles.input}
       placeholder={placeholder}
@@ -36,7 +37,7 @@ const styles = StyleSheet.create({
     marginHorizontal: spacing.lg,
     marginBottom: spacing.lg,
     paddingHorizontal: spacing.md,
+    gap: spacing.sm,
   },
-  icon: { fontSize: 16, marginRight: spacing.sm },
   input: { flex: 1, paddingVertical: spacing.md, fontSize: 15, color: colors.text },
 });

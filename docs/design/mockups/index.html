@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ProDay — Maquettes interactives</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --brand: #003399;
+      --brand-soft: #e8eef8;
+      --bg: #f4f6fa;
+      --surface: #fff;
+      --border: #dde3ed;
+      --text: #1a1f36;
+      --text-2: #5c6478;
+      --text-3: #8b93a8;
+      --success: #16a34a;
+      --success-bg: #dcfce7;
+      --warning: #ea580c;
+      --warning-bg: #ffedd5;
+      --radius: 12px;
+      --phone-w: 320px;
+      --phone-h: 640px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: Inter, system-ui, sans-serif;
+      background: #0f172a;
+      color: #f8fafc;
+      padding: 2rem 1.5rem 4rem;
+    }
+    header { max-width: 1200px; margin: 0 auto 2rem; }
+    header h1 { font-size: 1.75rem; font-weight: 800; }
+    header p { color: #94a3b8; margin-top: 0.5rem; line-height: 1.5; }
+    .tokens {
+      display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem;
+    }
+    .token {
+      font-size: 11px; font-weight: 600; padding: 4px 10px;
+      border-radius: 999px; background: #1e293b;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(var(--phone-w), 1fr));
+      gap: 2rem;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    .screen-wrap { text-align: center; }
+    .screen-wrap h2 {
+      font-size: 0.85rem; font-weight: 700; color: #94a3b8;
+      margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em;
+    }
+    .phone {
+      width: var(--phone-w);
+      height: var(--phone-h);
+      margin: 0 auto;
+      background: var(--bg);
+      border-radius: 28px;
+      border: 3px solid #334155;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 24px 48px rgba(0,0,0,0.35);
+      text-align: left;
+    }
+    .status { height: 28px; background: var(--surface); flex-shrink: 0; }
+    .content { flex: 1; overflow-y: auto; padding: 14px; }
+    .tab-bar {
+      display: flex; background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 8px 0 10px; flex-shrink: 0;
+    }
+    .tab {
+      flex: 1; text-align: center; font-size: 9px;
+      font-weight: 600; color: var(--text-3);
+    }
+    .tab.active { color: var(--brand); }
+    .tab span { display: block; font-size: 16px; margin-bottom: 2px; }
+    .title { font-size: 22px; font-weight: 800; color: var(--text); }
+    .sub { font-size: 12px; color: var(--text-2); margin-top: 4px; line-height: 1.4; }
+    .search {
+      margin-top: 12px; background: var(--surface);
+      border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 10px 12px; font-size: 12px; color: var(--text-3);
+    }
+    .row { display: flex; gap: 10px; margin-top: 12px; }
+    .card {
+      flex: 1; background: var(--surface);
+      border: 1px solid var(--border); border-radius: 14px;
+      padding: 14px; box-shadow: 0 2px 10px rgba(0,51,153,0.06);
+    }
+    .card .ico { font-size: 22px; }
+    .card strong { display: block; font-size: 13px; margin-top: 6px; color: var(--text); }
+    .card small { font-size: 10px; color: var(--text-3); }
+    .section { font-size: 13px; font-weight: 700; color: var(--text); margin: 16px 0 8px; }
+    .ad {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; padding: 12px; margin-bottom: 8px;
+    }
+    .ad b { font-size: 13px; color: var(--text); }
+    .ad p { font-size: 11px; color: var(--brand); margin-top: 4px; font-weight: 600; }
+    .ad span { font-size: 10px; color: var(--text-3); }
+    .fab {
+      margin-top: 12px; background: var(--brand); color: #fff;
+      text-align: center; padding: 14px; border-radius: var(--radius);
+      font-weight: 700; font-size: 13px;
+    }
+    .toggle {
+      display: flex; background: var(--border); border-radius: var(--radius);
+      padding: 3px; margin-top: 10px;
+    }
+    .toggle button {
+      flex: 1; border: none; background: transparent;
+      padding: 8px; font-size: 11px; font-weight: 600;
+      border-radius: 8px; color: var(--text-2); cursor: default;
+    }
+    .toggle button.on { background: var(--surface); color: var(--brand); }
+    .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .chip {
+      font-size: 10px; font-weight: 600; padding: 6px 10px;
+      border-radius: 999px; border: 1px solid var(--border);
+      background: var(--surface); color: var(--text-2);
+    }
+    .chip.on { background: var(--brand); color: #fff; border-color: var(--brand); }
+    .list-item {
+      display: flex; align-items: center; gap: 10px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; padding: 10px; margin-bottom: 8px;
+    }
+    .avatar {
+      width: 44px; height: 44px; border-radius: 50%;
+      background: var(--brand-soft); color: var(--brand);
+      font-weight: 800; display: flex; align-items: center; justify-content: center;
+    }
+    .list-item .info { flex: 1; }
+    .list-item .name { font-size: 13px; font-weight: 700; color: var(--text); }
+    .list-item .meta { font-size: 10px; color: var(--text-3); margin-top: 2px; }
+    .badge {
+      font-size: 9px; font-weight: 700; padding: 2px 6px;
+      border-radius: 4px; background: var(--success-bg); color: var(--success);
+    }
+    .badge-warn { background: var(--warning-bg); color: var(--warning); }
+    .match {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; padding: 12px; margin-bottom: 8px;
+    }
+    .match .date { font-size: 10px; color: var(--brand); font-weight: 600; }
+    .match .teams { font-size: 14px; font-weight: 700; margin-top: 4px; }
+    .pill {
+      display: inline-block; margin-top: 8px; font-size: 9px; font-weight: 700;
+      padding: 4px 8px; border-radius: 999px; background: var(--success-bg); color: var(--success);
+    }
+    .banner {
+      background: var(--warning-bg); border-left: 4px solid var(--warning);
+      padding: 10px; border-radius: 8px; margin-top: 10px;
+    }
+    .banner b { font-size: 12px; color: var(--warning); }
+    .banner p { font-size: 10px; color: var(--text-2); margin-top: 4px; }
+    .step { display: flex; gap: 10px; margin-top: 10px; align-items: flex-start; }
+    .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--border); margin-top: 2px; }
+    .dot.done { background: var(--success); }
+    .dot.active { background: var(--warning); width: 14px; height: 14px; }
+    .footer-btns { display: flex; gap: 8px; margin-top: 12px; }
+    .btn-o, .btn-p {
+      flex: 1; text-align: center; padding: 10px; border-radius: var(--radius);
+      font-size: 11px; font-weight: 700;
+    }
+    .btn-o { border: 2px solid var(--brand); color: var(--brand); }
+    .btn-p { background: var(--brand); color: #fff; }
+    .logo-text { font-size: 20px; font-weight: 800; color: var(--brand); text-align: center; margin-top: 8px; }
+    .tagline { font-size: 9px; color: var(--text-3); text-align: center; letter-spacing: 0.08em; margin-top: 4px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>ProDay — Maquettes interactives</h1>
+    <p>
+      Prévisualisation HTML alignée sur <code>designTokens.ts</code> (#003399).
+      Ouvrir ce fichier dans le navigateur pour présenter le produit à l’équipe ou l’importer dans Figma en référence.
+    </p>
+    <div class="tokens">
+      <span class="token">Brand #003399</span>
+      <span class="token">Fond #F4F6FA</span>
+      <span class="token">Cartes blanches</span>
+      <span class="token">Inter</span>
+      <span class="token">5 onglets</span>
+    </div>
+  </header>
+
+  <div class="grid">
+    <!-- Accueil -->
+    <div class="screen-wrap">
+      <h2>Accueil</h2>
+      <div class="phone">
+        <div class="status"></div>
+        <div class="content">
+          <div class="logo-text">ProDay</div>
+          <div class="tagline">CONNECTER • PROGRESSER • RÉUSSIR</div>
+          <p class="sub" style="margin-top:14px">L’app qui connecte les passionnés de sport.</p>
+          <p style="font-size:11px;color:var(--brand);font-weight:600;margin-top:8px;text-align:center">128 joueurs · 24 clubs · 12 annonces</p>
+          <div class="row">
+            <div class="card"><div class="ico">🔍</div><strong>Recrutement</strong><small>Joueurs & clubs</small></div>
+            <div class="card"><div class="ico">🤝</div><strong>Matchs</strong><small>Amicaux</small></div>
+          </div>
+          <div class="row">
+            <div class="card"><div class="ico">🏆</div><strong>Arena</strong><small>Tournois</small></div>
+            <div class="card"><div class="ico">⭐</div><strong>Sponsors</strong><small>Partenaires</small></div>
+          </div>
+        </div>
+        <nav class="tab-bar">
+          <div class="tab active"><span>🏠</span>Accueil</div>
+          <div class="tab"><span>🔍</span>Recrutement</div>
+          <div class="tab"><span>🤝</span>Matchs</div>
+          <div class="tab"><span>💬</span>Messages</div>
+          <div class="tab"><span>👤</span>Profil</div>
+        </nav>
+      </div>
+    </div>
+
+    <!-- Recrutement -->
+    <div class="screen-wrap">
+      <h2>Recrutement</h2>
+      <div class="phone">
+        <div class="status"></div>
+        <div class="content">
+          <div class="title">Recrutement</div>
+          <div class="sub">Le bon profil pour le bon projet.</div>
+          <div class="search">🔍 Rechercher un joueur, un poste…</div>
+          <div class="row">
+            <div class="card"><div class="ico">👤</div><strong>Joueurs</strong><small>128 profils</small></div>
+            <div class="card"><div class="ico">🏟️</div><strong>Clubs</strong><small>24 clubs</small></div>
+          </div>
+          <div class="section">Recrutements populaires</div>
+          <div class="ad"><b>US Marseille</b><p>Recherche Attaquant U19</p><span>U19 · R1 · Il y a 2 j</span></div>
+          <div class="fab">+ Créer une annonce</div>
+        </div>
+        <nav class="tab-bar">
+          <div class="tab"><span>🏠</span>Accueil</div>
+          <div class="tab active"><span>🔍</span>Recrutement</div>
+          <div class="tab"><span>🤝</span>Matchs</div>
+          <div class="tab"><span>💬</span>Messages</div>
+          <div class="tab"><span>👤</span>Profil</div>
+        </nav>
+      </div>
+    </div>
+
+    <!-- Coachs -->
+    <div class="screen-wrap">
+      <h2>Coachs & agents</h2>
+      <div class="phone">
+        <div class="status"></div>
+        <div class="content">
+          <div class="title">Recrutement</div>
+          <div class="toggle">
+            <button class="on">Coachs</button>
+            <button>Agents</button>
+          </div>
+          <div class="search">Rechercher un coach…</div>
+          <div class="chips">
+            <span class="chip on">Spécialité</span>
+            <span class="chip">Niveau</span>
+            <span class="chip">Localisation</span>
+            <span class="chip">Filtres</span>
+          </div>
+          <div class="section">Coachs populaires</div>
+          <div class="list-item">
+            <div class="avatar">J</div>
+            <div class="info">
+              <div class="name">Julien Moreau <span class="badge">Vérifié</span></div>
+              <div class="meta">Préparateur physique · 8 ans · Lyon</div>
+              <div class="meta">★★★★★ 4.8</div>
+            </div>
+          </div>
+          <div class="fab">+ Publier une annonce</div>
+        </div>
+        <nav class="tab-bar">
+          <div class="tab"><span>🏠</span>Accueil</div>
+          <div class="tab active"><span>🔍</span>Recrutement</div>
+          <div class="tab"><span>🤝</span>Matchs</div>
+          <div class="tab"><span>💬</span>Messages</div>
+          <div class="tab"><span>👤</span>Profil</div>
+        </nav>
+      </div>
+    </div>
+
+    <!-- Matchs -->
+    <div class="screen-wrap">
+      <h2>Matchs amicaux</h2>
+      <div class="phone">
+        <div class="status"></div>
+        <div class="content">
+          <div class="title">Matchs amicaux</div>
+          <div class="sub">Jouez. Progressez. Créez du lien.</div>
+          <div class="row">
+            <div class="card"><div class="ico">📅</div><strong>Proposer</strong><small>un match</small></div>
+            <div class="card"><div class="ico">🔎</div><strong>Rechercher</strong><small>un match</small></div>
+          </div>
+          <div class="section">Matchs à venir</div>
+          <div class="match">
+            <div class="date">Mer. 14 juin · 14h</div>
+            <div class="teams">US Marseille vs AS Cannes</div>
+            <div class="meta">Cannes · R2</div>
+            <span class="pill">En attente</span>
+          </div>
+          <div class="match">
+            <div class="date">Sam. 17 juin · 10h</div>
+            <div class="teams">FC Lyon vs US Villeurbanne</div>
+            <span class="pill" style="background:var(--success-bg);color:var(--success)">Confirmé</span>
+          </div>
+        </div>
+        <nav class="tab-bar">
+          <div class="tab"><span>🏠</span>Accueil</div>
+          <div class="tab"><span>🔍</span>Recrutement</div>
+          <div class="tab active"><span>🤝</span>Matchs</div>
+          <div class="tab"><span>💬</span>Messages</div>
+          <div class="tab"><span>👤</span>Profil</div>
+        </nav>
+      </div>
+    </div>
+
+    <!-- Vérification -->
+    <div class="screen-wrap">
+      <h2>Vérification diplômes</h2>
+      <div class="phone">
+        <div class="status"></div>
+        <div class="content">
+          <div class="title">Vérification</div>
+          <div class="banner">
+            <b>Vérification en cours</b>
+            <p>Badge orange · messagerie bloquée jusqu’à validation.</p>
+          </div>
+          <div class="step"><div class="dot done"></div><span style="font-size:11px">Document reçu</span></div>
+          <div class="step"><div class="dot done"></div><span style="font-size:11px">Authenticité du document</span></div>
+          <div class="step"><div class="dot active"></div><span style="font-size:11px;color:var(--warning);font-weight:700">Vérification établissement</span></div>
+          <div class="step"><div class="dot"></div><span style="font-size:11px;color:var(--text-3)">Résultat</span></div>
+        </div>
+        <nav class="tab-bar">
+          <div class="tab"><span>🏠</span>Accueil</div>
+          <div class="tab"><span>🔍</span>Recrutement</div>
+          <div class="tab"><span>🤝</span>Matchs</div>
+          <div class="tab"><span>💬</span>Messages</div>
+          <div class="tab active"><span>👤</span>Profil</div>
+        </nav>
+      </div>
+    </div>
+
+    <!-- Messages -->
+    <div class="screen-wrap">
+      <h2>Messages</h2>
+      <div class="phone">
+        <div class="status"></div>
+        <div class="content">
+          <div class="title">Messages</div>
+          <div class="sub">Profils vérifiés uniquement</div>
+          <div class="list-item">
+            <div class="avatar">M</div>
+            <div class="info">
+              <div class="name">Marc Lefebvre</div>
+              <div class="meta">Bonjour, intéressé par votre profil…</div>
+            </div>
+            <span class="badge-warn badge">•</span>
+          </div>
+        </div>
+        <nav class="tab-bar">
+          <div class="tab"><span>🏠</span>Accueil</div>
+          <div class="tab"><span>🔍</span>Recrutement</div>
+          <div class="tab"><span>🤝</span>Matchs</div>
+          <div class="tab active"><span>💬</span>Messages</div>
+          <div class="tab"><span>👤</span>Profil</div>
+        </nav>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

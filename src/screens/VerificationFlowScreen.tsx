@@ -1,110 +1,178 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { colors, spacing, radius } from '../theme/designTokens';
+import { View, Text, ScrollView, StyleSheet } from 'react-native';
+import { ScreenTopBar } from '../components/ui/ScreenTopBar';
+import { Icon } from '../components/ui/Icon';
+import { colors, spacing, radius, shadows } from '../theme/designTokens';
+
+type StepState = 'done' | 'active' | 'pending';
 
 type VerificationStep = {
   id: number;
   label: string;
-  done: boolean;
-  active?: boolean;
+  state: StepState;
+  sub?: string;
+  date?: string;
 };
 
 const STEPS: VerificationStep[] = [
-  { id: 1, label: 'Document reçu', done: true },
-  { id: 2, label: 'Authenticité du document', done: true },
-  { id: 3, label: "Vérification auprès de l'établissement", done: false, active: true },
-  { id: 4, label: 'Résultat', done: false },
+  { id: 1, label: 'Document reçu', state: 'done', date: '03/05/2025' },
+  { id: 2, label: 'Authenticité', state: 'active', sub: 'En cours' },
+  { id: 3, label: 'Établissement', state: 'pending', sub: 'En attente' },
+  { id: 4, label: 'Résultat', state: 'pending', sub: 'En attente' },
 ];
 
-/**
- * Écran « Vérification en cours » — timeline maquette coach/agent
- */
-export const VerificationFlowScreen: React.FC = () => (
-  <View style={styles.container}>
-    <Text style={styles.title}>Vérification des diplômes</Text>
-    <View style={styles.banner}>
-      <Text style={styles.bannerTitle}>Vérification en cours</Text>
-      <Text style={styles.bannerSub}>
-        Votre profil est visible avec un badge orange. La messagerie sera débloquée
-        après validation admin.
-      </Text>
-    </View>
+interface VerificationFlowScreenProps {
+  onBack?: () => void;
+  diplomaName?: string;
+  diplomaRef?: string;
+}
 
-    {STEPS.map((step, index) => (
-      <View key={step.id} style={styles.stepRow}>
-        <View style={styles.stepLine}>
-          <View
-            style={[
-              styles.dot,
-              step.done && styles.dotDone,
-              step.active && styles.dotActive,
-            ]}
-          />
-          {index < STEPS.length - 1 && <View style={styles.connector} />}
+export const VerificationFlowScreen: React.FC<VerificationFlowScreenProps> = ({
+  onBack,
+  diplomaName = 'UEFA A Licence',
+  diplomaRef = 'REF-2025-0847',
+}) => (
+  <View style={styles.root}>
+    {onBack ? (
+      <ScreenTopBar title="Vérification du diplôme" onBack={onBack} />
+    ) : null}
+
+    <ScrollView contentContainerStyle={styles.content}>
+      <View style={styles.banner}>
+        <Icon name="warning" size={22} color={colors.warning} />
+        <View style={styles.bannerText}>
+          <Text style={styles.bannerTitle}>Vérification en cours</Text>
+          <Text style={styles.bannerSub}>
+            Le traitement peut prendre jusqu&apos;à 5 jours ouvrés. Votre profil reste
+            visible avec un badge orange.
+          </Text>
         </View>
-        <Text
-          style={[
-            styles.stepLabel,
-            step.active && styles.stepLabelActive,
-            step.done && styles.stepLabelDone,
-          ]}
-        >
-          {step.label}
-        </Text>
       </View>
-    ))}
+
+      <View style={[styles.card, shadows.card]}>
+        {STEPS.map((step, index) => (
+          <View key={step.id} style={styles.stepRow}>
+            <View style={styles.stepCol}>
+              <View
+                style={[
+                  styles.stepCircle,
+                  step.state === 'done' && styles.circleDone,
+                  step.state === 'active' && styles.circleActive,
+                  step.state === 'pending' && styles.circlePending,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.stepNum,
+                    step.state === 'pending' && styles.stepNumPending,
+                  ]}
+                >
+                  {step.id}
+                </Text>
+              </View>
+              {index < STEPS.length - 1 && (
+                <View
+                  style={[
+                    styles.connector,
+                    step.state === 'done' && styles.connectorDone,
+                  ]}
+                />
+              )}
+            </View>
+            <View style={styles.stepBody}>
+              <Text
+                style={[
+                  styles.stepLabel,
+                  step.state === 'active' && styles.stepLabelActive,
+                ]}
+              >
+                {step.label}
+              </Text>
+              {step.date && <Text style={styles.stepDate}>{step.date}</Text>}
+              {step.sub && (
+                <Text
+                  style={[
+                    styles.stepSub,
+                    step.state === 'active' && styles.stepSubActive,
+                  ]}
+                >
+                  {step.sub}
+                </Text>
+              )}
+            </View>
+          </View>
+        ))}
+      </View>
+
+      <View style={[styles.diplomaCard, shadows.card]}>
+        <Text style={styles.diplomaLabel}>Diplôme concerné</Text>
+        <Text style={styles.diplomaName}>{diplomaName}</Text>
+        <Text style={styles.diplomaRef}>Réf. {diplomaRef}</Text>
+      </View>
+    </ScrollView>
   </View>
 );
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-    padding: spacing.lg,
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: '800',
-    color: colors.text,
-    marginBottom: spacing.lg,
-  },
+  root: { flex: 1, backgroundColor: colors.background },
+  content: { padding: spacing.lg, paddingBottom: spacing.xxl },
   banner: {
+    flexDirection: 'row',
+    gap: spacing.md,
     backgroundColor: colors.warningBg,
-    borderRadius: radius.md,
+    borderRadius: radius.lg,
     padding: spacing.lg,
-    marginBottom: spacing.xl,
+    marginBottom: spacing.lg,
     borderLeftWidth: 4,
     borderLeftColor: colors.warning,
   },
-  bannerTitle: {
-    color: colors.warning,
-    fontWeight: '700',
-    fontSize: 16,
+  bannerText: { flex: 1 },
+  bannerTitle: { color: colors.warning, fontWeight: '700', fontSize: 15 },
+  bannerSub: { color: colors.textSecondary, fontSize: 13, marginTop: 4, lineHeight: 20 },
+  card: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    padding: spacing.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    marginBottom: spacing.lg,
   },
-  bannerSub: {
-    color: colors.textSecondary,
-    fontSize: 13,
-    marginTop: spacing.sm,
-    lineHeight: 20,
+  stepRow: { flexDirection: 'row', minHeight: 56 },
+  stepCol: { alignItems: 'center', width: 36 },
+  stepCircle: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  stepRow: { flexDirection: 'row', marginBottom: spacing.md },
-  stepLine: { alignItems: 'center', width: 28 },
-  dot: {
-    width: 14,
-    height: 14,
-    borderRadius: 7,
-    backgroundColor: colors.border,
-  },
-  dotDone: { backgroundColor: colors.success },
-  dotActive: { backgroundColor: colors.warning, width: 16, height: 16, borderRadius: 8 },
+  circleDone: { backgroundColor: colors.warning },
+  circleActive: { backgroundColor: colors.warning },
+  circlePending: { backgroundColor: colors.surfaceMuted, borderWidth: 2, borderColor: colors.border },
+  stepNum: { color: '#FFFFFF', fontWeight: '800', fontSize: 13 },
+  stepNumPending: { color: colors.textMuted },
   connector: {
     width: 2,
     flex: 1,
-    minHeight: 28,
+    minHeight: 24,
     backgroundColor: colors.border,
     marginVertical: 4,
   },
-  stepLabel: { flex: 1, color: colors.textMuted, fontSize: 14, paddingTop: 0 },
-  stepLabelDone: { color: colors.text },
+  connectorDone: { backgroundColor: colors.warning },
+  stepBody: { flex: 1, paddingBottom: spacing.md },
+  stepLabel: { fontSize: 14, fontWeight: '600', color: colors.text },
   stepLabelActive: { color: colors.warning, fontWeight: '700' },
+  stepDate: { fontSize: 11, color: colors.textMuted, marginTop: 2 },
+  stepSub: { fontSize: 11, color: colors.textMuted, marginTop: 2 },
+  stepSubActive: { color: colors.warning, fontWeight: '600' },
+  diplomaCard: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    padding: spacing.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  diplomaLabel: { fontSize: 12, color: colors.textMuted, fontWeight: '600' },
+  diplomaName: { fontSize: 16, fontWeight: '700', color: colors.text, marginTop: 4 },
+  diplomaRef: { fontSize: 12, color: colors.textSecondary, marginTop: 4 },
 });

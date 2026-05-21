@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import type { User } from '../models/User';
 import { getVerificationBadge } from '../models/User';
 import { StarRating } from './StarRating';
+import { Icon } from './ui/Icon';
 import { colors, spacing, radius, shadows } from '../theme/designTokens';
 
 interface CoachListCardProps {
@@ -49,9 +50,11 @@ export const CoachListCard: React.FC<CoachListCardProps> = ({
       </View>
       {onBookmark && (
         <TouchableOpacity onPress={() => onBookmark(user)} style={styles.bookmark}>
-          <Text style={bookmarked ? styles.bookmarkOn : styles.bookmarkOff}>
-            {bookmarked ? '★' : '☆'}
-          </Text>
+          <Icon
+            name={bookmarked ? 'bookmark' : 'bookmark-outline'}
+            size={22}
+            color={bookmarked ? '#F59E0B' : colors.border}
+          />
         </TouchableOpacity>
       )}
     </TouchableOpacity>
@@ -92,6 +95,4 @@ const styles = StyleSheet.create({
   title: { color: colors.bluePrimary, fontSize: 13, marginTop: 2 },
   meta: { color: colors.textMuted, fontSize: 12, marginTop: 2 },
   bookmark: { padding: spacing.sm },
-  bookmarkOn: { fontSize: 22, color: '#FBBF24' },
-  bookmarkOff: { fontSize: 22, color: colors.border },
 });

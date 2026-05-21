@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { colors, spacing, radius, shadows } from '../theme/designTokens';
 import { ScreenHeader } from '../components/ui/ScreenHeader';
+import { Icon } from '../components/ui/Icon';
 import { ProposeMatchScreen } from './ProposeMatchScreen';
 import { SearchMatchScreen } from './SearchMatchScreen';
 import { useFriendlyMatches } from '../hooks/useAppData';
@@ -55,14 +56,18 @@ export const MatchsScreen: React.FC = () => {
           style={[styles.actionCard, shadows.card]}
           onPress={() => setView('propose')}
         >
-          <Text style={styles.actionIcon}>📅</Text>
+          <View style={styles.actionIconWrap}>
+            <Icon name="calendar" size={28} color={colors.brand} />
+          </View>
           <Text style={styles.actionTitle}>Proposer un match</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.actionCard, shadows.card]}
           onPress={() => setView('search')}
         >
-          <Text style={styles.actionIcon}>🔎</Text>
+          <View style={styles.actionIconWrap}>
+            <Icon name="search" size={28} color={colors.brand} />
+          </View>
           <Text style={styles.actionTitle}>Rechercher un match</Text>
         </TouchableOpacity>
       </View>
@@ -120,7 +125,15 @@ const styles = StyleSheet.create({
     minHeight: 110,
     justifyContent: 'center',
   },
-  actionIcon: { fontSize: 28, marginBottom: spacing.sm },
+  actionIconWrap: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: colors.brandSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.sm,
+  },
   actionTitle: { fontSize: 14, fontWeight: '700', color: colors.brand },
   sectionTitle: {
     fontSize: 16,

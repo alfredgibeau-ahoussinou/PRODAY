@@ -10,6 +10,9 @@ Les visuels de référence sont **déjà dans le dépôt** — à répliquer fra
 | `assets/branding/logo-dark.png` | Logo fond navy (splash / marketing) |
 | `assets/mockups/mockup-recrutement-matchs.png` | 6 écrans Recrutement + Matchs amicaux |
 | `assets/mockups/mockup-coach-verification.png` | Coachs, agents, vérification diplômes, contrôle parental |
+| `assets/mockups/maquette-proday-ecrans-principaux.png` | Planche 6 écrans principaux (générée) |
+| `assets/mockups/maquette-proday-coach-verification.png` | Profils, vérification, contrôle parental (générée) |
+| `docs/design/mockups/index.html` | Maquettes HTML interactives (tokens `#003399`) |
 
 Design system code : `src/theme/designTokens.ts` · doc : `docs/design/DESIGN_SYSTEM.md`
 

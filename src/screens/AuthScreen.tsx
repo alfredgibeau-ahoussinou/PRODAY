@@ -17,6 +17,7 @@ import { profileService } from '../services/profile.service';
 import { Logo } from '../components/Logo';
 import { VerificationBadge } from '../components/VerificationBadge';
 import { VerificationFlowScreen } from './VerificationFlowScreen';
+import { ParentalControlScreen } from './ParentalControlScreen';
 import { useAuth } from '../context/AuthContext';
 import { colors, spacing, radius } from '../theme/designTokens';
 
@@ -43,6 +44,7 @@ export const AuthScreen: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showVerificationFlow, setShowVerificationFlow] = useState(false);
+  const [showParentalControl, setShowParentalControl] = useState(false);
 
   const needsDocument = ROLES_REQUIRING_VERIFICATION.includes(role);
 
@@ -152,12 +154,13 @@ export const AuthScreen: React.FC = () => {
 
     if (showVerificationFlow && pendingVerification) {
       return (
-        <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-          <TouchableOpacity onPress={() => setShowVerificationFlow(false)}>
-            <Text style={styles.backLink}>← Retour au profil</Text>
-          </TouchableOpacity>
-          <VerificationFlowScreen />
-        </ScrollView>
+        <VerificationFlowScreen onBack={() => setShowVerificationFlow(false)} />
+      );
+    }
+
+    if (showParentalControl) {
+      return (
+        <ParentalControlScreen onBack={() => setShowParentalControl(false)} />
       );
     }
 
@@ -189,6 +192,13 @@ export const AuthScreen: React.FC = () => {
             </TouchableOpacity>
           </>
         )}
+
+        <TouchableOpacity
+          style={styles.secondary}
+          onPress={() => setShowParentalControl(true)}
+        >
+          <Text style={styles.secondaryText}>Contrôle parental</Text>
+        </TouchableOpacity>
 
         <TouchableOpacity
           style={styles.primary}

@@ -67,7 +67,7 @@ const now = Timestamp.now();
 const users = [
   {
     id: 'seed_player_1',
-    display_name: 'Lucas Martin',
+    display_name: 'Yanis Diallo',
     email: 'lucas.demo@proday.app',
     role: 'player',
     is_verified: true,
@@ -76,8 +76,8 @@ const users = [
     city: 'Marseille',
     department: '13',
     profile: {
-      position: 'Attaquant',
-      category: 'U19',
+      position: 'Milieu offensif',
+      category: 'Seniors',
       level: 'R1',
       strong_foot: 'right',
       height_cm: 176,
@@ -97,11 +97,33 @@ const users = [
     is_active: true,
     city: 'Lyon',
     profile: {
-      job_title: 'Préparateur physique',
+      job_title: 'Entraîneur principal',
       years_experience: 8,
       rating: 4.8,
-      bio: 'Préparation physique U17 à Seniors.',
+      bio: 'Coach passionné avec une expérience en formation de jeunes talents et préparation physique.',
       specialties: ['Préparation physique', 'Renforcement'],
+      diplomas_list: [
+        {
+          id: 'dip_1',
+          name: "Brevet d'Entraîneur de Football",
+          institution: 'FFF · 2019',
+          verified: true,
+        },
+        {
+          id: 'dip_2',
+          name: 'UEFA A Licence',
+          institution: 'UEFA · 2022',
+          verified: true,
+        },
+      ],
+      experiences: [
+        {
+          id: 'exp_1',
+          title: 'Entraîneur U19',
+          organization: 'FC Lyon Sud',
+          period: '2021 — Aujourd\'hui',
+        },
+      ],
     },
   },
   {

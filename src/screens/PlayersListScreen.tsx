@@ -12,6 +12,7 @@ import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { SearchBar } from '../components/ui/SearchBar';
 import { PlayerRowCard } from '../components/ui/PlayerRowCard';
 import { useUsersByRole } from '../hooks/useRecruitmentData';
+import { Icon } from '../components/ui/Icon';
 import { colors, spacing, radius } from '../theme/designTokens';
 
 const FILTER_CHIPS = ['Poste', 'Niveau', 'Localisation', 'Filtres'] as const;
@@ -36,8 +37,8 @@ export const PlayersListScreen: React.FC<PlayersListScreenProps> = ({
         title="Joueurs"
         onBack={onBack}
         rightAction={
-          <TouchableOpacity>
-            <Text style={styles.filterIcon}>⚙</Text>
+          <TouchableOpacity hitSlop={12}>
+            <Icon name="settings" size={22} color={colors.textSecondary} />
           </TouchableOpacity>
         }
       />
@@ -96,7 +97,6 @@ export const PlayersListScreen: React.FC<PlayersListScreenProps> = ({
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
-  filterIcon: { fontSize: 22, color: colors.textSecondary },
   chips: {
     flexDirection: 'row',
     flexWrap: 'wrap',

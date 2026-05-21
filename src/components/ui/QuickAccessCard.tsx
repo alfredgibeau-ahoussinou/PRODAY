@@ -1,9 +1,10 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { colors, spacing, radius, shadows } from '../../theme/designTokens';
+import { Icon, type IconName } from './Icon';
 
 interface QuickAccessCardProps {
-  icon: string;
+  icon: IconName;
   title: string;
   count: string;
   onPress?: () => void;
@@ -23,7 +24,7 @@ export const QuickAccessCard: React.FC<QuickAccessCardProps> = ({
     activeOpacity={0.85}
   >
     <View style={styles.iconCircle}>
-      <Text style={styles.icon}>{icon}</Text>
+      <Icon name={icon} size={24} color={colors.brand} />
     </View>
     <Text style={styles.title}>{title}</Text>
     {loading ? (
@@ -53,7 +54,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: spacing.md,
   },
-  icon: { fontSize: 22 },
   title: { fontSize: 17, fontWeight: '700', color: colors.text },
   count: { fontSize: 13, color: colors.textMuted, marginTop: 6 },
   loader: { marginTop: 8, alignSelf: 'flex-start' },

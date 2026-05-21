@@ -8,18 +8,41 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Logo } from '../components/Logo';
+import { Icon, type IconName } from '../components/ui/Icon';
 import { ArenaScreen } from './ArenaScreen';
 import { SponsorsScreen } from './SponsorsScreen';
 import { useTabNavigation } from '../context/TabNavigationContext';
 import { useHomeStats } from '../hooks/useAppData';
 import { formatCount } from '../services/stats.service';
 import { colors, spacing, radius, shadows, BRAND } from '../theme/designTokens';
+
 type HomeModule = 'home' | 'arena' | 'sponsors';
+
+const MODULES: { title: string; subtitle: string; icon: IconName; action: (h: HomeHandlers) => void }[] = [
+  { title: 'Recrutement', subtitle: 'Joueurs & clubs', icon: 'search', action: (h) => h.goRecrutement() },
+  { title: 'Matchs', subtitle: 'Amicaux', icon: 'calendar', action: (h) => h.goMatchs() },
+  { title: 'Arena', subtitle: 'Tournois', icon: 'trophy', action: (h) => h.goArena() },
+  { title: 'Sponsors', subtitle: 'Partenaires', icon: 'star-four-points', action: (h) => h.goSponsors() },
+];
+
+interface HomeHandlers {
+  goRecrutement: () => void;
+  goMatchs: () => void;
+  goArena: () => void;
+  goSponsors: () => void;
+}
 
 export const HomeScreen: React.FC = () => {
   const [module, setModule] = useState<HomeModule>('home');
   const { setActiveTab } = useTabNavigation();
   const { stats, loading } = useHomeStats();
+
+  const handlers: HomeHandlers = {
+    goRecrutement: () => setActiveTab('recrutement'),
+    goMatchs: () => setActiveTab('matchs'),
+    goArena: () => setModule('arena'),
+    goSponsors: () => setModule('sponsors'),
+  };
 
   if (module === 'arena') {
     return <ArenaScreen onBack={() => setModule('home')} />;
@@ -46,32 +69,12 @@ export const HomeScreen: React.FC = () => {
       ) : null}
 
       <View style={styles.row}>
-        <ModuleCard
-          title="Recrutement"
-          subtitle="Joueurs & clubs"
-          emoji="🔍"
-          onPress={() => setActiveTab('recrutement')}
-        />
-        <ModuleCard
-          title="Matchs"
-          subtitle="Amicaux"
-          emoji="🤝"
-          onPress={() => setActiveTab('matchs')}
-        />
+        <ModuleCard {...MODULES[0]} onPress={() => MODULES[0].action(handlers)} />
+        <ModuleCard {...MODULES[1]} onPress={() => MODULES[1].action(handlers)} />
       </View>
       <View style={styles.row}>
-        <ModuleCard
-          title="Arena"
-          subtitle="Tournois"
-          emoji="🏆"
-          onPress={() => setModule('arena')}
-        />
-        <ModuleCard
-          title="Sponsors"
-          subtitle="Partenaires"
-          emoji="⭐"
-          onPress={() => setModule('sponsors')}
-        />
+        <ModuleCard {...MODULES[2]} onPress={() => MODULES[2].action(handlers)} />
+        <ModuleCard {...MODULES[3]} onPress={() => MODULES[3].action(handlers)} />
       </View>
 
       <Text style={styles.pillars}>Connexion · Progression · Réussite</Text>
@@ -82,11 +85,13 @@ export const HomeScreen: React.FC = () => {
 const ModuleCard: React.FC<{
   title: string;
   subtitle: string;
-  emoji: string;
+  icon: IconName;
   onPress: () => void;
-}> = ({ title, subtitle, emoji, onPress }) => (
+}> = ({ title, subtitle, icon, onPress }) => (
   <TouchableOpacity style={[styles.card, shadows.card]} onPress={onPress} activeOpacity={0.85}>
-    <Text style={styles.emoji}>{emoji}</Text>
+    <View style={styles.iconCircle}>
+      <Icon name={icon} size={24} color={colors.brand} />
+    </View>
     <Text style={styles.cardTitle}>{title}</Text>
     <Text style={styles.cardSub}>{subtitle}</Text>
   </TouchableOpacity>
@@ -119,7 +124,15 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
-  emoji: { fontSize: 28, marginBottom: spacing.sm },
+  iconCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: colors.brandSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.sm,
+  },
   cardTitle: { color: colors.text, fontSize: 16, fontWeight: '700' },
   cardSub: { color: colors.textMuted, fontSize: 12, marginTop: 4 },
   pillars: {

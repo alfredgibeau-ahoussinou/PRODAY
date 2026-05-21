@@ -8,6 +8,7 @@ import {
   ViewStyle,
 } from 'react-native';
 import { User, getVerificationBadge, canContactMinors } from '../models/User';
+import { Icon } from './ui/Icon';
 import { colors, spacing, radius, shadows } from '../theme/designTokens';
 
 interface ProfileCardProps {
@@ -77,9 +78,11 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
           onPress={() => canContact && onContact(user)}
           disabled={!canContact}
         >
-          <Text style={styles.contactButtonText}>
-            {canContact ? 'Contacter' : '🔒'}
-          </Text>
+          {canContact ? (
+            <Text style={styles.contactButtonText}>Contacter</Text>
+          ) : (
+            <Icon name="lock" size={18} color={colors.textMuted} />
+          )}
         </TouchableOpacity>
       )}
     </TouchableOpacity>

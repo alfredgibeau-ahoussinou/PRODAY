@@ -9,6 +9,7 @@ import {
   Alert,
 } from 'react-native';
 import { recruitmentService, formatTimeAgo } from '../services/recruitment.service';
+import { Icon } from '../components/ui/Icon';
 import { colors, spacing, radius, shadows } from '../theme/designTokens';
 import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { SearchBar } from '../components/ui/SearchBar';
@@ -151,7 +152,7 @@ export const MercatoScreen: React.FC = () => {
 
         <View style={styles.quickRow}>
           <QuickAccessCard
-            icon="👤"
+            icon="people"
             title="Joueurs"
             count={
               stats
@@ -164,7 +165,7 @@ export const MercatoScreen: React.FC = () => {
             onPress={() => setView('players')}
           />
           <QuickAccessCard
-            icon="🏟️"
+            icon="business"
             title="Clubs"
             count={
               stats
@@ -208,7 +209,10 @@ export const MercatoScreen: React.FC = () => {
         {creatingPost ? (
           <ActivityIndicator color="#FFF" />
         ) : (
-          <Text style={styles.fabText}>+ Créer une annonce</Text>
+          <>
+            <Icon name="add" size={20} color="#FFFFFF" />
+            <Text style={styles.fabText}>Créer une annonce</Text>
+          </>
         )}
       </TouchableOpacity>
     </View>
@@ -241,7 +245,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.brand,
     borderRadius: radius.md,
     paddingVertical: 16,
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
   },
   fabText: { color: '#FFFFFF', fontWeight: '700', fontSize: 16 },
   fabDisabled: { opacity: 0.75 },

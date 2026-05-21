@@ -14,6 +14,7 @@ import { SearchBar } from '../components/ui/SearchBar';
 import { useUsersByRole } from '../hooks/useRecruitmentData';
 import type { StaffType } from '../services/users.service';
 import { isFirebaseConfigured } from '../config/firebase';
+import { Icon } from '../components/ui/Icon';
 import { colors, spacing, radius, shadows } from '../theme/designTokens';
 
 const FILTER_CHIPS = ['Spécialité', 'Niveau', 'Localisation', 'Filtres'] as const;
@@ -55,8 +56,8 @@ export const CoachesListScreen: React.FC<CoachesListScreenProps> = ({
         }
         onBack={onBack}
         rightAction={
-          <TouchableOpacity>
-            <Text style={styles.bell}>🔔</Text>
+          <TouchableOpacity hitSlop={12}>
+            <Icon name="notifications" size={22} color={colors.text} />
           </TouchableOpacity>
         }
       />
@@ -154,7 +155,6 @@ export const CoachesListScreen: React.FC<CoachesListScreenProps> = ({
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
-  bell: { fontSize: 20 },
   toggle: {
     flexDirection: 'row',
     marginHorizontal: spacing.lg,

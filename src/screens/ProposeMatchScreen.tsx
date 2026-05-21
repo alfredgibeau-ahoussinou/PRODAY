@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { ScreenHeader } from '../components/ui/ScreenHeader';
+import { Icon, type IconName } from '../components/ui/Icon';
 import { colors, spacing, radius, shadows } from '../theme/designTokens';
 import { friendlyMatchesService } from '../services/friendlyMatches.service';
 
@@ -91,21 +92,21 @@ export const ProposeMatchScreen: React.FC<ProposeMatchScreenProps> = ({
           placeholder="jj/mm/aaaa"
           value={dateStr}
           onChangeText={setDateStr}
-          icon="📅"
+          icon="calendar"
         />
         <Field
           label="Heure"
           placeholder="14:00"
           value={timeStr}
           onChangeText={setTimeStr}
-          icon="🕐"
+          icon="time"
         />
         <Field
           label="Lieu / ville"
           placeholder="Stade, ville…"
           value={city}
           onChangeText={setCity}
-          icon="📍"
+          icon="location"
         />
 
         <Text style={styles.label}>Niveau souhaité</Text>
@@ -167,7 +168,7 @@ const Field: React.FC<{
   label: string;
   value?: string;
   placeholder?: string;
-  icon?: string;
+  icon?: IconName;
   onChangeText?: (t: string) => void;
 }> = ({ label, value, placeholder, icon, onChangeText }) => (
   <View style={styles.field}>
@@ -180,7 +181,7 @@ const Field: React.FC<{
         placeholderTextColor={colors.textMuted}
         onChangeText={onChangeText}
       />
-      {icon ? <Text style={styles.fieldIcon}>{icon}</Text> : null}
+      {icon ? <Icon name={icon} size={18} color={colors.textMuted} /> : null}
     </View>
   </View>
 );
@@ -205,7 +206,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
   },
   input: { flex: 1, paddingVertical: spacing.md, fontSize: 15, color: colors.text },
-  fieldIcon: { fontSize: 18 },
   label: {
     fontSize: 13,
     fontWeight: '600',

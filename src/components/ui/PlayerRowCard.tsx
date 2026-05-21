@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import type { User } from '../../models/User';
+import { Icon } from './Icon';
 import { colors, spacing, radius, shadows } from '../../theme/designTokens';
 
 interface PlayerRowCardProps {
@@ -41,9 +42,11 @@ export const PlayerRowCard: React.FC<PlayerRowCardProps> = ({
       </View>
       {onBookmark && (
         <TouchableOpacity onPress={onBookmark} hitSlop={12}>
-          <Text style={bookmarked ? styles.starOn : styles.starOff}>
-            {bookmarked ? '★' : '☆'}
-          </Text>
+          <Icon
+            name={bookmarked ? 'bookmark' : 'bookmark-outline'}
+            size={22}
+            color={bookmarked ? '#F59E0B' : colors.border}
+          />
         </TouchableOpacity>
       )}
     </TouchableOpacity>
@@ -75,6 +78,4 @@ const styles = StyleSheet.create({
   name: { fontSize: 16, fontWeight: '700', color: colors.text },
   meta: { fontSize: 13, color: colors.textSecondary, marginTop: 2 },
   level: { fontSize: 12, color: colors.brand, marginTop: 2, fontWeight: '600' },
-  starOn: { fontSize: 22, color: '#FBBF24' },
-  starOff: { fontSize: 22, color: colors.border },
 });
