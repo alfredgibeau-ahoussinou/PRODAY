@@ -1,0 +1,30 @@
+{
+  "expo": {
+    "name": "ProDay",
+    "slug": "proday",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/branding/logo-light.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/branding/logo-light.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#F1F5F9"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.proday.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/branding/logo-light.png",
+        "backgroundColor": "#F1F5F9"
+      },
+      "package": "com.proday.app"
+    },
+    "web": {
+      "bundler": "metro",
+      "favicon": "./assets/branding/logo-light.png"
+    }
+  }
+}
