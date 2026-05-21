@@ -33,6 +33,7 @@ Régénérer le PDF : `npm run docs:pdf`
 
 - **Mobile :** React Native / Flutter (MVP FlutterFlow possible)
 - **Backend :** Firebase Auth, Firestore, Storage, FCM
+- **Données :** statistiques et listes **réelles** depuis Firestore (pas de mock) — voir [docs/FIREBASE_SETUP.md](docs/FIREBASE_SETUP.md)
 - **Logique serveur :** Cloud Functions (`functions/src/index.ts`)
 - **Sécurité :** `firebase/firestore.rules` — `is_verified` modifiable admin uniquement
 

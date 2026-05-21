@@ -1,12 +1,14 @@
 // src/services/profile.service.ts
 // Logique métier : gestion des profils et validation des documents
 
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import {
   User,
   UserRole,
   VerificationStatus,
   ROLES_REQUIRING_VERIFICATION,
 } from '../models/User';
+import { getDb } from '../lib/firebase';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -67,8 +69,20 @@ export const profileService = {
       is_active: true,
     };
 
-    // [FIREBASE] await db.collection('users').doc(uid).set(newUser);
-    console.log(`[ProfileService] Created profile for ${uid} (role: ${role})`);
+    const database = getDb();
+    if (database) {
+      await setDoc(doc(database, 'users', uid), {
+        display_name: displayName,
+        email,
+        role,
+        is_verified: newUser.is_verified,
+        verification_status: newUser.verification_status,
+        profile: {},
+        is_active: true,
+        created_at: serverTimestamp(),
+        updated_at: serverTimestamp(),
+      });
+    }
     
     // Si le rôle nécessite vérification, notifier l'admin
     if (requiresVerification) {

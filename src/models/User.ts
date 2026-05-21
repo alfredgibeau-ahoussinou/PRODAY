@@ -9,6 +9,31 @@ export interface GeoPoint {
   longitude: number;
 }
 
+export interface WorkExperience {
+  id: string;
+  title: string;
+  organization: string;
+  period: string;
+  description?: string;
+}
+
+export interface DiplomaRecord {
+  id: string;
+  name: string;
+  institution: string;
+  year?: number;
+  verified: boolean;
+  status?: 'verified' | 'pending' | 'to_verify';
+}
+
+export interface ProfileReview {
+  id: string;
+  author_name: string;
+  rating: number;
+  comment: string;
+  created_at: string;
+}
+
 export interface UserDocument {
   id: string;
   type: 'diploma' | 'license' | 'id' | 'other';
@@ -28,11 +53,25 @@ export interface UserProfile {
   height_cm?: number;
   weight_kg?: number;
   highlight_video_urls?: string[];
+  gallery_urls?: string[];
+  age?: number;
+  years_experience?: number;
+  availability?: 'available' | 'unavailable' | 'negotiating';
+  season_stats?: {
+    matches: number;
+    goals: number;
+    assists: number;
+  };
   
   // Coach / Agent
   diploma?: string;           // BEF, BFF, BMF, UEFA B/A, etc.
   license_number?: string;
-  years_experience?: number;
+  job_title?: string;         // ex. Préparateur physique, Agent FIFA
+  specialties?: string[];
+  experiences?: WorkExperience[];
+  diplomas_list?: DiplomaRecord[];
+  reviews?: ProfileReview[];
+  rating?: number;            // moyenne 1–5
   
   // Commun
   bio?: string;

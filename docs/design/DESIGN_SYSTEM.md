@@ -50,8 +50,10 @@ Barre basse **5 onglets** :
 
 ### Module Recrutement
 - Accueil : recherche, cartes Joueurs / Clubs, annonces populaires, FAB « + Créer une annonce »
-- Liste joueurs : chips Poste / Niveau / Localisation
-- Profil joueur : stats, galerie, **Contacter** / favoris
+- Liste joueurs : chips Poste / Niveau / Localisation → `PlayersListScreen.tsx`
+- Profil joueur : stats, galerie, **Contacter** / favoris → `PlayerProfileScreen.tsx`
+- Liste coachs/agents : toggle Coachs · Agents → `CoachesListScreen.tsx`
+- Profil coach/agent : onglets Profil / Expérience / Diplômes / Avis, **Contacter** / **Engager** → `CoachProfileScreen.tsx`
 
 ### Module Matchs amicaux
 - Accueil : Proposer / Rechercher un match, matchs à venir (badges statut)

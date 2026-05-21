@@ -7,6 +7,9 @@
     "typecheck": "tsc --noEmit",
     "docs:pdf": "pandoc docs/ProDay_Brief_NonDev.md -o docs/ProDay_Brief_NonDev.pdf --pdf-engine=pdflatex -V geometry:margin=2cm 2>/dev/null || pandoc docs/ProDay_Brief_NonDev.md -o docs/ProDay_Brief_NonDev.pdf"
   },
+  "dependencies": {
+    "firebase": "^11.0.0"
+  },
   "devDependencies": {
     "typescript": "^5.4.0",
     "@types/react": "^18.2.0",

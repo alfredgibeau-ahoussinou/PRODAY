@@ -1,5 +1,6 @@
 import type { GeoPoint } from '../models/User';
 import { agentsWithinRadius } from '../utils/geofencing';
+import { usersService } from './users.service';
 
 export const notificationService = {
   async notifyAgentsNearTournament(
@@ -7,9 +8,15 @@ export const notificationService = {
     tournamentName: string,
     radiusKm = 50
   ): Promise<number> {
-    // [FIREBASE] const agents = await db.collection('users').where('role', '==', 'agent').get();
-    const mockAgents: { uid: string; location: GeoPoint; fcm_token?: string }[] = [];
-    const nearby = agentsWithinRadius(tournamentLocation, mockAgents, radiusKm);
+    const agents = await usersService.listByRole('agent');
+    const withLocation = agents
+      .filter((a) => a.location)
+      .map((a) => ({
+        uid: a.uid,
+        location: a.location!,
+        fcm_token: a.fcm_token,
+      }));
+    const nearby = agentsWithinRadius(tournamentLocation, withLocation, radiusKm);
 
     for (const agent of nearby) {
       await this.sendPush(agent.uid, agent.fcm_token, {
