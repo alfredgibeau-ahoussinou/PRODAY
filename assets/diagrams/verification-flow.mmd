@@ -1,0 +1,11 @@
+flowchart TD
+    A([Inscription]) --> B{Rôle ?}
+    B -->|Joueur| C[Accès standard]
+    B -->|Coach / Agent| D[Upload document obligatoire]
+    D --> E[(is_verified = false\nstatus = PENDING)]
+    E --> F[Badge orange]
+    F --> G{Admin}
+    G -->|OK| H[(VERIFIED)]
+    G -->|KO| I[(REJECTED)]
+    H --> J[Badge vert + messagerie]
+    I --> K[Ré-upload]

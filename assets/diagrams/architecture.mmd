@@ -1,0 +1,30 @@
+graph TB
+    subgraph CLIENT["Application Mobile"]
+        A[Mercato]
+        B[Arena]
+        C[Matchs]
+        D[Sponsors]
+        E[Auth / Profil]
+    end
+
+    subgraph FIREBASE["Firebase"]
+        G[Auth]
+        H[Firestore]
+        I[Storage]
+        J[Cloud Functions]
+        K[FCM]
+    end
+
+    subgraph ADMIN["Admin"]
+        L[Validation diplômes]
+    end
+
+    E --> G
+    A --> H
+    B --> H
+    C --> H
+    D --> H
+    E --> I
+    J --> K
+    J --> H
+    L --> J
