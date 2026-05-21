@@ -1,6 +1,7 @@
-import React from 'react';
-import { View, Text, ScrollView, StyleSheet } from 'react-native';
-import { ScreenTopBar } from '../components/ui/ScreenTopBar';
+import React, { useState } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
+import { VerificationSuccessScreen } from './VerificationSuccessScreen';
+import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { Icon } from '../components/ui/Icon';
 import { colors, spacing, radius, shadows } from '../theme/designTokens';
 
@@ -25,16 +26,32 @@ interface VerificationFlowScreenProps {
   onBack?: () => void;
   diplomaName?: string;
   diplomaRef?: string;
+  /** Affiche l'écran succès (démo ou profil déjà vérifié) */
+  initialSuccess?: boolean;
 }
 
 export const VerificationFlowScreen: React.FC<VerificationFlowScreenProps> = ({
   onBack,
   diplomaName = 'UEFA A Licence',
   diplomaRef = 'REF-2025-0847',
-}) => (
+  initialSuccess = false,
+}) => {
+  const [showSuccess, setShowSuccess] = useState(initialSuccess);
+
+  if (showSuccess && onBack) {
+    return (
+      <VerificationSuccessScreen
+        onBack={onBack}
+        diplomaName={diplomaName}
+        institution="UEFA · 2022"
+      />
+    );
+  }
+
+  return (
   <View style={styles.root}>
     {onBack ? (
-      <ScreenTopBar title="Vérification du diplôme" onBack={onBack} />
+      <ScreenHeader title="Vérification du diplôme" onBack={onBack} centered />
     ) : null}
 
     <ScrollView contentContainerStyle={styles.content}>
@@ -109,9 +126,11 @@ export const VerificationFlowScreen: React.FC<VerificationFlowScreenProps> = ({
         <Text style={styles.diplomaName}>{diplomaName}</Text>
         <Text style={styles.diplomaRef}>Réf. {diplomaRef}</Text>
       </View>
+
     </ScrollView>
   </View>
-);
+  );
+};
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.background },
@@ -147,7 +166,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   circleDone: { backgroundColor: colors.warning },
-  circleActive: { backgroundColor: colors.warning },
+  circleActive: { backgroundColor: colors.warning, borderWidth: 2, borderColor: colors.warning },
   circlePending: { backgroundColor: colors.surfaceMuted, borderWidth: 2, borderColor: colors.border },
   stepNum: { color: '#FFFFFF', fontWeight: '800', fontSize: 13 },
   stepNumPending: { color: colors.textMuted },

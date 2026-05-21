@@ -55,6 +55,7 @@ export const CoachesListScreen: React.FC<CoachesListScreenProps> = ({
             : `${users.length} agents`
         }
         onBack={onBack}
+        centered
         rightAction={
           <TouchableOpacity hitSlop={12}>
             <Icon name="notifications" size={22} color={colors.text} />
@@ -147,7 +148,7 @@ export const CoachesListScreen: React.FC<CoachesListScreenProps> = ({
       </DataState>
 
       <TouchableOpacity style={[styles.fab, shadows.fab]}>
-        <Text style={styles.fabText}>+ Publier une annonce</Text>
+        <Text style={styles.fabText}>Publier une annonce</Text>
       </TouchableOpacity>
     </View>
   );

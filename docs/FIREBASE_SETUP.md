@@ -184,20 +184,13 @@ En attendant, tu peux modifier à la main dans Firestore :
 **Option A — Inscription dans l’app**  
 Onglet **Profil** → Inscription → crée un compte Firebase Auth + document `users/{uid}`.
 
-**Option B — Script seed (recommandé pour démarrer)**
+**Nettoyer d'anciennes données fictives (optionnel)**
 
 ```bash
-cd /Users/gibeau--ahoussinou/PRODAY
-npm install
-npm run seed
+npm run cleanup:demo
 ```
 
-Si les règles Firestore bloquent l’écriture :
-1. Firebase → **Paramètres** → **Comptes de service** → **Générer une nouvelle clé privée**
-2. Enregistrer le fichier sous `firebase/service-account.json`
-3. Relancer : `npm run seed`
-
-Le script crée 3 utilisateurs, 2 clubs et 1 annonce — les **stats Recrutement** s’affichent tout de suite.
+Supprime uniquement les comptes démo et les documents `seed_*`. Les comptes créés via **Inscription** sont conservés.
 
 ---
 

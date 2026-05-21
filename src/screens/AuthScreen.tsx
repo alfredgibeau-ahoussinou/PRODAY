@@ -14,9 +14,10 @@ import type { UserRole } from '../models/User';
 import { ROLES_REQUIRING_VERIFICATION } from '../models/User';
 import { authService } from '../services/auth.service';
 import { profileService } from '../services/profile.service';
-import { Logo } from '../components/Logo';
+import { BrandHeader } from '../components/BrandHeader';
 import { VerificationBadge } from '../components/VerificationBadge';
 import { VerificationFlowScreen } from './VerificationFlowScreen';
+import { VerificationSuccessScreen } from './VerificationSuccessScreen';
 import { ParentalControlScreen } from './ParentalControlScreen';
 import { useAuth } from '../context/AuthContext';
 import { colors, spacing, radius } from '../theme/designTokens';
@@ -41,9 +42,15 @@ export const AuthScreen: React.FC = () => {
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [city, setCity] = useState('');
+  const [position, setPosition] = useState('');
+  const [statMatches, setStatMatches] = useState('');
+  const [statGoals, setStatGoals] = useState('');
+  const [statAssists, setStatAssists] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showVerificationFlow, setShowVerificationFlow] = useState(false);
+  const [showVerificationSuccess, setShowVerificationSuccess] = useState(false);
   const [showParentalControl, setShowParentalControl] = useState(false);
 
   const needsDocument = ROLES_REQUIRING_VERIFICATION.includes(role);
@@ -54,6 +61,11 @@ export const AuthScreen: React.FC = () => {
     }
   }, [profile, mode, step]);
 
+  const parseStat = (value: string) => {
+    const n = parseInt(value.replace(/\D/g, ''), 10);
+    return Number.isFinite(n) && n >= 0 ? n : 0;
+  };
+
   const handleSignUp = async () => {
     if (!displayName.trim() || !email.trim() || password.length < 6) {
       setError('Nom, email et mot de passe (6 car. min.) requis.');
@@ -62,11 +74,25 @@ export const AuthScreen: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
+      const profilePayload =
+        role === 'player'
+          ? {
+              ...(position.trim() ? { position: position.trim() } : {}),
+              season_stats: {
+                matches: parseStat(statMatches),
+                goals: parseStat(statGoals),
+                assists: parseStat(statAssists),
+              },
+            }
+          : undefined;
+
       const user = await authService.signUp({
         email,
         password,
         display_name: displayName,
         role,
+        city: city.trim() || undefined,
+        profile: profilePayload,
       });
       await refreshProfile();
       setStep(needsDocument ? 'document' : 'pending');
@@ -131,7 +157,7 @@ export const AuthScreen: React.FC = () => {
   if (!configured) {
     return (
       <View style={styles.container}>
-        <Logo variant="light" width={160} />
+        <BrandHeader size="screen" centered />
         <Text style={styles.errorBox}>
           Fichier .env manquant ou incomplet. Voir docs/FIREBASE_SETUP.md
         </Text>
@@ -148,13 +174,27 @@ export const AuthScreen: React.FC = () => {
   }
 
   if (profile && mode !== 'signup') {
+    const isStaff =
+      profile.role === 'coach' || profile.role === 'agent';
     const pendingVerification =
-      ROLES_REQUIRING_VERIFICATION.includes(profile.role) &&
-      profile.verification_status === 'PENDING';
+      isStaff && profile.verification_status === 'PENDING';
+    const verifiedStaff =
+      isStaff && profile.verification_status === 'VERIFIED';
 
-    if (showVerificationFlow && pendingVerification) {
+    if (showVerificationSuccess && verifiedStaff) {
       return (
-        <VerificationFlowScreen onBack={() => setShowVerificationFlow(false)} />
+        <VerificationSuccessScreen
+          onBack={() => setShowVerificationSuccess(false)}
+        />
+      );
+    }
+
+    if (showVerificationFlow && (pendingVerification || verifiedStaff)) {
+      return (
+        <VerificationFlowScreen
+          onBack={() => setShowVerificationFlow(false)}
+          initialSuccess={verifiedStaff}
+        />
       );
     }
 
@@ -166,12 +206,20 @@ export const AuthScreen: React.FC = () => {
 
     return (
       <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-        <Logo variant="light" width={180} />
+        <BrandHeader size="screen" centered />
         <Text style={styles.profileName}>{profile.display_name}</Text>
         <Text style={styles.profileMeta}>
           {profile.email} · {profile.role}
         </Text>
         <VerificationBadge user={profile} />
+
+        {profile.role === 'player' && profile.profile.season_stats && (
+          <Text style={styles.profileStats}>
+            Saison : {profile.profile.season_stats.matches} matchs ·{' '}
+            {profile.profile.season_stats.goals} buts ·{' '}
+            {profile.profile.season_stats.assists} passes décisives
+          </Text>
+        )}
 
         {pendingVerification && (
           <>
@@ -191,6 +239,12 @@ export const AuthScreen: React.FC = () => {
               <Text style={styles.link}>Voir le suivi de vérification</Text>
             </TouchableOpacity>
           </>
+        )}
+
+        {verifiedStaff && (
+          <TouchableOpacity onPress={() => setShowVerificationSuccess(true)}>
+            <Text style={styles.link}>Voir diplôme vérifié</Text>
+          </TouchableOpacity>
         )}
 
         <TouchableOpacity
@@ -216,7 +270,7 @@ export const AuthScreen: React.FC = () => {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Logo variant="light" width={180} />
+      <BrandHeader size="hero" showTagline centered style={styles.authBrand} />
 
       <View style={styles.modeRow}>
         <TouchableOpacity
@@ -323,6 +377,51 @@ export const AuthScreen: React.FC = () => {
             onChangeText={setPassword}
             secureTextEntry
           />
+          <TextInput
+            style={styles.input}
+            placeholder="Ville (optionnel)"
+            placeholderTextColor={colors.textMuted}
+            value={city}
+            onChangeText={setCity}
+          />
+          {role === 'player' && (
+            <>
+              <Text style={styles.label}>Stats saison (réelles)</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Poste (ex. Milieu)"
+                placeholderTextColor={colors.textMuted}
+                value={position}
+                onChangeText={setPosition}
+              />
+              <View style={styles.statRow}>
+                <TextInput
+                  style={[styles.input, styles.statInput]}
+                  placeholder="Matchs"
+                  placeholderTextColor={colors.textMuted}
+                  value={statMatches}
+                  onChangeText={setStatMatches}
+                  keyboardType="number-pad"
+                />
+                <TextInput
+                  style={[styles.input, styles.statInput]}
+                  placeholder="Buts"
+                  placeholderTextColor={colors.textMuted}
+                  value={statGoals}
+                  onChangeText={setStatGoals}
+                  keyboardType="number-pad"
+                />
+                <TextInput
+                  style={[styles.input, styles.statInput]}
+                  placeholder="Passes d."
+                  placeholderTextColor={colors.textMuted}
+                  value={statAssists}
+                  onChangeText={setStatAssists}
+                  keyboardType="number-pad"
+                />
+              </View>
+            </>
+          )}
           <TouchableOpacity
             style={styles.primary}
             onPress={handleSignUp}
@@ -403,6 +502,13 @@ const styles = StyleSheet.create({
     marginTop: spacing.lg,
   },
   profileMeta: { color: colors.textSecondary, marginTop: 4, marginBottom: spacing.md },
+  profileStats: {
+    color: colors.brand,
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: spacing.md,
+    textAlign: 'center',
+  },
   roleBtn: {
     backgroundColor: colors.surface,
     padding: spacing.md,
@@ -450,6 +556,9 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
     fontSize: 13,
   },
+  authBrand: { marginBottom: spacing.md },
+  statRow: { flexDirection: 'row', gap: spacing.sm },
+  statInput: { flex: 1, marginBottom: spacing.md },
   link: { color: colors.brand, fontWeight: '600', marginTop: spacing.md, textAlign: 'center' },
   backLink: { color: colors.brand, fontWeight: '600', marginBottom: spacing.md },
 });

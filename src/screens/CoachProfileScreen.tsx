@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 import type { User } from '../models/User';
 import { canContactMinors } from '../models/User';
-import { ScreenTopBar } from '../components/ui/ScreenTopBar';
+import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { StarRating } from '../components/StarRating';
 import { Icon } from '../components/ui/Icon';
 import { colors, spacing, radius, shadows } from '../theme/designTokens';
@@ -43,10 +43,11 @@ export const CoachProfileScreen: React.FC<CoachProfileScreenProps> = ({
 
   return (
     <View style={styles.root}>
-      <ScreenTopBar
+      <ScreenHeader
         title={staff.role === 'agent' ? 'Profil agent' : 'Profil coach'}
         onBack={onBack}
         onMenu={() => {}}
+        centered
       />
 
       <ScrollView stickyHeaderIndices={[1]} showsVerticalScrollIndicator={false}>
@@ -56,9 +57,9 @@ export const CoachProfileScreen: React.FC<CoachProfileScreenProps> = ({
           </View>
           <View style={styles.nameRow}>
             <Text style={styles.name}>{staff.display_name}</Text>
-            {verified && (
-              <Icon name="checkmark-circle" size={20} color={colors.brand} />
-            )}
+                {verified && (
+                  <Icon name="checkmark-circle" size={20} color={colors.brandLight} />
+                )}
           </View>
           <Text style={styles.jobTitle}>{p.job_title ?? roleLabel}</Text>
           <View style={styles.locRow}>

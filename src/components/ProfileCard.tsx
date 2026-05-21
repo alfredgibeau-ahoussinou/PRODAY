@@ -63,6 +63,13 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
           <View style={styles.statsRow}>
             {user.profile.position && <StatChip label={user.profile.position} />}
             {user.profile.level && <StatChip label={user.profile.level} />}
+            {user.profile.season_stats &&
+              (user.profile.season_stats.goals > 0 ||
+                user.profile.season_stats.assists > 0) && (
+                <StatChip
+                  label={`${user.profile.season_stats.goals} buts · ${user.profile.season_stats.assists} pd`}
+                />
+              )}
           </View>
         )}
         {badge.color !== 'gray' && (

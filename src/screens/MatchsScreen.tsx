@@ -49,6 +49,7 @@ export const MatchsScreen: React.FC = () => {
       <ScreenHeader
         title="Matchs amicaux"
         subtitle="Jouez. Progressez. Créez du lien."
+        showBrandLogo
       />
 
       <View style={styles.quickRow}>
@@ -78,7 +79,7 @@ export const MatchsScreen: React.FC = () => {
       ) : matches.length === 0 ? (
         <Text style={styles.empty}>
           Aucun match — exécutez{' '}
-          <Text style={styles.emptyCode}>npm run seed</Text> pour des exemples.
+          Connectez-vous et proposez un match pour alimenter la liste.
         </Text>
       ) : (
         matches.map((m) => {

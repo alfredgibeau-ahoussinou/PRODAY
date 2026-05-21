@@ -33,7 +33,7 @@ export const ArenaScreen: React.FC<ArenaScreenProps> = ({ onBack }) => {
       ) : tournaments.length === 0 ? (
         <Text style={styles.hint}>
           Aucun tournoi — lancez{' '}
-          <Text style={styles.hintCode}>npm run seed</Text> puis rechargez.
+          Les tournois publiés par les clubs apparaîtront ici.
         </Text>
       ) : (
         tournaments.map((t) => <TournamentCard key={t.id} tournament={t} />)

@@ -59,18 +59,21 @@ export const profileService = {
     uid: string,
     email: string,
     role: UserRole,
-    displayName: string
+    displayName: string,
+    options?: { city?: string; profile?: Partial<User['profile']> }
   ): Promise<User> {
     const requiresVerification = ROLES_REQUIRING_VERIFICATION.includes(role);
+    const profileData: User['profile'] = { ...(options?.profile ?? {}) };
 
     const newUser: User = {
       uid,
       display_name: displayName,
       email,
       role,
+      city: options?.city?.trim() || undefined,
       is_verified: !requiresVerification, // Joueurs sont auto-vérifiés
       verification_status: requiresVerification ? 'PENDING' : 'NOT_REQUIRED',
-      profile: {},
+      profile: profileData,
       documents: [],
       created_at: new Date(),
       updated_at: new Date(),
@@ -85,7 +88,8 @@ export const profileService = {
         role,
         is_verified: newUser.is_verified,
         verification_status: newUser.verification_status,
-        profile: {},
+        profile: profileData,
+        ...(options?.city?.trim() ? { city: options.city.trim() } : {}),
         is_active: true,
         created_at: serverTimestamp(),
         updated_at: serverTimestamp(),

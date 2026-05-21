@@ -8,16 +8,27 @@ import {
   StyleSheet,
 } from 'react-native';
 import type { User } from '../models/User';
-import { ScreenTopBar } from '../components/ui/ScreenTopBar';
-import { StatIconCard } from '../components/ui/StatIconCard';
-import { Icon } from '../components/ui/Icon';
-import { colors, spacing, radius } from '../theme/designTokens';
+import { ScreenHeader } from '../components/ui/ScreenHeader';
+import { Icon, type IconName } from '../components/ui/Icon';
+import { colors, spacing, radius, shadows } from '../theme/designTokens';
 
 interface PlayerProfileScreenProps {
   player: User;
   onBack: () => void;
   onContact?: (player: User) => void;
 }
+
+const StatItem: React.FC<{ icon: IconName; value: string | number; label: string }> = ({
+  icon,
+  value,
+  label,
+}) => (
+  <View style={styles.statItem}>
+    <Icon name={icon} size={22} color={colors.brand} />
+    <Text style={styles.statValue}>{value}</Text>
+    <Text style={styles.statLabel}>{label}</Text>
+  </View>
+);
 
 export const PlayerProfileScreen: React.FC<PlayerProfileScreenProps> = ({
   player,
@@ -27,64 +38,71 @@ export const PlayerProfileScreen: React.FC<PlayerProfileScreenProps> = ({
   const [favorited, setFavorited] = useState(false);
   const p = player.profile;
   const stats = p.season_stats;
-  const region = player.city ?? 'France';
-  const gallery = p.gallery_urls?.length
-    ? p.gallery_urls
-    : Array.from({ length: 6 }, (_, i) => `placeholder-${i}`);
+  const hasStats =
+    stats &&
+    (stats.matches > 0 || stats.goals > 0 || stats.assists > 0);
+  const region = player.city ?? '—';
+  const gallery = p.gallery_urls?.filter(Boolean) ?? [];
+  const metaParts: string[] = [];
+  if (p.age) metaParts.push(`${p.age} ans`);
+  if (player.city) metaParts.push(player.city);
+  if (p.height_cm) metaParts.push(`${p.height_cm} cm`);
+  if (p.weight_kg) metaParts.push(`${p.weight_kg} kg`);
 
   return (
     <View style={styles.root}>
-      <ScreenTopBar title="Profil joueur" onBack={onBack} onMenu={() => {}} />
+      <ScreenHeader
+        title="Profil joueur"
+        onBack={onBack}
+        onMenu={() => {}}
+        centered
+      />
 
       <ScrollView
-        style={styles.scroll}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.heroCard}>
-          {p.position && (
-            <View style={styles.positionBadge}>
-              <Text style={styles.positionText}>{p.position}</Text>
-            </View>
-          )}
-          <View style={styles.heroRow}>
-            {player.avatar_url ? (
-              <Image source={{ uri: player.avatar_url }} style={styles.avatar} />
-            ) : (
-              <View style={[styles.avatar, styles.avatarPh]}>
-                <Text style={styles.avatarLetter}>
-                  {player.display_name.charAt(0)}
-                </Text>
+        <View style={[styles.profileCard, shadows.card]}>
+          <View style={styles.blueBlock}>
+            {p.position && (
+              <View style={styles.positionBadge}>
+                <Text style={styles.positionText}>{p.position}</Text>
               </View>
             )}
-            <View style={styles.heroInfo}>
-              <View style={styles.nameRow}>
-                <Text style={styles.heroName}>{player.display_name}</Text>
-                {player.is_verified && (
-                  <Icon name="checkmark-circle" size={18} color={colors.brandLight} />
-                )}
+            <View style={styles.heroRow}>
+              {player.avatar_url ? (
+                <Image source={{ uri: player.avatar_url }} style={styles.avatar} />
+              ) : (
+                <View style={[styles.avatar, styles.avatarPh]}>
+                  <Text style={styles.avatarLetter}>
+                    {player.display_name.charAt(0)}
+                  </Text>
+                </View>
+              )}
+              <View style={styles.heroInfo}>
+                <View style={styles.nameRow}>
+                  <Text style={styles.heroName}>{player.display_name}</Text>
+                  <Icon name="checkmark-circle" size={20} color="#7DD3FC" />
+                </View>
+                <Text style={styles.heroSub}>
+                  {metaParts.length > 0 ? metaParts.join(' · ') : region}
+                </Text>
               </View>
-              <Text style={styles.heroSub}>
-                {p.age ? `${p.age} ans` : ''}
-                {p.age ? ' · ' : ''}
-                {region}
-              </Text>
-              <Text style={styles.heroMeta}>
-                {p.height_cm ? `${p.height_cm} cm` : '—'}
-                {' · '}
-                {p.weight_kg ? `${p.weight_kg} kg` : '—'}
-              </Text>
             </View>
           </View>
-        </View>
 
-        {stats && (
-          <View style={styles.statRow}>
-            <StatIconCard icon="shirt" value={stats.matches} label="Matchs" />
-            <StatIconCard icon="football" value={stats.goals} label="Buts" />
-            <StatIconCard icon="walk" value={stats.assists} label="Passes décisives" />
-          </View>
-        )}
+          {hasStats && stats ? (
+            <View style={styles.statsStrip}>
+              <StatItem icon="shirt" value={stats.matches} label="Matchs" />
+              <View style={styles.statDivider} />
+              <StatItem icon="football" value={stats.goals} label="Buts" />
+              <View style={styles.statDivider} />
+              <StatItem icon="walk" value={stats.assists} label="Passes décisives" />
+            </View>
+          ) : (
+            <Text style={styles.statsEmpty}>Stats saison non renseignées</Text>
+          )}
+        </View>
 
         <View style={styles.galleryHeader}>
           <Text style={styles.sectionTitle}>Galerie photos</Text>
@@ -92,17 +110,15 @@ export const PlayerProfileScreen: React.FC<PlayerProfileScreenProps> = ({
             <Text style={styles.link}>Voir tout</Text>
           </TouchableOpacity>
         </View>
-        <View style={styles.galleryGrid}>
-          {gallery.slice(0, 6).map((uri, i) =>
-            uri.startsWith('placeholder') ? (
-              <View key={uri} style={styles.galleryCell}>
-                <Icon name="image" size={28} color={colors.textMuted} />
-              </View>
-            ) : (
+        {gallery.length > 0 ? (
+          <View style={styles.galleryGrid}>
+            {gallery.slice(0, 6).map((uri) => (
               <Image key={uri} source={{ uri }} style={styles.galleryCell} />
-            )
-          )}
-        </View>
+            ))}
+          </View>
+        ) : (
+          <Text style={styles.statsEmpty}>Aucune photo dans la galerie</Text>
+        )}
       </ScrollView>
 
       <View style={styles.footer}>
@@ -131,20 +147,25 @@ export const PlayerProfileScreen: React.FC<PlayerProfileScreenProps> = ({
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.background },
-  scroll: { flex: 1 },
-  content: { padding: spacing.lg, paddingBottom: 120 },
-  heroCard: {
-    backgroundColor: colors.brand,
+  content: { padding: spacing.lg, paddingBottom: 140 },
+  profileCard: {
     borderRadius: radius.lg,
-    padding: spacing.lg,
-    marginBottom: spacing.lg,
     overflow: 'hidden',
+    marginBottom: spacing.xl,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  blueBlock: {
+    position: 'relative',
+    backgroundColor: colors.brand,
+    padding: spacing.lg,
+    paddingTop: spacing.xl,
   },
   positionBadge: {
     position: 'absolute',
     top: spacing.md,
     right: spacing.md,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    backgroundColor: 'rgba(255,255,255,0.22)',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: radius.pill,
@@ -152,27 +173,44 @@ const styles = StyleSheet.create({
   positionText: { color: '#FFFFFF', fontSize: 11, fontWeight: '700' },
   heroRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   avatar: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
+    width: 76,
+    height: 76,
+    borderRadius: 38,
     borderWidth: 3,
-    borderColor: 'rgba(255,255,255,0.5)',
+    borderColor: 'rgba(255,255,255,0.45)',
   },
   avatarPh: {
     backgroundColor: colors.brandLight,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  avatarLetter: { fontSize: 28, fontWeight: '800', color: '#FFFFFF' },
+  avatarLetter: { fontSize: 30, fontWeight: '800', color: '#FFFFFF' },
   heroInfo: { flex: 1 },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   heroName: { fontSize: 20, fontWeight: '800', color: '#FFFFFF' },
-  heroSub: { color: 'rgba(255,255,255,0.9)', fontSize: 13, marginTop: 4 },
+  heroSub: { color: 'rgba(255,255,255,0.92)', fontSize: 13, marginTop: 4 },
   heroMeta: { color: 'rgba(255,255,255,0.75)', fontSize: 12, marginTop: 2 },
-  statRow: {
+  statsStrip: {
     flexDirection: 'row',
-    gap: spacing.sm,
-    marginBottom: spacing.xl,
+    backgroundColor: colors.surface,
+    paddingVertical: spacing.lg,
+    alignItems: 'center',
+  },
+  statItem: { flex: 1, alignItems: 'center', gap: 4 },
+  statValue: { fontSize: 20, fontWeight: '800', color: colors.text },
+  statLabel: {
+    fontSize: 10,
+    color: colors.textMuted,
+    textAlign: 'center',
+    paddingHorizontal: 4,
+  },
+  statDivider: { width: 1, height: 40, backgroundColor: colors.border },
+  statsEmpty: {
+    color: colors.textMuted,
+    fontSize: 13,
+    textAlign: 'center',
+    paddingVertical: spacing.lg,
+    paddingHorizontal: spacing.lg,
   },
   galleryHeader: {
     flexDirection: 'row',
@@ -182,11 +220,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: { fontSize: 16, fontWeight: '700', color: colors.text },
   link: { fontSize: 13, fontWeight: '600', color: colors.brand },
-  galleryGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-  },
+  galleryGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   galleryCell: {
     width: '31%' as unknown as number,
     aspectRatio: 1,
@@ -198,9 +232,8 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   footer: {
-    flexDirection: 'column',
-    gap: spacing.sm,
     padding: spacing.lg,
+    gap: spacing.sm,
     backgroundColor: colors.surface,
     borderTopWidth: 1,
     borderTopColor: colors.border,
@@ -212,7 +245,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     backgroundColor: colors.brand,
     borderRadius: radius.md,
-    paddingVertical: 14,
+    paddingVertical: 15,
   },
   btnPrimaryText: { color: '#FFFFFF', fontWeight: '700', fontSize: 15 },
   btnOutline: {
@@ -223,7 +256,7 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: colors.brand,
     borderRadius: radius.md,
-    paddingVertical: 14,
+    paddingVertical: 15,
     backgroundColor: colors.surface,
   },
   btnOutlineText: { color: colors.brand, fontWeight: '700', fontSize: 15 },

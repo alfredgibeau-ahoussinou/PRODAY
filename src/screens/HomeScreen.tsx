@@ -7,7 +7,7 @@ import {
   StyleSheet,
   ActivityIndicator,
 } from 'react-native';
-import { Logo } from '../components/Logo';
+import { BrandHeader } from '../components/BrandHeader';
 import { Icon, type IconName } from '../components/ui/Icon';
 import { ArenaScreen } from './ArenaScreen';
 import { SponsorsScreen } from './SponsorsScreen';
@@ -57,9 +57,11 @@ export const HomeScreen: React.FC = () => {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Logo variant="wordmark" showTagline />
+      <View style={styles.heroBrand}>
+        <BrandHeader size="hero" showTagline centered />
+      </View>
       <Text style={styles.hero}>
-        {BRAND.name}, l&apos;application qui connecte les passionnés de sport.
+        L&apos;application qui connecte les passionnés de sport.
       </Text>
 
       {loading ? (
@@ -100,6 +102,14 @@ const ModuleCard: React.FC<{
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   content: { padding: spacing.lg, paddingBottom: spacing.xxl },
+  heroBrand: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    marginBottom: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    overflow: 'hidden',
+  },
   hero: {
     color: colors.textSecondary,
     fontSize: 15,

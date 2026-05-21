@@ -3,7 +3,7 @@ import {
   signInWithEmailAndPassword,
   signOut as firebaseSignOut,
 } from 'firebase/auth';
-import type { User, UserRole } from '../models/User';
+import type { User, UserRole, UserProfile } from '../models/User';
 import { getFirebaseAuth } from '../lib/firebase';
 import { profileService } from './profile.service';
 import { usersService } from './users.service';
@@ -13,6 +13,8 @@ export interface SignUpInput {
   password: string;
   display_name: string;
   role: UserRole;
+  city?: string;
+  profile?: Partial<UserProfile>;
 }
 
 function mapAuthError(code: string): string {
@@ -23,8 +25,16 @@ function mapAuthError(code: string): string {
     'auth/user-not-found': 'Aucun compte avec cet email.',
     'auth/wrong-password': 'Mot de passe incorrect.',
     'auth/invalid-credential': 'Email ou mot de passe incorrect.',
+    'auth/too-many-requests': 'Trop de tentatives. Réessayez plus tard.',
+    'auth/network-request-failed': 'Pas de réseau. Vérifiez votre connexion.',
+    'auth/operation-not-allowed':
+      'Connexion email/mot de passe désactivée dans Firebase (Authentication).',
+    'auth/user-disabled': 'Ce compte est désactivé.',
+    'auth/invalid-api-key': 'Clé Firebase invalide. Vérifiez le fichier .env.',
+    'auth/configuration-not-found': 'Projet Firebase introuvable. Vérifiez le .env.',
+    'firestore/permission-denied': 'Accès refusé aux données. Réessayez ou contactez le support.',
   };
-  return messages[code] ?? 'Erreur de connexion. Réessayez.';
+  return messages[code] ?? '';
 }
 
 export const authService = {
@@ -42,7 +52,8 @@ export const authService = {
       cred.user.uid,
       input.email.trim(),
       input.role,
-      input.display_name.trim()
+      input.display_name.trim(),
+      { city: input.city, profile: input.profile }
     );
   },
 
@@ -56,9 +67,25 @@ export const authService = {
       password
     );
 
-    const profile = await usersService.getById(cred.user.uid);
+    let profile: User | null;
+    try {
+      profile = await usersService.getById(cred.user.uid);
+    } catch (e) {
+      const code =
+        e && typeof e === 'object' && 'code' in e
+          ? String((e as { code: string }).code)
+          : '';
+      if (code === 'permission-denied' || code === 'firestore/permission-denied') {
+        throw Object.assign(new Error(mapAuthError('firestore/permission-denied')), {
+          code: 'firestore/permission-denied',
+        });
+      }
+      throw e;
+    }
     if (!profile) {
-      throw new Error('Profil introuvable. Terminez l’inscription.');
+      throw new Error(
+        'Compte connecté mais profil absent. Créez un compte via Inscription pour compléter votre profil.'
+      );
     }
     return profile;
   },
@@ -73,6 +100,10 @@ export const authService = {
       error && typeof error === 'object' && 'code' in error
         ? String((error as { code: string }).code)
         : '';
-    return mapAuthError(code) || (error instanceof Error ? error.message : 'Erreur');
+    const mapped = mapAuthError(code);
+    if (mapped) return mapped;
+    if (error instanceof Error && error.message) return error.message;
+    if (__DEV__ && code) return `Erreur (${code}). Réessayez.`;
+    return 'Erreur de connexion. Réessayez.';
   },
 };

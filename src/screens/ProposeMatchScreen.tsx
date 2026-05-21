@@ -13,6 +13,7 @@ import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { Icon, type IconName } from '../components/ui/Icon';
 import { colors, spacing, radius, shadows } from '../theme/designTokens';
 import { friendlyMatchesService } from '../services/friendlyMatches.service';
+import { useAuth } from '../context/AuthContext';
 
 const LEVELS = ['Loisir', 'Compétition', 'Mixte'] as const;
 const LEVEL_MAP: Record<(typeof LEVELS)[number], 'loisir' | 'competition' | 'mixte'> = {
@@ -31,7 +32,8 @@ export const ProposeMatchScreen: React.FC<ProposeMatchScreenProps> = ({
   onCreated,
 }) => {
   const [level, setLevel] = useState<(typeof LEVELS)[number]>('Loisir');
-  const [clubName, setClubName] = useState('ProDay FC');
+  const { profile } = useAuth();
+  const [clubName, setClubName] = useState(profile?.display_name ?? '');
   const [opponent, setOpponent] = useState('');
   const [dateStr, setDateStr] = useState('');
   const [timeStr, setTimeStr] = useState('14:00');
@@ -50,10 +52,15 @@ export const ProposeMatchScreen: React.FC<ProposeMatchScreenProps> = ({
       return;
     }
 
+    if (!profile) {
+      Alert.alert('Connexion requise', 'Connectez-vous depuis l’onglet Profil.');
+      return;
+    }
+
     setSubmitting(true);
     try {
       await friendlyMatchesService.create({
-        requester_club_id: 'seed_club_1',
+        requester_club_id: profile.profile.club_id ?? profile.uid,
         requester_club_name: clubName.trim(),
         opponent_club_name: opponent.trim() || undefined,
         city: city.trim(),

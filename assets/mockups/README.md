@@ -9,6 +9,7 @@
 | `mockup-coach-verification.png` | Coachs, agents, vérification, contrôle parental |
 | `maquette-proday-ecrans-principaux.png` | **Nouveau** — Accueil, Recrutement, Matchs, Coachs, Messages, Profil |
 | `maquette-proday-coach-verification.png` | **Nouveau** — Profil joueur, profil coach, timeline, contrôle parental |
+| `reference-maquette-profiles-parental.png` | **Référence officielle** — 4 écrans (joueur, coach, vérif., parental) |
 
 ## Maquettes HTML (tokens exacts)
 

@@ -7,8 +7,10 @@ import {
   Switch,
   StyleSheet,
 } from 'react-native';
-import { ScreenTopBar } from '../components/ui/ScreenTopBar';
+import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { Icon } from '../components/ui/Icon';
+import { ParentalActivityReportScreen } from './ParentalActivityReportScreen';
+import { ParentalTimeLimitScreen } from './ParentalTimeLimitScreen';
 import { colors, spacing, radius, shadows } from '../theme/designTokens';
 
 const CONTACTS = [
@@ -17,6 +19,8 @@ const CONTACTS = [
   { id: '3', name: 'Karim Benali', role: 'Agent', approved: true },
 ];
 
+type ParentalView = 'home' | 'report' | 'time';
+
 interface ParentalControlScreenProps {
   onBack: () => void;
 }
@@ -24,13 +28,21 @@ interface ParentalControlScreenProps {
 export const ParentalControlScreen: React.FC<ParentalControlScreenProps> = ({
   onBack,
 }) => {
+  const [view, setView] = useState<ParentalView>('home');
   const [supervision, setSupervision] = useState(true);
   const [contacts, setContacts] = useState(true);
   const [screenTime, setScreenTime] = useState(true);
 
+  if (view === 'report') {
+    return <ParentalActivityReportScreen onBack={() => setView('home')} />;
+  }
+  if (view === 'time') {
+    return <ParentalTimeLimitScreen onBack={() => setView('home')} />;
+  }
+
   return (
     <View style={styles.root}>
-      <ScreenTopBar title="Contrôle parental" onBack={onBack} />
+      <ScreenHeader title="Contrôle parental" onBack={onBack} centered />
 
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.dashboard}>
@@ -39,9 +51,23 @@ export const ParentalControlScreen: React.FC<ParentalControlScreenProps> = ({
           </View>
           <Text style={styles.dashboardTitle}>Tableau de bord</Text>
           <Text style={styles.dashboardSub}>
-            Supervisez l&apos;activité et les contacts de votre enfant sur ProDay.
+            Supervisez l&apos;activité de votre enfant sur ProDay.
           </Text>
         </View>
+
+        <TouchableOpacity
+          style={[styles.menuCard, shadows.card]}
+          onPress={() => setView('report')}
+        >
+          <View style={styles.menuIcon}>
+            <Icon name="chat" size={22} color={colors.brand} />
+          </View>
+          <View style={styles.menuText}>
+            <Text style={styles.menuTitle}>Rapport d&apos;activité</Text>
+            <Text style={styles.menuSub}>Messages, profils, temps passé</Text>
+          </View>
+          <Icon name="chevron-forward" size={20} color={colors.textMuted} />
+        </TouchableOpacity>
 
         <SettingRow
           title="Supervision"
@@ -55,17 +81,31 @@ export const ParentalControlScreen: React.FC<ParentalControlScreenProps> = ({
           value={contacts}
           onValueChange={setContacts}
         />
-        <SettingRow
-          title="Temps d'écran"
-          subtitle="Limiter le temps d'utilisation"
-          value={screenTime}
-          onValueChange={setScreenTime}
-        />
+        <TouchableOpacity
+          style={[styles.menuCard, shadows.card]}
+          onPress={() => setView('time')}
+        >
+          <View style={styles.menuIcon}>
+            <Icon name="time" size={22} color={colors.brand} />
+          </View>
+          <View style={styles.menuText}>
+            <Text style={styles.menuTitle}>Temps d&apos;écran</Text>
+            <Text style={styles.menuSub}>
+              {screenTime ? 'Limite active' : 'Limite désactivée'}
+            </Text>
+          </View>
+          <Switch
+            value={screenTime}
+            onValueChange={setScreenTime}
+            trackColor={{ false: colors.border, true: colors.brandSoft }}
+            thumbColor={screenTime ? colors.brand : colors.surface}
+          />
+        </TouchableOpacity>
 
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Contacts autorisés</Text>
           <TouchableOpacity>
-            <Text style={styles.addBtn}>+ Ajouter</Text>
+            <Text style={styles.addBtn}>Ajouter</Text>
           </TouchableOpacity>
         </View>
 
@@ -116,7 +156,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.brand,
     borderRadius: radius.lg,
     padding: spacing.xl,
-    marginBottom: spacing.xl,
+    marginBottom: spacing.lg,
     alignItems: 'flex-start',
   },
   dashboardIcon: {
@@ -135,6 +175,28 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
     lineHeight: 20,
   },
+  menuCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    padding: spacing.lg,
+    marginBottom: spacing.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    gap: spacing.md,
+  },
+  menuIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: colors.brandSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  menuText: { flex: 1 },
+  menuTitle: { fontSize: 15, fontWeight: '700', color: colors.text },
+  menuSub: { fontSize: 12, color: colors.textMuted, marginTop: 2 },
   settingRow: {
     flexDirection: 'row',
     alignItems: 'center',

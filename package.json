@@ -10,7 +10,7 @@
     "ios": "expo start --ios",
     "android": "expo start --android",
     "typecheck": "tsc --noEmit",
-    "seed": "node scripts/seed-firestore.mjs",
+    "cleanup:demo": "node scripts/cleanup-demo-data.mjs",
     "docs:pdf": "pandoc docs/ProDay_Brief_NonDev.md -o docs/ProDay_Brief_NonDev.pdf -V lang=fr 2>/dev/null || true"
   },
   "dependencies": {

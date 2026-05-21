@@ -54,7 +54,7 @@ export const MercatoScreen: React.FC = () => {
     setCreatingPost(true);
     try {
       await recruitmentService.createPost({
-        club_id: profile.profile.club_id ?? 'seed_club_1',
+        club_id: profile.profile.club_id ?? profile.uid,
         club_name: profile.display_name,
         title: 'Recherche joueur',
         position: 'Milieu',
@@ -143,6 +143,12 @@ export const MercatoScreen: React.FC = () => {
         <ScreenHeader
           title="Recrutement"
           subtitle="Le bon profil pour le bon projet."
+          showBrandLogo
+          rightAction={
+            <TouchableOpacity hitSlop={12}>
+              <Icon name="notifications" size={22} color={colors.text} />
+            </TouchableOpacity>
+          }
         />
         <SearchBar
           placeholder="Rechercher un joueur, un poste…"
@@ -211,7 +217,7 @@ export const MercatoScreen: React.FC = () => {
         ) : (
           <>
             <Icon name="add" size={20} color="#FFFFFF" />
-            <Text style={styles.fabText}>Créer une annonce</Text>
+            <Text style={styles.fabText}>Publier une annonce</Text>
           </>
         )}
       </TouchableOpacity>

@@ -36,6 +36,7 @@ export const PlayersListScreen: React.FC<PlayersListScreenProps> = ({
       <ScreenHeader
         title="Joueurs"
         onBack={onBack}
+        centered
         rightAction={
           <TouchableOpacity hitSlop={12}>
             <Icon name="settings" size={22} color={colors.textSecondary} />
