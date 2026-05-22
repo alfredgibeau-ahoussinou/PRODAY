@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ProDay — Brief produit</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --brand: #003399;
+      --brand-soft: #e8eef8;
+      --navy: #0f172a;
+      --text: #1a1f36;
+      --text-2: #5c6478;
+      --border: #dde3ed;
+    }
+    @page { size: A4; margin: 20mm 18mm; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: Inter, system-ui, sans-serif;
+      color: var(--text);
+      font-size: 11pt;
+      line-height: 1.55;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    .toolbar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: var(--navy); color: #f8fafc;
+      padding: 12px 24px; display: flex; align-items: center; gap: 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    }
+    .toolbar a { color: #94a3b8; text-decoration: none; font-size: 13px; }
+    .toolbar a:hover { color: #fff; }
+    .toolbar button {
+      background: var(--brand); color: #fff; border: none;
+      padding: 10px 20px; border-radius: 8px; font-weight: 700;
+      cursor: pointer; font-size: 13px;
+    }
+    .doc {
+      max-width: 800px;
+      margin: 72px auto 48px;
+      padding: 0 24px 48px;
+    }
+    @media print {
+      .toolbar { display: none; }
+      .doc { margin: 0; max-width: none; padding: 0; }
+    }
+    .cover {
+      text-align: center;
+      padding: 32px 24px 40px;
+      background: linear-gradient(160deg, var(--brand-soft) 0%, #fff 60%);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      margin-bottom: 32px;
+    }
+    .cover img { height: 56px; margin-bottom: 16px; }
+    .cover h1 { font-size: 28pt; font-weight: 800; color: var(--brand); }
+    .cover .sub { font-size: 14pt; color: var(--text-2); margin-top: 8px; }
+    .cover .tag { font-size: 9pt; letter-spacing: 0.14em; color: var(--text-2); margin-top: 16px; font-weight: 600; }
+    h2 {
+      font-size: 14pt; font-weight: 800; color: var(--brand);
+      margin: 28px 0 12px;
+      padding-bottom: 6px;
+      border-bottom: 2px solid var(--brand-soft);
+    }
+    h3 { font-size: 12pt; font-weight: 700; margin: 16px 0 8px; color: var(--navy); }
+    p { margin-bottom: 10px; color: var(--text); }
+    ul { margin: 0 0 12px 20px; }
+    li { margin-bottom: 6px; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0 20px;
+      font-size: 10pt;
+    }
+    th, td {
+      border: 1px solid var(--border);
+      padding: 10px 12px;
+      text-align: left;
+    }
+    th { background: var(--brand-soft); color: var(--brand); font-weight: 700; }
+    .pill-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+    .pill {
+      background: var(--brand-soft);
+      color: var(--brand);
+      font-size: 9pt;
+      font-weight: 700;
+      padding: 6px 12px;
+      border-radius: 999px;
+    }
+    .callout {
+      background: #ffedd5;
+      border-left: 4px solid #ea580c;
+      padding: 14px 16px;
+      border-radius: 0 8px 8px 0;
+      margin: 16px 0;
+      font-size: 10pt;
+    }
+    .callout strong { color: #ea580c; }
+    .roadmap { display: grid; gap: 12px; margin-top: 12px; }
+    .roadmap-item {
+      display: grid;
+      grid-template-columns: 80px 1fr;
+      gap: 12px;
+      align-items: start;
+    }
+    .roadmap-item .when {
+      font-weight: 800;
+      color: var(--brand);
+      font-size: 10pt;
+    }
+    footer.doc-foot {
+      margin-top: 40px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+      font-size: 9pt;
+      color: var(--text-2);
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="toolbar">
+    <strong>ProDay Brief</strong>
+    <a href="mockups/index.html">Maquettes HTML</a>
+    <a href="../ARCHITECTURE.md">Architecture</a>
+    <button type="button" onclick="window.print()">Exporter en PDF</button>
+  </div>
+
+  <article class="doc">
+    <header class="cover">
+      <img src="../../assets/branding/logo-light.png" alt="ProDay" />
+      <h1>ProDay</h1>
+      <p class="sub">Connecter · Progresser · Réussir</p>
+      <p class="tag">BRIEF PRODUIT — ÉQUIPE & PARTENAIRES · MAI 2026</p>
+    </header>
+
+    <p>
+      <strong>ProDay</strong> est une application mobile qui relie joueurs, coachs, agents, clubs,
+      organisateurs de tournois et sponsors sur un même écosystème football amateur et semi-pro.
+      Les données sont hébergées sur <strong>Firebase</strong> ; l’app est développée en
+      <strong>React Native / Expo</strong>.
+    </p>
+
+    <h2>Navigation — 5 onglets</h2>
+    <table>
+      <thead>
+        <tr><th>Onglet</th><th>Rôle</th><th>Fonctions clés</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Accueil</strong></td><td>Hub</td><td>Stats réelles Firestore, accès Arena & Sponsors</td></tr>
+        <tr><td><strong>Recherche</strong></td><td>Recrutement</td><td>Joueurs, clubs, coachs, annonces, messagerie</td></tr>
+        <tr><td><strong>Matchs</strong></td><td>Amicaux</td><td>Proposer, rechercher, accepter des matchs</td></tr>
+        <tr><td><strong>Messagerie</strong></td><td>Contact</td><td>Conversations entre profils inscrits</td></tr>
+        <tr><td><strong>Profil</strong></td><td>Compte</td><td>Inscription, stats joueur, club, vérification</td></tr>
+      </tbody>
+    </table>
+
+    <div class="pill-row">
+      <span class="pill">Comptes réels uniquement</span>
+      <span class="pill">Stats saison joueur</span>
+      <span class="pill">CV HTML → PDF</span>
+      <span class="pill">#003399</span>
+    </div>
+
+    <h2>Sécurité & confiance</h2>
+    <p>Pour les <strong>coachs</strong> et <strong>agents</strong> :</p>
+    <ol>
+      <li>Choix du rôle à l’inscription.</li>
+      <li>Envoi obligatoire d’un diplôme ou d’une licence (PDF / image).</li>
+      <li>Badge orange « Vérification en cours » — messagerie limitée.</li>
+      <li>Validation manuelle par un administrateur.</li>
+      <li>Badge vert — accès complet (contact joueurs, etc.).</li>
+    </ol>
+    <div class="callout">
+      <strong>Protection :</strong> un profil non vérifié ne peut pas effectuer d’actions sensibles
+      (messagerie complète selon les règles métier).
+    </div>
+
+    <h2>Modules produit</h2>
+    <h3>Recrutement</h3>
+    <ul>
+      <li>Listes joueurs / clubs / coachs avec recherche.</li>
+      <li>Profils détaillés et bouton <strong>Contacter</strong>.</li>
+      <li>Publication d’annonces (poste, niveau, ville).</li>
+      <li>Création de club liée au profil organisateur.</li>
+    </ul>
+    <h3>Matchs amicaux</h3>
+    <ul>
+      <li>Proposition avec date, lieu, niveau (Loisir / Compétition / Mixte).</li>
+      <li>Acceptation par un autre club connecté.</li>
+    </ul>
+    <h3>Arena (tournois)</h3>
+    <ul>
+      <li>Liste des tournois, inscription club, création par organisateur.</li>
+      <li>Tableau d’honneur après clôture.</li>
+    </ul>
+    <h3>Sponsors</h3>
+    <ul>
+      <li>Offres partenaires et objectifs de financement club.</li>
+    </ul>
+
+    <h2>Stack technique</h2>
+    <table>
+      <tr><th>Couche</th><th>Technologie</th></tr>
+      <tr><td>Mobile</td><td>React Native, Expo 52</td></tr>
+      <tr><td>Backend</td><td>Firebase Auth, Firestore, Storage</td></tr>
+      <tr><td>Design</td><td>designTokens.ts, maquettes HTML</td></tr>
+      <tr><td>Documents</td><td>CV HTML imprimable, brief PDF</td></tr>
+    </table>
+
+    <h2>Roadmap</h2>
+    <div class="roadmap">
+      <div class="roadmap-item">
+        <span class="when">Mois 1</span>
+        <span>Logo, maquettes, pilote recrutement + validation profils, 3 clubs testeurs.</span>
+      </div>
+      <div class="roadmap-item">
+        <span class="when">Mois 2–3</span>
+        <span>Tournoi local sur l’app (inscriptions, classements).</span>
+      </div>
+      <div class="roadmap-item">
+        <span class="when">Mois 4</span>
+        <span>Premier sponsor local (visibilité ↔ avantages membres).</span>
+      </div>
+    </div>
+
+    <h2>Documents du dépôt</h2>
+    <table>
+      <tr><th>Fichier</th><th>Usage</th></tr>
+      <tr><td><code>docs/design/mockups/index.html</code></td><td>Maquettes interactives + export PDF</td></tr>
+      <tr><td><code>docs/design/ProDay_Brief.html</code></td><td>Ce brief (export PDF)</td></tr>
+      <tr><td><code>docs/design/exports/cv-*.html</code></td><td>Modèle CV joueur</td></tr>
+      <tr><td><code>docs/ARCHITECTURE.md</code></td><td>Diagrammes techniques</td></tr>
+    </table>
+
+    <footer class="doc-foot">
+      ProDay © 2026 · Dépôt : github.com/alfredgibeau-ahoussinou/PRODAY
+    </footer>
+  </article>
+</body>
+</html>
