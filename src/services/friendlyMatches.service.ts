@@ -2,9 +2,10 @@ import {
   collection,
   doc,
   getDocs,
+  getDoc,
   addDoc,
+  updateDoc,
   query,
-  where,
   orderBy,
   limit,
   serverTimestamp,
@@ -60,6 +61,7 @@ export const friendlyMatchesService = {
     if (!database) throw new Error('Firebase non configuré');
 
     const ref = await addDoc(collection(database, 'friendly_matches'), {
+      requester_uid: input.requester_uid,
       requester_club_id: input.requester_club_id,
       requester_club_name: input.requester_club_name,
       opponent_club_name: input.opponent_club_name ?? null,
@@ -75,5 +77,52 @@ export const friendlyMatchesService = {
       created_at: serverTimestamp(),
     });
     return ref.id;
+  },
+
+  async getById(matchId: string): Promise<FriendlyMatch | null> {
+    const database = getDb();
+    if (!database) return null;
+    const snap = await getDoc(doc(database, 'friendly_matches', matchId));
+    if (!snap.exists()) return null;
+    return friendlyMatchFromFirestore(snap.id, snap.data() as Record<string, unknown>);
+  },
+
+  async acceptMatch(
+    matchId: string,
+    accepterClubId: string,
+    accepterClubName: string
+  ): Promise<void> {
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+
+    const snap = await getDoc(doc(database, 'friendly_matches', matchId));
+    if (!snap.exists()) throw new Error('Match introuvable.');
+    const data = snap.data();
+    if (data.status !== 'OPEN') throw new Error('Ce match n’est plus disponible.');
+
+    await updateDoc(doc(database, 'friendly_matches', matchId), {
+      status: 'ACCEPTED',
+      opponent_club_id: accepterClubId,
+      opponent_club_name: accepterClubName,
+      updated_at: serverTimestamp(),
+    });
+  },
+
+  async cancelMatch(matchId: string): Promise<void> {
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+    await updateDoc(doc(database, 'friendly_matches', matchId), {
+      status: 'CANCELLED',
+      updated_at: serverTimestamp(),
+    });
+  },
+
+  async markPlayed(matchId: string): Promise<void> {
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+    await updateDoc(doc(database, 'friendly_matches', matchId), {
+      status: 'PLAYED',
+      updated_at: serverTimestamp(),
+    });
   },
 };

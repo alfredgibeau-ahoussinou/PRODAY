@@ -2,6 +2,7 @@ import type { GeoPoint } from './User';
 
 export interface RecruitmentPost {
   id: string;
+  author_uid?: string;
   club_id: string;
   club_name: string;
   title: string;

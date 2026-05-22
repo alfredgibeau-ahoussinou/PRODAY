@@ -1,4 +1,14 @@
-import { collection, getDocs, query, limit } from 'firebase/firestore';
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  setDoc,
+  query,
+  where,
+  limit,
+  serverTimestamp,
+} from 'firebase/firestore';
 import { getDb } from '../lib/firebase';
 import { isFirebaseConfigured } from '../config/firebase';
 import type { Club } from '../models/Club';
@@ -24,6 +34,15 @@ function clubFromFirestore(id: string, data: Record<string, unknown>): Club {
   };
 }
 
+export interface CreateClubInput {
+  name: string;
+  city: string;
+  department?: string;
+  categories: string[];
+  owner_uid: string;
+  location?: GeoPoint;
+}
+
 export const clubsService = {
   async list(max = 50): Promise<Club[]> {
     if (!isFirebaseConfigured()) return [];
@@ -31,6 +50,35 @@ export const clubsService = {
     if (!database) return [];
     const snap = await getDocs(query(collection(database, 'clubs'), limit(max)));
     return snap.docs.map((d) => clubFromFirestore(d.id, d.data() as Record<string, unknown>));
+  },
+
+  async getById(clubId: string): Promise<Club | null> {
+    if (!isFirebaseConfigured()) return null;
+    const database = getDb();
+    if (!database) return null;
+    const snap = await getDoc(doc(database, 'clubs', clubId));
+    if (!snap.exists()) return null;
+    return clubFromFirestore(snap.id, snap.data() as Record<string, unknown>);
+  },
+
+  async getByOwner(ownerUid: string): Promise<Club | null> {
+    if (!isFirebaseConfigured()) return null;
+    const database = getDb();
+    if (!database) return null;
+    try {
+      const q = query(
+        collection(database, 'clubs'),
+        where('owner_uid', '==', ownerUid),
+        limit(1)
+      );
+      const snap = await getDocs(q);
+      if (snap.empty) return null;
+      const d = snap.docs[0];
+      return clubFromFirestore(d.id, d.data() as Record<string, unknown>);
+    } catch {
+      const all = await this.list();
+      return all.find((c) => c.owner_uid === ownerUid) ?? null;
+    }
   },
 
   async searchByName(term: string): Promise<Club[]> {
@@ -42,5 +90,25 @@ export const clubsService = {
         c.name.toLowerCase().includes(q) ||
         c.city.toLowerCase().includes(q)
     );
+  },
+
+  async create(input: CreateClubInput): Promise<string> {
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+
+    const ref = doc(collection(database, 'clubs'));
+    await setDoc(ref, {
+      name: input.name.trim(),
+      city: input.city.trim(),
+      department: input.department?.trim() ?? null,
+      location: input.location ?? { latitude: 0, longitude: 0 },
+      verified: false,
+      categories: input.categories,
+      sponsor_ids: [],
+      owner_uid: input.owner_uid,
+      is_active: true,
+      created_at: serverTimestamp(),
+    });
+    return ref.id;
   },
 };

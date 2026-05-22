@@ -1,63 +1,73 @@
 ---
 title: "ProDay — Brief produit"
-subtitle: "Document pour l'équipe non technique"
+subtitle: "Document pour l'équipe et les partenaires"
 author: "ProDay © 2026"
 date: "Mai 2026"
 lang: fr
+documentclass: article
+geometry: margin=2.2cm
+colorlinks: true
+linkcolor: "003399"
 ---
 
 # ProDay — Connecter · Progresser · Réussir
 
-**ProDay** est une application mobile qui relie joueurs, coachs, agents, clubs, organisateurs de tournois et sponsors locaux sur un même écosystème.
+**ProDay** est une application mobile (React Native / Expo) qui relie joueurs, coachs, agents, clubs, organisateurs et sponsors sur un écosystème football. Les données vivent dans **Firebase** (comptes réels, pas de données fictives en production).
 
-## Les 4 onglets
+## Navigation — 5 onglets
 
-| Onglet | Nom | À quoi ça sert |
-|--------|-----|----------------|
-| 1 | **Mercato** | Recrutement : annonces clubs, candidatures joueurs avec CV PDF |
-| 2 | **Arena** | Tournois : calendrier, inscriptions, live score, trophées |
-| 3 | **Matchs** | Matchs amicaux : carte des clubs qui cherchent un adversaire |
-| 4 | **Sponsors** | Partenariats locaux et financement participatif des clubs |
+| Onglet | Rôle | Fonctions |
+|--------|------|-----------|
+| **Accueil** | Hub | Statistiques Firestore, modules Arena & Sponsors |
+| **Recherche** | Recrutement | Joueurs, clubs, coachs, annonces, contact |
+| **Matchs** | Amicaux | Proposer, chercher, **accepter** un match |
+| **Messagerie** | Contact | Conversations entre profils inscrits |
+| **Profil** | Compte | Inscription, stats saison, club, vérification |
 
 ## Sécurité : profils contrôlés
 
-Pour les **coachs** et **agents**, le profil ne devient pas actif automatiquement :
+Pour les **coachs** et **agents** :
 
-1. L'utilisateur choisit son rôle à l'inscription.
-2. Il doit envoyer une photo de **diplôme** ou de **carte professionnelle**.
-3. Son profil affiche **« Vérification en cours »** (badge orange).
-4. Un administrateur valide manuellement le document.
-5. Après validation (badge vert), il peut contacter les joueurs et utiliser toutes les fonctions.
+1. Choix du rôle à l'inscription.
+2. Envoi obligatoire d'un **diplôme** ou **licence** (PDF / image).
+3. Badge orange « Vérification en cours » — messagerie limitée.
+4. Validation manuelle par un administrateur.
+5. Badge vert — accès complet.
 
-**Protection légale :** un profil non validé ne peut pas envoyer de messages directs aux mineurs.
+## Documents & exports PDF
 
-## Stack technique (résumé)
+| Fichier | Export PDF |
+|---------|------------|
+| `docs/design/mockups/index.html` | Bouton *Exporter maquettes PDF* (impression navigateur) |
+| `docs/design/ProDay_Brief.html` | Brief produit mis en page |
+| `npm run docs:cv` | CV joueur HTML → Imprimer → PDF |
 
-- **Mobile :** Flutter / FlutterFlow
-- **Backend :** Firebase (Auth, Firestore, Storage, notifications)
-- **Coût démarrage :** gratuit ou faible jusqu'à montée en charge
+## Stack technique
 
-## Roadmap opérationnelle
+- **Mobile :** React Native, Expo 52
+- **Backend :** Firebase Auth, Firestore, Storage
+- **Design :** `designTokens.ts`, logo `assets/branding/`
+
+## Roadmap
 
 ### Mois 1
-- Nom, logo, maquettes Figma
-- Prototype Mercato + validation profils
-- Démarchage de 3 clubs pilotes
+- Identité visuelle, maquettes, pilote recrutement + validation profils, clubs testeurs.
 
 ### Mois 2–3
-- Pilote sur un tournoi local (inscriptions + classement buteurs sur l'app)
+- Tournoi local (inscriptions et suivi sur l'app).
 
 ### Mois 4
-- Premier sponsor (magasin de sport : réduction membres en échange de visibilité app)
+- Premier sponsor local.
 
 ## Documents associés
 
 | Fichier | Public |
 |---------|--------|
-| `docs/ARCHITECTURE.md` | Développeurs — diagrammes |
-| `docs/design/FIGMA_BRIEF.md` | Designer — écrans à maquetter |
-| `docs/ProDay_Brief_NonDev.pdf` | Ce document en PDF |
+| `docs/ARCHITECTURE.md` | Développeurs |
+| `docs/design/FIGMA_BRIEF.md` | Design |
+| `docs/design/ProDay_Brief.html` | Brief HTML/PDF |
+| `docs/ProDay_Brief_NonDev.pdf` | Brief PDF (pandoc) |
 
-## Contact projet
+## Contact
 
-Dépôt GitHub : **https://github.com/alfredgibeau-ahoussinou/PRODAY**
+Dépôt : **https://github.com/alfredgibeau-ahoussinou/PRODAY**

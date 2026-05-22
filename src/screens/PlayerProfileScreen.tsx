@@ -11,6 +11,9 @@ import type { User } from '../models/User';
 import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { Icon, type IconName } from '../components/ui/Icon';
 import { colors, spacing, radius, shadows } from '../theme/designTokens';
+import { buildPlayerCvHtmlFromUser } from '../utils/pdfGenerator';
+import { openPlayerCvHtml } from '../utils/openCvHtml';
+import { useAuth } from '../context/AuthContext';
 
 interface PlayerProfileScreenProps {
   player: User;
@@ -36,7 +39,14 @@ export const PlayerProfileScreen: React.FC<PlayerProfileScreenProps> = ({
   onContact,
 }) => {
   const [favorited, setFavorited] = useState(false);
+  const { profile: myProfile } = useAuth();
+  const isOwnProfile = myProfile?.uid === player.uid;
   const p = player.profile;
+
+  const handleExportCv = () => {
+    const html = buildPlayerCvHtmlFromUser(player);
+    openPlayerCvHtml(html, player.display_name);
+  };
   const stats = p.season_stats;
   const hasStats =
     stats &&
@@ -129,17 +139,24 @@ export const PlayerProfileScreen: React.FC<PlayerProfileScreenProps> = ({
           <Icon name="mail" size={18} color="#FFFFFF" />
           <Text style={styles.btnPrimaryText}>Contacter</Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.btnOutline}
-          onPress={() => setFavorited((f) => !f)}
-        >
-          <Icon
-            name={favorited ? 'heart' : 'heart-outline'}
-            size={18}
-            color={colors.brand}
-          />
-          <Text style={styles.btnOutlineText}>Ajouter aux favoris</Text>
-        </TouchableOpacity>
+        {isOwnProfile ? (
+          <TouchableOpacity style={styles.btnOutline} onPress={handleExportCv}>
+            <Icon name="share" size={18} color={colors.brand} />
+            <Text style={styles.btnOutlineText}>Exporter mon CV (PDF)</Text>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity
+            style={styles.btnOutline}
+            onPress={() => setFavorited((f) => !f)}
+          >
+            <Icon
+              name={favorited ? 'heart' : 'heart-outline'}
+              size={18}
+              color={colors.brand}
+            />
+            <Text style={styles.btnOutlineText}>Ajouter aux favoris</Text>
+          </TouchableOpacity>
+        )}
       </View>
     </View>
   );

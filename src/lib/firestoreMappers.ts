@@ -7,7 +7,7 @@ import type {
   DiplomaRecord,
   ProfileReview,
 } from '../models/User';
-import type { RecruitmentPost } from '../models/Player';
+import type { RecruitmentPost, Application } from '../models/Player';
 import type { Tournament, TournamentAwards } from '../models/Tournament';
 import type { FriendlyMatch } from '../models/FriendlyMatch';
 import type { SponsorOffer, ClubFundingGoal } from '../models/SponsorOffer';
@@ -98,12 +98,28 @@ export function userFromFirestore(uid: string, data: Record<string, unknown>): U
   };
 }
 
+export function applicationFromFirestore(
+  id: string,
+  data: Record<string, unknown>
+): Application {
+  return {
+    id,
+    post_id: String(data.post_id ?? ''),
+    player_uid: String(data.player_uid ?? ''),
+    cover_letter: String(data.cover_letter ?? ''),
+    cv_pdf_url: String(data.cv_pdf_url ?? ''),
+    created_at: toDate(data.created_at),
+    status: (data.status as Application['status']) ?? 'PENDING',
+  };
+}
+
 export function recruitmentPostFromFirestore(
   id: string,
   data: Record<string, unknown>
 ): RecruitmentPost {
   return {
     id,
+    author_uid: data.author_uid as string | undefined,
     club_id: String(data.club_id ?? ''),
     club_name: String(data.club_name ?? ''),
     title: String(data.title ?? ''),
@@ -151,6 +167,7 @@ export function friendlyMatchFromFirestore(
 ): FriendlyMatch {
   return {
     id,
+    requester_uid: data.requester_uid as string | undefined,
     requester_club_id: String(data.requester_club_id ?? ''),
     requester_club_name: String(data.requester_club_name ?? ''),
     opponent_club_id: data.opponent_club_id as string | undefined,
@@ -204,6 +221,7 @@ export function fundingGoalFromFirestore(
 export interface MessageThread {
   id: string;
   participant_name: string;
+  other_user_id: string;
   last_message: string;
   updated_at: Date;
   unread: boolean;
@@ -211,13 +229,46 @@ export interface MessageThread {
 
 export function messageThreadFromFirestore(
   id: string,
-  data: Record<string, unknown>
+  data: Record<string, unknown>,
+  currentUid: string
 ): MessageThread {
+  const participantIds = (data.participant_ids as string[]) ?? [];
+  const names = (data.participant_names as Record<string, string>) ?? {};
+  const otherId =
+    participantIds.find((pid) => pid !== currentUid) ??
+    (id.includes('__') ? id.split('__').find((p) => p !== currentUid) : '') ??
+    '';
+  const unreadBy = (data.unread_by as string[]) ?? [];
+
   return {
     id,
-    participant_name: String(data.participant_name ?? 'Utilisateur'),
+    other_user_id: otherId,
+    participant_name: names[otherId] ?? String(data.participant_name ?? 'Utilisateur'),
     last_message: String(data.last_message ?? ''),
     updated_at: toDate(data.updated_at),
-    unread: Boolean(data.unread),
+    unread: unreadBy.includes(currentUid) || Boolean(data.unread),
+  };
+}
+
+export interface ChatMessage {
+  id: string;
+  thread_id: string;
+  sender_id: string;
+  receiver_id: string;
+  body: string;
+  created_at: Date;
+}
+
+export function chatMessageFromFirestore(
+  id: string,
+  data: Record<string, unknown>
+): ChatMessage {
+  return {
+    id,
+    thread_id: String(data.thread_id ?? ''),
+    sender_id: String(data.sender_id ?? ''),
+    receiver_id: String(data.receiver_id ?? ''),
+    body: String(data.body ?? ''),
+    created_at: toDate(data.created_at),
   };
 }

@@ -4,6 +4,7 @@ export type FriendlyMatchStatus = 'OPEN' | 'ACCEPTED' | 'PLAYED' | 'CANCELLED';
 
 export interface FriendlyMatch {
   id: string;
+  requester_uid?: string;
   requester_club_id: string;
   requester_club_name: string;
   opponent_club_id?: string;
@@ -22,6 +23,7 @@ export interface FriendlyMatch {
 }
 
 export interface CreateFriendlyMatchInput {
+  requester_uid: string;
   requester_club_id: string;
   requester_club_name: string;
   opponent_club_name?: string;

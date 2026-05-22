@@ -4,6 +4,9 @@ import type { MainTabId } from '../navigation/MainTabs';
 interface TabNavigationContextValue {
   activeTab: MainTabId;
   setActiveTab: (tab: MainTabId) => void;
+  pendingChatThreadId: string | null;
+  openChat: (threadId: string) => void;
+  clearPendingChat: () => void;
 }
 
 const TabNavigationContext = createContext<TabNavigationContextValue | null>(null);

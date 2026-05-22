@@ -1,54 +1,116 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
   ScrollView,
   StyleSheet,
   ActivityIndicator,
+  Alert,
+  TouchableOpacity,
 } from 'react-native';
 import { TournamentCard } from '../components/TournamentCard';
 import { ScreenHeader } from '../components/ui/ScreenHeader';
+import { Icon } from '../components/ui/Icon';
 import { useArenaData } from '../hooks/useAppData';
-import { colors, spacing, radius } from '../theme/designTokens';
+import { useAuth } from '../context/AuthContext';
+import { tournamentService } from '../services/tournament.service';
+import { CreateTournamentScreen } from './CreateTournamentScreen';
+import type { Tournament } from '../models/Tournament';
+import { colors, spacing, radius, shadows } from '../theme/designTokens';
 
 interface ArenaScreenProps {
   onBack?: () => void;
 }
 
+type ArenaView = 'list' | 'create';
+
 export const ArenaScreen: React.FC<ArenaScreenProps> = ({ onBack }) => {
-  const { tournaments, honorTournament, loading } = useArenaData();
+  const { profile } = useAuth();
+  const [view, setView] = useState<ArenaView>('list');
+  const { tournaments, honorTournament, loading, refresh } = useArenaData();
   const awards = honorTournament?.awards_names;
 
+  const handleRegister = async (t: Tournament) => {
+    if (!profile) {
+      Alert.alert('Connexion requise', 'Connectez-vous depuis l’onglet Profil.');
+      return;
+    }
+    const clubUid = profile.profile.club_id ?? profile.uid;
+    if (t.subscriber_uids?.includes(clubUid)) {
+      Alert.alert('Déjà inscrit', 'Votre club est déjà inscrit à ce tournoi.');
+      return;
+    }
+    try {
+      await tournamentService.registerClub(t.id, clubUid);
+      Alert.alert('Inscription enregistrée', `Vous êtes inscrit à ${t.name}.`);
+      refresh();
+    } catch (e) {
+      Alert.alert('Erreur', e instanceof Error ? e.message : 'Inscription impossible.');
+    }
+  };
+
+  if (view === 'create' && profile) {
+    return (
+      <CreateTournamentScreen
+        profile={profile}
+        onBack={() => setView('list')}
+        onCreated={refresh}
+      />
+    );
+  }
+
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      {onBack ? (
-        <ScreenHeader title="Arena" subtitle="Tournois & tableau d'honneur" onBack={onBack} />
-      ) : (
-        <Text style={styles.title}>Arena</Text>
-      )}
+    <View style={styles.root}>
+      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+        {onBack ? (
+          <ScreenHeader title="Arena" subtitle="Tournois & tableau d'honneur" onBack={onBack} />
+        ) : (
+          <ScreenHeader
+            title="Arena"
+            subtitle="Tournois & tableau d'honneur"
+            showBrandLogo
+          />
+        )}
 
-      <Text style={styles.section}>Tournois proches</Text>
-      {loading ? (
-        <ActivityIndicator color={colors.brand} style={styles.loader} />
-      ) : tournaments.length === 0 ? (
-        <Text style={styles.hint}>
-          Aucun tournoi — lancez{' '}
-          Les tournois publiés par les clubs apparaîtront ici.
-        </Text>
-      ) : (
-        tournaments.map((t) => <TournamentCard key={t.id} tournament={t} />)
-      )}
+        <Text style={styles.section}>Tournois proches</Text>
+        {loading ? (
+          <ActivityIndicator color={colors.brand} style={styles.loader} />
+        ) : tournaments.length === 0 ? (
+          <Text style={styles.hint}>
+            Aucun tournoi pour le moment. Créez le premier avec le bouton ci-dessous.
+          </Text>
+        ) : (
+          tournaments.map((t) => (
+            <TournamentCard
+              key={t.id}
+              tournament={t}
+              onRegister={t.status === 'OPEN' ? handleRegister : undefined}
+            />
+          ))
+        )}
 
-      <Text style={[styles.section, styles.mt]}>Tableau d&apos;honneur</Text>
-      <View style={styles.honor}>
-        <HonorSlot label="Meilleur joueur" name={awards?.best_player ?? '—'} />
-        <HonorSlot label="Buteur" name={awards?.top_scorer ?? '—'} />
-        <HonorSlot label="Gardien" name={awards?.best_goalkeeper ?? '—'} />
-      </View>
-      {!loading && !honorTournament && (
-        <Text style={styles.hintSmall}>Publié après clôture d&apos;un tournoi.</Text>
+        <Text style={[styles.section, styles.mt]}>Tableau d&apos;honneur</Text>
+        <View style={styles.honor}>
+          <HonorSlot label="Meilleur joueur" name={awards?.best_player ?? '—'} />
+          <HonorSlot label="Buteur" name={awards?.top_scorer ?? '—'} />
+          <HonorSlot label="Gardien" name={awards?.best_goalkeeper ?? '—'} />
+        </View>
+        {!loading && !honorTournament && (
+          <Text style={styles.hintSmall}>Publié après clôture d&apos;un tournoi.</Text>
+        )}
+        <View style={styles.bottomSpacer} />
+      </ScrollView>
+
+      {profile && (
+        <TouchableOpacity
+          style={[styles.fab, shadows.fab]}
+          onPress={() => setView('create')}
+        >
+          <Icon name="add" size={20} color="#FFFFFF" />
+          <Text style={styles.fabText}>Créer un tournoi</Text>
+        </TouchableOpacity>
       )}
-    </ScrollView>
+    </View>
   );
 };
 
@@ -60,9 +122,9 @@ const HonorSlot: React.FC<{ label: string; name: string }> = ({ label, name }) =
 );
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
-  content: { padding: spacing.lg, paddingBottom: spacing.xxl },
-  title: { fontSize: 24, fontWeight: '800', color: colors.text },
+  root: { flex: 1, backgroundColor: colors.background },
+  container: { flex: 1 },
+  content: { padding: spacing.lg, paddingBottom: spacing.md },
   section: {
     color: colors.textSecondary,
     fontSize: 14,
@@ -72,7 +134,6 @@ const styles = StyleSheet.create({
   },
   mt: { marginTop: spacing.xl },
   hint: { color: colors.textMuted, fontSize: 13, lineHeight: 20 },
-  hintCode: { fontFamily: 'monospace', color: colors.brand },
   hintSmall: { color: colors.textMuted, fontSize: 12, marginTop: spacing.sm },
   loader: { marginVertical: spacing.lg },
   honor: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },
@@ -88,4 +149,19 @@ const styles = StyleSheet.create({
   },
   honorLabel: { color: colors.textMuted, fontSize: 11 },
   honorName: { color: colors.text, fontSize: 16, fontWeight: '700', marginTop: 4 },
+  bottomSpacer: { height: 88 },
+  fab: {
+    position: 'absolute',
+    left: spacing.lg,
+    right: spacing.lg,
+    bottom: spacing.md,
+    backgroundColor: colors.brand,
+    borderRadius: radius.md,
+    paddingVertical: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+  },
+  fabText: { color: '#FFFFFF', fontWeight: '700', fontSize: 16 },
 });

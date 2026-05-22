@@ -18,17 +18,32 @@ const TAB_ICONS: Record<MainTabId, { icon: IconName; label: string }> = {
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<MainTabId>('recrutement');
+  const [pendingChatThreadId, setPendingChatThreadId] = useState<string | null>(null);
   const { count: unreadCount, refresh: refreshUnread } = useUnreadMessageCount();
 
   useEffect(() => {
     if (activeTab === 'messages') refreshUnread();
   }, [activeTab, refreshUnread]);
+
+  const openChat = (threadId: string) => {
+    setPendingChatThreadId(threadId);
+    setActiveTab('messages');
+  };
+
   const current = MAIN_TABS.find((t) => t.id === activeTab)!;
   const Screen = current.screen;
 
   return (
     <AuthProvider>
-      <TabNavigationProvider value={{ activeTab, setActiveTab }}>
+      <TabNavigationProvider
+        value={{
+          activeTab,
+          setActiveTab,
+          pendingChatThreadId,
+          openChat,
+          clearPendingChat: () => setPendingChatThreadId(null),
+        }}
+      >
         <SafeAreaView style={styles.root}>
           <StatusBar style="dark" />
           <View style={styles.screen}>

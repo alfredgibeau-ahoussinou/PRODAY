@@ -14,6 +14,7 @@ import { Icon, type IconName } from '../components/ui/Icon';
 import { colors, spacing, radius, shadows } from '../theme/designTokens';
 import { friendlyMatchesService } from '../services/friendlyMatches.service';
 import { useAuth } from '../context/AuthContext';
+import { parseFrenchDate } from '../utils/parseFrenchDate';
 
 const LEVELS = ['Loisir', 'Compétition', 'Mixte'] as const;
 const LEVEL_MAP: Record<(typeof LEVELS)[number], 'loisir' | 'competition' | 'mixte'> = {
@@ -60,6 +61,7 @@ export const ProposeMatchScreen: React.FC<ProposeMatchScreenProps> = ({
     setSubmitting(true);
     try {
       await friendlyMatchesService.create({
+        requester_uid: profile.uid,
         requester_club_id: profile.profile.club_id ?? profile.uid,
         requester_club_name: clubName.trim(),
         opponent_club_name: opponent.trim() || undefined,
@@ -157,19 +159,6 @@ export const ProposeMatchScreen: React.FC<ProposeMatchScreenProps> = ({
     </View>
   );
 };
-
-function parseFrenchDate(input: string): Date | null {
-  const m = input.trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-  if (!m) return null;
-  const day = Number(m[1]);
-  const month = Number(m[2]) - 1;
-  const year = Number(m[3]);
-  const d = new Date(year, month, day);
-  if (d.getFullYear() !== year || d.getMonth() !== month || d.getDate() !== day) {
-    return null;
-  }
-  return d;
-}
 
 const Field: React.FC<{
   label: string;

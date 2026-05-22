@@ -86,3 +86,13 @@ Barre basse **5 onglets** :
 
 - Cartes : `borderRadius: 12–16`, ombre légère (`designTokens.shadows.card`)
 - Bouton principal : plein bleu, radius 12, ombre FAB pour le « + »
+
+## Documents HTML / PDF
+
+| Ressource | Chemin | Export PDF |
+|-----------|--------|------------|
+| Maquettes app | `docs/design/mockups/index.html` | Bouton « Exporter maquettes PDF » |
+| Brief produit | `docs/design/ProDay_Brief.html` | Bouton « Exporter en PDF » |
+| CV joueur | `src/utils/pdfGenerator.ts` + `npm run docs:cv` | Impression navigateur (A4) |
+
+Le logo officiel (`logo-light.png`) est utilisé dans tous les exports HTML.

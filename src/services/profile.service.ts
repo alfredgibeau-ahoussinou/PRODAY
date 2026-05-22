@@ -3,6 +3,7 @@
 
 import {
   doc,
+  getDoc,
   setDoc,
   updateDoc,
   collection,
@@ -102,6 +103,35 @@ export const profileService = {
     }
 
     return newUser;
+  },
+
+  async updateProfile(uid: string, payload: ProfileUpdatePayload): Promise<void> {
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+
+    const snap = await getDoc(doc(database, 'users', uid));
+    if (!snap.exists()) throw new Error('Profil introuvable.');
+
+    const current = snap.data() as Record<string, unknown>;
+    const currentProfile = (current.profile as User['profile']) ?? {};
+
+    const update: Record<string, unknown> = {
+      updated_at: serverTimestamp(),
+    };
+    if (payload.display_name?.trim()) {
+      update.display_name = payload.display_name.trim();
+    }
+    if (payload.city !== undefined) {
+      update.city = payload.city.trim();
+    }
+    if (payload.phone !== undefined) {
+      update.phone = payload.phone.trim();
+    }
+    if (payload.profile) {
+      update.profile = { ...currentProfile, ...payload.profile };
+    }
+
+    await updateDoc(doc(database, 'users', uid), update);
   },
 
   /**

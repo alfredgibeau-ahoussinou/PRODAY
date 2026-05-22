@@ -11,7 +11,10 @@
     "android": "expo start --android",
     "typecheck": "tsc --noEmit",
     "cleanup:demo": "node scripts/cleanup-demo-data.mjs",
-    "docs:pdf": "pandoc docs/ProDay_Brief_NonDev.md -o docs/ProDay_Brief_NonDev.pdf -V lang=fr 2>/dev/null || true"
+    "docs:cv": "node scripts/generate-player-cv.mjs",
+    "docs:pdf": "pandoc docs/ProDay_Brief_NonDev.md -o docs/ProDay_Brief_NonDev.pdf --pdf-engine=pdflatex -V lang=fr -V geometry:margin=2.2cm -V colorlinks=true -V linkcolor=003399 2>/dev/null || pandoc docs/ProDay_Brief_NonDev.md -o docs/ProDay_Brief_NonDev.pdf -V lang=fr 2>/dev/null || echo '→ Ouvrir docs/design/ProDay_Brief.html et Imprimer → PDF'",
+    "docs:open-mockups": "open docs/design/mockups/index.html",
+    "docs:open-brief": "open docs/design/ProDay_Brief.html"
   },
   "dependencies": {
     "@expo/metro-config": "~0.19.0",

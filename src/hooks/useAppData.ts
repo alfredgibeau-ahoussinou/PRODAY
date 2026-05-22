@@ -31,19 +31,22 @@ export function useArenaData() {
   const [honorTournament, setHonorTournament] = useState<Tournament | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    (async () => {
-      const [list, honor] = await Promise.all([
-        tournamentService.listUpcoming(),
-        tournamentService.getLatestWithAwards(),
-      ]);
-      setTournaments(list);
-      setHonorTournament(honor);
-      setLoading(false);
-    })();
+  const refresh = useCallback(async () => {
+    setLoading(true);
+    const [list, honor] = await Promise.all([
+      tournamentService.listUpcoming(),
+      tournamentService.getLatestWithAwards(),
+    ]);
+    setTournaments(list);
+    setHonorTournament(honor);
+    setLoading(false);
   }, []);
 
-  return { tournaments, honorTournament, loading };
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
+
+  return { tournaments, honorTournament, loading, refresh };
 }
 
 export function useFriendlyMatches() {
@@ -83,16 +86,35 @@ export function useSponsorsData() {
   return { offers, goals, loading };
 }
 
-export function useMessagesData() {
+export function useMessagesData(currentUid: string | undefined) {
   const [threads, setThreads] = useState<MessageThread[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const refresh = useCallback(async () => {
+    if (!currentUid) {
+      setThreads([]);
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    setThreads(await messagesService.listThreads(currentUid));
+    setLoading(false);
+  }, [currentUid]);
+
   useEffect(() => {
-    messagesService.listThreads().then((t) => {
-      setThreads(t);
+    if (!currentUid) {
+      setThreads([]);
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    const unsub = messagesService.subscribeThreads(currentUid, (list) => {
+      setThreads(list);
       setLoading(false);
     });
-  }, []);
+    if (!unsub) refresh();
+    return () => unsub?.();
+  }, [currentUid, refresh]);
 
-  return { threads, loading };
+  return { threads, loading, refresh };
 }

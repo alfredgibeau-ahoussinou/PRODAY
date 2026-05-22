@@ -10,13 +10,20 @@
 
 | Document | Description |
 |----------|-------------|
-| [docs/ProDay_Brief_NonDev.pdf](docs/ProDay_Brief_NonDev.pdf) | Vision produit, 4 onglets, validation profils, roadmap |
+| [docs/design/ProDay_Brief.html](docs/design/ProDay_Brief.html) | Brief produit (export PDF via le navigateur) |
+| [docs/ProDay_Brief_NonDev.pdf](docs/ProDay_Brief_NonDev.pdf) | Brief PDF (pandoc, si installé) |
+| [docs/design/mockups/index.html](docs/design/mockups/index.html) | Maquettes interactives + export PDF |
 | [docs/design/DESIGN_SYSTEM.md](docs/design/DESIGN_SYSTEM.md) | Logo, couleurs, navigation, composants |
 | [docs/design/FIGMA_BRIEF.md](docs/design/FIGMA_BRIEF.md) | Reprise des maquettes PNG dans Figma |
 | [assets/branding/](assets/branding/) | Logo light/dark + planches UI |
 | [docs/CONVENTION_SPONSOR.md](docs/CONVENTION_SPONSOR.md) | Modèle de convention partenariat magasin / club |
 
-Régénérer le PDF : `npm run docs:pdf`
+| Commande | Action |
+|----------|--------|
+| `npm run docs:open-mockups` | Ouvrir les maquettes HTML |
+| `npm run docs:open-brief` | Ouvrir le brief HTML |
+| `npm run docs:pdf` | Générer le brief PDF (pandoc) |
+| `npm run docs:cv` | Générer un CV joueur HTML (exemple) |
 
 ---
 

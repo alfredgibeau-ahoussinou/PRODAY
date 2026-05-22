@@ -19,6 +19,8 @@ import { VerificationBadge } from '../components/VerificationBadge';
 import { VerificationFlowScreen } from './VerificationFlowScreen';
 import { VerificationSuccessScreen } from './VerificationSuccessScreen';
 import { ParentalControlScreen } from './ParentalControlScreen';
+import { EditProfileScreen } from './EditProfileScreen';
+import { CreateClubScreen } from './CreateClubScreen';
 import { useAuth } from '../context/AuthContext';
 import { colors, spacing, radius } from '../theme/designTokens';
 
@@ -52,6 +54,8 @@ export const AuthScreen: React.FC = () => {
   const [showVerificationFlow, setShowVerificationFlow] = useState(false);
   const [showVerificationSuccess, setShowVerificationSuccess] = useState(false);
   const [showParentalControl, setShowParentalControl] = useState(false);
+  const [showEditProfile, setShowEditProfile] = useState(false);
+  const [showCreateClub, setShowCreateClub] = useState(false);
 
   const needsDocument = ROLES_REQUIRING_VERIFICATION.includes(role);
 
@@ -204,6 +208,31 @@ export const AuthScreen: React.FC = () => {
       );
     }
 
+    if (showEditProfile) {
+      return (
+        <EditProfileScreen
+          user={profile}
+          onBack={() => setShowEditProfile(false)}
+          onSaved={refreshProfile}
+        />
+      );
+    }
+
+    if (showCreateClub) {
+      return (
+        <CreateClubScreen
+          profile={profile}
+          onBack={() => setShowCreateClub(false)}
+          onCreated={refreshProfile}
+        />
+      );
+    }
+
+    const canManageClub =
+      profile.role === 'organizer' ||
+      profile.role === 'coach' ||
+      profile.role === 'agent';
+
     return (
       <ScrollView style={styles.container} contentContainerStyle={styles.content}>
         <BrandHeader size="screen" centered />
@@ -245,6 +274,28 @@ export const AuthScreen: React.FC = () => {
           <TouchableOpacity onPress={() => setShowVerificationSuccess(true)}>
             <Text style={styles.link}>Voir diplôme vérifié</Text>
           </TouchableOpacity>
+        )}
+
+        <TouchableOpacity
+          style={styles.secondary}
+          onPress={() => setShowEditProfile(true)}
+        >
+          <Text style={styles.secondaryText}>Modifier mon profil</Text>
+        </TouchableOpacity>
+
+        {canManageClub && !profile.profile.club_id && (
+          <TouchableOpacity
+            style={styles.secondary}
+            onPress={() => setShowCreateClub(true)}
+          >
+            <Text style={styles.secondaryText}>Créer mon club</Text>
+          </TouchableOpacity>
+        )}
+
+        {profile.profile.club_id && (
+          <Text style={styles.clubLinked}>
+            Club lié · ID {profile.profile.club_id.slice(0, 8)}…
+          </Text>
         )}
 
         <TouchableOpacity
@@ -508,6 +559,12 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginBottom: spacing.md,
     textAlign: 'center',
+  },
+  clubLinked: {
+    color: colors.textSecondary,
+    fontSize: 13,
+    textAlign: 'center',
+    marginBottom: spacing.md,
   },
   roleBtn: {
     backgroundColor: colors.surface,

@@ -29,7 +29,7 @@ export const SponsorsScreen: React.FC<SponsorsScreenProps> = ({ onBack }) => {
       {loading ? (
         <ActivityIndicator color={colors.brand} />
       ) : offers.length === 0 ? (
-        <Text style={styles.hint}>Aucune offre active — exécutez le seed Firestore.</Text>
+        <Text style={styles.hint}>Aucune offre partenaire active pour le moment.</Text>
       ) : (
         offers.map((o) => (
           <View key={o.id} style={styles.offer}>

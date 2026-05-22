@@ -64,7 +64,8 @@ Modules **Arena** et **Sponsors** : cartes sur l’accueil (roadmap produit).
 1. Fichier → **Place image** → importer les PNG du dossier `assets/mockups/`
 2. Calquer les composants (boutons, cartes, barre nav) par-dessus
 3. Créer les **Color styles** depuis le tableau tokens ci-dessus
-4. Exporter le kit : `File → Export` pour le PDF collègues
+4. Référence HTML : ouvrir `docs/design/mockups/index.html` (logo PNG, export PDF intégré)
+5. Brief produit PDF : `docs/design/ProDay_Brief.html` ou `npm run docs:pdf`
 
 ## Lien Figma (à compléter)
 

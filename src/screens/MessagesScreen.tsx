@@ -1,32 +1,75 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
   FlatList,
   StyleSheet,
   ActivityIndicator,
+  TouchableOpacity,
 } from 'react-native';
 import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { useMessagesData } from '../hooks/useAppData';
 import { useAuth } from '../context/AuthContext';
+import { useTabNavigation } from '../context/TabNavigationContext';
 import { profileService } from '../services/profile.service';
 import { ROLES_REQUIRING_VERIFICATION } from '../models/User';
+import { ChatScreen } from './ChatScreen';
 import { colors, spacing, radius } from '../theme/designTokens';
 
 export const MessagesScreen: React.FC = () => {
   const { profile, loading: authLoading } = useAuth();
-  const { threads, loading } = useMessagesData();
+  const { pendingChatThreadId, clearPendingChat } = useTabNavigation();
+  const { threads, loading, refresh } = useMessagesData(profile?.uid);
+  const [activeThreadId, setActiveThreadId] = useState<string | null>(null);
 
   const mustVerify =
     profile &&
     ROLES_REQUIRING_VERIFICATION.includes(profile.role) &&
     !profileService.canPerformSensitiveAction(profile);
 
+  useEffect(() => {
+    if (pendingChatThreadId) {
+      setActiveThreadId(pendingChatThreadId);
+      clearPendingChat();
+    }
+  }, [pendingChatThreadId, clearPendingChat]);
+
+  const activeThread = threads.find((t) => t.id === activeThreadId);
+
+  if (activeThreadId && profile && activeThread) {
+    return (
+      <ChatScreen
+        threadId={activeThreadId}
+        otherName={activeThread.participant_name}
+        currentUid={profile.uid}
+        onBack={() => {
+          setActiveThreadId(null);
+          refresh();
+        }}
+      />
+    );
+  }
+
+  if (activeThreadId && profile) {
+    return (
+      <ChatScreen
+        threadId={activeThreadId}
+        otherName="Conversation"
+        currentUid={profile.uid}
+        onBack={() => {
+          setActiveThreadId(null);
+          refresh();
+        }}
+      />
+    );
+  }
+
   return (
     <View style={styles.container}>
       <ScreenHeader
         title="Messages"
         subtitle="Profils vérifiés (coach, agent)"
+        showBrandLogo
       />
       <Text style={styles.notice}>
         Les conversations avec les mineurs nécessitent un badge vert. Messagerie
@@ -50,7 +93,7 @@ export const MessagesScreen: React.FC = () => {
         <ActivityIndicator color={colors.brand} style={styles.loader} />
       ) : !profile ? null : threads.length === 0 ? (
         <Text style={styles.empty}>
-          Aucune conversation — connectez-vous et lancez le seed pour des exemples.
+          Aucune conversation. Contactez un joueur ou un coach depuis Recrutement.
         </Text>
       ) : (
         <FlatList
@@ -58,7 +101,11 @@ export const MessagesScreen: React.FC = () => {
           keyExtractor={(t) => t.id}
           contentContainerStyle={styles.list}
           renderItem={({ item }) => (
-            <View style={styles.thread}>
+            <TouchableOpacity
+              style={styles.thread}
+              onPress={() => !mustVerify && setActiveThreadId(item.id)}
+              disabled={!!mustVerify}
+            >
               <View style={styles.avatar}>
                 <Text style={styles.avatarText}>
                   {item.participant_name.charAt(0).toUpperCase()}
@@ -75,11 +122,11 @@ export const MessagesScreen: React.FC = () => {
                   </Text>
                 </View>
                 <Text style={styles.threadPreview} numberOfLines={1}>
-                  {item.last_message}
+                  {item.last_message || 'Nouvelle conversation'}
                 </Text>
               </View>
               {item.unread ? <View style={styles.unreadDot} /> : null}
-            </View>
+            </TouchableOpacity>
           )}
         />
       )}
@@ -102,6 +149,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     padding: spacing.xl,
     fontSize: 14,
+    lineHeight: 22,
   },
   blocked: {
     color: colors.warning,
