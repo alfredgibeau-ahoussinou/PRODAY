@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>CV — Yanis Diallo | ProDay</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    @page { size: A4; margin: 18mm 16mm; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: Inter, system-ui, sans-serif;
+      color: #0f172a;
+      font-size: 11pt;
+      line-height: 1.45;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    .toolbar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 10;
+      background: #0f172a; color: #f8fafc; padding: 10px 20px;
+      display: flex; gap: 12px; align-items: center; font-size: 13px;
+    }
+    .toolbar button {
+      background: #003399; color: #fff; border: none;
+      padding: 8px 16px; border-radius: 8px; font-weight: 700; cursor: pointer;
+    }
+    .page { max-width: 210mm; margin: 56px auto 24px; padding: 24px; }
+    @media print {
+      .toolbar { display: none; }
+      .page { margin: 0; padding: 0; box-shadow: none; }
+    }
+    .header {
+      display: flex; justify-content: space-between; align-items: flex-start;
+      border-bottom: 3px solid #003399; padding-bottom: 14px; margin-bottom: 20px;
+    }
+    .logo { height: 44px; }
+    .tagline { font-size: 8pt; letter-spacing: 0.12em; color: #5c6478; margin-top: 6px; font-weight: 600; }
+    h1 { font-size: 22pt; font-weight: 800; color: #003399; }
+    .role { font-size: 12pt; color: #5c6478; font-weight: 600; margin-top: 4px; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 18px 0; }
+    .card { background: #f4f6fa; border: 1px solid #dde3ed; border-radius: 10px; padding: 12px; }
+    .card label { font-size: 8pt; text-transform: uppercase; letter-spacing: 0.06em; color: #8b93a8; font-weight: 700; }
+    .card strong { display: block; font-size: 12pt; margin-top: 4px; }
+    .stats { display: flex; border: 1px solid #dde3ed; border-radius: 10px; overflow: hidden; margin: 16px 0; }
+    .stat { flex: 1; text-align: center; padding: 14px; background: #fff; border-right: 1px solid #dde3ed; }
+    .stat:last-child { border-right: none; }
+    .stat .n { font-size: 20pt; font-weight: 800; color: #003399; }
+    .stat .l { font-size: 8pt; color: #8b93a8; margin-top: 4px; }
+    h2 { font-size: 11pt; color: #003399; margin: 16px 0 8px; text-transform: uppercase; }
+    ul { padding-left: 18px; }
+    .footer { margin-top: 28px; padding-top: 12px; border-top: 1px solid #dde3ed; font-size: 8pt; color: #8b93a8; }
+  </style>
+</head>
+<body>
+  <div class="toolbar">
+    <span>CV joueur ProDay</span>
+    <button type="button" onclick="window.print()">Exporter en PDF</button>
+  </div>
+  <div class="page">
+    <header class="header">
+      <div>
+        <img class="logo" src="../../../assets/branding/logo-light.png" alt="ProDay" />
+        <div class="tagline">CONNECTER • PROGRESSER • RÉUSSIR</div>
+      </div>
+      <div style="text-align:right;font-size:9pt;color:#5c6478">
+        22 mai 2026
+      </div>
+    </header>
+    <h1>Yanis Diallo</h1>
+    <p class="role">Milieu offensif · Seniors · R2</p>
+    <div class="grid">
+      <div class="card"><label>Ville</label><strong>Marseille (13)</strong></div>
+      <div class="card"><label>Pied fort</label><strong>Droit</strong></div>
+      <div class="card"><label>Âge</label><strong>19 ans</strong></div>
+      <div class="card"><label>Morphologie</label><strong>176 cm · 70 kg</strong></div>
+    </div>
+    <h2>Statistiques saison</h2>
+    <div class="stats">
+      <div class="stat"><div class="n">24</div><div class="l">Matchs</div></div>
+      <div class="stat"><div class="n">9</div><div class="l">Buts</div></div>
+      <div class="stat"><div class="n">7</div><div class="l">Passes décisives</div></div>
+    </div>
+    <h2>Présentation</h2>
+    <p>Joueur créatif, bonne vision du jeu. Disponible pour projets ambitieux en Régional 2.</p>
+    <h2>Palmarès</h2>
+    <ul><li>Capitaine équipe U19 (2024)</li><li>Tournoi inter-départemental — demi-finale</li></ul>
+    <footer class="footer">joueur@exemple.fr · Document ProDay</footer>
+  </div>
+</body>
+</html>
