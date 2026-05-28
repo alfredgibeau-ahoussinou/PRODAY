@@ -79,7 +79,8 @@ export const DashboardRolePanel: React.FC<DashboardRolePanelProps> = ({
   if (
     profile.role === 'coach' ||
     profile.role === 'agent' ||
-    profile.role === 'organizer'
+    profile.role === 'organizer' ||
+    profile.role === 'club'
   ) {
     return (
       <View style={styles.wrap}>
@@ -87,9 +88,11 @@ export const DashboardRolePanel: React.FC<DashboardRolePanelProps> = ({
         <Text style={styles.title}>
           {profile.role === 'coach'
             ? 'Pilotez votre équipe'
-            : profile.role === 'agent'
-              ? 'Scouting & placement'
-              : 'Animez la communauté'}
+            : profile.role === 'club'
+              ? 'Votre club sur ProDay'
+              : profile.role === 'agent'
+                ? 'Scouting & placement'
+                : 'Animez la communauté'}
         </Text>
         <ActionRow
           icon="calendar"

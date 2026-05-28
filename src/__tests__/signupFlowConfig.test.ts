@@ -10,6 +10,10 @@ describe('signupFlowConfig', () => {
     expect(getFlowKind('coach')).toBe('staff');
   });
 
+  it('déduit le parcours staff pour club', () => {
+    expect(getFlowKind('club')).toBe('staff');
+  });
+
   it('inclut parental pour mineur ou espace -13', () => {
     expect(needsParentalStep(true, 'men')).toBe(true);
     expect(needsParentalStep(false, 'under_u13')).toBe(true);

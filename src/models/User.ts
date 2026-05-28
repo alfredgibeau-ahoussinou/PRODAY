@@ -27,6 +27,7 @@ export interface PlayerVerificationState {
 export type UserRole =
   | 'player'
   | 'coach'
+  | 'club'
   | 'agent'
   | 'organizer'
   | 'sponsor'
@@ -154,7 +155,12 @@ export interface User {
 }
 
 // Rôles nécessitant une vérification obligatoire (document + revue IA / admin)
-export const ROLES_REQUIRING_VERIFICATION: UserRole[] = ['coach', 'agent', 'organizer'];
+export const ROLES_REQUIRING_VERIFICATION: UserRole[] = [
+  'coach',
+  'club',
+  'agent',
+  'organizer',
+];
 
 export type VerificationDocumentType =
   | 'diploma'
@@ -183,6 +189,7 @@ export function verificationDocumentTypeForRole(role: UserRole): VerificationDoc
     case 'agent':
       return 'license';
     case 'organizer':
+    case 'club':
       return 'authorization';
     case 'player':
       return 'id';

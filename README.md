@@ -11,7 +11,8 @@
 | Document | Description |
 |----------|-------------|
 | [docs/design/ProDay_Brief.html](docs/design/ProDay_Brief.html) | Brief produit (export PDF via le navigateur) |
-| [docs/ProDay_Brief_NonDev.pdf](docs/ProDay_Brief_NonDev.pdf) | Brief PDF (pandoc, si installé) |
+| [docs/PRODAY_Restant_et_Ameliorations.pdf](docs/PRODAY_Restant_et_Ameliorations.pdf) | Guide associés — reste à faire, tarifs, roadmap (`npm run docs:guide-restant`) |
+| [docs/legal/pactes/](docs/legal/pactes/) | Pactes d'associés (4 exemplaires, `npm run docs:pactes`) |
 | [docs/design/mockups/index.html](docs/design/mockups/index.html) | Maquettes interactives + export PDF |
 | [docs/design/DESIGN_SYSTEM.md](docs/design/DESIGN_SYSTEM.md) | Logo, couleurs, navigation, composants |
 | [docs/design/FIGMA_BRIEF.md](docs/design/FIGMA_BRIEF.md) | Reprise des maquettes PNG dans Figma |
@@ -22,7 +23,9 @@
 |----------|--------|
 | `npm run docs:open-mockups` | Ouvrir les maquettes HTML |
 | `npm run docs:open-brief` | Ouvrir le brief HTML |
-| `npm run docs:pdf` | Générer le brief PDF (pandoc) |
+| `npm run docs:guide-restant` | Générer le guide associés PDF |
+| `npm run docs:pactes` | Générer les 4 pactes PDF |
+| `npm run docs:pdf` | Générer le brief PDF depuis le Markdown (pandoc) |
 | `npm run docs:cv` | Générer un CV joueur HTML (exemple) |
 
 ---

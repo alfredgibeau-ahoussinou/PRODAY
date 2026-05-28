@@ -45,7 +45,10 @@ export const SponsorsScreen: React.FC<SponsorsScreenProps> = ({
   const isSponsor = profile?.role === 'sponsor';
   const canCreateGoal =
     profile &&
-    (profile.role === 'coach' || profile.role === 'organizer' || profile.role === 'agent');
+    (profile.role === 'coach' ||
+      profile.role === 'organizer' ||
+      profile.role === 'agent' ||
+      profile.role === 'club');
   const clubId = profile?.profile.club_id ?? profile?.uid;
 
   const onRefresh = useCallback(async () => {

@@ -77,7 +77,8 @@ export const EventLiveStatsScreen: React.FC<EventLiveStatsScreenProps> = ({
     Boolean(isAdmin) ||
     profile?.role === 'coach' ||
     profile?.role === 'organizer' ||
-    profile?.role === 'agent';
+    profile?.role === 'agent' ||
+    profile?.role === 'club';
   const reportLocked = Boolean(event?.match_report_finalized_at) && !canManageFinalizedReport;
 
   const addAction = async (type: LiveActionType) => {

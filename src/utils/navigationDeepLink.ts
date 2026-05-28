@@ -1,8 +1,8 @@
 import type { SeasonCalendarItem } from './seasonCalendar';
 
-export type MercatoDeepLink = 'detections' | 'create_post';
+export type MercatoDeepLink = 'detections' | 'create_post' | 'stages';
 export type ProfileDeepLink = 'applications';
-export type DashboardDeepLink = 'arena' | 'sponsors';
+export type DashboardDeepLink = 'arena' | 'sponsors' | 'feed';
 export type MatchsDeepLink = { eventId?: string; homeTab?: 'season' | 'matches' };
 
 export interface TabNavigationActions {

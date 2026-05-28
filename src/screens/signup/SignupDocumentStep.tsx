@@ -82,7 +82,9 @@ export const SignupDocumentStep: React.FC<SignupDocumentStepProps> = ({
           ? 'Téléversez votre licence agent (FFF / FIFA). Analyse Mistral IA puis validation ProDay.'
           : role === 'organizer'
             ? 'Pièce d’identité ou attestation d’organisateur / responsable tournoi.'
-            : 'Téléversez votre diplôme ou carte éducateur. Analyse Mistral IA puis validation ProDay.'
+            : role === 'club'
+              ? 'Mandat, statuts ou attestation de représentant du club.'
+              : 'Téléversez votre diplôme ou carte éducateur. Analyse Mistral IA puis validation ProDay.'
       }
       onBack={onBack}
       footer={

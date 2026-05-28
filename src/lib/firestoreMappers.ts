@@ -25,6 +25,7 @@ import type {
 } from '../models/TeamEvent';
 import type { SponsorOffer, ClubFundingGoal } from '../models/SponsorOffer';
 import type { ClubAnnouncement } from '../models/ClubAnnouncement';
+import type { StageOffer, StageApplication } from '../models/Stage';
 
 function toDate(value: unknown): Date {
   if (
@@ -413,6 +414,46 @@ export function clubAnnouncementFromFirestore(
     author_name: String(data.author_name ?? ''),
     title: String(data.title ?? ''),
     body: String(data.body ?? ''),
+    created_at: toDate(data.created_at),
+  };
+}
+
+export function stageOfferFromFirestore(
+  id: string,
+  data: Record<string, unknown>
+): StageOffer {
+  return {
+    id,
+    author_uid: String(data.author_uid ?? ''),
+    club_id: String(data.club_id ?? ''),
+    club_name: String(data.club_name ?? ''),
+    title: String(data.title ?? ''),
+    description: String(data.description ?? ''),
+    city: String(data.city ?? ''),
+    category: String(data.category ?? ''),
+    start_date: toDate(data.start_date),
+    end_date: toDate(data.end_date),
+    price_eur: data.price_eur != null ? Number(data.price_eur) : undefined,
+    spots_total: Number(data.spots_total ?? 0),
+    spots_taken: Number(data.spots_taken ?? 0),
+    status: (data.status as StageOffer['status']) ?? 'OPEN',
+    target_space: data.target_space as StageOffer['target_space'],
+    created_at: toDate(data.created_at),
+  };
+}
+
+export function stageApplicationFromFirestore(
+  id: string,
+  data: Record<string, unknown>
+): StageApplication {
+  return {
+    id,
+    stage_id: String(data.stage_id ?? ''),
+    stage_author_uid: data.stage_author_uid as string | undefined,
+    player_uid: String(data.player_uid ?? ''),
+    player_name: String(data.player_name ?? ''),
+    message: String(data.message ?? ''),
+    status: (data.status as StageApplication['status']) ?? 'PENDING',
     created_at: toDate(data.created_at),
   };
 }

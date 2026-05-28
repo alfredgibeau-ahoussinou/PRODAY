@@ -42,6 +42,7 @@ export interface SignupPhase {
 const ROLE_LABELS: Record<UserRole, string> = {
   player: 'Joueur',
   coach: 'Coach',
+  club: 'Club',
   agent: 'Agent',
   organizer: 'Organisateur',
   sponsor: 'Partenaire',
@@ -241,6 +242,8 @@ export function getStaffStepSubtitle(role: UserRole): string {
       return 'Zone géographique — la licence pro suit à l’étape vérification.';
     case 'organizer':
       return 'Ville et structure — justificatif à téléverser ensuite.';
+    case 'club':
+      return 'Structure sportive — mandat ou statuts à téléverser après le compte.';
     case 'physio':
       return 'Cabinet ou club d’attache — publiez sur le fil ProDay après inscription.';
     default:

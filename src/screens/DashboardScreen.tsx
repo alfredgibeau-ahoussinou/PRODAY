@@ -71,15 +71,16 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ profile }) => 
   const [refreshing, setRefreshing] = useState(false);
 
   const isStaff =
-    profile.role === 'coach' || profile.role === 'agent' || profile.role === 'physio';
-  const showFeedEntry =
-    platformFeedService.canPublishFeedNews(profile.role) ||
+    profile.role === 'coach' ||
     profile.role === 'agent' ||
-    profile.role === 'player';
+    profile.role === 'physio' ||
+    profile.role === 'club';
+  const showFeedEntry = true;
   const isOrganizer =
     profile.role === 'coach' ||
     profile.role === 'organizer' ||
-    profile.role === 'agent';
+    profile.role === 'agent' ||
+    profile.role === 'club';
   const pendingVerify = isStaff && profile.verification_status === 'PENDING';
 
   const { items: reminderItems, loading: loadingReminders, refresh: refreshReminders } =
@@ -241,9 +242,13 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ profile }) => 
             <Text style={styles.feedSub}>
               {profile.role === 'agent'
                 ? 'Actualités, sondages entre agents et veille mercato.'
-                : profile.role === 'physio'
-                  ? 'Publiez conseils prévention & récupération.'
-                  : 'Suivez les actus agents, coachs et kinés.'}
+                : profile.role === 'club'
+                  ? 'Publiez actus club, stages et vie de votre structure.'
+                  : profile.role === 'physio'
+                    ? 'Publiez conseils prévention & récupération.'
+                    : platformFeedService.canPublishFeedNews(profile.role)
+                      ? 'Partagez vos actus avec la communauté ProDay.'
+                      : 'Suivez les actus agents, coachs, clubs et kinés.'}
             </Text>
           </View>
           <Icon name="chevron-forward" size={22} color={colors.accent} />

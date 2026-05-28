@@ -20,11 +20,15 @@ service cloud.firestore {
 
     function isStaff() {
       return isSignedIn()
-        && userDoc(request.auth.uid).data.role in ['coach', 'organizer', 'agent', 'physio'];
+        && userDoc(request.auth.uid).data.role in ['coach', 'club', 'organizer', 'agent', 'physio'];
     }
 
     function isFeedAuthorRole() {
-      return userDoc(request.auth.uid).data.role in ['agent', 'physio', 'coach', 'organizer'];
+      return userDoc(request.auth.uid).data.role in ['agent', 'physio', 'coach', 'organizer', 'club'];
+    }
+
+    function canPublishStages() {
+      return userDoc(request.auth.uid).data.role in ['club', 'organizer', 'coach'];
     }
 
     function canReadFeedPost() {
@@ -217,6 +221,33 @@ service cloud.firestore {
     }
 
     /** Fil d'actualité ProDay + sondages agents */
+    match /stage_offers/{offerId} {
+      allow read: if true;
+      allow create: if isSignedIn()
+        && canPublishStages()
+        && request.resource.data.author_uid == request.auth.uid
+        && request.resource.data.status == 'OPEN';
+      allow update: if isAdmin()
+        || (isSignedIn()
+            && resource.data.author_uid == request.auth.uid
+            && request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly(['spots_taken', 'status', 'updated_at']));
+      allow delete: if isAdmin()
+        || (isSignedIn() && resource.data.author_uid == request.auth.uid);
+    }
+
+    match /stage_applications/{appId} {
+      allow read: if isAdmin()
+        || (isSignedIn()
+            && (resource.data.player_uid == request.auth.uid
+                || resource.data.stage_author_uid == request.auth.uid));
+      allow create: if isSignedIn()
+        && request.resource.data.player_uid == request.auth.uid
+        && request.resource.data.status == 'PENDING';
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
     match /platform_feed/{postId} {
       allow read: if isSignedIn() && canReadFeedPost();
       allow create: if isSignedIn()

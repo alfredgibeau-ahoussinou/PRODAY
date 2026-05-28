@@ -66,7 +66,11 @@ export function useMatchActions(profile: User | null) {
         const requesterOrganizerUid =
           match.requester_uid ??
           requesterMembers.find(
-            (m) => m.role === 'coach' || m.role === 'organizer' || m.role === 'agent'
+            (m) =>
+              m.role === 'coach' ||
+              m.role === 'organizer' ||
+              m.role === 'agent' ||
+              m.role === 'club'
           )?.uid ??
           requesterMembers[0]?.uid;
 

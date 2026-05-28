@@ -54,6 +54,7 @@ import { colors, spacing, radius } from '../theme/designTokens';
 const ROLE_LABELS: Record<UserRole, string> = {
   player: 'Joueur',
   coach: 'Coach',
+  club: 'Club',
   agent: 'Agent',
   organizer: 'Organisateur',
   sponsor: 'Sponsor',
@@ -101,17 +102,22 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
   }, [pendingProfileView, clearPendingProfile]);
 
   const p = profile.profile;
-  const isStaff = profile.role === 'coach' || profile.role === 'agent';
+  const isStaff =
+    profile.role === 'coach' ||
+    profile.role === 'agent' ||
+    profile.role === 'club';
   const isOrganizer =
     profile.role === 'coach' ||
     profile.role === 'organizer' ||
-    profile.role === 'agent';
+    profile.role === 'agent' ||
+    profile.role === 'club';
   const pendingVerify = isStaff && profile.verification_status === 'PENDING';
   const verifiedStaff = isStaff && profile.verification_status === 'VERIFIED';
   const canManageClub =
     profile.role === 'organizer' ||
     profile.role === 'coach' ||
-    profile.role === 'agent';
+    profile.role === 'agent' ||
+    profile.role === 'club';
   const isPlayerMinor = profile.role === 'player' && isMinorUser(profile);
   const playerVerifyProgress =
     profile.role === 'player'

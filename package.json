@@ -25,6 +25,8 @@
     "docs:open-mockups": "open docs/design/mockups/index.html",
     "docs:open-brief": "open docs/design/ProDay_Brief.html",
     "branding:logos": "node scripts/generate-transparent-logos.mjs",
+    "docs:pactes": "node scripts/generate-pacte-pdf.mjs",
+    "docs:guide-restant": "node scripts/generate-guide-restant-pdf.mjs",
     "test": "jest",
     "test:watch": "jest --watch",
     "eas:build:preview": "eas build --profile preview",

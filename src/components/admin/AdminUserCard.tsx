@@ -8,6 +8,7 @@ import { colors, spacing, radius } from '../../theme/designTokens';
 const ROLE_LABEL: Record<UserRole, string> = {
   player: 'Joueur',
   coach: 'Coach',
+  club: 'Club',
   agent: 'Agent',
   organizer: 'Organisateur',
   sponsor: 'Sponsor',

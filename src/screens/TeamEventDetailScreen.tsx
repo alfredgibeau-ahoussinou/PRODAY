@@ -172,7 +172,8 @@ export const TeamEventDetailScreen: React.FC<TeamEventDetailScreenProps> = ({
     Boolean(isAdmin) ||
     profile?.role === 'coach' ||
     profile?.role === 'organizer' ||
-    profile?.role === 'agent';
+    profile?.role === 'agent' ||
+    profile?.role === 'club';
   const canManageFinalizedReport = isStaff;
   const reportLocked = Boolean(event.match_report_finalized_at) && !canManageFinalizedReport;
 

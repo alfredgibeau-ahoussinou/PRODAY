@@ -15,6 +15,10 @@ import { useUnreadMessageCount } from './src/hooks/useUnreadMessages';
 import { AdminAppShell } from './src/navigation/AdminAppShell';
 import { AdminPreviewBanner } from './src/components/admin/AdminPreviewBanner';
 import { useIsAdmin } from './src/hooks/useIsAdmin';
+import type {
+  DashboardDeepLink,
+  MercatoDeepLink,
+} from './src/utils/navigationDeepLink';
 
 export default function App() {
   return (
@@ -44,15 +48,15 @@ function AppShell() {
     eventId?: string;
     homeTab?: 'season' | 'matches';
   } | null>(null);
-  const [pendingMercatoView, setPendingMercatoView] = useState<
-    'detections' | 'create_post' | null
-  >(null);
+  const [pendingMercatoView, setPendingMercatoView] = useState<MercatoDeepLink | null>(
+    null
+  );
   const [pendingProfileView, setPendingProfileView] = useState<'applications' | null>(
     null
   );
-  const [pendingDashboardView, setPendingDashboardView] = useState<
-    'arena' | 'sponsors' | null
-  >(null);
+  const [pendingDashboardView, setPendingDashboardView] = useState<DashboardDeepLink | null>(
+    null
+  );
   const [pendingArenaTournamentId, setPendingArenaTournamentId] = useState<
     string | null
   >(null);

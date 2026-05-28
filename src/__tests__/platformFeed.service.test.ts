@@ -8,6 +8,7 @@ describe('platformFeed permissions', () => {
   it('autorise la publication fil pour staff autorisé', () => {
     expect(canPublishFeedNews('agent')).toBe(true);
     expect(canPublishFeedNews('physio')).toBe(true);
+    expect(canPublishFeedNews('club')).toBe(true);
     expect(canPublishFeedNews('player')).toBe(false);
     expect(canPublishFeedNews('sponsor')).toBe(false);
   });

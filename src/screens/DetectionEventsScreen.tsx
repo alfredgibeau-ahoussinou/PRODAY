@@ -35,7 +35,8 @@ export const DetectionEventsScreen: React.FC<DetectionEventsScreenProps> = ({
     profile &&
     (profile.role === 'coach' ||
       profile.role === 'organizer' ||
-      profile.role === 'agent');
+      profile.role === 'agent' ||
+      profile.role === 'club');
 
   if (view === 'create' && canCreate) {
     return (

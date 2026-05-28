@@ -13,7 +13,7 @@ import type { User, UserRole, VerificationStatus } from '../../models/User';
 import { ROLES_REQUIRING_VERIFICATION } from '../../models/User';
 import { colors, spacing, radius } from '../../theme/designTokens';
 
-const ROLES: UserRole[] = ['player', 'coach', 'agent', 'organizer', 'physio', 'sponsor'];
+const ROLES: UserRole[] = ['player', 'coach', 'club', 'agent', 'organizer', 'physio', 'sponsor'];
 const VERIFY: VerificationStatus[] = ['NOT_REQUIRED', 'PENDING', 'VERIFIED', 'REJECTED'];
 
 interface AdminUserEditModalProps {

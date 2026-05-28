@@ -8,6 +8,7 @@ import {
   ViewStyle,
 } from 'react-native';
 import { User, getVerificationBadge, canContactMinors } from '../models/User';
+import { ROLE_LABELS } from '../utils/roleCapabilities';
 import { Icon } from './ui/Icon';
 import { colors, spacing, radius, shadows } from '../theme/designTokens';
 
@@ -103,15 +104,7 @@ const StatChip: React.FC<{ label: string }> = ({ label }) => (
 );
 
 function getRoleLabel(user: User): string {
-  const labels: Record<User['role'], string> = {
-    player: 'Joueur',
-    coach: 'Coach',
-    agent: 'Agent',
-    organizer: 'Organisateur',
-    sponsor: 'Sponsor',
-    physio: 'Kinésithérapeute',
-  };
-  return labels[user.role] ?? user.role;
+  return ROLE_LABELS[user.role] ?? user.role;
 }
 
 const styles = StyleSheet.create({

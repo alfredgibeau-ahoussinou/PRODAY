@@ -62,7 +62,8 @@ export const MatchsScreen: React.FC = () => {
     profile &&
     (profile.role === 'coach' ||
       profile.role === 'organizer' ||
-      profile.role === 'agent');
+      profile.role === 'agent' ||
+      profile.role === 'club');
 
   useEffect(() => {
     setMyClubId(profile ? profile.profile.club_id ?? profile.uid : null);

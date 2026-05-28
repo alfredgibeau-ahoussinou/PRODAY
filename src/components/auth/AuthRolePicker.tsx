@@ -23,6 +23,12 @@ export const ROLE_OPTIONS: {
     icon: 'school',
   },
   {
+    value: 'club',
+    label: 'Club',
+    description: 'Stages · annonces · gestion équipe',
+    icon: 'business',
+  },
+  {
     value: 'agent',
     label: 'Agent',
     description: 'Licence pro · recrutement',

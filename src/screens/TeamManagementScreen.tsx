@@ -220,7 +220,8 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
     Boolean(isAdmin) ||
     profile.role === 'coach' ||
     profile.role === 'organizer' ||
-    profile.role === 'agent';
+    profile.role === 'agent' ||
+    profile.role === 'club';
 
   if (hubView === 'join') {
     return (
@@ -270,7 +271,10 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
   }
   const canManageFinalizedReport =
     Boolean(isAdmin) ||
-    profile.role === 'coach' || profile.role === 'organizer' || profile.role === 'agent';
+    profile.role === 'coach' ||
+    profile.role === 'organizer' ||
+    profile.role === 'agent' ||
+    profile.role === 'club';
   const reportLocked = Boolean(statsEvent?.match_report_finalized_at) && !canManageFinalizedReport;
   const statPlayers = useMemo(() => {
     if (!statsEvent) return [];

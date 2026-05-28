@@ -27,6 +27,10 @@ import { CreateRecruitmentPostScreen } from './CreateRecruitmentPostScreen';
 import { RecruitmentPostScreen } from './RecruitmentPostScreen';
 import { FavoritesListScreen } from './FavoritesListScreen';
 import { DetectionEventsScreen } from './DetectionEventsScreen';
+import { StagesListScreen } from './StagesListScreen';
+import { StageDetailScreen } from './StageDetailScreen';
+import { CreateStageScreen } from './CreateStageScreen';
+import { canPublishStages } from '../utils/roleCapabilities';
 import { useMercatoHome, useUserProfile } from '../hooks/useRecruitmentData';
 import { useAuth } from '../context/AuthContext';
 import { useTabNavigation } from '../context/TabNavigationContext';
@@ -54,7 +58,10 @@ type MercatoView =
   | 'create_club'
   | 'post_detail'
   | 'favorites'
-  | 'detections';
+  | 'detections'
+  | 'stages'
+  | 'stage_detail'
+  | 'create_stage';
 
 export const MercatoScreen: React.FC = () => {
   const [view, setView] = useState<MercatoView>('home');
@@ -62,6 +69,7 @@ export const MercatoScreen: React.FC = () => {
   const [selectedStaffId, setSelectedStaffId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
+  const [selectedStageId, setSelectedStageId] = useState<string | null>(null);
   const [returnView, setReturnView] = useState<MercatoView>('home');
   const [applicationsCount, setApplicationsCount] = useState(0);
 
@@ -120,6 +128,47 @@ export const MercatoScreen: React.FC = () => {
 
   if (view === 'detections') {
     return <DetectionEventsScreen onBack={() => setView('home')} />;
+  }
+
+  if (view === 'stages') {
+    return (
+      <StagesListScreen
+        profile={profile}
+        onBack={() => setView('home')}
+        onSelectStage={(id) => {
+          setSelectedStageId(id);
+          setView('stage_detail');
+        }}
+        onCreateStage={
+          profile && canPublishStages(profile.role)
+            ? () => setView('create_stage')
+            : undefined
+        }
+      />
+    );
+  }
+
+  if (view === 'create_stage' && profile) {
+    return (
+      <CreateStageScreen
+        profile={profile}
+        onBack={() => setView('stages')}
+        onCreated={() => setView('stages')}
+      />
+    );
+  }
+
+  if (view === 'stage_detail' && selectedStageId) {
+    return (
+      <StageDetailScreen
+        stageId={selectedStageId}
+        profile={profile}
+        onBack={() => {
+          setSelectedStageId(null);
+          setView('stages');
+        }}
+      />
+    );
   }
 
   if (view === 'favorites' && profile) {
@@ -355,6 +404,15 @@ export const MercatoScreen: React.FC = () => {
             count="Essais & scouting"
             loading={false}
             onPress={() => setView('detections')}
+          />
+        </View>
+        <View style={styles.quickRow}>
+          <QuickAccessCard
+            icon="calendar"
+            title="Stages"
+            count="Camps & stages foot"
+            loading={false}
+            onPress={() => setView('stages')}
           />
         </View>
         {profile ? (

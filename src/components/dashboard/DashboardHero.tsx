@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import type { User } from '../../models/User';
 import type { ProdayPulseResult, PulseBreakdownItem } from '../../utils/prodayPulse';
 import { ROLE_DASHBOARD_TAGLINE } from '../../content/dashboardUniques';
+import { ROLE_LABELS } from '../../utils/roleCapabilities';
 import { ProDayPulseInteractive } from '../interactive/ProDayPulseInteractive';
 import { Icon } from '../ui/Icon';
 import { colors, spacing, radius, shadows } from '../../theme/designTokens';
@@ -25,16 +26,7 @@ export const DashboardHero: React.FC<DashboardHeroProps> = ({
   onMessagesPress,
 }) => {
   const firstName = profile.display_name.split(' ')[0];
-  const roleLabel =
-    profile.role === 'player'
-      ? 'Joueur'
-      : profile.role === 'coach'
-        ? 'Coach'
-        : profile.role === 'agent'
-          ? 'Agent'
-          : profile.role === 'organizer'
-            ? 'Organisateur'
-            : 'Sponsor';
+  const roleLabel = ROLE_LABELS[profile.role];
 
   return (
     <View style={styles.wrap}>
