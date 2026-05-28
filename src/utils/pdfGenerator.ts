@@ -22,7 +22,7 @@ export interface PlayerCvData {
   generated_at?: string;
 }
 
-const BRAND = '#003399';
+const BRAND = '#0A0A0A';
 const NAVY = '#0F172A';
 
 function footLabel(foot?: string): string {

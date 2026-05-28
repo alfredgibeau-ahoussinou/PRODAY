@@ -12,6 +12,7 @@ import {
 import type { User } from '../models/User';
 import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { recruitmentService } from '../services/recruitment.service';
+import { useAppSpace } from '../context/AppSpaceContext';
 import { colors, spacing, radius } from '../theme/designTokens';
 
 interface CreateRecruitmentPostScreenProps {
@@ -32,6 +33,7 @@ export const CreateRecruitmentPostScreen: React.FC<CreateRecruitmentPostScreenPr
   const [city, setCity] = useState(profile.city ?? '');
   const [description, setDescription] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const { appSpace } = useAppSpace();
 
   const handleSubmit = async () => {
     if (!position.trim() || !level.trim() || !city.trim()) {
@@ -50,6 +52,7 @@ export const CreateRecruitmentPostScreen: React.FC<CreateRecruitmentPostScreenPr
         level: level.trim(),
         city: city.trim(),
         description: description.trim() || undefined,
+        target_space: appSpace,
       });
       Alert.alert('Annonce publiée', 'Visible dans Recrutements populaires.');
       onCreated();

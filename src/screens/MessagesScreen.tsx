@@ -13,7 +13,9 @@ import { useAuth } from '../context/AuthContext';
 import { useTabNavigation } from '../context/TabNavigationContext';
 import { profileService } from '../services/profile.service';
 import { ROLES_REQUIRING_VERIFICATION } from '../models/User';
+import { physioCareThreadLabel } from '../utils/physioMessaging';
 import { ChatScreen } from './ChatScreen';
+import { TAB_BAR_CONTENT_INSET } from '../components/navigation/BottomTabBar';
 import { colors, spacing, radius } from '../theme/designTokens';
 
 export const MessagesScreen: React.FC = () => {
@@ -42,6 +44,7 @@ export const MessagesScreen: React.FC = () => {
         threadId={activeThreadId}
         otherName={activeThread.participant_name}
         currentUid={profile.uid}
+        currentUser={profile}
         onBack={() => {
           setActiveThreadId(null);
           refresh();
@@ -56,6 +59,7 @@ export const MessagesScreen: React.FC = () => {
         threadId={activeThreadId}
         otherName="Conversation"
         currentUid={profile.uid}
+        currentUser={profile}
         onBack={() => {
           setActiveThreadId(null);
           refresh();
@@ -67,13 +71,14 @@ export const MessagesScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       <ScreenHeader
+        label="Messagerie"
         title="Messages"
-        subtitle="Profils vérifiés (coach, agent)"
+        subtitle="Coach, agent, kiné joueur"
         showBrandLogo
       />
       <Text style={styles.notice}>
-        Les conversations avec les mineurs nécessitent un badge vert. Messagerie
-        bloquée tant que la vérification est en attente.
+        Comptes mineurs : contacts approuvés uniquement. Coachs et agents doivent être
+        vérifiés (badge vert) pour contacter un mineur.
       </Text>
 
       {!authLoading && !profile && (
@@ -113,7 +118,14 @@ export const MessagesScreen: React.FC = () => {
               </View>
               <View style={styles.threadBody}>
                 <View style={styles.threadTop}>
-                  <Text style={styles.threadName}>{item.participant_name}</Text>
+                  <View style={styles.threadNameRow}>
+                    <Text style={styles.threadName}>{item.participant_name}</Text>
+                    {physioCareThreadLabel(item.thread_kind) ? (
+                      <Text style={styles.kineBadge}>
+                        {physioCareThreadLabel(item.thread_kind)}
+                      </Text>
+                    ) : null}
+                  </View>
                   <Text style={styles.threadTime}>
                     {item.updated_at.toLocaleDateString('fr-FR', {
                       day: 'numeric',
@@ -161,7 +173,10 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 20,
   },
-  list: { paddingHorizontal: spacing.lg, paddingBottom: spacing.xxl },
+  list: {
+    paddingHorizontal: spacing.lg,
+    paddingBottom: TAB_BAR_CONTENT_INSET + spacing.lg,
+  },
   thread: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -176,15 +191,25 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: colors.brandSoft,
+    backgroundColor: colors.surfaceInverse,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: spacing.md,
   },
-  avatarText: { fontSize: 18, fontWeight: '800', color: colors.brand },
+  avatarText: { fontSize: 18, fontWeight: '900', color: colors.brandInverse },
   threadBody: { flex: 1 },
   threadTop: { flexDirection: 'row', justifyContent: 'space-between' },
+  threadNameRow: { flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 },
   threadName: { fontSize: 15, fontWeight: '700', color: colors.text },
+  kineBadge: {
+    fontSize: 9,
+    fontWeight: '900',
+    color: colors.accent,
+    backgroundColor: colors.accentSoft,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
   threadTime: { fontSize: 11, color: colors.textMuted },
   threadPreview: { fontSize: 13, color: colors.textSecondary, marginTop: 4 },
   unreadDot: {

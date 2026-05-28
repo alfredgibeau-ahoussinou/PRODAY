@@ -24,6 +24,8 @@ import {
   type MessageThread,
   type ChatMessage,
 } from '../lib/firestoreMappers';
+import { threadKindForParticipants, type ThreadKind } from '../utils/physioMessaging';
+import type { UserRole } from '../models/User';
 
 function threadIdFor(uidA: string, uidB: string): string {
   return [uidA, uidB].sort().join('__');
@@ -60,7 +62,8 @@ export const messagesService = {
     currentUid: string,
     currentName: string,
     otherUid: string,
-    otherName: string
+    otherName: string,
+    options?: { currentRole?: UserRole; otherRole?: UserRole }
   ): Promise<string> {
     const database = getDb();
     if (!database) throw new Error('Firebase non configuré');
@@ -69,6 +72,10 @@ export const messagesService = {
     const id = threadIdFor(currentUid, otherUid);
     const ref = doc(database, 'message_threads', id);
     const snap = await getDoc(ref);
+    const threadKind: ThreadKind =
+      options?.currentRole && options?.otherRole
+        ? threadKindForParticipants(options.currentRole, options.otherRole)
+        : 'standard';
 
     if (!snap.exists()) {
       await setDoc(ref, {
@@ -77,20 +84,25 @@ export const messagesService = {
           [currentUid]: currentName,
           [otherUid]: otherName,
         },
+        thread_kind: threadKind,
         last_message: '',
         updated_at: serverTimestamp(),
         unread_by: [],
       });
     } else {
       const names = (snap.data().participant_names ?? {}) as Record<string, string>;
-      await updateDoc(ref, {
+      const patch: Record<string, unknown> = {
         participant_names: {
           ...names,
           [currentUid]: currentName,
           [otherUid]: otherName,
         },
         updated_at: serverTimestamp(),
-      });
+      };
+      if (!snap.data().thread_kind && threadKind === 'physio_care') {
+        patch.thread_kind = threadKind;
+      }
+      await updateDoc(ref, patch);
     }
 
     return id;

@@ -1,170 +1,117 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
   ScrollView,
-  Alert,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
-import * as DocumentPicker from 'expo-document-picker';
-import type { UserRole } from '../models/User';
-import { ROLES_REQUIRING_VERIFICATION } from '../models/User';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { authService } from '../services/auth.service';
-import { profileService } from '../services/profile.service';
-import { BrandHeader } from '../components/BrandHeader';
-import { VerificationBadge } from '../components/VerificationBadge';
-import { VerificationFlowScreen } from './VerificationFlowScreen';
-import { VerificationSuccessScreen } from './VerificationSuccessScreen';
-import { ParentalControlScreen } from './ParentalControlScreen';
-import { EditProfileScreen } from './EditProfileScreen';
-import { CreateClubScreen } from './CreateClubScreen';
+import { Logo } from '../components/Logo';
+import { AuthTextField } from '../components/auth/AuthTextField';
+import { AuthSocialButtons } from '../components/auth/AuthSocialButtons';
+import { ProDayErrorBanner, type ProDayBannerVariant } from '../components/ui/ProDayErrorBanner';
+import { ProDayConfigNotice } from '../components/ui/ProDayConfigNotice';
+import { SignupFlow } from './signup/SignupFlow';
+import { ForgotPasswordScreen } from './ForgotPasswordScreen';
+import { LegalDocumentScreen } from './LegalDocumentScreen';
+import { ProfileScreen } from './ProfileScreen';
+import type { LegalDocumentId } from '../content/legalDocuments';
 import { useAuth } from '../context/AuthContext';
-import { colors, spacing, radius } from '../theme/designTokens';
+import { colors, spacing, radius, shadows, BRAND } from '../theme/designTokens';
 
-const ROLES: { value: UserRole; label: string }[] = [
-  { value: 'player', label: 'Joueur' },
-  { value: 'coach', label: 'Coach' },
-  { value: 'agent', label: 'Agent' },
-  { value: 'organizer', label: 'Organisateur' },
-  { value: 'sponsor', label: 'Sponsor' },
-];
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 type Mode = 'signup' | 'login';
 
 export const AuthScreen: React.FC = () => {
+  const insets = useSafeAreaInsets();
   const { profile, loading: authLoading, configured, refreshProfile, signOut } =
     useAuth();
 
-  const [mode, setMode] = useState<Mode>('signup');
-  const [step, setStep] = useState<'role' | 'info' | 'document' | 'pending'>('role');
-  const [role, setRole] = useState<UserRole>('player');
-  const [displayName, setDisplayName] = useState('');
+  const [mode, setMode] = useState<Mode>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [city, setCity] = useState('');
-  const [position, setPosition] = useState('');
-  const [statMatches, setStatMatches] = useState('');
-  const [statGoals, setStatGoals] = useState('');
-  const [statAssists, setStatAssists] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [showVerificationFlow, setShowVerificationFlow] = useState(false);
-  const [showVerificationSuccess, setShowVerificationSuccess] = useState(false);
-  const [showParentalControl, setShowParentalControl] = useState(false);
-  const [showEditProfile, setShowEditProfile] = useState(false);
-  const [showCreateClub, setShowCreateClub] = useState(false);
+  const [banner, setBanner] = useState<{
+    message: string;
+    variant: ProDayBannerVariant;
+  } | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [signupPrefill, setSignupPrefill] = useState<{
+    email: string;
+    displayName?: string;
+  } | null>(null);
+  /** Garde le wizard d'inscription monté après création du compte (success / document). */
+  const [signupWizardActive, setSignupWizardActive] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [legalDocument, setLegalDocument] = useState<LegalDocumentId | null>(null);
 
-  const needsDocument = ROLES_REQUIRING_VERIFICATION.includes(role);
-
-  useEffect(() => {
-    if (profile && mode === 'signup' && step === 'role') {
-      setMode('login');
-    }
-  }, [profile, mode, step]);
-
-  const parseStat = (value: string) => {
-    const n = parseInt(value.replace(/\D/g, ''), 10);
-    return Number.isFinite(n) && n >= 0 ? n : 0;
+  const clearErrors = () => {
+    setBanner(null);
+    setFieldErrors({});
   };
 
-  const handleSignUp = async () => {
-    if (!displayName.trim() || !email.trim() || password.length < 6) {
-      setError('Nom, email et mot de passe (6 car. min.) requis.');
-      return;
-    }
-    setLoading(true);
-    setError(null);
-    try {
-      const profilePayload =
-        role === 'player'
-          ? {
-              ...(position.trim() ? { position: position.trim() } : {}),
-              season_stats: {
-                matches: parseStat(statMatches),
-                goals: parseStat(statGoals),
-                assists: parseStat(statAssists),
-              },
-            }
-          : undefined;
+  const showError = (message: string, variant: ProDayBannerVariant = 'error') => {
+    setBanner({ message, variant });
+  };
 
-      const user = await authService.signUp({
-        email,
-        password,
-        display_name: displayName,
-        role,
-        city: city.trim() || undefined,
-        profile: profilePayload,
-      });
-      await refreshProfile();
-      setStep(needsDocument ? 'document' : 'pending');
-      if (!needsDocument) {
-        Alert.alert('Compte créé', `Bienvenue ${user.display_name} !`);
-      }
-    } catch (e) {
-      setError(authService.getAuthErrorMessage(e));
-    } finally {
-      setLoading(false);
+  const switchMode = (next: Mode) => {
+    setMode(next);
+    clearErrors();
+    if (next === 'signup') {
+      setSignupWizardActive(true);
+    } else {
+      setSignupPrefill(null);
+      setSignupWizardActive(false);
     }
+  };
+
+  const validateEmail = (value: string) => {
+    if (!value.trim()) return 'Email requis';
+    if (!EMAIL_RE.test(value.trim())) return 'Format email invalide';
+    return undefined;
+  };
+
+  const validateLoginFields = () => {
+    const errs: Record<string, string> = {};
+    const emailErr = validateEmail(email);
+    if (emailErr) errs.email = emailErr;
+    if (!password) errs.password = 'Mot de passe requis';
+    setFieldErrors(errs);
+    return Object.keys(errs).length === 0;
   };
 
   const handleLogin = async () => {
-    if (!email.trim() || !password) {
-      setError('Email et mot de passe requis.');
-      return;
-    }
+    if (!validateLoginFields()) return;
     setLoading(true);
-    setError(null);
+    clearErrors();
     try {
       await authService.signIn(email, password);
       await refreshProfile();
-      setError(null);
     } catch (e) {
-      setError(authService.getAuthErrorMessage(e));
+      showError(authService.getAuthErrorMessage(e));
     } finally {
       setLoading(false);
     }
   };
 
-  const handlePickAndUploadDocument = async (uid: string, userRole: UserRole) => {
-    const pick = await DocumentPicker.getDocumentAsync({
-      type: ['image/*', 'application/pdf'],
-      copyToCacheDirectory: true,
-    });
-    if (pick.canceled || !pick.assets?.[0]) return;
-
-    const asset = pick.assets[0];
-    setLoading(true);
-    setError(null);
-    try {
-      const result = await profileService.uploadVerificationDocument(
-        uid,
-        {
-          uri: asset.uri,
-          mimeType: asset.mimeType ?? 'image/jpeg',
-        },
-        userRole === 'agent' ? 'license' : 'diploma'
-      );
-      if (!result.success) throw new Error(result.error);
-      await refreshProfile();
-      setStep('pending');
-      Alert.alert('Document envoyé', 'Votre dossier est en cours de validation.');
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Upload échoué');
-    } finally {
-      setLoading(false);
-    }
+  const handleSignOut = async () => {
+    await signOut();
+    switchMode('login');
   };
 
   if (!configured) {
     return (
-      <View style={styles.container}>
-        <BrandHeader size="screen" centered />
-        <Text style={styles.errorBox}>
-          Fichier .env manquant ou incomplet. Voir docs/FIREBASE_SETUP.md
-        </Text>
+      <View style={[styles.container, styles.centered]}>
+        <Logo background="light" width={140} />
+        <View style={styles.configWrap}>
+          <ProDayConfigNotice blockingOnly />
+        </View>
       </View>
     );
   }
@@ -172,450 +119,332 @@ export const AuthScreen: React.FC = () => {
   if (authLoading) {
     return (
       <View style={[styles.container, styles.centered]}>
-        <ActivityIndicator size="large" color={colors.brand} />
+        <ActivityIndicator size="large" color={colors.accent} />
       </View>
     );
   }
 
-  if (profile && mode !== 'signup') {
-    const isStaff =
-      profile.role === 'coach' || profile.role === 'agent';
-    const pendingVerification =
-      isStaff && profile.verification_status === 'PENDING';
-    const verifiedStaff =
-      isStaff && profile.verification_status === 'VERIFIED';
-
-    if (showVerificationSuccess && verifiedStaff) {
-      return (
-        <VerificationSuccessScreen
-          onBack={() => setShowVerificationSuccess(false)}
-        />
-      );
-    }
-
-    if (showVerificationFlow && (pendingVerification || verifiedStaff)) {
-      return (
-        <VerificationFlowScreen
-          onBack={() => setShowVerificationFlow(false)}
-          initialSuccess={verifiedStaff}
-        />
-      );
-    }
-
-    if (showParentalControl) {
-      return (
-        <ParentalControlScreen onBack={() => setShowParentalControl(false)} />
-      );
-    }
-
-    if (showEditProfile) {
-      return (
-        <EditProfileScreen
-          user={profile}
-          onBack={() => setShowEditProfile(false)}
-          onSaved={refreshProfile}
-        />
-      );
-    }
-
-    if (showCreateClub) {
-      return (
-        <CreateClubScreen
-          profile={profile}
-          onBack={() => setShowCreateClub(false)}
-          onCreated={refreshProfile}
-        />
-      );
-    }
-
-    const canManageClub =
-      profile.role === 'organizer' ||
-      profile.role === 'coach' ||
-      profile.role === 'agent';
-
+  if (showForgotPassword) {
     return (
-      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-        <BrandHeader size="screen" centered />
-        <Text style={styles.profileName}>{profile.display_name}</Text>
-        <Text style={styles.profileMeta}>
-          {profile.email} · {profile.role}
-        </Text>
-        <VerificationBadge user={profile} />
+      <ForgotPasswordScreen
+        initialEmail={email}
+        onBack={() => {
+          setShowForgotPassword(false);
+          clearErrors();
+        }}
+      />
+    );
+  }
 
-        {profile.role === 'player' && profile.profile.season_stats && (
-          <Text style={styles.profileStats}>
-            Saison : {profile.profile.season_stats.matches} matchs ·{' '}
-            {profile.profile.season_stats.goals} buts ·{' '}
-            {profile.profile.season_stats.assists} passes décisives
-          </Text>
-        )}
+  if (legalDocument) {
+    return (
+      <LegalDocumentScreen
+        documentId={legalDocument}
+        onBack={() => setLegalDocument(null)}
+      />
+    );
+  }
 
-        {pendingVerification && (
-          <>
-            <Text style={styles.warn}>
-              Envoyez votre diplôme ou licence pour débloquer la messagerie.
-            </Text>
-            <TouchableOpacity
-              style={styles.secondary}
-              onPress={() => handlePickAndUploadDocument(profile.uid, profile.role)}
-              disabled={loading}
-            >
-              <Text style={styles.secondaryText}>
-                {loading ? 'Envoi…' : 'Choisir un document (PDF / image)'}
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => setShowVerificationFlow(true)}>
-              <Text style={styles.link}>Voir le suivi de vérification</Text>
-            </TouchableOpacity>
-          </>
-        )}
+  if (signupWizardActive) {
+    return (
+      <SignupFlow
+        onClose={() => {
+          setSignupWizardActive(false);
+          setMode('login');
+          setSignupPrefill(null);
+          clearErrors();
+        }}
+        onComplete={() => setSignupWizardActive(false)}
+        initialEmail={signupPrefill?.email}
+        initialDisplayName={signupPrefill?.displayName}
+      />
+    );
+  }
 
-        {verifiedStaff && (
-          <TouchableOpacity onPress={() => setShowVerificationSuccess(true)}>
-            <Text style={styles.link}>Voir diplôme vérifié</Text>
-          </TouchableOpacity>
-        )}
-
-        <TouchableOpacity
-          style={styles.secondary}
-          onPress={() => setShowEditProfile(true)}
-        >
-          <Text style={styles.secondaryText}>Modifier mon profil</Text>
-        </TouchableOpacity>
-
-        {canManageClub && !profile.profile.club_id && (
-          <TouchableOpacity
-            style={styles.secondary}
-            onPress={() => setShowCreateClub(true)}
-          >
-            <Text style={styles.secondaryText}>Créer mon club</Text>
-          </TouchableOpacity>
-        )}
-
-        {profile.profile.club_id && (
-          <Text style={styles.clubLinked}>
-            Club lié · ID {profile.profile.club_id.slice(0, 8)}…
-          </Text>
-        )}
-
-        <TouchableOpacity
-          style={styles.secondary}
-          onPress={() => setShowParentalControl(true)}
-        >
-          <Text style={styles.secondaryText}>Contrôle parental</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.primary}
-          onPress={async () => {
-            await signOut();
-            setMode('login');
-            setStep('role');
-          }}
-        >
-          <Text style={styles.primaryText}>Se déconnecter</Text>
-        </TouchableOpacity>
-      </ScrollView>
+  if (profile) {
+    return (
+      <ProfileScreen
+        profile={profile}
+        onRefresh={refreshProfile}
+        onSignOut={handleSignOut}
+      />
     );
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <BrandHeader size="hero" showTagline centered style={styles.authBrand} />
-
-      <View style={styles.modeRow}>
-        <TouchableOpacity
-          style={[styles.modeBtn, mode === 'signup' && styles.modeBtnActive]}
-          onPress={() => {
-            setMode('signup');
-            setStep('role');
-            setError(null);
-          }}
-        >
-          <Text style={[styles.modeText, mode === 'signup' && styles.modeTextActive]}>
-            Inscription
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <ScrollView
+        contentContainerStyle={[
+          styles.scroll,
+          { paddingBottom: Math.max(insets.bottom, spacing.xl) },
+        ]}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={[styles.hero, { paddingTop: insets.top + spacing.xl }]}>
+          <Logo background="dark" width={160} showTagline={false} />
+          <Text style={styles.heroTagline}>{BRAND.tagline}</Text>
+          <Text style={styles.heroTitle}>Bon retour</Text>
+          <Text style={styles.heroSub}>
+            Connectez-vous pour accéder à votre espace ProDay
           </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.modeBtn, mode === 'login' && styles.modeBtnActive]}
-          onPress={() => {
-            setMode('login');
-            setError(null);
-          }}
-        >
-          <Text style={[styles.modeText, mode === 'login' && styles.modeTextActive]}>
-            Connexion
-          </Text>
-        </TouchableOpacity>
-      </View>
+        </View>
 
-      {error && <Text style={styles.errorBox}>{error}</Text>}
+        <View style={styles.sheet}>
+          <View style={styles.sheetHandle} />
 
-      {mode === 'login' && (
-        <>
-          <TextInput
-            style={styles.input}
-            placeholder="Email"
-            placeholderTextColor={colors.textMuted}
+          <View style={styles.modeRow}>
+            <TouchableOpacity
+              style={[styles.modeTab, styles.modeTabActive]}
+              onPress={() => switchMode('login')}
+            >
+              <Text style={[styles.modeTabText, styles.modeTabTextActive]}>Connexion</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.modeTab} onPress={() => switchMode('signup')}>
+              <Text style={styles.modeTabText}>Inscription</Text>
+            </TouchableOpacity>
+          </View>
+
+          <ProDayConfigNotice compact />
+
+          {banner ? (
+            <ProDayErrorBanner
+              message={banner.message}
+              variant={banner.variant}
+              onDismiss={() => setBanner(null)}
+            />
+          ) : null}
+
+          <AuthTextField
+            label="Email"
+            icon="mail"
+            placeholder="vous@exemple.com"
             value={email}
-            onChangeText={setEmail}
+            onChangeText={(t) => {
+              setEmail(t);
+              if (fieldErrors.email) setFieldErrors((e) => ({ ...e, email: '' }));
+            }}
             keyboardType="email-address"
             autoCapitalize="none"
+            autoComplete="email"
+            error={fieldErrors.email}
           />
-          <TextInput
-            style={styles.input}
-            placeholder="Mot de passe"
-            placeholderTextColor={colors.textMuted}
+          <AuthTextField
+            label="Mot de passe"
+            icon="lock"
+            placeholder="••••••••"
             value={password}
-            onChangeText={setPassword}
-            secureTextEntry
+            onChangeText={(t) => {
+              setPassword(t);
+              if (fieldErrors.password) setFieldErrors((e) => ({ ...e, password: '' }));
+            }}
+            secureToggle
+            autoComplete="password"
+            error={fieldErrors.password}
           />
+
           <TouchableOpacity
-            style={styles.primary}
+            style={styles.forgotBtn}
+            onPress={() => {
+              clearErrors();
+              setShowForgotPassword(true);
+            }}
+          >
+            <Text style={styles.forgotText}>Mot de passe oublié ?</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.primaryBtn, loading && styles.primaryDisabled]}
             onPress={handleLogin}
             disabled={loading}
+            activeOpacity={0.88}
           >
             {loading ? (
-              <ActivityIndicator color="#fff" />
+              <ActivityIndicator color={colors.brandInverse} />
             ) : (
-              <Text style={styles.primaryText}>Se connecter</Text>
+              <Text style={styles.primaryBtnText}>Se connecter</Text>
             )}
           </TouchableOpacity>
-        </>
-      )}
 
-      {mode === 'signup' && step === 'role' && (
-        <>
-          <Text style={styles.label}>Choisissez votre rôle</Text>
-          {ROLES.map((r) => (
-            <TouchableOpacity
-              key={r.value}
-              style={[styles.roleBtn, role === r.value && styles.roleBtnActive]}
-              onPress={() => setRole(r.value)}
-            >
-              <Text style={styles.roleText}>{r.label}</Text>
-            </TouchableOpacity>
-          ))}
-          <TouchableOpacity style={styles.primary} onPress={() => setStep('info')}>
-            <Text style={styles.primaryText}>Continuer</Text>
-          </TouchableOpacity>
-        </>
-      )}
+          <View style={styles.dividerRow}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>ou</Text>
+            <View style={styles.dividerLine} />
+          </View>
 
-      {mode === 'signup' && step === 'info' && (
-        <>
-          <TextInput
-            style={styles.input}
-            placeholder="Nom affiché"
-            placeholderTextColor={colors.textMuted}
-            value={displayName}
-            onChangeText={setDisplayName}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Email"
-            placeholderTextColor={colors.textMuted}
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Mot de passe (6 car. min.)"
-            placeholderTextColor={colors.textMuted}
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Ville (optionnel)"
-            placeholderTextColor={colors.textMuted}
-            value={city}
-            onChangeText={setCity}
-          />
-          {role === 'player' && (
-            <>
-              <Text style={styles.label}>Stats saison (réelles)</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Poste (ex. Milieu)"
-                placeholderTextColor={colors.textMuted}
-                value={position}
-                onChangeText={setPosition}
-              />
-              <View style={styles.statRow}>
-                <TextInput
-                  style={[styles.input, styles.statInput]}
-                  placeholder="Matchs"
-                  placeholderTextColor={colors.textMuted}
-                  value={statMatches}
-                  onChangeText={setStatMatches}
-                  keyboardType="number-pad"
-                />
-                <TextInput
-                  style={[styles.input, styles.statInput]}
-                  placeholder="Buts"
-                  placeholderTextColor={colors.textMuted}
-                  value={statGoals}
-                  onChangeText={setStatGoals}
-                  keyboardType="number-pad"
-                />
-                <TextInput
-                  style={[styles.input, styles.statInput]}
-                  placeholder="Passes d."
-                  placeholderTextColor={colors.textMuted}
-                  value={statAssists}
-                  onChangeText={setStatAssists}
-                  keyboardType="number-pad"
-                />
-              </View>
-            </>
-          )}
-          <TouchableOpacity
-            style={styles.primary}
-            onPress={handleSignUp}
+          <AuthSocialButtons
             disabled={loading}
-          >
-            {loading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.primaryText}>Créer mon profil</Text>
-            )}
-          </TouchableOpacity>
-        </>
-      )}
+            onSuccess={refreshProfile}
+            onNeedsProfile={(prefill) => {
+              setSignupPrefill(prefill);
+              switchMode('signup');
+            }}
+            onError={(msg) => showError(msg)}
+          />
 
-      {mode === 'signup' && step === 'document' && profile && (
-        <>
-          <Text style={styles.warn}>
-            Photo de carte éducateur ou licence agent obligatoire. Accès messagerie bloqué
-            tant que non validé.
+          <Text style={styles.legal}>
+            En continuant, vous acceptez les{' '}
+            <Text style={styles.legalLink} onPress={() => setLegalDocument('terms')}>
+              CGU
+            </Text>{' '}
+            et la{' '}
+            <Text style={styles.legalLink} onPress={() => setLegalDocument('privacy')}>
+              politique de confidentialité
+            </Text>
+            .
           </Text>
-          <TouchableOpacity
-            style={styles.primary}
-            onPress={() => handlePickAndUploadDocument(profile.uid, profile.role)}
-            disabled={loading}
-          >
-            {loading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.primaryText}>Choisir un document</Text>
-            )}
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => setStep('pending')}>
-            <Text style={styles.link}>Passer pour l&apos;instant</Text>
-          </TouchableOpacity>
-        </>
-      )}
-
-      {mode === 'signup' && step === 'pending' && profile && (
-        <View style={styles.pendingBox}>
-          <VerificationBadge user={profile} />
-          <Text style={styles.pendingText}>
-            Compte créé sur Firebase. Connectez-vous depuis l&apos;onglet Profil pour
-            gérer votre compte.
-          </Text>
-          <TouchableOpacity
-            style={styles.secondary}
-            onPress={() => setMode('login')}
-          >
-            <Text style={styles.secondaryText}>Aller à la connexion</Text>
-          </TouchableOpacity>
         </View>
-      )}
-    </ScrollView>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
-  content: { padding: spacing.xl, paddingBottom: spacing.xxl },
-  centered: { justifyContent: 'center', alignItems: 'center' },
+  container: {
+    flex: 1,
+    backgroundColor: colors.surfaceInverse,
+  },
+  centered: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.background,
+    padding: spacing.xl,
+  },
+  scroll: {
+    flexGrow: 1,
+  },
+  hero: {
+    alignItems: 'center',
+    paddingHorizontal: spacing.xl,
+    paddingBottom: spacing.xxl + spacing.lg,
+  },
+  heroTagline: {
+    marginTop: spacing.md,
+    fontSize: 9,
+    fontWeight: '700',
+    letterSpacing: 2.5,
+    color: colors.heroMuted,
+    textAlign: 'center',
+  },
+  heroTitle: {
+    marginTop: spacing.xl,
+    fontSize: 32,
+    fontWeight: '800',
+    color: colors.brandInverse,
+    letterSpacing: -0.8,
+    textAlign: 'center',
+  },
+  heroSub: {
+    marginTop: spacing.sm,
+    fontSize: 15,
+    lineHeight: 22,
+    color: colors.heroMuted,
+    textAlign: 'center',
+    maxWidth: 300,
+  },
+  sheet: {
+    flex: 1,
+    marginTop: -spacing.xl,
+    backgroundColor: colors.surface,
+    borderTopLeftRadius: radius.xxl,
+    borderTopRightRadius: radius.xxl,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.xl,
+    ...shadows.interactive,
+  },
+  sheetHandle: {
+    alignSelf: 'center',
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: colors.borderMedium,
+    marginBottom: spacing.lg,
+  },
   modeRow: {
     flexDirection: 'row',
-    marginTop: spacing.lg,
-    marginBottom: spacing.md,
-    backgroundColor: colors.surfaceMuted,
-    borderRadius: radius.md,
-    padding: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    marginBottom: spacing.lg,
   },
-  modeBtn: { flex: 1, paddingVertical: spacing.sm, alignItems: 'center', borderRadius: radius.sm },
-  modeBtnActive: { backgroundColor: colors.surface },
-  modeText: { color: colors.textSecondary, fontWeight: '600' },
-  modeTextActive: { color: colors.brand },
-  label: { color: colors.text, marginBottom: spacing.md, fontWeight: '600' },
-  profileName: {
-    fontSize: 22,
-    fontWeight: '800',
-    color: colors.text,
-    marginTop: spacing.lg,
+  modeTab: {
+    flex: 1,
+    paddingVertical: spacing.md,
+    alignItems: 'center',
+    borderBottomWidth: 2,
+    borderBottomColor: 'transparent',
+    marginBottom: -1,
   },
-  profileMeta: { color: colors.textSecondary, marginTop: 4, marginBottom: spacing.md },
-  profileStats: {
-    color: colors.brand,
-    fontSize: 14,
+  modeTabActive: {
+    borderBottomColor: colors.accent,
+  },
+  modeTabText: {
+    fontSize: 15,
     fontWeight: '600',
-    marginBottom: spacing.md,
-    textAlign: 'center',
+    color: colors.textMuted,
   },
-  clubLinked: {
-    color: colors.textSecondary,
-    fontSize: 13,
-    textAlign: 'center',
-    marginBottom: spacing.md,
-  },
-  roleBtn: {
-    backgroundColor: colors.surface,
-    padding: spacing.md,
-    borderRadius: radius.md,
-    marginBottom: spacing.sm,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  roleBtnActive: { borderColor: colors.brand, borderWidth: 2 },
-  roleText: { color: colors.text },
-  input: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.md,
-    padding: spacing.md,
+  modeTabTextActive: {
     color: colors.text,
-    marginBottom: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.border,
+    fontWeight: '800',
   },
-  primary: {
-    backgroundColor: colors.brand,
-    borderRadius: radius.md,
-    padding: spacing.lg,
-    alignItems: 'center',
+  configWrap: {
+    width: '100%',
+    maxWidth: 360,
     marginTop: spacing.lg,
   },
-  primaryText: { color: '#FFFFFF', fontWeight: '700' },
-  secondary: {
-    borderWidth: 1,
-    borderColor: colors.brand,
-    borderRadius: radius.md,
-    padding: spacing.md,
-    alignItems: 'center',
-    marginTop: spacing.md,
-  },
-  secondaryText: { color: colors.brand, fontWeight: '700' },
-  warn: { color: colors.warning, fontSize: 13, lineHeight: 20, marginTop: spacing.lg },
-  pendingBox: { marginTop: spacing.lg, gap: spacing.md, alignItems: 'flex-start' },
-  pendingText: { color: colors.textSecondary, lineHeight: 22, fontSize: 14 },
-  errorBox: {
-    color: colors.error,
-    backgroundColor: colors.errorBg,
-    padding: spacing.md,
-    borderRadius: radius.md,
+  forgotBtn: {
+    alignSelf: 'flex-end',
+    marginTop: -spacing.xs,
     marginBottom: spacing.md,
-    fontSize: 13,
   },
-  authBrand: { marginBottom: spacing.md },
-  statRow: { flexDirection: 'row', gap: spacing.sm },
-  statInput: { flex: 1, marginBottom: spacing.md },
-  link: { color: colors.brand, fontWeight: '600', marginTop: spacing.md, textAlign: 'center' },
-  backLink: { color: colors.brand, fontWeight: '600', marginBottom: spacing.md },
+  forgotText: {
+    color: colors.textSecondary,
+    fontWeight: '700',
+    fontSize: 13,
+    textDecorationLine: 'underline',
+  },
+  primaryBtn: {
+    backgroundColor: colors.accent,
+    borderRadius: radius.pill,
+    paddingVertical: spacing.md + 2,
+    alignItems: 'center',
+    ...shadows.fab,
+  },
+  primaryDisabled: { opacity: 0.65 },
+  primaryBtnText: {
+    color: colors.brandInverse,
+    fontWeight: '800',
+    fontSize: 16,
+    letterSpacing: 0.2,
+  },
+  dividerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    marginVertical: spacing.lg,
+  },
+  dividerLine: { flex: 1, height: 1, backgroundColor: colors.border },
+  dividerText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.textMuted,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  legal: {
+    marginTop: spacing.lg,
+    fontSize: 11,
+    lineHeight: 16,
+    color: colors.textMuted,
+    textAlign: 'center',
+    paddingHorizontal: spacing.md,
+  },
+  legalLink: {
+    color: colors.accent,
+    fontWeight: '700',
+    textDecorationLine: 'underline',
+  },
 });

@@ -109,6 +109,7 @@ function getRoleLabel(user: User): string {
     agent: 'Agent',
     organizer: 'Organisateur',
     sponsor: 'Sponsor',
+    physio: 'Kinésithérapeute',
   };
   return labels[user.role] ?? user.role;
 }

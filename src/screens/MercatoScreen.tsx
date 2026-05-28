@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -9,11 +9,9 @@ import {
   Alert,
 } from 'react-native';
 import type { User } from '../models/User';
-import { ROLES_REQUIRING_VERIFICATION } from '../models/User';
 import { formatTimeAgo } from '../services/recruitment.service';
-import { messagesService } from '../services/messages.service';
-import { profileService } from '../services/profile.service';
 import { Icon } from '../components/ui/Icon';
+import { TAB_BAR_CONTENT_INSET } from '../components/navigation/BottomTabBar';
 import { colors, spacing, radius, shadows } from '../theme/designTokens';
 import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { SearchBar } from '../components/ui/SearchBar';
@@ -27,10 +25,23 @@ import { ClubsListScreen } from './ClubsListScreen';
 import { CreateClubScreen } from './CreateClubScreen';
 import { CreateRecruitmentPostScreen } from './CreateRecruitmentPostScreen';
 import { RecruitmentPostScreen } from './RecruitmentPostScreen';
+import { FavoritesListScreen } from './FavoritesListScreen';
+import { DetectionEventsScreen } from './DetectionEventsScreen';
 import { useMercatoHome, useUserProfile } from '../hooks/useRecruitmentData';
 import { useAuth } from '../context/AuthContext';
 import { useTabNavigation } from '../context/TabNavigationContext';
 import { formatCount } from '../services/stats.service';
+import { recruitmentService } from '../services/recruitment.service';
+import { openContactConversation } from '../utils/openContactConversation';
+import { MercatoHero } from '../components/mercato/MercatoHero';
+import { useAppSpace } from '../context/AppSpaceContext';
+import { postMatchesAppSpace } from '../constants/appSpaces';
+import {
+  APP_SPACE_LABELS,
+  isFeminineAppSpace,
+  isMasculineAppSpace,
+  isUnderU13AppSpace,
+} from '../models/AppSpace';
 
 type MercatoView =
   | 'home'
@@ -41,7 +52,9 @@ type MercatoView =
   | 'staff_profile'
   | 'create_post'
   | 'create_club'
-  | 'post_detail';
+  | 'post_detail'
+  | 'favorites'
+  | 'detections';
 
 export const MercatoScreen: React.FC = () => {
   const [view, setView] = useState<MercatoView>('home');
@@ -49,6 +62,8 @@ export const MercatoScreen: React.FC = () => {
   const [selectedStaffId, setSelectedStaffId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
+  const [returnView, setReturnView] = useState<MercatoView>('home');
+  const [applicationsCount, setApplicationsCount] = useState(0);
 
   const { user: selectedPlayer, loading: loadingPlayer } =
     useUserProfile(selectedPlayerId);
@@ -56,14 +71,20 @@ export const MercatoScreen: React.FC = () => {
     useUserProfile(selectedStaffId);
 
   const { profile } = useAuth();
-  const { openChat } = useTabNavigation();
+  const { appSpace } = useAppSpace();
+  const { openChat, pendingMercatoView, clearPendingMercato } = useTabNavigation();
   const { stats, loading: loadingStats, posts, loadingLists, refreshLists } =
     useMercatoHome();
 
+  const spacePosts = useMemo(
+    () => posts.filter((ad) => postMatchesAppSpace(ad, appSpace)),
+    [posts, appSpace]
+  );
+
   const filteredPosts = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return posts;
-    return posts.filter(
+    if (!q) return spacePosts;
+    return spacePosts.filter(
       (ad) =>
         ad.club_name.toLowerCase().includes(q) ||
         ad.position.toLowerCase().includes(q) ||
@@ -71,38 +92,54 @@ export const MercatoScreen: React.FC = () => {
         ad.city.toLowerCase().includes(q) ||
         ad.category.toLowerCase().includes(q)
     );
-  }, [posts, search]);
+  }, [spacePosts, search]);
+
+  useEffect(() => {
+    if (!pendingMercatoView) return;
+    setView(pendingMercatoView);
+    clearPendingMercato();
+  }, [pendingMercatoView, clearPendingMercato]);
+
+  useEffect(() => {
+    if (!profile || profile.role !== 'player') {
+      setApplicationsCount(0);
+      return;
+    }
+    recruitmentService.listMyApplications(profile.uid).then((apps) => {
+      setApplicationsCount(apps.length);
+    });
+  }, [profile]);
 
   const handleContact = async (target: User) => {
     if (!profile) {
       Alert.alert('Connexion requise', 'Connectez-vous depuis l’onglet Profil.');
       return;
     }
-    if (
-      ROLES_REQUIRING_VERIFICATION.includes(profile.role) &&
-      !profileService.canPerformSensitiveAction(profile)
-    ) {
-      Alert.alert(
-        'Vérification requise',
-        'Validez votre diplôme ou licence pour contacter d’autres profils.'
-      );
-      return;
-    }
-    try {
-      const threadId = await messagesService.getOrCreateThread(
-        profile.uid,
-        profile.display_name,
-        target.uid,
-        target.display_name
-      );
-      openChat(threadId);
-    } catch (e) {
-      Alert.alert(
-        'Erreur',
-        e instanceof Error ? e.message : 'Impossible d’ouvrir la conversation.'
-      );
-    }
+    await openContactConversation(profile, target, target.display_name, openChat);
   };
+
+  if (view === 'detections') {
+    return <DetectionEventsScreen onBack={() => setView('home')} />;
+  }
+
+  if (view === 'favorites' && profile) {
+    return (
+      <FavoritesListScreen
+        onBack={() => setView('home')}
+        onSelectUser={(u) => {
+          if (u.role === 'player') {
+            setSelectedPlayerId(u.uid);
+            setReturnView('favorites');
+            setView('player_profile');
+          } else {
+            setSelectedStaffId(u.uid);
+            setReturnView('favorites');
+            setView('staff_profile');
+          }
+        }}
+      />
+    );
+  }
 
   if (view === 'post_detail' && selectedPostId) {
     return (
@@ -112,6 +149,11 @@ export const MercatoScreen: React.FC = () => {
         onBack={() => {
           setSelectedPostId(null);
           setView('home');
+        }}
+        onViewPlayer={(uid) => {
+          setSelectedPlayerId(uid);
+          setReturnView('post_detail');
+          setView('player_profile');
         }}
       />
     );
@@ -150,7 +192,7 @@ export const MercatoScreen: React.FC = () => {
     return (
       <PlayerProfileScreen
         player={selectedPlayer}
-        onBack={() => setView('players')}
+        onBack={() => setView(returnView === 'post_detail' ? 'post_detail' : returnView === 'favorites' ? 'favorites' : 'players')}
         onContact={handleContact}
       />
     );
@@ -175,6 +217,10 @@ export const MercatoScreen: React.FC = () => {
             ? () => setView('create_club')
             : undefined
         }
+        onSelectClub={(club) => {
+          setSearch(club.name);
+          setView('home');
+        }}
       />
     );
   }
@@ -186,6 +232,10 @@ export const MercatoScreen: React.FC = () => {
         onSelect={(u) => {
           setSelectedStaffId(u.uid);
           setView('staff_profile');
+        }}
+        onCreatePost={() => {
+          setReturnView('staff');
+          setView('create_post');
         }}
       />
     );
@@ -202,7 +252,7 @@ export const MercatoScreen: React.FC = () => {
     return (
       <CoachProfileScreen
         staff={selectedStaff}
-        onBack={() => setView('staff')}
+        onBack={() => setView(returnView === 'favorites' ? 'favorites' : 'staff')}
         onContact={handleContact}
         onHire={handleContact}
       />
@@ -219,13 +269,41 @@ export const MercatoScreen: React.FC = () => {
         showsVerticalScrollIndicator={false}
       >
         <ScreenHeader
-          title="Recrutement"
-          subtitle="Le bon profil pour le bon projet."
+          label="Mercato"
+          title={APP_SPACE_LABELS[appSpace]}
+          subtitle={
+            isUnderU13AppSpace(appSpace)
+              ? 'U7, U9, U11 — école de foot et détections poussins.'
+              : isFeminineAppSpace(appSpace)
+                ? 'Annonces et profils filtrés pour le football féminin.'
+                : isMasculineAppSpace(appSpace)
+                  ? 'Annonces et profils filtrés pour le football masculin.'
+                  : 'Espace dédié.'
+          }
           showBrandLogo
           rightAction={
-            <TouchableOpacity hitSlop={12}>
-              <Icon name="notifications" size={22} color={colors.text} />
-            </TouchableOpacity>
+            profile?.role === 'player' ? (
+              <TouchableOpacity
+                hitSlop={12}
+                onPress={() => setView('favorites')}
+              >
+                <Icon name="bookmark" size={22} color={colors.text} />
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                hitSlop={12}
+                onPress={() => setView('detections')}
+              >
+                <Icon name="football" size={22} color={colors.text} />
+              </TouchableOpacity>
+            )
+          }
+        />
+        <MercatoHero
+          stats={stats}
+          loading={loadingStats}
+          applicationsCount={
+            profile?.role === 'player' ? applicationsCount : undefined
           }
         />
         <SearchBar
@@ -271,7 +349,24 @@ export const MercatoScreen: React.FC = () => {
             loading={loading}
             onPress={() => setView('clubs')}
           />
+          <QuickAccessCard
+            icon="football"
+            title="Détections"
+            count="Essais & scouting"
+            loading={false}
+            onPress={() => setView('detections')}
+          />
         </View>
+        {profile ? (
+          <TouchableOpacity
+            style={styles.favoritesLink}
+            onPress={() => setView('favorites')}
+          >
+            <Icon name="bookmark" size={18} color={colors.brand} />
+            <Text style={styles.favoritesLinkText}>Mes favoris</Text>
+          </TouchableOpacity>
+        ) : null}
+
         <TouchableOpacity style={styles.staffLink} onPress={() => setView('staff')}>
           <Text style={styles.staffLinkText}>
             Coachs & agents
@@ -282,13 +377,18 @@ export const MercatoScreen: React.FC = () => {
           <Icon name="chevron-forward" size={18} color={colors.brand} />
         </TouchableOpacity>
 
-        <Text style={styles.sectionTitle}>Recrutements populaires</Text>
+        <Text style={styles.sectionTitle}>
+          Recrutements populaires
+          {!loading && posts.length > 0 ? (
+            <Text style={styles.liveBadge}> · Live Firebase</Text>
+          ) : null}
+        </Text>
         {loading ? (
           <ActivityIndicator color={colors.brand} style={styles.loaderInline} />
         ) : filteredPosts.length === 0 ? (
-          <Text style={styles.emptyPosts}>
+          <Text style={styles.emptyHint}>
             {posts.length === 0
-              ? 'Aucune annonce. Publiez la première depuis le bouton ci-dessous.'
+              ? 'Aucune annonce ouverte pour le moment. Soyez le premier à publier une offre Mercato.'
               : 'Aucune annonce ne correspond à votre recherche.'}
           </Text>
         ) : (
@@ -333,10 +433,25 @@ const styles = StyleSheet.create({
     marginHorizontal: spacing.lg,
     marginBottom: spacing.md,
     padding: spacing.md,
-    backgroundColor: colors.brandSoft,
+    backgroundColor: colors.surfaceMuted,
     borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
-  searchHintText: { color: colors.brand, fontWeight: '600', fontSize: 13 },
+  searchHintText: { color: colors.text, fontWeight: '800', fontSize: 13 },
+  favoritesLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.md,
+    padding: spacing.md,
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  favoritesLinkText: { color: colors.text, fontWeight: '800', fontSize: 14 },
   staffLink: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -349,7 +464,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
-  staffLinkText: { color: colors.brand, fontWeight: '700', fontSize: 14 },
+  staffLinkText: { color: colors.text, fontWeight: '800', fontSize: 14 },
   quickRow: {
     flexDirection: 'row',
     gap: spacing.md,
@@ -363,6 +478,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     marginBottom: spacing.md,
   },
+  liveBadge: { fontSize: 12, fontWeight: '800', color: colors.brand },
   emptyPosts: {
     color: colors.textMuted,
     fontSize: 14,
@@ -370,14 +486,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     marginBottom: spacing.lg,
   },
-  bottomSpacer: { height: 88 },
+  emptyHint: {
+    color: colors.textSecondary,
+    fontSize: 13,
+    lineHeight: 19,
+    paddingHorizontal: spacing.lg,
+    marginBottom: spacing.md,
+    fontWeight: '600',
+  },
+  bottomSpacer: { height: TAB_BAR_CONTENT_INSET + spacing.lg },
   fab: {
     position: 'absolute',
     left: spacing.lg,
     right: spacing.lg,
-    bottom: spacing.md,
+    bottom: TAB_BAR_CONTENT_INSET - spacing.sm,
     backgroundColor: colors.brand,
     borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
     paddingVertical: 16,
     flexDirection: 'row',
     alignItems: 'center',

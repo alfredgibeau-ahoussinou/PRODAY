@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
-import { colors, spacing, radius, shadows } from '../../theme/designTokens';
+import { colors, spacing, radius, shadows, surfaces } from '../../theme/designTokens';
 import { Icon, type IconName } from './Icon';
 
 interface QuickAccessCardProps {
@@ -19,16 +19,16 @@ export const QuickAccessCard: React.FC<QuickAccessCardProps> = ({
   loading,
 }) => (
   <TouchableOpacity
-    style={[styles.card, shadows.card]}
+    style={styles.card}
     onPress={onPress}
     activeOpacity={0.85}
   >
-    <View style={styles.iconCircle}>
-      <Icon name={icon} size={24} color={colors.brand} />
+    <View style={styles.iconBox}>
+      <Icon name={icon} size={22} color={colors.accent} variant="filled" />
     </View>
     <Text style={styles.title}>{title}</Text>
     {loading ? (
-      <ActivityIndicator size="small" color={colors.brand} style={styles.loader} />
+      <ActivityIndicator size="small" color={colors.accent} style={styles.loader} />
     ) : (
       <Text style={styles.count}>{count}</Text>
     )}
@@ -38,23 +38,21 @@ export const QuickAccessCard: React.FC<QuickAccessCardProps> = ({
 const styles = StyleSheet.create({
   card: {
     flex: 1,
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
+    ...surfaces.card,
     padding: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    minHeight: 130,
+    minHeight: 128,
+    ...shadows.card,
   },
-  iconCircle: {
+  iconBox: {
     width: 44,
     height: 44,
-    borderRadius: 22,
-    backgroundColor: colors.brandSoft,
+    borderRadius: radius.md,
+    backgroundColor: colors.accentSoft,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: spacing.md,
   },
-  title: { fontSize: 17, fontWeight: '700', color: colors.text },
-  count: { fontSize: 13, color: colors.textMuted, marginTop: 6 },
+  title: { fontSize: 16, fontWeight: '800', color: colors.text },
+  count: { fontSize: 12, color: colors.textMuted, marginTop: 6, fontWeight: '600' },
   loader: { marginTop: 8, alignSelf: 'flex-start' },
 });

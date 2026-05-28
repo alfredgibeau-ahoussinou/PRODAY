@@ -370,7 +370,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: spacing.sm,
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: colors.brand,
     borderRadius: radius.md,
     paddingVertical: 14,

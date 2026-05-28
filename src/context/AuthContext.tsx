@@ -8,8 +8,9 @@ import React, {
 import { onAuthStateChanged, type User as FirebaseAuthUser } from 'firebase/auth';
 import { getFirebaseAuth } from '../lib/firebase';
 import { isFirebaseConfigured } from '../config/firebase';
-import { authService } from '../services/auth.service';
+import { authService, needsEmailVerification } from '../services/auth.service';
 import { usersService } from '../services/users.service';
+import { registerPushTokenIfPossible } from '../services/pushToken.service';
 import type { User } from '../models/User';
 
 interface AuthContextValue {
@@ -17,7 +18,13 @@ interface AuthContextValue {
   profile: User | null;
   loading: boolean;
   configured: boolean;
+  isAdmin: boolean;
+  adminClaimLoading: boolean;
+  needsEmailVerification: boolean;
   refreshProfile: () => Promise<void>;
+  refreshFirebaseUser: () => Promise<boolean>;
+  resendEmailVerification: () => Promise<void>;
+  refreshAdminClaim: () => Promise<boolean>;
   signOut: () => Promise<void>;
 }
 
@@ -29,6 +36,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [firebaseUser, setFirebaseUser] = useState<FirebaseAuthUser | null>(null);
   const [profile, setProfile] = useState<User | null>(null);
   const [loading, setLoading] = useState(isFirebaseConfigured());
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [adminClaimLoading, setAdminClaimLoading] = useState(false);
+
+  const refreshAdminClaim = useCallback(async () => {
+    const auth = getFirebaseAuth();
+    const user = auth?.currentUser;
+    if (!user) {
+      setIsAdmin(false);
+      return false;
+    }
+    setAdminClaimLoading(true);
+    try {
+      const token = await user.getIdTokenResult(true);
+      const admin = token.claims.admin === true;
+      setIsAdmin(admin);
+      return admin;
+    } catch {
+      setIsAdmin(false);
+      return false;
+    } finally {
+      setAdminClaimLoading(false);
+    }
+  }, []);
 
   const refreshProfile = useCallback(async () => {
     const auth = getFirebaseAuth();
@@ -38,7 +68,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       return;
     }
     setProfile(await usersService.getById(uid));
-  }, []);
+    await refreshAdminClaim();
+  }, [refreshAdminClaim]);
 
   useEffect(() => {
     const auth = getFirebaseAuth();
@@ -51,19 +82,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       setFirebaseUser(user);
       if (user) {
         setProfile(await usersService.getById(user.uid));
+        void registerPushTokenIfPossible(user.uid);
+        void refreshAdminClaim();
       } else {
         setProfile(null);
+        setIsAdmin(false);
       }
       setLoading(false);
     });
 
     return unsubscribe;
+  }, [refreshAdminClaim]);
+
+  const refreshFirebaseUser = useCallback(async () => {
+    const user = await authService.reloadAuthUser();
+    if (user) {
+      setFirebaseUser(user);
+      if (user.emailVerified && user.uid) {
+        await authService.syncEmailVerifiedToProfile(user.uid, true);
+        await refreshProfile();
+      }
+      return user.emailVerified;
+    }
+    return false;
+  }, [refreshProfile]);
+
+  const resendEmailVerification = useCallback(async () => {
+    await authService.resendEmailVerification();
   }, []);
 
   const signOut = useCallback(async () => {
     await authService.signOut();
     setProfile(null);
     setFirebaseUser(null);
+    setIsAdmin(false);
   }, []);
 
   return (
@@ -73,7 +125,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         profile,
         loading,
         configured: isFirebaseConfigured(),
+        isAdmin,
+        adminClaimLoading,
+        needsEmailVerification: needsEmailVerification(firebaseUser),
         refreshProfile,
+        refreshFirebaseUser,
+        resendEmailVerification,
+        refreshAdminClaim,
         signOut,
       }}
     >

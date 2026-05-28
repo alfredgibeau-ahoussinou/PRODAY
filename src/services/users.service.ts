@@ -47,6 +47,10 @@ export const usersService = {
     return userFromFirestore(snap.id, snap.data() as Record<string, unknown>);
   },
 
+  async listPhysios(search = ''): Promise<User[]> {
+    return this.listByRole('physio', search);
+  },
+
   async listByRole(role: UserRole, search = ''): Promise<User[]> {
     if (!isFirebaseConfigured()) return [];
     const database = getDb();
@@ -107,6 +111,17 @@ export const usersService = {
   async listRecentPlayers(): Promise<User[]> {
     const players = await this.listPlayers();
     return players.slice(0, POPULAR_LIMIT);
+  },
+
+  /** Membres liés à un club (convocations). */
+  async listMembersByClubId(clubId: string): Promise<User[]> {
+    if (!clubId) return [];
+    const players = await this.listPlayers();
+    const coaches = await this.listStaff('coach');
+    const agents = await this.listStaff('agent');
+    return [...players, ...coaches, ...agents].filter(
+      (u) => u.profile.club_id === clubId
+    );
   },
 
   isNewProfile,

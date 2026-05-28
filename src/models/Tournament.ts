@@ -27,6 +27,19 @@ export interface TournamentAwards {
   best_goalkeeper_uid: string;
 }
 
+export interface TournamentMatch {
+  id: string;
+  tournament_id: string;
+  team_a_name: string;
+  team_b_name: string;
+  score_a: number;
+  score_b: number;
+  phase: 'poule' | 'elimination';
+  scheduled_at?: Date;
+  played: boolean;
+}
+
+/** @deprecated Utiliser TournamentMatch */
 export interface Match {
   id: string;
   tournament_id: string;

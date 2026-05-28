@@ -17,11 +17,13 @@ import { colors, spacing, radius, shadows } from '../theme/designTokens';
 interface ClubsListScreenProps {
   onBack: () => void;
   onCreateClub?: () => void;
+  onSelectClub?: (club: Club) => void;
 }
 
 export const ClubsListScreen: React.FC<ClubsListScreenProps> = ({
   onBack,
   onCreateClub,
+  onSelectClub,
 }) => {
   const [query, setQuery] = useState('');
   const [clubs, setClubs] = useState<Club[]>([]);
@@ -69,8 +71,14 @@ export const ClubsListScreen: React.FC<ClubsListScreenProps> = ({
               Aucun club enregistré. Créez le vôtre avec le bouton +.
             </Text>
           }
-          renderItem={({ item }) => (
-            <View style={[styles.card, shadows.card]}>
+          renderItem={({ item }) => {
+            const CardWrap = onSelectClub ? TouchableOpacity : View;
+            return (
+            <CardWrap
+              style={[styles.card, shadows.card]}
+              onPress={onSelectClub ? () => onSelectClub(item) : undefined}
+              activeOpacity={0.85}
+            >
               <View style={styles.logo}>
                 <Text style={styles.logoLetter}>{item.name.charAt(0)}</Text>
               </View>
@@ -87,8 +95,9 @@ export const ClubsListScreen: React.FC<ClubsListScreenProps> = ({
               {item.verified && (
                 <Icon name="checkmark-circle" size={20} color={colors.success} />
               )}
-            </View>
-          )}
+            </CardWrap>
+            );
+          }}
         />
       )}
     </View>

@@ -3,6 +3,7 @@
     "name": "ProDay",
     "slug": "proday",
     "version": "1.0.0",
+    "scheme": "proday",
     "orientation": "portrait",
     "icon": "./assets/branding/logo-light.png",
     "userInterfaceStyle": "light",
@@ -25,6 +26,16 @@
     "web": {
       "bundler": "metro",
       "favicon": "./assets/branding/logo-light.png"
-    }
+    },
+    "plugins": [
+      "expo-apple-authentication",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "ProDay accède à vos photos pour votre avatar et votre galerie joueur."
+        }
+      ],
+      "expo-web-browser"
+    ]
   }
 }

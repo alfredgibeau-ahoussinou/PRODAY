@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, TextInput, StyleSheet } from 'react-native';
-import { colors, spacing, radius } from '../../theme/designTokens';
+import { colors, spacing, radius, shadows } from '../../theme/designTokens';
 import { Icon } from './Icon';
 
 interface SearchBarProps {
@@ -31,13 +31,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.surface,
-    borderRadius: radius.md,
+    borderRadius: radius.pill,
     borderWidth: 1,
     borderColor: colors.border,
     marginHorizontal: spacing.lg,
     marginBottom: spacing.lg,
     paddingHorizontal: spacing.md,
     gap: spacing.sm,
+    ...shadows.soft,
   },
   input: { flex: 1, paddingVertical: spacing.md, fontSize: 15, color: colors.text },
 });

@@ -14,15 +14,19 @@ const PRESETS = [30, 60, 90, 120, 180] as const;
 
 interface ParentalTimeLimitScreenProps {
   onBack: () => void;
+  minutes?: number;
+  activeDays?: string[];
+  onSave?: (minutes: number, activeDays: string[]) => void;
 }
 
 export const ParentalTimeLimitScreen: React.FC<ParentalTimeLimitScreenProps> = ({
   onBack,
+  minutes: initialMinutes = 90,
+  activeDays: initialDays = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven'],
+  onSave,
 }) => {
-  const [minutes, setMinutes] = useState(90);
-  const [activeDays, setActiveDays] = useState<Set<string>>(
-    new Set(['Lun', 'Mar', 'Mer', 'Jeu', 'Ven'])
-  );
+  const [minutes, setMinutes] = useState(initialMinutes);
+  const [activeDays, setActiveDays] = useState<Set<string>>(new Set(initialDays));
 
   const toggleDay = (day: string) => {
     setActiveDays((prev) => {
@@ -85,7 +89,13 @@ export const ParentalTimeLimitScreen: React.FC<ParentalTimeLimitScreenProps> = (
           })}
         </View>
 
-        <TouchableOpacity style={styles.saveBtn} onPress={onBack}>
+        <TouchableOpacity
+          style={styles.saveBtn}
+          onPress={() => {
+            onSave?.(minutes, [...activeDays]);
+            onBack();
+          }}
+        >
           <Text style={styles.saveText}>Enregistrer</Text>
         </TouchableOpacity>
       </ScrollView>

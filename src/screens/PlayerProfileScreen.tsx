@@ -6,6 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
   StyleSheet,
+  Alert,
 } from 'react-native';
 import type { User } from '../models/User';
 import { ScreenHeader } from '../components/ui/ScreenHeader';
@@ -14,6 +15,7 @@ import { colors, spacing, radius, shadows } from '../theme/designTokens';
 import { buildPlayerCvHtmlFromUser } from '../utils/pdfGenerator';
 import { openPlayerCvHtml } from '../utils/openCvHtml';
 import { useAuth } from '../context/AuthContext';
+import { useFavorites } from '../hooks/useFavorites';
 
 interface PlayerProfileScreenProps {
   player: User;
@@ -38,8 +40,9 @@ export const PlayerProfileScreen: React.FC<PlayerProfileScreenProps> = ({
   onBack,
   onContact,
 }) => {
-  const [favorited, setFavorited] = useState(false);
   const { profile: myProfile } = useAuth();
+  const { isFavorite, toggle } = useFavorites(myProfile?.uid);
+  const favorited = isFavorite(player.uid);
   const isOwnProfile = myProfile?.uid === player.uid;
   const p = player.profile;
 
@@ -147,7 +150,17 @@ export const PlayerProfileScreen: React.FC<PlayerProfileScreenProps> = ({
         ) : (
           <TouchableOpacity
             style={styles.btnOutline}
-            onPress={() => setFavorited((f) => !f)}
+            onPress={async () => {
+              if (!myProfile) {
+                Alert.alert('Connexion requise', 'Connectez-vous pour enregistrer des favoris.');
+                return;
+              }
+              try {
+                await toggle(player.uid, 'player');
+              } catch (e) {
+                Alert.alert('Erreur', e instanceof Error ? e.message : 'Action impossible.');
+              }
+            }}
           >
             <Icon
               name={favorited ? 'heart' : 'heart-outline'}
@@ -270,7 +283,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: spacing.sm,
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: colors.brand,
     borderRadius: radius.md,
     paddingVertical: 15,

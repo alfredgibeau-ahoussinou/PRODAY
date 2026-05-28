@@ -14,6 +14,8 @@ import { SearchBar } from '../components/ui/SearchBar';
 import { useUsersByRole } from '../hooks/useRecruitmentData';
 import type { StaffType } from '../services/users.service';
 import { isFirebaseConfigured } from '../config/firebase';
+import { useAuth } from '../context/AuthContext';
+import { useFavorites } from '../hooks/useFavorites';
 import { Icon } from '../components/ui/Icon';
 import { colors, spacing, radius, shadows } from '../theme/designTokens';
 
@@ -23,27 +25,21 @@ interface CoachesListScreenProps {
   initialType?: StaffType;
   onBack: () => void;
   onSelect: (user: User) => void;
+  onCreatePost?: () => void;
 }
 
 export const CoachesListScreen: React.FC<CoachesListScreenProps> = ({
   initialType = 'coach',
   onBack,
   onSelect,
+  onCreatePost,
 }) => {
   const [staffType, setStaffType] = useState<StaffType>(initialType);
   const [query, setQuery] = useState('');
   const [activeChip, setActiveChip] = useState<string | null>(null);
-  const [bookmarks, setBookmarks] = useState<Set<string>>(new Set());
+  const { profile } = useAuth();
+  const { isFavorite, toggle } = useFavorites(profile?.uid);
   const { users, loading } = useUsersByRole(staffType, query);
-
-  const toggleBookmark = (uid: string) => {
-    setBookmarks((prev) => {
-      const next = new Set(prev);
-      if (next.has(uid)) next.delete(uid);
-      else next.add(uid);
-      return next;
-    });
-  };
 
   return (
     <View style={styles.container}>
@@ -139,17 +135,19 @@ export const CoachesListScreen: React.FC<CoachesListScreenProps> = ({
             <CoachListCard
               user={item}
               onPress={onSelect}
-              bookmarked={bookmarks.has(item.uid)}
-              onBookmark={() => toggleBookmark(item.uid)}
+              bookmarked={isFavorite(item.uid)}
+              onBookmark={() => profile && toggle(item.uid, staffType)}
             />
           )}
           contentContainerStyle={styles.list}
         />
       </DataState>
 
-      <TouchableOpacity style={[styles.fab, shadows.fab]}>
-        <Text style={styles.fabText}>Publier une annonce</Text>
-      </TouchableOpacity>
+      {onCreatePost ? (
+        <TouchableOpacity style={[styles.fab, shadows.fab]} onPress={onCreatePost}>
+          <Text style={styles.fabText}>Publier une annonce</Text>
+        </TouchableOpacity>
+      ) : null}
     </View>
   );
 };

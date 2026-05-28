@@ -1,7 +1,7 @@
 import { Platform, Alert } from 'react-native';
 
-/** Ouvre le CV HTML (web : nouvel onglet + impression ; mobile : message). */
-export function openPlayerCvHtml(html: string, displayName: string): void {
+/** Ouvre du HTML imprimable (web : nouvel onglet). */
+export function openPrintableHtml(html: string, title: string): void {
   if (Platform.OS === 'web' && typeof window !== 'undefined') {
     const w = window.open('', '_blank');
     if (w) {
@@ -9,16 +9,14 @@ export function openPlayerCvHtml(html: string, displayName: string): void {
       w.document.close();
       w.focus();
     } else {
-      Alert.alert(
-        'CV joueur',
-        'Autorisez les pop-ups pour afficher le CV, puis Imprimer → PDF.'
-      );
+      Alert.alert(title, 'Autorisez les pop-ups, puis Imprimer → PDF.');
     }
     return;
   }
+  Alert.alert(title, 'Export PDF disponible depuis la version web (Imprimer → PDF).');
+}
 
-  Alert.alert(
-    'CV joueur',
-    `Le CV de ${displayName} s’exporte en PDF depuis la version web (Profil → Exporter le CV → Imprimer → PDF).`
-  );
+/** Ouvre le CV HTML (web : nouvel onglet + impression ; mobile : message). */
+export function openPlayerCvHtml(html: string, displayName: string): void {
+  openPrintableHtml(html, `CV — ${displayName}`);
 }

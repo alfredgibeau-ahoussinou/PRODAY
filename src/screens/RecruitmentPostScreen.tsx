@@ -10,28 +10,36 @@ import {
   Alert,
 } from 'react-native';
 import type { User } from '../models/User';
-import type { RecruitmentPost } from '../models/Player';
+import type { RecruitmentPost, Application } from '../models/Player';
 import { ScreenHeader } from '../components/ui/ScreenHeader';
-import { recruitmentService, formatTimeAgo } from '../services/recruitment.service';
+import { ApplicationReviewCard } from '../components/recruitment/ApplicationReviewCard';
+import {
+  recruitmentService,
+  formatTimeAgo,
+  canManagePostApplications,
+} from '../services/recruitment.service';
 import { colors, spacing, radius } from '../theme/designTokens';
 
 interface RecruitmentPostScreenProps {
   postId: string;
   profile: User | null;
   onBack: () => void;
+  onViewPlayer?: (playerUid: string) => void;
 }
 
 export const RecruitmentPostScreen: React.FC<RecruitmentPostScreenProps> = ({
   postId,
   profile,
   onBack,
+  onViewPlayer,
 }) => {
   const [post, setPost] = useState<RecruitmentPost | null>(null);
   const [loading, setLoading] = useState(true);
   const [coverLetter, setCoverLetter] = useState('');
   const [applied, setApplied] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [applicationsCount, setApplicationsCount] = useState(0);
+  const [applications, setApplications] = useState<Application[]>([]);
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -41,21 +49,19 @@ export const RecruitmentPostScreen: React.FC<RecruitmentPostScreenProps> = ({
       const has = await recruitmentService.hasPlayerApplied(postId, profile.uid);
       setApplied(has);
     }
-    if (p && profile?.uid === (p.author_uid ?? p.club_id)) {
-      const apps = await recruitmentService.listApplicationsForPost(postId);
-      setApplicationsCount(apps.length);
+    if (p && profile && canManagePostApplications(profile, p)) {
+      setApplications(await recruitmentService.listApplicationsForPost(postId));
+    } else {
+      setApplications([]);
     }
     setLoading(false);
-  }, [postId, profile?.uid]);
+  }, [postId, profile]);
 
   useEffect(() => {
     load();
   }, [load]);
 
-  const isOwner =
-    post &&
-    profile &&
-    (profile.uid === post.author_uid || profile.uid === post.club_id);
+  const isManager = post && profile && canManagePostApplications(profile, post);
 
   const handleApply = async () => {
     if (!profile) {
@@ -63,10 +69,7 @@ export const RecruitmentPostScreen: React.FC<RecruitmentPostScreenProps> = ({
       return;
     }
     if (profile.role !== 'player') {
-      Alert.alert(
-        'Réservé aux joueurs',
-        'Seuls les joueurs peuvent postuler à une annonce.'
-      );
+      Alert.alert('Réservé aux joueurs', 'Seuls les joueurs peuvent postuler à une annonce.');
       return;
     }
     if (!coverLetter.trim()) {
@@ -87,12 +90,25 @@ export const RecruitmentPostScreen: React.FC<RecruitmentPostScreenProps> = ({
       setApplied(true);
       Alert.alert('Candidature envoyée', 'Le club pourra consulter votre profil.');
     } catch (e) {
-      Alert.alert(
-        'Erreur',
-        e instanceof Error ? e.message : 'Envoi impossible.'
-      );
+      Alert.alert('Erreur', e instanceof Error ? e.message : 'Envoi impossible.');
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const updateStatus = async (
+    app: Application,
+    status: Application['status'],
+    rejectionReason?: string
+  ) => {
+    setUpdatingId(app.id);
+    try {
+      await recruitmentService.updateApplicationStatus(app.id, status, rejectionReason);
+      await load();
+    } catch (e) {
+      Alert.alert('Erreur', e instanceof Error ? e.message : 'Mise à jour impossible.');
+    } finally {
+      setUpdatingId(null);
     }
   };
 
@@ -123,7 +139,9 @@ export const RecruitmentPostScreen: React.FC<RecruitmentPostScreenProps> = ({
           <Text style={styles.meta}>
             {post.position} · {post.category} · {post.level}
           </Text>
-          <Text style={styles.meta}>{post.city} · {formatTimeAgo(post.created_at)}</Text>
+          <Text style={styles.meta}>
+            {post.city} · {formatTimeAgo(post.created_at)}
+          </Text>
         </View>
 
         {post.description ? (
@@ -133,15 +151,27 @@ export const RecruitmentPostScreen: React.FC<RecruitmentPostScreenProps> = ({
           </>
         ) : null}
 
-        {isOwner ? (
-          <View style={styles.ownerBox}>
-            <Text style={styles.ownerTitle}>Votre annonce</Text>
-            <Text style={styles.ownerMeta}>
-              {applicationsCount === 0
-                ? 'Aucune candidature pour le moment.'
-                : `${applicationsCount} candidature${applicationsCount > 1 ? 's' : ''}`}
-            </Text>
-          </View>
+        {isManager ? (
+          <>
+            <Text style={styles.section}>Candidatures ({applications.length})</Text>
+            {applications.length === 0 ? (
+              <Text style={styles.hint}>Aucune candidature pour le moment.</Text>
+            ) : (
+              applications.map((app) => (
+                <ApplicationReviewCard
+                  key={app.id}
+                  application={app}
+                  busy={updatingId === app.id}
+                  onViewProfile={
+                    onViewPlayer ? () => onViewPlayer(app.player_uid) : undefined
+                  }
+                  onMarkViewed={() => updateStatus(app, 'VIEWED')}
+                  onAccept={() => updateStatus(app, 'ACCEPTED')}
+                  onReject={(reason) => updateStatus(app, 'REJECTED', reason)}
+                />
+              ))
+            )}
+          </>
         ) : profile?.role === 'player' ? (
           <>
             <Text style={styles.section}>Postuler</Text>
@@ -234,11 +264,4 @@ const styles = StyleSheet.create({
   applyText: { color: '#FFFFFF', fontWeight: '700', fontSize: 15 },
   applied: { color: colors.brand, fontWeight: '600', fontSize: 14 },
   hint: { color: colors.textMuted, fontSize: 14, lineHeight: 22 },
-  ownerBox: {
-    backgroundColor: colors.brandSoft,
-    borderRadius: radius.md,
-    padding: spacing.md,
-  },
-  ownerTitle: { fontWeight: '700', color: colors.brand, fontSize: 14 },
-  ownerMeta: { color: colors.textSecondary, marginTop: 4, fontSize: 13 },
 });

@@ -4,6 +4,9 @@ import type { User } from '../models/User';
 import type { FriendlyMatch } from '../models/FriendlyMatch';
 import { friendlyMatchesService } from '../services/friendlyMatches.service';
 import { clubsService } from '../services/clubs.service';
+import { teamEventsService } from '../services/teamEvents.service';
+import { usersService } from '../services/users.service';
+import { filterMembersByCategory, memberUidsExcluding } from '../utils/clubMembersFilter';
 
 export function useMatchActions(profile: User | null) {
   const getClubIdentity = useCallback(async () => {
@@ -32,7 +35,66 @@ export function useMatchActions(profile: User | null) {
       }
       try {
         await friendlyMatchesService.acceptMatch(match.id, club.id, club.name);
-        Alert.alert('Match accepté', `Vous affrontez ${match.requester_club_name}.`);
+
+        const categories = match.category ? [match.category] : undefined;
+
+        if (profile.profile.club_id) {
+          const accepterMembers = await usersService.listMembersByClubId(profile.profile.club_id);
+          const filtered = filterMembersByCategory(accepterMembers, categories);
+          const inviteeUids = memberUidsExcluding(filtered, profile.uid);
+          await teamEventsService.createFriendlyConvocation({
+            matchId: match.id,
+            opponentName: match.requester_club_name,
+            organizerUid: profile.uid,
+            organizerName: profile.display_name,
+            clubId: profile.profile.club_id,
+            clubName: club.name,
+            startsAt: match.date,
+            city: match.city,
+            locationLabel: match.time_label,
+            inviteeUids,
+            categories,
+          });
+        }
+
+        const requesterMembers = await usersService.listMembersByClubId(match.requester_club_id);
+        const requesterFiltered = filterMembersByCategory(requesterMembers, categories);
+        const requesterInvitees = memberUidsExcluding(
+          requesterFiltered,
+          match.requester_uid
+        );
+        const requesterOrganizerUid =
+          match.requester_uid ??
+          requesterMembers.find(
+            (m) => m.role === 'coach' || m.role === 'organizer' || m.role === 'agent'
+          )?.uid ??
+          requesterMembers[0]?.uid;
+
+        if (requesterOrganizerUid && requesterInvitees.length > 0) {
+          const requesterOrganizer =
+            requesterMembers.find((m) => m.uid === requesterOrganizerUid) ??
+            (await usersService.getById(requesterOrganizerUid));
+          await teamEventsService.createFriendlyConvocation({
+            matchId: match.id,
+            opponentName: match.opponent_club_name ?? club.name,
+            organizerUid: requesterOrganizerUid,
+            organizerName: requesterOrganizer?.display_name ?? match.requester_club_name,
+            clubId: match.requester_club_id,
+            clubName: match.requester_club_name,
+            startsAt: match.date,
+            city: match.city,
+            locationLabel: match.time_label,
+            inviteeUids: requesterInvitees,
+            categories,
+          });
+        }
+
+        Alert.alert(
+          'Match accepté',
+          profile.profile.club_id
+            ? `Convocations créées pour les deux clubs — ${match.requester_club_name}.`
+            : `Vous affrontez ${match.requester_club_name}.`
+        );
         onDone?.();
       } catch (e) {
         Alert.alert('Erreur', e instanceof Error ? e.message : 'Action impossible.');

@@ -9,16 +9,21 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  Alert,
 } from 'react-native';
 import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { messagesService } from '../services/messages.service';
+import { usersService } from '../services/users.service';
 import type { ChatMessage } from '../lib/firestoreMappers';
+import type { User } from '../models/User';
+import { evaluateMessagingPermission } from '../utils/parentalMessaging';
 import { colors, spacing, radius } from '../theme/designTokens';
 
 interface ChatScreenProps {
   threadId: string;
   otherName: string;
   currentUid: string;
+  currentUser?: User | null;
   onBack: () => void;
 }
 
@@ -26,14 +31,31 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
   threadId,
   otherName,
   currentUid,
+  currentUser,
   onBack,
 }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
+  const [otherUser, setOtherUser] = useState<User | null>(null);
+  const [sendBlocked, setSendBlocked] = useState<string | null>(null);
 
   const otherUid = messagesService.getOtherParticipantId(threadId, currentUid);
+
+  useEffect(() => {
+    if (!otherUid) return;
+    void usersService.getById(otherUid).then(setOtherUser);
+  }, [otherUid]);
+
+  useEffect(() => {
+    if (!currentUser || !otherUser) {
+      setSendBlocked(null);
+      return;
+    }
+    const permission = evaluateMessagingPermission(currentUser, otherUser);
+    setSendBlocked(permission.allowed ? null : permission.message ?? 'Messagerie bloquée.');
+  }, [currentUser, otherUser]);
 
   useEffect(() => {
     setLoading(true);
@@ -52,7 +74,14 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
   }, [threadId, currentUid]);
 
   const handleSend = async () => {
-    if (!text.trim() || !otherUid) return;
+    if (!text.trim() || !otherUid || sendBlocked) return;
+    if (currentUser && otherUser) {
+      const permission = evaluateMessagingPermission(currentUser, otherUser);
+      if (!permission.allowed) {
+        Alert.alert(permission.title ?? 'Messagerie bloquée', permission.message ?? '');
+        return;
+      }
+    }
     setSending(true);
     try {
       await messagesService.sendMessage(
@@ -108,6 +137,9 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
           }}
         />
       )}
+      {sendBlocked ? (
+        <Text style={styles.blocked}>{sendBlocked}</Text>
+      ) : null}
       <View style={styles.composer}>
         <TextInput
           style={styles.input}
@@ -116,11 +148,15 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
           value={text}
           onChangeText={setText}
           multiline
+          editable={!sendBlocked}
         />
         <TouchableOpacity
-          style={[styles.sendBtn, (!text.trim() || sending) && styles.sendDisabled]}
+          style={[
+            styles.sendBtn,
+            (!text.trim() || sending || sendBlocked) && styles.sendDisabled,
+          ]}
           onPress={handleSend}
-          disabled={!text.trim() || sending}
+          disabled={!text.trim() || sending || Boolean(sendBlocked)}
         >
           {sending ? (
             <ActivityIndicator color="#FFF" size="small" />
@@ -159,6 +195,16 @@ const styles = StyleSheet.create({
   bubbleText: { fontSize: 15, color: colors.text, lineHeight: 22 },
   bubbleTextMine: { color: '#FFFFFF' },
   time: { fontSize: 10, color: colors.textMuted, marginTop: 4 },
+  blocked: {
+    fontSize: 12,
+    color: colors.warning,
+    backgroundColor: colors.warningBg,
+    marginHorizontal: spacing.md,
+    marginBottom: spacing.sm,
+    padding: spacing.sm,
+    borderRadius: radius.md,
+    lineHeight: 18,
+  },
   composer: {
     flexDirection: 'row',
     alignItems: 'flex-end',

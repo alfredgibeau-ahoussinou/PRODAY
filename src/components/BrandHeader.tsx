@@ -25,7 +25,7 @@ export const BrandHeader: React.FC<BrandHeaderProps> = ({
   style,
 }) => (
   <View style={[styles.wrap, centered && styles.centered, style]}>
-    <Logo variant="light" width={LOGO_WIDTH[size]} showTagline={showTagline} />
+    <Logo background="light" width={LOGO_WIDTH[size]} showTagline={showTagline} />
   </View>
 );
 

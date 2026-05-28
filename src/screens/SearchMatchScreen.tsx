@@ -19,8 +19,8 @@ import { useTabNavigation } from '../context/TabNavigationContext';
 import { useMatchActions } from '../hooks/useMatchActions';
 import { messagesService } from '../services/messages.service';
 import { clubsService } from '../services/clubs.service';
-import { profileService } from '../services/profile.service';
-import { ROLES_REQUIRING_VERIFICATION } from '../models/User';
+import { usersService } from '../services/users.service';
+import { openContactConversation } from '../utils/openContactConversation';
 
 const CHIPS = ['Tous', 'Loisir', 'Compétition', 'Mixte'] as const;
 
@@ -63,16 +63,6 @@ export const SearchMatchScreen: React.FC<SearchMatchScreenProps> = ({
       Alert.alert('Connexion requise', 'Connectez-vous depuis l’onglet Profil.');
       return;
     }
-    if (
-      ROLES_REQUIRING_VERIFICATION.includes(profile.role) &&
-      !profileService.canPerformSensitiveAction(profile)
-    ) {
-      Alert.alert(
-        'Vérification requise',
-        'Validez votre diplôme ou licence pour contacter d’autres profils.'
-      );
-      return;
-    }
     let organizerUid = m.requester_uid;
     if (!organizerUid) {
       const club = await clubsService.getById(m.requester_club_id);
@@ -86,20 +76,17 @@ export const SearchMatchScreen: React.FC<SearchMatchScreenProps> = ({
       Alert.alert('Information', 'Il s’agit de votre propre proposition.');
       return;
     }
-    try {
-      const threadId = await messagesService.getOrCreateThread(
-        profile.uid,
-        profile.display_name,
-        organizerUid,
-        m.requester_club_name
-      );
-      openChat(threadId);
-    } catch (e) {
-      Alert.alert(
-        'Erreur',
-        e instanceof Error ? e.message : 'Impossible d’ouvrir la conversation.'
-      );
+    const organizer = await usersService.getById(organizerUid);
+    if (!organizer) {
+      Alert.alert('Contact indisponible', 'Profil organisateur introuvable.');
+      return;
     }
+    await openContactConversation(
+      profile,
+      organizer,
+      m.requester_club_name,
+      openChat
+    );
   };
 
   const filtered = matches.filter((m) => {

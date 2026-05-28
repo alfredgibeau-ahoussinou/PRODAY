@@ -16,7 +16,26 @@ import {
   recruitmentPostFromFirestore,
   applicationFromFirestore,
 } from '../lib/firestoreMappers';
+import type { User } from '../models/User';
+import type { AppSpaceId } from '../models/AppSpace';
 import type { RecruitmentPost, Application } from '../models/Player';
+import { callFunction } from '../lib/firebaseFunctions';
+
+export const APPLICATION_STATUS_LABEL: Record<Application['status'], string> = {
+  PENDING: 'En attente',
+  VIEWED: 'Consultée',
+  ACCEPTED: 'Acceptée',
+  REJECTED: 'Refusée',
+};
+
+const STAFF_ROLES = new Set(['coach', 'agent', 'organizer']);
+
+export function canManagePostApplications(profile: User, post: RecruitmentPost): boolean {
+  if (profile.uid === post.author_uid) return true;
+  if (!STAFF_ROLES.has(profile.role)) return false;
+  const clubId = profile.profile?.club_id;
+  return Boolean(clubId && clubId === post.club_id);
+}
 
 export const recruitmentService = {
   async listOpenPosts(max = 10): Promise<RecruitmentPost[]> {
@@ -64,6 +83,7 @@ export const recruitmentService = {
       level: string;
       city: string;
       description?: string;
+      target_space?: AppSpaceId;
     }
   ): Promise<string> {
     const database = getDb();
@@ -140,6 +160,38 @@ export const recruitmentService = {
       console.error('[recruitmentService] listApplicationsForPost:', error);
       return [];
     }
+  },
+
+  async listMyApplications(playerUid: string, max = 20): Promise<Application[]> {
+    if (!isFirebaseConfigured() || !playerUid) return [];
+    const database = getDb();
+    if (!database) return [];
+    try {
+      const q = query(
+        collection(database, 'recruitment_applications'),
+        where('player_uid', '==', playerUid),
+        orderBy('created_at', 'desc'),
+        limit(max)
+      );
+      const snap = await getDocs(q);
+      return snap.docs.map((d) =>
+        applicationFromFirestore(d.id, d.data() as Record<string, unknown>)
+      );
+    } catch (error) {
+      console.error('[recruitmentService] listMyApplications:', error);
+      return [];
+    }
+  },
+
+  async updateApplicationStatus(
+    applicationId: string,
+    status: Application['status'],
+    rejectionReason?: string
+  ): Promise<void> {
+    await callFunction<
+      { applicationId: string; status: Application['status']; rejectionReason?: string },
+      { success: boolean }
+    >('updateApplicationStatus', { applicationId, status, rejectionReason });
   },
 };
 

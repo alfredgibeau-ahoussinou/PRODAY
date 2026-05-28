@@ -27,6 +27,8 @@ export type IconName =
   | 'shield'
   | 'school'
   | 'chevron-forward'
+  | 'chevron-down'
+  | 'chevron-up'
   | 'menu'
   | 'settings'
   | 'add'
@@ -39,7 +41,12 @@ export type IconName =
   | 'business'
   | 'trophy'
   | 'star-four-points'
-  | 'lock';
+  | 'lock'
+  | 'eye'
+  | 'eye-off'
+  | 'arrow-back'
+  | 'alert-circle'
+  | 'document';
 
 const MAP: Record<IconName, keyof typeof Ionicons.glyphMap> = {
   home: 'home-outline',
@@ -66,6 +73,8 @@ const MAP: Record<IconName, keyof typeof Ionicons.glyphMap> = {
   shield: 'shield-checkmark-outline',
   school: 'school-outline',
   'chevron-forward': 'chevron-forward',
+  'chevron-down': 'chevron-down',
+  'chevron-up': 'chevron-up',
   menu: 'ellipsis-vertical',
   settings: 'options-outline',
   add: 'add',
@@ -79,18 +88,39 @@ const MAP: Record<IconName, keyof typeof Ionicons.glyphMap> = {
   trophy: 'trophy-outline',
   'star-four-points': 'sparkles-outline',
   lock: 'lock-closed-outline',
+  eye: 'eye-outline',
+  'eye-off': 'eye-off-outline',
+  'arrow-back': 'arrow-back',
+  'alert-circle': 'alert-circle-outline',
+  document: 'document-text-outline',
+};
+
+/** Icônes pleines pour onglets actifs */
+const FILLED_MAP: Partial<Record<IconName, keyof typeof Ionicons.glyphMap>> = {
+  home: 'home',
+  search: 'search',
+  chat: 'chatbubbles',
+  person: 'person',
+  handshake: 'people',
+  calendar: 'calendar',
+  shield: 'shield-checkmark',
+  trophy: 'trophy',
 };
 
 interface IconProps {
   name: IconName;
   size?: number;
   color?: string;
+  variant?: 'outline' | 'filled';
 }
 
 export const Icon: React.FC<IconProps> = ({
   name,
   size = 22,
-  color = colors.brand,
-}) => (
-  <Ionicons name={MAP[name]} size={size} color={color} />
-);
+  color = colors.text,
+  variant = 'outline',
+}) => {
+  const glyph =
+    variant === 'filled' && FILLED_MAP[name] ? FILLED_MAP[name] : MAP[name];
+  return <Ionicons name={glyph} size={size} color={color} />;
+};
