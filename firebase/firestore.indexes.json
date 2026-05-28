@@ -1,6 +1,11 @@
 {
   "indexes": [
     {
+      "collectionGroup": "platform_feed",
+      "queryScope": "COLLECTION",
+      "fields": [{ "fieldPath": "created_at", "order": "DESCENDING" }]
+    },
+    {
       "collectionGroup": "users",
       "queryScope": "COLLECTION",
       "fields": [
@@ -55,6 +60,38 @@
       "fields": [
         { "fieldPath": "post_id", "order": "ASCENDING" },
         { "fieldPath": "player_uid", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "recruitment_applications",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "player_uid", "order": "ASCENDING" },
+        { "fieldPath": "created_at", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "team_payment_requests",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "club_id", "order": "ASCENDING" },
+        { "fieldPath": "due_at", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "team_payment_requests",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "member_uid", "order": "ASCENDING" },
+        { "fieldPath": "due_at", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "club_announcements",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "club_id", "order": "ASCENDING" },
+        { "fieldPath": "created_at", "order": "DESCENDING" }
       ]
     }
   ],
