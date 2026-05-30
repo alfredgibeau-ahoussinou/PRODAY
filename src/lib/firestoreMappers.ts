@@ -244,9 +244,54 @@ export function teamEventFromFirestore(
     match_report_finalized_at: data.match_report_finalized_at
       ? toDate(data.match_report_finalized_at)
       : undefined,
+    event_tasks: mapEventTasks(data.event_tasks),
+    carpool_slots: mapCarpoolSlots(data.carpool_slots),
+    carpool_messages: mapCarpoolMessages(data.carpool_messages),
     created_at: toDate(data.created_at),
     updated_at: toDate(data.updated_at),
   };
+}
+
+function mapEventTasks(raw: unknown) {
+  if (!Array.isArray(raw)) return undefined;
+  return raw.map((item) => {
+    const t = item as Record<string, unknown>;
+    return {
+      id: String(t.id ?? ''),
+      kind: (t.kind as import('../models/TeamEvent').EventTaskKind) ?? 'other',
+      label: String(t.label ?? ''),
+      assignee_uids: (t.assignee_uids as string[]) ?? [],
+    };
+  });
+}
+
+function mapCarpoolSlots(raw: unknown) {
+  if (!Array.isArray(raw)) return undefined;
+  return raw.map((item) => {
+    const s = item as Record<string, unknown>;
+    return {
+      driver_uid: String(s.driver_uid ?? ''),
+      driver_name: String(s.driver_name ?? ''),
+      seats: typeof s.seats === 'number' ? s.seats : undefined,
+      meeting_time: s.meeting_time ? String(s.meeting_time) : undefined,
+      meeting_place: s.meeting_place ? String(s.meeting_place) : undefined,
+      notes: s.notes ? String(s.notes) : undefined,
+    };
+  });
+}
+
+function mapCarpoolMessages(raw: unknown) {
+  if (!Array.isArray(raw)) return undefined;
+  return raw.map((item) => {
+    const m = item as Record<string, unknown>;
+    return {
+      id: String(m.id ?? ''),
+      author_uid: String(m.author_uid ?? ''),
+      author_name: String(m.author_name ?? ''),
+      body: String(m.body ?? ''),
+      created_at: toDate(m.created_at),
+    };
+  });
 }
 
 function mapLiveActions(raw: unknown): LiveMatchAction[] | undefined {

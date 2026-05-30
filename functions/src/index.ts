@@ -209,6 +209,52 @@ export const onTeamEventCreated = functions.firestore
     }
   });
 
+interface CarpoolSlotDoc {
+  driver_uid?: string;
+  driver_name?: string;
+}
+
+function carpoolDriverUids(slots: unknown): string[] {
+  if (!Array.isArray(slots)) return [];
+  return slots
+    .map((s) => (s as CarpoolSlotDoc).driver_uid)
+    .filter((uid): uid is string => typeof uid === 'string' && uid.length > 0);
+}
+
+/** Nouveau chauffeur désigné → notification push */
+export const onTeamEventCarpoolUpdated = functions.firestore
+  .document('team_events/{eventId}')
+  .onUpdate(async (change, context) => {
+    const before = carpoolDriverUids(change.before.data().carpool_slots);
+    const after = carpoolDriverUids(change.after.data().carpool_slots);
+    const newlyAssigned = after.filter((uid) => !before.includes(uid));
+    if (newlyAssigned.length === 0) return;
+
+    const data = change.after.data();
+    const startsAt = (data.starts_at as admin.firestore.Timestamp | undefined)?.toDate();
+    const dateLabel = startsAt
+      ? startsAt.toLocaleDateString('fr-FR', {
+          weekday: 'short',
+          day: 'numeric',
+          month: 'short',
+          hour: '2-digit',
+          minute: '2-digit',
+        })
+      : '';
+    const eventTitle = String(data.title ?? 'Événement');
+
+    for (const uid of newlyAssigned) {
+      await sendFcmToUser(uid, {
+        title: 'Covoiturage — vous êtes chauffeur',
+        body: `${eventTitle} · ${dateLabel}. Indiquez vos places et le point de RDV dans ProDay.`,
+        data: {
+          type: 'carpool_assignment',
+          eventId: context.params.eventId,
+        },
+      });
+    }
+  });
+
 /** Nouvelle cotisation → push au membre concerné */
 export const onTeamPaymentRequestCreated = functions.firestore
   .document('team_payment_requests/{requestId}')

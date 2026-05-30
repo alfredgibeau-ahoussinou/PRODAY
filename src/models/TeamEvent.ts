@@ -49,6 +49,41 @@ export interface PlayerMatchSheetStat {
   red_cards?: number;
 }
 
+/** Tâche logistique (covoiturage, matériel…) — assignation coach */
+export type EventTaskKind = 'carpool' | 'equipment' | 'snacks' | 'other';
+
+export interface EventTask {
+  id: string;
+  kind: EventTaskKind;
+  label: string;
+  assignee_uids: string[];
+}
+
+/** Détail d’un conducteur pour un événement */
+export interface CarpoolSlot {
+  driver_uid: string;
+  driver_name: string;
+  seats?: number;
+  meeting_time?: string;
+  meeting_place?: string;
+  notes?: string;
+}
+
+export interface CarpoolMessage {
+  id: string;
+  author_uid: string;
+  author_name: string;
+  body: string;
+  created_at: Date;
+}
+
+export interface CarpoolDriverBalance {
+  uid: string;
+  name: string;
+  trips: number;
+  last_trip_at?: Date;
+}
+
 export const LIVE_ACTION_LABELS: Record<LiveActionType, string> = {
   goal: 'But',
   assist: 'Passe décisive',
@@ -95,6 +130,12 @@ export interface TeamEvent {
   player_match_stats?: Record<string, PlayerMatchSheetStat>;
   stats_applied_at?: Date;
   match_report_finalized_at?: Date;
+  /** Tâches assignées (covoiturage, matériel…) */
+  event_tasks?: EventTask[];
+  /** Conducteurs désignés + places / RDV */
+  carpool_slots?: CarpoolSlot[];
+  /** Fil de coordination covoiturage (messagerie événement) */
+  carpool_messages?: CarpoolMessage[];
   created_at: Date;
   updated_at: Date;
 }

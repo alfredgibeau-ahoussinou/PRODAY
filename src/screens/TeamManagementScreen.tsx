@@ -26,6 +26,8 @@ import { CreateTeamEventScreen } from './CreateTeamEventScreen';
 import { JoinClubScreen } from './JoinClubScreen';
 import { ClubAnnouncementsScreen } from './ClubAnnouncementsScreen';
 import { EventAttendancePanel } from '../components/team/EventAttendancePanel';
+import { CarpoolBalanceTable } from '../components/team/CarpoolBalanceTable';
+import { aggregateCarpoolBalance } from '../utils/carpoolBalance';
 import { colors, radius, spacing } from '../theme/designTokens';
 
 type TeamTab = 'planning' | 'roster' | 'attendance' | 'stats' | 'payments';
@@ -50,6 +52,7 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
   const [payments, setPayments] = useState<TeamPaymentRequest[]>([]);
   const [membersCount, setMembersCount] = useState(0);
   const [members, setMembers] = useState<User[]>([]);
+  const [seasonEvents, setSeasonEvents] = useState<TeamEvent[]>([]);
   const [selectedStatUid, setSelectedStatUid] = useState<string | null>(null);
 
   const clubId = profile.profile.club_id;
@@ -57,15 +60,17 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [listEvents, listPayments, members] = await Promise.all([
+      const [listEvents, listPayments, members, clubSeasonEvents] = await Promise.all([
         teamEventsService.listForUser(profile.uid, clubId),
         clubId ? teamFinanceService.listByClub(clubId, 80) : Promise.resolve([]),
         clubId ? usersService.listMembersByClubId(clubId) : Promise.resolve([]),
+        clubId ? teamEventsService.listForClub(clubId, 120) : Promise.resolve([]),
       ]);
       setEvents(listEvents);
       setPayments(listPayments);
       setMembersCount(members.length);
       setMembers(members);
+      setSeasonEvents(clubSeasonEvents);
       if (!selectedStatUid && members[0]) setSelectedStatUid(members[0].uid);
     } finally {
       setLoading(false);
@@ -89,6 +94,11 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
     );
     return { convocation, training, yes, pending };
   }, [events]);
+
+  const carpoolBalance = useMemo(
+    () => aggregateCarpoolBalance(seasonEvents),
+    [seasonEvents]
+  );
 
   const paymentStats = useMemo(() => {
     const expected = payments.reduce((acc, p) => acc + p.amount_eur, 0);
@@ -540,6 +550,10 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
                 ) : null}
               </View>
             ) : null}
+            <View style={styles.inlineBlock}>
+              <Text style={styles.inlineTitle}>Bilan covoiturage</Text>
+              <CarpoolBalanceTable rows={carpoolBalance} />
+            </View>
           </View>
         ) : null}
 

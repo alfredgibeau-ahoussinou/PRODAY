@@ -26,6 +26,7 @@ import { openPrintableHtml } from '../utils/openCvHtml';
 import { EventLineupScreen } from './EventLineupScreen';
 import { EventLiveStatsScreen } from './EventLiveStatsScreen';
 import { EventAttendancePanel } from '../components/team/EventAttendancePanel';
+import { EventCarpoolPanel } from '../components/team/EventCarpoolPanel';
 import { colors, spacing, radius } from '../theme/designTokens';
 
 interface TeamEventDetailScreenProps {
@@ -212,6 +213,19 @@ export const TeamEventDetailScreen: React.FC<TeamEventDetailScreenProps> = ({
         ) : null}
 
         {event.description ? <Text style={styles.desc}>{event.description}</Text> : null}
+
+        {profile &&
+        (isOrganizer ||
+          isStaff ||
+          event.invitee_uids.includes(profile.uid) ||
+          event.event_type === 'detection') ? (
+          <EventCarpoolPanel
+            event={event}
+            profile={profile}
+            isStaff={Boolean(isStaff)}
+            onUpdated={load}
+          />
+        ) : null}
 
         {event.lineup && (
           <View style={styles.lineupBox}>

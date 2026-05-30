@@ -71,6 +71,17 @@ service cloud.firestore {
         && !(clubUid in oldUids);
     }
 
+    function isEventInvitee() {
+      return resource.data.invitee_uids.hasAny([request.auth.uid]);
+    }
+
+    function isCarpoolCoordinationUpdate() {
+      return isSignedIn()
+        && isEventInvitee()
+        && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['carpool_slots', 'carpool_messages', 'updated_at']);
+    }
+
     match /users/{userId} {
       allow read: if isSignedIn();
       allow create: if isOwner(userId)
@@ -116,6 +127,7 @@ service cloud.firestore {
       allow update: if isSignedIn()
         && (
           isStaffOrAdmin()
+          || isCarpoolCoordinationUpdate()
           || (
             resource.data.match_report_finalized_at == null
             && (
@@ -132,7 +144,10 @@ service cloud.firestore {
                     'stats_applied_at',
                     'match_report_finalized_at',
                     'last_reminder_at',
-                    'auto_reminder_sent_at'
+                    'auto_reminder_sent_at',
+                    'event_tasks',
+                    'carpool_slots',
+                    'carpool_messages'
                   ])
               )
             )

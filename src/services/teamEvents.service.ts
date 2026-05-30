@@ -26,6 +26,8 @@ import type {
   LiveMatchAction,
   LiveActionType,
 } from '../models/TeamEvent';
+import type { CarpoolSlot, EventTask, CarpoolMessage } from '../models/TeamEvent';
+import { newCarpoolMessageId, newEventTaskId } from '../utils/carpoolBalance';
 import type { Tournament } from '../models/Tournament';
 import { callFunction } from '../lib/firebaseFunctions';
 import { usersService } from './users.service';
@@ -79,6 +81,32 @@ export const teamEventsService = {
         e.invitee_uids.includes(uid) ||
         (clubId && e.club_id === clubId)
     );
+  },
+
+  /** Événements club (passés + à venir) — bilan covoiturage saison */
+  async listForClub(clubId: string, max = 120): Promise<TeamEvent[]> {
+    if (!isFirebaseConfigured() || !clubId) return [];
+    const database = getDb();
+    if (!database) return [];
+
+    try {
+      const q = query(
+        collection(database, COL),
+        orderBy('starts_at', 'desc'),
+        limit(max)
+      );
+      const snap = await getDocs(q);
+      return snap.docs
+        .map((d) => teamEventFromFirestore(d.id, d.data() as Record<string, unknown>))
+        .filter((e) => e.club_id === clubId);
+    } catch {
+      const snap = await getDocs(collection(database, COL));
+      return snap.docs
+        .map((d) => teamEventFromFirestore(d.id, d.data() as Record<string, unknown>))
+        .filter((e) => e.club_id === clubId)
+        .sort((a, b) => b.starts_at.getTime() - a.starts_at.getTime())
+        .slice(0, max);
+    }
   },
 
   async getById(id: string): Promise<TeamEvent | null> {
@@ -383,6 +411,100 @@ export const teamEventsService = {
     if (!database) throw new Error('Firebase non configuré');
     await updateDoc(doc(database, COL, eventId), {
       stats_applied_at: serverTimestamp(),
+      updated_at: serverTimestamp(),
+    });
+  },
+
+  /** Coach — désigne les chauffeurs / tâche covoiturage */
+  async setCarpoolDrivers(
+    eventId: string,
+    drivers: { uid: string; name: string }[]
+  ): Promise<void> {
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+    const event = await this.getById(eventId);
+    if (!event) throw new Error('Événement introuvable');
+
+    const existing = new Map(
+      (event.carpool_slots ?? []).map((s) => [s.driver_uid, s])
+    );
+    const carpool_slots: CarpoolSlot[] = drivers.map((d) => {
+      const prev = existing.get(d.uid);
+      return {
+        driver_uid: d.uid,
+        driver_name: d.name,
+        seats: prev?.seats,
+        meeting_time: prev?.meeting_time,
+        meeting_place: prev?.meeting_place,
+        notes: prev?.notes,
+      };
+    });
+
+    const tasks = [...(event.event_tasks ?? [])];
+    const carpoolTaskIdx = tasks.findIndex((t) => t.kind === 'carpool');
+    const carpoolTask: EventTask = {
+      id: carpoolTaskIdx >= 0 ? tasks[carpoolTaskIdx].id : newEventTaskId(),
+      kind: 'carpool',
+      label: 'Covoiturage',
+      assignee_uids: drivers.map((d) => d.uid),
+    };
+    if (carpoolTaskIdx >= 0) tasks[carpoolTaskIdx] = carpoolTask;
+    else tasks.push(carpoolTask);
+
+    await updateDoc(doc(database, COL, eventId), {
+      carpool_slots,
+      event_tasks: tasks,
+      updated_at: serverTimestamp(),
+    });
+  },
+
+  /** Conducteur — places, RDV, notes */
+  async updateCarpoolSlot(
+    eventId: string,
+    driverUid: string,
+    patch: Partial<Pick<CarpoolSlot, 'seats' | 'meeting_time' | 'meeting_place' | 'notes'>>
+  ): Promise<void> {
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+    const event = await this.getById(eventId);
+    if (!event) throw new Error('Événement introuvable');
+
+    const slots = [...(event.carpool_slots ?? [])];
+    const idx = slots.findIndex((s) => s.driver_uid === driverUid);
+    if (idx < 0) throw new Error('Vous n’êtes pas désigné chauffeur sur cet événement.');
+
+    slots[idx] = { ...slots[idx], ...patch };
+    await updateDoc(doc(database, COL, eventId), {
+      carpool_slots: slots,
+      updated_at: serverTimestamp(),
+    });
+  },
+
+  /** Message de coordination (fil événement) */
+  async addCarpoolMessage(
+    eventId: string,
+    authorUid: string,
+    authorName: string,
+    body: string
+  ): Promise<void> {
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+    const event = await this.getById(eventId);
+    if (!event) throw new Error('Événement introuvable');
+
+    const text = body.trim();
+    if (!text) throw new Error('Message vide.');
+
+    const entry: CarpoolMessage = {
+      id: newCarpoolMessageId(),
+      author_uid: authorUid,
+      author_name: authorName,
+      body: text,
+      created_at: new Date(),
+    };
+    const carpool_messages = [...(event.carpool_messages ?? []), entry];
+    await updateDoc(doc(database, COL, eventId), {
+      carpool_messages,
       updated_at: serverTimestamp(),
     });
   },
