@@ -49,29 +49,38 @@ export const DiscoverHomePager: React.FC<DiscoverHomePagerProps> = ({
   const { width: pageWidth } = useWindowDimensions();
   const scrollRef = useRef<Animated.ScrollView>(null);
   const scrollX = useSharedValue(0);
+  /** Évite que onScrollEndDrag annule un tap onglet (offset encore à 0 pendant le scroll programmé). */
+  const suppressChapterSyncRef = useRef(false);
 
   const goToIndex = useCallback(
     (index: number, animated = true) => {
+      if (pageWidth <= 0) return;
       const clamped = Math.max(0, Math.min(index, pages.length - 1));
       const x = clamped * pageWidth;
+      const chapterId = pages[clamped].id;
+      suppressChapterSyncRef.current = true;
       scrollX.value = x;
+      onChapterChange(chapterId);
       scrollRef.current?.scrollTo({ x, animated });
-      onChapterChange(pages[clamped].id);
+      if (!animated) {
+        suppressChapterSyncRef.current = false;
+      }
     },
     [onChapterChange, pages, pageWidth, scrollX]
   );
 
   const goToChapter = useCallback(
-    (id: DiscoverChapterId) => {
+    (id: DiscoverChapterId, animated = false) => {
       const index = pages.findIndex((p) => p.id === id);
-      if (index >= 0) goToIndex(index);
+      if (index >= 0) goToIndex(index, animated);
     },
     [goToIndex, pages]
   );
 
-  /** Sync chapitre uniquement après swipe — pas pendant onScroll (sinon les onglets sont annulés). */
+  /** Sync chapitre uniquement après swipe utilisateur. */
   const syncChapterFromOffset = useCallback(
     (offsetX: number) => {
+      if (suppressChapterSyncRef.current) return;
       const snap = Math.max(pageWidth, 1);
       const index = Math.round(offsetX / snap);
       const page = pages[index];
@@ -82,6 +91,7 @@ export const DiscoverHomePager: React.FC<DiscoverHomePagerProps> = ({
 
   const onPagerScrollEnd = useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+      suppressChapterSyncRef.current = false;
       syncChapterFromOffset(e.nativeEvent.contentOffset.x);
     },
     [syncChapterFromOffset]
@@ -89,6 +99,7 @@ export const DiscoverHomePager: React.FC<DiscoverHomePagerProps> = ({
 
   const onPagerScrollEndDrag = useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+      if (suppressChapterSyncRef.current) return;
       const vx = e.nativeEvent.velocity?.x ?? 0;
       if (Math.abs(vx) < 0.05) {
         syncChapterFromOffset(e.nativeEvent.contentOffset.x);
@@ -105,12 +116,15 @@ export const DiscoverHomePager: React.FC<DiscoverHomePagerProps> = ({
 
   const pageNum = pages.findIndex((p) => p.id === activeChapter) + 1;
 
+  /** Sync pager quand le parent change de chapitre (ex. CTA intro « Voir le live »). */
   useEffect(() => {
     const index = pages.findIndex((p) => p.id === activeChapter);
-    if (index >= 0) {
-      scrollRef.current?.scrollTo({ x: index * pageWidth, animated: true });
-    }
-  }, [activeChapter, pages, pageWidth]);
+    if (index < 0 || pageWidth <= 0) return;
+    const x = index * pageWidth;
+    suppressChapterSyncRef.current = true;
+    scrollX.value = x;
+    scrollRef.current?.scrollTo({ x, animated: true });
+  }, [activeChapter, pages, pageWidth, scrollX]);
 
   return (
     <View
@@ -123,12 +137,12 @@ export const DiscoverHomePager: React.FC<DiscoverHomePagerProps> = ({
       ]}
     >
       {editorial ? (
-        <DiscoverTabRail active={activeChapter} onSelect={goToChapter} />
+        <DiscoverTabRail active={activeChapter} onSelect={(id) => goToChapter(id, false)} />
       ) : (
         <DiscoverChapterRail
           active={activeChapter}
           onSelect={(id) => {
-            goToChapter(id);
+            goToChapter(id, false);
             onChapterSelect?.(id);
           }}
           embedded={embedded}
