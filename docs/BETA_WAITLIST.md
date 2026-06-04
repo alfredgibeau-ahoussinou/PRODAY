@@ -2,6 +2,15 @@
 
 Envoi via [EmailJS](https://www.emailjs.com/) : pas de domaine DNS à vérifier, branchement Gmail/Outlook dans le dashboard.
 
+## Dépannage — pas d'email reçu
+
+1. **Site à jour ?** Sur `/beta`, il ne doit plus y avoir « Démo locale ». Si oui → redéployer Vercel.
+2. **Test API** : `curl -X POST https://proday-xak9.vercel.app/api/beta -H "Content-Type: application/json" -d '{"email":"test@test.fr","role":"player"}'`
+   - **404** → redeploy ; **Output Directory** Vercel doit être **vide** (pas `.next`)
+   - **503** → ajouter `EMAILJS_*` sur Vercel
+   - **502** → EmailJS (clé privée, template, API non-navigateur)
+3. **Vercel** → Settings → Environment Variables → redeploy après modification.
+
 ## 1. Compte EmailJS
 
 1. [emailjs.com](https://www.emailjs.com/) → créer un compte
