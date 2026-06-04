@@ -5,6 +5,7 @@ import { sendFcmToUser } from './messaging';
 import { createPaymentCheckoutSession, stripeWebhook } from './stripePayments';
 import { runMistralDocumentVerification, verifyOnboardingDocumentEphemeral } from './mistralVerification';
 import { onPlatformFeedCreated, onChatMessageCreated } from './feedNotifications';
+import { createSubmitBetaWaitlistHandler } from './betaWaitlist';
 
 export { createPaymentCheckoutSession, stripeWebhook };
 export { onPlatformFeedCreated, onChatMessageCreated };
@@ -505,3 +506,8 @@ export const adminDeleteUser = functions.https.onCall(async (data, context) => {
 
   return { success: true };
 });
+
+/** Inscription bêta site vitrine — Firestore + email Resend */
+export const submitBetaWaitlist = functions
+  .region('europe-west1')
+  .https.onRequest(createSubmitBetaWaitlistHandler(db));
