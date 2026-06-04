@@ -7,6 +7,8 @@
   "scripts": {
     "start": "expo start",
     "web": "expo start --web --clear",
+    "website:dev": "npm run dev --prefix website",
+    "website:build": "npm run build --prefix website",
     "ios": "expo run:ios",
     "android": "expo run:android",
     "typecheck": "tsc --noEmit",

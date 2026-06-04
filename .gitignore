@@ -1,4 +1,7 @@
 node_modules/
+website/node_modules/
+website/.next/
+website/.vercel/
 .expo/
 dist/
 .env
