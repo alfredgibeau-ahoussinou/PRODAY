@@ -11,7 +11,7 @@ import { RoleQuiz } from "@/components/interactive/RoleQuiz";
 import { FaqAccordion } from "@/components/interactive/FaqAccordion";
 import { StatsBar } from "@/components/StatsBar";
 import { Reveal } from "@/components/Reveal";
-import { BETA_PITCH } from "@/lib/content";
+import { WaitlistForm } from "@/components/WaitlistForm";
 import { ROUTES } from "@/lib/routes";
 
 export default function HomePage() {
@@ -66,21 +66,7 @@ export default function HomePage() {
         </div>
       </section>
       <DownloadSection />
-      <section className="bg-neutral-900 py-16 text-center text-white">
-        <p className="text-sm tracking-widest text-neutral-400">PRÊT À COMMENCER ?</p>
-        <h2 className="mt-2 text-2xl font-bold sm:text-3xl">
-          Rejoignez la bêta ProDay
-        </h2>
-        <p className="mx-auto mt-3 max-w-lg text-neutral-400">
-          {BETA_PITCH.dailyUpdates}
-        </p>
-        <Link
-          href={ROUTES.beta}
-          className="mt-8 inline-block rounded-full bg-white px-8 py-3.5 text-sm font-semibold text-neutral-900 transition hover:bg-neutral-100"
-        >
-          S&apos;inscrire à la beta
-        </Link>
-      </section>
+      <WaitlistForm />
     </>
   );
 }

@@ -25,7 +25,7 @@ Envoi via [EmailJS](https://www.emailjs.com/) : pas de domaine DNS à vérifier,
 
 | Champ | Valeur |
 |-------|--------|
-| **To Email** | `{{to_email}}` |
+| **To Email** | `{{email}}` |
 | **From Name** | `ProDay` |
 | **Subject** | `{{subject}}` ou fixe : `Vous êtes beta-testeur ProDay` |
 | **Reply To** | `support@proday.app` |

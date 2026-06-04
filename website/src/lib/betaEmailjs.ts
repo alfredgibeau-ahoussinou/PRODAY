@@ -28,6 +28,7 @@ export function buildBetaEmailJsTemplateParams(
   const site = (params.siteUrl ?? "https://proday.app").replace(/\/$/, "");
 
   return {
+    email: params.email,
     to_email: params.email,
     user_email: params.email,
     member_role: BETA_MEMBER_ROLE,

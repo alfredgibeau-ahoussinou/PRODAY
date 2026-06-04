@@ -24,3 +24,4 @@ docs/**/*.pdf
 docs/legal/pactes/*.tex
 docs/legal/pactes/*.{aux,log,out,toc}
 docs/PRODAY_Restant_et_Ameliorations.tex
+.vercel
