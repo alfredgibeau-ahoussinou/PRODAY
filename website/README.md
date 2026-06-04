@@ -35,3 +35,22 @@ npm run website:dev
 ```bash
 npm run website:build
 ```
+
+## Déploiement Vercel
+
+**Branche Git :** `website` — **Root Directory :** `website`
+
+### Dashboard (recommandé)
+
+1. [vercel.com/new](https://vercel.com/new) → importer `alfredgibeau-ahoussinou/PRODAY`
+2. **Production Branch** : `website`
+3. **Root Directory** : `website`
+4. Deploy
+
+### CLI
+
+```bash
+git checkout website && cd website
+npx vercel login
+npx vercel --prod
+```
