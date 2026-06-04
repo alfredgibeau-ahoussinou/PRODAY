@@ -2,8 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, ActivityIndicator } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
-import { FirstLaunchIntro } from './src/components/branding/FirstLaunchIntro';
-import { useAppLaunchIntro } from './src/hooks/useAppLaunchIntro';
 import { MAIN_TABS, type MainTabId } from './src/navigation/MainTabs';
 import { isGuestTabAllowed } from './src/navigation/guestAccess';
 import { TabNavigationProvider } from './src/context/TabNavigationContext';
@@ -12,6 +10,7 @@ import { SubscriptionProvider } from './src/context/SubscriptionContext';
 import { SubscriptionShell } from './src/components/subscription/SubscriptionShell';
 import { AppSpaceProvider } from './src/context/AppSpaceContext';
 import { ProductLineProvider, useProductLine } from './src/context/ProductLineContext';
+import { LaunchIntroProvider } from './src/context/LaunchIntroContext';
 import { BottomTabBar } from './src/components/navigation/BottomTabBar';
 import { WomanSpaceDefaults } from './src/components/appSpace/WomanSpaceDefaults';
 import { AnimatedTabContent } from './src/components/motion';
@@ -27,44 +26,25 @@ import type {
   DashboardDeepLink,
   MercatoDeepLink,
 } from './src/utils/navigationDeepLink';
+import { profileMatchesActiveLine } from './src/utils/productLineAccess';
 
 export default function App() {
   return (
     <SafeAreaProvider>
       <AuthProvider>
         <ProductLineProvider>
-          <LaunchIntroGate>
+          <LaunchIntroProvider>
             <AppShell />
-          </LaunchIntroGate>
+          </LaunchIntroProvider>
         </ProductLineProvider>
       </AuthProvider>
     </SafeAreaProvider>
   );
 }
 
-/** Intro courte + choix d’espace (première ouverture). */
-function LaunchIntroGate({ children }: { children: React.ReactNode }) {
-  const { visible, playKey, markIntroComplete } = useAppLaunchIntro();
-  const { enterWomanSpace, exitWomanSpace } = useProductLine();
-
-  const onChooseSpace = (space: 'standard' | 'woman') => {
-    void (async () => {
-      if (space === 'woman') await enterWomanSpace();
-      else await exitWomanSpace();
-      await markIntroComplete();
-    })();
-  };
-
-  return (
-    <View style={styles.appWrap}>
-      {children}
-      {visible ? <FirstLaunchIntro key={playKey} onChooseSpace={onChooseSpace} /> : null}
-    </View>
-  );
-}
-
 function AppShell() {
-  const { colors: themeColors, isWoman } = useProductLine();
+  const { colors: themeColors, isWoman, productLine, loading: productLineLoading } =
+    useProductLine();
   const {
     profile,
     loading: authLoading,
@@ -108,6 +88,13 @@ function AppShell() {
       setActiveTab('home');
     }
   }, [isGuest, activeTab]);
+
+  useEffect(() => {
+    if (productLineLoading || authLoading || !profile) return;
+    if (!profileMatchesActiveLine(profile, productLine)) {
+      void signOut();
+    }
+  }, [productLine, productLineLoading, authLoading, profile, signOut]);
 
   if (!authLoading && profile && needsOnboardingDocumentUpload(profile)) {
     return (
@@ -249,7 +236,6 @@ function AppShell() {
 }
 
 const styles = StyleSheet.create({
-  appWrap: { flex: 1 },
   root: { flex: 1, backgroundColor: colors.background },
   screen: { flex: 1 },
   adminLoader: {

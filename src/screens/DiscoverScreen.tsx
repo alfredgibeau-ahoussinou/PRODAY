@@ -1,20 +1,24 @@
 import React, { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, Pressable, Text } from 'react-native';
 import { ArenaScreen } from './ArenaScreen';
 import { SponsorsScreen } from './SponsorsScreen';
 import { DiscoverInteractiveHome } from '../components/discover/DiscoverInteractiveHome';
 import type { DiscoverExperienceId } from '../components/discover/DiscoverExperiencesHub';
 import { AnimatedModalShell } from '../components/motion';
+import { useLaunchIntro } from '../context/LaunchIntroContext';
 import type { ProDayModuleId } from '../content/prodayModules';
 import { useTabNavigation } from '../context/TabNavigationContext';
 import { useDiscoverLiveData } from '../hooks/useAppData';
-import { colors } from '../theme/designTokens';
+import { colors, spacing } from '../theme/designTokens';
+import { useAppTheme } from '../context/ProductLineContext';
 import { DiscoverExperienceDeckScreen } from './discover/DiscoverExperienceDeckScreen';
 import { DiscoverStoryShowcaseScreen } from './discover/DiscoverStoryShowcaseScreen';
 import { DiscoverMotionLabScreen } from './discover/DiscoverMotionLabScreen';
 
 export const DiscoverScreen: React.FC = () => {
   const { setActiveTab } = useTabNavigation();
+  const { openSpacePicker } = useLaunchIntro();
+  const { isWoman } = useAppTheme();
   const { stats, posts, tournaments, loading } = useDiscoverLiveData();
   const [guestModule, setGuestModule] = useState<'arena' | 'sponsors' | null>(null);
   const [experience, setExperience] = useState<DiscoverExperienceId | null>(null);
@@ -36,6 +40,11 @@ export const DiscoverScreen: React.FC = () => {
 
   return (
     <View style={styles.root}>
+      <Pressable style={styles.universeBar} onPress={openSpacePicker}>
+        <Text style={styles.universeBarText}>
+          {isWoman ? 'ProDay for Women' : 'ProDay Classic'} · Changer d’univers
+        </Text>
+      </Pressable>
       <DiscoverInteractiveHome
         stats={stats}
         posts={posts}
@@ -87,4 +96,18 @@ export const DiscoverScreen: React.FC = () => {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.background },
+  universeBar: {
+    alignItems: 'center',
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.md,
+    backgroundColor: colors.surface,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
+  },
+  universeBarText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: colors.ink,
+    textDecorationLine: 'underline',
+  },
 });

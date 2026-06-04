@@ -82,7 +82,7 @@ export const BrandRevealIntro: React.FC<BrandRevealIntroProps> = ({ onChooseSpac
             style={[styles.choiceBtn, styles.choiceBtnClassic]}
             onPress={() => onChooseSpace('standard')}
           >
-            <Text style={styles.choiceBtnTitle}>{BRAND.name}</Text>
+            <Text style={styles.choiceBtnTitle}>ProDay Classic</Text>
             <Text style={styles.choiceBtnSub}>Football classique — Mercato, matchs, fil</Text>
           </Pressable>
 

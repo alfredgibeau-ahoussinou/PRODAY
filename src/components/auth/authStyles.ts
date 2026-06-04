@@ -52,6 +52,18 @@ export const authStyles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     ...Platform.select({ android: { includeFontPadding: false } }),
   },
+  spacePickerLink: {
+    marginTop: spacing.sm,
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.md,
+  },
+  spacePickerText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: colors.ink,
+    textAlign: 'center',
+    textDecorationLine: 'underline',
+  },
   body: {
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.lg,

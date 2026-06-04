@@ -26,7 +26,10 @@ import { ProfileScreen } from './ProfileScreen';
 import type { LegalDocumentId } from '../content/legalDocuments';
 import { useAuth } from '../context/AuthContext';
 import { useTabNavigation } from '../context/TabNavigationContext';
+import { useAppTheme } from '../context/ProductLineContext';
+import { useLaunchIntro } from '../context/LaunchIntroContext';
 import { BRAND, colors, spacing } from '../theme/designTokens';
+import { PRODAY_WOMAN_BRAND } from '../models/ProductLine';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -41,6 +44,8 @@ export const AuthScreen: React.FC = () => {
   const { profile, loading: authLoading, configured, refreshProfile, signOut } =
     useAuth();
   const { setActiveTab } = useTabNavigation();
+  const { isWoman, productLine } = useAppTheme();
+  const { openSpacePicker } = useLaunchIntro();
   const [tab, setTab] = useState<AuthTabId>('login');
   const [signupOpen, setSignupOpen] = useState(false);
   const [email, setEmail] = useState('');
@@ -172,7 +177,7 @@ export const AuthScreen: React.FC = () => {
     return (
       <View style={authStyles.root}>
         <SignupFlow
-          productLine="standard"
+          productLine={productLine}
           onClose={closeSignup}
           onComplete={onSignupComplete}
           initialEmail={signupPrefill?.email}
@@ -194,7 +199,14 @@ export const AuthScreen: React.FC = () => {
       >
         <View style={[authStyles.header, { paddingTop: insets.top + (compact ? spacing.sm : spacing.md) }]}>
           <AuthBrandHeader width={logoWidth} tone="light" />
-          <Text style={authStyles.tagline}>{BRAND.tagline}</Text>
+          <Text style={authStyles.tagline}>
+            {isWoman ? PRODAY_WOMAN_BRAND.tagline : BRAND.tagline}
+          </Text>
+          <Pressable style={authStyles.spacePickerLink} onPress={openSpacePicker}>
+            <Text style={authStyles.spacePickerText}>
+              {isWoman ? 'ProDay for Women' : 'ProDay Classic'} — changer d’univers
+            </Text>
+          </Pressable>
         </View>
 
         <View style={[authStyles.body, compact && authStyles.bodyCompact]}>
@@ -208,12 +220,16 @@ export const AuthScreen: React.FC = () => {
           />
 
           <Text style={[authStyles.title, compact && authStyles.titleCompact]}>
-            {tab === 'login' ? 'Bon retour' : 'Rejoignez ProDay'}
+            {tab === 'login' ? 'Bon retour' : isWoman ? 'Rejoignez ProDay Woman' : 'Rejoignez ProDay'}
           </Text>
           <Text style={authStyles.sub}>
             {tab === 'login'
-              ? 'Connectez-vous pour accéder à votre espace.'
-              : 'Créez votre compte en quelques minutes — joueurs, coachs, clubs et partenaires.'}
+              ? isWoman
+                ? 'Connectez-vous à votre espace foot féminin.'
+                : 'Connectez-vous pour accéder à votre espace.'
+              : isWoman
+                ? 'Créez votre compte Woman — réservé à l’univers foot féminin.'
+                : 'Créez votre compte en quelques minutes — joueurs, coachs, clubs et partenaires.'}
           </Text>
 
           <ProDayConfigNotice compact />
