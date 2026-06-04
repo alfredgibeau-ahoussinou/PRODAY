@@ -10,13 +10,15 @@ import {
 } from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
 import * as Google from 'expo-auth-session/providers/google';
+import { AccessTokenRequest, type AuthRequest } from 'expo-auth-session';
+import type { AuthSessionResult } from 'expo-auth-session';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import * as Crypto from 'expo-crypto';
 import { Ionicons } from '@expo/vector-icons';
 import {
   getGoogleAuthRequestConfig,
   getGoogleAuthSetupHint,
-  isGoogleAuthConfigured,
+  getGoogleSignInBlockReason,
   type GoogleAuthRequestConfig,
 } from '../../config/oauth';
 import {
@@ -26,6 +28,33 @@ import {
 import { colors, spacing, radius } from '../../theme/designTokens';
 
 WebBrowser.maybeCompleteAuthSession();
+
+/** Récupère l’id_token (échange code OAuth si nécessaire sur iOS/Android). */
+async function resolveGoogleIdToken(
+  result: AuthSessionResult,
+  googleRequest: AuthRequest | null
+): Promise<string | null> {
+  const direct =
+    result.type === 'success'
+      ? (result.authentication?.idToken ?? result.params?.id_token)
+      : undefined;
+  if (direct && typeof direct === 'string') return direct;
+
+  if (result.type !== 'success' || !googleRequest) return null;
+  const code = result.params?.code;
+  if (!code || typeof code !== 'string') return null;
+
+  const exchangeRequest = new AccessTokenRequest({
+    clientId: googleRequest.clientId,
+    redirectUri: googleRequest.redirectUri,
+    code,
+    extraParams: {
+      code_verifier: googleRequest.codeVerifier ?? '',
+    },
+  });
+  const tokens = await exchangeRequest.performAsync(Google.discovery);
+  return tokens.idToken ?? null;
+}
 
 interface AuthSocialButtonsProps {
   disabled?: boolean;
@@ -54,7 +83,9 @@ const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
   onNeedsProfile,
   onError,
 }) => {
-  const [googleRequest, , promptGoogle] = Google.useIdTokenAuthRequest(config);
+  const [googleRequest, , promptGoogle] = Google.useIdTokenAuthRequest(config, {
+    path: 'oauthredirect',
+  });
 
   const handleAuthResult = useCallback(
     async (fn: () => Promise<void>) => {
@@ -98,8 +129,8 @@ const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
         }
         return;
       }
-      const idToken = result.authentication?.idToken ?? result.params?.id_token;
-      if (!idToken || typeof idToken !== 'string') {
+      const idToken = await resolveGoogleIdToken(result, googleRequest);
+      if (!idToken) {
         onError(
           'Connexion Google incomplète. Vérifiez que le Web client ID Firebase est dans .env et que Google est activé dans Authentication.'
         );
@@ -142,7 +173,15 @@ export const AuthSocialButtons: React.FC<AuthSocialButtonsProps> = ({
 }) => {
   const [busy, setBusy] = useState<'google' | 'apple' | null>(null);
   const [appleAvailable, setAppleAvailable] = useState(false);
-  const googleConfig = getGoogleAuthRequestConfig();
+  const googleBlockReason = getGoogleSignInBlockReason();
+  const googleConfig = googleBlockReason ? null : getGoogleAuthRequestConfig();
+
+  const showGoogleSetupAlert = () => {
+    Alert.alert(
+      googleBlockReason ? 'Google — Expo Go' : 'Google non configuré',
+      googleBlockReason ?? getGoogleAuthSetupHint()
+    );
+  };
 
   useEffect(() => {
     if (Platform.OS === 'ios') {
@@ -168,10 +207,6 @@ export const AuthSocialButtons: React.FC<AuthSocialButtonsProps> = ({
     },
     [onSuccess, onNeedsProfile, onError]
   );
-
-  const showGoogleSetupAlert = () => {
-    Alert.alert('Google non configuré', getGoogleAuthSetupHint());
-  };
 
   const signInWithApple = async () => {
     if (Platform.OS !== 'ios' || !appleAvailable) {

@@ -38,7 +38,24 @@
    EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID=123456789-zzzz.apps.googleusercontent.com
    ```
 
-   > Sur iOS, `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID` est **obligatoire**. Sans lui, le bouton Google affiche un message de configuration au lieu de planter l’app.
+   > Sur iOS, `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID` est **obligatoire** (dev build / App Store). Sans lui, le bouton Google affiche un message de configuration au lieu de planter l’app.
+
+   **Expo Go — Google Sign-In impossible**
+
+   Google refuse les URI de redirection `exp://` utilisées par Expo Go (`exp://192.168.x.x:8081/...`). L’erreur **400 invalid_request** est normale dans ce cas.
+
+   **Solution : development build** (app native `com.proday.app`) :
+
+   1. [Google Cloud Console](https://console.cloud.google.com/apis/credentials) → **Créer un identifiant** → **ID client OAuth iOS** → bundle `com.proday.app`
+   2. Copier l’ID dans `.env` : `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID=277880299213-xxxx.apps.googleusercontent.com`
+   3. **Écran de consentement OAuth** → mode **Test** → ajouter `alfredgibeauahoussinou@gmail.com` comme **utilisateur test**
+   4. Lancer sur simulateur ou iPhone :
+      ```bash
+      npx expo run:ios
+      ```
+      Ou build EAS : `eas build --profile development --platform ios`
+
+   Le client **Web** (`EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID`) reste requis pour Firebase ; le client **iOS** sert au redirect natif dans le dev build.
 
 5. Pour Apple : configure le Service ID / clé dans Apple Developer, puis Firebase → Apple.
 
