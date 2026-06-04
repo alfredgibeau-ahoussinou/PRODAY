@@ -30,6 +30,18 @@
 
 ---
 
+## Site vitrine (Next.js)
+
+Site multi-pages interactif (**16 pages**) : Live Stats, CV, quiz, tarifs, FAQ, comparatif, écosystème, roadmap, Woman, beta, etc.
+
+```bash
+npm run website:dev
+```
+
+→ [http://localhost:3000](http://localhost:3000) — voir [website/README.md](website/README.md) pour la liste des routes.
+
+---
+
 ## Lancer la démo (voir l’app)
 
 ```bash
