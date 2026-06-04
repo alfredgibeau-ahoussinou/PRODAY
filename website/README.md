@@ -58,3 +58,30 @@ cd website
 npx vercel login
 npx vercel --prod
 ```
+
+## Bêta — email de bienvenue
+
+Le formulaire `/beta` appelle `POST /api/beta`, enregistre l’inscription dans Firestore (`beta_waitlist`) et envoie un **email de bienvenue** (Mercato, Pulse, prochaines étapes).
+
+### Configuration (production)
+
+1. Compte [Resend](https://resend.com) + domaine vérifié (ou `onboarding@resend.dev` pour tests).
+2. Déployer la Cloud Function :
+   ```bash
+   firebase functions:config:set \
+     beta.resend_api_key="re_..." \
+     beta.from_email="ProDay <noreply@votredomaine.com>" \
+     beta.site_url="https://proday.app"
+   firebase deploy --only functions:submitBetaWaitlist
+   firebase deploy --only firestore:rules
+   ```
+3. Sur **Vercel** (variables d’environnement du projet `website`) :
+   ```env
+   BETA_WAITLIST_FUNCTION_URL=https://europe-west1-proday-155b0.cloudfunctions.net/submitBetaWaitlist
+   ```
+
+### Dev local (sans Functions)
+
+Copier `website/.env.example` → `website/.env.local` et définir `RESEND_API_KEY`.
+
+Voir aussi `docs/BETA_WAITLIST.md`.

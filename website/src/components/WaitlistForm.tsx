@@ -3,20 +3,59 @@
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { BETA_PITCH } from "@/lib/content";
+import { BETA_ROLE_LABELS, type BetaRoleId } from "@/lib/betaWelcomeEmail";
 import { Reveal } from "./Reveal";
 
 type WaitlistFormProps = { fullPage?: boolean };
 
+type SubmitState = "idle" | "loading" | "success" | "error";
+
 export function WaitlistForm({ fullPage }: WaitlistFormProps) {
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState("player");
-  const [sent, setSent] = useState(false);
+  const [role, setRole] = useState<BetaRoleId>("player");
+  const [state, setState] = useState<SubmitState>("idle");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [emailSent, setEmailSent] = useState(true);
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!email.trim()) return;
-    setSent(true);
+    const value = email.trim();
+    if (!value) return;
+
+    setState("loading");
+    setErrorMessage(null);
+
+    try {
+      const res = await fetch("/api/beta", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: value, role }),
+      });
+      const data = (await res.json().catch(() => ({}))) as {
+        error?: string;
+        emailSent?: boolean;
+      };
+
+      if (!res.ok) {
+        setErrorMessage(data.error ?? "Inscription impossible. Réessayez.");
+        setState("error");
+        return;
+      }
+
+      setEmailSent(data.emailSent !== false);
+      setState("success");
+    } catch {
+      setErrorMessage("Connexion impossible. Vérifiez votre réseau.");
+      setState("error");
+    }
   }
+
+  const roles: { id: BetaRoleId; label: string }[] = [
+    { id: "player", label: "Joueur" },
+    { id: "coach", label: "Coach" },
+    { id: "club", label: "Club" },
+    { id: "organizer", label: "Organisateur" },
+  ];
 
   return (
     <section className={fullPage ? "py-12" : "scroll-mt-24 py-24"}>
@@ -53,13 +92,13 @@ export function WaitlistForm({ fullPage }: WaitlistFormProps) {
                 </li>
                 <li className="flex gap-2">
                   <span className="text-pink-300">•</span>
-                  Accès prioritaire à la bêta mobile
+                  Un email de bienvenue avec les premières infos ProDay
                 </li>
               </ul>
             )}
           </Reveal>
 
-          {sent ? (
+          {state === "success" ? (
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -68,19 +107,26 @@ export function WaitlistForm({ fullPage }: WaitlistFormProps) {
               <p className="text-lg font-semibold">Merci !</p>
               <p className="mt-2 text-white/80">
                 Nous avons enregistré <strong>{email}</strong> pour le rôle{" "}
-                <strong>{role}</strong>. Vous recevrez des nouvelles quotidiennes
-                sur l&apos;avancement de ProDay jusqu&apos;au lancement.
+                <strong>{BETA_ROLE_LABELS[role]}</strong>.
+                {emailSent ? (
+                  <>
+                    {" "}
+                    Consultez votre boîte mail — un message de bienvenue ProDay
+                    vient de vous être envoyé.
+                  </>
+                ) : (
+                  <>
+                    {" "}
+                    Votre inscription est enregistrée ; l&apos;email de
+                    bienvenue suivra très prochainement.
+                  </>
+                )}
               </p>
             </motion.div>
           ) : (
             <form onSubmit={handleSubmit} className="mt-10 max-w-lg space-y-4">
               <div className="flex flex-wrap gap-2">
-                {[
-                  { id: "player", label: "Joueur" },
-                  { id: "coach", label: "Coach" },
-                  { id: "club", label: "Club" },
-                  { id: "organizer", label: "Organisateur" },
-                ].map((r) => (
+                {roles.map((r) => (
                   <button
                     key={r.id}
                     type="button"
@@ -102,17 +148,23 @@ export function WaitlistForm({ fullPage }: WaitlistFormProps) {
                   placeholder="votre@email.fr"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="flex-1 rounded-full border-0 bg-white/10 px-5 py-3.5 text-white placeholder:text-white/50 focus:outline focus:outline-2 focus:outline-white/40"
+                  disabled={state === "loading"}
+                  className="flex-1 rounded-full border-0 bg-white/10 px-5 py-3.5 text-white placeholder:text-white/50 focus:outline focus:outline-2 focus:outline-white/40 disabled:opacity-60"
                 />
                 <button
                   type="submit"
-                  className="rounded-full bg-white px-8 py-3.5 font-semibold text-proday-ink transition hover:bg-neutral-100"
+                  disabled={state === "loading"}
+                  className="rounded-full bg-white px-8 py-3.5 font-semibold text-proday-ink transition hover:bg-neutral-100 disabled:opacity-60"
                 >
-                  S&apos;inscrire
+                  {state === "loading" ? "Envoi…" : "S'inscrire"}
                 </button>
               </div>
+              {state === "error" && errorMessage ? (
+                <p className="text-sm text-pink-200">{errorMessage}</p>
+              ) : null}
               <p className="text-xs text-white/50">
-                Démo locale — les emails ne sont pas envoyés (phase marketing).
+                En vous inscrivant, vous acceptez de recevoir des emails sur la
+                bêta ProDay. Désinscription possible à tout moment.
               </p>
             </form>
           )}
