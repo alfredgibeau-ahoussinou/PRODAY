@@ -61,6 +61,7 @@ service cloud.firestore {
           'subscription_plan_id',
           'subscription_status',
           'subscription_period_end',
+          'product_line',
         ]);
     }
 

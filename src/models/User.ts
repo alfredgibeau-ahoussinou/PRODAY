@@ -3,6 +3,7 @@
 
 import type { ParentalSettings } from './ParentalSettings';
 import type { AppSpaceId } from './AppSpace';
+import type { ProductLineId } from './ProductLine';
 
 export type PlayerVerificationCheckId = 'identity' | 'club_license' | 'parental_consent';
 export type PlayerVerificationCheckStatus =
@@ -153,6 +154,9 @@ export interface User {
 
   /** Espace ProDay : féminin, masculin, jeunes, -13 */
   app_space?: AppSpaceId;
+
+  /** Version app à l'inscription (standard vs Woman) — ne change pas côté client */
+  product_line?: ProductLineId;
 
   /** Abonnement plateforme (freemium store) */
   subscription_tier?: 'free' | 'pro';

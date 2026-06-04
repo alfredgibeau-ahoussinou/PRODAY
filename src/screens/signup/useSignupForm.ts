@@ -603,6 +603,7 @@ export function useSignupForm(initial?: {
                           }
                         : undefined,
           parental_settings: buildParentalSettings(),
+          product_line: productLine,
           ...(role === 'player' ? { app_space: appSpace } : {}),
         };
 

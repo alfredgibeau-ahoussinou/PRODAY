@@ -11,6 +11,10 @@ import { isFirebaseConfigured } from '../config/firebase';
 import { authService, needsEmailVerification } from '../services/auth.service';
 import { usersService } from '../services/users.service';
 import { registerPushTokenIfPossible } from '../services/pushToken.service';
+import {
+  getActiveProductLineFromStorage,
+  profileMatchesActiveLine,
+} from '../utils/productLineAccess';
 import type { User } from '../models/User';
 
 interface AuthContextValue {
@@ -81,9 +85,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setFirebaseUser(user);
       if (user) {
-        setProfile(await usersService.getById(user.uid));
-        void registerPushTokenIfPossible(user.uid);
-        void refreshAdminClaim();
+        const loaded = await usersService.getById(user.uid);
+        const activeLine = await getActiveProductLineFromStorage();
+        if (loaded && !profileMatchesActiveLine(loaded, activeLine)) {
+          await authService.signOut();
+          setProfile(null);
+        } else {
+          setProfile(loaded);
+          if (loaded) void registerPushTokenIfPossible(user.uid);
+          void refreshAdminClaim();
+        }
       } else {
         setProfile(null);
         setIsAdmin(false);

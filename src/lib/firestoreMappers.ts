@@ -9,6 +9,7 @@ import type {
 } from '../models/User';
 import type { ParentalSettings } from '../models/ParentalSettings';
 import { normalizeAppSpace, type AppSpaceId } from '../models/AppSpace';
+import { normalizeStoredProductLine } from '../models/ProductLine';
 import type { PlayerVerificationState } from '../models/User';
 import type { RecruitmentPost, Application } from '../models/Player';
 import type { Tournament, TournamentAwards } from '../models/Tournament';
@@ -119,6 +120,9 @@ export function userFromFirestore(uid: string, data: Record<string, unknown>): U
     app_space: data.app_space
       ? normalizeAppSpace(String(data.app_space))
       : undefined,
+    product_line: normalizeStoredProductLine(
+      data.product_line != null ? String(data.product_line) : null
+    ) ?? undefined,
     player_verification: data.player_verification as PlayerVerificationState | undefined,
     subscription_tier:
       data.subscription_tier === 'pro' ? 'pro' : data.subscription_tier === 'free' ? 'free' : undefined,

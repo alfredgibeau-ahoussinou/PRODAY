@@ -13,9 +13,17 @@ import {
 import type { User, UserRole, UserProfile } from '../models/User';
 import type { ParentalSettings } from '../models/ParentalSettings';
 import type { AppSpaceId } from '../models/AppSpace';
+import type { ProductLineId } from '../models/ProductLine';
 import { getFirebaseAuth } from '../lib/firebase';
 import { profileService } from './profile.service';
 import { usersService } from './users.service';
+import {
+  assertProfileMatchesActiveLine,
+  getActiveProductLineFromStorage,
+  ProductLineMismatchError,
+} from '../utils/productLineAccess';
+
+export { ProductLineMismatchError } from '../utils/productLineAccess';
 
 export interface SignUpInput {
   email: string;
@@ -27,6 +35,7 @@ export interface SignUpInput {
   profile?: Partial<UserProfile>;
   parental_settings?: ParentalSettings;
   app_space?: AppSpaceId;
+  product_line?: ProductLineId;
 }
 
 function mapAuthError(code: string): string {
@@ -107,6 +116,16 @@ async function loadProfileAfterAuth(fbUser: FirebaseAuthUser): Promise<User> {
       fbUser.displayName ?? undefined
     );
   }
+
+  const activeLine = await getActiveProductLineFromStorage();
+  try {
+    assertProfileMatchesActiveLine(profile, activeLine);
+  } catch (e) {
+    const auth = getFirebaseAuth();
+    if (auth) await firebaseSignOut(auth);
+    throw e;
+  }
+
   return profile;
 }
 
@@ -124,8 +143,13 @@ export const authService = {
       throw new Error('Email requis. Utilisez un compte Google/Apple qui partage votre email.');
     }
 
+    const registrationLine: ProductLineId = input.product_line ?? 'standard';
+
     const existing = await usersService.getById(fb.uid);
-    if (existing) return existing;
+    if (existing) {
+      assertProfileMatchesActiveLine(existing, registrationLine);
+      return existing;
+    }
 
     return profileService.createProfile(
       fb.uid,
@@ -138,6 +162,7 @@ export const authService = {
         profile: input.profile,
         parental_settings: input.parental_settings,
         app_space: input.app_space,
+        product_line: registrationLine,
         email_verified: fb.emailVerified,
       }
     );
@@ -159,6 +184,8 @@ export const authService = {
       // Le profil peut quand même être créé ; l'utilisateur pourra renvoyer le mail.
     }
 
+    const registrationLine: ProductLineId = input.product_line ?? 'standard';
+
     return profileService.createProfile(
       cred.user.uid,
       input.email.trim(),
@@ -170,6 +197,7 @@ export const authService = {
         profile: input.profile,
         parental_settings: input.parental_settings,
         app_space: input.app_space,
+        product_line: registrationLine,
         email_verified: false,
       }
     );
@@ -242,6 +270,7 @@ export const authService = {
 
   getAuthErrorMessage(error: unknown): string {
     if (error instanceof AuthNeedsProfileError) return error.message;
+    if (error instanceof ProductLineMismatchError) return error.message;
     const code =
       error && typeof error === 'object' && 'code' in error
         ? String((error as { code: string }).code)

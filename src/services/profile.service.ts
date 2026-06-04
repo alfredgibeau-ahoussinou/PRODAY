@@ -22,6 +22,7 @@ import {
   documentTypeForPlayerCheck,
 } from '../models/User';
 import type { AppSpaceId } from '../models/AppSpace';
+import type { ProductLineId } from '../models/ProductLine';
 import type { ParentalSettings } from '../models/ParentalSettings';
 import { getDb } from '../lib/firebase';
 import { storageService, type UploadFileInput } from './storage.service';
@@ -97,6 +98,7 @@ export const profileService = {
       parental_settings?: ParentalSettings;
       email_verified?: boolean;
       app_space?: AppSpaceId;
+      product_line?: ProductLineId;
     }
   ): Promise<User> {
     const requiresStaffVerification = ROLES_REQUIRING_VERIFICATION.includes(role);
@@ -112,6 +114,8 @@ export const profileService = {
       : isPlayer
         ? 'PENDING'
         : 'NOT_REQUIRED';
+
+    const registrationLine: ProductLineId = options?.product_line ?? 'standard';
 
     const newUser: User = {
       uid,
@@ -129,6 +133,7 @@ export const profileService = {
       updated_at: new Date(),
       is_active: true,
       app_space: options?.app_space ?? 'men',
+      product_line: registrationLine,
       ...(playerVerification ? { player_verification: playerVerification } : {}),
       ...(options?.parental_settings ? { parental_settings: options.parental_settings } : {}),
     };
@@ -144,6 +149,7 @@ export const profileService = {
         email_verified: newUser.email_verified ?? false,
         profile: profileData,
         app_space: options?.app_space ?? 'men',
+        product_line: registrationLine,
         ...(playerVerification ? { player_verification: playerVerification } : {}),
         ...(options?.city?.trim() ? { city: options.city.trim() } : {}),
         ...(options?.department?.trim() ? { department: options.department.trim() } : {}),
