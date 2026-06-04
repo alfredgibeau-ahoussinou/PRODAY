@@ -8,19 +8,29 @@ Envoi via [EmailJS](https://www.emailjs.com/) : pas de domaine DNS à vérifier,
 2. **Email Services** → connecter Gmail (ou autre) — ex. `contact@proday.app`
 3. **Account → Security** → activer **Allow EmailJS API for non-browser applications**
 
-## 2. Template « Bêta ProDay »
+## 2. Template « Bêta ProDay » (`template_zkbezzh`)
 
-**Email Templates → Create**
+1. Ouvrez **Email Templates** → `template_zkbezzh` → **Edit**
+2. Copiez-collez le HTML depuis **`docs/emailjs/beta-welcome.html`**
+3. Configurez :
 
 | Champ | Valeur |
 |-------|--------|
 | **To Email** | `{{to_email}}` |
-| **Subject** | `{{subject}}` |
-| **Content** | `{{{message_html}}}` (mode HTML, triple accolades) |
+| **From Name** | `ProDay` |
+| **Subject** | `{{subject}}` ou fixe : `Vous êtes beta-testeur ProDay` |
+| **Reply To** | `support@proday.app` |
+| **Content** | HTML de `docs/emailjs/beta-welcome.html` |
 
-Variables injectées par le code : `to_email`, `role_label`, `site_url`, `beta_url`, `subject`, `message_html`, `message_text`.
+Variables : `to_email`, `member_role`, `profile_label`, `site_url`, `beta_url`, `subject`
 
-Le HTML complet est généré dans `website/src/lib/betaWelcomeEmail.ts`.
+4. **Test** :
+   - `to_email` : votre email
+   - `member_role` : Beta-testeur
+   - `profile_label` : Joueur
+   - `site_url` : https://proday-xak9.vercel.app
+   - `beta_url` : https://proday-xak9.vercel.app/beta
+   - `subject` : Vous êtes beta-testeur ProDay
 
 ## 3. Clés API
 

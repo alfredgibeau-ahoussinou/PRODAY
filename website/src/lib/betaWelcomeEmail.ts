@@ -1,5 +1,7 @@
 /** Template email bêta — garder aligné avec functions/src/betaWaitlistEmail.ts */
 
+export const BETA_MEMBER_ROLE = "Beta-testeur";
+
 export type BetaRoleId = "player" | "coach" | "club" | "organizer";
 
 export const BETA_ROLE_LABELS: Record<BetaRoleId, string> = {

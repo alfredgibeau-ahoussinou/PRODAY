@@ -1,8 +1,6 @@
 import emailjs from "@emailjs/nodejs";
-import {
-  buildBetaWelcomeEmail,
-  type BetaWelcomeEmailParams,
-} from "./betaWelcomeEmail";
+import type { BetaWelcomeEmailParams } from "./betaWelcomeEmail";
+import { BETA_MEMBER_ROLE } from "./betaWelcomeEmail";
 
 export type EmailJsBetaConfig = {
   serviceId: string;
@@ -28,17 +26,16 @@ export function buildBetaEmailJsTemplateParams(
   params: BetaWelcomeEmailParams
 ): Record<string, string> {
   const site = (params.siteUrl ?? "https://proday.app").replace(/\/$/, "");
-  const { subject, html, text } = buildBetaWelcomeEmail(params);
 
   return {
     to_email: params.email,
     user_email: params.email,
-    role_label: params.roleLabel,
+    member_role: BETA_MEMBER_ROLE,
+    profile_label: params.roleLabel,
+    role_label: BETA_MEMBER_ROLE,
     site_url: site,
     beta_url: `${site}/beta`,
-    subject,
-    message_html: html,
-    message_text: text,
+    subject: "Vous êtes beta-testeur ProDay",
   };
 }
 

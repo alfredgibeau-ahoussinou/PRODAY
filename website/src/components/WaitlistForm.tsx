@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { BETA_PITCH } from "@/lib/content";
-import { BETA_ROLE_LABELS, type BetaRoleId } from "@/lib/betaWelcomeEmail";
+import { BETA_MEMBER_ROLE, BETA_ROLE_LABELS, type BetaRoleId } from "@/lib/betaWelcomeEmail";
 import { Reveal } from "./Reveal";
 
 type WaitlistFormProps = { fullPage?: boolean };
@@ -106,20 +106,13 @@ export function WaitlistForm({ fullPage }: WaitlistFormProps) {
             >
               <p className="text-lg font-semibold">Merci !</p>
               <p className="mt-2 text-white/80">
-                Nous avons enregistré <strong>{email}</strong> pour le rôle{" "}
-                <strong>{BETA_ROLE_LABELS[role]}</strong>.
+                Inscription confirmée pour <strong>{email}</strong> — statut{" "}
+                <strong>{BETA_MEMBER_ROLE}</strong> (profil{" "}
+                {BETA_ROLE_LABELS[role]}).
                 {emailSent ? (
-                  <>
-                    {" "}
-                    Consultez votre boîte mail — un message de bienvenue ProDay
-                    vient de vous être envoyé.
-                  </>
+                  <> Consultez votre boîte mail.</>
                 ) : (
-                  <>
-                    {" "}
-                    Votre inscription est enregistrée ; l&apos;email de
-                    bienvenue suivra très prochainement.
-                  </>
+                  <> L&apos;email de confirmation suivra très prochainement.</>
                 )}
               </p>
             </motion.div>
