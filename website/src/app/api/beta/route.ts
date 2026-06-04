@@ -1,17 +1,16 @@
 import { NextResponse } from "next/server";
+import { BETA_ROLE_LABELS, isBetaRoleId } from "@/lib/betaWelcomeEmail";
+import { resolveBetaSiteUrl } from "@/lib/betaEmailConfig";
 import {
-  BETA_ROLE_LABELS,
-  buildBetaWelcomeEmail,
-  isBetaRoleId,
-  sendBetaWelcomeEmailViaResend,
-} from "@/lib/betaWelcomeEmail";
-import { resolveBetaFromEmail, resolveBetaSiteUrl } from "@/lib/betaEmailConfig";
+  getEmailJsBetaConfig,
+  sendBetaWelcomeEmailViaEmailJs,
+} from "@/lib/betaEmailjs";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 type BetaPayload = { email?: string; role?: string };
 
-/** Proxy Cloud Function ou envoi Resend direct (dev / Vercel). */
+/** Proxy Cloud Function ou envoi EmailJS depuis Vercel. */
 export async function POST(request: Request) {
   let body: BetaPayload;
   try {
@@ -39,46 +38,32 @@ export async function POST(request: Request) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, role }),
     });
-    const data = (await upstream.json().catch(() => ({}))) as Record<string, unknown>;
+    const data = (await upstream.json().catch(() => ({}))) as Record<
+      string,
+      unknown
+    >;
     return NextResponse.json(data, { status: upstream.status });
   }
 
-  const resendKey = process.env.RESEND_API_KEY?.trim();
-  if (!resendKey) {
+  const emailJs = getEmailJsBetaConfig();
+  if (!emailJs) {
     return NextResponse.json(
       {
         error:
-          "Service bêta non configuré. Définissez BETA_WAITLIST_FUNCTION_URL ou RESEND_API_KEY.",
+          "Service bêta non configuré. Définissez EMAILJS_* ou BETA_WAITLIST_FUNCTION_URL.",
       },
       { status: 503 }
     );
   }
 
   const roleLabel = BETA_ROLE_LABELS[role];
-  let from: string;
-  try {
-    from = resolveBetaFromEmail();
-  } catch (e) {
-    const message = e instanceof Error ? e.message : "Configuration email invalide";
-    console.error("[api/beta]", message);
-    return NextResponse.json({ error: message }, { status: 503 });
-  }
   const siteUrl = resolveBetaSiteUrl();
 
-  const { subject, html, text } = buildBetaWelcomeEmail({
-    email,
-    roleLabel,
-    siteUrl,
-  });
-
   try {
-    await sendBetaWelcomeEmailViaResend({
-      apiKey: resendKey,
-      from,
-      to: email,
-      subject,
-      html,
-      text,
+    await sendBetaWelcomeEmailViaEmailJs(emailJs, {
+      email,
+      roleLabel,
+      siteUrl,
     });
   } catch (e) {
     const message = e instanceof Error ? e.message : "Envoi impossible";

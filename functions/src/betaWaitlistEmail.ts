@@ -117,31 +117,51 @@ export function buildBetaWelcomeEmail(params: BetaWelcomeEmailParams): {
   return { subject, html, text };
 }
 
-export async function sendBetaWelcomeEmailViaResend(options: {
-  apiKey: string;
-  from: string;
-  to: string;
-  subject: string;
-  html: string;
-  text: string;
-}): Promise<void> {
-  const res = await fetch('https://api.resend.com/emails', {
+export type EmailJsBetaConfig = {
+  serviceId: string;
+  templateId: string;
+  publicKey: string;
+  privateKey: string;
+};
+
+export function buildBetaEmailJsTemplateParams(
+  params: BetaWelcomeEmailParams
+): Record<string, string> {
+  const site = (params.siteUrl ?? 'https://proday.app').replace(/\/$/, '');
+  const { subject, html, text } = buildBetaWelcomeEmail(params);
+
+  return {
+    to_email: params.email,
+    user_email: params.email,
+    role_label: params.roleLabel,
+    site_url: site,
+    beta_url: `${site}/beta`,
+    subject,
+    message_html: html,
+    message_text: text,
+  };
+}
+
+export async function sendBetaWelcomeEmailViaEmailJs(
+  config: EmailJsBetaConfig,
+  params: BetaWelcomeEmailParams
+): Promise<void> {
+  const templateParams = buildBetaEmailJsTemplateParams(params);
+
+  const res = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
     method: 'POST',
-    headers: {
-      Authorization: `Bearer ${options.apiKey}`,
-      'Content-Type': 'application/json',
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      from: options.from,
-      to: [options.to],
-      subject: options.subject,
-      html: options.html,
-      text: options.text,
+      service_id: config.serviceId,
+      template_id: config.templateId,
+      user_id: config.publicKey,
+      accessToken: config.privateKey,
+      template_params: templateParams,
     }),
   });
 
   if (!res.ok) {
     const detail = await res.text();
-    throw new Error(`Resend ${res.status}: ${detail}`);
+    throw new Error(`EmailJS ${res.status}: ${detail}`);
   }
 }

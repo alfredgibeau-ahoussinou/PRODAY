@@ -59,29 +59,18 @@ npx vercel login
 npx vercel --prod
 ```
 
-## Bêta — email de bienvenue
+## Bêta — email de bienvenue (EmailJS)
 
-Le formulaire `/beta` appelle `POST /api/beta`, enregistre l’inscription dans Firestore (`beta_waitlist`) et envoie un **email de bienvenue** (Mercato, Pulse, prochaines étapes).
+Le formulaire `/beta` appelle `POST /api/beta` et envoie un **email de bienvenue** via [EmailJS](https://www.emailjs.com/).
 
-### Configuration (production)
+### Vercel
 
-1. Compte [Resend](https://resend.com) + domaine vérifié (ou `onboarding@resend.dev` pour tests).
-2. Déployer la Cloud Function :
-   ```bash
-   firebase functions:config:set \
-     beta.resend_api_key="re_..." \
-     beta.from_email="ProDay <noreply@votredomaine.com>" \
-     beta.site_url="https://proday.app"
-   firebase deploy --only functions:submitBetaWaitlist
-   firebase deploy --only firestore:rules
-   ```
-3. Sur **Vercel** (variables d’environnement du projet `website`) :
-   ```env
-   BETA_WAITLIST_FUNCTION_URL=https://europe-west1-proday-155b0.cloudfunctions.net/submitBetaWaitlist
-   ```
+```env
+EMAILJS_SERVICE_ID=service_xxx
+EMAILJS_TEMPLATE_ID=template_xxx
+EMAILJS_PUBLIC_KEY=xxx
+EMAILJS_PRIVATE_KEY=xxx
+NEXT_PUBLIC_SITE_URL=https://proday-xak9.vercel.app
+```
 
-### Dev local (sans Functions)
-
-Copier `website/.env.example` → `website/.env.local` et définir `RESEND_API_KEY`.
-
-Voir aussi `docs/BETA_WAITLIST.md`.
+Voir `docs/BETA_WAITLIST.md` (template EmailJS + activation API non-navigateur).

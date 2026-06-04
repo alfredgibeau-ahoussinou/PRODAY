@@ -2,9 +2,9 @@ import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
 import {
   BETA_ROLE_LABELS,
-  buildBetaWelcomeEmail,
   isBetaRoleId,
-  sendBetaWelcomeEmailViaResend,
+  sendBetaWelcomeEmailViaEmailJs,
+  type EmailJsBetaConfig,
 } from './betaWaitlistEmail';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -27,22 +27,21 @@ function setCors(req: functions.https.Request, res: functions.Response): boolean
   return req.method === 'OPTIONS';
 }
 
-function getBetaEmailConfig(): {
-  resendApiKey?: string;
-  fromEmail: string;
-  siteUrl: string;
-} {
+function getBetaEmailJsConfig(): EmailJsBetaConfig | null {
   const cfg = functions.config().beta ?? {};
-  const configuredFrom = (cfg.from_email as string | undefined)?.trim();
-  const fromEmail =
-    configuredFrom && !configuredFrom.includes("onboarding@resend.dev")
-      ? configuredFrom
-      : "ProDay <contact@proday.app>";
-  return {
-    resendApiKey: cfg.resend_api_key as string | undefined,
-    fromEmail,
-    siteUrl: (cfg.site_url as string | undefined) ?? "https://proday.app",
-  };
+  const serviceId = (cfg.emailjs_service_id as string | undefined)?.trim();
+  const templateId = (cfg.emailjs_template_id as string | undefined)?.trim();
+  const publicKey = (cfg.emailjs_public_key as string | undefined)?.trim();
+  const privateKey = (cfg.emailjs_private_key as string | undefined)?.trim();
+
+  if (!serviceId || !templateId || !publicKey || !privateKey) return null;
+
+  return { serviceId, templateId, publicKey, privateKey };
+}
+
+function getBetaSiteUrl(): string {
+  const cfg = functions.config().beta ?? {};
+  return (cfg.site_url as string | undefined) ?? 'https://proday.app';
 }
 
 /** Inscription bêta depuis le site vitrine — Firestore + email de bienvenue. */
@@ -106,24 +105,16 @@ export function createSubmitBetaWaitlistHandler(db: admin.firestore.Firestore) {
       });
     }
 
-    const emailConfig = getBetaEmailConfig();
+    const emailJs = getBetaEmailJsConfig();
     let emailSent = false;
     let emailError: string | undefined;
 
-    if (emailConfig.resendApiKey) {
+    if (emailJs) {
       try {
-        const { subject, html, text } = buildBetaWelcomeEmail({
+        await sendBetaWelcomeEmailViaEmailJs(emailJs, {
           email,
           roleLabel,
-          siteUrl: emailConfig.siteUrl,
-        });
-        await sendBetaWelcomeEmailViaResend({
-          apiKey: emailConfig.resendApiKey,
-          from: emailConfig.fromEmail,
-          to: email,
-          subject,
-          html,
-          text,
+          siteUrl: getBetaSiteUrl(),
         });
         emailSent = true;
         await docRef.update({
@@ -135,7 +126,8 @@ export function createSubmitBetaWaitlistHandler(db: admin.firestore.Firestore) {
         console.error('[submitBetaWaitlist] email:', e);
       }
     } else {
-      emailError = 'RESEND non configuré (functions.config().beta.resend_api_key)';
+      emailError =
+        'EmailJS non configuré (beta.emailjs_service_id, template_id, public_key, private_key)';
       console.warn('[submitBetaWaitlist]', emailError);
     }
 

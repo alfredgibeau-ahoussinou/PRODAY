@@ -118,32 +118,3 @@ export function buildBetaWelcomeEmail(params: BetaWelcomeEmailParams): {
 
   return { subject, html, text };
 }
-
-export async function sendBetaWelcomeEmailViaResend(options: {
-  apiKey: string;
-  from: string;
-  to: string;
-  subject: string;
-  html: string;
-  text: string;
-}): Promise<void> {
-  const res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${options.apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      from: options.from,
-      to: [options.to],
-      subject: options.subject,
-      html: options.html,
-      text: options.text,
-    }),
-  });
-
-  if (!res.ok) {
-    const detail = await res.text();
-    throw new Error(`Resend ${res.status}: ${detail}`);
-  }
-}

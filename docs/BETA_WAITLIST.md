@@ -1,96 +1,83 @@
-# Inscriptions bêta (site vitrine)
+# Inscriptions bêta (site vitrine) — EmailJS
 
-## Production — envoyer à tous les inscrits (pas le mode test Resend)
+Envoi via [EmailJS](https://www.emailjs.com/) : pas de domaine DNS à vérifier, branchement Gmail/Outlook dans le dashboard.
 
-`onboarding@resend.dev` **ne fonctionne qu'en test** : emails limités à l'adresse de votre compte Resend.
+## 1. Compte EmailJS
 
-Pour la vraie bêta :
+1. [emailjs.com](https://www.emailjs.com/) → créer un compte
+2. **Email Services** → connecter Gmail (ou autre) — ex. `contact@proday.app`
+3. **Account → Security** → activer **Allow EmailJS API for non-browser applications**
 
-### 1. Vérifier le domaine `proday.app` sur Resend
+## 2. Template « Bêta ProDay »
 
-1. [resend.com/domains](https://resend.com/domains) → **Add Domain** → `proday.app`
-2. Ajoutez les enregistrements DNS proposés (SPF, DKIM) chez votre registrar / Cloudflare
-3. Attendez le statut **Verified**
+**Email Templates → Create**
 
-### 2. Expéditeur production
+| Champ | Valeur |
+|-------|--------|
+| **To Email** | `{{to_email}}` |
+| **Subject** | `{{subject}}` |
+| **Content** | `{{{message_html}}}` (mode HTML, triple accolades) |
 
-```env
-BETA_FROM_EMAIL=ProDay <contact@proday.app>
-```
+Variables injectées par le code : `to_email`, `role_label`, `site_url`, `beta_url`, `subject`, `message_html`, `message_text`.
 
-(`contact@proday.app` est déjà l'email légal ProDay dans l'app.)
+Le HTML complet est généré dans `website/src/lib/betaWelcomeEmail.ts`.
 
-### 3. Firebase Functions (Firestore + email)
+## 3. Clés API
+
+**Account → API Keys** :
+
+- **Public Key** → `EMAILJS_PUBLIC_KEY`
+- **Private Key** → `EMAILJS_PRIVATE_KEY` (serveur uniquement, jamais dans le navigateur)
+
+**Email Services** → Service ID → `EMAILJS_SERVICE_ID`  
+**Email Templates** → Template ID → `EMAILJS_TEMPLATE_ID`
+
+## 4. Vercel (projet `website`)
+
+| Variable | Description |
+|----------|-------------|
+| `EMAILJS_SERVICE_ID` | ID service EmailJS |
+| `EMAILJS_TEMPLATE_ID` | ID template bêta |
+| `EMAILJS_PUBLIC_KEY` | Clé publique |
+| `EMAILJS_PRIVATE_KEY` | Clé privée (secret) |
+| `NEXT_PUBLIC_SITE_URL` | `https://proday-xak9.vercel.app` ou `https://proday.app` |
+
+Redéployez après ajout des variables.
+
+## 5. Firebase (optionnel — Firestore + email)
+
+Plan **Blaze** requis pour Cloud Functions.
 
 ```bash
 firebase functions:config:set \
-  beta.resend_api_key="re_VOTRE_CLE" \
-  beta.from_email="ProDay <contact@proday.app>" \
+  beta.emailjs_service_id="service_xxx" \
+  beta.emailjs_template_id="template_xxx" \
+  beta.emailjs_public_key="xxx" \
+  beta.emailjs_private_key="xxx" \
   beta.site_url="https://proday.app"
 
 firebase deploy --only functions:submitBetaWaitlist,firestore:rules
 ```
 
-### 4. Vercel (projet `website`)
-
-| Variable | Valeur |
-|----------|--------|
-| `RESEND_API_KEY` | clé Resend |
-| `BETA_FROM_EMAIL` | `ProDay <contact@proday.app>` |
-| `NEXT_PUBLIC_SITE_URL` | `https://proday.app` |
-| `BETA_WAITLIST_FUNCTION_URL` | `https://europe-west1-proday-155b0.cloudfunctions.net/submitBetaWaitlist` |
-
-Redéployez le site après modification des variables.
-
----
+Sur Vercel, ajoutez aussi :
+```env
+BETA_WAITLIST_FUNCTION_URL=https://europe-west1-proday-155b0.cloudfunctions.net/submitBetaWaitlist
+```
 
 ## Flux
 
-1. Visiteur remplit le formulaire sur `/beta`
-2. `POST /api/beta` (Next.js sur Vercel)
-3. Cloud Function `submitBetaWaitlist` (Firebase) :
-   - enregistre dans `beta_waitlist` (email, rôle, dates)
-   - envoie l’email **« Bienvenue dans la bêta ProDay »** via Resend
+1. Formulaire `/beta` → `POST /api/beta`
+2. API Next.js envoie via `@emailjs/nodejs` (clé privée côté serveur)
+3. L’inscrit reçoit « Bienvenue dans la bêta ProDay »
 
-## Contenu de l’email
+## Inscrits Firestore
 
-- Remerciement + rôle choisi (Joueur, Coach, Club, Organisateur)
-- Présentation ProDay (Mercato, matchs, Pulse, CV)
-- Prochaines étapes (nouvelles, accès prioritaire, ProDay Woman)
-- Lien vers `/beta` sur le site
-- Contact `support@proday.app`
-
-Template : `functions/src/betaWaitlistEmail.ts` (copie miroir dans `website/src/lib/betaWelcomeEmail.ts`).
-
-## Déploiement
-
-```bash
-# 1. Secrets Firebase Functions
-firebase functions:config:set \
-  beta.resend_api_key="re_VOTRE_CLE" \
-  beta.from_email="ProDay <noreply@votredomaine.com>" \
-  beta.site_url="https://proday.app"
-
-# 2. Functions + règles Firestore
-firebase deploy --only functions:submitBetaWaitlist,firestore:rules
-
-# 3. Vercel (projet website)
-# BETA_WAITLIST_FUNCTION_URL=https://europe-west1-proday-155b0.cloudfunctions.net/submitBetaWaitlist
-```
-
-## Consulter les inscrits
-
-Firestore → collection `beta_waitlist` (lecture admin uniquement).
+Collection `beta_waitlist` si la Cloud Function est déployée (lecture admin).
 
 ## Test local
 
 ```bash
-# website/.env.local
-RESEND_API_KEY=re_...
-BETA_FROM_EMAIL=ProDay <onboarding@resend.dev>
-NEXT_PUBLIC_SITE_URL=http://localhost:3000
-
+# website/.env.local — voir website/.env.example
 npm run website:dev
+# → http://localhost:3000/beta
 ```
-
-Sans clé Resend, le formulaire renvoie une erreur 503.
