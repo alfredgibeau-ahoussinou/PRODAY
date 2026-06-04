@@ -1,15 +1,28 @@
-/** Assets logo ProDay — variantes avec fond transparent (détourage IA + traitement). */
+/**
+ * Assets logo ProDay — uniquement des fichiers présents dans assets/branding/.
+ */
 export const BRANDING_LOGOS = {
-  /** Fond blanc — usage legacy / export */
   light: require('../../assets/branding/logo-light.png'),
-  /** Fond sombre plein — usage legacy */
   dark: require('../../assets/branding/logo-dark.png'),
-  /** Transparent — hero sur photo / fond sombre */
   transparent: require('../../assets/branding/logo-transparent-hero.png'),
-  /** Transparent — cartes et fonds clairs */
   transparentDark: require('../../assets/branding/logo-transparent-dark.png'),
-  /** Picto seul — filigrane discret */
+  authDark: require('../../assets/branding/logo-auth-dark.png'),
   mark: require('../../assets/branding/logo-mark-transparent.png'),
+} as const;
+
+/**
+ * Pro Day for Women — picto P rose (mark).
+ * Le mot-symbole est composé en natif via `WomanLogo`.
+ */
+export const WOMAN_BRANDING_LOGOS = {
+  picto: require('../../assets/branding/logo-woman-picto.png'),
+  mark: require('../../assets/branding/logo-woman-mark-transparent.png'),
+  /** @deprecated Utiliser picto + WomanLogo — conservé pour compat. */
+  light: require('../../assets/branding/logo-woman-picto.png'),
+  dark: require('../../assets/branding/logo-woman-picto.png'),
+  transparent: require('../../assets/branding/logo-woman-picto.png'),
+  transparentDark: require('../../assets/branding/logo-woman-picto.png'),
+  authDark: require('../../assets/branding/logo-woman-picto.png'),
 } as const;
 
 export type BrandingLogoKey = keyof typeof BRANDING_LOGOS;

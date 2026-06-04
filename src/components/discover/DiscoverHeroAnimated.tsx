@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, Dimensions, ImageBackground } from 'react-native';
+import { View, Text, StyleSheet, Dimensions } from 'react-native';
+import { ShowcaseImageBackground } from '../ui/ShowcaseImageBackground';
 import Animated, {
   Extrapolation,
   interpolate,
@@ -15,7 +16,7 @@ import { BRAND } from '../../theme/designTokens';
 import { discover } from '../../theme/discoverTheme';
 import { colors, spacing } from '../../theme/designTokens';
 import { EASE_OUT } from './animationConfig';
-import { SHOWCASE_IMAGES } from '../../content/showcaseAssets';
+import { useShowcaseImages } from '../../hooks/useShowcaseImages';
 
 const { width: SCREEN_W } = Dimensions.get('window');
 
@@ -28,6 +29,7 @@ export const DiscoverHeroAnimated: React.FC<DiscoverHeroAnimatedProps> = ({
   scrollY,
   pitch,
 }) => {
+  const showcase = useShowcaseImages();
   const lineWidth = useSharedValue(0);
   const pitchOpacity = useSharedValue(0);
   const livePulse = useSharedValue(0);
@@ -62,8 +64,9 @@ export const DiscoverHeroAnimated: React.FC<DiscoverHeroAnimatedProps> = ({
 
   return (
     <Animated.View style={[styles.heroWrap, heroParallax]}>
-      <ImageBackground
-        source={SHOWCASE_IMAGES.discoverHero}
+      <ShowcaseImageBackground
+        source={showcase.discoverHero}
+        variant="hero"
         style={styles.hero}
         imageStyle={styles.heroImage}
       >
@@ -93,7 +96,7 @@ export const DiscoverHeroAnimated: React.FC<DiscoverHeroAnimatedProps> = ({
 
           <Animated.Text style={[styles.pitch, pitchStyle]}>{pitch}</Animated.Text>
         </View>
-      </ImageBackground>
+      </ShowcaseImageBackground>
     </Animated.View>
   );
 };

@@ -33,7 +33,7 @@ const ROLE_LABEL: Record<UserRole, string> = {
 
 interface FeedScreenProps {
   profile: User;
-  onBack: () => void;
+  onBack?: () => void;
   onOpenChat: (threadId: string) => void;
   onOpenMessages: () => void;
 }
@@ -239,7 +239,14 @@ export const FeedScreen: React.FC<FeedScreenProps> = ({
 
   return (
     <View style={styles.root}>
-      <ScreenHeader title="Fil d'actualité" onBack={onBack} centered />
+      <ScreenHeader
+        label="Communauté"
+        title="Fil d'actualité"
+        subtitle="Actualités et sondages"
+        onBack={onBack}
+        centered
+        showBrandLogo={!onBack}
+      />
 
       {(canNews || canPoll) && (
         <View style={styles.composerBar}>

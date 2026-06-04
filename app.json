@@ -32,7 +32,8 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "ProDay accède à vos photos pour votre avatar et votre galerie joueur."
+          "photosPermission": "ProDay accède à vos photos pour votre avatar et votre galerie joueur.",
+          "cameraPermission": "ProDay utilise la caméra pour photographier votre pièce d'identité ou passeport lors de la vérification."
         }
       ],
       "expo-web-browser"

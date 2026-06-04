@@ -51,11 +51,11 @@ export const PhysioCarePanel: React.FC<PhysioCarePanelProps> = ({
     <View style={styles.wrap}>
       <Text style={styles.eyebrow}>SUIVI SANTÉ</Text>
       <Text style={styles.title}>
-        {isPlayer ? 'Contacter un kiné' : 'Joueurs — suivi blessure'}
+        {isPlayer ? 'Pôle médical' : 'Joueurs — suivi blessure'}
       </Text>
       <Text style={styles.sub}>
         {isPlayer
-          ? 'Messagerie dédiée joueur ↔ kinésithérapeute ProDay.'
+          ? 'Messagerie dédiée joueur ↔ professionnels du pôle médical ProDay.'
           : 'Les joueurs vous contactent pour prévention et récupération.'}
       </Text>
 
@@ -71,7 +71,7 @@ export const PhysioCarePanel: React.FC<PhysioCarePanelProps> = ({
           {loading ? (
             <ActivityIndicator color={colors.accent} style={styles.loader} />
           ) : physios.length === 0 ? (
-            <Text style={styles.empty}>Aucun kiné inscrit pour le moment.</Text>
+            <Text style={styles.empty}>Aucun professionnel du pôle médical inscrit pour le moment.</Text>
           ) : (
             physios.slice(0, 8).map((p) => (
               <TouchableOpacity
@@ -86,7 +86,9 @@ export const PhysioCarePanel: React.FC<PhysioCarePanelProps> = ({
                 </View>
                 <View style={styles.copy}>
                   <Text style={styles.name}>{p.display_name}</Text>
-                  <Text style={styles.meta}>{p.city ?? 'Kinésithérapeute ProDay'}</Text>
+                  <Text style={styles.meta}>
+                    {p.profile?.medical_specialty ?? p.profile?.job_title ?? p.city ?? 'Pôle médical ProDay'}
+                  </Text>
                 </View>
                 <Icon name="chat" size={20} color={colors.accent} />
               </TouchableOpacity>

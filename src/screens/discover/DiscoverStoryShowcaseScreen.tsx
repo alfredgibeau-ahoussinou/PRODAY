@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
-import { View, Text, StyleSheet, Dimensions, ImageBackground } from 'react-native';
+import { View, Text, StyleSheet, Dimensions } from 'react-native';
+import { ShowcaseImageBackground } from '../../components/ui/ShowcaseImageBackground';
 import Animated, {
   Extrapolation,
   interpolate,
@@ -11,7 +12,7 @@ import Animated, {
 import { ScreenHeader } from '../../components/ui/ScreenHeader';
 import { Icon } from '../../components/ui/Icon';
 import { colors, spacing, radius, shadows } from '../../theme/designTokens';
-import { SHOWCASE_IMAGES } from '../../content/showcaseAssets';
+import { useShowcaseImages } from '../../hooks/useShowcaseImages';
 
 const { height: H, width: W } = Dimensions.get('window');
 
@@ -30,6 +31,7 @@ type StoryCard = {
 export const DiscoverStoryShowcaseScreen: React.FC<DiscoverStoryShowcaseScreenProps> = ({
   onBack,
 }) => {
+  const showcase = useShowcaseImages();
   const y = useSharedValue(0);
   const cardH = Math.min(520, H - 190);
   const snap = cardH + spacing.lg;
@@ -40,32 +42,32 @@ export const DiscoverStoryShowcaseScreen: React.FC<DiscoverStoryShowcaseScreenPr
         key: 'discover',
         title: 'Tout commence ici',
         subtitle: 'Découvre la saison, les chiffres réels et l’énergie ProDay.',
-        image: SHOWCASE_IMAGES.expDiscover,
+        image: showcase.expDiscover,
         icon: 'home',
       },
       {
         key: 'team',
         title: 'Une équipe, un planning',
         subtitle: 'Convocations, détections et rituels de match — au même endroit.',
-        image: SHOWCASE_IMAGES.expTeam,
+        image: showcase.expTeam,
         icon: 'calendar',
       },
       {
         key: 'profile',
         title: 'Ton profil, ta vitrine',
         subtitle: 'CV, photos, progression — prêt à convaincre.',
-        image: SHOWCASE_IMAGES.expProfile,
+        image: showcase.expProfile,
         icon: 'person',
       },
       {
         key: 'messages',
         title: 'Messagerie fluide',
         subtitle: 'Reste en contact : coachs, clubs, recruteurs, sponsors.',
-        image: SHOWCASE_IMAGES.expMessages,
+        image: showcase.expMessages,
         icon: 'chat',
       },
     ],
-    []
+    [showcase]
   );
 
   const onScroll = useAnimatedScrollHandler({
@@ -134,7 +136,7 @@ const StoryCardView: React.FC<{
 
   return (
     <Animated.View style={[styles.card, shadows.card, wrapStyle, { height: cardH }]}>
-      <ImageBackground source={card.image} style={styles.hero} imageStyle={styles.heroImg}>
+      <ShowcaseImageBackground source={card.image} variant="hero" style={styles.hero} imageStyle={styles.heroImg}>
         <Animated.View style={[styles.heroMotion, imageStyle]} />
         <View style={styles.overlay} />
         <View style={styles.headerRow}>
@@ -147,7 +149,7 @@ const StoryCardView: React.FC<{
           <Text style={styles.title}>{card.title}</Text>
           <Text style={styles.subtitle}>{card.subtitle}</Text>
         </View>
-      </ImageBackground>
+      </ShowcaseImageBackground>
     </Animated.View>
   );
 };

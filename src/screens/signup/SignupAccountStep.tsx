@@ -1,12 +1,12 @@
 import React from 'react';
-import { Text, StyleSheet } from 'react-native';
+import { View } from 'react-native';
 import { AuthTextField } from '../../components/auth/AuthTextField';
+
 import { SignupStepLayout } from './SignupStepLayout';
 import { SignupFooterButton } from './SignupFooterButton';
 import type { SignupForm } from './useSignupForm';
-import { getAccountSubtitle } from './signupFlowConfig';
+import { getWomanStepMeta } from './signupWomanConfig';
 import { ProDayErrorBanner } from '../../components/ui/ProDayErrorBanner';
-import { colors, spacing } from '../../theme/designTokens';
 
 interface SignupAccountStepProps {
   form: SignupForm;
@@ -16,8 +16,6 @@ interface SignupAccountStepProps {
   phases?: SignupForm['phases'];
   phaseIndex?: number;
   onBack?: () => void;
-  onNext: () => void;
-  nextLabel?: string;
 }
 
 export const SignupAccountStep: React.FC<SignupAccountStepProps> = ({
@@ -28,40 +26,31 @@ export const SignupAccountStep: React.FC<SignupAccountStepProps> = ({
   phases,
   phaseIndex,
   onBack,
-  onNext,
-  nextLabel = 'Créer mon compte',
 }) => {
-  const passwordHint =
-    form.password.length === 0
-      ? null
-      : form.password.length < 6
-        ? 'Trop court (6 car. min.)'
-        : form.password.length < 10
-          ? 'Acceptable'
-          : 'Solide';
-
+  const womanMeta = form.isWomanProduct ? getWomanStepMeta('account') : null;
   return (
-    <SignupStepLayout
-      stepIndex={stepIndex}
-      stepTotal={stepTotal}
-      stepName={stepName}
-      phases={phases}
-      phaseIndex={phaseIndex}
-      title="Créer votre compte"
-      subtitle={getAccountSubtitle(form.role, form.isOAuthCompletion)}
-      onBack={onBack}
-      footer={
-        <SignupFooterButton
-          label={nextLabel}
-          onPress={onNext}
-          loading={form.loading}
-        />
-      }
-    >
-      {form.error ? (
+  <SignupStepLayout
+    stepIndex={stepIndex}
+    stepTotal={stepTotal}
+    stepName={stepName}
+    phases={phases}
+    phaseIndex={phaseIndex}
+    title={womanMeta?.title ?? 'Ton identité'}
+    subtitle={womanMeta?.subtitle ?? 'Nom et email — la base de ton compte ProDay.'}
+    contentKey={`account-${form.role}`}
+    heroIcon={womanMeta?.heroIcon ?? 'person'}
+    onBack={onBack}
+    footer={
+      <SignupFooterButton label="Continuer" onPress={() => form.advanceFromCurrentPage()} />
+    }
+  >
+    {form.error ? (
+      <View>
         <ProDayErrorBanner message={form.error} onDismiss={() => form.setError(null)} />
-      ) : null}
+      </View>
+    ) : null}
 
+    <View>
       <AuthTextField
         label="Nom affiché"
         icon="person"
@@ -70,6 +59,8 @@ export const SignupAccountStep: React.FC<SignupAccountStepProps> = ({
         onChangeText={form.setDisplayName}
         error={form.fieldErrors.displayName}
       />
+    </View>
+    <View>
       <AuthTextField
         label="Email"
         icon="mail"
@@ -81,54 +72,19 @@ export const SignupAccountStep: React.FC<SignupAccountStepProps> = ({
         editable={!form.isOAuthCompletion}
         error={form.fieldErrors.email}
       />
-      {form.isOAuthCompletion ? null : (
-        <>
-          <AuthTextField
-            label="Mot de passe"
-            icon="lock"
-            placeholder="6 caractères minimum"
-            value={form.password}
-            onChangeText={form.setPassword}
-            secureToggle
-            error={form.fieldErrors.password}
-          />
-          {passwordHint ? (
-            <Text
-              style={[
-                styles.hint,
-                form.password.length < 6 ? styles.hintWeak : styles.hintOk,
-              ]}
-            >
-              {passwordHint}
-            </Text>
-          ) : null}
-          <AuthTextField
-            label="Confirmer le mot de passe"
-            icon="lock"
-            placeholder="Répétez le mot de passe"
-            value={form.confirmPassword}
-            onChangeText={form.setConfirmPassword}
-            secureToggle
-            error={form.fieldErrors.confirmPassword}
-          />
-        </>
-      )}
-      {form.role === 'sponsor' ? (
+    </View>
+    {form.role === 'sponsor' ? (
+      <View>
         <AuthTextField
-          label="Ville / région"
+          label="Ville / région *"
           icon="location"
           placeholder="Paris, Lyon…"
           value={form.city}
           onChangeText={form.setCity}
           error={form.fieldErrors.city}
         />
-      ) : null}
-    </SignupStepLayout>
+      </View>
+    ) : null}
+  </SignupStepLayout>
   );
 };
-
-const styles = StyleSheet.create({
-  hint: { fontSize: 12, marginTop: -spacing.sm, marginBottom: spacing.sm },
-  hintWeak: { color: colors.warning },
-  hintOk: { color: colors.textMuted },
-});

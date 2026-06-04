@@ -76,5 +76,5 @@ export const ROLE_DASHBOARD_TAGLINE: Record<UserRole, string> = {
   agent: 'Repérez, convoquez, placez.',
   organizer: 'Animez tournois et écosystème local.',
   sponsor: 'Soutenez les clubs de votre territoire.',
-  physio: 'Prévention, récupération, fil ProDay.',
+  physio: 'Kiné, ostéo, médecin du sport — fil ProDay.',
 };

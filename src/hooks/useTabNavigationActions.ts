@@ -23,6 +23,10 @@ export function useTabNavigationActions(): TabNavigationActions {
         nav.openProfile(view);
       },
       openDashboard: (view) => {
+        if (view === 'feed') {
+          nav.setActiveTab('feed');
+          return;
+        }
         nav.setActiveTab('home');
         nav.openDashboard(view);
       },

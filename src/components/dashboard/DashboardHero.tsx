@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import type { User } from '../../models/User';
 import type { ProdayPulseResult, PulseBreakdownItem } from '../../utils/prodayPulse';
 import { ROLE_DASHBOARD_TAGLINE } from '../../content/dashboardUniques';
+import { getRoleDashboardMeta, ROLE_HERO_ACCENT } from '../../content/roleDashboardExperience';
 import { ROLE_LABELS } from '../../utils/roleCapabilities';
 import { ProDayPulseInteractive } from '../interactive/ProDayPulseInteractive';
 import { Icon } from '../ui/Icon';
@@ -27,9 +28,11 @@ export const DashboardHero: React.FC<DashboardHeroProps> = ({
 }) => {
   const firstName = profile.display_name.split(' ')[0];
   const roleLabel = ROLE_LABELS[profile.role];
+  const dashMeta = getRoleDashboardMeta(profile.role);
+  const heroAccent = ROLE_HERO_ACCENT[dashMeta.heroTone];
 
   return (
-    <View style={styles.wrap}>
+    <View style={[styles.wrap, { borderBottomColor: heroAccent }]}>
       <View style={styles.topRow}>
         <View style={styles.brandMark}>
           <Text style={styles.brandText}>PRODAY</Text>
@@ -48,8 +51,9 @@ export const DashboardHero: React.FC<DashboardHeroProps> = ({
 
       <Text style={styles.greeting}>Bonjour, {firstName}</Text>
       <Text style={styles.tagline}>{ROLE_DASHBOARD_TAGLINE[profile.role]}</Text>
+      <Text style={[styles.roleEyebrow, { color: heroAccent }]}>{dashMeta.eyebrow}</Text>
       <View style={styles.metaRow}>
-        <Text style={styles.rolePill}>{roleLabel}</Text>
+        <Text style={[styles.rolePill, { backgroundColor: heroAccent }]}>{roleLabel}</Text>
         {profile.city ? <Text style={styles.city}>{profile.city}</Text> : null}
       </View>
 
@@ -74,7 +78,15 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
     borderBottomLeftRadius: radius.xl,
     borderBottomRightRadius: radius.xl,
+    borderBottomWidth: 3,
     ...shadows.interactive,
+  },
+  roleEyebrow: {
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 1.2,
+    marginTop: spacing.xs,
+    marginBottom: spacing.sm,
   },
   topRow: {
     flexDirection: 'row',

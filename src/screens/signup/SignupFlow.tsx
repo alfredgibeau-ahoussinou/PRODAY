@@ -1,34 +1,51 @@
 import React from 'react';
-import { ActivityIndicator, View, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { useSignupForm } from './useSignupForm';
-import { SignupRoleStep } from './SignupRoleStep';
-import { SignupProgramStep } from './SignupProgramStep';
+import { SignupWelcomeStep } from './SignupWelcomeStep';
+import { SignupSpaceStep } from './SignupSpaceStep';
+import { SignupSportStep } from './SignupSportStep';
+import { SignupLocationStep } from './SignupLocationStep';
+import { SignupStatsStep } from './SignupStatsStep';
+import {
+  SignupCoachProStep,
+  SignupClubProStep,
+  SignupAgentProStep,
+  SignupOrganizerProStep,
+  SignupMedicalSpecialtyStep,
+  SignupMedicalPracticeStep,
+  SignupSponsorProStep,
+} from './SignupRoleSteps';
 import { SignupAccountStep } from './SignupAccountStep';
-import { SignupPlayerVerificationStep } from './SignupPlayerVerificationStep';
-import { SignupPlayerStep } from './SignupPlayerStep';
-import { SignupStaffStep } from './SignupStaffStep';
+import { SignupSecurityStep } from './SignupSecurityStep';
 import { SignupParentalStep } from './SignupParentalStep';
-import { SignupDocumentStep } from './SignupDocumentStep';
 import { SignupSuccessStep } from './SignupSuccessStep';
 import { useAuth } from '../../context/AuthContext';
 import { ROLES_REQUIRING_VERIFICATION } from '../../models/User';
-import { getSuccessCopy } from './signupFlowConfig';
-import { colors } from '../../theme/designTokens';
+import { getLaunchCopy } from './signupFlowConfig';
+import type { ProductLineId } from '../../models/ProductLine';
+import { SignupFlowProvider, useSignupFlowTheme } from './SignupFlowContext';
+import { getWomanLaunchCopy } from './signupWomanConfig';
 
 interface SignupFlowProps {
   onClose: () => void;
   onComplete: () => void;
   initialEmail?: string;
   initialDisplayName?: string;
+  productLine?: ProductLineId;
 }
 
-export const SignupFlow: React.FC<SignupFlowProps> = ({
+type SignupFormApi = ReturnType<typeof useSignupForm>;
+
+interface SignupFlowInnerProps extends SignupFlowProps {
+  form: SignupFormApi;
+}
+
+const SignupFlowInner: React.FC<SignupFlowInnerProps> = ({
   onClose,
   onComplete,
-  initialEmail,
-  initialDisplayName,
+  form,
 }) => {
-  const form = useSignupForm({ initialEmail, initialDisplayName });
+  const { colors, isWomanSignup } = useSignupFlowTheme();
   const { profile, refreshProfile } = useAuth();
 
   const layout = {
@@ -37,130 +54,101 @@ export const SignupFlow: React.FC<SignupFlowProps> = ({
     stepName: form.stepLabel,
     phases: form.phases,
     phaseIndex: form.phaseIndex,
-    flowKind: form.flowKind,
   };
 
-  const postAccountPages = ['player_verify', 'document', 'success'] as const;
-  const backUnlessLocked =
-    form.accountCreated && postAccountPages.includes(form.currentPage as (typeof postAccountPages)[number])
-      ? undefined
-      : form.goBack;
+  const backUnlessLocked = form.accountCreated ? undefined : form.goBack;
 
-  const submitAccount = async () => {
+  const submitSecurity = async () => {
     if (!form.validateAccount()) return;
     await form.createAccount(refreshProfile);
   };
 
+  let content: React.ReactNode;
   switch (form.currentPage) {
-    case 'role':
-      return <SignupRoleStep form={form} {...layout} onClose={onClose} />;
-
-    case 'program':
-      return <SignupProgramStep form={form} {...layout} onClose={onClose} />;
-
-    case 'player':
-      return (
-        <SignupPlayerStep
-          form={form}
-          {...layout}
-          onBack={form.goBack}
-          onSubmit={() => form.submitPlayerProfile()}
-        />
-      );
-
-    case 'parental':
-      return (
+    case 'welcome':
+      content = <SignupWelcomeStep form={form} {...layout} onClose={onClose} />;
+      break;
+    case 'space':
+      content = <SignupSpaceStep form={form} {...layout} onBack={form.goBack} />;
+      break;
+    case 'sport':
+      content = <SignupSportStep form={form} {...layout} onBack={form.goBack} />;
+      break;
+    case 'location':
+      content = <SignupLocationStep form={form} {...layout} onBack={form.goBack} />;
+      break;
+    case 'stats':
+      content = <SignupStatsStep form={form} {...layout} onBack={form.goBack} />;
+      break;
+    case 'coach_pro':
+      content = <SignupCoachProStep form={form} {...layout} onBack={form.goBack} />;
+      break;
+    case 'club_pro':
+      content = <SignupClubProStep form={form} {...layout} onBack={form.goBack} />;
+      break;
+    case 'agent_pro':
+      content = <SignupAgentProStep form={form} {...layout} onBack={form.goBack} />;
+      break;
+    case 'organizer_pro':
+      content = <SignupOrganizerProStep form={form} {...layout} onBack={form.goBack} />;
+      break;
+    case 'medical_specialty':
+      content = <SignupMedicalSpecialtyStep form={form} {...layout} onBack={form.goBack} />;
+      break;
+    case 'medical_practice':
+      content = <SignupMedicalPracticeStep form={form} {...layout} onBack={form.goBack} />;
+      break;
+    case 'sponsor_pro':
+      content = <SignupSponsorProStep form={form} {...layout} onBack={form.goBack} />;
+      break;
+    case 'family':
+      content = (
         <SignupParentalStep
           form={form}
           {...layout}
           onBack={form.goBack}
-          onSubmit={() => {
-            if (!form.validateParental()) return;
-            form.goNext();
-          }}
+          onSubmit={() => form.advanceFromCurrentPage()}
         />
       );
-
-    case 'staff':
-      return (
-        <SignupStaffStep
-          form={form}
-          {...layout}
-          onBack={form.goBack}
-          onNext={() => {
-            if (!form.validateStaff()) return;
-            form.goNext();
-          }}
-        />
-      );
-
+      break;
     case 'account':
-      return (
-        <SignupAccountStep
+      content = <SignupAccountStep form={form} {...layout} onBack={backUnlessLocked} />;
+      break;
+    case 'security':
+      content = (
+        <SignupSecurityStep
           form={form}
           {...layout}
           onBack={backUnlessLocked}
-          onNext={() => void submitAccount()}
-          nextLabel={form.isOAuthCompletion ? 'Finaliser mon compte' : 'Créer mon compte'}
+          onSubmit={() => void submitSecurity()}
+          nextLabel={
+            form.isOAuthCompletion
+              ? 'Finaliser mon accès'
+              : form.isWomanProduct
+                ? 'Créer mon compte Woman'
+                : 'Créer mon compte'
+          }
         />
       );
-
-    case 'player_verify':
-      if (!profile) {
-        return (
-          <View style={styles.waiting}>
-            <ActivityIndicator size="large" color={colors.accent} />
-          </View>
-        );
-      }
-      return (
-        <SignupPlayerVerificationStep
-          uid={profile.uid}
-          appSpace={form.appSpace}
-          {...layout}
-          onBack={backUnlessLocked}
-          onDone={() => form.goToPage('success')}
-        />
-      );
-
-    case 'document':
-      if (!profile) {
-        return (
-          <View style={styles.waiting}>
-            <ActivityIndicator size="large" color={colors.accent} />
-          </View>
-        );
-      }
-      return (
-        <SignupDocumentStep
-          {...layout}
-          uid={profile.uid}
-          role={profile.role}
-          loading={form.loading}
-          error={form.error}
-          onBack={backUnlessLocked}
-          onSkip={() => form.goToPage('success')}
-          onUploaded={() => form.goToPage('success')}
-          onError={(msg) => form.setError(msg || null)}
-          setLoading={form.setLoading}
-        />
-      );
-
-    case 'success':
+      break;
+    case 'launch':
     default: {
-      const verificationPending = profile
-        ? profile.role === 'player'
-          ? profile.verification_status === 'PENDING'
-          : ROLES_REQUIRING_VERIFICATION.includes(profile.role) &&
-            profile.verification_status === 'PENDING'
-        : form.role === 'player' || form.needsDocument;
+      const verificationPending =
+        profile?.verification_status === 'PENDING' ||
+        form.role === 'player' ||
+        ROLES_REQUIRING_VERIFICATION.includes(form.role) ||
+        form.role === 'physio';
 
-      const copy = getSuccessCopy(form.role, {
-        emailVerificationPending: form.createdWithEmailPassword,
-        verificationPending,
-      });
+      const copy = isWomanSignup
+        ? getWomanLaunchCopy({
+            emailVerificationPending: form.createdWithEmailPassword,
+          })
+        : getLaunchCopy(form.role, {
+            emailVerificationPending: form.createdWithEmailPassword,
+            verificationPending,
+          });
 
-      return (
+      content = (
         <SignupSuccessStep
           {...layout}
           displayName={form.createdDisplayName || profile?.display_name || 'Membre'}
@@ -170,15 +158,38 @@ export const SignupFlow: React.FC<SignupFlowProps> = ({
           onFinish={onComplete}
         />
       );
+      break;
     }
   }
+
+  return (
+    <View style={[styles.root, { backgroundColor: colors.background }]}>
+      <View key={form.currentPage} style={styles.page}>
+        {content}
+      </View>
+    </View>
+  );
 };
 
+const SignupFlowWithTheme: React.FC<SignupFlowProps> = (props) => {
+  const form = useSignupForm({
+    initialEmail: props.initialEmail,
+    initialDisplayName: props.initialDisplayName,
+    productLine: props.productLine ?? 'standard',
+  });
+
+  return (
+    <SignupFlowProvider productLine={props.productLine ?? 'standard'} experienceRole={form.role}>
+      <SignupFlowInner {...props} form={form} />
+    </SignupFlowProvider>
+  );
+};
+
+export const SignupFlow: React.FC<SignupFlowProps> = (props) => <SignupFlowWithTheme {...props} />;
+
 const styles = StyleSheet.create({
-  waiting: {
+  root: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.background,
   },
+  page: { flex: 1, minHeight: 0 },
 });

@@ -20,6 +20,7 @@ import type { User } from '../models/User';
 import type { AppSpaceId } from '../models/AppSpace';
 import type { RecruitmentPost, Application } from '../models/Player';
 import { callFunction } from '../lib/firebaseFunctions';
+import { subscriptionService } from './subscription.service';
 
 export const APPLICATION_STATUS_LABEL: Record<Application['status'], string> = {
   PENDING: 'En attente',
@@ -84,10 +85,15 @@ export const recruitmentService = {
       city: string;
       description?: string;
       target_space?: AppSpaceId;
-    }
+    },
+    author?: User
   ): Promise<string> {
     const database = getDb();
     if (!database) throw new Error('Firebase non configuré');
+
+    if (author) {
+      await subscriptionService.assertFeature(author, 'club_active_post');
+    }
 
     const ref = await addDoc(collection(database, 'recruitment_posts'), {
       ...input,
@@ -115,18 +121,25 @@ export const recruitmentService = {
     }
   },
 
-  async applyToPost(input: {
-    post_id: string;
-    post_author_uid: string;
-    player_uid: string;
-    player_name: string;
-    cover_letter: string;
-  }): Promise<string> {
+  async applyToPost(
+    input: {
+      post_id: string;
+      post_author_uid: string;
+      player_uid: string;
+      player_name: string;
+      cover_letter: string;
+    },
+    player?: User
+  ): Promise<string> {
     const database = getDb();
     if (!database) throw new Error('Firebase non configuré');
 
     const already = await this.hasPlayerApplied(input.post_id, input.player_uid);
     if (already) throw new Error('Vous avez déjà postulé à cette annonce.');
+
+    if (player) {
+      await subscriptionService.assertFeature(player, 'mercato_apply');
+    }
 
     const ref = await addDoc(collection(database, 'recruitment_applications'), {
       post_id: input.post_id,
@@ -138,6 +151,11 @@ export const recruitmentService = {
       status: 'PENDING',
       created_at: serverTimestamp(),
     });
+
+    if (player) {
+      await subscriptionService.incrementUsage(player.uid, 'mercato_apply');
+    }
+
     return ref.id;
   },
 

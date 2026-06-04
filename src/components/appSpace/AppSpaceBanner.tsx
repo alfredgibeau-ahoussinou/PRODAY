@@ -9,22 +9,22 @@ import {
   type AppSpaceId,
 } from '../../models/AppSpace';
 import { Icon } from '../ui/Icon';
+import { useAppTheme } from '../../context/ProductLineContext';
 import { colors, spacing, radius } from '../../theme/designTokens';
 
 interface AppSpaceBannerProps {
   showHubLinks?: boolean;
-  onOpenWomenHub?: () => void;
   onOpenMenHub?: () => void;
   onOpenUnderU13Hub?: () => void;
 }
 
 export const AppSpaceBanner: React.FC<AppSpaceBannerProps> = ({
   showHubLinks = false,
-  onOpenWomenHub,
   onOpenMenHub,
   onOpenUnderU13Hub,
 }) => {
   const { appSpace } = useAppSpace();
+  const { isWoman } = useAppTheme();
 
   const wrapStyle = isUnderU13AppSpace(appSpace)
     ? styles.wrapUnderU13
@@ -54,20 +54,8 @@ export const AppSpaceBanner: React.FC<AppSpaceBannerProps> = ({
         </View>
       </View>
 
-      {showHubLinks ? (
+      {showHubLinks && !isWoman ? (
         <View style={styles.dualWrap}>
-          <TouchableOpacity
-            style={[styles.dualCard, styles.dualFeminine]}
-            onPress={onOpenWomenHub}
-            activeOpacity={0.9}
-          >
-            <Icon name="people" size={20} color={colors.accent} />
-            <View style={styles.dualCopy}>
-              <Text style={styles.dualTitle}>Changer — Féminin</Text>
-              <Text style={styles.dualSub}>Joueuses · clubs F</Text>
-            </View>
-            <Icon name="chevron-forward" size={16} color={colors.textMuted} />
-          </TouchableOpacity>
           <TouchableOpacity
             style={[styles.dualCard, styles.dualMasculine]}
             onPress={onOpenMenHub}
@@ -137,7 +125,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderColor: colors.border,
   },
-  dualFeminine: { borderLeftWidth: 4, borderLeftColor: '#c45b9a' },
   dualMasculine: { borderLeftWidth: 4, borderLeftColor: '#3d6cb9' },
   dualUnderU13: { borderLeftWidth: 4, borderLeftColor: '#4ade80' },
   dualCopy: { flex: 1 },

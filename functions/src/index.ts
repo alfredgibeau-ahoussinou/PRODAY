@@ -3,7 +3,7 @@ import * as admin from 'firebase-admin';
 import { processScheduledEventReminders } from './eventReminders';
 import { sendFcmToUser } from './messaging';
 import { createPaymentCheckoutSession, stripeWebhook } from './stripePayments';
-import { runMistralDocumentVerification } from './mistralVerification';
+import { runMistralDocumentVerification, verifyOnboardingDocumentEphemeral } from './mistralVerification';
 import { onPlatformFeedCreated, onChatMessageCreated } from './feedNotifications';
 
 export { createPaymentCheckoutSession, stripeWebhook };
@@ -27,6 +27,34 @@ export const onProfileDocumentSubmit = functions
       await runMistralDocumentVerification(uid, docId);
     } catch (e) {
       console.error('[onProfileDocumentSubmit] mistral:', e);
+    }
+  });
+
+/** Inscription — analyse IA éphémère (sans Storage ni sous-collection documents). */
+export const verifyOnboardingDocument = functions
+  .runWith({ timeoutSeconds: 120, memory: '512MB' })
+  .https.onCall(async (data, context) => {
+    if (!context.auth?.uid) {
+      throw new functions.https.HttpsError('unauthenticated', 'Connexion requise');
+    }
+    const { image_base64, mime_type, verification_check } = data as {
+      image_base64?: string;
+      mime_type?: string;
+      verification_check?: string;
+    };
+    if (!image_base64?.trim()) {
+      throw new functions.https.HttpsError('invalid-argument', 'image_base64 requis');
+    }
+    try {
+      return await verifyOnboardingDocumentEphemeral(
+        context.auth.uid,
+        image_base64.trim(),
+        String(mime_type ?? 'image/jpeg'),
+        verification_check?.trim() || undefined
+      );
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Analyse impossible';
+      throw new functions.https.HttpsError('failed-precondition', msg);
     }
   });
 

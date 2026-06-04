@@ -3,6 +3,7 @@ export type MainTabId =
   | 'home'
   | 'recrutement'
   | 'matchs'
+  | 'feed'
   | 'messages'
   | 'profil';
 
@@ -12,8 +13,9 @@ export const MAIN_TAB_ITEMS: {
   icon: string;
 }[] = [
   { id: 'home', label: 'Accueil', icon: 'home' },
-  { id: 'recrutement', label: 'Recrutement', icon: 'recruitment' },
+  { id: 'recrutement', label: 'Mercato', icon: 'recruitment' },
   { id: 'matchs', label: 'Matchs', icon: 'handshake' },
+  { id: 'feed', label: 'Fil', icon: 'star-four-points' },
   { id: 'messages', label: 'Messages', icon: 'chat' },
   { id: 'profil', label: 'Profil', icon: 'user' },
 ];

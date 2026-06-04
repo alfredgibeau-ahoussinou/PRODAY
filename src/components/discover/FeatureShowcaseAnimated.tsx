@@ -21,7 +21,10 @@ import { CarouselDot } from './CarouselDot';
 import { DiscoverSectionHeader } from './DiscoverSectionHeader';
 import { DISCOVER_FEATURES } from '../../content/founders';
 import { FEATURE_IMAGE_KEYS } from '../../content/showcaseExperience';
-import { SHOWCASE_IMAGES } from '../../content/showcaseAssets';
+import { useShowcaseImages } from '../../hooks/useShowcaseImages';
+import { getShowcaseImageStyle } from '../../content/showcaseImageStyle';
+import { useAppTheme } from '../../context/ProductLineContext';
+import type { ShowcaseImageKey } from '../../content/showcaseAssets';
 import { Icon, type IconName } from '../ui/Icon';
 import { PressableSpring } from './PressableSpring';
 import { colors, spacing, radius } from '../../theme/designTokens';
@@ -41,12 +44,15 @@ function FeatureCard({
   scrollX,
   feature,
   onPress,
+  showcase,
 }: {
   index: number;
   scrollX: SharedValue<number>;
   feature: (typeof DISCOVER_FEATURES)[number];
   onPress: () => void;
+  showcase: Record<ShowcaseImageKey, number>;
 }) {
+  const { isWoman } = useAppTheme();
   const cardStyle = useAnimatedStyle(() => {
     const center = index * SNAP;
     const dist = Math.abs(scrollX.value - center);
@@ -59,8 +65,8 @@ function FeatureCard({
       <PressableSpring style={styles.card} onPress={onPress} scaleTo={0.98}>
         {FEATURE_IMAGE_KEYS[feature.id] ? (
           <Image
-            source={SHOWCASE_IMAGES[FEATURE_IMAGE_KEYS[feature.id]]}
-            style={styles.cover}
+            source={showcase[FEATURE_IMAGE_KEYS[feature.id]]}
+            style={[styles.cover, getShowcaseImageStyle('card', undefined, isWoman)]}
             resizeMode="cover"
           />
         ) : null}
@@ -98,6 +104,7 @@ interface FeatureShowcaseAnimatedProps {
 export const FeatureShowcaseAnimated: React.FC<FeatureShowcaseAnimatedProps> = ({
   onFeaturePress,
 }) => {
+  const showcase = useShowcaseImages();
   const scrollX = useSharedValue(0);
   const [active, setActive] = useState(0);
   const listRef = useRef<ScrollView>(null);
@@ -162,6 +169,7 @@ export const FeatureShowcaseAnimated: React.FC<FeatureShowcaseAnimatedProps> = (
             scrollX={scrollX}
             feature={f}
             onPress={() => onFeaturePress?.(f.id)}
+            showcase={showcase}
           />
         ))}
       </AnimatedScrollView>

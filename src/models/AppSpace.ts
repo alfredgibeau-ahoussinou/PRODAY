@@ -13,7 +13,7 @@ export const APP_SPACE_IDS: AppSpaceId[] = [
 
 export const APP_SPACE_LABELS: Record<AppSpaceId, string> = {
   women: 'ProDay Féminin',
-  girls: 'ProDay Filles',
+  girls: 'Jeunes F',
   men: 'ProDay Masculin',
   boys: 'ProDay Jeunes',
   under_u13: 'ProDay -13',

@@ -1,16 +1,19 @@
 import React, { useCallback, useEffect, useRef } from 'react';
-import { View, StyleSheet, Dimensions, Text } from 'react-native';
-import Animated, {
-  useAnimatedScrollHandler,
-  useSharedValue,
-  runOnJS,
-} from 'react-native-reanimated';
+import {
+  View,
+  StyleSheet,
+  Text,
+  useWindowDimensions,
+  type NativeSyntheticEvent,
+  type NativeScrollEvent,
+} from 'react-native';
+import Animated, { useAnimatedScrollHandler, useSharedValue } from 'react-native-reanimated';
 import { type DiscoverChapterId } from '../../content/discoverChapters';
 import { DiscoverChapterRail } from './DiscoverChapterRail';
+import { DiscoverTabRail } from './DiscoverTabRail';
 import { CarouselDot } from './CarouselDot';
+import { discoverPalette } from './discoverStyles';
 import { colors, spacing, radius, shadows } from '../../theme/designTokens';
-
-const { width: W } = Dimensions.get('window');
 
 export interface DiscoverHomePage {
   id: DiscoverChapterId;
@@ -21,6 +24,12 @@ interface DiscoverHomePagerProps {
   pages: DiscoverHomePage[];
   activeChapter: DiscoverChapterId;
   onChapterChange: (id: DiscoverChapterId) => void;
+  /** Tap sur un onglet (ex. remonter le scroll vertical de la page) */
+  onChapterSelect?: (id: DiscoverChapterId) => void;
+  /** Dans la feuille blanche (accueil) — fond transparent, footer compact */
+  embedded?: boolean;
+  /** Style accueil éditorial (onglets soulignés, fond crème) */
+  ui?: 'default' | 'editorial' | 'immersive' | 'light';
 }
 
 /**
@@ -30,17 +39,26 @@ export const DiscoverHomePager: React.FC<DiscoverHomePagerProps> = ({
   pages,
   activeChapter,
   onChapterChange,
+  onChapterSelect,
+  embedded = false,
+  ui = 'default',
 }) => {
+  const editorial = ui === 'editorial';
+  const immersive = ui === 'immersive';
+  const light = ui === 'light';
+  const { width: pageWidth } = useWindowDimensions();
   const scrollRef = useRef<Animated.ScrollView>(null);
   const scrollX = useSharedValue(0);
 
   const goToIndex = useCallback(
-    (index: number) => {
+    (index: number, animated = true) => {
       const clamped = Math.max(0, Math.min(index, pages.length - 1));
-      scrollRef.current?.scrollTo({ x: clamped * W, animated: true });
+      const x = clamped * pageWidth;
+      scrollX.value = x;
+      scrollRef.current?.scrollTo({ x, animated });
       onChapterChange(pages[clamped].id);
     },
-    [onChapterChange, pages]
+    [onChapterChange, pages, pageWidth, scrollX]
   );
 
   const goToChapter = useCallback(
@@ -51,13 +69,37 @@ export const DiscoverHomePager: React.FC<DiscoverHomePagerProps> = ({
     [goToIndex, pages]
   );
 
+  /** Sync chapitre uniquement après swipe — pas pendant onScroll (sinon les onglets sont annulés). */
+  const syncChapterFromOffset = useCallback(
+    (offsetX: number) => {
+      const snap = Math.max(pageWidth, 1);
+      const index = Math.round(offsetX / snap);
+      const page = pages[index];
+      if (page) onChapterChange(page.id);
+    },
+    [onChapterChange, pages, pageWidth]
+  );
+
+  const onPagerScrollEnd = useCallback(
+    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+      syncChapterFromOffset(e.nativeEvent.contentOffset.x);
+    },
+    [syncChapterFromOffset]
+  );
+
+  const onPagerScrollEndDrag = useCallback(
+    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+      const vx = e.nativeEvent.velocity?.x ?? 0;
+      if (Math.abs(vx) < 0.05) {
+        syncChapterFromOffset(e.nativeEvent.contentOffset.x);
+      }
+    },
+    [syncChapterFromOffset]
+  );
+
   const onScroll = useAnimatedScrollHandler({
     onScroll: (e) => {
       scrollX.value = e.contentOffset.x;
-      const index = Math.round(e.contentOffset.x / W);
-      if (pages[index]) {
-        runOnJS(onChapterChange)(pages[index].id);
-      }
     },
   });
 
@@ -66,13 +108,35 @@ export const DiscoverHomePager: React.FC<DiscoverHomePagerProps> = ({
   useEffect(() => {
     const index = pages.findIndex((p) => p.id === activeChapter);
     if (index >= 0) {
-      scrollRef.current?.scrollTo({ x: index * W, animated: true });
+      scrollRef.current?.scrollTo({ x: index * pageWidth, animated: true });
     }
-  }, [activeChapter, pages]);
+  }, [activeChapter, pages, pageWidth]);
 
   return (
-    <View style={styles.root}>
-      <DiscoverChapterRail active={activeChapter} onSelect={goToChapter} />
+    <View
+      style={[
+        styles.root,
+        embedded && styles.rootEmbedded,
+        editorial && styles.rootEditorial,
+        immersive && styles.rootImmersive,
+        light && styles.rootLight,
+      ]}
+    >
+      {editorial ? (
+        <DiscoverTabRail active={activeChapter} onSelect={goToChapter} />
+      ) : (
+        <DiscoverChapterRail
+          active={activeChapter}
+          onSelect={(id) => {
+            goToChapter(id);
+            onChapterSelect?.(id);
+          }}
+          embedded={embedded}
+          variant={immersive ? 'immersive' : light ? 'light' : 'default'}
+          scrollX={light ? scrollX : undefined}
+          pageWidth={light ? pageWidth : undefined}
+        />
+      )}
 
       <Animated.ScrollView
         ref={scrollRef}
@@ -80,41 +144,58 @@ export const DiscoverHomePager: React.FC<DiscoverHomePagerProps> = ({
         pagingEnabled
         showsHorizontalScrollIndicator={false}
         onScroll={onScroll}
+        onMomentumScrollEnd={onPagerScrollEnd}
+        onScrollEndDrag={onPagerScrollEndDrag}
         scrollEventThrottle={16}
         decelerationRate="fast"
         style={styles.pager}
+        nestedScrollEnabled
+        directionalLockEnabled
+        keyboardShouldPersistTaps="handled"
       >
         {pages.map((page) => (
-          <View key={page.id} style={[styles.page, { width: W }]}>
+          <View key={page.id} style={[styles.page, { width: pageWidth }]}>
             {page.render()}
           </View>
         ))}
       </Animated.ScrollView>
 
-      <View style={styles.footer}>
-        <View style={styles.dots}>
-          {pages.map((p, i) => (
-            <CarouselDot
-              key={p.id}
-              index={i}
-              scrollX={scrollX}
-              snap={W}
-              onPress={() => goToIndex(i)}
-            />
-          ))}
+      {!immersive && !light ? (
+        <View
+          style={[
+            styles.footer,
+            embedded && styles.footerEmbedded,
+            editorial && styles.footerEditorial,
+          ]}
+        >
+          <View style={styles.dots}>
+            {pages.map((p, i) => (
+              <CarouselDot
+                key={p.id}
+                index={i}
+                scrollX={scrollX}
+                snap={pageWidth}
+                onPress={() => goToIndex(i)}
+              />
+            ))}
+          </View>
+          <Text style={[styles.hint, immersive && styles.hintImmersive]}>
+            Glissez · {pageNum}/{pages.length}
+          </Text>
         </View>
-        <Text style={styles.hint}>
-          Glissez · {pageNum}/{pages.length}
-        </Text>
-      </View>
+      ) : null}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.background },
-  pager: { flex: 1 },
-  page: { flex: 1 },
+  rootEmbedded: { backgroundColor: 'transparent' },
+  rootEditorial: { backgroundColor: discoverPalette.canvas },
+  rootImmersive: { backgroundColor: discoverPalette.canvas },
+  rootLight: { backgroundColor: discoverPalette.canvas },
+  pager: { flex: 1, minHeight: 0 },
+  page: { flex: 1, minHeight: 0 },
   footer: {
     alignItems: 'center',
     paddingVertical: spacing.sm,
@@ -127,6 +208,34 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     ...shadows.soft,
   },
+  footerEmbedded: {
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.xs,
+    paddingVertical: spacing.xs + 2,
+    backgroundColor: colors.surfaceMuted,
+    borderColor: colors.border,
+    shadowOpacity: 0,
+    elevation: 0,
+  },
+  footerEditorial: {
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.sm,
+    paddingVertical: spacing.sm,
+    backgroundColor: 'transparent',
+    borderWidth: 0,
+    shadowOpacity: 0,
+    elevation: 0,
+  },
+  footerLight: {
+    marginHorizontal: spacing.lg,
+    marginTop: spacing.xs,
+    marginBottom: spacing.sm,
+    paddingVertical: spacing.sm,
+    backgroundColor: 'transparent',
+    borderWidth: 0,
+    shadowOpacity: 0,
+    elevation: 0,
+  },
   dots: { flexDirection: 'row', gap: 6, alignItems: 'center' },
   hint: {
     fontSize: 9,
@@ -135,4 +244,5 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
     textTransform: 'uppercase',
   },
+  hintImmersive: { color: discoverPalette.faint },
 });

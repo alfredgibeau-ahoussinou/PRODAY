@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import type { SeasonCalendarItem } from '../../utils/seasonCalendar';
 import { formatCalendarDate } from '../../utils/seasonCalendar';
-import { SHOWCASE_IMAGES } from '../../content/showcaseAssets';
+import { useShowcaseImages } from '../../hooks/useShowcaseImages';
 import { Icon } from '../ui/Icon';
 import { RichEmptyState } from '../ui/RichEmptyState';
 import { colors, spacing, radius } from '../../theme/designTokens';
@@ -17,7 +17,9 @@ export const DashboardAgenda: React.FC<DashboardAgendaProps> = ({
   items,
   onPressItem,
   onSeeAll,
-}) => (
+}) => {
+  const showcase = useShowcaseImages();
+  return (
   <View style={styles.wrap}>
     <View style={styles.header}>
       <Text style={styles.eyebrow}>AGENDA SAISON</Text>
@@ -30,7 +32,7 @@ export const DashboardAgenda: React.FC<DashboardAgendaProps> = ({
       <RichEmptyState
         title="Votre calendrier vous attend"
         subtitle="Convocations, matchs amicaux, détections et tournois Arena — tout converge ici dès votre prochain événement."
-        image={SHOWCASE_IMAGES.friendlyMatch}
+        image={showcase.friendlyMatch}
         actionLabel="Ouvrir Matchs"
         onAction={onSeeAll}
       />
@@ -49,7 +51,7 @@ export const DashboardAgenda: React.FC<DashboardAgendaProps> = ({
           >
             {item.kind === 'tournament' ? (
               <Image
-                source={SHOWCASE_IMAGES.arenaTournament}
+                source={showcase.arenaTournament}
                 style={styles.chipImage}
                 resizeMode="cover"
               />
@@ -81,7 +83,8 @@ export const DashboardAgenda: React.FC<DashboardAgendaProps> = ({
       </ScrollView>
     )}
   </View>
-);
+  );
+};
 
 const styles = StyleSheet.create({
   wrap: { marginBottom: spacing.xl },

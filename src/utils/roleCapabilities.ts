@@ -7,7 +7,7 @@ export const ROLE_LABELS: Record<UserRole, string> = {
   agent: 'Agent',
   organizer: 'Organisateur',
   sponsor: 'Partenaire',
-  physio: 'Kinésithérapeute',
+  physio: 'Pôle médical',
 };
 
 export function isClubRole(role: UserRole): boolean {

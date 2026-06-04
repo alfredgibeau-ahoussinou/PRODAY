@@ -1,0 +1,66 @@
+import React from 'react';
+import { View } from 'react-native';
+import { AuthTextField } from '../../components/auth/AuthTextField';
+import { SignupStepLayout } from './SignupStepLayout';
+import { SignupFooterButton } from './SignupFooterButton';
+import type { SignupForm } from './useSignupForm';
+import { getWomanStepMeta } from './signupWomanConfig';
+
+interface SignupLocationStepProps {
+  form: SignupForm;
+  stepIndex: number;
+  stepTotal: number;
+  stepName?: string;
+  phases?: SignupForm['phases'];
+  phaseIndex?: number;
+  onBack: () => void;
+}
+
+export const SignupLocationStep: React.FC<SignupLocationStepProps> = ({
+  form,
+  stepIndex,
+  stepTotal,
+  stepName,
+  phases,
+  phaseIndex,
+  onBack,
+}) => {
+  const womanMeta = form.isWomanProduct ? getWomanStepMeta('location') : null;
+  return (
+  <SignupStepLayout
+    stepIndex={stepIndex}
+    stepTotal={stepTotal}
+    stepName={stepName}
+    phases={phases}
+    phaseIndex={phaseIndex}
+    title={womanMeta?.title ?? 'Où joues-tu ?'}
+    subtitle={womanMeta?.subtitle ?? 'Ville et département pour le Mercato et les clubs près de chez toi.'}
+    contentKey="player-location"
+    heroIcon={womanMeta?.heroIcon ?? 'location'}
+    onBack={onBack}
+    footer={
+      <SignupFooterButton label="Continuer" onPress={() => form.advanceFromCurrentPage()} />
+    }
+  >
+    <View>
+      <AuthTextField
+        label="Ville *"
+        icon="location"
+        placeholder="Paris, Lyon…"
+        value={form.city}
+        onChangeText={form.setCity}
+        error={form.fieldErrors.city}
+      />
+    </View>
+    <View>
+      <AuthTextField
+        label="Département (optionnel)"
+        placeholder="Ex. 75, 2A…"
+        value={form.department}
+        onChangeText={form.setDepartment}
+        error={form.fieldErrors.department}
+      />
+    </View>
+  </SignupStepLayout>
+  );
+};

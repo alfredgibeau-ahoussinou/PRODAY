@@ -1,18 +1,24 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   View,
   Text,
-  TouchableOpacity,
+  Pressable,
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Icon } from '../../components/ui/Icon';
-import { TAB_BAR_CONTENT_INSET } from '../../components/navigation/BottomTabBar';
+import { Icon, type IconName } from '../../components/ui/Icon';
+import { SignupPhaseRail } from '../../components/signup/SignupPhaseRail';
+import { SignupProgressRing } from '../../components/signup/SignupProgressRing';
+import { SignupStepHero } from '../../components/signup/SignupStepHero';
+import { authStyles } from '../../components/auth/authStyles';
+import { useAuthLayout } from '../../components/auth/useAuthLayout';
 import type { SignupPhase } from './signupFlowConfig';
-import { colors, spacing, radius } from '../../theme/designTokens';
+import { useSignupFlowTheme } from './SignupFlowContext';
+import { PRODAY_WOMAN_BRAND } from '../../models/ProductLine';
+import { spacing, radius } from '../../theme/designTokens';
+import type { AppColors } from '../../theme/prodayWomanTheme';
 
 interface SignupStepLayoutProps {
   stepIndex: number;
@@ -22,11 +28,27 @@ interface SignupStepLayoutProps {
   phaseIndex?: number;
   title: string;
   subtitle?: string;
+  contentKey?: string;
+  heroIcon?: IconName;
   onBack?: () => void;
   onClose?: () => void;
   children: React.ReactNode;
   footer?: React.ReactNode;
 }
+
+const ProgressSegment: React.FC<{
+  done: boolean;
+  active: boolean;
+  accent: string;
+  track: string;
+}> = ({ done, active, accent, track }) => (
+  <View
+    style={[
+      { flex: 1, height: active ? 3 : 2, borderRadius: radius.pill, backgroundColor: track },
+      (active || done) && { backgroundColor: accent },
+    ]}
+  />
+);
 
 export const SignupStepLayout: React.FC<SignupStepLayoutProps> = ({
   stepIndex,
@@ -36,94 +58,62 @@ export const SignupStepLayout: React.FC<SignupStepLayoutProps> = ({
   phaseIndex = 0,
   title,
   subtitle,
+  heroIcon,
   onBack,
   onClose,
   children,
   footer,
 }) => {
-  const insets = useSafeAreaInsets();
+  const { compact, insets, scrollBottom, contentMaxWidth } = useAuthLayout();
+  const { isWomanSignup, colors } = useSignupFlowTheme();
+  const styles = useMemo(() => createStyles(colors, contentMaxWidth), [colors, contentMaxWidth]);
 
   return (
     <KeyboardAvoidingView
       style={styles.root}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <View style={[styles.topBar, { paddingTop: insets.top + spacing.sm }]}>
-        {onBack ? (
-          <TouchableOpacity onPress={onBack} style={styles.iconBtn} hitSlop={12}>
-            <Icon name="arrow-back" size={22} color={colors.text} />
-          </TouchableOpacity>
-        ) : (
-          <View style={styles.iconBtn} />
-        )}
-        <View style={styles.topCenter}>
-          <Text style={styles.stepLabel} numberOfLines={1}>
-            Inscription
-            {stepName ? ` · ${stepName}` : ''}
-          </Text>
-          {phases && phases.length > 1 ? (
-            <Text style={styles.stepCount}>{stepName ?? `Étape ${stepIndex + 1}`}</Text>
+      <View style={[styles.header, { paddingTop: insets.top + (compact ? spacing.sm : spacing.md) }]}>
+        <View style={styles.headerRow}>
+          {onBack ? (
+            <Pressable onPress={onBack} style={authStyles.backBtn} hitSlop={8} accessibilityLabel="Retour">
+              <Icon name="arrow-back" size={20} color={colors.ink} />
+            </Pressable>
           ) : (
-            <Text style={styles.stepCount}>
-              Étape {stepIndex + 1} sur {stepTotal}
-            </Text>
+            <View style={styles.headerSide} />
           )}
+          <View style={styles.headerCenter}>
+            <Text style={styles.headerEyebrow}>
+              {isWomanSignup ? PRODAY_WOMAN_BRAND.name : 'Inscription'}
+            </Text>
+            <Text style={styles.headerTitle} numberOfLines={1}>
+              {stepName ?? `Étape ${stepIndex + 1}`}
+            </Text>
+          </View>
+          <View style={styles.headerRight}>
+            <SignupProgressRing stepIndex={stepIndex} stepTotal={stepTotal} accentColor={colors.accent} />
+            {onClose ? (
+              <Pressable onPress={onClose} style={authStyles.backBtn} hitSlop={8} accessibilityLabel="Fermer">
+                <Icon name="close" size={20} color={colors.ink} />
+              </Pressable>
+            ) : (
+              <View style={styles.headerSide} />
+            )}
+          </View>
         </View>
-        {onClose ? (
-          <TouchableOpacity onPress={onClose} style={styles.iconBtn} hitSlop={12}>
-            <Icon name="close" size={22} color={colors.text} />
-          </TouchableOpacity>
-        ) : (
-          <View style={styles.iconBtn} />
-        )}
       </View>
 
       {phases && phases.length > 1 ? (
-        <View style={styles.phaseRow}>
-          {phases.map((phase, i) => {
-            const done = i < phaseIndex;
-            const active = i === phaseIndex;
-            return (
-              <View key={phase.id} style={styles.phaseItem}>
-                <View
-                  style={[
-                    styles.phaseDot,
-                    done && styles.phaseDotDone,
-                    active && styles.phaseDotActive,
-                  ]}
-                >
-                  {done ? (
-                    <Icon name="checkmark-circle" size={12} color={colors.brandInverse} />
-                  ) : (
-                    <Text style={[styles.phaseNum, active && styles.phaseNumActive]}>
-                      {i + 1}
-                    </Text>
-                  )}
-                </View>
-                <Text
-                  style={[
-                    styles.phaseLabel,
-                    active && styles.phaseLabelActive,
-                    done && styles.phaseLabelDone,
-                  ]}
-                  numberOfLines={1}
-                >
-                  {phase.label}
-                </Text>
-              </View>
-            );
-          })}
-        </View>
+        <SignupPhaseRail phases={phases} phaseIndex={phaseIndex} compact={compact} accentColor={colors.accent} />
       ) : (
         <View style={styles.progressRow}>
           {Array.from({ length: stepTotal }).map((_, i) => (
-            <View
+            <ProgressSegment
               key={i}
-              style={[
-                styles.progressSeg,
-                i <= stepIndex && styles.progressSegActive,
-                i < stepIndex && styles.progressSegDone,
-              ]}
+              done={i < stepIndex}
+              active={i === stepIndex}
+              accent={colors.accent}
+              track={colors.surfaceMuted}
             />
           ))}
         </View>
@@ -131,110 +121,146 @@ export const SignupStepLayout: React.FC<SignupStepLayoutProps> = ({
 
       <ScrollView
         style={styles.scroll}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: scrollBottom }]}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
+        nestedScrollEnabled
       >
-        <Text style={styles.title}>{title}</Text>
-        {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
-        {children}
+        <View style={styles.contentColumn}>
+          <View style={styles.intro}>
+            <View style={styles.titleRow}>
+              {heroIcon ? (
+                <SignupStepHero icon={heroIcon} accentColor={colors.accentSoft} iconColor={colors.accent} />
+              ) : null}
+              <View style={styles.titleBlock}>
+                <Text style={[authStyles.title, compact && authStyles.titleCompact, { color: colors.text }]}>
+                  {title}
+                </Text>
+                {subtitle ? (
+                  <Text style={[authStyles.sub, styles.subtitle, { color: colors.textSecondary }]}>
+                    {subtitle}
+                  </Text>
+                ) : null}
+              </View>
+            </View>
+          </View>
+
+          <View style={styles.body}>{children}</View>
+        </View>
       </ScrollView>
 
       {footer ? (
-        <View
-          style={[
-            styles.footer,
-            { paddingBottom: Math.max(insets.bottom, spacing.md) + TAB_BAR_CONTENT_INSET * 0.25 },
-          ]}
-        >
-          {footer}
+        <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, spacing.md) }]}>
+          <View style={styles.footerInner}>{footer}</View>
         </View>
       ) : null}
     </KeyboardAvoidingView>
   );
 };
 
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.background },
-  topBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: spacing.md,
-    paddingBottom: spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-    backgroundColor: colors.surface,
-  },
-  iconBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
-  topCenter: { flex: 1, alignItems: 'center' },
-  stepLabel: { fontSize: 13, fontWeight: '900', color: colors.text },
-  stepCount: { fontSize: 11, color: colors.textMuted, marginTop: 2 },
-  phaseRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    backgroundColor: colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  phaseItem: { flex: 1, alignItems: 'center', gap: 4 },
-  phaseDot: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    borderWidth: 2,
-    borderColor: colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.surfaceMuted,
-  },
-  phaseDotActive: { borderColor: colors.accent, backgroundColor: colors.accentSoft },
-  phaseDotDone: { borderColor: colors.accent, backgroundColor: colors.accent },
-  phaseNum: { fontSize: 10, fontWeight: '900', color: colors.textMuted },
-  phaseNumActive: { color: colors.accent },
-  phaseLabel: { fontSize: 9, fontWeight: '700', color: colors.textMuted, textAlign: 'center' },
-  phaseLabelActive: { color: colors.text, fontWeight: '900' },
-  phaseLabelDone: { color: colors.accent },
-  progressRow: {
-    flexDirection: 'row',
-    gap: 6,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    backgroundColor: colors.surface,
-  },
-  progressSeg: {
-    flex: 1,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: colors.surfaceMuted,
-  },
-  progressSegActive: { backgroundColor: colors.accentSoft },
-  progressSegDone: { backgroundColor: colors.accent },
-  scroll: { flex: 1 },
-  scrollContent: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.xl,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: '900',
-    color: colors.text,
-    letterSpacing: -0.5,
-    marginBottom: spacing.xs,
-  },
-  subtitle: {
-    fontSize: 14,
-    lineHeight: 21,
-    color: colors.textSecondary,
-    marginBottom: spacing.lg,
-  },
-  footer: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.md,
-    borderTopWidth: 2,
-    borderTopColor: colors.borderStrong,
-    backgroundColor: colors.surface,
-  },
-});
+const createStyles = (colors: AppColors, contentMaxWidth: number) =>
+  StyleSheet.create({
+    root: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    header: {
+      backgroundColor: colors.surface,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: colors.border,
+      paddingHorizontal: spacing.md,
+      paddingBottom: spacing.md,
+      zIndex: 2,
+    },
+    headerRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.xs,
+    },
+    headerSide: {
+      width: 40,
+      height: 40,
+    },
+    headerCenter: {
+      flex: 1,
+      alignItems: 'center',
+      paddingHorizontal: spacing.xs,
+    },
+    headerEyebrow: {
+      fontSize: 9,
+      fontWeight: '700',
+      letterSpacing: 2,
+      textTransform: 'uppercase',
+      color: colors.textMuted,
+      ...Platform.select({ android: { includeFontPadding: false } }),
+    },
+    headerTitle: {
+      fontSize: 15,
+      fontWeight: '800',
+      color: colors.text,
+      marginTop: 2,
+      textAlign: 'center',
+    },
+    headerRight: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.xs,
+    },
+    progressRow: {
+      flexDirection: 'row',
+      gap: 4,
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.sm + 2,
+      backgroundColor: colors.surface,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: colors.border,
+    },
+    scroll: { flex: 1 },
+    scrollContent: {
+      flexGrow: 1,
+      alignItems: 'center',
+      width: '100%',
+    },
+    contentColumn: {
+      width: '100%',
+      maxWidth: contentMaxWidth,
+      alignSelf: 'center',
+    },
+    intro: {
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.lg,
+      alignItems: 'center',
+      width: '100%',
+    },
+    titleRow: {
+      flexDirection: 'column',
+      alignItems: 'center',
+      width: '100%',
+    },
+    titleBlock: {
+      width: '100%',
+      alignItems: 'center',
+    },
+    subtitle: {
+      alignSelf: 'stretch',
+      marginBottom: spacing.sm,
+    },
+    body: {
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.lg,
+      width: '100%',
+      alignItems: 'stretch',
+    },
+    footer: {
+      alignItems: 'center',
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.md,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: colors.border,
+      backgroundColor: colors.surface,
+    },
+    footerInner: {
+      width: '100%',
+      maxWidth: contentMaxWidth,
+    },
+  });

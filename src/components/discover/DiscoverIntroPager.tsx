@@ -1,12 +1,12 @@
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  Dimensions,
-  ImageBackground,
+  useWindowDimensions,
   NativeSyntheticEvent,
   NativeScrollEvent,
+  Platform,
 } from 'react-native';
 import Animated, {
   Extrapolation,
@@ -17,26 +17,50 @@ import Animated, {
   type SharedValue,
 } from 'react-native-reanimated';
 import { DISCOVER_INTRO_SLIDES, type IntroSlideAction } from '../../content/discoverChapters';
+import { DISCOVER_INTRO_SLIDES_WOMAN } from '../../content/discoverWomanContent';
+import { useAppTheme } from '../../context/ProductLineContext';
 import { CarouselDot } from './CarouselDot';
 import { PressableSpring } from './PressableSpring';
+import { ShowcaseImageBackground } from '../ui/ShowcaseImageBackground';
 import { Icon } from '../ui/Icon';
 import { Logo } from '../Logo';
 import { colors, spacing, radius, shadows } from '../../theme/designTokens';
-
-const { width: W } = Dimensions.get('window');
-const PAGER_H = 440;
+import { discoverPalette, discoverLayout } from './discoverStyles';
+import { useDiscoverMetrics } from './useDiscoverMetrics';
 
 interface DiscoverIntroPagerProps {
   statsLabel?: string;
   onAction: (action: IntroSlideAction) => void;
   onPageChange?: (index: number) => void;
+  /** Défilement auto des slides — désactivé par défaut (UX sobre) */
+  autoAdvance?: boolean;
+  /** Hauteur réduite dans la feuille accueil */
+  compact?: boolean;
+  /** Cartes claires image + texte (style accueil éditorial) */
+  variant?: 'dark' | 'editorial';
+  /** Hauteur fixe du bloc (mobile) */
+  height?: number;
+  /** Points sous le carrousel — désactivé si le parent affiche déjà des dots */
+  showFooter?: boolean;
 }
 
 export const DiscoverIntroPager: React.FC<DiscoverIntroPagerProps> = ({
   statsLabel,
   onAction,
   onPageChange,
+  autoAdvance = false,
+  compact = false,
+  variant = 'dark',
+  height: heightProp,
+  showFooter = true,
 }) => {
+  const { width: pageWidth } = useWindowDimensions();
+  const { isWoman } = useAppTheme();
+  const slides = useMemo(
+    () => (isWoman ? DISCOVER_INTRO_SLIDES_WOMAN : DISCOVER_INTRO_SLIDES),
+    [isWoman]
+  );
+  const metrics = useDiscoverMetrics();
   const scrollRef = useRef<Animated.ScrollView>(null);
   const scrollX = useSharedValue(0);
   const pausedRef = useRef(false);
@@ -57,32 +81,38 @@ export const DiscoverIntroPager: React.FC<DiscoverIntroPagerProps> = ({
 
   const goToPage = useCallback(
     (index: number) => {
-      const clamped = Math.max(0, Math.min(index, DISCOVER_INTRO_SLIDES.length - 1));
-      scrollRef.current?.scrollTo({ x: clamped * W, animated: true });
+      const clamped = Math.max(0, Math.min(index, slides.length - 1));
+      scrollRef.current?.scrollTo({ x: clamped * pageWidth, animated: true });
       onPageChange?.(clamped);
     },
-    [onPageChange]
+    [onPageChange, pageWidth, slides.length]
   );
 
   useEffect(() => {
+    if (!autoAdvance) return undefined;
     stopAuto();
     autoTimer.current = setInterval(() => {
       if (pausedRef.current) return;
-      const next = (Math.round(scrollX.value / W) + 1) % DISCOVER_INTRO_SLIDES.length;
+      const next = (Math.round(scrollX.value / pageWidth) + 1) % slides.length;
       goToPage(next);
     }, 5200);
     return stopAuto;
-  }, [goToPage, scrollX, stopAuto]);
+  }, [autoAdvance, goToPage, scrollX, stopAuto, slides.length]);
 
   const onScrollEnd = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const i = Math.round(e.nativeEvent.contentOffset.x / W);
+    const i = Math.round(e.nativeEvent.contentOffset.x / pageWidth);
     onPageChange?.(i);
   };
 
+  const pagerH = heightProp ?? metrics.introPagerHeight;
+  const introFooterH = showFooter ? 40 : 0;
+  const slideH = pagerH - introFooterH;
+
   return (
-    <View style={styles.wrap}>
+    <View style={[styles.wrap, { height: pagerH }]}>
       <Animated.ScrollView
         ref={scrollRef}
+        style={[styles.pager, showFooter && { height: slideH }]}
         horizontal
         pagingEnabled
         showsHorizontalScrollIndicator={false}
@@ -98,32 +128,38 @@ export const DiscoverIntroPager: React.FC<DiscoverIntroPagerProps> = ({
           pausedRef.current = false;
         }}
       >
-        {DISCOVER_INTRO_SLIDES.map((slide, index) => (
+        {slides.map((slide, index) => (
           <IntroSlide
             key={slide.id}
             slide={slide}
             index={index}
             scrollX={scrollX}
+            pageWidth={pageWidth}
+            pageHeight={slideH}
+            metrics={metrics}
             statsLabel={index === 1 ? statsLabel : undefined}
             onCta={() => onAction(slide.action)}
+            variant={variant}
           />
         ))}
       </Animated.ScrollView>
 
-      <View style={styles.footer}>
-        <View style={styles.dots}>
-          {DISCOVER_INTRO_SLIDES.map((s, i) => (
-            <CarouselDot
-              key={s.id}
-              index={i}
-              scrollX={scrollX}
-              snap={W}
-              onPress={() => goToPage(i)}
-            />
-          ))}
+      {showFooter ? (
+        <View style={styles.footer}>
+          <View style={styles.dots}>
+            {slides.map((s, i) => (
+              <CarouselDot
+                key={s.id}
+                index={i}
+                scrollX={scrollX}
+                snap={pageWidth}
+                onPress={() => goToPage(i)}
+              />
+            ))}
+          </View>
+          <Text style={styles.swipeHint}>Glissez pour explorer →</Text>
         </View>
-        <Text style={styles.swipeHint}>Glissez pour explorer →</Text>
-      </View>
+      ) : null}
     </View>
   );
 };
@@ -132,24 +168,29 @@ const IntroSlide: React.FC<{
   slide: (typeof DISCOVER_INTRO_SLIDES)[0];
   index: number;
   scrollX: SharedValue<number>;
+  pageWidth: number;
+  pageHeight: number;
+  metrics: ReturnType<typeof useDiscoverMetrics>;
   statsLabel?: string;
   onCta: () => void;
-}> = ({ slide, index, scrollX, statsLabel, onCta }) => {
-  const pageX = index * W;
+  variant: 'dark' | 'editorial';
+}> = ({ slide, index, scrollX, pageWidth, pageHeight, metrics, statsLabel, onCta, variant }) => {
+  const pageX = index * pageWidth;
 
   const cardStyle = useAnimatedStyle(() => {
     const dx = scrollX.value - pageX;
     return {
-      transform: [
-        { translateY: interpolate(dx, [-W, 0, W], [24, 0, 24], Extrapolation.CLAMP) },
-        { scale: interpolate(dx, [-W, 0, W], [0.92, 1, 0.92], Extrapolation.CLAMP) },
-      ],
       opacity: interpolate(
         dx,
-        [-W, -W * 0.35, 0, W * 0.35, W],
-        [0.35, 0.75, 1, 0.75, 0.35],
+        [-pageWidth, 0, pageWidth],
+        [0.55, 1, 0.55],
         Extrapolation.CLAMP
       ),
+      transform: [
+        {
+          scale: interpolate(dx, [-pageWidth, 0, pageWidth], [0.97, 1, 0.97], Extrapolation.CLAMP),
+        },
+      ],
     };
   });
 
@@ -157,18 +198,94 @@ const IntroSlide: React.FC<{
     const dx = scrollX.value - pageX;
     return {
       transform: [
-        { translateX: interpolate(dx, [-W, 0, W], [-40, 0, 40], Extrapolation.CLAMP) },
-        { scale: interpolate(dx, [-W, 0, W], [1.08, 1, 1.08], Extrapolation.CLAMP) },
+        {
+          scale: interpolate(dx, [-pageWidth, 0, pageWidth], [1.04, 1, 1.04], Extrapolation.CLAMP),
+        },
       ],
     };
   });
 
   const isWelcome = slide.id === 'welcome';
 
+  if (variant === 'editorial') {
+    const cardW = metrics.cardWidth;
+    const cardH = Math.max(260, pageHeight - spacing.xs);
+    const heroH = Math.round(cardH * (metrics.compact ? 0.3 : 0.32));
+
+    return (
+      <View style={[styles.page, styles.pageCentered, { width: pageWidth, height: pageHeight }]}>
+        <Animated.View
+          style={[
+            styles.cardEditorial,
+            shadows.card,
+            { width: cardW, height: cardH },
+            cardStyle,
+          ]}
+        >
+          <ShowcaseImageBackground
+            source={slide.image}
+            variant="card"
+            style={[styles.editorialHero, { height: heroH }]}
+            imageStyle={styles.editorialHeroImg}
+          >
+            <View style={styles.editorialKicker}>
+              <Icon name={slide.icon} size={14} color={discoverPalette.ink} />
+              <Text style={styles.editorialKickerText}>{slide.kicker}</Text>
+            </View>
+          </ShowcaseImageBackground>
+          <View
+            style={[
+              styles.editorialBody,
+              {
+                paddingHorizontal: metrics.introBodyPad,
+                paddingVertical: metrics.compact ? spacing.sm : spacing.md,
+              },
+            ]}
+          >
+            <Text
+              style={[
+                styles.editorialTitle,
+                {
+                  fontSize: metrics.introTitleSize,
+                  lineHeight: metrics.introTitleLine,
+                },
+              ]}
+            >
+              {slide.title}
+            </Text>
+            <Text
+              style={[
+                styles.editorialBodyText,
+                {
+                  fontSize: metrics.introBodySize,
+                  lineHeight: metrics.introBodyLine,
+                },
+              ]}
+            >
+              {slide.body}
+            </Text>
+            {statsLabel ? (
+              <View style={styles.editorialStats}>
+                <View style={styles.statsDotEditorial} />
+                <Text style={styles.editorialStatsText} numberOfLines={2}>
+                  {statsLabel}
+                </Text>
+              </View>
+            ) : null}
+            <PressableSpring style={styles.ctaEditorial} onPress={onCta} scaleTo={0.97}>
+              <Text style={styles.ctaEditorialText}>{slide.cta}</Text>
+              <Icon name="chevron-forward" size={18} color={colors.brandInverse} />
+            </PressableSpring>
+          </View>
+        </Animated.View>
+      </View>
+    );
+  }
+
   return (
-    <View style={[styles.page, { width: W }]}>
+    <View style={[styles.page, { width: pageWidth, height: pageHeight, paddingHorizontal: metrics.pad }]}>
       <Animated.View style={[styles.card, shadows.interactive, cardStyle]}>
-        <ImageBackground source={slide.image} style={styles.bg} imageStyle={styles.bgImg}>
+        <ShowcaseImageBackground source={slide.image} variant="hero" style={styles.bg} imageStyle={styles.bgImg}>
           <Animated.View style={[styles.bgMotion, imageStyle]} />
           <View style={styles.overlay} />
 
@@ -197,15 +314,28 @@ const IntroSlide: React.FC<{
               <Icon name="chevron-forward" size={18} color={colors.brandInverse} />
             </PressableSpring>
           </View>
-        </ImageBackground>
+        </ShowcaseImageBackground>
       </Animated.View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  wrap: { height: PAGER_H },
-  page: { height: PAGER_H, paddingHorizontal: spacing.lg, paddingTop: spacing.md },
+  wrap: {
+    width: '100%',
+    overflow: 'hidden',
+  },
+  pager: {
+    flex: 1,
+  },
+  page: {
+    paddingTop: spacing.xs,
+  },
+  pageCentered: {
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    paddingTop: spacing.xs,
+  },
   card: {
     flex: 1,
     borderRadius: radius.xl,
@@ -276,19 +406,120 @@ const styles = StyleSheet.create({
   },
   ctaText: { color: colors.brandInverse, fontWeight: '900', fontSize: 14, letterSpacing: 0.3 },
   footer: {
-    position: 'absolute',
-    bottom: spacing.md,
-    left: 0,
-    right: 0,
+    height: 40,
+    justifyContent: 'center',
     alignItems: 'center',
-    gap: spacing.sm,
+    gap: 4,
   },
   dots: { flexDirection: 'row', gap: 6, alignItems: 'center' },
   swipeHint: {
-    fontSize: 9,
-    fontWeight: '800',
-    color: colors.textMuted,
-    letterSpacing: 1.2,
+    fontSize: 8,
+    fontWeight: '700',
+    color: discoverPalette.faint,
+    letterSpacing: 1,
     textTransform: 'uppercase',
+    textAlign: 'center',
+  },
+  cardEditorial: {
+    borderRadius: discoverLayout.cardRadius,
+    overflow: 'hidden',
+    backgroundColor: discoverPalette.card,
+    borderWidth: 1,
+    borderColor: discoverPalette.cardBorder,
+  },
+  editorialHero: {
+    width: '100%',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    paddingBottom: spacing.sm,
+  },
+  editorialHeroImg: { opacity: 1 },
+  editorialLogo: {
+    alignSelf: 'flex-start',
+    backgroundColor: 'rgba(255,255,255,0.9)',
+    padding: spacing.sm,
+    borderRadius: radius.md,
+  },
+  editorialKicker: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    alignSelf: 'center',
+    backgroundColor: discoverPalette.card,
+    paddingHorizontal: spacing.sm + 2,
+    paddingVertical: 6,
+    borderRadius: radius.pill,
+  },
+  editorialKickerText: {
+    fontSize: 10,
+    fontWeight: '900',
+    color: discoverPalette.ink,
+    letterSpacing: 1.4,
+  },
+  editorialBody: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    width: '100%',
+    gap: spacing.sm,
+    minHeight: 0,
+  },
+  editorialTitle: {
+    fontWeight: '900',
+    color: discoverPalette.ink,
+    letterSpacing: -0.6,
+    textAlign: 'center',
+    width: '100%',
+    ...Platform.select({ android: { includeFontPadding: false } }),
+  },
+  editorialBodyText: {
+    color: discoverPalette.muted,
+    fontWeight: '500',
+    textAlign: 'center',
+    width: '100%',
+    ...Platform.select({ android: { includeFontPadding: false } }),
+  },
+  editorialStats: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginTop: spacing.xs,
+    paddingVertical: 8,
+    paddingHorizontal: spacing.md,
+    backgroundColor: discoverPalette.canvasDeep,
+    borderRadius: radius.pill,
+    alignSelf: 'center',
+  },
+  statsDotEditorial: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: discoverPalette.live,
+  },
+  editorialStatsText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: discoverPalette.ink,
+    textAlign: 'center',
+    flexShrink: 1,
+  },
+  ctaEditorial: {
+    marginTop: spacing.xs,
+    alignSelf: 'stretch',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    backgroundColor: discoverPalette.ink,
+    borderRadius: radius.md,
+    paddingVertical: spacing.md,
+    minHeight: 48,
+  },
+  ctaEditorialText: {
+    color: colors.brandInverse,
+    fontWeight: '800',
+    fontSize: 14,
+    textAlign: 'center',
   },
 });

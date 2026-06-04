@@ -91,6 +91,9 @@ async function syncPlayerCheckAfterMistral(
     is_verified,
     verification_status,
     updated_at: admin.firestore.FieldValue.serverTimestamp(),
+    ...(checkId === 'identity' && checkStatus !== 'rejected'
+      ? { onboarding_documents_submitted: true }
+      : {}),
     ...(clubOk && identityOk
       ? { verification_date: admin.firestore.FieldValue.serverTimestamp() }
       : {}),
@@ -275,6 +278,7 @@ export async function runMistralDocumentVerification(
       is_verified: true,
       verification_status: 'VERIFIED',
       verification_date: admin.firestore.FieldValue.serverTimestamp(),
+      onboarding_documents_submitted: true,
       updated_at: admin.firestore.FieldValue.serverTimestamp(),
     });
     await sendFcmToUser(uid, {
@@ -304,11 +308,143 @@ export async function runMistralDocumentVerification(
   await userRef.update({
     is_verified: false,
     verification_status: 'PENDING',
+    onboarding_documents_submitted: true,
     updated_at: admin.firestore.FieldValue.serverTimestamp(),
   });
   await sendFcmToUser(uid, {
     title: 'Vérification en cours',
     body: 'Votre document est en revue (IA + équipe ProDay). Vous serez notifié sous 48 h.',
     data: { type: 'verification_pending' },
+  });
+}
+
+export interface EphemeralVerifyResult {
+  status: 'approved' | 'rejected';
+  approved: boolean;
+  confidence: number;
+  document_type_detected: string;
+  summary_fr: string;
+  rejection_reason_fr: string | null;
+}
+
+const MAX_EPHEMERAL_IMAGE_BYTES = 4 * 1024 * 1024;
+
+/** Analyse IA sans stockage Storage/Firestore — acceptation directe si conforme. */
+export async function verifyOnboardingDocumentEphemeral(
+  uid: string,
+  imageBase64: string,
+  mimeType: string,
+  verificationCheck?: string
+): Promise<EphemeralVerifyResult> {
+  const apiKey = getMistralApiKey();
+  if (!apiKey) {
+    throw new Error('Analyse IA indisponible (clé Mistral non configurée).');
+  }
+
+  const normalizedMime = mimeType.toLowerCase().split(';')[0].trim() || 'image/jpeg';
+  if (normalizedMime.includes('pdf')) {
+    return {
+      status: 'rejected',
+      approved: false,
+      confidence: 0,
+      document_type_detected: 'PDF',
+      summary_fr: 'Format PDF non pris en charge sans stockage.',
+      rejection_reason_fr: 'Prenez une photo JPG ou PNG du document.',
+    };
+  }
+
+  const rawBase64 = imageBase64.replace(/^data:[^;]+;base64,/, '');
+  const byteLength = Buffer.byteLength(rawBase64, 'base64');
+  if (byteLength > MAX_EPHEMERAL_IMAGE_BYTES) {
+    throw new Error('Image trop volumineuse (max 4 Mo). Reprenez une photo plus légère.');
+  }
+
+  const db = admin.firestore();
+  const userSnap = await db.doc(`users/${uid}`).get();
+  if (!userSnap.exists) {
+    throw new Error('Profil introuvable.');
+  }
+  const user = userSnap.data()!;
+  const role = String(user.role ?? 'coach');
+  const displayName = String(user.display_name ?? '');
+
+  const dataUrl = `data:${normalizedMime};base64,${rawBase64}`;
+  const verdict = await callMistralVision(apiKey, role, displayName, dataUrl, verificationCheck);
+  if (!verdict) {
+    throw new Error('Analyse IA indisponible. Réessayez dans un instant.');
+  }
+
+  const confidence = Math.min(1, Math.max(0, Number(verdict.confidence) || 0));
+
+  if (verdict.approved) {
+    await applyEphemeralApproved(uid, role, verificationCheck, verdict);
+    return {
+      status: 'approved',
+      approved: true,
+      confidence,
+      document_type_detected: verdict.document_type_detected,
+      summary_fr: verdict.summary_fr,
+      rejection_reason_fr: null,
+    };
+  }
+
+  await applyEphemeralRejected(uid, role, verificationCheck, verdict);
+  return {
+    status: 'rejected',
+    approved: false,
+    confidence,
+    document_type_detected: verdict.document_type_detected,
+    summary_fr: verdict.summary_fr,
+    rejection_reason_fr: verdict.rejection_reason_fr,
+  };
+}
+
+async function applyEphemeralApproved(
+  uid: string,
+  role: string,
+  verificationCheck: string | undefined,
+  verdict: MistralVerdict
+): Promise<void> {
+  if (role === 'player' && verificationCheck) {
+    await syncPlayerCheckAfterMistral(uid, verificationCheck, verdict, true);
+    await sendFcmToUser(uid, {
+      title: 'Document validé',
+      body: `Votre justificatif a été accepté par l'analyse IA.`,
+      data: { type: 'player_verification', verificationCheck },
+    });
+    return;
+  }
+
+  const db = admin.firestore();
+  await db.doc(`users/${uid}`).update({
+    is_verified: true,
+    verification_status: 'VERIFIED',
+    verification_date: admin.firestore.FieldValue.serverTimestamp(),
+    onboarding_documents_submitted: true,
+    updated_at: admin.firestore.FieldValue.serverTimestamp(),
+  });
+  await sendFcmToUser(uid, {
+    title: 'Profil vérifié',
+    body: 'Document accepté par l’IA — aucune copie conservée sur nos serveurs.',
+    data: { type: 'verification_ai_approved' },
+  });
+}
+
+async function applyEphemeralRejected(
+  uid: string,
+  role: string,
+  verificationCheck: string | undefined,
+  verdict: MistralVerdict
+): Promise<void> {
+  if (role === 'player' && verificationCheck) {
+    await syncPlayerCheckAfterMistral(uid, verificationCheck, verdict, false);
+    return;
+  }
+
+  const db = admin.firestore();
+  await db.doc(`users/${uid}`).update({
+    is_verified: false,
+    verification_status: 'REJECTED',
+    updated_at: admin.firestore.FieldValue.serverTimestamp(),
   });
 }

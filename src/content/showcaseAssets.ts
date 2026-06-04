@@ -1,22 +1,21 @@
-/** Visuels générés (IA) — enrichissement UI sans dépendre de Firebase Storage. */
+/**
+ * Visuels ProDay classique — foot masculin / mixte amateur-pro.
+ * Sources : photos Unsplash ; remplaçables via scripts/download-classic-showcase-images.mjs
+ */
 export const SHOWCASE_IMAGES = {
-  discoverHero: require('../../assets/generated/discover-hero-football.png'),
-  arenaTournament: require('../../assets/generated/arena-tournament.png'),
-  mercatoDetection: require('../../assets/generated/mercato-detection.png'),
-  playerProfile: require('../../assets/generated/player-profile-showcase.png'),
-  friendlyMatch: require('../../assets/generated/friendly-match.png'),
-  coachFounder: require('../../assets/generated/coach-founder.png'),
-  /**
-   * Expériences interactives (fallbacks provisoires).
-   * Remplacer par des images IA dédiées quand disponibles.
-   */
-  expPulse: require('../../assets/generated/discover-hero-football.png'),
-  expArena: require('../../assets/generated/arena-tournament.png'),
-  expSponsors: require('../../assets/generated/coach-founder.png'),
-  expDiscover: require('../../assets/generated/discover-hero-football.png'),
-  expTeam: require('../../assets/generated/friendly-match.png'),
-  expProfile: require('../../assets/generated/player-profile-showcase.png'),
-  expMessages: require('../../assets/generated/coach-founder.png'),
+  discoverHero: require('../../assets/generated/classic/classic-discover-hero.jpg'),
+  arenaTournament: require('../../assets/generated/classic/classic-arena.jpg'),
+  mercatoDetection: require('../../assets/generated/classic/classic-mercato.jpg'),
+  playerProfile: require('../../assets/generated/classic/classic-profile.jpg'),
+  friendlyMatch: require('../../assets/generated/classic/classic-match.jpg'),
+  coachFounder: require('../../assets/generated/classic/classic-staff.jpg'),
+  expPulse: require('../../assets/generated/classic/classic-exp-pulse.jpg'),
+  expArena: require('../../assets/generated/classic/classic-exp-arena.jpg'),
+  expSponsors: require('../../assets/generated/classic/classic-exp-sponsors.jpg'),
+  expDiscover: require('../../assets/generated/classic/classic-exp-discover.jpg'),
+  expTeam: require('../../assets/generated/classic/classic-exp-team.jpg'),
+  expProfile: require('../../assets/generated/classic/classic-exp-profile.jpg'),
+  expMessages: require('../../assets/generated/classic/classic-exp-messages.jpg'),
 } as const;
 
 export type ShowcaseImageKey = keyof typeof SHOWCASE_IMAGES;

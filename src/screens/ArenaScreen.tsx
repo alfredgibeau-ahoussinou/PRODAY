@@ -20,7 +20,7 @@ import { CreateTournamentScreen } from './CreateTournamentScreen';
 import { TournamentDetailScreen } from './TournamentDetailScreen';
 import type { Tournament } from '../models/Tournament';
 import { colors, spacing, radius, shadows } from '../theme/designTokens';
-import { SHOWCASE_IMAGES } from '../content/showcaseAssets';
+import { useShowcaseImages } from '../hooks/useShowcaseImages';
 
 interface ArenaScreenProps {
   onBack?: () => void;
@@ -40,6 +40,7 @@ export const ArenaScreen: React.FC<ArenaScreenProps> = ({
   const [view, setView] = useState<ArenaView>('list');
   const [detailId, setDetailId] = useState<string | null>(null);
   const { tournaments, honorTournament, loading, refresh } = useArenaData();
+  const showcase = useShowcaseImages();
   const awards = honorTournament?.awards_names;
 
   useEffect(() => {
@@ -118,7 +119,7 @@ export const ArenaScreen: React.FC<ArenaScreenProps> = ({
 
         <View style={[styles.hero, shadows.card]}>
           <Image
-            source={SHOWCASE_IMAGES.arenaTournament}
+            source={showcase.arenaTournament}
             style={styles.heroBanner}
             resizeMode="cover"
           />

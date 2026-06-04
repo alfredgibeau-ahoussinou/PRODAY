@@ -60,6 +60,7 @@ function stripUndefinedDeep(value: unknown): unknown {
 export interface DocumentUploadResult {
   success: boolean;
   storage_url?: string;
+  document_id?: string;
   error?: string;
 }
 
@@ -298,6 +299,7 @@ export const profileService = {
       const url = await storageService.uploadUserDocument(uid, file, documentType);
 
       const database = getDb();
+      let documentId: string | undefined;
       if (database) {
         const docRef = await addDoc(collection(database, 'users', uid, 'documents'), {
           type: documentType,
@@ -307,6 +309,7 @@ export const profileService = {
             ? { verification_check: meta.verification_check }
             : {}),
         });
+        documentId = docRef.id;
 
         if (meta.verification_check) {
           const userRef = doc(database, 'users', uid);
@@ -321,14 +324,18 @@ export const profileService = {
             updated_at: serverTimestamp(),
           };
           const merged = { ...defaultPlayerVerificationState(false), ...pv };
-          await updateDoc(userRef, {
+          const playerUpdate: Record<string, unknown> = {
             player_verification: merged,
             verification_status: computePlayerVerificationStatus(
               merged as ReturnType<typeof defaultPlayerVerificationState>
             ),
             is_verified: false,
             updated_at: serverTimestamp(),
-          });
+          };
+          if (meta.verification_check === 'identity') {
+            // onboarding_documents_submitted posé après analyse IA (Cloud Function)
+          }
+          await updateDoc(userRef, playerUpdate);
         } else {
           await updateDoc(doc(database, 'users', uid), {
             verification_status: 'PENDING',
@@ -337,7 +344,7 @@ export const profileService = {
           });
         }
       }
-      return { success: true, storage_url: url };
+      return { success: true, storage_url: url, document_id: documentId };
     } catch (error) {
       console.error('[ProfileService] Upload failed:', error);
       return { success: false, error: String(error) };

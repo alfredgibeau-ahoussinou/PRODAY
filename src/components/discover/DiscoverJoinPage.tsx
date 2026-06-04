@@ -15,15 +15,21 @@ import { colors, spacing, BRAND } from '../../theme/designTokens';
 interface DiscoverJoinPageProps {
   onExperience: (id: DiscoverExperienceId) => void;
   onSignup: () => void;
+  /** Marge bas (pager accueil — hors barre d’onglets globale). */
+  scrollBottomPad?: number;
 }
 
 export const DiscoverJoinPage: React.FC<DiscoverJoinPageProps> = ({
   onExperience,
   onSignup,
+  scrollBottomPad,
 }) => (
   <ScrollView
     style={styles.root}
-    contentContainerStyle={styles.content}
+    contentContainerStyle={[
+      styles.content,
+      scrollBottomPad != null ? { paddingBottom: scrollBottomPad } : null,
+    ]}
     showsVerticalScrollIndicator={false}
   >
     <DiscoverSectionHeader

@@ -3,9 +3,21 @@ import type { UserRole } from '../../models/User';
 import { ROLES_REQUIRING_VERIFICATION } from '../../models/User';
 import { DEFAULT_APP_SPACE, type AppSpaceId } from '../../models/AppSpace';
 import { DEFAULT_PARENTAL_SETTINGS } from '../../models/ParentalSettings';
+import { defaultCategoriesForAppSpace } from '../../constants/appSpaces';
 import { getFirebaseAuth } from '../../lib/firebase';
 import { authService } from '../../services/auth.service';
 import { isMinorAge, parseAgeInput } from '../../utils/minor';
+import {
+  validateAccountStepFields,
+  validateParentalStepFields,
+  validatePlayerStepFields,
+  validateSignupIntegrity,
+  validateStaffStepFields,
+  validateMedicalSpecialtyStep,
+  validateMedicalPracticeStep,
+  validateRoleProFields,
+  validateSponsorProFields,
+} from '../../utils/signupValidation';
 import {
   buildSignupSteps,
   getFlowKind,
@@ -16,27 +28,34 @@ import {
   getCurrentPhase,
   getPhaseIndex,
   getSignupPhases,
-  getFlowStepLabels,
-  getFlowIntro,
+  MEDICAL_POLE_SPECIALTIES,
   type SignupPageId,
   type SignupFlowKind,
 } from './signupFlowConfig';
+import { WOMAN_SIGNUP_PHASES, suggestFeminineAppSpaceFromAge } from './signupWomanConfig';
+import type { ProductLineId } from '../../models/ProductLine';
+import { useProductLine } from '../../context/ProductLineContext';
 
 export type { SignupPageId, SignupFlowKind };
-
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function useSignupForm(initial?: {
   initialEmail?: string;
   initialDisplayName?: string;
   startAtAccount?: boolean;
+  productLine?: ProductLineId;
 }) {
+  const { setProductLine } = useProductLine();
+  const productLine: ProductLineId = initial?.productLine ?? 'standard';
+  const isWomanProduct = productLine === 'woman';
+
   const [role, setRoleState] = useState<UserRole>('player');
   const [draftRole, setDraftRole] = useState<UserRole>('player');
-  const [appSpace, setAppSpaceState] = useState<AppSpaceId>(DEFAULT_APP_SPACE);
+  const [appSpace, setAppSpaceState] = useState<AppSpaceId>(
+    isWomanProduct ? 'girls' : DEFAULT_APP_SPACE
+  );
   const [spaceTouched, setSpaceTouched] = useState(false);
   const [parentalRequired, setParentalRequired] = useState(false);
-  const [currentPageId, setCurrentPageId] = useState<SignupPageId>('role');
+  const [currentPageId, setCurrentPageId] = useState<SignupPageId>('welcome');
   const [accountCreated, setAccountCreated] = useState(false);
 
   const [displayName, setDisplayName] = useState(initial?.initialDisplayName ?? '');
@@ -45,6 +64,12 @@ export function useSignupForm(initial?: {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [city, setCity] = useState('');
   const [department, setDepartment] = useState('');
+  const [medicalSpecialty, setMedicalSpecialty] = useState<(typeof MEDICAL_POLE_SPECIALTIES)[number]>(
+    MEDICAL_POLE_SPECIALTIES[0]
+  );
+  const [medicalPracticeFocus, setMedicalPracticeFocus] = useState('');
+  const [structureName, setStructureName] = useState('');
+  const [professionalHeadline, setProfessionalHeadline] = useState('');
   const [position, setPosition] = useState('');
   const [category, setCategory] = useState('');
   const [level, setLevel] = useState('');
@@ -55,6 +80,7 @@ export function useSignupForm(initial?: {
   const [guardianName, setGuardianName] = useState('');
   const [guardianEmail, setGuardianEmail] = useState('');
   const [guardianConsent, setGuardianConsent] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -83,19 +109,16 @@ export function useSignupForm(initial?: {
     return idx >= 0 ? idx : 0;
   }, [steps, currentPageId]);
 
-  const currentPage = steps[pageIndex] ?? 'role';
+  const currentPage = steps[pageIndex] ?? 'welcome';
   const stepLabel = SIGNUP_PAGE_LABELS[currentPage] ?? 'Inscription';
-  const phases = useMemo(() => getSignupPhases(flowKind), [flowKind]);
+  const phases = useMemo(
+    () => (isWomanProduct ? WOMAN_SIGNUP_PHASES : getSignupPhases(flowKind, role)),
+    [isWomanProduct, flowKind, role]
+  );
   const phaseIndex = getPhaseIndex(flowKind, currentPage);
   const currentPhase = getCurrentPhase(currentPage);
   const needsDocument = ROLES_REQUIRING_VERIFICATION.includes(role);
   const isOAuthCompletion = Boolean(getFirebaseAuth()?.currentUser);
-
-  const flowStepLabels = useMemo(
-    () => getFlowStepLabels(draftFlowKind, draftRole, false),
-    [draftFlowKind, draftRole]
-  );
-  const flowIntro = useMemo(() => getFlowIntro(draftFlowKind, draftRole), [draftFlowKind, draftRole]);
 
   const ageSpaceMismatch = useMemo(() => {
     if (parsedAge == null || role !== 'player') return undefined;
@@ -178,11 +201,93 @@ export function useSignupForm(initial?: {
     clearErrors();
   }, [clearErrors]);
 
-  const validateEmail = (value: string) => {
-    if (!value.trim()) return 'Email requis';
-    if (!EMAIL_RE.test(value.trim())) return 'Format email invalide';
-    return undefined;
-  };
+  const allowedCategories = useMemo(
+    () => [...defaultCategoriesForAppSpace(appSpace)],
+    [appSpace]
+  );
+
+  const buildIntegrityInput = useCallback(
+    () => ({
+      role,
+      flowKind,
+      spaceTouched,
+      parentalRequired,
+      staff: {
+        role,
+        city,
+        department,
+        medicalSpecialty,
+        medicalPracticeFocus,
+        structureName,
+        professionalHeadline,
+      },
+      player:
+        role === 'player'
+          ? {
+              position,
+              category,
+              level,
+              city,
+              department,
+              parsedAge,
+              appSpace,
+              allowedCategories,
+              statMatches,
+              statGoals,
+              statAssists,
+            }
+          : undefined,
+      account: {
+        displayName,
+        email,
+        password,
+        confirmPassword,
+        isOAuth: isOAuthCompletion,
+        role,
+        city,
+        acceptedTerms,
+        guardianEmail: parentalRequired ? guardianEmail : undefined,
+      },
+      parental: parentalRequired
+        ? {
+            guardianName,
+            guardianEmail,
+            guardianConsent,
+            accountEmail: email,
+          }
+        : undefined,
+    }),
+    [
+      role,
+      flowKind,
+      spaceTouched,
+      parentalRequired,
+      city,
+      department,
+      medicalSpecialty,
+      medicalPracticeFocus,
+      structureName,
+      professionalHeadline,
+      position,
+      category,
+      level,
+      parsedAge,
+      appSpace,
+      allowedCategories,
+      statMatches,
+      statGoals,
+      statAssists,
+      displayName,
+      email,
+      password,
+      confirmPassword,
+      isOAuthCompletion,
+      acceptedTerms,
+      guardianName,
+      guardianEmail,
+      guardianConsent,
+    ]
+  );
 
   const validateProgram = () => {
     if (!spaceTouched) {
@@ -194,68 +299,226 @@ export function useSignupForm(initial?: {
   };
 
   const validateAccount = () => {
-    const errs: Record<string, string> = {};
-    if (!displayName.trim()) errs.displayName = 'Nom affiché requis';
-    const emailErr = validateEmail(email);
-    if (emailErr) errs.email = emailErr;
-    if (!isOAuthCompletion) {
-      if (password.length < 6) errs.password = '6 caractères minimum';
-      if (password !== confirmPassword) errs.confirmPassword = 'Les mots de passe ne correspondent pas';
-    }
-    if (role === 'sponsor' && !city.trim()) {
-      errs.city = 'Ville ou région recommandée pour les partenaires';
-    }
+    const errs = validateAccountStepFields({
+      displayName,
+      email,
+      password,
+      confirmPassword,
+      isOAuth: isOAuthCompletion,
+      role,
+      city,
+      acceptedTerms,
+      guardianEmail: parentalRequired ? guardianEmail : undefined,
+    });
     setFieldErrors(errs);
     return Object.keys(errs).length === 0;
   };
 
   const validateStaff = () => {
-    const errs: Record<string, string> = {};
-    if (!city.trim()) errs.city = 'Ville requise';
+    const errs = validateRoleProFields({
+      role,
+      city,
+      department,
+      medicalSpecialty,
+      medicalPracticeFocus,
+      structureName,
+      professionalHeadline,
+    });
+    setFieldErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
+
+  const validateMedicalSpecialtyOnly = () => {
+    const errs = validateMedicalSpecialtyStep(medicalSpecialty);
+    setFieldErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
+
+  const validateMedicalPracticeOnly = () => {
+    const errs = validateMedicalPracticeStep({ medicalPracticeFocus, city, department });
+    setFieldErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
+
+  const validateSponsorPro = () => {
+    const errs = validateSponsorProFields(structureName, city);
     setFieldErrors(errs);
     return Object.keys(errs).length === 0;
   };
 
   const validatePlayer = () => {
-    const errs: Record<string, string> = {};
-    if (!position.trim()) errs.position = 'Choisissez un poste';
-    if (!category.trim()) errs.category = 'Choisissez une catégorie';
-    if (!level.trim()) errs.level = 'Choisissez un niveau';
-    if (!city.trim()) errs.city = 'Ville requise';
-    if (parsedAge == null) {
-      errs.age = 'Âge valide requis (5–99 ans)';
-    } else {
-      const ageSpaceErr = validateAgeForAppSpace(parsedAge, appSpace);
-      if (ageSpaceErr) errs.age = ageSpaceErr;
-    }
+    const errs = validatePlayerStepFields({
+      position,
+      category,
+      level,
+      city,
+      department,
+      parsedAge,
+      appSpace,
+      allowedCategories,
+      statMatches,
+      statGoals,
+      statAssists,
+    });
     setFieldErrors(errs);
     return Object.keys(errs).length === 0;
   };
 
-  const submitPlayerProfile = useCallback(() => {
-    if (!validatePlayer()) return false;
-    const needsParental = needsParentalStep(isMinor, appSpace);
-    setParentalRequired(needsParental);
-    const nextSteps = buildSignupSteps('player', {
-      role: 'player',
-      parentalRequired: needsParental,
+  const pickPlayerErrors = (
+    all: Record<string, string>,
+    keys: string[]
+  ): Record<string, string> =>
+    Object.fromEntries(Object.entries(all).filter(([k]) => keys.includes(k)));
+
+  const validateSport = () => {
+    if (!validateProgram()) return false;
+    const all = validatePlayerStepFields({
+      position,
+      category,
+      level,
+      city: '',
+      department,
+      parsedAge,
+      appSpace,
+      allowedCategories,
+      statMatches,
+      statGoals,
+      statAssists,
     });
-    const playerIdx = nextSteps.indexOf('player');
-    const nextPage = nextSteps[playerIdx + 1] ?? 'account';
-    setCurrentPageId(nextPage);
-    clearErrors();
-    return true;
-  }, [validatePlayer, isMinor, appSpace, clearErrors]);
+    const errs = pickPlayerErrors(all, ['position', 'category', 'level', 'age']);
+    setFieldErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
+
+  const validateLocation = () => {
+    const all = validatePlayerStepFields({
+      position,
+      category,
+      level,
+      city,
+      department,
+      parsedAge,
+      appSpace,
+      allowedCategories,
+      statMatches,
+      statGoals,
+      statAssists,
+    });
+    const errs = pickPlayerErrors(all, ['city', 'department']);
+    setFieldErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
+
+  const validateStats = () => {
+    const all = validatePlayerStepFields({
+      position,
+      category,
+      level,
+      city,
+      department,
+      parsedAge,
+      appSpace,
+      allowedCategories,
+      statMatches,
+      statGoals,
+      statAssists,
+    });
+    const errs = pickPlayerErrors(all, ['statMatches', 'statGoals', 'statAssists']);
+    setFieldErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
+
+  const validateAccountIdentity = () => {
+    const all = validateAccountStepFields({
+      displayName,
+      email,
+      password,
+      confirmPassword,
+      isOAuth: isOAuthCompletion,
+      role,
+      city,
+      acceptedTerms,
+      guardianEmail: parentalRequired ? guardianEmail : undefined,
+    });
+    const keys =
+      role === 'sponsor'
+        ? ['displayName', 'email', 'city']
+        : ['displayName', 'email'];
+    const errs = pickPlayerErrors(all, keys);
+    setFieldErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
 
   const validateParental = () => {
-    const errs: Record<string, string> = {};
-    if (!guardianName.trim()) errs.guardianName = 'Nom du responsable requis';
-    const emailErr = validateEmail(guardianEmail);
-    if (emailErr) errs.guardianEmail = emailErr;
-    if (!guardianConsent) errs.guardianConsent = 'Consentement requis';
+    const errs = validateParentalStepFields({
+      guardianName,
+      guardianEmail,
+      guardianConsent,
+      accountEmail: email,
+    });
     setFieldErrors(errs);
     return Object.keys(errs).length === 0;
   };
+
+  const advanceFromCurrentPage = useCallback(() => {
+    switch (currentPage) {
+      case 'space':
+        if (!validateProgram()) return false;
+        break;
+      case 'sport':
+        if (!validateSport()) return false;
+        setParentalRequired(needsParentalStep(isMinor, appSpace));
+        break;
+      case 'location':
+        if (!validateLocation()) return false;
+        break;
+      case 'stats':
+        if (!validateStats()) return false;
+        break;
+      case 'staff':
+      case 'coach_pro':
+      case 'club_pro':
+      case 'agent_pro':
+      case 'organizer_pro':
+        if (!validateStaff()) return false;
+        break;
+      case 'medical_specialty':
+        if (!validateMedicalSpecialtyOnly()) return false;
+        setMedicalPracticeFocus('');
+        break;
+      case 'medical_practice':
+        if (!validateMedicalPracticeOnly()) return false;
+        break;
+      case 'sponsor_pro':
+        if (!validateSponsorPro()) return false;
+        break;
+      case 'family':
+        if (!validateParental()) return false;
+        break;
+      case 'account':
+        if (!validateAccountIdentity()) return false;
+        break;
+      default:
+        break;
+    }
+    goNext();
+    return true;
+  }, [
+    currentPage,
+    validateProgram,
+    validateSport,
+    validateLocation,
+    validateStats,
+    validateStaff,
+    validateMedicalSpecialtyOnly,
+    validateMedicalPracticeOnly,
+    validateSponsorPro,
+    validateParental,
+    validateAccountIdentity,
+    isMinor,
+    appSpace,
+    goNext,
+  ]);
 
   const parseStat = (value: string) => {
     const n = parseInt(value.replace(/\D/g, ''), 10);
@@ -290,6 +553,13 @@ export function useSignupForm(initial?: {
 
   const createAccount = useCallback(
     async (refreshProfile: () => Promise<void>) => {
+      const integrityErrors = validateSignupIntegrity(buildIntegrityInput());
+      if (Object.keys(integrityErrors).length > 0) {
+        setFieldErrors(integrityErrors);
+        setError('Corrigez les champs signalés avant de créer le compte.');
+        return false;
+      }
+
       setLoading(true);
       clearErrors();
       try {
@@ -299,7 +569,39 @@ export function useSignupForm(initial?: {
           role,
           city: city.trim() || undefined,
           department: department.trim() || undefined,
-          profile: role === 'player' ? buildPlayerPayload() : undefined,
+          profile:
+            role === 'player'
+              ? buildPlayerPayload()
+              : role === 'physio'
+                ? {
+                    medical_specialty: medicalSpecialty,
+                    job_title: medicalSpecialty,
+                    specialties: [medicalSpecialty, medicalPracticeFocus].filter(Boolean),
+                    bio: medicalPracticeFocus
+                      ? `${medicalSpecialty} — ${medicalPracticeFocus}`
+                      : medicalSpecialty,
+                  }
+                : role === 'coach'
+                  ? {
+                      diploma: professionalHeadline.trim() || undefined,
+                      job_title: professionalHeadline.trim() || 'Coach',
+                    }
+                  : role === 'agent'
+                    ? {
+                        license_number: professionalHeadline.trim() || undefined,
+                        job_title: 'Agent sportif',
+                      }
+                    : role === 'club' || role === 'organizer'
+                      ? {
+                          job_title: structureName.trim() || undefined,
+                          bio: structureName.trim() || undefined,
+                        }
+                      : role === 'sponsor'
+                        ? {
+                            job_title: structureName.trim() || undefined,
+                            bio: structureName.trim() || undefined,
+                          }
+                        : undefined,
           parental_settings: buildParentalSettings(),
           ...(role === 'player' ? { app_space: appSpace } : {}),
         };
@@ -309,6 +611,7 @@ export function useSignupForm(initial?: {
           : await authService.signUp({ ...common, password });
 
         await refreshProfile();
+        if (isWomanProduct) await setProductLine('woman');
         setCreatedDisplayName(user.display_name);
         setCreatedWithEmailPassword(!isOAuthCompletion);
         setAccountCreated(true);
@@ -328,6 +631,10 @@ export function useSignupForm(initial?: {
       displayName,
       city,
       department,
+      medicalSpecialty,
+      medicalPracticeFocus,
+      structureName,
+      professionalHeadline,
       position,
       category,
       level,
@@ -339,13 +646,20 @@ export function useSignupForm(initial?: {
       appSpace,
       guardianName,
       guardianEmail,
+      guardianConsent,
+      acceptedTerms,
       isOAuthCompletion,
+      buildIntegrityInput,
       clearErrors,
       goToPage,
+      isWomanProduct,
+      setProductLine,
     ]
   );
 
   return {
+    productLine,
+    isWomanProduct,
     isOAuthCompletion,
     accountCreated,
     appSpace,
@@ -357,8 +671,6 @@ export function useSignupForm(initial?: {
     confirmRoleAndContinue,
     flowKind,
     draftFlowKind,
-    flowStepLabels,
-    flowIntro,
     displayName,
     setDisplayName,
     email,
@@ -371,6 +683,14 @@ export function useSignupForm(initial?: {
     setCity,
     department,
     setDepartment,
+    medicalSpecialty,
+    setMedicalSpecialty,
+    medicalPracticeFocus,
+    setMedicalPracticeFocus,
+    structureName,
+    setStructureName,
+    professionalHeadline,
+    setProfessionalHeadline,
     position,
     setPosition,
     category,
@@ -391,6 +711,8 @@ export function useSignupForm(initial?: {
     setGuardianEmail,
     guardianConsent,
     setGuardianConsent,
+    acceptedTerms,
+    setAcceptedTerms,
     isMinor,
     parentalRequired,
     ageSpaceMismatch,
@@ -416,7 +738,11 @@ export function useSignupForm(initial?: {
     validatePlayer,
     validateParental,
     validateProgram,
-    submitPlayerProfile,
+    validateSport,
+    validateLocation,
+    validateStats,
+    validateAccountIdentity,
+    advanceFromCurrentPage,
     createAccount,
     setError,
     setLoading,

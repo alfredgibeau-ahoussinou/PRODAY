@@ -65,12 +65,12 @@ export const EmailVerificationScreen: React.FC<EmailVerificationScreenProps> = (
         </View>
         <Text style={styles.title}>Vérifiez votre email</Text>
         <Text style={styles.subtitle}>
-          Un lien de confirmation a été envoyé à{'\n'}
+          Étape 2 — Vos documents ont été analysés par l’IA. Confirmez maintenant{'\n'}
           <Text style={styles.email}>{email}</Text>
         </Text>
         <Text style={styles.body}>
-          Ouvrez le mail ProDay et cliquez sur le lien pour activer votre compte. Cette étape
-          protège votre profil et active la messagerie.
+          Ouvrez le mail ProDay et cliquez sur le lien. Cette étape sécurise votre compte après la
+          vérification documentaire.
         </Text>
 
         {error ? (

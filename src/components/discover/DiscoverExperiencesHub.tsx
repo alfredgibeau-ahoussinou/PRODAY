@@ -1,11 +1,12 @@
 import React from 'react';
-import { View, Text, StyleSheet, ImageBackground } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
+import { ShowcaseImageBackground } from '../ui/ShowcaseImageBackground';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 import { DiscoverSectionHeader } from './DiscoverSectionHeader';
 import { PressableSpring } from './PressableSpring';
 import { Icon } from '../ui/Icon';
 import { colors, spacing, radius, shadows, brandOverlay } from '../../theme/designTokens';
-import { SHOWCASE_IMAGES } from '../../content/showcaseAssets';
+import { useShowcaseImages } from '../../hooks/useShowcaseImages';
 
 export type DiscoverExperienceId = 'deck' | 'stories' | 'motion';
 
@@ -13,7 +14,9 @@ interface DiscoverExperiencesHubProps {
   onPress: (id: DiscoverExperienceId) => void;
 }
 
-export const DiscoverExperiencesHub: React.FC<DiscoverExperiencesHubProps> = ({ onPress }) => (
+export const DiscoverExperiencesHub: React.FC<DiscoverExperiencesHubProps> = ({ onPress }) => {
+  const showcase = useShowcaseImages();
+  return (
   <View style={styles.wrap}>
     <DiscoverSectionHeader
       label="EXPÉRIENCES"
@@ -25,7 +28,7 @@ export const DiscoverExperiencesHub: React.FC<DiscoverExperiencesHubProps> = ({ 
     <View style={styles.grid}>
       <Animated.View entering={FadeInUp.delay(40).springify()} style={styles.cell}>
         <PressableSpring style={styles.card} onPress={() => onPress('deck')} scaleTo={0.94}>
-          <ImageBackground source={SHOWCASE_IMAGES.expPulse} style={styles.bg} imageStyle={styles.bgImg}>
+          <ShowcaseImageBackground source={showcase.expPulse} variant="card" style={styles.bg} imageStyle={styles.bgImg}>
             <View style={styles.overlay} />
             <View style={styles.pill}>
               <Icon name="star-four-points" size={16} color={colors.accent} />
@@ -33,13 +36,13 @@ export const DiscoverExperiencesHub: React.FC<DiscoverExperiencesHubProps> = ({ 
             </View>
             <Text style={styles.title}>Pitch interactif</Text>
             <Text style={styles.sub}>Swipe horizontal · parallax</Text>
-          </ImageBackground>
+          </ShowcaseImageBackground>
         </PressableSpring>
       </Animated.View>
 
       <Animated.View entering={FadeInUp.delay(100).springify()} style={styles.cell}>
         <PressableSpring style={styles.card} onPress={() => onPress('stories')} scaleTo={0.94}>
-          <ImageBackground source={SHOWCASE_IMAGES.expTeam} style={styles.bg} imageStyle={styles.bgImg}>
+          <ShowcaseImageBackground source={showcase.expTeam} variant="card" style={styles.bg} imageStyle={styles.bgImg}>
             <View style={styles.overlay} />
             <View style={styles.pill}>
               <Icon name="calendar" size={16} color={colors.accent} />
@@ -47,7 +50,7 @@ export const DiscoverExperiencesHub: React.FC<DiscoverExperiencesHubProps> = ({ 
             </View>
             <Text style={styles.title}>Showcase vertical</Text>
             <Text style={styles.sub}>Snap cards · focus dynamique</Text>
-          </ImageBackground>
+          </ShowcaseImageBackground>
         </PressableSpring>
       </Animated.View>
 
@@ -65,7 +68,8 @@ export const DiscoverExperiencesHub: React.FC<DiscoverExperiencesHubProps> = ({ 
       </Animated.View>
     </View>
   </View>
-);
+  );
+};
 
 const styles = StyleSheet.create({
   wrap: { marginTop: spacing.xl },

@@ -53,7 +53,15 @@ service cloud.firestore {
 
     function verificationFieldsUnchanged() {
       return !request.resource.data.diff(resource.data).affectedKeys()
-        .hasAny(['is_verified', 'verification_status', 'verification_date']);
+        .hasAny([
+          'is_verified',
+          'verification_status',
+          'verification_date',
+          'subscription_tier',
+          'subscription_plan_id',
+          'subscription_status',
+          'subscription_period_end',
+        ]);
     }
 
     function userClubId() {
@@ -95,6 +103,10 @@ service cloud.firestore {
       allow read: if isOwner(userId) || isAdmin();
       allow create: if isOwner(userId);
       allow update, delete: if isAdmin();
+    }
+
+    match /users/{userId}/subscription_usage/{periodId} {
+      allow read, write: if isOwner(userId);
     }
 
     match /messages/{msgId} {

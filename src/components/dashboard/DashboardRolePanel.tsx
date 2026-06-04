@@ -5,6 +5,7 @@ import type { Application } from '../../models/Player';
 import type { TeamEvent } from '../../models/TeamEvent';
 import type { FriendlyMatch } from '../../models/FriendlyMatch';
 import { Icon, type IconName } from '../ui/Icon';
+import { getRoleDashboardMeta, getRolePanelActions } from '../../content/roleDashboardExperience';
 import { colors, spacing, radius } from '../../theme/designTokens';
 
 interface DashboardRolePanelProps {
@@ -17,6 +18,7 @@ interface DashboardRolePanelProps {
   onMatches: () => void;
   onApplications: () => void;
   onSponsors?: () => void;
+  onProfile?: () => void;
 }
 
 export const DashboardRolePanel: React.FC<DashboardRolePanelProps> = ({
@@ -29,26 +31,21 @@ export const DashboardRolePanel: React.FC<DashboardRolePanelProps> = ({
   onMatches,
   onApplications,
   onSponsors,
+  onProfile,
 }) => {
-  const stats = profile.profile.season_stats;
+  const meta = getRoleDashboardMeta(profile.role);
+  const actions = getRolePanelActions(profile.role);
 
   if (profile.role === 'player') {
+    const stats = profile.profile.season_stats;
     return (
       <View style={styles.wrap}>
-        <Text style={styles.eyebrow}>COCKPIT JOUEUR</Text>
-        <Text style={styles.title}>Votre carrière en direct</Text>
+        <Text style={styles.eyebrow}>{meta.eyebrow}</Text>
+        <Text style={styles.title}>{meta.title}</Text>
         <View style={styles.statGrid}>
-          <StatBox
-            label="Matchs"
-            value={String(stats?.matches ?? 0)}
-            icon="football"
-          />
+          <StatBox label="Matchs" value={String(stats?.matches ?? 0)} icon="football" />
           <StatBox label="Buts" value={String(stats?.goals ?? 0)} icon="star" />
-          <StatBox
-            label="Passes d."
-            value={String(stats?.assists ?? 0)}
-            icon="handshake"
-          />
+          <StatBox label="Passes d." value={String(stats?.assists ?? 0)} icon="handshake" />
           <StatBox
             label="Candidatures"
             value={String(applications.length)}
@@ -57,16 +54,20 @@ export const DashboardRolePanel: React.FC<DashboardRolePanelProps> = ({
             onPress={onApplications}
           />
         </View>
-        <ActionRow
-          icon="search"
-          title="Opportunités Mercato"
-          sub="Annonces clubs & détections"
-          onPress={onRecruitment}
-        />
+        {actions.map((a) => (
+          <ActionRow
+            key={a.title}
+            icon={a.icon}
+            title={a.title}
+            sub={a.sub}
+            accent={a.accent}
+            onPress={a.title.includes('Mercato') ? onRecruitment : onMatches}
+          />
+        ))}
         {detections.length > 0 ? (
           <ActionRow
             icon="football"
-            title={`${detections.length} détection${detections.length > 1 ? 's' : ''} ouverte${detections.length > 1 ? 's' : ''}`}
+            title={`${detections.length} détection${detections.length > 1 ? 's' : ''}`}
             sub="Inscription en un tap"
             onPress={onDetections}
             accent
@@ -76,67 +77,94 @@ export const DashboardRolePanel: React.FC<DashboardRolePanelProps> = ({
     );
   }
 
-  if (
-    profile.role === 'coach' ||
-    profile.role === 'agent' ||
-    profile.role === 'organizer' ||
-    profile.role === 'club'
-  ) {
+  if (profile.role === 'physio') {
+    const specialty =
+      profile.profile.medical_specialty ?? profile.profile.job_title ?? 'Praticien';
     return (
-      <View style={styles.wrap}>
-        <Text style={styles.eyebrow}>CENTRE DE COMMANDE</Text>
-        <Text style={styles.title}>
-          {profile.role === 'coach'
-            ? 'Pilotez votre équipe'
-            : profile.role === 'club'
-              ? 'Votre club sur ProDay'
-              : profile.role === 'agent'
-                ? 'Scouting & placement'
-                : 'Animez la communauté'}
-        </Text>
-        <ActionRow
-          icon="calendar"
-          title="Calendrier & convocations"
-          sub="RSVP, compo, Live Stats"
-          onPress={onMatches}
-          accent
-        />
-        <ActionRow
-          icon="search"
-          title="Recrutement"
-          sub="Publier ou chercher des profils"
-          onPress={onRecruitment}
-        />
-        {openMatches.length > 0 ? (
-          <ActionRow
-            icon="handshake"
-            title={`${openMatches.length} match${openMatches.length > 1 ? 's' : ''} amical${openMatches.length > 1 ? 'ux' : ''} disponible${openMatches.length > 1 ? 's' : ''}`}
-            sub="Complétez votre planning"
-            onPress={onMatches}
-          />
+      <View style={[styles.wrap, styles.wrapMedical]}>
+        <Text style={[styles.eyebrow, styles.eyebrowMedical]}>{meta.eyebrow}</Text>
+        <Text style={styles.title}>{meta.title}</Text>
+        <View style={styles.medicalBadge}>
+          <Icon name="heart" size={18} color="#0F766E" variant="filled" />
+          <Text style={styles.medicalBadgeText}>{specialty}</Text>
+        </View>
+        {profile.city ? (
+          <Text style={styles.medicalZone}>
+            Zone : {profile.city}
+            {profile.department ? ` (${profile.department})` : ''}
+          </Text>
         ) : null}
-        {detections.length > 0 ? (
+        {actions.map((a) => (
           <ActionRow
-            icon="football"
-            title="Organiser une détection"
-            sub="Journées scouting ProDay"
-            onPress={onDetections}
+            key={a.title}
+            icon={a.icon}
+            title={a.title}
+            sub={a.sub}
+            accent={a.accent}
+            onPress={
+              a.title.includes('Fil')
+                ? onRecruitment
+                : a.title.includes('Sportifs')
+                  ? onMatches
+                  : onProfile ?? onRecruitment
+            }
           />
-        ) : null}
+        ))}
+      </View>
+    );
+  }
+
+  if (profile.role === 'sponsor') {
+    return (
+      <View style={[styles.wrap, styles.wrapSponsor]}>
+        <Text style={[styles.eyebrow, styles.eyebrowSponsor]}>{meta.eyebrow}</Text>
+        <Text style={styles.title}>{meta.title}</Text>
+        {actions.map((a) => (
+          <ActionRow
+            key={a.title}
+            icon={a.icon}
+            title={a.title}
+            sub={a.sub}
+            accent={a.accent}
+            onPress={onSponsors ?? onRecruitment}
+          />
+        ))}
       </View>
     );
   }
 
   return (
     <View style={styles.wrap}>
-      <Text style={styles.eyebrow}>PARTENARIATS</Text>
-      <Text style={styles.title}>Soutenez les clubs locaux</Text>
-      <ActionRow
-        icon="star-four-points"
-        title="Offres sponsors"
-        sub="Visibilité & financement"
-        onPress={onSponsors ?? onRecruitment}
-      />
+      <Text style={styles.eyebrow}>{meta.eyebrow}</Text>
+      <Text style={styles.title}>{meta.title}</Text>
+      {actions.map((a) => (
+        <ActionRow
+          key={a.title}
+          icon={a.icon}
+          title={a.title}
+          sub={a.sub}
+          accent={a.accent}
+          onPress={
+            a.title.includes('Calendrier') || a.title.includes('Gestion') || a.title.includes('Matchs')
+              ? onMatches
+              : a.title.includes('Recrutement') || a.title.includes('Repérage') || a.title.includes('Annonces')
+                ? onRecruitment
+                : a.title.includes('Détection') || a.title.includes('Tournois')
+                  ? onDetections
+                  : a.title.includes('Diplômes')
+                    ? (onProfile ?? onRecruitment)
+                    : onMatches
+          }
+        />
+      ))}
+      {openMatches.length > 0 && profile.role !== 'organizer' ? (
+        <ActionRow
+          icon="handshake"
+          title={`${openMatches.length} match${openMatches.length > 1 ? 's' : ''} amical${openMatches.length > 1 ? 'ux' : ''}`}
+          sub="Complétez votre planning"
+          onPress={onMatches}
+        />
+      ) : null}
     </View>
   );
 };
@@ -185,8 +213,37 @@ const ActionRow: React.FC<{
 
 const styles = StyleSheet.create({
   wrap: { marginBottom: spacing.xl },
+  wrapMedical: {
+    backgroundColor: '#F0FDFA',
+    borderRadius: radius.lg,
+    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: '#99F6E4',
+  },
+  wrapSponsor: {
+    backgroundColor: '#FFF5F8',
+    borderRadius: radius.lg,
+    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: '#FBCFE8',
+  },
   eyebrow: { fontSize: 10, fontWeight: '800', color: colors.accent, letterSpacing: 1 },
+  eyebrowMedical: { color: '#0F766E' },
+  eyebrowSponsor: { color: '#BE185D' },
   title: { fontSize: 18, fontWeight: '900', color: colors.text, marginBottom: spacing.md },
+  medicalBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    alignSelf: 'flex-start',
+    backgroundColor: '#CCFBF1',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: radius.pill,
+    marginBottom: spacing.md,
+  },
+  medicalBadgeText: { fontSize: 13, fontWeight: '800', color: '#0F766E' },
+  medicalZone: { fontSize: 12, color: colors.textSecondary, marginBottom: spacing.md, fontWeight: '600' },
   statGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',

@@ -3,6 +3,7 @@ import {
   getFlowKind,
   needsParentalStep,
   validateAgeForAppSpace,
+  getCurrentPhase,
 } from '../screens/signup/signupFlowConfig';
 
 describe('signupFlowConfig', () => {
@@ -14,40 +15,71 @@ describe('signupFlowConfig', () => {
     expect(getFlowKind('club')).toBe('staff');
   });
 
-  it('inclut parental pour mineur ou espace -13', () => {
+  it('inclut family pour mineur ou espace -13', () => {
     expect(needsParentalStep(true, 'men')).toBe(true);
     expect(needsParentalStep(false, 'under_u13')).toBe(true);
     expect(needsParentalStep(false, 'men')).toBe(false);
   });
 
-  it('parcours joueur : documents après compte', () => {
+  it('parcours joueur : micro-étapes puis accès', () => {
     const steps = buildSignupSteps('player', {
       role: 'player',
       parentalRequired: false,
     });
     expect(steps).toEqual([
-      'role',
-      'program',
-      'player',
+      'welcome',
+      'space',
+      'sport',
+      'location',
+      'stats',
       'account',
-      'player_verify',
-      'success',
+      'security',
+      'launch',
     ]);
   });
 
-  it('parcours joueur mineur : étape parental', () => {
+  it('parcours joueur mineur : étape family', () => {
     const steps = buildSignupSteps('player', {
       role: 'player',
       parentalRequired: true,
     });
-    expect(steps).toContain('parental');
-    expect(steps.indexOf('parental')).toBeLessThan(steps.indexOf('account'));
+    expect(steps).toContain('family');
+    expect(steps.indexOf('family')).toBeLessThan(steps.indexOf('account'));
   });
 
-  it('parcours sponsor court', () => {
+  it('parcours coach : étape coach_pro dédiée', () => {
+    expect(
+      buildSignupSteps('staff', { role: 'coach', parentalRequired: false })
+    ).toEqual(['welcome', 'coach_pro', 'account', 'security', 'launch']);
+  });
+
+  it('parcours médical : spécialité puis cabinet', () => {
+    expect(
+      buildSignupSteps('staff', { role: 'physio', parentalRequired: false })
+    ).toEqual([
+      'welcome',
+      'medical_specialty',
+      'medical_practice',
+      'account',
+      'security',
+      'launch',
+    ]);
+  });
+
+  it('parcours partenaire : territoire puis identité', () => {
     expect(
       buildSignupSteps('sponsor', { role: 'sponsor', parentalRequired: false })
-    ).toEqual(['role', 'account', 'success']);
+    ).toEqual(['welcome', 'sponsor_pro', 'account', 'security', 'launch']);
+  });
+
+  it('phases unifiées Vous / Accès / Go', () => {
+    expect(getCurrentPhase('welcome')).toBe('vous');
+    expect(getCurrentPhase('space')).toBe('vous');
+    expect(getCurrentPhase('sport')).toBe('vous');
+    expect(getCurrentPhase('family')).toBe('vous');
+    expect(getCurrentPhase('account')).toBe('acces');
+    expect(getCurrentPhase('security')).toBe('acces');
+    expect(getCurrentPhase('launch')).toBe('launch');
   });
 
   it('valide l’âge selon l’espace', () => {

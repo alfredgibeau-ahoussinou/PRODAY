@@ -12,6 +12,8 @@ import {
 import type { User } from '../models/User';
 import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { recruitmentService } from '../services/recruitment.service';
+import { SubscriptionLimitError } from '../services/subscription.service';
+import { useSubscriptionOptional } from '../context/SubscriptionContext';
 import { useAppSpace } from '../context/AppSpaceContext';
 import { colors, spacing, radius } from '../theme/designTokens';
 
@@ -34,6 +36,7 @@ export const CreateRecruitmentPostScreen: React.FC<CreateRecruitmentPostScreenPr
   const [description, setDescription] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const { appSpace } = useAppSpace();
+  const subscriptionCtx = useSubscriptionOptional();
 
   const handleSubmit = async () => {
     if (!position.trim() || !level.trim() || !city.trim()) {
@@ -42,22 +45,29 @@ export const CreateRecruitmentPostScreen: React.FC<CreateRecruitmentPostScreenPr
     }
     setSubmitting(true);
     try {
-      await recruitmentService.createPost({
-        author_uid: profile.uid,
-        club_id: profile.profile.club_id ?? profile.uid,
-        club_name: profile.display_name,
-        title: title.trim(),
-        position: position.trim(),
-        category: category.trim(),
-        level: level.trim(),
-        city: city.trim(),
-        description: description.trim() || undefined,
-        target_space: appSpace,
-      });
+      await recruitmentService.createPost(
+        {
+          author_uid: profile.uid,
+          club_id: profile.profile.club_id ?? profile.uid,
+          club_name: profile.display_name,
+          title: title.trim(),
+          position: position.trim(),
+          category: category.trim(),
+          level: level.trim(),
+          city: city.trim(),
+          description: description.trim() || undefined,
+          target_space: appSpace,
+        },
+        profile
+      );
       Alert.alert('Annonce publiée', 'Visible dans Recrutements populaires.');
       onCreated();
       onBack();
     } catch (e) {
+      if (e instanceof SubscriptionLimitError) {
+        subscriptionCtx?.openUpgradeForFeature(e.feature);
+        return;
+      }
       Alert.alert('Erreur', e instanceof Error ? e.message : 'Publication impossible.');
     } finally {
       setSubmitting(false);

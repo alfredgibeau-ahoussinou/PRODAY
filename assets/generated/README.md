@@ -1,14 +1,30 @@
-# Visuels ProDay (générés IA)
+# Visuels ProDay (showcase UI)
 
-Images locales pour enrichir l’UI sans Firebase Storage.
+Images locales pour Discover, Arena, dashboard, etc. — sans Firebase Storage.
+
+## Classique (`classic/`)
 
 | Fichier | Usage |
 |---------|--------|
-| `discover-hero-football.png` | Hero page Discover |
-| `arena-tournament.png` | Arena, tournois |
-| `mercato-detection.png` | Mercato, détections |
-| `player-profile-showcase.png` | Profils joueurs |
-| `friendly-match.png` | Matchs amicaux |
-| `coach-founder.png` | Staff / fondateurs |
+| `classic-discover-hero.jpg` | Hero Discover |
+| `classic-mercato.jpg` | Mercato, détections |
+| `classic-profile.jpg` | Profils joueurs |
+| `classic-match.jpg` | Matchs amicaux |
+| `classic-arena.jpg` | Arena, tournois |
+| `classic-staff.jpg` | Staff / fondateurs |
+| `classic-exp-*.jpg` | Expériences interactives |
 
-Référencées dans `src/content/showcaseAssets.ts`.
+Téléchargement (recadrage 16:9 / 4:3 / 21:9, `crop=faces` ou `entropy`) :  
+`node scripts/download-classic-showcase-images.mjs`  
+Référence : `src/content/showcaseAssets.ts`
+
+## Woman (`woman/`)
+
+Foot féminin uniquement (Unsplash + Pexels, sujets vérifiés) — `node scripts/download-woman-showcase-images.mjs`  
+Référence : `src/content/womanShowcaseAssets.ts`
+
+Affichage : `ShowcaseImageBackground` (`resizeMode="cover"`) dans Discover et l’inscription.
+
+## Anciens PNG
+
+Les fichiers `*.png` à la racine de `generated/` sont dépréciés ; vous pouvez les supprimer après validation des nouveaux visuels.

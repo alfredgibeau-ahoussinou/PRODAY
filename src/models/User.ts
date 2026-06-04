@@ -97,6 +97,7 @@ export interface UserProfile {
   diploma?: string;           // BEF, BFF, BMF, UEFA B/A, etc.
   license_number?: string;
   job_title?: string;         // ex. Préparateur physique, Agent FIFA
+  medical_specialty?: string; // Pôle médical (kiné du sport, ostéo, médecin...)
   specialties?: string[];
   experiences?: WorkExperience[];
   diplomas_list?: DiplomaRecord[];
@@ -119,6 +120,9 @@ export interface User {
 
   /** Email confirmé via lien Firebase (comptes email/mot de passe) */
   email_verified?: boolean;
+
+  /** Justificatifs d’onboarding envoyés (après validation email, avant dashboard) */
+  onboarding_documents_submitted?: boolean;
   
   // Vérification
   is_verified: boolean;
@@ -149,6 +153,12 @@ export interface User {
 
   /** Espace ProDay : féminin, masculin, jeunes, -13 */
   app_space?: AppSpaceId;
+
+  /** Abonnement plateforme (freemium store) */
+  subscription_tier?: 'free' | 'pro';
+  subscription_plan_id?: string;
+  subscription_status?: 'active' | 'trialing' | 'canceled' | 'past_due';
+  subscription_period_end?: Date;
 
   /** Vérifications joueur (identité, licence club, etc.) */
   player_verification?: PlayerVerificationState;

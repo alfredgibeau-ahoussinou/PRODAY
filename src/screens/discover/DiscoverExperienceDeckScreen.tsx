@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
-import { View, Text, StyleSheet, Dimensions, ImageBackground } from 'react-native';
+import { View, Text, StyleSheet, Dimensions } from 'react-native';
+import { ShowcaseImageBackground } from '../../components/ui/ShowcaseImageBackground';
 import Animated, {
   Extrapolation,
   interpolate,
@@ -11,7 +12,7 @@ import Animated, {
 import { ScreenHeader } from '../../components/ui/ScreenHeader';
 import { Icon } from '../../components/ui/Icon';
 import { colors, spacing, radius, shadows } from '../../theme/designTokens';
-import { SHOWCASE_IMAGES } from '../../content/showcaseAssets';
+import { useShowcaseImages } from '../../hooks/useShowcaseImages';
 
 const { width: W } = Dimensions.get('window');
 
@@ -31,6 +32,7 @@ type Slide = {
 export const DiscoverExperienceDeckScreen: React.FC<DiscoverExperienceDeckScreenProps> = ({
   onBack,
 }) => {
+  const showcase = useShowcaseImages();
   const x = useSharedValue(0);
 
   const slides: Slide[] = useMemo(
@@ -40,7 +42,7 @@ export const DiscoverExperienceDeckScreen: React.FC<DiscoverExperienceDeckScreen
         kicker: 'VIBES EN DIRECT',
         title: 'ProDay Pulse',
         body: 'Des chiffres réels, une vibe de saison — et un feed qui bouge.',
-        image: SHOWCASE_IMAGES.expPulse,
+        image: showcase.expPulse,
         icon: 'star-four-points',
       },
       {
@@ -48,7 +50,7 @@ export const DiscoverExperienceDeckScreen: React.FC<DiscoverExperienceDeckScreen
         kicker: 'ARENA',
         title: 'Tournois qui claquent',
         body: 'Inscription club, statut live, palmarès publié par l’organisateur.',
-        image: SHOWCASE_IMAGES.expArena,
+        image: showcase.expArena,
         icon: 'trophy',
       },
       {
@@ -56,11 +58,11 @@ export const DiscoverExperienceDeckScreen: React.FC<DiscoverExperienceDeckScreen
         kicker: 'SPONSORS',
         title: 'Partenaires & objectifs',
         body: 'Offres, campagnes, contributions — du concret pour financer la saison.',
-        image: SHOWCASE_IMAGES.expSponsors,
+        image: showcase.expSponsors,
         icon: 'star',
       },
     ],
-    []
+    [showcase]
   );
 
   const onScroll = useAnimatedScrollHandler({
@@ -123,8 +125,9 @@ const DeckSlide: React.FC<{ slide: Slide; index: number; x: SharedValue<number> 
   return (
     <View style={styles.page}>
       <Animated.View style={[styles.card, shadows.card, cardStyle]}>
-        <ImageBackground
+        <ShowcaseImageBackground
           source={slide.image}
+          variant="hero"
           style={styles.hero}
           imageStyle={styles.heroImg}
         >
@@ -142,7 +145,7 @@ const DeckSlide: React.FC<{ slide: Slide; index: number; x: SharedValue<number> 
             <Text style={styles.title}>{slide.title}</Text>
             <Text style={styles.body}>{slide.body}</Text>
           </View>
-        </ImageBackground>
+        </ShowcaseImageBackground>
       </Animated.View>
     </View>
   );

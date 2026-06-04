@@ -1,6 +1,9 @@
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet, ActivityIndicator } from 'react-native';
-import { colors, spacing, radius } from '../../theme/designTokens';
+import { Text, StyleSheet, ActivityIndicator, View, Pressable } from 'react-native';
+import { Icon } from '../../components/ui/Icon';
+import { authStyles } from '../../components/auth/authStyles';
+import { useSignupFlowTheme } from './SignupFlowContext';
+import { colors as defaultColors, spacing } from '../../theme/designTokens';
 
 interface SignupFooterButtonProps {
   label: string;
@@ -8,6 +11,7 @@ interface SignupFooterButtonProps {
   loading?: boolean;
   variant?: 'primary' | 'secondary';
   disabled?: boolean;
+  showArrow?: boolean;
 }
 
 export const SignupFooterButton: React.FC<SignupFooterButtonProps> = ({
@@ -16,41 +20,71 @@ export const SignupFooterButton: React.FC<SignupFooterButtonProps> = ({
   loading,
   variant = 'primary',
   disabled,
-}) => (
-  <TouchableOpacity
-    style={[
-      styles.btn,
-      variant === 'secondary' ? styles.secondary : styles.primary,
-      (disabled || loading) && styles.disabled,
+  showArrow = variant === 'primary',
+}) => {
+  const { colors, isWomanSignup } = useSignupFlowTheme();
+
+  return (
+  <Pressable
+    style={({ pressed }) => [
+      variant === 'secondary' ? styles.secondary : authStyles.primaryBtn,
+      isWomanSignup && variant === 'primary' && { backgroundColor: colors.accent },
+      styles.btnBase,
+      (disabled || loading) && authStyles.primaryDisabled,
+      pressed && !disabled && !loading && styles.pressed,
     ]}
     onPress={onPress}
     disabled={disabled || loading}
-    activeOpacity={0.85}
   >
     {loading ? (
       <ActivityIndicator color={variant === 'secondary' ? colors.text : colors.brandInverse} />
     ) : (
-      <Text style={[styles.text, variant === 'secondary' && styles.textSecondary]}>{label}</Text>
+      <View style={styles.row}>
+        <Text
+          style={[
+            variant === 'secondary' ? styles.textSecondary : authStyles.primaryBtnText,
+          ]}
+        >
+          {label}
+        </Text>
+        {showArrow ? (
+          <Icon
+            name="chevron-forward"
+            size={18}
+            color={variant === 'secondary' ? colors.text : colors.brandInverse}
+          />
+        ) : null}
+      </View>
     )}
-  </TouchableOpacity>
-);
+  </Pressable>
+  );
+};
 
 const styles = StyleSheet.create({
-  btn: {
-    borderRadius: radius.md,
-    paddingVertical: spacing.lg,
-    alignItems: 'center',
-    borderWidth: 1,
-  },
-  primary: {
-    backgroundColor: colors.ink,
-    borderColor: colors.border,
+  btnBase: {
+    marginTop: 0,
+    minHeight: 52,
+    justifyContent: 'center',
   },
   secondary: {
-    backgroundColor: colors.surface,
-    borderColor: colors.border,
+    backgroundColor: defaultColors.surface,
+    borderWidth: 1.5,
+    borderColor: defaultColors.border,
+    borderRadius: 999,
+    paddingVertical: spacing.md + 2,
+    paddingHorizontal: spacing.lg,
+    alignItems: 'center',
+    minHeight: 52,
+    justifyContent: 'center',
   },
-  disabled: { opacity: 0.55 },
-  text: { color: colors.brandInverse, fontWeight: '900', fontSize: 16 },
-  textSecondary: { color: colors.text, fontWeight: '800' },
+  pressed: { opacity: 0.88 },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  textSecondary: {
+    color: defaultColors.text,
+    fontWeight: '800',
+  },
 });

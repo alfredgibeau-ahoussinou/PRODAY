@@ -42,8 +42,8 @@ export const ROLE_OPTIONS: {
   },
   {
     value: 'physio',
-    label: 'Kinésithérapeute',
-    description: 'Suivi blessures · fil ProDay',
+    label: 'Pôle médical',
+    description: 'Kiné du sport, ostéo, médecin, prépa physique…',
     icon: 'heart',
   },
   {

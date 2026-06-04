@@ -1,50 +1,59 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ImageBackground } from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { View, Text, StyleSheet } from 'react-native';
+import { ShowcaseImageBackground } from '../ui/ShowcaseImageBackground';
 import Animated, { FadeInRight } from 'react-native-reanimated';
 import { DISCOVER_FEATURES } from '../../content/founders';
-import { SHOWCASE_IMAGES } from '../../content/showcaseAssets';
+import { useShowcaseImages } from '../../hooks/useShowcaseImages';
 import { PressableSpring } from './PressableSpring';
 import { DiscoverSectionHeader } from './DiscoverSectionHeader';
 import { Icon, type IconName } from '../ui/Icon';
 import { colors, spacing, radius } from '../../theme/designTokens';
 
-const STEP_IMAGES: Record<string, number> = {
-  recruit: SHOWCASE_IMAGES.mercatoDetection,
-  cv: SHOWCASE_IMAGES.playerProfile,
-  matches: SHOWCASE_IMAGES.friendlyMatch,
-  verify: SHOWCASE_IMAGES.playerProfile,
-  team: SHOWCASE_IMAGES.friendlyMatch,
-  arena: SHOWCASE_IMAGES.arenaTournament,
-};
-
-const STEPS = DISCOVER_FEATURES.map((f, i) => ({
-  id: f.id,
-  step: i + 1,
-  title: f.title,
-  icon: f.icon as IconName,
-  color: f.color,
-  preview: f.description,
-  image: STEP_IMAGES[f.id] ?? SHOWCASE_IMAGES.discoverHero,
-}));
-
 interface DiscoverJourneyProps {
   onStepPress: (id: string) => void;
+  /** Masque le titre de section (page parent déjà titrée). */
+  compact?: boolean;
 }
 
-export const DiscoverJourney: React.FC<DiscoverJourneyProps> = ({ onStepPress }) => {
-  const [active, setActive] = useState(STEPS[0].id);
-  const current = STEPS.find((s) => s.id === active) ?? STEPS[0];
+export const DiscoverJourney: React.FC<DiscoverJourneyProps> = ({
+  onStepPress,
+  compact = false,
+}) => {
+  const showcase = useShowcaseImages();
+  const steps = useMemo(() => {
+    const stepImages: Record<string, number> = {
+      recruit: showcase.mercatoDetection,
+      cv: showcase.playerProfile,
+      matches: showcase.friendlyMatch,
+      verify: showcase.playerProfile,
+      team: showcase.friendlyMatch,
+      arena: showcase.arenaTournament,
+    };
+    return DISCOVER_FEATURES.map((f, i) => ({
+      id: f.id,
+      step: i + 1,
+      title: f.title,
+      icon: f.icon as IconName,
+      color: f.color,
+      preview: f.description,
+      image: stepImages[f.id] ?? showcase.discoverHero,
+    }));
+  }, [showcase]);
+  const [active, setActive] = useState(steps[0].id);
+  const current = steps.find((s) => s.id === active) ?? steps[0];
 
   return (
-    <View style={styles.wrap}>
-      <DiscoverSectionHeader
-        label="Parcours"
-        title="Testez l'expérience"
-        subtitle="Touchez une étape — aperçu interactif"
-      />
+    <View style={[styles.wrap, compact && styles.wrapCompact]}>
+      {!compact ? (
+        <DiscoverSectionHeader
+          label="Parcours"
+          title="Testez l'expérience"
+          subtitle="Touchez une étape — aperçu interactif"
+        />
+      ) : null}
 
       <View style={styles.chips}>
-        {STEPS.map((s) => {
+        {steps.map((s) => {
           const on = s.id === active;
           return (
             <PressableSpring
@@ -67,14 +76,19 @@ export const DiscoverJourney: React.FC<DiscoverJourneyProps> = ({ onStepPress })
       <Animated.View
         key={current.id}
         entering={FadeInRight.duration(280).springify()}
-        style={styles.preview}
+        style={[styles.preview, compact && styles.previewCompact]}
       >
-        <ImageBackground source={current.image} style={styles.previewImage} imageStyle={styles.previewImageInner}>
+        <ShowcaseImageBackground
+          source={current.image}
+          variant="card"
+          style={styles.previewImage}
+          imageStyle={styles.previewImageInner}
+        >
           <View style={styles.previewOverlay} />
           <View style={[styles.previewBadge, { borderColor: current.color }]}>
             <Icon name={current.icon} size={20} color={colors.brandInverse} variant="filled" />
           </View>
-        </ImageBackground>
+        </ShowcaseImageBackground>
         <View style={styles.previewBody}>
           <View style={[styles.previewStripe, { backgroundColor: current.color }]} />
           <View style={styles.previewInner}>
@@ -92,9 +106,10 @@ export const DiscoverJourney: React.FC<DiscoverJourneyProps> = ({ onStepPress })
 
 const styles = StyleSheet.create({
   wrap: { marginTop: spacing.xl },
+  wrapCompact: { marginTop: 0 },
   chips: {
     flexDirection: 'row',
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: 0,
     gap: spacing.sm,
     marginBottom: spacing.md,
   },
@@ -126,6 +141,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     overflow: 'hidden',
+  },
+  previewCompact: {
+    marginHorizontal: 0,
   },
   previewImage: {
     height: 120,

@@ -18,6 +18,8 @@ import {
   formatTimeAgo,
   canManagePostApplications,
 } from '../services/recruitment.service';
+import { SubscriptionLimitError } from '../services/subscription.service';
+import { useSubscriptionOptional } from '../context/SubscriptionContext';
 import { colors, spacing, radius } from '../theme/designTokens';
 
 interface RecruitmentPostScreenProps {
@@ -40,6 +42,7 @@ export const RecruitmentPostScreen: React.FC<RecruitmentPostScreenProps> = ({
   const [submitting, setSubmitting] = useState(false);
   const [applications, setApplications] = useState<Application[]>([]);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const subscriptionCtx = useSubscriptionOptional();
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -80,16 +83,24 @@ export const RecruitmentPostScreen: React.FC<RecruitmentPostScreenProps> = ({
 
     setSubmitting(true);
     try {
-      await recruitmentService.applyToPost({
-        post_id: post.id,
-        post_author_uid: post.author_uid ?? post.club_id,
-        player_uid: profile.uid,
-        player_name: profile.display_name,
-        cover_letter: coverLetter.trim(),
-      });
+      await recruitmentService.applyToPost(
+        {
+          post_id: post.id,
+          post_author_uid: post.author_uid ?? post.club_id,
+          player_uid: profile.uid,
+          player_name: profile.display_name,
+          cover_letter: coverLetter.trim(),
+        },
+        profile
+      );
+      void subscriptionCtx?.refresh();
       setApplied(true);
       Alert.alert('Candidature envoyée', 'Le club pourra consulter votre profil.');
     } catch (e) {
+      if (e instanceof SubscriptionLimitError) {
+        subscriptionCtx?.openUpgradeForFeature(e.feature);
+        return;
+      }
       Alert.alert('Erreur', e instanceof Error ? e.message : 'Envoi impossible.');
     } finally {
       setSubmitting(false);

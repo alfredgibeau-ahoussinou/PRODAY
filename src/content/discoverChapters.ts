@@ -3,10 +3,10 @@ import { SHOWCASE_IMAGES } from './showcaseAssets';
 
 export type DiscoverChapterId =
   | 'welcome'
+  | 'explore'
   | 'live'
-  | 'universe'
   | 'journey'
-  | 'experience';
+  | 'join';
 
 export interface DiscoverChapter {
   id: DiscoverChapterId;
@@ -15,11 +15,11 @@ export interface DiscoverChapter {
 }
 
 export const DISCOVER_CHAPTERS: DiscoverChapter[] = [
-  { id: 'welcome', label: 'Accueil', short: '01' },
-  { id: 'live', label: 'Live', short: '02' },
-  { id: 'universe', label: 'Univers', short: '03' },
-  { id: 'journey', label: 'Parcours', short: '04' },
-  { id: 'experience', label: 'Expérience', short: '05' },
+  { id: 'welcome', label: 'Découvrir', short: '1' },
+  { id: 'explore', label: 'Modules', short: '2' },
+  { id: 'live', label: 'Live', short: '3' },
+  { id: 'journey', label: 'Parcours', short: '4' },
+  { id: 'join', label: 'Rejoindre', short: '5' },
 ];
 
 export type IntroSlideAction = 'signup' | 'live' | 'modules' | 'arena' | 'sponsors';
@@ -40,47 +40,27 @@ export const DISCOVER_INTRO_SLIDES: DiscoverIntroSlide[] = [
     id: 'welcome',
     kicker: 'PRODAY',
     title: 'Une saison.\nUne app.',
-    body: 'Joueurs, clubs, coachs et sponsors — connectés sur le terrain et en dehors.',
+    body: 'Mercato, matchs, Arena et sponsors — tout pour votre saison amateur.',
     image: SHOWCASE_IMAGES.discoverHero,
     icon: 'home',
-    cta: 'Explorer',
-    action: 'live',
-  },
-  {
-    id: 'community',
-    kicker: 'COMMUNAUTÉ LIVE',
-    title: 'Des chiffres\nréels.',
-    body: 'Stats Firebase, annonces Mercato et tournois Arena — rien n’est inventé.',
-    image: SHOWCASE_IMAGES.expPulse,
-    icon: 'star-four-points',
     cta: 'Voir le live',
     action: 'live',
   },
   {
-    id: 'mercato',
-    kicker: 'MERCATO',
-    title: 'Recrute.\nProgresse.',
-    body: 'Annonces, candidatures, détections — le mercato amateur enfin structuré.',
+    id: 'modules',
+    kicker: 'MODULES',
+    title: 'Touchez.\nExplorez.',
+    body: 'Quatre piliers interactifs — swipez ou ouvrez un module en un tap.',
     image: SHOWCASE_IMAGES.mercatoDetection,
     icon: 'search',
-    cta: 'Découvrir',
+    cta: 'Les modules',
     action: 'modules',
-  },
-  {
-    id: 'arena',
-    kicker: 'ARENA',
-    title: 'Tournois\n& palmarès.',
-    body: 'Inscriptions club, statuts live et récompenses publiées par l’organisateur.',
-    image: SHOWCASE_IMAGES.arenaTournament,
-    icon: 'trophy',
-    cta: 'Aperçu Arena',
-    action: 'arena',
   },
   {
     id: 'join',
     kicker: 'REJOINDRE',
-    title: 'Crée ton\ncompte.',
-    body: 'Gratuit. Unique. Pensé pour ceux qui vivent le sport pour de vrai.',
+    title: 'Compte\ngratuit.',
+    body: 'Créez votre profil en quelques minutes et débloquez toute l’app.',
     image: SHOWCASE_IMAGES.playerProfile,
     icon: 'person',
     cta: 'Commencer',

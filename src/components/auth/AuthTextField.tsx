@@ -24,6 +24,8 @@ export const AuthTextField: React.FC<AuthTextFieldProps> = ({
   secureToggle,
   secureTextEntry,
   style,
+  onFocus,
+  onBlur,
   ...rest
 }) => {
   const [hidden, setHidden] = useState(Boolean(secureTextEntry));
@@ -49,11 +51,11 @@ export const AuthTextField: React.FC<AuthTextFieldProps> = ({
           secureTextEntry={isSecure}
           onFocus={(e) => {
             setFocused(true);
-            rest.onFocus?.(e);
+            onFocus?.(e);
           }}
           onBlur={(e) => {
             setFocused(false);
-            rest.onBlur?.(e);
+            onBlur?.(e);
           }}
           {...rest}
         />
@@ -94,7 +96,7 @@ const styles = StyleSheet.create({
     minHeight: 54,
   },
   fieldFocused: {
-    borderColor: colors.accent,
+    borderColor: colors.ink,
     backgroundColor: colors.surface,
   },
   fieldError: {

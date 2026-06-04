@@ -1,12 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import * as DocumentPicker from 'expo-document-picker';
 import { Icon } from '../../components/ui/Icon';
+import { SignupDocumentAiPanel } from '../../components/signup/SignupDocumentAiPanel';
 import { SignupStepLayout } from './SignupStepLayout';
 import { SignupFooterButton } from './SignupFooterButton';
 import type { UserRole } from '../../models/User';
-import { verificationDocumentTypeForRole } from '../../models/User';
-import { profileService } from '../../services/profile.service';
+import { verifyOnboardingDocumentWithAi } from '../../services/onboardingDocument.service';
+import { isAiVerificationPassing, type AiVerificationResult } from '../../utils/aiVerification';
+import { captureDocumentWithCamera } from '../../utils/captureIdentityDocument';
 import { ProDayErrorBanner } from '../../components/ui/ProDayErrorBanner';
 import { getErrorMessage } from '../../utils/errors';
 import { colors, spacing, radius } from '../../theme/designTokens';
@@ -22,8 +23,9 @@ interface SignupDocumentStepProps {
   loading: boolean;
   error: string | null;
   onBack?: () => void;
-  onSkip: () => void;
+  onSkip?: () => void;
   onUploaded: () => void;
+  allowSkip?: boolean;
   onError: (msg: string) => void;
   setLoading: (v: boolean) => void;
 }
@@ -34,40 +36,49 @@ export const SignupDocumentStep: React.FC<SignupDocumentStepProps> = ({
   stepName,
   phases,
   phaseIndex,
-  uid,
   role,
   loading,
   error,
   onBack,
   onSkip,
   onUploaded,
+  allowSkip = true,
   onError,
   setLoading,
 }) => {
-  const pick = async () => {
-    const result = await DocumentPicker.getDocumentAsync({
-      type: ['image/*', 'application/pdf'],
-      copyToCacheDirectory: true,
-    });
-    if (result.canceled || !result.assets?.[0]) return;
+  const [aiResult, setAiResult] = useState<AiVerificationResult | null>(null);
+  const [analyzing, setAnalyzing] = useState(false);
 
-    const asset = result.assets[0];
+  const capture = async () => {
+    const photo = await captureDocumentWithCamera('document');
+    if (!photo) return;
+
+    setAiResult(null);
+    setAnalyzing(true);
     setLoading(true);
     onError('');
     try {
-      const upload = await profileService.uploadVerificationDocument(
-        uid,
-        { uri: asset.uri, mimeType: asset.mimeType ?? 'image/jpeg' },
-        verificationDocumentTypeForRole(role)
+      const ai = await verifyOnboardingDocumentWithAi(
+        { uri: photo.uri, mimeType: photo.mimeType }
       );
-      if (!upload.success) throw new Error(upload.error);
-      onUploaded();
+      setAiResult(ai);
+      if (isAiVerificationPassing(ai.status)) {
+        onUploaded();
+      } else {
+        onError(
+          ai.rejection_reason_fr ??
+            'Document refusé par l’analyse IA. Reprenez la photo avec la caméra.'
+        );
+      }
     } catch (e) {
-      onError(getErrorMessage(e, 'Envoi du document impossible.'));
+      onError(getErrorMessage(e, 'Analyse IA impossible.'));
     } finally {
+      setAnalyzing(false);
       setLoading(false);
     }
   };
+
+  const passed = aiResult ? isAiVerificationPassing(aiResult.status) : false;
 
   return (
     <SignupStepLayout
@@ -77,43 +88,42 @@ export const SignupDocumentStep: React.FC<SignupDocumentStepProps> = ({
       phases={phases}
       phaseIndex={phaseIndex}
       title="Justificatif pro"
-      subtitle={
-        role === 'agent'
-          ? 'Téléversez votre licence agent (FFF / FIFA). Analyse Mistral IA puis validation ProDay.'
-          : role === 'organizer'
-            ? 'Pièce d’identité ou attestation d’organisateur / responsable tournoi.'
-            : role === 'club'
-              ? 'Mandat, statuts ou attestation de représentant du club.'
-              : 'Téléversez votre diplôme ou carte éducateur. Analyse Mistral IA puis validation ProDay.'
-      }
+      subtitle="Photographiez votre document avec la caméra — analyse IA instantanée, rien n’est stocké."
+      heroIcon="camera"
+      contentKey={`doc-${role}`}
       onBack={onBack}
       footer={
         <>
           <SignupFooterButton
-            label="Choisir un document"
-            onPress={pick}
-            loading={loading}
+            label={passed ? 'Continuer' : 'Ouvrir la caméra'}
+            onPress={passed ? onUploaded : capture}
+            loading={loading || analyzing}
+            disabled={analyzing}
           />
-          <View style={styles.skipWrap}>
-            <SignupFooterButton
-              label="Passer cette étape"
-              onPress={onSkip}
-              variant="secondary"
-              disabled={loading}
-            />
-          </View>
+          {allowSkip && onSkip && !analyzing && !passed ? (
+            <View style={styles.skipWrap}>
+              <SignupFooterButton
+                label="Passer cette étape"
+                onPress={onSkip}
+                variant="secondary"
+                showArrow={false}
+                disabled={loading}
+              />
+            </View>
+          ) : null}
         </>
       }
     >
       <View style={styles.iconWrap}>
-        <Icon name="document" size={36} color={colors.accent} />
+        <Icon name="camera" size={36} color={colors.accent} />
       </View>
       {error ? (
         <ProDayErrorBanner message={error} onDismiss={() => onError('')} />
       ) : null}
+      <SignupDocumentAiPanel result={aiResult ?? undefined} loading={analyzing} />
       <Text style={styles.hint}>
-        Mistral IA pré-analyse votre document en quelques secondes. La messagerie complète
-        s&apos;ouvre après validation (automatique si le dossier est clair, sinon sous 48 h).
+        Cadrez clairement votre diplôme, carte pro ou attestation. Mistral IA analyse la photo en
+        mémoire — sans enregistrement Firebase Storage.
       </Text>
     </SignupStepLayout>
   );
@@ -132,7 +142,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: spacing.lg,
   },
-  error: { color: colors.error, fontSize: 13, marginBottom: spacing.md },
   hint: { fontSize: 14, lineHeight: 21, color: colors.textSecondary, textAlign: 'center' },
   skipWrap: { marginTop: spacing.sm },
 });

@@ -38,6 +38,7 @@ interface DiscoverLivePreviewProps {
   tournaments: Tournament[];
   loading: boolean;
   onPress: () => void;
+  compact?: boolean;
 }
 
 export const DiscoverLivePreview: React.FC<DiscoverLivePreviewProps> = ({
@@ -45,16 +46,21 @@ export const DiscoverLivePreview: React.FC<DiscoverLivePreviewProps> = ({
   tournaments,
   loading,
   onPress,
+  compact = false,
 }) => {
   const hasContent = posts.length > 0 || tournaments.length > 0;
 
   return (
-    <View style={styles.wrap}>
-      <DiscoverSectionHeader
-        label="LIVE FIREBASE"
-        title="Données réelles ProDay"
-        subtitle="Annonces et tournois publiés sur la plateforme."
-      />
+    <View style={[styles.wrap, compact && styles.wrapCompact]}>
+      {!compact ? (
+        <DiscoverSectionHeader
+          label="LIVE FIREBASE"
+          title="Données réelles ProDay"
+          subtitle="Annonces et tournois publiés sur la plateforme."
+        />
+      ) : (
+        <Text style={styles.compactTitle}>Activité récente</Text>
+      )}
 
       {loading ? (
         <ActivityIndicator color={colors.accent} style={styles.loader} />
@@ -150,6 +156,13 @@ export const DiscoverLivePreview: React.FC<DiscoverLivePreviewProps> = ({
 
 const styles = StyleSheet.create({
   wrap: { marginTop: spacing.xl },
+  wrapCompact: { marginTop: spacing.sm },
+  compactTitle: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: colors.text,
+    marginBottom: spacing.sm,
+  },
   loader: { marginVertical: spacing.lg },
   empty: {
     marginHorizontal: spacing.lg,

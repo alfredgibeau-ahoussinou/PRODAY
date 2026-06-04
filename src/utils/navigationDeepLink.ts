@@ -6,7 +6,9 @@ export type DashboardDeepLink = 'arena' | 'sponsors' | 'feed';
 export type MatchsDeepLink = { eventId?: string; homeTab?: 'season' | 'matches' };
 
 export interface TabNavigationActions {
-  setActiveTab: (tab: 'home' | 'recrutement' | 'matchs' | 'messages' | 'profil') => void;
+  setActiveTab: (
+    tab: 'home' | 'recrutement' | 'matchs' | 'feed' | 'messages' | 'profil'
+  ) => void;
   openTeamEvent: (eventId: string) => void;
   openMatchs: (opts?: { homeTab?: 'season' | 'matches' }) => void;
   openMercato: (view: MercatoDeepLink) => void;

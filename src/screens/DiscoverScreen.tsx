@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, Alert } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { ArenaScreen } from './ArenaScreen';
 import { SponsorsScreen } from './SponsorsScreen';
 import { DiscoverInteractiveHome } from '../components/discover/DiscoverInteractiveHome';
-import { DiscoverLoginPrompt } from '../components/discover/DiscoverLoginPrompt';
 import type { DiscoverExperienceId } from '../components/discover/DiscoverExperiencesHub';
 import { AnimatedModalShell } from '../components/motion';
 import type { ProDayModuleId } from '../content/prodayModules';
@@ -17,34 +16,16 @@ import { DiscoverMotionLabScreen } from './discover/DiscoverMotionLabScreen';
 export const DiscoverScreen: React.FC = () => {
   const { setActiveTab } = useTabNavigation();
   const { stats, posts, tournaments, loading } = useDiscoverLiveData();
-  const [loginPrompt, setLoginPrompt] = useState(false);
   const [guestModule, setGuestModule] = useState<'arena' | 'sponsors' | null>(null);
   const [experience, setExperience] = useState<DiscoverExperienceId | null>(null);
 
-  const goSignup = () => {
-    setLoginPrompt(false);
-    setActiveTab('profil');
-  };
-
-  const promptLogin = () => setLoginPrompt(true);
-
-  const teaseTab = (tab: 'recrutement' | 'matchs') => {
-    Alert.alert(
-      'Connexion requise',
-      'Créez un compte gratuit pour accéder au Mercato, aux matchs et à la messagerie.',
-      [
-        { text: 'Plus tard', style: 'cancel' },
-        { text: 'Se connecter', onPress: goSignup },
-      ]
-    );
-    if (tab === 'recrutement') setActiveTab('recrutement');
-  };
+  const goSignup = () => setActiveTab('profil');
 
   const onModulePress = (id: ProDayModuleId) => {
-    if (id === 'recrutement') teaseTab('recrutement');
-    else if (id === 'matchs') teaseTab('matchs');
+    if (id === 'recrutement') setActiveTab('recrutement');
+    else if (id === 'matchs') setActiveTab('matchs');
     else if (id === 'arena' || id === 'sponsors') setGuestModule(id);
-    else promptLogin();
+    else goSignup();
   };
 
   const statsLabel = stats
@@ -63,19 +44,13 @@ export const DiscoverScreen: React.FC = () => {
         statsLabel={statsLabel}
         liveRecruitment={Boolean(stats && stats.recruitment_posts_open > 0)}
         onSignup={goSignup}
-        onPress={promptLogin}
-        onMercato={() => teaseTab('recrutement')}
-        onMatchs={() => teaseTab('matchs')}
+        onPress={goSignup}
+        onMercato={() => setActiveTab('recrutement')}
+        onMatchs={() => setActiveTab('matchs')}
         onModulePress={onModulePress}
-        onStepPress={promptLogin}
-        onFeaturePress={promptLogin}
+        onStepPress={goSignup}
+        onFeaturePress={goSignup}
         onExperience={setExperience}
-      />
-
-      <DiscoverLoginPrompt
-        visible={loginPrompt}
-        onLogin={goSignup}
-        onDismiss={() => setLoginPrompt(false)}
       />
 
       <AnimatedModalShell

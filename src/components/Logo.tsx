@@ -1,7 +1,10 @@
 import React from 'react';
-import { View, Text, Image, StyleSheet, ImageSourcePropType } from 'react-native';
+import { View, Text, StyleSheet, Image, ImageSourcePropType } from 'react-native';
 import { BRAND, colors, typography, spacing } from '../theme/designTokens';
-import { BRANDING_LOGOS } from '../content/brandingAssets';
+import { BRANDING_LOGOS, WOMAN_BRANDING_LOGOS } from '../content/brandingAssets';
+import { PRODAY_WOMAN_BRAND } from '../models/ProductLine';
+import { useAppTheme } from '../context/ProductLineContext';
+import { WomanLogo, womanLogoAspect } from './WomanLogo';
 
 /** Fond derrière le logo — choisit automatiquement transparent ou non */
 export type LogoBackground = 'light' | 'dark' | 'photo';
@@ -12,42 +15,35 @@ export type LogoVariant =
   | 'dark'
   | 'transparent'
   | 'transparentDark'
+  | 'authDark'
   | 'mark';
 
 interface LogoProps {
-  /** Fond blanc/clair → logo classique · fond sombre/photo → logo transparent */
   background?: LogoBackground;
   variant?: LogoVariant;
   width?: number;
   showTagline?: boolean;
-  /** Filigrane discret (uniquement sur photo) */
   watermark?: boolean;
   opacity?: number;
+  woman?: boolean;
 }
-
-const LOGO_SOURCES: Record<LogoVariant, ImageSourcePropType> = {
-  light: BRANDING_LOGOS.light,
-  dark: BRANDING_LOGOS.dark,
-  transparent: BRANDING_LOGOS.transparent,
-  transparentDark: BRANDING_LOGOS.transparentDark,
-  mark: BRANDING_LOGOS.mark,
-};
 
 const LOGO_ASPECT: Record<LogoVariant, number> = {
   light: 1.066,
   dark: 1.003,
   transparent: 0.93,
   transparentDark: 0.946,
+  authDark: 0.93,
   mark: 1.813,
 };
 
-/** Transparent seulement si le fond n’est pas blanc. */
 export function logoVariantForBackground(bg: LogoBackground, watermark = false): LogoVariant {
   if (watermark) return 'mark';
   switch (bg) {
     case 'light':
       return 'light';
     case 'dark':
+      return 'transparent';
     case 'photo':
       return 'transparent';
     default:
@@ -62,9 +58,36 @@ export const Logo: React.FC<LogoProps> = ({
   showTagline = false,
   watermark = false,
   opacity,
+  woman: womanProp,
 }) => {
+  const { isWoman } = useAppTheme();
+  const isWomanLogo = womanProp ?? isWoman;
   const resolved = variant ?? logoVariantForBackground(background, watermark);
-  const source = LOGO_SOURCES[resolved];
+
+  if (isWomanLogo) {
+    if (resolved === 'mark' || watermark) {
+      const markW = width * (watermark ? 1 : 0.55);
+      const markH = markW / 1.813;
+      return (
+        <Image
+          source={WOMAN_BRANDING_LOGOS.mark}
+          style={{ width: markW, height: markH, opacity: opacity ?? (watermark ? 0.14 : 1) }}
+          resizeMode="contain"
+          accessibilityLabel={PRODAY_WOMAN_BRAND.name}
+        />
+      );
+    }
+    return (
+      <WomanLogo
+        width={width}
+        background={background}
+        opacity={opacity}
+        watermark={false}
+      />
+    );
+  }
+
+  const source: ImageSourcePropType = BRANDING_LOGOS[resolved];
   const height = width / LOGO_ASPECT[resolved];
   const imageOpacity = opacity ?? (watermark ? 0.14 : 1);
   const onLightBg = resolved === 'light' || resolved === 'dark';
@@ -76,6 +99,7 @@ export const Logo: React.FC<LogoProps> = ({
         style={{ width, height, opacity: imageOpacity }}
         resizeMode="contain"
         accessibilityLabel={BRAND.name}
+        accessible
       />
       {showTagline && !watermark && (
         <Text
@@ -91,11 +115,22 @@ export const Logo: React.FC<LogoProps> = ({
   );
 };
 
+/** Ratio largeur/hauteur pour réserver l’espace (Woman = composant vectoriel). */
+export function logoDisplayAspect(
+  width: number,
+  opts: { woman?: boolean; variant?: LogoVariant; watermark?: boolean }
+): number {
+  if (opts.woman) {
+    if (opts.variant === 'mark' || opts.watermark) return 1.813;
+    return womanLogoAspect(width);
+  }
+  const v = opts.variant ?? 'transparent';
+  return LOGO_ASPECT[v] ?? 0.93;
+}
+
 const styles = StyleSheet.create({
   wrap: { alignItems: 'center' },
-  watermarkWrap: {
-    pointerEvents: 'none',
-  },
+  watermarkWrap: { pointerEvents: 'none' },
   tagline: {
     fontSize: typography.sizes.caption,
     letterSpacing: 1.2,
@@ -104,7 +139,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   taglineOnLight: { color: colors.navySoft },
-  taglineOnDark: { color: colors.textMuted },
+  taglineOnDark: { color: colors.heroMuted },
 });
 
 export default Logo;

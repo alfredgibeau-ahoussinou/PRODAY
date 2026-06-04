@@ -8,7 +8,8 @@ import Animated, {
 } from 'react-native-reanimated';
 import { FOUNDERS, FOUNDERS_LETTER } from '../../content/founders';
 import { FOUNDER_IMAGE_KEYS } from '../../content/showcaseExperience';
-import { SHOWCASE_IMAGES } from '../../content/showcaseAssets';
+import { useShowcaseImages } from '../../hooks/useShowcaseImages';
+import type { ShowcaseImageKey } from '../../content/showcaseAssets';
 import { PressableSpring } from './PressableSpring';
 import { DiscoverSectionHeader } from './DiscoverSectionHeader';
 import { discover } from '../../theme/discoverTheme';
@@ -76,7 +77,9 @@ const FounderChip: React.FC<{
   active: boolean;
   onPress: () => void;
 }> = ({ founder, active, onPress }) => {
+  const showcase = useShowcaseImages();
   const scale = useSharedValue(1);
+  const imageKey = FOUNDER_IMAGE_KEYS[founder.id] as ShowcaseImageKey | undefined;
 
   return (
     <PressableSpring
@@ -96,9 +99,9 @@ const FounderChip: React.FC<{
           active && styles.chipAvatarActive,
         ]}
       >
-        {FOUNDER_IMAGE_KEYS[founder.id] ? (
+        {imageKey ? (
           <Image
-            source={SHOWCASE_IMAGES[FOUNDER_IMAGE_KEYS[founder.id]]}
+            source={showcase[imageKey]}
             style={styles.chipPhoto}
           />
         ) : (

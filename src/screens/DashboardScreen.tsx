@@ -14,31 +14,23 @@ import { Icon } from '../components/ui/Icon';
 import { ProfileCompletionBar } from '../components/ProfileCompletionBar';
 import { OrganizerReminderCard } from '../components/OrganizerReminderCard';
 import { DashboardHero } from '../components/dashboard/DashboardHero';
-import { DashboardUniquesRail } from '../components/dashboard/DashboardUniquesRail';
 import { DashboardNextUp } from '../components/dashboard/DashboardNextUp';
 import { DashboardRolePanel } from '../components/dashboard/DashboardRolePanel';
 import { DashboardAgenda } from '../components/dashboard/DashboardAgenda';
-import { DashboardCommunityStrip } from '../components/dashboard/DashboardCommunityStrip';
-import { DashboardActivityHub } from '../components/dashboard/DashboardActivityHub';
-import { DashboardPulseBoost } from '../components/dashboard/DashboardPulseBoost';
+import { DashboardFocusTabs, type DashboardFocusId } from '../components/dashboard/DashboardFocusTabs';
 import { AppSpaceBanner } from '../components/appSpace/AppSpaceBanner';
-import { WomenHubScreen } from './women/WomenHubScreen';
 import { MenHubScreen } from './men/MenHubScreen';
 import { UnderU13HubScreen } from './underU13/UnderU13HubScreen';
 import { ProDayModuleGrid } from '../components/ui/ProDayModuleGrid';
-import { DiscoverSectionHeader } from '../components/discover/DiscoverSectionHeader';
 import type { ProDayModuleId } from '../content/prodayModules';
 import { getPulseBreakdown } from '../utils/prodayPulse';
-import { getProfileCompletion } from '../utils/profileCompletion';
 import { ArenaScreen } from './ArenaScreen';
 import { SponsorsScreen } from './SponsorsScreen';
 import { TeamManagementScreen } from './TeamManagementScreen';
-import { FeedScreen } from './FeedScreen';
-import { platformFeedService } from '../services/platformFeed.service';
 import { useTabNavigation } from '../context/TabNavigationContext';
+import { useAppTheme } from '../context/ProductLineContext';
 import { useTabNavigationActions } from '../hooks/useTabNavigationActions';
 import { openSeasonCalendarItem } from '../utils/navigationDeepLink';
-import type { ProdayUniqueId } from '../content/dashboardUniques';
 import { useUnreadMessageCount } from '../hooks/useUnreadMessages';
 import { useDashboardData } from '../hooks/useDashboardData';
 import { useOrganizerReminders } from '../hooks/useOrganizerReminders';
@@ -53,8 +45,6 @@ type DashboardView =
   | 'team'
   | 'arena'
   | 'sponsors'
-  | 'feed'
-  | 'women_hub'
   | 'men_hub'
   | 'under_u13_hub';
 
@@ -64,6 +54,7 @@ interface DashboardScreenProps {
 
 export const DashboardScreen: React.FC<DashboardScreenProps> = ({ profile }) => {
   const [view, setView] = useState<DashboardView>('main');
+  const [focus, setFocus] = useState<DashboardFocusId>('priorities');
   const { pendingDashboardView, clearPendingDashboard, openChat } = useTabNavigation();
   const nav = useTabNavigationActions();
   const { count: unreadCount } = useUnreadMessageCount();
@@ -75,7 +66,6 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ profile }) => 
     profile.role === 'agent' ||
     profile.role === 'physio' ||
     profile.role === 'club';
-  const showFeedEntry = true;
   const isOrganizer =
     profile.role === 'coach' ||
     profile.role === 'organizer' ||
@@ -139,44 +129,22 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ profile }) => 
 
   useEffect(() => {
     if (!pendingDashboardView) return;
-    setView(pendingDashboardView);
+    if (pendingDashboardView === 'feed') {
+      nav.setActiveTab('feed');
+    } else {
+      setView(pendingDashboardView);
+    }
     clearPendingDashboard();
-  }, [pendingDashboardView, clearPendingDashboard]);
+  }, [pendingDashboardView, clearPendingDashboard, nav]);
 
   const handleAgendaItem = (item: SeasonCalendarItem) => {
     openSeasonCalendarItem(item, nav);
-  };
-
-  const handleUniquePress = (id: ProdayUniqueId) => {
-    switch (id) {
-      case 'pulse':
-      case 'cv-live':
-      case 'trust':
-        nav.openProfile();
-        break;
-      case 'season':
-      case 'live':
-        nav.openMatchs();
-        break;
-      case 'detect':
-        nav.openMercato('detections');
-        break;
-      case 'arena':
-        setView('arena');
-        break;
-      default:
-        nav.openMatchs();
-    }
   };
 
   const handleNextUp = () => {
     if (data.nextItem) openSeasonCalendarItem(data.nextItem, nav);
     else nav.openMatchs();
   };
-
-  if (view === 'women_hub') {
-    return <WomenHubScreen onBack={() => setView('main')} />;
-  }
 
   if (view === 'men_hub') {
     return <MenHubScreen onBack={() => setView('main')} />;
@@ -186,170 +154,123 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ profile }) => 
     return <UnderU13HubScreen onBack={() => setView('main')} />;
   }
 
-  if (view === 'feed') {
-    return (
-      <FeedScreen
-        profile={profile}
-        onBack={() => setView('main')}
-        onOpenChat={(threadId) => {
-          nav.setActiveTab('messages');
-          openChat(threadId);
-        }}
-        onOpenMessages={() => nav.setActiveTab('messages')}
-      />
-    );
-  }
-
   return (
     <View style={styles.root}>
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.content}
-      showsVerticalScrollIndicator={false}
-      refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={onRefresh}
-          tintColor={colors.accent}
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={colors.accent}
+          />
+        }
+      >
+        <DashboardHero
+          profile={profile}
+          pulse={data.pulse}
+          breakdown={pulseBreakdown}
+          unreadMessages={unreadCount}
+          onProfilePress={goProfile}
+          onMessagesPress={goMessages}
         />
-      }
-    >
-      <DashboardHero
-        profile={profile}
-        pulse={data.pulse}
-        breakdown={pulseBreakdown}
-        unreadMessages={unreadCount}
-        onProfilePress={goProfile}
-        onMessagesPress={goMessages}
-      />
 
-      <AppSpaceBanner
-        showHubLinks
-        onOpenWomenHub={() => setView('women_hub')}
-        onOpenMenHub={() => setView('men_hub')}
-        onOpenUnderU13Hub={() => setView('under_u13_hub')}
-      />
+        <View style={styles.quickRow}>
+          <TouchableOpacity style={styles.quickChip} onPress={() => nav.setActiveTab('feed')} activeOpacity={0.85}>
+            <Icon name="star-four-points" size={18} color={colors.accent} />
+            <Text style={styles.quickLabel}>Fil</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.quickChip} onPress={goMessages} activeOpacity={0.85}>
+            <Icon name="chat" size={18} color={colors.accent} />
+            <Text style={styles.quickLabel}>Messages</Text>
+            {unreadCount > 0 ? (
+              <View style={styles.quickBadge}>
+                <Text style={styles.quickBadgeText}>{unreadCount > 9 ? '9+' : unreadCount}</Text>
+              </View>
+            ) : null}
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.quickChip} onPress={goProfile} activeOpacity={0.85}>
+            <Icon name="person" size={18} color={colors.accent} />
+            <Text style={styles.quickLabel}>Profil</Text>
+          </TouchableOpacity>
+        </View>
 
-      {showFeedEntry ? (
-        <TouchableOpacity
-          style={styles.feedBanner}
-          onPress={() => setView('feed')}
-          activeOpacity={0.9}
-        >
-          <View style={styles.feedBannerCopy}>
-            <Text style={styles.feedEyebrow}>COMMUNAUTÉ</Text>
-            <Text style={styles.feedTitle}>Fil d&apos;actualité ProDay</Text>
-            <Text style={styles.feedSub}>
-              {profile.role === 'agent'
-                ? 'Actualités, sondages entre agents et veille mercato.'
-                : profile.role === 'club'
-                  ? 'Publiez actus club, stages et vie de votre structure.'
-                  : profile.role === 'physio'
-                    ? 'Publiez conseils prévention & récupération.'
-                    : platformFeedService.canPublishFeedNews(profile.role)
-                      ? 'Partagez vos actus avec la communauté ProDay.'
-                      : 'Suivez les actus agents, coachs, clubs et kinés.'}
-            </Text>
-          </View>
-          <Icon name="chevron-forward" size={22} color={colors.accent} />
-        </TouchableOpacity>
-      ) : null}
-
-      <View style={styles.moduleHub}>
-        <DiscoverSectionHeader
-          label="Accès rapide"
-          title="Vos modules ProDay"
+        <AppSpaceBanner
+          showHubLinks
+          onOpenMenHub={() => setView('men_hub')}
+          onOpenUnderU13Hub={() => setView('under_u13_hub')}
         />
+
         <ProDayModuleGrid
           onModulePress={onModulePress}
           liveRecruitment={Boolean(data.stats?.recruitment_posts_open)}
+          role={profile.role}
         />
-      </View>
 
-      {data.loading ? (
-        <ActivityIndicator color={colors.accent} style={styles.loader} />
-      ) : null}
+        {data.loading ? (
+          <ActivityIndicator color={colors.accent} style={styles.loader} />
+        ) : null}
 
-      {profile.role === 'player' && <ProfileCompletionBar user={profile} />}
+        {profile.role === 'player' ? <ProfileCompletionBar user={profile} /> : null}
 
-      <DashboardPulseBoost
-        pulse={data.pulse}
-        pendingConvocations={data.pendingConvocations.length}
-        profileComplete={getProfileCompletion(profile).percent}
-        onProfile={goProfile}
-        onMatchs={goMatchs}
-        onRecruitment={goRecruitment}
-      />
+        {isOrganizer ? (
+          <OrganizerReminderCard
+            items={reminderItems}
+            loading={loadingReminders}
+            onPress={() => {
+              const firstId = reminderItems[0]?.event.id;
+              if (firstId) nav.openTeamEvent(firstId);
+              else goMatchs();
+            }}
+            onRemind={handleQuickRemind}
+            remindingId={remindingId}
+          />
+        ) : null}
 
-      {isOrganizer && (
-        <OrganizerReminderCard
-          items={reminderItems}
-          loading={loadingReminders}
-          onPress={() => {
-            const firstId = reminderItems[0]?.event.id;
-            if (firstId) nav.openTeamEvent(firstId);
-            else goMatchs();
-          }}
-          onRemind={handleQuickRemind}
-          remindingId={remindingId}
-        />
-      )}
+        {pendingVerify ? (
+          <TouchableOpacity style={styles.alertCard} onPress={goProfile}>
+            <Icon name="warning" size={22} color={colors.warning} />
+            <View style={styles.alertBody}>
+              <Text style={styles.alertTitle}>Vérification en cours</Text>
+              <Text style={styles.alertSub}>Complétez votre dossier pour la messagerie.</Text>
+            </View>
+            <Icon name="chevron-forward" size={20} color={colors.warning} />
+          </TouchableOpacity>
+        ) : null}
 
-      {pendingVerify && (
-        <TouchableOpacity style={styles.alertCard} onPress={goProfile}>
-          <Icon name="warning" size={22} color={colors.warning} />
-          <View style={styles.alertBody}>
-            <Text style={styles.alertTitle}>Vérification en cours</Text>
-            <Text style={styles.alertSub}>
-              Complétez votre dossier pour débloquer la messagerie.
-            </Text>
-          </View>
-          <Icon name="chevron-forward" size={20} color={colors.warning} />
-        </TouchableOpacity>
-      )}
+        <DashboardFocusTabs active={focus} onChange={setFocus} />
 
-      <DashboardNextUp
-        item={data.nextItem}
-        pendingCount={data.pendingConvocations.length}
-        onPress={handleNextUp}
-        onConvocationsPress={goMatchs}
-      />
-
-      <DashboardRolePanel
-        profile={profile}
-        applications={data.myApplications}
-        detections={data.detections}
-        openMatches={data.openMatches}
-        onRecruitment={goRecruitment}
-        onDetections={() => nav.openMercato('detections')}
-        onMatches={goMatchs}
-        onApplications={() => nav.openProfile('applications')}
-        onSponsors={profile.role === 'sponsor' ? () => setView('sponsors') : undefined}
-      />
-
-      <DashboardUniquesRail onPressItem={handleUniquePress} />
-
-      <DashboardAgenda
-        items={data.calendarItems}
-        onPressItem={handleAgendaItem}
-        onSeeAll={goMatchs}
-      />
-
-      <DashboardCommunityStrip
-        stats={data.stats}
-        loading={data.loading}
-        onRecruitment={goRecruitment}
-      />
-
-      <DashboardActivityHub
-        profile={profile}
-        unreadCount={unreadCount}
-        onMessages={goMessages}
-        onProfile={goProfile}
-        onArena={() => setView('arena')}
-        onSponsors={() => setView('sponsors')}
-      />
-    </ScrollView>
+        {focus === 'priorities' ? (
+          <>
+            <DashboardNextUp
+              item={data.nextItem}
+              pendingCount={data.pendingConvocations.length}
+              onPress={handleNextUp}
+              onConvocationsPress={goMatchs}
+            />
+            <DashboardRolePanel
+              profile={profile}
+              applications={data.myApplications}
+              detections={data.detections}
+              openMatches={data.openMatches}
+              onRecruitment={goRecruitment}
+              onDetections={() => nav.openMercato('detections')}
+              onMatches={goMatchs}
+              onApplications={() => nav.openProfile('applications')}
+              onSponsors={profile.role === 'sponsor' ? () => setView('sponsors') : undefined}
+              onProfile={goProfile}
+            />
+          </>
+        ) : (
+          <DashboardAgenda
+            items={data.calendarItems}
+            onPressItem={handleAgendaItem}
+            onSeeAll={goMatchs}
+          />
+        )}
+      </ScrollView>
 
       <PushScreenTransition active={view === 'arena'}>
         <ArenaScreen onBack={() => setView('main')} />
@@ -372,28 +293,37 @@ const styles = StyleSheet.create({
     paddingBottom: TAB_BAR_CONTENT_INSET + spacing.xl,
   },
   loader: { marginVertical: spacing.lg },
-  feedBanner: {
+  quickRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginBottom: spacing.lg,
+  },
+  quickChip: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.md,
-    backgroundColor: colors.ink,
-    borderRadius: radius.lg,
-    padding: spacing.md,
-    marginBottom: spacing.lg,
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: spacing.sm + 2,
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: colors.accent,
+    borderColor: colors.border,
   },
-  feedBannerCopy: { flex: 1 },
-  feedEyebrow: {
-    fontSize: 9,
-    fontWeight: '900',
-    color: colors.accent,
-    letterSpacing: 1.2,
-    marginBottom: 4,
+  quickLabel: { fontSize: 12, fontWeight: '700', color: colors.text },
+  quickBadge: {
+    position: 'absolute',
+    top: 4,
+    right: 8,
+    minWidth: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: colors.error,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
   },
-  feedTitle: { fontSize: 16, fontWeight: '900', color: colors.brandInverse },
-  feedSub: { fontSize: 12, color: colors.heroMuted, marginTop: 4, lineHeight: 17 },
-  moduleHub: { marginBottom: spacing.lg, gap: spacing.md },
+  quickBadgeText: { fontSize: 9, fontWeight: '800', color: colors.brandInverse },
   alertCard: {
     flexDirection: 'row',
     alignItems: 'center',

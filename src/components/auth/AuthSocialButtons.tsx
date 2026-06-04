@@ -272,17 +272,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: spacing.sm,
     borderRadius: radius.pill,
-    paddingVertical: spacing.md + 2,
+    paddingVertical: spacing.md,
     minHeight: 52,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: colors.border,
   },
   btnGoogle: {
-    backgroundColor: colors.surface,
+    backgroundColor: colors.surfaceMuted,
   },
   btnApple: {
-    backgroundColor: colors.accent,
-    borderColor: colors.accent,
+    backgroundColor: colors.ink,
+    borderColor: colors.ink,
   },
   btnDisabled: { opacity: 0.6 },
   btnText: {

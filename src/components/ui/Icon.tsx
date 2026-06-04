@@ -46,7 +46,8 @@ export type IconName =
   | 'eye-off'
   | 'arrow-back'
   | 'alert-circle'
-  | 'document';
+  | 'document'
+  | 'camera';
 
 const MAP: Record<IconName, keyof typeof Ionicons.glyphMap> = {
   home: 'home-outline',
@@ -93,6 +94,7 @@ const MAP: Record<IconName, keyof typeof Ionicons.glyphMap> = {
   'arrow-back': 'arrow-back',
   'alert-circle': 'alert-circle-outline',
   document: 'document-text-outline',
+  camera: 'camera-outline',
 };
 
 /** Icônes pleines pour onglets actifs */

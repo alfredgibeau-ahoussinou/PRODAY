@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, ImageBackground, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, Dimensions } from 'react-native';
+import { ShowcaseImageBackground } from '../ui/ShowcaseImageBackground';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -12,7 +13,7 @@ import { Logo } from '../Logo';
 import { PressableSpring } from './PressableSpring';
 import { MarqueePillars } from './MarqueePillars';
 import { ShimmerCTA } from './ShimmerCTA';
-import { SHOWCASE_IMAGES } from '../../content/showcaseAssets';
+import { useShowcaseImages } from '../../hooks/useShowcaseImages';
 import { colors, spacing, radius, shadows, surfaces, BRAND, brandOverlay } from '../../theme/designTokens';
 
 const { width: W } = Dimensions.get('window');
@@ -28,6 +29,7 @@ export const DiscoverWelcomePage: React.FC<DiscoverWelcomePageProps> = ({
   onNext,
   onSignup,
 }) => {
+  const showcase = useShowcaseImages();
   const breathe = useSharedValue(0);
 
   useEffect(() => {
@@ -41,14 +43,15 @@ export const DiscoverWelcomePage: React.FC<DiscoverWelcomePageProps> = ({
   return (
     <View style={styles.root}>
       <Animated.View entering={FadeInDown.springify()} style={styles.photoWrap}>
-        <ImageBackground
-          source={SHOWCASE_IMAGES.discoverHero}
+        <ShowcaseImageBackground
+          source={showcase.discoverHero}
+          variant="hero"
           style={styles.photo}
           imageStyle={styles.photoImg}
         >
           <Animated.View style={[styles.photoMotion, photoAnim]} />
           <View style={styles.photoOverlay} />
-        </ImageBackground>
+        </ShowcaseImageBackground>
       </Animated.View>
 
       <Animated.View

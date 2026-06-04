@@ -1,21 +1,13 @@
 import React from 'react';
-import { Text, StyleSheet } from 'react-native';
+import { Text, StyleSheet, View } from 'react-native';
 import { AuthTextField } from '../../components/auth/AuthTextField';
+import { SignupOptionPicker } from '../../components/signup/SignupOptionPicker';
+
 import { SignupStepLayout } from './SignupStepLayout';
 import { SignupFooterButton } from './SignupFooterButton';
 import type { SignupForm } from './useSignupForm';
-import {
-  getStaffStepSubtitle,
-  getStaffStepTitle,
-} from './signupFlowConfig';
+import { getStaffStepSubtitle, MEDICAL_POLE_SPECIALTIES } from './signupFlowConfig';
 import { colors, spacing } from '../../theme/designTokens';
-
-const ROLE_HINT: Record<string, string> = {
-  coach: 'Après la création du compte, téléversez un diplôme ou une attestation d’éducateur (analyse automatique).',
-  agent: 'Licence agent ou carte professionnelle demandée à l’étape suivante.',
-  organizer: 'Justificatif d’organisateur (pièce d’identité + attestation club ou licence).',
-  physio: 'Compte professionnel santé — partagez conseils et actualités sur le fil ProDay.',
-};
 
 interface SignupStaffStepProps {
   form: SignupForm;
@@ -25,7 +17,6 @@ interface SignupStaffStepProps {
   phases?: SignupForm['phases'];
   phaseIndex?: number;
   onBack: () => void;
-  onNext: () => void;
 }
 
 export const SignupStaffStep: React.FC<SignupStaffStepProps> = ({
@@ -36,42 +27,69 @@ export const SignupStaffStep: React.FC<SignupStaffStepProps> = ({
   phases,
   phaseIndex,
   onBack,
-  onNext,
-}) => {
-  return (
-    <SignupStepLayout
-      stepIndex={stepIndex}
-      stepTotal={stepTotal}
-      stepName={stepName}
-      phases={phases}
-      phaseIndex={phaseIndex}
-      title={getStaffStepTitle(form.role)}
-      subtitle={getStaffStepSubtitle(form.role)}
-      onBack={onBack}
-      footer={<SignupFooterButton label="Continuer" onPress={onNext} />}
-    >
-      <Text style={styles.hint}>{ROLE_HINT[form.role] ?? ''}</Text>
+}) => (
+  <SignupStepLayout
+    stepIndex={stepIndex}
+    stepTotal={stepTotal}
+    stepName={stepName}
+    phases={phases}
+    phaseIndex={phaseIndex}
+    title="Profil professionnel"
+    subtitle={getStaffStepSubtitle(form.role)}
+    contentKey={`staff-${form.role}`}
+    heroIcon="briefcase"
+    onBack={onBack}
+    footer={
+      <SignupFooterButton label="Continuer" onPress={() => form.advanceFromCurrentPage()} />
+    }
+  >
+    <View>
+      <Text style={styles.staffHint}>
+        Documents vérifiés après confirmation de l’email.
+      </Text>
+    </View>
+    {form.role === 'physio' ? (
+      <View>
+        <SignupOptionPicker
+          label="Spécialité du pôle médical *"
+          options={MEDICAL_POLE_SPECIALTIES}
+          value={form.medicalSpecialty}
+          onChange={(value) =>
+            form.setMedicalSpecialty(value as typeof form.medicalSpecialty)
+          }
+          error={form.fieldErrors.medicalSpecialty}
+        />
+      </View>
+    ) : null}
+    <View>
       <AuthTextField
-        label="Ville"
+        label="Ville *"
         icon="location"
         placeholder="Ex. Paris, Lyon…"
         value={form.city}
         onChangeText={form.setCity}
         error={form.fieldErrors.city}
       />
+    </View>
+    <View>
       <AuthTextField
-        label="Département (optionnel)"
+        label={
+          form.role === 'agent' || form.role === 'club'
+            ? 'Département *'
+            : 'Département (optionnel)'
+        }
         icon="location"
-        placeholder="Ex. 75, 69…"
+        placeholder="Ex. 75, 69, 2A, 971…"
         value={form.department}
         onChangeText={form.setDepartment}
+        error={form.fieldErrors.department}
       />
-    </SignupStepLayout>
-  );
-};
+    </View>
+  </SignupStepLayout>
+);
 
 const styles = StyleSheet.create({
-  hint: {
+  staffHint: {
     fontSize: 13,
     lineHeight: 20,
     color: colors.textSecondary,

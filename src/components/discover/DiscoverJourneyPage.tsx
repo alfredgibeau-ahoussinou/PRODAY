@@ -10,15 +10,20 @@ import { spacing } from '../../theme/designTokens';
 interface DiscoverJourneyPageProps {
   onStepPress: (id: string) => void;
   onFeaturePress: () => void;
+  scrollBottomPad?: number;
 }
 
 export const DiscoverJourneyPage: React.FC<DiscoverJourneyPageProps> = ({
   onStepPress,
   onFeaturePress,
+  scrollBottomPad,
 }) => (
   <ScrollView
     style={styles.root}
-    contentContainerStyle={styles.content}
+    contentContainerStyle={[
+      styles.content,
+      scrollBottomPad != null ? { paddingBottom: scrollBottomPad } : null,
+    ]}
     showsVerticalScrollIndicator={false}
   >
     <DiscoverSectionHeader

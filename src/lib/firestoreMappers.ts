@@ -66,6 +66,9 @@ export function userFromFirestore(uid: string, data: Record<string, unknown>): U
     avatar_url: (data.avatar_url ?? data.avatarUrl) as string | undefined,
     role: (data.role as UserRole) ?? 'player',
     email_verified: Boolean(data.email_verified ?? data.emailVerified ?? false),
+    onboarding_documents_submitted: Boolean(
+      data.onboarding_documents_submitted ?? data.onboardingDocumentsSubmitted ?? false
+    ),
     is_verified: Boolean(data.is_verified ?? data.isVerified ?? false),
     verification_status:
       (data.verification_status as VerificationStatus) ??
@@ -93,6 +96,7 @@ export function userFromFirestore(uid: string, data: Record<string, unknown>): U
       diploma: profile.diploma as string | undefined,
       license_number: profile.license_number as string | undefined,
       job_title: profile.job_title as string | undefined,
+      medical_specialty: profile.medical_specialty as string | undefined,
       specialties: profile.specialties as string[] | undefined,
       experiences: profile.experiences as WorkExperience[] | undefined,
       diplomas_list: profile.diplomas_list as DiplomaRecord[] | undefined,
@@ -116,6 +120,13 @@ export function userFromFirestore(uid: string, data: Record<string, unknown>): U
       ? normalizeAppSpace(String(data.app_space))
       : undefined,
     player_verification: data.player_verification as PlayerVerificationState | undefined,
+    subscription_tier:
+      data.subscription_tier === 'pro' ? 'pro' : data.subscription_tier === 'free' ? 'free' : undefined,
+    subscription_plan_id: data.subscription_plan_id as string | undefined,
+    subscription_status: data.subscription_status as User['subscription_status'],
+    subscription_period_end: data.subscription_period_end
+      ? toDate(data.subscription_period_end)
+      : undefined,
   };
 }
 

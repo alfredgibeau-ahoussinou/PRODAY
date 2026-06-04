@@ -1,7 +1,9 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useMemo } from 'react';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
 import Animated, { FadeInUp } from 'react-native-reanimated';
-import { PRODAY_MODULES, type ProDayModuleId } from '../../content/prodayModules';
+import { PRODAY_MODULES, type ProDayModuleId, type ProDayModuleDef } from '../../content/prodayModules';
+import { getModulesForRole } from '../../content/roleDashboardExperience';
+import type { UserRole } from '../../models/User';
 import { PressableSpring } from '../discover/PressableSpring';
 import { Icon } from './Icon';
 import { colors, spacing, radius, shadows, surfaces } from '../../theme/designTokens';
@@ -25,25 +27,56 @@ const MODULE_BG: Record<ProDayModuleId, string> = {
 interface ProDayModuleGridProps {
   onModulePress: (id: ProDayModuleId) => void;
   liveRecruitment?: boolean;
+  animated?: boolean;
+  fullWidthModuleId?: ProDayModuleId;
+  /** Réordonne et met en avant les modules selon le rôle */
+  role?: UserRole;
+}
+
+function orderModules(
+  defs: ProDayModuleDef[],
+  order: ProDayModuleId[],
+  fullWidthModuleId?: ProDayModuleId
+): ProDayModuleDef[] {
+  const byId = Object.fromEntries(defs.map((m) => [m.id, m])) as Record<ProDayModuleId, ProDayModuleDef>;
+  const sorted = order.map((id) => byId[id]).filter(Boolean);
+  if (!fullWidthModuleId) return sorted;
+  const wide = byId[fullWidthModuleId];
+  const rest = sorted.filter((m) => m.id !== fullWidthModuleId);
+  return wide ? [...rest, wide] : sorted;
 }
 
 export const ProDayModuleGrid: React.FC<ProDayModuleGridProps> = ({
   onModulePress,
   liveRecruitment,
-}) => (
-  <View style={styles.grid}>
-    {PRODAY_MODULES.map((mod, i) => {
-      const accent = MODULE_ACCENT[mod.id];
-      return (
-        <Animated.View
-          key={mod.id}
-          entering={FadeInUp.delay(i * 50).springify()}
-          style={styles.cell}
-        >
-          <PressableSpring
-            style={[styles.card, shadows.card]}
+  animated = true,
+  fullWidthModuleId: fullWidthProp,
+  role,
+}) => {
+  const modules = useMemo(() => {
+    if (role) {
+      const { order, fullWidthModuleId } = getModulesForRole(role);
+      return orderModules(PRODAY_MODULES, order, fullWidthModuleId);
+    }
+    const wideId = fullWidthProp ?? 'gestion';
+    return orderModules(PRODAY_MODULES, PRODAY_MODULES.map((m) => m.id), wideId);
+  }, [role, fullWidthProp]);
+
+  return (
+    <View style={styles.grid}>
+      {modules.map((mod, i) => {
+        const accent = MODULE_ACCENT[mod.id];
+        const wideId = role ? getModulesForRole(role).fullWidthModuleId : fullWidthProp ?? 'gestion';
+        const isWide = mod.id === wideId;
+        const cellStyle = isWide ? styles.cellWide : styles.cell;
+        const card = (
+          <Pressable
+            style={({ pressed }) => [
+              styles.card,
+              shadows.card,
+              pressed && styles.cardPressed,
+            ]}
             onPress={() => onModulePress(mod.id)}
-            scaleTo={0.94}
           >
             <View style={[styles.stripe, { backgroundColor: accent }]} />
             <View style={[styles.iconWrap, { backgroundColor: MODULE_BG[mod.id] }]}>
@@ -57,12 +90,47 @@ export const ProDayModuleGrid: React.FC<ProDayModuleGridProps> = ({
                 <Text style={styles.liveText}>Live</Text>
               </View>
             ) : null}
-          </PressableSpring>
-        </Animated.View>
-      );
-    })}
-  </View>
-);
+          </Pressable>
+        );
+
+        if (!animated) {
+          return (
+            <View key={mod.id} style={cellStyle}>
+              {card}
+            </View>
+          );
+        }
+
+        return (
+          <Animated.View
+            key={mod.id}
+            entering={FadeInUp.delay(i * 50).springify()}
+            style={cellStyle}
+          >
+            <PressableSpring
+              style={[styles.card, shadows.card]}
+              onPress={() => onModulePress(mod.id)}
+              scaleTo={0.94}
+            >
+              <View style={[styles.stripe, { backgroundColor: accent }]} />
+              <View style={[styles.iconWrap, { backgroundColor: MODULE_BG[mod.id] }]}>
+                <Icon name={mod.icon} size={22} color={accent} variant="filled" />
+              </View>
+              <Text style={styles.title}>{mod.title}</Text>
+              <Text style={styles.sub}>{mod.subtitle}</Text>
+              {mod.id === 'recrutement' && liveRecruitment ? (
+                <View style={styles.liveBadge}>
+                  <View style={styles.liveDot} />
+                  <Text style={styles.liveText}>Live</Text>
+                </View>
+              ) : null}
+            </PressableSpring>
+          </Animated.View>
+        );
+      })}
+    </View>
+  );
+};
 
 const styles = StyleSheet.create({
   grid: {
@@ -71,12 +139,14 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   cell: { width: '48.5%', flexGrow: 1 },
+  cellWide: { width: '100%' },
   card: {
     ...surfaces.cardFlat,
     padding: spacing.md,
     minHeight: 112,
     overflow: 'hidden',
   },
+  cardPressed: { opacity: 0.88 },
   stripe: {
     position: 'absolute',
     top: 0,

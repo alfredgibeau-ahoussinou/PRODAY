@@ -50,6 +50,8 @@ import { FirebaseStatusCard } from '../components/FirebaseStatusCard';
 import { isMinorUser } from '../utils/minor';
 import { verificationDocumentTypeForRole } from '../models/User';
 import { colors, spacing, radius } from '../theme/designTokens';
+import { useSubscriptionOptional } from '../context/SubscriptionContext';
+import { getPlanForRole, FREE_TIER_LABEL, PRO_TIER_LABEL } from '../content/subscriptionPlans';
 
 const ROLE_LABELS: Record<UserRole, string> = {
   player: 'Joueur',
@@ -58,7 +60,7 @@ const ROLE_LABELS: Record<UserRole, string> = {
   agent: 'Agent',
   organizer: 'Organisateur',
   sponsor: 'Sponsor',
-  physio: 'Kinésithérapeute',
+  physio: 'Pôle médical',
 };
 
 const FOOT_LABELS = { left: 'Gauche', right: 'Droit', both: 'Ambidextre' } as const;
@@ -91,6 +93,9 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
   const [remindingId, setRemindingId] = useState<string | null>(null);
   const { pendingProfileView, clearPendingProfile } = useTabNavigation();
   const nav = useTabNavigationActions();
+  const subscriptionCtx = useSubscriptionOptional();
+  const subscriptionPlan = getPlanForRole(profile.role);
+  const isPro = subscriptionCtx?.subscription?.tier === 'pro';
   const [showPublicProfile, setShowPublicProfile] = useState(false);
   const [legalDocument, setLegalDocument] = useState<LegalDocumentId | null>(null);
 
@@ -666,6 +671,21 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
           <Icon name="chevron-forward" size={20} color={colors.heroMuted} />
         </TouchableOpacity>
       )}
+
+      {subscriptionPlan && subscriptionCtx ? (
+        <View style={[styles.card, styles.menuCard]}>
+          <ProfileMenuRow
+            icon="star-outline"
+            title="Mon abonnement"
+            subtitle={
+              isPro
+                ? `${PRO_TIER_LABEL} · ${subscriptionPlan.label}`
+                : `${FREE_TIER_LABEL} · ${subscriptionPlan.label}`
+            }
+            onPress={() => subscriptionCtx.openPlansScreen()}
+          />
+        </View>
+      ) : null}
 
       <View style={[styles.card, styles.menuCard]}>
         <ProfileMenuRow

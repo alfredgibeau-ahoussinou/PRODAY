@@ -1,17 +1,20 @@
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   View,
   Text,
-  TouchableOpacity,
+  Pressable,
   StyleSheet,
   ActivityIndicator,
   ScrollView,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { authService } from '../services/auth.service';
 import { Logo } from '../components/Logo';
+import { AuthBrandHeader } from '../components/auth/AuthBrandHeader';
+import { AuthTabRail, type AuthTabId } from '../components/auth/AuthTabRail';
+import { authStyles } from '../components/auth/authStyles';
+import { useAuthLayout } from '../components/auth/useAuthLayout';
 import { AuthTextField } from '../components/auth/AuthTextField';
 import { AuthSocialButtons } from '../components/auth/AuthSocialButtons';
 import { ProDayErrorBanner, type ProDayBannerVariant } from '../components/ui/ProDayErrorBanner';
@@ -22,18 +25,24 @@ import { LegalDocumentScreen } from './LegalDocumentScreen';
 import { ProfileScreen } from './ProfileScreen';
 import type { LegalDocumentId } from '../content/legalDocuments';
 import { useAuth } from '../context/AuthContext';
-import { colors, spacing, radius, shadows, BRAND } from '../theme/designTokens';
+import { useTabNavigation } from '../context/TabNavigationContext';
+import { BRAND, colors, spacing } from '../theme/designTokens';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-type Mode = 'signup' | 'login';
+const SIGNUP_TEASER = [
+  'Choisissez votre rôle (joueur, coach, agent…)',
+  'Complétez votre profil en quelques étapes',
+  'Vérifiez votre identité puis confirmez votre email',
+];
 
 export const AuthScreen: React.FC = () => {
-  const insets = useSafeAreaInsets();
+  const { compact, logoWidth, insets, scrollBottom } = useAuthLayout();
   const { profile, loading: authLoading, configured, refreshProfile, signOut } =
     useAuth();
-
-  const [mode, setMode] = useState<Mode>('login');
+  const { setActiveTab } = useTabNavigation();
+  const [tab, setTab] = useState<AuthTabId>('login');
+  const [signupOpen, setSignupOpen] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -46,8 +55,6 @@ export const AuthScreen: React.FC = () => {
     email: string;
     displayName?: string;
   } | null>(null);
-  /** Garde le wizard d'inscription monté après création du compte (success / document). */
-  const [signupWizardActive, setSignupWizardActive] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [legalDocument, setLegalDocument] = useState<LegalDocumentId | null>(null);
 
@@ -60,16 +67,21 @@ export const AuthScreen: React.FC = () => {
     setBanner({ message, variant });
   };
 
-  const switchMode = (next: Mode) => {
-    setMode(next);
+  const openSignup = useCallback(() => {
     clearErrors();
-    if (next === 'signup') {
-      setSignupWizardActive(true);
-    } else {
-      setSignupPrefill(null);
-      setSignupWizardActive(false);
-    }
-  };
+    setSignupOpen(true);
+  }, []);
+
+  const closeSignup = useCallback(() => {
+    setSignupOpen(false);
+    setSignupPrefill(null);
+    setTab('login');
+    clearErrors();
+  }, []);
+
+  const onSignupComplete = useCallback(() => {
+    setSignupOpen(false);
+  }, []);
 
   const validateEmail = (value: string) => {
     if (!value.trim()) return 'Email requis';
@@ -102,14 +114,15 @@ export const AuthScreen: React.FC = () => {
 
   const handleSignOut = async () => {
     await signOut();
-    switchMode('login');
+    setSignupOpen(false);
+    clearErrors();
   };
 
   if (!configured) {
     return (
-      <View style={[styles.container, styles.centered]}>
+      <View style={[authStyles.root, authStyles.centered]}>
         <Logo background="light" width={140} />
-        <View style={styles.configWrap}>
+        <View style={authStyles.configWrap}>
           <ProDayConfigNotice blockingOnly />
         </View>
       </View>
@@ -118,8 +131,8 @@ export const AuthScreen: React.FC = () => {
 
   if (authLoading) {
     return (
-      <View style={[styles.container, styles.centered]}>
-        <ActivityIndicator size="large" color={colors.accent} />
+      <View style={[authStyles.root, authStyles.centered]}>
+        <ActivityIndicator size="large" color={colors.ink} />
       </View>
     );
   }
@@ -145,22 +158,6 @@ export const AuthScreen: React.FC = () => {
     );
   }
 
-  if (signupWizardActive) {
-    return (
-      <SignupFlow
-        onClose={() => {
-          setSignupWizardActive(false);
-          setMode('login');
-          setSignupPrefill(null);
-          clearErrors();
-        }}
-        onComplete={() => setSignupWizardActive(false)}
-        initialEmail={signupPrefill?.email}
-        initialDisplayName={signupPrefill?.displayName}
-      />
-    );
-  }
-
   if (profile) {
     return (
       <ProfileScreen
@@ -171,42 +168,53 @@ export const AuthScreen: React.FC = () => {
     );
   }
 
+  if (signupOpen) {
+    return (
+      <View style={authStyles.root}>
+        <SignupFlow
+          productLine="standard"
+          onClose={closeSignup}
+          onComplete={onSignupComplete}
+          initialEmail={signupPrefill?.email}
+          initialDisplayName={signupPrefill?.displayName}
+        />
+      </View>
+    );
+  }
+
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={authStyles.root}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView
-        contentContainerStyle={[
-          styles.scroll,
-          { paddingBottom: Math.max(insets.bottom, spacing.xl) },
-        ]}
+        contentContainerStyle={[authStyles.scroll, { paddingBottom: scrollBottom }]}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <View style={[styles.hero, { paddingTop: insets.top + spacing.xl }]}>
-          <Logo background="dark" width={160} showTagline={false} />
-          <Text style={styles.heroTagline}>{BRAND.tagline}</Text>
-          <Text style={styles.heroTitle}>Bon retour</Text>
-          <Text style={styles.heroSub}>
-            Connectez-vous pour accéder à votre espace ProDay
-          </Text>
+        <View style={[authStyles.header, { paddingTop: insets.top + (compact ? spacing.sm : spacing.md) }]}>
+          <AuthBrandHeader width={logoWidth} tone="light" />
+          <Text style={authStyles.tagline}>{BRAND.tagline}</Text>
         </View>
 
-        <View style={styles.sheet}>
-          <View style={styles.sheetHandle} />
+        <View style={[authStyles.body, compact && authStyles.bodyCompact]}>
+          <AuthTabRail
+            active={tab}
+            onSelect={(id) => {
+              setTab(id);
+              clearErrors();
+            }}
+            compact={compact}
+          />
 
-          <View style={styles.modeRow}>
-            <TouchableOpacity
-              style={[styles.modeTab, styles.modeTabActive]}
-              onPress={() => switchMode('login')}
-            >
-              <Text style={[styles.modeTabText, styles.modeTabTextActive]}>Connexion</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.modeTab} onPress={() => switchMode('signup')}>
-              <Text style={styles.modeTabText}>Inscription</Text>
-            </TouchableOpacity>
-          </View>
+          <Text style={[authStyles.title, compact && authStyles.titleCompact]}>
+            {tab === 'login' ? 'Bon retour' : 'Rejoignez ProDay'}
+          </Text>
+          <Text style={authStyles.sub}>
+            {tab === 'login'
+              ? 'Connectez-vous pour accéder à votre espace.'
+              : 'Créez votre compte en quelques minutes — joueurs, coachs, clubs et partenaires.'}
+          </Text>
 
           <ProDayConfigNotice compact />
 
@@ -218,80 +226,97 @@ export const AuthScreen: React.FC = () => {
             />
           ) : null}
 
-          <AuthTextField
-            label="Email"
-            icon="mail"
-            placeholder="vous@exemple.com"
-            value={email}
-            onChangeText={(t) => {
-              setEmail(t);
-              if (fieldErrors.email) setFieldErrors((e) => ({ ...e, email: '' }));
-            }}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            autoComplete="email"
-            error={fieldErrors.email}
-          />
-          <AuthTextField
-            label="Mot de passe"
-            icon="lock"
-            placeholder="••••••••"
-            value={password}
-            onChangeText={(t) => {
-              setPassword(t);
-              if (fieldErrors.password) setFieldErrors((e) => ({ ...e, password: '' }));
-            }}
-            secureToggle
-            autoComplete="password"
-            error={fieldErrors.password}
-          />
+          {tab === 'login' ? (
+            <View>
+              <AuthTextField
+                label="Email"
+                icon="mail"
+                placeholder="vous@exemple.com"
+                value={email}
+                onChangeText={(t) => {
+                  setEmail(t);
+                  if (fieldErrors.email) setFieldErrors((e) => ({ ...e, email: '' }));
+                }}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoComplete="email"
+                error={fieldErrors.email}
+              />
+              <AuthTextField
+                label="Mot de passe"
+                icon="lock"
+                placeholder="••••••••"
+                value={password}
+                onChangeText={(t) => {
+                  setPassword(t);
+                  if (fieldErrors.password) setFieldErrors((e) => ({ ...e, password: '' }));
+                }}
+                secureToggle
+                autoComplete="password"
+                error={fieldErrors.password}
+              />
 
-          <TouchableOpacity
-            style={styles.forgotBtn}
-            onPress={() => {
-              clearErrors();
-              setShowForgotPassword(true);
-            }}
-          >
-            <Text style={styles.forgotText}>Mot de passe oublié ?</Text>
-          </TouchableOpacity>
+              <Pressable
+                style={authStyles.forgotBtn}
+                onPress={() => {
+                  clearErrors();
+                  setShowForgotPassword(true);
+                }}
+              >
+                <Text style={authStyles.forgotText}>Mot de passe oublié ?</Text>
+              </Pressable>
 
-          <TouchableOpacity
-            style={[styles.primaryBtn, loading && styles.primaryDisabled]}
-            onPress={handleLogin}
-            disabled={loading}
-            activeOpacity={0.88}
-          >
-            {loading ? (
-              <ActivityIndicator color={colors.brandInverse} />
-            ) : (
-              <Text style={styles.primaryBtnText}>Se connecter</Text>
-            )}
-          </TouchableOpacity>
+              <Pressable
+                style={[authStyles.primaryBtn, loading && authStyles.primaryDisabled]}
+                onPress={() => void handleLogin()}
+                disabled={loading}
+              >
+                {loading ? (
+                  <ActivityIndicator color={colors.brandInverse} />
+                ) : (
+                  <Text style={authStyles.primaryBtnText}>Se connecter</Text>
+                )}
+              </Pressable>
 
-          <View style={styles.dividerRow}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>ou</Text>
-            <View style={styles.dividerLine} />
-          </View>
+              <View style={authStyles.dividerRow}>
+                <View style={authStyles.dividerLine} />
+                <Text style={authStyles.dividerText}>ou</Text>
+                <View style={authStyles.dividerLine} />
+              </View>
 
-          <AuthSocialButtons
-            disabled={loading}
-            onSuccess={refreshProfile}
-            onNeedsProfile={(prefill) => {
-              setSignupPrefill(prefill);
-              switchMode('signup');
-            }}
-            onError={(msg) => showError(msg)}
-          />
+              <AuthSocialButtons
+                disabled={loading}
+                onSuccess={refreshProfile}
+                onNeedsProfile={(prefill) => {
+                  setSignupPrefill(prefill);
+                  openSignup();
+                }}
+                onError={(msg) => showError(msg)}
+              />
+            </View>
+          ) : (
+            <View style={authStyles.signupTeaser}>
+              {SIGNUP_TEASER.map((line, i) => (
+                <View key={line} style={authStyles.teaserRow}>
+                  <View style={authStyles.teaserNum}>
+                    <Text style={authStyles.teaserNumText}>{i + 1}</Text>
+                  </View>
+                  <Text style={authStyles.teaserText}>{line}</Text>
+                </View>
+              ))}
+              <Pressable style={authStyles.primaryBtn} onPress={openSignup}>
+                <Text style={authStyles.primaryBtnText}>Inscription ProDay</Text>
+              </Pressable>
+            </View>
+          )}
 
-          <Text style={styles.legal}>
+          <Text style={authStyles.legal}>
             En continuant, vous acceptez les{' '}
-            <Text style={styles.legalLink} onPress={() => setLegalDocument('terms')}>
+            <Text style={authStyles.legalLink} onPress={() => setLegalDocument('terms')}>
               CGU
             </Text>{' '}
             et la{' '}
-            <Text style={styles.legalLink} onPress={() => setLegalDocument('privacy')}>
+            <Text style={authStyles.legalLink} onPress={() => setLegalDocument('privacy')}>
               politique de confidentialité
             </Text>
             .
@@ -302,149 +327,3 @@ export const AuthScreen: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.surfaceInverse,
-  },
-  centered: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: colors.background,
-    padding: spacing.xl,
-  },
-  scroll: {
-    flexGrow: 1,
-  },
-  hero: {
-    alignItems: 'center',
-    paddingHorizontal: spacing.xl,
-    paddingBottom: spacing.xxl + spacing.lg,
-  },
-  heroTagline: {
-    marginTop: spacing.md,
-    fontSize: 9,
-    fontWeight: '700',
-    letterSpacing: 2.5,
-    color: colors.heroMuted,
-    textAlign: 'center',
-  },
-  heroTitle: {
-    marginTop: spacing.xl,
-    fontSize: 32,
-    fontWeight: '800',
-    color: colors.brandInverse,
-    letterSpacing: -0.8,
-    textAlign: 'center',
-  },
-  heroSub: {
-    marginTop: spacing.sm,
-    fontSize: 15,
-    lineHeight: 22,
-    color: colors.heroMuted,
-    textAlign: 'center',
-    maxWidth: 300,
-  },
-  sheet: {
-    flex: 1,
-    marginTop: -spacing.xl,
-    backgroundColor: colors.surface,
-    borderTopLeftRadius: radius.xxl,
-    borderTopRightRadius: radius.xxl,
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.md,
-    paddingBottom: spacing.xl,
-    ...shadows.interactive,
-  },
-  sheetHandle: {
-    alignSelf: 'center',
-    width: 40,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: colors.borderMedium,
-    marginBottom: spacing.lg,
-  },
-  modeRow: {
-    flexDirection: 'row',
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-    marginBottom: spacing.lg,
-  },
-  modeTab: {
-    flex: 1,
-    paddingVertical: spacing.md,
-    alignItems: 'center',
-    borderBottomWidth: 2,
-    borderBottomColor: 'transparent',
-    marginBottom: -1,
-  },
-  modeTabActive: {
-    borderBottomColor: colors.accent,
-  },
-  modeTabText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: colors.textMuted,
-  },
-  modeTabTextActive: {
-    color: colors.text,
-    fontWeight: '800',
-  },
-  configWrap: {
-    width: '100%',
-    maxWidth: 360,
-    marginTop: spacing.lg,
-  },
-  forgotBtn: {
-    alignSelf: 'flex-end',
-    marginTop: -spacing.xs,
-    marginBottom: spacing.md,
-  },
-  forgotText: {
-    color: colors.textSecondary,
-    fontWeight: '700',
-    fontSize: 13,
-    textDecorationLine: 'underline',
-  },
-  primaryBtn: {
-    backgroundColor: colors.accent,
-    borderRadius: radius.pill,
-    paddingVertical: spacing.md + 2,
-    alignItems: 'center',
-    ...shadows.fab,
-  },
-  primaryDisabled: { opacity: 0.65 },
-  primaryBtnText: {
-    color: colors.brandInverse,
-    fontWeight: '800',
-    fontSize: 16,
-    letterSpacing: 0.2,
-  },
-  dividerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    marginVertical: spacing.lg,
-  },
-  dividerLine: { flex: 1, height: 1, backgroundColor: colors.border },
-  dividerText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: colors.textMuted,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-  },
-  legal: {
-    marginTop: spacing.lg,
-    fontSize: 11,
-    lineHeight: 16,
-    color: colors.textMuted,
-    textAlign: 'center',
-    paddingHorizontal: spacing.md,
-  },
-  legalLink: {
-    color: colors.accent,
-    fontWeight: '700',
-    textDecorationLine: 'underline',
-  },
-});

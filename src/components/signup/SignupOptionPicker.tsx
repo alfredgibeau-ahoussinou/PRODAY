@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { colors, spacing, radius } from '../../theme/designTokens';
 
 interface SignupOptionPickerProps {
@@ -23,13 +23,13 @@ export const SignupOptionPicker: React.FC<SignupOptionPickerProps> = ({
       {options.map((opt) => {
         const active = value === opt;
         return (
-          <TouchableOpacity
+          <Pressable
             key={opt}
             style={[styles.chip, active && styles.chipActive]}
             onPress={() => onChange(opt)}
           >
             <Text style={[styles.chipText, active && styles.chipTextActive]}>{opt}</Text>
-          </TouchableOpacity>
+          </Pressable>
         );
       })}
     </View>
@@ -38,24 +38,41 @@ export const SignupOptionPicker: React.FC<SignupOptionPickerProps> = ({
 );
 
 const styles = StyleSheet.create({
-  wrap: { marginBottom: spacing.md },
+  wrap: { marginBottom: spacing.lg },
   label: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: colors.textSecondary,
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
+    color: colors.textMuted,
     marginBottom: spacing.sm,
   },
-  row: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
+  row: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   chip: {
+    paddingVertical: spacing.sm + 2,
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
     borderRadius: radius.pill,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: colors.border,
     backgroundColor: colors.surface,
   },
-  chipActive: { borderColor: colors.ink, backgroundColor: colors.ink },
-  chipText: { fontSize: 12, fontWeight: '700', color: colors.textSecondary },
-  chipTextActive: { color: colors.brandInverse },
-  error: { color: colors.error, fontSize: 12, marginTop: spacing.xs, fontWeight: '600' },
+  chipActive: {
+    backgroundColor: colors.ink,
+    borderColor: colors.ink,
+  },
+  chipText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: colors.textSecondary,
+  },
+  chipTextActive: {
+    color: colors.brandInverse,
+    fontWeight: '800',
+  },
+  error: {
+    fontSize: 12,
+    color: colors.error,
+    marginTop: spacing.xs,
+    fontWeight: '600',
+  },
 });

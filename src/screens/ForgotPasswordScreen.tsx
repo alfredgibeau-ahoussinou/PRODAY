@@ -2,19 +2,21 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
-  TouchableOpacity,
+  Pressable,
   StyleSheet,
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { authService } from '../services/auth.service';
-import { Logo } from '../components/Logo';
+import { AuthBrandHeader } from '../components/auth/AuthBrandHeader';
+import { authStyles } from '../components/auth/authStyles';
+import { useAuthLayout } from '../components/auth/useAuthLayout';
 import { AuthTextField } from '../components/auth/AuthTextField';
 import { ProDayErrorBanner } from '../components/ui/ProDayErrorBanner';
 import { Icon } from '../components/ui/Icon';
-import { colors, spacing, radius, shadows, BRAND } from '../theme/designTokens';
+import { colors, spacing, radius } from '../theme/designTokens';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -27,7 +29,7 @@ export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({
   initialEmail = '',
   onBack,
 }) => {
-  const insets = useSafeAreaInsets();
+  const { compact, logoWidth, insets, scrollBottom } = useAuthLayout();
   const [email, setEmail] = useState(initialEmail);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -64,63 +66,71 @@ export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={authStyles.root}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView
-        contentContainerStyle={[
-          styles.scroll,
-          { paddingBottom: Math.max(insets.bottom, spacing.xl) },
-        ]}
+        contentContainerStyle={[authStyles.scroll, { paddingBottom: scrollBottom }]}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <View style={[styles.hero, { paddingTop: insets.top + spacing.lg }]}>
-          <TouchableOpacity
-            style={styles.backBtn}
-            onPress={onBack}
-            hitSlop={12}
-            accessibilityLabel="Retour"
-          >
-            <Icon name="arrow-back" size={22} color={colors.brandInverse} />
-          </TouchableOpacity>
-          <Logo background="dark" width={140} showTagline={false} />
-          <Text style={styles.heroTagline}>{BRAND.tagline}</Text>
+        <View
+          style={[
+            authStyles.header,
+            { paddingTop: insets.top + (compact ? spacing.sm : spacing.md) },
+          ]}
+        >
+          <View style={authStyles.headerRow}>
+            <Pressable
+              style={authStyles.backBtn}
+              onPress={onBack}
+              hitSlop={8}
+              accessibilityLabel="Retour"
+            >
+              <Icon name="arrow-back" size={20} color={colors.ink} />
+            </Pressable>
+            <View style={authStyles.headerLogo}>
+              <AuthBrandHeader width={logoWidth} tone="light" />
+            </View>
+            <View style={authStyles.headerSpacer} />
+          </View>
         </View>
 
-        <View style={styles.sheet}>
-          <View style={styles.sheetHandle} />
-
+        <View style={[authStyles.body, compact && authStyles.bodyCompact]}>
           {sent ? (
-            <View style={styles.successBlock}>
-              <View style={styles.successIcon}>
-                <Icon name="mail" size={28} color={colors.accent} />
+            <View style={local.successBlock}>
+              <View style={local.successIcon}>
+                <Icon name="mail" size={28} color={colors.ink} />
               </View>
-              <Text style={styles.title}>Email envoyé</Text>
-              <Text style={styles.sub}>
+              <Text style={[authStyles.title, compact && authStyles.titleCompact]}>
+                Email envoyé
+              </Text>
+              <Text style={authStyles.sub}>
                 Un lien de réinitialisation a été envoyé à{' '}
-                <Text style={styles.emailHighlight}>{email.trim()}</Text>.
+                <Text style={local.emailHighlight}>{email.trim()}</Text>.
                 {'\n\n'}
                 Consultez votre boîte mail et le dossier spam, puis suivez les instructions
                 pour choisir un nouveau mot de passe.
               </Text>
-              <TouchableOpacity style={styles.primaryBtn} onPress={onBack} activeOpacity={0.88}>
-                <Text style={styles.primaryBtnText}>Retour à la connexion</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.linkBtn}
+              <Pressable style={authStyles.primaryBtn} onPress={onBack}>
+                <Text style={authStyles.primaryBtnText}>Retour à la connexion</Text>
+              </Pressable>
+              <Pressable
+                style={authStyles.linkBtn}
                 onPress={() => {
                   setSent(false);
                   setError(null);
                 }}
               >
-                <Text style={styles.linkText}>Renvoyer un email</Text>
-              </TouchableOpacity>
+                <Text style={[authStyles.linkText, local.linkUnderline]}>Renvoyer un email</Text>
+              </Pressable>
             </View>
           ) : (
             <>
-              <Text style={styles.title}>Mot de passe oublié</Text>
-              <Text style={styles.sub}>
+              <Text style={[authStyles.title, compact && authStyles.titleCompact]}>
+                Mot de passe oublié
+              </Text>
+              <Text style={authStyles.sub}>
                 Saisissez l’adresse email de votre compte ProDay. Nous vous enverrons un lien
                 pour réinitialiser votre mot de passe.
               </Text>
@@ -145,20 +155,21 @@ export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({
                 error={fieldError}
               />
 
-              <TouchableOpacity
-                style={[styles.primaryBtn, loading && styles.primaryDisabled]}
+              <Pressable
+                style={[authStyles.primaryBtn, loading && authStyles.primaryDisabled]}
                 onPress={() => void handleSubmit()}
                 disabled={loading}
-                activeOpacity={0.88}
               >
-                <Text style={styles.primaryBtnText}>
-                  {loading ? 'Envoi en cours…' : 'Envoyer le lien'}
-                </Text>
-              </TouchableOpacity>
+                {loading ? (
+                  <ActivityIndicator color={colors.brandInverse} />
+                ) : (
+                  <Text style={authStyles.primaryBtnText}>Envoyer le lien</Text>
+                )}
+              </Pressable>
 
-              <TouchableOpacity style={styles.linkBtn} onPress={onBack}>
-                <Text style={styles.linkText}>Retour à la connexion</Text>
-              </TouchableOpacity>
+              <Pressable style={authStyles.linkBtn} onPress={onBack}>
+                <Text style={[authStyles.linkText, local.linkUnderline]}>Retour à la connexion</Text>
+              </Pressable>
             </>
           )}
         </View>
@@ -167,91 +178,7 @@ export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.surfaceInverse,
-  },
-  scroll: { flexGrow: 1 },
-  hero: {
-    alignItems: 'center',
-    paddingHorizontal: spacing.xl,
-    paddingBottom: spacing.xxl,
-  },
-  backBtn: {
-    alignSelf: 'flex-start',
-    marginBottom: spacing.md,
-    padding: spacing.xs,
-  },
-  heroTagline: {
-    marginTop: spacing.md,
-    fontSize: 9,
-    fontWeight: '700',
-    letterSpacing: 2.5,
-    color: colors.heroMuted,
-    textAlign: 'center',
-  },
-  sheet: {
-    flex: 1,
-    marginTop: -spacing.xl,
-    backgroundColor: colors.surface,
-    borderTopLeftRadius: radius.xxl,
-    borderTopRightRadius: radius.xxl,
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.md,
-    paddingBottom: spacing.xl,
-    minHeight: 420,
-    ...shadows.interactive,
-  },
-  sheetHandle: {
-    alignSelf: 'center',
-    width: 40,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: colors.borderMedium,
-    marginBottom: spacing.lg,
-  },
-  title: {
-    fontSize: 26,
-    fontWeight: '900',
-    color: colors.text,
-    letterSpacing: -0.5,
-    marginBottom: spacing.sm,
-  },
-  sub: {
-    fontSize: 14,
-    lineHeight: 21,
-    color: colors.textSecondary,
-    marginBottom: spacing.lg,
-  },
-  emailHighlight: {
-    fontWeight: '800',
-    color: colors.text,
-  },
-  primaryBtn: {
-    backgroundColor: colors.accent,
-    borderRadius: radius.pill,
-    paddingVertical: spacing.md + 2,
-    alignItems: 'center',
-    marginTop: spacing.sm,
-    ...shadows.fab,
-  },
-  primaryDisabled: { opacity: 0.65 },
-  primaryBtnText: {
-    color: colors.brandInverse,
-    fontWeight: '800',
-    fontSize: 16,
-  },
-  linkBtn: {
-    alignItems: 'center',
-    paddingVertical: spacing.lg,
-  },
-  linkText: {
-    color: colors.textSecondary,
-    fontWeight: '700',
-    fontSize: 14,
-    textDecorationLine: 'underline',
-  },
+const local = StyleSheet.create({
   successBlock: { alignItems: 'stretch' },
   successIcon: {
     alignSelf: 'center',
@@ -262,5 +189,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  emailHighlight: {
+    fontWeight: '800',
+    color: colors.text,
+  },
+  linkUnderline: {
+    textDecorationLine: 'underline',
   },
 });

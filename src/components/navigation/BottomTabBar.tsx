@@ -12,7 +12,8 @@ import { isGuestTabAllowed } from '../../navigation/guestAccess';
 import { PressableSpring } from '../discover/PressableSpring';
 import { Icon, type IconName } from '../ui/Icon';
 import { motion } from '../../theme/motion';
-import { colors, spacing } from '../../theme/designTokens';
+import { useAppTheme } from '../../context/ProductLineContext';
+import { colors as defaultColors, spacing, radius, shadows } from '../../theme/designTokens';
 
 export { TAB_BAR_CONTENT_INSET } from '../../navigation/tabBarLayout';
 
@@ -20,18 +21,22 @@ const TAB_ICONS: Record<MainTabId, IconName> = {
   home: 'home',
   recrutement: 'search',
   matchs: 'handshake',
+  feed: 'star-four-points',
   messages: 'chat',
   profil: 'person',
 };
 
-/** Libellés courts pour la barre (évite le texte tronqué). */
 const TAB_SHORT_LABELS: Record<MainTabId, string> = {
   home: 'Accueil',
   recrutement: 'Mercato',
   matchs: 'Matchs',
+  feed: 'Fil',
   messages: 'Messages',
   profil: 'Profil',
 };
+
+const DOCK_PAD = 4;
+const PILL_INSET = 6;
 
 interface BottomTabBarProps {
   activeTab: MainTabId;
@@ -41,7 +46,7 @@ interface BottomTabBarProps {
 }
 
 /**
- * Barre d’onglets — style maquettes ProDay : pleine largeur, trait actif en haut.
+ * Barre d’onglets — dock flottant, pilule active (style accueil clair ProDay).
  */
 export const BottomTabBar: React.FC<BottomTabBarProps> = ({
   activeTab,
@@ -49,193 +54,227 @@ export const BottomTabBar: React.FC<BottomTabBarProps> = ({
   unreadCount = 0,
   guestMode = false,
 }) => {
+  const { colors, isWoman } = useAppTheme();
   const insets = useSafeAreaInsets();
-  const [barWidth, setBarWidth] = useState(0);
-  const tabWidth = barWidth > 0 ? barWidth / MAIN_TAB_ITEMS.length : 0;
+  const [trackW, setTrackW] = useState(0);
+  const tabW = trackW > 0 ? trackW / MAIN_TAB_ITEMS.length : 0;
   const activeIndex = MAIN_TAB_ITEMS.findIndex((t) => t.id === activeTab);
-  const indicatorX = useSharedValue(0);
+  const pillX = useSharedValue(0);
 
   useEffect(() => {
-    if (tabWidth > 0) {
-      indicatorX.value = withSpring(activeIndex * tabWidth, motion.spring.smooth);
+    if (tabW > 0) {
+      pillX.value = withSpring(activeIndex * tabW, motion.spring.snappy);
     }
-  }, [activeIndex, tabWidth, indicatorX]);
+  }, [activeIndex, tabW, pillX]);
 
-  const indicatorStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: indicatorX.value }],
-    width: tabWidth,
+  const pillStyle = useAnimatedStyle(() => ({
+    width: Math.max(0, tabW - PILL_INSET * 2),
+    transform: [{ translateX: pillX.value + PILL_INSET }],
   }));
 
-  const onBarLayout = (e: LayoutChangeEvent) => {
-    setBarWidth(e.nativeEvent.layout.width);
+  const onTrackLayout = (e: LayoutChangeEvent) => {
+    setTrackW(e.nativeEvent.layout.width);
   };
 
   return (
-    <View style={[styles.root, { paddingBottom: Math.max(insets.bottom, 8) }]}>
+    <View
+      style={[
+        styles.root,
+        {
+          paddingBottom: Math.max(insets.bottom, spacing.sm),
+          backgroundColor: colors.background,
+        },
+      ]}
+    >
       {guestMode ? (
         <PressableSpring
           style={styles.guestBanner}
           onPress={() => onTabPress('profil')}
           scaleTo={0.99}
         >
-          <Icon name="lock" size={14} color={colors.accent} />
+          <Icon name="lock" size={14} color={colors.ink} />
           <Text style={styles.guestBannerText}>
-            Connectez-vous pour Mercato, Matchs et Messages
+            Connectez-vous pour publier, messagerie et profil complet
           </Text>
-          <Icon name="chevron-forward" size={14} color={colors.accent} />
+          <Icon name="chevron-forward" size={14} color={colors.inkMuted} />
         </PressableSpring>
       ) : null}
 
-      <View style={styles.bar} onLayout={onBarLayout}>
-        {tabWidth > 0 ? (
-          <Animated.View style={[styles.topIndicator, indicatorStyle]} />
-        ) : null}
+      <View style={styles.dockOuter}>
+        <View
+          style={[
+            styles.dock,
+            shadows.soft,
+            { backgroundColor: colors.surface, borderColor: colors.border },
+          ]}
+          onLayout={onTrackLayout}
+        >
+          {tabW > 0 ? (
+            <Animated.View
+              style={[
+                styles.activePill,
+                pillStyle,
+                isWoman && {
+                  backgroundColor: colors.accentSoft,
+                  borderColor: colors.accentMuted,
+                },
+              ]}
+            />
+          ) : null}
 
-        {MAIN_TAB_ITEMS.map((tab) => {
-          const active = tab.id === activeTab;
-          const icon = TAB_ICONS[tab.id];
-          const locked = guestMode && !isGuestTabAllowed(tab.id);
-          const badge = !locked && tab.id === 'messages' ? unreadCount : 0;
-          const label = TAB_SHORT_LABELS[tab.id];
+          {MAIN_TAB_ITEMS.map((tab) => {
+            const active = tab.id === activeTab;
+            const icon = TAB_ICONS[tab.id];
+            const locked = guestMode && !isGuestTabAllowed(tab.id);
+            const badge = !locked && tab.id === 'messages' ? unreadCount : 0;
+            const label = TAB_SHORT_LABELS[tab.id];
+            const tabOn = active && !locked;
+            const accentInk = isWoman ? colors.accent : colors.ink;
+            const iconColor = locked
+              ? colors.textMuted
+              : tabOn
+                ? accentInk
+                : colors.textMuted;
 
-          return (
-            <PressableSpring
-              key={tab.id}
-              style={styles.tab}
-              onPress={() => onTabPress(tab.id)}
-              scaleTo={locked ? 1 : 0.92}
-              accessibilityRole="tab"
-              accessibilityState={{ selected: active, disabled: locked }}
-              accessibilityLabel={
-                locked ? `${tab.label} — connexion requise` : tab.label
-              }
-            >
-              <View style={styles.iconRow}>
-                <Icon
-                  name={locked ? 'lock' : icon}
-                  size={22}
-                  color={
-                    locked
-                      ? colors.textMuted
-                      : active
-                        ? colors.accent
-                        : colors.textMuted
-                  }
-                  variant={active && !locked ? 'filled' : 'outline'}
-                />
-                {badge > 0 ? (
-                  <View style={styles.badge}>
-                    <Text style={styles.badgeText}>
-                      {badge > 99 ? '99+' : badge > 9 ? '9+' : badge}
-                    </Text>
-                  </View>
-                ) : null}
-              </View>
-              <Text
-                style={[
-                  styles.label,
-                  active && !locked && styles.labelActive,
-                  locked && styles.labelLocked,
-                ]}
-                numberOfLines={1}
+            return (
+              <PressableSpring
+                key={tab.id}
+                style={styles.tab}
+                onPress={() => onTabPress(tab.id)}
+                scaleTo={locked ? 1 : 0.96}
+                accessibilityRole="tab"
+                accessibilityState={{ selected: active, disabled: locked }}
+                accessibilityLabel={tab.label}
               >
-                {label}
-              </Text>
-            </PressableSpring>
-          );
-        })}
+                <View style={styles.iconRow}>
+                  <Icon
+                    name={locked ? 'lock' : icon}
+                    size={20}
+                    color={iconColor}
+                    variant={tabOn ? 'filled' : 'outline'}
+                  />
+                  {badge > 0 ? (
+                    <View style={styles.badge}>
+                      <Text style={styles.badgeText}>
+                        {badge > 99 ? '99+' : badge > 9 ? '9+' : badge}
+                      </Text>
+                    </View>
+                  ) : null}
+                </View>
+                <Text
+                  style={[
+                    styles.label,
+                    tabOn && { color: accentInk, fontWeight: '800' },
+                    locked && styles.labelLocked,
+                  ]}
+                  numberOfLines={1}
+                >
+                  {label}
+                </Text>
+              </PressableSpring>
+            );
+          })}
+        </View>
       </View>
     </View>
   );
 };
 
-const BAR_HEIGHT = 56;
-
 const styles = StyleSheet.create({
   root: {
-    backgroundColor: colors.surface,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
+    paddingTop: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    backgroundColor: defaultColors.background,
   },
   guestBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
     gap: spacing.sm,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.lg,
-    backgroundColor: colors.accentSoft,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.accentMuted,
+    marginBottom: spacing.sm,
+    paddingVertical: spacing.sm + 2,
+    paddingHorizontal: spacing.md,
+    backgroundColor: defaultColors.surface,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: defaultColors.border,
   },
   guestBannerText: {
     flex: 1,
     fontSize: 12,
     fontWeight: '600',
-    color: colors.accent,
-    lineHeight: 16,
+    color: defaultColors.textSecondary,
+    lineHeight: 17,
   },
-  bar: {
+  dockOuter: {
+    width: '100%',
+  },
+  dock: {
     flexDirection: 'row',
     alignItems: 'stretch',
-    minHeight: BAR_HEIGHT,
-    paddingTop: 4,
-    paddingBottom: 6,
+    minHeight: 52,
+    padding: DOCK_PAD,
+    backgroundColor: defaultColors.surface,
+    borderRadius: radius.xl,
+    borderWidth: 1,
+    borderColor: defaultColors.border,
     position: 'relative',
+    overflow: 'hidden',
   },
-  topIndicator: {
+  activePill: {
     position: 'absolute',
-    top: 0,
+    top: DOCK_PAD,
     left: 0,
-    height: 3,
-    backgroundColor: colors.accent,
-    borderBottomLeftRadius: 3,
-    borderBottomRightRadius: 3,
+    height: 52 - DOCK_PAD * 2,
+    backgroundColor: defaultColors.surfaceMuted,
+    borderRadius: radius.lg,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: defaultColors.border,
   },
   tab: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingTop: 6,
-    gap: 3,
+    paddingVertical: spacing.xs,
+    gap: 2,
+    zIndex: 1,
   },
   iconRow: {
-    width: 28,
-    height: 26,
+    width: 26,
+    height: 24,
     alignItems: 'center',
     justifyContent: 'center',
   },
   badge: {
     position: 'absolute',
-    top: -2,
-    right: -6,
-    backgroundColor: colors.accent,
-    borderRadius: 8,
-    minWidth: 16,
-    height: 16,
+    top: -3,
+    right: -8,
+    backgroundColor: defaultColors.ink,
+    borderRadius: 9,
+    minWidth: 17,
+    height: 17,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 3,
+    paddingHorizontal: 4,
     borderWidth: 2,
-    borderColor: colors.surface,
+    borderColor: defaultColors.surface,
   },
   badgeText: {
-    color: colors.brandInverse,
+    color: defaultColors.brandInverse,
     fontSize: 9,
     fontWeight: '800',
     lineHeight: 11,
   },
   label: {
-    fontSize: 10,
+    fontSize: MAIN_TAB_ITEMS.length > 6 ? 8 : MAIN_TAB_ITEMS.length > 5 ? 9 : 10,
     fontWeight: '600',
-    color: colors.textMuted,
-    letterSpacing: -0.2,
+    color: defaultColors.textMuted,
+    letterSpacing: 0.1,
   },
   labelActive: {
-    color: colors.accent,
-    fontWeight: '700',
+    color: defaultColors.ink,
+    fontWeight: '800',
   },
   labelLocked: {
-    opacity: 0.4,
+    opacity: 0.45,
   },
 });

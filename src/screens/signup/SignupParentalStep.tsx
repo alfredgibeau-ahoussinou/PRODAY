@@ -1,9 +1,12 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { AuthTextField } from '../../components/auth/AuthTextField';
+
+import { SignupPressable } from '../../components/signup/SignupPressable';
 import { SignupStepLayout } from './SignupStepLayout';
 import { SignupFooterButton } from './SignupFooterButton';
 import type { SignupForm } from './useSignupForm';
+import { getWomanStepMeta } from './signupWomanConfig';
 import { isUnderU13AppSpace } from '../../models/AppSpace';
 import { colors, spacing, radius } from '../../theme/designTokens';
 
@@ -29,10 +32,7 @@ export const SignupParentalStep: React.FC<SignupParentalStepProps> = ({
   onSubmit,
 }) => {
   const underU13 = isUnderU13AppSpace(form.appSpace);
-  const handleSubmit = () => {
-    if (!form.validateParental()) return;
-    onSubmit();
-  };
+  const womanMeta = form.isWomanProduct ? getWomanStepMeta('family') : null;
 
   return (
     <SignupStepLayout
@@ -41,66 +41,80 @@ export const SignupParentalStep: React.FC<SignupParentalStepProps> = ({
       stepName={stepName}
       phases={phases}
       phaseIndex={phaseIndex}
-      title="Responsable légal"
+      title={womanMeta?.title ?? 'Famille & supervision'}
       subtitle={
-        underU13
-          ? 'Espace -13 — un parent ou tuteur légal doit valider le compte du jeune joueur.'
-          : 'Compte mineur — renseignez un responsable légal pour activer la supervision ProDay.'
+        womanMeta?.subtitle ??
+        (underU13
+          ? 'Espace -13 — un parent ou tuteur valide le compte.'
+          : 'Compte mineur — le responsable légal supervise le compte.')
       }
+      contentKey={`family-${form.appSpace}`}
+      heroIcon={womanMeta?.heroIcon ?? 'shield'}
       onBack={onBack}
       footer={
         <SignupFooterButton
           label="Continuer"
-          onPress={handleSubmit}
+          onPress={onSubmit}
           loading={form.loading}
         />
       }
     >
-      {form.error ? <Text style={styles.error}>{form.error}</Text> : null}
+      {form.error ? (
+        <View>
+          <Text style={styles.error}>{form.error}</Text>
+        </View>
+      ) : null}
 
-      <View style={styles.infoBox}>
-        <Text style={styles.infoTitle}>Protection activée</Text>
-        <Text style={styles.infoBody}>
-          Filtrage des contacts, limite de temps d&apos;écran et rapport d&apos;activité pour
-          les comptes de moins de 18 ans.
-        </Text>
+      <View>
+        <View style={styles.infoBox}>
+          <Text style={styles.infoTitle}>Protection activée</Text>
+          <Text style={styles.infoBody}>
+            Filtrage des contacts, limite de temps d&apos;écran et rapport d&apos;activité pour
+            les comptes de moins de 18 ans.
+          </Text>
+        </View>
       </View>
 
-      <AuthTextField
-        label="Nom du responsable"
-        icon="person"
-        placeholder="Parent ou tuteur légal"
-        value={form.guardianName}
-        onChangeText={form.setGuardianName}
-        error={form.fieldErrors.guardianName}
-      />
-      <AuthTextField
-        label="Email du responsable"
-        icon="mail"
-        placeholder="parent@exemple.com"
-        value={form.guardianEmail}
-        onChangeText={form.setGuardianEmail}
-        keyboardType="email-address"
-        autoCapitalize="none"
-        error={form.fieldErrors.guardianEmail}
-      />
+      <View>
+        <AuthTextField
+          label="Nom du responsable"
+          icon="person"
+          placeholder="Parent ou tuteur légal"
+          value={form.guardianName}
+          onChangeText={form.setGuardianName}
+          error={form.fieldErrors.guardianName}
+        />
+      </View>
+      <View>
+        <AuthTextField
+          label="Email du responsable"
+          icon="mail"
+          placeholder="parent@exemple.com"
+          value={form.guardianEmail}
+          onChangeText={form.setGuardianEmail}
+          keyboardType="email-address"
+          autoCapitalize="none"
+          error={form.fieldErrors.guardianEmail}
+        />
+      </View>
 
-      <TouchableOpacity
-        style={styles.consentRow}
-        onPress={() => form.setGuardianConsent(!form.guardianConsent)}
-        activeOpacity={0.8}
-      >
-        <View style={[styles.checkbox, form.guardianConsent && styles.checkboxOn]}>
-          {form.guardianConsent ? <Text style={styles.checkMark}>✓</Text> : null}
-        </View>
-        <Text style={styles.consentText}>
-          Je confirme être mineur et que mon responsable accepte la supervision du compte
-          ProDay.
-        </Text>
-      </TouchableOpacity>
-      {form.fieldErrors.guardianConsent ? (
-        <Text style={styles.error}>{form.fieldErrors.guardianConsent}</Text>
-      ) : null}
+      <View>
+        <SignupPressable
+          style={styles.consentRow}
+          onPress={() => form.setGuardianConsent(!form.guardianConsent)}
+        >
+          <View style={[styles.checkbox, form.guardianConsent && styles.checkboxOn]}>
+            {form.guardianConsent ? <Text style={styles.checkMark}>✓</Text> : null}
+          </View>
+          <Text style={styles.consentText}>
+            Je confirme être mineur et que mon responsable accepte la supervision du compte
+            ProDay.
+          </Text>
+        </SignupPressable>
+        {form.fieldErrors.guardianConsent ? (
+          <Text style={styles.error}>{form.fieldErrors.guardianConsent}</Text>
+        ) : null}
+      </View>
     </SignupStepLayout>
   );
 };
