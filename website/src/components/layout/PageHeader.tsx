@@ -11,6 +11,8 @@ type PageHeaderProps = {
   title: string;
   description: string;
   image?: string;
+  logo?: string;
+  logoAlt?: string;
   dark?: boolean;
   accent?: "default" | "woman" | "pro";
 };
@@ -20,43 +22,57 @@ export function PageHeader({
   title,
   description,
   image,
+  logo,
+  logoAlt,
   dark = false,
   accent = "default",
 }: PageHeaderProps) {
   const isWoman = accent === "woman";
   const isPro = accent === "pro";
-  const isDarkHero = dark || isWoman || isPro;
+  const hasHeroImage = Boolean(image);
+  const isDarkHero = dark || isWoman || isPro || hasHeroImage;
 
-  const headerBg = isWoman
-    ? "bg-gradient-to-br from-pink-950 via-rose-900 to-neutral-900 text-white"
-    : isPro
-      ? "bg-gradient-to-br from-blue-950 via-blue-900 to-slate-950 text-white"
-      : dark
-        ? "bg-neutral-900 text-white"
-        : "gradient-mesh bg-[var(--proday-bg)]";
+  const headerBg = hasHeroImage
+    ? "bg-neutral-950 text-white"
+    : isWoman
+      ? "bg-gradient-to-br from-pink-950 via-rose-900 to-neutral-900 text-white"
+      : isPro
+        ? "bg-gradient-to-br from-blue-950 via-blue-900 to-slate-950 text-white"
+        : dark
+          ? "bg-neutral-900 text-white"
+          : "gradient-mesh bg-[var(--proday-bg)]";
 
   const overlayGradient = isWoman
-    ? "bg-gradient-to-r from-pink-950/95 to-rose-900/80"
+    ? "bg-gradient-to-r from-pink-950/88 via-pink-950/45 to-pink-950/5"
     : isPro
-      ? "bg-gradient-to-r from-blue-950/95 to-blue-900/80"
-      : "bg-gradient-to-r from-neutral-900/95 to-neutral-900/70";
+      ? "bg-gradient-to-r from-blue-950/88 via-blue-950/45 to-blue-950/5"
+      : "bg-gradient-to-r from-neutral-950/88 via-neutral-950/40 to-neutral-950/5";
 
-  const kickerClass = isWoman
-    ? "text-pink-300"
-    : isPro
-      ? "text-blue-300"
-      : dark
-        ? "text-neutral-400"
-        : "text-proday-muted";
+  const kickerClass = isDarkHero
+    ? isWoman
+      ? "text-pink-300"
+      : isPro
+        ? "text-blue-300"
+        : "text-neutral-400"
+    : "text-proday-muted";
 
-  const descClass = isDarkHero ? "text-white/80" : "text-proday-muted";
+  const descClass = isDarkHero ? "text-white/85" : "text-proday-muted";
   const backClass = isDarkHero ? "text-white/70" : "text-proday-muted";
 
   return (
-    <header className={`relative overflow-hidden pt-24 ${headerBg}`}>
+    <header
+      className={`relative overflow-hidden pt-24 ${headerBg} ${hasHeroImage ? "min-h-[420px] sm:min-h-[480px]" : ""}`}
+    >
       {image && (
         <div className="absolute inset-0">
-          <Image src={image} alt="" fill className="object-cover opacity-25" priority />
+          <Image
+            src={image}
+            alt=""
+            fill
+            className="object-cover object-center"
+            priority
+            sizes="100vw"
+          />
           <div className={`absolute inset-0 ${overlayGradient}`} />
         </div>
       )}
@@ -70,13 +86,24 @@ export function PageHeader({
           Accueil
         </Link>
 
-        <motion.p
+        <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          className={`text-xs font-semibold tracking-[0.2em] ${kickerClass}`}
+          className="flex flex-wrap items-center gap-4"
         >
-          {kicker}
-        </motion.p>
+          {logo && (
+            <Image
+              src={logo}
+              alt={logoAlt ?? ""}
+              width={72}
+              height={72}
+              className="rounded-2xl bg-white/10 shadow-lg ring-1 ring-white/20"
+            />
+          )}
+          <p className={`text-xs font-semibold tracking-[0.2em] ${kickerClass}`}>
+            {kicker}
+          </p>
+        </motion.div>
         <motion.h1
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}

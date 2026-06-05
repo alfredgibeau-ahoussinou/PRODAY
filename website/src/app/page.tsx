@@ -1,12 +1,10 @@
 import Link from "next/link";
 import { DownloadSection } from "@/components/home/DownloadSection";
 import { ExploreGrid } from "@/components/home/ExploreGrid";
-import { HomeTeaser } from "@/components/home/HomeTeaser";
 import { TestimonialsCarousel } from "@/components/home/TestimonialsCarousel";
 import { UniversePromoGrid } from "@/components/home/UniversePromoGrid";
 import { HeroSection } from "@/components/HeroSection";
 import { MarqueeStrip } from "@/components/MarqueeStrip";
-import { ModuleExplorer } from "@/components/ModuleExplorer";
 import { RoleQuiz } from "@/components/interactive/RoleQuiz";
 import { FaqAccordion } from "@/components/interactive/FaqAccordion";
 import { StatsBar } from "@/components/StatsBar";
@@ -22,14 +20,6 @@ export default function HomePage() {
       <StatsBar />
       <ExploreGrid />
       <TestimonialsCarousel />
-      <HomeTeaser
-        title="Les quatre modules de votre saison"
-        description="Mercato, Matchs, Arena et Pulse — explorez chaque pilier avec des visuels et des descriptions détaillées."
-        href={ROUTES.features}
-        cta="Voir toutes les fonctionnalités"
-      >
-        <ModuleExplorer compact />
-      </HomeTeaser>
       <section className="border-t border-neutral-200 py-20">
         <div className="mx-auto grid max-w-6xl gap-12 px-4 sm:px-6 lg:grid-cols-2">
           <Reveal>

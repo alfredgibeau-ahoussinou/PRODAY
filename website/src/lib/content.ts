@@ -1,25 +1,41 @@
+import {
+  ANNUAL_DISCOUNT_PERCENT,
+  formatAnnualPricingLine,
+  yearlyPriceFromMonthly,
+} from "./pricing";
+
 export const BRAND = {
   name: "ProDay",
   tagline: "CONNECTER • PROGRESSER • RÉUSSIR",
   mission:
-    "Trois univers — Homme, Woman et Pro — pour couvrir tout l'écosystème foot amateur et professionnel.",
+    "Trois univers — Man, Woman et Pro — pour couvrir tout l'écosystème foot amateur et professionnel.",
 } as const;
 
 export type ProductLineWeb = "homme" | "woman" | "pro";
 
+export const UNIVERSE_LOGOS: Record<ProductLineWeb, string> = {
+  homme: "/branding/logo-man-picto.png",
+  woman: "/branding/logo-woman-picto.png",
+  pro: "/branding/logo-pro-picto.png",
+};
+
 export const HOMME_BRAND = {
   name: "Pro Day Man",
+  shortName: "Man",
   fullName: "Pro Day Man",
+  logo: UNIVERSE_LOGOS.homme,
   tagline: "CONNECTER • PROGRESSER • RÉUSSIR",
   mission:
-    "Le foot masculin amateur : Mercato M, matchs, Arena, pôle santé et CV joueur — réservé aux joueurs.",
+    "Le foot masculin amateur : Mercato M, matchs, Arena, Pulse, CV joueur, covoiturage, pôle santé et Shop — réservé aux joueurs.",
   accent: "#0A0A0A",
   accentDark: "#262626",
 } as const;
 
 export const PRO_BRAND = {
   name: "Pro Day Pro",
+  shortName: "Pro",
   fullName: "Pro Day Pro",
+  logo: UNIVERSE_LOGOS.pro,
   tagline: "EXPERTISE • RÉSEAU • PERFORMANCE",
   mission:
     "Coach, agent, club recruteur et pôle santé — Mercato Pro, réseau vérifié et accompagnement sportif.",
@@ -246,19 +262,81 @@ export const VERIFICATION_STEPS = [
 export const STATS = [
   { value: "7", label: "Onglets dynamiques" },
   { value: "8", label: "Piliers produit" },
-  { value: "3", label: "Univers Homme · Woman · Pro" },
+  { value: "3", label: "Univers Man · Woman · Pro" },
   { value: "∞", label: "Ambition terrain" },
 ] as const;
 
 export const WOMAN_BRAND = {
   name: "ProDay Woman",
-  fullName: "Pro Day for Women",
+  shortName: "Woman",
+  fullName: "ProDay Woman",
+  logo: UNIVERSE_LOGOS.woman,
   tagline: "JOUER • BRILLER • GRANDIR",
   mission:
-    "Le foot au féminin : Mercato F, matchs, Arena et profil joueuse — pensé pour les filles et les seniors F.",
+    "Le foot au féminin : Mercato F, matchs, Arena, Pulse, CV joueuse, covoiturage, pôle santé et Shop — réservé aux joueuses.",
   accent: "#BE185D",
   accentDark: "#831843",
 } as const;
+
+/** Modules exclusifs Pro Day Man — joueurs foot masculin. */
+export const MAN_MODULES = [
+  {
+    id: "mercato-m",
+    title: "Mercato M",
+    subtitle: "Recrutement masculin",
+    description:
+      "Annonces par poste, niveau et ville. Candidatures en un tap, suivi des réponses sur le Mercato M.",
+    image: "/showcase/classic-mercato.jpg",
+  },
+  {
+    id: "matchs",
+    title: "Matchs",
+    subtitle: "Amicaux & convocations",
+    description:
+      "Proposez ou acceptez un match. Calendrier unifié avec convocations et RSVP pour votre équipe.",
+    image: "/showcase/classic-match.jpg",
+  },
+  {
+    id: "arena",
+    title: "Arena",
+    subtitle: "Tournois locaux",
+    description:
+      "Inscriptions, tableaux et palmarès — votre saison compétitive amateur au masculin.",
+    image: "/showcase/classic-arena.jpg",
+  },
+  {
+    id: "pulse-cv",
+    title: "Pulse & CV",
+    subtitle: "Visibilité joueur",
+    description:
+      "Score Pulse, stats saison, galerie et CV en ligne éditable — votre vitrine sur le Mercato M.",
+    image: "/showcase/classic-exp-pulse.jpg",
+  },
+  {
+    id: "carpool",
+    title: "Covoiturage",
+    subtitle: "Trajets match & détection",
+    description:
+      "Proposez ou réservez une place pour matchs et détections — intégré aux événements Man.",
+    image: "/showcase/classic-match.jpg",
+  },
+  {
+    id: "health",
+    title: "Pôle santé",
+    subtitle: "Annuaire praticiens",
+    description:
+      "Kinés, coach mental, nutritionnistes vérifiés — contact sécurisé joueur ↔ pro depuis l'app Man.",
+    image: "/showcase/classic-exp-profile.jpg",
+  },
+  {
+    id: "shop",
+    title: "ProDay Shop Man",
+    subtitle: "Équipement & textile",
+    description:
+      "Trépieds, t-shirts et maillots logo Pro Day Man — précommande depuis l'app.",
+    image: "/showcase/classic-exp-sponsors.jpg",
+  },
+] as const;
 
 export const WOMAN_MODULES = [
   {
@@ -293,12 +371,37 @@ export const WOMAN_MODULES = [
       "Stats saison, galerie et CV joueuse éditable — votre vitrine sportive au féminin.",
     image: "/showcase/woman/woman-profile.jpg",
   },
+  {
+    id: "carpool-f",
+    title: "Covoiturage",
+    subtitle: "Trajets match & détection",
+    description:
+      "Proposez ou réservez une place pour matchs et détections — intégré aux événements Woman.",
+    image: "/showcase/woman/woman-match.jpg",
+  },
+  {
+    id: "health-f",
+    title: "Pôle santé",
+    subtitle: "Annuaire praticiens",
+    description:
+      "Kinés, coach mental, nutritionnistes vérifiés — contact sécurisé joueuse ↔ pro depuis l'app Woman.",
+    image: "/showcase/woman/woman-profile.jpg",
+  },
+  {
+    id: "shop-f",
+    title: "ProDay Shop Woman",
+    subtitle: "Équipement & textile",
+    description:
+      "Trépieds, t-shirts et maillots logo ProDay Woman — précommande depuis l'app.",
+    image: "/showcase/woman/woman-arena.jpg",
+  },
 ] as const;
 
 export const PRODUCT_LINES = [
   {
     id: "homme" as const,
     brand: HOMME_BRAND,
+    logo: UNIVERSE_LOGOS.homme,
     href: "/homme",
     image: "/showcase/classic-discover-hero.jpg",
     cta: "Pro Day Man",
@@ -306,18 +409,28 @@ export const PRODUCT_LINES = [
   {
     id: "woman" as const,
     brand: WOMAN_BRAND,
+    logo: UNIVERSE_LOGOS.woman,
     href: "/woman",
     image: "/showcase/woman/woman-discover-hero.jpg",
-    cta: "Univers Woman",
+    cta: "ProDay Woman",
   },
   {
     id: "pro" as const,
     brand: PRO_BRAND,
+    logo: UNIVERSE_LOGOS.pro,
     href: "/pro",
     image: "/showcase/classic-staff.jpg",
     cta: "Pro Day Pro",
   },
 ] as const;
+
+export type UniverseModule = {
+  id: string;
+  title: string;
+  subtitle: string;
+  description: string;
+  image: string;
+};
 
 export const PRO_MODULES = [
   {
@@ -361,6 +474,116 @@ export const PRO_MODULES = [
     image: "/showcase/classic-exp-messages.jpg",
   },
 ] as const;
+
+export const UNIVERSE_PAGE_CONFIG = {
+  homme: {
+    line: "homme" as const,
+    brand: HOMME_BRAND,
+    hero: {
+      title: "Le foot masculin amateur.",
+      image: "/showcase/classic-discover-hero.jpg",
+    },
+    highlights: [
+      { label: "Public", value: "Joueurs M" },
+      { label: "Mercato", value: "Mercato M" },
+      { label: "Saison", value: "Matchs & Arena" },
+      { label: "Visibilité", value: "Pulse & CV" },
+    ],
+    modulesTitle: "Tout pour votre saison",
+    modulesSubtitle:
+      "Mercato M, matchs, Arena, Pulse, covoiturage, pôle santé et Shop — pensé pour les joueurs.",
+    modules: MAN_MODULES as readonly UniverseModule[],
+    journeyIds: ["player"] as const,
+    audienceNote:
+      "Coach, club ou recruteur ? Direction Pro Day Pro — univers dédié aux professionnels.",
+    showPulse: true,
+    showVerification: false,
+    pricingPlanIds: ["player_plus"] as const,
+    pricingTitle: "Tarif joueur",
+    cta: {
+      title: "Créez votre compte Man",
+      description:
+        "Inscription joueur en quelques minutes — Mercato M, CV en ligne et convocations.",
+      beta: "Rejoindre la beta Man",
+    },
+  },
+  woman: {
+    line: "woman" as const,
+    brand: WOMAN_BRAND,
+    hero: {
+      title: "Le foot au féminin.",
+      image: "/showcase/woman/woman-discover-hero.jpg",
+    },
+    highlights: [
+      { label: "Public", value: "Joueuses F" },
+      { label: "Mercato", value: "Mercato F" },
+      { label: "Saison", value: "Matchs & Arena" },
+      { label: "Visibilité", value: "Pulse & CV F" },
+    ],
+    modulesTitle: "Tout pour votre saison",
+    modulesSubtitle:
+      "Mercato F, matchs, Arena, Pulse, covoiturage, pôle santé et Shop — pensé pour les joueuses.",
+    modules: WOMAN_MODULES as readonly UniverseModule[],
+    journeyIds: ["player"] as const,
+    audienceNote:
+      "Staff, club ou recruteur F ? L'univers Pro Day Pro couvre les structures et le réseau pro.",
+    showPulse: true,
+    showVerification: false,
+    pricingPlanIds: ["player_plus"] as const,
+    pricingTitle: "Tarif joueuse",
+    cta: {
+      title: "Créez votre compte Woman",
+      description:
+        "Inscription joueuse en quelques minutes — visibilité sur le Mercato F et votre CV en ligne.",
+      beta: "Rejoindre la beta Woman",
+    },
+  },
+  pro: {
+    line: "pro" as const,
+    brand: PRO_BRAND,
+    hero: {
+      title: "Les pros du foot.",
+      image: "/showcase/classic-staff.jpg",
+    },
+    highlights: [
+      { label: "Rôles", value: "7 profils pro" },
+      { label: "Mercato", value: "Mercato Pro" },
+      { label: "Confiance", value: "Profils vérifiés" },
+      { label: "Réseau", value: "Messagerie sécurisée" },
+    ],
+    modulesTitle: "Modules professionnels",
+    modulesSubtitle:
+      "Recruteur, coach, agent, pôle santé et réseau Pro — Mercato Pro et pipeline candidatures.",
+    modules: PRO_MODULES as readonly UniverseModule[],
+    journeyIds: [
+      "coach",
+      "recruiter",
+      "agent",
+      "club",
+      "medical",
+      "organizer",
+    ] as const,
+    audienceNote:
+      "Joueurs foot M ou F ? Choisissez Pro Day Man ou ProDay Woman à l'inscription.",
+    showPulse: false,
+    showVerification: true,
+    pricingPlanIds: [
+      "coach_pro",
+      "agent_elite",
+      "physio_pro",
+      "organizer_pro",
+    ] as const,
+    pricingTitle: "Formules Pro",
+    cta: {
+      title: "Créez votre compte Pro",
+      description:
+        "Recruteur, coach, agent, club, pôle santé, organisateur ou partenaire — validation métier incluse.",
+      beta: "Rejoindre la beta Pro",
+    },
+  },
+} as const;
+
+export type UniversePageId = keyof typeof UNIVERSE_PAGE_CONFIG;
 
 export const VISION_PILLARS = [
   {
@@ -440,7 +663,6 @@ export const SUBSCRIPTION_PLANS_WEB = [
     label: "Joueur Plus",
     tagline: "CV en ligne, visibilité et Mercato",
     monthlyEur: 2.99,
-    yearlyEur: 24.99,
     storeAvailable: false,
     universes: ["homme", "woman"] as ProductLineWeb[],
     freeIncludes: [
@@ -448,32 +670,53 @@ export const SUBSCRIPTION_PLANS_WEB = [
       "Galerie et stats saison",
       "Mercato en lecture",
       "1 candidature / mois",
+      "Calendrier et RSVP équipe",
     ],
     proIncludes: [
-      "Candidatures illimitées",
-      "Mise en avant recherches",
+      "Candidatures Mercato illimitées",
+      "Mise en avant dans les recherches",
       "Alertes nouvelles annonces",
       "Export PDF optionnel",
     ],
   },
   {
-    id: "coach_pro",
-    label: "Coach Pro",
-    tagline: "Recrutement et multi-équipes",
+    id: "recruiter_pro",
+    label: "Recruteur Pro",
+    tagline: "Scouting, Mercato Pro et pipeline candidatures",
     monthlyEur: 7.99,
-    yearlyEur: 59.99,
     storeAvailable: false,
     universes: ["pro"] as ProductLineWeb[],
     freeIncludes: [
-      "Profil staff vérifié",
-      "1 équipe liée",
+      "Profil recruteur vérifié",
+      "Territoire & spécialité",
+      "Mercato en lecture",
       "5 messages recrutement / mois",
     ],
     proIncludes: [
+      "Annonces Mercato Pro actives",
+      "Pipeline candidatures",
+      "Messages recrutement illimités",
+      "Statistiques scouting & candidatures",
+    ],
+  },
+  {
+    id: "coach_pro",
+    label: "Coach Pro",
+    tagline: "Recrutement et gestion multi-équipes",
+    monthlyEur: 7.99,
+    storeAvailable: false,
+    universes: ["pro"] as ProductLineWeb[],
+    freeIncludes: [
+      "Profil staff et vérification",
+      "1 équipe liée",
+      "5 messages recrutement / mois",
+      "Annonces Mercato en lecture",
+    ],
+    proIncludes: [
       "Équipes illimitées",
-      "Messages illimités",
+      "Messages recrutement illimités",
       "Annonces Mercato actives",
-      "Stats candidatures",
+      "Statistiques candidatures",
     ],
   },
   {
@@ -481,34 +724,33 @@ export const SUBSCRIPTION_PLANS_WEB = [
     label: "Club Pro",
     tagline: "Annonces et structure club",
     monthlyEur: 11.99,
-    yearlyEur: 89.99,
     storeAvailable: true,
-    universes: ["homme", "woman"] as ProductLineWeb[],
+    universes: ["pro"] as ProductLineWeb[],
     freeIncludes: [
-      "Profil club",
+      "Profil club et vérification",
       "1 équipe",
-      "2 annonces actives",
-      "Convocations base",
+      "2 annonces Mercato actives",
+      "Gestion convocations (base)",
     ],
     proIncludes: [
-      "Annonces illimitées",
+      "Annonces actives illimitées",
       "Multi-équipes",
-      "Priorité fil Mercato",
+      "Priorité dans le fil Mercato",
       "Exports candidatures",
     ],
   },
   {
     id: "agent_elite",
     label: "Agent Elite",
-    tagline: "CRM joueurs et mandats",
-    monthlyEur: 24.99,
-    yearlyEur: 199.99,
+    tagline: "CRM joueurs, mandats et pipeline — formule premium",
+    monthlyEur: 99.99,
     storeAvailable: false,
+    premium: true,
     universes: ["pro"] as ProductLineWeb[],
     freeIncludes: [
-      "Profil agent vérifié",
-      "10 contacts / mois",
-      "Mercato lecture",
+      "Profil agent et vérification",
+      "10 contacts recrutement / mois",
+      "Mercato en lecture",
     ],
     proIncludes: [
       "Contacts illimités",
@@ -517,11 +759,117 @@ export const SUBSCRIPTION_PLANS_WEB = [
       "Exports et rapports",
     ],
   },
+  {
+    id: "physio_pro",
+    label: "Pôle santé Pro",
+    tagline: "Abonnement léger + visibilité clubs — commission sur les RDV",
+    monthlyEur: 19.99,
+    storeAvailable: false,
+    commissionPercent: 10,
+    commissionNote:
+      "10 % sur chaque consultation réservée via ProDay (nutrition, coach mental, prépa…). Pas de commission sur les actes médicaux réglementés.",
+    universes: ["pro"] as ProductLineWeb[],
+    freeIncludes: [
+      "Profil praticien et vérification",
+      "Spécialité et zone d'intervention",
+      "Visibilité annuaire (base)",
+      "Messagerie limitée",
+    ],
+    proIncludes: [
+      "Visibilité prioritaire près des clubs",
+      "Messagerie complète après vérif.",
+      "Prise de rendez-vous via l'app",
+      "Commission 10 % uniquement si RDV conclu",
+    ],
+  },
+  {
+    id: "organizer_pro",
+    label: "Organisateur Pro",
+    tagline: "Tournois Arena, inscriptions et palmarès",
+    monthlyEur: 14.99,
+    storeAvailable: false,
+    universes: ["pro"] as ProductLineWeb[],
+    freeIncludes: [
+      "Profil organisateur vérifié",
+      "1 tournoi Arena actif",
+      "Inscriptions en ligne",
+      "Palmarès publié",
+    ],
+    proIncludes: [
+      "Tournois illimités",
+      "Visibilité sponsors intégrée",
+      "Exports participants",
+      "Priorité fil événements",
+    ],
+  },
+  {
+    id: "sponsor_pro",
+    label: "Partenaire Pro",
+    tagline: "Visibilité marque & clubs locaux",
+    monthlyEur: 99.99,
+    storeAvailable: false,
+    universes: ["pro"] as ProductLineWeb[],
+    freeIncludes: [
+      "Profil partenaire vérifié",
+      "Présence annuaire Sponsors",
+      "1 offre active",
+      "Zone géographique",
+    ],
+    proIncludes: [
+      "Offres sponsors illimitées",
+      "Logo onglet Sponsors",
+      "Campagnes locales ciblées",
+      "Push géolocalisé (à venir)",
+    ],
+  },
 ] as const;
 
-export function plansForUniverse(line: ProductLineWeb) {
-  return SUBSCRIPTION_PLANS_WEB.filter((p) => p.universes.includes(line));
+export type WebSubscriptionPlanBase = (typeof SUBSCRIPTION_PLANS_WEB)[number];
+export type WebSubscriptionPlan = WebSubscriptionPlanBase & {
+  yearlyEur: number;
+};
+
+export function plansForUniverse(line: ProductLineWeb): WebSubscriptionPlan[] {
+  return SUBSCRIPTION_PLANS_WEB.filter((p) => p.universes.includes(line)).map(
+    (p) => ({
+      ...p,
+      yearlyEur: yearlyPriceFromMonthly(p.monthlyEur),
+    }),
+  );
 }
+
+export function getWebPlanById(
+  id: WebSubscriptionPlanBase["id"],
+): WebSubscriptionPlan | null {
+  const plan = SUBSCRIPTION_PLANS_WEB.find((p) => p.id === id);
+  if (!plan) return null;
+  return { ...plan, yearlyEur: yearlyPriceFromMonthly(plan.monthlyEur) };
+}
+
+export type WebSubscriptionPlanUnion = WebSubscriptionPlan;
+
+export function isPremiumWebPlan(plan: WebSubscriptionPlan): boolean {
+  return "premium" in plan && plan.premium === true;
+}
+
+export function webPlanMonthlyPrice(id: WebSubscriptionPlanBase["id"]): number {
+  const plan = SUBSCRIPTION_PLANS_WEB.find((p) => p.id === id);
+  if (!plan) throw new Error(`Plan inconnu : ${id}`);
+  return plan.monthlyEur;
+}
+
+/** Tarif Pro Day Pro pour partenaire / sponsor — dérivé du plan store. */
+export const PRO_ESSENTIAL_MONTHLY_EUR = webPlanMonthlyPrice("sponsor_pro");
+
+/** Organisateur Arena — dérivé du plan store. */
+export const ORGANIZER_PRO_MONTHLY_EUR = webPlanMonthlyPrice("organizer_pro");
+
+/** Pôle santé — dérivé du plan store. */
+export const PHYSIO_PRO_MONTHLY_EUR = webPlanMonthlyPrice("physio_pro");
+export const PHYSIO_BOOKING_COMMISSION_PERCENT = 10;
+
+const faqPricing = (planId: WebSubscriptionPlanBase["id"]) =>
+  formatAnnualPricingLine(webPlanMonthlyPrice(planId));
 
 export const FAQ_ITEMS = [
   {
@@ -559,6 +907,38 @@ export const FAQ_ITEMS = [
   {
     q: "Pro Day Man, Woman et Pro — c'est quoi ?",
     a: "Trois univers : Man (joueurs foot M), Woman (joueuses foot F) et Pro (coach, agent, recruteur, club, pôle santé, orga, partenaire). Choisissez le vôtre à l'inscription.",
+  },
+  {
+    q: "Comment fonctionne le tarif mensuel vs annuel ?",
+    a: `Le mensuel est toujours le tarif de base. L'annuel facture 12 mois avec ${ANNUAL_DISCOUNT_PERCENT} % de remise (prix annuel = mensuel × 12 − ${ANNUAL_DISCOUNT_PERCENT} %). Exemple : ${faqPricing("agent_elite")}.`,
+  },
+  {
+    q: "Quel tarif pour Joueur Plus ?",
+    a: `Joueur Plus (Man & Woman) : ${faqPricing("player_plus")}. Candidatures Mercato illimitées, mise en avant et alertes annonces.`,
+  },
+  {
+    q: "Quel tarif pour Coach ou Recruteur Pro ?",
+    a: `Coach Pro et Recruteur Pro : ${faqPricing("coach_pro")}. Multi-équipes, messages recrutement illimités et annonces Mercato actives.`,
+  },
+  {
+    q: "Quel tarif pour Club Pro ?",
+    a: `Club Pro : ${faqPricing("club_pro")}. Annonces illimitées, multi-équipes et priorité dans le fil Mercato.`,
+  },
+  {
+    q: "Quel tarif pour Agent Elite ?",
+    a: `Agent Elite est la formule premium agents : ${faqPricing("agent_elite")}. CRM joueurs, alertes géolocalisées, pipeline mandats et contacts illimités.`,
+  },
+  {
+    q: "Quel tarif pour le pôle santé ?",
+    a: `Pôle santé Pro : ${faqPricing("physio_pro")}. Commission ${PHYSIO_BOOKING_COMMISSION_PERCENT} % uniquement sur les consultations réservées via l'app (nutrition, coach mental, prépa…). Pas de commission sur les actes médicaux réglementés.`,
+  },
+  {
+    q: "Quel tarif pour Organisateur Pro ?",
+    a: `Organisateur Pro : ${faqPricing("organizer_pro")}. Tournois Arena illimités, inscriptions en ligne, palmarès et visibilité sponsors.`,
+  },
+  {
+    q: "Quel tarif pour les partenaires / sponsors ?",
+    a: `Partenaire Pro : ${faqPricing("sponsor_pro")}. Visibilité marque, offres sponsors illimitées et campagnes locales ciblées.`,
   },
   {
     q: "Puis-je exporter mon CV foot ?",

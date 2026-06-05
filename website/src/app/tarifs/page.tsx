@@ -1,23 +1,36 @@
 import type { Metadata } from "next";
 import { PricingTable } from "@/components/interactive/PricingTable";
 import { PageHeader } from "@/components/layout/PageHeader";
+import type { ProductLineWeb } from "@/lib/content";
 
 export const metadata: Metadata = {
   title: "Tarifs",
   description:
-    "Offres Gratuit et Pro — par univers Man, Woman et Pro Day Pro.",
+    "Offres Gratuit et Pro — mensuel au tarif de base, annuel −20 % sur 12 mois. Man, Woman et Pro Day Pro.",
 };
 
-export default function PricingPage() {
+function parseUniverseParam(value: string | undefined): ProductLineWeb | undefined {
+  if (value === "homme" || value === "woman" || value === "pro") return value;
+  return undefined;
+}
+
+export default async function PricingPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ u?: string }>;
+}) {
+  const { u } = await searchParams;
+  const initialUniverse = parseUniverseParam(u) ?? "homme";
+
   return (
     <>
       <PageHeader
         kicker="TARIFS"
         title="Gratuit pour démarrer. Pro pour aller plus loin."
-        description="Choisissez votre univers — Man, Woman ou Pro — puis le plan adapté à votre rôle."
+        description="Choisissez votre univers — Man, Woman ou Pro — puis le plan adapté à votre rôle. Mensuel = tarif de base ; annuel = 12 mois avec 20 % de remise."
       />
       <section className="py-16">
-        <PricingTable />
+        <PricingTable initialUniverse={initialUniverse} />
       </section>
     </>
   );

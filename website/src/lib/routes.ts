@@ -27,7 +27,7 @@ export const NAV_ITEMS = [
   { href: ROUTES.features, label: "Fonctionnalités" },
   { href: ROUTES.demo, label: "Démo" },
   { href: ROUTES.pricing, label: "Tarifs" },
-  { href: ROUTES.homme, label: "Homme" },
+  { href: ROUTES.homme, label: "Man", accent: "man" as const },
   { href: ROUTES.woman, label: "Woman", accent: "woman" as const },
   { href: ROUTES.pro, label: "Pro", accent: "pro" as const },
   { href: ROUTES.faq, label: "FAQ" },
@@ -79,7 +79,7 @@ export const EXPLORE_CARDS = [
   {
     href: ROUTES.quiz,
     title: "Quiz profil",
-    description: "3 questions — Homme, Woman ou Pro : quel parcours vous correspond.",
+    description: "3 questions — Man, Woman ou Pro : quel parcours vous correspond.",
     image: "/showcase/classic-exp-discover.jpg",
     tag: "Quiz",
   },
@@ -114,7 +114,7 @@ export const EXPLORE_CARDS = [
   {
     href: ROUTES.pricing,
     title: "Tarifs",
-    description: "Gratuit et offres Pro — par univers Homme, Woman et Pro.",
+    description: "Gratuit et offres Pro — par univers Man, Woman et Pro.",
     image: "/showcase/classic-exp-messages.jpg",
     tag: "Tarifs",
   },
@@ -123,7 +123,7 @@ export const EXPLORE_CARDS = [
     title: "Pro Day Man",
     description: "Foot masculin amateur — Mercato M, matchs et CV joueur.",
     image: "/showcase/classic-discover-hero.jpg",
-    tag: "Homme",
+    tag: "Man",
   },
   {
     href: ROUTES.woman,

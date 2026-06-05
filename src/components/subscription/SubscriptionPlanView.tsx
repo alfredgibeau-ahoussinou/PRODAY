@@ -13,10 +13,15 @@ import type { User } from '../../models/User';
 import { ScreenHeader } from '../ui/ScreenHeader';
 import { Icon } from '../ui/Icon';
 import {
+  ANNUAL_DISCOUNT_PERCENT,
+  annualSavingsFromMonthly,
+  monthlyEquivalentFromYearly,
+} from '../../utils/subscriptionPricing';
+import {
   FREE_TIER_LABEL,
   PRO_TIER_LABEL,
-  getPlanForRole,
   ROLES_WITHOUT_STORE_PLAN,
+  getPlanForRole,
   type SubscriptionPlanDefinition,
 } from '../../content/subscriptionPlans';
 import { subscriptionService } from '../../services/subscription.service';
@@ -211,29 +216,33 @@ export const SubscriptionPlanView: React.FC<SubscriptionPlanViewProps> = ({
           </View>
           <Text style={styles.heroTitle}>{plan?.label ?? 'ProDay'}</Text>
           <Text style={styles.heroSub}>
-            {noStorePlan
-              ? 'Accès complet inclus pour votre rôle au lancement beta.'
-              : plan?.tagline ?? 'Gérez votre formule et vos limites mensuelles.'}
+            {plan?.tagline ?? 'Gérez votre formule et vos limites mensuelles.'}
           </Text>
         </View>
 
-        {noStorePlan ? (
-          <View style={styles.infoCard}>
-            <Icon name="checkmark-circle" size={22} color={colors.success} />
-            <Text style={styles.infoText}>
-              Organisateurs, sponsors et pôle médical : pas d’abonnement payant requis pour
-              l’instant. Profitez de toutes les fonctionnalités ouvertes en beta.
-            </Text>
-          </View>
-        ) : null}
-
-        {!noStorePlan && plan && !isPro ? (
+        {plan && !isPro ? (
           <View style={styles.priceCard}>
             <Text style={styles.priceMain}>{formatEur(plan.pricing.monthlyEur)} €</Text>
             <Text style={styles.pricePer}>/ mois</Text>
             <Text style={styles.priceAlt}>
-              ou {plan.pricing.yearlyEur} € / an · économisez ~20 %
+              ou {formatEur(plan.pricing.yearlyEur)} € / an · −{ANNUAL_DISCOUNT_PERCENT} % (
+              {formatEur(annualSavingsFromMonthly(plan.pricing.monthlyEur))} € d&apos;économie)
             </Text>
+            <Text style={styles.priceEquiv}>
+              soit {formatEur(monthlyEquivalentFromYearly(plan.pricing.yearlyEur))} €/mois en
+              annuel
+            </Text>
+            {plan.bookingCommissionPercent != null ? (
+              <Text style={styles.commissionNote}>
+                + {plan.bookingCommissionPercent} % par RDV réservé via l&apos;app
+              </Text>
+            ) : null}
+          </View>
+        ) : null}
+
+        {plan?.bookingCommissionNote ? (
+          <View style={styles.commissionCard}>
+            <Text style={styles.commissionCardText}>{plan.bookingCommissionNote}</Text>
           </View>
         ) : null}
 
@@ -250,7 +259,7 @@ export const SubscriptionPlanView: React.FC<SubscriptionPlanViewProps> = ({
           </View>
         ) : null}
 
-        {plan && !noStorePlan ? (
+        {plan ? (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Comparer les offres</Text>
             {renderCompare(plan)}
@@ -260,7 +269,7 @@ export const SubscriptionPlanView: React.FC<SubscriptionPlanViewProps> = ({
         <View style={{ height: spacing.xxl }} />
       </ScrollView>
 
-      {!noStorePlan && !isPro && plan ? (
+      {!isPro && plan ? (
         <View style={styles.footer}>
           <TouchableOpacity
             style={styles.cta}
@@ -354,6 +363,23 @@ const styles = StyleSheet.create({
   priceMain: { fontSize: 28, fontWeight: '900', color: colors.text },
   pricePer: { fontSize: 16, color: colors.textMuted, fontWeight: '600', marginTop: -4 },
   priceAlt: { fontSize: 13, color: colors.textSecondary, marginTop: spacing.sm },
+  priceEquiv: { fontSize: 12, color: colors.textMuted, marginTop: spacing.xs },
+  commissionNote: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: colors.brand,
+    marginTop: spacing.sm,
+    textAlign: 'center',
+  },
+  commissionCard: {
+    backgroundColor: colors.accentSoft,
+    borderRadius: radius.lg,
+    padding: spacing.md,
+    marginBottom: spacing.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  commissionCardText: { fontSize: 13, lineHeight: 19, color: colors.textSecondary },
   section: { marginBottom: spacing.lg },
   sectionTitle: {
     fontSize: 12,

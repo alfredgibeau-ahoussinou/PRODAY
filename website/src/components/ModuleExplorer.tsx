@@ -67,31 +67,26 @@ export function ModuleExplorer({ compact }: ModuleExplorerProps) {
             initial={{ opacity: 0, scale: 0.96 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.45 }}
-            className="relative min-h-[400px] overflow-hidden rounded-3xl"
+            className="relative aspect-[4/3] min-h-[320px] overflow-hidden rounded-3xl sm:min-h-[400px] lg:aspect-auto lg:min-h-[480px]"
           >
             <Image
               src={mod.image}
               alt={mod.title}
               fill
-              className="object-cover"
+              className="object-cover object-center"
               sizes="(max-width: 768px) 100vw, 50vw"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-            <div className="absolute bottom-0 p-8">
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/15 to-transparent" />
+            <div className="absolute inset-x-0 bottom-0 p-8 pt-20">
               <motion.h3
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
-                className="text-2xl font-bold text-white"
+                className="text-2xl font-bold text-white drop-shadow-sm"
               >
                 {mod.title}
               </motion.h3>
-              <p className="mt-2 max-w-sm text-white/85">{mod.description}</p>
+              <p className="mt-2 max-w-sm text-sm text-white/90 drop-shadow-sm">{mod.description}</p>
             </div>
-            <motion.div
-              className="absolute right-6 top-6 h-16 w-16 rounded-full border-2 border-white/30"
-              animate={{ scale: [1, 1.15, 1] }}
-              transition={{ duration: 3, repeat: Infinity }}
-            />
           </motion.div>
         </div>
       </div>

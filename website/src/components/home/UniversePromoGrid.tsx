@@ -50,22 +50,31 @@ export function UniversePromoGrid() {
                 className={`relative overflow-hidden rounded-3xl bg-gradient-to-br ${styles.gradient} p-8`}
               >
                 <div className="absolute -right-6 -top-6 h-32 w-32 rounded-full bg-white/10 blur-2xl" />
-                <div className="relative">
-                  <p className={`text-xs font-semibold tracking-widest ${styles.tag}`}>
-                    {line.brand.tagline}
-                  </p>
-                  <h3 className="mt-2 text-xl font-bold text-white sm:text-2xl">
-                    {line.brand.fullName}
-                  </h3>
-                  <p className={`mt-3 text-sm ${styles.body}`}>{line.brand.mission}</p>
-                  <Link
-                    href={line.href}
-                    className={`mt-6 inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold ${styles.btn}`}
-                  >
-                    {line.cta}
-                    <ArrowRight size={16} />
-                  </Link>
+                <div className="relative flex items-start gap-4">
+                  <Image
+                    src={line.logo}
+                    alt={line.brand.fullName}
+                    width={56}
+                    height={56}
+                    className="shrink-0 rounded-2xl bg-white/10 ring-1 ring-white/20"
+                  />
+                  <div>
+                    <p className={`text-xs font-semibold tracking-widest ${styles.tag}`}>
+                      {line.brand.tagline}
+                    </p>
+                    <h3 className="mt-2 text-xl font-bold text-white sm:text-2xl">
+                      {line.brand.fullName}
+                    </h3>
+                  </div>
                 </div>
+                <p className={`relative mt-4 text-sm ${styles.body}`}>{line.brand.mission}</p>
+                <Link
+                  href={line.href}
+                  className={`relative mt-6 inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold ${styles.btn}`}
+                >
+                  {line.cta}
+                  <ArrowRight size={16} />
+                </Link>
                 <div className="relative mt-6 h-36 overflow-hidden rounded-2xl">
                   <Image src={line.image} alt="" fill className="object-cover opacity-90" />
                 </div>

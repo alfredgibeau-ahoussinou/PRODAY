@@ -1,11 +1,15 @@
 import type { UserRole } from '../models/User';
+import { yearlyPriceFromMonthly } from '../utils/subscriptionPricing';
 
 /** Identifiant produit store / Stripe (phase 1 : club_pro actif en IAP). */
 export type SubscriptionPlanId =
   | 'player_plus'
   | 'coach_pro'
   | 'club_pro'
-  | 'agent_elite';
+  | 'agent_elite'
+  | 'physio_pro'
+  | 'organizer_pro'
+  | 'sponsor_pro';
 
 export type SubscriptionTier = 'free' | 'pro';
 
@@ -38,6 +42,17 @@ export interface SubscriptionPlanDefinition {
   limits: PlanLimits;
   freeIncludes: string[];
   proIncludes: string[];
+  /** Commission sur prestations réservées via l'app (ex. pôle santé). */
+  bookingCommissionPercent?: number;
+  bookingCommissionNote?: string;
+}
+
+function planPricing(monthlyEur: number, storeAvailable: boolean): PlanPricing {
+  return {
+    monthlyEur,
+    yearlyEur: yearlyPriceFromMonthly(monthlyEur),
+    storeAvailable,
+  };
 }
 
 export const SUBSCRIPTION_PLANS: Record<SubscriptionPlanId, SubscriptionPlanDefinition> = {
@@ -46,7 +61,7 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionPlanId, SubscriptionPlanDefi
     role: 'player',
     label: 'Joueur Plus',
     tagline: 'CV en ligne, visibilité et Mercato',
-    pricing: { monthlyEur: 2.99, yearlyEur: 24.99, storeAvailable: false },
+    pricing: planPricing(2.99, false),
     limits: { mercato_apply_per_month: 1 },
     freeIncludes: [
       'Profil, Pulse et CV en ligne',
@@ -67,7 +82,7 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionPlanId, SubscriptionPlanDefi
     role: 'coach',
     label: 'Coach Pro',
     tagline: 'Recrutement et gestion multi-équipes',
-    pricing: { monthlyEur: 7.99, yearlyEur: 59.99, storeAvailable: false },
+    pricing: planPricing(7.99, false),
     limits: {
       club_teams: 1,
       recruitment_messages_per_month: 5,
@@ -90,7 +105,7 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionPlanId, SubscriptionPlanDefi
     role: 'club',
     label: 'Club Pro',
     tagline: 'Annonces et structure club',
-    pricing: { monthlyEur: 11.99, yearlyEur: 89.99, storeAvailable: true },
+    pricing: planPricing(11.99, true),
     limits: { club_teams: 1, club_active_posts: 2 },
     freeIncludes: [
       'Profil club et vérification',
@@ -109,8 +124,8 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionPlanId, SubscriptionPlanDefi
     id: 'agent_elite',
     role: 'agent',
     label: 'Agent Elite',
-    tagline: 'CRM joueurs et mandats',
-    pricing: { monthlyEur: 24.99, yearlyEur: 199.99, storeAvailable: false },
+    tagline: 'CRM joueurs, mandats et pipeline — formule premium',
+    pricing: planPricing(99.99, false),
     limits: { recruitment_messages_per_month: 10 },
     freeIncludes: [
       'Profil agent et vérification',
@@ -124,6 +139,69 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionPlanId, SubscriptionPlanDefi
       'Exports et rapports',
     ],
   },
+  physio_pro: {
+    id: 'physio_pro',
+    role: 'physio',
+    label: 'Pôle santé Pro',
+    tagline: 'Abonnement léger + visibilité clubs — commission sur les RDV',
+    pricing: planPricing(19.99, false),
+    limits: {},
+    bookingCommissionPercent: 10,
+    bookingCommissionNote:
+      'Sur chaque consultation réservée via ProDay (nutrition, coach mental, prépa physique…). Pas de commission sur les actes médicaux réglementés — règlement au cabinet.',
+    freeIncludes: [
+      'Profil praticien et vérification',
+      'Spécialité et zone d\'intervention',
+      'Visibilité annuaire (base)',
+      'Messagerie limitée',
+    ],
+    proIncludes: [
+      'Visibilité prioritaire près des clubs',
+      'Messagerie complète après vérif.',
+      'Prise de rendez-vous via l\'app',
+      'Commission 10 % uniquement si RDV conclu',
+    ],
+  },
+  organizer_pro: {
+    id: 'organizer_pro',
+    role: 'organizer',
+    label: 'Organisateur Pro',
+    tagline: 'Tournois Arena, inscriptions et palmarès',
+    pricing: planPricing(14.99, false),
+    limits: {},
+    freeIncludes: [
+      'Profil organisateur vérifié',
+      '1 tournoi Arena actif',
+      'Inscriptions en ligne',
+      'Palmarès publié',
+    ],
+    proIncludes: [
+      'Tournois illimités',
+      'Visibilité sponsors intégrée',
+      'Exports participants',
+      'Priorité fil événements',
+    ],
+  },
+  sponsor_pro: {
+    id: 'sponsor_pro',
+    role: 'sponsor',
+    label: 'Partenaire Pro',
+    tagline: 'Visibilité marque & clubs locaux',
+    pricing: planPricing(99.99, false),
+    limits: {},
+    freeIncludes: [
+      'Profil partenaire vérifié',
+      'Présence annuaire Sponsors',
+      '1 offre active',
+      'Zone géographique',
+    ],
+    proIncludes: [
+      'Offres sponsors illimitées',
+      'Logo onglet Sponsors',
+      'Campagnes locales ciblées',
+      'Push géolocalisé (à venir)',
+    ],
+  },
 };
 
 const ROLE_TO_PLAN: Partial<Record<UserRole, SubscriptionPlanId>> = {
@@ -132,6 +210,9 @@ const ROLE_TO_PLAN: Partial<Record<UserRole, SubscriptionPlanId>> = {
   club: 'club_pro',
   agent: 'agent_elite',
   recruiter: 'coach_pro',
+  physio: 'physio_pro',
+  organizer: 'organizer_pro',
+  sponsor: 'sponsor_pro',
 };
 
 export function planIdForRole(role: UserRole): SubscriptionPlanId | null {
@@ -147,12 +228,11 @@ export function getPlanForRole(role: UserRole): SubscriptionPlanDefinition | nul
   return id ? SUBSCRIPTION_PLANS[id] : null;
 }
 
-/** Rôles sans abonnement store au lancement (accès gratuit large). */
-export const ROLES_WITHOUT_STORE_PLAN: UserRole[] = [
-  'organizer',
-  'sponsor',
-  'physio',
-];
+/** Rôles sans formule store dédiée (aucun au lancement tarifaire actuel). */
+export const ROLES_WITHOUT_STORE_PLAN: UserRole[] = [];
 
 export const FREE_TIER_LABEL = 'Gratuit';
 export const PRO_TIER_LABEL = 'Pro';
+
+/** Commission ProDay sur RDV pôle santé réservés via l'app (profils éligibles). */
+export const PHYSIO_BOOKING_COMMISSION_PERCENT = 10;

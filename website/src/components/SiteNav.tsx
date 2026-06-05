@@ -11,13 +11,13 @@ import { NAV_ITEMS, ROUTES } from "@/lib/routes";
 
 function navBrandForPath(pathname: string) {
   if (pathname.startsWith("/woman")) {
-    return { name: WOMAN_BRAND.name, logo: "/branding/logo-woman-picto.png", cta: "bg-pink-700 hover:bg-pink-800" };
+    return { name: WOMAN_BRAND.name, logo: WOMAN_BRAND.logo, cta: "bg-pink-700 hover:bg-pink-800" };
   }
   if (pathname.startsWith("/pro")) {
-    return { name: PRO_BRAND.name, logo: "/branding/logo-pro-picto.png", cta: "bg-blue-700 hover:bg-blue-800" };
+    return { name: PRO_BRAND.name, logo: PRO_BRAND.logo, cta: "bg-blue-700 hover:bg-blue-800" };
   }
   if (pathname.startsWith("/homme")) {
-    return { name: HOMME_BRAND.name, logo: "/branding/logo-man-picto.png", cta: "bg-proday-ink hover:bg-neutral-800" };
+    return { name: HOMME_BRAND.name, logo: HOMME_BRAND.logo, cta: "bg-proday-ink hover:bg-neutral-800" };
   }
   return { name: BRAND.name, logo: "/branding/logo-light.png", cta: "bg-proday-ink hover:bg-neutral-800" };
 }
@@ -65,7 +65,9 @@ export function SiteNav() {
                 ? "font-medium text-pink-700 hover:text-pink-800"
                 : accent === "pro"
                   ? "font-medium text-blue-700 hover:text-blue-800"
-                  : "text-proday-muted hover:text-proday-ink";
+                  : accent === "man"
+                    ? "font-medium text-neutral-800 hover:text-proday-ink"
+                    : "text-proday-muted hover:text-proday-ink";
             return (
               <li key={l.href}>
                 <Link
