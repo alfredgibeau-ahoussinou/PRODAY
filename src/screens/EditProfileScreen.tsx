@@ -145,7 +145,7 @@ export const EditProfileScreen: React.FC<EditProfileScreenProps> = ({
         profileUpdate.highlight_video_urls = videos.length > 0 ? videos : undefined;
       }
 
-      if (user.role === 'coach' || user.role === 'agent') {
+      if (user.role === 'coach' || user.role === 'agent' || user.role === 'recruiter') {
         profileUpdate.diploma = diploma.trim() || undefined;
         profileUpdate.license_number = licenseNumber.trim() || undefined;
         profileUpdate.job_title = jobTitle.trim() || undefined;
@@ -287,7 +287,7 @@ export const EditProfileScreen: React.FC<EditProfileScreenProps> = ({
           </>
         )}
 
-        {(user.role === 'coach' || user.role === 'agent') && (
+        {(user.role === 'coach' || user.role === 'agent' || user.role === 'recruiter') && (
           <>
             <Text style={styles.section}>Staff</Text>
             <Field label="Titre / fonction" value={jobTitle} onChangeText={setJobTitle} />

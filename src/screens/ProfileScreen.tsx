@@ -10,23 +10,25 @@ import {
   Linking,
 } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
-import type { User, UserRole } from '../models/User';
+import type { User } from '../models/User';
 import { profileService } from '../services/profile.service';
 import { pickProfileImage } from '../utils/pickMedia';
-import { buildPlayerCvHtmlFromUser } from '../utils/pdfGenerator';
-import { openPlayerCvHtml } from '../utils/openCvHtml';
-import { ProfileAvatarButton } from '../components/profile/ProfileAvatarButton';
 import { ProfileGalleryEditor } from '../components/profile/ProfileGalleryEditor';
-import { ProfileMenuRow } from '../components/profile/ProfileMenuRow';
 import { ProfileCompletionBar } from '../components/ProfileCompletionBar';
-import { VerificationBadge } from '../components/VerificationBadge';
 import { Icon } from '../components/ui/Icon';
 import { EditProfileScreen } from './EditProfileScreen';
 import { VerificationFlowScreen } from './VerificationFlowScreen';
 import { PlayerVerificationScreen } from './PlayerVerificationScreen';
 import { AppSpacePill } from '../components/appSpace/AppSpaceBanner';
 import { useAppSpace } from '../context/AppSpaceContext';
-import { APP_SPACE_IDS, APP_SPACE_LABELS } from '../models/AppSpace';
+import { APP_SPACE_LABELS } from '../models/AppSpace';
+import { PlayerCvEditorScreen } from './PlayerCvEditorScreen';
+import { PlayerCvLivePreview } from '../components/profile/PlayerCvLivePreview';
+import { ProfileHubHeader } from '../components/profile/ProfileHubHeader';
+import { ProfileMenuSection, type ProfileMenuItem } from '../components/profile/ProfileMenuSection';
+import { HubSection } from '../components/ui/HubSection';
+import { getUniverseIdentity } from '../content/brandExperience';
+import { getSelectableAppSpaces } from '../utils/appSpaceProductLine';
 import { playerVerificationProgress } from '../models/User';
 import { VerificationSuccessScreen } from './VerificationSuccessScreen';
 import { ParentalControlScreen } from './ParentalControlScreen';
@@ -46,24 +48,13 @@ import { useTabNavigation } from '../context/TabNavigationContext';
 import { useTabNavigationActions } from '../hooks/useTabNavigationActions';
 import { computeProdayPulse, getPulseBreakdown } from '../utils/prodayPulse';
 import { ProfilePulseCard } from '../components/profile/ProfilePulseCard';
-import { FirebaseStatusCard } from '../components/FirebaseStatusCard';
+import { ProfileSubscriptionCard } from '../components/profile/ProfileSubscriptionCard';
 import { isMinorUser } from '../utils/minor';
+import { shouldShowPlayerVerificationReminder } from '../utils/onboardingGate';
 import { verificationDocumentTypeForRole } from '../models/User';
 import { colors, spacing, radius } from '../theme/designTokens';
+import { useAppTheme } from '../context/ProductLineContext';
 import { useSubscriptionOptional } from '../context/SubscriptionContext';
-import { getPlanForRole, FREE_TIER_LABEL, PRO_TIER_LABEL } from '../content/subscriptionPlans';
-
-const ROLE_LABELS: Record<UserRole, string> = {
-  player: 'Joueur',
-  coach: 'Coach',
-  club: 'Club',
-  agent: 'Agent',
-  organizer: 'Organisateur',
-  sponsor: 'Sponsor',
-  physio: 'Pôle médical',
-};
-
-const FOOT_LABELS = { left: 'Gauche', right: 'Droit', both: 'Ambidextre' } as const;
 
 interface ProfileScreenProps {
   profile: User;
@@ -93,15 +84,22 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
   const [remindingId, setRemindingId] = useState<string | null>(null);
   const { pendingProfileView, clearPendingProfile } = useTabNavigation();
   const nav = useTabNavigationActions();
+  const { productLine, colors: themeColors } = useAppTheme();
+  const brand = getUniverseIdentity(productLine);
+  const selectableAppSpaces = getSelectableAppSpaces(productLine);
   const subscriptionCtx = useSubscriptionOptional();
-  const subscriptionPlan = getPlanForRole(profile.role);
-  const isPro = subscriptionCtx?.subscription?.tier === 'pro';
+  const subscriptionTier = subscriptionCtx?.subscription?.tier ?? 'free';
   const [showPublicProfile, setShowPublicProfile] = useState(false);
+  const [showCvEditor, setShowCvEditor] = useState(false);
   const [legalDocument, setLegalDocument] = useState<LegalDocumentId | null>(null);
 
   useEffect(() => {
     if (pendingProfileView === 'applications') {
       setShowApplications(true);
+      clearPendingProfile();
+    }
+    if (pendingProfileView === 'cv') {
+      setShowCvEditor(true);
       clearPendingProfile();
     }
   }, [pendingProfileView, clearPendingProfile]);
@@ -110,6 +108,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
   const isStaff =
     profile.role === 'coach' ||
     profile.role === 'agent' ||
+    profile.role === 'recruiter' ||
     profile.role === 'club';
   const isOrganizer =
     profile.role === 'coach' ||
@@ -124,13 +123,10 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
     profile.role === 'agent' ||
     profile.role === 'club';
   const isPlayerMinor = profile.role === 'player' && isMinorUser(profile);
-  const playerVerifyProgress =
-    profile.role === 'player'
-      ? playerVerificationProgress(profile.player_verification)
-      : null;
-  const playerNeedsVerify =
-    profile.role === 'player' &&
-    profile.player_verification?.identity?.status !== 'verified';
+  const showPlayerVerificationReminder = shouldShowPlayerVerificationReminder(profile);
+  const playerVerifyProgress = showPlayerVerificationReminder
+    ? playerVerificationProgress(profile.player_verification)
+    : null;
 
   const { items: reminderItems, loading: loadingReminders, refresh: refreshReminders } =
     useOrganizerReminders(isOrganizer ? profile.uid : undefined);
@@ -186,18 +182,6 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
         },
       },
     ]);
-  };
-
-  const handleExportCv = () => {
-    if (profile.role !== 'player') {
-      Alert.alert(
-        'CV joueur',
-        'L’export CV est optimisé pour les profils joueur. Complétez votre bio et vos stats dans « Modifier le profil ».'
-      );
-      return;
-    }
-    const html = buildPlayerCvHtmlFromUser(profile);
-    openPlayerCvHtml(html, profile.display_name);
   };
 
   const handlePickDocument = async () => {
@@ -314,6 +298,16 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
     );
   }
 
+  if (showCvEditor && profile.role === 'player') {
+    return (
+      <PlayerCvEditorScreen
+        profile={profile}
+        onBack={() => setShowCvEditor(false)}
+        onSaved={onRefresh}
+      />
+    );
+  }
+
   if (showApplications && profile.role === 'player') {
     return (
       <MyApplicationsScreen
@@ -332,69 +326,196 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
     );
   }
 
-  const metaParts: string[] = [ROLE_LABELS[profile.role]];
-  if (profile.city) metaParts.push(profile.city);
-  if (p.position) metaParts.push(p.position);
-  if (p.level) metaParts.push(p.level);
-
   const pulse = computeProdayPulse(profile);
   const pulseBreakdown = getPulseBreakdown(profile);
 
+  const accountMenu: ProfileMenuItem[] = [
+    {
+      icon: 'person',
+      title: 'Modifier le profil',
+      subtitle: 'Identité, fiche sportive, contacts',
+      onPress: () => setShowEdit(true),
+    },
+  ];
+
+  if (profile.role === 'player') {
+    accountMenu.unshift({
+      icon: 'document',
+      title: brand.cvLabel,
+      subtitle: 'Compléter et publier en ligne',
+      onPress: () => setShowCvEditor(true),
+      accent: true,
+    });
+    accountMenu.push({
+      icon: 'eye',
+      title: 'Profil public',
+      subtitle: 'Aperçu visible par les clubs',
+      onPress: () => setShowPublicProfile(true),
+    });
+  }
+
+  const mercatoMenu: ProfileMenuItem[] = [];
+  if (profile.role === 'player') {
+    mercatoMenu.push({
+      icon: 'briefcase',
+      title: 'Mes candidatures',
+      subtitle: 'Suivi des annonces Mercato',
+      onPress: () => setShowApplications(true),
+    });
+  }
+
   return (
     <ScrollView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: themeColors.background }]}
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
     >
-      <View style={styles.hero}>
-        <ProfileAvatarButton
-          displayName={profile.display_name}
-          avatarUrl={profile.avatar_url}
-          uploading={uploadingAvatar}
-          onPress={handleAvatarPick}
-        />
-        <Text style={styles.name}>{profile.display_name}</Text>
-        <Text style={styles.meta}>{metaParts.join(' · ')}</Text>
-        <Text style={styles.email}>{profile.email}</Text>
-        <View style={styles.badgeWrap}>
-          <VerificationBadge user={profile} />
-        </View>
-      </View>
+      <ProfileHubHeader
+        profile={profile}
+        productLine={productLine}
+        colors={themeColors}
+        uploadingAvatar={uploadingAvatar}
+        onAvatarPress={handleAvatarPick}
+      />
+
+      {profile.role === 'player' ? (
+        <HubSection
+          title={brand.cvLabel}
+          subtitle="Votre vitrine sportive — remplissez-la ici, sans PDF."
+          colors={themeColors}
+        >
+          <PlayerCvLivePreview user={profile} colors={themeColors} />
+          <TouchableOpacity
+            style={[styles.cvPrimaryBtn, { backgroundColor: themeColors.ink }]}
+            onPress={() => setShowCvEditor(true)}
+            activeOpacity={0.9}
+          >
+            <Icon name="document" size={20} color={themeColors.brandInverse} />
+            <Text style={[styles.cvPrimaryText, { color: themeColors.brandInverse }]}>
+              Compléter mon CV
+            </Text>
+          </TouchableOpacity>
+        </HubSection>
+      ) : null}
 
       <ProfilePulseCard pulse={pulse} breakdown={pulseBreakdown} />
-
-      {__DEV__ ? <FirebaseStatusCard profileLoaded={Boolean(profile.uid)} /> : null}
-
       <ProfileCompletionBar user={profile} />
 
-      <View style={styles.spaceRow}>
-        <Text style={styles.spaceLabel}>Espace ProDay</Text>
-        <View style={styles.spacePills}>
-          {APP_SPACE_IDS.map((space) => (
-            <AppSpacePill
-              key={space}
-              space={space}
-              active={appSpace === space}
-              onPress={() => void setAppSpace(space)}
-            />
-          ))}
-        </View>
-        <Text style={styles.spaceHint}>
-          Mode {APP_SPACE_LABELS[appSpace]} — Mercato et annonces filtrés.
-        </Text>
-      </View>
+      {subscriptionCtx ? (
+        <ProfileSubscriptionCard
+          profile={profile}
+          tier={subscriptionTier}
+          usage={subscriptionCtx.usage}
+          onPress={() => subscriptionCtx.openPlansScreen()}
+        />
+      ) : null}
 
-      {playerNeedsVerify && playerVerifyProgress && (
-        <View style={[styles.card, styles.warnCard]}>
-          <Text style={styles.warnTitle}>Vérification joueur ({playerVerifyProgress.label})</Text>
-          <Text style={styles.warnSub}>
-            Pièce d’identité obligatoire pour la messagerie. Licence club pour le badge complet.
+      <ProfileMenuSection title="Mon compte" items={accountMenu} colors={themeColors} />
+
+      {profile.role === 'player' && (
+        <>
+          {profile.role === 'player' && hasStats && stats ? (
+            <View style={styles.statsRow}>
+              <StatChip value={String(stats.matches)} label="Matchs" colors={themeColors} />
+              <StatChip value={String(stats.goals)} label="Buts" colors={themeColors} />
+              <StatChip value={String(stats.assists)} label="Passes d." colors={themeColors} />
+            </View>
+          ) : null}
+
+          <HubSection
+            title="Galerie & médias"
+            colors={themeColors}
+            compact
+          >
+            <ProfileGalleryEditor
+              urls={gallery}
+              uploading={uploadingGallery}
+              onAdd={handleGalleryAdd}
+              onRemove={handleGalleryRemove}
+            />
+            {videos.length > 0 ? (
+              videos.map((url) => (
+                <TouchableOpacity
+                  key={url}
+                  style={[styles.videoRow, { borderColor: themeColors.border }]}
+                  onPress={() => Linking.openURL(url).catch(() => {})}
+                >
+                  <Icon name="time" size={18} color={themeColors.accent} />
+                  <Text style={[styles.videoLink, { color: themeColors.textSecondary }]} numberOfLines={1}>
+                    {url}
+                  </Text>
+                </TouchableOpacity>
+              ))
+            ) : (
+              <Text style={[styles.hintText, { color: themeColors.textMuted }]}>
+                Ajoutez des liens vidéo dans « Modifier le profil ».
+              </Text>
+            )}
+          </HubSection>
+        </>
+      )}
+
+      {profile.role === 'player' && (
+        <HubSection
+          title={
+            productLine === 'woman'
+              ? 'Mercato F (optionnel)'
+              : productLine === 'pro'
+                ? 'Mercato Pro'
+                : 'Mercato (optionnel)'
+          }
+          subtitle="Postuler aux annonces — votre CV reste votre priorité."
+          colors={themeColors}
+          compact
+        >
+          {mercatoMenu.map((item) => (
+            <TouchableOpacity
+              key={item.title}
+              style={[styles.mercatoRow, { borderColor: themeColors.border }]}
+              onPress={item.onPress}
+              activeOpacity={0.85}
+            >
+              <Icon name={item.icon} size={20} color={themeColors.accent} />
+              <View style={styles.mercatoBody}>
+                <Text style={[styles.mercatoTitle, { color: themeColors.text }]}>{item.title}</Text>
+                {item.subtitle ? (
+                  <Text style={[styles.mercatoSub, { color: themeColors.textSecondary }]}>
+                    {item.subtitle}
+                  </Text>
+                ) : null}
+              </View>
+              <Icon name="chevron-forward" size={18} color={themeColors.textMuted} />
+            </TouchableOpacity>
+          ))}
+          <View style={styles.spacePills}>
+            {selectableAppSpaces.map((space) => (
+              <AppSpacePill
+                key={space}
+                space={space}
+                active={appSpace === space}
+                onPress={() => void setAppSpace(space)}
+              />
+            ))}
+          </View>
+          <Text style={[styles.spaceHint, { color: themeColors.textSecondary }]}>
+            {APP_SPACE_LABELS[appSpace]} — filtre des annonces.
+          </Text>
+        </HubSection>
+      )}
+
+      {showPlayerVerificationReminder && playerVerifyProgress && (
+        <View style={[styles.card, styles.warnCard, { borderColor: themeColors.border }]}>
+          <Text style={[styles.warnTitle, { color: themeColors.text }]}>
+            Vérification ({playerVerifyProgress.label})
+          </Text>
+          <Text style={[styles.warnSub, { color: themeColors.textSecondary }]}>
+            Pièce d’identité pour la messagerie. Licence club pour le badge complet.
           </Text>
           <TouchableOpacity
-            style={styles.secondaryBtn}
+            style={[styles.secondaryBtn, { borderColor: themeColors.border }]}
             onPress={() => setShowPlayerVerification(true)}
           >
-            <Text style={styles.secondaryBtnText}>Compléter mes vérifications</Text>
+            <Text style={[styles.secondaryBtnText, { color: themeColors.text }]}>Compléter</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -413,297 +534,140 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
         />
       )}
 
-      {profile.role === 'player' && hasStats && stats && (
-        <View style={styles.statsRow}>
-          <StatChip value={String(stats.matches)} label="Matchs" />
-          <StatChip value={String(stats.goals)} label="Buts" />
-          <StatChip value={String(stats.assists)} label="Passes d." />
-        </View>
-      )}
-
-      <View style={styles.actionRow}>
-        <TouchableOpacity style={styles.actionPrimary} onPress={() => setShowEdit(true)}>
-          <Icon name="person" size={18} color={colors.brandInverse} />
-          <Text style={styles.actionPrimaryText}>Modifier le profil</Text>
-        </TouchableOpacity>
-        {profile.role === 'player' ? (
-          <TouchableOpacity
-            style={styles.actionOutline}
-            onPress={() => setShowPublicProfile(true)}
-          >
-            <Icon name="eye" size={18} color={colors.accent} />
-            <Text style={styles.actionOutlineText}>Voir mon profil public</Text>
-          </TouchableOpacity>
-        ) : null}
-        {profile.role === 'player' ? (
-          <TouchableOpacity style={styles.actionOutline} onPress={handleExportCv}>
-            <Icon name="document" size={18} color={colors.accent} />
-            <Text style={styles.actionOutlineText}>CV vivant (PDF)</Text>
-          </TouchableOpacity>
-        ) : null}
-      </View>
-
-      {(p.bio || profile.role === 'player') && (
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Présentation</Text>
-          <Text style={styles.bioText}>
-            {p.bio?.trim() ||
-              'Ajoutez une bio pour vous présenter aux clubs et coachs.'}
-          </Text>
-        </View>
-      )}
-
-      {profile.role === 'player' && (
-        <>
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>Fiche joueur</Text>
-            <InfoLine label="Poste" value={p.position} />
-            <InfoLine label="Niveau" value={p.level} />
-            <InfoLine label="Catégorie" value={p.category} />
-            <InfoLine label="Pied fort" value={p.strong_foot ? FOOT_LABELS[p.strong_foot] : undefined} />
-            <InfoLine label="Âge" value={p.age ? `${p.age} ans` : undefined} />
-            <InfoLine label="Taille" value={p.height_cm ? `${p.height_cm} cm` : undefined} />
-            <InfoLine label="Poids" value={p.weight_kg ? `${p.weight_kg} kg` : undefined} />
-            <InfoLine label="Expérience" value={p.years_experience ? `${p.years_experience} ans` : undefined} />
-            <InfoLine
-              label="Disponibilité"
-              value={
-                p.availability === 'available'
-                  ? 'Disponible'
-                  : p.availability === 'negotiating'
-                    ? 'En discussion'
-                    : p.availability === 'unavailable'
-                      ? 'Indisponible'
-                      : undefined
-              }
-            />
-          </View>
-
-          <View style={styles.card}>
-            <ProfileGalleryEditor
-              urls={gallery}
-              uploading={uploadingGallery}
-              onAdd={handleGalleryAdd}
-              onRemove={handleGalleryRemove}
-            />
-          </View>
-
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>Vidéos highlights</Text>
-            {videos.length > 0 ? (
-              videos.map((url) => (
-                <TouchableOpacity
-                  key={url}
-                  style={styles.videoRow}
-                  onPress={() => Linking.openURL(url).catch(() => {})}
-                >
-                  <Icon name="time" size={18} color={colors.accent} />
-                  <Text style={styles.videoLink} numberOfLines={1}>
-                    {url}
-                  </Text>
-                </TouchableOpacity>
-              ))
-            ) : (
-              <Text style={styles.bioText}>
-                Ajoutez des liens YouTube / Vimeo dans « Modifier le profil ».
-              </Text>
-            )}
-          </View>
-
-          {(p.achievements?.length ?? 0) > 0 && (
-            <View style={styles.card}>
-              <Text style={styles.cardTitle}>Palmarès</Text>
-              {p.achievements!.map((a) => (
-                <Text key={a} style={styles.achievement}>
-                  · {a}
-                </Text>
-              ))}
-            </View>
-          )}
-        </>
-      )}
-
-      {(profile.role === 'coach' || profile.role === 'agent') && (
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Parcours pro</Text>
-          <InfoLine label="Titre" value={p.job_title} />
-          <InfoLine label="Diplôme" value={p.diploma} />
-          <InfoLine label="N° licence" value={p.license_number} />
+      {(profile.role === 'coach' || profile.role === 'agent' || profile.role === 'recruiter') && (
+        <HubSection title="Parcours pro" colors={themeColors} compact>
+          <InfoLine label="Titre" value={p.job_title} colors={themeColors} />
+          <InfoLine label="Diplôme" value={p.diploma} colors={themeColors} />
+          <InfoLine label="N° licence" value={p.license_number} colors={themeColors} />
           {p.specialties?.length ? (
-            <Text style={styles.specialties}>
+            <Text style={[styles.specialties, { color: themeColors.textSecondary }]}>
               Spécialités : {p.specialties.join(' · ')}
             </Text>
           ) : null}
-        </View>
+        </HubSection>
       )}
 
       {pendingVerify && (
-        <View style={[styles.card, styles.warnCard]}>
-          <Text style={styles.warnTitle}>Vérification requise</Text>
-          <Text style={styles.warnSub}>
-            Envoyez votre diplôme ou licence pour débloquer la messagerie complète.
+        <View style={[styles.card, styles.warnCard, { borderColor: themeColors.border }]}>
+          <Text style={[styles.warnTitle, { color: themeColors.text }]}>Vérification requise</Text>
+          <Text style={[styles.warnSub, { color: themeColors.textSecondary }]}>
+            Envoyez votre diplôme ou licence pour débloquer la messagerie.
           </Text>
           <TouchableOpacity
-            style={styles.secondaryBtn}
+            style={[styles.secondaryBtn, { borderColor: themeColors.border }]}
             onPress={handlePickDocument}
             disabled={docLoading}
           >
-            <Text style={styles.secondaryBtnText}>
-              {docLoading ? 'Envoi…' : 'Choisir un document (PDF / image)'}
+            <Text style={[styles.secondaryBtnText, { color: themeColors.text }]}>
+              {docLoading ? 'Envoi…' : 'Envoyer un document'}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={() => setShowVerificationFlow(true)}>
-            <Text style={styles.link}>Suivi de vérification</Text>
+            <Text style={[styles.link, { color: themeColors.accent }]}>Suivi de vérification</Text>
           </TouchableOpacity>
         </View>
       )}
 
       {profile.profile.club_id ? (
-        <>
-          <TouchableOpacity
-            style={styles.candidaturesCard}
-            onPress={() => setShowAnnouncements(true)}
-            activeOpacity={0.88}
-          >
-            <View style={styles.candidaturesIcon}>
-              <Icon name="notifications" size={22} color={colors.accent} />
-            </View>
-            <View style={styles.candidaturesBody}>
-              <Text style={styles.candidaturesTitle}>Annonces club</Text>
-              <Text style={styles.candidaturesSub}>Fil d&apos;actualités de votre structure</Text>
-            </View>
-            <Icon name="chevron-forward" size={20} color={colors.textMuted} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.candidaturesCard}
-            onPress={() => setShowPayments(true)}
-            activeOpacity={0.88}
-          >
-            <View style={styles.candidaturesIcon}>
-              <Icon name="calendar" size={22} color={colors.accent} />
-            </View>
-            <View style={styles.candidaturesBody}>
-              <Text style={styles.candidaturesTitle}>Mes cotisations</Text>
-              <Text style={styles.candidaturesSub}>Statut des paiements club</Text>
-            </View>
-            <Icon name="chevron-forward" size={20} color={colors.textMuted} />
-          </TouchableOpacity>
-        </>
+        <ProfileMenuSection
+          title="Mon club"
+          colors={themeColors}
+          items={[
+            {
+              icon: 'notifications',
+              title: 'Annonces club',
+              subtitle: 'Actualités de votre structure',
+              onPress: () => setShowAnnouncements(true),
+            },
+            {
+              icon: 'calendar',
+              title: 'Mes cotisations',
+              subtitle: 'Paiements club',
+              onPress: () => setShowPayments(true),
+            },
+          ]}
+        />
       ) : null}
 
-      {profile.role === 'player' && (
-        <TouchableOpacity
-          style={styles.candidaturesCard}
-          onPress={() => setShowApplications(true)}
-          activeOpacity={0.88}
-        >
-          <View style={styles.candidaturesIcon}>
-            <Icon name="briefcase" size={22} color={colors.accent} />
-          </View>
-          <View style={styles.candidaturesBody}>
-            <Text style={styles.candidaturesTitle}>Mes candidatures</Text>
-            <Text style={styles.candidaturesSub}>Suivi des annonces Mercato</Text>
-          </View>
-          <Icon name="chevron-forward" size={20} color={colors.textMuted} />
-        </TouchableOpacity>
-      )}
-
       {(canManageClub || verifiedStaff) && (
-      <View style={[styles.card, styles.menuCard]}>
-        {canManageClub && !profile.profile.club_id && (
-          <>
-            <ProfileMenuRow
-              icon="business"
-              title="Créer mon club"
-              subtitle="Lier votre structure"
-              onPress={() => setShowCreateClub(true)}
-            />
-            <ProfileMenuRow
-              icon="people"
-              title="Rejoindre un club"
-              subtitle="Accéder aux convocations et cotisations"
-              onPress={() => setShowJoinClub(true)}
-            />
-          </>
-        )}
-        {profile.profile.club_id && (
-          <ProfileMenuRow
-            icon="business"
-            title="Club lié"
-            subtitle={`ID ${profile.profile.club_id.slice(0, 10)}…`}
-            onPress={() => setShowCreateClub(true)}
-          />
-        )}
-        {!profile.profile.club_id && profile.role === 'player' && (
-          <ProfileMenuRow
-            icon="people"
-            title="Rejoindre mon club"
-            subtitle="Convocations et calendrier équipe"
-            onPress={() => setShowJoinClub(true)}
-          />
-        )}
-        {verifiedStaff && (
-          <ProfileMenuRow
-            icon="shield"
-            title="Diplôme vérifié"
-            subtitle="Badge actif sur votre profil"
-            onPress={() => setShowVerificationSuccess(true)}
-          />
-        )}
-      </View>
+        <ProfileMenuSection
+          title="Structure"
+          colors={themeColors}
+          items={[
+            ...(canManageClub && !profile.profile.club_id
+              ? [
+                  {
+                    icon: 'business' as const,
+                    title: 'Créer mon club',
+                    subtitle: 'Lier votre structure',
+                    onPress: () => setShowCreateClub(true),
+                  },
+                  {
+                    icon: 'people' as const,
+                    title: 'Rejoindre un club',
+                    subtitle: 'Convocations et calendrier',
+                    onPress: () => setShowJoinClub(true),
+                  },
+                ]
+              : []),
+            ...(!profile.profile.club_id && profile.role === 'player'
+              ? [
+                  {
+                    icon: 'people' as const,
+                    title: 'Rejoindre mon club',
+                    subtitle: 'Calendrier équipe',
+                    onPress: () => setShowJoinClub(true),
+                  },
+                ]
+              : []),
+            ...(verifiedStaff
+              ? [
+                  {
+                    icon: 'shield' as const,
+                    title: 'Diplôme vérifié',
+                    subtitle: 'Badge actif',
+                    onPress: () => setShowVerificationSuccess(true),
+                  },
+                ]
+              : []),
+          ]}
+        />
       )}
 
       {isPlayerMinor && (
-        <TouchableOpacity
-          style={styles.parentalCard}
-          onPress={() => setShowParental(true)}
-          activeOpacity={0.88}
-        >
-          <View style={styles.parentalIcon}>
-            <Icon name="shield" size={24} color={colors.brandInverse} />
-          </View>
-          <View style={styles.parentalBody}>
-            <Text style={styles.parentalTitle}>Contrôle parental</Text>
-            <Text style={styles.parentalSub}>
-              Compte mineur — supervision et contacts autorisés
-            </Text>
-          </View>
-          <Icon name="chevron-forward" size={20} color={colors.heroMuted} />
-        </TouchableOpacity>
+        <ProfileMenuSection
+          title="Famille"
+          colors={themeColors}
+          items={[
+            {
+              icon: 'shield',
+              title: 'Contrôle parental',
+              subtitle: 'Supervision compte mineur',
+              onPress: () => setShowParental(true),
+            },
+          ]}
+        />
       )}
 
-      {subscriptionPlan && subscriptionCtx ? (
-        <View style={[styles.card, styles.menuCard]}>
-          <ProfileMenuRow
-            icon="star-outline"
-            title="Mon abonnement"
-            subtitle={
-              isPro
-                ? `${PRO_TIER_LABEL} · ${subscriptionPlan.label}`
-                : `${FREE_TIER_LABEL} · ${subscriptionPlan.label}`
-            }
-            onPress={() => subscriptionCtx.openPlansScreen()}
-          />
-        </View>
-      ) : null}
-
-      <View style={[styles.card, styles.menuCard]}>
-        <ProfileMenuRow
-          icon="document"
-          title="Conditions d’utilisation"
-          subtitle="CGU ProDay"
-          onPress={() => setLegalDocument('terms')}
-        />
-        <ProfileMenuRow
-          icon="lock"
-          title="Confidentialité"
-          subtitle="Données personnelles et droits RGPD"
-          onPress={() => setLegalDocument('privacy')}
-        />
-      </View>
+      <ProfileMenuSection
+        title="Informations"
+        colors={themeColors}
+        items={[
+          {
+            icon: 'document',
+            title: 'Conditions d’utilisation',
+            onPress: () => setLegalDocument('terms'),
+          },
+          {
+            icon: 'lock',
+            title: 'Confidentialité',
+            onPress: () => setLegalDocument('privacy'),
+          },
+        ]}
+      />
 
       <TouchableOpacity
-        style={styles.logoutBtn}
+        style={[styles.logoutBtn, { borderColor: themeColors.border }]}
         onPress={() => {
           Alert.alert('Déconnexion', 'Voulez-vous quitter votre session ?', [
             { text: 'Annuler', style: 'cancel' },
@@ -712,25 +676,33 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
         }}
         activeOpacity={0.85}
       >
-        <Text style={styles.logoutText}>Se déconnecter</Text>
+        <Text style={[styles.logoutText, { color: themeColors.error }]}>Se déconnecter</Text>
       </TouchableOpacity>
     </ScrollView>
   );
 };
 
-const StatChip: React.FC<{ value: string; label: string }> = ({ value, label }) => (
-  <View style={styles.statChip}>
-    <Text style={styles.statValue}>{value}</Text>
-    <Text style={styles.statLabel}>{label}</Text>
+const StatChip: React.FC<{
+  value: string;
+  label: string;
+  colors: { surface: string; border: string; text: string; textMuted: string };
+}> = ({ value, label, colors: c }) => (
+  <View style={[styles.statChip, { backgroundColor: c.surface, borderColor: c.border }]}>
+    <Text style={[styles.statValue, { color: c.text }]}>{value}</Text>
+    <Text style={[styles.statLabel, { color: c.textMuted }]}>{label}</Text>
   </View>
 );
 
-const InfoLine: React.FC<{ label: string; value?: string }> = ({ label, value }) => {
+const InfoLine: React.FC<{
+  label: string;
+  value?: string;
+  colors: { textMuted: string; text: string };
+}> = ({ label, value, colors: c }) => {
   if (!value) return null;
   return (
     <View style={styles.infoRow}>
-      <Text style={styles.infoLabel}>{label}</Text>
-      <Text style={styles.infoValue}>{value}</Text>
+      <Text style={[styles.infoLabel, { color: c.textMuted }]}>{label}</Text>
+      <Text style={[styles.infoValue, { color: c.text }]}>{value}</Text>
     </View>
   );
 };
@@ -741,10 +713,52 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     paddingBottom: TAB_BAR_CONTENT_INSET + spacing.xl,
   },
+  screenTitle: {
+    fontSize: 28,
+    fontWeight: '900',
+    color: colors.text,
+    marginBottom: spacing.md,
+    textAlign: 'center',
+  },
+  heroInner: {
+    alignItems: 'center',
+    paddingTop: spacing.xs,
+  },
+  cvPrimaryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    borderRadius: radius.lg,
+    paddingVertical: spacing.md,
+    marginTop: spacing.md,
+  },
+  cvPrimaryText: { fontSize: 16, fontWeight: '800' },
+  mercatoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    paddingVertical: spacing.sm,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    marginBottom: spacing.sm,
+  },
+  mercatoBody: { flex: 1 },
+  mercatoTitle: { fontSize: 15, fontWeight: '800' },
+  mercatoSub: { fontSize: 12, marginTop: 2 },
+  hintText: { fontSize: 13, lineHeight: 19 },
+  videoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    paddingVertical: spacing.sm,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    marginTop: spacing.sm,
+  },
+  videoLink: { flex: 1, fontSize: 13 },
   hero: {
     alignItems: 'center',
     marginBottom: spacing.lg,
-    paddingTop: spacing.md,
+    paddingTop: spacing.xs,
   },
   name: {
     fontSize: 24,
@@ -759,12 +773,27 @@ const styles = StyleSheet.create({
     marginTop: 4,
     textAlign: 'center',
   },
-  email: { fontSize: 12, color: colors.textMuted, marginTop: 2 },
+  email: {
+    fontSize: 12,
+    color: colors.textMuted,
+    marginTop: 2,
+    textAlign: 'center',
+    alignSelf: 'stretch',
+  },
   badgeWrap: { marginTop: spacing.sm },
-  spaceRow: { marginBottom: spacing.lg },
-  spaceLabel: { fontSize: 12, fontWeight: '800', color: colors.textMuted, marginBottom: spacing.sm },
-  spacePills: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  spaceHint: { fontSize: 11, color: colors.textSecondary, marginTop: spacing.sm },
+  spacePills: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+    justifyContent: 'center',
+  },
+  spaceHint: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    marginTop: spacing.sm,
+    textAlign: 'center',
+    lineHeight: 18,
+  },
   statsRow: {
     flexDirection: 'row',
     gap: spacing.sm,
@@ -781,7 +810,7 @@ const styles = StyleSheet.create({
   },
   statValue: { fontSize: 22, fontWeight: '900', color: colors.text },
   statLabel: { fontSize: 10, color: colors.textMuted, fontWeight: '700', marginTop: 4 },
-  actionRow: { gap: spacing.sm, marginBottom: spacing.lg },
+  actionRow: { gap: spacing.sm, marginBottom: spacing.lg, width: '100%' },
   actionPrimary: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -826,13 +855,6 @@ const styles = StyleSheet.create({
   infoLabel: { fontSize: 13, color: colors.textMuted, fontWeight: '600' },
   infoValue: { fontSize: 13, fontWeight: '800', color: colors.text },
   specialties: { fontSize: 13, color: colors.textSecondary, marginTop: spacing.sm, lineHeight: 18 },
-  videoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    paddingVertical: spacing.sm,
-  },
-  videoLink: { flex: 1, fontSize: 12, color: colors.accent, fontWeight: '600' },
   achievement: { fontSize: 13, color: colors.textSecondary, lineHeight: 20, marginTop: 4 },
   warnCard: { backgroundColor: colors.warningBg },
   warnTitle: { fontWeight: '900', fontSize: 15, color: colors.text },

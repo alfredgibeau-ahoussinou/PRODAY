@@ -135,7 +135,7 @@ export function HeroSection() {
                   className="mb-2 h-8 w-auto object-contain"
                 />
                 <p className="text-sm text-white/80">
-                  Mercato · Matchs · Arena · Pulse
+                  Mercato · Covoiturage · Santé · Shop
                 </p>
               </div>
             </div>

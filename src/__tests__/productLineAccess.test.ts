@@ -34,14 +34,24 @@ describe('productLineAccess', () => {
     expect(getUserProductLine(user)).toBe('woman');
   });
 
-  it('compte standard par défaut', () => {
-    expect(getUserProductLine(baseUser as User)).toBe('standard');
+  it('compte homme par défaut', () => {
+    expect(getUserProductLine(baseUser as User)).toBe('homme');
+  });
+
+  it('déduit pro depuis rôle coach', () => {
+    const coach = { ...baseUser, role: 'coach' as const } as User;
+    expect(getUserProductLine(coach)).toBe('pro');
+  });
+
+  it('déduit pro depuis rôle club ou organisateur', () => {
+    const club = { ...baseUser, role: 'club' as const } as User;
+    expect(getUserProductLine(club)).toBe('pro');
   });
 
   it('refuse connexion cross-version', () => {
     const womanUser = { ...baseUser, product_line: 'woman' as const } as User;
-    expect(profileMatchesActiveLine(womanUser, 'standard')).toBe(false);
-    expect(getProductLineMismatchMessage('woman', 'standard')).toMatch(/ProDay Woman/);
-    expect(getProductLineMismatchMessage('standard', 'woman')).toMatch(/classique/);
+    expect(profileMatchesActiveLine(womanUser, 'homme')).toBe(false);
+    expect(getProductLineMismatchMessage('woman', 'homme')).toMatch(/ProDay Woman/);
+    expect(getProductLineMismatchMessage('homme', 'woman')).toMatch(/Pro Day Man/);
   });
 });

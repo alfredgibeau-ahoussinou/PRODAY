@@ -29,7 +29,7 @@ export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({
   initialEmail = '',
   onBack,
 }) => {
-  const { compact, logoWidth, insets, scrollBottom } = useAuthLayout();
+  const { compact, logoWidth, headerTopPad, scrollBottom } = useAuthLayout();
   const [email, setEmail] = useState(initialEmail);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -77,7 +77,7 @@ export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({
         <View
           style={[
             authStyles.header,
-            { paddingTop: insets.top + (compact ? spacing.sm : spacing.md) },
+            { paddingTop: headerTopPad },
           ]}
         >
           <View style={authStyles.headerRow}>

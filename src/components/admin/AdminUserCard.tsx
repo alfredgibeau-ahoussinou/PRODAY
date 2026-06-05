@@ -10,6 +10,7 @@ const ROLE_LABEL: Record<UserRole, string> = {
   coach: 'Coach',
   club: 'Club',
   agent: 'Agent',
+  recruiter: 'Recruteur',
   organizer: 'Organisateur',
   sponsor: 'Sponsor',
   physio: 'Kinésithérapeute',

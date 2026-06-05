@@ -5,7 +5,8 @@ import { AuthTextField } from '../../components/auth/AuthTextField';
 import { SignupStepLayout } from './SignupStepLayout';
 import { SignupFooterButton } from './SignupFooterButton';
 import type { SignupForm } from './useSignupForm';
-import { getWomanStepMeta } from './signupWomanConfig';
+import { getPlayerStepMeta } from './signupPlayerStepMeta';
+import { getProStepMeta } from './signupProConfig';
 import { ProDayErrorBanner } from '../../components/ui/ProDayErrorBanner';
 
 interface SignupAccountStepProps {
@@ -27,7 +28,9 @@ export const SignupAccountStep: React.FC<SignupAccountStepProps> = ({
   phaseIndex,
   onBack,
 }) => {
-  const womanMeta = form.isWomanProduct ? getWomanStepMeta('account') : null;
+  const meta = form.isProProduct
+    ? getProStepMeta('account')
+    : getPlayerStepMeta(form.productLine, 'account');
   return (
   <SignupStepLayout
     stepIndex={stepIndex}
@@ -35,10 +38,10 @@ export const SignupAccountStep: React.FC<SignupAccountStepProps> = ({
     stepName={stepName}
     phases={phases}
     phaseIndex={phaseIndex}
-    title={womanMeta?.title ?? 'Ton identité'}
-    subtitle={womanMeta?.subtitle ?? 'Nom et email — la base de ton compte ProDay.'}
+    title={meta.title}
+    subtitle={meta.subtitle}
     contentKey={`account-${form.role}`}
-    heroIcon={womanMeta?.heroIcon ?? 'person'}
+    heroIcon={meta.heroIcon}
     onBack={onBack}
     footer={
       <SignupFooterButton label="Continuer" onPress={() => form.advanceFromCurrentPage()} />

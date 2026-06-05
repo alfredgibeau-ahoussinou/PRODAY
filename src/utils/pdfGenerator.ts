@@ -46,7 +46,7 @@ export function buildPlayerCvFromUser(user: User): PlayerCvData {
     age: p.age,
     height_cm: p.height_cm,
     weight_kg: p.weight_kg,
-    bio: p.bio,
+    bio: p.cv_headline?.trim() || p.bio,
     achievements: p.achievements,
     season_stats: p.season_stats,
     email: user.email,

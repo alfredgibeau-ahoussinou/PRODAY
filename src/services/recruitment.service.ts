@@ -21,6 +21,7 @@ import type { AppSpaceId } from '../models/AppSpace';
 import type { RecruitmentPost, Application } from '../models/Player';
 import { callFunction } from '../lib/firebaseFunctions';
 import { subscriptionService } from './subscription.service';
+import { canPublishRecruitmentPost } from '../content/poleExperience';
 
 export const APPLICATION_STATUS_LABEL: Record<Application['status'], string> = {
   PENDING: 'En attente',
@@ -92,6 +93,9 @@ export const recruitmentService = {
     if (!database) throw new Error('Firebase non configuré');
 
     if (author) {
+      if (!canPublishRecruitmentPost(author.role)) {
+        throw new Error('Votre profil ne peut pas publier d’annonces Mercato.');
+      }
       await subscriptionService.assertFeature(author, 'club_active_post');
     }
 

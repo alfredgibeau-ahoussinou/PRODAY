@@ -16,8 +16,8 @@ import Animated, {
   useSharedValue,
   type SharedValue,
 } from 'react-native-reanimated';
-import { DISCOVER_INTRO_SLIDES, type IntroSlideAction } from '../../content/discoverChapters';
-import { DISCOVER_INTRO_SLIDES_WOMAN } from '../../content/discoverWomanContent';
+import { getDiscoverIntroSlides } from '../../content/discoverContentByLine';
+import type { IntroSlideAction, DiscoverIntroSlide } from '../../content/discoverChapters';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { CarouselDot } from './CarouselDot';
 import { PressableSpring } from './PressableSpring';
@@ -55,11 +55,8 @@ export const DiscoverIntroPager: React.FC<DiscoverIntroPagerProps> = ({
   showFooter = true,
 }) => {
   const { width: pageWidth } = useWindowDimensions();
-  const { isWoman } = useAppTheme();
-  const slides = useMemo(
-    () => (isWoman ? DISCOVER_INTRO_SLIDES_WOMAN : DISCOVER_INTRO_SLIDES),
-    [isWoman]
-  );
+  const { productLine } = useAppTheme();
+  const slides = useMemo(() => getDiscoverIntroSlides(productLine), [productLine]);
   const metrics = useDiscoverMetrics();
   const scrollRef = useRef<Animated.ScrollView>(null);
   const scrollX = useSharedValue(0);
@@ -165,7 +162,7 @@ export const DiscoverIntroPager: React.FC<DiscoverIntroPagerProps> = ({
 };
 
 const IntroSlide: React.FC<{
-  slide: (typeof DISCOVER_INTRO_SLIDES)[0];
+  slide: DiscoverIntroSlide;
   index: number;
   scrollX: SharedValue<number>;
   pageWidth: number;

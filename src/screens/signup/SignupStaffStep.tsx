@@ -74,7 +74,7 @@ export const SignupStaffStep: React.FC<SignupStaffStepProps> = ({
     <View>
       <AuthTextField
         label={
-          form.role === 'agent' || form.role === 'club'
+          form.role === 'agent' || form.role === 'club' || form.role === 'recruiter'
             ? 'Département *'
             : 'Département (optionnel)'
         }

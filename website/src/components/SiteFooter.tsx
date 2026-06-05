@@ -89,7 +89,7 @@ export function SiteFooter() {
         </div>
 
         <p className="mt-12 border-t border-neutral-100 pt-8 text-center text-sm text-proday-muted">
-          © {new Date().getFullYear()} ProDay — React Native / Expo · Firebase
+          © {new Date().getFullYear()} ProDay — Application mobile & web
         </p>
       </div>
     </footer>

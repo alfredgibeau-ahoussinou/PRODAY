@@ -4,7 +4,8 @@ import { PageHeader } from "@/components/layout/PageHeader";
 
 export const metadata: Metadata = {
   title: "Tarifs",
-  description: "Offres Gratuit et Pro — Joueur Plus, Coach Pro, Club Pro, Agent Elite.",
+  description:
+    "Offres Gratuit et Pro — par univers Man, Woman et Pro Day Pro.",
 };
 
 export default function PricingPage() {
@@ -13,7 +14,7 @@ export default function PricingPage() {
       <PageHeader
         kicker="TARIFS"
         title="Gratuit pour démarrer. Pro pour aller plus loin."
-        description="Chaque rôle a son plan — limites claires en gratuit, puissance débloquée en Pro."
+        description="Choisissez votre univers — Man, Woman ou Pro — puis le plan adapté à votre rôle."
       />
       <section className="py-16">
         <PricingTable />

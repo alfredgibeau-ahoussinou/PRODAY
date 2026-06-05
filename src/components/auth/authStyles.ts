@@ -110,7 +110,7 @@ export const authStyles = StyleSheet.create({
   },
   forgotBtn: {
     alignSelf: 'flex-end',
-    marginTop: -spacing.xs,
+    marginTop: spacing.xs,
     marginBottom: spacing.md,
     paddingVertical: spacing.xs,
   },

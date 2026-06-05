@@ -4,14 +4,15 @@ import {
   Text,
   Image,
   StyleSheet,
-  Pressable,
   useWindowDimensions,
   Platform,
+  ScrollView,
 } from 'react-native';
 import Animated, {
   Easing,
   Extrapolation,
   cancelAnimation,
+  FadeIn,
   interpolate,
   runOnJS,
   useAnimatedStyle,
@@ -22,32 +23,32 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BRANDING_LOGOS } from '../../../content/brandingAssets';
 import { BRAND, colors, spacing, radius, shadows } from '../../../theme/designTokens';
-import { PRODAY_WOMAN_BRAND } from '../../../models/ProductLine';
-import { Logo } from '../../Logo';
-import { motion } from '../../../theme/motion';
+import { UniverseChoiceCard } from './UniverseChoiceCard';
+import type { ProductLineId } from '../../../models/ProductLine';
 
 const HERO_ASPECT = 0.93;
 const REVEAL_MS = 1100;
-const EASE = motion.easing.out;
 const WORDS = BRAND.tagline.split(' • ');
-const WOMAN_ACCENT = '#BE185D';
 
-export type IntroSpaceChoice = 'standard' | 'woman';
+export type IntroSpaceChoice = ProductLineId;
 
 interface BrandRevealIntroProps {
   onChooseSpace: (space: IntroSpaceChoice) => void;
 }
 
+const UNIVERSE_ORDER: ProductLineId[] = ['homme', 'woman', 'pro'];
+
 /**
- * Intro courte — logo puis choix ProDay classique / For women.
+ * Intro — choix ProDay Homme / Woman / Pro avec mini-présentation par carte.
  */
 export const BrandRevealIntro: React.FC<BrandRevealIntroProps> = ({ onChooseSpace }) => {
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const logoW = Math.min(168, width - spacing.xl * 2);
   const logoH = logoW / HERO_ASPECT;
   const [phase, setPhase] = useState<'reveal' | 'choose'>('reveal');
   const t = useSharedValue(0);
+  const compactHeader = height < 740;
 
   const showChoice = useCallback(() => setPhase('choose'), []);
 
@@ -65,42 +66,44 @@ export const BrandRevealIntro: React.FC<BrandRevealIntroProps> = ({ onChooseSpac
 
   return (
     <Animated.View
-      style={[styles.root, sceneStyle, { paddingTop: insets.top, paddingBottom: insets.bottom }]}
+      style={[styles.root, sceneStyle, { paddingTop: insets.top }]}
       accessibilityViewIsModal
     >
-      <View style={styles.center}>
-        <BrandMark logoW={logoW} logoH={logoH} t={t} compact={phase === 'choose'} />
-        {phase === 'reveal' ? <BrandTagline t={t} /> : null}
-      </View>
-
-      {phase === 'choose' ? (
-        <View style={[styles.choiceDock, { paddingBottom: insets.bottom + spacing.lg }]}>
-          <Text style={styles.choiceTitle}>Choisissez votre espace</Text>
-          <Text style={styles.choiceSub}>Même application — expérience adaptée à votre univers.</Text>
-
-          <Pressable
-            style={[styles.choiceBtn, styles.choiceBtnClassic]}
-            onPress={() => onChooseSpace('standard')}
-          >
-            <Text style={styles.choiceBtnTitle}>ProDay Classic</Text>
-            <Text style={styles.choiceBtnSub}>Football classique — Mercato, matchs, fil</Text>
-          </Pressable>
-
-          <Pressable
-            style={[styles.choiceBtn, styles.choiceBtnWoman]}
-            onPress={() => onChooseSpace('woman')}
-          >
-            <View style={styles.choiceWomanBg}>
-              <Logo background="light" width={152} woman />
-              <View style={styles.choiceWomanRow}>
-                <Text style={styles.choiceBtnTitleWoman}>{PRODAY_WOMAN_BRAND.name}</Text>
-                <Text style={styles.choiceBadge}>{PRODAY_WOMAN_BRAND.entryCta}</Text>
-              </View>
-              <Text style={styles.choiceBtnSubWoman}>Foot au féminin — même app, univers rose</Text>
-            </View>
-          </Pressable>
+      {phase === 'reveal' ? (
+        <View style={[styles.center, { paddingBottom: insets.bottom }]}>
+          <BrandMark logoW={logoW} logoH={logoH} t={t} compact={false} />
+          <BrandTagline t={t} />
         </View>
-      ) : null}
+      ) : (
+        <Animated.View entering={FadeIn.duration(400)} style={styles.chooseRoot}>
+          <View style={[styles.chooseHeader, compactHeader && styles.chooseHeaderCompact]}>
+            <BrandMark logoW={compactHeader ? 72 : 88} logoH={(compactHeader ? 72 : 88) / HERO_ASPECT} t={t} compact />
+            <Text style={styles.choiceTitle}>Choisissez votre univers</Text>
+            <Text style={styles.choiceSub}>
+              Une app ProDay — trois expériences distinctes, même exigence.
+            </Text>
+          </View>
+
+          <ScrollView
+            style={styles.scroll}
+            contentContainerStyle={[
+              styles.scrollContent,
+              { paddingBottom: insets.bottom + spacing.xl },
+            ]}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
+            {UNIVERSE_ORDER.map((line, index) => (
+              <UniverseChoiceCard
+                key={line}
+                line={line}
+                index={index}
+                onPress={() => onChooseSpace(line)}
+              />
+            ))}
+          </ScrollView>
+        </Animated.View>
+      )}
     </Animated.View>
   );
 };
@@ -121,7 +124,7 @@ const BrandMark: React.FC<{
 
   return (
     <Animated.View style={[styles.markWrap, wrap]}>
-      <View style={[styles.logoCard, shadows.card]}>
+      <View style={[styles.logoCard, compact && styles.logoCardCompact, shadows.card]}>
         <Image
           source={BRANDING_LOGOS.transparent}
           style={{ width: logoW, height: logoH }}
@@ -129,7 +132,7 @@ const BrandMark: React.FC<{
           accessibilityLabel={BRAND.name}
         />
       </View>
-      <Text style={styles.brandName}>{BRAND.name}</Text>
+      {!compact ? <Text style={styles.brandName}>{BRAND.name}</Text> : null}
     </Animated.View>
   );
 };
@@ -165,6 +168,30 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: spacing.xl,
   },
+  chooseRoot: {
+    flex: 1,
+  },
+  chooseHeader: {
+    alignItems: 'center',
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.md,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
+    backgroundColor: colors.surface,
+  },
+  chooseHeaderCompact: {
+    paddingTop: spacing.xs,
+    paddingBottom: spacing.sm,
+  },
+  scroll: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.lg,
+    gap: spacing.md,
+  },
   markWrap: { alignItems: 'center' },
   logoCard: {
     backgroundColor: colors.surface,
@@ -174,6 +201,11 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.lg,
     paddingHorizontal: spacing.lg,
     alignItems: 'center',
+  },
+  logoCardCompact: {
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.sm,
+    borderRadius: radius.lg,
   },
   brandName: {
     marginTop: spacing.md,
@@ -192,63 +224,20 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     ...Platform.select({ android: { includeFontPadding: false } }),
   },
-  choiceDock: {
-    paddingHorizontal: spacing.lg,
-    gap: spacing.sm,
-  },
   choiceTitle: {
-    fontSize: 18,
+    marginTop: spacing.sm,
+    fontSize: 20,
     fontWeight: '900',
     color: colors.text,
     textAlign: 'center',
     letterSpacing: -0.3,
   },
   choiceSub: {
+    marginTop: 4,
     fontSize: 13,
     color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 18,
-    marginBottom: spacing.sm,
-  },
-  choiceBtn: {
-    borderRadius: radius.lg,
-    padding: spacing.md,
-    borderWidth: 1,
-  },
-  choiceBtnClassic: {
-    backgroundColor: colors.surface,
-    borderColor: colors.border,
-  },
-  choiceBtnWoman: {
-    backgroundColor: '#FDF2F8',
-    borderColor: '#FBCFE8',
-    overflow: 'hidden',
-    padding: 0,
-  },
-  choiceWomanBg: {
-    padding: spacing.md,
-    alignItems: 'center',
-    gap: spacing.xs,
-    backgroundColor: '#FDF2F8',
-  },
-  choiceWomanRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    flexWrap: 'wrap',
-  },
-  choiceBtnTitle: { fontSize: 16, fontWeight: '900', color: colors.text },
-  choiceBtnSub: { fontSize: 12, color: colors.textSecondary, marginTop: 4, lineHeight: 17 },
-  choiceBtnTitleWoman: { fontSize: 16, fontWeight: '900', color: WOMAN_ACCENT },
-  choiceBtnSubWoman: { fontSize: 12, color: '#9D174D', marginTop: 4, lineHeight: 17 },
-  choiceBadge: {
-    fontSize: 10,
-    fontWeight: '800',
-    color: '#FFFFFF',
-    backgroundColor: WOMAN_ACCENT,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: radius.pill,
-    overflow: 'hidden',
+    maxWidth: 300,
   },
 });

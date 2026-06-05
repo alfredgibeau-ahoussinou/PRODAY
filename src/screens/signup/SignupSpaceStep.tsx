@@ -6,7 +6,7 @@ import type { SignupForm } from './useSignupForm';
 import { APP_SPACE_GROUPS, WOMAN_APP_SPACE_GROUPS } from './signupFlowConfig';
 import { signupTheme } from './signupTheme';
 import { useSignupFlowTheme } from './SignupFlowContext';
-import { getWomanStepMeta } from './signupWomanConfig';
+import { getPlayerStepMeta } from './signupPlayerStepMeta';
 
 interface SignupSpaceStepProps {
   form: SignupForm;
@@ -29,7 +29,7 @@ export const SignupSpaceStep: React.FC<SignupSpaceStepProps> = ({
 }) => {
   const { colors } = useSignupFlowTheme();
   const spaceGroups = form.isWomanProduct ? [...WOMAN_APP_SPACE_GROUPS] : APP_SPACE_GROUPS;
-  const womanMeta = form.isWomanProduct ? getWomanStepMeta('space') : null;
+  const meta = getPlayerStepMeta(form.productLine, 'space');
 
   return (
   <SignupStepLayout
@@ -38,9 +38,9 @@ export const SignupSpaceStep: React.FC<SignupSpaceStepProps> = ({
     stepName={stepName}
     phases={phases}
     phaseIndex={phaseIndex}
-    title={womanMeta?.title ?? 'Ton espace ProDay'}
-    subtitle={womanMeta?.subtitle ?? 'Choisis l’univers qui correspond à ton profil foot.'}
-    heroIcon={womanMeta?.heroIcon ?? 'football'}
+    title={meta.title}
+    subtitle={meta.subtitle}
+    heroIcon={meta.heroIcon}
     onBack={onBack}
     footer={
       <SignupFooterButton label="Continuer" onPress={() => form.advanceFromCurrentPage()} />

@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -13,15 +13,13 @@ import type { User } from '../models/User';
 import { Icon } from '../components/ui/Icon';
 import { ProfileCompletionBar } from '../components/ProfileCompletionBar';
 import { OrganizerReminderCard } from '../components/OrganizerReminderCard';
-import { DashboardHero } from '../components/dashboard/DashboardHero';
+import { DashboardHomeHeader } from '../components/home/DashboardHomeHeader';
+import { HomeModuleRail } from '../components/home/HomeModuleRail';
 import { DashboardNextUp } from '../components/dashboard/DashboardNextUp';
 import { DashboardRolePanel } from '../components/dashboard/DashboardRolePanel';
 import { DashboardAgenda } from '../components/dashboard/DashboardAgenda';
 import { DashboardFocusTabs, type DashboardFocusId } from '../components/dashboard/DashboardFocusTabs';
-import { AppSpaceBanner } from '../components/appSpace/AppSpaceBanner';
-import { MenHubScreen } from './men/MenHubScreen';
-import { UnderU13HubScreen } from './underU13/UnderU13HubScreen';
-import { ProDayModuleGrid } from '../components/ui/ProDayModuleGrid';
+import { PhysioCarePanel } from '../components/feed/PhysioCarePanel';
 import type { ProDayModuleId } from '../content/prodayModules';
 import { getPulseBreakdown } from '../utils/prodayPulse';
 import { ArenaScreen } from './ArenaScreen';
@@ -38,21 +36,32 @@ import { teamEventsService } from '../services/teamEvents.service';
 import { TAB_BAR_CONTENT_INSET } from '../components/navigation/BottomTabBar';
 import { PushScreenTransition } from '../components/motion';
 import { colors, spacing, radius } from '../theme/designTokens';
+import {
+  canAccessSponsorsModule,
+  getDashboardFocusTabLabels,
+  getDashboardLayoutKind,
+  getDashboardQuickAccessLabel,
+  getMercatoTabLabel,
+  getVisibleMainTabs,
+} from '../content/poleExperience';
+import { HomeQuickStrip, type HomeQuickItem } from '../components/home/HomeQuickStrip';
 import type { SeasonCalendarItem } from '../utils/seasonCalendar';
 
-type DashboardView =
-  | 'main'
-  | 'team'
-  | 'arena'
-  | 'sponsors'
-  | 'men_hub'
-  | 'under_u13_hub';
+type DashboardView = 'main' | 'team' | 'arena' | 'sponsors';
 
 interface DashboardScreenProps {
   profile: User;
 }
 
 export const DashboardScreen: React.FC<DashboardScreenProps> = ({ profile }) => {
+  const { colors: themeColors, productLine } = useAppTheme();
+  const layoutKind = getDashboardLayoutKind(productLine, profile.role);
+  const isAmateurPlayer = layoutKind === 'amateur_player';
+  const isProLayout = layoutKind === 'pro';
+  const showSponsors = canAccessSponsorsModule(productLine, profile.role);
+  const focusTabs = getDashboardFocusTabLabels(productLine, profile.role);
+  const quickAccessLabel = getDashboardQuickAccessLabel(productLine, profile.role);
+
   const [view, setView] = useState<DashboardView>('main');
   const [focus, setFocus] = useState<DashboardFocusId>('priorities');
   const { pendingDashboardView, clearPendingDashboard, openChat } = useTabNavigation();
@@ -64,6 +73,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ profile }) => 
   const isStaff =
     profile.role === 'coach' ||
     profile.role === 'agent' ||
+    profile.role === 'recruiter' ||
     profile.role === 'physio' ||
     profile.role === 'club';
   const isOrganizer =
@@ -74,7 +84,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ profile }) => 
   const pendingVerify = isStaff && profile.verification_status === 'PENDING';
 
   const { items: reminderItems, loading: loadingReminders, refresh: refreshReminders } =
-    useOrganizerReminders(isOrganizer ? profile.uid : undefined);
+    useOrganizerReminders(isOrganizer && isProLayout ? profile.uid : undefined);
   const [remindingId, setRemindingId] = useState<string | null>(null);
 
   const onRefresh = useCallback(async () => {
@@ -99,7 +109,42 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ profile }) => 
   const goMatchs = () => nav.openMatchs();
   const goRecruitment = () => nav.setActiveTab('recrutement');
   const goMessages = () => nav.setActiveTab('messages');
+  const goHealth = () => nav.setActiveTab('sante');
+  const goCarpool = () => nav.setActiveTab('covoiturage');
   const goProfile = () => nav.openProfile();
+
+  const visibleTabs = getVisibleMainTabs(productLine, profile.role);
+  const showFeedShortcut = visibleTabs.includes('feed');
+  const showCarpoolShortcut = visibleTabs.includes('covoiturage');
+  const showHealthShortcut = visibleTabs.includes('sante');
+
+  const quickStripItems = useMemo((): HomeQuickItem[] => {
+    const items: HomeQuickItem[] = [];
+    if (visibleTabs.includes('recrutement')) {
+      items.push({
+        id: 'mercato',
+        label: getMercatoTabLabel(productLine, profile.role),
+        icon: 'search',
+        onPress: goRecruitment,
+      });
+    }
+    if (visibleTabs.includes('matchs')) {
+      items.push({ id: 'matchs', label: 'Matchs', icon: 'handshake', onPress: goMatchs });
+    }
+    if (showCarpoolShortcut) {
+      items.push({ id: 'covoiturage', label: 'Covoiturage', icon: 'car', onPress: goCarpool });
+    }
+    if (showHealthShortcut) {
+      items.push({ id: 'sante', label: 'Santé', icon: 'heart', onPress: goHealth });
+    }
+    return items;
+  }, [
+    visibleTabs,
+    productLine,
+    profile.role,
+    showCarpoolShortcut,
+    showHealthShortcut,
+  ]);
 
   const pulseBreakdown = getPulseBreakdown(profile, {
     pendingConvocations: data.pendingConvocations.length,
@@ -119,7 +164,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ profile }) => 
         setView('arena');
         break;
       case 'sponsors':
-        setView('sponsors');
+        if (showSponsors) setView('sponsors');
         break;
       case 'gestion':
         setView('team');
@@ -146,76 +191,59 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ profile }) => 
     else nav.openMatchs();
   };
 
-  if (view === 'men_hub') {
-    return <MenHubScreen onBack={() => setView('main')} />;
-  }
-
-  if (view === 'under_u13_hub') {
-    return <UnderU13HubScreen onBack={() => setView('main')} />;
-  }
-
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, { backgroundColor: themeColors.background }]}>
       <ScrollView
-        style={styles.container}
+        style={[styles.container, { backgroundColor: themeColors.background }]}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor={colors.accent}
+            tintColor={themeColors.accent}
           />
         }
       >
-        <DashboardHero
+        <DashboardHomeHeader
           profile={profile}
           pulse={data.pulse}
           breakdown={pulseBreakdown}
           unreadMessages={unreadCount}
           onProfilePress={goProfile}
           onMessagesPress={goMessages}
+          onFeedPress={showFeedShortcut ? () => nav.setActiveTab('feed') : undefined}
+          onHealthPress={showHealthShortcut ? goHealth : undefined}
+          onCarpoolPress={showCarpoolShortcut ? goCarpool : undefined}
         />
 
-        <View style={styles.quickRow}>
-          <TouchableOpacity style={styles.quickChip} onPress={() => nav.setActiveTab('feed')} activeOpacity={0.85}>
-            <Icon name="star-four-points" size={18} color={colors.accent} />
-            <Text style={styles.quickLabel}>Fil</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.quickChip} onPress={goMessages} activeOpacity={0.85}>
-            <Icon name="chat" size={18} color={colors.accent} />
-            <Text style={styles.quickLabel}>Messages</Text>
-            {unreadCount > 0 ? (
-              <View style={styles.quickBadge}>
-                <Text style={styles.quickBadgeText}>{unreadCount > 9 ? '9+' : unreadCount}</Text>
-              </View>
-            ) : null}
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.quickChip} onPress={goProfile} activeOpacity={0.85}>
-            <Icon name="person" size={18} color={colors.accent} />
-            <Text style={styles.quickLabel}>Profil</Text>
-          </TouchableOpacity>
-        </View>
+        <HomeQuickStrip items={quickStripItems} />
 
-        <AppSpaceBanner
-          showHubLinks
-          onOpenMenHub={() => setView('men_hub')}
-          onOpenUnderU13Hub={() => setView('under_u13_hub')}
-        />
-
-        <ProDayModuleGrid
+        <Text style={[styles.sectionLabel, { color: themeColors.textMuted }]}>
+          {quickAccessLabel}
+        </Text>
+        <HomeModuleRail
           onModulePress={onModulePress}
           liveRecruitment={Boolean(data.stats?.recruitment_posts_open)}
           role={profile.role}
         />
 
         {data.loading ? (
-          <ActivityIndicator color={colors.accent} style={styles.loader} />
+          <ActivityIndicator color={themeColors.accent} style={styles.loader} />
         ) : null}
 
-        {profile.role === 'player' ? <ProfileCompletionBar user={profile} /> : null}
+        {isAmateurPlayer ? (
+          <>
+            <PhysioCarePanel
+              profile={profile}
+              onOpenChat={(threadId) => openChat(threadId)}
+              onOpenMessages={goMessages}
+            />
+            <ProfileCompletionBar user={profile} />
+          </>
+        ) : null}
 
-        {isOrganizer ? (
+        {isProLayout && isOrganizer ? (
           <OrganizerReminderCard
             items={reminderItems}
             loading={loadingReminders}
@@ -229,8 +257,11 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ profile }) => 
           />
         ) : null}
 
-        {pendingVerify ? (
-          <TouchableOpacity style={styles.alertCard} onPress={goProfile}>
+        {isProLayout && pendingVerify ? (
+          <TouchableOpacity
+            style={[styles.alertCard, isProLayout && styles.alertCardPro]}
+            onPress={goProfile}
+          >
             <Icon name="warning" size={22} color={colors.warning} />
             <View style={styles.alertBody}>
               <Text style={styles.alertTitle}>Vérification en cours</Text>
@@ -240,7 +271,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ profile }) => 
           </TouchableOpacity>
         ) : null}
 
-        <DashboardFocusTabs active={focus} onChange={setFocus} />
+        <DashboardFocusTabs active={focus} onChange={setFocus} tabs={focusTabs} />
 
         {focus === 'priorities' ? (
           <>
@@ -252,6 +283,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ profile }) => 
             />
             <DashboardRolePanel
               profile={profile}
+              layoutKind={layoutKind}
               applications={data.myApplications}
               detections={data.detections}
               openMatches={data.openMatches}
@@ -259,8 +291,9 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ profile }) => 
               onDetections={() => nav.openMercato('detections')}
               onMatches={goMatchs}
               onApplications={() => nav.openProfile('applications')}
-              onSponsors={profile.role === 'sponsor' ? () => setView('sponsors') : undefined}
-              onProfile={goProfile}
+              onHealth={goHealth}
+              onSponsors={showSponsors ? () => setView('sponsors') : undefined}
+              onProfile={isAmateurPlayer ? () => nav.openProfile('cv') : goProfile}
             />
           </>
         ) : (
@@ -278,52 +311,31 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ profile }) => 
       <PushScreenTransition active={view === 'team'}>
         <TeamManagementScreen profile={profile} onBack={() => setView('main')} />
       </PushScreenTransition>
-      <PushScreenTransition active={view === 'sponsors'}>
-        <SponsorsScreen onBack={() => setView('main')} />
-      </PushScreenTransition>
+      {showSponsors ? (
+        <PushScreenTransition active={view === 'sponsors'}>
+          <SponsorsScreen onBack={() => setView('main')} />
+        </PushScreenTransition>
+      ) : null}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.background },
-  container: { flex: 1, backgroundColor: colors.background },
+  root: { flex: 1 },
+  container: { flex: 1 },
   content: {
     paddingHorizontal: spacing.lg,
     paddingBottom: TAB_BAR_CONTENT_INSET + spacing.xl,
   },
   loader: { marginVertical: spacing.lg },
-  quickRow: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-    marginBottom: spacing.lg,
+  sectionLabel: {
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+    marginBottom: spacing.sm,
+    marginTop: spacing.xs,
   },
-  quickChip: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    paddingVertical: spacing.sm + 2,
-    backgroundColor: colors.surface,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  quickLabel: { fontSize: 12, fontWeight: '700', color: colors.text },
-  quickBadge: {
-    position: 'absolute',
-    top: 4,
-    right: 8,
-    minWidth: 16,
-    height: 16,
-    borderRadius: 8,
-    backgroundColor: colors.error,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 4,
-  },
-  quickBadgeText: { fontSize: 9, fontWeight: '800', color: colors.brandInverse },
   alertCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -334,6 +346,10 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
     borderWidth: 1,
     borderColor: colors.border,
+  },
+  alertCardPro: {
+    backgroundColor: '#FFFBEB',
+    borderColor: '#FDE68A',
   },
   alertBody: { flex: 1 },
   alertTitle: { fontWeight: '800', color: colors.text, fontSize: 14 },

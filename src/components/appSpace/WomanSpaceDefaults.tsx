@@ -1,18 +1,21 @@
 import { useEffect } from 'react';
 import { useAppSpace } from '../../context/AppSpaceContext';
 import { useProductLine } from '../../context/ProductLineContext';
-import { isFeminineAppSpace } from '../../models/AppSpace';
+import {
+  defaultAppSpaceForProductLine,
+  isAppSpaceAllowedForProductLine,
+} from '../../utils/appSpaceProductLine';
 
-/** Espace foot féminin par défaut en mode ProDay Woman. */
+/** Aligne l’espace Mercato actif sur la ligne produit (classique ↔ Woman). */
 export function WomanSpaceDefaults() {
-  const { isWoman } = useProductLine();
+  const { productLine } = useProductLine();
   const { appSpace, setAppSpace } = useAppSpace();
 
   useEffect(() => {
-    if (isWoman && !isFeminineAppSpace(appSpace)) {
-      void setAppSpace('women');
+    if (!isAppSpaceAllowedForProductLine(appSpace, productLine)) {
+      void setAppSpace(defaultAppSpaceForProductLine(productLine));
     }
-  }, [isWoman, appSpace, setAppSpace]);
+  }, [productLine, appSpace, setAppSpace]);
 
   return null;
 }

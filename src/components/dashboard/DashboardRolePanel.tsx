@@ -19,6 +19,8 @@ interface DashboardRolePanelProps {
   onApplications: () => void;
   onSponsors?: () => void;
   onProfile?: () => void;
+  onHealth?: () => void;
+  layoutKind?: 'amateur_player' | 'pro';
 }
 
 export const DashboardRolePanel: React.FC<DashboardRolePanelProps> = ({
@@ -32,6 +34,8 @@ export const DashboardRolePanel: React.FC<DashboardRolePanelProps> = ({
   onApplications,
   onSponsors,
   onProfile,
+  onHealth,
+  layoutKind = 'pro',
 }) => {
   const meta = getRoleDashboardMeta(profile.role);
   const actions = getRolePanelActions(profile.role);
@@ -39,7 +43,7 @@ export const DashboardRolePanel: React.FC<DashboardRolePanelProps> = ({
   if (profile.role === 'player') {
     const stats = profile.profile.season_stats;
     return (
-      <View style={styles.wrap}>
+      <View style={[styles.wrap, styles.wrapPlayer]}>
         <Text style={styles.eyebrow}>{meta.eyebrow}</Text>
         <Text style={styles.title}>{meta.title}</Text>
         <View style={styles.statGrid}>
@@ -61,7 +65,15 @@ export const DashboardRolePanel: React.FC<DashboardRolePanelProps> = ({
             title={a.title}
             sub={a.sub}
             accent={a.accent}
-            onPress={a.title.includes('Mercato') ? onRecruitment : onMatches}
+            onPress={
+              a.title.includes('CV')
+                ? (onProfile ?? onRecruitment)
+                : a.title.includes('Candidater')
+                  ? onRecruitment
+                  : a.title.includes('Pôle santé')
+                    ? (onHealth ?? onRecruitment)
+                    : onMatches
+            }
           />
         ))}
         {detections.length > 0 ? (
@@ -134,8 +146,8 @@ export const DashboardRolePanel: React.FC<DashboardRolePanelProps> = ({
   }
 
   return (
-    <View style={styles.wrap}>
-      <Text style={styles.eyebrow}>{meta.eyebrow}</Text>
+    <View style={[styles.wrap, layoutKind === 'pro' && styles.wrapPro]}>
+      <Text style={[styles.eyebrow, layoutKind === 'pro' && styles.eyebrowPro]}>{meta.eyebrow}</Text>
       <Text style={styles.title}>{meta.title}</Text>
       {actions.map((a) => (
         <ActionRow
@@ -213,6 +225,21 @@ const ActionRow: React.FC<{
 
 const styles = StyleSheet.create({
   wrap: { marginBottom: spacing.xl },
+  wrapPlayer: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  wrapPro: {
+    backgroundColor: '#EFF6FF',
+    borderRadius: radius.lg,
+    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
+  },
+  eyebrowPro: { color: '#1D4ED8' },
   wrapMedical: {
     backgroundColor: '#F0FDFA',
     borderRadius: radius.lg,

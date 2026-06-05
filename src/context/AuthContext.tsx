@@ -138,7 +138,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         configured: isFirebaseConfigured(),
         isAdmin,
         adminClaimLoading,
-        needsEmailVerification: needsEmailVerification(firebaseUser),
+        needsEmailVerification: needsEmailVerification(firebaseUser, profile?.email),
         refreshProfile,
         refreshFirebaseUser,
         resendEmailVerification,

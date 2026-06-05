@@ -5,7 +5,7 @@ import type { ProDayModuleId } from './prodayModules';
 export interface RoleDashboardMeta {
   eyebrow: string;
   title: string;
-  heroTone: 'player' | 'coach' | 'club' | 'agent' | 'organizer' | 'medical' | 'sponsor';
+  heroTone: 'player' | 'coach' | 'club' | 'agent' | 'recruiter' | 'organizer' | 'medical' | 'sponsor';
   moduleOrder: ProDayModuleId[];
   fullWidthModule?: ProDayModuleId;
   hideModules?: ProDayModuleId[];
@@ -39,6 +39,14 @@ const ROLE_DASHBOARD: Record<UserRole, RoleDashboardMeta> = {
     heroTone: 'agent',
     moduleOrder: ['recrutement', 'matchs', 'gestion', 'arena', 'sponsors'],
     fullWidthModule: 'recrutement',
+  },
+  recruiter: {
+    eyebrow: 'RECRUTEUR PRO',
+    title: 'Repérez & recrutez',
+    heroTone: 'recruiter',
+    moduleOrder: ['recrutement', 'matchs', 'arena', 'gestion', 'sponsors'],
+    fullWidthModule: 'recrutement',
+    hideModules: ['gestion'],
   },
   organizer: {
     eyebrow: 'ÉVÉNEMENTS',
@@ -83,6 +91,7 @@ export const ROLE_HERO_ACCENT: Record<RoleDashboardMeta['heroTone'], string> = {
   coach: '#1D4ED8',
   club: '#7C2D12',
   agent: '#4C1D95',
+  recruiter: '#059669',
   organizer: '#B45309',
   medical: '#0F766E',
   sponsor: '#BE185D',
@@ -99,7 +108,9 @@ export function getRolePanelActions(role: UserRole): RolePanelAction[] {
   switch (role) {
     case 'player':
       return [
-        { icon: 'search', title: 'Opportunités Mercato', sub: 'Annonces & candidatures', accent: true },
+        { icon: 'document', title: 'Mon CV en ligne', sub: 'Compléter et publier votre CV foot', accent: true },
+        { icon: 'search', title: 'Candidater', sub: 'Parcourir les annonces — sans publication' },
+        { icon: 'heart', title: 'Pôle santé', sub: 'Kinés, coach mental, nutrition…' },
         { icon: 'calendar', title: 'Matchs & convocations', sub: 'RSVP et compo' },
       ];
     case 'coach':
@@ -119,6 +130,12 @@ export function getRolePanelActions(role: UserRole): RolePanelAction[] {
         { icon: 'search', title: 'Repérage', sub: 'Profils joueurs filtrés', accent: true },
         { icon: 'briefcase', title: 'Mandats', sub: 'Licence & dossiers' },
         { icon: 'handshake', title: 'Matchs amicaux', sub: 'Réseau clubs' },
+      ];
+    case 'recruiter':
+      return [
+        { icon: 'search', title: 'Mercato', sub: 'Publier et suivre vos annonces', accent: true },
+        { icon: 'people', title: 'Scouting', sub: 'Profils joueurs filtrés par critères' },
+        { icon: 'car', title: 'Covoiturage', sub: 'Trajets matchs & détections' },
       ];
     case 'organizer':
       return [

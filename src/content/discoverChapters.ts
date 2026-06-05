@@ -38,7 +38,7 @@ export interface DiscoverIntroSlide {
 export const DISCOVER_INTRO_SLIDES: DiscoverIntroSlide[] = [
   {
     id: 'welcome',
-    kicker: 'PRODAY',
+    kicker: 'PRO DAY MAN',
     title: 'Une saison.\nUne app.',
     body: 'Mercato, matchs, Arena et sponsors — tout pour votre saison amateur.',
     image: SHOWCASE_IMAGES.discoverHero,

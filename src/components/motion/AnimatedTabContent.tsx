@@ -9,10 +9,9 @@ import Animated, {
 import { MAIN_TAB_ITEMS, type MainTabId } from '../../navigation/mainTabConfig';
 import { motion } from '../../theme/motion';
 
-const TAB_ORDER = MAIN_TAB_ITEMS.map((t) => t.id);
-
 interface AnimatedTabContentProps {
   activeTab: MainTabId;
+  tabOrder?: MainTabId[];
   children: React.ReactNode;
 }
 
@@ -21,10 +20,12 @@ interface AnimatedTabContentProps {
  */
 export const AnimatedTabContent: React.FC<AnimatedTabContentProps> = ({
   activeTab,
+  tabOrder,
   children,
 }) => {
-  const prevIndex = useRef(TAB_ORDER.indexOf(activeTab));
-  const currentIndex = TAB_ORDER.indexOf(activeTab);
+  const order = tabOrder ?? MAIN_TAB_ITEMS.map((t) => t.id);
+  const prevIndex = useRef(order.indexOf(activeTab));
+  const currentIndex = order.indexOf(activeTab);
   const direction = currentIndex >= prevIndex.current ? 1 : -1;
 
   useEffect(() => {

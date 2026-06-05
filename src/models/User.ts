@@ -30,6 +30,7 @@ export type UserRole =
   | 'coach'
   | 'club'
   | 'agent'
+  | 'recruiter'
   | 'organizer'
   | 'sponsor'
   | 'physio';
@@ -107,6 +108,10 @@ export interface UserProfile {
   
   // Commun
   bio?: string;
+  /** Accroche affichée en tête du CV en ligne */
+  cv_headline?: string;
+  /** Objectifs sportifs / projet de carrière (CV en ligne) */
+  cv_objectives?: string;
   club_id?: string;
   achievements?: string[];
 }
@@ -202,6 +207,8 @@ export function verificationDocumentTypeForRole(role: UserRole): VerificationDoc
   switch (role) {
     case 'agent':
       return 'license';
+    case 'recruiter':
+      return 'authorization';
     case 'organizer':
     case 'club':
       return 'authorization';

@@ -5,6 +5,8 @@ import Image from "next/image";
 import { useState } from "react";
 import {
   Calendar,
+  Car,
+  Heart,
   Home,
   MessageCircle,
   Search,
@@ -17,6 +19,8 @@ const ICONS = {
   home: Home,
   search: Search,
   calendar: Calendar,
+  car: Car,
+  heart: Heart,
   message: MessageCircle,
   user: User,
 } as const;
@@ -42,6 +46,16 @@ const SCREENS: Record<
     body: "Proposez, cherchez ou acceptez un match — calendrier unifié.",
     image: "/showcase/classic-match.jpg",
     chips: ["Sam. 15h", "Loisir", "Confirmé"],
+  },
+  carpool: {
+    title: "Covoiturage",
+    body: "Proposez un trajet ou réservez une place pour le prochain match ou la détection.",
+    chips: ["2 places", "Stade Nord", "Sam. 13h30"],
+  },
+  health: {
+    title: "Pôle santé",
+    body: "Kinés, coach mental, nutrition — annuaire vérifié et messagerie sécurisée.",
+    chips: ["Coach mental", "Kiné sport", "Paris 75"],
   },
   messages: {
     title: "Messagerie",

@@ -74,6 +74,7 @@ export const ROLE_DASHBOARD_TAGLINE: Record<UserRole, string> = {
   coach: 'Pilotez votre effectif et vos convocations.',
   club: 'Stages, recrutement et vie de club.',
   agent: 'Repérez, convoquez, placez.',
+  recruiter: 'Scouting, annonces Mercato et suivi candidatures.',
   organizer: 'Animez tournois et écosystème local.',
   sponsor: 'Soutenez les clubs de votre territoire.',
   physio: 'Kiné, ostéo, médecin du sport — fil ProDay.',

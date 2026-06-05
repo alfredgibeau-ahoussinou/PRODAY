@@ -1,4 +1,7 @@
-import { needsOnboardingDocumentUpload } from '../utils/onboardingGate';
+import {
+  needsOnboardingDocumentUpload,
+  shouldShowPlayerVerificationReminder,
+} from '../utils/onboardingGate';
 import type { User } from '../models/User';
 
 function baseUser(overrides: Partial<User>): User {
@@ -39,5 +42,43 @@ describe('onboardingGate', () => {
         baseUser({ role: 'sponsor', verification_status: 'NOT_REQUIRED' })
       )
     ).toBe(false);
+  });
+
+  it('contourne les documents pour les emails beta', () => {
+    expect(
+      needsOnboardingDocumentUpload(
+        baseUser({ role: 'coach', email: 'alfredgibeauahoussinou@gmail.com' })
+      )
+    ).toBe(false);
+  });
+
+  it('masque le rappel vérification joueur après inscription', () => {
+    expect(
+      shouldShowPlayerVerificationReminder(
+        baseUser({ role: 'player', onboarding_documents_submitted: true })
+      )
+    ).toBe(false);
+    expect(
+      shouldShowPlayerVerificationReminder(
+        baseUser({
+          role: 'player',
+          player_verification: {
+            identity: { status: 'pending' },
+            club_license: { status: 'not_submitted' },
+          },
+        })
+      )
+    ).toBe(false);
+    expect(
+      shouldShowPlayerVerificationReminder(
+        baseUser({
+          role: 'player',
+          player_verification: {
+            identity: { status: 'not_submitted' },
+            club_license: { status: 'not_submitted' },
+          },
+        })
+      )
+    ).toBe(true);
   });
 });

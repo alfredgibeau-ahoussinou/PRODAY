@@ -1,4 +1,12 @@
-export type BetaRoleId = 'player' | 'coach' | 'club' | 'organizer';
+export type BetaRoleId =
+  | 'player'
+  | 'coach'
+  | 'club'
+  | 'agent'
+  | 'recruiter'
+  | 'organizer'
+  | 'physio'
+  | 'sponsor';
 
 export const BETA_MEMBER_ROLE = 'Beta-testeur';
 
@@ -6,7 +14,11 @@ export const BETA_ROLE_LABELS: Record<BetaRoleId, string> = {
   player: 'Joueur',
   coach: 'Coach',
   club: 'Club',
+  agent: 'Agent',
+  recruiter: 'Recruteur',
   organizer: 'Organisateur',
+  physio: 'Pôle santé',
+  sponsor: 'Partenaire',
 };
 
 export function isBetaRoleId(value: string): value is BetaRoleId {

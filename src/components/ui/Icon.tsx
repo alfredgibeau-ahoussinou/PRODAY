@@ -16,6 +16,7 @@ export type IconName =
   | 'football'
   | 'football-outline'
   | 'walk'
+  | 'car'
   | 'heart'
   | 'heart-outline'
   | 'mail'
@@ -47,7 +48,8 @@ export type IconName =
   | 'arrow-back'
   | 'alert-circle'
   | 'document'
-  | 'camera';
+  | 'camera'
+  | 'bag';
 
 const MAP: Record<IconName, keyof typeof Ionicons.glyphMap> = {
   home: 'home-outline',
@@ -63,6 +65,7 @@ const MAP: Record<IconName, keyof typeof Ionicons.glyphMap> = {
   football: 'football',
   'football-outline': 'football-outline',
   walk: 'walk-outline',
+  car: 'car-outline',
   heart: 'heart',
   'heart-outline': 'heart-outline',
   mail: 'mail-outline',
@@ -95,6 +98,7 @@ const MAP: Record<IconName, keyof typeof Ionicons.glyphMap> = {
   'alert-circle': 'alert-circle-outline',
   document: 'document-text-outline',
   camera: 'camera-outline',
+  bag: 'bag-outline',
 };
 
 /** Icônes pleines pour onglets actifs */
@@ -104,9 +108,11 @@ const FILLED_MAP: Partial<Record<IconName, keyof typeof Ionicons.glyphMap>> = {
   chat: 'chatbubbles',
   person: 'person',
   handshake: 'people',
+  car: 'car',
   calendar: 'calendar',
   shield: 'shield-checkmark',
   trophy: 'trophy',
+  bag: 'bag',
 };
 
 interface IconProps {

@@ -8,27 +8,30 @@ import React, {
 } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
-  isWomanProductLine,
+  brandForProductLine,
   normalizeStoredProductLine,
-  PRODAY_WOMAN_BRAND,
   PRODUCT_LINE_STORAGE_KEY,
   WOMAN_SPACE_ACTIVE_KEY,
   type ProductLineId,
 } from '../models/ProductLine';
-import { getThemedColors, type AppColors } from '../theme/prodayWomanTheme';
+import { getThemedColorsForLine, type AppColors } from '../theme/universeTheme';
 import { BRAND, colors as defaultColors } from '../theme/designTokens';
 
 interface ProductLineContextValue {
   productLine: ProductLineId;
   womanSpaceActive: boolean;
   isWoman: boolean;
+  isHomme: boolean;
+  isPro: boolean;
   /** @deprecated Préférer isWoman */
   isGirl: boolean;
   brandName: string;
   tagline: string;
   colors: AppColors;
   setProductLine: (line: ProductLineId) => Promise<void>;
+  enterHommeSpace: () => Promise<void>;
   enterWomanSpace: () => Promise<void>;
+  enterProSpace: () => Promise<void>;
   exitWomanSpace: () => Promise<void>;
   loading: boolean;
 }
@@ -38,7 +41,7 @@ const ProductLineContext = createContext<ProductLineContextValue | null>(null);
 export const ProductLineProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const [productLine, setLineState] = useState<ProductLineId>('standard');
+  const [productLine, setLineState] = useState<ProductLineId>('homme');
   const [womanSpaceActive, setWomanSpaceActive] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -50,11 +53,12 @@ export const ProductLineProvider: React.FC<{ children: React.ReactNode }> = ({
           AsyncStorage.getItem(PRODUCT_LINE_STORAGE_KEY),
           AsyncStorage.getItem(WOMAN_SPACE_ACTIVE_KEY),
         ]);
-        const line = normalizeStoredProductLine(storedLine) ?? 'standard';
-        const inWoman = spaceFlag === '1' && line === 'woman';
+        const line = normalizeStoredProductLine(storedLine) ?? 'homme';
+        const legacyWoman = spaceFlag === '1' && line === 'homme';
+        const resolved: ProductLineId = legacyWoman ? 'woman' : line;
         if (!cancelled) {
-          setWomanSpaceActive(inWoman);
-          setLineState(inWoman ? 'woman' : 'standard');
+          setWomanSpaceActive(resolved === 'woman');
+          setLineState(resolved);
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -65,46 +69,64 @@ export const ProductLineProvider: React.FC<{ children: React.ReactNode }> = ({
     };
   }, []);
 
-  const persistWomanState = useCallback(async (active: boolean, line: ProductLineId) => {
+  const persistLine = useCallback(async (line: ProductLineId) => {
     await AsyncStorage.multiSet([
       [PRODUCT_LINE_STORAGE_KEY, line],
-      [WOMAN_SPACE_ACTIVE_KEY, active ? '1' : '0'],
+      [WOMAN_SPACE_ACTIVE_KEY, line === 'woman' ? '1' : '0'],
     ]);
   }, []);
+
+  const enterHommeSpace = useCallback(async () => {
+    setWomanSpaceActive(false);
+    setLineState('homme');
+    await persistLine('homme');
+  }, [persistLine]);
 
   const enterWomanSpace = useCallback(async () => {
     setWomanSpaceActive(true);
     setLineState('woman');
-    await persistWomanState(true, 'woman');
-  }, [persistWomanState]);
+    await persistLine('woman');
+  }, [persistLine]);
+
+  const enterProSpace = useCallback(async () => {
+    setWomanSpaceActive(false);
+    setLineState('pro');
+    await persistLine('pro');
+  }, [persistLine]);
 
   const exitWomanSpace = useCallback(async () => {
-    setWomanSpaceActive(false);
-    setLineState('standard');
-    await persistWomanState(false, 'standard');
-  }, [persistWomanState]);
+    await enterHommeSpace();
+  }, [enterHommeSpace]);
 
   const setProductLine = useCallback(
     async (line: ProductLineId) => {
       if (line === 'woman') await enterWomanSpace();
-      else await exitWomanSpace();
+      else if (line === 'pro') await enterProSpace();
+      else await enterHommeSpace();
     },
-    [enterWomanSpace, exitWomanSpace]
+    [enterHommeSpace, enterWomanSpace, enterProSpace]
   );
 
-  const isWoman = womanSpaceActive && isWomanProductLine(productLine);
+  const isWoman = productLine === 'woman';
+  const isHomme = productLine === 'homme';
+  const isPro = productLine === 'pro';
+  const brand = brandForProductLine(productLine);
 
   const value = useMemo(
     () => ({
-      productLine: (isWoman ? 'woman' : 'standard') as ProductLineId,
+      productLine,
       womanSpaceActive,
       isWoman,
+      isHomme,
+      isPro,
       isGirl: isWoman,
-      brandName: isWoman ? PRODAY_WOMAN_BRAND.name : BRAND.name,
-      tagline: isWoman ? PRODAY_WOMAN_BRAND.tagline : BRAND.tagline,
-      colors: getThemedColors(isWoman),
+      brandName: brand.name,
+      tagline: brand.tagline,
+      colors: getThemedColorsForLine(productLine),
       setProductLine,
+      enterHommeSpace,
       enterWomanSpace,
+      enterProSpace,
       exitWomanSpace,
       loading,
     }),
@@ -112,8 +134,14 @@ export const ProductLineProvider: React.FC<{ children: React.ReactNode }> = ({
       productLine,
       womanSpaceActive,
       isWoman,
+      isHomme,
+      isPro,
+      brand.name,
+      brand.tagline,
       setProductLine,
+      enterHommeSpace,
       enterWomanSpace,
+      enterProSpace,
       exitWomanSpace,
       loading,
     ]
@@ -134,24 +162,32 @@ export function useAppTheme() {
   const {
     colors,
     isWoman,
+    isHomme,
+    isPro,
     isGirl,
     brandName,
     tagline,
     productLine,
     setProductLine,
+    enterHommeSpace,
     enterWomanSpace,
+    enterProSpace,
     exitWomanSpace,
     womanSpaceActive,
   } = useProductLine();
   return {
     colors,
     isWoman,
+    isHomme,
+    isPro,
     isGirl,
     brandName,
     tagline,
     productLine,
     setProductLine,
+    enterHommeSpace,
     enterWomanSpace,
+    enterProSpace,
     exitWomanSpace,
     womanSpaceActive,
   };

@@ -71,7 +71,7 @@ const styles = StyleSheet.create({
   wrap: {
     backgroundColor: colors.surfaceInverse,
     marginHorizontal: -spacing.lg,
-    marginTop: -spacing.lg,
+    marginTop: 0,
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.lg,
     paddingBottom: spacing.xl,

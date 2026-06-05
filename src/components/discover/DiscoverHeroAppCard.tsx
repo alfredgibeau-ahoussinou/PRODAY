@@ -12,7 +12,7 @@ interface DiscoverHeroAppCardProps {
 /** Carte accueil — calquée sur `.hero-card-app` des maquettes ProDay */
 export const DiscoverHeroAppCard: React.FC<DiscoverHeroAppCardProps> = ({
   pitch,
-  statsLabel = 'Stats temps réel · Firebase',
+  statsLabel = 'Communauté en direct',
 }) => (
   <Animated.View entering={FadeInDown.delay(120).springify()} style={styles.wrap}>
     <View style={styles.card}>

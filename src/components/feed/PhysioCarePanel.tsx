@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -6,27 +6,38 @@ import {
   StyleSheet,
   ActivityIndicator,
   TextInput,
+  ScrollView,
 } from 'react-native';
 import type { User } from '../../models/User';
 import { usersService } from '../../services/users.service';
 import { openContactConversation } from '../../utils/openContactConversation';
+import {
+  HEALTH_POLE_FILTERS,
+  isMentalCoachSpecialty,
+  matchesHealthPoleFilter,
+  type HealthPoleFilterId,
+} from '../../utils/healthPoleSpecialties';
 import { colors, spacing, radius } from '../../theme/designTokens';
-import { Icon } from '../ui/Icon';
+import { Icon, type IconName } from '../ui/Icon';
 
 interface PhysioCarePanelProps {
   profile: User;
   onOpenChat: (threadId: string) => void;
   onOpenMessages: () => void;
+  /** Plein écran onglet Santé — liste complète */
+  expanded?: boolean;
 }
 
 export const PhysioCarePanel: React.FC<PhysioCarePanelProps> = ({
   profile,
   onOpenChat,
   onOpenMessages,
+  expanded = false,
 }) => {
   const [physios, setPhysios] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [specialtyFilter, setSpecialtyFilter] = useState<HealthPoleFilterId>('all');
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -45,7 +56,19 @@ export const PhysioCarePanel: React.FC<PhysioCarePanelProps> = ({
   const isPlayer = profile.role === 'player';
   const isPhysio = profile.role === 'physio';
 
+  const filteredPhysios = useMemo(
+    () =>
+      physios.filter((p) =>
+        matchesHealthPoleFilter(p.profile?.medical_specialty, specialtyFilter)
+      ),
+    [physios, specialtyFilter]
+  );
+
   if (!isPlayer && !isPhysio) return null;
+
+  function specialtyIcon(specialty: string | undefined): IconName {
+    return isMentalCoachSpecialty(specialty) ? 'shield' : 'heart';
+  }
 
   return (
     <View style={styles.wrap}>
@@ -55,8 +78,8 @@ export const PhysioCarePanel: React.FC<PhysioCarePanelProps> = ({
       </Text>
       <Text style={styles.sub}>
         {isPlayer
-          ? 'Messagerie dédiée joueur ↔ professionnels du pôle médical ProDay.'
-          : 'Les joueurs vous contactent pour prévention et récupération.'}
+          ? 'Kiné, coach mental, nutrition… Messagerie dédiée joueur ↔ pôle santé ProDay.'
+          : 'Les joueurs vous contactent pour prévention, récupération ou accompagnement mental.'}
       </Text>
 
       {isPlayer ? (
@@ -73,7 +96,7 @@ export const PhysioCarePanel: React.FC<PhysioCarePanelProps> = ({
           ) : physios.length === 0 ? (
             <Text style={styles.empty}>Aucun professionnel du pôle médical inscrit pour le moment.</Text>
           ) : (
-            physios.slice(0, 8).map((p) => (
+            (expanded ? physios : physios.slice(0, 5)).map((p) => (
               <TouchableOpacity
                 key={p.uid}
                 style={styles.row}
@@ -133,6 +156,32 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
     color: colors.text,
     backgroundColor: colors.background,
+  },
+  filters: {
+    flexDirection: 'row',
+    gap: spacing.xs,
+    marginBottom: spacing.sm,
+    paddingRight: spacing.sm,
+  },
+  filterChip: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 6,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.background,
+  },
+  filterChipActive: {
+    borderColor: colors.accent,
+    backgroundColor: colors.accentSoft,
+  },
+  filterChipText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: colors.textMuted,
+  },
+  filterChipTextActive: {
+    color: colors.accent,
   },
   loader: { marginVertical: spacing.md },
   empty: { fontSize: 13, color: colors.textMuted, fontStyle: 'italic' },

@@ -43,7 +43,7 @@ export const DiscoverLivePage: React.FC<DiscoverLivePageProps> = ({
       <DiscoverSectionHeader
         label="Communauté"
         title="En direct sur ProDay"
-        subtitle="Données réelles depuis Firebase"
+        subtitle="Communauté ProDay en temps réel"
         compact
       />
 

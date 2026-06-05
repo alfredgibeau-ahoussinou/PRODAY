@@ -85,7 +85,7 @@ export function checkFeatureAccess(input: {
           feature,
           used,
           limit,
-          message: `Limite gratuite : ${limit} candidatures Mercato par mois. Passez à ${plan.label} pour continuer.`,
+          message: `Limite gratuite : ${limit} candidature Mercato par mois. Passez à ${plan.label} pour continuer.`,
         };
       }
       return { allowed: true, tier, planId, feature, used, limit };

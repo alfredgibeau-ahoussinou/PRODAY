@@ -6,7 +6,7 @@ import { SignupPressable } from '../../components/signup/SignupPressable';
 import { SignupStepLayout } from './SignupStepLayout';
 import { SignupFooterButton } from './SignupFooterButton';
 import type { SignupForm } from './useSignupForm';
-import { getWomanStepMeta } from './signupWomanConfig';
+import { getPlayerStepMeta } from './signupPlayerStepMeta';
 import { isUnderU13AppSpace } from '../../models/AppSpace';
 import { colors, spacing, radius } from '../../theme/designTokens';
 
@@ -32,7 +32,7 @@ export const SignupParentalStep: React.FC<SignupParentalStepProps> = ({
   onSubmit,
 }) => {
   const underU13 = isUnderU13AppSpace(form.appSpace);
-  const womanMeta = form.isWomanProduct ? getWomanStepMeta('family') : null;
+  const meta = getPlayerStepMeta(form.productLine, 'family');
 
   return (
     <SignupStepLayout
@@ -41,15 +41,14 @@ export const SignupParentalStep: React.FC<SignupParentalStepProps> = ({
       stepName={stepName}
       phases={phases}
       phaseIndex={phaseIndex}
-      title={womanMeta?.title ?? 'Famille & supervision'}
+      title={meta.title}
       subtitle={
-        womanMeta?.subtitle ??
-        (underU13
+        underU13
           ? 'Espace -13 — un parent ou tuteur valide le compte.'
-          : 'Compte mineur — le responsable légal supervise le compte.')
+          : meta.subtitle
       }
       contentKey={`family-${form.appSpace}`}
-      heroIcon={womanMeta?.heroIcon ?? 'shield'}
+      heroIcon={meta.heroIcon}
       onBack={onBack}
       footer={
         <SignupFooterButton

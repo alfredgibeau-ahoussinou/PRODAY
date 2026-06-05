@@ -6,7 +6,7 @@ import { useProductLine } from './ProductLineContext';
 import { StyleSheet, View } from 'react-native';
 
 interface LaunchIntroContextValue {
-  /** Rouvre l'écran Classic / Woman (invité ou changement d'univers). */
+  /** Rouvre l'écran Homme / Woman / Pro. */
   openSpacePicker: () => void;
 }
 
@@ -16,7 +16,7 @@ export const LaunchIntroProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const { visible: firstLaunchVisible, playKey, markIntroComplete } = useAppLaunchIntro();
-  const { enterWomanSpace, exitWomanSpace } = useProductLine();
+  const { enterHommeSpace, enterWomanSpace, enterProSpace } = useProductLine();
   const [manualOpen, setManualOpen] = useState(false);
 
   const visible = firstLaunchVisible || manualOpen;
@@ -29,12 +29,13 @@ export const LaunchIntroProvider: React.FC<{ children: React.ReactNode }> = ({
     (space: IntroSpaceChoice) => {
       void (async () => {
         if (space === 'woman') await enterWomanSpace();
-        else await exitWomanSpace();
+        else if (space === 'pro') await enterProSpace();
+        else await enterHommeSpace();
         await markIntroComplete();
         setManualOpen(false);
       })();
     },
-    [enterWomanSpace, exitWomanSpace, markIntroComplete]
+    [enterHommeSpace, enterWomanSpace, enterProSpace, markIntroComplete]
   );
 
   return (

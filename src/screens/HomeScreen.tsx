@@ -4,17 +4,18 @@ import { useAuth } from '../context/AuthContext';
 import { DiscoverScreen } from './DiscoverScreen';
 import { DashboardScreen } from './DashboardScreen';
 import { CrossfadeSwitch } from '../components/motion';
-import { colors } from '../theme/designTokens';
+import { useAppTheme } from '../context/ProductLineContext';
 
 /**
  * Accueil : découverte interactive avant connexion, dashboard personnel après.
  */
 export const HomeScreen: React.FC = () => {
   const { profile, loading } = useAuth();
+  const { colors } = useAppTheme();
 
   if (loading) {
     return (
-      <View style={styles.loader}>
+      <View style={[styles.loader, { backgroundColor: colors.background }]}>
         <ActivityIndicator size="large" color={colors.brand} />
       </View>
     );
@@ -34,6 +35,5 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: colors.background,
   },
 });

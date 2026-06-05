@@ -41,11 +41,10 @@ export function getProfileCompletion(user: User): ProfileCompletionResult {
       (p.gallery_urls?.filter(Boolean).length ?? 0) > 0 ||
       (p.highlight_video_urls?.filter(Boolean).length ?? 0) > 0;
     add('media', 'Photo ou vidéo', hasMedia, 15);
-  } else if (user.role === 'coach' || user.role === 'agent') {
-    add('bio', 'Présentation', Boolean(p.bio?.trim()), 15);
-    add('diploma', 'Diplôme / licence', Boolean(p.diploma?.trim() || p.license_number?.trim()), 20);
-    add('verify', 'Document vérifié', user.verification_status === 'VERIFIED', 25);
-    add('specialties', 'Spécialités', (p.specialties?.length ?? 0) > 0, 10);
+  } else if (user.role === 'coach' || user.role === 'agent' || user.role === 'recruiter') {
+    add('bio', 'Présentation', Boolean(p.bio?.trim()), 25);
+    add('diploma', 'Diplôme / licence', Boolean(p.diploma?.trim() || p.license_number?.trim()), 35);
+    add('specialties', 'Spécialités', (p.specialties?.length ?? 0) > 0, 15);
   } else {
     add('bio', 'Description', Boolean(p.bio?.trim()), 20);
     add('club', 'Club lié', Boolean(p.club_id), 30);

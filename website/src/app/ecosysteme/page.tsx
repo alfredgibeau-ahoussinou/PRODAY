@@ -4,7 +4,8 @@ import { PageHeader } from "@/components/layout/PageHeader";
 
 export const metadata: Metadata = {
   title: "Écosystème",
-  description: "Joueurs, clubs, coachs, organisateurs — reliés par Mercato et Arena.",
+  description:
+    "Joueurs, recruteurs, pôle santé et organisateurs — reliés par Mercato et Arena.",
 };
 
 export default function EcosystemPage() {

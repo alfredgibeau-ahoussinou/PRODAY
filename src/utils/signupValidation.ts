@@ -1,5 +1,7 @@
 import type { AppSpaceId } from '../models/AppSpace';
 import type { UserRole } from '../models/User';
+import type { ProductLineId } from '../models/ProductLine';
+import { isRoleAllowedForProductLine } from '../content/universeRoles';
 import { MEDICAL_POLE_SPECIALTIES } from '../screens/signup/signupFlowConfig';
 import { validateAgeForAppSpace } from '../screens/signup/signupFlowConfig';
 import { PLAYER_LEVELS, PLAYER_POSITIONS } from '../constants/playerProfile';
@@ -276,7 +278,7 @@ export function validateRoleProFields(input: StaffValidationInput): Record<strin
   const cityErr = validateCity(city, { required: true, minLength: cityMin });
   if (cityErr) errs.city = cityErr;
 
-  const deptRequired = role === 'agent' || role === 'club';
+  const deptRequired = role === 'agent' || role === 'club' || role === 'recruiter';
   const deptErr = validateFrenchDepartment(department, { required: deptRequired });
   if (deptErr) errs.department = deptErr;
 
@@ -284,6 +286,12 @@ export function validateRoleProFields(input: StaffValidationInput): Record<strin
     if (!professionalHeadline?.trim()) {
       errs.professionalHeadline =
         role === 'coach' ? 'Indiquez votre diplôme ou certification' : 'Indiquez votre n° de licence';
+    }
+  }
+
+  if (role === 'recruiter') {
+    if (!professionalHeadline?.trim()) {
+      errs.professionalHeadline = 'Indiquez votre spécialité recrutement';
     }
   }
 
@@ -441,6 +449,7 @@ export function validateParentalStepFields(input: ParentalValidationInput): Reco
 
 export interface SignupIntegrityInput {
   role: UserRole;
+  productLine?: ProductLineId;
   flowKind: 'player' | 'staff' | 'sponsor';
   spaceTouched: boolean;
   parentalRequired: boolean;
@@ -453,6 +462,10 @@ export interface SignupIntegrityInput {
 /** Dernière barrière avant création du compte (toutes étapes). */
 export function validateSignupIntegrity(input: SignupIntegrityInput): Record<string, string> {
   const errs: Record<string, string> = {};
+
+  if (input.productLine && !isRoleAllowedForProductLine(input.role, input.productLine)) {
+    errs.role = 'Ce profil n’est pas disponible sur cet univers ProDay.';
+  }
 
   if (!input.spaceTouched && input.flowKind === 'player') {
     errs.appSpace = 'Sélectionnez un espace ProDay';

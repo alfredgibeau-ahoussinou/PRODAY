@@ -30,7 +30,7 @@ import { DetectionEventsScreen } from './DetectionEventsScreen';
 import { StagesListScreen } from './StagesListScreen';
 import { StageDetailScreen } from './StageDetailScreen';
 import { CreateStageScreen } from './CreateStageScreen';
-import { canPublishStages } from '../utils/roleCapabilities';
+import { canPublishRecruitmentPost, canPublishStages } from '../utils/roleCapabilities';
 import { useMercatoHome, useUserProfile } from '../hooks/useRecruitmentData';
 import { useAuth } from '../context/AuthContext';
 import { useTabNavigation } from '../context/TabNavigationContext';
@@ -282,10 +282,14 @@ export const MercatoScreen: React.FC = () => {
           setSelectedStaffId(u.uid);
           setView('staff_profile');
         }}
-        onCreatePost={() => {
-          setReturnView('staff');
-          setView('create_post');
-        }}
+        onCreatePost={
+          profile && canPublishRecruitmentPost(profile.role)
+            ? () => {
+                setReturnView('staff');
+                setView('create_post');
+              }
+            : undefined
+        }
       />
     );
   }
@@ -321,13 +325,15 @@ export const MercatoScreen: React.FC = () => {
           label="Mercato"
           title={APP_SPACE_LABELS[appSpace]}
           subtitle={
-            isUnderU13AppSpace(appSpace)
-              ? 'U7, U9, U11 — école de foot et détections poussins.'
-              : isFeminineAppSpace(appSpace)
-                ? 'Annonces et profils filtrés pour le football féminin.'
-                : isMasculineAppSpace(appSpace)
-                  ? 'Annonces et profils filtrés pour le football masculin.'
-                  : 'Espace dédié.'
+            profile?.role === 'player'
+              ? 'Parcourez les annonces et candidatez — la publication est réservée aux clubs.'
+              : isUnderU13AppSpace(appSpace)
+                ? 'U7, U9, U11 — école de foot et détections poussins.'
+                : isFeminineAppSpace(appSpace)
+                  ? 'Annonces et profils filtrés pour le football féminin.'
+                  : isMasculineAppSpace(appSpace)
+                    ? 'Annonces et profils filtrés pour le football masculin.'
+                    : 'Espace dédié.'
           }
           showBrandLogo
           rightAction={
@@ -438,7 +444,7 @@ export const MercatoScreen: React.FC = () => {
         <Text style={styles.sectionTitle}>
           Recrutements populaires
           {!loading && posts.length > 0 ? (
-            <Text style={styles.liveBadge}> · Live Firebase</Text>
+            <Text style={styles.liveBadge}> · En direct</Text>
           ) : null}
         </Text>
         {loading ? (
@@ -466,19 +472,15 @@ export const MercatoScreen: React.FC = () => {
         <View style={styles.bottomSpacer} />
       </ScrollView>
 
-      <TouchableOpacity
-        style={[styles.fab, shadows.fab]}
-        onPress={() => {
-          if (!profile) {
-            Alert.alert('Connexion requise', 'Connectez-vous pour publier une annonce.');
-            return;
-          }
-          setView('create_post');
-        }}
-      >
-        <Icon name="add" size={20} color="#FFFFFF" />
-        <Text style={styles.fabText}>Publier une annonce</Text>
-      </TouchableOpacity>
+      {profile && canPublishRecruitmentPost(profile.role) ? (
+        <TouchableOpacity
+          style={[styles.fab, shadows.fab]}
+          onPress={() => setView('create_post')}
+        >
+          <Icon name="add" size={20} color="#FFFFFF" />
+          <Text style={styles.fabText}>Publier une annonce</Text>
+        </TouchableOpacity>
+      ) : null}
     </View>
   );
 };

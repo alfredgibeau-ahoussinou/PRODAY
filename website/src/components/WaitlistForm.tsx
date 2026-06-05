@@ -52,9 +52,13 @@ export function WaitlistForm({ fullPage }: WaitlistFormProps) {
 
   const roles: { id: BetaRoleId; label: string }[] = [
     { id: "player", label: "Joueur" },
+    { id: "recruiter", label: "Recruteur" },
     { id: "coach", label: "Coach" },
     { id: "club", label: "Club" },
+    { id: "agent", label: "Agent" },
     { id: "organizer", label: "Organisateur" },
+    { id: "physio", label: "Pôle santé" },
+    { id: "sponsor", label: "Partenaire" },
   ];
 
   return (

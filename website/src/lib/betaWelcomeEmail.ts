@@ -2,13 +2,25 @@
 
 export const BETA_MEMBER_ROLE = "Beta-testeur";
 
-export type BetaRoleId = "player" | "coach" | "club" | "organizer";
+export type BetaRoleId =
+  | "player"
+  | "coach"
+  | "club"
+  | "agent"
+  | "recruiter"
+  | "organizer"
+  | "physio"
+  | "sponsor";
 
 export const BETA_ROLE_LABELS: Record<BetaRoleId, string> = {
   player: "Joueur",
   coach: "Coach",
   club: "Club",
+  agent: "Agent",
+  recruiter: "Recruteur",
   organizer: "Organisateur",
+  physio: "Pôle santé",
+  sponsor: "Partenaire",
 };
 
 export function isBetaRoleId(value: string): value is BetaRoleId {
@@ -34,12 +46,12 @@ export function buildBetaWelcomeEmail(params: BetaWelcomeEmailParams): {
     "",
     `Merci de votre inscription à la bêta ProDay en tant que ${params.roleLabel}.`,
     "",
-    "ProDay est l'écosystème foot amateur et semi-pro qui réunit recrutement (Mercato), matchs, tournois, Pulse (score de visibilité) et CV joueur — le tout dans une seule application mobile.",
+    "ProDay est l'écosystème foot amateur et semi-pro : Mercato, recruteurs vérifiés, matchs, covoiturage, pôle santé, ProDay Shop et CV joueur — trois univers Homme, Woman et Pro.",
     "",
     "Prochaines étapes :",
     "• Vous recevrez des nouvelles sur l'avancement de l'app et les dates de test.",
     "• Vous serez contacté en priorité dès l'ouverture de la bêta iOS et Android.",
-    "• En attendant, explorez le site pour découvrir les fonctionnalités et l'univers ProDay Woman.",
+    "• En attendant, explorez le site : démo interactive, parcours recruteurs, Shop et feuille de route.",
     "",
     `Site : ${site}`,
     `Page bêta : ${site}/beta`,
@@ -78,9 +90,9 @@ export function buildBetaWelcomeEmail(params: BetaWelcomeEmailParams): {
                 Vous faites partie des premiers à suivre le lancement de ProDay.
               </p>
               <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#334155;">
-                <strong>ProDay</strong> réunit recrutement (Mercato), matchs amicaux, tournois,
-                le score <strong>Pulse</strong> et un <strong>CV joueur</strong> exportable — une seule app pour
-                joueurs, coachs, clubs et organisateurs.
+                <strong>ProDay</strong> réunit Mercato et recruteurs vérifiés, matchs, covoiturage,
+                pôle santé (kiné, coach mental), le score <strong>Pulse</strong>, le <strong>Shop</strong>
+                et un <strong>CV joueur</strong> exportable — Homme, Woman et Pro.
               </p>
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:24px 0;background:#f8fafc;border-radius:12px;border:1px solid #e2e8f0;">
                 <tr>
@@ -89,7 +101,7 @@ export function buildBetaWelcomeEmail(params: BetaWelcomeEmailParams): {
                     <ul style="margin:0;padding-left:18px;font-size:14px;line-height:1.7;color:#475569;">
                       <li>Des nouvelles régulières sur l'avancement de l'application</li>
                       <li>Un accès prioritaire à la bêta mobile (iOS &amp; Android)</li>
-                      <li>La découverte de <strong>ProDay Woman</strong>, l'univers dédié au foot féminin</li>
+                      <li>Les trois univers : <strong>Pro Day Man</strong>, <strong>ProDay Woman</strong> et <strong>Pro Day Pro</strong></li>
                     </ul>
                   </td>
                 </tr>

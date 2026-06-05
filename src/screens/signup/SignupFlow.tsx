@@ -10,6 +10,7 @@ import {
   SignupCoachProStep,
   SignupClubProStep,
   SignupAgentProStep,
+  SignupRecruiterProStep,
   SignupOrganizerProStep,
   SignupMedicalSpecialtyStep,
   SignupMedicalPracticeStep,
@@ -21,10 +22,11 @@ import { SignupParentalStep } from './SignupParentalStep';
 import { SignupSuccessStep } from './SignupSuccessStep';
 import { useAuth } from '../../context/AuthContext';
 import { ROLES_REQUIRING_VERIFICATION } from '../../models/User';
-import { getLaunchCopy } from './signupFlowConfig';
 import type { ProductLineId } from '../../models/ProductLine';
 import { SignupFlowProvider, useSignupFlowTheme } from './SignupFlowContext';
 import { getWomanLaunchCopy } from './signupWomanConfig';
+import { getManLaunchCopy } from './signupManConfig';
+import { getProLaunchCopy } from './signupProConfig';
 
 interface SignupFlowProps {
   onClose: () => void;
@@ -45,7 +47,7 @@ const SignupFlowInner: React.FC<SignupFlowInnerProps> = ({
   onComplete,
   form,
 }) => {
-  const { colors, isWomanSignup } = useSignupFlowTheme();
+  const { colors, isWomanSignup, isProSignup } = useSignupFlowTheme();
   const { profile, refreshProfile } = useAuth();
 
   const layout = {
@@ -89,6 +91,9 @@ const SignupFlowInner: React.FC<SignupFlowInnerProps> = ({
     case 'agent_pro':
       content = <SignupAgentProStep form={form} {...layout} onBack={form.goBack} />;
       break;
+    case 'recruiter_pro':
+      content = <SignupRecruiterProStep form={form} {...layout} onBack={form.goBack} />;
+      break;
     case 'organizer_pro':
       content = <SignupOrganizerProStep form={form} {...layout} onBack={form.goBack} />;
       break;
@@ -124,9 +129,11 @@ const SignupFlowInner: React.FC<SignupFlowInnerProps> = ({
           nextLabel={
             form.isOAuthCompletion
               ? 'Finaliser mon accès'
-              : form.isWomanProduct
-                ? 'Créer mon compte Woman'
-                : 'Créer mon compte'
+              : form.isProProduct
+                ? 'Créer mon compte Pro'
+                : form.isWomanProduct
+                  ? 'Créer mon compte Woman'
+                  : 'Créer mon compte'
           }
         />
       );
@@ -143,10 +150,14 @@ const SignupFlowInner: React.FC<SignupFlowInnerProps> = ({
         ? getWomanLaunchCopy({
             emailVerificationPending: form.createdWithEmailPassword,
           })
-        : getLaunchCopy(form.role, {
-            emailVerificationPending: form.createdWithEmailPassword,
-            verificationPending,
-          });
+        : isProSignup
+          ? getProLaunchCopy({
+              emailVerificationPending: form.createdWithEmailPassword,
+              verificationPending,
+            })
+          : getManLaunchCopy({
+              emailVerificationPending: form.createdWithEmailPassword,
+            });
 
       content = (
         <SignupSuccessStep
@@ -175,11 +186,11 @@ const SignupFlowWithTheme: React.FC<SignupFlowProps> = (props) => {
   const form = useSignupForm({
     initialEmail: props.initialEmail,
     initialDisplayName: props.initialDisplayName,
-    productLine: props.productLine ?? 'standard',
+    productLine: props.productLine ?? 'homme',
   });
 
   return (
-    <SignupFlowProvider productLine={props.productLine ?? 'standard'} experienceRole={form.role}>
+    <SignupFlowProvider productLine={props.productLine ?? 'homme'} experienceRole={form.role}>
       <SignupFlowInner {...props} form={form} />
     </SignupFlowProvider>
   );

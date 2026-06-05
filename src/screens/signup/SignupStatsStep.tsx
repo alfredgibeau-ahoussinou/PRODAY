@@ -4,7 +4,7 @@ import { View, Text, TextInput, StyleSheet } from 'react-native';
 import { SignupStepLayout } from './SignupStepLayout';
 import { SignupFooterButton } from './SignupFooterButton';
 import type { SignupForm } from './useSignupForm';
-import { getWomanStepMeta } from './signupWomanConfig';
+import { getPlayerStepMeta } from './signupPlayerStepMeta';
 import { colors, spacing, radius } from '../../theme/designTokens';
 
 interface SignupStatsStepProps {
@@ -26,7 +26,7 @@ export const SignupStatsStep: React.FC<SignupStatsStepProps> = ({
   phaseIndex,
   onBack,
 }) => {
-  const womanMeta = form.isWomanProduct ? getWomanStepMeta('stats') : null;
+  const meta = getPlayerStepMeta(form.productLine, 'stats');
   return (
   <SignupStepLayout
     stepIndex={stepIndex}
@@ -34,10 +34,10 @@ export const SignupStatsStep: React.FC<SignupStatsStepProps> = ({
     stepName={stepName}
     phases={phases}
     phaseIndex={phaseIndex}
-    title={womanMeta?.title ?? 'Stats saison'}
-    subtitle={womanMeta?.subtitle ?? 'Optionnel — valorise ton profil dès l’inscription.'}
+    title={meta.title}
+    subtitle={meta.subtitle}
     contentKey="player-stats"
-    heroIcon={womanMeta?.heroIcon ?? 'star'}
+    heroIcon={meta.heroIcon}
     onBack={onBack}
     footer={
       <>

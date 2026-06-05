@@ -1,10 +1,13 @@
 import type { UserRole } from '../models/User';
 
+export { canPublishRecruitmentPost } from '../content/poleExperience';
+
 export const ROLE_LABELS: Record<UserRole, string> = {
   player: 'Joueur',
   coach: 'Coach',
   club: 'Club',
   agent: 'Agent',
+  recruiter: 'Recruteur',
   organizer: 'Organisateur',
   sponsor: 'Partenaire',
   physio: 'Pôle médical',

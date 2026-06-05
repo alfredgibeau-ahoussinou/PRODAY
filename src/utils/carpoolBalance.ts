@@ -30,6 +30,58 @@ export function totalCarpoolSeats(slots: CarpoolSlot[] | undefined): number {
   return (slots ?? []).reduce((acc, s) => acc + (s.seats ?? 0), 0);
 }
 
+export function carpoolPassengerCount(slot: CarpoolSlot): number {
+  return slot.passengers?.length ?? 0;
+}
+
+export function carpoolAvailableSeats(slot: CarpoolSlot): number | null {
+  if (slot.seats == null) return null;
+  return Math.max(0, slot.seats - carpoolPassengerCount(slot));
+}
+
+export function totalCarpoolAvailableSeats(slots: CarpoolSlot[] | undefined): number | null {
+  const list = slots ?? [];
+  if (list.some((s) => s.seats == null)) return null;
+  return list.reduce((acc, s) => acc + (carpoolAvailableSeats(s) ?? 0), 0);
+}
+
+export function isCarpoolPassenger(slot: CarpoolSlot, uid: string): boolean {
+  return (slot.passengers ?? []).some((p) => p.uid === uid);
+}
+
+export function carpoolEventSummaryForUser(
+  event: TeamEvent,
+  uid: string
+): {
+  driverCount: number;
+  seatTotal: number;
+  availableTotal: number | null;
+  isDriver: boolean;
+  myBookingDriverUid: string | null;
+} {
+  const booking = findCarpoolBooking(event, uid);
+  const slots = event.carpool_slots ?? [];
+  return {
+    driverCount: slots.length,
+    seatTotal: totalCarpoolSeats(slots),
+    availableTotal: totalCarpoolAvailableSeats(slots),
+    isDriver: isCarpoolDriver(event, uid),
+    myBookingDriverUid: booking?.driverUid ?? null,
+  };
+}
+
+export function findCarpoolBooking(
+  event: TeamEvent,
+  passengerUid: string
+): { slot: CarpoolSlot; driverUid: string } | undefined {
+  for (const slot of event.carpool_slots ?? []) {
+    if (isCarpoolPassenger(slot, passengerUid)) {
+      return { slot, driverUid: slot.driver_uid };
+    }
+  }
+  return undefined;
+}
+
 export function isCarpoolDriver(event: TeamEvent, uid: string): boolean {
   return (event.carpool_slots ?? []).some((s) => s.driver_uid === uid);
 }

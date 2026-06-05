@@ -28,6 +28,7 @@
     "docs:open-brief": "open docs/design/ProDay_Brief.html",
     "branding:logos": "node scripts/generate-transparent-logos.mjs",
     "branding:logos:woman": "node scripts/generate-woman-logos.mjs",
+    "branding:logos:universes": "node scripts/generate-universe-logos.mjs",
     "docs:pactes": "node scripts/generate-pacte-pdf.mjs",
     "docs:guide-restant": "node scripts/generate-guide-restant-pdf.mjs",
     "test": "jest",

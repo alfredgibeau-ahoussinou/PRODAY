@@ -200,6 +200,21 @@ const ROLE_EXPERIENCES: Record<UserRole, RoleSignupExperience> = {
     launchBody: 'Repérez les profils et contactez les clubs après validation de licence.',
     launchFinishLabel: 'Entrer dans le réseau',
   },
+  recruiter: {
+    id: 'recruiter',
+    welcomeTitle: 'Espace recruteur',
+    welcomeSubtitle: 'Scouting, annonces Mercato et pipeline candidatures — profil vérifié.',
+    previewSteps: ['Profil recruteur', 'Identité', 'Sécurité', 'Lancement'],
+    phases: [
+      { id: 'vous', label: 'Recrutement' },
+      { id: 'acces', label: 'Compte' },
+      { id: 'launch', label: 'Go' },
+    ],
+    accent: { accent: '#059669', accentSoft: '#D1FAE5', accentMuted: '#6EE7B7' },
+    launchTitle: 'Mercato recruteur ouvert',
+    launchBody: 'Publiez vos annonces et suivez les candidatures dès validation du mandat.',
+    launchFinishLabel: 'Accéder au Mercato Pro',
+  },
   organizer: {
     id: 'organizer',
     welcomeTitle: 'Espace organisateur',
@@ -343,6 +358,13 @@ export function getStepMetaForRole(page: SignupPageId, role: UserRole): RoleStep
         subtitle: 'Licence, territoire et ville — accès messagerie après validation.',
         heroIcon: 'briefcase',
         stepName: 'Agent',
+      };
+    case 'recruiter_pro':
+      return {
+        title: 'Profil recruteur',
+        subtitle: 'Spécialité, territoire et ville — mandat contrôlé après l’email.',
+        heroIcon: 'search',
+        stepName: 'Recruteur',
       };
     case 'organizer_pro':
       return {

@@ -24,12 +24,13 @@ import { adminConfirmDelete, adminActionErrorAlert } from '../../../utils/adminC
 import { getErrorMessage } from '../../../utils/errors';
 import { colors, spacing, radius } from '../../../theme/designTokens';
 
-const ROLES: UserRole[] = ['player', 'coach', 'club', 'agent', 'organizer', 'physio', 'sponsor'];
+const ROLES: UserRole[] = ['player', 'coach', 'club', 'agent', 'recruiter', 'organizer', 'physio', 'sponsor'];
 const ROLE_LABEL: Record<UserRole, string> = {
   player: 'Joueur',
   coach: 'Coach',
   club: 'Club',
   agent: 'Agent',
+  recruiter: 'Recruteur',
   organizer: 'Organisateur',
   sponsor: 'Sponsor',
   physio: 'Kinésithérapeute',

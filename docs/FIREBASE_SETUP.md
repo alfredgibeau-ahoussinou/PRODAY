@@ -296,6 +296,45 @@ Supprime uniquement les comptes démo et les documents `seed_*`. Les comptes cr�
 
 ---
 
+## Étape 11 — Stripe (cotisations club + futurs abonnements)
+
+ProDay utilise Stripe **côté serveur** (Cloud Functions). Les clés ne vont **jamais** dans le repo Git.
+
+| Clé | Où la mettre | Usage |
+|-----|--------------|--------|
+| **pk_test_…** (publique) | Optionnel — site web / Checkout embarqué | Front uniquement |
+| **sk_test_…** (secrète) | Firebase Functions config | Création sessions Checkout |
+| **whsec_…** (webhook) | Firebase Functions config | Confirmation paiement |
+
+### Configurer la clé secrète (déjà fait si vous avez lancé la commande)
+
+```bash
+firebase use proday-155b0
+firebase functions:config:set \
+  stripe.secret_key="sk_test_VOTRE_CLE" \
+  stripe.webhook_secret="whsec_VOTRE_SECRET"
+firebase deploy --only functions
+```
+
+### Webhook Stripe Dashboard
+
+1. [Stripe Dashboard → Developers → Webhooks](https://dashboard.stripe.com/test/webhooks)
+2. **Add endpoint** → URL :  
+   `https://us-central1-proday-155b0.cloudfunctions.net/stripeWebhook`  
+   (ajuster la région si vos functions sont en `europe-west1`)
+3. Événement : `checkout.session.completed`
+4. Copier le **Signing secret** (`whsec_…`) → `stripe.webhook_secret` ci-dessus
+
+### Tester une cotisation
+
+1. Un coach/club crée une cotisation dans **Gestion équipe**
+2. Le joueur ouvre **Mes paiements** → **Payer en ligne**
+3. Carte test Stripe : `4242 4242 4242 4242` — date future — CVC quelconque
+
+> **Abonnements ProDay (Joueur Plus, Club Pro…)** : grille freemium en place dans l’app ; le paiement récurrent Stripe/IAP reste à brancher sur `subscription_tier: pro`.
+
+---
+
 ## Récap visuel
 
 ```

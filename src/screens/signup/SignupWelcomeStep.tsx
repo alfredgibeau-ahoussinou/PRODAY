@@ -1,12 +1,10 @@
-import React, { useMemo, useState, useCallback, useEffect } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import {
   View,
   Text,
   ScrollView,
   StyleSheet,
   useWindowDimensions,
-  NativeSyntheticEvent,
-  NativeScrollEvent,
   Pressable,
 } from 'react-native';
 import { ShowcaseImageBackground } from '../../components/ui/ShowcaseImageBackground';
@@ -15,33 +13,19 @@ import { ROLE_OPTIONS } from '../../components/auth/AuthRolePicker';
 import { SignupStepLayout } from './SignupStepLayout';
 import { SignupFooterButton } from './SignupFooterButton';
 import type { SignupForm } from './useSignupForm';
-import { ROLE_GROUPS, getRoleLabel, getWelcomeCopy } from './signupFlowConfig';
-import { getRolePreviewSteps } from './signupRoleExperience';
+import { getRoleLabel } from './signupFlowConfig';
 import { getWomanWelcomeCopy, WOMAN_PLAYER_PREVIEW_STEPS } from './signupWomanConfig';
+import { getManWelcomeCopy, MAN_PLAYER_PREVIEW_STEPS } from './signupManConfig';
+import { getProWelcomeCopy, PRO_ROLE_PREVIEW } from './signupProConfig';
+import { getSignupRoleGroups } from '../../content/poleExperience';
 import { useSignupFlowTheme } from './SignupFlowContext';
 import { SignupSegmentTabs } from '../../components/signup/SignupSegmentTabs';
 import { useAuthLayout } from '../../components/auth/useAuthLayout';
-import { signupTheme } from './signupTheme';
 import { colors, spacing, radius } from '../../theme/designTokens';
-import { PRODAY_WOMAN_BRAND } from '../../models/ProductLine';
+import { PRODAY_WOMAN_BRAND, PRODAY_PRO_BRAND, PRODAY_HOMME_BRAND } from '../../models/ProductLine';
 import { WOMAN_SHOWCASE_IMAGES } from '../../content/womanShowcaseAssets';
+import { SHOWCASE_IMAGES } from '../../content/showcaseAssets';
 import type { UserRole } from '../../models/User';
-
-const CARD_WIDTH_RATIO = 0.78;
-const CARD_WIDTH_MAX = 300;
-const CARD_GAP = spacing.md;
-
-const CarouselDots: React.FC<{ count: number; activeIndex: number; accent: string }> = ({
-  count,
-  activeIndex,
-  accent,
-}) => (
-  <View style={styles.dotsRow}>
-    {Array.from({ length: count }).map((_, i) => (
-      <View key={i} style={[styles.dot, i === activeIndex && { width: 20, backgroundColor: accent }]} />
-    ))}
-  </View>
-);
 
 interface SignupWelcomeStepProps {
   form: SignupForm;
@@ -57,44 +41,65 @@ const ROLE_META = Object.fromEntries(
   ROLE_OPTIONS.map((r) => [r.value, { icon: r.icon, description: r.description }])
 ) as Record<UserRole, { icon: IconName; description: string }>;
 
-const RoleCarouselCard: React.FC<{
-  role: UserRole;
-  active: boolean;
-  onSelect: () => void;
-  accentInk: string;
+const PreviewStepsCard: React.FC<{
+  steps: readonly string[];
+  accent: string;
   accentInverse: string;
-  cardWidth: number;
-}> = ({ role, active, onSelect, accentInk, accentInverse, cardWidth }) => (
-  <Pressable
-    style={[
-      styles.carouselCard,
-      { width: cardWidth },
-      active && { backgroundColor: accentInk, borderColor: accentInk },
-    ]}
-    onPress={onSelect}
-  >
-    <View style={[styles.roleIconWrap, active && { backgroundColor: 'rgba(255,255,255,0.15)' }]}>
-      <Icon name={ROLE_META[role].icon} size={26} color={active ? accentInverse : colors.ink} />
+  borderColor: string;
+  surface: string;
+  surfaceMuted: string;
+  text: string;
+  textMuted: string;
+}> = ({ steps, accent, accentInverse, borderColor, surface, surfaceMuted, text, textMuted }) => (
+  <View style={[styles.previewCard, { borderColor, backgroundColor: surface }]}>
+    <Text style={[styles.previewEyebrow, { color: textMuted }]}>Votre parcours</Text>
+    <View style={styles.previewSteps}>
+      {steps.map((s, i) => (
+        <View
+          key={s}
+          style={[styles.previewStep, { borderColor, backgroundColor: surfaceMuted }]}
+        >
+          <Text
+            style={[
+              styles.previewStepNum,
+              { backgroundColor: accent, color: accentInverse },
+            ]}
+          >
+            {i + 1}
+          </Text>
+          <Text style={[styles.previewStepLabel, { color: text }]}>{s}</Text>
+        </View>
+      ))}
     </View>
-    <Text style={[styles.roleCardTitle, active && { color: accentInverse }]}>
-      {getRoleLabel(role)}
-    </Text>
-    <Text style={[styles.roleCardDesc, active && { color: 'rgba(255,255,255,0.75)' }]}>
-      {ROLE_META[role].description}
-    </Text>
-    {active ? (
-      <View style={[styles.selectedBadge, { backgroundColor: 'rgba(255,255,255,0.15)' }]}>
-        <Icon name="checkmark-circle" size={14} color={accentInverse} />
-        <Text style={[styles.selectedBadgeText, { color: accentInverse }]}>Choisi</Text>
-      </View>
-    ) : null}
-  </Pressable>
+  </View>
 );
 
-const WomanWelcomeBody: React.FC<{ form: SignupForm; onContinue: () => void }> = ({
-  form,
-  onContinue,
-}) => {
+const PlayerWelcomeHero: React.FC<{
+  source: number;
+  overlayColor: string;
+  badgeIcon: IconName;
+  badgeText: string;
+  title: string;
+  subtitle: string;
+  accentInverse: string;
+}> = ({ source, overlayColor, badgeIcon, badgeText, title, subtitle, accentInverse }) => (
+  <ShowcaseImageBackground
+    source={source}
+    variant="hero"
+    style={styles.playerHero}
+    imageStyle={styles.playerHeroImage}
+  >
+    <View style={[styles.playerHeroOverlay, { backgroundColor: overlayColor }]} />
+    <View style={styles.playerBadge}>
+      <Icon name={badgeIcon} size={16} color={accentInverse} variant="filled" />
+      <Text style={[styles.playerBadgeText, { color: accentInverse }]}>{badgeText}</Text>
+    </View>
+    <Text style={styles.playerHeroTitle}>{title}</Text>
+    <Text style={styles.playerHeroSub}>{subtitle}</Text>
+  </ShowcaseImageBackground>
+);
+
+const WomanWelcomeBody: React.FC<{ form: SignupForm }> = ({ form }) => {
   const { colors } = useSignupFlowTheme();
 
   useEffect(() => {
@@ -103,32 +108,208 @@ const WomanWelcomeBody: React.FC<{ form: SignupForm; onContinue: () => void }> =
 
   return (
     <>
-      <ShowcaseImageBackground
+      <PlayerWelcomeHero
         source={WOMAN_SHOWCASE_IMAGES.discoverHero}
+        overlayColor="rgba(131, 24, 67, 0.58)"
+        badgeIcon="heart"
+        badgeText={PRODAY_WOMAN_BRAND.entryCta}
+        title="Profil joueuse"
+        subtitle="Mercato filtré foot féminin, stats et visibilité auprès des clubs F."
+        accentInverse={colors.brandInverse}
+      />
+      <PreviewStepsCard
+        steps={WOMAN_PLAYER_PREVIEW_STEPS}
+        accent={colors.accent}
+        accentInverse={colors.brandInverse}
+        borderColor={colors.border}
+        surface={colors.surface}
+        surfaceMuted={colors.surfaceMuted}
+        text={colors.text}
+        textMuted={colors.textMuted}
+      />
+    </>
+  );
+};
+
+const ManWelcomeBody: React.FC<{ form: SignupForm }> = ({ form }) => {
+  const { colors } = useSignupFlowTheme();
+
+  useEffect(() => {
+    if (form.draftRole !== 'player') form.setDraftRole('player');
+  }, [form]);
+
+  return (
+    <>
+      <PlayerWelcomeHero
+        source={SHOWCASE_IMAGES.discoverHero}
+        overlayColor="rgba(12, 12, 14, 0.62)"
+        badgeIcon="football"
+        badgeText={PRODAY_HOMME_BRAND.entryCta}
+        title="Profil joueur"
+        subtitle="CV en ligne, Mercato M, matchs et visibilité auprès des clubs."
+        accentInverse={colors.brandInverse}
+      />
+      <PreviewStepsCard
+        steps={MAN_PLAYER_PREVIEW_STEPS}
+        accent={colors.ink}
+        accentInverse={colors.brandInverse}
+        borderColor={colors.border}
+        surface={colors.surface}
+        surfaceMuted={colors.surfaceMuted}
+        text={colors.text}
+        textMuted={colors.textMuted}
+      />
+    </>
+  );
+};
+
+const ProRoleCard: React.FC<{
+  role: UserRole;
+  active: boolean;
+  onSelect: () => void;
+  accent: string;
+  accentInverse: string;
+  surface: string;
+  border: string;
+  text: string;
+  textMuted: string;
+  width: number;
+}> = ({
+  role,
+  active,
+  onSelect,
+  accent,
+  accentInverse,
+  surface,
+  border,
+  text,
+  textMuted,
+  width,
+}) => (
+  <Pressable
+    style={[
+      styles.proRoleCard,
+      { width, backgroundColor: surface, borderColor: border },
+      active && { backgroundColor: accent, borderColor: accent },
+    ]}
+    onPress={onSelect}
+  >
+    <View
+      style={[
+        styles.proRoleIcon,
+        { backgroundColor: active ? 'rgba(255,255,255,0.14)' : colors.surfaceMuted },
+      ]}
+    >
+      <Icon
+        name={ROLE_META[role].icon}
+        size={22}
+        color={active ? accentInverse : accent}
+        variant={active ? 'filled' : 'outline'}
+      />
+    </View>
+    <Text style={[styles.proRoleTitle, { color: active ? accentInverse : text }]}>
+      {getRoleLabel(role)}
+    </Text>
+    <Text
+      style={[styles.proRoleDesc, active && styles.proRoleDescActive]}
+      numberOfLines={2}
+    >
+      {ROLE_META[role].description}
+    </Text>
+    {active ? (
+      <View style={styles.proSelectedMark}>
+        <Icon name="checkmark-circle" size={14} color={accentInverse} />
+      </View>
+    ) : null}
+  </Pressable>
+);
+
+const ProWelcomeBody: React.FC<{ form: SignupForm }> = ({ form }) => {
+  const { width: screenWidth } = useWindowDimensions();
+  const { compact, contentMaxWidth } = useAuthLayout();
+  const { colors } = useSignupFlowTheme();
+  const roleGroups = useMemo(() => getSignupRoleGroups('pro'), []);
+  const [groupIndex, setGroupIndex] = useState(0);
+  const activeGroup = roleGroups[groupIndex] ?? roleGroups[0];
+  const rolesInGroup = activeGroup?.roles ?? [];
+  const previewSteps = PRO_ROLE_PREVIEW[form.draftRole] ?? ['Profil métier', 'Identité', 'Accès'];
+
+  const gridWidth = Math.min(screenWidth - spacing.lg * 2, contentMaxWidth);
+  const cardGap = spacing.sm;
+  const cardWidth = (gridWidth - cardGap) / 2;
+
+  return (
+    <>
+      <ShowcaseImageBackground
+        source={SHOWCASE_IMAGES.coachFounder}
         variant="hero"
-        style={styles.womanHero}
-        imageStyle={styles.womanHeroImage}
+        style={styles.proHero}
+        imageStyle={styles.proHeroImage}
       >
-        <View style={styles.womanHeroOverlay} />
-        <View style={styles.womanBadge}>
-          <Icon name="heart" size={16} color={colors.brandInverse} variant="filled" />
-          <Text style={styles.womanBadgeText}>{PRODAY_WOMAN_BRAND.entryCta}</Text>
+        <View style={styles.proHeroOverlay} />
+        <View style={styles.proHeroBadge}>
+          <Icon name="school" size={15} color="#FFFFFF" variant="filled" />
+          <Text style={styles.proHeroBadgeText}>{PRODAY_PRO_BRAND.entryCta}</Text>
         </View>
-        <Text style={styles.womanHeroTitle}>Profil joueuse</Text>
-        <Text style={styles.womanHeroSub}>
-          Mercato filtré foot féminin, stats et visibilité auprès des clubs F.
+        <Text style={styles.proHeroTitle}>Votre métier</Text>
+        <Text style={styles.proHeroSub}>
+          Coach, club, agent, pôle santé, organisateur ou partenaire — un parcours dédié.
         </Text>
       </ShowcaseImageBackground>
 
-      <View style={[styles.previewCard, { borderColor: colors.border, backgroundColor: colors.surface }]}>
-        <Text style={[styles.previewEyebrow, { color: colors.textMuted }]}>Votre parcours</Text>
+      <View style={styles.proPickerSection}>
+        <SignupSegmentTabs
+          tabs={roleGroups.map((g) => ({ id: g.id, label: g.label }))}
+          active={activeGroup.id}
+          compact={compact}
+          onSelect={(id) => {
+            const idx = roleGroups.findIndex((g) => g.id === id);
+            if (idx >= 0) setGroupIndex(idx);
+          }}
+        />
+        <Text style={[styles.proGroupHint, { color: colors.textSecondary }]}>
+          {activeGroup.hint}
+        </Text>
+
+        <View style={[styles.proRoleGrid, { width: gridWidth, gap: cardGap }]}>
+          {rolesInGroup.map((role) => (
+            <ProRoleCard
+              key={role}
+              role={role}
+              active={form.draftRole === role}
+              onSelect={() => form.setDraftRole(role)}
+              accent={colors.accent}
+              accentInverse={colors.brandInverse}
+              surface={colors.surface}
+              border={colors.border}
+              text={colors.text}
+              textMuted={colors.textMuted}
+              width={cardWidth}
+            />
+          ))}
+        </View>
+      </View>
+
+      <View style={[styles.proPreviewCard, { borderColor: colors.border, backgroundColor: colors.surface }]}>
+        <Text style={[styles.previewEyebrow, { color: colors.textMuted }]}>Parcours {getRoleLabel(form.draftRole)}</Text>
+        <Text style={[styles.proPreviewDesc, { color: colors.textSecondary }]}>
+          {ROLE_META[form.draftRole].description}
+        </Text>
         <View style={styles.previewSteps}>
-          {WOMAN_PLAYER_PREVIEW_STEPS.map((s, i) => (
+          {previewSteps.map((s, i) => (
             <View
               key={s}
-              style={[styles.previewStep, { borderColor: colors.border, backgroundColor: colors.surfaceMuted }]}
+              style={[
+                styles.previewStep,
+                { borderColor: colors.border, backgroundColor: colors.surfaceMuted },
+              ]}
             >
-              <Text style={[styles.previewStepNum, { backgroundColor: colors.accent, color: colors.brandInverse }]}>
+              <Text
+                style={[
+                  styles.previewStepNum,
+                  { backgroundColor: colors.accent, color: colors.brandInverse },
+                ]}
+              >
                 {i + 1}
               </Text>
               <Text style={[styles.previewStepLabel, { color: colors.text }]}>{s}</Text>
@@ -136,8 +317,6 @@ const WomanWelcomeBody: React.FC<{ form: SignupForm; onContinue: () => void }> =
           ))}
         </View>
       </View>
-
-      <SignupFooterButton label="Commencer mon inscription Woman" onPress={onContinue} />
     </>
   );
 };
@@ -151,15 +330,8 @@ export const SignupWelcomeStep: React.FC<SignupWelcomeStepProps> = ({
   phaseIndex,
   onClose,
 }) => {
-  const { width: screenWidth } = useWindowDimensions();
-  const { compact } = useAuthLayout();
-  const { colors: themeColors, isWomanSignup } = useSignupFlowTheme();
-  const cardWidth = Math.min(screenWidth * CARD_WIDTH_RATIO, CARD_WIDTH_MAX);
-  const snap = cardWidth + CARD_GAP;
-  const carouselSidePad = Math.max(0, (screenWidth - cardWidth) / 2 - spacing.lg);
-  const welcome = form.isWomanProduct ? getWomanWelcomeCopy() : getWelcomeCopy(form.draftRole);
-
   if (form.isWomanProduct) {
+    const welcome = getWomanWelcomeCopy();
     return (
       <SignupStepLayout
         stepIndex={stepIndex}
@@ -171,236 +343,115 @@ export const SignupWelcomeStep: React.FC<SignupWelcomeStepProps> = ({
         subtitle={welcome.subtitle}
         heroIcon="heart"
         onClose={onClose}
+        footer={
+          <SignupFooterButton
+            label="Commencer mon inscription Woman"
+            onPress={form.confirmRoleAndContinue}
+          />
+        }
       >
-        <WomanWelcomeBody form={form} onContinue={form.confirmRoleAndContinue} />
+        <WomanWelcomeBody form={form} />
       </SignupStepLayout>
     );
   }
 
-  const roleGroups = ROLE_GROUPS;
-  const [groupIndex, setGroupIndex] = useState(0);
-  const [carouselIndex, setCarouselIndex] = useState(0);
-  const activeGroup = roleGroups[groupIndex] ?? roleGroups[0];
-  const rolesInGroup = useMemo(() => activeGroup.roles, [activeGroup]);
+  if (form.isProProduct) {
+    const welcome = getProWelcomeCopy(getRoleLabel(form.draftRole));
+    return (
+      <SignupStepLayout
+        stepIndex={stepIndex}
+        stepTotal={stepTotal}
+        stepName={stepName ?? PRODAY_PRO_BRAND.name}
+        phases={phases}
+        phaseIndex={phaseIndex}
+        title={welcome.title}
+        subtitle={welcome.subtitle}
+        heroIcon="school"
+        onClose={onClose}
+        footer={
+          <SignupFooterButton
+            label="Continuer sur Pro Day Pro"
+            onPress={form.confirmRoleAndContinue}
+          />
+        }
+      >
+        <ProWelcomeBody form={form} />
+      </SignupStepLayout>
+    );
+  }
 
-  const onCarouselScroll = useCallback(
-    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-      const x = e.nativeEvent.contentOffset.x;
-      const idx = Math.round(x / snap);
-      if (idx !== carouselIndex && idx >= 0 && idx < rolesInGroup.length) {
-        setCarouselIndex(idx);
-      }
-    },
-    [carouselIndex, rolesInGroup.length, snap]
-  );
-
-  useEffect(() => {
-    setCarouselIndex(0);
-  }, [groupIndex]);
-
-  const previewSteps = getRolePreviewSteps(form.draftRole);
-
-  const accentInk = themeColors.ink;
-
+  const welcome = getManWelcomeCopy();
   return (
     <SignupStepLayout
       stepIndex={stepIndex}
       stepTotal={stepTotal}
-      stepName={stepName}
+      stepName={stepName ?? PRODAY_HOMME_BRAND.name}
       phases={phases}
       phaseIndex={phaseIndex}
       title={welcome.title}
-      subtitle="Sélectionnez votre profil. Le parcours s’adapte automatiquement."
-      heroIcon="star-four-points"
+      subtitle={welcome.subtitle}
+      heroIcon="football"
       onClose={onClose}
       footer={
-        <SignupFooterButton label="Continuer avec ce profil" onPress={form.confirmRoleAndContinue} />
+        <SignupFooterButton
+          label={`Commencer sur ${PRODAY_HOMME_BRAND.name}`}
+          onPress={form.confirmRoleAndContinue}
+        />
       }
     >
-      <View style={styles.roleSection}>
-        <SignupSegmentTabs
-          tabs={roleGroups.map((g) => ({ id: g.id, label: g.label }))}
-          active={activeGroup.id}
-          compact={compact}
-          onSelect={(id) => {
-            const idx = roleGroups.findIndex((g) => g.id === id);
-            if (idx >= 0) setGroupIndex(idx);
-          }}
-        />
-
-        <Text style={styles.groupHint}>{activeGroup.hint}</Text>
-
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          decelerationRate="fast"
-          snapToInterval={snap}
-          onScroll={onCarouselScroll}
-          scrollEventThrottle={16}
-          contentContainerStyle={[
-            styles.carouselContent,
-            { paddingLeft: carouselSidePad, paddingRight: carouselSidePad },
-          ]}
-        >
-          {rolesInGroup.map((role) => (
-            <RoleCarouselCard
-              key={role}
-              role={role}
-              active={form.draftRole === role}
-              accentInk={accentInk}
-              accentInverse={themeColors.brandInverse}
-              cardWidth={cardWidth}
-              onSelect={() => form.setDraftRole(role)}
-            />
-          ))}
-        </ScrollView>
-        {rolesInGroup.length > 1 ? (
-          <CarouselDots count={rolesInGroup.length} activeIndex={carouselIndex} accent={accentInk} />
-        ) : null}
-      </View>
-
-      <View style={styles.previewCardClassic}>
-        <Text style={styles.previewEyebrowClassic}>Votre parcours</Text>
-        <Text style={styles.previewTitleClassic}>{getRoleLabel(form.draftRole)}</Text>
-        <Text style={styles.previewDescClassic}>{ROLE_META[form.draftRole].description}</Text>
-        <View style={styles.previewStepsClassic}>
-          {previewSteps.map((s, i) => (
-            <View key={s} style={styles.previewStepClassic}>
-              <Text style={styles.previewStepNumClassic}>{i + 1}</Text>
-              <Text style={styles.previewStepLabelClassic}>{s}</Text>
-            </View>
-          ))}
-        </View>
-      </View>
+      <ManWelcomeBody form={form} />
     </SignupStepLayout>
   );
 };
 
 const styles = StyleSheet.create({
-  roleSection: {
-    width: '100%',
-    gap: spacing.md,
-    marginBottom: spacing.sm,
-  },
-  groupHint: {
-    fontSize: 13,
-    color: colors.textSecondary,
-    fontWeight: '500',
-    lineHeight: 19,
-    textAlign: 'center',
-    paddingHorizontal: spacing.xs,
-  },
-  dotsRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 6,
-    marginTop: spacing.sm,
-  },
-  dot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: colors.border,
-  },
-  carouselContent: {
-    gap: CARD_GAP,
-    alignItems: 'stretch',
-  },
-  carouselCard: {
-    padding: spacing.lg,
-    borderRadius: radius.lg,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
-    minHeight: 188,
-  },
-  roleIconWrap: {
-    width: 48,
-    height: 48,
-    borderRadius: radius.md,
-    backgroundColor: colors.surfaceMuted,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.md,
-  },
-  roleCardTitle: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: colors.text,
-    letterSpacing: -0.3,
-  },
-  roleCardDesc: {
-    fontSize: 13,
-    lineHeight: 19,
-    color: colors.textSecondary,
-    marginTop: spacing.xs,
-    flex: 1,
-  },
-  selectedBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginTop: spacing.md,
-    alignSelf: 'flex-start',
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 4,
-    borderRadius: radius.pill,
-  },
-  selectedBadgeText: {
-    fontSize: 11,
-    fontWeight: '800',
-  },
-  womanHero: {
+  playerHero: {
     borderRadius: radius.xl,
     padding: spacing.lg,
     marginBottom: spacing.lg,
     overflow: 'hidden',
-    minHeight: 168,
+    minHeight: 160,
     justifyContent: 'flex-end',
     width: '100%',
-    alignSelf: 'center',
   },
-  womanHeroImage: { borderRadius: radius.xl },
-  womanHeroOverlay: {
+  playerHeroImage: { borderRadius: radius.xl },
+  playerHeroOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(131, 24, 67, 0.55)',
     borderRadius: radius.xl,
   },
-  womanBadge: {
+  playerBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
     alignSelf: 'flex-start',
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    backgroundColor: 'rgba(255,255,255,0.18)',
     paddingHorizontal: spacing.md,
     paddingVertical: 6,
     borderRadius: radius.pill,
     marginBottom: spacing.md,
   },
-  womanBadgeText: {
-    color: '#FFFFFF',
+  playerBadgeText: {
     fontSize: 11,
     fontWeight: '800',
-    letterSpacing: 0.6,
+    letterSpacing: 0.5,
   },
-  womanHeroTitle: {
+  playerHeroTitle: {
     fontSize: 22,
     fontWeight: '900',
     color: '#FFFFFF',
     letterSpacing: -0.4,
   },
-  womanHeroSub: {
+  playerHeroSub: {
     marginTop: spacing.sm,
     fontSize: 14,
     lineHeight: 20,
-    color: 'rgba(255,255,255,0.9)',
+    color: 'rgba(255,255,255,0.92)',
     fontWeight: '600',
   },
   previewCard: {
     borderRadius: radius.lg,
     borderWidth: 1,
     padding: spacing.lg,
-    marginBottom: spacing.lg,
     alignItems: 'center',
   },
   previewEyebrow: {
@@ -440,68 +491,113 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
   },
-  previewCardClassic: {
-    ...signupTheme.card,
-    marginTop: spacing.lg,
-    marginBottom: 0,
-    alignItems: 'center',
+  proHero: {
+    borderRadius: radius.xl,
+    padding: spacing.lg,
+    marginBottom: spacing.lg,
+    overflow: 'hidden',
+    minHeight: 148,
+    justifyContent: 'flex-end',
+    width: '100%',
   },
-  previewEyebrowClassic: {
-    fontSize: 10,
-    fontWeight: '800',
-    color: colors.textMuted,
-    letterSpacing: 1.4,
-    textTransform: 'uppercase',
-    textAlign: 'center',
+  proHeroImage: { borderRadius: radius.xl },
+  proHeroOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(30, 58, 138, 0.62)',
+    borderRadius: radius.xl,
   },
-  previewTitleClassic: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: colors.text,
-    marginTop: spacing.xs,
-    letterSpacing: -0.3,
-    textAlign: 'center',
-  },
-  previewDescClassic: {
-    fontSize: 13,
-    color: colors.textSecondary,
-    marginTop: 4,
-    lineHeight: 19,
-    textAlign: 'center',
-  },
-  previewStepsClassic: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-    marginTop: spacing.md,
-    justifyContent: 'center',
-  },
-  previewStepClassic: {
+  proHeroBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: colors.surface,
-    paddingHorizontal: spacing.sm,
+    alignSelf: 'flex-start',
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    paddingHorizontal: spacing.md,
     paddingVertical: 6,
     borderRadius: radius.pill,
-    borderWidth: 1,
-    borderColor: colors.border,
+    marginBottom: spacing.md,
   },
-  previewStepNumClassic: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: colors.ink,
-    color: colors.brandInverse,
-    fontSize: 10,
+  proHeroBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 11,
     fontWeight: '800',
-    textAlign: 'center',
-    lineHeight: 20,
-    overflow: 'hidden',
+    letterSpacing: 0.5,
   },
-  previewStepLabelClassic: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: colors.text,
+  proHeroTitle: {
+    fontSize: 21,
+    fontWeight: '900',
+    color: '#FFFFFF',
+    letterSpacing: -0.3,
+  },
+  proHeroSub: {
+    marginTop: spacing.sm,
+    fontSize: 13,
+    lineHeight: 19,
+    color: 'rgba(255,255,255,0.9)',
+    fontWeight: '600',
+  },
+  proPickerSection: {
+    width: '100%',
+    alignItems: 'center',
+    gap: spacing.md,
+    marginBottom: spacing.lg,
+  },
+  proGroupHint: {
+    fontSize: 13,
+    fontWeight: '500',
+    lineHeight: 19,
+    textAlign: 'center',
+    paddingHorizontal: spacing.sm,
+  },
+  proRoleGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+  },
+  proRoleCard: {
+    borderRadius: radius.lg,
+    borderWidth: 1.5,
+    padding: spacing.md,
+    minHeight: 118,
+    position: 'relative',
+  },
+  proRoleIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.sm,
+  },
+  proRoleTitle: {
+    fontSize: 15,
+    fontWeight: '800',
+    letterSpacing: -0.2,
+  },
+  proRoleDesc: {
+    fontSize: 11,
+    lineHeight: 15,
+    color: colors.textSecondary,
+    marginTop: 3,
+  },
+  proRoleDescActive: {
+    color: 'rgba(255,255,255,0.78)',
+  },
+  proSelectedMark: {
+    position: 'absolute',
+    top: spacing.sm,
+    right: spacing.sm,
+  },
+  proPreviewCard: {
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    padding: spacing.lg,
+    alignItems: 'center',
+  },
+  proPreviewDesc: {
+    fontSize: 13,
+    lineHeight: 19,
+    textAlign: 'center',
+    marginBottom: spacing.md,
   },
 });

@@ -16,9 +16,9 @@ import { authStyles } from '../../components/auth/authStyles';
 import { useAuthLayout } from '../../components/auth/useAuthLayout';
 import type { SignupPhase } from './signupFlowConfig';
 import { useSignupFlowTheme } from './SignupFlowContext';
-import { PRODAY_WOMAN_BRAND } from '../../models/ProductLine';
+import { brandForProductLine } from '../../models/ProductLine';
 import { spacing, radius } from '../../theme/designTokens';
-import type { AppColors } from '../../theme/prodayWomanTheme';
+import type { AppColors } from '../../theme/universeTheme';
 
 interface SignupStepLayoutProps {
   stepIndex: number;
@@ -64,8 +64,12 @@ export const SignupStepLayout: React.FC<SignupStepLayoutProps> = ({
   children,
   footer,
 }) => {
-  const { compact, insets, scrollBottom, contentMaxWidth } = useAuthLayout();
-  const { isWomanSignup, colors } = useSignupFlowTheme();
+  const { compact, headerTopPad, contentMaxWidth, tabBarScrollInset: tabInset } =
+    useAuthLayout();
+  const scrollBottomPad = tabInset({ guestMode: true, stickyFooter: Boolean(footer) });
+  const footerBottomPad = tabInset({ guestMode: true });
+  const { productLine, colors } = useSignupFlowTheme();
+  const brandName = brandForProductLine(productLine).name;
   const styles = useMemo(() => createStyles(colors, contentMaxWidth), [colors, contentMaxWidth]);
 
   return (
@@ -73,18 +77,18 @@ export const SignupStepLayout: React.FC<SignupStepLayoutProps> = ({
       style={styles.root}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <View style={[styles.header, { paddingTop: insets.top + (compact ? spacing.sm : spacing.md) }]}>
+      <View style={[styles.header, { paddingTop: headerTopPad }]}>
         <View style={styles.headerRow}>
           {onBack ? (
             <Pressable onPress={onBack} style={authStyles.backBtn} hitSlop={8} accessibilityLabel="Retour">
               <Icon name="arrow-back" size={20} color={colors.ink} />
             </Pressable>
           ) : (
-            <View style={styles.headerSide} />
+            <View style={styles.headerSideSpacer} />
           )}
           <View style={styles.headerCenter}>
             <Text style={styles.headerEyebrow}>
-              {isWomanSignup ? PRODAY_WOMAN_BRAND.name : 'Inscription'}
+              {brandName}
             </Text>
             <Text style={styles.headerTitle} numberOfLines={1}>
               {stepName ?? `Étape ${stepIndex + 1}`}
@@ -97,7 +101,7 @@ export const SignupStepLayout: React.FC<SignupStepLayoutProps> = ({
                 <Icon name="close" size={20} color={colors.ink} />
               </Pressable>
             ) : (
-              <View style={styles.headerSide} />
+              <View style={styles.headerSideSpacer} />
             )}
           </View>
         </View>
@@ -121,7 +125,7 @@ export const SignupStepLayout: React.FC<SignupStepLayoutProps> = ({
 
       <ScrollView
         style={styles.scroll}
-        contentContainerStyle={[styles.scrollContent, { paddingBottom: scrollBottom }]}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: scrollBottomPad }]}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
         nestedScrollEnabled
@@ -150,7 +154,7 @@ export const SignupStepLayout: React.FC<SignupStepLayoutProps> = ({
       </ScrollView>
 
       {footer ? (
-        <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, spacing.md) }]}>
+        <View style={[styles.footer, { paddingBottom: footerBottomPad }]}>
           <View style={styles.footerInner}>{footer}</View>
         </View>
       ) : null}
@@ -177,8 +181,8 @@ const createStyles = (colors: AppColors, contentMaxWidth: number) =>
       alignItems: 'center',
       gap: spacing.xs,
     },
-    headerSide: {
-      width: 40,
+    headerSideSpacer: {
+      width: 88,
       height: 40,
     },
     headerCenter: {

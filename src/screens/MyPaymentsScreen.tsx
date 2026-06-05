@@ -62,7 +62,7 @@ export const MyPaymentsScreen: React.FC<MyPaymentsScreenProps> = ({
       Alert.alert(
         'Paiement en ligne',
         msg.includes('Stripe') || msg.includes('failed-precondition')
-          ? `${msg}\n\nConfigurez Stripe sur Firebase Functions (voir docs/API_CONTRACTS.md).`
+          ? `${msg}\n\nLes paiements en ligne seront disponibles prochainement.`
           : msg
       );
     } finally {

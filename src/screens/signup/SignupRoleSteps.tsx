@@ -11,6 +11,7 @@ import {
   MEDICAL_SPECIALTY_CONFIGS,
   getMedicalConfig,
 } from './signupRoleExperience';
+import { getProStepMeta } from './signupProConfig';
 import type { SignupPageId } from './signupFlowConfig';
 import { useSignupFlowTheme } from './SignupFlowContext';
 import { spacing, radius } from '../../theme/designTokens';
@@ -28,8 +29,8 @@ type StepProps = {
 const RoleStepShell: React.FC<
   StepProps & { page: SignupPageId; children: React.ReactNode; hint?: string }
 > = ({ form, page, children, hint, ...layout }) => {
-  const meta = getStepMetaForRole(page, form.role);
-  const { colors } = useSignupFlowTheme();
+  const { colors, isProSignup } = useSignupFlowTheme();
+  const meta = isProSignup ? getProStepMeta(page) : getStepMetaForRole(page, form.role);
   return (
     <SignupStepLayout
       {...layout}
@@ -137,6 +138,39 @@ export const SignupAgentProStep: React.FC<StepProps> = (props) => (
       label="Département *"
       icon="location"
       placeholder="Ex. 75, 33…"
+      value={props.form.department}
+      onChangeText={props.form.setDepartment}
+      error={props.form.fieldErrors.department}
+    />
+  </RoleStepShell>
+);
+
+export const SignupRecruiterProStep: React.FC<StepProps> = (props) => (
+  <RoleStepShell
+    {...props}
+    page="recruiter_pro"
+    hint="Mandat recruteur ou attestation club — vérification IA après l’email."
+  >
+    <AuthTextField
+      label="Spécialité recrutement *"
+      icon="search"
+      placeholder="Ex. Scout indépendant, resp. recrutement, détection…"
+      value={props.form.professionalHeadline}
+      onChangeText={props.form.setProfessionalHeadline}
+      error={props.form.fieldErrors.professionalHeadline}
+    />
+    <AuthTextField
+      label="Ville principale *"
+      icon="location"
+      placeholder="Ex. Lyon, Lille…"
+      value={props.form.city}
+      onChangeText={props.form.setCity}
+      error={props.form.fieldErrors.city}
+    />
+    <AuthTextField
+      label="Département *"
+      icon="location"
+      placeholder="Ex. 69, 59…"
       value={props.form.department}
       onChangeText={props.form.setDepartment}
       error={props.form.fieldErrors.department}

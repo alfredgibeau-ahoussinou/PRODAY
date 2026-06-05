@@ -25,4 +25,19 @@ export const WOMAN_BRANDING_LOGOS = {
   authDark: require('../../assets/branding/logo-woman-picto.png'),
 } as const;
 
+/** Pro Day Man — picto P anthracite. Libellé via `ManLogo`. */
+export const MAN_BRANDING_LOGOS = {
+  picto: require('../../assets/branding/logo-man-picto.png'),
+  mark: require('../../assets/branding/logo-man-mark-transparent.png'),
+} as const;
+
+/** @deprecated Utiliser MAN_BRANDING_LOGOS */
+export const HOMME_BRANDING_LOGOS = MAN_BRANDING_LOGOS;
+
+/** Pro Day Pro — picto P bleu vif. Libellé via `ProLogo`. */
+export const PRO_BRANDING_LOGOS = {
+  picto: require('../../assets/branding/logo-pro-picto.png'),
+  mark: require('../../assets/branding/logo-pro-mark-transparent.png'),
+} as const;
+
 export type BrandingLogoKey = keyof typeof BRANDING_LOGOS;

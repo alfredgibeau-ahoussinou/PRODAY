@@ -5,22 +5,24 @@ import { colors, spacing, radius } from '../../theme/designTokens';
 
 export type DashboardFocusId = 'priorities' | 'calendar';
 
-const TABS: { id: DashboardFocusId; label: string }[] = [
+interface DashboardFocusTabsProps {
+  active: DashboardFocusId;
+  onChange: (id: DashboardFocusId) => void;
+  tabs?: { id: DashboardFocusId; label: string }[];
+}
+
+const DEFAULT_TABS: { id: DashboardFocusId; label: string }[] = [
   { id: 'priorities', label: 'Priorités' },
   { id: 'calendar', label: 'Planning' },
 ];
 
-interface DashboardFocusTabsProps {
-  active: DashboardFocusId;
-  onChange: (id: DashboardFocusId) => void;
-}
-
 export const DashboardFocusTabs: React.FC<DashboardFocusTabsProps> = ({
   active,
   onChange,
+  tabs = DEFAULT_TABS,
 }) => (
   <View style={styles.row}>
-    {TABS.map((tab) => {
+    {tabs.map((tab) => {
       const on = tab.id === active;
       return (
         <PressableSpring

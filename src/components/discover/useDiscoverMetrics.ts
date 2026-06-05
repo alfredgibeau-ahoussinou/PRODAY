@@ -21,7 +21,8 @@ export function useDiscoverMetrics() {
     const logoWidth = Math.min(compact ? 132 : 156, pageWidth - pad * 2);
     const bottomInset = Math.max(TAB_BAR_CONTENT_INSET, insets.bottom + TAB_BAR_H);
 
-    const headerBlock = insets.top + (compact ? 118 : 132);
+    const headerTopPad = compact ? spacing.sm : spacing.md;
+    const headerBlock = (compact ? 118 : 132) + headerTopPad;
     const tabsBlock = compact ? CHAPTER_TABS_H - 2 : CHAPTER_TABS_H;
     const scrollBottomPad = bottomInset + spacing.md;
 
@@ -38,6 +39,7 @@ export function useDiscoverMetrics() {
     return {
       compact,
       pad,
+      headerTopPad,
       pageWidth,
       logoWidth,
       bottomInset,

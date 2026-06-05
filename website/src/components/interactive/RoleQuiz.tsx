@@ -31,7 +31,7 @@ export function RoleQuiz({ compact }: { compact?: boolean }) {
   }
 
   const resultRole = done
-    ? Object.entries(scores).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "standard"
+    ? Object.entries(scores).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "homme"
     : null;
   const result = resultRole ? QUIZ_RESULTS[resultRole] : null;
 

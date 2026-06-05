@@ -4,13 +4,15 @@ import { BRAND } from "@/lib/content";
 
 const ITEMS = [
   "Mercato",
+  "Recruteurs",
   "Matchs amicaux",
+  "Covoiturage",
+  "Pôle santé",
+  "ProDay Shop",
   "Arena",
   "Pulse ProDay",
   "Live Stats",
   "CV PDF",
-  "Convocations",
-  "Sponsors",
   BRAND.tagline,
 ];
 

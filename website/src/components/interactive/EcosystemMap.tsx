@@ -5,22 +5,30 @@ import { useState } from "react";
 
 const NODES = [
   { id: "mercato", label: "Mercato", x: 50, y: 50, center: true },
-  { id: "player", label: "Joueur", x: 18, y: 35 },
-  { id: "coach", label: "Coach", x: 82, y: 35 },
-  { id: "club", label: "Club", x: 18, y: 68 },
-  { id: "organizer", label: "Organisateur", x: 82, y: 68 },
-  { id: "arena", label: "Arena", x: 50, y: 18 },
-  { id: "pulse", label: "Pulse", x: 50, y: 82 },
+  { id: "player", label: "Joueur", x: 12, y: 35 },
+  { id: "coach", label: "Coach", x: 88, y: 28 },
+  { id: "agent", label: "Agent", x: 88, y: 52 },
+  { id: "recruiter", label: "Recruteur", x: 72, y: 38 },
+  { id: "club", label: "Club", x: 12, y: 68 },
+  { id: "organizer", label: "Organisateur", x: 82, y: 78 },
+  { id: "health", label: "Pôle santé", x: 28, y: 18 },
+  { id: "arena", label: "Arena", x: 72, y: 12 },
+  { id: "pulse", label: "Pulse", x: 50, y: 85 },
 ] as const;
 
 const EDGES: [string, string][] = [
   ["player", "mercato"],
   ["coach", "mercato"],
+  ["agent", "mercato"],
+  ["recruiter", "mercato"],
   ["club", "mercato"],
   ["organizer", "arena"],
   ["mercato", "arena"],
   ["player", "pulse"],
   ["coach", "club"],
+  ["agent", "club"],
+  ["player", "health"],
+  ["coach", "health"],
 ];
 
 export function EcosystemMap() {
@@ -88,11 +96,14 @@ export function EcosystemMap() {
 
 const DESCRIPTIONS: Record<string, string> = {
   mercato:
-    "Hub recrutement — annonces, candidatures, filtres poste/niveau/ville.",
-  player: "Profil, Pulse, stats, CV PDF et candidatures Mercato.",
-  coach: "Vérification, détections, convocations et Live Stats équipe.",
-  club: "Annonces actives, multi-équipes, exports candidatures.",
+    "Hub recrutement — annonces, candidatures, filtres poste/niveau/ville. Publié par les recruteurs Pro.",
+  player: "Profil, Pulse, stats, CV PDF, pôle santé, covoiturage et candidatures Mercato.",
+  coach: "Vérification diplôme, effectif, convocations et Live Stats équipe.",
+  agent: "Mandats joueurs, repérage et contacts clubs sur Mercato Pro.",
+  recruiter: "Rôle dédié — scouting, annonces Mercato Pro et suivi candidatures.",
+  club: "Recruteur Pro — annonces actives, multi-équipes, exports candidatures.",
   organizer: "Tournois Arena — inscriptions et palmarès publiés.",
+  health: "Kinés, coach mental, nutrition — annuaire vérifié et messagerie sécurisée.",
   arena: "Compétitions locales intégrées au calendrier saison.",
   pulse: "Score de visibilité — profil, activité et confiance.",
 };

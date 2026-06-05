@@ -22,6 +22,7 @@ import {
   getActiveProductLineFromStorage,
   ProductLineMismatchError,
 } from '../utils/productLineAccess';
+import { isBetaAccountBypassed } from '../config/emailVerificationBypass';
 
 export { ProductLineMismatchError } from '../utils/productLineAccess';
 
@@ -76,9 +77,15 @@ function usesPasswordProvider(fbUser: FirebaseAuthUser): boolean {
   return fbUser.providerData.some((p) => p.providerId === 'password');
 }
 
-export function needsEmailVerification(fbUser: FirebaseAuthUser | null): boolean {
+export function needsEmailVerification(
+  fbUser: FirebaseAuthUser | null,
+  profileEmail?: string | null
+): boolean {
   if (!fbUser || fbUser.emailVerified) return false;
-  return usesPasswordProvider(fbUser);
+  if (!usesPasswordProvider(fbUser)) return false;
+  const email = profileEmail ?? fbUser.email ?? '';
+  if (isBetaAccountBypassed(email)) return false;
+  return true;
 }
 
 /** Firebase connecté mais profil Firestore absent — compléter via Inscription. */
@@ -126,6 +133,21 @@ async function loadProfileAfterAuth(fbUser: FirebaseAuthUser): Promise<User> {
     throw e;
   }
 
+  if (isBetaAccountBypassed(fbUser.email ?? profile.email)) {
+    const patch: {
+      email_verified?: boolean;
+      onboarding_documents_submitted?: boolean;
+    } = {};
+    if (!profile.email_verified) patch.email_verified = true;
+    if (!profile.onboarding_documents_submitted) {
+      patch.onboarding_documents_submitted = true;
+    }
+    if (Object.keys(patch).length > 0) {
+      await profileService.updateProfile(profile.uid, patch);
+      return { ...profile, ...patch };
+    }
+  }
+
   return profile;
 }
 
@@ -143,7 +165,7 @@ export const authService = {
       throw new Error('Email requis. Utilisez un compte Google/Apple qui partage votre email.');
     }
 
-    const registrationLine: ProductLineId = input.product_line ?? 'standard';
+    const registrationLine: ProductLineId = input.product_line ?? 'homme';
 
     const existing = await usersService.getById(fb.uid);
     if (existing) {
@@ -184,7 +206,7 @@ export const authService = {
       // Le profil peut quand même être créé ; l'utilisateur pourra renvoyer le mail.
     }
 
-    const registrationLine: ProductLineId = input.product_line ?? 'standard';
+    const registrationLine: ProductLineId = input.product_line ?? 'homme';
 
     return profileService.createProfile(
       cred.user.uid,
@@ -198,7 +220,8 @@ export const authService = {
         parental_settings: input.parental_settings,
         app_space: input.app_space,
         product_line: registrationLine,
-        email_verified: false,
+        email_verified: isBetaAccountBypassed(input.email.trim()),
+        onboarding_documents_submitted: isBetaAccountBypassed(input.email.trim()),
       }
     );
   },

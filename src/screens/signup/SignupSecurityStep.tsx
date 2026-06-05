@@ -9,7 +9,8 @@ import { SignupPasswordStrengthBar } from '../../components/signup/SignupPasswor
 import { SignupStepLayout } from './SignupStepLayout';
 import { SignupFooterButton } from './SignupFooterButton';
 import type { SignupForm } from './useSignupForm';
-import { getWomanStepMeta } from './signupWomanConfig';
+import { getPlayerStepMeta } from './signupPlayerStepMeta';
+import { getProStepMeta } from './signupProConfig';
 import { ProDayErrorBanner } from '../../components/ui/ProDayErrorBanner';
 import { colors, spacing } from '../../theme/designTokens';
 
@@ -38,7 +39,9 @@ export const SignupSecurityStep: React.FC<SignupSecurityStepProps> = ({
 }) => {
   const passwordStrength =
     form.password.length > 0 ? getPasswordStrength(form.password) : null;
-  const womanMeta = form.isWomanProduct ? getWomanStepMeta('security') : null;
+  const meta = form.isProProduct
+    ? getProStepMeta('security')
+    : getPlayerStepMeta(form.productLine, 'security');
 
   return (
     <SignupStepLayout
@@ -47,18 +50,14 @@ export const SignupSecurityStep: React.FC<SignupSecurityStepProps> = ({
       stepName={stepName}
       phases={phases}
       phaseIndex={phaseIndex}
-      title={
-        form.isOAuthCompletion
-          ? 'Finaliser l’accès'
-          : (womanMeta?.title ?? 'Sécurité du compte')
-      }
+      title={form.isOAuthCompletion ? 'Finaliser l’accès' : meta.title}
       subtitle={
         form.isOAuthCompletion
-          ? 'Acceptez les conditions pour entrer dans ProDay Woman.'
-          : (womanMeta?.subtitle ?? 'Mot de passe robuste et acceptation des CGU.')
+          ? 'Acceptez les conditions pour activer votre compte.'
+          : meta.subtitle
       }
       contentKey="security"
-      heroIcon={womanMeta?.heroIcon ?? 'lock'}
+      heroIcon={meta.heroIcon}
       onBack={onBack}
       footer={
         <SignupFooterButton

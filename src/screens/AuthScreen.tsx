@@ -10,8 +10,8 @@ import {
   Platform,
 } from 'react-native';
 import { authService } from '../services/auth.service';
-import { Logo } from '../components/Logo';
 import { AuthBrandHeader } from '../components/auth/AuthBrandHeader';
+import { Icon } from '../components/ui/Icon';
 import { AuthTabRail, type AuthTabId } from '../components/auth/AuthTabRail';
 import { authStyles } from '../components/auth/authStyles';
 import { useAuthLayout } from '../components/auth/useAuthLayout';
@@ -28,25 +28,82 @@ import { useAuth } from '../context/AuthContext';
 import { useTabNavigation } from '../context/TabNavigationContext';
 import { useAppTheme } from '../context/ProductLineContext';
 import { useLaunchIntro } from '../context/LaunchIntroContext';
-import { BRAND, colors, spacing } from '../theme/designTokens';
-import { PRODAY_WOMAN_BRAND } from '../models/ProductLine';
+import { brandForProductLine, type ProductLineId } from '../models/ProductLine';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-const SIGNUP_TEASER = [
-  'Choisissez votre rôle (joueur, coach, agent…)',
-  'Complétez votre profil en quelques étapes',
-  'Vérifiez votre identité puis confirmez votre email',
+const SIGNUP_TEASER_HOMME = [
+  'Inscription joueur uniquement',
+  'Espace M, fiche sportive et stats',
+  'Email confirmé puis accès au Mercato M',
 ];
 
+const SIGNUP_TEASER_WOMAN = [
+  'Inscription joueuse uniquement',
+  'Catégorie F, fiche et stats',
+  'Email confirmé puis accès au Mercato F',
+];
+
+const SIGNUP_TEASER_PRO = [
+  'Coach, club, agent, santé, orga ou partenaire',
+  'Parcours métier dédié à votre rôle',
+  'Validation pro puis accès à l’écosystème',
+];
+
+function authScreenCopy(line: ProductLineId, tab: AuthTabId): { title: string; sub: string } {
+  const brand = brandForProductLine(line);
+  if (tab === 'login') {
+    if (line === 'woman') {
+      return {
+        title: 'Bon retour',
+        sub: 'Connectez-vous à votre espace foot féminin.',
+      };
+    }
+    if (line === 'pro') {
+      return {
+        title: 'Bon retour',
+        sub: 'Connectez-vous à Pro Day Pro — staff, structures et partenaires.',
+      };
+    }
+    return {
+      title: 'Bon retour',
+      sub: 'Connectez-vous à votre espace Pro Day Man.',
+    };
+  }
+  if (line === 'woman') {
+    return {
+      title: `Rejoignez ${brand.name}`,
+      sub: 'Créez votre compte joueuse — Mercato F, stats et visibilité clubs.',
+    };
+  }
+  if (line === 'pro') {
+    return {
+      title: `Rejoignez ${brand.name}`,
+      sub: 'Créez votre compte pro — coach, club, agent, santé, orga ou partenaire.',
+    };
+  }
+  return {
+    title: `Rejoignez ${brand.name}`,
+    sub: 'Créez votre compte joueur — CV en ligne, Mercato M et matchs.',
+  };
+}
+
 export const AuthScreen: React.FC = () => {
-  const { compact, logoWidth, insets, scrollBottom } = useAuthLayout();
+  const { compact, logoWidth, headerTopPad, tabBarScrollInset: tabInset } = useAuthLayout();
   const { profile, loading: authLoading, configured, refreshProfile, signOut } =
     useAuth();
   const { setActiveTab } = useTabNavigation();
-  const { isWoman, productLine } = useAppTheme();
+  const { productLine, colors } = useAppTheme();
+  const activeBrand = brandForProductLine(productLine);
   const { openSpacePicker } = useLaunchIntro();
   const [tab, setTab] = useState<AuthTabId>('login');
+  const screenCopy = authScreenCopy(productLine, tab);
+  const signupTeaser =
+    productLine === 'woman'
+      ? SIGNUP_TEASER_WOMAN
+      : productLine === 'pro'
+        ? SIGNUP_TEASER_PRO
+        : SIGNUP_TEASER_HOMME;
   const [signupOpen, setSignupOpen] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -126,7 +183,7 @@ export const AuthScreen: React.FC = () => {
   if (!configured) {
     return (
       <View style={[authStyles.root, authStyles.centered]}>
-        <Logo background="light" width={140} />
+        <AuthBrandHeader width={140} tone="light" />
         <View style={authStyles.configWrap}>
           <ProDayConfigNotice blockingOnly />
         </View>
@@ -193,18 +250,32 @@ export const AuthScreen: React.FC = () => {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView
-        contentContainerStyle={[authStyles.scroll, { paddingBottom: scrollBottom }]}
+        contentContainerStyle={[
+          authStyles.scroll,
+          { paddingBottom: tabInset({ guestMode: true }) },
+        ]}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <View style={[authStyles.header, { paddingTop: insets.top + (compact ? spacing.sm : spacing.md) }]}>
-          <AuthBrandHeader width={logoWidth} tone="light" />
-          <Text style={authStyles.tagline}>
-            {isWoman ? PRODAY_WOMAN_BRAND.tagline : BRAND.tagline}
-          </Text>
+        <View style={[authStyles.header, { paddingTop: headerTopPad }]}>
+          <View style={authStyles.headerRow}>
+            <Pressable
+              style={authStyles.backBtn}
+              onPress={() => setActiveTab('home')}
+              hitSlop={8}
+              accessibilityLabel="Retour à l’accueil"
+            >
+              <Icon name="arrow-back" size={20} color={colors.ink} />
+            </Pressable>
+            <View style={authStyles.headerLogo}>
+              <AuthBrandHeader width={logoWidth} tone="light" />
+            </View>
+            <View style={authStyles.headerSpacer} />
+          </View>
+          <Text style={authStyles.tagline}>{activeBrand.tagline}</Text>
           <Pressable style={authStyles.spacePickerLink} onPress={openSpacePicker}>
             <Text style={authStyles.spacePickerText}>
-              {isWoman ? 'ProDay for Women' : 'ProDay Classic'} — changer d’univers
+              {activeBrand.name} — changer d’univers
             </Text>
           </Pressable>
         </View>
@@ -220,17 +291,9 @@ export const AuthScreen: React.FC = () => {
           />
 
           <Text style={[authStyles.title, compact && authStyles.titleCompact]}>
-            {tab === 'login' ? 'Bon retour' : isWoman ? 'Rejoignez ProDay Woman' : 'Rejoignez ProDay'}
+            {screenCopy.title}
           </Text>
-          <Text style={authStyles.sub}>
-            {tab === 'login'
-              ? isWoman
-                ? 'Connectez-vous à votre espace foot féminin.'
-                : 'Connectez-vous pour accéder à votre espace.'
-              : isWoman
-                ? 'Créez votre compte Woman — réservé à l’univers foot féminin.'
-                : 'Créez votre compte en quelques minutes — joueurs, coachs, clubs et partenaires.'}
-          </Text>
+          <Text style={authStyles.sub}>{screenCopy.sub}</Text>
 
           <ProDayConfigNotice compact />
 
@@ -312,7 +375,7 @@ export const AuthScreen: React.FC = () => {
             </View>
           ) : (
             <View style={authStyles.signupTeaser}>
-              {SIGNUP_TEASER.map((line, i) => (
+              {signupTeaser.map((line, i) => (
                 <View key={line} style={authStyles.teaserRow}>
                   <View style={authStyles.teaserNum}>
                     <Text style={authStyles.teaserNumText}>{i + 1}</Text>
@@ -321,7 +384,7 @@ export const AuthScreen: React.FC = () => {
                 </View>
               ))}
               <Pressable style={authStyles.primaryBtn} onPress={openSignup}>
-                <Text style={authStyles.primaryBtnText}>Inscription ProDay</Text>
+                <Text style={authStyles.primaryBtnText}>Inscription {activeBrand.name}</Text>
               </Pressable>
             </View>
           )}

@@ -2,8 +2,9 @@ import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 import { PRODAY_MODULES, type ProDayModuleId, type ProDayModuleDef } from '../../content/prodayModules';
-import { getModulesForRole } from '../../content/roleDashboardExperience';
+import { getModulesForRoleAndLine } from '../../content/poleExperience';
 import type { UserRole } from '../../models/User';
+import { useAppTheme } from '../../context/ProductLineContext';
 import { PressableSpring } from '../discover/PressableSpring';
 import { Icon } from './Icon';
 import { colors, spacing, radius, shadows, surfaces } from '../../theme/designTokens';
@@ -53,20 +54,25 @@ export const ProDayModuleGrid: React.FC<ProDayModuleGridProps> = ({
   fullWidthModuleId: fullWidthProp,
   role,
 }) => {
+  const { productLine } = useAppTheme();
+  const roleLayout = useMemo(
+    () => (role ? getModulesForRoleAndLine(role, productLine) : null),
+    [role, productLine]
+  );
+
   const modules = useMemo(() => {
-    if (role) {
-      const { order, fullWidthModuleId } = getModulesForRole(role);
-      return orderModules(PRODAY_MODULES, order, fullWidthModuleId);
+    if (roleLayout) {
+      return orderModules(PRODAY_MODULES, roleLayout.order, roleLayout.fullWidthModuleId);
     }
     const wideId = fullWidthProp ?? 'gestion';
     return orderModules(PRODAY_MODULES, PRODAY_MODULES.map((m) => m.id), wideId);
-  }, [role, fullWidthProp]);
+  }, [roleLayout, fullWidthProp]);
 
   return (
     <View style={styles.grid}>
       {modules.map((mod, i) => {
         const accent = MODULE_ACCENT[mod.id];
-        const wideId = role ? getModulesForRole(role).fullWidthModuleId : fullWidthProp ?? 'gestion';
+        const wideId = roleLayout?.fullWidthModuleId ?? fullWidthProp ?? 'gestion';
         const isWide = mod.id === wideId;
         const cellStyle = isWide ? styles.cellWide : styles.cell;
         const card = (

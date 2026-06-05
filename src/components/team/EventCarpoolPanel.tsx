@@ -14,8 +14,12 @@ import type { User } from '../../models/User';
 import { usersService } from '../../services/users.service';
 import { teamEventsService } from '../../services/teamEvents.service';
 import {
+  carpoolAvailableSeats,
   carpoolSlotForDriver,
+  findCarpoolBooking,
   isCarpoolDriver,
+  isCarpoolPassenger,
+  totalCarpoolAvailableSeats,
   totalCarpoolSeats,
 } from '../../utils/carpoolBalance';
 import { Icon } from '../ui/Icon';
@@ -47,11 +51,16 @@ export const EventCarpoolPanel: React.FC<EventCarpoolPanelProps> = ({
   const slots = event.carpool_slots ?? [];
   const mySlot = carpoolSlotForDriver(event, profile.uid);
   const isDriver = isCarpoolDriver(event, profile.uid);
+  const myBooking = findCarpoolBooking(event, profile.uid);
   const canManage = isStaff || profile.uid === event.organizer_uid;
+  const canParticipate =
+    profile.uid === event.organizer_uid || event.invitee_uids.includes(profile.uid);
   const candidateUids = useMemo(
-    () => [...new Set([...event.invitee_uids, profile.uid])],
-    [event.invitee_uids, profile.uid]
+    () => [...new Set([...event.invitee_uids, event.organizer_uid, profile.uid])],
+    [event.invitee_uids, event.organizer_uid, profile.uid]
   );
+
+  const destination = [event.location_label, event.city].filter(Boolean).join(' · ');
 
   useEffect(() => {
     void (async () => {
@@ -109,6 +118,53 @@ export const EventCarpoolPanel: React.FC<EventCarpoolPanelProps> = ({
     }
   };
 
+  const volunteerAsDriver = async () => {
+    setSaving(true);
+    try {
+      await teamEventsService.volunteerAsCarpoolDriver(
+        event.id,
+        profile.uid,
+        profile.display_name
+      );
+      onUpdated();
+      Alert.alert(
+        'Trajet proposé',
+        'Indiquez vos places et le point de rendez-vous pour que l’équipe puisse réserver.'
+      );
+    } catch (e) {
+      Alert.alert('Erreur', e instanceof Error ? e.message : 'Proposition impossible.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const withdrawOffer = async () => {
+    Alert.alert(
+      'Retirer votre trajet ?',
+      'Les réservations sur votre véhicule seront annulées.',
+      [
+        { text: 'Annuler', style: 'cancel' },
+        {
+          text: 'Retirer',
+          style: 'destructive',
+          onPress: () => {
+            void (async () => {
+              setSaving(true);
+              try {
+                await teamEventsService.withdrawCarpoolOffer(event.id, profile.uid);
+                onUpdated();
+              } catch (e) {
+                Alert.alert('Erreur', e instanceof Error ? e.message : 'Retrait impossible.');
+              } finally {
+                setSaving(false);
+              }
+            })();
+          },
+        },
+      ]
+    );
+  };
+
   const saveMySlot = async () => {
     setSaving(true);
     try {
@@ -123,9 +179,39 @@ export const EventCarpoolPanel: React.FC<EventCarpoolPanelProps> = ({
         notes: editNotes.trim() || undefined,
       });
       onUpdated();
-      Alert.alert('Enregistré', 'Vos infos de covoiturage sont visibles par l’équipe.');
+      Alert.alert('Enregistré', 'Votre trajet est visible par l’équipe.');
     } catch (e) {
       Alert.alert('Erreur', e instanceof Error ? e.message : 'Mise à jour impossible.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const bookSeat = async (driverUid: string) => {
+    setSaving(true);
+    try {
+      await teamEventsService.requestCarpoolSeat(
+        event.id,
+        driverUid,
+        profile.uid,
+        profile.display_name
+      );
+      onUpdated();
+      Alert.alert('Place réservée', 'Le conducteur est notifié dans le fil de coordination.');
+    } catch (e) {
+      Alert.alert('Erreur', e instanceof Error ? e.message : 'Réservation impossible.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const cancelBooking = async (driverUid: string) => {
+    setSaving(true);
+    try {
+      await teamEventsService.cancelCarpoolSeat(event.id, driverUid, profile.uid);
+      onUpdated();
+    } catch (e) {
+      Alert.alert('Erreur', e instanceof Error ? e.message : 'Annulation impossible.');
     } finally {
       setSaving(false);
     }
@@ -151,23 +237,187 @@ export const EventCarpoolPanel: React.FC<EventCarpoolPanelProps> = ({
   };
 
   const seatTotal = totalCarpoolSeats(slots);
+  const availableTotal = totalCarpoolAvailableSeats(slots);
 
   return (
     <View style={styles.wrap}>
       <View style={styles.headerRow}>
-        <Icon name="people" size={20} color={colors.accent} />
-        <Text style={styles.title}>Covoiturage</Text>
+        <Icon name="walk" size={20} color={colors.accent} />
+        <Text style={styles.title}>Covoiturage équipe</Text>
       </View>
       <Text style={styles.sub}>
-        Le coach désigne les chauffeurs ; l’équipe précise places et point de rendez-vous.
+        Comme BlaBlaCar : proposez un trajet ou réservez une place chez un coéquipier ou votre
+        coach.
       </Text>
 
+      {canParticipate && !isDriver ? (
+        <TouchableOpacity
+          style={styles.offerBtn}
+          onPress={() => void volunteerAsDriver()}
+          disabled={saving}
+        >
+          <Icon name="add" size={20} color="#fff" />
+          <Text style={styles.offerBtnText}>Je peux emmener des coéquipiers</Text>
+        </TouchableOpacity>
+      ) : null}
+
+      {myBooking && myBooking.driverUid !== profile.uid ? (
+        <View style={styles.bookingBanner}>
+          <Icon name="checkmark-circle" size={18} color={colors.accent} />
+          <Text style={styles.bookingBannerText}>
+            Vous montez avec {myBooking.slot.driver_name}
+          </Text>
+        </View>
+      ) : null}
+
+      {slots.length > 0 ? (
+        <View style={styles.slotsBox}>
+          <Text style={styles.slotsTitle}>
+            Trajets proposés
+            {seatTotal > 0
+              ? ` · ${availableTotal ?? seatTotal} place(s) dispo`
+              : ' · places à préciser'}
+          </Text>
+          {slots.map((slot) => {
+            const available = carpoolAvailableSeats(slot);
+            const bookedHere = isCarpoolPassenger(slot, profile.uid);
+            const isMine = slot.driver_uid === profile.uid;
+            const canBook =
+              canParticipate &&
+              !isMine &&
+              !myBooking &&
+              (available === null || available > 0);
+
+            return (
+              <View key={slot.driver_uid} style={styles.rideCard}>
+                <View style={styles.rideTop}>
+                  <View style={styles.rideAvatar}>
+                    <Icon name="person" size={18} color={colors.ink} />
+                  </View>
+                  <View style={styles.rideMeta}>
+                    <Text style={styles.slotName}>{slot.driver_name}</Text>
+                    <Text style={styles.rideBadge}>
+                      {slot.volunteered ? 'Proposition spontanée' : 'Assigné par le staff'}
+                    </Text>
+                  </View>
+                </View>
+
+                <View style={styles.routeRow}>
+                  <Text style={styles.routeFrom}>
+                    {slot.meeting_place?.trim() || 'Point RDV à préciser'}
+                  </Text>
+                  <Icon name="chevron-forward" size={14} color={colors.textMuted} />
+                  <Text style={styles.routeTo}>{destination || event.city}</Text>
+                </View>
+
+                {slot.meeting_time ? (
+                  <Text style={styles.slotLine}>Départ {slot.meeting_time}</Text>
+                ) : null}
+
+                {slot.seats != null ? (
+                  <Text style={styles.slotLine}>
+                    {available === 0
+                      ? 'Complet'
+                      : `${available ?? slot.seats} place(s) restante(s) sur ${slot.seats}`}
+                  </Text>
+                ) : (
+                  <Text style={styles.slotMuted}>Places non renseignées par le conducteur</Text>
+                )}
+
+                {(slot.passengers ?? []).length > 0 ? (
+                  <Text style={styles.passengersLine}>
+                    Passagers : {(slot.passengers ?? []).map((p) => p.name).join(', ')}
+                  </Text>
+                ) : null}
+
+                {slot.notes ? <Text style={styles.slotNotes}>{slot.notes}</Text> : null}
+
+                {bookedHere ? (
+                  <TouchableOpacity
+                    style={styles.cancelBookBtn}
+                    onPress={() => void cancelBooking(slot.driver_uid)}
+                    disabled={saving}
+                  >
+                    <Text style={styles.cancelBookText}>Annuler ma réservation</Text>
+                  </TouchableOpacity>
+                ) : canBook ? (
+                  <TouchableOpacity
+                    style={styles.bookBtn}
+                    onPress={() => void bookSeat(slot.driver_uid)}
+                    disabled={saving}
+                  >
+                    <Text style={styles.bookBtnText}>Réserver une place</Text>
+                  </TouchableOpacity>
+                ) : null}
+              </View>
+            );
+          })}
+        </View>
+      ) : (
+        <Text style={styles.empty}>
+          Aucun trajet pour l’instant — proposez le vôtre ou attendez les coéquipiers.
+        </Text>
+      )}
+
+      {isDriver && mySlot ? (
+        <View style={styles.driverForm}>
+          <Text style={styles.formTitle}>Votre trajet</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Nombre de places (ex. 3)"
+            placeholderTextColor={colors.textMuted}
+            keyboardType="number-pad"
+            value={editSeats}
+            onChangeText={setEditSeats}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Heure de départ (ex. 13:00)"
+            placeholderTextColor={colors.textMuted}
+            value={editTime}
+            onChangeText={setEditTime}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Point de rendez-vous (ex. parking du club)"
+            placeholderTextColor={colors.textMuted}
+            value={editPlace}
+            onChangeText={setEditPlace}
+          />
+          <TextInput
+            style={[styles.input, styles.inputMultiline]}
+            placeholder="Infos utiles (sièges enfants, retour direct…)"
+            placeholderTextColor={colors.textMuted}
+            value={editNotes}
+            onChangeText={setEditNotes}
+            multiline
+          />
+          <TouchableOpacity
+            style={styles.primaryBtn}
+            onPress={() => void saveMySlot()}
+            disabled={saving}
+          >
+            <Text style={styles.primaryBtnText}>Publier mon trajet</Text>
+          </TouchableOpacity>
+          {mySlot.volunteered ? (
+            <TouchableOpacity
+              style={styles.secondaryBtn}
+              onPress={() => void withdrawOffer()}
+              disabled={saving}
+            >
+              <Text style={styles.secondaryBtnText}>Retirer ma proposition</Text>
+            </TouchableOpacity>
+          ) : null}
+        </View>
+      ) : null}
+
       {canManage ? (
-        <>
+        <View style={styles.staffBox}>
+          <Text style={styles.staffTitle}>Staff — assignation rapide</Text>
           {!pickMode ? (
-            <TouchableOpacity style={styles.primaryBtn} onPress={() => setPickMode(true)}>
-              <Text style={styles.primaryBtnText}>
-                {slots.length > 0 ? 'Modifier les chauffeurs' : 'Assigner des chauffeurs'}
+            <TouchableOpacity style={styles.secondaryBtn} onPress={() => setPickMode(true)}>
+              <Text style={styles.secondaryBtnText}>
+                {slots.length > 0 ? 'Modifier les chauffeurs assignés' : 'Assigner des chauffeurs'}
               </Text>
             </TouchableOpacity>
           ) : (
@@ -203,81 +453,11 @@ export const EventCarpoolPanel: React.FC<EventCarpoolPanelProps> = ({
               </View>
             </View>
           )}
-        </>
-      ) : null}
-
-      {slots.length > 0 ? (
-        <View style={styles.slotsBox}>
-          <Text style={styles.slotsTitle}>
-            Chauffeurs · {seatTotal > 0 ? `${seatTotal} place(s) déclarée(s)` : 'places à préciser'}
-          </Text>
-          {slots.map((slot) => (
-            <View key={slot.driver_uid} style={styles.slotCard}>
-              <Text style={styles.slotName}>{slot.driver_name}</Text>
-              {slot.seats != null ? (
-                <Text style={styles.slotLine}>{slot.seats} place(s) disponible(s)</Text>
-              ) : (
-                <Text style={styles.slotMuted}>Places non renseignées</Text>
-              )}
-              {slot.meeting_time || slot.meeting_place ? (
-                <Text style={styles.slotLine}>
-                  RDV {slot.meeting_time ?? '—'}
-                  {slot.meeting_place ? ` · ${slot.meeting_place}` : ''}
-                </Text>
-              ) : null}
-              {slot.notes ? <Text style={styles.slotNotes}>{slot.notes}</Text> : null}
-            </View>
-          ))}
-        </View>
-      ) : (
-        <Text style={styles.empty}>Aucun chauffeur désigné pour cet événement.</Text>
-      )}
-
-      {isDriver && mySlot ? (
-        <View style={styles.driverForm}>
-          <Text style={styles.formTitle}>Votre véhicule</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Nombre de places (ex. 3)"
-            placeholderTextColor={colors.textMuted}
-            keyboardType="number-pad"
-            value={editSeats}
-            onChangeText={setEditSeats}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Heure RDV (ex. 13:00)"
-            placeholderTextColor={colors.textMuted}
-            value={editTime}
-            onChangeText={setEditTime}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Lieu RDV (ex. parking du club)"
-            placeholderTextColor={colors.textMuted}
-            value={editPlace}
-            onChangeText={setEditPlace}
-          />
-          <TextInput
-            style={[styles.input, styles.inputMultiline]}
-            placeholder="Notes (ex. siège enfant, retour direct…)"
-            placeholderTextColor={colors.textMuted}
-            value={editNotes}
-            onChangeText={setEditNotes}
-            multiline
-          />
-          <TouchableOpacity
-            style={styles.primaryBtn}
-            onPress={() => void saveMySlot()}
-            disabled={saving}
-          >
-            <Text style={styles.primaryBtnText}>Enregistrer mes infos</Text>
-          </TouchableOpacity>
         </View>
       ) : null}
 
       <View style={styles.forum}>
-        <Text style={styles.formTitle}>Coordination équipe</Text>
+        <Text style={styles.formTitle}>Coordination</Text>
         {(event.carpool_messages ?? []).length === 0 ? (
           <Text style={styles.slotMuted}>
             Précisez ici le RDV, les places restantes ou qui monte dans quelle voiture.
@@ -330,6 +510,29 @@ const styles = StyleSheet.create({
   headerRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.xs },
   title: { fontSize: 16, fontWeight: '900', color: colors.text },
   sub: { fontSize: 12, lineHeight: 18, color: colors.textMuted, marginBottom: spacing.md },
+  offerBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    backgroundColor: colors.ink,
+    borderRadius: radius.md,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+  },
+  offerBtnText: { color: '#fff', fontWeight: '900', fontSize: 14 },
+  bookingBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    padding: spacing.sm,
+    marginBottom: spacing.md,
+    borderRadius: radius.md,
+    backgroundColor: colors.accentSoft,
+    borderWidth: 1,
+    borderColor: colors.accentMuted,
+  },
+  bookingBannerText: { flex: 1, fontSize: 13, fontWeight: '700', color: colors.text },
   primaryBtn: {
     backgroundColor: colors.accent,
     borderRadius: radius.md,
@@ -345,6 +548,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: colors.background,
+    marginBottom: spacing.sm,
   },
   secondaryBtnText: { fontWeight: '800', color: colors.text, fontSize: 13 },
   pickBox: { marginBottom: spacing.md },
@@ -365,20 +569,58 @@ const styles = StyleSheet.create({
   pickCheck: { fontWeight: '900', color: colors.accent },
   pickActions: { flexDirection: 'row', gap: spacing.sm },
   pickSaveBtn: { flex: 1 },
-  slotsBox: { marginTop: spacing.sm },
+  slotsBox: { marginTop: spacing.xs },
   slotsTitle: { fontSize: 13, fontWeight: '800', color: colors.text, marginBottom: spacing.sm },
-  slotCard: {
-    padding: spacing.sm,
+  rideCard: {
+    padding: spacing.md,
     borderRadius: radius.md,
     backgroundColor: colors.background,
-    marginBottom: spacing.xs,
+    marginBottom: spacing.sm,
     borderWidth: 1,
     borderColor: colors.border,
   },
-  slotName: { fontWeight: '900', color: colors.text },
+  rideTop: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.sm },
+  rideAvatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.surfaceMuted,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  rideMeta: { flex: 1 },
+  slotName: { fontWeight: '900', color: colors.text, fontSize: 15 },
+  rideBadge: { fontSize: 11, color: colors.textMuted, marginTop: 2 },
+  routeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    marginBottom: spacing.xs,
+    flexWrap: 'wrap',
+  },
+  routeFrom: { fontSize: 13, fontWeight: '700', color: colors.textSecondary, flexShrink: 1 },
+  routeTo: { fontSize: 13, fontWeight: '700', color: colors.text, flexShrink: 1 },
   slotLine: { fontSize: 13, color: colors.textSecondary, marginTop: 2 },
   slotMuted: { fontSize: 12, color: colors.textMuted, fontStyle: 'italic', marginTop: 2 },
+  passengersLine: { fontSize: 12, color: colors.accent, fontWeight: '700', marginTop: spacing.xs },
   slotNotes: { fontSize: 12, color: colors.textMuted, marginTop: 4 },
+  bookBtn: {
+    marginTop: spacing.sm,
+    backgroundColor: colors.accent,
+    borderRadius: radius.md,
+    paddingVertical: spacing.sm,
+    alignItems: 'center',
+  },
+  bookBtnText: { color: '#fff', fontWeight: '800', fontSize: 13 },
+  cancelBookBtn: {
+    marginTop: spacing.sm,
+    borderRadius: radius.md,
+    paddingVertical: spacing.sm,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  cancelBookText: { fontWeight: '800', color: colors.textSecondary, fontSize: 13 },
   empty: { fontSize: 13, color: colors.textMuted, fontStyle: 'italic' },
   driverForm: {
     marginTop: spacing.md,
@@ -386,6 +628,13 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: colors.border,
   },
+  staffBox: {
+    marginTop: spacing.md,
+    paddingTop: spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+  },
+  staffTitle: { fontSize: 12, fontWeight: '800', color: colors.textMuted, marginBottom: spacing.sm },
   formTitle: { fontSize: 13, fontWeight: '900', color: colors.text, marginBottom: spacing.sm },
   input: {
     backgroundColor: colors.background,

@@ -20,10 +20,10 @@ export const DataState: React.FC<DataStateProps> = ({
   if (firebaseMissing) {
     return (
       <View style={styles.box}>
-        <Text style={styles.title}>Firebase non configuré</Text>
+        <Text style={styles.title}>Service indisponible</Text>
+        <Text style={styles.sub}>Connectez-vous pour accéder aux données en ligne.</Text>
         <Text style={styles.sub}>
-          Copiez .env.example vers .env et renseignez les clés du projet ProDay.
-          Les statistiques afficheront alors les vrais comptages Firestore.
+          Les données ne sont pas disponibles pour le moment. Réessayez dans quelques instants.
         </Text>
       </View>
     );

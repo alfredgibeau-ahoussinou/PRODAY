@@ -4,7 +4,7 @@ import { AuthTextField } from '../../components/auth/AuthTextField';
 import { SignupStepLayout } from './SignupStepLayout';
 import { SignupFooterButton } from './SignupFooterButton';
 import type { SignupForm } from './useSignupForm';
-import { getWomanStepMeta } from './signupWomanConfig';
+import { getPlayerStepMeta } from './signupPlayerStepMeta';
 
 interface SignupLocationStepProps {
   form: SignupForm;
@@ -25,7 +25,7 @@ export const SignupLocationStep: React.FC<SignupLocationStepProps> = ({
   phaseIndex,
   onBack,
 }) => {
-  const womanMeta = form.isWomanProduct ? getWomanStepMeta('location') : null;
+  const meta = getPlayerStepMeta(form.productLine, 'location');
   return (
   <SignupStepLayout
     stepIndex={stepIndex}
@@ -33,10 +33,10 @@ export const SignupLocationStep: React.FC<SignupLocationStepProps> = ({
     stepName={stepName}
     phases={phases}
     phaseIndex={phaseIndex}
-    title={womanMeta?.title ?? 'Où joues-tu ?'}
-    subtitle={womanMeta?.subtitle ?? 'Ville et département pour le Mercato et les clubs près de chez toi.'}
+    title={meta.title}
+    subtitle={meta.subtitle}
     contentKey="player-location"
-    heroIcon={womanMeta?.heroIcon ?? 'location'}
+    heroIcon={meta.heroIcon}
     onBack={onBack}
     footer={
       <SignupFooterButton label="Continuer" onPress={() => form.advanceFromCurrentPage()} />

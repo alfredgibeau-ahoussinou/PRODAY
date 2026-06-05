@@ -2,7 +2,29 @@ export const BRAND = {
   name: "ProDay",
   tagline: "CONNECTER • PROGRESSER • RÉUSSIR",
   mission:
-    "L'écosystème foot amateur et semi-pro : carrière, club, matchs et communauté dans une seule application.",
+    "Trois univers — Homme, Woman et Pro — pour couvrir tout l'écosystème foot amateur et professionnel.",
+} as const;
+
+export type ProductLineWeb = "homme" | "woman" | "pro";
+
+export const HOMME_BRAND = {
+  name: "Pro Day Man",
+  fullName: "Pro Day Man",
+  tagline: "CONNECTER • PROGRESSER • RÉUSSIR",
+  mission:
+    "Le foot masculin amateur : Mercato M, matchs, Arena, pôle santé et CV joueur — réservé aux joueurs.",
+  accent: "#0A0A0A",
+  accentDark: "#262626",
+} as const;
+
+export const PRO_BRAND = {
+  name: "Pro Day Pro",
+  fullName: "Pro Day Pro",
+  tagline: "EXPERTISE • RÉSEAU • PERFORMANCE",
+  mission:
+    "Coach, agent, club recruteur et pôle santé — Mercato Pro, réseau vérifié et accompagnement sportif.",
+  accent: "#1D4ED8",
+  accentDark: "#1E3A8A",
 } as const;
 
 /** Message waitlist / page beta */
@@ -52,6 +74,33 @@ export const MODULES = [
     image: "/showcase/classic-exp-pulse.jpg",
     color: "#525252",
   },
+  {
+    id: "carpool",
+    title: "Covoiturage",
+    subtitle: "Trajets match & détection",
+    description:
+      "Coachs et joueurs proposent ou réservent des places — style BlaBlaCar, intégré aux événements.",
+    image: "/showcase/classic-match.jpg",
+    color: "#737373",
+  },
+  {
+    id: "health",
+    title: "Pôle santé",
+    subtitle: "Kiné, mental, nutrition",
+    description:
+      "Annuaire praticiens vérifiés — kinés, coach mental, nutritionnistes. Contact sécurisé joueur ↔ pro.",
+    image: "/showcase/classic-exp-profile.jpg",
+    color: "#64748b",
+  },
+  {
+    id: "shop",
+    title: "ProDay Shop",
+    subtitle: "Équipement & textile",
+    description:
+      "Trépieds, t-shirts et maillots officiels par univers — précommande depuis l'app.",
+    image: "/showcase/classic-exp-sponsors.jpg",
+    color: "#57534e",
+  },
 ] as const;
 
 export const PILLARS = [
@@ -91,21 +140,66 @@ export const JOURNEYS = [
     role: "Joueur",
     emoji: "⚽",
     steps: [
-      "Compléter le profil & Pulse",
-      "Postuler au Mercato",
-      "Matchs & Live Stats",
-      "Exporter le CV PDF",
+      "Profil & Pulse",
+      "CV en ligne éditable",
+      "Stats & galerie",
+      "Mercato & candidatures",
+      "Matchs & Arena",
     ],
   },
   {
     id: "coach",
-    role: "Coach / Agent",
+    role: "Coach",
     emoji: "📋",
     steps: [
       "Vérification diplôme",
+      "Gestion effectif",
       "Annonces & détections",
-      "Convocations & compositions",
-      "Live Stats équipe",
+      "Convocations & Live Stats",
+    ],
+  },
+  {
+    id: "recruiter",
+    role: "Recruteur",
+    emoji: "🎯",
+    steps: [
+      "Profil recruteur vérifié",
+      "Territoire & spécialité",
+      "Annonces Mercato Pro",
+      "Pipeline candidatures",
+    ],
+  },
+  {
+    id: "agent",
+    role: "Agent",
+    emoji: "💼",
+    steps: [
+      "Profil agent vérifié",
+      "Repérage & mandats",
+      "Contacts clubs & joueurs",
+      "Pipeline mandats",
+    ],
+  },
+  {
+    id: "club",
+    role: "Club",
+    emoji: "🏟️",
+    steps: [
+      "Profil club & équipes",
+      "Annonces Mercato actives",
+      "Candidatures & exports",
+      "Convocations & effectif",
+    ],
+  },
+  {
+    id: "medical",
+    role: "Pôle santé",
+    emoji: "🩺",
+    steps: [
+      "Spécialité (kiné, coach mental…)",
+      "Zone & diplômes",
+      "Visibilité près des clubs",
+      "Messagerie après vérif.",
     ],
   },
   {
@@ -136,6 +230,8 @@ export const TABS = [
   { id: "home", label: "Accueil", icon: "home" },
   { id: "recruit", label: "Mercato", icon: "search" },
   { id: "matches", label: "Matchs", icon: "calendar" },
+  { id: "carpool", label: "Covoit.", icon: "car" },
+  { id: "health", label: "Santé", icon: "heart" },
   { id: "messages", label: "Messages", icon: "message" },
   { id: "profile", label: "Profil", icon: "user" },
 ] as const;
@@ -148,9 +244,9 @@ export const VERIFICATION_STEPS = [
 ] as const;
 
 export const STATS = [
-  { value: "5", label: "Onglets unifiés" },
+  { value: "7", label: "Onglets dynamiques" },
   { value: "8", label: "Piliers produit" },
-  { value: "1", label: "Saison, une app" },
+  { value: "3", label: "Univers Homme · Woman · Pro" },
   { value: "∞", label: "Ambition terrain" },
 ] as const;
 
@@ -192,10 +288,77 @@ export const WOMAN_MODULES = [
   {
     id: "profil-f",
     title: "Profil joueuse",
-    subtitle: "Pulse & CV",
+    subtitle: "Pulse & CV en ligne",
     description:
-      "Stats saison, galerie et export PDF — votre CV foot féminin vivant.",
+      "Stats saison, galerie et CV joueuse éditable — votre vitrine sportive au féminin.",
     image: "/showcase/woman/woman-profile.jpg",
+  },
+] as const;
+
+export const PRODUCT_LINES = [
+  {
+    id: "homme" as const,
+    brand: HOMME_BRAND,
+    href: "/homme",
+    image: "/showcase/classic-discover-hero.jpg",
+    cta: "Pro Day Man",
+  },
+  {
+    id: "woman" as const,
+    brand: WOMAN_BRAND,
+    href: "/woman",
+    image: "/showcase/woman/woman-discover-hero.jpg",
+    cta: "Univers Woman",
+  },
+  {
+    id: "pro" as const,
+    brand: PRO_BRAND,
+    href: "/pro",
+    image: "/showcase/classic-staff.jpg",
+    cta: "Pro Day Pro",
+  },
+] as const;
+
+export const PRO_MODULES = [
+  {
+    id: "recruiter",
+    title: "Recruteur Pro",
+    subtitle: "Scouting & Mercato",
+    description:
+      "Profil recruteur vérifié, annonces Mercato Pro, pipeline candidatures et covoiturage détections.",
+    image: "/showcase/classic-mercato.jpg",
+  },
+  {
+    id: "coach",
+    title: "Coach Pro",
+    subtitle: "Effectifs & recrutement",
+    description:
+      "Profil staff vérifié, annonces Mercato, convocations et stats candidatures — multi-équipes.",
+    image: "/showcase/classic-staff.jpg",
+  },
+  {
+    id: "agent",
+    title: "Agent Elite",
+    subtitle: "Mandats & repérage",
+    description:
+      "CRM joueurs, alertes géolocalisées, pipeline mandats et contacts clubs.",
+    image: "/showcase/classic-mercato.jpg",
+  },
+  {
+    id: "sante",
+    title: "Pôle santé",
+    subtitle: "Kiné, mental, nutrition",
+    description:
+      "Visibilité près des clubs, messagerie après validation — coach mental inclus.",
+    image: "/showcase/classic-exp-profile.jpg",
+  },
+  {
+    id: "reseau",
+    title: "Réseau Pro",
+    subtitle: "Messagerie sécurisée",
+    description:
+      "Contacts vérifiés entre staff, agents et structures — fini les échanges non tracés.",
+    image: "/showcase/classic-exp-messages.jpg",
   },
 ] as const;
 
@@ -206,15 +369,15 @@ export const VISION_PILLARS = [
   },
   {
     title: "Écosystème",
-    body: "Recrutement, saison, convocations, matchs amicaux, Arena et sponsors — cinq onglets, une expérience.",
+    body: "Recrutement, matchs, covoiturage, pôle santé, Arena et ProDay Shop — sept onglets selon votre rôle, une expérience.",
   },
   {
     title: "Technologie",
-    body: "React Native / Expo, Firebase Auth & Firestore — données réelles, pas de fiction en production.",
+    body: "React Native / Expo — une app mobile et web unifiée, données synchronisées en temps réel.",
   },
   {
     title: "Roadmap",
-    body: "Mercato, Live Stats, Gestion équipe livrés. Notifications géo et paiements tournois à venir.",
+    body: "Mercato, Live Stats, covoiturage, pôle santé et Shop livrés. Notifications géo et paiements tournois à venir.",
   },
 ] as const;
 
@@ -248,36 +411,59 @@ export const ALL_PILLARS = [
     description:
       "Présent, absent, peut-être — avec relances et composition d'équipe.",
   },
+  {
+    id: "carpool-pillar",
+    title: "Covoiturage",
+    subtitle: "Trajets partagés",
+    description:
+      "Proposez ou réservez une place pour matchs et détections — coachs et joueurs.",
+  },
+  {
+    id: "health-pillar",
+    title: "Pôle santé",
+    subtitle: "Kiné & coach mental",
+    description:
+      "Annuaire praticiens vérifiés — kinés, coach mental, nutrition. Messagerie sécurisée.",
+  },
+  {
+    id: "shop-pillar",
+    title: "ProDay Shop",
+    subtitle: "Équipement officiel",
+    description:
+      "Trépieds, t-shirts et maillots par univers — précommande depuis l'app.",
+  },
 ] as const;
 
 export const SUBSCRIPTION_PLANS_WEB = [
   {
     id: "player_plus",
     label: "Joueur Plus",
-    tagline: "Mercato illimité et visibilité renforcée",
-    monthlyEur: 4.99,
-    yearlyEur: 39,
+    tagline: "CV en ligne, visibilité et Mercato",
+    monthlyEur: 2.99,
+    yearlyEur: 24.99,
     storeAvailable: false,
+    universes: ["homme", "woman"] as ProductLineWeb[],
     freeIncludes: [
-      "Profil, Pulse et galerie",
+      "Profil, Pulse et CV en ligne",
+      "Galerie et stats saison",
       "Mercato en lecture",
-      "3 candidatures / mois",
-      "Calendrier et RSVP",
+      "1 candidature / mois",
     ],
     proIncludes: [
       "Candidatures illimitées",
       "Mise en avant recherches",
       "Alertes nouvelles annonces",
-      "Historique exportable",
+      "Export PDF optionnel",
     ],
   },
   {
     id: "coach_pro",
     label: "Coach Pro",
     tagline: "Recrutement et multi-équipes",
-    monthlyEur: 14.99,
-    yearlyEur: 119,
+    monthlyEur: 7.99,
+    yearlyEur: 59.99,
     storeAvailable: false,
+    universes: ["pro"] as ProductLineWeb[],
     freeIncludes: [
       "Profil staff vérifié",
       "1 équipe liée",
@@ -294,9 +480,10 @@ export const SUBSCRIPTION_PLANS_WEB = [
     id: "club_pro",
     label: "Club Pro",
     tagline: "Annonces et structure club",
-    monthlyEur: 19.99,
-    yearlyEur: 169,
+    monthlyEur: 11.99,
+    yearlyEur: 89.99,
     storeAvailable: true,
+    universes: ["homme", "woman"] as ProductLineWeb[],
     freeIncludes: [
       "Profil club",
       "1 équipe",
@@ -314,9 +501,10 @@ export const SUBSCRIPTION_PLANS_WEB = [
     id: "agent_elite",
     label: "Agent Elite",
     tagline: "CRM joueurs et mandats",
-    monthlyEur: 79,
-    yearlyEur: 699,
+    monthlyEur: 24.99,
+    yearlyEur: 199.99,
     storeAvailable: false,
+    universes: ["pro"] as ProductLineWeb[],
     freeIncludes: [
       "Profil agent vérifié",
       "10 contacts / mois",
@@ -330,6 +518,10 @@ export const SUBSCRIPTION_PLANS_WEB = [
     ],
   },
 ] as const;
+
+export function plansForUniverse(line: ProductLineWeb) {
+  return SUBSCRIPTION_PLANS_WEB.filter((p) => p.universes.includes(line));
+}
 
 export const FAQ_ITEMS = [
   {
@@ -349,8 +541,24 @@ export const FAQ_ITEMS = [
     a: "Score de visibilité combinant profil, stats saison, candidatures et confiance. Plus il monte, plus vous êtes visible des clubs.",
   },
   {
-    q: "ProDay Woman est-il séparé ?",
-    a: "C'est un univers dédié au foot féminin dans la même app : Mercato F, tournois filles, profil joueuse — branding et contenus adaptés.",
+    q: "Qui peut publier sur le Mercato ?",
+    a: "Les recruteurs ProDay : rôle Recruteur dédié, clubs, coachs, agents et organisateurs (univers Pro). Les joueurs Man et Woman candidatent sans publier d'annonces.",
+  },
+  {
+    q: "Le pôle santé inclut-il le coach mental ?",
+    a: "Oui — kinés, médecins du sport, coach mental, nutritionnistes et autres spécialités. Diplômes validés avant messagerie complète.",
+  },
+  {
+    q: "Comment fonctionne le covoiturage ?",
+    a: "Coachs et joueurs proposent des trajets ou réservent une place pour matchs et détections — intégré aux événements, style BlaBlaCar.",
+  },
+  {
+    q: "Qu'est-ce que le ProDay Shop ?",
+    a: "Boutique officielle dans l'app : trépieds, t-shirts et maillots par univers (Man, Woman, Pro). Précommande par email en attendant le paiement in-app.",
+  },
+  {
+    q: "Pro Day Man, Woman et Pro — c'est quoi ?",
+    a: "Trois univers : Man (joueurs foot M), Woman (joueuses foot F) et Pro (coach, agent, recruteur, club, pôle santé, orga, partenaire). Choisissez le vôtre à l'inscription.",
   },
   {
     q: "Puis-je exporter mon CV foot ?",
@@ -358,7 +566,7 @@ export const FAQ_ITEMS = [
   },
   {
     q: "Les données sont-elles réelles ?",
-    a: "En production, Firebase Auth et Firestore — pas de données fictives. La beta collecte des comptes testeurs réels.",
+    a: "Comptes sécurisés, données hébergées en Europe via nos prestataires certifiés. La bêta collecte des comptes testeurs réels.",
   },
   {
     q: "Prochainement disponible sur iOS et Android ?",
@@ -407,6 +615,9 @@ export const ROADMAP_ITEMS = [
       "Matchs",
       "Live Stats",
       "Gestion équipe",
+      "Covoiturage",
+      "Pôle santé",
+      "ProDay Shop",
       "Arena MVP",
       "Contrôle parental",
     ],
@@ -431,6 +642,10 @@ export const COMPARISON_ROWS = [
   { feature: "Vérification staff", proday: true, whatsapp: false, excel: false },
   { feature: "Tournois Arena", proday: true, whatsapp: false, excel: "partial" as const },
   { feature: "Pulse visibilité", proday: true, whatsapp: false, excel: false },
+  { feature: "Covoiturage matchs", proday: true, whatsapp: "partial" as const, excel: false },
+  { feature: "Pôle santé & coach mental", proday: true, whatsapp: false, excel: false },
+  { feature: "ProDay Shop intégré", proday: true, whatsapp: false, excel: false },
+  { feature: "Recruteurs Mercato (club/coach/agent)", proday: true, whatsapp: false, excel: "partial" as const },
 ] as const;
 
 export const QUIZ_QUESTIONS = [
@@ -459,7 +674,7 @@ export const QUIZ_QUESTIONS = [
     question: "Côté foot féminin ?",
     options: [
       { label: "Oui, c'est mon univers", role: "woman" },
-      { label: "Mixte / plutôt masculin", role: "standard" },
+      { label: "Mixte / plutôt masculin", role: "homme" },
       { label: "Je supervise un enfant", role: "parent" },
       { label: "Je représente des joueurs", role: "agent" },
     ],
@@ -472,21 +687,27 @@ export const QUIZ_RESULTS: Record<
 > = {
   player: {
     title: "Profil Joueur",
-    description: "Complétez votre profil, montez votre Pulse et postulez au Mercato.",
-    href: "/parcours",
-    cta: "Voir le parcours joueur",
+    description: "CV en ligne, Pulse et stats — le Mercato vient compléter votre visibilité.",
+    href: "/cv",
+    cta: "Découvrir le CV en ligne",
   },
   coach: {
-    title: "Profil Coach",
-    description: "Vérification diplôme, annonces et convocations — Live Stats inclus.",
-    href: "/confiance",
-    cta: "Vérification & parcours",
+    title: "Profil Coach Pro",
+    description: "Vérification diplôme, effectif et convocations — univers Pro Day Pro.",
+    href: "/pro",
+    cta: "Découvrir Pro Day Pro",
+  },
+  recruiter: {
+    title: "Profil Recruteur",
+    description: "Scouting, Mercato Pro et pipeline candidatures — rôle dédié Pro Day Pro.",
+    href: "/pro",
+    cta: "Découvrir Pro Day Pro",
   },
   club: {
     title: "Profil Club",
-    description: "Annonces Mercato, multi-équipes et exports candidatures avec Club Pro.",
-    href: "/tarifs",
-    cta: "Voir les offres Club",
+    description: "Annonces Mercato, multi-équipes et exports candidatures — univers Pro Day Pro.",
+    href: "/pro",
+    cta: "Découvrir Pro Day Pro",
   },
   organizer: {
     title: "Profil Organisateur",
@@ -508,17 +729,41 @@ export const QUIZ_RESULTS: Record<
   },
   agent: {
     title: "Profil Agent",
-    description: "CRM joueurs, mandats et contacts recrutement avec Agent Elite.",
-    href: "/tarifs",
-    cta: "Voir Agent Elite",
+    description: "CRM joueurs, mandats et contacts Mercato — Agent Elite sur Pro Day Pro.",
+    href: "/pro",
+    cta: "Voir Pro Day Pro",
   },
-  standard: {
-    title: "ProDay Classique",
-    description: "L'écosystème complet amateur et semi-pro.",
-    href: "/fonctionnalites",
-    cta: "Toutes les fonctionnalités",
+  homme: {
+    title: "Pro Day Man",
+    description: "Foot masculin amateur — Mercato M, matchs, Arena et CV joueur.",
+    href: "/homme",
+    cta: "Explorer Man",
+  },
+  pro: {
+    title: "Univers Pro Day Pro",
+    description: "Recruteurs, coach, agent, club, pôle santé et réseau vérifié — Mercato Pro.",
+    href: "/pro",
+    cta: "Explorer Pro",
   },
 };
+
+export const SHOP_HIGHLIGHTS = [
+  {
+    name: "Trépied ProDay",
+    priceEur: 34.9,
+    description: "Filmez matchs et skills pour votre CV — sac de transport inclus.",
+  },
+  {
+    name: "T-shirt officiel",
+    priceEur: 29.9,
+    description: "Textile premium logo brodé — par univers Man, Woman ou Pro.",
+  },
+  {
+    name: "Maillot match",
+    priceEur: 59.9,
+    description: "Maillot domicile ou extérieur — personnalisation nom + numéro en option.",
+  },
+] as const;
 
 export const LIVE_STAT_EVENTS = [
   { type: "goal", label: "But", points: 1 },

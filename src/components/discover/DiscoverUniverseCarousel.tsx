@@ -11,10 +11,12 @@ import Animated, {
 } from 'react-native-reanimated';
 import { AUTO_CAROUSEL_MS } from './animationConfig';
 import {
-  DISCOVER_UNIVERSE_CARDS,
+  getDiscoverCarouselCopy,
+  getDiscoverUniverseCards,
+} from '../../content/discoverContentByLine';
+import {
   type DiscoverUniverseCard,
 } from '../../content/discoverChapters';
-import { DISCOVER_UNIVERSE_CARDS_WOMAN } from '../../content/discoverWomanContent';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { CarouselDot } from './CarouselDot';
 import { PressableSpring } from './PressableSpring';
@@ -39,11 +41,9 @@ export const DiscoverUniverseCarousel: React.FC<DiscoverUniverseCarouselProps> =
   variant = 'dark',
 }) => {
   const editorial = variant === 'editorial';
-  const { isWoman } = useAppTheme();
-  const cards = useMemo(
-    () => (isWoman ? DISCOVER_UNIVERSE_CARDS_WOMAN : DISCOVER_UNIVERSE_CARDS),
-    [isWoman]
-  );
+  const { productLine } = useAppTheme();
+  const cards = useMemo(() => getDiscoverUniverseCards(productLine), [productLine]);
+  const carouselCopy = useMemo(() => getDiscoverCarouselCopy(productLine), [productLine]);
   const { cardWidth, cardSnap, pad, compact } = useDiscoverMetrics();
   const scrollRef = useRef<Animated.ScrollView>(null);
   const scrollX = useSharedValue(0);
@@ -77,9 +77,9 @@ export const DiscoverUniverseCarousel: React.FC<DiscoverUniverseCarouselProps> =
     <View style={[styles.wrap, editorial && styles.wrapEditorial, variant === 'dark' && styles.wrapImmersive]}>
       {showHeader ? (
         <DiscoverSectionHeader
-          label={isWoman ? 'Univers Woman' : 'Univers ProDay'}
-          title={isWoman ? 'Foot féminin, un seul tap' : '4 mondes, un seul tap'}
-          subtitle={isWoman ? 'Mercato F, matchs, Arena — visuels joueuses' : 'Swipez — chaque carte ouvre un aperçu'}
+          label={carouselCopy.label}
+          title={carouselCopy.title}
+          subtitle={carouselCopy.subtitle}
           compact
         />
       ) : null}

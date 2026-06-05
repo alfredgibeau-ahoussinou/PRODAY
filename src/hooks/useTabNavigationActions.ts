@@ -33,6 +33,9 @@ export function useTabNavigationActions(): TabNavigationActions {
       openArenaTournament: (tournamentId) => {
         nav.openArenaTournament(tournamentId);
       },
+      openShop: () => {
+        nav.openShop();
+      },
     }),
     [nav]
   );

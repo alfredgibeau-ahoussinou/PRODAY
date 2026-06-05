@@ -1,9 +1,17 @@
 import React from 'react';
 import { View, Text, StyleSheet, Image, ImageSourcePropType } from 'react-native';
 import { BRAND, colors, typography, spacing } from '../theme/designTokens';
-import { BRANDING_LOGOS, WOMAN_BRANDING_LOGOS } from '../content/brandingAssets';
-import { PRODAY_WOMAN_BRAND } from '../models/ProductLine';
+import {
+  BRANDING_LOGOS,
+  MAN_BRANDING_LOGOS,
+  PRO_BRANDING_LOGOS,
+  WOMAN_BRANDING_LOGOS,
+} from '../content/brandingAssets';
+import { brandForProductLine } from '../models/ProductLine';
+import type { ProductLineId } from '../models/ProductLine';
 import { useAppTheme } from '../context/ProductLineContext';
+import { ManLogo, manLogoAspect } from './ManLogo';
+import { ProLogo, proLogoAspect } from './ProLogo';
 import { WomanLogo, womanLogoAspect } from './WomanLogo';
 
 /** Fond derrière le logo — choisit automatiquement transparent ou non */
@@ -25,7 +33,10 @@ interface LogoProps {
   showTagline?: boolean;
   watermark?: boolean;
   opacity?: number;
+  /** Force l’univers Woman (rétrocompat.) */
   woman?: boolean;
+  /** Force un univers (cartes intro, previews). */
+  productLine?: ProductLineId;
 }
 
 const LOGO_ASPECT: Record<LogoVariant, number> = {
@@ -36,6 +47,8 @@ const LOGO_ASPECT: Record<LogoVariant, number> = {
   authDark: 0.93,
   mark: 1.813,
 };
+
+const MARK_ASPECT = 1.813;
 
 export function logoVariantForBackground(bg: LogoBackground, watermark = false): LogoVariant {
   if (watermark) return 'mark';
@@ -51,6 +64,23 @@ export function logoVariantForBackground(bg: LogoBackground, watermark = false):
   }
 }
 
+function resolveProductLine(
+  productLineProp: ProductLineId | undefined,
+  womanProp: boolean | undefined,
+  themeLine: ProductLineId
+): ProductLineId {
+  if (productLineProp) return productLineProp;
+  if (womanProp) return 'woman';
+  return themeLine;
+}
+
+function markForLine(line: ProductLineId): ImageSourcePropType {
+  if (line === 'woman') return WOMAN_BRANDING_LOGOS.mark;
+  if (line === 'pro') return PRO_BRANDING_LOGOS.mark;
+  if (line === 'homme') return MAN_BRANDING_LOGOS.mark;
+  return BRANDING_LOGOS.mark;
+}
+
 export const Logo: React.FC<LogoProps> = ({
   background = 'light',
   variant,
@@ -59,26 +89,51 @@ export const Logo: React.FC<LogoProps> = ({
   watermark = false,
   opacity,
   woman: womanProp,
+  productLine: productLineProp,
 }) => {
-  const { isWoman } = useAppTheme();
-  const isWomanLogo = womanProp ?? isWoman;
+  const { productLine: themeLine } = useAppTheme();
+  const line = resolveProductLine(productLineProp, womanProp, themeLine);
   const resolved = variant ?? logoVariantForBackground(background, watermark);
+  const brand = brandForProductLine(line);
 
-  if (isWomanLogo) {
-    if (resolved === 'mark' || watermark) {
-      const markW = width * (watermark ? 1 : 0.55);
-      const markH = markW / 1.813;
-      return (
-        <Image
-          source={WOMAN_BRANDING_LOGOS.mark}
-          style={{ width: markW, height: markH, opacity: opacity ?? (watermark ? 0.14 : 1) }}
-          resizeMode="contain"
-          accessibilityLabel={PRODAY_WOMAN_BRAND.name}
-        />
-      );
-    }
+  if (resolved === 'mark' || watermark) {
+    const markW = width * (watermark ? 1 : 0.55);
+    const markH = markW / MARK_ASPECT;
+    return (
+      <Image
+        source={markForLine(line)}
+        style={{ width: markW, height: markH, opacity: opacity ?? (watermark ? 0.14 : 1) }}
+        resizeMode="contain"
+        accessibilityLabel={brand.name}
+      />
+    );
+  }
+
+  if (line === 'woman') {
     return (
       <WomanLogo
+        width={width}
+        background={background}
+        opacity={opacity}
+        watermark={false}
+      />
+    );
+  }
+
+  if (line === 'pro') {
+    return (
+      <ProLogo
+        width={width}
+        background={background}
+        opacity={opacity}
+        watermark={false}
+      />
+    );
+  }
+
+  if (line === 'homme') {
+    return (
+      <ManLogo
         width={width}
         background={background}
         opacity={opacity}
@@ -115,15 +170,21 @@ export const Logo: React.FC<LogoProps> = ({
   );
 };
 
-/** Ratio largeur/hauteur pour réserver l’espace (Woman = composant vectoriel). */
+/** Ratio largeur/hauteur pour réserver l’espace (logos composés Man / Woman / Pro). */
 export function logoDisplayAspect(
   width: number,
-  opts: { woman?: boolean; variant?: LogoVariant; watermark?: boolean }
+  opts: {
+    woman?: boolean;
+    productLine?: ProductLineId;
+    variant?: LogoVariant;
+    watermark?: boolean;
+  } = {}
 ): number {
-  if (opts.woman) {
-    if (opts.variant === 'mark' || opts.watermark) return 1.813;
-    return womanLogoAspect(width);
-  }
+  const line = resolveProductLine(opts.productLine, opts.woman, 'homme');
+  if (opts.variant === 'mark' || opts.watermark) return MARK_ASPECT;
+  if (line === 'woman') return womanLogoAspect(width);
+  if (line === 'pro') return proLogoAspect(width);
+  if (line === 'homme') return manLogoAspect(width);
   const v = opts.variant ?? 'transparent';
   return LOGO_ASPECT[v] ?? 0.93;
 }

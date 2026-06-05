@@ -123,7 +123,7 @@ export const SignupDocumentStep: React.FC<SignupDocumentStepProps> = ({
       <SignupDocumentAiPanel result={aiResult ?? undefined} loading={analyzing} />
       <Text style={styles.hint}>
         Cadrez clairement votre diplôme, carte pro ou attestation. Mistral IA analyse la photo en
-        mémoire — sans enregistrement Firebase Storage.
+        mémoire — analyse locale sécurisée.
       </Text>
     </SignupStepLayout>
   );

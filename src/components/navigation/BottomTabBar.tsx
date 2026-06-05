@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, LayoutChangeEvent } from 'react-native';
 import Animated, {
   useAnimatedStyle,
@@ -8,11 +8,12 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MAIN_TAB_ITEMS, type MainTabId } from '../../navigation/mainTabConfig';
 import { TAB_BAR_CONTENT_INSET } from '../../navigation/tabBarLayout';
-import { isGuestTabAllowed } from '../../navigation/guestAccess';
 import { PressableSpring } from '../discover/PressableSpring';
 import { Icon, type IconName } from '../ui/Icon';
 import { motion } from '../../theme/motion';
 import { useAppTheme } from '../../context/ProductLineContext';
+import { useAuth } from '../../context/AuthContext';
+import { getTabShortLabel, getVisibleMainTabs } from '../../content/poleExperience';
 import { colors as defaultColors, spacing, radius, shadows } from '../../theme/designTokens';
 
 export { TAB_BAR_CONTENT_INSET } from '../../navigation/tabBarLayout';
@@ -21,18 +22,24 @@ const TAB_ICONS: Record<MainTabId, IconName> = {
   home: 'home',
   recrutement: 'search',
   matchs: 'handshake',
+  covoiturage: 'car',
+  sante: 'heart',
   feed: 'star-four-points',
   messages: 'chat',
   profil: 'person',
+  shop: 'bag',
 };
 
 const TAB_SHORT_LABELS: Record<MainTabId, string> = {
   home: 'Accueil',
   recrutement: 'Mercato',
   matchs: 'Matchs',
+  covoiturage: 'Covoiturage',
+  sante: 'Santé',
   feed: 'Fil',
   messages: 'Messages',
   profil: 'Profil',
+  shop: 'Shop',
 };
 
 const DOCK_PAD = 4;
@@ -42,7 +49,6 @@ interface BottomTabBarProps {
   activeTab: MainTabId;
   onTabPress: (tab: MainTabId) => void;
   unreadCount?: number;
-  guestMode?: boolean;
 }
 
 /**
@@ -52,13 +58,22 @@ export const BottomTabBar: React.FC<BottomTabBarProps> = ({
   activeTab,
   onTabPress,
   unreadCount = 0,
-  guestMode = false,
 }) => {
-  const { colors, isWoman } = useAppTheme();
+  const { colors, isWoman, productLine } = useAppTheme();
+  const { profile } = useAuth();
   const insets = useSafeAreaInsets();
   const [trackW, setTrackW] = useState(0);
-  const tabW = trackW > 0 ? trackW / MAIN_TAB_ITEMS.length : 0;
-  const activeIndex = MAIN_TAB_ITEMS.findIndex((t) => t.id === activeTab);
+  const visibleTabIds = useMemo(
+    () => getVisibleMainTabs(productLine, profile?.role),
+    [productLine, profile?.role]
+  );
+  const tabItems = useMemo(
+    () => MAIN_TAB_ITEMS.filter((t) => visibleTabIds.includes(t.id)),
+    [visibleTabIds]
+  );
+  const role = profile?.role;
+  const tabW = trackW > 0 ? trackW / tabItems.length : 0;
+  const activeIndex = tabItems.findIndex((t) => t.id === activeTab);
   const pillX = useSharedValue(0);
 
   useEffect(() => {
@@ -86,20 +101,6 @@ export const BottomTabBar: React.FC<BottomTabBarProps> = ({
         },
       ]}
     >
-      {guestMode ? (
-        <PressableSpring
-          style={styles.guestBanner}
-          onPress={() => onTabPress('profil')}
-          scaleTo={0.99}
-        >
-          <Icon name="lock" size={14} color={colors.ink} />
-          <Text style={styles.guestBannerText}>
-            Connectez-vous pour publier, messagerie et profil complet
-          </Text>
-          <Icon name="chevron-forward" size={14} color={colors.inkMuted} />
-        </PressableSpring>
-      ) : null}
-
       <View style={styles.dockOuter}>
         <View
           style={[
@@ -122,33 +123,28 @@ export const BottomTabBar: React.FC<BottomTabBarProps> = ({
             />
           ) : null}
 
-          {MAIN_TAB_ITEMS.map((tab) => {
+          {tabItems.map((tab) => {
             const active = tab.id === activeTab;
             const icon = TAB_ICONS[tab.id];
-            const locked = guestMode && !isGuestTabAllowed(tab.id);
-            const badge = !locked && tab.id === 'messages' ? unreadCount : 0;
-            const label = TAB_SHORT_LABELS[tab.id];
-            const tabOn = active && !locked;
+            const badge = tab.id === 'messages' ? unreadCount : 0;
+            const label = getTabShortLabel(tab.id, productLine, role) || TAB_SHORT_LABELS[tab.id];
+            const tabOn = active;
             const accentInk = isWoman ? colors.accent : colors.ink;
-            const iconColor = locked
-              ? colors.textMuted
-              : tabOn
-                ? accentInk
-                : colors.textMuted;
+            const iconColor = tabOn ? accentInk : colors.textMuted;
 
             return (
               <PressableSpring
                 key={tab.id}
                 style={styles.tab}
                 onPress={() => onTabPress(tab.id)}
-                scaleTo={locked ? 1 : 0.96}
+                scaleTo={0.96}
                 accessibilityRole="tab"
-                accessibilityState={{ selected: active, disabled: locked }}
+                accessibilityState={{ selected: active }}
                 accessibilityLabel={tab.label}
               >
                 <View style={styles.iconRow}>
                   <Icon
-                    name={locked ? 'lock' : icon}
+                    name={icon}
                     size={20}
                     color={iconColor}
                     variant={tabOn ? 'filled' : 'outline'}
@@ -164,8 +160,11 @@ export const BottomTabBar: React.FC<BottomTabBarProps> = ({
                 <Text
                   style={[
                     styles.label,
+                    {
+                      fontSize:
+                        tabItems.length > 5 ? 9 : tabItems.length > 4 ? 9 : 10,
+                    },
                     tabOn && { color: accentInk, fontWeight: '800' },
-                    locked && styles.labelLocked,
                   ]}
                   numberOfLines={1}
                 >
@@ -185,25 +184,6 @@ const styles = StyleSheet.create({
     paddingTop: spacing.sm,
     paddingHorizontal: spacing.lg,
     backgroundColor: defaultColors.background,
-  },
-  guestBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    marginBottom: spacing.sm,
-    paddingVertical: spacing.sm + 2,
-    paddingHorizontal: spacing.md,
-    backgroundColor: defaultColors.surface,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: defaultColors.border,
-  },
-  guestBannerText: {
-    flex: 1,
-    fontSize: 12,
-    fontWeight: '600',
-    color: defaultColors.textSecondary,
-    lineHeight: 17,
   },
   dockOuter: {
     width: '100%',
@@ -265,7 +245,7 @@ const styles = StyleSheet.create({
     lineHeight: 11,
   },
   label: {
-    fontSize: MAIN_TAB_ITEMS.length > 6 ? 8 : MAIN_TAB_ITEMS.length > 5 ? 9 : 10,
+    fontSize: 10,
     fontWeight: '600',
     color: defaultColors.textMuted,
     letterSpacing: 0.1,
@@ -273,8 +253,5 @@ const styles = StyleSheet.create({
   labelActive: {
     color: defaultColors.ink,
     fontWeight: '800',
-  },
-  labelLocked: {
-    opacity: 0.45,
   },
 });

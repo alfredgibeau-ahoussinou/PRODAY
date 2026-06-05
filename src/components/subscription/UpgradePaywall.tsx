@@ -14,7 +14,7 @@ import { Icon } from '../ui/Icon';
 import { colors, spacing, radius, shadows } from '../../theme/designTokens';
 
 const FEATURE_HINTS: Record<SubscriptionFeatureId, string> = {
-  mercato_apply: 'Vous avez utilisé vos candidatures Mercato gratuites ce mois-ci.',
+  mercato_apply: 'Vous avez utilisé votre candidature Mercato gratuite ce mois-ci.',
   recruitment_message: 'Quota de messages recrutement atteint pour ce mois.',
   club_active_post: 'Nombre maximum d’annonces actives sur le plan gratuit.',
   club_team: 'Le plan gratuit est limité à une équipe.',

@@ -1,9 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { View, StyleSheet, ActivityIndicator } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { MAIN_TABS, type MainTabId } from './src/navigation/MainTabs';
-import { isGuestTabAllowed } from './src/navigation/guestAccess';
+import {
+  getGuestVisibleTabs,
+  isGuestTabAllowed,
+  resolveGuestTab,
+} from './src/navigation/guestAccess';
 import { TabNavigationProvider } from './src/context/TabNavigationContext';
 import { AuthProvider, useAuth } from './src/context/AuthContext';
 import { SubscriptionProvider } from './src/context/SubscriptionContext';
@@ -25,8 +29,10 @@ import { useIsAdmin } from './src/hooks/useIsAdmin';
 import type {
   DashboardDeepLink,
   MercatoDeepLink,
+  ProfileDeepLink,
 } from './src/utils/navigationDeepLink';
 import { profileMatchesActiveLine } from './src/utils/productLineAccess';
+import { getVisibleMainTabs } from './src/content/poleExperience';
 
 export default function App() {
   return (
@@ -66,7 +72,7 @@ function AppShell() {
   const [pendingMercatoView, setPendingMercatoView] = useState<MercatoDeepLink | null>(
     null
   );
-  const [pendingProfileView, setPendingProfileView] = useState<'applications' | null>(
+  const [pendingProfileView, setPendingProfileView] = useState<ProfileDeepLink | null>(
     null
   );
   const [pendingDashboardView, setPendingDashboardView] = useState<DashboardDeepLink | null>(
@@ -79,6 +85,19 @@ function AppShell() {
 
   const isGuest = !authLoading && !profile;
 
+  const visibleTabs = useMemo(
+    () =>
+      isGuest
+        ? getGuestVisibleTabs()
+        : getVisibleMainTabs(productLine, profile?.role),
+    [isGuest, productLine, profile?.role]
+  );
+
+  const screenTabs = useMemo((): MainTabId[] => {
+    if (visibleTabs.includes('shop')) return visibleTabs;
+    return [...visibleTabs, 'shop'];
+  }, [visibleTabs]);
+
   useEffect(() => {
     if (activeTab === 'messages') refreshUnread();
   }, [activeTab, refreshUnread]);
@@ -88,6 +107,12 @@ function AppShell() {
       setActiveTab('home');
     }
   }, [isGuest, activeTab]);
+
+  useEffect(() => {
+    if (!screenTabs.includes(activeTab)) {
+      setActiveTab(screenTabs[0] ?? 'home');
+    }
+  }, [screenTabs, activeTab]);
 
   useEffect(() => {
     if (productLineLoading || authLoading || !profile) return;
@@ -140,7 +165,7 @@ function AppShell() {
   };
 
   const handleTabPress = (tab: MainTabId) => {
-    setActiveTab(tab);
+    setActiveTab(isGuest ? resolveGuestTab(tab) : tab);
   };
 
   const current = MAIN_TABS.find((t) => t.id === activeTab)!;
@@ -198,6 +223,7 @@ function AppShell() {
             handleTabPress('home');
           },
           clearPendingArenaTournament: () => setPendingArenaTournamentId(null),
+          openShop: () => handleTabPress('shop'),
         }}
       >
         <SafeAreaView
@@ -209,16 +235,17 @@ function AppShell() {
             <AdminPreviewBanner onExitPreview={() => setPreviewUserMode(false)} />
           ) : null}
           <View style={styles.screen}>
-            <AnimatedTabContent activeTab={activeTab}>
+            <AnimatedTabContent activeTab={activeTab} tabOrder={screenTabs}>
               <Screen />
             </AnimatedTabContent>
           </View>
-          <BottomTabBar
-            activeTab={activeTab}
-            onTabPress={handleTabPress}
-            unreadCount={isGuest ? 0 : unreadCount}
-            guestMode={isGuest}
-          />
+          {!isGuest ? (
+            <BottomTabBar
+              activeTab={activeTab}
+              onTabPress={handleTabPress}
+              unreadCount={unreadCount}
+            />
+          ) : null}
         </SafeAreaView>
       </TabNavigationProvider>
     </AppSpaceProvider>

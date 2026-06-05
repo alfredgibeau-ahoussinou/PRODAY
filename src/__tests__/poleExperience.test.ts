@@ -1,0 +1,76 @@
+import {
+  canAccessSponsorsModule,
+  canPublishRecruitmentPost,
+  getDashboardLayoutKind,
+  getMercatoTabLabel,
+  getSignupRoleGroups,
+  getVisibleMainTabs,
+} from '../content/poleExperience';
+import { rolesForProductLine } from '../content/universeRoles';
+
+describe('poleExperience', () => {
+  it('limite Man et Woman aux joueurs', () => {
+    expect(rolesForProductLine('homme')).toEqual(['player']);
+    expect(rolesForProductLine('woman')).toEqual(['player']);
+    expect(getSignupRoleGroups('homme')).toEqual([]);
+    expect(getSignupRoleGroups('woman')).toEqual([]);
+  });
+
+  it('regroupe tous les métiers sur Pro', () => {
+    const proRoles = getSignupRoleGroups('pro').flatMap((g) => g.roles);
+    expect(proRoles).toEqual(
+      expect.arrayContaining([
+        'coach',
+        'agent',
+        'recruiter',
+        'club',
+        'organizer',
+        'physio',
+        'sponsor',
+      ])
+    );
+    expect(proRoles).not.toContain('player');
+  });
+
+  it('interdit la publication Mercato aux joueurs', () => {
+    expect(canPublishRecruitmentPost('player')).toBe(false);
+    expect(canPublishRecruitmentPost('club')).toBe(true);
+    expect(canPublishRecruitmentPost('coach')).toBe(true);
+    expect(canPublishRecruitmentPost('recruiter')).toBe(true);
+  });
+
+  it('adapte les onglets selon pôle et rôle', () => {
+    expect(getVisibleMainTabs('homme', 'player')).toEqual([
+      'home',
+      'recrutement',
+      'matchs',
+      'covoiturage',
+      'sante',
+      'messages',
+      'profil',
+    ]);
+    expect(getVisibleMainTabs('homme', 'player')).not.toContain('feed');
+    expect(getVisibleMainTabs('pro', 'sponsor')).toEqual(['home', 'messages', 'profil']);
+    expect(getVisibleMainTabs('pro', 'physio')).not.toContain('recrutement');
+    expect(getVisibleMainTabs('pro', 'club')).toContain('recrutement');
+    expect(getVisibleMainTabs('pro', 'recruiter')).toContain('recrutement');
+    expect(getVisibleMainTabs('pro', 'coach')).toContain('covoiturage');
+    expect(getVisibleMainTabs('pro', 'physio')).not.toContain('covoiturage');
+  });
+
+  it('libellé Mercato joueur = Candidater', () => {
+    expect(getMercatoTabLabel('homme', 'player')).toBe('Candidater');
+    expect(getMercatoTabLabel('pro', 'coach')).toBe('Mercato Pro');
+  });
+
+  it('sépare dashboard amateur et pro', () => {
+    expect(getDashboardLayoutKind('homme', 'player')).toBe('amateur_player');
+    expect(getDashboardLayoutKind('pro', 'coach')).toBe('pro');
+  });
+
+  it('limite le module sponsors au partenaire Pro', () => {
+    expect(canAccessSponsorsModule('pro', 'sponsor')).toBe(true);
+    expect(canAccessSponsorsModule('homme', 'player')).toBe(false);
+    expect(canAccessSponsorsModule('woman', 'player')).toBe(false);
+  });
+});

@@ -38,6 +38,8 @@ interface TabNavigationContextValue {
   pendingArenaTournamentId: string | null;
   openArenaTournament: (tournamentId: string) => void;
   clearPendingArenaTournament: () => void;
+
+  openShop: () => void;
 }
 
 const TabNavigationContext = createContext<TabNavigationContextValue | null>(null);

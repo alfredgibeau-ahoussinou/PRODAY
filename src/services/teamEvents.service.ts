@@ -27,7 +27,13 @@ import type {
   LiveActionType,
 } from '../models/TeamEvent';
 import type { CarpoolSlot, EventTask, CarpoolMessage } from '../models/TeamEvent';
-import { newCarpoolMessageId, newEventTaskId } from '../utils/carpoolBalance';
+import {
+  carpoolAvailableSeats,
+  findCarpoolBooking,
+  isCarpoolPassenger,
+  newCarpoolMessageId,
+  newEventTaskId,
+} from '../utils/carpoolBalance';
 import type { Tournament } from '../models/Tournament';
 import { callFunction } from '../lib/firebaseFunctions';
 import { usersService } from './users.service';
@@ -415,6 +421,156 @@ export const teamEventsService = {
     });
   },
 
+  /** Proposition spontanée — joueur ou coach convoqué */
+  async volunteerAsCarpoolDriver(
+    eventId: string,
+    uid: string,
+    name: string
+  ): Promise<void> {
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+    const event = await this.getById(eventId);
+    if (!event) throw new Error('Événement introuvable');
+    teamEventsService.assertCarpoolParticipant(event, uid);
+
+    const slots = [...(event.carpool_slots ?? [])];
+    if (slots.some((s) => s.driver_uid === uid)) {
+      throw new Error('Vous proposez déjà un trajet sur cet événement.');
+    }
+
+    slots.push({
+      driver_uid: uid,
+      driver_name: name,
+      volunteered: true,
+      passengers: [],
+    });
+
+    await updateDoc(doc(database, COL, eventId), {
+      carpool_slots: slots,
+      event_tasks: teamEventsService.mergeCarpoolTask(event.event_tasks, slots),
+      updated_at: serverTimestamp(),
+    });
+  },
+
+  /** Retrait d’une proposition spontanée */
+  async withdrawCarpoolOffer(eventId: string, driverUid: string): Promise<void> {
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+    const event = await this.getById(eventId);
+    if (!event) throw new Error('Événement introuvable');
+
+    const slot = (event.carpool_slots ?? []).find((s) => s.driver_uid === driverUid);
+    if (!slot) throw new Error('Aucun trajet à retirer.');
+    if (slot.volunteered !== true) {
+      throw new Error('Ce trajet a été assigné par le staff — contactez votre coach.');
+    }
+
+    const carpool_slots = (event.carpool_slots ?? []).filter((s) => s.driver_uid !== driverUid);
+    await updateDoc(doc(database, COL, eventId), {
+      carpool_slots,
+      event_tasks: teamEventsService.mergeCarpoolTask(event.event_tasks, carpool_slots),
+      updated_at: serverTimestamp(),
+    });
+  },
+
+  /** Réserver une place chez un conducteur */
+  async requestCarpoolSeat(
+    eventId: string,
+    driverUid: string,
+    passengerUid: string,
+    passengerName: string
+  ): Promise<void> {
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+    const event = await this.getById(eventId);
+    if (!event) throw new Error('Événement introuvable');
+    teamEventsService.assertCarpoolParticipant(event, passengerUid);
+
+    if (driverUid === passengerUid) {
+      throw new Error('Vous ne pouvez pas réserver votre propre véhicule.');
+    }
+
+    const existingBooking = findCarpoolBooking(event, passengerUid);
+    if (existingBooking && existingBooking.driverUid !== driverUid) {
+      throw new Error('Vous avez déjà réservé une place sur un autre trajet.');
+    }
+
+    const slots = [...(event.carpool_slots ?? [])];
+    const idx = slots.findIndex((s) => s.driver_uid === driverUid);
+    if (idx < 0) throw new Error('Trajet introuvable.');
+
+    const slot = slots[idx];
+    if (isCarpoolPassenger(slot, passengerUid)) return;
+
+    const available = carpoolAvailableSeats(slot);
+    if (available === null) {
+      throw new Error('Le conducteur n’a pas encore indiqué le nombre de places.');
+    }
+    if (available <= 0) throw new Error('Plus de place disponible sur ce trajet.');
+
+    slots[idx] = {
+      ...slot,
+      passengers: [...(slot.passengers ?? []), { uid: passengerUid, name: passengerName }],
+    };
+
+    await updateDoc(doc(database, COL, eventId), {
+      carpool_slots: slots,
+      updated_at: serverTimestamp(),
+    });
+  },
+
+  /** Annuler sa réservation */
+  async cancelCarpoolSeat(
+    eventId: string,
+    driverUid: string,
+    passengerUid: string
+  ): Promise<void> {
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+    const event = await this.getById(eventId);
+    if (!event) throw new Error('Événement introuvable');
+
+    const slots = [...(event.carpool_slots ?? [])];
+    const idx = slots.findIndex((s) => s.driver_uid === driverUid);
+    if (idx < 0) throw new Error('Trajet introuvable.');
+
+    const slot = slots[idx];
+    if (!isCarpoolPassenger(slot, passengerUid)) {
+      throw new Error('Vous n’avez pas réservé sur ce trajet.');
+    }
+
+    slots[idx] = {
+      ...slot,
+      passengers: (slot.passengers ?? []).filter((p) => p.uid !== passengerUid),
+    };
+
+    await updateDoc(doc(database, COL, eventId), {
+      carpool_slots: slots,
+      updated_at: serverTimestamp(),
+    });
+  },
+
+  assertCarpoolParticipant(event: TeamEvent, uid: string): void {
+    if (event.organizer_uid !== uid && !event.invitee_uids.includes(uid)) {
+      throw new Error('Réservé aux personnes convoquées à cet événement.');
+    }
+  },
+
+  mergeCarpoolTask(tasks: EventTask[] | undefined, slots: CarpoolSlot[]): EventTask[] {
+    const next = [...(tasks ?? [])];
+    const driverUids = slots.map((s) => s.driver_uid);
+    const idx = next.findIndex((t) => t.kind === 'carpool');
+    const task: EventTask = {
+      id: idx >= 0 ? next[idx].id : newEventTaskId(),
+      kind: 'carpool',
+      label: 'Covoiturage',
+      assignee_uids: driverUids,
+    };
+    if (idx >= 0) next[idx] = task;
+    else next.push(task);
+    return next;
+  },
+
   /** Coach — désigne les chauffeurs / tâche covoiturage */
   async setCarpoolDrivers(
     eventId: string,
@@ -428,32 +584,31 @@ export const teamEventsService = {
     const existing = new Map(
       (event.carpool_slots ?? []).map((s) => [s.driver_uid, s])
     );
-    const carpool_slots: CarpoolSlot[] = drivers.map((d) => {
-      const prev = existing.get(d.uid);
-      return {
-        driver_uid: d.uid,
-        driver_name: d.name,
-        seats: prev?.seats,
-        meeting_time: prev?.meeting_time,
-        meeting_place: prev?.meeting_place,
-        notes: prev?.notes,
-      };
-    });
+    const assignedUids = new Set(drivers.map((d) => d.uid));
+    const volunteeredKeep = (event.carpool_slots ?? []).filter(
+      (s) => s.volunteered === true && !assignedUids.has(s.driver_uid)
+    );
 
-    const tasks = [...(event.event_tasks ?? [])];
-    const carpoolTaskIdx = tasks.findIndex((t) => t.kind === 'carpool');
-    const carpoolTask: EventTask = {
-      id: carpoolTaskIdx >= 0 ? tasks[carpoolTaskIdx].id : newEventTaskId(),
-      kind: 'carpool',
-      label: 'Covoiturage',
-      assignee_uids: drivers.map((d) => d.uid),
-    };
-    if (carpoolTaskIdx >= 0) tasks[carpoolTaskIdx] = carpoolTask;
-    else tasks.push(carpoolTask);
+    const carpool_slots: CarpoolSlot[] = [
+      ...drivers.map((d) => {
+        const prev = existing.get(d.uid);
+        return {
+          driver_uid: d.uid,
+          driver_name: d.name,
+          seats: prev?.seats,
+          meeting_time: prev?.meeting_time,
+          meeting_place: prev?.meeting_place,
+          notes: prev?.notes,
+          volunteered: false,
+          passengers: prev?.passengers,
+        };
+      }),
+      ...volunteeredKeep,
+    ];
 
     await updateDoc(doc(database, COL, eventId), {
       carpool_slots,
-      event_tasks: tasks,
+      event_tasks: teamEventsService.mergeCarpoolTask(event.event_tasks, carpool_slots),
       updated_at: serverTimestamp(),
     });
   },

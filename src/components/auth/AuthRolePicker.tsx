@@ -1,8 +1,11 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import type { UserRole } from '../../models/User';
+import { rolesForProductLine } from '../../content/universeRoles';
+import type { ProductLineId } from '../../models/ProductLine';
+import { useAppTheme } from '../../context/ProductLineContext';
 import { Icon, type IconName } from '../ui/Icon';
-import { colors, spacing, radius } from '../../theme/designTokens';
+import { colors as defaultColors, spacing, radius } from '../../theme/designTokens';
 
 export const ROLE_OPTIONS: {
   value: UserRole;
@@ -13,43 +16,49 @@ export const ROLE_OPTIONS: {
   {
     value: 'player',
     label: 'Joueur',
-    description: 'Profil, stats, candidatures clubs',
+    description: 'CV en ligne, stats, Pulse',
     icon: 'football',
   },
   {
     value: 'coach',
     label: 'Coach',
-    description: 'Diplôme vérifié · messagerie',
+    description: 'Effectif, convocations, recrutement vérifié',
     icon: 'school',
   },
   {
     value: 'club',
     label: 'Club',
-    description: 'Stages · annonces · gestion équipe',
+    description: 'Annonces, équipes, candidatures',
     icon: 'business',
   },
   {
     value: 'agent',
     label: 'Agent',
-    description: 'Licence pro · recrutement',
+    description: 'Mandats, repérage joueurs, réseau clubs',
     icon: 'briefcase',
+  },
+  {
+    value: 'recruiter',
+    label: 'Recruteur',
+    description: 'Scouting, annonces Mercato, pipeline candidatures',
+    icon: 'search',
   },
   {
     value: 'organizer',
     label: 'Organisateur',
-    description: 'Tournois · vérif. document + IA',
+    description: 'Tournois Arena, inscriptions',
     icon: 'trophy',
   },
   {
     value: 'physio',
-    label: 'Pôle médical',
-    description: 'Kiné du sport, ostéo, médecin, prépa physique…',
+    label: 'Pôle santé',
+    description: 'Kiné, médecin, coach mental, nutrition…',
     icon: 'heart',
   },
   {
     value: 'sponsor',
     label: 'Sponsor',
-    description: 'Partenariats & visibilité',
+    description: 'Visibilité marque & clubs locaux',
     icon: 'star-four-points',
   },
 ];
@@ -57,34 +66,83 @@ export const ROLE_OPTIONS: {
 interface AuthRolePickerProps {
   value: UserRole;
   onChange: (role: UserRole) => void;
+  productLine?: ProductLineId;
 }
 
-export const AuthRolePicker: React.FC<AuthRolePickerProps> = ({ value, onChange }) => (
-  <View style={styles.list}>
-    {ROLE_OPTIONS.map((r) => {
-      const active = value === r.value;
-      return (
-        <TouchableOpacity
-          key={r.value}
-          style={[styles.card, active && styles.cardActive]}
-          onPress={() => onChange(r.value)}
-          activeOpacity={0.85}
-        >
-          <View style={[styles.iconWrap, active && styles.iconWrapActive]}>
-            <Icon name={r.icon} size={22} color={active ? colors.brandInverse : colors.text} />
-          </View>
-          <View style={styles.body}>
-            <Text style={[styles.title, active && styles.titleActive]}>{r.label}</Text>
-            <Text style={styles.desc}>{r.description}</Text>
-          </View>
-          {active ? (
-            <Icon name="checkmark-circle" size={22} color={colors.brand} />
-          ) : null}
-        </TouchableOpacity>
-      );
-    })}
-  </View>
-);
+export const AuthRolePicker: React.FC<AuthRolePickerProps> = ({
+  value,
+  onChange,
+  productLine: productLineProp,
+}) => {
+  const { colors, productLine: themeLine } = useAppTheme();
+  const line = productLineProp ?? themeLine;
+  const options = useMemo(() => {
+    const allowed = new Set(rolesForProductLine(line));
+    return ROLE_OPTIONS.filter((r) => allowed.has(r.value)).map((r) => {
+      if (line === 'woman' && r.value === 'player') {
+        return { ...r, label: 'Joueuse', description: 'CV en ligne, stats, Pulse F' };
+      }
+      if (line === 'pro' && r.value === 'physio') {
+        return { ...r, label: 'Pôle santé', description: 'Kiné, médecin, coach mental…' };
+      }
+      if (line === 'pro' && r.value === 'sponsor') {
+        return { ...r, label: 'Partenaire', description: 'Visibilité marque & clubs pro' };
+      }
+      return r;
+    });
+  }, [line]);
+
+  const ink = colors.ink ?? defaultColors.ink;
+
+  return (
+    <View style={styles.list}>
+      {options.map((r) => {
+        const active = value === r.value;
+        return (
+          <TouchableOpacity
+            key={r.value}
+            style={[
+              styles.card,
+              { backgroundColor: colors.surface, borderColor: colors.border },
+              active && { backgroundColor: colors.ink, borderColor: colors.ink },
+            ]}
+            onPress={() => onChange(r.value)}
+            activeOpacity={0.85}
+          >
+            <View
+              style={[
+                styles.iconWrap,
+                { borderColor: colors.border, backgroundColor: colors.surfaceMuted },
+                active && { backgroundColor: colors.surfaceInverse, borderColor: colors.ink },
+              ]}
+            >
+              <Icon
+                name={r.icon}
+                size={22}
+                color={active ? colors.brandInverse : ink}
+              />
+            </View>
+            <View style={styles.body}>
+              <Text
+                style={[
+                  styles.title,
+                  { color: colors.text },
+                  active && { color: colors.brandInverse },
+                ]}
+              >
+                {r.label}
+              </Text>
+              <Text style={[styles.desc, active && styles.descActive]}>{r.description}</Text>
+            </View>
+            {active ? (
+              <Icon name="checkmark-circle" size={22} color={colors.brandInverse} />
+            ) : null}
+          </TouchableOpacity>
+        );
+      })}
+    </View>
+  );
+};
 
 const styles = StyleSheet.create({
   list: { gap: spacing.sm },
@@ -92,29 +150,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
-    backgroundColor: colors.surface,
     borderRadius: radius.lg,
     padding: spacing.md,
     borderWidth: 1,
-    borderColor: colors.border,
-  },
-  cardActive: {
-    borderColor: colors.border,
-    backgroundColor: colors.brand,
   },
   iconWrap: {
     width: 44,
     height: 44,
     borderRadius: radius.sm,
     borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surfaceMuted,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  iconWrapActive: { backgroundColor: colors.surfaceInverse, borderColor: colors.border },
   body: { flex: 1 },
-  title: { fontSize: 16, fontWeight: '800', color: colors.text },
-  titleActive: { color: colors.brandInverse },
-  desc: { fontSize: 12, color: colors.textMuted, marginTop: 2 },
+  title: { fontSize: 16, fontWeight: '800' },
+  desc: { fontSize: 12, color: defaultColors.textMuted, marginTop: 2 },
+  descActive: { color: 'rgba(255,255,255,0.78)' },
 });

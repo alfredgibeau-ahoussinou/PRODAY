@@ -17,6 +17,7 @@ export type SignupPageId =
   | 'coach_pro'
   | 'club_pro'
   | 'agent_pro'
+  | 'recruiter_pro'
   | 'organizer_pro'
   | 'medical_specialty'
   | 'medical_practice'
@@ -38,6 +39,7 @@ export const SIGNUP_PAGE_LABELS: Record<SignupPageId, string> = {
   coach_pro: 'Coach',
   club_pro: 'Club',
   agent_pro: 'Agent',
+  recruiter_pro: 'Recruteur',
   organizer_pro: 'Orga',
   medical_specialty: 'Spécialité',
   medical_practice: 'Cabinet',
@@ -66,6 +68,7 @@ const ROLE_LABELS: Record<UserRole, string> = {
   coach: 'Coach',
   club: 'Club',
   agent: 'Agent',
+  recruiter: 'Recruteur',
   organizer: 'Organisateur',
   sponsor: 'Partenaire',
   physio: 'Pôle médical',
@@ -76,10 +79,12 @@ export const MEDICAL_POLE_SPECIALTIES = [
   'Ostéopathe',
   'Médecin du sport',
   'Préparateur physique',
+  'Coach mental / préparateur mental',
   'Nutritionniste sportif',
   'Podologue du sport',
 ] as const;
 
+/** @deprecated Préférer getSignupRoleGroups(productLine) dans poleExperience.ts */
 export const ROLE_GROUPS: {
   id: string;
   label: string;
@@ -89,26 +94,14 @@ export const ROLE_GROUPS: {
   {
     id: 'sport',
     label: 'Sportifs',
-    hint: 'Mercato, stats et candidatures clubs',
+    hint: 'CV en ligne, stats et candidatures Mercato',
     roles: ['player'],
   },
   {
-    id: 'pro',
-    label: 'Pros du foot',
-    hint: 'Coach, club, agent, organisateur',
-    roles: ['coach', 'club', 'agent', 'organizer'],
-  },
-  {
-    id: 'medical',
-    label: 'Pôle médical',
-    hint: 'Kiné, médecin, prépa, nutrition, podo…',
-    roles: ['physio'],
-  },
-  {
-    id: 'partner',
-    label: 'Partenaires',
-    hint: 'Visibilité marque & réseau clubs',
-    roles: ['sponsor'],
+    id: 'structure',
+    label: 'Structures',
+    hint: 'Annonces club, effectifs et tournois Arena',
+    roles: ['club', 'organizer'],
   },
 ];
 
@@ -139,6 +132,8 @@ function staffProPage(role: UserRole): SignupPageId {
       return 'club_pro';
     case 'agent':
       return 'agent_pro';
+    case 'recruiter':
+      return 'recruiter_pro';
     case 'organizer':
       return 'organizer_pro';
     case 'physio':
@@ -198,6 +193,7 @@ const PRO_PROFILE_PAGES: SignupPageId[] = [
   'coach_pro',
   'club_pro',
   'agent_pro',
+  'recruiter_pro',
   'organizer_pro',
   'medical_specialty',
   'medical_practice',
@@ -229,6 +225,8 @@ export function getStepHeroIcon(page: SignupPageId): IconName {
       return 'business';
     case 'agent_pro':
       return 'briefcase';
+    case 'recruiter_pro':
+      return 'search';
     case 'organizer_pro':
       return 'trophy';
     case 'medical_specialty':
@@ -260,6 +258,8 @@ export function getStaffStepSubtitle(role: UserRole): string {
       return 'Indiquez où vous exercez — justificatif analysé par IA avant confirmation email.';
     case 'agent':
       return 'Zone géographique — licence pro vérifiée par IA avant l’email.';
+    case 'recruiter':
+      return 'Territoire et spécialité recrutement — mandat vérifié par IA avant l’email.';
     case 'organizer':
       return 'Ville et structure — justificatif + IA Mistral avant l’email.';
     case 'club':

@@ -42,6 +42,8 @@ export interface DiscoverInteractiveHomeProps {
   onStepPress: (id: string) => void;
   onFeaturePress: () => void;
   onExperience: (id: DiscoverExperienceId) => void;
+  universeLabel?: string;
+  onUniversePress?: () => void;
 }
 
 /**
@@ -62,6 +64,8 @@ export const DiscoverInteractiveHome: React.FC<DiscoverInteractiveHomeProps> = (
   onStepPress,
   onFeaturePress,
   onExperience,
+  universeLabel,
+  onUniversePress,
 }) => {
   const [chapter, setChapter] = useState<DiscoverChapterId>('welcome');
   const metrics = useDiscoverMetrics();
@@ -303,6 +307,8 @@ export const DiscoverInteractiveHome: React.FC<DiscoverInteractiveHomeProps> = (
       <DiscoverLightHeader
         statsLabel={showHeaderStats ? statsLabel : undefined}
         onStatsPress={showHeaderStats ? onPress : undefined}
+        universeLabel={universeLabel}
+        onUniversePress={onUniversePress}
       />
 
       <View style={discoverStyles.body}>

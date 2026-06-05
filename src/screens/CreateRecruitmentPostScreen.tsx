@@ -16,6 +16,7 @@ import { SubscriptionLimitError } from '../services/subscription.service';
 import { useSubscriptionOptional } from '../context/SubscriptionContext';
 import { useAppSpace } from '../context/AppSpaceContext';
 import { colors, spacing, radius } from '../theme/designTokens';
+import { canPublishRecruitmentPost } from '../utils/roleCapabilities';
 
 interface CreateRecruitmentPostScreenProps {
   profile: User;
@@ -37,6 +38,17 @@ export const CreateRecruitmentPostScreen: React.FC<CreateRecruitmentPostScreenPr
   const [submitting, setSubmitting] = useState(false);
   const { appSpace } = useAppSpace();
   const subscriptionCtx = useSubscriptionOptional();
+
+  if (!canPublishRecruitmentPost(profile.role)) {
+    return (
+      <View style={styles.denied}>
+        <ScreenHeader title="Publier une annonce" onBack={onBack} centered />
+        <Text style={styles.deniedText}>
+          Les joueurs et joueuses peuvent candidater aux annonces, mais pas en publier.
+        </Text>
+      </View>
+    );
+  }
 
   const handleSubmit = async () => {
     if (!position.trim() || !level.trim() || !city.trim()) {
@@ -159,4 +171,17 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
   },
   primaryText: { color: '#FFFFFF', fontWeight: '700' },
+  denied: {
+    flex: 1,
+    backgroundColor: colors.background,
+    padding: spacing.lg,
+  },
+  deniedText: {
+    marginTop: spacing.lg,
+    fontSize: 15,
+    lineHeight: 22,
+    color: colors.textSecondary,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
 });

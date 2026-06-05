@@ -3,7 +3,7 @@ import { DownloadSection } from "@/components/home/DownloadSection";
 import { ExploreGrid } from "@/components/home/ExploreGrid";
 import { HomeTeaser } from "@/components/home/HomeTeaser";
 import { TestimonialsCarousel } from "@/components/home/TestimonialsCarousel";
-import { WomanPromoBanner } from "@/components/home/WomanPromoBanner";
+import { UniversePromoGrid } from "@/components/home/UniversePromoGrid";
 import { HeroSection } from "@/components/HeroSection";
 import { MarqueeStrip } from "@/components/MarqueeStrip";
 import { ModuleExplorer } from "@/components/ModuleExplorer";
@@ -35,8 +35,8 @@ export default function HomePage() {
           <Reveal>
             <h2 className="text-2xl font-bold sm:text-3xl">Quiz : votre profil ProDay</h2>
             <p className="mt-4 text-proday-muted">
-              3 questions pour être orienté vers le bon parcours — joueur, coach,
-              Woman, club…
+              3 questions pour être orienté vers le bon univers — Man, Woman ou
+              Pro.
             </p>
             <Link
               href={ROUTES.quiz}
@@ -48,7 +48,7 @@ export default function HomePage() {
           <RoleQuiz compact />
         </div>
       </section>
-      <WomanPromoBanner />
+      <UniversePromoGrid />
       <section className="bg-neutral-50 py-20">
         <div className="mx-auto max-w-2xl px-4 sm:px-6">
           <Reveal>

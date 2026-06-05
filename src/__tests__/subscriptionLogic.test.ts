@@ -20,9 +20,9 @@ describe('subscriptionLogic', () => {
     expect(result.allowed).toBe(true);
   });
 
-  it('bloque la 4e candidature joueur gratuit', () => {
+  it('bloque la 2e candidature joueur gratuit', () => {
     const usage = emptyUsagePeriod('2026-06');
-    usage.mercato_applications = 3;
+    usage.mercato_applications = 1;
     const result = checkFeatureAccess({
       role: 'player',
       tier: 'free',
@@ -30,7 +30,7 @@ describe('subscriptionLogic', () => {
       usage,
     });
     expect(result.allowed).toBe(false);
-    expect(result.message).toMatch(/3 candidatures/i);
+    expect(result.message).toMatch(/1 candidature/i);
   });
 
   it('bloque une 3e annonce club gratuite', () => {

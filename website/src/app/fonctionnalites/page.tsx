@@ -7,7 +7,7 @@ import { VerificationTimeline } from "@/components/VerificationTimeline";
 export const metadata: Metadata = {
   title: "Fonctionnalités",
   description:
-    "Découvrez les modules ProDay : Mercato, Matchs, Arena, Pulse, CV vivant et Live Stats.",
+    "Mercato, covoiturage, pôle santé, ProDay Shop, Arena, Pulse, CV vivant et Live Stats.",
 };
 
 export default function FeaturesPage() {
@@ -16,7 +16,7 @@ export default function FeaturesPage() {
       <PageHeader
         kicker="FONCTIONNALITÉS"
         title="Tout votre foot amateur, une app"
-        description="Huit piliers produit pour connecter joueurs, clubs, coachs et organisateurs — sans groupes éparpillés."
+        description="Huit piliers produit pour connecter joueurs, recruteurs et organisateurs — sans groupes éparpillés."
         image="/showcase/classic-mercato.jpg"
         dark
       />

@@ -284,6 +284,7 @@ function mapCarpoolSlots(raw: unknown) {
   if (!Array.isArray(raw)) return undefined;
   return raw.map((item) => {
     const s = item as Record<string, unknown>;
+    const passengersRaw = s.passengers;
     return {
       driver_uid: String(s.driver_uid ?? ''),
       driver_name: String(s.driver_name ?? ''),
@@ -291,6 +292,16 @@ function mapCarpoolSlots(raw: unknown) {
       meeting_time: s.meeting_time ? String(s.meeting_time) : undefined,
       meeting_place: s.meeting_place ? String(s.meeting_place) : undefined,
       notes: s.notes ? String(s.notes) : undefined,
+      volunteered: s.volunteered === true,
+      passengers: Array.isArray(passengersRaw)
+        ? passengersRaw.map((p) => {
+            const row = p as Record<string, unknown>;
+            return {
+              uid: String(row.uid ?? ''),
+              name: String(row.name ?? ''),
+            };
+          })
+        : undefined,
     };
   });
 }

@@ -59,6 +59,12 @@ export interface EventTask {
   assignee_uids: string[];
 }
 
+/** Passager ayant réservé une place chez un conducteur */
+export interface CarpoolPassenger {
+  uid: string;
+  name: string;
+}
+
 /** Détail d’un conducteur pour un événement */
 export interface CarpoolSlot {
   driver_uid: string;
@@ -67,6 +73,10 @@ export interface CarpoolSlot {
   meeting_time?: string;
   meeting_place?: string;
   notes?: string;
+  /** Proposition spontanée (joueur/coach) plutôt qu’assignation staff */
+  volunteered?: boolean;
+  /** Coéquipiers ayant réservé une place */
+  passengers?: CarpoolPassenger[];
 }
 
 export interface CarpoolMessage {

@@ -5,7 +5,7 @@ import { PageHeader } from "@/components/layout/PageHeader";
 export const metadata: Metadata = {
   title: "Parcours par rôle",
   description:
-    "Joueur, coach, organisateur ou parent — découvrez votre chemin dans ProDay.",
+    "Joueur, recruteur, pôle santé, organisateur ou parent — découvrez votre chemin dans ProDay.",
 };
 
 export default function JourneysPage() {

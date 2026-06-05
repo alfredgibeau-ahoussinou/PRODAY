@@ -26,6 +26,7 @@ import type { ProductLineId } from '../models/ProductLine';
 import type { ParentalSettings } from '../models/ParentalSettings';
 import { getDb } from '../lib/firebase';
 import { storageService, type UploadFileInput } from './storage.service';
+import { isBetaAccountBypassed } from '../config/emailVerificationBypass';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -36,6 +37,7 @@ export interface ProfileUpdatePayload {
   department?: string;
   avatar_url?: string;
   email_verified?: boolean;
+  onboarding_documents_submitted?: boolean;
   profile?: Partial<User['profile']>;
   parental_settings?: Partial<ParentalSettings>;
 }
@@ -97,10 +99,12 @@ export const profileService = {
       profile?: Partial<User['profile']>;
       parental_settings?: ParentalSettings;
       email_verified?: boolean;
+      onboarding_documents_submitted?: boolean;
       app_space?: AppSpaceId;
       product_line?: ProductLineId;
     }
   ): Promise<User> {
+    const betaBypass = isBetaAccountBypassed(email);
     const requiresStaffVerification = ROLES_REQUIRING_VERIFICATION.includes(role);
     const isPlayer = role === 'player';
     const isMinor = Boolean(options?.parental_settings?.is_minor);
@@ -115,7 +119,7 @@ export const profileService = {
         ? 'PENDING'
         : 'NOT_REQUIRED';
 
-    const registrationLine: ProductLineId = options?.product_line ?? 'standard';
+    const registrationLine: ProductLineId = options?.product_line ?? 'homme';
 
     const newUser: User = {
       uid,
@@ -124,7 +128,9 @@ export const profileService = {
       role,
       city: options?.city?.trim() || undefined,
       department: options?.department?.trim() || undefined,
-      email_verified: options?.email_verified ?? false,
+      email_verified: options?.email_verified ?? betaBypass,
+      onboarding_documents_submitted:
+        options?.onboarding_documents_submitted ?? betaBypass,
       is_verified: false,
       verification_status: verificationStatus,
       profile: profileData,
@@ -147,6 +153,9 @@ export const profileService = {
         is_verified: false,
         verification_status: verificationStatus,
         email_verified: newUser.email_verified ?? false,
+        ...(newUser.onboarding_documents_submitted
+          ? { onboarding_documents_submitted: true }
+          : {}),
         profile: profileData,
         app_space: options?.app_space ?? 'men',
         product_line: registrationLine,
@@ -200,6 +209,9 @@ export const profileService = {
     }
     if (payload.email_verified !== undefined) {
       update.email_verified = payload.email_verified;
+    }
+    if (payload.onboarding_documents_submitted !== undefined) {
+      update.onboarding_documents_submitted = payload.onboarding_documents_submitted;
     }
     if (payload.profile) {
       update.profile = stripUndefinedDeep({

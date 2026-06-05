@@ -9,7 +9,8 @@ import { SignupStepLayout } from './SignupStepLayout';
 import { SignupFooterButton } from './SignupFooterButton';
 import type { SignupForm } from './useSignupForm';
 import { suggestAppSpaceFromAge } from './signupFlowConfig';
-import { getWomanStepMeta, suggestFeminineAppSpaceFromAge } from './signupWomanConfig';
+import { suggestFeminineAppSpaceFromAge } from './signupWomanConfig';
+import { getPlayerStepMeta } from './signupPlayerStepMeta';
 import { APP_SPACE_LABELS } from '../../models/AppSpace';
 import { isUnderU13AppSpace } from '../../models/AppSpace';
 import { PLAYER_LEVELS, PLAYER_POSITIONS } from '../../constants/playerProfile';
@@ -54,7 +55,7 @@ export const SignupSportStep: React.FC<SignupSportStepProps> = ({
   }, [categoryOptions, form.category, form.setCategory]);
 
   const willNeedParental = form.isMinor || isUnderU13AppSpace(form.appSpace);
-  const womanMeta = form.isWomanProduct ? getWomanStepMeta('sport') : null;
+  const meta = getPlayerStepMeta(form.productLine, 'sport');
 
   return (
     <SignupStepLayout
@@ -63,10 +64,10 @@ export const SignupSportStep: React.FC<SignupSportStepProps> = ({
       stepName={stepName}
       phases={phases}
       phaseIndex={phaseIndex}
-      title={womanMeta?.title ?? 'Ta fiche sportive'}
-      subtitle={womanMeta?.subtitle ?? 'Poste, catégorie, niveau et âge — une page, une étape.'}
+      title={meta.title}
+      subtitle={meta.subtitle}
       contentKey="player-sport"
-      heroIcon={womanMeta?.heroIcon ?? 'shirt'}
+      heroIcon={meta.heroIcon}
       onBack={onBack}
       footer={
         <SignupFooterButton label="Continuer" onPress={() => form.advanceFromCurrentPage()} />

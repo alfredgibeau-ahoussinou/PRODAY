@@ -5,7 +5,9 @@ export const ROUTES = {
   pulse: "/pulse",
   journeys: "/parcours",
   trust: "/confiance",
+  homme: "/homme",
   woman: "/woman",
+  pro: "/pro",
   beta: "/beta",
   about: "/a-propos",
   pricing: "/tarifs",
@@ -16,6 +18,7 @@ export const ROUTES = {
   quiz: "/quiz",
   compare: "/comparatif",
   ecosystem: "/ecosysteme",
+  shop: "/shop",
 } as const;
 
 export type RouteKey = keyof typeof ROUTES;
@@ -24,7 +27,9 @@ export const NAV_ITEMS = [
   { href: ROUTES.features, label: "Fonctionnalités" },
   { href: ROUTES.demo, label: "Démo" },
   { href: ROUTES.pricing, label: "Tarifs" },
-  { href: ROUTES.woman, label: "Woman", accent: true },
+  { href: ROUTES.homme, label: "Homme" },
+  { href: ROUTES.woman, label: "Woman", accent: "woman" as const },
+  { href: ROUTES.pro, label: "Pro", accent: "pro" as const },
   { href: ROUTES.faq, label: "FAQ" },
 ] as const;
 
@@ -39,7 +44,7 @@ export const EXPLORE_CARDS = [
   {
     href: ROUTES.demo,
     title: "Démo interactive",
-    description: "Naviguez les 5 onglets comme dans l'app mobile.",
+    description: "Naviguez les 7 onglets dynamiques comme dans l'app mobile.",
     image: "/showcase/classic-discover-hero.jpg",
     tag: "Essayer",
   },
@@ -60,21 +65,21 @@ export const EXPLORE_CARDS = [
   {
     href: ROUTES.cv,
     title: "CV joueur",
-    description: "Aperçu du CV foot PDF alimenté par vos matchs.",
+    description: "Aperçu du CV foot en ligne alimenté par vos matchs.",
     image: "/showcase/classic-profile.jpg",
     tag: "Export",
   },
   {
     href: ROUTES.journeys,
     title: "Parcours par rôle",
-    description: "Joueur, coach, organisateur ou parent — étape par étape.",
+    description: "Joueur, recruteur, pôle santé, organisateur ou parent — étape par étape.",
     image: "/showcase/classic-profile.jpg",
     tag: "Parcours",
   },
   {
     href: ROUTES.quiz,
     title: "Quiz profil",
-    description: "3 questions — découvrez quel parcours ProDay vous correspond.",
+    description: "3 questions — Homme, Woman ou Pro : quel parcours vous correspond.",
     image: "/showcase/classic-exp-discover.jpg",
     tag: "Quiz",
   },
@@ -109,9 +114,16 @@ export const EXPLORE_CARDS = [
   {
     href: ROUTES.pricing,
     title: "Tarifs",
-    description: "Gratuit et offres Pro — Joueur, Coach, Club, Agent.",
+    description: "Gratuit et offres Pro — par univers Homme, Woman et Pro.",
     image: "/showcase/classic-exp-messages.jpg",
     tag: "Tarifs",
+  },
+  {
+    href: ROUTES.homme,
+    title: "Pro Day Man",
+    description: "Foot masculin amateur — Mercato M, matchs et CV joueur.",
+    image: "/showcase/classic-discover-hero.jpg",
+    tag: "Homme",
   },
   {
     href: ROUTES.woman,
@@ -120,6 +132,21 @@ export const EXPLORE_CARDS = [
     image: "/showcase/woman/woman-discover-hero.jpg",
     tag: "Woman",
     accent: true,
+  },
+  {
+    href: ROUTES.pro,
+    title: "Pro Day Pro",
+    description: "Recruteurs, coach, agent, pôle santé — réseau vérifié du foot pro.",
+    image: "/showcase/classic-staff.jpg",
+    tag: "Pro",
+    accent: true,
+  },
+  {
+    href: ROUTES.shop,
+    title: "ProDay Shop",
+    description: "Trépieds, t-shirts et maillots officiels — par univers Man, Woman et Pro.",
+    image: "/showcase/classic-exp-sponsors.jpg",
+    tag: "Shop",
   },
   {
     href: ROUTES.faq,

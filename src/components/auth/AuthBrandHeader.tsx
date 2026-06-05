@@ -3,6 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import { Logo } from '../Logo';
 import { BRAND, colors, spacing } from '../../theme/designTokens';
 import { useAppTheme } from '../../context/ProductLineContext';
+import { brandForProductLine } from '../../models/ProductLine';
 
 interface AuthBrandHeaderProps {
   width?: number;
@@ -15,33 +16,36 @@ interface AuthBrandHeaderProps {
 }
 
 /**
- * Logo ProDay — clair (connexion) ou hero transparent (bandeau noir legacy).
+ * Logo ProDay — variante selon l’univers actif (Man / Woman / Pro).
  */
 export const AuthBrandHeader: React.FC<AuthBrandHeaderProps> = ({
   width = 220,
   tone = 'dark',
   showTagline = false,
 }) => {
-  const { isWoman } = useAppTheme();
+  const { productLine } = useAppTheme();
   const isLight = tone === 'light';
+  const background = isLight ? 'light' : 'dark';
+  const brand = brandForProductLine(productLine);
+
+  const logo = (
+    <Logo
+      background={background}
+      width={width}
+      showTagline={false}
+      productLine={productLine}
+    />
+  );
 
   return (
     <View style={styles.wrap}>
-      <View style={styles.logoSlot}>
-        <Logo
-          background={isLight ? 'light' : 'dark'}
-          variant={isLight ? 'light' : 'transparent'}
-          width={width}
-          showTagline={false}
-          woman={isWoman}
-        />
-      </View>
+      <View style={styles.logoSlot}>{logo}</View>
       {showTagline ? (
         <Text
           style={[styles.tagline, !isLight && styles.taglineDark]}
           accessibilityRole="text"
         >
-          {BRAND.tagline}
+          {productLine === 'homme' ? BRAND.tagline : brand.tagline}
         </Text>
       ) : null}
     </View>

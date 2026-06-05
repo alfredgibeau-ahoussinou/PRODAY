@@ -132,7 +132,7 @@ const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
       const idToken = await resolveGoogleIdToken(result, googleRequest);
       if (!idToken) {
         onError(
-          'Connexion Google incomplète. Vérifiez que le Web client ID Firebase est dans .env et que Google est activé dans Authentication.'
+          'Connexion Google incomplète. Vérifiez la configuration de connexion Google dans les paramètres de l’application.'
         );
         return;
       }

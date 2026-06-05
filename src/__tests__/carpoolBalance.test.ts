@@ -1,4 +1,11 @@
-import { aggregateCarpoolBalance, totalCarpoolSeats, isCarpoolDriver } from '../utils/carpoolBalance';
+import {
+  aggregateCarpoolBalance,
+  carpoolAvailableSeats,
+  findCarpoolBooking,
+  isCarpoolPassenger,
+  totalCarpoolSeats,
+  isCarpoolDriver,
+} from '../utils/carpoolBalance';
 import type { TeamEvent } from '../models/TeamEvent';
 
 describe('carpoolBalance', () => {
@@ -43,5 +50,21 @@ describe('carpoolBalance', () => {
     const ev = baseEvent('e1', ['p1'], new Date());
     expect(isCarpoolDriver(ev, 'p1')).toBe(true);
     expect(isCarpoolDriver(ev, 'p9')).toBe(false);
+  });
+
+  it('calcule les places restantes et les réservations', () => {
+    const slot = {
+      driver_uid: 'p1',
+      driver_name: 'Alice',
+      seats: 3,
+      passengers: [{ uid: 'p2', name: 'Bob' }],
+    };
+    expect(carpoolAvailableSeats(slot)).toBe(2);
+    expect(isCarpoolPassenger(slot, 'p2')).toBe(true);
+    const ev = {
+      ...baseEvent('e1', ['p1', 'p2'], new Date()),
+      carpool_slots: [slot],
+    } as TeamEvent;
+    expect(findCarpoolBooking(ev, 'p2')?.driverUid).toBe('p1');
   });
 });

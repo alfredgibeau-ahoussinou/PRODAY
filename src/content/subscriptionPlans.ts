@@ -45,21 +45,21 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionPlanId, SubscriptionPlanDefi
     id: 'player_plus',
     role: 'player',
     label: 'Joueur Plus',
-    tagline: 'Mercato illimité et visibilité renforcée',
-    pricing: { monthlyEur: 4.99, yearlyEur: 39, storeAvailable: false },
-    limits: { mercato_apply_per_month: 3 },
+    tagline: 'CV en ligne, visibilité et Mercato',
+    pricing: { monthlyEur: 2.99, yearlyEur: 24.99, storeAvailable: false },
+    limits: { mercato_apply_per_month: 1 },
     freeIncludes: [
-      'Profil, Pulse et galerie',
+      'Profil, Pulse et CV en ligne',
+      'Galerie et stats saison',
       'Mercato en lecture',
-      '3 candidatures / mois',
+      '1 candidature / mois',
       'Calendrier et RSVP équipe',
-      'Arena et sponsors en consultation',
     ],
     proIncludes: [
       'Candidatures Mercato illimitées',
       'Mise en avant dans les recherches',
       'Alertes nouvelles annonces',
-      'Historique candidatures exportable',
+      'Export PDF optionnel',
     ],
   },
   coach_pro: {
@@ -67,7 +67,7 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionPlanId, SubscriptionPlanDefi
     role: 'coach',
     label: 'Coach Pro',
     tagline: 'Recrutement et gestion multi-équipes',
-    pricing: { monthlyEur: 14.99, yearlyEur: 119, storeAvailable: false },
+    pricing: { monthlyEur: 7.99, yearlyEur: 59.99, storeAvailable: false },
     limits: {
       club_teams: 1,
       recruitment_messages_per_month: 5,
@@ -90,7 +90,7 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionPlanId, SubscriptionPlanDefi
     role: 'club',
     label: 'Club Pro',
     tagline: 'Annonces et structure club',
-    pricing: { monthlyEur: 19.99, yearlyEur: 169, storeAvailable: true },
+    pricing: { monthlyEur: 11.99, yearlyEur: 89.99, storeAvailable: true },
     limits: { club_teams: 1, club_active_posts: 2 },
     freeIncludes: [
       'Profil club et vérification',
@@ -110,7 +110,7 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionPlanId, SubscriptionPlanDefi
     role: 'agent',
     label: 'Agent Elite',
     tagline: 'CRM joueurs et mandats',
-    pricing: { monthlyEur: 79, yearlyEur: 699, storeAvailable: false },
+    pricing: { monthlyEur: 24.99, yearlyEur: 199.99, storeAvailable: false },
     limits: { recruitment_messages_per_month: 10 },
     freeIncludes: [
       'Profil agent et vérification',
@@ -131,6 +131,7 @@ const ROLE_TO_PLAN: Partial<Record<UserRole, SubscriptionPlanId>> = {
   coach: 'coach_pro',
   club: 'club_pro',
   agent: 'agent_elite',
+  recruiter: 'coach_pro',
 };
 
 export function planIdForRole(role: UserRole): SubscriptionPlanId | null {

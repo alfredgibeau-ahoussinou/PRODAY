@@ -3,9 +3,12 @@ export type MainTabId =
   | 'home'
   | 'recrutement'
   | 'matchs'
+  | 'covoiturage'
+  | 'sante'
   | 'feed'
   | 'messages'
-  | 'profil';
+  | 'profil'
+  | 'shop';
 
 export const MAIN_TAB_ITEMS: {
   id: MainTabId;
@@ -15,7 +18,10 @@ export const MAIN_TAB_ITEMS: {
   { id: 'home', label: 'Accueil', icon: 'home' },
   { id: 'recrutement', label: 'Mercato', icon: 'recruitment' },
   { id: 'matchs', label: 'Matchs', icon: 'handshake' },
+  { id: 'covoiturage', label: 'Covoiturage', icon: 'car' },
+  { id: 'sante', label: 'Santé', icon: 'heart' },
   { id: 'feed', label: 'Fil', icon: 'star-four-points' },
   { id: 'messages', label: 'Messages', icon: 'chat' },
   { id: 'profil', label: 'Profil', icon: 'user' },
+  { id: 'shop', label: 'Shop', icon: 'bag' },
 ];

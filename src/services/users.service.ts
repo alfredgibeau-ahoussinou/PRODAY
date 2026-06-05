@@ -26,6 +26,7 @@ function matchesSearch(user: User, q: string): boolean {
     user.display_name.toLowerCase().includes(lower) ||
     (p.position?.toLowerCase().includes(lower) ?? false) ||
     (p.job_title?.toLowerCase().includes(lower) ?? false) ||
+    (p.medical_specialty?.toLowerCase().includes(lower) ?? false) ||
     (user.city?.toLowerCase().includes(lower) ?? false) ||
     (p.level?.toLowerCase().includes(lower) ?? false)
   );

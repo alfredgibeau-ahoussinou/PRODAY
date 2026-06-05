@@ -1,12 +1,12 @@
 import React, { createContext, useContext, useEffect, useMemo } from 'react';
 import type { ProductLineId } from '../../models/ProductLine';
 import type { UserRole } from '../../models/User';
-import { getThemedColors, type AppColors } from '../../theme/prodayWomanTheme';
+import { getThemedColorsForLine, type AppColors } from '../../theme/universeTheme';
 import { useProductLine } from '../../context/ProductLineContext';
-import { getRoleSignupAccent } from './signupRoleExperience';
-
 interface SignupFlowContextValue {
+  productLine: ProductLineId;
   isWomanSignup: boolean;
+  isProSignup: boolean;
   colors: AppColors;
   experienceRole: UserRole;
 }
@@ -18,29 +18,21 @@ export const SignupFlowProvider: React.FC<{
   experienceRole: UserRole;
   children: React.ReactNode;
 }> = ({ productLine, experienceRole, children }) => {
-  const { enterWomanSpace } = useProductLine();
+  const { enterWomanSpace, enterProSpace } = useProductLine();
   const isWomanSignup = productLine === 'woman';
+  const isProSignup = productLine === 'pro';
 
-  const colors = useMemo(() => {
-    const base = getThemedColors(isWomanSignup);
-    if (isWomanSignup) return base;
-    const accent = getRoleSignupAccent(experienceRole);
-    return {
-      ...base,
-      accent: accent.accent,
-      accentSoft: accent.accentSoft,
-      accentMuted: accent.accentMuted,
-      ink: accent.accent,
-      brand: accent.accent,
-    };
-  }, [isWomanSignup, experienceRole]);
+  const colors = useMemo(() => getThemedColorsForLine(productLine), [productLine]);
 
   useEffect(() => {
     if (isWomanSignup) void enterWomanSpace();
-  }, [isWomanSignup, enterWomanSpace]);
+    else if (isProSignup) void enterProSpace();
+  }, [isWomanSignup, isProSignup, enterWomanSpace, enterProSpace]);
 
   return (
-    <SignupFlowContext.Provider value={{ isWomanSignup, colors, experienceRole }}>
+    <SignupFlowContext.Provider
+      value={{ productLine, isWomanSignup, isProSignup, colors, experienceRole }}
+    >
       {children}
     </SignupFlowContext.Provider>
   );
@@ -50,8 +42,10 @@ export function useSignupFlowTheme(): SignupFlowContextValue {
   const ctx = useContext(SignupFlowContext);
   if (!ctx) {
     return {
+      productLine: 'homme',
       isWomanSignup: false,
-      colors: getThemedColors(false),
+      isProSignup: false,
+      colors: getThemedColorsForLine('homme'),
       experienceRole: 'player',
     };
   }
