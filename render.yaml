@@ -1,0 +1,31 @@
+# Blueprint Render — site vitrine Next.js (dossier website/)
+# Dashboard : https://dashboard.render.com/blueprints → New Blueprint Instance → repo PRODAY
+services:
+  - type: web
+    name: proday-website
+    runtime: node
+    region: frankfurt
+    plan: free
+    rootDir: website
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: 20.11.0
+      # URL publique — Render la fournit aussi via RENDER_EXTERNAL_URL (voir betaEmailConfig.ts)
+      - key: NEXT_PUBLIC_SITE_URL
+        sync: false
+      - key: EMAILJS_SERVICE_ID
+        sync: false
+      - key: EMAILJS_TEMPLATE_ID
+        sync: false
+      - key: EMAILJS_PUBLIC_KEY
+        sync: false
+      - key: EMAILJS_PRIVATE_KEY
+        sync: false
+      # Optionnel — proxy vers Cloud Function Firebase au lieu d’EmailJS direct
+      - key: BETA_WAITLIST_FUNCTION_URL
+        sync: false

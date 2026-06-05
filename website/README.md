@@ -36,7 +36,22 @@ npm run website:dev
 npm run website:build
 ```
 
-## Déploiement Vercel
+## Déploiement Render (recommandé)
+
+**Blueprint :** fichier `render.yaml` à la racine — **Root Directory :** `website`
+
+1. [dashboard.render.com/blueprints](https://dashboard.render.com/blueprints) → **New Blueprint Instance**
+2. Repo `alfredgibeau-ahoussinou/PRODAY`, branche `main`
+3. Renseigner les variables EmailJS + `NEXT_PUBLIC_SITE_URL` (URL `.onrender.com`)
+
+Guide détaillé : [`docs/RENDER_DEPLOY.md`](../docs/RENDER_DEPLOY.md)
+
+```bash
+render login
+render blueprint launch
+```
+
+## Déploiement Vercel (alternative)
 
 **Branche Git :** `main` — **Root Directory :** `website`
 
