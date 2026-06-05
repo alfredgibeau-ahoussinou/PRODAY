@@ -36,8 +36,8 @@ export const SignupSportStep: React.FC<SignupSportStepProps> = ({
   onBack,
 }) => {
   const categoryOptions = useMemo(
-    () => [...defaultCategoriesForAppSpace(form.appSpace)],
-    [form.appSpace]
+    () => [...defaultCategoriesForAppSpace(form.appSpace, form.productLine)],
+    [form.appSpace, form.productLine]
   );
 
   const suggestedSpace = useMemo(() => {

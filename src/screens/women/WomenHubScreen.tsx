@@ -22,7 +22,7 @@ export const WomenHubScreen: React.FC<WomenHubScreenProps> = ({ onBack }) => {
   const { setAppSpace } = useAppSpace();
   const nav = useTabNavigationActions();
 
-  const enterSpace = async (space: 'women' | 'girls') => {
+  const enterSpace = async (space: 'women' | 'girls' | 'under_u13') => {
     await setAppSpace(space);
     onBack();
     nav.setActiveTab('recrutement');
@@ -55,6 +55,15 @@ export const WomenHubScreen: React.FC<WomenHubScreenProps> = ({ onBack }) => {
           <View style={styles.cardBody}>
             <Text style={styles.cardTitle}>{APP_SPACE_LABELS.girls}</Text>
             <Text style={styles.cardSub}>U13 F à U19 F — formations et détections</Text>
+          </View>
+          <Icon name="chevron-forward" size={18} color={colors.textMuted} />
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.card} onPress={() => enterSpace('under_u13')}>
+          <Icon name="school" size={24} color="#4ade80" />
+          <View style={styles.cardBody}>
+            <Text style={styles.cardTitle}>{APP_SPACE_LABELS.under_u13}</Text>
+            <Text style={styles.cardSub}>U7 F, U9 F, U11 F — école de foot féminine</Text>
           </View>
           <Icon name="chevron-forward" size={18} color={colors.textMuted} />
         </TouchableOpacity>

@@ -212,8 +212,8 @@ export function useSignupForm(initial?: {
   }, [clearErrors]);
 
   const allowedCategories = useMemo(
-    () => [...defaultCategoriesForAppSpace(appSpace)],
-    [appSpace]
+    () => [...defaultCategoriesForAppSpace(appSpace, productLine)],
+    [appSpace, productLine]
   );
 
   const buildIntegrityInput = useCallback(

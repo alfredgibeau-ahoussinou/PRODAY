@@ -18,7 +18,7 @@ export const DISCOVER_INTRO_SLIDES_WOMAN: DiscoverIntroSlideWoman[] = [
     id: 'welcome',
     kicker: 'PRODAY WOMAN',
     title: 'Le foot\nau féminin.',
-    body: 'Mercato F, matchs et profil joueuse — pensé pour les filles et les seniors F.',
+    body: 'Mercato F, matchs, Arena, covoiturage, pôle santé et Shop — pensé pour les joueuses.',
     image: WOMAN_SHOWCASE_IMAGES.discoverHero,
     icon: 'heart',
     cta: 'Voir le live',

@@ -1,5 +1,6 @@
 import type { AppSpaceId } from '../models/AppSpace';
 import { normalizeAppSpace } from '../models/AppSpace';
+import type { ProductLineId } from '../models/ProductLine';
 import { PLAYER_CATEGORIES } from './playerProfile';
 
 export const PLAYER_CATEGORIES_WOMEN = [
@@ -36,6 +37,8 @@ export const PLAYER_CATEGORIES_UNDER_U13 = [
   'U9 F',
   'U11 F',
 ] as const;
+
+export const PLAYER_CATEGORIES_UNDER_U13_F = ['U7 F', 'U9 F', 'U11 F'] as const;
 
 const YOUTH_PREFIXES = ['U13', 'U15', 'U17', 'U19'] as const;
 const UNDER_U13_PREFIXES = ['U7', 'U9', 'U11'] as const;
@@ -81,14 +84,21 @@ export function categoriesForAppSpace(space: AppSpaceId): readonly string[] {
   }
 }
 
-export function defaultCategoriesForAppSpace(space: AppSpaceId): readonly string[] {
+export function defaultCategoriesForAppSpace(
+  space: AppSpaceId,
+  line?: ProductLineId
+): readonly string[] {
+  if (space === 'under_u13' && line === 'woman') {
+    return PLAYER_CATEGORIES_UNDER_U13_F;
+  }
   const dedicated = categoriesForAppSpace(space);
   return dedicated.length > 0 ? dedicated : PLAYER_CATEGORIES;
 }
 
 export function postMatchesAppSpace(
   post: { category?: string; target_space?: AppSpaceId | string },
-  space: AppSpaceId
+  space: AppSpaceId,
+  line?: ProductLineId
 ): boolean {
   const target = resolveTargetSpace(post.target_space as string | undefined);
   if (target) return target === space;
@@ -100,6 +110,8 @@ export function postMatchesAppSpace(
 
   switch (space) {
     case 'under_u13':
+      if (line === 'woman') return under && fem;
+      if (line === 'homme' || line === 'pro') return under && !fem;
       return under;
     case 'women':
       return fem && !youth && !under;

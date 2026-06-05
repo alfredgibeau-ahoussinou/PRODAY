@@ -36,7 +36,7 @@ export function getDiscoverCarouselCopy(line: ProductLineId): {
     return {
       label: 'Univers Woman',
       title: 'Foot féminin, un seul tap',
-      subtitle: 'Mercato F, matchs, Arena — visuels joueuses',
+      subtitle: 'Mercato F, matchs, Arena, covoiturage, santé et Shop — un seul tap',
     };
   }
   if (line === 'pro') {

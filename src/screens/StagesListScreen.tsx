@@ -15,6 +15,7 @@ import { Icon } from '../components/ui/Icon';
 import { stagesService } from '../services/stages.service';
 import { canPublishStages } from '../utils/roleCapabilities';
 import { useAppSpace } from '../context/AppSpaceContext';
+import { useAppTheme } from '../context/ProductLineContext';
 import { postMatchesAppSpace } from '../constants/appSpaces';
 import { formatCalendarDate } from '../utils/seasonCalendar';
 import { colors, spacing, radius } from '../theme/designTokens';
@@ -33,6 +34,7 @@ export const StagesListScreen: React.FC<StagesListScreenProps> = ({
   onCreateStage,
 }) => {
   const { appSpace } = useAppSpace();
+  const { productLine } = useAppTheme();
   const [offers, setOffers] = useState<StageOffer[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -51,8 +53,8 @@ export const StagesListScreen: React.FC<StagesListScreenProps> = ({
   }, [load]);
 
   const filtered = useMemo(
-    () => offers.filter((o) => postMatchesAppSpace(o, appSpace)),
-    [offers, appSpace]
+    () => offers.filter((o) => postMatchesAppSpace(o, appSpace, productLine)),
+    [offers, appSpace, productLine]
   );
 
   const onRefresh = () => {

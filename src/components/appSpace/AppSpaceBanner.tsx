@@ -15,12 +15,14 @@ import { colors, spacing, radius } from '../../theme/designTokens';
 interface AppSpaceBannerProps {
   showHubLinks?: boolean;
   onOpenMenHub?: () => void;
+  onOpenWomenHub?: () => void;
   onOpenUnderU13Hub?: () => void;
 }
 
 export const AppSpaceBanner: React.FC<AppSpaceBannerProps> = ({
   showHubLinks = false,
   onOpenMenHub,
+  onOpenWomenHub,
   onOpenUnderU13Hub,
 }) => {
   const { appSpace } = useAppSpace();
@@ -54,20 +56,35 @@ export const AppSpaceBanner: React.FC<AppSpaceBannerProps> = ({
         </View>
       </View>
 
-      {showHubLinks && !isWoman ? (
+      {showHubLinks ? (
         <View style={styles.dualWrap}>
-          <TouchableOpacity
-            style={[styles.dualCard, styles.dualMasculine]}
-            onPress={onOpenMenHub}
-            activeOpacity={0.9}
-          >
-            <Icon name="football" size={20} color={colors.accent} />
-            <View style={styles.dualCopy}>
-              <Text style={styles.dualTitle}>Changer — Masculin</Text>
-              <Text style={styles.dualSub}>Joueurs · clubs M</Text>
-            </View>
-            <Icon name="chevron-forward" size={16} color={colors.textMuted} />
-          </TouchableOpacity>
+          {isWoman ? (
+            <TouchableOpacity
+              style={[styles.dualCard, styles.dualFeminine]}
+              onPress={onOpenWomenHub}
+              activeOpacity={0.9}
+            >
+              <Icon name="people" size={20} color={colors.accent} />
+              <View style={styles.dualCopy}>
+                <Text style={styles.dualTitle}>Changer — Féminin</Text>
+                <Text style={styles.dualSub}>Joueuses · clubs F</Text>
+              </View>
+              <Icon name="chevron-forward" size={16} color={colors.textMuted} />
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              style={[styles.dualCard, styles.dualMasculine]}
+              onPress={onOpenMenHub}
+              activeOpacity={0.9}
+            >
+              <Icon name="football" size={20} color={colors.accent} />
+              <View style={styles.dualCopy}>
+                <Text style={styles.dualTitle}>Changer — Masculin</Text>
+                <Text style={styles.dualSub}>Joueurs · clubs M</Text>
+              </View>
+              <Icon name="chevron-forward" size={16} color={colors.textMuted} />
+            </TouchableOpacity>
+          )}
           <TouchableOpacity
             style={[styles.dualCard, styles.dualUnderU13]}
             onPress={onOpenUnderU13Hub}
@@ -76,7 +93,7 @@ export const AppSpaceBanner: React.FC<AppSpaceBannerProps> = ({
             <Icon name="school" size={20} color="#4ade80" />
             <View style={styles.dualCopy}>
               <Text style={styles.dualTitle}>Changer — -13 ans</Text>
-              <Text style={styles.dualSub}>U7 · U9 · U11</Text>
+              <Text style={styles.dualSub}>{isWoman ? 'U7 F · U9 F · U11 F' : 'U7 · U9 · U11'}</Text>
             </View>
             <Icon name="chevron-forward" size={16} color={colors.textMuted} />
           </TouchableOpacity>
@@ -126,6 +143,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   dualMasculine: { borderLeftWidth: 4, borderLeftColor: '#3d6cb9' },
+  dualFeminine: { borderLeftWidth: 4, borderLeftColor: '#be185d' },
   dualUnderU13: { borderLeftWidth: 4, borderLeftColor: '#4ade80' },
   dualCopy: { flex: 1 },
   dualTitle: { fontSize: 14, fontWeight: '900', color: colors.text },

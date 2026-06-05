@@ -1,0 +1,12 @@
+# ProDay — site vitrine Next.js (App Router + /api/beta)
+# Dans Netlify UI : Base directory = website (si repo monorepo)
+
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"

@@ -376,6 +376,12 @@ export const WOMAN_APP_SPACE_GROUPS = [
       { id: 'women' as AppSpaceId, label: 'Seniors F', hint: 'D1 F, Régional' },
     ],
   },
+  {
+    id: 'school' as const,
+    label: 'École de foot',
+    icon: 'school' as const,
+    options: [{ id: 'under_u13' as AppSpaceId, label: 'Moins de 13 ans', hint: 'U7 F, U9 F, U11 F' }],
+  },
 ] as const;
 
 /** @deprecated */

@@ -9,6 +9,7 @@ export const WOMAN_SIGNUP_PHASES = [
 ];
 
 export function suggestFeminineAppSpaceFromAge(age: number): AppSpaceId {
+  if (age < 13) return 'under_u13';
   if (age >= 20) return 'women';
   return 'girls';
 }
@@ -17,7 +18,7 @@ export function getWomanWelcomeCopy() {
   return {
     title: `Bienvenue sur ${PRODAY_WOMAN_BRAND.name}`,
     subtitle:
-      'Inscription joueuse — Mercato féminin, détections et profil dédié au foot au féminin.',
+      'Inscription joueuse — CV en ligne, Mercato F, matchs, covoiturage, pôle santé et visibilité auprès des clubs.',
   };
 }
 
@@ -38,7 +39,7 @@ export function getWomanStepMeta(page: SignupPageId): {
     case 'space':
       return {
         title: 'Ta catégorie',
-        subtitle: 'Jeunes F (U13 F – U19 F) ou Seniors F — tout le parcours est filtré pour toi.',
+        subtitle: 'Jeunes F, -13 ans, seniors F — tout le parcours est adapté à ton profil.',
         heroIcon: 'heart',
       };
     case 'sport':

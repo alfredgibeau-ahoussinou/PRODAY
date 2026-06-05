@@ -41,13 +41,15 @@ describe('appSpaceProductLine', () => {
   it('n’expose que les espaces compatibles avec la ligne produit', () => {
     expect(getSelectableAppSpaces('homme')).toEqual(['men', 'boys', 'under_u13']);
     expect(getSelectableAppSpaces('pro')).toEqual(['men', 'boys', 'under_u13']);
-    expect(getSelectableAppSpaces('woman')).toEqual(['women', 'girls']);
+    expect(getSelectableAppSpaces('woman')).toEqual(['women', 'girls', 'under_u13']);
   });
 
   it('refuse les espaces croisés', () => {
     expect(isAppSpaceAllowedForProductLine('men', 'woman')).toBe(false);
     expect(isAppSpaceAllowedForProductLine('women', 'homme')).toBe(false);
     expect(isAppSpaceAllowedForProductLine('women', 'woman')).toBe(true);
+    expect(isAppSpaceAllowedForProductLine('under_u13', 'woman')).toBe(true);
+    expect(isAppSpaceAllowedForProductLine('under_u13', 'homme')).toBe(true);
     expect(isAppSpaceAllowedForProductLine('men', 'homme')).toBe(true);
     expect(isAppSpaceAllowedForProductLine('men', 'pro')).toBe(true);
   });

@@ -39,6 +39,7 @@ import { recruitmentService } from '../services/recruitment.service';
 import { openContactConversation } from '../utils/openContactConversation';
 import { MercatoHero } from '../components/mercato/MercatoHero';
 import { useAppSpace } from '../context/AppSpaceContext';
+import { useAppTheme } from '../context/ProductLineContext';
 import { postMatchesAppSpace } from '../constants/appSpaces';
 import {
   APP_SPACE_LABELS,
@@ -80,13 +81,14 @@ export const MercatoScreen: React.FC = () => {
 
   const { profile } = useAuth();
   const { appSpace } = useAppSpace();
+  const { productLine } = useAppTheme();
   const { openChat, pendingMercatoView, clearPendingMercato } = useTabNavigation();
   const { stats, loading: loadingStats, posts, loadingLists, refreshLists } =
     useMercatoHome();
 
   const spacePosts = useMemo(
-    () => posts.filter((ad) => postMatchesAppSpace(ad, appSpace)),
-    [posts, appSpace]
+    () => posts.filter((ad) => postMatchesAppSpace(ad, appSpace, productLine)),
+    [posts, appSpace, productLine]
   );
 
   const filteredPosts = useMemo(() => {
