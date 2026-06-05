@@ -1,7 +1,10 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, spacing, radius, shadows } from '../../theme/designTokens';
+import { spacing, radius, shadows } from '../../theme/designTokens';
+import { SPONSOR_THEME } from '../../content/sponsorExperience';
+import { useAppTheme } from '../../context/ProductLineContext';
+import type { AppColors } from '../../theme/universeTheme';
 import { Icon } from './Icon';
 import { Logo } from '../Logo';
 
@@ -15,6 +18,8 @@ interface ScreenHeaderProps {
   centered?: boolean;
   showBrandLogo?: boolean;
   dark?: boolean;
+  /** Fond sombre aligné espace partenaire */
+  sponsorDark?: boolean;
 }
 
 export const ScreenHeader: React.FC<ScreenHeaderProps> = ({
@@ -27,18 +32,46 @@ export const ScreenHeader: React.FC<ScreenHeaderProps> = ({
   centered = false,
   showBrandLogo = false,
   dark = false,
+  sponsorDark = false,
 }) => {
-  const ink = dark ? colors.brandInverse : colors.text;
-  const subInk = dark ? colors.heroMuted : colors.textSecondary;
-  const wrapStyle = dark ? styles.wrapDark : styles.wrap;
+  const { colors: c } = useAppTheme();
+  const styles = useMemo(() => createStyles(c), [c]);
+  const isDarkHeader = dark || sponsorDark;
+  const ink = isDarkHeader
+    ? sponsorDark
+      ? SPONSOR_THEME.text
+      : c.brandInverse
+    : c.text;
+  const subInk = isDarkHeader
+    ? sponsorDark
+      ? SPONSOR_THEME.textSecondary
+      : c.heroMuted
+    : c.textSecondary;
+  const wrapStyle = [
+    isDarkHeader ? styles.wrapDark : styles.wrap,
+    !isDarkHeader && { backgroundColor: c.background },
+    sponsorDark && {
+      backgroundColor: SPONSOR_THEME.surface,
+      borderBottomWidth: 1,
+      borderBottomColor: SPONSOR_THEME.borderSubtle,
+    },
+  ];
+  const backIconColor = sponsorDark
+    ? SPONSOR_THEME.heroSubtext
+    : dark
+      ? c.brandInverse
+      : c.brand;
+  const backBtnStyle = sponsorDark
+    ? { backgroundColor: SPONSOR_THEME.primarySoft }
+    : { backgroundColor: c.brandSoft };
 
   if (centered || onBack) {
     return (
       <View style={wrapStyle}>
         <View style={styles.bar}>
           {onBack ? (
-            <TouchableOpacity onPress={onBack} style={styles.backBtn} hitSlop={12}>
-              <Ionicons name="chevron-back" size={22} color={dark ? colors.brandInverse : colors.accent} />
+            <TouchableOpacity onPress={onBack} style={[styles.backBtn, backBtnStyle]} hitSlop={12}>
+              <Ionicons name="chevron-back" size={22} color={backIconColor} />
             </TouchableOpacity>
           ) : (
             <View style={styles.side} />
@@ -65,7 +98,15 @@ export const ScreenHeader: React.FC<ScreenHeaderProps> = ({
   return (
     <View style={wrapStyle}>
       {label ? (
-        <Text style={[styles.label, dark && styles.labelDark]}>{label}</Text>
+        <Text
+          style={[
+            styles.label,
+            dark && styles.labelDark,
+            !isDarkHeader && { color: c.brand },
+          ]}
+        >
+          {label}
+        </Text>
       ) : null}
       {showBrandLogo && (
         <View style={styles.brandRow}>
@@ -85,13 +126,14 @@ export const ScreenHeader: React.FC<ScreenHeaderProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+function createStyles(c: AppColors) {
+  return StyleSheet.create({
   wrap: {
-    backgroundColor: colors.background,
+    backgroundColor: c.background,
     paddingBottom: spacing.sm,
   },
   wrapDark: {
-    backgroundColor: colors.surfaceInverse,
+    backgroundColor: c.surfaceInverse,
     paddingTop: spacing.sm,
     paddingBottom: spacing.lg,
     borderBottomLeftRadius: radius.xl,
@@ -103,13 +145,13 @@ const styles = StyleSheet.create({
       fontSize: 11,
       fontWeight: '700',
       letterSpacing: 1.8,
-      color: colors.accent,
+      color: c.brand,
       textTransform: 'uppercase',
     },
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
   },
-  labelDark: { color: colors.heroMuted },
+  labelDark: { color: c.heroMuted },
   bar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -122,7 +164,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: radius.pill,
-    backgroundColor: colors.accentSoft,
+    backgroundColor: c.brandSoft,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -164,3 +206,4 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.sm,
   },
 });
+}

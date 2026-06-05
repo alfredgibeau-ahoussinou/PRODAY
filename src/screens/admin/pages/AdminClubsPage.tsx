@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { ScrollView, TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { useAdminData } from '../../../context/AdminDataContext';
 import { adminService } from '../../../services/admin.service';
@@ -7,7 +7,9 @@ import { AdminEntityCard } from '../../../components/admin/AdminEntityCard';
 import { AdminSectionHeader } from '../../../components/admin/AdminSectionHeader';
 import { AdminEmptyState } from '../../../components/admin/AdminEmptyState';
 import { adminConfirmDelete } from '../../../utils/adminConfirm';
-import { colors, spacing, radius } from '../../../theme/designTokens';
+import { useAdminStyles } from '../../../components/admin/adminStyles';
+import { spacing, radius } from '../../../theme/designTokens';
+import type { AppColors } from '../../../theme/universeTheme';
 
 type ClubsSegment = 'clubs' | 'finance' | 'announcements';
 
@@ -19,6 +21,8 @@ const SEGMENTS: { id: ClubsSegment; label: string }[] = [
 
 export const AdminClubsPage: React.FC = () => {
   const { loading, clubs, payments, announcements, refresh } = useAdminData();
+  const { colors: c } = useAdminStyles();
+  const styles = useMemo(() => createStyles(c), [c]);
   const [segment, setSegment] = useState<ClubsSegment>('clubs');
 
   return (
@@ -45,15 +49,15 @@ export const AdminClubsPage: React.FC = () => {
           {clubs.length === 0 ? (
             <AdminEmptyState icon="business" title="Aucun club" subtitle="Structures créées." />
           ) : (
-            clubs.map((c) => (
+            clubs.map((club) => (
               <AdminEntityCard
-                key={c.id}
+                key={club.id}
                 icon="business"
-                title={c.name}
-                subtitle={`${c.city}${c.verified ? ' · vérifié' : ''}`}
-                meta={`${c.categories.join(', ') || '—'} · owner ${c.owner_uid.slice(0, 8)}…`}
+                title={club.name}
+                subtitle={`${club.city}${club.verified ? ' · vérifié' : ''}`}
+                meta={`${club.categories.join(', ') || '—'} · owner ${club.owner_uid.slice(0, 8)}…`}
                 onDelete={() =>
-                  adminConfirmDelete('Supprimer le club', c.name, () => adminService.deleteClub(c.id), refresh)
+                  adminConfirmDelete('Supprimer le club', club.name, () => adminService.deleteClub(club.id), refresh)
                 }
               />
             ))
@@ -114,18 +118,20 @@ export const AdminClubsPage: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  segments: { maxHeight: 44, marginBottom: spacing.md },
-  pill: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: 8,
-    borderRadius: radius.pill,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
-    marginRight: spacing.sm,
-  },
-  pillOn: { backgroundColor: colors.ink, borderColor: colors.ink },
-  pillText: { fontSize: 12, fontWeight: '800', color: colors.text },
-  pillTextOn: { color: colors.brandInverse },
-});
+function createStyles(c: AppColors) {
+  return StyleSheet.create({
+    segments: { maxHeight: 44, marginBottom: spacing.md },
+    pill: {
+      paddingHorizontal: spacing.md,
+      paddingVertical: 8,
+      borderRadius: radius.pill,
+      borderWidth: 1,
+      borderColor: c.border,
+      backgroundColor: c.surface,
+      marginRight: spacing.sm,
+    },
+    pillOn: { backgroundColor: c.ink, borderColor: c.ink },
+    pillText: { fontSize: 12, fontWeight: '800', color: c.text },
+    pillTextOn: { color: c.brandInverse },
+  });
+}

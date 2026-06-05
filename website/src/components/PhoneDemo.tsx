@@ -13,7 +13,8 @@ import {
   User,
 } from "lucide-react";
 import { Reveal } from "./Reveal";
-import { TABS } from "@/lib/content";
+import { UNIVERSE_THEME } from "@/components/universe/universeTheme";
+import { TABS, mercatoTabLabelForWeb, type ProductLineWeb } from "@/lib/content";
 
 const ICONS = {
   home: Home,
@@ -25,10 +26,9 @@ const ICONS = {
   user: User,
 } as const;
 
-const SCREENS: Record<
-  (typeof TABS)[number]["id"],
-  { title: string; body: string; image?: string; chips?: string[] }
-> = {
+type ScreenContent = { title: string; body: string; image?: string; chips?: string[] };
+
+const SCREENS: Record<(typeof TABS)[number]["id"], ScreenContent> = {
   home: {
     title: "Accueil ProDay",
     body: "Hub de votre saison : stats, modules Arena & Sponsors, agenda du jour.",
@@ -36,7 +36,7 @@ const SCREENS: Record<
     chips: ["Pulse 72", "3 convocations", "Arena ouvert"],
   },
   recruit: {
-    title: "Mercato",
+    title: "Candidater",
     body: "Filtrez par poste, niveau et ville. Postulez en un tap.",
     image: "/showcase/classic-mercato.jpg",
     chips: ["Attaquant", "Régional", "Paris"],
@@ -70,11 +70,75 @@ const SCREENS: Record<
   },
 };
 
-type PhoneDemoProps = { fullPage?: boolean };
+const UNIVERSE_SCREEN_OVERRIDES: Record<
+  ProductLineWeb,
+  Partial<Record<(typeof TABS)[number]["id"], Partial<ScreenContent>>>
+> = {
+  homme: {},
+  woman: {
+    home: {
+      title: "Accueil Woman",
+      body: "Hub Mercato F : stats, Arena filles, agenda et Pulse dédiés au foot au féminin.",
+      image: "/showcase/woman/woman-discover-hero.jpg",
+      chips: ["Pulse 72", "Mercato F", "Arena F"],
+    },
+    recruit: {
+      title: "Mercato F",
+      body: "Annonces féminines — filtrez par poste, niveau et ville. Postulez en un tap.",
+      image: "/showcase/woman/woman-mercato.jpg",
+      chips: ["Attaquante", "Régional", "Lyon"],
+    },
+    matches: {
+      title: "Matchs & convocations F",
+      body: "Amicaux, convocations et calendrier — pensés pour les équipes féminines.",
+      image: "/showcase/woman/woman-match.jpg",
+      chips: ["Sam. 15h", "U17 F", "Confirmé"],
+    },
+    profile: {
+      title: "Profil joueuse & CV",
+      body: "Stats saison, galerie, export PDF — vitrine sportive pour le foot au féminin.",
+      image: "/showcase/woman/woman-profile.jpg",
+      chips: ["12 buts", "8 passes", "Export PDF"],
+    },
+  },
+  pro: {
+    home: {
+      title: "Accueil Pro",
+      body: "Hub staff : Mercato Pro, effectifs, convocations et réseau vérifié.",
+      image: "/showcase/classic-staff.jpg",
+      chips: ["10 pros", "Mercato Pro", "Réseau"],
+    },
+    recruit: {
+      title: "Mercato Pro",
+      body: "Recrutement vérifié — annonces staff, clubs et mandats agent.",
+      image: "/showcase/classic-staff.jpg",
+      chips: ["Coach", "National", "Paris"],
+    },
+  },
+};
 
-export function PhoneDemo({ fullPage }: PhoneDemoProps) {
+function screenForTab(
+  tabId: (typeof TABS)[number]["id"],
+  universe: ProductLineWeb,
+  mercatoLabel: string,
+): ScreenContent {
+  const base = SCREENS[tabId];
+  const override = UNIVERSE_SCREEN_OVERRIDES[universe][tabId];
+  const merged = { ...base, ...override };
+  if (tabId === "recruit") merged.title = mercatoLabel;
+  return merged;
+}
+
+type PhoneDemoProps = { fullPage?: boolean; universe?: ProductLineWeb };
+
+export function PhoneDemo({ fullPage, universe = "homme" }: PhoneDemoProps) {
   const [active, setActive] = useState<(typeof TABS)[number]["id"]>("home");
-  const screen = SCREENS[active];
+  const theme = UNIVERSE_THEME[universe];
+  const mercatoLabel = mercatoTabLabelForWeb(universe);
+  const screen = screenForTab(active, universe, mercatoLabel);
+  const tabs = TABS.map((tab) =>
+    tab.id === "recruit" ? { ...tab, label: mercatoLabel } : tab,
+  );
 
   return (
     <section
@@ -152,7 +216,7 @@ export function PhoneDemo({ fullPage }: PhoneDemoProps) {
             </div>
 
             <div className="mt-3 flex justify-around rounded-2xl bg-neutral-800/80 p-2">
-              {TABS.map((tab) => {
+              {tabs.map((tab) => {
                 const Icon = ICONS[tab.icon as keyof typeof ICONS];
                 const isActive = active === tab.id;
                 return (
@@ -167,7 +231,7 @@ export function PhoneDemo({ fullPage }: PhoneDemoProps) {
                     {isActive && (
                       <motion.div
                         layoutId="tab-pill"
-                        className="absolute inset-0 rounded-xl bg-white/15"
+                        className={`absolute inset-0 rounded-xl ${theme.demoTabActive}`}
                         transition={{
                           type: "spring",
                           stiffness: 400,
@@ -202,14 +266,14 @@ export function PhoneDemo({ fullPage }: PhoneDemoProps) {
                 transition={{ delay: i * 0.08 }}
                 className={`block w-full rounded-2xl border p-4 text-left transition ${
                   active === tab.id
-                    ? "border-white/30 bg-white/10"
+                    ? `border-white/30 ${theme.demoTabActive}`
                     : "border-transparent hover:bg-white/5"
                 }`}
               >
                 <span className="text-xs text-neutral-500">0{i + 1}</span>
                 <span className="ml-2 font-semibold">{tab.label}</span>
                 <p className="mt-1 text-sm text-neutral-400">
-                  {SCREENS[tab.id].body.slice(0, 60)}…
+                  {screenForTab(tab.id, universe, mercatoLabel).body.slice(0, 60)}…
                 </p>
               </motion.button>
             ))}

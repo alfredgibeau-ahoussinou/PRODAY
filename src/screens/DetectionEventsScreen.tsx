@@ -15,7 +15,8 @@ import { formatCalendarDate } from '../utils/seasonCalendar';
 import { TeamEventDetailScreen } from './TeamEventDetailScreen';
 import { CreateTeamEventScreen } from './CreateTeamEventScreen';
 import { useAuth } from '../context/AuthContext';
-import { colors, spacing, radius } from '../theme/designTokens';
+import { spacing, radius } from '../theme/designTokens';
+import { useAppTheme } from '../context/ProductLineContext';
 
 interface DetectionEventsScreenProps {
   onBack: () => void;
@@ -30,6 +31,7 @@ export const DetectionEventsScreen: React.FC<DetectionEventsScreenProps> = ({
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const { profile } = useAuth();
   const { events, loading, refresh } = useDetectionEvents();
+  const { colors: themeColors } = useAppTheme();
 
   const canCreate =
     profile &&
@@ -65,7 +67,7 @@ export const DetectionEventsScreen: React.FC<DetectionEventsScreenProps> = ({
   }
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, { backgroundColor: themeColors.background }]}>
       <ScreenHeader
         title="Journées détection"
         subtitle="Journées de scouting intégrées à votre calendrier ProDay"
@@ -73,13 +75,29 @@ export const DetectionEventsScreen: React.FC<DetectionEventsScreenProps> = ({
         centered
       />
 
-      <View style={styles.heroBanner}>
-        <View style={styles.heroIcon}>
-          <Icon name="football" size={22} color={colors.accent} />
+      <View
+        style={[
+          styles.heroBanner,
+          {
+            backgroundColor: themeColors.surface,
+            borderColor: themeColors.border,
+          },
+        ]}
+      >
+        <View
+          style={[
+            styles.heroIcon,
+            {
+              backgroundColor: themeColors.accentSoft,
+              borderColor: themeColors.brand,
+            },
+          ]}
+        >
+          <Icon name="football" size={22} color={themeColors.brand} />
         </View>
         <View style={styles.heroCopy}>
-          <Text style={styles.heroTitle}>Scouting ProDay</Text>
-          <Text style={styles.heroSub}>
+          <Text style={[styles.heroTitle, { color: themeColors.text }]}>Scouting ProDay</Text>
+          <Text style={[styles.heroSub, { color: themeColors.textSecondary }]}>
             Journées de détection reliées à votre calendrier — inscrivez-vous ou
             organisez une session pour votre club.
           </Text>
@@ -87,14 +105,19 @@ export const DetectionEventsScreen: React.FC<DetectionEventsScreenProps> = ({
       </View>
 
       {canCreate && (
-        <TouchableOpacity style={styles.createBtn} onPress={() => setView('create')}>
-          <Icon name="add" size={20} color={colors.brandInverse} />
-          <Text style={styles.createText}>Organiser une détection</Text>
+        <TouchableOpacity
+          style={[styles.createBtn, { backgroundColor: themeColors.brand }]}
+          onPress={() => setView('create')}
+        >
+          <Icon name="add" size={20} color={themeColors.brandInverse} />
+          <Text style={[styles.createText, { color: themeColors.brandInverse }]}>
+            Organiser une détection
+          </Text>
         </TouchableOpacity>
       )}
 
       {loading ? (
-        <ActivityIndicator color={colors.accent} style={styles.loader} />
+        <ActivityIndicator color={themeColors.brand} style={styles.loader} />
       ) : (
         <FlatList
           data={events}
@@ -104,22 +127,32 @@ export const DetectionEventsScreen: React.FC<DetectionEventsScreenProps> = ({
             const yes = countRsvpYes(item);
             return (
               <TouchableOpacity
-                style={styles.card}
+                style={[
+                  styles.card,
+                  {
+                    backgroundColor: themeColors.surface,
+                    borderColor: themeColors.border,
+                  },
+                ]}
                 onPress={() => {
                   setSelectedId(item.id);
                   setView('detail');
                 }}
               >
-                <Text style={styles.cardTitle}>{item.title}</Text>
-                <Text style={styles.cardMeta}>{formatCalendarDate(item.starts_at)}</Text>
-                <Text style={styles.cardMeta}>
+                <Text style={[styles.cardTitle, { color: themeColors.text }]}>{item.title}</Text>
+                <Text style={[styles.cardMeta, { color: themeColors.textMuted }]}>
+                  {formatCalendarDate(item.starts_at)}
+                </Text>
+                <Text style={[styles.cardMeta, { color: themeColors.textMuted }]}>
                   {item.city} · {item.organizer_name}
                 </Text>
                 {item.categories?.length ? (
-                  <Text style={styles.cardCats}>{item.categories.join(' · ')}</Text>
+                  <Text style={[styles.cardCats, { color: themeColors.brand }]}>
+                    {item.categories.join(' · ')}
+                  </Text>
                 ) : null}
                 {item.max_participants ? (
-                  <Text style={styles.cardSlots}>
+                  <Text style={[styles.cardSlots, { color: themeColors.text }]}>
                     {yes} / {item.max_participants} inscrits
                   </Text>
                 ) : null}
@@ -127,7 +160,7 @@ export const DetectionEventsScreen: React.FC<DetectionEventsScreenProps> = ({
             );
           }}
           ListEmptyComponent={
-            <Text style={styles.empty}>
+            <Text style={[styles.empty, { color: themeColors.textMuted }]}>
               Aucune détection programmée. Les clubs et organisateurs peuvent en créer une.
             </Text>
           }
@@ -138,32 +171,28 @@ export const DetectionEventsScreen: React.FC<DetectionEventsScreenProps> = ({
 };
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.background },
+  root: { flex: 1 },
   heroBanner: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: spacing.md,
     marginHorizontal: spacing.lg,
     marginBottom: spacing.md,
-    backgroundColor: colors.surface,
     borderRadius: radius.lg,
     padding: spacing.lg,
     borderWidth: 1,
-    borderColor: colors.border,
   },
   heroIcon: {
     width: 44,
     height: 44,
     borderRadius: radius.md,
-    backgroundColor: colors.accentSoft,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: colors.accent,
   },
   heroCopy: { flex: 1 },
-  heroTitle: { fontSize: 16, fontWeight: '900', color: colors.text },
-  heroSub: { fontSize: 12, color: colors.textSecondary, lineHeight: 17, marginTop: 4 },
+  heroTitle: { fontSize: 16, fontWeight: '900' },
+  heroSub: { fontSize: 12, lineHeight: 17, marginTop: 4 },
   createBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -171,30 +200,24 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     marginHorizontal: spacing.lg,
     marginBottom: spacing.md,
-    backgroundColor: colors.ink,
     padding: spacing.md,
     borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
   },
-  createText: { color: colors.brandInverse, fontWeight: '900', fontSize: 14 },
+  createText: { fontWeight: '900', fontSize: 14 },
   loader: { marginTop: 40 },
   list: { paddingHorizontal: spacing.lg, paddingBottom: spacing.xxl },
   card: {
-    backgroundColor: colors.surface,
     borderRadius: radius.lg,
     padding: spacing.lg,
     marginBottom: spacing.sm,
     borderWidth: 1,
-    borderColor: colors.border,
   },
-  cardTitle: { fontSize: 16, fontWeight: '900', color: colors.text },
-  cardMeta: { fontSize: 13, color: colors.textMuted, marginTop: 4 },
-  cardCats: { fontSize: 12, color: colors.accent, fontWeight: '700', marginTop: 6 },
-  cardSlots: { fontSize: 12, fontWeight: '800', color: colors.text, marginTop: 4 },
+  cardTitle: { fontSize: 16, fontWeight: '900' },
+  cardMeta: { fontSize: 13, marginTop: 4 },
+  cardCats: { fontSize: 12, fontWeight: '700', marginTop: 6 },
+  cardSlots: { fontSize: 12, fontWeight: '800', marginTop: 4 },
   empty: {
     textAlign: 'center',
-    color: colors.textMuted,
     marginTop: 48,
     lineHeight: 22,
     paddingHorizontal: spacing.lg,

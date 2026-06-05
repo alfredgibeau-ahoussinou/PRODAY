@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Icon } from '../../components/ui/Icon';
 import { SignupDocumentAiPanel } from '../../components/signup/SignupDocumentAiPanel';
@@ -10,7 +10,9 @@ import { isAiVerificationPassing, type AiVerificationResult } from '../../utils/
 import { captureDocumentWithCamera } from '../../utils/captureIdentityDocument';
 import { ProDayErrorBanner } from '../../components/ui/ProDayErrorBanner';
 import { getErrorMessage } from '../../utils/errors';
-import { colors, spacing, radius } from '../../theme/designTokens';
+import { spacing } from '../../theme/designTokens';
+import { useSignupFlowTheme } from './SignupFlowContext';
+import type { AppColors } from '../../theme/universeTheme';
 
 interface SignupDocumentStepProps {
   stepIndex: number;
@@ -46,6 +48,8 @@ export const SignupDocumentStep: React.FC<SignupDocumentStepProps> = ({
   onError,
   setLoading,
 }) => {
+  const { colors: c } = useSignupFlowTheme();
+  const styles = useMemo(() => createStyles(c), [c]);
   const [aiResult, setAiResult] = useState<AiVerificationResult | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
 
@@ -115,7 +119,7 @@ export const SignupDocumentStep: React.FC<SignupDocumentStepProps> = ({
       }
     >
       <View style={styles.iconWrap}>
-        <Icon name="camera" size={36} color={colors.accent} />
+        <Icon name="camera" size={36} color={c.brand} />
       </View>
       {error ? (
         <ProDayErrorBanner message={error} onDismiss={() => onError('')} />
@@ -129,19 +133,21 @@ export const SignupDocumentStep: React.FC<SignupDocumentStepProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  iconWrap: {
-    alignSelf: 'center',
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    backgroundColor: colors.accentSoft,
-    borderWidth: 1,
-    borderColor: colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.lg,
-  },
-  hint: { fontSize: 14, lineHeight: 21, color: colors.textSecondary, textAlign: 'center' },
-  skipWrap: { marginTop: spacing.sm },
-});
+function createStyles(c: AppColors) {
+  return StyleSheet.create({
+    iconWrap: {
+      alignSelf: 'center',
+      width: 72,
+      height: 72,
+      borderRadius: 36,
+      backgroundColor: c.brandSoft,
+      borderWidth: 1,
+      borderColor: c.border,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: spacing.lg,
+    },
+    hint: { fontSize: 14, lineHeight: 21, color: c.textSecondary, textAlign: 'center' },
+    skipWrap: { marginTop: spacing.sm },
+  });
+}

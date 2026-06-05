@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, type ViewStyle } from 'react-native';
 import { spacing, radius, shadows } from '../../theme/designTokens';
-import type { AppColors } from '../../theme/prodayWomanTheme';
+import type { AppColors } from '../../theme/universeTheme';
 
 interface HubSectionProps {
   title?: string;

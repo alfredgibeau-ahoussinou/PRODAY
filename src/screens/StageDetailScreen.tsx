@@ -14,7 +14,8 @@ import type { StageOffer } from '../models/Stage';
 import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { stagesService } from '../services/stages.service';
 import { formatCalendarDate } from '../utils/seasonCalendar';
-import { colors, spacing, radius } from '../theme/designTokens';
+import { spacing, radius } from '../theme/designTokens';
+import { useThemedScreen } from '../hooks/useThemedScreen';
 
 interface StageDetailScreenProps {
   stageId: string;
@@ -32,6 +33,7 @@ export const StageDetailScreen: React.FC<StageDetailScreenProps> = ({
   const [message, setMessage] = useState('');
   const [applied, setApplied] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const { colors: themeColors, rootStyle } = useThemedScreen();
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -82,9 +84,9 @@ export const StageDetailScreen: React.FC<StageDetailScreenProps> = ({
 
   if (loading || !stage) {
     return (
-      <View style={styles.root}>
+      <View style={[styles.root, rootStyle]}>
         <ScreenHeader title="Stage" onBack={onBack} centered />
-        <ActivityIndicator color={colors.brand} style={styles.loader} />
+        <ActivityIndicator color={themeColors.brand} style={styles.loader} />
       </View>
     );
   }
@@ -92,39 +94,49 @@ export const StageDetailScreen: React.FC<StageDetailScreenProps> = ({
   const spotsLeft = stage.spots_total - stage.spots_taken;
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, rootStyle]}>
       <ScreenHeader title={stage.title} onBack={onBack} centered />
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.club}>{stage.club_name}</Text>
-        <Text style={styles.meta}>
+        <Text style={[styles.club, { color: themeColors.brand }]}>{stage.club_name}</Text>
+        <Text style={[styles.meta, { color: themeColors.textMuted }]}>
           {stage.category} · {stage.city}
         </Text>
-        <Text style={styles.dates}>
+        <Text style={[styles.dates, { color: themeColors.text }]}>
           Du {formatCalendarDate(stage.start_date)} au {formatCalendarDate(stage.end_date)}
         </Text>
-        <Text style={styles.spots}>
+        <Text style={[styles.spots, { color: themeColors.text }]}>
           {spotsLeft} place{spotsLeft !== 1 ? 's' : ''} disponible{spotsLeft !== 1 ? 's' : ''}
           {stage.price_eur != null ? ` · ${stage.price_eur} €` : ''}
         </Text>
         {stage.description ? (
-          <Text style={styles.body}>{stage.description}</Text>
+          <Text style={[styles.body, { color: themeColors.text }]}>{stage.description}</Text>
         ) : null}
 
         {profile?.role === 'player' && stage.status === 'OPEN' && spotsLeft > 0 ? (
           applied ? (
-            <Text style={styles.applied}>Vous avez déjà demandé une inscription.</Text>
+            <Text style={[styles.applied, { color: themeColors.brand }]}>
+              Vous avez déjà demandé une inscription.
+            </Text>
           ) : (
             <>
               <TextInput
-                style={[styles.input, styles.bio]}
+                style={[
+                  styles.input,
+                  styles.bio,
+                  {
+                    backgroundColor: themeColors.surface,
+                    borderColor: themeColors.border,
+                    color: themeColors.text,
+                  },
+                ]}
                 placeholder="Message au club *"
-                placeholderTextColor={colors.textMuted}
+                placeholderTextColor={themeColors.textMuted}
                 value={message}
                 onChangeText={setMessage}
                 multiline
               />
               <TouchableOpacity
-                style={styles.primary}
+                style={[styles.primary, { backgroundColor: themeColors.brand }]}
                 onPress={handleApply}
                 disabled={submitting}
               >
@@ -143,37 +155,31 @@ export const StageDetailScreen: React.FC<StageDetailScreenProps> = ({
 };
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.background },
+  root: { flex: 1 },
   loader: { marginTop: spacing.xl },
   content: { padding: spacing.lg, paddingBottom: spacing.xxl },
-  club: { fontSize: 14, fontWeight: '800', color: colors.brand },
-  meta: { fontSize: 13, color: colors.textMuted, marginTop: 4 },
-  dates: { fontSize: 14, color: colors.text, marginTop: spacing.sm },
+  club: { fontSize: 14, fontWeight: '800' },
+  meta: { fontSize: 13, marginTop: 4 },
+  dates: { fontSize: 14, marginTop: spacing.sm },
   spots: { fontSize: 13, fontWeight: '700', marginTop: spacing.sm },
   body: {
     fontSize: 15,
     lineHeight: 22,
-    color: colors.text,
     marginTop: spacing.lg,
   },
   applied: {
     marginTop: spacing.lg,
-    color: colors.accent,
     fontWeight: '700',
     textAlign: 'center',
   },
   input: {
-    backgroundColor: colors.surface,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: colors.border,
     padding: spacing.md,
     marginTop: spacing.lg,
-    color: colors.text,
   },
   bio: { minHeight: 90, textAlignVertical: 'top' },
   primary: {
-    backgroundColor: colors.brand,
     borderRadius: radius.lg,
     padding: spacing.md,
     alignItems: 'center',

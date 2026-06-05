@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   View,
   Text,
@@ -11,9 +11,10 @@ import type { RecruitmentPost } from '../../models/Player';
 import type { Tournament } from '../../models/Tournament';
 import { formatTimeAgo } from '../../services/recruitment.service';
 import { Icon } from '../ui/Icon';
-import { colors, spacing, radius } from '../../theme/designTokens';
-import { discoverPalette, discoverLayout } from './discoverStyles';
+import { spacing, radius } from '../../theme/designTokens';
+import { discoverLayout, getDiscoverPalette, useDiscoverStyles } from './discoverStyles';
 import { useDiscoverMetrics } from './useDiscoverMetrics';
+import type { AppColors } from '../../theme/universeTheme';
 
 interface DiscoverActivityStripProps {
   posts: RecruitmentPost[];
@@ -30,6 +31,8 @@ export const DiscoverActivityStrip: React.FC<DiscoverActivityStripProps> = ({
   onPress,
   variant = 'default',
 }) => {
+  const { palette, colors: c } = useDiscoverStyles();
+  const styles = useMemo(() => createStyles(c, palette), [c, palette]);
   const editorial = variant === 'editorial';
   const immersive = variant === 'immersive';
   const { pageWidth, pad, compact } = useDiscoverMetrics();
@@ -39,7 +42,7 @@ export const DiscoverActivityStrip: React.FC<DiscoverActivityStripProps> = ({
   if (loading) {
     return (
       <ActivityIndicator
-        color={immersive || editorial ? discoverPalette.text : colors.accent}
+        color={immersive || editorial ? palette.text : c.brand}
         style={styles.loader}
       />
     );
@@ -48,7 +51,7 @@ export const DiscoverActivityStrip: React.FC<DiscoverActivityStripProps> = ({
   if (!hasContent) {
     return (
       <View style={[styles.empty, (editorial || immersive) && styles.emptyDark]}>
-        <Icon name="football-outline" size={22} color={immersive ? discoverPalette.muted : colors.textMuted} />
+        <Icon name="football-outline" size={22} color={immersive ? palette.muted : c.textMuted} />
         <Text style={styles.emptyText}>Les annonces et tournois apparaîtront ici.</Text>
       </View>
     );
@@ -112,81 +115,72 @@ export const DiscoverActivityStrip: React.FC<DiscoverActivityStripProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  loader: { marginVertical: spacing.lg },
-  empty: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    padding: spacing.lg,
-    backgroundColor: colors.surfaceMuted,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  emptyText: {
-    flex: 1,
-    fontSize: 13,
-    color: colors.textSecondary,
-    fontWeight: '500',
-    lineHeight: 18,
-  },
-  rail: {
-    gap: spacing.sm,
-    paddingRight: spacing.lg,
-  },
-  chip: {
-    padding: spacing.md,
-    backgroundColor: colors.surfaceMuted,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  chipArena: {},
-  chipPressed: { opacity: 0.88 },
-  chipEyebrow: {
-    fontSize: 9,
-    fontWeight: '800',
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-    color: colors.textMuted,
-    marginBottom: 4,
-  },
-  chipTitle: {
-    fontSize: 14,
-    fontWeight: '800',
-    color: colors.text,
-    letterSpacing: -0.2,
-  },
-  chipMeta: {
-    marginTop: 4,
-    fontSize: 11,
-    color: colors.textSecondary,
-    fontWeight: '500',
-  },
-  emptyEditorial: {
-    backgroundColor: discoverPalette.surface,
-    borderColor: discoverPalette.border,
-    borderRadius: discoverLayout.cardRadius,
-  },
-  emptyDark: {
-    backgroundColor: discoverPalette.surface,
-    borderColor: discoverPalette.border,
-    borderRadius: discoverLayout.cardRadius,
-  },
-  chipEditorial: {
-    backgroundColor: discoverPalette.surface,
-    borderColor: discoverPalette.border,
-    borderRadius: discoverLayout.cardRadius,
-  },
-  chipDark: {
-    backgroundColor: discoverPalette.surface,
-    borderColor: discoverPalette.border,
-    borderRadius: discoverLayout.cardRadius,
-  },
-  chipEyebrowEditorial: { color: discoverPalette.faint },
-  chipEyebrowDark: { color: discoverPalette.faint },
-  chipTitleDark: { color: discoverPalette.text },
-  chipMetaDark: { color: discoverPalette.muted },
-  chipCompact: { padding: spacing.sm + 2 },
-});
+function createStyles(c: AppColors, palette: ReturnType<typeof getDiscoverPalette>) {
+  return StyleSheet.create({
+    loader: { marginVertical: spacing.lg },
+    empty: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.md,
+      padding: spacing.lg,
+      backgroundColor: c.surfaceMuted,
+      borderRadius: radius.lg,
+      borderWidth: 1,
+      borderColor: c.border,
+    },
+    emptyText: {
+      flex: 1,
+      fontSize: 13,
+      color: c.textSecondary,
+      fontWeight: '500',
+      lineHeight: 18,
+    },
+    rail: {
+      gap: spacing.sm,
+      paddingRight: spacing.lg,
+    },
+    chip: {
+      padding: spacing.md,
+      backgroundColor: c.surfaceMuted,
+      borderRadius: radius.md,
+      borderWidth: 1,
+      borderColor: c.border,
+    },
+    chipArena: {},
+    chipPressed: { opacity: 0.88 },
+    chipEyebrow: {
+      fontSize: 9,
+      fontWeight: '800',
+      letterSpacing: 1,
+      textTransform: 'uppercase',
+      color: c.textMuted,
+      marginBottom: 4,
+    },
+    chipTitle: {
+      fontSize: 14,
+      fontWeight: '800',
+      color: c.text,
+      letterSpacing: -0.2,
+    },
+    chipMeta: {
+      marginTop: 4,
+      fontSize: 11,
+      color: c.textSecondary,
+      fontWeight: '500',
+    },
+    emptyDark: {
+      backgroundColor: palette.surface,
+      borderColor: palette.border,
+      borderRadius: discoverLayout.cardRadius,
+    },
+    chipDark: {
+      backgroundColor: palette.surface,
+      borderColor: palette.border,
+      borderRadius: discoverLayout.cardRadius,
+    },
+    chipEyebrowDark: { color: palette.faint },
+    chipTitleDark: { color: palette.text },
+    chipMetaDark: { color: palette.muted },
+    chipCompact: { padding: spacing.sm + 2 },
+  });
+}

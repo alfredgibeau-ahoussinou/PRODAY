@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Icon, type IconName } from '../ui/Icon';
 import type { PlatformStats } from '../../services/admin.service';
-import { colors, spacing, radius } from '../../theme/designTokens';
+import { useAdminStyles } from './adminStyles';
+import { spacing, radius } from '../../theme/designTokens';
+import type { AppColors } from '../../theme/universeTheme';
 
 interface AdminStatGridProps {
   stats: PlatformStats;
@@ -35,62 +37,69 @@ const ITEMS: {
   },
 ];
 
-export const AdminStatGrid: React.FC<AdminStatGridProps> = ({ stats }) => (
-  <View style={styles.wrap}>
-    <Text style={styles.eyebrow}>APERÇU PLATEFORME</Text>
-    <View style={styles.grid}>
-      {ITEMS.map((item) => {
-        const value = item.getValue(stats);
-        const isAlert = item.alert && value > 0;
-        return (
-          <View
-            key={item.key}
-            style={[styles.card, isAlert && styles.cardAlert]}
-          >
-            <View style={[styles.iconBox, isAlert && styles.iconBoxAlert]}>
-              <Icon name={item.icon} size={18} color={isAlert ? colors.brandInverse : colors.accent} />
-            </View>
-            <Text style={styles.value}>{value}</Text>
-            <Text style={styles.label}>{item.label}</Text>
-          </View>
-        );
-      })}
-    </View>
-  </View>
-);
+export const AdminStatGrid: React.FC<AdminStatGridProps> = ({ stats }) => {
+  const { colors: c } = useAdminStyles();
+  const styles = useMemo(() => createStyles(c), [c]);
 
-const styles = StyleSheet.create({
-  wrap: { marginBottom: spacing.lg },
-  eyebrow: {
-    fontSize: 10,
-    fontWeight: '800',
-    color: colors.accent,
-    letterSpacing: 1.2,
-    marginBottom: spacing.md,
-  },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  card: {
-    width: '47%',
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    padding: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  cardAlert: {
-    borderColor: colors.accent,
-    backgroundColor: colors.accentSoft,
-  },
-  iconBox: {
-    width: 36,
-    height: 36,
-    borderRadius: radius.sm,
-    backgroundColor: colors.accentSoft,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.sm,
-  },
-  iconBoxAlert: { backgroundColor: colors.accent },
-  value: { fontSize: 28, fontWeight: '900', color: colors.text, letterSpacing: -1 },
-  label: { fontSize: 11, fontWeight: '700', color: colors.textMuted, marginTop: 2 },
-});
+  return (
+    <View style={styles.wrap}>
+      <Text style={styles.eyebrow}>APERÇU PLATEFORME</Text>
+      <View style={styles.grid}>
+        {ITEMS.map((item) => {
+          const value = item.getValue(stats);
+          const isAlert = item.alert && value > 0;
+          return (
+            <View
+              key={item.key}
+              style={[styles.card, isAlert && styles.cardAlert]}
+            >
+              <View style={[styles.iconBox, isAlert && styles.iconBoxAlert]}>
+                <Icon name={item.icon} size={18} color={isAlert ? c.brandInverse : c.brand} />
+              </View>
+              <Text style={styles.value}>{value}</Text>
+              <Text style={styles.label}>{item.label}</Text>
+            </View>
+          );
+        })}
+      </View>
+    </View>
+  );
+};
+
+function createStyles(c: AppColors) {
+  return StyleSheet.create({
+    wrap: { marginBottom: spacing.lg },
+    eyebrow: {
+      fontSize: 10,
+      fontWeight: '800',
+      color: c.brand,
+      letterSpacing: 1.2,
+      marginBottom: spacing.md,
+    },
+    grid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+    card: {
+      width: '47%',
+      backgroundColor: c.surface,
+      borderRadius: radius.lg,
+      padding: spacing.md,
+      borderWidth: 1,
+      borderColor: c.border,
+    },
+    cardAlert: {
+      borderColor: c.brand,
+      backgroundColor: c.accentSoft,
+    },
+    iconBox: {
+      width: 36,
+      height: 36,
+      borderRadius: radius.sm,
+      backgroundColor: c.accentSoft,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: spacing.sm,
+    },
+    iconBoxAlert: { backgroundColor: c.brand },
+    value: { fontSize: 28, fontWeight: '900', color: c.text, letterSpacing: -1 },
+    label: { fontSize: 11, fontWeight: '700', color: c.textMuted, marginTop: 2 },
+  });
+}

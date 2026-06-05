@@ -2,7 +2,11 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { View, StyleSheet, ActivityIndicator } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
-import { MAIN_TABS, type MainTabId } from './src/navigation/MainTabs';
+import { type MainTabId } from './src/navigation/MainTabs';
+import {
+  resolveMainTabScreen,
+  shouldInjectShopTab,
+} from './src/navigation/resolveMainTabScreen';
 import {
   getGuestVisibleTabs,
   isGuestTabAllowed,
@@ -33,6 +37,8 @@ import type {
 } from './src/utils/navigationDeepLink';
 import { profileMatchesActiveLine } from './src/utils/productLineAccess';
 import { getVisibleMainTabs } from './src/content/poleExperience';
+import { useSessionProfile } from './src/hooks/useSessionProfile';
+import { isSponsorRole, SPONSOR_THEME } from './src/content/sponsorExperience';
 
 export default function App() {
   return (
@@ -51,6 +57,7 @@ export default function App() {
 function AppShell() {
   const { colors: themeColors, isWoman, productLine, loading: productLineLoading } =
     useProductLine();
+  const sessionProfile = useSessionProfile();
   const {
     profile,
     loading: authLoading,
@@ -89,14 +96,15 @@ function AppShell() {
     () =>
       isGuest
         ? getGuestVisibleTabs()
-        : getVisibleMainTabs(productLine, profile?.role),
-    [isGuest, productLine, profile?.role]
+        : getVisibleMainTabs(productLine, sessionProfile?.role),
+    [isGuest, productLine, sessionProfile?.role]
   );
 
   const screenTabs = useMemo((): MainTabId[] => {
+    if (!shouldInjectShopTab(sessionProfile?.role)) return visibleTabs;
     if (visibleTabs.includes('shop')) return visibleTabs;
     return [...visibleTabs, 'shop'];
-  }, [visibleTabs]);
+  }, [visibleTabs, sessionProfile?.role]);
 
   useEffect(() => {
     if (activeTab === 'messages') refreshUnread();
@@ -168,8 +176,9 @@ function AppShell() {
     setActiveTab(isGuest ? resolveGuestTab(tab) : tab);
   };
 
-  const current = MAIN_TABS.find((t) => t.id === activeTab)!;
-  const Screen = current.screen;
+  const Screen = resolveMainTabScreen(activeTab, sessionProfile?.role);
+  const isSponsor = isSponsorRole(sessionProfile?.role);
+  const shellBackground = isSponsor ? SPONSOR_THEME.background : themeColors.background;
 
   const mainApp = (
     <AppSpaceProvider>
@@ -227,10 +236,10 @@ function AppShell() {
         }}
       >
         <SafeAreaView
-          style={[styles.root, { backgroundColor: themeColors.background }]}
+          style={[styles.root, { backgroundColor: shellBackground }]}
           edges={previewUserMode ? [] : ['top', 'left', 'right']}
         >
-          <StatusBar style="dark" />
+          <StatusBar style={isSponsor ? 'light' : 'dark'} />
           {previewUserMode ? (
             <AdminPreviewBanner onExitPreview={() => setPreviewUserMode(false)} />
           ) : null}
@@ -252,9 +261,10 @@ function AppShell() {
   );
 
   if (profile) {
+    const billingProfile = sessionProfile ?? profile;
     return (
-      <SubscriptionProvider profile={profile}>
-        <SubscriptionShell profile={profile}>{mainApp}</SubscriptionShell>
+      <SubscriptionProvider profile={billingProfile}>
+        <SubscriptionShell profile={billingProfile}>{mainApp}</SubscriptionShell>
       </SubscriptionProvider>
     );
   }

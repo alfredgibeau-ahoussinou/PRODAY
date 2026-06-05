@@ -23,8 +23,9 @@ import { PressableSpring } from './PressableSpring';
 import { DiscoverSectionHeader } from './DiscoverSectionHeader';
 import { Icon } from '../ui/Icon';
 import type { ProDayModuleId } from '../../content/prodayModules';
-import { colors, spacing, radius, shadows, brandOverlay } from '../../theme/designTokens';
-import { discoverPalette, discoverLayout } from './discoverStyles';
+import { spacing, radius, shadows, brandOverlay } from '../../theme/designTokens';
+import { discoverLayout, getDiscoverPalette, useDiscoverStyles } from './discoverStyles';
+import type { AppColors } from '../../theme/universeTheme';
 import { useDiscoverMetrics } from './useDiscoverMetrics';
 
 interface DiscoverUniverseCarouselProps {
@@ -40,6 +41,8 @@ export const DiscoverUniverseCarousel: React.FC<DiscoverUniverseCarouselProps> =
   autoPlay = false,
   variant = 'dark',
 }) => {
+  const { palette, colors: c } = useDiscoverStyles();
+  const styles = useMemo(() => createCarouselStyles(c, palette), [c, palette]);
   const editorial = variant === 'editorial';
   const { productLine } = useAppTheme();
   const cards = useMemo(() => getDiscoverUniverseCards(productLine), [productLine]);
@@ -135,6 +138,8 @@ const UniverseCard: React.FC<{
   editorial: boolean;
   compact: boolean;
 }> = ({ card, index, scrollX, cardWidth, cardSnap, onPress, editorial, compact }) => {
+  const { palette, colors: c } = useDiscoverStyles();
+  const styles = useMemo(() => createCarouselStyles(c, palette), [c, palette]);
   const offset = index * cardSnap;
 
   const style = useAnimatedStyle(() => {
@@ -164,7 +169,7 @@ const UniverseCard: React.FC<{
             />
             <View style={styles.editorialCopy}>
               <View style={styles.editorialBadge}>
-                <Icon name={card.icon} size={16} color={discoverPalette.ink} variant="filled" />
+                <Icon name={card.icon} size={16} color={palette.ink} variant="filled" />
               </View>
               <Text style={styles.editorialTitle}>{card.title}</Text>
               <Text style={styles.editorialSub}>{card.subtitle}</Text>
@@ -183,14 +188,14 @@ const UniverseCard: React.FC<{
           <ShowcaseImageBackground source={card.image} variant="hero" style={styles.hero} imageStyle={styles.heroImg}>
             <View style={styles.overlay} />
             <View style={[styles.badge, { borderColor: card.accent }]}>
-              <Icon name={card.icon} size={18} color={colors.brandInverse} variant="filled" />
+              <Icon name={card.icon} size={18} color={c.brandInverse} variant="filled" />
             </View>
             <View style={styles.copy}>
               <Text style={styles.title}>{card.title}</Text>
               <Text style={styles.sub}>{card.subtitle}</Text>
               <View style={styles.tapRow}>
                 <Text style={styles.tapText}>Toucher pour explorer</Text>
-                <Icon name="chevron-forward" size={16} color={colors.brandInverse} />
+                <Icon name="chevron-forward" size={16} color={c.brandInverse} />
               </View>
             </View>
           </ShowcaseImageBackground>
@@ -200,7 +205,8 @@ const UniverseCard: React.FC<{
   );
 };
 
-const styles = StyleSheet.create({
+function createCarouselStyles(c: AppColors, palette: ReturnType<typeof getDiscoverPalette>) {
+  return StyleSheet.create({
   wrap: { marginTop: spacing.xl },
   wrapEditorial: { marginTop: spacing.md },
   wrapImmersive: { marginTop: spacing.sm },
@@ -210,9 +216,9 @@ const styles = StyleSheet.create({
     borderRadius: radius.xl,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: c.border,
     minHeight: 260,
-    backgroundColor: colors.surface,
+    backgroundColor: c.surface,
   },
   hero: { flex: 1, justifyContent: 'flex-end', minHeight: 260 },
   heroImg: { opacity: 0.92 },
@@ -226,11 +232,11 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.accent,
+    backgroundColor: c.accent,
     borderWidth: 0,
   },
   copy: { padding: spacing.lg },
-  title: { fontSize: 26, fontWeight: '800', color: colors.brandInverse, letterSpacing: -0.5 },
+  title: { fontSize: 26, fontWeight: '800', color: c.brandInverse, letterSpacing: -0.5 },
   sub: { marginTop: 4, fontSize: 14, fontWeight: '600', color: 'rgba(255,255,255,0.9)' },
   tapRow: {
     marginTop: spacing.md,
@@ -249,9 +255,9 @@ const styles = StyleSheet.create({
   cardEditorial: {
     borderRadius: discoverLayout.cardRadius,
     overflow: 'hidden',
-    backgroundColor: discoverPalette.card,
+    backgroundColor: palette.card,
     borderWidth: 1,
-    borderColor: discoverPalette.cardBorder,
+    borderColor: palette.cardBorder,
     minHeight: 220,
   },
   cardEditorialCompact: { minHeight: 200 },
@@ -266,7 +272,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: radius.sm,
-    backgroundColor: discoverPalette.canvasDeep,
+    backgroundColor: palette.canvasDeep,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.xs,
@@ -274,7 +280,7 @@ const styles = StyleSheet.create({
   editorialTitle: {
     fontSize: 20,
     fontWeight: '900',
-    color: discoverPalette.ink,
+    color: palette.ink,
     letterSpacing: -0.5,
     textAlign: 'center',
     width: '100%',
@@ -282,7 +288,7 @@ const styles = StyleSheet.create({
   editorialSub: {
     fontSize: 13,
     fontWeight: '500',
-    color: discoverPalette.muted,
+    color: palette.muted,
     textAlign: 'center',
     width: '100%',
   },
@@ -290,7 +296,8 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
     fontSize: 12,
     fontWeight: '800',
-    color: discoverPalette.ink,
+    color: palette.ink,
     textAlign: 'center',
   },
-});
+  });
+}

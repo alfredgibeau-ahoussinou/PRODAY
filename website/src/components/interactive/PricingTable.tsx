@@ -19,6 +19,7 @@ import {
   fullAnnualPrice,
   monthlyEquivalentFromYearly,
 } from "@/lib/pricing";
+import { UNIVERSE_THEME } from "@/components/universe/universeTheme";
 import { ROUTES } from "@/lib/routes";
 
 const UNIVERSE_OPTIONS: { id: ProductLineWeb; label: string }[] = [
@@ -26,12 +27,6 @@ const UNIVERSE_OPTIONS: { id: ProductLineWeb; label: string }[] = [
   { id: "woman", label: "Woman" },
   { id: "pro", label: "Pro" },
 ];
-
-const UNIVERSE_ACCENT: Record<ProductLineWeb, string> = {
-  homme: "bg-proday-ink",
-  woman: "bg-pink-700",
-  pro: "bg-blue-700",
-};
 
 function PlanPriceBlock({
   plan,
@@ -138,6 +133,7 @@ export function PricingTable({
   const plans = useMemo(() => plansForUniverse(universe), [universe]);
   const plan = plans[activePlan] ?? plans[0];
   const premium = plan ? isPremiumWebPlan(plan) : false;
+  const theme = UNIVERSE_THEME[universe];
 
   const selectUniverse = (line: ProductLineWeb) => {
     setUniverse(line);
@@ -156,7 +152,7 @@ export function PricingTable({
             onClick={() => selectUniverse(u.id)}
             className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition ${
               universe === u.id
-                ? `${UNIVERSE_ACCENT[u.id]} text-white`
+                ? `${UNIVERSE_THEME[u.id].pricingAccent} text-white`
                 : "bg-neutral-100 text-proday-muted hover:bg-neutral-200"
             }`}
           >
@@ -203,7 +199,7 @@ export function PricingTable({
             onClick={() => setActivePlan(i)}
             className={`rounded-full px-4 py-2 text-sm font-medium transition ${
               activePlan === i
-                ? `${UNIVERSE_ACCENT[universe]} text-white`
+                ? `${theme.pricingAccent} text-white`
                 : "bg-neutral-100 text-proday-muted hover:bg-neutral-200"
             }`}
           >
@@ -299,7 +295,7 @@ export function PricingTable({
           </p>
           <Link
             href={ROUTES.beta}
-            className={`mt-4 inline-block rounded-full px-8 py-3 text-sm font-semibold text-white ${UNIVERSE_ACCENT[universe]}`}
+            className={`mt-4 inline-block rounded-full px-8 py-3 text-sm font-semibold text-white ${theme.pricingAccent}`}
           >
             Rejoindre la beta
           </Link>

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { Text, StyleSheet } from 'react-native';
 import Animated, {
   FadeInUp,
@@ -9,8 +9,10 @@ import Animated, {
   interpolate,
 } from 'react-native-reanimated';
 import { PressableSpring } from './PressableSpring';
-import { colors, spacing, radius, shadows } from '../../theme/designTokens';
+import { spacing, radius, shadows } from '../../theme/designTokens';
 import { motion } from '../../theme/motion';
+import { useDiscoverStyles } from './discoverStyles';
+import type { AppColors } from '../../theme/universeTheme';
 
 interface ShimmerCTAProps {
   label: string;
@@ -25,6 +27,8 @@ export const ShimmerCTA: React.FC<ShimmerCTAProps> = ({
   onPress,
   delay = 0,
 }) => {
+  const { colors: c } = useDiscoverStyles();
+  const styles = useMemo(() => createStyles(c), [c]);
   const shimmer = useSharedValue(0);
 
   useEffect(() => {
@@ -58,39 +62,41 @@ export const ShimmerCTA: React.FC<ShimmerCTAProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  btn: {
-    borderRadius: radius.pill,
-    paddingVertical: spacing.md + 2,
-    paddingHorizontal: spacing.lg,
-    alignItems: 'center',
-    overflow: 'hidden',
-  },
-  shimmerBand: {
-    position: 'absolute',
-    top: 0,
-    bottom: 0,
-    width: 72,
-    backgroundColor: 'rgba(255,255,255,0.45)',
-  },
-  primary: {
-    backgroundColor: colors.accent,
-    ...shadows.interactive,
-  },
-  secondary: {
-    backgroundColor: colors.surface,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    ...shadows.soft,
-  },
-  text: {
-    color: colors.brandInverse,
-    fontWeight: '800',
-    fontSize: 15,
-  },
-  textAlt: {
-    color: colors.accent,
-    fontWeight: '700',
-    fontSize: 15,
-  },
-});
+function createStyles(c: AppColors) {
+  return StyleSheet.create({
+    btn: {
+      borderRadius: radius.pill,
+      paddingVertical: spacing.md + 2,
+      paddingHorizontal: spacing.lg,
+      alignItems: 'center',
+      overflow: 'hidden',
+    },
+    shimmerBand: {
+      position: 'absolute',
+      top: 0,
+      bottom: 0,
+      width: 72,
+      backgroundColor: 'rgba(255,255,255,0.45)',
+    },
+    primary: {
+      backgroundColor: c.brand,
+      ...shadows.interactive,
+    },
+    secondary: {
+      backgroundColor: c.surface,
+      borderWidth: 1.5,
+      borderColor: c.border,
+      ...shadows.soft,
+    },
+    text: {
+      color: c.brandInverse,
+      fontWeight: '800',
+      fontSize: 15,
+    },
+    textAlt: {
+      color: c.brand,
+      fontWeight: '700',
+      fontSize: 15,
+    },
+  });
+}

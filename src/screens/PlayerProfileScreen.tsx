@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo } from 'react';
 import {
   View,
   Text,
@@ -11,7 +11,9 @@ import {
 import type { User } from '../models/User';
 import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { Icon, type IconName } from '../components/ui/Icon';
-import { colors, spacing, radius, shadows } from '../theme/designTokens';
+import { spacing, radius, shadows } from '../theme/designTokens';
+import type { AppColors } from '../theme/universeTheme';
+import { useAppTheme } from '../context/ProductLineContext';
 import { buildPlayerCvHtmlFromUser } from '../utils/pdfGenerator';
 import { openPlayerCvHtml } from '../utils/openCvHtml';
 import { useAuth } from '../context/AuthContext';
@@ -23,28 +25,151 @@ interface PlayerProfileScreenProps {
   onContact?: (player: User) => void;
 }
 
-const StatItem: React.FC<{ icon: IconName; value: string | number; label: string }> = ({
-  icon,
-  value,
-  label,
-}) => (
+const StatItem: React.FC<{
+  icon: IconName;
+  value: string | number;
+  label: string;
+  brandColor: string;
+  styles: ReturnType<typeof createStyles>;
+}> = ({ icon, value, label, brandColor, styles }) => (
   <View style={styles.statItem}>
-    <Icon name={icon} size={22} color={colors.brand} />
+    <Icon name={icon} size={22} color={brandColor} />
     <Text style={styles.statValue}>{value}</Text>
     <Text style={styles.statLabel}>{label}</Text>
   </View>
 );
+
+function createStyles(c: AppColors) {
+  return StyleSheet.create({
+    root: { flex: 1, backgroundColor: c.background },
+    content: { padding: spacing.lg, paddingBottom: 140 },
+    profileCard: {
+      borderRadius: radius.lg,
+      overflow: 'hidden',
+      marginBottom: spacing.xl,
+      borderWidth: 1,
+      borderColor: c.border,
+    },
+    blueBlock: {
+      position: 'relative',
+      backgroundColor: c.brand,
+      padding: spacing.lg,
+      paddingTop: spacing.xl,
+    },
+    positionBadge: {
+      position: 'absolute',
+      top: spacing.md,
+      right: spacing.md,
+      backgroundColor: 'rgba(255,255,255,0.22)',
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: radius.pill,
+    },
+    positionText: { color: '#FFFFFF', fontSize: 11, fontWeight: '700' },
+    heroRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+    avatar: {
+      width: 76,
+      height: 76,
+      borderRadius: 38,
+      borderWidth: 3,
+      borderColor: 'rgba(255,255,255,0.45)',
+    },
+    avatarPh: {
+      backgroundColor: c.brandLight,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    avatarLetter: { fontSize: 30, fontWeight: '800', color: '#FFFFFF' },
+    heroInfo: { flex: 1 },
+    nameRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+    heroName: { fontSize: 20, fontWeight: '800', color: '#FFFFFF' },
+    heroSub: { color: 'rgba(255,255,255,0.92)', fontSize: 13, marginTop: 4 },
+    statsStrip: {
+      flexDirection: 'row',
+      backgroundColor: c.surface,
+      paddingVertical: spacing.lg,
+      alignItems: 'center',
+    },
+    statItem: { flex: 1, alignItems: 'center', gap: 4 },
+    statValue: { fontSize: 20, fontWeight: '800', color: c.text },
+    statLabel: {
+      fontSize: 10,
+      color: c.textMuted,
+      textAlign: 'center',
+      paddingHorizontal: 4,
+    },
+    statDivider: { width: 1, height: 40, backgroundColor: c.border },
+    statsEmpty: {
+      color: c.textMuted,
+      fontSize: 13,
+      textAlign: 'center',
+      paddingVertical: spacing.lg,
+      paddingHorizontal: spacing.lg,
+    },
+    galleryHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: spacing.md,
+    },
+    sectionTitle: { fontSize: 16, fontWeight: '700', color: c.text },
+    link: { fontSize: 13, fontWeight: '600', color: c.brand },
+    galleryGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+    galleryCell: {
+      width: '31%' as unknown as number,
+      aspectRatio: 1,
+      borderRadius: radius.md,
+      backgroundColor: c.surfaceMuted,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 1,
+      borderColor: c.border,
+    },
+    footer: {
+      padding: spacing.lg,
+      gap: spacing.sm,
+      backgroundColor: c.surface,
+      borderTopWidth: 1,
+      borderTopColor: c.border,
+    },
+    btnPrimary: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: spacing.sm,
+      backgroundColor: c.brand,
+      borderRadius: radius.md,
+      paddingVertical: 15,
+    },
+    btnPrimaryText: { color: '#FFFFFF', fontWeight: '700', fontSize: 15 },
+    btnOutline: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: spacing.sm,
+      borderWidth: 1,
+      borderColor: c.brand,
+      borderRadius: radius.md,
+      paddingVertical: 15,
+      backgroundColor: c.surface,
+    },
+    btnOutlineText: { color: c.brand, fontWeight: '700', fontSize: 15 },
+  });
+}
 
 export const PlayerProfileScreen: React.FC<PlayerProfileScreenProps> = ({
   player,
   onBack,
   onContact,
 }) => {
+  const { colors: themeColors, productLine } = useAppTheme();
+  const styles = useMemo(() => createStyles(themeColors), [themeColors]);
   const { profile: myProfile } = useAuth();
   const { isFavorite, toggle } = useFavorites(myProfile?.uid);
   const favorited = isFavorite(player.uid);
   const isOwnProfile = myProfile?.uid === player.uid;
   const p = player.profile;
+  const profileTitle = productLine === 'woman' ? 'Profil joueuse' : 'Profil joueur';
 
   const handleExportCv = () => {
     const html = buildPlayerCvHtmlFromUser(player);
@@ -64,12 +189,7 @@ export const PlayerProfileScreen: React.FC<PlayerProfileScreenProps> = ({
 
   return (
     <View style={styles.root}>
-      <ScreenHeader
-        title="Profil joueur"
-        onBack={onBack}
-        onMenu={() => {}}
-        centered
-      />
+      <ScreenHeader title={profileTitle} onBack={onBack} onMenu={() => {}} centered />
 
       <ScrollView
         contentContainerStyle={styles.content}
@@ -106,11 +226,29 @@ export const PlayerProfileScreen: React.FC<PlayerProfileScreenProps> = ({
 
           {hasStats && stats ? (
             <View style={styles.statsStrip}>
-              <StatItem icon="shirt" value={stats.matches} label="Matchs" />
+              <StatItem
+                icon="shirt"
+                value={stats.matches}
+                label="Matchs"
+                brandColor={themeColors.brand}
+                styles={styles}
+              />
               <View style={styles.statDivider} />
-              <StatItem icon="football" value={stats.goals} label="Buts" />
+              <StatItem
+                icon="football"
+                value={stats.goals}
+                label="Buts"
+                brandColor={themeColors.brand}
+                styles={styles}
+              />
               <View style={styles.statDivider} />
-              <StatItem icon="walk" value={stats.assists} label="Passes décisives" />
+              <StatItem
+                icon="walk"
+                value={stats.assists}
+                label="Passes décisives"
+                brandColor={themeColors.brand}
+                styles={styles}
+              />
             </View>
           ) : (
             <Text style={styles.statsEmpty}>Stats saison non renseignées</Text>
@@ -144,7 +282,7 @@ export const PlayerProfileScreen: React.FC<PlayerProfileScreenProps> = ({
         </TouchableOpacity>
         {isOwnProfile ? (
           <TouchableOpacity style={styles.btnOutline} onPress={handleExportCv}>
-            <Icon name="share" size={18} color={colors.brand} />
+            <Icon name="share" size={18} color={themeColors.brand} />
             <Text style={styles.btnOutlineText}>Exporter mon CV (PDF)</Text>
           </TouchableOpacity>
         ) : (
@@ -165,7 +303,7 @@ export const PlayerProfileScreen: React.FC<PlayerProfileScreenProps> = ({
             <Icon
               name={favorited ? 'heart' : 'heart-outline'}
               size={18}
-              color={colors.brand}
+              color={themeColors.brand}
             />
             <Text style={styles.btnOutlineText}>Ajouter aux favoris</Text>
           </TouchableOpacity>
@@ -174,120 +312,3 @@ export const PlayerProfileScreen: React.FC<PlayerProfileScreenProps> = ({
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.background },
-  content: { padding: spacing.lg, paddingBottom: 140 },
-  profileCard: {
-    borderRadius: radius.lg,
-    overflow: 'hidden',
-    marginBottom: spacing.xl,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  blueBlock: {
-    position: 'relative',
-    backgroundColor: colors.brand,
-    padding: spacing.lg,
-    paddingTop: spacing.xl,
-  },
-  positionBadge: {
-    position: 'absolute',
-    top: spacing.md,
-    right: spacing.md,
-    backgroundColor: 'rgba(255,255,255,0.22)',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: radius.pill,
-  },
-  positionText: { color: '#FFFFFF', fontSize: 11, fontWeight: '700' },
-  heroRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
-  avatar: {
-    width: 76,
-    height: 76,
-    borderRadius: 38,
-    borderWidth: 3,
-    borderColor: 'rgba(255,255,255,0.45)',
-  },
-  avatarPh: {
-    backgroundColor: colors.brandLight,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  avatarLetter: { fontSize: 30, fontWeight: '800', color: '#FFFFFF' },
-  heroInfo: { flex: 1 },
-  nameRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  heroName: { fontSize: 20, fontWeight: '800', color: '#FFFFFF' },
-  heroSub: { color: 'rgba(255,255,255,0.92)', fontSize: 13, marginTop: 4 },
-  heroMeta: { color: 'rgba(255,255,255,0.75)', fontSize: 12, marginTop: 2 },
-  statsStrip: {
-    flexDirection: 'row',
-    backgroundColor: colors.surface,
-    paddingVertical: spacing.lg,
-    alignItems: 'center',
-  },
-  statItem: { flex: 1, alignItems: 'center', gap: 4 },
-  statValue: { fontSize: 20, fontWeight: '800', color: colors.text },
-  statLabel: {
-    fontSize: 10,
-    color: colors.textMuted,
-    textAlign: 'center',
-    paddingHorizontal: 4,
-  },
-  statDivider: { width: 1, height: 40, backgroundColor: colors.border },
-  statsEmpty: {
-    color: colors.textMuted,
-    fontSize: 13,
-    textAlign: 'center',
-    paddingVertical: spacing.lg,
-    paddingHorizontal: spacing.lg,
-  },
-  galleryHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: spacing.md,
-  },
-  sectionTitle: { fontSize: 16, fontWeight: '700', color: colors.text },
-  link: { fontSize: 13, fontWeight: '600', color: colors.brand },
-  galleryGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  galleryCell: {
-    width: '31%' as unknown as number,
-    aspectRatio: 1,
-    borderRadius: radius.md,
-    backgroundColor: colors.surfaceMuted,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  footer: {
-    padding: spacing.lg,
-    gap: spacing.sm,
-    backgroundColor: colors.surface,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-  },
-  btnPrimary: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.sm,
-    backgroundColor: colors.brand,
-    borderRadius: radius.md,
-    paddingVertical: 15,
-  },
-  btnPrimaryText: { color: '#FFFFFF', fontWeight: '700', fontSize: 15 },
-  btnOutline: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.sm,
-    borderWidth: 1,
-    borderColor: colors.brand,
-    borderRadius: radius.md,
-    paddingVertical: 15,
-    backgroundColor: colors.surface,
-  },
-  btnOutlineText: { color: colors.brand, fontWeight: '700', fontSize: 15 },
-});

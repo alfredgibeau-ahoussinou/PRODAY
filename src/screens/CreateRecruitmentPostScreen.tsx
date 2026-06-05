@@ -15,7 +15,8 @@ import { recruitmentService } from '../services/recruitment.service';
 import { SubscriptionLimitError } from '../services/subscription.service';
 import { useSubscriptionOptional } from '../context/SubscriptionContext';
 import { useAppSpace } from '../context/AppSpaceContext';
-import { colors, spacing, radius } from '../theme/designTokens';
+import { spacing, radius } from '../theme/designTokens';
+import { useThemedScreen } from '../hooks/useThemedScreen';
 import { canPublishRecruitmentPost } from '../utils/roleCapabilities';
 
 interface CreateRecruitmentPostScreenProps {
@@ -29,7 +30,6 @@ export const CreateRecruitmentPostScreen: React.FC<CreateRecruitmentPostScreenPr
   onBack,
   onCreated,
 }) => {
-  const [title, setTitle] = useState('Recherche joueur');
   const [position, setPosition] = useState('');
   const [category, setCategory] = useState('Seniors');
   const [level, setLevel] = useState('');
@@ -38,12 +38,23 @@ export const CreateRecruitmentPostScreen: React.FC<CreateRecruitmentPostScreenPr
   const [submitting, setSubmitting] = useState(false);
   const { appSpace } = useAppSpace();
   const subscriptionCtx = useSubscriptionOptional();
+  const { colors: themeColors, productLine, rootStyle } = useThemedScreen();
+  const defaultTitle = productLine === 'woman' ? 'Recherche joueuse' : 'Recherche joueur';
+  const [title, setTitle] = useState(defaultTitle);
+  const inputStyle = [
+    styles.input,
+    {
+      backgroundColor: themeColors.surface,
+      borderColor: themeColors.border,
+      color: themeColors.text,
+    },
+  ];
 
   if (!canPublishRecruitmentPost(profile.role)) {
     return (
-      <View style={styles.denied}>
+      <View style={[styles.denied, rootStyle]}>
         <ScreenHeader title="Publier une annonce" onBack={onBack} centered />
-        <Text style={styles.deniedText}>
+        <Text style={[styles.deniedText, { color: themeColors.textSecondary }]}>
           Les joueurs et joueuses peuvent candidater aux annonces, mais pas en publier.
         </Text>
       </View>
@@ -87,54 +98,54 @@ export const CreateRecruitmentPostScreen: React.FC<CreateRecruitmentPostScreenPr
   };
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, rootStyle]}>
       <ScreenHeader title="Publier une annonce" onBack={onBack} centered />
       <ScrollView contentContainerStyle={styles.content}>
         <TextInput
-          style={styles.input}
+          style={inputStyle}
           placeholder="Titre de l'annonce"
-          placeholderTextColor={colors.textMuted}
+          placeholderTextColor={themeColors.textMuted}
           value={title}
           onChangeText={setTitle}
         />
         <TextInput
-          style={styles.input}
+          style={inputStyle}
           placeholder="Poste recherché *"
-          placeholderTextColor={colors.textMuted}
+          placeholderTextColor={themeColors.textMuted}
           value={position}
           onChangeText={setPosition}
         />
         <TextInput
-          style={styles.input}
+          style={inputStyle}
           placeholder="Catégorie (ex. U19, Seniors)"
-          placeholderTextColor={colors.textMuted}
+          placeholderTextColor={themeColors.textMuted}
           value={category}
           onChangeText={setCategory}
         />
         <TextInput
-          style={styles.input}
+          style={inputStyle}
           placeholder="Niveau (ex. R2, Départemental) *"
-          placeholderTextColor={colors.textMuted}
+          placeholderTextColor={themeColors.textMuted}
           value={level}
           onChangeText={setLevel}
         />
         <TextInput
-          style={styles.input}
+          style={inputStyle}
           placeholder="Ville *"
-          placeholderTextColor={colors.textMuted}
+          placeholderTextColor={themeColors.textMuted}
           value={city}
           onChangeText={setCity}
         />
         <TextInput
-          style={[styles.input, styles.bio]}
+          style={[...inputStyle, styles.bio]}
           placeholder="Description (optionnel)"
-          placeholderTextColor={colors.textMuted}
+          placeholderTextColor={themeColors.textMuted}
           value={description}
           onChangeText={setDescription}
           multiline
         />
         <TouchableOpacity
-          style={styles.primary}
+          style={[styles.primary, { backgroundColor: themeColors.brand }]}
           onPress={handleSubmit}
           disabled={submitting}
         >
@@ -150,21 +161,17 @@ export const CreateRecruitmentPostScreen: React.FC<CreateRecruitmentPostScreenPr
 };
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.background },
+  root: { flex: 1 },
   content: { padding: spacing.lg, paddingBottom: spacing.xxl },
   input: {
-    backgroundColor: colors.surface,
     borderRadius: radius.md,
     padding: spacing.md,
-    color: colors.text,
     marginBottom: spacing.md,
     borderWidth: 1,
-    borderColor: colors.border,
     fontSize: 15,
   },
   bio: { minHeight: 100, textAlignVertical: 'top' },
   primary: {
-    backgroundColor: colors.brand,
     borderRadius: radius.md,
     padding: spacing.lg,
     alignItems: 'center',
@@ -173,14 +180,12 @@ const styles = StyleSheet.create({
   primaryText: { color: '#FFFFFF', fontWeight: '700' },
   denied: {
     flex: 1,
-    backgroundColor: colors.background,
     padding: spacing.lg,
   },
   deniedText: {
     marginTop: spacing.lg,
     fontSize: 15,
     lineHeight: 22,
-    color: colors.textSecondary,
     fontWeight: '600',
     textAlign: 'center',
   },

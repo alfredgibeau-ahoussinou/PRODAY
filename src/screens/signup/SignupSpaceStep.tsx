@@ -4,7 +4,7 @@ import { SignupStepLayout } from './SignupStepLayout';
 import { SignupFooterButton } from './SignupFooterButton';
 import type { SignupForm } from './useSignupForm';
 import { APP_SPACE_GROUPS, WOMAN_APP_SPACE_GROUPS } from './signupFlowConfig';
-import { signupTheme } from './signupTheme';
+import { useSignupTheme } from './signupTheme';
 import { useSignupFlowTheme } from './SignupFlowContext';
 import { getPlayerStepMeta } from './signupPlayerStepMeta';
 
@@ -27,66 +27,67 @@ export const SignupSpaceStep: React.FC<SignupSpaceStepProps> = ({
   phaseIndex,
   onBack,
 }) => {
+  const signupTheme = useSignupTheme();
   const { colors } = useSignupFlowTheme();
   const spaceGroups = form.isWomanProduct ? [...WOMAN_APP_SPACE_GROUPS] : APP_SPACE_GROUPS;
   const meta = getPlayerStepMeta(form.productLine, 'space');
 
   return (
-  <SignupStepLayout
-    stepIndex={stepIndex}
-    stepTotal={stepTotal}
-    stepName={stepName}
-    phases={phases}
-    phaseIndex={phaseIndex}
-    title={meta.title}
-    subtitle={meta.subtitle}
-    heroIcon={meta.heroIcon}
-    onBack={onBack}
-    footer={
-      <SignupFooterButton label="Continuer" onPress={() => form.advanceFromCurrentPage()} />
-    }
-  >
-    {form.fieldErrors.appSpace ? (
-      <Text style={signupTheme.fieldError}>{form.fieldErrors.appSpace}</Text>
-    ) : null}
-    {spaceGroups.map((group) => (
-      <View key={group.id} style={{ marginBottom: 12 }}>
-        <Text style={signupTheme.sectionLabel}>{group.label}</Text>
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-          {group.options.map((opt) => {
-            const active = form.appSpace === opt.id;
-            return (
-              <Pressable
-                key={opt.id}
-                style={[
-                  signupTheme.chip,
-                  { flexGrow: 1, minWidth: '46%' },
-                  active && { backgroundColor: colors.accent, borderColor: colors.accent },
-                ]}
-                onPress={() => form.setAppSpace(opt.id)}
-              >
-                <Text
+    <SignupStepLayout
+      stepIndex={stepIndex}
+      stepTotal={stepTotal}
+      stepName={stepName}
+      phases={phases}
+      phaseIndex={phaseIndex}
+      title={meta.title}
+      subtitle={meta.subtitle}
+      heroIcon={meta.heroIcon}
+      onBack={onBack}
+      footer={
+        <SignupFooterButton label="Continuer" onPress={() => form.advanceFromCurrentPage()} />
+      }
+    >
+      {form.fieldErrors.appSpace ? (
+        <Text style={signupTheme.fieldError}>{form.fieldErrors.appSpace}</Text>
+      ) : null}
+      {spaceGroups.map((group) => (
+        <View key={group.id} style={{ marginBottom: 12 }}>
+          <Text style={signupTheme.sectionLabel}>{group.label}</Text>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+            {group.options.map((opt) => {
+              const active = form.appSpace === opt.id;
+              return (
+                <Pressable
+                  key={opt.id}
                   style={[
-                    signupTheme.chipTitle,
-                    active && { color: colors.brandInverse },
+                    signupTheme.chip,
+                    { flexGrow: 1, minWidth: '46%' },
+                    active && { backgroundColor: colors.brand, borderColor: colors.brand },
                   ]}
+                  onPress={() => form.setAppSpace(opt.id)}
                 >
-                  {opt.label}
-                </Text>
-                <Text
-                  style={[
-                    signupTheme.chipHint,
-                    active && { color: 'rgba(255,255,255,0.72)' },
-                  ]}
-                >
-                  {opt.hint}
-                </Text>
-              </Pressable>
-            );
-          })}
+                  <Text
+                    style={[
+                      signupTheme.chipTitle,
+                      active && { color: colors.brandInverse },
+                    ]}
+                  >
+                    {opt.label}
+                  </Text>
+                  <Text
+                    style={[
+                      signupTheme.chipHint,
+                      active && signupTheme.chipHintActive,
+                    ]}
+                  >
+                    {opt.hint}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
         </View>
-      </View>
-    ))}
-  </SignupStepLayout>
+      ))}
+    </SignupStepLayout>
   );
 };

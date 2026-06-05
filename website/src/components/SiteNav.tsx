@@ -6,21 +6,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
-import { BRAND, HOMME_BRAND, PRO_BRAND, WOMAN_BRAND } from "@/lib/content";
+import { navBrandForPath, UNIVERSE_THEME } from "@/components/universe/universeTheme";
 import { NAV_ITEMS, ROUTES } from "@/lib/routes";
-
-function navBrandForPath(pathname: string) {
-  if (pathname.startsWith("/woman")) {
-    return { name: WOMAN_BRAND.name, logo: WOMAN_BRAND.logo, cta: "bg-pink-700 hover:bg-pink-800" };
-  }
-  if (pathname.startsWith("/pro")) {
-    return { name: PRO_BRAND.name, logo: PRO_BRAND.logo, cta: "bg-blue-700 hover:bg-blue-800" };
-  }
-  if (pathname.startsWith("/homme")) {
-    return { name: HOMME_BRAND.name, logo: HOMME_BRAND.logo, cta: "bg-proday-ink hover:bg-neutral-800" };
-  }
-  return { name: BRAND.name, logo: "/branding/logo-light.png", cta: "bg-proday-ink hover:bg-neutral-800" };
-}
 
 export function SiteNav() {
   const pathname = usePathname();
@@ -62,11 +49,11 @@ export function SiteNav() {
             const accent = "accent" in l ? l.accent : undefined;
             const accentClass =
               accent === "woman"
-                ? "font-medium text-pink-700 hover:text-pink-800"
+                ? UNIVERSE_THEME.woman.navLink
                 : accent === "pro"
-                  ? "font-medium text-blue-700 hover:text-blue-800"
+                  ? UNIVERSE_THEME.pro.navLink
                   : accent === "man"
-                    ? "font-medium text-neutral-800 hover:text-proday-ink"
+                    ? UNIVERSE_THEME.homme.navLink
                     : "text-proday-muted hover:text-proday-ink";
             return (
               <li key={l.href}>
@@ -86,7 +73,7 @@ export function SiteNav() {
         <div className="hidden items-center gap-3 md:flex">
           <Link
             href={ROUTES.beta}
-            className={`rounded-full px-5 py-2 text-sm font-medium text-white transition ${brand.cta}`}
+            className={`rounded-full px-5 py-2 text-sm font-medium text-white transition ${brand.theme.navCta}`}
           >
             Rejoindre la beta
           </Link>
@@ -120,7 +107,7 @@ export function SiteNav() {
           ))}
           <Link
             href={ROUTES.beta}
-            className="mt-2 block rounded-full bg-proday-ink py-3 text-center text-sm text-white"
+            className={`mt-2 block rounded-full py-3 text-center text-sm text-white ${brand.theme.navCta}`}
             onClick={() => setOpen(false)}
           >
             Rejoindre la beta

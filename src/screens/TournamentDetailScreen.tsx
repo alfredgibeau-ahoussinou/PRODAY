@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -17,7 +17,9 @@ import { teamEventsService } from '../services/teamEvents.service';
 import { usersService } from '../services/users.service';
 import { clubsService } from '../services/clubs.service';
 import type { Tournament, TournamentStatus, TournamentMatch } from '../models/Tournament';
-import { colors, spacing, radius, shadows } from '../theme/designTokens';
+import { spacing, radius, shadows } from '../theme/designTokens';
+import { useThemedScreen } from '../hooks/useThemedScreen';
+import type { AppColors } from '../theme/universeTheme';
 
 interface TournamentDetailScreenProps {
   tournamentId: string;
@@ -37,6 +39,9 @@ export const TournamentDetailScreen: React.FC<TournamentDetailScreenProps> = ({
   onRegistered,
 }) => {
   const { profile } = useAuth();
+  const { colors: c, productLine, rootStyle } = useThemedScreen();
+  const styles = useMemo(() => createStyles(c), [c]);
+  const bestPlayerLabel = productLine === 'woman' ? 'Meilleure joueuse' : 'Meilleur joueur';
   const [tournament, setTournament] = useState<Tournament | null>(null);
   const [loading, setLoading] = useState(true);
   const [registering, setRegistering] = useState(false);
@@ -215,16 +220,16 @@ export const TournamentDetailScreen: React.FC<TournamentDetailScreenProps> = ({
 
   if (loading) {
     return (
-      <View style={styles.root}>
+      <View style={[styles.root, rootStyle]}>
         <ScreenHeader title="Tournoi" onBack={onBack} centered />
-        <ActivityIndicator color={colors.brand} style={styles.loader} />
+        <ActivityIndicator color={c.brand} style={styles.loader} />
       </View>
     );
   }
 
   if (!tournament) {
     return (
-      <View style={styles.root}>
+      <View style={[styles.root, rootStyle]}>
         <ScreenHeader title="Tournoi" onBack={onBack} centered />
         <Text style={styles.missing}>Tournoi introuvable.</Text>
       </View>
@@ -235,12 +240,12 @@ export const TournamentDetailScreen: React.FC<TournamentDetailScreenProps> = ({
   const awards = tournament.awards_names;
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, rootStyle]}>
       <ScreenHeader title="Arena" subtitle={tournament.name} onBack={onBack} />
       <ScrollView contentContainerStyle={styles.content}>
         <View style={[styles.hero, shadows.card]}>
           <View style={styles.heroBadge}>
-            <Icon name="trophy" size={28} color={colors.accent} />
+            <Icon name="trophy" size={28} color={c.accent} />
           </View>
           <Text style={styles.heroTitle}>{tournament.name}</Text>
           <Text style={styles.heroMeta}>
@@ -251,18 +256,18 @@ export const TournamentDetailScreen: React.FC<TournamentDetailScreenProps> = ({
           </View>
         </View>
 
-        <DetailBlock title="Catégories" icon="people">
+        <DetailBlock styles={styles} colors={c} title="Catégories" icon="people">
           <Text style={styles.blockBody}>{tournament.categories.join(' · ')}</Text>
         </DetailBlock>
 
-        <DetailBlock title="Clubs inscrits" icon="shield">
+        <DetailBlock styles={styles} colors={c} title="Clubs inscrits" icon="shield">
           <Text style={styles.blockBody}>
             {tournament.subscriber_uids?.length ?? 0} inscription(s)
           </Text>
         </DetailBlock>
 
         {!isOrganizer && matches.length > 0 ? (
-          <DetailBlock title="Résultats & calendrier" icon="football">
+          <DetailBlock styles={styles} colors={c} title="Résultats & calendrier" icon="football">
             {matches.map((m) => (
               <View key={m.id} style={styles.matchRow}>
                 <Text style={styles.matchTeams}>
@@ -285,7 +290,7 @@ export const TournamentDetailScreen: React.FC<TournamentDetailScreenProps> = ({
         ) : null}
 
         {isOrganizer && tournament.status !== 'OPEN' ? (
-          <DetailBlock title="Calendrier & scores" icon="football">
+          <DetailBlock styles={styles} colors={c} title="Calendrier & scores" icon="football">
             {matches.length === 0 ? (
               <Text style={styles.blockBody}>Aucun match programmé.</Text>
             ) : (
@@ -312,7 +317,7 @@ export const TournamentDetailScreen: React.FC<TournamentDetailScreenProps> = ({
                         }
                         keyboardType="number-pad"
                         placeholder="0"
-                        placeholderTextColor={colors.textMuted}
+                        placeholderTextColor={c.textMuted}
                       />
                       <Text style={styles.scoreSep}>—</Text>
                       <TextInput
@@ -326,7 +331,7 @@ export const TournamentDetailScreen: React.FC<TournamentDetailScreenProps> = ({
                         }
                         keyboardType="number-pad"
                         placeholder="0"
-                        placeholderTextColor={colors.textMuted}
+                        placeholderTextColor={c.textMuted}
                       />
                       <TouchableOpacity
                         style={styles.scoreSaveBtn}
@@ -344,8 +349,8 @@ export const TournamentDetailScreen: React.FC<TournamentDetailScreenProps> = ({
             )}
             {tournament.status !== 'FINISHED' ? (
               <>
-                <AwardField label="Équipe A" value={matchTeamA} onChange={setMatchTeamA} />
-                <AwardField label="Équipe B" value={matchTeamB} onChange={setMatchTeamB} />
+                <AwardField styles={styles} colors={c} label="Équipe A" value={matchTeamA} onChange={setMatchTeamA} />
+                <AwardField styles={styles} colors={c} label="Équipe B" value={matchTeamB} onChange={setMatchTeamB} />
                 <View style={styles.phaseRow}>
                   <TouchableOpacity
                     style={[styles.phaseChip, matchPhase === 'poule' && styles.phaseChipOn]}
@@ -392,7 +397,7 @@ export const TournamentDetailScreen: React.FC<TournamentDetailScreenProps> = ({
         ) : null}
 
         {isOrganizer && tournament.status !== 'FINISHED' && (
-          <DetailBlock title="Gestion organisateur" icon="settings">
+          <DetailBlock styles={styles} colors={c} title="Gestion organisateur" icon="settings">
             <Text style={styles.organizerHint}>
               Passez le tournoi en cours puis publiez le palmarès pour le clôturer.
             </Text>
@@ -409,9 +414,11 @@ export const TournamentDetailScreen: React.FC<TournamentDetailScreenProps> = ({
             ) : null}
             {tournament.status === 'IN_PROGRESS' ? (
               <>
-                <AwardField label="Meilleur joueur" value={bestPlayer} onChange={setBestPlayer} />
-                <AwardField label="Buteur" value={topScorer} onChange={setTopScorer} />
+                <AwardField styles={styles} colors={c} label={bestPlayerLabel} value={bestPlayer} onChange={setBestPlayer} />
+                <AwardField styles={styles} colors={c} label="Buteur" value={topScorer} onChange={setTopScorer} />
                 <AwardField
+                  styles={styles}
+                  colors={c}
                   label="Gardien"
                   value={bestGoalkeeper}
                   onChange={setBestGoalkeeper}
@@ -431,10 +438,10 @@ export const TournamentDetailScreen: React.FC<TournamentDetailScreenProps> = ({
         )}
 
         {tournament.status === 'FINISHED' && awards && (
-          <DetailBlock title="Palmarès" icon="star-four-points">
-            <HonorLine label="Meilleur joueur" value={awards.best_player ?? '—'} />
-            <HonorLine label="Buteur" value={awards.top_scorer ?? '—'} />
-            <HonorLine label="Gardien" value={awards.best_goalkeeper ?? '—'} />
+          <DetailBlock styles={styles} colors={c} title="Palmarès" icon="star-four-points">
+            <HonorLine styles={styles} label={bestPlayerLabel} value={awards.best_player ?? '—'} />
+            <HonorLine styles={styles} label="Buteur" value={awards.top_scorer ?? '—'} />
+            <HonorLine styles={styles} label="Gardien" value={awards.best_goalkeeper ?? '—'} />
           </DetailBlock>
         )}
 
@@ -463,10 +470,12 @@ export const TournamentDetailScreen: React.FC<TournamentDetailScreenProps> = ({
 };
 
 const AwardField: React.FC<{
+  styles: ReturnType<typeof createStyles>;
+  colors: AppColors;
   label: string;
   value: string;
   onChange: (v: string) => void;
-}> = ({ label, value, onChange }) => (
+}> = ({ styles, colors, label, value, onChange }) => (
   <View style={styles.awardField}>
     <Text style={styles.awardLabel}>{label}</Text>
     <TextInput
@@ -480,10 +489,12 @@ const AwardField: React.FC<{
 );
 
 const DetailBlock: React.FC<{
+  styles: ReturnType<typeof createStyles>;
+  colors: AppColors;
   title: string;
   icon: 'people' | 'shield' | 'star-four-points' | 'settings' | 'football';
   children: React.ReactNode;
-}> = ({ title, icon, children }) => (
+}> = ({ styles, colors, title, icon, children }) => (
   <View style={[styles.block, shadows.card]}>
     <View style={styles.blockHead}>
       <Icon name={icon} size={20} color={colors.brand} />
@@ -493,7 +504,11 @@ const DetailBlock: React.FC<{
   </View>
 );
 
-const HonorLine: React.FC<{ label: string; value: string }> = ({ label, value }) => (
+const HonorLine: React.FC<{
+  styles: ReturnType<typeof createStyles>;
+  label: string;
+  value: string;
+}> = ({ styles, label, value }) => (
   <View style={styles.honorRow}>
     <Text style={styles.honorLabel}>{label}</Text>
     <Text style={styles.honorValue}>{value}</Text>
@@ -507,58 +522,59 @@ function formatRange(start: Date, end: Date): string {
   return a === b ? a : `${a} – ${b}`;
 }
 
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.background },
+function createStyles(c: AppColors) {
+  return StyleSheet.create({
+  root: { flex: 1 },
   content: { padding: spacing.lg, paddingBottom: spacing.xxl },
   loader: { marginTop: spacing.xxl },
-  missing: { textAlign: 'center', color: colors.textMuted, marginTop: spacing.xl },
+  missing: { textAlign: 'center', color: c.textMuted, marginTop: spacing.xl },
   hero: {
-    backgroundColor: colors.surface,
+    backgroundColor: c.surface,
     borderRadius: radius.xl,
     padding: spacing.xl,
     marginBottom: spacing.lg,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: c.border,
     alignItems: 'center',
   },
   heroBadge: {
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: colors.accentSoft,
+    backgroundColor: c.accentSoft,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.md,
     borderWidth: 1,
-    borderColor: colors.accent,
+    borderColor: c.accent,
   },
   heroTitle: {
     fontSize: 22,
     fontWeight: '900',
-    color: colors.text,
+    color: c.text,
     textAlign: 'center',
   },
   heroMeta: {
     fontSize: 14,
-    color: colors.textSecondary,
+    color: c.textSecondary,
     marginTop: spacing.xs,
     textAlign: 'center',
   },
   statusPill: {
     marginTop: spacing.md,
-    backgroundColor: colors.brandSoft,
+    backgroundColor: c.brandSoft,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,
     borderRadius: radius.pill,
   },
-  statusText: { fontSize: 12, fontWeight: '800', color: colors.brand },
+  statusText: { fontSize: 12, fontWeight: '800', color: c.brand },
   block: {
-    backgroundColor: colors.surface,
+    backgroundColor: c.surface,
     borderRadius: radius.lg,
     padding: spacing.lg,
     marginBottom: spacing.md,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: c.border,
   },
   blockHead: {
     flexDirection: 'row',
@@ -566,23 +582,23 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     marginBottom: spacing.sm,
   },
-  blockTitle: { fontSize: 15, fontWeight: '800', color: colors.text },
-  blockBody: { fontSize: 14, color: colors.textSecondary, lineHeight: 20 },
+  blockTitle: { fontSize: 15, fontWeight: '800', color: c.text },
+  blockBody: { fontSize: 14, color: c.textSecondary, lineHeight: 20 },
   organizerHint: {
     fontSize: 13,
-    color: colors.textMuted,
+    color: c.textMuted,
     marginBottom: spacing.md,
     lineHeight: 18,
   },
   orgBtn: {
-    backgroundColor: colors.brand,
+    backgroundColor: c.brand,
     borderRadius: radius.md,
     paddingVertical: spacing.sm,
     alignItems: 'center',
     marginBottom: spacing.sm,
   },
   orgBtnAccent: {
-    backgroundColor: colors.accent,
+    backgroundColor: c.accent,
     borderRadius: radius.md,
     paddingVertical: spacing.sm,
     alignItems: 'center',
@@ -591,72 +607,73 @@ const styles = StyleSheet.create({
   orgBtnDisabled: { opacity: 0.65 },
   orgBtnText: { color: '#FFFFFF', fontWeight: '800', fontSize: 14 },
   awardField: { marginBottom: spacing.sm },
-  awardLabel: { fontSize: 12, fontWeight: '700', color: colors.textMuted, marginBottom: 4 },
+  awardLabel: { fontSize: 12, fontWeight: '700', color: c.textMuted, marginBottom: 4 },
   awardInput: {
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: c.border,
     borderRadius: radius.md,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     fontSize: 14,
-    color: colors.text,
-    backgroundColor: colors.background,
+    color: c.text,
+    backgroundColor: c.background,
   },
   honorRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingVertical: spacing.xs,
   },
-  honorLabel: { fontSize: 13, color: colors.textMuted },
-  honorValue: { fontSize: 14, fontWeight: '700', color: colors.text },
+  honorLabel: { fontSize: 13, color: c.textMuted },
+  honorValue: { fontSize: 14, fontWeight: '700', color: c.text },
   matchRow: {
     borderTopWidth: 1,
-    borderTopColor: colors.border,
+    borderTopColor: c.border,
     paddingTop: spacing.sm,
     marginTop: spacing.sm,
   },
-  matchTeams: { fontSize: 13, fontWeight: '700', color: colors.text, marginBottom: spacing.xs },
+  matchTeams: { fontSize: 13, fontWeight: '700', color: c.text, marginBottom: spacing.xs },
   scoreRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
   scoreInput: {
     flex: 1,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: c.border,
     borderRadius: radius.sm,
     paddingHorizontal: spacing.sm,
     paddingVertical: 6,
     fontSize: 14,
     textAlign: 'center',
-    color: colors.text,
-    backgroundColor: colors.background,
+    color: c.text,
+    backgroundColor: c.background,
   },
-  scoreSep: { fontSize: 14, fontWeight: '700', color: colors.textMuted },
+  scoreSep: { fontSize: 14, fontWeight: '700', color: c.textMuted },
   scoreSaveBtn: {
-    backgroundColor: colors.ink,
+    backgroundColor: c.ink,
     borderRadius: radius.sm,
     paddingHorizontal: spacing.sm,
     paddingVertical: 8,
   },
-  scoreSaveText: { color: colors.brandInverse, fontWeight: '800', fontSize: 12 },
-  matchPlayed: { fontSize: 11, color: colors.textMuted, marginTop: 4 },
+  scoreSaveText: { color: c.brandInverse, fontWeight: '800', fontSize: 12 },
+  matchPlayed: { fontSize: 11, color: c.textMuted, marginTop: 4 },
   phaseRow: { flexDirection: 'row', gap: spacing.xs, marginBottom: spacing.sm },
   phaseChip: {
     paddingHorizontal: spacing.md,
     paddingVertical: 6,
     borderRadius: radius.pill,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: c.border,
   },
-  phaseChipOn: { backgroundColor: colors.ink, borderColor: colors.ink },
-  phaseChipText: { fontSize: 12, fontWeight: '700', color: colors.textSecondary },
-  phaseChipTextOn: { color: colors.brandInverse },
+  phaseChipOn: { backgroundColor: c.ink, borderColor: c.ink },
+  phaseChipText: { fontSize: 12, fontWeight: '700', color: c.textSecondary },
+  phaseChipTextOn: { color: c.brandInverse },
   cta: {
     marginTop: spacing.md,
-    backgroundColor: colors.brand,
+    backgroundColor: c.brand,
     borderRadius: radius.lg,
     paddingVertical: spacing.md,
     alignItems: 'center',
   },
-  ctaDone: { backgroundColor: colors.textMuted },
+  ctaDone: { backgroundColor: c.textMuted },
   ctaDisabled: { opacity: 0.7 },
   ctaText: { color: '#FFFFFF', fontWeight: '800', fontSize: 16 },
-});
+  });
+}

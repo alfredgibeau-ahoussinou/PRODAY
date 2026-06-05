@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -25,7 +25,9 @@ import {
   authService,
   AuthNeedsProfileError,
 } from '../../services/auth.service';
-import { colors, spacing, radius } from '../../theme/designTokens';
+import { spacing, radius } from '../../theme/designTokens';
+import { useAppTheme } from '../../context/ProductLineContext';
+import type { AppColors } from '../../theme/universeTheme';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -83,6 +85,8 @@ const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
   onNeedsProfile,
   onError,
 }) => {
+  const { colors: c } = useAppTheme();
+  const styles = useMemo(() => createSocialStyles(c), [c]);
   const [googleRequest, , promptGoogle] = Google.useIdTokenAuthRequest(config, {
     path: 'oauthredirect',
   });
@@ -154,7 +158,7 @@ const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
       accessibilityLabel="Se connecter avec Google"
     >
       {busy ? (
-        <ActivityIndicator color={colors.text} />
+        <ActivityIndicator color={c.text} />
       ) : (
         <>
           <Ionicons name="logo-google" size={20} color="#4285F4" />
@@ -171,6 +175,8 @@ export const AuthSocialButtons: React.FC<AuthSocialButtonsProps> = ({
   onNeedsProfile,
   onError,
 }) => {
+  const { colors: c } = useAppTheme();
+  const styles = useMemo(() => createSocialStyles(c), [c]);
   const [busy, setBusy] = useState<'google' | 'apple' | null>(null);
   const [appleAvailable, setAppleAvailable] = useState(false);
   const googleBlockReason = getGoogleSignInBlockReason();
@@ -284,10 +290,10 @@ export const AuthSocialButtons: React.FC<AuthSocialButtonsProps> = ({
           accessibilityLabel="Se connecter avec Apple"
         >
           {busy === 'apple' ? (
-            <ActivityIndicator color={colors.brandInverse} />
+            <ActivityIndicator color={c.brandInverse} />
           ) : (
             <>
-              <Ionicons name="logo-apple" size={22} color={colors.brandInverse} />
+              <Ionicons name="logo-apple" size={22} color={c.brandInverse} />
               <Text style={[styles.btnText, styles.btnAppleText]}>
                 Se connecter avec Apple
               </Text>
@@ -299,33 +305,35 @@ export const AuthSocialButtons: React.FC<AuthSocialButtonsProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  wrap: { gap: spacing.sm },
-  btn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.sm,
-    borderRadius: radius.pill,
-    paddingVertical: spacing.md,
-    minHeight: 52,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-  },
-  btnGoogle: {
-    backgroundColor: colors.surfaceMuted,
-  },
-  btnApple: {
-    backgroundColor: colors.ink,
-    borderColor: colors.ink,
-  },
-  btnDisabled: { opacity: 0.6 },
-  btnText: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: colors.text,
-  },
-  btnAppleText: {
-    color: colors.brandInverse,
-  },
-});
+function createSocialStyles(c: AppColors) {
+  return StyleSheet.create({
+    wrap: { gap: spacing.sm },
+    btn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: spacing.sm,
+      borderRadius: radius.pill,
+      paddingVertical: spacing.md,
+      minHeight: 52,
+      borderWidth: 1.5,
+      borderColor: c.border,
+    },
+    btnGoogle: {
+      backgroundColor: c.surfaceMuted,
+    },
+    btnApple: {
+      backgroundColor: c.ink,
+      borderColor: c.ink,
+    },
+    btnDisabled: { opacity: 0.6 },
+    btnText: {
+      fontSize: 15,
+      fontWeight: '700',
+      color: c.text,
+    },
+    btnAppleText: {
+      color: c.brandInverse,
+    },
+  });
+}

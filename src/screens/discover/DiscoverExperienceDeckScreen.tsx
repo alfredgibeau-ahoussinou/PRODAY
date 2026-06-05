@@ -11,8 +11,10 @@ import Animated, {
 } from 'react-native-reanimated';
 import { ScreenHeader } from '../../components/ui/ScreenHeader';
 import { Icon } from '../../components/ui/Icon';
-import { colors, spacing, radius, shadows } from '../../theme/designTokens';
+import { spacing, radius, shadows } from '../../theme/designTokens';
 import { useShowcaseImages } from '../../hooks/useShowcaseImages';
+import { useThemedScreen } from '../../hooks/useThemedScreen';
+import type { AppColors } from '../../theme/universeTheme';
 
 const { width: W } = Dimensions.get('window');
 
@@ -25,13 +27,15 @@ type Slide = {
   kicker: string;
   title: string;
   body: string;
-  image: any;
+  image: number;
   icon: Parameters<typeof Icon>[0]['name'];
 };
 
 export const DiscoverExperienceDeckScreen: React.FC<DiscoverExperienceDeckScreenProps> = ({
   onBack,
 }) => {
+  const { colors: c, rootStyle } = useThemedScreen();
+  const styles = useMemo(() => createStyles(c), [c]);
   const showcase = useShowcaseImages();
   const x = useSharedValue(0);
 
@@ -72,7 +76,7 @@ export const DiscoverExperienceDeckScreen: React.FC<DiscoverExperienceDeckScreen
   });
 
   return (
-    <View style={styles.root}>
+    <View style={rootStyle}>
       <ScreenHeader title="Expérience" subtitle="Deck interactif" onBack={onBack} />
 
       <Animated.ScrollView
@@ -84,20 +88,22 @@ export const DiscoverExperienceDeckScreen: React.FC<DiscoverExperienceDeckScreen
         contentContainerStyle={styles.rail}
       >
         {slides.map((s, i) => (
-          <DeckSlide key={s.key} slide={s} index={i} x={x} />
+          <DeckSlide key={s.key} slide={s} index={i} x={x} styles={styles} accent={c.brand} />
         ))}
       </Animated.ScrollView>
 
-      <DeckDots count={slides.length} x={x} />
+      <DeckDots count={slides.length} x={x} accent={c.brand} inkFaint={c.inkFaint} />
     </View>
   );
 };
 
-const DeckSlide: React.FC<{ slide: Slide; index: number; x: SharedValue<number> }> = ({
-  slide,
-  index,
-  x,
-}) => {
+const DeckSlide: React.FC<{
+  slide: Slide;
+  index: number;
+  x: SharedValue<number>;
+  styles: ReturnType<typeof createStyles>;
+  accent: string;
+}> = ({ slide, index, x, styles, accent }) => {
   const pageX0 = index * W;
 
   const cardStyle = useAnimatedStyle(() => {
@@ -136,7 +142,7 @@ const DeckSlide: React.FC<{ slide: Slide; index: number; x: SharedValue<number> 
 
           <View style={styles.badgeRow}>
             <View style={styles.badge}>
-              <Icon name={slide.icon} size={16} color={colors.accent} />
+              <Icon name={slide.icon} size={16} color={accent} />
               <Text style={styles.badgeText}>{slide.kicker}</Text>
             </View>
           </View>
@@ -151,15 +157,25 @@ const DeckSlide: React.FC<{ slide: Slide; index: number; x: SharedValue<number> 
   );
 };
 
-const DeckDots: React.FC<{ count: number; x: SharedValue<number> }> = ({ count, x }) => (
-  <View style={styles.dots}>
+const DeckDots: React.FC<{ count: number; x: SharedValue<number>; accent: string; inkFaint: string }> = ({
+  count,
+  x,
+  accent,
+  inkFaint,
+}) => (
+  <View style={deckDotStyles.dots}>
     {Array.from({ length: count }).map((_, i) => (
-      <DeckDot key={i} index={i} x={x} />
+      <DeckDot key={i} index={i} x={x} accent={accent} inkFaint={inkFaint} />
     ))}
   </View>
 );
 
-const DeckDot: React.FC<{ index: number; x: SharedValue<number> }> = ({ index, x }) => {
+const DeckDot: React.FC<{ index: number; x: SharedValue<number>; accent: string; inkFaint: string }> = ({
+  index,
+  x,
+  accent,
+  inkFaint,
+}) => {
   const style = useAnimatedStyle(() => {
     const px = index * W;
     const d = Math.abs(x.value - px);
@@ -167,57 +183,13 @@ const DeckDot: React.FC<{ index: number; x: SharedValue<number> }> = ({ index, x
     return {
       width: 8 + t * 14,
       opacity: 0.35 + t * 0.65,
-      backgroundColor: t > 0.55 ? colors.accent : colors.inkFaint,
+      backgroundColor: t > 0.55 ? accent : inkFaint,
     };
   });
-  return <Animated.View style={[styles.dot, style]} />;
+  return <Animated.View style={[deckDotStyles.dot, style]} />;
 };
 
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.background },
-  rail: { alignItems: 'center' },
-  page: { width: W, padding: spacing.lg, paddingTop: spacing.md },
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.xl,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: colors.border,
-    minHeight: 430,
-  },
-  hero: { flex: 1, justifyContent: 'flex-end' },
-  heroImg: { opacity: 0.82 },
-  heroMotion: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  heroOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.38)',
-  },
-  badgeRow: { padding: spacing.lg, paddingBottom: spacing.sm },
-  badge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    alignSelf: 'flex-start',
-    backgroundColor: 'rgba(255,255,255,0.92)',
-    borderRadius: radius.pill,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  badgeText: { fontSize: 11, fontWeight: '900', color: colors.ink, letterSpacing: 1.4 },
-  copy: { padding: spacing.lg, paddingTop: 0 },
-  title: { fontSize: 26, fontWeight: '900', color: colors.brandInverse, letterSpacing: -0.6 },
-  body: {
-    marginTop: spacing.sm,
-    fontSize: 14,
-    lineHeight: 21,
-    color: 'rgba(255,255,255,0.86)',
-    maxWidth: 320,
-    fontWeight: '600',
-  },
+const deckDotStyles = StyleSheet.create({
   dots: {
     flexDirection: 'row',
     justifyContent: 'center',
@@ -231,3 +203,50 @@ const styles = StyleSheet.create({
   },
 });
 
+function createStyles(c: AppColors) {
+  return StyleSheet.create({
+    rail: { alignItems: 'center' },
+    page: { width: W, padding: spacing.lg, paddingTop: spacing.md },
+    card: {
+      backgroundColor: c.surface,
+      borderRadius: radius.xl,
+      overflow: 'hidden',
+      borderWidth: 1,
+      borderColor: c.border,
+      minHeight: 430,
+    },
+    hero: { flex: 1, justifyContent: 'flex-end' },
+    heroImg: { opacity: 0.82 },
+    heroMotion: {
+      ...StyleSheet.absoluteFillObject,
+    },
+    heroOverlay: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: 'rgba(0,0,0,0.38)',
+    },
+    badgeRow: { padding: spacing.lg, paddingBottom: spacing.sm },
+    badge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+      alignSelf: 'flex-start',
+      backgroundColor: 'rgba(255,255,255,0.92)',
+      borderRadius: radius.pill,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.xs,
+      borderWidth: 1,
+      borderColor: c.border,
+    },
+    badgeText: { fontSize: 11, fontWeight: '900', color: c.ink, letterSpacing: 1.4 },
+    copy: { padding: spacing.lg, paddingTop: 0 },
+    title: { fontSize: 26, fontWeight: '900', color: c.brandInverse, letterSpacing: -0.6 },
+    body: {
+      marginTop: spacing.sm,
+      fontSize: 14,
+      lineHeight: 21,
+      color: 'rgba(255,255,255,0.86)',
+      maxWidth: 320,
+      fontWeight: '600',
+    },
+  });
+}

@@ -5,8 +5,13 @@ import type { Application } from '../../models/Player';
 import type { TeamEvent } from '../../models/TeamEvent';
 import type { FriendlyMatch } from '../../models/FriendlyMatch';
 import { Icon, type IconName } from '../ui/Icon';
-import { getRoleDashboardMeta, getRolePanelActions } from '../../content/roleDashboardExperience';
-import { colors, spacing, radius } from '../../theme/designTokens';
+import {
+  getRolePanelActionsForLine,
+} from '../../content/roleDashboardExperience';
+import { getDashboardMetaForLine } from '../../content/poleExperience';
+import { useAppTheme } from '../../context/ProductLineContext';
+import type { AppColors } from '../../theme/universeTheme';
+import { spacing, radius } from '../../theme/designTokens';
 
 interface DashboardRolePanelProps {
   profile: User;
@@ -20,6 +25,7 @@ interface DashboardRolePanelProps {
   onSponsors?: () => void;
   onProfile?: () => void;
   onHealth?: () => void;
+  onMercatoStages?: () => void;
   layoutKind?: 'amateur_player' | 'pro';
 }
 
@@ -35,22 +41,31 @@ export const DashboardRolePanel: React.FC<DashboardRolePanelProps> = ({
   onSponsors,
   onProfile,
   onHealth,
+  onMercatoStages,
   layoutKind = 'pro',
 }) => {
-  const meta = getRoleDashboardMeta(profile.role);
-  const actions = getRolePanelActions(profile.role);
+  const { productLine, colors: c } = useAppTheme();
+  const meta = getDashboardMetaForLine(profile.role, productLine);
+  const actions = getRolePanelActionsForLine(profile.role, productLine);
 
   if (profile.role === 'player') {
     const stats = profile.profile.season_stats;
     return (
-      <View style={[styles.wrap, styles.wrapPlayer]}>
-        <Text style={styles.eyebrow}>{meta.eyebrow}</Text>
-        <Text style={styles.title}>{meta.title}</Text>
+      <View
+        style={[
+          styles.wrap,
+          styles.wrapPlayer,
+          { backgroundColor: c.surface, borderColor: c.border },
+        ]}
+      >
+        <Text style={[styles.eyebrow, { color: c.brand }]}>{meta.eyebrow}</Text>
+        <Text style={[styles.title, { color: c.text }]}>{meta.title}</Text>
         <View style={styles.statGrid}>
-          <StatBox label="Matchs" value={String(stats?.matches ?? 0)} icon="football" />
-          <StatBox label="Buts" value={String(stats?.goals ?? 0)} icon="star" />
-          <StatBox label="Passes d." value={String(stats?.assists ?? 0)} icon="handshake" />
+          <StatBox c={c} label="Matchs" value={String(stats?.matches ?? 0)} icon="football" />
+          <StatBox c={c} label="Buts" value={String(stats?.goals ?? 0)} icon="star" />
+          <StatBox c={c} label="Passes d." value={String(stats?.assists ?? 0)} icon="handshake" />
           <StatBox
+            c={c}
             label="Candidatures"
             value={String(applications.length)}
             icon="briefcase"
@@ -61,6 +76,7 @@ export const DashboardRolePanel: React.FC<DashboardRolePanelProps> = ({
         {actions.map((a) => (
           <ActionRow
             key={a.title}
+            c={c}
             icon={a.icon}
             title={a.title}
             sub={a.sub}
@@ -68,7 +84,7 @@ export const DashboardRolePanel: React.FC<DashboardRolePanelProps> = ({
             onPress={
               a.title.includes('CV')
                 ? (onProfile ?? onRecruitment)
-                : a.title.includes('Candidater')
+                : a.title.includes('Candidater') || a.title.includes('Mercato F')
                   ? onRecruitment
                   : a.title.includes('Pôle santé')
                     ? (onHealth ?? onRecruitment)
@@ -78,6 +94,7 @@ export const DashboardRolePanel: React.FC<DashboardRolePanelProps> = ({
         ))}
         {detections.length > 0 ? (
           <ActionRow
+            c={c}
             icon="football"
             title={`${detections.length} détection${detections.length > 1 ? 's' : ''}`}
             sub="Inscription en un tap"
@@ -95,13 +112,13 @@ export const DashboardRolePanel: React.FC<DashboardRolePanelProps> = ({
     return (
       <View style={[styles.wrap, styles.wrapMedical]}>
         <Text style={[styles.eyebrow, styles.eyebrowMedical]}>{meta.eyebrow}</Text>
-        <Text style={styles.title}>{meta.title}</Text>
+        <Text style={[styles.title, { color: c.text }]}>{meta.title}</Text>
         <View style={styles.medicalBadge}>
           <Icon name="heart" size={18} color="#0F766E" variant="filled" />
           <Text style={styles.medicalBadgeText}>{specialty}</Text>
         </View>
         {profile.city ? (
-          <Text style={styles.medicalZone}>
+          <Text style={[styles.medicalZone, { color: c.textSecondary }]}>
             Zone : {profile.city}
             {profile.department ? ` (${profile.department})` : ''}
           </Text>
@@ -109,15 +126,16 @@ export const DashboardRolePanel: React.FC<DashboardRolePanelProps> = ({
         {actions.map((a) => (
           <ActionRow
             key={a.title}
+            c={c}
             icon={a.icon}
             title={a.title}
             sub={a.sub}
             accent={a.accent}
             onPress={
-              a.title.includes('Fil')
-                ? onRecruitment
-                : a.title.includes('Sportifs')
-                  ? onMatches
+              a.title.includes('Agenda')
+                ? onMatches
+                : a.title.includes('Messagerie')
+                  ? onRecruitment
                   : onProfile ?? onRecruitment
             }
           />
@@ -130,10 +148,11 @@ export const DashboardRolePanel: React.FC<DashboardRolePanelProps> = ({
     return (
       <View style={[styles.wrap, styles.wrapSponsor]}>
         <Text style={[styles.eyebrow, styles.eyebrowSponsor]}>{meta.eyebrow}</Text>
-        <Text style={styles.title}>{meta.title}</Text>
+        <Text style={[styles.title, { color: c.text }]}>{meta.title}</Text>
         {actions.map((a) => (
           <ActionRow
             key={a.title}
+            c={c}
             icon={a.icon}
             title={a.title}
             sub={a.sub}
@@ -146,12 +165,31 @@ export const DashboardRolePanel: React.FC<DashboardRolePanelProps> = ({
   }
 
   return (
-    <View style={[styles.wrap, layoutKind === 'pro' && styles.wrapPro]}>
-      <Text style={[styles.eyebrow, layoutKind === 'pro' && styles.eyebrowPro]}>{meta.eyebrow}</Text>
-      <Text style={styles.title}>{meta.title}</Text>
+    <View
+      style={[
+        styles.wrap,
+        layoutKind === 'pro' && {
+          backgroundColor: c.accentSoft,
+          borderRadius: radius.lg,
+          padding: spacing.md,
+          borderWidth: 1,
+          borderColor: c.border,
+        },
+      ]}
+    >
+      <Text
+        style={[
+          styles.eyebrow,
+          { color: layoutKind === 'pro' ? c.brand : c.brand },
+        ]}
+      >
+        {meta.eyebrow}
+      </Text>
+      <Text style={[styles.title, { color: c.text }]}>{meta.title}</Text>
       {actions.map((a) => (
         <ActionRow
           key={a.title}
+          c={c}
           icon={a.icon}
           title={a.title}
           sub={a.sub}
@@ -159,10 +197,15 @@ export const DashboardRolePanel: React.FC<DashboardRolePanelProps> = ({
           onPress={
             a.title.includes('Calendrier') || a.title.includes('Gestion') || a.title.includes('Matchs')
               ? onMatches
-              : a.title.includes('Recrutement') || a.title.includes('Repérage') || a.title.includes('Annonces')
+              : a.title.includes('Recrutement') ||
+                  a.title.includes('Repérage') ||
+                  a.title.includes('Annonces') ||
+                  a.title.includes('Mercato Pro')
                 ? onRecruitment
                 : a.title.includes('Détection') || a.title.includes('Tournois')
                   ? onDetections
+                  : a.title.includes('Stages')
+                    ? (onMercatoStages ?? onRecruitment)
                   : a.title.includes('Diplômes')
                     ? (onProfile ?? onRecruitment)
                     : onMatches
@@ -171,6 +214,7 @@ export const DashboardRolePanel: React.FC<DashboardRolePanelProps> = ({
       ))}
       {openMatches.length > 0 && profile.role !== 'organizer' ? (
         <ActionRow
+          c={c}
           icon="handshake"
           title={`${openMatches.length} match${openMatches.length > 1 ? 's' : ''} amical${openMatches.length > 1 ? 'ux' : ''}`}
           sub="Complétez votre planning"
@@ -182,64 +226,88 @@ export const DashboardRolePanel: React.FC<DashboardRolePanelProps> = ({
 };
 
 const StatBox: React.FC<{
+  c: AppColors;
   label: string;
   value: string;
   icon: IconName;
   highlight?: boolean;
   onPress?: () => void;
-}> = ({ label, value, icon, highlight, onPress }) => {
+}> = ({ c, label, value, icon, highlight, onPress }) => {
   const Box = onPress ? TouchableOpacity : View;
   return (
     <Box
-      style={[styles.statBox, highlight && styles.statBoxHighlight]}
+      style={[
+        styles.statBox,
+        {
+          backgroundColor: c.surface,
+          borderColor: highlight ? c.brand : c.border,
+        },
+        highlight && { backgroundColor: c.accentSoft },
+      ]}
       onPress={onPress}
     >
-      <Icon name={icon} size={16} color={highlight ? colors.accent : colors.textMuted} />
-      <Text style={styles.statValue}>{value}</Text>
-      <Text style={styles.statLabel}>{label}</Text>
+      <Icon name={icon} size={16} color={highlight ? c.brand : c.textMuted} />
+      <Text style={[styles.statValue, { color: c.text }]}>{value}</Text>
+      <Text style={[styles.statLabel, { color: c.textMuted }]}>{label}</Text>
     </Box>
   );
 };
 
 const ActionRow: React.FC<{
+  c: AppColors;
   icon: IconName;
   title: string;
   sub: string;
   onPress: () => void;
   accent?: boolean;
-}> = ({ icon, title, sub, onPress, accent }) => (
+}> = ({ c, icon, title, sub, onPress, accent }) => (
   <TouchableOpacity
-    style={[styles.actionRow, accent && styles.actionRowAccent]}
+    style={[
+      styles.actionRow,
+      {
+        backgroundColor: accent ? c.brand : c.surface,
+        borderColor: accent ? c.brand : c.border,
+      },
+    ]}
     onPress={onPress}
   >
-    <View style={[styles.actionIcon, accent && styles.actionIconAccent]}>
-      <Icon name={icon} size={20} color={accent ? colors.brandInverse : colors.text} />
+    <View
+      style={[
+        styles.actionIcon,
+        { backgroundColor: accent ? c.brandLight : c.surfaceMuted },
+      ]}
+    >
+      <Icon name={icon} size={20} color={accent ? c.brandInverse : c.text} />
     </View>
     <View style={styles.actionBody}>
-      <Text style={[styles.actionTitle, accent && styles.actionTitleAccent]}>{title}</Text>
-      <Text style={[styles.actionSub, accent && styles.actionSubAccent]}>{sub}</Text>
+      <Text
+        style={[
+          styles.actionTitle,
+          { color: accent ? c.brandInverse : c.text },
+        ]}
+      >
+        {title}
+      </Text>
+      <Text
+        style={[
+          styles.actionSub,
+          { color: accent ? c.heroMuted : c.textMuted },
+        ]}
+      >
+        {sub}
+      </Text>
     </View>
-    <Icon name="chevron-forward" size={18} color={colors.textMuted} />
+    <Icon name="chevron-forward" size={18} color={accent ? c.brandInverse : c.textMuted} />
   </TouchableOpacity>
 );
 
 const styles = StyleSheet.create({
   wrap: { marginBottom: spacing.xl },
   wrapPlayer: {
-    backgroundColor: colors.surface,
     borderRadius: radius.lg,
     padding: spacing.md,
     borderWidth: 1,
-    borderColor: colors.border,
   },
-  wrapPro: {
-    backgroundColor: '#EFF6FF',
-    borderRadius: radius.lg,
-    padding: spacing.md,
-    borderWidth: 1,
-    borderColor: '#BFDBFE',
-  },
-  eyebrowPro: { color: '#1D4ED8' },
   wrapMedical: {
     backgroundColor: '#F0FDFA',
     borderRadius: radius.lg,
@@ -254,10 +322,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#FBCFE8',
   },
-  eyebrow: { fontSize: 10, fontWeight: '800', color: colors.accent, letterSpacing: 1 },
+  eyebrow: { fontSize: 10, fontWeight: '800', letterSpacing: 1 },
   eyebrowMedical: { color: '#0F766E' },
   eyebrowSponsor: { color: '#BE185D' },
-  title: { fontSize: 18, fontWeight: '900', color: colors.text, marginBottom: spacing.md },
+  title: { fontSize: 18, fontWeight: '900', marginBottom: spacing.md },
   medicalBadge: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -270,7 +338,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   medicalBadgeText: { fontSize: 13, fontWeight: '800', color: '#0F766E' },
-  medicalZone: { fontSize: 12, color: colors.textSecondary, marginBottom: spacing.md, fontWeight: '600' },
+  medicalZone: { fontSize: 12, marginBottom: spacing.md, fontWeight: '600' },
   statGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -279,40 +347,30 @@ const styles = StyleSheet.create({
   },
   statBox: {
     width: '47%',
-    backgroundColor: colors.surface,
     borderRadius: radius.md,
     padding: spacing.md,
     borderWidth: 1,
-    borderColor: colors.border,
     alignItems: 'flex-start',
   },
-  statBoxHighlight: { borderColor: colors.accent, backgroundColor: colors.accentSoft },
-  statValue: { fontSize: 22, fontWeight: '900', color: colors.text, marginTop: spacing.xs },
-  statLabel: { fontSize: 11, color: colors.textMuted, fontWeight: '600' },
+  statValue: { fontSize: 22, fontWeight: '900', marginTop: spacing.xs },
+  statLabel: { fontSize: 11, fontWeight: '600' },
   actionRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
     padding: spacing.md,
-    backgroundColor: colors.surface,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: colors.border,
     marginBottom: spacing.sm,
   },
-  actionRowAccent: { backgroundColor: colors.ink, borderColor: colors.ink },
-  actionTitleAccent: { color: colors.brandInverse },
-  actionSubAccent: { color: colors.heroMuted },
   actionIcon: {
     width: 40,
     height: 40,
     borderRadius: radius.sm,
-    backgroundColor: colors.surfaceMuted,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  actionIconAccent: { backgroundColor: colors.accent, borderWidth: 0 },
   actionBody: { flex: 1 },
-  actionTitle: { fontSize: 14, fontWeight: '800', color: colors.text },
-  actionSub: { fontSize: 12, color: colors.textMuted, marginTop: 2 },
+  actionTitle: { fontSize: 14, fontWeight: '800' },
+  actionSub: { fontSize: 12, marginTop: 2 },
 });

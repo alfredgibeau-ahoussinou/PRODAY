@@ -1,6 +1,8 @@
-import React, { useEffect, useRef } from 'react';
-import { Animated, TouchableOpacity, Text, StyleSheet, View } from 'react-native';
-import { colors, spacing, radius } from '../../theme/designTokens';
+import React, { useEffect, useMemo, useRef } from 'react';
+import { Animated, TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { spacing, radius } from '../../theme/designTokens';
+import { useDiscoverStyles } from './discoverStyles';
+import type { AppColors } from '../../theme/universeTheme';
 
 interface PulseCtaProps {
   label: string;
@@ -13,6 +15,8 @@ export const PulseCta: React.FC<PulseCtaProps> = ({
   onPress,
   variant = 'primary',
 }) => {
+  const { colors: c } = useDiscoverStyles();
+  const styles = useMemo(() => createStyles(c), [c]);
   const scale = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
@@ -49,18 +53,20 @@ export const PulseCta: React.FC<PulseCtaProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  btn: {
-    borderRadius: radius.md,
-    paddingVertical: spacing.lg,
-    alignItems: 'center',
-  },
-  primary: { backgroundColor: colors.brand },
-  secondary: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.brand,
-  },
-  text: { color: '#FFFFFF', fontWeight: '800', fontSize: 16 },
-  textSecondary: { color: colors.brand },
-});
+function createStyles(c: AppColors) {
+  return StyleSheet.create({
+    btn: {
+      borderRadius: radius.md,
+      paddingVertical: spacing.lg,
+      alignItems: 'center',
+    },
+    primary: { backgroundColor: c.brand },
+    secondary: {
+      backgroundColor: c.surface,
+      borderWidth: 1,
+      borderColor: c.brand,
+    },
+    text: { color: c.brandInverse, fontWeight: '800', fontSize: 16 },
+    textSecondary: { color: c.brand },
+  });
+}

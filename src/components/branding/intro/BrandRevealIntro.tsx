@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -22,7 +22,9 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BRANDING_LOGOS } from '../../../content/brandingAssets';
-import { BRAND, colors, spacing, radius, shadows } from '../../../theme/designTokens';
+import { BRAND, spacing, radius, shadows } from '../../../theme/designTokens';
+import { useAppTheme } from '../../../context/ProductLineContext';
+import type { AppColors } from '../../../theme/universeTheme';
 import { UniverseChoiceCard } from './UniverseChoiceCard';
 import type { ProductLineId } from '../../../models/ProductLine';
 
@@ -42,6 +44,8 @@ const UNIVERSE_ORDER: ProductLineId[] = ['homme', 'woman', 'pro'];
  * Intro — choix ProDay Homme / Woman / Pro avec mini-présentation par carte.
  */
 export const BrandRevealIntro: React.FC<BrandRevealIntroProps> = ({ onChooseSpace }) => {
+  const { colors: c } = useAppTheme();
+  const styles = useMemo(() => createStyles(c), [c]);
   const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const logoW = Math.min(168, width - spacing.xl * 2);
@@ -114,6 +118,8 @@ const BrandMark: React.FC<{
   t: SharedValue<number>;
   compact: boolean;
 }> = ({ logoW, logoH, t, compact }) => {
+  const { colors: c } = useAppTheme();
+  const styles = useMemo(() => createStyles(c), [c]);
   const wrap = useAnimatedStyle(() => ({
     opacity: interpolate(t.value, [0, 0.2], [0, 1], Extrapolation.CLAMP),
     transform: [
@@ -138,6 +144,8 @@ const BrandMark: React.FC<{
 };
 
 const BrandTagline: React.FC<{ t: SharedValue<number> }> = ({ t }) => {
+  const { colors: c } = useAppTheme();
+  const styles = useMemo(() => createStyles(c), [c]);
   const wrap = useAnimatedStyle(() => ({
     opacity: interpolate(t.value, [0.45, 0.7], [0, 1], Extrapolation.CLAMP),
   }));
@@ -155,12 +163,13 @@ const BrandTagline: React.FC<{ t: SharedValue<number> }> = ({ t }) => {
   );
 };
 
-const styles = StyleSheet.create({
+function createStyles(c: AppColors) {
+  return StyleSheet.create({
   root: {
     ...StyleSheet.absoluteFillObject,
     zIndex: 1000,
     elevation: 1000,
-    backgroundColor: colors.background,
+    backgroundColor: c.background,
   },
   center: {
     flex: 1,
@@ -177,8 +186,8 @@ const styles = StyleSheet.create({
     paddingTop: spacing.sm,
     paddingBottom: spacing.md,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.border,
-    backgroundColor: colors.surface,
+    borderBottomColor: c.border,
+    backgroundColor: c.surface,
   },
   chooseHeaderCompact: {
     paddingTop: spacing.xs,
@@ -194,10 +203,10 @@ const styles = StyleSheet.create({
   },
   markWrap: { alignItems: 'center' },
   logoCard: {
-    backgroundColor: colors.surface,
+    backgroundColor: c.surface,
     borderRadius: radius.xl,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: c.border,
     paddingVertical: spacing.lg,
     paddingHorizontal: spacing.lg,
     alignItems: 'center',
@@ -211,7 +220,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
     fontSize: 22,
     fontWeight: '800',
-    color: colors.text,
+    color: c.text,
     letterSpacing: -0.5,
   },
   taglineBlock: { marginTop: spacing.lg, alignItems: 'center' },
@@ -221,23 +230,24 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     letterSpacing: 2.2,
     textTransform: 'uppercase',
-    color: colors.textMuted,
+    color: c.textMuted,
     ...Platform.select({ android: { includeFontPadding: false } }),
   },
   choiceTitle: {
     marginTop: spacing.sm,
     fontSize: 20,
     fontWeight: '900',
-    color: colors.text,
+    color: c.text,
     textAlign: 'center',
     letterSpacing: -0.3,
   },
   choiceSub: {
     marginTop: 4,
     fontSize: 13,
-    color: colors.textSecondary,
+    color: c.textSecondary,
     textAlign: 'center',
     lineHeight: 18,
     maxWidth: 300,
   },
-});
+  });
+}

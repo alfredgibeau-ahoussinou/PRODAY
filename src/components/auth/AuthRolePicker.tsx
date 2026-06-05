@@ -5,7 +5,7 @@ import { rolesForProductLine } from '../../content/universeRoles';
 import type { ProductLineId } from '../../models/ProductLine';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { Icon, type IconName } from '../ui/Icon';
-import { colors as defaultColors, spacing, radius } from '../../theme/designTokens';
+import { spacing, radius } from '../../theme/designTokens';
 
 export const ROLE_OPTIONS: {
   value: UserRole;
@@ -92,7 +92,7 @@ export const AuthRolePicker: React.FC<AuthRolePickerProps> = ({
     });
   }, [line]);
 
-  const ink = colors.ink ?? defaultColors.ink;
+  const ink = colors.ink;
 
   return (
     <View style={styles.list}>
@@ -132,7 +132,15 @@ export const AuthRolePicker: React.FC<AuthRolePickerProps> = ({
               >
                 {r.label}
               </Text>
-              <Text style={[styles.desc, active && styles.descActive]}>{r.description}</Text>
+              <Text
+                style={[
+                  styles.desc,
+                  { color: colors.textMuted },
+                  active && { color: 'rgba(255,255,255,0.78)' },
+                ]}
+              >
+                {r.description}
+              </Text>
             </View>
             {active ? (
               <Icon name="checkmark-circle" size={22} color={colors.brandInverse} />
@@ -164,6 +172,5 @@ const styles = StyleSheet.create({
   },
   body: { flex: 1 },
   title: { fontSize: 16, fontWeight: '800' },
-  desc: { fontSize: 12, color: defaultColors.textMuted, marginTop: 2 },
-  descActive: { color: 'rgba(255,255,255,0.78)' },
+  desc: { fontSize: 12, marginTop: 2 },
 });

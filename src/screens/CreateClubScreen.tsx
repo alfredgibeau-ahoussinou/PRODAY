@@ -13,7 +13,8 @@ import type { User } from '../models/User';
 import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { clubsService } from '../services/clubs.service';
 import { profileService } from '../services/profile.service';
-import { colors, spacing, radius } from '../theme/designTokens';
+import { spacing, radius } from '../theme/designTokens';
+import { useThemedScreen } from '../hooks/useThemedScreen';
 
 interface CreateClubScreenProps {
   profile: User;
@@ -31,6 +32,15 @@ export const CreateClubScreen: React.FC<CreateClubScreenProps> = ({
   const [department, setDepartment] = useState(profile.department ?? '');
   const [categoriesText, setCategoriesText] = useState('Seniors, U19');
   const [submitting, setSubmitting] = useState(false);
+  const { colors: themeColors, rootStyle } = useThemedScreen();
+  const inputStyle = [
+    styles.input,
+    {
+      backgroundColor: themeColors.surface,
+      borderColor: themeColors.border,
+      color: themeColors.text,
+    },
+  ];
 
   const handleSubmit = async () => {
     if (!name.trim() || !city.trim()) {
@@ -69,42 +79,42 @@ export const CreateClubScreen: React.FC<CreateClubScreenProps> = ({
   };
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, rootStyle]}>
       <ScreenHeader title="Créer un club" onBack={onBack} centered />
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.hint}>
+        <Text style={[styles.hint, { color: themeColors.textSecondary }]}>
           Votre club sera lié à votre profil pour publier des annonces et des matchs.
         </Text>
         <TextInput
-          style={styles.input}
+          style={inputStyle}
           placeholder="Nom du club *"
-          placeholderTextColor={colors.textMuted}
+          placeholderTextColor={themeColors.textMuted}
           value={name}
           onChangeText={setName}
         />
         <TextInput
-          style={styles.input}
+          style={inputStyle}
           placeholder="Ville *"
-          placeholderTextColor={colors.textMuted}
+          placeholderTextColor={themeColors.textMuted}
           value={city}
           onChangeText={setCity}
         />
         <TextInput
-          style={styles.input}
+          style={inputStyle}
           placeholder="Département (ex. 13)"
-          placeholderTextColor={colors.textMuted}
+          placeholderTextColor={themeColors.textMuted}
           value={department}
           onChangeText={setDepartment}
         />
         <TextInput
-          style={styles.input}
+          style={inputStyle}
           placeholder="Catégories (séparées par des virgules)"
-          placeholderTextColor={colors.textMuted}
+          placeholderTextColor={themeColors.textMuted}
           value={categoriesText}
           onChangeText={setCategoriesText}
         />
         <TouchableOpacity
-          style={styles.primary}
+          style={[styles.primary, { backgroundColor: themeColors.brand }]}
           onPress={handleSubmit}
           disabled={submitting}
         >
@@ -120,26 +130,21 @@ export const CreateClubScreen: React.FC<CreateClubScreenProps> = ({
 };
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.background },
+  root: { flex: 1 },
   content: { padding: spacing.lg, paddingBottom: spacing.xxl },
   hint: {
-    color: colors.textSecondary,
     fontSize: 14,
     lineHeight: 22,
     marginBottom: spacing.lg,
   },
   input: {
-    backgroundColor: colors.surface,
     borderRadius: radius.md,
     padding: spacing.md,
-    color: colors.text,
     marginBottom: spacing.md,
     borderWidth: 1,
-    borderColor: colors.border,
     fontSize: 15,
   },
   primary: {
-    backgroundColor: colors.brand,
     borderRadius: radius.md,
     padding: spacing.lg,
     alignItems: 'center',

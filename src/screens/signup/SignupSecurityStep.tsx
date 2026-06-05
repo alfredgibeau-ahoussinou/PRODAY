@@ -1,9 +1,8 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Text, StyleSheet, View } from 'react-native';
 import { Icon } from '../../components/ui/Icon';
 import { getPasswordStrength, SIGNUP_PASSWORD_MIN } from '../../utils/signupValidation';
 import { AuthTextField } from '../../components/auth/AuthTextField';
-
 import { SignupPressable } from '../../components/signup/SignupPressable';
 import { SignupPasswordStrengthBar } from '../../components/signup/SignupPasswordStrengthBar';
 import { SignupStepLayout } from './SignupStepLayout';
@@ -12,7 +11,9 @@ import type { SignupForm } from './useSignupForm';
 import { getPlayerStepMeta } from './signupPlayerStepMeta';
 import { getProStepMeta } from './signupProConfig';
 import { ProDayErrorBanner } from '../../components/ui/ProDayErrorBanner';
-import { colors, spacing } from '../../theme/designTokens';
+import { spacing } from '../../theme/designTokens';
+import { useSignupFlowTheme } from './SignupFlowContext';
+import type { AppColors } from '../../theme/universeTheme';
 
 interface SignupSecurityStepProps {
   form: SignupForm;
@@ -37,6 +38,8 @@ export const SignupSecurityStep: React.FC<SignupSecurityStepProps> = ({
   onSubmit,
   nextLabel = 'Créer mon compte',
 }) => {
+  const { colors: c } = useSignupFlowTheme();
+  const styles = useMemo(() => createStyles(c), [c]);
   const passwordStrength =
     form.password.length > 0 ? getPasswordStrength(form.password) : null;
   const meta = form.isProProduct
@@ -122,7 +125,7 @@ export const SignupSecurityStep: React.FC<SignupSecurityStepProps> = ({
         >
           <View style={[styles.checkbox, form.acceptedTerms && styles.checkboxOn]}>
             {form.acceptedTerms ? (
-              <Icon name="checkmark-circle" size={16} color={colors.brandInverse} />
+              <Icon name="checkmark-circle" size={16} color={c.brandInverse} />
             ) : null}
           </View>
           <Text style={styles.termsText}>
@@ -138,45 +141,47 @@ export const SignupSecurityStep: React.FC<SignupSecurityStepProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  passwordRules: {
-    fontSize: 11,
-    color: colors.textMuted,
-    marginTop: -spacing.xs,
-    marginBottom: spacing.sm,
-    lineHeight: 16,
-  },
-  termsRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: spacing.sm,
-    marginTop: spacing.md,
-  },
-  checkbox: {
-    width: 22,
-    height: 22,
-    borderRadius: 6,
-    borderWidth: 2,
-    borderColor: colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 2,
-    backgroundColor: colors.surface,
-  },
-  checkboxOn: {
-    backgroundColor: colors.ink,
-    borderColor: colors.ink,
-  },
-  termsText: {
-    flex: 1,
-    fontSize: 12,
-    lineHeight: 18,
-    color: colors.textSecondary,
-  },
-  termsError: {
-    color: colors.error,
-    fontSize: 12,
-    fontWeight: '600',
-    marginTop: spacing.xs,
-  },
-});
+function createStyles(c: AppColors) {
+  return StyleSheet.create({
+    passwordRules: {
+      fontSize: 11,
+      color: c.textMuted,
+      marginTop: -spacing.xs,
+      marginBottom: spacing.sm,
+      lineHeight: 16,
+    },
+    termsRow: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      gap: spacing.sm,
+      marginTop: spacing.md,
+    },
+    checkbox: {
+      width: 22,
+      height: 22,
+      borderRadius: 6,
+      borderWidth: 2,
+      borderColor: c.border,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginTop: 2,
+      backgroundColor: c.surface,
+    },
+    checkboxOn: {
+      backgroundColor: c.ink,
+      borderColor: c.ink,
+    },
+    termsText: {
+      flex: 1,
+      fontSize: 12,
+      lineHeight: 18,
+      color: c.textSecondary,
+    },
+    termsError: {
+      color: c.error,
+      fontSize: 12,
+      fontWeight: '600',
+      marginTop: spacing.xs,
+    },
+  });
+}

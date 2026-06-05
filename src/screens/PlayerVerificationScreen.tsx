@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
 import type { User, PlayerVerificationCheckId } from '../models/User';
@@ -7,7 +7,9 @@ import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { Icon } from '../components/ui/Icon';
 import { profileService } from '../services/profile.service';
 import { ProDayErrorBanner } from '../components/ui/ProDayErrorBanner';
-import { colors, spacing, radius } from '../theme/designTokens';
+import { spacing, radius } from '../theme/designTokens';
+import { useThemedScreen } from '../hooks/useThemedScreen';
+import type { AppColors } from '../theme/universeTheme';
 
 const CHECKS: {
   id: PlayerVerificationCheckId;
@@ -29,6 +31,9 @@ export const PlayerVerificationScreen: React.FC<PlayerVerificationScreenProps> =
   onBack,
   onUpdated,
 }) => {
+  const { colors: c, productLine, rootStyle } = useThemedScreen();
+  const styles = useMemo(() => createStyles(c), [c]);
+  const isWoman = productLine === 'woman';
   const [loading, setLoading] = useState<PlayerVerificationCheckId | null>(null);
   const [error, setError] = useState<string | null>(null);
   const pv = user.player_verification;
@@ -69,39 +74,43 @@ export const PlayerVerificationScreen: React.FC<PlayerVerificationScreenProps> =
   };
 
   return (
-    <View style={styles.root}>
-      <ScreenHeader title="Vérification joueur" onBack={onBack} centered />
+    <View style={[styles.root, rootStyle]}>
+      <ScreenHeader
+        title={isWoman ? 'Vérification joueuse' : 'Vérification joueur'}
+        onBack={onBack}
+        centered
+      />
       <View style={styles.body}>
         <Text style={styles.progress}>
           Progression {progress.label} — identité obligatoire pour la messagerie.
         </Text>
         {error ? <ProDayErrorBanner message={error} onDismiss={() => setError(null)} /> : null}
 
-        {CHECKS.map((c) => {
-          const st = pv?.[c.id]?.status ?? 'not_submitted';
+        {CHECKS.map((check) => {
+          const st = pv?.[check.id]?.status ?? 'not_submitted';
           const done = st === 'verified';
           return (
-            <View key={c.id} style={styles.card}>
+            <View key={check.id} style={styles.card}>
               <View style={styles.cardHead}>
                 <Icon
                   name={done ? 'checkmark-circle' : 'document'}
                   size={22}
-                  color={done ? colors.success : colors.accent}
+                  color={done ? c.success : c.accent}
                 />
                 <View style={styles.cardCopy}>
-                  <Text style={styles.cardTitle}>{c.title}</Text>
-                  <Text style={styles.cardSub}>{c.subtitle}</Text>
-                  <Text style={styles.status}>{statusLabel(c.id)}</Text>
+                  <Text style={styles.cardTitle}>{check.title}</Text>
+                  <Text style={styles.cardSub}>{check.subtitle}</Text>
+                  <Text style={styles.status}>{statusLabel(check.id)}</Text>
                 </View>
               </View>
               {st !== 'verified' ? (
                 <TouchableOpacity
                   style={styles.btn}
-                  onPress={() => pick(c.id)}
+                  onPress={() => pick(check.id)}
                   disabled={loading !== null}
                 >
                   <Text style={styles.btnText}>
-                    {loading === c.id ? 'Envoi…' : st === 'pending' ? 'Remplacer' : 'Téléverser'}
+                    {loading === check.id ? 'Envoi…' : st === 'pending' ? 'Remplacer' : 'Téléverser'}
                   </Text>
                 </TouchableOpacity>
               ) : null}
@@ -113,27 +122,29 @@ export const PlayerVerificationScreen: React.FC<PlayerVerificationScreenProps> =
   );
 };
 
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.background },
-  body: { padding: spacing.lg, gap: spacing.sm },
-  progress: { fontSize: 13, color: colors.textSecondary, marginBottom: spacing.sm },
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    padding: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  cardHead: { flexDirection: 'row', gap: spacing.md, marginBottom: spacing.sm },
-  cardCopy: { flex: 1 },
-  cardTitle: { fontSize: 14, fontWeight: '900', color: colors.text },
-  cardSub: { fontSize: 12, color: colors.textSecondary, marginTop: 2 },
-  status: { fontSize: 11, fontWeight: '800', color: colors.accent, marginTop: 4 },
-  btn: {
-    backgroundColor: colors.ink,
-    borderRadius: radius.md,
-    paddingVertical: spacing.sm,
-    alignItems: 'center',
-  },
-  btnText: { color: colors.brandInverse, fontWeight: '800', fontSize: 13 },
-});
+function createStyles(c: AppColors) {
+  return StyleSheet.create({
+    root: { flex: 1 },
+    body: { padding: spacing.lg, gap: spacing.sm },
+    progress: { fontSize: 13, color: c.textSecondary, marginBottom: spacing.sm },
+    card: {
+      backgroundColor: c.surface,
+      borderRadius: radius.lg,
+      padding: spacing.md,
+      borderWidth: 1,
+      borderColor: c.border,
+    },
+    cardHead: { flexDirection: 'row', gap: spacing.md, marginBottom: spacing.sm },
+    cardCopy: { flex: 1 },
+    cardTitle: { fontSize: 14, fontWeight: '900', color: c.text },
+    cardSub: { fontSize: 12, color: c.textSecondary, marginTop: 2 },
+    status: { fontSize: 11, fontWeight: '800', color: c.accent, marginTop: 4 },
+    btn: {
+      backgroundColor: c.ink,
+      borderRadius: radius.md,
+      paddingVertical: spacing.sm,
+      alignItems: 'center',
+    },
+    btnText: { color: c.brandInverse, fontWeight: '800', fontSize: 13 },
+  });
+}

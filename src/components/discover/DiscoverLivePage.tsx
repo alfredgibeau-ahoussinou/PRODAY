@@ -11,7 +11,8 @@ import type { RecruitmentStats } from '../../services/stats.service';
 import type { RecruitmentPost } from '../../models/Player';
 import type { Tournament } from '../../models/Tournament';
 import { TAB_BAR_CONTENT_INSET } from '../../navigation/tabBarLayout';
-import { colors, spacing } from '../../theme/designTokens';
+import { spacing } from '../../theme/designTokens';
+import { useDiscoverStyles } from './discoverStyles';
 
 interface DiscoverLivePageProps {
   stats: RecruitmentStats | null;
@@ -32,6 +33,7 @@ export const DiscoverLivePage: React.FC<DiscoverLivePageProps> = ({
   onMercato,
   onMatchs,
 }) => {
+  const { colors: c } = useDiscoverStyles();
   const highlights = buildDiscoverHighlights(stats, tournaments.length);
 
   return (
@@ -53,7 +55,7 @@ export const DiscoverLivePage: React.FC<DiscoverLivePageProps> = ({
 
       <StaggerReveal index={1}>
         {loading ? (
-          <ActivityIndicator color={colors.accent} style={styles.loader} />
+          <ActivityIndicator color={c.brand} style={styles.loader} />
         ) : stats ? (
           <AnimatedStatCounters stats={stats} onPress={onPress} />
         ) : null}

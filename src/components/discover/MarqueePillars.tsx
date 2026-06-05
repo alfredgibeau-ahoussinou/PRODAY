@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import Animated, {
   useAnimatedStyle,
@@ -8,7 +8,9 @@ import Animated, {
   Easing,
   cancelAnimation,
 } from 'react-native-reanimated';
-import { colors, spacing, radius } from '../../theme/designTokens';
+import { spacing, radius } from '../../theme/designTokens';
+import { useDiscoverStyles } from './discoverStyles';
+import type { AppColors } from '../../theme/universeTheme';
 
 const ITEMS = [
   'RECRUTEMENT',
@@ -22,6 +24,8 @@ const ITEMS = [
 ];
 
 export const MarqueePillars: React.FC = () => {
+  const { colors: c } = useDiscoverStyles();
+  const styles = useMemo(() => createStyles(c), [c]);
   const offset = useSharedValue(0);
   const [paused, setPaused] = useState(false);
   const [flash, setFlash] = useState<string | null>(null);
@@ -86,49 +90,51 @@ export const MarqueePillars: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  wrap: {
-    overflow: 'hidden',
-    marginTop: spacing.lg,
-    marginHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    borderRadius: radius.lg,
-    backgroundColor: colors.accentSoft,
-    borderWidth: 1,
-    borderColor: colors.accentMuted,
-  },
-  pauseHint: {
-    position: 'absolute',
-    right: spacing.md,
-    top: spacing.sm,
-    zIndex: 2,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: radius.pill,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  pauseText: {
-    color: colors.accent,
-    fontSize: 10,
-    fontWeight: '700',
-  },
-  track: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xl,
-    paddingHorizontal: spacing.lg,
-  },
-  item: {
-    color: colors.accent,
-    fontWeight: '800',
-    fontSize: 12,
-    letterSpacing: 2.5,
-    opacity: 0.85,
-  },
-  itemFlash: {
-    color: colors.accentLight,
-    opacity: 1,
-  },
-});
+function createStyles(c: AppColors) {
+  return StyleSheet.create({
+    wrap: {
+      overflow: 'hidden',
+      marginTop: spacing.lg,
+      marginHorizontal: spacing.lg,
+      paddingVertical: spacing.md,
+      borderRadius: radius.lg,
+      backgroundColor: c.brandSoft,
+      borderWidth: 1,
+      borderColor: c.accentMuted,
+    },
+    pauseHint: {
+      position: 'absolute',
+      right: spacing.md,
+      top: spacing.sm,
+      zIndex: 2,
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: radius.pill,
+      backgroundColor: c.surface,
+      borderWidth: 1,
+      borderColor: c.border,
+    },
+    pauseText: {
+      color: c.brand,
+      fontSize: 10,
+      fontWeight: '700',
+    },
+    track: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.xl,
+      paddingHorizontal: spacing.lg,
+    },
+    item: {
+      color: c.brand,
+      fontWeight: '800',
+      fontSize: 12,
+      letterSpacing: 2.5,
+      opacity: 0.85,
+    },
+    itemFlash: {
+      color: c.accentLight,
+      opacity: 1,
+    },
+  });
+}

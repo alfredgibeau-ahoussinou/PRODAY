@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   View,
   Text,
@@ -7,7 +7,9 @@ import {
   StyleSheet,
   ViewStyle,
 } from 'react-native';
-import { colors, spacing, radius, shadows, surfaces } from '../../theme/designTokens';
+import { useAppTheme } from '../../context/ProductLineContext';
+import { spacing, radius, surfaces } from '../../theme/designTokens';
+import type { AppColors } from '../../theme/universeTheme';
 
 interface RichEmptyStateProps {
   title: string;
@@ -25,51 +27,58 @@ export const RichEmptyState: React.FC<RichEmptyStateProps> = ({
   actionLabel,
   onAction,
   style,
-}) => (
-  <View style={[styles.wrap, style]}>
-    {image ? (
-      <Image source={image} style={styles.image} resizeMode="cover" />
-    ) : null}
-    <Text style={styles.title}>{title}</Text>
-    <Text style={styles.subtitle}>{subtitle}</Text>
-    {actionLabel && onAction ? (
-      <Text style={styles.action} onPress={onAction}>
-        {actionLabel} →
-      </Text>
-    ) : null}
-  </View>
-);
+}) => {
+  const { colors: c } = useAppTheme();
+  const styles = useMemo(() => createStyles(c), [c]);
 
-const styles = StyleSheet.create({
-  wrap: {
-    alignItems: 'center',
-    padding: spacing.xl,
-    ...surfaces.card,
-    overflow: 'hidden',
-  },
-  image: {
-    width: '100%',
-    height: 140,
-    borderRadius: radius.md,
-    marginBottom: spacing.md,
-  },
-  title: {
-    fontSize: 17,
-    fontWeight: '800',
-    color: colors.text,
-    textAlign: 'center',
-  },
-  subtitle: {
-    fontSize: 13,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    lineHeight: 19,
-    marginTop: spacing.sm,
-  },
-  action: {
-    marginTop: spacing.md,
-    fontSize: 14,
-    fontWeight: '700',
-    color: colors.accent,
-  },
-});
+  return (
+    <View style={[styles.wrap, style]}>
+      {image ? (
+        <Image source={image} style={styles.image} resizeMode="cover" />
+      ) : null}
+      <Text style={styles.title}>{title}</Text>
+      <Text style={styles.subtitle}>{subtitle}</Text>
+      {actionLabel && onAction ? (
+        <Text style={styles.action} onPress={onAction}>
+          {actionLabel} →
+        </Text>
+      ) : null}
+    </View>
+  );
+};
+
+function createStyles(c: AppColors) {
+  return StyleSheet.create({
+    wrap: {
+      alignItems: 'center',
+      padding: spacing.xl,
+      ...surfaces.card,
+      overflow: 'hidden',
+    },
+    image: {
+      width: '100%',
+      height: 140,
+      borderRadius: radius.md,
+      marginBottom: spacing.md,
+    },
+    title: {
+      fontSize: 17,
+      fontWeight: '800',
+      color: c.text,
+      textAlign: 'center',
+    },
+    subtitle: {
+      fontSize: 13,
+      color: c.textSecondary,
+      textAlign: 'center',
+      lineHeight: 19,
+      marginTop: spacing.sm,
+    },
+    action: {
+      marginTop: spacing.md,
+      fontSize: 14,
+      fontWeight: '700',
+      color: c.brand,
+    },
+  });
+}

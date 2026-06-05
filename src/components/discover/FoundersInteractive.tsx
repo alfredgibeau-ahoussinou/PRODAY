@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, Image } from 'react-native';
 import Animated, {
   FadeIn,
@@ -12,11 +12,14 @@ import { useShowcaseImages } from '../../hooks/useShowcaseImages';
 import type { ShowcaseImageKey } from '../../content/showcaseAssets';
 import { PressableSpring } from './PressableSpring';
 import { DiscoverSectionHeader } from './DiscoverSectionHeader';
-import { discover } from '../../theme/discoverTheme';
-import { colors, spacing } from '../../theme/designTokens';
+import { spacing, radius } from '../../theme/designTokens';
 import { SPRING_SNAPPY } from './animationConfig';
+import { useDiscoverStyles } from './discoverStyles';
+import type { AppColors } from '../../theme/universeTheme';
 
 export const FoundersInteractive: React.FC = () => {
+  const { colors: c } = useDiscoverStyles();
+  const styles = useMemo(() => createStyles(c), [c]);
   const [selected, setSelected] = useState<string | null>(null);
   const [showLetter, setShowLetter] = useState(false);
   const founder = FOUNDERS.find((f) => f.id === selected);
@@ -77,6 +80,8 @@ const FounderChip: React.FC<{
   active: boolean;
   onPress: () => void;
 }> = ({ founder, active, onPress }) => {
+  const { colors: c } = useDiscoverStyles();
+  const styles = useMemo(() => createStyles(c), [c]);
   const showcase = useShowcaseImages();
   const scale = useSharedValue(1);
   const imageKey = FOUNDER_IMAGE_KEYS[founder.id] as ShowcaseImageKey | undefined;
@@ -115,92 +120,94 @@ const FounderChip: React.FC<{
   );
 };
 
-const styles = StyleSheet.create({
-  wrap: { marginTop: spacing.lg },
-  avatars: {
-    flexDirection: 'row',
-    paddingHorizontal: spacing.lg,
-    gap: spacing.sm,
-    marginBottom: spacing.md,
-  },
-  chip: {
-    flex: 1,
-    alignItems: 'center',
-    padding: spacing.sm,
-    borderRadius: discover.radius.md,
-    borderWidth: 1,
-    borderColor: discover.borderSoft,
-    backgroundColor: discover.bgElevated,
-  },
-  chipActive: {
-    borderColor: discover.border,
-    backgroundColor: discover.bgInverse,
-  },
-  chipAvatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: discover.border,
-    overflow: 'hidden',
-  },
-  chipAvatarActive: {
-    borderColor: colors.accent,
-    borderWidth: 3,
-  },
-  chipPhoto: { width: '100%', height: '100%' },
-  chipInitial: { color: '#FFF', fontWeight: '900', fontSize: 13 },
-  chipName: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: discover.inkMuted,
-    marginTop: spacing.xs,
-    textAlign: 'center',
-  },
-  chipNameActive: { color: discover.accentText },
-  selectedBox: {
-    marginHorizontal: spacing.lg,
-    padding: spacing.md,
-    borderLeftWidth: 3,
-    borderLeftColor: colors.accent,
-    backgroundColor: discover.bgMuted,
-    borderRadius: discover.radius.sm,
-  },
-  selectedName: { fontSize: 16, fontWeight: '900', color: discover.ink },
-  selectedRole: { fontSize: 12, color: discover.inkMuted, marginTop: 2 },
-  letterBtn: {
-    marginHorizontal: spacing.lg,
-    marginTop: spacing.md,
-    paddingVertical: spacing.md,
-    borderWidth: 1,
-    borderColor: discover.border,
-    borderRadius: discover.radius.md,
-    alignItems: 'center',
-    backgroundColor: discover.bgElevated,
-  },
-  letterBtnText: { fontWeight: '800', fontSize: 14, color: discover.ink },
-  letterBox: {
-    marginHorizontal: spacing.lg,
-    marginTop: spacing.md,
-    padding: spacing.lg,
-    backgroundColor: discover.bgElevated,
-    borderWidth: 1,
-    borderColor: discover.border,
-    borderRadius: discover.radius.lg,
-  },
-  letterBody: { fontSize: 14, lineHeight: 23, color: discover.inkSecondary },
-  letterSign: {
-    marginTop: spacing.lg,
-    fontStyle: 'italic',
-    color: discover.ink,
-    fontSize: 14,
-  },
-  letterNames: {
-    marginTop: spacing.sm,
-    fontWeight: '800',
-    fontSize: 12,
-    color: colors.accent,
-  },
-});
+function createStyles(c: AppColors) {
+  return StyleSheet.create({
+    wrap: { marginTop: spacing.lg },
+    avatars: {
+      flexDirection: 'row',
+      paddingHorizontal: spacing.lg,
+      gap: spacing.sm,
+      marginBottom: spacing.md,
+    },
+    chip: {
+      flex: 1,
+      alignItems: 'center',
+      padding: spacing.sm,
+      borderRadius: radius.md,
+      borderWidth: 1,
+      borderColor: c.border,
+      backgroundColor: c.surface,
+    },
+    chipActive: {
+      borderColor: c.text,
+      backgroundColor: c.surfaceInverse,
+    },
+    chipAvatar: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 1,
+      borderColor: c.border,
+      overflow: 'hidden',
+    },
+    chipAvatarActive: {
+      borderColor: c.brand,
+      borderWidth: 3,
+    },
+    chipPhoto: { width: '100%', height: '100%' },
+    chipInitial: { color: '#FFF', fontWeight: '900', fontSize: 13 },
+    chipName: {
+      fontSize: 10,
+      fontWeight: '700',
+      color: c.textMuted,
+      marginTop: spacing.xs,
+      textAlign: 'center',
+    },
+    chipNameActive: { color: c.brand },
+    selectedBox: {
+      marginHorizontal: spacing.lg,
+      padding: spacing.md,
+      borderLeftWidth: 3,
+      borderLeftColor: c.brand,
+      backgroundColor: c.surfaceMuted,
+      borderRadius: radius.sm,
+    },
+    selectedName: { fontSize: 16, fontWeight: '900', color: c.text },
+    selectedRole: { fontSize: 12, color: c.textMuted, marginTop: 2 },
+    letterBtn: {
+      marginHorizontal: spacing.lg,
+      marginTop: spacing.md,
+      paddingVertical: spacing.md,
+      borderWidth: 1,
+      borderColor: c.border,
+      borderRadius: radius.md,
+      alignItems: 'center',
+      backgroundColor: c.surface,
+    },
+    letterBtnText: { fontWeight: '800', fontSize: 14, color: c.text },
+    letterBox: {
+      marginHorizontal: spacing.lg,
+      marginTop: spacing.md,
+      padding: spacing.lg,
+      backgroundColor: c.surface,
+      borderWidth: 1,
+      borderColor: c.border,
+      borderRadius: radius.lg,
+    },
+    letterBody: { fontSize: 14, lineHeight: 23, color: c.textSecondary },
+    letterSign: {
+      marginTop: spacing.lg,
+      fontStyle: 'italic',
+      color: c.text,
+      fontSize: 14,
+    },
+    letterNames: {
+      marginTop: spacing.sm,
+      fontWeight: '800',
+      fontSize: 12,
+      color: c.brand,
+    },
+  });
+}

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { View, Text, StyleSheet, Dimensions } from 'react-native';
 import { ShowcaseImageBackground } from '../ui/ShowcaseImageBackground';
 import Animated, {
@@ -14,7 +14,9 @@ import { PressableSpring } from './PressableSpring';
 import { MarqueePillars } from './MarqueePillars';
 import { ShimmerCTA } from './ShimmerCTA';
 import { useShowcaseImages } from '../../hooks/useShowcaseImages';
-import { colors, spacing, radius, shadows, surfaces, BRAND, brandOverlay } from '../../theme/designTokens';
+import { spacing, radius, shadows, surfaces, BRAND, brandOverlay } from '../../theme/designTokens';
+import { useDiscoverStyles } from './discoverStyles';
+import type { AppColors } from '../../theme/universeTheme';
 
 const { width: W } = Dimensions.get('window');
 
@@ -29,6 +31,8 @@ export const DiscoverWelcomePage: React.FC<DiscoverWelcomePageProps> = ({
   onNext,
   onSignup,
 }) => {
+  const { colors: c } = useDiscoverStyles();
+  const styles = useMemo(() => createStyles(c), [c]);
   const showcase = useShowcaseImages();
   const breathe = useSharedValue(0);
 
@@ -84,84 +88,86 @@ export const DiscoverWelcomePage: React.FC<DiscoverWelcomePageProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.background },
-  photoWrap: {
-    marginHorizontal: spacing.lg,
-    marginTop: spacing.md,
-    borderRadius: radius.xl,
-    overflow: 'hidden',
-    height: 160,
-    ...shadows.soft,
-  },
-  photo: { flex: 1 },
-  photoImg: { borderRadius: radius.xl },
-  photoMotion: { ...StyleSheet.absoluteFillObject },
-  photoOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: brandOverlay(0.25),
-  },
-  card: {
-    marginHorizontal: spacing.lg,
-    marginTop: -spacing.xl,
-    backgroundColor: colors.surface,
-    borderRadius: radius.xl,
-    borderWidth: 1,
-    borderColor: colors.border,
-    overflow: 'hidden',
-  },
-  cardAccent: {
-    height: 4,
-    backgroundColor: colors.accent,
-  },
-  cardBody: {
-    padding: spacing.xl,
-    alignItems: 'center',
-    backgroundColor: colors.surface,
-  },
-  tagline: {
-    marginTop: spacing.sm,
-    fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 2,
-    color: colors.textMuted,
-  },
-  pitch: {
-    marginTop: spacing.md,
-    fontSize: 15,
-    lineHeight: 22,
-    fontWeight: '600',
-    color: colors.textSecondary,
-    textAlign: 'center',
-    maxWidth: W - 96,
-  },
-  statsPill: {
-    ...surfaces.pill,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginTop: spacing.lg,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 8,
-  },
-  liveDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: colors.accent,
-  },
-  statsText: { fontSize: 12, fontWeight: '700', color: colors.accent },
-  actions: {
-    paddingHorizontal: spacing.lg,
-    marginTop: spacing.lg,
-    gap: spacing.sm,
-  },
-  nextBtn: {
-    backgroundColor: colors.accent,
-    borderRadius: radius.pill,
-    paddingVertical: spacing.md + 2,
-    alignItems: 'center',
-    ...shadows.interactive,
-  },
-  nextText: { color: colors.brandInverse, fontWeight: '800', fontSize: 16 },
-});
+function createStyles(c: AppColors) {
+  return StyleSheet.create({
+    root: { flex: 1, backgroundColor: c.background },
+    photoWrap: {
+      marginHorizontal: spacing.lg,
+      marginTop: spacing.md,
+      borderRadius: radius.xl,
+      overflow: 'hidden',
+      height: 160,
+      ...shadows.soft,
+    },
+    photo: { flex: 1 },
+    photoImg: { borderRadius: radius.xl },
+    photoMotion: { ...StyleSheet.absoluteFillObject },
+    photoOverlay: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: brandOverlay(0.25),
+    },
+    card: {
+      marginHorizontal: spacing.lg,
+      marginTop: -spacing.xl,
+      backgroundColor: c.surface,
+      borderRadius: radius.xl,
+      borderWidth: 1,
+      borderColor: c.border,
+      overflow: 'hidden',
+    },
+    cardAccent: {
+      height: 4,
+      backgroundColor: c.brand,
+    },
+    cardBody: {
+      padding: spacing.xl,
+      alignItems: 'center',
+      backgroundColor: c.surface,
+    },
+    tagline: {
+      marginTop: spacing.sm,
+      fontSize: 10,
+      fontWeight: '700',
+      letterSpacing: 2,
+      color: c.textMuted,
+    },
+    pitch: {
+      marginTop: spacing.md,
+      fontSize: 15,
+      lineHeight: 22,
+      fontWeight: '600',
+      color: c.textSecondary,
+      textAlign: 'center',
+      maxWidth: W - 96,
+    },
+    statsPill: {
+      ...surfaces.pill,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      marginTop: spacing.lg,
+      paddingHorizontal: spacing.md,
+      paddingVertical: 8,
+    },
+    liveDot: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+      backgroundColor: c.brand,
+    },
+    statsText: { fontSize: 12, fontWeight: '700', color: c.brand },
+    actions: {
+      paddingHorizontal: spacing.lg,
+      marginTop: spacing.lg,
+      gap: spacing.sm,
+    },
+    nextBtn: {
+      backgroundColor: c.brand,
+      borderRadius: radius.pill,
+      paddingVertical: spacing.md + 2,
+      alignItems: 'center',
+      ...shadows.interactive,
+    },
+    nextText: { color: c.brandInverse, fontWeight: '800', fontSize: 16 },
+  });
+}

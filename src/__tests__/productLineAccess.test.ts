@@ -3,7 +3,9 @@ jest.mock('@react-native-async-storage/async-storage', () =>
 );
 
 import {
+  getEffectiveRoleForProductLine,
   getProductLineMismatchMessage,
+  getSessionProfile,
   getUserProductLine,
   profileMatchesActiveLine,
 } from '../utils/productLineAccess';
@@ -53,5 +55,38 @@ describe('productLineAccess', () => {
     expect(profileMatchesActiveLine(womanUser, 'homme')).toBe(false);
     expect(getProductLineMismatchMessage('woman', 'homme')).toMatch(/ProDay Woman/);
     expect(getProductLineMismatchMessage('homme', 'woman')).toMatch(/Pro Day Man/);
+  });
+
+  it('autorise le compte test sur tous les pôles', () => {
+    const testUser = {
+      ...baseUser,
+      email: 'alfredgibeauahoussinou@gmail.com',
+      product_line: 'homme' as const,
+    } as User;
+    expect(profileMatchesActiveLine(testUser, 'homme')).toBe(true);
+    expect(profileMatchesActiveLine(testUser, 'woman')).toBe(true);
+    expect(profileMatchesActiveLine(testUser, 'pro')).toBe(true);
+    expect(getEffectiveRoleForProductLine(testUser, 'homme')).toBe('player');
+    expect(getEffectiveRoleForProductLine(testUser, 'woman')).toBe('player');
+    expect(getEffectiveRoleForProductLine(testUser, 'pro')).toBe('physio');
+    const proSession = getSessionProfile(testUser, 'pro');
+    expect(proSession.role).toBe('physio');
+    expect(proSession.product_line).toBe('pro');
+  });
+
+  it('autorise le compte démo partenaire uniquement sur Pro', () => {
+    const partner = {
+      ...baseUser,
+      email: 'part@gmail.com',
+      role: 'sponsor' as const,
+      product_line: 'pro' as const,
+    } as User;
+    expect(profileMatchesActiveLine(partner, 'pro')).toBe(true);
+    expect(profileMatchesActiveLine(partner, 'homme')).toBe(false);
+    expect(profileMatchesActiveLine(partner, 'woman')).toBe(false);
+    expect(getEffectiveRoleForProductLine(partner, 'pro')).toBe('sponsor');
+    const session = getSessionProfile(partner, 'pro');
+    expect(session.role).toBe('sponsor');
+    expect(session.product_line).toBe('pro');
   });
 });

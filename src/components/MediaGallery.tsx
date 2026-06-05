@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Image, ScrollView, StyleSheet } from 'react-native';
-import { colors, spacing, radius } from '../theme/designTokens';
+import { useAppTheme } from '../context/ProductLineContext';
+import { spacing, radius } from '../theme/designTokens';
+import type { AppColors } from '../theme/universeTheme';
 
 interface MediaGalleryProps {
   urls: string[];
@@ -9,6 +11,9 @@ interface MediaGalleryProps {
 const THUMB = 88;
 
 export const MediaGallery: React.FC<MediaGalleryProps> = ({ urls }) => {
+  const { colors: c } = useAppTheme();
+  const styles = useMemo(() => createStyles(c), [c]);
+
   if (!urls.length) return null;
 
   return (
@@ -24,12 +29,14 @@ export const MediaGallery: React.FC<MediaGalleryProps> = ({ urls }) => {
   );
 };
 
-const styles = StyleSheet.create({
-  row: { gap: spacing.sm, paddingVertical: spacing.xs },
-  thumb: {
-    width: THUMB,
-    height: THUMB,
-    borderRadius: radius.md,
-    backgroundColor: colors.surfaceMuted,
-  },
-});
+function createStyles(c: AppColors) {
+  return StyleSheet.create({
+    row: { gap: spacing.sm, paddingVertical: spacing.xs },
+    thumb: {
+      width: THUMB,
+      height: THUMB,
+      borderRadius: radius.md,
+      backgroundColor: c.surfaceMuted,
+    },
+  });
+}

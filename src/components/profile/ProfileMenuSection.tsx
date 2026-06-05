@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Icon, type IconName } from '../ui/Icon';
-import type { AppColors } from '../../theme/prodayWomanTheme';
+import type { AppColors } from '../../theme/universeTheme';
 import { spacing, radius } from '../../theme/designTokens';
 
 export interface ProfileMenuItem {

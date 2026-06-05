@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -17,7 +17,10 @@ import { usersService } from '../services/users.service';
 import type { ChatMessage } from '../lib/firestoreMappers';
 import type { User } from '../models/User';
 import { evaluateMessagingPermission } from '../utils/parentalMessaging';
-import { colors, spacing, radius } from '../theme/designTokens';
+import { isSponsorRole, SPONSOR_THEME } from '../content/sponsorExperience';
+import { spacing, radius } from '../theme/designTokens';
+import { useAppTheme } from '../context/ProductLineContext';
+import type { AppColors } from '../theme/universeTheme';
 
 interface ChatScreenProps {
   threadId: string;
@@ -40,6 +43,39 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
   const [sending, setSending] = useState(false);
   const [otherUser, setOtherUser] = useState<User | null>(null);
   const [sendBlocked, setSendBlocked] = useState<string | null>(null);
+  const sponsorDark = isSponsorRole(currentUser?.role);
+  const { colors: themeColors } = useAppTheme();
+  const styles = useMemo(() => createStyles(themeColors), [themeColors]);
+
+  const ui = useMemo(
+    () =>
+      sponsorDark
+        ? {
+            bg: SPONSOR_THEME.background,
+            surface: SPONSOR_THEME.surface,
+            surfaceMuted: SPONSOR_THEME.surfaceMuted,
+            border: SPONSOR_THEME.borderSubtle,
+            text: SPONSOR_THEME.text,
+            textMuted: SPONSOR_THEME.textMuted,
+            accent: SPONSOR_THEME.primary,
+            onAccent: SPONSOR_THEME.onPrimary,
+            warning: themeColors.warning,
+            warningBg: themeColors.warningBg,
+          }
+        : {
+            bg: themeColors.background,
+            surface: themeColors.surface,
+            surfaceMuted: themeColors.surfaceMuted,
+            border: themeColors.border,
+            text: themeColors.text,
+            textMuted: themeColors.textMuted,
+            accent: themeColors.brand,
+            onAccent: themeColors.brandInverse,
+            warning: themeColors.warning,
+            warningBg: themeColors.warningBg,
+          },
+    [sponsorDark, themeColors]
+  );
 
   const otherUid = messagesService.getOtherParticipantId(threadId, currentUid);
 
@@ -84,12 +120,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
     }
     setSending(true);
     try {
-      await messagesService.sendMessage(
-        threadId,
-        currentUid,
-        otherUid,
-        text.trim()
-      );
+      await messagesService.sendMessage(threadId, currentUid, otherUid, text.trim());
       setText('');
     } finally {
       setSending(false);
@@ -98,35 +129,44 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
 
   return (
     <KeyboardAvoidingView
-      style={styles.root}
+      style={[styles.root, { backgroundColor: ui.bg }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       keyboardVerticalOffset={80}
     >
-      <ScreenHeader title={otherName} onBack={onBack} centered />
+      <ScreenHeader title={otherName} onBack={onBack} centered sponsorDark={sponsorDark} />
       {loading ? (
-        <ActivityIndicator color={colors.brand} style={styles.loader} />
+        <ActivityIndicator color={ui.accent} style={styles.loader} />
       ) : (
         <FlatList
           data={messages}
           keyExtractor={(m) => m.id}
           contentContainerStyle={styles.list}
           ListEmptyComponent={
-            <Text style={styles.empty}>
+            <Text style={[styles.empty, { color: ui.textMuted }]}>
               Aucun message. Envoyez le premier pour démarrer la conversation.
             </Text>
           }
           renderItem={({ item }) => {
             const mine = item.sender_id === currentUid;
             return (
-              <View
-                style={[styles.bubbleWrap, mine ? styles.bubbleWrapMine : null]}
-              >
-                <View style={[styles.bubble, mine ? styles.bubbleMine : styles.bubbleTheirs]}>
-                  <Text style={[styles.bubbleText, mine && styles.bubbleTextMine]}>
+              <View style={[styles.bubbleWrap, mine ? styles.bubbleWrapMine : null]}>
+                <View
+                  style={[
+                    styles.bubble,
+                    mine
+                      ? { backgroundColor: ui.accent }
+                      : {
+                          backgroundColor: ui.surface,
+                          borderWidth: 1,
+                          borderColor: ui.border,
+                        },
+                  ]}
+                >
+                  <Text style={[styles.bubbleText, { color: mine ? ui.onAccent : ui.text }]}>
                     {item.body}
                   </Text>
                 </View>
-                <Text style={styles.time}>
+                <Text style={[styles.time, { color: ui.textMuted }]}>
                   {item.created_at.toLocaleTimeString('fr-FR', {
                     hour: '2-digit',
                     minute: '2-digit',
@@ -138,13 +178,32 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
         />
       )}
       {sendBlocked ? (
-        <Text style={styles.blocked}>{sendBlocked}</Text>
+        <Text
+          style={[
+            styles.blocked,
+            { color: ui.warning, backgroundColor: ui.warningBg },
+          ]}
+        >
+          {sendBlocked}
+        </Text>
       ) : null}
-      <View style={styles.composer}>
+      <View
+        style={[
+          styles.composer,
+          { backgroundColor: ui.surface, borderTopColor: ui.border },
+        ]}
+      >
         <TextInput
-          style={styles.input}
+          style={[
+            styles.input,
+            {
+              backgroundColor: ui.surfaceMuted,
+              borderColor: ui.border,
+              color: ui.text,
+            },
+          ]}
           placeholder="Votre message…"
-          placeholderTextColor={colors.textMuted}
+          placeholderTextColor={ui.textMuted}
           value={text}
           onChangeText={setText}
           multiline
@@ -153,15 +212,16 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
         <TouchableOpacity
           style={[
             styles.sendBtn,
+            { backgroundColor: ui.accent },
             (!text.trim() || sending || sendBlocked) && styles.sendDisabled,
           ]}
           onPress={handleSend}
           disabled={!text.trim() || sending || Boolean(sendBlocked)}
         >
           {sending ? (
-            <ActivityIndicator color="#FFF" size="small" />
+            <ActivityIndicator color={ui.onAccent} size="small" />
           ) : (
-            <Text style={styles.sendText}>Envoyer</Text>
+            <Text style={[styles.sendText, { color: ui.onAccent }]}>Envoyer</Text>
           )}
         </TouchableOpacity>
       </View>
@@ -169,72 +229,58 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.background },
-  loader: { marginTop: spacing.xl },
-  list: { padding: spacing.lg, paddingBottom: spacing.md, flexGrow: 1 },
-  empty: {
-    textAlign: 'center',
-    color: colors.textMuted,
-    fontSize: 14,
-    marginTop: spacing.xl,
-    lineHeight: 22,
-  },
-  bubbleWrap: { marginBottom: spacing.md, maxWidth: '82%' },
-  bubbleWrapMine: { alignSelf: 'flex-end' },
-  bubble: {
-    borderRadius: radius.lg,
-    padding: spacing.md,
-  },
-  bubbleMine: { backgroundColor: colors.brand },
-  bubbleTheirs: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  bubbleText: { fontSize: 15, color: colors.text, lineHeight: 22 },
-  bubbleTextMine: { color: '#FFFFFF' },
-  time: { fontSize: 10, color: colors.textMuted, marginTop: 4 },
-  blocked: {
-    fontSize: 12,
-    color: colors.warning,
-    backgroundColor: colors.warningBg,
-    marginHorizontal: spacing.md,
-    marginBottom: spacing.sm,
-    padding: spacing.sm,
-    borderRadius: radius.md,
-    lineHeight: 18,
-  },
-  composer: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    gap: spacing.sm,
-    padding: spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-    backgroundColor: colors.surface,
-  },
-  input: {
-    flex: 1,
-    minHeight: 44,
-    maxHeight: 120,
-    backgroundColor: colors.background,
-    borderRadius: radius.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    color: colors.text,
-    fontSize: 15,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  sendBtn: {
-    backgroundColor: colors.brand,
-    borderRadius: radius.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 12,
-    minWidth: 72,
-    alignItems: 'center',
-  },
-  sendDisabled: { opacity: 0.5 },
-  sendText: { color: '#FFFFFF', fontWeight: '700', fontSize: 14 },
-});
+function createStyles(_c: AppColors) {
+  return StyleSheet.create({
+    root: { flex: 1 },
+    loader: { marginTop: spacing.xl },
+    list: { padding: spacing.lg, paddingBottom: spacing.md, flexGrow: 1 },
+    empty: {
+      textAlign: 'center',
+      fontSize: 14,
+      marginTop: spacing.xl,
+      lineHeight: 22,
+    },
+    bubbleWrap: { marginBottom: spacing.md, maxWidth: '82%' },
+    bubbleWrapMine: { alignSelf: 'flex-end' },
+    bubble: {
+      borderRadius: radius.lg,
+      padding: spacing.md,
+    },
+    bubbleText: { fontSize: 15, lineHeight: 22 },
+    time: { fontSize: 10, marginTop: 4 },
+    blocked: {
+      fontSize: 12,
+      marginHorizontal: spacing.md,
+      marginBottom: spacing.sm,
+      padding: spacing.sm,
+      borderRadius: radius.md,
+      lineHeight: 18,
+    },
+    composer: {
+      flexDirection: 'row',
+      alignItems: 'flex-end',
+      gap: spacing.sm,
+      padding: spacing.md,
+      borderTopWidth: 1,
+    },
+    input: {
+      flex: 1,
+      minHeight: 44,
+      maxHeight: 120,
+      borderRadius: radius.md,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      fontSize: 15,
+      borderWidth: 1,
+    },
+    sendBtn: {
+      borderRadius: radius.md,
+      paddingHorizontal: spacing.md,
+      paddingVertical: 12,
+      minWidth: 72,
+      alignItems: 'center',
+    },
+    sendDisabled: { opacity: 0.5 },
+    sendText: { fontWeight: '700', fontSize: 14 },
+  });
+}

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -8,7 +8,9 @@ import {
   type TextInputProps,
 } from 'react-native';
 import { Icon, type IconName } from '../ui/Icon';
-import { colors, spacing, radius } from '../../theme/designTokens';
+import { spacing, radius } from '../../theme/designTokens';
+import { useAppTheme } from '../../context/ProductLineContext';
+import type { AppColors } from '../../theme/universeTheme';
 
 interface AuthTextFieldProps extends TextInputProps {
   label: string;
@@ -28,6 +30,8 @@ export const AuthTextField: React.FC<AuthTextFieldProps> = ({
   onBlur,
   ...rest
 }) => {
+  const { colors: c } = useAppTheme();
+  const styles = useMemo(() => createStyles(c), [c]);
   const [hidden, setHidden] = useState(Boolean(secureTextEntry));
   const [focused, setFocused] = useState(false);
   const isSecure = secureToggle ? hidden : secureTextEntry;
@@ -43,11 +47,11 @@ export const AuthTextField: React.FC<AuthTextFieldProps> = ({
         ]}
       >
         {icon ? (
-          <Icon name={icon} size={20} color={focused ? colors.text : colors.textMuted} />
+          <Icon name={icon} size={20} color={focused ? c.text : c.textMuted} />
         ) : null}
         <TextInput
           style={[styles.input, style]}
-          placeholderTextColor={colors.textMuted}
+          placeholderTextColor={c.textMuted}
           secureTextEntry={isSecure}
           onFocus={(e) => {
             setFocused(true);
@@ -65,7 +69,7 @@ export const AuthTextField: React.FC<AuthTextFieldProps> = ({
             hitSlop={12}
             accessibilityLabel={hidden ? 'Afficher le mot de passe' : 'Masquer'}
           >
-            <Icon name={hidden ? 'eye-off' : 'eye'} size={20} color={colors.textMuted} />
+            <Icon name={hidden ? 'eye-off' : 'eye'} size={20} color={c.textMuted} />
           </TouchableOpacity>
         ) : null}
       </View>
@@ -74,40 +78,42 @@ export const AuthTextField: React.FC<AuthTextFieldProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  wrap: { marginBottom: spacing.md },
-  label: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: colors.text,
-    marginBottom: spacing.xs,
-    letterSpacing: 0.3,
-    textTransform: 'uppercase',
-  },
-  field: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    backgroundColor: colors.surfaceMuted,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    paddingHorizontal: spacing.md,
-    minHeight: 54,
-  },
-  fieldFocused: {
-    borderColor: colors.ink,
-    backgroundColor: colors.surface,
-  },
-  fieldError: {
-    borderColor: colors.error,
-    backgroundColor: colors.errorBg,
-  },
-  input: {
-    flex: 1,
-    fontSize: 16,
-    color: colors.text,
-    paddingVertical: spacing.sm,
-  },
-  errorText: { fontSize: 12, color: colors.error, marginTop: 4, fontWeight: '600' },
-});
+function createStyles(c: AppColors) {
+  return StyleSheet.create({
+    wrap: { marginBottom: spacing.md },
+    label: {
+      fontSize: 12,
+      fontWeight: '700',
+      color: c.text,
+      marginBottom: spacing.xs,
+      letterSpacing: 0.3,
+      textTransform: 'uppercase',
+    },
+    field: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+      backgroundColor: c.surfaceMuted,
+      borderRadius: radius.md,
+      borderWidth: 1,
+      borderColor: c.border,
+      paddingHorizontal: spacing.md,
+      minHeight: 54,
+    },
+    fieldFocused: {
+      borderColor: c.ink,
+      backgroundColor: c.surface,
+    },
+    fieldError: {
+      borderColor: c.error,
+      backgroundColor: c.errorBg,
+    },
+    input: {
+      flex: 1,
+      fontSize: 16,
+      color: c.text,
+      paddingVertical: spacing.sm,
+    },
+    errorText: { fontSize: 12, color: c.error, marginTop: 4, fontWeight: '600' },
+  });
+}

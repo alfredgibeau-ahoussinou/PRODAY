@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { ScrollView, Text, StyleSheet, Linking, TouchableOpacity, View } from 'react-native';
 import { ScreenHeader } from '../components/ui/ScreenHeader';
 import {
@@ -7,7 +7,10 @@ import {
   type LegalDocumentId,
 } from '../content/legalDocuments';
 import { TAB_BAR_CONTENT_INSET } from '../components/navigation/BottomTabBar';
-import { colors, spacing, radius } from '../theme/designTokens';
+import { useSessionProfile } from '../hooks/useSessionProfile';
+import { isSponsorRole, SPONSOR_THEME } from '../content/sponsorExperience';
+import { spacing, radius } from '../theme/designTokens';
+import { useAppTheme } from '../context/ProductLineContext';
 
 interface LegalDocumentScreenProps {
   documentId: LegalDocumentId;
@@ -18,36 +21,68 @@ export const LegalDocumentScreen: React.FC<LegalDocumentScreenProps> = ({
   documentId,
   onBack,
 }) => {
+  const profile = useSessionProfile();
+  const sponsorDark = isSponsorRole(profile?.role);
+  const { colors: themeColors } = useAppTheme();
   const doc = getLegalDocument(documentId);
+
+  const ui = useMemo(
+    () =>
+      sponsorDark
+        ? {
+            bg: SPONSOR_THEME.background,
+            surface: SPONSOR_THEME.surface,
+            border: SPONSOR_THEME.borderSubtle,
+            text: SPONSOR_THEME.text,
+            textSecondary: SPONSOR_THEME.textSecondary,
+            textMuted: SPONSOR_THEME.textMuted,
+            accent: SPONSOR_THEME.primary,
+          }
+        : {
+            bg: themeColors.background,
+            surface: themeColors.surface,
+            border: themeColors.border,
+            text: themeColors.text,
+            textSecondary: themeColors.textSecondary,
+            textMuted: themeColors.textMuted,
+            accent: themeColors.accent,
+          },
+    [sponsorDark, themeColors]
+  );
 
   return (
     <ScrollView
-      style={styles.root}
+      style={[styles.root, { backgroundColor: ui.bg }]}
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
     >
-      <ScreenHeader title={doc.title} onBack={onBack} centered />
-      <Text style={styles.updated}>Mise à jour : {doc.updatedAt}</Text>
+      <ScreenHeader title={doc.title} onBack={onBack} centered sponsorDark={sponsorDark} />
+      <Text style={[styles.updated, { color: ui.textMuted }]}>Mise à jour : {doc.updatedAt}</Text>
 
       {doc.sections.map((section) => (
-        <View key={section.title} style={styles.section}>
-          <Text style={styles.sectionTitle}>{section.title}</Text>
+        <View
+          key={section.title}
+          style={[styles.section, { backgroundColor: ui.surface, borderColor: ui.border }]}
+        >
+          <Text style={[styles.sectionTitle, { color: ui.text }]}>{section.title}</Text>
           {section.paragraphs.map((p, i) => (
-            <Text key={`${section.title}-${i}`} style={styles.paragraph}>
+            <Text key={`${section.title}-${i}`} style={[styles.paragraph, { color: ui.textSecondary }]}>
               {p}
             </Text>
           ))}
         </View>
       ))}
 
-      <View style={styles.contactBox}>
-        <Text style={styles.contactLabel}>Question juridique ou données personnelles</Text>
+      <View style={[styles.contactBox, { backgroundColor: ui.surface, borderColor: ui.border }]}>
+        <Text style={[styles.contactLabel, { color: ui.textMuted }]}>
+          Question juridique ou données personnelles
+        </Text>
         <TouchableOpacity onPress={() => void Linking.openURL(`mailto:${LEGAL_CONTACT_EMAIL}`)}>
-          <Text style={styles.contactEmail}>{LEGAL_CONTACT_EMAIL}</Text>
+          <Text style={[styles.contactEmail, { color: ui.accent }]}>{LEGAL_CONTACT_EMAIL}</Text>
         </TouchableOpacity>
       </View>
 
-      <Text style={styles.footer}>
+      <Text style={[styles.footer, { color: ui.textMuted }]}>
         Version complète disponible dans docs/legal/ du dépôt ProDay (publication store).
       </Text>
     </ScrollView>
@@ -55,58 +90,51 @@ export const LegalDocumentScreen: React.FC<LegalDocumentScreenProps> = ({
 };
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.background },
+  root: { flex: 1 },
   content: {
     paddingHorizontal: spacing.lg,
     paddingBottom: TAB_BAR_CONTENT_INSET + spacing.xl,
   },
   updated: {
     fontSize: 12,
-    color: colors.textMuted,
     marginBottom: spacing.lg,
-    textAlign: 'center',
+    fontStyle: 'italic',
   },
   section: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    padding: spacing.md,
     marginBottom: spacing.md,
+    borderRadius: radius.lg,
     borderWidth: 1,
-    borderColor: colors.border,
+    padding: spacing.md,
   },
   sectionTitle: {
     fontSize: 15,
-    fontWeight: '900',
-    color: colors.text,
+    fontWeight: '800',
     marginBottom: spacing.sm,
   },
   paragraph: {
     fontSize: 14,
     lineHeight: 22,
-    color: colors.textSecondary,
     marginBottom: spacing.sm,
   },
   contactBox: {
-    backgroundColor: colors.accentSoft,
-    borderRadius: radius.md,
+    marginTop: spacing.lg,
     padding: spacing.md,
-    marginTop: spacing.sm,
+    borderRadius: radius.lg,
     borderWidth: 1,
-    borderColor: colors.border,
   },
-  contactLabel: { fontSize: 12, fontWeight: '700', color: colors.textMuted },
+  contactLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+    marginBottom: spacing.xs,
+  },
   contactEmail: {
-    fontSize: 15,
-    fontWeight: '900',
-    color: colors.accent,
-    marginTop: 4,
-    textDecorationLine: 'underline',
+    fontSize: 14,
+    fontWeight: '700',
   },
   footer: {
     fontSize: 11,
-    color: colors.textMuted,
-    textAlign: 'center',
-    marginTop: spacing.lg,
     lineHeight: 16,
+    marginTop: spacing.lg,
+    textAlign: 'center',
   },
 });

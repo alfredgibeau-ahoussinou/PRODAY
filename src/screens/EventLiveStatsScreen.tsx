@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -18,7 +18,9 @@ import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { teamEventsService } from '../services/teamEvents.service';
 import { usersService } from '../services/users.service';
 import { useAuth } from '../context/AuthContext';
-import { colors, spacing, radius } from '../theme/designTokens';
+import { spacing, radius } from '../theme/designTokens';
+import { useThemedScreen } from '../hooks/useThemedScreen';
+import type { AppColors } from '../theme/universeTheme';
 
 const ACTION_TYPES: LiveActionType[] = [
   'goal',
@@ -39,6 +41,9 @@ export const EventLiveStatsScreen: React.FC<EventLiveStatsScreenProps> = ({
   onBack,
 }) => {
   const { profile, isAdmin } = useAuth();
+  const { colors: c, productLine, rootStyle } = useThemedScreen();
+  const styles = useMemo(() => createStyles(c), [c]);
+  const isWoman = productLine === 'woman';
   const [event, setEvent] = useState<TeamEvent | null>(null);
   const [players, setPlayers] = useState<{ uid: string; name: string }[]>([]);
   const [selectedPlayer, setSelectedPlayer] = useState<string | null>(null);
@@ -87,7 +92,10 @@ export const EventLiveStatsScreen: React.FC<EventLiveStatsScreenProps> = ({
       return;
     }
     if (!selectedPlayer) {
-      Alert.alert('Joueur', 'Sélectionnez un joueur.');
+      Alert.alert(
+        isWoman ? 'Joueuse' : 'Joueur',
+        isWoman ? 'Sélectionnez une joueuse.' : 'Sélectionnez un joueur.'
+      );
       return;
     }
     const player = players.find((p) => p.uid === selectedPlayer);
@@ -117,7 +125,9 @@ export const EventLiveStatsScreen: React.FC<EventLiveStatsScreenProps> = ({
     }
     Alert.alert(
       'Mettre à jour les stats saison',
-      'Les buts et passes seront ajoutés aux profils joueurs (+1 match). Continuer ?',
+      isWoman
+        ? 'Les buts et passes seront ajoutés aux profils joueuses (+1 match). Continuer ?'
+        : 'Les buts et passes seront ajoutés aux profils joueurs (+1 match). Continuer ?',
       [
         { text: 'Annuler', style: 'cancel' },
         {
@@ -126,7 +136,10 @@ export const EventLiveStatsScreen: React.FC<EventLiveStatsScreenProps> = ({
             setSaving(true);
             try {
               await teamEventsService.applyLiveStatsToPlayers(eventId);
-              Alert.alert('Stats appliquées', 'Profils joueurs mis à jour.');
+              Alert.alert(
+                'Stats appliquées',
+                isWoman ? 'Profils joueuses mis à jour.' : 'Profils joueurs mis à jour.'
+              );
               await load();
             } catch (e) {
               Alert.alert('Erreur', e instanceof Error ? e.message : 'Échec');
@@ -142,7 +155,7 @@ export const EventLiveStatsScreen: React.FC<EventLiveStatsScreenProps> = ({
   if (loading && !event) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator color={colors.accent} size="large" />
+        <ActivityIndicator color={c.accent} size="large" />
       </View>
     );
   }
@@ -152,7 +165,7 @@ export const EventLiveStatsScreen: React.FC<EventLiveStatsScreenProps> = ({
   );
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, rootStyle]}>
       <ScreenHeader title="Live Stats" onBack={onBack} centered />
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.hint}>
@@ -165,7 +178,7 @@ export const EventLiveStatsScreen: React.FC<EventLiveStatsScreenProps> = ({
           </Text>
         ) : null}
 
-        <Text style={styles.label}>Joueur</Text>
+        <Text style={styles.label}>{isWoman ? 'Joueuse' : 'Joueur'}</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.playerScroll}>
           {players.map((p) => (
             <TouchableOpacity
@@ -188,7 +201,7 @@ export const EventLiveStatsScreen: React.FC<EventLiveStatsScreenProps> = ({
         <TextInput
           style={styles.input}
           placeholder="Minute (ex. 67)"
-          placeholderTextColor={colors.textMuted}
+          placeholderTextColor={c.textMuted}
           value={minute}
           onChangeText={setMinute}
           keyboardType="number-pad"
@@ -239,12 +252,13 @@ export const EventLiveStatsScreen: React.FC<EventLiveStatsScreenProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.background },
+function createStyles(c: AppColors) {
+  return StyleSheet.create({
+  root: { flex: 1 },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   content: { padding: spacing.lg, paddingBottom: spacing.xxl },
-  hint: { fontSize: 13, color: colors.textSecondary, marginBottom: spacing.md, lineHeight: 19 },
-  label: { fontSize: 12, fontWeight: '800', color: colors.textSecondary, marginTop: spacing.md, marginBottom: spacing.sm },
+  hint: { fontSize: 13, color: c.textSecondary, marginBottom: spacing.md, lineHeight: 19 },
+  label: { fontSize: 12, fontWeight: '800', color: c.textSecondary, marginTop: spacing.md, marginBottom: spacing.sm },
   playerScroll: { marginBottom: spacing.sm },
   playerChip: {
     paddingHorizontal: spacing.md,
@@ -252,61 +266,62 @@ const styles = StyleSheet.create({
     marginRight: spacing.xs,
     borderRadius: radius.pill,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: c.border,
   },
-  playerChipActive: { backgroundColor: colors.ink, borderColor: colors.ink },
-  playerChipText: { fontSize: 12, fontWeight: '700', color: colors.textSecondary },
-  playerChipTextActive: { color: colors.brandInverse },
+  playerChipActive: { backgroundColor: c.ink, borderColor: c.ink },
+  playerChipText: { fontSize: 12, fontWeight: '700', color: c.textSecondary },
+  playerChipTextActive: { color: c.brandInverse },
   input: {
-    backgroundColor: colors.surface,
+    backgroundColor: c.surface,
     borderRadius: radius.md,
     padding: spacing.md,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: c.border,
     fontSize: 16,
-    color: colors.text,
+    color: c.text,
     marginBottom: spacing.md,
   },
   actionGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
   actionBtn: {
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.sm,
-    backgroundColor: colors.accentSoft,
+    backgroundColor: c.accentSoft,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: colors.accent,
+    borderColor: c.accent,
   },
-  actionBtnText: { fontSize: 12, fontWeight: '800', color: colors.accent },
-  empty: { fontSize: 13, color: colors.textMuted },
+  actionBtnText: { fontSize: 12, fontWeight: '800', color: c.accent },
+  empty: { fontSize: 13, color: c.textMuted },
   timelineRow: {
     flexDirection: 'row',
     gap: spacing.md,
     paddingVertical: spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: c.border,
   },
-  timelineMin: { fontSize: 14, fontWeight: '900', color: colors.accent, width: 36 },
+  timelineMin: { fontSize: 14, fontWeight: '900', color: c.accent, width: 36 },
   timelineBody: { flex: 1 },
-  timelineType: { fontSize: 14, fontWeight: '800', color: colors.text },
-  timelinePlayer: { fontSize: 12, color: colors.textMuted },
+  timelineType: { fontSize: 14, fontWeight: '800', color: c.text },
+  timelinePlayer: { fontSize: 12, color: c.textMuted },
   applyBtn: {
     marginTop: spacing.xl,
-    backgroundColor: colors.ink,
+    backgroundColor: c.ink,
     padding: spacing.lg,
     borderRadius: radius.md,
     alignItems: 'center',
   },
-  applyText: { color: colors.brandInverse, fontWeight: '900' },
+  applyText: { color: c.brandInverse, fontWeight: '900' },
   applied: {
     marginTop: spacing.lg,
     textAlign: 'center',
-    color: colors.success,
+    color: c.success,
     fontWeight: '700',
   },
   lockedMsg: {
     fontSize: 12,
-    color: colors.warning,
+    color: c.warning,
     fontWeight: '700',
     marginBottom: spacing.sm,
   },
-});
+  });
+}

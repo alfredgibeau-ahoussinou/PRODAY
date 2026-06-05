@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -11,7 +11,9 @@ import { canContactMinors } from '../models/User';
 import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { StarRating } from '../components/StarRating';
 import { Icon } from '../components/ui/Icon';
-import { colors, spacing, radius, shadows } from '../theme/designTokens';
+import { spacing, radius, shadows } from '../theme/designTokens';
+import type { AppColors } from '../theme/universeTheme';
+import { useAppTheme } from '../context/ProductLineContext';
 
 type TabId = 'profil' | 'experience' | 'diplomes' | 'avis';
 
@@ -35,6 +37,8 @@ export const CoachProfileScreen: React.FC<CoachProfileScreenProps> = ({
   onContact,
   onHire,
 }) => {
+  const { colors: themeColors } = useAppTheme();
+  const styles = useMemo(() => createCoachStyles(themeColors), [themeColors]);
   const [tab, setTab] = useState<TabId>('profil');
   const p = staff.profile;
   const canContact = canContactMinors(staff);
@@ -58,12 +62,12 @@ export const CoachProfileScreen: React.FC<CoachProfileScreenProps> = ({
           <View style={styles.nameRow}>
             <Text style={styles.name}>{staff.display_name}</Text>
                 {verified && (
-                  <Icon name="checkmark-circle" size={20} color={colors.brandLight} />
+                  <Icon name="checkmark-circle" size={20} color={themeColors.brandLight} />
                 )}
           </View>
           <Text style={styles.jobTitle}>{p.job_title ?? roleLabel}</Text>
           <View style={styles.locRow}>
-            <Icon name="location" size={14} color={colors.textMuted} />
+            <Icon name="location" size={14} color={themeColors.textMuted} />
             <Text style={styles.meta}>
               {staff.city ?? 'France'}
               {staff.department ? ` (${staff.department})` : ''}
@@ -109,7 +113,7 @@ export const CoachProfileScreen: React.FC<CoachProfileScreenProps> = ({
           onPress={() => canContact && onContact?.(staff)}
           disabled={!canContact}
         >
-          <Icon name="mail" size={18} color={colors.brand} />
+          <Icon name="mail" size={18} color={themeColors.brand} />
           <Text style={styles.btnOutlineText}>Contacter</Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -126,6 +130,8 @@ export const CoachProfileScreen: React.FC<CoachProfileScreenProps> = ({
 };
 
 const TabProfil: React.FC<{ staff: User }> = ({ staff }) => {
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createCoachStyles(colors), [colors]);
   const p = staff.profile;
   return (
     <>
@@ -154,6 +160,8 @@ const TabProfil: React.FC<{ staff: User }> = ({ staff }) => {
 };
 
 const TabExperience: React.FC<{ staff: User }> = ({ staff }) => {
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createCoachStyles(colors), [colors]);
   const items = staff.profile.experiences ?? [];
   if (!items.length) {
     return <Text style={styles.empty}>Aucune expérience renseignée.</Text>;
@@ -176,6 +184,8 @@ const TabExperience: React.FC<{ staff: User }> = ({ staff }) => {
 };
 
 const TabDiplomes: React.FC<{ staff: User }> = ({ staff }) => {
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createCoachStyles(colors), [colors]);
   const items = staff.profile.diplomas_list ?? [
     {
       id: 'd1',
@@ -218,6 +228,8 @@ const TabDiplomes: React.FC<{ staff: User }> = ({ staff }) => {
 };
 
 const TabAvis: React.FC<{ staff: User }> = ({ staff }) => {
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createCoachStyles(colors), [colors]);
   const items = staff.profile.reviews ?? [];
   if (!items.length) {
     return <Text style={styles.empty}>Pas encore d&apos;avis.</Text>;
@@ -241,128 +253,129 @@ const TabAvis: React.FC<{ staff: User }> = ({ staff }) => {
   );
 };
 
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.background },
+function createCoachStyles(c: AppColors) {
+  return StyleSheet.create({
+  root: { flex: 1, backgroundColor: c.background },
   hero: {
     alignItems: 'center',
     padding: spacing.xl,
-    backgroundColor: colors.surface,
+    backgroundColor: c.surface,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: c.border,
   },
   avatar: {
     width: 96,
     height: 96,
     borderRadius: 48,
-    backgroundColor: colors.brandSoft,
+    backgroundColor: c.brandSoft,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: spacing.md,
     borderWidth: 3,
-    borderColor: colors.brand,
+    borderColor: c.brand,
   },
-  avatarLetter: { fontSize: 36, fontWeight: '800', color: colors.brand },
+  avatarLetter: { fontSize: 36, fontWeight: '800', color: c.brand },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  name: { fontSize: 22, fontWeight: '800', color: colors.text },
-  jobTitle: { color: colors.brand, fontSize: 15, fontWeight: '600', marginTop: 4 },
+  name: { fontSize: 22, fontWeight: '800', color: c.text },
+  jobTitle: { color: c.brand, fontSize: 15, fontWeight: '600', marginTop: 4 },
   locRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 },
-  meta: { color: colors.textSecondary, fontSize: 14 },
+  meta: { color: c.textSecondary, fontSize: 14 },
   verifiedPill: {
     marginTop: spacing.md,
-    backgroundColor: colors.successBg,
+    backgroundColor: c.successBg,
     paddingHorizontal: 14,
     paddingVertical: 6,
     borderRadius: radius.pill,
   },
-  verifiedText: { color: colors.success, fontWeight: '700', fontSize: 12 },
+  verifiedText: { color: c.success, fontWeight: '700', fontSize: 12 },
   ratingWrap: { marginTop: spacing.sm },
   tabBar: {
     flexDirection: 'row',
-    backgroundColor: colors.surface,
+    backgroundColor: c.surface,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: c.border,
   },
   tab: { flex: 1, paddingVertical: spacing.md, alignItems: 'center' },
-  tabActive: { borderBottomWidth: 3, borderBottomColor: colors.brand },
-  tabText: { color: colors.textMuted, fontWeight: '600', fontSize: 13 },
-  tabTextActive: { color: colors.brand, fontWeight: '700' },
+  tabActive: { borderBottomWidth: 3, borderBottomColor: c.brand },
+  tabText: { color: c.textMuted, fontWeight: '600', fontSize: 13 },
+  tabTextActive: { color: c.brand, fontWeight: '700' },
   tabContent: { padding: spacing.lg, paddingBottom: 100 },
   block: {
-    backgroundColor: colors.surface,
+    backgroundColor: c.surface,
     borderRadius: radius.lg,
     padding: spacing.lg,
     marginBottom: spacing.md,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: c.border,
   },
-  blockTitle: { fontSize: 16, fontWeight: '700', color: colors.text, marginBottom: spacing.md },
-  bodyText: { color: colors.textSecondary, lineHeight: 22, fontSize: 15 },
+  blockTitle: { fontSize: 16, fontWeight: '700', color: c.text, marginBottom: spacing.md },
+  bodyText: { color: c.textSecondary, lineHeight: 22, fontSize: 15 },
   tags: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   tag: {
-    backgroundColor: colors.brandSoft,
+    backgroundColor: c.brandSoft,
     borderRadius: radius.pill,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
   },
-  tagText: { color: colors.brand, fontSize: 12, fontWeight: '600' },
+  tagText: { color: c.brand, fontSize: 12, fontWeight: '600' },
   timelineItem: { flexDirection: 'row', paddingVertical: spacing.md },
-  timelineBorder: { borderTopWidth: 1, borderTopColor: colors.border },
+  timelineBorder: { borderTopWidth: 1, borderTopColor: c.border },
   timelineDot: {
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: colors.brand,
+    backgroundColor: c.brand,
     marginTop: 6,
     marginRight: spacing.md,
   },
   timelineBody: { flex: 1 },
-  expTitle: { fontWeight: '700', color: colors.text, fontSize: 15 },
-  expOrg: { color: colors.brand, marginTop: 2, fontSize: 14 },
-  expPeriod: { color: colors.textMuted, fontSize: 12, marginTop: 4 },
+  expTitle: { fontWeight: '700', color: c.text, fontSize: 15 },
+  expOrg: { color: c.brand, marginTop: 2, fontSize: 14 },
+  expPeriod: { color: c.textMuted, fontSize: 12, marginTop: 4 },
   diplomaRow: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: c.border,
   },
   diplomaIcon: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: colors.brandSoft,
+    backgroundColor: c.brandSoft,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: spacing.md,
   },
   diplomaInfo: { flex: 1 },
-  diplomaName: { fontWeight: '700', color: colors.text, fontSize: 14 },
-  diplomaInst: { color: colors.textMuted, fontSize: 12, marginTop: 2 },
+  diplomaName: { fontWeight: '700', color: c.text, fontSize: 14 },
+  diplomaInst: { color: c.textMuted, fontSize: 12, marginTop: 2 },
   diplomaVerified: {
-    backgroundColor: colors.successBg,
+    backgroundColor: c.successBg,
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 6,
   },
-  diplomaVerifiedText: { color: colors.success, fontWeight: '700', fontSize: 11 },
+  diplomaVerifiedText: { color: c.success, fontWeight: '700', fontSize: 11 },
   diplomaPending: {
-    backgroundColor: colors.warningBg,
+    backgroundColor: c.warningBg,
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 6,
   },
-  diplomaPendingText: { color: colors.warning, fontSize: 11, fontWeight: '700' },
+  diplomaPendingText: { color: c.warning, fontSize: 11, fontWeight: '700' },
   reviewSummary: { alignItems: 'center' },
-  reviewAvg: { fontSize: 36, fontWeight: '800', color: colors.text },
-  reviewAuthor: { fontWeight: '700', color: colors.text, marginBottom: spacing.sm },
-  empty: { color: colors.textMuted, textAlign: 'center', marginTop: spacing.xl },
+  reviewAvg: { fontSize: 36, fontWeight: '800', color: c.text },
+  reviewAuthor: { fontWeight: '700', color: c.text, marginBottom: spacing.sm },
+  empty: { color: c.textMuted, textAlign: 'center', marginTop: spacing.xl },
   footer: {
     flexDirection: 'row',
     gap: spacing.md,
     padding: spacing.lg,
-    backgroundColor: colors.surface,
+    backgroundColor: c.surface,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
+    borderTopColor: c.border,
   },
   btnOutline: {
     flex: 1,
@@ -371,22 +384,23 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: spacing.sm,
     borderWidth: 1,
-    borderColor: colors.brand,
+    borderColor: c.brand,
     borderRadius: radius.md,
     paddingVertical: 14,
   },
-  btnOutlineText: { color: colors.brand, fontWeight: '700' },
+  btnOutlineText: { color: c.brand, fontWeight: '700' },
   btnPrimary: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: spacing.sm,
-    backgroundColor: colors.brand,
+    backgroundColor: c.brand,
     borderRadius: radius.md,
     paddingVertical: 14,
   },
-  btnPrimaryText: { color: '#FFFFFF', fontWeight: '700' },
+  btnPrimaryText: { color: c.brandInverse, fontWeight: '700' },
   btnDisabled: { opacity: 0.5 },
-  btnDisabledPrimary: { backgroundColor: colors.textMuted },
+  btnDisabledPrimary: { backgroundColor: c.textMuted },
 });
+}

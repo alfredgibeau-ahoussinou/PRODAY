@@ -28,7 +28,9 @@ import { ClubAnnouncementsScreen } from './ClubAnnouncementsScreen';
 import { EventAttendancePanel } from '../components/team/EventAttendancePanel';
 import { CarpoolBalanceTable } from '../components/team/CarpoolBalanceTable';
 import { aggregateCarpoolBalance } from '../utils/carpoolBalance';
-import { colors, radius, spacing } from '../theme/designTokens';
+import { radius, spacing } from '../theme/designTokens';
+import { useThemedScreen } from '../hooks/useThemedScreen';
+import type { AppColors } from '../theme/universeTheme';
 
 type TeamTab = 'planning' | 'roster' | 'attendance' | 'stats' | 'payments';
 type HubView = 'hub' | 'event' | 'create' | 'join' | 'announcements';
@@ -43,6 +45,9 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
   onBack,
 }) => {
   const { isAdmin } = useAuth();
+  const { colors: c, productLine, rootStyle } = useThemedScreen();
+  const styles = useMemo(() => createStyles(c), [c]);
+  const isWoman = productLine === 'woman';
   const [hubView, setHubView] = useState<HubView>(profile.profile.club_id ? 'hub' : 'join');
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [attendanceEventId, setAttendanceEventId] = useState<string | null>(null);
@@ -300,12 +305,20 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
       return;
     }
     if (!statsEvent) {
-      Alert.alert('Aucun match', 'Créez un événement training/friendly avec joueurs.');
+      Alert.alert(
+        'Aucun match',
+        isWoman
+          ? 'Créez un événement training/friendly avec des joueuses.'
+          : 'Créez un événement training/friendly avec joueurs.'
+      );
       return;
     }
     const uid = statsEvent.invitee_uids[0];
     if (!uid) {
-      Alert.alert('Aucun convoqué', 'Ajoutez des joueurs convoqués.');
+      Alert.alert(
+        'Aucun convoqué',
+        isWoman ? 'Ajoutez des joueuses convoquées.' : 'Ajoutez des joueurs convoqués.'
+      );
       return;
     }
     const user = await usersService.getById(uid);
@@ -382,7 +395,7 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
   };
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, rootStyle]}>
       <ScreenHeader title="Gestion équipe" onBack={onBack} centered />
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.hero}>
@@ -391,18 +404,18 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
             Planning, présences, stats et paiements dans un seul espace.
           </Text>
           <View style={styles.kpiRow}>
-            <Kpi label="Membres" value={String(membersCount)} />
-            <Kpi label="Événements" value={String(events.length)} />
-            <Kpi label="Paiements" value={String(payments.length)} />
+            <Kpi styles={styles} label="Membres" value={String(membersCount)} />
+            <Kpi styles={styles} label="Événements" value={String(events.length)} />
+            <Kpi styles={styles} label="Paiements" value={String(payments.length)} />
           </View>
         </View>
 
         <View style={styles.tabs}>
-          <TabBtn id="planning" label="Planning" tab={tab} setTab={setTab} />
-          <TabBtn id="roster" label="Effectif" tab={tab} setTab={setTab} />
-          <TabBtn id="attendance" label="Présences" tab={tab} setTab={setTab} />
-          <TabBtn id="stats" label="Stats" tab={tab} setTab={setTab} />
-          <TabBtn id="payments" label="Paiements" tab={tab} setTab={setTab} />
+          <TabBtn styles={styles} id="planning" label="Planning" tab={tab} setTab={setTab} />
+          <TabBtn styles={styles} id="roster" label="Effectif" tab={tab} setTab={setTab} />
+          <TabBtn styles={styles} id="attendance" label="Présences" tab={tab} setTab={setTab} />
+          <TabBtn styles={styles} id="stats" label="Stats" tab={tab} setTab={setTab} />
+          <TabBtn styles={styles} id="payments" label="Paiements" tab={tab} setTab={setTab} />
         </View>
 
         {clubId ? (
@@ -424,15 +437,15 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
         )}
 
         {loading ? (
-          <ActivityIndicator color={colors.accent} style={styles.loader} />
+          <ActivityIndicator color={c.accent} style={styles.loader} />
         ) : null}
 
         {!loading && tab === 'planning' ? (
           <>
             <View style={styles.planningKpiRow}>
-              <Kpi label="Convocations" value={String(eventStats.convocation)} />
-              <Kpi label="Présents" value={String(eventStats.yes)} />
-              <Kpi label="En attente" value={String(eventStats.pending)} />
+              <Kpi styles={styles} label="Convocations" value={String(eventStats.convocation)} />
+              <Kpi styles={styles} label="Présents" value={String(eventStats.yes)} />
+              <Kpi styles={styles} label="En attente" value={String(eventStats.pending)} />
             </View>
             <View style={styles.card}>
               <Text style={styles.sectionTitle}>Prochains événements</Text>
@@ -451,6 +464,7 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
                     }}
                   >
                     <Row
+                      styles={styles}
                       title={e.title}
                       subtitle={`${e.starts_at.toLocaleDateString('fr-FR', {
                         weekday: 'short',
@@ -481,6 +495,7 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
             </Text>
             {members.map((m) => (
               <Row
+                styles={styles}
                 key={m.uid}
                 title={m.display_name}
                 subtitle={`${m.role}${m.profile?.position ? ` · ${m.profile.position}` : ''}${m.profile?.category ? ` · ${m.profile.category}` : ''}`}
@@ -498,10 +513,10 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
         {!loading && tab === 'attendance' ? (
           <View style={styles.card}>
             <Text style={styles.sectionTitle}>Présences & réponses</Text>
-            <Row title="Confirmés" subtitle="Réponses YES" right={String(eventStats.yes)} />
-            <Row title="En attente" subtitle="Réponses PENDING" right={String(eventStats.pending)} />
-            <Row title="Convocations" subtitle="Matchs / feuilles" right={String(eventStats.convocation)} />
-            <Row title="Entraînements" subtitle="Séances" right={String(eventStats.training)} />
+            <Row styles={styles} title="Confirmés" subtitle="Réponses YES" right={String(eventStats.yes)} />
+            <Row styles={styles} title="En attente" subtitle="Réponses PENDING" right={String(eventStats.pending)} />
+            <Row styles={styles} title="Convocations" subtitle="Matchs / feuilles" right={String(eventStats.convocation)} />
+            <Row styles={styles} title="Entraînements" subtitle="Séances" right={String(eventStats.training)} />
             {events.filter((e) => e.invitee_uids.length > 0).length > 0 ? (
               <>
                 <Text style={styles.inlineTitle}>Événement</Text>
@@ -511,6 +526,7 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
                       .filter((e) => e.invitee_uids.length > 0)
                       .map((e) => (
                         <MiniBtn
+                          styles={styles}
                           key={e.id}
                           label={e.title.slice(0, 18)}
                           onPress={() => setAttendanceEventId(e.id)}
@@ -527,8 +543,9 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
                 </Text>
                 {profile.role === 'player' ? (
                   <View style={styles.inlineBtns}>
-                    <MiniBtn label="Présent" onPress={() => void updateMyAttendance(editableAttendanceEvent, 'yes')} />
+                    <MiniBtn styles={styles} label="Présent" onPress={() => void updateMyAttendance(editableAttendanceEvent, 'yes')} />
                     <MiniBtn
+                      styles={styles}
                       label="Absent"
                       onPress={() =>
                         void updateMyAttendance(
@@ -538,7 +555,7 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
                         )
                       }
                     />
-                    <MiniBtn label="Peut-être" onPress={() => void updateMyAttendance(editableAttendanceEvent, 'maybe')} />
+                    <MiniBtn styles={styles} label="Peut-être" onPress={() => void updateMyAttendance(editableAttendanceEvent, 'maybe')} />
                   </View>
                 ) : null}
                 {isStaff ? (
@@ -561,30 +578,41 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
           <View style={styles.card}>
             <Text style={styles.sectionTitle}>Stats équipe</Text>
             <Text style={styles.body}>
-              Les actions live de match peuvent être appliquées aux stats joueurs depuis
-              les écrans Matchs (but, passe, cartons, remplacements).
+              {isWoman
+                ? 'Les actions live de match peuvent être appliquées aux stats joueuses depuis les écrans Matchs (but, passe, cartons, remplacements).'
+                : 'Les actions live de match peuvent être appliquées aux stats joueurs depuis les écrans Matchs (but, passe, cartons, remplacements).'}
             </Text>
             <View style={styles.infoBox}>
-              <Icon name="document" size={18} color={colors.accent} />
+              <Icon name="document" size={18} color={c.accent} />
               <Text style={styles.infoText}>
                 Base prête: lineup, live actions et agrégation automatique vers les stats saison.
               </Text>
             </View>
             <View style={styles.inlineBtns}>
               <MiniBtn
-                label={reportLocked ? 'Rapport verrouillé' : 'Ajouter stat joueur #1'}
+                styles={styles}
+                label={
+                  reportLocked
+                    ? 'Rapport verrouillé'
+                    : isWoman
+                      ? 'Ajouter stat joueuse #1'
+                      : 'Ajouter stat joueur #1'
+                }
                 onPress={() => void addQuickPlayerStat()}
               />
-              <MiniBtn label="Exporter rapport match" onPress={exportMatchReport} />
-              <MiniBtn label="Partager rapport" onPress={() => void shareMatchReport()} />
+              <MiniBtn styles={styles} label="Exporter rapport match" onPress={exportMatchReport} />
+              <MiniBtn styles={styles} label="Partager rapport" onPress={() => void shareMatchReport()} />
             </View>
             {selectedStatPlayer && statsEvent ? (
               <View style={styles.inlineBlock}>
-                <Text style={styles.inlineTitle}>Édition feuille joueur</Text>
+                <Text style={styles.inlineTitle}>
+                  {isWoman ? 'Édition feuille joueuse' : 'Édition feuille joueur'}
+                </Text>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                   <View style={styles.inlineBtns}>
                     {statPlayers.slice(0, 8).map((p) => (
                       <MiniBtn
+                        styles={styles}
                         key={p.uid}
                         label={p.display_name}
                         onPress={() => setSelectedStatUid(p.uid)}
@@ -592,16 +620,19 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
                     ))}
                   </View>
                 </ScrollView>
-                <Text style={styles.rowSub}>Joueur sélectionné: {selectedStatPlayer.display_name}</Text>
+                <Text style={styles.rowSub}>
+                  {isWoman ? 'Joueuse sélectionnée' : 'Joueur sélectionné'}:{' '}
+                  {selectedStatPlayer.display_name}
+                </Text>
                 <View style={styles.inlineBtns}>
-                  <MiniBtn label={reportLocked ? 'Locked' : '+15 min'} onPress={() => void updateSelectedStat({ minutes_played: Math.min(120, (statsEvent.player_match_stats?.[selectedStatPlayer.uid]?.minutes_played ?? 0) + 15) })} />
-                  <MiniBtn label={reportLocked ? 'Locked' : '+1 but'} onPress={() => void updateSelectedStat({ goals: (statsEvent.player_match_stats?.[selectedStatPlayer.uid]?.goals ?? 0) + 1 })} />
-                  <MiniBtn label={reportLocked ? 'Locked' : '+1 passe'} onPress={() => void updateSelectedStat({ assists: (statsEvent.player_match_stats?.[selectedStatPlayer.uid]?.assists ?? 0) + 1 })} />
+                  <MiniBtn styles={styles} label={reportLocked ? 'Locked' : '+15 min'} onPress={() => void updateSelectedStat({ minutes_played: Math.min(120, (statsEvent.player_match_stats?.[selectedStatPlayer.uid]?.minutes_played ?? 0) + 15) })} />
+                  <MiniBtn styles={styles} label={reportLocked ? 'Locked' : '+1 but'} onPress={() => void updateSelectedStat({ goals: (statsEvent.player_match_stats?.[selectedStatPlayer.uid]?.goals ?? 0) + 1 })} />
+                  <MiniBtn styles={styles} label={reportLocked ? 'Locked' : '+1 passe'} onPress={() => void updateSelectedStat({ assists: (statsEvent.player_match_stats?.[selectedStatPlayer.uid]?.assists ?? 0) + 1 })} />
                 </View>
                 <View style={styles.inlineBtns}>
-                  <MiniBtn label={reportLocked ? 'Locked' : '+0.5 note'} onPress={() => void updateSelectedStat({ rating: Math.min(10, Number(((statsEvent.player_match_stats?.[selectedStatPlayer.uid]?.rating ?? 6) + 0.5).toFixed(1))) })} />
-                  <MiniBtn label={reportLocked ? 'Locked' : '+1 jaune'} onPress={() => void updateSelectedStat({ yellow_cards: (statsEvent.player_match_stats?.[selectedStatPlayer.uid]?.yellow_cards ?? 0) + 1 })} />
-                  <MiniBtn label={reportLocked ? 'Locked' : '+1 rouge'} onPress={() => void updateSelectedStat({ red_cards: (statsEvent.player_match_stats?.[selectedStatPlayer.uid]?.red_cards ?? 0) + 1 })} />
+                  <MiniBtn styles={styles} label={reportLocked ? 'Locked' : '+0.5 note'} onPress={() => void updateSelectedStat({ rating: Math.min(10, Number(((statsEvent.player_match_stats?.[selectedStatPlayer.uid]?.rating ?? 6) + 0.5).toFixed(1))) })} />
+                  <MiniBtn styles={styles} label={reportLocked ? 'Locked' : '+1 jaune'} onPress={() => void updateSelectedStat({ yellow_cards: (statsEvent.player_match_stats?.[selectedStatPlayer.uid]?.yellow_cards ?? 0) + 1 })} />
+                  <MiniBtn styles={styles} label={reportLocked ? 'Locked' : '+1 rouge'} onPress={() => void updateSelectedStat({ red_cards: (statsEvent.player_match_stats?.[selectedStatPlayer.uid]?.red_cards ?? 0) + 1 })} />
                 </View>
               </View>
             ) : null}
@@ -635,7 +666,7 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
               <Text style={styles.inlineTitle}>Top buteurs (live)</Text>
               {topStats.topGoals.length ? (
                 topStats.topGoals.map(([name, n]) => (
-                  <Row key={`g-${name}`} title={name} subtitle="Buts" right={String(n)} />
+                  <Row styles={styles} key={`g-${name}`} title={name} subtitle="Buts" right={String(n)} />
                 ))
               ) : (
                 <Text style={styles.empty}>Aucun but live enregistré pour le moment.</Text>
@@ -645,7 +676,7 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
               <Text style={styles.inlineTitle}>Top passeurs (live)</Text>
               {topStats.topAssists.length ? (
                 topStats.topAssists.map(([name, n]) => (
-                  <Row key={`a-${name}`} title={name} subtitle="Passes décisives" right={String(n)} />
+                  <Row styles={styles} key={`a-${name}`} title={name} subtitle="Passes décisives" right={String(n)} />
                 ))
               ) : (
                 <Text style={styles.empty}>Aucune passe live enregistrée pour le moment.</Text>
@@ -657,9 +688,9 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
         {!loading && tab === 'payments' ? (
           <View style={styles.card}>
             <Text style={styles.sectionTitle}>Cotisations / trésorerie</Text>
-            <Row title="Attendu" subtitle="Total des demandes" right={`${paymentStats.expected} EUR`} />
-            <Row title="Reçu" subtitle="Paiements validés" right={`${paymentStats.received} EUR`} />
-            <Row title="En retard" subtitle="Demandes late" right={String(paymentStats.late)} />
+            <Row styles={styles} title="Attendu" subtitle="Total des demandes" right={`${paymentStats.expected} EUR`} />
+            <Row styles={styles} title="Reçu" subtitle="Paiements validés" right={`${paymentStats.received} EUR`} />
+            <Row styles={styles} title="En retard" subtitle="Demandes late" right={String(paymentStats.late)} />
             <TouchableOpacity style={styles.primaryBtn} onPress={() => void createBulkPayments()}>
               <Text style={styles.primaryBtnText}>Cotisation pour tout l&apos;effectif</Text>
             </TouchableOpacity>
@@ -667,8 +698,8 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
               <Text style={styles.secondaryBtnText}>Cotisation rapide (1 membre)</Text>
             </TouchableOpacity>
             <View style={styles.inlineBtns}>
-              <MiniBtn label="Marquer retards" onPress={() => void markOverdue()} />
-              <MiniBtn label="Exporter CSV" onPress={() => void exportFinanceCsv()} />
+              <MiniBtn styles={styles} label="Marquer retards" onPress={() => void markOverdue()} />
+              <MiniBtn styles={styles} label="Exporter CSV" onPress={() => void exportFinanceCsv()} />
             </View>
             {payments.slice(0, 4).map((p) => (
               <TouchableOpacity
@@ -694,11 +725,12 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
 };
 
 const TabBtn: React.FC<{
+  styles: ReturnType<typeof createStyles>;
   id: TeamTab;
   label: string;
   tab: TeamTab;
   setTab: (t: TeamTab) => void;
-}> = ({ id, label, tab, setTab }) => (
+}> = ({ styles, id, label, tab, setTab }) => (
   <TouchableOpacity
     style={[styles.tabBtn, tab === id && styles.tabBtnOn]}
     onPress={() => setTab(id)}
@@ -707,18 +739,23 @@ const TabBtn: React.FC<{
   </TouchableOpacity>
 );
 
-const Kpi: React.FC<{ label: string; value: string }> = ({ label, value }) => (
+const Kpi: React.FC<{
+  styles: ReturnType<typeof createStyles>;
+  label: string;
+  value: string;
+}> = ({ styles, label, value }) => (
   <View style={styles.kpi}>
     <Text style={styles.kpiValue}>{value}</Text>
     <Text style={styles.kpiLabel}>{label}</Text>
   </View>
 );
 
-const Row: React.FC<{ title: string; subtitle: string; right: string }> = ({
-  title,
-  subtitle,
-  right,
-}) => (
+const Row: React.FC<{
+  styles: ReturnType<typeof createStyles>;
+  title: string;
+  subtitle: string;
+  right: string;
+}> = ({ styles, title, subtitle, right }) => (
   <View style={styles.row}>
     <View style={{ flex: 1 }}>
       <Text style={styles.rowTitle}>{title}</Text>
@@ -728,23 +765,28 @@ const Row: React.FC<{ title: string; subtitle: string; right: string }> = ({
   </View>
 );
 
-const MiniBtn: React.FC<{ label: string; onPress: () => void }> = ({ label, onPress }) => (
+const MiniBtn: React.FC<{
+  styles: ReturnType<typeof createStyles>;
+  label: string;
+  onPress: () => void;
+}> = ({ styles, label, onPress }) => (
   <TouchableOpacity style={styles.miniBtn} onPress={onPress}>
     <Text style={styles.miniBtnText}>{label}</Text>
   </TouchableOpacity>
 );
 
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.background },
+function createStyles(c: AppColors) {
+  return StyleSheet.create({
+  root: { flex: 1 },
   content: { padding: spacing.lg, paddingBottom: spacing.xxl },
   hero: {
-    backgroundColor: colors.surfaceInverse,
+    backgroundColor: c.surfaceInverse,
     borderRadius: radius.lg,
     padding: spacing.lg,
     marginBottom: spacing.md,
   },
-  heroTitle: { color: colors.brandInverse, fontSize: 18, fontWeight: '900' },
-  heroSub: { color: colors.heroMuted, fontSize: 12, marginTop: spacing.xs, lineHeight: 18 },
+  heroTitle: { color: c.brandInverse, fontSize: 18, fontWeight: '900' },
+  heroSub: { color: c.heroMuted, fontSize: 12, marginTop: spacing.xs, lineHeight: 18 },
   kpiRow: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.md },
   planningKpiRow: {
     flexDirection: 'row',
@@ -752,115 +794,116 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   kpi: { flex: 1, backgroundColor: 'rgba(255,255,255,0.12)', borderRadius: radius.md, padding: spacing.sm },
-  kpiValue: { color: colors.brandInverse, fontSize: 17, fontWeight: '900' },
-  kpiLabel: { color: colors.heroMuted, fontSize: 10, marginTop: 2 },
+  kpiValue: { color: c.brandInverse, fontSize: 17, fontWeight: '900' },
+  kpiLabel: { color: c.heroMuted, fontSize: 10, marginTop: 2 },
   tabs: { flexDirection: 'row', gap: spacing.xs, marginBottom: spacing.md, flexWrap: 'wrap' },
   tabBtn: {
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: radius.pill,
     borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
+    borderColor: c.border,
+    backgroundColor: c.surface,
   },
-  tabBtnOn: { backgroundColor: colors.ink, borderColor: colors.ink },
-  tabText: { color: colors.textSecondary, fontSize: 12, fontWeight: '700' },
-  tabTextOn: { color: colors.brandInverse },
+  tabBtnOn: { backgroundColor: c.ink, borderColor: c.ink },
+  tabText: { color: c.textSecondary, fontSize: 12, fontWeight: '700' },
+  tabTextOn: { color: c.brandInverse },
   createEventBtn: {
-    backgroundColor: colors.ink,
+    backgroundColor: c.ink,
     borderRadius: radius.md,
     paddingVertical: spacing.md,
     alignItems: 'center',
     marginBottom: spacing.md,
   },
-  createEventBtnText: { color: colors.brandInverse, fontWeight: '800', fontSize: 13 },
+  createEventBtnText: { color: c.brandInverse, fontWeight: '800', fontSize: 13 },
   secondaryHubBtn: {
-    backgroundColor: colors.surface,
+    backgroundColor: c.surface,
     borderRadius: radius.md,
     paddingVertical: spacing.md,
     alignItems: 'center',
     marginBottom: spacing.md,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: c.border,
   },
-  secondaryHubBtnText: { color: colors.text, fontWeight: '800', fontSize: 13 },
+  secondaryHubBtnText: { color: c.text, fontWeight: '800', fontSize: 13 },
   rowTouchable: { marginHorizontal: -spacing.xs },
   loader: { marginVertical: spacing.md },
   card: {
-    backgroundColor: colors.surface,
+    backgroundColor: c.surface,
     borderRadius: radius.lg,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: c.border,
     padding: spacing.md,
     gap: spacing.xs,
   },
-  sectionTitle: { fontSize: 15, fontWeight: '800', color: colors.text, marginBottom: spacing.xs },
-  empty: { color: colors.textMuted, fontSize: 12, marginTop: spacing.sm },
+  sectionTitle: { fontSize: 15, fontWeight: '800', color: c.text, marginBottom: spacing.xs },
+  empty: { color: c.textMuted, fontSize: 12, marginTop: spacing.sm },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: c.border,
     paddingVertical: spacing.sm,
   },
-  rowTitle: { color: colors.text, fontWeight: '700', fontSize: 13 },
-  rowSub: { color: colors.textMuted, fontSize: 11, marginTop: 1 },
-  rowRight: { color: colors.textSecondary, fontSize: 11, fontWeight: '700' },
-  body: { color: colors.textSecondary, fontSize: 12, lineHeight: 19, marginBottom: spacing.sm },
+  rowTitle: { color: c.text, fontWeight: '700', fontSize: 13 },
+  rowSub: { color: c.textMuted, fontSize: 11, marginTop: 1 },
+  rowRight: { color: c.textSecondary, fontSize: 11, fontWeight: '700' },
+  body: { color: c.textSecondary, fontSize: 12, lineHeight: 19, marginBottom: spacing.sm },
   infoBox: {
     flexDirection: 'row',
     gap: spacing.sm,
-    backgroundColor: colors.surfaceMuted,
+    backgroundColor: c.surfaceMuted,
     borderRadius: radius.md,
     padding: spacing.sm,
     alignItems: 'flex-start',
   },
-  infoText: { flex: 1, color: colors.textSecondary, fontSize: 11, lineHeight: 17 },
+  infoText: { flex: 1, color: c.textSecondary, fontSize: 11, lineHeight: 17 },
   primaryBtn: {
-    backgroundColor: colors.ink,
+    backgroundColor: c.ink,
     borderRadius: radius.md,
     alignItems: 'center',
     paddingVertical: spacing.md,
     marginVertical: spacing.sm,
   },
-  primaryBtnText: { color: colors.brandInverse, fontSize: 13, fontWeight: '800' },
+  primaryBtnText: { color: c.brandInverse, fontSize: 13, fontWeight: '800' },
   primaryBtnDone: { opacity: 0.7 },
   secondaryBtn: {
     borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
+    borderColor: c.border,
+    backgroundColor: c.surface,
     borderRadius: radius.md,
     alignItems: 'center',
     paddingVertical: spacing.sm,
     marginTop: spacing.xs,
   },
-  secondaryBtnText: { color: colors.textSecondary, fontSize: 12, fontWeight: '700' },
+  secondaryBtnText: { color: c.textSecondary, fontSize: 12, fontWeight: '700' },
   paymentRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: c.border,
     borderRadius: radius.md,
     padding: spacing.sm,
     marginTop: spacing.xs,
   },
   inlineBlock: {
     marginTop: spacing.sm,
-    backgroundColor: colors.surfaceMuted,
+    backgroundColor: c.surfaceMuted,
     borderRadius: radius.md,
     padding: spacing.sm,
   },
-  inlineTitle: { color: colors.text, fontSize: 12, fontWeight: '800', marginBottom: spacing.xs },
+  inlineTitle: { color: c.text, fontSize: 12, fontWeight: '800', marginBottom: spacing.xs },
   inlineBtns: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs, marginTop: spacing.xs },
   miniBtn: {
     borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
+    borderColor: c.border,
+    backgroundColor: c.surface,
     borderRadius: radius.pill,
     paddingHorizontal: spacing.sm,
     paddingVertical: 6,
   },
-  miniBtnText: { fontSize: 10, fontWeight: '700', color: colors.textSecondary },
-});
+  miniBtnText: { fontSize: 10, fontWeight: '700', color: c.textSecondary },
+  });
+}

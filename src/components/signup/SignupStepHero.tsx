@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Icon, type IconName } from '../ui/Icon';
-import { colors, spacing, radius } from '../../theme/designTokens';
+import { spacing, radius } from '../../theme/designTokens';
+import { useSignupFlowTheme } from '../../screens/signup/SignupFlowContext';
+import type { AppColors } from '../../theme/universeTheme';
 
 interface SignupStepHeroProps {
   icon: IconName;
@@ -13,34 +15,43 @@ interface SignupStepHeroProps {
 
 export const SignupStepHero: React.FC<SignupStepHeroProps> = ({
   icon,
-  accentColor = colors.ink,
-  iconColor = colors.brandInverse,
+  accentColor,
+  iconColor,
   layout = 'stacked',
-}) => (
-  <View
-    style={[
-      styles.wrap,
-      layout === 'stacked' ? styles.wrapStacked : styles.wrapInline,
-      { backgroundColor: accentColor },
-    ]}
-  >
-    <Icon name={icon} size={24} color={iconColor} variant="filled" />
-  </View>
-);
+}) => {
+  const { colors: c } = useSignupFlowTheme();
+  const styles = useMemo(() => createStyles(c), [c]);
+  const bg = accentColor ?? c.ink;
+  const fg = iconColor ?? c.brandInverse;
 
-const styles = StyleSheet.create({
-  wrap: {
-    width: 48,
-    height: 48,
-    borderRadius: radius.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  wrapStacked: {
-    marginBottom: spacing.md,
-    alignSelf: 'center',
-  },
-  wrapInline: {
-    marginRight: spacing.md,
-  },
-});
+  return (
+    <View
+      style={[
+        styles.wrap,
+        layout === 'stacked' ? styles.wrapStacked : styles.wrapInline,
+        { backgroundColor: bg },
+      ]}
+    >
+      <Icon name={icon} size={24} color={fg} variant="filled" />
+    </View>
+  );
+};
+
+function createStyles(_c: AppColors) {
+  return StyleSheet.create({
+    wrap: {
+      width: 48,
+      height: 48,
+      borderRadius: radius.md,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    wrapStacked: {
+      marginBottom: spacing.md,
+      alignSelf: 'center',
+    },
+    wrapInline: {
+      marginRight: spacing.md,
+    },
+  });
+}

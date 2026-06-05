@@ -1,9 +1,8 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
   FlatList,
-  TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
 } from 'react-native';
@@ -14,7 +13,9 @@ import { CoachListCard } from '../components/CoachListCard';
 import { favoritesService } from '../services/favorites.service';
 import { usersService } from '../services/users.service';
 import { useAuth } from '../context/AuthContext';
-import { colors, spacing } from '../theme/designTokens';
+import { spacing } from '../theme/designTokens';
+import { useThemedScreen } from '../hooks/useThemedScreen';
+import type { AppColors } from '../theme/universeTheme';
 
 interface FavoritesListScreenProps {
   onBack: () => void;
@@ -26,6 +27,8 @@ export const FavoritesListScreen: React.FC<FavoritesListScreenProps> = ({
   onSelectUser,
 }) => {
   const { profile } = useAuth();
+  const { colors: c, productLine, rootStyle } = useThemedScreen();
+  const styles = useMemo(() => createStyles(c), [c]);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -49,13 +52,15 @@ export const FavoritesListScreen: React.FC<FavoritesListScreenProps> = ({
   }, [load]);
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, rootStyle]}>
       <ScreenHeader title="Mes favoris" onBack={onBack} centered />
       {loading ? (
-        <ActivityIndicator color={colors.brand} style={styles.loader} />
+        <ActivityIndicator color={c.brand} style={styles.loader} />
       ) : users.length === 0 ? (
         <Text style={styles.empty}>
-          Aucun favori. Ajoutez des joueurs ou coachs depuis leurs profils.
+          {productLine === 'woman'
+            ? 'Aucun favori. Ajoutez des joueuses ou coachs depuis leurs profils.'
+            : 'Aucun favori. Ajoutez des joueurs ou coachs depuis leurs profils.'}
         </Text>
       ) : (
         <FlatList
@@ -101,15 +106,17 @@ export const FavoritesListScreen: React.FC<FavoritesListScreenProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.background },
-  loader: { marginTop: spacing.xl },
-  empty: {
-    textAlign: 'center',
-    color: colors.textMuted,
-    padding: spacing.xl,
-    fontSize: 14,
-    lineHeight: 22,
-  },
-  list: { padding: spacing.lg, paddingBottom: spacing.xxl },
-});
+function createStyles(c: AppColors) {
+  return StyleSheet.create({
+    root: { flex: 1 },
+    loader: { marginTop: spacing.xl },
+    empty: {
+      textAlign: 'center',
+      padding: spacing.xl,
+      fontSize: 14,
+      lineHeight: 22,
+      color: c.textMuted,
+    },
+    list: { padding: spacing.lg, paddingBottom: spacing.xxl },
+  });
+}

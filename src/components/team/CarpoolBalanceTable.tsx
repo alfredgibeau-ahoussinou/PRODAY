@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import type { CarpoolDriverBalance } from '../../models/TeamEvent';
-import { colors, spacing } from '../../theme/designTokens';
+import { spacing } from '../../theme/designTokens';
+import { useAppTheme } from '../../context/ProductLineContext';
+import type { AppColors } from '../../theme/universeTheme';
 
 interface CarpoolBalanceTableProps {
   rows: CarpoolDriverBalance[];
@@ -12,6 +14,9 @@ export const CarpoolBalanceTable: React.FC<CarpoolBalanceTableProps> = ({
   rows,
   seasonLabel = 'Saison en cours',
 }) => {
+  const { colors: c } = useAppTheme();
+  const styles = useMemo(() => createStyles(c), [c]);
+
   if (rows.length === 0) {
     return (
       <Text style={styles.empty}>
@@ -56,41 +61,43 @@ export const CarpoolBalanceTable: React.FC<CarpoolBalanceTableProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  hint: {
-    fontSize: 12,
-    lineHeight: 18,
-    color: colors.textMuted,
-    marginBottom: spacing.md,
-  },
-  empty: { fontSize: 13, color: colors.textMuted, fontStyle: 'italic', lineHeight: 20 },
-  tableHead: {
-    flexDirection: 'row',
-    paddingBottom: spacing.xs,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-    marginBottom: spacing.xs,
-  },
-  th: { fontSize: 11, fontWeight: '800', color: colors.textMuted, textTransform: 'uppercase' },
-  tableRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: spacing.sm,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.border,
-  },
-  colName: { flex: 2 },
-  colTrips: { flex: 0.6, textAlign: 'center' },
-  colLast: { flex: 0.9, textAlign: 'right' },
-  name: { fontWeight: '800', fontSize: 14, color: colors.text },
-  barTrack: {
-    height: 4,
-    backgroundColor: colors.border,
-    borderRadius: 2,
-    marginTop: 4,
-    overflow: 'hidden',
-  },
-  barFill: { height: '100%', backgroundColor: colors.accent, borderRadius: 2 },
-  trips: { fontWeight: '900', fontSize: 16, color: colors.accent },
-  last: { fontSize: 12, color: colors.textSecondary },
-});
+function createStyles(c: AppColors) {
+  return StyleSheet.create({
+    hint: {
+      fontSize: 12,
+      lineHeight: 18,
+      color: c.textMuted,
+      marginBottom: spacing.md,
+    },
+    empty: { fontSize: 13, color: c.textMuted, fontStyle: 'italic', lineHeight: 20 },
+    tableHead: {
+      flexDirection: 'row',
+      paddingBottom: spacing.xs,
+      borderBottomWidth: 1,
+      borderBottomColor: c.border,
+      marginBottom: spacing.xs,
+    },
+    th: { fontSize: 11, fontWeight: '800', color: c.textMuted, textTransform: 'uppercase' },
+    tableRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: spacing.sm,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: c.border,
+    },
+    colName: { flex: 2 },
+    colTrips: { flex: 0.6, textAlign: 'center' },
+    colLast: { flex: 0.9, textAlign: 'right' },
+    name: { fontWeight: '800', fontSize: 14, color: c.text },
+    barTrack: {
+      height: 4,
+      backgroundColor: c.border,
+      borderRadius: 2,
+      marginTop: 4,
+      overflow: 'hidden',
+    },
+    barFill: { height: '100%', backgroundColor: c.accent, borderRadius: 2 },
+    trips: { fontWeight: '900', fontSize: 16, color: c.accent },
+    last: { fontSize: 12, color: c.textSecondary },
+  });
+}

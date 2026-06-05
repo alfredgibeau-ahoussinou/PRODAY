@@ -1,23 +1,49 @@
 import type { Metadata } from "next";
 import { CvPreview } from "@/components/interactive/CvPreview";
 import { PageHeader } from "@/components/layout/PageHeader";
+import type { ProductLineWeb } from "@/lib/content";
 
 export const metadata: Metadata = {
-  title: "CV joueur",
+  title: "CV foot en ligne",
   description: "CV foot vivant exportable en PDF — alimenté par Live Stats.",
 };
 
-export default function CvPage() {
+function parseUniverseParam(value: string | undefined): ProductLineWeb {
+  if (value === "homme" || value === "woman" || value === "pro") return value;
+  return "homme";
+}
+
+export default async function CvPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ u?: string }>;
+}) {
+  const { u } = await searchParams;
+  const universe = parseUniverseParam(u);
+
   return (
     <>
       <PageHeader
         kicker="CV VIVANT"
-        title="Votre CV foot professionnel"
+        title={
+          universe === "woman"
+            ? "Votre CV joueuse professionnel"
+            : universe === "pro"
+              ? "Votre CV staff professionnel"
+              : "Votre CV foot professionnel"
+        }
         description="Chaque match enrichit votre fiche. Export PDF en un geste depuis l'app."
-        image="/showcase/classic-profile.jpg"
+        image={
+          universe === "woman"
+            ? "/showcase/woman/woman-profile.jpg"
+            : universe === "pro"
+              ? "/showcase/classic-staff.jpg"
+              : "/showcase/classic-profile.jpg"
+        }
+        accent={universe === "woman" ? "woman" : universe === "pro" ? "pro" : "default"}
       />
       <section className="py-16 px-4 sm:px-6">
-        <CvPreview />
+        <CvPreview universe={universe} />
       </section>
     </>
   );

@@ -27,7 +27,8 @@ import { EventLineupScreen } from './EventLineupScreen';
 import { EventLiveStatsScreen } from './EventLiveStatsScreen';
 import { EventAttendancePanel } from '../components/team/EventAttendancePanel';
 import { EventCarpoolPanel } from '../components/team/EventCarpoolPanel';
-import { colors, spacing, radius } from '../theme/designTokens';
+import { spacing, radius } from '../theme/designTokens';
+import { useThemedScreen } from '../hooks/useThemedScreen';
 
 interface TeamEventDetailScreenProps {
   eventId: string;
@@ -47,6 +48,7 @@ export const TeamEventDetailScreen: React.FC<TeamEventDetailScreenProps> = ({
   onBack,
 }) => {
   const { profile, isAdmin } = useAuth();
+  const { colors: c, rootStyle } = useThemedScreen();
   const [subView, setSubView] = useState<SubView>('detail');
   const [event, setEvent] = useState<TeamEvent | null>(null);
   const [loading, setLoading] = useState(true);
@@ -142,17 +144,17 @@ export const TeamEventDetailScreen: React.FC<TeamEventDetailScreenProps> = ({
 
   if (loading) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator color={colors.accent} size="large" />
+      <View style={[styles.centered, rootStyle]}>
+        <ActivityIndicator color={c.brand} size="large" />
       </View>
     );
   }
 
   if (!event) {
     return (
-      <View style={styles.root}>
+      <View style={rootStyle}>
         <ScreenHeader title="Événement" onBack={onBack} centered />
-        <Text style={styles.missing}>Événement introuvable.</Text>
+        <Text style={[styles.missing, { color: c.textMuted }]}>Événement introuvable.</Text>
       </View>
     );
   }
@@ -187,32 +189,45 @@ export const TeamEventDetailScreen: React.FC<TeamEventDetailScreenProps> = ({
     await load();
   };
 
+  const surfaceCard = {
+    backgroundColor: c.surface,
+    borderColor: c.border,
+  };
+
   return (
-    <View style={styles.root}>
+    <View style={rootStyle}>
       <ScreenHeader title="Convocation" onBack={onBack} centered />
       <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.badge}>
-          <Text style={styles.badgeText}>{EVENT_TYPE_LABELS[event.event_type]}</Text>
+        <View style={[styles.badge, { backgroundColor: c.accentSoft }]}>
+          <Text style={[styles.badgeText, { color: c.brand }]}>
+            {EVENT_TYPE_LABELS[event.event_type]}
+          </Text>
         </View>
-        <Text style={styles.title}>{event.title}</Text>
-        <Text style={styles.meta}>{formatCalendarDate(event.starts_at)}</Text>
-        <Text style={styles.meta}>
+        <Text style={[styles.title, { color: c.text }]}>{event.title}</Text>
+        <Text style={[styles.meta, { color: c.textSecondary }]}>
+          {formatCalendarDate(event.starts_at)}
+        </Text>
+        <Text style={[styles.meta, { color: c.textSecondary }]}>
           {event.city}
           {event.location_label ? ` · ${event.location_label}` : ''}
         </Text>
-        <Text style={styles.meta}>Par {event.organizer_name}</Text>
+        <Text style={[styles.meta, { color: c.textSecondary }]}>Par {event.organizer_name}</Text>
 
         {event.event_type === 'detection' && event.max_participants ? (
-          <Text style={styles.stats}>
+          <Text style={[styles.stats, { color: c.brand }]}>
             {yesCount} / {event.max_participants} places confirmées
           </Text>
         ) : null}
 
         {event.categories && event.categories.length > 0 ? (
-          <Text style={styles.categories}>{event.categories.join(' · ')}</Text>
+          <Text style={[styles.categories, { color: c.textMuted }]}>
+            {event.categories.join(' · ')}
+          </Text>
         ) : null}
 
-        {event.description ? <Text style={styles.desc}>{event.description}</Text> : null}
+        {event.description ? (
+          <Text style={[styles.desc, { color: c.text }]}>{event.description}</Text>
+        ) : null}
 
         {profile &&
         (isOrganizer ||
@@ -228,9 +243,11 @@ export const TeamEventDetailScreen: React.FC<TeamEventDetailScreenProps> = ({
         ) : null}
 
         {event.lineup && (
-          <View style={styles.lineupBox}>
-            <Text style={styles.lineupTitle}>Composition · {event.lineup.formation}</Text>
-            <Text style={styles.lineupSub}>
+          <View style={[styles.lineupBox, surfaceCard]}>
+            <Text style={[styles.lineupTitle, { color: c.text }]}>
+              Composition · {event.lineup.formation}
+            </Text>
+            <Text style={[styles.lineupSub, { color: c.textMuted }]}>
               {event.lineup.slots.filter((s) => s.role === 'starter').length} titulaires ·{' '}
               {event.lineup.slots.filter((s) => s.role === 'sub').length} remplaçants
             </Text>
@@ -239,8 +256,8 @@ export const TeamEventDetailScreen: React.FC<TeamEventDetailScreenProps> = ({
 
         {isOrganizer && (
           <>
-            <View style={styles.summary}>
-              <Text style={styles.summaryTitle}>Réponses</Text>
+            <View style={[styles.summary, surfaceCard]}>
+              <Text style={[styles.summaryTitle, { color: c.text }]}>Réponses</Text>
               {(['yes', 'maybe', 'no', 'pending'] as RsvpStatus[]).map((st) => {
                 const n = Object.values(event.rsvps).filter((s) => s === st).length;
                 const labels: Record<RsvpStatus, string> = {
@@ -250,7 +267,7 @@ export const TeamEventDetailScreen: React.FC<TeamEventDetailScreenProps> = ({
                   pending: 'En attente',
                 };
                 return (
-                  <Text key={st} style={styles.summaryLine}>
+                  <Text key={st} style={[styles.summaryLine, { color: c.textSecondary }]}>
                     {labels[st]} : {n}
                   </Text>
                 );
@@ -260,22 +277,25 @@ export const TeamEventDetailScreen: React.FC<TeamEventDetailScreenProps> = ({
             <View style={styles.organizerRow}>
               {pendingCount > 0 && (
                 <TouchableOpacity
-                  style={styles.orgBtn}
+                  style={[styles.orgBtn, { backgroundColor: c.brand }]}
                   onPress={handleReminder}
                   disabled={saving}
                 >
-                  <Text style={styles.orgBtnText}>
+                  <Text style={[styles.orgBtnText, { color: c.brandInverse }]}>
                     Relancer ({pendingCount})
                   </Text>
                 </TouchableOpacity>
               )}
-              <TouchableOpacity style={styles.orgBtnSecondary} onPress={shareConvocation}>
-                <Text style={styles.orgBtnSecondaryText}>Partager</Text>
+              <TouchableOpacity
+                style={[styles.orgBtnSecondary, surfaceCard]}
+                onPress={shareConvocation}
+              >
+                <Text style={[styles.orgBtnSecondaryText, { color: c.text }]}>Partager</Text>
               </TouchableOpacity>
             </View>
 
             {event.last_reminder_at && (
-              <Text style={styles.reminderMeta}>
+              <Text style={[styles.reminderMeta, { color: c.textMuted }]}>
                 Dernière relance :{' '}
                 {event.last_reminder_at.toLocaleString('fr-FR', {
                   day: 'numeric',
@@ -289,19 +309,19 @@ export const TeamEventDetailScreen: React.FC<TeamEventDetailScreenProps> = ({
             {showLineupLive && (
               <View style={styles.toolRow}>
                 <TouchableOpacity
-                  style={[styles.toolCard, reportLocked && styles.toolCardMuted]}
+                  style={[styles.toolCard, surfaceCard, reportLocked && styles.toolCardMuted]}
                   onPress={() => setSubView('lineup')}
                 >
-                  <Text style={styles.toolTitle}>Composition</Text>
-                  <Text style={styles.toolSub}>Tactique & titulaires</Text>
+                  <Text style={[styles.toolTitle, { color: c.text }]}>Composition</Text>
+                  <Text style={[styles.toolSub, { color: c.textMuted }]}>Tactique & titulaires</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={[styles.toolCard, reportLocked && styles.toolCardMuted]}
+                  style={[styles.toolCard, surfaceCard, reportLocked && styles.toolCardMuted]}
                   onPress={() => setSubView('live')}
                   disabled={reportLocked}
                 >
-                  <Text style={styles.toolTitle}>Live Stats</Text>
-                  <Text style={styles.toolSub}>
+                  <Text style={[styles.toolTitle, { color: c.text }]}>Live Stats</Text>
+                  <Text style={[styles.toolSub, { color: c.textMuted }]}>
                     {reportLocked
                       ? 'Lecture seule (rapport validé)'
                       : `${event.live_actions?.length ?? 0} action(s)`}
@@ -312,23 +332,28 @@ export const TeamEventDetailScreen: React.FC<TeamEventDetailScreenProps> = ({
 
             {(event.lineup || (event.live_actions?.length ?? 0) > 0) && (
               <TouchableOpacity
-                style={styles.exportBtn}
+                style={[styles.exportBtn, surfaceCard]}
                 onPress={() =>
                   openPrintableHtml(buildMatchSheetHtml(event), 'Feuille de match')
                 }
               >
-                <Text style={styles.exportBtnText}>Exporter feuille de match (PDF)</Text>
+                <Text style={[styles.exportBtnText, { color: c.brand }]}>
+                  Exporter feuille de match (PDF)
+                </Text>
               </TouchableOpacity>
             )}
             {event.match_report_finalized_at ? (
-              <Text style={styles.reportLockInfo}>
+              <Text style={[styles.reportLockInfo, { color: c.textMuted }]}>
                 Rapport validé le{' '}
                 {event.match_report_finalized_at.toLocaleDateString('fr-FR')}.
               </Text>
             ) : null}
             {canManageFinalizedReport ? (
-              <TouchableOpacity style={styles.lockToggleBtn} onPress={() => void toggleReportLock()}>
-                <Text style={styles.lockToggleText}>
+              <TouchableOpacity
+                style={[styles.lockToggleBtn, surfaceCard]}
+                onPress={() => void toggleReportLock()}
+              >
+                <Text style={[styles.lockToggleText, { color: c.textSecondary }]}>
                   {event.match_report_finalized_at
                     ? 'Déverrouiller le rapport'
                     : 'Valider et verrouiller le rapport'}
@@ -338,7 +363,7 @@ export const TeamEventDetailScreen: React.FC<TeamEventDetailScreenProps> = ({
 
             {event.invitee_uids.length > 0 ? (
               <View style={styles.attendanceSection}>
-                <Text style={styles.summaryTitle}>Présences & pointage</Text>
+                <Text style={[styles.summaryTitle, { color: c.text }]}>Présences & pointage</Text>
                 <EventAttendancePanel
                   event={event}
                   isStaff={isStaff}
@@ -351,48 +376,68 @@ export const TeamEventDetailScreen: React.FC<TeamEventDetailScreenProps> = ({
 
         {canRespond && (
           <>
-            <Text style={styles.rsvpLabel}>Votre réponse</Text>
+            <Text style={[styles.rsvpLabel, { color: c.textSecondary }]}>Votre réponse</Text>
             <View style={styles.rsvpRow}>
-              {RSVP_OPTIONS.map((opt) => (
-                <TouchableOpacity
-                  key={opt.status}
-                  style={[styles.rsvpBtn, myStatus === opt.status && styles.rsvpBtnActive]}
-                  onPress={() => handleRsvp(opt.status)}
-                  disabled={saving}
-                >
-                  <Text
+              {RSVP_OPTIONS.map((opt) => {
+                const active = myStatus === opt.status;
+                return (
+                  <TouchableOpacity
+                    key={opt.status}
                     style={[
-                      styles.rsvpBtnText,
-                      myStatus === opt.status && styles.rsvpBtnTextActive,
+                      styles.rsvpBtn,
+                      {
+                        backgroundColor: active ? c.brand : c.surface,
+                        borderColor: active ? c.brand : c.border,
+                      },
                     ]}
+                    onPress={() => handleRsvp(opt.status)}
+                    disabled={saving}
                   >
-                    {opt.label}
-                  </Text>
-                </TouchableOpacity>
-              ))}
+                    <Text
+                      style={[
+                        styles.rsvpBtnText,
+                        { color: active ? c.brandInverse : c.text },
+                      ]}
+                    >
+                      {opt.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
             {showAbsenceNote ? (
               <>
-                <Text style={styles.rsvpLabel}>Motif d&apos;absence (optionnel)</Text>
+                <Text style={[styles.rsvpLabel, { color: c.textSecondary }]}>
+                  Motif d&apos;absence (optionnel)
+                </Text>
                 <TextInput
-                  style={styles.noteInput}
+                  style={[
+                    styles.noteInput,
+                    {
+                      backgroundColor: c.surface,
+                      borderColor: c.border,
+                      color: c.text,
+                    },
+                  ]}
                   placeholder="Ex. blessure, examen, déplacement…"
-                  placeholderTextColor={colors.textMuted}
+                  placeholderTextColor={c.textMuted}
                   value={absenceNote}
                   onChangeText={setAbsenceNote}
                   multiline
                 />
                 <TouchableOpacity
-                  style={styles.confirmAbsentBtn}
+                  style={[styles.confirmAbsentBtn, { backgroundColor: c.brand }]}
                   onPress={() => void handleRsvp('no')}
                   disabled={saving}
                 >
-                  <Text style={styles.confirmAbsentText}>Confirmer l&apos;absence</Text>
+                  <Text style={[styles.confirmAbsentText, { color: c.brandInverse }]}>
+                    Confirmer l&apos;absence
+                  </Text>
                 </TouchableOpacity>
               </>
             ) : null}
             {profile && event.rsvp_notes?.[profile.uid] ? (
-              <Text style={styles.myNote}>
+              <Text style={[styles.myNote, { color: c.textMuted }]}>
                 Votre motif : {event.rsvp_notes[profile.uid]}
               </Text>
             ) : null}
@@ -403,11 +448,13 @@ export const TeamEventDetailScreen: React.FC<TeamEventDetailScreenProps> = ({
           profile &&
           !event.invitee_uids.includes(profile.uid) && (
             <TouchableOpacity
-              style={styles.registerBtn}
+              style={[styles.registerBtn, { backgroundColor: c.brand }]}
               onPress={() => handleRsvp('yes')}
               disabled={saving}
             >
-              <Text style={styles.registerText}>S&apos;inscrire à la détection</Text>
+              <Text style={[styles.registerText, { color: c.brandInverse }]}>
+                S&apos;inscrire à la détection
+              </Text>
             </TouchableOpacity>
           )}
       </ScrollView>
@@ -416,101 +463,85 @@ export const TeamEventDetailScreen: React.FC<TeamEventDetailScreenProps> = ({
 };
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.background },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   content: { padding: spacing.lg, paddingBottom: spacing.xxl },
-  missing: { textAlign: 'center', color: colors.textMuted, marginTop: 40 },
+  missing: { textAlign: 'center', marginTop: 40 },
   badge: {
     alignSelf: 'flex-start',
-    backgroundColor: colors.accentSoft,
     paddingHorizontal: spacing.sm,
     paddingVertical: 4,
     borderRadius: radius.pill,
     marginBottom: spacing.sm,
   },
-  badgeText: { fontSize: 11, fontWeight: '800', color: colors.accent },
-  title: { fontSize: 22, fontWeight: '900', color: colors.text, marginBottom: spacing.sm },
-  meta: { fontSize: 14, color: colors.textSecondary, marginBottom: 4 },
-  stats: { fontSize: 15, fontWeight: '800', color: colors.accent, marginTop: spacing.md },
-  categories: { fontSize: 13, color: colors.textMuted, marginTop: spacing.xs },
-  desc: { fontSize: 15, lineHeight: 22, color: colors.text, marginTop: spacing.lg },
+  badgeText: { fontSize: 11, fontWeight: '800' },
+  title: { fontSize: 22, fontWeight: '900', marginBottom: spacing.sm },
+  meta: { fontSize: 14, marginBottom: 4 },
+  stats: { fontSize: 15, fontWeight: '800', marginTop: spacing.md },
+  categories: { fontSize: 13, marginTop: spacing.xs },
+  desc: { fontSize: 15, lineHeight: 22, marginTop: spacing.lg },
   lineupBox: {
     marginTop: spacing.md,
     padding: spacing.md,
-    backgroundColor: colors.surface,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: colors.border,
   },
-  lineupTitle: { fontWeight: '900', color: colors.text },
-  lineupSub: { fontSize: 12, color: colors.textMuted, marginTop: 4 },
+  lineupTitle: { fontWeight: '900' },
+  lineupSub: { fontSize: 12, marginTop: 4 },
   summary: {
     marginTop: spacing.xl,
     padding: spacing.md,
-    backgroundColor: colors.surface,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: colors.border,
   },
-  summaryTitle: { fontWeight: '900', marginBottom: spacing.sm, color: colors.text },
-  summaryLine: { fontSize: 13, color: colors.textSecondary, marginBottom: 4 },
+  summaryTitle: { fontWeight: '900', marginBottom: spacing.sm },
+  summaryLine: { fontSize: 13, marginBottom: 4 },
   organizerRow: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.md },
   orgBtn: {
     flex: 1,
-    backgroundColor: colors.accent,
     padding: spacing.md,
     borderRadius: radius.md,
     alignItems: 'center',
   },
-  orgBtnText: { color: '#fff', fontWeight: '900', fontSize: 13 },
+  orgBtnText: { fontWeight: '900', fontSize: 13 },
   orgBtnSecondary: {
     flex: 1,
     padding: spacing.md,
     borderRadius: radius.md,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
   },
-  orgBtnSecondaryText: { fontWeight: '800', color: colors.text },
-  reminderMeta: { fontSize: 11, color: colors.textMuted, marginTop: spacing.xs },
+  orgBtnSecondaryText: { fontWeight: '800' },
+  reminderMeta: { fontSize: 11, marginTop: spacing.xs },
   toolRow: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.lg },
   toolCard: {
     flex: 1,
     padding: spacing.md,
-    backgroundColor: colors.surface,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: colors.border,
   },
   toolCardMuted: { opacity: 0.6 },
-  toolTitle: { fontWeight: '900', fontSize: 14, color: colors.text },
-  toolSub: { fontSize: 11, color: colors.textMuted, marginTop: 4 },
+  toolTitle: { fontWeight: '900', fontSize: 14 },
+  toolSub: { fontSize: 11, marginTop: 4 },
   exportBtn: {
     marginTop: spacing.md,
     padding: spacing.md,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
     alignItems: 'center',
   },
-  exportBtnText: { fontWeight: '800', fontSize: 13, color: colors.accent },
-  reportLockInfo: { marginTop: spacing.sm, fontSize: 12, color: colors.textMuted },
+  exportBtnText: { fontWeight: '800', fontSize: 13 },
+  reportLockInfo: { marginTop: spacing.sm, fontSize: 12 },
   lockToggleBtn: {
     marginTop: spacing.sm,
     paddingVertical: spacing.sm,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
     alignItems: 'center',
   },
-  lockToggleText: { color: colors.textSecondary, fontSize: 12, fontWeight: '800' },
+  lockToggleText: { fontSize: 12, fontWeight: '800' },
   rsvpLabel: {
     fontSize: 12,
     fontWeight: '800',
-    color: colors.textSecondary,
     marginTop: spacing.xl,
     marginBottom: spacing.sm,
   },
@@ -520,41 +551,32 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: colors.border,
     alignItems: 'center',
-    backgroundColor: colors.surface,
   },
-  rsvpBtnActive: { backgroundColor: colors.ink, borderColor: colors.ink },
-  rsvpBtnText: { fontWeight: '800', fontSize: 13, color: colors.text },
-  rsvpBtnTextActive: { color: colors.brandInverse },
+  rsvpBtnText: { fontWeight: '800', fontSize: 13 },
   registerBtn: {
     marginTop: spacing.lg,
-    backgroundColor: colors.accent,
     padding: spacing.lg,
     borderRadius: radius.md,
     alignItems: 'center',
   },
-  registerText: { color: '#fff', fontWeight: '900', fontSize: 16 },
+  registerText: { fontWeight: '900', fontSize: 16 },
   attendanceSection: { marginTop: spacing.lg },
   noteInput: {
-    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: colors.border,
     borderRadius: radius.md,
     padding: spacing.md,
     fontSize: 14,
-    color: colors.text,
     minHeight: 72,
     textAlignVertical: 'top',
     marginBottom: spacing.sm,
   },
   confirmAbsentBtn: {
-    backgroundColor: colors.ink,
     borderRadius: radius.md,
     padding: spacing.md,
     alignItems: 'center',
     marginBottom: spacing.sm,
   },
-  confirmAbsentText: { color: colors.brandInverse, fontWeight: '800', fontSize: 13 },
-  myNote: { fontSize: 12, color: colors.textMuted, marginTop: spacing.xs, fontStyle: 'italic' },
+  confirmAbsentText: { fontWeight: '800', fontSize: 13 },
+  myNote: { fontSize: 12, marginTop: spacing.xs, fontStyle: 'italic' },
 });

@@ -125,24 +125,21 @@ export function UniversePage({ universe }: UniversePageProps) {
       )}
 
       {config.showPulse && (
-        <section className={universe === "woman" ? "bg-pink-50/50 py-16" : "py-16"}>
+        <section className={`py-16 ${theme.softSectionBg}`}>
           <div className="mx-auto max-w-6xl px-4 sm:px-6">
             <h2 className="text-2xl font-bold sm:text-3xl">Pulse ProDay</h2>
             <p className="mt-3 max-w-2xl text-proday-muted">
               Score de visibilité exclusif — profil, stats, activité et confiance combinés.
             </p>
           </div>
-          <PulseSimulator
-            fullPage
-            variant={universe === "woman" ? "woman" : "default"}
-          />
+          <PulseSimulator fullPage universe={universe} />
         </section>
       )}
 
       {config.showVerification && (
-        <section className="bg-blue-50/30 py-16">
+        <section className={`py-16 ${theme.verificationSectionBg}`}>
           <div className="mx-auto max-w-6xl px-4 sm:px-6">
-            <h2 className="text-2xl font-bold text-blue-950 sm:text-3xl">
+            <h2 className={`text-2xl font-bold sm:text-3xl ${theme.verificationTitle}`}>
               Profils vérifiés
             </h2>
             <p className="mt-3 max-w-2xl text-proday-muted">

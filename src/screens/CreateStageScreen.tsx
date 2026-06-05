@@ -14,7 +14,8 @@ import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { stagesService } from '../services/stages.service';
 import { canPublishStages } from '../utils/roleCapabilities';
 import { useAppSpace } from '../context/AppSpaceContext';
-import { colors, spacing, radius } from '../theme/designTokens';
+import { spacing, radius } from '../theme/designTokens';
+import { useThemedScreen } from '../hooks/useThemedScreen';
 
 interface CreateStageScreenProps {
   profile: User;
@@ -44,12 +45,21 @@ export const CreateStageScreen: React.FC<CreateStageScreenProps> = ({
   const [spots, setSpots] = useState('20');
   const [price, setPrice] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const { colors: themeColors, rootStyle } = useThemedScreen();
+  const inputStyle = [
+    styles.input,
+    {
+      backgroundColor: themeColors.surface,
+      borderColor: themeColors.border,
+      color: themeColors.text,
+    },
+  ];
 
   if (!canPublishStages(profile.role)) {
     return (
-      <View style={styles.root}>
+      <View style={[styles.root, rootStyle]}>
         <ScreenHeader title="Publier un stage" onBack={onBack} centered />
-        <Text style={styles.denied}>
+        <Text style={[styles.denied, { color: themeColors.textMuted }]}>
           Réservé aux clubs, coachs et organisateurs vérifiés.
         </Text>
       </View>
@@ -103,70 +113,76 @@ export const CreateStageScreen: React.FC<CreateStageScreenProps> = ({
   };
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, rootStyle]}>
       <ScreenHeader title="Publier un stage" onBack={onBack} centered />
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.hint}>Format date : AAAA-MM-JJ (ex. 2026-07-14)</Text>
+        <Text style={[styles.hint, { color: themeColors.textMuted }]}>
+          Format date : AAAA-MM-JJ (ex. 2026-07-14)
+        </Text>
         <TextInput
-          style={styles.input}
+          style={inputStyle}
           placeholder="Titre du stage *"
-          placeholderTextColor={colors.textMuted}
+          placeholderTextColor={themeColors.textMuted}
           value={title}
           onChangeText={setTitle}
         />
         <TextInput
-          style={styles.input}
+          style={inputStyle}
           placeholder="Catégorie (ex. U15, Seniors) *"
-          placeholderTextColor={colors.textMuted}
+          placeholderTextColor={themeColors.textMuted}
           value={category}
           onChangeText={setCategory}
         />
         <TextInput
-          style={styles.input}
+          style={inputStyle}
           placeholder="Ville *"
-          placeholderTextColor={colors.textMuted}
+          placeholderTextColor={themeColors.textMuted}
           value={city}
           onChangeText={setCity}
         />
         <TextInput
-          style={styles.input}
+          style={inputStyle}
           placeholder="Date début *"
-          placeholderTextColor={colors.textMuted}
+          placeholderTextColor={themeColors.textMuted}
           value={startDate}
           onChangeText={setStartDate}
         />
         <TextInput
-          style={styles.input}
+          style={inputStyle}
           placeholder="Date fin *"
-          placeholderTextColor={colors.textMuted}
+          placeholderTextColor={themeColors.textMuted}
           value={endDate}
           onChangeText={setEndDate}
         />
         <TextInput
-          style={styles.input}
+          style={inputStyle}
           placeholder="Nombre de places *"
-          placeholderTextColor={colors.textMuted}
+          placeholderTextColor={themeColors.textMuted}
           value={spots}
           onChangeText={setSpots}
           keyboardType="number-pad"
         />
         <TextInput
-          style={styles.input}
+          style={inputStyle}
           placeholder="Prix € (optionnel)"
-          placeholderTextColor={colors.textMuted}
+          placeholderTextColor={themeColors.textMuted}
           value={price}
           onChangeText={setPrice}
           keyboardType="decimal-pad"
         />
         <TextInput
-          style={[styles.input, styles.bio]}
+          style={[...inputStyle, styles.bio]}
           placeholder="Description du programme"
-          placeholderTextColor={colors.textMuted}
+          placeholderTextColor={themeColors.textMuted}
           value={description}
           onChangeText={setDescription}
           multiline
         />
-        <TouchableOpacity style={styles.primary} onPress={handleSubmit} disabled={submitting}>
+        <TouchableOpacity
+          style={[styles.primary, { backgroundColor: themeColors.brand }]}
+          onPress={handleSubmit}
+          disabled={submitting}
+        >
           {submitting ? (
             <ActivityIndicator color="#FFF" />
           ) : (
@@ -179,23 +195,19 @@ export const CreateStageScreen: React.FC<CreateStageScreenProps> = ({
 };
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.background },
+  root: { flex: 1 },
   content: { padding: spacing.lg, paddingBottom: spacing.xxl },
-  hint: { fontSize: 12, color: colors.textMuted, marginBottom: spacing.sm },
-  denied: { padding: spacing.lg, color: colors.textMuted, textAlign: 'center' },
+  hint: { fontSize: 12, marginBottom: spacing.sm },
+  denied: { padding: spacing.lg, textAlign: 'center' },
   input: {
-    backgroundColor: colors.surface,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: colors.border,
     padding: spacing.md,
     marginBottom: spacing.sm,
-    color: colors.text,
     fontSize: 15,
   },
   bio: { minHeight: 100, textAlignVertical: 'top' },
   primary: {
-    backgroundColor: colors.brand,
     borderRadius: radius.lg,
     padding: spacing.md,
     alignItems: 'center',

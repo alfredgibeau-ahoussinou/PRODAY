@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import { useState } from "react";
 import { Reveal } from "./Reveal";
+import { UNIVERSE_THEME } from "@/components/universe/universeTheme";
 import { MODULES } from "@/lib/content";
 
 type ModuleExplorerProps = {
@@ -13,6 +14,7 @@ type ModuleExplorerProps = {
 export function ModuleExplorer({ compact }: ModuleExplorerProps) {
   const [active, setActive] = useState(0);
   const mod = MODULES[active];
+  const theme = UNIVERSE_THEME.homme;
 
   return (
     <section
@@ -42,9 +44,7 @@ export function ModuleExplorer({ compact }: ModuleExplorerProps) {
                 onClick={() => setActive(i)}
                 whileHover={{ x: 4 }}
                 className={`rounded-2xl border p-5 text-left transition ${
-                  active === i
-                    ? "border-proday-ink bg-proday-ink text-white shadow-lg"
-                    : "border-neutral-200 bg-white hover:border-neutral-300"
+                  active === i ? theme.moduleActive : theme.moduleIdle
                 }`}
               >
                 <span className="text-xs opacity-70">{m.subtitle}</span>
@@ -53,7 +53,7 @@ export function ModuleExplorer({ compact }: ModuleExplorerProps) {
                   <motion.p
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: "auto" }}
-                    className="mt-2 text-sm text-white/80"
+                    className={`mt-2 text-sm ${theme.moduleDesc}`}
                   >
                     {m.description}
                   </motion.p>
@@ -76,7 +76,7 @@ export function ModuleExplorer({ compact }: ModuleExplorerProps) {
               className="object-cover object-center"
               sizes="(max-width: 768px) 100vw, 50vw"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/15 to-transparent" />
+            <div className={`absolute inset-0 bg-gradient-to-t ${theme.imageGradient}`} />
             <div className="absolute inset-x-0 bottom-0 p-8 pt-20">
               <motion.h3
                 initial={{ y: 20, opacity: 0 }}

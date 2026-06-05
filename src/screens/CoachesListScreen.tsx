@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -17,7 +17,9 @@ import { isFirebaseConfigured } from '../config/firebase';
 import { useAuth } from '../context/AuthContext';
 import { useFavorites } from '../hooks/useFavorites';
 import { Icon } from '../components/ui/Icon';
-import { colors, spacing, radius, shadows } from '../theme/designTokens';
+import { spacing, radius, shadows } from '../theme/designTokens';
+import { useThemedScreen } from '../hooks/useThemedScreen';
+import type { AppColors } from '../theme/universeTheme';
 
 const FILTER_CHIPS = ['Spécialité', 'Niveau', 'Localisation', 'Filtres'] as const;
 
@@ -40,9 +42,11 @@ export const CoachesListScreen: React.FC<CoachesListScreenProps> = ({
   const { profile } = useAuth();
   const { isFavorite, toggle } = useFavorites(profile?.uid);
   const { users, loading } = useUsersByRole(staffType, query);
+  const { colors: c, rootStyle } = useThemedScreen();
+  const styles = useMemo(() => createStyles(c), [c]);
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, rootStyle]}>
       <ScreenHeader
         title="Recrutement"
         subtitle={
@@ -52,11 +56,6 @@ export const CoachesListScreen: React.FC<CoachesListScreenProps> = ({
         }
         onBack={onBack}
         centered
-        rightAction={
-          <TouchableOpacity hitSlop={12}>
-            <Icon name="notifications" size={22} color={colors.text} />
-          </TouchableOpacity>
-        }
       />
 
       <View style={styles.toggle}>
@@ -144,7 +143,10 @@ export const CoachesListScreen: React.FC<CoachesListScreenProps> = ({
       </DataState>
 
       {onCreatePost ? (
-        <TouchableOpacity style={[styles.fab, shadows.fab]} onPress={onCreatePost}>
+        <TouchableOpacity
+          style={[styles.fab, shadows.fab]}
+          onPress={onCreatePost}
+        >
           <Text style={styles.fabText}>Publier une annonce</Text>
         </TouchableOpacity>
       ) : null}
@@ -152,60 +154,62 @@ export const CoachesListScreen: React.FC<CoachesListScreenProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
-  toggle: {
-    flexDirection: 'row',
-    marginHorizontal: spacing.lg,
-    marginBottom: spacing.md,
-    backgroundColor: colors.surfaceMuted,
-    borderRadius: radius.md,
-    padding: 4,
-  },
-  toggleBtn: {
-    flex: 1,
-    paddingVertical: spacing.sm,
-    alignItems: 'center',
-    borderRadius: radius.sm,
-  },
-  toggleActive: { backgroundColor: colors.surface },
-  toggleText: { color: colors.textSecondary, fontWeight: '600' },
-  toggleTextActive: { color: colors.brand, fontWeight: '700' },
-  chips: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-    paddingHorizontal: spacing.lg,
-    marginBottom: spacing.md,
-  },
-  chip: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: radius.pill,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  chipActive: { backgroundColor: colors.brand, borderColor: colors.brand },
-  chipText: { fontSize: 12, fontWeight: '600', color: colors.textSecondary },
-  chipTextActive: { color: '#FFFFFF' },
-  section: {
-    paddingHorizontal: spacing.lg,
-    color: colors.text,
-    fontWeight: '700',
-    fontSize: 16,
-    marginBottom: spacing.sm,
-  },
-  list: { paddingHorizontal: spacing.lg, paddingBottom: 88 },
-  fab: {
-    position: 'absolute',
-    bottom: spacing.lg,
-    left: spacing.lg,
-    right: spacing.lg,
-    backgroundColor: colors.brand,
-    borderRadius: radius.md,
-    paddingVertical: 16,
-    alignItems: 'center',
-  },
-  fabText: { color: '#FFF', fontWeight: '700' },
-});
+function createStyles(c: AppColors) {
+  return StyleSheet.create({
+    container: { flex: 1 },
+    toggle: {
+      flexDirection: 'row',
+      marginHorizontal: spacing.lg,
+      marginBottom: spacing.md,
+      backgroundColor: c.surfaceMuted,
+      borderRadius: radius.md,
+      padding: 4,
+    },
+    toggleBtn: {
+      flex: 1,
+      paddingVertical: spacing.sm,
+      alignItems: 'center',
+      borderRadius: radius.sm,
+    },
+    toggleActive: { backgroundColor: c.surface },
+    toggleText: { color: c.textSecondary, fontWeight: '600' },
+    toggleTextActive: { color: c.brand, fontWeight: '700' },
+    chips: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: spacing.sm,
+      paddingHorizontal: spacing.lg,
+      marginBottom: spacing.md,
+    },
+    chip: {
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      borderRadius: radius.pill,
+      backgroundColor: c.surface,
+      borderWidth: 1,
+      borderColor: c.border,
+    },
+    chipActive: { backgroundColor: c.brand, borderColor: c.brand },
+    chipText: { fontSize: 12, fontWeight: '600', color: c.textSecondary },
+    chipTextActive: { color: c.brandInverse },
+    section: {
+      paddingHorizontal: spacing.lg,
+      color: c.text,
+      fontWeight: '700',
+      fontSize: 16,
+      marginBottom: spacing.sm,
+    },
+    list: { paddingHorizontal: spacing.lg, paddingBottom: 88 },
+    fab: {
+      position: 'absolute',
+      bottom: spacing.lg,
+      left: spacing.lg,
+      right: spacing.lg,
+      backgroundColor: c.brand,
+      borderRadius: radius.md,
+      paddingVertical: 16,
+      alignItems: 'center',
+    },
+    fabText: { color: c.brandInverse, fontWeight: '700' },
+  });
+}

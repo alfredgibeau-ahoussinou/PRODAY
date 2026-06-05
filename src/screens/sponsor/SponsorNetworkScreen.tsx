@@ -1,0 +1,330 @@
+import React, { useEffect, useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ActivityIndicator,
+  TouchableOpacity,
+  ScrollView,
+  Alert,
+} from 'react-native';
+import { useSessionProfile } from '../../hooks/useSessionProfile';
+import { useMessagesData } from '../../hooks/useAppData';
+import { useTabNavigation } from '../../context/TabNavigationContext';
+import { useSponsorDashboard } from '../../hooks/useSponsorDashboard';
+import { ChatScreen } from '../ChatScreen';
+import { SponsorScreenHeader } from '../../components/sponsor/SponsorScreenHeader';
+import { SPONSOR_MESSAGE_TEMPLATES } from '../../content/sponsorContent';
+import { TAB_BAR_CONTENT_INSET } from '../../components/navigation/BottomTabBar';
+import { SPONSOR_THEME } from '../../content/sponsorExperience';
+import { spacing, radius } from '../../theme/designTokens';
+
+export const SponsorNetworkScreen: React.FC = () => {
+  const profile = useSessionProfile();
+  const company = profile?.profile.job_title ?? profile?.display_name;
+  const { pendingChatThreadId, clearPendingChat } = useTabNavigation();
+  const { threads, loading, refresh } = useMessagesData(profile?.uid);
+  const { prospects, analytics, loading: sponsorLoading } = useSponsorDashboard(
+    profile?.uid,
+    company
+  );
+  const [activeThreadId, setActiveThreadId] = useState<string | null>(null);
+  const [segment, setSegment] = useState<'messages' | 'prospects'>('messages');
+
+  useEffect(() => {
+    if (pendingChatThreadId) {
+      setActiveThreadId(pendingChatThreadId);
+      clearPendingChat();
+    }
+  }, [pendingChatThreadId, clearPendingChat]);
+
+  const activeThread = threads.find((t) => t.id === activeThreadId);
+
+  const showTemplate = (text: string) => {
+    Alert.alert('Modèle de message', text, [{ text: 'OK' }]);
+  };
+
+  if (activeThreadId && profile && activeThread) {
+    return (
+      <ChatScreen
+        threadId={activeThreadId}
+        otherName={activeThread.participant_name}
+        currentUid={profile.uid}
+        currentUser={profile}
+        onBack={() => {
+          setActiveThreadId(null);
+          refresh();
+        }}
+      />
+    );
+  }
+
+  if (activeThreadId && profile) {
+    return (
+      <ChatScreen
+        threadId={activeThreadId}
+        otherName="Contact club"
+        currentUid={profile.uid}
+        currentUser={profile}
+        onBack={() => {
+          setActiveThreadId(null);
+          refresh();
+        }}
+      />
+    );
+  }
+
+  const isLoading = loading || sponsorLoading;
+
+  return (
+    <View style={styles.container}>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <SponsorScreenHeader
+          title="Réseau partenaires"
+          subtitle="Messages clubs, prospects locaux et modèles pour accélérer vos prises de contact."
+        />
+
+        {analytics ? (
+          <View style={styles.statsRow}>
+            <View style={styles.statBox}>
+              <Text style={styles.statValue}>{threads.length}</Text>
+              <Text style={styles.statLabel}>Conversations</Text>
+            </View>
+            <View style={styles.statBox}>
+              <Text style={styles.statValue}>{analytics.leads}</Text>
+              <Text style={styles.statLabel}>Contacts</Text>
+            </View>
+            <View style={styles.statBox}>
+              <Text style={styles.statValue}>{prospects.length}</Text>
+              <Text style={styles.statLabel}>Prospects</Text>
+            </View>
+          </View>
+        ) : null}
+
+        <Text style={styles.sectionTitle}>Modèles rapides</Text>
+        <View style={styles.templateRow}>
+          {SPONSOR_MESSAGE_TEMPLATES.map((tpl) => (
+            <TouchableOpacity
+              key={tpl.id}
+              style={styles.templateChip}
+              onPress={() => showTemplate(tpl.text)}
+            >
+              <Text style={styles.templateLabel}>{tpl.label}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        <View style={styles.segmentRow}>
+          <TouchableOpacity
+            style={[styles.segment, segment === 'messages' && styles.segmentOn]}
+            onPress={() => setSegment('messages')}
+          >
+            <Text style={[styles.segmentText, segment === 'messages' && styles.segmentTextOn]}>
+              Messages ({threads.length})
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.segment, segment === 'prospects' && styles.segmentOn]}
+            onPress={() => setSegment('prospects')}
+          >
+            <Text style={[styles.segmentText, segment === 'prospects' && styles.segmentTextOn]}>
+              Prospects ({prospects.length})
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {isLoading ? (
+          <ActivityIndicator color={SPONSOR_THEME.primary} style={styles.loader} />
+        ) : !profile ? (
+          <Text style={styles.empty}>Connectez-vous pour accéder au réseau.</Text>
+        ) : segment === 'prospects' ? (
+          prospects.length === 0 ? (
+            <Text style={styles.empty}>Aucun prospect pour le moment.</Text>
+          ) : (
+            prospects.map((p) => (
+              <View key={p.id} style={styles.prospectCard}>
+                <View style={styles.prospectScore}>
+                  <Text style={styles.prospectScoreText}>{p.match_score}</Text>
+                </View>
+                <View style={styles.prospectBody}>
+                  <Text style={styles.prospectName}>{p.name}</Text>
+                  <Text style={styles.prospectMeta}>
+                    {p.city} · {p.category}
+                  </Text>
+                  <Text style={styles.prospectReason}>{p.reason}</Text>
+                </View>
+                <TouchableOpacity
+                  style={styles.contactBtn}
+                  onPress={() =>
+                    showTemplate(
+                      SPONSOR_MESSAGE_TEMPLATES[0].text.replace('votre club', p.name)
+                    )
+                  }
+                >
+                  <Text style={styles.contactBtnText}>Contacter</Text>
+                </TouchableOpacity>
+              </View>
+            ))
+          )
+        ) : threads.length === 0 ? (
+          <View style={styles.emptyCard}>
+            <Text style={styles.emptyTitle}>Aucun message</Text>
+            <Text style={styles.empty}>
+              Publiez une offre ou consultez les prospects pour démarrer une conversation.
+            </Text>
+          </View>
+        ) : (
+          threads.map((item) => (
+            <TouchableOpacity
+              key={item.id}
+              style={styles.thread}
+              onPress={() => setActiveThreadId(item.id)}
+            >
+              <View style={styles.avatar}>
+                <Text style={styles.avatarText}>
+                  {item.participant_name.charAt(0).toUpperCase()}
+                </Text>
+              </View>
+              <View style={styles.threadBody}>
+                <Text style={styles.threadName}>{item.participant_name}</Text>
+                <Text style={styles.threadPreview} numberOfLines={1}>
+                  {item.last_message || 'Nouvelle conversation'}
+                </Text>
+              </View>
+              {item.unread ? <View style={styles.unreadDot} /> : null}
+            </TouchableOpacity>
+          ))
+        )}
+      </ScrollView>
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: SPONSOR_THEME.background },
+  scrollContent: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.lg,
+    paddingBottom: TAB_BAR_CONTENT_INSET + spacing.lg,
+  },
+  statsRow: { flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.lg },
+  statBox: {
+    flex: 1,
+    backgroundColor: SPONSOR_THEME.surface,
+    borderRadius: radius.md,
+    padding: spacing.md,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: SPONSOR_THEME.borderSubtle,
+  },
+  statValue: { fontSize: 18, fontWeight: '900', color: SPONSOR_THEME.text },
+  statLabel: { fontSize: 9, fontWeight: '700', color: SPONSOR_THEME.textMuted, marginTop: 4 },
+  sectionTitle: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: SPONSOR_THEME.sectionLabel,
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+    marginBottom: spacing.sm,
+  },
+  templateRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginBottom: spacing.lg },
+  templateChip: {
+    backgroundColor: SPONSOR_THEME.primarySoft,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: SPONSOR_THEME.primaryBorder,
+  },
+  templateLabel: { fontSize: 11, fontWeight: '800', color: SPONSOR_THEME.heroSubtext },
+  segmentRow: { flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.md },
+  segment: {
+    flex: 1,
+    paddingVertical: spacing.sm,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: SPONSOR_THEME.borderSubtle,
+    backgroundColor: SPONSOR_THEME.surface,
+    alignItems: 'center',
+  },
+  segmentOn: { backgroundColor: SPONSOR_THEME.primary, borderColor: SPONSOR_THEME.primary },
+  segmentText: { fontSize: 12, fontWeight: '700', color: SPONSOR_THEME.textMuted },
+  segmentTextOn: { color: SPONSOR_THEME.onPrimary },
+  loader: { marginTop: spacing.xl },
+  emptyCard: {
+    padding: spacing.xl,
+    backgroundColor: SPONSOR_THEME.surface,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: SPONSOR_THEME.borderSubtle,
+    alignItems: 'center',
+  },
+  emptyTitle: { fontSize: 16, fontWeight: '900', color: SPONSOR_THEME.text, marginBottom: spacing.sm },
+  empty: {
+    color: SPONSOR_THEME.textMuted,
+    textAlign: 'center',
+    fontSize: 14,
+    lineHeight: 22,
+  },
+  prospectCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    backgroundColor: SPONSOR_THEME.surface,
+    borderRadius: radius.lg,
+    padding: spacing.md,
+    marginBottom: spacing.sm,
+    borderWidth: 1,
+    borderColor: SPONSOR_THEME.borderSubtle,
+  },
+  prospectScore: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: SPONSOR_THEME.primarySoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  prospectScoreText: { fontSize: 13, fontWeight: '900', color: SPONSOR_THEME.primary },
+  prospectBody: { flex: 1 },
+  prospectName: { fontSize: 14, fontWeight: '800', color: SPONSOR_THEME.text },
+  prospectMeta: { fontSize: 11, color: SPONSOR_THEME.textMuted, marginTop: 2 },
+  prospectReason: { fontSize: 11, color: SPONSOR_THEME.textSecondary, marginTop: 4 },
+  contactBtn: {
+    backgroundColor: SPONSOR_THEME.primary,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 6,
+    borderRadius: radius.md,
+  },
+  contactBtnText: { fontSize: 10, fontWeight: '800', color: SPONSOR_THEME.onPrimary },
+  thread: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: SPONSOR_THEME.surface,
+    borderRadius: radius.lg,
+    padding: spacing.md,
+    marginBottom: spacing.sm,
+    borderWidth: 1,
+    borderColor: SPONSOR_THEME.borderSubtle,
+  },
+  avatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: SPONSOR_THEME.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: spacing.md,
+  },
+  avatarText: { fontSize: 18, fontWeight: '900', color: SPONSOR_THEME.onPrimary },
+  threadBody: { flex: 1 },
+  threadName: { fontSize: 15, fontWeight: '700', color: SPONSOR_THEME.text },
+  threadPreview: { fontSize: 13, color: SPONSOR_THEME.textSecondary, marginTop: 4 },
+  unreadDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: SPONSOR_THEME.primary,
+    marginLeft: spacing.sm,
+  },
+});

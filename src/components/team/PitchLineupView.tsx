@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import type { EventLineupSlot } from '../../models/TeamEvent';
 import { assignStartersToPitch } from '../../utils/formationPitch';
-import { colors, radius, spacing } from '../../theme/designTokens';
+import { radius, spacing } from '../../theme/designTokens';
+import { useAppTheme } from '../../context/ProductLineContext';
+import type { AppColors } from '../../theme/universeTheme';
 
 interface PitchLineupViewProps {
   formation: string;
@@ -13,6 +15,8 @@ export const PitchLineupView: React.FC<PitchLineupViewProps> = ({
   formation,
   starters,
 }) => {
+  const { colors: c } = useAppTheme();
+  const styles = useMemo(() => createStyles(c), [c]);
   const placements = assignStartersToPitch(starters, formation);
   const lineIndices = [...new Set(placements.map((p) => p.lineIndex))].sort((a, b) => b - a);
 
@@ -49,7 +53,8 @@ export const PitchLineupView: React.FC<PitchLineupViewProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+function createStyles(c: AppColors) {
+  return StyleSheet.create({
   wrap: { marginVertical: spacing.md },
   pitch: {
     aspectRatio: 0.68,
@@ -120,9 +125,10 @@ const styles = StyleSheet.create({
   },
   caption: {
     fontSize: 11,
-    color: colors.textMuted,
+    color: c.textMuted,
     textAlign: 'center',
     marginTop: spacing.sm,
     fontWeight: '600',
   },
-});
+  });
+}

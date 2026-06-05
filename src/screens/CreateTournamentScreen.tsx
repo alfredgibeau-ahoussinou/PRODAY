@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -13,7 +13,9 @@ import type { User } from '../models/User';
 import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { tournamentService } from '../services/tournament.service';
 import { parseFrenchDate } from '../utils/parseFrenchDate';
-import { colors, spacing, radius } from '../theme/designTokens';
+import { spacing, radius } from '../theme/designTokens';
+import { useThemedScreen } from '../hooks/useThemedScreen';
+import type { AppColors } from '../theme/universeTheme';
 
 interface CreateTournamentScreenProps {
   profile: User;
@@ -26,6 +28,8 @@ export const CreateTournamentScreen: React.FC<CreateTournamentScreenProps> = ({
   onBack,
   onCreated,
 }) => {
+  const { colors: c, rootStyle } = useThemedScreen();
+  const styles = useMemo(() => createStyles(c), [c]);
   const [name, setName] = useState('');
   const [city, setCity] = useState(profile.city ?? '');
   const [dateStart, setDateStart] = useState('');
@@ -50,7 +54,7 @@ export const CreateTournamentScreen: React.FC<CreateTournamentScreenProps> = ({
     }
     const categories = categoriesText
       .split(',')
-      .map((c) => c.trim())
+      .map((cat) => cat.trim())
       .filter(Boolean);
     if (categories.length === 0) {
       Alert.alert('Catégories', 'Indiquez au moins une catégorie.');
@@ -79,41 +83,41 @@ export const CreateTournamentScreen: React.FC<CreateTournamentScreenProps> = ({
   };
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, rootStyle]}>
       <ScreenHeader title="Créer un tournoi" onBack={onBack} centered />
       <ScrollView contentContainerStyle={styles.content}>
         <TextInput
           style={styles.input}
           placeholder="Nom du tournoi *"
-          placeholderTextColor={colors.textMuted}
+          placeholderTextColor={c.textMuted}
           value={name}
           onChangeText={setName}
         />
         <TextInput
           style={styles.input}
           placeholder="Ville *"
-          placeholderTextColor={colors.textMuted}
+          placeholderTextColor={c.textMuted}
           value={city}
           onChangeText={setCity}
         />
         <TextInput
           style={styles.input}
           placeholder="Date début (jj/mm/aaaa) *"
-          placeholderTextColor={colors.textMuted}
+          placeholderTextColor={c.textMuted}
           value={dateStart}
           onChangeText={setDateStart}
         />
         <TextInput
           style={styles.input}
           placeholder="Date fin (jj/mm/aaaa)"
-          placeholderTextColor={colors.textMuted}
+          placeholderTextColor={c.textMuted}
           value={dateEnd}
           onChangeText={setDateEnd}
         />
         <TextInput
           style={styles.input}
           placeholder="Catégories (U15, Seniors…)"
-          placeholderTextColor={colors.textMuted}
+          placeholderTextColor={c.textMuted}
           value={categoriesText}
           onChangeText={setCategoriesText}
         />
@@ -123,7 +127,7 @@ export const CreateTournamentScreen: React.FC<CreateTournamentScreenProps> = ({
           disabled={submitting}
         >
           {submitting ? (
-            <ActivityIndicator color="#FFF" />
+            <ActivityIndicator color={c.brandInverse} />
           ) : (
             <Text style={styles.primaryText}>Publier le tournoi</Text>
           )}
@@ -133,25 +137,27 @@ export const CreateTournamentScreen: React.FC<CreateTournamentScreenProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.background },
-  content: { padding: spacing.lg, paddingBottom: spacing.xxl },
-  input: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.md,
-    padding: spacing.md,
-    color: colors.text,
-    marginBottom: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    fontSize: 15,
-  },
-  primary: {
-    backgroundColor: colors.brand,
-    borderRadius: radius.md,
-    padding: spacing.lg,
-    alignItems: 'center',
-    marginTop: spacing.md,
-  },
-  primaryText: { color: '#FFFFFF', fontWeight: '700' },
-});
+function createStyles(c: AppColors) {
+  return StyleSheet.create({
+    root: { flex: 1 },
+    content: { padding: spacing.lg, paddingBottom: spacing.xxl },
+    input: {
+      backgroundColor: c.surface,
+      borderRadius: radius.md,
+      padding: spacing.md,
+      color: c.text,
+      marginBottom: spacing.md,
+      borderWidth: 1,
+      borderColor: c.border,
+      fontSize: 15,
+    },
+    primary: {
+      backgroundColor: c.brand,
+      borderRadius: radius.md,
+      padding: spacing.lg,
+      alignItems: 'center',
+      marginTop: spacing.md,
+    },
+    primaryText: { color: c.brandInverse, fontWeight: '700' },
+  });
+}

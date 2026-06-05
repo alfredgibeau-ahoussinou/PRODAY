@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -11,7 +11,9 @@ import {
 } from 'react-native';
 import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { Icon, type IconName } from '../components/ui/Icon';
-import { colors, spacing, radius, shadows } from '../theme/designTokens';
+import { spacing, radius, shadows } from '../theme/designTokens';
+import { useThemedScreen } from '../hooks/useThemedScreen';
+import type { AppColors } from '../theme/universeTheme';
 import { friendlyMatchesService } from '../services/friendlyMatches.service';
 import { useAuth } from '../context/AuthContext';
 import { parseFrenchDate } from '../utils/parseFrenchDate';
@@ -34,6 +36,8 @@ export const ProposeMatchScreen: React.FC<ProposeMatchScreenProps> = ({
 }) => {
   const [level, setLevel] = useState<(typeof LEVELS)[number]>('Loisir');
   const { profile } = useAuth();
+  const { colors: c, rootStyle } = useThemedScreen();
+  const styles = useMemo(() => createStyles(c), [c]);
   const [clubName, setClubName] = useState(profile?.display_name ?? '');
   const [opponent, setOpponent] = useState('');
   const [dateStr, setDateStr] = useState('');
@@ -86,17 +90,21 @@ export const ProposeMatchScreen: React.FC<ProposeMatchScreenProps> = ({
   };
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, rootStyle]}>
       <ScreenHeader title="Proposer un match" onBack={onBack} />
       <ScrollView contentContainerStyle={styles.form}>
-        <Field label="Votre club" value={clubName} onChangeText={setClubName} />
+        <Field styles={styles} colors={c} label="Votre club" value={clubName} onChangeText={setClubName} />
         <Field
+          styles={styles}
+          colors={c}
           label="Adversaire"
           placeholder="Nom du club (optionnel)"
           value={opponent}
           onChangeText={setOpponent}
         />
         <Field
+          styles={styles}
+          colors={c}
           label="Date souhaitée"
           placeholder="jj/mm/aaaa"
           value={dateStr}
@@ -104,6 +112,8 @@ export const ProposeMatchScreen: React.FC<ProposeMatchScreenProps> = ({
           icon="calendar"
         />
         <Field
+          styles={styles}
+          colors={c}
           label="Heure"
           placeholder="14:00"
           value={timeStr}
@@ -111,6 +121,8 @@ export const ProposeMatchScreen: React.FC<ProposeMatchScreenProps> = ({
           icon="time"
         />
         <Field
+          styles={styles}
+          colors={c}
           label="Lieu / ville"
           placeholder="Stade, ville…"
           value={city}
@@ -137,7 +149,7 @@ export const ProposeMatchScreen: React.FC<ProposeMatchScreenProps> = ({
         <TextInput
           style={styles.textArea}
           placeholder="Infos complémentaires…"
-          placeholderTextColor={colors.textMuted}
+          placeholderTextColor={c.textMuted}
           multiline
           numberOfLines={4}
           value={message}
@@ -151,7 +163,7 @@ export const ProposeMatchScreen: React.FC<ProposeMatchScreenProps> = ({
         disabled={submitting}
       >
         {submitting ? (
-          <ActivityIndicator color="#FFF" />
+          <ActivityIndicator color={c.brandInverse} />
         ) : (
           <Text style={styles.submitText}>Envoyer la demande</Text>
         )}
@@ -161,12 +173,14 @@ export const ProposeMatchScreen: React.FC<ProposeMatchScreenProps> = ({
 };
 
 const Field: React.FC<{
+  styles: ReturnType<typeof createStyles>;
+  colors: AppColors;
   label: string;
   value?: string;
   placeholder?: string;
   icon?: IconName;
   onChangeText?: (t: string) => void;
-}> = ({ label, value, placeholder, icon, onChangeText }) => (
+}> = ({ styles, colors, label, value, placeholder, icon, onChangeText }) => (
   <View style={styles.field}>
     <Text style={styles.fieldLabel}>{label}</Text>
     <View style={styles.fieldInput}>
@@ -182,64 +196,66 @@ const Field: React.FC<{
   </View>
 );
 
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.background },
+function createStyles(c: AppColors) {
+  return StyleSheet.create({
+  root: { flex: 1 },
   form: { padding: spacing.lg, paddingBottom: 100 },
   field: { marginBottom: spacing.lg },
   fieldLabel: {
     fontSize: 13,
     fontWeight: '600',
-    color: colors.textSecondary,
+    color: c.textSecondary,
     marginBottom: spacing.sm,
   },
   fieldInput: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surface,
+    backgroundColor: c.surface,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: c.border,
     paddingHorizontal: spacing.md,
   },
-  input: { flex: 1, paddingVertical: spacing.md, fontSize: 15, color: colors.text },
+  input: { flex: 1, paddingVertical: spacing.md, fontSize: 15, color: c.text },
   label: {
     fontSize: 13,
     fontWeight: '600',
-    color: colors.textSecondary,
+    color: c.textSecondary,
     marginBottom: spacing.sm,
   },
   segment: {
     flexDirection: 'row',
-    backgroundColor: colors.surfaceMuted,
+    backgroundColor: c.surfaceMuted,
     borderRadius: radius.md,
     padding: 4,
     marginBottom: spacing.lg,
   },
   segBtn: { flex: 1, paddingVertical: spacing.sm, alignItems: 'center', borderRadius: radius.sm },
-  segBtnActive: { backgroundColor: colors.surface },
-  segText: { fontSize: 13, fontWeight: '600', color: colors.textSecondary },
-  segTextActive: { color: colors.brand },
+  segBtnActive: { backgroundColor: c.surface },
+  segText: { fontSize: 13, fontWeight: '600', color: c.textSecondary },
+  segTextActive: { color: c.brand },
   textArea: {
-    backgroundColor: colors.surface,
+    backgroundColor: c.surface,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: c.border,
     padding: spacing.md,
     minHeight: 100,
     textAlignVertical: 'top',
     fontSize: 15,
-    color: colors.text,
+    color: c.text,
   },
   submit: {
     position: 'absolute',
     left: spacing.lg,
     right: spacing.lg,
     bottom: spacing.md,
-    backgroundColor: colors.brand,
+    backgroundColor: c.brand,
     borderRadius: radius.md,
     paddingVertical: 16,
     alignItems: 'center',
   },
   submitDisabled: { opacity: 0.7 },
-  submitText: { color: '#FFF', fontWeight: '700', fontSize: 16 },
-});
+  submitText: { color: c.brandInverse, fontWeight: '700', fontSize: 16 },
+  });
+}

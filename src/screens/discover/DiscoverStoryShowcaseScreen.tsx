@@ -11,8 +11,10 @@ import Animated, {
 } from 'react-native-reanimated';
 import { ScreenHeader } from '../../components/ui/ScreenHeader';
 import { Icon } from '../../components/ui/Icon';
-import { colors, spacing, radius, shadows } from '../../theme/designTokens';
+import { spacing, radius, shadows } from '../../theme/designTokens';
 import { useShowcaseImages } from '../../hooks/useShowcaseImages';
+import { useThemedScreen } from '../../hooks/useThemedScreen';
+import type { AppColors } from '../../theme/universeTheme';
 
 const { height: H, width: W } = Dimensions.get('window');
 
@@ -24,13 +26,15 @@ type StoryCard = {
   key: string;
   title: string;
   subtitle: string;
-  image: any;
+  image: number;
   icon: Parameters<typeof Icon>[0]['name'];
 };
 
 export const DiscoverStoryShowcaseScreen: React.FC<DiscoverStoryShowcaseScreenProps> = ({
   onBack,
 }) => {
+  const { colors: c, rootStyle } = useThemedScreen();
+  const styles = useMemo(() => createStyles(c), [c]);
   const showcase = useShowcaseImages();
   const y = useSharedValue(0);
   const cardH = Math.min(520, H - 190);
@@ -77,7 +81,7 @@ export const DiscoverStoryShowcaseScreen: React.FC<DiscoverStoryShowcaseScreenPr
   });
 
   return (
-    <View style={styles.root}>
+    <View style={rootStyle}>
       <ScreenHeader title="Expérience" subtitle="Stories interactives" onBack={onBack} />
 
       <Animated.ScrollView
@@ -88,14 +92,16 @@ export const DiscoverStoryShowcaseScreen: React.FC<DiscoverStoryShowcaseScreenPr
         onScroll={onScroll}
         scrollEventThrottle={16}
       >
-        {cards.map((c, i) => (
+        {cards.map((card, i) => (
           <StoryCardView
-            key={c.key}
-            card={c}
+            key={card.key}
+            card={card}
             index={i}
             y={y}
             cardH={cardH}
             snap={snap}
+            styles={styles}
+            brandInverse={c.brandInverse}
           />
         ))}
         <View style={{ height: spacing.xl }} />
@@ -110,7 +116,9 @@ const StoryCardView: React.FC<{
   y: SharedValue<number>;
   cardH: number;
   snap: number;
-}> = ({ card, index, y, cardH, snap }) => {
+  styles: ReturnType<typeof createStyles>;
+  brandInverse: string;
+}> = ({ card, index, y, cardH, snap, styles, brandInverse }) => {
   const offset = index * snap;
 
   const wrapStyle = useAnimatedStyle(() => {
@@ -141,7 +149,7 @@ const StoryCardView: React.FC<{
         <View style={styles.overlay} />
         <View style={styles.headerRow}>
           <View style={styles.iconPill}>
-            <Icon name={card.icon} size={16} color={colors.brandInverse} />
+            <Icon name={card.icon} size={16} color={brandInverse} />
           </View>
           <Text style={styles.kicker}>PRODAY EXPERIENCE</Text>
         </View>
@@ -154,40 +162,40 @@ const StoryCardView: React.FC<{
   );
 };
 
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.background },
-  content: { padding: spacing.lg, paddingBottom: spacing.xxl },
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.xl,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: colors.border,
-    marginBottom: spacing.lg,
-  },
-  hero: { flex: 1, justifyContent: 'space-between' },
-  heroImg: { opacity: 0.9 },
-  heroMotion: { ...StyleSheet.absoluteFillObject },
-  overlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.34)' },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: spacing.lg,
-  },
-  iconPill: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(0,0,0,0.55)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
-  },
-  kicker: { fontSize: 10, fontWeight: '900', color: 'rgba(255,255,255,0.86)', letterSpacing: 2 },
-  copy: { padding: spacing.lg },
-  title: { fontSize: 24, fontWeight: '900', color: colors.brandInverse, letterSpacing: -0.5, maxWidth: W - 64 },
-  subtitle: { marginTop: spacing.sm, fontSize: 14, lineHeight: 21, color: 'rgba(255,255,255,0.84)', fontWeight: '600' },
-});
-
+function createStyles(c: AppColors) {
+  return StyleSheet.create({
+    content: { padding: spacing.lg, paddingBottom: spacing.xxl },
+    card: {
+      backgroundColor: c.surface,
+      borderRadius: radius.xl,
+      overflow: 'hidden',
+      borderWidth: 1,
+      borderColor: c.border,
+      marginBottom: spacing.lg,
+    },
+    hero: { flex: 1, justifyContent: 'space-between' },
+    heroImg: { opacity: 0.9 },
+    heroMotion: { ...StyleSheet.absoluteFillObject },
+    overlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.34)' },
+    headerRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: spacing.lg,
+    },
+    iconPill: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: 'rgba(0,0,0,0.55)',
+      borderWidth: 1,
+      borderColor: 'rgba(255,255,255,0.2)',
+    },
+    kicker: { fontSize: 10, fontWeight: '900', color: 'rgba(255,255,255,0.86)', letterSpacing: 2 },
+    copy: { padding: spacing.lg },
+    title: { fontSize: 24, fontWeight: '900', color: c.brandInverse, letterSpacing: -0.5, maxWidth: W - 64 },
+    subtitle: { marginTop: spacing.sm, fontSize: 14, lineHeight: 21, color: 'rgba(255,255,255,0.84)', fontWeight: '600' },
+  });
+}

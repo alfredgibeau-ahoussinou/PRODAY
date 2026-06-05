@@ -24,7 +24,9 @@ import {
   filterPlayers,
   type PlayerListFilters,
 } from '../utils/playerFilters';
-import { colors, spacing, radius } from '../theme/designTokens';
+import { spacing, radius } from '../theme/designTokens';
+import type { AppColors } from '../theme/universeTheme';
+import { useAppTheme } from '../context/ProductLineContext';
 
 type FilterPanel = 'poste' | 'categorie' | 'niveau' | 'ville' | 'age' | null;
 
@@ -42,7 +44,9 @@ export const PlayersListScreen: React.FC<PlayersListScreenProps> = ({
   const [panel, setPanel] = useState<FilterPanel>(null);
   const { profile } = useAuth();
   const { isFavorite, toggle } = useFavorites(profile?.uid);
+  const { colors: themeColors, productLine } = useAppTheme();
   const { users: rawUsers, loading } = useUsersByRole('player', query);
+  const listTitle = productLine === 'woman' ? 'Joueuses' : 'Joueurs';
 
   const users = useMemo(() => filterPlayers(rawUsers, filters), [rawUsers, filters]);
   const activeFilterCount = countActiveFilters(filters);
@@ -57,15 +61,15 @@ export const PlayersListScreen: React.FC<PlayersListScreenProps> = ({
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: themeColors.background }]}>
       <ScreenHeader
-        title="Joueurs"
+        title={listTitle}
         onBack={onBack}
         centered
         rightAction={
           activeFilterCount > 0 ? (
             <TouchableOpacity onPress={resetFilters} hitSlop={12}>
-              <Text style={styles.resetText}>Réinit.</Text>
+              <Text style={[styles.resetText, { color: themeColors.brand }]}>Réinit.</Text>
             </TouchableOpacity>
           ) : undefined
         }
@@ -81,29 +85,34 @@ export const PlayersListScreen: React.FC<PlayersListScreenProps> = ({
           label="Poste"
           active={panel === 'poste' || filters.position !== 'Tous'}
           onPress={() => togglePanel('poste')}
+          colors={themeColors}
         />
         <FilterChip
           label="Catégorie"
           active={panel === 'categorie' || filters.category !== 'Tous'}
           onPress={() => togglePanel('categorie')}
+          colors={themeColors}
         />
         <FilterChip
           label="Niveau"
           active={panel === 'niveau' || filters.level !== 'Tous'}
           onPress={() => togglePanel('niveau')}
+          colors={themeColors}
         />
         <FilterChip
           label="Ville"
           active={panel === 'ville' || Boolean(filters.city.trim())}
           onPress={() => togglePanel('ville')}
+          colors={themeColors}
         />
         <FilterChip
           label="Âge max"
           active={panel === 'age' || Boolean(filters.maxAge.trim())}
           onPress={() => togglePanel('age')}
+          colors={themeColors}
         />
         {activeFilterCount > 0 ? (
-          <View style={styles.badge}>
+          <View style={[styles.badge, { backgroundColor: themeColors.brand }]}>
             <Text style={styles.badgeText}>{activeFilterCount}</Text>
           </View>
         ) : null}
@@ -113,6 +122,7 @@ export const PlayersListScreen: React.FC<PlayersListScreenProps> = ({
         <OptionRow
           options={PLAYER_POSITIONS_FILTER}
           selected={filters.position}
+          colors={themeColors}
           onSelect={(position) =>
             setFilters((f) => ({
               ...f,
@@ -126,6 +136,7 @@ export const PlayersListScreen: React.FC<PlayersListScreenProps> = ({
         <OptionRow
           options={PLAYER_CATEGORIES_FILTER}
           selected={filters.category}
+          colors={themeColors}
           onSelect={(category) =>
             setFilters((f) => ({
               ...f,
@@ -139,6 +150,7 @@ export const PlayersListScreen: React.FC<PlayersListScreenProps> = ({
         <OptionRow
           options={PLAYER_LEVELS_FILTER}
           selected={filters.level}
+          colors={themeColors}
           onSelect={(level) =>
             setFilters((f) => ({
               ...f,
@@ -151,9 +163,16 @@ export const PlayersListScreen: React.FC<PlayersListScreenProps> = ({
       {panel === 'ville' ? (
         <View style={styles.cityRow}>
           <TextInput
-            style={styles.cityInput}
+            style={[
+              styles.cityInput,
+              {
+                backgroundColor: themeColors.surface,
+                borderColor: themeColors.border,
+                color: themeColors.text,
+              },
+            ]}
             placeholder="Ex. Paris, Lyon…"
-            placeholderTextColor={colors.textMuted}
+            placeholderTextColor={themeColors.textMuted}
             value={filters.city}
             onChangeText={(city) => setFilters((f) => ({ ...f, city }))}
             autoCapitalize="words"
@@ -164,9 +183,20 @@ export const PlayersListScreen: React.FC<PlayersListScreenProps> = ({
       {panel === 'age' ? (
         <View style={styles.cityRow}>
           <TextInput
-            style={styles.cityInput}
-            placeholder="Ex. 17 (joueurs ≤ cet âge)"
-            placeholderTextColor={colors.textMuted}
+            style={[
+              styles.cityInput,
+              {
+                backgroundColor: themeColors.surface,
+                borderColor: themeColors.border,
+                color: themeColors.text,
+              },
+            ]}
+            placeholder={
+              productLine === 'woman'
+                ? 'Ex. 17 (joueuses ≤ cet âge)'
+                : 'Ex. 17 (joueurs ≤ cet âge)'
+            }
+            placeholderTextColor={themeColors.textMuted}
             value={filters.maxAge}
             onChangeText={(maxAge) => setFilters((f) => ({ ...f, maxAge }))}
             keyboardType="number-pad"
@@ -175,7 +205,7 @@ export const PlayersListScreen: React.FC<PlayersListScreenProps> = ({
       ) : null}
 
       {loading ? (
-        <ActivityIndicator color={colors.brand} style={styles.loader} />
+        <ActivityIndicator color={themeColors.brand} style={styles.loader} />
       ) : (
         <FlatList
           data={users}
@@ -190,10 +220,14 @@ export const PlayersListScreen: React.FC<PlayersListScreenProps> = ({
             />
           )}
           ListEmptyComponent={
-            <Text style={styles.empty}>
+            <Text style={[styles.empty, { color: themeColors.textMuted }]}>
               {activeFilterCount > 0 || query.trim()
-                ? 'Aucun joueur ne correspond à vos critères.'
-                : 'Aucun joueur inscrit.'}
+                ? productLine === 'woman'
+                  ? 'Aucune joueuse ne correspond à vos critères.'
+                  : 'Aucun joueur ne correspond à vos critères.'
+                : productLine === 'woman'
+                  ? 'Aucune joueuse inscrite.'
+                  : 'Aucun joueur inscrit.'}
             </Text>
           }
         />
@@ -206,40 +240,62 @@ const FilterChip: React.FC<{
   label: string;
   active: boolean;
   onPress: () => void;
-}> = ({ label, active, onPress }) => (
+  colors: AppColors;
+}> = ({ label, active, onPress, colors: c }) => (
   <TouchableOpacity
-    style={[styles.chip, active && styles.chipActive]}
+    style={[
+      styles.chip,
+      {
+        backgroundColor: active ? c.brand : c.surface,
+        borderColor: active ? c.brand : c.border,
+      },
+    ]}
     onPress={onPress}
   >
-    <Text style={[styles.chipText, active && styles.chipTextActive]}>{label}</Text>
+    <Text style={[styles.chipText, { color: active ? c.brandInverse : c.textSecondary }]}>
+      {label}
+    </Text>
   </TouchableOpacity>
 );
 
 const OptionRow: React.FC<{
   options: readonly string[];
   selected: string;
+  colors: AppColors;
   onSelect: (value: string) => void;
-}> = ({ options, selected, onSelect }) => (
+}> = ({ options, selected, onSelect, colors: c }) => (
   <View style={styles.optionRow}>
-    {options.map((opt) => (
-      <TouchableOpacity
-        key={opt}
-        style={[styles.optionChip, selected === opt && styles.optionChipActive]}
-        onPress={() => onSelect(opt)}
-      >
-        <Text
-          style={[styles.optionText, selected === opt && styles.optionTextActive]}
+    {options.map((opt) => {
+      const isSelected = selected === opt;
+      return (
+        <TouchableOpacity
+          key={opt}
+          style={[
+            styles.optionChip,
+            {
+              borderColor: isSelected ? c.brand : c.border,
+              backgroundColor: isSelected ? c.accentSoft : c.surface,
+            },
+          ]}
+          onPress={() => onSelect(opt)}
         >
-          {opt}
-        </Text>
-      </TouchableOpacity>
-    ))}
+          <Text
+            style={[
+              styles.optionText,
+              { color: isSelected ? c.brand : c.textSecondary },
+            ]}
+          >
+            {opt}
+          </Text>
+        </TouchableOpacity>
+      );
+    })}
   </View>
 );
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
-  resetText: { fontSize: 12, fontWeight: '800', color: colors.accent },
+  container: { flex: 1 },
+  resetText: { fontSize: 12, fontWeight: '800' },
   chips: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -252,18 +308,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: radius.pill,
-    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: colors.border,
   },
-  chipActive: { backgroundColor: colors.ink, borderColor: colors.ink },
-  chipText: { color: colors.textSecondary, fontSize: 12, fontWeight: '700' },
-  chipTextActive: { color: colors.brandInverse },
+  chipText: { fontSize: 12, fontWeight: '700' },
   badge: {
     minWidth: 22,
     height: 22,
     borderRadius: 11,
-    backgroundColor: colors.accent,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 6,
@@ -281,26 +332,16 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: radius.pill,
     borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
   },
-  optionChipActive: {
-    borderColor: colors.accent,
-    backgroundColor: colors.accentSoft,
-  },
-  optionText: { fontSize: 11, fontWeight: '700', color: colors.textSecondary },
-  optionTextActive: { color: colors.accent },
+  optionText: { fontSize: 11, fontWeight: '700' },
   cityRow: { paddingHorizontal: spacing.lg, marginBottom: spacing.md },
   cityInput: {
-    backgroundColor: colors.surface,
     borderRadius: radius.md,
     padding: spacing.md,
     borderWidth: 1,
-    borderColor: colors.border,
     fontSize: 15,
-    color: colors.text,
   },
   list: { paddingHorizontal: spacing.lg, paddingBottom: spacing.xxl },
-  empty: { textAlign: 'center', color: colors.textMuted, marginTop: 40 },
+  empty: { textAlign: 'center', marginTop: 40 },
   loader: { marginTop: 40 },
 });

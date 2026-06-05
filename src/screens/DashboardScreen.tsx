@@ -26,7 +26,7 @@ import { ArenaScreen } from './ArenaScreen';
 import { SponsorsScreen } from './SponsorsScreen';
 import { TeamManagementScreen } from './TeamManagementScreen';
 import { useTabNavigation } from '../context/TabNavigationContext';
-import { useAppTheme } from '../context/ProductLineContext';
+import { useThemedScreen } from '../hooks/useThemedScreen';
 import { useTabNavigationActions } from '../hooks/useTabNavigationActions';
 import { openSeasonCalendarItem } from '../utils/navigationDeepLink';
 import { useUnreadMessageCount } from '../hooks/useUnreadMessages';
@@ -35,7 +35,7 @@ import { useOrganizerReminders } from '../hooks/useOrganizerReminders';
 import { teamEventsService } from '../services/teamEvents.service';
 import { TAB_BAR_CONTENT_INSET } from '../components/navigation/BottomTabBar';
 import { PushScreenTransition } from '../components/motion';
-import { colors, spacing, radius } from '../theme/designTokens';
+import { spacing, radius } from '../theme/designTokens';
 import {
   canAccessSponsorsModule,
   getDashboardFocusTabLabels,
@@ -44,6 +44,7 @@ import {
   getMercatoTabLabel,
   getVisibleMainTabs,
 } from '../content/poleExperience';
+import { canPublishRecruitmentPost } from '../utils/roleCapabilities';
 import { HomeQuickStrip, type HomeQuickItem } from '../components/home/HomeQuickStrip';
 import type { SeasonCalendarItem } from '../utils/seasonCalendar';
 
@@ -54,7 +55,7 @@ interface DashboardScreenProps {
 }
 
 export const DashboardScreen: React.FC<DashboardScreenProps> = ({ profile }) => {
-  const { colors: themeColors, productLine } = useAppTheme();
+  const { colors: themeColors, productLine, rootStyle } = useThemedScreen();
   const layoutKind = getDashboardLayoutKind(productLine, profile.role);
   const isAmateurPlayer = layoutKind === 'amateur_player';
   const isProLayout = layoutKind === 'pro';
@@ -97,7 +98,14 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ profile }) => 
     setRemindingId(eventId);
     try {
       const n = await teamEventsService.sendReminders(eventId);
-      Alert.alert('Relance', n > 0 ? `${n} joueur(s) relancé(s).` : 'Aucune réponse en attente.');
+      Alert.alert(
+        'Relance',
+        n > 0
+          ? productLine === 'woman'
+            ? `${n} joueuse${n > 1 ? 's' : ''} relancée${n > 1 ? 's' : ''}.`
+            : `${n} joueur${n > 1 ? 's' : ''} relancé${n > 1 ? 's' : ''}.`
+          : 'Aucune réponse en attente.'
+      );
       refreshReminders();
     } catch (e) {
       Alert.alert('Erreur', e instanceof Error ? e.message : 'Relance impossible.');
@@ -107,7 +115,13 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ profile }) => 
   };
 
   const goMatchs = () => nav.openMatchs();
-  const goRecruitment = () => nav.setActiveTab('recrutement');
+  const goRecruitment = () => {
+    if (canPublishRecruitmentPost(profile.role)) {
+      nav.openMercato('create_post');
+    } else {
+      nav.setActiveTab('recrutement');
+    }
+  };
   const goMessages = () => nav.setActiveTab('messages');
   const goHealth = () => nav.setActiveTab('sante');
   const goCarpool = () => nav.setActiveTab('covoiturage');
@@ -192,9 +206,9 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ profile }) => 
   };
 
   return (
-    <View style={[styles.root, { backgroundColor: themeColors.background }]}>
+    <View style={[styles.root, rootStyle]}>
       <ScrollView
-        style={[styles.container, { backgroundColor: themeColors.background }]}
+        style={[styles.container, rootStyle]}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
         refreshControl={
@@ -259,15 +273,25 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ profile }) => 
 
         {isProLayout && pendingVerify ? (
           <TouchableOpacity
-            style={[styles.alertCard, isProLayout && styles.alertCardPro]}
+            style={[
+              styles.alertCard,
+              {
+                backgroundColor: themeColors.warningBg,
+                borderColor: themeColors.warning,
+              },
+            ]}
             onPress={goProfile}
           >
-            <Icon name="warning" size={22} color={colors.warning} />
+            <Icon name="warning" size={22} color={themeColors.warning} />
             <View style={styles.alertBody}>
-              <Text style={styles.alertTitle}>Vérification en cours</Text>
-              <Text style={styles.alertSub}>Complétez votre dossier pour la messagerie.</Text>
+              <Text style={[styles.alertTitle, { color: themeColors.text }]}>
+                Vérification en cours
+              </Text>
+              <Text style={[styles.alertSub, { color: themeColors.textSecondary }]}>
+                Complétez votre dossier pour la messagerie.
+              </Text>
             </View>
-            <Icon name="chevron-forward" size={20} color={colors.warning} />
+            <Icon name="chevron-forward" size={20} color={themeColors.warning} />
           </TouchableOpacity>
         ) : null}
 
@@ -289,6 +313,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ profile }) => 
               openMatches={data.openMatches}
               onRecruitment={goRecruitment}
               onDetections={() => nav.openMercato('detections')}
+              onMercatoStages={() => nav.openMercato('stages')}
               onMatches={goMatchs}
               onApplications={() => nav.openProfile('applications')}
               onHealth={goHealth}
@@ -340,18 +365,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
-    backgroundColor: colors.surfaceMuted,
     borderRadius: radius.md,
     padding: spacing.md,
     marginBottom: spacing.lg,
     borderWidth: 1,
-    borderColor: colors.border,
-  },
-  alertCardPro: {
-    backgroundColor: '#FFFBEB',
-    borderColor: '#FDE68A',
   },
   alertBody: { flex: 1 },
-  alertTitle: { fontWeight: '800', color: colors.text, fontSize: 14 },
-  alertSub: { fontSize: 12, color: colors.textSecondary, marginTop: 2 },
+  alertTitle: { fontWeight: '800', fontSize: 14 },
+  alertSub: { fontSize: 12, marginTop: 2 },
 });

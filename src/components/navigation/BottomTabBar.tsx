@@ -12,9 +12,20 @@ import { PressableSpring } from '../discover/PressableSpring';
 import { Icon, type IconName } from '../ui/Icon';
 import { motion } from '../../theme/motion';
 import { useAppTheme } from '../../context/ProductLineContext';
-import { useAuth } from '../../context/AuthContext';
+import { useSessionProfile } from '../../hooks/useSessionProfile';
 import { getTabShortLabel, getVisibleMainTabs } from '../../content/poleExperience';
-import { colors as defaultColors, spacing, radius, shadows } from '../../theme/designTokens';
+import {
+  getPhysioTabIcon,
+  isMedicalPractitionerRole,
+  MEDICAL_THEME,
+} from '../../content/medicalExperience';
+import {
+  getSponsorTabIcon,
+  isSponsorRole,
+  SPONSOR_THEME,
+} from '../../content/sponsorExperience';
+import { spacing, radius, shadows } from '../../theme/designTokens';
+import type { AppColors } from '../../theme/universeTheme';
 
 export { TAB_BAR_CONTENT_INSET } from '../../navigation/tabBarLayout';
 
@@ -60,18 +71,20 @@ export const BottomTabBar: React.FC<BottomTabBarProps> = ({
   unreadCount = 0,
 }) => {
   const { colors, isWoman, productLine } = useAppTheme();
-  const { profile } = useAuth();
+  const sessionProfile = useSessionProfile();
   const insets = useSafeAreaInsets();
   const [trackW, setTrackW] = useState(0);
   const visibleTabIds = useMemo(
-    () => getVisibleMainTabs(productLine, profile?.role),
-    [productLine, profile?.role]
+    () => getVisibleMainTabs(productLine, sessionProfile?.role),
+    [productLine, sessionProfile?.role]
   );
   const tabItems = useMemo(
     () => MAIN_TAB_ITEMS.filter((t) => visibleTabIds.includes(t.id)),
     [visibleTabIds]
   );
-  const role = profile?.role;
+  const role = sessionProfile?.role;
+  const isPhysio = isMedicalPractitionerRole(role);
+  const isSponsor = isSponsorRole(role);
   const tabW = trackW > 0 ? trackW / tabItems.length : 0;
   const activeIndex = tabItems.findIndex((t) => t.id === activeTab);
   const pillX = useSharedValue(0);
@@ -91,58 +104,87 @@ export const BottomTabBar: React.FC<BottomTabBarProps> = ({
     setTrackW(e.nativeEvent.layout.width);
   };
 
+  const dockBg = isSponsor ? SPONSOR_THEME.surface : colors.surface;
+  const dockBorder = isSponsor ? SPONSOR_THEME.border : colors.border;
+  const rootBg = isSponsor ? SPONSOR_THEME.background : colors.background;
+  const staticStyles = useMemo(() => createTabBarStyles(colors), [colors]);
+
   return (
     <View
       style={[
-        styles.root,
+        staticStyles.root,
         {
           paddingBottom: Math.max(insets.bottom, spacing.sm),
-          backgroundColor: colors.background,
+          backgroundColor: rootBg,
         },
       ]}
     >
-      <View style={styles.dockOuter}>
+      <View style={staticStyles.dockOuter}>
         <View
           style={[
-            styles.dock,
+            staticStyles.dock,
             shadows.soft,
-            { backgroundColor: colors.surface, borderColor: colors.border },
+            { backgroundColor: dockBg, borderColor: dockBorder },
           ]}
           onLayout={onTrackLayout}
         >
           {tabW > 0 ? (
             <Animated.View
               style={[
-                styles.activePill,
+                staticStyles.activePill,
                 pillStyle,
-                isWoman && {
-                  backgroundColor: colors.accentSoft,
-                  borderColor: colors.accentMuted,
-                },
+                isPhysio
+                  ? {
+                      backgroundColor: MEDICAL_THEME.primarySoft,
+                      borderColor: MEDICAL_THEME.primaryBorder,
+                    }
+                  : isSponsor
+                    ? {
+                        backgroundColor: SPONSOR_THEME.primarySoft,
+                        borderColor: SPONSOR_THEME.primaryBorder,
+                      }
+                    : isWoman && {
+                        backgroundColor: colors.accentSoft,
+                        borderColor: colors.accentMuted,
+                      },
               ]}
             />
           ) : null}
 
           {tabItems.map((tab) => {
             const active = tab.id === activeTab;
-            const icon = TAB_ICONS[tab.id];
+            const icon = isPhysio
+              ? getPhysioTabIcon(tab.id)
+              : isSponsor
+                ? getSponsorTabIcon(tab.id)
+                : TAB_ICONS[tab.id];
             const badge = tab.id === 'messages' ? unreadCount : 0;
             const label = getTabShortLabel(tab.id, productLine, role) || TAB_SHORT_LABELS[tab.id];
             const tabOn = active;
-            const accentInk = isWoman ? colors.accent : colors.ink;
-            const iconColor = tabOn ? accentInk : colors.textMuted;
+            const accentInk = isPhysio
+              ? MEDICAL_THEME.primary
+              : isSponsor
+                ? SPONSOR_THEME.primary
+                : isWoman
+                  ? colors.accent
+                  : colors.ink;
+            const iconColor = tabOn
+              ? accentInk
+              : isSponsor
+                ? SPONSOR_THEME.textMuted
+                : colors.textMuted;
 
             return (
               <PressableSpring
                 key={tab.id}
-                style={styles.tab}
+                style={staticStyles.tab}
                 onPress={() => onTabPress(tab.id)}
                 scaleTo={0.96}
                 accessibilityRole="tab"
                 accessibilityState={{ selected: active }}
-                accessibilityLabel={tab.label}
+                accessibilityLabel={label}
               >
-                <View style={styles.iconRow}>
+                <View style={staticStyles.iconRow}>
                   <Icon
                     name={icon}
                     size={20}
@@ -150,8 +192,8 @@ export const BottomTabBar: React.FC<BottomTabBarProps> = ({
                     variant={tabOn ? 'filled' : 'outline'}
                   />
                   {badge > 0 ? (
-                    <View style={styles.badge}>
-                      <Text style={styles.badgeText}>
+                    <View style={staticStyles.badge}>
+                      <Text style={staticStyles.badgeText}>
                         {badge > 99 ? '99+' : badge > 9 ? '9+' : badge}
                       </Text>
                     </View>
@@ -159,7 +201,7 @@ export const BottomTabBar: React.FC<BottomTabBarProps> = ({
                 </View>
                 <Text
                   style={[
-                    styles.label,
+                    staticStyles.label,
                     {
                       fontSize:
                         tabItems.length > 5 ? 9 : tabItems.length > 4 ? 9 : 10,
@@ -179,79 +221,74 @@ export const BottomTabBar: React.FC<BottomTabBarProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  root: {
-    paddingTop: spacing.sm,
-    paddingHorizontal: spacing.lg,
-    backgroundColor: defaultColors.background,
-  },
-  dockOuter: {
-    width: '100%',
-  },
-  dock: {
-    flexDirection: 'row',
-    alignItems: 'stretch',
-    minHeight: 52,
-    padding: DOCK_PAD,
-    backgroundColor: defaultColors.surface,
-    borderRadius: radius.xl,
-    borderWidth: 1,
-    borderColor: defaultColors.border,
-    position: 'relative',
-    overflow: 'hidden',
-  },
-  activePill: {
-    position: 'absolute',
-    top: DOCK_PAD,
-    left: 0,
-    height: 52 - DOCK_PAD * 2,
-    backgroundColor: defaultColors.surfaceMuted,
-    borderRadius: radius.lg,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: defaultColors.border,
-  },
-  tab: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: spacing.xs,
-    gap: 2,
-    zIndex: 1,
-  },
-  iconRow: {
-    width: 26,
-    height: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  badge: {
-    position: 'absolute',
-    top: -3,
-    right: -8,
-    backgroundColor: defaultColors.ink,
-    borderRadius: 9,
-    minWidth: 17,
-    height: 17,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 4,
-    borderWidth: 2,
-    borderColor: defaultColors.surface,
-  },
-  badgeText: {
-    color: defaultColors.brandInverse,
-    fontSize: 9,
-    fontWeight: '800',
-    lineHeight: 11,
-  },
-  label: {
-    fontSize: 10,
-    fontWeight: '600',
-    color: defaultColors.textMuted,
-    letterSpacing: 0.1,
-  },
-  labelActive: {
-    color: defaultColors.ink,
-    fontWeight: '800',
-  },
-});
+function createTabBarStyles(c: AppColors) {
+  return StyleSheet.create({
+    root: {
+      paddingTop: spacing.sm,
+      paddingHorizontal: spacing.lg,
+    },
+    dockOuter: {
+      width: '100%',
+    },
+    dock: {
+      flexDirection: 'row',
+      alignItems: 'stretch',
+      minHeight: 52,
+      padding: DOCK_PAD,
+      borderRadius: radius.xl,
+      borderWidth: 1,
+      position: 'relative',
+      overflow: 'hidden',
+    },
+    activePill: {
+      position: 'absolute',
+      top: DOCK_PAD,
+      left: 0,
+      height: 52 - DOCK_PAD * 2,
+      backgroundColor: c.surfaceMuted,
+      borderRadius: radius.lg,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: c.border,
+    },
+    tab: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: spacing.xs,
+      gap: 2,
+      zIndex: 1,
+    },
+    iconRow: {
+      width: 26,
+      height: 24,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    badge: {
+      position: 'absolute',
+      top: -3,
+      right: -8,
+      backgroundColor: c.ink,
+      borderRadius: 9,
+      minWidth: 17,
+      height: 17,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: 4,
+      borderWidth: 2,
+      borderColor: c.surface,
+    },
+    badgeText: {
+      color: c.brandInverse,
+      fontSize: 9,
+      fontWeight: '800',
+      lineHeight: 11,
+    },
+    label: {
+      fontSize: 10,
+      fontWeight: '600',
+      color: c.textMuted,
+      letterSpacing: 0.1,
+    },
+  });
+}

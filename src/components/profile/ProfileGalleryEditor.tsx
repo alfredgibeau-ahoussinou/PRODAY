@@ -8,13 +8,16 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Icon } from '../ui/Icon';
-import { colors, spacing, radius } from '../../theme/designTokens';
+import type { ProductLineId } from '../../models/ProductLine';
+import { useAppTheme } from '../../context/ProductLineContext';
+import { spacing, radius } from '../../theme/designTokens';
 
 const MAX = 6;
 
 interface ProfileGalleryEditorProps {
   urls: string[];
   uploading?: boolean;
+  productLine?: ProductLineId;
   onAdd: () => void;
   onRemove: (url: string) => void;
 }
@@ -22,49 +25,63 @@ interface ProfileGalleryEditorProps {
 export const ProfileGalleryEditor: React.FC<ProfileGalleryEditorProps> = ({
   urls,
   uploading,
+  productLine = 'homme',
   onAdd,
   onRemove,
-}) => (
-  <View style={styles.wrap}>
-    <View style={styles.header}>
-      <Text style={styles.title}>Galerie photos</Text>
-      <Text style={styles.count}>
-        {urls.length}/{MAX}
-      </Text>
-    </View>
-    <View style={styles.grid}>
-      {urls.map((uri) => (
-        <View key={uri} style={styles.cell}>
-          <Image source={{ uri }} style={styles.photo} />
-          <TouchableOpacity style={styles.removeBtn} onPress={() => onRemove(uri)}>
-            <Icon name="close" size={14} color={colors.brandInverse} />
+}) => {
+  const { colors: c } = useAppTheme();
+
+  return (
+    <View style={styles.wrap}>
+      <View style={styles.header}>
+        <Text style={[styles.title, { color: c.text }]}>Galerie photos</Text>
+        <Text style={[styles.count, { color: c.brand }]}>{urls.length}/{MAX}</Text>
+      </View>
+      <View style={styles.grid}>
+        {urls.map((uri) => (
+          <View key={uri} style={[styles.cell, { borderColor: c.border }]}>
+            <Image source={{ uri }} style={styles.photo} />
+            <TouchableOpacity
+              style={[styles.removeBtn, { backgroundColor: c.brand }]}
+              onPress={() => onRemove(uri)}
+            >
+              <Icon name="close" size={14} color={c.brandInverse} />
+            </TouchableOpacity>
+          </View>
+        ))}
+        {urls.length < MAX ? (
+          <TouchableOpacity
+            style={[
+              styles.addCell,
+              {
+                borderColor: c.brand,
+                backgroundColor: c.accentSoft,
+              },
+            ]}
+            onPress={onAdd}
+            disabled={uploading}
+          >
+            {uploading ? (
+              <ActivityIndicator color={c.brand} />
+            ) : (
+              <>
+                <Icon name="add" size={28} color={c.brand} />
+                <Text style={[styles.addLabel, { color: c.brand }]}>Ajouter</Text>
+              </>
+            )}
           </TouchableOpacity>
-        </View>
-      ))}
-      {urls.length < MAX ? (
-        <TouchableOpacity
-          style={styles.addCell}
-          onPress={onAdd}
-          disabled={uploading}
-        >
-          {uploading ? (
-            <ActivityIndicator color={colors.accent} />
-          ) : (
-            <>
-              <Icon name="add" size={28} color={colors.accent} />
-              <Text style={styles.addLabel}>Ajouter</Text>
-            </>
-          )}
-        </TouchableOpacity>
+        ) : null}
+      </View>
+      {urls.length === 0 ? (
+        <Text style={[styles.hint, { color: c.textMuted }]}>
+          {productLine === 'woman'
+            ? 'Ajoutez des photos d’action pour vous démarquer des autres joueuses.'
+            : 'Ajoutez des photos d’action pour vous démarquer des autres joueurs.'}
+        </Text>
       ) : null}
     </View>
-    {urls.length === 0 ? (
-      <Text style={styles.hint}>
-        Ajoutez des photos d’action pour vous démarquer des autres joueurs.
-      </Text>
-    ) : null}
-  </View>
-);
+  );
+};
 
 const styles = StyleSheet.create({
   wrap: { marginBottom: spacing.lg },
@@ -74,8 +91,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: spacing.sm,
   },
-  title: { fontSize: 16, fontWeight: '900', color: colors.text },
-  count: { fontSize: 12, fontWeight: '800', color: colors.accent },
+  title: { fontSize: 16, fontWeight: '900' },
+  count: { fontSize: 12, fontWeight: '800' },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   cell: {
     width: '31%',
@@ -83,7 +100,6 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: colors.border,
   },
   photo: { width: '100%', height: '100%' },
   removeBtn: {
@@ -93,7 +109,6 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: colors.ink,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -102,18 +117,15 @@ const styles = StyleSheet.create({
     aspectRatio: 1,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: colors.accent,
     borderStyle: 'dashed',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.accentSoft,
     gap: 4,
   },
-  addLabel: { fontSize: 10, fontWeight: '800', color: colors.accent },
+  addLabel: { fontSize: 10, fontWeight: '800' },
   hint: {
     marginTop: spacing.sm,
     fontSize: 12,
-    color: colors.textMuted,
     lineHeight: 17,
   },
 });

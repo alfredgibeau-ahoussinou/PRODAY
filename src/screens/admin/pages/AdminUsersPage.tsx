@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
-  View,
   Text,
   ScrollView,
   TouchableOpacity,
@@ -22,7 +21,9 @@ import {
 import { AdminUserEditModal, AdminRejectModal } from '../../../components/admin/AdminUserModals';
 import { adminConfirmDelete, adminActionErrorAlert } from '../../../utils/adminConfirm';
 import { getErrorMessage } from '../../../utils/errors';
-import { colors, spacing, radius } from '../../../theme/designTokens';
+import { useAdminStyles } from '../../../components/admin/adminStyles';
+import { spacing, radius } from '../../../theme/designTokens';
+import type { AppColors } from '../../../theme/universeTheme';
 
 const ROLES: UserRole[] = ['player', 'coach', 'club', 'agent', 'recruiter', 'organizer', 'physio', 'sponsor'];
 const ROLE_LABEL: Record<UserRole, string> = {
@@ -46,6 +47,8 @@ const EMPTY_FORM: CreateUserFormState = {
 
 export const AdminUsersPage: React.FC = () => {
   const { loading, users, userDocCounts, refresh } = useAdminData();
+  const { colors: c } = useAdminStyles();
+  const styles = useMemo(() => createStyles(c), [c]);
   const [roleFilter, setRoleFilter] = useState<UserRole | 'all'>('all');
   const [pendingOnly, setPendingOnly] = useState(false);
   const [search, setSearch] = useState('');
@@ -143,6 +146,7 @@ export const AdminUsersPage: React.FC = () => {
             setRoleFilter('all');
             setPendingOnly(false);
           }}
+          styles={styles}
         />
         <FilterPill
           label="Vérif. attente"
@@ -151,6 +155,7 @@ export const AdminUsersPage: React.FC = () => {
             setPendingOnly(true);
             setRoleFilter('all');
           }}
+          styles={styles}
         />
         {ROLES.map((r) => (
           <FilterPill
@@ -161,6 +166,7 @@ export const AdminUsersPage: React.FC = () => {
               setRoleFilter(r);
               setPendingOnly(false);
             }}
+            styles={styles}
           />
         ))}
       </ScrollView>
@@ -256,36 +262,41 @@ export const AdminUsersPage: React.FC = () => {
   );
 };
 
-const FilterPill: React.FC<{ label: string; active: boolean; onPress: () => void }> = ({
-  label,
-  active,
-  onPress,
-}) => (
+type UsersPageStyles = ReturnType<typeof createStyles>;
+
+const FilterPill: React.FC<{
+  label: string;
+  active: boolean;
+  onPress: () => void;
+  styles: UsersPageStyles;
+}> = ({ label, active, onPress, styles }) => (
   <TouchableOpacity style={[styles.pill, active && styles.pillOn]} onPress={onPress}>
     <Text style={[styles.pillText, active && styles.pillTextOn]}>{label}</Text>
   </TouchableOpacity>
 );
 
-const styles = StyleSheet.create({
-  fab: {
-    backgroundColor: colors.ink,
-    borderRadius: radius.md,
-    padding: spacing.md,
-    alignItems: 'center',
-    marginBottom: spacing.md,
-  },
-  fabText: { color: colors.brandInverse, fontWeight: '900', fontSize: 14 },
-  filters: { maxHeight: 44, marginBottom: spacing.sm },
-  pill: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: 8,
-    borderRadius: radius.pill,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
-    marginRight: spacing.sm,
-  },
-  pillOn: { backgroundColor: colors.ink, borderColor: colors.ink },
-  pillText: { fontSize: 12, fontWeight: '800', color: colors.text },
-  pillTextOn: { color: colors.brandInverse },
-});
+function createStyles(c: AppColors) {
+  return StyleSheet.create({
+    fab: {
+      backgroundColor: c.ink,
+      borderRadius: radius.md,
+      padding: spacing.md,
+      alignItems: 'center',
+      marginBottom: spacing.md,
+    },
+    fabText: { color: c.brandInverse, fontWeight: '900', fontSize: 14 },
+    filters: { maxHeight: 44, marginBottom: spacing.sm },
+    pill: {
+      paddingHorizontal: spacing.md,
+      paddingVertical: 8,
+      borderRadius: radius.pill,
+      borderWidth: 1,
+      borderColor: c.border,
+      backgroundColor: c.surface,
+      marginRight: spacing.sm,
+    },
+    pillOn: { backgroundColor: c.ink, borderColor: c.ink },
+    pillText: { fontSize: 12, fontWeight: '800', color: c.text },
+    pillTextOn: { color: c.brandInverse },
+  });
+}

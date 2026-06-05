@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   View,
   Text,
@@ -13,7 +13,9 @@ import { formatTimeAgo } from '../../services/recruitment.service';
 import { DiscoverSectionHeader } from './DiscoverSectionHeader';
 import { PressableSpring } from './PressableSpring';
 import { Icon } from '../ui/Icon';
-import { colors, spacing, radius } from '../../theme/designTokens';
+import { spacing, radius } from '../../theme/designTokens';
+import { useDiscoverStyles } from './discoverStyles';
+import type { AppColors } from '../../theme/universeTheme';
 
 const CARD_W = Math.round(Dimensions.get('window').width * 0.78);
 
@@ -48,6 +50,8 @@ export const DiscoverLivePreview: React.FC<DiscoverLivePreviewProps> = ({
   onPress,
   compact = false,
 }) => {
+  const { colors: c } = useDiscoverStyles();
+  const styles = useMemo(() => createStyles(c), [c]);
   const hasContent = posts.length > 0 || tournaments.length > 0;
 
   return (
@@ -63,10 +67,10 @@ export const DiscoverLivePreview: React.FC<DiscoverLivePreviewProps> = ({
       )}
 
       {loading ? (
-        <ActivityIndicator color={colors.accent} style={styles.loader} />
+        <ActivityIndicator color={c.brand} style={styles.loader} />
       ) : !hasContent ? (
         <View style={styles.empty}>
-          <Icon name="football" size={28} color={colors.textMuted} />
+          <Icon name="football" size={28} color={c.textMuted} />
           <Text style={styles.emptyTitle}>Aucun contenu publié pour le moment</Text>
           <Text style={styles.emptySub}>
             Les annonces Mercato et tournois Arena apparaîtront ici dès qu’un club ou
@@ -122,7 +126,7 @@ export const DiscoverLivePreview: React.FC<DiscoverLivePreviewProps> = ({
                   return (
                     <PressableSpring key={t.id} style={styles.tCard} onPress={onPress}>
                       <View style={styles.tHeader}>
-                        <Icon name="trophy" size={22} color={colors.accent} variant="filled" />
+                        <Icon name="trophy" size={22} color={c.brand} variant="filled" />
                       </View>
                       <View style={styles.tBody}>
                         <Text style={styles.tName}>{t.name}</Text>
@@ -131,7 +135,7 @@ export const DiscoverLivePreview: React.FC<DiscoverLivePreviewProps> = ({
                         </Text>
                         <Text style={styles.tCats}>{t.categories.join(' · ')}</Text>
                         <View style={styles.tRow}>
-                          <Icon name="people" size={14} color={colors.textMuted} />
+                          <Icon name="people" size={14} color={c.textMuted} />
                           <Text style={styles.tStat}>
                             {clubs} club{clubs !== 1 ? 's' : ''}
                           </Text>
@@ -154,100 +158,102 @@ export const DiscoverLivePreview: React.FC<DiscoverLivePreviewProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  wrap: { marginTop: spacing.xl },
-  wrapCompact: { marginTop: spacing.sm },
-  compactTitle: {
-    fontSize: 13,
-    fontWeight: '800',
-    color: colors.text,
-    marginBottom: spacing.sm,
-  },
-  loader: { marginVertical: spacing.lg },
-  empty: {
-    marginHorizontal: spacing.lg,
-    padding: spacing.xl,
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    alignItems: 'center',
-  },
-  emptyTitle: {
-    fontSize: 15,
-    fontWeight: '900',
-    color: colors.text,
-    marginTop: spacing.md,
-    textAlign: 'center',
-  },
-  emptySub: {
-    fontSize: 13,
-    lineHeight: 19,
-    color: colors.textSecondary,
-    marginTop: spacing.sm,
-    textAlign: 'center',
-  },
-  subSection: {
-    fontSize: 11,
-    fontWeight: '800',
-    color: colors.accent,
-    letterSpacing: 0.8,
-    paddingHorizontal: spacing.lg,
-    marginBottom: spacing.sm,
-  },
-  mt: { marginTop: spacing.lg },
-  rail: { paddingHorizontal: spacing.lg, gap: spacing.md, paddingBottom: spacing.xs },
-  adCard: {
-    width: CARD_W,
-    flexDirection: 'row',
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: spacing.md,
-    gap: spacing.md,
-  },
-  adLogo: {
-    width: 52,
-    height: 52,
-    borderRadius: radius.sm,
-    backgroundColor: colors.surfaceInverse,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  adLogoText: { fontSize: 22, fontWeight: '900', color: colors.brandInverse },
-  adBody: { flex: 1 },
-  adClub: { fontSize: 11, fontWeight: '800', color: colors.textMuted },
-  adTitle: { fontSize: 16, fontWeight: '900', color: colors.text, marginTop: 2 },
-  adMeta: { fontSize: 12, color: colors.textSecondary, marginTop: 4 },
-  adFoot: { fontSize: 11, fontWeight: '700', color: colors.brand, marginTop: 6 },
-  tCard: {
-    width: CARD_W * 0.92,
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    overflow: 'hidden',
-  },
-  tHeader: {
-    height: 56,
-    backgroundColor: colors.accentSoft,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  tBody: { padding: spacing.md },
-  tName: { fontSize: 15, fontWeight: '900', color: colors.text },
-  tMeta: { fontSize: 12, color: colors.textMuted, marginTop: 4 },
-  tCats: { fontSize: 12, fontWeight: '700', color: colors.brand, marginTop: 4 },
-  tRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: spacing.sm },
-  tStat: { flex: 1, fontSize: 11, color: colors.textMuted, fontWeight: '600' },
-  tPill: {
-    backgroundColor: colors.brandSoft,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: radius.pill,
-  },
-  tPillText: { fontSize: 9, fontWeight: '800', color: colors.brand },
-});
+function createStyles(c: AppColors) {
+  return StyleSheet.create({
+    wrap: { marginTop: spacing.xl },
+    wrapCompact: { marginTop: spacing.sm },
+    compactTitle: {
+      fontSize: 13,
+      fontWeight: '800',
+      color: c.text,
+      marginBottom: spacing.sm,
+    },
+    loader: { marginVertical: spacing.lg },
+    empty: {
+      marginHorizontal: spacing.lg,
+      padding: spacing.xl,
+      backgroundColor: c.surface,
+      borderRadius: radius.lg,
+      borderWidth: 1,
+      borderColor: c.border,
+      alignItems: 'center',
+    },
+    emptyTitle: {
+      fontSize: 15,
+      fontWeight: '900',
+      color: c.text,
+      marginTop: spacing.md,
+      textAlign: 'center',
+    },
+    emptySub: {
+      fontSize: 13,
+      lineHeight: 19,
+      color: c.textSecondary,
+      marginTop: spacing.sm,
+      textAlign: 'center',
+    },
+    subSection: {
+      fontSize: 11,
+      fontWeight: '800',
+      color: c.brand,
+      letterSpacing: 0.8,
+      paddingHorizontal: spacing.lg,
+      marginBottom: spacing.sm,
+    },
+    mt: { marginTop: spacing.lg },
+    rail: { paddingHorizontal: spacing.lg, gap: spacing.md, paddingBottom: spacing.xs },
+    adCard: {
+      width: CARD_W,
+      flexDirection: 'row',
+      backgroundColor: c.surface,
+      borderRadius: radius.lg,
+      borderWidth: 1,
+      borderColor: c.border,
+      padding: spacing.md,
+      gap: spacing.md,
+    },
+    adLogo: {
+      width: 52,
+      height: 52,
+      borderRadius: radius.sm,
+      backgroundColor: c.surfaceInverse,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    adLogoText: { fontSize: 22, fontWeight: '900', color: c.brandInverse },
+    adBody: { flex: 1 },
+    adClub: { fontSize: 11, fontWeight: '800', color: c.textMuted },
+    adTitle: { fontSize: 16, fontWeight: '900', color: c.text, marginTop: 2 },
+    adMeta: { fontSize: 12, color: c.textSecondary, marginTop: 4 },
+    adFoot: { fontSize: 11, fontWeight: '700', color: c.brand, marginTop: 6 },
+    tCard: {
+      width: CARD_W * 0.92,
+      backgroundColor: c.surface,
+      borderRadius: radius.lg,
+      borderWidth: 1,
+      borderColor: c.border,
+      overflow: 'hidden',
+    },
+    tHeader: {
+      height: 56,
+      backgroundColor: c.brandSoft,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderBottomWidth: 1,
+      borderBottomColor: c.border,
+    },
+    tBody: { padding: spacing.md },
+    tName: { fontSize: 15, fontWeight: '900', color: c.text },
+    tMeta: { fontSize: 12, color: c.textMuted, marginTop: 4 },
+    tCats: { fontSize: 12, fontWeight: '700', color: c.brand, marginTop: 4 },
+    tRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: spacing.sm },
+    tStat: { flex: 1, fontSize: 11, color: c.textMuted, fontWeight: '600' },
+    tPill: {
+      backgroundColor: c.brandSoft,
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+      borderRadius: radius.pill,
+    },
+    tPillText: { fontSize: 9, fontWeight: '800', color: c.brand },
+  });
+}

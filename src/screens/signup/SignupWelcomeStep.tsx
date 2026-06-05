@@ -21,7 +21,7 @@ import { getSignupRoleGroups } from '../../content/poleExperience';
 import { useSignupFlowTheme } from './SignupFlowContext';
 import { SignupSegmentTabs } from '../../components/signup/SignupSegmentTabs';
 import { useAuthLayout } from '../../components/auth/useAuthLayout';
-import { colors, spacing, radius } from '../../theme/designTokens';
+import { spacing, radius } from '../../theme/designTokens';
 import { PRODAY_WOMAN_BRAND, PRODAY_PRO_BRAND, PRODAY_HOMME_BRAND } from '../../models/ProductLine';
 import { WOMAN_SHOWCASE_IMAGES } from '../../content/womanShowcaseAssets';
 import { SHOWCASE_IMAGES } from '../../content/showcaseAssets';
@@ -170,6 +170,7 @@ const ProRoleCard: React.FC<{
   accent: string;
   accentInverse: string;
   surface: string;
+  surfaceMuted: string;
   border: string;
   text: string;
   textMuted: string;
@@ -181,6 +182,7 @@ const ProRoleCard: React.FC<{
   accent,
   accentInverse,
   surface,
+  surfaceMuted,
   border,
   text,
   textMuted,
@@ -197,7 +199,7 @@ const ProRoleCard: React.FC<{
     <View
       style={[
         styles.proRoleIcon,
-        { backgroundColor: active ? 'rgba(255,255,255,0.14)' : colors.surfaceMuted },
+        { backgroundColor: active ? 'rgba(255,255,255,0.14)' : surfaceMuted },
       ]}
     >
       <Icon
@@ -211,7 +213,10 @@ const ProRoleCard: React.FC<{
       {getRoleLabel(role)}
     </Text>
     <Text
-      style={[styles.proRoleDesc, active && styles.proRoleDescActive]}
+      style={[
+        styles.proRoleDesc,
+        { color: active ? 'rgba(255,255,255,0.78)' : textMuted },
+      ]}
       numberOfLines={2}
     >
       {ROLE_META[role].description}
@@ -281,6 +286,7 @@ const ProWelcomeBody: React.FC<{ form: SignupForm }> = ({ form }) => {
               accent={colors.accent}
               accentInverse={colors.brandInverse}
               surface={colors.surface}
+              surfaceMuted={colors.surfaceMuted}
               border={colors.border}
               text={colors.text}
               textMuted={colors.textMuted}
@@ -577,7 +583,6 @@ const styles = StyleSheet.create({
   proRoleDesc: {
     fontSize: 11,
     lineHeight: 15,
-    color: colors.textSecondary,
     marginTop: 3,
   },
   proRoleDescActive: {

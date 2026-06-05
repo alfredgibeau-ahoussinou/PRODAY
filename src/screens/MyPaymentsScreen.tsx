@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -14,7 +14,9 @@ import type { TeamPaymentRequest } from '../models/TeamFinance';
 import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { Icon } from '../components/ui/Icon';
 import { teamFinanceService } from '../services/teamFinance.service';
-import { colors, spacing, radius } from '../theme/designTokens';
+import { spacing, radius } from '../theme/designTokens';
+import { useThemedScreen } from '../hooks/useThemedScreen';
+import type { AppColors } from '../theme/universeTheme';
 
 interface MyPaymentsScreenProps {
   profile: User;
@@ -31,6 +33,8 @@ export const MyPaymentsScreen: React.FC<MyPaymentsScreenProps> = ({
   profile,
   onBack,
 }) => {
+  const { colors: c, rootStyle } = useThemedScreen();
+  const styles = useMemo(() => createStyles(c), [c]);
   const [payments, setPayments] = useState<TeamPaymentRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [payingId, setPayingId] = useState<string | null>(null);
@@ -75,10 +79,10 @@ export const MyPaymentsScreen: React.FC<MyPaymentsScreenProps> = ({
     .reduce((acc, p) => acc + p.amount_eur, 0);
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, rootStyle]}>
       <ScreenHeader title="Mes cotisations" onBack={onBack} centered />
       {loading ? (
-        <ActivityIndicator color={colors.brand} style={styles.loader} />
+        <ActivityIndicator color={c.brand} style={styles.loader} />
       ) : (
         <>
           <View style={styles.summary}>
@@ -126,10 +130,10 @@ export const MyPaymentsScreen: React.FC<MyPaymentsScreenProps> = ({
                       disabled={paying}
                     >
                       {paying ? (
-                        <ActivityIndicator color={colors.brandInverse} />
+                        <ActivityIndicator color={c.brandInverse} />
                       ) : (
                         <>
-                          <Icon name="calendar" size={18} color={colors.brandInverse} />
+                          <Icon name="calendar" size={18} color={c.brandInverse} />
                           <Text style={styles.payBtnText}>Payer en ligne (Stripe)</Text>
                         </>
                       )}
@@ -145,56 +149,58 @@ export const MyPaymentsScreen: React.FC<MyPaymentsScreenProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.background },
-  loader: { marginTop: spacing.xl },
-  summary: {
-    margin: spacing.lg,
-    marginBottom: spacing.sm,
-    backgroundColor: colors.surfaceInverse,
-    borderRadius: radius.lg,
-    padding: spacing.lg,
-  },
-  summaryLabel: { fontSize: 12, color: colors.heroMuted, fontWeight: '600' },
-  summaryValue: {
-    fontSize: 28,
-    fontWeight: '900',
-    color: colors.brandInverse,
-    marginTop: spacing.xs,
-  },
-  list: { padding: spacing.lg, paddingTop: 0, paddingBottom: spacing.xxl },
-  empty: { textAlign: 'center', color: colors.textMuted, marginTop: spacing.xl, lineHeight: 22 },
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: spacing.md,
-    marginBottom: spacing.sm,
-  },
-  cardLate: { borderColor: colors.warning, backgroundColor: colors.warningBg },
-  cardHead: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    gap: spacing.sm,
-  },
-  label: { flex: 1, fontSize: 15, fontWeight: '800', color: colors.text },
-  status: { fontSize: 11, fontWeight: '800', color: colors.textSecondary },
-  statusPaid: { color: colors.success },
-  statusLate: { color: colors.warning },
-  amount: { fontSize: 20, fontWeight: '900', color: colors.text, marginTop: spacing.sm },
-  meta: { fontSize: 12, color: colors.textMuted, marginTop: 4 },
-  payBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.sm,
-    backgroundColor: colors.ink,
-    borderRadius: radius.md,
-    paddingVertical: spacing.md,
-    marginTop: spacing.md,
-  },
-  payBtnDisabled: { opacity: 0.6 },
-  payBtnText: { color: colors.brandInverse, fontWeight: '900', fontSize: 14 },
-});
+function createStyles(c: AppColors) {
+  return StyleSheet.create({
+    root: { flex: 1 },
+    loader: { marginTop: spacing.xl },
+    summary: {
+      margin: spacing.lg,
+      marginBottom: spacing.sm,
+      backgroundColor: c.surfaceInverse,
+      borderRadius: radius.lg,
+      padding: spacing.lg,
+    },
+    summaryLabel: { fontSize: 12, color: c.heroMuted, fontWeight: '600' },
+    summaryValue: {
+      fontSize: 28,
+      fontWeight: '900',
+      color: c.brandInverse,
+      marginTop: spacing.xs,
+    },
+    list: { padding: spacing.lg, paddingTop: 0, paddingBottom: spacing.xxl },
+    empty: { textAlign: 'center', color: c.textMuted, marginTop: spacing.xl, lineHeight: 22 },
+    card: {
+      backgroundColor: c.surface,
+      borderRadius: radius.lg,
+      borderWidth: 1,
+      borderColor: c.border,
+      padding: spacing.md,
+      marginBottom: spacing.sm,
+    },
+    cardLate: { borderColor: c.warning, backgroundColor: c.warningBg },
+    cardHead: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'flex-start',
+      gap: spacing.sm,
+    },
+    label: { flex: 1, fontSize: 15, fontWeight: '800', color: c.text },
+    status: { fontSize: 11, fontWeight: '800', color: c.textSecondary },
+    statusPaid: { color: c.success },
+    statusLate: { color: c.warning },
+    amount: { fontSize: 20, fontWeight: '900', color: c.text, marginTop: spacing.sm },
+    meta: { fontSize: 12, color: c.textMuted, marginTop: 4 },
+    payBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: spacing.sm,
+      backgroundColor: c.ink,
+      borderRadius: radius.md,
+      paddingVertical: spacing.md,
+      marginTop: spacing.md,
+    },
+    payBtnDisabled: { opacity: 0.6 },
+    payBtnText: { color: c.brandInverse, fontWeight: '900', fontSize: 14 },
+  });
+}

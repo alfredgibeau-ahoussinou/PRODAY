@@ -101,6 +101,14 @@ export interface UserProfile {
   job_title?: string;         // ex. Préparateur physique, Agent FIFA
   medical_specialty?: string; // Pôle médical (kiné du sport, ostéo, médecin...)
   specialties?: string[];
+  /** Prise de RDV en ligne — pôle médical */
+  booking_enabled?: boolean;
+  consultation_duration_min?: number;
+  weekly_availability?: {
+    weekday: number;
+    start: string;
+    end: string;
+  }[];
   experiences?: WorkExperience[];
   diplomas_list?: DiplomaRecord[];
   reviews?: ProfileReview[];

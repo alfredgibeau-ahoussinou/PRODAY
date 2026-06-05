@@ -1,8 +1,8 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AuthBrandHeader } from '../auth/AuthBrandHeader';
-import { pitchStyles } from '../auth/pitchStyles';
+import { usePitchStyles } from '../auth/pitchStyles';
 import { spacing } from '../../theme/designTokens';
 
 interface DiscoverStageHeroProps {
@@ -11,6 +11,7 @@ interface DiscoverStageHeroProps {
 
 export const DiscoverStageHero: React.FC<DiscoverStageHeroProps> = ({ compact = false }) => {
   const insets = useSafeAreaInsets();
+  const pitchStyles = usePitchStyles();
 
   return (
     <View

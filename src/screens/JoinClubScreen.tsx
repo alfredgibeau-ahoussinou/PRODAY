@@ -15,7 +15,8 @@ import { SearchBar } from '../components/ui/SearchBar';
 import { clubsService } from '../services/clubs.service';
 import { profileService } from '../services/profile.service';
 import { Icon } from '../components/ui/Icon';
-import { colors, spacing, radius, shadows } from '../theme/designTokens';
+import { spacing, radius, shadows } from '../theme/designTokens';
+import { useThemedScreen } from '../hooks/useThemedScreen';
 
 interface JoinClubScreenProps {
   profile: User;
@@ -28,6 +29,7 @@ export const JoinClubScreen: React.FC<JoinClubScreenProps> = ({
   onBack,
   onJoined,
 }) => {
+  const { colors: themeColors, rootStyle } = useThemedScreen();
   const [query, setQuery] = useState('');
   const [clubs, setClubs] = useState<Club[]>([]);
   const [loading, setLoading] = useState(true);
@@ -75,40 +77,47 @@ export const JoinClubScreen: React.FC<JoinClubScreenProps> = ({
   };
 
   return (
-    <View style={styles.root}>
+    <View style={rootStyle}>
       <ScreenHeader title="Rejoindre un club" onBack={onBack} centered />
-      <Text style={styles.hint}>
+      <Text style={[styles.hint, { color: themeColors.textSecondary }]}>
         Recherchez votre structure pour accéder aux convocations, présences et cotisations.
       </Text>
       <SearchBar placeholder="Nom ou ville…" value={query} onChangeText={setQuery} />
       {loading ? (
-        <ActivityIndicator color={colors.brand} style={styles.loader} />
+        <ActivityIndicator color={themeColors.brand} style={styles.loader} />
       ) : (
         <FlatList
           data={clubs}
           keyExtractor={(c) => c.id}
           contentContainerStyle={styles.list}
           ListEmptyComponent={
-            <Text style={styles.empty}>
+            <Text style={[styles.empty, { color: themeColors.textMuted }]}>
               Aucun club trouvé. Créez le vôtre depuis le profil.
             </Text>
           }
           renderItem={({ item }) => (
             <TouchableOpacity
-              style={[styles.card, shadows.card]}
+              style={[
+                styles.card,
+                shadows.card,
+                {
+                  backgroundColor: themeColors.surface,
+                  borderColor: themeColors.border,
+                },
+              ]}
               onPress={() => void handleJoin(item)}
               disabled={joiningId === item.id}
             >
               <View style={styles.cardBody}>
-                <Text style={styles.name}>{item.name}</Text>
-                <Text style={styles.meta}>
+                <Text style={[styles.name, { color: themeColors.text }]}>{item.name}</Text>
+                <Text style={[styles.meta, { color: themeColors.textMuted }]}>
                   {[item.city, item.categories?.[0]].filter(Boolean).join(' · ')}
                 </Text>
               </View>
               {joiningId === item.id ? (
-                <ActivityIndicator color={colors.brand} />
+                <ActivityIndicator color={themeColors.brand} />
               ) : (
-                <Icon name="chevron-forward" size={20} color={colors.textMuted} />
+                <Icon name="chevron-forward" size={20} color={themeColors.textMuted} />
               )}
             </TouchableOpacity>
           )}
@@ -119,28 +128,24 @@ export const JoinClubScreen: React.FC<JoinClubScreenProps> = ({
 };
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.background },
   hint: {
     fontSize: 13,
-    color: colors.textSecondary,
     lineHeight: 20,
     paddingHorizontal: spacing.lg,
     marginBottom: spacing.sm,
   },
   loader: { marginTop: spacing.xl },
   list: { padding: spacing.lg, paddingBottom: spacing.xxl },
-  empty: { textAlign: 'center', color: colors.textMuted, marginTop: spacing.xl },
+  empty: { textAlign: 'center', marginTop: spacing.xl },
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surface,
     borderRadius: radius.lg,
     padding: spacing.md,
     marginBottom: spacing.sm,
     borderWidth: 1,
-    borderColor: colors.border,
   },
   cardBody: { flex: 1 },
-  name: { fontSize: 15, fontWeight: '800', color: colors.text },
-  meta: { fontSize: 12, color: colors.textMuted, marginTop: 4 },
+  name: { fontSize: 15, fontWeight: '800' },
+  meta: { fontSize: 12, marginTop: 4 },
 });

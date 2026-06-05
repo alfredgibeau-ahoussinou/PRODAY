@@ -4,7 +4,8 @@ import type { User } from '../models/User';
 import { getVerificationBadge } from '../models/User';
 import { StarRating } from './StarRating';
 import { Icon } from './ui/Icon';
-import { colors, spacing, radius, shadows } from '../theme/designTokens';
+import { spacing, radius, shadows } from '../theme/designTokens';
+import { useAppTheme } from '../context/ProductLineContext';
 
 interface CoachListCardProps {
   user: User;
@@ -19,30 +20,39 @@ export const CoachListCard: React.FC<CoachListCardProps> = ({
   bookmarked,
   onBookmark,
 }) => {
+  const { colors } = useAppTheme();
   const badge = getVerificationBadge(user);
   const p = user.profile;
   const verified = user.is_verified && badge.color === 'green';
 
   return (
     <TouchableOpacity
-      style={[styles.card, shadows.card]}
+      style={[
+        styles.card,
+        { backgroundColor: colors.surface, borderColor: colors.border },
+        shadows.card,
+      ]}
       onPress={() => onPress(user)}
       activeOpacity={0.9}
     >
-      <View style={styles.avatar}>
-        <Text style={styles.initial}>{user.display_name.charAt(0)}</Text>
+      <View style={[styles.avatar, { backgroundColor: colors.accentSoft }]}>
+        <Text style={[styles.initial, { color: colors.brand }]}>
+          {user.display_name.charAt(0)}
+        </Text>
       </View>
       <View style={styles.body}>
         <View style={styles.nameRow}>
-          <Text style={styles.name}>{user.display_name}</Text>
+          <Text style={[styles.name, { color: colors.text }]}>{user.display_name}</Text>
           {verified && (
             <View style={styles.verifiedChip}>
               <Text style={styles.verifiedText}>Vérifié</Text>
             </View>
           )}
         </View>
-        <Text style={styles.title}>{p.job_title ?? (user.role === 'agent' ? 'Agent' : 'Coach')}</Text>
-        <Text style={styles.meta}>
+        <Text style={[styles.title, { color: colors.brand }]}>
+          {p.job_title ?? (user.role === 'agent' ? 'Agent' : 'Coach')}
+        </Text>
+        <Text style={[styles.meta, { color: colors.textMuted }]}>
           {p.years_experience ? `${p.years_experience} ans exp. · ` : ''}
           {user.city ?? 'France'}
         </Text>
@@ -65,34 +75,31 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surface,
     borderRadius: radius.lg,
     padding: spacing.md,
     marginBottom: spacing.sm,
     borderWidth: 1,
-    borderColor: colors.border,
   },
   avatar: {
     width: 52,
     height: 52,
     borderRadius: 26,
-    backgroundColor: colors.blueCyan + '33',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: spacing.md,
   },
-  initial: { fontSize: 22, fontWeight: '800', color: colors.bluePrimary },
+  initial: { fontSize: 22, fontWeight: '800' },
   body: { flex: 1 },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flexWrap: 'wrap' },
-  name: { fontSize: 16, fontWeight: '700', color: colors.text },
+  name: { fontSize: 16, fontWeight: '700' },
   verifiedChip: {
-    backgroundColor: colors.successBg,
+    backgroundColor: '#D1FAE5',
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 6,
   },
-  verifiedText: { color: colors.success, fontSize: 10, fontWeight: '700' },
-  title: { color: colors.bluePrimary, fontSize: 13, marginTop: 2 },
-  meta: { color: colors.textMuted, fontSize: 12, marginTop: 2 },
+  verifiedText: { color: '#059669', fontSize: 10, fontWeight: '700' },
+  title: { fontSize: 13, marginTop: 2 },
+  meta: { fontSize: 12, marginTop: 2 },
   bookmark: { padding: spacing.sm },
 });

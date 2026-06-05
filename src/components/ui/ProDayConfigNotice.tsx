@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import {
   getAppConfigIssues,
@@ -6,7 +6,9 @@ import {
   type ConfigIssue,
 } from '../../config/appConfig';
 import { ProDayErrorBanner } from './ProDayErrorBanner';
-import { colors, spacing, radius } from '../../theme/designTokens';
+import { useAppTheme } from '../../context/ProductLineContext';
+import { spacing, radius } from '../../theme/designTokens';
+import type { AppColors } from '../../theme/universeTheme';
 
 interface ProDayConfigNoticeProps {
   /** Afficher uniquement les erreurs bloquantes */
@@ -18,6 +20,8 @@ export const ProDayConfigNotice: React.FC<ProDayConfigNoticeProps> = ({
   blockingOnly = false,
   compact = false,
 }) => {
+  const { colors: c } = useAppTheme();
+  const styles = useMemo(() => createStyles(c), [c]);
   const issues = getAppConfigIssues().filter(
     (i) => !blockingOnly || i.severity === 'error'
   );
@@ -56,27 +60,29 @@ const IssueRow: React.FC<{ issue: ConfigIssue }> = ({ issue }) => (
   />
 );
 
-const styles = StyleSheet.create({
-  wrap: {
-    backgroundColor: colors.surfaceMuted,
-    borderRadius: radius.lg,
-    padding: spacing.md,
-    marginBottom: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  heading: {
-    fontSize: 12,
-    fontWeight: '800',
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-    color: colors.textMuted,
-    marginBottom: spacing.sm,
-  },
-  docLink: {
-    fontSize: 12,
-    color: colors.textSecondary,
-    textDecorationLine: 'underline',
-    marginTop: spacing.xs,
-  },
-});
+function createStyles(c: AppColors) {
+  return StyleSheet.create({
+    wrap: {
+      backgroundColor: c.surfaceMuted,
+      borderRadius: radius.lg,
+      padding: spacing.md,
+      marginBottom: spacing.md,
+      borderWidth: 1,
+      borderColor: c.border,
+    },
+    heading: {
+      fontSize: 12,
+      fontWeight: '800',
+      letterSpacing: 1,
+      textTransform: 'uppercase',
+      color: c.textMuted,
+      marginBottom: spacing.sm,
+    },
+    docLink: {
+      fontSize: 12,
+      color: c.textSecondary,
+      textDecorationLine: 'underline',
+      marginTop: spacing.xs,
+    },
+  });
+}

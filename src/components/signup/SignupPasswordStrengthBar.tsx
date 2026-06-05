@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Animated, {
   useAnimatedStyle,
@@ -6,26 +6,26 @@ import Animated, {
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
-import { colors, spacing, radius } from '../../theme/designTokens';
+import { spacing, radius } from '../../theme/designTokens';
 import { motion } from '../../theme/motion';
+import { useSignupFlowTheme } from '../../screens/signup/SignupFlowContext';
+import type { AppColors } from '../../theme/universeTheme';
 
 interface SignupPasswordStrengthBarProps {
   level: number;
   label: string;
 }
 
-const LEVEL_COLORS = [
-  colors.surfaceMuted,
-  colors.error,
-  colors.warning,
-  colors.success,
-  colors.success,
-];
-
 export const SignupPasswordStrengthBar: React.FC<SignupPasswordStrengthBarProps> = ({
   level,
   label,
 }) => {
+  const { colors: c } = useSignupFlowTheme();
+  const styles = useMemo(() => createStyles(c), [c]);
+  const levelColors = useMemo(
+    () => [c.surfaceMuted, c.error, c.warning, c.success, c.success],
+    [c]
+  );
   const width = useSharedValue(0);
 
   useEffect(() => {
@@ -36,41 +36,39 @@ export const SignupPasswordStrengthBar: React.FC<SignupPasswordStrengthBarProps>
     transform: [{ scaleX: width.value }],
   }));
 
+  const levelColor = levelColors[level] ?? c.surfaceMuted;
+
   return (
     <View style={styles.wrap}>
       <View style={styles.track}>
         <Animated.View
-          style={[
-            styles.fill,
-            fillStyle,
-            { backgroundColor: LEVEL_COLORS[level] ?? colors.surfaceMuted },
-          ]}
+          style={[styles.fill, fillStyle, { backgroundColor: levelColor }]}
         />
       </View>
-      <Text style={[styles.label, { color: LEVEL_COLORS[level] ?? colors.textMuted }]}>
-        {label}
-      </Text>
+      <Text style={[styles.label, { color: levelColor }]}>{label}</Text>
     </View>
   );
 };
 
-const styles = StyleSheet.create({
-  wrap: { marginTop: -spacing.sm, marginBottom: spacing.sm },
-  track: {
-    height: 6,
-    borderRadius: radius.pill,
-    backgroundColor: colors.surfaceMuted,
-    overflow: 'hidden',
-  },
-  fill: {
-    height: '100%',
-    width: '100%',
-    borderRadius: radius.pill,
-    transformOrigin: 'left',
-  },
-  label: {
-    fontSize: 11,
-    fontWeight: '800',
-    marginTop: spacing.xs,
-  },
-});
+function createStyles(c: AppColors) {
+  return StyleSheet.create({
+    wrap: { marginTop: -spacing.sm, marginBottom: spacing.sm },
+    track: {
+      height: 6,
+      borderRadius: radius.pill,
+      backgroundColor: c.surfaceMuted,
+      overflow: 'hidden',
+    },
+    fill: {
+      height: '100%',
+      width: '100%',
+      borderRadius: radius.pill,
+      transformOrigin: 'left',
+    },
+    label: {
+      fontSize: 11,
+      fontWeight: '800',
+      marginTop: spacing.xs,
+    },
+  });
+}

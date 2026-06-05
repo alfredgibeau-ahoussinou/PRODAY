@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, Image, ImageSourcePropType } from 'react-native';
-import { BRAND, colors, typography, spacing } from '../theme/designTokens';
+import { BRAND, typography, spacing } from '../theme/designTokens';
 import {
   BRANDING_LOGOS,
   MAN_BRANDING_LOGOS,
@@ -10,6 +10,7 @@ import {
 import { brandForProductLine } from '../models/ProductLine';
 import type { ProductLineId } from '../models/ProductLine';
 import { useAppTheme } from '../context/ProductLineContext';
+import type { AppColors } from '../theme/universeTheme';
 import { ManLogo, manLogoAspect } from './ManLogo';
 import { ProLogo, proLogoAspect } from './ProLogo';
 import { WomanLogo, womanLogoAspect } from './WomanLogo';
@@ -33,7 +34,7 @@ interface LogoProps {
   showTagline?: boolean;
   watermark?: boolean;
   opacity?: number;
-  /** Force l’univers Woman (rétrocompat.) */
+  /** Force l'univers Woman (rétrocompat.) */
   woman?: boolean;
   /** Force un univers (cartes intro, previews). */
   productLine?: ProductLineId;
@@ -91,7 +92,8 @@ export const Logo: React.FC<LogoProps> = ({
   woman: womanProp,
   productLine: productLineProp,
 }) => {
-  const { productLine: themeLine } = useAppTheme();
+  const { productLine: themeLine, colors: c } = useAppTheme();
+  const styles = useMemo(() => createStyles(c), [c]);
   const line = resolveProductLine(productLineProp, womanProp, themeLine);
   const resolved = variant ?? logoVariantForBackground(background, watermark);
   const brand = brandForProductLine(line);
@@ -170,7 +172,7 @@ export const Logo: React.FC<LogoProps> = ({
   );
 };
 
-/** Ratio largeur/hauteur pour réserver l’espace (logos composés Man / Woman / Pro). */
+/** Ratio largeur/hauteur pour réserver l'espace (logos composés Man / Woman / Pro). */
 export function logoDisplayAspect(
   width: number,
   opts: {
@@ -189,18 +191,20 @@ export function logoDisplayAspect(
   return LOGO_ASPECT[v] ?? 0.93;
 }
 
-const styles = StyleSheet.create({
-  wrap: { alignItems: 'center' },
-  watermarkWrap: { pointerEvents: 'none' },
-  tagline: {
-    fontSize: typography.sizes.caption,
-    letterSpacing: 1.2,
-    marginTop: spacing.sm,
-    textAlign: 'center',
-    fontWeight: '600',
-  },
-  taglineOnLight: { color: colors.navySoft },
-  taglineOnDark: { color: colors.heroMuted },
-});
+function createStyles(c: AppColors) {
+  return StyleSheet.create({
+    wrap: { alignItems: 'center' },
+    watermarkWrap: { pointerEvents: 'none' },
+    tagline: {
+      fontSize: typography.sizes.caption,
+      letterSpacing: 1.2,
+      marginTop: spacing.sm,
+      textAlign: 'center',
+      fontWeight: '600',
+    },
+    taglineOnLight: { color: c.navySoft },
+    taglineOnDark: { color: c.heroMuted },
+  });
+}
 
 export default Logo;

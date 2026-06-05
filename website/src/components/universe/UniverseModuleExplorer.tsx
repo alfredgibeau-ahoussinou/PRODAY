@@ -62,7 +62,7 @@ export function UniverseModuleExplorer({
           className="object-cover object-center"
           sizes="(max-width: 1024px) 100vw, 50vw"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+        <div className={`absolute inset-0 bg-gradient-to-t ${theme.imageGradient}`} />
         <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent p-8 pt-24">
           <h3 className="text-2xl font-bold text-white drop-shadow-sm">{mod.title}</h3>
           <p className="mt-2 max-w-sm text-sm text-white/90 drop-shadow-sm">

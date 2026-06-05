@@ -18,7 +18,7 @@ import type { DiscoverExperienceId } from './DiscoverExperiencesHub';
 import { ProDayModuleGrid } from '../ui/ProDayModuleGrid';
 import { Icon } from '../ui/Icon';
 import { PressableSpring } from './PressableSpring';
-import { discoverStyles, discoverPalette } from './discoverStyles';
+import { useDiscoverStyles } from './discoverStyles';
 import { useDiscoverMetrics } from './useDiscoverMetrics';
 import type { DiscoverChapterId, IntroSlideAction } from '../../content/discoverChapters';
 import type { RecruitmentStats } from '../../services/stats.service';
@@ -67,6 +67,7 @@ export const DiscoverInteractiveHome: React.FC<DiscoverInteractiveHomeProps> = (
   universeLabel,
   onUniversePress,
 }) => {
+  const { styles: discoverStyles, palette: discoverPalette } = useDiscoverStyles();
   const [chapter, setChapter] = useState<DiscoverChapterId>('welcome');
   const metrics = useDiscoverMetrics();
   const exploreScrollRef = useRef<ScrollView>(null);

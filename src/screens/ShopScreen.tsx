@@ -10,7 +10,7 @@ import {
   Image,
 } from 'react-native';
 import { useTabNavigation } from '../context/TabNavigationContext';
-import { useAppTheme } from '../context/ProductLineContext';
+import { useThemedScreen } from '../hooks/useThemedScreen';
 import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { Icon } from '../components/ui/Icon';
 import { ShopProductDetailScreen } from '../components/shop/ShopProductDetailScreen';
@@ -31,7 +31,7 @@ const CATEGORY_ORDER: ShopProductCategory[] = ['equipment', 'apparel', 'jersey']
 
 export const ShopScreen: React.FC = () => {
   const { setActiveTab } = useTabNavigation();
-  const { colors, productLine } = useAppTheme();
+  const { colors, productLine, rootStyle } = useThemedScreen();
   const copy = useMemo(() => getShopCopy(productLine), [productLine]);
   const catalog = useMemo(() => getShopCatalog(productLine), [productLine]);
   const [category, setCategory] = useState<ShopProductCategory | 'all'>('all');
@@ -77,7 +77,7 @@ export const ShopScreen: React.FC = () => {
   }
 
   return (
-    <View style={[styles.root, { backgroundColor: colors.background }]}>
+    <View style={[styles.root, rootStyle]}>
       <ScreenHeader title={copy.title} subtitle={copy.subtitle} onBack={onBack} centered />
       <ScrollView
         contentContainerStyle={styles.content}
@@ -130,7 +130,7 @@ const FilterChip: React.FC<{
   label: string;
   active: boolean;
   onPress: () => void;
-  colors: { ink: string; surface: string; border: string };
+  colors: { ink: string; surface: string; border: string; brandInverse: string };
 }> = ({ label, active, onPress, colors }) => (
   <Pressable
     style={[
@@ -142,7 +142,7 @@ const FilterChip: React.FC<{
     ]}
     onPress={onPress}
   >
-    <Text style={[styles.chipText, { color: active ? '#fff' : colors.ink }]}>{label}</Text>
+    <Text style={[styles.chipText, { color: active ? colors.brandInverse : colors.ink }]}>{label}</Text>
   </Pressable>
 );
 

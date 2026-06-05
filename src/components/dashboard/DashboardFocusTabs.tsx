@@ -1,7 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { PressableSpring } from '../discover/PressableSpring';
-import { colors, spacing, radius } from '../../theme/designTokens';
+import { spacing, radius } from '../../theme/designTokens';
+import { useAppTheme } from '../../context/ProductLineContext';
 
 export type DashboardFocusId = 'priorities' | 'calendar';
 
@@ -20,49 +21,65 @@ export const DashboardFocusTabs: React.FC<DashboardFocusTabsProps> = ({
   active,
   onChange,
   tabs = DEFAULT_TABS,
-}) => (
-  <View style={styles.row}>
-    {tabs.map((tab) => {
-      const on = tab.id === active;
-      return (
-        <PressableSpring
-          key={tab.id}
-          style={[styles.chip, on && styles.chipOn]}
-          onPress={() => onChange(tab.id)}
-          scaleTo={0.96}
-        >
-          <Text style={[styles.label, on && styles.labelOn]}>{tab.label}</Text>
-        </PressableSpring>
-      );
-    })}
-  </View>
-);
+}) => {
+  const { colors: c } = useAppTheme();
+
+  return (
+    <View
+      style={[
+        styles.row,
+        { backgroundColor: c.surfaceMuted, borderColor: c.border },
+      ]}
+    >
+      {tabs.map((tab) => {
+        const on = tab.id === active;
+        return (
+          <PressableSpring
+            key={tab.id}
+            style={[
+              styles.chip,
+              on && {
+                backgroundColor: c.surface,
+                shadowColor: c.brand,
+              },
+            ]}
+            onPress={() => onChange(tab.id)}
+            scaleTo={0.96}
+          >
+            <Text
+              style={[
+                styles.label,
+                { color: c.textMuted },
+                on && { fontWeight: '800', color: c.text },
+              ]}
+            >
+              {tab.label}
+            </Text>
+          </PressableSpring>
+        );
+      })}
+    </View>
+  );
+};
 
 const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     gap: spacing.sm,
     marginBottom: spacing.md,
-    backgroundColor: colors.surfaceMuted,
     borderRadius: radius.pill,
     padding: 4,
     borderWidth: 1,
-    borderColor: colors.border,
   },
   chip: {
     flex: 1,
     paddingVertical: spacing.sm,
     alignItems: 'center',
     borderRadius: radius.pill,
-  },
-  chipOn: {
-    backgroundColor: colors.surface,
-    shadowColor: colors.accent,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 1,
   },
-  label: { fontSize: 13, fontWeight: '600', color: colors.textMuted },
-  labelOn: { fontWeight: '800', color: colors.text },
+  label: { fontSize: 13, fontWeight: '600' },
 });

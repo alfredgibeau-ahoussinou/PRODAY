@@ -7,7 +7,9 @@ import { useShowcaseImages } from '../../hooks/useShowcaseImages';
 import { PressableSpring } from './PressableSpring';
 import { DiscoverSectionHeader } from './DiscoverSectionHeader';
 import { Icon, type IconName } from '../ui/Icon';
-import { colors, spacing, radius } from '../../theme/designTokens';
+import { spacing, radius } from '../../theme/designTokens';
+import { useDiscoverStyles } from './discoverStyles';
+import type { AppColors } from '../../theme/universeTheme';
 
 interface DiscoverJourneyProps {
   onStepPress: (id: string) => void;
@@ -19,6 +21,8 @@ export const DiscoverJourney: React.FC<DiscoverJourneyProps> = ({
   onStepPress,
   compact = false,
 }) => {
+  const { colors: c } = useDiscoverStyles();
+  const styles = useMemo(() => createStyles(c), [c]);
   const showcase = useShowcaseImages();
   const steps = useMemo(() => {
     const stepImages: Record<string, number> = {
@@ -86,7 +90,7 @@ export const DiscoverJourney: React.FC<DiscoverJourneyProps> = ({
         >
           <View style={styles.previewOverlay} />
           <View style={[styles.previewBadge, { borderColor: current.color }]}>
-            <Icon name={current.icon} size={20} color={colors.brandInverse} variant="filled" />
+            <Icon name={current.icon} size={20} color={c.brandInverse} variant="filled" />
           </View>
         </ShowcaseImageBackground>
         <View style={styles.previewBody}>
@@ -104,99 +108,101 @@ export const DiscoverJourney: React.FC<DiscoverJourneyProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  wrap: { marginTop: spacing.xl },
-  wrapCompact: { marginTop: 0 },
-  chips: {
-    flexDirection: 'row',
-    paddingHorizontal: 0,
-    gap: spacing.sm,
-    marginBottom: spacing.md,
-  },
-  chip: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: spacing.md,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
-  },
-  chipOn: {
-    borderColor: colors.accent,
-    backgroundColor: colors.accentSoft,
-  },
-  chipNum: {
-    fontSize: 15,
-    fontWeight: '900',
-    color: colors.textMuted,
-  },
-  chipNumOn: {
-    color: colors.accent,
-  },
-  preview: {
-    marginHorizontal: spacing.lg,
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    overflow: 'hidden',
-  },
-  previewCompact: {
-    marginHorizontal: 0,
-  },
-  previewImage: {
-    height: 120,
-    justifyContent: 'flex-end',
-    padding: spacing.md,
-  },
-  previewImageInner: { opacity: 0.85 },
-  previewOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.35)',
-  },
-  previewBadge: {
-    alignSelf: 'flex-start',
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    borderWidth: 1,
-    backgroundColor: 'rgba(0,0,0,0.45)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 1,
-  },
-  previewBody: { flexDirection: 'row', minHeight: 140 },
-  previewStripe: { width: 5 },
-  previewInner: {
-    flex: 1,
-    padding: spacing.lg,
-  },
-  previewTitle: {
-    fontSize: 20,
-    fontWeight: '900',
-    color: colors.text,
-    letterSpacing: -0.3,
-  },
-  previewDesc: {
-    fontSize: 14,
-    lineHeight: 21,
-    color: colors.textSecondary,
-    marginTop: spacing.sm,
-  },
-  previewCta: {
-    marginTop: spacing.lg,
-    alignSelf: 'flex-start',
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-    backgroundColor: colors.accentSoft,
-    borderRadius: radius.pill,
-    borderWidth: 1,
-    borderColor: colors.accent,
-  },
-  previewCtaText: {
-    color: colors.accent,
-    fontWeight: '800',
-    fontSize: 13,
-  },
-});
+function createStyles(c: AppColors) {
+  return StyleSheet.create({
+    wrap: { marginTop: spacing.xl },
+    wrapCompact: { marginTop: 0 },
+    chips: {
+      flexDirection: 'row',
+      paddingHorizontal: 0,
+      gap: spacing.sm,
+      marginBottom: spacing.md,
+    },
+    chip: {
+      flex: 1,
+      alignItems: 'center',
+      paddingVertical: spacing.md,
+      borderRadius: radius.md,
+      borderWidth: 1,
+      borderColor: c.border,
+      backgroundColor: c.surface,
+    },
+    chipOn: {
+      borderColor: c.brand,
+      backgroundColor: c.brandSoft,
+    },
+    chipNum: {
+      fontSize: 15,
+      fontWeight: '900',
+      color: c.textMuted,
+    },
+    chipNumOn: {
+      color: c.brand,
+    },
+    preview: {
+      marginHorizontal: spacing.lg,
+      backgroundColor: c.surface,
+      borderRadius: radius.lg,
+      borderWidth: 1,
+      borderColor: c.border,
+      overflow: 'hidden',
+    },
+    previewCompact: {
+      marginHorizontal: 0,
+    },
+    previewImage: {
+      height: 120,
+      justifyContent: 'flex-end',
+      padding: spacing.md,
+    },
+    previewImageInner: { opacity: 0.85 },
+    previewOverlay: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: 'rgba(0,0,0,0.35)',
+    },
+    previewBadge: {
+      alignSelf: 'flex-start',
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      borderWidth: 1,
+      backgroundColor: 'rgba(0,0,0,0.45)',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 1,
+    },
+    previewBody: { flexDirection: 'row', minHeight: 140 },
+    previewStripe: { width: 5 },
+    previewInner: {
+      flex: 1,
+      padding: spacing.lg,
+    },
+    previewTitle: {
+      fontSize: 20,
+      fontWeight: '900',
+      color: c.text,
+      letterSpacing: -0.3,
+    },
+    previewDesc: {
+      fontSize: 14,
+      lineHeight: 21,
+      color: c.textSecondary,
+      marginTop: spacing.sm,
+    },
+    previewCta: {
+      marginTop: spacing.lg,
+      alignSelf: 'flex-start',
+      paddingVertical: spacing.sm,
+      paddingHorizontal: spacing.md,
+      backgroundColor: c.brandSoft,
+      borderRadius: radius.pill,
+      borderWidth: 1,
+      borderColor: c.brand,
+    },
+    previewCtaText: {
+      color: c.brand,
+      fontWeight: '800',
+      fontSize: 13,
+    },
+  });
+}

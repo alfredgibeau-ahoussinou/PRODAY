@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -12,8 +12,9 @@ import Animated, {
 import type { RecruitmentStats } from '../../services/stats.service';
 import { Icon } from '../ui/Icon';
 import { PressableSpring } from './PressableSpring';
-import { discover } from '../../theme/discoverTheme';
-import { colors, spacing } from '../../theme/designTokens';
+import { spacing, radius } from '../../theme/designTokens';
+import { useDiscoverStyles } from './discoverStyles';
+import type { AppColors } from '../../theme/universeTheme';
 
 interface AnimatedStatCountersProps {
   stats: RecruitmentStats;
@@ -49,7 +50,8 @@ const StatBlock: React.FC<{
   delay: number;
   active: boolean;
   onPress: () => void;
-}> = ({ value, label, delay, active, onPress }) => {
+  styles: ReturnType<typeof createStyles>;
+}> = ({ value, label, delay, active, onPress, styles }) => {
   const progress = useSharedValue(0);
   const [display, setDisplay] = useState(0);
 
@@ -74,6 +76,8 @@ export const AnimatedStatCounters: React.FC<AnimatedStatCountersProps> = ({
   stats,
   onPress,
 }) => {
+  const { colors: c } = useDiscoverStyles();
+  const styles = useMemo(() => createStyles(c), [c]);
   const [activeKey, setActiveKey] = useState<StatKey | null>(null);
   const entries: { key: StatKey; value: number }[] = [
     { key: 'players', value: stats.players },
@@ -102,6 +106,7 @@ export const AnimatedStatCounters: React.FC<AnimatedStatCountersProps> = ({
               delay={i * 120}
               active={activeKey === key}
               onPress={() => toggle(key)}
+              styles={styles}
             />
           </React.Fragment>
         ))}
@@ -110,7 +115,7 @@ export const AnimatedStatCounters: React.FC<AnimatedStatCountersProps> = ({
       {activeMeta ? (
         <Animated.View layout={Layout.springify()} style={styles.detail}>
           <View style={styles.detailIcon}>
-            <Icon name={activeMeta.icon} size={22} color={colors.accent} variant="filled" />
+            <Icon name={activeMeta.icon} size={22} color={c.brand} variant="filled" />
           </View>
           <View style={styles.detailBody}>
             <Text style={styles.detailTitle}>
@@ -129,95 +134,97 @@ export const AnimatedStatCounters: React.FC<AnimatedStatCountersProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  wrap: {
-    paddingHorizontal: spacing.lg,
-    marginTop: spacing.lg,
-  },
-  row: {
-    flexDirection: 'row',
-    backgroundColor: discover.bgElevated,
-    borderWidth: 1,
-    borderColor: discover.border,
-    borderRadius: discover.radius.lg,
-    overflow: 'hidden',
-  },
-  block: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: spacing.lg,
-  },
-  blockActive: {
-    backgroundColor: colors.accentSoft,
-  },
-  blockValue: {
-    fontSize: 32,
-    fontWeight: '900',
-    color: discover.ink,
-    letterSpacing: -1,
-    fontVariant: ['tabular-nums'],
-  },
-  blockValueActive: { color: colors.accent },
-  blockLabel: {
-    fontSize: 10,
-    fontWeight: '800',
-    color: discover.inkMuted,
-    letterSpacing: 1.2,
-    marginTop: 4,
-    textTransform: 'uppercase',
-  },
-  blockLabelActive: { color: colors.accent },
-  sep: {
-    width: 2,
-    backgroundColor: discover.border,
-  },
-  detail: {
-    flexDirection: 'row',
-    gap: spacing.md,
-    marginTop: spacing.sm,
-    backgroundColor: colors.accentSoft,
-    borderRadius: discover.radius.md,
-    padding: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.accent,
-  },
-  detailIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: colors.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: colors.accent,
-  },
-  detailBody: { flex: 1 },
-  detailTitle: {
-    fontSize: 14,
-    fontWeight: '900',
-    color: colors.accent,
-  },
-  detailText: {
-    fontSize: 12,
-    lineHeight: 18,
-    color: colors.textSecondary,
-    marginTop: 4,
-  },
-  ctaRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: spacing.sm,
-    paddingVertical: spacing.xs,
-  },
-  caption: {
-    fontSize: 11,
-    color: discover.inkMuted,
-    fontWeight: '600',
-  },
-  ctaLink: {
-    fontSize: 11,
-    fontWeight: '800',
-    color: colors.accent,
-  },
-});
+function createStyles(c: AppColors) {
+  return StyleSheet.create({
+    wrap: {
+      paddingHorizontal: spacing.lg,
+      marginTop: spacing.lg,
+    },
+    row: {
+      flexDirection: 'row',
+      backgroundColor: c.surface,
+      borderWidth: 1,
+      borderColor: c.border,
+      borderRadius: radius.lg,
+      overflow: 'hidden',
+    },
+    block: {
+      flex: 1,
+      alignItems: 'center',
+      paddingVertical: spacing.lg,
+    },
+    blockActive: {
+      backgroundColor: c.brandSoft,
+    },
+    blockValue: {
+      fontSize: 32,
+      fontWeight: '900',
+      color: c.text,
+      letterSpacing: -1,
+      fontVariant: ['tabular-nums'],
+    },
+    blockValueActive: { color: c.brand },
+    blockLabel: {
+      fontSize: 10,
+      fontWeight: '800',
+      color: c.textMuted,
+      letterSpacing: 1.2,
+      marginTop: 4,
+      textTransform: 'uppercase',
+    },
+    blockLabelActive: { color: c.brand },
+    sep: {
+      width: 2,
+      backgroundColor: c.border,
+    },
+    detail: {
+      flexDirection: 'row',
+      gap: spacing.md,
+      marginTop: spacing.sm,
+      backgroundColor: c.brandSoft,
+      borderRadius: radius.md,
+      padding: spacing.md,
+      borderWidth: 1,
+      borderColor: c.brand,
+    },
+    detailIcon: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      backgroundColor: c.surface,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 1,
+      borderColor: c.brand,
+    },
+    detailBody: { flex: 1 },
+    detailTitle: {
+      fontSize: 14,
+      fontWeight: '900',
+      color: c.brand,
+    },
+    detailText: {
+      fontSize: 12,
+      lineHeight: 18,
+      color: c.textSecondary,
+      marginTop: 4,
+    },
+    ctaRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginTop: spacing.sm,
+      paddingVertical: spacing.xs,
+    },
+    caption: {
+      fontSize: 11,
+      color: c.textMuted,
+      fontWeight: '600',
+    },
+    ctaLink: {
+      fontSize: 11,
+      fontWeight: '800',
+      color: c.brand,
+    },
+  });
+}

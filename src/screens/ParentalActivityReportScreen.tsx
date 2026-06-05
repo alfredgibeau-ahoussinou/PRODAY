@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -9,7 +9,9 @@ import {
 import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { Icon, type IconName } from '../components/ui/Icon';
 import { parentalActivityService } from '../services/parentalActivity.service';
-import { colors, spacing, radius, shadows } from '../theme/designTokens';
+import { spacing, radius, shadows } from '../theme/designTokens';
+import { useThemedScreen } from '../hooks/useThemedScreen';
+import type { AppColors } from '../theme/universeTheme';
 
 interface ParentalActivityReportScreenProps {
   onBack: () => void;
@@ -24,6 +26,8 @@ export const ParentalActivityReportScreen: React.FC<ParentalActivityReportScreen
   childName = 'Compte enfant',
   periodLabel = '7 derniers jours',
 }) => {
+  const { colors: c, rootStyle } = useThemedScreen();
+  const styles = useMemo(() => createStyles(c), [c]);
   const [loading, setLoading] = useState(true);
   const [messagesCount, setMessagesCount] = useState(0);
   const [applicationsCount, setApplicationsCount] = useState(0);
@@ -55,17 +59,17 @@ export const ParentalActivityReportScreen: React.FC<ParentalActivityReportScreen
   const hasActivity = messagesCount + applicationsCount + eventsCount > 0;
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, rootStyle]}>
       <ScreenHeader title="Rapport d'activité" onBack={onBack} centered />
 
       <ScrollView contentContainerStyle={styles.content}>
         {loading ? (
-          <ActivityIndicator color={colors.brand} style={styles.loader} />
+          <ActivityIndicator color={c.brand} style={styles.loader} />
         ) : (
           <>
             <View style={[styles.statusCard, shadows.card]}>
               <View style={styles.statusIcon}>
-                <Icon name="shield" size={28} color={colors.success} />
+                <Icon name="shield" size={28} color={c.success} />
               </View>
               <Text style={styles.statusTitle}>
                 {hasActivity ? 'Activité suivie' : 'Peu d’activité récente'}
@@ -82,7 +86,7 @@ export const ParentalActivityReportScreen: React.FC<ParentalActivityReportScreen
               {stats.map((s) => (
                 <View key={s.label} style={[styles.statCard, shadows.card]}>
                   <View style={styles.statIcon}>
-                    <Icon name={s.icon} size={22} color={colors.brand} />
+                    <Icon name={s.icon} size={22} color={c.brand} />
                   </View>
                   <Text style={styles.statValue}>{s.value}</Text>
                   <Text style={styles.statLabel}>{s.label}</Text>
@@ -99,6 +103,7 @@ export const ParentalActivityReportScreen: React.FC<ParentalActivityReportScreen
               recent.map((item, i) => (
                 <ActivityRow
                   key={`${item.title}-${i}`}
+                  styles={styles}
                   title={item.title}
                   meta={item.meta}
                   safe={item.safe}
@@ -107,7 +112,7 @@ export const ParentalActivityReportScreen: React.FC<ParentalActivityReportScreen
             )}
 
             <View style={[styles.tipCard, shadows.card]}>
-              <Icon name="warning" size={20} color={colors.warning} />
+              <Icon name="warning" size={20} color={c.warning} />
               <Text style={styles.tipText}>
                 Les contacts non approuvés sont bloqués automatiquement lorsque la
                 supervision est activée.
@@ -121,10 +126,11 @@ export const ParentalActivityReportScreen: React.FC<ParentalActivityReportScreen
 };
 
 const ActivityRow: React.FC<{
+  styles: ReturnType<typeof createStyles>;
   title: string;
   meta: string;
   safe: boolean;
-}> = ({ title, meta, safe }) => (
+}> = ({ styles, title, meta, safe }) => (
   <View style={[styles.activityRow, shadows.card]}>
     <View style={[styles.activityDot, safe ? styles.dotSafe : styles.dotWarn]} />
     <View style={styles.activityCopy}>
@@ -139,116 +145,118 @@ const ActivityRow: React.FC<{
   </View>
 );
 
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.background },
-  content: { padding: spacing.lg, paddingBottom: spacing.xxl },
-  loader: { marginVertical: spacing.xxl },
-  statusCard: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    padding: spacing.xl,
-    alignItems: 'center',
-    marginBottom: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  statusIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: colors.successBg,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.md,
-  },
-  statusTitle: { fontSize: 18, fontWeight: '800', color: colors.text },
-  statusSub: {
-    fontSize: 13,
-    color: colors.textMuted,
-    textAlign: 'center',
-    marginTop: spacing.sm,
-    lineHeight: 20,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: colors.text,
-    marginBottom: spacing.md,
-  },
-  statsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-    marginBottom: spacing.lg,
-  },
-  statCard: {
-    width: '31%',
-    minWidth: 100,
-    flexGrow: 1,
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    padding: spacing.md,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  statIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.brandSoft,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.sm,
-  },
-  statValue: { fontSize: 20, fontWeight: '900', color: colors.text },
-  statLabel: {
-    fontSize: 10,
-    color: colors.textMuted,
-    textAlign: 'center',
-    marginTop: 4,
-    fontWeight: '600',
-  },
-  emptyHint: {
-    fontSize: 13,
-    color: colors.textMuted,
-    marginBottom: spacing.lg,
-    lineHeight: 20,
-  },
-  activityRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    padding: spacing.md,
-    marginBottom: spacing.sm,
-    borderWidth: 1,
-    borderColor: colors.border,
-    gap: spacing.sm,
-  },
-  activityDot: { width: 8, height: 8, borderRadius: 4 },
-  dotSafe: { backgroundColor: colors.success },
-  dotWarn: { backgroundColor: colors.warning },
-  activityCopy: { flex: 1 },
-  activityTitle: { fontSize: 14, fontWeight: '700', color: colors.text },
-  activityMeta: { fontSize: 12, color: colors.textMuted, marginTop: 2 },
-  safeBadge: {
-    backgroundColor: colors.successBg,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-  },
-  safeText: { fontSize: 10, fontWeight: '800', color: colors.success },
-  tipCard: {
-    flexDirection: 'row',
-    gap: spacing.md,
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    padding: spacing.lg,
-    marginTop: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    alignItems: 'flex-start',
-  },
-  tipText: { flex: 1, fontSize: 13, color: colors.textSecondary, lineHeight: 20 },
-});
+function createStyles(c: AppColors) {
+  return StyleSheet.create({
+    root: { flex: 1 },
+    content: { padding: spacing.lg, paddingBottom: spacing.xxl },
+    loader: { marginVertical: spacing.xxl },
+    statusCard: {
+      backgroundColor: c.surface,
+      borderRadius: radius.lg,
+      padding: spacing.xl,
+      alignItems: 'center',
+      marginBottom: spacing.lg,
+      borderWidth: 1,
+      borderColor: c.border,
+    },
+    statusIcon: {
+      width: 56,
+      height: 56,
+      borderRadius: 28,
+      backgroundColor: c.successBg,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: spacing.md,
+    },
+    statusTitle: { fontSize: 18, fontWeight: '800', color: c.text },
+    statusSub: {
+      fontSize: 13,
+      color: c.textMuted,
+      textAlign: 'center',
+      marginTop: spacing.sm,
+      lineHeight: 20,
+    },
+    sectionTitle: {
+      fontSize: 16,
+      fontWeight: '700',
+      color: c.text,
+      marginBottom: spacing.md,
+    },
+    statsGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: spacing.sm,
+      marginBottom: spacing.lg,
+    },
+    statCard: {
+      width: '31%',
+      minWidth: 100,
+      flexGrow: 1,
+      backgroundColor: c.surface,
+      borderRadius: radius.lg,
+      padding: spacing.md,
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: c.border,
+    },
+    statIcon: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: c.brandSoft,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: spacing.sm,
+    },
+    statValue: { fontSize: 20, fontWeight: '900', color: c.text },
+    statLabel: {
+      fontSize: 10,
+      color: c.textMuted,
+      textAlign: 'center',
+      marginTop: 4,
+      fontWeight: '600',
+    },
+    emptyHint: {
+      fontSize: 13,
+      color: c.textMuted,
+      marginBottom: spacing.lg,
+      lineHeight: 20,
+    },
+    activityRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: c.surface,
+      borderRadius: radius.lg,
+      padding: spacing.md,
+      marginBottom: spacing.sm,
+      borderWidth: 1,
+      borderColor: c.border,
+      gap: spacing.sm,
+    },
+    activityDot: { width: 8, height: 8, borderRadius: 4 },
+    dotSafe: { backgroundColor: c.success },
+    dotWarn: { backgroundColor: c.warning },
+    activityCopy: { flex: 1 },
+    activityTitle: { fontSize: 14, fontWeight: '700', color: c.text },
+    activityMeta: { fontSize: 12, color: c.textMuted, marginTop: 2 },
+    safeBadge: {
+      backgroundColor: c.successBg,
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 6,
+    },
+    safeText: { fontSize: 10, fontWeight: '800', color: c.success },
+    tipCard: {
+      flexDirection: 'row',
+      gap: spacing.md,
+      backgroundColor: c.surface,
+      borderRadius: radius.lg,
+      padding: spacing.lg,
+      marginTop: spacing.lg,
+      borderWidth: 1,
+      borderColor: c.border,
+      alignItems: 'flex-start',
+    },
+    tipText: { flex: 1, fontSize: 13, color: c.textSecondary, lineHeight: 20 },
+  });
+}

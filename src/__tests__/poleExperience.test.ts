@@ -50,8 +50,21 @@ describe('poleExperience', () => {
       'profil',
     ]);
     expect(getVisibleMainTabs('homme', 'player')).not.toContain('feed');
-    expect(getVisibleMainTabs('pro', 'sponsor')).toEqual(['home', 'messages', 'profil']);
+    expect(getVisibleMainTabs('pro', 'sponsor')).toEqual([
+      'home',
+      'matchs',
+      'messages',
+      'profil',
+    ]);
+    expect(getVisibleMainTabs('pro', 'sponsor')).not.toContain('shop');
+    expect(getVisibleMainTabs('pro', 'physio')).toEqual([
+      'home',
+      'matchs',
+      'messages',
+      'profil',
+    ]);
     expect(getVisibleMainTabs('pro', 'physio')).not.toContain('recrutement');
+    expect(getVisibleMainTabs('pro', 'physio')).not.toContain('shop');
     expect(getVisibleMainTabs('pro', 'club')).toContain('recrutement');
     expect(getVisibleMainTabs('pro', 'recruiter')).toContain('recrutement');
     expect(getVisibleMainTabs('pro', 'coach')).toContain('covoiturage');

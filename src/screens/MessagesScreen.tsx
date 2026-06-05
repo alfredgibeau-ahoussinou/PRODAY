@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -16,13 +16,18 @@ import { ROLES_REQUIRING_VERIFICATION } from '../models/User';
 import { physioCareThreadLabel } from '../utils/physioMessaging';
 import { ChatScreen } from './ChatScreen';
 import { TAB_BAR_CONTENT_INSET } from '../components/navigation/BottomTabBar';
-import { colors, spacing, radius } from '../theme/designTokens';
+import { spacing, radius } from '../theme/designTokens';
+import { useThemedScreen } from '../hooks/useThemedScreen';
+import type { AppColors } from '../theme/universeTheme';
 
 export const MessagesScreen: React.FC = () => {
   const { profile, loading: authLoading } = useAuth();
   const { pendingChatThreadId, clearPendingChat } = useTabNavigation();
   const { threads, loading, refresh } = useMessagesData(profile?.uid);
   const [activeThreadId, setActiveThreadId] = useState<string | null>(null);
+  const { colors: c, productLine, rootStyle } = useThemedScreen();
+  const styles = useMemo(() => createStyles(c), [c]);
+  const isWoman = productLine === 'woman';
 
   const mustVerify =
     profile &&
@@ -69,11 +74,15 @@ export const MessagesScreen: React.FC = () => {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, rootStyle]}>
       <ScreenHeader
         label="Messagerie"
         title="Messages"
-        subtitle="Coach, agent, kiné joueur"
+        subtitle={
+          isWoman
+            ? 'Coach, agent, kiné joueuse'
+            : 'Coach, agent, kiné joueur'
+        }
         showBrandLogo
       />
       <Text style={styles.notice}>
@@ -95,10 +104,12 @@ export const MessagesScreen: React.FC = () => {
       )}
 
       {loading ? (
-        <ActivityIndicator color={colors.brand} style={styles.loader} />
+        <ActivityIndicator color={c.brand} style={styles.loader} />
       ) : !profile ? null : threads.length === 0 ? (
         <Text style={styles.empty}>
-          Aucune conversation. Contactez un joueur ou un coach depuis Recrutement.
+          {isWoman
+            ? 'Aucune conversation. Contactez une joueuse ou un coach depuis Recrutement.'
+            : 'Aucune conversation. Contactez un joueur ou un coach depuis Recrutement.'}
         </Text>
       ) : (
         <FlatList
@@ -146,77 +157,79 @@ export const MessagesScreen: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
-  notice: {
-    color: colors.textSecondary,
-    fontSize: 13,
-    lineHeight: 20,
-    paddingHorizontal: spacing.lg,
-    marginBottom: spacing.md,
-  },
-  loader: { marginTop: spacing.xl },
-  empty: {
-    color: colors.textMuted,
-    textAlign: 'center',
-    padding: spacing.xl,
-    fontSize: 14,
-    lineHeight: 22,
-  },
-  blocked: {
-    color: colors.warning,
-    backgroundColor: colors.warningBg,
-    marginHorizontal: spacing.lg,
-    marginBottom: spacing.md,
-    padding: spacing.md,
-    borderRadius: radius.md,
-    fontSize: 13,
-    lineHeight: 20,
-  },
-  list: {
-    paddingHorizontal: spacing.lg,
-    paddingBottom: TAB_BAR_CONTENT_INSET + spacing.lg,
-  },
-  thread: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    padding: spacing.md,
-    marginBottom: spacing.sm,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: colors.surfaceInverse,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: spacing.md,
-  },
-  avatarText: { fontSize: 18, fontWeight: '900', color: colors.brandInverse },
-  threadBody: { flex: 1 },
-  threadTop: { flexDirection: 'row', justifyContent: 'space-between' },
-  threadNameRow: { flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 },
-  threadName: { fontSize: 15, fontWeight: '700', color: colors.text },
-  kineBadge: {
-    fontSize: 9,
-    fontWeight: '900',
-    color: colors.accent,
-    backgroundColor: colors.accentSoft,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  threadTime: { fontSize: 11, color: colors.textMuted },
-  threadPreview: { fontSize: 13, color: colors.textSecondary, marginTop: 4 },
-  unreadDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: colors.brand,
-    marginLeft: spacing.sm,
-  },
-});
+function createStyles(c: AppColors) {
+  return StyleSheet.create({
+    container: { flex: 1 },
+    notice: {
+      color: c.textSecondary,
+      fontSize: 13,
+      lineHeight: 20,
+      paddingHorizontal: spacing.lg,
+      marginBottom: spacing.md,
+    },
+    loader: { marginTop: spacing.xl },
+    empty: {
+      color: c.textMuted,
+      textAlign: 'center',
+      padding: spacing.xl,
+      fontSize: 14,
+      lineHeight: 22,
+    },
+    blocked: {
+      color: c.warning,
+      backgroundColor: c.warningBg,
+      marginHorizontal: spacing.lg,
+      marginBottom: spacing.md,
+      padding: spacing.md,
+      borderRadius: radius.md,
+      fontSize: 13,
+      lineHeight: 20,
+    },
+    list: {
+      paddingHorizontal: spacing.lg,
+      paddingBottom: TAB_BAR_CONTENT_INSET + spacing.lg,
+    },
+    thread: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: c.surface,
+      borderRadius: radius.lg,
+      padding: spacing.md,
+      marginBottom: spacing.sm,
+      borderWidth: 1,
+      borderColor: c.border,
+    },
+    avatar: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      backgroundColor: c.surfaceInverse,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginRight: spacing.md,
+    },
+    avatarText: { fontSize: 18, fontWeight: '900', color: c.brandInverse },
+    threadBody: { flex: 1 },
+    threadTop: { flexDirection: 'row', justifyContent: 'space-between' },
+    threadNameRow: { flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 },
+    threadName: { fontSize: 15, fontWeight: '700', color: c.text },
+    kineBadge: {
+      fontSize: 9,
+      fontWeight: '900',
+      color: c.accent,
+      backgroundColor: c.accentSoft,
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+      borderRadius: 4,
+    },
+    threadTime: { fontSize: 11, color: c.textMuted },
+    threadPreview: { fontSize: 13, color: c.textSecondary, marginTop: 4 },
+    unreadDot: {
+      width: 10,
+      height: 10,
+      borderRadius: 5,
+      backgroundColor: c.brand,
+      marginLeft: spacing.sm,
+    },
+  });
+}

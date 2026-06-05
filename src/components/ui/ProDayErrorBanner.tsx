@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { useAppTheme } from '../../context/ProductLineContext';
+import { spacing, radius } from '../../theme/designTokens';
+import type { AppColors } from '../../theme/universeTheme';
 import { Icon, type IconName } from './Icon';
-import { colors, spacing, radius } from '../../theme/designTokens';
 
 export type ProDayBannerVariant = 'error' | 'warning' | 'info' | 'success';
 
@@ -14,7 +16,9 @@ interface ProDayErrorBannerProps {
   onAction?: () => void;
 }
 
-const VARIANT_STYLES: Record<
+function getVariantStyles(
+  c: AppColors
+): Record<
   ProDayBannerVariant,
   {
     bg: string;
@@ -23,36 +27,38 @@ const VARIANT_STYLES: Record<
     icon: IconName;
     iconColor: string;
   }
-> = {
-  error: {
-    bg: colors.errorBg,
-    border: colors.error,
-    text: colors.error,
-    icon: 'alert-circle',
-    iconColor: colors.error,
-  },
-  warning: {
-    bg: colors.warningBg,
-    border: colors.warning,
-    text: '#9A3412',
-    icon: 'warning',
-    iconColor: colors.warning,
-  },
-  info: {
-    bg: colors.accentSoft,
-    border: colors.borderMedium,
-    text: colors.textSecondary,
-    icon: 'alert-circle',
-    iconColor: colors.text,
-  },
-  success: {
-    bg: colors.successBg,
-    border: colors.success,
-    text: colors.success,
-    icon: 'checkmark-circle',
-    iconColor: colors.success,
-  },
-};
+> {
+  return {
+    error: {
+      bg: c.errorBg,
+      border: c.error,
+      text: c.error,
+      icon: 'alert-circle',
+      iconColor: c.error,
+    },
+    warning: {
+      bg: c.warningBg,
+      border: c.warning,
+      text: '#9A3412',
+      icon: 'warning',
+      iconColor: c.warning,
+    },
+    info: {
+      bg: c.brandSoft,
+      border: c.borderMedium,
+      text: c.textSecondary,
+      icon: 'alert-circle',
+      iconColor: c.text,
+    },
+    success: {
+      bg: c.successBg,
+      border: c.success,
+      text: c.success,
+      icon: 'checkmark-circle',
+      iconColor: c.success,
+    },
+  };
+}
 
 export const ProDayErrorBanner: React.FC<ProDayErrorBannerProps> = ({
   message,
@@ -62,7 +68,10 @@ export const ProDayErrorBanner: React.FC<ProDayErrorBannerProps> = ({
   actionLabel,
   onAction,
 }) => {
-  const v = VARIANT_STYLES[variant];
+  const { colors: c } = useAppTheme();
+  const styles = useMemo(() => createStyles(), []);
+  const variantStyles = useMemo(() => getVariantStyles(c), [c]);
+  const v = variantStyles[variant];
 
   return (
     <View style={[styles.wrap, { backgroundColor: v.bg, borderColor: v.border }]}>
@@ -85,31 +94,33 @@ export const ProDayErrorBanner: React.FC<ProDayErrorBannerProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  wrap: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: spacing.sm,
-    padding: spacing.md,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    marginBottom: spacing.md,
-  },
-  body: { flex: 1 },
-  title: {
-    fontSize: 14,
-    fontWeight: '800',
-    marginBottom: 2,
-  },
-  message: {
-    fontSize: 13,
-    lineHeight: 18,
-    fontWeight: '600',
-  },
-  actionBtn: { marginTop: spacing.sm },
-  actionText: {
-    fontSize: 13,
-    fontWeight: '800',
-    textDecorationLine: 'underline',
-  },
-});
+function createStyles() {
+  return StyleSheet.create({
+    wrap: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      gap: spacing.sm,
+      padding: spacing.md,
+      borderRadius: radius.md,
+      borderWidth: 1,
+      marginBottom: spacing.md,
+    },
+    body: { flex: 1 },
+    title: {
+      fontSize: 14,
+      fontWeight: '800',
+      marginBottom: 2,
+    },
+    message: {
+      fontSize: 13,
+      lineHeight: 18,
+      fontWeight: '600',
+    },
+    actionBtn: { marginTop: spacing.sm },
+    actionText: {
+      fontSize: 13,
+      fontWeight: '800',
+      textDecorationLine: 'underline',
+    },
+  });
+}

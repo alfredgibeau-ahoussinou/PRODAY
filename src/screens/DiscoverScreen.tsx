@@ -7,12 +7,13 @@ import { AnimatedModalShell } from '../components/motion';
 import type { ProDayModuleId } from '../content/prodayModules';
 import { useTabNavigation } from '../context/TabNavigationContext';
 import { useDiscoverLiveData } from '../hooks/useAppData';
-import { colors } from '../theme/designTokens';
+import { useThemedScreen } from '../hooks/useThemedScreen';
 
 export const DiscoverScreen: React.FC = () => {
   const { setActiveTab } = useTabNavigation();
   const { stats, loading } = useDiscoverLiveData();
   const [guestModule, setGuestModule] = useState<'arena' | 'sponsors' | null>(null);
+  const { rootStyle } = useThemedScreen();
 
   const goAuth = () => setActiveTab('profil');
 
@@ -22,7 +23,7 @@ export const DiscoverScreen: React.FC = () => {
   };
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, rootStyle]}>
       <DiscoverHomeScroll
         stats={stats}
         loading={loading}
@@ -49,5 +50,5 @@ export const DiscoverScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.background },
+  root: { flex: 1 },
 });

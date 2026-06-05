@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, Platform } from 'react-native';
 import type { SignupPhase } from '../../screens/signup/signupFlowConfig';
-import { colors, spacing } from '../../theme/designTokens';
+import { spacing } from '../../theme/designTokens';
+import { useSignupFlowTheme } from '../../screens/signup/SignupFlowContext';
+import type { AppColors } from '../../theme/universeTheme';
 
 interface SignupPhaseRailProps {
   phases: SignupPhase[];
@@ -14,15 +16,18 @@ export const SignupPhaseRail: React.FC<SignupPhaseRailProps> = ({
   phases,
   phaseIndex,
   compact,
-  accentColor = colors.ink,
+  accentColor,
 }) => {
+  const { colors: c } = useSignupFlowTheme();
+  const styles = useMemo(() => createStyles(c), [c]);
+  const accent = accentColor ?? c.ink;
   const progress =
     phases.length <= 1 ? 100 : Math.round((phaseIndex / Math.max(phases.length - 1, 1)) * 100);
 
   return (
     <View style={[styles.wrap, compact && styles.wrapCompact]}>
       <View style={styles.track}>
-        <View style={[styles.trackFill, { width: `${progress}%`, backgroundColor: accentColor }]} />
+        <View style={[styles.trackFill, { width: `${progress}%`, backgroundColor: accent }]} />
       </View>
       <View style={styles.labels}>
         {phases.map((phase, i) => {
@@ -35,7 +40,7 @@ export const SignupPhaseRail: React.FC<SignupPhaseRailProps> = ({
                   styles.label,
                   compact && styles.labelCompact,
                   done && styles.labelDone,
-                  active && [styles.labelActive, { color: accentColor }],
+                  active && [styles.labelActive, { color: accent }],
                 ]}
                 numberOfLines={1}
               >
@@ -49,52 +54,54 @@ export const SignupPhaseRail: React.FC<SignupPhaseRailProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  wrap: {
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm + 2,
-    backgroundColor: colors.surface,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.border,
-  },
-  wrapCompact: {
-    paddingVertical: spacing.sm,
-  },
-  track: {
-    height: 2,
-    borderRadius: 1,
-    backgroundColor: colors.surfaceMuted,
-    marginBottom: spacing.sm,
-    overflow: 'hidden',
-  },
-  trackFill: {
-    height: '100%',
-    backgroundColor: colors.ink,
-    borderRadius: 1,
-  },
-  labels: {
-    flexDirection: 'row',
-  },
-  labelCell: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  label: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: colors.textMuted,
-    textAlign: 'center',
-    ...Platform.select({ android: { includeFontPadding: false } }),
-  },
-  labelCompact: {
-    fontSize: 10,
-  },
-  labelActive: {
-    color: colors.ink,
-    fontWeight: '800',
-  },
-  labelDone: {
-    color: colors.textSecondary,
-    fontWeight: '700',
-  },
-});
+function createStyles(c: AppColors) {
+  return StyleSheet.create({
+    wrap: {
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.sm + 2,
+      backgroundColor: c.surface,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: c.border,
+    },
+    wrapCompact: {
+      paddingVertical: spacing.sm,
+    },
+    track: {
+      height: 2,
+      borderRadius: 1,
+      backgroundColor: c.surfaceMuted,
+      marginBottom: spacing.sm,
+      overflow: 'hidden',
+    },
+    trackFill: {
+      height: '100%',
+      backgroundColor: c.ink,
+      borderRadius: 1,
+    },
+    labels: {
+      flexDirection: 'row',
+    },
+    labelCell: {
+      flex: 1,
+      alignItems: 'center',
+    },
+    label: {
+      fontSize: 11,
+      fontWeight: '600',
+      color: c.textMuted,
+      textAlign: 'center',
+      ...Platform.select({ android: { includeFontPadding: false } }),
+    },
+    labelCompact: {
+      fontSize: 10,
+    },
+    labelActive: {
+      color: c.ink,
+      fontWeight: '800',
+    },
+    labelDone: {
+      color: c.textSecondary,
+      fontWeight: '700',
+    },
+  });
+}

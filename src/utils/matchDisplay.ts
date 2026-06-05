@@ -1,4 +1,4 @@
-import { colors } from '../theme/designTokens';
+import type { AppColors } from '../theme/universeTheme';
 import type { FriendlyMatch, FriendlyMatchStatus } from '../models/FriendlyMatch';
 
 export function formatMatchDateTime(date: Date, timeLabel?: string): string {
@@ -15,20 +15,23 @@ export function formatMatchTeams(m: FriendlyMatch): string {
   return `${m.requester_club_name} vs ${opponent}`;
 }
 
-export function matchStatusStyle(status: FriendlyMatchStatus): {
+export function matchStatusStyle(
+  status: FriendlyMatchStatus,
+  c: AppColors
+): {
   label: string;
   color: string;
   bg: string;
 } {
   switch (status) {
     case 'ACCEPTED':
-      return { label: 'Confirmé', color: colors.success, bg: colors.successBg };
+      return { label: 'Confirmé', color: c.success, bg: c.successBg };
     case 'PLAYED':
-      return { label: 'Joué', color: colors.textMuted, bg: colors.surfaceMuted };
+      return { label: 'Joué', color: c.textMuted, bg: c.surfaceMuted };
     case 'CANCELLED':
-      return { label: 'Annulé', color: colors.error, bg: colors.errorBg };
+      return { label: 'Annulé', color: c.error, bg: c.errorBg };
     case 'OPEN':
     default:
-      return { label: 'En attente', color: colors.pending, bg: colors.pendingBg };
+      return { label: 'En attente', color: c.pending, bg: c.pendingBg };
   }
 }

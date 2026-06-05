@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -21,7 +21,21 @@ import {
   PLAYER_POSITIONS,
 } from '../constants/playerProfile';
 import { isMinorAge, parseAgeInput } from '../utils/minor';
-import { colors, spacing, radius } from '../theme/designTokens';
+import { isSponsorRole, SPONSOR_THEME } from '../content/sponsorExperience';
+import { spacing, radius } from '../theme/designTokens';
+import { useThemedScreen } from '../hooks/useThemedScreen';
+import type { AppColors } from '../theme/universeTheme';
+
+type FieldUi = {
+  surface: string;
+  surfaceMuted: string;
+  border: string;
+  text: string;
+  textSecondary: string;
+  textMuted: string;
+  accent: string;
+  onAccent: string;
+};
 
 interface EditProfileScreenProps {
   user: User;
@@ -80,6 +94,36 @@ export const EditProfileScreen: React.FC<EditProfileScreenProps> = ({
     (p.specialties ?? []).join(', ')
   );
   const [saving, setSaving] = useState(false);
+  const isSponsor = isSponsorRole(user.role);
+  const { colors: c, productLine, rootStyle } = useThemedScreen();
+  const styles = useMemo(() => createStyles(c), [c]);
+  const isWoman = productLine === 'woman';
+
+  const ui: FieldUi = useMemo(
+    () =>
+      isSponsor
+        ? {
+            surface: SPONSOR_THEME.surface,
+            surfaceMuted: SPONSOR_THEME.surfaceMuted,
+            border: SPONSOR_THEME.borderSubtle,
+            text: SPONSOR_THEME.text,
+            textSecondary: SPONSOR_THEME.textSecondary,
+            textMuted: SPONSOR_THEME.textMuted,
+            accent: SPONSOR_THEME.primary,
+            onAccent: SPONSOR_THEME.onPrimary,
+          }
+        : {
+            surface: c.surface,
+            surfaceMuted: c.surfaceMuted,
+            border: c.border,
+            text: c.text,
+            textSecondary: c.textSecondary,
+            textMuted: c.textMuted,
+            accent: c.accent,
+            onAccent: c.brandInverse,
+          },
+    [isSponsor, c]
+  );
 
   const parseStat = (value: string) => {
     const n = parseInt(value.replace(/\D/g, ''), 10);
@@ -153,6 +197,10 @@ export const EditProfileScreen: React.FC<EditProfileScreenProps> = ({
         profileUpdate.specialties = specs.length > 0 ? specs : undefined;
       }
 
+      if (user.role === 'sponsor') {
+        profileUpdate.job_title = jobTitle.trim() || undefined;
+      }
+
       const updatePayload: Parameters<typeof profileService.updateProfile>[1] = {
         display_name: displayName.trim(),
         city: city.trim(),
@@ -188,21 +236,47 @@ export const EditProfileScreen: React.FC<EditProfileScreenProps> = ({
   };
 
   return (
-    <View style={styles.root}>
-      <ScreenHeader title="Modifier le profil" onBack={onBack} centered />
+    <View
+      style={[
+        styles.root,
+        !isSponsor && rootStyle,
+        isSponsor && { backgroundColor: SPONSOR_THEME.background },
+      ]}
+    >
+      <ScreenHeader
+        title={isSponsor ? 'Modifier la marque' : 'Modifier le profil'}
+        onBack={onBack}
+        centered
+        sponsorDark={isSponsor}
+      />
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <ProfileCompletionBar user={user} />
+        {!isSponsor ? <ProfileCompletionBar user={user} /> : null}
 
-        <Text style={styles.section}>Identité</Text>
-        <Field label="Nom affiché *" value={displayName} onChangeText={setDisplayName} />
-        <Field label="Email" value={email} editable={false} muted />
-        <Field label="Téléphone" value={phone} onChangeText={setPhone} keyboardType="phone-pad" />
-        <Field label="Ville" value={city} onChangeText={setCity} />
-        <Field label="Département" value={department} onChangeText={setDepartment} />
+        <Text style={[styles.section, { color: ui.accent }]}>Identité</Text>
+        <Field styles={styles} label="Nom affiché *" value={displayName} onChangeText={setDisplayName} ui={ui} />
+        <Field styles={styles} label="Email" value={email} editable={false} muted ui={ui} />
+        <Field styles={styles} label="Téléphone" value={phone} onChangeText={setPhone} keyboardType="phone-pad" ui={ui} />
+        <Field styles={styles} label="Ville" value={city} onChangeText={setCity} ui={ui} />
+        <Field styles={styles} label="Département" value={department} onChangeText={setDepartment} ui={ui} />
+
+        {isSponsor ? (
+          <>
+            <Text style={[styles.section, { color: ui.accent }]}>Marque</Text>
+            <Field
+              styles={styles}
+              label="Nom de la marque / entreprise *"
+              value={jobTitle}
+              onChangeText={setJobTitle}
+              ui={ui}
+            />
+          </>
+        ) : null}
 
         {user.role === 'player' && (
           <>
-            <Text style={styles.section}>Joueur</Text>
+            <Text style={[styles.section, { color: ui.accent }]}>
+              {isWoman ? 'Joueuse' : 'Joueur'}
+            </Text>
             <SignupOptionPicker
               label="Poste"
               options={PLAYER_POSITIONS}
@@ -237,18 +311,18 @@ export const EditProfileScreen: React.FC<EditProfileScreenProps> = ({
             </View>
             <View style={styles.row2}>
               <View style={styles.half}>
-                <Field label="Âge" value={age} onChangeText={setAge} keyboardType="number-pad" />
+                <Field styles={styles} label="Âge" value={age} onChangeText={setAge} keyboardType="number-pad" ui={ui} />
               </View>
               <View style={styles.half}>
-                <Field label="Exp. (ans)" value={yearsExp} onChangeText={setYearsExp} keyboardType="number-pad" />
+                <Field styles={styles} label="Exp. (ans)" value={yearsExp} onChangeText={setYearsExp} keyboardType="number-pad" ui={ui} />
               </View>
             </View>
             <View style={styles.row2}>
               <View style={styles.half}>
-                <Field label="Taille (cm)" value={heightCm} onChangeText={setHeightCm} keyboardType="number-pad" />
+                <Field styles={styles} label="Taille (cm)" value={heightCm} onChangeText={setHeightCm} keyboardType="number-pad" ui={ui} />
               </View>
               <View style={styles.half}>
-                <Field label="Poids (kg)" value={weightKg} onChangeText={setWeightKg} keyboardType="number-pad" />
+                <Field styles={styles} label="Poids (kg)" value={weightKg} onChangeText={setWeightKg} keyboardType="number-pad" ui={ui} />
               </View>
             </View>
             <Text style={styles.fieldLabel}>Disponibilité</Text>
@@ -267,59 +341,79 @@ export const EditProfileScreen: React.FC<EditProfileScreenProps> = ({
             </View>
             <Text style={styles.fieldLabel}>Stats saison</Text>
             <View style={styles.statRow}>
-              <Field label="Matchs" value={statMatches} onChangeText={setStatMatches} keyboardType="number-pad" compact />
-              <Field label="Buts" value={statGoals} onChangeText={setStatGoals} keyboardType="number-pad" compact />
-              <Field label="Passes d." value={statAssists} onChangeText={setStatAssists} keyboardType="number-pad" compact />
+              <Field styles={styles} label="Matchs" value={statMatches} onChangeText={setStatMatches} keyboardType="number-pad" compact ui={ui} />
+              <Field styles={styles} label="Buts" value={statGoals} onChangeText={setStatGoals} keyboardType="number-pad" compact ui={ui} />
+              <Field styles={styles} label="Passes d." value={statAssists} onChangeText={setStatAssists} keyboardType="number-pad" compact ui={ui} />
             </View>
             <Field
+              styles={styles}
               label="Vidéos (une URL par ligne)"
               value={videoUrlsText}
               onChangeText={setVideoUrlsText}
               multiline
               placeholder="https://youtube.com/…"
+              ui={ui}
             />
             <Field
+              styles={styles}
               label="Palmarès (une ligne par distinction)"
               value={achievementsText}
               onChangeText={setAchievementsText}
               multiline
+              ui={ui}
             />
           </>
         )}
 
         {(user.role === 'coach' || user.role === 'agent' || user.role === 'recruiter') && (
           <>
-            <Text style={styles.section}>Staff</Text>
-            <Field label="Titre / fonction" value={jobTitle} onChangeText={setJobTitle} />
-            <Field label="Diplôme" value={diploma} onChangeText={setDiploma} placeholder="BEF, UEFA B…" />
-            <Field label="N° licence" value={licenseNumber} onChangeText={setLicenseNumber} />
+            <Text style={[styles.section, { color: ui.accent }]}>Staff</Text>
+            <Field styles={styles} label="Titre / fonction" value={jobTitle} onChangeText={setJobTitle} ui={ui} />
+            <Field styles={styles} label="Diplôme" value={diploma} onChangeText={setDiploma} placeholder="BEF, UEFA B…" ui={ui} />
+            <Field styles={styles} label="N° licence" value={licenseNumber} onChangeText={setLicenseNumber} ui={ui} />
             <Field
+              styles={styles}
               label="Spécialités (séparées par des virgules)"
               value={specialtiesText}
               onChangeText={setSpecialtiesText}
               placeholder="Gardien, U17, Préparation physique"
+              ui={ui}
             />
           </>
         )}
 
-        <Text style={styles.section}>Présentation</Text>
+        <Text style={[styles.section, { color: ui.accent }]}>Présentation</Text>
         <Field
+          styles={styles}
           label="Bio"
           value={bio}
           onChangeText={setBio}
           multiline
-          placeholder="Présentez-vous en quelques lignes…"
+          placeholder={isSponsor ? 'Présentez votre marque en quelques lignes…' : 'Présentez-vous en quelques lignes…'}
+          ui={ui}
         />
 
-        <Text style={styles.hintPhoto}>
-          Photo et galerie : modifiez-les depuis l’onglet Profil (tap sur la photo ou galerie).
-        </Text>
+        {!isSponsor ? (
+          <Text style={[styles.hintPhoto, { color: ui.textMuted }]}>
+            Photo et galerie : modifiez-les depuis l’onglet Profil (tap sur la photo ou galerie).
+          </Text>
+        ) : null}
 
-        <TouchableOpacity style={styles.primary} onPress={handleSave} disabled={saving}>
+        <TouchableOpacity
+          style={[
+            styles.primary,
+            isSponsor && {
+              backgroundColor: ui.accent,
+              borderColor: ui.accent,
+            },
+          ]}
+          onPress={handleSave}
+          disabled={saving}
+        >
           {saving ? (
             <ActivityIndicator color="#FFF" />
           ) : (
-            <Text style={styles.primaryText}>Enregistrer</Text>
+            <Text style={[styles.primaryText, isSponsor && { color: ui.onAccent }]}>Enregistrer</Text>
           )}
         </TouchableOpacity>
       </ScrollView>
@@ -328,6 +422,7 @@ export const EditProfileScreen: React.FC<EditProfileScreenProps> = ({
 };
 
 const Field: React.FC<{
+  styles: ReturnType<typeof createStyles>;
   label: string;
   value: string;
   onChangeText?: (t: string) => void;
@@ -337,7 +432,9 @@ const Field: React.FC<{
   editable?: boolean;
   muted?: boolean;
   compact?: boolean;
+  ui: FieldUi;
 }> = ({
+  styles,
   label,
   value,
   onChangeText,
@@ -347,18 +444,23 @@ const Field: React.FC<{
   editable = true,
   muted,
   compact,
+  ui,
 }) => (
   <View style={compact ? styles.fieldCompact : styles.field}>
-    {!compact ? <Text style={styles.fieldLabel}>{label}</Text> : null}
+    {!compact ? <Text style={[styles.fieldLabel, { color: ui.textSecondary }]}>{label}</Text> : null}
     <TextInput
       style={[
         styles.input,
+        {
+          backgroundColor: muted ? ui.surfaceMuted : ui.surface,
+          borderColor: ui.border,
+          color: muted ? ui.textMuted : ui.text,
+        },
         multiline && styles.inputMulti,
-        muted && styles.inputMuted,
         compact && styles.inputCompact,
       ]}
       placeholder={compact ? label : placeholder}
-      placeholderTextColor={colors.textMuted}
+      placeholderTextColor={ui.textMuted}
       value={value}
       onChangeText={onChangeText}
       editable={editable}
@@ -368,32 +470,33 @@ const Field: React.FC<{
   </View>
 );
 
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.background },
+function createStyles(c: AppColors) {
+  return StyleSheet.create({
+  root: { flex: 1 },
   content: { padding: spacing.lg, paddingBottom: spacing.xxl },
   section: {
     fontSize: 11,
     fontWeight: '800',
-    color: colors.accent,
+    color: c.accent,
     letterSpacing: 1,
     marginTop: spacing.md,
     marginBottom: spacing.sm,
   },
   field: { marginBottom: spacing.md },
   fieldCompact: { flex: 1, marginBottom: spacing.sm },
-  fieldLabel: { fontSize: 12, fontWeight: '700', color: colors.textSecondary, marginBottom: 4 },
+  fieldLabel: { fontSize: 12, fontWeight: '700', color: c.textSecondary, marginBottom: 4 },
   input: {
-    backgroundColor: colors.surface,
+    backgroundColor: c.surface,
     borderRadius: radius.md,
     padding: spacing.md,
-    color: colors.text,
+    color: c.text,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: c.border,
     fontSize: 15,
   },
   inputCompact: { textAlign: 'center' },
   inputMulti: { minHeight: 88, textAlignVertical: 'top' },
-  inputMuted: { color: colors.textMuted, backgroundColor: colors.surfaceMuted },
+  inputMuted: { color: c.textMuted, backgroundColor: c.surfaceMuted },
   statRow: { flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.md },
   row2: { flexDirection: 'row', gap: spacing.sm },
   half: { flex: 1 },
@@ -403,25 +506,26 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     borderRadius: radius.pill,
     borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
+    borderColor: c.border,
+    backgroundColor: c.surface,
   },
-  chipActive: { backgroundColor: colors.ink, borderColor: colors.accent },
-  chipText: { fontSize: 12, fontWeight: '800', color: colors.text },
-  chipTextActive: { color: colors.brandInverse },
+  chipActive: { backgroundColor: c.ink, borderColor: c.accent },
+  chipText: { fontSize: 12, fontWeight: '800', color: c.text },
+  chipTextActive: { color: c.brandInverse },
   hintPhoto: {
     fontSize: 12,
-    color: colors.textMuted,
+    color: c.textMuted,
     lineHeight: 17,
     marginBottom: spacing.lg,
   },
   primary: {
-    backgroundColor: colors.ink,
+    backgroundColor: c.ink,
     borderRadius: radius.md,
     padding: spacing.lg,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: colors.accent,
+    borderColor: c.accent,
   },
-  primaryText: { color: colors.brandInverse, fontWeight: '900', fontSize: 16 },
-});
+  primaryText: { color: c.brandInverse, fontWeight: '900', fontSize: 16 },
+  });
+}

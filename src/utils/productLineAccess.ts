@@ -6,8 +6,12 @@ import {
   WOMAN_SPACE_ACTIVE_KEY,
   type ProductLineId,
 } from '../models/ProductLine';
-import type { User } from '../models/User';
+import type { User, UserRole } from '../models/User';
 import { isRoleAllowedForProductLine, productLineLabel } from '../content/universeRoles';
+import {
+  isPartnerPoleTestAccount,
+  isUniversalPoleTestAccount,
+} from '../config/emailVerificationBypass';
 
 /** Ligne produit active (AsyncStorage — même logique que ProductLineContext). */
 export async function getActiveProductLineFromStorage(): Promise<ProductLineId> {
@@ -64,7 +68,25 @@ export class ProductLineMismatchError extends Error {
   }
 }
 
+/** Rôle effectif en session — comptes test multi-pôles. */
+export function getEffectiveRoleForProductLine(
+  user: User,
+  activeLine: ProductLineId
+): UserRole {
+  if (isPartnerPoleTestAccount(user.email)) {
+    if (activeLine === 'pro') return 'sponsor';
+    return user.role;
+  }
+  if (isUniversalPoleTestAccount(user.email)) {
+    if (activeLine === 'pro') return 'physio';
+    return 'player';
+  }
+  return user.role;
+}
+
 export function profileMatchesActiveLine(user: User, activeLine: ProductLineId): boolean {
+  if (isPartnerPoleTestAccount(user.email)) return activeLine === 'pro';
+  if (isUniversalPoleTestAccount(user.email)) return true;
   const userLine = getUserProductLine(user);
   if (userLine !== activeLine) return false;
   return isRoleAllowedForProductLine(user.role, activeLine);
@@ -74,8 +96,33 @@ export function assertProfileMatchesActiveLine(
   user: User,
   activeLine: ProductLineId
 ): void {
+  if (isPartnerPoleTestAccount(user.email)) {
+    if (activeLine !== 'pro') {
+      throw new ProductLineMismatchError('pro', activeLine);
+    }
+    return;
+  }
+  if (isUniversalPoleTestAccount(user.email)) return;
   const userLine = getUserProductLine(user);
   if (userLine !== activeLine || !isRoleAllowedForProductLine(user.role, activeLine)) {
     throw new ProductLineMismatchError(userLine, activeLine);
   }
+}
+
+/** Profil adapté à l’univers actif (comptes test multi-pôles). */
+export function getSessionProfile(user: User, activeLine: ProductLineId): User {
+  if (isPartnerPoleTestAccount(user.email)) {
+    return {
+      ...user,
+      role: activeLine === 'pro' ? 'sponsor' : user.role,
+      product_line: activeLine,
+    };
+  }
+  if (!isUniversalPoleTestAccount(user.email)) return user;
+  const role = getEffectiveRoleForProductLine(user, activeLine);
+  return {
+    ...user,
+    role,
+    product_line: activeLine,
+  };
 }

@@ -19,7 +19,8 @@ import { platformFeedService } from '../services/platformFeed.service';
 import { storageService } from '../services/storage.service';
 import { pickFeedImage } from '../utils/pickFeedImage';
 import { PhysioCarePanel } from '../components/feed/PhysioCarePanel';
-import { colors, spacing, radius } from '../theme/designTokens';
+import { spacing, radius } from '../theme/designTokens';
+import { useAppTheme } from '../context/ProductLineContext';
 
 const ROLE_LABEL: Record<UserRole, string> = {
   player: 'Joueur',
@@ -39,12 +40,18 @@ interface FeedScreenProps {
   onOpenMessages: () => void;
 }
 
+function roleLabelForLine(role: UserRole, productLine: 'homme' | 'woman' | 'pro'): string {
+  if (role === 'player' && productLine === 'woman') return 'Joueuse';
+  return ROLE_LABEL[role] ?? role;
+}
+
 export const FeedScreen: React.FC<FeedScreenProps> = ({
   profile,
   onBack,
   onOpenChat,
   onOpenMessages,
 }) => {
+  const { colors: c, productLine } = useAppTheme();
   const [posts, setPosts] = useState<PlatformFeedPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -180,17 +187,25 @@ export const FeedScreen: React.FC<FeedScreenProps> = ({
           return (
             <TouchableOpacity
               key={`${post.id}-${i}`}
-              style={[styles.pollOption, selected && styles.pollOptionOn]}
+              style={[
+                styles.pollOption,
+                {
+                  borderColor: selected ? c.brand : c.border,
+                  backgroundColor: selected ? c.accentSoft : c.background,
+                },
+              ]}
               onPress={() => canVote && handleVote(post, i)}
               disabled={!canVote}
               activeOpacity={0.88}
             >
-              <View style={styles.pollBarTrack}>
-                <View style={[styles.pollBarFill, { width: `${pct}%` }]} />
+              <View style={[styles.pollBarTrack, { backgroundColor: c.surfaceMuted }]}>
+                <View
+                  style={[styles.pollBarFill, { width: `${pct}%`, backgroundColor: c.brand }]}
+                />
               </View>
               <View style={styles.pollRow}>
-                <Text style={styles.pollLabel}>{label}</Text>
-                <Text style={styles.pollPct}>
+                <Text style={[styles.pollLabel, { color: c.text }]}>{label}</Text>
+                <Text style={[styles.pollPct, { color: c.textMuted }]}>
                   {pct}% · {count} vote{count !== 1 ? 's' : ''}
                 </Text>
               </View>
@@ -198,26 +213,28 @@ export const FeedScreen: React.FC<FeedScreenProps> = ({
           );
         })}
         {!canVote ? (
-          <Text style={styles.pollHint}>Réservé aux agents — résultats en lecture seule.</Text>
+          <Text style={[styles.pollHint, { color: c.textMuted }]}>
+            Réservé aux agents — résultats en lecture seule.
+          </Text>
         ) : null}
       </View>
     );
   };
 
   const renderItem = ({ item }: { item: PlatformFeedPost }) => (
-    <View style={styles.card}>
+    <View style={[styles.card, { backgroundColor: c.surface, borderColor: c.border }]}>
       <View style={styles.cardHead}>
-        <View style={styles.typePill}>
+        <View style={[styles.typePill, { backgroundColor: c.accentSoft }]}>
           <Icon
             name={item.type === 'poll' ? 'people' : 'document'}
             size={12}
-            color={colors.accent}
+            color={c.brand}
           />
-          <Text style={styles.typeText}>
+          <Text style={[styles.typeText, { color: c.brand }]}>
             {item.type === 'poll' ? 'Sondage agents' : 'Actualité'}
           </Text>
         </View>
-        <Text style={styles.date}>
+        <Text style={[styles.date, { color: c.textMuted }]}>
           {item.created_at.toLocaleDateString('fr-FR', {
             day: 'numeric',
             month: 'short',
@@ -226,20 +243,35 @@ export const FeedScreen: React.FC<FeedScreenProps> = ({
           })}
         </Text>
       </View>
-      <Text style={styles.cardTitle}>{item.title}</Text>
+      <Text style={[styles.cardTitle, { color: c.text }]}>{item.title}</Text>
       {item.image_url ? (
-        <Image source={{ uri: item.image_url }} style={styles.cardImage} resizeMode="cover" />
+        <Image
+          source={{ uri: item.image_url }}
+          style={[styles.cardImage, { backgroundColor: c.surfaceMuted }]}
+          resizeMode="cover"
+        />
       ) : null}
-      {item.body ? <Text style={styles.cardBody}>{item.body}</Text> : null}
-      <Text style={styles.meta}>
-        {item.author_name} · {ROLE_LABEL[item.author_role] ?? item.author_role}
+      {item.body ? (
+        <Text style={[styles.cardBody, { color: c.textSecondary }]}>{item.body}</Text>
+      ) : null}
+      <Text style={[styles.meta, { color: c.textMuted }]}>
+        {item.author_name} · {roleLabelForLine(item.author_role, productLine)}
       </Text>
       {item.type === 'poll' ? renderPoll(item) : null}
     </View>
   );
 
+  const inputStyle = [
+    styles.input,
+    {
+      borderColor: c.border,
+      color: c.text,
+      backgroundColor: c.background,
+    },
+  ];
+
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, { backgroundColor: c.background }]}>
       <ScreenHeader
         label="Communauté"
         title="Fil d'actualité"
@@ -253,36 +285,70 @@ export const FeedScreen: React.FC<FeedScreenProps> = ({
         <View style={styles.composerBar}>
           {canNews ? (
             <TouchableOpacity
-              style={[styles.composerBtn, composer === 'news' && styles.composerBtnOn]}
+              style={[
+                styles.composerBtn,
+                {
+                  borderColor: composer === 'news' ? c.brand : c.border,
+                  backgroundColor: composer === 'news' ? c.brand : c.surface,
+                },
+              ]}
               onPress={() => setComposer(composer === 'news' ? 'none' : 'news')}
             >
-              <Text style={styles.composerBtnText}>+ Actualité</Text>
+              <Text
+                style={[
+                  styles.composerBtnText,
+                  { color: composer === 'news' ? c.brandInverse : c.text },
+                ]}
+              >
+                + Actualité
+              </Text>
             </TouchableOpacity>
           ) : null}
           {canPoll ? (
             <TouchableOpacity
-              style={[styles.composerBtn, composer === 'poll' && styles.composerBtnOn]}
+              style={[
+                styles.composerBtn,
+                {
+                  borderColor: composer === 'poll' ? c.brand : c.border,
+                  backgroundColor: composer === 'poll' ? c.brand : c.surface,
+                },
+              ]}
               onPress={() => setComposer(composer === 'poll' ? 'none' : 'poll')}
             >
-              <Text style={styles.composerBtnText}>+ Sondage</Text>
+              <Text
+                style={[
+                  styles.composerBtnText,
+                  { color: composer === 'poll' ? c.brandInverse : c.text },
+                ]}
+              >
+                + Sondage
+              </Text>
             </TouchableOpacity>
           ) : null}
         </View>
       )}
 
       {composer !== 'none' ? (
-        <View style={styles.composerPanel}>
+        <View
+          style={[
+            styles.composerPanel,
+            { backgroundColor: c.surface, borderColor: c.border },
+          ]}
+        >
           <TextInput
-            style={styles.input}
+            style={inputStyle}
             placeholder="Titre"
-            placeholderTextColor={colors.textMuted}
+            placeholderTextColor={c.textMuted}
             value={title}
             onChangeText={setTitle}
           />
           {composer === 'news' ? (
             <>
-              <TouchableOpacity style={styles.imagePickBtn} onPress={() => void handlePickImage()}>
-                <Text style={styles.imagePickText}>
+              <TouchableOpacity
+                style={[styles.imagePickBtn, { borderColor: c.border }]}
+                onPress={() => void handlePickImage()}
+              >
+                <Text style={[styles.imagePickText, { color: c.brand }]}>
                   {imageUri ? 'Changer la photo' : '+ Ajouter une photo'}
                 </Text>
               </TouchableOpacity>
@@ -290,9 +356,9 @@ export const FeedScreen: React.FC<FeedScreenProps> = ({
                 <Image source={{ uri: imageUri }} style={styles.previewImage} resizeMode="cover" />
               ) : null}
               <TextInput
-                style={[styles.input, styles.textArea]}
+                style={[inputStyle, styles.textArea]}
                 placeholder="Contenu de l'actualité…"
-                placeholderTextColor={colors.textMuted}
+                placeholderTextColor={c.textMuted}
                 value={body}
                 onChangeText={setBody}
                 multiline
@@ -301,30 +367,30 @@ export const FeedScreen: React.FC<FeedScreenProps> = ({
           ) : (
             <>
               <TextInput
-                style={styles.input}
+                style={inputStyle}
                 placeholder="Option 1"
-                placeholderTextColor={colors.textMuted}
+                placeholderTextColor={c.textMuted}
                 value={pollOpt1}
                 onChangeText={setPollOpt1}
               />
               <TextInput
-                style={styles.input}
+                style={inputStyle}
                 placeholder="Option 2"
-                placeholderTextColor={colors.textMuted}
+                placeholderTextColor={c.textMuted}
                 value={pollOpt2}
                 onChangeText={setPollOpt2}
               />
               <TextInput
-                style={styles.input}
+                style={inputStyle}
                 placeholder="Option 3 (optionnel)"
-                placeholderTextColor={colors.textMuted}
+                placeholderTextColor={c.textMuted}
                 value={pollOpt3}
                 onChangeText={setPollOpt3}
               />
               <TextInput
-                style={[styles.input, styles.textArea]}
+                style={[inputStyle, styles.textArea]}
                 placeholder="Contexte (optionnel)"
-                placeholderTextColor={colors.textMuted}
+                placeholderTextColor={c.textMuted}
                 value={body}
                 onChangeText={setBody}
                 multiline
@@ -332,23 +398,27 @@ export const FeedScreen: React.FC<FeedScreenProps> = ({
             </>
           )}
           <TouchableOpacity
-            style={[styles.publishBtn, submitting && styles.publishDisabled]}
+            style={[
+              styles.publishBtn,
+              { backgroundColor: c.brand },
+              submitting && styles.publishDisabled,
+            ]}
             onPress={() =>
               void (composer === 'news' ? handlePublishNews() : handlePublishPoll())
             }
             disabled={submitting}
           >
             {submitting ? (
-              <ActivityIndicator color={colors.brandInverse} />
+              <ActivityIndicator color={c.brandInverse} />
             ) : (
-              <Text style={styles.publishText}>Publier</Text>
+              <Text style={[styles.publishText, { color: c.brandInverse }]}>Publier</Text>
             )}
           </TouchableOpacity>
         </View>
       ) : null}
 
       {loading ? (
-        <ActivityIndicator color={colors.accent} style={styles.loader} />
+        <ActivityIndicator color={c.brand} style={styles.loader} />
       ) : (
         <FlatList
           data={posts}
@@ -362,7 +432,7 @@ export const FeedScreen: React.FC<FeedScreenProps> = ({
                 setRefreshing(true);
                 void load();
               }}
-              tintColor={colors.accent}
+              tintColor={c.brand}
             />
           }
           ListHeaderComponent={
@@ -373,7 +443,7 @@ export const FeedScreen: React.FC<FeedScreenProps> = ({
             />
           }
           ListEmptyComponent={
-            <Text style={styles.empty}>
+            <Text style={[styles.empty, { color: c.textMuted }]}>
               Aucune publication pour le moment.
               {canNews || canPoll ? ' Soyez le premier à publier.' : ''}
             </Text>
@@ -385,7 +455,7 @@ export const FeedScreen: React.FC<FeedScreenProps> = ({
 };
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.background },
+  root: { flex: 1 },
   composerBar: {
     flexDirection: 'row',
     gap: spacing.sm,
@@ -397,56 +467,44 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: colors.border,
     alignItems: 'center',
-    backgroundColor: colors.surface,
   },
-  composerBtnOn: { backgroundColor: colors.ink, borderColor: colors.ink },
-  composerBtnText: { fontWeight: '800', fontSize: 13, color: colors.text },
+  composerBtnText: { fontWeight: '800', fontSize: 13 },
   composerPanel: {
     marginHorizontal: spacing.lg,
     marginBottom: spacing.md,
     padding: spacing.md,
-    backgroundColor: colors.surface,
     borderRadius: radius.lg,
     borderWidth: 1,
-    borderColor: colors.border,
     gap: spacing.sm,
   },
   input: {
     borderWidth: 1,
-    borderColor: colors.border,
     borderRadius: radius.md,
     padding: spacing.md,
     fontSize: 15,
-    color: colors.text,
-    backgroundColor: colors.background,
   },
   textArea: { minHeight: 88, textAlignVertical: 'top' },
   publishBtn: {
-    backgroundColor: colors.accent,
     borderRadius: radius.md,
     paddingVertical: spacing.md,
     alignItems: 'center',
   },
   publishDisabled: { opacity: 0.6 },
-  publishText: { color: colors.brandInverse, fontWeight: '900' },
+  publishText: { fontWeight: '900' },
   loader: { marginTop: spacing.xl },
   list: { padding: spacing.lg, paddingBottom: spacing.xxl },
   empty: {
     textAlign: 'center',
-    color: colors.textMuted,
     fontSize: 14,
     lineHeight: 22,
     paddingVertical: spacing.xl,
   },
   card: {
-    backgroundColor: colors.surface,
     borderRadius: radius.lg,
     padding: spacing.md,
     marginBottom: spacing.md,
     borderWidth: 1,
-    borderColor: colors.border,
   },
   cardHead: {
     flexDirection: 'row',
@@ -458,22 +516,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: colors.accentSoft,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: radius.pill,
   },
-  typeText: { fontSize: 10, fontWeight: '800', color: colors.accent },
-  date: { fontSize: 10, color: colors.textMuted, fontWeight: '600' },
+  typeText: { fontSize: 10, fontWeight: '800' },
+  date: { fontSize: 10, fontWeight: '600' },
   imagePickBtn: {
     borderWidth: 1,
-    borderColor: colors.border,
     borderRadius: radius.md,
     padding: spacing.sm,
     alignItems: 'center',
     borderStyle: 'dashed',
   },
-  imagePickText: { fontSize: 13, fontWeight: '700', color: colors.accent },
+  imagePickText: { fontSize: 13, fontWeight: '700' },
   previewImage: {
     width: '100%',
     height: 160,
@@ -485,31 +541,26 @@ const styles = StyleSheet.create({
     height: 180,
     borderRadius: radius.md,
     marginBottom: spacing.sm,
-    backgroundColor: colors.surfaceMuted,
   },
-  cardTitle: { fontSize: 17, fontWeight: '900', color: colors.text, marginBottom: 6 },
-  cardBody: { fontSize: 14, lineHeight: 21, color: colors.textSecondary, marginBottom: 8 },
-  meta: { fontSize: 11, color: colors.textMuted, fontWeight: '700', marginBottom: spacing.sm },
+  cardTitle: { fontSize: 17, fontWeight: '900', marginBottom: 6 },
+  cardBody: { fontSize: 14, lineHeight: 21, marginBottom: 8 },
+  meta: { fontSize: 11, fontWeight: '700', marginBottom: spacing.sm },
   pollBox: { gap: spacing.sm, marginTop: spacing.xs },
   pollOption: {
     borderWidth: 1,
-    borderColor: colors.border,
     borderRadius: radius.md,
     padding: spacing.sm,
-    backgroundColor: colors.background,
     overflow: 'hidden',
   },
-  pollOptionOn: { borderColor: colors.accent, backgroundColor: colors.accentSoft },
   pollBarTrack: {
     height: 4,
-    backgroundColor: colors.surfaceMuted,
     borderRadius: 2,
     marginBottom: 6,
     overflow: 'hidden',
   },
-  pollBarFill: { height: 4, backgroundColor: colors.accent },
+  pollBarFill: { height: 4 },
   pollRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 },
-  pollLabel: { flex: 1, fontSize: 13, fontWeight: '700', color: colors.text },
-  pollPct: { fontSize: 11, fontWeight: '700', color: colors.textMuted },
-  pollHint: { fontSize: 11, color: colors.textMuted, fontStyle: 'italic', marginTop: 4 },
+  pollLabel: { flex: 1, fontSize: 13, fontWeight: '700' },
+  pollPct: { fontSize: 11, fontWeight: '700' },
+  pollHint: { fontSize: 11, fontStyle: 'italic', marginTop: 4 },
 });

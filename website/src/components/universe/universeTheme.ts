@@ -1,4 +1,10 @@
-import type { ProductLineWeb } from "@/lib/content";
+import {
+  HOMME_BRAND,
+  PRO_BRAND,
+  WOMAN_BRAND,
+  type ProductLineWeb,
+} from "@/lib/content";
+import { ROUTES } from "@/lib/routes";
 
 export const UNIVERSE_THEME: Record<
   ProductLineWeb,
@@ -20,6 +26,17 @@ export const UNIVERSE_THEME: Record<
     ctaBtn: string;
     ctaBtnOutline: string;
     crossCard: string;
+    navCta: string;
+    navLink: string;
+    pricingAccent: string;
+    softSectionBg: string;
+    verificationSectionBg: string;
+    verificationTitle: string;
+    pulseStroke: string;
+    pulseSliderAccent: string;
+    exploreCard: string;
+    exploreBadge: string;
+    demoTabActive: string;
   }
 > = {
   homme: {
@@ -41,6 +58,17 @@ export const UNIVERSE_THEME: Record<
     ctaBtn: "bg-white text-neutral-900 hover:bg-neutral-100",
     ctaBtnOutline: "border-white/30 text-white hover:bg-white/10",
     crossCard: "from-neutral-800 to-neutral-950",
+    navCta: "bg-proday-ink hover:bg-neutral-800",
+    navLink: "font-medium text-neutral-800 hover:text-proday-ink",
+    pricingAccent: "bg-proday-ink",
+    softSectionBg: "",
+    verificationSectionBg: "",
+    verificationTitle: "",
+    pulseStroke: HOMME_BRAND.accent,
+    pulseSliderAccent: "accent-neutral-900",
+    exploreCard: "border-neutral-200 hover:border-neutral-300",
+    exploreBadge: "bg-white/90 text-proday-ink",
+    demoTabActive: "bg-white/15",
   },
   woman: {
     pageHeaderAccent: "woman",
@@ -62,6 +90,17 @@ export const UNIVERSE_THEME: Record<
     ctaBtn: "bg-white text-pink-900 hover:bg-pink-50",
     ctaBtnOutline: "border-white/30 text-white hover:bg-white/10",
     crossCard: "from-pink-800 to-rose-950",
+    navCta: "bg-pink-700 hover:bg-pink-800",
+    navLink: "font-medium text-pink-700 hover:text-pink-800",
+    pricingAccent: "bg-pink-700",
+    softSectionBg: "bg-pink-50/50",
+    verificationSectionBg: "",
+    verificationTitle: "",
+    pulseStroke: WOMAN_BRAND.accent,
+    pulseSliderAccent: "accent-pink-700",
+    exploreCard: "border-pink-200 ring-1 ring-pink-100 hover:border-pink-300",
+    exploreBadge: "bg-pink-600 text-white",
+    demoTabActive: "bg-pink-500/25",
   },
   pro: {
     pageHeaderAccent: "pro",
@@ -83,5 +122,48 @@ export const UNIVERSE_THEME: Record<
     ctaBtn: "bg-white text-blue-900 hover:bg-blue-50",
     ctaBtnOutline: "border-white/30 text-white hover:bg-white/10",
     crossCard: "from-blue-900 to-slate-950",
+    navCta: "bg-blue-700 hover:bg-blue-800",
+    navLink: "font-medium text-blue-700 hover:text-blue-800",
+    pricingAccent: "bg-blue-700",
+    softSectionBg: "bg-blue-50/30",
+    verificationSectionBg: "bg-blue-50/30",
+    verificationTitle: "text-blue-950",
+    pulseStroke: PRO_BRAND.accent,
+    pulseSliderAccent: "accent-blue-700",
+    exploreCard: "border-blue-200 ring-1 ring-blue-100 hover:border-blue-300",
+    exploreBadge: "bg-blue-700 text-white",
+    demoTabActive: "bg-blue-500/25",
   },
 };
+
+export function universeFromPath(pathname: string): ProductLineWeb | null {
+  if (pathname.startsWith(ROUTES.woman)) return "woman";
+  if (pathname.startsWith(ROUTES.pro)) return "pro";
+  if (pathname.startsWith(ROUTES.homme)) return "homme";
+  return null;
+}
+
+export function universeFromExploreHref(href: string): ProductLineWeb | null {
+  if (href === ROUTES.woman) return "woman";
+  if (href === ROUTES.pro) return "pro";
+  if (href === ROUTES.homme) return "homme";
+  return null;
+}
+
+export function navBrandForPath(pathname: string) {
+  const line = universeFromPath(pathname);
+  if (line === "woman") {
+    return { name: WOMAN_BRAND.name, logo: WOMAN_BRAND.logo, theme: UNIVERSE_THEME.woman };
+  }
+  if (line === "pro") {
+    return { name: PRO_BRAND.name, logo: PRO_BRAND.logo, theme: UNIVERSE_THEME.pro };
+  }
+  if (line === "homme") {
+    return { name: HOMME_BRAND.name, logo: HOMME_BRAND.logo, theme: UNIVERSE_THEME.homme };
+  }
+  return {
+    name: "ProDay",
+    logo: "/branding/logo-light.png",
+    theme: UNIVERSE_THEME.homme,
+  };
+}

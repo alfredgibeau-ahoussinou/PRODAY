@@ -1,15 +1,16 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { Modal, View, StyleSheet, Pressable, Text, type ModalProps } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withSpring,
   withTiming,
-  runOnJS,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { motion } from '../../theme/motion';
-import { colors, spacing, radius } from '../../theme/designTokens';
+import { useAppTheme } from '../../context/ProductLineContext';
+import { spacing, radius } from '../../theme/designTokens';
+import type { AppColors } from '../../theme/universeTheme';
 
 interface AnimatedModalShellProps {
   visible: boolean;
@@ -30,6 +31,8 @@ export const AnimatedModalShell: React.FC<AnimatedModalShellProps> = ({
   presentationStyle = 'overFullScreen',
 }) => {
   const insets = useSafeAreaInsets();
+  const { colors: c } = useAppTheme();
+  const styles = useMemo(() => createStyles(c), [c]);
   const backdrop = useSharedValue(0);
   const sheetY = useSharedValue(80);
 
@@ -85,36 +88,38 @@ export const AnimatedModalShell: React.FC<AnimatedModalShellProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  root: { flex: 1, justifyContent: 'flex-end' },
-  backdrop: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: motion.modalBackdrop,
-  },
-  sheet: {
-    flex: 1,
-    backgroundColor: colors.background,
-    borderTopLeftRadius: radius.xl,
-    borderTopRightRadius: radius.xl,
-    borderWidth: 1,
-    borderBottomWidth: 0,
-    borderColor: colors.border,
-    overflow: 'hidden',
-  },
-  handleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.sm,
-  },
-  handle: {
-    width: 40,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: colors.borderMedium,
-  },
-  closeBtn: { paddingVertical: spacing.xs, paddingHorizontal: spacing.sm },
-  closeText: { fontSize: 14, fontWeight: '800', color: colors.accent },
-  body: { flex: 1 },
-});
+function createStyles(c: AppColors) {
+  return StyleSheet.create({
+    root: { flex: 1, justifyContent: 'flex-end' },
+    backdrop: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: motion.modalBackdrop,
+    },
+    sheet: {
+      flex: 1,
+      backgroundColor: c.background,
+      borderTopLeftRadius: radius.xl,
+      borderTopRightRadius: radius.xl,
+      borderWidth: 1,
+      borderBottomWidth: 0,
+      borderColor: c.border,
+      overflow: 'hidden',
+    },
+    handleRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: spacing.lg,
+      paddingBottom: spacing.sm,
+    },
+    handle: {
+      width: 40,
+      height: 4,
+      borderRadius: 2,
+      backgroundColor: c.borderMedium,
+    },
+    closeBtn: { paddingVertical: spacing.xs, paddingHorizontal: spacing.sm },
+    closeText: { fontSize: 14, fontWeight: '800', color: c.brand },
+    body: { flex: 1 },
+  });
+}

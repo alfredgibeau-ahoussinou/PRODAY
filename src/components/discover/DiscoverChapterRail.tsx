@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -18,8 +18,9 @@ import Animated, {
 import { DISCOVER_CHAPTERS, type DiscoverChapterId } from '../../content/discoverChapters';
 import { PressableSpring } from './PressableSpring';
 import { SPRING_SNAPPY } from './animationConfig';
-import { discoverPalette } from './discoverStyles';
-import { colors, spacing, radius } from '../../theme/designTokens';
+import { getDiscoverPalette, useDiscoverStyles } from './discoverStyles';
+import type { AppColors } from '../../theme/universeTheme';
+import { spacing, radius } from '../../theme/designTokens';
 import { useDiscoverMetrics } from './useDiscoverMetrics';
 
 interface DiscoverChapterRailProps {
@@ -41,6 +42,8 @@ const LightChapterTabs: React.FC<{
   scrollX?: SharedValue<number>;
   pageWidth: number;
 }> = ({ active, onSelect, pad, compact, scrollX, pageWidth }) => {
+  const { palette, colors: c } = useDiscoverStyles();
+  const styles = useMemo(() => createChapterRailStyles(c, palette), [c, palette]);
   const [trackW, setTrackW] = useState(0);
   const lineX = useSharedValue(0);
   const activeIndex = Math.max(0, DISCOVER_CHAPTERS.findIndex((c) => c.id === active));
@@ -130,6 +133,8 @@ const LightTabLabel: React.FC<{
   label: string;
   compact: boolean;
 }> = ({ index, scrollX, snap, label, compact }) => {
+  const { palette, colors: c } = useDiscoverStyles();
+  const styles = useMemo(() => createChapterRailStyles(c, palette), [c, palette]);
   const labelStyle = useAnimatedStyle(() => {
     const progress = scrollX.value / snap;
     const emphasis = interpolate(
@@ -138,8 +143,8 @@ const LightTabLabel: React.FC<{
       [0, 1, 0],
       Extrapolation.CLAMP
     );
-    const inactive = discoverPalette.faint;
-    const active = discoverPalette.ink;
+    const inactive = palette.faint;
+    const active = palette.ink;
     return {
       opacity: 0.5 + emphasis * 0.5,
       color: emphasis > 0.5 ? active : inactive,
@@ -169,6 +174,8 @@ export const DiscoverChapterRail: React.FC<DiscoverChapterRailProps> = ({
   scrollX,
   pageWidth: pageWidthProp,
 }) => {
+  const { palette, colors: c } = useDiscoverStyles();
+  const styles = useMemo(() => createChapterRailStyles(c, palette), [c, palette]);
   const immersive = variant === 'immersive';
   const light = variant === 'light';
   const { pad, compact, pageWidth } = useDiscoverMetrics();
@@ -216,11 +223,12 @@ export const DiscoverChapterRail: React.FC<DiscoverChapterRailProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+function createChapterRailStyles(c: AppColors, palette: ReturnType<typeof getDiscoverPalette>) {
+  return StyleSheet.create({
   lightWrap: {
-    backgroundColor: discoverPalette.surface,
+    backgroundColor: palette.surface,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: discoverPalette.border,
+    borderBottomColor: palette.border,
     zIndex: 2,
   },
   lightWrapCompact: {
@@ -240,7 +248,7 @@ const styles = StyleSheet.create({
     left: 0,
     bottom: 0,
     height: 2,
-    backgroundColor: discoverPalette.ink,
+    backgroundColor: palette.ink,
     borderRadius: 1,
   },
   lightTab: {
@@ -253,7 +261,7 @@ const styles = StyleSheet.create({
   lightTabLabel: {
     fontSize: 14,
     fontWeight: '700',
-    color: discoverPalette.faint,
+    color: palette.faint,
     letterSpacing: 0.15,
     textAlign: 'center',
     ...Platform.select({ android: { includeFontPadding: false } }),
@@ -262,18 +270,18 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   lightTabLabelOn: {
-    color: discoverPalette.ink,
+    color: palette.ink,
     fontWeight: '800',
   },
   wrap: {
     marginHorizontal: spacing.lg,
     marginTop: spacing.sm,
     marginBottom: spacing.sm,
-    backgroundColor: colors.surfaceMuted,
+    backgroundColor: c.surfaceMuted,
     borderRadius: radius.pill,
     padding: 4,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: c.border,
   },
   wrapEmbedded: {
     marginTop: spacing.md,
@@ -296,10 +304,10 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
   },
   chipOn: {
-    backgroundColor: colors.surface,
+    backgroundColor: c.surface,
     ...Platform.select({
       ios: {
-        shadowColor: colors.ink,
+        shadowColor: c.ink,
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.08,
         shadowRadius: 6,
@@ -310,20 +318,21 @@ const styles = StyleSheet.create({
   chipNum: {
     fontSize: 10,
     fontWeight: '800',
-    color: colors.textMuted,
+    color: c.textMuted,
   },
-  chipNumOn: { color: colors.ink },
+  chipNumOn: { color: c.ink },
   chipLabel: {
     fontSize: 13,
     fontWeight: '600',
-    color: colors.textMuted,
+    color: c.textMuted,
     textAlign: 'center',
   },
   chipOnImmersive: {
     backgroundColor: '#262626',
   },
   chipTextOn: {
-    color: colors.text,
+    color: c.text,
     fontWeight: '800',
   },
-});
+  });
+}

@@ -8,10 +8,9 @@ import Animated, {
   withDelay,
   withTiming,
 } from 'react-native-reanimated';
-import { colors } from '../../theme/designTokens';
+import { useSignupFlowTheme } from '../../screens/signup/SignupFlowContext';
 
 const { width: SCREEN_W } = Dimensions.get('window');
-const PALETTE = [colors.accent, colors.success, colors.accentLight, colors.textSecondary];
 
 interface SignupConfettiProps {
   active?: boolean;
@@ -56,17 +55,23 @@ const ConfettiPiece: React.FC<{
 };
 
 export const SignupConfetti: React.FC<SignupConfettiProps> = ({ active = true, count = 28 }) => {
+  const { colors: c } = useSignupFlowTheme();
+  const palette = useMemo(
+    () => [c.brand, c.success, c.brandLight, c.textSecondary],
+    [c]
+  );
+
   const pieces = useMemo(
     () =>
       Array.from({ length: count }, (_, i) => ({
         id: i,
         left: (SCREEN_W / count) * i + Math.random() * 24,
         delay: Math.random() * 500,
-        color: PALETTE[i % PALETTE.length],
+        color: palette[i % palette.length],
         size: 6 + Math.random() * 6,
         rotate: Math.random() * 180,
       })),
-    [count]
+    [count, palette]
   );
 
   if (!active) return null;

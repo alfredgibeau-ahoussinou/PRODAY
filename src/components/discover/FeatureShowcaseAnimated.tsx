@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -27,8 +27,10 @@ import { useAppTheme } from '../../context/ProductLineContext';
 import type { ShowcaseImageKey } from '../../content/showcaseAssets';
 import { Icon, type IconName } from '../ui/Icon';
 import { PressableSpring } from './PressableSpring';
-import { colors, spacing, radius } from '../../theme/designTokens';
+import { spacing, radius } from '../../theme/designTokens';
 import { AUTO_CAROUSEL_MS } from './animationConfig';
+import { useDiscoverStyles } from './discoverStyles';
+import type { AppColors } from '../../theme/universeTheme';
 
 const { width: SCREEN_W } = Dimensions.get('window');
 /** ~88 % largeur écran : aperçu de la carte suivante sans carte géante */
@@ -53,6 +55,8 @@ function FeatureCard({
   showcase: Record<ShowcaseImageKey, number>;
 }) {
   const { isWoman } = useAppTheme();
+  const { colors: c } = useDiscoverStyles();
+  const styles = useMemo(() => createStyles(c), [c]);
   const cardStyle = useAnimatedStyle(() => {
     const center = index * SNAP;
     const dist = Math.abs(scrollX.value - center);
@@ -104,6 +108,8 @@ interface FeatureShowcaseAnimatedProps {
 export const FeatureShowcaseAnimated: React.FC<FeatureShowcaseAnimatedProps> = ({
   onFeaturePress,
 }) => {
+  const { colors: c } = useDiscoverStyles();
+  const styles = useMemo(() => createStyles(c), [c]);
   const showcase = useShowcaseImages();
   const scrollX = useSharedValue(0);
   const [active, setActive] = useState(0);
@@ -189,7 +195,8 @@ export const FeatureShowcaseAnimated: React.FC<FeatureShowcaseAnimatedProps> = (
   );
 };
 
-const styles = StyleSheet.create({
+function createStyles(c: AppColors) {
+  return StyleSheet.create({
   wrap: { marginTop: spacing.md },
   scrollPad: {
     gap: CARD_GAP,
@@ -197,10 +204,10 @@ const styles = StyleSheet.create({
   },
   cardWrap: {},
   card: {
-    backgroundColor: colors.surface,
+    backgroundColor: c.surface,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: c.border,
     minHeight: 168,
     overflow: 'hidden',
   },
@@ -247,17 +254,17 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 15,
     fontWeight: '800',
-    color: colors.text,
+    color: c.text,
   },
   num: {
     fontSize: 11,
     fontWeight: '800',
-    color: colors.textMuted,
+    color: c.textMuted,
   },
   desc: {
     fontSize: 12,
     lineHeight: 16,
-    color: colors.textSecondary,
+    color: c.textSecondary,
     marginTop: 4,
   },
   dots: {
@@ -268,3 +275,4 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
   },
 });
+}

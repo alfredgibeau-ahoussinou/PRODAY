@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import type { Tournament, TournamentStatus } from '../models/Tournament';
 import { Icon } from './ui/Icon';
-import { colors, spacing, radius } from '../theme/designTokens';
+import { spacing, radius } from '../theme/designTokens';
+import { useAppTheme } from '../context/ProductLineContext';
+import type { AppColors } from '../theme/universeTheme';
 
 interface TournamentCardProps {
   tournament: Tournament;
@@ -10,18 +12,24 @@ interface TournamentCardProps {
   onRegister?: (t: Tournament) => void;
 }
 
-const STATUS: Record<TournamentStatus, { label: string; color: string }> = {
-  OPEN: { label: 'Ouvert', color: colors.success },
-  IN_PROGRESS: { label: 'En cours', color: colors.brand },
-  FINISHED: { label: 'Terminé', color: colors.textMuted },
-};
+function statusMeta(
+  c: AppColors
+): Record<TournamentStatus, { label: string; color: string }> {
+  return {
+    OPEN: { label: 'Ouvert', color: c.success },
+    IN_PROGRESS: { label: 'En cours', color: c.brand },
+    FINISHED: { label: 'Terminé', color: c.textMuted },
+  };
+}
 
 export const TournamentCard: React.FC<TournamentCardProps> = ({
   tournament,
   onPress,
   onRegister,
 }) => {
-  const status = STATUS[tournament.status];
+  const { colors: c } = useAppTheme();
+  const styles = useMemo(() => createStyles(c), [c]);
+  const status = statusMeta(c)[tournament.status];
   const count = tournament.subscriber_uids?.length ?? 0;
 
   return (
@@ -46,11 +54,11 @@ export const TournamentCard: React.FC<TournamentCardProps> = ({
         </Text>
         <Text style={styles.categories}>{tournament.categories.join(' · ')}</Text>
         <View style={styles.footer}>
-          <Icon name="people" size={14} color={colors.textMuted} />
+          <Icon name="people" size={14} color={c.textMuted} />
           <Text style={styles.footerText}>
             {count} club{count !== 1 ? 's' : ''} inscrit{count !== 1 ? 's' : ''}
           </Text>
-          <Icon name="chevron-forward" size={16} color={colors.textMuted} />
+          <Icon name="chevron-forward" size={16} color={c.textMuted} />
         </View>
       </TouchableOpacity>
       {tournament.status === 'OPEN' && onRegister ? (
@@ -66,45 +74,47 @@ function formatDate(d: Date): string {
   return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
 }
 
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    marginVertical: spacing.xs,
-    borderWidth: 1,
-    borderColor: colors.border,
-    overflow: 'hidden',
-  },
-  main: { padding: spacing.lg },
-  topRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-    gap: spacing.sm,
-  },
-  name: { flex: 1, color: colors.text, fontSize: 17, fontWeight: '900' },
-  statusPill: {
-    borderWidth: 1.5,
-    borderRadius: radius.pill,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-  },
-  statusText: { fontSize: 10, fontWeight: '800' },
-  meta: { color: colors.textSecondary, fontSize: 13, marginTop: 4 },
-  categories: { color: colors.brand, fontSize: 12, marginTop: spacing.sm, fontWeight: '700' },
-  footer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginTop: spacing.md,
-  },
-  footerText: { flex: 1, fontSize: 12, color: colors.textMuted, fontWeight: '600' },
-  btn: {
-    backgroundColor: colors.brand,
-    paddingVertical: 12,
-    alignItems: 'center',
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-  },
-  btnText: { color: '#FFFFFF', fontWeight: '800', fontSize: 14 },
-});
+function createStyles(c: AppColors) {
+  return StyleSheet.create({
+    card: {
+      backgroundColor: c.surface,
+      borderRadius: radius.lg,
+      marginVertical: spacing.xs,
+      borderWidth: 1,
+      borderColor: c.border,
+      overflow: 'hidden',
+    },
+    main: { padding: spacing.lg },
+    topRow: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      justifyContent: 'space-between',
+      gap: spacing.sm,
+    },
+    name: { flex: 1, color: c.text, fontSize: 17, fontWeight: '900' },
+    statusPill: {
+      borderWidth: 1.5,
+      borderRadius: radius.pill,
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+    },
+    statusText: { fontSize: 10, fontWeight: '800' },
+    meta: { color: c.textSecondary, fontSize: 13, marginTop: 4 },
+    categories: { color: c.brand, fontSize: 12, marginTop: spacing.sm, fontWeight: '700' },
+    footer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      marginTop: spacing.md,
+    },
+    footerText: { flex: 1, fontSize: 12, color: c.textMuted, fontWeight: '600' },
+    btn: {
+      backgroundColor: c.brand,
+      paddingVertical: 12,
+      alignItems: 'center',
+      borderTopWidth: 1,
+      borderTopColor: c.border,
+    },
+    btnText: { color: c.brandInverse, fontWeight: '800', fontSize: 14 },
+  });
+}

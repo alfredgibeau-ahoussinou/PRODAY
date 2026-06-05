@@ -1,6 +1,6 @@
 import React from 'react';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../../theme/designTokens';
+import { useAppTheme } from '../../context/ProductLineContext';
 
 export type IconName =
   | 'home'
@@ -125,10 +125,12 @@ interface IconProps {
 export const Icon: React.FC<IconProps> = ({
   name,
   size = 22,
-  color = colors.text,
+  color,
   variant = 'outline',
 }) => {
+  const { colors: c } = useAppTheme();
+  const resolvedColor = color ?? c.text;
   const glyph =
     variant === 'filled' && FILLED_MAP[name] ? FILLED_MAP[name] : MAP[name];
-  return <Ionicons name={glyph} size={size} color={color} />;
+  return <Ionicons name={glyph} size={size} color={resolvedColor} />;
 };

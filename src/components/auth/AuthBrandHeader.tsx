@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Logo } from '../Logo';
-import { BRAND, colors, spacing } from '../../theme/designTokens';
+import { BRAND, spacing } from '../../theme/designTokens';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { brandForProductLine } from '../../models/ProductLine';
+import type { AppColors } from '../../theme/universeTheme';
 
 interface AuthBrandHeaderProps {
   width?: number;
@@ -16,14 +17,15 @@ interface AuthBrandHeaderProps {
 }
 
 /**
- * Logo ProDay — variante selon l’univers actif (Man / Woman / Pro).
+ * Logo ProDay — variante selon l'univers actif (Man / Woman / Pro).
  */
 export const AuthBrandHeader: React.FC<AuthBrandHeaderProps> = ({
   width = 220,
   tone = 'dark',
   showTagline = false,
 }) => {
-  const { productLine } = useAppTheme();
+  const { productLine, colors: c } = useAppTheme();
+  const styles = useMemo(() => createStyles(c), [c]);
   const isLight = tone === 'light';
   const background = isLight ? 'light' : 'dark';
   const brand = brandForProductLine(productLine);
@@ -52,29 +54,31 @@ export const AuthBrandHeader: React.FC<AuthBrandHeaderProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  wrap: {
-    alignItems: 'center',
-    width: '100%',
-    paddingVertical: spacing.sm,
-  },
-  logoSlot: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  tagline: {
-    marginTop: spacing.sm,
-    fontSize: 9,
-    fontWeight: '700',
-    letterSpacing: 2,
-    textTransform: 'uppercase',
-    color: colors.textMuted,
-    textAlign: 'center',
-  },
-  taglineDark: {
-    color: colors.heroMuted,
-    letterSpacing: 2.2,
-    fontSize: 10,
-    marginTop: spacing.md,
-  },
-});
+function createStyles(c: AppColors) {
+  return StyleSheet.create({
+    wrap: {
+      alignItems: 'center',
+      width: '100%',
+      paddingVertical: spacing.sm,
+    },
+    logoSlot: {
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    tagline: {
+      marginTop: spacing.sm,
+      fontSize: 9,
+      fontWeight: '700',
+      letterSpacing: 2,
+      textTransform: 'uppercase',
+      color: c.textMuted,
+      textAlign: 'center',
+    },
+    taglineDark: {
+      color: c.heroMuted,
+      letterSpacing: 2.2,
+      fontSize: 10,
+      marginTop: spacing.md,
+    },
+  });
+}

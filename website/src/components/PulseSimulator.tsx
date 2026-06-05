@@ -3,6 +3,8 @@
 import { motion, useSpring, useTransform } from "framer-motion";
 import { useMemo, useState } from "react";
 import { Reveal } from "./Reveal";
+import { UNIVERSE_THEME } from "@/components/universe/universeTheme";
+import type { ProductLineWeb } from "@/lib/content";
 
 type SliderKey = "profile" | "stats" | "activity" | "trust";
 
@@ -22,11 +24,20 @@ function scoreLabel(score: number): string {
 
 type PulseSimulatorProps = {
   fullPage?: boolean;
+  /** @deprecated Préférer `universe` */
   variant?: "default" | "woman";
+  universe?: ProductLineWeb;
 };
 
-export function PulseSimulator({ fullPage, variant = "default" }: PulseSimulatorProps) {
-  const isWoman = variant === "woman";
+export function PulseSimulator({
+  fullPage,
+  variant = "default",
+  universe,
+}: PulseSimulatorProps) {
+  const line: ProductLineWeb =
+    universe ?? (variant === "woman" ? "woman" : "homme");
+  const theme = UNIVERSE_THEME[line];
+
   const [values, setValues] = useState<Record<SliderKey, number>>({
     profile: 65,
     stats: 40,
@@ -53,7 +64,7 @@ export function PulseSimulator({ fullPage, variant = "default" }: PulseSimulator
 
   return (
     <section
-      className={`${isWoman ? "bg-transparent" : "bg-white"} ${fullPage ? "py-12" : "scroll-mt-24 py-24"}`}
+      className={`${fullPage ? "bg-transparent" : theme.softSectionBg || "bg-white"} ${fullPage ? "py-12" : "scroll-mt-24 py-24"}`}
     >
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         {!fullPage && (
@@ -92,7 +103,7 @@ export function PulseSimulator({ fullPage, variant = "default" }: PulseSimulator
                       [s.key]: Number(e.target.value),
                     }))
                   }
-                  className="h-2 w-full cursor-pointer appearance-none rounded-full bg-neutral-200 accent-neutral-900"
+                  className={`h-2 w-full cursor-pointer appearance-none rounded-full bg-neutral-200 ${theme.pulseSliderAccent}`}
                   aria-label={s.label}
                 />
                 <p className="mt-1 text-xs text-proday-muted">{s.hint}</p>
@@ -116,7 +127,7 @@ export function PulseSimulator({ fullPage, variant = "default" }: PulseSimulator
                   cy={100}
                   r={88}
                   fill="none"
-                  stroke={isWoman ? "#BE185D" : "#0a0a0a"}
+                  stroke={theme.pulseStroke}
                   strokeWidth={12}
                   strokeLinecap="round"
                   strokeDasharray={circumference}
@@ -142,7 +153,11 @@ export function PulseSimulator({ fullPage, variant = "default" }: PulseSimulator
               {scoreLabel(score)}
             </motion.p>
             <p className="mt-2 text-center text-sm text-proday-muted">
-              Plus le Pulse monte, plus vous êtes visible des clubs et coachs.
+              {line === "woman"
+                ? "Plus le Pulse monte, plus vous êtes visible des clubs et coachs F."
+                : line === "pro"
+                  ? "Plus le Pulse monte, plus votre profil pro gagne en crédibilité."
+                  : "Plus le Pulse monte, plus vous êtes visible des clubs et coachs."}
             </p>
           </div>
         </div>

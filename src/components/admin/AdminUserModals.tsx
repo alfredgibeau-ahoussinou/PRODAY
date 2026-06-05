@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Modal,
   View,
@@ -11,7 +11,9 @@ import {
 } from 'react-native';
 import type { User, UserRole, VerificationStatus } from '../../models/User';
 import { ROLES_REQUIRING_VERIFICATION } from '../../models/User';
-import { colors, spacing, radius } from '../../theme/designTokens';
+import { useAdminStyles } from './adminStyles';
+import { spacing, radius } from '../../theme/designTokens';
+import type { AppColors } from '../../theme/universeTheme';
 
 const ROLES: UserRole[] = ['player', 'coach', 'club', 'agent', 'recruiter', 'organizer', 'physio', 'sponsor'];
 const VERIFY: VerificationStatus[] = ['NOT_REQUIRED', 'PENDING', 'VERIFIED', 'REJECTED'];
@@ -37,6 +39,8 @@ export const AdminUserEditModal: React.FC<AdminUserEditModalProps> = ({
   onClose,
   onSave,
 }) => {
+  const { colors: c } = useAdminStyles();
+  const styles = useMemo(() => createStyles(c), [c]);
   const [displayName, setDisplayName] = useState('');
   const [city, setCity] = useState('');
   const [role, setRole] = useState<UserRole>('player');
@@ -64,14 +68,14 @@ export const AdminUserEditModal: React.FC<AdminUserEditModalProps> = ({
               style={styles.input}
               value={displayName}
               onChangeText={setDisplayName}
-              placeholderTextColor={colors.textMuted}
+              placeholderTextColor={c.textMuted}
             />
             <Text style={styles.label}>Ville</Text>
             <TextInput
               style={styles.input}
               value={city}
               onChangeText={setCity}
-              placeholderTextColor={colors.textMuted}
+              placeholderTextColor={c.textMuted}
             />
             <Text style={styles.label}>Rôle</Text>
             <View style={styles.chipRow}>
@@ -128,7 +132,7 @@ export const AdminUserEditModal: React.FC<AdminUserEditModalProps> = ({
               }
             >
               {saving ? (
-                <ActivityIndicator color={colors.brandInverse} />
+                <ActivityIndicator color={c.brandInverse} />
               ) : (
                 <Text style={styles.saveText}>Enregistrer</Text>
               )}
@@ -155,6 +159,8 @@ export const AdminRejectModal: React.FC<AdminRejectModalProps> = ({
   onClose,
   onConfirm,
 }) => {
+  const { colors: c } = useAdminStyles();
+  const styles = useMemo(() => createStyles(c), [c]);
   const [reason, setReason] = useState('');
 
   return (
@@ -168,7 +174,7 @@ export const AdminRejectModal: React.FC<AdminRejectModalProps> = ({
             value={reason}
             onChangeText={setReason}
             placeholder="Motif (optionnel) — visible dans la notification"
-            placeholderTextColor={colors.textMuted}
+            placeholderTextColor={c.textMuted}
             multiline
           />
           <View style={styles.actions}>
@@ -181,7 +187,7 @@ export const AdminRejectModal: React.FC<AdminRejectModalProps> = ({
               onPress={() => onConfirm(reason.trim())}
             >
               {submitting ? (
-                <ActivityIndicator color={colors.brandInverse} />
+                <ActivityIndicator color={c.brandInverse} />
               ) : (
                 <Text style={styles.saveText}>Confirmer le rejet</Text>
               )}
@@ -193,67 +199,69 @@ export const AdminRejectModal: React.FC<AdminRejectModalProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'flex-end',
-  },
-  sheet: {
-    backgroundColor: colors.surface,
-    borderTopLeftRadius: radius.xl,
-    borderTopRightRadius: radius.xl,
-    padding: spacing.lg,
-    maxHeight: '85%',
-  },
-  title: { fontSize: 20, fontWeight: '900', color: colors.text },
-  sub: { fontSize: 13, color: colors.textMuted, marginBottom: spacing.md },
-  label: {
-    fontSize: 11,
-    fontWeight: '800',
-    color: colors.textSecondary,
-    marginTop: spacing.sm,
-    marginBottom: spacing.xs,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    padding: spacing.md,
-    fontSize: 15,
-    color: colors.text,
-    backgroundColor: colors.background,
-  },
-  textArea: { minHeight: 88, textAlignVertical: 'top' },
-  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs, marginBottom: spacing.sm },
-  chip: {
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 6,
-    borderRadius: radius.pill,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  chipOn: { backgroundColor: colors.ink, borderColor: colors.ink },
-  chipText: { fontSize: 11, fontWeight: '700', color: colors.textSecondary },
-  chipTextOn: { color: colors.brandInverse },
-  actions: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.lg },
-  cancelBtn: {
-    flex: 1,
-    padding: spacing.md,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    alignItems: 'center',
-  },
-  cancelText: { fontWeight: '800', color: colors.text },
-  saveBtn: {
-    flex: 1,
-    padding: spacing.md,
-    borderRadius: radius.md,
-    backgroundColor: colors.ink,
-    alignItems: 'center',
-  },
-  rejectBtn: { backgroundColor: colors.error },
-  saveDisabled: { opacity: 0.6 },
-  saveText: { fontWeight: '900', color: colors.brandInverse },
-});
+function createStyles(c: AppColors) {
+  return StyleSheet.create({
+    overlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.5)',
+      justifyContent: 'flex-end',
+    },
+    sheet: {
+      backgroundColor: c.surface,
+      borderTopLeftRadius: radius.xl,
+      borderTopRightRadius: radius.xl,
+      padding: spacing.lg,
+      maxHeight: '85%',
+    },
+    title: { fontSize: 20, fontWeight: '900', color: c.text },
+    sub: { fontSize: 13, color: c.textMuted, marginBottom: spacing.md },
+    label: {
+      fontSize: 11,
+      fontWeight: '800',
+      color: c.textSecondary,
+      marginTop: spacing.sm,
+      marginBottom: spacing.xs,
+    },
+    input: {
+      borderWidth: 1,
+      borderColor: c.border,
+      borderRadius: radius.md,
+      padding: spacing.md,
+      fontSize: 15,
+      color: c.text,
+      backgroundColor: c.background,
+    },
+    textArea: { minHeight: 88, textAlignVertical: 'top' },
+    chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs, marginBottom: spacing.sm },
+    chip: {
+      paddingHorizontal: spacing.sm,
+      paddingVertical: 6,
+      borderRadius: radius.pill,
+      borderWidth: 1,
+      borderColor: c.border,
+    },
+    chipOn: { backgroundColor: c.ink, borderColor: c.ink },
+    chipText: { fontSize: 11, fontWeight: '700', color: c.textSecondary },
+    chipTextOn: { color: c.brandInverse },
+    actions: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.lg },
+    cancelBtn: {
+      flex: 1,
+      padding: spacing.md,
+      borderRadius: radius.md,
+      borderWidth: 1,
+      borderColor: c.border,
+      alignItems: 'center',
+    },
+    cancelText: { fontWeight: '800', color: c.text },
+    saveBtn: {
+      flex: 1,
+      padding: spacing.md,
+      borderRadius: radius.md,
+      backgroundColor: c.ink,
+      alignItems: 'center',
+    },
+    rejectBtn: { backgroundColor: c.error },
+    saveDisabled: { opacity: 0.6 },
+    saveText: { fontWeight: '900', color: c.brandInverse },
+  });
+}

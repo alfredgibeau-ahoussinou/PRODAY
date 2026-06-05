@@ -11,7 +11,9 @@ import Animated, {
 } from 'react-native-reanimated';
 import { ScreenHeader } from '../../components/ui/ScreenHeader';
 import { Icon } from '../../components/ui/Icon';
-import { colors, spacing, radius, shadows } from '../../theme/designTokens';
+import { spacing, radius, shadows } from '../../theme/designTokens';
+import { useThemedScreen } from '../../hooks/useThemedScreen';
+import type { AppColors } from '../../theme/universeTheme';
 
 const { width: W, height: H } = Dimensions.get('window');
 
@@ -22,6 +24,8 @@ interface DiscoverMotionLabScreenProps {
 type Bubble = { id: string; x: number; y: number; size: number; delay: number };
 
 export const DiscoverMotionLabScreen: React.FC<DiscoverMotionLabScreenProps> = ({ onBack }) => {
+  const { colors: c, rootStyle } = useThemedScreen();
+  const styles = useMemo(() => createStyles(c), [c]);
   const t = useSharedValue(0);
   const burst = useSharedValue(0);
 
@@ -49,17 +53,17 @@ export const DiscoverMotionLabScreen: React.FC<DiscoverMotionLabScreenProps> = (
   }));
 
   return (
-    <View style={styles.root}>
+    <View style={rootStyle}>
       <ScreenHeader title="Expérience" subtitle="Motion lab" onBack={onBack} />
 
       <View style={styles.stage}>
         {bubbles.map((b) => (
-          <FloatingBubble key={b.id} bubble={b} t={t} burst={burst} />
+          <FloatingBubble key={b.id} bubble={b} t={t} burst={burst} bubbleColor={c.brand} />
         ))}
 
         <Animated.View style={[styles.centerCard, shadows.card, burstStyle]}>
           <View style={styles.centerBadge}>
-            <Icon name="star-four-points" size={18} color={colors.accent} />
+            <Icon name="star-four-points" size={18} color={c.brand} />
             <Text style={styles.centerBadgeText}>INTERACTIF</Text>
           </View>
           <Text style={styles.centerTitle}>Tap pour déclencher un “burst”</Text>
@@ -86,7 +90,8 @@ const FloatingBubble: React.FC<{
   bubble: Bubble;
   t: SharedValue<number>;
   burst: SharedValue<number>;
-}> = ({ bubble, t, burst }) => {
+  bubbleColor: string;
+}> = ({ bubble, t, burst, bubbleColor }) => {
   const style = useAnimatedStyle(() => {
     const drift = Math.sin((t.value * Math.PI * 2) + bubble.delay / 120) * 14;
     const drift2 = Math.cos((t.value * Math.PI * 2) + bubble.delay / 180) * 10;
@@ -104,60 +109,57 @@ const FloatingBubble: React.FC<{
   return (
     <Animated.View
       style={[
-        styles.bubble,
-        style,
         {
+          position: 'absolute',
+          backgroundColor: bubbleColor,
           width: bubble.size,
           height: bubble.size,
           borderRadius: bubble.size / 2,
           left: bubble.x,
           top: bubble.y,
         },
+        style,
       ]}
     />
   );
 };
 
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.background },
-  stage: { flex: 1, padding: spacing.lg },
-  bubble: {
-    position: 'absolute',
-    backgroundColor: colors.accent,
-  },
-  centerCard: {
-    marginTop: spacing.xl,
-    backgroundColor: colors.surface,
-    borderRadius: radius.xl,
-    padding: spacing.xl,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  centerBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    alignSelf: 'flex-start',
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-    borderRadius: radius.pill,
-    backgroundColor: colors.accentSoft,
-    borderWidth: 1,
-    borderColor: colors.accent,
-    marginBottom: spacing.lg,
-  },
-  centerBadgeText: { fontSize: 10, fontWeight: '900', color: colors.accent, letterSpacing: 2 },
-  centerTitle: { fontSize: 20, fontWeight: '900', color: colors.text, letterSpacing: -0.4 },
-  centerBody: { marginTop: spacing.sm, fontSize: 14, lineHeight: 21, color: colors.textSecondary, fontWeight: '600' },
-  cta: {
-    marginTop: spacing.lg,
-    backgroundColor: colors.ink,
-    borderRadius: radius.md,
-    paddingVertical: spacing.md,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.accent,
-  },
-  ctaText: { color: colors.brandInverse, fontWeight: '900', fontSize: 14 },
-});
-
+function createStyles(c: AppColors) {
+  return StyleSheet.create({
+    stage: { flex: 1, padding: spacing.lg },
+    centerCard: {
+      marginTop: spacing.xl,
+      backgroundColor: c.surface,
+      borderRadius: radius.xl,
+      padding: spacing.xl,
+      borderWidth: 1,
+      borderColor: c.border,
+    },
+    centerBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+      alignSelf: 'flex-start',
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.xs,
+      borderRadius: radius.pill,
+      backgroundColor: c.brandSoft,
+      borderWidth: 1,
+      borderColor: c.brand,
+      marginBottom: spacing.lg,
+    },
+    centerBadgeText: { fontSize: 10, fontWeight: '900', color: c.brand, letterSpacing: 2 },
+    centerTitle: { fontSize: 20, fontWeight: '900', color: c.text, letterSpacing: -0.4 },
+    centerBody: { marginTop: spacing.sm, fontSize: 14, lineHeight: 21, color: c.textSecondary, fontWeight: '600' },
+    cta: {
+      marginTop: spacing.lg,
+      backgroundColor: c.ink,
+      borderRadius: radius.md,
+      paddingVertical: spacing.md,
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: c.brand,
+    },
+    ctaText: { color: c.brandInverse, fontWeight: '900', fontSize: 14 },
+  });
+}

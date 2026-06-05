@@ -1,11 +1,13 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import { useTabNavigation } from '../context/TabNavigationContext';
 import { FeedScreen } from './FeedScreen';
 import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { TAB_BAR_CONTENT_INSET } from '../components/navigation/BottomTabBar';
-import { colors, spacing } from '../theme/designTokens';
+import { spacing } from '../theme/designTokens';
+import { useThemedScreen } from '../hooks/useThemedScreen';
+import type { AppColors } from '../theme/universeTheme';
 
 /**
  * Onglet Fil — fil complet si connecté, aperçu invité sinon.
@@ -13,11 +15,14 @@ import { colors, spacing } from '../theme/designTokens';
 export const FeedTabScreen: React.FC = () => {
   const { profile, loading } = useAuth();
   const { setActiveTab, openChat } = useTabNavigation();
+  const { colors: c, productLine, rootStyle } = useThemedScreen();
+  const styles = useMemo(() => createStyles(c), [c]);
+  const isWoman = productLine === 'woman';
 
   if (loading) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color={colors.accent} />
+      <View style={[styles.centered, rootStyle]}>
+        <ActivityIndicator size="large" color={c.brand} />
       </View>
     );
   }
@@ -33,11 +38,15 @@ export const FeedTabScreen: React.FC = () => {
   }
 
   return (
-    <View style={styles.guestRoot}>
+    <View style={[styles.guestRoot, rootStyle]}>
       <ScreenHeader
         label="Communauté"
-        title="Fil ProDay"
-        subtitle="Actualités et sondages de la plateforme"
+        title="Fil d'actualité"
+        subtitle={
+          isWoman
+            ? 'Actualités et sondages du foot féminin'
+            : 'Actualités et sondages de la plateforme'
+        }
         showBrandLogo
         centered
       />
@@ -52,33 +61,33 @@ export const FeedTabScreen: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  centered: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: colors.background,
-  },
-  guestRoot: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  guestBody: {
-    flex: 1,
-    paddingHorizontal: spacing.lg,
-    paddingBottom: TAB_BAR_CONTENT_INSET + spacing.xl,
-    justifyContent: 'center',
-  },
-  guestTitle: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: colors.text,
-    letterSpacing: -0.3,
-    marginBottom: spacing.sm,
-  },
-  guestSub: {
-    fontSize: 15,
-    lineHeight: 22,
-    color: colors.textSecondary,
-  },
-});
+function createStyles(c: AppColors) {
+  return StyleSheet.create({
+    centered: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    guestRoot: {
+      flex: 1,
+    },
+    guestBody: {
+      flex: 1,
+      paddingHorizontal: spacing.lg,
+      paddingBottom: TAB_BAR_CONTENT_INSET + spacing.xl,
+      justifyContent: 'center',
+    },
+    guestTitle: {
+      fontSize: 20,
+      fontWeight: '800',
+      color: c.text,
+      letterSpacing: -0.3,
+      marginBottom: spacing.sm,
+    },
+    guestSub: {
+      fontSize: 15,
+      lineHeight: 22,
+      color: c.textSecondary,
+    },
+  });
+}

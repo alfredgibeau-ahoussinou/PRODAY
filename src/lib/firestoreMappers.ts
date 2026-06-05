@@ -27,6 +27,7 @@ import type {
 import type { SponsorOffer, ClubFundingGoal } from '../models/SponsorOffer';
 import type { ClubAnnouncement } from '../models/ClubAnnouncement';
 import type { StageOffer, StageApplication } from '../models/Stage';
+import type { MedicalAppointment, MedicalAppointmentStatus } from '../models/MedicalAppointment';
 
 function toDate(value: unknown): Date {
   if (
@@ -98,6 +99,9 @@ export function userFromFirestore(uid: string, data: Record<string, unknown>): U
       license_number: profile.license_number as string | undefined,
       job_title: profile.job_title as string | undefined,
       medical_specialty: profile.medical_specialty as string | undefined,
+      booking_enabled: profile.booking_enabled as boolean | undefined,
+      consultation_duration_min: profile.consultation_duration_min as number | undefined,
+      weekly_availability: profile.weekly_availability as User['profile']['weekly_availability'],
       specialties: profile.specialties as string[] | undefined,
       experiences: profile.experiences as WorkExperience[] | undefined,
       diplomas_list: profile.diplomas_list as DiplomaRecord[] | undefined,
@@ -389,6 +393,7 @@ export function sponsorOfferFromFirestore(
 ): SponsorOffer {
   return {
     id,
+    sponsor_uid: data.sponsor_uid ? String(data.sponsor_uid) : undefined,
     company_name: String(data.company_name ?? ''),
     logo_url: String(data.logo_url ?? ''),
     offer_type: (data.offer_type as SponsorOffer['offer_type']) ?? 'equipment',
@@ -526,6 +531,29 @@ export function stageApplicationFromFirestore(
     message: String(data.message ?? ''),
     status: (data.status as StageApplication['status']) ?? 'PENDING',
     created_at: toDate(data.created_at),
+  };
+}
+
+export function medicalAppointmentFromFirestore(
+  id: string,
+  data: Record<string, unknown>
+): MedicalAppointment {
+  return {
+    id,
+    physio_uid: String(data.physio_uid ?? ''),
+    physio_name: String(data.physio_name ?? ''),
+    patient_uid: String(data.patient_uid ?? ''),
+    patient_name: String(data.patient_name ?? ''),
+    specialty: data.specialty != null ? String(data.specialty) : undefined,
+    start_at: toDate(data.start_at),
+    end_at: toDate(data.end_at),
+    duration_min: Number(data.duration_min ?? 30),
+    status: (data.status as MedicalAppointmentStatus) ?? 'pending',
+    motif: data.motif != null ? String(data.motif) : undefined,
+    location_label: data.location_label != null ? String(data.location_label) : undefined,
+    notes: data.notes != null ? String(data.notes) : undefined,
+    created_at: toDate(data.created_at),
+    updated_at: data.updated_at ? toDate(data.updated_at) : undefined,
   };
 }
 

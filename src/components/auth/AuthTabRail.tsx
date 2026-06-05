@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, Platform, type LayoutChangeEvent } from 'react-native';
 import Animated, {
   useAnimatedStyle,
@@ -7,7 +7,9 @@ import Animated, {
 } from 'react-native-reanimated';
 import { PressableSpring } from '../discover/PressableSpring';
 import { SPRING_SNAPPY } from '../discover/animationConfig';
-import { colors, spacing } from '../../theme/designTokens';
+import { spacing } from '../../theme/designTokens';
+import { useAppTheme } from '../../context/ProductLineContext';
+import type { AppColors } from '../../theme/universeTheme';
 
 export type AuthTabId = 'login' | 'signup';
 
@@ -23,6 +25,8 @@ interface AuthTabRailProps {
 }
 
 export const AuthTabRail: React.FC<AuthTabRailProps> = ({ active, onSelect, compact }) => {
+  const { colors: c } = useAppTheme();
+  const styles = useMemo(() => createStyles(c), [c]);
   const [trackW, setTrackW] = useState(0);
   const lineX = useSharedValue(0);
   const activeIndex = Math.max(0, TABS.findIndex((t) => t.id === active));
@@ -83,49 +87,51 @@ export const AuthTabRail: React.FC<AuthTabRailProps> = ({ active, onSelect, comp
   );
 };
 
-const styles = StyleSheet.create({
-  wrap: {
-    marginBottom: spacing.lg,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.border,
-  },
-  wrapCompact: {
-    marginBottom: spacing.md,
-  },
-  track: {
-    flexDirection: 'row',
-    height: 46,
-    position: 'relative',
-  },
-  trackCompact: {
-    height: 42,
-  },
-  line: {
-    position: 'absolute',
-    left: 0,
-    bottom: 0,
-    height: 2,
-    backgroundColor: colors.ink,
-    borderRadius: 1,
-  },
-  tab: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 1,
-  },
-  tabLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.textMuted,
-    textAlign: 'center',
-    ...Platform.select({ android: { includeFontPadding: false } }),
-  },
-  tabLabelCompact: {
-    fontSize: 13,
-  },
-  tabLabelOn: {
-    color: colors.ink,
-    fontWeight: '800',
-  },
-});
+function createStyles(c: AppColors) {
+  return StyleSheet.create({
+    wrap: {
+      marginBottom: spacing.lg,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: c.border,
+    },
+    wrapCompact: {
+      marginBottom: spacing.md,
+    },
+    track: {
+      flexDirection: 'row',
+      height: 46,
+      position: 'relative',
+    },
+    trackCompact: {
+      height: 42,
+    },
+    line: {
+      position: 'absolute',
+      left: 0,
+      bottom: 0,
+      height: 2,
+      backgroundColor: c.ink,
+      borderRadius: 1,
+    },
+    tab: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 1,
+    },
+    tabLabel: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: c.textMuted,
+      textAlign: 'center',
+      ...Platform.select({ android: { includeFontPadding: false } }),
+    },
+    tabLabelCompact: {
+      fontSize: 13,
+    },
+    tabLabelOn: {
+      color: c.ink,
+      fontWeight: '800',
+    },
+  });
+}

@@ -12,7 +12,9 @@ import { getPlayerVerificationChecks } from './signupFlowConfig';
 import { isAiVerificationPassing, type AiVerificationResult } from '../../utils/aiVerification';
 import { captureDocumentWithCamera } from '../../utils/captureIdentityDocument';
 import { ProDayErrorBanner } from '../../components/ui/ProDayErrorBanner';
-import { colors, spacing, radius } from '../../theme/designTokens';
+import { spacing, radius } from '../../theme/designTokens';
+import { useSignupFlowTheme } from './SignupFlowContext';
+import type { AppColors } from '../../theme/universeTheme';
 
 type CheckAiState = 'idle' | 'analyzing' | 'passed' | 'rejected';
 
@@ -38,6 +40,8 @@ export const SignupPlayerVerificationStep: React.FC<SignupPlayerVerificationStep
   onBack,
   onDone,
 }) => {
+  const { colors: c } = useSignupFlowTheme();
+  const styles = useMemo(() => createStyles(c), [c]);
   const checks = useMemo(() => getPlayerVerificationChecks(appSpace), [appSpace]);
   const underU13 = isUnderU13AppSpace(appSpace);
 
@@ -130,24 +134,24 @@ export const SignupPlayerVerificationStep: React.FC<SignupPlayerVerificationStep
     >
       {error ? <ProDayErrorBanner message={error} onDismiss={() => setError(null)} /> : null}
 
-      {checks.map((c) => {
-        const state = checkState[c.id] ?? 'idle';
+      {checks.map((check) => {
+        const state = checkState[check.id] ?? 'idle';
         const passed = state === 'passed';
-        const isIdentity = c.id === 'identity';
+        const isIdentity = check.id === 'identity';
         return (
-          <View key={c.id} style={styles.card}>
+          <View key={check.id} style={styles.card}>
             <View style={styles.cardHead}>
               <Icon
                 name={passed ? 'checkmark-circle' : isIdentity ? 'camera' : 'document'}
                 size={22}
-                color={passed ? colors.success : state === 'rejected' ? colors.error : colors.accent}
+                color={passed ? c.success : state === 'rejected' ? c.error : c.brand}
               />
               <View style={styles.cardCopy}>
                 <Text style={styles.cardTitle}>
-                  {c.title}
-                  {c.required ? ' *' : ''}
+                  {check.title}
+                  {check.required ? ' *' : ''}
                 </Text>
-                <Text style={styles.cardSub}>{c.subtitle}</Text>
+                <Text style={styles.cardSub}>{check.subtitle}</Text>
                 {isIdentity ? (
                   <Text style={styles.cameraTip}>
                     Cadrez le recto de la carte ou la page photo du passeport, sans reflet.
@@ -161,7 +165,7 @@ export const SignupPlayerVerificationStep: React.FC<SignupPlayerVerificationStep
             </View>
             <TouchableOpacity
               style={[styles.btn, passed && styles.btnDone]}
-              onPress={() => capture(c.id)}
+              onPress={() => capture(check.id)}
               disabled={busy}
             >
               <Text style={[styles.btnText, passed && styles.btnTextDone]}>
@@ -190,35 +194,37 @@ export const SignupPlayerVerificationStep: React.FC<SignupPlayerVerificationStep
   );
 };
 
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    padding: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    marginBottom: spacing.sm,
-  },
-  cardHead: { flexDirection: 'row', gap: spacing.md, marginBottom: spacing.sm },
-  cardCopy: { flex: 1 },
-  cardTitle: { fontSize: 14, fontWeight: '900', color: colors.text },
-  cardSub: { fontSize: 12, color: colors.textSecondary, marginTop: 2 },
-  cameraTip: {
-    fontSize: 11,
-    color: colors.textMuted,
-    marginTop: 4,
-    lineHeight: 16,
-  },
-  aiTag: { fontSize: 11, fontWeight: '700', color: colors.warning, marginTop: 4 },
-  aiOk: { fontSize: 11, fontWeight: '700', color: colors.success, marginTop: 4 },
-  btn: {
-    backgroundColor: colors.ink,
-    borderRadius: radius.md,
-    paddingVertical: spacing.sm,
-    alignItems: 'center',
-  },
-  btnDone: { backgroundColor: colors.accentSoft, borderWidth: 1, borderColor: colors.accent },
-  btnText: { color: colors.brandInverse, fontWeight: '800', fontSize: 13 },
-  btnTextDone: { color: colors.text },
-  hint: { fontSize: 12, color: colors.textMuted, lineHeight: 18, marginTop: spacing.md },
-});
+function createStyles(c: AppColors) {
+  return StyleSheet.create({
+    card: {
+      backgroundColor: c.surface,
+      borderRadius: radius.lg,
+      padding: spacing.md,
+      borderWidth: 1,
+      borderColor: c.border,
+      marginBottom: spacing.sm,
+    },
+    cardHead: { flexDirection: 'row', gap: spacing.md, marginBottom: spacing.sm },
+    cardCopy: { flex: 1 },
+    cardTitle: { fontSize: 14, fontWeight: '900', color: c.text },
+    cardSub: { fontSize: 12, color: c.textSecondary, marginTop: 2 },
+    cameraTip: {
+      fontSize: 11,
+      color: c.textMuted,
+      marginTop: 4,
+      lineHeight: 16,
+    },
+    aiTag: { fontSize: 11, fontWeight: '700', color: c.warning, marginTop: 4 },
+    aiOk: { fontSize: 11, fontWeight: '700', color: c.success, marginTop: 4 },
+    btn: {
+      backgroundColor: c.ink,
+      borderRadius: radius.md,
+      paddingVertical: spacing.sm,
+      alignItems: 'center',
+    },
+    btnDone: { backgroundColor: c.brandSoft, borderWidth: 1, borderColor: c.brand },
+    btnText: { color: c.brandInverse, fontWeight: '800', fontSize: 13 },
+    btnTextDone: { color: c.text },
+    hint: { fontSize: 12, color: c.textMuted, lineHeight: 18, marginTop: spacing.md },
+  });
+}

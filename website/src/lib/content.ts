@@ -242,9 +242,15 @@ export const JOURNEYS = [
   },
 ] as const;
 
+export function mercatoTabLabelForWeb(line: ProductLineWeb = "homme"): string {
+  if (line === "woman") return "Mercato F";
+  if (line === "pro") return "Mercato Pro";
+  return "Candidater";
+}
+
 export const TABS = [
   { id: "home", label: "Accueil", icon: "home" },
-  { id: "recruit", label: "Mercato", icon: "search" },
+  { id: "recruit", label: "Candidater", icon: "search" },
   { id: "matches", label: "Matchs", icon: "calendar" },
   { id: "carpool", label: "Covoit.", icon: "car" },
   { id: "health", label: "Santé", icon: "heart" },
@@ -277,6 +283,17 @@ export const WOMAN_BRAND = {
   accent: "#BE185D",
   accentDark: "#831843",
 } as const;
+
+export type UniverseBrand =
+  | typeof HOMME_BRAND
+  | typeof WOMAN_BRAND
+  | typeof PRO_BRAND;
+
+export const BRANDS_BY_LINE: Record<ProductLineWeb, UniverseBrand> = {
+  homme: HOMME_BRAND,
+  woman: WOMAN_BRAND,
+  pro: PRO_BRAND,
+};
 
 /** Modules exclusifs Pro Day Man — joueurs foot masculin. */
 export const MAN_MODULES = [
@@ -710,12 +727,12 @@ export const SUBSCRIPTION_PLANS_WEB = [
       "Profil staff et vérification",
       "1 équipe liée",
       "5 messages recrutement / mois",
-      "Annonces Mercato en lecture",
+      "Annonces Mercato Pro en lecture",
     ],
     proIncludes: [
       "Équipes illimitées",
       "Messages recrutement illimités",
-      "Annonces Mercato actives",
+      "Annonces Mercato Pro actives",
       "Statistiques candidatures",
     ],
   },
@@ -729,13 +746,13 @@ export const SUBSCRIPTION_PLANS_WEB = [
     freeIncludes: [
       "Profil club et vérification",
       "1 équipe",
-      "2 annonces Mercato actives",
+      "2 annonces Mercato Pro actives",
       "Gestion convocations (base)",
     ],
     proIncludes: [
       "Annonces actives illimitées",
       "Multi-équipes",
-      "Priorité dans le fil Mercato",
+      "Priorité dans le fil Mercato Pro",
       "Exports candidatures",
     ],
   },
@@ -829,12 +846,41 @@ export type WebSubscriptionPlan = WebSubscriptionPlanBase & {
   yearlyEur: number;
 };
 
+function womanPlayerPlusPlan(
+  plan: WebSubscriptionPlanBase,
+): WebSubscriptionPlan {
+  return {
+    ...plan,
+    yearlyEur: yearlyPriceFromMonthly(plan.monthlyEur),
+    label: "Joueuse Plus",
+    tagline: "CV joueuse, visibilité et Mercato F",
+    freeIncludes: [
+      "Profil, Pulse et CV joueuse en ligne",
+      "Galerie et stats saison",
+      "Mercato F en lecture",
+      "1 candidature Mercato F / mois",
+      "Calendrier et RSVP équipe",
+    ],
+    proIncludes: [
+      "Candidatures Mercato F illimitées",
+      "Mise en avant dans les recherches",
+      "Alertes nouvelles annonces Mercato F",
+      "Export PDF optionnel",
+    ],
+  } as unknown as WebSubscriptionPlan;
+}
+
 export function plansForUniverse(line: ProductLineWeb): WebSubscriptionPlan[] {
   return SUBSCRIPTION_PLANS_WEB.filter((p) => p.universes.includes(line)).map(
-    (p) => ({
-      ...p,
-      yearlyEur: yearlyPriceFromMonthly(p.monthlyEur),
-    }),
+    (p) => {
+      if (line === "woman" && p.id === "player_plus") {
+        return womanPlayerPlusPlan(p);
+      }
+      return {
+        ...p,
+        yearlyEur: yearlyPriceFromMonthly(p.monthlyEur),
+      };
+    },
   );
 }
 
@@ -1043,7 +1089,7 @@ export const QUIZ_QUESTIONS = [
     id: "q2",
     question: "Vous utilisez surtout…",
     options: [
-      { label: "Mon profil joueur et stats", role: "player" },
+      { label: "Mon profil sportif et stats", role: "player" },
       { label: "Diplômes et détections", role: "coach" },
       { label: "Plusieurs équipes au club", role: "club" },
       { label: "Inscriptions et tableaux", role: "organizer" },
@@ -1066,7 +1112,7 @@ export const QUIZ_RESULTS: Record<
   { title: string; description: string; href: string; cta: string }
 > = {
   player: {
-    title: "Profil Joueur",
+    title: "Profil sportif",
     description: "CV en ligne, Pulse et stats — le Mercato vient compléter votre visibilité.",
     href: "/cv",
     cta: "Découvrir le CV en ligne",

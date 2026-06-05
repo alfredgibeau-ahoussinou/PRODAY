@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { PressableSpring } from '../discover/PressableSpring';
 import type { ProdayPulseResult } from '../../utils/prodayPulse';
 import { Icon } from '../ui/Icon';
-import { colors, spacing, radius } from '../../theme/designTokens';
+import { spacing, radius } from '../../theme/designTokens';
+import { useAppTheme } from '../../context/ProductLineContext';
+import type { AppColors } from '../../theme/universeTheme';
 
 interface DashboardPulseBoostProps {
   pulse: ProdayPulseResult;
@@ -22,6 +24,8 @@ export const DashboardPulseBoost: React.FC<DashboardPulseBoostProps> = ({
   onMatchs,
   onRecruitment,
 }) => {
+  const { colors: c } = useAppTheme();
+  const styles = useMemo(() => createStyles(c), [c]);
   const actions: { label: string; sub: string; onPress: () => void }[] = [];
 
   if (profileComplete < 80) {
@@ -51,7 +55,7 @@ export const DashboardPulseBoost: React.FC<DashboardPulseBoostProps> = ({
   return (
     <View style={styles.wrap}>
       <View style={styles.header}>
-        <Icon name="star-four-points" size={18} color={colors.accent} />
+        <Icon name="star-four-points" size={18} color={c.accent} />
         <Text style={styles.title}>Boost Pulse</Text>
       </View>
       {actions.slice(0, 2).map((a) => (
@@ -60,32 +64,34 @@ export const DashboardPulseBoost: React.FC<DashboardPulseBoostProps> = ({
             <Text style={styles.rowLabel}>{a.label}</Text>
             <Text style={styles.rowSub}>{a.sub}</Text>
           </View>
-          <Icon name="chevron-forward" size={18} color={colors.accent} />
+          <Icon name="chevron-forward" size={18} color={c.accent} />
         </PressableSpring>
       ))}
     </View>
   );
 };
 
-const styles = StyleSheet.create({
-  wrap: {
-    marginBottom: spacing.lg,
-    backgroundColor: colors.accentSoft,
-    borderRadius: radius.lg,
-    padding: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.accent,
-  },
-  header: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.sm },
-  title: { fontSize: 14, fontWeight: '900', color: colors.accent },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: spacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(0,51,153,0.15)',
-  },
-  rowBody: { flex: 1 },
-  rowLabel: { fontSize: 13, fontWeight: '800', color: colors.text },
-  rowSub: { fontSize: 11, color: colors.textMuted, marginTop: 2 },
-});
+function createStyles(c: AppColors) {
+  return StyleSheet.create({
+    wrap: {
+      marginBottom: spacing.lg,
+      backgroundColor: c.accentSoft,
+      borderRadius: radius.lg,
+      padding: spacing.md,
+      borderWidth: 1,
+      borderColor: c.accent,
+    },
+    header: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.sm },
+    title: { fontSize: 14, fontWeight: '900', color: c.accent },
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: spacing.sm,
+      borderTopWidth: 1,
+      borderTopColor: c.border,
+    },
+    rowBody: { flex: 1 },
+    rowLabel: { fontSize: 13, fontWeight: '800', color: c.text },
+    rowSub: { fontSize: 11, color: c.textMuted, marginTop: 2 },
+  });
+}

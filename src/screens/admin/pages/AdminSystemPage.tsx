@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { useAuth } from '../../../context/AuthContext';
 import { useIsAdmin } from '../../../hooks/useIsAdmin';
@@ -7,7 +7,9 @@ import { adminService } from '../../../services/admin.service';
 import { AdminPageScaffold } from '../../../components/admin/AdminPageScaffold';
 import { AdminSectionHeader } from '../../../components/admin/AdminSectionHeader';
 import { Icon } from '../../../components/ui/Icon';
-import { colors, spacing, radius } from '../../../theme/designTokens';
+import { useAdminStyles } from '../../../components/admin/adminStyles';
+import { spacing, radius } from '../../../theme/designTokens';
+import type { AppColors } from '../../../theme/universeTheme';
 
 interface AdminSystemPageProps {
   onPreviewUserApp: () => void;
@@ -17,6 +19,8 @@ export const AdminSystemPage: React.FC<AdminSystemPageProps> = ({ onPreviewUserA
   const { profile, signOut, refreshAdminClaim } = useAuth();
   const { isAdmin } = useIsAdmin();
   const { loading, refresh } = useAdminData();
+  const { colors: c } = useAdminStyles();
+  const styles = useMemo(() => createStyles(c), [c]);
   const [systemBusy, setSystemBusy] = useState(false);
 
   const handleRefreshPublicStats = async () => {
@@ -85,14 +89,14 @@ export const AdminSystemPage: React.FC<AdminSystemPageProps> = ({ onPreviewUserA
       <AdminSectionHeader title="SESSION & APERÇU" />
 
       <TouchableOpacity style={styles.previewBtn} onPress={onPreviewUserApp} activeOpacity={0.88}>
-        <Icon name="eye" size={22} color={colors.accent} />
+        <Icon name="eye" size={22} color={c.brand} />
         <View style={styles.previewBody}>
           <Text style={styles.previewTitle}>Prévisualiser l’app utilisateur</Text>
           <Text style={styles.previewSub}>
             Ouvrir l’interface membre sans quitter votre session admin
           </Text>
         </View>
-        <Icon name="chevron-forward" size={18} color={colors.textSecondary} />
+        <Icon name="chevron-forward" size={18} color={c.textSecondary} />
       </TouchableOpacity>
 
       <TouchableOpacity
@@ -110,58 +114,60 @@ export const AdminSystemPage: React.FC<AdminSystemPageProps> = ({ onPreviewUserA
   );
 };
 
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    padding: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    marginBottom: spacing.md,
-  },
-  cardTitle: { fontSize: 15, fontWeight: '900', color: colors.text, marginBottom: spacing.xs },
-  cardSub: { fontSize: 13, color: colors.textSecondary, lineHeight: 20, marginBottom: spacing.md },
-  mono: { fontFamily: 'monospace', fontSize: 12 },
-  btn: {
-    backgroundColor: colors.ink,
-    borderRadius: radius.md,
-    padding: spacing.md,
-    alignItems: 'center',
-  },
-  btnDisabled: { opacity: 0.6 },
-  btnText: { color: colors.brandInverse, fontWeight: '900', fontSize: 14 },
-  btnOutline: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    padding: spacing.md,
-    alignItems: 'center',
-  },
-  btnOutlineText: { color: colors.text, fontWeight: '800', fontSize: 14 },
-  previewBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    padding: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    marginBottom: spacing.md,
-  },
-  previewBody: { flex: 1 },
-  previewTitle: { fontSize: 14, fontWeight: '900', color: colors.text },
-  previewSub: { fontSize: 12, color: colors.textSecondary, marginTop: 2 },
-  signOutBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.sm,
-    padding: spacing.md,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.error,
-    backgroundColor: colors.errorBg,
-  },
-  signOutText: { color: colors.error, fontWeight: '900', fontSize: 14 },
-});
+function createStyles(c: AppColors) {
+  return StyleSheet.create({
+    card: {
+      backgroundColor: c.surface,
+      borderRadius: radius.lg,
+      padding: spacing.md,
+      borderWidth: 1,
+      borderColor: c.border,
+      marginBottom: spacing.md,
+    },
+    cardTitle: { fontSize: 15, fontWeight: '900', color: c.text, marginBottom: spacing.xs },
+    cardSub: { fontSize: 13, color: c.textSecondary, lineHeight: 20, marginBottom: spacing.md },
+    mono: { fontFamily: 'monospace', fontSize: 12 },
+    btn: {
+      backgroundColor: c.ink,
+      borderRadius: radius.md,
+      padding: spacing.md,
+      alignItems: 'center',
+    },
+    btnDisabled: { opacity: 0.6 },
+    btnText: { color: c.brandInverse, fontWeight: '900', fontSize: 14 },
+    btnOutline: {
+      borderWidth: 1,
+      borderColor: c.border,
+      borderRadius: radius.md,
+      padding: spacing.md,
+      alignItems: 'center',
+    },
+    btnOutlineText: { color: c.text, fontWeight: '800', fontSize: 14 },
+    previewBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.md,
+      backgroundColor: c.surface,
+      borderRadius: radius.lg,
+      padding: spacing.md,
+      borderWidth: 1,
+      borderColor: c.border,
+      marginBottom: spacing.md,
+    },
+    previewBody: { flex: 1 },
+    previewTitle: { fontSize: 14, fontWeight: '900', color: c.text },
+    previewSub: { fontSize: 12, color: c.textSecondary, marginTop: 2 },
+    signOutBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: spacing.sm,
+      padding: spacing.md,
+      borderRadius: radius.md,
+      borderWidth: 1,
+      borderColor: c.error,
+      backgroundColor: c.errorBg,
+    },
+    signOutText: { color: c.error, fontWeight: '900', fontSize: 14 },
+  });
+}

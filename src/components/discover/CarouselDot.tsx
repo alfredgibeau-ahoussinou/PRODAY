@@ -7,7 +7,7 @@ import Animated, {
   type SharedValue,
 } from 'react-native-reanimated';
 import { PressableSpring } from './PressableSpring';
-import { colors } from '../../theme/designTokens';
+import { useDiscoverStyles } from './discoverStyles';
 
 interface CarouselDotProps {
   index: number;
@@ -22,6 +22,8 @@ export const CarouselDot: React.FC<CarouselDotProps> = ({
   snap,
   onPress,
 }) => {
+  const { colors: c } = useDiscoverStyles();
+
   const style = useAnimatedStyle(() => ({
     width: interpolate(
       scrollX.value,
@@ -36,8 +38,8 @@ export const CarouselDot: React.FC<CarouselDotProps> = ({
         [0, 1, 0],
         Extrapolation.CLAMP
       ) > 0.5
-        ? colors.accent
-        : colors.border,
+        ? c.brand
+        : c.border,
   }));
 
   return (

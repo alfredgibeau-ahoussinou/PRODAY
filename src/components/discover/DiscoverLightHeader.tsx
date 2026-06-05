@@ -1,9 +1,9 @@
 import React from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { Logo } from '../Logo';
-import { discoverStyles, BRAND } from './discoverStyles';
+import { useDiscoverStyles, BRAND } from './discoverStyles';
 import { useDiscoverMetrics } from './useDiscoverMetrics';
-import { colors, spacing } from '../../theme/designTokens';
+import { spacing } from '../../theme/designTokens';
 
 interface DiscoverLightHeaderProps {
   statsLabel?: string;
@@ -19,12 +19,28 @@ export const DiscoverLightHeader: React.FC<DiscoverLightHeaderProps> = ({
   onUniversePress,
 }) => {
   const { logoWidth, compact, headerTopPad } = useDiscoverMetrics();
+  const { styles: discoverStyles, colors } = useDiscoverStyles();
+  const local = StyleSheet.create({
+    universeLink: {
+      alignSelf: 'center',
+      marginBottom: spacing.sm,
+      paddingVertical: spacing.xs,
+      paddingHorizontal: spacing.sm,
+    },
+    universeLinkText: {
+      fontSize: 11,
+      fontWeight: '700',
+      color: colors.ink,
+      textDecorationLine: 'underline',
+      textAlign: 'center',
+    },
+  });
 
   return (
     <View style={[discoverStyles.header, { paddingTop: headerTopPad }]}>
       {universeLabel && onUniversePress ? (
-        <Pressable style={styles.universeLink} onPress={onUniversePress}>
-          <Text style={styles.universeLinkText}>{universeLabel}</Text>
+        <Pressable style={local.universeLink} onPress={onUniversePress}>
+          <Text style={local.universeLinkText}>{universeLabel}</Text>
         </Pressable>
       ) : null}
       <Logo background="light" width={logoWidth} showTagline={false} />
@@ -50,18 +66,3 @@ export const DiscoverLightHeader: React.FC<DiscoverLightHeaderProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  universeLink: {
-    alignSelf: 'center',
-    marginBottom: spacing.sm,
-    paddingVertical: spacing.xs,
-    paddingHorizontal: spacing.sm,
-  },
-  universeLinkText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: colors.ink,
-    textDecorationLine: 'underline',
-    textAlign: 'center',
-  },
-});

@@ -1,4 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useAppTheme } from '../../context/ProductLineContext';
+import type { AppColors } from '../../theme/universeTheme';
 import {
   View,
   Text,
@@ -23,7 +25,7 @@ import {
   totalCarpoolSeats,
 } from '../../utils/carpoolBalance';
 import { Icon } from '../ui/Icon';
-import { colors, spacing, radius } from '../../theme/designTokens';
+import { spacing, radius } from '../../theme/designTokens';
 
 interface EventCarpoolPanelProps {
   event: TeamEvent;
@@ -38,6 +40,8 @@ export const EventCarpoolPanel: React.FC<EventCarpoolPanelProps> = ({
   isStaff,
   onUpdated,
 }) => {
+  const { colors: c } = useAppTheme();
+  const styles = useMemo(() => createStyles(c), [c]);
   const [names, setNames] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
   const [pickMode, setPickMode] = useState(false);
@@ -242,7 +246,7 @@ export const EventCarpoolPanel: React.FC<EventCarpoolPanelProps> = ({
   return (
     <View style={styles.wrap}>
       <View style={styles.headerRow}>
-        <Icon name="walk" size={20} color={colors.accent} />
+        <Icon name="walk" size={20} color={c.accent} />
         <Text style={styles.title}>Covoiturage équipe</Text>
       </View>
       <Text style={styles.sub}>
@@ -263,7 +267,7 @@ export const EventCarpoolPanel: React.FC<EventCarpoolPanelProps> = ({
 
       {myBooking && myBooking.driverUid !== profile.uid ? (
         <View style={styles.bookingBanner}>
-          <Icon name="checkmark-circle" size={18} color={colors.accent} />
+          <Icon name="checkmark-circle" size={18} color={c.accent} />
           <Text style={styles.bookingBannerText}>
             Vous montez avec {myBooking.slot.driver_name}
           </Text>
@@ -292,7 +296,7 @@ export const EventCarpoolPanel: React.FC<EventCarpoolPanelProps> = ({
               <View key={slot.driver_uid} style={styles.rideCard}>
                 <View style={styles.rideTop}>
                   <View style={styles.rideAvatar}>
-                    <Icon name="person" size={18} color={colors.ink} />
+                    <Icon name="person" size={18} color={c.ink} />
                   </View>
                   <View style={styles.rideMeta}>
                     <Text style={styles.slotName}>{slot.driver_name}</Text>
@@ -306,7 +310,7 @@ export const EventCarpoolPanel: React.FC<EventCarpoolPanelProps> = ({
                   <Text style={styles.routeFrom}>
                     {slot.meeting_place?.trim() || 'Point RDV à préciser'}
                   </Text>
-                  <Icon name="chevron-forward" size={14} color={colors.textMuted} />
+                  <Icon name="chevron-forward" size={14} color={c.textMuted} />
                   <Text style={styles.routeTo}>{destination || event.city}</Text>
                 </View>
 
@@ -365,7 +369,7 @@ export const EventCarpoolPanel: React.FC<EventCarpoolPanelProps> = ({
           <TextInput
             style={styles.input}
             placeholder="Nombre de places (ex. 3)"
-            placeholderTextColor={colors.textMuted}
+            placeholderTextColor={c.textMuted}
             keyboardType="number-pad"
             value={editSeats}
             onChangeText={setEditSeats}
@@ -373,21 +377,21 @@ export const EventCarpoolPanel: React.FC<EventCarpoolPanelProps> = ({
           <TextInput
             style={styles.input}
             placeholder="Heure de départ (ex. 13:00)"
-            placeholderTextColor={colors.textMuted}
+            placeholderTextColor={c.textMuted}
             value={editTime}
             onChangeText={setEditTime}
           />
           <TextInput
             style={styles.input}
             placeholder="Point de rendez-vous (ex. parking du club)"
-            placeholderTextColor={colors.textMuted}
+            placeholderTextColor={c.textMuted}
             value={editPlace}
             onChangeText={setEditPlace}
           />
           <TextInput
             style={[styles.input, styles.inputMultiline]}
             placeholder="Infos utiles (sièges enfants, retour direct…)"
-            placeholderTextColor={colors.textMuted}
+            placeholderTextColor={c.textMuted}
             value={editNotes}
             onChangeText={setEditNotes}
             multiline
@@ -481,7 +485,7 @@ export const EventCarpoolPanel: React.FC<EventCarpoolPanelProps> = ({
         <TextInput
           style={[styles.input, styles.inputMultiline]}
           placeholder="Message pour l’équipe…"
-          placeholderTextColor={colors.textMuted}
+          placeholderTextColor={c.textMuted}
           value={messageDraft}
           onChangeText={setMessageDraft}
           multiline
@@ -498,24 +502,25 @@ export const EventCarpoolPanel: React.FC<EventCarpoolPanelProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+function createStyles(c: AppColors) {
+  return StyleSheet.create({
   wrap: {
     marginTop: spacing.lg,
     padding: spacing.md,
-    backgroundColor: colors.surface,
+    backgroundColor: c.surface,
     borderRadius: radius.lg,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: c.border,
   },
   headerRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.xs },
-  title: { fontSize: 16, fontWeight: '900', color: colors.text },
-  sub: { fontSize: 12, lineHeight: 18, color: colors.textMuted, marginBottom: spacing.md },
+  title: { fontSize: 16, fontWeight: '900', color: c.text },
+  sub: { fontSize: 12, lineHeight: 18, color: c.textMuted, marginBottom: spacing.md },
   offerBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: spacing.sm,
-    backgroundColor: colors.ink,
+    backgroundColor: c.ink,
     borderRadius: radius.md,
     padding: spacing.md,
     marginBottom: spacing.md,
@@ -528,13 +533,13 @@ const styles = StyleSheet.create({
     padding: spacing.sm,
     marginBottom: spacing.md,
     borderRadius: radius.md,
-    backgroundColor: colors.accentSoft,
+    backgroundColor: c.accentSoft,
     borderWidth: 1,
-    borderColor: colors.accentMuted,
+    borderColor: c.accentMuted,
   },
-  bookingBannerText: { flex: 1, fontSize: 13, fontWeight: '700', color: colors.text },
+  bookingBannerText: { flex: 1, fontSize: 13, fontWeight: '700', color: c.text },
   primaryBtn: {
-    backgroundColor: colors.accent,
+    backgroundColor: c.accent,
     borderRadius: radius.md,
     padding: spacing.md,
     alignItems: 'center',
@@ -546,13 +551,13 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.background,
+    borderColor: c.border,
+    backgroundColor: c.background,
     marginBottom: spacing.sm,
   },
-  secondaryBtnText: { fontWeight: '800', color: colors.text, fontSize: 13 },
+  secondaryBtnText: { fontWeight: '800', color: c.text, fontSize: 13 },
   pickBox: { marginBottom: spacing.md },
-  pickLabel: { fontSize: 12, fontWeight: '800', color: colors.textSecondary, marginBottom: spacing.sm },
+  pickLabel: { fontSize: 12, fontWeight: '800', color: c.textSecondary, marginBottom: spacing.sm },
   pickList: { maxHeight: 160, marginBottom: spacing.sm },
   pickRow: {
     flexDirection: 'row',
@@ -561,36 +566,36 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm,
     borderRadius: radius.sm,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: c.border,
     marginBottom: 4,
   },
-  pickRowActive: { borderColor: colors.accent, backgroundColor: colors.accentSoft },
-  pickName: { fontWeight: '700', color: colors.text },
-  pickCheck: { fontWeight: '900', color: colors.accent },
+  pickRowActive: { borderColor: c.accent, backgroundColor: c.accentSoft },
+  pickName: { fontWeight: '700', color: c.text },
+  pickCheck: { fontWeight: '900', color: c.accent },
   pickActions: { flexDirection: 'row', gap: spacing.sm },
   pickSaveBtn: { flex: 1 },
   slotsBox: { marginTop: spacing.xs },
-  slotsTitle: { fontSize: 13, fontWeight: '800', color: colors.text, marginBottom: spacing.sm },
+  slotsTitle: { fontSize: 13, fontWeight: '800', color: c.text, marginBottom: spacing.sm },
   rideCard: {
     padding: spacing.md,
     borderRadius: radius.md,
-    backgroundColor: colors.background,
+    backgroundColor: c.background,
     marginBottom: spacing.sm,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: c.border,
   },
   rideTop: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.sm },
   rideAvatar: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: colors.surfaceMuted,
+    backgroundColor: c.surfaceMuted,
     alignItems: 'center',
     justifyContent: 'center',
   },
   rideMeta: { flex: 1 },
-  slotName: { fontWeight: '900', color: colors.text, fontSize: 15 },
-  rideBadge: { fontSize: 11, color: colors.textMuted, marginTop: 2 },
+  slotName: { fontWeight: '900', color: c.text, fontSize: 15 },
+  rideBadge: { fontSize: 11, color: c.textMuted, marginTop: 2 },
   routeRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -598,15 +603,15 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
     flexWrap: 'wrap',
   },
-  routeFrom: { fontSize: 13, fontWeight: '700', color: colors.textSecondary, flexShrink: 1 },
-  routeTo: { fontSize: 13, fontWeight: '700', color: colors.text, flexShrink: 1 },
-  slotLine: { fontSize: 13, color: colors.textSecondary, marginTop: 2 },
-  slotMuted: { fontSize: 12, color: colors.textMuted, fontStyle: 'italic', marginTop: 2 },
-  passengersLine: { fontSize: 12, color: colors.accent, fontWeight: '700', marginTop: spacing.xs },
-  slotNotes: { fontSize: 12, color: colors.textMuted, marginTop: 4 },
+  routeFrom: { fontSize: 13, fontWeight: '700', color: c.textSecondary, flexShrink: 1 },
+  routeTo: { fontSize: 13, fontWeight: '700', color: c.text, flexShrink: 1 },
+  slotLine: { fontSize: 13, color: c.textSecondary, marginTop: 2 },
+  slotMuted: { fontSize: 12, color: c.textMuted, fontStyle: 'italic', marginTop: 2 },
+  passengersLine: { fontSize: 12, color: c.accent, fontWeight: '700', marginTop: spacing.xs },
+  slotNotes: { fontSize: 12, color: c.textMuted, marginTop: 4 },
   bookBtn: {
     marginTop: spacing.sm,
-    backgroundColor: colors.accent,
+    backgroundColor: c.accent,
     borderRadius: radius.md,
     paddingVertical: spacing.sm,
     alignItems: 'center',
@@ -618,32 +623,32 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: c.border,
   },
-  cancelBookText: { fontWeight: '800', color: colors.textSecondary, fontSize: 13 },
-  empty: { fontSize: 13, color: colors.textMuted, fontStyle: 'italic' },
+  cancelBookText: { fontWeight: '800', color: c.textSecondary, fontSize: 13 },
+  empty: { fontSize: 13, color: c.textMuted, fontStyle: 'italic' },
   driverForm: {
     marginTop: spacing.md,
     paddingTop: spacing.md,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
+    borderTopColor: c.border,
   },
   staffBox: {
     marginTop: spacing.md,
     paddingTop: spacing.md,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
+    borderTopColor: c.border,
   },
-  staffTitle: { fontSize: 12, fontWeight: '800', color: colors.textMuted, marginBottom: spacing.sm },
-  formTitle: { fontSize: 13, fontWeight: '900', color: colors.text, marginBottom: spacing.sm },
+  staffTitle: { fontSize: 12, fontWeight: '800', color: c.textMuted, marginBottom: spacing.sm },
+  formTitle: { fontSize: 13, fontWeight: '900', color: c.text, marginBottom: spacing.sm },
   input: {
-    backgroundColor: colors.background,
+    backgroundColor: c.background,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: c.border,
     borderRadius: radius.md,
     padding: spacing.sm,
     fontSize: 14,
-    color: colors.text,
+    color: c.text,
     marginBottom: spacing.sm,
   },
   inputMultiline: { minHeight: 64, textAlignVertical: 'top' },
@@ -651,10 +656,11 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
     paddingTop: spacing.md,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
+    borderTopColor: c.border,
   },
   msgRow: { marginBottom: spacing.sm },
-  msgAuthor: { fontSize: 12, fontWeight: '800', color: colors.accent },
-  msgBody: { fontSize: 14, color: colors.text, marginTop: 2 },
-  msgTime: { fontSize: 10, color: colors.textMuted, marginTop: 2 },
-});
+  msgAuthor: { fontSize: 12, fontWeight: '800', color: c.accent },
+  msgBody: { fontSize: 14, color: c.text, marginTop: 2 },
+  msgTime: { fontSize: 10, color: c.textMuted, marginTop: 2 },
+  });
+}

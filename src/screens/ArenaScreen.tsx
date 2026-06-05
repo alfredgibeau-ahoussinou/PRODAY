@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -19,7 +19,9 @@ import { tournamentService } from '../services/tournament.service';
 import { CreateTournamentScreen } from './CreateTournamentScreen';
 import { TournamentDetailScreen } from './TournamentDetailScreen';
 import type { Tournament } from '../models/Tournament';
-import { colors, spacing, radius, shadows } from '../theme/designTokens';
+import { spacing, radius, shadows } from '../theme/designTokens';
+import { useThemedScreen } from '../hooks/useThemedScreen';
+import type { AppColors } from '../theme/universeTheme';
 import { useShowcaseImages } from '../hooks/useShowcaseImages';
 
 interface ArenaScreenProps {
@@ -36,6 +38,10 @@ export const ArenaScreen: React.FC<ArenaScreenProps> = ({
   onLoginRequired,
 }) => {
   const { profile } = useAuth();
+  const { colors: c, productLine, rootStyle } = useThemedScreen();
+  const styles = useMemo(() => createStyles(c), [c]);
+  const isWoman = productLine === 'woman';
+  const bestPlayerLabel = isWoman ? 'Meilleure joueuse' : 'Meilleur joueur';
   const { pendingArenaTournamentId, clearPendingArenaTournament } = useTabNavigation();
   const [view, setView] = useState<ArenaView>('list');
   const [detailId, setDetailId] = useState<string | null>(null);
@@ -101,7 +107,7 @@ export const ArenaScreen: React.FC<ArenaScreenProps> = ({
   const openCount = tournaments.filter((t) => t.status === 'OPEN').length;
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, rootStyle]}>
       <ScrollView style={styles.container} contentContainerStyle={styles.content}>
         {onBack ? (
           <ScreenHeader title="Arena" subtitle="Tournois ProDay" onBack={onBack} />
@@ -124,7 +130,7 @@ export const ArenaScreen: React.FC<ArenaScreenProps> = ({
             resizeMode="cover"
           />
           <View style={styles.heroIcon}>
-            <Icon name="trophy" size={26} color={colors.accent} />
+            <Icon name="trophy" size={26} color={c.accent} />
           </View>
           <Text style={styles.heroTitle}>Arena ProDay</Text>
           <Text style={styles.heroSub}>
@@ -142,7 +148,7 @@ export const ArenaScreen: React.FC<ArenaScreenProps> = ({
 
         <Text style={styles.section}>Tournois proches</Text>
         {loading ? (
-          <ActivityIndicator color={colors.brand} style={styles.loader} />
+          <ActivityIndicator color={c.brand} style={styles.loader} />
         ) : tournaments.length === 0 ? (
           <Text style={styles.hint}>
             Aucun tournoi pour le moment. Créez le premier avec le bouton ci-dessous.
@@ -162,9 +168,9 @@ export const ArenaScreen: React.FC<ArenaScreenProps> = ({
 
         <Text style={[styles.section, styles.mt]}>Tableau d&apos;honneur</Text>
         <View style={styles.honor}>
-          <HonorSlot label="Meilleur joueur" name={awards?.best_player ?? '—'} />
-          <HonorSlot label="Buteur" name={awards?.top_scorer ?? '—'} />
-          <HonorSlot label="Gardien" name={awards?.best_goalkeeper ?? '—'} />
+          <HonorSlot styles={styles} label={bestPlayerLabel} name={awards?.best_player ?? '—'} />
+          <HonorSlot styles={styles} label="Buteur" name={awards?.top_scorer ?? '—'} />
+          <HonorSlot styles={styles} label="Gardien" name={awards?.best_goalkeeper ?? '—'} />
         </View>
         {!loading && !honorTournament && (
           <Text style={styles.hintSmall}>Publié après clôture d&apos;un tournoi.</Text>
@@ -185,33 +191,38 @@ export const ArenaScreen: React.FC<ArenaScreenProps> = ({
   );
 };
 
-const HonorSlot: React.FC<{ label: string; name: string }> = ({ label, name }) => (
+const HonorSlot: React.FC<{
+  styles: ReturnType<typeof createStyles>;
+  label: string;
+  name: string;
+}> = ({ styles, label, name }) => (
   <View style={styles.honorItem}>
     <Text style={styles.honorLabel}>{label}</Text>
     <Text style={styles.honorName}>{name}</Text>
   </View>
 );
 
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.background },
+function createStyles(c: AppColors) {
+  return StyleSheet.create({
+  root: { flex: 1 },
   container: { flex: 1 },
   content: { padding: spacing.lg, paddingBottom: 120 },
   guestBanner: {
-    backgroundColor: colors.accentSoft,
+    backgroundColor: c.accentSoft,
     borderRadius: radius.md,
     padding: spacing.md,
     marginBottom: spacing.md,
     borderWidth: 1,
-    borderColor: colors.accent,
+    borderColor: c.accent,
   },
-  guestBannerText: { fontSize: 12, color: colors.accent, fontWeight: '700', lineHeight: 17 },
+  guestBannerText: { fontSize: 12, color: c.accent, fontWeight: '700', lineHeight: 17 },
   hero: {
-    backgroundColor: colors.surface,
+    backgroundColor: c.surface,
     borderRadius: radius.lg,
     padding: spacing.lg,
     marginBottom: spacing.lg,
     borderWidth: 1,
-    borderColor: colors.accent,
+    borderColor: c.accent,
     overflow: 'hidden',
   },
   heroBanner: {
@@ -222,15 +233,15 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: radius.md,
-    backgroundColor: colors.accentSoft,
+    backgroundColor: c.accentSoft,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.sm,
   },
-  heroTitle: { fontSize: 20, fontWeight: '900', color: colors.text },
+  heroTitle: { fontSize: 20, fontWeight: '900', color: c.text },
   heroSub: {
     fontSize: 13,
-    color: colors.textSecondary,
+    color: c.textSecondary,
     lineHeight: 19,
     marginTop: spacing.xs,
   },
@@ -238,20 +249,20 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
     fontSize: 12,
     fontWeight: '800',
-    color: colors.brand,
+    color: c.brand,
   },
   section: {
     fontSize: 13,
     fontWeight: '800',
-    color: colors.textMuted,
+    color: c.textMuted,
     textTransform: 'uppercase',
     letterSpacing: 0.6,
     marginBottom: spacing.sm,
   },
   mt: { marginTop: spacing.lg },
   loader: { marginVertical: spacing.lg },
-  hint: { color: colors.textMuted, fontSize: 14, lineHeight: 20 },
-  hintSmall: { color: colors.textMuted, fontSize: 12, marginTop: spacing.xs },
+  hint: { color: c.textMuted, fontSize: 14, lineHeight: 20 },
+  hintSmall: { color: c.textMuted, fontSize: 12, marginTop: spacing.xs },
   honor: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -260,14 +271,14 @@ const styles = StyleSheet.create({
   honorItem: {
     flex: 1,
     minWidth: '30%',
-    backgroundColor: colors.surface,
+    backgroundColor: c.surface,
     borderRadius: radius.md,
     padding: spacing.md,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: c.border,
   },
-  honorLabel: { fontSize: 11, color: colors.textMuted, fontWeight: '700' },
-  honorName: { fontSize: 14, fontWeight: '800', color: colors.text, marginTop: 4 },
+  honorLabel: { fontSize: 11, color: c.textMuted, fontWeight: '700' },
+  honorName: { fontSize: 14, fontWeight: '800', color: c.text, marginTop: 4 },
   bottomSpacer: { height: spacing.xl },
   fab: {
     position: 'absolute',
@@ -276,18 +287,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.xs,
-    backgroundColor: colors.brand,
+    backgroundColor: c.brand,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
     borderRadius: radius.pill,
   },
   fabText: { color: '#FFFFFF', fontWeight: '800', fontSize: 15 },
   featured: {
-    backgroundColor: colors.surface,
+    backgroundColor: c.surface,
     borderRadius: radius.lg,
     marginBottom: spacing.lg,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: c.border,
     overflow: 'hidden',
   },
   featuredImage: { width: '100%', height: 120 },
@@ -295,10 +306,11 @@ const styles = StyleSheet.create({
   featuredEyebrow: {
     fontSize: 10,
     fontWeight: '800',
-    color: colors.accent,
+    color: c.accent,
     letterSpacing: 0.8,
   },
-  featuredTitle: { fontSize: 17, fontWeight: '900', color: colors.text, marginTop: 4 },
-  featuredMeta: { fontSize: 12, color: colors.textSecondary, marginTop: 4 },
-  featuredStat: { fontSize: 11, fontWeight: '800', color: colors.brand, marginTop: 6 },
-});
+  featuredTitle: { fontSize: 17, fontWeight: '900', color: c.text, marginTop: 4 },
+  featuredMeta: { fontSize: 12, color: c.textSecondary, marginTop: 4 },
+  featuredStat: { fontSize: 11, fontWeight: '800', color: c.brand, marginTop: 6 },
+  });
+}

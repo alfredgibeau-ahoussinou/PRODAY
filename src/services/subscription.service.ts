@@ -14,6 +14,8 @@ import { isFirebaseConfigured } from '../config/firebase';
 import type { User } from '../models/User';
 import type { SubscriptionFeatureId, SubscriptionPlanId } from '../content/subscriptionPlans';
 import { getPlanForRole, planIdForRole } from '../content/subscriptionPlans';
+import type { ProductLineId } from '../models/ProductLine';
+import { getPlanForRoleAndLine } from '../content/subscriptionPlansByLine';
 import type { SubscriptionUsagePeriod, UserSubscription } from '../models/Subscription';
 import {
   checkFeatureAccess,
@@ -55,8 +57,8 @@ export const subscriptionService = {
     return userSubscription(user);
   },
 
-  getPlanForUser(user: User) {
-    return getPlanForRole(user.role);
+  getPlanForUser(user: User, line: ProductLineId = 'homme') {
+    return getPlanForRoleAndLine(user.role, line) ?? getPlanForRole(user.role);
   },
 
   async loadUsage(uid: string): Promise<SubscriptionUsagePeriod> {

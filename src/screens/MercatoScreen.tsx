@@ -9,14 +9,10 @@ import {
   Alert,
 } from 'react-native';
 import type { User } from '../models/User';
-import { formatTimeAgo } from '../services/recruitment.service';
 import { Icon } from '../components/ui/Icon';
 import { TAB_BAR_CONTENT_INSET } from '../components/navigation/BottomTabBar';
-import { colors, spacing, radius, shadows } from '../theme/designTokens';
-import { ScreenHeader } from '../components/ui/ScreenHeader';
+import { spacing, radius, shadows } from '../theme/designTokens';
 import { SearchBar } from '../components/ui/SearchBar';
-import { QuickAccessCard } from '../components/ui/QuickAccessCard';
-import { RecruitmentAdCard } from '../components/ui/RecruitmentAdCard';
 import { PlayersListScreen } from './PlayersListScreen';
 import { PlayerProfileScreen } from './PlayerProfileScreen';
 import { CoachesListScreen } from './CoachesListScreen';
@@ -34,19 +30,25 @@ import { canPublishRecruitmentPost, canPublishStages } from '../utils/roleCapabi
 import { useMercatoHome, useUserProfile } from '../hooks/useRecruitmentData';
 import { useAuth } from '../context/AuthContext';
 import { useTabNavigation } from '../context/TabNavigationContext';
+import { useTabNavigationActions } from '../hooks/useTabNavigationActions';
 import { formatCount } from '../services/stats.service';
 import { recruitmentService } from '../services/recruitment.service';
 import { openContactConversation } from '../utils/openContactConversation';
 import { MercatoHero } from '../components/mercato/MercatoHero';
+import { MercatoScreenHeader } from '../components/mercato/MercatoScreenHeader';
+import { MercatoQuickGrid } from '../components/mercato/MercatoQuickGrid';
+import { MercatoActionRow } from '../components/mercato/MercatoActionRow';
+import { MercatoPostsSection } from '../components/mercato/MercatoPostsSection';
+import { AppSpaceBanner } from '../components/appSpace/AppSpaceBanner';
+import { WomenHubScreen } from './women/WomenHubScreen';
+import { UnderU13HubScreen } from './underU13/UnderU13HubScreen';
 import { useAppSpace } from '../context/AppSpaceContext';
 import { useAppTheme } from '../context/ProductLineContext';
 import { postMatchesAppSpace } from '../constants/appSpaces';
 import {
-  APP_SPACE_LABELS,
-  isFeminineAppSpace,
-  isMasculineAppSpace,
-  isUnderU13AppSpace,
-} from '../models/AppSpace';
+  getMercatoExperienceConfig,
+  type MercatoQuickTileId,
+} from '../content/mercatoExperience';
 
 type MercatoView =
   | 'home'
@@ -62,7 +64,9 @@ type MercatoView =
   | 'detections'
   | 'stages'
   | 'stage_detail'
-  | 'create_stage';
+  | 'create_stage'
+  | 'women_hub'
+  | 'under_u13_hub';
 
 export const MercatoScreen: React.FC = () => {
   const [view, setView] = useState<MercatoView>('home');
@@ -80,11 +84,17 @@ export const MercatoScreen: React.FC = () => {
     useUserProfile(selectedStaffId);
 
   const { profile } = useAuth();
-  const { appSpace } = useAppSpace();
-  const { productLine } = useAppTheme();
+  const { appSpace, setAppSpace } = useAppSpace();
+  const { productLine, colors: themeColors, enterWomanSpace } = useAppTheme();
   const { openChat, pendingMercatoView, clearPendingMercato } = useTabNavigation();
+  const { openProfile } = useTabNavigationActions();
   const { stats, loading: loadingStats, posts, loadingLists, refreshLists } =
     useMercatoHome();
+
+  const config = useMemo(
+    () => getMercatoExperienceConfig(productLine, profile?.role, appSpace),
+    [productLine, profile?.role, appSpace]
+  );
 
   const spacePosts = useMemo(
     () => posts.filter((ad) => postMatchesAppSpace(ad, appSpace, productLine)),
@@ -127,6 +137,18 @@ export const MercatoScreen: React.FC = () => {
     }
     await openContactConversation(profile, target, target.display_name, openChat);
   };
+
+  const handleQuickTile = (id: MercatoQuickTileId) => {
+    setView(id);
+  };
+
+  if (view === 'women_hub') {
+    return <WomenHubScreen onBack={() => setView('home')} />;
+  }
+
+  if (view === 'under_u13_hub') {
+    return <UnderU13HubScreen onBack={() => setView('home')} />;
+  }
 
   if (view === 'detections') {
     return <DetectionEventsScreen onBack={() => setView('home')} />;
@@ -235,8 +257,8 @@ export const MercatoScreen: React.FC = () => {
   if (view === 'player_profile' && selectedPlayerId) {
     if (loadingPlayer || !selectedPlayer) {
       return (
-        <View style={styles.loader}>
-          <ActivityIndicator size="large" color={colors.brand} />
+        <View style={[styles.loader, { backgroundColor: themeColors.background }]}>
+          <ActivityIndicator size="large" color={themeColors.brand} />
         </View>
       );
     }
@@ -299,8 +321,8 @@ export const MercatoScreen: React.FC = () => {
   if (view === 'staff_profile' && selectedStaffId) {
     if (loadingStaff || !selectedStaff) {
       return (
-        <View style={styles.loader}>
-          <ActivityIndicator size="large" color={colors.brand} />
+        <View style={[styles.loader, { backgroundColor: themeColors.background }]}>
+          <ActivityIndicator size="large" color={themeColors.brand} />
         </View>
       );
     }
@@ -316,171 +338,144 @@ export const MercatoScreen: React.FC = () => {
 
   const loading = loadingStats || loadingLists;
 
+  const headerRight = config.showFavoritesHeader ? (
+    <TouchableOpacity hitSlop={12} onPress={() => setView('favorites')}>
+      <Icon name="bookmark" size={22} color={themeColors.text} />
+    </TouchableOpacity>
+  ) : config.showDetectionsHeader ? (
+    <TouchableOpacity hitSlop={12} onPress={() => setView('detections')}>
+      <Icon name="football" size={22} color={themeColors.text} />
+    </TouchableOpacity>
+  ) : null;
+
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, { backgroundColor: themeColors.background }]}>
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        <ScreenHeader
-          label="Mercato"
-          title={APP_SPACE_LABELS[appSpace]}
-          subtitle={
-            profile?.role === 'player'
-              ? 'Parcourez les annonces et candidatez — la publication est réservée aux clubs.'
-              : isUnderU13AppSpace(appSpace)
-                ? 'U7, U9, U11 — école de foot et détections poussins.'
-                : isFeminineAppSpace(appSpace)
-                  ? 'Annonces et profils filtrés pour le football féminin.'
-                  : isMasculineAppSpace(appSpace)
-                    ? 'Annonces et profils filtrés pour le football masculin.'
-                    : 'Espace dédié.'
-          }
-          showBrandLogo
-          rightAction={
-            profile?.role === 'player' ? (
-              <TouchableOpacity
-                hitSlop={12}
-                onPress={() => setView('favorites')}
-              >
-                <Icon name="bookmark" size={22} color={colors.text} />
-              </TouchableOpacity>
-            ) : (
-              <TouchableOpacity
-                hitSlop={12}
-                onPress={() => setView('detections')}
-              >
-                <Icon name="football" size={22} color={colors.text} />
-              </TouchableOpacity>
-            )
-          }
+        <MercatoScreenHeader
+          eyebrow={config.eyebrow}
+          title={config.screenTitle}
+          subtitle={config.screenSubtitle}
+          colors={themeColors}
+          badgeIcon={config.heroIcon}
+          rightAction={headerRight}
         />
+
+        <View style={styles.bannerWrap}>
+          <AppSpaceBanner
+            showHubLinks={productLine === 'homme' || productLine === 'woman'}
+            onOpenMenHub={() => setAppSpace('men')}
+            onOpenWomenHub={() =>
+              productLine === 'homme'
+                ? void enterWomanSpace()
+                : setView('women_hub')
+            }
+            onOpenUnderU13Hub={() =>
+              productLine === 'homme'
+                ? setAppSpace('under_u13')
+                : setView('under_u13_hub')
+            }
+          />
+        </View>
+
         <MercatoHero
+          colors={themeColors}
+          title={config.heroTitle}
+          subtitle={config.heroSubtitle}
+          icon={config.heroIcon}
+          playersStatLabel={config.playersStatLabel}
           stats={stats}
           loading={loadingStats}
           applicationsCount={
             profile?.role === 'player' ? applicationsCount : undefined
           }
+          onApplicationsPress={
+            profile?.role === 'player' && applicationsCount > 0
+              ? () => openProfile('applications')
+              : undefined
+          }
         />
-        <SearchBar
-          placeholder="Rechercher un joueur, un poste…"
-          value={search}
-          onChangeText={setSearch}
-        />
-        {search.trim().length > 0 && (
-          <TouchableOpacity
-            style={styles.searchHint}
-            onPress={() => setView('players')}
-          >
-            <Text style={styles.searchHintText}>
-              Voir les joueurs correspondant à « {search.trim()} »
-            </Text>
-          </TouchableOpacity>
-        )}
 
-        <View style={styles.quickRow}>
-          <QuickAccessCard
-            icon="people"
-            title="Joueurs"
-            count={
-              stats
-                ? formatCount(stats.players, 'profil')
-                : loading
-                  ? '…'
-                  : '0 profil'
-            }
-            loading={loading}
-            onPress={() => setView('players')}
-          />
-          <QuickAccessCard
-            icon="business"
-            title="Clubs"
-            count={
-              stats
-                ? formatCount(stats.clubs, 'club')
-                : loading
-                  ? '…'
-                  : '0 club'
-            }
-            loading={loading}
-            onPress={() => setView('clubs')}
-          />
-          <QuickAccessCard
-            icon="football"
-            title="Détections"
-            count="Essais & scouting"
-            loading={false}
-            onPress={() => setView('detections')}
+        <View style={styles.searchWrap}>
+          <SearchBar
+            placeholder={config.searchPlaceholder}
+            value={search}
+            onChangeText={setSearch}
           />
         </View>
-        <View style={styles.quickRow}>
-          <QuickAccessCard
-            icon="calendar"
-            title="Stages"
-            count="Camps & stages foot"
-            loading={false}
-            onPress={() => setView('stages')}
-          />
-        </View>
-        {profile ? (
+
+        {search.trim().length > 0 ? (
           <TouchableOpacity
-            style={styles.favoritesLink}
-            onPress={() => setView('favorites')}
+            style={[
+              styles.searchHint,
+              {
+                backgroundColor: themeColors.surfaceMuted,
+                borderColor: themeColors.border,
+              },
+            ]}
+            onPress={() => setView('players')}
           >
-            <Icon name="bookmark" size={18} color={colors.brand} />
-            <Text style={styles.favoritesLinkText}>Mes favoris</Text>
+            <Icon name="people" size={18} color={themeColors.brand} />
+            <Text style={[styles.searchHintText, { color: themeColors.text }]}>
+              {config.playersSearchHint} « {search.trim()} »
+            </Text>
           </TouchableOpacity>
         ) : null}
 
-        <TouchableOpacity style={styles.staffLink} onPress={() => setView('staff')}>
-          <Text style={styles.staffLinkText}>
-            Coachs & agents
-            {stats
-              ? ` · ${formatCount(stats.coaches + stats.agents, 'profil')}`
-              : ''}
-          </Text>
-          <Icon name="chevron-forward" size={18} color={colors.brand} />
-        </TouchableOpacity>
+        <MercatoQuickGrid
+          tiles={config.quickTiles}
+          colors={themeColors}
+          stats={stats}
+          loading={loading}
+          onPress={handleQuickTile}
+        />
 
-        <Text style={styles.sectionTitle}>
-          Recrutements populaires
-          {!loading && posts.length > 0 ? (
-            <Text style={styles.liveBadge}> · En direct</Text>
-          ) : null}
-        </Text>
-        {loading ? (
-          <ActivityIndicator color={colors.brand} style={styles.loaderInline} />
-        ) : filteredPosts.length === 0 ? (
-          <Text style={styles.emptyHint}>
-            {posts.length === 0
-              ? 'Aucune annonce ouverte pour le moment. Soyez le premier à publier une offre Mercato.'
-              : 'Aucune annonce ne correspond à votre recherche.'}
-          </Text>
-        ) : (
-          filteredPosts.map((ad) => (
-            <RecruitmentAdCard
-              key={ad.id}
-              clubName={ad.club_name}
-              roleLine={ad.title || `Recherche ${ad.position}`}
-              meta={`${ad.category} · ${ad.level} · ${formatTimeAgo(ad.created_at)}`}
-              onPress={() => {
-                setSelectedPostId(ad.id);
-                setView('post_detail');
-              }}
-            />
-          ))
-        )}
+        <MercatoActionRow
+          colors={themeColors}
+          showFavorites={config.showFavoritesRow}
+          staffLabel={config.staffRowLabel}
+          staffCount={
+            stats
+              ? formatCount(stats.coaches + stats.agents, 'profil')
+              : undefined
+          }
+          onFavorites={() => setView('favorites')}
+          onStaff={() => setView('staff')}
+        />
+
+        <MercatoPostsSection
+          colors={themeColors}
+          title={config.postsSectionTitle}
+          loading={loading}
+          posts={filteredPosts}
+          hasSpacePosts={spacePosts.length > 0}
+          searchActive={search.trim().length > 0}
+          emptyAll={config.postsEmptyAll}
+          emptySpace={config.postsEmptySpace}
+          emptyFiltered={config.postsEmptyFiltered}
+          onSelectPost={(id) => {
+            setSelectedPostId(id);
+            setView('post_detail');
+          }}
+        />
+
         <View style={styles.bottomSpacer} />
       </ScrollView>
 
       {profile && canPublishRecruitmentPost(profile.role) ? (
         <TouchableOpacity
-          style={[styles.fab, shadows.fab]}
+          style={[
+            styles.fab,
+            shadows.fab,
+            { backgroundColor: themeColors.brand, borderColor: themeColors.border },
+          ]}
           onPress={() => setView('create_post')}
         >
           <Icon name="add" size={20} color="#FFFFFF" />
-          <Text style={styles.fabText}>Publier une annonce</Text>
+          <Text style={styles.fabText}>{config.fabLabel}</Text>
         </TouchableOpacity>
       ) : null}
     </View>
@@ -488,96 +483,45 @@ export const MercatoScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.background },
+  root: { flex: 1 },
   scroll: { flex: 1 },
   content: { paddingBottom: spacing.md },
-  searchHint: {
-    marginHorizontal: spacing.lg,
-    marginBottom: spacing.md,
-    padding: spacing.md,
-    backgroundColor: colors.surfaceMuted,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
+  bannerWrap: {
+    paddingHorizontal: spacing.lg,
+    marginBottom: spacing.sm,
   },
-  searchHintText: { color: colors.text, fontWeight: '800', fontSize: 13 },
-  favoritesLink: {
+  searchWrap: {
+    paddingHorizontal: spacing.lg,
+  },
+  searchHint: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
     marginHorizontal: spacing.lg,
     marginBottom: spacing.md,
     padding: spacing.md,
-    backgroundColor: colors.surface,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: colors.border,
   },
-  favoritesLinkText: { color: colors.text, fontWeight: '800', fontSize: 14 },
-  staffLink: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginHorizontal: spacing.lg,
-    marginBottom: spacing.lg,
-    padding: spacing.md,
-    backgroundColor: colors.surface,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  staffLinkText: { color: colors.text, fontWeight: '800', fontSize: 14 },
-  quickRow: {
-    flexDirection: 'row',
-    gap: spacing.md,
-    paddingHorizontal: spacing.lg,
-    marginBottom: spacing.xl,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: colors.text,
-    paddingHorizontal: spacing.lg,
-    marginBottom: spacing.md,
-  },
-  liveBadge: { fontSize: 12, fontWeight: '800', color: colors.brand },
-  emptyPosts: {
-    color: colors.textMuted,
-    fontSize: 14,
-    lineHeight: 22,
-    paddingHorizontal: spacing.lg,
-    marginBottom: spacing.lg,
-  },
-  emptyHint: {
-    color: colors.textSecondary,
-    fontSize: 13,
-    lineHeight: 19,
-    paddingHorizontal: spacing.lg,
-    marginBottom: spacing.md,
-    fontWeight: '600',
-  },
+  searchHintText: { fontWeight: '800', fontSize: 13, flex: 1 },
   bottomSpacer: { height: TAB_BAR_CONTENT_INSET + spacing.lg },
   fab: {
     position: 'absolute',
     left: spacing.lg,
     right: spacing.lg,
     bottom: TAB_BAR_CONTENT_INSET - spacing.sm,
-    backgroundColor: colors.brand,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: colors.border,
     paddingVertical: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: spacing.sm,
   },
-  fabText: { color: '#FFFFFF', fontWeight: '700', fontSize: 16 },
+  fabText: { fontWeight: '700', fontSize: 16 },
   loader: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: colors.background,
   },
-  loaderInline: { marginVertical: spacing.lg },
 });

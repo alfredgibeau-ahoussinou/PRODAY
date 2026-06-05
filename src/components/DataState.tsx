@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
-import { colors, spacing } from '../theme/designTokens';
+import { useAppTheme } from '../context/ProductLineContext';
+import { spacing } from '../theme/designTokens';
+import type { AppColors } from '../theme/universeTheme';
 
 interface DataStateProps {
   loading?: boolean;
@@ -17,6 +19,9 @@ export const DataState: React.FC<DataStateProps> = ({
   firebaseMissing,
   children,
 }) => {
+  const { colors: c } = useAppTheme();
+  const styles = useMemo(() => createStyles(c), [c]);
+
   if (firebaseMissing) {
     return (
       <View style={styles.box}>
@@ -32,7 +37,7 @@ export const DataState: React.FC<DataStateProps> = ({
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color={colors.bluePrimary} />
+        <ActivityIndicator size="large" color={c.brand} />
       </View>
     );
   }
@@ -48,9 +53,11 @@ export const DataState: React.FC<DataStateProps> = ({
   return <>{children}</>;
 };
 
-const styles = StyleSheet.create({
-  center: { padding: spacing.xl, alignItems: 'center' },
-  box: { padding: spacing.lg },
-  title: { color: colors.text, fontWeight: '700', fontSize: 15 },
-  sub: { color: colors.textSecondary, fontSize: 14, lineHeight: 22, marginTop: spacing.sm },
-});
+function createStyles(c: AppColors) {
+  return StyleSheet.create({
+    center: { padding: spacing.xl, alignItems: 'center' },
+    box: { padding: spacing.lg },
+    title: { color: c.text, fontWeight: '700', fontSize: 15 },
+    sub: { color: c.textSecondary, fontSize: 14, lineHeight: 22, marginTop: spacing.sm },
+  });
+}

@@ -24,8 +24,9 @@ import { PressableSpring } from './PressableSpring';
 import { ShowcaseImageBackground } from '../ui/ShowcaseImageBackground';
 import { Icon } from '../ui/Icon';
 import { Logo } from '../Logo';
-import { colors, spacing, radius, shadows } from '../../theme/designTokens';
-import { discoverPalette, discoverLayout } from './discoverStyles';
+import { spacing, radius, shadows } from '../../theme/designTokens';
+import { discoverLayout, getDiscoverPalette, useDiscoverStyles } from './discoverStyles';
+import type { AppColors } from '../../theme/universeTheme';
 import { useDiscoverMetrics } from './useDiscoverMetrics';
 
 interface DiscoverIntroPagerProps {
@@ -54,6 +55,8 @@ export const DiscoverIntroPager: React.FC<DiscoverIntroPagerProps> = ({
   height: heightProp,
   showFooter = true,
 }) => {
+  const { palette, colors: c } = useDiscoverStyles();
+  const styles = useMemo(() => createIntroStyles(c, palette), [c, palette]);
   const { width: pageWidth } = useWindowDimensions();
   const { productLine } = useAppTheme();
   const slides = useMemo(() => getDiscoverIntroSlides(productLine), [productLine]);
@@ -172,6 +175,8 @@ const IntroSlide: React.FC<{
   onCta: () => void;
   variant: 'dark' | 'editorial';
 }> = ({ slide, index, scrollX, pageWidth, pageHeight, metrics, statsLabel, onCta, variant }) => {
+  const { palette, colors: c } = useDiscoverStyles();
+  const styles = useMemo(() => createIntroStyles(c, palette), [c, palette]);
   const pageX = index * pageWidth;
 
   const cardStyle = useAnimatedStyle(() => {
@@ -226,7 +231,7 @@ const IntroSlide: React.FC<{
             imageStyle={styles.editorialHeroImg}
           >
             <View style={styles.editorialKicker}>
-              <Icon name={slide.icon} size={14} color={discoverPalette.ink} />
+              <Icon name={slide.icon} size={14} color={palette.ink} />
               <Text style={styles.editorialKickerText}>{slide.kicker}</Text>
             </View>
           </ShowcaseImageBackground>
@@ -271,7 +276,7 @@ const IntroSlide: React.FC<{
             ) : null}
             <PressableSpring style={styles.ctaEditorial} onPress={onCta} scaleTo={0.97}>
               <Text style={styles.ctaEditorialText}>{slide.cta}</Text>
-              <Icon name="chevron-forward" size={18} color={colors.brandInverse} />
+              <Icon name="chevron-forward" size={18} color={c.brandInverse} />
             </PressableSpring>
           </View>
         </Animated.View>
@@ -291,7 +296,7 @@ const IntroSlide: React.FC<{
               <Logo background="photo" width={120} showTagline={false} />
             ) : (
               <View style={styles.kickerPill}>
-                <Icon name={slide.icon} size={14} color={colors.accent} />
+                <Icon name={slide.icon} size={14} color={c.brand} />
                 <Text style={styles.kicker}>{slide.kicker}</Text>
               </View>
             )}
@@ -308,7 +313,7 @@ const IntroSlide: React.FC<{
             ) : null}
             <PressableSpring style={styles.cta} onPress={onCta} scaleTo={0.94}>
               <Text style={styles.ctaText}>{slide.cta}</Text>
-              <Icon name="chevron-forward" size={18} color={colors.brandInverse} />
+              <Icon name="chevron-forward" size={18} color={c.brandInverse} />
             </PressableSpring>
           </View>
         </ShowcaseImageBackground>
@@ -317,7 +322,8 @@ const IntroSlide: React.FC<{
   );
 };
 
-const styles = StyleSheet.create({
+function createIntroStyles(c: AppColors, palette: ReturnType<typeof getDiscoverPalette>) {
+  return StyleSheet.create({
   wrap: {
     width: '100%',
     overflow: 'hidden',
@@ -338,7 +344,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.xl,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: c.border,
   },
   bg: { flex: 1, justifyContent: 'space-between' },
   bgImg: { opacity: 0.88 },
@@ -355,14 +361,14 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xs,
     borderRadius: radius.pill,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: c.border,
   },
-  kicker: { fontSize: 10, fontWeight: '900', color: colors.ink, letterSpacing: 1.6 },
+  kicker: { fontSize: 10, fontWeight: '900', color: c.ink, letterSpacing: 1.6 },
   copy: { padding: spacing.lg },
   title: {
     fontSize: 32,
     fontWeight: '900',
-    color: colors.brandInverse,
+    color: c.brandInverse,
     letterSpacing: -1,
     lineHeight: 36,
   },
@@ -385,23 +391,23 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.92)',
     borderRadius: radius.pill,
     borderWidth: 1,
-    borderColor: colors.accent,
+    borderColor: c.accent,
   },
-  statsDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.accent },
-  statsText: { fontSize: 10, fontWeight: '800', color: colors.accent },
+  statsDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: c.accent },
+  statsText: { fontSize: 10, fontWeight: '800', color: c.accent },
   cta: {
     marginTop: spacing.lg,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: spacing.sm,
-    backgroundColor: colors.accent,
+    backgroundColor: c.accent,
     borderRadius: radius.md,
     paddingVertical: spacing.md,
     borderWidth: 1,
-    borderColor: colors.brandInverse,
+    borderColor: c.brandInverse,
   },
-  ctaText: { color: colors.brandInverse, fontWeight: '900', fontSize: 14, letterSpacing: 0.3 },
+  ctaText: { color: c.brandInverse, fontWeight: '900', fontSize: 14, letterSpacing: 0.3 },
   footer: {
     height: 40,
     justifyContent: 'center',
@@ -412,7 +418,7 @@ const styles = StyleSheet.create({
   swipeHint: {
     fontSize: 8,
     fontWeight: '700',
-    color: discoverPalette.faint,
+    color: palette.faint,
     letterSpacing: 1,
     textTransform: 'uppercase',
     textAlign: 'center',
@@ -420,9 +426,9 @@ const styles = StyleSheet.create({
   cardEditorial: {
     borderRadius: discoverLayout.cardRadius,
     overflow: 'hidden',
-    backgroundColor: discoverPalette.card,
+    backgroundColor: palette.card,
     borderWidth: 1,
-    borderColor: discoverPalette.cardBorder,
+    borderColor: palette.cardBorder,
   },
   editorialHero: {
     width: '100%',
@@ -442,7 +448,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
     alignSelf: 'center',
-    backgroundColor: discoverPalette.card,
+    backgroundColor: palette.card,
     paddingHorizontal: spacing.sm + 2,
     paddingVertical: 6,
     borderRadius: radius.pill,
@@ -450,7 +456,7 @@ const styles = StyleSheet.create({
   editorialKickerText: {
     fontSize: 10,
     fontWeight: '900',
-    color: discoverPalette.ink,
+    color: palette.ink,
     letterSpacing: 1.4,
   },
   editorialBody: {
@@ -463,14 +469,14 @@ const styles = StyleSheet.create({
   },
   editorialTitle: {
     fontWeight: '900',
-    color: discoverPalette.ink,
+    color: palette.ink,
     letterSpacing: -0.6,
     textAlign: 'center',
     width: '100%',
     ...Platform.select({ android: { includeFontPadding: false } }),
   },
   editorialBodyText: {
-    color: discoverPalette.muted,
+    color: palette.muted,
     fontWeight: '500',
     textAlign: 'center',
     width: '100%',
@@ -484,7 +490,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
     paddingVertical: 8,
     paddingHorizontal: spacing.md,
-    backgroundColor: discoverPalette.canvasDeep,
+    backgroundColor: palette.canvasDeep,
     borderRadius: radius.pill,
     alignSelf: 'center',
   },
@@ -492,12 +498,12 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: discoverPalette.live,
+    backgroundColor: palette.live,
   },
   editorialStatsText: {
     fontSize: 12,
     fontWeight: '700',
-    color: discoverPalette.ink,
+    color: palette.ink,
     textAlign: 'center',
     flexShrink: 1,
   },
@@ -508,15 +514,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: spacing.sm,
-    backgroundColor: discoverPalette.ink,
+    backgroundColor: palette.ink,
     borderRadius: radius.md,
     paddingVertical: spacing.md,
     minHeight: 48,
   },
   ctaEditorialText: {
-    color: colors.brandInverse,
+    color: c.brandInverse,
     fontWeight: '800',
     fontSize: 14,
     textAlign: 'center',
   },
-});
+  });
+}

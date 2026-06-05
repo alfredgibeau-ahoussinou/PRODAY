@@ -12,7 +12,7 @@ import { Icon, type IconName } from '../../components/ui/Icon';
 import { SignupPhaseRail } from '../../components/signup/SignupPhaseRail';
 import { SignupProgressRing } from '../../components/signup/SignupProgressRing';
 import { SignupStepHero } from '../../components/signup/SignupStepHero';
-import { authStyles } from '../../components/auth/authStyles';
+import { useAuthStyles } from '../../components/auth/authStyles';
 import { useAuthLayout } from '../../components/auth/useAuthLayout';
 import type { SignupPhase } from './signupFlowConfig';
 import { useSignupFlowTheme } from './SignupFlowContext';
@@ -69,6 +69,7 @@ export const SignupStepLayout: React.FC<SignupStepLayoutProps> = ({
   const scrollBottomPad = tabInset({ guestMode: true, stickyFooter: Boolean(footer) });
   const footerBottomPad = tabInset({ guestMode: true });
   const { productLine, colors } = useSignupFlowTheme();
+  const authStyles = useAuthStyles();
   const brandName = brandForProductLine(productLine).name;
   const styles = useMemo(() => createStyles(colors, contentMaxWidth), [colors, contentMaxWidth]);
 

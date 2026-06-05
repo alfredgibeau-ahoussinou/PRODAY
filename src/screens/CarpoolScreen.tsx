@@ -17,12 +17,12 @@ import { TeamEventDetailScreen } from './TeamEventDetailScreen';
 import { EVENT_TYPE_LABELS } from '../models/TeamEvent';
 import { carpoolEventSummaryForUser } from '../utils/carpoolBalance';
 import { formatCalendarDate } from '../utils/seasonCalendar';
-import { useAppTheme } from '../context/ProductLineContext';
+import { useThemedScreen } from '../hooks/useThemedScreen';
 import { spacing, radius, shadows } from '../theme/designTokens';
 
 export const CarpoolScreen: React.FC = () => {
   const { profile } = useAuth();
-  const { colors } = useAppTheme();
+  const { colors, rootStyle } = useThemedScreen();
   const clubId = profile?.profile.club_id;
   const { events, loading, refresh } = useTeamEvents(profile?.uid, clubId);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
@@ -60,7 +60,7 @@ export const CarpoolScreen: React.FC = () => {
 
   return (
     <ScrollView
-      style={[styles.root, { backgroundColor: colors.background }]}
+      style={[styles.root, rootStyle]}
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
       refreshControl={

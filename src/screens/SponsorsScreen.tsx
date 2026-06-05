@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -18,7 +18,9 @@ import { sponsorsService } from '../services/sponsors.service';
 import { CreateSponsorOfferScreen } from './CreateSponsorOfferScreen';
 import { CreateClubFundingGoalScreen } from './CreateClubFundingGoalScreen';
 import { TAB_BAR_CONTENT_INSET } from '../components/navigation/BottomTabBar';
-import { colors, spacing, radius, shadows } from '../theme/designTokens';
+import { spacing, radius, shadows } from '../theme/designTokens';
+import { useThemedScreen } from '../hooks/useThemedScreen';
+import type { AppColors } from '../theme/universeTheme';
 
 type SponsorsView = 'main' | 'create_offer' | 'create_goal';
 
@@ -34,6 +36,8 @@ export const SponsorsScreen: React.FC<SponsorsScreenProps> = ({
   onLoginRequired,
 }) => {
   const { profile } = useAuth();
+  const { colors: c, rootStyle } = useThemedScreen();
+  const styles = useMemo(() => createStyles(c), [c]);
   const { offers, goals, loading, refresh } = useSponsorsData();
   const [view, setView] = useState<SponsorsView>('main');
   const [refreshing, setRefreshing] = useState(false);
@@ -108,12 +112,12 @@ export const SponsorsScreen: React.FC<SponsorsScreenProps> = ({
   }
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, rootStyle]}>
       <ScrollView
         style={styles.container}
         contentContainerStyle={styles.content}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent} />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={c.brand} />
         }
       >
         {onBack ? (
@@ -136,7 +140,7 @@ export const SponsorsScreen: React.FC<SponsorsScreenProps> = ({
 
         <View style={[styles.hero, shadows.card]}>
           <View style={styles.heroIcon}>
-            <Icon name="star-four-points" size={26} color={colors.accent} />
+            <Icon name="star-four-points" size={26} color={c.brand} />
           </View>
           <Text style={styles.heroEyebrow}>PARTENARIATS PRODAY</Text>
           <Text style={styles.heroTitle}>Soutenez le foot local</Text>
@@ -153,17 +157,17 @@ export const SponsorsScreen: React.FC<SponsorsScreenProps> = ({
 
         <Text style={styles.sectionLabel}>OFFRES PARTENAIRES</Text>
         {loading ? (
-          <ActivityIndicator color={colors.accent} style={styles.loader} />
+          <ActivityIndicator color={c.brand} style={styles.loader} />
         ) : offers.length === 0 ? (
           <View style={styles.empty}>
-            <Icon name="business" size={32} color={colors.accent} />
+            <Icon name="business" size={32} color={c.brand} />
             <Text style={styles.emptyText}>Aucune offre active pour le moment.</Text>
           </View>
         ) : (
           offers.map((o) => (
             <View key={o.id} style={styles.offer}>
               <View style={styles.offerIcon}>
-                <Icon name="business" size={20} color={colors.accent} />
+                <Icon name="business" size={20} color={c.brand} />
               </View>
               <View style={styles.offerBody}>
                 <Text style={styles.offerTitle}>{o.company_name}</Text>
@@ -209,7 +213,7 @@ export const SponsorsScreen: React.FC<SponsorsScreenProps> = ({
                         keyboardType="decimal-pad"
                         value={contributeAmount}
                         onChangeText={setContributeAmount}
-                        placeholderTextColor={colors.textMuted}
+                        placeholderTextColor={c.textMuted}
                       />
                       <TouchableOpacity
                         style={styles.contributeBtn}
@@ -221,7 +225,7 @@ export const SponsorsScreen: React.FC<SponsorsScreenProps> = ({
                         </Text>
                       </TouchableOpacity>
                       <TouchableOpacity onPress={() => setContributeGoalId(null)}>
-                        <Icon name="close" size={20} color={colors.textMuted} />
+                        <Icon name="close" size={20} color={c.textMuted} />
                       </TouchableOpacity>
                     </View>
                   ) : (
@@ -253,7 +257,7 @@ export const SponsorsScreen: React.FC<SponsorsScreenProps> = ({
               style={[styles.fab, styles.fabSecondary]}
               onPress={() => requireAuth(() => setView('create_goal'))}
             >
-              <Icon name="add" size={18} color={colors.accent} />
+              <Icon name="add" size={18} color={c.brand} />
               <Text style={styles.fabSecondaryText}>Campagne</Text>
             </TouchableOpacity>
           ) : null}
@@ -262,7 +266,7 @@ export const SponsorsScreen: React.FC<SponsorsScreenProps> = ({
               style={styles.fab}
               onPress={() => requireAuth(() => setView('create_offer'))}
             >
-              <Icon name="add" size={18} color="#fff" />
+              <Icon name="add" size={18} color={c.brandInverse} />
               <Text style={styles.fabText}>Offre sponsor</Text>
             </TouchableOpacity>
           ) : null}
@@ -272,168 +276,171 @@ export const SponsorsScreen: React.FC<SponsorsScreenProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.background },
-  container: { flex: 1 },
-  content: { padding: spacing.lg, paddingBottom: TAB_BAR_CONTENT_INSET + 88 },
-  guestBanner: {
-    backgroundColor: colors.accentSoft,
-    borderRadius: radius.md,
-    padding: spacing.md,
-    marginBottom: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.accent,
-  },
-  guestBannerText: { fontSize: 12, color: colors.accent, fontWeight: '700', lineHeight: 17 },
-  hero: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    padding: spacing.lg,
-    marginBottom: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.accent,
-  },
-  heroIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: radius.md,
-    backgroundColor: colors.accentSoft,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.sm,
-  },
-  heroEyebrow: { fontSize: 10, fontWeight: '800', color: colors.accent, letterSpacing: 1 },
-  heroTitle: { fontSize: 22, fontWeight: '900', color: colors.text, marginTop: 4 },
-  heroSub: {
-    fontSize: 13,
-    color: colors.textSecondary,
-    lineHeight: 19,
-    marginTop: spacing.xs,
-  },
-  heroStat: {
-    marginTop: spacing.sm,
-    fontSize: 12,
-    fontWeight: '800',
-    color: colors.brand,
-  },
-  sectionLabel: {
-    fontSize: 10,
-    fontWeight: '800',
-    color: colors.accent,
-    letterSpacing: 1,
-    marginBottom: spacing.md,
-  },
-  mt: { marginTop: spacing.xl },
-  loader: { marginVertical: spacing.lg },
-  empty: { alignItems: 'center', padding: spacing.xl, gap: spacing.sm },
-  emptyText: { color: colors.textMuted, fontSize: 14, fontWeight: '700' },
-  hint: { color: colors.textMuted, fontSize: 13, marginBottom: spacing.md },
-  offer: {
-    flexDirection: 'row',
-    gap: spacing.md,
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    padding: spacing.md,
-    marginBottom: spacing.sm,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  offerIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: radius.sm,
-    backgroundColor: colors.accentSoft,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  offerBody: { flex: 1 },
-  offerTitle: { color: colors.text, fontWeight: '900', fontSize: 16 },
-  offerDesc: { color: colors.textSecondary, marginTop: 6, fontSize: 13, lineHeight: 18 },
-  offerValue: { color: colors.accent, marginTop: 8, fontSize: 12, fontWeight: '800' },
-  offerCity: { color: colors.textMuted, marginTop: 4, fontSize: 11 },
-  progressCard: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    padding: spacing.lg,
-    marginBottom: spacing.sm,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  progressTitle: { color: colors.text, fontWeight: '800', fontSize: 15 },
-  progressDesc: { color: colors.textSecondary, fontSize: 12, marginTop: 4, lineHeight: 17 },
-  barBg: {
-    height: 8,
-    backgroundColor: colors.surfaceMuted,
-    borderRadius: 4,
-    marginTop: spacing.md,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  barFill: { height: '100%', backgroundColor: colors.accent, borderRadius: 4 },
-  progressMeta: { color: colors.textMuted, fontSize: 12, marginTop: spacing.sm, fontWeight: '600' },
-  supportBtn: {
-    marginTop: spacing.md,
-    backgroundColor: colors.accentSoft,
-    borderRadius: radius.md,
-    paddingVertical: spacing.sm,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.accent,
-  },
-  supportBtnText: { color: colors.accent, fontWeight: '800', fontSize: 13 },
-  contributeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    marginTop: spacing.md,
-  },
-  contributeInput: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    padding: spacing.sm,
-    fontSize: 15,
-    backgroundColor: colors.surface,
-  },
-  contributeBtn: {
-    backgroundColor: colors.accent,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: radius.md,
-  },
-  contributeBtnText: { color: '#fff', fontWeight: '800' },
-  fabRow: {
-    position: 'absolute',
-    bottom: TAB_BAR_CONTENT_INSET + spacing.md,
-    left: spacing.lg,
-    right: spacing.lg,
-    flexDirection: 'row',
-    gap: spacing.sm,
-  },
-  fab: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.sm,
-    backgroundColor: colors.brand,
-    borderRadius: radius.lg,
-    paddingVertical: spacing.md,
-  },
-  fabText: { color: '#fff', fontWeight: '800', fontSize: 14 },
-  fabSecondary: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.sm,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.accent,
-    borderRadius: radius.lg,
-    paddingVertical: spacing.md,
-  },
-  fabSecondaryText: { color: colors.accent, fontWeight: '800', fontSize: 14 },
-});
+function createStyles(c: AppColors) {
+  return StyleSheet.create({
+    root: { flex: 1 },
+    container: { flex: 1 },
+    content: { padding: spacing.lg, paddingBottom: TAB_BAR_CONTENT_INSET + 88 },
+    guestBanner: {
+      backgroundColor: c.brandSoft,
+      borderRadius: radius.md,
+      padding: spacing.md,
+      marginBottom: spacing.md,
+      borderWidth: 1,
+      borderColor: c.brand,
+    },
+    guestBannerText: { fontSize: 12, color: c.brand, fontWeight: '700', lineHeight: 17 },
+    hero: {
+      backgroundColor: c.surface,
+      borderRadius: radius.lg,
+      padding: spacing.lg,
+      marginBottom: spacing.lg,
+      borderWidth: 1,
+      borderColor: c.brand,
+    },
+    heroIcon: {
+      width: 48,
+      height: 48,
+      borderRadius: radius.md,
+      backgroundColor: c.brandSoft,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: spacing.sm,
+    },
+    heroEyebrow: { fontSize: 10, fontWeight: '800', color: c.brand, letterSpacing: 1 },
+    heroTitle: { fontSize: 22, fontWeight: '900', color: c.text, marginTop: 4 },
+    heroSub: {
+      fontSize: 13,
+      color: c.textSecondary,
+      lineHeight: 19,
+      marginTop: spacing.xs,
+    },
+    heroStat: {
+      marginTop: spacing.sm,
+      fontSize: 12,
+      fontWeight: '800',
+      color: c.brand,
+    },
+    sectionLabel: {
+      fontSize: 10,
+      fontWeight: '800',
+      color: c.brand,
+      letterSpacing: 1,
+      marginBottom: spacing.md,
+    },
+    mt: { marginTop: spacing.xl },
+    loader: { marginVertical: spacing.lg },
+    empty: { alignItems: 'center', padding: spacing.xl, gap: spacing.sm },
+    emptyText: { color: c.textMuted, fontSize: 14, fontWeight: '700' },
+    hint: { color: c.textMuted, fontSize: 13, marginBottom: spacing.md },
+    offer: {
+      flexDirection: 'row',
+      gap: spacing.md,
+      backgroundColor: c.surface,
+      borderRadius: radius.lg,
+      padding: spacing.md,
+      marginBottom: spacing.sm,
+      borderWidth: 1,
+      borderColor: c.border,
+    },
+    offerIcon: {
+      width: 44,
+      height: 44,
+      borderRadius: radius.sm,
+      backgroundColor: c.brandSoft,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    offerBody: { flex: 1 },
+    offerTitle: { color: c.text, fontWeight: '900', fontSize: 16 },
+    offerDesc: { color: c.textSecondary, marginTop: 6, fontSize: 13, lineHeight: 18 },
+    offerValue: { color: c.brand, marginTop: 8, fontSize: 12, fontWeight: '800' },
+    offerCity: { color: c.textMuted, marginTop: 4, fontSize: 11 },
+    progressCard: {
+      backgroundColor: c.surface,
+      borderRadius: radius.lg,
+      padding: spacing.lg,
+      marginBottom: spacing.sm,
+      borderWidth: 1,
+      borderColor: c.border,
+    },
+    progressTitle: { color: c.text, fontWeight: '800', fontSize: 15 },
+    progressDesc: { color: c.textSecondary, fontSize: 12, marginTop: 4, lineHeight: 17 },
+    barBg: {
+      height: 8,
+      backgroundColor: c.surfaceMuted,
+      borderRadius: 4,
+      marginTop: spacing.md,
+      overflow: 'hidden',
+      borderWidth: 1,
+      borderColor: c.border,
+    },
+    barFill: { height: '100%', backgroundColor: c.brand, borderRadius: 4 },
+    progressMeta: { color: c.textMuted, fontSize: 12, marginTop: spacing.sm, fontWeight: '600' },
+    supportBtn: {
+      marginTop: spacing.md,
+      backgroundColor: c.brandSoft,
+      borderRadius: radius.md,
+      paddingVertical: spacing.sm,
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: c.brand,
+    },
+    supportBtnText: { color: c.brand, fontWeight: '800', fontSize: 13 },
+    contributeRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+      marginTop: spacing.md,
+    },
+    contributeInput: {
+      flex: 1,
+      borderWidth: 1,
+      borderColor: c.border,
+      borderRadius: radius.md,
+      padding: spacing.sm,
+      fontSize: 15,
+      backgroundColor: c.surface,
+      color: c.text,
+    },
+    contributeBtn: {
+      backgroundColor: c.brand,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      borderRadius: radius.md,
+    },
+    contributeBtnText: { color: c.brandInverse, fontWeight: '800' },
+    fabRow: {
+      position: 'absolute',
+      bottom: TAB_BAR_CONTENT_INSET + spacing.md,
+      left: spacing.lg,
+      right: spacing.lg,
+      flexDirection: 'row',
+      gap: spacing.sm,
+    },
+    fab: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: spacing.sm,
+      backgroundColor: c.brand,
+      borderRadius: radius.lg,
+      paddingVertical: spacing.md,
+    },
+    fabText: { color: c.brandInverse, fontWeight: '800', fontSize: 14 },
+    fabSecondary: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: spacing.sm,
+      backgroundColor: c.surface,
+      borderWidth: 1,
+      borderColor: c.brand,
+      borderRadius: radius.lg,
+      paddingVertical: spacing.md,
+    },
+    fabSecondaryText: { color: c.brand, fontWeight: '800', fontSize: 14 },
+  });
+}

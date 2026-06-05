@@ -1,6 +1,8 @@
 import type { IconName } from '../components/ui/Icon';
+import type { ProductLineId } from '../models/ProductLine';
 import type { UserRole } from '../models/User';
 import type { ProDayModuleId } from './prodayModules';
+import { getMercatoTabLabel } from './poleExperience';
 
 export interface RoleDashboardMeta {
   eyebrow: string;
@@ -56,12 +58,12 @@ const ROLE_DASHBOARD: Record<UserRole, RoleDashboardMeta> = {
     fullWidthModule: 'arena',
   },
   physio: {
-    eyebrow: 'PÔLE MÉDICAL',
-    title: 'Accompagnez les sportifs',
+    eyebrow: 'PÔLE SANTÉ PRODAY',
+    title: 'Cabinet & rendez-vous',
     heroTone: 'medical',
     moduleOrder: ['matchs', 'recrutement', 'gestion', 'sponsors', 'arena'],
     fullWidthModule: 'matchs',
-    hideModules: ['arena'],
+    hideModules: ['arena', 'recrutement', 'matchs', 'gestion', 'sponsors'],
   },
   sponsor: {
     eyebrow: 'VITRINE MARQUE',
@@ -124,6 +126,7 @@ export function getRolePanelActions(role: UserRole): RolePanelAction[] {
         { icon: 'business', title: 'Annonces club', sub: 'Recrutement & stages', accent: true },
         { icon: 'people', title: 'Gestion effectif', sub: 'Planning & présences' },
         { icon: 'football', title: 'Détections', sub: 'Journées scouting' },
+        { icon: 'calendar', title: 'Stages', sub: 'Camps & stages foot' },
       ];
     case 'agent':
       return [
@@ -145,9 +148,9 @@ export function getRolePanelActions(role: UserRole): RolePanelAction[] {
       ];
     case 'physio':
       return [
-        { icon: 'heart', title: 'Fil santé', sub: 'Visibilité près des clubs', accent: true },
-        { icon: 'people', title: 'Sportifs suivis', sub: 'Messagerie après vérif.' },
-        { icon: 'location', title: 'Zone d’intervention', sub: 'Ville & département' },
+        { icon: 'calendar', title: 'Agenda RDV', sub: 'Confirmer et gérer les créneaux', accent: true },
+        { icon: 'chat', title: 'Messagerie patients', sub: 'Suivi blessure & prévention' },
+        { icon: 'location', title: 'Cabinet & zone', sub: 'Ville, département, visibilité' },
       ];
     case 'sponsor':
       return [
@@ -157,4 +160,50 @@ export function getRolePanelActions(role: UserRole): RolePanelAction[] {
     default:
       return [];
   }
+}
+
+export function getRolePanelActionsForLine(
+  role: UserRole,
+  line: ProductLineId
+): RolePanelAction[] {
+  const actions = getRolePanelActions(role);
+
+  if (role === 'player' && line === 'woman') {
+    return actions.map((a) => {
+      if (a.title === 'Mon CV en ligne') {
+        return {
+          ...a,
+          title: 'Mon CV joueuse',
+          sub: 'Compléter et publier votre CV foot',
+        };
+      }
+      if (a.title === 'Candidater') {
+        return {
+          ...a,
+          title: 'Mercato F',
+          sub: 'Parcourir les annonces foot féminin',
+        };
+      }
+      return a;
+    });
+  }
+
+  if (role === 'player' && line === 'homme') {
+    return actions.map((a) =>
+      a.title === 'Candidater'
+        ? { ...a, title: getMercatoTabLabel(line, role) }
+        : a
+    );
+  }
+
+  if (line === 'pro') {
+    return actions.map((a) => {
+      if (a.title === 'Mercato' || a.title === 'Recrutement') {
+        return { ...a, title: 'Mercato Pro', sub: a.sub };
+      }
+      return a;
+    });
+  }
+
+  return actions;
 }

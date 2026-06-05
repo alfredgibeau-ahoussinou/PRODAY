@@ -4,6 +4,7 @@ import { yearlyPriceFromMonthly } from '../utils/subscriptionPricing';
 /** Identifiant produit store / Stripe (phase 1 : club_pro actif en IAP). */
 export type SubscriptionPlanId =
   | 'player_plus'
+  | 'recruiter_pro'
   | 'coach_pro'
   | 'club_pro'
   | 'agent_elite'
@@ -75,6 +76,26 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionPlanId, SubscriptionPlanDefi
       'Mise en avant dans les recherches',
       'Alertes nouvelles annonces',
       'Export PDF optionnel',
+    ],
+  },
+  recruiter_pro: {
+    id: 'recruiter_pro',
+    role: 'recruiter',
+    label: 'Recruteur Pro',
+    tagline: 'Scouting, Mercato Pro et pipeline candidatures',
+    pricing: planPricing(7.99, false),
+    limits: { recruitment_messages_per_month: 5 },
+    freeIncludes: [
+      'Profil recruteur vérifié',
+      'Territoire & spécialité',
+      'Mercato en lecture',
+      '5 messages recrutement / mois',
+    ],
+    proIncludes: [
+      'Annonces Mercato Pro actives',
+      'Pipeline candidatures',
+      'Messages recrutement illimités',
+      'Statistiques scouting & candidatures',
     ],
   },
   coach_pro: {
@@ -209,7 +230,7 @@ const ROLE_TO_PLAN: Partial<Record<UserRole, SubscriptionPlanId>> = {
   coach: 'coach_pro',
   club: 'club_pro',
   agent: 'agent_elite',
-  recruiter: 'coach_pro',
+  recruiter: 'recruiter_pro',
   physio: 'physio_pro',
   organizer: 'organizer_pro',
   sponsor: 'sponsor_pro',
@@ -227,6 +248,8 @@ export function getPlanForRole(role: UserRole): SubscriptionPlanDefinition | nul
   const id = planIdForRole(role);
   return id ? SUBSCRIPTION_PLANS[id] : null;
 }
+
+export { getPlanForRoleAndLine, plansForProductLine } from './subscriptionPlansByLine';
 
 /** Rôles sans formule store dédiée (aucun au lancement tarifaire actuel). */
 export const ROLES_WITHOUT_STORE_PLAN: UserRole[] = [];

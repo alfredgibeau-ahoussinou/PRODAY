@@ -12,7 +12,8 @@ import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { SearchBar } from '../components/ui/SearchBar';
 import { clubsService } from '../services/clubs.service';
 import { Icon } from '../components/ui/Icon';
-import { colors, spacing, radius, shadows } from '../theme/designTokens';
+import { spacing, radius, shadows } from '../theme/designTokens';
+import { useAppTheme } from '../context/ProductLineContext';
 
 interface ClubsListScreenProps {
   onBack: () => void;
@@ -28,6 +29,7 @@ export const ClubsListScreen: React.FC<ClubsListScreenProps> = ({
   const [query, setQuery] = useState('');
   const [clubs, setClubs] = useState<Club[]>([]);
   const [loading, setLoading] = useState(true);
+  const { colors: themeColors } = useAppTheme();
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -41,7 +43,7 @@ export const ClubsListScreen: React.FC<ClubsListScreenProps> = ({
   }, [load]);
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, { backgroundColor: themeColors.background }]}>
       <ScreenHeader
         title="Clubs"
         onBack={onBack}
@@ -49,7 +51,7 @@ export const ClubsListScreen: React.FC<ClubsListScreenProps> = ({
         rightAction={
           onCreateClub ? (
             <TouchableOpacity onPress={onCreateClub} hitSlop={12}>
-              <Icon name="add" size={24} color={colors.brand} />
+              <Icon name="add" size={24} color={themeColors.brand} />
             </TouchableOpacity>
           ) : undefined
         }
@@ -60,14 +62,14 @@ export const ClubsListScreen: React.FC<ClubsListScreenProps> = ({
         onChangeText={setQuery}
       />
       {loading ? (
-        <ActivityIndicator color={colors.brand} style={styles.loader} />
+        <ActivityIndicator color={themeColors.brand} style={styles.loader} />
       ) : (
         <FlatList
           data={clubs}
           keyExtractor={(c) => c.id}
           contentContainerStyle={styles.list}
           ListEmptyComponent={
-            <Text style={styles.empty}>
+            <Text style={[styles.empty, { color: themeColors.textMuted }]}>
               Aucun club enregistré. Créez le vôtre avec le bouton +.
             </Text>
           }
@@ -75,25 +77,36 @@ export const ClubsListScreen: React.FC<ClubsListScreenProps> = ({
             const CardWrap = onSelectClub ? TouchableOpacity : View;
             return (
             <CardWrap
-              style={[styles.card, shadows.card]}
+              style={[
+                styles.card,
+                shadows.card,
+                {
+                  backgroundColor: themeColors.surface,
+                  borderColor: themeColors.border,
+                },
+              ]}
               onPress={onSelectClub ? () => onSelectClub(item) : undefined}
               activeOpacity={0.85}
             >
-              <View style={styles.logo}>
-                <Text style={styles.logoLetter}>{item.name.charAt(0)}</Text>
+              <View style={[styles.logo, { backgroundColor: themeColors.accentSoft }]}>
+                <Text style={[styles.logoLetter, { color: themeColors.brand }]}>
+                  {item.name.charAt(0)}
+                </Text>
               </View>
               <View style={styles.info}>
-                <Text style={styles.name}>{item.name}</Text>
-                <Text style={styles.meta}>
+                <Text style={[styles.name, { color: themeColors.text }]}>{item.name}</Text>
+                <Text style={[styles.meta, { color: themeColors.textSecondary }]}>
                   {item.city}
                   {item.department ? ` · ${item.department}` : ''}
                 </Text>
                 {item.categories.length > 0 && (
-                  <Text style={styles.cats}>{item.categories.join(' · ')}</Text>
+                  <Text style={[styles.cats, { color: themeColors.brand }]}>
+                    {item.categories.join(' · ')}
+                  </Text>
                 )}
               </View>
               {item.verified && (
-                <Icon name="checkmark-circle" size={20} color={colors.success} />
+                <Icon name="checkmark-circle" size={20} color={themeColors.success} />
               )}
             </CardWrap>
             );
@@ -105,12 +118,11 @@ export const ClubsListScreen: React.FC<ClubsListScreenProps> = ({
 };
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.background },
+  root: { flex: 1 },
   loader: { marginTop: spacing.xl },
   list: { paddingHorizontal: spacing.lg, paddingBottom: spacing.xxl },
   empty: {
     textAlign: 'center',
-    color: colors.textMuted,
     padding: spacing.xl,
     fontSize: 14,
     lineHeight: 22,
@@ -118,25 +130,22 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surface,
     borderRadius: radius.lg,
     padding: spacing.md,
     marginBottom: spacing.sm,
     borderWidth: 1,
-    borderColor: colors.border,
   },
   logo: {
     width: 48,
     height: 48,
     borderRadius: radius.md,
-    backgroundColor: colors.brandSoft,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: spacing.md,
   },
-  logoLetter: { fontSize: 20, fontWeight: '800', color: colors.brand },
+  logoLetter: { fontSize: 20, fontWeight: '800' },
   info: { flex: 1 },
-  name: { fontSize: 16, fontWeight: '700', color: colors.text },
-  meta: { fontSize: 13, color: colors.textSecondary, marginTop: 2 },
-  cats: { fontSize: 12, color: colors.brand, marginTop: 4, fontWeight: '600' },
+  name: { fontSize: 16, fontWeight: '700' },
+  meta: { fontSize: 13, marginTop: 2 },
+  cats: { fontSize: 12, marginTop: 4, fontWeight: '600' },
 });

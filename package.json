@@ -14,6 +14,8 @@
     "typecheck": "tsc --noEmit",
     "cleanup:demo": "node scripts/cleanup-demo-data.mjs",
     "admin:setup": "node scripts/setup-admin.mjs",
+    "test-account:setup": "node scripts/setup-test-account.mjs",
+    "partner-account:setup": "node scripts/setup-partner-test-account.mjs",
     "stats:refresh": "node scripts/refresh-platform-stats.mjs",
     "firebase:health": "node scripts/firebase-health.mjs",
     "firebase:seed": "node scripts/seed-firestore.mjs",

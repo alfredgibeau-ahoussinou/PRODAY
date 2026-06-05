@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   View,
   Text,
@@ -12,7 +12,9 @@ import { useAppSpace } from '../../context/AppSpaceContext';
 import { APP_SPACE_LABELS } from '../../models/AppSpace';
 import { useTabNavigationActions } from '../../hooks/useTabNavigationActions';
 import { TAB_BAR_CONTENT_INSET } from '../../components/navigation/BottomTabBar';
-import { colors, spacing, radius } from '../../theme/designTokens';
+import { spacing, radius } from '../../theme/designTokens';
+import { useThemedScreen } from '../../hooks/useThemedScreen';
+import type { AppColors } from '../../theme/universeTheme';
 
 interface MenHubScreenProps {
   onBack: () => void;
@@ -21,6 +23,8 @@ interface MenHubScreenProps {
 export const MenHubScreen: React.FC<MenHubScreenProps> = ({ onBack }) => {
   const { setAppSpace } = useAppSpace();
   const nav = useTabNavigationActions();
+  const { colors: c, rootStyle } = useThemedScreen();
+  const styles = useMemo(() => createStyles(c), [c]);
 
   const enterSpace = async (space: 'men' | 'boys') => {
     await setAppSpace(space);
@@ -29,7 +33,7 @@ export const MenHubScreen: React.FC<MenHubScreenProps> = ({ onBack }) => {
   };
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, rootStyle]}>
       <ScreenHeader title="ProDay Masculin" onBack={onBack} centered />
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.hero}>
@@ -42,21 +46,21 @@ export const MenHubScreen: React.FC<MenHubScreenProps> = ({ onBack }) => {
         </View>
 
         <TouchableOpacity style={styles.card} onPress={() => enterSpace('men')}>
-          <Icon name="football" size={24} color={colors.accent} />
+          <Icon name="football" size={24} color={c.accent} />
           <View style={styles.cardBody}>
             <Text style={styles.cardTitle}>{APP_SPACE_LABELS.men}</Text>
             <Text style={styles.cardSub}>Seniors, R1, N3, N2, N1, régional</Text>
           </View>
-          <Icon name="chevron-forward" size={18} color={colors.textMuted} />
+          <Icon name="chevron-forward" size={18} color={c.textMuted} />
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.card} onPress={() => enterSpace('boys')}>
-          <Icon name="school" size={24} color={colors.accent} />
+          <Icon name="school" size={24} color={c.accent} />
           <View style={styles.cardBody}>
             <Text style={styles.cardTitle}>{APP_SPACE_LABELS.boys}</Text>
             <Text style={styles.cardSub}>U13 à U19 — formations et détections</Text>
           </View>
-          <Icon name="chevron-forward" size={18} color={colors.textMuted} />
+          <Icon name="chevron-forward" size={18} color={c.textMuted} />
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.secondary} onPress={onBack}>
@@ -67,44 +71,46 @@ export const MenHubScreen: React.FC<MenHubScreenProps> = ({ onBack }) => {
   );
 };
 
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.background },
-  content: { padding: spacing.lg, paddingBottom: TAB_BAR_CONTENT_INSET + spacing.xxl },
-  hero: {
-    backgroundColor: '#0f2847',
-    borderRadius: radius.lg,
-    padding: spacing.lg,
-    marginBottom: spacing.lg,
-    borderWidth: 2,
-    borderColor: colors.accent,
-  },
-  heroEyebrow: {
-    color: colors.accent,
-    fontSize: 10,
-    fontWeight: '900',
-    letterSpacing: 2,
-  },
-  heroTitle: {
-    color: colors.brandInverse,
-    fontSize: 24,
-    fontWeight: '900',
-    marginTop: spacing.sm,
-  },
-  heroSub: { color: colors.heroMuted, fontSize: 14, lineHeight: 20, marginTop: spacing.sm },
-  card: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    padding: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    marginBottom: spacing.sm,
-  },
-  cardBody: { flex: 1 },
-  cardTitle: { fontSize: 16, fontWeight: '900', color: colors.text },
-  cardSub: { fontSize: 12, color: colors.textSecondary, marginTop: 2 },
-  secondary: { alignItems: 'center', padding: spacing.lg },
-  secondaryText: { color: colors.textMuted, fontWeight: '700' },
-});
+function createStyles(c: AppColors) {
+  return StyleSheet.create({
+    root: { flex: 1 },
+    content: { padding: spacing.lg, paddingBottom: TAB_BAR_CONTENT_INSET + spacing.xxl },
+    hero: {
+      backgroundColor: c.surfaceInverse,
+      borderRadius: radius.lg,
+      padding: spacing.lg,
+      marginBottom: spacing.lg,
+      borderWidth: 2,
+      borderColor: c.accent,
+    },
+    heroEyebrow: {
+      color: c.accent,
+      fontSize: 10,
+      fontWeight: '900',
+      letterSpacing: 2,
+    },
+    heroTitle: {
+      color: c.brandInverse,
+      fontSize: 24,
+      fontWeight: '900',
+      marginTop: spacing.sm,
+    },
+    heroSub: { color: c.heroMuted, fontSize: 14, lineHeight: 20, marginTop: spacing.sm },
+    card: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.md,
+      backgroundColor: c.surface,
+      borderRadius: radius.lg,
+      padding: spacing.md,
+      borderWidth: 1,
+      borderColor: c.border,
+      marginBottom: spacing.sm,
+    },
+    cardBody: { flex: 1 },
+    cardTitle: { fontSize: 16, fontWeight: '900', color: c.text },
+    cardSub: { fontSize: 12, color: c.textSecondary, marginTop: 2 },
+    secondary: { alignItems: 'center', padding: spacing.lg },
+    secondaryText: { color: c.textMuted, fontWeight: '700' },
+  });
+}

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { View, Text, StyleSheet, Dimensions } from 'react-native';
 import { ShowcaseImageBackground } from '../ui/ShowcaseImageBackground';
 import Animated, {
@@ -12,13 +12,14 @@ import Animated, {
   type SharedValue,
 } from 'react-native-reanimated';
 import { Logo } from '../Logo';
-import { BRAND } from '../../theme/designTokens';
-import { discover } from '../../theme/discoverTheme';
-import { colors, spacing } from '../../theme/designTokens';
+import { BRAND, spacing } from '../../theme/designTokens';
 import { EASE_OUT } from './animationConfig';
 import { useShowcaseImages } from '../../hooks/useShowcaseImages';
+import { useDiscoverStyles } from './discoverStyles';
+import type { AppColors } from '../../theme/universeTheme';
 
 const { width: SCREEN_W } = Dimensions.get('window');
+const HERO_LINE = 'rgba(255, 255, 255, 0.28)';
 
 interface DiscoverHeroAnimatedProps {
   scrollY: SharedValue<number>;
@@ -29,6 +30,8 @@ export const DiscoverHeroAnimated: React.FC<DiscoverHeroAnimatedProps> = ({
   scrollY,
   pitch,
 }) => {
+  const { colors: c } = useDiscoverStyles();
+  const styles = useMemo(() => createStyles(c), [c]);
   const showcase = useShowcaseImages();
   const lineWidth = useSharedValue(0);
   const pitchOpacity = useSharedValue(0);
@@ -72,7 +75,6 @@ export const DiscoverHeroAnimated: React.FC<DiscoverHeroAnimatedProps> = ({
       >
         <View style={styles.overlay} />
 
-        {/* Filigrane logo transparent — fond photo */}
         <View style={styles.watermarkLayer} pointerEvents="none">
           <Logo background="photo" width={SCREEN_W * 0.72} watermark />
         </View>
@@ -101,84 +103,86 @@ export const DiscoverHeroAnimated: React.FC<DiscoverHeroAnimatedProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  heroWrap: { overflow: 'hidden' },
-  hero: {
-    paddingTop: spacing.xl,
-    paddingBottom: spacing.xl + spacing.md,
-    paddingHorizontal: spacing.lg,
-    minHeight: 300,
-    overflow: 'hidden',
-  },
-  heroImage: { opacity: 0.55 },
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.48)',
-  },
-  watermarkLayer: {
-    ...StyleSheet.absoluteFillObject,
-    alignItems: 'center',
-    justifyContent: 'center',
-    transform: [{ translateY: -24 }, { rotate: '-6deg' }],
-  },
-  heroContent: { zIndex: 1 },
-  grid: {
-    ...StyleSheet.absoluteFillObject,
-    opacity: 0.08,
-  },
-  gridLine: {
-    position: 'absolute',
-    top: 0,
-    bottom: 0,
-    width: 1,
-    backgroundColor: discover.heroText,
-  },
-  badge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    alignSelf: 'flex-start',
-    marginBottom: spacing.lg,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-    borderWidth: 1,
-    borderColor: discover.heroLine,
-    borderRadius: 999,
-    backgroundColor: 'rgba(0,0,0,0.25)',
-  },
-  badgeDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: colors.accent,
-  },
-  badgeText: {
-    color: colors.accent,
-    fontSize: 11,
-    fontWeight: '800',
-    letterSpacing: 1,
-  },
-  brandTag: {
-    color: discover.heroMuted,
-    fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 2.5,
-    marginTop: spacing.sm,
-    marginBottom: spacing.lg,
-  },
-  accentLine: {
-    height: 3,
-    backgroundColor: colors.accent,
-    borderRadius: 2,
-    marginBottom: spacing.lg,
-    maxWidth: SCREEN_W * 0.5,
-  },
-  pitch: {
-    color: discover.heroText,
-    fontSize: 22,
-    lineHeight: 30,
-    fontWeight: '700',
-    letterSpacing: -0.3,
-    maxWidth: 320,
-  },
-});
+function createStyles(c: AppColors) {
+  return StyleSheet.create({
+    heroWrap: { overflow: 'hidden' },
+    hero: {
+      paddingTop: spacing.xl,
+      paddingBottom: spacing.xl + spacing.md,
+      paddingHorizontal: spacing.lg,
+      minHeight: 300,
+      overflow: 'hidden',
+    },
+    heroImage: { opacity: 0.55 },
+    overlay: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: 'rgba(0,0,0,0.48)',
+    },
+    watermarkLayer: {
+      ...StyleSheet.absoluteFillObject,
+      alignItems: 'center',
+      justifyContent: 'center',
+      transform: [{ translateY: -24 }, { rotate: '-6deg' }],
+    },
+    heroContent: { zIndex: 1 },
+    grid: {
+      ...StyleSheet.absoluteFillObject,
+      opacity: 0.08,
+    },
+    gridLine: {
+      position: 'absolute',
+      top: 0,
+      bottom: 0,
+      width: 1,
+      backgroundColor: c.brandInverse,
+    },
+    badge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+      alignSelf: 'flex-start',
+      marginBottom: spacing.lg,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.xs,
+      borderWidth: 1,
+      borderColor: HERO_LINE,
+      borderRadius: 999,
+      backgroundColor: 'rgba(0,0,0,0.25)',
+    },
+    badgeDot: {
+      width: 6,
+      height: 6,
+      borderRadius: 3,
+      backgroundColor: c.brand,
+    },
+    badgeText: {
+      color: c.brand,
+      fontSize: 11,
+      fontWeight: '800',
+      letterSpacing: 1,
+    },
+    brandTag: {
+      color: c.heroMuted,
+      fontSize: 10,
+      fontWeight: '700',
+      letterSpacing: 2.5,
+      marginTop: spacing.sm,
+      marginBottom: spacing.lg,
+    },
+    accentLine: {
+      height: 3,
+      backgroundColor: c.brand,
+      borderRadius: 2,
+      marginBottom: spacing.lg,
+      maxWidth: SCREEN_W * 0.5,
+    },
+    pitch: {
+      color: c.brandInverse,
+      fontSize: 22,
+      lineHeight: 30,
+      fontWeight: '700',
+      letterSpacing: -0.3,
+      maxWidth: 320,
+    },
+  });
+}

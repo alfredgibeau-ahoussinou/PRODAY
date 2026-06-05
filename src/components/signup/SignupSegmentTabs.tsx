@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, Platform, ScrollView } from 'react-native';
 import { PressableSpring } from '../discover/PressableSpring';
 import { useSignupFlowTheme } from '../../screens/signup/SignupFlowContext';
-import { colors as defaultColors, spacing, radius } from '../../theme/designTokens';
+import { spacing, radius } from '../../theme/designTokens';
+import type { AppColors } from '../../theme/universeTheme';
 
 export interface SignupSegmentTab<T extends string = string> {
   id: T;
@@ -25,8 +26,9 @@ export function SignupSegmentTabs<T extends string>({
   onSelect,
   compact,
 }: SignupSegmentTabsProps<T>) {
-  const { colors, isWomanSignup } = useSignupFlowTheme();
-  const accent = isWomanSignup ? colors.accent : defaultColors.ink;
+  const { colors: c, isWomanSignup } = useSignupFlowTheme();
+  const styles = useMemo(() => createStyles(c), [c]);
+  const accent = isWomanSignup ? c.brand : c.ink;
 
   return (
     <View style={[styles.wrap, compact && styles.wrapCompact]}>
@@ -67,51 +69,53 @@ export function SignupSegmentTabs<T extends string>({
   );
 }
 
-const styles = StyleSheet.create({
-  wrap: {
-    marginBottom: spacing.lg,
-    width: '100%',
-  },
-  wrapCompact: {
-    marginBottom: spacing.md,
-  },
-  rail: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexGrow: 1,
-    gap: spacing.sm,
-    paddingVertical: spacing.xs,
-    paddingHorizontal: spacing.xs,
-  },
-  pill: {
-    paddingVertical: spacing.sm + 2,
-    paddingHorizontal: spacing.lg,
-    borderRadius: radius.pill,
-    borderWidth: 1.5,
-    borderColor: defaultColors.border,
-    backgroundColor: defaultColors.surface,
-    minHeight: 44,
-    justifyContent: 'center',
-  },
-  pillCompact: {
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-    minHeight: 40,
-  },
-  pillLabel: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: defaultColors.textSecondary,
-    letterSpacing: 0.1,
-    textAlign: 'center',
-    ...Platform.select({ android: { includeFontPadding: false } }),
-  },
-  pillLabelCompact: {
-    fontSize: 13,
-  },
-  pillLabelOn: {
-    color: defaultColors.brandInverse,
-    fontWeight: '800',
-  },
-});
+function createStyles(c: AppColors) {
+  return StyleSheet.create({
+    wrap: {
+      marginBottom: spacing.lg,
+      width: '100%',
+    },
+    wrapCompact: {
+      marginBottom: spacing.md,
+    },
+    rail: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      flexGrow: 1,
+      gap: spacing.sm,
+      paddingVertical: spacing.xs,
+      paddingHorizontal: spacing.xs,
+    },
+    pill: {
+      paddingVertical: spacing.sm + 2,
+      paddingHorizontal: spacing.lg,
+      borderRadius: radius.pill,
+      borderWidth: 1.5,
+      borderColor: c.border,
+      backgroundColor: c.surface,
+      minHeight: 44,
+      justifyContent: 'center',
+    },
+    pillCompact: {
+      paddingVertical: spacing.sm,
+      paddingHorizontal: spacing.md,
+      minHeight: 40,
+    },
+    pillLabel: {
+      fontSize: 14,
+      fontWeight: '700',
+      color: c.textSecondary,
+      letterSpacing: 0.1,
+      textAlign: 'center',
+      ...Platform.select({ android: { includeFontPadding: false } }),
+    },
+    pillLabelCompact: {
+      fontSize: 13,
+    },
+    pillLabelOn: {
+      color: c.brandInverse,
+      fontWeight: '800',
+    },
+  });
+}

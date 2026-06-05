@@ -7,23 +7,27 @@ import type { UserRole } from '../../models/User';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { PressableSpring } from '../discover/PressableSpring';
 import { Icon } from './Icon';
-import { colors, spacing, radius, shadows, surfaces } from '../../theme/designTokens';
+import { spacing, radius, shadows, surfaces } from '../../theme/designTokens';
+import type { AppColors } from '../../theme/universeTheme';
 
-const MODULE_ACCENT: Record<ProDayModuleId, string> = {
-  recrutement: colors.tone1,
-  matchs: colors.tone2,
-  gestion: colors.accent,
-  arena: colors.tone3,
-  sponsors: colors.tone4,
-};
-
-const MODULE_BG: Record<ProDayModuleId, string> = {
-  recrutement: colors.accentSoft,
-  matchs: colors.backgroundAlt,
-  gestion: colors.surfaceMuted,
-  arena: colors.surfaceMuted,
-  sponsors: colors.accentSoft,
-};
+function getModuleAccents(c: AppColors) {
+  return {
+    accent: {
+      recrutement: c.tone1,
+      matchs: c.tone2,
+      gestion: c.brand,
+      arena: c.tone3,
+      sponsors: c.tone4,
+    } as Record<ProDayModuleId, string>,
+    bg: {
+      recrutement: c.brandSoft,
+      matchs: c.backgroundAlt,
+      gestion: c.surfaceMuted,
+      arena: c.surfaceMuted,
+      sponsors: c.brandSoft,
+    } as Record<ProDayModuleId, string>,
+  };
+}
 
 interface ProDayModuleGridProps {
   onModulePress: (id: ProDayModuleId) => void;
@@ -54,7 +58,9 @@ export const ProDayModuleGrid: React.FC<ProDayModuleGridProps> = ({
   fullWidthModuleId: fullWidthProp,
   role,
 }) => {
-  const { productLine } = useAppTheme();
+  const { productLine, colors: c } = useAppTheme();
+  const styles = useMemo(() => createStyles(c), [c]);
+  const modulePalette = useMemo(() => getModuleAccents(c), [c]);
   const roleLayout = useMemo(
     () => (role ? getModulesForRoleAndLine(role, productLine) : null),
     [role, productLine]
@@ -71,7 +77,7 @@ export const ProDayModuleGrid: React.FC<ProDayModuleGridProps> = ({
   return (
     <View style={styles.grid}>
       {modules.map((mod, i) => {
-        const accent = MODULE_ACCENT[mod.id];
+        const accent = modulePalette.accent[mod.id];
         const wideId = roleLayout?.fullWidthModuleId ?? fullWidthProp ?? 'gestion';
         const isWide = mod.id === wideId;
         const cellStyle = isWide ? styles.cellWide : styles.cell;
@@ -85,7 +91,7 @@ export const ProDayModuleGrid: React.FC<ProDayModuleGridProps> = ({
             onPress={() => onModulePress(mod.id)}
           >
             <View style={[styles.stripe, { backgroundColor: accent }]} />
-            <View style={[styles.iconWrap, { backgroundColor: MODULE_BG[mod.id] }]}>
+            <View style={[styles.iconWrap, { backgroundColor: modulePalette.bg[mod.id] }]}>
               <Icon name={mod.icon} size={22} color={accent} variant="filled" />
             </View>
             <Text style={styles.title}>{mod.title}</Text>
@@ -119,7 +125,7 @@ export const ProDayModuleGrid: React.FC<ProDayModuleGridProps> = ({
               scaleTo={0.94}
             >
               <View style={[styles.stripe, { backgroundColor: accent }]} />
-              <View style={[styles.iconWrap, { backgroundColor: MODULE_BG[mod.id] }]}>
+              <View style={[styles.iconWrap, { backgroundColor: modulePalette.bg[mod.id] }]}>
                 <Icon name={mod.icon} size={22} color={accent} variant="filled" />
               </View>
               <Text style={styles.title}>{mod.title}</Text>
@@ -138,7 +144,8 @@ export const ProDayModuleGrid: React.FC<ProDayModuleGridProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+function createStyles(c: AppColors) {
+  return StyleSheet.create({
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -169,8 +176,8 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
     marginTop: spacing.xs,
   },
-  title: { fontSize: 14, fontWeight: '800', color: colors.text },
-  sub: { fontSize: 11, color: colors.textMuted, marginTop: 2, fontWeight: '500' },
+  title: { fontSize: 14, fontWeight: '800', color: c.text },
+  sub: { fontSize: 11, color: c.textMuted, marginTop: 2, fontWeight: '500' },
   liveBadge: {
     position: 'absolute',
     top: spacing.sm,
@@ -178,7 +185,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: colors.successBg,
+    backgroundColor: c.successBg,
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: radius.pill,
@@ -187,7 +194,8 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: colors.success,
+    backgroundColor: c.success,
   },
-  liveText: { fontSize: 9, fontWeight: '800', color: colors.success },
+  liveText: { fontSize: 9, fontWeight: '800', color: c.success },
 });
+}

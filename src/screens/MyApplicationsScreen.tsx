@@ -13,7 +13,8 @@ import { recruitmentService, formatTimeAgo, APPLICATION_STATUS_LABEL } from '../
 import { useAuth } from '../context/AuthContext';
 import type { Application, RecruitmentPost } from '../models/Player';
 import { Icon } from '../components/ui/Icon';
-import { colors, spacing, radius } from '../theme/designTokens';
+import { spacing, radius } from '../theme/designTokens';
+import { useThemedScreen } from '../hooks/useThemedScreen';
 
 const STATUS_LABEL = APPLICATION_STATUS_LABEL;
 
@@ -27,6 +28,7 @@ export const MyApplicationsScreen: React.FC<MyApplicationsScreenProps> = ({
   onBack,
 }) => {
   const { profile } = useAuth();
+  const { colors: themeColors, rootStyle } = useThemedScreen();
   const [items, setItems] = useState<
     { application: Application; post: RecruitmentPost | null }[]
   >([]);
@@ -61,15 +63,15 @@ export const MyApplicationsScreen: React.FC<MyApplicationsScreenProps> = ({
   }
 
   return (
-    <View style={styles.root}>
+    <View style={rootStyle}>
       <ScreenHeader title="Mes candidatures" onBack={onBack} centered />
       {loading ? (
-        <ActivityIndicator color={colors.accent} style={styles.loader} />
+        <ActivityIndicator color={themeColors.brand} style={styles.loader} />
       ) : items.length === 0 ? (
         <View style={styles.emptyWrap}>
-          <Icon name="briefcase" size={40} color={colors.accent} />
-          <Text style={styles.emptyTitle}>Aucune candidature</Text>
-          <Text style={styles.emptySub}>
+          <Icon name="briefcase" size={40} color={themeColors.brand} />
+          <Text style={[styles.emptyTitle, { color: themeColors.text }]}>Aucune candidature</Text>
+          <Text style={[styles.emptySub, { color: themeColors.textMuted }]}>
             Parcourez le Mercato et postulez aux annonces qui vous correspondent.
           </Text>
         </View>
@@ -78,41 +80,58 @@ export const MyApplicationsScreen: React.FC<MyApplicationsScreenProps> = ({
           {items.map(({ application, post }) => (
             <TouchableOpacity
               key={application.id}
-              style={styles.card}
+              style={[
+                styles.card,
+                {
+                  backgroundColor: themeColors.surface,
+                  borderColor: themeColors.border,
+                },
+              ]}
               onPress={() => post && setSelectedPostId(post.id)}
               activeOpacity={0.9}
               disabled={!post}
             >
               <View style={styles.cardTop}>
-                <Text style={styles.club}>{post?.club_name ?? 'Annonce'}</Text>
+                <Text style={[styles.club, { color: themeColors.brand }]}>
+                  {post?.club_name ?? 'Annonce'}
+                </Text>
                 <View
                   style={[
                     styles.statusPill,
-                    application.status === 'ACCEPTED' && styles.statusOk,
-                    application.status === 'REJECTED' && styles.statusBad,
+                    {
+                      backgroundColor: themeColors.surfaceMuted,
+                      borderColor: themeColors.border,
+                    },
+                    application.status === 'ACCEPTED' && {
+                      backgroundColor: themeColors.accentSoft,
+                      borderColor: themeColors.brand,
+                    },
+                    application.status === 'REJECTED' && {
+                      backgroundColor: themeColors.warningBg,
+                    },
                   ]}
                 >
-                  <Text style={styles.statusText}>
+                  <Text style={[styles.statusText, { color: themeColors.text }]}>
                     {STATUS_LABEL[application.status]}
                   </Text>
                 </View>
               </View>
-              <Text style={styles.title}>
+              <Text style={[styles.title, { color: themeColors.text }]}>
                 {post?.title || post?.position || 'Recrutement'}
               </Text>
-              <Text style={styles.meta}>
+              <Text style={[styles.meta, { color: themeColors.textMuted }]}>
                 {formatTimeAgo(application.created_at)}
                 {post?.city ? ` · ${post.city}` : ''}
               </Text>
               {application.cover_letter ? (
-                <Text style={styles.letter} numberOfLines={2}>
+                <Text style={[styles.letter, { color: themeColors.textSecondary }]} numberOfLines={2}>
                   {application.cover_letter}
                 </Text>
               ) : null}
               {post ? (
                 <View style={styles.ctaRow}>
-                  <Text style={styles.cta}>Voir l&apos;annonce</Text>
-                  <Icon name="chevron-forward" size={16} color={colors.accent} />
+                  <Text style={[styles.cta, { color: themeColors.brand }]}>Voir l&apos;annonce</Text>
+                  <Icon name="chevron-forward" size={16} color={themeColors.brand} />
                 </View>
               ) : null}
             </TouchableOpacity>
@@ -124,7 +143,6 @@ export const MyApplicationsScreen: React.FC<MyApplicationsScreenProps> = ({
 };
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.background },
   loader: { marginTop: spacing.xl },
   emptyWrap: {
     flex: 1,
@@ -133,21 +151,18 @@ const styles = StyleSheet.create({
     padding: spacing.xl,
     gap: spacing.md,
   },
-  emptyTitle: { fontSize: 18, fontWeight: '900', color: colors.text },
+  emptyTitle: { fontSize: 18, fontWeight: '900' },
   emptySub: {
     textAlign: 'center',
-    color: colors.textMuted,
     fontSize: 14,
     lineHeight: 22,
     maxWidth: 280,
   },
   list: { padding: spacing.lg, paddingBottom: spacing.xxl, gap: spacing.md },
   card: {
-    backgroundColor: colors.surface,
     borderRadius: radius.lg,
     padding: spacing.md,
     borderWidth: 1,
-    borderColor: colors.border,
   },
   cardTop: {
     flexDirection: 'row',
@@ -155,21 +170,17 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     gap: spacing.sm,
   },
-  club: { fontSize: 11, fontWeight: '800', color: colors.accent, flex: 1 },
+  club: { fontSize: 11, fontWeight: '800', flex: 1 },
   statusPill: {
-    backgroundColor: colors.surfaceMuted,
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: radius.pill,
     borderWidth: 1,
-    borderColor: colors.border,
   },
-  statusOk: { backgroundColor: colors.accentSoft, borderColor: colors.accent },
-  statusBad: { backgroundColor: colors.warningBg },
-  statusText: { fontSize: 10, fontWeight: '800', color: colors.text },
-  title: { fontSize: 16, fontWeight: '900', color: colors.text, marginTop: spacing.sm },
-  meta: { fontSize: 12, color: colors.textMuted, marginTop: 4 },
-  letter: { fontSize: 13, color: colors.textSecondary, marginTop: spacing.sm, lineHeight: 18 },
+  statusText: { fontSize: 10, fontWeight: '800' },
+  title: { fontSize: 16, fontWeight: '900', marginTop: spacing.sm },
+  meta: { fontSize: 12, marginTop: 4 },
+  letter: { fontSize: 13, marginTop: spacing.sm, lineHeight: 18 },
   ctaRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: spacing.md },
-  cta: { fontSize: 12, fontWeight: '800', color: colors.accent },
+  cta: { fontSize: 12, fontWeight: '800' },
 });

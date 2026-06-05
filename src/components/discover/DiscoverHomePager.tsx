@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import {
   View,
   StyleSheet,
@@ -12,8 +12,9 @@ import { type DiscoverChapterId } from '../../content/discoverChapters';
 import { DiscoverChapterRail } from './DiscoverChapterRail';
 import { DiscoverTabRail } from './DiscoverTabRail';
 import { CarouselDot } from './CarouselDot';
-import { discoverPalette } from './discoverStyles';
-import { colors, spacing, radius, shadows } from '../../theme/designTokens';
+import { getDiscoverPalette, useDiscoverStyles } from './discoverStyles';
+import { spacing, radius, shadows } from '../../theme/designTokens';
+import type { AppColors } from '../../theme/universeTheme';
 
 export interface DiscoverHomePage {
   id: DiscoverChapterId;
@@ -43,6 +44,8 @@ export const DiscoverHomePager: React.FC<DiscoverHomePagerProps> = ({
   embedded = false,
   ui = 'default',
 }) => {
+  const { palette, colors: c } = useDiscoverStyles();
+  const styles = useMemo(() => createPagerStyles(c, palette), [c, palette]);
   const editorial = ui === 'editorial';
   const immersive = ui === 'immersive';
   const light = ui === 'light';
@@ -202,61 +205,63 @@ export const DiscoverHomePager: React.FC<DiscoverHomePagerProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.background },
-  rootEmbedded: { backgroundColor: 'transparent' },
-  rootEditorial: { backgroundColor: discoverPalette.canvas },
-  rootImmersive: { backgroundColor: discoverPalette.canvas },
-  rootLight: { backgroundColor: discoverPalette.canvas },
-  pager: { flex: 1, minHeight: 0 },
-  page: { flex: 1, minHeight: 0 },
-  footer: {
-    alignItems: 'center',
-    paddingVertical: spacing.sm,
-    gap: 4,
-    marginHorizontal: spacing.md,
-    marginBottom: spacing.xs,
-    borderRadius: radius.lg,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    ...shadows.soft,
-  },
-  footerEmbedded: {
-    marginHorizontal: spacing.lg,
-    marginBottom: spacing.xs,
-    paddingVertical: spacing.xs + 2,
-    backgroundColor: colors.surfaceMuted,
-    borderColor: colors.border,
-    shadowOpacity: 0,
-    elevation: 0,
-  },
-  footerEditorial: {
-    marginHorizontal: spacing.lg,
-    marginBottom: spacing.sm,
-    paddingVertical: spacing.sm,
-    backgroundColor: 'transparent',
-    borderWidth: 0,
-    shadowOpacity: 0,
-    elevation: 0,
-  },
-  footerLight: {
-    marginHorizontal: spacing.lg,
-    marginTop: spacing.xs,
-    marginBottom: spacing.sm,
-    paddingVertical: spacing.sm,
-    backgroundColor: 'transparent',
-    borderWidth: 0,
-    shadowOpacity: 0,
-    elevation: 0,
-  },
-  dots: { flexDirection: 'row', gap: 6, alignItems: 'center' },
-  hint: {
-    fontSize: 9,
-    fontWeight: '800',
-    color: colors.textMuted,
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-  },
-  hintImmersive: { color: discoverPalette.faint },
-});
+function createPagerStyles(c: AppColors, palette: ReturnType<typeof getDiscoverPalette>) {
+  return StyleSheet.create({
+    root: { flex: 1, backgroundColor: c.background },
+    rootEmbedded: { backgroundColor: 'transparent' },
+    rootEditorial: { backgroundColor: palette.canvas },
+    rootImmersive: { backgroundColor: palette.canvas },
+    rootLight: { backgroundColor: palette.canvas },
+    pager: { flex: 1, minHeight: 0 },
+    page: { flex: 1, minHeight: 0 },
+    footer: {
+      alignItems: 'center',
+      paddingVertical: spacing.sm,
+      gap: 4,
+      marginHorizontal: spacing.md,
+      marginBottom: spacing.xs,
+      borderRadius: radius.lg,
+      backgroundColor: c.surface,
+      borderWidth: 1,
+      borderColor: c.border,
+      ...shadows.soft,
+    },
+    footerEmbedded: {
+      marginHorizontal: spacing.lg,
+      marginBottom: spacing.xs,
+      paddingVertical: spacing.xs + 2,
+      backgroundColor: c.surfaceMuted,
+      borderColor: c.border,
+      shadowOpacity: 0,
+      elevation: 0,
+    },
+    footerEditorial: {
+      marginHorizontal: spacing.lg,
+      marginBottom: spacing.sm,
+      paddingVertical: spacing.sm,
+      backgroundColor: 'transparent',
+      borderWidth: 0,
+      shadowOpacity: 0,
+      elevation: 0,
+    },
+    footerLight: {
+      marginHorizontal: spacing.lg,
+      marginTop: spacing.xs,
+      marginBottom: spacing.sm,
+      paddingVertical: spacing.sm,
+      backgroundColor: 'transparent',
+      borderWidth: 0,
+      shadowOpacity: 0,
+      elevation: 0,
+    },
+    dots: { flexDirection: 'row', gap: 6, alignItems: 'center' },
+    hint: {
+      fontSize: 9,
+      fontWeight: '800',
+      color: c.textMuted,
+      letterSpacing: 1,
+      textTransform: 'uppercase',
+    },
+    hintImmersive: { color: palette.faint },
+  });
+}

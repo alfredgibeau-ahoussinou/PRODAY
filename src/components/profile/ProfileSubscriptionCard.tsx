@@ -5,11 +5,15 @@ import { Icon } from '../ui/Icon';
 import {
   FREE_TIER_LABEL,
   PRO_TIER_LABEL,
-  getPlanForRole,
+  getPlanForRoleAndLine,
   ROLES_WITHOUT_STORE_PLAN,
 } from '../../content/subscriptionPlans';
+import { getMercatoQuotaLabel } from '../../content/subscriptionPlansByLine';
+import { getSubscriptionPlanVisual } from '../../content/subscriptionPlanVisuals';
 import type { SubscriptionUsagePeriod } from '../../models/Subscription';
-import { colors, spacing, radius, shadows } from '../../theme/designTokens';
+import { useAppTheme } from '../../context/ProductLineContext';
+import { SPONSOR_THEME } from '../../content/sponsorExperience';
+import { spacing, radius } from '../../theme/designTokens';
 
 interface ProfileSubscriptionCardProps {
   profile: User;
@@ -24,35 +28,68 @@ export const ProfileSubscriptionCard: React.FC<ProfileSubscriptionCardProps> = (
   usage,
   onPress,
 }) => {
-  const plan = getPlanForRole(profile.role);
-  if (!plan || ROLES_WITHOUT_STORE_PLAN.includes(profile.role)) return null;
+  const { productLine } = useAppTheme();
+  const plan = getPlanForRoleAndLine(profile.role, productLine);
+  const visual = getSubscriptionPlanVisual(profile.role, productLine);
+  if (!plan || !visual || ROLES_WITHOUT_STORE_PLAN.includes(profile.role)) return null;
 
   const isPro = tier === 'pro';
+  const mercatoLabel = getMercatoQuotaLabel(profile.role, productLine);
   const hint = useMemo(() => {
-    if (isPro) return 'Mercato et outils illimités';
-    if (plan.limits.mercato_apply_per_month != null && usage) {
+    if (isPro) return visual.proHighlight ?? plan.proIncludes[0];
+    if (plan.limits.mercato_apply_per_month != null && usage && mercatoLabel) {
       const lim = plan.limits.mercato_apply_per_month;
       const left = Math.max(0, lim - usage.mercato_applications);
-      return `${left} candidature${left !== 1 ? 's' : ''} Mercato restante${left !== 1 ? 's' : ''} ce mois`;
+      return `${left} ${mercatoLabel.toLowerCase()} restante${left !== 1 ? 's' : ''} ce mois`;
     }
     return plan.tagline;
-  }, [isPro, plan, usage]);
+  }, [isPro, plan, usage, mercatoLabel, visual.proHighlight]);
+
+  const isSponsor = profile.role === 'sponsor';
 
   return (
-    <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.9}>
-      <View style={styles.iconWrap}>
-        <Icon name={isPro ? 'star' : 'star-outline'} size={22} color={colors.brandInverse} />
+    <TouchableOpacity
+      style={[
+        styles.card,
+        {
+          backgroundColor: isSponsor ? SPONSOR_THEME.surface : visual.heroBg,
+          borderColor: isSponsor ? SPONSOR_THEME.borderSubtle : visual.heroBorder ?? visual.primary,
+        },
+      ]}
+      onPress={onPress}
+      activeOpacity={0.9}
+    >
+      <View style={[styles.iconWrap, { backgroundColor: visual.primarySoft }]}>
+        <Icon
+          name={isPro ? visual.featureIconPro : visual.icon}
+          size={22}
+          color={visual.primary}
+          variant="filled"
+        />
       </View>
       <View style={styles.body}>
-        <Text style={styles.eyebrow}>Abonnement</Text>
-        <Text style={styles.title}>
+        <Text
+          style={[
+            styles.eyebrow,
+            { color: isSponsor ? SPONSOR_THEME.sectionLabel : visual.heroSubtext },
+          ]}
+        >
+          {visual.eyebrow}
+        </Text>
+        <Text style={[styles.title, { color: isSponsor ? SPONSOR_THEME.text : visual.heroText }]}>
           {isPro ? PRO_TIER_LABEL : FREE_TIER_LABEL} · {plan.label}
         </Text>
-        <Text style={styles.sub} numberOfLines={2}>
+        <Text
+          style={[
+            styles.sub,
+            { color: isSponsor ? SPONSOR_THEME.textSecondary : visual.heroSubtext },
+          ]}
+          numberOfLines={2}
+        >
           {hint}
         </Text>
       </View>
-      <Icon name="chevron-forward" size={20} color={colors.heroMuted} />
+      <Icon name="chevron-forward" size={20} color={visual.primary} />
     </TouchableOpacity>
   );
 };
@@ -62,19 +99,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
-    backgroundColor: colors.surfaceInverse,
     borderRadius: radius.lg,
     padding: spacing.md,
     marginBottom: spacing.md,
     borderWidth: 1,
-    borderColor: colors.borderStrong,
-    ...shadows.card,
   },
   iconWrap: {
-    width: 44,
-    height: 44,
+    width: 48,
+    height: 48,
     borderRadius: radius.md,
-    backgroundColor: 'rgba(255,255,255,0.1)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -84,17 +117,14 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     letterSpacing: 1,
     textTransform: 'uppercase',
-    color: colors.heroMuted,
   },
   title: {
     fontSize: 16,
     fontWeight: '900',
-    color: colors.brandInverse,
     marginTop: 2,
   },
   sub: {
     fontSize: 12,
-    color: colors.heroMuted,
     marginTop: 4,
     lineHeight: 16,
   },

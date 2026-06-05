@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { ScrollView, TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { useAdminData } from '../../../context/AdminDataContext';
 import { adminService } from '../../../services/admin.service';
@@ -8,7 +8,9 @@ import { AdminSectionHeader } from '../../../components/admin/AdminSectionHeader
 import { AdminEmptyState } from '../../../components/admin/AdminEmptyState';
 import { adminConfirmDelete } from '../../../utils/adminConfirm';
 import { formatCalendarDate } from '../../../utils/seasonCalendar';
-import { colors, spacing, radius } from '../../../theme/designTokens';
+import { useAdminStyles } from '../../../components/admin/adminStyles';
+import { spacing, radius } from '../../../theme/designTokens';
+import type { AppColors } from '../../../theme/universeTheme';
 
 type ContentSegment =
   | 'events'
@@ -30,6 +32,8 @@ const SEGMENTS: { id: ContentSegment; label: string }[] = [
 export const AdminContentPage: React.FC = () => {
   const { loading, events, posts, matches, tournaments, applications, sponsorOffers, fundingGoals, refresh } =
     useAdminData();
+  const { colors: c } = useAdminStyles();
+  const styles = useMemo(() => createStyles(c), [c]);
   const [segment, setSegment] = useState<ContentSegment>('events');
 
   return (
@@ -208,18 +212,20 @@ export const AdminContentPage: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  segments: { maxHeight: 44, marginBottom: spacing.md },
-  pill: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: 8,
-    borderRadius: radius.pill,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
-    marginRight: spacing.sm,
-  },
-  pillOn: { backgroundColor: colors.ink, borderColor: colors.ink },
-  pillText: { fontSize: 12, fontWeight: '800', color: colors.text },
-  pillTextOn: { color: colors.brandInverse },
-});
+function createStyles(c: AppColors) {
+  return StyleSheet.create({
+    segments: { maxHeight: 44, marginBottom: spacing.md },
+    pill: {
+      paddingHorizontal: spacing.md,
+      paddingVertical: 8,
+      borderRadius: radius.pill,
+      borderWidth: 1,
+      borderColor: c.border,
+      backgroundColor: c.surface,
+      marginRight: spacing.sm,
+    },
+    pillOn: { backgroundColor: c.ink, borderColor: c.ink },
+    pillText: { fontSize: 12, fontWeight: '800', color: c.text },
+    pillTextOn: { color: c.brandInverse },
+  });
+}

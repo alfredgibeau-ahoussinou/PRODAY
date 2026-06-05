@@ -14,7 +14,9 @@ import { getPlayerStepMeta } from './signupPlayerStepMeta';
 import { APP_SPACE_LABELS } from '../../models/AppSpace';
 import { isUnderU13AppSpace } from '../../models/AppSpace';
 import { PLAYER_LEVELS, PLAYER_POSITIONS } from '../../constants/playerProfile';
-import { colors, spacing, radius } from '../../theme/designTokens';
+import { spacing, radius } from '../../theme/designTokens';
+import { useSignupFlowTheme } from './SignupFlowContext';
+import type { AppColors } from '../../theme/universeTheme';
 
 interface SignupSportStepProps {
   form: SignupForm;
@@ -54,6 +56,8 @@ export const SignupSportStep: React.FC<SignupSportStepProps> = ({
     }
   }, [categoryOptions, form.category, form.setCategory]);
 
+  const { colors: c } = useSignupFlowTheme();
+  const styles = useMemo(() => createStyles(c), [c]);
   const willNeedParental = form.isMinor || isUnderU13AppSpace(form.appSpace);
   const meta = getPlayerStepMeta(form.productLine, 'sport');
 
@@ -134,30 +138,32 @@ export const SignupSportStep: React.FC<SignupSportStepProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  mismatchBox: {
-    backgroundColor: colors.accentSoft,
-    borderRadius: radius.md,
-    padding: spacing.md,
-    marginBottom: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.warning,
-  },
-  mismatchText: { fontSize: 13, color: colors.text, lineHeight: 19, fontWeight: '600' },
-  mismatchBtn: {
-    marginTop: spacing.sm,
-    alignSelf: 'flex-start',
-    paddingVertical: spacing.xs,
-    paddingHorizontal: spacing.sm,
-    backgroundColor: colors.ink,
-    borderRadius: radius.sm,
-  },
-  mismatchBtnText: { color: colors.brandInverse, fontSize: 12, fontWeight: '800' },
-  minorHint: {
-    fontSize: 12,
-    color: colors.warning,
-    fontWeight: '600',
-    marginTop: -spacing.sm,
-    marginBottom: spacing.sm,
-  },
-});
+function createStyles(c: AppColors) {
+  return StyleSheet.create({
+    mismatchBox: {
+      backgroundColor: c.brandSoft,
+      borderRadius: radius.md,
+      padding: spacing.md,
+      marginBottom: spacing.md,
+      borderWidth: 1,
+      borderColor: c.warning,
+    },
+    mismatchText: { fontSize: 13, color: c.text, lineHeight: 19, fontWeight: '600' },
+    mismatchBtn: {
+      marginTop: spacing.sm,
+      alignSelf: 'flex-start',
+      paddingVertical: spacing.xs,
+      paddingHorizontal: spacing.sm,
+      backgroundColor: c.ink,
+      borderRadius: radius.sm,
+    },
+    mismatchBtnText: { color: c.brandInverse, fontSize: 12, fontWeight: '800' },
+    minorHint: {
+      fontSize: 12,
+      color: c.warning,
+      fontWeight: '600',
+      marginTop: -spacing.sm,
+      marginBottom: spacing.sm,
+    },
+  });
+}

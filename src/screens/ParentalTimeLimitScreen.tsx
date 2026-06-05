@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -7,7 +7,9 @@ import {
   StyleSheet,
 } from 'react-native';
 import { ScreenHeader } from '../components/ui/ScreenHeader';
-import { colors, spacing, radius, shadows } from '../theme/designTokens';
+import { spacing, radius, shadows } from '../theme/designTokens';
+import { useThemedScreen } from '../hooks/useThemedScreen';
+import type { AppColors } from '../theme/universeTheme';
 
 const DAYS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'] as const;
 const PRESETS = [30, 60, 90, 120, 180] as const;
@@ -25,6 +27,8 @@ export const ParentalTimeLimitScreen: React.FC<ParentalTimeLimitScreenProps> = (
   activeDays: initialDays = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven'],
   onSave,
 }) => {
+  const { colors: c, rootStyle } = useThemedScreen();
+  const styles = useMemo(() => createStyles(c), [c]);
   const [minutes, setMinutes] = useState(initialMinutes);
   const [activeDays, setActiveDays] = useState<Set<string>>(new Set(initialDays));
 
@@ -43,7 +47,7 @@ export const ParentalTimeLimitScreen: React.FC<ParentalTimeLimitScreenProps> = (
     hours > 0 ? `${hours}h${mins > 0 ? ` ${mins}min` : ''}` : `${minutes} min`;
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, rootStyle]}>
       <ScreenHeader title="Limite de temps" onBack={onBack} centered />
 
       <ScrollView contentContainerStyle={styles.content}>
@@ -103,65 +107,67 @@ export const ParentalTimeLimitScreen: React.FC<ParentalTimeLimitScreenProps> = (
   );
 };
 
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.background },
-  content: { padding: spacing.lg, paddingBottom: spacing.xxl },
-  sectionTitle: { fontSize: 16, fontWeight: '700', color: colors.text },
-  mt: { marginTop: spacing.xl },
-  sliderCard: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    padding: spacing.xl,
-    marginTop: spacing.md,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  quotaValue: { fontSize: 32, fontWeight: '800', color: colors.brand },
-  quotaHint: { fontSize: 12, color: colors.textMuted, marginTop: 4 },
-  presetRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    gap: spacing.sm,
-    marginTop: spacing.lg,
-  },
-  presetBtn: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: radius.pill,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.background,
-  },
-  presetActive: { backgroundColor: colors.brand, borderColor: colors.brand },
-  presetText: { fontSize: 13, fontWeight: '600', color: colors.textSecondary },
-  presetTextActive: { color: '#FFFFFF' },
-  daysRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-    marginTop: spacing.md,
-  },
-  dayBtn: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
-    minWidth: 44,
-    alignItems: 'center',
-  },
-  dayActive: { backgroundColor: colors.brand, borderColor: colors.brand },
-  dayText: { fontSize: 12, fontWeight: '700', color: colors.textSecondary },
-  dayTextActive: { color: '#FFFFFF' },
-  saveBtn: {
-    marginTop: spacing.xxl,
-    backgroundColor: colors.brand,
-    borderRadius: radius.md,
-    paddingVertical: 16,
-    alignItems: 'center',
-  },
-  saveText: { color: '#FFFFFF', fontWeight: '700', fontSize: 16 },
-});
+function createStyles(c: AppColors) {
+  return StyleSheet.create({
+    root: { flex: 1 },
+    content: { padding: spacing.lg, paddingBottom: spacing.xxl },
+    sectionTitle: { fontSize: 16, fontWeight: '700', color: c.text },
+    mt: { marginTop: spacing.xl },
+    sliderCard: {
+      backgroundColor: c.surface,
+      borderRadius: radius.lg,
+      padding: spacing.xl,
+      marginTop: spacing.md,
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: c.border,
+    },
+    quotaValue: { fontSize: 32, fontWeight: '800', color: c.brand },
+    quotaHint: { fontSize: 12, color: c.textMuted, marginTop: 4 },
+    presetRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      justifyContent: 'center',
+      gap: spacing.sm,
+      marginTop: spacing.lg,
+    },
+    presetBtn: {
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      borderRadius: radius.pill,
+      borderWidth: 1,
+      borderColor: c.border,
+      backgroundColor: c.background,
+    },
+    presetActive: { backgroundColor: c.brand, borderColor: c.brand },
+    presetText: { fontSize: 13, fontWeight: '600', color: c.textSecondary },
+    presetTextActive: { color: c.brandInverse },
+    daysRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: spacing.sm,
+      marginTop: spacing.md,
+    },
+    dayBtn: {
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      borderRadius: radius.md,
+      borderWidth: 1,
+      borderColor: c.border,
+      backgroundColor: c.surface,
+      minWidth: 44,
+      alignItems: 'center',
+    },
+    dayActive: { backgroundColor: c.brand, borderColor: c.brand },
+    dayText: { fontSize: 12, fontWeight: '700', color: c.textSecondary },
+    dayTextActive: { color: c.brandInverse },
+    saveBtn: {
+      marginTop: spacing.xxl,
+      backgroundColor: c.brand,
+      borderRadius: radius.md,
+      paddingVertical: 16,
+      alignItems: 'center',
+    },
+    saveText: { color: c.brandInverse, fontWeight: '700', fontSize: 16 },
+  });
+}

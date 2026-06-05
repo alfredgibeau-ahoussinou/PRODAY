@@ -304,5 +304,23 @@ service cloud.firestore {
       allow read: if isAdmin();
       allow write: if false;
     }
+
+    /** Rendez-vous pôle santé — praticien ↔ joueur */
+    match /medical_appointments/{appointmentId} {
+      allow read: if isAdmin()
+        || (isSignedIn()
+            && (resource.data.physio_uid == request.auth.uid
+                || resource.data.patient_uid == request.auth.uid));
+      allow create: if isSignedIn()
+        && request.resource.data.patient_uid == request.auth.uid
+        && userDoc(request.auth.uid).data.role == 'player'
+        && request.resource.data.status == 'pending';
+      allow update: if isAdmin()
+        || (isSignedIn()
+            && resource.data.physio_uid == request.auth.uid
+            && request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly(['status', 'notes', 'updated_at']));
+      allow delete: if isAdmin();
+    }
   }
 }

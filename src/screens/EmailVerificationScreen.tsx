@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -9,7 +9,9 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Icon } from '../components/ui/Icon';
 import { ProDayErrorBanner } from '../components/ui/ProDayErrorBanner';
-import { colors, spacing, radius } from '../theme/designTokens';
+import { spacing, radius } from '../theme/designTokens';
+import { useThemedScreen } from '../hooks/useThemedScreen';
+import type { AppColors } from '../theme/universeTheme';
 
 interface EmailVerificationScreenProps {
   email: string;
@@ -24,6 +26,8 @@ export const EmailVerificationScreen: React.FC<EmailVerificationScreenProps> = (
   onResend,
   onSignOut,
 }) => {
+  const { colors: c, rootStyle } = useThemedScreen();
+  const styles = useMemo(() => createStyles(c), [c]);
   const [checking, setChecking] = useState(false);
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
@@ -58,10 +62,10 @@ export const EmailVerificationScreen: React.FC<EmailVerificationScreenProps> = (
   };
 
   return (
-    <SafeAreaView style={styles.root} edges={['top', 'left', 'right', 'bottom']}>
+    <SafeAreaView style={[styles.root, rootStyle]} edges={['top', 'left', 'right', 'bottom']}>
       <View style={styles.content}>
         <View style={styles.iconWrap}>
-          <Icon name="mail" size={40} color={colors.brandInverse} />
+          <Icon name="mail" size={40} color={c.brandInverse} />
         </View>
         <Text style={styles.title}>Vérifiez votre email</Text>
         <Text style={styles.subtitle}>
@@ -86,7 +90,7 @@ export const EmailVerificationScreen: React.FC<EmailVerificationScreenProps> = (
           disabled={checking}
         >
           {checking ? (
-            <ActivityIndicator color={colors.brandInverse} />
+            <ActivityIndicator color={c.brandInverse} />
           ) : (
             <Text style={styles.primaryBtnText}>J&apos;ai confirmé mon email</Text>
           )}
@@ -98,7 +102,7 @@ export const EmailVerificationScreen: React.FC<EmailVerificationScreenProps> = (
           disabled={sending}
         >
           {sending ? (
-            <ActivityIndicator color={colors.text} />
+            <ActivityIndicator color={c.text} />
           ) : (
             <Text style={styles.secondaryBtnText}>Renvoyer l&apos;email</Text>
           )}
@@ -112,71 +116,73 @@ export const EmailVerificationScreen: React.FC<EmailVerificationScreenProps> = (
   );
 };
 
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.background },
-  content: {
-    flex: 1,
-    padding: spacing.xl,
-    justifyContent: 'center',
-  },
-  iconWrap: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    backgroundColor: colors.ink,
-    alignItems: 'center',
-    justifyContent: 'center',
-    alignSelf: 'center',
-    marginBottom: spacing.lg,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: '900',
-    color: colors.text,
-    textAlign: 'center',
-    marginBottom: spacing.sm,
-  },
-  subtitle: {
-    fontSize: 15,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    lineHeight: 22,
-    marginBottom: spacing.md,
-  },
-  email: { fontWeight: '800', color: colors.text },
-  body: {
-    fontSize: 14,
-    color: colors.textMuted,
-    textAlign: 'center',
-    lineHeight: 21,
-    marginBottom: spacing.lg,
-  },
-  sentHint: {
-    fontSize: 13,
-    color: colors.success,
-    textAlign: 'center',
-    marginBottom: spacing.md,
-    fontWeight: '600',
-  },
-  primaryBtn: {
-    backgroundColor: colors.ink,
-    borderRadius: radius.lg,
-    paddingVertical: spacing.lg,
-    alignItems: 'center',
-    marginBottom: spacing.sm,
-  },
-  btnDisabled: { opacity: 0.7 },
-  primaryBtnText: { color: colors.brandInverse, fontSize: 16, fontWeight: '800' },
-  secondaryBtn: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    paddingVertical: spacing.lg,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.border,
-    marginBottom: spacing.md,
-  },
-  secondaryBtnText: { color: colors.text, fontSize: 15, fontWeight: '700' },
-  linkBtn: { alignItems: 'center', paddingVertical: spacing.md },
-  linkText: { color: colors.textMuted, fontSize: 14, fontWeight: '600' },
-});
+function createStyles(c: AppColors) {
+  return StyleSheet.create({
+    root: { flex: 1 },
+    content: {
+      flex: 1,
+      padding: spacing.xl,
+      justifyContent: 'center',
+    },
+    iconWrap: {
+      width: 72,
+      height: 72,
+      borderRadius: 36,
+      backgroundColor: c.ink,
+      alignItems: 'center',
+      justifyContent: 'center',
+      alignSelf: 'center',
+      marginBottom: spacing.lg,
+    },
+    title: {
+      fontSize: 24,
+      fontWeight: '900',
+      color: c.text,
+      textAlign: 'center',
+      marginBottom: spacing.sm,
+    },
+    subtitle: {
+      fontSize: 15,
+      color: c.textSecondary,
+      textAlign: 'center',
+      lineHeight: 22,
+      marginBottom: spacing.md,
+    },
+    email: { fontWeight: '800', color: c.text },
+    body: {
+      fontSize: 14,
+      color: c.textMuted,
+      textAlign: 'center',
+      lineHeight: 21,
+      marginBottom: spacing.lg,
+    },
+    sentHint: {
+      fontSize: 13,
+      color: c.success,
+      textAlign: 'center',
+      marginBottom: spacing.md,
+      fontWeight: '600',
+    },
+    primaryBtn: {
+      backgroundColor: c.ink,
+      borderRadius: radius.lg,
+      paddingVertical: spacing.lg,
+      alignItems: 'center',
+      marginBottom: spacing.sm,
+    },
+    btnDisabled: { opacity: 0.7 },
+    primaryBtnText: { color: c.brandInverse, fontSize: 16, fontWeight: '800' },
+    secondaryBtn: {
+      backgroundColor: c.surface,
+      borderRadius: radius.lg,
+      paddingVertical: spacing.lg,
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: c.border,
+      marginBottom: spacing.md,
+    },
+    secondaryBtnText: { color: c.text, fontSize: 15, fontWeight: '700' },
+    linkBtn: { alignItems: 'center', paddingVertical: spacing.md },
+    linkText: { color: c.textMuted, fontSize: 14, fontWeight: '600' },
+  });
+}

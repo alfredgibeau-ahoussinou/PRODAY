@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Icon, type IconName } from '../ui/Icon';
-import { colors, spacing, radius } from '../../theme/designTokens';
+import { useAdminStyles } from './adminStyles';
+import { spacing, radius } from '../../theme/designTokens';
+import type { AppColors } from '../../theme/universeTheme';
 
 interface AdminEmptyStateProps {
   icon: IconName;
@@ -13,39 +15,46 @@ export const AdminEmptyState: React.FC<AdminEmptyStateProps> = ({
   icon,
   title,
   subtitle,
-}) => (
-  <View style={styles.wrap}>
-    <View style={styles.iconCircle}>
-      <Icon name={icon} size={32} color={colors.accent} />
-    </View>
-    <Text style={styles.title}>{title}</Text>
-    <Text style={styles.subtitle}>{subtitle}</Text>
-  </View>
-);
+}) => {
+  const { colors: c } = useAdminStyles();
+  const styles = useMemo(() => createStyles(c), [c]);
 
-const styles = StyleSheet.create({
-  wrap: {
-    alignItems: 'center',
-    paddingVertical: spacing.xxl,
-    paddingHorizontal: spacing.xl,
-  },
-  iconCircle: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    backgroundColor: colors.accentSoft,
-    borderWidth: 1,
-    borderColor: colors.accent,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.lg,
-  },
-  title: { fontSize: 17, fontWeight: '900', color: colors.text, textAlign: 'center' },
-  subtitle: {
-    fontSize: 13,
-    color: colors.textMuted,
-    textAlign: 'center',
-    marginTop: spacing.sm,
-    lineHeight: 20,
-  },
-});
+  return (
+    <View style={styles.wrap}>
+      <View style={styles.iconCircle}>
+        <Icon name={icon} size={32} color={c.brand} />
+      </View>
+      <Text style={styles.title}>{title}</Text>
+      <Text style={styles.subtitle}>{subtitle}</Text>
+    </View>
+  );
+};
+
+function createStyles(c: AppColors) {
+  return StyleSheet.create({
+    wrap: {
+      alignItems: 'center',
+      paddingVertical: spacing.xxl,
+      paddingHorizontal: spacing.xl,
+    },
+    iconCircle: {
+      width: 72,
+      height: 72,
+      borderRadius: 36,
+      backgroundColor: c.accentSoft,
+      borderWidth: 1,
+      borderColor: c.brand,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: spacing.lg,
+    },
+    title: { fontSize: 17, fontWeight: '900', color: c.text, textAlign: 'center' },
+    subtitle: {
+      fontSize: 13,
+      color: c.textMuted,
+      textAlign: 'center',
+      marginTop: spacing.sm,
+      lineHeight: 20,
+    },
+  });
+}

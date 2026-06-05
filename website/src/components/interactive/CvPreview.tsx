@@ -3,6 +3,8 @@
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { Download, Share2 } from "lucide-react";
+import { UNIVERSE_THEME } from "@/components/universe/universeTheme";
+import type { ProductLineWeb } from "@/lib/content";
 
 const STATS = [
   { label: "Matchs", value: "24" },
@@ -11,7 +13,50 @@ const STATS = [
   { label: "Minutes", value: "1860" },
 ];
 
-export function CvPreview() {
+const CV_COPY: Record<
+  ProductLineWeb,
+  {
+    headerLabel: string;
+    name: string;
+    role: string;
+    footer: string;
+    image: string;
+  }
+> = {
+  homme: {
+    headerLabel: "CV FOOT PRODAY",
+    name: "Alex Martin",
+    role: "Milieu offensif · Régional · Paris",
+    footer:
+      "Profil polyvalent, vision de jeu et volume physique. Alimenté par Live Stats ProDay — chaque match met à jour ce document.",
+    image: "/showcase/classic-profile.jpg",
+  },
+  woman: {
+    headerLabel: "CV FOOT PRODAY WOMAN",
+    name: "Léa Dupont",
+    role: "Milieu · Régional F · Lyon",
+    footer:
+      "Profil complet pour le Mercato F — stats saison, galerie et export PDF. Chaque match enrichit votre CV joueuse.",
+    image: "/showcase/woman/woman-profile.jpg",
+  },
+  pro: {
+    headerLabel: "CV PRODAY PRO",
+    name: "Thomas Bernard",
+    role: "Coach · National · Bordeaux",
+    footer:
+      "Parcours staff et certifications — vitrine pro pour le réseau vérifié ProDay.",
+    image: "/showcase/classic-staff.jpg",
+  },
+};
+
+type CvPreviewProps = {
+  universe?: ProductLineWeb;
+};
+
+export function CvPreview({ universe = "homme" }: CvPreviewProps) {
+  const copy = CV_COPY[universe];
+  const theme = UNIVERSE_THEME[universe];
+
   return (
     <div className="mx-auto flex max-w-4xl flex-col gap-8 lg:flex-row">
       <motion.div
@@ -19,22 +64,23 @@ export function CvPreview() {
         animate={{ opacity: 1, rotate: 0 }}
         className="relative flex-1 overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-2xl"
       >
-        <div className="border-b border-neutral-100 bg-neutral-900 p-6 text-white">
+        <div
+          className="border-b border-neutral-100 p-6 text-white"
+          style={{ backgroundColor: theme.pulseStroke }}
+        >
           <div className="flex items-center gap-4">
-            <div className="relative h-16 w-16 overflow-hidden rounded-full bg-neutral-700">
+            <div className="relative h-16 w-16 overflow-hidden rounded-full bg-black/20">
               <Image
-                src="/showcase/classic-profile.jpg"
+                src={copy.image}
                 alt=""
                 fill
                 className="object-cover"
               />
             </div>
             <div>
-              <p className="text-xs text-neutral-400">CV FOOT PRODAY</p>
-              <h3 className="text-xl font-bold">Alex Martin</h3>
-              <p className="text-sm text-neutral-300">
-                Milieu offensif · Régional · Paris
-              </p>
+              <p className="text-xs text-white/70">{copy.headerLabel}</p>
+              <h3 className="text-xl font-bold">{copy.name}</h3>
+              <p className="text-sm text-white/85">{copy.role}</p>
             </div>
           </div>
         </div>
@@ -54,16 +100,16 @@ export function CvPreview() {
             ))}
           </div>
           <p className="mt-6 text-sm text-proday-muted leading-relaxed">
-            Joueur polyvalent, vision de jeu et volume physique. Alimenté par
-            Live Stats ProDay — chaque match met à jour ce document.
+            {copy.footer}
           </p>
           <div className="mt-4 flex items-center gap-2">
-            <span className="rounded-full bg-neutral-100 px-3 py-1 text-xs">
+            <span
+              className="rounded-full px-3 py-1 text-xs font-semibold text-white"
+              style={{ backgroundColor: theme.pulseStroke }}
+            >
               Pulse 78
             </span>
-            <span className="rounded-full bg-green-100 px-3 py-1 text-xs text-green-800">
-              Profil vérifié
-            </span>
+            <span className="text-xs text-proday-muted">Mis à jour après le dernier match</span>
           </div>
         </div>
       </motion.div>
@@ -71,20 +117,24 @@ export function CvPreview() {
       <div className="flex flex-col justify-center gap-4 lg:w-64">
         <button
           type="button"
-          className="flex items-center justify-center gap-2 rounded-full bg-proday-ink py-3.5 text-sm font-semibold text-white transition hover:bg-neutral-800"
+          className="flex items-center justify-center gap-2 rounded-full border border-neutral-200 bg-white px-6 py-3 text-sm font-semibold transition hover:bg-neutral-50"
         >
           <Download size={18} />
-          Exporter PDF
+          Export PDF
         </button>
         <button
           type="button"
-          className="flex items-center justify-center gap-2 rounded-full border border-neutral-300 py-3.5 text-sm font-semibold transition hover:bg-neutral-50"
+          className={`flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold text-white transition ${theme.pricingAccent} hover:opacity-90`}
         >
           <Share2 size={18} />
           Partager le lien
         </button>
-        <p className="text-xs text-proday-muted">
-          Aperçu démo — l&apos;export réel est disponible depuis l&apos;app mobile.
+        <p className="text-sm text-proday-muted">
+          {universe === "woman"
+            ? "Le CV joueuse se met à jour automatiquement depuis l'app Woman."
+            : universe === "pro"
+              ? "Le CV pro est synchronisé avec votre profil staff vérifié."
+              : "Le CV se met à jour automatiquement depuis l'app après chaque match."}
         </p>
       </div>
     </div>

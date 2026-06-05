@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -52,7 +52,8 @@ import { ProfileSubscriptionCard } from '../components/profile/ProfileSubscripti
 import { isMinorUser } from '../utils/minor';
 import { shouldShowPlayerVerificationReminder } from '../utils/onboardingGate';
 import { verificationDocumentTypeForRole } from '../models/User';
-import { colors, spacing, radius } from '../theme/designTokens';
+import { spacing, radius } from '../theme/designTokens';
+import type { AppColors } from '../theme/universeTheme';
 import { useAppTheme } from '../context/ProductLineContext';
 import { useSubscriptionOptional } from '../context/SubscriptionContext';
 
@@ -85,6 +86,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
   const { pendingProfileView, clearPendingProfile } = useTabNavigation();
   const nav = useTabNavigationActions();
   const { productLine, colors: themeColors } = useAppTheme();
+  const styles = useMemo(() => createProfileStyles(themeColors), [themeColors]);
   const brand = getUniverseIdentity(productLine);
   const selectableAppSpaces = getSelectableAppSpaces(productLine);
   const subscriptionCtx = useSubscriptionOptional();
@@ -213,7 +215,14 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
     setRemindingId(eventId);
     try {
       const n = await teamEventsService.sendReminders(eventId);
-      Alert.alert('Relance', n > 0 ? `${n} joueur(s) relancé(s).` : 'Aucune réponse en attente.');
+      Alert.alert(
+        'Relance',
+        n > 0
+          ? productLine === 'woman'
+            ? `${n} joueuse${n > 1 ? 's' : ''} relancée${n > 1 ? 's' : ''}.`
+            : `${n} joueur${n > 1 ? 's' : ''} relancé${n > 1 ? 's' : ''}.`
+          : 'Aucune réponse en attente.'
+      );
       refreshReminders();
     } catch (e) {
       Alert.alert('Erreur', e instanceof Error ? e.message : 'Relance impossible.');
@@ -416,9 +425,9 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
         <>
           {profile.role === 'player' && hasStats && stats ? (
             <View style={styles.statsRow}>
-              <StatChip value={String(stats.matches)} label="Matchs" colors={themeColors} />
-              <StatChip value={String(stats.goals)} label="Buts" colors={themeColors} />
-              <StatChip value={String(stats.assists)} label="Passes d." colors={themeColors} />
+              <StatChip value={String(stats.matches)} label="Matchs" colors={themeColors} styles={styles} />
+              <StatChip value={String(stats.goals)} label="Buts" colors={themeColors} styles={styles} />
+              <StatChip value={String(stats.assists)} label="Passes d." colors={themeColors} styles={styles} />
             </View>
           ) : null}
 
@@ -429,6 +438,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
           >
             <ProfileGalleryEditor
               urls={gallery}
+              productLine={productLine}
               uploading={uploadingGallery}
               onAdd={handleGalleryAdd}
               onRemove={handleGalleryRemove}
@@ -536,9 +546,9 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
 
       {(profile.role === 'coach' || profile.role === 'agent' || profile.role === 'recruiter') && (
         <HubSection title="Parcours pro" colors={themeColors} compact>
-          <InfoLine label="Titre" value={p.job_title} colors={themeColors} />
-          <InfoLine label="Diplôme" value={p.diploma} colors={themeColors} />
-          <InfoLine label="N° licence" value={p.license_number} colors={themeColors} />
+          <InfoLine label="Titre" value={p.job_title} colors={themeColors} styles={styles} />
+          <InfoLine label="Diplôme" value={p.diploma} colors={themeColors} styles={styles} />
+          <InfoLine label="N° licence" value={p.license_number} colors={themeColors} styles={styles} />
           {p.specialties?.length ? (
             <Text style={[styles.specialties, { color: themeColors.textSecondary }]}>
               Spécialités : {p.specialties.join(' · ')}
@@ -686,7 +696,8 @@ const StatChip: React.FC<{
   value: string;
   label: string;
   colors: { surface: string; border: string; text: string; textMuted: string };
-}> = ({ value, label, colors: c }) => (
+  styles: ReturnType<typeof createProfileStyles>;
+}> = ({ value, label, colors: c, styles }) => (
   <View style={[styles.statChip, { backgroundColor: c.surface, borderColor: c.border }]}>
     <Text style={[styles.statValue, { color: c.text }]}>{value}</Text>
     <Text style={[styles.statLabel, { color: c.textMuted }]}>{label}</Text>
@@ -697,7 +708,8 @@ const InfoLine: React.FC<{
   label: string;
   value?: string;
   colors: { textMuted: string; text: string };
-}> = ({ label, value, colors: c }) => {
+  styles: ReturnType<typeof createProfileStyles>;
+}> = ({ label, value, colors: c, styles }) => {
   if (!value) return null;
   return (
     <View style={styles.infoRow}>
@@ -707,8 +719,9 @@ const InfoLine: React.FC<{
   );
 };
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
+function createProfileStyles(c: AppColors) {
+  return StyleSheet.create({
+  container: { flex: 1, backgroundColor: c.background },
   content: {
     padding: spacing.lg,
     paddingBottom: TAB_BAR_CONTENT_INSET + spacing.xl,
@@ -716,7 +729,7 @@ const styles = StyleSheet.create({
   screenTitle: {
     fontSize: 28,
     fontWeight: '900',
-    color: colors.text,
+    color: c.text,
     marginBottom: spacing.md,
     textAlign: 'center',
   },
@@ -763,19 +776,19 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 24,
     fontWeight: '900',
-    color: colors.text,
+    color: c.text,
     marginTop: spacing.md,
     textAlign: 'center',
   },
   meta: {
     fontSize: 13,
-    color: colors.textSecondary,
+    color: c.textSecondary,
     marginTop: 4,
     textAlign: 'center',
   },
   email: {
     fontSize: 12,
-    color: colors.textMuted,
+    color: c.textMuted,
     marginTop: 2,
     textAlign: 'center',
     alignSelf: 'stretch',
@@ -789,7 +802,7 @@ const styles = StyleSheet.create({
   },
   spaceHint: {
     fontSize: 12,
-    color: colors.textSecondary,
+    color: c.textSecondary,
     marginTop: spacing.sm,
     textAlign: 'center',
     lineHeight: 18,
@@ -801,75 +814,75 @@ const styles = StyleSheet.create({
   },
   statChip: {
     flex: 1,
-    backgroundColor: colors.surface,
+    backgroundColor: c.surface,
     borderRadius: radius.md,
     padding: spacing.md,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: c.border,
   },
-  statValue: { fontSize: 22, fontWeight: '900', color: colors.text },
-  statLabel: { fontSize: 10, color: colors.textMuted, fontWeight: '700', marginTop: 4 },
+  statValue: { fontSize: 22, fontWeight: '900', color: c.text },
+  statLabel: { fontSize: 10, color: c.textMuted, fontWeight: '700', marginTop: 4 },
   actionRow: { gap: spacing.sm, marginBottom: spacing.lg, width: '100%' },
   actionPrimary: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: spacing.sm,
-    backgroundColor: colors.ink,
+    backgroundColor: c.ink,
     borderRadius: radius.md,
     padding: spacing.md,
     borderWidth: 1,
-    borderColor: colors.accent,
+    borderColor: c.accent,
   },
-  actionPrimaryText: { color: colors.brandInverse, fontWeight: '900', fontSize: 15 },
+  actionPrimaryText: { color: c.brandInverse, fontWeight: '900', fontSize: 15 },
   actionOutline: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: spacing.sm,
-    backgroundColor: colors.surface,
+    backgroundColor: c.surface,
     borderRadius: radius.md,
     padding: spacing.md,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: c.border,
   },
-  actionOutlineText: { color: colors.accent, fontWeight: '800', fontSize: 14 },
+  actionOutlineText: { color: c.accent, fontWeight: '800', fontSize: 14 },
   card: {
-    backgroundColor: colors.surface,
+    backgroundColor: c.surface,
     borderRadius: radius.lg,
     padding: spacing.lg,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: c.border,
     marginBottom: spacing.md,
   },
-  cardTitle: { fontSize: 14, fontWeight: '900', color: colors.accent, marginBottom: spacing.sm },
-  bioText: { fontSize: 14, color: colors.textSecondary, lineHeight: 21 },
+  cardTitle: { fontSize: 14, fontWeight: '900', color: c.accent, marginBottom: spacing.sm },
+  bioText: { fontSize: 14, color: c.textSecondary, lineHeight: 21 },
   infoRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingVertical: 6,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: c.border,
   },
-  infoLabel: { fontSize: 13, color: colors.textMuted, fontWeight: '600' },
-  infoValue: { fontSize: 13, fontWeight: '800', color: colors.text },
-  specialties: { fontSize: 13, color: colors.textSecondary, marginTop: spacing.sm, lineHeight: 18 },
-  achievement: { fontSize: 13, color: colors.textSecondary, lineHeight: 20, marginTop: 4 },
-  warnCard: { backgroundColor: colors.warningBg },
-  warnTitle: { fontWeight: '900', fontSize: 15, color: colors.text },
-  warnSub: { fontSize: 13, color: colors.textSecondary, marginTop: 4, marginBottom: spacing.md, lineHeight: 18 },
+  infoLabel: { fontSize: 13, color: c.textMuted, fontWeight: '600' },
+  infoValue: { fontSize: 13, fontWeight: '800', color: c.text },
+  specialties: { fontSize: 13, color: c.textSecondary, marginTop: spacing.sm, lineHeight: 18 },
+  achievement: { fontSize: 13, color: c.textSecondary, lineHeight: 20, marginTop: 4 },
+  warnCard: { backgroundColor: c.warningBg },
+  warnTitle: { fontWeight: '900', fontSize: 15, color: c.text },
+  warnSub: { fontSize: 13, color: c.textSecondary, marginTop: 4, marginBottom: spacing.md, lineHeight: 18 },
   secondaryBtn: {
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: c.border,
     borderRadius: radius.md,
     padding: spacing.md,
     alignItems: 'center',
     marginBottom: spacing.sm,
   },
-  secondaryBtnText: { fontWeight: '800', color: colors.text },
+  secondaryBtnText: { fontWeight: '800', color: c.text },
   link: {
-    color: colors.accent,
+    color: c.accent,
     fontWeight: '800',
     textAlign: 'center',
     textDecorationLine: 'underline',
@@ -879,29 +892,29 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
-    backgroundColor: colors.surface,
+    backgroundColor: c.surface,
     borderRadius: radius.lg,
     padding: spacing.lg,
     marginBottom: spacing.md,
     borderWidth: 1,
-    borderColor: colors.accent,
+    borderColor: c.accent,
   },
   candidaturesIcon: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: colors.accentSoft,
+    backgroundColor: c.accentSoft,
     alignItems: 'center',
     justifyContent: 'center',
   },
   candidaturesBody: { flex: 1 },
-  candidaturesTitle: { fontSize: 16, fontWeight: '900', color: colors.text },
-  candidaturesSub: { fontSize: 12, color: colors.textMuted, marginTop: 2 },
+  candidaturesTitle: { fontSize: 16, fontWeight: '900', color: c.text },
+  candidaturesSub: { fontSize: 12, color: c.textMuted, marginTop: 2 },
   parentalCard: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
-    backgroundColor: colors.brand,
+    backgroundColor: c.brand,
     borderRadius: radius.lg,
     padding: spacing.lg,
     marginBottom: spacing.md,
@@ -915,10 +928,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   parentalBody: { flex: 1 },
-  parentalTitle: { fontSize: 16, fontWeight: '900', color: colors.brandInverse },
+  parentalTitle: { fontSize: 16, fontWeight: '900', color: c.brandInverse },
   parentalSub: {
     fontSize: 12,
-    color: colors.heroMuted,
+    color: c.heroMuted,
     marginTop: 2,
     lineHeight: 17,
   },
@@ -929,8 +942,9 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
     borderRadius: radius.lg,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: c.border,
     backgroundColor: 'transparent',
   },
-  logoutText: { fontSize: 15, fontWeight: '600', color: colors.textMuted },
-});
+  logoutText: { fontSize: 15, fontWeight: '600', color: c.textMuted },
+  });
+}

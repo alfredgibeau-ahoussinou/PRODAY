@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Image, ImageSourcePropType } from 'react-native';
-import { colors, spacing, radius, shadows, surfaces } from '../../theme/designTokens';
+import { spacing, radius, shadows } from '../../theme/designTokens';
+import { useAppTheme } from '../../context/ProductLineContext';
 
 interface RecruitmentAdCardProps {
   clubName: string;
@@ -18,44 +19,55 @@ export const RecruitmentAdCard: React.FC<RecruitmentAdCardProps> = ({
   onPress,
   imageSource,
   badge,
-}) => (
-  <TouchableOpacity
-    style={styles.card}
-    onPress={onPress}
-    activeOpacity={onPress ? 0.85 : 1}
-  >
-    {imageSource ? (
-      <Image source={imageSource} style={styles.thumb} resizeMode="cover" />
-    ) : (
-      <View style={styles.logo}>
-        <Text style={styles.logoText}>{clubName.charAt(0)}</Text>
+}) => {
+  const { colors } = useAppTheme();
+
+  return (
+    <TouchableOpacity
+      style={[
+        styles.card,
+        {
+          backgroundColor: colors.surface,
+          borderColor: colors.border,
+        },
+        shadows.soft,
+      ]}
+      onPress={onPress}
+      activeOpacity={onPress ? 0.85 : 1}
+    >
+      {imageSource ? (
+        <Image source={imageSource} style={styles.thumb} resizeMode="cover" />
+      ) : (
+        <View style={[styles.logo, { backgroundColor: colors.accentSoft }]}>
+          <Text style={[styles.logoText, { color: colors.brand }]}>{clubName.charAt(0)}</Text>
+        </View>
+      )}
+      <View style={styles.body}>
+        <View style={styles.titleRow}>
+          <Text style={[styles.club, { color: colors.text }]}>{clubName}</Text>
+          {badge ? (
+            <View style={[styles.badge, { backgroundColor: colors.accentSoft }]}>
+              <Text style={[styles.badgeText, { color: colors.brand }]}>{badge}</Text>
+            </View>
+          ) : null}
+        </View>
+        <Text style={[styles.role, { color: colors.textSecondary }]}>{roleLine}</Text>
+        <Text style={[styles.meta, { color: colors.textMuted }]}>{meta}</Text>
       </View>
-    )}
-    <View style={styles.body}>
-      <View style={styles.titleRow}>
-        <Text style={styles.club}>{clubName}</Text>
-        {badge ? (
-          <View style={styles.badge}>
-            <Text style={styles.badgeText}>{badge}</Text>
-          </View>
-        ) : null}
-      </View>
-      <Text style={styles.role}>{roleLine}</Text>
-      <Text style={styles.meta}>{meta}</Text>
-    </View>
-    <Text style={styles.chevron}>›</Text>
-  </TouchableOpacity>
-);
+      <Text style={[styles.chevron, { color: colors.brand }]}>›</Text>
+    </TouchableOpacity>
+  );
+};
 
 const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    ...surfaces.card,
     padding: spacing.md,
     marginBottom: spacing.sm,
     overflow: 'hidden',
-    ...shadows.soft,
+    borderRadius: radius.lg,
+    borderWidth: 1,
   },
   thumb: {
     width: 52,
@@ -67,23 +79,21 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: radius.md,
-    backgroundColor: colors.accentSoft,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: spacing.md,
   },
-  logoText: { fontSize: 20, fontWeight: '800', color: colors.accent },
+  logoText: { fontSize: 20, fontWeight: '800' },
   body: { flex: 1 },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
-  club: { fontSize: 16, fontWeight: '800', color: colors.text, flex: 1 },
+  club: { fontSize: 16, fontWeight: '800', flex: 1 },
   badge: {
-    backgroundColor: colors.accentSoft,
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: radius.pill,
   },
-  badgeText: { fontSize: 10, fontWeight: '700', color: colors.accent },
-  role: { fontSize: 14, color: colors.textSecondary, marginTop: 2 },
-  meta: { fontSize: 12, color: colors.textMuted, marginTop: 4 },
-  chevron: { fontSize: 22, color: colors.accent, fontWeight: '600', marginLeft: spacing.sm },
+  badgeText: { fontSize: 10, fontWeight: '700' },
+  role: { fontSize: 14, marginTop: 2 },
+  meta: { fontSize: 12, marginTop: 4 },
+  chevron: { fontSize: 22, fontWeight: '600', marginLeft: spacing.sm },
 });

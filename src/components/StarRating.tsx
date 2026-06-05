@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { colors } from '../theme/designTokens';
+import { useAppTheme } from '../context/ProductLineContext';
+import type { AppColors } from '../theme/universeTheme';
 import { Icon } from './ui/Icon';
 
 interface StarRatingProps {
@@ -9,6 +10,8 @@ interface StarRatingProps {
 }
 
 export const StarRating: React.FC<StarRatingProps> = ({ rating, size = 'md' }) => {
+  const { colors: c } = useAppTheme();
+  const styles = useMemo(() => createStyles(c), [c]);
   const full = Math.floor(rating);
   const half = rating - full >= 0.5;
   const iconSize = size === 'sm' ? 13 : 16;
@@ -35,9 +38,11 @@ export const StarRating: React.FC<StarRatingProps> = ({ rating, size = 'md' }) =
   );
 };
 
-const styles = StyleSheet.create({
-  row: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  stars: { flexDirection: 'row', gap: 2 },
-  value: { color: colors.textSecondary, fontWeight: '700', fontSize: 14 },
-  valueSm: { fontSize: 12 },
-});
+function createStyles(c: AppColors) {
+  return StyleSheet.create({
+    row: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+    stars: { flexDirection: 'row', gap: 2 },
+    value: { color: c.textSecondary, fontWeight: '700', fontSize: 14 },
+    valueSm: { fontSize: 12 },
+  });
+}

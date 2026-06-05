@@ -4,7 +4,9 @@ import { ShowcaseImageBackground } from '../ui/ShowcaseImageBackground';
 import { PRODAY_MODULES, type ProDayModuleId } from '../../content/prodayModules';
 import { useShowcaseImages } from '../../hooks/useShowcaseImages';
 import { Icon } from '../ui/Icon';
-import { colors, spacing, radius, shadows } from '../../theme/designTokens';
+import { spacing, radius, shadows } from '../../theme/designTokens';
+import { useDiscoverStyles } from './discoverStyles';
+import type { AppColors } from '../../theme/universeTheme';
 
 const GRID_IDS: ProDayModuleId[] = ['matchs', 'arena', 'sponsors'];
 const FEATURED_ID: ProDayModuleId = 'recrutement';
@@ -24,7 +26,9 @@ const ModuleCard: React.FC<{
   live?: boolean;
   onPress: () => void;
   image: number;
-}> = ({ id, title, subtitle, icon, variant, live, onPress, image }) => {
+}> = ({ title, subtitle, icon, variant, live, onPress, image }) => {
+  const { colors: c } = useDiscoverStyles();
+  const styles = useMemo(() => createStyles(c), [c]);
   const isFeatured = variant === 'featured';
   const isWide = variant === 'wide';
 
@@ -46,7 +50,7 @@ const ModuleCard: React.FC<{
       >
         <View style={styles.imageOverlay} />
         <View style={[styles.iconBadge, isWide && styles.iconBadgeWide]}>
-          <Icon name={icon} size={isFeatured ? 20 : 18} color={colors.brandInverse} variant="filled" />
+          <Icon name={icon} size={isFeatured ? 20 : 18} color={c.brandInverse} variant="filled" />
         </View>
       </ShowcaseImageBackground>
       <View style={styles.body}>
@@ -65,7 +69,7 @@ const ModuleCard: React.FC<{
         </Text>
         <View style={styles.chevronRow}>
           <Text style={styles.chevronLabel}>Ouvrir</Text>
-          <Icon name="chevron-forward" size={16} color={colors.textMuted} />
+          <Icon name="chevron-forward" size={16} color={c.textMuted} />
         </View>
       </View>
     </Pressable>
@@ -76,6 +80,8 @@ export const DiscoverModuleShowcase: React.FC<DiscoverModuleShowcaseProps> = ({
   onModulePress,
   liveRecruitment,
 }) => {
+  const { colors: c } = useDiscoverStyles();
+  const styles = useMemo(() => createStyles(c), [c]);
   const showcase = useShowcaseImages();
   const moduleImages = useMemo(
     (): Record<ProDayModuleId, number> => ({
@@ -142,114 +148,116 @@ export const DiscoverModuleShowcase: React.FC<DiscoverModuleShowcaseProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  wrap: { gap: spacing.md },
-  sectionLabel: {
-    fontSize: 10,
-    fontWeight: '800',
-    letterSpacing: 1.6,
-    textTransform: 'uppercase',
-    color: colors.textMuted,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: colors.text,
-    letterSpacing: -0.4,
-    marginTop: -spacing.sm,
-    marginBottom: spacing.xs,
-  },
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    overflow: 'hidden',
-    ...shadows.card,
-  },
-  cardFeatured: {},
-  cardWide: {},
-  cardPressed: { opacity: 0.92 },
-  image: {
-    height: 100,
-    justifyContent: 'flex-end',
-  },
-  imageFeatured: { height: 128 },
-  imageWide: { height: 72 },
-  imageInner: { opacity: 0.92 },
-  imageOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(10, 10, 10, 0.38)',
-  },
-  iconBadge: {
-    position: 'absolute',
-    top: spacing.md,
-    left: spacing.md,
-    width: 40,
-    height: 40,
-    borderRadius: radius.md,
-    backgroundColor: colors.ink,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  iconBadgeWide: {
-    width: 36,
-    height: 36,
-  },
-  body: {
-    padding: spacing.md,
-    gap: 4,
-  },
-  bodyTop: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: spacing.sm,
-  },
-  title: {
-    flex: 1,
-    fontSize: 16,
-    fontWeight: '800',
-    color: colors.text,
-    letterSpacing: -0.2,
-  },
-  titleWide: { fontSize: 15 },
-  sub: {
-    fontSize: 12,
-    lineHeight: 17,
-    color: colors.textSecondary,
-    fontWeight: '500',
-  },
-  liveBadge: {
-    backgroundColor: colors.successBg,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: radius.pill,
-  },
-  liveBadgeText: {
-    fontSize: 9,
-    fontWeight: '800',
-    color: colors.success,
-    letterSpacing: 0.3,
-  },
-  chevronRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 2,
-    marginTop: spacing.xs,
-  },
-  chevronLabel: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: colors.textMuted,
-  },
-  grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-  },
-  gridCell: {
-    width: '48.5%',
-    flexGrow: 1,
-  },
-});
+function createStyles(c: AppColors) {
+  return StyleSheet.create({
+    wrap: { gap: spacing.md },
+    sectionLabel: {
+      fontSize: 10,
+      fontWeight: '800',
+      letterSpacing: 1.6,
+      textTransform: 'uppercase',
+      color: c.textMuted,
+    },
+    sectionTitle: {
+      fontSize: 20,
+      fontWeight: '800',
+      color: c.text,
+      letterSpacing: -0.4,
+      marginTop: -spacing.sm,
+      marginBottom: spacing.xs,
+    },
+    card: {
+      backgroundColor: c.surface,
+      borderRadius: radius.lg,
+      borderWidth: 1,
+      borderColor: c.border,
+      overflow: 'hidden',
+      ...shadows.card,
+    },
+    cardFeatured: {},
+    cardWide: {},
+    cardPressed: { opacity: 0.92 },
+    image: {
+      height: 100,
+      justifyContent: 'flex-end',
+    },
+    imageFeatured: { height: 128 },
+    imageWide: { height: 72 },
+    imageInner: { opacity: 0.92 },
+    imageOverlay: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: 'rgba(10, 10, 10, 0.38)',
+    },
+    iconBadge: {
+      position: 'absolute',
+      top: spacing.md,
+      left: spacing.md,
+      width: 40,
+      height: 40,
+      borderRadius: radius.md,
+      backgroundColor: c.ink,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    iconBadgeWide: {
+      width: 36,
+      height: 36,
+    },
+    body: {
+      padding: spacing.md,
+      gap: 4,
+    },
+    bodyTop: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: spacing.sm,
+    },
+    title: {
+      flex: 1,
+      fontSize: 16,
+      fontWeight: '800',
+      color: c.text,
+      letterSpacing: -0.2,
+    },
+    titleWide: { fontSize: 15 },
+    sub: {
+      fontSize: 12,
+      lineHeight: 17,
+      color: c.textSecondary,
+      fontWeight: '500',
+    },
+    liveBadge: {
+      backgroundColor: c.successBg,
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+      borderRadius: radius.pill,
+    },
+    liveBadgeText: {
+      fontSize: 9,
+      fontWeight: '800',
+      color: c.success,
+      letterSpacing: 0.3,
+    },
+    chevronRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 2,
+      marginTop: spacing.xs,
+    },
+    chevronLabel: {
+      fontSize: 11,
+      fontWeight: '700',
+      color: c.textMuted,
+    },
+    grid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: spacing.sm,
+    },
+    gridCell: {
+      width: '48.5%',
+      flexGrow: 1,
+    },
+  });
+}

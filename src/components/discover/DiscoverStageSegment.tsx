@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, LayoutChangeEvent } from 'react-native';
 import Animated, {
   useAnimatedStyle,
@@ -7,7 +7,9 @@ import Animated, {
 } from 'react-native-reanimated';
 import { PressableSpring } from './PressableSpring';
 import { SPRING_SNAPPY } from './animationConfig';
-import { colors, spacing, radius } from '../../theme/designTokens';
+import { spacing, radius } from '../../theme/designTokens';
+import { useDiscoverStyles } from './discoverStyles';
+import type { AppColors } from '../../theme/universeTheme';
 
 export type DiscoverStageMode = 'explore' | 'live';
 
@@ -27,6 +29,8 @@ export const DiscoverStageSegment: React.FC<DiscoverStageSegmentProps> = ({
   active,
   onChange,
 }) => {
+  const { colors: c } = useDiscoverStyles();
+  const styles = useMemo(() => createStyles(c), [c]);
   const [trackW, setTrackW] = useState(0);
   const pillX = useSharedValue(PADDING);
 
@@ -79,41 +83,43 @@ export const DiscoverStageSegment: React.FC<DiscoverStageSegmentProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  wrap: {
-    paddingHorizontal: spacing.lg,
-    marginBottom: spacing.md,
-  },
-  track: {
-    flexDirection: 'row',
-    backgroundColor: colors.surfaceMuted,
-    borderRadius: radius.pill,
-    padding: PADDING,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  pill: {
-    position: 'absolute',
-    top: PADDING,
-    left: 0,
-    bottom: PADDING,
-    backgroundColor: colors.ink,
-    borderRadius: radius.pill,
-  },
-  tab: {
-    flex: 1,
-    paddingVertical: spacing.sm + 2,
-    alignItems: 'center',
-    zIndex: 1,
-  },
-  tabText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: colors.textMuted,
-    letterSpacing: 0.2,
-  },
-  tabTextOn: {
-    color: colors.brandInverse,
-    fontWeight: '800',
-  },
-});
+function createStyles(c: AppColors) {
+  return StyleSheet.create({
+    wrap: {
+      paddingHorizontal: spacing.lg,
+      marginBottom: spacing.md,
+    },
+    track: {
+      flexDirection: 'row',
+      backgroundColor: c.surfaceMuted,
+      borderRadius: radius.pill,
+      padding: PADDING,
+      borderWidth: 1,
+      borderColor: c.border,
+    },
+    pill: {
+      position: 'absolute',
+      top: PADDING,
+      left: 0,
+      bottom: PADDING,
+      backgroundColor: c.ink,
+      borderRadius: radius.pill,
+    },
+    tab: {
+      flex: 1,
+      paddingVertical: spacing.sm + 2,
+      alignItems: 'center',
+      zIndex: 1,
+    },
+    tabText: {
+      fontSize: 13,
+      fontWeight: '600',
+      color: c.textMuted,
+      letterSpacing: 0.2,
+    },
+    tabTextOn: {
+      color: c.brandInverse,
+      fontWeight: '800',
+    },
+  });
+}

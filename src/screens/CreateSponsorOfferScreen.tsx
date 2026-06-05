@@ -11,7 +11,13 @@ import {
 } from 'react-native';
 import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { sponsorsService } from '../services/sponsors.service';
-import { colors, spacing, radius } from '../theme/designTokens';
+import {
+  SPONSOR_OFFER_TYPES,
+  SPONSOR_TARGET_CATEGORIES,
+} from '../content/sponsorContent';
+import type { SponsorOfferType } from '../models/SponsorOffer';
+import { SPONSOR_THEME } from '../content/sponsorExperience';
+import { spacing, radius } from '../theme/designTokens';
 
 interface CreateSponsorOfferScreenProps {
   sponsorUid: string;
@@ -28,7 +34,15 @@ export const CreateSponsorOfferScreen: React.FC<CreateSponsorOfferScreenProps> =
   const [description, setDescription] = useState('');
   const [value, setValue] = useState('');
   const [city, setCity] = useState('');
+  const [offerType, setOfferType] = useState<SponsorOfferType>('equipment');
+  const [categories, setCategories] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
+
+  const toggleCategory = (cat: string) => {
+    setCategories((prev) =>
+      prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat]
+    );
+  };
 
   const submit = async () => {
     if (!company.trim() || !description.trim()) {
@@ -43,6 +57,8 @@ export const CreateSponsorOfferScreen: React.FC<CreateSponsorOfferScreenProps> =
         description: description.trim(),
         value: value.trim() || 'Offre partenaire',
         city: city.trim() || 'France',
+        offer_type: offerType,
+        target_categories: categories,
       });
       Alert.alert('Offre publiée', 'Votre offre est visible sur ProDay.');
       onCreated();
@@ -56,12 +72,49 @@ export const CreateSponsorOfferScreen: React.FC<CreateSponsorOfferScreenProps> =
 
   return (
     <View style={styles.root}>
-      <ScreenHeader title="Nouvelle offre" subtitle="Sponsors ProDay" onBack={onBack} centered />
+      <ScreenHeader
+        title="Nouvelle offre"
+        subtitle="Espace partenaire ProDay"
+        onBack={onBack}
+        centered
+        sponsorDark
+      />
       <ScrollView contentContainerStyle={styles.content}>
-        <Field label="Entreprise" value={company} onChangeText={setCompany} />
-        <Field label="Description" value={description} onChangeText={setDescription} multiline />
-        <Field label="Valeur (ex. -20 %)" value={value} onChangeText={setValue} />
-        <Field label="Ville" value={city} onChangeText={setCity} />
+        <Text style={styles.section}>Type d’offre</Text>
+        <View style={styles.typeRow}>
+          {SPONSOR_OFFER_TYPES.map((t) => (
+            <TouchableOpacity
+              key={t.id}
+              style={[styles.typeChip, offerType === t.id && styles.typeChipOn]}
+              onPress={() => setOfferType(t.id)}
+            >
+              <Text style={[styles.typeChipText, offerType === t.id && styles.typeChipTextOn]}>
+                {t.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        <Field label="Entreprise / marque *" value={company} onChangeText={setCompany} />
+        <Field label="Description *" value={description} onChangeText={setDescription} multiline />
+        <Field label="Valeur (ex. -20 %, 500 €)" value={value} onChangeText={setValue} />
+        <Field label="Ville ou zone" value={city} onChangeText={setCity} />
+
+        <Text style={styles.section}>Catégories ciblées</Text>
+        <View style={styles.catRow}>
+          {SPONSOR_TARGET_CATEGORIES.map((cat) => (
+            <TouchableOpacity
+              key={cat}
+              style={[styles.catChip, categories.includes(cat) && styles.catChipOn]}
+              onPress={() => toggleCategory(cat)}
+            >
+              <Text style={[styles.catChipText, categories.includes(cat) && styles.catChipTextOn]}>
+                {cat}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
         <TouchableOpacity style={styles.btn} onPress={submit} disabled={saving}>
           {saving ? (
             <ActivityIndicator color="#fff" />
@@ -87,32 +140,65 @@ const Field: React.FC<{
       value={value}
       onChangeText={onChangeText}
       multiline={multiline}
-      placeholderTextColor={colors.textMuted}
+      placeholderTextColor={SPONSOR_THEME.textMuted}
     />
   </View>
 );
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.background },
+  root: { flex: 1, backgroundColor: SPONSOR_THEME.background },
   content: { padding: spacing.lg, paddingBottom: spacing.xxl },
-  field: { marginBottom: spacing.md },
-  label: { fontSize: 12, fontWeight: '800', color: colors.textMuted, marginBottom: 6 },
-  input: {
-    backgroundColor: colors.surface,
+  section: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: SPONSOR_THEME.sectionLabel,
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+    marginBottom: spacing.sm,
+    marginTop: spacing.sm,
+  },
+  typeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginBottom: spacing.md },
+  typeChip: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: radius.pill,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: SPONSOR_THEME.borderSubtle,
+    backgroundColor: SPONSOR_THEME.surface,
+  },
+  typeChipOn: { backgroundColor: SPONSOR_THEME.primary, borderColor: SPONSOR_THEME.primary },
+  typeChipText: { fontSize: 12, fontWeight: '700', color: SPONSOR_THEME.textMuted },
+  typeChipTextOn: { color: SPONSOR_THEME.onPrimary },
+  catRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginBottom: spacing.lg },
+  catChip: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 6,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: SPONSOR_THEME.borderSubtle,
+    backgroundColor: SPONSOR_THEME.surface,
+  },
+  catChipOn: { backgroundColor: SPONSOR_THEME.primarySoft, borderColor: SPONSOR_THEME.primary },
+  catChipText: { fontSize: 11, fontWeight: '700', color: SPONSOR_THEME.textMuted },
+  catChipTextOn: { color: SPONSOR_THEME.heroSubtext },
+  field: { marginBottom: spacing.md },
+  label: { fontSize: 12, fontWeight: '800', color: SPONSOR_THEME.sectionLabel, marginBottom: 6 },
+  input: {
+    backgroundColor: SPONSOR_THEME.surface,
+    borderWidth: 1,
+    borderColor: SPONSOR_THEME.borderSubtle,
     borderRadius: radius.md,
     padding: spacing.md,
     fontSize: 15,
-    color: colors.text,
+    color: SPONSOR_THEME.text,
   },
   inputMulti: { minHeight: 100, textAlignVertical: 'top' },
   btn: {
     marginTop: spacing.lg,
-    backgroundColor: colors.brand,
+    backgroundColor: SPONSOR_THEME.primary,
     borderRadius: radius.lg,
     paddingVertical: spacing.md,
     alignItems: 'center',
   },
-  btnText: { color: '#fff', fontWeight: '800', fontSize: 16 },
+  btnText: { color: SPONSOR_THEME.onPrimary, fontWeight: '800', fontSize: 16 },
 });

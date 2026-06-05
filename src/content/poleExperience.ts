@@ -11,6 +11,16 @@ import {
 import { DISCOVER_UNIVERSE_CARDS } from './discoverChapters';
 import { DISCOVER_UNIVERSE_CARDS_WOMAN } from './discoverWomanContent';
 import { DISCOVER_UNIVERSE_CARDS_PRO } from './discoverProContent';
+import {
+  getPhysioTabLabel,
+  isMedicalPractitionerRole,
+  PHYSIO_MAIN_TABS,
+} from './medicalExperience';
+import {
+  getSponsorTabLabel,
+  isSponsorRole,
+  SPONSOR_MAIN_TABS,
+} from './sponsorExperience';
 
 /** Groupes de rôles à l'inscription — filtrés par pôle. */
 export interface SignupRoleGroup {
@@ -81,10 +91,10 @@ export function getVisibleMainTabs(
 
   if (line === 'pro') {
     if (r === 'sponsor') {
-      return ['home', 'messages', 'profil'];
+      return SPONSOR_MAIN_TABS;
     }
     if (r === 'physio') {
-      return ['home', 'matchs', 'messages', 'profil'];
+      return PHYSIO_MAIN_TABS;
     }
     if (r === 'organizer') {
       return ['home', 'recrutement', 'matchs', 'covoiturage', 'messages', 'profil'];
@@ -114,6 +124,12 @@ export function getTabShortLabel(
   line: ProductLineId,
   role?: UserRole | null
 ): string {
+  if (isMedicalPractitionerRole(role)) {
+    return getPhysioTabLabel(tab);
+  }
+  if (isSponsorRole(role)) {
+    return getSponsorTabLabel(tab);
+  }
   if (tab === 'recrutement') return getMercatoTabLabel(line, role);
   const labels: Record<MainTabId, string> = {
     home: 'Accueil',
@@ -153,8 +169,8 @@ export function getDashboardFocusTabLabels(
   }
   if (role === 'physio') {
     return [
-      { id: 'priorities', label: 'Suivi' },
-      { id: 'calendar', label: 'Agenda' },
+      { id: 'priorities', label: "Aujourd'hui" },
+      { id: 'calendar', label: 'Agenda RDV' },
     ];
   }
   if (role === 'sponsor') {
@@ -197,7 +213,7 @@ const LINE_MODULE_HIDE: Partial<
     coach: ['sponsors', 'arena'],
     agent: ['sponsors', 'arena'],
     recruiter: ['sponsors', 'arena', 'gestion'],
-    physio: ['sponsors', 'arena', 'recrutement'],
+    physio: ['sponsors', 'arena', 'recrutement', 'matchs', 'gestion'],
     sponsor: ['recrutement', 'gestion', 'arena', 'matchs'],
     club: ['sponsors'],
     organizer: ['sponsors'],

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -18,7 +18,9 @@ import { clubsService } from '../services/clubs.service';
 import { useAuth } from '../context/AuthContext';
 import { parseFrenchDate } from '../utils/parseFrenchDate';
 import { filterMembersByCategory, memberUidsExcluding } from '../utils/clubMembersFilter';
-import { colors, spacing, radius } from '../theme/designTokens';
+import { spacing, radius } from '../theme/designTokens';
+import { useThemedScreen } from '../hooks/useThemedScreen';
+import type { AppColors } from '../theme/universeTheme';
 
 const EVENT_TYPES: { id: TeamEventType; label: string }[] = [
   { id: 'training', label: 'Entraînement' },
@@ -42,6 +44,8 @@ export const CreateTeamEventScreen: React.FC<CreateTeamEventScreenProps> = ({
   defaultType = 'training',
 }) => {
   const { profile } = useAuth();
+  const { colors: c, productLine, rootStyle } = useThemedScreen();
+  const styles = useMemo(() => createStyles(c), [c]);
   const [eventType, setEventType] = useState<TeamEventType>(defaultType);
   const [title, setTitle] = useState('');
   const [dateStr, setDateStr] = useState('');
@@ -157,7 +161,7 @@ export const CreateTeamEventScreen: React.FC<CreateTeamEventScreenProps> = ({
   };
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, rootStyle]}>
       <ScreenHeader title="Nouvel événement" onBack={onBack} centered />
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <Text style={styles.label}>Type</Text>
@@ -180,42 +184,42 @@ export const CreateTeamEventScreen: React.FC<CreateTeamEventScreenProps> = ({
         <TextInput
           style={styles.input}
           placeholder="Titre"
-          placeholderTextColor={colors.textMuted}
+          placeholderTextColor={c.textMuted}
           value={title}
           onChangeText={setTitle}
         />
         <TextInput
           style={styles.input}
           placeholder="Date (JJ/MM/AAAA)"
-          placeholderTextColor={colors.textMuted}
+          placeholderTextColor={c.textMuted}
           value={dateStr}
           onChangeText={setDateStr}
         />
         <TextInput
           style={styles.input}
           placeholder="Heure (14:00)"
-          placeholderTextColor={colors.textMuted}
+          placeholderTextColor={c.textMuted}
           value={timeStr}
           onChangeText={setTimeStr}
         />
         <TextInput
           style={styles.input}
           placeholder="Ville"
-          placeholderTextColor={colors.textMuted}
+          placeholderTextColor={c.textMuted}
           value={city}
           onChangeText={setCity}
         />
         <TextInput
           style={styles.input}
           placeholder="Lieu (stade, adresse…)"
-          placeholderTextColor={colors.textMuted}
+          placeholderTextColor={c.textMuted}
           value={locationLabel}
           onChangeText={setLocationLabel}
         />
         <TextInput
           style={[styles.input, styles.textArea]}
           placeholder="Description (optionnel)"
-          placeholderTextColor={colors.textMuted}
+          placeholderTextColor={c.textMuted}
           value={description}
           onChangeText={setDescription}
           multiline
@@ -248,7 +252,7 @@ export const CreateTeamEventScreen: React.FC<CreateTeamEventScreenProps> = ({
             <TextInput
               style={styles.input}
               placeholder="Places max"
-              placeholderTextColor={colors.textMuted}
+              placeholderTextColor={c.textMuted}
               value={maxParticipants}
               onChangeText={setMaxParticipants}
               keyboardType="number-pad"
@@ -260,8 +264,9 @@ export const CreateTeamEventScreen: React.FC<CreateTeamEventScreenProps> = ({
           <>
             <Text style={styles.label}>Catégories convoquées (optionnel)</Text>
             <Text style={styles.hint}>
-              Si vous sélectionnez des catégories, seuls les joueurs correspondants seront
-              convoqués lorsque « Convoquer tout le club » est activé.
+              {productLine === 'woman'
+                ? 'Si vous sélectionnez des catégories, seules les joueuses correspondantes seront convoquées lorsque « Convoquer tout le club » est activé.'
+                : 'Si vous sélectionnez des catégories, seuls les joueurs correspondants seront convoqués lorsque « Convoquer tout le club » est activé.'}
             </Text>
             <View style={styles.typeRow}>
               {CATEGORIES.map((cat) => (
@@ -301,7 +306,9 @@ export const CreateTeamEventScreen: React.FC<CreateTeamEventScreenProps> = ({
             </View>
             {!inviteClub && clubMembers.length > 0 ? (
               <>
-                <Text style={styles.label}>Joueurs convoqués</Text>
+                <Text style={styles.label}>
+                  {productLine === 'woman' ? 'Joueuses convoquées' : 'Joueurs convoqués'}
+                </Text>
                 <View style={styles.memberList}>
                   {clubMembers.map((m) => {
                     const on = selectedUids.includes(m.uid);
@@ -337,7 +344,7 @@ export const CreateTeamEventScreen: React.FC<CreateTeamEventScreenProps> = ({
           disabled={submitting}
         >
           {submitting ? (
-            <ActivityIndicator color={colors.brandInverse} />
+            <ActivityIndicator color={c.brandInverse} />
           ) : (
             <Text style={styles.submitText}>Créer et convoquer</Text>
           )}
@@ -347,13 +354,14 @@ export const CreateTeamEventScreen: React.FC<CreateTeamEventScreenProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.background },
+function createStyles(c: AppColors) {
+  return StyleSheet.create({
+  root: { flex: 1 },
   content: { padding: spacing.lg, paddingBottom: spacing.xxl },
   label: {
     fontSize: 12,
     fontWeight: '800',
-    color: colors.textSecondary,
+    color: c.textSecondary,
     marginBottom: spacing.sm,
     marginTop: spacing.sm,
   },
@@ -363,21 +371,21 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: radius.pill,
     borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
+    borderColor: c.border,
+    backgroundColor: c.surface,
   },
-  typeChipActive: { backgroundColor: colors.ink, borderColor: colors.ink },
-  typeText: { fontSize: 11, fontWeight: '700', color: colors.textSecondary },
-  typeTextActive: { color: colors.brandInverse },
+  typeChipActive: { backgroundColor: c.ink, borderColor: c.ink },
+  typeText: { fontSize: 11, fontWeight: '700', color: c.textSecondary },
+  typeTextActive: { color: c.brandInverse },
   input: {
-    backgroundColor: colors.surface,
+    backgroundColor: c.surface,
     borderRadius: radius.md,
     padding: spacing.md,
     marginBottom: spacing.sm,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: c.border,
     fontSize: 15,
-    color: colors.text,
+    color: c.text,
   },
   textArea: { minHeight: 80, textAlignVertical: 'top' },
   switchRow: {
@@ -386,29 +394,30 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginVertical: spacing.md,
   },
-  switchLabel: { fontSize: 14, fontWeight: '700', color: colors.text, flex: 1 },
-  hint: { fontSize: 12, color: colors.textMuted, marginBottom: spacing.md, lineHeight: 18 },
+  switchLabel: { fontSize: 14, fontWeight: '700', color: c.text, flex: 1 },
+  hint: { fontSize: 12, color: c.textMuted, marginBottom: spacing.md, lineHeight: 18 },
   memberList: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs, marginBottom: spacing.md },
   memberChip: {
     paddingHorizontal: spacing.sm,
     paddingVertical: 6,
     borderRadius: radius.pill,
     borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
+    borderColor: c.border,
+    backgroundColor: c.surface,
   },
-  memberChipOn: { backgroundColor: colors.ink, borderColor: colors.ink },
-  memberChipText: { fontSize: 11, fontWeight: '700', color: colors.textSecondary },
-  memberChipTextOn: { color: colors.brandInverse },
+  memberChipOn: { backgroundColor: c.ink, borderColor: c.ink },
+  memberChipText: { fontSize: 11, fontWeight: '700', color: c.textSecondary },
+  memberChipTextOn: { color: c.brandInverse },
   submit: {
-    backgroundColor: colors.ink,
+    backgroundColor: c.ink,
     borderRadius: radius.md,
     padding: spacing.lg,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: c.border,
     marginTop: spacing.md,
   },
   submitDisabled: { opacity: 0.6 },
-  submitText: { color: colors.brandInverse, fontWeight: '900', fontSize: 16 },
-});
+  submitText: { color: c.brandInverse, fontWeight: '900', fontSize: 16 },
+  });
+}

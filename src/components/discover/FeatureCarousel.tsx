@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -11,11 +11,15 @@ import {
 } from 'react-native';
 import { DISCOVER_FEATURES } from '../../content/founders';
 import { Icon, type IconName } from '../ui/Icon';
-import { colors, spacing, radius, shadows } from '../../theme/designTokens';
+import { spacing, radius, shadows } from '../../theme/designTokens';
+import { useDiscoverStyles } from './discoverStyles';
+import type { AppColors } from '../../theme/universeTheme';
 
 const CARD_WIDTH = Dimensions.get('window').width - spacing.lg * 2 - spacing.md;
 
 export const FeatureCarousel: React.FC = () => {
+  const { colors: c } = useDiscoverStyles();
+  const styles = useMemo(() => createStyles(c), [c]);
   const scrollRef = useRef<ScrollView>(null);
   const [index, setIndex] = useState(0);
 
@@ -72,50 +76,52 @@ export const FeatureCarousel: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  scrollContent: {
-    paddingHorizontal: spacing.lg,
-    gap: spacing.md,
-    paddingBottom: spacing.sm,
-  },
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    padding: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    minHeight: 168,
-  },
-  iconWrap: {
-    width: 52,
-    height: 52,
-    borderRadius: radius.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.md,
-  },
-  title: { fontSize: 17, fontWeight: '800', color: colors.text, marginBottom: spacing.xs },
-  desc: { fontSize: 14, color: colors.textSecondary, lineHeight: 20 },
-  accentBar: {
-    position: 'absolute',
-    bottom: 0,
-    left: spacing.lg,
-    right: spacing.lg,
-    height: 3,
-    borderRadius: 2,
-    marginBottom: spacing.md,
-  },
-  dots: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: spacing.sm,
-    marginTop: spacing.md,
-  },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: colors.surfaceMuted,
-  },
-  dotActive: { width: 24, backgroundColor: colors.brand },
-});
+function createStyles(c: AppColors) {
+  return StyleSheet.create({
+    scrollContent: {
+      paddingHorizontal: spacing.lg,
+      gap: spacing.md,
+      paddingBottom: spacing.sm,
+    },
+    card: {
+      backgroundColor: c.surface,
+      borderRadius: radius.lg,
+      padding: spacing.lg,
+      borderWidth: 1,
+      borderColor: c.border,
+      minHeight: 168,
+    },
+    iconWrap: {
+      width: 52,
+      height: 52,
+      borderRadius: radius.md,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: spacing.md,
+    },
+    title: { fontSize: 17, fontWeight: '800', color: c.text, marginBottom: spacing.xs },
+    desc: { fontSize: 14, color: c.textSecondary, lineHeight: 20 },
+    accentBar: {
+      position: 'absolute',
+      bottom: 0,
+      left: spacing.lg,
+      right: spacing.lg,
+      height: 3,
+      borderRadius: 2,
+      marginBottom: spacing.md,
+    },
+    dots: {
+      flexDirection: 'row',
+      justifyContent: 'center',
+      gap: spacing.sm,
+      marginTop: spacing.md,
+    },
+    dot: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+      backgroundColor: c.surfaceMuted,
+    },
+    dotActive: { width: 24, backgroundColor: c.brand },
+  });
+}

@@ -8,7 +8,9 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { TAB_BAR_CONTENT_INSET } from '../components/navigation/BottomTabBar';
-import { colors, spacing, radius } from '../theme/designTokens';
+import { spacing, radius } from '../theme/designTokens';
+import { useThemedScreen } from '../hooks/useThemedScreen';
+import type { AppColors } from '../theme/universeTheme';
 import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { Icon } from '../components/ui/Icon';
 import { ProposeMatchScreen } from './ProposeMatchScreen';
@@ -64,6 +66,9 @@ export const MatchsScreen: React.FC = () => {
       profile.role === 'organizer' ||
       profile.role === 'agent' ||
       profile.role === 'club');
+
+  const { colors: c, rootStyle } = useThemedScreen();
+  const styles = useMemo(() => createStyles(c), [c]);
 
   useEffect(() => {
     setMyClubId(profile ? profile.profile.club_id ?? profile.uid : null);
@@ -140,7 +145,7 @@ export const MatchsScreen: React.FC = () => {
 
   return (
     <ScrollView
-      style={styles.container}
+      style={[styles.container, rootStyle]}
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
     >
@@ -177,7 +182,7 @@ export const MatchsScreen: React.FC = () => {
             onPress={() => setView('create_event')}
           >
             <View style={styles.actionIconWrap}>
-              <Icon name="calendar" size={26} color={colors.text} variant="filled" />
+              <Icon name="calendar" size={26} color={c.text} variant="filled" />
             </View>
             <Text style={styles.actionTitle}>Créer événement</Text>
             <Text style={styles.actionSub}>Convocation</Text>
@@ -185,13 +190,13 @@ export const MatchsScreen: React.FC = () => {
         )}
         <TouchableOpacity style={styles.actionCard} onPress={() => setView('propose')}>
           <View style={styles.actionIconWrap}>
-            <Icon name="football" size={26} color={colors.text} />
+            <Icon name="football" size={26} color={c.text} />
           </View>
           <Text style={styles.actionTitle}>Proposer match</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.actionCard} onPress={() => setView('search')}>
           <View style={styles.actionIconWrap}>
-            <Icon name="search" size={26} color={colors.text} />
+            <Icon name="search" size={26} color={c.text} />
           </View>
           <Text style={styles.actionTitle}>Rechercher</Text>
         </TouchableOpacity>
@@ -200,7 +205,7 @@ export const MatchsScreen: React.FC = () => {
       {homeTab === 'season' ? (
         <>
           {loadingCalendar ? (
-            <ActivityIndicator color={colors.brand} style={styles.loader} />
+            <ActivityIndicator color={c.brand} style={styles.loader} />
           ) : items.length === 0 ? (
             <Text style={styles.empty}>
               Aucun événement à venir. Créez une convocation ou proposez un match amical.
@@ -248,14 +253,14 @@ export const MatchsScreen: React.FC = () => {
         <>
           <Text style={styles.sectionTitle}>Matchs à venir</Text>
           {loadingMatches ? (
-            <ActivityIndicator color={colors.brand} style={styles.loader} />
+            <ActivityIndicator color={c.brand} style={styles.loader} />
           ) : matches.length === 0 ? (
             <Text style={styles.empty}>
               Aucun match. Proposez ou recherchez un match amical.
             </Text>
           ) : (
             matches.map((m) => {
-              const st = matchStatusStyle(m.status);
+              const st = matchStatusStyle(m.status, c);
               const isMine = myClubId != null && m.requester_club_id === myClubId;
               const showAccept = canAccept(m) && !isMine && profile;
               return (
@@ -307,8 +312,9 @@ export const MatchsScreen: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
+function createStyles(c: AppColors) {
+  return StyleSheet.create({
+  container: { flex: 1 },
   content: { paddingBottom: TAB_BAR_CONTENT_INSET + spacing.lg },
   tabRow: {
     flexDirection: 'row',
@@ -322,12 +328,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
+    borderColor: c.border,
+    backgroundColor: c.surface,
   },
-  tabActive: { backgroundColor: colors.ink, borderColor: colors.ink },
-  tabText: { fontWeight: '800', fontSize: 13, color: colors.textSecondary },
-  tabTextActive: { color: colors.brandInverse },
+  tabActive: { backgroundColor: c.ink, borderColor: c.ink },
+  tabText: { fontWeight: '800', fontSize: 13, color: c.textSecondary },
+  tabTextActive: { color: c.brandInverse },
   quickRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -338,11 +344,11 @@ const styles = StyleSheet.create({
   actionCard: {
     flex: 1,
     minWidth: '30%',
-    backgroundColor: colors.surface,
+    backgroundColor: c.surface,
     borderRadius: radius.lg,
     padding: spacing.md,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: c.border,
     minHeight: 96,
   },
   actionIconWrap: {
@@ -350,18 +356,18 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: radius.sm,
     borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surfaceMuted,
+    borderColor: c.border,
+    backgroundColor: c.surfaceMuted,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.xs,
   },
-  actionTitle: { fontSize: 12, fontWeight: '900', color: colors.text },
-  actionSub: { fontSize: 10, color: colors.textMuted, marginTop: 2 },
+  actionTitle: { fontSize: 12, fontWeight: '900', color: c.text },
+  actionSub: { fontSize: 10, color: c.textMuted, marginTop: 2 },
   sectionTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: colors.text,
+    color: c.text,
     paddingHorizontal: spacing.lg,
     marginBottom: spacing.md,
   },
@@ -369,49 +375,49 @@ const styles = StyleSheet.create({
   monthTitle: {
     fontSize: 14,
     fontWeight: '900',
-    color: colors.accent,
+    color: c.accent,
     paddingHorizontal: spacing.lg,
     marginBottom: spacing.sm,
     textTransform: 'capitalize',
   },
   calCard: {
-    backgroundColor: colors.surface,
+    backgroundColor: c.surface,
     borderRadius: radius.lg,
     padding: spacing.lg,
     marginHorizontal: spacing.lg,
     marginBottom: spacing.sm,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: c.border,
   },
   calCardTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: spacing.xs,
   },
-  calKind: { fontSize: 11, fontWeight: '800', color: colors.accent },
-  calDate: { fontSize: 11, color: colors.textMuted, fontWeight: '700' },
-  calTitle: { fontSize: 16, fontWeight: '800', color: colors.text },
-  calSub: { fontSize: 13, color: colors.textMuted, marginTop: 4 },
-  calLink: { fontSize: 12, fontWeight: '800', color: colors.accent, marginTop: spacing.sm },
+  calKind: { fontSize: 11, fontWeight: '800', color: c.accent },
+  calDate: { fontSize: 11, color: c.textMuted, fontWeight: '700' },
+  calTitle: { fontSize: 16, fontWeight: '800', color: c.text },
+  calSub: { fontSize: 13, color: c.textMuted, marginTop: 4 },
+  calLink: { fontSize: 12, fontWeight: '800', color: c.accent, marginTop: spacing.sm },
   loader: { marginVertical: spacing.lg },
   empty: {
-    color: colors.textMuted,
+    color: c.textMuted,
     fontSize: 13,
     paddingHorizontal: spacing.lg,
     lineHeight: 20,
   },
   matchCard: {
-    backgroundColor: colors.surface,
+    backgroundColor: c.surface,
     borderRadius: radius.lg,
     padding: spacing.lg,
     marginHorizontal: spacing.lg,
     marginBottom: spacing.sm,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: c.border,
   },
-  matchDate: { fontSize: 12, color: colors.textMuted, fontWeight: '800', letterSpacing: 0.5 },
-  matchTeams: { fontSize: 16, fontWeight: '700', color: colors.text, marginTop: 4 },
-  matchPlace: { fontSize: 13, color: colors.textMuted, marginTop: 2 },
+  matchDate: { fontSize: 12, color: c.textMuted, fontWeight: '800', letterSpacing: 0.5 },
+  matchTeams: { fontSize: 16, fontWeight: '700', color: c.text, marginTop: 4 },
+  matchPlace: { fontSize: 13, color: c.textMuted, marginTop: 2 },
   badge: {
     alignSelf: 'flex-start',
     marginTop: spacing.sm,
@@ -422,28 +428,29 @@ const styles = StyleSheet.create({
   badgeText: { fontSize: 11, fontWeight: '700' },
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginTop: spacing.md },
   btnAccept: {
-    backgroundColor: colors.brand,
+    backgroundColor: c.brand,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: c.border,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: radius.md,
   },
-  btnAcceptText: { color: colors.brandInverse, fontWeight: '800', fontSize: 13 },
+  btnAcceptText: { color: c.brandInverse, fontWeight: '800', fontSize: 13 },
   btnCancel: {
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: c.border,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: radius.md,
   },
-  btnCancelText: { color: colors.text, fontWeight: '800', fontSize: 13 },
+  btnCancelText: { color: c.text, fontWeight: '800', fontSize: 13 },
   btnPlayed: {
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: c.border,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: radius.md,
   },
-  btnPlayedText: { color: colors.text, fontWeight: '800', fontSize: 13 },
-});
+  btnPlayedText: { color: c.text, fontWeight: '800', fontSize: 13 },
+  });
+}

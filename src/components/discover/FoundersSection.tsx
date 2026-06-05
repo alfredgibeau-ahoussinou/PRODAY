@@ -1,10 +1,14 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { FOUNDERS, FOUNDERS_LETTER } from '../../content/founders';
 import { FadeInView } from './FadeInView';
-import { colors, spacing, radius, shadows } from '../../theme/designTokens';
+import { spacing, radius, shadows } from '../../theme/designTokens';
+import { useDiscoverStyles } from './discoverStyles';
+import type { AppColors } from '../../theme/universeTheme';
 
 export const FoundersSection: React.FC = () => {
+  const { colors: c } = useDiscoverStyles();
+  const styles = useMemo(() => createStyles(c), [c]);
   const [expanded, setExpanded] = useState(false);
 
   return (
@@ -50,66 +54,68 @@ export const FoundersSection: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  wrap: { marginTop: spacing.lg },
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    padding: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  kicker: {
-    fontSize: 10,
-    fontWeight: '800',
-    letterSpacing: 1.2,
-    color: colors.brand,
-    marginBottom: spacing.xs,
-  },
-  title: { fontSize: 20, fontWeight: '800', color: colors.text, marginBottom: spacing.sm },
-  intro: { fontSize: 14, color: colors.textSecondary, lineHeight: 22 },
-  avatars: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: spacing.lg,
-    marginBottom: spacing.md,
-  },
-  founderCol: { flex: 1, alignItems: 'center', maxWidth: 72 },
-  avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.xs,
-  },
-  avatarText: { color: '#FFF', fontWeight: '800', fontSize: 13 },
-  founderName: { fontSize: 11, fontWeight: '700', color: colors.text, textAlign: 'center' },
-  founderRole: { fontSize: 9, color: colors.textMuted, textAlign: 'center', marginTop: 2 },
-  expandBtn: {
-    alignSelf: 'center',
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-    backgroundColor: colors.brandSoft,
-    borderRadius: radius.pill,
-  },
-  expandText: { color: colors.brand, fontWeight: '700', fontSize: 13 },
-  body: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    lineHeight: 22,
-    marginTop: spacing.md,
-  },
-  signature: {
-    marginTop: spacing.lg,
-    fontSize: 14,
-    fontStyle: 'italic',
-    color: colors.text,
-  },
-  signNames: {
-    marginTop: spacing.xs,
-    fontSize: 12,
-    fontWeight: '700',
-    color: colors.brand,
-  },
-});
+function createStyles(c: AppColors) {
+  return StyleSheet.create({
+    wrap: { marginTop: spacing.lg },
+    card: {
+      backgroundColor: c.surface,
+      borderRadius: radius.lg,
+      padding: spacing.lg,
+      borderWidth: 1,
+      borderColor: c.border,
+    },
+    kicker: {
+      fontSize: 10,
+      fontWeight: '800',
+      letterSpacing: 1.2,
+      color: c.brand,
+      marginBottom: spacing.xs,
+    },
+    title: { fontSize: 20, fontWeight: '800', color: c.text, marginBottom: spacing.sm },
+    intro: { fontSize: 14, color: c.textSecondary, lineHeight: 22 },
+    avatars: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginTop: spacing.lg,
+      marginBottom: spacing.md,
+    },
+    founderCol: { flex: 1, alignItems: 'center', maxWidth: 72 },
+    avatar: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: spacing.xs,
+    },
+    avatarText: { color: '#FFF', fontWeight: '800', fontSize: 13 },
+    founderName: { fontSize: 11, fontWeight: '700', color: c.text, textAlign: 'center' },
+    founderRole: { fontSize: 9, color: c.textMuted, textAlign: 'center', marginTop: 2 },
+    expandBtn: {
+      alignSelf: 'center',
+      paddingVertical: spacing.sm,
+      paddingHorizontal: spacing.md,
+      backgroundColor: c.brandSoft,
+      borderRadius: radius.pill,
+    },
+    expandText: { color: c.brand, fontWeight: '700', fontSize: 13 },
+    body: {
+      fontSize: 14,
+      color: c.textSecondary,
+      lineHeight: 22,
+      marginTop: spacing.md,
+    },
+    signature: {
+      marginTop: spacing.lg,
+      fontSize: 14,
+      fontStyle: 'italic',
+      color: c.text,
+    },
+    signNames: {
+      marginTop: spacing.xs,
+      fontSize: 12,
+      fontWeight: '700',
+      color: c.brand,
+    },
+  });
+}

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Animated, {
   useAnimatedStyle,
@@ -10,12 +10,13 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Icon } from '../../components/ui/Icon';
 import { SignupConfetti } from '../../components/signup/SignupConfetti';
-
 import { SignupStepLayout } from './SignupStepLayout';
 import { SignupFooterButton } from './SignupFooterButton';
 import type { SignupForm } from './useSignupForm';
-import { colors, spacing } from '../../theme/designTokens';
+import { spacing } from '../../theme/designTokens';
 import { motion } from '../../theme/motion';
+import { useSignupFlowTheme } from './SignupFlowContext';
+import type { AppColors } from '../../theme/universeTheme';
 
 interface SignupSuccessStepProps {
   stepIndex: number;
@@ -42,6 +43,8 @@ export const SignupSuccessStep: React.FC<SignupSuccessStepProps> = ({
   finishLabel,
   onFinish,
 }) => {
+  const { colors: c } = useSignupFlowTheme();
+  const styles = useMemo(() => createStyles(c), [c]);
   const pulse = useSharedValue(1);
   const ring = useSharedValue(0);
 
@@ -90,7 +93,7 @@ export const SignupSuccessStep: React.FC<SignupSuccessStepProps> = ({
             <Animated.View style={[styles.ring, ringStyle]} />
             <Animated.View style={[styles.ring, styles.ringOuter, ringStyle]} />
             <Animated.View style={iconStyle}>
-              <Icon name="checkmark-circle" size={80} color={colors.accent} variant="filled" />
+              <Icon name="checkmark-circle" size={80} color={c.brand} variant="filled" />
             </Animated.View>
           </View>
         </View>
@@ -102,35 +105,37 @@ export const SignupSuccessStep: React.FC<SignupSuccessStepProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  root: { flex: 1 },
-  iconWrap: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginVertical: spacing.xxl,
-    minHeight: 140,
-  },
-  ring: {
-    position: 'absolute',
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: colors.accentSoft,
-    borderWidth: 2,
-    borderColor: colors.accent,
-  },
-  ringOuter: {
-    width: 130,
-    height: 130,
-    borderRadius: 65,
-    backgroundColor: 'transparent',
-    borderWidth: 1,
-    borderColor: colors.borderMedium,
-  },
-  body: {
-    fontSize: 15,
-    lineHeight: 23,
-    color: colors.textSecondary,
-    textAlign: 'center',
-  },
-});
+function createStyles(c: AppColors) {
+  return StyleSheet.create({
+    root: { flex: 1 },
+    iconWrap: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginVertical: spacing.xxl,
+      minHeight: 140,
+    },
+    ring: {
+      position: 'absolute',
+      width: 100,
+      height: 100,
+      borderRadius: 50,
+      backgroundColor: c.brandSoft,
+      borderWidth: 2,
+      borderColor: c.brand,
+    },
+    ringOuter: {
+      width: 130,
+      height: 130,
+      borderRadius: 65,
+      backgroundColor: 'transparent',
+      borderWidth: 1,
+      borderColor: c.borderMedium,
+    },
+    body: {
+      fontSize: 15,
+      lineHeight: 23,
+      color: c.textSecondary,
+      textAlign: 'center',
+    },
+  });
+}

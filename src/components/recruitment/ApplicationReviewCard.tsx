@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -14,7 +14,9 @@ import {
   APPLICATION_STATUS_LABEL,
   formatTimeAgo,
 } from '../../services/recruitment.service';
-import { colors, spacing, radius } from '../../theme/designTokens';
+import { spacing, radius } from '../../theme/designTokens';
+import type { AppColors } from '../../theme/universeTheme';
+import { useAppTheme } from '../../context/ProductLineContext';
 
 interface ApplicationReviewCardProps {
   application: Application;
@@ -25,6 +27,135 @@ interface ApplicationReviewCardProps {
   busy?: boolean;
 }
 
+function createStyles(c: AppColors) {
+  return StyleSheet.create({
+    card: {
+      backgroundColor: c.surface,
+      borderRadius: radius.lg,
+      padding: spacing.md,
+      borderWidth: 1,
+      borderColor: c.border,
+      marginBottom: spacing.sm,
+    },
+    head: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
+    headCopy: { flex: 1 },
+    name: { fontSize: 16, fontWeight: '900', color: c.text },
+    meta: { fontSize: 12, color: c.textSecondary, marginTop: 2, fontWeight: '600' },
+    pill: {
+      backgroundColor: c.surfaceMuted,
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: radius.pill,
+      borderWidth: 1,
+      borderColor: c.border,
+    },
+    pillOk: { backgroundColor: c.accentSoft, borderColor: c.brand },
+    pillBad: { backgroundColor: c.errorBg, borderColor: c.error },
+    pillViewed: { backgroundColor: c.warningBg, borderColor: c.warning },
+    pillText: { fontSize: 10, fontWeight: '800', color: c.text },
+    letter: { fontSize: 13, color: c.textSecondary, marginTop: spacing.sm, lineHeight: 20 },
+    rejectNote: {
+      fontSize: 12,
+      color: c.error,
+      marginTop: spacing.sm,
+      fontStyle: 'italic',
+    },
+    actions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginTop: spacing.md },
+    actionBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      paddingHorizontal: spacing.sm,
+      paddingVertical: 8,
+      borderRadius: radius.sm,
+      borderWidth: 1,
+      borderColor: c.border,
+      backgroundColor: c.background,
+    },
+    actionPrimary: { backgroundColor: c.brand, borderColor: c.brand },
+    actionDanger: { backgroundColor: c.ink, borderColor: c.ink },
+    actionDisabled: { opacity: 0.5 },
+    actionLabel: { fontSize: 11, fontWeight: '800', color: c.text },
+    actionLabelLight: { color: c.brandInverse },
+    loader: { marginTop: spacing.sm },
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.5)',
+      justifyContent: 'center',
+      padding: spacing.lg,
+    },
+    modalSheet: {
+      backgroundColor: c.surface,
+      borderRadius: radius.lg,
+      padding: spacing.lg,
+      borderWidth: 1,
+      borderColor: c.border,
+    },
+    modalTitle: { fontSize: 18, fontWeight: '900', color: c.text },
+    modalSub: { fontSize: 13, color: c.textSecondary, marginTop: 4, marginBottom: spacing.md },
+    modalInput: {
+      minHeight: 88,
+      borderWidth: 1,
+      borderColor: c.border,
+      borderRadius: radius.md,
+      padding: spacing.md,
+      fontSize: 14,
+      color: c.text,
+      textAlignVertical: 'top',
+      backgroundColor: c.background,
+    },
+    modalActions: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.md },
+    modalCancel: {
+      flex: 1,
+      padding: spacing.md,
+      alignItems: 'center',
+      borderRadius: radius.md,
+      borderWidth: 1,
+      borderColor: c.border,
+    },
+    modalCancelText: { fontWeight: '800', color: c.text },
+    modalConfirm: {
+      flex: 1,
+      padding: spacing.md,
+      alignItems: 'center',
+      borderRadius: radius.md,
+      backgroundColor: c.brand,
+    },
+    modalConfirmText: { fontWeight: '800', color: c.brandInverse },
+  });
+}
+
+const ActionBtn: React.FC<{
+  icon: 'eye' | 'checkmark-circle' | 'close';
+  label: string;
+  onPress: () => void;
+  primary?: boolean;
+  danger?: boolean;
+  disabled?: boolean;
+  styles: ReturnType<typeof createStyles>;
+  colors: AppColors;
+}> = ({ icon, label, onPress, primary, danger, disabled, styles, colors }) => (
+  <TouchableOpacity
+    style={[
+      styles.actionBtn,
+      primary && styles.actionPrimary,
+      danger && styles.actionDanger,
+      disabled && styles.actionDisabled,
+    ]}
+    onPress={onPress}
+    disabled={disabled}
+  >
+    <Icon
+      name={icon}
+      size={14}
+      color={primary || danger ? colors.brandInverse : colors.text}
+    />
+    <Text style={[styles.actionLabel, (primary || danger) && styles.actionLabelLight]}>
+      {label}
+    </Text>
+  </TouchableOpacity>
+);
+
 export const ApplicationReviewCard: React.FC<ApplicationReviewCardProps> = ({
   application,
   onViewProfile,
@@ -33,6 +164,10 @@ export const ApplicationReviewCard: React.FC<ApplicationReviewCardProps> = ({
   onReject,
   busy = false,
 }) => {
+  const { colors, productLine } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+  const playerFallback = productLine === 'woman' ? 'Joueuse' : 'Joueur';
+
   const [rejectOpen, setRejectOpen] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
   const [localBusy, setLocalBusy] = useState(false);
@@ -55,7 +190,9 @@ export const ApplicationReviewCard: React.FC<ApplicationReviewCardProps> = ({
     <View style={styles.card}>
       <View style={styles.head}>
         <View style={styles.headCopy}>
-          <Text style={styles.name}>{application.player_name ?? 'Joueur'}</Text>
+          <Text style={styles.name}>
+            {application.player_name ?? playerFallback}
+          </Text>
           <Text style={styles.meta}>
             {APPLICATION_STATUS_LABEL[application.status]} ·{' '}
             {formatTimeAgo(application.created_at)}
@@ -81,7 +218,14 @@ export const ApplicationReviewCard: React.FC<ApplicationReviewCardProps> = ({
 
       <View style={styles.actions}>
         {onViewProfile ? (
-          <ActionBtn icon="eye" label="Profil" onPress={onViewProfile} disabled={loading} />
+          <ActionBtn
+            icon="eye"
+            label="Profil"
+            onPress={onViewProfile}
+            disabled={loading}
+            styles={styles}
+            colors={colors}
+          />
         ) : null}
         {!isFinal && isPending ? (
           <ActionBtn
@@ -89,6 +233,8 @@ export const ApplicationReviewCard: React.FC<ApplicationReviewCardProps> = ({
             label="Marquer vue"
             onPress={() => run(onMarkViewed)}
             disabled={loading}
+            styles={styles}
+            colors={colors}
           />
         ) : null}
         {!isFinal ? (
@@ -99,6 +245,8 @@ export const ApplicationReviewCard: React.FC<ApplicationReviewCardProps> = ({
               primary
               onPress={() => run(onAccept)}
               disabled={loading}
+              styles={styles}
+              colors={colors}
             />
             <ActionBtn
               icon="close"
@@ -106,18 +254,27 @@ export const ApplicationReviewCard: React.FC<ApplicationReviewCardProps> = ({
               danger
               onPress={() => setRejectOpen(true)}
               disabled={loading}
+              styles={styles}
+              colors={colors}
             />
           </>
         ) : null}
       </View>
 
-      {loading ? <ActivityIndicator color={colors.accent} style={styles.loader} /> : null}
+      {loading ? <ActivityIndicator color={colors.brand} style={styles.loader} /> : null}
 
-      <Modal visible={rejectOpen} transparent animationType="fade" onRequestClose={() => setRejectOpen(false)}>
+      <Modal
+        visible={rejectOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setRejectOpen(false)}
+      >
         <View style={styles.modalOverlay}>
           <View style={styles.modalSheet}>
             <Text style={styles.modalTitle}>Refuser la candidature</Text>
-            <Text style={styles.modalSub}>Motif optionnel (visible par le joueur)</Text>
+            <Text style={styles.modalSub}>
+              Motif optionnel (visible par la {playerFallback.toLowerCase()})
+            </Text>
             <TextInput
               style={styles.modalInput}
               value={rejectReason}
@@ -146,121 +303,3 @@ export const ApplicationReviewCard: React.FC<ApplicationReviewCardProps> = ({
     </View>
   );
 };
-
-const ActionBtn: React.FC<{
-  icon: 'eye' | 'checkmark-circle' | 'close';
-  label: string;
-  onPress: () => void;
-  primary?: boolean;
-  danger?: boolean;
-  disabled?: boolean;
-}> = ({ icon, label, onPress, primary, danger, disabled }) => (
-  <TouchableOpacity
-    style={[
-      styles.actionBtn,
-      primary && styles.actionPrimary,
-      danger && styles.actionDanger,
-      disabled && styles.actionDisabled,
-    ]}
-    onPress={onPress}
-    disabled={disabled}
-  >
-    <Icon name={icon} size={14} color={primary || danger ? colors.brandInverse : colors.text} />
-    <Text style={[styles.actionLabel, (primary || danger) && styles.actionLabelLight]}>{label}</Text>
-  </TouchableOpacity>
-);
-
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    padding: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    marginBottom: spacing.sm,
-  },
-  head: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
-  headCopy: { flex: 1 },
-  name: { fontSize: 16, fontWeight: '900', color: colors.text },
-  meta: { fontSize: 12, color: colors.textSecondary, marginTop: 2, fontWeight: '600' },
-  pill: {
-    backgroundColor: colors.surfaceMuted,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: radius.pill,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  pillOk: { backgroundColor: colors.accentSoft, borderColor: colors.accent },
-  pillBad: { backgroundColor: colors.errorBg, borderColor: colors.error },
-  pillViewed: { backgroundColor: colors.warningBg, borderColor: colors.warning },
-  pillText: { fontSize: 10, fontWeight: '800', color: colors.text },
-  letter: { fontSize: 13, color: colors.textSecondary, marginTop: spacing.sm, lineHeight: 20 },
-  rejectNote: {
-    fontSize: 12,
-    color: colors.error,
-    marginTop: spacing.sm,
-    fontStyle: 'italic',
-  },
-  actions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginTop: spacing.md },
-  actionBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 8,
-    borderRadius: radius.sm,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.background,
-  },
-  actionPrimary: { backgroundColor: colors.accent, borderColor: colors.accent },
-  actionDanger: { backgroundColor: colors.ink, borderColor: colors.ink },
-  actionDisabled: { opacity: 0.5 },
-  actionLabel: { fontSize: 11, fontWeight: '800', color: colors.text },
-  actionLabelLight: { color: colors.brandInverse },
-  loader: { marginTop: spacing.sm },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    padding: spacing.lg,
-  },
-  modalSheet: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    padding: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  modalTitle: { fontSize: 18, fontWeight: '900', color: colors.text },
-  modalSub: { fontSize: 13, color: colors.textSecondary, marginTop: 4, marginBottom: spacing.md },
-  modalInput: {
-    minHeight: 88,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    padding: spacing.md,
-    fontSize: 14,
-    color: colors.text,
-    textAlignVertical: 'top',
-  },
-  modalActions: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.md },
-  modalCancel: {
-    flex: 1,
-    padding: spacing.md,
-    alignItems: 'center',
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  modalCancelText: { fontWeight: '800', color: colors.text },
-  modalConfirm: {
-    flex: 1,
-    padding: spacing.md,
-    alignItems: 'center',
-    borderRadius: radius.md,
-    backgroundColor: colors.ink,
-  },
-  modalConfirmText: { fontWeight: '800', color: colors.brandInverse },
-});

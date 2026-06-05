@@ -1,16 +1,20 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, LayoutAnimation, Platform, UIManager } from 'react-native';
 import { PRODAY_INFO_SECTIONS } from '../../content/showcaseExperience';
 import { DiscoverSectionHeader } from './DiscoverSectionHeader';
 import { PressableSpring } from './PressableSpring';
 import { Icon } from '../ui/Icon';
-import { colors, spacing, radius } from '../../theme/designTokens';
+import { spacing, radius } from '../../theme/designTokens';
+import { useDiscoverStyles } from './discoverStyles';
+import type { AppColors } from '../../theme/universeTheme';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 
 export const DiscoverInfoHub: React.FC = () => {
+  const { colors: c } = useDiscoverStyles();
+  const styles = useMemo(() => createStyles(c), [c]);
   const [openId, setOpenId] = useState<string | null>(PRODAY_INFO_SECTIONS[0]?.id ?? null);
 
   const toggle = (id: string) => {
@@ -41,7 +45,7 @@ export const DiscoverInfoHub: React.FC = () => {
               <Icon
                 name={open ? 'chevron-up' : 'chevron-down'}
                 size={20}
-                color={colors.textMuted}
+                color={c.textMuted}
               />
             </View>
             {open ? (
@@ -64,37 +68,39 @@ export const DiscoverInfoHub: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  wrap: {
-    paddingHorizontal: spacing.lg,
-    marginTop: spacing.xl,
-  },
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    padding: spacing.md,
-    marginBottom: spacing.sm,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  cardOpen: {
-    borderColor: colors.accent,
-    backgroundColor: colors.surfaceMuted,
-  },
-  head: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  headCopy: { flex: 1 },
-  title: { fontSize: 15, fontWeight: '900', color: colors.text },
-  summary: { fontSize: 12, color: colors.accent, fontWeight: '700', marginTop: 2 },
-  body: { marginTop: spacing.md, paddingTop: spacing.md, borderTopWidth: 1, borderTopColor: colors.border },
-  bodyText: { fontSize: 13, lineHeight: 20, color: colors.textSecondary },
-  tips: { marginTop: spacing.md, gap: spacing.xs },
-  tipRow: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
-  tipDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: colors.accent,
-    marginTop: 6,
-  },
-  tipText: { flex: 1, fontSize: 12, fontWeight: '700', color: colors.text },
-});
+function createStyles(c: AppColors) {
+  return StyleSheet.create({
+    wrap: {
+      paddingHorizontal: spacing.lg,
+      marginTop: spacing.xl,
+    },
+    card: {
+      backgroundColor: c.surface,
+      borderRadius: radius.lg,
+      padding: spacing.md,
+      marginBottom: spacing.sm,
+      borderWidth: 1,
+      borderColor: c.border,
+    },
+    cardOpen: {
+      borderColor: c.brand,
+      backgroundColor: c.surfaceMuted,
+    },
+    head: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+    headCopy: { flex: 1 },
+    title: { fontSize: 15, fontWeight: '900', color: c.text },
+    summary: { fontSize: 12, color: c.brand, fontWeight: '700', marginTop: 2 },
+    body: { marginTop: spacing.md, paddingTop: spacing.md, borderTopWidth: 1, borderTopColor: c.border },
+    bodyText: { fontSize: 13, lineHeight: 20, color: c.textSecondary },
+    tips: { marginTop: spacing.md, gap: spacing.xs },
+    tipRow: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
+    tipDot: {
+      width: 6,
+      height: 6,
+      borderRadius: 3,
+      backgroundColor: c.brand,
+      marginTop: 6,
+    },
+    tipText: { flex: 1, fontSize: 12, fontWeight: '700', color: c.text },
+  });
+}

@@ -4,7 +4,9 @@ import type { User } from '../models/User';
 import { VerificationSuccessScreen } from './VerificationSuccessScreen';
 import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { Icon } from '../components/ui/Icon';
-import { colors, spacing, radius, shadows } from '../theme/designTokens';
+import { spacing, radius, shadows } from '../theme/designTokens';
+import { useThemedScreen } from '../hooks/useThemedScreen';
+import type { AppColors } from '../theme/universeTheme';
 
 type StepState = 'done' | 'active' | 'pending';
 
@@ -77,6 +79,8 @@ export const VerificationFlowScreen: React.FC<VerificationFlowScreenProps> = ({
   const [showSuccess, setShowSuccess] = useState(
     initialSuccess || user.verification_status === 'VERIFIED'
   );
+  const { colors: c, rootStyle } = useThemedScreen();
+  const styles = useMemo(() => createStyles(c), [c]);
 
   const steps = useMemo(() => buildSteps(user), [user]);
   const diplomaName =
@@ -96,7 +100,7 @@ export const VerificationFlowScreen: React.FC<VerificationFlowScreenProps> = ({
   const rejected = user.verification_status === 'REJECTED';
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, rootStyle]}>
       {onBack ? (
         <ScreenHeader title="Vérification du diplôme" onBack={onBack} centered />
       ) : null}
@@ -104,9 +108,9 @@ export const VerificationFlowScreen: React.FC<VerificationFlowScreenProps> = ({
       <ScrollView contentContainerStyle={styles.content}>
         <View style={[styles.banner, rejected && styles.bannerRejected]}>
           <Icon
-            name={rejected ? 'warning' : 'warning'}
+            name="warning"
             size={22}
-            color={rejected ? colors.brand : colors.warning}
+            color={rejected ? c.brand : c.warning}
           />
           <View style={styles.bannerText}>
             <Text style={styles.bannerTitle}>
@@ -144,7 +148,7 @@ export const VerificationFlowScreen: React.FC<VerificationFlowScreenProps> = ({
                   ]}
                 >
                   {step.state === 'done' ? (
-                    <Icon name="checkmark-circle" size={18} color="#FFFFFF" />
+                    <Icon name="checkmark-circle" size={18} color={c.brandInverse} />
                   ) : (
                     <Text style={styles.stepNum}>{step.id}</Text>
                   )}
@@ -170,65 +174,67 @@ export const VerificationFlowScreen: React.FC<VerificationFlowScreenProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.background },
-  content: { padding: spacing.lg, paddingBottom: spacing.xxl },
-  banner: {
-    flexDirection: 'row',
-    gap: spacing.md,
-    backgroundColor: '#FEF3C7',
-    borderRadius: radius.md,
-    padding: spacing.md,
-    marginBottom: spacing.md,
-  },
-  bannerRejected: { backgroundColor: colors.brandSoft },
-  bannerText: { flex: 1 },
-  bannerTitle: { fontWeight: '700', color: colors.text, fontSize: 14 },
-  bannerSub: { color: colors.textSecondary, fontSize: 13, marginTop: 4, lineHeight: 20 },
-  docHint: { fontSize: 12, color: colors.textMuted, marginBottom: spacing.md },
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    padding: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  diplomaTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: colors.brand,
-    marginBottom: spacing.lg,
-  },
-  stepRow: { flexDirection: 'row', marginBottom: spacing.md },
-  stepCol: { alignItems: 'center', width: 36 },
-  stepCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  circleDone: { backgroundColor: colors.brand },
-  circleActive: { backgroundColor: colors.warning },
-  circlePending: { backgroundColor: colors.border },
-  stepNum: { color: colors.textMuted, fontWeight: '700', fontSize: 13 },
-  stepLine: {
-    flex: 1,
-    width: 2,
-    backgroundColor: colors.border,
-    minHeight: 24,
-    marginVertical: 4,
-  },
-  stepBody: { flex: 1, paddingLeft: spacing.md },
-  stepLabel: { fontWeight: '700', color: colors.text, fontSize: 14 },
-  stepSub: { color: colors.textSecondary, fontSize: 12, marginTop: 2 },
-  stepDate: { color: colors.textMuted, fontSize: 11, marginTop: 2 },
-  btn: {
-    marginTop: spacing.lg,
-    backgroundColor: colors.brand,
-    borderRadius: radius.md,
-    paddingVertical: 14,
-    alignItems: 'center',
-  },
-  btnText: { color: '#FFFFFF', fontWeight: '700' },
-});
+function createStyles(c: AppColors) {
+  return StyleSheet.create({
+    root: { flex: 1 },
+    content: { padding: spacing.lg, paddingBottom: spacing.xxl },
+    banner: {
+      flexDirection: 'row',
+      gap: spacing.md,
+      backgroundColor: c.warningBg,
+      borderRadius: radius.md,
+      padding: spacing.md,
+      marginBottom: spacing.md,
+    },
+    bannerRejected: { backgroundColor: c.brandSoft },
+    bannerText: { flex: 1 },
+    bannerTitle: { fontWeight: '700', color: c.text, fontSize: 14 },
+    bannerSub: { color: c.textSecondary, fontSize: 13, marginTop: 4, lineHeight: 20 },
+    docHint: { fontSize: 12, color: c.textMuted, marginBottom: spacing.md },
+    card: {
+      backgroundColor: c.surface,
+      borderRadius: radius.lg,
+      padding: spacing.lg,
+      borderWidth: 1,
+      borderColor: c.border,
+    },
+    diplomaTitle: {
+      fontSize: 15,
+      fontWeight: '700',
+      color: c.brand,
+      marginBottom: spacing.lg,
+    },
+    stepRow: { flexDirection: 'row', marginBottom: spacing.md },
+    stepCol: { alignItems: 'center', width: 36 },
+    stepCircle: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    circleDone: { backgroundColor: c.brand },
+    circleActive: { backgroundColor: c.warning },
+    circlePending: { backgroundColor: c.border },
+    stepNum: { color: c.textMuted, fontWeight: '700', fontSize: 13 },
+    stepLine: {
+      flex: 1,
+      width: 2,
+      backgroundColor: c.border,
+      minHeight: 24,
+      marginVertical: 4,
+    },
+    stepBody: { flex: 1, paddingLeft: spacing.md },
+    stepLabel: { fontWeight: '700', color: c.text, fontSize: 14 },
+    stepSub: { color: c.textSecondary, fontSize: 12, marginTop: 2 },
+    stepDate: { color: c.textMuted, fontSize: 11, marginTop: 2 },
+    btn: {
+      marginTop: spacing.lg,
+      backgroundColor: c.brand,
+      borderRadius: radius.md,
+      paddingVertical: 14,
+      alignItems: 'center',
+    },
+    btnText: { color: c.brandInverse, fontWeight: '700' },
+  });
+}

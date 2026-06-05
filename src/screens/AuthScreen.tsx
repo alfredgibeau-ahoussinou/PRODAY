@@ -13,7 +13,7 @@ import { authService } from '../services/auth.service';
 import { AuthBrandHeader } from '../components/auth/AuthBrandHeader';
 import { Icon } from '../components/ui/Icon';
 import { AuthTabRail, type AuthTabId } from '../components/auth/AuthTabRail';
-import { authStyles } from '../components/auth/authStyles';
+import { useAuthStyles } from '../components/auth/authStyles';
 import { useAuthLayout } from '../components/auth/useAuthLayout';
 import { AuthTextField } from '../components/auth/AuthTextField';
 import { AuthSocialButtons } from '../components/auth/AuthSocialButtons';
@@ -89,6 +89,7 @@ function authScreenCopy(line: ProductLineId, tab: AuthTabId): { title: string; s
 }
 
 export const AuthScreen: React.FC = () => {
+  const authStyles = useAuthStyles();
   const { compact, logoWidth, headerTopPad, tabBarScrollInset: tabInset } = useAuthLayout();
   const { profile, loading: authLoading, configured, refreshProfile, signOut } =
     useAuth();

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -11,12 +11,14 @@ import {
 } from 'react-native';
 import { authService } from '../services/auth.service';
 import { AuthBrandHeader } from '../components/auth/AuthBrandHeader';
-import { authStyles } from '../components/auth/authStyles';
+import { useAuthStyles } from '../components/auth/authStyles';
 import { useAuthLayout } from '../components/auth/useAuthLayout';
 import { AuthTextField } from '../components/auth/AuthTextField';
 import { ProDayErrorBanner } from '../components/ui/ProDayErrorBanner';
 import { Icon } from '../components/ui/Icon';
-import { colors, spacing, radius } from '../theme/designTokens';
+import { spacing, radius } from '../theme/designTokens';
+import { useAppTheme } from '../context/ProductLineContext';
+import type { AppColors } from '../theme/universeTheme';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -30,6 +32,9 @@ export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({
   onBack,
 }) => {
   const { compact, logoWidth, headerTopPad, scrollBottom } = useAuthLayout();
+  const { colors: c } = useAppTheme();
+  const authStyles = useAuthStyles();
+  const local = useMemo(() => createLocalStyles(c), [c]);
   const [email, setEmail] = useState(initialEmail);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -87,7 +92,7 @@ export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({
               hitSlop={8}
               accessibilityLabel="Retour"
             >
-              <Icon name="arrow-back" size={20} color={colors.ink} />
+              <Icon name="arrow-back" size={20} color={c.ink} />
             </Pressable>
             <View style={authStyles.headerLogo}>
               <AuthBrandHeader width={logoWidth} tone="light" />
@@ -100,7 +105,7 @@ export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({
           {sent ? (
             <View style={local.successBlock}>
               <View style={local.successIcon}>
-                <Icon name="mail" size={28} color={colors.ink} />
+                <Icon name="mail" size={28} color={c.ink} />
               </View>
               <Text style={[authStyles.title, compact && authStyles.titleCompact]}>
                 Email envoyé
@@ -161,7 +166,7 @@ export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({
                 disabled={loading}
               >
                 {loading ? (
-                  <ActivityIndicator color={colors.brandInverse} />
+                  <ActivityIndicator color={c.brandInverse} />
                 ) : (
                   <Text style={authStyles.primaryBtnText}>Envoyer le lien</Text>
                 )}
@@ -178,25 +183,27 @@ export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({
   );
 };
 
-const local = StyleSheet.create({
-  successBlock: { alignItems: 'stretch' },
-  successIcon: {
-    alignSelf: 'center',
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: colors.accentSoft,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  emailHighlight: {
-    fontWeight: '800',
-    color: colors.text,
-  },
-  linkUnderline: {
-    textDecorationLine: 'underline',
-  },
-});
+function createLocalStyles(c: AppColors) {
+  return StyleSheet.create({
+    successBlock: { alignItems: 'stretch' },
+    successIcon: {
+      alignSelf: 'center',
+      width: 56,
+      height: 56,
+      borderRadius: 28,
+      backgroundColor: c.accentSoft,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: spacing.md,
+      borderWidth: 1,
+      borderColor: c.border,
+    },
+    emailHighlight: {
+      fontWeight: '800',
+      color: c.text,
+    },
+    linkUnderline: {
+      textDecorationLine: 'underline',
+    },
+  });
+}

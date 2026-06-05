@@ -16,9 +16,11 @@ import { stagesService } from '../services/stages.service';
 import { canPublishStages } from '../utils/roleCapabilities';
 import { useAppSpace } from '../context/AppSpaceContext';
 import { useAppTheme } from '../context/ProductLineContext';
+import { useThemedScreen } from '../hooks/useThemedScreen';
 import { postMatchesAppSpace } from '../constants/appSpaces';
 import { formatCalendarDate } from '../utils/seasonCalendar';
-import { colors, spacing, radius } from '../theme/designTokens';
+import { spacing, radius } from '../theme/designTokens';
+import type { AppColors } from '../theme/universeTheme';
 
 interface StagesListScreenProps {
   profile: User | null;
@@ -35,6 +37,8 @@ export const StagesListScreen: React.FC<StagesListScreenProps> = ({
 }) => {
   const { appSpace } = useAppSpace();
   const { productLine } = useAppTheme();
+  const { colors: c, rootStyle } = useThemedScreen();
+  const styles = useMemo(() => createStyles(c), [c]);
   const [offers, setOffers] = useState<StageOffer[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -63,17 +67,17 @@ export const StagesListScreen: React.FC<StagesListScreenProps> = ({
   };
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, rootStyle]}>
       <ScreenHeader title="Stages & camps" onBack={onBack} centered />
       {loading ? (
-        <ActivityIndicator color={colors.brand} style={styles.loader} />
+        <ActivityIndicator color={c.brand} style={styles.loader} />
       ) : (
         <FlatList
           data={filtered}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.list}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.brand} />
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={c.brand} />
           }
           ListEmptyComponent={
             <Text style={styles.empty}>
@@ -113,7 +117,7 @@ export const StagesListScreen: React.FC<StagesListScreenProps> = ({
       )}
       {canCreate && onCreateStage ? (
         <TouchableOpacity style={styles.fab} onPress={onCreateStage}>
-          <Icon name="add" size={20} color="#FFF" />
+          <Icon name="add" size={20} color={c.brandInverse} />
           <Text style={styles.fabText}>Publier un stage</Text>
         </TouchableOpacity>
       ) : null}
@@ -121,47 +125,49 @@ export const StagesListScreen: React.FC<StagesListScreenProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.background },
-  loader: { marginTop: spacing.xl },
-  list: { padding: spacing.lg, paddingBottom: 100, gap: spacing.md },
-  empty: {
-    textAlign: 'center',
-    color: colors.textMuted,
-    fontSize: 14,
-    lineHeight: 20,
-    marginTop: spacing.xl,
-  },
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    padding: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  cardTitle: { fontSize: 17, fontWeight: '900', color: colors.text },
-  cardClub: { fontSize: 13, color: colors.brand, fontWeight: '700', marginTop: 4 },
-  cardMeta: { fontSize: 12, color: colors.textMuted, marginTop: 2 },
-  cardDates: { fontSize: 12, color: colors.text, marginTop: 6 },
-  cardFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: spacing.sm,
-  },
-  spots: { fontSize: 12, fontWeight: '700', color: colors.text },
-  price: { fontSize: 12, fontWeight: '800', color: colors.accent },
-  fab: {
-    position: 'absolute',
-    bottom: spacing.lg,
-    right: spacing.lg,
-    left: spacing.lg,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.sm,
-    backgroundColor: colors.brand,
-    paddingVertical: spacing.md,
-    borderRadius: radius.lg,
-  },
-  fabText: { color: '#FFF', fontWeight: '800', fontSize: 15 },
-});
+function createStyles(c: AppColors) {
+  return StyleSheet.create({
+    root: { flex: 1 },
+    loader: { marginTop: spacing.xl },
+    list: { padding: spacing.lg, paddingBottom: 100, gap: spacing.md },
+    empty: {
+      textAlign: 'center',
+      color: c.textMuted,
+      fontSize: 14,
+      lineHeight: 20,
+      marginTop: spacing.xl,
+    },
+    card: {
+      backgroundColor: c.surface,
+      borderRadius: radius.lg,
+      padding: spacing.md,
+      borderWidth: 1,
+      borderColor: c.border,
+    },
+    cardTitle: { fontSize: 17, fontWeight: '900', color: c.text },
+    cardClub: { fontSize: 13, color: c.brand, fontWeight: '700', marginTop: 4 },
+    cardMeta: { fontSize: 12, color: c.textMuted, marginTop: 2 },
+    cardDates: { fontSize: 12, color: c.text, marginTop: 6 },
+    cardFooter: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginTop: spacing.sm,
+    },
+    spots: { fontSize: 12, fontWeight: '700', color: c.text },
+    price: { fontSize: 12, fontWeight: '800', color: c.brand },
+    fab: {
+      position: 'absolute',
+      bottom: spacing.lg,
+      right: spacing.lg,
+      left: spacing.lg,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: spacing.sm,
+      backgroundColor: c.brand,
+      paddingVertical: spacing.md,
+      borderRadius: radius.lg,
+    },
+    fabText: { color: c.brandInverse, fontWeight: '800', fontSize: 15 },
+  });
+}

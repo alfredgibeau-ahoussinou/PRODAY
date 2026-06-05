@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   View,
   Text,
@@ -8,7 +8,9 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Icon } from '../ui/Icon';
-import { colors, spacing } from '../../theme/designTokens';
+import { useAppTheme } from '../../context/ProductLineContext';
+import { spacing } from '../../theme/designTokens';
+import type { AppColors } from '../../theme/universeTheme';
 
 interface ProfileAvatarButtonProps {
   displayName: string;
@@ -25,6 +27,8 @@ export const ProfileAvatarButton: React.FC<ProfileAvatarButtonProps> = ({
   onPress,
   size = 96,
 }) => {
+  const { colors: c } = useAppTheme();
+  const styles = useMemo(() => createStyles(c), [c]);
   const letter = displayName.trim().charAt(0).toUpperCase() || '?';
 
   return (
@@ -46,40 +50,42 @@ export const ProfileAvatarButton: React.FC<ProfileAvatarButtonProps> = ({
       )}
       <View style={styles.badge}>
         {uploading ? (
-          <ActivityIndicator size="small" color={colors.brandInverse} />
+          <ActivityIndicator size="small" color={c.brandInverse} />
         ) : (
-          <Icon name="image" size={14} color={colors.brandInverse} />
+          <Icon name="image" size={14} color={c.brandInverse} />
         )}
       </View>
     </TouchableOpacity>
   );
 };
 
-const styles = StyleSheet.create({
-  wrap: {
-    borderWidth: 3,
-    borderColor: colors.accent,
-    overflow: 'hidden',
-    backgroundColor: colors.surfaceMuted,
-  },
-  image: { resizeMode: 'cover' },
-  placeholder: {
-    backgroundColor: colors.ink,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  letter: { color: colors.brandInverse, fontWeight: '900' },
-  badge: {
-    position: 'absolute',
-    right: 0,
-    bottom: 0,
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: colors.accent,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: colors.brandInverse,
-  },
-});
+function createStyles(c: AppColors) {
+  return StyleSheet.create({
+    wrap: {
+      borderWidth: 3,
+      borderColor: c.brand,
+      overflow: 'hidden',
+      backgroundColor: c.surfaceMuted,
+    },
+    image: { resizeMode: 'cover' },
+    placeholder: {
+      backgroundColor: c.ink,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    letter: { color: c.brandInverse, fontWeight: '900' },
+    badge: {
+      position: 'absolute',
+      right: 0,
+      bottom: 0,
+      width: 30,
+      height: 30,
+      borderRadius: 15,
+      backgroundColor: c.brand,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 1,
+      borderColor: c.brandInverse,
+    },
+  });
+}

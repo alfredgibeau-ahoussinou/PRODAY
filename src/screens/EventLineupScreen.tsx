@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -14,7 +14,10 @@ import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { teamEventsService } from '../services/teamEvents.service';
 import { usersService } from '../services/users.service';
 import { PitchLineupView } from '../components/team/PitchLineupView';
-import { colors, spacing, radius } from '../theme/designTokens';
+import { spacing, radius } from '../theme/designTokens';
+import { useThemedScreen } from '../hooks/useThemedScreen';
+import type { AppColors } from '../theme/universeTheme';
+import type { ProductLineId } from '../models/ProductLine';
 
 interface EventLineupScreenProps {
   eventId: string;
@@ -25,6 +28,8 @@ export const EventLineupScreen: React.FC<EventLineupScreenProps> = ({
   eventId,
   onBack,
 }) => {
+  const { colors: c, productLine, rootStyle } = useThemedScreen();
+  const styles = useMemo(() => createStyles(c), [c]);
   const [event, setEvent] = useState<TeamEvent | null>(null);
   const [formation, setFormation] = useState<string>('4-3-3');
   const [starters, setStarters] = useState<EventLineupSlot[]>([]);
@@ -115,17 +120,19 @@ export const EventLineupScreen: React.FC<EventLineupScreenProps> = ({
   if (loading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator color={colors.accent} size="large" />
+        <ActivityIndicator color={c.accent} size="large" />
       </View>
     );
   }
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, rootStyle]}>
       <ScreenHeader title="Composition" onBack={onBack} centered />
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.hint}>
-          Titulaires et remplaçants parmi les joueurs ayant confirmé leur présence.
+          {productLine === 'woman'
+            ? 'Titulaires et remplaçants parmi les joueuses ayant confirmé leur présence.'
+            : 'Titulaires et remplaçants parmi les joueurs ayant confirmé leur présence.'}
         </Text>
 
         <Text style={styles.label}>Système</Text>
@@ -149,11 +156,15 @@ export const EventLineupScreen: React.FC<EventLineupScreenProps> = ({
           title={`Titulaires (${starters.length})`}
           slots={starters}
           onRemove={removeFromLineup}
+          styles={styles}
+          productLine={productLine}
         />
         <Section
           title={`Remplaçants (${subs.length})`}
           slots={subs}
           onRemove={removeFromLineup}
+          styles={styles}
+          productLine={productLine}
         />
 
         {pool.length > 0 && (
@@ -187,7 +198,7 @@ export const EventLineupScreen: React.FC<EventLineupScreenProps> = ({
           disabled={saving}
         >
           {saving ? (
-            <ActivityIndicator color={colors.brandInverse} />
+            <ActivityIndicator color={c.brandInverse} />
           ) : (
             <Text style={styles.saveText}>Enregistrer la compo</Text>
           )}
@@ -201,11 +212,15 @@ const Section: React.FC<{
   title: string;
   slots: EventLineupSlot[];
   onRemove: (uid: string) => void;
-}> = ({ title, slots, onRemove }) => (
+  styles: ReturnType<typeof createStyles>;
+  productLine: ProductLineId;
+}> = ({ title, slots, onRemove, styles, productLine }) => (
   <View style={styles.section}>
     <Text style={styles.label}>{title}</Text>
     {slots.length === 0 ? (
-      <Text style={styles.empty}>Aucun joueur</Text>
+      <Text style={styles.empty}>
+        {productLine === 'woman' ? 'Aucune joueuse' : 'Aucun joueur'}
+      </Text>
     ) : (
       slots.map((s) => (
         <View key={s.uid} style={styles.slotRow}>
@@ -222,23 +237,24 @@ const Section: React.FC<{
   </View>
 );
 
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.background },
+function createStyles(c: AppColors) {
+  return StyleSheet.create({
+  root: { flex: 1 },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   content: { padding: spacing.lg, paddingBottom: spacing.xxl },
-  hint: { fontSize: 13, color: colors.textSecondary, marginBottom: spacing.md, lineHeight: 19 },
-  label: { fontSize: 12, fontWeight: '800', color: colors.textSecondary, marginTop: spacing.md, marginBottom: spacing.sm },
+  hint: { fontSize: 13, color: c.textSecondary, marginBottom: spacing.md, lineHeight: 19 },
+  label: { fontSize: 12, fontWeight: '800', color: c.textSecondary, marginTop: spacing.md, marginBottom: spacing.sm },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
   chip: {
     paddingHorizontal: spacing.sm,
     paddingVertical: 6,
     borderRadius: radius.pill,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: c.border,
   },
-  chipActive: { backgroundColor: colors.ink, borderColor: colors.ink },
-  chipText: { fontSize: 12, fontWeight: '800', color: colors.textSecondary },
-  chipTextActive: { color: colors.brandInverse },
+  chipActive: { backgroundColor: c.ink, borderColor: c.ink },
+  chipText: { fontSize: 12, fontWeight: '800', color: c.textSecondary },
+  chipTextActive: { color: c.brandInverse },
   section: { marginBottom: spacing.sm },
   slotRow: {
     flexDirection: 'row',
@@ -246,37 +262,38 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: c.border,
   },
-  slotName: { fontSize: 14, fontWeight: '700', color: colors.text, flex: 1 },
-  remove: { fontSize: 12, fontWeight: '800', color: colors.accent },
-  empty: { fontSize: 13, color: colors.textMuted },
+  slotName: { fontSize: 14, fontWeight: '700', color: c.text, flex: 1 },
+  remove: { fontSize: 12, fontWeight: '800', color: c.accent },
+  empty: { fontSize: 13, color: c.textMuted },
   poolRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingVertical: spacing.sm,
   },
-  poolName: { fontSize: 14, fontWeight: '600', color: colors.text },
+  poolName: { fontSize: 14, fontWeight: '600', color: c.text },
   poolActions: { flexDirection: 'row', gap: spacing.xs },
   smallBtn: {
     paddingHorizontal: spacing.sm,
     paddingVertical: 4,
     borderRadius: radius.sm,
     borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
+    borderColor: c.border,
+    backgroundColor: c.surface,
   },
-  smallBtnText: { fontSize: 11, fontWeight: '800', color: colors.text },
+  smallBtnText: { fontSize: 11, fontWeight: '800', color: c.text },
   save: {
     marginTop: spacing.xl,
-    backgroundColor: colors.ink,
+    backgroundColor: c.ink,
     padding: spacing.lg,
     borderRadius: radius.md,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: c.border,
   },
   saveDisabled: { opacity: 0.6 },
-  saveText: { color: colors.brandInverse, fontWeight: '900', fontSize: 16 },
-});
+  saveText: { color: c.brandInverse, fontWeight: '900', fontSize: 16 },
+  });
+}

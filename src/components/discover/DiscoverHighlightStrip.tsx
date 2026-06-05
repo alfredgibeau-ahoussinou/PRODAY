@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import type { RecruitmentStats } from '../../services/stats.service';
 import { PressableSpring } from './PressableSpring';
-import { colors, spacing, radius } from '../../theme/designTokens';
+import { spacing, radius } from '../../theme/designTokens';
+import { useDiscoverStyles } from './discoverStyles';
+import type { AppColors } from '../../theme/universeTheme';
 
 export interface DiscoverHighlightItem {
   label: string;
@@ -17,6 +19,8 @@ interface DiscoverHighlightStripProps {
 export const DiscoverHighlightStrip: React.FC<DiscoverHighlightStripProps> = ({
   highlights,
 }) => {
+  const { colors: c } = useDiscoverStyles();
+  const styles = useMemo(() => createStyles(c), [c]);
   const [active, setActive] = React.useState<string | null>(null);
 
   if (highlights.length === 0) return null;
@@ -84,39 +88,41 @@ export function buildDiscoverHighlights(
   ];
 }
 
-const styles = StyleSheet.create({
-  wrap: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-    paddingHorizontal: spacing.lg,
-    marginTop: spacing.md,
-  },
-  chip: {
-    flex: 1,
-    minWidth: '22%',
-    backgroundColor: colors.surface,
-    borderRadius: radius.md,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.xs,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  chipOn: {
-    borderColor: colors.accent,
-    backgroundColor: colors.accentSoft,
-    minWidth: '45%',
-  },
-  value: { fontSize: 16, fontWeight: '900', color: colors.brand },
-  valueOn: { color: colors.accent },
-  label: { fontSize: 9, fontWeight: '800', color: colors.textMuted, marginTop: 2 },
-  labelOn: { color: colors.accent },
-  detail: {
-    fontSize: 10,
-    color: colors.textSecondary,
-    marginTop: spacing.xs,
-    textAlign: 'center',
-    lineHeight: 14,
-  },
-});
+function createStyles(c: AppColors) {
+  return StyleSheet.create({
+    wrap: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: spacing.sm,
+      paddingHorizontal: spacing.lg,
+      marginTop: spacing.md,
+    },
+    chip: {
+      flex: 1,
+      minWidth: '22%',
+      backgroundColor: c.surface,
+      borderRadius: radius.md,
+      paddingVertical: spacing.sm,
+      paddingHorizontal: spacing.xs,
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: c.border,
+    },
+    chipOn: {
+      borderColor: c.brand,
+      backgroundColor: c.brandSoft,
+      minWidth: '45%',
+    },
+    value: { fontSize: 16, fontWeight: '900', color: c.brand },
+    valueOn: { color: c.brand },
+    label: { fontSize: 9, fontWeight: '800', color: c.textMuted, marginTop: 2 },
+    labelOn: { color: c.brand },
+    detail: {
+      fontSize: 10,
+      color: c.textSecondary,
+      marginTop: spacing.xs,
+      textAlign: 'center',
+      lineHeight: 14,
+    },
+  });
+}

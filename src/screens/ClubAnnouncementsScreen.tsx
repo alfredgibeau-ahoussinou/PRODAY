@@ -13,7 +13,8 @@ import type { User } from '../models/User';
 import type { ClubAnnouncement } from '../models/ClubAnnouncement';
 import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { clubAnnouncementsService } from '../services/clubAnnouncements.service';
-import { colors, spacing, radius } from '../theme/designTokens';
+import { spacing, radius } from '../theme/designTokens';
+import { useThemedScreen } from '../hooks/useThemedScreen';
 
 interface ClubAnnouncementsScreenProps {
   profile: User;
@@ -27,12 +28,22 @@ export const ClubAnnouncementsScreen: React.FC<ClubAnnouncementsScreenProps> = (
   onBack,
   canManage = false,
 }) => {
+  const { colors: themeColors, rootStyle } = useThemedScreen();
   const clubId = profile.profile.club_id;
   const [announcements, setAnnouncements] = useState<ClubAnnouncement[]>([]);
   const [loading, setLoading] = useState(true);
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
   const [publishing, setPublishing] = useState(false);
+
+  const inputStyle = [
+    styles.input,
+    {
+      backgroundColor: themeColors.surface,
+      borderColor: themeColors.border,
+      color: themeColors.text,
+    },
+  ];
 
   const load = useCallback(async () => {
     if (!clubId) {
@@ -99,71 +110,89 @@ export const ClubAnnouncementsScreen: React.FC<ClubAnnouncementsScreenProps> = (
 
   if (!clubId) {
     return (
-      <View style={styles.root}>
+      <View style={rootStyle}>
         <ScreenHeader title="Annonces club" onBack={onBack} centered />
-        <Text style={styles.empty}>Liez un club à votre profil pour accéder aux annonces.</Text>
+        <Text style={[styles.empty, { color: themeColors.textMuted }]}>
+          Liez un club à votre profil pour accéder aux annonces.
+        </Text>
       </View>
     );
   }
 
   return (
-    <View style={styles.root}>
+    <View style={rootStyle}>
       <ScreenHeader title="Annonces club" onBack={onBack} centered />
       {canManage ? (
-        <View style={styles.compose}>
+        <View style={[styles.compose, { borderBottomColor: themeColors.border }]}>
           <TextInput
-            style={styles.input}
+            style={inputStyle}
             placeholder="Titre de l'annonce"
-            placeholderTextColor={colors.textMuted}
+            placeholderTextColor={themeColors.textMuted}
             value={title}
             onChangeText={setTitle}
           />
           <TextInput
-            style={[styles.input, styles.textArea]}
+            style={[inputStyle, styles.textArea]}
             placeholder="Message aux membres…"
-            placeholderTextColor={colors.textMuted}
+            placeholderTextColor={themeColors.textMuted}
             value={body}
             onChangeText={setBody}
             multiline
           />
           <TouchableOpacity
-            style={[styles.publishBtn, publishing && styles.publishDisabled]}
+            style={[
+              styles.publishBtn,
+              { backgroundColor: themeColors.brand },
+              publishing && styles.publishDisabled,
+            ]}
             onPress={() => void handlePublish()}
             disabled={publishing}
           >
             {publishing ? (
-              <ActivityIndicator color={colors.brandInverse} />
+              <ActivityIndicator color={themeColors.brandInverse} />
             ) : (
-              <Text style={styles.publishText}>Publier</Text>
+              <Text style={[styles.publishText, { color: themeColors.brandInverse }]}>
+                Publier
+              </Text>
             )}
           </TouchableOpacity>
         </View>
       ) : null}
 
       {loading ? (
-        <ActivityIndicator color={colors.brand} style={styles.loader} />
+        <ActivityIndicator color={themeColors.brand} style={styles.loader} />
       ) : (
         <FlatList
           data={announcements}
           keyExtractor={(a) => a.id}
           contentContainerStyle={styles.list}
           ListEmptyComponent={
-            <Text style={styles.empty}>
+            <Text style={[styles.empty, { color: themeColors.textMuted }]}>
               Aucune annonce pour le moment. Le staff publiera ici les infos club.
             </Text>
           }
           renderItem={({ item }) => (
-            <View style={styles.card}>
+            <View
+              style={[
+                styles.card,
+                {
+                  backgroundColor: themeColors.surface,
+                  borderColor: themeColors.border,
+                },
+              ]}
+            >
               <View style={styles.cardHead}>
-                <Text style={styles.cardTitle}>{item.title}</Text>
+                <Text style={[styles.cardTitle, { color: themeColors.text }]}>{item.title}</Text>
                 {canManage ? (
                   <TouchableOpacity onPress={() => handleDelete(item)}>
-                    <Text style={styles.delete}>Suppr.</Text>
+                    <Text style={[styles.delete, { color: themeColors.error }]}>Suppr.</Text>
                   </TouchableOpacity>
                 ) : null}
               </View>
-              <Text style={styles.cardBody}>{item.body}</Text>
-              <Text style={styles.cardMeta}>
+              <Text style={[styles.cardBody, { color: themeColors.textSecondary }]}>
+                {item.body}
+              </Text>
+              <Text style={[styles.cardMeta, { color: themeColors.textMuted }]}>
                 {item.author_name} · {item.created_at.toLocaleDateString('fr-FR')}
               </Text>
             </View>
@@ -175,47 +204,38 @@ export const ClubAnnouncementsScreen: React.FC<ClubAnnouncementsScreenProps> = (
 };
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.background },
   compose: {
     padding: spacing.lg,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
     gap: spacing.sm,
   },
   input: {
-    backgroundColor: colors.surface,
     borderRadius: radius.md,
     padding: spacing.md,
     borderWidth: 1,
-    borderColor: colors.border,
     fontSize: 15,
-    color: colors.text,
   },
   textArea: { minHeight: 88, textAlignVertical: 'top' },
   publishBtn: {
-    backgroundColor: colors.ink,
     borderRadius: radius.md,
     padding: spacing.md,
     alignItems: 'center',
   },
   publishDisabled: { opacity: 0.6 },
-  publishText: { color: colors.brandInverse, fontWeight: '800' },
+  publishText: { fontWeight: '800' },
   loader: { marginTop: spacing.xl },
   list: { padding: spacing.lg, paddingBottom: spacing.xxl },
   empty: {
     padding: spacing.lg,
     fontSize: 14,
-    color: colors.textMuted,
     lineHeight: 20,
     textAlign: 'center',
   },
   card: {
-    backgroundColor: colors.surface,
     borderRadius: radius.md,
     padding: spacing.md,
     marginBottom: spacing.sm,
     borderWidth: 1,
-    borderColor: colors.border,
   },
   cardHead: {
     flexDirection: 'row',
@@ -223,8 +243,8 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     marginBottom: spacing.xs,
   },
-  cardTitle: { fontSize: 16, fontWeight: '800', color: colors.text, flex: 1 },
-  delete: { fontSize: 12, fontWeight: '700', color: colors.error },
-  cardBody: { fontSize: 14, color: colors.textSecondary, lineHeight: 20 },
-  cardMeta: { fontSize: 11, color: colors.textMuted, marginTop: spacing.sm },
+  cardTitle: { fontSize: 16, fontWeight: '800', flex: 1 },
+  delete: { fontSize: 12, fontWeight: '700' },
+  cardBody: { fontSize: 14, lineHeight: 20 },
+  cardMeta: { fontSize: 11, marginTop: spacing.sm },
 });

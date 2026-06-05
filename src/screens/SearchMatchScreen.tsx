@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -10,7 +10,9 @@ import {
 } from 'react-native';
 import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { SearchBar } from '../components/ui/SearchBar';
-import { colors, spacing, radius, shadows } from '../theme/designTokens';
+import { spacing, radius, shadows } from '../theme/designTokens';
+import { useThemedScreen } from '../hooks/useThemedScreen';
+import type { AppColors } from '../theme/universeTheme';
 import { friendlyMatchesService } from '../services/friendlyMatches.service';
 import type { FriendlyMatch } from '../models/FriendlyMatch';
 import { formatMatchDateTime } from '../utils/matchDisplay';
@@ -34,6 +36,8 @@ export const SearchMatchScreen: React.FC<SearchMatchScreenProps> = ({
   onAccepted,
 }) => {
   const { profile } = useAuth();
+  const { colors: c, rootStyle } = useThemedScreen();
+  const styles = useMemo(() => createStyles(c), [c]);
   const { openChat } = useTabNavigation();
   const { acceptMatch, canAccept } = useMatchActions(profile);
   const [chip, setChip] = useState<(typeof CHIPS)[number]>('Tous');
@@ -101,7 +105,7 @@ export const SearchMatchScreen: React.FC<SearchMatchScreenProps> = ({
   });
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, rootStyle]}>
       <ScreenHeader
         title="Rechercher un match"
         onBack={onBack}
@@ -119,21 +123,21 @@ export const SearchMatchScreen: React.FC<SearchMatchScreenProps> = ({
 
       <ScrollView contentContainerStyle={styles.list}>
         <View style={styles.chips}>
-          {CHIPS.map((c) => (
+          {CHIPS.map((chipId) => (
             <TouchableOpacity
-              key={c}
-              style={[styles.chip, chip === c && styles.chipActive]}
-              onPress={() => setChip(c)}
+              key={chipId}
+              style={[styles.chip, chip === chipId && styles.chipActive]}
+              onPress={() => setChip(chipId)}
             >
-              <Text style={[styles.chipText, chip === c && styles.chipTextActive]}>
-                {c}
+              <Text style={[styles.chipText, chip === chipId && styles.chipTextActive]}>
+                {chipId}
               </Text>
             </TouchableOpacity>
           ))}
         </View>
 
         {loading ? (
-          <ActivityIndicator color={colors.brand} style={styles.loader} />
+          <ActivityIndicator color={c.brand} style={styles.loader} />
         ) : filtered.length === 0 ? (
           <Text style={styles.empty}>Aucun match ouvert pour ces critères.</Text>
         ) : (
@@ -189,16 +193,17 @@ export const SearchMatchScreen: React.FC<SearchMatchScreenProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.background },
+function createStyles(c: AppColors) {
+  return StyleSheet.create({
+  root: { flex: 1 },
   filterBtn: {
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: radius.pill,
     borderWidth: 1,
-    borderColor: colors.brand,
+    borderColor: c.brand,
   },
-  filterText: { color: colors.brand, fontWeight: '600', fontSize: 13 },
+  filterText: { color: c.brand, fontWeight: '600', fontSize: 13 },
   list: { paddingBottom: spacing.xxl },
   chips: {
     flexDirection: 'row',
@@ -211,49 +216,49 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: radius.pill,
-    backgroundColor: colors.surface,
+    backgroundColor: c.surface,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: c.border,
   },
-  chipActive: { backgroundColor: colors.brand, borderColor: colors.brand },
-  chipText: { fontSize: 12, fontWeight: '600', color: colors.textSecondary },
+  chipActive: { backgroundColor: c.brand, borderColor: c.brand },
+  chipText: { fontSize: 12, fontWeight: '600', color: c.textSecondary },
   chipTextActive: { color: '#FFF' },
   loader: { marginVertical: spacing.xl },
   empty: {
     textAlign: 'center',
-    color: colors.textMuted,
+    color: c.textMuted,
     padding: spacing.xl,
     fontSize: 14,
   },
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surface,
+    backgroundColor: c.surface,
     borderRadius: radius.lg,
     padding: spacing.md,
     marginHorizontal: spacing.lg,
     marginBottom: spacing.sm,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: c.border,
     flexWrap: 'wrap',
   },
   logo: {
     width: 48,
     height: 48,
     borderRadius: radius.md,
-    backgroundColor: colors.brandSoft,
+    backgroundColor: c.brandSoft,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: spacing.md,
   },
-  logoLetter: { fontSize: 20, fontWeight: '800', color: colors.brand },
+  logoLetter: { fontSize: 20, fontWeight: '800', color: c.brand },
   info: { flex: 1, minWidth: 120 },
-  name: { fontSize: 16, fontWeight: '700', color: colors.text },
-  meta: { fontSize: 13, color: colors.textSecondary, marginTop: 2 },
-  avail: { fontSize: 12, color: colors.brand, marginTop: 4, fontWeight: '600' },
+  name: { fontSize: 16, fontWeight: '700', color: c.text },
+  meta: { fontSize: 13, color: c.textSecondary, marginTop: 2 },
+  avail: { fontSize: 12, color: c.brand, marginTop: 4, fontWeight: '600' },
   actions: { marginTop: spacing.sm, gap: spacing.sm },
   acceptBtn: {
-    backgroundColor: colors.brand,
+    backgroundColor: c.brand,
     borderRadius: radius.md,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
@@ -264,12 +269,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderWidth: 1,
-    borderColor: colors.brand,
+    borderColor: c.brand,
   },
-  contactText: { color: colors.brand, fontWeight: '700', fontSize: 13 },
+  contactText: { color: c.brand, fontWeight: '700', fontSize: 13 },
   mineLabel: {
-    color: colors.textMuted,
+    color: c.textMuted,
     fontSize: 12,
     fontWeight: '600',
   },
-});
+  });
+}
