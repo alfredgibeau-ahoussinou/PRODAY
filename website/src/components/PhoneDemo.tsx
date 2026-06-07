@@ -94,6 +94,21 @@ const UNIVERSE_SCREEN_OVERRIDES: Record<
       image: "/showcase/woman/woman-match.jpg",
       chips: ["Sam. 15h", "U17 F", "Confirmé"],
     },
+    carpool: {
+      title: "Covoiturage F",
+      body: "Trajets vers matchs et détections — partagez ou réservez une place avec l'équipe.",
+      chips: ["3 places", "Centre F", "Sam. 13h30"],
+    },
+    health: {
+      title: "Santé & bien-être F",
+      body: "Kinés, préparation physique et coach mental — réseau adapté au foot au féminin.",
+      chips: ["Kiné F", "Coach mental", "Lyon"],
+    },
+    messages: {
+      title: "Messagerie F",
+      body: "Échanges entre joueuses et staff vérifié — clubs et entraîneurs certifiés.",
+      chips: ["Coach vérifiée", "Club F Lyon"],
+    },
     profile: {
       title: "Profil joueuse & CV",
       body: "Stats saison, galerie, export PDF — vitrine sportive pour le foot au féminin.",
@@ -113,6 +128,33 @@ const UNIVERSE_SCREEN_OVERRIDES: Record<
       body: "Recrutement vérifié — annonces staff, clubs et mandats agent.",
       image: "/showcase/classic-staff.jpg",
       chips: ["Coach", "National", "Paris"],
+    },
+    matches: {
+      title: "Convocations & matchs",
+      body: "Calendrier staff, convocations effectif et matchs amicaux organisés par le club.",
+      image: "/showcase/classic-match.jpg",
+      chips: ["Sam. 15h", "Effectif", "Confirmé"],
+    },
+    carpool: {
+      title: "Déplacements staff",
+      body: "Organisez les trajets vers détections, stages et matchs — logistique simplifiée.",
+      chips: ["4 places", "Stade", "Ven. 18h"],
+    },
+    health: {
+      title: "Réseau médical Pro",
+      body: "Médecins du sport, kinés et préparateurs — annuaire vérifié pour le staff.",
+      chips: ["Médecin sport", "Kiné", "Paris 75"],
+    },
+    messages: {
+      title: "Messagerie staff",
+      body: "Conversations entre profils vérifiés — clubs, agents et encadrement certifié.",
+      chips: ["Dir. sportif", "Agent vérifié"],
+    },
+    profile: {
+      title: "Profil staff & CV Pro",
+      body: "Parcours, diplômes vérifiés, expériences — export PDF pour candidatures.",
+      image: "/showcase/classic-profile.jpg",
+      chips: ["UEFA B", "5 saisons", "Export PDF"],
     },
   },
 };
@@ -173,7 +215,7 @@ export function PhoneDemo({ fullPage, universe = "homme" }: PhoneDemoProps) {
             <div className="overflow-hidden rounded-[1.75rem] bg-neutral-900">
               <AnimatePresence mode="wait">
                 <motion.div
-                  key={active}
+                  key={`${universe}-${active}`}
                   initial={{ opacity: 0, x: 24 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -24 }}
@@ -215,47 +257,49 @@ export function PhoneDemo({ fullPage, universe = "homme" }: PhoneDemoProps) {
               </AnimatePresence>
             </div>
 
-            <div className="mt-3 flex justify-around rounded-2xl bg-neutral-800/80 p-2">
-              {tabs.map((tab) => {
-                const Icon = ICONS[tab.icon as keyof typeof ICONS];
-                const isActive = active === tab.id;
-                return (
-                  <button
-                    key={tab.id}
-                    type="button"
-                    onClick={() => setActive(tab.id)}
-                    className="relative flex flex-col items-center gap-0.5 px-2 py-1"
-                    aria-label={tab.label}
-                    aria-pressed={isActive}
-                  >
-                    {isActive && (
-                      <motion.div
-                        layoutId="tab-pill"
-                        className={`absolute inset-0 rounded-xl ${theme.demoTabActive}`}
-                        transition={{
-                          type: "spring",
-                          stiffness: 400,
-                          damping: 30,
-                        }}
-                      />
-                    )}
-                    <Icon
-                      size={20}
-                      className={isActive ? "text-white" : "text-neutral-500"}
-                    />
-                    <span
-                      className={`text-[9px] ${isActive ? "text-white" : "text-neutral-500"}`}
+            <div className="mt-3 overflow-x-auto rounded-2xl bg-neutral-800/80 p-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              <div className="flex min-w-max justify-center gap-0.5">
+                {tabs.map((tab) => {
+                  const Icon = ICONS[tab.icon as keyof typeof ICONS];
+                  const isActive = active === tab.id;
+                  return (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      onClick={() => setActive(tab.id)}
+                      className="relative flex min-w-[2.5rem] flex-col items-center gap-0.5 px-1.5 py-1"
+                      aria-label={tab.label}
+                      aria-pressed={isActive}
                     >
-                      {tab.label}
-                    </span>
-                  </button>
-                );
-              })}
+                      {isActive && (
+                        <motion.div
+                          layoutId={`tab-pill-${universe}`}
+                          className={`absolute inset-0 rounded-xl ${theme.demoTabActive}`}
+                          transition={{
+                            type: "spring",
+                            stiffness: 400,
+                            damping: 30,
+                          }}
+                        />
+                      )}
+                      <Icon
+                        size={18}
+                        className={`relative z-10 ${isActive ? "text-white" : "text-neutral-500"}`}
+                      />
+                      <span
+                        className={`relative z-10 max-w-[3.25rem] truncate text-[8px] leading-tight ${isActive ? "text-white" : "text-neutral-500"}`}
+                      >
+                        {tab.label}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </motion.div>
 
-          <div className="max-w-md space-y-6">
-            {TABS.map((tab, i) => (
+          <div className="max-w-md space-y-4">
+            {tabs.map((tab, i) => (
               <motion.button
                 key={tab.id}
                 type="button"
@@ -263,17 +307,19 @@ export function PhoneDemo({ fullPage, universe = "homme" }: PhoneDemoProps) {
                 initial={{ opacity: 0, x: 20 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: i * 0.08 }}
+                transition={{ delay: i * 0.06 }}
                 className={`block w-full rounded-2xl border p-4 text-left transition ${
                   active === tab.id
                     ? `border-white/30 ${theme.demoTabActive}`
                     : "border-transparent hover:bg-white/5"
                 }`}
               >
-                <span className="text-xs text-neutral-500">0{i + 1}</span>
+                <span className="text-xs text-neutral-500">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
                 <span className="ml-2 font-semibold">{tab.label}</span>
                 <p className="mt-1 text-sm text-neutral-400">
-                  {screenForTab(tab.id, universe, mercatoLabel).body.slice(0, 60)}…
+                  {screenForTab(tab.id, universe, mercatoLabel).body.slice(0, 72)}…
                 </p>
               </motion.button>
             ))}
