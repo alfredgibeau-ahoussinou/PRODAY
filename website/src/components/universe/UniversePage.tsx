@@ -18,7 +18,7 @@ import {
   type UniversePageId,
 } from "@/lib/content";
 import { formatPriceEur } from "@/lib/pricing";
-import { ROUTES } from "@/lib/routes";
+import { demoUrlForUniverse, ROUTES } from "@/lib/routes";
 
 type UniversePageProps = {
   universe: UniversePageId;
@@ -243,6 +243,12 @@ export function UniversePage({ universe }: UniversePageProps) {
               className={`inline-block rounded-full px-8 py-3.5 text-sm font-semibold ${theme.ctaBtn}`}
             >
               {config.cta.beta}
+            </Link>
+            <Link
+              href={demoUrlForUniverse(universe)}
+              className={`inline-block rounded-full border px-8 py-3.5 text-sm font-semibold ${theme.ctaBtnOutline}`}
+            >
+              Voir la démo
             </Link>
             <Link
               href={`${ROUTES.pricing}?u=${universe}`}

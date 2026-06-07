@@ -1,3 +1,5 @@
+import type { ProductLineWeb } from "./content";
+
 export const ROUTES = {
   home: "/",
   features: "/fonctionnalites",
@@ -156,3 +158,8 @@ export const EXPLORE_CARDS = [
     tag: "Aide",
   },
 ] as const;
+
+/** URL de la démo interactive pour un univers (homme / woman / pro). */
+export function demoUrlForUniverse(line: ProductLineWeb): string {
+  return `${ROUTES.demo}?u=${line}`;
+}
