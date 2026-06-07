@@ -1,57 +1,79 @@
 # Site vitrine ProDay (Next.js)
 
-Site multi-pages interactif — **16 pages** + composants démo.
+Site multi-pages interactif — **20 routes** publiques, démos par univers (**Man**, **Woman**, **Pro**) et formulaire bêta avec email de bienvenue.
 
 ## Pages
 
 | Route | Contenu |
 |-------|---------|
-| `/` | Accueil enrichi — témoignages, quiz, FAQ, téléchargement |
-| `/fonctionnalites` | 8 piliers + modules |
-| `/demo` | Démo 5 onglets |
-| `/pulse` | Simulateur Pulse |
+| `/` | Accueil — témoignages, quiz, FAQ, exploration |
+| `/homme` | Univers **Man** — modules, parcours, tarifs, Pulse |
+| `/woman` | Univers **Woman** — foot féminin |
+| `/pro` | Univers **Pro** — staff, recrutement vérifié |
+| `/fonctionnalites` | 8 piliers produit + modules |
+| `/demo` | Démo interactive **7 onglets** (`?u=homme\|woman\|pro`) |
+| `/pulse` | Simulateur Pulse (thème par univers) |
 | `/live-stats` | Saisie match en direct |
-| `/cv` | Aperçu CV PDF |
+| `/cv` | Aperçu CV PDF (`?u=` pour le thème) |
 | `/parcours` | Parcours par rôle |
 | `/quiz` | Quiz profil (3 questions) |
 | `/comparatif` | ProDay vs WhatsApp vs tableur |
 | `/ecosysteme` | Carte interactive des acteurs |
 | `/confiance` | Vérification diplômes |
 | `/roadmap` | Livré / en cours / à venir |
-| `/tarifs` | Plans Gratuit & Pro |
-| `/faq` | 8 questions |
-| `/woman` | Univers foot féminin |
-| `/beta` | Waitlist |
+| `/tarifs` | Plans Gratuit & Pro (`?u=` pour filtrer par univers) |
+| `/shop` | ProDay Shop |
+| `/faq` | Questions fréquentes |
+| `/beta` | Waitlist + email de bienvenue |
 | `/a-propos` | Vision produit |
 
-## Lancer
+### Démo interactive (`/demo`)
+
+Mock téléphone avec les **7 onglets** de l’app : Accueil, Mercato, Matchs, Covoiturage, Santé, Messages, Profil.
+
+- Sélecteur **Man / Woman / Pro** en haut de page
+- Contenu et visuels adaptés par univers (`?u=homme`, `?u=woman`, `?u=pro`)
+- Lien **« Voir la démo »** depuis chaque page univers
+
+## Lancer en local
 
 ```bash
+# Depuis la racine du monorepo
 npm run website:dev
+
+# Ou depuis ce dossier
+npm install
+npm run dev
 ```
+
+→ [http://localhost:3000](http://localhost:3000)
+
+Copier `website/.env.example` vers `website/.env.local` pour la bêta (EmailJS).
 
 ## Build
 
 ```bash
-npm run website:build
+npm run website:build   # racine
+# ou
+npm run build           # dans website/
 ```
 
-## Déploiement Vercel
+## Déploiement
 
-**Branche Git :** `main` — **Root Directory :** `website`
+**Branche Git :** `main` — **Root directory :** `website`
 
-### CI (recommandé)
+### Vercel (CI recommandé)
 
 Un push sur `main` qui modifie `website/**` déclenche `.github/workflows/deploy-website.yml` (secrets `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`).
 
-### Dashboard
+**Dashboard :**
 
-1. [vercel.com/new](https://vercel.com/new) → importer `alfredgibeau-ahoussinou/PRODAY`
+1. [vercel.com/new](https://vercel.com/new) → importer le dépôt
 2. **Production Branch** : `main`
 3. **Root Directory** : `website`
 4. Deploy
 
-### CLI
+**CLI :**
 
 ```bash
 cd website
@@ -59,18 +81,26 @@ npx vercel login
 npx vercel --prod
 ```
 
+### Netlify (alternative)
+
+Le fichier `netlify.toml` configure le plugin Next.js. Dans l’UI Netlify : **Base directory** = `website`.
+
 ## Bêta — email de bienvenue (EmailJS)
 
 Le formulaire `/beta` appelle `POST /api/beta` et envoie un **email de bienvenue** via [EmailJS](https://www.emailjs.com/).
 
-### Vercel
+Variables d’environnement (Vercel / Netlify / `.env.local`) :
 
 ```env
 EMAILJS_SERVICE_ID=service_xxx
 EMAILJS_TEMPLATE_ID=template_xxx
 EMAILJS_PUBLIC_KEY=xxx
 EMAILJS_PRIVATE_KEY=xxx
-NEXT_PUBLIC_SITE_URL=https://proday-xak9.vercel.app
+NEXT_PUBLIC_SITE_URL=https://votre-domaine.com
 ```
 
-Voir `docs/BETA_WAITLIST.md` (template EmailJS + activation API non-navigateur).
+Voir `docs/BETA_WAITLIST.md` pour le template EmailJS et l’activation API non-navigateur.
+
+## Thématisation par univers
+
+Couleurs, CTA et contenus démo/tarifs/CV sont centralisés dans `src/components/universe/universeTheme.ts` et `src/lib/content.ts` (`BRANDS_BY_LINE`, `UNIVERSE_PAGE_CONFIG`).

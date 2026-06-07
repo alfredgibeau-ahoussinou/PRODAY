@@ -32,29 +32,29 @@
 
 ## Site vitrine (Next.js)
 
-Site multi-pages interactif (**16 pages**) : Live Stats, CV, quiz, tarifs, FAQ, comparatif, écosystème, roadmap, Woman, beta, etc.
+Site multi-pages interactif (**20 routes**) : univers **Man** (`/homme`), **Woman** (`/woman`), **Pro** (`/pro`), démo 7 onglets, Live Stats, CV, quiz, tarifs, shop, FAQ, beta, etc.
 
 ```bash
 npm run website:dev
 ```
 
-→ [http://localhost:3000](http://localhost:3000) — voir [website/README.md](website/README.md) pour la liste des routes.
+→ [http://localhost:3000](http://localhost:3000) — liste complète dans [website/README.md](website/README.md).
+
+Démo navigateur (sans installer l’app) : [localhost:3000/demo](http://localhost:3000/demo) — sélecteur Man / Woman / Pro, 7 onglets comme sur mobile.
 
 ---
 
-## Lancer la démo (voir l’app)
+## Lancer l’app mobile (Expo)
 
 ```bash
-cd /Users/gibeau--ahoussinou/PRODAY
 npm install
-npm run web
+npm run web          # navigateur — Expo Web
+npm start            # menu Expo (QR code avec Expo Go)
+npm run ios          # simulateur iOS
+npm run android      # émulateur Android
 ```
 
-Le navigateur s’ouvre avec ProDay (5 onglets : Accueil, Recrutement, Matchs, Messages, Profil).
-
-Autres commandes :
-- `npm start` — menu Expo (QR code téléphone avec app Expo Go)
-- `npm run ios` / `npm run android` — simulateur
+Navigation principale : Accueil, Mercato, Matchs, Covoiturage, Santé, Feed, Messages, Profil (+ Shop). Modules secondaires : Arena, Sponsors.
 
 ---
 
@@ -79,15 +79,16 @@ Autres commandes :
 
 ```
 PRODAY/
-├── website/                 # Site vitrine Next.js (Vercel, root directory)
+├── website/                 # Site vitrine Next.js (Vercel / Netlify, root = website)
 ├── docs/                    # Architecture, brief, Figma, PDF
 ├── src/
+│   ├── theme/               # Thème dynamique Homme / Woman / Pro
 │   ├── models/              # User, Club, Tournament, …
 │   ├── services/            # auth, profile, tournament, notification
-│   ├── screens/             # 4 onglets + Auth
-│   ├── components/          # ProfileCard, VerificationBadge, …
-│   ├── navigation/          # MainTabs (4 icônes)
-│   └── utils/               # géofencing, PDF CV
+│   ├── screens/             # Écrans par onglet (Mercato, Matchs, Santé…)
+│   ├── components/          # UI, profil, discover, subscription…
+│   ├── navigation/          # MainTabs + modules secondaires
+│   └── utils/               # géofencing, PDF CV, pricing
 ├── firebase/                # firestore.rules
 ├── functions/               # Cloud Functions TypeScript
 └── assets/diagrams/         # Mermaid
