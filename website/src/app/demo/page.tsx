@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
-import { PhoneDemo } from "@/components/PhoneDemo";
+import { DemoPageContent } from "@/components/demo/DemoPageContent";
 import { PageHeader } from "@/components/layout/PageHeader";
 import type { ProductLineWeb } from "@/lib/content";
 
 export const metadata: Metadata = {
   title: "Démo interactive",
   description:
-    "Testez la navigation ProDay : 5 onglets, transitions fluides comme sur mobile.",
+    "Testez la navigation ProDay : 7 onglets (Accueil, Mercato, Matchs, Covoiturage, Santé, Messages, Profil) avec transitions fluides.",
 };
 
 function parseUniverseParam(value: string | undefined): ProductLineWeb {
@@ -27,7 +27,7 @@ export default async function DemoPage({
       <PageHeader
         kicker="DÉMO"
         title="Naviguez comme dans l'app"
-        description="Cliquez sur les onglets Accueil, Mercato, Matchs, Messages et Profil — l'écran change en temps réel."
+        description="Parcourez les 7 onglets — Accueil, Mercato, Matchs, Covoiturage, Santé, Messages et Profil — avec des transitions en temps réel."
         image={
           universe === "woman"
             ? "/showcase/woman/woman-discover-hero.jpg"
@@ -38,7 +38,7 @@ export default async function DemoPage({
         dark={universe === "homme"}
         accent={universe === "woman" ? "woman" : universe === "pro" ? "pro" : "default"}
       />
-      <PhoneDemo fullPage universe={universe} />
+      <DemoPageContent universe={universe} />
     </>
   );
 }
