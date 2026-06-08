@@ -81,9 +81,30 @@ npx vercel login
 npx vercel --prod
 ```
 
-### Netlify (alternative)
+### Netlify
 
-Le fichier `netlify.toml` configure le plugin Next.js. Dans l’UI Netlify : **Base directory** = `website`.
+Configuration : `website/netlify.toml` (canonique) + `netlify.toml` à la racine (`base = "website"` pour le monorepo).
+
+**Réglages obligatoires dans l’UI Netlify** (Site configuration → Build & deploy) :
+
+| Champ | Valeur |
+|-------|--------|
+| Base directory | `website` |
+| Build command | *(laisser vide — défini dans `netlify.toml`)* `npm run build` |
+| Publish directory | *(laisser vide ou effacer `dist`)* — le plugin OpenNext gère la sortie |
+
+Ne pas publier `dist` ni `.next` manuellement : Next.js a besoin de la **fonction serveur** générée par `@netlify/plugin-nextjs`.
+
+**Variables d’environnement** : mêmes clés EmailJS que Vercel (voir ci-dessus) + `NEXT_PUBLIC_SITE_URL=https://proday-site.netlify.app`.
+
+**Déploiement manuel (CLI)** depuis `website/` :
+
+```bash
+npm run build          # via netlify build
+netlify deploy --prod --no-build \
+  --dir .netlify/static \
+  --functions .netlify/functions-internal
+```
 
 ## Bêta — email de bienvenue (EmailJS)
 
