@@ -1,5 +1,6 @@
-# ProDay — site vitrine Next.js (App Router + /api/beta)
-# Dans Netlify UI : Base directory = website (si repo monorepo)
+# ProDay — Next.js sur Netlify (OpenNext)
+# UI Netlify : Base directory = website
+# publish = ".next" écrase le répertoire « dist » de l’UI.
 
 [build]
   command = "npm run build"
@@ -7,6 +8,7 @@
 
 [build.environment]
   NODE_VERSION = "20"
+  NPM_FLAGS = "--include=dev"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"

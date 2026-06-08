@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "netlify:deploy": "bash scripts/netlify-deploy.sh"
   },
   "dependencies": {
     "@emailjs/nodejs": "^5.0.2",
@@ -15,10 +16,10 @@
     "lucide-react": "^1.17.0",
     "next": "16.2.7",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "@netlify/plugin-nextjs": "^5.15.11"
   },
   "devDependencies": {
-    "@netlify/plugin-nextjs": "^5.9.3",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",

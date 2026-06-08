@@ -1,0 +1,3 @@
+# Monorepo — le site vitrine est dans website/ (voir website/netlify.toml)
+[build]
+  base = "website"
