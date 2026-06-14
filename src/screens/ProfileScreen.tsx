@@ -1,37 +1,18 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  StyleSheet,
-  Alert,
-  ActivityIndicator,
-  Linking,
-} from 'react-native';
+import { Alert } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
 import type { User } from '../models/User';
 import { profileService } from '../services/profile.service';
 import { pickProfileImage } from '../utils/pickMedia';
-import { ProfileGalleryEditor } from '../components/profile/ProfileGalleryEditor';
-import { ProfileCompletionBar } from '../components/ProfileCompletionBar';
-import { Icon } from '../components/ui/Icon';
 import { EditProfileScreen } from './EditProfileScreen';
 import { VerificationFlowScreen } from './VerificationFlowScreen';
 import { PlayerVerificationScreen } from './PlayerVerificationScreen';
-import { AppSpacePill } from '../components/appSpace/AppSpaceBanner';
 import { useAppSpace } from '../context/AppSpaceContext';
-import { APP_SPACE_LABELS } from '../models/AppSpace';
-import { PlayerCvEditorScreen } from './PlayerCvEditorScreen';
-import { PlayerCvLivePreview } from '../components/profile/PlayerCvLivePreview';
-import { ProfileHubHeader } from '../components/profile/ProfileHubHeader';
-import { ProfileMenuSection, type ProfileMenuItem } from '../components/profile/ProfileMenuSection';
-import { HubSection } from '../components/ui/HubSection';
-import { getUniverseIdentity } from '../content/brandExperience';
 import { getSelectableAppSpaces } from '../utils/appSpaceProductLine';
 import { playerVerificationProgress } from '../models/User';
 import { VerificationSuccessScreen } from './VerificationSuccessScreen';
 import { ParentalControlScreen } from './ParentalControlScreen';
+import { GuardianPortalScreen } from './GuardianPortalScreen';
 import { CreateClubScreen } from './CreateClubScreen';
 import { JoinClubScreen } from './JoinClubScreen';
 import { MyPaymentsScreen } from './MyPaymentsScreen';
@@ -40,22 +21,24 @@ import { MyApplicationsScreen } from './MyApplicationsScreen';
 import { PlayerProfileScreen } from './PlayerProfileScreen';
 import { LegalDocumentScreen } from './LegalDocumentScreen';
 import type { LegalDocumentId } from '../content/legalDocuments';
-import { OrganizerReminderCard } from '../components/OrganizerReminderCard';
+import { PlayerCvEditorScreen } from './PlayerCvEditorScreen';
 import { useOrganizerReminders } from '../hooks/useOrganizerReminders';
 import { teamEventsService } from '../services/teamEvents.service';
-import { TAB_BAR_CONTENT_INSET } from '../components/navigation/BottomTabBar';
 import { useTabNavigation } from '../context/TabNavigationContext';
 import { useTabNavigationActions } from '../hooks/useTabNavigationActions';
 import { computeProdayPulse, getPulseBreakdown } from '../utils/prodayPulse';
-import { ProfilePulseCard } from '../components/profile/ProfilePulseCard';
-import { ProfileSubscriptionCard } from '../components/profile/ProfileSubscriptionCard';
+import { ProfileHomeScreen } from '../components/profile/ProfileHomeScreen';
+import type { ProfileQuickAction } from '../components/profile/ProfileQuickGrid';
+import { ProDayScreenCanvas } from '../components/ui/ProDayScreenCanvas';
 import { isMinorUser } from '../utils/minor';
 import { shouldShowPlayerVerificationReminder } from '../utils/onboardingGate';
 import { verificationDocumentTypeForRole } from '../models/User';
-import { spacing, radius } from '../theme/designTokens';
-import type { AppColors } from '../theme/universeTheme';
 import { useAppTheme } from '../context/ProductLineContext';
+import { isMedicalPractitionerRole } from '../content/medicalExperience';
 import { useSubscriptionOptional } from '../context/SubscriptionContext';
+import { useProDayBrain } from '../hooks/useProDayBrain';
+import { useSectionIntelligence } from '../hooks/useSectionIntelligence';
+import { maybeRecordProfileCompletion } from '../utils/recordV3Action';
 
 interface ProfileScreenProps {
   profile: User;
@@ -74,6 +57,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
   const { appSpace, setAppSpace } = useAppSpace();
   const [showVerificationSuccess, setShowVerificationSuccess] = useState(false);
   const [showParental, setShowParental] = useState(false);
+  const [showGuardianPortal, setShowGuardianPortal] = useState(false);
   const [showCreateClub, setShowCreateClub] = useState(false);
   const [showJoinClub, setShowJoinClub] = useState(false);
   const [showPayments, setShowPayments] = useState(false);
@@ -85,15 +69,19 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
   const [remindingId, setRemindingId] = useState<string | null>(null);
   const { pendingProfileView, clearPendingProfile } = useTabNavigation();
   const nav = useTabNavigationActions();
-  const { productLine, colors: themeColors } = useAppTheme();
-  const styles = useMemo(() => createProfileStyles(themeColors), [themeColors]);
-  const brand = getUniverseIdentity(productLine);
+  const { productLine } = useAppTheme();
   const selectableAppSpaces = getSelectableAppSpaces(productLine);
   const subscriptionCtx = useSubscriptionOptional();
   const subscriptionTier = subscriptionCtx?.subscription?.tier ?? 'free';
+  const brain = useProDayBrain(profile, productLine);
+  const intelligence = useSectionIntelligence('profil', profile, productLine);
   const [showPublicProfile, setShowPublicProfile] = useState(false);
   const [showCvEditor, setShowCvEditor] = useState(false);
   const [legalDocument, setLegalDocument] = useState<LegalDocumentId | null>(null);
+
+  useEffect(() => {
+    maybeRecordProfileCompletion(profile);
+  }, [profile]);
 
   useEffect(() => {
     if (pendingProfileView === 'applications') {
@@ -231,6 +219,100 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
     }
   };
 
+  const pulse = useMemo(() => computeProdayPulse(profile), [profile]);
+  const pulseBreakdown = useMemo(() => getPulseBreakdown(profile), [profile]);
+  const quickActions = useMemo((): ProfileQuickAction[] => {
+    const actions: ProfileQuickAction[] = [
+      { id: 'edit', label: 'Éditer', icon: 'person', onPress: () => setShowEdit(true) },
+    ];
+
+    if (profile.role === 'player') {
+      actions.push({
+        id: 'cv',
+        label: 'Mon CV',
+        icon: 'document',
+        onPress: () => setShowCvEditor(true),
+      });
+    }
+
+    if (isMedicalPractitionerRole(profile.role)) {
+      actions.push({
+        id: 'agenda',
+        label: 'Agenda',
+        icon: 'calendar',
+        onPress: () => nav.setActiveTab('matchs'),
+      });
+    } else if (
+      profile.role === 'coach' ||
+      profile.role === 'club' ||
+      profile.role === 'organizer' ||
+      profile.role === 'agent'
+    ) {
+      actions.push(
+        {
+          id: 'matchs',
+          label: 'Matchs',
+          icon: 'handshake',
+          onPress: () => nav.setActiveTab('matchs'),
+        },
+        {
+          id: 'mercato',
+          label: 'Mercato',
+          icon: 'briefcase',
+          onPress: () => nav.setActiveTab('recrutement'),
+        }
+      );
+    }
+
+    actions.push({
+      id: 'messages',
+      label: 'Messages',
+      icon: 'chat',
+      onPress: () => nav.setActiveTab('messages'),
+    });
+
+    if (!isMedicalPractitionerRole(profile.role) && productLine !== 'sante') {
+      actions.push(
+        {
+          id: 'carpool',
+          label: 'Covoiturage',
+          icon: 'car',
+          onPress: () => nav.openCarpool({ chapter: 'reserver' }),
+        },
+        {
+          id: 'shop',
+          label: 'Shop',
+          icon: 'bag',
+          onPress: () => nav.openShop(),
+        }
+      );
+    }
+
+    if (profile.role === 'player') {
+      actions.push({
+        id: 'applications',
+        label: 'Candidatures',
+        icon: 'briefcase',
+        onPress: () => setShowApplications(true),
+      });
+    }
+
+    return actions;
+  }, [profile.role, productLine, nav]);
+
+  const handleOrganizerPress = () => {
+    const firstId = reminderItems[0]?.event.id;
+    if (firstId) nav.openTeamEvent(firstId);
+    else nav.openMatchs();
+  };
+
+  const handleSignOutPress = () => {
+    Alert.alert('Déconnexion', 'Voulez-vous quitter votre session ?', [
+      { text: 'Annuler', style: 'cancel' },
+      { text: 'Déconnexion', style: 'destructive', onPress: () => void onSignOut() },
+    ]);
+  };
+
   if (showEdit) {
     return (
       <EditProfileScreen
@@ -335,616 +417,63 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
     );
   }
 
-  const pulse = computeProdayPulse(profile);
-  const pulseBreakdown = getPulseBreakdown(profile);
-
-  const accountMenu: ProfileMenuItem[] = [
-    {
-      icon: 'person',
-      title: 'Modifier le profil',
-      subtitle: 'Identité, fiche sportive, contacts',
-      onPress: () => setShowEdit(true),
-    },
-  ];
-
-  if (profile.role === 'player') {
-    accountMenu.unshift({
-      icon: 'document',
-      title: brand.cvLabel,
-      subtitle: 'Compléter et publier en ligne',
-      onPress: () => setShowCvEditor(true),
-      accent: true,
-    });
-    accountMenu.push({
-      icon: 'eye',
-      title: 'Profil public',
-      subtitle: 'Aperçu visible par les clubs',
-      onPress: () => setShowPublicProfile(true),
-    });
-  }
-
-  const mercatoMenu: ProfileMenuItem[] = [];
-  if (profile.role === 'player') {
-    mercatoMenu.push({
-      icon: 'briefcase',
-      title: 'Mes candidatures',
-      subtitle: 'Suivi des annonces Mercato',
-      onPress: () => setShowApplications(true),
-    });
-  }
-
   return (
-    <ScrollView
-      style={[styles.container, { backgroundColor: themeColors.background }]}
-      contentContainerStyle={styles.content}
-      showsVerticalScrollIndicator={false}
-    >
-      <ProfileHubHeader
+    <ProDayScreenCanvas flat>
+      <ProfileHomeScreen
         profile={profile}
         productLine={productLine}
-        colors={themeColors}
+        pulse={pulse}
+        pulseBreakdown={pulseBreakdown}
         uploadingAvatar={uploadingAvatar}
+        uploadingGallery={uploadingGallery}
+        gallery={gallery}
+        videos={videos}
+        appSpace={appSpace}
+        selectableAppSpaces={selectableAppSpaces}
+        subscriptionTier={subscriptionTier}
+        subscriptionUsage={subscriptionCtx?.usage ?? undefined}
+        onSubscriptionPress={
+          subscriptionCtx ? () => subscriptionCtx.openPlansScreen() : undefined
+        }
+        isOrganizer={isOrganizer}
+        reminderItems={reminderItems}
+        loadingReminders={loadingReminders}
+        remindingId={remindingId}
+        onOrganizerPress={handleOrganizerPress}
+        onRemind={handleQuickRemind}
+        showPlayerVerificationReminder={showPlayerVerificationReminder}
+        playerVerifyLabel={playerVerifyProgress?.label}
+        pendingVerify={pendingVerify}
+        docLoading={docLoading}
+        canManageClub={canManageClub}
+        verifiedStaff={verifiedStaff}
+        isPlayerMinor={isPlayerMinor}
+        hasStats={Boolean(hasStats)}
+        stats={stats ?? undefined}
         onAvatarPress={handleAvatarPick}
+        onEdit={() => setShowEdit(true)}
+        onCvEditor={() => setShowCvEditor(true)}
+        onPublicProfile={() => setShowPublicProfile(true)}
+        onApplications={() => setShowApplications(true)}
+        onPlayerVerification={() => setShowPlayerVerification(true)}
+        onPickDocument={handlePickDocument}
+        onVerificationFlow={() => setShowVerificationFlow(true)}
+        onAnnouncements={() => setShowAnnouncements(true)}
+        onPayments={() => setShowPayments(true)}
+        onCreateClub={() => setShowCreateClub(true)}
+        onJoinClub={() => setShowJoinClub(true)}
+        onVerificationSuccess={() => setShowVerificationSuccess(true)}
+        onParental={() => setShowParental(true)}
+        onGuardianPortal={() => setShowGuardianPortal(true)}
+        onLegal={(id) => setLegalDocument(id)}
+        onSignOut={handleSignOutPress}
+        onSetAppSpace={(space) => void setAppSpace(space)}
+        onGalleryAdd={handleGalleryAdd}
+        onGalleryRemove={handleGalleryRemove}
+        quickActions={quickActions}
+        intelligence={intelligence}
+        progression={brain.progression}
       />
-
-      {profile.role === 'player' ? (
-        <HubSection
-          title={brand.cvLabel}
-          subtitle="Votre vitrine sportive — remplissez-la ici, sans PDF."
-          colors={themeColors}
-        >
-          <PlayerCvLivePreview user={profile} colors={themeColors} />
-          <TouchableOpacity
-            style={[styles.cvPrimaryBtn, { backgroundColor: themeColors.ink }]}
-            onPress={() => setShowCvEditor(true)}
-            activeOpacity={0.9}
-          >
-            <Icon name="document" size={20} color={themeColors.brandInverse} />
-            <Text style={[styles.cvPrimaryText, { color: themeColors.brandInverse }]}>
-              Compléter mon CV
-            </Text>
-          </TouchableOpacity>
-        </HubSection>
-      ) : null}
-
-      <ProfilePulseCard pulse={pulse} breakdown={pulseBreakdown} />
-      <ProfileCompletionBar user={profile} />
-
-      {subscriptionCtx ? (
-        <ProfileSubscriptionCard
-          profile={profile}
-          tier={subscriptionTier}
-          usage={subscriptionCtx.usage}
-          onPress={() => subscriptionCtx.openPlansScreen()}
-        />
-      ) : null}
-
-      <ProfileMenuSection title="Mon compte" items={accountMenu} colors={themeColors} />
-
-      {profile.role === 'player' && (
-        <>
-          {profile.role === 'player' && hasStats && stats ? (
-            <View style={styles.statsRow}>
-              <StatChip value={String(stats.matches)} label="Matchs" colors={themeColors} styles={styles} />
-              <StatChip value={String(stats.goals)} label="Buts" colors={themeColors} styles={styles} />
-              <StatChip value={String(stats.assists)} label="Passes d." colors={themeColors} styles={styles} />
-            </View>
-          ) : null}
-
-          <HubSection
-            title="Galerie & médias"
-            colors={themeColors}
-            compact
-          >
-            <ProfileGalleryEditor
-              urls={gallery}
-              productLine={productLine}
-              uploading={uploadingGallery}
-              onAdd={handleGalleryAdd}
-              onRemove={handleGalleryRemove}
-            />
-            {videos.length > 0 ? (
-              videos.map((url) => (
-                <TouchableOpacity
-                  key={url}
-                  style={[styles.videoRow, { borderColor: themeColors.border }]}
-                  onPress={() => Linking.openURL(url).catch(() => {})}
-                >
-                  <Icon name="time" size={18} color={themeColors.accent} />
-                  <Text style={[styles.videoLink, { color: themeColors.textSecondary }]} numberOfLines={1}>
-                    {url}
-                  </Text>
-                </TouchableOpacity>
-              ))
-            ) : (
-              <Text style={[styles.hintText, { color: themeColors.textMuted }]}>
-                Ajoutez des liens vidéo dans « Modifier le profil ».
-              </Text>
-            )}
-          </HubSection>
-        </>
-      )}
-
-      {profile.role === 'player' && (
-        <HubSection
-          title={
-            productLine === 'woman'
-              ? 'Mercato F (optionnel)'
-              : productLine === 'pro'
-                ? 'Mercato Pro'
-                : 'Mercato (optionnel)'
-          }
-          subtitle="Postuler aux annonces — votre CV reste votre priorité."
-          colors={themeColors}
-          compact
-        >
-          {mercatoMenu.map((item) => (
-            <TouchableOpacity
-              key={item.title}
-              style={[styles.mercatoRow, { borderColor: themeColors.border }]}
-              onPress={item.onPress}
-              activeOpacity={0.85}
-            >
-              <Icon name={item.icon} size={20} color={themeColors.accent} />
-              <View style={styles.mercatoBody}>
-                <Text style={[styles.mercatoTitle, { color: themeColors.text }]}>{item.title}</Text>
-                {item.subtitle ? (
-                  <Text style={[styles.mercatoSub, { color: themeColors.textSecondary }]}>
-                    {item.subtitle}
-                  </Text>
-                ) : null}
-              </View>
-              <Icon name="chevron-forward" size={18} color={themeColors.textMuted} />
-            </TouchableOpacity>
-          ))}
-          <View style={styles.spacePills}>
-            {selectableAppSpaces.map((space) => (
-              <AppSpacePill
-                key={space}
-                space={space}
-                active={appSpace === space}
-                onPress={() => void setAppSpace(space)}
-              />
-            ))}
-          </View>
-          <Text style={[styles.spaceHint, { color: themeColors.textSecondary }]}>
-            {APP_SPACE_LABELS[appSpace]} — filtre des annonces.
-          </Text>
-        </HubSection>
-      )}
-
-      {showPlayerVerificationReminder && playerVerifyProgress && (
-        <View style={[styles.card, styles.warnCard, { borderColor: themeColors.border }]}>
-          <Text style={[styles.warnTitle, { color: themeColors.text }]}>
-            Vérification ({playerVerifyProgress.label})
-          </Text>
-          <Text style={[styles.warnSub, { color: themeColors.textSecondary }]}>
-            Pièce d’identité pour la messagerie. Licence club pour le badge complet.
-          </Text>
-          <TouchableOpacity
-            style={[styles.secondaryBtn, { borderColor: themeColors.border }]}
-            onPress={() => setShowPlayerVerification(true)}
-          >
-            <Text style={[styles.secondaryBtnText, { color: themeColors.text }]}>Compléter</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-
-      {isOrganizer && (
-        <OrganizerReminderCard
-          items={reminderItems}
-          loading={loadingReminders}
-          onPress={() => {
-            const firstId = reminderItems[0]?.event.id;
-            if (firstId) nav.openTeamEvent(firstId);
-            else nav.openMatchs();
-          }}
-          onRemind={handleQuickRemind}
-          remindingId={remindingId}
-        />
-      )}
-
-      {(profile.role === 'coach' || profile.role === 'agent' || profile.role === 'recruiter') && (
-        <HubSection title="Parcours pro" colors={themeColors} compact>
-          <InfoLine label="Titre" value={p.job_title} colors={themeColors} styles={styles} />
-          <InfoLine label="Diplôme" value={p.diploma} colors={themeColors} styles={styles} />
-          <InfoLine label="N° licence" value={p.license_number} colors={themeColors} styles={styles} />
-          {p.specialties?.length ? (
-            <Text style={[styles.specialties, { color: themeColors.textSecondary }]}>
-              Spécialités : {p.specialties.join(' · ')}
-            </Text>
-          ) : null}
-        </HubSection>
-      )}
-
-      {pendingVerify && (
-        <View style={[styles.card, styles.warnCard, { borderColor: themeColors.border }]}>
-          <Text style={[styles.warnTitle, { color: themeColors.text }]}>Vérification requise</Text>
-          <Text style={[styles.warnSub, { color: themeColors.textSecondary }]}>
-            Envoyez votre diplôme ou licence pour débloquer la messagerie.
-          </Text>
-          <TouchableOpacity
-            style={[styles.secondaryBtn, { borderColor: themeColors.border }]}
-            onPress={handlePickDocument}
-            disabled={docLoading}
-          >
-            <Text style={[styles.secondaryBtnText, { color: themeColors.text }]}>
-              {docLoading ? 'Envoi…' : 'Envoyer un document'}
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => setShowVerificationFlow(true)}>
-            <Text style={[styles.link, { color: themeColors.accent }]}>Suivi de vérification</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-
-      {profile.profile.club_id ? (
-        <ProfileMenuSection
-          title="Mon club"
-          colors={themeColors}
-          items={[
-            {
-              icon: 'notifications',
-              title: 'Annonces club',
-              subtitle: 'Actualités de votre structure',
-              onPress: () => setShowAnnouncements(true),
-            },
-            {
-              icon: 'calendar',
-              title: 'Mes cotisations',
-              subtitle: 'Paiements club',
-              onPress: () => setShowPayments(true),
-            },
-          ]}
-        />
-      ) : null}
-
-      {(canManageClub || verifiedStaff) && (
-        <ProfileMenuSection
-          title="Structure"
-          colors={themeColors}
-          items={[
-            ...(canManageClub && !profile.profile.club_id
-              ? [
-                  {
-                    icon: 'business' as const,
-                    title: 'Créer mon club',
-                    subtitle: 'Lier votre structure',
-                    onPress: () => setShowCreateClub(true),
-                  },
-                  {
-                    icon: 'people' as const,
-                    title: 'Rejoindre un club',
-                    subtitle: 'Convocations et calendrier',
-                    onPress: () => setShowJoinClub(true),
-                  },
-                ]
-              : []),
-            ...(!profile.profile.club_id && profile.role === 'player'
-              ? [
-                  {
-                    icon: 'people' as const,
-                    title: 'Rejoindre mon club',
-                    subtitle: 'Calendrier équipe',
-                    onPress: () => setShowJoinClub(true),
-                  },
-                ]
-              : []),
-            ...(verifiedStaff
-              ? [
-                  {
-                    icon: 'shield' as const,
-                    title: 'Diplôme vérifié',
-                    subtitle: 'Badge actif',
-                    onPress: () => setShowVerificationSuccess(true),
-                  },
-                ]
-              : []),
-          ]}
-        />
-      )}
-
-      {isPlayerMinor && (
-        <ProfileMenuSection
-          title="Famille"
-          colors={themeColors}
-          items={[
-            {
-              icon: 'shield',
-              title: 'Contrôle parental',
-              subtitle: 'Supervision compte mineur',
-              onPress: () => setShowParental(true),
-            },
-          ]}
-        />
-      )}
-
-      <ProfileMenuSection
-        title="Informations"
-        colors={themeColors}
-        items={[
-          {
-            icon: 'document',
-            title: 'Conditions d’utilisation',
-            onPress: () => setLegalDocument('terms'),
-          },
-          {
-            icon: 'lock',
-            title: 'Confidentialité',
-            onPress: () => setLegalDocument('privacy'),
-          },
-        ]}
-      />
-
-      <TouchableOpacity
-        style={[styles.logoutBtn, { borderColor: themeColors.border }]}
-        onPress={() => {
-          Alert.alert('Déconnexion', 'Voulez-vous quitter votre session ?', [
-            { text: 'Annuler', style: 'cancel' },
-            { text: 'Déconnexion', style: 'destructive', onPress: () => void onSignOut() },
-          ]);
-        }}
-        activeOpacity={0.85}
-      >
-        <Text style={[styles.logoutText, { color: themeColors.error }]}>Se déconnecter</Text>
-      </TouchableOpacity>
-    </ScrollView>
+    </ProDayScreenCanvas>
   );
 };
-
-const StatChip: React.FC<{
-  value: string;
-  label: string;
-  colors: { surface: string; border: string; text: string; textMuted: string };
-  styles: ReturnType<typeof createProfileStyles>;
-}> = ({ value, label, colors: c, styles }) => (
-  <View style={[styles.statChip, { backgroundColor: c.surface, borderColor: c.border }]}>
-    <Text style={[styles.statValue, { color: c.text }]}>{value}</Text>
-    <Text style={[styles.statLabel, { color: c.textMuted }]}>{label}</Text>
-  </View>
-);
-
-const InfoLine: React.FC<{
-  label: string;
-  value?: string;
-  colors: { textMuted: string; text: string };
-  styles: ReturnType<typeof createProfileStyles>;
-}> = ({ label, value, colors: c, styles }) => {
-  if (!value) return null;
-  return (
-    <View style={styles.infoRow}>
-      <Text style={[styles.infoLabel, { color: c.textMuted }]}>{label}</Text>
-      <Text style={[styles.infoValue, { color: c.text }]}>{value}</Text>
-    </View>
-  );
-};
-
-function createProfileStyles(c: AppColors) {
-  return StyleSheet.create({
-  container: { flex: 1, backgroundColor: c.background },
-  content: {
-    padding: spacing.lg,
-    paddingBottom: TAB_BAR_CONTENT_INSET + spacing.xl,
-  },
-  screenTitle: {
-    fontSize: 28,
-    fontWeight: '900',
-    color: c.text,
-    marginBottom: spacing.md,
-    textAlign: 'center',
-  },
-  heroInner: {
-    alignItems: 'center',
-    paddingTop: spacing.xs,
-  },
-  cvPrimaryBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.sm,
-    borderRadius: radius.lg,
-    paddingVertical: spacing.md,
-    marginTop: spacing.md,
-  },
-  cvPrimaryText: { fontSize: 16, fontWeight: '800' },
-  mercatoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    paddingVertical: spacing.sm,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    marginBottom: spacing.sm,
-  },
-  mercatoBody: { flex: 1 },
-  mercatoTitle: { fontSize: 15, fontWeight: '800' },
-  mercatoSub: { fontSize: 12, marginTop: 2 },
-  hintText: { fontSize: 13, lineHeight: 19 },
-  videoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    paddingVertical: spacing.sm,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    marginTop: spacing.sm,
-  },
-  videoLink: { flex: 1, fontSize: 13 },
-  hero: {
-    alignItems: 'center',
-    marginBottom: spacing.lg,
-    paddingTop: spacing.xs,
-  },
-  name: {
-    fontSize: 24,
-    fontWeight: '900',
-    color: c.text,
-    marginTop: spacing.md,
-    textAlign: 'center',
-  },
-  meta: {
-    fontSize: 13,
-    color: c.textSecondary,
-    marginTop: 4,
-    textAlign: 'center',
-  },
-  email: {
-    fontSize: 12,
-    color: c.textMuted,
-    marginTop: 2,
-    textAlign: 'center',
-    alignSelf: 'stretch',
-  },
-  badgeWrap: { marginTop: spacing.sm },
-  spacePills: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-    justifyContent: 'center',
-  },
-  spaceHint: {
-    fontSize: 12,
-    color: c.textSecondary,
-    marginTop: spacing.sm,
-    textAlign: 'center',
-    lineHeight: 18,
-  },
-  statsRow: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-    marginBottom: spacing.lg,
-  },
-  statChip: {
-    flex: 1,
-    backgroundColor: c.surface,
-    borderRadius: radius.md,
-    padding: spacing.md,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: c.border,
-  },
-  statValue: { fontSize: 22, fontWeight: '900', color: c.text },
-  statLabel: { fontSize: 10, color: c.textMuted, fontWeight: '700', marginTop: 4 },
-  actionRow: { gap: spacing.sm, marginBottom: spacing.lg, width: '100%' },
-  actionPrimary: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.sm,
-    backgroundColor: c.ink,
-    borderRadius: radius.md,
-    padding: spacing.md,
-    borderWidth: 1,
-    borderColor: c.accent,
-  },
-  actionPrimaryText: { color: c.brandInverse, fontWeight: '900', fontSize: 15 },
-  actionOutline: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.sm,
-    backgroundColor: c.surface,
-    borderRadius: radius.md,
-    padding: spacing.md,
-    borderWidth: 1,
-    borderColor: c.border,
-  },
-  actionOutlineText: { color: c.accent, fontWeight: '800', fontSize: 14 },
-  card: {
-    backgroundColor: c.surface,
-    borderRadius: radius.lg,
-    padding: spacing.lg,
-    borderWidth: 1,
-    borderColor: c.border,
-    marginBottom: spacing.md,
-  },
-  cardTitle: { fontSize: 14, fontWeight: '900', color: c.accent, marginBottom: spacing.sm },
-  bioText: { fontSize: 14, color: c.textSecondary, lineHeight: 21 },
-  infoRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 6,
-    borderBottomWidth: 1,
-    borderBottomColor: c.border,
-  },
-  infoLabel: { fontSize: 13, color: c.textMuted, fontWeight: '600' },
-  infoValue: { fontSize: 13, fontWeight: '800', color: c.text },
-  specialties: { fontSize: 13, color: c.textSecondary, marginTop: spacing.sm, lineHeight: 18 },
-  achievement: { fontSize: 13, color: c.textSecondary, lineHeight: 20, marginTop: 4 },
-  warnCard: { backgroundColor: c.warningBg },
-  warnTitle: { fontWeight: '900', fontSize: 15, color: c.text },
-  warnSub: { fontSize: 13, color: c.textSecondary, marginTop: 4, marginBottom: spacing.md, lineHeight: 18 },
-  secondaryBtn: {
-    borderWidth: 1,
-    borderColor: c.border,
-    borderRadius: radius.md,
-    padding: spacing.md,
-    alignItems: 'center',
-    marginBottom: spacing.sm,
-  },
-  secondaryBtnText: { fontWeight: '800', color: c.text },
-  link: {
-    color: c.accent,
-    fontWeight: '800',
-    textAlign: 'center',
-    textDecorationLine: 'underline',
-  },
-  menuCard: { paddingVertical: spacing.xs },
-  candidaturesCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    backgroundColor: c.surface,
-    borderRadius: radius.lg,
-    padding: spacing.lg,
-    marginBottom: spacing.md,
-    borderWidth: 1,
-    borderColor: c.accent,
-  },
-  candidaturesIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: c.accentSoft,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  candidaturesBody: { flex: 1 },
-  candidaturesTitle: { fontSize: 16, fontWeight: '900', color: c.text },
-  candidaturesSub: { fontSize: 12, color: c.textMuted, marginTop: 2 },
-  parentalCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    backgroundColor: c.brand,
-    borderRadius: radius.lg,
-    padding: spacing.lg,
-    marginBottom: spacing.md,
-  },
-  parentalIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  parentalBody: { flex: 1 },
-  parentalTitle: { fontSize: 16, fontWeight: '900', color: c.brandInverse },
-  parentalSub: {
-    fontSize: 12,
-    color: c.heroMuted,
-    marginTop: 2,
-    lineHeight: 17,
-  },
-  logoutBtn: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: spacing.lg,
-    marginTop: spacing.sm,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: c.border,
-    backgroundColor: 'transparent',
-  },
-  logoutText: { fontSize: 15, fontWeight: '600', color: c.textMuted },
-  });
-}

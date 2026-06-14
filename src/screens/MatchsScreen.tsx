@@ -1,39 +1,32 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  ScrollView,
-  StyleSheet,
-  ActivityIndicator,
-} from 'react-native';
-import { TAB_BAR_CONTENT_INSET } from '../components/navigation/BottomTabBar';
-import { spacing, radius } from '../theme/designTokens';
-import { useThemedScreen } from '../hooks/useThemedScreen';
-import type { AppColors } from '../theme/universeTheme';
-import { ScreenHeader } from '../components/ui/ScreenHeader';
-import { Icon } from '../components/ui/Icon';
-import { ProposeMatchScreen } from './ProposeMatchScreen';
-import { SearchMatchScreen } from './SearchMatchScreen';
-import { CreateTeamEventScreen } from './CreateTeamEventScreen';
-import { TeamEventDetailScreen } from './TeamEventDetailScreen';
-import { useFriendlyMatches, useSeasonCalendar } from '../hooks/useAppData';
+import React, { useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useTabNavigation } from '../context/TabNavigationContext';
 import { openSeasonCalendarItem } from '../utils/navigationDeepLink';
 import { useTabNavigationActions } from '../hooks/useTabNavigationActions';
+import { useFriendlyMatches, useSeasonCalendar } from '../hooks/useAppData';
+import { useMatchScreenData } from '../hooks/useMatchScreenData';
 import { useMatchActions } from '../hooks/useMatchActions';
-import {
-  formatMatchDateTime,
-  formatMatchTeams,
-  matchStatusStyle,
-} from '../utils/matchDisplay';
-import {
-  groupByMonth,
-  formatCalendarDate,
-  type SeasonCalendarItem,
-} from '../utils/seasonCalendar';
-import { EVENT_TYPE_LABELS } from '../models/TeamEvent';
+import { useMatchJoinGuard } from '../hooks/useMatchJoinGuard';
+import { useSectionIntelligence } from '../hooks/useSectionIntelligence';
+import { useAppTheme } from '../context/ProductLineContext';
+import { userStateStore } from '../core/state/userState.store';
+import { trackV3Event } from '../core/analytics/v3Events';
+import { flushBrainState } from '../services/brainState.service';
+import { isV3ShellEnabled } from '../config/featureFlags';
+import { teamEventsService } from '../services/teamEvents.service';
+import type { RsvpStatus } from '../models/TeamEvent';
+import { ProDayScreenCanvas } from '../components/ui/ProDayScreenCanvas';
+import { MatchHomeScreen } from '../components/matchs/MatchHomeScreen';
+import type { MatchChapterId } from '../content/matchChapters';
+import type { SeasonCalendarItem } from '../utils/seasonCalendar';
+import { ProposeMatchScreen } from './ProposeMatchScreen';
+import { SearchMatchScreen } from './SearchMatchScreen';
+import { CreateTeamEventScreen } from './CreateTeamEventScreen';
+import { MatchEventHubScreen } from './MatchEventHubScreen';
+import type { MatchHubChapterId } from '../content/matchHubChapters';
+import { prodayHaptics } from '../utils/prodayHaptics';
+import { isInMatchWindow } from '../utils/matchLive';
+import { useRequireAuth } from '../hooks/useRequireAuth';
 
 type MatchView =
   | 'home'
@@ -42,23 +35,42 @@ type MatchView =
   | 'create_event'
   | 'event_detail';
 
-type HomeTab = 'season' | 'matches';
-
 export const MatchsScreen: React.FC = () => {
-  const [view, setView] = useState<MatchView>('home');
-  const [homeTab, setHomeTab] = useState<HomeTab>('season');
-  const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+  const [view, setView] = React.useState<MatchView>('home');
+  const [initialChapter, setInitialChapter] = React.useState<MatchChapterId>('calendrier');
+  const [selectedEventId, setSelectedEventId] = React.useState<string | null>(null);
+  const [hubChapter, setHubChapter] = React.useState<MatchHubChapterId>('apercu');
+  const [rsvpBusy, setRsvpBusy] = React.useState(false);
   const { profile } = useAuth();
+  const { productLine } = useAppTheme();
+  const { requireAuth } = useRequireAuth();
   const { pendingMatchsLink, clearPendingMatchs } = useTabNavigation();
   const navActions = useTabNavigationActions();
   const clubId = profile?.profile.club_id;
-  const { items, loading: loadingCalendar, refresh: refreshCalendar } = useSeasonCalendar(
-    profile?.uid,
-    clubId
-  );
+  const {
+    items,
+    events,
+    loading: loadingCalendar,
+    fromCache,
+    refresh: refreshCalendar,
+  } = useSeasonCalendar(profile?.uid, clubId);
   const { matches, loading: loadingMatches, refresh: refreshMatches } = useFriendlyMatches();
   const { acceptMatch, cancelMatch, markPlayed, canAccept } = useMatchActions(profile);
-  const [myClubId, setMyClubId] = useState<string | null>(null);
+  const { guardAcceptMatch, guardRsvpYes, getMatchIaScore, checkMatch } =
+    useMatchJoinGuard(profile);
+  const [myClubId, setMyClubId] = React.useState<string | null>(null);
+
+  const { pendingConvocations, myUpcomingEvents, nextItem } = useMatchScreenData(
+    profile,
+    events,
+    items
+  );
+
+  const intelligence = useSectionIntelligence('matchs', profile, productLine, {
+    pendingConvocations: pendingConvocations.length,
+    openMatches: matches.filter((m) => m.status === 'OPEN').length,
+    liveMatches: events.filter((e) => isInMatchWindow(e)).length,
+  });
 
   const canManageEvents =
     profile &&
@@ -67,29 +79,94 @@ export const MatchsScreen: React.FC = () => {
       profile.role === 'agent' ||
       profile.role === 'club');
 
-  const { colors: c, rootStyle } = useThemedScreen();
-  const styles = useMemo(() => createStyles(c), [c]);
-
-  useEffect(() => {
+  React.useEffect(() => {
     setMyClubId(profile ? profile.profile.club_id ?? profile.uid : null);
   }, [profile]);
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (!pendingMatchsLink) return;
-    if (pendingMatchsLink.homeTab) setHomeTab(pendingMatchsLink.homeTab);
+    if (pendingMatchsLink.homeTab === 'matches') {
+      setInitialChapter('amicaux');
+    } else if (pendingMatchsLink.homeTab === 'convocations') {
+      setInitialChapter('convocations');
+    } else if (pendingMatchsLink.homeTab === 'centre') {
+      setInitialChapter('centre');
+    } else if (pendingMatchsLink.homeTab === 'stats') {
+      setInitialChapter('stats');
+    } else {
+      setInitialChapter('calendrier');
+    }
     if (pendingMatchsLink.eventId) {
       setSelectedEventId(pendingMatchsLink.eventId);
+      setHubChapter(pendingMatchsLink.hubChapter ?? 'apercu');
       setView('event_detail');
     }
     clearPendingMatchs();
   }, [pendingMatchsLink, clearPendingMatchs]);
 
-  const monthGroups = useMemo(() => groupByMonth(items), [items]);
-
   const refreshAll = () => {
     refreshCalendar();
     refreshMatches();
   };
+
+  const recordMatchJoin = useCallback(() => {
+    if (!profile) return;
+    const progression = userStateStore.get()?.progression ?? {
+      xp: 0,
+      level: 1,
+      xpToNext: 200,
+      xpProgress: 0,
+      streakDays: 1,
+      badges: [],
+      rankLabel: 'Rookie',
+    };
+    userStateStore.applyAction(
+      profile,
+      'join_match',
+      {
+        upcomingEventsCount: items.length,
+        pendingConvocations: pendingConvocations.length,
+        recentMatchCount: myUpcomingEvents.length,
+        streakDays: 1,
+        globalScore: 50,
+      },
+      progression
+    );
+    trackV3Event('match_joined', { source: 'matchs_tab' });
+    if (isV3ShellEnabled()) {
+      void flushBrainState(profile.uid);
+    }
+  }, [profile, items.length, pendingConvocations.length, myUpcomingEvents.length]);
+
+  const handleRsvp = async (eventId: string, status: RsvpStatus) => {
+    if (!profile) return;
+    const submit = async () => {
+      setRsvpBusy(true);
+      try {
+        await teamEventsService.updateRsvp(eventId, profile.uid, status);
+        prodayHaptics.rsvpConfirm();
+        if (status === 'yes') recordMatchJoin();
+        refreshCalendar();
+      } finally {
+        setRsvpBusy(false);
+      }
+    };
+    if (status === 'yes') {
+      guardRsvpYes(() => void submit());
+      return;
+    }
+    await submit();
+  };
+
+  const getMatchHealthWarning = useCallback(
+    (matchId: string) => {
+      const match = matches.find((m) => m.id === matchId);
+      if (!match) return undefined;
+      const check = checkMatch(match);
+      return check.allowed ? undefined : check.reasons[0];
+    },
+    [checkMatch, matches]
+  );
 
   if (view === 'propose') {
     return (
@@ -97,6 +174,7 @@ export const MatchsScreen: React.FC = () => {
         onBack={() => setView('home')}
         onCreated={() => {
           refreshAll();
+          setInitialChapter('amicaux');
           setView('home');
         }}
       />
@@ -106,7 +184,10 @@ export const MatchsScreen: React.FC = () => {
     return (
       <SearchMatchScreen
         onBack={() => setView('home')}
-        onAccepted={refreshAll}
+        onAccepted={() => {
+          refreshAll();
+          setInitialChapter('amicaux');
+        }}
       />
     );
   }
@@ -124,12 +205,16 @@ export const MatchsScreen: React.FC = () => {
   }
   if (view === 'event_detail' && selectedEventId) {
     return (
-      <TeamEventDetailScreen
+      <MatchEventHubScreen
         eventId={selectedEventId}
+        initialChapter={hubChapter}
         onBack={() => {
           setView('home');
           refreshAll();
         }}
+        onOpenCarpool={() =>
+          navActions.openCarpool({ chapter: 'reserver', eventId: selectedEventId })
+        }
       />
     );
   }
@@ -143,314 +228,65 @@ export const MatchsScreen: React.FC = () => {
     openSeasonCalendarItem(item, navActions);
   };
 
+  const openEvent = (eventId: string, chapter: MatchHubChapterId = 'apercu') => {
+    setSelectedEventId(eventId);
+    setHubChapter(chapter);
+    setView('event_detail');
+  };
+
   return (
-    <ScrollView
-      style={[styles.container, rootStyle]}
-      contentContainerStyle={styles.content}
-      showsVerticalScrollIndicator={false}
-    >
-      <ScreenHeader
-        label="Saison"
-        title="Calendrier & matchs"
-        subtitle="Convocations, entraînements, détections et amicaux."
-        showBrandLogo
-      />
-
-      <View style={styles.tabRow}>
-        <TouchableOpacity
-          style={[styles.tab, homeTab === 'season' && styles.tabActive]}
-          onPress={() => setHomeTab('season')}
-        >
-          <Text style={[styles.tabText, homeTab === 'season' && styles.tabTextActive]}>
-            Calendrier
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tab, homeTab === 'matches' && styles.tabActive]}
-          onPress={() => setHomeTab('matches')}
-        >
-          <Text style={[styles.tabText, homeTab === 'matches' && styles.tabTextActive]}>
-            Matchs amicaux
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.quickRow}>
-        {canManageEvents && (
-          <TouchableOpacity
-            style={styles.actionCard}
-            onPress={() => setView('create_event')}
-          >
-            <View style={styles.actionIconWrap}>
-              <Icon name="calendar" size={26} color={c.text} variant="filled" />
-            </View>
-            <Text style={styles.actionTitle}>Créer événement</Text>
-            <Text style={styles.actionSub}>Convocation</Text>
-          </TouchableOpacity>
-        )}
-        <TouchableOpacity style={styles.actionCard} onPress={() => setView('propose')}>
-          <View style={styles.actionIconWrap}>
-            <Icon name="football" size={26} color={c.text} />
-          </View>
-          <Text style={styles.actionTitle}>Proposer match</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.actionCard} onPress={() => setView('search')}>
-          <View style={styles.actionIconWrap}>
-            <Icon name="search" size={26} color={c.text} />
-          </View>
-          <Text style={styles.actionTitle}>Rechercher</Text>
-        </TouchableOpacity>
-      </View>
-
-      {homeTab === 'season' ? (
-        <>
-          {loadingCalendar ? (
-            <ActivityIndicator color={c.brand} style={styles.loader} />
-          ) : items.length === 0 ? (
-            <Text style={styles.empty}>
-              Aucun événement à venir. Créez une convocation ou proposez un match amical.
-            </Text>
-          ) : (
-            monthGroups.map((group) => (
-              <View key={group.key} style={styles.monthBlock}>
-                <Text style={styles.monthTitle}>{group.label}</Text>
-                {group.items.map((item) => (
-                  <TouchableOpacity
-                    key={item.id}
-                    style={styles.calCard}
-                    onPress={() => openCalendarItem(item)}
-                  >
-                    <View style={styles.calCardTop}>
-                      <Text style={styles.calKind}>
-                        {item.kind === 'team_event' && item.event_type
-                          ? EVENT_TYPE_LABELS[item.event_type]
-                          : item.kind === 'friendly_match'
-                            ? 'Match amical'
-                            : 'Tournoi'}
-                      </Text>
-                      <Text style={styles.calDate}>{formatCalendarDate(item.starts_at)}</Text>
-                    </View>
-                    <Text style={styles.calTitle}>{item.title}</Text>
-                    <Text style={styles.calSub}>
-                      {item.subtitle} · {item.city}
-                    </Text>
-                    <Text style={styles.calLink}>
-                      {item.team_event_id
-                        ? 'Voir convocation →'
-                        : item.friendly_match_id
-                          ? 'Voir matchs amicaux →'
-                          : item.tournament_id
-                            ? 'Voir Arena →'
-                            : 'Ouvrir →'}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            ))
-          )}
-        </>
-      ) : (
-        <>
-          <Text style={styles.sectionTitle}>Matchs à venir</Text>
-          {loadingMatches ? (
-            <ActivityIndicator color={c.brand} style={styles.loader} />
-          ) : matches.length === 0 ? (
-            <Text style={styles.empty}>
-              Aucun match. Proposez ou recherchez un match amical.
-            </Text>
-          ) : (
-            matches.map((m) => {
-              const st = matchStatusStyle(m.status, c);
-              const isMine = myClubId != null && m.requester_club_id === myClubId;
-              const showAccept = canAccept(m) && !isMine && profile;
-              return (
-                <View key={m.id} style={styles.matchCard}>
-                  <Text style={styles.matchDate}>
-                    {formatMatchDateTime(m.date, m.time_label)}
-                  </Text>
-                  <Text style={styles.matchTeams}>{formatMatchTeams(m)}</Text>
-                  <Text style={styles.matchPlace}>
-                    {m.city}
-                    {m.level ? ` · ${m.level}` : ''}
-                  </Text>
-                  <View style={[styles.badge, { backgroundColor: st.bg }]}>
-                    <Text style={[styles.badgeText, { color: st.color }]}>{st.label}</Text>
-                  </View>
-                  <View style={styles.actions}>
-                    {showAccept && (
-                      <TouchableOpacity
-                        style={styles.btnAccept}
-                        onPress={() => acceptMatch(m, refreshMatches)}
-                      >
-                        <Text style={styles.btnAcceptText}>Accepter</Text>
-                      </TouchableOpacity>
-                    )}
-                    {isMine && m.status === 'OPEN' && (
-                      <TouchableOpacity
-                        style={styles.btnCancel}
-                        onPress={() => cancelMatch(m, refreshMatches)}
-                      >
-                        <Text style={styles.btnCancelText}>Annuler</Text>
-                      </TouchableOpacity>
-                    )}
-                    {isMine && m.status === 'ACCEPTED' && (
-                      <TouchableOpacity
-                        style={styles.btnPlayed}
-                        onPress={() => markPlayed(m, refreshMatches)}
-                      >
-                        <Text style={styles.btnPlayedText}>Marquer joué</Text>
-                      </TouchableOpacity>
-                    )}
-                  </View>
-                </View>
-              );
+    <ProDayScreenCanvas flat>
+      <MatchHomeScreen
+        profile={profile}
+        items={items}
+        teamEvents={events}
+        matches={matches}
+        pendingConvocations={pendingConvocations}
+        myUpcomingEvents={myUpcomingEvents}
+        nextItem={nextItem}
+        loadingCalendar={loadingCalendar}
+        loadingMatches={loadingMatches}
+        canManageEvents={Boolean(canManageEvents)}
+        myClubId={myClubId}
+        initialChapter={initialChapter}
+        rsvpBusy={rsvpBusy}
+        canAccept={canAccept}
+        intelligence={intelligence}
+        getMatchIaScore={getMatchIaScore}
+        getMatchHealthWarning={getMatchHealthWarning}
+        onPropose={() => {
+          if (!requireAuth('Connectez-vous pour proposer un match amical.')) return;
+          setView('propose');
+        }}
+        onSearch={() => {
+          if (!requireAuth('Connectez-vous pour rechercher un match.')) return;
+          setView('search');
+        }}
+        onCreateEvent={() => {
+          if (!requireAuth('Connectez-vous pour créer une convocation.')) return;
+          setView('create_event');
+        }}
+        onOpenCalendarItem={openCalendarItem}
+        onOpenEvent={(id, hubChapter) => openEvent(id, hubChapter ?? 'apercu')}
+        onRsvp={handleRsvp}
+        onAcceptMatch={(m) =>
+          guardAcceptMatch(m, () =>
+            acceptMatch(m, () => {
+              recordMatchJoin();
+              refreshMatches();
             })
-          )}
-        </>
-      )}
-    </ScrollView>
+          )
+        }
+        onCancelMatch={(m) => cancelMatch(m, refreshMatches)}
+        onMarkPlayed={(m) =>
+          markPlayed(m, refreshMatches, () => navActions.openProfile())
+        }
+        fromCache={fromCache}
+        onRefresh={refreshAll}
+        onOpenCarpoolForEvent={(eventId) =>
+          navActions.openCarpool({ chapter: 'reserver', eventId })
+        }
+      />
+    </ProDayScreenCanvas>
   );
 };
-
-function createStyles(c: AppColors) {
-  return StyleSheet.create({
-  container: { flex: 1 },
-  content: { paddingBottom: TAB_BAR_CONTENT_INSET + spacing.lg },
-  tabRow: {
-    flexDirection: 'row',
-    marginHorizontal: spacing.lg,
-    marginBottom: spacing.md,
-    gap: spacing.sm,
-  },
-  tab: {
-    flex: 1,
-    paddingVertical: spacing.sm,
-    alignItems: 'center',
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: c.border,
-    backgroundColor: c.surface,
-  },
-  tabActive: { backgroundColor: c.ink, borderColor: c.ink },
-  tabText: { fontWeight: '800', fontSize: 13, color: c.textSecondary },
-  tabTextActive: { color: c.brandInverse },
-  quickRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-    paddingHorizontal: spacing.lg,
-    marginBottom: spacing.lg,
-  },
-  actionCard: {
-    flex: 1,
-    minWidth: '30%',
-    backgroundColor: c.surface,
-    borderRadius: radius.lg,
-    padding: spacing.md,
-    borderWidth: 1,
-    borderColor: c.border,
-    minHeight: 96,
-  },
-  actionIconWrap: {
-    width: 40,
-    height: 40,
-    borderRadius: radius.sm,
-    borderWidth: 1,
-    borderColor: c.border,
-    backgroundColor: c.surfaceMuted,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.xs,
-  },
-  actionTitle: { fontSize: 12, fontWeight: '900', color: c.text },
-  actionSub: { fontSize: 10, color: c.textMuted, marginTop: 2 },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: c.text,
-    paddingHorizontal: spacing.lg,
-    marginBottom: spacing.md,
-  },
-  monthBlock: { marginBottom: spacing.lg },
-  monthTitle: {
-    fontSize: 14,
-    fontWeight: '900',
-    color: c.accent,
-    paddingHorizontal: spacing.lg,
-    marginBottom: spacing.sm,
-    textTransform: 'capitalize',
-  },
-  calCard: {
-    backgroundColor: c.surface,
-    borderRadius: radius.lg,
-    padding: spacing.lg,
-    marginHorizontal: spacing.lg,
-    marginBottom: spacing.sm,
-    borderWidth: 1,
-    borderColor: c.border,
-  },
-  calCardTop: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: spacing.xs,
-  },
-  calKind: { fontSize: 11, fontWeight: '800', color: c.accent },
-  calDate: { fontSize: 11, color: c.textMuted, fontWeight: '700' },
-  calTitle: { fontSize: 16, fontWeight: '800', color: c.text },
-  calSub: { fontSize: 13, color: c.textMuted, marginTop: 4 },
-  calLink: { fontSize: 12, fontWeight: '800', color: c.accent, marginTop: spacing.sm },
-  loader: { marginVertical: spacing.lg },
-  empty: {
-    color: c.textMuted,
-    fontSize: 13,
-    paddingHorizontal: spacing.lg,
-    lineHeight: 20,
-  },
-  matchCard: {
-    backgroundColor: c.surface,
-    borderRadius: radius.lg,
-    padding: spacing.lg,
-    marginHorizontal: spacing.lg,
-    marginBottom: spacing.sm,
-    borderWidth: 1,
-    borderColor: c.border,
-  },
-  matchDate: { fontSize: 12, color: c.textMuted, fontWeight: '800', letterSpacing: 0.5 },
-  matchTeams: { fontSize: 16, fontWeight: '700', color: c.text, marginTop: 4 },
-  matchPlace: { fontSize: 13, color: c.textMuted, marginTop: 2 },
-  badge: {
-    alignSelf: 'flex-start',
-    marginTop: spacing.sm,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: radius.pill,
-  },
-  badgeText: { fontSize: 11, fontWeight: '700' },
-  actions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginTop: spacing.md },
-  btnAccept: {
-    backgroundColor: c.brand,
-    borderWidth: 1,
-    borderColor: c.border,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: radius.md,
-  },
-  btnAcceptText: { color: c.brandInverse, fontWeight: '800', fontSize: 13 },
-  btnCancel: {
-    borderWidth: 1,
-    borderColor: c.border,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: radius.md,
-  },
-  btnCancelText: { color: c.text, fontWeight: '800', fontSize: 13 },
-  btnPlayed: {
-    borderWidth: 1,
-    borderColor: c.border,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: radius.md,
-  },
-  btnPlayedText: { color: c.text, fontWeight: '800', fontSize: 13 },
-  });
-}

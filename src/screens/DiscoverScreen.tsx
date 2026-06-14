@@ -1,48 +1,81 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { ArenaScreen } from './ArenaScreen';
 import { SponsorsScreen } from './SponsorsScreen';
-import { DiscoverHomeScroll } from '../components/home/DiscoverHomeScroll';
+import { DiscoverInteractiveHome } from '../components/discover/DiscoverInteractiveHome';
 import { AnimatedModalShell } from '../components/motion';
 import type { ProDayModuleId } from '../content/prodayModules';
+import type { DiscoverJourneyStepId } from '../content/discoverGuestJourney';
 import { useTabNavigation } from '../context/TabNavigationContext';
+import { useLaunchIntro } from '../context/LaunchIntroContext';
 import { useDiscoverLiveData } from '../hooks/useAppData';
 import { useThemedScreen } from '../hooks/useThemedScreen';
+import { formatCount } from '../services/stats.service';
 
 export const DiscoverScreen: React.FC = () => {
-  const { setActiveTab } = useTabNavigation();
-  const { stats, loading } = useDiscoverLiveData();
-  const [guestModule, setGuestModule] = useState<'arena' | 'sponsors' | null>(null);
-  const { rootStyle } = useThemedScreen();
+  const { setActiveTab, openAuth, openMercato, openMatchs } = useTabNavigation();
+  const { openSpacePicker } = useLaunchIntro();
+  const { stats, posts, loading } = useDiscoverLiveData();
+  const [guestModule, setGuestModule] = useState<'sponsors' | null>(null);
+  const { rootStyle, productLine } = useThemedScreen();
 
-  const goAuth = () => setActiveTab('profil');
+  const goLogin = () => openAuth('login');
+  const goSignup = () => openAuth('signup');
+
+  const statsLabel = useMemo(() => {
+    if (!stats) return 'Communauté ProDay';
+    return `${formatCount(stats.players, 'joueur')} · ${stats.recruitment_posts_open} annonces`;
+  }, [stats]);
+
+  const onJourneyStep = (id: DiscoverJourneyStepId) => {
+    if (id === 'profile') goLogin();
+    else if (id === 'mercato') openMercato('home');
+    else openMatchs({ homeTab: 'season' });
+  };
 
   const onModulePress = (id: ProDayModuleId) => {
-    if (id === 'arena' || id === 'sponsors') setGuestModule(id);
-    else goAuth();
+    if (id === 'sponsors') setGuestModule('sponsors');
+    else if (id === 'recrutement') openMercato('home');
+    else if (id === 'matchs') openMatchs({ homeTab: 'season' });
+    else goSignup();
   };
 
   return (
     <View style={[styles.root, rootStyle]}>
-      <DiscoverHomeScroll
+      <DiscoverInteractiveHome
+        productLine={productLine}
         stats={stats}
+        posts={posts}
         loading={loading}
+        statsLabel={statsLabel}
         liveRecruitment={Boolean(stats && stats.recruitment_posts_open > 0)}
-        onSignup={goAuth}
-        onLogin={goAuth}
+        onSignup={goSignup}
+        onLogin={goLogin}
+        onPress={goSignup}
+        onMercato={() => openMercato('home')}
+        onMatchs={() => openMatchs({ homeTab: 'season' })}
+        onOpenReels={() => setActiveTab('reels')}
+        onOpenShop={() => setActiveTab('shop')}
         onModulePress={onModulePress}
+        onStepPress={onJourneyStep}
+        universeLabel={
+          productLine === 'woman'
+            ? 'Univers Woman'
+            : productLine === 'pro'
+              ? 'Univers Pro'
+              : productLine === 'sante'
+                ? 'Univers Santé'
+                : 'Univers Homme'
+        }
+        onUniversePress={openSpacePicker}
       />
 
       <AnimatedModalShell
         visible={guestModule !== null}
         onClose={() => setGuestModule(null)}
-        closeLabel="Fermer l’aperçu"
+        closeLabel="Fermer l'aperçu"
       >
-        {guestModule === 'arena' ? (
-          <ArenaScreen guestMode onLoginRequired={goAuth} onBack={() => setGuestModule(null)} />
-        ) : null}
         {guestModule === 'sponsors' ? (
-          <SponsorsScreen guestMode onLoginRequired={goAuth} onBack={() => setGuestModule(null)} />
+          <SponsorsScreen guestMode onLoginRequired={goLogin} onBack={() => setGuestModule(null)} />
         ) : null}
       </AnimatedModalShell>
     </View>

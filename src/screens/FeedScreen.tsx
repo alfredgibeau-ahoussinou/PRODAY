@@ -1,16 +1,17 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
   FlatList,
   TextInput,
-  TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
   Alert,
   RefreshControl,
   Image,
+  ScrollView,
 } from 'react-native';
+import type { ProductLineId } from '../models/ProductLine';
 import type { User, UserRole } from '../models/User';
 import type { PlatformFeedPost } from '../models/PlatformFeed';
 import { ScreenHeader } from '../components/ui/ScreenHeader';
@@ -19,8 +20,20 @@ import { platformFeedService } from '../services/platformFeed.service';
 import { storageService } from '../services/storage.service';
 import { pickFeedImage } from '../utils/pickFeedImage';
 import { PhysioCarePanel } from '../components/feed/PhysioCarePanel';
+import { PressableSpring, SkeletonList, InteractiveListItem } from '../components/motion';
+import { prodayHaptics } from '../utils/prodayHaptics';
+import { SearchBar } from '../components/ui/SearchBar';
+import {
+  FEED_TYPE_FILTERS,
+  type FeedTypeFilter,
+} from '../content/feedChapters';
+import { ProDaySelect } from '../components/ui/ProDaySelect';
 import { spacing, radius } from '../theme/designTokens';
 import { useAppTheme } from '../context/ProductLineContext';
+import { isV3ShellEnabled } from '../config/featureFlags';
+import { rankFeedPosts } from '../core/recommendation/feedRanking.engine';
+
+export type FeedPanel = 'full' | 'list' | 'compose';
 
 const ROLE_LABEL: Record<UserRole, string> = {
   player: 'Joueur',
@@ -35,18 +48,20 @@ const ROLE_LABEL: Record<UserRole, string> = {
 
 interface FeedScreenProps {
   profile: User;
+  panel?: FeedPanel;
   onBack?: () => void;
   onOpenChat: (threadId: string) => void;
   onOpenMessages: () => void;
 }
 
-function roleLabelForLine(role: UserRole, productLine: 'homme' | 'woman' | 'pro'): string {
+function roleLabelForLine(role: UserRole, productLine: ProductLineId): string {
   if (role === 'player' && productLine === 'woman') return 'Joueuse';
   return ROLE_LABEL[role] ?? role;
 }
 
 export const FeedScreen: React.FC<FeedScreenProps> = ({
   profile,
+  panel = 'full',
   onBack,
   onOpenChat,
   onOpenMessages,
@@ -55,12 +70,17 @@ export const FeedScreen: React.FC<FeedScreenProps> = ({
   const [posts, setPosts] = useState<PlatformFeedPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [composer, setComposer] = useState<'none' | 'news' | 'poll'>('none');
+  const [search, setSearch] = useState('');
+  const [typeFilter, setTypeFilter] = useState<FeedTypeFilter>('all');
+  const [composer, setComposer] = useState<'none' | 'news' | 'poll'>(
+    panel === 'compose' ? 'news' : 'none'
+  );
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
   const [pollOpt1, setPollOpt1] = useState('');
   const [pollOpt2, setPollOpt2] = useState('');
   const [pollOpt3, setPollOpt3] = useState('');
+  const [pollEventLink, setPollEventLink] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [imageMime, setImageMime] = useState<string>('image/jpeg');
@@ -68,6 +88,30 @@ export const FeedScreen: React.FC<FeedScreenProps> = ({
   const canNews = platformFeedService.canPublishFeedNews(profile.role);
   const canPoll = platformFeedService.canCreateAgentPoll(profile.role);
   const canVote = platformFeedService.canVoteAgentPoll(profile.role);
+
+  const showList = panel === 'full' || panel === 'list';
+  const showCompose = panel === 'full' || panel === 'compose';
+  const showHeader = panel === 'full';
+
+  const useV3Ranking = isV3ShellEnabled();
+
+  const filteredPosts = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    const base = posts.filter((post) => {
+      if (typeFilter === 'news' && post.type !== 'news') return false;
+      if (typeFilter === 'poll' && post.type !== 'poll') return false;
+      if (!q) return true;
+      return (
+        post.title.toLowerCase().includes(q) ||
+        (post.body?.toLowerCase().includes(q) ?? false) ||
+        post.author_name.toLowerCase().includes(q)
+      );
+    });
+    if (useV3Ranking && !q && typeFilter === 'all') {
+      return rankFeedPosts({ posts: base, profile });
+    }
+    return base;
+  }, [posts, search, typeFilter, useV3Ranking, profile]);
 
   const load = useCallback(async () => {
     try {
@@ -83,6 +127,12 @@ export const FeedScreen: React.FC<FeedScreenProps> = ({
     void load();
   }, [load]);
 
+  useEffect(() => {
+    if (panel !== 'compose') return;
+    if (canNews) setComposer('news');
+    else if (canPoll) setComposer('poll');
+  }, [panel, canNews, canPoll]);
+
   const resetComposer = () => {
     setComposer('none');
     setTitle('');
@@ -90,6 +140,7 @@ export const FeedScreen: React.FC<FeedScreenProps> = ({
     setPollOpt1('');
     setPollOpt2('');
     setPollOpt3('');
+    setPollEventLink('');
     setImageUri(null);
   };
 
@@ -145,7 +196,12 @@ export const FeedScreen: React.FC<FeedScreenProps> = ({
         author_name: profile.display_name,
         author_role: profile.role,
         title: title.trim(),
-        body: body.trim(),
+        body: [
+          pollEventLink.trim() ? `[Événement: ${pollEventLink.trim()}]` : '',
+          body.trim(),
+        ]
+          .filter(Boolean)
+          .join('\n'),
         options,
       });
       resetComposer();
@@ -185,7 +241,7 @@ export const FeedScreen: React.FC<FeedScreenProps> = ({
           const pct = totalVotes > 0 ? Math.round((count / totalVotes) * 100) : 0;
           const selected = myVoteIndex === i;
           return (
-            <TouchableOpacity
+            <PressableSpring
               key={`${post.id}-${i}`}
               style={[
                 styles.pollOption,
@@ -194,9 +250,15 @@ export const FeedScreen: React.FC<FeedScreenProps> = ({
                   backgroundColor: selected ? c.accentSoft : c.background,
                 },
               ]}
-              onPress={() => canVote && handleVote(post, i)}
+              onPress={() => {
+                if (canVote) {
+                  prodayHaptics.press();
+                  handleVote(post, i);
+                }
+              }}
               disabled={!canVote}
-              activeOpacity={0.88}
+              scaleTo={0.98}
+              haptic={canVote}
             >
               <View style={[styles.pollBarTrack, { backgroundColor: c.surfaceMuted }]}>
                 <View
@@ -209,7 +271,7 @@ export const FeedScreen: React.FC<FeedScreenProps> = ({
                   {pct}% · {count} vote{count !== 1 ? 's' : ''}
                 </Text>
               </View>
-            </TouchableOpacity>
+            </PressableSpring>
           );
         })}
         {!canVote ? (
@@ -222,7 +284,12 @@ export const FeedScreen: React.FC<FeedScreenProps> = ({
   };
 
   const renderItem = ({ item }: { item: PlatformFeedPost }) => (
-    <View style={[styles.card, { backgroundColor: c.surface, borderColor: c.border }]}>
+    <PressableSpring
+      style={[styles.card, { backgroundColor: c.surface, borderColor: c.border }]}
+      onPress={() => prodayHaptics.press()}
+      scaleTo={0.98}
+      haptic
+    >
       <View style={styles.cardHead}>
         <View style={[styles.typePill, { backgroundColor: c.accentSoft }]}>
           <Icon
@@ -258,7 +325,7 @@ export const FeedScreen: React.FC<FeedScreenProps> = ({
         {item.author_name} · {roleLabelForLine(item.author_role, productLine)}
       </Text>
       {item.type === 'poll' ? renderPoll(item) : null}
-    </View>
+    </PressableSpring>
   );
 
   const inputStyle = [
@@ -272,19 +339,34 @@ export const FeedScreen: React.FC<FeedScreenProps> = ({
 
   return (
     <View style={[styles.root, { backgroundColor: c.background }]}>
-      <ScreenHeader
-        label="Communauté"
-        title="Fil d'actualité"
-        subtitle="Actualités et sondages"
-        onBack={onBack}
-        centered
-        showBrandLogo={!onBack}
-      />
+      {showHeader ? (
+        <ScreenHeader
+          label="Communauté"
+          title="Fil d'actualité"
+          subtitle="Actualités et sondages"
+          onBack={onBack}
+          centered
+          showBrandLogo={!onBack}
+        />
+      ) : null}
 
-      {(canNews || canPoll) && (
+      {showList && panel === 'list' ? (
+        <>
+          <SearchBar placeholder="Rechercher…" value={search} onChangeText={setSearch} />
+          <ProDaySelect<FeedTypeFilter>
+            label="Type de contenu"
+            placeholder="Tout"
+            options={FEED_TYPE_FILTERS.map((f) => ({ id: f.id, label: f.label }))}
+            value={typeFilter}
+            onChange={setTypeFilter}
+          />
+        </>
+      ) : null}
+
+      {showCompose && (canNews || canPoll) && (
         <View style={styles.composerBar}>
           {canNews ? (
-            <TouchableOpacity
+            <PressableSpring
               style={[
                 styles.composerBtn,
                 {
@@ -293,6 +375,8 @@ export const FeedScreen: React.FC<FeedScreenProps> = ({
                 },
               ]}
               onPress={() => setComposer(composer === 'news' ? 'none' : 'news')}
+              scaleTo={0.96}
+              haptic
             >
               <Text
                 style={[
@@ -302,10 +386,10 @@ export const FeedScreen: React.FC<FeedScreenProps> = ({
               >
                 + Actualité
               </Text>
-            </TouchableOpacity>
+            </PressableSpring>
           ) : null}
           {canPoll ? (
-            <TouchableOpacity
+            <PressableSpring
               style={[
                 styles.composerBtn,
                 {
@@ -314,6 +398,8 @@ export const FeedScreen: React.FC<FeedScreenProps> = ({
                 },
               ]}
               onPress={() => setComposer(composer === 'poll' ? 'none' : 'poll')}
+              scaleTo={0.96}
+              haptic
             >
               <Text
                 style={[
@@ -323,12 +409,12 @@ export const FeedScreen: React.FC<FeedScreenProps> = ({
               >
                 + Sondage
               </Text>
-            </TouchableOpacity>
+            </PressableSpring>
           ) : null}
         </View>
       )}
 
-      {composer !== 'none' ? (
+      {showCompose && composer !== 'none' ? (
         <View
           style={[
             styles.composerPanel,
@@ -344,14 +430,15 @@ export const FeedScreen: React.FC<FeedScreenProps> = ({
           />
           {composer === 'news' ? (
             <>
-              <TouchableOpacity
+              <PressableSpring
                 style={[styles.imagePickBtn, { borderColor: c.border }]}
                 onPress={() => void handlePickImage()}
+                scaleTo={0.98}
               >
                 <Text style={[styles.imagePickText, { color: c.brand }]}>
                   {imageUri ? 'Changer la photo' : '+ Ajouter une photo'}
                 </Text>
-              </TouchableOpacity>
+              </PressableSpring>
               {imageUri ? (
                 <Image source={{ uri: imageUri }} style={styles.previewImage} resizeMode="cover" />
               ) : null}
@@ -366,6 +453,13 @@ export const FeedScreen: React.FC<FeedScreenProps> = ({
             </>
           ) : (
             <>
+              <TextInput
+                style={inputStyle}
+                placeholder="Convocation liée (optionnel) — ex. Entraînement samedi"
+                placeholderTextColor={c.textMuted}
+                value={pollEventLink}
+                onChangeText={setPollEventLink}
+              />
               <TextInput
                 style={inputStyle}
                 placeholder="Option 1"
@@ -397,33 +491,38 @@ export const FeedScreen: React.FC<FeedScreenProps> = ({
               />
             </>
           )}
-          <TouchableOpacity
+          <PressableSpring
             style={[
               styles.publishBtn,
               { backgroundColor: c.brand },
               submitting && styles.publishDisabled,
             ]}
-            onPress={() =>
-              void (composer === 'news' ? handlePublishNews() : handlePublishPoll())
-            }
+            onPress={() => {
+              prodayHaptics.confirm();
+              void (composer === 'news' ? handlePublishNews() : handlePublishPoll());
+            }}
             disabled={submitting}
+            scaleTo={0.97}
+            haptic={!submitting}
           >
             {submitting ? (
               <ActivityIndicator color={c.brandInverse} />
             ) : (
               <Text style={[styles.publishText, { color: c.brandInverse }]}>Publier</Text>
             )}
-          </TouchableOpacity>
+          </PressableSpring>
         </View>
       ) : null}
 
-      {loading ? (
-        <ActivityIndicator color={c.brand} style={styles.loader} />
+      {showList && (loading ? (
+        <SkeletonList count={4} variant="card" />
       ) : (
         <FlatList
-          data={posts}
+          data={filteredPosts}
           keyExtractor={(p) => p.id}
-          renderItem={renderItem}
+          renderItem={({ item, index }) => (
+            <InteractiveListItem index={index}>{renderItem({ item })}</InteractiveListItem>
+          )}
           contentContainerStyle={styles.list}
           refreshControl={
             <RefreshControl
@@ -436,11 +535,13 @@ export const FeedScreen: React.FC<FeedScreenProps> = ({
             />
           }
           ListHeaderComponent={
-            <PhysioCarePanel
-              profile={profile}
-              onOpenChat={onOpenChat}
-              onOpenMessages={onOpenMessages}
-            />
+            panel === 'full' ? (
+              <PhysioCarePanel
+                profile={profile}
+                onOpenChat={onOpenChat}
+                onOpenMessages={onOpenMessages}
+              />
+            ) : null
           }
           ListEmptyComponent={
             <Text style={[styles.empty, { color: c.textMuted }]}>
@@ -449,7 +550,7 @@ export const FeedScreen: React.FC<FeedScreenProps> = ({
             </Text>
           }
         />
-      )}
+      ))}
     </View>
   );
 };

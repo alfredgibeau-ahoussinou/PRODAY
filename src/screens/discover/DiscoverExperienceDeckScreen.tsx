@@ -50,14 +50,6 @@ export const DiscoverExperienceDeckScreen: React.FC<DiscoverExperienceDeckScreen
         icon: 'star-four-points',
       },
       {
-        key: 'arena',
-        kicker: 'ARENA',
-        title: 'Tournois qui claquent',
-        body: 'Inscription club, statut live, palmarès publié par l’organisateur.',
-        image: showcase.expArena,
-        icon: 'trophy',
-      },
-      {
         key: 'sponsors',
         kicker: 'SPONSORS',
         title: 'Partenaires & objectifs',

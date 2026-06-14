@@ -1,18 +1,14 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   View,
-  Text,
   TouchableOpacity,
   StyleSheet,
-  ScrollView,
   ActivityIndicator,
   Alert,
 } from 'react-native';
 import type { User } from '../models/User';
 import { Icon } from '../components/ui/Icon';
-import { TAB_BAR_CONTENT_INSET } from '../components/navigation/BottomTabBar';
-import { spacing, radius, shadows } from '../theme/designTokens';
-import { SearchBar } from '../components/ui/SearchBar';
+import { spacing } from '../theme/designTokens';
 import { PlayersListScreen } from './PlayersListScreen';
 import { PlayerProfileScreen } from './PlayerProfileScreen';
 import { CoachesListScreen } from './CoachesListScreen';
@@ -31,15 +27,15 @@ import { useMercatoHome, useUserProfile } from '../hooks/useRecruitmentData';
 import { useAuth } from '../context/AuthContext';
 import { useTabNavigation } from '../context/TabNavigationContext';
 import { useTabNavigationActions } from '../hooks/useTabNavigationActions';
-import { formatCount } from '../services/stats.service';
+import { useRequireAuth } from '../hooks/useRequireAuth';
 import { recruitmentService } from '../services/recruitment.service';
 import { openContactConversation } from '../utils/openContactConversation';
-import { MercatoHero } from '../components/mercato/MercatoHero';
-import { MercatoScreenHeader } from '../components/mercato/MercatoScreenHeader';
-import { MercatoQuickGrid } from '../components/mercato/MercatoQuickGrid';
-import { MercatoActionRow } from '../components/mercato/MercatoActionRow';
-import { MercatoPostsSection } from '../components/mercato/MercatoPostsSection';
-import { AppSpaceBanner } from '../components/appSpace/AppSpaceBanner';
+import { guardStaffVerification } from '../utils/staffVerificationGuard';
+import { ROLES_REQUIRING_VERIFICATION } from '../models/User';
+import { profileService } from '../services/profile.service';
+import { ProDayScreenCanvas } from '../components/ui/ProDayScreenCanvas';
+import { CandidatureScreen } from '../components/mercato/CandidatureScreen';
+import { MercatoStaffHome } from '../components/mercato/MercatoStaffHome';
 import { WomenHubScreen } from './women/WomenHubScreen';
 import { UnderU13HubScreen } from './underU13/UnderU13HubScreen';
 import { useAppSpace } from '../context/AppSpaceContext';
@@ -88,6 +84,7 @@ export const MercatoScreen: React.FC = () => {
   const { productLine, colors: themeColors, enterWomanSpace } = useAppTheme();
   const { openChat, pendingMercatoView, clearPendingMercato } = useTabNavigation();
   const { openProfile } = useTabNavigationActions();
+  const { requireAuth } = useRequireAuth();
   const { stats, loading: loadingStats, posts, loadingLists, refreshLists } =
     useMercatoHome();
 
@@ -116,9 +113,31 @@ export const MercatoScreen: React.FC = () => {
 
   useEffect(() => {
     if (!pendingMercatoView) return;
-    setView(pendingMercatoView);
+    if (
+      profile &&
+      pendingMercatoView === 'create_post' &&
+      ROLES_REQUIRING_VERIFICATION.includes(profile.role) &&
+      !profileService.canPerformSensitiveAction(profile)
+    ) {
+      Alert.alert(
+        'Vérification requise',
+        'Validez votre diplôme ou licence pour publier une annonce.',
+      );
+      setView('home');
+      clearPendingMercato();
+      return;
+    }
+    if (pendingMercatoView === 'home') {
+      setView('home');
+    } else if (pendingMercatoView === 'detections') {
+      setView('detections');
+    } else if (pendingMercatoView === 'create_post') {
+      setView('create_post');
+    } else if (pendingMercatoView === 'stages') {
+      setView('stages');
+    }
     clearPendingMercato();
-  }, [pendingMercatoView, clearPendingMercato]);
+  }, [pendingMercatoView, clearPendingMercato, profile]);
 
   useEffect(() => {
     if (!profile || profile.role !== 'player') {
@@ -131,10 +150,7 @@ export const MercatoScreen: React.FC = () => {
   }, [profile]);
 
   const handleContact = async (target: User) => {
-    if (!profile) {
-      Alert.alert('Connexion requise', 'Connectez-vous depuis l’onglet Profil.');
-      return;
-    }
+    if (!requireAuth('Connectez-vous pour contacter ce profil.') || !profile) return;
     await openContactConversation(profile, target, target.display_name, openChat);
   };
 
@@ -165,7 +181,10 @@ export const MercatoScreen: React.FC = () => {
         }}
         onCreateStage={
           profile && canPublishStages(profile.role)
-            ? () => setView('create_stage')
+            ? () => {
+                if (!guardStaffVerification(profile)) return;
+                setView('create_stage');
+              }
             : undefined
         }
       />
@@ -309,6 +328,7 @@ export const MercatoScreen: React.FC = () => {
         onCreatePost={
           profile && canPublishRecruitmentPost(profile.role)
             ? () => {
+                if (!guardStaffVerification(profile)) return;
                 setReturnView('staff');
                 setView('create_post');
               }
@@ -338,8 +358,13 @@ export const MercatoScreen: React.FC = () => {
 
   const loading = loadingStats || loadingLists;
 
+  const openFavorites = () => {
+    if (!requireAuth('Connectez-vous pour voir vos favoris Mercato.')) return;
+    setView('favorites');
+  };
+
   const headerRight = config.showFavoritesHeader ? (
-    <TouchableOpacity hitSlop={12} onPress={() => setView('favorites')}>
+    <TouchableOpacity hitSlop={12} onPress={openFavorites}>
       <Icon name="bookmark" size={22} color={themeColors.text} />
     </TouchableOpacity>
   ) : config.showDetectionsHeader ? (
@@ -348,177 +373,95 @@ export const MercatoScreen: React.FC = () => {
     </TouchableOpacity>
   ) : null;
 
-  return (
-    <View style={[styles.root, { backgroundColor: themeColors.background }]}>
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
-      >
-        <MercatoScreenHeader
-          eyebrow={config.eyebrow}
-          title={config.screenTitle}
-          subtitle={config.screenSubtitle}
-          colors={themeColors}
-          badgeIcon={config.heroIcon}
-          rightAction={headerRight}
-        />
+  const isPlayerHub = profile?.role === 'player';
 
-        <View style={styles.bannerWrap}>
-          <AppSpaceBanner
-            showHubLinks={productLine === 'homme' || productLine === 'woman'}
-            onOpenMenHub={() => setAppSpace('men')}
-            onOpenWomenHub={() =>
-              productLine === 'homme'
-                ? void enterWomanSpace()
-                : setView('women_hub')
-            }
-            onOpenUnderU13Hub={() =>
-              productLine === 'homme'
-                ? setAppSpace('under_u13')
-                : setView('under_u13_hub')
-            }
-          />
-        </View>
-
-        <MercatoHero
-          colors={themeColors}
-          title={config.heroTitle}
-          subtitle={config.heroSubtitle}
-          icon={config.heroIcon}
-          playersStatLabel={config.playersStatLabel}
+  if (isPlayerHub && profile) {
+    return (
+      <ProDayScreenCanvas flat>
+        <CandidatureScreen
+          profile={profile}
+          config={config}
           stats={stats}
-          loading={loadingStats}
-          applicationsCount={
-            profile?.role === 'player' ? applicationsCount : undefined
-          }
-          onApplicationsPress={
-            profile?.role === 'player' && applicationsCount > 0
-              ? () => openProfile('applications')
-              : undefined
-          }
-        />
-
-        <View style={styles.searchWrap}>
-          <SearchBar
-            placeholder={config.searchPlaceholder}
-            value={search}
-            onChangeText={setSearch}
-          />
-        </View>
-
-        {search.trim().length > 0 ? (
-          <TouchableOpacity
-            style={[
-              styles.searchHint,
-              {
-                backgroundColor: themeColors.surfaceMuted,
-                borderColor: themeColors.border,
-              },
-            ]}
-            onPress={() => setView('players')}
-          >
-            <Icon name="people" size={18} color={themeColors.brand} />
-            <Text style={[styles.searchHintText, { color: themeColors.text }]}>
-              {config.playersSearchHint} « {search.trim()} »
-            </Text>
-          </TouchableOpacity>
-        ) : null}
-
-        <MercatoQuickGrid
-          tiles={config.quickTiles}
-          colors={themeColors}
-          stats={stats}
-          loading={loading}
-          onPress={handleQuickTile}
-        />
-
-        <MercatoActionRow
-          colors={themeColors}
-          showFavorites={config.showFavoritesRow}
-          staffLabel={config.staffRowLabel}
-          staffCount={
-            stats
-              ? formatCount(stats.coaches + stats.agents, 'profil')
-              : undefined
-          }
-          onFavorites={() => setView('favorites')}
-          onStaff={() => setView('staff')}
-        />
-
-        <MercatoPostsSection
-          colors={themeColors}
-          title={config.postsSectionTitle}
           loading={loading}
           posts={filteredPosts}
-          hasSpacePosts={spacePosts.length > 0}
-          searchActive={search.trim().length > 0}
-          emptyAll={config.postsEmptyAll}
-          emptySpace={config.postsEmptySpace}
-          emptyFiltered={config.postsEmptyFiltered}
+          search={search}
+          onSearchChange={setSearch}
+          emptyMessage={
+            search.trim().length > 0
+              ? config.postsEmptyFiltered
+              : spacePosts.length === 0
+                ? config.postsEmptyAll
+                : config.postsEmptySpace
+          }
+          applicationsCount={applicationsCount}
+          productLine={productLine}
           onSelectPost={(id) => {
             setSelectedPostId(id);
             setView('post_detail');
           }}
+          onQuickTile={handleQuickTile}
+          onOpenApplications={() => openProfile('applications')}
+          onSearchPlayers={() => setView('players')}
+          showSpaceBanner={productLine === 'homme' || productLine === 'woman'}
+          onOpenMenHub={() => setAppSpace('men')}
+          onOpenWomenHub={() =>
+            productLine === 'homme' ? void enterWomanSpace() : setView('women_hub')
+          }
+          onOpenUnderU13Hub={() =>
+            productLine === 'homme' ? setAppSpace('under_u13') : setView('under_u13_hub')
+          }
+          onRefresh={async () => {
+            await refreshLists();
+          }}
         />
+      </ProDayScreenCanvas>
+    );
+  }
 
-        <View style={styles.bottomSpacer} />
-      </ScrollView>
-
-      {profile && canPublishRecruitmentPost(profile.role) ? (
-        <TouchableOpacity
-          style={[
-            styles.fab,
-            shadows.fab,
-            { backgroundColor: themeColors.brand, borderColor: themeColors.border },
-          ]}
-          onPress={() => setView('create_post')}
-        >
-          <Icon name="add" size={20} color="#FFFFFF" />
-          <Text style={styles.fabText}>{config.fabLabel}</Text>
-        </TouchableOpacity>
-      ) : null}
-    </View>
+  return (
+    <ProDayScreenCanvas flat>
+      <MercatoStaffHome
+        profile={profile}
+        config={config}
+        themeColors={themeColors}
+        productLine={productLine}
+        stats={stats}
+        loading={loading}
+        filteredPosts={filteredPosts}
+        spacePosts={spacePosts}
+        search={search}
+        onSearchChange={setSearch}
+        headerRight={headerRight}
+        showSpaceBanner={productLine === 'homme' || productLine === 'woman'}
+        onOpenMenHub={() => setAppSpace('men')}
+        onOpenWomenHub={() =>
+          productLine === 'homme' ? void enterWomanSpace() : setView('women_hub')
+        }
+        onOpenUnderU13Hub={() =>
+          productLine === 'homme' ? setAppSpace('under_u13') : setView('under_u13_hub')
+        }
+        onQuickTile={handleQuickTile}
+        onFavorites={openFavorites}
+        onStaff={() => setView('staff')}
+        onSelectPost={(id) => {
+          setSelectedPostId(id);
+          setView('post_detail');
+        }}
+        onCreatePost={
+          profile && canPublishRecruitmentPost(profile.role)
+            ? () => {
+                if (!guardStaffVerification(profile)) return;
+                setView('create_post');
+              }
+            : undefined
+        }
+        onSearchPlayers={() => setView('players')}
+      />
+    </ProDayScreenCanvas>
   );
 };
 
 const styles = StyleSheet.create({
-  root: { flex: 1 },
-  scroll: { flex: 1 },
-  content: { paddingBottom: spacing.md },
-  bannerWrap: {
-    paddingHorizontal: spacing.lg,
-    marginBottom: spacing.sm,
-  },
-  searchWrap: {
-    paddingHorizontal: spacing.lg,
-  },
-  searchHint: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    marginHorizontal: spacing.lg,
-    marginBottom: spacing.md,
-    padding: spacing.md,
-    borderRadius: radius.md,
-    borderWidth: 1,
-  },
-  searchHintText: { fontWeight: '800', fontSize: 13, flex: 1 },
-  bottomSpacer: { height: TAB_BAR_CONTENT_INSET + spacing.lg },
-  fab: {
-    position: 'absolute',
-    left: spacing.lg,
-    right: spacing.lg,
-    bottom: TAB_BAR_CONTENT_INSET - spacing.sm,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    paddingVertical: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.sm,
-  },
-  fabText: { fontWeight: '700', fontSize: 16 },
   loader: {
     flex: 1,
     justifyContent: 'center',

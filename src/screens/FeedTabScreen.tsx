@@ -1,17 +1,16 @@
 import React, { useMemo } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, ActivityIndicator } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import { useTabNavigation } from '../context/TabNavigationContext';
-import { FeedScreen } from './FeedScreen';
-import { ScreenHeader } from '../components/ui/ScreenHeader';
+import { FeedHomeScreen } from '../components/feed/FeedHomeScreen';
+import { ProDayScreenCanvas } from '../components/ui/ProDayScreenCanvas';
+import { AppTabHeader } from '../components/app/AppTabHeader';
+import { ProDayText } from '../components/ui/ProDayText';
 import { TAB_BAR_CONTENT_INSET } from '../components/navigation/BottomTabBar';
 import { spacing } from '../theme/designTokens';
 import { useThemedScreen } from '../hooks/useThemedScreen';
 import type { AppColors } from '../theme/universeTheme';
 
-/**
- * Onglet Fil — fil complet si connecté, aperçu invité sinon.
- */
 export const FeedTabScreen: React.FC = () => {
   const { profile, loading } = useAuth();
   const { setActiveTab, openChat } = useTabNavigation();
@@ -29,35 +28,37 @@ export const FeedTabScreen: React.FC = () => {
 
   if (profile) {
     return (
-      <FeedScreen
-        profile={profile}
-        onOpenChat={(threadId) => openChat(threadId)}
-        onOpenMessages={() => setActiveTab('messages')}
-      />
+      <ProDayScreenCanvas flat>
+        <FeedHomeScreen
+          profile={profile}
+          onOpenChat={(threadId) => openChat(threadId)}
+          onOpenMessages={() => setActiveTab('messages')}
+        />
+      </ProDayScreenCanvas>
     );
   }
 
   return (
-    <View style={[styles.guestRoot, rootStyle]}>
-      <ScreenHeader
-        label="Communauté"
-        title="Fil d'actualité"
-        subtitle={
-          isWoman
-            ? 'Actualités et sondages du foot féminin'
-            : 'Actualités et sondages de la plateforme'
-        }
-        showBrandLogo
-        centered
-      />
-      <View style={styles.guestBody}>
-        <Text style={styles.guestTitle}>Suivez l’activité ProDay</Text>
-        <Text style={styles.guestSub}>
-          Connectez-vous pour publier, voter aux sondages agents et commenter l’actualité de
-          votre écosystème foot.
-        </Text>
+    <ProDayScreenCanvas>
+      <View style={styles.guestRoot}>
+        <AppTabHeader
+          safeTop={false}
+          title="Fil"
+          subtitle={
+            isWoman
+              ? 'Actualités et sondages du foot féminin'
+              : 'Actualités et sondages de la plateforme'
+          }
+        />
+        <View style={styles.guestBody}>
+          <ProDayText variant="section">Suivez l&apos;activité ProDay</ProDayText>
+          <ProDayText variant="body" muted style={styles.guestSub}>
+            Connectez-vous pour publier, voter aux sondages agents et commenter l&apos;actualité
+            de votre écosystème foot.
+          </ProDayText>
+        </View>
       </View>
-    </View>
+    </ProDayScreenCanvas>
   );
 };
 
@@ -68,26 +69,14 @@ function createStyles(c: AppColors) {
       justifyContent: 'center',
       alignItems: 'center',
     },
-    guestRoot: {
-      flex: 1,
-    },
+    guestRoot: { flex: 1 },
     guestBody: {
       flex: 1,
       paddingHorizontal: spacing.lg,
       paddingBottom: TAB_BAR_CONTENT_INSET + spacing.xl,
       justifyContent: 'center',
+      gap: spacing.sm,
     },
-    guestTitle: {
-      fontSize: 20,
-      fontWeight: '800',
-      color: c.text,
-      letterSpacing: -0.3,
-      marginBottom: spacing.sm,
-    },
-    guestSub: {
-      fontSize: 15,
-      lineHeight: 22,
-      color: c.textSecondary,
-    },
+    guestSub: { lineHeight: 22 },
   });
 }
