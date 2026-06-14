@@ -1,5 +1,6 @@
 import {
   isBetaAccountBypassed,
+  isBetaBypassAllowed,
   isEmailVerificationBypassed,
   isOnboardingDocumentsBypassed,
   isPartnerPoleTestAccount,
@@ -27,5 +28,9 @@ describe('emailVerificationBypass', () => {
 
   it('normalise en minuscules', () => {
     expect(normalizeEmailForBypass('Test@Gmail.COM')).toBe('test@gmail.com');
+  });
+
+  it('expose le flag bypass dev', () => {
+    expect(typeof isBetaBypassAllowed()).toBe('boolean');
   });
 });

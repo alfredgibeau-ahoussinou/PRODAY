@@ -26,18 +26,24 @@ describe('subscriptionPlansByLine', () => {
   });
 
   it('personnalise les métiers sur Pro', () => {
-    const physio = getPlanForRoleAndLine('physio', 'pro');
     const recruiter = getPlanForRoleAndLine('recruiter', 'pro');
 
-    expect(physio?.label).toBe('Cabinet Pro');
+    expect(getPlanForRoleAndLine('physio', 'pro')).toBeNull();
     expect(recruiter?.label).toBe('Recruteur Pro');
-    expect(physio?.proIncludes.some((i) => i.includes('RDV'))).toBe(true);
     expect(recruiter?.freeIncludes.some((i) => i.includes('Mercato Pro'))).toBe(true);
+  });
+
+  it('expose le plan praticien sur Santé', () => {
+    const physio = getPlanForRoleAndLine('physio', 'sante');
+
+    expect(physio?.label).toBe('Cabinet Santé');
+    expect(physio?.proIncludes.some((i) => i.includes('RDV'))).toBe(true);
+    expect(plansForProductLine('sante')).toHaveLength(1);
   });
 
   it('liste les offres par univers', () => {
     expect(plansForProductLine('homme')).toHaveLength(1);
     expect(plansForProductLine('woman')[0].label).toBe('Joueuse Plus');
-    expect(plansForProductLine('pro').length).toBeGreaterThanOrEqual(6);
+    expect(plansForProductLine('pro').length).toBeGreaterThanOrEqual(5);
   });
 });

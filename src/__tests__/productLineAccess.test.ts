@@ -40,6 +40,11 @@ describe('productLineAccess', () => {
     expect(getUserProductLine(baseUser as User)).toBe('homme');
   });
 
+  it('déduit sante depuis rôle physio', () => {
+    const physio = { ...baseUser, role: 'physio' as const } as User;
+    expect(getUserProductLine(physio)).toBe('sante');
+  });
+
   it('déduit pro depuis rôle coach', () => {
     const coach = { ...baseUser, role: 'coach' as const } as User;
     expect(getUserProductLine(coach)).toBe('pro');
@@ -66,12 +71,17 @@ describe('productLineAccess', () => {
     expect(profileMatchesActiveLine(testUser, 'homme')).toBe(true);
     expect(profileMatchesActiveLine(testUser, 'woman')).toBe(true);
     expect(profileMatchesActiveLine(testUser, 'pro')).toBe(true);
+    expect(profileMatchesActiveLine(testUser, 'sante')).toBe(true);
     expect(getEffectiveRoleForProductLine(testUser, 'homme')).toBe('player');
     expect(getEffectiveRoleForProductLine(testUser, 'woman')).toBe('player');
-    expect(getEffectiveRoleForProductLine(testUser, 'pro')).toBe('physio');
+    expect(getEffectiveRoleForProductLine(testUser, 'pro')).toBe('coach');
+    expect(getEffectiveRoleForProductLine(testUser, 'sante')).toBe('physio');
     const proSession = getSessionProfile(testUser, 'pro');
-    expect(proSession.role).toBe('physio');
+    expect(proSession.role).toBe('coach');
     expect(proSession.product_line).toBe('pro');
+    const santeSession = getSessionProfile(testUser, 'sante');
+    expect(santeSession.role).toBe('physio');
+    expect(santeSession.product_line).toBe('sante');
   });
 
   it('autorise le compte démo partenaire uniquement sur Pro', () => {

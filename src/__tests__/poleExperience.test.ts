@@ -16,7 +16,7 @@ describe('poleExperience', () => {
     expect(getSignupRoleGroups('woman')).toEqual([]);
   });
 
-  it('regroupe tous les métiers sur Pro', () => {
+  it('regroupe les métiers foot sur Pro', () => {
     const proRoles = getSignupRoleGroups('pro').flatMap((g) => g.roles);
     expect(proRoles).toEqual(
       expect.arrayContaining([
@@ -25,11 +25,17 @@ describe('poleExperience', () => {
         'recruiter',
         'club',
         'organizer',
-        'physio',
         'sponsor',
       ])
     );
     expect(proRoles).not.toContain('player');
+    expect(proRoles).not.toContain('physio');
+  });
+
+  it('dédié Santé aux praticiens médicaux', () => {
+    const santeRoles = getSignupRoleGroups('sante').flatMap((g) => g.roles);
+    expect(santeRoles).toEqual(['physio']);
+    expect(rolesForProductLine('sante')).toEqual(['physio']);
   });
 
   it('interdit la publication Mercato aux joueurs', () => {
@@ -44,6 +50,7 @@ describe('poleExperience', () => {
       'home',
       'recrutement',
       'matchs',
+      'reels',
       'covoiturage',
       'sante',
       'messages',
@@ -57,18 +64,18 @@ describe('poleExperience', () => {
       'profil',
     ]);
     expect(getVisibleMainTabs('pro', 'sponsor')).not.toContain('shop');
-    expect(getVisibleMainTabs('pro', 'physio')).toEqual([
+    expect(getVisibleMainTabs('sante', 'physio')).toEqual([
       'home',
       'matchs',
       'messages',
       'profil',
     ]);
-    expect(getVisibleMainTabs('pro', 'physio')).not.toContain('recrutement');
-    expect(getVisibleMainTabs('pro', 'physio')).not.toContain('shop');
+    expect(getVisibleMainTabs('sante', 'physio')).not.toContain('recrutement');
+    expect(getVisibleMainTabs('sante', 'physio')).not.toContain('shop');
     expect(getVisibleMainTabs('pro', 'club')).toContain('recrutement');
     expect(getVisibleMainTabs('pro', 'recruiter')).toContain('recrutement');
     expect(getVisibleMainTabs('pro', 'coach')).toContain('covoiturage');
-    expect(getVisibleMainTabs('pro', 'physio')).not.toContain('covoiturage');
+    expect(getVisibleMainTabs('sante', 'physio')).not.toContain('covoiturage');
   });
 
   it('libellé Mercato joueur = Candidater', () => {
