@@ -123,7 +123,7 @@ export function useMercatoHome() {
     const [coaches, players, openPosts] = await Promise.all([
       usersService.listPopularStaff('coach'),
       usersService.listRecentPlayers(),
-      recruitmentService.listOpenPosts(5),
+      recruitmentService.listOpenPosts(40),
     ]);
     setPopularCoaches(coaches);
     setRecentPlayers(players);

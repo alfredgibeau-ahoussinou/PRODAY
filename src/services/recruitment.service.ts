@@ -22,6 +22,12 @@ import type { RecruitmentPost, Application } from '../models/Player';
 import { callFunction } from '../lib/firebaseFunctions';
 import { subscriptionService } from './subscription.service';
 import { canPublishRecruitmentPost } from '../content/poleExperience';
+import { profileService } from './profile.service';
+import { ROLES_REQUIRING_VERIFICATION } from '../models/User';
+import {
+  validateCoverLetter,
+  validateRecruitmentPostInput,
+} from '../utils/recruitmentValidation';
 
 export const APPLICATION_STATUS_LABEL: Record<Application['status'], string> = {
   PENDING: 'En attente',
@@ -96,11 +102,27 @@ export const recruitmentService = {
       if (!canPublishRecruitmentPost(author.role)) {
         throw new Error('Votre profil ne peut pas publier d’annonces Mercato.');
       }
+      if (
+        ROLES_REQUIRING_VERIFICATION.includes(author.role) &&
+        !profileService.canPerformSensitiveAction(author)
+      ) {
+        throw new Error('Vérification requise pour publier une annonce.');
+      }
       await subscriptionService.assertFeature(author, 'club_active_post');
     }
 
+    const validated = validateRecruitmentPostInput({
+      title: input.title,
+      position: input.position,
+      category: input.category,
+      level: input.level,
+      city: input.city,
+      description: input.description,
+    });
+
     const ref = await addDoc(collection(database, 'recruitment_posts'), {
       ...input,
+      ...validated,
       status: 'OPEN',
       created_at: serverTimestamp(),
     });
@@ -142,15 +164,20 @@ export const recruitmentService = {
     if (already) throw new Error('Vous avez déjà postulé à cette annonce.');
 
     if (player) {
+      if (player.role !== 'player') {
+        throw new Error('Seuls les joueurs peuvent postuler.');
+      }
       await subscriptionService.assertFeature(player, 'mercato_apply');
     }
+
+    const coverLetter = validateCoverLetter(input.cover_letter);
 
     const ref = await addDoc(collection(database, 'recruitment_applications'), {
       post_id: input.post_id,
       post_author_uid: input.post_author_uid,
       player_uid: input.player_uid,
       player_name: input.player_name,
-      cover_letter: input.cover_letter.trim(),
+      cover_letter: coverLetter,
       cv_pdf_url: '',
       status: 'PENDING',
       created_at: serverTimestamp(),

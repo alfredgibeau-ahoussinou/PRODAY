@@ -24,6 +24,8 @@ import {
 import type { AppSpaceId } from '../models/AppSpace';
 import type { ProductLineId } from '../models/ProductLine';
 import type { ParentalSettings } from '../models/ParentalSettings';
+import { DEFAULT_PARENTAL_SETTINGS } from '../models/ParentalSettings';
+import { enforceMinorParentalPatch } from '../utils/minorProfileGuard';
 import { getDb } from '../lib/firebase';
 import { storageService, type UploadFileInput } from './storage.service';
 import { isBetaAccountBypassed } from '../config/emailVerificationBypass';
@@ -220,11 +222,14 @@ export const profileService = {
       });
     }
     if (payload.parental_settings) {
-      const currentParental =
-        (current.parental_settings as ParentalSettings | undefined) ?? {};
+      const currentParental: ParentalSettings = {
+        ...DEFAULT_PARENTAL_SETTINGS,
+        ...(current.parental_settings as Partial<ParentalSettings> | undefined),
+      };
+      const safePatch = enforceMinorParentalPatch(currentParental, payload.parental_settings);
       update.parental_settings = stripUndefinedDeep({
         ...currentParental,
-        ...payload.parental_settings,
+        ...safePatch,
       });
     }
 

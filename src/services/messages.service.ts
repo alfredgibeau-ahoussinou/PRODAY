@@ -25,10 +25,23 @@ import {
   type ChatMessage,
 } from '../lib/firestoreMappers';
 import { threadKindForParticipants, type ThreadKind } from '../utils/physioMessaging';
-import type { UserRole } from '../models/User';
+import type { User, UserRole } from '../models/User';
+import { validateMessageBody } from '../utils/messagingLimits';
+import { isMinorUser } from '../utils/minor';
+import { evaluateScreenTimeAccess, shouldEnforceScreenTime } from '../utils/parentalScreenTime';
 
 function threadIdFor(uidA: string, uidB: string): string {
   return [uidA, uidB].sort().join('__');
+}
+
+async function assertMinorMessagingAllowed(sender?: User): Promise<void> {
+  if (!sender || !isMinorUser(sender)) return;
+  const settings = sender.parental_settings;
+  if (!shouldEnforceScreenTime(settings)) return;
+  const result = await evaluateScreenTimeAccess(sender.uid, settings!);
+  if (result.blocked) {
+    throw new Error('Limite de temps parentale atteinte. Réessayez plus tard.');
+  }
 }
 
 export const messagesService = {
@@ -134,12 +147,13 @@ export const messagesService = {
     threadId: string,
     senderUid: string,
     receiverUid: string,
-    body: string
+    body: string,
+    sender?: User,
   ): Promise<void> {
     const database = getDb();
     if (!database) throw new Error('Firebase non configuré');
-    const text = body.trim();
-    if (!text) throw new Error('Message vide.');
+    await assertMinorMessagingAllowed(sender);
+    const text = validateMessageBody(body);
 
     await addDoc(collection(database, 'messages'), {
       thread_id: threadId,
@@ -165,9 +179,36 @@ export const messagesService = {
   },
 
   getOtherParticipantId(threadId: string, currentUid: string): string | null {
+    if (threadId.startsWith('team__')) return 'group';
     const parts = threadId.split('__');
     if (parts.length !== 2) return null;
     return parts[0] === currentUid ? parts[1] : parts[0];
+  },
+
+  async sendGroupMessage(threadId: string, senderUid: string, body: string, sender?: User): Promise<void> {
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+    await assertMinorMessagingAllowed(sender);
+    const text = validateMessageBody(body);
+    const threadRef = doc(database, 'message_threads', threadId);
+    const snap = await getDoc(threadRef);
+    if (!snap.exists()) throw new Error('Conversation introuvable.');
+    const participantIds = (snap.data().participant_ids as string[]) ?? [];
+    const unreadTargets = participantIds.filter((id) => id !== senderUid);
+
+    await addDoc(collection(database, 'messages'), {
+      thread_id: threadId,
+      sender_id: senderUid,
+      receiver_id: 'group',
+      body: text,
+      created_at: serverTimestamp(),
+    });
+
+    await updateDoc(threadRef, {
+      last_message: text,
+      updated_at: serverTimestamp(),
+      unread_by: unreadTargets,
+    });
   },
 
   subscribeThreads(

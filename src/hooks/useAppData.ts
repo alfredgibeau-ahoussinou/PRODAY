@@ -1,15 +1,17 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { statsService, type RecruitmentStats } from '../services/stats.service';
-import { tournamentService } from '../services/tournament.service';
 import { friendlyMatchesService } from '../services/friendlyMatches.service';
 import { teamEventsService } from '../services/teamEvents.service';
 import type { TeamEvent } from '../models/TeamEvent';
 import { mergeSeasonCalendar, type SeasonCalendarItem } from '../utils/seasonCalendar';
+import {
+  loadSeasonCalendarCache,
+  saveSeasonCalendarCache,
+} from '../utils/seasonCalendarCache';
 import { sponsorsService } from '../services/sponsors.service';
 import { messagesService } from '../services/messages.service';
 import { recruitmentService } from '../services/recruitment.service';
 import type { RecruitmentPost } from '../models/Player';
-import type { Tournament } from '../models/Tournament';
 import type { FriendlyMatch } from '../models/FriendlyMatch';
 import type { SponsorOffer, ClubFundingGoal } from '../models/SponsorOffer';
 import type { MessageThread } from '../lib/firestoreMappers';
@@ -31,23 +33,20 @@ export function useHomeStats() {
   return { stats, loading, refresh };
 }
 
-/** Stats + annonces + tournois réels pour l’écran Découverte. */
+/** Stats + annonces réelles pour l’écran Découverte. */
 export function useDiscoverLiveData() {
   const [stats, setStats] = useState<RecruitmentStats | null>(null);
   const [posts, setPosts] = useState<RecruitmentPost[]>([]);
-  const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [loading, setLoading] = useState(true);
 
   const refresh = useCallback(async () => {
     setLoading(true);
-    const [s, p, t] = await Promise.all([
+    const [s, p] = await Promise.all([
       statsService.getRecruitmentStats(),
       recruitmentService.listOpenPosts(8),
-      tournamentService.listUpcoming(8),
     ]);
     setStats(s);
     setPosts(p);
-    setTournaments(t);
     setLoading(false);
   }, []);
 
@@ -55,30 +54,7 @@ export function useDiscoverLiveData() {
     refresh();
   }, [refresh]);
 
-  return { stats, posts, tournaments, loading, refresh };
-}
-
-export function useArenaData() {
-  const [tournaments, setTournaments] = useState<Tournament[]>([]);
-  const [honorTournament, setHonorTournament] = useState<Tournament | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  const refresh = useCallback(async () => {
-    setLoading(true);
-    const [list, honor] = await Promise.all([
-      tournamentService.listUpcoming(),
-      tournamentService.getLatestWithAwards(),
-    ]);
-    setTournaments(list);
-    setHonorTournament(honor);
-    setLoading(false);
-  }, []);
-
-  useEffect(() => {
-    refresh();
-  }, [refresh]);
-
-  return { tournaments, honorTournament, loading, refresh };
+  return { stats, posts, loading, refresh };
 }
 
 export function useTeamEvents(uid?: string, clubId?: string) {
@@ -103,23 +79,52 @@ export function useTeamEvents(uid?: string, clubId?: string) {
 }
 
 export function useSeasonCalendar(uid?: string, clubId?: string) {
+  const [cachedItems, setCachedItems] = useState<SeasonCalendarItem[] | null>(null);
   const { events, loading: loadingEvents, refresh: refreshEvents } = useTeamEvents(
     uid,
     clubId
   );
   const { matches, loading: loadingMatches, refresh: refreshMatches } =
     useFriendlyMatches();
-  const { tournaments, loading: loadingTournaments, refresh: refreshTournaments } =
-    useArenaData();
 
-  const items: SeasonCalendarItem[] = mergeSeasonCalendar(events, matches, tournaments);
-  const loading = loadingEvents || loadingMatches || loadingTournaments;
+  useEffect(() => {
+    if (!uid) {
+      setCachedItems(null);
+      return;
+    }
+    void loadSeasonCalendarCache(uid).then(setCachedItems);
+  }, [uid]);
+
+  const liveItems = useMemo(
+    () => mergeSeasonCalendar(events, matches),
+    [events, matches]
+  );
+  const hasLive = liveItems.length > 0;
+  const hasCache = (cachedItems?.length ?? 0) > 0;
+  const loading = loadingEvents || loadingMatches;
+  const items = hasLive ? liveItems : (cachedItems ?? []);
+  const fromCache = !hasLive && hasCache && !loading ? true : loading && hasCache && !hasLive;
 
   const refresh = useCallback(async () => {
-    await Promise.all([refreshEvents(), refreshMatches(), refreshTournaments()]);
-  }, [refreshEvents, refreshMatches, refreshTournaments]);
+    await Promise.all([refreshEvents(), refreshMatches()]);
+  }, [refreshEvents, refreshMatches]);
 
-  return { items, events, matches, tournaments, loading, refresh };
+  useEffect(() => {
+    if (!uid || liveItems.length === 0) return;
+    void saveSeasonCalendarCache(uid, liveItems);
+    setCachedItems((prev) => {
+      if (
+        prev &&
+        prev.length === liveItems.length &&
+        prev.every((item, index) => item.id === liveItems[index]?.id)
+      ) {
+        return prev;
+      }
+      return liveItems;
+    });
+  }, [uid, liveItems]);
+
+  return { items, events, matches, loading, fromCache, refresh };
 }
 
 export function useDetectionEvents() {

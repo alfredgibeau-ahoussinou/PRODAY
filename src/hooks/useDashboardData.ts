@@ -7,12 +7,15 @@ import { userRsvp } from '../models/TeamEvent';
 import { teamEventsService } from '../services/teamEvents.service';
 import { friendlyMatchesService } from '../services/friendlyMatches.service';
 import { recruitmentService } from '../services/recruitment.service';
-import { tournamentService } from '../services/tournament.service';
 import { statsService, type RecruitmentStats } from '../services/stats.service';
 import {
   mergeSeasonCalendar,
   type SeasonCalendarItem,
 } from '../utils/seasonCalendar';
+import {
+  loadSeasonCalendarCache,
+  saveSeasonCalendarCache,
+} from '../utils/seasonCalendarCache';
 import { computeProdayPulse, type ProdayPulseResult } from '../utils/prodayPulse';
 
 export interface DashboardData {
@@ -22,10 +25,12 @@ export interface DashboardData {
   nextItem: SeasonCalendarItem | null;
   pendingConvocations: TeamEvent[];
   myUpcomingEvents: TeamEvent[];
+  teamEvents: TeamEvent[];
   detections: TeamEvent[];
   myApplications: Application[];
   openMatches: FriendlyMatch[];
   loading: boolean;
+  fromCache: boolean;
 }
 
 const EMPTY: DashboardData = {
@@ -47,14 +52,30 @@ const EMPTY: DashboardData = {
   nextItem: null,
   pendingConvocations: [],
   myUpcomingEvents: [],
+  teamEvents: [],
   detections: [],
   myApplications: [],
   openMatches: [],
   loading: true,
+  fromCache: false,
 };
 
 export function useDashboardData(profile: User | null) {
   const [data, setData] = useState<DashboardData>(EMPTY);
+
+  useEffect(() => {
+    if (!profile?.uid) return;
+    void loadSeasonCalendarCache(profile.uid).then((cached) => {
+      if (!cached?.length) return;
+      setData((d) => ({
+        ...d,
+        calendarItems: cached.slice(0, 12),
+        nextItem: cached.find((c) => c.starts_at.getTime() > Date.now()) ?? null,
+        fromCache: true,
+        loading: d.loading,
+      }));
+    });
+  }, [profile?.uid]);
 
   const refresh = useCallback(async () => {
     if (!profile) {
@@ -66,23 +87,37 @@ export function useDashboardData(profile: User | null) {
 
     const clubId = profile.profile.club_id ?? profile.uid;
 
-    const [
-      stats,
-      teamEvents,
-      friendlyMatches,
-      tournaments,
-      detections,
-      applications,
-    ] = await Promise.all([
-      statsService.getRecruitmentStats(),
-      teamEventsService.listForUser(profile.uid, clubId),
-      friendlyMatchesService.listUpcoming(20),
-      tournamentService.listUpcoming(12),
-      teamEventsService.listDetections(8),
-      profile.role === 'player'
-        ? recruitmentService.listMyApplications(profile.uid)
-        : Promise.resolve([] as Application[]),
-    ]);
+    let teamEvents: TeamEvent[] = [];
+    let friendlyMatches: FriendlyMatch[] = [];
+    let stats: RecruitmentStats | null = null;
+    let detections: TeamEvent[] = [];
+    let applications: Application[] = [];
+    let fetchFailed = false;
+
+    try {
+      [stats, teamEvents, friendlyMatches, detections, applications] = await Promise.all([
+        statsService.getRecruitmentStats(),
+        teamEventsService.listForUser(profile.uid, clubId),
+        friendlyMatchesService.listUpcoming(20),
+        teamEventsService.listDetections(8),
+        profile.role === 'player'
+          ? recruitmentService.listMyApplications(profile.uid)
+          : Promise.resolve([] as Application[]),
+      ]);
+    } catch {
+      fetchFailed = true;
+      const cached = await loadSeasonCalendarCache(profile.uid);
+      if (cached?.length) {
+        setData((d) => ({
+          ...d,
+          calendarItems: cached.slice(0, 12),
+          nextItem: cached.find((c) => c.starts_at.getTime() > Date.now()) ?? null,
+          fromCache: true,
+          loading: false,
+        }));
+        return;
+      }
+    }
 
     const myClubId = profile.profile.club_id ?? profile.uid;
     const relevantMatches = friendlyMatches.filter(
@@ -107,7 +142,7 @@ export function useDashboardData(profile: User | null) {
         e.starts_at.getTime() > Date.now()
     );
 
-    const calendarItems = mergeSeasonCalendar(teamEvents, relevantMatches, tournaments);
+    const calendarItems = mergeSeasonCalendar(teamEvents, relevantMatches);
 
     const nextItem =
       calendarItems.find((c) => c.starts_at.getTime() > Date.now()) ?? null;
@@ -118,6 +153,10 @@ export function useDashboardData(profile: User | null) {
       upcomingEvents: myUpcomingEvents.length,
     });
 
+    if (!fetchFailed && calendarItems.length > 0) {
+      await saveSeasonCalendarCache(profile.uid, calendarItems);
+    }
+
     setData({
       stats,
       pulse,
@@ -125,10 +164,12 @@ export function useDashboardData(profile: User | null) {
       nextItem,
       pendingConvocations,
       myUpcomingEvents,
+      teamEvents,
       detections,
       myApplications: applications,
       openMatches: relevantMatches.filter((m) => m.status === 'OPEN').slice(0, 5),
       loading: false,
+      fromCache: false,
     });
   }, [profile]);
 

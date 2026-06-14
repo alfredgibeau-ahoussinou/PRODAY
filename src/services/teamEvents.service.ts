@@ -12,6 +12,7 @@ import {
   serverTimestamp,
   Timestamp,
 } from 'firebase/firestore';
+import { teamChatService } from './teamChat.service';
 import { getDb } from '../lib/firebase';
 import { isFirebaseConfigured } from '../config/firebase';
 import { teamEventFromFirestore } from '../lib/firestoreMappers';
@@ -26,7 +27,8 @@ import type {
   LiveMatchAction,
   LiveActionType,
 } from '../models/TeamEvent';
-import type { CarpoolSlot, EventTask, CarpoolMessage } from '../models/TeamEvent';
+import type { CarpoolSlot, EventTask, CarpoolMessage, MatchLiveState } from '../models/TeamEvent';
+import type { GeoPoint } from '../models/User';
 import {
   carpoolAvailableSeats,
   findCarpoolBooking,
@@ -34,10 +36,27 @@ import {
   newCarpoolMessageId,
   newEventTaskId,
 } from '../utils/carpoolBalance';
-import type { Tournament } from '../models/Tournament';
 import { callFunction } from '../lib/firebaseFunctions';
 import { usersService } from './users.service';
 import { profileService } from './profile.service';
+import { assertTeamEventManageAccess, assertTeamEventRsvpAccess } from '../utils/teamEventAccess';
+import type { User } from '../models/User';
+
+export type TeamEventActor = {
+  user: User;
+  isAdmin?: boolean;
+};
+
+function assertManage(
+  event: TeamEvent,
+  actor: TeamEventActor,
+  options?: { allowWhenReportLocked?: boolean },
+): void {
+  assertTeamEventManageAccess(event, actor.user, {
+    isAdmin: actor.isAdmin,
+    allowWhenReportLocked: options?.allowWhenReportLocked,
+  });
+}
 
 const COL = 'team_events';
 
@@ -156,40 +175,6 @@ export const teamEventsService = {
     return ref.id;
   },
 
-  /** Convocation équipe après inscription tournoi Arena (évite les doublons). */
-  async createTournamentConvocation(
-    tournament: Tournament,
-    organizerUid: string,
-    organizerName: string,
-    clubId: string,
-    clubName: string,
-    inviteeUids: string[]
-  ): Promise<string | null> {
-    if (inviteeUids.length === 0) return null;
-
-    const existing = (await this.listForUser(organizerUid, clubId)).find(
-      (e) => e.tournament_id === tournament.id && e.club_id === clubId
-    );
-    if (existing) return existing.id;
-
-    return this.create({
-      title: `Tournoi — ${tournament.name}`,
-      description: `Convocation Arena · ${tournament.categories?.join(', ') ?? ''}`,
-      event_type: 'tournament',
-      organizer_uid: organizerUid,
-      organizer_name: organizerName,
-      club_id: clubId,
-      club_name: clubName,
-      tournament_id: tournament.id,
-      starts_at: tournament.date_start,
-      ends_at: tournament.date_end,
-      city: tournament.city,
-      invitee_uids: inviteeUids,
-      categories: tournament.categories,
-      reminder_hours_before: 48,
-    });
-  },
-
   /** Convocation match amical (évite les doublons via friendly_match_id). */
   async createFriendlyConvocation(params: {
     matchId: string;
@@ -233,6 +218,7 @@ export const teamEventsService = {
     if (!database) throw new Error('Firebase non configuré');
     const event = await this.getById(eventId);
     if (!event) throw new Error('Événement introuvable');
+    assertTeamEventRsvpAccess(event, uid);
 
     if (
       event.event_type === 'detection' &&
@@ -255,6 +241,10 @@ export const teamEventsService = {
       payload.invitee_uids = arrayUnion(uid);
     }
     await updateDoc(doc(database, COL, eventId), payload);
+    if (status === 'yes') {
+      const updated = { ...event, rsvps: { ...event.rsvps, [uid]: status } };
+      await teamChatService.ensureTeamThread(updated);
+    }
   },
 
   async updateRsvpWithReason(
@@ -267,6 +257,7 @@ export const teamEventsService = {
     if (!database) throw new Error('Firebase non configuré');
     const event = await this.getById(eventId);
     if (!event) throw new Error('Événement introuvable');
+    assertTeamEventRsvpAccess(event, uid);
 
     const payload: Record<string, unknown> = {
       [`rsvps.${uid}`]: status,
@@ -275,26 +266,41 @@ export const teamEventsService = {
     };
     if (!event.invitee_uids.includes(uid)) payload.invitee_uids = arrayUnion(uid);
     await updateDoc(doc(database, COL, eventId), payload);
+    if (status === 'yes') {
+      const updated = {
+        ...event,
+        rsvps: { ...event.rsvps, [uid]: status },
+        rsvp_notes: reason?.trim()
+          ? { ...event.rsvp_notes, [uid]: reason.trim() }
+          : event.rsvp_notes,
+      };
+      await teamChatService.ensureTeamThread(updated);
+    }
   },
 
   async markAttendance(
     eventId: string,
     uid: string,
-    mark: AttendanceMark
+    mark: AttendanceMark,
+    actor: TeamEventActor,
   ): Promise<void> {
     const database = getDb();
     if (!database) throw new Error('Firebase non configuré');
+    const event = await this.getById(eventId);
+    if (!event) throw new Error('Événement introuvable');
+    assertManage(event, actor);
     await updateDoc(doc(database, COL, eventId), {
       [`attendance_marks.${uid}`]: mark,
       updated_at: serverTimestamp(),
     });
   },
 
-  async addInvitees(eventId: string, uids: string[]): Promise<void> {
+  async addInvitees(eventId: string, uids: string[], actor: TeamEventActor): Promise<void> {
     const database = getDb();
     if (!database) throw new Error('Firebase non configuré');
     const event = await this.getById(eventId);
     if (!event) throw new Error('Événement introuvable');
+    assertManage(event, actor);
 
     const merged = [...new Set([...event.invitee_uids, ...uids])];
     const rsvps = { ...event.rsvps };
@@ -309,9 +315,12 @@ export const teamEventsService = {
     });
   },
 
-  async saveLineup(eventId: string, lineup: EventLineup): Promise<void> {
+  async saveLineup(eventId: string, lineup: EventLineup, actor: TeamEventActor): Promise<void> {
     const database = getDb();
     if (!database) throw new Error('Firebase non configuré');
+    const event = await this.getById(eventId);
+    if (!event) throw new Error('Événement introuvable');
+    assertManage(event, actor);
     await updateDoc(doc(database, COL, eventId), {
       lineup,
       updated_at: serverTimestamp(),
@@ -320,12 +329,14 @@ export const teamEventsService = {
 
   async addLiveAction(
     eventId: string,
-    action: Omit<LiveMatchAction, 'id' | 'created_at'>
+    action: Omit<LiveMatchAction, 'id' | 'created_at'>,
+    actor: TeamEventActor,
   ): Promise<void> {
     const database = getDb();
     if (!database) throw new Error('Firebase non configuré');
     const event = await this.getById(eventId);
     if (!event) throw new Error('Événement introuvable');
+    assertManage(event, actor);
 
     const entry: LiveMatchAction = {
       ...action,
@@ -333,8 +344,44 @@ export const teamEventsService = {
       created_at: new Date(),
     };
     const live_actions = [...(event.live_actions ?? []), entry];
-    await updateDoc(doc(database, COL, eventId), {
+    const patch: Record<string, unknown> = {
       live_actions,
+      updated_at: serverTimestamp(),
+    };
+    if (action.type === 'goal') {
+      const prev = event.live_state ?? {
+        status: 'live' as const,
+        home_score: 0,
+        away_score: 0,
+      };
+      patch.live_state = {
+        ...prev,
+        status: prev.status === 'scheduled' ? 'live' : prev.status,
+        home_score: (prev.home_score ?? 0) + 1,
+      };
+    }
+    await updateDoc(doc(database, COL, eventId), patch);
+  },
+
+  async updateMatchLiveState(
+    eventId: string,
+    state: Partial<MatchLiveState>,
+    actor: TeamEventActor,
+  ): Promise<void> {
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+    const event = await this.getById(eventId);
+    if (!event) throw new Error('Événement introuvable');
+    assertManage(event, actor);
+
+    const prev = event.live_state ?? {
+      status: 'scheduled' as const,
+      home_score: 0,
+      away_score: 0,
+    };
+
+    await updateDoc(doc(database, COL, eventId), {
+      live_state: { ...prev, ...state },
       updated_at: serverTimestamp(),
     });
   },
@@ -342,12 +389,14 @@ export const teamEventsService = {
   async updatePlayerMatchStat(
     eventId: string,
     uid: string,
-    patch: Partial<PlayerMatchSheetStat> & { player_name?: string }
+    patch: Partial<PlayerMatchSheetStat> & { player_name?: string },
+    actor: TeamEventActor,
   ): Promise<void> {
     const database = getDb();
     if (!database) throw new Error('Firebase non configuré');
     const event = await this.getById(eventId);
     if (!event) throw new Error('Événement introuvable');
+    assertManage(event, actor);
     const current = event.player_match_stats?.[uid] ?? {
       uid,
       player_name: patch.player_name ?? 'Joueur',
@@ -364,9 +413,16 @@ export const teamEventsService = {
     });
   },
 
-  async setMatchReportFinalized(eventId: string, finalized: boolean): Promise<void> {
+  async setMatchReportFinalized(
+    eventId: string,
+    finalized: boolean,
+    actor: TeamEventActor,
+  ): Promise<void> {
     const database = getDb();
     if (!database) throw new Error('Firebase non configuré');
+    const event = await this.getById(eventId);
+    if (!event) throw new Error('Événement introuvable');
+    assertManage(event, actor, { allowWhenReportLocked: true });
     await updateDoc(doc(database, COL, eventId), {
       match_report_finalized_at: finalized ? serverTimestamp() : null,
       updated_at: serverTimestamp(),
@@ -382,9 +438,11 @@ export const teamEventsService = {
   },
 
   /** Agrège buts/passes du live vers les stats saison des joueurs présents. */
-  async applyLiveStatsToPlayers(eventId: string): Promise<void> {
+  async applyLiveStatsToPlayers(eventId: string, actor: TeamEventActor): Promise<void> {
     const event = await this.getById(eventId);
-    if (!event?.live_actions?.length) {
+    if (!event) throw new Error('Événement introuvable');
+    assertManage(event, actor);
+    if (!event.live_actions?.length) {
       throw new Error('Aucune action live à enregistrer.');
     }
     if (event.stats_applied_at) {
@@ -478,7 +536,8 @@ export const teamEventsService = {
     eventId: string,
     driverUid: string,
     passengerUid: string,
-    passengerName: string
+    passengerName: string,
+    pickup?: { pickup_place?: string; pickup_location?: GeoPoint }
   ): Promise<void> {
     const database = getDb();
     if (!database) throw new Error('Firebase non configuré');
@@ -510,9 +569,54 @@ export const teamEventsService = {
 
     slots[idx] = {
       ...slot,
-      passengers: [...(slot.passengers ?? []), { uid: passengerUid, name: passengerName }],
+      passengers: [
+        ...(slot.passengers ?? []),
+        {
+          uid: passengerUid,
+          name: passengerName,
+          pickup_place: pickup?.pickup_place?.trim() || undefined,
+          pickup_location: pickup?.pickup_location,
+        },
+      ],
     };
 
+    await updateDoc(doc(database, COL, eventId), {
+      carpool_slots: slots,
+      updated_at: serverTimestamp(),
+    });
+  },
+
+  /** Passager — mettre à jour son point de prise en charge */
+  async updatePassengerPickup(
+    eventId: string,
+    driverUid: string,
+    passengerUid: string,
+    pickup: {
+      pickup_place?: string;
+      pickup_location?: GeoPoint;
+    }
+  ): Promise<void> {
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+    const event = await this.getById(eventId);
+    if (!event) throw new Error('Événement introuvable');
+
+    const slots = [...(event.carpool_slots ?? [])];
+    const idx = slots.findIndex((s) => s.driver_uid === driverUid);
+    if (idx < 0) throw new Error('Trajet introuvable.');
+
+    const slot = slots[idx];
+    const passengers = [...(slot.passengers ?? [])];
+    const pIdx = passengers.findIndex((p) => p.uid === passengerUid);
+    if (pIdx < 0) throw new Error('Réservation introuvable.');
+
+    passengers[pIdx] = {
+      ...passengers[pIdx],
+      pickup_place: pickup.pickup_place?.trim() || undefined,
+      pickup_location: pickup.pickup_location,
+    };
+
+    slots[idx] = { ...slot, passengers };
     await updateDoc(doc(database, COL, eventId), {
       carpool_slots: slots,
       updated_at: serverTimestamp(),
@@ -574,12 +678,14 @@ export const teamEventsService = {
   /** Coach — désigne les chauffeurs / tâche covoiturage */
   async setCarpoolDrivers(
     eventId: string,
-    drivers: { uid: string; name: string }[]
+    drivers: { uid: string; name: string }[],
+    actor: TeamEventActor,
   ): Promise<void> {
     const database = getDb();
     if (!database) throw new Error('Firebase non configuré');
     const event = await this.getById(eventId);
     if (!event) throw new Error('Événement introuvable');
+    assertManage(event, actor);
 
     const existing = new Map(
       (event.carpool_slots ?? []).map((s) => [s.driver_uid, s])
@@ -598,6 +704,7 @@ export const teamEventsService = {
           seats: prev?.seats,
           meeting_time: prev?.meeting_time,
           meeting_place: prev?.meeting_place,
+          meeting_location: prev?.meeting_location,
           notes: prev?.notes,
           volunteered: false,
           passengers: prev?.passengers,
@@ -613,11 +720,33 @@ export const teamEventsService = {
     });
   },
 
+  /** Proposer ou mettre à jour un trajet (volontariat + détails en une étape) */
+  async proposeOrUpdateCarpoolRide(
+    eventId: string,
+    uid: string,
+    name: string,
+    patch: Partial<
+      Pick<CarpoolSlot, 'seats' | 'meeting_time' | 'meeting_place' | 'meeting_location' | 'notes'>
+    >
+  ): Promise<void> {
+    const event = await this.getById(eventId);
+    if (!event) throw new Error('Événement introuvable');
+    teamEventsService.assertCarpoolParticipant(event, uid);
+
+    const existing = (event.carpool_slots ?? []).find((s) => s.driver_uid === uid);
+    if (!existing) {
+      await this.volunteerAsCarpoolDriver(eventId, uid, name);
+    }
+    await this.updateCarpoolSlot(eventId, uid, patch);
+  },
+
   /** Conducteur — places, RDV, notes */
   async updateCarpoolSlot(
     eventId: string,
     driverUid: string,
-    patch: Partial<Pick<CarpoolSlot, 'seats' | 'meeting_time' | 'meeting_place' | 'notes'>>
+    patch: Partial<
+      Pick<CarpoolSlot, 'seats' | 'meeting_time' | 'meeting_place' | 'meeting_location' | 'notes'>
+    >
   ): Promise<void> {
     const database = getDb();
     if (!database) throw new Error('Firebase non configuré');

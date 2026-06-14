@@ -19,9 +19,15 @@ import {
   stageApplicationFromFirestore,
 } from '../lib/firestoreMappers';
 import type { User } from '../models/User';
+import { ROLES_REQUIRING_VERIFICATION } from '../models/User';
 import type { AppSpaceId } from '../models/AppSpace';
 import type { StageOffer, StageApplication } from '../models/Stage';
 import { canPublishStages } from '../utils/roleCapabilities';
+import { profileService } from './profile.service';
+import {
+  validateStageApplicationMessage,
+  validateStageOfferInput,
+} from '../utils/stageValidation';
 
 export const STAGE_APPLICATION_STATUS_LABEL: Record<
   StageApplication['status'],
@@ -72,25 +78,48 @@ export const stagesService = {
     return stageOfferFromFirestore(snap.id, snap.data() as Record<string, unknown>);
   },
 
-  async createOffer(input: {
-    author_uid: string;
-    club_id: string;
-    club_name: string;
-    title: string;
-    description: string;
-    city: string;
-    category: string;
-    start_date: Date;
-    end_date: Date;
-    price_eur?: number;
-    spots_total: number;
-    target_space?: AppSpaceId;
-  }): Promise<string> {
+  async createOffer(
+    input: {
+      author_uid: string;
+      club_id: string;
+      club_name: string;
+      title: string;
+      description: string;
+      city: string;
+      category: string;
+      start_date: Date;
+      end_date: Date;
+      price_eur?: number;
+      spots_total: number;
+      target_space?: AppSpaceId;
+    },
+    author?: User,
+  ): Promise<string> {
     const database = getDb();
     if (!database) throw new Error('Firebase non configuré');
 
+    if (author) {
+      if (!canPublishStages(author.role)) {
+        throw new Error('Votre profil ne peut pas publier de stages.');
+      }
+      if (
+        ROLES_REQUIRING_VERIFICATION.includes(author.role) &&
+        !profileService.canPerformSensitiveAction(author)
+      ) {
+        throw new Error('Vérification requise pour publier un stage.');
+      }
+    }
+
+    const validated = validateStageOfferInput({
+      title: input.title,
+      description: input.description,
+      city: input.city,
+      category: input.category,
+    });
+
     const ref = await addDoc(collection(database, 'stage_offers'), {
       ...input,
+      ...validated,
       start_date: input.start_date,
       end_date: input.end_date,
       spots_taken: 0,
@@ -114,15 +143,22 @@ export const stagesService = {
     return !snap.empty;
   },
 
-  async apply(input: {
-    stage_id: string;
-    stage_author_uid: string;
-    player_uid: string;
-    player_name: string;
-    message: string;
-  }): Promise<string> {
+  async apply(
+    input: {
+      stage_id: string;
+      stage_author_uid: string;
+      player_uid: string;
+      player_name: string;
+      message: string;
+    },
+    player?: User,
+  ): Promise<string> {
     const database = getDb();
     if (!database) throw new Error('Firebase non configuré');
+
+    if (player && player.role !== 'player') {
+      throw new Error('Seuls les joueurs peuvent s’inscrire à un stage.');
+    }
 
     const stage = await this.getOfferById(input.stage_id);
     if (!stage || stage.status !== 'OPEN') {
@@ -132,8 +168,11 @@ export const stagesService = {
       throw new Error('Plus de place disponible sur ce stage.');
     }
 
+    const message = validateStageApplicationMessage(input.message);
+
     const ref = await addDoc(collection(database, 'stage_applications'), {
       ...input,
+      message,
       status: 'PENDING',
       created_at: serverTimestamp(),
     });

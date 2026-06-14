@@ -13,7 +13,6 @@ import type { User, UserRole, VerificationStatus } from '../models/User';
 import type { TeamEvent } from '../models/TeamEvent';
 import type { FriendlyMatch } from '../models/FriendlyMatch';
 import type { RecruitmentPost } from '../models/Player';
-import type { Tournament } from '../models/Tournament';
 import type { SponsorOffer, ClubFundingGoal } from '../models/SponsorOffer';
 import { getDb } from '../lib/firebase';
 import { isFirebaseConfigured } from '../config/firebase';
@@ -22,7 +21,6 @@ import {
   teamEventFromFirestore,
   friendlyMatchFromFirestore,
   recruitmentPostFromFirestore,
-  tournamentFromFirestore,
   sponsorOfferFromFirestore,
   fundingGoalFromFirestore,
   clubAnnouncementFromFirestore,
@@ -48,7 +46,6 @@ export interface PlatformStats {
   teamEvents: number;
   friendlyMatches: number;
   recruitmentPosts: number;
-  tournaments: number;
   paymentRequests: number;
   applications: number;
   announcements: number;
@@ -404,36 +401,6 @@ export const adminService = {
     await deleteDoc(doc(database, 'recruitment_posts', postId));
   },
 
-  async listAllTournaments(max = 80): Promise<Tournament[]> {
-    if (!isFirebaseConfigured()) return [];
-    const database = getDb();
-    if (!database) return [];
-
-    try {
-      const q = query(
-        collection(database, 'tournaments'),
-        orderBy('date_start', 'desc'),
-        limit(max)
-      );
-      const snap = await getDocs(q);
-      return snap.docs.map((d) =>
-        tournamentFromFirestore(d.id, d.data() as Record<string, unknown>)
-      );
-    } catch {
-      const snap = await getDocs(collection(database, 'tournaments'));
-      return snap.docs
-        .map((d) => tournamentFromFirestore(d.id, d.data() as Record<string, unknown>))
-        .sort((a, b) => b.date_start.getTime() - a.date_start.getTime())
-        .slice(0, max);
-    }
-  },
-
-  async deleteTournament(tournamentId: string): Promise<void> {
-    const database = getDb();
-    if (!database) throw new Error('Firebase non configuré');
-    await deleteDoc(doc(database, 'tournaments', tournamentId));
-  },
-
   async listAllSponsorOffers(max = 80): Promise<SponsorOffer[]> {
     if (!isFirebaseConfigured()) return [];
     const database = getDb();
@@ -476,7 +443,6 @@ export const adminService = {
       events,
       matches,
       posts,
-      tournaments,
       clubs,
       payments,
       applications,
@@ -486,7 +452,6 @@ export const adminService = {
       this.listAllTeamEvents(200),
       this.listAllFriendlyMatches(200),
       this.listAllRecruitmentPosts(200),
-      this.listAllTournaments(200),
       this.listAllClubs(200),
       this.listAllPaymentRequests(200),
       this.listAllApplications(200),
@@ -502,7 +467,6 @@ export const adminService = {
       teamEvents: events.length,
       friendlyMatches: matches.length,
       recruitmentPosts: posts.length,
-      tournaments: tournaments.length,
       paymentRequests: payments.length,
       applications: applications.length,
       announcements: announcements.length,

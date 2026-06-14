@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import { Alert } from 'react-native';
+import { useRequireAuth } from './useRequireAuth';
 import type { User } from '../models/User';
 import type { FriendlyMatch } from '../models/FriendlyMatch';
 import { friendlyMatchesService } from '../services/friendlyMatches.service';
@@ -9,6 +10,8 @@ import { usersService } from '../services/users.service';
 import { filterMembersByCategory, memberUidsExcluding } from '../utils/clubMembersFilter';
 
 export function useMatchActions(profile: User | null) {
+  const { requireAuth } = useRequireAuth();
+
   const getClubIdentity = useCallback(async () => {
     if (!profile) return null;
     if (profile.profile.club_id) {
@@ -23,10 +26,7 @@ export function useMatchActions(profile: User | null) {
 
   const acceptMatch = useCallback(
     async (match: FriendlyMatch, onDone?: () => void) => {
-      if (!profile) {
-        Alert.alert('Connexion requise', 'Connectez-vous depuis l’onglet Profil.');
-        return;
-      }
+      if (!requireAuth('Connectez-vous pour accepter ce match amical.') || !profile) return;
       const club = await getClubIdentity();
       if (!club) return;
       if (match.requester_club_id === club.id) {
@@ -104,7 +104,7 @@ export function useMatchActions(profile: User | null) {
         Alert.alert('Erreur', e instanceof Error ? e.message : 'Action impossible.');
       }
     },
-    [profile, getClubIdentity]
+    [profile, getClubIdentity, requireAuth]
   );
 
   const cancelMatch = useCallback(
@@ -135,13 +135,29 @@ export function useMatchActions(profile: User | null) {
   );
 
   const markPlayed = useCallback(
-    async (match: FriendlyMatch, onDone?: () => void) => {
-      try {
-        await friendlyMatchesService.markPlayed(match.id);
-        onDone?.();
-      } catch (e) {
-        Alert.alert('Erreur', e instanceof Error ? e.message : 'Échec.');
-      }
+    async (match: FriendlyMatch, onDone?: () => void, onOpenProfile?: () => void) => {
+      Alert.alert('Match joué', 'Confirmer que ce match amical a bien eu lieu ?', [
+        { text: 'Annuler', style: 'cancel' },
+        {
+          text: 'Confirmer',
+          onPress: async () => {
+            try {
+              await friendlyMatchesService.markPlayed(match.id);
+              Alert.alert(
+                'Match enregistré',
+                'Pensez à mettre à jour vos stats saison sur votre profil pour booster votre Pulse.',
+                [
+                  { text: 'Plus tard', style: 'cancel' },
+                  { text: 'Mon profil', onPress: onOpenProfile },
+                ]
+              );
+              onDone?.();
+            } catch (e) {
+              Alert.alert('Erreur', e instanceof Error ? e.message : 'Échec.');
+            }
+          },
+        },
+      ]);
     },
     []
   );

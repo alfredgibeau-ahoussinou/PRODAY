@@ -51,7 +51,7 @@ const DEMO_OFFERS: SponsorOffer[] = [
     company_name: 'VilleActive',
     logo_url: '',
     offer_type: 'visibility',
-    description: 'Banderoles et visibilité sur tournois Arena.',
+    description: 'Banderoles et visibilité sur événements locaux.',
     value: 'Campagne locale',
     target_categories: ['Senior'],
     city: 'Bordeaux',

@@ -12,7 +12,9 @@ import {
 import { getDb } from '../lib/firebase';
 import { isFirebaseConfigured } from '../config/firebase';
 import type { Club } from '../models/Club';
-import type { GeoPoint } from '../models/User';
+import type { GeoPoint, User } from '../models/User';
+import { canManageClubEntity } from '../utils/roleCapabilities';
+import { validateClubInput } from '../utils/clubValidation';
 
 function clubFromFirestore(id: string, data: Record<string, unknown>): Club {
   const loc = data.location as { latitude?: number; longitude?: number } | undefined;
@@ -92,18 +94,29 @@ export const clubsService = {
     );
   },
 
-  async create(input: CreateClubInput): Promise<string> {
+  async create(input: CreateClubInput, owner?: User): Promise<string> {
     const database = getDb();
     if (!database) throw new Error('Firebase non configuré');
 
+    if (owner) {
+      if (!canManageClubEntity(owner.role)) {
+        throw new Error('Votre profil ne peut pas créer de club.');
+      }
+      if (owner.uid !== input.owner_uid) {
+        throw new Error('Identité propriétaire invalide.');
+      }
+    }
+
+    const validated = validateClubInput(input);
+
     const ref = doc(collection(database, 'clubs'));
     await setDoc(ref, {
-      name: input.name.trim(),
-      city: input.city.trim(),
-      department: input.department?.trim() ?? null,
+      name: validated.name,
+      city: validated.city,
+      department: validated.department ?? null,
       location: input.location ?? { latitude: 0, longitude: 0 },
       verified: false,
-      categories: input.categories,
+      categories: validated.categories,
       sponsor_ids: [],
       owner_uid: input.owner_uid,
       is_active: true,
