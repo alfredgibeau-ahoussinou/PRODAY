@@ -226,7 +226,7 @@ const ROLE_EXPERIENCES: Record<UserRole, RoleSignupExperience> = {
       { id: 'launch', label: 'Go' },
     ],
     accent: { accent: '#B45309', accentSoft: '#FEF3C7', accentMuted: '#FCD34D' },
-    launchTitle: 'Arena & events',
+    launchTitle: 'Événements',
     launchBody: 'Créez tournois et journées scouting dès votre email confirmé.',
     launchFinishLabel: 'Lancer l’organisation',
   },

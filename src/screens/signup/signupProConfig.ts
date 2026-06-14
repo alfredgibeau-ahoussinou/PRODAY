@@ -66,7 +66,7 @@ export function getProStepMeta(page: SignupPageId): {
     case 'organizer_pro':
       return {
         title: 'Profil organisateur',
-        subtitle: 'Tournois Arena, détections et événements.',
+        subtitle: 'Détections et événements locaux.',
         heroIcon: 'trophy',
       };
     case 'medical_specialty':
@@ -118,10 +118,9 @@ export const PRO_ROLE_PREVIEW: Partial<Record<UserRole, string[]>> = {
   coach: ['Diplômes & licence', 'Effectif & convocations', 'Annonces Mercato Pro'],
   agent: ['Profil agent vérifié', 'Mandats & repérage', 'Réseau clubs'],
   recruiter: ['Profil recruteur vérifié', 'Annonces Mercato Pro', 'Pipeline candidatures'],
-  physio: ['Spécialité santé', 'Zone & diplômes', 'Visibilité clubs'],
   sponsor: ['Offre partenaire', 'Clubs cibles', 'Campagnes locales'],
   club: ['Structure club', 'Ville & département', 'Annonces Mercato Pro'],
-  organizer: ['Structure orga', 'Zone d’action', 'Tournois Arena'],
+  organizer: ['Structure orga', 'Zone d’action', 'Événements locaux'],
 };
 
 export function getProLaunchCopy(flags: {

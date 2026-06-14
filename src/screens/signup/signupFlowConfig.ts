@@ -100,7 +100,7 @@ export const ROLE_GROUPS: {
   {
     id: 'structure',
     label: 'Structures',
-    hint: 'Annonces club, effectifs et tournois Arena',
+    hint: 'Annonces club, effectifs et événements',
     roles: ['club', 'organizer'],
   },
 ];

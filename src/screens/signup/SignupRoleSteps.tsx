@@ -12,6 +12,7 @@ import {
   getMedicalConfig,
 } from './signupRoleExperience';
 import { getProStepMeta } from './signupProConfig';
+import { getSanteStepMeta } from './signupSanteConfig';
 import type { SignupPageId } from './signupFlowConfig';
 import { useSignupFlowTheme } from './SignupFlowContext';
 import { spacing, radius } from '../../theme/designTokens';
@@ -29,8 +30,12 @@ type StepProps = {
 const RoleStepShell: React.FC<
   StepProps & { page: SignupPageId; children: React.ReactNode; hint?: string }
 > = ({ form, page, children, hint, ...layout }) => {
-  const { colors, isProSignup } = useSignupFlowTheme();
-  const meta = isProSignup ? getProStepMeta(page) : getStepMetaForRole(page, form.role);
+  const { colors, isProSignup, isSanteSignup } = useSignupFlowTheme();
+  const meta = isSanteSignup
+    ? getSanteStepMeta(page)
+    : isProSignup
+      ? getProStepMeta(page)
+      : getStepMetaForRole(page, form.role);
   return (
     <SignupStepLayout
       {...layout}

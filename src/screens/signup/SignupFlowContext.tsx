@@ -7,6 +7,7 @@ interface SignupFlowContextValue {
   productLine: ProductLineId;
   isWomanSignup: boolean;
   isProSignup: boolean;
+  isSanteSignup: boolean;
   colors: AppColors;
   experienceRole: UserRole;
 }
@@ -18,20 +19,22 @@ export const SignupFlowProvider: React.FC<{
   experienceRole: UserRole;
   children: React.ReactNode;
 }> = ({ productLine, experienceRole, children }) => {
-  const { enterWomanSpace, enterProSpace } = useProductLine();
+  const { enterWomanSpace, enterProSpace, enterSanteSpace } = useProductLine();
   const isWomanSignup = productLine === 'woman';
   const isProSignup = productLine === 'pro';
+  const isSanteSignup = productLine === 'sante';
 
   const colors = useMemo(() => getThemedColorsForLine(productLine), [productLine]);
 
   useEffect(() => {
     if (isWomanSignup) void enterWomanSpace();
+    else if (isSanteSignup) void enterSanteSpace();
     else if (isProSignup) void enterProSpace();
-  }, [isWomanSignup, isProSignup, enterWomanSpace, enterProSpace]);
+  }, [isWomanSignup, isSanteSignup, isProSignup, enterWomanSpace, enterSanteSpace, enterProSpace]);
 
   return (
     <SignupFlowContext.Provider
-      value={{ productLine, isWomanSignup, isProSignup, colors, experienceRole }}
+      value={{ productLine, isWomanSignup, isProSignup, isSanteSignup, colors, experienceRole }}
     >
       {children}
     </SignupFlowContext.Provider>
@@ -45,6 +48,7 @@ export function useSignupFlowTheme(): SignupFlowContextValue {
       productLine: 'homme',
       isWomanSignup: false,
       isProSignup: false,
+      isSanteSignup: false,
       colors: getThemedColorsForLine('homme'),
       experienceRole: 'player',
     };

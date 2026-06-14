@@ -3,6 +3,8 @@ import { Text, StyleSheet, View } from 'react-native';
 import { Icon } from '../../components/ui/Icon';
 import { getPasswordStrength, SIGNUP_PASSWORD_MIN } from '../../utils/signupValidation';
 import { AuthTextField } from '../../components/auth/AuthTextField';
+import { StaggerReveal } from '../../components/motion';
+import { SignupFormCard } from '../../components/signup/SignupFormCard';
 import { SignupPressable } from '../../components/signup/SignupPressable';
 import { SignupPasswordStrengthBar } from '../../components/signup/SignupPasswordStrengthBar';
 import { SignupStepLayout } from './SignupStepLayout';
@@ -10,6 +12,7 @@ import { SignupFooterButton } from './SignupFooterButton';
 import type { SignupForm } from './useSignupForm';
 import { getPlayerStepMeta } from './signupPlayerStepMeta';
 import { getProStepMeta } from './signupProConfig';
+import { getSanteStepMeta } from './signupSanteConfig';
 import { ProDayErrorBanner } from '../../components/ui/ProDayErrorBanner';
 import { spacing } from '../../theme/designTokens';
 import { useSignupFlowTheme } from './SignupFlowContext';
@@ -42,9 +45,11 @@ export const SignupSecurityStep: React.FC<SignupSecurityStepProps> = ({
   const styles = useMemo(() => createStyles(c), [c]);
   const passwordStrength =
     form.password.length > 0 ? getPasswordStrength(form.password) : null;
-  const meta = form.isProProduct
-    ? getProStepMeta('security')
-    : getPlayerStepMeta(form.productLine, 'security');
+  const meta = form.isSanteProduct
+    ? getSanteStepMeta('security')
+    : form.isProProduct
+      ? getProStepMeta('security')
+      : getPlayerStepMeta(form.productLine, 'security');
 
   return (
     <SignupStepLayout
@@ -77,8 +82,8 @@ export const SignupSecurityStep: React.FC<SignupSecurityStepProps> = ({
       ) : null}
 
       {form.isOAuthCompletion ? null : (
-        <>
-          <View>
+        <SignupFormCard>
+          <StaggerReveal index={0}>
             <AuthTextField
               label="Mot de passe"
               icon="lock"
@@ -88,23 +93,21 @@ export const SignupSecurityStep: React.FC<SignupSecurityStepProps> = ({
               secureToggle
               error={form.fieldErrors.password}
             />
-          </View>
+          </StaggerReveal>
           {passwordStrength?.label ? (
-            <View>
+            <StaggerReveal index={1}>
               <SignupPasswordStrengthBar
                 level={passwordStrength.level}
                 label={`Sécurité : ${passwordStrength.label}`}
               />
-            </View>
+            </StaggerReveal>
           ) : null}
           {!form.fieldErrors.password && form.password.length > 0 ? (
-            <View>
-              <Text style={styles.passwordRules}>
-                Majuscule, minuscule, chiffre et caractère spécial requis.
-              </Text>
-            </View>
+            <Text style={styles.passwordRules}>
+              Majuscule, minuscule, chiffre et caractère spécial requis.
+            </Text>
           ) : null}
-          <View>
+          <StaggerReveal index={2}>
             <AuthTextField
               label="Confirmer le mot de passe"
               icon="lock"
@@ -114,8 +117,8 @@ export const SignupSecurityStep: React.FC<SignupSecurityStepProps> = ({
               secureToggle
               error={form.fieldErrors.confirmPassword}
             />
-          </View>
-        </>
+          </StaggerReveal>
+        </SignupFormCard>
       )}
 
       <View>

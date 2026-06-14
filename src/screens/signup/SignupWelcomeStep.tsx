@@ -17,12 +17,18 @@ import { getRoleLabel } from './signupFlowConfig';
 import { getWomanWelcomeCopy, WOMAN_PLAYER_PREVIEW_STEPS } from './signupWomanConfig';
 import { getManWelcomeCopy, MAN_PLAYER_PREVIEW_STEPS } from './signupManConfig';
 import { getProWelcomeCopy, PRO_ROLE_PREVIEW } from './signupProConfig';
+import { getSanteWelcomeCopy, SANTE_PHYSIO_PREVIEW } from './signupSanteConfig';
 import { getSignupRoleGroups } from '../../content/poleExperience';
 import { useSignupFlowTheme } from './SignupFlowContext';
 import { SignupSegmentTabs } from '../../components/signup/SignupSegmentTabs';
 import { useAuthLayout } from '../../components/auth/useAuthLayout';
 import { spacing, radius } from '../../theme/designTokens';
-import { PRODAY_WOMAN_BRAND, PRODAY_PRO_BRAND, PRODAY_HOMME_BRAND } from '../../models/ProductLine';
+import {
+  PRODAY_WOMAN_BRAND,
+  PRODAY_PRO_BRAND,
+  PRODAY_HOMME_BRAND,
+  PRODAY_SANTE_BRAND,
+} from '../../models/ProductLine';
 import { WOMAN_SHOWCASE_IMAGES } from '../../content/womanShowcaseAssets';
 import { SHOWCASE_IMAGES } from '../../content/showcaseAssets';
 import type { UserRole } from '../../models/User';
@@ -229,6 +235,38 @@ const ProRoleCard: React.FC<{
   </Pressable>
 );
 
+const SanteWelcomeBody: React.FC<{ form: SignupForm }> = ({ form }) => {
+  const { colors } = useSignupFlowTheme();
+
+  useEffect(() => {
+    if (form.draftRole !== 'physio') form.setDraftRole('physio');
+  }, [form]);
+
+  return (
+    <>
+      <PlayerWelcomeHero
+        source={SHOWCASE_IMAGES.coachFounder}
+        overlayColor="rgba(15, 118, 110, 0.62)"
+        badgeIcon="heart"
+        badgeText={PRODAY_SANTE_BRAND.entryCta}
+        title="Profil praticien"
+        subtitle="Agenda RDV, messagerie patients et visibilité auprès des clubs et joueurs."
+        accentInverse={colors.brandInverse}
+      />
+      <PreviewStepsCard
+        steps={SANTE_PHYSIO_PREVIEW}
+        accent={colors.accent}
+        accentInverse={colors.brandInverse}
+        borderColor={colors.border}
+        surface={colors.surface}
+        surfaceMuted={colors.surfaceMuted}
+        text={colors.text}
+        textMuted={colors.textMuted}
+      />
+    </>
+  );
+};
+
 const ProWelcomeBody: React.FC<{ form: SignupForm }> = ({ form }) => {
   const { width: screenWidth } = useWindowDimensions();
   const { compact, contentMaxWidth } = useAuthLayout();
@@ -258,7 +296,7 @@ const ProWelcomeBody: React.FC<{ form: SignupForm }> = ({ form }) => {
         </View>
         <Text style={styles.proHeroTitle}>Votre métier</Text>
         <Text style={styles.proHeroSub}>
-          Coach, club, agent, pôle santé, organisateur ou partenaire — un parcours dédié.
+          Coach, club, agent, recruteur, organisateur ou partenaire — un parcours dédié.
         </Text>
       </ShowcaseImageBackground>
 
@@ -357,6 +395,31 @@ export const SignupWelcomeStep: React.FC<SignupWelcomeStepProps> = ({
         }
       >
         <WomanWelcomeBody form={form} />
+      </SignupStepLayout>
+    );
+  }
+
+  if (form.isSanteProduct) {
+    const welcome = getSanteWelcomeCopy();
+    return (
+      <SignupStepLayout
+        stepIndex={stepIndex}
+        stepTotal={stepTotal}
+        stepName={stepName ?? PRODAY_SANTE_BRAND.name}
+        phases={phases}
+        phaseIndex={phaseIndex}
+        title={welcome.title}
+        subtitle={welcome.subtitle}
+        heroIcon="heart"
+        onClose={onClose}
+        footer={
+          <SignupFooterButton
+            label="Continuer sur Pro Day Santé"
+            onPress={form.confirmRoleAndContinue}
+          />
+        }
+      >
+        <SanteWelcomeBody form={form} />
       </SignupStepLayout>
     );
   }

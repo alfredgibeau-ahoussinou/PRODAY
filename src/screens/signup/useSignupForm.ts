@@ -35,6 +35,7 @@ import {
 import { WOMAN_SIGNUP_PHASES, suggestFeminineAppSpaceFromAge } from './signupWomanConfig';
 import { MAN_SIGNUP_PHASES } from './signupManConfig';
 import { PRO_SIGNUP_PHASES } from './signupProConfig';
+import { SANTE_SIGNUP_PHASES } from './signupSanteConfig';
 import { isRoleAllowedForProductLine } from '../../content/universeRoles';
 import type { ProductLineId } from '../../models/ProductLine';
 import { useProductLine } from '../../context/ProductLineContext';
@@ -51,9 +52,15 @@ export function useSignupForm(initial?: {
   const productLine: ProductLineId = initial?.productLine ?? 'homme';
   const isWomanProduct = productLine === 'woman';
   const isProProduct = productLine === 'pro';
+  const isSanteProduct = productLine === 'sante';
+  const isStaffProduct = isProProduct || isSanteProduct;
 
-  const [role, setRoleState] = useState<UserRole>(isProProduct ? 'coach' : 'player');
-  const [draftRole, setDraftRole] = useState<UserRole>(isProProduct ? 'coach' : 'player');
+  const [role, setRoleState] = useState<UserRole>(
+    isSanteProduct ? 'physio' : isProProduct ? 'coach' : 'player'
+  );
+  const [draftRole, setDraftRole] = useState<UserRole>(
+    isSanteProduct ? 'physio' : isProProduct ? 'coach' : 'player'
+  );
   const [appSpace, setAppSpaceState] = useState<AppSpaceId>(
     isWomanProduct ? 'girls' : DEFAULT_APP_SPACE
   );
@@ -117,9 +124,10 @@ export function useSignupForm(initial?: {
   const stepLabel = SIGNUP_PAGE_LABELS[currentPage] ?? 'Inscription';
   const phases = useMemo(() => {
     if (isWomanProduct) return WOMAN_SIGNUP_PHASES;
+    if (isSanteProduct) return SANTE_SIGNUP_PHASES;
     if (isProProduct) return PRO_SIGNUP_PHASES;
     return MAN_SIGNUP_PHASES;
-  }, [isWomanProduct, isProProduct]);
+  }, [isWomanProduct, isSanteProduct, isProProduct]);
   const phaseIndex = getPhaseIndex(flowKind, currentPage);
   const currentPhase = getCurrentPhase(currentPage);
   const needsDocument = ROLES_REQUIRING_VERIFICATION.includes(role);
@@ -184,7 +192,7 @@ export function useSignupForm(initial?: {
 
   const confirmRoleAndContinue = useCallback(() => {
     const nextRole =
-      isWomanProduct || (!isProProduct && productLine === 'homme') ? 'player' : draftRole;
+      isWomanProduct || (!isStaffProduct && productLine === 'homme') ? 'player' : draftRole;
     if (!isRoleAllowedForProductLine(nextRole, productLine)) {
       setError('Ce profil n’est pas disponible sur cet univers ProDay.');
       return;
@@ -556,7 +564,7 @@ export function useSignupForm(initial?: {
       ...DEFAULT_PARENTAL_SETTINGS,
       is_minor: true,
       guardian_name: guardianName.trim(),
-      guardian_email: guardianEmail.trim(),
+      guardian_email: guardianEmail.trim().toLowerCase(),
       guardian_consent: true,
       supervision_enabled: true,
       contacts_filter_enabled: true,
@@ -631,6 +639,7 @@ export function useSignupForm(initial?: {
 
         await refreshProfile();
         if (isWomanProduct) await setProductLine('woman');
+        else if (isSanteProduct) await setProductLine('sante');
         else if (isProProduct) await setProductLine('pro');
         setCreatedDisplayName(user.display_name);
         setCreatedWithEmailPassword(!isOAuthCompletion);
@@ -674,6 +683,7 @@ export function useSignupForm(initial?: {
       goToPage,
       isWomanProduct,
       isProProduct,
+      isSanteProduct,
       setProductLine,
     ]
   );
@@ -682,6 +692,8 @@ export function useSignupForm(initial?: {
     productLine,
     isWomanProduct,
     isProProduct,
+    isSanteProduct,
+    isStaffProduct,
     isOAuthCompletion,
     accountCreated,
     appSpace,

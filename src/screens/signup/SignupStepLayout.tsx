@@ -2,13 +2,13 @@ import React, { useMemo } from 'react';
 import {
   View,
   Text,
-  Pressable,
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
 } from 'react-native';
 import { Icon, type IconName } from '../../components/ui/Icon';
+import { AnimatedEntrance, PressableSpring } from '../../components/motion';
 import { SignupPhaseRail } from '../../components/signup/SignupPhaseRail';
 import { SignupProgressRing } from '../../components/signup/SignupProgressRing';
 import { SignupStepHero } from '../../components/signup/SignupStepHero';
@@ -81,9 +81,16 @@ export const SignupStepLayout: React.FC<SignupStepLayoutProps> = ({
       <View style={[styles.header, { paddingTop: headerTopPad }]}>
         <View style={styles.headerRow}>
           {onBack ? (
-            <Pressable onPress={onBack} style={authStyles.backBtn} hitSlop={8} accessibilityLabel="Retour">
+            <PressableSpring
+              onPress={onBack}
+              style={authStyles.backBtn}
+              hitSlop={8}
+              scaleTo={0.92}
+              haptic
+              accessibilityLabel="Retour"
+            >
               <Icon name="arrow-back" size={20} color={colors.ink} />
-            </Pressable>
+            </PressableSpring>
           ) : (
             <View style={styles.headerSideSpacer} />
           )}
@@ -98,9 +105,16 @@ export const SignupStepLayout: React.FC<SignupStepLayoutProps> = ({
           <View style={styles.headerRight}>
             <SignupProgressRing stepIndex={stepIndex} stepTotal={stepTotal} accentColor={colors.accent} />
             {onClose ? (
-              <Pressable onPress={onClose} style={authStyles.backBtn} hitSlop={8} accessibilityLabel="Fermer">
+              <PressableSpring
+                onPress={onClose}
+                style={authStyles.backBtn}
+                hitSlop={8}
+                scaleTo={0.92}
+                haptic
+                accessibilityLabel="Fermer"
+              >
                 <Icon name="close" size={20} color={colors.ink} />
-              </Pressable>
+              </PressableSpring>
             ) : (
               <View style={styles.headerSideSpacer} />
             )}
@@ -132,25 +146,35 @@ export const SignupStepLayout: React.FC<SignupStepLayoutProps> = ({
         nestedScrollEnabled
       >
         <View style={styles.contentColumn}>
-          <View style={styles.intro}>
-            <View style={styles.titleRow}>
-              {heroIcon ? (
-                <SignupStepHero icon={heroIcon} accentColor={colors.accentSoft} iconColor={colors.accent} />
-              ) : null}
-              <View style={styles.titleBlock}>
-                <Text style={[authStyles.title, compact && authStyles.titleCompact, { color: colors.text }]}>
+          <AnimatedEntrance index={0}>
+            <View style={styles.intro}>
+              <View style={styles.titleRow}>
+                {heroIcon ? (
+                  <SignupStepHero icon={heroIcon} accentColor={colors.accentSoft} iconColor={colors.accent} />
+                ) : null}
+                <View style={styles.titleBlock}>
+                <Text
+                  style={[
+                    authStyles.title,
+                    compact && authStyles.titleCompact,
+                    { color: colors.text, textAlign: 'left' },
+                  ]}
+                >
                   {title}
                 </Text>
-                {subtitle ? (
-                  <Text style={[authStyles.sub, styles.subtitle, { color: colors.textSecondary }]}>
-                    {subtitle}
-                  </Text>
-                ) : null}
+                  {subtitle ? (
+                    <Text style={[authStyles.sub, styles.subtitle, { color: colors.textSecondary }]}>
+                      {subtitle}
+                    </Text>
+                  ) : null}
+                </View>
               </View>
             </View>
-          </View>
+          </AnimatedEntrance>
 
-          <View style={styles.body}>{children}</View>
+          <AnimatedEntrance index={1} kind="fadeUp">
+            <View style={styles.body}>{children}</View>
+          </AnimatedEntrance>
         </View>
       </ScrollView>
 
@@ -234,21 +258,22 @@ const createStyles = (colors: AppColors, contentMaxWidth: number) =>
     intro: {
       paddingHorizontal: spacing.lg,
       paddingTop: spacing.lg,
-      alignItems: 'center',
+      alignItems: 'flex-start',
       width: '100%',
     },
     titleRow: {
       flexDirection: 'column',
-      alignItems: 'center',
+      alignItems: 'flex-start',
       width: '100%',
     },
     titleBlock: {
       width: '100%',
-      alignItems: 'center',
+      alignItems: 'flex-start',
     },
     subtitle: {
       alignSelf: 'stretch',
       marginBottom: spacing.sm,
+      textAlign: 'left',
     },
     body: {
       paddingHorizontal: spacing.lg,

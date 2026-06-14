@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { View, StyleSheet } from 'react-native';
+import Animated, { FadeInLeft, FadeInRight } from 'react-native-reanimated';
+import { motion } from '../../theme/motion';
 import { useSignupForm } from './useSignupForm';
 import { SignupWelcomeStep } from './SignupWelcomeStep';
 import { SignupSpaceStep } from './SignupSpaceStep';
@@ -27,6 +29,7 @@ import { SignupFlowProvider, useSignupFlowTheme } from './SignupFlowContext';
 import { getWomanLaunchCopy } from './signupWomanConfig';
 import { getManLaunchCopy } from './signupManConfig';
 import { getProLaunchCopy } from './signupProConfig';
+import { getSanteLaunchCopy } from './signupSanteConfig';
 
 interface SignupFlowProps {
   onClose: () => void;
@@ -47,7 +50,7 @@ const SignupFlowInner: React.FC<SignupFlowInnerProps> = ({
   onComplete,
   form,
 }) => {
-  const { colors, isWomanSignup, isProSignup } = useSignupFlowTheme();
+  const { colors, isWomanSignup, isProSignup, isSanteSignup } = useSignupFlowTheme();
   const { profile, refreshProfile } = useAuth();
 
   const layout = {
@@ -59,6 +62,23 @@ const SignupFlowInner: React.FC<SignupFlowInnerProps> = ({
   };
 
   const backUnlessLocked = form.accountCreated ? undefined : form.goBack;
+  const prevIndexRef = useRef(form.pageIndex);
+  const direction = form.pageIndex >= prevIndexRef.current ? 1 : -1;
+
+  useEffect(() => {
+    prevIndexRef.current = form.pageIndex;
+  }, [form.pageIndex]);
+
+  const pageEntering =
+    direction > 0
+      ? FadeInRight.springify()
+          .damping(18)
+          .stiffness(160)
+          .duration(motion.duration.normal)
+      : FadeInLeft.springify()
+          .damping(18)
+          .stiffness(160)
+          .duration(motion.duration.normal);
 
   const submitSecurity = async () => {
     if (!form.validateAccount()) return;
@@ -129,11 +149,13 @@ const SignupFlowInner: React.FC<SignupFlowInnerProps> = ({
           nextLabel={
             form.isOAuthCompletion
               ? 'Finaliser mon accès'
-              : form.isProProduct
-                ? 'Créer mon compte Pro'
-                : form.isWomanProduct
-                  ? 'Créer mon compte Woman'
-                  : 'Créer mon compte'
+              : form.isSanteProduct
+                ? 'Créer mon compte Santé'
+                : form.isProProduct
+                  ? 'Créer mon compte Pro'
+                  : form.isWomanProduct
+                    ? 'Créer mon compte Woman'
+                    : 'Créer mon compte'
           }
         />
       );
@@ -150,14 +172,19 @@ const SignupFlowInner: React.FC<SignupFlowInnerProps> = ({
         ? getWomanLaunchCopy({
             emailVerificationPending: form.createdWithEmailPassword,
           })
-        : isProSignup
-          ? getProLaunchCopy({
+        : isSanteSignup
+          ? getSanteLaunchCopy({
               emailVerificationPending: form.createdWithEmailPassword,
               verificationPending,
             })
-          : getManLaunchCopy({
-              emailVerificationPending: form.createdWithEmailPassword,
-            });
+          : isProSignup
+            ? getProLaunchCopy({
+                emailVerificationPending: form.createdWithEmailPassword,
+                verificationPending,
+              })
+            : getManLaunchCopy({
+                emailVerificationPending: form.createdWithEmailPassword,
+              });
 
       content = (
         <SignupSuccessStep
@@ -175,9 +202,9 @@ const SignupFlowInner: React.FC<SignupFlowInnerProps> = ({
 
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
-      <View key={form.currentPage} style={styles.page}>
+      <Animated.View key={form.currentPage} entering={pageEntering} style={styles.page}>
         {content}
-      </View>
+      </Animated.View>
     </View>
   );
 };

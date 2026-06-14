@@ -1,12 +1,14 @@
 import React from 'react';
 import { View } from 'react-native';
 import { AuthTextField } from '../../components/auth/AuthTextField';
-
+import { StaggerReveal } from '../../components/motion';
+import { SignupFormCard } from '../../components/signup/SignupFormCard';
 import { SignupStepLayout } from './SignupStepLayout';
 import { SignupFooterButton } from './SignupFooterButton';
 import type { SignupForm } from './useSignupForm';
 import { getPlayerStepMeta } from './signupPlayerStepMeta';
 import { getProStepMeta } from './signupProConfig';
+import { getSanteStepMeta } from './signupSanteConfig';
 import { ProDayErrorBanner } from '../../components/ui/ProDayErrorBanner';
 
 interface SignupAccountStepProps {
@@ -28,9 +30,11 @@ export const SignupAccountStep: React.FC<SignupAccountStepProps> = ({
   phaseIndex,
   onBack,
 }) => {
-  const meta = form.isProProduct
-    ? getProStepMeta('account')
-    : getPlayerStepMeta(form.productLine, 'account');
+  const meta = form.isSanteProduct
+    ? getSanteStepMeta('account')
+    : form.isProProduct
+      ? getProStepMeta('account')
+      : getPlayerStepMeta(form.productLine, 'account');
   return (
   <SignupStepLayout
     stepIndex={stepIndex}
@@ -53,29 +57,31 @@ export const SignupAccountStep: React.FC<SignupAccountStepProps> = ({
       </View>
     ) : null}
 
-    <View>
-      <AuthTextField
-        label="Nom affiché"
-        icon="person"
-        placeholder="Prénom Nom"
-        value={form.displayName}
-        onChangeText={form.setDisplayName}
-        error={form.fieldErrors.displayName}
-      />
-    </View>
-    <View>
-      <AuthTextField
-        label="Email"
-        icon="mail"
-        placeholder="vous@exemple.com"
-        value={form.email}
-        onChangeText={form.setEmail}
-        keyboardType="email-address"
-        autoCapitalize="none"
-        editable={!form.isOAuthCompletion}
-        error={form.fieldErrors.email}
-      />
-    </View>
+    <SignupFormCard>
+      <StaggerReveal index={0}>
+        <AuthTextField
+          label="Nom affiché"
+          icon="person"
+          placeholder="Prénom Nom"
+          value={form.displayName}
+          onChangeText={form.setDisplayName}
+          error={form.fieldErrors.displayName}
+        />
+      </StaggerReveal>
+      <StaggerReveal index={1}>
+        <AuthTextField
+          label="Email"
+          icon="mail"
+          placeholder="vous@exemple.com"
+          value={form.email}
+          onChangeText={form.setEmail}
+          keyboardType="email-address"
+          autoCapitalize="none"
+          editable={!form.isOAuthCompletion}
+          error={form.fieldErrors.email}
+        />
+      </StaggerReveal>
+    </SignupFormCard>
     {form.role === 'sponsor' ? (
       <View>
         <AuthTextField
