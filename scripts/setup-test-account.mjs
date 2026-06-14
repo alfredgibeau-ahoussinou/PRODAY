@@ -90,7 +90,7 @@ await db.doc(`users/${user.uid}`).set(
       job_title: 'Kiné du sport',
       booking_enabled: true,
       consultation_duration_min: 30,
-      bio: 'Compte test ProDay — Man, Woman et Pro (dashboard médical sur Pro).',
+      bio: 'Compte test ProDay — Man, Woman, Pro (coach) et Santé (kiné).',
     },
     updated_at: FieldValue.serverTimestamp(),
   },
@@ -103,7 +103,7 @@ const data = doc.data() || {};
 console.log('✔ Compte test multi-pôles synchronisé');
 console.log(`  Email : ${EMAIL}`);
 console.log(`  UID   : ${user.uid}`);
-console.log(`  Rôle  : ${data.role ?? '—'} (player — physio simulé sur Pro)`);
+console.log(`  Rôle  : ${data.role ?? '—'} (player — rôles simulés par univers)`);
 console.log(`  Nom   : ${data.display_name ?? user.displayName ?? '—'}`);
-console.log('\n→ Man / Woman : joueur · Pro : dashboard médical (physio)');
+console.log('\n→ Man / Woman : joueur · Pro : coach · Santé : kiné (physio)');
 console.log('→ Email listé dans src/config/emailVerificationBypass.ts');

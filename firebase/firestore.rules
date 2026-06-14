@@ -31,6 +31,45 @@ service cloud.firestore {
       return userDoc(request.auth.uid).data.role in ['club', 'organizer', 'coach'];
     }
 
+    function canPublishRecruitmentPost() {
+      return userDoc(request.auth.uid).data.role
+        in ['club', 'coach', 'agent', 'recruiter', 'organizer'];
+    }
+
+    /** Coach/club/organizer doivent être vérifiés ; recruteur et agent exemptés du diplôme. */
+    function staffCanPublishSensitive() {
+      let role = userDoc(request.auth.uid).data.role;
+      return isVerifiedUser()
+        || !(role in ['coach', 'club', 'organizer']);
+    }
+
+    function isMinorAccount() {
+      return resource.data.get('parental_settings', {}).get('is_minor', false) == true;
+    }
+
+    function minorParentalProtected() {
+      return !isMinorAccount()
+        || (
+          request.resource.data.get('parental_settings', {}).get('is_minor', true) != false
+          && request.resource.data.get('parental_settings', {}).get('contacts_filter_enabled', true) != false
+          && request.resource.data.get('parental_settings', {}).get('supervision_enabled', true) != false
+        );
+    }
+
+    function canManageClubEntity() {
+      return userDoc(request.auth.uid).data.role in ['club', 'coach', 'organizer', 'agent'];
+    }
+
+    function isThreadParticipant() {
+      return resource.data.get('participant_ids', []).hasAny([request.auth.uid]);
+    }
+
+    function isValidThreadCreate() {
+      return request.resource.data.participant_ids.size() == 2
+        && request.resource.data.participant_ids.hasAny([request.auth.uid])
+        && request.resource.data.participant_ids[0] != request.resource.data.participant_ids[1];
+    }
+
     function canReadFeedPost() {
       return resource.data.audience == 'all'
         || (resource.data.audience == 'agents'
@@ -91,12 +130,45 @@ service cloud.firestore {
             .hasOnly(['carpool_slots', 'carpool_messages', 'updated_at']);
     }
 
+    function isGuardianOfUser(data) {
+      return isSignedIn()
+        && request.auth.token.email != null
+        && data.get('parental_settings', {}).get('guardian_email', '') == request.auth.token.email
+        && data.get('parental_settings', {}).get('is_minor', false) == true;
+    }
+
+    function guardianParentalPatchValid(prev, next) {
+      let pPrev = prev.get('parental_settings', {});
+      let pNext = next.get('parental_settings', {});
+      return pNext.get('is_minor', false) == true
+        && pNext.get('guardian_email', '') == pPrev.get('guardian_email', '')
+        && pNext.get('supervision_enabled', true) == true
+        && pNext.get('contacts_filter_enabled', true) == true;
+    }
+
+    function isGuardianParentalUpdate() {
+      return isGuardianOfUser(resource.data)
+        && verificationFieldsUnchanged()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['parental_settings', 'updated_at'])
+        && guardianParentalPatchValid(resource.data, request.resource.data);
+    }
+
+    function isOwnerParentalRuntimeSync() {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['parental_runtime', 'updated_at'])
+        && request.resource.data.parental_runtime.minutes_used is int
+        && request.resource.data.parental_runtime.minutes_used >= 0
+        && request.resource.data.parental_runtime.minutes_used <= 480
+        && request.resource.data.parental_runtime.date is string;
+    }
+
     match /users/{userId} {
       allow read: if isSignedIn();
       allow create: if isOwner(userId)
         && request.resource.data.verification_status in ['PENDING', 'NOT_REQUIRED'];
       allow update: if isAdmin()
-        || (isOwner(userId) && verificationFieldsUnchanged());
+        || isGuardianParentalUpdate()
+        || (isOwner(userId) && verificationFieldsUnchanged()
+            && (minorParentalProtected() || isOwnerParentalRuntimeSync()));
       allow delete: if isAdmin();
     }
 
@@ -110,8 +182,15 @@ service cloud.firestore {
       allow read, write: if isOwner(userId);
     }
 
+    match /users/{userId}/v3_brain/{docId} {
+      allow read, write: if isOwner(userId);
+    }
+
     match /messages/{msgId} {
-      allow create: if canSendMessage();
+      allow create: if canSendMessage()
+        && request.resource.data.sender_id == request.auth.uid
+        && request.resource.data.body.size() > 0
+        && request.resource.data.body.size() <= 2000;
       allow read: if isSignedIn()
         && (resource.data.sender_id == request.auth.uid
             || resource.data.receiver_id == request.auth.uid);
@@ -204,13 +283,41 @@ service cloud.firestore {
 
     match /clubs/{clubId} {
       allow read: if true;
-      allow write: if isSignedIn();
+      allow create: if isSignedIn()
+        && canManageClubEntity()
+        && request.resource.data.owner_uid == request.auth.uid
+        && request.resource.data.verified == false;
+      allow update: if isAdmin()
+        || (isSignedIn()
+            && resource.data.owner_uid == request.auth.uid
+            && request.resource.data.owner_uid == resource.data.owner_uid
+            && request.resource.data.verified == resource.data.verified);
+      allow delete: if isAdmin();
     }
 
     match /recruitment_posts/{postId} {
       allow read: if true;
-      allow create: if isSignedIn();
-      allow update, delete: if isSignedIn() || isAdmin();
+      allow create: if isSignedIn()
+        && canPublishRecruitmentPost()
+        && staffCanPublishSensitive()
+        && request.resource.data.author_uid == request.auth.uid
+        && request.resource.data.status == 'OPEN';
+      allow update: if isAdmin()
+        || (isSignedIn() && resource.data.author_uid == request.auth.uid);
+      allow delete: if isAdmin()
+        || (isSignedIn() && resource.data.author_uid == request.auth.uid);
+    }
+
+    /** Alertes mercato joueur — sync pour push serveur */
+    match /mercato_alerts/{uid} {
+      allow read, write: if isSignedIn() && request.auth.uid == uid;
+    }
+
+    /** Commandes boutique ProDay Shop */
+    match /shop_orders/{orderId} {
+      allow read: if isAdmin()
+        || (isSignedIn() && resource.data.buyer_uid == request.auth.uid);
+      allow create, update, delete: if false;
     }
 
     match /recruitment_applications/{appId} {
@@ -231,8 +338,14 @@ service cloud.firestore {
     }
 
     match /message_threads/{threadId} {
-      allow read: if isSignedIn();
-      allow write: if isSignedIn();
+      allow read: if isSignedIn() && isThreadParticipant();
+      allow create: if isSignedIn()
+        && canSendMessage()
+        && isValidThreadCreate();
+      allow update: if isSignedIn()
+        && isThreadParticipant()
+        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['participant_ids']);
+      allow delete: if isAdmin();
     }
 
     match /user_favorites/{favoriteId} {
@@ -253,6 +366,7 @@ service cloud.firestore {
       allow read: if true;
       allow create: if isSignedIn()
         && canPublishStages()
+        && staffCanPublishSensitive()
         && request.resource.data.author_uid == request.auth.uid
         && request.resource.data.status == 'OPEN';
       allow update: if isAdmin()
@@ -271,7 +385,10 @@ service cloud.firestore {
                 || resource.data.stage_author_uid == request.auth.uid));
       allow create: if isSignedIn()
         && request.resource.data.player_uid == request.auth.uid
-        && request.resource.data.status == 'PENDING';
+        && request.resource.data.status == 'PENDING'
+        && request.resource.data.message is string
+        && request.resource.data.message.size() >= 10
+        && request.resource.data.message.size() <= 600;
       allow update: if isAdmin();
       allow delete: if isAdmin();
     }

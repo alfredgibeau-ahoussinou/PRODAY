@@ -3,12 +3,17 @@ import * as admin from 'firebase-admin';
 import { processScheduledEventReminders } from './eventReminders';
 import { sendFcmToUser } from './messaging';
 import { createPaymentCheckoutSession, stripeWebhook } from './stripePayments';
+import { createShopCheckoutSession } from './shopPayments';
+import { onRecruitmentPostCreated } from './mercatoAlerts';
 import { runMistralDocumentVerification, verifyOnboardingDocumentEphemeral } from './mistralVerification';
 import { onPlatformFeedCreated, onChatMessageCreated } from './feedNotifications';
 import { createSubmitBetaWaitlistHandler } from './betaWaitlist';
+import { onV3BrainWrite } from './v3Brain';
 
-export { createPaymentCheckoutSession, stripeWebhook };
+export { createPaymentCheckoutSession, stripeWebhook, createShopCheckoutSession };
 export { onPlatformFeedCreated, onChatMessageCreated };
+export { onRecruitmentPostCreated };
+export { onV3BrainWrite };
 
 admin.initializeApp();
 const db = admin.firestore();

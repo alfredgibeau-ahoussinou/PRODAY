@@ -156,6 +156,227 @@ async function run() {
     deleteDoc(doc(bobDb, 'club_announcements/ann1'))
   );
 
+  // --- Mercato : joueur ne peut pas publier ---
+  await testEnv.withSecurityRulesDisabled(async (ctx) => {
+    const db = ctx.firestore();
+    await setDoc(doc(db, 'users/carol'), {
+      role: 'player',
+      profile: { club_id: 'club1' },
+      is_verified: true,
+    });
+    await setDoc(doc(db, 'users/dave'), {
+      role: 'coach',
+      profile: { club_id: 'club1' },
+      is_verified: false,
+    });
+    await setDoc(doc(db, 'users/erin'), {
+      role: 'coach',
+      profile: { club_id: 'club1' },
+      is_verified: true,
+    });
+    await setDoc(doc(db, 'users/minor1'), {
+      role: 'player',
+      profile: { club_id: 'club1' },
+      is_verified: true,
+      parental_settings: {
+        is_minor: true,
+        supervision_enabled: true,
+        contacts_filter_enabled: true,
+      },
+    });
+    await setDoc(doc(db, 'recruitment_posts/post1'), {
+      author_uid: 'erin',
+      club_id: 'club1',
+      status: 'OPEN',
+      title: 'Annonce',
+    });
+  });
+
+  const carolDb = testEnv.authenticatedContext('carol').firestore();
+  const daveDb = testEnv.authenticatedContext('dave').firestore();
+  const erinDb = testEnv.authenticatedContext('erin').firestore();
+  const minorDb = testEnv.authenticatedContext('minor1').firestore();
+
+  await assertFails(
+    setDoc(doc(carolDb, 'recruitment_posts/post2'), {
+      author_uid: 'carol',
+      club_id: 'club1',
+      status: 'OPEN',
+      title: 'Hack',
+    })
+  );
+
+  await assertFails(
+    setDoc(doc(daveDb, 'recruitment_posts/post3'), {
+      author_uid: 'dave',
+      club_id: 'club1',
+      status: 'OPEN',
+      title: 'Non vérifié',
+    })
+  );
+
+  await assertSucceeds(
+    setDoc(doc(erinDb, 'recruitment_posts/post4'), {
+      author_uid: 'erin',
+      club_id: 'club1',
+      status: 'OPEN',
+      title: 'Recherche ailier',
+    })
+  );
+
+  await assertFails(
+    updateDoc(doc(carolDb, 'recruitment_posts/post1'), { title: 'Piraté' })
+  );
+
+  // --- Mineur : protections parentales non désactivables ---
+  await assertFails(
+    updateDoc(doc(minorDb, 'users/minor1'), {
+      parental_settings: {
+        is_minor: false,
+        supervision_enabled: false,
+        contacts_filter_enabled: false,
+      },
+    })
+  );
+
+  await assertSucceeds(
+    updateDoc(doc(minorDb, 'users/minor1'), {
+      parental_settings: {
+        is_minor: true,
+        supervision_enabled: true,
+        contacts_filter_enabled: true,
+        daily_limit_minutes: 60,
+      },
+    })
+  );
+
+  // --- Clubs : joueur refusé, coach autorisé ---
+  await assertFails(
+    setDoc(doc(carolDb, 'clubs/club-hack'), {
+      name: 'Hack FC',
+      city: 'Paris',
+      owner_uid: 'carol',
+      verified: false,
+      categories: ['Seniors'],
+    })
+  );
+
+  await assertSucceeds(
+    setDoc(doc(erinDb, 'clubs/club-ok'), {
+      name: 'FC Erin',
+      city: 'Lyon',
+      owner_uid: 'erin',
+      verified: false,
+      categories: ['Seniors'],
+    })
+  );
+
+  // --- Messagerie : thread réservé aux participants ---
+  await assertSucceeds(
+    setDoc(doc(bobDb, 'message_threads/alice__bob'), {
+      participant_ids: ['alice', 'bob'],
+      participant_names: { alice: 'Alice', bob: 'Bob' },
+      last_message: '',
+      unread_by: [],
+    })
+  );
+
+  await assertFails(getDoc(doc(carolDb, 'message_threads/alice__bob')));
+
+  await assertFails(
+    setDoc(doc(daveDb, 'message_threads/dave__bob'), {
+      participant_ids: ['dave', 'bob'],
+      participant_names: { dave: 'Dave', bob: 'Bob' },
+      last_message: '',
+      unread_by: [],
+    })
+  );
+
+  // --- Stage : message trop court refusé ---
+  await assertFails(
+    setDoc(doc(carolDb, 'stage_applications/app1'), {
+      stage_id: 'stage1',
+      stage_author_uid: 'erin',
+      player_uid: 'carol',
+      player_name: 'Carol',
+      message: 'court',
+      status: 'PENDING',
+    })
+  );
+
+  await assertSucceeds(
+    setDoc(doc(carolDb, 'stage_applications/app2'), {
+      stage_id: 'stage1',
+      stage_author_uid: 'erin',
+      player_uid: 'carol',
+      player_name: 'Carol',
+      message: 'Bonjour, je souhaite m’inscrire à ce stage.',
+      status: 'PENDING',
+    })
+  );
+
+  // --- Tuteur : mise à jour temps d'écran à distance ---
+  await testEnv.withSecurityRulesDisabled(async (ctx) => {
+    const db = ctx.firestore();
+    await setDoc(doc(db, 'users/minor-linked'), {
+      role: 'player',
+      display_name: 'Enfant',
+      email: 'enfant@test.com',
+      profile: {},
+      is_verified: false,
+      parental_settings: {
+        is_minor: true,
+        guardian_email: 'parent@test.com',
+        guardian_name: 'Parent',
+        supervision_enabled: true,
+        contacts_filter_enabled: true,
+        screen_time_enabled: true,
+        daily_limit_minutes: 90,
+        active_days: ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven'],
+      },
+    });
+    await setDoc(doc(db, 'users/parent-user'), {
+      role: 'player',
+      email: 'parent@test.com',
+      profile: {},
+      is_verified: true,
+    });
+  });
+
+  const parentDb = testEnv
+    .authenticatedContext('parent-user', { email: 'parent@test.com' })
+    .firestore();
+
+  await assertSucceeds(
+    updateDoc(doc(parentDb, 'users/minor-linked'), {
+      parental_settings: {
+        is_minor: true,
+        guardian_email: 'parent@test.com',
+        guardian_name: 'Parent',
+        supervision_enabled: true,
+        contacts_filter_enabled: true,
+        screen_time_enabled: true,
+        daily_limit_minutes: 45,
+        active_days: ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven'],
+      },
+    })
+  );
+
+  await assertFails(
+    updateDoc(doc(carolDb, 'users/minor-linked'), {
+      parental_settings: {
+        is_minor: true,
+        guardian_email: 'parent@test.com',
+        guardian_name: 'Parent',
+        supervision_enabled: true,
+        contacts_filter_enabled: true,
+        screen_time_enabled: false,
+        daily_limit_minutes: 45,
+        active_days: ['Lun'],
+      },
+    })
+  );
+
   console.log('✓ Tous les scénarios rules-unit-testing ont réussi.');
   await testEnv.cleanup();
 }

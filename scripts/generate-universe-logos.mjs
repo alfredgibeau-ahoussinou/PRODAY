@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
- * Pictos Pro Day Man (anthracite) et Pro Day Pro (bleu vif) — teinte mark distincte de Woman.
- * Libellés rendus en natif via ManLogo.tsx / ProLogo.tsx.
+ * Pictos Pro Day Man (anthracite), Pro Day Pro (bleu vif) et Pro Day Santé (teal).
+ * Libellés rendus en natif via ManLogo.tsx / ProLogo.tsx / SanteLogo.tsx.
  *
  *   node scripts/generate-universe-logos.mjs
  */
@@ -80,6 +80,22 @@ def recolor_pro(im):
     out = Image.fromarray(arr.astype(np.uint8))
     return ImageEnhance.Contrast(out).enhance(1.12)
 
+def recolor_sante(im):
+    """P teal santé — distinct Pro bleu, Woman rose et Man anthracite."""
+    arr = np.array(im.convert("RGBA"), dtype=np.float32)
+    rgb = arr[..., :3]
+    a = arr[..., 3]
+    hsv = rgb_to_hsv_arr(rgb)
+    h, s, v = hsv[..., 0], hsv[..., 1], hsv[..., 2]
+    brand = is_brand_pixel(a, h, s, v)
+    h_new = np.where(brand, 0.485, h)
+    s_new = np.where(brand, np.clip(s * 1.18, 0.68, 1.0), s)
+    v_new = np.where(brand, np.clip(v * 0.98, 0.48, 0.82), v)
+    rgb_out = hsv_to_rgb_arr(np.stack([h_new, s_new, v_new], axis=-1))
+    arr[..., :3] = rgb_out
+    out = Image.fromarray(arr.astype(np.uint8))
+    return ImageEnhance.Contrast(out).enhance(1.1)
+
 def save_picto(im, name):
     im = crop_visible(im, pad=10)
     w, h = im.size
@@ -100,6 +116,10 @@ save_picto(man.copy(), "logo-homme-mark-transparent.png")
 pro = recolor_pro(mark.copy())
 save_picto(pro, "logo-pro-picto.png")
 save_picto(pro.copy(), "logo-pro-mark-transparent.png")
+
+sante = recolor_sante(mark.copy())
+save_picto(sante, "logo-sante-picto.png")
+save_picto(sante.copy(), "logo-sante-mark-transparent.png")
 `;
 
 if (!existsSync(resolve(branding, 'logo-mark-transparent.png'))) {

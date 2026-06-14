@@ -2,6 +2,7 @@ import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
 import Stripe from 'stripe';
 import { sendFcmToUser } from './messaging';
+import { handleShopCheckoutCompleted } from './shopPayments';
 
 const db = admin.firestore();
 
@@ -119,6 +120,13 @@ export const stripeWebhook = functions.https.onRequest(async (req, res) => {
 
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object as Stripe.Checkout.Session;
+
+    if (session.metadata?.type === 'shop_order') {
+      await handleShopCheckoutCompleted(session);
+      res.json({ received: true });
+      return;
+    }
+
     const requestId = session.metadata?.requestId;
     if (requestId) {
       const ref = db.doc(`team_payment_requests/${requestId}`);
