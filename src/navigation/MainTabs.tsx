@@ -2,11 +2,11 @@ import React from 'react';
 import { HomeScreen } from '../screens/HomeScreen';
 import { MercatoScreen } from '../screens/MercatoScreen';
 import { MatchsScreen } from '../screens/MatchsScreen';
-import { ArenaScreen } from '../screens/ArenaScreen';
 import { SponsorsScreen } from '../screens/SponsorsScreen';
-import { AuthScreen } from '../screens/AuthScreen';
+import { ProfilTabScreen } from '../screens/ProfilTabScreen';
 import { MessagesScreen } from '../screens/MessagesScreen';
 import { FeedTabScreen } from '../screens/FeedTabScreen';
+import { ReelsScreen } from '../screens/ReelsScreen';
 import { HealthProfessionalsScreen } from '../screens/HealthProfessionalsScreen';
 import { CarpoolScreen } from '../screens/CarpoolScreen';
 import { ShopScreen } from '../screens/ShopScreen';
@@ -21,8 +21,9 @@ const TAB_SCREENS: Record<MainTabId, React.ComponentType> = {
   covoiturage: CarpoolScreen,
   sante: HealthProfessionalsScreen,
   feed: FeedTabScreen,
+  reels: ReelsScreen,
   messages: MessagesScreen,
-  profil: AuthScreen,
+  profil: ProfilTabScreen,
   shop: ShopScreen,
 };
 
@@ -38,6 +39,5 @@ export const MAIN_TABS: {
 
 /** Modules accessibles depuis l’accueil ou menu secondaire */
 export const SECONDARY_MODULES = [
-  { id: 'arena', label: 'Arena', screen: ArenaScreen },
   { id: 'sponsors', label: 'Sponsors', screen: SponsorsScreen },
 ] as const;

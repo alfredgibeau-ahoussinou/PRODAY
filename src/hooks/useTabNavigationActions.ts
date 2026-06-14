@@ -30,11 +30,11 @@ export function useTabNavigationActions(): TabNavigationActions {
         nav.setActiveTab('home');
         nav.openDashboard(view);
       },
-      openArenaTournament: (tournamentId) => {
-        nav.openArenaTournament(tournamentId);
-      },
       openShop: () => {
         nav.openShop();
+      },
+      openCarpool: (opts) => {
+        nav.openCarpool(opts);
       },
     }),
     [nav]

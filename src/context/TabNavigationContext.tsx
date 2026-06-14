@@ -1,6 +1,9 @@
 import React, { createContext, useContext } from 'react';
 import type { MainTabId } from '../navigation/mainTabConfig';
+
+export type AuthIntent = 'login' | 'signup';
 import type {
+  CarpoolDeepLink,
   DashboardDeepLink,
   MatchsDeepLink,
   MercatoDeepLink,
@@ -24,22 +27,26 @@ interface TabNavigationContextValue {
   clearPendingMatchs: () => void;
 
   pendingMercatoView: MercatoDeepLink | null;
-  openMercato: (view: MercatoDeepLink) => void;
+  openMercato: (view?: MercatoDeepLink) => void;
   clearPendingMercato: () => void;
 
   pendingProfileView: ProfileDeepLink | null;
   openProfile: (view?: ProfileDeepLink) => void;
   clearPendingProfile: () => void;
 
+  pendingAuthIntent: AuthIntent | null;
+  openAuth: (intent: AuthIntent) => void;
+  clearPendingAuthIntent: () => void;
+
   pendingDashboardView: DashboardDeepLink | null;
   openDashboard: (view: DashboardDeepLink) => void;
   clearPendingDashboard: () => void;
 
-  pendingArenaTournamentId: string | null;
-  openArenaTournament: (tournamentId: string) => void;
-  clearPendingArenaTournament: () => void;
-
   openShop: () => void;
+
+  pendingCarpoolLink: CarpoolDeepLink | null;
+  openCarpool: (link?: CarpoolDeepLink) => void;
+  clearPendingCarpool: () => void;
 }
 
 const TabNavigationContext = createContext<TabNavigationContextValue | null>(null);

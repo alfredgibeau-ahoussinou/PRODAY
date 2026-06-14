@@ -9,8 +9,9 @@ import { MatchsScreen } from '../screens/MatchsScreen';
 import { CarpoolScreen } from '../screens/CarpoolScreen';
 import { HealthProfessionalsScreen } from '../screens/HealthProfessionalsScreen';
 import { FeedTabScreen } from '../screens/FeedTabScreen';
+import { ReelsScreen } from '../screens/ReelsScreen';
 import { MessagesScreen } from '../screens/MessagesScreen';
-import { AuthScreen } from '../screens/AuthScreen';
+import { ProfilTabScreen } from '../screens/ProfilTabScreen';
 import { ShopScreen } from '../screens/ShopScreen';
 import { PhysioAgendaScreen } from '../screens/medical/PhysioAgendaScreen';
 import { PhysioMessagesScreen } from '../screens/medical/PhysioMessagesScreen';
@@ -26,8 +27,9 @@ const DEFAULT_SCREENS: Record<MainTabId, ComponentType> = {
   covoiturage: CarpoolScreen,
   sante: HealthProfessionalsScreen,
   feed: FeedTabScreen,
+  reels: ReelsScreen,
   messages: MessagesScreen,
-  profil: AuthScreen,
+  profil: ProfilTabScreen,
   shop: ShopScreen,
 };
 
