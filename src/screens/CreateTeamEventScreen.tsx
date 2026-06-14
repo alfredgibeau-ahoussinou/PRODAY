@@ -3,13 +3,13 @@ import {
   View,
   Text,
   TextInput,
-  TouchableOpacity,
   ScrollView,
   StyleSheet,
   Alert,
   ActivityIndicator,
   Switch,
 } from 'react-native';
+import { PressableSpring } from '../components/motion';
 import type { TeamEventType } from '../models/TeamEvent';
 import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { teamEventsService } from '../services/teamEvents.service';
@@ -167,7 +167,7 @@ export const CreateTeamEventScreen: React.FC<CreateTeamEventScreenProps> = ({
         <Text style={styles.label}>Type</Text>
         <View style={styles.typeRow}>
           {EVENT_TYPES.map((t) => (
-            <TouchableOpacity
+            <PressableSpring
               key={t.id}
               style={[styles.typeChip, eventType === t.id && styles.typeChipActive]}
               onPress={() => setEventType(t.id)}
@@ -177,7 +177,7 @@ export const CreateTeamEventScreen: React.FC<CreateTeamEventScreenProps> = ({
               >
                 {t.label}
               </Text>
-            </TouchableOpacity>
+            </PressableSpring>
           ))}
         </View>
 
@@ -230,7 +230,7 @@ export const CreateTeamEventScreen: React.FC<CreateTeamEventScreenProps> = ({
             <Text style={styles.label}>Catégories</Text>
             <View style={styles.typeRow}>
               {CATEGORIES.map((cat) => (
-                <TouchableOpacity
+                <PressableSpring
                   key={cat}
                   style={[
                     styles.typeChip,
@@ -246,7 +246,7 @@ export const CreateTeamEventScreen: React.FC<CreateTeamEventScreenProps> = ({
                   >
                     {cat}
                   </Text>
-                </TouchableOpacity>
+                </PressableSpring>
               ))}
             </View>
             <TextInput
@@ -270,7 +270,7 @@ export const CreateTeamEventScreen: React.FC<CreateTeamEventScreenProps> = ({
             </Text>
             <View style={styles.typeRow}>
               {CATEGORIES.map((cat) => (
-                <TouchableOpacity
+                <PressableSpring
                   key={cat}
                   style={[
                     styles.typeChip,
@@ -286,7 +286,7 @@ export const CreateTeamEventScreen: React.FC<CreateTeamEventScreenProps> = ({
                   >
                     {cat}
                   </Text>
-                </TouchableOpacity>
+                </PressableSpring>
               ))}
             </View>
           </>
@@ -313,7 +313,7 @@ export const CreateTeamEventScreen: React.FC<CreateTeamEventScreenProps> = ({
                   {clubMembers.map((m) => {
                     const on = selectedUids.includes(m.uid);
                     return (
-                      <TouchableOpacity
+                      <PressableSpring
                         key={m.uid}
                         style={[styles.memberChip, on && styles.memberChipOn]}
                         onPress={() =>
@@ -325,7 +325,7 @@ export const CreateTeamEventScreen: React.FC<CreateTeamEventScreenProps> = ({
                         <Text style={[styles.memberChipText, on && styles.memberChipTextOn]}>
                           {m.name}
                         </Text>
-                      </TouchableOpacity>
+                      </PressableSpring>
                     );
                   })}
                 </View>
@@ -338,7 +338,7 @@ export const CreateTeamEventScreen: React.FC<CreateTeamEventScreenProps> = ({
           </Text>
         )}
 
-        <TouchableOpacity
+        <PressableSpring
           style={[styles.submit, submitting && styles.submitDisabled]}
           onPress={handleSubmit}
           disabled={submitting}
@@ -348,7 +348,7 @@ export const CreateTeamEventScreen: React.FC<CreateTeamEventScreenProps> = ({
           ) : (
             <Text style={styles.submitText}>Créer et convoquer</Text>
           )}
-        </TouchableOpacity>
+        </PressableSpring>
       </ScrollView>
     </View>
   );

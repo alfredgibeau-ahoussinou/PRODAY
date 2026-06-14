@@ -21,8 +21,6 @@ import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { teamEventsService } from '../services/teamEvents.service';
 import { useAuth } from '../context/AuthContext';
 import { formatCalendarDate } from '../utils/seasonCalendar';
-import { buildMatchSheetHtml } from '../utils/matchSheetHtml';
-import { openPrintableHtml } from '../utils/openCvHtml';
 import { EventLineupScreen } from './EventLineupScreen';
 import { EventLiveStatsScreen } from './EventLiveStatsScreen';
 import { EventAttendancePanel } from '../components/team/EventAttendancePanel';
@@ -125,7 +123,7 @@ export const TeamEventDetailScreen: React.FC<TeamEventDetailScreenProps> = ({
       if (n === 0) {
         Alert.alert('Relance', 'Personne en attente de réponse.');
       } else {
-        Alert.alert('Relance envoyée', `${n} notification(s) (FCM si token configuré).`);
+        Alert.alert('Relance envoyée', `${n} joueur${n > 1 ? 's' : ''} relancé${n > 1 ? 's' : ''} par notification.`);
         await load();
       }
     } catch (e) {
@@ -181,10 +179,11 @@ export const TeamEventDetailScreen: React.FC<TeamEventDetailScreenProps> = ({
   const reportLocked = Boolean(event.match_report_finalized_at) && !canManageFinalizedReport;
 
   const toggleReportLock = async () => {
-    if (!canManageFinalizedReport) return;
+    if (!canManageFinalizedReport || !profile) return;
     await teamEventsService.setMatchReportFinalized(
       event.id,
-      !event.match_report_finalized_at
+      !event.match_report_finalized_at,
+      { user: profile, isAdmin },
     );
     await load();
   };
@@ -330,18 +329,6 @@ export const TeamEventDetailScreen: React.FC<TeamEventDetailScreenProps> = ({
               </View>
             )}
 
-            {(event.lineup || (event.live_actions?.length ?? 0) > 0) && (
-              <TouchableOpacity
-                style={[styles.exportBtn, surfaceCard]}
-                onPress={() =>
-                  openPrintableHtml(buildMatchSheetHtml(event), 'Feuille de match')
-                }
-              >
-                <Text style={[styles.exportBtnText, { color: c.brand }]}>
-                  Exporter feuille de match (PDF)
-                </Text>
-              </TouchableOpacity>
-            )}
             {event.match_report_finalized_at ? (
               <Text style={[styles.reportLockInfo, { color: c.textMuted }]}>
                 Rapport validé le{' '}
@@ -366,6 +353,7 @@ export const TeamEventDetailScreen: React.FC<TeamEventDetailScreenProps> = ({
                 <Text style={[styles.summaryTitle, { color: c.text }]}>Présences & pointage</Text>
                 <EventAttendancePanel
                   event={event}
+                  profile={profile}
                   isStaff={isStaff}
                   onUpdated={load}
                 />

@@ -103,12 +103,17 @@ export const EventLiveStatsScreen: React.FC<EventLiveStatsScreenProps> = ({
 
     setSaving(true);
     try {
-      await teamEventsService.addLiveAction(eventId, {
-        type,
-        player_uid: player.uid,
-        player_name: player.name,
-        minute: parseInt(minute, 10) || 0,
-      });
+      if (!profile) return;
+      await teamEventsService.addLiveAction(
+        eventId,
+        {
+          type,
+          player_uid: player.uid,
+          player_name: player.name,
+          minute: parseInt(minute, 10) || 0,
+        },
+        { user: profile, isAdmin },
+      );
       setMinute('');
       await load();
     } catch (e) {
@@ -135,7 +140,11 @@ export const EventLiveStatsScreen: React.FC<EventLiveStatsScreenProps> = ({
           onPress: async () => {
             setSaving(true);
             try {
-              await teamEventsService.applyLiveStatsToPlayers(eventId);
+              if (!profile) return;
+              await teamEventsService.applyLiveStatsToPlayers(eventId, {
+                user: profile,
+                isAdmin,
+              });
               Alert.alert(
                 'Stats appliquées',
                 isWoman ? 'Profils joueuses mis à jour.' : 'Profils joueurs mis à jour.'

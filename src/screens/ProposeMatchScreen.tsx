@@ -3,7 +3,6 @@ import {
   View,
   Text,
   TextInput,
-  TouchableOpacity,
   ScrollView,
   StyleSheet,
   Alert,
@@ -11,11 +10,15 @@ import {
 } from 'react-native';
 import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { Icon, type IconName } from '../components/ui/Icon';
+import { PressableSpring, StaggerReveal } from '../components/motion';
+import { prodayHaptics } from '../utils/prodayHaptics';
 import { spacing, radius, shadows } from '../theme/designTokens';
 import { useThemedScreen } from '../hooks/useThemedScreen';
 import type { AppColors } from '../theme/universeTheme';
 import { friendlyMatchesService } from '../services/friendlyMatches.service';
 import { useAuth } from '../context/AuthContext';
+import { useRequireAuth } from '../hooks/useRequireAuth';
+import { useTabNavigation } from '../context/TabNavigationContext';
 import { parseFrenchDate } from '../utils/parseFrenchDate';
 
 const LEVELS = ['Loisir', 'Compétition', 'Mixte'] as const;
@@ -36,6 +39,8 @@ export const ProposeMatchScreen: React.FC<ProposeMatchScreenProps> = ({
 }) => {
   const [level, setLevel] = useState<(typeof LEVELS)[number]>('Loisir');
   const { profile } = useAuth();
+  const { requireAuth } = useRequireAuth();
+  const { openAuth } = useTabNavigation();
   const { colors: c, rootStyle } = useThemedScreen();
   const styles = useMemo(() => createStyles(c), [c]);
   const [clubName, setClubName] = useState(profile?.display_name ?? '');
@@ -47,6 +52,7 @@ export const ProposeMatchScreen: React.FC<ProposeMatchScreenProps> = ({
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async () => {
+    if (!requireAuth('Connectez-vous pour proposer un match amical.') || !profile) return;
     if (!clubName.trim() || !city.trim()) {
       Alert.alert('Champs requis', 'Indiquez votre club et la ville.');
       return;
@@ -54,11 +60,6 @@ export const ProposeMatchScreen: React.FC<ProposeMatchScreenProps> = ({
     const parsed = parseFrenchDate(dateStr);
     if (!parsed) {
       Alert.alert('Date invalide', 'Utilisez le format jj/mm/aaaa.');
-      return;
-    }
-
-    if (!profile) {
-      Alert.alert('Connexion requise', 'Connectez-vous depuis l’onglet Profil.');
       return;
     }
 
@@ -77,7 +78,10 @@ export const ProposeMatchScreen: React.FC<ProposeMatchScreenProps> = ({
         level_type: LEVEL_MAP[level],
         message: message.trim() || undefined,
       });
-      Alert.alert('Demande envoyée', 'Votre match a été publié sur Firestore.');
+      Alert.alert(
+        'Demande envoyée',
+        'Votre proposition est en ligne. Les clubs pourront vous contacter.',
+      );
       onCreated?.();
     } catch (e) {
       Alert.alert(
@@ -93,6 +97,16 @@ export const ProposeMatchScreen: React.FC<ProposeMatchScreenProps> = ({
     <View style={[styles.root, rootStyle]}>
       <ScreenHeader title="Proposer un match" onBack={onBack} />
       <ScrollView contentContainerStyle={styles.form}>
+        {!profile ? (
+          <View style={[styles.guestBanner, { borderColor: c.border, backgroundColor: c.surfaceMuted }]}>
+            <Text style={[styles.guestBannerText, { color: c.textSecondary }]}>
+              Connectez-vous pour publier une proposition de match amical.
+            </Text>
+            <PressableSpring onPress={() => openAuth('login')} scaleTo={0.97} haptic>
+              <Text style={[styles.guestBannerLink, { color: c.brand }]}>Se connecter</Text>
+            </PressableSpring>
+          </View>
+        ) : null}
         <Field styles={styles} colors={c} label="Votre club" value={clubName} onChangeText={setClubName} />
         <Field
           styles={styles}
@@ -132,16 +146,22 @@ export const ProposeMatchScreen: React.FC<ProposeMatchScreenProps> = ({
 
         <Text style={styles.label}>Niveau souhaité</Text>
         <View style={styles.segment}>
-          {LEVELS.map((l) => (
-            <TouchableOpacity
-              key={l}
-              style={[styles.segBtn, level === l && styles.segBtnActive]}
-              onPress={() => setLevel(l)}
-            >
-              <Text style={[styles.segText, level === l && styles.segTextActive]}>
-                {l}
-              </Text>
-            </TouchableOpacity>
+          {LEVELS.map((l, index) => (
+            <StaggerReveal key={l} index={index} delayStep={40}>
+              <PressableSpring
+                style={[styles.segBtn, level === l && styles.segBtnActive]}
+                onPress={() => {
+                  prodayHaptics.tabSwitch();
+                  setLevel(l);
+                }}
+                scaleTo={0.96}
+                haptic
+              >
+                <Text style={[styles.segText, level === l && styles.segTextActive]}>
+                  {l}
+                </Text>
+              </PressableSpring>
+            </StaggerReveal>
           ))}
         </View>
 
@@ -157,17 +177,19 @@ export const ProposeMatchScreen: React.FC<ProposeMatchScreenProps> = ({
         />
       </ScrollView>
 
-      <TouchableOpacity
+      <PressableSpring
         style={[styles.submit, shadows.fab, submitting && styles.submitDisabled]}
         onPress={handleSubmit}
         disabled={submitting}
+        scaleTo={0.97}
+        haptic
       >
         {submitting ? (
           <ActivityIndicator color={c.brandInverse} />
         ) : (
           <Text style={styles.submitText}>Envoyer la demande</Text>
         )}
-      </TouchableOpacity>
+      </PressableSpring>
     </View>
   );
 };
@@ -200,6 +222,15 @@ function createStyles(c: AppColors) {
   return StyleSheet.create({
   root: { flex: 1 },
   form: { padding: spacing.lg, paddingBottom: 100 },
+  guestBanner: {
+    borderWidth: 1,
+    borderRadius: radius.md,
+    padding: spacing.md,
+    marginBottom: spacing.lg,
+    gap: spacing.xs,
+  },
+  guestBannerText: { fontSize: 13, lineHeight: 18 },
+  guestBannerLink: { fontSize: 13, fontWeight: '700' },
   field: { marginBottom: spacing.lg },
   fieldLabel: {
     fontSize: 13,
@@ -229,6 +260,7 @@ function createStyles(c: AppColors) {
     borderRadius: radius.md,
     padding: 4,
     marginBottom: spacing.lg,
+    gap: 4,
   },
   segBtn: { flex: 1, paddingVertical: spacing.sm, alignItems: 'center', borderRadius: radius.sm },
   segBtnActive: { backgroundColor: c.surface },

@@ -1,14 +1,14 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import {
   View,
   Text,
   Image,
   ScrollView,
-  TouchableOpacity,
   StyleSheet,
   Alert,
 } from 'react-native';
 import type { User } from '../models/User';
+import { PressableSpring } from '../components/motion';
 import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { Icon, type IconName } from '../components/ui/Icon';
 import { spacing, radius, shadows } from '../theme/designTokens';
@@ -18,6 +18,16 @@ import { buildPlayerCvHtmlFromUser } from '../utils/pdfGenerator';
 import { openPlayerCvHtml } from '../utils/openCvHtml';
 import { useAuth } from '../context/AuthContext';
 import { useFavorites } from '../hooks/useFavorites';
+import { useRequireAuth } from '../hooks/useRequireAuth';
+import { isV3ShellEnabled } from '../config/featureFlags';
+import { V3TabShell } from '../components/v3/V3TabShell';
+import { V3ScreenBack } from '../components/v3/V3ScreenBack';
+import { useSectionIntelligence } from '../hooks/useSectionIntelligence';
+import { scorePlayerForScouting } from '../features/v3/engines/playerScouting.engine';
+import { AnimatedEntrance } from '../components/motion';
+import { ProDayText } from '../components/ui/ProDayText';
+import { trackV3Event } from '../core/analytics/v3Events';
+import { PlayerProfileBlocks, type ProfileBlockId } from '../components/player/PlayerProfileBlocks';
 
 interface PlayerProfileScreenProps {
   player: User;
@@ -154,6 +164,12 @@ function createStyles(c: AppColors) {
       backgroundColor: c.surface,
     },
     btnOutlineText: { color: c.brand, fontWeight: '700', fontSize: 15 },
+    scoutingBox: {
+      borderWidth: 1,
+      borderRadius: radius.md,
+      padding: spacing.md,
+      marginBottom: spacing.md,
+    },
   });
 }
 
@@ -165,9 +181,29 @@ export const PlayerProfileScreen: React.FC<PlayerProfileScreenProps> = ({
   const { colors: themeColors, productLine } = useAppTheme();
   const styles = useMemo(() => createStyles(themeColors), [themeColors]);
   const { profile: myProfile } = useAuth();
+  const { requireAuth } = useRequireAuth();
   const { isFavorite, toggle } = useFavorites(myProfile?.uid);
   const favorited = isFavorite(player.uid);
   const isOwnProfile = myProfile?.uid === player.uid;
+  const useV3Header =
+    isV3ShellEnabled() && Boolean(myProfile && myProfile.role !== 'player' && !isOwnProfile);
+  const useV3Blocks = isV3ShellEnabled() && isOwnProfile;
+  const scouting = useMemo(() => {
+    if (!useV3Header || !myProfile) return null;
+    return scorePlayerForScouting(myProfile, player);
+  }, [useV3Header, myProfile, player]);
+  const intelligence = useSectionIntelligence('recrutement', myProfile ?? null, productLine, {
+    staffMode: true,
+  });
+
+  useEffect(() => {
+    if (useV3Header && scouting) {
+      trackV3Event('staff_player_profile_open', {
+        playerUid: player.uid,
+        scoutingScore: scouting.score,
+      });
+    }
+  }, [useV3Header, scouting, player.uid]);
   const p = player.profile;
   const profileTitle = productLine === 'woman' ? 'Profil joueuse' : 'Profil joueur';
 
@@ -181,20 +217,30 @@ export const PlayerProfileScreen: React.FC<PlayerProfileScreenProps> = ({
     (stats.matches > 0 || stats.goals > 0 || stats.assists > 0);
   const region = player.city ?? '—';
   const gallery = p.gallery_urls?.filter(Boolean) ?? [];
+  const [galleryExpanded, setGalleryExpanded] = useState(false);
+  const visibleGallery = galleryExpanded ? gallery : gallery.slice(0, 6);
   const metaParts: string[] = [];
   if (p.age) metaParts.push(`${p.age} ans`);
   if (player.city) metaParts.push(player.city);
   if (p.height_cm) metaParts.push(`${p.height_cm} cm`);
   if (p.weight_kg) metaParts.push(`${p.weight_kg} kg`);
 
-  return (
-    <View style={styles.root}>
-      <ScreenHeader title={profileTitle} onBack={onBack} onMenu={() => {}} centered />
+  const profileScroll = (
+    <ScrollView
+      contentContainerStyle={styles.content}
+      showsVerticalScrollIndicator={false}
+    >
+      {scouting && useV3Header ? (
+        <AnimatedEntrance kind="fadeUp">
+          <View style={[styles.scoutingBox, { backgroundColor: themeColors.accentSoft, borderColor: themeColors.accentMuted }]}>
+            <ProDayText variant="caption" accent style={{ fontWeight: '800' }}>
+              Score scouting IA {scouting.score}% — {scouting.label}
+            </ProDayText>
+          </View>
+        </AnimatedEntrance>
+      ) : null}
 
-      <ScrollView
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
-      >
+      <AnimatedEntrance kind="fadeUp">
         <View style={[styles.profileCard, shadows.card]}>
           <View style={styles.blueBlock}>
             {p.position && (
@@ -224,7 +270,7 @@ export const PlayerProfileScreen: React.FC<PlayerProfileScreenProps> = ({
             </View>
           </View>
 
-          {hasStats && stats ? (
+          {!useV3Blocks && hasStats && stats ? (
             <View style={styles.statsStrip}>
               <StatItem
                 icon="shirt"
@@ -250,65 +296,132 @@ export const PlayerProfileScreen: React.FC<PlayerProfileScreenProps> = ({
                 styles={styles}
               />
             </View>
-          ) : (
+          ) : !useV3Blocks ? (
             <Text style={styles.statsEmpty}>Stats saison non renseignées</Text>
-          )}
+          ) : null}
         </View>
+      </AnimatedEntrance>
 
-        <View style={styles.galleryHeader}>
-          <Text style={styles.sectionTitle}>Galerie photos</Text>
-          <TouchableOpacity>
-            <Text style={styles.link}>Voir tout</Text>
-          </TouchableOpacity>
-        </View>
-        {gallery.length > 0 ? (
-          <View style={styles.galleryGrid}>
-            {gallery.slice(0, 6).map((uri) => (
-              <Image key={uri} source={{ uri }} style={styles.galleryCell} />
-            ))}
-          </View>
-        ) : (
-          <Text style={styles.statsEmpty}>Aucune photo dans la galerie</Text>
-        )}
-      </ScrollView>
-
-      <View style={styles.footer}>
-        <TouchableOpacity
-          style={styles.btnPrimary}
-          onPress={() => onContact?.(player)}
-        >
-          <Icon name="mail" size={18} color="#FFFFFF" />
-          <Text style={styles.btnPrimaryText}>Contacter</Text>
-        </TouchableOpacity>
-        {isOwnProfile ? (
-          <TouchableOpacity style={styles.btnOutline} onPress={handleExportCv}>
-            <Icon name="share" size={18} color={themeColors.brand} />
-            <Text style={styles.btnOutlineText}>Exporter mon CV (PDF)</Text>
-          </TouchableOpacity>
-        ) : (
-          <TouchableOpacity
-            style={styles.btnOutline}
-            onPress={async () => {
-              if (!myProfile) {
-                Alert.alert('Connexion requise', 'Connectez-vous pour enregistrer des favoris.');
-                return;
-              }
-              try {
-                await toggle(player.uid, 'player');
-              } catch (e) {
-                Alert.alert('Erreur', e instanceof Error ? e.message : 'Action impossible.');
-              }
-            }}
-          >
-            <Icon
-              name={favorited ? 'heart' : 'heart-outline'}
-              size={18}
-              color={themeColors.brand}
-            />
-            <Text style={styles.btnOutlineText}>Ajouter aux favoris</Text>
-          </TouchableOpacity>
-        )}
+      {useV3Blocks ? (
+        <PlayerProfileBlocks
+          player={player}
+          editable
+          renderBlock={(id: ProfileBlockId) => {
+            if (id === 'stats') {
+              return hasStats && stats ? (
+                <View style={styles.statsStrip}>
+                  <StatItem icon="shirt" value={stats.matches} label="Matchs" brandColor={themeColors.brand} styles={styles} />
+                  <View style={styles.statDivider} />
+                  <StatItem icon="football" value={stats.goals} label="Buts" brandColor={themeColors.brand} styles={styles} />
+                  <View style={styles.statDivider} />
+                  <StatItem icon="walk" value={stats.assists} label="Passes décisives" brandColor={themeColors.brand} styles={styles} />
+                </View>
+              ) : (
+                <Text style={styles.statsEmpty}>Stats saison non renseignées</Text>
+              );
+            }
+            if (id === 'videos' || id === 'identity') {
+              return gallery.length > 0 ? (
+                <View style={styles.galleryGrid}>
+                  {visibleGallery.map((uri) => (
+                    <Image key={uri} source={{ uri }} style={styles.galleryCell} />
+                  ))}
+                </View>
+              ) : (
+                <Text style={styles.statsEmpty}>Aucune photo dans la galerie</Text>
+              );
+            }
+            if (id === 'bio') {
+              return <Text style={styles.statsEmpty}>{p.bio?.trim() || 'Bio non renseignée'}</Text>;
+            }
+            return <Text style={styles.statsEmpty}>À compléter dans l’édition du profil</Text>;
+          }}
+        />
+      ) : (
+        <>
+      <View style={styles.galleryHeader}>
+        <Text style={styles.sectionTitle}>Galerie photos</Text>
+        {gallery.length > 6 ? (
+          <PressableSpring onPress={() => setGalleryExpanded((v) => !v)}>
+            <Text style={styles.link}>{galleryExpanded ? 'Réduire' : 'Voir tout'}</Text>
+          </PressableSpring>
+        ) : null}
       </View>
+      {gallery.length > 0 ? (
+        <View style={styles.galleryGrid}>
+          {visibleGallery.map((uri) => (
+            <Image key={uri} source={{ uri }} style={styles.galleryCell} />
+          ))}
+        </View>
+      ) : (
+        <Text style={styles.statsEmpty}>Aucune photo dans la galerie</Text>
+      )}
+        </>
+      )}
+    </ScrollView>
+  );
+
+  const footer = (
+    <View style={styles.footer}>
+      <PressableSpring
+        style={styles.btnPrimary}
+        onPress={() => {
+          if (!requireAuth('Connectez-vous pour contacter ce joueur.')) return;
+          onContact?.(player);
+        }}
+      >
+        <Icon name="mail" size={18} color="#FFFFFF" />
+        <Text style={styles.btnPrimaryText}>Contacter</Text>
+      </PressableSpring>
+      {isOwnProfile ? (
+        <PressableSpring style={styles.btnOutline} onPress={handleExportCv}>
+          <Icon name="share" size={18} color={themeColors.brand} />
+          <Text style={styles.btnOutlineText}>Exporter mon CV (PDF)</Text>
+        </PressableSpring>
+      ) : (
+        <PressableSpring
+          style={styles.btnOutline}
+          onPress={async () => {
+            if (!requireAuth('Connectez-vous pour enregistrer des favoris.') || !myProfile) return;
+            try {
+              await toggle(player.uid, 'player');
+            } catch (e) {
+              Alert.alert('Erreur', e instanceof Error ? e.message : 'Action impossible.');
+            }
+          }}
+        >
+          <Icon
+            name={favorited ? 'heart' : 'heart-outline'}
+            size={18}
+            color={themeColors.brand}
+          />
+          <Text style={styles.btnOutlineText}>Ajouter aux favoris</Text>
+        </PressableSpring>
+      )}
+    </View>
+  );
+
+  if (useV3Header) {
+    return (
+      <V3TabShell
+        caption="Scouting"
+        title={player.display_name}
+        subtitle={scouting ? `${scouting.label} · ${scouting.score}%` : undefined}
+        right={<V3ScreenBack onPress={onBack} />}
+        intelligence={intelligence}
+        flat
+      >
+        {profileScroll}
+        {footer}
+      </V3TabShell>
+    );
+  }
+
+  return (
+    <View style={styles.root}>
+      <ScreenHeader title={profileTitle} onBack={onBack} onMenu={() => {}} centered />
+      {profileScroll}
+      {footer}
     </View>
   );
 };

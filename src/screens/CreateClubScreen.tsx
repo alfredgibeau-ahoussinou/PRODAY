@@ -58,13 +58,16 @@ export const CreateClubScreen: React.FC<CreateClubScreenProps> = ({
 
     setSubmitting(true);
     try {
-      const clubId = await clubsService.create({
-        name: name.trim(),
-        city: city.trim(),
-        department: department.trim() || undefined,
-        categories,
-        owner_uid: profile.uid,
-      });
+      const clubId = await clubsService.create(
+        {
+          name: name.trim(),
+          city: city.trim(),
+          department: department.trim() || undefined,
+          categories,
+          owner_uid: profile.uid,
+        },
+        profile,
+      );
       await profileService.updateProfile(profile.uid, {
         profile: { club_id: clubId },
       });

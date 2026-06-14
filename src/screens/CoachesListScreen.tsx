@@ -16,10 +16,15 @@ import type { StaffType } from '../services/users.service';
 import { isFirebaseConfigured } from '../config/firebase';
 import { useAuth } from '../context/AuthContext';
 import { useFavorites } from '../hooks/useFavorites';
-import { Icon } from '../components/ui/Icon';
 import { spacing, radius, shadows } from '../theme/designTokens';
 import { useThemedScreen } from '../hooks/useThemedScreen';
 import type { AppColors } from '../theme/universeTheme';
+import { V3TabShell } from '../components/v3/V3TabShell';
+import { V3ScreenBack } from '../components/v3/V3ScreenBack';
+import { useSectionIntelligence } from '../hooks/useSectionIntelligence';
+import { isV3SubScreenEnabled } from '../hooks/useV3SubScreen';
+import { StaggerReveal, PressableSpring } from '../components/motion';
+import { TAB_BAR_CONTENT_INSET } from '../navigation/tabBarLayout';
 
 const FILTER_CHIPS = ['Spécialité', 'Niveau', 'Localisation', 'Filtres'] as const;
 
@@ -42,33 +47,22 @@ export const CoachesListScreen: React.FC<CoachesListScreenProps> = ({
   const { profile } = useAuth();
   const { isFavorite, toggle } = useFavorites(profile?.uid);
   const { users, loading } = useUsersByRole(staffType, query);
-  const { colors: c, rootStyle } = useThemedScreen();
+  const { colors: c, rootStyle, productLine } = useThemedScreen();
   const styles = useMemo(() => createStyles(c), [c]);
+  const useV3Header = isV3SubScreenEnabled(profile, 'staff');
+  const intelligence = useSectionIntelligence('recrutement', profile ?? null, productLine, {
+    staffMode: true,
+    mercatoPosts: users.length,
+  });
 
-  return (
-    <View style={[styles.container, rootStyle]}>
-      <ScreenHeader
-        title="Recrutement"
-        subtitle={
-          staffType === 'coach'
-            ? `${users.length} coachs`
-            : `${users.length} agents`
-        }
-        onBack={onBack}
-        centered
-      />
-
+  const filtersBlock = (
+    <>
       <View style={styles.toggle}>
         <TouchableOpacity
           style={[styles.toggleBtn, staffType === 'coach' && styles.toggleActive]}
           onPress={() => setStaffType('coach')}
         >
-          <Text
-            style={[
-              styles.toggleText,
-              staffType === 'coach' && styles.toggleTextActive,
-            ]}
-          >
+          <Text style={[styles.toggleText, staffType === 'coach' && styles.toggleTextActive]}>
             Coachs
           </Text>
         </TouchableOpacity>
@@ -76,23 +70,14 @@ export const CoachesListScreen: React.FC<CoachesListScreenProps> = ({
           style={[styles.toggleBtn, staffType === 'agent' && styles.toggleActive]}
           onPress={() => setStaffType('agent')}
         >
-          <Text
-            style={[
-              styles.toggleText,
-              staffType === 'agent' && styles.toggleTextActive,
-            ]}
-          >
+          <Text style={[styles.toggleText, staffType === 'agent' && styles.toggleTextActive]}>
             Agents
           </Text>
         </TouchableOpacity>
       </View>
 
       <SearchBar
-        placeholder={
-          staffType === 'coach'
-            ? 'Rechercher un coach…'
-            : 'Rechercher un agent…'
-        }
+        placeholder={staffType === 'coach' ? 'Rechercher un coach…' : 'Rechercher un agent…'}
         value={query}
         onChangeText={setQuery}
       />
@@ -104,52 +89,91 @@ export const CoachesListScreen: React.FC<CoachesListScreenProps> = ({
             style={[styles.chip, activeChip === chip && styles.chipActive]}
             onPress={() => setActiveChip(activeChip === chip ? null : chip)}
           >
-            <Text
-              style={[styles.chipText, activeChip === chip && styles.chipTextActive]}
-            >
+            <Text style={[styles.chipText, activeChip === chip && styles.chipTextActive]}>
               {chip}
             </Text>
           </TouchableOpacity>
         ))}
       </View>
 
-      <Text style={styles.section}>
-        {staffType === 'coach' ? 'Coachs populaires' : 'Agents en avant'}
-      </Text>
+      {!useV3Header ? (
+        <Text style={styles.section}>
+          {staffType === 'coach' ? 'Coachs populaires' : 'Agents en avant'}
+        </Text>
+      ) : null}
+    </>
+  );
 
-      <DataState
-        loading={loading}
-        empty={!loading && users.length === 0}
-        emptyMessage={
-          isFirebaseConfigured()
-            ? `Aucun ${staffType === 'coach' ? 'coach' : 'agent'} inscrit pour le moment.`
-            : undefined
-        }
-        firebaseMissing={!isFirebaseConfigured()}
-      >
-        <FlatList
-          data={users}
-          keyExtractor={(item) => item.uid}
-          renderItem={({ item }) => (
+  const listBody = (
+    <DataState
+      loading={loading}
+      empty={!loading && users.length === 0}
+      emptyMessage={
+        isFirebaseConfigured()
+          ? `Aucun ${staffType === 'coach' ? 'coach' : 'agent'} inscrit pour le moment.`
+          : undefined
+      }
+      firebaseMissing={!isFirebaseConfigured()}
+    >
+      <FlatList
+        data={users}
+        keyExtractor={(item) => item.uid}
+        ListHeaderComponent={useV3Header ? filtersBlock : undefined}
+        renderItem={({ item, index }) => {
+          const row = (
             <CoachListCard
               user={item}
               onPress={onSelect}
               bookmarked={isFavorite(item.uid)}
               onBookmark={() => profile && toggle(item.uid, staffType)}
             />
-          )}
-          contentContainerStyle={styles.list}
-        />
-      </DataState>
+          );
+          return useV3Header ? <StaggerReveal index={Math.min(index, 8)}>{row}</StaggerReveal> : row;
+        }}
+        contentContainerStyle={styles.list}
+      />
+    </DataState>
+  );
 
-      {onCreatePost ? (
-        <TouchableOpacity
-          style={[styles.fab, shadows.fab]}
-          onPress={onCreatePost}
-        >
-          <Text style={styles.fabText}>Publier une annonce</Text>
-        </TouchableOpacity>
-      ) : null}
+  const fab = onCreatePost ? (
+    <PressableSpring style={[styles.fab, shadows.fab]} onPress={onCreatePost} scaleTo={0.98} haptic>
+      <Text style={styles.fabText}>Publier une annonce</Text>
+    </PressableSpring>
+  ) : null;
+
+  if (useV3Header) {
+    return (
+      <V3TabShell
+        caption="Réseau staff"
+        title="Recrutement"
+        subtitle={
+          staffType === 'coach'
+            ? `${users.length} coach(s) disponibles`
+            : `${users.length} agent(s) disponibles`
+        }
+        right={<V3ScreenBack onPress={onBack} />}
+        intelligence={intelligence}
+        flat
+      >
+        {listBody}
+        {fab}
+      </V3TabShell>
+    );
+  }
+
+  return (
+    <View style={[styles.container, rootStyle]}>
+      <ScreenHeader
+        title="Recrutement"
+        subtitle={
+          staffType === 'coach' ? `${users.length} coachs` : `${users.length} agents`
+        }
+        onBack={onBack}
+        centered
+      />
+      {filtersBlock}
+      {listBody}
+      {fab}
     </View>
   );
 };
@@ -199,10 +223,13 @@ function createStyles(c: AppColors) {
       fontSize: 16,
       marginBottom: spacing.sm,
     },
-    list: { paddingHorizontal: spacing.lg, paddingBottom: 88 },
+    list: {
+      paddingHorizontal: spacing.lg,
+      paddingBottom: TAB_BAR_CONTENT_INSET + spacing.xl,
+    },
     fab: {
       position: 'absolute',
-      bottom: spacing.lg,
+      bottom: TAB_BAR_CONTENT_INSET - spacing.sm,
       left: spacing.lg,
       right: spacing.lg,
       backgroundColor: c.brand,

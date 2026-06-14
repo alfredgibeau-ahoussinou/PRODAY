@@ -16,6 +16,8 @@ import { stagesService } from '../services/stages.service';
 import { formatCalendarDate } from '../utils/seasonCalendar';
 import { spacing, radius } from '../theme/designTokens';
 import { useThemedScreen } from '../hooks/useThemedScreen';
+import { useRequireAuth } from '../hooks/useRequireAuth';
+import { MAX_STAGE_MESSAGE } from '../utils/stageValidation';
 
 interface StageDetailScreenProps {
   stageId: string;
@@ -34,6 +36,7 @@ export const StageDetailScreen: React.FC<StageDetailScreenProps> = ({
   const [applied, setApplied] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const { colors: themeColors, rootStyle } = useThemedScreen();
+  const { requireAuth } = useRequireAuth();
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -50,10 +53,7 @@ export const StageDetailScreen: React.FC<StageDetailScreenProps> = ({
   }, [load]);
 
   const handleApply = async () => {
-    if (!profile) {
-      Alert.alert('Connexion requise', 'Connectez-vous depuis l’onglet Profil.');
-      return;
-    }
+    if (!requireAuth('Connectez-vous pour vous inscrire à ce stage.') || !profile) return;
     if (profile.role !== 'player') {
       Alert.alert('Réservé aux joueurs', 'Seuls les joueurs peuvent s’inscrire à un stage.');
       return;
@@ -66,13 +66,16 @@ export const StageDetailScreen: React.FC<StageDetailScreenProps> = ({
 
     setSubmitting(true);
     try {
-      await stagesService.apply({
-        stage_id: stage.id,
-        stage_author_uid: stage.author_uid,
-        player_uid: profile.uid,
-        player_name: profile.display_name,
-        message: message.trim(),
-      });
+      await stagesService.apply(
+        {
+          stage_id: stage.id,
+          stage_author_uid: stage.author_uid,
+          player_uid: profile.uid,
+          player_name: profile.display_name,
+          message: message.trim(),
+        },
+        profile,
+      );
       setApplied(true);
       Alert.alert('Demande envoyée', 'Le club examinera votre inscription.');
     } catch (e) {
@@ -134,6 +137,7 @@ export const StageDetailScreen: React.FC<StageDetailScreenProps> = ({
                 value={message}
                 onChangeText={setMessage}
                 multiline
+                maxLength={MAX_STAGE_MESSAGE}
               />
               <TouchableOpacity
                 style={[styles.primary, { backgroundColor: themeColors.brand }]}

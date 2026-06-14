@@ -20,6 +20,7 @@ import { CreateClubFundingGoalScreen } from './CreateClubFundingGoalScreen';
 import { TAB_BAR_CONTENT_INSET } from '../components/navigation/BottomTabBar';
 import { spacing, radius, shadows } from '../theme/designTokens';
 import { useThemedScreen } from '../hooks/useThemedScreen';
+import { useRequireAuth } from '../hooks/useRequireAuth';
 import type { AppColors } from '../theme/universeTheme';
 
 type SponsorsView = 'main' | 'create_offer' | 'create_goal';
@@ -36,6 +37,7 @@ export const SponsorsScreen: React.FC<SponsorsScreenProps> = ({
   onLoginRequired,
 }) => {
   const { profile } = useAuth();
+  const { requireAuth } = useRequireAuth();
   const { colors: c, rootStyle } = useThemedScreen();
   const styles = useMemo(() => createStyles(c), [c]);
   const { offers, goals, loading, refresh } = useSponsorsData();
@@ -61,10 +63,9 @@ export const SponsorsScreen: React.FC<SponsorsScreenProps> = ({
     setRefreshing(false);
   }, [refresh]);
 
-  const requireAuth = (action: () => void) => {
-    if (guestMode || !profile) {
-      onLoginRequired?.();
-      Alert.alert('Connexion requise', 'Connectez-vous pour utiliser le module Sponsors.');
+  const guardAuth = (action: () => void) => {
+    if (!requireAuth('Connectez-vous pour utiliser le module Sponsors.')) {
+      if (guestMode) onLoginRequired?.();
       return;
     }
     action();
@@ -232,7 +233,7 @@ export const SponsorsScreen: React.FC<SponsorsScreenProps> = ({
                     <TouchableOpacity
                       style={styles.supportBtn}
                       onPress={() =>
-                        requireAuth(() => {
+                        guardAuth(() => {
                           setContributeGoalId(g.id);
                           setContributeAmount('');
                         })
@@ -255,7 +256,7 @@ export const SponsorsScreen: React.FC<SponsorsScreenProps> = ({
           {canCreateGoal ? (
             <TouchableOpacity
               style={[styles.fab, styles.fabSecondary]}
-              onPress={() => requireAuth(() => setView('create_goal'))}
+              onPress={() => guardAuth(() => setView('create_goal'))}
             >
               <Icon name="add" size={18} color={c.brand} />
               <Text style={styles.fabSecondaryText}>Campagne</Text>
@@ -264,7 +265,7 @@ export const SponsorsScreen: React.FC<SponsorsScreenProps> = ({
           {isSponsor ? (
             <TouchableOpacity
               style={styles.fab}
-              onPress={() => requireAuth(() => setView('create_offer'))}
+              onPress={() => guardAuth(() => setView('create_offer'))}
             >
               <Icon name="add" size={18} color={c.brandInverse} />
               <Text style={styles.fabText}>Offre sponsor</Text>

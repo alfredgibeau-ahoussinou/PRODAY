@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -15,6 +15,12 @@ import type { Application, RecruitmentPost } from '../models/Player';
 import { Icon } from '../components/ui/Icon';
 import { spacing, radius } from '../theme/designTokens';
 import { useThemedScreen } from '../hooks/useThemedScreen';
+import { V3TabShell } from '../components/v3/V3TabShell';
+import { V3ScreenBack } from '../components/v3/V3ScreenBack';
+import { useSectionIntelligence } from '../hooks/useSectionIntelligence';
+import { isV3SubScreenEnabled } from '../hooks/useV3SubScreen';
+import { StaggerReveal } from '../components/motion';
+import { TAB_BAR_CONTENT_INSET } from '../navigation/tabBarLayout';
 
 const STATUS_LABEL = APPLICATION_STATUS_LABEL;
 
@@ -28,12 +34,20 @@ export const MyApplicationsScreen: React.FC<MyApplicationsScreenProps> = ({
   onBack,
 }) => {
   const { profile } = useAuth();
-  const { colors: themeColors, rootStyle } = useThemedScreen();
+  const { colors: themeColors, rootStyle, productLine } = useThemedScreen();
+  const useV3Header = isV3SubScreenEnabled(profile, 'player');
   const [items, setItems] = useState<
     { application: Application; post: RecruitmentPost | null }[]
   >([]);
   const [loading, setLoading] = useState(true);
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
+  const pendingCount = useMemo(
+    () => items.filter(({ application }) => application.status === 'PENDING').length,
+    [items]
+  );
+  const intelligence = useSectionIntelligence('recrutement', profile ?? null, productLine, {
+    mercatoApplications: pendingCount,
+  });
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -62,22 +76,21 @@ export const MyApplicationsScreen: React.FC<MyApplicationsScreenProps> = ({
     );
   }
 
-  return (
-    <View style={rootStyle}>
-      <ScreenHeader title="Mes candidatures" onBack={onBack} centered />
-      {loading ? (
-        <ActivityIndicator color={themeColors.brand} style={styles.loader} />
-      ) : items.length === 0 ? (
-        <View style={styles.emptyWrap}>
-          <Icon name="briefcase" size={40} color={themeColors.brand} />
-          <Text style={[styles.emptyTitle, { color: themeColors.text }]}>Aucune candidature</Text>
-          <Text style={[styles.emptySub, { color: themeColors.textMuted }]}>
-            Parcourez le Mercato et postulez aux annonces qui vous correspondent.
-          </Text>
-        </View>
-      ) : (
-        <ScrollView contentContainerStyle={styles.list}>
-          {items.map(({ application, post }) => (
+  const listBody =
+    loading ? (
+      <ActivityIndicator color={themeColors.brand} style={styles.loader} />
+    ) : items.length === 0 ? (
+      <View style={styles.emptyWrap}>
+        <Icon name="briefcase" size={40} color={themeColors.brand} />
+        <Text style={[styles.emptyTitle, { color: themeColors.text }]}>Aucune candidature</Text>
+        <Text style={[styles.emptySub, { color: themeColors.textMuted }]}>
+          Parcourez le Mercato et postulez aux annonces qui vous correspondent.
+        </Text>
+      </View>
+    ) : (
+      <ScrollView contentContainerStyle={styles.list}>
+        {items.map(({ application, post }, index) => {
+          const card = (
             <TouchableOpacity
               key={application.id}
               style={[
@@ -135,9 +148,41 @@ export const MyApplicationsScreen: React.FC<MyApplicationsScreenProps> = ({
                 </View>
               ) : null}
             </TouchableOpacity>
-          ))}
-        </ScrollView>
-      )}
+          );
+          return useV3Header ? (
+            <StaggerReveal key={application.id} index={Math.min(index, 8)}>
+              {card}
+            </StaggerReveal>
+          ) : (
+            card
+          );
+        })}
+      </ScrollView>
+    );
+
+  if (useV3Header) {
+    return (
+      <V3TabShell
+        caption="Mercato"
+        title="Mes candidatures"
+        subtitle={
+          pendingCount > 0
+            ? `${pendingCount} en attente de réponse`
+            : `${items.length} candidature(s) envoyée(s)`
+        }
+        right={<V3ScreenBack onPress={onBack} />}
+        intelligence={intelligence}
+        flat
+      >
+        {listBody}
+      </V3TabShell>
+    );
+  }
+
+  return (
+    <View style={rootStyle}>
+      <ScreenHeader title="Mes candidatures" onBack={onBack} centered />
+      {listBody}
     </View>
   );
 };
@@ -158,7 +203,7 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     maxWidth: 280,
   },
-  list: { padding: spacing.lg, paddingBottom: spacing.xxl, gap: spacing.md },
+  list: { padding: spacing.lg, paddingBottom: TAB_BAR_CONTENT_INSET + spacing.lg, gap: spacing.md },
   card: {
     borderRadius: radius.lg,
     padding: spacing.md,

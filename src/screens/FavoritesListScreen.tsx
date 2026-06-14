@@ -16,6 +16,13 @@ import { useAuth } from '../context/AuthContext';
 import { spacing } from '../theme/designTokens';
 import { useThemedScreen } from '../hooks/useThemedScreen';
 import type { AppColors } from '../theme/universeTheme';
+import { V3TabShell } from '../components/v3/V3TabShell';
+import { V3ScreenBack } from '../components/v3/V3ScreenBack';
+import { useSectionIntelligence } from '../hooks/useSectionIntelligence';
+import { isV3SubScreenEnabled } from '../hooks/useV3SubScreen';
+import { scoutingScoreMap } from '../features/v3/engines/playerScouting.engine';
+import { StaggerReveal } from '../components/motion';
+import { TAB_BAR_CONTENT_INSET } from '../navigation/tabBarLayout';
 
 interface FavoritesListScreenProps {
   onBack: () => void;
@@ -31,6 +38,17 @@ export const FavoritesListScreen: React.FC<FavoritesListScreenProps> = ({
   const styles = useMemo(() => createStyles(c), [c]);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
+  const useV3Header = isV3SubScreenEnabled(profile, 'signed');
+  const isStaff = isV3SubScreenEnabled(profile, 'staff');
+  const playerFavorites = useMemo(() => users.filter((u) => u.role === 'player'), [users]);
+  const scores = useMemo(() => {
+    if (!profile || !isStaff) return new Map();
+    return scoutingScoreMap(profile, playerFavorites);
+  }, [profile, isStaff, playerFavorites]);
+  const intelligence = useSectionIntelligence('recrutement', profile ?? null, productLine, {
+    staffMode: isStaff,
+    mercatoPosts: users.length,
+  });
 
   const load = useCallback(async () => {
     if (!profile?.uid) {
@@ -48,60 +66,80 @@ export const FavoritesListScreen: React.FC<FavoritesListScreenProps> = ({
   }, [profile?.uid]);
 
   useEffect(() => {
-    load();
+    void load();
   }, [load]);
+
+  const body = loading ? (
+    <ActivityIndicator color={c.brand} style={styles.loader} />
+  ) : users.length === 0 ? (
+    <Text style={styles.empty}>
+      {productLine === 'woman'
+        ? 'Aucun favori. Ajoutez des joueuses ou coachs depuis leurs profils.'
+        : 'Aucun favori. Ajoutez des joueurs ou coachs depuis leurs profils.'}
+    </Text>
+  ) : (
+    <FlatList
+      data={users}
+      keyExtractor={(u) => u.uid}
+      contentContainerStyle={styles.list}
+      renderItem={({ item, index }) => {
+        const scouting = scores.get(item.uid);
+        const row =
+          item.role === 'player' ? (
+            <PlayerRowCard
+              user={item}
+              onPress={onSelectUser}
+              bookmarked
+              scoutingScore={scouting?.score}
+              scoutingLabel={scouting?.label}
+              onBookmark={async () => {
+                if (profile) {
+                  await favoritesService.toggle(profile.uid, item.uid, 'player');
+                  void load();
+                }
+              }}
+            />
+          ) : (
+            <CoachListCard
+              user={item}
+              onPress={onSelectUser}
+              bookmarked
+              onBookmark={async () => {
+                if (profile) {
+                  await favoritesService.toggle(
+                    profile.uid,
+                    item.uid,
+                    item.role === 'coach' || item.role === 'agent' ? item.role : 'coach'
+                  );
+                  void load();
+                }
+              }}
+            />
+          );
+        return useV3Header ? <StaggerReveal index={Math.min(index, 8)}>{row}</StaggerReveal> : row;
+      }}
+    />
+  );
+
+  if (useV3Header) {
+    return (
+      <V3TabShell
+        caption="Mercato"
+        title="Mes favoris"
+        subtitle={`${users.length} profil(s) enregistré(s)`}
+        right={<V3ScreenBack onPress={onBack} />}
+        intelligence={intelligence}
+        flat
+      >
+        {body}
+      </V3TabShell>
+    );
+  }
 
   return (
     <View style={[styles.root, rootStyle]}>
       <ScreenHeader title="Mes favoris" onBack={onBack} centered />
-      {loading ? (
-        <ActivityIndicator color={c.brand} style={styles.loader} />
-      ) : users.length === 0 ? (
-        <Text style={styles.empty}>
-          {productLine === 'woman'
-            ? 'Aucun favori. Ajoutez des joueuses ou coachs depuis leurs profils.'
-            : 'Aucun favori. Ajoutez des joueurs ou coachs depuis leurs profils.'}
-        </Text>
-      ) : (
-        <FlatList
-          data={users}
-          keyExtractor={(u) => u.uid}
-          contentContainerStyle={styles.list}
-          renderItem={({ item }) =>
-            item.role === 'player' ? (
-              <PlayerRowCard
-                user={item}
-                onPress={onSelectUser}
-                bookmarked
-                onBookmark={async () => {
-                  if (profile) {
-                    await favoritesService.toggle(profile.uid, item.uid, 'player');
-                    load();
-                  }
-                }}
-              />
-            ) : (
-              <CoachListCard
-                user={item}
-                onPress={onSelectUser}
-                bookmarked
-                onBookmark={async () => {
-                  if (profile) {
-                    await favoritesService.toggle(
-                      profile.uid,
-                      item.uid,
-                      item.role === 'coach' || item.role === 'agent'
-                        ? item.role
-                        : 'coach'
-                    );
-                    load();
-                  }
-                }}
-              />
-            )
-          }
-        />
-      )}
+      {body}
     </View>
   );
 };
@@ -117,6 +155,6 @@ function createStyles(c: AppColors) {
       lineHeight: 22,
       color: c.textMuted,
     },
-    list: { padding: spacing.lg, paddingBottom: spacing.xxl },
+    list: { padding: spacing.lg, paddingBottom: TAB_BAR_CONTENT_INSET + spacing.lg },
   });
 }

@@ -3,7 +3,6 @@ import {
   View,
   Text,
   TextInput,
-  TouchableOpacity,
   ScrollView,
   StyleSheet,
   ActivityIndicator,
@@ -12,12 +11,21 @@ import {
 import type { User } from '../models/User';
 import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { recruitmentService } from '../services/recruitment.service';
+import { guardStaffVerification } from '../utils/staffVerificationGuard';
 import { SubscriptionLimitError } from '../services/subscription.service';
 import { useSubscriptionOptional } from '../context/SubscriptionContext';
 import { useAppSpace } from '../context/AppSpaceContext';
 import { spacing, radius } from '../theme/designTokens';
 import { useThemedScreen } from '../hooks/useThemedScreen';
 import { canPublishRecruitmentPost } from '../utils/roleCapabilities';
+import { isV3ShellEnabled } from '../config/featureFlags';
+import { recordV3UserAction } from '../utils/recordV3Action';
+import { trackV3Event } from '../core/analytics/v3Events';
+import { V3TabShell } from '../components/v3/V3TabShell';
+import { V3ScreenBack } from '../components/v3/V3ScreenBack';
+import { useSectionIntelligence } from '../hooks/useSectionIntelligence';
+import { PressableSpring } from '../components/motion';
+import { TAB_BAR_CONTENT_INSET } from '../navigation/tabBarLayout';
 
 interface CreateRecruitmentPostScreenProps {
   profile: User;
@@ -39,6 +47,11 @@ export const CreateRecruitmentPostScreen: React.FC<CreateRecruitmentPostScreenPr
   const { appSpace } = useAppSpace();
   const subscriptionCtx = useSubscriptionOptional();
   const { colors: themeColors, productLine, rootStyle } = useThemedScreen();
+  const useV3Header = isV3ShellEnabled();
+  const intelligence = useSectionIntelligence('recrutement', profile, productLine, {
+    staffMode: true,
+    mercatoPosts: 0,
+  });
   const defaultTitle = productLine === 'woman' ? 'Recherche joueuse' : 'Recherche joueur';
   const [title, setTitle] = useState(defaultTitle);
   const inputStyle = [
@@ -51,17 +64,36 @@ export const CreateRecruitmentPostScreen: React.FC<CreateRecruitmentPostScreenPr
   ];
 
   if (!canPublishRecruitmentPost(profile.role)) {
-    return (
-      <View style={[styles.denied, rootStyle]}>
-        <ScreenHeader title="Publier une annonce" onBack={onBack} centered />
+    const denied = (
+      <View style={styles.deniedBody}>
         <Text style={[styles.deniedText, { color: themeColors.textSecondary }]}>
           Les joueurs et joueuses peuvent candidater aux annonces, mais pas en publier.
         </Text>
       </View>
     );
+    if (useV3Header) {
+      return (
+        <V3TabShell
+          caption="Mercato"
+          title="Publier une annonce"
+          right={<V3ScreenBack onPress={onBack} />}
+          intelligence={intelligence}
+          flat
+        >
+          {denied}
+        </V3TabShell>
+      );
+    }
+    return (
+      <View style={[styles.root, rootStyle]}>
+        <ScreenHeader title="Publier une annonce" onBack={onBack} centered />
+        {denied}
+      </View>
+    );
   }
 
   const handleSubmit = async () => {
+    if (!guardStaffVerification(profile)) return;
     if (!position.trim() || !level.trim() || !city.trim()) {
       Alert.alert('Champs requis', 'Poste, niveau et ville sont obligatoires.');
       return;
@@ -84,6 +116,10 @@ export const CreateRecruitmentPostScreen: React.FC<CreateRecruitmentPostScreenPr
         profile
       );
       Alert.alert('Annonce publiée', 'Visible dans Recrutements populaires.');
+      if (isV3ShellEnabled()) {
+        trackV3Event('mercato_post_published', { uid: profile.uid });
+        recordV3UserAction(profile, 'publish_mercato');
+      }
       onCreated();
       onBack();
     } catch (e) {
@@ -97,72 +133,96 @@ export const CreateRecruitmentPostScreen: React.FC<CreateRecruitmentPostScreenPr
     }
   };
 
+  const form = (
+    <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+      <TextInput
+        style={inputStyle}
+        placeholder="Titre de l'annonce"
+        placeholderTextColor={themeColors.textMuted}
+        value={title}
+        onChangeText={setTitle}
+      />
+      <TextInput
+        style={inputStyle}
+        placeholder="Poste recherché *"
+        placeholderTextColor={themeColors.textMuted}
+        value={position}
+        onChangeText={setPosition}
+      />
+      <TextInput
+        style={inputStyle}
+        placeholder="Catégorie (ex. U19, Seniors)"
+        placeholderTextColor={themeColors.textMuted}
+        value={category}
+        onChangeText={setCategory}
+      />
+      <TextInput
+        style={inputStyle}
+        placeholder="Niveau (ex. R2, Départemental) *"
+        placeholderTextColor={themeColors.textMuted}
+        value={level}
+        onChangeText={setLevel}
+      />
+      <TextInput
+        style={inputStyle}
+        placeholder="Ville *"
+        placeholderTextColor={themeColors.textMuted}
+        value={city}
+        onChangeText={setCity}
+      />
+      <TextInput
+        style={[...inputStyle, styles.bio]}
+        placeholder="Description (optionnel)"
+        placeholderTextColor={themeColors.textMuted}
+        value={description}
+        onChangeText={setDescription}
+        multiline
+      />
+      <PressableSpring
+        style={[styles.primary, { backgroundColor: themeColors.brand }]}
+        onPress={handleSubmit}
+        disabled={submitting}
+        scaleTo={0.98}
+        haptic
+      >
+        {submitting ? (
+          <ActivityIndicator color="#FFF" />
+        ) : (
+          <Text style={styles.primaryText}>Publier</Text>
+        )}
+      </PressableSpring>
+    </ScrollView>
+  );
+
+  if (useV3Header) {
+    return (
+      <V3TabShell
+        caption="Mercato"
+        title="Publier une annonce"
+        subtitle="Visible dans les recherches joueurs compatibles"
+        right={<V3ScreenBack onPress={onBack} />}
+        intelligence={intelligence}
+        flat
+      >
+        {form}
+      </V3TabShell>
+    );
+  }
+
   return (
     <View style={[styles.root, rootStyle]}>
       <ScreenHeader title="Publier une annonce" onBack={onBack} centered />
-      <ScrollView contentContainerStyle={styles.content}>
-        <TextInput
-          style={inputStyle}
-          placeholder="Titre de l'annonce"
-          placeholderTextColor={themeColors.textMuted}
-          value={title}
-          onChangeText={setTitle}
-        />
-        <TextInput
-          style={inputStyle}
-          placeholder="Poste recherché *"
-          placeholderTextColor={themeColors.textMuted}
-          value={position}
-          onChangeText={setPosition}
-        />
-        <TextInput
-          style={inputStyle}
-          placeholder="Catégorie (ex. U19, Seniors)"
-          placeholderTextColor={themeColors.textMuted}
-          value={category}
-          onChangeText={setCategory}
-        />
-        <TextInput
-          style={inputStyle}
-          placeholder="Niveau (ex. R2, Départemental) *"
-          placeholderTextColor={themeColors.textMuted}
-          value={level}
-          onChangeText={setLevel}
-        />
-        <TextInput
-          style={inputStyle}
-          placeholder="Ville *"
-          placeholderTextColor={themeColors.textMuted}
-          value={city}
-          onChangeText={setCity}
-        />
-        <TextInput
-          style={[...inputStyle, styles.bio]}
-          placeholder="Description (optionnel)"
-          placeholderTextColor={themeColors.textMuted}
-          value={description}
-          onChangeText={setDescription}
-          multiline
-        />
-        <TouchableOpacity
-          style={[styles.primary, { backgroundColor: themeColors.brand }]}
-          onPress={handleSubmit}
-          disabled={submitting}
-        >
-          {submitting ? (
-            <ActivityIndicator color="#FFF" />
-          ) : (
-            <Text style={styles.primaryText}>Publier</Text>
-          )}
-        </TouchableOpacity>
-      </ScrollView>
+      {form}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  content: { padding: spacing.lg, paddingBottom: spacing.xxl },
+  content: {
+    padding: spacing.lg,
+    paddingBottom: TAB_BAR_CONTENT_INSET + spacing.lg,
+  },
   input: {
     borderRadius: radius.md,
     padding: spacing.md,
@@ -178,12 +238,8 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
   },
   primaryText: { color: '#FFFFFF', fontWeight: '700' },
-  denied: {
-    flex: 1,
-    padding: spacing.lg,
-  },
+  deniedBody: { padding: spacing.lg },
   deniedText: {
-    marginTop: spacing.lg,
     fontSize: 15,
     lineHeight: 22,
     fontWeight: '600',

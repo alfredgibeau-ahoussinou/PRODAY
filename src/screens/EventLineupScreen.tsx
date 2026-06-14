@@ -3,11 +3,11 @@ import {
   View,
   Text,
   ScrollView,
-  TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
   Alert,
 } from 'react-native';
+import { PressableSpring } from '../components/motion';
 import type { TeamEvent, EventLineupSlot } from '../models/TeamEvent';
 import { FORMATIONS, getPresentInviteeUids } from '../models/TeamEvent';
 import { ScreenHeader } from '../components/ui/ScreenHeader';
@@ -16,6 +16,7 @@ import { usersService } from '../services/users.service';
 import { PitchLineupView } from '../components/team/PitchLineupView';
 import { spacing, radius } from '../theme/designTokens';
 import { useThemedScreen } from '../hooks/useThemedScreen';
+import { useAuth } from '../context/AuthContext';
 import type { AppColors } from '../theme/universeTheme';
 import type { ProductLineId } from '../models/ProductLine';
 
@@ -28,6 +29,7 @@ export const EventLineupScreen: React.FC<EventLineupScreenProps> = ({
   eventId,
   onBack,
 }) => {
+  const { profile } = useAuth();
   const { colors: c, productLine, rootStyle } = useThemedScreen();
   const styles = useMemo(() => createStyles(c), [c]);
   const [event, setEvent] = useState<TeamEvent | null>(null);
@@ -102,12 +104,20 @@ export const EventLineupScreen: React.FC<EventLineupScreenProps> = ({
   };
 
   const handleSave = async () => {
+    if (!profile) {
+      Alert.alert('Connexion requise', 'Connectez-vous pour enregistrer la composition.');
+      return;
+    }
     setSaving(true);
     try {
-      await teamEventsService.saveLineup(eventId, {
-        formation,
-        slots: [...starters, ...subs],
-      });
+      await teamEventsService.saveLineup(
+        eventId,
+        {
+          formation,
+          slots: [...starters, ...subs],
+        },
+        { user: profile },
+      );
       Alert.alert('Composition enregistrée', 'Visible par les convoqués présents.');
       onBack();
     } catch (e) {
@@ -138,7 +148,7 @@ export const EventLineupScreen: React.FC<EventLineupScreenProps> = ({
         <Text style={styles.label}>Système</Text>
         <View style={styles.row}>
           {FORMATIONS.map((f) => (
-            <TouchableOpacity
+            <PressableSpring
               key={f}
               style={[styles.chip, formation === f && styles.chipActive]}
               onPress={() => setFormation(f)}
@@ -146,7 +156,7 @@ export const EventLineupScreen: React.FC<EventLineupScreenProps> = ({
               <Text style={[styles.chipText, formation === f && styles.chipTextActive]}>
                 {f}
               </Text>
-            </TouchableOpacity>
+            </PressableSpring>
           ))}
         </View>
 
@@ -174,25 +184,25 @@ export const EventLineupScreen: React.FC<EventLineupScreenProps> = ({
               <View key={slot.uid} style={styles.poolRow}>
                 <Text style={styles.poolName}>{slot.display_name}</Text>
                 <View style={styles.poolActions}>
-                  <TouchableOpacity
+                  <PressableSpring
                     style={styles.smallBtn}
                     onPress={() => moveToStarters(slot)}
                   >
                     <Text style={styles.smallBtnText}>Titu</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
+                  </PressableSpring>
+                  <PressableSpring
                     style={styles.smallBtn}
                     onPress={() => moveToSubs(slot)}
                   >
                     <Text style={styles.smallBtnText}>Remp</Text>
-                  </TouchableOpacity>
+                  </PressableSpring>
                 </View>
               </View>
             ))}
           </>
         )}
 
-        <TouchableOpacity
+        <PressableSpring
           style={[styles.save, saving && styles.saveDisabled]}
           onPress={handleSave}
           disabled={saving}
@@ -202,7 +212,7 @@ export const EventLineupScreen: React.FC<EventLineupScreenProps> = ({
           ) : (
             <Text style={styles.saveText}>Enregistrer la compo</Text>
           )}
-        </TouchableOpacity>
+        </PressableSpring>
       </ScrollView>
     </View>
   );
@@ -228,9 +238,9 @@ const Section: React.FC<{
             {s.display_name}
             {s.position_label ? ` · ${s.position_label}` : ''}
           </Text>
-          <TouchableOpacity onPress={() => onRemove(s.uid)}>
+          <PressableSpring onPress={() => onRemove(s.uid)}>
             <Text style={styles.remove}>Retirer</Text>
-          </TouchableOpacity>
+          </PressableSpring>
         </View>
       ))
     )}

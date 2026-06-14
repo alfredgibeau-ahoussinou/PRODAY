@@ -21,6 +21,12 @@ import { postMatchesAppSpace } from '../constants/appSpaces';
 import { formatCalendarDate } from '../utils/seasonCalendar';
 import { spacing, radius } from '../theme/designTokens';
 import type { AppColors } from '../theme/universeTheme';
+import { V3TabShell } from '../components/v3/V3TabShell';
+import { V3ScreenBack } from '../components/v3/V3ScreenBack';
+import { useSectionIntelligence } from '../hooks/useSectionIntelligence';
+import { isV3SubScreenEnabled } from '../hooks/useV3SubScreen';
+import { StaggerReveal, PressableSpring } from '../components/motion';
+import { TAB_BAR_CONTENT_INSET } from '../navigation/tabBarLayout';
 
 interface StagesListScreenProps {
   profile: User | null;
@@ -44,6 +50,17 @@ export const StagesListScreen: React.FC<StagesListScreenProps> = ({
   const [refreshing, setRefreshing] = useState(false);
 
   const canCreate = profile ? canPublishStages(profile.role) : false;
+  const useV3Header = isV3SubScreenEnabled(profile, 'staff');
+
+  const filtered = useMemo(
+    () => offers.filter((o) => postMatchesAppSpace(o, appSpace, productLine)),
+    [offers, appSpace, productLine]
+  );
+
+  const intelligence = useSectionIntelligence('recrutement', profile, productLine, {
+    staffMode: true,
+    mercatoPosts: filtered.length,
+  });
 
   const load = useCallback(async () => {
     const list = await stagesService.listOpenOffers();
@@ -56,71 +73,89 @@ export const StagesListScreen: React.FC<StagesListScreenProps> = ({
     void load();
   }, [load]);
 
-  const filtered = useMemo(
-    () => offers.filter((o) => postMatchesAppSpace(o, appSpace, productLine)),
-    [offers, appSpace, productLine]
-  );
-
   const onRefresh = () => {
     setRefreshing(true);
     void load();
   };
 
+  const listBody = loading ? (
+    <ActivityIndicator color={c.brand} style={styles.loader} />
+  ) : (
+    <FlatList
+      data={filtered}
+      keyExtractor={(item) => item.id}
+      contentContainerStyle={styles.list}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={c.brand} />
+      }
+      ListEmptyComponent={
+        <Text style={styles.empty}>
+          Aucun stage ouvert pour le moment. Les clubs peuvent publier des camps et stages foot.
+        </Text>
+      }
+      renderItem={({ item, index }) => {
+        const card = (
+          <TouchableOpacity
+            style={styles.card}
+            onPress={() => onSelectStage(item.id)}
+            activeOpacity={0.9}
+          >
+            <Text style={styles.cardTitle}>{item.title}</Text>
+            <Text style={styles.cardClub}>{item.club_name}</Text>
+            <Text style={styles.cardMeta}>
+              {item.category} · {item.city}
+            </Text>
+            <Text style={styles.cardDates}>
+              {formatCalendarDate(item.start_date)} → {formatCalendarDate(item.end_date)}
+            </Text>
+            <View style={styles.cardFooter}>
+              <Text style={styles.spots}>
+                {item.spots_total - item.spots_taken} place
+                {item.spots_total - item.spots_taken !== 1 ? 's' : ''} restante
+                {item.spots_total - item.spots_taken !== 1 ? 's' : ''}
+              </Text>
+              {item.price_eur != null ? (
+                <Text style={styles.price}>{item.price_eur} €</Text>
+              ) : (
+                <Text style={styles.price}>Sur devis</Text>
+              )}
+            </View>
+          </TouchableOpacity>
+        );
+        return useV3Header ? <StaggerReveal index={Math.min(index, 8)}>{card}</StaggerReveal> : card;
+      }}
+    />
+  );
+
+  const fab =
+    canCreate && onCreateStage ? (
+      <PressableSpring style={styles.fab} onPress={onCreateStage} scaleTo={0.98} haptic>
+        <Icon name="add" size={20} color={c.brandInverse} />
+        <Text style={styles.fabText}>Publier un stage</Text>
+      </PressableSpring>
+    ) : null;
+
+  if (useV3Header) {
+    return (
+      <V3TabShell
+        caption="Mercato"
+        title="Stages & camps"
+        subtitle={`${filtered.length} offre(s) ouverte(s)`}
+        right={<V3ScreenBack onPress={onBack} />}
+        intelligence={intelligence}
+        flat
+      >
+        {listBody}
+        {fab}
+      </V3TabShell>
+    );
+  }
+
   return (
     <View style={[styles.root, rootStyle]}>
       <ScreenHeader title="Stages & camps" onBack={onBack} centered />
-      {loading ? (
-        <ActivityIndicator color={c.brand} style={styles.loader} />
-      ) : (
-        <FlatList
-          data={filtered}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.list}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={c.brand} />
-          }
-          ListEmptyComponent={
-            <Text style={styles.empty}>
-              Aucun stage ouvert pour le moment. Les clubs peuvent publier des camps et stages
-              foot.
-            </Text>
-          }
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              style={styles.card}
-              onPress={() => onSelectStage(item.id)}
-              activeOpacity={0.9}
-            >
-              <Text style={styles.cardTitle}>{item.title}</Text>
-              <Text style={styles.cardClub}>{item.club_name}</Text>
-              <Text style={styles.cardMeta}>
-                {item.category} · {item.city}
-              </Text>
-              <Text style={styles.cardDates}>
-                {formatCalendarDate(item.start_date)} → {formatCalendarDate(item.end_date)}
-              </Text>
-              <View style={styles.cardFooter}>
-                <Text style={styles.spots}>
-                  {item.spots_total - item.spots_taken} place
-                  {item.spots_total - item.spots_taken !== 1 ? 's' : ''} restante
-                  {item.spots_total - item.spots_taken !== 1 ? 's' : ''}
-                </Text>
-                {item.price_eur != null ? (
-                  <Text style={styles.price}>{item.price_eur} €</Text>
-                ) : (
-                  <Text style={styles.price}>Sur devis</Text>
-                )}
-              </View>
-            </TouchableOpacity>
-          )}
-        />
-      )}
-      {canCreate && onCreateStage ? (
-        <TouchableOpacity style={styles.fab} onPress={onCreateStage}>
-          <Icon name="add" size={20} color={c.brandInverse} />
-          <Text style={styles.fabText}>Publier un stage</Text>
-        </TouchableOpacity>
-      ) : null}
+      {listBody}
+      {fab}
     </View>
   );
 };
@@ -129,7 +164,7 @@ function createStyles(c: AppColors) {
   return StyleSheet.create({
     root: { flex: 1 },
     loader: { marginTop: spacing.xl },
-    list: { padding: spacing.lg, paddingBottom: 100, gap: spacing.md },
+    list: { padding: spacing.lg, paddingBottom: TAB_BAR_CONTENT_INSET + spacing.xl, gap: spacing.md },
     empty: {
       textAlign: 'center',
       color: c.textMuted,

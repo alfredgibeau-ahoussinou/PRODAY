@@ -3,24 +3,24 @@ import {
   View,
   Text,
   TextInput,
-  TouchableOpacity,
   ScrollView,
   StyleSheet,
   ActivityIndicator,
   Alert,
 } from 'react-native';
+import { PressableSpring } from '../components/motion';
 import type { User } from '../models/User';
 import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { profileService } from '../services/profile.service';
 import { ProfileCompletionBar } from '../components/ProfileCompletionBar';
 import { SignupOptionPicker } from '../components/signup/SignupOptionPicker';
-import { DEFAULT_PARENTAL_SETTINGS } from '../models/ParentalSettings';
 import {
   PLAYER_CATEGORIES,
   PLAYER_LEVELS,
   PLAYER_POSITIONS,
 } from '../constants/playerProfile';
-import { isMinorAge, parseAgeInput } from '../utils/minor';
+import { parseAgeInput } from '../utils/minor';
+import { mergePlayerParentalOnProfileEdit } from '../utils/minorProfileGuard';
 import { isSponsorRole, SPONSOR_THEME } from '../content/sponsorExperience';
 import { spacing, radius } from '../theme/designTokens';
 import { useThemedScreen } from '../hooks/useThemedScreen';
@@ -210,18 +210,7 @@ export const EditProfileScreen: React.FC<EditProfileScreenProps> = ({
       };
 
       if (user.role === 'player') {
-        const minor = parsedAge != null && isMinorAge(parsedAge);
-        const base = user.parental_settings ?? DEFAULT_PARENTAL_SETTINGS;
-        updatePayload.parental_settings = {
-          ...base,
-          is_minor: minor,
-          ...(minor
-            ? {
-                supervision_enabled: base.supervision_enabled ?? true,
-                contacts_filter_enabled: base.contacts_filter_enabled ?? true,
-              }
-            : {}),
-        };
+        updatePayload.parental_settings = mergePlayerParentalOnProfileEdit(user, parsedAge);
       }
 
       await profileService.updateProfile(user.uid, updatePayload);
@@ -298,7 +287,7 @@ export const EditProfileScreen: React.FC<EditProfileScreenProps> = ({
             <Text style={styles.fieldLabel}>Pied fort</Text>
             <View style={styles.chipRow}>
               {FOOT_OPTIONS.map((opt) => (
-                <TouchableOpacity
+                <PressableSpring
                   key={opt.value}
                   style={[styles.chip, strongFoot === opt.value && styles.chipActive]}
                   onPress={() => setStrongFoot(opt.value)}
@@ -306,7 +295,7 @@ export const EditProfileScreen: React.FC<EditProfileScreenProps> = ({
                   <Text style={[styles.chipText, strongFoot === opt.value && styles.chipTextActive]}>
                     {opt.label}
                   </Text>
-                </TouchableOpacity>
+                </PressableSpring>
               ))}
             </View>
             <View style={styles.row2}>
@@ -328,7 +317,7 @@ export const EditProfileScreen: React.FC<EditProfileScreenProps> = ({
             <Text style={styles.fieldLabel}>Disponibilité</Text>
             <View style={styles.chipRow}>
               {AVAILABILITY_OPTIONS.map((opt) => (
-                <TouchableOpacity
+                <PressableSpring
                   key={opt.value}
                   style={[styles.chip, availability === opt.value && styles.chipActive]}
                   onPress={() => setAvailability(opt.value)}
@@ -336,7 +325,7 @@ export const EditProfileScreen: React.FC<EditProfileScreenProps> = ({
                   <Text style={[styles.chipText, availability === opt.value && styles.chipTextActive]}>
                     {opt.label}
                   </Text>
-                </TouchableOpacity>
+                </PressableSpring>
               ))}
             </View>
             <Text style={styles.fieldLabel}>Stats saison</Text>
@@ -399,7 +388,7 @@ export const EditProfileScreen: React.FC<EditProfileScreenProps> = ({
           </Text>
         ) : null}
 
-        <TouchableOpacity
+        <PressableSpring
           style={[
             styles.primary,
             isSponsor && {
@@ -415,7 +404,7 @@ export const EditProfileScreen: React.FC<EditProfileScreenProps> = ({
           ) : (
             <Text style={[styles.primaryText, isSponsor && { color: ui.onAccent }]}>Enregistrer</Text>
           )}
-        </TouchableOpacity>
+        </PressableSpring>
       </ScrollView>
     </View>
   );

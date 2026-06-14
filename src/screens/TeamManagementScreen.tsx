@@ -6,9 +6,9 @@ import {
   Share,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from 'react-native';
+import { PressableSpring } from '../components/motion';
 import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { Icon } from '../components/ui/Icon';
 import type { User } from '../models/User';
@@ -18,13 +18,13 @@ import type { TeamPaymentRequest } from '../models/TeamFinance';
 import { teamEventsService } from '../services/teamEvents.service';
 import { teamFinanceService } from '../services/teamFinance.service';
 import { usersService } from '../services/users.service';
-import { buildMatchSheetHtml } from '../utils/matchSheetHtml';
-import { openPrintableHtml } from '../utils/openCvHtml';
 import { useAuth } from '../context/AuthContext';
 import { TeamEventDetailScreen } from './TeamEventDetailScreen';
 import { CreateTeamEventScreen } from './CreateTeamEventScreen';
 import { JoinClubScreen } from './JoinClubScreen';
 import { ClubAnnouncementsScreen } from './ClubAnnouncementsScreen';
+import { ClubHubScreen } from './ClubHubScreen';
+import { useTabNavigation } from '../context/TabNavigationContext';
 import { EventAttendancePanel } from '../components/team/EventAttendancePanel';
 import { CarpoolBalanceTable } from '../components/team/CarpoolBalanceTable';
 import { aggregateCarpoolBalance } from '../utils/carpoolBalance';
@@ -33,7 +33,7 @@ import { useThemedScreen } from '../hooks/useThemedScreen';
 import type { AppColors } from '../theme/universeTheme';
 
 type TeamTab = 'planning' | 'roster' | 'attendance' | 'stats' | 'payments';
-type HubView = 'hub' | 'event' | 'create' | 'join' | 'announcements';
+type HubView = 'hub' | 'event' | 'create' | 'join' | 'announcements' | 'club';
 
 interface TeamManagementScreenProps {
   profile: User;
@@ -45,6 +45,7 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
   onBack,
 }) => {
   const { isAdmin } = useAuth();
+  const { openChat, setActiveTab } = useTabNavigation();
   const { colors: c, productLine, rootStyle } = useThemedScreen();
   const styles = useMemo(() => createStyles(c), [c]);
   const isWoman = productLine === 'woman';
@@ -273,6 +274,33 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
     );
   }
 
+  if (hubView === 'club') {
+    return (
+      <ClubHubScreen
+        profile={profile}
+        events={events}
+        onBack={() => setHubView('hub')}
+        onChannel={(channel) => {
+          if (channel === 'general') {
+            setHubView('announcements');
+          } else if (channel === 'mercato') {
+            setActiveTab('recrutement');
+          } else if (channel === 'covoit') {
+            setActiveTab('covoiturage');
+          } else if (channel === 'convocations') {
+            setHubView('hub');
+            setTab('planning');
+          }
+        }}
+        onOpenEvent={(eventId) => {
+          setSelectedEventId(eventId);
+          setHubView('event');
+        }}
+        onOpenTeamChat={(threadId, title) => openChat(threadId)}
+      />
+    );
+  }
+
   if (hubView === 'event' && selectedEventId) {
     return (
       <TeamEventDetailScreen
@@ -324,25 +352,21 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
     const user = await usersService.getById(uid);
     if (!user) return;
     const current = statsEvent.player_match_stats?.[uid];
-    await teamEventsService.updatePlayerMatchStat(statsEvent.id, uid, {
-      player_name: user.display_name,
-      minutes_played: Math.min(90, (current?.minutes_played ?? 0) + 15),
-      rating: Math.min(10, Number((current?.rating ?? 6) + 0.5)),
-      goals: (current?.goals ?? 0) + 1,
-      assists: current?.assists ?? 0,
-      yellow_cards: current?.yellow_cards ?? 0,
-      red_cards: current?.red_cards ?? 0,
-    });
+    await teamEventsService.updatePlayerMatchStat(
+      statsEvent.id,
+      uid,
+      {
+        player_name: user.display_name,
+        minutes_played: Math.min(90, (current?.minutes_played ?? 0) + 15),
+        rating: Math.min(10, Number((current?.rating ?? 6) + 0.5)),
+        goals: (current?.goals ?? 0) + 1,
+        assists: current?.assists ?? 0,
+        yellow_cards: current?.yellow_cards ?? 0,
+        red_cards: current?.red_cards ?? 0,
+      },
+      { user: profile, isAdmin },
+    );
     await load();
-  };
-
-  const exportMatchReport = () => {
-    if (!statsEvent) {
-      Alert.alert('Rapport indisponible', 'Aucun événement match/entraînement à exporter.');
-      return;
-    }
-    const html = buildMatchSheetHtml(statsEvent);
-    openPrintableHtml(html, `Rapport match — ${statsEvent.title}`);
   };
 
   const shareMatchReport = async () => {
@@ -363,22 +387,30 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
     }
     if (!statsEvent || !selectedStatPlayer) return;
     const current = statsEvent.player_match_stats?.[selectedStatPlayer.uid];
-    await teamEventsService.updatePlayerMatchStat(statsEvent.id, selectedStatPlayer.uid, {
-      player_name: selectedStatPlayer.display_name,
-      minutes_played: current?.minutes_played ?? 0,
-      rating: current?.rating ?? 6,
-      goals: current?.goals ?? 0,
-      assists: current?.assists ?? 0,
-      yellow_cards: current?.yellow_cards ?? 0,
-      red_cards: current?.red_cards ?? 0,
-      ...patch,
-    });
+    await teamEventsService.updatePlayerMatchStat(
+      statsEvent.id,
+      selectedStatPlayer.uid,
+      {
+        player_name: selectedStatPlayer.display_name,
+        minutes_played: current?.minutes_played ?? 0,
+        rating: current?.rating ?? 6,
+        goals: current?.goals ?? 0,
+        assists: current?.assists ?? 0,
+        yellow_cards: current?.yellow_cards ?? 0,
+        red_cards: current?.red_cards ?? 0,
+        ...patch,
+      },
+      { user: profile, isAdmin },
+    );
     await load();
   };
 
   const finalizeReport = async () => {
     if (!statsEvent) return;
-    await teamEventsService.setMatchReportFinalized(statsEvent.id, true);
+    await teamEventsService.setMatchReportFinalized(statsEvent.id, true, {
+      user: profile,
+      isAdmin,
+    });
     await load();
     Alert.alert('Rapport validé', 'Le rapport d’après-match est figé et partageable.');
   };
@@ -389,7 +421,10 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
       Alert.alert('Accès refusé', 'Seul le staff peut déverrouiller un rapport validé.');
       return;
     }
-    await teamEventsService.setMatchReportFinalized(statsEvent.id, false);
+    await teamEventsService.setMatchReportFinalized(statsEvent.id, false, {
+      user: profile,
+      isAdmin,
+    });
     await load();
     Alert.alert('Rapport déverrouillé', 'Le rapport est à nouveau modifiable.');
   };
@@ -420,20 +455,23 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
 
         {clubId ? (
           <>
-            <TouchableOpacity style={styles.createEventBtn} onPress={() => setHubView('create')}>
+            <PressableSpring style={styles.createEventBtn} onPress={() => setHubView('create')}>
               <Text style={styles.createEventBtnText}>+ Nouvelle convocation</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
+            </PressableSpring>
+            <PressableSpring
               style={styles.secondaryHubBtn}
               onPress={() => setHubView('announcements')}
             >
               <Text style={styles.secondaryHubBtnText}>Annonces club</Text>
-            </TouchableOpacity>
+            </PressableSpring>
+            <PressableSpring style={styles.secondaryHubBtn} onPress={() => setHubView('club')}>
+              <Text style={styles.secondaryHubBtnText}>Communauté club</Text>
+            </PressableSpring>
           </>
         ) : (
-          <TouchableOpacity style={styles.createEventBtn} onPress={() => setHubView('join')}>
+          <PressableSpring style={styles.createEventBtn} onPress={() => setHubView('join')}>
             <Text style={styles.createEventBtnText}>Rejoindre un club</Text>
-          </TouchableOpacity>
+          </PressableSpring>
         )}
 
         {loading ? (
@@ -455,7 +493,7 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
                 const no = Object.values(e.rsvps).filter((s) => s === 'no').length;
                 const rsvpSummary = `${yes} présents · ${no} absents · ${pending} en attente`;
                 return (
-                  <TouchableOpacity
+                  <PressableSpring
                     key={e.id}
                     style={styles.rowTouchable}
                     onPress={() => {
@@ -475,13 +513,18 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
                       })} · ${e.city}${e.categories?.length ? ` · ${e.categories.join(', ')}` : ''}`}
                       right={rsvpSummary}
                     />
-                  </TouchableOpacity>
+                  </PressableSpring>
                 );
               })}
               {events.length === 0 ? (
-                <Text style={styles.empty}>
-                  Aucun événement. Créez une convocation ci-dessus.
-                </Text>
+                <View style={styles.emptyBlock}>
+                  <Text style={styles.empty}>
+                    Aucun événement planifié pour le moment.
+                  </Text>
+                  <PressableSpring style={styles.createEventBtn} onPress={() => setHubView('create')} scaleTo={0.97} haptic>
+                    <Text style={styles.createEventBtnText}>Créer une convocation</Text>
+                  </PressableSpring>
+                </View>
               ) : null}
             </View>
           </>
@@ -513,8 +556,8 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
         {!loading && tab === 'attendance' ? (
           <View style={styles.card}>
             <Text style={styles.sectionTitle}>Présences & réponses</Text>
-            <Row styles={styles} title="Confirmés" subtitle="Réponses YES" right={String(eventStats.yes)} />
-            <Row styles={styles} title="En attente" subtitle="Réponses PENDING" right={String(eventStats.pending)} />
+            <Row styles={styles} title="Confirmés" subtitle="Présents" right={String(eventStats.yes)} />
+            <Row styles={styles} title="En attente" subtitle="Sans réponse" right={String(eventStats.pending)} />
             <Row styles={styles} title="Convocations" subtitle="Matchs / feuilles" right={String(eventStats.convocation)} />
             <Row styles={styles} title="Entraînements" subtitle="Séances" right={String(eventStats.training)} />
             {events.filter((e) => e.invitee_uids.length > 0).length > 0 ? (
@@ -561,6 +604,7 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
                 {isStaff ? (
                   <EventAttendancePanel
                     event={editableAttendanceEvent}
+                    profile={profile}
                     isStaff
                     onUpdated={load}
                   />
@@ -600,7 +644,6 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
                 }
                 onPress={() => void addQuickPlayerStat()}
               />
-              <MiniBtn styles={styles} label="Exporter rapport match" onPress={exportMatchReport} />
               <MiniBtn styles={styles} label="Partager rapport" onPress={() => void shareMatchReport()} />
             </View>
             {selectedStatPlayer && statsEvent ? (
@@ -638,7 +681,7 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
             ) : null}
             {statsEvent ? (
               <>
-                <TouchableOpacity
+                <PressableSpring
                   style={[styles.primaryBtn, statsEvent.match_report_finalized_at && styles.primaryBtnDone]}
                   onPress={() => void finalizeReport()}
                   disabled={Boolean(statsEvent.match_report_finalized_at)}
@@ -646,9 +689,9 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
                   <Text style={styles.primaryBtnText}>
                     {statsEvent.match_report_finalized_at ? 'Rapport validé' : 'Valider le rapport d’après-match'}
                   </Text>
-                </TouchableOpacity>
+                </PressableSpring>
                 {statsEvent.match_report_finalized_at ? (
-                  <TouchableOpacity
+                  <PressableSpring
                     style={styles.secondaryBtn}
                     onPress={() => void unlockReport()}
                     disabled={!canManageFinalizedReport}
@@ -658,7 +701,7 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
                         ? 'Déverrouiller le rapport'
                         : 'Rapport verrouillé (staff uniquement)'}
                     </Text>
-                  </TouchableOpacity>
+                  </PressableSpring>
                 ) : null}
               </>
             ) : null}
@@ -691,18 +734,18 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
             <Row styles={styles} title="Attendu" subtitle="Total des demandes" right={`${paymentStats.expected} EUR`} />
             <Row styles={styles} title="Reçu" subtitle="Paiements validés" right={`${paymentStats.received} EUR`} />
             <Row styles={styles} title="En retard" subtitle="Demandes late" right={String(paymentStats.late)} />
-            <TouchableOpacity style={styles.primaryBtn} onPress={() => void createBulkPayments()}>
+            <PressableSpring style={styles.primaryBtn} onPress={() => void createBulkPayments()}>
               <Text style={styles.primaryBtnText}>Cotisation pour tout l&apos;effectif</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.secondaryBtn} onPress={() => void createQuickPayment()}>
+            </PressableSpring>
+            <PressableSpring style={styles.secondaryBtn} onPress={() => void createQuickPayment()}>
               <Text style={styles.secondaryBtnText}>Cotisation rapide (1 membre)</Text>
-            </TouchableOpacity>
+            </PressableSpring>
             <View style={styles.inlineBtns}>
               <MiniBtn styles={styles} label="Marquer retards" onPress={() => void markOverdue()} />
               <MiniBtn styles={styles} label="Exporter CSV" onPress={() => void exportFinanceCsv()} />
             </View>
             {payments.slice(0, 4).map((p) => (
-              <TouchableOpacity
+              <PressableSpring
                 key={p.id}
                 style={styles.paymentRow}
                 onPress={() => void (p.status !== 'paid' ? markPaid(p) : Promise.resolve())}
@@ -715,7 +758,7 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
                   {p.amount_eur} EUR · {p.status}
                   {p.payment_method === 'stripe' ? ' · Stripe' : ''}
                 </Text>
-              </TouchableOpacity>
+              </PressableSpring>
             ))}
           </View>
         ) : null}
@@ -731,12 +774,12 @@ const TabBtn: React.FC<{
   tab: TeamTab;
   setTab: (t: TeamTab) => void;
 }> = ({ styles, id, label, tab, setTab }) => (
-  <TouchableOpacity
+  <PressableSpring
     style={[styles.tabBtn, tab === id && styles.tabBtnOn]}
     onPress={() => setTab(id)}
   >
     <Text style={[styles.tabText, tab === id && styles.tabTextOn]}>{label}</Text>
-  </TouchableOpacity>
+  </PressableSpring>
 );
 
 const Kpi: React.FC<{
@@ -770,9 +813,9 @@ const MiniBtn: React.FC<{
   label: string;
   onPress: () => void;
 }> = ({ styles, label, onPress }) => (
-  <TouchableOpacity style={styles.miniBtn} onPress={onPress}>
+  <PressableSpring style={styles.miniBtn} onPress={onPress}>
     <Text style={styles.miniBtnText}>{label}</Text>
-  </TouchableOpacity>
+  </PressableSpring>
 );
 
 function createStyles(c: AppColors) {
@@ -838,6 +881,7 @@ function createStyles(c: AppColors) {
   },
   sectionTitle: { fontSize: 15, fontWeight: '800', color: c.text, marginBottom: spacing.xs },
   empty: { color: c.textMuted, fontSize: 12, marginTop: spacing.sm },
+  emptyBlock: { gap: spacing.sm, marginTop: spacing.sm },
   row: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -17,6 +17,12 @@ import { CreateTeamEventScreen } from './CreateTeamEventScreen';
 import { useAuth } from '../context/AuthContext';
 import { spacing, radius } from '../theme/designTokens';
 import { useAppTheme } from '../context/ProductLineContext';
+import { V3TabShell } from '../components/v3/V3TabShell';
+import { V3ScreenBack } from '../components/v3/V3ScreenBack';
+import { useSectionIntelligence } from '../hooks/useSectionIntelligence';
+import { isV3SubScreenEnabled } from '../hooks/useV3SubScreen';
+import { StaggerReveal, PressableSpring } from '../components/motion';
+import { TAB_BAR_CONTENT_INSET } from '../navigation/tabBarLayout';
 
 interface DetectionEventsScreenProps {
   onBack: () => void;
@@ -31,7 +37,11 @@ export const DetectionEventsScreen: React.FC<DetectionEventsScreenProps> = ({
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const { profile } = useAuth();
   const { events, loading, refresh } = useDetectionEvents();
-  const { colors: themeColors } = useAppTheme();
+  const { colors: themeColors, productLine } = useAppTheme();
+  const useV3Header = isV3SubScreenEnabled(profile, 'staff');
+  const intelligence = useSectionIntelligence('matchs', profile ?? null, productLine, {
+    openMatches: events.length,
+  });
 
   const canCreate =
     profile &&
@@ -66,15 +76,8 @@ export const DetectionEventsScreen: React.FC<DetectionEventsScreenProps> = ({
     );
   }
 
-  return (
-    <View style={[styles.root, { backgroundColor: themeColors.background }]}>
-      <ScreenHeader
-        title="Journées détection"
-        subtitle="Journées de scouting intégrées à votre calendrier ProDay"
-        onBack={onBack}
-        centered
-      />
-
+  const listContent = (
+    <>
       <View
         style={[
           styles.heroBanner,
@@ -98,23 +101,25 @@ export const DetectionEventsScreen: React.FC<DetectionEventsScreenProps> = ({
         <View style={styles.heroCopy}>
           <Text style={[styles.heroTitle, { color: themeColors.text }]}>Scouting ProDay</Text>
           <Text style={[styles.heroSub, { color: themeColors.textSecondary }]}>
-            Journées de détection reliées à votre calendrier — inscrivez-vous ou
-            organisez une session pour votre club.
+            Journées de détection reliées à votre calendrier — inscrivez-vous ou organisez une
+            session pour votre club.
           </Text>
         </View>
       </View>
 
-      {canCreate && (
-        <TouchableOpacity
+      {canCreate ? (
+        <PressableSpring
           style={[styles.createBtn, { backgroundColor: themeColors.brand }]}
           onPress={() => setView('create')}
+          scaleTo={0.98}
+          haptic
         >
           <Icon name="add" size={20} color={themeColors.brandInverse} />
           <Text style={[styles.createText, { color: themeColors.brandInverse }]}>
             Organiser une détection
           </Text>
-        </TouchableOpacity>
-      )}
+        </PressableSpring>
+      ) : null}
 
       {loading ? (
         <ActivityIndicator color={themeColors.brand} style={styles.loader} />
@@ -123,9 +128,9 @@ export const DetectionEventsScreen: React.FC<DetectionEventsScreenProps> = ({
           data={events}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.list}
-          renderItem={({ item }) => {
+          renderItem={({ item, index }) => {
             const yes = countRsvpYes(item);
-            return (
+            const card = (
               <TouchableOpacity
                 style={[
                   styles.card,
@@ -158,6 +163,11 @@ export const DetectionEventsScreen: React.FC<DetectionEventsScreenProps> = ({
                 ) : null}
               </TouchableOpacity>
             );
+            return useV3Header ? (
+              <StaggerReveal index={Math.min(index, 8)}>{card}</StaggerReveal>
+            ) : (
+              card
+            );
           }}
           ListEmptyComponent={
             <Text style={[styles.empty, { color: themeColors.textMuted }]}>
@@ -166,6 +176,33 @@ export const DetectionEventsScreen: React.FC<DetectionEventsScreenProps> = ({
           }
         />
       )}
+    </>
+  );
+
+  if (useV3Header) {
+    return (
+      <V3TabShell
+        caption="Scouting"
+        title="Journées détection"
+        subtitle={`${events.length} session(s) à venir`}
+        right={<V3ScreenBack onPress={onBack} />}
+        intelligence={intelligence}
+        flat
+      >
+        {listContent}
+      </V3TabShell>
+    );
+  }
+
+  return (
+    <View style={[styles.root, { backgroundColor: themeColors.background }]}>
+      <ScreenHeader
+        title="Journées détection"
+        subtitle="Journées de scouting intégrées à votre calendrier ProDay"
+        onBack={onBack}
+        centered
+      />
+      {listContent}
     </View>
   );
 };
@@ -205,7 +242,7 @@ const styles = StyleSheet.create({
   },
   createText: { fontWeight: '900', fontSize: 14 },
   loader: { marginTop: 40 },
-  list: { paddingHorizontal: spacing.lg, paddingBottom: spacing.xxl },
+  list: { paddingHorizontal: spacing.lg, paddingBottom: TAB_BAR_CONTENT_INSET + spacing.lg },
   card: {
     borderRadius: radius.lg,
     padding: spacing.lg,

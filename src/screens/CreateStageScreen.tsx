@@ -12,6 +12,7 @@ import {
 import type { User } from '../models/User';
 import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { stagesService } from '../services/stages.service';
+import { isStaffVerificationPending } from '../utils/staffVerificationGuard';
 import { canPublishStages } from '../utils/roleCapabilities';
 import { useAppSpace } from '../context/AppSpaceContext';
 import { spacing, radius } from '../theme/designTokens';
@@ -66,6 +67,17 @@ export const CreateStageScreen: React.FC<CreateStageScreenProps> = ({
     );
   }
 
+  if (isStaffVerificationPending(profile)) {
+    return (
+      <View style={[styles.root, rootStyle]}>
+        <ScreenHeader title="Publier un stage" onBack={onBack} centered />
+        <Text style={[styles.denied, { color: themeColors.textMuted }]}>
+          Validez votre diplôme ou licence depuis l’onglet Profil pour publier un stage.
+        </Text>
+      </View>
+    );
+  }
+
   const handleSubmit = async () => {
     const start = parseDateInput(startDate);
     const end = parseDateInput(endDate);
@@ -88,20 +100,23 @@ export const CreateStageScreen: React.FC<CreateStageScreenProps> = ({
 
     setSubmitting(true);
     try {
-      await stagesService.createOffer({
-        author_uid: profile.uid,
-        club_id: profile.profile.club_id ?? profile.uid,
-        club_name: profile.display_name,
-        title: title.trim(),
-        description: description.trim(),
-        city: city.trim(),
-        category: category.trim(),
-        start_date: start,
-        end_date: end,
-        price_eur: price.trim() ? Number(price) : undefined,
-        spots_total: spotsTotal,
-        target_space: appSpace,
-      });
+      await stagesService.createOffer(
+        {
+          author_uid: profile.uid,
+          club_id: profile.profile.club_id ?? profile.uid,
+          club_name: profile.display_name,
+          title: title.trim(),
+          description: description.trim(),
+          city: city.trim(),
+          category: category.trim(),
+          start_date: start,
+          end_date: end,
+          price_eur: price.trim() ? Number(price) : undefined,
+          spots_total: spotsTotal,
+          target_space: appSpace,
+        },
+        profile,
+      );
       Alert.alert('Stage publié', 'Visible dans Stages & camps du Mercato.');
       onCreated();
       onBack();

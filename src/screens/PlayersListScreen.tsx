@@ -24,9 +24,22 @@ import {
   filterPlayers,
   type PlayerListFilters,
 } from '../utils/playerFilters';
+import { ProDayActionTiles } from '../components/ui/ProDayActionTiles';
 import { spacing, radius } from '../theme/designTokens';
 import type { AppColors } from '../theme/universeTheme';
 import { useAppTheme } from '../context/ProductLineContext';
+import { isV3ShellEnabled } from '../config/featureFlags';
+import { V3TabShell } from '../components/v3/V3TabShell';
+import { V3ScreenBack } from '../components/v3/V3ScreenBack';
+import { useSectionIntelligence } from '../hooks/useSectionIntelligence';
+import {
+  scoutingScoreMap,
+  sortPlayersByScouting,
+  type PlayerScoutingScore,
+} from '../features/v3/engines/playerScouting.engine';
+import { StaggerReveal } from '../components/motion';
+import { trackV3Event } from '../core/analytics/v3Events';
+import { TAB_BAR_CONTENT_INSET } from '../navigation/tabBarLayout';
 
 type FilterPanel = 'poste' | 'categorie' | 'niveau' | 'ville' | 'age' | null;
 
@@ -47,8 +60,24 @@ export const PlayersListScreen: React.FC<PlayersListScreenProps> = ({
   const { colors: themeColors, productLine } = useAppTheme();
   const { users: rawUsers, loading } = useUsersByRole('player', query);
   const listTitle = productLine === 'woman' ? 'Joueuses' : 'Joueurs';
+  const useV3Header = isV3ShellEnabled() && Boolean(profile && profile.role !== 'player');
 
-  const users = useMemo(() => filterPlayers(rawUsers, filters), [rawUsers, filters]);
+  const filteredUsers = useMemo(() => filterPlayers(rawUsers, filters), [rawUsers, filters]);
+  const users = useMemo(() => {
+    if (!useV3Header || !profile) return filteredUsers;
+    return sortPlayersByScouting(profile, filteredUsers);
+  }, [filteredUsers, profile, useV3Header]);
+
+  const scores = useMemo(() => {
+    if (!profile || !useV3Header) return new Map<string, PlayerScoutingScore>();
+    return scoutingScoreMap(profile, users);
+  }, [profile, users, useV3Header]);
+
+  const intelligence = useSectionIntelligence('recrutement', profile ?? null, productLine, {
+    staffMode: true,
+    mercatoPosts: users.length,
+  });
+
   const activeFilterCount = countActiveFilters(filters);
 
   const togglePanel = (p: FilterPanel) => {
@@ -60,63 +89,64 @@ export const PlayersListScreen: React.FC<PlayersListScreenProps> = ({
     setPanel(null);
   };
 
-  return (
-    <View style={[styles.container, { backgroundColor: themeColors.background }]}>
-      <ScreenHeader
-        title={listTitle}
-        onBack={onBack}
-        centered
-        rightAction={
-          activeFilterCount > 0 ? (
-            <TouchableOpacity onPress={resetFilters} hitSlop={12}>
-              <Text style={[styles.resetText, { color: themeColors.brand }]}>Réinit.</Text>
-            </TouchableOpacity>
-          ) : undefined
-        }
-      />
-      <SearchBar
-        placeholder="Nom, poste, ville…"
-        value={query}
-        onChangeText={setQuery}
-      />
+  const handleSelectPlayer = (player: User) => {
+    if (useV3Header) {
+      const scouting = scores.get(player.uid);
+      trackV3Event('staff_player_tap', {
+        playerUid: player.uid,
+        scoutingScore: scouting?.score ?? 0,
+      });
+    }
+    onSelectPlayer(player);
+  };
 
-      <View style={styles.chips}>
-        <FilterChip
-          label="Poste"
-          active={panel === 'poste' || filters.position !== 'Tous'}
-          onPress={() => togglePanel('poste')}
-          colors={themeColors}
-        />
-        <FilterChip
-          label="Catégorie"
-          active={panel === 'categorie' || filters.category !== 'Tous'}
-          onPress={() => togglePanel('categorie')}
-          colors={themeColors}
-        />
-        <FilterChip
-          label="Niveau"
-          active={panel === 'niveau' || filters.level !== 'Tous'}
-          onPress={() => togglePanel('niveau')}
-          colors={themeColors}
-        />
-        <FilterChip
-          label="Ville"
-          active={panel === 'ville' || Boolean(filters.city.trim())}
-          onPress={() => togglePanel('ville')}
-          colors={themeColors}
-        />
-        <FilterChip
-          label="Âge max"
-          active={panel === 'age' || Boolean(filters.maxAge.trim())}
-          onPress={() => togglePanel('age')}
-          colors={themeColors}
-        />
-        {activeFilterCount > 0 ? (
-          <View style={[styles.badge, { backgroundColor: themeColors.brand }]}>
-            <Text style={styles.badgeText}>{activeFilterCount}</Text>
-          </View>
-        ) : null}
-      </View>
+  const resetAction =
+    activeFilterCount > 0 ? (
+      <TouchableOpacity onPress={resetFilters} hitSlop={12}>
+        <Text style={[styles.resetText, { color: themeColors.brand }]}>Réinit.</Text>
+      </TouchableOpacity>
+    ) : undefined;
+
+  const filtersBlock = (
+    <>
+      <SearchBar placeholder="Nom, poste, ville…" value={query} onChangeText={setQuery} />
+
+      <ProDayActionTiles
+        items={[
+          {
+            id: 'poste',
+            label: 'Poste',
+            icon: 'football',
+            badge: filters.position !== 'Tous' ? 1 : undefined,
+          },
+          {
+            id: 'categorie',
+            label: 'Catégorie',
+            icon: 'people',
+            badge: filters.category !== 'Tous' ? 1 : undefined,
+          },
+          {
+            id: 'niveau',
+            label: 'Niveau',
+            icon: 'trophy',
+            badge: filters.level !== 'Tous' ? 1 : undefined,
+          },
+          {
+            id: 'ville',
+            label: 'Ville',
+            icon: 'location',
+            badge: filters.city.trim() ? 1 : undefined,
+          },
+          {
+            id: 'age',
+            label: 'Âge max',
+            icon: 'calendar',
+            badge: filters.maxAge.trim() ? 1 : undefined,
+          },
+        ]}
+        activeId={panel}
+        onPress={(id) => togglePanel(id as FilterPanel)}
+      />
 
       {panel === 'poste' ? (
         <OptionRow
@@ -203,60 +233,86 @@ export const PlayersListScreen: React.FC<PlayersListScreenProps> = ({
           />
         </View>
       ) : null}
+    </>
+  );
 
-      {loading ? (
-        <ActivityIndicator color={themeColors.brand} style={styles.loader} />
-      ) : (
-        <FlatList
-          data={users}
-          keyExtractor={(item) => item.uid}
-          contentContainerStyle={styles.list}
-          renderItem={({ item }) => (
-            <PlayerRowCard
-              user={item}
-              onPress={onSelectPlayer}
-              bookmarked={isFavorite(item.uid)}
-              onBookmark={() => profile && toggle(item.uid, 'player')}
-            />
-          )}
-          ListEmptyComponent={
-            <Text style={[styles.empty, { color: themeColors.textMuted }]}>
-              {activeFilterCount > 0 || query.trim()
-                ? productLine === 'woman'
-                  ? 'Aucune joueuse ne correspond à vos critères.'
-                  : 'Aucun joueur ne correspond à vos critères.'
-                : productLine === 'woman'
-                  ? 'Aucune joueuse inscrite.'
-                  : 'Aucun joueur inscrit.'}
-            </Text>
-          }
-        />
-      )}
+  const listBody = loading ? (
+    <ActivityIndicator color={themeColors.brand} style={styles.loader} />
+  ) : (
+    <FlatList
+      data={users}
+      keyExtractor={(item) => item.uid}
+      contentContainerStyle={styles.list}
+      ListHeaderComponent={useV3Header ? filtersBlock : undefined}
+      renderItem={({ item, index }) => {
+        const scouting = scores.get(item.uid);
+        const row = (
+          <PlayerRowCard
+            user={item}
+            onPress={handleSelectPlayer}
+            bookmarked={isFavorite(item.uid)}
+            onBookmark={() => profile && toggle(item.uid, 'player')}
+            scoutingScore={scouting?.score}
+            scoutingLabel={scouting?.label}
+          />
+        );
+        return useV3Header ? (
+          <StaggerReveal index={Math.min(index, 8)}>{row}</StaggerReveal>
+        ) : (
+          row
+        );
+      }}
+      ListEmptyComponent={
+        <Text style={[styles.empty, { color: themeColors.textMuted }]}>
+          {activeFilterCount > 0 || query.trim()
+            ? productLine === 'woman'
+              ? 'Aucune joueuse ne correspond à vos critères.'
+              : 'Aucun joueur ne correspond à vos critères.'
+            : productLine === 'woman'
+              ? 'Aucune joueuse inscrite.'
+              : 'Aucun joueur inscrit.'}
+        </Text>
+      }
+    />
+  );
+
+  if (useV3Header) {
+    return (
+      <V3TabShell
+        caption="Scouting"
+        title={listTitle}
+        subtitle={
+          users.length > 0
+            ? `${users.length} profil(s) — triés par score IA`
+            : 'Explorez la base joueurs'
+        }
+        right={
+          <View style={styles.headerRight}>
+            {resetAction}
+            <V3ScreenBack onPress={onBack} />
+          </View>
+        }
+        intelligence={intelligence}
+        flat
+      >
+        {listBody}
+      </V3TabShell>
+    );
+  }
+
+  return (
+    <View style={[styles.container, { backgroundColor: themeColors.background }]}>
+      <ScreenHeader
+        title={listTitle}
+        onBack={onBack}
+        centered
+        rightAction={resetAction}
+      />
+      {filtersBlock}
+      {listBody}
     </View>
   );
 };
-
-const FilterChip: React.FC<{
-  label: string;
-  active: boolean;
-  onPress: () => void;
-  colors: AppColors;
-}> = ({ label, active, onPress, colors: c }) => (
-  <TouchableOpacity
-    style={[
-      styles.chip,
-      {
-        backgroundColor: active ? c.brand : c.surface,
-        borderColor: active ? c.brand : c.border,
-      },
-    ]}
-    onPress={onPress}
-  >
-    <Text style={[styles.chipText, { color: active ? c.brandInverse : c.textSecondary }]}>
-      {label}
-    </Text>
-  </TouchableOpacity>
-);
 
 const OptionRow: React.FC<{
   options: readonly string[];
@@ -295,31 +351,8 @@ const OptionRow: React.FC<{
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+  headerRight: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   resetText: { fontSize: 12, fontWeight: '800' },
-  chips: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    alignItems: 'center',
-    gap: spacing.sm,
-    paddingHorizontal: spacing.lg,
-    marginBottom: spacing.sm,
-  },
-  chip: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: radius.pill,
-    borderWidth: 1,
-  },
-  chipText: { fontSize: 12, fontWeight: '700' },
-  badge: {
-    minWidth: 22,
-    height: 22,
-    borderRadius: 11,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 6,
-  },
-  badgeText: { color: '#fff', fontSize: 11, fontWeight: '900' },
   optionRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -341,7 +374,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     fontSize: 15,
   },
-  list: { paddingHorizontal: spacing.lg, paddingBottom: spacing.xxl },
+  list: {
+    paddingHorizontal: spacing.lg,
+    paddingBottom: TAB_BAR_CONTENT_INSET + spacing.lg,
+  },
   empty: { textAlign: 'center', marginTop: 40 },
   loader: { marginTop: 40 },
 });

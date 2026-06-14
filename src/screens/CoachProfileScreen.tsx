@@ -14,6 +14,11 @@ import { Icon } from '../components/ui/Icon';
 import { spacing, radius, shadows } from '../theme/designTokens';
 import type { AppColors } from '../theme/universeTheme';
 import { useAppTheme } from '../context/ProductLineContext';
+import { useAuth } from '../context/AuthContext';
+import { V3TabShell } from '../components/v3/V3TabShell';
+import { V3ScreenBack } from '../components/v3/V3ScreenBack';
+import { useSectionIntelligence } from '../hooks/useSectionIntelligence';
+import { isV3SubScreenEnabled } from '../hooks/useV3SubScreen';
 
 type TabId = 'profil' | 'experience' | 'diplomes' | 'avis';
 
@@ -37,23 +42,23 @@ export const CoachProfileScreen: React.FC<CoachProfileScreenProps> = ({
   onContact,
   onHire,
 }) => {
-  const { colors: themeColors } = useAppTheme();
+  const { colors: themeColors, productLine } = useAppTheme();
+  const { profile: myProfile } = useAuth();
   const styles = useMemo(() => createCoachStyles(themeColors), [themeColors]);
+  const useV3Header =
+    isV3SubScreenEnabled(myProfile, 'staff') && myProfile?.uid !== staff.uid;
+  const intelligence = useSectionIntelligence('recrutement', myProfile ?? null, productLine, {
+    staffMode: true,
+  });
   const [tab, setTab] = useState<TabId>('profil');
   const p = staff.profile;
   const canContact = canContactMinors(staff);
   const roleLabel = staff.role === 'agent' ? 'Agent sportif' : 'Entraîneur principal';
   const verified = staff.is_verified && staff.verification_status === 'VERIFIED';
+  const profileTitle = staff.role === 'agent' ? 'Profil agent' : 'Profil coach';
 
-  return (
-    <View style={styles.root}>
-      <ScreenHeader
-        title={staff.role === 'agent' ? 'Profil agent' : 'Profil coach'}
-        onBack={onBack}
-        onMenu={() => {}}
-        centered
-      />
-
+  const scrollBody = (
+    <>
       <ScrollView stickyHeaderIndices={[1]} showsVerticalScrollIndicator={false}>
         <View style={styles.hero}>
           <View style={styles.avatar}>
@@ -61,9 +66,9 @@ export const CoachProfileScreen: React.FC<CoachProfileScreenProps> = ({
           </View>
           <View style={styles.nameRow}>
             <Text style={styles.name}>{staff.display_name}</Text>
-                {verified && (
-                  <Icon name="checkmark-circle" size={20} color={themeColors.brandLight} />
-                )}
+            {verified && (
+              <Icon name="checkmark-circle" size={20} color={themeColors.brandLight} />
+            )}
           </View>
           <Text style={styles.jobTitle}>{p.job_title ?? roleLabel}</Text>
           <View style={styles.locRow}>
@@ -125,6 +130,28 @@ export const CoachProfileScreen: React.FC<CoachProfileScreenProps> = ({
           <Text style={styles.btnPrimaryText}>Engager</Text>
         </TouchableOpacity>
       </View>
+    </>
+  );
+
+  if (useV3Header) {
+    return (
+      <V3TabShell
+        caption="Mercato"
+        title={profileTitle}
+        subtitle={staff.display_name}
+        right={<V3ScreenBack onPress={onBack} />}
+        intelligence={intelligence}
+        flat
+      >
+        <View style={styles.root}>{scrollBody}</View>
+      </V3TabShell>
+    );
+  }
+
+  return (
+    <View style={styles.root}>
+      <ScreenHeader title={profileTitle} onBack={onBack} onMenu={() => {}} centered />
+      {scrollBody}
     </View>
   );
 };

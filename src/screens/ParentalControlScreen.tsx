@@ -7,6 +7,7 @@ import {
   Switch,
   StyleSheet,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { Icon } from '../components/ui/Icon';
@@ -110,6 +111,13 @@ export const ParentalControlScreen: React.FC<ParentalControlScreenProps> = ({
 
   const patch = (partial: Partial<ParentalSettings>) => {
     setSettings((prev) => {
+      if (partial.contacts_filter_enabled === false || partial.supervision_enabled === false) {
+        Alert.alert(
+          'Paramètre verrouillé',
+          'Les protections de supervision et de filtrage des contacts ne peuvent pas être désactivées depuis un compte mineur.',
+        );
+        return prev;
+      }
       const next = { ...prev, ...partial };
       persist(next);
       return next;
@@ -184,6 +192,12 @@ export const ParentalControlScreen: React.FC<ParentalControlScreenProps> = ({
               </Text>
               {settings.guardian_email ? (
                 <Text style={styles.guardianEmail}>Contact tuteur : {settings.guardian_email}</Text>
+              ) : null}
+              {settings.guardian_email ? (
+                <Text style={styles.guardianHint}>
+                  Votre tuteur peut ajuster le temps d&apos;écran à distance depuis Profil →
+                  Espace tuteur (même adresse email).
+                </Text>
               ) : null}
             </View>
 
@@ -345,6 +359,13 @@ function createStyles(c: AppColors) {
       color: 'rgba(255,255,255,0.75)',
       marginTop: spacing.sm,
       fontWeight: '600',
+    },
+    guardianHint: {
+      fontSize: 12,
+      color: 'rgba(255,255,255,0.7)',
+      marginTop: spacing.sm,
+      lineHeight: 18,
+      textAlign: 'center',
     },
     menuCard: {
       flexDirection: 'row',
