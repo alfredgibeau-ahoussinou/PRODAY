@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
-import { TouchableOpacity, View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
+import { PressableSpring } from '../motion/PressableSpring';
 import { Icon, type IconName } from '../ui/Icon';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { spacing, radius } from '../../theme/designTokens';
@@ -26,7 +27,7 @@ export const ProfileMenuRow: React.FC<ProfileMenuRowProps> = ({
   const styles = useMemo(() => createStyles(c), [c]);
 
   return (
-    <TouchableOpacity style={styles.row} onPress={onPress} activeOpacity={0.85}>
+    <PressableSpring style={styles.row} onPress={onPress} scaleTo={0.96} haptic>
       <View style={[styles.iconBox, danger && styles.iconBoxDanger]}>
         <Icon name={icon} size={20} color={danger ? c.brandInverse : c.text} />
       </View>
@@ -40,7 +41,7 @@ export const ProfileMenuRow: React.FC<ProfileMenuRowProps> = ({
         </View>
       ) : null}
       <Icon name="chevron-forward" size={18} color={c.textMuted} />
-    </TouchableOpacity>
+    </PressableSpring>
   );
 };
 
