@@ -10,7 +10,9 @@ export const metadata: Metadata = {
 };
 
 function parseUniverseParam(value: string | undefined): ProductLineWeb {
-  if (value === "homme" || value === "woman" || value === "pro") return value;
+  if (value === "homme" || value === "woman" || value === "pro" || value === "sante") {
+    return value;
+  }
   return "homme";
 }
 
@@ -33,10 +35,20 @@ export default async function DemoPage({
             ? "/showcase/woman/woman-discover-hero.jpg"
             : universe === "pro"
               ? "/showcase/classic-staff.jpg"
-              : "/showcase/classic-discover-hero.jpg"
+              : universe === "sante"
+                ? "/showcase/classic-exp-profile.jpg"
+                : "/showcase/classic-discover-hero.jpg"
         }
         dark={universe === "homme"}
-        accent={universe === "woman" ? "woman" : universe === "pro" ? "pro" : "default"}
+        accent={
+          universe === "woman"
+            ? "woman"
+            : universe === "pro"
+              ? "pro"
+              : universe === "sante"
+                ? "sante"
+                : "default"
+        }
       />
       <DemoPageContent universe={universe} />
     </>

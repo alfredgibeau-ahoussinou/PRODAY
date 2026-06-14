@@ -12,6 +12,7 @@ const UNIVERSE_OPTIONS: { id: ProductLineWeb; label: string }[] = [
   { id: "homme", label: "Man" },
   { id: "woman", label: "Woman" },
   { id: "pro", label: "Pro" },
+  { id: "sante", label: "Santé" },
 ];
 
 type DemoPageContentProps = {
@@ -33,12 +34,12 @@ export function DemoPageContent({ universe }: DemoPageContentProps) {
   return (
     <>
       <div className="mx-auto mb-8 flex max-w-6xl flex-col items-center gap-4 px-4">
-        <p className="text-center text-sm text-neutral-400">
-          Parcourez les 7 onglets de l&apos;app — contenu adapté à{" "}
-          <span className="font-medium text-neutral-200">{brand.name}</span>.
+        <p className="text-center text-sm text-neutral-600">
+          Maquette fidèle au nouveau design mobile — univers{" "}
+          <span className="font-semibold text-neutral-900">{brand.name}</span>.
         </p>
         <div
-          className="inline-flex rounded-full border border-neutral-800 bg-neutral-900/80 p-1"
+          className="inline-flex flex-wrap justify-center rounded-full border border-neutral-200 bg-white p-1 shadow-sm"
           role="tablist"
           aria-label="Univers ProDay"
         >
@@ -51,8 +52,8 @@ export function DemoPageContent({ universe }: DemoPageContentProps) {
                 role="tab"
                 aria-selected={active}
                 onClick={() => onUniverseChange(opt.id)}
-                className={`rounded-full px-4 py-2 text-sm font-medium transition ${
-                  active ? theme.demoTabActive : "text-neutral-400 hover:text-neutral-200"
+                className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+                  active ? `${theme.pricingAccent} text-white` : "text-neutral-500 hover:text-neutral-800"
                 }`}
               >
                 {opt.label}

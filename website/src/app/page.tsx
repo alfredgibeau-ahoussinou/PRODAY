@@ -4,6 +4,7 @@ import { ExploreGrid } from "@/components/home/ExploreGrid";
 import { TestimonialsCarousel } from "@/components/home/TestimonialsCarousel";
 import { UniversePromoGrid } from "@/components/home/UniversePromoGrid";
 import { HeroSection } from "@/components/HeroSection";
+import { PhoneDemo } from "@/components/PhoneDemo";
 import { MarqueeStrip } from "@/components/MarqueeStrip";
 import { RoleQuiz } from "@/components/interactive/RoleQuiz";
 import { FaqAccordion } from "@/components/interactive/FaqAccordion";
@@ -17,6 +18,7 @@ export default function HomePage() {
     <>
       <HeroSection />
       <MarqueeStrip />
+      <PhoneDemo />
       <StatsBar />
       <ExploreGrid />
       <TestimonialsCarousel />

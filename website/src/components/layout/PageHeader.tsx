@@ -14,7 +14,7 @@ type PageHeaderProps = {
   logo?: string;
   logoAlt?: string;
   dark?: boolean;
-  accent?: "default" | "woman" | "pro";
+  accent?: "default" | "woman" | "pro" | "sante";
 };
 
 export function PageHeader({
@@ -29,8 +29,9 @@ export function PageHeader({
 }: PageHeaderProps) {
   const isWoman = accent === "woman";
   const isPro = accent === "pro";
+  const isSante = accent === "sante";
   const hasHeroImage = Boolean(image);
-  const isDarkHero = dark || isWoman || isPro || hasHeroImage;
+  const isDarkHero = dark || isWoman || isPro || isSante || hasHeroImage;
 
   const headerBg = hasHeroImage
     ? "bg-neutral-950 text-white"
@@ -38,22 +39,28 @@ export function PageHeader({
       ? "bg-gradient-to-br from-pink-950 via-rose-900 to-neutral-900 text-white"
       : isPro
         ? "bg-gradient-to-br from-blue-950 via-blue-900 to-slate-950 text-white"
-        : dark
-          ? "bg-neutral-900 text-white"
-          : "gradient-mesh bg-[var(--proday-bg)]";
+        : isSante
+          ? "bg-gradient-to-br from-teal-950 via-teal-900 to-neutral-900 text-white"
+          : dark
+            ? "bg-neutral-900 text-white"
+            : "gradient-mesh bg-[var(--proday-bg)]";
 
   const overlayGradient = isWoman
     ? "bg-gradient-to-r from-pink-950/88 via-pink-950/45 to-pink-950/5"
     : isPro
       ? "bg-gradient-to-r from-blue-950/88 via-blue-950/45 to-blue-950/5"
-      : "bg-gradient-to-r from-neutral-950/88 via-neutral-950/40 to-neutral-950/5";
+      : isSante
+        ? "bg-gradient-to-r from-teal-950/88 via-teal-950/45 to-teal-950/5"
+        : "bg-gradient-to-r from-neutral-950/88 via-neutral-950/40 to-neutral-950/5";
 
   const kickerClass = isDarkHero
     ? isWoman
       ? "text-pink-300"
       : isPro
         ? "text-blue-300"
-        : "text-neutral-400"
+        : isSante
+          ? "text-teal-300"
+          : "text-neutral-400"
     : "text-proday-muted";
 
   const descClass = isDarkHero ? "text-white/85" : "text-proday-muted";

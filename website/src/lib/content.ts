@@ -11,12 +11,13 @@ export const BRAND = {
     "Trois univers — Man, Woman et Pro — pour couvrir tout l'écosystème foot amateur et professionnel.",
 } as const;
 
-export type ProductLineWeb = "homme" | "woman" | "pro";
+export type ProductLineWeb = "homme" | "woman" | "pro" | "sante";
 
 export const UNIVERSE_LOGOS: Record<ProductLineWeb, string> = {
   homme: "/branding/logo-man-picto.png",
   woman: "/branding/logo-woman-picto.png",
   pro: "/branding/logo-pro-picto.png",
+  sante: "/branding/logo-sante-picto.png",
 };
 
 export const HOMME_BRAND = {
@@ -245,6 +246,7 @@ export const JOURNEYS = [
 export function mercatoTabLabelForWeb(line: ProductLineWeb = "homme"): string {
   if (line === "woman") return "Mercato F";
   if (line === "pro") return "Mercato Pro";
+  if (line === "sante") return "Cabinet";
   return "Candidater";
 }
 
@@ -272,6 +274,18 @@ export const STATS = [
   { value: "∞", label: "Ambition terrain" },
 ] as const;
 
+export const SANTE_BRAND = {
+  name: "Pro Day Santé",
+  shortName: "Santé",
+  fullName: "Pro Day Santé",
+  logo: UNIVERSE_LOGOS.sante,
+  tagline: "SOIGNER • ACCOMPAGNER • PERFORMER",
+  mission:
+    "Kinés, coach mental et staff médical — annuaire santé, RDV en ligne et messagerie patients.",
+  accent: "#0F766E",
+  accentDark: "#134E4A",
+} as const;
+
 export const WOMAN_BRAND = {
   name: "ProDay Woman",
   shortName: "Woman",
@@ -287,12 +301,14 @@ export const WOMAN_BRAND = {
 export type UniverseBrand =
   | typeof HOMME_BRAND
   | typeof WOMAN_BRAND
-  | typeof PRO_BRAND;
+  | typeof PRO_BRAND
+  | typeof SANTE_BRAND;
 
 export const BRANDS_BY_LINE: Record<ProductLineWeb, UniverseBrand> = {
   homme: HOMME_BRAND,
   woman: WOMAN_BRAND,
   pro: PRO_BRAND,
+  sante: SANTE_BRAND,
 };
 
 /** Modules exclusifs Pro Day Man — joueurs foot masculin. */

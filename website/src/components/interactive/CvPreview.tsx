@@ -47,6 +47,14 @@ const CV_COPY: Record<
       "Parcours staff et certifications — vitrine pro pour le réseau vérifié ProDay.",
     image: "/showcase/classic-staff.jpg",
   },
+  sante: {
+    headerLabel: "CABINET PRODAY SANTÉ",
+    name: "Dr. Sophie Martin",
+    role: "Kinésithérapeute · Sport · Paris",
+    footer:
+      "Agenda en ligne, messagerie patients et visibilité auprès des clubs partenaires.",
+    image: "/showcase/classic-exp-profile.jpg",
+  },
 };
 
 type CvPreviewProps = {
