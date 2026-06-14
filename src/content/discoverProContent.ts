@@ -64,7 +64,7 @@ export const DISCOVER_UNIVERSE_CARDS_PRO = [
     accent: '#1E3A8A',
   },
   {
-    id: 'arena' as const,
+    id: 'gestion' as const,
     title: 'Réseau',
     subtitle: 'Clubs & mandats agent',
     image: SHOWCASE_IMAGES.coachFounder,

@@ -20,7 +20,7 @@ export const FOUNDERS = [
   {
     id: 'yoan',
     name: 'Yoan',
-    role: 'Arena & Partenariats',
+    role: 'Partenariats',
     initial: 'Y',
     accent: '#262626',
   },
@@ -82,11 +82,11 @@ export const DISCOVER_FEATURES = [
     color: '#525252',
   },
   {
-    id: 'arena',
-    title: 'Arena & Sponsors',
+    id: 'sponsors',
+    title: 'Sponsors & partenaires',
     description:
-      'Tournois, détections locales, palmarès et financement club.',
-    icon: 'trophy' as const,
+      'Offres locales, financement club et visibilité marque.',
+    icon: 'star' as const,
     color: '#0A0A0A',
   },
 ] as const;

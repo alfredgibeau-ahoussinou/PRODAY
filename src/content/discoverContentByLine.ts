@@ -36,7 +36,7 @@ export function getDiscoverCarouselCopy(line: ProductLineId): {
     return {
       label: 'Univers Woman',
       title: 'Foot féminin, un seul tap',
-      subtitle: 'Mercato F, matchs, Arena, covoiturage, santé et Shop — un seul tap',
+      subtitle: 'Mercato F, matchs, covoiturage, santé et Shop — un seul tap',
     };
   }
   if (line === 'pro') {
@@ -49,6 +49,6 @@ export function getDiscoverCarouselCopy(line: ProductLineId): {
   return {
     label: brand.name,
     title: '4 mondes, un seul tap',
-    subtitle: 'Swipez — Mercato, matchs, Arena et sponsors',
+    subtitle: 'Swipez — Mercato, matchs et sponsors',
   };
 }

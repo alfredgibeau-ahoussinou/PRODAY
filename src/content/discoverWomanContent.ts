@@ -18,7 +18,7 @@ export const DISCOVER_INTRO_SLIDES_WOMAN: DiscoverIntroSlideWoman[] = [
     id: 'welcome',
     kicker: 'PRODAY WOMAN',
     title: 'Le foot\nau féminin.',
-    body: 'Mercato F, matchs, Arena, covoiturage, pôle santé et Shop — pensé pour les joueuses.',
+    body: 'Mercato F, matchs, covoiturage, pôle santé et Shop — pensé pour les joueuses.',
     image: WOMAN_SHOWCASE_IMAGES.discoverHero,
     icon: 'heart',
     cta: 'Voir le live',
@@ -62,14 +62,6 @@ export const DISCOVER_UNIVERSE_CARDS_WOMAN = [
     image: WOMAN_SHOWCASE_IMAGES.friendlyMatch,
     icon: 'handshake' as IconName,
     accent: '#9D174D',
-  },
-  {
-    id: 'arena' as const,
-    title: 'Arena',
-    subtitle: 'Tournois filles & F',
-    image: WOMAN_SHOWCASE_IMAGES.arenaTournament,
-    icon: 'trophy' as IconName,
-    accent: '#831843',
   },
   {
     id: 'sponsors' as const,

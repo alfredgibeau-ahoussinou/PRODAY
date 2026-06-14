@@ -1,4 +1,5 @@
 import type { IconName } from '../components/ui/Icon';
+import type { ProDayModuleId } from './prodayModules';
 import { SHOWCASE_IMAGES } from './showcaseAssets';
 
 export type DiscoverChapterId =
@@ -22,7 +23,7 @@ export const DISCOVER_CHAPTERS: DiscoverChapter[] = [
   { id: 'join', label: 'Rejoindre', short: '5' },
 ];
 
-export type IntroSlideAction = 'signup' | 'live' | 'modules' | 'arena' | 'sponsors';
+export type IntroSlideAction = 'signup' | 'live' | 'modules' | 'sponsors';
 
 export interface DiscoverIntroSlide {
   id: string;
@@ -40,7 +41,7 @@ export const DISCOVER_INTRO_SLIDES: DiscoverIntroSlide[] = [
     id: 'welcome',
     kicker: 'PRO DAY MAN',
     title: 'Une saison.\nUne app.',
-    body: 'Mercato, matchs, Arena et sponsors — tout pour votre saison amateur.',
+    body: 'Mercato, matchs et sponsors — tout pour votre saison amateur.',
     image: SHOWCASE_IMAGES.discoverHero,
     icon: 'home',
     cta: 'Voir le live',
@@ -50,7 +51,7 @@ export const DISCOVER_INTRO_SLIDES: DiscoverIntroSlide[] = [
     id: 'modules',
     kicker: 'MODULES',
     title: 'Touchez.\nExplorez.',
-    body: 'Quatre piliers interactifs — swipez ou ouvrez un module en un tap.',
+    body: 'Les piliers ProDay — swipez ou ouvrez un module en un tap.',
     image: SHOWCASE_IMAGES.mercatoDetection,
     icon: 'search',
     cta: 'Les modules',
@@ -69,7 +70,7 @@ export const DISCOVER_INTRO_SLIDES: DiscoverIntroSlide[] = [
 ];
 
 export interface DiscoverUniverseCard {
-  id: 'recrutement' | 'matchs' | 'arena' | 'sponsors';
+  id: ProDayModuleId;
   title: string;
   subtitle: string;
   image: number;
@@ -93,14 +94,6 @@ export const DISCOVER_UNIVERSE_CARDS: DiscoverUniverseCard[] = [
     image: SHOWCASE_IMAGES.friendlyMatch,
     icon: 'handshake',
     accent: '#262626',
-  },
-  {
-    id: 'arena',
-    title: 'Arena',
-    subtitle: 'Tournois locaux',
-    image: SHOWCASE_IMAGES.arenaTournament,
-    icon: 'trophy',
-    accent: '#525252',
   },
   {
     id: 'sponsors',

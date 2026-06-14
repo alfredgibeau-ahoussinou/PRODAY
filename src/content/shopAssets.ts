@@ -25,6 +25,12 @@ const LINE_IMAGES: Record<ProductLineId, Record<string, ImageSourcePropType>> = 
     'jersey-home': require('../../assets/shop/pro/jersey-home.png'),
     'jersey-away': require('../../assets/shop/pro/jersey-away.png'),
   },
+  sante: {
+    'tee-classic': require('../../assets/shop/pro/tee-classic.png'),
+    'tee-training': require('../../assets/shop/pro/tee-training.png'),
+    'jersey-home': require('../../assets/shop/pro/jersey-home.png'),
+    'jersey-away': require('../../assets/shop/pro/jersey-away.png'),
+  },
 };
 
 /** Visuel catalogue pour un produit boutique. */

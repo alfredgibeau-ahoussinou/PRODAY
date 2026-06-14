@@ -42,7 +42,7 @@ export const PRODAY_PILLARS = [
   },
   {
     id: 'matches',
-    title: 'Matchs & Arena',
+    title: 'Matchs & saison',
     subtitle: 'Saison complète',
     description:
       'Matchs amicaux, tournois locaux, détections et palmarès intégrés au calendrier.',

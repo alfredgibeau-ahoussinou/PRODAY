@@ -40,4 +40,10 @@ export const PRO_BRANDING_LOGOS = {
   mark: require('../../assets/branding/logo-pro-mark-transparent.png'),
 } as const;
 
+/** Pro Day Santé — picto P teal. Libellé via `SanteLogo`. */
+export const SANTE_BRANDING_LOGOS = {
+  picto: require('../../assets/branding/logo-sante-picto.png'),
+  mark: require('../../assets/branding/logo-sante-mark-transparent.png'),
+} as const;
+
 export type BrandingLogoKey = keyof typeof BRANDING_LOGOS;

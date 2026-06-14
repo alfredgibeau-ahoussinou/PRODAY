@@ -1,6 +1,10 @@
 import type { UserRole } from '../models/User';
 import type { ProductLineId } from '../models/ProductLine';
-import { rolesForProductLine, isRoleAllowedForProductLine } from './universeRoles';
+import {
+  rolesForProductLine,
+  isRoleAllowedForProductLine,
+  productLineLabel,
+} from './universeRoles';
 import type { MainTabId } from '../navigation/mainTabConfig';
 import type { ProDayModuleId } from './prodayModules';
 import {
@@ -11,6 +15,7 @@ import {
 import { DISCOVER_UNIVERSE_CARDS } from './discoverChapters';
 import { DISCOVER_UNIVERSE_CARDS_WOMAN } from './discoverWomanContent';
 import { DISCOVER_UNIVERSE_CARDS_PRO } from './discoverProContent';
+import { DISCOVER_UNIVERSE_CARDS_SANTE } from './discoverSanteContent';
 import {
   getPhysioTabLabel,
   isMedicalPractitionerRole,
@@ -46,14 +51,8 @@ const PRO_SIGNUP_GROUPS: SignupRoleGroup[] = [
   {
     id: 'structure',
     label: 'Structures',
-    hint: 'Club, annonces Mercato Pro et tournois Arena',
+    hint: 'Club, annonces Mercato Pro et événements',
     roles: ['club', 'organizer'],
-  },
-  {
-    id: 'medical',
-    label: 'Pôle santé',
-    hint: 'Kiné, médecin, coach mental, nutrition…',
-    roles: ['physio'],
   },
   {
     id: 'partner',
@@ -63,7 +62,17 @@ const PRO_SIGNUP_GROUPS: SignupRoleGroup[] = [
   },
 ];
 
+const SANTE_SIGNUP_GROUPS: SignupRoleGroup[] = [
+  {
+    id: 'medical',
+    label: 'Praticiens',
+    hint: 'Kiné, médecin, prépa, nutrition, podologue…',
+    roles: ['physio'],
+  },
+];
+
 export function getSignupRoleGroups(line: ProductLineId): SignupRoleGroup[] {
+  if (line === 'sante') return SANTE_SIGNUP_GROUPS;
   if (line !== 'pro') return [];
   const allowed = new Set(rolesForProductLine(line));
   return PRO_SIGNUP_GROUPS.map((g) => ({
@@ -78,7 +87,7 @@ export function getDashboardLayoutKind(
   line: ProductLineId,
   role: UserRole
 ): DashboardLayoutKind {
-  if (line === 'pro') return 'pro';
+  if (line === 'pro' || line === 'sante') return 'pro';
   return role === 'player' ? 'amateur_player' : 'pro';
 }
 
@@ -89,31 +98,42 @@ export function getVisibleMainTabs(
 ): MainTabId[] {
   const r = role ?? 'player';
 
+  if (line === 'sante') {
+    return ['home', 'matchs', 'messages', 'profil'];
+  }
+
   if (line === 'pro') {
     if (r === 'sponsor') {
       return SPONSOR_MAIN_TABS;
     }
-    if (r === 'physio') {
-      return PHYSIO_MAIN_TABS;
-    }
     if (r === 'organizer') {
-      return ['home', 'recrutement', 'matchs', 'covoiturage', 'messages', 'profil'];
+      return ['home', 'recrutement', 'matchs', 'reels', 'covoiturage', 'messages', 'profil'];
     }
     if (r === 'coach' || r === 'club' || r === 'agent') {
-      return ['home', 'recrutement', 'matchs', 'covoiturage', 'messages', 'profil'];
+      return ['home', 'recrutement', 'matchs', 'reels', 'covoiturage', 'messages', 'profil'];
     }
-    return ['home', 'recrutement', 'matchs', 'messages', 'profil'];
+    return ['home', 'recrutement', 'matchs', 'reels', 'messages', 'profil'];
   }
 
   if (r === 'player') {
-    return ['home', 'recrutement', 'matchs', 'covoiturage', 'sante', 'messages', 'profil'];
+    return [
+      'home',
+      'recrutement',
+      'matchs',
+      'reels',
+      'covoiturage',
+      'sante',
+      'messages',
+      'profil',
+    ];
   }
 
-  return ['home', 'recrutement', 'matchs', 'feed', 'messages', 'profil'];
+  return ['home', 'recrutement', 'matchs', 'reels', 'feed', 'messages', 'profil'];
 }
 
 export function getMercatoTabLabel(line: ProductLineId, role?: UserRole | null): string {
   if (line === 'woman') return 'Mercato F';
+  if (line === 'sante') return 'Annuaire santé';
   if (line === 'pro') return 'Mercato Pro';
   if (role === 'player') return 'Candidater';
   return 'Mercato';
@@ -139,6 +159,7 @@ export function getTabShortLabel(
     shop: 'Shop',
     sante: 'Santé',
     feed: 'Fil',
+    reels: 'Reels',
     messages: 'Messages',
     profil: 'Profil',
   };
@@ -210,13 +231,15 @@ const LINE_MODULE_HIDE: Partial<
     player: ['sponsors', 'gestion'],
   },
   pro: {
-    coach: ['sponsors', 'arena'],
-    agent: ['sponsors', 'arena'],
-    recruiter: ['sponsors', 'arena', 'gestion'],
-    physio: ['sponsors', 'arena', 'recrutement', 'matchs', 'gestion'],
-    sponsor: ['recrutement', 'gestion', 'arena', 'matchs'],
+    coach: ['sponsors'],
+    agent: ['sponsors'],
+    recruiter: ['sponsors', 'gestion'],
+    sponsor: ['recrutement', 'gestion', 'matchs'],
     club: ['sponsors'],
     organizer: ['sponsors'],
+  },
+  sante: {
+    physio: ['sponsors', 'recrutement', 'matchs', 'gestion'],
   },
 };
 
@@ -255,7 +278,6 @@ export function getDashboardMetaForLine(
       coach: 'BANC TECHNIQUE PRO',
       agent: 'RÉSEAU AGENT PRO',
       recruiter: 'RECRUTEUR PRO',
-      physio: 'PÔLE SANTÉ PRO',
       sponsor: 'PARTENAIRES PRO',
       club: 'QG CLUB PRO',
       organizer: 'ARENA PRO',
@@ -265,19 +287,26 @@ export function getDashboardMetaForLine(
       eyebrow: proEyebrows[role] ?? meta.eyebrow,
     };
   }
+  if (line === 'sante') {
+    return {
+      ...meta,
+      eyebrow: role === 'physio' ? 'CABINET SANTÉ' : meta.eyebrow,
+    };
+  }
   return meta;
 }
 
 export function getDiscoverUniverseCardsForLine(line: ProductLineId) {
   if (line === 'woman') return DISCOVER_UNIVERSE_CARDS_WOMAN;
   if (line === 'pro') return DISCOVER_UNIVERSE_CARDS_PRO;
+  if (line === 'sante') return DISCOVER_UNIVERSE_CARDS_SANTE;
   return DISCOVER_UNIVERSE_CARDS;
 }
 
 export function assertRoleAllowedForLine(role: UserRole, line: ProductLineId): void {
   if (!isRoleAllowedForProductLine(role, line)) {
     throw new Error(
-      `Le rôle « ${role} » n’est pas disponible sur ${line === 'pro' ? 'Pro Day Pro' : line === 'woman' ? 'Pro Day Woman' : 'Pro Day Man'}.`
+      `Le rôle « ${role} » n’est pas disponible sur ${productLineLabel(line)}.`
     );
   }
 }

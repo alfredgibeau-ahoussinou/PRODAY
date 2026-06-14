@@ -7,16 +7,18 @@ export const HOMME_PRODUCT_ROLES: UserRole[] = ['player'];
 /** Rôles ProDay Woman — joueuses uniquement (foot féminin). */
 export const WOMAN_PRODUCT_ROLES: UserRole[] = ['player'];
 
-/** Rôles ProDay Pro — staff, structures, santé et partenaires. */
+/** Rôles ProDay Pro — staff foot, structures et partenaires. */
 export const PRO_PRODUCT_ROLES: UserRole[] = [
   'coach',
   'agent',
   'recruiter',
-  'physio',
   'sponsor',
   'club',
   'organizer',
 ];
+
+/** Rôles ProDay Santé — praticiens médicaux et paramédicaux. */
+export const SANTE_PRODUCT_ROLES: UserRole[] = ['physio'];
 
 export function rolesForProductLine(line: ProductLineId): UserRole[] {
   switch (line) {
@@ -24,6 +26,8 @@ export function rolesForProductLine(line: ProductLineId): UserRole[] {
       return WOMAN_PRODUCT_ROLES;
     case 'pro':
       return PRO_PRODUCT_ROLES;
+    case 'sante':
+      return SANTE_PRODUCT_ROLES;
     default:
       return HOMME_PRODUCT_ROLES;
   }
@@ -35,6 +39,7 @@ export function isRoleAllowedForProductLine(role: UserRole, line: ProductLineId)
 
 export function defaultRoleForProductLine(line: ProductLineId): UserRole {
   if (line === 'pro') return 'coach';
+  if (line === 'sante') return 'physio';
   return 'player';
 }
 
@@ -44,6 +49,8 @@ export function productLineLabel(line: ProductLineId): string {
       return 'ProDay Woman';
     case 'pro':
       return 'Pro Day Pro';
+    case 'sante':
+      return 'Pro Day Santé';
     default:
       return 'Pro Day Man';
   }

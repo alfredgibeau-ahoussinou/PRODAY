@@ -7,8 +7,7 @@ export type ProdayUniqueId =
   | 'trust'
   | 'season'
   | 'live'
-  | 'detect'
-  | 'arena';
+  | 'detect';
 
 /** Fonctionnalités exclusives ProDay — signature produit. */
 export const PRODAY_UNIQUES: {
@@ -43,7 +42,7 @@ export const PRODAY_UNIQUES: {
     id: 'season',
     title: 'Saison 360°',
     subtitle: 'Tout-en-un',
-    description: 'Recrutement, convocations, matchs amicaux et Arena.',
+    description: 'Recrutement, convocations et matchs amicaux.',
     icon: 'calendar' as IconName,
   },
   {
@@ -60,13 +59,6 @@ export const PRODAY_UNIQUES: {
     description: 'Journées de scouting dans le même calendrier que votre club.',
     icon: 'football' as IconName,
   },
-  {
-    id: 'arena',
-    title: 'Arena ProDay',
-    subtitle: 'Tournois locaux',
-    description: 'Inscrivez votre club, suivez le palmarès et brillez en fin de saison.',
-    icon: 'trophy' as IconName,
-  },
 ] as const;
 
 export const ROLE_DASHBOARD_TAGLINE: Record<UserRole, string> = {
@@ -75,7 +67,7 @@ export const ROLE_DASHBOARD_TAGLINE: Record<UserRole, string> = {
   club: 'Stages, recrutement et vie de club.',
   agent: 'Repérez, convoquez, placez.',
   recruiter: 'Scouting, annonces Mercato et suivi candidatures.',
-  organizer: 'Animez tournois et écosystème local.',
+  organizer: 'Animez détections et écosystème local.',
   sponsor: 'Soutenez les clubs de votre territoire.',
   physio: 'Kiné, ostéo, médecin du sport — fil ProDay.',
 };

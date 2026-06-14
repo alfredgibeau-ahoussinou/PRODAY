@@ -24,10 +24,10 @@ export const PLAN_IDS_BY_LINE: Record<ProductLineId, SubscriptionPlanId[]> = {
     'coach_pro',
     'club_pro',
     'agent_elite',
-    'physio_pro',
     'organizer_pro',
     'sponsor_pro',
   ],
+  sante: ['physio_pro'],
 };
 
 const LINE_PLAN_PATCHES: Record<
@@ -161,18 +161,18 @@ const LINE_PLAN_PATCHES: Record<
     },
     organizer_pro: {
       label: 'Organisateur Pro',
-      tagline: 'Tournois Arena Pro, inscriptions et palmarès',
-      mercatoQuotaLabel: 'Tournois Arena actifs',
+      tagline: 'Événements Pro, détections et visibilité locale',
+      mercatoQuotaLabel: 'Événements actifs',
       freeIncludes: [
         'Profil organisateur vérifié',
-        '1 tournoi Arena Pro actif',
-        'Inscriptions en ligne',
-        'Palmarès publié',
+        '1 événement Pro actif',
+        'Détections publiées',
+        'Calendrier local',
       ],
       proIncludes: [
-        'Tournois Arena illimités',
+        'Événements illimités',
         'Visibilité sponsors intégrée',
-        'Exports participants',
+        'Relances participants',
         'Priorité fil événements Pro',
       ],
     },
@@ -191,6 +191,25 @@ const LINE_PLAN_PATCHES: Record<
         'Logo onglet Sponsors',
         'Campagnes locales ciblées',
         'Push géolocalisé (à venir)',
+      ],
+    },
+  },
+  sante: {
+    physio_pro: {
+      label: 'Cabinet Santé',
+      tagline: 'Agenda RDV, patients et visibilité clubs',
+      mercatoQuotaLabel: 'Messages patients',
+      freeIncludes: [
+        'Profil praticien et vérification',
+        'Spécialité et zone d\'intervention',
+        'Visibilité annuaire santé (base)',
+        'Messagerie patients limitée',
+      ],
+      proIncludes: [
+        'Visibilité prioritaire près des clubs',
+        'Messagerie patients complète',
+        'Prise de rendez-vous via l\'app',
+        'Commission 10 % uniquement si RDV conclu',
       ],
     },
   },

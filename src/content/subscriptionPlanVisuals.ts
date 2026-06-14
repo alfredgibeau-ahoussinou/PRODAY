@@ -13,7 +13,7 @@ export type SubscriptionVisualVariant =
   | 'club'
   | 'agent_premium'
   | 'medical'
-  | 'arena'
+  | 'organizer'
   | 'sponsor';
 
 export interface SubscriptionPlanVisual {
@@ -198,10 +198,10 @@ const VISUALS: Record<SubscriptionVisualVariant, SubscriptionPlanVisual> = {
     priceStyle: 'medical',
     proHighlight: 'RDV en ligne',
   },
-  arena: {
-    variant: 'arena',
-    icon: 'trophy',
-    eyebrow: 'Arena & tournois',
+  organizer: {
+    variant: 'organizer',
+    icon: 'calendar',
+    eyebrow: 'Événements & détections',
     screenTitle: 'Organisateur Pro',
     heroMode: 'dark',
     primary: '#7C3AED',
@@ -212,13 +212,13 @@ const VISUALS: Record<SubscriptionVisualVariant, SubscriptionPlanVisual> = {
     onPrimary: '#FFFFFF',
     rootBg: '#FAF5FF',
     freeColumnTitle: 'Orga gratuit',
-    compareTitle: 'Tournois Arena — comparer',
-    quotaTitle: 'Tournois actifs',
+    compareTitle: 'Événements — comparer',
+    quotaTitle: 'Événements actifs',
     ctaVerb: 'Activer Organisateur Pro',
-    featureIconFree: 'trophy',
+    featureIconFree: 'calendar',
     featureIconPro: 'star',
     priceStyle: 'standard',
-    proHighlight: 'Arena illimitée',
+    proHighlight: 'Événements illimités',
   },
   sponsor: {
     variant: 'sponsor',
@@ -256,7 +256,7 @@ const PLAN_VARIANT: Record<SubscriptionPlanId, SubscriptionVisualVariant> = {
   club_pro: 'club',
   agent_elite: 'agent_premium',
   physio_pro: 'medical',
-  organizer_pro: 'arena',
+  organizer_pro: 'organizer',
   sponsor_pro: 'sponsor',
 };
 
