@@ -19,5 +19,8 @@
     "index.js",
     "src/**/*"
   ],
+  "exclude": [
+    "src/proday-next/**"
+  ],
   "extends": "expo/tsconfig.base"
 }
