@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
-  Modal,
   View,
   Text,
   TextInput,
@@ -9,6 +8,8 @@ import {
   ScrollView,
   ActivityIndicator,
 } from 'react-native';
+import { AnimatedModalShell } from '../motion/AnimatedModalShell';
+import { AnimatedDialogShell } from '../motion/AnimatedDialogShell';
 import type { User, UserRole, VerificationStatus } from '../../models/User';
 import { ROLES_REQUIRING_VERIFICATION } from '../../models/User';
 import { useAdminStyles } from './adminStyles';
@@ -57,9 +58,8 @@ export const AdminUserEditModal: React.FC<AdminUserEditModalProps> = ({
   if (!user) return null;
 
   return (
-    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-      <View style={styles.overlay}>
-        <View style={styles.sheet}>
+    <AnimatedModalShell visible={visible} onClose={onClose} closeLabel="Fermer">
+      <View style={styles.sheetInner}>
           <Text style={styles.title}>Modifier l&apos;utilisateur</Text>
           <Text style={styles.sub}>{user.email}</Text>
           <ScrollView keyboardShouldPersistTaps="handled">
@@ -138,9 +138,8 @@ export const AdminUserEditModal: React.FC<AdminUserEditModalProps> = ({
               )}
             </TouchableOpacity>
           </View>
-        </View>
       </View>
-    </Modal>
+    </AnimatedModalShell>
   );
 };
 
@@ -164,9 +163,8 @@ export const AdminRejectModal: React.FC<AdminRejectModalProps> = ({
   const [reason, setReason] = useState('');
 
   return (
-    <Modal visible={visible} animationType="fade" transparent onRequestClose={onClose}>
-      <View style={styles.overlay}>
-        <View style={styles.sheet}>
+    <AnimatedDialogShell visible={visible} onClose={onClose}>
+        <View style={[styles.sheet, { backgroundColor: c.surface }]}>
           <Text style={styles.title}>Rejeter la vérification</Text>
           <Text style={styles.sub}>{userName}</Text>
           <TextInput
@@ -194,24 +192,22 @@ export const AdminRejectModal: React.FC<AdminRejectModalProps> = ({
             </TouchableOpacity>
           </View>
         </View>
-      </View>
-    </Modal>
+    </AnimatedDialogShell>
   );
 };
 
 function createStyles(c: AppColors) {
   return StyleSheet.create({
-    overlay: {
+    sheetInner: {
       flex: 1,
-      backgroundColor: 'rgba(0,0,0,0.5)',
-      justifyContent: 'flex-end',
+      paddingHorizontal: spacing.lg,
+      paddingBottom: spacing.lg,
     },
     sheet: {
-      backgroundColor: c.surface,
-      borderTopLeftRadius: radius.xl,
-      borderTopRightRadius: radius.xl,
+      borderRadius: radius.xl,
       padding: spacing.lg,
-      maxHeight: '85%',
+      borderWidth: 1,
+      borderColor: c.border,
     },
     title: { fontSize: 20, fontWeight: '900', color: c.text },
     sub: { fontSize: 13, color: c.textMuted, marginBottom: spacing.md },

@@ -12,9 +12,10 @@ export function WomanSpaceDefaults() {
   const { appSpace, setAppSpace } = useAppSpace();
 
   useEffect(() => {
-    if (!isAppSpaceAllowedForProductLine(appSpace, productLine)) {
-      void setAppSpace(defaultAppSpaceForProductLine(productLine));
-    }
+    if (isAppSpaceAllowedForProductLine(appSpace, productLine)) return;
+    const next = defaultAppSpaceForProductLine(productLine);
+    if (next === appSpace) return;
+    void setAppSpace(next);
   }, [productLine, appSpace, setAppSpace]);
 
   return null;

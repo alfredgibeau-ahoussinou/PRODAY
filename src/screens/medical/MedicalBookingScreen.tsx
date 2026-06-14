@@ -3,12 +3,12 @@ import {
   View,
   Text,
   ScrollView,
-  TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
   TextInput,
   Alert,
 } from 'react-native';
+import { PressableSpring } from '../../components/motion';
 import type { User } from '../../models/User';
 import { ScreenHeader } from '../../components/ui/ScreenHeader';
 import { Icon } from '../../components/ui/Icon';
@@ -21,6 +21,8 @@ import {
 import { spacing, radius } from '../../theme/designTokens';
 import { useMedicalStyles } from '../../components/medical/medicalStyles';
 import type { AppColors } from '../../theme/universeTheme';
+import { isV3ShellEnabled } from '../../config/featureFlags';
+import { recordV3UserAction } from '../../utils/recordV3Action';
 
 interface MedicalBookingScreenProps {
   physio: User;
@@ -74,6 +76,9 @@ export const MedicalBookingScreen: React.FC<MedicalBookingScreenProps> = ({
         'Demande envoyée',
         `${physio.display_name} confirmera votre rendez-vous du ${formatAppointmentDay(selectedSlot)} à ${formatSlotLabel(selectedSlot)}.`
       );
+      if (isV3ShellEnabled()) {
+        recordV3UserAction(patient, 'book_health');
+      }
       onBooked?.();
       onBack();
     } catch (e) {
@@ -111,7 +116,7 @@ export const MedicalBookingScreen: React.FC<MedicalBookingScreenProps> = ({
           {days.map((day) => {
             const active = day.toDateString() === selectedDay.toDateString();
             return (
-              <TouchableOpacity
+              <PressableSpring
                 key={day.toISOString()}
                 style={[styles.dayChip, active && styles.dayChipActive]}
                 onPress={() => setSelectedDay(day)}
@@ -119,7 +124,7 @@ export const MedicalBookingScreen: React.FC<MedicalBookingScreenProps> = ({
                 <Text style={[styles.dayChipText, active && styles.dayChipTextActive]}>
                   {formatAppointmentDay(day)}
                 </Text>
-              </TouchableOpacity>
+              </PressableSpring>
             );
           })}
         </ScrollView>
@@ -134,7 +139,7 @@ export const MedicalBookingScreen: React.FC<MedicalBookingScreenProps> = ({
             {slots.map((slot) => {
               const active = selectedSlot?.getTime() === slot.getTime();
               return (
-                <TouchableOpacity
+                <PressableSpring
                   key={slot.toISOString()}
                   style={[styles.slotChip, active && styles.slotChipActive]}
                   onPress={() => setSelectedSlot(slot)}
@@ -142,7 +147,7 @@ export const MedicalBookingScreen: React.FC<MedicalBookingScreenProps> = ({
                   <Text style={[styles.slotText, active && styles.slotTextActive]}>
                     {formatSlotLabel(slot)}
                   </Text>
-                </TouchableOpacity>
+                </PressableSpring>
               );
             })}
           </View>
@@ -158,7 +163,7 @@ export const MedicalBookingScreen: React.FC<MedicalBookingScreenProps> = ({
           multiline
         />
 
-        <TouchableOpacity
+        <PressableSpring
           style={[styles.bookBtn, (!selectedSlot || booking) && styles.bookBtnDisabled]}
           onPress={() => void handleBook()}
           disabled={!selectedSlot || booking}
@@ -175,7 +180,7 @@ export const MedicalBookingScreen: React.FC<MedicalBookingScreenProps> = ({
               </Text>
             </>
           )}
-        </TouchableOpacity>
+        </PressableSpring>
       </ScrollView>
     </View>
   );
@@ -245,7 +250,7 @@ function createStyles(c: AppColors) {
       backgroundColor: c.surface,
       alignItems: 'center',
     },
-    slotChipActive: { backgroundColor: '#0F766E', borderColor: '#0F766E' },
+    slotChipActive: { backgroundColor: c.accent, borderColor: c.accent },
     slotText: { fontSize: 13, fontWeight: '800', color: c.text },
     slotTextActive: { color: c.brandInverse },
     motifInput: {
@@ -264,7 +269,7 @@ function createStyles(c: AppColors) {
       alignItems: 'center',
       justifyContent: 'center',
       gap: spacing.sm,
-      backgroundColor: '#0F766E',
+      backgroundColor: c.accent,
       borderRadius: radius.lg,
       paddingVertical: spacing.md,
     },

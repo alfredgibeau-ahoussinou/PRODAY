@@ -3,13 +3,13 @@ import {
   View,
   Text,
   ScrollView,
-  TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
   RefreshControl,
   Alert,
   TextInput,
 } from 'react-native';
+import { PressableSpring } from '../../components/motion';
 import { useSessionProfile } from '../../hooks/useSessionProfile';
 import { useSponsorDashboard } from '../../hooks/useSponsorDashboard';
 import { SponsorScreenHeader } from '../../components/sponsor/SponsorScreenHeader';
@@ -152,10 +152,10 @@ export const SponsorCampaignsScreen: React.FC = () => {
         subtitle="Gérez vos offres, financez les clubs et suivez vos contributions."
       />
 
-      <TouchableOpacity style={styles.createBtn} onPress={() => setShowCreate(true)}>
+      <PressableSpring style={styles.createBtn} onPress={() => setShowCreate(true)}>
         <Icon name="add" size={18} color={SPONSOR_THEME.onPrimary} />
         <Text style={styles.createBtnText}>Nouvelle offre partenaire</Text>
-      </TouchableOpacity>
+      </PressableSpring>
 
       <View style={styles.filters}>
         {(
@@ -165,13 +165,13 @@ export const SponsorCampaignsScreen: React.FC = () => {
             { id: 'all' as const, label: 'Écosystème' },
           ] as const
         ).map((f) => (
-          <TouchableOpacity
+          <PressableSpring
             key={f.id}
             style={[styles.filterChip, filter === f.id && styles.filterChipOn]}
             onPress={() => setFilter(f.id)}
           >
             <Text style={[styles.filterText, filter === f.id && styles.filterTextOn]}>{f.label}</Text>
-          </TouchableOpacity>
+          </PressableSpring>
         ))}
       </View>
 
@@ -212,22 +212,22 @@ export const SponsorCampaignsScreen: React.FC = () => {
           <View style={styles.clubToolbar}>
             <Text style={[styles.sectionTitle, styles.sectionGap]}>Campagnes clubs</Text>
             <View style={styles.clubFilters}>
-              <TouchableOpacity
+              <PressableSpring
                 style={[styles.miniChip, urgentOnly && styles.miniChipOn]}
                 onPress={() => setUrgentOnly((v) => !v)}
               >
                 <Text style={[styles.miniChipText, urgentOnly && styles.miniChipTextOn]}>
                   Urgentes
                 </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
+              </PressableSpring>
+              <PressableSpring
                 style={styles.miniChip}
                 onPress={() => setClubSort((s) => (s === 'progress' ? 'amount' : 'progress'))}
               >
                 <Text style={styles.miniChipText}>
                   Tri : {clubSort === 'progress' ? '% atteint' : 'montant'}
                 </Text>
-              </TouchableOpacity>
+              </PressableSpring>
             </View>
           </View>
           {sortedGoals.length === 0 ? (
@@ -259,18 +259,18 @@ export const SponsorCampaignsScreen: React.FC = () => {
                         value={amount}
                         onChangeText={setAmount}
                       />
-                      <TouchableOpacity
+                      <PressableSpring
                         style={styles.contribBtn}
                         onPress={() => void handleContribute()}
                         disabled={contributing}
                       >
                         <Text style={styles.contribBtnText}>{contributing ? '…' : 'Soutenir'}</Text>
-                      </TouchableOpacity>
+                      </PressableSpring>
                     </View>
                   ) : (
-                    <TouchableOpacity style={styles.supportBtn} onPress={() => setContributeId(goal.id)}>
+                    <PressableSpring style={styles.supportBtn} onPress={() => setContributeId(goal.id)}>
                       <Text style={styles.supportBtnText}>Financer ce club</Text>
-                    </TouchableOpacity>
+                    </PressableSpring>
                   )}
                 </View>
               );

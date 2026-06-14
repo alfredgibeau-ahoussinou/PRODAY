@@ -23,6 +23,10 @@ import { TAB_BAR_CONTENT_INSET } from '../../components/navigation/BottomTabBar'
 import { SPONSOR_THEME } from '../../content/sponsorExperience';
 import { spacing, radius } from '../../theme/designTokens';
 import type { SponsorOffer } from '../../models/SponsorOffer';
+import { V3TabShell } from '../../components/v3/V3TabShell';
+import { isV3ShellEnabled } from '../../config/featureFlags';
+import { useSectionIntelligence } from '../../hooks/useSectionIntelligence';
+import { useAppTheme } from '../../context/ProductLineContext';
 
 interface SponsorDashboardScreenProps {
   profile: User;
@@ -30,7 +34,9 @@ interface SponsorDashboardScreenProps {
 
 export const SponsorDashboardScreen: React.FC<SponsorDashboardScreenProps> = ({ profile }) => {
   const nav = useTabNavigationActions();
+  const { productLine } = useAppTheme();
   const { count: unreadCount } = useUnreadMessageCount();
+  const useV3Header = isV3ShellEnabled();
   const company = profile.profile.job_title ?? profile.display_name;
   const {
     activeOffers,
@@ -44,6 +50,11 @@ export const SponsorDashboardScreen: React.FC<SponsorDashboardScreenProps> = ({ 
   } = useSponsorDashboard(profile.uid, company);
   const [refreshing, setRefreshing] = useState(false);
   const [detailOffer, setDetailOffer] = useState<SponsorOffer | null>(null);
+  const intelligence = useSectionIntelligence('home', profile, productLine, {
+    sponsorLeads: stats.leads,
+    activeOffers: stats.activeOffers,
+    unreadMessages: unreadCount,
+  });
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -61,94 +72,118 @@ export const SponsorDashboardScreen: React.FC<SponsorDashboardScreenProps> = ({ 
     );
   }
 
+  const dashboardScroll = (
+    <ScrollView
+      contentContainerStyle={styles.content}
+      showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} tintColor={SPONSOR_THEME.primary} />
+      }
+    >
+      <SponsorHomeTopBar
+        profile={profile}
+        unreadMessages={unreadCount}
+        onMessagesPress={() => nav.setActiveTab('messages')}
+        onProfilePress={() => nav.setActiveTab('profil')}
+      />
+
+      {!useV3Header ? (
+        <>
+          <SponsorScreenHeader
+            title={`Bonjour, ${company}`}
+            subtitle="Tableau de bord marque — performance, offres et réseau local."
+          />
+          <View style={styles.statsRow}>
+            <StatCard label="Offres actives" value={String(stats.activeOffers)} />
+            <StatCard label="Contacts" value={String(stats.leads)} highlight={stats.leads > 0} />
+            <StatCard label="Soutien" value={`${stats.totalFunded} €`} />
+          </View>
+        </>
+      ) : null}
+
+      {analytics ? <SponsorAnalyticsPanel analytics={analytics} /> : null}
+
+      <View style={styles.quickRow}>
+        <QuickAction icon="add" label="Offre" onPress={() => nav.setActiveTab('matchs')} />
+        <QuickAction icon="briefcase" label="Campagnes" onPress={() => nav.setActiveTab('matchs')} />
+        <QuickAction icon="chat" label="Réseau" onPress={() => nav.setActiveTab('messages')} />
+        <QuickAction icon="people" label="Prospects" onPress={() => nav.setActiveTab('messages')} />
+      </View>
+
+      <SponsorActivityFeed items={activity} />
+
+      {loading ? <ActivityIndicator color={SPONSOR_THEME.primary} style={styles.loader} /> : null}
+
+      <Text style={styles.sectionTitle}>Mes offres</Text>
+      {myOffers.length === 0 ? (
+        <View style={styles.emptyCard}>
+          <Icon name="briefcase" size={24} color={SPONSOR_THEME.primary} />
+          <Text style={styles.emptyTitle}>Publiez votre première offre</Text>
+          <Text style={styles.emptySub}>
+            Équipement, visibilité ou financement — touchez les clubs de votre zone.
+          </Text>
+          <TouchableOpacity style={styles.cta} onPress={() => nav.setActiveTab('matchs')}>
+            <Text style={styles.ctaText}>Créer une offre</Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        activeOffers.slice(0, 3).map((offer) => (
+          <SponsorOfferCard
+            key={offer.id}
+            offer={offer}
+            owned
+            onPress={() => setDetailOffer(offer)}
+          />
+        ))
+      )}
+
+      {prospects.length > 0 ? (
+        <>
+          <Text style={[styles.sectionTitle, styles.sectionGap]}>Clubs à contacter</Text>
+          {prospects.slice(0, 3).map((p) => (
+            <TouchableOpacity
+              key={p.id}
+              style={styles.prospectCard}
+              onPress={() => nav.setActiveTab('messages')}
+            >
+              <View style={styles.prospectScore}>
+                <Text style={styles.prospectScoreText}>{p.match_score}</Text>
+              </View>
+              <View style={styles.prospectBody}>
+                <Text style={styles.prospectName}>{p.name}</Text>
+                <Text style={styles.prospectMeta}>
+                  {p.city} · {p.category}
+                </Text>
+                <Text style={styles.prospectReason}>{p.reason}</Text>
+              </View>
+              <Icon name="chevron-forward" size={16} color={SPONSOR_THEME.textMuted} />
+            </TouchableOpacity>
+          ))}
+        </>
+      ) : null}
+    </ScrollView>
+  );
+
   return (
     <View style={styles.root}>
-      <ScrollView
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} tintColor={SPONSOR_THEME.primary} />
-        }
-      >
-        <SponsorHomeTopBar
-          profile={profile}
-          unreadMessages={unreadCount}
-          onMessagesPress={() => nav.setActiveTab('messages')}
-          onProfilePress={() => nav.setActiveTab('profil')}
-        />
-
-        <SponsorScreenHeader
+      {useV3Header ? (
+        <V3TabShell
+          caption="Partenaires"
           title={`Bonjour, ${company}`}
-          subtitle="Tableau de bord marque — performance, offres et réseau local."
-        />
-
-        {analytics ? <SponsorAnalyticsPanel analytics={analytics} /> : null}
-
-        <View style={styles.statsRow}>
-          <StatCard label="Offres actives" value={String(stats.activeOffers)} />
-          <StatCard label="Contacts" value={String(stats.leads)} highlight={stats.leads > 0} />
-          <StatCard label="Soutien" value={`${stats.totalFunded} €`} />
-        </View>
-
-        <View style={styles.quickRow}>
-          <QuickAction icon="add" label="Offre" onPress={() => nav.setActiveTab('matchs')} />
-          <QuickAction icon="briefcase" label="Campagnes" onPress={() => nav.setActiveTab('matchs')} />
-          <QuickAction icon="chat" label="Réseau" onPress={() => nav.setActiveTab('messages')} />
-          <QuickAction icon="people" label="Prospects" onPress={() => nav.setActiveTab('messages')} />
-        </View>
-
-        <SponsorActivityFeed items={activity} />
-
-        {loading ? <ActivityIndicator color={SPONSOR_THEME.primary} style={styles.loader} /> : null}
-
-        <Text style={styles.sectionTitle}>Mes offres</Text>
-        {myOffers.length === 0 ? (
-          <View style={styles.emptyCard}>
-            <Icon name="briefcase" size={24} color={SPONSOR_THEME.primary} />
-            <Text style={styles.emptyTitle}>Publiez votre première offre</Text>
-            <Text style={styles.emptySub}>
-              Équipement, visibilité ou financement — touchez les clubs de votre zone.
-            </Text>
-            <TouchableOpacity style={styles.cta} onPress={() => nav.setActiveTab('matchs')}>
-              <Text style={styles.ctaText}>Créer une offre</Text>
-            </TouchableOpacity>
-          </View>
-        ) : (
-          activeOffers.slice(0, 3).map((offer) => (
-            <SponsorOfferCard
-              key={offer.id}
-              offer={offer}
-              owned
-              onPress={() => setDetailOffer(offer)}
-            />
-          ))
-        )}
-
-        {prospects.length > 0 ? (
-          <>
-            <Text style={[styles.sectionTitle, styles.sectionGap]}>Clubs à contacter</Text>
-            {prospects.slice(0, 3).map((p) => (
-              <TouchableOpacity
-                key={p.id}
-                style={styles.prospectCard}
-                onPress={() => nav.setActiveTab('messages')}
-              >
-                <View style={styles.prospectScore}>
-                  <Text style={styles.prospectScoreText}>{p.match_score}</Text>
-                </View>
-                <View style={styles.prospectBody}>
-                  <Text style={styles.prospectName}>{p.name}</Text>
-                  <Text style={styles.prospectMeta}>
-                    {p.city} · {p.category}
-                  </Text>
-                  <Text style={styles.prospectReason}>{p.reason}</Text>
-                </View>
-                <Icon name="chevron-forward" size={16} color={SPONSOR_THEME.textMuted} />
-              </TouchableOpacity>
-            ))}
-          </>
-        ) : null}
-      </ScrollView>
+          subtitle="Performance, offres et réseau local"
+          flat
+          intelligence={intelligence}
+          stats={[
+            { value: String(stats.activeOffers), label: 'Offres' },
+            { value: String(stats.leads), label: 'Contacts', highlight: stats.leads > 0 },
+            { value: `${stats.totalFunded} €`, label: 'Soutien' },
+          ]}
+        >
+          {dashboardScroll}
+        </V3TabShell>
+      ) : (
+        dashboardScroll
+      )}
     </View>
   );
 };

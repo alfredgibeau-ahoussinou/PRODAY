@@ -3,9 +3,7 @@ import {
   View,
   Text,
   ScrollView,
-  TouchableOpacity,
   StyleSheet,
-  ActivityIndicator,
   RefreshControl,
   Alert,
 } from 'react-native';
@@ -22,10 +20,13 @@ import { TAB_BAR_CONTENT_INSET } from '../../components/navigation/BottomTabBar'
 import { spacing, radius } from '../../theme/designTokens';
 import { MEDICAL_THEME } from '../../content/medicalExperience';
 import { useMedicalStyles } from '../../components/medical/medicalStyles';
-import { PushScreenTransition } from '../../components/motion';
+import { PressableSpring, PushScreenTransition, SkeletonList, StaggerReveal } from '../../components/motion';
 import { PhysioAvailabilityScreen } from './PhysioAvailabilityScreen';
 import { isPhysioBookingEnabled } from '../../services/medicalAppointments.service';
 import type { AppColors } from '../../theme/universeTheme';
+import { V3TabShell } from '../../components/v3/V3TabShell';
+import { isV3ShellEnabled } from '../../config/featureFlags';
+import { useSectionIntelligence } from '../../hooks/useSectionIntelligence';
 
 interface PhysioDashboardScreenProps {
   profile: User;
@@ -41,6 +42,12 @@ export const PhysioDashboardScreen: React.FC<PhysioDashboardScreenProps> = ({ pr
   const [refreshing, setRefreshing] = useState(false);
   const [showAvailability, setShowAvailability] = useState(false);
   const bookingOnline = isPhysioBookingEnabled(profile);
+  const useV3Header = isV3ShellEnabled();
+  const intelligence = useSectionIntelligence('home', profile, 'sante', {
+    pendingAppointments: pendingCount,
+    todayAppointments: todayAppointments.length,
+    unreadMessages: unreadCount,
+  });
 
   const specialty =
     profile.profile.medical_specialty ?? profile.profile.job_title ?? 'Praticien';
@@ -92,116 +99,120 @@ export const PhysioDashboardScreen: React.FC<PhysioDashboardScreenProps> = ({ pr
     label: string;
     onPress: () => void;
   }> = ({ icon, label, onPress }) => (
-    <TouchableOpacity style={styles.quickAction} onPress={onPress}>
+    <PressableSpring style={styles.quickAction} onPress={onPress} scaleTo={0.96} haptic>
       <Icon name={icon} size={18} color="#0F766E" />
       <Text style={styles.quickLabel}>{label}</Text>
-    </TouchableOpacity>
+    </PressableSpring>
   );
 
-  return (
-    <View style={[styles.root, rootStyle]}>
-      <ScrollView
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={() => void onRefresh()}
-            tintColor="#0F766E"
+  const dashboardScroll = (
+    <ScrollView
+      contentContainerStyle={styles.content}
+      showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={() => void onRefresh()}
+          tintColor="#0F766E"
+        />
+      }
+    >
+      <PhysioHomeTopBar
+        profile={profile}
+        unreadMessages={unreadCount}
+        onMessagesPress={goMessages}
+        onCabinetPress={goProfile}
+      />
+
+      {!useV3Header ? (
+        <>
+          <PhysioScreenHeader
+            title="Bonjour"
+            subtitle={`${specialty}${profile.city ? ` · ${profile.city}` : ''} — votre journée de consultations.`}
           />
-        }
-      >
-        <PhysioHomeTopBar
-          profile={profile}
-          unreadMessages={unreadCount}
-          onMessagesPress={goMessages}
-          onCabinetPress={goProfile}
-        />
-
-        <PhysioScreenHeader
-          title="Bonjour"
-          subtitle={`${specialty}${profile.city ? ` · ${profile.city}` : ''} — votre journée de consultations.`}
-        />
-
-        <View style={styles.statsRow}>
-          <StatCard label="Aujourd'hui" value={String(todayAppointments.length)} />
-          <StatCard label="En attente" value={String(pendingCount)} highlight={pendingCount > 0} />
-          <StatCard label="Patients" value={String(uniquePatients.length)} />
-        </View>
-
-        <View style={styles.bookingBanner}>
-          <Icon name="calendar" size={18} color={bookingOnline ? '#0F766E' : c.textMuted} />
-          <Text style={styles.bookingBannerText}>
-            {bookingOnline
-              ? 'RDV en ligne actifs — les joueurs peuvent réserver'
-              : 'RDV en ligne désactivés — activez vos créneaux'}
-          </Text>
-          <TouchableOpacity style={styles.bookingBannerBtn} onPress={() => setShowAvailability(true)}>
-            <Text style={styles.bookingBannerBtnText}>Créneaux</Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.quickRow}>
-          <QuickAction icon="chat" label="Patients" onPress={goMessages} />
-          <QuickAction icon="calendar" label="Agenda" onPress={goAgenda} />
-          <QuickAction icon="settings" label="Créneaux" onPress={() => setShowAvailability(true)} />
-        </View>
-
-        {loading ? <ActivityIndicator color={MEDICAL_THEME.primary} style={styles.loader} /> : null}
-
-        <Text style={styles.sectionTitle}>Rendez-vous du jour</Text>
-        {todayAppointments.length === 0 ? (
-          <View style={styles.emptyCard}>
-            <Icon name="calendar" size={28} color={c.textMuted} />
-            <Text style={styles.emptyTitle}>Aucun RDV aujourd'hui</Text>
-            <Text style={styles.emptySub}>
-              Les joueurs réservent depuis l'onglet Santé. Consultez l'agenda pour la semaine.
-            </Text>
-            <TouchableOpacity style={styles.agendaLink} onPress={goAgenda}>
-              <Text style={styles.agendaLinkText}>Voir l'agenda</Text>
-            </TouchableOpacity>
+          <View style={styles.statsRow}>
+            <StatCard label="Aujourd'hui" value={String(todayAppointments.length)} />
+            <StatCard label="En attente" value={String(pendingCount)} highlight={pendingCount > 0} />
+            <StatCard label="Patients" value={String(uniquePatients.length)} />
           </View>
-        ) : (
-          todayAppointments.map((appt) => (
+        </>
+      ) : null}
+
+      <View style={styles.bookingBanner}>
+        <Icon name="calendar" size={18} color={bookingOnline ? '#0F766E' : c.textMuted} />
+        <Text style={styles.bookingBannerText}>
+          {bookingOnline
+            ? 'RDV en ligne actifs — les joueurs peuvent réserver'
+            : 'RDV en ligne désactivés — activez vos créneaux'}
+        </Text>
+        <PressableSpring
+          style={styles.bookingBannerBtn}
+          onPress={() => setShowAvailability(true)}
+          scaleTo={0.96}
+          haptic
+        >
+          <Text style={styles.bookingBannerBtnText}>Créneaux</Text>
+        </PressableSpring>
+      </View>
+
+      <View style={styles.quickRow}>
+        <QuickAction icon="chat" label="Patients" onPress={goMessages} />
+        <QuickAction icon="calendar" label="Agenda" onPress={goAgenda} />
+        <QuickAction icon="settings" label="Créneaux" onPress={() => setShowAvailability(true)} />
+      </View>
+
+      {loading ? <SkeletonList count={2} variant="card" /> : null}
+
+      <Text style={styles.sectionTitle}>Rendez-vous du jour</Text>
+      {todayAppointments.length === 0 ? (
+        <View style={styles.emptyCard}>
+          <Icon name="calendar" size={28} color={c.textMuted} />
+          <Text style={styles.emptyTitle}>Aucun RDV aujourd'hui</Text>
+          <Text style={styles.emptySub}>
+            Les joueurs réservent depuis l'onglet Santé. Consultez l'agenda pour la semaine.
+          </Text>
+          <PressableSpring style={styles.agendaLink} onPress={goAgenda} scaleTo={0.97} haptic>
+            <Text style={styles.agendaLinkText}>Voir l'agenda</Text>
+          </PressableSpring>
+        </View>
+      ) : (
+        todayAppointments.map((appt, index) => (
+          <StaggerReveal key={appt.id} index={index}>
             <MedicalAppointmentCard
-              key={appt.id}
               appointment={appt}
               mode="physio"
               onConfirm={() => void updateStatus(appt.id, 'confirmed')}
               onCancel={() => void updateStatus(appt.id, 'cancelled')}
               onComplete={() => void updateStatus(appt.id, 'completed')}
             />
-          ))
-        )}
+          </StaggerReveal>
+        ))
+      )}
 
-        {pendingCount > 0 ? (
-          <>
-            <Text style={[styles.sectionTitle, styles.sectionGap]}>
-              Demandes à traiter
-            </Text>
-            {appointments
-              .filter((a) => a.status === 'pending')
-              .map((appt) => (
+      {pendingCount > 0 ? (
+        <>
+          <Text style={[styles.sectionTitle, styles.sectionGap]}>Demandes à traiter</Text>
+          {appointments
+            .filter((a) => a.status === 'pending')
+            .map((appt, index) => (
+              <StaggerReveal key={`pending-${appt.id}`} index={index}>
                 <MedicalAppointmentCard
-                  key={`pending-${appt.id}`}
                   appointment={appt}
                   mode="physio"
                   onConfirm={() => void updateStatus(appt.id, 'confirmed')}
                   onCancel={() => void updateStatus(appt.id, 'cancelled')}
                 />
-              ))}
-          </>
-        ) : null}
+              </StaggerReveal>
+            ))}
+        </>
+      ) : null}
 
-        {uniquePatients.length > 0 ? (
-          <>
-            <Text style={[styles.sectionTitle, styles.sectionGap]}>Sportifs suivis</Text>
-            {uniquePatients.map((p) => (
-              <TouchableOpacity
-                key={p.uid}
-                style={styles.patientRow}
-                onPress={goMessages}
-              >
+      {uniquePatients.length > 0 ? (
+        <>
+          <Text style={[styles.sectionTitle, styles.sectionGap]}>Sportifs suivis</Text>
+          {uniquePatients.map((p, index) => (
+            <StaggerReveal key={p.uid} index={index}>
+              <PressableSpring style={styles.patientRow} onPress={goMessages} scaleTo={0.98} haptic>
                 <View style={styles.patientAvatar}>
                   <Icon name="person" size={18} color="#0F766E" />
                 </View>
@@ -210,11 +221,38 @@ export const PhysioDashboardScreen: React.FC<PhysioDashboardScreenProps> = ({ pr
                   <Text style={styles.patientSub}>Ouvrir la messagerie de suivi</Text>
                 </View>
                 <Icon name="chevron-forward" size={16} color={c.textMuted} />
-              </TouchableOpacity>
-            ))}
-          </>
-        ) : null}
-      </ScrollView>
+              </PressableSpring>
+            </StaggerReveal>
+          ))}
+        </>
+      ) : null}
+    </ScrollView>
+  );
+
+  return (
+    <View style={[styles.root, rootStyle]}>
+      {useV3Header ? (
+        <V3TabShell
+          caption="Cabinet Santé"
+          title={`Bonjour, ${profile.display_name}`}
+          subtitle={`${specialty}${profile.city ? ` · ${profile.city}` : ''} — votre journée de consultations.`}
+          flat
+          intelligence={intelligence}
+          stats={[
+            { value: String(todayAppointments.length), label: "Aujourd'hui" },
+            {
+              value: String(pendingCount),
+              label: 'En attente',
+              highlight: pendingCount > 0,
+            },
+            { value: String(uniquePatients.length), label: 'Patients' },
+          ]}
+        >
+          {dashboardScroll}
+        </V3TabShell>
+      ) : (
+        dashboardScroll
+      )}
 
       <PushScreenTransition active={showAvailability}>
         <PhysioAvailabilityScreen

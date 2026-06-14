@@ -25,7 +25,6 @@ const ITEMS: {
   { key: 'friendlyMatches', label: 'Matchs', icon: 'handshake', getValue: (s) => s.friendlyMatches },
   { key: 'recruitmentPosts', label: 'Annonces', icon: 'search', getValue: (s) => s.recruitmentPosts },
   { key: 'clubs', label: 'Clubs', icon: 'business', getValue: (s) => s.clubs },
-  { key: 'tournaments', label: 'Tournois', icon: 'trophy', getValue: (s) => s.tournaments },
   { key: 'paymentRequests', label: 'Cotisations', icon: 'calendar', getValue: (s) => s.paymentRequests },
   { key: 'applications', label: 'Candidatures', icon: 'document', getValue: (s) => s.applications },
   {

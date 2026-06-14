@@ -16,7 +16,6 @@ type ContentSegment =
   | 'events'
   | 'mercato'
   | 'matches'
-  | 'arena'
   | 'applications'
   | 'sponsors';
 
@@ -24,13 +23,12 @@ const SEGMENTS: { id: ContentSegment; label: string }[] = [
   { id: 'events', label: 'Événements' },
   { id: 'mercato', label: 'Mercato' },
   { id: 'matches', label: 'Matchs' },
-  { id: 'arena', label: 'Arena' },
   { id: 'applications', label: 'Candidatures' },
   { id: 'sponsors', label: 'Sponsors' },
 ];
 
 export const AdminContentPage: React.FC = () => {
-  const { loading, events, posts, matches, tournaments, applications, sponsorOffers, fundingGoals, refresh } =
+  const { loading, events, posts, matches, applications, sponsorOffers, fundingGoals, refresh } =
     useAdminData();
   const { colors: c } = useAdminStyles();
   const styles = useMemo(() => createStyles(c), [c]);
@@ -39,7 +37,7 @@ export const AdminContentPage: React.FC = () => {
   return (
     <AdminPageScaffold
       title="Contenu plateforme"
-      subtitle="Événements · mercato · matchs · arena · candidatures · sponsors"
+      subtitle="Événements · mercato · matchs · candidatures · sponsors"
       loading={loading}
     >
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.segments}>
@@ -119,28 +117,6 @@ export const AdminContentPage: React.FC = () => {
                 meta={`${m.city} · ${m.status}`}
                 onDelete={() =>
                   adminConfirmDelete('Supprimer', 'Match amical', () => adminService.deleteFriendlyMatch(m.id), refresh)
-                }
-              />
-            ))
-          )}
-        </>
-      )}
-
-      {segment === 'arena' && (
-        <>
-          <AdminSectionHeader title="TOURNOIS ARENA" count={tournaments.length} />
-          {tournaments.length === 0 ? (
-            <AdminEmptyState icon="trophy" title="Aucun tournoi" subtitle="Tournois Arena." />
-          ) : (
-            tournaments.map((t) => (
-              <AdminEntityCard
-                key={t.id}
-                icon="trophy"
-                title={t.name}
-                subtitle={`${t.city} · ${formatCalendarDate(t.date_start)}`}
-                meta={`${t.status} · ${t.subscriber_uids?.length ?? 0} club(s)`}
-                onDelete={() =>
-                  adminConfirmDelete('Supprimer', t.name, () => adminService.deleteTournament(t.id), refresh)
                 }
               />
             ))

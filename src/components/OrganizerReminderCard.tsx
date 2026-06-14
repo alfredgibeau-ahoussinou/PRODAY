@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { Icon } from './ui/Icon';
+import { LivePulseDot, PressableSpring, SkeletonList, StaggerReveal } from './motion';
 import type { OrganizerReminderItem } from '../hooks/useOrganizerReminders';
 import { useAppTheme } from '../context/ProductLineContext';
 import { spacing, radius } from '../theme/designTokens';
@@ -27,7 +28,7 @@ export const OrganizerReminderCard: React.FC<OrganizerReminderCardProps> = ({
   if (loading) {
     return (
       <View style={styles.wrap}>
-        <ActivityIndicator color={c.brand} />
+        <SkeletonList count={1} variant="row" />
       </View>
     );
   }
@@ -37,33 +38,39 @@ export const OrganizerReminderCard: React.FC<OrganizerReminderCardProps> = ({
 
   return (
     <View style={styles.wrap}>
-      <TouchableOpacity style={styles.main} onPress={onPress} activeOpacity={0.9}>
+      <PressableSpring style={styles.main} onPress={onPress} scaleTo={0.98} haptic>
         <Icon name="notifications" size={22} color={c.brand} />
         <View style={styles.body}>
-          <Text style={styles.title}>Convocations en attente</Text>
+          <View style={styles.titleRow}>
+            <LivePulseDot active size={8} color={c.brand} inactiveColor={c.brandSoft} />
+            <Text style={styles.title}>Convocations en attente</Text>
+          </View>
           <Text style={styles.sub}>
             {totalPending} réponse{totalPending > 1 ? 's' : ''} · {items.length} événement
             {items.length > 1 ? 's' : ''}
           </Text>
         </View>
         <Icon name="chevron-forward" size={20} color={c.brand} />
-      </TouchableOpacity>
+      </PressableSpring>
       {onRemind &&
-        items.slice(0, 2).map(({ event, pendingCount }) => (
-          <TouchableOpacity
-            key={event.id}
-            style={styles.remindBtn}
-            onPress={() => onRemind(event.id)}
-            disabled={remindingId === event.id}
-          >
-            {remindingId === event.id ? (
-              <ActivityIndicator color={c.brandInverse} size="small" />
-            ) : (
-              <Text style={styles.remindText}>
-                Relancer « {event.title} » ({pendingCount})
-              </Text>
-            )}
-          </TouchableOpacity>
+        items.slice(0, 2).map(({ event, pendingCount }, index) => (
+          <StaggerReveal key={event.id} index={index}>
+            <PressableSpring
+              style={styles.remindBtn}
+              onPress={() => onRemind(event.id)}
+              disabled={remindingId === event.id}
+              scaleTo={0.98}
+              haptic={remindingId !== event.id}
+            >
+              {remindingId === event.id ? (
+                <ActivityIndicator color={c.brandInverse} size="small" />
+              ) : (
+                <Text style={styles.remindText}>
+                  Relancer « {event.title} » ({pendingCount})
+                </Text>
+              )}
+            </PressableSpring>
+          </StaggerReveal>
         ))}
     </View>
   );
@@ -87,6 +94,7 @@ function createStyles(c: AppColors) {
       padding: spacing.md,
     },
     body: { flex: 1 },
+    titleRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
     title: { fontSize: 14, fontWeight: '900', color: c.text },
     sub: { fontSize: 12, color: c.textSecondary, marginTop: 2 },
     remindBtn: {

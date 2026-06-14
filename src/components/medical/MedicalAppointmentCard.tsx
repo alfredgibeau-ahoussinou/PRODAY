@@ -1,5 +1,7 @@
 import React, { useMemo } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
+import { PressableSpring } from '../motion/PressableSpring';
+import { prodayHaptics } from '../../utils/prodayHaptics';
 import type { MedicalAppointment } from '../../models/MedicalAppointment';
 import { MEDICAL_APPOINTMENT_STATUS_LABELS } from '../../models/MedicalAppointment';
 import { formatAppointmentDay, formatSlotLabel } from '../../utils/medicalSlots';
@@ -40,10 +42,8 @@ export const MedicalAppointmentCard: React.FC<MedicalAppointmentCardProps> = ({
   const counterpart =
     mode === 'physio' ? appointment.patient_name : appointment.physio_name;
 
-  const Wrapper = onPress ? TouchableOpacity : View;
-
-  return (
-    <Wrapper style={styles.card} onPress={onPress} activeOpacity={onPress ? 0.9 : 1}>
+  const cardContent = (
+    <>
       <View style={styles.timeCol}>
         <Text style={styles.time}>{formatSlotLabel(appointment.start_at)}</Text>
         <Text style={styles.duration}>{appointment.duration_min} min</Text>
@@ -68,23 +68,41 @@ export const MedicalAppointmentCard: React.FC<MedicalAppointmentCardProps> = ({
         ) : null}
         {mode === 'physio' && appointment.status === 'pending' ? (
           <View style={styles.actions}>
-            <TouchableOpacity style={styles.confirmBtn} onPress={onConfirm}>
+            <PressableSpring
+              style={styles.confirmBtn}
+              onPress={() => {
+                prodayHaptics.confirm();
+                onConfirm?.();
+              }}
+              scaleTo={0.96}
+              haptic
+            >
               <Icon name="checkmark-circle" size={16} color={c.brandInverse} />
               <Text style={styles.confirmText}>Confirmer</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.cancelBtn} onPress={onCancel}>
+            </PressableSpring>
+            <PressableSpring style={styles.cancelBtn} onPress={onCancel} scaleTo={0.97}>
               <Text style={styles.cancelText}>Refuser</Text>
-            </TouchableOpacity>
+            </PressableSpring>
           </View>
         ) : null}
         {mode === 'physio' && appointment.status === 'confirmed' ? (
-          <TouchableOpacity style={styles.completeBtn} onPress={onComplete}>
+          <PressableSpring style={styles.completeBtn} onPress={onComplete} scaleTo={0.98} haptic>
             <Text style={styles.completeText}>Marquer terminé</Text>
-          </TouchableOpacity>
+          </PressableSpring>
         ) : null}
       </View>
-    </Wrapper>
+    </>
   );
+
+  if (onPress) {
+    return (
+      <PressableSpring style={styles.card} onPress={onPress} scaleTo={0.98} haptic>
+        {cardContent}
+      </PressableSpring>
+    );
+  }
+
+  return <View style={styles.card}>{cardContent}</View>;
 };
 
 function createStyles(c: AppColors) {

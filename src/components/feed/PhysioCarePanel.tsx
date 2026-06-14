@@ -2,12 +2,11 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
-  TouchableOpacity,
   StyleSheet,
-  ActivityIndicator,
   TextInput,
-  ScrollView,
 } from 'react-native';
+import { PressableSpring, SkeletonList, StaggerReveal } from '../motion';
+import { ProDaySelect } from '../ui/ProDaySelect';
 import type { User } from '../../models/User';
 import { usersService } from '../../services/users.service';
 import { openContactConversation } from '../../utils/openContactConversation';
@@ -22,6 +21,14 @@ import { spacing, radius } from '../../theme/designTokens';
 import { useAppTheme } from '../../context/ProductLineContext';
 import type { AppColors } from '../../theme/universeTheme';
 import { Icon, type IconName } from '../ui/Icon';
+import { ProDayText } from '../ui/ProDayText';
+import { ProDayGradient } from '../ui/ProDayGradient';
+
+const INJURY_TIPS = [
+  { id: 'knee', label: 'Genou', hint: 'Kiné & prévention' },
+  { id: 'ankle', label: 'Cheville', hint: 'Ostéo / kiné' },
+  { id: 'muscle', label: 'Musculaire', hint: 'Récupération' },
+] as const;
 
 interface PhysioCarePanelProps {
   profile: User;
@@ -30,6 +37,8 @@ interface PhysioCarePanelProps {
   onBookPhysio?: (physio: User) => void;
   /** Plein écran onglet Santé — liste complète */
   expanded?: boolean;
+  /** Masque le titre dupliqué quand l’onglet Santé fournit déjà le hero. */
+  hideHeader?: boolean;
 }
 
 export const PhysioCarePanel: React.FC<PhysioCarePanelProps> = ({
@@ -38,6 +47,7 @@ export const PhysioCarePanel: React.FC<PhysioCarePanelProps> = ({
   onOpenMessages,
   onBookPhysio,
   expanded = false,
+  hideHeader = false,
 }) => {
   const { colors: c, productLine } = useAppTheme();
   const styles = useMemo(() => createStyles(c), [c]);
@@ -81,22 +91,28 @@ export const PhysioCarePanel: React.FC<PhysioCarePanelProps> = ({
   }
 
   return (
-    <View style={styles.wrap}>
-      <Text style={styles.eyebrow}>SUIVI SANTÉ</Text>
-      <Text style={styles.title}>
-        {isPlayer
-          ? 'Pôle médical'
-          : isWoman
-            ? 'Joueuses — suivi blessure'
-            : 'Joueurs — suivi blessure'}
-      </Text>
-      <Text style={styles.sub}>
-        {isPlayer
-          ? 'Réservez un créneau ou contactez kinés, coach mental, nutrition…'
-          : isWoman
-            ? 'Les joueuses réservent en ligne ou vous contactent pour prévention et récupération.'
-            : 'Les joueurs réservent en ligne ou vous contactent pour prévention et récupération.'}
-      </Text>
+    <View style={[styles.wrap, expanded && styles.wrapExpanded, { borderColor: c.borderStrong }]}>
+      {!hideHeader ? (
+        <>
+          <ProDayText variant="eyebrow" accent>
+            Suivi santé
+          </ProDayText>
+          <ProDayText variant="section">
+            {isPlayer
+              ? 'Pôle médical'
+              : isWoman
+                ? 'Joueuses — suivi blessure'
+                : 'Joueurs — suivi blessure'}
+          </ProDayText>
+          <ProDayText variant="body" muted style={styles.sub}>
+            {isPlayer
+              ? 'Réservez un créneau ou contactez kinés, coach mental, nutrition…'
+              : isWoman
+                ? 'Les joueuses réservent en ligne ou vous contactent pour prévention et récupération.'
+                : 'Les joueurs réservent en ligne ou vous contactent pour prévention et récupération.'}
+          </ProDayText>
+        </>
+      ) : null}
 
       {isPlayer ? (
         <>
@@ -107,71 +123,86 @@ export const PhysioCarePanel: React.FC<PhysioCarePanelProps> = ({
             value={search}
             onChangeText={setSearch}
           />
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={styles.filters}
-            contentContainerStyle={styles.filtersContent}
-          >
-            {HEALTH_POLE_FILTERS.map((filter) => {
-              const active = specialtyFilter === filter.id;
-              return (
-                <TouchableOpacity
-                  key={filter.id}
-                  style={[styles.filterChip, active && styles.filterChipActive]}
-                  onPress={() => setSpecialtyFilter(filter.id)}
-                >
-                  <Text
-                    style={[styles.filterChipText, active && styles.filterChipTextActive]}
-                  >
-                    {filter.label}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
+          {expanded ? (
+            <ProDaySelect<HealthPoleFilterId>
+              label="Spécialité"
+              placeholder="Tous les pros"
+              options={HEALTH_POLE_FILTERS.map((f) => ({ id: f.id, label: f.label }))}
+              value={specialtyFilter}
+              onChange={setSpecialtyFilter}
+              inset={false}
+            />
+          ) : null}
+
+          {expanded ? (
+            <ProDaySelect<string>
+              label="Type de douleur"
+              placeholder="Parcours blessure"
+              options={INJURY_TIPS.map((t) => ({
+                id: t.id,
+                label: t.label,
+                hint: t.hint,
+              }))}
+              onChange={(id) => {
+                const tip = INJURY_TIPS.find((t) => t.id === id);
+                if (tip?.id === 'knee') setSpecialtyFilter('kine');
+                if (tip?.id === 'muscle') setSpecialtyFilter('kine');
+                if (tip?.id === 'ankle') setSpecialtyFilter('kine');
+              }}
+              resetOnSelect
+            />
+          ) : null}
           {loading ? (
-            <ActivityIndicator color={c.accent} style={styles.loader} />
+            <SkeletonList count={3} variant="row" />
           ) : list.length === 0 ? (
             <Text style={styles.empty}>Aucun professionnel du pôle médical inscrit pour le moment.</Text>
           ) : (
-            list.map((p) => (
-              <View key={p.uid} style={styles.row}>
-                <View style={styles.avatar}>
-                  <Icon name={specialtyIcon(p.profile?.medical_specialty)} size={18} color={c.accent} />
-                </View>
-                <View style={styles.copy}>
-                  <Text style={styles.name}>{p.display_name}</Text>
-                  <Text style={styles.meta}>
-                    {p.profile?.medical_specialty ?? p.profile?.job_title ?? p.city ?? 'Pôle médical ProDay'}
-                  </Text>
-                </View>
-                <View style={styles.actions}>
-                  {onBookPhysio && isPhysioBookingEnabled(p) ? (
-                    <TouchableOpacity
-                      style={styles.bookBtn}
-                      onPress={() => onBookPhysio(p)}
-                    >
-                      <Text style={styles.bookBtnText}>RDV</Text>
-                    </TouchableOpacity>
-                  ) : null}
-                  <TouchableOpacity
-                    style={styles.chatBtn}
-                    onPress={() =>
-                      void openContactConversation(profile, p, p.display_name, onOpenChat)
-                    }
-                  >
-                    <Icon name="chat" size={18} color={c.accent} />
-                  </TouchableOpacity>
-                </View>
-              </View>
+            list.map((p, index) => (
+              <StaggerReveal key={p.uid} index={index}>
+                <PressableSpring
+                  style={styles.row}
+                  onPress={() =>
+                    void openContactConversation(profile, p, p.display_name, onOpenChat)
+                  }
+                  scaleTo={0.98}
+                  haptic
+                >
+                  <View style={styles.avatar}>
+                    <Icon name={specialtyIcon(p.profile?.medical_specialty)} size={18} color={c.accent} />
+                  </View>
+                  <View style={styles.copy}>
+                    <Text style={styles.name}>{p.display_name}</Text>
+                    <Text style={styles.meta}>
+                      {p.profile?.medical_specialty ?? p.profile?.job_title ?? p.city ?? 'Pôle médical ProDay'}
+                    </Text>
+                  </View>
+                  <View style={styles.actions}>
+                    {onBookPhysio && isPhysioBookingEnabled(p) ? (
+                      <PressableSpring
+                        style={styles.bookBtn}
+                        onPress={() => onBookPhysio(p)}
+                        scaleTo={0.96}
+                        haptic
+                      >
+                        <Text style={styles.bookBtnText}>RDV</Text>
+                      </PressableSpring>
+                    ) : (
+                      <Icon name="chevron-forward" size={18} color={c.textMuted} />
+                    )}
+                  </View>
+                </PressableSpring>
+              </StaggerReveal>
             ))
           )}
         </>
       ) : (
-        <TouchableOpacity style={styles.inboxBtn} onPress={onOpenMessages}>
-          <Text style={styles.inboxBtnText}>Voir mon agenda & messagerie</Text>
-        </TouchableOpacity>
+        <PressableSpring onPress={onOpenMessages} scaleTo={0.97} haptic style={styles.inboxWrap}>
+          <ProDayGradient kind="cta" style={styles.inboxBtn}>
+            <ProDayText variant="caption" inverse style={styles.inboxBtnText}>
+              Voir mon agenda & messagerie
+            </ProDayText>
+          </ProDayGradient>
+        </PressableSpring>
       )}
     </View>
   );
@@ -184,21 +215,15 @@ function createStyles(c: AppColors) {
       padding: spacing.md,
       backgroundColor: c.surface,
       borderRadius: radius.lg,
-      borderWidth: 1,
-      borderColor: c.border,
+      borderWidth: 1.5,
     },
-    eyebrow: {
-      fontSize: 9,
-      fontWeight: '900',
-      color: c.accent,
-      letterSpacing: 1.2,
-      marginBottom: 4,
+    wrapExpanded: {
+      backgroundColor: c.surfaceMuted,
     },
-    title: { fontSize: 16, fontWeight: '900', color: c.text },
-    sub: { fontSize: 12, color: c.textSecondary, marginTop: 4, marginBottom: spacing.md },
+    sub: { marginTop: 4, marginBottom: spacing.md },
     search: {
-      borderWidth: 1,
-      borderColor: c.border,
+      borderWidth: 1.5,
+      borderColor: c.borderStrong,
       borderRadius: radius.md,
       padding: spacing.sm,
       marginBottom: spacing.sm,
@@ -206,27 +231,6 @@ function createStyles(c: AppColors) {
       backgroundColor: c.background,
     },
     filters: { marginBottom: spacing.sm },
-    filtersContent: { gap: spacing.xs, paddingRight: spacing.sm },
-    filterChip: {
-      paddingHorizontal: spacing.sm,
-      paddingVertical: 6,
-      borderRadius: radius.pill,
-      borderWidth: 1,
-      borderColor: c.border,
-      backgroundColor: c.background,
-    },
-    filterChipActive: {
-      borderColor: c.accent,
-      backgroundColor: c.accentSoft,
-    },
-    filterChipText: {
-      fontSize: 11,
-      fontWeight: '700',
-      color: c.textMuted,
-    },
-    filterChipTextActive: {
-      color: c.accent,
-    },
     loader: { marginVertical: spacing.md },
     empty: { fontSize: 13, color: c.textMuted, fontStyle: 'italic' },
     row: {
@@ -249,13 +253,16 @@ function createStyles(c: AppColors) {
     name: { fontSize: 14, fontWeight: '800', color: c.text },
     meta: { fontSize: 11, color: c.textMuted, marginTop: 2 },
     actions: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
-    bookBtn: {
-      backgroundColor: c.accent,
+    bookBtnWrap: {
       borderRadius: radius.md,
-      paddingHorizontal: spacing.sm,
-      paddingVertical: 8,
+      overflow: 'hidden',
     },
-    bookBtnText: { color: c.brandInverse, fontWeight: '900', fontSize: 12 },
+    bookBtn: {
+      paddingHorizontal: spacing.sm + 2,
+      paddingVertical: 8,
+      borderRadius: radius.md,
+    },
+    bookBtnText: { fontWeight: '900' },
     chatBtn: {
       width: 36,
       height: 36,
@@ -266,12 +273,15 @@ function createStyles(c: AppColors) {
       justifyContent: 'center',
       backgroundColor: c.background,
     },
+    inboxWrap: {
+      borderRadius: radius.lg,
+      overflow: 'hidden',
+    },
     inboxBtn: {
-      backgroundColor: c.accent,
-      borderRadius: radius.md,
       paddingVertical: spacing.md,
       alignItems: 'center',
+      borderRadius: radius.lg,
     },
-    inboxBtnText: { color: c.brandInverse, fontWeight: '900', fontSize: 14 },
+    inboxBtnText: { fontWeight: '900', fontSize: 14 },
   });
 }

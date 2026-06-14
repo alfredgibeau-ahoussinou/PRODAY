@@ -2,14 +2,15 @@ import React, { useMemo, useState } from 'react';
 import {
   View,
   Text,
-  TouchableOpacity,
   StyleSheet,
-  Modal,
   TextInput,
   ActivityIndicator,
 } from 'react-native';
 import type { Application } from '../../models/Player';
 import { Icon } from '../ui/Icon';
+import { AnimatedDialogShell } from '../motion/AnimatedDialogShell';
+import { PressableSpring } from '../motion/PressableSpring';
+import { prodayHaptics } from '../../utils/prodayHaptics';
 import {
   APPLICATION_STATUS_LABEL,
   formatTimeAgo,
@@ -20,6 +21,7 @@ import { useAppTheme } from '../../context/ProductLineContext';
 
 interface ApplicationReviewCardProps {
   application: Application;
+  pulseScore?: number;
   onViewProfile?: () => void;
   onMarkViewed: () => Promise<void>;
   onAccept: () => Promise<void>;
@@ -78,12 +80,6 @@ function createStyles(c: AppColors) {
     actionLabel: { fontSize: 11, fontWeight: '800', color: c.text },
     actionLabelLight: { color: c.brandInverse },
     loader: { marginTop: spacing.sm },
-    modalOverlay: {
-      flex: 1,
-      backgroundColor: 'rgba(0,0,0,0.5)',
-      justifyContent: 'center',
-      padding: spacing.lg,
-    },
     modalSheet: {
       backgroundColor: c.surface,
       borderRadius: radius.lg,
@@ -135,7 +131,7 @@ const ActionBtn: React.FC<{
   styles: ReturnType<typeof createStyles>;
   colors: AppColors;
 }> = ({ icon, label, onPress, primary, danger, disabled, styles, colors }) => (
-  <TouchableOpacity
+  <PressableSpring
     style={[
       styles.actionBtn,
       primary && styles.actionPrimary,
@@ -144,6 +140,8 @@ const ActionBtn: React.FC<{
     ]}
     onPress={onPress}
     disabled={disabled}
+    scaleTo={0.96}
+    haptic={!disabled}
   >
     <Icon
       name={icon}
@@ -153,11 +151,12 @@ const ActionBtn: React.FC<{
     <Text style={[styles.actionLabel, (primary || danger) && styles.actionLabelLight]}>
       {label}
     </Text>
-  </TouchableOpacity>
+  </PressableSpring>
 );
 
 export const ApplicationReviewCard: React.FC<ApplicationReviewCardProps> = ({
   application,
+  pulseScore,
   onViewProfile,
   onMarkViewed,
   onAccept,
@@ -188,27 +187,35 @@ export const ApplicationReviewCard: React.FC<ApplicationReviewCardProps> = ({
 
   return (
     <View style={styles.card}>
-      <View style={styles.head}>
-        <View style={styles.headCopy}>
-          <Text style={styles.name}>
-            {application.player_name ?? playerFallback}
-          </Text>
-          <Text style={styles.meta}>
-            {APPLICATION_STATUS_LABEL[application.status]} ·{' '}
-            {formatTimeAgo(application.created_at)}
-          </Text>
+      <PressableSpring
+        onPress={onViewProfile}
+        disabled={!onViewProfile || loading}
+        scaleTo={0.98}
+        haptic={Boolean(onViewProfile) && !loading}
+      >
+        <View style={styles.head}>
+          <View style={styles.headCopy}>
+            <Text style={styles.name}>
+              {application.player_name ?? playerFallback}
+            </Text>
+            <Text style={styles.meta}>
+              {APPLICATION_STATUS_LABEL[application.status]} ·{' '}
+              {formatTimeAgo(application.created_at)}
+              {pulseScore != null ? ` · Pulse ${pulseScore}` : ''}
+            </Text>
+          </View>
+          <View
+            style={[
+              styles.pill,
+              application.status === 'ACCEPTED' && styles.pillOk,
+              application.status === 'REJECTED' && styles.pillBad,
+              application.status === 'VIEWED' && styles.pillViewed,
+            ]}
+          >
+            <Text style={styles.pillText}>{APPLICATION_STATUS_LABEL[application.status]}</Text>
+          </View>
         </View>
-        <View
-          style={[
-            styles.pill,
-            application.status === 'ACCEPTED' && styles.pillOk,
-            application.status === 'REJECTED' && styles.pillBad,
-            application.status === 'VIEWED' && styles.pillViewed,
-          ]}
-        >
-          <Text style={styles.pillText}>{APPLICATION_STATUS_LABEL[application.status]}</Text>
-        </View>
-      </View>
+      </PressableSpring>
 
       <Text style={styles.letter}>{application.cover_letter}</Text>
 
@@ -243,7 +250,10 @@ export const ApplicationReviewCard: React.FC<ApplicationReviewCardProps> = ({
               icon="checkmark-circle"
               label="Accepter"
               primary
-              onPress={() => run(onAccept)}
+              onPress={() => {
+                prodayHaptics.confirm();
+                void run(onAccept);
+              }}
               disabled={loading}
               styles={styles}
               colors={colors}
@@ -263,43 +273,46 @@ export const ApplicationReviewCard: React.FC<ApplicationReviewCardProps> = ({
 
       {loading ? <ActivityIndicator color={colors.brand} style={styles.loader} /> : null}
 
-      <Modal
+      <AnimatedDialogShell
         visible={rejectOpen}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setRejectOpen(false)}
+        onClose={() => setRejectOpen(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalSheet}>
-            <Text style={styles.modalTitle}>Refuser la candidature</Text>
-            <Text style={styles.modalSub}>
-              Motif optionnel (visible par la {playerFallback.toLowerCase()})
-            </Text>
-            <TextInput
-              style={styles.modalInput}
-              value={rejectReason}
-              onChangeText={setRejectReason}
-              placeholder="Ex. profil ne correspond pas au poste…"
-              placeholderTextColor={colors.textMuted}
-              multiline
-            />
-            <View style={styles.modalActions}>
-              <TouchableOpacity style={styles.modalCancel} onPress={() => setRejectOpen(false)}>
-                <Text style={styles.modalCancelText}>Annuler</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.modalConfirm}
-                onPress={() => {
-                  setRejectOpen(false);
-                  void run(() => onReject(rejectReason.trim()));
-                }}
-              >
-                <Text style={styles.modalConfirmText}>Confirmer le refus</Text>
-              </TouchableOpacity>
-            </View>
+        <View style={styles.modalSheet}>
+          <Text style={styles.modalTitle}>Refuser la candidature</Text>
+          <Text style={styles.modalSub}>
+            Motif optionnel (visible par la {playerFallback.toLowerCase()})
+          </Text>
+          <TextInput
+            style={styles.modalInput}
+            value={rejectReason}
+            onChangeText={setRejectReason}
+            placeholder="Ex. profil ne correspond pas au poste…"
+            placeholderTextColor={colors.textMuted}
+            multiline
+          />
+          <View style={styles.modalActions}>
+            <PressableSpring
+              style={styles.modalCancel}
+              scaleTo={0.97}
+              onPress={() => setRejectOpen(false)}
+            >
+              <Text style={styles.modalCancelText}>Annuler</Text>
+            </PressableSpring>
+            <PressableSpring
+              style={styles.modalConfirm}
+              scaleTo={0.97}
+              haptic
+              onPress={() => {
+                prodayHaptics.confirm();
+                setRejectOpen(false);
+                void run(() => onReject(rejectReason.trim()));
+              }}
+            >
+              <Text style={styles.modalConfirmText}>Confirmer le refus</Text>
+            </PressableSpring>
           </View>
         </View>
-      </Modal>
+      </AnimatedDialogShell>
     </View>
   );
 };

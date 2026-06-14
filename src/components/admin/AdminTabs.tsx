@@ -11,7 +11,6 @@ export type AdminTabId =
   | 'events'
   | 'mercato'
   | 'matches'
-  | 'arena'
   | 'clubs'
   | 'finance'
   | 'applications'
@@ -24,7 +23,6 @@ const TABS: { id: AdminTabId; label: string; icon: IconName; countKey?: string }
   { id: 'events', label: 'Events', icon: 'calendar', countKey: 'events' },
   { id: 'mercato', label: 'Mercato', icon: 'briefcase', countKey: 'posts' },
   { id: 'matches', label: 'Matchs', icon: 'handshake', countKey: 'matches' },
-  { id: 'arena', label: 'Arena', icon: 'trophy', countKey: 'tournaments' },
   { id: 'clubs', label: 'Clubs', icon: 'business', countKey: 'clubs' },
   { id: 'finance', label: 'Finance', icon: 'calendar', countKey: 'payments' },
   { id: 'applications', label: 'Candid.', icon: 'document', countKey: 'applications' },
@@ -37,7 +35,7 @@ interface AdminTabsProps {
   onChange: (tab: AdminTabId) => void;
   counts?: Partial<
     Record<
-      'users' | 'events' | 'posts' | 'matches' | 'tournaments' | 'sponsors' | 'clubs' | 'payments' | 'applications',
+      'users' | 'events' | 'posts' | 'matches' | 'sponsors' | 'clubs' | 'payments' | 'applications',
       number
     >
   >;

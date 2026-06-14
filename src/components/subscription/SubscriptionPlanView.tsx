@@ -1,7 +1,6 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import {
   View,
-  Text,
   ScrollView,
   TouchableOpacity,
   StyleSheet,
@@ -11,7 +10,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { User } from '../../models/User';
 import { ScreenHeader } from '../ui/ScreenHeader';
-import { Icon } from '../ui/Icon';
+import { Icon, type IconName } from '../ui/Icon';
 import {
   ANNUAL_DISCOUNT_PERCENT,
   annualSavingsFromMonthly,
@@ -33,168 +32,17 @@ import {
 import { subscriptionService } from '../../services/subscription.service';
 import { useSubscription } from '../../context/SubscriptionContext';
 import { useAppTheme } from '../../context/ProductLineContext';
+import { ProDayScreenCanvas } from '../ui/ProDayScreenCanvas';
+import { ProDaySurface } from '../ui/ProDaySurface';
+import { ProDayText } from '../ui/ProDayText';
+import { ProDayGradient } from '../ui/ProDayGradient';
+import { TAB_BAR_CONTENT_INSET } from '../../navigation/tabBarLayout';
 import { spacing, radius, shadows } from '../../theme/designTokens';
-import type { AppColors } from '../../theme/universeTheme';
+
+type BillingCycle = 'monthly' | 'yearly';
 
 function formatEur(value: number): string {
   return value.toFixed(2).replace('.', ',');
-}
-
-interface QuotaMeterProps {
-  label: string;
-  used: number;
-  limit: number;
-  visual: SubscriptionPlanVisual;
-}
-
-const QuotaMeter: React.FC<QuotaMeterProps> = ({ label, used, limit, visual }) => {
-  const { colors: c } = useAppTheme();
-  const meterStyles = useMemo(() => createMeterStyles(c), [c]);
-  const ratio = limit > 0 ? Math.min(1, used / limit) : 0;
-  const atLimit = used >= limit;
-  const isDark = isDarkSubscriptionVisual(visual);
-
-  return (
-    <View style={meterStyles.wrap}>
-      <View style={meterStyles.row}>
-        <Text style={[meterStyles.label, isDark && { color: '#E4E4E7' }]}>{label}</Text>
-        <Text style={[meterStyles.value, atLimit && meterStyles.valueWarn, isDark && { color: '#FAFAFA' }]}>
-          {used} / {limit}
-        </Text>
-      </View>
-      <View style={[meterStyles.track, isDark && { backgroundColor: '#27272A' }]}>
-        <View
-          style={[
-            meterStyles.fill,
-            { width: `${ratio * 100}%`, backgroundColor: visual.primary },
-            atLimit && { backgroundColor: c.warning },
-          ]}
-        />
-      </View>
-    </View>
-  );
-};
-
-function createMeterStyles(c: AppColors) {
-  return StyleSheet.create({
-    wrap: { marginBottom: spacing.md },
-    row: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: spacing.xs },
-    label: { fontSize: 14, fontWeight: '600', color: c.text },
-    value: { fontSize: 14, fontWeight: '800', color: c.text },
-    valueWarn: { color: c.warning },
-    track: {
-      height: 6,
-      borderRadius: radius.pill,
-      backgroundColor: c.surfaceMuted,
-      overflow: 'hidden',
-    },
-    fill: { height: '100%', borderRadius: radius.pill },
-  });
-}
-
-interface PlanColumnProps {
-  title: string;
-  items: string[];
-  visual: SubscriptionPlanVisual;
-  highlighted?: boolean;
-  priceLabel?: string;
-}
-
-const PlanColumn: React.FC<PlanColumnProps> = ({
-  title,
-  items,
-  visual,
-  highlighted,
-  priceLabel,
-}) => {
-  const { colors: c } = useAppTheme();
-  const colStyles = useMemo(() => createColStyles(c), [c]);
-  const isPremium = visual.priceStyle === 'premium' && highlighted;
-  const isMedical = visual.priceStyle === 'medical';
-  const isDarkRoot = isDarkSubscriptionVisual(visual);
-
-  return (
-    <View
-      style={[
-        colStyles.card,
-        highlighted && { backgroundColor: visual.heroBg, borderColor: visual.primary },
-        isPremium && colStyles.cardPremium,
-        isMedical && highlighted && { backgroundColor: visual.primary, borderColor: visual.primary },
-        !highlighted && isDarkRoot && colStyles.cardDarkFree,
-      ]}
-    >
-      <Text
-        style={[
-          colStyles.title,
-          highlighted && { color: isMedical ? visual.onPrimary : visual.heroSubtext },
-          !highlighted && isDarkRoot && { color: '#A1A1AA' },
-        ]}
-      >
-        {title}
-      </Text>
-      {priceLabel ? (
-        <Text
-          style={[
-            colStyles.price,
-            highlighted && { color: isMedical ? visual.onPrimary : visual.heroText },
-          ]}
-        >
-          {priceLabel}
-        </Text>
-      ) : null}
-      {items.map((item) => (
-        <View key={item} style={colStyles.row}>
-          <Icon
-            name={highlighted ? visual.featureIconPro : visual.featureIconFree}
-            size={14}
-            color={highlighted ? (isMedical ? visual.onPrimary : visual.primary) : c.success}
-          />
-          <Text
-            style={[
-              colStyles.item,
-              highlighted && { color: isMedical ? visual.onPrimary : visual.heroSubtext },
-              !highlighted && isDarkRoot && { color: '#D4D4D8' },
-            ]}
-          >
-            {item}
-          </Text>
-        </View>
-      ))}
-    </View>
-  );
-};
-
-function createColStyles(c: AppColors) {
-  return StyleSheet.create({
-    card: {
-      flex: 1,
-      backgroundColor: c.surface,
-      borderRadius: radius.lg,
-      padding: spacing.md,
-      borderWidth: 1,
-      borderColor: c.border,
-      minWidth: 0,
-    },
-    cardPremium: {
-      borderWidth: 2,
-      ...shadows.card,
-    },
-    cardDarkFree: {
-      backgroundColor: '#18181B',
-      borderColor: '#3F3F46',
-    },
-    title: {
-      fontSize: 11,
-      fontWeight: '900',
-      textTransform: 'uppercase',
-      letterSpacing: 0.6,
-      color: c.textMuted,
-      marginBottom: spacing.xs,
-    },
-    price: { fontSize: 20, fontWeight: '900', color: c.text, marginBottom: spacing.sm },
-    row: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.xs, marginTop: spacing.xs },
-    item: { flex: 1, fontSize: 12, lineHeight: 17, color: c.textSecondary },
-  });
 }
 
 interface SubscriptionPlanViewProps {
@@ -207,15 +55,15 @@ export const SubscriptionPlanView: React.FC<SubscriptionPlanViewProps> = ({
   onBack,
 }) => {
   const { subscription, usage, loading, refresh } = useSubscription();
-  const { productLine, colors: c } = useAppTheme();
-  const styles = useMemo(() => createPlanViewStyles(c), [c]);
+  const { productLine, colors } = useAppTheme();
   const plan = getPlanForRoleAndLine(profile.role, productLine);
   const visual = getSubscriptionPlanVisual(profile.role, productLine);
   const [upgrading, setUpgrading] = useState(false);
+  const [billing, setBilling] = useState<BillingCycle>('monthly');
 
   const isPro = subscription?.tier === 'pro';
   const noStorePlan = ROLES_WITHOUT_STORE_PLAN.includes(profile.role);
-  const isDarkRoot = visual ? isDarkSubscriptionVisual(visual) : false;
+  const isDarkHero = visual ? isDarkSubscriptionVisual(visual) : false;
   const isSponsorPlan = visual?.variant === 'sponsor';
 
   const meters = useMemo(() => {
@@ -252,214 +100,367 @@ export const SubscriptionPlanView: React.FC<SubscriptionPlanViewProps> = ({
 
   if (!visual || !plan) {
     return (
-      <SafeAreaView style={styles.fallback} edges={['top', 'bottom']}>
-        <ScreenHeader title="Abonnement" onBack={onBack} centered />
-        <Text style={styles.fallbackText}>Aucune offre pour ce profil.</Text>
-      </SafeAreaView>
+      <ProDayScreenCanvas>
+        <SafeAreaView style={styles.fallback} edges={['top', 'bottom']}>
+          <ScreenHeader title="Abonnement" onBack={onBack} centered />
+          <ProDayText variant="body" muted style={styles.fallbackText}>
+            Aucune offre pour ce profil.
+          </ProDayText>
+        </SafeAreaView>
+      </ProDayScreenCanvas>
     );
   }
 
-  const renderCompare = (p: SubscriptionPlanDefinition) => {
-    if (visual.priceStyle === 'premium') {
-      return (
-        <View style={styles.compareStack}>
-          <PlanColumn
-            title={visual.freeColumnTitle}
-            items={p.freeIncludes}
-            visual={visual}
-          />
-          <PlanColumn
-            title={p.label}
-            items={p.proIncludes}
-            visual={visual}
-            highlighted
-            priceLabel={`${formatEur(p.pricing.monthlyEur)} €/mois`}
-          />
-        </View>
-      );
-    }
-
-    return (
-      <View style={styles.compareRow}>
-        <PlanColumn title={visual.freeColumnTitle} items={p.freeIncludes} visual={visual} />
-        <PlanColumn
-          title={p.label}
-          items={p.proIncludes}
-          visual={visual}
-          highlighted
-          priceLabel={`${formatEur(p.pricing.monthlyEur)} €/mois`}
-        />
-      </View>
-    );
-  };
+  const displayPrice =
+    billing === 'monthly'
+      ? plan.pricing.monthlyEur
+      : monthlyEquivalentFromYearly(plan.pricing.yearlyEur);
+  const billedLabel =
+    billing === 'monthly'
+      ? 'Facturation mensuelle'
+      : `${formatEur(plan.pricing.yearlyEur)} € / an · −${ANNUAL_DISCOUNT_PERCENT} %`;
 
   return (
-    <SafeAreaView style={[styles.root, { backgroundColor: visual.rootBg }]} edges={['top', 'bottom']}>
-      <ScreenHeader
-        title={visual.screenTitle}
-        onBack={onBack}
-        centered
-        sponsorDark={isSponsorPlan}
-        dark={isDarkRoot && !isSponsorPlan}
-      />
+    <ProDayScreenCanvas>
+      <SafeAreaView style={styles.root} edges={['top', 'bottom']}>
+        <ScreenHeader
+          title={visual.screenTitle}
+          onBack={onBack}
+          centered
+          sponsorDark={isSponsorPlan}
+        />
 
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        <View
-          style={[
-            styles.hero,
-            {
-              backgroundColor: visual.heroBg,
-              borderColor: visual.heroBorder ?? 'transparent',
-            },
-            visual.heroBorder ? styles.heroBordered : null,
-          ]}
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
         >
-          <View style={[styles.heroIcon, { backgroundColor: visual.primarySoft }]}>
-            <Icon name={visual.icon} size={28} color={visual.primary} variant="filled" />
-          </View>
-          <Text style={[styles.heroEyebrow, { color: visual.heroSubtext }]}>{visual.eyebrow}</Text>
-          <View
-            style={[
-              styles.tierPill,
-              isPro
-                ? { backgroundColor: visual.primary }
-                : { backgroundColor: visual.heroMode === 'light' ? visual.primarySoft : 'rgba(255,255,255,0.12)' },
-            ]}
-          >
-            <Icon
-              name={isPro ? 'star' : 'star-outline'}
-              size={14}
-              color={isPro ? visual.onPrimary : visual.primary}
-            />
-            <Text
-              style={[
-                styles.tierText,
-                { color: isPro ? visual.onPrimary : visual.heroMode === 'light' ? visual.primary : visual.heroSubtext },
-              ]}
-            >
-              {isPro ? PRO_TIER_LABEL : FREE_TIER_LABEL}
-            </Text>
-          </View>
-          <Text style={[styles.heroTitle, { color: visual.heroText }]}>{plan.label}</Text>
-          <Text style={[styles.heroSub, { color: visual.heroSubtext }]}>{plan.tagline}</Text>
-          {visual.proHighlight ? (
-            <View style={[styles.highlightPill, { backgroundColor: visual.primarySoft }]}>
-              <Text style={[styles.highlightText, { color: visual.primary }]}>
-                {visual.proHighlight}
-              </Text>
+          <SubscriptionHero
+            visual={visual}
+            plan={plan}
+            isPro={isPro}
+            isDarkHero={isDarkHero}
+          />
+
+          {isPro ? (
+            <ProDaySurface variant="accent" style={styles.proActiveCard}>
+              <Icon name="checkmark-circle" size={22} color={colors.accent} variant="filled" />
+              <View style={styles.proActiveCopy}>
+                <ProDayText variant="section" accent>
+                  Abonnement actif
+                </ProDayText>
+                <ProDayText variant="caption" muted>
+                  {visual.proHighlight ?? plan.proIncludes[0]}
+                </ProDayText>
+              </View>
+            </ProDaySurface>
+          ) : (
+            <>
+              <BillingToggle billing={billing} onChange={setBilling} visual={visual} />
+
+              <ProDaySurface variant="elevated" style={[styles.priceCard, { borderColor: colors.border }]}>
+                <ProDayText variant="eyebrow" muted>
+                  {plan.label}
+                </ProDayText>
+                <View style={styles.priceRow}>
+                  <ProDayText variant="hero" style={{ color: visual.primary }}>
+                    {formatEur(displayPrice)} €
+                  </ProDayText>
+                  <ProDayText variant="body" muted>
+                    / mois
+                  </ProDayText>
+                </View>
+                <ProDayText variant="caption" muted style={styles.billedLabel}>
+                  {billedLabel}
+                </ProDayText>
+                {billing === 'yearly' ? (
+                  <View style={[styles.savingsPill, { backgroundColor: visual.primarySoft }]}>
+                    <ProDayText variant="caption" style={{ color: visual.primary, fontWeight: '800' }}>
+                      Économisez {formatEur(annualSavingsFromMonthly(plan.pricing.monthlyEur))} € / an
+                    </ProDayText>
+                  </View>
+                ) : null}
+                {plan.bookingCommissionPercent != null ? (
+                  <ProDayText variant="caption" accent style={styles.commission}>
+                    + {plan.bookingCommissionPercent} % par RDV réservé via l&apos;app
+                  </ProDayText>
+                ) : null}
+              </ProDaySurface>
+            </>
+          )}
+
+          {plan.bookingCommissionNote ? (
+            <ProDaySurface variant="module" style={[styles.noteCard, { borderColor: colors.border }]}>
+              <Icon name="heart" size={18} color={visual.primary} />
+              <ProDayText variant="caption" muted style={styles.noteText}>
+                {plan.bookingCommissionNote}
+              </ProDayText>
+            </ProDaySurface>
+          ) : null}
+
+          {loading ? (
+            <ActivityIndicator color={visual.primary} style={styles.loader} />
+          ) : meters.length > 0 ? (
+            <View style={styles.section}>
+              <ProDayText variant="eyebrow" muted>
+                {visual.quotaTitle}
+              </ProDayText>
+              <ProDaySurface variant="module" style={[styles.meterCard, { borderColor: colors.border }]}>
+                {meters.map((m) => (
+                  <QuotaMeter key={m.label} {...m} accent={visual.primary} />
+                ))}
+              </ProDaySurface>
             </View>
           ) : null}
-        </View>
+
+          <View style={styles.section}>
+            <ProDayText variant="eyebrow" muted>
+              {visual.compareTitle}
+            </ProDayText>
+
+            <ProDaySurface
+              variant="module"
+              style={[
+                styles.proPlanCard,
+                { borderColor: visual.primary, backgroundColor: visual.primarySoft },
+              ]}
+              accentBar
+            >
+              <View style={styles.proPlanHead}>
+                <View style={[styles.proBadge, { backgroundColor: visual.primary }]}>
+                  <Icon name="star" size={12} color={visual.onPrimary} variant="filled" />
+                  <ProDayText variant="caption" inverse style={styles.proBadgeText}>
+                    {PRO_TIER_LABEL}
+                  </ProDayText>
+                </View>
+                {!isPro ? (
+                  <ProDayText variant="caption" style={{ color: visual.primary, fontWeight: '800' }}>
+                    {billing === 'monthly'
+                      ? `${formatEur(plan.pricing.monthlyEur)} €/mois`
+                      : `${formatEur(plan.pricing.yearlyEur)} €/an`}
+                  </ProDayText>
+                ) : null}
+              </View>
+              <ProDayText variant="section" style={{ color: visual.primary }}>
+                {plan.label}
+              </ProDayText>
+              {plan.proIncludes.map((item) => (
+                <FeatureRow key={item} text={item} icon={visual.featureIconPro} color={visual.primary} />
+              ))}
+            </ProDaySurface>
+
+            <ProDaySurface variant="flat" style={[styles.freePlanCard, { borderColor: colors.border }]}>
+              <ProDayText variant="caption" muted style={styles.freeLabel}>
+                {visual.freeColumnTitle} · {FREE_TIER_LABEL}
+              </ProDayText>
+              {plan.freeIncludes.map((item) => (
+                <FeatureRow key={item} text={item} icon={visual.featureIconFree} color={colors.textMuted} muted />
+              ))}
+            </ProDaySurface>
+          </View>
+        </ScrollView>
 
         {!isPro ? (
-          <View
-            style={[
-              styles.priceCard,
-              visual.priceStyle === 'premium' && styles.priceCardPremium,
-              visual.priceStyle === 'medical' && styles.priceCardMedical,
-              isDarkRoot && styles.priceCardDark,
-            ]}
-          >
-            <Text
-              style={[
-                styles.priceMain,
-                isDarkRoot && { color: visual.primary },
-                visual.priceStyle === 'medical' && { color: visual.primary },
-              ]}
-            >
-              {formatEur(plan.pricing.monthlyEur)} €
-            </Text>
-            <Text style={[styles.pricePer, isDarkRoot && { color: '#A1A1AA' }]}>/ mois</Text>
-            <Text style={[styles.priceAlt, isDarkRoot && { color: '#D4D4D8' }]}>
-              ou {formatEur(plan.pricing.yearlyEur)} € / an · −{ANNUAL_DISCOUNT_PERCENT} % (
-              {formatEur(annualSavingsFromMonthly(plan.pricing.monthlyEur))} € d&apos;économie)
-            </Text>
-            {plan.bookingCommissionPercent != null ? (
-              <Text style={[styles.commissionNote, { color: visual.primary }]}>
-                + {plan.bookingCommissionPercent} % par RDV réservé via l&apos;app
-              </Text>
-            ) : null}
+          <View style={[styles.footer, { borderTopColor: colors.border, backgroundColor: colors.surface }]}>
+            <TouchableOpacity onPress={() => void handleUpgrade()} disabled={upgrading} activeOpacity={0.9}>
+              <ProDayGradient kind="cta" style={styles.cta}>
+                {upgrading ? (
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                ) : (
+                  <ProDayText variant="caption" inverse style={styles.ctaText}>
+                    {visual.ctaVerb}
+                  </ProDayText>
+                )}
+              </ProDayGradient>
+            </TouchableOpacity>
+            <ProDayText variant="caption" muted style={styles.footnote}>
+              {plan.pricing.storeAvailable
+                ? 'Paiement App Store / Google Play'
+                : 'Disponible très prochainement'}
+            </ProDayText>
           </View>
-        ) : null}
-
-        {plan.bookingCommissionNote ? (
-          <View style={[styles.commissionCard, { backgroundColor: visual.primarySoft, borderColor: visual.heroBorder ?? visual.primarySoft }]}>
-            <Icon name="heart" size={18} color={visual.primary} />
-            <Text style={[styles.commissionCardText, { color: visual.heroText }]}>{plan.bookingCommissionNote}</Text>
-          </View>
-        ) : null}
-
-        {loading ? (
-          <ActivityIndicator color={visual.primary} style={styles.loader} />
-        ) : meters.length > 0 ? (
-          <View style={styles.section}>
-            <Text style={[styles.sectionTitle, isDarkRoot && styles.sectionTitleDark]}>
-              {visual.quotaTitle}
-            </Text>
-            <View style={[styles.meterCard, isDarkRoot && styles.meterCardDark]}>
-              {meters.map((m) => (
-                <QuotaMeter key={m.label} label={m.label} used={m.used} limit={m.limit} visual={visual} />
-              ))}
-            </View>
-          </View>
-        ) : null}
-
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, isDarkRoot && styles.sectionTitleDark]}>
-            {visual.compareTitle}
-          </Text>
-          {renderCompare(plan)}
-        </View>
-
-        <View style={{ height: spacing.xxl }} />
-      </ScrollView>
-
-      {!isPro ? (
-        <View style={[styles.footer, isDarkRoot && styles.footerDark]}>
-          <TouchableOpacity
-            style={[styles.cta, { backgroundColor: visual.primary }]}
-            onPress={() => void handleUpgrade()}
-            disabled={upgrading}
-            activeOpacity={0.88}
-          >
-            {upgrading ? (
-              <ActivityIndicator size="small" color={visual.onPrimary} />
-            ) : (
-              <Text style={[styles.ctaText, { color: visual.onPrimary }]}>{visual.ctaVerb}</Text>
-            )}
+        ) : (
+          <TouchableOpacity style={styles.refreshLink} onPress={() => void refresh()}>
+            <ProDayText variant="caption" muted>
+              Actualiser mon abonnement
+            </ProDayText>
           </TouchableOpacity>
-          <Text style={[styles.ctaFootnote, isDarkRoot && { color: '#71717A' }]}>
-            {plan.pricing.storeAvailable
-              ? 'Paiement App Store / Google Play'
-              : 'Disponible très prochainement'}
-          </Text>
-        </View>
-      ) : (
-        <TouchableOpacity style={styles.refreshLink} onPress={() => void refresh()}>
-          <Text style={[styles.refreshText, isDarkRoot && { color: '#A1A1AA' }]}>Actualiser</Text>
-        </TouchableOpacity>
-      )}
-    </SafeAreaView>
+        )}
+      </SafeAreaView>
+    </ProDayScreenCanvas>
   );
 };
 
-function createPlanViewStyles(c: AppColors) {
-  return StyleSheet.create({
+const SubscriptionHero: React.FC<{
+  visual: SubscriptionPlanVisual;
+  plan: SubscriptionPlanDefinition;
+  isPro: boolean;
+  isDarkHero: boolean;
+}> = ({ visual, plan, isPro, isDarkHero }) => (
+  <View
+    style={[
+      styles.hero,
+      {
+        backgroundColor: visual.heroBg,
+        borderColor: visual.heroBorder ?? 'transparent',
+      },
+      visual.heroBorder ? styles.heroBordered : null,
+      shadows.card,
+    ]}
+  >
+    <View style={[styles.heroIcon, { backgroundColor: visual.primarySoft }]}>
+      <Icon name={visual.icon} size={28} color={visual.primary} variant="filled" />
+    </View>
+    <ProDayText
+      variant="eyebrow"
+      inverse={isDarkHero}
+      muted={!isDarkHero}
+      style={{ color: isDarkHero ? visual.heroSubtext : undefined }}
+    >
+      {visual.eyebrow}
+    </ProDayText>
+    <View
+      style={[
+        styles.tierPill,
+        isPro
+          ? { backgroundColor: visual.primary }
+          : { backgroundColor: isDarkHero ? 'rgba(255,255,255,0.12)' : visual.primarySoft },
+      ]}
+    >
+      <Icon
+        name={isPro ? 'star' : 'star-outline'}
+        size={14}
+        color={isPro ? visual.onPrimary : visual.primary}
+      />
+      <ProDayText
+        variant="caption"
+        inverse={isPro || isDarkHero}
+        style={{
+          fontWeight: '800',
+          color: isPro ? visual.onPrimary : isDarkHero ? visual.heroSubtext : visual.primary,
+        }}
+      >
+        {isPro ? PRO_TIER_LABEL : FREE_TIER_LABEL}
+      </ProDayText>
+    </View>
+    <ProDayText
+      variant="hero"
+      inverse={isDarkHero}
+      style={[styles.heroTitle, { color: isDarkHero ? visual.heroText : undefined }]}
+    >
+      {plan.label}
+    </ProDayText>
+    <ProDayText
+      variant="body"
+      inverse={isDarkHero}
+      muted={!isDarkHero}
+      style={[styles.heroSub, { color: isDarkHero ? visual.heroSubtext : undefined }]}
+    >
+      {plan.tagline}
+    </ProDayText>
+    {visual.proHighlight ? (
+      <View style={[styles.highlightPill, { backgroundColor: visual.primarySoft }]}>
+        <ProDayText variant="caption" style={{ color: visual.primary, fontWeight: '800' }}>
+          {visual.proHighlight}
+        </ProDayText>
+      </View>
+    ) : null}
+  </View>
+);
+
+const BillingToggle: React.FC<{
+  billing: BillingCycle;
+  onChange: (cycle: BillingCycle) => void;
+  visual: SubscriptionPlanVisual;
+}> = ({ billing, onChange, visual }) => {
+  const { colors } = useAppTheme();
+  return (
+    <View style={[styles.billingTrack, { backgroundColor: colors.surfaceMuted, borderColor: colors.border }]}>
+      {(['monthly', 'yearly'] as const).map((cycle) => {
+        const on = billing === cycle;
+        return (
+          <TouchableOpacity
+            key={cycle}
+            style={[
+              styles.billingTab,
+              on && { backgroundColor: colors.surface, ...shadows.soft },
+            ]}
+            onPress={() => onChange(cycle)}
+            activeOpacity={0.9}
+          >
+            <ProDayText variant="caption" style={on ? { fontWeight: '800' } : undefined}>
+              {cycle === 'monthly' ? 'Mensuel' : 'Annuel'}
+            </ProDayText>
+            {cycle === 'yearly' ? (
+              <ProDayText variant="caption" style={{ color: visual.primary, fontWeight: '800', fontSize: 10 }}>
+                −{ANNUAL_DISCOUNT_PERCENT} %
+              </ProDayText>
+            ) : null}
+          </TouchableOpacity>
+        );
+      })}
+    </View>
+  );
+};
+
+const QuotaMeter: React.FC<{ label: string; used: number; limit: number; accent: string }> = ({
+  label,
+  used,
+  limit,
+  accent,
+}) => {
+  const { colors } = useAppTheme();
+  const ratio = limit > 0 ? Math.min(1, used / limit) : 0;
+  const atLimit = used >= limit;
+  return (
+    <View style={styles.meterRow}>
+      <View style={styles.meterHead}>
+        <ProDayText variant="caption">{label}</ProDayText>
+        <ProDayText variant="caption" style={atLimit ? { color: colors.warning, fontWeight: '800' } : undefined}>
+          {used} / {limit}
+        </ProDayText>
+      </View>
+      <View style={[styles.meterTrack, { backgroundColor: colors.surfaceMuted }]}>
+        <View
+          style={[
+            styles.meterFill,
+            { width: `${ratio * 100}%`, backgroundColor: atLimit ? colors.warning : accent },
+          ]}
+        />
+      </View>
+    </View>
+  );
+};
+
+const FeatureRow: React.FC<{
+  text: string;
+  icon: IconName;
+  color: string;
+  muted?: boolean;
+}> = ({ text, icon, color, muted }) => (
+  <View style={styles.featureRow}>
+    <Icon name={icon} size={15} color={color} variant="filled" />
+    <ProDayText variant="caption" muted={muted} style={styles.featureText}>
+      {text}
+    </ProDayText>
+  </View>
+);
+
+const styles = StyleSheet.create({
   root: { flex: 1 },
-  fallback: { flex: 1, backgroundColor: c.background },
-  fallbackText: { textAlign: 'center', color: c.textMuted, padding: spacing.xl },
+  fallback: { flex: 1 },
+  fallbackText: { textAlign: 'center', padding: spacing.xl },
   scroll: { flex: 1 },
-  scrollContent: { paddingHorizontal: spacing.lg, paddingTop: spacing.md },
+  scrollContent: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+    paddingBottom: TAB_BAR_CONTENT_INSET + spacing.lg,
+  },
   hero: {
     borderRadius: radius.xl,
     padding: spacing.lg,
     alignItems: 'center',
-    marginBottom: spacing.lg,
-    ...shadows.card,
+    marginBottom: spacing.md,
   },
   heroBordered: { borderWidth: 1 },
   heroIcon: {
@@ -470,13 +471,6 @@ function createPlanViewStyles(c: AppColors) {
     justifyContent: 'center',
     marginBottom: spacing.sm,
   },
-  heroEyebrow: {
-    fontSize: 10,
-    fontWeight: '900',
-    letterSpacing: 1.2,
-    textTransform: 'uppercase',
-    marginBottom: spacing.xs,
-  },
   tierPill: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -484,104 +478,101 @@ function createPlanViewStyles(c: AppColors) {
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,
     borderRadius: radius.pill,
+    marginTop: spacing.sm,
     marginBottom: spacing.sm,
   },
-  tierText: { fontWeight: '800', fontSize: 12 },
-  heroTitle: { fontSize: 26, fontWeight: '900', textAlign: 'center' },
-  heroSub: { fontSize: 14, textAlign: 'center', marginTop: spacing.sm, lineHeight: 20 },
+  heroTitle: { textAlign: 'center' },
+  heroSub: { textAlign: 'center', marginTop: spacing.xs },
   highlightPill: {
     marginTop: spacing.md,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,
     borderRadius: radius.pill,
   },
-  highlightText: { fontSize: 11, fontWeight: '900', textTransform: 'uppercase', letterSpacing: 0.5 },
-  priceCard: {
-    alignItems: 'center',
-    backgroundColor: c.surface,
-    borderRadius: radius.lg,
-    padding: spacing.lg,
-    marginBottom: spacing.lg,
-    borderWidth: 1,
-    borderColor: c.border,
-  },
-  priceCardPremium: {
-    backgroundColor: '#18181B',
-    borderColor: '#F59E0B',
-    borderWidth: 2,
-  },
-  priceCardMedical: {
-    backgroundColor: '#FFFFFF',
-    borderColor: '#99F6E4',
-  },
-  priceCardDark: {
-    backgroundColor: '#18181B',
-    borderColor: '#3F3F46',
-  },
-  priceMain: { fontSize: 32, fontWeight: '900', color: c.text },
-  pricePer: { fontSize: 16, color: c.textMuted, fontWeight: '600', marginTop: -4 },
-  priceAlt: { fontSize: 13, color: c.textSecondary, marginTop: spacing.sm, textAlign: 'center' },
-  commissionNote: { fontSize: 12, fontWeight: '700', marginTop: spacing.sm, textAlign: 'center' },
-  commissionCard: {
+  billingTrack: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    padding: 4,
+    marginBottom: spacing.md,
+    gap: 4,
+  },
+  billingTab: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.sm,
+    borderRadius: radius.md,
+    gap: 2,
+  },
+  priceCard: {
+    padding: spacing.lg,
+    marginBottom: spacing.md,
+    borderWidth: 1,
+    gap: spacing.xs,
+  },
+  priceRow: { flexDirection: 'row', alignItems: 'flex-end', gap: spacing.xs },
+  billedLabel: { marginTop: spacing.xs },
+  savingsPill: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
+    borderRadius: radius.pill,
+    marginTop: spacing.xs,
+  },
+  commission: { marginTop: spacing.sm },
+  noteCard: {
+    flexDirection: 'row',
     gap: spacing.sm,
-    borderRadius: radius.lg,
     padding: spacing.md,
-    marginBottom: spacing.lg,
+    marginBottom: spacing.md,
     borderWidth: 1,
   },
-  commissionCardText: { flex: 1, fontSize: 13, lineHeight: 19 },
-  section: { marginBottom: spacing.lg },
-  sectionTitle: {
-    fontSize: 11,
-    fontWeight: '900',
-    letterSpacing: 0.8,
-    textTransform: 'uppercase',
-    color: c.textMuted,
-    marginBottom: spacing.sm,
-  },
-  sectionTitleDark: { color: '#A1A1AA' },
-  meterCard: {
-    backgroundColor: c.surface,
-    borderRadius: radius.lg,
+  noteText: { flex: 1, lineHeight: 18 },
+  proActiveCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
     padding: spacing.md,
-    borderWidth: 1,
-    borderColor: c.border,
+    marginBottom: spacing.md,
   },
-  meterCardDark: { backgroundColor: '#18181B', borderColor: '#3F3F46' },
-  compareRow: { flexDirection: 'row', gap: spacing.sm, alignItems: 'stretch' },
-  compareStack: { gap: spacing.sm },
-  loader: { marginVertical: spacing.xl },
+  proActiveCopy: { flex: 1, gap: 2 },
+  section: { marginBottom: spacing.lg, gap: spacing.sm },
+  meterCard: { borderWidth: 1, padding: spacing.md, gap: spacing.md },
+  meterRow: { gap: spacing.xs },
+  meterHead: { flexDirection: 'row', justifyContent: 'space-between' },
+  meterTrack: { height: 6, borderRadius: radius.pill, overflow: 'hidden' },
+  meterFill: { height: '100%', borderRadius: radius.pill },
+  proPlanCard: { borderWidth: 2, padding: spacing.md, marginBottom: spacing.sm, gap: spacing.xs },
+  proPlanHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  proBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
+    borderRadius: radius.pill,
+  },
+  proBadgeText: { fontWeight: '800', fontSize: 10 },
+  freePlanCard: { borderWidth: 1, padding: spacing.md, gap: spacing.xs },
+  freeLabel: { fontWeight: '800', marginBottom: spacing.xs, textTransform: 'uppercase', letterSpacing: 0.5 },
+  featureRow: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm, marginTop: spacing.xs },
+  featureText: { flex: 1, lineHeight: 18 },
+  loader: { marginVertical: spacing.lg },
   footer: {
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.sm,
     paddingBottom: spacing.sm,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: c.border,
-    backgroundColor: c.surface,
-    alignItems: 'center',
   },
-  footerDark: { backgroundColor: '#09090B', borderTopColor: '#27272A' },
   cta: {
-    alignSelf: 'stretch',
-    borderRadius: radius.md,
-    paddingVertical: spacing.sm + 2,
-    paddingHorizontal: spacing.md,
+    borderRadius: radius.lg,
+    paddingVertical: spacing.md,
     alignItems: 'center',
+    minHeight: 48,
     justifyContent: 'center',
-    minHeight: 44,
-    maxHeight: 48,
   },
   ctaText: { fontWeight: '800', fontSize: 15 },
-  ctaFootnote: {
-    fontSize: 11,
-    color: c.textMuted,
-    textAlign: 'center',
-    marginTop: spacing.xs,
-    fontWeight: '500',
-  },
+  footnote: { textAlign: 'center', marginTop: spacing.xs },
   refreshLink: { alignItems: 'center', padding: spacing.md },
-  refreshText: { fontSize: 13, color: c.textMuted, fontWeight: '600' },
-  });
-}
+});

@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { PressableSpring, StaggerReveal } from '../motion';
 import type { TeamEvent, AttendanceMark, RsvpStatus } from '../../models/TeamEvent';
 import { userRsvp } from '../../models/TeamEvent';
 import type { User } from '../../models/User';
@@ -25,12 +26,14 @@ const MARKS: { mark: AttendanceMark; label: string }[] = [
 
 interface EventAttendancePanelProps {
   event: TeamEvent;
+  profile: User;
   isStaff: boolean;
   onUpdated: () => void;
 }
 
 export const EventAttendancePanel: React.FC<EventAttendancePanelProps> = ({
   event,
+  profile,
   isStaff,
   onUpdated,
 }) => {
@@ -50,7 +53,7 @@ export const EventAttendancePanel: React.FC<EventAttendancePanelProps> = ({
   }, [event.invitee_uids]);
 
   const markAttendance = async (uid: string, mark: AttendanceMark) => {
-    await teamEventsService.markAttendance(event.id, uid, mark);
+    await teamEventsService.markAttendance(event.id, uid, mark, { user: profile });
     onUpdated();
   };
 
@@ -66,12 +69,13 @@ export const EventAttendancePanel: React.FC<EventAttendancePanelProps> = ({
 
   return (
     <ScrollView style={styles.list} nestedScrollEnabled>
-      {event.invitee_uids.map((uid) => {
+      {event.invitee_uids.map((uid, index) => {
         const rsvp = userRsvp(event, uid);
         const note = event.rsvp_notes?.[uid];
         const mark = event.attendance_marks?.[uid];
         return (
-          <View key={uid} style={styles.row}>
+          <StaggerReveal key={uid} index={index} delayStep={40}>
+          <View style={styles.row}>
             <View style={styles.rowHead}>
               <Text style={styles.name}>{names[uid] ?? '…'}</Text>
               <Text style={styles.rsvp}>
@@ -85,20 +89,23 @@ export const EventAttendancePanel: React.FC<EventAttendancePanelProps> = ({
                 {MARKS.map((m) => {
                   const active = mark === m.mark;
                   return (
-                    <TouchableOpacity
+                    <PressableSpring
                       key={m.mark}
                       style={[styles.markBtn, active && styles.markBtnOn]}
                       onPress={() => void markAttendance(uid, m.mark)}
+                      scaleTo={0.94}
+                      haptic
                     >
                       <Text style={[styles.markBtnText, active && styles.markBtnTextOn]}>
                         {m.label}
                       </Text>
-                    </TouchableOpacity>
+                    </PressableSpring>
                   );
                 })}
               </View>
             ) : null}
           </View>
+          </StaggerReveal>
         );
       })}
     </ScrollView>

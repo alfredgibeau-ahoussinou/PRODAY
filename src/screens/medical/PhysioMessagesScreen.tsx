@@ -5,8 +5,9 @@ import {
   FlatList,
   StyleSheet,
   ActivityIndicator,
-  TouchableOpacity,
+  Alert,
 } from 'react-native';
+import { PressableSpring, SkeletonList, StaggerReveal } from '../../components/motion';
 import { useAuth } from '../../context/AuthContext';
 import { useSessionProfile } from '../../hooks/useSessionProfile';
 import { useMessagesData } from '../../hooks/useAppData';
@@ -47,14 +48,22 @@ export const PhysioMessagesScreen: React.FC = () => {
 
   useEffect(() => {
     if (pendingChatThreadId) {
+      if (mustVerify) {
+        clearPendingChat();
+        Alert.alert(
+          'Messagerie bloquée',
+          'Validez votre diplôme ou licence depuis l’onglet Profil.',
+        );
+        return;
+      }
       setActiveThreadId(pendingChatThreadId);
       clearPendingChat();
     }
-  }, [pendingChatThreadId, clearPendingChat]);
+  }, [pendingChatThreadId, clearPendingChat, mustVerify]);
 
   const activeThread = threads.find((t) => t.id === activeThreadId);
 
-  if (activeThreadId && profile && activeThread) {
+  if (activeThreadId && profile && !mustVerify && activeThread) {
     return (
       <ChatScreen
         threadId={activeThreadId}
@@ -69,7 +78,7 @@ export const PhysioMessagesScreen: React.FC = () => {
     );
   }
 
-  if (activeThreadId && profile) {
+  if (activeThreadId && profile && !mustVerify) {
     return (
       <ChatScreen
         threadId={activeThreadId}
@@ -104,7 +113,7 @@ export const PhysioMessagesScreen: React.FC = () => {
       )}
 
       {loading ? (
-        <ActivityIndicator color={MEDICAL_THEME.primary} style={styles.loader} />
+        <SkeletonList count={5} variant="row" />
       ) : !profile ? null : sortedThreads.length === 0 ? (
         <View style={styles.emptyCard}>
           <Text style={styles.emptyTitle}>Aucun message</Text>
@@ -117,43 +126,47 @@ export const PhysioMessagesScreen: React.FC = () => {
           data={sortedThreads}
           keyExtractor={(t) => t.id}
           contentContainerStyle={styles.list}
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              style={[
-                styles.thread,
-                item.thread_kind === 'physio_care' && styles.threadCare,
-              ]}
-              onPress={() => !mustVerify && setActiveThreadId(item.id)}
-              disabled={!!mustVerify}
-            >
-              <View style={[styles.avatar, item.thread_kind === 'physio_care' && styles.avatarCare]}>
-                <Text style={styles.avatarText}>
-                  {item.participant_name.charAt(0).toUpperCase()}
-                </Text>
-              </View>
-              <View style={styles.threadBody}>
-                <View style={styles.threadTop}>
-                  <View style={styles.threadNameRow}>
-                    <Text style={styles.threadName}>{item.participant_name}</Text>
-                    {physioCareThreadLabel(item.thread_kind) ? (
-                      <Text style={styles.careBadge}>
-                        {physioCareThreadLabel(item.thread_kind)}
-                      </Text>
-                    ) : null}
-                  </View>
-                  <Text style={styles.threadTime}>
-                    {item.updated_at.toLocaleDateString('fr-FR', {
-                      day: 'numeric',
-                      month: 'short',
-                    })}
+          renderItem={({ item, index }) => (
+            <StaggerReveal index={index}>
+              <PressableSpring
+                style={[
+                  styles.thread,
+                  item.thread_kind === 'physio_care' && styles.threadCare,
+                ]}
+                onPress={() => !mustVerify && setActiveThreadId(item.id)}
+                disabled={!!mustVerify}
+                scaleTo={0.99}
+                haptic={!mustVerify}
+              >
+                <View style={[styles.avatar, item.thread_kind === 'physio_care' && styles.avatarCare]}>
+                  <Text style={styles.avatarText}>
+                    {item.participant_name.charAt(0).toUpperCase()}
                   </Text>
                 </View>
-                <Text style={styles.threadPreview} numberOfLines={1}>
-                  {item.last_message || 'Nouvelle conversation'}
-                </Text>
-              </View>
-              {item.unread ? <View style={styles.unreadDot} /> : null}
-            </TouchableOpacity>
+                <View style={styles.threadBody}>
+                  <View style={styles.threadTop}>
+                    <View style={styles.threadNameRow}>
+                      <Text style={styles.threadName}>{item.participant_name}</Text>
+                      {physioCareThreadLabel(item.thread_kind) ? (
+                        <Text style={styles.careBadge}>
+                          {physioCareThreadLabel(item.thread_kind)}
+                        </Text>
+                      ) : null}
+                    </View>
+                    <Text style={styles.threadTime}>
+                      {item.updated_at.toLocaleDateString('fr-FR', {
+                        day: 'numeric',
+                        month: 'short',
+                      })}
+                    </Text>
+                  </View>
+                  <Text style={styles.threadPreview} numberOfLines={1}>
+                    {item.last_message || 'Nouvelle conversation'}
+                  </Text>
+                </View>
+                {item.unread ? <View style={styles.unreadDot} /> : null}
+              </PressableSpring>
+            </StaggerReveal>
           )}
         />
       )}
