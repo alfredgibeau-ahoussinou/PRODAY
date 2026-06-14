@@ -5,12 +5,12 @@ import {
   View,
   Text,
   TextInput,
-  TouchableOpacity,
   StyleSheet,
   Alert,
   ActivityIndicator,
   ScrollView,
 } from 'react-native';
+import { PressableSpring, StaggerReveal } from '../motion';
 import type { TeamEvent } from '../../models/TeamEvent';
 import type { User } from '../../models/User';
 import { usersService } from '../../services/users.service';
@@ -25,6 +25,10 @@ import {
   totalCarpoolSeats,
 } from '../../utils/carpoolBalance';
 import { Icon } from '../ui/Icon';
+import { CarpoolLocationCapture } from '../carpool/CarpoolLocationCapture';
+import { openMapsAt } from '../../utils/geoLocation';
+import { pickupDistanceFromMeeting } from '../../utils/carpoolGeo';
+import { prodayHaptics } from '../../utils/prodayHaptics';
 import { spacing, radius } from '../../theme/designTokens';
 
 interface EventCarpoolPanelProps {
@@ -50,7 +54,14 @@ export const EventCarpoolPanel: React.FC<EventCarpoolPanelProps> = ({
   const [editSeats, setEditSeats] = useState('');
   const [editTime, setEditTime] = useState('');
   const [editPlace, setEditPlace] = useState('');
+  const [editMeetingLocation, setEditMeetingLocation] = useState<
+    import('../../models/User').GeoPoint | undefined
+  >();
   const [editNotes, setEditNotes] = useState('');
+  const [pickupPlace, setPickupPlace] = useState('');
+  const [pickupLocation, setPickupLocation] = useState<
+    import('../../models/User').GeoPoint | undefined
+  >();
 
   const slots = event.carpool_slots ?? [];
   const mySlot = carpoolSlotForDriver(event, profile.uid);
@@ -82,9 +93,28 @@ export const EventCarpoolPanel: React.FC<EventCarpoolPanelProps> = ({
       setEditSeats(mySlot.seats != null ? String(mySlot.seats) : '');
       setEditTime(mySlot.meeting_time ?? '');
       setEditPlace(mySlot.meeting_place ?? '');
+      setEditMeetingLocation(mySlot.meeting_location);
       setEditNotes(mySlot.notes ?? '');
     }
-  }, [mySlot?.driver_uid, mySlot?.seats, mySlot?.meeting_time, mySlot?.meeting_place, mySlot?.notes]);
+  }, [
+    mySlot?.driver_uid,
+    mySlot?.seats,
+    mySlot?.meeting_time,
+    mySlot?.meeting_place,
+    mySlot?.meeting_location,
+    mySlot?.notes,
+  ]);
+
+  useEffect(() => {
+    if (!myBooking) {
+      setPickupPlace('');
+      setPickupLocation(undefined);
+      return;
+    }
+    const passenger = (myBooking.slot.passengers ?? []).find((p) => p.uid === profile.uid);
+    setPickupPlace(passenger?.pickup_place ?? '');
+    setPickupLocation(passenger?.pickup_location);
+  }, [myBooking?.driverUid, myBooking?.slot.passengers, profile.uid]);
 
   useEffect(() => {
     setSelectedUids(new Set(slots.map((s) => s.driver_uid)));
@@ -106,7 +136,7 @@ export const EventCarpoolPanel: React.FC<EventCarpoolPanelProps> = ({
         uid,
         name: names[uid] ?? uid.slice(0, 8),
       }));
-      await teamEventsService.setCarpoolDrivers(event.id, drivers);
+      await teamEventsService.setCarpoolDrivers(event.id, drivers, { user: profile });
       setPickMode(false);
       onUpdated();
       Alert.alert(
@@ -180,6 +210,7 @@ export const EventCarpoolPanel: React.FC<EventCarpoolPanelProps> = ({
         seats,
         meeting_time: editTime.trim() || undefined,
         meeting_place: editPlace.trim() || undefined,
+        meeting_location: editMeetingLocation,
         notes: editNotes.trim() || undefined,
       });
       onUpdated();
@@ -192,14 +223,26 @@ export const EventCarpoolPanel: React.FC<EventCarpoolPanelProps> = ({
   };
 
   const bookSeat = async (driverUid: string) => {
+    if (!pickupPlace.trim() && !pickupLocation) {
+      Alert.alert(
+        'Point de prise en charge',
+        'Indiquez où vous souhaitez être récupéré(e) — adresse ou position GPS.'
+      );
+      return;
+    }
     setSaving(true);
     try {
       await teamEventsService.requestCarpoolSeat(
         event.id,
         driverUid,
         profile.uid,
-        profile.display_name
+        profile.display_name,
+        {
+          pickup_place: pickupPlace.trim() || undefined,
+          pickup_location: pickupLocation,
+        }
       );
+      prodayHaptics.carpoolBook();
       onUpdated();
       Alert.alert('Place réservée', 'Le conducteur est notifié dans le fil de coordination.');
     } catch (e) {
@@ -255,14 +298,16 @@ export const EventCarpoolPanel: React.FC<EventCarpoolPanelProps> = ({
       </Text>
 
       {canParticipate && !isDriver ? (
-        <TouchableOpacity
+        <PressableSpring
           style={styles.offerBtn}
           onPress={() => void volunteerAsDriver()}
           disabled={saving}
+          scaleTo={0.96}
+          haptic
         >
           <Icon name="add" size={20} color="#fff" />
           <Text style={styles.offerBtnText}>Je peux emmener des coéquipiers</Text>
-        </TouchableOpacity>
+        </PressableSpring>
       ) : null}
 
       {myBooking && myBooking.driverUid !== profile.uid ? (
@@ -271,6 +316,49 @@ export const EventCarpoolPanel: React.FC<EventCarpoolPanelProps> = ({
           <Text style={styles.bookingBannerText}>
             Vous montez avec {myBooking.slot.driver_name}
           </Text>
+          <CarpoolLocationCapture
+            label="Votre point de prise en charge"
+            place={pickupPlace}
+            location={pickupLocation}
+            onPlaceChange={setPickupPlace}
+            onLocationChange={setPickupLocation}
+            disabled={saving}
+            compact
+          />
+          <PressableSpring
+            style={styles.secondaryBtn}
+            onPress={() => {
+              void (async () => {
+                if (!pickupPlace.trim() && !pickupLocation) {
+                  Alert.alert('Prise en charge', 'Indiquez votre adresse ou position GPS.');
+                  return;
+                }
+                setSaving(true);
+                try {
+                  await teamEventsService.updatePassengerPickup(
+                    event.id,
+                    myBooking.driverUid,
+                    profile.uid,
+                    {
+                      pickup_place: pickupPlace.trim() || undefined,
+                      pickup_location: pickupLocation,
+                    }
+                  );
+                  onUpdated();
+                  Alert.alert('Enregistré', 'Le conducteur voit votre point de prise en charge.');
+                } catch (e) {
+                  Alert.alert('Erreur', e instanceof Error ? e.message : 'Mise à jour impossible.');
+                } finally {
+                  setSaving(false);
+                }
+              })();
+            }}
+            disabled={saving}
+            scaleTo={0.96}
+            haptic
+          >
+            <Text style={styles.secondaryBtnText}>Mettre à jour ma position</Text>
+          </PressableSpring>
         </View>
       ) : null}
 
@@ -282,7 +370,7 @@ export const EventCarpoolPanel: React.FC<EventCarpoolPanelProps> = ({
               ? ` · ${availableTotal ?? seatTotal} place(s) dispo`
               : ' · places à préciser'}
           </Text>
-          {slots.map((slot) => {
+          {slots.map((slot, slotIndex) => {
             const available = carpoolAvailableSeats(slot);
             const bookedHere = isCarpoolPassenger(slot, profile.uid);
             const isMine = slot.driver_uid === profile.uid;
@@ -293,7 +381,8 @@ export const EventCarpoolPanel: React.FC<EventCarpoolPanelProps> = ({
               (available === null || available > 0);
 
             return (
-              <View key={slot.driver_uid} style={styles.rideCard}>
+              <StaggerReveal key={slot.driver_uid} index={slotIndex} delayStep={50}>
+              <View style={styles.rideCard}>
                 <View style={styles.rideTop}>
                   <View style={styles.rideAvatar}>
                     <Icon name="person" size={18} color={c.ink} />
@@ -313,6 +402,15 @@ export const EventCarpoolPanel: React.FC<EventCarpoolPanelProps> = ({
                   <Icon name="chevron-forward" size={14} color={c.textMuted} />
                   <Text style={styles.routeTo}>{destination || event.city}</Text>
                 </View>
+                {slot.meeting_location ? (
+                  <PressableSpring
+                    onPress={() => openMapsAt(slot.meeting_location!, slot.meeting_place)}
+                    scaleTo={0.96}
+                    haptic
+                  >
+                    <Text style={styles.mapLink}>Voir le RDV conducteur sur la carte</Text>
+                  </PressableSpring>
+                ) : null}
 
                 {slot.meeting_time ? (
                   <Text style={styles.slotLine}>Départ {slot.meeting_time}</Text>
@@ -329,31 +427,70 @@ export const EventCarpoolPanel: React.FC<EventCarpoolPanelProps> = ({
                 )}
 
                 {(slot.passengers ?? []).length > 0 ? (
-                  <Text style={styles.passengersLine}>
-                    Passagers : {(slot.passengers ?? []).map((p) => p.name).join(', ')}
-                  </Text>
+                  <View style={styles.passengersBox}>
+                    <Text style={styles.passengersLine}>
+                      Passagers : {(slot.passengers ?? []).map((p) => p.name).join(', ')}
+                    </Text>
+                    {(slot.passengers ?? []).map((p) => {
+                      const dist = pickupDistanceFromMeeting(slot, p);
+                      if (!p.pickup_place && !p.pickup_location) return null;
+                      return (
+                        <View key={p.uid} style={styles.pickupRow}>
+                          <Text style={styles.pickupName}>
+                            {p.name} — {p.pickup_place?.trim() || 'Position GPS'}
+                            {dist ? ` · ${dist} du RDV` : ''}
+                          </Text>
+                          {p.pickup_location ? (
+                            <PressableSpring
+                              onPress={() => openMapsAt(p.pickup_location!, p.pickup_place)}
+                              scaleTo={0.96}
+                              haptic
+                            >
+                              <Text style={styles.mapLink}>Carte prise en charge</Text>
+                            </PressableSpring>
+                          ) : null}
+                        </View>
+                      );
+                    })}
+                  </View>
                 ) : null}
 
                 {slot.notes ? <Text style={styles.slotNotes}>{slot.notes}</Text> : null}
 
                 {bookedHere ? (
-                  <TouchableOpacity
+                  <PressableSpring
                     style={styles.cancelBookBtn}
                     onPress={() => void cancelBooking(slot.driver_uid)}
                     disabled={saving}
+                    scaleTo={0.96}
+                    haptic
                   >
                     <Text style={styles.cancelBookText}>Annuler ma réservation</Text>
-                  </TouchableOpacity>
+                  </PressableSpring>
                 ) : canBook ? (
-                  <TouchableOpacity
-                    style={styles.bookBtn}
-                    onPress={() => void bookSeat(slot.driver_uid)}
-                    disabled={saving}
-                  >
-                    <Text style={styles.bookBtnText}>Réserver une place</Text>
-                  </TouchableOpacity>
+                  <View style={styles.bookBlock}>
+                    <CarpoolLocationCapture
+                      label="Où souhaitez-vous être récupéré(e) ?"
+                      place={pickupPlace}
+                      location={pickupLocation}
+                      onPlaceChange={setPickupPlace}
+                      onLocationChange={setPickupLocation}
+                      disabled={saving}
+                      compact
+                    />
+                    <PressableSpring
+                      style={styles.bookBtn}
+                      onPress={() => void bookSeat(slot.driver_uid)}
+                      disabled={saving}
+                      scaleTo={0.96}
+                      haptic
+                    >
+                      <Text style={styles.bookBtnText}>Réserver une place</Text>
+                    </PressableSpring>
+                  </View>
                 ) : null}
               </View>
+              </StaggerReveal>
             );
           })}
         </View>
@@ -388,6 +525,15 @@ export const EventCarpoolPanel: React.FC<EventCarpoolPanelProps> = ({
             value={editPlace}
             onChangeText={setEditPlace}
           />
+          <CarpoolLocationCapture
+            label="Position GPS du point de rendez-vous"
+            place={editPlace}
+            location={editMeetingLocation}
+            onPlaceChange={setEditPlace}
+            onLocationChange={setEditMeetingLocation}
+            disabled={saving}
+            compact
+          />
           <TextInput
             style={[styles.input, styles.inputMultiline]}
             placeholder="Infos utiles (sièges enfants, retour direct…)"
@@ -396,21 +542,25 @@ export const EventCarpoolPanel: React.FC<EventCarpoolPanelProps> = ({
             onChangeText={setEditNotes}
             multiline
           />
-          <TouchableOpacity
+          <PressableSpring
             style={styles.primaryBtn}
             onPress={() => void saveMySlot()}
             disabled={saving}
+            scaleTo={0.96}
+            haptic
           >
             <Text style={styles.primaryBtnText}>Publier mon trajet</Text>
-          </TouchableOpacity>
+          </PressableSpring>
           {mySlot.volunteered ? (
-            <TouchableOpacity
+            <PressableSpring
               style={styles.secondaryBtn}
               onPress={() => void withdrawOffer()}
               disabled={saving}
+              scaleTo={0.96}
+              haptic
             >
               <Text style={styles.secondaryBtnText}>Retirer ma proposition</Text>
-            </TouchableOpacity>
+            </PressableSpring>
           ) : null}
         </View>
       ) : null}
@@ -419,41 +569,56 @@ export const EventCarpoolPanel: React.FC<EventCarpoolPanelProps> = ({
         <View style={styles.staffBox}>
           <Text style={styles.staffTitle}>Staff — assignation rapide</Text>
           {!pickMode ? (
-            <TouchableOpacity style={styles.secondaryBtn} onPress={() => setPickMode(true)}>
+            <PressableSpring
+              style={styles.secondaryBtn}
+              onPress={() => setPickMode(true)}
+              scaleTo={0.96}
+              haptic
+            >
               <Text style={styles.secondaryBtnText}>
                 {slots.length > 0 ? 'Modifier les chauffeurs assignés' : 'Assigner des chauffeurs'}
               </Text>
-            </TouchableOpacity>
+            </PressableSpring>
           ) : (
             <View style={styles.pickBox}>
               <Text style={styles.pickLabel}>Sélectionnez les conducteurs</Text>
               <ScrollView style={styles.pickList} nestedScrollEnabled>
-                {candidateUids.map((uid) => (
-                  <TouchableOpacity
-                    key={uid}
-                    style={[styles.pickRow, selectedUids.has(uid) && styles.pickRowActive]}
-                    onPress={() => togglePick(uid)}
-                  >
-                    <Text style={styles.pickName}>{names[uid] ?? '…'}</Text>
-                    <Text style={styles.pickCheck}>{selectedUids.has(uid) ? '✓' : ''}</Text>
-                  </TouchableOpacity>
+                {candidateUids.map((uid, pickIndex) => (
+                  <StaggerReveal key={uid} index={pickIndex} delayStep={35}>
+                    <PressableSpring
+                      style={[styles.pickRow, selectedUids.has(uid) && styles.pickRowActive]}
+                      onPress={() => togglePick(uid)}
+                      scaleTo={0.98}
+                      haptic
+                    >
+                      <Text style={styles.pickName}>{names[uid] ?? '…'}</Text>
+                      <Text style={styles.pickCheck}>{selectedUids.has(uid) ? '✓' : ''}</Text>
+                    </PressableSpring>
+                  </StaggerReveal>
                 ))}
               </ScrollView>
               <View style={styles.pickActions}>
-                <TouchableOpacity style={styles.secondaryBtn} onPress={() => setPickMode(false)}>
+                <PressableSpring
+                  style={styles.secondaryBtn}
+                  onPress={() => setPickMode(false)}
+                  scaleTo={0.96}
+                  haptic
+                >
                   <Text style={styles.secondaryBtnText}>Annuler</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
+                </PressableSpring>
+                <PressableSpring
                   style={[styles.primaryBtn, styles.pickSaveBtn]}
                   onPress={() => void saveDrivers()}
                   disabled={saving}
+                  scaleTo={0.96}
+                  haptic
                 >
                   {saving ? (
                     <ActivityIndicator color="#fff" />
                   ) : (
                     <Text style={styles.primaryBtnText}>Valider</Text>
                   )}
-                </TouchableOpacity>
+                </PressableSpring>
               </View>
             </View>
           )}
@@ -467,19 +632,21 @@ export const EventCarpoolPanel: React.FC<EventCarpoolPanelProps> = ({
             Précisez ici le RDV, les places restantes ou qui monte dans quelle voiture.
           </Text>
         ) : (
-          (event.carpool_messages ?? []).map((m) => (
-            <View key={m.id} style={styles.msgRow}>
-              <Text style={styles.msgAuthor}>{m.author_name}</Text>
-              <Text style={styles.msgBody}>{m.body}</Text>
-              <Text style={styles.msgTime}>
-                {m.created_at.toLocaleString('fr-FR', {
-                  day: 'numeric',
-                  month: 'short',
-                  hour: '2-digit',
-                  minute: '2-digit',
-                })}
-              </Text>
-            </View>
+          (event.carpool_messages ?? []).map((m, msgIndex) => (
+            <StaggerReveal key={m.id} index={msgIndex} delayStep={40}>
+              <View style={styles.msgRow}>
+                <Text style={styles.msgAuthor}>{m.author_name}</Text>
+                <Text style={styles.msgBody}>{m.body}</Text>
+                <Text style={styles.msgTime}>
+                  {m.created_at.toLocaleString('fr-FR', {
+                    day: 'numeric',
+                    month: 'short',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
+                </Text>
+              </View>
+            </StaggerReveal>
           ))
         )}
         <TextInput
@@ -490,13 +657,15 @@ export const EventCarpoolPanel: React.FC<EventCarpoolPanelProps> = ({
           onChangeText={setMessageDraft}
           multiline
         />
-        <TouchableOpacity
+        <PressableSpring
           style={styles.secondaryBtn}
           onPress={() => void postMessage()}
           disabled={saving || !messageDraft.trim()}
+          scaleTo={0.96}
+          haptic
         >
           <Text style={styles.secondaryBtnText}>Publier</Text>
-        </TouchableOpacity>
+        </PressableSpring>
       </View>
     </View>
   );
@@ -608,7 +777,12 @@ function createStyles(c: AppColors) {
   slotLine: { fontSize: 13, color: c.textSecondary, marginTop: 2 },
   slotMuted: { fontSize: 12, color: c.textMuted, fontStyle: 'italic', marginTop: 2 },
   passengersLine: { fontSize: 12, color: c.accent, fontWeight: '700', marginTop: spacing.xs },
+  passengersBox: { marginTop: spacing.xs, gap: 4 },
+  pickupRow: { marginTop: 2 },
+  pickupName: { fontSize: 11, color: c.textSecondary },
+  mapLink: { fontSize: 11, fontWeight: '700', color: c.accent, marginTop: 2 },
   slotNotes: { fontSize: 12, color: c.textMuted, marginTop: 4 },
+  bookBlock: { marginTop: spacing.sm, gap: spacing.xs },
   bookBtn: {
     marginTop: spacing.sm,
     backgroundColor: c.accent,
