@@ -7,6 +7,7 @@ import { useAppTheme } from '../../context/ProductLineContext';
 import type { AppColors } from '../../theme/universeTheme';
 import { Icon } from './Icon';
 import { Logo } from '../Logo';
+import { ProDayText } from './ProDayText';
 
 interface ScreenHeaderProps {
   title: string;
@@ -96,28 +97,35 @@ export const ScreenHeader: React.FC<ScreenHeaderProps> = ({
   }
 
   return (
-    <View style={wrapStyle}>
-      {label ? (
-        <Text
-          style={[
-            styles.label,
-            dark && styles.labelDark,
-            !isDarkHeader && { color: c.brand },
-          ]}
-        >
-          {label}
-        </Text>
-      ) : null}
-      {showBrandLogo && (
+    <View
+      style={[
+        wrapStyle,
+        !isDarkHeader && {
+          backgroundColor: c.surface,
+          borderBottomWidth: StyleSheet.hairlineWidth,
+          borderBottomColor: c.border,
+        },
+      ]}
+    >
+      {showBrandLogo ? (
         <View style={styles.brandRow}>
           <Logo background={dark ? 'dark' : 'light'} width={72} />
         </View>
-      )}
+      ) : null}
       <View style={styles.row}>
         <View style={styles.titles}>
-          <Text style={[styles.title, { color: ink }]}>{title}</Text>
+          {label ? (
+            <ProDayText variant="caption" muted style={styles.labelCompact}>
+              {label}
+            </ProDayText>
+          ) : null}
+          <ProDayText variant="title" inverse={isDarkHeader} style={[styles.appTitle, { color: ink }]}>
+            {title}
+          </ProDayText>
           {subtitle ? (
-            <Text style={[styles.subtitleInline, { color: subInk }]}>{subtitle}</Text>
+            <ProDayText variant="body" style={[styles.subtitleInline, { color: subInk }]}>
+              {subtitle}
+            </ProDayText>
           ) : null}
         </View>
         {rightAction}
@@ -131,6 +139,19 @@ function createStyles(c: AppColors) {
   wrap: {
     backgroundColor: c.background,
     paddingBottom: spacing.sm,
+    overflow: 'hidden',
+  },
+  labelCompact: {
+    marginBottom: 2,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+    fontSize: 11,
+  },
+  appTitle: {
+    fontSize: 22,
+    fontWeight: '800',
+    letterSpacing: -0.4,
   },
   wrapDark: {
     backgroundColor: c.surfaceInverse,

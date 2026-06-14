@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Image, ImageSourcePropType } from 'react-native';
+import { View, Text, StyleSheet, Image, ImageSourcePropType } from 'react-native';
+import { PressableSpring } from '../motion/PressableSpring';
 import { spacing, radius, shadows } from '../../theme/designTokens';
 import { useAppTheme } from '../../context/ProductLineContext';
 
@@ -23,7 +24,7 @@ export const RecruitmentAdCard: React.FC<RecruitmentAdCardProps> = ({
   const { colors } = useAppTheme();
 
   return (
-    <TouchableOpacity
+    <PressableSpring
       style={[
         styles.card,
         {
@@ -33,7 +34,9 @@ export const RecruitmentAdCard: React.FC<RecruitmentAdCardProps> = ({
         shadows.soft,
       ]}
       onPress={onPress}
-      activeOpacity={onPress ? 0.85 : 1}
+      disabled={!onPress}
+      scaleTo={0.96}
+      haptic={Boolean(onPress)}
     >
       {imageSource ? (
         <Image source={imageSource} style={styles.thumb} resizeMode="cover" />
@@ -55,7 +58,7 @@ export const RecruitmentAdCard: React.FC<RecruitmentAdCardProps> = ({
         <Text style={[styles.meta, { color: colors.textMuted }]}>{meta}</Text>
       </View>
       <Text style={[styles.chevron, { color: colors.brand }]}>›</Text>
-    </TouchableOpacity>
+    </PressableSpring>
   );
 };
 

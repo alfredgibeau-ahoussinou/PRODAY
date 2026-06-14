@@ -10,6 +10,8 @@ interface PlayerRowCardProps {
   onPress: (user: User) => void;
   bookmarked?: boolean;
   onBookmark?: () => void;
+  scoutingScore?: number;
+  scoutingLabel?: string;
 }
 
 export const PlayerRowCard: React.FC<PlayerRowCardProps> = ({
@@ -17,6 +19,8 @@ export const PlayerRowCard: React.FC<PlayerRowCardProps> = ({
   onPress,
   bookmarked,
   onBookmark,
+  scoutingScore,
+  scoutingLabel,
 }) => {
   const { colors } = useAppTheme();
   const p = user.profile;
@@ -51,6 +55,12 @@ export const PlayerRowCard: React.FC<PlayerRowCardProps> = ({
         <Text style={[styles.meta, { color: colors.textSecondary }]}>{meta}</Text>
         {p.level ? (
           <Text style={[styles.level, { color: colors.brand }]}>{p.level}</Text>
+        ) : null}
+        {scoutingScore != null ? (
+          <Text style={[styles.scouting, { color: colors.accent }]}>
+            IA {scoutingScore}%
+            {scoutingLabel ? ` · ${scoutingLabel}` : ''}
+          </Text>
         ) : null}
       </View>
       {onBookmark && (
@@ -88,4 +98,5 @@ const styles = StyleSheet.create({
   name: { fontSize: 16, fontWeight: '700' },
   meta: { fontSize: 13, marginTop: 2 },
   level: { fontSize: 12, marginTop: 2, fontWeight: '600' },
+  scouting: { fontSize: 11, marginTop: 4, fontWeight: '700' },
 });

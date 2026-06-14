@@ -16,14 +16,12 @@ function getModuleAccents(c: AppColors) {
       recrutement: c.tone1,
       matchs: c.tone2,
       gestion: c.brand,
-      arena: c.tone3,
       sponsors: c.tone4,
     } as Record<ProDayModuleId, string>,
     bg: {
       recrutement: c.brandSoft,
       matchs: c.backgroundAlt,
       gestion: c.surfaceMuted,
-      arena: c.surfaceMuted,
       sponsors: c.brandSoft,
     } as Record<ProDayModuleId, string>,
   };

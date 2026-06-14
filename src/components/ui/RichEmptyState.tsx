@@ -7,6 +7,7 @@ import {
   StyleSheet,
   ViewStyle,
 } from 'react-native';
+import { PressableSpring } from '../motion';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { spacing, radius, surfaces } from '../../theme/designTokens';
 import type { AppColors } from '../../theme/universeTheme';
@@ -39,9 +40,14 @@ export const RichEmptyState: React.FC<RichEmptyStateProps> = ({
       <Text style={styles.title}>{title}</Text>
       <Text style={styles.subtitle}>{subtitle}</Text>
       {actionLabel && onAction ? (
-        <Text style={styles.action} onPress={onAction}>
-          {actionLabel} →
-        </Text>
+        <PressableSpring
+          onPress={onAction}
+          scaleTo={0.97}
+          haptic
+          style={styles.actionBtn}
+        >
+          <Text style={styles.action}>{actionLabel} →</Text>
+        </PressableSpring>
       ) : null}
     </View>
   );
@@ -74,11 +80,19 @@ function createStyles(c: AppColors) {
       lineHeight: 19,
       marginTop: spacing.sm,
     },
-    action: {
+    actionBtn: {
       marginTop: spacing.md,
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.sm,
+      borderRadius: radius.pill,
+      borderWidth: 1.5,
+      borderColor: c.borderStrong,
+      backgroundColor: c.surfaceMuted,
+    },
+    action: {
       fontSize: 14,
-      fontWeight: '700',
-      color: c.brand,
+      fontWeight: '800',
+      color: c.accent,
     },
   });
 }

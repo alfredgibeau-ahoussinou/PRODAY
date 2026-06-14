@@ -1,6 +1,7 @@
 import React from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { useAppTheme } from '../../context/ProductLineContext';
+import { FootIcon, FOOT_ICON_NAMES, type FootIconName } from './footIcons/FootIcon';
 
 export type IconName =
   | 'home'
@@ -49,7 +50,29 @@ export type IconName =
   | 'alert-circle'
   | 'document'
   | 'camera'
+  | 'videocam'
+  | 'volume-high'
+  | 'volume-mute'
   | 'bag';
+
+const FOOT_ALIAS: Partial<Record<IconName, FootIconName>> = {
+  home: 'home',
+  search: 'search',
+  chat: 'chat',
+  person: 'person',
+  handshake: 'handshake',
+  calendar: 'calendar',
+  football: 'football',
+  'football-outline': 'football',
+  car: 'car',
+  heart: 'heart',
+  'heart-outline': 'heart',
+  trophy: 'trophy',
+  videocam: 'videocam',
+  bag: 'bag',
+  star: 'star',
+  'star-four-points': 'star',
+};
 
 const MAP: Record<IconName, keyof typeof Ionicons.glyphMap> = {
   home: 'home-outline',
@@ -98,10 +121,12 @@ const MAP: Record<IconName, keyof typeof Ionicons.glyphMap> = {
   'alert-circle': 'alert-circle-outline',
   document: 'document-text-outline',
   camera: 'camera-outline',
+  videocam: 'videocam-outline',
+  'volume-high': 'volume-high',
+  'volume-mute': 'volume-mute',
   bag: 'bag-outline',
 };
 
-/** Icônes pleines pour onglets actifs */
 const FILLED_MAP: Partial<Record<IconName, keyof typeof Ionicons.glyphMap>> = {
   home: 'home',
   search: 'search',
@@ -130,6 +155,19 @@ export const Icon: React.FC<IconProps> = ({
 }) => {
   const { colors: c } = useAppTheme();
   const resolvedColor = color ?? c.text;
+  const footName = FOOT_ALIAS[name];
+
+  if (footName && FOOT_ICON_NAMES.has(footName)) {
+    return (
+      <FootIcon
+        name={footName}
+        size={size}
+        color={resolvedColor}
+        filled={variant === 'filled'}
+      />
+    );
+  }
+
   const glyph =
     variant === 'filled' && FILLED_MAP[name] ? FILLED_MAP[name] : MAP[name];
   return <Ionicons name={glyph} size={size} color={resolvedColor} />;

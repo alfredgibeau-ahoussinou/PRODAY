@@ -2,21 +2,24 @@ import React, { useMemo } from 'react';
 import { View, StyleSheet, type ViewProps, type StyleProp, type ViewStyle } from 'react-native';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { radius, shadows, surfaces } from '../../theme/designTokens';
+import { ProDayGradient } from './ProDayGradient';
 import type { AppColors } from '../../theme/universeTheme';
 
-type SurfaceVariant = 'card' | 'flat' | 'accent' | 'dark';
+type SurfaceVariant = 'card' | 'flat' | 'accent' | 'dark' | 'elevated' | 'module';
 
 interface ProDaySurfaceProps extends ViewProps {
   variant?: SurfaceVariant;
   children: React.ReactNode;
   style?: StyleProp<ViewStyle>;
+  accentBar?: boolean;
 }
 
-/** Conteneur visuel cohérent ProDay v2 */
+/** Conteneur visuel ProDay — variantes sémantiques + barre d’accent optionnelle. */
 export const ProDaySurface: React.FC<ProDaySurfaceProps> = ({
   variant = 'card',
   children,
   style,
+  accentBar = false,
   ...rest
 }) => {
   const { colors: c } = useAppTheme();
@@ -24,6 +27,9 @@ export const ProDaySurface: React.FC<ProDaySurfaceProps> = ({
 
   return (
     <View style={[styles.base, variantStyles[variant], style]} {...rest}>
+      {accentBar ? (
+        <ProDayGradient kind="cta" style={styles.accentBar} start={{ x: 0, y: 0.5 }} end={{ x: 1, y: 0.5 }} />
+      ) : null}
       {children}
     </View>
   );
@@ -31,6 +37,10 @@ export const ProDaySurface: React.FC<ProDaySurfaceProps> = ({
 
 const styles = StyleSheet.create({
   base: { overflow: 'hidden' },
+  accentBar: {
+    height: 3,
+    width: '100%',
+  },
 });
 
 function createVariantStyles(c: AppColors) {
@@ -50,6 +60,22 @@ function createVariantStyles(c: AppColors) {
       borderWidth: 1,
       borderColor: 'rgba(255,255,255,0.08)',
       ...shadows.interactive,
+    },
+    elevated: {
+      backgroundColor: c.surface,
+      borderRadius: radius.xl,
+      borderWidth: 1,
+      borderColor: c.border,
+      ...shadows.interactive,
+    },
+    module: {
+      backgroundColor: c.surface,
+      borderRadius: radius.lg,
+      borderWidth: 1,
+      borderColor: c.border,
+      borderLeftWidth: 3,
+      borderLeftColor: c.accent,
+      ...shadows.card,
     },
   });
 }

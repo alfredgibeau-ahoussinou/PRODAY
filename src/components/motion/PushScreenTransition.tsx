@@ -7,6 +7,7 @@ import Animated, {
   runOnJS,
 } from 'react-native-reanimated';
 import { motion } from '../../theme/motion';
+import { useAppTheme } from '../../context/ProductLineContext';
 
 const { width: W } = Dimensions.get('window');
 
@@ -22,6 +23,7 @@ export const PushScreenTransition: React.FC<PushScreenTransitionProps> = ({
   active,
   children,
 }) => {
+  const { colors } = useAppTheme();
   const [mounted, setMounted] = useState(active);
   const x = useSharedValue(active ? 0 : W);
 
@@ -45,7 +47,10 @@ export const PushScreenTransition: React.FC<PushScreenTransitionProps> = ({
   if (!mounted) return null;
 
   return (
-    <Animated.View style={[styles.overlay, style]} pointerEvents={active ? 'auto' : 'none'}>
+    <Animated.View
+      style={[styles.overlay, { backgroundColor: colors.background }, style]}
+      pointerEvents={active ? 'auto' : 'none'}
+    >
       {children}
     </Animated.View>
   );
@@ -55,6 +60,5 @@ const styles = StyleSheet.create({
   overlay: {
     ...StyleSheet.absoluteFillObject,
     zIndex: 20,
-    backgroundColor: '#FAFAFA',
   },
 });
