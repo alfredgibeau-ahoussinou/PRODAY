@@ -13,7 +13,6 @@ import type { Application, RecruitmentPost } from '../models/Player';
 import type { ClubAnnouncement } from '../models/ClubAnnouncement';
 import type { TeamEvent } from '../models/TeamEvent';
 import type { FriendlyMatch } from '../models/FriendlyMatch';
-import type { Tournament } from '../models/Tournament';
 import type { SponsorOffer, ClubFundingGoal } from '../models/SponsorOffer';
 import { adminService, type PlatformStats } from '../services/admin.service';
 
@@ -25,7 +24,6 @@ interface AdminDataContextValue {
   events: TeamEvent[];
   matches: FriendlyMatch[];
   posts: RecruitmentPost[];
-  tournaments: Tournament[];
   clubs: Club[];
   payments: TeamPaymentRequest[];
   applications: Application[];
@@ -48,7 +46,6 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({
   const [events, setEvents] = useState<TeamEvent[]>([]);
   const [matches, setMatches] = useState<FriendlyMatch[]>([]);
   const [posts, setPosts] = useState<RecruitmentPost[]>([]);
-  const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [clubs, setClubs] = useState<Club[]>([]);
   const [payments, setPayments] = useState<TeamPaymentRequest[]>([]);
   const [applications, setApplications] = useState<Application[]>([]);
@@ -58,13 +55,12 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({
   const [userDocCounts, setUserDocCounts] = useState<Record<string, number>>({});
 
   const load = useCallback(async () => {
-    const [s, u, e, m, p, t, c, pay, apps, ann, so, fg] = await Promise.all([
+    const [s, u, e, m, p, c, pay, apps, ann, so, fg] = await Promise.all([
       adminService.getPlatformStats(),
       adminService.listAllUsers(),
       adminService.listAllTeamEvents(),
       adminService.listAllFriendlyMatches(),
       adminService.listAllRecruitmentPosts(),
-      adminService.listAllTournaments(),
       adminService.listAllClubs(),
       adminService.listAllPaymentRequests(),
       adminService.listAllApplications(),
@@ -77,7 +73,6 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({
     setEvents(e);
     setMatches(m);
     setPosts(p);
-    setTournaments(t);
     setClubs(c);
     setPayments(pay);
     setApplications(apps);
@@ -124,7 +119,6 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({
       events,
       matches,
       posts,
-      tournaments,
       clubs,
       payments,
       applications,
@@ -142,7 +136,6 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({
       events,
       matches,
       posts,
-      tournaments,
       clubs,
       payments,
       applications,

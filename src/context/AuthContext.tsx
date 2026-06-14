@@ -16,6 +16,7 @@ import {
   profileMatchesActiveLine,
 } from '../utils/productLineAccess';
 import type { User } from '../models/User';
+import { userStateStore } from '../core/state/userState.store';
 
 interface AuthContextValue {
   firebaseUser: FirebaseAuthUser | null;
@@ -124,6 +125,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const signOut = useCallback(async () => {
     await authService.signOut();
+    userStateStore.reset();
     setProfile(null);
     setFirebaseUser(null);
     setIsAdmin(false);

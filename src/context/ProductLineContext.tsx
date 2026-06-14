@@ -23,6 +23,7 @@ interface ProductLineContextValue {
   isWoman: boolean;
   isHomme: boolean;
   isPro: boolean;
+  isSante: boolean;
   /** @deprecated Préférer isWoman */
   isGirl: boolean;
   brandName: string;
@@ -32,6 +33,7 @@ interface ProductLineContextValue {
   enterHommeSpace: () => Promise<void>;
   enterWomanSpace: () => Promise<void>;
   enterProSpace: () => Promise<void>;
+  enterSanteSpace: () => Promise<void>;
   exitWomanSpace: () => Promise<void>;
   loading: boolean;
 }
@@ -94,6 +96,12 @@ export const ProductLineProvider: React.FC<{ children: React.ReactNode }> = ({
     await persistLine('pro');
   }, [persistLine]);
 
+  const enterSanteSpace = useCallback(async () => {
+    setWomanSpaceActive(false);
+    setLineState('sante');
+    await persistLine('sante');
+  }, [persistLine]);
+
   const exitWomanSpace = useCallback(async () => {
     await enterHommeSpace();
   }, [enterHommeSpace]);
@@ -102,14 +110,16 @@ export const ProductLineProvider: React.FC<{ children: React.ReactNode }> = ({
     async (line: ProductLineId) => {
       if (line === 'woman') await enterWomanSpace();
       else if (line === 'pro') await enterProSpace();
+      else if (line === 'sante') await enterSanteSpace();
       else await enterHommeSpace();
     },
-    [enterHommeSpace, enterWomanSpace, enterProSpace]
+    [enterHommeSpace, enterWomanSpace, enterProSpace, enterSanteSpace]
   );
 
   const isWoman = productLine === 'woman';
   const isHomme = productLine === 'homme';
   const isPro = productLine === 'pro';
+  const isSante = productLine === 'sante';
   const brand = brandForProductLine(productLine);
 
   const value = useMemo(
@@ -119,6 +129,7 @@ export const ProductLineProvider: React.FC<{ children: React.ReactNode }> = ({
       isWoman,
       isHomme,
       isPro,
+      isSante,
       isGirl: isWoman,
       brandName: brand.name,
       tagline: brand.tagline,
@@ -127,6 +138,7 @@ export const ProductLineProvider: React.FC<{ children: React.ReactNode }> = ({
       enterHommeSpace,
       enterWomanSpace,
       enterProSpace,
+      enterSanteSpace,
       exitWomanSpace,
       loading,
     }),
@@ -136,12 +148,14 @@ export const ProductLineProvider: React.FC<{ children: React.ReactNode }> = ({
       isWoman,
       isHomme,
       isPro,
+      isSante,
       brand.name,
       brand.tagline,
       setProductLine,
       enterHommeSpace,
       enterWomanSpace,
       enterProSpace,
+      enterSanteSpace,
       exitWomanSpace,
       loading,
     ]
@@ -164,6 +178,7 @@ export function useAppTheme() {
     isWoman,
     isHomme,
     isPro,
+    isSante,
     isGirl,
     brandName,
     tagline,
@@ -172,6 +187,7 @@ export function useAppTheme() {
     enterHommeSpace,
     enterWomanSpace,
     enterProSpace,
+    enterSanteSpace,
     exitWomanSpace,
     womanSpaceActive,
   } = useProductLine();
@@ -180,6 +196,7 @@ export function useAppTheme() {
     isWoman,
     isHomme,
     isPro,
+    isSante,
     isGirl,
     brandName,
     tagline,
@@ -188,6 +205,7 @@ export function useAppTheme() {
     enterHommeSpace,
     enterWomanSpace,
     enterProSpace,
+    enterSanteSpace,
     exitWomanSpace,
     womanSpaceActive,
   };

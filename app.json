@@ -36,7 +36,20 @@
           "cameraPermission": "ProDay utilise la caméra pour photographier votre pièce d'identité ou passeport lors de la vérification."
         }
       ],
-      "expo-web-browser"
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "ProDay utilise votre position pour organiser les points de rendez-vous et de prise en charge en covoiturage."
+        }
+      ],
+      "expo-web-browser",
+      "expo-secure-store",
+      [
+        "expo-calendar",
+        {
+          "calendarPermission": "ProDay synchronise vos matchs et convocations avec votre calendrier."
+        }
+      ]
     ]
   }
 }
