@@ -1,6 +1,6 @@
 import type { User, UserRole } from '../models/User';
 
-export type ThreadKind = 'standard' | 'physio_care';
+export type ThreadKind = 'standard' | 'physio_care' | 'team_group';
 
 export function isPhysioCarePair(roleA: UserRole, roleB: UserRole): boolean {
   return (
@@ -17,5 +17,6 @@ export function threadKindForParticipants(
 
 export function physioCareThreadLabel(kind: ThreadKind | undefined): string | null {
   if (kind === 'physio_care') return 'Suivi kiné';
+  if (kind === 'team_group') return 'Équipe';
   return null;
 }
