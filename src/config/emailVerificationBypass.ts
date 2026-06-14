@@ -1,8 +1,8 @@
 /**
  * Comptes test / beta :
  * - pas de vérification email ni d’écran documents à l’onboarding ;
- * - accès à tous les pôles (Man, Woman, Pro) sans déconnexion ;
- * - sur Pro : expérience praticien (physio) pour tester le dashboard médical.
+ * - accès à tous les pôles (Man, Woman, Pro, Santé) sans déconnexion ;
+ * - sur Pro : coach · sur Santé : physio (dashboard médical).
  */
 export const BETA_ACCOUNT_BYPASS_EMAILS: readonly string[] = [
   'alfredgibeauahoussinou@gmail.com',
@@ -11,7 +11,7 @@ export const BETA_ACCOUNT_BYPASS_EMAILS: readonly string[] = [
 /** Compte démo partenaire — Pro Day Pro, rôle sponsor. */
 export const PARTNER_POLE_TEST_EMAILS: readonly string[] = ['part@gmail.com'];
 
-/** Alias — comptes autorisés sur les 3 univers. */
+/** Alias — comptes autorisés sur tous les univers. */
 export const UNIVERSAL_POLE_TEST_EMAILS = BETA_ACCOUNT_BYPASS_EMAILS;
 
 /** @deprecated Utiliser BETA_ACCOUNT_BYPASS_EMAILS */
@@ -34,7 +34,12 @@ export function isPartnerPoleTestAccount(email: string | null | undefined): bool
   return isListedTestEmail(email, PARTNER_POLE_TEST_EMAILS);
 }
 
+export function isBetaBypassAllowed(): boolean {
+  return __DEV__ || process.env.EXPO_PUBLIC_APP_ENV !== 'production';
+}
+
 export function isBetaAccountBypassed(email: string | null | undefined): boolean {
+  if (!isBetaBypassAllowed()) return false;
   return (
     isListedTestEmail(email, BETA_ACCOUNT_BYPASS_EMAILS) ||
     isPartnerPoleTestAccount(email)

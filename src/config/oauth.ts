@@ -74,7 +74,7 @@ export function getGoogleAuthSetupHint(): string {
     return getGoogleSignInBlockReason() ?? 'Utilisez un development build pour Google Sign-In.';
   }
   if (Platform.OS === 'ios') {
-    return 'Ajoutez dans .env au minimum EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID et EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID (client OAuth iOS, bundle com.proday.app). Voir docs/FIREBASE_SETUP.md';
+    return 'Ajoutez EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID dans .env (obligatoire). EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID est recommandé pour le dev build ; le client Web peut servir de secours. Voir docs/FIREBASE_SETUP.md';
   }
   if (Platform.OS === 'android') {
     return 'Ajoutez EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID et EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID dans .env. Voir docs/FIREBASE_SETUP.md';

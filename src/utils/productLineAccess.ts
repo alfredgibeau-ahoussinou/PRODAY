@@ -29,14 +29,14 @@ export async function getActiveProductLineFromStorage(): Promise<ProductLineId> 
 /** Ligne d'inscription du compte (champ Firestore ou déduction legacy). */
 export function getUserProductLine(user: User): ProductLineId {
   const stored = user.product_line;
-  if (stored === 'woman' || stored === 'pro') return stored;
+  if (user.role === 'physio') return 'sante';
+  if (stored === 'woman' || stored === 'pro' || stored === 'sante') return stored;
   if (stored === 'homme' || stored === 'standard') return 'homme';
   if (user.app_space && isFeminineAppSpace(user.app_space)) return 'woman';
   if (
     user.role === 'coach' ||
     user.role === 'agent' ||
     user.role === 'recruiter' ||
-    user.role === 'physio' ||
     user.role === 'sponsor' ||
     user.role === 'club' ||
     user.role === 'organizer'
@@ -78,7 +78,8 @@ export function getEffectiveRoleForProductLine(
     return user.role;
   }
   if (isUniversalPoleTestAccount(user.email)) {
-    if (activeLine === 'pro') return 'physio';
+    if (activeLine === 'sante') return 'physio';
+    if (activeLine === 'pro') return 'coach';
     return 'player';
   }
   return user.role;

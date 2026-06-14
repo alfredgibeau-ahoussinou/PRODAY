@@ -1,13 +1,9 @@
 import type { FriendlyMatch } from '../models/FriendlyMatch';
-import type { Tournament } from '../models/Tournament';
 import type { TeamEvent, TeamEventType } from '../models/TeamEvent';
 import { EVENT_TYPE_LABELS } from '../models/TeamEvent';
 import { formatMatchTeams } from './matchDisplay';
 
-export type CalendarItemKind =
-  | 'team_event'
-  | 'friendly_match'
-  | 'tournament';
+export type CalendarItemKind = 'team_event' | 'friendly_match';
 
 export interface SeasonCalendarItem {
   id: string;
@@ -19,7 +15,6 @@ export interface SeasonCalendarItem {
   event_type?: TeamEventType;
   team_event_id?: string;
   friendly_match_id?: string;
-  tournament_id?: string;
 }
 
 export function teamEventsToCalendarItems(events: TeamEvent[]): SeasonCalendarItem[] {
@@ -49,29 +44,13 @@ export function friendlyMatchesToCalendarItems(
   }));
 }
 
-export function tournamentsToCalendarItems(
-  tournaments: Tournament[]
-): SeasonCalendarItem[] {
-  return tournaments.map((t) => ({
-    id: `tournament-${t.id}`,
-    kind: 'tournament',
-    title: t.name,
-    subtitle: `Tournoi · ${t.categories.join(', ') || 'Arena'}`,
-    starts_at: t.date_start,
-    city: t.city,
-    tournament_id: t.id,
-  }));
-}
-
 export function mergeSeasonCalendar(
   events: TeamEvent[],
-  matches: FriendlyMatch[],
-  tournaments: Tournament[]
+  matches: FriendlyMatch[]
 ): SeasonCalendarItem[] {
   return [
     ...teamEventsToCalendarItems(events),
     ...friendlyMatchesToCalendarItems(matches),
-    ...tournamentsToCalendarItems(tournaments),
   ].sort((a, b) => a.starts_at.getTime() - b.starts_at.getTime());
 }
 
