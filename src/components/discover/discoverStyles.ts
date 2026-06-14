@@ -38,7 +38,7 @@ export function createDiscoverStyles(palette: ReturnType<typeof getDiscoverPalet
   return StyleSheet.create({
     canvas: {
       flex: 1,
-      backgroundColor: palette.canvas,
+      backgroundColor: 'transparent',
     },
     header: {
       width: '100%',
@@ -48,6 +48,14 @@ export function createDiscoverStyles(palette: ReturnType<typeof getDiscoverPalet
       backgroundColor: palette.surface,
       borderBottomWidth: 1,
       borderBottomColor: palette.border,
+      overflow: 'hidden',
+    },
+    headerGradientBar: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: 4,
     },
     tagline: {
       marginTop: spacing.sm,

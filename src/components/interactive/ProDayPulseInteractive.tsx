@@ -4,9 +4,12 @@ import Animated, {
   FadeInDown,
   useAnimatedStyle,
   useSharedValue,
+  withRepeat,
+  withSequence,
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
+import { ProDayGradient } from '../ui/ProDayGradient';
 import type { ProdayPulseResult, PulseBreakdownItem } from '../../utils/prodayPulse';
 import type { RecruitmentStats } from '../../services/stats.service';
 import { PressableSpring } from '../discover/PressableSpring';
@@ -14,12 +17,18 @@ import { Icon } from '../ui/Icon';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { spacing, radius } from '../../theme/designTokens';
 import type { AppColors } from '../../theme/universeTheme';
+import { fontFamily } from '../../theme/typography';
+import { profileType } from '../profile/profileTypography';
 import { SPRING_BOUNCY } from '../discover/animationConfig';
 
 interface ProDayPulseInteractiveProps {
   pulse: ProdayPulseResult;
   breakdown: PulseBreakdownItem[];
   variant?: 'dark' | 'light';
+  /** Profil / cartes denses — anneau et textes réduits. */
+  density?: 'default' | 'compact';
+  /** Centrage vertical (onglet Profil mobile). */
+  align?: 'start' | 'center';
   onExpand?: () => void;
 }
 
@@ -64,50 +73,98 @@ export const ProDayPulseInteractive: React.FC<ProDayPulseInteractiveProps> = ({
   pulse,
   breakdown,
   variant = 'dark',
+  density = 'default',
+  align = 'start',
   onExpand,
 }) => {
   const { colors: c } = useAppTheme();
-  const styles = useMemo(() => createStyles(c), [c]);
+  const compact = density === 'compact';
+  const centered = align === 'center';
+  const styles = useMemo(() => createStyles(c, compact, centered), [c, compact, centered]);
   const [expanded, setExpanded] = useState(false);
   const ringScale = useSharedValue(1);
+  const glowPulse = useSharedValue(1);
   const dark = variant === 'dark';
+
+  useEffect(() => {
+    glowPulse.value = withRepeat(
+      withSequence(
+        withTiming(1.12, { duration: 1400 }),
+        withTiming(1, { duration: 1400 })
+      ),
+      -1,
+      false
+    );
+  }, [glowPulse]);
 
   const ringAnim = useAnimatedStyle(() => ({
     transform: [{ scale: ringScale.value }],
   }));
 
+  const glowAnim = useAnimatedStyle(() => ({
+    transform: [{ scale: glowPulse.value }],
+    opacity: 0.35 + (glowPulse.value - 1) * 2,
+  }));
+
   const toggle = () => {
     const next = !expanded;
     setExpanded(next);
-    ringScale.value = withSpring(next ? 1.06 : 1, SPRING_BOUNCY);
+    ringScale.value = withSpring(next ? 1.08 : 1, SPRING_BOUNCY);
     if (next) onExpand?.();
   };
 
+  const ringControl = (
+    <PressableSpring onPress={toggle} scaleTo={0.92}>
+      <View style={styles.ringWrap}>
+        <Animated.View style={[styles.ringGlow, glowAnim]}>
+          <ProDayGradient kind="cta" style={styles.ringGlowFill} />
+        </Animated.View>
+        <Animated.View style={[styles.ring, dark && styles.ringDark, ringAnim]}>
+          <Text style={[styles.score, dark && styles.scoreDark, profileType.pulseScore]}>
+            {pulse.score}
+          </Text>
+          <Text style={[styles.scoreLabel, dark && styles.scoreLabelDark, profileType.pulseLabel]}>
+            PULSE
+          </Text>
+          <View style={styles.tapBadge}>
+            <Icon
+              name={expanded ? 'chevron-up' : 'chevron-down'}
+              size={12}
+              color={c.accent}
+            />
+          </View>
+        </Animated.View>
+      </View>
+    </PressableSpring>
+  );
+
   return (
-    <View>
-      <View style={styles.row}>
-        <View style={styles.copy}>
-          <Text style={[styles.hint, dark && styles.hintDark]}>
+    <View style={centered ? styles.centerRoot : undefined}>
+      {centered ? (
+        <View style={styles.centerStack}>
+          <Text style={[styles.hint, dark && styles.hintDark, profileType.pulseHint]}>
             {pulse.label} — {pulse.hint}
           </Text>
+          {ringControl}
         </View>
-        <PressableSpring onPress={toggle} scaleTo={0.9}>
-          <Animated.View style={[styles.ring, dark && styles.ringDark, ringAnim]}>
-            <Text style={[styles.score, dark && styles.scoreDark]}>{pulse.score}</Text>
-            <Text style={[styles.scoreLabel, dark && styles.scoreLabelDark]}>PULSE</Text>
-            <View style={styles.tapBadge}>
-              <Icon
-                name={expanded ? 'chevron-up' : 'chevron-down'}
-                size={12}
-                color={c.brand}
-              />
-            </View>
-          </Animated.View>
-        </PressableSpring>
-      </View>
+      ) : (
+        <View style={styles.row}>
+          <View style={styles.copy}>
+            <Text style={[styles.hint, dark && styles.hintDark]}>
+              {pulse.label} — {pulse.hint}
+            </Text>
+          </View>
+          {ringControl}
+        </View>
+      )}
 
-      <View style={[styles.barBg, dark && styles.barBgDark]}>
-        <View style={[styles.barFill, { width: `${pulse.score}%` }]} />
+      <View style={[styles.barBg, dark && styles.barBgDark, centered && styles.barBgCentered]}>
+        <ProDayGradient
+          kind="cta"
+          style={[styles.barFill, { width: `${pulse.score}%` }]}
+          start={{ x: 0, y: 0.5 }}
+          end={{ x: 1, y: 0.5 }}
+        />
       </View>
 
       {expanded ? (
@@ -122,7 +179,7 @@ export const ProDayPulseInteractive: React.FC<ProDayPulseInteractiveProps> = ({
             Touchez l'anneau pour replier
           </Text>
         </Animated.View>
-      ) : (
+      ) : compact ? null : (
         <Text style={[styles.tapHint, dark && styles.tapHintDark]}>
           Touchez le Pulse pour le détail →
         </Text>
@@ -137,12 +194,14 @@ export const ProDayPulseIntro: React.FC<{
   onPress: () => void;
 }> = ({ stats, onPress }) => {
   const { colors: c } = useAppTheme();
-  const styles = useMemo(() => createStyles(c), [c]);
+  const styles = useMemo(() => createStyles(c, false, false), [c]);
 
   return (
     <PressableSpring style={styles.teaserWrap} onPress={onPress} scaleTo={0.98}>
       <View style={styles.teaserHead}>
-        <Icon name="star-four-points" size={18} color={c.brand} />
+        <ProDayGradient kind="cta" style={styles.teaserIconWrap}>
+          <Icon name="star-four-points" size={16} color="#FFFFFF" variant="filled" />
+        </ProDayGradient>
         <Text style={styles.teaserTitle}>Pulse ProDay — exclusif</Text>
       </View>
       <Text style={styles.teaserBody}>
@@ -172,26 +231,58 @@ export const ProDayPulseIntro: React.FC<{
   );
 };
 
-function createStyles(c: AppColors) {
+function createStyles(c: AppColors, compact: boolean, centered: boolean) {
+  const ringOuter = compact ? 72 : 92;
+  const ringInner = compact ? 64 : 84;
   return StyleSheet.create({
-    row: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.md },
-    copy: { flex: 1, paddingTop: spacing.sm },
-    hint: { fontSize: 11, lineHeight: 16, color: c.textSecondary },
+    centerRoot: { alignItems: 'center' },
+    centerStack: { alignItems: 'center', gap: spacing.sm, width: '100%' },
+    row: {
+      flexDirection: 'row',
+      alignItems: compact ? 'center' : 'flex-start',
+      gap: compact ? spacing.sm : spacing.md,
+    },
+    copy: { flex: 1, paddingTop: compact ? 0 : spacing.sm },
+    hint: {
+      fontFamily: fontFamily.regular,
+      fontSize: centered ? 12 : 11,
+      lineHeight: centered ? 17 : 16,
+      color: c.textSecondary,
+      textAlign: centered ? 'center' : 'left',
+    },
     hintDark: { color: c.heroMuted },
+    ringWrap: {
+      width: ringOuter,
+      height: ringOuter,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    ringGlow: {
+      position: 'absolute',
+      width: ringOuter,
+      height: ringOuter,
+      borderRadius: ringOuter / 2,
+      overflow: 'hidden',
+    },
+    ringGlowFill: {
+      flex: 1,
+      borderRadius: ringOuter / 2,
+    },
     ring: {
-      width: 72,
-      height: 72,
-      borderRadius: 36,
+      width: ringInner,
+      height: ringInner,
+      borderRadius: ringInner / 2,
       borderWidth: 3,
-      borderColor: c.brand,
+      borderColor: c.accent,
       alignItems: 'center',
       justifyContent: 'center',
       backgroundColor: c.brandSoft,
     },
     ringDark: {
       backgroundColor: 'rgba(0,51,153,0.35)',
+      borderColor: c.accent,
     },
-    score: { fontSize: 24, fontWeight: '900', color: c.text },
+    score: { fontSize: compact ? 22 : 28, fontWeight: '900', color: c.text },
     scoreDark: { color: c.brandInverse },
     scoreLabel: {
       fontSize: 8,
@@ -215,9 +306,11 @@ function createStyles(c: AppColors) {
       marginTop: spacing.md,
       borderRadius: 2,
       overflow: 'hidden',
+      alignSelf: 'stretch',
     },
+    barBgCentered: { width: '100%' },
     barBgDark: { backgroundColor: 'rgba(255,255,255,0.2)' },
-    barFill: { height: '100%', backgroundColor: c.brand },
+    barFill: { height: '100%' },
     tapHint: {
       fontSize: 10,
       fontWeight: '700',
@@ -278,6 +371,13 @@ function createStyles(c: AppColors) {
       alignItems: 'center',
       gap: spacing.sm,
       marginBottom: spacing.md,
+    },
+    teaserIconWrap: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     teaserTitle: { fontSize: 15, fontWeight: '900', color: c.text },
     teaserBody: {

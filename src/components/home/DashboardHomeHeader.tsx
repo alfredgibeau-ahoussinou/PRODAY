@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Pressable } from 'react-native';
+import { View, TouchableOpacity, StyleSheet, Pressable } from 'react-native';
 import type { User } from '../../models/User';
 import type { ProdayPulseResult, PulseBreakdownItem } from '../../utils/prodayPulse';
 import { Logo } from '../Logo';
@@ -11,7 +11,10 @@ import { ProDayPulseInteractive } from '../interactive/ProDayPulseInteractive';
 import { Icon } from '../ui/Icon';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { ProDayShopButton } from '../shop/ProDayShopButton';
+import { ProDaySurface } from '../ui/ProDaySurface';
+import { ProDayText } from '../ui/ProDayText';
 import { spacing, radius, shadows } from '../../theme/designTokens';
+import { fontFamily } from '../../theme/typography';
 
 interface DashboardHomeHeaderProps {
   profile: User;
@@ -38,33 +41,16 @@ export const DashboardHomeHeader: React.FC<DashboardHomeHeaderProps> = ({
 }) => {
   const { colors, productLine } = useAppTheme();
   const isAmateurPlayer = getDashboardLayoutKind(productLine, profile.role) === 'amateur_player';
-  const isProLayout = productLine === 'pro';
   const firstName = profile.display_name.split(' ')[0];
   const roleLabel =
     profile.role === 'player' && productLine === 'woman' ? 'Joueuse' : ROLE_LABELS[profile.role];
   const dashMeta = useMemo(
     () => getHomeDashboardMeta(profile.role, productLine),
-    [profile.role, productLine]
+    [profile.role, productLine],
   );
 
   return (
-    <View
-      style={[
-        styles.wrap,
-        {
-          backgroundColor: isProLayout ? '#F8FAFC' : colors.surface,
-          borderColor: isProLayout ? '#CBD5E1' : colors.border,
-        },
-        shadows.card,
-      ]}
-    >
-      <View
-        style={[
-          styles.accentBar,
-          { backgroundColor: isProLayout ? '#1D4ED8' : colors.accent },
-        ]}
-      />
-
+    <ProDaySurface variant="elevated" accentBar style={styles.wrap}>
       <View style={styles.topRow}>
         <View style={styles.brandCol}>
           <Logo background="light" width={108} showTagline={false} productLine={productLine} />
@@ -73,21 +59,16 @@ export const DashboardHomeHeader: React.FC<DashboardHomeHeaderProps> = ({
         <View style={styles.actions}>
           <ProDayShopButton compact />
           {onCarpoolPress ? (
-            <HeaderIconBtn
-              icon="car"
-              onPress={onCarpoolPress}
-              colors={colors}
-              filled
-            />
+            <HeaderIconBtn icon="car" onPress={onCarpoolPress} colors={colors} filled />
           ) : null}
           {isAmateurPlayer && onHealthPress ? (
             <HeaderIconBtn
               icon="heart"
               onPress={onHealthPress}
               colors={colors}
-              tint="#0F766E"
-              bg="#F0FDFA"
-              border="#99F6E4"
+              tint={colors.tone4}
+              bg={colors.accentSoft}
+              border={colors.accentMuted}
               filled
             />
           ) : null}
@@ -105,47 +86,59 @@ export const DashboardHomeHeader: React.FC<DashboardHomeHeaderProps> = ({
       </View>
 
       <View style={styles.greetBlock}>
-        <Text style={[styles.eyebrow, { color: colors.textMuted }]}>{dashMeta.eyebrow}</Text>
-        <Text style={[styles.greeting, { color: colors.text }]}>Bonjour, {firstName}</Text>
-        <Text style={[styles.tagline, { color: colors.textSecondary }]}>{dashMeta.tagline}</Text>
+        <ProDayText variant="eyebrow">{dashMeta.eyebrow}</ProDayText>
+        <ProDayText variant="hero" style={styles.greeting}>
+          Bonjour, {firstName}
+        </ProDayText>
+        <ProDayText variant="body" style={styles.tagline}>
+          {dashMeta.tagline}
+        </ProDayText>
         <View style={styles.meta}>
-          <Text
-            style={[styles.rolePill, { color: colors.brandInverse, backgroundColor: colors.ink }]}
-          >
-            {roleLabel}
-          </Text>
+          <ProDayGradientPill label={roleLabel} colors={colors} />
           {profile.city ? (
-            <Text style={[styles.city, { color: colors.textMuted }]}>{profile.city}</Text>
+            <ProDayText variant="caption" muted>
+              {profile.city}
+            </ProDayText>
           ) : null}
         </View>
       </View>
 
-      <Pressable
-        style={[
-          styles.pulseCard,
-          {
-            backgroundColor: colors.surface,
-            borderColor: colors.border,
-          },
-          shadows.card,
-        ]}
-        onPress={onProfilePress}
-      >
-        <ProDayPulseInteractive
-          pulse={pulse}
-          breakdown={breakdown}
-          variant="light"
-          onExpand={onProfilePress}
-        />
+      <Pressable style={styles.pulseCard} onPress={onProfilePress}>
+        <ProDaySurface variant="module" style={styles.pulseInner}>
+          <ProDayPulseInteractive
+            pulse={pulse}
+            breakdown={breakdown}
+            variant="light"
+            onExpand={onProfilePress}
+          />
+        </ProDaySurface>
       </Pressable>
-    </View>
+    </ProDaySurface>
   );
 };
+
+const ProDayGradientPill: React.FC<{
+  label: string;
+  colors: { ink: string; brandInverse: string; accent: string };
+}> = ({ label, colors }) => (
+  <View style={[styles.rolePill, { backgroundColor: colors.ink }]}>
+    <ProDayText variant="caption" inverse style={styles.rolePillText}>
+      {label}
+    </ProDayText>
+  </View>
+);
 
 const HeaderIconBtn: React.FC<{
   icon: 'car' | 'heart' | 'star-four-points' | 'chat' | 'person';
   onPress: () => void;
-  colors: { surface: string; border: string; ink: string; error: string; brandInverse: string; background: string };
+  colors: {
+    surface: string;
+    border: string;
+    ink: string;
+    error: string;
+    brandInverse: string;
+    background: string;
+  };
   badge?: number;
   filled?: boolean;
   tint?: string;
@@ -172,9 +165,9 @@ const HeaderIconBtn: React.FC<{
           { backgroundColor: colors.error, borderColor: colors.background },
         ]}
       >
-        <Text style={[styles.badgeText, { color: colors.brandInverse }]}>
+        <ProDayText variant="caption" inverse style={styles.badgeText}>
           {badge > 9 ? '9+' : badge}
-        </Text>
+        </ProDayText>
       </View>
     ) : null}
   </TouchableOpacity>
@@ -183,11 +176,7 @@ const HeaderIconBtn: React.FC<{
 const styles = StyleSheet.create({
   wrap: {
     marginBottom: spacing.lg,
-    borderRadius: radius.xl,
-    borderWidth: 1,
-    overflow: 'hidden',
   },
-  accentBar: { height: 4, width: '100%' },
   topRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -213,22 +202,11 @@ const styles = StyleSheet.create({
     paddingTop: spacing.md,
     marginBottom: spacing.md,
   },
-  eyebrow: {
-    fontSize: 10,
-    fontWeight: '800',
-    letterSpacing: 1.2,
-    textTransform: 'uppercase',
-  },
   greeting: {
-    fontSize: 26,
-    fontWeight: '900',
-    letterSpacing: -0.5,
     marginTop: 4,
   },
   tagline: {
-    fontSize: 14,
     marginTop: 6,
-    lineHeight: 20,
   },
   meta: {
     flexDirection: 'row',
@@ -238,14 +216,16 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
   },
   rolePill: {
-    fontSize: 11,
-    fontWeight: '800',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: radius.pill,
     overflow: 'hidden',
   },
-  city: { fontSize: 13, fontWeight: '600' },
+  rolePillText: {
+    fontFamily: fontFamily.extrabold,
+    fontSize: 11,
+    letterSpacing: 0.3,
+  },
   iconBtn: {
     width: 42,
     height: 42,
@@ -266,12 +246,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 3,
     borderWidth: 2,
   },
-  badgeText: { fontSize: 9, fontWeight: '800' },
+  badgeText: {
+    fontSize: 9,
+    lineHeight: 11,
+  },
   pulseCard: {
-    borderRadius: radius.xl,
-    padding: spacing.md,
-    borderWidth: 1,
     marginHorizontal: spacing.md,
     marginBottom: spacing.md,
+  },
+  pulseInner: {
+    padding: spacing.md,
   },
 });

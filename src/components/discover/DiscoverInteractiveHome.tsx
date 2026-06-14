@@ -1,342 +1,283 @@
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useMemo } from 'react';
 import {
   View,
   Text,
   ScrollView,
   ActivityIndicator,
   StyleSheet,
+  Platform,
 } from 'react-native';
-import { DiscoverLightHeader } from './DiscoverLightHeader';
-import { DiscoverHomePager } from './DiscoverHomePager';
-import { DiscoverIntroPager } from './DiscoverIntroPager';
-import { DiscoverUniverseCarousel } from './DiscoverUniverseCarousel';
+import { LinearGradient } from 'expo-linear-gradient';
+import { DiscoverGuestHero } from './DiscoverGuestHero';
+import { DiscoverQuickAccess, type DiscoverQuickId } from './DiscoverQuickAccess';
 import { DiscoverActivityStrip } from './DiscoverActivityStrip';
+import { DiscoverGuestJourney } from './DiscoverGuestJourney';
 import { DiscoverSectionLabel } from './DiscoverSectionLabel';
-import { DiscoverJourneyPage } from './DiscoverJourneyPage';
-import { DiscoverJoinPage } from './DiscoverJoinPage';
-import type { DiscoverExperienceId } from './DiscoverExperiencesHub';
 import { ProDayModuleGrid } from '../ui/ProDayModuleGrid';
 import { Icon } from '../ui/Icon';
-import { PressableSpring } from './PressableSpring';
+import { PressableSpring } from '../motion';
 import { useDiscoverStyles } from './discoverStyles';
 import { useDiscoverMetrics } from './useDiscoverMetrics';
-import type { DiscoverChapterId, IntroSlideAction } from '../../content/discoverChapters';
 import type { RecruitmentStats } from '../../services/stats.service';
 import type { RecruitmentPost } from '../../models/Player';
-import type { Tournament } from '../../models/Tournament';
 import type { ProDayModuleId } from '../../content/prodayModules';
-import { spacing } from '../../theme/designTokens';
+import type { ProductLineId } from '../../models/ProductLine';
+import { getDiscoverHomeCopy } from '../../content/brandExperience';
+import { spacing, BRAND, radius, shadows } from '../../theme/designTokens';
+import { ProDayScreenCanvas } from '../ui/ProDayScreenCanvas';
+import { ProDayGradient } from '../ui/ProDayGradient';
+import { DiscoverV3Teaser } from './DiscoverV3Teaser';
+import { isV3ShellEnabled } from '../../config/featureFlags';
+import type { AppColors } from '../../theme/universeTheme';
+
+const STICKY_CTA_HEIGHT = 56;
 
 export interface DiscoverInteractiveHomeProps {
+  productLine: ProductLineId;
   stats: RecruitmentStats | null;
   posts: RecruitmentPost[];
-  tournaments: Tournament[];
   loading: boolean;
   statsLabel: string;
   liveRecruitment: boolean;
   onSignup: () => void;
+  onLogin: () => void;
   onPress: () => void;
   onMercato: () => void;
   onMatchs: () => void;
+  onOpenReels: () => void;
+  onOpenShop: () => void;
   onModulePress: (id: ProDayModuleId) => void;
-  onStepPress: (id: string) => void;
-  onFeaturePress: () => void;
-  onExperience: (id: DiscoverExperienceId) => void;
+  onStepPress: (id: import('../../content/discoverGuestJourney').DiscoverJourneyStepId) => void;
   universeLabel?: string;
   onUniversePress?: () => void;
 }
 
 /**
- * Accueil invité — fond clair, cartes blanches, 5 pages swipe, layout mobile.
+ * Accueil invité — hero immersif + scroll vertical unique.
  */
 export const DiscoverInteractiveHome: React.FC<DiscoverInteractiveHomeProps> = ({
+  productLine,
   stats,
   posts,
-  tournaments,
   loading,
   statsLabel,
   liveRecruitment,
   onSignup,
+  onLogin,
   onPress,
   onMercato,
   onMatchs,
+  onOpenReels,
+  onOpenShop,
   onModulePress,
   onStepPress,
-  onFeaturePress,
-  onExperience,
   universeLabel,
   onUniversePress,
 }) => {
-  const { styles: discoverStyles, palette: discoverPalette } = useDiscoverStyles();
-  const [chapter, setChapter] = useState<DiscoverChapterId>('welcome');
+  const { styles: discoverStyles, palette: discoverPalette, colors: c } = useDiscoverStyles();
   const metrics = useDiscoverMetrics();
-  const exploreScrollRef = useRef<ScrollView>(null);
-  const liveScrollRef = useRef<ScrollView>(null);
+  const homeCopy = getDiscoverHomeCopy(productLine);
+  const local = useMemo(() => createLocalStyles(c), [c]);
 
-  const pagePad = useMemo(
-    () => ({
-      paddingHorizontal: metrics.pad,
-      paddingTop: spacing.xs,
-      paddingBottom: metrics.scrollBottomPad,
-      flexGrow: 1,
-    }),
-    [metrics.pad, metrics.scrollBottomPad]
-  );
-
-  const goChapter = useCallback((id: DiscoverChapterId) => setChapter(id), []);
-
-  const onChapterSelect = useCallback((id: DiscoverChapterId) => {
-    if (id === 'explore') {
-      exploreScrollRef.current?.scrollTo({ y: 0, animated: true });
-    } else if (id === 'live') {
-      liveScrollRef.current?.scrollTo({ y: 0, animated: true });
-    }
-  }, []);
-
-  const onIntroAction = useCallback(
-    (action: IntroSlideAction) => {
-      switch (action) {
-        case 'signup':
-          setChapter('join');
-          break;
-        case 'live':
-          setChapter('live');
-          break;
-        case 'modules':
-          setChapter('explore');
-          break;
-        case 'arena':
-          onModulePress('arena');
-          break;
-        case 'sponsors':
-          onModulePress('sponsors');
-          break;
-        default:
-          break;
-      }
-    },
-    [onModulePress, onSignup]
-  );
-
-  const hasActivity = posts.length > 0 || tournaments.length > 0;
   const showHeaderStats = Boolean(stats) && !loading;
+  const hasActivity = posts.length > 0;
+  const showV3Teaser = isV3ShellEnabled();
 
-  const scrollProps = {
-    showsVerticalScrollIndicator: false,
-    nestedScrollEnabled: true,
-    keyboardShouldPersistTaps: 'handled' as const,
-    bounces: true,
+  const onQuickPress = (id: DiscoverQuickId) => {
+    switch (id) {
+      case 'mercato':
+        onMercato();
+        break;
+      case 'matchs':
+        onMatchs();
+        break;
+      case 'reels':
+        onOpenReels();
+        break;
+      case 'shop':
+        onOpenShop();
+        break;
+      default:
+        break;
+    }
   };
 
-  const pages = useMemo(
-    () => [
-      {
-        id: 'welcome' as const,
-        render: () => (
-          <View style={local.page}>
-            <DiscoverIntroPager
-              statsLabel={showHeaderStats ? undefined : statsLabel}
-              onAction={onIntroAction}
-              autoAdvance={false}
-              compact
-              height={metrics.introPagerHeight}
-              showFooter
-              variant="editorial"
-            />
+  return (
+    <ProDayScreenCanvas>
+      <View style={discoverStyles.canvas}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          bounces
+          contentContainerStyle={{
+            paddingBottom: STICKY_CTA_HEIGHT + spacing.xl * 2,
+          }}
+        >
+          <DiscoverGuestHero
+            productLine={productLine}
+            statsLabel={showHeaderStats ? statsLabel : undefined}
+            loading={loading && !stats}
+            onSignup={onSignup}
+            onLogin={onLogin}
+            onStatsPress={showHeaderStats ? onPress : undefined}
+            universeLabel={universeLabel}
+            onUniversePress={onUniversePress}
+          />
+
+          <View style={[local.section, { paddingHorizontal: metrics.pad }]}>
+            <DiscoverSectionLabel>Accès rapide</DiscoverSectionLabel>
+            <DiscoverQuickAccess onPress={onQuickPress} hideReels={productLine === 'sante'} />
           </View>
-        ),
-      },
-      {
-        id: 'explore' as const,
-        render: () => (
-          <ScrollView
-            ref={exploreScrollRef}
-            style={local.pageScroll}
-            contentContainerStyle={pagePad}
-            {...scrollProps}
-          >
-            <DiscoverSectionLabel>Univers ProDay</DiscoverSectionLabel>
-            <DiscoverUniverseCarousel
-              onModulePress={onModulePress}
-              showHeader={false}
-              autoPlay={false}
-              variant="editorial"
-            />
-            <View style={local.gridSpacer} />
-            <DiscoverSectionLabel>Tous les modules</DiscoverSectionLabel>
+
+          {showV3Teaser ? <DiscoverV3Teaser /> : null}
+
+          <View style={[local.section, { paddingHorizontal: metrics.pad }]}>
+            <DiscoverSectionLabel>Votre parcours</DiscoverSectionLabel>
+            <DiscoverGuestJourney productLine={productLine} onStepPress={onStepPress} />
+          </View>
+
+          <View style={[local.section, { paddingHorizontal: metrics.pad }]}>
+            <DiscoverSectionLabel>{homeCopy.sectionExplore}</DiscoverSectionLabel>
             <ProDayModuleGrid
               onModulePress={onModulePress}
               liveRecruitment={liveRecruitment}
               animated
               fullWidthModuleId="gestion"
             />
-          </ScrollView>
-        ),
-      },
-      {
-        id: 'live' as const,
-        render: () => (
-          <ScrollView
-            ref={liveScrollRef}
-            style={local.pageScroll}
-            contentContainerStyle={pagePad}
-            {...scrollProps}
-          >
-            <DiscoverSectionLabel>Communauté</DiscoverSectionLabel>
+          </View>
 
-            {!loading && stats ? (
-              <PressableSpring
-                style={discoverStyles.statsRow}
-                onPress={onPress}
-                scaleTo={0.98}
-              >
-                <View style={discoverStyles.liveDot} />
-                <Text style={discoverStyles.statsRowText} numberOfLines={2}>
-                  {statsLabel}
-                </Text>
-                <Icon name="chevron-forward" size={16} color={discoverPalette.faint} />
-              </PressableSpring>
-            ) : loading ? (
-              <ActivityIndicator color={discoverPalette.ink} style={local.loader} />
-            ) : (
-              <View style={discoverStyles.emptyCard}>
-                <Icon name="people" size={24} color={discoverPalette.faint} />
-                <Text style={discoverStyles.emptyCardText}>
-                  Les statistiques de la communauté s’afficheront dès qu’elles sont disponibles.
-                </Text>
-              </View>
-            )}
-
-            {hasActivity || loading ? (
-              <>
-                <DiscoverSectionLabel>Activité récente</DiscoverSectionLabel>
-                <DiscoverActivityStrip
-                  posts={posts}
-                  tournaments={tournaments}
-                  loading={loading}
+          {hasActivity || loading ? (
+            <View style={[local.section, { paddingHorizontal: metrics.pad }]}>
+              <DiscoverSectionLabel>En direct</DiscoverSectionLabel>
+              {!loading && stats ? (
+                <PressableSpring
+                  style={discoverStyles.statsRow}
                   onPress={onPress}
-                  variant="editorial"
-                />
-              </>
-            ) : null}
-
-            <DiscoverSectionLabel>Accès rapide</DiscoverSectionLabel>
-            <View style={discoverStyles.shortcuts}>
-              <PressableSpring style={discoverStyles.shortcut} onPress={onMercato} scaleTo={0.98}>
-                <View style={discoverStyles.shortcutIcon}>
-                  <Icon name="search" size={20} color={discoverPalette.ink} variant="filled" />
-                </View>
-                <View style={local.shortcutCopy}>
-                  <Text style={discoverStyles.shortcutTitle}>Mercato</Text>
-                  <Text style={discoverStyles.shortcutSub}>Annonces & candidatures</Text>
-                </View>
-                <Icon name="chevron-forward" size={18} color={discoverPalette.faint} />
-              </PressableSpring>
-              <PressableSpring style={discoverStyles.shortcut} onPress={onMatchs} scaleTo={0.98}>
-                <View style={discoverStyles.shortcutIcon}>
-                  <Icon name="handshake" size={20} color={discoverPalette.ink} variant="filled" />
-                </View>
-                <View style={local.shortcutCopy}>
-                  <Text style={discoverStyles.shortcutTitle}>Matchs</Text>
-                  <Text style={discoverStyles.shortcutSub}>Amicaux & convocations</Text>
-                </View>
-                <Icon name="chevron-forward" size={18} color={discoverPalette.faint} />
-              </PressableSpring>
+                  scaleTo={0.98}
+                >
+                  <View style={discoverStyles.liveDot} />
+                  <Text style={discoverStyles.statsRowText} numberOfLines={2}>
+                    {statsLabel}
+                  </Text>
+                  <Icon name="chevron-forward" size={16} color={discoverPalette.faint} />
+                </PressableSpring>
+              ) : loading ? (
+                <ActivityIndicator color={discoverPalette.ink} style={local.loader} />
+              ) : null}
+              <DiscoverActivityStrip
+                posts={posts}
+                loading={loading}
+                onPress={onPress}
+                variant="editorial"
+              />
             </View>
+          ) : null}
 
-            <View style={discoverStyles.trust}>
-              <Icon name="shield" size={18} color={discoverPalette.ink} variant="filled" />
-              <Text style={discoverStyles.trustText}>
-                <Text style={discoverStyles.trustBold}>Profils vérifiés</Text>
-                {' — coachs et agents validés avant la messagerie complète.'}
-              </Text>
-            </View>
-          </ScrollView>
-        ),
-      },
-      {
-        id: 'journey' as const,
-        render: () => (
-          <View style={local.pageScroll}>
-            <DiscoverJourneyPage
-              onStepPress={onStepPress}
-              onFeaturePress={onFeaturePress}
-              scrollBottomPad={metrics.scrollBottomPad}
-            />
+          <View style={[local.trust, { marginHorizontal: metrics.pad }]}>
+            <Icon name="shield" size={18} color={discoverPalette.ink} variant="filled" />
+            <Text style={local.trustText}>{homeCopy.trustText}</Text>
           </View>
-        ),
-      },
-      {
-        id: 'join' as const,
-        render: () => (
-          <View style={local.pageScroll}>
-            <DiscoverJoinPage
-              onExperience={onExperience}
-              onSignup={onSignup}
-              scrollBottomPad={metrics.scrollBottomPad}
-            />
+
+          <View style={[local.finalCta, { paddingHorizontal: metrics.pad }]}>
+            <Text style={local.foot}>{BRAND.tagline}</Text>
           </View>
-        ),
-      },
-    ],
-    [
-      statsLabel,
-      showHeaderStats,
-      onIntroAction,
-      onModulePress,
-      liveRecruitment,
-      loading,
-      stats,
-      hasActivity,
-      posts,
-      tournaments,
-      onPress,
-      onMercato,
-      onMatchs,
-      onStepPress,
-      onFeaturePress,
-      onExperience,
-      onSignup,
-      pagePad,
-      metrics.introPagerHeight,
-      metrics.scrollBottomPad,
-    ]
-  );
+        </ScrollView>
 
-  return (
-    <View style={discoverStyles.canvas}>
-      <DiscoverLightHeader
-        statsLabel={showHeaderStats ? statsLabel : undefined}
-        onStatsPress={showHeaderStats ? onPress : undefined}
-        universeLabel={universeLabel}
-        onUniversePress={onUniversePress}
-      />
-
-      <View style={discoverStyles.body}>
-        <DiscoverHomePager
-          embedded
-          ui="light"
-          pages={pages}
-          activeChapter={chapter}
-          onChapterChange={goChapter}
-          onChapterSelect={onChapterSelect}
-        />
+        <View style={local.stickyDock}>
+          <LinearGradient
+            colors={['transparent', c.background]}
+            style={local.stickyFade}
+            pointerEvents="none"
+          />
+          <View style={[local.stickyBar, { backgroundColor: c.background, borderTopColor: c.border }]}>
+            <PressableSpring onPress={onSignup} scaleTo={0.98} haptic style={[local.stickyBtnWrap, shadows.soft]}>
+              <ProDayGradient kind="cta" style={local.stickyBtn}>
+                <Text style={local.stickyBtnText}>S&apos;inscrire gratuitement</Text>
+                <Icon name="chevron-forward" size={18} color={c.brandInverse} />
+              </ProDayGradient>
+            </PressableSpring>
+          </View>
+        </View>
       </View>
-    </View>
+    </ProDayScreenCanvas>
   );
 };
 
-const local = StyleSheet.create({
-  page: {
-    flex: 1,
-    minHeight: 0,
-    width: '100%',
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-    paddingTop: spacing.xs,
-  },
-  pageScroll: { flex: 1, minHeight: 0 },
-  loader: { marginVertical: spacing.xl },
-  gridSpacer: { height: spacing.md },
-  shortcutCopy: { flex: 1, minWidth: 0 },
-});
+function createLocalStyles(c: AppColors) {
+  return StyleSheet.create({
+    section: {
+      marginBottom: spacing.xl,
+      gap: spacing.md,
+    },
+    loader: {
+      marginVertical: spacing.md,
+    },
+    trust: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      gap: spacing.sm,
+      padding: spacing.md,
+      borderRadius: radius.xl,
+      backgroundColor: c.surfaceMuted,
+      borderWidth: 1.5,
+      borderColor: c.borderStrong,
+      marginBottom: spacing.xl,
+      ...shadows.soft,
+    },
+    trustText: {
+      flex: 1,
+      fontSize: 13,
+      lineHeight: 19,
+      fontWeight: '500',
+      color: c.textSecondary,
+    },
+    finalCta: {
+      marginBottom: spacing.md,
+    },
+    foot: {
+      textAlign: 'center',
+      color: c.textMuted,
+      fontSize: 10,
+      fontWeight: '700',
+      letterSpacing: 2,
+      textTransform: 'uppercase',
+      ...Platform.select({ android: { includeFontPadding: false } }),
+    },
+    stickyDock: {
+      position: 'absolute',
+      left: 0,
+      right: 0,
+      bottom: 0,
+    },
+    stickyFade: {
+      position: 'absolute',
+      left: 0,
+      right: 0,
+      top: -32,
+      height: 32,
+    },
+    stickyBar: {
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.sm,
+      paddingBottom: spacing.md,
+      borderTopWidth: StyleSheet.hairlineWidth,
+    },
+    stickyBtnWrap: {
+      borderRadius: radius.pill,
+      overflow: 'hidden',
+    },
+    stickyBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: spacing.xs,
+      minHeight: STICKY_CTA_HEIGHT,
+      paddingHorizontal: spacing.lg,
+      borderRadius: radius.pill,
+    },
+    stickyBtnText: {
+      fontSize: 15,
+      fontWeight: '800',
+      color: c.brandInverse,
+    },
+  });
+}

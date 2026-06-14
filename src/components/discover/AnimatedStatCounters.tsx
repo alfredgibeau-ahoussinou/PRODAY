@@ -60,8 +60,10 @@ const StatBlock: React.FC<{
   }, [delay, progress, value]);
 
   useAnimatedReaction(
-    () => progress.value,
-    (v) => runOnJS(setDisplay)(Math.round(v * value))
+    () => Math.round(progress.value * value),
+    (current, prev) => {
+      if (current !== prev) runOnJS(setDisplay)(current);
+    }
   );
 
   return (

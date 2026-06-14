@@ -8,7 +8,7 @@ import { spacing, radius, shadows } from '../../theme/designTokens';
 import { useDiscoverStyles } from './discoverStyles';
 import type { AppColors } from '../../theme/universeTheme';
 
-const GRID_IDS: ProDayModuleId[] = ['matchs', 'arena', 'sponsors'];
+const GRID_IDS: ProDayModuleId[] = ['matchs', 'gestion', 'sponsors'];
 const FEATURED_ID: ProDayModuleId = 'recrutement';
 const WIDE_ID: ProDayModuleId = 'gestion';
 
@@ -88,7 +88,6 @@ export const DiscoverModuleShowcase: React.FC<DiscoverModuleShowcaseProps> = ({
       recrutement: showcase.mercatoDetection,
       matchs: showcase.friendlyMatch,
       gestion: showcase.expTeam,
-      arena: showcase.arenaTournament,
       sponsors: showcase.coachFounder,
     }),
     [showcase]

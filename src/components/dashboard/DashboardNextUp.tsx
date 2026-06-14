@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import type { SeasonCalendarItem } from '../../utils/seasonCalendar';
 import { formatCalendarDate } from '../../utils/seasonCalendar';
+import { AnimatedEntrance, PressableSpring } from '../motion';
 import { Icon } from '../ui/Icon';
 import { spacing, radius } from '../../theme/designTokens';
 import { useAppTheme } from '../../context/ProductLineContext';
@@ -22,69 +23,74 @@ export const DashboardNextUp: React.FC<DashboardNextUpProps> = ({
   const { colors: c } = useAppTheme();
 
   return (
-    <View style={styles.wrap}>
-      <View style={styles.header}>
-        <Text style={[styles.eyebrow, { color: c.brand }]}>PROCHAIN RENDEZ-VOUS</Text>
-        {pendingCount > 0 && onConvocationsPress ? (
-          <TouchableOpacity
-            style={[
-              styles.pendingChip,
-              { backgroundColor: c.accentSoft, borderColor: c.brand },
-            ]}
-            onPress={onConvocationsPress}
-          >
-            <Text style={[styles.pendingText, { color: c.brand }]}>
-              {pendingCount} convoc. en attente
-            </Text>
-          </TouchableOpacity>
-        ) : null}
-      </View>
-
-      {item ? (
-        <TouchableOpacity
-          style={[styles.card, { backgroundColor: c.surface, borderColor: c.border }]}
-          onPress={onPress}
-          activeOpacity={0.9}
-        >
-          <View style={[styles.accentBar, { backgroundColor: c.brand }]} />
-          <View style={styles.body}>
-            <Text style={[styles.date, { color: c.brand }]}>{formatCalendarDate(item.starts_at)}</Text>
-            <Text style={[styles.title, { color: c.text }]}>{item.title}</Text>
-            <Text style={[styles.sub, { color: c.textSecondary }]}>
-              {item.subtitle} · {item.city}
-            </Text>
-            <View style={styles.ctaRow}>
-              <Text style={[styles.cta, { color: c.brand }]}>
-                {item.team_event_id
-                  ? 'Voir la convocation'
-                  : item.friendly_match_id
-                    ? 'Voir le match amical'
-                    : item.tournament_id
-                      ? 'Voir le tournoi'
-                      : 'Voir le calendrier'}
+    <AnimatedEntrance kind="fadeUp" index={1}>
+      <View style={styles.wrap}>
+        <View style={styles.header}>
+          <Text style={[styles.eyebrow, { color: c.brand }]}>PROCHAIN RENDEZ-VOUS</Text>
+          {pendingCount > 0 && onConvocationsPress ? (
+            <PressableSpring
+              style={[
+                styles.pendingChip,
+                { backgroundColor: c.accentSoft, borderColor: c.brand },
+              ]}
+              onPress={onConvocationsPress}
+              scaleTo={0.94}
+              haptic
+            >
+              <Text style={[styles.pendingText, { color: c.brand }]}>
+                {pendingCount} convoc. en attente
               </Text>
-              <Icon name="chevron-forward" size={16} color={c.brand} />
-            </View>
-          </View>
-        </TouchableOpacity>
-      ) : (
-        <View
-          style={[styles.empty, { backgroundColor: c.surface, borderColor: c.border }]}
-        >
-          <Icon name="calendar" size={28} color={c.textMuted} />
-          <Text style={[styles.emptyTitle, { color: c.text }]}>Aucun événement planifié</Text>
-          <Text style={[styles.emptySub, { color: c.textMuted }]}>
-            Créez une convocation ou proposez un match amical.
-          </Text>
-          <TouchableOpacity
-            style={[styles.emptyBtn, { backgroundColor: c.brand }]}
-            onPress={onPress}
-          >
-            <Text style={[styles.emptyBtnText, { color: c.brandInverse }]}>Ouvrir la saison</Text>
-          </TouchableOpacity>
+            </PressableSpring>
+          ) : null}
         </View>
-      )}
-    </View>
+
+        {item ? (
+          <PressableSpring
+            style={[styles.card, { backgroundColor: c.surface, borderColor: c.border }]}
+            onPress={onPress}
+            scaleTo={0.97}
+            haptic
+          >
+            <View style={[styles.accentBar, { backgroundColor: c.brand }]} />
+            <View style={styles.body}>
+              <Text style={[styles.date, { color: c.brand }]}>{formatCalendarDate(item.starts_at)}</Text>
+              <Text style={[styles.title, { color: c.text }]}>{item.title}</Text>
+              <Text style={[styles.sub, { color: c.textSecondary }]}>
+                {item.subtitle} · {item.city}
+              </Text>
+              <View style={styles.ctaRow}>
+                <Text style={[styles.cta, { color: c.brand }]}>
+                  {item.team_event_id
+                    ? 'Voir la convocation'
+                    : item.friendly_match_id
+                      ? 'Voir le match amical'
+                      : 'Voir le calendrier'}
+                </Text>
+                <Icon name="chevron-forward" size={16} color={c.brand} />
+              </View>
+            </View>
+          </PressableSpring>
+        ) : (
+          <View
+            style={[styles.empty, { backgroundColor: c.surface, borderColor: c.border }]}
+          >
+            <Icon name="calendar" size={28} color={c.textMuted} />
+            <Text style={[styles.emptyTitle, { color: c.text }]}>Aucun événement planifié</Text>
+            <Text style={[styles.emptySub, { color: c.textMuted }]}>
+              Créez une convocation ou proposez un match amical.
+            </Text>
+            <PressableSpring
+              style={[styles.emptyBtn, { backgroundColor: c.brand }]}
+              onPress={onPress}
+              scaleTo={0.96}
+              haptic
+            >
+              <Text style={[styles.emptyBtnText, { color: c.brandInverse }]}>Ouvrir la saison</Text>
+            </PressableSpring>
+          </View>
+        )}
+      </View>
+    </AnimatedEntrance>
   );
 };
 

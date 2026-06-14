@@ -4,15 +4,17 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  Pressable,
   type ViewStyle,
 } from 'react-native';
+import { LivePulseDot, PressableSpring, StaggerReveal } from '../motion';
 import type { ProDayModuleDef, ProDayModuleId } from '../../content/prodayModules';
 import { getHomeModules } from '../../content/homeExperience';
 import type { UserRole } from '../../models/User';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { Icon } from '../ui/Icon';
 import { spacing, radius, shadows } from '../../theme/designTokens';
+import { ProDayText } from '../ui/ProDayText';
+import { ProDayGradient } from '../ui/ProDayGradient';
 
 interface HomeModuleRailProps {
   onModulePress: (id: ProDayModuleId) => void;
@@ -43,33 +45,38 @@ export const HomeModuleRail: React.FC<HomeModuleRailProps> = ({
       showsHorizontalScrollIndicator={false}
       contentContainerStyle={[styles.track, style]}
     >
-      {modules.map((mod) => (
-        <Pressable
-          key={mod.id}
-          style={({ pressed }) => [
+      {modules.map((mod, index) => (
+        <StaggerReveal key={mod.id} index={index} delayStep={45}>
+        <PressableSpring
+          style={[
             styles.card,
             {
               backgroundColor: colors.surface,
               borderColor: colors.border,
+              borderLeftColor: colors.accent,
             },
-            pressed && styles.cardPressed,
           ]}
           onPress={() => onModulePress(mod.id)}
+          scaleTo={0.96}
+          haptic
         >
-          <View style={[styles.iconWrap, { backgroundColor: colors.accentSoft }]}>
+          <ProDayGradient kind="card" style={styles.iconWrap}>
             <Icon name={mod.icon} size={22} color={colors.ink} variant="filled" />
-          </View>
-          <Text style={[styles.title, { color: colors.text }]}>{mod.title}</Text>
-          <Text style={[styles.sub, { color: colors.textMuted }]} numberOfLines={2}>
+          </ProDayGradient>
+          <ProDayText variant="caption" style={styles.title}>
+            {mod.title}
+          </ProDayText>
+          <ProDayText variant="caption" muted numberOfLines={2} style={styles.sub}>
             {mod.subtitle}
-          </Text>
+          </ProDayText>
           {mod.id === 'recrutement' && liveRecruitment ? (
             <View style={styles.live}>
-              <View style={[styles.liveDot, { backgroundColor: colors.success }]} />
+              <LivePulseDot active size={6} color={colors.success} />
               <Text style={[styles.liveText, { color: colors.success }]}>Live</Text>
             </View>
           ) : null}
-        </Pressable>
+        </PressableSpring>
+        </StaggerReveal>
       ))}
     </ScrollView>
   );
@@ -87,6 +94,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.lg,
     padding: spacing.md,
     borderWidth: 1,
+    borderLeftWidth: 3,
     ...shadows.soft,
   },
   cardPressed: { opacity: 0.92, transform: [{ scale: 0.98 }] },
@@ -98,18 +106,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: spacing.sm,
   },
-  title: { fontSize: 14, fontWeight: '800' },
-  sub: { fontSize: 11, marginTop: 4, lineHeight: 15 },
+  title: { fontSize: 13 },
+  sub: { marginTop: 4, lineHeight: 15 },
   live: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
     marginTop: spacing.sm,
-  },
-  liveDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
   },
   liveText: { fontSize: 10, fontWeight: '800' },
 });

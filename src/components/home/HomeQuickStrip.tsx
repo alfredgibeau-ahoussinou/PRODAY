@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
+import { PressableSpring, StaggerReveal } from '../motion';
 import { Icon, type IconName } from '../ui/Icon';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { spacing, radius } from '../../theme/designTokens';
@@ -23,24 +24,26 @@ export const HomeQuickStrip: React.FC<HomeQuickStripProps> = ({ items }) => {
 
   return (
     <View style={styles.row}>
-      {items.map((item) => (
-        <Pressable
-          key={item.id}
-          style={({ pressed }) => [
+      {items.map((item, index) => (
+        <StaggerReveal key={item.id} index={index} delayStep={40}>
+        <PressableSpring
+          style={[
             styles.chip,
             {
               backgroundColor: colors.surface,
               borderColor: colors.border,
             },
-            pressed && styles.chipPressed,
           ]}
           onPress={item.onPress}
+          scaleTo={0.96}
+          haptic
         >
           <Icon name={item.icon} size={18} color={colors.ink} />
           <Text style={[styles.label, { color: colors.text }]} numberOfLines={1}>
             {item.label}
           </Text>
-        </Pressable>
+        </PressableSpring>
+        </StaggerReveal>
       ))}
     </View>
   );
@@ -62,6 +65,5 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
     borderWidth: 1,
   },
-  chipPressed: { opacity: 0.88 },
   label: { fontSize: 13, fontWeight: '700' },
 });

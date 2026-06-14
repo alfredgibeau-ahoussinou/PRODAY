@@ -15,17 +15,16 @@ import { DiscoverActivityStrip } from './DiscoverActivityStrip';
 import { Icon } from '../ui/Icon';
 import type { RecruitmentStats } from '../../services/stats.service';
 import type { RecruitmentPost } from '../../models/Player';
-import type { Tournament } from '../../models/Tournament';
 import type { ProDayModuleId } from '../../content/prodayModules';
 import { TAB_BAR_CONTENT_INSET } from '../../navigation/tabBarLayout';
 import { spacing, radius, shadows } from '../../theme/designTokens';
 import { useDiscoverStyles } from './discoverStyles';
 import type { AppColors } from '../../theme/universeTheme';
+import { ProDayScreenCanvas } from '../ui/ProDayScreenCanvas';
 
 export interface DiscoverStageProps {
   stats: RecruitmentStats | null;
   posts: RecruitmentPost[];
-  tournaments: Tournament[];
   loading: boolean;
   statsLabel: string;
   onSignup: () => void;
@@ -39,7 +38,6 @@ export interface DiscoverStageProps {
 export const DiscoverStage: React.FC<DiscoverStageProps> = ({
   stats,
   posts,
-  tournaments,
   loading,
   statsLabel,
   onSignup,
@@ -49,11 +47,12 @@ export const DiscoverStage: React.FC<DiscoverStageProps> = ({
   const { colors: c } = useDiscoverStyles();
   const pitchStyles = usePitchStyles();
   const styles = useMemo(() => createStyles(c), [c]);
-  const hasActivity = posts.length > 0 || tournaments.length > 0;
+  const hasActivity = posts.length > 0;
 
   return (
-    <View style={pitchStyles.root}>
-      <ScrollView
+    <ProDayScreenCanvas>
+      <View style={pitchStyles.root}>
+        <ScrollView
         contentContainerStyle={[
           pitchStyles.scrollContent,
           { paddingBottom: TAB_BAR_CONTENT_INSET },
@@ -67,7 +66,7 @@ export const DiscoverStage: React.FC<DiscoverStageProps> = ({
 
           <Text style={pitchStyles.sheetTitle}>Le foot amateur, enfin connecté</Text>
           <Text style={pitchStyles.sheetSub}>
-            Mercato, matchs, Arena et sponsors — une seule app pour votre saison.
+            Mercato, matchs et sponsors — une seule app pour votre saison.
           </Text>
 
           {!loading && stats ? (
@@ -101,7 +100,6 @@ export const DiscoverStage: React.FC<DiscoverStageProps> = ({
               <Text style={styles.activityLabel}>Activité récente</Text>
               <DiscoverActivityStrip
                 posts={posts}
-                tournaments={tournaments}
                 loading={loading}
                 onPress={onPress}
               />
@@ -117,8 +115,9 @@ export const DiscoverStage: React.FC<DiscoverStageProps> = ({
             </TouchableOpacity>
           </View>
         </View>
-      </ScrollView>
-    </View>
+        </ScrollView>
+      </View>
+    </ProDayScreenCanvas>
   );
 };
 

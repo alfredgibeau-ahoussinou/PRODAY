@@ -31,7 +31,7 @@ export const DiscoverJourney: React.FC<DiscoverJourneyProps> = ({
       matches: showcase.friendlyMatch,
       verify: showcase.playerProfile,
       team: showcase.friendlyMatch,
-      arena: showcase.arenaTournament,
+      sponsors: showcase.coachFounder,
     };
     return DISCOVER_FEATURES.map((f, i) => ({
       id: f.id,

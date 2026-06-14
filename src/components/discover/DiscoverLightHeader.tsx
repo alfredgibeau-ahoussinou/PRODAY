@@ -4,6 +4,8 @@ import { Logo } from '../Logo';
 import { useDiscoverStyles, BRAND } from './discoverStyles';
 import { useDiscoverMetrics } from './useDiscoverMetrics';
 import { spacing } from '../../theme/designTokens';
+import { ProDayGradient } from '../ui/ProDayGradient';
+import { ProDayText } from '../ui/ProDayText';
 
 interface DiscoverLightHeaderProps {
   statsLabel?: string;
@@ -38,18 +40,27 @@ export const DiscoverLightHeader: React.FC<DiscoverLightHeaderProps> = ({
 
   return (
     <View style={[discoverStyles.header, { paddingTop: headerTopPad }]}>
+      <ProDayGradient
+        kind="cta"
+        style={discoverStyles.headerGradientBar}
+        start={{ x: 0, y: 0.5 }}
+        end={{ x: 1, y: 0.5 }}
+      />
       {universeLabel && onUniversePress ? (
         <Pressable style={local.universeLink} onPress={onUniversePress}>
-          <Text style={local.universeLinkText}>{universeLabel}</Text>
+          <ProDayText variant="caption" accent style={local.universeLinkText}>
+            {universeLabel}
+          </ProDayText>
         </Pressable>
       ) : null}
       <Logo background="light" width={logoWidth} showTagline={false} />
-      <Text
+      <ProDayText
+        variant="eyebrow"
         style={[discoverStyles.tagline, compact && discoverStyles.taglineCompact]}
         maxFontSizeMultiplier={1.1}
       >
         {BRAND.tagline}
-      </Text>
+      </ProDayText>
       {statsLabel ? (
         <Pressable
           style={[discoverStyles.headerStats, compact && discoverStyles.headerStatsCompact]}

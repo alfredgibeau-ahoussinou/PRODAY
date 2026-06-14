@@ -9,7 +9,6 @@ import { DiscoverSectionHeader } from './DiscoverSectionHeader';
 import { StaggerReveal } from '../motion';
 import type { RecruitmentStats } from '../../services/stats.service';
 import type { RecruitmentPost } from '../../models/Player';
-import type { Tournament } from '../../models/Tournament';
 import { TAB_BAR_CONTENT_INSET } from '../../navigation/tabBarLayout';
 import { spacing } from '../../theme/designTokens';
 import { useDiscoverStyles } from './discoverStyles';
@@ -17,7 +16,6 @@ import { useDiscoverStyles } from './discoverStyles';
 interface DiscoverLivePageProps {
   stats: RecruitmentStats | null;
   posts: RecruitmentPost[];
-  tournaments: Tournament[];
   loading: boolean;
   onPress: () => void;
   onMercato: () => void;
@@ -27,14 +25,13 @@ interface DiscoverLivePageProps {
 export const DiscoverLivePage: React.FC<DiscoverLivePageProps> = ({
   stats,
   posts,
-  tournaments,
   loading,
   onPress,
   onMercato,
   onMatchs,
 }) => {
   const { colors: c } = useDiscoverStyles();
-  const highlights = buildDiscoverHighlights(stats, tournaments.length);
+  const highlights = buildDiscoverHighlights(stats);
 
   return (
     <ScrollView
@@ -62,12 +59,7 @@ export const DiscoverLivePage: React.FC<DiscoverLivePageProps> = ({
       </StaggerReveal>
 
       <StaggerReveal index={2}>
-        <DiscoverLivePreview
-          posts={posts}
-          tournaments={tournaments}
-          loading={loading}
-          onPress={onPress}
-        />
+        <DiscoverLivePreview posts={posts} loading={loading} onPress={onPress} />
       </StaggerReveal>
 
       <StaggerReveal index={3}>

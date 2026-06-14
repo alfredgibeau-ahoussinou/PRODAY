@@ -54,22 +54,28 @@ export const DiscoverHomePager: React.FC<DiscoverHomePagerProps> = ({
   const scrollX = useSharedValue(0);
   /** Évite que onScrollEndDrag annule un tap onglet (offset encore à 0 pendant le scroll programmé). */
   const suppressChapterSyncRef = useRef(false);
+  const pagesRef = useRef(pages);
+  pagesRef.current = pages;
+  const activeChapterRef = useRef(activeChapter);
+  activeChapterRef.current = activeChapter;
 
   const goToIndex = useCallback(
     (index: number, animated = true) => {
       if (pageWidth <= 0) return;
-      const clamped = Math.max(0, Math.min(index, pages.length - 1));
+      const clamped = Math.max(0, Math.min(index, pagesRef.current.length - 1));
       const x = clamped * pageWidth;
-      const chapterId = pages[clamped].id;
+      const chapterId = pagesRef.current[clamped].id;
       suppressChapterSyncRef.current = true;
       scrollX.value = x;
-      onChapterChange(chapterId);
+      if (chapterId !== activeChapterRef.current) {
+        onChapterChange(chapterId);
+      }
       scrollRef.current?.scrollTo({ x, animated });
       if (!animated) {
         suppressChapterSyncRef.current = false;
       }
     },
-    [onChapterChange, pages, pageWidth, scrollX]
+    [onChapterChange, pageWidth, scrollX]
   );
 
   const goToChapter = useCallback(
@@ -86,15 +92,20 @@ export const DiscoverHomePager: React.FC<DiscoverHomePagerProps> = ({
       if (suppressChapterSyncRef.current) return;
       const snap = Math.max(pageWidth, 1);
       const index = Math.round(offsetX / snap);
-      const page = pages[index];
-      if (page) onChapterChange(page.id);
+      const page = pagesRef.current[index];
+      if (page && page.id !== activeChapterRef.current) {
+        onChapterChange(page.id);
+      }
     },
-    [onChapterChange, pages, pageWidth]
+    [onChapterChange, pageWidth]
   );
 
   const onPagerScrollEnd = useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-      suppressChapterSyncRef.current = false;
+      if (suppressChapterSyncRef.current) {
+        suppressChapterSyncRef.current = false;
+        return;
+      }
       syncChapterFromOffset(e.nativeEvent.contentOffset.x);
     },
     [syncChapterFromOffset]
@@ -121,13 +132,13 @@ export const DiscoverHomePager: React.FC<DiscoverHomePagerProps> = ({
 
   /** Sync pager quand le parent change de chapitre (ex. CTA intro « Voir le live »). */
   useEffect(() => {
-    const index = pages.findIndex((p) => p.id === activeChapter);
+    const index = pagesRef.current.findIndex((p) => p.id === activeChapter);
     if (index < 0 || pageWidth <= 0) return;
     const x = index * pageWidth;
     suppressChapterSyncRef.current = true;
     scrollX.value = x;
     scrollRef.current?.scrollTo({ x, animated: true });
-  }, [activeChapter, pages, pageWidth, scrollX]);
+  }, [activeChapter, pageWidth, scrollX]);
 
   return (
     <View

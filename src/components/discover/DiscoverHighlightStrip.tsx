@@ -48,8 +48,7 @@ export const DiscoverHighlightStrip: React.FC<DiscoverHighlightStripProps> = ({
 
 /** Construit les highlights depuis les stats Firestore réelles. */
 export function buildDiscoverHighlights(
-  stats: RecruitmentStats | null,
-  tournamentCount: number
+  stats: RecruitmentStats | null
 ): DiscoverHighlightItem[] {
   if (!stats) return [];
 
@@ -70,11 +69,6 @@ export function buildDiscoverHighlights(
       label: 'Annonces',
       value: String(stats.recruitment_posts_open),
       detail: 'Offres Mercato ouvertes en ce moment.',
-    },
-    {
-      label: 'Tournois',
-      value: String(tournamentCount),
-      detail: 'Tournois Arena publiés (à venir ou en cours).',
     },
     ...(staff > 0
       ? [

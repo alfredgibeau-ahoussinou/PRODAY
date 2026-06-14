@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -44,37 +44,41 @@ const LightChapterTabs: React.FC<{
 }> = ({ active, onSelect, pad, compact, scrollX, pageWidth }) => {
   const { palette, colors: c } = useDiscoverStyles();
   const styles = useMemo(() => createChapterRailStyles(c, palette), [c, palette]);
-  const [trackW, setTrackW] = useState(0);
+  const trackW = useSharedValue(0);
   const lineX = useSharedValue(0);
   const activeIndex = Math.max(0, DISCOVER_CHAPTERS.findIndex((c) => c.id === active));
-  const tabW = trackW > 0 ? trackW / DISCOVER_CHAPTERS.length : 0;
+  const chapterCount = DISCOVER_CHAPTERS.length;
 
   const moveLine = useCallback(
     (index: number) => {
-      if (tabW <= 0) return;
-      lineX.value = withSpring(index * tabW, SPRING_SNAPPY);
+      const w = trackW.value / chapterCount;
+      if (w <= 0) return;
+      lineX.value = withSpring(index * w, SPRING_SNAPPY);
     },
-    [lineX, tabW]
+    [chapterCount, lineX, trackW]
   );
-
-  useEffect(() => {
-    moveLine(activeIndex);
-  }, [activeIndex, moveLine]);
 
   const snap = Math.max(pageWidth, 1);
   const usePagerSync = scrollX != null && pageWidth > 0;
 
+  useEffect(() => {
+    if (usePagerSync) return;
+    moveLine(activeIndex);
+  }, [activeIndex, moveLine, usePagerSync]);
+
   const lineStyle = useAnimatedStyle(() => {
-    const w = tabW;
-    if (w <= 0) return { width: 0, transform: [{ translateX: 0 }] };
+    const w = trackW.value / chapterCount;
+    if (w <= 0) return { width: 0, opacity: 0, transform: [{ translateX: 0 }] };
     if (usePagerSync && scrollX) {
       return {
         width: w,
+        opacity: 1,
         transform: [{ translateX: (scrollX.value / snap) * w }],
       };
     }
     return {
       width: w,
+      opacity: 1,
       transform: [{ translateX: lineX.value }],
     };
   });
@@ -83,9 +87,11 @@ const LightChapterTabs: React.FC<{
     <View style={[styles.lightWrap, { paddingHorizontal: pad }, compact && styles.lightWrapCompact]}>
       <View
         style={[styles.lightTrack, compact && styles.lightTrackCompact]}
-        onLayout={(e: LayoutChangeEvent) => setTrackW(e.nativeEvent.layout.width)}
+        onLayout={(e: LayoutChangeEvent) => {
+          trackW.value = e.nativeEvent.layout.width;
+        }}
       >
-        {tabW > 0 ? <Animated.View style={[styles.lightLine, lineStyle]} /> : null}
+        <Animated.View style={[styles.lightLine, lineStyle]} />
         {DISCOVER_CHAPTERS.map((ch, index) => {
           return (
             <PressableSpring
@@ -135,7 +141,7 @@ const LightTabLabel: React.FC<{
 }> = ({ index, scrollX, snap, label, compact }) => {
   const { palette, colors: c } = useDiscoverStyles();
   const styles = useMemo(() => createChapterRailStyles(c, palette), [c, palette]);
-  const labelStyle = useAnimatedStyle(() => {
+  const inactiveStyle = useAnimatedStyle(() => {
     const progress = scrollX.value / snap;
     const emphasis = interpolate(
       progress,
@@ -143,26 +149,48 @@ const LightTabLabel: React.FC<{
       [0, 1, 0],
       Extrapolation.CLAMP
     );
-    const inactive = palette.faint;
-    const active = palette.ink;
-    return {
-      opacity: 0.5 + emphasis * 0.5,
-      color: emphasis > 0.5 ? active : inactive,
-    };
+    return { opacity: 1 - emphasis };
+  });
+
+  const activeStyle = useAnimatedStyle(() => {
+    const progress = scrollX.value / snap;
+    const emphasis = interpolate(
+      progress,
+      [index - 1, index, index + 1],
+      [0, 1, 0],
+      Extrapolation.CLAMP
+    );
+    return { opacity: emphasis };
   });
 
   return (
-    <Animated.Text
-      style={[
-        styles.lightTabLabel,
-        compact && styles.lightTabLabelCompact,
-        labelStyle,
-      ]}
-      numberOfLines={1}
-      maxFontSizeMultiplier={1.1}
-    >
-      {label}
-    </Animated.Text>
+    <View style={styles.lightLabelStack}>
+      <Animated.Text
+        style={[
+          styles.lightTabLabel,
+          compact && styles.lightTabLabelCompact,
+          styles.lightTabLabelMuted,
+          inactiveStyle,
+        ]}
+        numberOfLines={1}
+        maxFontSizeMultiplier={1.1}
+      >
+        {label}
+      </Animated.Text>
+      <Animated.Text
+        style={[
+          styles.lightTabLabel,
+          compact && styles.lightTabLabelCompact,
+          styles.lightTabLabelOn,
+          activeStyle,
+        ]}
+        numberOfLines={1}
+        maxFontSizeMultiplier={1.1}
+        pointerEvents="none"
+      >
+        {label}
+      </Animated.Text>
+    </View>
   );
 };
 
@@ -269,7 +297,18 @@ function createChapterRailStyles(c: AppColors, palette: ReturnType<typeof getDis
   lightTabLabelCompact: {
     fontSize: 13,
   },
+  lightLabelStack: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 18,
+  },
+  lightTabLabelMuted: {
+    color: palette.faint,
+    fontWeight: '700',
+  },
   lightTabLabelOn: {
+    ...StyleSheet.absoluteFillObject,
+    textAlign: 'center',
     color: palette.ink,
     fontWeight: '800',
   },

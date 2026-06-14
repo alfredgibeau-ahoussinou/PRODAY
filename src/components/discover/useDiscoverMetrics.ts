@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { TAB_BAR_CONTENT_INSET } from '../../navigation/tabBarLayout';
 import { spacing } from '../../theme/designTokens';
 
-const TAB_BAR_H = 56;
+const TAB_BAR_H = 62;
 const CHAPTER_TABS_H = 48;
 
 /**

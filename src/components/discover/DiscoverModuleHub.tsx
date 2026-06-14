@@ -18,7 +18,7 @@ export const DiscoverModuleHub: React.FC<DiscoverModuleHubProps> = ({
     <DiscoverSectionHeader
       label="Modules ProDay"
       title="Tout en un tap"
-      subtitle="Recrutement, matchs, Arena, sponsors"
+      subtitle="Recrutement, matchs, sponsors"
     />
     <ProDayModuleGrid onModulePress={onModulePress} liveRecruitment={liveRecruitment} />
   </View>

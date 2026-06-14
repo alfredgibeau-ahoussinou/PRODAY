@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
+import { PressableSpring, StaggerReveal } from '../motion';
 import type { User } from '../../models/User';
 import type { Application } from '../../models/Player';
 import type { TeamEvent } from '../../models/TeamEvent';
@@ -73,9 +74,10 @@ export const DashboardRolePanel: React.FC<DashboardRolePanelProps> = ({
             onPress={onApplications}
           />
         </View>
-        {actions.map((a) => (
+        {actions.map((a, index) => (
           <ActionRow
             key={a.title}
+            index={index}
             c={c}
             icon={a.icon}
             title={a.title}
@@ -100,6 +102,7 @@ export const DashboardRolePanel: React.FC<DashboardRolePanelProps> = ({
             sub="Inscription en un tap"
             onPress={onDetections}
             accent
+            index={actions.length}
           />
         ) : null}
       </View>
@@ -123,9 +126,10 @@ export const DashboardRolePanel: React.FC<DashboardRolePanelProps> = ({
             {profile.department ? ` (${profile.department})` : ''}
           </Text>
         ) : null}
-        {actions.map((a) => (
+        {actions.map((a, index) => (
           <ActionRow
             key={a.title}
+            index={index}
             c={c}
             icon={a.icon}
             title={a.title}
@@ -149,9 +153,10 @@ export const DashboardRolePanel: React.FC<DashboardRolePanelProps> = ({
       <View style={[styles.wrap, styles.wrapSponsor]}>
         <Text style={[styles.eyebrow, styles.eyebrowSponsor]}>{meta.eyebrow}</Text>
         <Text style={[styles.title, { color: c.text }]}>{meta.title}</Text>
-        {actions.map((a) => (
+        {actions.map((a, index) => (
           <ActionRow
             key={a.title}
+            index={index}
             c={c}
             icon={a.icon}
             title={a.title}
@@ -219,6 +224,7 @@ export const DashboardRolePanel: React.FC<DashboardRolePanelProps> = ({
           title={`${openMatches.length} match${openMatches.length > 1 ? 's' : ''} amical${openMatches.length > 1 ? 'ux' : ''}`}
           sub="Complétez votre planning"
           onPress={onMatches}
+          index={actions.length}
         />
       ) : null}
     </View>
@@ -233,24 +239,29 @@ const StatBox: React.FC<{
   highlight?: boolean;
   onPress?: () => void;
 }> = ({ c, label, value, icon, highlight, onPress }) => {
-  const Box = onPress ? TouchableOpacity : View;
-  return (
-    <Box
-      style={[
-        styles.statBox,
-        {
-          backgroundColor: c.surface,
-          borderColor: highlight ? c.brand : c.border,
-        },
-        highlight && { backgroundColor: c.accentSoft },
-      ]}
-      onPress={onPress}
-    >
+  const content = (
+    <>
       <Icon name={icon} size={16} color={highlight ? c.brand : c.textMuted} />
       <Text style={[styles.statValue, { color: c.text }]}>{value}</Text>
       <Text style={[styles.statLabel, { color: c.textMuted }]}>{label}</Text>
-    </Box>
+    </>
   );
+  const boxStyle = [
+    styles.statBox,
+    {
+      backgroundColor: c.surface,
+      borderColor: highlight ? c.brand : c.border,
+    },
+    highlight && { backgroundColor: c.accentSoft },
+  ];
+  if (onPress) {
+    return (
+      <PressableSpring style={boxStyle} onPress={onPress} scaleTo={0.96} haptic>
+        {content}
+      </PressableSpring>
+    );
+  }
+  return <View style={boxStyle}>{content}</View>;
 };
 
 const ActionRow: React.FC<{
@@ -260,45 +271,50 @@ const ActionRow: React.FC<{
   sub: string;
   onPress: () => void;
   accent?: boolean;
-}> = ({ c, icon, title, sub, onPress, accent }) => (
-  <TouchableOpacity
-    style={[
-      styles.actionRow,
-      {
-        backgroundColor: accent ? c.brand : c.surface,
-        borderColor: accent ? c.brand : c.border,
-      },
-    ]}
-    onPress={onPress}
-  >
-    <View
+  index?: number;
+}> = ({ c, icon, title, sub, onPress, accent, index = 0 }) => (
+  <StaggerReveal index={index} delayStep={45}>
+    <PressableSpring
       style={[
-        styles.actionIcon,
-        { backgroundColor: accent ? c.brandLight : c.surfaceMuted },
+        styles.actionRow,
+        {
+          backgroundColor: accent ? c.brand : c.surface,
+          borderColor: accent ? c.brand : c.border,
+        },
       ]}
+      onPress={onPress}
+      scaleTo={0.97}
+      haptic
     >
-      <Icon name={icon} size={20} color={accent ? c.brandInverse : c.text} />
-    </View>
-    <View style={styles.actionBody}>
-      <Text
+      <View
         style={[
-          styles.actionTitle,
-          { color: accent ? c.brandInverse : c.text },
+          styles.actionIcon,
+          { backgroundColor: accent ? c.brandLight : c.surfaceMuted },
         ]}
       >
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.actionSub,
-          { color: accent ? c.heroMuted : c.textMuted },
-        ]}
-      >
-        {sub}
-      </Text>
-    </View>
-    <Icon name="chevron-forward" size={18} color={accent ? c.brandInverse : c.textMuted} />
-  </TouchableOpacity>
+        <Icon name={icon} size={20} color={accent ? c.brandInverse : c.text} />
+      </View>
+      <View style={styles.actionBody}>
+        <Text
+          style={[
+            styles.actionTitle,
+            { color: accent ? c.brandInverse : c.text },
+          ]}
+        >
+          {title}
+        </Text>
+        <Text
+          style={[
+            styles.actionSub,
+            { color: accent ? c.heroMuted : c.textMuted },
+          ]}
+        >
+          {sub}
+        </Text>
+      </View>
+      <Icon name="chevron-forward" size={18} color={accent ? c.brandInverse : c.textMuted} />
+    </PressableSpring>
+  </StaggerReveal>
 );
 
 const styles = StyleSheet.create({

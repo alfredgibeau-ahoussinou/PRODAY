@@ -4,10 +4,8 @@ import {
   Text,
   ScrollView,
   StyleSheet,
-  TouchableOpacity,
-  ActivityIndicator,
-  Pressable,
 } from 'react-native';
+import { PressableSpring, SkeletonList, StaggerReveal } from '../motion';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Logo } from '../Logo';
 import { spacing, radius, shadows } from '../../theme/designTokens';
@@ -97,71 +95,84 @@ export const DiscoverHomeScroll: React.FC<DiscoverHomeScrollProps> = ({
       </View>
 
       {loading ? (
-        <ActivityIndicator color={colors.ink} style={styles.loader} />
+        <SkeletonList count={1} variant="card" />
       ) : stats ? (
-        <View
-          style={[
-            styles.statsCard,
-            {
-              backgroundColor: colors.surface,
-              borderColor: colors.border,
-            },
-          ]}
-        >
-          <StatCell value={String(stats.players)} label={copy.playersStatLabel} colors={colors} />
-          <View style={[styles.statDivider, { backgroundColor: colors.border }]} />
-          <StatCell value={String(stats.clubs)} label="Clubs" colors={colors} />
-          <View style={[styles.statDivider, { backgroundColor: colors.border }]} />
-          <StatCell value={String(stats.recruitment_posts_open)} label="Annonces" colors={colors} />
-        </View>
+        <StaggerReveal index={0}>
+          <View
+            style={[
+              styles.statsCard,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.border,
+              },
+            ]}
+          >
+            <StatCell value={String(stats.players)} label={copy.playersStatLabel} colors={colors} />
+            <View style={[styles.statDivider, { backgroundColor: colors.border }]} />
+            <StatCell value={String(stats.clubs)} label="Clubs" colors={colors} />
+            <View style={[styles.statDivider, { backgroundColor: colors.border }]} />
+            <StatCell value={String(stats.recruitment_posts_open)} label="Annonces" colors={colors} />
+          </View>
+        </StaggerReveal>
       ) : null}
 
       <View style={styles.pillars}>
-        {PRODAY_BRAND_DNA.pillars.map((pillar) => (
-          <View
-            key={pillar}
-            style={[styles.pillar, { backgroundColor: colors.surfaceMuted, borderColor: colors.border }]}
-          >
-            <Text style={[styles.pillarText, { color: colors.textSecondary }]}>{pillar}</Text>
-          </View>
+        {PRODAY_BRAND_DNA.pillars.map((pillar, index) => (
+          <StaggerReveal key={pillar} index={index + 1}>
+            <View
+              style={[styles.pillar, { backgroundColor: colors.surfaceMuted, borderColor: colors.border }]}
+            >
+              <Text style={[styles.pillarText, { color: colors.textSecondary }]}>{pillar}</Text>
+            </View>
+          </StaggerReveal>
         ))}
       </View>
 
-      <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>{copy.sectionExplore}</Text>
-      <HomeQuickStrip items={quickItems} />
-      <HomeModuleRail
-        modules={getHomeModules(productLine)}
-        onModulePress={onModulePress}
-        liveRecruitment={liveRecruitment}
-        style={styles.railPad}
-      />
+      <StaggerReveal index={5}>
+        <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>{copy.sectionExplore}</Text>
+        <HomeQuickStrip items={quickItems} />
+        <HomeModuleRail
+          modules={getHomeModules(productLine)}
+          onModulePress={onModulePress}
+          liveRecruitment={liveRecruitment}
+          style={styles.railPad}
+        />
+      </StaggerReveal>
 
-      <TouchableOpacity
-        style={[styles.cta, { backgroundColor: colors.ink }, shadows.interactive]}
-        onPress={onSignup}
-        activeOpacity={0.9}
-      >
-        <Text style={[styles.ctaText, { color: colors.brandInverse }]}>{copy.ctaText}</Text>
-        <Icon name="chevron-forward" size={20} color={colors.brandInverse} />
-      </TouchableOpacity>
+      <StaggerReveal index={6}>
+        <PressableSpring
+          style={[styles.cta, { backgroundColor: colors.ink }, shadows.interactive]}
+          onPress={onSignup}
+          scaleTo={0.97}
+          haptic
+        >
+          <Text style={[styles.ctaText, { color: colors.brandInverse }]}>{copy.ctaText}</Text>
+          <Icon name="chevron-forward" size={20} color={colors.brandInverse} />
+        </PressableSpring>
 
-      <Pressable style={styles.loginLink} onPress={onLogin}>
-        <Text style={[styles.loginText, { color: colors.textSecondary }]}>
-          J’ai déjà un compte —{' '}
-          <Text style={[styles.loginAccent, { color: colors.ink }]}>Se connecter</Text>
-        </Text>
-      </Pressable>
+        <PressableSpring style={styles.loginLink} onPress={onLogin} scaleTo={0.99}>
+          <Text style={[styles.loginText, { color: colors.textSecondary }]}>
+            J’ai déjà un compte —{' '}
+            <Text style={[styles.loginAccent, { color: colors.ink }]}>Se connecter</Text>
+          </Text>
+        </PressableSpring>
 
-      <View style={[styles.trust, { backgroundColor: colors.surfaceMuted }]}>
-        <Icon name="shield" size={16} color={colors.textMuted} />
-        <Text style={[styles.trustText, { color: colors.textSecondary }]}>{copy.trustText}</Text>
-      </View>
+        <View style={[styles.trust, { backgroundColor: colors.surfaceMuted }]}>
+          <Icon name="shield" size={16} color={colors.textMuted} />
+          <Text style={[styles.trustText, { color: colors.textSecondary }]}>{copy.trustText}</Text>
+        </View>
 
-      <Pressable style={styles.spaceLink} onPress={openSpacePicker}>
-        <Text style={[styles.spaceLinkText, { color: colors.textMuted }]}>
-          {brand.productName} — changer d’univers
-        </Text>
-      </Pressable>
+        <PressableSpring
+          style={[styles.spaceLink, { borderColor: colors.borderStrong, backgroundColor: colors.surface }]}
+          onPress={openSpacePicker}
+          scaleTo={0.99}
+        >
+          <Text style={[styles.spaceLinkText, { color: colors.textSecondary }]}>
+            {brand.productName} — changer d’univers
+          </Text>
+          <Icon name="chevron-down" size={14} color={colors.accent} />
+        </PressableSpring>
+      </StaggerReveal>
     </ScrollView>
   );
 };
@@ -300,12 +311,18 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   spaceLink: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.xs,
+    alignSelf: 'center',
     paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    borderRadius: radius.pill,
+    borderWidth: 1.5,
   },
   spaceLinkText: {
-    fontSize: 12,
-    fontWeight: '600',
-    textDecorationLine: 'underline',
+    fontSize: 13,
+    fontWeight: '700',
   },
 });
