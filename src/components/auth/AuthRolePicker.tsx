@@ -46,7 +46,7 @@ export const ROLE_OPTIONS: {
   {
     value: 'organizer',
     label: 'Organisateur',
-    description: 'Tournois Arena, inscriptions',
+    description: 'Événements et détections',
     icon: 'trophy',
   },
   {

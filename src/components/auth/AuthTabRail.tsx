@@ -5,9 +5,10 @@ import Animated, {
   useSharedValue,
   withSpring,
 } from 'react-native-reanimated';
-import { PressableSpring } from '../discover/PressableSpring';
-import { SPRING_SNAPPY } from '../discover/animationConfig';
-import { spacing } from '../../theme/designTokens';
+import { PressableSpring } from '../motion';
+import { motion } from '../../theme/motion';
+import { prodayHaptics } from '../../utils/prodayHaptics';
+import { spacing, radius, shadows } from '../../theme/designTokens';
 import { useAppTheme } from '../../context/ProductLineContext';
 import type { AppColors } from '../../theme/universeTheme';
 
@@ -28,25 +29,26 @@ export const AuthTabRail: React.FC<AuthTabRailProps> = ({ active, onSelect, comp
   const { colors: c } = useAppTheme();
   const styles = useMemo(() => createStyles(c), [c]);
   const [trackW, setTrackW] = useState(0);
-  const lineX = useSharedValue(0);
+  const pillX = useSharedValue(0);
   const activeIndex = Math.max(0, TABS.findIndex((t) => t.id === active));
-  const tabW = trackW > 0 ? trackW / TABS.length : 0;
+  const inset = 4;
+  const segW = trackW > 0 ? (trackW - inset * 2) / TABS.length : 0;
 
-  const moveLine = useCallback(
+  const movePill = useCallback(
     (index: number) => {
-      if (tabW <= 0) return;
-      lineX.value = withSpring(index * tabW, SPRING_SNAPPY);
+      if (segW <= 0) return;
+      pillX.value = withSpring(index * segW, motion.spring.snappy);
     },
-    [lineX, tabW]
+    [pillX, segW]
   );
 
   useEffect(() => {
-    moveLine(activeIndex);
-  }, [activeIndex, moveLine]);
+    movePill(activeIndex);
+  }, [activeIndex, movePill]);
 
-  const lineStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: lineX.value }],
-    width: tabW,
+  const pillStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: pillX.value }],
+    width: segW,
   }));
 
   return (
@@ -55,7 +57,11 @@ export const AuthTabRail: React.FC<AuthTabRailProps> = ({ active, onSelect, comp
         style={[styles.track, compact && styles.trackCompact]}
         onLayout={(e: LayoutChangeEvent) => setTrackW(e.nativeEvent.layout.width)}
       >
-        {tabW > 0 ? <Animated.View style={[styles.line, lineStyle]} /> : null}
+        {segW > 0 ? (
+          <Animated.View style={[styles.pill, pillStyle]}>
+            <View style={styles.pillInner} />
+          </Animated.View>
+        ) : null}
         {TABS.map((tab, index) => {
           const on = tab.id === active;
           return (
@@ -63,17 +69,14 @@ export const AuthTabRail: React.FC<AuthTabRailProps> = ({ active, onSelect, comp
               key={tab.id}
               style={styles.tab}
               onPress={() => {
+                if (tab.id !== active) prodayHaptics.tabSwitch();
                 onSelect(tab.id);
-                moveLine(index);
+                movePill(index);
               }}
               scaleTo={0.98}
             >
               <Text
-                style={[
-                  styles.tabLabel,
-                  compact && styles.tabLabelCompact,
-                  on && styles.tabLabelOn,
-                ]}
+                style={[styles.tabLabel, compact && styles.tabLabelCompact, on && styles.tabLabelOn]}
                 numberOfLines={1}
                 maxFontSizeMultiplier={1.1}
               >
@@ -91,27 +94,36 @@ function createStyles(c: AppColors) {
   return StyleSheet.create({
     wrap: {
       marginBottom: spacing.lg,
-      borderBottomWidth: StyleSheet.hairlineWidth,
-      borderBottomColor: c.border,
     },
     wrapCompact: {
       marginBottom: spacing.md,
     },
     track: {
       flexDirection: 'row',
-      height: 46,
+      height: 48,
       position: 'relative',
+      backgroundColor: c.surfaceMuted,
+      borderRadius: radius.pill,
+      padding: 4,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: c.border,
     },
     trackCompact: {
-      height: 42,
+      height: 44,
     },
-    line: {
+    pill: {
       position: 'absolute',
-      left: 0,
-      bottom: 0,
-      height: 2,
-      backgroundColor: c.ink,
-      borderRadius: 1,
+      left: 4,
+      top: 4,
+      bottom: 4,
+      borderRadius: radius.pill,
+      overflow: 'hidden',
+    },
+    pillInner: {
+      flex: 1,
+      backgroundColor: c.surface,
+      borderRadius: radius.pill,
+      ...shadows.soft,
     },
     tab: {
       flex: 1,
@@ -130,7 +142,7 @@ function createStyles(c: AppColors) {
       fontSize: 13,
     },
     tabLabelOn: {
-      color: c.ink,
+      color: c.text,
       fontWeight: '800',
     },
   });

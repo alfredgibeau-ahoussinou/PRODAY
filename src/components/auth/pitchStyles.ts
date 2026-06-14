@@ -33,7 +33,6 @@ export function createPitchStyles(c: AppColors) {
     },
     sheetAccent: {
       height: 4,
-      backgroundColor: c.ink,
       marginHorizontal: -spacing.lg,
       marginBottom: spacing.md,
     },

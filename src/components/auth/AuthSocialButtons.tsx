@@ -2,12 +2,12 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
-  TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
   Platform,
   Alert,
 } from 'react-native';
+import { PressableSpring } from '../motion';
 import * as WebBrowser from 'expo-web-browser';
 import * as Google from 'expo-auth-session/providers/google';
 import { AccessTokenRequest, type AuthRequest } from 'expo-auth-session';
@@ -58,8 +58,12 @@ async function resolveGoogleIdToken(
   return tokens.idToken ?? null;
 }
 
+type SocialProvider = 'google' | 'apple';
+
 interface AuthSocialButtonsProps {
   disabled?: boolean;
+  /** Par défaut : Google + Apple (iOS). */
+  providers?: SocialProvider[];
   onSuccess: () => void | Promise<void>;
   onNeedsProfile: (prefill: { email: string; displayName?: string }) => void;
   onError: (message: string) => void;
@@ -149,11 +153,12 @@ const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
   };
 
   return (
-    <TouchableOpacity
+    <PressableSpring
       style={[styles.btn, styles.btnGoogle, (disabled || busy) && styles.btnDisabled]}
       onPress={signInWithGoogle}
       disabled={disabled || busy}
-      activeOpacity={0.88}
+      scaleTo={0.97}
+      haptic
       accessibilityRole="button"
       accessibilityLabel="Se connecter avec Google"
     >
@@ -165,12 +170,13 @@ const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
           <Text style={styles.btnText}>Se connecter avec Google</Text>
         </>
       )}
-    </TouchableOpacity>
+    </PressableSpring>
   );
 };
 
 export const AuthSocialButtons: React.FC<AuthSocialButtonsProps> = ({
   disabled,
+  providers = ['google', 'apple'],
   onSuccess,
   onNeedsProfile,
   onError,
@@ -253,10 +259,12 @@ export const AuthSocialButtons: React.FC<AuthSocialButtonsProps> = ({
   };
 
   const isDisabled = disabled || busy !== null;
+  const showGoogle = providers.includes('google');
+  const showApple = providers.includes('apple');
 
   return (
     <View style={styles.wrap}>
-      {googleConfig ? (
+      {showGoogle && googleConfig ? (
         <GoogleSignInButton
           config={googleConfig}
           disabled={disabled}
@@ -266,26 +274,27 @@ export const AuthSocialButtons: React.FC<AuthSocialButtonsProps> = ({
           onNeedsProfile={onNeedsProfile}
           onError={onError}
         />
-      ) : (
-        <TouchableOpacity
+      ) : showGoogle ? (
+        <PressableSpring
           style={[styles.btn, styles.btnGoogle, isDisabled && styles.btnDisabled]}
           onPress={showGoogleSetupAlert}
           disabled={isDisabled}
-          activeOpacity={0.88}
+          scaleTo={0.97}
           accessibilityRole="button"
           accessibilityLabel="Se connecter avec Google — configuration requise"
         >
           <Ionicons name="logo-google" size={20} color="#4285F4" />
           <Text style={styles.btnText}>Se connecter avec Google</Text>
-        </TouchableOpacity>
-      )}
+        </PressableSpring>
+      ) : null}
 
-      {Platform.OS === 'ios' && appleAvailable ? (
-        <TouchableOpacity
+      {showApple && Platform.OS === 'ios' && appleAvailable ? (
+        <PressableSpring
           style={[styles.btn, styles.btnApple, isDisabled && styles.btnDisabled]}
           onPress={signInWithApple}
           disabled={isDisabled}
-          activeOpacity={0.88}
+          scaleTo={0.97}
+          haptic
           accessibilityRole="button"
           accessibilityLabel="Se connecter avec Apple"
         >
@@ -299,7 +308,7 @@ export const AuthSocialButtons: React.FC<AuthSocialButtonsProps> = ({
               </Text>
             </>
           )}
-        </TouchableOpacity>
+        </PressableSpring>
       ) : null}
     </View>
   );
@@ -313,11 +322,11 @@ function createSocialStyles(c: AppColors) {
       alignItems: 'center',
       justifyContent: 'center',
       gap: spacing.sm,
-      borderRadius: radius.pill,
+      borderRadius: radius.lg,
       paddingVertical: spacing.md,
-      minHeight: 52,
+      minHeight: 50,
       borderWidth: 1.5,
-      borderColor: c.border,
+      borderColor: c.borderStrong,
     },
     btnGoogle: {
       backgroundColor: c.surfaceMuted,
