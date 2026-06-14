@@ -1,27 +1,17 @@
-import React from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  ActivityIndicator,
-} from 'react-native';
-import { Icon } from '../ui/Icon';
-import type { AppColors } from '../../theme/universeTheme';
+import React, { useMemo } from 'react';
 import type { MercatoQuickTile, MercatoQuickTileId } from '../../content/mercatoExperience';
-import { spacing, radius, shadows } from '../../theme/designTokens';
+import { ProDayActionTiles } from '../ui/ProDayActionTiles';
 import type { RecruitmentStats } from '../../services/stats.service';
 import { formatCount } from '../../services/stats.service';
 
 interface MercatoQuickGridProps {
   tiles: MercatoQuickTile[];
-  colors: AppColors;
   stats: RecruitmentStats | null;
   loading?: boolean;
   onPress: (id: MercatoQuickTileId) => void;
 }
 
-function tileCount(
+function tileSubtitle(
   id: MercatoQuickTileId,
   stats: RecruitmentStats | null,
   loading: boolean
@@ -36,71 +26,31 @@ function tileCount(
 
 export const MercatoQuickGrid: React.FC<MercatoQuickGridProps> = ({
   tiles,
-  colors,
   stats,
   loading,
   onPress,
-}) => (
-  <View style={styles.grid}>
-    {tiles.map((tile) => (
-      <TouchableOpacity
-        key={tile.id}
-        style={[
-          styles.tile,
-          { borderColor: colors.border, backgroundColor: colors.surface },
-          shadows.soft,
-        ]}
-        onPress={() => onPress(tile.id)}
-        activeOpacity={0.85}
-      >
-        <View style={[styles.iconBox, { backgroundColor: colors.accentSoft }]}>
-          <Icon name={tile.icon} size={22} color={colors.brand} variant="filled" />
-        </View>
-        <Text style={[styles.title, { color: colors.text }]}>{tile.title}</Text>
-        <Text style={[styles.hint, { color: colors.textMuted }]}>{tile.hint}</Text>
-        {loading && (tile.id === 'players' || tile.id === 'clubs') ? (
-          <ActivityIndicator
-            size="small"
-            color={colors.brand}
-            style={styles.loader}
-          />
-        ) : (
-          <Text style={[styles.count, { color: colors.textSecondary }]}>
-            {tileCount(tile.id, stats, !!loading)}
-          </Text>
-        )}
-      </TouchableOpacity>
-    ))}
-  </View>
-);
+}) => {
+  const items = useMemo(
+    () =>
+      tiles.map((tile) => {
+        const isStatTile = tile.id === 'players' || tile.id === 'clubs';
+        return {
+          id: tile.id,
+          label: tile.title,
+          icon: tile.icon,
+          subtitle: isStatTile
+            ? tileSubtitle(tile.id, stats, !!loading)
+            : tile.hint || tileSubtitle(tile.id, stats, !!loading),
+          loading: loading && isStatTile,
+        };
+      }),
+    [tiles, stats, loading]
+  );
 
-const styles = StyleSheet.create({
-  grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.md,
-    paddingHorizontal: spacing.lg,
-    marginBottom: spacing.lg,
-  },
-  tile: {
-    width: '47%',
-    flexGrow: 1,
-    minWidth: '46%',
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    padding: spacing.md,
-    minHeight: 130,
-  },
-  iconBox: {
-    width: 44,
-    height: 44,
-    borderRadius: radius.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.sm,
-  },
-  title: { fontSize: 16, fontWeight: '800' },
-  hint: { fontSize: 11, fontWeight: '600', marginTop: 2 },
-  count: { fontSize: 12, fontWeight: '700', marginTop: spacing.sm },
-  loader: { marginTop: spacing.sm, alignSelf: 'flex-start' },
-});
+  return (
+    <ProDayActionTiles
+      items={items}
+      onPress={(id) => onPress(id as MercatoQuickTileId)}
+    />
+  );
+};

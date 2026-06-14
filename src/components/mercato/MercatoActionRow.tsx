@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
+import { PressableSpring } from '../motion';
 import { Icon } from '../ui/Icon';
 import type { AppColors } from '../../theme/universeTheme';
 import { spacing, radius, shadows } from '../../theme/designTokens';
@@ -23,22 +24,23 @@ export const MercatoActionRow: React.FC<MercatoActionRowProps> = ({
 }) => (
   <View style={styles.row}>
     {showFavorites ? (
-      <TouchableOpacity
+      <PressableSpring
         style={[
           styles.card,
           { backgroundColor: colors.surface, borderColor: colors.border },
           shadows.soft,
         ]}
         onPress={onFavorites}
-        activeOpacity={0.85}
+        scaleTo={0.96}
+        haptic
       >
         <View style={[styles.iconWrap, { backgroundColor: colors.accentSoft }]}>
           <Icon name="bookmark" size={18} color={colors.brand} variant="filled" />
         </View>
         <Text style={[styles.label, { color: colors.text }]}>Mes favoris</Text>
-      </TouchableOpacity>
+      </PressableSpring>
     ) : null}
-    <TouchableOpacity
+    <PressableSpring
       style={[
         styles.card,
         styles.cardFlex,
@@ -46,7 +48,8 @@ export const MercatoActionRow: React.FC<MercatoActionRowProps> = ({
         shadows.soft,
       ]}
       onPress={onStaff}
-      activeOpacity={0.85}
+      scaleTo={0.96}
+      haptic
     >
       <View style={[styles.iconWrap, { backgroundColor: colors.accentSoft }]}>
         <Icon name="people" size={18} color={colors.brand} variant="filled" />
@@ -58,7 +61,7 @@ export const MercatoActionRow: React.FC<MercatoActionRowProps> = ({
         ) : null}
       </View>
       <Icon name="chevron-forward" size={18} color={colors.brand} />
-    </TouchableOpacity>
+    </PressableSpring>
   </View>
 );
 

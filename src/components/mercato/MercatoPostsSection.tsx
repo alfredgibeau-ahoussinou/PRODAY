@@ -1,10 +1,15 @@
 import React from 'react';
-import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { RecruitmentAdCard } from '../ui/RecruitmentAdCard';
+import { SkeletonList, InteractiveListItem, PressableSpring } from '../motion';
+import { ProDaySurface } from '../ui/ProDaySurface';
+import { ProDayText } from '../ui/ProDayText';
+import { ProDayGradient } from '../ui/ProDayGradient';
+import { Icon } from '../ui/Icon';
 import type { AppColors } from '../../theme/universeTheme';
 import type { RecruitmentPost } from '../../models/Player';
 import { formatTimeAgo } from '../../services/recruitment.service';
-import { spacing } from '../../theme/designTokens';
+import { spacing, radius } from '../../theme/designTokens';
 
 interface MercatoPostsSectionProps {
   colors: AppColors;
@@ -17,6 +22,8 @@ interface MercatoPostsSectionProps {
   emptySpace: string;
   emptyFiltered: string;
   onSelectPost: (id: string) => void;
+  onClearSearch?: () => void;
+  onCreatePost?: () => void;
 }
 
 function resolveEmptyMessage(
@@ -42,6 +49,8 @@ export const MercatoPostsSection: React.FC<MercatoPostsSectionProps> = ({
   emptySpace,
   emptyFiltered,
   onSelectPost,
+  onClearSearch,
+  onCreatePost,
 }) => (
   <View style={styles.wrap}>
     <Text style={[styles.title, { color: colors.text }]}>
@@ -51,20 +60,42 @@ export const MercatoPostsSection: React.FC<MercatoPostsSectionProps> = ({
       ) : null}
     </Text>
     {loading ? (
-      <ActivityIndicator color={colors.brand} style={styles.loader} />
+      <SkeletonList count={4} variant="row" />
     ) : posts.length === 0 ? (
-      <Text style={[styles.empty, { color: colors.textSecondary }]}>
-        {resolveEmptyMessage(searchActive, hasSpacePosts, emptyFiltered, emptySpace, emptyAll)}
-      </Text>
+      <ProDaySurface variant="module" style={[styles.empty, { borderColor: colors.border }]}>
+        <Icon name="search" size={28} color={colors.textMuted} />
+        <ProDayText variant="section">Aucune annonce</ProDayText>
+        <ProDayText variant="body" muted style={styles.emptySub}>
+          {resolveEmptyMessage(searchActive, hasSpacePosts, emptyFiltered, emptySpace, emptyAll)}
+        </ProDayText>
+        {searchActive && onClearSearch ? (
+          <PressableSpring onPress={onClearSearch} scaleTo={0.96} haptic>
+            <ProDayGradient kind="cta" style={styles.emptyCta}>
+              <ProDayText variant="caption" inverse style={styles.emptyCtaText}>
+                Effacer la recherche
+              </ProDayText>
+            </ProDayGradient>
+          </PressableSpring>
+        ) : onCreatePost ? (
+          <PressableSpring onPress={onCreatePost} scaleTo={0.96} haptic>
+            <ProDayGradient kind="cta" style={styles.emptyCta}>
+              <ProDayText variant="caption" inverse style={styles.emptyCtaText}>
+                Publier une annonce
+              </ProDayText>
+            </ProDayGradient>
+          </PressableSpring>
+        ) : null}
+      </ProDaySurface>
     ) : (
-      posts.map((ad) => (
-        <RecruitmentAdCard
-          key={ad.id}
-          clubName={ad.club_name}
-          roleLine={ad.title || `Recherche ${ad.position}`}
-          meta={`${ad.category} · ${ad.level} · ${formatTimeAgo(ad.created_at)}`}
-          onPress={() => onSelectPost(ad.id)}
-        />
+      posts.map((ad, index) => (
+        <InteractiveListItem key={ad.id} index={index}>
+          <RecruitmentAdCard
+            clubName={ad.club_name}
+            roleLine={ad.title || `Recherche ${ad.position}`}
+            meta={`${ad.category} · ${ad.level} · ${formatTimeAgo(ad.created_at)}`}
+            onPress={() => onSelectPost(ad.id)}
+          />
+        </InteractiveListItem>
       ))
     )}
   </View>
@@ -84,10 +115,18 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   empty: {
-    fontSize: 13,
-    lineHeight: 19,
+    alignItems: 'center',
+    gap: spacing.sm,
+    padding: spacing.xl,
+    borderWidth: 1,
     marginBottom: spacing.md,
-    fontWeight: '600',
   },
-  loader: { marginVertical: spacing.lg },
+  emptySub: { textAlign: 'center', lineHeight: 20 },
+  emptyCta: {
+    marginTop: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    borderRadius: radius.pill,
+  },
+  emptyCtaText: { fontWeight: '800' },
 });
