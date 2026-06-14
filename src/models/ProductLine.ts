@@ -1,5 +1,5 @@
-/** Ligne produit — Homme (amateur M), Woman (foot F), Pro (coach, agent, santé). */
-export type ProductLineId = 'homme' | 'woman' | 'pro';
+/** Ligne produit — Homme, Woman, Pro (staff foot), Santé (praticiens médicaux). */
+export type ProductLineId = 'homme' | 'woman' | 'pro' | 'sante';
 
 /** @deprecated Alias stockage — migré vers homme */
 export type LegacyProductLineId = 'standard';
@@ -36,8 +36,18 @@ export const PRODAY_PRO_BRAND = {
   logoLine2Lead: '',
   logoLine2Accent: 'Pro',
   tagline: 'EXPERTISE • RÉSEAU • PERFORMANCE',
-  shortTagline: 'Coach, agent et pôle santé — l’écosystème pro du foot',
+  shortTagline: 'Coach, agent et staff — l’écosystème pro du foot',
   entryCta: 'Espace Pro',
+} as const;
+
+export const PRODAY_SANTE_BRAND = {
+  name: 'Pro Day Santé',
+  logoLine1: 'Pro Day',
+  logoLine2Lead: '',
+  logoLine2Accent: 'Santé',
+  tagline: 'SOIGNER • ACCOMPAGNER • PERFORMER',
+  shortTagline: 'Kiné, médecin et staff médical — l’écosystème santé du foot',
+  entryCta: 'Espace Santé',
 } as const;
 
 /** @deprecated Utiliser PRODAY_WOMAN_BRAND */
@@ -55,6 +65,10 @@ export function isProProductLine(line: ProductLineId): boolean {
   return line === 'pro';
 }
 
+export function isSanteProductLine(line: ProductLineId): boolean {
+  return line === 'sante';
+}
+
 /** @deprecated */
 export function isGirlProductLine(line: ProductLineId): boolean {
   return isWomanProductLine(line);
@@ -63,6 +77,7 @@ export function isGirlProductLine(line: ProductLineId): boolean {
 export function normalizeStoredProductLine(stored: string | null): ProductLineId | null {
   if (stored === 'woman' || stored === 'girl') return 'woman';
   if (stored === 'pro') return 'pro';
+  if (stored === 'sante' || stored === 'health') return 'sante';
   if (stored === 'homme' || stored === 'standard') return 'homme';
   return null;
 }
@@ -70,5 +85,6 @@ export function normalizeStoredProductLine(stored: string | null): ProductLineId
 export function brandForProductLine(line: ProductLineId) {
   if (line === 'woman') return PRODAY_WOMAN_BRAND;
   if (line === 'pro') return PRODAY_PRO_BRAND;
+  if (line === 'sante') return PRODAY_SANTE_BRAND;
   return PRODAY_HOMME_BRAND;
 }

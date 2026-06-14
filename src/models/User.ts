@@ -1,7 +1,7 @@
 // src/models/User.ts
 // Modèle principal utilisateur ProDay
 
-import type { ParentalSettings } from './ParentalSettings';
+import type { ParentalRuntime, ParentalSettings } from './ParentalSettings';
 import type { AppSpaceId } from './AppSpace';
 import type { ProductLineId } from './ProductLine';
 
@@ -164,6 +164,8 @@ export interface User {
 
   /** Contrôle parental (compte mineur / supervision famille) */
   parental_settings?: ParentalSettings;
+  /** Temps d’écran du jour — sync locale → Firestore */
+  parental_runtime?: ParentalRuntime;
 
   /** Espace ProDay : féminin, masculin, jeunes, -13 */
   app_space?: AppSpaceId;

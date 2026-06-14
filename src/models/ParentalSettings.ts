@@ -19,6 +19,12 @@ export interface ParentalSettings {
   approved_contacts?: ParentalContact[];
 }
 
+/** Usage temps d’écran synchronisé depuis l’appareil du mineur (lecture tuteur). */
+export interface ParentalRuntime {
+  date: string;
+  minutes_used: number;
+}
+
 export const DEFAULT_PARENTAL_SETTINGS: ParentalSettings = {
   supervision_enabled: true,
   contacts_filter_enabled: true,

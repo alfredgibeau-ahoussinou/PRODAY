@@ -12,7 +12,6 @@ import { normalizeAppSpace, type AppSpaceId } from '../models/AppSpace';
 import { normalizeStoredProductLine } from '../models/ProductLine';
 import type { PlayerVerificationState } from '../models/User';
 import type { RecruitmentPost, Application } from '../models/Player';
-import type { Tournament, TournamentAwards } from '../models/Tournament';
 import type { FriendlyMatch } from '../models/FriendlyMatch';
 import type {
   TeamEvent,
@@ -121,6 +120,7 @@ export function userFromFirestore(uid: string, data: Record<string, unknown>): U
     fcm_token: data.fcm_token as string | undefined,
     notification_radius_km: data.notification_radius_km as number | undefined,
     parental_settings: data.parental_settings as ParentalSettings | undefined,
+    parental_runtime: data.parental_runtime as User['parental_runtime'],
     app_space: data.app_space
       ? normalizeAppSpace(String(data.app_space))
       : undefined,
@@ -179,33 +179,6 @@ export function recruitmentPostFromFirestore(
   };
 }
 
-export function tournamentFromFirestore(
-  id: string,
-  data: Record<string, unknown>
-): Tournament {
-  const awards = data.awards as Record<string, string> | undefined;
-  return {
-    id,
-    name: String(data.name ?? ''),
-    organizer_id: String(data.organizer_id ?? ''),
-    location: toGeoPoint(data.location) ?? { latitude: 0, longitude: 0 },
-    city: String(data.city ?? ''),
-    date_start: toDate(data.date_start),
-    date_end: toDate(data.date_end),
-    categories: (data.categories as string[]) ?? [],
-    status: (data.status as Tournament['status']) ?? 'OPEN',
-    subscriber_uids: (data.subscriber_uids as string[]) ?? [],
-    awards: awards
-      ? {
-          best_player_uid: awards.best_player ?? '',
-          top_scorer_uid: awards.top_scorer ?? '',
-          best_goalkeeper_uid: awards.best_goalkeeper ?? '',
-        }
-      : undefined,
-    awards_names: data.awards_names as Tournament['awards_names'],
-  };
-}
-
 export function teamEventFromFirestore(
   id: string,
   data: Record<string, unknown>
@@ -255,6 +228,7 @@ export function teamEventFromFirestore(
       ? toDate(data.auto_reminder_sent_at)
       : undefined,
     lineup: data.lineup as EventLineup | undefined,
+    live_state: mapMatchLiveState(data.live_state),
     live_actions: mapLiveActions(data.live_actions),
     player_match_stats: mapPlayerMatchStats(data.player_match_stats),
     stats_applied_at: data.stats_applied_at
@@ -295,6 +269,7 @@ function mapCarpoolSlots(raw: unknown) {
       seats: typeof s.seats === 'number' ? s.seats : undefined,
       meeting_time: s.meeting_time ? String(s.meeting_time) : undefined,
       meeting_place: s.meeting_place ? String(s.meeting_place) : undefined,
+      meeting_location: toGeoPoint(s.meeting_location),
       notes: s.notes ? String(s.notes) : undefined,
       volunteered: s.volunteered === true,
       passengers: Array.isArray(passengersRaw)
@@ -303,6 +278,8 @@ function mapCarpoolSlots(raw: unknown) {
             return {
               uid: String(row.uid ?? ''),
               name: String(row.name ?? ''),
+              pickup_place: row.pickup_place ? String(row.pickup_place) : undefined,
+              pickup_location: toGeoPoint(row.pickup_location),
             };
           })
         : undefined,
@@ -322,6 +299,21 @@ function mapCarpoolMessages(raw: unknown) {
       created_at: toDate(m.created_at),
     };
   });
+}
+
+function mapMatchLiveState(raw: unknown): import('../models/TeamEvent').MatchLiveState | undefined {
+  if (!raw || typeof raw !== 'object') return undefined;
+  const s = raw as Record<string, unknown>;
+  const status = String(s.status ?? 'scheduled');
+  if (!['scheduled', 'live', 'halftime', 'finished'].includes(status)) return undefined;
+  return {
+    status: status as import('../models/TeamEvent').MatchLiveStatus,
+    minute: typeof s.minute === 'number' ? s.minute : undefined,
+    home_score: Number(s.home_score ?? 0),
+    away_score: Number(s.away_score ?? 0),
+    opponent_name: s.opponent_name ? String(s.opponent_name) : undefined,
+    home_label: s.home_label ? String(s.home_label) : undefined,
+  };
 }
 
 function mapLiveActions(raw: unknown): LiveMatchAction[] | undefined {
@@ -427,7 +419,8 @@ export interface MessageThread {
   last_message: string;
   updated_at: Date;
   unread: boolean;
-  thread_kind?: 'standard' | 'physio_care';
+  thread_kind?: 'standard' | 'physio_care' | 'team_group';
+  thread_title?: string;
 }
 
 export function messageThreadFromFirestore(
@@ -444,15 +437,20 @@ export function messageThreadFromFirestore(
   const unreadBy = (data.unread_by as string[]) ?? [];
 
   const threadKind = data.thread_kind as MessageThread['thread_kind'] | undefined;
+  const threadTitle = data.thread_title ? String(data.thread_title) : undefined;
+  const isTeam = threadKind === 'team_group';
 
   return {
     id,
-    other_user_id: otherId,
-    participant_name: names[otherId] ?? String(data.participant_name ?? 'Utilisateur'),
+    other_user_id: isTeam ? '' : otherId,
+    participant_name: isTeam
+      ? (threadTitle ?? 'Groupe équipe')
+      : (names[otherId] ?? String(data.participant_name ?? 'Utilisateur')),
     last_message: String(data.last_message ?? ''),
     updated_at: toDate(data.updated_at),
     unread: unreadBy.includes(currentUid) || Boolean(data.unread),
-    thread_kind: threadKind === 'physio_care' ? 'physio_care' : 'standard',
+    thread_kind: threadKind === 'physio_care' ? 'physio_care' : threadKind === 'team_group' ? 'team_group' : 'standard',
+    thread_title: threadTitle,
   };
 }
 
@@ -557,20 +555,3 @@ export function medicalAppointmentFromFirestore(
   };
 }
 
-export function tournamentMatchFromFirestore(
-  id: string,
-  tournamentId: string,
-  data: Record<string, unknown>
-): import('../models/Tournament').TournamentMatch {
-  return {
-    id,
-    tournament_id: tournamentId,
-    team_a_name: String(data.team_a_name ?? ''),
-    team_b_name: String(data.team_b_name ?? ''),
-    score_a: Number(data.score_a ?? 0),
-    score_b: Number(data.score_b ?? 0),
-    phase: data.phase === 'elimination' ? 'elimination' : 'poule',
-    scheduled_at: data.scheduled_at ? toDate(data.scheduled_at) : undefined,
-    played: Boolean(data.played),
-  };
-}

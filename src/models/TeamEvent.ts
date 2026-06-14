@@ -1,3 +1,5 @@
+import type { GeoPoint } from './User';
+
 export type TeamEventType =
   | 'training'
   | 'detection'
@@ -63,6 +65,10 @@ export interface EventTask {
 export interface CarpoolPassenger {
   uid: string;
   name: string;
+  /** Lieu textuel où le passager souhaite être récupéré */
+  pickup_place?: string;
+  /** Coordonnées GPS du point de prise en charge */
+  pickup_location?: GeoPoint;
 }
 
 /** Détail d’un conducteur pour un événement */
@@ -72,6 +78,8 @@ export interface CarpoolSlot {
   seats?: number;
   meeting_time?: string;
   meeting_place?: string;
+  /** Coordonnées GPS du point de rendez-vous conducteur */
+  meeting_location?: GeoPoint;
   notes?: string;
   /** Proposition spontanée (joueur/coach) plutôt qu’assignation staff */
   volunteered?: boolean;
@@ -105,6 +113,17 @@ export const LIVE_ACTION_LABELS: Record<LiveActionType, string> = {
 
 export const FORMATIONS = ['4-3-3', '4-4-2', '3-5-2', '4-2-3-1', '5-3-2'] as const;
 
+export type MatchLiveStatus = 'scheduled' | 'live' | 'halftime' | 'finished';
+
+export interface MatchLiveState {
+  status: MatchLiveStatus;
+  minute?: number;
+  home_score: number;
+  away_score: number;
+  opponent_name?: string;
+  home_label?: string;
+}
+
 export interface TeamEvent {
   id: string;
   title: string;
@@ -114,7 +133,7 @@ export interface TeamEvent {
   organizer_name: string;
   club_id?: string;
   club_name?: string;
-  /** Lien Arena — tournoi associé */
+  /** Lien legacy — tournoi associé (données historiques) */
   tournament_id?: string;
   /** Lien match amical — évite les doublons de convocation */
   friendly_match_id?: string;
@@ -136,6 +155,8 @@ export interface TeamEvent {
   last_reminder_at?: Date;
   auto_reminder_sent_at?: Date;
   lineup?: EventLineup;
+  /** Score et statut en direct */
+  live_state?: MatchLiveState;
   live_actions?: LiveMatchAction[];
   player_match_stats?: Record<string, PlayerMatchSheetStat>;
   stats_applied_at?: Date;
@@ -185,7 +206,7 @@ export const EVENT_TYPE_LABELS: Record<TeamEventType, string> = {
   detection: 'Journée détection',
   meeting: 'Réunion',
   friendly: 'Match / convocation',
-  tournament: 'Tournoi Arena',
+  tournament: 'Tournoi',
   other: 'Autre',
 };
 
