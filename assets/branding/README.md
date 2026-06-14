@@ -42,4 +42,13 @@ Libellé **Pro Day Man** + tagline via `src/components/ManLogo.tsx`.
 
 Libellé **Pro Day Pro** + tagline via `src/components/ProLogo.tsx`.
 
-Génération pictos Man + Pro : `npm run branding:logos:universes` (nécessite `logo-mark-transparent.png`).
+## Pro Day Santé (teal)
+
+| Fichier | Usage |
+|---------|--------|
+| `logo-sante-picto.png` | Picto P teal santé |
+| `logo-sante-mark-transparent.png` | Filigrane (= picto) |
+
+Libellé **Pro Day Santé** + tagline via `src/components/SanteLogo.tsx`.
+
+Génération pictos Man + Pro + Santé : `npm run branding:logos:universes` (nécessite `logo-mark-transparent.png`).

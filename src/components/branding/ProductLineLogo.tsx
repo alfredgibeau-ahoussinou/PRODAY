@@ -2,6 +2,7 @@ import React from 'react';
 import type { ProductLineId } from '../../models/ProductLine';
 import { ManLogo } from '../ManLogo';
 import { ProLogo } from '../ProLogo';
+import { SanteLogo } from '../SanteLogo';
 import { WomanLogo } from '../WomanLogo';
 
 interface ProductLineLogoProps {
@@ -10,7 +11,7 @@ interface ProductLineLogoProps {
   onDark?: boolean;
 }
 
-/** Logo compact pour les cartes de choix d’univers (Homme / Woman / Pro). */
+/** Logo compact pour les cartes de choix d’univers. */
 export const ProductLineLogo: React.FC<ProductLineLogoProps> = ({
   line,
   width = 168,
@@ -23,6 +24,9 @@ export const ProductLineLogo: React.FC<ProductLineLogoProps> = ({
   }
   if (line === 'pro') {
     return <ProLogo width={width} background={background} />;
+  }
+  if (line === 'sante') {
+    return <SanteLogo width={width} background={background} />;
   }
   return <ManLogo width={width} background={background} />;
 };

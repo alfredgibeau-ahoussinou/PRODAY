@@ -1,6 +1,7 @@
 import { colors as baseColors } from './designTokens';
 import type { ProductLineId } from '../models/ProductLine';
 import { womanColorOverrides } from './prodayWomanTheme';
+import { santeColorOverrides } from './prodaySanteTheme';
 
 /** Palette ProDay Pro — bleu pro, distinct Homme (noir) et Woman (rose). */
 export const proColorOverrides = {
@@ -45,10 +46,26 @@ export const proColorOverrides = {
 
 export type AppColors = { [K in keyof typeof baseColors]: string };
 
+/** Homme — monochrome + touche terrain (vert discret). */
+export const hommeColorOverrides = {
+  accentSoft: '#F0FDF4',
+  accentMuted: '#BBF7D0',
+  brandSoft: '#F0FDF4',
+  background: '#F6F8F6',
+  backgroundAlt: '#ECFDF5',
+  surfaceMuted: '#F4FAF6',
+  border: '#D8E8DE',
+  borderStrong: '#15803D',
+  borderMedium: '#BBF7D0',
+  tone4: '#15803D',
+  gradientEnd: '#15803D',
+} as const;
+
 export function getThemedColorsForLine(line: ProductLineId): AppColors {
   if (line === 'woman') return { ...baseColors, ...womanColorOverrides };
   if (line === 'pro') return { ...baseColors, ...proColorOverrides };
-  return { ...baseColors };
+  if (line === 'sante') return { ...baseColors, ...santeColorOverrides };
+  return { ...baseColors, ...hommeColorOverrides };
 }
 
 /** @deprecated Préférer getThemedColorsForLine */
@@ -57,6 +74,7 @@ export function getThemedColors(isWoman: boolean): AppColors {
 }
 
 export { womanColorOverrides, womanGradients } from './prodayWomanTheme';
+export { santeColorOverrides, santeGradients } from './prodaySanteTheme';
 
 export const proGradients = {
   hero: ['#1E3A8A', '#1D4ED8'] as const,

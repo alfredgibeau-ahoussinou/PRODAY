@@ -5,6 +5,7 @@ import {
   BRANDING_LOGOS,
   MAN_BRANDING_LOGOS,
   PRO_BRANDING_LOGOS,
+  SANTE_BRANDING_LOGOS,
   WOMAN_BRANDING_LOGOS,
 } from '../content/brandingAssets';
 import { brandForProductLine } from '../models/ProductLine';
@@ -13,6 +14,7 @@ import { useAppTheme } from '../context/ProductLineContext';
 import type { AppColors } from '../theme/universeTheme';
 import { ManLogo, manLogoAspect } from './ManLogo';
 import { ProLogo, proLogoAspect } from './ProLogo';
+import { SanteLogo, santeLogoAspect } from './SanteLogo';
 import { WomanLogo, womanLogoAspect } from './WomanLogo';
 
 /** Fond derrière le logo — choisit automatiquement transparent ou non */
@@ -78,6 +80,7 @@ function resolveProductLine(
 function markForLine(line: ProductLineId): ImageSourcePropType {
   if (line === 'woman') return WOMAN_BRANDING_LOGOS.mark;
   if (line === 'pro') return PRO_BRANDING_LOGOS.mark;
+  if (line === 'sante') return SANTE_BRANDING_LOGOS.mark;
   if (line === 'homme') return MAN_BRANDING_LOGOS.mark;
   return BRANDING_LOGOS.mark;
 }
@@ -144,6 +147,17 @@ export const Logo: React.FC<LogoProps> = ({
     );
   }
 
+  if (line === 'sante') {
+    return (
+      <SanteLogo
+        width={width}
+        background={background}
+        opacity={opacity}
+        watermark={false}
+      />
+    );
+  }
+
   const source: ImageSourcePropType = BRANDING_LOGOS[resolved];
   const height = width / LOGO_ASPECT[resolved];
   const imageOpacity = opacity ?? (watermark ? 0.14 : 1);
@@ -186,6 +200,7 @@ export function logoDisplayAspect(
   if (opts.variant === 'mark' || opts.watermark) return MARK_ASPECT;
   if (line === 'woman') return womanLogoAspect(width);
   if (line === 'pro') return proLogoAspect(width);
+  if (line === 'sante') return santeLogoAspect(width);
   if (line === 'homme') return manLogoAspect(width);
   const v = opts.variant ?? 'transparent';
   return LOGO_ASPECT[v] ?? 0.93;

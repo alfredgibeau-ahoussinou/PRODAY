@@ -6,13 +6,12 @@ import {
   StyleSheet,
   useWindowDimensions,
   Platform,
-  ScrollView,
 } from 'react-native';
 import Animated, {
   Easing,
   Extrapolation,
   cancelAnimation,
-  FadeIn,
+  FadeInDown,
   interpolate,
   runOnJS,
   useAnimatedStyle,
@@ -25,87 +24,72 @@ import { BRANDING_LOGOS } from '../../../content/brandingAssets';
 import { BRAND, spacing, radius, shadows } from '../../../theme/designTokens';
 import { useAppTheme } from '../../../context/ProductLineContext';
 import type { AppColors } from '../../../theme/universeTheme';
-import { UniverseChoiceCard } from './UniverseChoiceCard';
+import { UniverseChoicePager } from './UniverseChoicePager';
 import type { ProductLineId } from '../../../models/ProductLine';
 
 const HERO_ASPECT = 0.93;
-const REVEAL_MS = 1100;
-const WORDS = BRAND.tagline.split(' • ');
+const LOGO_REVEAL_MS = 1080;
+
+type IntroPhase = 'reveal' | 'choose';
 
 export type IntroSpaceChoice = ProductLineId;
 
 interface BrandRevealIntroProps {
   onChooseSpace: (space: IntroSpaceChoice) => void;
+  /** Tour auto Men / Women / Pro (première ouverture uniquement). */
+  introTour?: boolean;
 }
 
-const UNIVERSE_ORDER: ProductLineId[] = ['homme', 'woman', 'pro'];
-
 /**
- * Intro — choix ProDay Homme / Woman / Pro avec mini-présentation par carte.
+ * Intro — logo ProDay puis carousel avec tour des trois univers.
  */
-export const BrandRevealIntro: React.FC<BrandRevealIntroProps> = ({ onChooseSpace }) => {
+export const BrandRevealIntro: React.FC<BrandRevealIntroProps> = ({
+  onChooseSpace,
+  introTour = false,
+}) => {
   const { colors: c } = useAppTheme();
-  const styles = useMemo(() => createStyles(c), [c]);
-  const { width, height } = useWindowDimensions();
+  const styles = useMemo(() => createStyles(c), [c.background, c.border, c.surface, c.text, c.textMuted]);
+  const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const logoW = Math.min(168, width - spacing.xl * 2);
   const logoH = logoW / HERO_ASPECT;
-  const [phase, setPhase] = useState<'reveal' | 'choose'>('reveal');
+  const [phase, setPhase] = useState<IntroPhase>('reveal');
   const t = useSharedValue(0);
-  const compactHeader = height < 740;
 
   const showChoice = useCallback(() => setPhase('choose'), []);
 
   useEffect(() => {
+    if (phase !== 'reveal') return undefined;
     t.value = 0;
-    t.value = withTiming(1, { duration: REVEAL_MS, easing: Easing.out(Easing.cubic) }, (done) => {
-      if (done) runOnJS(showChoice)();
-    });
+    t.value = withTiming(
+      1,
+      { duration: LOGO_REVEAL_MS, easing: Easing.bezier(0.22, 1, 0.36, 1) },
+      (done) => {
+        if (done) runOnJS(showChoice)();
+      }
+    );
     return () => cancelAnimation(t);
-  }, [showChoice, t]);
+  }, [phase, showChoice, t]);
 
   const sceneStyle = useAnimatedStyle(() => ({
-    opacity: phase === 'choose' ? 1 : interpolate(t.value, [0, 0.12], [0, 1], Extrapolation.CLAMP),
+    opacity: interpolate(t.value, [0, 0.1], [0, 1], Extrapolation.CLAMP),
   }));
 
   return (
     <Animated.View
-      style={[styles.root, sceneStyle, { paddingTop: insets.top }]}
+      style={[styles.root, phase === 'reveal' ? sceneStyle : undefined, { paddingTop: insets.top }]}
       accessibilityViewIsModal
     >
       {phase === 'reveal' ? (
         <View style={[styles.center, { paddingBottom: insets.bottom }]}>
-          <BrandMark logoW={logoW} logoH={logoH} t={t} compact={false} />
-          <BrandTagline t={t} />
+          <BrandMark logoW={logoW} logoH={logoH} t={t} />
         </View>
       ) : (
-        <Animated.View entering={FadeIn.duration(400)} style={styles.chooseRoot}>
-          <View style={[styles.chooseHeader, compactHeader && styles.chooseHeaderCompact]}>
-            <BrandMark logoW={compactHeader ? 72 : 88} logoH={(compactHeader ? 72 : 88) / HERO_ASPECT} t={t} compact />
-            <Text style={styles.choiceTitle}>Choisissez votre univers</Text>
-            <Text style={styles.choiceSub}>
-              Une app ProDay — trois expériences distinctes, même exigence.
-            </Text>
-          </View>
-
-          <ScrollView
-            style={styles.scroll}
-            contentContainerStyle={[
-              styles.scrollContent,
-              { paddingBottom: insets.bottom + spacing.xl },
-            ]}
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
-          >
-            {UNIVERSE_ORDER.map((line, index) => (
-              <UniverseChoiceCard
-                key={line}
-                line={line}
-                index={index}
-                onPress={() => onChooseSpace(line)}
-              />
-            ))}
-          </ScrollView>
+        <Animated.View
+          entering={FadeInDown.duration(560).springify().damping(18).stiffness(120)}
+          style={[styles.chooseRoot, { paddingBottom: insets.bottom }]}
+        >
+          <UniverseChoicePager onChoose={onChooseSpace} introTour={introTour} />
         </Animated.View>
       )}
     </Animated.View>
@@ -116,21 +100,34 @@ const BrandMark: React.FC<{
   logoW: number;
   logoH: number;
   t: SharedValue<number>;
-  compact: boolean;
-}> = ({ logoW, logoH, t, compact }) => {
+}> = ({ logoW, logoH, t }) => {
   const { colors: c } = useAppTheme();
-  const styles = useMemo(() => createStyles(c), [c]);
+  const styles = useMemo(() => createStyles(c), [c.background, c.border, c.surface, c.text, c.textMuted]);
   const wrap = useAnimatedStyle(() => ({
-    opacity: interpolate(t.value, [0, 0.2], [0, 1], Extrapolation.CLAMP),
+    opacity: interpolate(t.value, [0, 0.18], [0, 1], Extrapolation.CLAMP),
     transform: [
-      { translateY: interpolate(t.value, [0, 0.35], [compact ? 0 : 16, 0], Extrapolation.CLAMP) },
-      { scale: interpolate(t.value, [0, 0.35], [0.92, 1], Extrapolation.CLAMP) },
+      { translateY: interpolate(t.value, [0, 0.5], [32, 0], Extrapolation.CLAMP) },
+      { scale: interpolate(t.value, [0, 0.5], [0.86, 1], Extrapolation.CLAMP) },
+    ],
+  }));
+
+  const nameStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(t.value, [0.38, 0.62], [0, 1], Extrapolation.CLAMP),
+    transform: [
+      { translateY: interpolate(t.value, [0.38, 0.62], [10, 0], Extrapolation.CLAMP) },
+    ],
+  }));
+
+  const hintStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(t.value, [0.52, 0.78], [0, 1], Extrapolation.CLAMP),
+    transform: [
+      { translateY: interpolate(t.value, [0.52, 0.78], [8, 0], Extrapolation.CLAMP) },
     ],
   }));
 
   return (
     <Animated.View style={[styles.markWrap, wrap]}>
-      <View style={[styles.logoCard, compact && styles.logoCardCompact, shadows.card]}>
+      <View style={[styles.logoCard, shadows.card]}>
         <Image
           source={BRANDING_LOGOS.transparent}
           style={{ width: logoW, height: logoH }}
@@ -138,116 +135,51 @@ const BrandMark: React.FC<{
           accessibilityLabel={BRAND.name}
         />
       </View>
-      {!compact ? <Text style={styles.brandName}>{BRAND.name}</Text> : null}
-    </Animated.View>
-  );
-};
-
-const BrandTagline: React.FC<{ t: SharedValue<number> }> = ({ t }) => {
-  const { colors: c } = useAppTheme();
-  const styles = useMemo(() => createStyles(c), [c]);
-  const wrap = useAnimatedStyle(() => ({
-    opacity: interpolate(t.value, [0.45, 0.7], [0, 1], Extrapolation.CLAMP),
-  }));
-
-  return (
-    <Animated.View style={[styles.taglineBlock, wrap]}>
-      <View style={styles.taglineRow}>
-        {WORDS.map((word) => (
-          <Text key={word} style={styles.word}>
-            {word}
-          </Text>
-        ))}
-      </View>
+      <Animated.Text style={[styles.brandName, nameStyle]}>{BRAND.name}</Animated.Text>
+      <Animated.Text style={[styles.brandHint, hintStyle]}>Men · Women · Pro · Santé</Animated.Text>
     </Animated.View>
   );
 };
 
 function createStyles(c: AppColors) {
   return StyleSheet.create({
-  root: {
-    ...StyleSheet.absoluteFillObject,
-    zIndex: 1000,
-    elevation: 1000,
-    backgroundColor: c.background,
-  },
-  center: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: spacing.xl,
-  },
-  chooseRoot: {
-    flex: 1,
-  },
-  chooseHeader: {
-    alignItems: 'center',
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.sm,
-    paddingBottom: spacing.md,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: c.border,
-    backgroundColor: c.surface,
-  },
-  chooseHeaderCompact: {
-    paddingTop: spacing.xs,
-    paddingBottom: spacing.sm,
-  },
-  scroll: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.lg,
-    gap: spacing.md,
-  },
-  markWrap: { alignItems: 'center' },
-  logoCard: {
-    backgroundColor: c.surface,
-    borderRadius: radius.xl,
-    borderWidth: 1,
-    borderColor: c.border,
-    paddingVertical: spacing.lg,
-    paddingHorizontal: spacing.lg,
-    alignItems: 'center',
-  },
-  logoCardCompact: {
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.sm,
-    borderRadius: radius.lg,
-  },
-  brandName: {
-    marginTop: spacing.md,
-    fontSize: 22,
-    fontWeight: '800',
-    color: c.text,
-    letterSpacing: -0.5,
-  },
-  taglineBlock: { marginTop: spacing.lg, alignItems: 'center' },
-  taglineRow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 4 },
-  word: {
-    fontSize: 9,
-    fontWeight: '700',
-    letterSpacing: 2.2,
-    textTransform: 'uppercase',
-    color: c.textMuted,
-    ...Platform.select({ android: { includeFontPadding: false } }),
-  },
-  choiceTitle: {
-    marginTop: spacing.sm,
-    fontSize: 20,
-    fontWeight: '900',
-    color: c.text,
-    textAlign: 'center',
-    letterSpacing: -0.3,
-  },
-  choiceSub: {
-    marginTop: 4,
-    fontSize: 13,
-    color: c.textSecondary,
-    textAlign: 'center',
-    lineHeight: 18,
-    maxWidth: 300,
-  },
+    root: {
+      ...StyleSheet.absoluteFillObject,
+      zIndex: 1000,
+      elevation: 1000,
+      backgroundColor: c.background,
+    },
+    center: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingHorizontal: spacing.xl,
+    },
+    chooseRoot: {
+      flex: 1,
+    },
+    markWrap: { alignItems: 'center', gap: spacing.sm },
+    logoCard: {
+      backgroundColor: c.surface,
+      borderRadius: radius.xl,
+      borderWidth: 1,
+      borderColor: c.border,
+      paddingVertical: spacing.lg,
+      paddingHorizontal: spacing.lg,
+      alignItems: 'center',
+    },
+    brandName: {
+      fontSize: 24,
+      fontWeight: '900',
+      color: c.text,
+      letterSpacing: -0.6,
+    },
+    brandHint: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: c.textMuted,
+      letterSpacing: 0.3,
+      ...Platform.select({ android: { includeFontPadding: false } }),
+    },
   });
 }

@@ -3,7 +3,8 @@ import { View, Text, StyleSheet } from 'react-native';
 import { getUniverseIdentity } from '../../content/brandExperience';
 import type { ProductLineId } from '../../models/ProductLine';
 import type { AppColors } from '../../theme/universeTheme';
-import { radius, spacing } from '../../theme/designTokens';
+import { radius } from '../../theme/designTokens';
+import { fontFamily } from '../../theme/typography';
 
 interface UniverseBadgeProps {
   productLine: ProductLineId;
@@ -56,9 +57,10 @@ const styles = StyleSheet.create({
     borderRadius: 3,
   },
   label: {
+    fontFamily: fontFamily.extrabold,
     fontSize: 10,
     fontWeight: '800',
-    letterSpacing: 0.6,
+    letterSpacing: 0.8,
     textTransform: 'uppercase',
   },
 });
