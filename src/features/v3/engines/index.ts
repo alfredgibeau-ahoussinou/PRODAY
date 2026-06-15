@@ -1,5 +1,4 @@
 export * from './gamification.engine';
-export * from './intelligence.engine';
 export * from './geoDiscovery.engine';
 export * from './recommendation.engine';
 export * from './smartCalendar.engine';

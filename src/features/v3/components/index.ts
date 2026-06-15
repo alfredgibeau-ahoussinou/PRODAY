@@ -1,4 +1,4 @@
-export { RecommendationStrip } from './RecommendationStrip';
 export { SmartCalendarPeek } from './SmartCalendarPeek';
-export { SectionIntelligencePanel } from './SectionIntelligencePanel';
+export { SmartNotificationsPeek } from './SmartNotificationsPeek';
 export { SocialNearbyStrip } from './SocialNearbyStrip';
+export { StaffPrioritiesStrip } from './StaffPrioritiesStrip';
