@@ -58,7 +58,7 @@ export const PlayerRowCard: React.FC<PlayerRowCardProps> = ({
         ) : null}
         {scoutingScore != null ? (
           <Text style={[styles.scouting, { color: colors.accent }]}>
-            IA {scoutingScore}%
+            Match {scoutingScore}%
             {scoutingLabel ? ` · ${scoutingLabel}` : ''}
           </Text>
         ) : null}

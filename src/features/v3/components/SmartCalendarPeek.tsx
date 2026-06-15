@@ -24,14 +24,14 @@ export const SmartCalendarPeek: React.FC<SmartCalendarPeekProps> = ({ today, upc
   const card = (
     <GlassCard variant="default" style={styles.card}>
       <ProDayText variant="eyebrow" muted style={styles.eyebrow}>
-        Calendrier intelligent
+        Calendrier
       </ProDayText>
       <ProDayText variant="section">
         {today.length > 0 ? "Aujourd'hui" : 'À venir'}
       </ProDayText>
       {items.length === 0 ? (
         <ProDayText variant="body" muted>
-          Aucun événement planifié — l’IA vous proposera des objectifs.
+          Aucun événement planifié — des objectifs apparaîtront ici.
         </ProDayText>
       ) : (
         <View style={styles.list}>

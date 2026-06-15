@@ -11,13 +11,13 @@ import { PressableSpring } from '../motion';
 import { ProDayGradient } from '../ui/ProDayGradient';
 import type { ProductLineId } from '../../models/ProductLine';
 import { getUniverseIdentity } from '../../content/brandExperience';
-import { profileType } from './profileTypography';
 import { useAppTheme } from '../../context/ProductLineContext';
 import type { ProdayPulseResult } from '../../utils/prodayPulse';
 import { spacing, radius, shadows } from '../../theme/designTokens';
 import type { AppColors } from '../../theme/universeTheme';
 
-const AVATAR_SIZE = 72;
+const AVATAR_FULL = 64;
+const AVATAR_COMPACT = 48;
 
 const ROLE_LABELS: Record<UserRole, string> = {
   player: 'Joueur',
@@ -40,6 +40,8 @@ interface ProfileIdentityHeaderProps {
   onAvatarPress: () => void;
   onEditPress: () => void;
   onPublicProfile?: () => void;
+  /** Bandeau réduit — sans titre « Profil » ni carte volumineuse. */
+  compact?: boolean;
 }
 
 export const ProfileIdentityHeader: React.FC<ProfileIdentityHeaderProps> = ({
@@ -52,10 +54,11 @@ export const ProfileIdentityHeader: React.FC<ProfileIdentityHeaderProps> = ({
   onAvatarPress,
   onEditPress,
   onPublicProfile,
+  compact = false,
 }) => {
   const insets = useSafeAreaInsets();
   const { colors: c } = useAppTheme();
-  const styles = useMemo(() => createStyles(c), [c]);
+  const styles = useMemo(() => createStyles(c, compact), [c, compact]);
   const brand = getUniverseIdentity(productLine);
   const p = profile.profile;
   const roleLabel =
@@ -63,50 +66,25 @@ export const ProfileIdentityHeader: React.FC<ProfileIdentityHeaderProps> = ({
       ? brand.playerLabel
       : ROLE_LABELS[profile.role];
   const verified = getVerificationBadge(profile).color === 'green';
+  const avatarSize = compact ? AVATAR_COMPACT : AVATAR_FULL;
 
   const meta: string[] = [];
   if (profile.city) meta.push(profile.city);
   if (p.position) meta.push(p.position);
-  if (p.level) meta.push(p.level);
 
-  return (
-    <View style={styles.headerShell}>
-      <ProDayGradient kind="cta" style={styles.accentBar} />
-      <View style={[styles.shell, { paddingTop: Math.max(insets.top, spacing.sm) }]}>
-      <View style={styles.topRow}>
-        <View style={styles.titleBlock}>
-          <ProDayText variant="caption" muted style={styles.caption}>
-            {brand.productName}
-          </ProDayText>
-          <ProDayText variant="hero" style={styles.screenTitle}>
-            Profil
-          </ProDayText>
-        </View>
-        <PressableSpring
-          style={[styles.editChip, { borderColor: c.borderStrong, backgroundColor: c.surfaceMuted }]}
-          onPress={onEditPress}
-          scaleTo={0.96}
-          haptic
-        >
-          <Icon name="person" size={14} color={c.accent} />
-          <ProDayText variant="caption" accent style={styles.editLabel}>
-            Modifier
-          </ProDayText>
-        </PressableSpring>
-      </View>
-
-      <View style={styles.card}>
-        <ProDayGradient kind="ambient" style={styles.cardGlow} />
-        <View style={styles.identityRow}>
+  if (compact) {
+    return (
+      <View style={[styles.compactShell, { paddingTop: Math.max(insets.top, spacing.xs) }]}>
+        <View style={styles.compactRow}>
           <ProfileAvatarButton
             displayName={profile.display_name}
             avatarUrl={profile.avatar_url}
             uploading={uploadingAvatar}
             onPress={onAvatarPress}
-            size={AVATAR_SIZE}
+            size={avatarSize}
           />
-          <View style={styles.copy}>
-            <ProDayText variant="title" numberOfLines={2} style={profileType.heroName}>
+          <View style={styles.compactCopy}>
+            <ProDayText variant="section" numberOfLines={1} style={styles.compactName}>
               {profile.display_name}
             </ProDayText>
             <ProDayText variant="caption" muted numberOfLines={1}>
@@ -114,56 +92,174 @@ export const ProfileIdentityHeader: React.FC<ProfileIdentityHeaderProps> = ({
             </ProDayText>
             <View style={styles.pillRow}>
               <View style={[styles.rolePill, { backgroundColor: c.accentSoft }]}>
-                <ProDayText variant="caption" accent style={profileType.role}>
+                <ProDayText variant="caption" accent style={styles.rolePillText}>
                   {roleLabel}
                 </ProDayText>
               </View>
               {verified ? <VerificationBadge user={profile} /> : null}
+              {meta.length > 0 ? (
+                <ProDayText variant="caption" muted numberOfLines={1} style={styles.metaInline}>
+                  {meta.join(' · ')}
+                </ProDayText>
+              ) : null}
             </View>
-            {meta.length > 0 ? (
-              <ProDayText variant="caption" muted numberOfLines={2} style={profileType.meta}>
-                {meta.join(' · ')}
-              </ProDayText>
-            ) : null}
           </View>
+          <PressableSpring
+            style={[styles.iconBtn, { borderColor: c.border, backgroundColor: c.surfaceMuted }]}
+            onPress={onEditPress}
+            scaleTo={0.94}
+            haptic
+          >
+            <Icon name="person" size={16} color={c.accent} />
+          </PressableSpring>
         </View>
 
-        <View style={styles.metrics}>
-          <MetricCell
-            label="Complétion"
-            value={`${completionPercent}%`}
-            colors={c}
-          />
-          <View style={[styles.metricDivider, { backgroundColor: c.border }]} />
-          <MetricCell label="Pulse" value={String(pulse.score)} colors={c} />
-          <View style={[styles.metricDivider, { backgroundColor: c.border }]} />
-          <MetricCell
+        <View style={[styles.chipRow, { paddingLeft: avatarSize + spacing.sm }]}>
+          <StatChip label="Profil" value={`${completionPercent}%`} colors={c} />
+          <StatChip label="Pulse" value={String(pulse.score)} colors={c} />
+          <StatChip
             label="Plan"
             value={subscriptionTier === 'pro' ? 'Pro' : 'Free'}
             colors={c}
             accent={subscriptionTier === 'pro'}
           />
+          {onPublicProfile ? (
+            <PressableSpring onPress={onPublicProfile} scaleTo={0.97} haptic>
+              <View style={[styles.publicChip, { borderColor: c.border }]}>
+                <Icon name="eye" size={12} color={c.accent} />
+                <ProDayText variant="caption" accent style={styles.publicChipText}>
+                  Public
+                </ProDayText>
+              </View>
+            </PressableSpring>
+          ) : null}
         </View>
+      </View>
+    );
+  }
 
-        {onPublicProfile ? (
+  return (
+    <View style={styles.headerShell}>
+      <ProDayGradient kind="cta" style={styles.accentBar} />
+      <View style={[styles.shell, { paddingTop: Math.max(insets.top, spacing.sm) }]}>
+        <View style={styles.topRow}>
+          <View style={styles.titleBlock}>
+            <ProDayText variant="caption" muted style={styles.caption}>
+              {brand.productName}
+            </ProDayText>
+            <ProDayText variant="hero" style={styles.screenTitle}>
+              Profil
+            </ProDayText>
+          </View>
           <PressableSpring
-            style={[styles.publicBtn, { borderColor: c.border }]}
-            onPress={onPublicProfile}
-            scaleTo={0.98}
+            style={[styles.editChip, { borderColor: c.borderStrong, backgroundColor: c.surfaceMuted }]}
+            onPress={onEditPress}
+            scaleTo={0.96}
             haptic
           >
-            <Icon name="eye" size={16} color={c.accent} />
-            <ProDayText variant="caption" style={styles.publicText}>
-              Voir mon profil public
+            <Icon name="person" size={14} color={c.accent} />
+            <ProDayText variant="caption" accent style={styles.editLabel}>
+              Modifier
             </ProDayText>
-            <Icon name="chevron-forward" size={14} color={c.textMuted} />
           </PressableSpring>
-        ) : null}
-      </View>
+        </View>
+
+        <View style={styles.card}>
+          <View style={styles.identityRow}>
+            <ProfileAvatarButton
+              displayName={profile.display_name}
+              avatarUrl={profile.avatar_url}
+              uploading={uploadingAvatar}
+              onPress={onAvatarPress}
+              size={avatarSize}
+            />
+            <View style={styles.copy}>
+              <ProDayText variant="title" numberOfLines={2} style={styles.heroName}>
+                {profile.display_name}
+              </ProDayText>
+              <ProDayText variant="caption" muted numberOfLines={1}>
+                {profile.email}
+              </ProDayText>
+              <View style={styles.pillRow}>
+                <View style={[styles.rolePill, { backgroundColor: c.accentSoft }]}>
+                  <ProDayText variant="caption" accent style={styles.rolePillText}>
+                    {roleLabel}
+                  </ProDayText>
+                </View>
+                {verified ? <VerificationBadge user={profile} /> : null}
+              </View>
+              {meta.length > 0 ? (
+                <ProDayText variant="caption" muted numberOfLines={1}>
+                  {meta.join(' · ')}
+                </ProDayText>
+              ) : null}
+            </View>
+          </View>
+
+          <View style={styles.metrics}>
+            <MetricCell label="Complétion" value={`${completionPercent}%`} colors={c} />
+            <View style={[styles.metricDivider, { backgroundColor: c.border }]} />
+            <MetricCell label="Pulse" value={String(pulse.score)} colors={c} />
+            <View style={[styles.metricDivider, { backgroundColor: c.border }]} />
+            <MetricCell
+              label="Plan"
+              value={subscriptionTier === 'pro' ? 'Pro' : 'Free'}
+              colors={c}
+              accent={subscriptionTier === 'pro'}
+            />
+          </View>
+
+          {onPublicProfile ? (
+            <PressableSpring
+              style={[styles.publicBtn, { borderColor: c.border }]}
+              onPress={onPublicProfile}
+              scaleTo={0.98}
+              haptic
+            >
+              <Icon name="eye" size={14} color={c.accent} />
+              <ProDayText variant="caption" style={styles.publicText}>
+                Profil public
+              </ProDayText>
+              <Icon name="chevron-forward" size={12} color={c.textMuted} />
+            </PressableSpring>
+          ) : null}
+        </View>
       </View>
     </View>
   );
 };
+
+const StatChip: React.FC<{
+  label: string;
+  value: string;
+  colors: AppColors;
+  accent?: boolean;
+}> = ({ label, value, colors: c, accent }) => (
+  <View style={[chipStyles.chip, { backgroundColor: c.surfaceMuted, borderColor: c.border }]}>
+    <ProDayText
+      variant="caption"
+      style={[chipStyles.value, accent && { color: c.accent }]}
+    >
+      {value}
+    </ProDayText>
+    <ProDayText variant="caption" muted style={chipStyles.label}>
+      {label}
+    </ProDayText>
+  </View>
+);
+
+const chipStyles = StyleSheet.create({
+  chip: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
+    borderRadius: radius.md,
+    borderWidth: StyleSheet.hairlineWidth,
+    alignItems: 'center',
+    minWidth: 52,
+  },
+  value: { fontWeight: '900', fontSize: 13, lineHeight: 16 },
+  label: { fontSize: 9, fontWeight: '700', textTransform: 'uppercase' },
+});
 
 const MetricCell: React.FC<{
   label: string;
@@ -172,10 +268,7 @@ const MetricCell: React.FC<{
   accent?: boolean;
 }> = ({ label, value, colors: c, accent }) => (
   <View style={metricStyles.cell}>
-    <ProDayText
-      variant="section"
-      style={[metricStyles.value, accent && { color: c.accent }]}
-    >
+    <ProDayText variant="section" style={[metricStyles.value, accent && { color: c.accent }]}>
       {value}
     </ProDayText>
     <ProDayText variant="caption" muted>
@@ -186,29 +279,65 @@ const MetricCell: React.FC<{
 
 const metricStyles = StyleSheet.create({
   cell: { flex: 1, alignItems: 'center', gap: 2 },
-  value: { fontSize: 18, fontWeight: '900', letterSpacing: -0.4 },
+  value: { fontSize: 16, fontWeight: '900', letterSpacing: -0.4 },
 });
 
-function createStyles(c: AppColors) {
+function createStyles(c: AppColors, compact: boolean) {
   return StyleSheet.create({
     headerShell: {
       backgroundColor: c.surface,
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: c.border,
     },
-    accentBar: {
-      height: 3,
-      width: '100%',
-    },
+    accentBar: { height: 3, width: '100%' },
     shell: {
       paddingHorizontal: spacing.lg,
       paddingBottom: spacing.sm,
     },
+    compactShell: {
+      paddingHorizontal: spacing.lg,
+      paddingBottom: spacing.xs,
+      backgroundColor: c.surface,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: c.border,
+      gap: spacing.xs,
+    },
+    compactRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+    },
+    compactCopy: { flex: 1, minWidth: 0, gap: 1 },
+    compactName: { fontWeight: '900', fontSize: 16 },
+    iconBtn: {
+      width: 36,
+      height: 36,
+      borderRadius: radius.md,
+      borderWidth: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    chipRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      alignItems: 'center',
+      gap: spacing.xs,
+    },
+    publicChip: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      paddingHorizontal: spacing.sm,
+      paddingVertical: 4,
+      borderRadius: radius.md,
+      borderWidth: StyleSheet.hairlineWidth,
+    },
+    publicChipText: { fontWeight: '800', fontSize: 11 },
     topRow: {
       flexDirection: 'row',
       alignItems: 'flex-start',
       justifyContent: 'space-between',
-      marginBottom: spacing.md,
+      marginBottom: spacing.sm,
       gap: spacing.sm,
     },
     titleBlock: { flex: 1, minWidth: 0 },
@@ -216,55 +345,42 @@ function createStyles(c: AppColors) {
       fontWeight: '700',
       textTransform: 'uppercase',
       letterSpacing: 0.6,
-      fontSize: 11,
+      fontSize: 10,
       marginBottom: 2,
     },
     screenTitle: {
-      fontSize: 28,
-      lineHeight: 32,
+      fontSize: compact ? 22 : 24,
+      lineHeight: compact ? 26 : 28,
       fontWeight: '900',
-      letterSpacing: -0.8,
+      letterSpacing: -0.6,
     },
     editChip: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 4,
-      paddingHorizontal: spacing.sm + 2,
-      paddingVertical: 6,
+      paddingHorizontal: spacing.sm,
+      paddingVertical: 5,
       borderRadius: radius.pill,
       borderWidth: 1.5,
       ...shadows.soft,
     },
     editLabel: { fontWeight: '800', fontSize: 11 },
     card: {
-      borderRadius: radius.xl + 2,
+      borderRadius: radius.lg,
       backgroundColor: c.surface,
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: c.border,
-      padding: spacing.md,
-      gap: spacing.md,
-      overflow: 'hidden',
+      padding: spacing.sm + 2,
+      gap: spacing.sm,
       ...shadows.soft,
-    },
-    cardGlow: {
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      right: 0,
-      height: 100,
-      opacity: 0.5,
     },
     identityRow: {
       flexDirection: 'row',
-      alignItems: 'flex-start',
-      gap: spacing.md,
+      alignItems: 'center',
+      gap: spacing.sm,
     },
-    copy: {
-      flex: 1,
-      minWidth: 0,
-      gap: spacing.xs,
-      paddingTop: 4,
-    },
+    copy: { flex: 1, minWidth: 0, gap: 2 },
+    heroName: { fontWeight: '900', fontSize: 17, lineHeight: 21 },
     pillRow: {
       flexDirection: 'row',
       flexWrap: 'wrap',
@@ -274,30 +390,29 @@ function createStyles(c: AppColors) {
     },
     rolePill: {
       paddingHorizontal: spacing.sm,
-      paddingVertical: 3,
+      paddingVertical: 2,
       borderRadius: radius.pill,
     },
+    rolePillText: { fontWeight: '800', fontSize: 10 },
+    metaInline: { flexShrink: 1 },
     metrics: {
       flexDirection: 'row',
       alignItems: 'center',
-      paddingTop: spacing.sm,
+      paddingTop: spacing.xs,
       borderTopWidth: StyleSheet.hairlineWidth,
       borderTopColor: c.border,
     },
-    metricDivider: {
-      width: StyleSheet.hairlineWidth,
-      height: 32,
-    },
+    metricDivider: { width: StyleSheet.hairlineWidth, height: 28 },
     publicBtn: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: spacing.sm,
-      paddingVertical: spacing.sm,
-      paddingHorizontal: spacing.md,
-      borderRadius: radius.lg,
+      gap: spacing.xs,
+      paddingVertical: spacing.xs + 2,
+      paddingHorizontal: spacing.sm,
+      borderRadius: radius.md,
       borderWidth: StyleSheet.hairlineWidth,
       ...Platform.select({ android: { includeFontPadding: false } }),
     },
-    publicText: { flex: 1, fontWeight: '700' },
+    publicText: { flex: 1, fontWeight: '700', fontSize: 12 },
   });
 }

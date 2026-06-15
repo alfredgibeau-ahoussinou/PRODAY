@@ -100,7 +100,7 @@ export function explainHealthScores(
 
   const summary =
     snapshot.state === 'INJURY_RISK' || snapshot.state === 'OVERLOADED'
-      ? 'Votre corps signale une surcharge. L’IA privilégie repos et soins avant l’intensité.'
+      ? 'Votre corps signale une surcharge. Privilégiez repos et soins avant l’intensité.'
       : snapshot.state === 'FATIGUED'
         ? 'Fatigue modérée : allégez la semaine et favorisez la récupération active.'
         : 'Votre équilibre charge/récupération permet de performer en sécurité.';

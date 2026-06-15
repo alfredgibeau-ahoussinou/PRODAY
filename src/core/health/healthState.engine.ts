@@ -64,7 +64,7 @@ export function computeHealthSnapshot(input: HealthEngineInput): HealthSnapshot 
     },
     INJURY_RISK: {
       hint: 'Repos + bilan kiné si douleur',
-      message: 'Risque blessure élevé. L’IA bloque les matchs intenses.',
+      message: 'Risque blessure élevé. Les matchs intenses sont déconseillés.',
     },
     RECOVERY: {
       hint: 'Réactivation progressive',

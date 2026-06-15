@@ -67,21 +67,21 @@ const MiniStat: React.FC<{ label: string; value: string; colors: AppColors }> = 
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: radius.lg,
+    borderRadius: radius.md,
     borderWidth: 1,
-    padding: spacing.md,
+    padding: spacing.sm + 2,
   },
   brand: {
-    fontSize: 9,
+    fontSize: 8,
     fontWeight: '800',
-    letterSpacing: 1.4,
-    marginBottom: spacing.sm,
+    letterSpacing: 1.2,
+    marginBottom: spacing.xs,
   },
-  name: { fontSize: 20, fontWeight: '900', letterSpacing: -0.4 },
-  role: { fontSize: 13, fontWeight: '600', marginTop: 4 },
-  headline: { fontSize: 14, lineHeight: 20, marginTop: spacing.sm, fontWeight: '600' },
-  objectives: { fontSize: 12, lineHeight: 18, marginTop: spacing.xs },
-  statsRow: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.md },
+  name: { fontSize: 16, fontWeight: '900', letterSpacing: -0.3 },
+  role: { fontSize: 12, fontWeight: '600', marginTop: 2 },
+  headline: { fontSize: 13, lineHeight: 18, marginTop: spacing.xs, fontWeight: '600' },
+  objectives: { fontSize: 11, lineHeight: 16, marginTop: 2 },
+  statsRow: { flexDirection: 'row', gap: spacing.xs, marginTop: spacing.sm },
   stat: {
     flex: 1,
     alignItems: 'center',

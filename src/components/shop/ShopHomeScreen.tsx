@@ -247,7 +247,7 @@ export const ShopHomeScreen: React.FC<ShopHomeScreenProps> = ({
       {useV3Header && topPick && category === 'all' && !search.trim() ? (
         <GlassCard variant="default" style={styles.pickBand}>
           <ProDayText variant="caption" muted>
-            Pour vous · IA {topPick.iaScore}%
+            Pour vous · {topPick.iaScore}% compat.
           </ProDayText>
           <ProDayText variant="section" numberOfLines={1}>
             {catalog.find((p) => p.id === topPick.productId)?.name ?? 'Sélection'}
@@ -379,7 +379,7 @@ export const ShopHomeScreen: React.FC<ShopHomeScreenProps> = ({
             { value: catalog.length, label: 'Articles' },
             {
               value: topPick ? topPick.iaScore : '—',
-              label: 'Top IA',
+              label: 'Pour vous',
               highlight: Boolean(topPick && topPick.iaScore >= 60),
             },
             { value: cartCount, label: 'Panier', highlight: cartCount > 0 },

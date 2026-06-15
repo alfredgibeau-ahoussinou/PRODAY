@@ -29,6 +29,8 @@ export type ProDayActionTilesProps = {
   onPress: (id: string) => void;
   /** Padding horizontal spacing.lg */
   inset?: boolean;
+  /** Tuiles plus petites (profil, filtres denses) */
+  compact?: boolean;
   style?: ViewStyle;
 };
 
@@ -52,6 +54,7 @@ export const ProDayActionTiles: React.FC<ProDayActionTilesProps> = ({
   activeId,
   onPress,
   inset = true,
+  compact = false,
   style,
 }) => {
   const { colors } = useAppTheme();
@@ -80,7 +83,11 @@ export const ProDayActionTiles: React.FC<ProDayActionTilesProps> = ({
               >
                 <ProDaySurface
                   variant={on ? 'accent' : 'module'}
-                  style={[styles.tile, { borderColor: on ? colors.accent : colors.border }]}
+                  style={[
+                    styles.tile,
+                    compact && styles.tileCompact,
+                    { borderColor: on ? colors.accent : colors.border },
+                  ]}
                 >
                   {item.badge != null && item.badge > 0 ? (
                     <View style={[styles.badge, { backgroundColor: colors.accent }]}>
@@ -93,12 +100,13 @@ export const ProDayActionTiles: React.FC<ProDayActionTilesProps> = ({
                     <View
                       style={[
                         styles.iconWrap,
+                        compact && styles.iconWrapCompact,
                         { backgroundColor: on ? colors.accent : colors.accentSoft },
                       ]}
                     >
                       <Icon
                         name={item.icon}
-                        size={22}
+                        size={compact ? 18 : 22}
                         color={on ? colors.brandInverse : colors.accent}
                         variant="filled"
                       />
@@ -106,7 +114,11 @@ export const ProDayActionTiles: React.FC<ProDayActionTilesProps> = ({
                   ) : null}
                   <ProDayText
                     variant="caption"
-                    style={[styles.label, { color: on ? colors.ink : colors.text }]}
+                    style={[
+                      styles.label,
+                      compact && styles.labelCompact,
+                      { color: on ? colors.ink : colors.text },
+                    ]}
                     numberOfLines={2}
                     adjustsFontSizeToFit
                     minimumFontScale={0.75}
@@ -166,6 +178,10 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
     ...shadows.soft,
   },
+  tileCompact: {
+    paddingVertical: spacing.sm,
+    gap: 4,
+  },
   badge: {
     position: 'absolute',
     top: spacing.xs,
@@ -186,7 +202,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  iconWrapCompact: {
+    width: 32,
+    height: 32,
+    borderRadius: radius.md,
+  },
   label: { fontWeight: '800', textAlign: 'center' },
+  labelCompact: { fontSize: 10, lineHeight: 12 },
   subtitle: { fontSize: 10, textAlign: 'center' },
   loader: { marginTop: 2 },
 });

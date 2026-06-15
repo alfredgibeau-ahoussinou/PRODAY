@@ -7,7 +7,7 @@ import {
   Linking,
 } from 'react-native';
 import { PressableSpring, StaggerReveal } from '../motion';
-import type { User } from '../../models/User';
+import type { User, UserRole } from '../../models/User';
 import type { ProdayPulseResult, PulseBreakdownItem } from '../../utils/prodayPulse';
 import type { AppSpaceId } from '../../models/AppSpace';
 import { APP_SPACE_LABELS } from '../../models/AppSpace';
@@ -18,6 +18,7 @@ import { ProfileSection } from './ProfileSection';
 import { ProfileQuickGrid, type ProfileQuickAction } from './ProfileQuickGrid';
 import { getProfileCompletion } from '../../utils/profileCompletion';
 import { ProfileCompletionPanel } from './ProfileCompletionPanel';
+import { ProfileAccountCard } from './ProfileAccountCard';
 import { ProfilePulseCard } from './ProfilePulseCard';
 import { ProfileSubscriptionCard } from './ProfileSubscriptionCard';
 import { ProfileMenuSection } from './ProfileMenuSection';
@@ -37,9 +38,9 @@ import type { OrganizerReminderItem } from '../../hooks/useOrganizerReminders';
 import type { SubscriptionUsagePeriod } from '../../models/Subscription';
 import { TAB_BAR_CONTENT_INSET } from '../../navigation/tabBarLayout';
 import { spacing, radius } from '../../theme/designTokens';
-import { V3TabShell } from '../v3/V3TabShell';
-import { ProgressionBlock } from '../../features/home/components/ProgressionBlock';
 import { V3PreferencesCard } from '../v3/V3PreferencesCard';
+import { ProDayScreenCanvas } from '../ui/ProDayScreenCanvas';
+import { ProgressionBlock } from '../../features/home/components/ProgressionBlock';
 import { isV3ShellEnabled } from '../../config/featureFlags';
 import type { SectionIntelligence } from '../../features/v3/models/sectionIntelligence';
 import type { GamificationState } from '../../features/v3/models/gamification';
@@ -101,7 +102,19 @@ export interface ProfileHomeScreenProps {
 
 const pagePad = {
   paddingHorizontal: spacing.lg,
+  paddingTop: spacing.xs,
   paddingBottom: TAB_BAR_CONTENT_INSET + spacing.sm,
+};
+
+const ROLE_LABELS: Record<UserRole, string> = {
+  player: 'Joueur',
+  coach: 'Coach',
+  club: 'Club',
+  agent: 'Agent',
+  recruiter: 'Recruteur',
+  organizer: 'Organisateur',
+  sponsor: 'Sponsor',
+  physio: 'Pôle santé',
 };
 
 const scrollProps = {
@@ -123,62 +136,62 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
     [props.profile]
   );
 
+  const roleLabel =
+    props.profile.role === 'player' && props.productLine === 'woman'
+      ? brand.playerLabel
+      : ROLE_LABELS[props.profile.role];
+
   const pages = useMemo(
     () => [
       {
         id: 'apercu' as const,
         render: () => (
           <ScrollView contentContainerStyle={pagePad} {...scrollProps}>
-            {props.progression ? (
-              <ProgressionBlock progression={props.progression} />
-            ) : null}
+            <ProfileAccountCard
+              profile={props.profile}
+              subscriptionTier={props.subscriptionTier}
+              roleLabel={roleLabel}
+              onEdit={props.onEdit}
+            />
 
-            <ProfileSection title="Raccourcis" subtitle="Navigation rapide" first={!props.progression}>
-              <StaggerReveal index={0}>
-                <ProfileQuickGrid actions={props.quickActions} />
-              </StaggerReveal>
-            </ProfileSection>
-
-            <ProfileSection title="Pulse ProDay" subtitle="Visibilité et activité sur la plateforme">
-              <StaggerReveal index={1}>
-                <ProfilePulseCard
-                  pulse={props.pulse}
-                  breakdown={props.pulseBreakdown}
-                  compact
-                />
-              </StaggerReveal>
-            </ProfileSection>
-
-            <ProfileSection title="Complétion" subtitle="Éléments à finaliser sur votre fiche">
-              <StaggerReveal index={2}>
-                <ProfileCompletionPanel user={props.profile} onCompletePress={props.onEdit} />
-              </StaggerReveal>
+            <ProfileSection title="Raccourcis" subtitle="Actions fréquentes" first>
+              <ProfileQuickGrid actions={props.quickActions} compact />
             </ProfileSection>
 
             {props.onSubscriptionPress ? (
               <ProfileSection title="Abonnement" subtitle="Formule et consommation">
-                <StaggerReveal index={3}>
-                  <ProfileSubscriptionCard
-                    profile={props.profile}
-                    tier={props.subscriptionTier}
-                    usage={props.subscriptionUsage ?? null}
-                    onPress={props.onSubscriptionPress}
-                  />
-                </StaggerReveal>
+                <ProfileSubscriptionCard
+                  profile={props.profile}
+                  tier={props.subscriptionTier}
+                  usage={props.subscriptionUsage ?? null}
+                  onPress={props.onSubscriptionPress}
+                />
+              </ProfileSection>
+            ) : null}
+
+            <ProfileSection title="Complétion" subtitle="Éléments à finaliser">
+              <ProfileCompletionPanel user={props.profile} onCompletePress={props.onEdit} />
+            </ProfileSection>
+
+            <ProfileSection title="Pulse ProDay" subtitle="Visibilité sur la plateforme">
+              <ProfilePulseCard pulse={props.pulse} breakdown={props.pulseBreakdown} compact />
+            </ProfileSection>
+
+            {props.progression ? (
+              <ProfileSection title="Progression" subtitle="Niveau et série">
+                <ProgressionBlock progression={props.progression} />
               </ProfileSection>
             ) : null}
 
             {props.isOrganizer ? (
               <ProfileSection title="Organisation" subtitle="Relances et convocations">
-                <StaggerReveal index={4}>
-                  <OrganizerReminderCard
-                    items={props.reminderItems}
-                    loading={props.loadingReminders}
-                    onPress={props.onOrganizerPress}
-                    onRemind={props.onRemind}
-                    remindingId={props.remindingId}
-                  />
-                </StaggerReveal>
+                <OrganizerReminderCard
+                  items={props.reminderItems}
+                  loading={props.loadingReminders}
+                  onPress={props.onOrganizerPress}
+                  onRemind={props.onRemind}
+                  remindingId={props.remindingId}
+                />
               </ProfileSection>
             ) : null}
           </ScrollView>
@@ -351,7 +364,7 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
         render: () => (
           <ScrollView contentContainerStyle={pagePad} {...scrollProps}>
             {useV3Header ? (
-              <ProfileSection title="ProDay V3" subtitle="Préférences intelligentes" first>
+              <ProfileSection title="ProDay V3" subtitle="Calendrier et préférences" first>
                 <V3PreferencesCard profile={props.profile} />
               </ProfileSection>
             ) : null}
@@ -505,83 +518,54 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
         ),
       },
     ],
-    [props, colors, brand, p]
+    [props, colors, brand, p, roleLabel]
+  );
+
+  const identityHeader = (
+    <ProfileIdentityHeader
+      profile={props.profile}
+      productLine={props.productLine}
+      uploadingAvatar={props.uploadingAvatar}
+      completionPercent={completionPercent}
+      pulse={props.pulse}
+      subscriptionTier={props.subscriptionTier}
+      onAvatarPress={props.onAvatarPress}
+      onEditPress={props.onEdit}
+      onPublicProfile={props.profile.role === 'player' ? props.onPublicProfile : undefined}
+      compact={useV3Header}
+    />
+  );
+
+  const pager = (
+    <View style={styles.pager}>
+      <ProDayTabPager
+        chapters={chapters}
+        pages={pages}
+        activeChapter={chapter}
+        onChapterChange={setChapter}
+        showFooter={false}
+        compact
+        badges={{
+          reglages:
+            props.pendingVerify || props.showPlayerVerificationReminder ? 1 : undefined,
+        }}
+      />
+    </View>
   );
 
   return (
     <View style={styles.root}>
       {useV3Header ? (
-        <V3TabShell
-          title="Profil"
-          subtitle={brand.tagline}
-          flat
-          intelligence={props.intelligence}
-          stats={[
-            { value: String(props.pulse.score), label: 'Pulse' },
-            { value: `${completionPercent}%`, label: 'Profil' },
-            {
-              value: props.progression ? String(props.progression.level) : '—',
-              label: 'Niveau',
-            },
-          ]}
-        >
-          <ProfileIdentityHeader
-            profile={props.profile}
-            productLine={props.productLine}
-            uploadingAvatar={props.uploadingAvatar}
-            completionPercent={completionPercent}
-            pulse={props.pulse}
-            subscriptionTier={props.subscriptionTier}
-            onAvatarPress={props.onAvatarPress}
-            onEditPress={props.onEdit}
-            onPublicProfile={
-              props.profile.role === 'player' ? props.onPublicProfile : undefined
-            }
-          />
-          <View style={styles.pager}>
-            <ProDayTabPager
-              chapters={chapters}
-              pages={pages}
-              activeChapter={chapter}
-              onChapterChange={setChapter}
-              showFooter={false}
-              compact
-              badges={{
-                reglages:
-                  props.pendingVerify || props.showPlayerVerificationReminder ? 1 : undefined,
-              }}
-            />
+        <ProDayScreenCanvas flat>
+          <View style={styles.v3Root}>
+            {identityHeader}
+            {pager}
           </View>
-        </V3TabShell>
+        </ProDayScreenCanvas>
       ) : (
         <>
-          <ProfileIdentityHeader
-            profile={props.profile}
-            productLine={props.productLine}
-            uploadingAvatar={props.uploadingAvatar}
-            completionPercent={completionPercent}
-            pulse={props.pulse}
-            subscriptionTier={props.subscriptionTier}
-            onAvatarPress={props.onAvatarPress}
-            onEditPress={props.onEdit}
-            onPublicProfile={
-              props.profile.role === 'player' ? props.onPublicProfile : undefined
-            }
-          />
-          <View style={styles.pager}>
-            <ProDayTabPager
-              chapters={chapters}
-              pages={pages}
-              activeChapter={chapter}
-              onChapterChange={setChapter}
-              showFooter={false}
-              compact
-              badges={{
-                reglages:
-                  props.pendingVerify || props.showPlayerVerificationReminder ? 1 : undefined,
-              }}
-            />
-          </View>
+          {identityHeader}
+          {pager}
         </>
       )}
     </View>
@@ -680,6 +664,7 @@ const alertStyles = StyleSheet.create({
 function createStyles(_c: AppColors) {
   return StyleSheet.create({
     root: { flex: 1, minHeight: 0 },
+    v3Root: { flex: 1, minHeight: 0 },
     pager: { flex: 1, minHeight: 0 },
     cvCta: {
       flexDirection: 'row',

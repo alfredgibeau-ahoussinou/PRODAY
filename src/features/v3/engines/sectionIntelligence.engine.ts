@@ -152,7 +152,7 @@ export function buildSectionIntelligence(input: SectionIntelligenceInput): Secti
       }
       insights.push({
         id: 'coach',
-        label: 'Coach IA',
+        label: 'Coach',
         detail: input.coachMessage ?? 'Suivez votre plan quotidien.',
         priority: 80,
       });
@@ -179,15 +179,15 @@ export function buildSectionIntelligence(input: SectionIntelligenceInput): Secti
       }
       insights.push({
         id: 'social-network',
-        label: 'Réseau IA',
-        detail: 'Contacts recommandés selon vos matchs et votre ville',
+        label: 'Contacts suggérés',
+        detail: 'Personnes recommandées selon vos matchs et votre ville',
         priority: 68,
       });
       break;
     case 'feed':
       insights.push({
         id: 'feed-local',
-        label: 'Fil intelligent',
+        label: 'Fil local',
         detail: input.city
           ? `Contenu priorisé près de ${input.city}`
           : 'Actualités et sondages triés selon votre profil',

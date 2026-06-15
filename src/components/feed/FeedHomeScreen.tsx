@@ -77,7 +77,7 @@ export const FeedHomeScreen: React.FC<FeedHomeScreenProps> = ({
           stats={[
             { value: profile.city ?? '—', label: 'Ville' },
             { value: profile.role === 'player' ? 'Joueur' : 'Staff', label: 'Rôle' },
-            { value: 'IA', label: 'Tri actif', highlight: true },
+            { value: 'Actif', label: 'Tri', highlight: true },
           ]}
         >
           {pager}

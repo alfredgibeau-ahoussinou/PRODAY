@@ -22,7 +22,6 @@ import { ProgressionBlock } from './components/ProgressionBlock';
 import { ReelsPreviewStrip } from './components/ReelsPreviewStrip';
 import { SmartCalendarPeek } from '../v3/components/SmartCalendarPeek';
 import { SmartNotificationsPeek } from '../v3/components/SmartNotificationsPeek';
-import { V3WelcomeBanner } from '../v3/components/V3WelcomeBanner';
 import { peekCalendar } from '../v3/engines/smartCalendar.engine';
 import { peekNotifications } from '../v3/engines/smartNotifications.engine';
 import { StaffPrioritiesStrip } from '../v3/components/StaffPrioritiesStrip';
@@ -146,8 +145,6 @@ export const HomeIaDashboard: React.FC<HomeIaDashboardProps> = ({
         onLocationPress={() => nav.openMatchs()}
         onNotificationsPress={() => nav.setActiveTab('messages')}
       />
-
-      <V3WelcomeBanner uid={profile.uid} />
 
       <TransversalNavBar
         actions={[

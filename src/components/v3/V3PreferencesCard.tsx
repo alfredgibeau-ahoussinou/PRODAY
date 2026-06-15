@@ -100,9 +100,9 @@ export const V3PreferencesCard: React.FC<V3PreferencesCardProps> = ({ profile })
       <View style={styles.head}>
         <Icon name="calendar" size={18} color={colors.accent} />
         <View style={styles.copy}>
-          <ProDayText variant="section">Intelligence ProDay</ProDayText>
+          <ProDayText variant="section">Préférences ProDay</ProDayText>
           <ProDayText variant="caption" muted>
-            Calendrier, Brain et recommandations V3
+            Calendrier et synchronisation
           </ProDayText>
         </View>
       </View>

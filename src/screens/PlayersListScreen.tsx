@@ -283,7 +283,7 @@ export const PlayersListScreen: React.FC<PlayersListScreenProps> = ({
         title={listTitle}
         subtitle={
           users.length > 0
-            ? `${users.length} profil(s) — triés par score IA`
+            ? `${users.length} profil(s) — triés par pertinence`
             : 'Explorez la base joueurs'
         }
         right={

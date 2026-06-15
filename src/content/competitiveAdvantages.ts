@@ -34,7 +34,7 @@ export const PRODAY_PILLARS = [
   },
   {
     id: 'recruit',
-    title: 'Mercato intelligent',
+    title: 'Mercato ciblé',
     subtitle: 'Filtres & candidatures',
     description:
       'Annonces ciblées, postuler en un tap, suivi des réponses — pour joueurs et clubs.',

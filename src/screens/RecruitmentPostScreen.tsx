@@ -369,7 +369,7 @@ export const RecruitmentPostScreen: React.FC<RecruitmentPostScreenProps> = ({
             {mercatoFit && useV3Header ? (
               <View style={[styles.fitBox, { backgroundColor: c.accentSoft, borderColor: c.accentMuted }]}>
                 <ProDayText variant="caption" accent style={{ fontWeight: '800' }}>
-                  Compatibilité IA {mercatoFit.iaScore}% — {mercatoFit.fitLabel}
+                  Compatibilité {mercatoFit.iaScore}% — {mercatoFit.fitLabel}
                 </ProDayText>
               </View>
             ) : null}

@@ -43,7 +43,7 @@ export const SmartNotificationsPeek: React.FC<SmartNotificationsPeekProps> = ({
   const card = (
     <GlassCard variant="default" style={styles.card}>
       <ProDayText variant="eyebrow" muted style={styles.eyebrow}>
-        Notifications intelligentes
+        Notifications
       </ProDayText>
       <ProDayText variant="section">
         {push.length > 0 ? 'Prioritaires' : 'Inbox'}

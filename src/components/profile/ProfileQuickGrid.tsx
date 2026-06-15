@@ -12,10 +12,11 @@ export type ProfileQuickAction = {
 
 interface ProfileQuickGridProps {
   actions: ProfileQuickAction[];
+  compact?: boolean;
 }
 
 /** Raccourcis profil — grandes tuiles unifiées. */
-export const ProfileQuickGrid: React.FC<ProfileQuickGridProps> = ({ actions }) => {
+export const ProfileQuickGrid: React.FC<ProfileQuickGridProps> = ({ actions, compact }) => {
   const items: ProDayActionTile[] = actions.map((action) => ({
     id: action.id,
     label: action.label,
@@ -30,6 +31,7 @@ export const ProfileQuickGrid: React.FC<ProfileQuickGridProps> = ({ actions }) =
       items={items}
       onPress={(id) => handlers[id]?.()}
       inset={false}
+      compact={compact}
     />
   );
 };

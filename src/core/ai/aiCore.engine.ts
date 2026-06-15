@@ -130,7 +130,7 @@ function arbitrate(votes: ExpertVote[]): { state: HeroIaState; tab: MainTabId; r
 }
 
 const CTA_BY_TAB: Record<MainTabId, string> = {
-  home: 'Voir le cockpit',
+  home: 'Voir l’accueil',
   matchs: 'Voir les matchs',
   recrutement: 'Ouvrir le Mercato',
   covoiturage: 'Covoiturage',

@@ -60,7 +60,7 @@ export const CandidaturePostCard: React.FC<CandidaturePostCardProps> = ({
           <View style={[styles.timeBadge, { backgroundColor: colors.surfaceMuted }]}>
             {iaScore != null ? (
               <ProDayText variant="caption" accent style={styles.iaText}>
-                IA {iaScore}%
+                {iaScore}% match
               </ProDayText>
             ) : (
               <ProDayText variant="caption" muted>

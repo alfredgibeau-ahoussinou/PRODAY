@@ -62,7 +62,7 @@ export const PRODAY_UNIQUES: {
 ] as const;
 
 export const ROLE_DASHBOARD_TAGLINE: Record<UserRole, string> = {
-  player: 'Votre carrière, un seul cockpit.',
+  player: 'Votre carrière, un seul espace.',
   coach: 'Pilotez votre effectif et vos convocations.',
   club: 'Stages, recrutement et vie de club.',
   agent: 'Repérez, convoquez, placez.',

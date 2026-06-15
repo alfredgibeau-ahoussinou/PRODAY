@@ -30,10 +30,17 @@ export const ProfileAvatarButton: React.FC<ProfileAvatarButtonProps> = ({
   const { colors: c } = useAppTheme();
   const styles = useMemo(() => createStyles(c), [c]);
   const letter = displayName.trim().charAt(0).toUpperCase() || '?';
+  const compact = size < 56;
+  const badgeSize = compact ? 22 : 30;
+  const badgeIcon = compact ? 11 : 14;
 
   return (
     <TouchableOpacity
-      style={[styles.wrap, { width: size, height: size, borderRadius: size / 2 }]}
+      style={[
+        styles.wrap,
+        { width: size, height: size, borderRadius: size / 2 },
+        compact && styles.wrapCompact,
+      ]}
       onPress={onPress}
       disabled={uploading}
       activeOpacity={0.85}
@@ -48,11 +55,20 @@ export const ProfileAvatarButton: React.FC<ProfileAvatarButtonProps> = ({
           <Text style={[styles.letter, { fontSize: size * 0.38 }]}>{letter}</Text>
         </View>
       )}
-      <View style={styles.badge}>
+      <View
+        style={[
+          styles.badge,
+          {
+            width: badgeSize,
+            height: badgeSize,
+            borderRadius: badgeSize / 2,
+          },
+        ]}
+      >
         {uploading ? (
           <ActivityIndicator size="small" color={c.brandInverse} />
         ) : (
-          <Icon name="image" size={14} color={c.brandInverse} />
+          <Icon name="image" size={badgeIcon} color={c.brandInverse} />
         )}
       </View>
     </TouchableOpacity>
@@ -67,6 +83,9 @@ function createStyles(c: AppColors) {
       overflow: 'hidden',
       backgroundColor: c.surfaceMuted,
     },
+    wrapCompact: {
+      borderWidth: 2,
+    },
     image: { resizeMode: 'cover' },
     placeholder: {
       backgroundColor: c.ink,
@@ -76,11 +95,8 @@ function createStyles(c: AppColors) {
     letter: { color: c.brandInverse, fontWeight: '900' },
     badge: {
       position: 'absolute',
-      right: 0,
-      bottom: 0,
-      width: 30,
-      height: 30,
-      borderRadius: 15,
+      right: -1,
+      bottom: -1,
       backgroundColor: c.brand,
       alignItems: 'center',
       justifyContent: 'center',

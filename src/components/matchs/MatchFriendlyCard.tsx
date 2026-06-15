@@ -62,7 +62,7 @@ export const MatchFriendlyCard: React.FC<MatchFriendlyCardProps> = ({
             {iaScore != null ? (
               <View style={[styles.iaBadge, { backgroundColor: colors.accentSoft }]}>
                 <ProDayText variant="caption" accent style={styles.iaText}>
-                  IA {iaScore}%
+                  {iaScore}%
                 </ProDayText>
               </View>
             ) : null}
