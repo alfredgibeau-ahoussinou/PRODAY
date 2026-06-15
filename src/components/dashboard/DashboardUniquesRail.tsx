@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { View, Text, ScrollView, StyleSheet } from 'react-native';
 import { PRODAY_UNIQUES, type ProdayUniqueId } from '../../content/dashboardUniques';
 import { Icon, type IconName } from '../ui/Icon';
-import { PressableSpring } from '../discover/PressableSpring';
+import { PressableSpring } from '../motion';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { spacing, radius } from '../../theme/designTokens';
 import type { AppColors } from '../../theme/universeTheme';

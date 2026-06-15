@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 import { Icon, type IconName } from '../ui/Icon';
-import { PressableSpring } from './PressableSpring';
+import { PressableSpring } from '../motion';
 import { DiscoverSectionHeader } from './DiscoverSectionHeader';
 import { spacing, radius, shadows, surfaces } from '../../theme/designTokens';
 import { useDiscoverStyles } from './discoverStyles';

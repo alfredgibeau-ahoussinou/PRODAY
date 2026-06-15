@@ -5,7 +5,7 @@ import Animated, {
   useSharedValue,
   withSpring,
 } from 'react-native-reanimated';
-import { PressableSpring } from './PressableSpring';
+import { PressableSpring } from '../motion';
 import { SPRING_SNAPPY } from './animationConfig';
 import { spacing, radius } from '../../theme/designTokens';
 import { useDiscoverStyles } from './discoverStyles';

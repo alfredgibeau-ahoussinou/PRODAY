@@ -26,7 +26,7 @@ import { getShowcaseImageStyle } from '../../content/showcaseImageStyle';
 import { useAppTheme } from '../../context/ProductLineContext';
 import type { ShowcaseImageKey } from '../../content/showcaseAssets';
 import { Icon, type IconName } from '../ui/Icon';
-import { PressableSpring } from './PressableSpring';
+import { PressableSpring } from '../motion';
 import { spacing, radius } from '../../theme/designTokens';
 import { AUTO_CAROUSEL_MS } from './animationConfig';
 import { useDiscoverStyles } from './discoverStyles';

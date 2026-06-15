@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, Platform, ScrollView } from 'react-native';
-import { PressableSpring } from '../discover/PressableSpring';
+import { PressableSpring } from '../motion';
 import { useSignupFlowTheme } from '../../screens/signup/SignupFlowContext';
 import { spacing, radius } from '../../theme/designTokens';
 import type { AppColors } from '../../theme/universeTheme';

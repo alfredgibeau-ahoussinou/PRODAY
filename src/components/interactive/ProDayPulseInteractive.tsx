@@ -12,7 +12,7 @@ import Animated, {
 import { ProDayGradient } from '../ui/ProDayGradient';
 import type { ProdayPulseResult, PulseBreakdownItem } from '../../utils/prodayPulse';
 import type { RecruitmentStats } from '../../services/stats.service';
-import { PressableSpring } from '../discover/PressableSpring';
+import { PressableSpring } from '../motion';
 import { Icon } from '../ui/Icon';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { spacing, radius } from '../../theme/designTokens';

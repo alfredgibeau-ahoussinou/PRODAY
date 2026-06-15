@@ -20,7 +20,7 @@ import { getDiscoverIntroSlides } from '../../content/discoverContentByLine';
 import type { IntroSlideAction, DiscoverIntroSlide } from '../../content/discoverChapters';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { CarouselDot } from './CarouselDot';
-import { PressableSpring } from './PressableSpring';
+import { PressableSpring } from '../motion';
 import { ShowcaseImageBackground } from '../ui/ShowcaseImageBackground';
 import { Icon } from '../ui/Icon';
 import { Logo } from '../Logo';

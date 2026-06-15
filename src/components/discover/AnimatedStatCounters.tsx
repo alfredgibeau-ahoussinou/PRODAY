@@ -11,7 +11,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import type { RecruitmentStats } from '../../services/stats.service';
 import { Icon } from '../ui/Icon';
-import { PressableSpring } from './PressableSpring';
+import { PressableSpring } from '../motion';
 import { spacing, radius } from '../../theme/designTokens';
 import { useDiscoverStyles } from './discoverStyles';
 import type { AppColors } from '../../theme/universeTheme';

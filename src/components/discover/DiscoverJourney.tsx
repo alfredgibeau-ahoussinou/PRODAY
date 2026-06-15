@@ -4,7 +4,7 @@ import { ShowcaseImageBackground } from '../ui/ShowcaseImageBackground';
 import Animated, { FadeInRight } from 'react-native-reanimated';
 import { DISCOVER_FEATURES } from '../../content/founders';
 import { useShowcaseImages } from '../../hooks/useShowcaseImages';
-import { PressableSpring } from './PressableSpring';
+import { PressableSpring } from '../motion';
 import { DiscoverSectionHeader } from './DiscoverSectionHeader';
 import { Icon, type IconName } from '../ui/Icon';
 import { spacing, radius } from '../../theme/designTokens';

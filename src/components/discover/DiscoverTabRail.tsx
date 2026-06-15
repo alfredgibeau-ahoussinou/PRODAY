@@ -6,7 +6,7 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 import { DISCOVER_CHAPTERS, type DiscoverChapterId } from '../../content/discoverChapters';
-import { PressableSpring } from './PressableSpring';
+import { PressableSpring } from '../motion';
 import { SPRING_SNAPPY } from './animationConfig';
 import { discoverLayout, getDiscoverPalette, useDiscoverStyles } from './discoverStyles';
 import { spacing } from '../../theme/designTokens';

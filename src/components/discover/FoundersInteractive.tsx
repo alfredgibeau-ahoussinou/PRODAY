@@ -10,7 +10,7 @@ import { FOUNDERS, FOUNDERS_LETTER } from '../../content/founders';
 import { FOUNDER_IMAGE_KEYS } from '../../content/showcaseExperience';
 import { useShowcaseImages } from '../../hooks/useShowcaseImages';
 import type { ShowcaseImageKey } from '../../content/showcaseAssets';
-import { PressableSpring } from './PressableSpring';
+import { PressableSpring } from '../motion';
 import { DiscoverSectionHeader } from './DiscoverSectionHeader';
 import { spacing, radius } from '../../theme/designTokens';
 import { SPRING_SNAPPY } from './animationConfig';

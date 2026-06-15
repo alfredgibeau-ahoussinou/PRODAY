@@ -6,7 +6,7 @@ import Animated, {
   useAnimatedStyle,
   type SharedValue,
 } from 'react-native-reanimated';
-import { PressableSpring } from './PressableSpring';
+import { PressableSpring } from '../motion';
 import { useDiscoverStyles } from './discoverStyles';
 
 interface CarouselDotProps {

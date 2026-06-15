@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { PressableSpring } from '../discover/PressableSpring';
+import { PressableSpring } from '../motion';
 import type { ProdayPulseResult } from '../../utils/prodayPulse';
 import { Icon } from '../ui/Icon';
 import { spacing, radius } from '../../theme/designTokens';

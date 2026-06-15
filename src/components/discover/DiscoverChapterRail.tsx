@@ -16,7 +16,7 @@ import Animated, {
   type SharedValue,
 } from 'react-native-reanimated';
 import { DISCOVER_CHAPTERS, type DiscoverChapterId } from '../../content/discoverChapters';
-import { PressableSpring } from './PressableSpring';
+import { PressableSpring } from '../motion';
 import { SPRING_SNAPPY } from './animationConfig';
 import { getDiscoverPalette, useDiscoverStyles } from './discoverStyles';
 import type { AppColors } from '../../theme/universeTheme';

@@ -19,7 +19,7 @@ import {
 } from '../../content/discoverChapters';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { CarouselDot } from './CarouselDot';
-import { PressableSpring } from './PressableSpring';
+import { PressableSpring } from '../motion';
 import { DiscoverSectionHeader } from './DiscoverSectionHeader';
 import { Icon } from '../ui/Icon';
 import type { ProDayModuleId } from '../../content/prodayModules';

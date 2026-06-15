@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ADMIN_TAB_ITEMS, type AdminMainTabId } from '../../navigation/adminTabConfig';
-import { PressableSpring } from '../discover/PressableSpring';
+import { PressableSpring } from '../motion';
 import { Icon } from '../ui/Icon';
 import { useAdminStyles } from '../admin/adminStyles';
 import { spacing } from '../../theme/designTokens';

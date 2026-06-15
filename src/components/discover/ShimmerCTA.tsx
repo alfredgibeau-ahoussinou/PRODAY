@@ -8,7 +8,7 @@ import Animated, {
   withTiming,
   interpolate,
 } from 'react-native-reanimated';
-import { PressableSpring } from './PressableSpring';
+import { PressableSpring } from '../motion';
 import { spacing, radius, shadows } from '../../theme/designTokens';
 import { motion } from '../../theme/motion';
 import { useDiscoverStyles } from './discoverStyles';

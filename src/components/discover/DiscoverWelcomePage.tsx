@@ -10,7 +10,7 @@ import Animated, {
   FadeInDown,
 } from 'react-native-reanimated';
 import { Logo } from '../Logo';
-import { PressableSpring } from './PressableSpring';
+import { PressableSpring } from '../motion';
 import { MarqueePillars } from './MarqueePillars';
 import { ShimmerCTA } from './ShimmerCTA';
 import { useShowcaseImages } from '../../hooks/useShowcaseImages';

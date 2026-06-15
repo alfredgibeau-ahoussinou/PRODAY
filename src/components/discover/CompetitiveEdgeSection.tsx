@@ -3,7 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import { PRODAY_PILLARS } from '../../content/competitiveAdvantages';
 import { DiscoverSectionHeader } from './DiscoverSectionHeader';
 import { Icon, type IconName } from '../ui/Icon';
-import { PressableSpring } from './PressableSpring';
+import { PressableSpring } from '../motion';
 import { spacing, radius } from '../../theme/designTokens';
 import { useDiscoverStyles } from './discoverStyles';
 import type { AppColors } from '../../theme/universeTheme';

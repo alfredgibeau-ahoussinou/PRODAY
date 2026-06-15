@@ -5,7 +5,7 @@ import { PRODAY_MODULES, type ProDayModuleId, type ProDayModuleDef } from '../..
 import { getModulesForRoleAndLine } from '../../content/poleExperience';
 import type { UserRole } from '../../models/User';
 import { useAppTheme } from '../../context/ProductLineContext';
-import { PressableSpring } from '../discover/PressableSpring';
+import { PressableSpring } from '../motion';
 import { Icon } from './Icon';
 import { spacing, radius, shadows, surfaces } from '../../theme/designTokens';
 import type { AppColors } from '../../theme/universeTheme';

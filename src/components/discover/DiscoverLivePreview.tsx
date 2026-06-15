@@ -10,7 +10,7 @@ import {
 import type { RecruitmentPost } from '../../models/Player';
 import { formatTimeAgo } from '../../services/recruitment.service';
 import { DiscoverSectionHeader } from './DiscoverSectionHeader';
-import { PressableSpring } from './PressableSpring';
+import { PressableSpring } from '../motion';
 import { Icon } from '../ui/Icon';
 import { spacing, radius } from '../../theme/designTokens';
 import { useDiscoverStyles } from './discoverStyles';
