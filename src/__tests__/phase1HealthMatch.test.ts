@@ -1,6 +1,5 @@
 import { validateMatchJoin } from '../core/recommendation/recommendation.engine';
 import { computeHealthSnapshot } from '../core/health/healthState.engine';
-import { isV3ShellEnabled } from '../config/featureFlags';
 
 describe('Phase 1 — boucle santé → match', () => {
   const overloadedHealth = computeHealthSnapshot({
@@ -36,12 +35,5 @@ describe('Phase 1 — boucle santé → match', () => {
       levelScore: 75,
     });
     expect(check.allowed).toBe(true);
-  });
-
-  it('V3_SHELL reste opt-in', () => {
-    const prev = process.env.EXPO_PUBLIC_V3_SHELL;
-    delete process.env.EXPO_PUBLIC_V3_SHELL;
-    expect(isV3ShellEnabled()).toBe(false);
-    process.env.EXPO_PUBLIC_V3_SHELL = prev;
   });
 });

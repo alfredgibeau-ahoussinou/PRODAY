@@ -1,0 +1,50 @@
+import type { MessageCatalog } from '../types';
+import { UI_ES } from './ui.es';
+import { MODULES_ES } from './modules.es';
+import { SECONDARY_ES } from './secondary.es';
+import { TERTIARY_ES } from './tertiary.es';
+
+export const es: MessageCatalog = {
+  ...UI_ES,
+  ...MODULES_ES,
+  ...SECONDARY_ES,
+  ...TERTIARY_ES,
+  'common.search': 'Buscar…',
+  'common.cancel': 'Cancelar',
+  'common.save': 'Guardar',
+  'common.close': 'Cerrar',
+  'language.title': 'Elegir idioma',
+  'language.search': 'Buscar un idioma…',
+  'language.current': 'Idioma actual',
+  'language.hint':
+    'Cinco idiomas disponibles: francés, inglés, español, alemán y coreano.',
+  'language.translating': 'Cargando la interfaz…',
+  'preferences.title': 'Preferencias',
+  'preferences.subtitle': 'Calendario, idioma y sincronización',
+  'preferences.language': 'Idioma de la app',
+  'preferences.languageHint': 'Interfaz y menús',
+  'preferences.calendarSync': 'Sincronizar calendario',
+  'preferences.calendarSyncHint': 'Partidos y convocatorias en tu agenda',
+  'preferences.syncNow': 'Sincronizar',
+  'preferences.neverSynced': 'Nunca sincronizado',
+  'preferences.syncedJustNow': 'Ahora mismo',
+  'preferences.syncedMinutes': 'Hace {{n}} min',
+  'preferences.syncedHours': 'Hace {{n}} h',
+  'preferences.syncedDays': 'Hace {{n}} d',
+  'profile.chapters.account': 'Cuenta',
+  'profile.chapters.showcase': 'Escaparate',
+  'profile.chapters.career': 'Trayectoria',
+  'profile.chapters.activity': 'Actividad',
+  'profile.chapters.settings': 'Ajustes',
+  'nav.overflow': 'Navegación',
+  'tabs.home': 'Inicio',
+  'tabs.recrutement': 'Mercado',
+  'tabs.matchs': 'Partidos',
+  'tabs.covoiturage': 'Coche',
+  'tabs.sante': 'Salud',
+  'tabs.feed': 'Feed',
+  'tabs.reels': 'Reels',
+  'tabs.messages': 'Mensajes',
+  'tabs.profil': 'Perfil',
+  'tabs.shop': 'Tienda',
+};

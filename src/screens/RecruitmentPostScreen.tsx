@@ -23,25 +23,21 @@ import { useSubscriptionOptional } from '../context/SubscriptionContext';
 import { spacing, radius } from '../theme/designTokens';
 import { useThemedScreen } from '../hooks/useThemedScreen';
 import { useRequireAuth } from '../hooks/useRequireAuth';
-import { isV3ShellEnabled } from '../config/featureFlags';
 import { trackV3Event } from '../core/analytics/v3Events';
 import { userStateStore } from '../core/state/userState.store';
 import { flushBrainState } from '../services/brainState.service';
 import { recordV3UserAction } from '../utils/recordV3Action';
-import { ProDayScreenCanvas } from '../components/ui/ProDayScreenCanvas';
 import { AppDetailHeader } from '../components/app';
 import { ProDayGradient } from '../components/ui/ProDayGradient';
 import { ProDaySurface } from '../components/ui/ProDaySurface';
 import { ProDayText } from '../components/ui/ProDayText';
-import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { Icon } from '../components/ui/Icon';
 import { TAB_BAR_CONTENT_INSET } from '../components/navigation/BottomTabBar';
 import { getProfileCompletion } from '../utils/profileCompletion';
 import { computeProdayPulse } from '../utils/prodayPulse';
 import { usersService } from '../services/users.service';
-import { V3TabShell } from '../components/v3/V3TabShell';
-import { V3ScreenBack } from '../components/v3/V3ScreenBack';
-import { useSectionIntelligence } from '../hooks/useSectionIntelligence';
+import { TabScreenShell } from '../components/app/TabScreenShell';
+import { ScreenBackButton } from '../components/ui/ScreenBackButton';
 import { useProDayBrain } from '../hooks/useProDayBrain';
 import { getPostMercatoFit } from '../features/v3/engines/mercatoPostDetail.engine';
 
@@ -107,21 +103,15 @@ export const RecruitmentPostScreen: React.FC<RecruitmentPostScreenProps> = ({
   }, [load]);
 
   const isManager = post && profile && canManagePostApplications(profile, post);
-  const useV3Header = isV3ShellEnabled();
   const brain = useProDayBrain(profile, productLine);
   const pendingApps = useMemo(
     () => applications.filter((app) => app.status === 'PENDING').length,
     [applications]
   );
-  const intelligence = useSectionIntelligence('recrutement', profile, productLine, {
-    staffMode: Boolean(isManager),
-    mercatoApplications: pendingApps,
-    mercatoPosts: isManager ? 1 : undefined,
-  });
   const mercatoFit = useMemo(() => {
-    if (!useV3Header || !profile || !post || profile.role !== 'player') return null;
+    if (!profile || !post || profile.role !== 'player') return null;
     return getPostMercatoFit({ profile, post, pulseScore: brain.ai.dynamicScore });
-  }, [useV3Header, profile, post, brain.ai.dynamicScore]);
+  }, [profile, post, brain.ai.dynamicScore]);
   const letterCount = coverLetter.trim().length;
   const letterOk = letterCount >= 20;
   const completion = profile ? getProfileCompletion(profile) : null;
@@ -166,31 +156,29 @@ export const RecruitmentPostScreen: React.FC<RecruitmentPostScreenProps> = ({
       );
       void subscriptionCtx?.refresh();
       setApplied(true);
-      if (isV3ShellEnabled()) {
-        trackV3Event('mercato_application_sent', { postId: post.id });
-        const progression = userStateStore.get()?.progression ?? {
-          xp: 0,
-          level: 1,
-          xpToNext: 200,
-          xpProgress: 0,
+      trackV3Event('mercato_application_sent', { postId: post.id });
+      const progression = userStateStore.get()?.progression ?? {
+        xp: 0,
+        level: 1,
+        xpToNext: 200,
+        xpProgress: 0,
+        streakDays: 1,
+        badges: [],
+        rankLabel: 'Rookie',
+      };
+      userStateStore.applyAction(
+        profile,
+        'open_mercato',
+        {
+          upcomingEventsCount: 0,
+          pendingConvocations: 0,
+          recentMatchCount: 0,
           streakDays: 1,
-          badges: [],
-          rankLabel: 'Rookie',
-        };
-        userStateStore.applyAction(
-          profile,
-          'open_mercato',
-          {
-            upcomingEventsCount: 0,
-            pendingConvocations: 0,
-            recentMatchCount: 0,
-            streakDays: 1,
-            globalScore: completion?.percent ?? 50,
-          },
-          progression
-        );
-        void flushBrainState(profile.uid);
-      }
+          globalScore: completion?.percent ?? 50,
+        },
+        progression
+      );
+      void flushBrainState(profile.uid);
       Alert.alert('Candidature envoyée', 'Le club pourra consulter votre profil.');
     } catch (e) {
       if (e instanceof SubscriptionLimitError) {
@@ -213,7 +201,6 @@ export const RecruitmentPostScreen: React.FC<RecruitmentPostScreenProps> = ({
     try {
       await recruitmentService.updateApplicationStatus(app.id, status, rejectionReason);
       if (
-        isV3ShellEnabled() &&
         profile &&
         canManagePostApplications(profile, post) &&
         app.status === 'PENDING' &&
@@ -234,59 +221,34 @@ export const RecruitmentPostScreen: React.FC<RecruitmentPostScreenProps> = ({
   };
 
   if (loading) {
-    const body = (
-      <View style={styles.loader}>
-        <ActivityIndicator size="large" color={c.accent} />
-      </View>
-    );
-    if (useV3Header) {
-      return (
-        <V3TabShell
-          caption="Mercato"
-          title="Annonce"
-          right={<V3ScreenBack onPress={onBack} />}
-          intelligence={intelligence}
-          flat
-        >
-          {body}
-        </V3TabShell>
-      );
-    }
     return (
-      <ProDayScreenCanvas flat>
+      <TabScreenShell
+        caption="Mercato"
+        title="Annonce"
+        right={<ScreenBackButton onPress={onBack} />}
+        flat
+      >
         <View style={styles.loader}>
           <ActivityIndicator size="large" color={c.accent} />
         </View>
-      </ProDayScreenCanvas>
+      </TabScreenShell>
     );
   }
 
   if (!post) {
-    const body = (
-      <View style={styles.loader}>
-        <ProDayText variant="body" muted>
-          Annonce introuvable ou fermée.
-        </ProDayText>
-      </View>
-    );
-    if (useV3Header) {
-      return (
-        <V3TabShell
-          caption="Mercato"
-          title="Annonce"
-          right={<V3ScreenBack onPress={onBack} />}
-          intelligence={intelligence}
-          flat
-        >
-          {body}
-        </V3TabShell>
-      );
-    }
     return (
-      <ProDayScreenCanvas flat>
-        <ScreenHeader title="Annonce" onBack={onBack} />
-        {body}
-      </ProDayScreenCanvas>
+      <TabScreenShell
+        caption="Mercato"
+        title="Annonce"
+        right={<ScreenBackButton onPress={onBack} />}
+        flat
+      >
+        <View style={styles.loader}>
+          <ProDayText variant="body" muted>
+            Annonce introuvable ou fermée.
+          </ProDayText>
+        </View>
+      </TabScreenShell>
     );
   }
 
@@ -366,7 +328,7 @@ export const RecruitmentPostScreen: React.FC<RecruitmentPostScreenProps> = ({
               Votre lettre de motivation
             </ProDayText>
 
-            {mercatoFit && useV3Header ? (
+            {mercatoFit ? (
               <View style={[styles.fitBox, { backgroundColor: c.accentSoft, borderColor: c.accentMuted }]}>
                 <ProDayText variant="caption" accent style={{ fontWeight: '800' }}>
                   Compatibilité {mercatoFit.iaScore}% — {mercatoFit.fitLabel}
@@ -484,26 +446,16 @@ export const RecruitmentPostScreen: React.FC<RecruitmentPostScreenProps> = ({
     </ScrollView>
   );
 
-  if (useV3Header) {
-    return (
-      <V3TabShell
-        caption={post.club_name}
-        title={postTitle}
-        subtitle={postSubtitle}
-        right={<V3ScreenBack onPress={onBack} />}
-        intelligence={intelligence}
-        flat
-      >
-        {detailScroll}
-      </V3TabShell>
-    );
-  }
-
   return (
-    <ProDayScreenCanvas flat>
-      <ScreenHeader title="Annonce" onBack={onBack} />
+    <TabScreenShell
+      caption={post.club_name}
+      title={postTitle}
+      subtitle={postSubtitle}
+      right={<ScreenBackButton onPress={onBack} />}
+      flat
+    >
       {detailScroll}
-    </ProDayScreenCanvas>
+    </TabScreenShell>
   );
 };
 

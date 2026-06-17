@@ -1,4 +1,5 @@
 import type { HealthEngineInput, HealthSnapshot } from '../../../core/types/health';
+import { getWearablePlatformLabel } from '../../../services/wearableHealth/types';
 
 export type HealthFactorImpact = 'positive' | 'negative' | 'neutral';
 
@@ -63,7 +64,40 @@ export function explainHealthScores(
     });
   }
 
+  if (input.wearableConnected) {
+    const sourceLabel = getWearablePlatformLabel();
+    if (input.stepsToday != null) {
+      fatigueFactors.push({
+        id: 'wearable_steps',
+        label: `Pas (${sourceLabel})`,
+        detail: `${input.stepsToday.toLocaleString('fr-FR')} pas aujourd’hui`,
+        impact: input.stepsToday > 10_000 ? 'negative' : 'neutral',
+        weight: input.stepsToday > 12_000 ? 6 : input.stepsToday > 9_000 ? 3 : 0,
+      });
+    }
+    if (input.sleepHoursLastNight != null) {
+      fatigueFactors.push({
+        id: 'wearable_sleep',
+        label: `Sommeil (${sourceLabel})`,
+        detail: `${input.sleepHoursLastNight} h la nuit dernière`,
+        impact: input.sleepHoursLastNight < 6 ? 'negative' : input.sleepHoursLastNight >= 7.5 ? 'positive' : 'neutral',
+        weight: input.sleepHoursLastNight < 6 ? 8 : 0,
+      });
+    }
+  }
+
   const recoveryFactors: HealthScoreFactor[] = [];
+
+  if (input.wearableConnected && input.restingHeartRate != null) {
+    const sourceLabel = getWearablePlatformLabel();
+    recoveryFactors.push({
+      id: 'wearable_hr',
+      label: `FC repos (${sourceLabel})`,
+      detail: `${input.restingHeartRate} bpm`,
+      impact: input.restingHeartRate <= 58 ? 'positive' : 'neutral',
+      weight: input.restingHeartRate <= 58 ? 4 : 0,
+    });
+  }
 
   if (input.streakDays > 0) {
     recoveryFactors.push({
@@ -99,11 +133,17 @@ export function explainHealthScores(
   }
 
   const summary =
-    snapshot.state === 'INJURY_RISK' || snapshot.state === 'OVERLOADED'
+    input.wearableConnected
+      ? `${snapshot.state === 'INJURY_RISK' || snapshot.state === 'OVERLOADED'
+          ? 'Votre corps signale une surcharge.'
+          : snapshot.state === 'FATIGUED'
+            ? 'Fatigue modérée détectée.'
+            : 'Équilibre charge/récupération favorable.'} Scores ProDay ajustés avec vos données ${getWearablePlatformLabel()}.`
+      : snapshot.state === 'INJURY_RISK' || snapshot.state === 'OVERLOADED'
       ? 'Votre corps signale une surcharge. Privilégiez repos et soins avant l’intensité.'
       : snapshot.state === 'FATIGUED'
         ? 'Fatigue modérée : allégez la semaine et favorisez la récupération active.'
-        : 'Votre équilibre charge/récupération permet de performer en sécurité.';
+        : 'Votre équilibre charge/récupération permet de performer en sécurité. Les scores ci-dessous sont estimés depuis votre activité ProDay (connectez Apple Santé ou Google Health pour plus de précision).';
 
   return { fatigueFactors, recoveryFactors, summary };
 }

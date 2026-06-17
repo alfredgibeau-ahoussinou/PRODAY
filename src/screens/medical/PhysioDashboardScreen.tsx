@@ -24,9 +24,7 @@ import { PressableSpring, PushScreenTransition, SkeletonList, StaggerReveal } fr
 import { PhysioAvailabilityScreen } from './PhysioAvailabilityScreen';
 import { isPhysioBookingEnabled } from '../../services/medicalAppointments.service';
 import type { AppColors } from '../../theme/universeTheme';
-import { V3TabShell } from '../../components/v3/V3TabShell';
-import { isV3ShellEnabled } from '../../config/featureFlags';
-import { useSectionIntelligence } from '../../hooks/useSectionIntelligence';
+import { TabScreenShell } from '../../components/app/TabScreenShell';
 
 interface PhysioDashboardScreenProps {
   profile: User;
@@ -42,12 +40,6 @@ export const PhysioDashboardScreen: React.FC<PhysioDashboardScreenProps> = ({ pr
   const [refreshing, setRefreshing] = useState(false);
   const [showAvailability, setShowAvailability] = useState(false);
   const bookingOnline = isPhysioBookingEnabled(profile);
-  const useV3Header = isV3ShellEnabled();
-  const intelligence = useSectionIntelligence('home', profile, 'sante', {
-    pendingAppointments: pendingCount,
-    todayAppointments: todayAppointments.length,
-    unreadMessages: unreadCount,
-  });
 
   const specialty =
     profile.profile.medical_specialty ?? profile.profile.job_title ?? 'Praticien';
@@ -123,20 +115,6 @@ export const PhysioDashboardScreen: React.FC<PhysioDashboardScreenProps> = ({ pr
         onMessagesPress={goMessages}
         onCabinetPress={goProfile}
       />
-
-      {!useV3Header ? (
-        <>
-          <PhysioScreenHeader
-            title="Bonjour"
-            subtitle={`${specialty}${profile.city ? ` · ${profile.city}` : ''} — votre journée de consultations.`}
-          />
-          <View style={styles.statsRow}>
-            <StatCard label="Aujourd'hui" value={String(todayAppointments.length)} />
-            <StatCard label="En attente" value={String(pendingCount)} highlight={pendingCount > 0} />
-            <StatCard label="Patients" value={String(uniquePatients.length)} />
-          </View>
-        </>
-      ) : null}
 
       <View style={styles.bookingBanner}>
         <Icon name="calendar" size={18} color={bookingOnline ? '#0F766E' : c.textMuted} />
@@ -231,28 +209,14 @@ export const PhysioDashboardScreen: React.FC<PhysioDashboardScreenProps> = ({ pr
 
   return (
     <View style={[styles.root, rootStyle]}>
-      {useV3Header ? (
-        <V3TabShell
-          caption="Cabinet Santé"
-          title={`Bonjour, ${profile.display_name}`}
-          subtitle={`${specialty}${profile.city ? ` · ${profile.city}` : ''} — votre journée de consultations.`}
-          flat
-          intelligence={intelligence}
-          stats={[
-            { value: String(todayAppointments.length), label: "Aujourd'hui" },
-            {
-              value: String(pendingCount),
-              label: 'En attente',
-              highlight: pendingCount > 0,
-            },
-            { value: String(uniquePatients.length), label: 'Patients' },
-          ]}
-        >
-          {dashboardScroll}
-        </V3TabShell>
-      ) : (
-        dashboardScroll
-      )}
+      <TabScreenShell
+        caption="Cabinet Santé"
+        title={`Bonjour, ${profile.display_name}`}
+        subtitle={`${specialty}${profile.city ? ` · ${profile.city}` : ''} — votre journée de consultations.`}
+        flat
+      >
+        {dashboardScroll}
+      </TabScreenShell>
 
       <PushScreenTransition active={showAvailability}>
         <PhysioAvailabilityScreen

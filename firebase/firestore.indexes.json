@@ -1,11 +1,6 @@
 {
   "indexes": [
     {
-      "collectionGroup": "platform_feed",
-      "queryScope": "COLLECTION",
-      "fields": [{ "fieldPath": "created_at", "order": "DESCENDING" }]
-    },
-    {
       "collectionGroup": "users",
       "queryScope": "COLLECTION",
       "fields": [
@@ -91,6 +86,14 @@
       "queryScope": "COLLECTION",
       "fields": [
         { "fieldPath": "club_id", "order": "ASCENDING" },
+        { "fieldPath": "created_at", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "sponsor_contributions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "sponsor_uid", "order": "ASCENDING" },
         { "fieldPath": "created_at", "order": "DESCENDING" }
       ]
     }

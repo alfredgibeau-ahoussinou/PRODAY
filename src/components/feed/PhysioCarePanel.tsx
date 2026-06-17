@@ -6,15 +6,12 @@ import {
   TextInput,
 } from 'react-native';
 import { PressableSpring, SkeletonList, StaggerReveal } from '../motion';
-import { ProDaySelect } from '../ui/ProDaySelect';
 import type { User } from '../../models/User';
 import { usersService } from '../../services/users.service';
 import { openContactConversation } from '../../utils/openContactConversation';
 import {
-  HEALTH_POLE_FILTERS,
-  isMentalCoachSpecialty,
-  matchesHealthPoleFilter,
-  type HealthPoleFilterId,
+  matchesHealthPoleGroup,
+  type HealthPoleGroupId,
 } from '../../utils/healthPoleSpecialties';
 import { isPhysioBookingEnabled } from '../../services/medicalAppointments.service';
 import { spacing, radius } from '../../theme/designTokens';
@@ -24,17 +21,14 @@ import { Icon, type IconName } from '../ui/Icon';
 import { ProDayText } from '../ui/ProDayText';
 import { ProDayGradient } from '../ui/ProDayGradient';
 
-const INJURY_TIPS = [
-  { id: 'knee', label: 'Genou', hint: 'Kiné & prévention' },
-  { id: 'ankle', label: 'Cheville', hint: 'Ostéo / kiné' },
-  { id: 'muscle', label: 'Musculaire', hint: 'Récupération' },
-] as const;
 
 interface PhysioCarePanelProps {
   profile: User;
   onOpenChat: (threadId: string) => void;
   onOpenMessages: () => void;
   onBookPhysio?: (physio: User) => void;
+  /** Filtre par pôle (onglet Santé). */
+  poleGroup?: HealthPoleGroupId;
   /** Plein écran onglet Santé — liste complète */
   expanded?: boolean;
   /** Masque le titre dupliqué quand l’onglet Santé fournit déjà le hero. */
@@ -46,6 +40,7 @@ export const PhysioCarePanel: React.FC<PhysioCarePanelProps> = ({
   onOpenChat,
   onOpenMessages,
   onBookPhysio,
+  poleGroup,
   expanded = false,
   hideHeader = false,
 }) => {
@@ -55,7 +50,6 @@ export const PhysioCarePanel: React.FC<PhysioCarePanelProps> = ({
   const [physios, setPhysios] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [specialtyFilter, setSpecialtyFilter] = useState<HealthPoleFilterId>('all');
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -77,9 +71,11 @@ export const PhysioCarePanel: React.FC<PhysioCarePanelProps> = ({
   const filteredPhysios = useMemo(
     () =>
       physios.filter((p) =>
-        matchesHealthPoleFilter(p.profile?.medical_specialty, specialtyFilter)
+        poleGroup
+          ? matchesHealthPoleGroup(p.profile?.medical_specialty, poleGroup)
+          : true
       ),
-    [physios, specialtyFilter]
+    [physios, poleGroup]
   );
 
   const list = expanded ? filteredPhysios : filteredPhysios.slice(0, 5);
@@ -87,7 +83,14 @@ export const PhysioCarePanel: React.FC<PhysioCarePanelProps> = ({
   if (!isPlayer && !isPhysio) return null;
 
   function specialtyIcon(specialty: string | undefined): IconName {
-    return isMentalCoachSpecialty(specialty) ? 'shield' : 'heart';
+    const lower = (specialty ?? '').toLowerCase();
+    if (lower.includes('médecin')) return 'shield';
+    if (lower.includes('préparateur physique')) return 'football';
+    if (lower.includes('mental')) return 'shield';
+    if (lower.includes('nutrition')) return 'heart';
+    if (lower.includes('podologue')) return 'walk';
+    if (lower.includes('ostéopathe')) return 'person';
+    return 'walk';
   }
 
   return (
@@ -116,6 +119,9 @@ export const PhysioCarePanel: React.FC<PhysioCarePanelProps> = ({
 
       {isPlayer ? (
         <>
+          <ProDayText variant="eyebrow" accent style={styles.listLabel}>
+            Praticiens disponibles
+          </ProDayText>
           <TextInput
             style={styles.search}
             placeholder="Ville, nom…"
@@ -123,39 +129,13 @@ export const PhysioCarePanel: React.FC<PhysioCarePanelProps> = ({
             value={search}
             onChangeText={setSearch}
           />
-          {expanded ? (
-            <ProDaySelect<HealthPoleFilterId>
-              label="Spécialité"
-              placeholder="Tous les pros"
-              options={HEALTH_POLE_FILTERS.map((f) => ({ id: f.id, label: f.label }))}
-              value={specialtyFilter}
-              onChange={setSpecialtyFilter}
-              inset={false}
-            />
-          ) : null}
 
-          {expanded ? (
-            <ProDaySelect<string>
-              label="Type de douleur"
-              placeholder="Parcours blessure"
-              options={INJURY_TIPS.map((t) => ({
-                id: t.id,
-                label: t.label,
-                hint: t.hint,
-              }))}
-              onChange={(id) => {
-                const tip = INJURY_TIPS.find((t) => t.id === id);
-                if (tip?.id === 'knee') setSpecialtyFilter('kine');
-                if (tip?.id === 'muscle') setSpecialtyFilter('kine');
-                if (tip?.id === 'ankle') setSpecialtyFilter('kine');
-              }}
-              resetOnSelect
-            />
-          ) : null}
           {loading ? (
             <SkeletonList count={3} variant="row" />
           ) : list.length === 0 ? (
-            <Text style={styles.empty}>Aucun professionnel du pôle médical inscrit pour le moment.</Text>
+            <Text style={styles.empty}>
+              Aucun praticien de ce pôle inscrit pour le moment.
+            </Text>
           ) : (
             list.map((p, index) => (
               <StaggerReveal key={p.uid} index={index}>
@@ -221,6 +201,7 @@ function createStyles(c: AppColors) {
       backgroundColor: c.surfaceMuted,
     },
     sub: { marginTop: 4, marginBottom: spacing.md },
+    listLabel: { marginBottom: spacing.xs, fontWeight: '800' },
     search: {
       borderWidth: 1.5,
       borderColor: c.borderStrong,

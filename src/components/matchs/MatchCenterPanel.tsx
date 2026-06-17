@@ -5,9 +5,11 @@ import { isMatchHubEligible, isInMatchWindow, resolveLiveState } from '../../uti
 import { MatchLiveEventCard } from './MatchLiveEventCard';
 import { LivePulseDot, StaggerReveal } from '../motion';
 import { ProDaySurface } from '../ui/ProDaySurface';
+import { MatchChapterIntro } from './MatchChapterIntro';
 import { ProDayText } from '../ui/ProDayText';
 import { Icon } from '../ui/Icon';
 import { useAppTheme } from '../../context/ProductLineContext';
+import { useTranslation } from '../../context/LocaleContext';
 import { spacing } from '../../theme/designTokens';
 
 interface MatchCenterPanelProps {
@@ -17,6 +19,7 @@ interface MatchCenterPanelProps {
 
 export const MatchCenterPanel: React.FC<MatchCenterPanelProps> = ({ events, onOpenEvent }) => {
   const { colors } = useAppTheme();
+  const { t } = useTranslation();
 
   const hubEvents = useMemo(() => {
     const now = Date.now();
@@ -32,9 +35,9 @@ export const MatchCenterPanel: React.FC<MatchCenterPanelProps> = ({ events, onOp
     return (
       <ProDaySurface variant="module" style={styles.empty}>
         <Icon name="football-outline" size={36} color={colors.textMuted} />
-        <ProDayText variant="section">Aucun match à suivre</ProDayText>
+        <ProDayText variant="section">{t('matchs.center.empty.title')}</ProDayText>
         <ProDayText variant="body" muted style={styles.emptySub}>
-          Vos convocations match apparaîtront ici avec score en direct, composition et stats.
+          {t('matchs.center.empty.subtitle')}
         </ProDayText>
       </ProDaySurface>
     );
@@ -42,18 +45,16 @@ export const MatchCenterPanel: React.FC<MatchCenterPanelProps> = ({ events, onOp
 
   return (
     <View style={styles.wrap}>
-      <ProDayText variant="eyebrow" accent>
-        Centre match
-      </ProDayText>
-      <ProDayText variant="body" muted style={styles.lead}>
-        Score live, compositions tactiques, feuille de stats et effectif — tout au même endroit.
-      </ProDayText>
+      <MatchChapterIntro
+        title={t('matchs.center.intro.title')}
+        subtitle={t('matchs.center.intro.subtitle')}
+      />
 
       {liveNow.length > 0 ? (
         <View style={styles.section}>
           <View style={styles.sectionHead}>
             <LivePulseDot active size={9} color={colors.error} inactiveColor={colors.errorBg} />
-            <ProDayText variant="section">En direct ({liveNow.length})</ProDayText>
+            <ProDayText variant="section">{t('matchs.center.live')} ({liveNow.length})</ProDayText>
           </View>
           {liveNow.map((e, index) => (
             <StaggerReveal key={e.id} index={index}>
@@ -65,7 +66,7 @@ export const MatchCenterPanel: React.FC<MatchCenterPanelProps> = ({ events, onOp
 
       {upcoming.length > 0 ? (
         <View style={styles.section}>
-          <ProDayText variant="section">À venir ({upcoming.length})</ProDayText>
+          <ProDayText variant="section">{t('matchs.center.upcoming')} ({upcoming.length})</ProDayText>
           {upcoming.map((e, index) => (
             <StaggerReveal key={e.id} index={liveNow.length + index}>
               <MatchLiveEventCard event={e} onPress={() => onOpenEvent(e.id)} />

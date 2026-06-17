@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -37,77 +37,13 @@ import { useAuth } from '../context/AuthContext';
 import { useTabNavigation, type AuthIntent } from '../context/TabNavigationContext';
 import { useAppTheme } from '../context/ProductLineContext';
 import { useLaunchIntro } from '../context/LaunchIntroContext';
+import { LanguageSettingControl } from '../components/settings/LanguageSettingControl';
+import { useTranslation } from '../context/LocaleContext';
+import { getLocalizedAuthCopy } from '../i18n/localizedContent';
+import { getAuthSignupTeaser } from '../i18n/localizedAuth';
 import { brandForProductLine, type ProductLineId } from '../models/ProductLine';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-const SIGNUP_TEASER_HOMME = [
-  'Inscription joueur uniquement',
-  'Espace M, fiche sportive et stats',
-  'Email confirmé puis accès au Mercato M',
-];
-
-const SIGNUP_TEASER_WOMAN = [
-  'Inscription joueuse uniquement',
-  'Catégorie F, fiche et stats',
-  'Email confirmé puis accès au Mercato F',
-];
-
-const SIGNUP_TEASER_PRO = [
-  'Coach, club, agent, orga ou partenaire',
-  'Parcours métier dédié à votre rôle',
-  'Validation pro puis accès à l’écosystème',
-];
-
-const SIGNUP_TEASER_SANTE = [
-  'Kinés, médecins et praticiens du sport',
-  'Agenda, messagerie et visibilité patients',
-  'Validation pro puis accès au pôle Santé',
-];
-
-function authScreenCopy(line: ProductLineId, tab: AuthTabId): { title: string; sub: string } {
-  const brand = brandForProductLine(line);
-  if (tab === 'login') {
-    if (line === 'woman') {
-      return {
-        title: 'Bon retour',
-        sub: 'Connectez-vous à votre espace foot féminin.',
-      };
-    }
-    if (line === 'pro') {
-      return {
-        title: 'Bon retour',
-        sub: 'Connectez-vous à Pro Day Pro — staff, structures et partenaires.',
-      };
-    }
-    return {
-      title: 'Bon retour',
-      sub: 'Connectez-vous à votre espace Pro Day Man.',
-    };
-  }
-  if (line === 'woman') {
-    return {
-      title: `Rejoignez ${brand.name}`,
-      sub: 'Créez votre compte joueuse — Mercato F, stats et visibilité clubs.',
-    };
-  }
-  if (line === 'pro') {
-    return {
-      title: `Rejoignez ${brand.name}`,
-      sub: 'Créez votre compte pro — coach, club, agent, orga ou partenaire.',
-    };
-  }
-  if (line === 'sante') {
-    return {
-      title: `Rejoignez ${brand.name}`,
-      sub: 'Créez votre compte praticien — agenda, messagerie et visibilité.',
-    };
-  }
-  return {
-    title: `Rejoignez ${brand.name}`,
-    sub: 'Créez votre compte joueur — CV en ligne, Mercato M et matchs.',
-  };
-}
 
 interface AuthScreenProps {
   /** Retour personnalisé (ex. invité → accueil). */
@@ -126,16 +62,10 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
   const { productLine, colors } = useAppTheme();
   const activeBrand = brandForProductLine(productLine);
   const { openSpacePicker } = useLaunchIntro();
+  const { t } = useTranslation();
   const [tab, setTab] = useState<AuthTabId>(initialIntent === 'signup' ? 'signup' : 'login');
-  const screenCopy = authScreenCopy(productLine, tab);
-  const signupTeaser =
-    productLine === 'woman'
-      ? SIGNUP_TEASER_WOMAN
-      : productLine === 'pro'
-        ? SIGNUP_TEASER_PRO
-        : productLine === 'sante'
-          ? SIGNUP_TEASER_SANTE
-          : SIGNUP_TEASER_HOMME;
+  const screenCopy = getLocalizedAuthCopy(productLine, tab, t);
+  const signupTeaser = useMemo(() => getAuthSignupTeaser(productLine, t), [productLine, t]);
   const [signupOpen, setSignupOpen] = useState(initialIntent === 'signup');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -319,21 +249,24 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
               hitSlop={8}
               scaleTo={0.92}
               haptic
-              accessibilityLabel="Retour à l'accueil"
+              accessibilityLabel={t('auth.backHome')}
             >
               <Icon name="arrow-back" size={20} color={colors.ink} />
             </PressableSpring>
-            <PressableSpring
-              style={authStyles.universeChip}
-              onPress={openSpacePicker}
-              scaleTo={0.96}
-              haptic
-              accessibilityLabel="Changer d’univers"
-            >
-              <Icon name="star-four-points" size={14} color={colors.accent} />
-              <Text style={authStyles.universeChipText}>{activeBrand.name}</Text>
-              <Icon name="chevron-down" size={14} color={colors.textMuted} />
-            </PressableSpring>
+            <View style={authStyles.toolbarEnd}>
+              <LanguageSettingControl variant="chip" />
+              <PressableSpring
+                style={authStyles.universeChip}
+                onPress={openSpacePicker}
+                scaleTo={0.96}
+                haptic
+                accessibilityLabel={t('auth.changeUniverse')}
+              >
+                <Icon name="star-four-points" size={14} color={colors.accent} />
+                <Text style={authStyles.universeChipText}>{activeBrand.name}</Text>
+                <Icon name="chevron-down" size={14} color={colors.textMuted} />
+              </PressableSpring>
+            </View>
           </View>
         </AnimatedEntrance>
 
@@ -362,8 +295,6 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
             }}
             compact={compact}
           />
-
-          <ProDayConfigNotice compact />
 
           {banner ? (
             <ProDayErrorBanner
@@ -396,7 +327,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                 <AuthFormCard>
                   <StaggerReveal index={quickLogin.canQuickLogin ? 1 : 0}>
                     <AuthTextField
-                      label="Email"
+                      label={t('auth.email')}
                       icon="mail"
                       placeholder="vous@exemple.com"
                       value={email}
@@ -416,7 +347,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                   <StaggerReveal index={quickLogin.canQuickLogin ? 2 : 1}>
                     <AuthTextField
                       ref={passwordRef}
-                      label="Mot de passe"
+                      label={t('auth.password')}
                       icon="lock"
                       placeholder="••••••••"
                       value={password}
@@ -504,13 +435,13 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
 
           <AnimatedEntrance index={3} kind="fade">
             <Text style={authStyles.legal}>
-            En continuant, vous acceptez les{' '}
+            {t('auth.legalPrefix')}{' '}
             <Text style={authStyles.legalLink} onPress={() => setLegalDocument('terms')}>
-              CGU
+              {t('auth.terms')}
             </Text>{' '}
-            et la{' '}
+            {t('auth.and')}{' '}
             <Text style={authStyles.legalLink} onPress={() => setLegalDocument('privacy')}>
-              politique de confidentialité
+              {t('auth.privacy')}
             </Text>
             .
             </Text>

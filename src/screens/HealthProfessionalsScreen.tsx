@@ -9,6 +9,8 @@ import { useSectionIntelligence } from '../hooks/useSectionIntelligence';
 import { ProDayScreenCanvas } from '../components/ui/ProDayScreenCanvas';
 import { ProDayText } from '../components/ui/ProDayText';
 import { Icon } from '../components/ui/Icon';
+import { useWearableHealth } from '../hooks/useWearableHealth';
+import { hasWearableData } from '../services/wearableHealth/formatWearableMetrics';
 import { HealthHomeScreen } from '../components/health/HealthHomeScreen';
 import { MedicalBookingScreen } from './medical/MedicalBookingScreen';
 import { PushScreenTransition } from '../components/motion';
@@ -19,7 +21,14 @@ export const HealthProfessionalsScreen: React.FC = () => {
   const { productLine, colors } = useAppTheme();
   const [bookingPhysio, setBookingPhysio] = useState<User | null>(null);
   const { openChat, setActiveTab } = useTabNavigation();
-  const brain = useProDayBrain(profile, productLine);
+  const wearable = useWearableHealth();
+  const wearableForBrain =
+    wearable.connected && wearable.metrics && hasWearableData(wearable.metrics)
+      ? wearable.metrics
+      : null;
+  const brain = useProDayBrain(profile, productLine, {
+    wearable: wearableForBrain,
+  });
   const intelligence = useSectionIntelligence('sante', profile, productLine);
 
   if (!profile || profile.role !== 'player') {
@@ -45,6 +54,13 @@ export const HealthProfessionalsScreen: React.FC = () => {
         onBookPhysio={setBookingPhysio}
         intelligence={intelligence}
         healthSnapshot={brain.ai.health}
+        wearableConnected={wearable.connected}
+        wearableMetrics={wearable.metrics}
+        wearablePlatformLabel={wearable.platformLabel}
+        wearableSyncing={wearable.syncing}
+        wearableError={wearable.error}
+        onWearableConnect={() => void wearable.connect()}
+        onWearableRefresh={() => void wearable.refresh()}
       />
 
       <PushScreenTransition active={bookingPhysio != null}>

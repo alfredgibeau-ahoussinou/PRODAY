@@ -136,7 +136,7 @@ export const HealthProgramCard: React.FC<HealthProgramCardProps> = ({
 };
 
 const styles = StyleSheet.create({
-  card: { marginHorizontal: spacing.lg, marginBottom: spacing.md, padding: spacing.lg, gap: spacing.sm },
+  card: { marginBottom: spacing.md, padding: spacing.lg, gap: spacing.sm },
   header: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   iconWrap: {
     width: 36,

@@ -4,6 +4,7 @@ import { SignupStepLayout } from './SignupStepLayout';
 import { SignupFooterButton } from './SignupFooterButton';
 import type { SignupForm } from './useSignupForm';
 import { getPlayerStepMeta } from './signupPlayerStepMeta';
+import { useTranslation } from '../../context/LocaleContext';
 import { spacing, radius } from '../../theme/designTokens';
 import { useSignupFlowTheme } from './SignupFlowContext';
 import type { AppColors } from '../../theme/universeTheme';
@@ -29,7 +30,8 @@ export const SignupStatsStep: React.FC<SignupStatsStepProps> = ({
 }) => {
   const { colors: c } = useSignupFlowTheme();
   const styles = useMemo(() => createStyles(c), [c]);
-  const meta = getPlayerStepMeta(form.productLine, 'stats');
+  const { t } = useTranslation();
+  const meta = getPlayerStepMeta(form.productLine, 'stats', t);
 
   return (
     <SignupStepLayout
@@ -45,10 +47,10 @@ export const SignupStatsStep: React.FC<SignupStatsStepProps> = ({
       onBack={onBack}
       footer={
         <>
-          <SignupFooterButton label="Continuer" onPress={() => form.advanceFromCurrentPage()} />
+          <SignupFooterButton label={t('signup.form.continue')} onPress={() => form.advanceFromCurrentPage()} />
           <View style={styles.skipWrap}>
             <SignupFooterButton
-              label="Passer cette étape"
+              label={t('signup.form.skipStep')}
               variant="secondary"
               showArrow={false}
               onPress={() => form.goNext()}
@@ -61,9 +63,9 @@ export const SignupStatsStep: React.FC<SignupStatsStepProps> = ({
         <View style={styles.statRow}>
           {(
             [
-              ['Matchs', form.statMatches, form.setStatMatches, form.fieldErrors.statMatches],
-              ['Buts', form.statGoals, form.setStatGoals, form.fieldErrors.statGoals],
-              ['Passes d.', form.statAssists, form.setStatAssists, form.fieldErrors.statAssists],
+              [t('signup.form.stats.matches'), form.statMatches, form.setStatMatches, form.fieldErrors.statMatches],
+              [t('signup.form.stats.goals'), form.statGoals, form.setStatGoals, form.fieldErrors.statGoals],
+              [t('signup.form.stats.assists'), form.statAssists, form.setStatAssists, form.fieldErrors.statAssists],
             ] as const
           ).map(([label, value, setter, err]) => (
             <View key={label} style={styles.statCell}>

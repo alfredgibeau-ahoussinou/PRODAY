@@ -8,16 +8,15 @@ import {
 } from '../config/emailVerificationBypass';
 
 describe('emailVerificationBypass', () => {
-  it('autorise l’email beta configuré', () => {
-    expect(isBetaAccountBypassed('alfredgibeauahoussinou@gmail.com')).toBe(true);
-    expect(isEmailVerificationBypassed('  AlfredGibeauAhoussinou@gmail.com  ')).toBe(true);
-    expect(isOnboardingDocumentsBypassed('alfredgibeauahoussinou@gmail.com')).toBe(true);
+  it('autorise le compte démo partenaire', () => {
+    expect(isBetaAccountBypassed('part@gmail.com')).toBe(true);
+    expect(isEmailVerificationBypassed('  PART@gmail.com  ')).toBe(true);
+    expect(isOnboardingDocumentsBypassed('part@gmail.com')).toBe(true);
   });
 
-  it('autorise le compte démo partenaire', () => {
-    expect(isPartnerPoleTestAccount('part@gmail.com')).toBe(true);
-    expect(isBetaAccountBypassed('part@gmail.com')).toBe(true);
-    expect(isOnboardingDocumentsBypassed('PART@gmail.com')).toBe(true);
+  it('ne bypass plus le compte joueur principal', () => {
+    expect(isBetaAccountBypassed('alfredgibeauahoussinou@gmail.com')).toBe(false);
+    expect(isEmailVerificationBypassed('alfredgibeauahoussinou@gmail.com')).toBe(false);
   });
 
   it('refuse les autres emails', () => {

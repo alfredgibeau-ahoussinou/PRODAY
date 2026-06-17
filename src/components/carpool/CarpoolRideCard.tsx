@@ -20,7 +20,9 @@ import { ProDayGradient } from '../ui/ProDayGradient';
 import { ProDayText } from '../ui/ProDayText';
 import { Icon } from '../ui/Icon';
 import { useAppTheme } from '../../context/ProductLineContext';
+import { useTranslation } from '../../context/LocaleContext';
 import { spacing, radius, shadows } from '../../theme/designTokens';
+import { CarpoolCardAccent } from './carpoolUi';
 
 interface CarpoolRideCardProps {
   event: TeamEvent;
@@ -44,6 +46,7 @@ export const CarpoolRideCard: React.FC<CarpoolRideCardProps> = ({
   etaLabel,
 }) => {
   const { colors } = useAppTheme();
+  const { t } = useTranslation();
   const [busy, setBusy] = useState(false);
   const [pickupPlace, setPickupPlace] = useState('');
   const [pickupLocation, setPickupLocation] = useState<
@@ -62,10 +65,7 @@ export const CarpoolRideCard: React.FC<CarpoolRideCardProps> = ({
 
   const handleBook = async () => {
     if (!pickupPlace.trim() && !pickupLocation) {
-      Alert.alert(
-        'Point de prise en charge',
-        'Indiquez où vous souhaitez être récupéré(e) avant de réserver.'
-      );
+      Alert.alert(t('carpool.standalone.form.pickupRequired'), t('carpool.ride.pickupRequired'));
       return;
     }
     setBusy(true);
@@ -81,9 +81,9 @@ export const CarpoolRideCard: React.FC<CarpoolRideCardProps> = ({
         }
       );
       onUpdated();
-      Alert.alert('Place réservée', `Vous montez avec ${slot.driver_name}.`);
+      Alert.alert(t('carpool.ride.booked'), t('carpool.ride.bookedBody', { name: slot.driver_name }));
     } catch (e) {
-      Alert.alert('Erreur', e instanceof Error ? e.message : 'Réservation impossible.');
+      Alert.alert(t('common.error'), e instanceof Error ? e.message : t('carpool.ride.bookFailed'));
     } finally {
       setBusy(false);
     }
@@ -108,7 +108,7 @@ export const CarpoolRideCard: React.FC<CarpoolRideCardProps> = ({
       scaleTo={0.98}
       haptic
     >
-      <ProDayGradient kind="cta" style={styles.accent} />
+      <CarpoolCardAccent kind="cta" />
       <View style={styles.body}>
         <ProDayText variant="caption" muted>
           {formatCalendarDate(event.starts_at)} · {event.title}
@@ -121,7 +121,7 @@ export const CarpoolRideCard: React.FC<CarpoolRideCardProps> = ({
           <View style={styles.driverCopy}>
             <ProDayText variant="section">{slot.driver_name}</ProDayText>
             <ProDayText variant="caption" muted>
-              {slot.volunteered ? 'Proposition spontanée' : 'Assigné par le staff'}
+              {slot.volunteered ? t('carpool.ride.volunteer') : t('carpool.ride.assigned')}
             </ProDayText>
           </View>
           {available != null ? (
@@ -158,7 +158,7 @@ export const CarpoolRideCard: React.FC<CarpoolRideCardProps> = ({
         <View style={styles.route}>
           <Icon name="location" size={14} color={colors.textMuted} />
           <ProDayText variant="body" muted numberOfLines={2} style={styles.routeText}>
-            {slot.meeting_place?.trim() || 'RDV à préciser'} → {destination || event.city}
+            {slot.meeting_place?.trim() || t('carpool.ride.meetingTbd')} → {destination || event.city}
           </ProDayText>
         </View>
         {slot.meeting_location ? (
@@ -224,7 +224,7 @@ export const CarpoolRideCard: React.FC<CarpoolRideCardProps> = ({
           ) : canBook ? (
             <>
               <CarpoolLocationCapture
-                label="Point de prise en charge"
+                label={t('carpool.standalone.pickupPoint')}
                 place={pickupPlace}
                 location={pickupLocation}
                 onPlaceChange={setPickupPlace}
@@ -272,9 +272,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     overflow: 'hidden',
     marginBottom: spacing.sm,
+    paddingLeft: spacing.sm,
   },
-  accent: { height: 3, width: '100%' },
-  body: { padding: spacing.md, gap: spacing.xs },
+  body: { padding: spacing.md, paddingLeft: spacing.sm, gap: spacing.xs },
   driverRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: spacing.xs },
   avatar: {
     width: 40,

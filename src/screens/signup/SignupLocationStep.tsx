@@ -5,6 +5,7 @@ import { SignupStepLayout } from './SignupStepLayout';
 import { SignupFooterButton } from './SignupFooterButton';
 import type { SignupForm } from './useSignupForm';
 import { getPlayerStepMeta } from './signupPlayerStepMeta';
+import { useTranslation } from '../../context/LocaleContext';
 
 interface SignupLocationStepProps {
   form: SignupForm;
@@ -25,7 +26,8 @@ export const SignupLocationStep: React.FC<SignupLocationStepProps> = ({
   phaseIndex,
   onBack,
 }) => {
-  const meta = getPlayerStepMeta(form.productLine, 'location');
+  const { t } = useTranslation();
+  const meta = getPlayerStepMeta(form.productLine, 'location', t);
   return (
   <SignupStepLayout
     stepIndex={stepIndex}
@@ -39,14 +41,14 @@ export const SignupLocationStep: React.FC<SignupLocationStepProps> = ({
     heroIcon={meta.heroIcon}
     onBack={onBack}
     footer={
-      <SignupFooterButton label="Continuer" onPress={() => form.advanceFromCurrentPage()} />
+      <SignupFooterButton label={t('signup.form.continue')} onPress={() => form.advanceFromCurrentPage()} />
     }
   >
     <View>
       <AuthTextField
-        label="Ville *"
+        label={t('signup.form.cityRequired')}
         icon="location"
-        placeholder="Paris, Lyon…"
+        placeholder={t('signup.form.cityPlaceholder')}
         value={form.city}
         onChangeText={form.setCity}
         error={form.fieldErrors.city}
@@ -54,8 +56,8 @@ export const SignupLocationStep: React.FC<SignupLocationStepProps> = ({
     </View>
     <View>
       <AuthTextField
-        label="Département (optionnel)"
-        placeholder="Ex. 75, 2A…"
+        label={t('signup.form.departmentOptional')}
+        placeholder={t('signup.form.deptPlaceholderShort')}
         value={form.department}
         onChangeText={form.setDepartment}
         error={form.fieldErrors.department}

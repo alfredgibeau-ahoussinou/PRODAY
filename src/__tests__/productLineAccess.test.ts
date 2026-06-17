@@ -62,26 +62,19 @@ describe('productLineAccess', () => {
     expect(getProductLineMismatchMessage('homme', 'woman')).toMatch(/Pro Day Man/);
   });
 
-  it('autorise le compte test sur tous les pôles', () => {
-    const testUser = {
+  it('refuse le compte joueur standard hors de son pôle', () => {
+    const player = {
       ...baseUser,
       email: 'alfredgibeauahoussinou@gmail.com',
       product_line: 'homme' as const,
     } as User;
-    expect(profileMatchesActiveLine(testUser, 'homme')).toBe(true);
-    expect(profileMatchesActiveLine(testUser, 'woman')).toBe(true);
-    expect(profileMatchesActiveLine(testUser, 'pro')).toBe(true);
-    expect(profileMatchesActiveLine(testUser, 'sante')).toBe(true);
-    expect(getEffectiveRoleForProductLine(testUser, 'homme')).toBe('player');
-    expect(getEffectiveRoleForProductLine(testUser, 'woman')).toBe('player');
-    expect(getEffectiveRoleForProductLine(testUser, 'pro')).toBe('coach');
-    expect(getEffectiveRoleForProductLine(testUser, 'sante')).toBe('physio');
-    const proSession = getSessionProfile(testUser, 'pro');
-    expect(proSession.role).toBe('coach');
-    expect(proSession.product_line).toBe('pro');
-    const santeSession = getSessionProfile(testUser, 'sante');
-    expect(santeSession.role).toBe('physio');
-    expect(santeSession.product_line).toBe('sante');
+    expect(profileMatchesActiveLine(player, 'homme')).toBe(true);
+    expect(profileMatchesActiveLine(player, 'woman')).toBe(false);
+    expect(profileMatchesActiveLine(player, 'pro')).toBe(false);
+    expect(profileMatchesActiveLine(player, 'sante')).toBe(false);
+    expect(getEffectiveRoleForProductLine(player, 'homme')).toBe('player');
+    expect(getEffectiveRoleForProductLine(player, 'pro')).toBe('player');
+    expect(getSessionProfile(player, 'pro').role).toBe('player');
   });
 
   it('autorise le compte démo partenaire uniquement sur Pro', () => {

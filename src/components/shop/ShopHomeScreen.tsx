@@ -10,8 +10,8 @@ import { useAppTheme } from '../../context/ProductLineContext';
 import { ProDayText } from '../ui/ProDayText';
 import { SearchBar } from '../ui/SearchBar';
 import { Icon } from '../ui/Icon';
-import { ShopHeader } from './ShopHeader';
 import { ShopSpotlight } from './ShopSpotlight';
+import { ShopPickBanner } from './ShopPickBanner';
 import { ShopCategoryRail } from './ShopCategoryRail';
 import { ShopProductCard } from './ShopProductCard';
 import { ShopTrustStrip } from './ShopTrustStrip';
@@ -35,24 +35,15 @@ import { TAB_BAR_CONTENT_INSET } from '../../navigation/tabBarLayout';
 import { spacing, radius } from '../../theme/designTokens';
 import type { CartLine } from '../../hooks/useShopCart';
 import type { User } from '../../models/User';
-import { V3TabShell } from '../v3/V3TabShell';
-import { GlassCard } from '../aurora/GlassCard';
-import { isV3ShellEnabled } from '../../config/featureFlags';
+import { TabScreenShell } from '../app/TabScreenShell';
 import { useProDayBrain } from '../../hooks/useProDayBrain';
-import { useSectionIntelligence } from '../../hooks/useSectionIntelligence';
 import {
   buildShopProductRecommendations,
   shopScoreMap,
   sortShopProductsByFit,
 } from '../../core/recommendation/shopRecommendation.engine';
 import { trackV3Event } from '../../core/analytics/v3Events';
-
-const SORT_CYCLE: { id: ShopSortId; label: string }[] = [
-  { id: 'featured', label: 'Sélection' },
-  { id: 'price-asc', label: 'Prix ↑' },
-  { id: 'price-desc', label: 'Prix ↓' },
-  { id: 'name', label: 'A–Z' },
-];
+import { useTranslation } from '../../context/LocaleContext';
 
 interface ShopHomeScreenProps {
   productLine: ProductLineId;
@@ -87,9 +78,8 @@ export const ShopHomeScreen: React.FC<ShopHomeScreenProps> = ({
 }) => {
   const { openCarpool } = useTabNavigation();
   const { colors } = useAppTheme();
-  const useV3Header = isV3ShellEnabled();
+  const { t } = useTranslation();
   const brain = useProDayBrain(profile, productLine);
-  const intelligence = useSectionIntelligence('shop', profile, productLine);
   const { width: screenWidth } = useWindowDimensions();
   const copy = useMemo(() => getShopCopy(productLine), [productLine]);
   const catalog = useMemo(() => getShopCatalog(productLine), [productLine]);
@@ -103,8 +93,18 @@ export const ShopHomeScreen: React.FC<ShopHomeScreenProps> = ({
   const [localWishlist, setLocalWishlist] = useState<Set<string>>(new Set());
   const wishlist = wishlistProp ?? localWishlist;
 
+  const sortCycle = useMemo(
+    () => [
+      { id: 'featured' as const, label: t('shop.sort.featured') },
+      { id: 'price-asc' as const, label: t('shop.sort.priceAsc') },
+      { id: 'price-desc' as const, label: t('shop.sort.priceDesc') },
+      { id: 'name' as const, label: t('shop.sort.name') },
+    ],
+    [t]
+  );
+
   const cardWidth = Math.floor((screenWidth - spacing.lg * 2 - spacing.md) / 2);
-  const sortLabel = SORT_CYCLE.find((s) => s.id === sort)?.label ?? 'Trier';
+  const sortLabel = sortCycle.find((s) => s.id === sort)?.label ?? t('shop.sort.featured');
 
   const cartProducts = useMemo(
     () =>
@@ -139,6 +139,9 @@ export const ShopHomeScreen: React.FC<ShopHomeScreenProps> = ({
   );
   const shopScores = useMemo(() => shopScoreMap(shopRecs), [shopRecs]);
   const topPick = shopRecs[0];
+  const topPickProduct = topPick
+    ? catalog.find((p) => p.id === topPick.productId) ?? null
+    : null;
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -155,10 +158,10 @@ export const ShopHomeScreen: React.FC<ShopHomeScreenProps> = ({
     const sorted = sortShopProductsByFit(
       sortShopProducts(base, sort),
       shopRecs,
-      useV3Header && sort === 'featured' && !q && category === 'all'
+      sort === 'featured' && !q && category === 'all'
     );
     return sorted;
-  }, [catalog, category, search, sort, productLine, spotlight, shopRecs, useV3Header]);
+  }, [catalog, category, search, sort, productLine, spotlight, shopRecs]);
 
   const gridProducts = useMemo(() => {
     if (!spotlight || category !== 'all' || search.trim()) return filtered;
@@ -183,8 +186,8 @@ export const ShopHomeScreen: React.FC<ShopHomeScreenProps> = ({
   };
 
   const cycleSort = () => {
-    const idx = SORT_CYCLE.findIndex((s) => s.id === sort);
-    const next = SORT_CYCLE[(idx + 1) % SORT_CYCLE.length];
+    const idx = sortCycle.findIndex((s) => s.id === sort);
+    const next = sortCycle[(idx + 1) % sortCycle.length];
     setSort(next.id);
   };
 
@@ -194,9 +197,11 @@ export const ShopHomeScreen: React.FC<ShopHomeScreenProps> = ({
         <View style={[styles.headerBtn, { borderColor: colors.border, backgroundColor: colors.surface }]}>
           <Icon name="bookmark" size={18} color={colors.ink} />
           {wishlist.size > 0 ? (
-            <ProDayText variant="caption" accent style={styles.headerBadge}>
-              {wishlist.size}
-            </ProDayText>
+            <View style={[styles.headerBadge, { backgroundColor: colors.accent }]}>
+              <ProDayText variant="caption" inverse style={styles.headerBadgeText}>
+                {wishlist.size}
+              </ProDayText>
+            </View>
           ) : null}
         </View>
       </PressableSpring>
@@ -204,9 +209,11 @@ export const ShopHomeScreen: React.FC<ShopHomeScreenProps> = ({
         <View style={[styles.headerBtn, { borderColor: colors.border, backgroundColor: colors.surface }]}>
           <Icon name="bag" size={18} color={colors.ink} />
           {cartCount > 0 ? (
-            <ProDayText variant="caption" accent style={styles.headerBadge}>
-              {cartCount}
-            </ProDayText>
+            <View style={[styles.headerBadge, { backgroundColor: colors.accent }]}>
+              <ProDayText variant="caption" inverse style={styles.headerBadgeText}>
+                {cartCount}
+              </ProDayText>
+            </View>
           ) : null}
         </View>
       </PressableSpring>
@@ -217,57 +224,30 @@ export const ShopHomeScreen: React.FC<ShopHomeScreenProps> = ({
     <ScrollView
       showsVerticalScrollIndicator={false}
       keyboardShouldPersistTaps="handled"
-      contentContainerStyle={{ paddingBottom: TAB_BAR_CONTENT_INSET + spacing.lg }}
+      contentContainerStyle={styles.scrollContent}
     >
-      {!useV3Header ? (
-        <ShopHeader
+      {topPick && topPickProduct && (!spotlight || topPick.productId !== spotlight.id) ? (
+        <ShopPickBanner
+          product={topPickProduct}
           productLine={productLine}
-          copy={copy}
-          cartCount={cartCount}
-          wishCount={wishlist.size}
-          onOpenCart={() => openSheet('cart')}
-          onOpenWishlist={() => openSheet('wishlist')}
+          recommendation={topPick}
+          onPress={() => onOpenProduct(topPickProduct)}
         />
       ) : null}
 
-      {useV3Header &&
-      (brain.ai.health.state === 'FATIGUED' ||
-        brain.ai.health.state === 'OVERLOADED' ||
-        brain.ai.health.state === 'INJURY_RISK') ? (
-        <GlassCard variant="accent" style={styles.healthBand}>
-          <ProDayText variant="caption" accent style={styles.healthTitle}>
-            Recommandé récupération
-          </ProDayText>
-          <ProDayText variant="body" muted>
-            {brain.ai.health.dailyPlanHint}
-          </ProDayText>
-        </GlassCard>
+      {spotlight && category === 'all' && !search.trim() ? (
+        <View style={styles.spotlight}>
+          <ShopSpotlight
+            product={spotlight}
+            productLine={productLine}
+            recommendation={
+              topPick && topPick.productId === spotlight.id ? topPick : undefined
+            }
+            onPress={() => onOpenProduct(spotlight)}
+            onAddToCart={onAddToCart ? () => onAddToCart(spotlight.id) : undefined}
+          />
+        </View>
       ) : null}
-
-      {useV3Header && topPick && category === 'all' && !search.trim() ? (
-        <GlassCard variant="default" style={styles.pickBand}>
-          <ProDayText variant="caption" muted>
-            Pour vous · {topPick.iaScore}% compat.
-          </ProDayText>
-          <ProDayText variant="section" numberOfLines={1}>
-            {catalog.find((p) => p.id === topPick.productId)?.name ?? 'Sélection'}
-          </ProDayText>
-          <ProDayText variant="caption" accent>
-            {topPick.reason}
-          </ProDayText>
-        </GlassCard>
-      ) : null}
-
-        {spotlight && category === 'all' && !search.trim() ? (
-          <View style={styles.spotlight}>
-            <ShopSpotlight
-              product={spotlight}
-              productLine={productLine}
-              onPress={() => onOpenProduct(spotlight)}
-              onAddToCart={onAddToCart ? () => onAddToCart(spotlight.id) : undefined}
-            />
-          </View>
-        ) : null}
 
         <ShopCategoryRail
           productLine={productLine}
@@ -279,9 +259,10 @@ export const ShopHomeScreen: React.FC<ShopHomeScreenProps> = ({
         <View style={styles.toolbar}>
           <View style={styles.searchWrap}>
             <SearchBar
-              placeholder="Rechercher…"
+              placeholder={t('shop.search')}
               value={search}
               onChangeText={setSearch}
+              embedded
             />
           </View>
           <PressableSpring
@@ -298,27 +279,25 @@ export const ShopHomeScreen: React.FC<ShopHomeScreenProps> = ({
         </View>
 
         <ProDayText variant="caption" muted style={styles.resultCount}>
-          {filtered.length} article{filtered.length > 1 ? 's' : ''}
+          {t('shop.resultCount', { n: filtered.length })}
         </ProDayText>
 
         {gridProducts.length === 0 ? (
           <View style={[styles.empty, { borderColor: colors.border, backgroundColor: colors.surface }]}>
             <Icon name="bag" size={28} color={colors.textMuted} />
             <ProDayText variant="body" muted style={styles.emptyText}>
-              {search.trim()
-                ? 'Aucun produit ne correspond à votre recherche.'
-                : 'Aucun produit dans cette catégorie.'}
+              {search.trim() ? t('shop.empty.search') : t('shop.empty.category')}
             </ProDayText>
             {search.trim() ? (
               <PressableSpring onPress={() => setSearch('')} scaleTo={0.96} haptic>
                 <ProDayText variant="caption" accent style={styles.clearSearch}>
-                  Effacer la recherche
+                  {t('shop.clearSearch')}
                 </ProDayText>
               </PressableSpring>
             ) : category !== 'all' ? (
               <PressableSpring onPress={() => setCategory('all')} scaleTo={0.96} haptic>
                 <ProDayText variant="caption" accent style={styles.clearSearch}>
-                  Toutes les catégories
+                  {t('shop.allCategories')}
                 </ProDayText>
               </PressableSpring>
             ) : null}
@@ -332,17 +311,13 @@ export const ShopHomeScreen: React.FC<ShopHomeScreenProps> = ({
                     product={product}
                     productLine={productLine}
                     wished={wishlist.has(product.id)}
-                    iaReason={
-                      useV3Header ? shopScores.get(product.id)?.reason : undefined
-                    }
+                    iaReason={shopScores.get(product.id)?.reason}
                     onToggleWish={() => toggleWishlist(product.id)}
                     onPress={() => {
-                      if (useV3Header) {
-                        trackV3Event('shop_product_tap', {
-                          productId: product.id,
-                          iaScore: shopScores.get(product.id)?.iaScore ?? 0,
-                        });
-                      }
+                      trackV3Event('shop_product_tap', {
+                        productId: product.id,
+                        iaScore: shopScores.get(product.id)?.iaScore ?? 0,
+                      });
                       onOpenProduct(product);
                     }}
                     onQuickAdd={onAddToCart ? () => onAddToCart(product.id) : undefined}
@@ -368,28 +343,14 @@ export const ShopHomeScreen: React.FC<ShopHomeScreenProps> = ({
 
   return (
     <View style={styles.root}>
-      {useV3Header ? (
-        <V3TabShell
-          title={copy.title}
-          subtitle={copy.subtitle}
-          right={cartActions}
-          flat
-          intelligence={intelligence}
-          stats={[
-            { value: catalog.length, label: 'Articles' },
-            {
-              value: topPick ? topPick.iaScore : '—',
-              label: 'Pour vous',
-              highlight: Boolean(topPick && topPick.iaScore >= 60),
-            },
-            { value: cartCount, label: 'Panier', highlight: cartCount > 0 },
-          ]}
-        >
-          {scrollContent}
-        </V3TabShell>
-      ) : (
-        scrollContent
-      )}
+      <TabScreenShell
+        title={copy.title}
+        subtitle={copy.subtitle}
+        right={cartActions}
+        flat
+      >
+        {scrollContent}
+      </TabScreenShell>
 
       <ShopCartSheet
         visible={sheetOpen}
@@ -420,42 +381,39 @@ export const ShopHomeScreen: React.FC<ShopHomeScreenProps> = ({
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  headerActions: { flexDirection: 'row', gap: spacing.xs },
+  scrollContent: {
+    paddingTop: spacing.sm,
+    paddingBottom: TAB_BAR_CONTENT_INSET + spacing.lg,
+  },
+  headerActions: { flexDirection: 'row', gap: spacing.xs, paddingTop: spacing.xs },
   headerBtn: {
     width: 40,
     height: 40,
     borderRadius: radius.md,
-    borderWidth: 1,
+    borderWidth: StyleSheet.hairlineWidth,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'visible',
   },
   headerBadge: {
     position: 'absolute',
-    top: -4,
-    right: -4,
-    fontWeight: '800',
-    fontSize: 9,
+    top: -6,
+    right: -6,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
   },
-  healthBand: {
-    marginHorizontal: spacing.lg,
-    marginTop: spacing.sm,
-    marginBottom: spacing.sm,
-    padding: spacing.md,
-    gap: 4,
-  },
-  healthTitle: { fontWeight: '800', letterSpacing: 0.5 },
-  pickBand: {
-    marginHorizontal: spacing.lg,
-    marginBottom: spacing.sm,
-    padding: spacing.md,
-    gap: 4,
-  },
-  spotlight: { marginTop: spacing.md, marginBottom: spacing.xs },
+  headerBadgeText: { fontWeight: '900', fontSize: 10 },
+  spotlight: { marginBottom: spacing.sm },
   toolbar: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
     paddingHorizontal: spacing.lg,
+    marginTop: spacing.xs,
     marginBottom: spacing.sm,
   },
   searchWrap: { flex: 1 },
@@ -464,9 +422,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
     paddingHorizontal: spacing.md,
-    paddingVertical: 12,
+    minHeight: 44,
     borderRadius: radius.lg,
-    borderWidth: 1,
+    borderWidth: StyleSheet.hairlineWidth,
   },
   sortLabel: { fontWeight: '800' },
   resultCount: {
@@ -485,7 +443,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     padding: spacing.xl,
     borderRadius: radius.xl,
-    borderWidth: 1,
+    borderWidth: StyleSheet.hairlineWidth,
   },
   emptyText: { textAlign: 'center' },
   clearSearch: { marginTop: spacing.sm, fontWeight: '700' },

@@ -19,10 +19,9 @@ import { openPlayerCvHtml } from '../utils/openCvHtml';
 import { useAuth } from '../context/AuthContext';
 import { useFavorites } from '../hooks/useFavorites';
 import { useRequireAuth } from '../hooks/useRequireAuth';
-import { isV3ShellEnabled } from '../config/featureFlags';
-import { V3TabShell } from '../components/v3/V3TabShell';
-import { V3ScreenBack } from '../components/v3/V3ScreenBack';
-import { useSectionIntelligence } from '../hooks/useSectionIntelligence';
+import { isSubScreenShellEnabled } from '../hooks/useSubScreenShell';
+import { TabScreenShell } from '../components/app/TabScreenShell';
+import { ScreenBackButton } from '../components/ui/ScreenBackButton';
 import { scorePlayerForScouting } from '../features/v3/engines/playerScouting.engine';
 import { AnimatedEntrance } from '../components/motion';
 import { ProDayText } from '../components/ui/ProDayText';
@@ -185,27 +184,25 @@ export const PlayerProfileScreen: React.FC<PlayerProfileScreenProps> = ({
   const { isFavorite, toggle } = useFavorites(myProfile?.uid);
   const favorited = isFavorite(player.uid);
   const isOwnProfile = myProfile?.uid === player.uid;
-  const useV3Header =
-    isV3ShellEnabled() && Boolean(myProfile && myProfile.role !== 'player' && !isOwnProfile);
-  const useV3Blocks = isV3ShellEnabled() && isOwnProfile;
+  const useShellHeader =
+    isSubScreenShellEnabled(myProfile, 'staff') && !isOwnProfile;
+  const showProfileBlocks = isOwnProfile;
   const scouting = useMemo(() => {
-    if (!useV3Header || !myProfile) return null;
+    if (!useShellHeader || !myProfile) return null;
     return scorePlayerForScouting(myProfile, player);
-  }, [useV3Header, myProfile, player]);
-  const intelligence = useSectionIntelligence('recrutement', myProfile ?? null, productLine, {
-    staffMode: true,
-  });
+  }, [useShellHeader, myProfile, player]);
 
   useEffect(() => {
-    if (useV3Header && scouting) {
+    if (useShellHeader && scouting) {
       trackV3Event('staff_player_profile_open', {
         playerUid: player.uid,
         scoutingScore: scouting.score,
       });
     }
-  }, [useV3Header, scouting, player.uid]);
-  const p = player.profile;
+  }, [useShellHeader, scouting, player.uid]);
+
   const profileTitle = productLine === 'woman' ? 'Profil joueuse' : 'Profil joueur';
+  const p = player.profile;
 
   const handleExportCv = () => {
     const html = buildPlayerCvHtmlFromUser(player);
@@ -230,7 +227,7 @@ export const PlayerProfileScreen: React.FC<PlayerProfileScreenProps> = ({
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
     >
-      {scouting && useV3Header ? (
+      {scouting && useShellHeader ? (
         <AnimatedEntrance kind="fadeUp">
           <View style={[styles.scoutingBox, { backgroundColor: themeColors.accentSoft, borderColor: themeColors.accentMuted }]}>
             <ProDayText variant="caption" accent style={{ fontWeight: '800' }}>
@@ -270,7 +267,7 @@ export const PlayerProfileScreen: React.FC<PlayerProfileScreenProps> = ({
             </View>
           </View>
 
-          {!useV3Blocks && hasStats && stats ? (
+          {!showProfileBlocks && hasStats && stats ? (
             <View style={styles.statsStrip}>
               <StatItem
                 icon="shirt"
@@ -296,13 +293,13 @@ export const PlayerProfileScreen: React.FC<PlayerProfileScreenProps> = ({
                 styles={styles}
               />
             </View>
-          ) : !useV3Blocks ? (
+          ) : !showProfileBlocks ? (
             <Text style={styles.statsEmpty}>Stats saison non renseignées</Text>
           ) : null}
         </View>
       </AnimatedEntrance>
 
-      {useV3Blocks ? (
+      {showProfileBlocks ? (
         <PlayerProfileBlocks
           player={player}
           editable
@@ -401,19 +398,18 @@ export const PlayerProfileScreen: React.FC<PlayerProfileScreenProps> = ({
     </View>
   );
 
-  if (useV3Header) {
+  if (useShellHeader) {
     return (
-      <V3TabShell
+      <TabScreenShell
         caption="Scouting"
         title={player.display_name}
         subtitle={scouting ? `${scouting.label} · ${scouting.score}%` : undefined}
-        right={<V3ScreenBack onPress={onBack} />}
-        intelligence={intelligence}
+        right={<ScreenBackButton onPress={onBack} />}
         flat
       >
         {profileScroll}
         {footer}
-      </V3TabShell>
+      </TabScreenShell>
     );
   }
 

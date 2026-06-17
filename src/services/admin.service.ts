@@ -2,14 +2,21 @@ import {
   collection,
   deleteDoc,
   doc,
+  getDoc,
   getDocs,
   limit,
   orderBy,
   query,
   updateDoc,
   serverTimestamp,
+  where,
+  writeBatch,
 } from 'firebase/firestore';
-import type { User, UserRole, VerificationStatus } from '../models/User';
+import type { User, UserRole, VerificationStatus, PlayerVerificationCheckId } from '../models/User';
+import {
+  computePlayerVerificationStatus,
+  defaultPlayerVerificationState,
+} from '../models/User';
 import type { TeamEvent } from '../models/TeamEvent';
 import type { FriendlyMatch } from '../models/FriendlyMatch';
 import type { RecruitmentPost } from '../models/Player';
@@ -35,6 +42,9 @@ import type { ClubAnnouncement } from '../models/ClubAnnouncement';
 import type { TeamPaymentRequest, TeamPaymentStatus } from '../models/TeamFinance';
 import type { Application } from '../models/Player';
 import type { Club } from '../models/Club';
+import type { CommunityReel, CommunityReelStatus } from '../models/CommunityReel';
+import type { ReelReport } from '../models/ReelReport';
+import { getErrorCode } from '../utils/errors';
 import { statsService } from './stats.service';
 
 export interface PlatformStats {
@@ -50,6 +60,32 @@ export interface PlatformStats {
   applications: number;
   announcements: number;
   pendingVerifications: number;
+  pendingCommunityReels: number;
+  reelReports: number;
+  pendingPayments: number;
+}
+
+export function countPendingUserVerifications(users: User[]): number {
+  return users.filter((u) => {
+    if (u.role === 'coach' || u.role === 'agent' || u.role === 'recruiter') {
+      return u.verification_status === 'PENDING';
+    }
+    if (u.role === 'player') {
+      if (u.verification_status === 'PENDING') return true;
+      if (u.player_verification) {
+        return computePlayerVerificationStatus(u.player_verification) === 'PENDING';
+      }
+    }
+    return false;
+  }).length;
+}
+
+export interface AdminUserDocument {
+  id: string;
+  name: string;
+  url?: string;
+  type?: string;
+  verification_check?: PlayerVerificationCheckId;
 }
 
 export interface AdminCreateUserInput {
@@ -121,9 +157,18 @@ export const adminService = {
   },
 
   async deleteUserFirestore(uid: string): Promise<void> {
+    await this.deleteUserFirestoreWithDocuments(uid);
+  },
+
+  async deleteUserFirestoreWithDocuments(uid: string): Promise<void> {
     const database = getDb();
     if (!database) throw new Error('Firebase non configuré');
-    await deleteDoc(doc(database, 'users', uid));
+
+    const docsSnap = await getDocs(collection(database, 'users', uid, 'documents'));
+    const batch = writeBatch(database);
+    docsSnap.docs.forEach((d) => batch.delete(d.ref));
+    batch.delete(doc(database, 'users', uid));
+    await batch.commit();
   },
 
   /**
@@ -134,13 +179,15 @@ export const adminService = {
       await callFunction<{ uid: string }, { success: boolean }>('adminDeleteUser', { uid });
       return { authDeleted: true };
     } catch (e) {
+      const msg = getCallableErrorMessage(e);
       if (!isFunctionsUnavailable(e)) {
-        throw new Error(getCallableErrorMessage(e));
+        const code = getErrorCode(e);
+        if (code === 'functions/permission-denied' || code === 'functions/unauthenticated') {
+          throw new Error(msg);
+        }
       }
-      await this.deleteUserFirestore(uid);
-      return {
-        authDeleted: false,
-      };
+      await this.deleteUserFirestoreWithDocuments(uid);
+      return { authDeleted: false };
     }
   },
 
@@ -157,13 +204,52 @@ export const adminService = {
     action: 'approve' | 'reject',
     rejectionReason?: string
   ): Promise<void> {
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+
+    const snap = await getDoc(doc(database, 'users', uid));
+    if (!snap.exists()) throw new Error('Utilisateur introuvable.');
+
+    const data = snap.data() as Record<string, unknown>;
+    const role = data.role as UserRole;
     const verified = action === 'approve';
-    await this.updateUser(uid, {
+    const checkStatus = verified ? 'verified' : 'rejected';
+
+    const update: Record<string, unknown> = {
       is_verified: verified,
       verification_status: verified ? 'VERIFIED' : 'REJECTED',
       verification_date: serverTimestamp(),
       rejection_reason: verified ? null : rejectionReason?.trim() || null,
-    });
+      updated_at: serverTimestamp(),
+    };
+
+    if (role === 'player' && data.player_verification) {
+      const pv = {
+        ...defaultPlayerVerificationState(false),
+        ...(data.player_verification as Record<string, unknown>),
+      } as ReturnType<typeof defaultPlayerVerificationState>;
+
+      (['identity', 'club_license', 'parental_consent'] as const).forEach((key) => {
+        const check = pv[key];
+        if (check?.status === 'pending') {
+          pv[key] = {
+            ...check,
+            status: checkStatus,
+            ...(verified ? {} : { rejection_reason: rejectionReason?.trim() || 'Refusé par l’administrateur' }),
+          };
+        }
+      });
+
+      update.player_verification = pv;
+      update.verification_status = verified
+        ? 'VERIFIED'
+        : computePlayerVerificationStatus(pv);
+      if (verified) {
+        update.onboarding_documents_submitted = true;
+      }
+    }
+
+    await updateDoc(doc(database, 'users', uid), update);
   },
 
   /**
@@ -321,17 +407,21 @@ export const adminService = {
     return statsService.refreshAndPublishRecruitmentStats();
   },
 
-  async listUserDocuments(uid: string): Promise<{ id: string; name: string; url?: string }[]> {
+  async listUserDocuments(uid: string): Promise<AdminUserDocument[]> {
     if (!isFirebaseConfigured()) return [];
     const database = getDb();
     if (!database) return [];
     const snap = await getDocs(collection(database, 'users', uid, 'documents'));
     return snap.docs.map((d) => {
       const data = d.data() as Record<string, unknown>;
+      const type = String(data.type ?? data.document_type ?? 'document');
+      const check = data.verification_check as PlayerVerificationCheckId | undefined;
       return {
         id: d.id,
-        name: String(data.name ?? data.file_name ?? 'Document'),
-        url: data.url as string | undefined,
+        name: String(data.name ?? data.file_name ?? type),
+        url: (data.storage_url ?? data.url) as string | undefined,
+        type,
+        verification_check: check,
       };
     });
   },
@@ -437,6 +527,112 @@ export const adminService = {
     await deleteDoc(doc(database, 'club_funding_goals', goalId));
   },
 
+  async listCommunityReels(max = 100, status?: CommunityReelStatus): Promise<CommunityReel[]> {
+    if (!isFirebaseConfigured()) return [];
+    const database = getDb();
+    if (!database) return [];
+
+    const mapReel = (id: string, data: Record<string, unknown>): CommunityReel => {
+      const toDate = (v: unknown) =>
+        v && typeof v === 'object' && 'toDate' in v
+          ? (v as { toDate: () => Date }).toDate()
+          : new Date(0);
+      return {
+        id,
+        author_uid: String(data.author_uid ?? ''),
+        author_name: String(data.author_name ?? ''),
+        club_id: data.club_id as string | undefined,
+        video_url: String(data.video_url ?? ''),
+        poster_url: data.poster_url as string | undefined,
+        caption: String(data.caption ?? ''),
+        theme: (data.theme as CommunityReel['theme']) ?? 'skills',
+        status: (data.status as CommunityReel['status']) ?? 'pending',
+        created_at: toDate(data.created_at),
+        updated_at: toDate(data.updated_at),
+      };
+    };
+
+    try {
+      if (status) {
+        const snap = await getDocs(
+          query(
+            collection(database, 'community_reels'),
+            where('status', '==', status),
+            orderBy('created_at', 'desc'),
+            limit(max)
+          )
+        );
+        return snap.docs.map((d) => mapReel(d.id, d.data() as Record<string, unknown>));
+      }
+      const snap = await getDocs(
+        query(collection(database, 'community_reels'), orderBy('created_at', 'desc'), limit(max))
+      );
+      return snap.docs.map((d) => mapReel(d.id, d.data() as Record<string, unknown>));
+    } catch {
+      const snap = await getDocs(collection(database, 'community_reels'));
+      return snap.docs
+        .map((d) => mapReel(d.id, d.data() as Record<string, unknown>))
+        .filter((r) => !status || r.status === status)
+        .sort((a, b) => b.created_at.getTime() - a.created_at.getTime())
+        .slice(0, max);
+    }
+  },
+
+  async updateCommunityReelStatus(reelId: string, status: 'approved' | 'rejected'): Promise<void> {
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+    await updateDoc(doc(database, 'community_reels', reelId), {
+      status,
+      updated_at: serverTimestamp(),
+    });
+  },
+
+  async deleteCommunityReel(reelId: string): Promise<void> {
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+    await deleteDoc(doc(database, 'community_reels', reelId));
+  },
+
+  async listReelReports(max = 100): Promise<ReelReport[]> {
+    if (!isFirebaseConfigured()) return [];
+    const database = getDb();
+    if (!database) return [];
+
+    const mapReport = (id: string, data: Record<string, unknown>): ReelReport => {
+      const toDate = (v: unknown) =>
+        v && typeof v === 'object' && 'toDate' in v
+          ? (v as { toDate: () => Date }).toDate()
+          : new Date(0);
+      return {
+        id,
+        bookmark_key: String(data.bookmark_key ?? ''),
+        reporter_uid: String(data.reporter_uid ?? ''),
+        reason: String(data.reason ?? ''),
+        source_url: String(data.source_url ?? ''),
+        created_at: toDate(data.created_at),
+      };
+    };
+
+    try {
+      const snap = await getDocs(
+        query(collection(database, 'reel_reports'), orderBy('created_at', 'desc'), limit(max))
+      );
+      return snap.docs.map((d) => mapReport(d.id, d.data() as Record<string, unknown>));
+    } catch {
+      const snap = await getDocs(collection(database, 'reel_reports'));
+      return snap.docs
+        .map((d) => mapReport(d.id, d.data() as Record<string, unknown>))
+        .sort((a, b) => b.created_at.getTime() - a.created_at.getTime())
+        .slice(0, max);
+    }
+  },
+
+  async deleteReelReport(reportId: string): Promise<void> {
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+    await deleteDoc(doc(database, 'reel_reports', reportId));
+  },
+
   async getPlatformStats(): Promise<PlatformStats> {
     const [
       users,
@@ -447,6 +643,8 @@ export const adminService = {
       payments,
       applications,
       announcements,
+      communityReels,
+      reelReports,
     ] = await Promise.all([
       this.listAllUsers(300),
       this.listAllTeamEvents(200),
@@ -456,6 +654,8 @@ export const adminService = {
       this.listAllPaymentRequests(200),
       this.listAllApplications(200),
       this.listAllClubAnnouncements(200),
+      this.listCommunityReels(200),
+      this.listReelReports(200),
     ]);
 
     return {
@@ -470,11 +670,10 @@ export const adminService = {
       paymentRequests: payments.length,
       applications: applications.length,
       announcements: announcements.length,
-      pendingVerifications: users.filter(
-        (u) =>
-          (u.role === 'coach' || u.role === 'agent') &&
-          u.verification_status === 'PENDING'
-      ).length,
+      pendingVerifications: countPendingUserVerifications(users),
+      pendingCommunityReels: communityReels.filter((r) => r.status === 'pending').length,
+      reelReports: reelReports.length,
+      pendingPayments: payments.filter((p) => p.status === 'pending').length,
     };
   },
 };

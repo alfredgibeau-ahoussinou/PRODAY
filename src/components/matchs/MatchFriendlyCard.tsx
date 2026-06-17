@@ -6,16 +6,18 @@ import type { FriendlyMatch } from '../../models/FriendlyMatch';
 import { ProDayGradient } from '../ui/ProDayGradient';
 import { ProDayText } from '../ui/ProDayText';
 import { useAppTheme } from '../../context/ProductLineContext';
+import { useTranslation } from '../../context/LocaleContext';
 import {
   formatMatchDateTime,
   formatMatchTeams,
   matchStatusStyle,
 } from '../../utils/matchDisplay';
+import { tr } from '../../i18n/translate';
 import { spacing, radius, shadows } from '../../theme/designTokens';
 
-const LEVEL_TYPE_LABELS: Record<FriendlyMatch['level_type'], string> = {
+const LEVEL_TYPE_FALLBACK: Record<FriendlyMatch['level_type'], string> = {
   loisir: 'Loisir',
-  competition: 'Compétition',
+  competition: 'Competition',
   mixte: 'Mixte',
 };
 
@@ -43,16 +45,21 @@ export const MatchFriendlyCard: React.FC<MatchFriendlyCardProps> = ({
   onMarkPlayed,
 }) => {
   const { colors } = useAppTheme();
+  const { t } = useTranslation();
+  const levelLabels: Record<FriendlyMatch['level_type'], string> = {
+    loisir: tr(t, 'match.level.loisir', LEVEL_TYPE_FALLBACK.loisir),
+    competition: tr(t, 'match.competition', LEVEL_TYPE_FALLBACK.competition),
+    mixte: tr(t, 'match.level.mixte', LEVEL_TYPE_FALLBACK.mixte),
+  };
   const st = matchStatusStyle(match.status, colors);
 
   return (
     <PressableSpring
       style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }, shadows.soft]}
       onPress={onPress ?? (() => prodayHaptics.press())}
-      scaleTo={0.96}
+      scaleTo={0.98}
       haptic
     >
-      <ProDayGradient kind="card" style={styles.accent} />
       <View style={styles.body}>
         <View style={styles.top}>
           <ProDayText variant="caption" muted style={styles.date}>
@@ -82,7 +89,7 @@ export const MatchFriendlyCard: React.FC<MatchFriendlyCardProps> = ({
           </ProDayText>
           <View style={[styles.levelPill, { backgroundColor: colors.accentSoft }]}>
             <ProDayText variant="caption" accent style={styles.levelText}>
-              {match.category} · {LEVEL_TYPE_LABELS[match.level_type]}
+              {match.category} · {levelLabels[match.level_type]}
             </ProDayText>
           </View>
         </View>
@@ -115,7 +122,7 @@ export const MatchFriendlyCard: React.FC<MatchFriendlyCardProps> = ({
               >
                 <ProDayGradient kind="cta" style={styles.btnPrimary}>
                   <ProDayText variant="caption" inverse style={styles.btnText}>
-                    Accepter
+                    {t('matchs.friendly.accept')}
                   </ProDayText>
                 </ProDayGradient>
               </PressableSpring>
@@ -131,7 +138,7 @@ export const MatchFriendlyCard: React.FC<MatchFriendlyCardProps> = ({
                 onPress={onCancel}
               >
                 <ProDayText variant="caption" accent style={styles.btnGhostText}>
-                  Annuler
+                  {t('matchs.friendly.cancel')}
                 </ProDayText>
               </PressableSpring>
             ) : null}
@@ -146,7 +153,7 @@ export const MatchFriendlyCard: React.FC<MatchFriendlyCardProps> = ({
                 onPress={onMarkPlayed}
               >
                 <ProDayText variant="caption" accent style={styles.btnGhostText}>
-                  Marquer joué
+                  {t('matchs.friendly.markPlayed')}
                 </ProDayText>
               </PressableSpring>
             ) : null}
@@ -159,12 +166,11 @@ export const MatchFriendlyCard: React.FC<MatchFriendlyCardProps> = ({
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: radius.xl,
+    borderRadius: radius.lg,
     borderWidth: 1,
     overflow: 'hidden',
     marginBottom: spacing.sm,
   },
-  accent: { height: 3, width: '100%' },
   body: { padding: spacing.md },
   top: {
     flexDirection: 'row',

@@ -4,6 +4,17 @@ import type { UploadFileInput } from '../services/storage.service';
 import { normalizeImageMimeType } from '../services/storage.service';
 
 export async function pickProfileImage(): Promise<UploadFileInput | null> {
+  return pickImageFromLibrary({ allowsEditing: true, aspect: [1, 1] });
+}
+
+export async function pickGalleryImage(): Promise<UploadFileInput | null> {
+  return pickImageFromLibrary({ allowsEditing: false });
+}
+
+async function pickImageFromLibrary(options: {
+  allowsEditing: boolean;
+  aspect?: [number, number];
+}): Promise<UploadFileInput | null> {
   if (Platform.OS !== 'web') {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
@@ -17,8 +28,8 @@ export async function pickProfileImage(): Promise<UploadFileInput | null> {
 
   const result = await ImagePicker.launchImageLibraryAsync({
     mediaTypes: ['images'],
-    allowsEditing: true,
-    aspect: [1, 1],
+    allowsEditing: options.allowsEditing,
+    aspect: options.aspect,
     quality: 0.85,
   });
 

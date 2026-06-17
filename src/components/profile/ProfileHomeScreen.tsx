@@ -12,23 +12,24 @@ import type { ProdayPulseResult, PulseBreakdownItem } from '../../utils/prodayPu
 import type { AppSpaceId } from '../../models/AppSpace';
 import { APP_SPACE_LABELS } from '../../models/AppSpace';
 import { getProfileChapters, type ProfileChapterId } from '../../content/profileChapters';
+import { useTranslation } from '../../context/LocaleContext';
 import { getUniverseIdentity } from '../../content/brandExperience';
 import { ProfileIdentityHeader } from './ProfileIdentityHeader';
 import { ProfileSection } from './ProfileSection';
 import { ProfileQuickGrid, type ProfileQuickAction } from './ProfileQuickGrid';
 import { getProfileCompletion } from '../../utils/profileCompletion';
 import { ProfileCompletionPanel } from './ProfileCompletionPanel';
-import { ProfileAccountCard } from './ProfileAccountCard';
-import { ProfilePulseCard } from './ProfilePulseCard';
 import { ProfileSubscriptionCard } from './ProfileSubscriptionCard';
 import { ProfileMenuSection } from './ProfileMenuSection';
 import { PlayerCvLivePreview } from './PlayerCvLivePreview';
 import { ProfileGalleryEditor } from './ProfileGalleryEditor';
+import { PlayerPositionPitchPicker } from './PlayerPositionPitchPicker';
 import { AppSpacePill } from '../appSpace/AppSpaceBanner';
 import { OrganizerReminderCard } from '../OrganizerReminderCard';
 import { ProDayTabPager } from '../ui/ProDayTabPager';
 import { ProDayGradient } from '../ui/ProDayGradient';
 import { ProDayText } from '../ui/ProDayText';
+import { GlassCard } from '../aurora/GlassCard';
 import { ProDaySurface } from '../ui/ProDaySurface';
 import { Icon } from '../ui/Icon';
 import { useAppTheme } from '../../context/ProductLineContext';
@@ -38,12 +39,12 @@ import type { OrganizerReminderItem } from '../../hooks/useOrganizerReminders';
 import type { SubscriptionUsagePeriod } from '../../models/Subscription';
 import { TAB_BAR_CONTENT_INSET } from '../../navigation/tabBarLayout';
 import { spacing, radius } from '../../theme/designTokens';
-import { V3PreferencesCard } from '../v3/V3PreferencesCard';
-import { ProDayScreenCanvas } from '../ui/ProDayScreenCanvas';
+import { ProfilePreferencesCard } from './ProfilePreferencesCard';
+import { LanguageSettingControl } from '../settings/LanguageSettingControl';
 import { ProgressionBlock } from '../../features/home/components/ProgressionBlock';
-import { isV3ShellEnabled } from '../../config/featureFlags';
 import type { SectionIntelligence } from '../../features/v3/models/sectionIntelligence';
 import type { GamificationState } from '../../features/v3/models/gamification';
+import { getRoleLabel } from '../../screens/signup/signupFlowConfig';
 
 export interface ProfileHomeScreenProps {
   profile: User;
@@ -66,6 +67,8 @@ export interface ProfileHomeScreenProps {
   onOrganizerPress: () => void;
   onRemind: (eventId: string) => void;
   showPlayerVerificationReminder: boolean;
+  needsDocumentUpload?: boolean;
+  onDocumentVerification?: () => void;
   playerVerifyLabel?: string;
   pendingVerify: boolean;
   docLoading: boolean;
@@ -83,17 +86,19 @@ export interface ProfileHomeScreenProps {
   onPickDocument: () => void;
   onVerificationFlow: () => void;
   onAnnouncements: () => void;
-  onPayments: () => void;
+  onTeamManagement?: () => void;
   onCreateClub: () => void;
   onJoinClub: () => void;
   onVerificationSuccess: () => void;
   onParental: () => void;
-  onGuardianPortal: () => void;
+  onGuardian?: () => void;
   onLegal: (id: 'terms' | 'privacy') => void;
   onSignOut: () => void;
   onSetAppSpace: (space: AppSpaceId) => void;
   onGalleryAdd: () => void;
   onGalleryRemove: (url: string) => void;
+  onPositionChange?: (position: string) => void | Promise<void>;
+  savingPosition?: boolean;
   quickActions: ProfileQuickAction[];
   initialChapter?: ProfileChapterId;
   intelligence?: SectionIntelligence | null;
@@ -106,17 +111,6 @@ const pagePad = {
   paddingBottom: TAB_BAR_CONTENT_INSET + spacing.sm,
 };
 
-const ROLE_LABELS: Record<UserRole, string> = {
-  player: 'Joueur',
-  coach: 'Coach',
-  club: 'Club',
-  agent: 'Agent',
-  recruiter: 'Recruteur',
-  organizer: 'Organisateur',
-  sponsor: 'Sponsor',
-  physio: 'Pôle santé',
-};
-
 const scrollProps = {
   showsVerticalScrollIndicator: false,
   nestedScrollEnabled: true,
@@ -125,10 +119,13 @@ const scrollProps = {
 
 export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
   const { colors } = useAppTheme();
+  const { t } = useTranslation();
   const styles = useMemo(() => createStyles(colors), [colors]);
-  const useV3Header = isV3ShellEnabled();
   const brand = getUniverseIdentity(props.productLine);
-  const chapters = useMemo(() => getProfileChapters(props.profile.role), [props.profile.role]);
+  const chapters = useMemo(
+    () => getProfileChapters(props.profile.role, t),
+    [props.profile.role, t]
+  );
   const [chapter, setChapter] = useState<ProfileChapterId>(props.initialChapter ?? 'apercu');
   const p = props.profile.profile;
   const completionPercent = useMemo(
@@ -136,10 +133,18 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
     [props.profile]
   );
 
+  const handleCompletionItem = (itemId: string) => {
+    if (itemId === 'position' && props.profile.role === 'player') {
+      setChapter('cv');
+      return;
+    }
+    props.onEdit();
+  };
+
   const roleLabel =
     props.profile.role === 'player' && props.productLine === 'woman'
       ? brand.playerLabel
-      : ROLE_LABELS[props.profile.role];
+      : getRoleLabel(props.profile.role, t);
 
   const pages = useMemo(
     () => [
@@ -147,19 +152,36 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
         id: 'apercu' as const,
         render: () => (
           <ScrollView contentContainerStyle={pagePad} {...scrollProps}>
-            <ProfileAccountCard
-              profile={props.profile}
-              subscriptionTier={props.subscriptionTier}
-              roleLabel={roleLabel}
-              onEdit={props.onEdit}
-            />
+            {props.needsDocumentUpload && props.onDocumentVerification ? (
+              <ProfileSection
+                title={t('profile.verify.title')}
+                subtitle={t('profile.verify.documentsRequired')}
+                first
+              >
+                <AlertCard
+                  title={t('profile.verify.sendDocuments')}
+                  body={t('profile.verify.player.body')}
+                  cta={t('profile.verify.complete')}
+                  onPress={props.onDocumentVerification}
+                  colors={colors}
+                />
+              </ProfileSection>
+            ) : null}
 
-            <ProfileSection title="Raccourcis" subtitle="Actions fréquentes" first>
+            <ProfileSection
+              title={t('profile.section.preferences')}
+              subtitle={t('profile.section.preferencesSub')}
+              first={!props.needsDocumentUpload}
+            >
+              <ProfilePreferencesCard profile={props.profile} />
+            </ProfileSection>
+
+            <ProfileSection title={t('profile.section.shortcuts')} subtitle={t('profile.section.shortcutsSub')}>
               <ProfileQuickGrid actions={props.quickActions} compact />
             </ProfileSection>
 
             {props.onSubscriptionPress ? (
-              <ProfileSection title="Abonnement" subtitle="Formule et consommation">
+              <ProfileSection title={t('profile.section.subscription')} subtitle={t('profile.section.subscriptionSub')}>
                 <ProfileSubscriptionCard
                   profile={props.profile}
                   tier={props.subscriptionTier}
@@ -169,22 +191,22 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
               </ProfileSection>
             ) : null}
 
-            <ProfileSection title="Complétion" subtitle="Éléments à finaliser">
-              <ProfileCompletionPanel user={props.profile} onCompletePress={props.onEdit} />
-            </ProfileSection>
-
-            <ProfileSection title="Pulse ProDay" subtitle="Visibilité sur la plateforme">
-              <ProfilePulseCard pulse={props.pulse} breakdown={props.pulseBreakdown} compact />
+            <ProfileSection title={t('profile.section.completion')} subtitle={t('profile.section.completionSub')}>
+              <ProfileCompletionPanel
+                user={props.profile}
+                onCompletePress={props.onEdit}
+                onItemPress={handleCompletionItem}
+              />
             </ProfileSection>
 
             {props.progression ? (
-              <ProfileSection title="Progression" subtitle="Niveau et série">
+              <ProfileSection title={t('profile.section.progression')} subtitle={t('profile.section.progressionSub')}>
                 <ProgressionBlock progression={props.progression} />
               </ProfileSection>
             ) : null}
 
             {props.isOrganizer ? (
-              <ProfileSection title="Organisation" subtitle="Relances et convocations">
+              <ProfileSection title={t('profile.section.organization')} subtitle={t('profile.section.organizationSub')}>
                 <OrganizerReminderCard
                   items={props.reminderItems}
                   loading={props.loadingReminders}
@@ -204,30 +226,41 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
             {props.profile.role === 'player' ? (
               <>
                 <ProfileSection
-                  title={brand.cvLabel}
-                  subtitle="Votre vitrine sportive — sans PDF"
+                  title={t('profile.section.position')}
+                  subtitle={t('profile.section.positionSub')}
                   first
+                >
+                  <PlayerPositionPitchPicker
+                    value={p.position ?? ''}
+                    onChange={(position) => void props.onPositionChange?.(position)}
+                    saving={props.savingPosition}
+                    hint={p.position ? undefined : t('profile.position.hint')}
+                  />
+                </ProfileSection>
+                <ProfileSection
+                  title={brand.cvLabel}
+                  subtitle={t('profile.section.cvSub')}
                 >
                   <PlayerCvLivePreview user={props.profile} colors={colors} />
                   <PressableSpring onPress={props.onCvEditor} scaleTo={0.97} haptic>
                     <ProDayGradient kind="cta" style={styles.cvCta}>
                       <Icon name="document" size={18} color="#FFFFFF" />
                       <ProDayText variant="caption" inverse style={styles.cvCtaText}>
-                        Compléter mon CV
+                        {t('profile.completeCv')}
                       </ProDayText>
                     </ProDayGradient>
                   </PressableSpring>
                 </ProfileSection>
                 {props.hasStats && props.stats ? (
-                  <ProfileSection title="Saison" subtitle="Statistiques enregistrées">
+                  <ProfileSection title={t('profile.section.season')} subtitle={t('profile.section.seasonSub')}>
                     <View style={styles.statsRow}>
-                      <StatChip value={String(props.stats.matches)} label="Matchs" colors={colors} />
-                      <StatChip value={String(props.stats.goals)} label="Buts" colors={colors} />
-                      <StatChip value={String(props.stats.assists)} label="Passes d." colors={colors} />
+                      <StatChip value={String(props.stats.matches)} label={t('profile.stats.matches')} colors={colors} />
+                      <StatChip value={String(props.stats.goals)} label={t('profile.stats.goals')} colors={colors} />
+                      <StatChip value={String(props.stats.assists)} label={t('profile.stats.assists')} colors={colors} />
                     </View>
                   </ProfileSection>
                 ) : null}
-                <ProfileSection title="Galerie & médias" subtitle="Photos et liens vidéo">
+                <ProfileSection title={t('profile.section.gallery')} subtitle={t('profile.section.gallerySub')}>
                   <ProfileGalleryEditor
                     urls={props.gallery}
                     productLine={props.productLine}
@@ -252,19 +285,19 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
                     ))
                   ) : (
                     <ProDayText variant="caption" muted>
-                      Ajoutez des liens vidéo dans « Modifier le profil ».
+                      {t('profile.videos.addHint')}
                     </ProDayText>
                   )}
                 </ProfileSection>
               </>
             ) : (
-              <ProfileSection title="Parcours professionnel" subtitle="Expérience et qualifications" first>
-                <InfoLine label="Titre" value={p.job_title} colors={colors} />
-                <InfoLine label="Diplôme" value={p.diploma} colors={colors} />
-                <InfoLine label="N° licence" value={p.license_number} colors={colors} />
+              <ProfileSection title={t('profile.section.career')} subtitle={t('profile.section.careerSub')} first>
+                <InfoLine label={t('profile.field.title')} value={p.job_title} colors={colors} />
+                <InfoLine label={t('profile.diploma')} value={p.diploma} colors={colors} />
+                <InfoLine label={t('profile.field.license')} value={p.license_number} colors={colors} />
                 {p.specialties?.length ? (
                   <ProDayText variant="body" muted>
-                    Spécialités : {p.specialties.join(' · ')}
+                    {t('profile.specialties')} : {p.specialties.join(' · ')}
                   </ProDayText>
                 ) : null}
               </ProfileSection>
@@ -277,7 +310,7 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
         render: () => (
           <ScrollView contentContainerStyle={pagePad} {...scrollProps}>
             {props.profile.role === 'player' ? (
-              <ProfileSection title="Mercato" subtitle="Candidatures et réponses clubs" first>
+              <ProfileSection title={t('profile.section.mercato')} subtitle={t('profile.section.mercatoSub')} first>
                 <ProDaySurface variant="module" style={[styles.activityCard, { borderColor: colors.border }]}>
                   <PressableSpring
                     style={styles.activityRow}
@@ -289,9 +322,9 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
                       <Icon name="briefcase" size={20} color={colors.accent} />
                     </View>
                     <View style={styles.activityCopy}>
-                      <ProDayText variant="section">Mes candidatures</ProDayText>
+                      <ProDayText variant="section">{t('profile.mercato.applications')}</ProDayText>
                       <ProDayText variant="caption" muted>
-                        Suivi Mercato et réponses clubs
+                        {t('profile.mercato.applicationsSub')}
                       </ProDayText>
                     </View>
                     <Icon name="chevron-forward" size={18} color={colors.textMuted} />
@@ -302,7 +335,7 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
 
             {(props.productLine === 'homme' || props.productLine === 'woman') &&
             props.profile.role === 'player' ? (
-              <ProfileSection title="Univers Mercato" subtitle="Filtre des annonces selon votre espace">
+              <ProfileSection title={t('profile.section.mercatoUniverse')} subtitle={t('profile.section.mercatoUniverseSub')}>
                 <View style={styles.spacePills}>
                   {props.selectableAppSpaces.map((space) => (
                     <AppSpacePill
@@ -314,17 +347,17 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
                   ))}
                 </View>
                 <ProDayText variant="caption" muted>
-                  {APP_SPACE_LABELS[props.appSpace]} — filtre des annonces.
+                  {t('profile.mercato.filterHint', { space: APP_SPACE_LABELS[props.appSpace] })}
                 </ProDayText>
               </ProfileSection>
             ) : null}
 
             <ProfileSection
-              title="Club"
+              title={t('profile.section.club')}
               subtitle={
                 props.profile.profile.club_id
-                  ? 'Espace lié à votre structure'
-                  : 'Rejoignez une structure'
+                  ? t('profile.club.linked')
+                  : t('profile.club.join')
               }
               first={props.profile.role !== 'player'}
             >
@@ -333,17 +366,21 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
                   title=""
                   colors={colors}
                   items={[
+                    ...(props.canManageClub && props.onTeamManagement
+                      ? [
+                          {
+                            icon: 'people' as const,
+                            title: t('profile.team.manage'),
+                            subtitle: t('profile.team.manageSub'),
+                            onPress: props.onTeamManagement,
+                          },
+                        ]
+                      : []),
                     {
                       icon: 'notifications',
-                      title: 'Annonces club',
-                      subtitle: 'Actualités de votre structure',
+                      title: t('profile.club.announcements'),
+                      subtitle: t('profile.club.news'),
                       onPress: props.onAnnouncements,
-                    },
-                    {
-                      icon: 'calendar',
-                      title: 'Mes cotisations',
-                      subtitle: 'Paiements club',
-                      onPress: props.onPayments,
                     },
                   ]}
                 />
@@ -351,7 +388,7 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
                 <ProDaySurface variant="flat" style={styles.hint}>
                   <Icon name="people" size={18} color={colors.textMuted} />
                   <ProDayText variant="caption" muted style={styles.hintText}>
-                    Rejoignez un club pour accéder au calendrier et aux convocations.
+                    {t('profile.club.joinHint')}
                   </ProDayText>
                 </ProDaySurface>
               )}
@@ -363,22 +400,21 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
         id: 'reglages' as const,
         render: () => (
           <ScrollView contentContainerStyle={pagePad} {...scrollProps}>
-            {useV3Header ? (
-              <ProfileSection title="ProDay V3" subtitle="Calendrier et préférences" first>
-                <V3PreferencesCard profile={props.profile} />
-              </ProfileSection>
-            ) : null}
+            <ProfileSection title={t('preferences.language')} subtitle={t('preferences.languageHint')} first>
+              <LanguageSettingControl variant="card" />
+            </ProfileSection>
 
             {props.showPlayerVerificationReminder && props.playerVerifyLabel ? (
               <ProfileSection
-                title="Vérification"
-                subtitle="Documents et badge de confiance"
-                first={!useV3Header}
+                title={t('profile.verify.title')}
+                subtitle={t('profile.verify.staffSubtitle')}
               >
                 <AlertCard
-                  title={`Vérification (${props.playerVerifyLabel})`}
-                  body="Pièce d'identité pour la messagerie. Licence club pour le badge complet."
-                  cta="Compléter"
+                  title={t('profile.verify.playerReminderTitle', {
+                    label: props.playerVerifyLabel,
+                  })}
+                  body={t('profile.verify.identityHint')}
+                  cta={t('profile.verify.complete')}
                   onPress={props.onPlayerVerification}
                   colors={colors}
                 />
@@ -386,17 +422,16 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
             ) : null}
             {props.pendingVerify ? (
               <ProfileSection
-                title="Vérification"
-                subtitle="Documents et badge de confiance"
-                first={!props.showPlayerVerificationReminder}
+                title={t('profile.verify.title')}
+                subtitle={t('profile.verify.staffSubtitle')}
               >
                 <AlertCard
-                  title="Vérification requise"
-                  body="Envoyez votre diplôme ou licence pour débloquer la messagerie."
-                  cta={props.docLoading ? 'Envoi…' : 'Envoyer un document'}
+                  title={t('profile.verify.staff.title')}
+                  body={t('profile.verify.staff.body')}
+                  cta={props.docLoading ? t('verification.upload.sending') : t('profile.verify.complete')}
                   onPress={props.onPickDocument}
                   colors={colors}
-                  secondaryCta="Suivi de vérification"
+                  secondaryCta={t('profile.verify.tracking')}
                   onSecondaryPress={props.onVerificationFlow}
                 />
               </ProfileSection>
@@ -404,26 +439,35 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
 
             {(props.canManageClub || props.verifiedStaff) ? (
               <ProfileSection
-                title="Structure"
-                subtitle="Club et organisation"
-                first={!props.showPlayerVerificationReminder && !props.pendingVerify}
+                title={t('profile.section.structure')}
+                subtitle={t('profile.section.structureSub')}
               >
                 <ProfileMenuSection
                   title=""
                   colors={colors}
                   items={[
+                    ...(props.canManageClub && props.profile.profile.club_id && props.onTeamManagement
+                      ? [
+                          {
+                            icon: 'people' as const,
+                            title: t('profile.team.manage'),
+                            subtitle: t('profile.team.manageSub'),
+                            onPress: props.onTeamManagement,
+                          },
+                        ]
+                      : []),
                     ...(props.canManageClub && !props.profile.profile.club_id
                       ? [
                           {
                             icon: 'business' as const,
-                            title: 'Créer mon club',
-                            subtitle: 'Lier votre structure',
+                            title: t('profile.club.create'),
+                            subtitle: t('profile.club.joinActionSub'),
                             onPress: props.onCreateClub,
                           },
                           {
                             icon: 'people' as const,
-                            title: 'Rejoindre un club',
-                            subtitle: 'Convocations et calendrier',
+                            title: t('profile.club.joinAction'),
+                            subtitle: t('profile.club.convocationsSub'),
                             onPress: props.onJoinClub,
                           },
                         ]
@@ -432,8 +476,8 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
                       ? [
                           {
                             icon: 'people' as const,
-                            title: 'Rejoindre mon club',
-                            subtitle: 'Calendrier équipe',
+                            title: t('profile.club.joinMyClub'),
+                            subtitle: t('profile.club.teamCalendar'),
                             onPress: props.onJoinClub,
                           },
                         ]
@@ -442,8 +486,8 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
                       ? [
                           {
                             icon: 'shield' as const,
-                            title: 'Diplôme vérifié',
-                            subtitle: 'Badge actif',
+                            title: t('profile.diploma.verified'),
+                            subtitle: t('profile.diploma.badgeActive'),
                             onPress: props.onVerificationSuccess,
                           },
                         ]
@@ -454,53 +498,68 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
             ) : null}
 
             {props.isPlayerMinor ? (
-              <ProfileSection title="Famille" subtitle="Compte mineur">
+              <ProfileSection title={t('profile.section.family')} subtitle={t('profile.section.familySub')}>
+                <GlassCard variant="accent" style={styles.familyTeaser}>
+                  <View style={styles.familyTeaserRow}>
+                    <Icon name="shield" size={20} color={colors.accent} />
+                    <View style={styles.familyTeaserCopy}>
+                      <ProDayText variant="caption" style={styles.familyTeaserTitle}>
+                        {t('profile.family.safeSpace')}
+                      </ProDayText>
+                      <ProDayText variant="caption" muted>
+                        {t('profile.family.safeSpaceSub')}
+                      </ProDayText>
+                    </View>
+                  </View>
+                </GlassCard>
                 <ProfileMenuSection
                   title=""
                   colors={colors}
                   items={[
                     {
                       icon: 'shield',
-                      title: 'Contrôle parental',
-                      subtitle: 'Supervision compte mineur',
+                      title: t('profile.parental'),
+                      subtitle: t('profile.parental.overviewSub'),
                       onPress: props.onParental,
                     },
                   ]}
                 />
               </ProfileSection>
-            ) : (
-              <ProfileSection title="Tuteur" subtitle="Comptes mineurs supervisés">
+            ) : null}
+
+            {!props.isPlayerMinor && props.onGuardian ? (
+              <ProfileSection title={t('profile.section.guardian')} subtitle={t('profile.section.guardianSub')}>
                 <ProfileMenuSection
                   title=""
                   colors={colors}
                   items={[
                     {
-                      icon: 'time',
-                      title: 'Espace tuteur',
-                      subtitle: 'Temps d’écran à distance',
-                      onPress: props.onGuardianPortal,
+                      icon: 'shield',
+                      title: t('profile.guardian.portal'),
+                      subtitle: t('profile.parental.sub'),
+                      onPress: props.onGuardian,
                     },
                   ]}
                 />
               </ProfileSection>
-            )}
+            ) : null}
 
-            <ProfileSection title="Informations légales" subtitle="CGU et confidentialité">
+            <ProfileSection title={t('profile.section.legal')} subtitle={t('profile.section.legalSub')}>
               <ProfileMenuSection
                 title=""
                 colors={colors}
                 items={[
                   {
                     icon: 'document',
-                    title: "Conditions d'utilisation",
+                    title: t('legal.terms'),
                     onPress: () => props.onLegal('terms'),
                   },
-                  { icon: 'lock', title: 'Confidentialité', onPress: () => props.onLegal('privacy') },
+                  { icon: 'lock', title: t('profile.privacy'), onPress: () => props.onLegal('privacy') },
                 ]}
               />
             </ProfileSection>
 
-            <ProfileSection title="Session">
+            <ProfileSection title={t('profile.section.session')}>
               <PressableSpring
                 style={[
                   styles.logoutBtn,
@@ -510,7 +569,7 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
                 scaleTo={0.97}
               >
                 <ProDayText variant="caption" style={{ color: colors.error, fontWeight: '800' }}>
-                  Se déconnecter
+                  {t('profile.logout')}
                 </ProDayText>
               </PressableSpring>
             </ProfileSection>
@@ -518,7 +577,7 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
         ),
       },
     ],
-    [props, colors, brand, p, roleLabel]
+    [props, colors, brand, p, roleLabel, t]
   );
 
   const identityHeader = (
@@ -532,7 +591,7 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
       onAvatarPress={props.onAvatarPress}
       onEditPress={props.onEdit}
       onPublicProfile={props.profile.role === 'player' ? props.onPublicProfile : undefined}
-      compact={useV3Header}
+      compact
     />
   );
 
@@ -544,7 +603,7 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
         activeChapter={chapter}
         onChapterChange={setChapter}
         showFooter={false}
-        compact
+        variant="pills"
         badges={{
           reglages:
             props.pendingVerify || props.showPlayerVerificationReminder ? 1 : undefined,
@@ -555,19 +614,8 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
 
   return (
     <View style={styles.root}>
-      {useV3Header ? (
-        <ProDayScreenCanvas flat>
-          <View style={styles.v3Root}>
-            {identityHeader}
-            {pager}
-          </View>
-        </ProDayScreenCanvas>
-      ) : (
-        <>
-          {identityHeader}
-          {pager}
-        </>
-      )}
+      {identityHeader}
+      {pager}
     </View>
   );
 };
@@ -664,8 +712,7 @@ const alertStyles = StyleSheet.create({
 function createStyles(_c: AppColors) {
   return StyleSheet.create({
     root: { flex: 1, minHeight: 0 },
-    v3Root: { flex: 1, minHeight: 0 },
-    pager: { flex: 1, minHeight: 0 },
+    pager: { flex: 1, minHeight: 0, marginTop: spacing.xs },
     cvCta: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -710,5 +757,16 @@ function createStyles(_c: AppColors) {
       borderWidth: 1.5,
       marginTop: spacing.md,
     },
+    familyTeaser: {
+      padding: spacing.md,
+      marginBottom: spacing.sm,
+    },
+    familyTeaserRow: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      gap: spacing.sm,
+    },
+    familyTeaserCopy: { flex: 1, gap: 4 },
+    familyTeaserTitle: { fontWeight: '800' },
   });
 }

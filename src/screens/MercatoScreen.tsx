@@ -28,12 +28,12 @@ import { useAuth } from '../context/AuthContext';
 import { useTabNavigation } from '../context/TabNavigationContext';
 import { useTabNavigationActions } from '../hooks/useTabNavigationActions';
 import { useRequireAuth } from '../hooks/useRequireAuth';
+import { useTranslation } from '../context/LocaleContext';
 import { recruitmentService } from '../services/recruitment.service';
 import { openContactConversation } from '../utils/openContactConversation';
 import { guardStaffVerification } from '../utils/staffVerificationGuard';
 import { ROLES_REQUIRING_VERIFICATION } from '../models/User';
 import { profileService } from '../services/profile.service';
-import { ProDayScreenCanvas } from '../components/ui/ProDayScreenCanvas';
 import { CandidatureScreen } from '../components/mercato/CandidatureScreen';
 import { MercatoStaffHome } from '../components/mercato/MercatoStaffHome';
 import { WomenHubScreen } from './women/WomenHubScreen';
@@ -69,6 +69,7 @@ export const MercatoScreen: React.FC = () => {
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
   const [selectedStaffId, setSelectedStaffId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
+  const [playerListQuery, setPlayerListQuery] = useState('');
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
   const [selectedStageId, setSelectedStageId] = useState<string | null>(null);
   const [returnView, setReturnView] = useState<MercatoView>('home');
@@ -85,12 +86,13 @@ export const MercatoScreen: React.FC = () => {
   const { openChat, pendingMercatoView, clearPendingMercato } = useTabNavigation();
   const { openProfile } = useTabNavigationActions();
   const { requireAuth } = useRequireAuth();
+  const { t } = useTranslation();
   const { stats, loading: loadingStats, posts, loadingLists, refreshLists } =
     useMercatoHome();
 
   const config = useMemo(
-    () => getMercatoExperienceConfig(productLine, profile?.role, appSpace),
-    [productLine, profile?.role, appSpace]
+    () => getMercatoExperienceConfig(productLine, profile?.role, appSpace, t),
+    [productLine, profile?.role, appSpace, t]
   );
 
   const spacePosts = useMemo(
@@ -120,8 +122,8 @@ export const MercatoScreen: React.FC = () => {
       !profileService.canPerformSensitiveAction(profile)
     ) {
       Alert.alert(
-        'Vérification requise',
-        'Validez votre diplôme ou licence pour publier une annonce.',
+        t('mercato.alert.verificationRequired.title'),
+        t('mercato.alert.verificationRequired.body'),
       );
       setView('home');
       clearPendingMercato();
@@ -150,7 +152,7 @@ export const MercatoScreen: React.FC = () => {
   }, [profile]);
 
   const handleContact = async (target: User) => {
-    if (!requireAuth('Connectez-vous pour contacter ce profil.') || !profile) return;
+    if (!requireAuth(t('mercato.auth.contactProfile')) || !profile) return;
     await openContactConversation(profile, target, target.display_name, openChat);
   };
 
@@ -264,7 +266,11 @@ export const MercatoScreen: React.FC = () => {
   if (view === 'players') {
     return (
       <PlayersListScreen
-        onBack={() => setView('home')}
+        initialQuery={playerListQuery}
+        onBack={() => {
+          setPlayerListQuery('');
+          setView('home');
+        }}
         onSelectPlayer={(p) => {
           setSelectedPlayerId(p.uid);
           setView('player_profile');
@@ -359,7 +365,7 @@ export const MercatoScreen: React.FC = () => {
   const loading = loadingStats || loadingLists;
 
   const openFavorites = () => {
-    if (!requireAuth('Connectez-vous pour voir vos favoris Mercato.')) return;
+    if (!requireAuth(t('mercato.auth.favorites'))) return;
     setView('favorites');
   };
 
@@ -377,7 +383,6 @@ export const MercatoScreen: React.FC = () => {
 
   if (isPlayerHub && profile) {
     return (
-      <ProDayScreenCanvas flat>
         <CandidatureScreen
           profile={profile}
           config={config}
@@ -399,27 +404,20 @@ export const MercatoScreen: React.FC = () => {
             setSelectedPostId(id);
             setView('post_detail');
           }}
-          onQuickTile={handleQuickTile}
           onOpenApplications={() => openProfile('applications')}
-          onSearchPlayers={() => setView('players')}
-          showSpaceBanner={productLine === 'homme' || productLine === 'woman'}
-          onOpenMenHub={() => setAppSpace('men')}
-          onOpenWomenHub={() =>
-            productLine === 'homme' ? void enterWomanSpace() : setView('women_hub')
-          }
-          onOpenUnderU13Hub={() =>
-            productLine === 'homme' ? setAppSpace('under_u13') : setView('under_u13_hub')
-          }
+          onSearchPlayers={(query) => {
+            if (query?.trim()) setPlayerListQuery(query.trim());
+            else setPlayerListQuery('');
+            setView('players');
+          }}
           onRefresh={async () => {
             await refreshLists();
           }}
         />
-      </ProDayScreenCanvas>
     );
   }
 
   return (
-    <ProDayScreenCanvas flat>
       <MercatoStaffHome
         profile={profile}
         config={config}
@@ -457,7 +455,6 @@ export const MercatoScreen: React.FC = () => {
         }
         onSearchPlayers={() => setView('players')}
       />
-    </ProDayScreenCanvas>
   );
 };
 

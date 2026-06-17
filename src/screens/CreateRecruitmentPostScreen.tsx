@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from '../context/LocaleContext';
 import {
   View,
   Text,
@@ -9,7 +10,6 @@ import {
   Alert,
 } from 'react-native';
 import type { User } from '../models/User';
-import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { recruitmentService } from '../services/recruitment.service';
 import { guardStaffVerification } from '../utils/staffVerificationGuard';
 import { SubscriptionLimitError } from '../services/subscription.service';
@@ -18,12 +18,10 @@ import { useAppSpace } from '../context/AppSpaceContext';
 import { spacing, radius } from '../theme/designTokens';
 import { useThemedScreen } from '../hooks/useThemedScreen';
 import { canPublishRecruitmentPost } from '../utils/roleCapabilities';
-import { isV3ShellEnabled } from '../config/featureFlags';
 import { recordV3UserAction } from '../utils/recordV3Action';
 import { trackV3Event } from '../core/analytics/v3Events';
-import { V3TabShell } from '../components/v3/V3TabShell';
-import { V3ScreenBack } from '../components/v3/V3ScreenBack';
-import { useSectionIntelligence } from '../hooks/useSectionIntelligence';
+import { TabScreenShell } from '../components/app/TabScreenShell';
+import { ScreenBackButton } from '../components/ui/ScreenBackButton';
 import { PressableSpring } from '../components/motion';
 import { TAB_BAR_CONTENT_INSET } from '../navigation/tabBarLayout';
 
@@ -38,6 +36,7 @@ export const CreateRecruitmentPostScreen: React.FC<CreateRecruitmentPostScreenPr
   onBack,
   onCreated,
 }) => {
+  const { t } = useTranslation();
   const [position, setPosition] = useState('');
   const [category, setCategory] = useState('Seniors');
   const [level, setLevel] = useState('');
@@ -46,12 +45,7 @@ export const CreateRecruitmentPostScreen: React.FC<CreateRecruitmentPostScreenPr
   const [submitting, setSubmitting] = useState(false);
   const { appSpace } = useAppSpace();
   const subscriptionCtx = useSubscriptionOptional();
-  const { colors: themeColors, productLine, rootStyle } = useThemedScreen();
-  const useV3Header = isV3ShellEnabled();
-  const intelligence = useSectionIntelligence('recrutement', profile, productLine, {
-    staffMode: true,
-    mercatoPosts: 0,
-  });
+  const { colors: themeColors, productLine } = useThemedScreen();
   const defaultTitle = productLine === 'woman' ? 'Recherche joueuse' : 'Recherche joueur';
   const [title, setTitle] = useState(defaultTitle);
   const inputStyle = [
@@ -64,31 +58,19 @@ export const CreateRecruitmentPostScreen: React.FC<CreateRecruitmentPostScreenPr
   ];
 
   if (!canPublishRecruitmentPost(profile.role)) {
-    const denied = (
-      <View style={styles.deniedBody}>
-        <Text style={[styles.deniedText, { color: themeColors.textSecondary }]}>
-          Les joueurs et joueuses peuvent candidater aux annonces, mais pas en publier.
-        </Text>
-      </View>
-    );
-    if (useV3Header) {
-      return (
-        <V3TabShell
-          caption="Mercato"
-          title="Publier une annonce"
-          right={<V3ScreenBack onPress={onBack} />}
-          intelligence={intelligence}
-          flat
-        >
-          {denied}
-        </V3TabShell>
-      );
-    }
     return (
-      <View style={[styles.root, rootStyle]}>
-        <ScreenHeader title="Publier une annonce" onBack={onBack} centered />
-        {denied}
-      </View>
+      <TabScreenShell
+        caption="Mercato"
+        title="Publier une annonce"
+        right={<ScreenBackButton onPress={onBack} />}
+        flat
+      >
+        <View style={styles.deniedBody}>
+          <Text style={[styles.deniedText, { color: themeColors.textSecondary }]}>
+            Les joueurs et joueuses peuvent candidater aux annonces, mais pas en publier.
+          </Text>
+        </View>
+      </TabScreenShell>
     );
   }
 
@@ -115,11 +97,9 @@ export const CreateRecruitmentPostScreen: React.FC<CreateRecruitmentPostScreenPr
         },
         profile
       );
-      Alert.alert('Annonce publiée', 'Visible dans Recrutements populaires.');
-      if (isV3ShellEnabled()) {
-        trackV3Event('mercato_post_published', { uid: profile.uid });
-        recordV3UserAction(profile, 'publish_mercato');
-      }
+      Alert.alert(t('recruitment.published'), t('recruitment.publishedBody'));
+      trackV3Event('mercato_post_published', { uid: profile.uid });
+      recordV3UserAction(profile, 'publish_mercato');
       onCreated();
       onBack();
     } catch (e) {
@@ -144,21 +124,21 @@ export const CreateRecruitmentPostScreen: React.FC<CreateRecruitmentPostScreenPr
       />
       <TextInput
         style={inputStyle}
-        placeholder="Poste recherché *"
+        placeholder={t('recruitment.positionPlaceholder')}
         placeholderTextColor={themeColors.textMuted}
         value={position}
         onChangeText={setPosition}
       />
       <TextInput
         style={inputStyle}
-        placeholder="Catégorie (ex. U19, Seniors)"
+        placeholder={t('recruitment.categoryPlaceholder')}
         placeholderTextColor={themeColors.textMuted}
         value={category}
         onChangeText={setCategory}
       />
       <TextInput
         style={inputStyle}
-        placeholder="Niveau (ex. R2, Départemental) *"
+        placeholder={t('recruitment.levelPlaceholder')}
         placeholderTextColor={themeColors.textMuted}
         value={level}
         onChangeText={setLevel}
@@ -194,26 +174,16 @@ export const CreateRecruitmentPostScreen: React.FC<CreateRecruitmentPostScreenPr
     </ScrollView>
   );
 
-  if (useV3Header) {
-    return (
-      <V3TabShell
-        caption="Mercato"
-        title="Publier une annonce"
-        subtitle="Visible dans les recherches joueurs compatibles"
-        right={<V3ScreenBack onPress={onBack} />}
-        intelligence={intelligence}
-        flat
-      >
-        {form}
-      </V3TabShell>
-    );
-  }
-
   return (
-    <View style={[styles.root, rootStyle]}>
-      <ScreenHeader title="Publier une annonce" onBack={onBack} centered />
+    <TabScreenShell
+      caption="Mercato"
+      title="Publier une annonce"
+      subtitle="Visible dans les recherches joueurs compatibles"
+      right={<ScreenBackButton onPress={onBack} />}
+      flat
+    >
       {form}
-    </View>
+    </TabScreenShell>
   );
 };
 
@@ -222,27 +192,23 @@ const styles = StyleSheet.create({
   content: {
     padding: spacing.lg,
     paddingBottom: TAB_BAR_CONTENT_INSET + spacing.lg,
+    gap: spacing.md,
   },
   input: {
-    borderRadius: radius.md,
-    padding: spacing.md,
-    marginBottom: spacing.md,
     borderWidth: 1,
-    fontSize: 15,
+    borderRadius: radius.lg,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 14,
+    fontSize: 16,
   },
-  bio: { minHeight: 100, textAlignVertical: 'top' },
+  bio: { minHeight: 120, textAlignVertical: 'top' },
   primary: {
-    borderRadius: radius.md,
-    padding: spacing.lg,
+    borderRadius: radius.lg,
+    paddingVertical: 16,
     alignItems: 'center',
-    marginTop: spacing.md,
+    marginTop: spacing.sm,
   },
-  primaryText: { color: '#FFFFFF', fontWeight: '700' },
+  primaryText: { color: '#FFF', fontWeight: '800', fontSize: 16 },
   deniedBody: { padding: spacing.lg },
-  deniedText: {
-    fontSize: 15,
-    lineHeight: 22,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
+  deniedText: { fontSize: 15, lineHeight: 22 },
 });

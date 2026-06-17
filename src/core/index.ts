@@ -22,7 +22,7 @@ export {
 export { mergeCalendarEntities, onMatchJoined } from './calendar/calendarSync.engine';
 export { buildDeviceCalendarDrafts } from './calendar/deviceCalendar.mapper';
 export type { DeviceCalendarEventDraft } from './calendar/deviceCalendar.mapper';
-export { buildChatQuickReplies } from './social/chatQuickReply.engine';
+export { buildChatQuickReplies, type ChatQuickReply } from './social/chatQuickReply.engine';
 export { computeProgression } from './gamification/progression.engine';
 export { dispatchUserAction } from './actionDispatch';
 export { userStateStore } from './state/userState.store';

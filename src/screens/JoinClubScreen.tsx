@@ -17,6 +17,7 @@ import { profileService } from '../services/profile.service';
 import { Icon } from '../components/ui/Icon';
 import { spacing, radius, shadows } from '../theme/designTokens';
 import { useThemedScreen } from '../hooks/useThemedScreen';
+import { useTranslation } from '../context/LocaleContext';
 
 interface JoinClubScreenProps {
   profile: User;
@@ -29,6 +30,7 @@ export const JoinClubScreen: React.FC<JoinClubScreenProps> = ({
   onBack,
   onJoined,
 }) => {
+  const { t } = useTranslation();
   const { colors: themeColors, rootStyle } = useThemedScreen();
   const [query, setQuery] = useState('');
   const [clubs, setClubs] = useState<Club[]>([]);
@@ -42,47 +44,44 @@ export const JoinClubScreen: React.FC<JoinClubScreenProps> = ({
   }, [query]);
 
   useEffect(() => {
-    const t = setTimeout(() => void load(), 300);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => void load(), 300);
+    return () => clearTimeout(timer);
   }, [load]);
 
   const handleJoin = async (club: Club) => {
-    Alert.alert(
-      'Rejoindre le club',
-      `Associer votre profil à ${club.name} ?`,
-      [
-        { text: 'Annuler', style: 'cancel' },
-        {
-          text: 'Rejoindre',
-          onPress: async () => {
-            setJoiningId(club.id);
-            try {
-              await profileService.updateProfile(profile.uid, {
-                profile: { club_id: club.id },
-              });
-              Alert.alert('Club rejoint', `Vous êtes maintenant membre de ${club.name}.`);
-              onJoined();
-            } catch (e) {
-              Alert.alert(
-                'Erreur',
-                e instanceof Error ? e.message : 'Impossible de rejoindre ce club.'
-              );
-            } finally {
-              setJoiningId(null);
-            }
-          },
+    Alert.alert(t('joinClub.confirm.title'), t('joinClub.confirm.body', { name: club.name }), [
+      { text: t('common.cancel'), style: 'cancel' },
+      {
+        text: t('joinClub.confirm.join'),
+        onPress: async () => {
+          setJoiningId(club.id);
+          try {
+            await profileService.updateProfile(profile.uid, {
+              profile: { club_id: club.id },
+            });
+            Alert.alert(
+              t('joinClub.success.title'),
+              t('joinClub.success.body', { name: club.name })
+            );
+            onJoined();
+          } catch (e) {
+            Alert.alert(
+              t('feed.alert.error'),
+              e instanceof Error ? e.message : t('joinClub.error.join')
+            );
+          } finally {
+            setJoiningId(null);
+          }
         },
-      ]
-    );
+      },
+    ]);
   };
 
   return (
     <View style={rootStyle}>
-      <ScreenHeader title="Rejoindre un club" onBack={onBack} centered />
-      <Text style={[styles.hint, { color: themeColors.textSecondary }]}>
-        Recherchez votre structure pour accéder aux convocations, présences et cotisations.
-      </Text>
-      <SearchBar placeholder="Nom ou ville…" value={query} onChangeText={setQuery} />
+      <ScreenHeader title={t('joinClub.title')} onBack={onBack} centered />
+      <Text style={[styles.hint, { color: themeColors.textSecondary }]}>{t('joinClub.hint')}</Text>
+      <SearchBar placeholder={t('joinClub.search')} value={query} onChangeText={setQuery} />
       {loading ? (
         <ActivityIndicator color={themeColors.brand} style={styles.loader} />
       ) : (
@@ -92,7 +91,7 @@ export const JoinClubScreen: React.FC<JoinClubScreenProps> = ({
           contentContainerStyle={styles.list}
           ListEmptyComponent={
             <Text style={[styles.empty, { color: themeColors.textMuted }]}>
-              Aucun club trouvé. Créez le vôtre depuis le profil.
+              {t('joinClub.empty')}
             </Text>
           }
           renderItem={({ item }) => (

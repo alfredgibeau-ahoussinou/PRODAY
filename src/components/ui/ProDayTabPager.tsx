@@ -3,6 +3,7 @@ import {
   View,
   StyleSheet,
   Platform,
+  ScrollView,
   useWindowDimensions,
   type NativeSyntheticEvent,
   type NativeScrollEvent,
@@ -40,6 +41,8 @@ interface ProDayTabPagerProps<T extends string> {
   showFooter?: boolean;
   /** Rail d’onglets plus bas (40 px). */
   compact?: boolean;
+  /** Rail souligné (défaut) ou pills scrollables. */
+  variant?: 'rail' | 'pills';
 }
 
 export function ProDayTabPager<T extends string>({
@@ -50,9 +53,10 @@ export function ProDayTabPager<T extends string>({
   badges,
   showFooter = false,
   compact = false,
+  variant = 'rail',
 }: ProDayTabPagerProps<T>) {
   const { colors } = useAppTheme();
-  const styles = useMemo(() => createStyles(colors, compact), [colors, compact]);
+  const styles = useMemo(() => createStyles(colors, compact, variant), [colors, compact, variant]);
   const { width: windowWidth } = useWindowDimensions();
   const [layoutWidth, setLayoutWidth] = useState(0);
   const [trackW, setTrackW] = useState(0);
@@ -173,6 +177,67 @@ export function ProDayTabPager<T extends string>({
   return (
     <View style={styles.root} onLayout={onRootLayout}>
       <View style={styles.railWrap}>
+        {variant === 'pills' ? (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.pillsRow}
+          >
+            {chapters.map((ch) => {
+              const on = ch.id === activeChapter;
+              const badge = badges?.[ch.id];
+              return (
+                <PressableSpring
+                  key={ch.id}
+                  onPress={() => {
+                    prodayHaptics.tabSwitch();
+                    goToChapter(ch.id, false);
+                  }}
+                  scaleTo={0.96}
+                  haptic
+                >
+                  <View
+                    style={[
+                      styles.pill,
+                      on
+                        ? { backgroundColor: colors.accent, borderColor: colors.accent }
+                        : {
+                            backgroundColor: colors.surface,
+                            borderColor: colors.border,
+                          },
+                    ]}
+                  >
+                    <ProDayText
+                      variant="caption"
+                      inverse={on}
+                      accent={!on}
+                      style={[styles.pillLabel, on && styles.pillLabelOn]}
+                    >
+                      {ch.label}
+                    </ProDayText>
+                    {badge && badge > 0 ? (
+                      <View
+                        style={[
+                          styles.pillBadge,
+                          { backgroundColor: on ? 'rgba(255,255,255,0.92)' : colors.accent },
+                        ]}
+                      >
+                        <ProDayText
+                          variant="caption"
+                          accent={!on}
+                          inverse={on}
+                          style={styles.pillBadgeText}
+                        >
+                          {badge > 9 ? '9+' : badge}
+                        </ProDayText>
+                      </View>
+                    ) : null}
+                  </View>
+                </PressableSpring>
+              );
+            })}
+          </ScrollView>
+        ) : (
         <View
           style={styles.track}
           onLayout={(e) => {
@@ -221,6 +286,7 @@ export function ProDayTabPager<T extends string>({
             );
           })}
         </View>
+        )}
       </View>
 
       <Animated.ScrollView
@@ -269,15 +335,43 @@ export function ProDayTabPager<T extends string>({
 
 function createStyles(
   c: { surface: string; border: string; text: string; textMuted: string; surfaceMuted: string; accent: string },
-  compact: boolean
+  compact: boolean,
+  variant: 'rail' | 'pills',
 ) {
   return StyleSheet.create({
     root: { flex: 1, minHeight: 0 },
     railWrap: {
       backgroundColor: c.surface,
-      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomWidth: variant === 'pills' ? 0 : StyleSheet.hairlineWidth,
       borderBottomColor: c.border,
+      paddingBottom: variant === 'pills' ? spacing.xs : 0,
     },
+    pillsRow: {
+      flexDirection: 'row',
+      gap: spacing.xs,
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.sm,
+    },
+    pill: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      paddingHorizontal: spacing.md,
+      paddingVertical: 9,
+      borderRadius: radius.pill,
+      borderWidth: 1,
+    },
+    pillLabel: { fontWeight: '700', fontSize: 13 },
+    pillLabelOn: { fontWeight: '800', color: '#fff' },
+    pillBadge: {
+      minWidth: 20,
+      height: 20,
+      borderRadius: 10,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: 5,
+    },
+    pillBadgeText: { fontSize: 11, fontWeight: '900', lineHeight: 13 },
     track: {
       flexDirection: 'row',
       height: compact ? 40 : 44,

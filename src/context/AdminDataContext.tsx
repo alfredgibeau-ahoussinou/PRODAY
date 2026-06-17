@@ -14,7 +14,10 @@ import type { ClubAnnouncement } from '../models/ClubAnnouncement';
 import type { TeamEvent } from '../models/TeamEvent';
 import type { FriendlyMatch } from '../models/FriendlyMatch';
 import type { SponsorOffer, ClubFundingGoal } from '../models/SponsorOffer';
+import type { CommunityReel } from '../models/CommunityReel';
+import type { ReelReport } from '../models/ReelReport';
 import { adminService, type PlatformStats } from '../services/admin.service';
+import { userNeedsAdminVerificationReview } from '../utils/adminUserVerification';
 
 interface AdminDataContextValue {
   loading: boolean;
@@ -30,6 +33,8 @@ interface AdminDataContextValue {
   announcements: ClubAnnouncement[];
   sponsorOffers: SponsorOffer[];
   fundingGoals: ClubFundingGoal[];
+  communityReels: CommunityReel[];
+  reelReports: ReelReport[];
   userDocCounts: Record<string, number>;
   refresh: () => Promise<void>;
 }
@@ -52,10 +57,12 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({
   const [announcements, setAnnouncements] = useState<ClubAnnouncement[]>([]);
   const [sponsorOffers, setSponsorOffers] = useState<SponsorOffer[]>([]);
   const [fundingGoals, setFundingGoals] = useState<ClubFundingGoal[]>([]);
+  const [communityReels, setCommunityReels] = useState<CommunityReel[]>([]);
+  const [reelReports, setReelReports] = useState<ReelReport[]>([]);
   const [userDocCounts, setUserDocCounts] = useState<Record<string, number>>({});
 
   const load = useCallback(async () => {
-    const [s, u, e, m, p, c, pay, apps, ann, so, fg] = await Promise.all([
+    const [s, u, e, m, p, c, pay, apps, ann, so, fg, reels, reports] = await Promise.all([
       adminService.getPlatformStats(),
       adminService.listAllUsers(),
       adminService.listAllTeamEvents(),
@@ -67,6 +74,8 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({
       adminService.listAllClubAnnouncements(),
       adminService.listAllSponsorOffers(),
       adminService.listAllFundingGoals(),
+      adminService.listCommunityReels(),
+      adminService.listReelReports(),
     ]);
     setStats(s);
     setUsers(u);
@@ -79,14 +88,13 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({
     setAnnouncements(ann);
     setSponsorOffers(so);
     setFundingGoals(fg);
+    setCommunityReels(reels);
+    setReelReports(reports);
 
-    const pendingStaff = u.filter(
-      (x) =>
-        (x.role === 'coach' || x.role === 'agent') && x.verification_status === 'PENDING'
-    );
+    const pendingReview = u.filter((x) => userNeedsAdminVerificationReview(x));
     const docCounts: Record<string, number> = {};
     await Promise.all(
-      pendingStaff.slice(0, 12).map(async (x) => {
+      pendingReview.slice(0, 24).map(async (x) => {
         const docs = await adminService.listUserDocuments(x.uid);
         docCounts[x.uid] = docs.length;
       })
@@ -125,6 +133,8 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({
       announcements,
       sponsorOffers,
       fundingGoals,
+      communityReels,
+      reelReports,
       userDocCounts,
       refresh,
     }),
@@ -142,6 +152,8 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({
       announcements,
       sponsorOffers,
       fundingGoals,
+      communityReels,
+      reelReports,
       userDocCounts,
       refresh,
     ]

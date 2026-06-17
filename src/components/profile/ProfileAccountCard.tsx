@@ -99,7 +99,7 @@ export const ProfileAccountCard: React.FC<ProfileAccountCardProps> = ({
   });
 
   return (
-    <ProDaySurface variant="module" style={styles.card}>
+    <ProDaySurface variant="flat" style={styles.card}>
       <View style={styles.head}>
         <ProDayText variant="section">Mon compte</ProDayText>
         {onEdit ? (

@@ -8,7 +8,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
-  ScrollView,
 } from 'react-native';
 import { messagesService } from '../services/messages.service';
 import { usersService } from '../services/users.service';
@@ -21,18 +20,18 @@ import { spacing, radius, shadows } from '../theme/designTokens';
 import { useAppTheme } from '../context/ProductLineContext';
 import type { AppColors } from '../theme/universeTheme';
 import { ProDayScreenCanvas } from '../components/ui/ProDayScreenCanvas';
-import { ProDayGradient } from '../components/ui/ProDayGradient';
 import { ProDayText } from '../components/ui/ProDayText';
 import { Icon } from '../components/ui/Icon';
 import { PressableSpring } from '../components/motion';
 import { prodayHaptics } from '../utils/prodayHaptics';
 import { MAX_MESSAGE_BODY } from '../utils/messagingLimits';
-import { isV3ShellEnabled } from '../config/featureFlags';
 import { buildChatQuickReplies } from '../core/social/chatQuickReply.engine';
+import { ChatQuickReplyRail } from '../components/messages/ChatQuickReplyRail';
 import { teamChatService } from '../services/teamChat.service';
 import { isTeamThread } from '../utils/teamChatIds';
 import { trackV3Event } from '../core/analytics/v3Events';
 import { recordV3UserAction } from '../utils/recordV3Action';
+import { useTranslation } from '../context/LocaleContext';
 
 interface ChatScreenProps {
   threadId: string;
@@ -49,6 +48,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
   currentUser,
   onBack,
 }) => {
+  const { t, locale } = useTranslation();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [text, setText] = useState('');
@@ -57,7 +57,6 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
   const [sendBlocked, setSendBlocked] = useState<string | null>(null);
   const listRef = useRef<FlatList>(null);
   const sponsorDark = isSponsorRole(currentUser?.role);
-  const useV3Chat = isV3ShellEnabled();
   const { colors: themeColors } = useAppTheme();
   const styles = useMemo(() => createStyles(themeColors), [themeColors]);
 
@@ -96,7 +95,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
   const initial = otherName.charAt(0).toUpperCase();
 
   const quickReplies = useMemo(() => {
-    if (!useV3Chat || sendBlocked) return [];
+    if (sendBlocked) return [];
     const lastIncoming = [...messages]
       .reverse()
       .find((message) => message.sender_id !== currentUid)?.body;
@@ -105,7 +104,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
       otherName,
       lastIncoming,
     });
-  }, [useV3Chat, sendBlocked, messages, currentUid, otherUser?.role, otherName]);
+  }, [sendBlocked, messages, currentUid, otherUser?.role, otherName]);
 
   useEffect(() => {
     if (!otherUid || isGroupChat) return;
@@ -118,16 +117,16 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
       return;
     }
     if (!currentUser || !otherUser) {
-      setSendBlocked(currentUser && !otherUser ? 'Chargement du profil…' : null);
+      setSendBlocked(currentUser && !otherUser ? t('chat.recipientLoading') : null);
       return;
     }
     if (isStaffVerificationPending(currentUser)) {
-      setSendBlocked('Validez votre diplôme ou licence pour envoyer des messages.');
+      setSendBlocked(t('messages.verifyDiploma'));
       return;
     }
     const permission = evaluateMessagingPermission(currentUser, otherUser);
-    setSendBlocked(permission.allowed ? null : permission.message ?? 'Messagerie bloquée.');
-  }, [currentUser, otherUser, isGroupChat]);
+    setSendBlocked(permission.allowed ? null : permission.message ?? t('chat.blocked'));
+  }, [currentUser, otherUser, isGroupChat, t]);
 
   useEffect(() => {
     setLoading(true);
@@ -150,10 +149,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
     if (!text.trim() || sendBlocked || sending) return;
     if (isGroupChat) {
       if (currentUser && isStaffVerificationPending(currentUser)) {
-        Alert.alert(
-          'Vérification requise',
-          'Validez votre diplôme ou licence pour envoyer des messages.',
-        );
+        Alert.alert(t('chat.verifyRequired'), t('messages.verifyDiploma'));
         return;
       }
       setSending(true);
@@ -166,36 +162,33 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
         );
         prodayHaptics.confirm();
         setText('');
-        if (useV3Chat && currentUser) {
+        if (currentUser) {
           trackV3Event('message_sent', { threadId, group: true });
           recordV3UserAction(currentUser, 'send_message');
         }
       } catch (e) {
-        Alert.alert('Erreur', e instanceof Error ? e.message : 'Envoi impossible.');
+        Alert.alert(t('common.error'), e instanceof Error ? e.message : t('chat.sendFailed'));
       } finally {
         setSending(false);
       }
       return;
     }
     if (!otherUid) {
-      Alert.alert('Envoi impossible', 'Destinataire introuvable pour cette conversation.');
+      Alert.alert(t('chat.sendBlocked'), t('chat.recipientNotFound'));
       return;
     }
     if (!otherUser) {
-      Alert.alert('Envoi impossible', 'Profil destinataire en cours de chargement.');
+      Alert.alert(t('chat.sendBlocked'), t('chat.recipientLoading'));
       return;
     }
     if (currentUser && isStaffVerificationPending(currentUser)) {
-      Alert.alert(
-        'Vérification requise',
-        'Validez votre diplôme ou licence pour envoyer des messages.',
-      );
+      Alert.alert(t('chat.verifyRequired'), t('messages.verifyDiploma'));
       return;
     }
     if (currentUser) {
       const permission = evaluateMessagingPermission(currentUser, otherUser);
       if (!permission.allowed) {
-        Alert.alert(permission.title ?? 'Messagerie bloquée', permission.message ?? '');
+        Alert.alert(permission.title ?? t('chat.blocked'), permission.message ?? '');
         return;
       }
     }
@@ -210,14 +203,14 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
       );
       prodayHaptics.confirm();
       setText('');
-      if (useV3Chat && currentUser) {
+      if (currentUser) {
         trackV3Event('message_sent', { threadId });
         recordV3UserAction(currentUser, 'send_message');
       }
     } catch (e) {
       Alert.alert(
-        'Envoi impossible',
-        e instanceof Error ? e.message : 'Vérifiez votre connexion et réessayez.',
+        t('chat.sendBlocked'),
+        e instanceof Error ? e.message : t('chat.sendFailed')
       );
     } finally {
       setSending(false);
@@ -235,17 +228,26 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
           <Icon name="arrow-back" size={20} color={ui.text} />
         </PressableSpring>
         <View style={styles.headerCenter}>
-          <View style={[styles.headerAvatar, { backgroundColor: themeColors.ink }]}>
-            <ProDayText variant="section" inverse>
-              {initial}
-            </ProDayText>
+          <View
+            style={[
+              styles.headerAvatar,
+              { backgroundColor: isGroupChat ? ui.accent : themeColors.ink },
+            ]}
+          >
+            {isGroupChat ? (
+              <Icon name="people" size={20} color={ui.onAccent} variant="filled" />
+            ) : (
+              <ProDayText variant="section" inverse>
+                {initial}
+              </ProDayText>
+            )}
           </View>
-          <View>
-            <ProDayText variant="section" numberOfLines={1}>
+          <View style={styles.headerCopy}>
+            <ProDayText variant="section" numberOfLines={1} style={styles.headerName}>
               {otherName}
             </ProDayText>
             <ProDayText variant="caption" muted>
-              Conversation ProDay
+              {isGroupChat ? t('chat.teamChat') : t('chat.messaging')}
             </ProDayText>
           </View>
         </View>
@@ -253,24 +255,27 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
       </View>
 
       {loading ? (
-        <ActivityIndicator color={ui.accent} style={styles.loader} />
+        <View style={[styles.chatArea, { backgroundColor: ui.surfaceMuted }]}>
+          <ActivityIndicator color={ui.accent} style={styles.loader} />
+        </View>
       ) : (
         <FlatList
           ref={listRef}
+          style={[styles.chatArea, { backgroundColor: ui.surfaceMuted }]}
           data={messages}
           keyExtractor={(m) => m.id}
           contentContainerStyle={styles.list}
           onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: false })}
           ListEmptyComponent={
             <View style={styles.emptyWrap}>
-              <ProDayGradient kind="cta" style={styles.emptyIcon}>
-                <Icon name="chat" size={24} color="#FFFFFF" variant="filled" />
-              </ProDayGradient>
+              <View style={[styles.emptyIcon, { backgroundColor: ui.accent }]}>
+                <Icon name="chat" size={24} color={ui.onAccent} variant="filled" />
+              </View>
               <ProDayText variant="section" style={styles.emptyTitle}>
-                Démarrez la conversation
+                {t('chat.empty.title')}
               </ProDayText>
               <ProDayText variant="body" muted style={styles.emptySub}>
-                Envoyez le premier message pour échanger avec {otherName}.
+                {t('chat.empty.subtitle', { name: otherName })}
               </ProDayText>
             </View>
           }
@@ -279,16 +284,11 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
             return (
               <View style={[styles.bubbleWrap, mine && styles.bubbleWrapMine]}>
                 {mine ? (
-                  <ProDayGradient
-                    kind="cta"
-                    style={styles.bubbleMine}
-                    start={{ x: 0, y: 0.5 }}
-                    end={{ x: 1, y: 0.5 }}
-                  >
+                  <View style={[styles.bubbleMine, { backgroundColor: ui.accent }]}>
                     <ProDayText variant="body" inverse style={styles.bubbleText}>
                       {item.body}
                     </ProDayText>
-                  </ProDayGradient>
+                  </View>
                 ) : (
                   <View
                     style={[
@@ -302,7 +302,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
                   </View>
                 )}
                 <ProDayText variant="caption" muted style={styles.time}>
-                  {item.created_at.toLocaleTimeString('fr-FR', {
+                  {item.created_at.toLocaleTimeString(locale, {
                     hour: '2-digit',
                     minute: '2-digit',
                   })}
@@ -323,66 +323,42 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
       ) : null}
 
       {quickReplies.length > 0 ? (
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.quickReplies}
-          keyboardShouldPersistTaps="handled"
-        >
-          {quickReplies.map((reply) => (
-            <PressableSpring
-              key={reply}
-              style={[styles.quickChip, { backgroundColor: ui.surfaceMuted, borderColor: ui.border }]}
-              onPress={() => setText(reply)}
-              scaleTo={0.97}
-              haptic
-            >
-              <ProDayText variant="caption" accent numberOfLines={1}>
-                {reply}
-              </ProDayText>
-            </PressableSpring>
-          ))}
-        </ScrollView>
+        <ChatQuickReplyRail replies={quickReplies} onSelect={setText} />
       ) : null}
 
-      <View style={[styles.composer, { backgroundColor: ui.surface, borderTopColor: ui.border }]}>
-        <TextInput
-          style={[
-            styles.input,
-            {
-              backgroundColor: ui.surfaceMuted,
-              borderColor: ui.border,
-              color: ui.text,
-            },
-          ]}
-          placeholder="Votre message…"
-          placeholderTextColor={ui.textMuted}
-          value={text}
-          onChangeText={setText}
-          multiline
-          maxLength={MAX_MESSAGE_BODY}
-          editable={!sendBlocked}
-        />
-        <PressableSpring
-          onPress={handleSend}
-          disabled={!text.trim() || sending || Boolean(sendBlocked)}
-          scaleTo={0.9}
-          haptic
-        >
-          <ProDayGradient
-            kind="cta"
-            style={[
-              styles.sendBtn,
-              (!text.trim() || sending || sendBlocked) && styles.sendDisabled,
-            ]}
+      <View style={[styles.composerWrap, { backgroundColor: ui.surface, borderTopColor: ui.border }]}>
+        <View style={[styles.composer, { backgroundColor: ui.surfaceMuted, borderColor: ui.border }]}>
+          <TextInput
+            style={[styles.input, { color: ui.text }]}
+            placeholder={t('chat.placeholder')}
+            placeholderTextColor={ui.textMuted}
+            value={text}
+            onChangeText={setText}
+            multiline
+            maxLength={MAX_MESSAGE_BODY}
+            editable={!sendBlocked}
+          />
+          <PressableSpring
+            onPress={handleSend}
+            disabled={!text.trim() || sending || Boolean(sendBlocked)}
+            scaleTo={0.9}
+            haptic
           >
-            {sending ? (
-              <ActivityIndicator color="#FFFFFF" size="small" />
-            ) : (
-              <Icon name="chat" size={20} color="#FFFFFF" variant="filled" />
-            )}
-          </ProDayGradient>
-        </PressableSpring>
+            <View
+              style={[
+                styles.sendBtn,
+                { backgroundColor: ui.accent },
+                (!text.trim() || sending || sendBlocked) && styles.sendDisabled,
+              ]}
+            >
+              {sending ? (
+                <ActivityIndicator color={ui.onAccent} size="small" />
+              ) : (
+                <Icon name="chevron-forward" size={18} color={ui.onAccent} />
+              )}
+            </View>
+          </PressableSpring>
+        </View>
       </View>
     </KeyboardAvoidingView>
   );
@@ -398,7 +374,7 @@ function createStyles(_c: AppColors) {
       alignItems: 'center',
       paddingHorizontal: spacing.md,
       paddingVertical: spacing.sm,
-      borderBottomWidth: 1,
+      borderBottomWidth: StyleSheet.hairlineWidth,
       gap: spacing.sm,
     },
     backBtn: {
@@ -416,13 +392,16 @@ function createStyles(_c: AppColors) {
       gap: spacing.sm,
     },
     headerAvatar: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
+      width: 44,
+      height: 44,
+      borderRadius: radius.md,
       alignItems: 'center',
       justifyContent: 'center',
     },
+    headerCopy: { flex: 1, minWidth: 0 },
+    headerName: { fontWeight: '800' },
     headerSpacer: { width: 40 },
+    chatArea: { flex: 1 },
     loader: { marginTop: spacing.xl },
     list: { padding: spacing.lg, paddingBottom: spacing.md, flexGrow: 1 },
     emptyWrap: {
@@ -433,29 +412,32 @@ function createStyles(_c: AppColors) {
     emptyIcon: {
       width: 56,
       height: 56,
-      borderRadius: 28,
+      borderRadius: radius.lg,
       alignItems: 'center',
       justifyContent: 'center',
       marginBottom: spacing.sm,
     },
     emptyTitle: { textAlign: 'center' },
     emptySub: { textAlign: 'center', paddingHorizontal: spacing.xl },
-    bubbleWrap: { marginBottom: spacing.md, maxWidth: '82%' },
+    bubbleWrap: { marginBottom: spacing.md, maxWidth: '80%' },
     bubbleWrapMine: { alignSelf: 'flex-end', alignItems: 'flex-end' },
     bubbleMine: {
       borderRadius: radius.lg,
-      borderBottomRightRadius: 4,
-      padding: spacing.md,
+      borderBottomRightRadius: 6,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm + 2,
       ...shadows.soft,
     },
     bubbleTheirs: {
       borderRadius: radius.lg,
-      borderBottomLeftRadius: 4,
-      padding: spacing.md,
-      borderWidth: 1,
+      borderBottomLeftRadius: 6,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm + 2,
+      borderWidth: StyleSheet.hairlineWidth,
+      ...shadows.soft,
     },
     bubbleText: { lineHeight: 22 },
-    time: { marginTop: 4 },
+    time: { marginTop: 4, fontSize: 11 },
     blocked: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -465,42 +447,35 @@ function createStyles(_c: AppColors) {
       padding: spacing.sm,
       borderRadius: radius.md,
     },
+    composerWrap: {
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      borderTopWidth: StyleSheet.hairlineWidth,
+    },
     composer: {
       flexDirection: 'row',
       alignItems: 'flex-end',
       gap: spacing.sm,
-      padding: spacing.md,
-      borderTopWidth: 1,
+      borderRadius: radius.pill,
+      borderWidth: 1,
+      paddingLeft: spacing.lg,
+      paddingRight: spacing.xs,
+      paddingVertical: spacing.xs,
     },
     input: {
       flex: 1,
-      minHeight: 44,
+      minHeight: 40,
       maxHeight: 120,
-      borderRadius: radius.pill,
-      paddingHorizontal: spacing.lg,
-      paddingVertical: spacing.sm,
       fontSize: 15,
-      borderWidth: 1,
+      paddingVertical: spacing.sm,
     },
     sendBtn: {
-      width: 48,
-      height: 48,
-      borderRadius: 24,
+      width: 40,
+      height: 40,
+      borderRadius: 20,
       alignItems: 'center',
       justifyContent: 'center',
     },
-    sendDisabled: { opacity: 0.45 },
-    quickReplies: {
-      paddingHorizontal: spacing.md,
-      paddingVertical: spacing.sm,
-      gap: spacing.sm,
-    },
-    quickChip: {
-      paddingHorizontal: spacing.md,
-      paddingVertical: spacing.sm,
-      borderRadius: radius.pill,
-      borderWidth: 1,
-      maxWidth: 220,
-    },
+    sendDisabled: { opacity: 0.4 },
   });
 }

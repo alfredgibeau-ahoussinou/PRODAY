@@ -34,6 +34,11 @@ export async function resolveReelPlayback(
       return resolveTikTokReelVideo(reel.authorHandle, reel.shortCode);
     case 'youtube':
       return resolveYoutubeShortVideo(reel.shortCode);
+    case 'pexels':
+    case 'proday':
+      return reel.videoUrl
+        ? { videoUrl: reel.videoUrl, posterUrl: reel.posterUrl, caption: reel.caption }
+        : null;
     default:
       return null;
   }

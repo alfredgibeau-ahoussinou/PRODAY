@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'rea
 import { useAuth } from '../../context/AuthContext';
 import { useIsAdmin } from '../../hooks/useIsAdmin';
 import { Icon } from '../../components/ui/Icon';
+import { PLATFORM_ADMIN_EMAIL } from '../../config/admin';
 import { useAdminStyles } from '../../components/admin/adminStyles';
 import { spacing } from '../../theme/designTokens';
 import type { AppColors } from '../../theme/universeTheme';
@@ -35,8 +36,8 @@ export const AdminGateScreen: React.FC = () => {
         <Text style={styles.title}>Droits administrateur requis</Text>
         <Text style={styles.sub}>
           {needsSetup
-            ? 'Votre compte est reconnu, mais le token Firebase n’a pas encore le claim admin.\n\nExécutez npm run admin:setup sur votre Mac, puis déconnectez-vous et reconnectez-vous.'
-            : 'Connectez-vous avec un compte administrateur ProDay pour accéder à cet espace.'}
+            ? `Votre compte (${PLATFORM_ADMIN_EMAIL}) est reconnu, mais le token Firebase n’a pas encore le claim admin.\n\nExécutez npm run admin:setup sur votre Mac, puis déconnectez-vous et reconnectez-vous.`
+            : `Connectez-vous avec le compte administrateur (${PLATFORM_ADMIN_EMAIL}) pour accéder à cet espace.`}
         </Text>
         <TouchableOpacity style={baseStyles.btn} onPress={() => refreshAdminClaim()}>
           <Text style={baseStyles.btnText}>Rafraîchir le token</Text>

@@ -12,6 +12,7 @@ import {
   getRoleDashboardMeta,
   type RoleDashboardMeta,
 } from './roleDashboardExperience';
+import { getMercatoTabLabel } from './mercatoTabLabel';
 import { DISCOVER_UNIVERSE_CARDS } from './discoverChapters';
 import { DISCOVER_UNIVERSE_CARDS_WOMAN } from './discoverWomanContent';
 import { DISCOVER_UNIVERSE_CARDS_PRO } from './discoverProContent';
@@ -131,19 +132,19 @@ export function getVisibleMainTabs(
   return ['home', 'recrutement', 'matchs', 'reels', 'feed', 'messages', 'profil'];
 }
 
-export function getMercatoTabLabel(line: ProductLineId, role?: UserRole | null): string {
-  if (line === 'woman') return 'Mercato F';
-  if (line === 'sante') return 'Annuaire santé';
-  if (line === 'pro') return 'Mercato Pro';
-  if (role === 'player') return 'Candidater';
-  return 'Mercato';
-}
+export { getMercatoTabLabel } from './mercatoTabLabel';
 
 export function getTabShortLabel(
   tab: MainTabId,
   line: ProductLineId,
-  role?: UserRole | null
+  role?: UserRole | null,
+  translate?: (key: string) => string
 ): string {
+  if (translate) {
+    const key = `tabs.${tab}`;
+    const translated = translate(key);
+    if (translated !== key) return translated;
+  }
   if (isMedicalPractitionerRole(role)) {
     return getPhysioTabLabel(tab);
   }

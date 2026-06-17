@@ -17,10 +17,10 @@ import { CreateTeamEventScreen } from './CreateTeamEventScreen';
 import { useAuth } from '../context/AuthContext';
 import { spacing, radius } from '../theme/designTokens';
 import { useAppTheme } from '../context/ProductLineContext';
-import { V3TabShell } from '../components/v3/V3TabShell';
-import { V3ScreenBack } from '../components/v3/V3ScreenBack';
+import { TabScreenShell } from '../components/app/TabScreenShell';
+import { ScreenBackButton } from '../components/ui/ScreenBackButton';
 import { useSectionIntelligence } from '../hooks/useSectionIntelligence';
-import { isV3SubScreenEnabled } from '../hooks/useV3SubScreen';
+import { isSubScreenShellEnabled } from '../hooks/useSubScreenShell';
 import { StaggerReveal, PressableSpring } from '../components/motion';
 import { TAB_BAR_CONTENT_INSET } from '../navigation/tabBarLayout';
 
@@ -38,7 +38,7 @@ export const DetectionEventsScreen: React.FC<DetectionEventsScreenProps> = ({
   const { profile } = useAuth();
   const { events, loading, refresh } = useDetectionEvents();
   const { colors: themeColors, productLine } = useAppTheme();
-  const useV3Header = isV3SubScreenEnabled(profile, 'staff');
+  const useShellHeader = isSubScreenShellEnabled(profile, 'staff');
   const intelligence = useSectionIntelligence('matchs', profile ?? null, productLine, {
     openMatches: events.length,
   });
@@ -163,7 +163,7 @@ export const DetectionEventsScreen: React.FC<DetectionEventsScreenProps> = ({
                 ) : null}
               </TouchableOpacity>
             );
-            return useV3Header ? (
+            return useShellHeader ? (
               <StaggerReveal index={Math.min(index, 8)}>{card}</StaggerReveal>
             ) : (
               card
@@ -179,18 +179,18 @@ export const DetectionEventsScreen: React.FC<DetectionEventsScreenProps> = ({
     </>
   );
 
-  if (useV3Header) {
+  if (useShellHeader) {
     return (
-      <V3TabShell
+      <TabScreenShell
         caption="Scouting"
         title="Journées détection"
         subtitle={`${events.length} session(s) à venir`}
-        right={<V3ScreenBack onPress={onBack} />}
-        intelligence={intelligence}
+        right={<ScreenBackButton onPress={onBack} />}
+        
         flat
       >
         {listContent}
-      </V3TabShell>
+      </TabScreenShell>
     );
   }
 

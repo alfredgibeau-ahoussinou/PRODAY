@@ -43,9 +43,20 @@ Sans **Blaze**, les Functions ne se déploient pas : la console admin peut quand
 
 ## 4. Accès dans l’app
 
-1. Connexion avec le compte admin
-2. Onglet **Profil** → **Console Admin ProDay**
-3. Onglets : Vue d’ensemble, Utilisateurs, Événements, Mercato, Matchs
+1. Connexion avec le compte admin (`proday.admin@gmail.com` + mot de passe défini dans `.env`)
+2. L’app ouvre automatiquement l’**espace Admin** (claim `admin: true` requis)
+3. Onglets : **Pilotage**, **Utilisateurs**, **Modération**, **Clubs**, **Système**
+4. **Prévisualiser l’app utilisateur** : onglet Système → mode prévisualisation (bandeau en haut)
+
+## Mot de passe
+
+Le mot de passe n’est **pas** stocké dans Git. Définissez-le uniquement dans `.env` :
+
+```bash
+ADMIN_SETUP_PASSWORD=votre-mot-de-passe-securise
+```
+
+Puis `npm run admin:setup` pour créer ou réinitialiser le compte Auth.
 
 ## Sécurité
 

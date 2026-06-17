@@ -1,7 +1,9 @@
 import type { IconName } from '../../components/ui/Icon';
 import type { UserRole } from '../../models/User';
-import type { SignupPageId, SignupPhase } from './signupFlowConfig';
-import { MEDICAL_POLE_SPECIALTIES } from './signupFlowConfig';
+import { tr } from '../../i18n/translate';
+import type { TranslateFn } from '../../i18n/types';
+import type { SignupPageId, SignupPhase } from './signupFlowTypes';
+import { MEDICAL_POLE_SPECIALTIES } from './signupFlowTypes';
 
 export type MedicalSpecialtyId =
   | 'kine'
@@ -270,31 +272,36 @@ export function getRoleSignupAccent(role: UserRole): RoleSignupAccent {
   return getRoleSignupExperience(role).accent ?? DEFAULT_ACCENT;
 }
 
-export function getRoleSignupPhases(role: UserRole): SignupPhase[] {
-  return getRoleSignupExperience(role).phases;
+export function getRoleSignupPhases(role: UserRole, t?: TranslateFn): SignupPhase[] {
+  return localizeRoleExperience(getRoleSignupExperience(role), role, t).phases;
 }
 
-export function getRoleWelcomeCopy(role: UserRole): { title: string; subtitle: string } {
-  const e = getRoleSignupExperience(role);
+export function getRoleWelcomeCopy(role: UserRole, t?: TranslateFn): { title: string; subtitle: string } {
+  const e = localizeRoleExperience(getRoleSignupExperience(role), role, t);
   return { title: e.welcomeTitle, subtitle: e.welcomeSubtitle };
 }
 
-export function getRolePreviewSteps(role: UserRole): string[] {
-  return getRoleSignupExperience(role).previewSteps;
+export function getRolePreviewSteps(role: UserRole, t?: TranslateFn): string[] {
+  return localizeRoleExperience(getRoleSignupExperience(role), role, t).previewSteps;
 }
 
 export function getRoleLaunchCopy(
   role: UserRole,
-  flags: { emailVerificationPending?: boolean }
+  flags: { emailVerificationPending?: boolean },
+  t?: TranslateFn
 ): { title: string; body: string; finishLabel: string } {
   if (flags.emailVerificationPending) {
     return {
-      title: 'Presque prêt',
-      body: 'Confirmez votre email pour débloquer votre espace personnalisé.',
-      finishLabel: 'Compris',
+      title: tr(t, 'signup.launch.emailValidated.title', 'Presque prêt'),
+      body: tr(
+        t,
+        'signup.launch.staff.email.body',
+        'Confirmez votre email pour débloquer votre espace personnalisé.'
+      ),
+      finishLabel: tr(t, 'signup.launch.emailValidated.finish', 'Compris'),
     };
   }
-  const e = getRoleSignupExperience(role);
+  const e = localizeRoleExperience(getRoleSignupExperience(role), role, t);
   return {
     title: e.launchTitle,
     body: e.launchBody,
@@ -302,150 +309,172 @@ export function getRoleLaunchCopy(
   };
 }
 
-export function getStepMetaForRole(page: SignupPageId, role: UserRole): RoleStepMeta {
+function localizeRoleExperience(
+  e: RoleSignupExperience,
+  role: UserRole,
+  t?: TranslateFn
+): RoleSignupExperience {
+  if (!t) return e;
+  const p = (suffix: string, val: string) => tr(t, `signup.experience.${role}.${suffix}`, val);
+  return {
+    ...e,
+    welcomeTitle: p('welcomeTitle', e.welcomeTitle),
+    welcomeSubtitle: p('welcomeSubtitle', e.welcomeSubtitle),
+    previewSteps: e.previewSteps.map((step, index) => p(`previewStep.${index}`, step)),
+    phases: e.phases.map((phase) => ({
+      ...phase,
+      label: p(`phase.${phase.id}`, phase.label),
+    })),
+    launchTitle: p('launchTitle', e.launchTitle),
+    launchBody: p('launchBody', e.launchBody),
+    launchFinishLabel: p('launchFinishLabel', e.launchFinishLabel),
+  };
+}
+
+export function getStepMetaForRole(page: SignupPageId, role: UserRole, t?: TranslateFn): RoleStepMeta {
+  const metaKey = (field: string, fallback: string) =>
+    tr(t, `signup.roleMeta.${page}.${field}`, fallback);
   switch (page) {
     case 'welcome':
       return {
-        ...getRoleWelcomeCopy(role),
+        ...getRoleWelcomeCopy(role, t),
         heroIcon: role === 'physio' ? 'heart' : role === 'sponsor' ? 'star-four-points' : 'football',
-        stepName: 'Bienvenue',
+        stepName: metaKey('stepName', tr(t, 'signup.page.welcome', 'Bienvenue')),
       };
     case 'space':
       return {
-        title: 'Ton univers foot',
-        subtitle: 'Féminin, masculin ou école — tout le parcours s’adapte.',
+        title: metaKey('title', 'Ton univers foot'),
+        subtitle: metaKey('subtitle', 'Féminin, masculin ou école — tout le parcours s’adapte.'),
         heroIcon: 'football',
-        stepName: 'Espace',
+        stepName: metaKey('stepName', tr(t, 'signup.page.space', 'Espace')),
       };
     case 'sport':
       return {
-        title: 'Ta fiche sportive',
-        subtitle: 'Poste, catégorie, niveau — une page, une étape.',
+        title: metaKey('title', 'Ta fiche sportive'),
+        subtitle: metaKey('subtitle', 'Poste, catégorie, niveau — une page, une étape.'),
         heroIcon: 'shirt',
-        stepName: 'Sport',
+        stepName: metaKey('stepName', tr(t, 'signup.page.sport', 'Sport')),
       };
     case 'location':
       return {
-        title: 'Où tu joues',
-        subtitle: 'Ville et département pour le Mercato local.',
+        title: metaKey('title', 'Où tu joues'),
+        subtitle: metaKey('subtitle', 'Ville et département pour le Mercato local.'),
         heroIcon: 'location',
-        stepName: 'Ville',
+        stepName: metaKey('stepName', tr(t, 'signup.page.location', 'Ville')),
       };
     case 'stats':
       return {
-        title: 'Tes stats saison',
-        subtitle: 'Matchs, buts, passes — alimentent ton CV vivant.',
+        title: metaKey('title', 'Tes stats saison'),
+        subtitle: metaKey('subtitle', 'Matchs, buts, passes — alimentent ton CV vivant.'),
         heroIcon: 'star',
-        stepName: 'Stats',
+        stepName: metaKey('stepName', tr(t, 'signup.page.stats', 'Stats')),
       };
     case 'coach_pro':
       return {
-        title: 'Profil coach',
-        subtitle: 'Diplôme, ville et zone d’intervention — vérification IA après l’email.',
+        title: metaKey('title', 'Profil coach'),
+        subtitle: metaKey('subtitle', 'Diplôme, ville et zone d’intervention — vérification IA après l’email.'),
         heroIcon: 'school',
-        stepName: 'Coach',
+        stepName: metaKey('stepName', tr(t, 'signup.page.coach_pro', 'Coach')),
       };
     case 'club_pro':
       return {
-        title: 'Votre structure',
-        subtitle: 'Nom du club, ville et département — mandat contrôlé ensuite.',
+        title: metaKey('title', 'Votre structure'),
+        subtitle: metaKey('subtitle', 'Nom du club, ville et département — mandat contrôlé ensuite.'),
         heroIcon: 'business',
-        stepName: 'Club',
+        stepName: metaKey('stepName', tr(t, 'signup.page.club_pro', 'Club')),
       };
     case 'agent_pro':
       return {
-        title: 'Profil agent',
-        subtitle: 'Licence, territoire et ville — accès messagerie après validation.',
+        title: metaKey('title', 'Profil agent'),
+        subtitle: metaKey('subtitle', 'Licence, territoire et ville — accès messagerie après validation.'),
         heroIcon: 'briefcase',
-        stepName: 'Agent',
+        stepName: metaKey('stepName', tr(t, 'signup.page.agent_pro', 'Agent')),
       };
     case 'recruiter_pro':
       return {
-        title: 'Profil recruteur',
-        subtitle: 'Spécialité, territoire et ville — mandat contrôlé après l’email.',
+        title: metaKey('title', 'Profil recruteur'),
+        subtitle: metaKey('subtitle', 'Spécialité, territoire et ville — mandat contrôlé après l’email.'),
         heroIcon: 'search',
-        stepName: 'Recruteur',
+        stepName: metaKey('stepName', tr(t, 'signup.page.recruiter_pro', 'Recruteur')),
       };
     case 'organizer_pro':
       return {
-        title: 'Profil organisateur',
-        subtitle: 'Structure, ville — tournois et détections sur ProDay.',
+        title: metaKey('title', 'Profil organisateur'),
+        subtitle: metaKey('subtitle', 'Structure, ville — tournois et détections sur ProDay.'),
         heroIcon: 'trophy',
-        stepName: 'Orga',
+        stepName: metaKey('stepName', tr(t, 'signup.page.organizer_pro', 'Orga')),
       };
     case 'medical_specialty':
       return {
-        title: 'Votre spécialité',
-        subtitle: 'Choisissez votre domaine — le parcours suivant est dédié à ce métier.',
+        title: metaKey('title', 'Votre spécialité'),
+        subtitle: metaKey('subtitle', 'Choisissez votre domaine — le parcours suivant est dédié à ce métier.'),
         heroIcon: 'heart',
-        stepName: 'Spécialité',
+        stepName: metaKey('stepName', tr(t, 'signup.page.medical_specialty', 'Spécialité')),
       };
     case 'medical_practice':
       return {
-        title: 'Votre pratique',
-        subtitle: 'Précisez comment vous accompagnez les sportifs.',
+        title: metaKey('title', 'Votre pratique'),
+        subtitle: metaKey('subtitle', 'Précisez comment vous accompagnez les sportifs.'),
         heroIcon: 'heart',
-        stepName: 'Cabinet',
+        stepName: metaKey('stepName', tr(t, 'signup.page.medical_practice', 'Cabinet')),
       };
     case 'sponsor_pro':
       return {
-        title: 'Votre territoire',
-        subtitle: 'Zone d’action et marque — visibilité auprès des clubs locaux.',
+        title: metaKey('title', 'Votre territoire'),
+        subtitle: metaKey('subtitle', 'Zone d’action et marque — visibilité auprès des clubs locaux.'),
         heroIcon: 'star-four-points',
-        stepName: 'Partenaire',
+        stepName: metaKey('stepName', tr(t, 'signup.page.sponsor_pro', 'Partenaire')),
       };
     case 'family':
       return {
-        title: 'Responsable légal',
-        subtitle: 'Obligatoire pour les mineurs — conformité ProDay.',
+        title: metaKey('title', 'Responsable légal'),
+        subtitle: metaKey('subtitle', 'Obligatoire pour les mineurs — conformité ProDay.'),
         heroIcon: 'shield',
-        stepName: 'Famille',
+        stepName: metaKey('stepName', tr(t, 'signup.page.family', 'Famille')),
       };
     case 'account':
       return {
-        title: role === 'sponsor' ? 'Identité partenaire' : 'Ton identité',
-        subtitle: 'Nom affiché et email — base de votre espace.',
+        title: metaKey(
+          'title',
+          role === 'sponsor' ? 'Identité partenaire' : 'Ton identité'
+        ),
+        subtitle: metaKey('subtitle', 'Nom affiché et email — base de votre espace.'),
         heroIcon: 'person',
-        stepName: 'Identité',
+        stepName: metaKey('stepName', tr(t, 'signup.page.account', 'Identité')),
       };
     case 'security':
       return {
-        title: 'Sécurisez l’accès',
-        subtitle: 'Mot de passe robuste puis confirmation par email.',
+        title: metaKey('title', 'Sécurisez l’accès'),
+        subtitle: metaKey('subtitle', 'Mot de passe robuste puis confirmation par email.'),
         heroIcon: 'lock',
-        stepName: 'Sécurité',
+        stepName: metaKey('stepName', tr(t, 'signup.page.security', 'Sécurité')),
       };
     case 'launch':
       return {
-        title: 'C’est prêt',
-        subtitle: getRoleSignupExperience(role).launchBody,
+        title: metaKey('title', 'C’est prêt'),
+        subtitle: localizeRoleExperience(getRoleSignupExperience(role), role, t).launchBody,
         heroIcon: 'checkmark-circle',
-        stepName: 'Go',
+        stepName: metaKey('stepName', tr(t, 'signup.page.launch', 'Go')),
       };
     default:
       return {
-        title: 'ProDay',
-        subtitle: '',
+        title: metaKey('title', 'ProDay'),
+        subtitle: metaKey('subtitle', ''),
         heroIcon: 'star-four-points',
       };
   }
 }
 
-export function getMedicalPracticeMeta(specialtyLabel: string): RoleStepMeta {
-  const cfg =
-    MEDICAL_SPECIALTY_CONFIGS.find((c) => c.label === specialtyLabel) ??
-    MEDICAL_SPECIALTY_CONFIGS[0];
-  return {
-    title: cfg.practiceTitle,
-    subtitle: cfg.practiceSubtitle,
-    heroIcon: cfg.icon,
-    stepName: 'Cabinet',
-  };
+/** @deprecated Utiliser getMedicalConfigById */
+export function getMedicalPracticeMeta(specialtyLabel: string, t?: TranslateFn): RoleStepMeta {
+  const { resolveMedicalSpecialtyId, getMedicalPracticeMetaById } = require('./signupMedicalI18n') as typeof import('./signupMedicalI18n');
+  const id = resolveMedicalSpecialtyId(specialtyLabel) ?? 'kine';
+  return getMedicalPracticeMetaById(id, t);
 }
 
-export function getMedicalConfig(specialtyLabel: string): MedicalSpecialtyConfig {
-  return (
-    MEDICAL_SPECIALTY_CONFIGS.find((c) => c.label === specialtyLabel) ??
-    MEDICAL_SPECIALTY_CONFIGS[0]
-  );
+/** @deprecated Utiliser getMedicalConfigById */
+export function getMedicalConfig(specialtyLabel: string, t?: TranslateFn) {
+  const { resolveMedicalSpecialtyId, getMedicalConfigById } = require('./signupMedicalI18n') as typeof import('./signupMedicalI18n');
+  const id = resolveMedicalSpecialtyId(specialtyLabel) ?? 'kine';
+  return getMedicalConfigById(id, t);
 }

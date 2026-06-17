@@ -156,19 +156,19 @@ export const ProDayActionTiles: React.FC<ProDayActionTilesProps> = ({
 const styles = StyleSheet.create({
   wrap: { marginBottom: spacing.sm },
   inset: { paddingHorizontal: spacing.lg },
-  row: { flexDirection: 'row', gap: spacing.sm },
-  rowWrap: { flexWrap: 'wrap' },
+  row: { flexDirection: 'row', gap: spacing.sm, justifyContent: 'center' },
+  rowWrap: { flexWrap: 'wrap', justifyContent: 'center' },
   cellFlex: { flex: 1 },
   tileFill: { flex: 1 },
   cellHalf: {
-    width: '48%',
-    flexGrow: 1,
+    width: '47%',
+    flexGrow: 0,
     minWidth: '46%',
   },
   cellThird: {
-    width: '31%',
-    flexGrow: 1,
-    minWidth: '30%',
+    width: '30%',
+    flexGrow: 0,
+    minWidth: '29%',
   },
   tile: {
     alignItems: 'center',

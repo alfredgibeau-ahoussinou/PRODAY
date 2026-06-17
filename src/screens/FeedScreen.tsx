@@ -23,28 +23,15 @@ import { PhysioCarePanel } from '../components/feed/PhysioCarePanel';
 import { PressableSpring, SkeletonList, InteractiveListItem } from '../components/motion';
 import { prodayHaptics } from '../utils/prodayHaptics';
 import { SearchBar } from '../components/ui/SearchBar';
-import {
-  FEED_TYPE_FILTERS,
-  type FeedTypeFilter,
-} from '../content/feedChapters';
 import { ProDaySelect } from '../components/ui/ProDaySelect';
 import { spacing, radius } from '../theme/designTokens';
 import { useAppTheme } from '../context/ProductLineContext';
-import { isV3ShellEnabled } from '../config/featureFlags';
 import { rankFeedPosts } from '../core/recommendation/feedRanking.engine';
+import { useTranslation } from '../context/LocaleContext';
+import { getFeedTypeFilters } from '../i18n/localizedChapters';
+import type { FeedTypeFilter } from '../content/feedChapters';
 
 export type FeedPanel = 'full' | 'list' | 'compose';
-
-const ROLE_LABEL: Record<UserRole, string> = {
-  player: 'Joueur',
-  coach: 'Coach',
-  club: 'Club',
-  agent: 'Agent',
-  recruiter: 'Recruteur',
-  organizer: 'Organisateur',
-  sponsor: 'Partenaire',
-  physio: 'Kinésithérapeute',
-};
 
 interface FeedScreenProps {
   profile: User;
@@ -54,9 +41,15 @@ interface FeedScreenProps {
   onOpenMessages: () => void;
 }
 
-function roleLabelForLine(role: UserRole, productLine: ProductLineId): string {
-  if (role === 'player' && productLine === 'woman') return 'Joueuse';
-  return ROLE_LABEL[role] ?? role;
+function roleLabelForLine(
+  role: UserRole,
+  productLine: ProductLineId,
+  t: (key: string) => string
+): string {
+  if (role === 'player' && productLine === 'woman') return t('role.player.woman');
+  const key = `role.${role}` as const;
+  const value = t(key);
+  return value === key ? role : value;
 }
 
 export const FeedScreen: React.FC<FeedScreenProps> = ({
@@ -66,7 +59,9 @@ export const FeedScreen: React.FC<FeedScreenProps> = ({
   onOpenChat,
   onOpenMessages,
 }) => {
+  const { t, locale } = useTranslation();
   const { colors: c, productLine } = useAppTheme();
+  const typeFilters = useMemo(() => getFeedTypeFilters(t), [t]);
   const [posts, setPosts] = useState<PlatformFeedPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -93,8 +88,6 @@ export const FeedScreen: React.FC<FeedScreenProps> = ({
   const showCompose = panel === 'full' || panel === 'compose';
   const showHeader = panel === 'full';
 
-  const useV3Ranking = isV3ShellEnabled();
-
   const filteredPosts = useMemo(() => {
     const q = search.trim().toLowerCase();
     const base = posts.filter((post) => {
@@ -107,11 +100,11 @@ export const FeedScreen: React.FC<FeedScreenProps> = ({
         post.author_name.toLowerCase().includes(q)
       );
     });
-    if (useV3Ranking && !q && typeFilter === 'all') {
+    if (!q && typeFilter === 'all') {
       return rankFeedPosts({ posts: base, profile });
     }
     return base;
-  }, [posts, search, typeFilter, useV3Ranking, profile]);
+  }, [posts, search, typeFilter, profile]);
 
   const load = useCallback(async () => {
     try {
@@ -153,7 +146,7 @@ export const FeedScreen: React.FC<FeedScreenProps> = ({
 
   const handlePublishNews = async () => {
     if (!title.trim() || !body.trim()) {
-      Alert.alert('Champs requis', 'Titre et contenu obligatoires.');
+      Alert.alert(t('feed.alert.fieldsRequired.title'), t('feed.alert.fieldsRequired.body'));
       return;
     }
     setSubmitting(true);
@@ -175,9 +168,12 @@ export const FeedScreen: React.FC<FeedScreenProps> = ({
       });
       resetComposer();
       await load();
-      Alert.alert('Publié', 'Votre actualité est visible sur le fil ProDay.');
+      Alert.alert(t('feed.alert.published.title'), t('feed.alert.published.body'));
     } catch (e) {
-      Alert.alert('Erreur', e instanceof Error ? e.message : 'Publication impossible.');
+      Alert.alert(
+        t('feed.alert.error'),
+        e instanceof Error ? e.message : t('feed.alert.publishFailed')
+      );
     } finally {
       setSubmitting(false);
     }
@@ -186,7 +182,7 @@ export const FeedScreen: React.FC<FeedScreenProps> = ({
   const handlePublishPoll = async () => {
     const options = [pollOpt1, pollOpt2, pollOpt3].map((o) => o.trim()).filter(Boolean);
     if (!title.trim()) {
-      Alert.alert('Titre requis', 'Donnez un intitulé au sondage.');
+      Alert.alert(t('feed.alert.titleRequired.title'), t('feed.alert.titleRequired.body'));
       return;
     }
     setSubmitting(true);
@@ -206,9 +202,12 @@ export const FeedScreen: React.FC<FeedScreenProps> = ({
       });
       resetComposer();
       await load();
-      Alert.alert('Sondage créé', 'Les agents peuvent voter dès maintenant.');
+      Alert.alert(t('feed.alert.pollCreated.title'), t('feed.alert.pollCreated.body'));
     } catch (e) {
-      Alert.alert('Erreur', e instanceof Error ? e.message : 'Création impossible.');
+      Alert.alert(
+        t('feed.alert.error'),
+        e instanceof Error ? e.message : t('feed.alert.createFailed')
+      );
     } finally {
       setSubmitting(false);
     }
@@ -219,7 +218,10 @@ export const FeedScreen: React.FC<FeedScreenProps> = ({
       await platformFeedService.votePoll(post, profile.uid, profile.role, optionIndex);
       await load();
     } catch (e) {
-      Alert.alert('Erreur', e instanceof Error ? e.message : 'Vote impossible.');
+      Alert.alert(
+        t('feed.alert.error'),
+        e instanceof Error ? e.message : t('feed.alert.voteFailed')
+      );
     }
   };
 
@@ -268,7 +270,7 @@ export const FeedScreen: React.FC<FeedScreenProps> = ({
               <View style={styles.pollRow}>
                 <Text style={[styles.pollLabel, { color: c.text }]}>{label}</Text>
                 <Text style={[styles.pollPct, { color: c.textMuted }]}>
-                  {pct}% · {count} vote{count !== 1 ? 's' : ''}
+                  {pct}% · {count === 1 ? t('feed.poll.vote', { n: count }) : t('feed.poll.votes', { n: count })}
                 </Text>
               </View>
             </PressableSpring>
@@ -276,7 +278,7 @@ export const FeedScreen: React.FC<FeedScreenProps> = ({
         })}
         {!canVote ? (
           <Text style={[styles.pollHint, { color: c.textMuted }]}>
-            Réservé aux agents — résultats en lecture seule.
+            {t('feed.poll.agentsOnly')}
           </Text>
         ) : null}
       </View>
@@ -298,11 +300,11 @@ export const FeedScreen: React.FC<FeedScreenProps> = ({
             color={c.brand}
           />
           <Text style={[styles.typeText, { color: c.brand }]}>
-            {item.type === 'poll' ? 'Sondage agents' : 'Actualité'}
+            {item.type === 'poll' ? t('feed.post.type.poll') : t('feed.post.type.news')}
           </Text>
         </View>
         <Text style={[styles.date, { color: c.textMuted }]}>
-          {item.created_at.toLocaleDateString('fr-FR', {
+          {item.created_at.toLocaleDateString(locale, {
             day: 'numeric',
             month: 'short',
             hour: '2-digit',
@@ -322,7 +324,7 @@ export const FeedScreen: React.FC<FeedScreenProps> = ({
         <Text style={[styles.cardBody, { color: c.textSecondary }]}>{item.body}</Text>
       ) : null}
       <Text style={[styles.meta, { color: c.textMuted }]}>
-        {item.author_name} · {roleLabelForLine(item.author_role, productLine)}
+        {item.author_name} · {roleLabelForLine(item.author_role, productLine, t)}
       </Text>
       {item.type === 'poll' ? renderPoll(item) : null}
     </PressableSpring>
@@ -341,9 +343,9 @@ export const FeedScreen: React.FC<FeedScreenProps> = ({
     <View style={[styles.root, { backgroundColor: c.background }]}>
       {showHeader ? (
         <ScreenHeader
-          label="Communauté"
-          title="Fil d'actualité"
-          subtitle="Actualités et sondages"
+          label={t('feed.caption')}
+          title={t('feed.header.title')}
+          subtitle={t('feed.header.subtitle')}
           onBack={onBack}
           centered
           showBrandLogo={!onBack}
@@ -352,11 +354,11 @@ export const FeedScreen: React.FC<FeedScreenProps> = ({
 
       {showList && panel === 'list' ? (
         <>
-          <SearchBar placeholder="Rechercher…" value={search} onChangeText={setSearch} />
+          <SearchBar placeholder={t('common.search')} value={search} onChangeText={setSearch} />
           <ProDaySelect<FeedTypeFilter>
-            label="Type de contenu"
-            placeholder="Tout"
-            options={FEED_TYPE_FILTERS.map((f) => ({ id: f.id, label: f.label }))}
+            label={t('feed.typeFilter.label')}
+            placeholder={t('feed.filter.all')}
+            options={typeFilters.map((f) => ({ id: f.id, label: f.label }))}
             value={typeFilter}
             onChange={setTypeFilter}
           />
@@ -384,7 +386,7 @@ export const FeedScreen: React.FC<FeedScreenProps> = ({
                   { color: composer === 'news' ? c.brandInverse : c.text },
                 ]}
               >
-                + Actualité
+                {t('feed.compose.news')}
               </Text>
             </PressableSpring>
           ) : null}
@@ -407,7 +409,7 @@ export const FeedScreen: React.FC<FeedScreenProps> = ({
                   { color: composer === 'poll' ? c.brandInverse : c.text },
                 ]}
               >
-                + Sondage
+                {t('feed.compose.poll')}
               </Text>
             </PressableSpring>
           ) : null}
@@ -423,7 +425,7 @@ export const FeedScreen: React.FC<FeedScreenProps> = ({
         >
           <TextInput
             style={inputStyle}
-            placeholder="Titre"
+            placeholder={t('feed.compose.title')}
             placeholderTextColor={c.textMuted}
             value={title}
             onChangeText={setTitle}
@@ -436,7 +438,7 @@ export const FeedScreen: React.FC<FeedScreenProps> = ({
                 scaleTo={0.98}
               >
                 <Text style={[styles.imagePickText, { color: c.brand }]}>
-                  {imageUri ? 'Changer la photo' : '+ Ajouter une photo'}
+                  {imageUri ? t('feed.compose.changePhoto') : t('feed.compose.addPhoto')}
                 </Text>
               </PressableSpring>
               {imageUri ? (
@@ -444,7 +446,7 @@ export const FeedScreen: React.FC<FeedScreenProps> = ({
               ) : null}
               <TextInput
                 style={[inputStyle, styles.textArea]}
-                placeholder="Contenu de l'actualité…"
+                placeholder={t('feed.compose.bodyPlaceholder')}
                 placeholderTextColor={c.textMuted}
                 value={body}
                 onChangeText={setBody}
@@ -455,35 +457,35 @@ export const FeedScreen: React.FC<FeedScreenProps> = ({
             <>
               <TextInput
                 style={inputStyle}
-                placeholder="Convocation liée (optionnel) — ex. Entraînement samedi"
+                placeholder={t('feed.compose.pollEventLink')}
                 placeholderTextColor={c.textMuted}
                 value={pollEventLink}
                 onChangeText={setPollEventLink}
               />
               <TextInput
                 style={inputStyle}
-                placeholder="Option 1"
+                placeholder={t('feed.compose.option1')}
                 placeholderTextColor={c.textMuted}
                 value={pollOpt1}
                 onChangeText={setPollOpt1}
               />
               <TextInput
                 style={inputStyle}
-                placeholder="Option 2"
+                placeholder={t('feed.compose.option2')}
                 placeholderTextColor={c.textMuted}
                 value={pollOpt2}
                 onChangeText={setPollOpt2}
               />
               <TextInput
                 style={inputStyle}
-                placeholder="Option 3 (optionnel)"
+                placeholder={t('feed.compose.option3')}
                 placeholderTextColor={c.textMuted}
                 value={pollOpt3}
                 onChangeText={setPollOpt3}
               />
               <TextInput
                 style={[inputStyle, styles.textArea]}
-                placeholder="Contexte (optionnel)"
+                placeholder={t('feed.compose.contextOptional')}
                 placeholderTextColor={c.textMuted}
                 value={body}
                 onChangeText={setBody}
@@ -508,7 +510,9 @@ export const FeedScreen: React.FC<FeedScreenProps> = ({
             {submitting ? (
               <ActivityIndicator color={c.brandInverse} />
             ) : (
-              <Text style={[styles.publishText, { color: c.brandInverse }]}>Publier</Text>
+              <Text style={[styles.publishText, { color: c.brandInverse }]}>
+                {t('feed.compose.publish')}
+              </Text>
             )}
           </PressableSpring>
         </View>
@@ -545,8 +549,8 @@ export const FeedScreen: React.FC<FeedScreenProps> = ({
           }
           ListEmptyComponent={
             <Text style={[styles.empty, { color: c.textMuted }]}>
-              Aucune publication pour le moment.
-              {canNews || canPoll ? ' Soyez le premier à publier.' : ''}
+              {t('feed.empty')}
+              {canNews || canPoll ? t('feed.empty.beFirst') : ''}
             </Text>
           }
         />

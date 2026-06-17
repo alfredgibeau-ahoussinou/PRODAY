@@ -1,5 +1,5 @@
 /**
- * Synchronise le compte test beta (Auth + email vérifié).
+ * Synchronise un compte joueur actif (Auth + profil Firestore).
  * Ne commitez jamais le mot de passe.
  *
  *   TEST_ACCOUNT_EMAIL=alfredgibeauahoussinou@gmail.com \
@@ -76,22 +76,32 @@ await db.doc(`users/${user.uid}`).set(
     display_name: 'Alfred Ahoussinou',
     email: EMAIL,
     role: 'player',
+    product_line: 'homme',
+    app_space: 'men',
     is_verified: true,
     verification_status: 'VERIFIED',
     is_active: true,
-    is_universal_test_account: true,
+    is_universal_test_account: FieldValue.delete(),
     email_verified: true,
     onboarding_documents_submitted: true,
-    product_line: null,
     city: 'Paris',
     department: '75',
     profile: {
-      medical_specialty: 'Kinésithérapeute du sport',
-      job_title: 'Kiné du sport',
-      booking_enabled: true,
-      consultation_duration_min: 30,
-      bio: 'Compte test ProDay — Man, Woman, Pro (coach) et Santé (kiné).',
+      position: 'Milieu',
+      category: 'Seniors',
+      level: 'Régional',
+      strong_foot: 'right',
+      availability: 'available',
+      bio: 'Joueur ProDay — foot amateur et semi-pro, disponible pour convocations et détections.',
+      cv_headline: 'Milieu relayeur — vision du jeu et volume physique.',
+      cv_objectives: 'Évoluer en R2 / N3 et intégrer un projet club structuré.',
+      season_stats: { matches: 18, goals: 4, assists: 6 },
     },
+    player_verification: {
+      identity: { status: 'verified' },
+      club_license: { status: 'verified' },
+    },
+    last_active_at: FieldValue.serverTimestamp(),
     updated_at: FieldValue.serverTimestamp(),
   },
   { merge: true }
@@ -100,10 +110,10 @@ await db.doc(`users/${user.uid}`).set(
 const doc = await db.doc(`users/${user.uid}`).get();
 const data = doc.data() || {};
 
-console.log('✔ Compte test multi-pôles synchronisé');
+console.log('✔ Compte joueur actif synchronisé');
 console.log(`  Email : ${EMAIL}`);
 console.log(`  UID   : ${user.uid}`);
-console.log(`  Rôle  : ${data.role ?? '—'} (player — rôles simulés par univers)`);
+console.log(`  Rôle  : ${data.role ?? '—'}`);
+console.log(`  Pôle  : ${data.product_line ?? 'homme'} (Pro Day Man)`);
 console.log(`  Nom   : ${data.display_name ?? user.displayName ?? '—'}`);
-console.log('\n→ Man / Woman : joueur · Pro : coach · Santé : kiné (physio)');
-console.log('→ Email listé dans src/config/emailVerificationBypass.ts');
+console.log('\n→ Compte standard joueur — plus de bypass multi-univers ni rôle kiné simulé.');

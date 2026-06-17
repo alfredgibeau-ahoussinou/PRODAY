@@ -32,10 +32,20 @@ export async function syncEntitiesToDeviceCalendar(
   const drafts = buildDeviceCalendarDrafts(entities);
   if (drafts.length === 0) return false;
 
-  const { status } = await Calendar.requestCalendarPermissionsAsync();
+  let status: string;
+  try {
+    ({ status } = await Calendar.requestCalendarPermissionsAsync());
+  } catch {
+    return false;
+  }
   if (status !== 'granted') return false;
 
-  const defaultCalendar = await Calendar.getDefaultCalendarAsync();
+  let defaultCalendar: Calendar.Calendar;
+  try {
+    defaultCalendar = await Calendar.getDefaultCalendarAsync();
+  } catch {
+    return false;
+  }
   const map = await loadMap(uid);
 
   for (const draft of drafts) {
@@ -77,7 +87,12 @@ export async function requestAndSyncDeviceCalendar(
   const drafts = buildDeviceCalendarDrafts(entities);
   if (drafts.length === 0) return 'empty';
 
-  const { status } = await Calendar.requestCalendarPermissionsAsync();
+  let status: string;
+  try {
+    ({ status } = await Calendar.requestCalendarPermissionsAsync());
+  } catch {
+    return 'error';
+  }
   if (status !== 'granted') return 'denied';
 
   try {

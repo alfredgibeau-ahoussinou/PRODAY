@@ -1,4 +1,4 @@
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import { Platform } from 'react-native';
 import { callFunction } from '../lib/firebaseFunctions';
 import { normalizeImageMimeType } from './storage.service';

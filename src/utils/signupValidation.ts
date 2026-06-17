@@ -2,7 +2,10 @@ import type { AppSpaceId } from '../models/AppSpace';
 import type { UserRole } from '../models/User';
 import type { ProductLineId } from '../models/ProductLine';
 import { isRoleAllowedForProductLine } from '../content/universeRoles';
-import { MEDICAL_POLE_SPECIALTIES } from '../screens/signup/signupFlowConfig';
+import {
+  MEDICAL_SPECIALTY_IDS,
+} from '../screens/signup/signupMedicalI18n';
+import type { MedicalSpecialtyId } from '../screens/signup/signupRoleExperience';
 import { validateAgeForAppSpace } from '../screens/signup/signupFlowConfig';
 import { PLAYER_LEVELS, PLAYER_POSITIONS } from '../constants/playerProfile';
 
@@ -223,7 +226,7 @@ export function validateSeasonStat(
 
 export function validateMedicalSpecialty(value: string): ValidationResult {
   if (!value) return 'Sélectionnez une spécialité du pôle médical';
-  if (!MEDICAL_POLE_SPECIALTIES.includes(value as (typeof MEDICAL_POLE_SPECIALTIES)[number])) {
+  if (!MEDICAL_SPECIALTY_IDS.includes(value as MedicalSpecialtyId)) {
     return 'Spécialité invalide';
   }
   return undefined;

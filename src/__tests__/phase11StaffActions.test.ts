@@ -52,7 +52,13 @@ describe('Phase 11 — Staff actions + accueil staff', () => {
     });
     expect(items[0].id).toBe('convoc');
     expect(items.some((item) => item.id === 'applications')).toBe(true);
-    expect(items.every((item) => item.tab === 'matchs' || item.tab === 'recrutement')).toBe(true);
+    expect(items.some((item) => item.id === 'team-mgmt' && item.action === 'gestion')).toBe(true);
+    expect(
+      items.every(
+        (item) =>
+          item.action === 'gestion' || item.tab === 'matchs' || item.tab === 'recrutement'
+      )
+    ).toBe(true);
   });
 
   it('suggère de publier une annonce sans post actif', () => {

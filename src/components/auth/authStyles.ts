@@ -28,6 +28,13 @@ export function createAuthStyles(c: AppColors) {
       paddingHorizontal: spacing.lg,
       marginBottom: spacing.md,
     },
+    toolbarEnd: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.xs,
+      flexShrink: 1,
+      justifyContent: 'flex-end',
+    },
     backBtn: {
       width: 42,
       height: 42,

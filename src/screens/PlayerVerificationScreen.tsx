@@ -1,36 +1,32 @@
 import React, { useMemo, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
-import * as DocumentPicker from 'expo-document-picker';
 import type { User, PlayerVerificationCheckId } from '../models/User';
 import { playerVerificationProgress } from '../models/User';
 import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { Icon } from '../components/ui/Icon';
 import { profileService } from '../services/profile.service';
 import { ProDayErrorBanner } from '../components/ui/ProDayErrorBanner';
+import { pickVerificationFromGallery, pickVerificationPdf } from '../utils/pickVerificationDocument';
 import { spacing, radius } from '../theme/designTokens';
 import { useThemedScreen } from '../hooks/useThemedScreen';
 import type { AppColors } from '../theme/universeTheme';
-
-const CHECKS: {
-  id: PlayerVerificationCheckId;
-  title: string;
-  subtitle: string;
-}[] = [
-  { id: 'identity', title: 'Pièce d’identité', subtitle: 'CNI ou passeport' },
-  { id: 'club_license', title: 'Licence / carte club', subtitle: 'Justificatif FFF' },
-];
+import { useTranslation } from '../context/LocaleContext';
 
 interface PlayerVerificationScreenProps {
   user: User;
   onBack: () => void;
   onUpdated: () => Promise<void>;
+  /** Intégré dans l’écran profil (sans en-tête séparé). */
+  embedded?: boolean;
 }
 
 export const PlayerVerificationScreen: React.FC<PlayerVerificationScreenProps> = ({
   user,
   onBack,
   onUpdated,
+  embedded = false,
 }) => {
+  const { t } = useTranslation();
   const { colors: c, productLine, rootStyle } = useThemedScreen();
   const styles = useMemo(() => createStyles(c), [c]);
   const isWoman = productLine === 'woman';
@@ -39,27 +35,43 @@ export const PlayerVerificationScreen: React.FC<PlayerVerificationScreenProps> =
   const pv = user.player_verification;
   const progress = playerVerificationProgress(pv);
 
-  const pick = async (checkId: PlayerVerificationCheckId) => {
-    const result = await DocumentPicker.getDocumentAsync({
-      type: ['image/*', 'application/pdf'],
-      copyToCacheDirectory: true,
-    });
-    if (result.canceled || !result.assets?.[0]) return;
+  const checks = useMemo(
+    () =>
+      [
+        {
+          id: 'identity' as const,
+          title: t('verification.check.identity.title'),
+          subtitle: t('verification.check.identity.subtitle'),
+        },
+        {
+          id: 'club_license' as const,
+          title: t('verification.check.license.title'),
+          subtitle: t('verification.check.license.subtitle'),
+        },
+      ],
+    [t]
+  );
+
+  const pick = async (checkId: PlayerVerificationCheckId, source: 'gallery' | 'pdf') => {
+    const file =
+      source === 'pdf'
+        ? await pickVerificationPdf()
+        : await pickVerificationFromGallery();
+    if (!file) return;
 
     setLoading(checkId);
     setError(null);
     try {
-      const asset = result.assets[0];
       const upload = await profileService.uploadPlayerVerificationCheck(
         user.uid,
-        { uri: asset.uri, mimeType: asset.mimeType ?? 'image/jpeg' },
+        { uri: file.uri, mimeType: file.mimeType },
         checkId
       );
       if (!upload.success) throw new Error(upload.error);
       await onUpdated();
-      Alert.alert('Document envoyé', 'Analyse en cours — vous serez notifié du résultat.');
+      Alert.alert(t('verification.alert.sent.title'), t('verification.alert.sent.body'));
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Envoi impossible');
+      setError(e instanceof Error ? e.message : t('verification.upload.failed'));
     } finally {
       setLoading(null);
     }
@@ -67,26 +79,28 @@ export const PlayerVerificationScreen: React.FC<PlayerVerificationScreenProps> =
 
   const statusLabel = (checkId: PlayerVerificationCheckId) => {
     const s = pv?.[checkId]?.status ?? 'not_submitted';
-    if (s === 'verified') return 'Validé';
-    if (s === 'pending') return 'En analyse';
-    if (s === 'rejected') return 'Refusé — renvoyer';
-    return 'À envoyer';
+    if (s === 'verified') return t('verification.status.verified');
+    if (s === 'pending') return t('verification.status.pending');
+    if (s === 'rejected') return t('verification.status.rejected');
+    return t('verification.status.todo');
   };
 
   return (
     <View style={[styles.root, rootStyle]}>
-      <ScreenHeader
-        title={isWoman ? 'Vérification joueuse' : 'Vérification joueur'}
-        onBack={onBack}
-        centered
-      />
+      {!embedded ? (
+        <ScreenHeader
+          title={isWoman ? t('verification.title.player.woman') : t('verification.title.player')}
+          onBack={onBack}
+          centered
+        />
+      ) : null}
       <View style={styles.body}>
         <Text style={styles.progress}>
-          Progression {progress.label} — identité obligatoire pour la messagerie.
+          {t('verification.progress', { label: progress.label })}
         </Text>
         {error ? <ProDayErrorBanner message={error} onDismiss={() => setError(null)} /> : null}
 
-        {CHECKS.map((check) => {
+        {checks.map((check) => {
           const st = pv?.[check.id]?.status ?? 'not_submitted';
           const done = st === 'verified';
           return (
@@ -104,15 +118,24 @@ export const PlayerVerificationScreen: React.FC<PlayerVerificationScreenProps> =
                 </View>
               </View>
               {st !== 'verified' ? (
-                <TouchableOpacity
-                  style={styles.btn}
-                  onPress={() => pick(check.id)}
-                  disabled={loading !== null}
-                >
-                  <Text style={styles.btnText}>
-                    {loading === check.id ? 'Envoi…' : st === 'pending' ? 'Remplacer' : 'Téléverser'}
-                  </Text>
-                </TouchableOpacity>
+                <View style={styles.btnRow}>
+                  <TouchableOpacity
+                    style={[styles.btn, styles.btnHalf]}
+                    onPress={() => pick(check.id, 'gallery')}
+                    disabled={loading !== null}
+                  >
+                    <Text style={styles.btnText}>
+                      {loading === check.id ? t('verification.upload.sending') : t('verification.upload.image')}
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.btn, styles.btnHalf]}
+                    onPress={() => pick(check.id, 'pdf')}
+                    disabled={loading !== null}
+                  >
+                    <Text style={styles.btnText}>{t('verification.upload.pdf')}</Text>
+                  </TouchableOpacity>
+                </View>
               ) : null}
             </View>
           );
@@ -145,6 +168,8 @@ function createStyles(c: AppColors) {
       paddingVertical: spacing.sm,
       alignItems: 'center',
     },
+    btnRow: { flexDirection: 'row', gap: spacing.xs },
+    btnHalf: { flex: 1 },
     btnText: { color: c.brandInverse, fontWeight: '800', fontSize: 13 },
   });
 }

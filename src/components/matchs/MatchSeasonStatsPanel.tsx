@@ -3,11 +3,13 @@ import { View, StyleSheet } from 'react-native';
 import type { TeamEvent } from '../../models/TeamEvent';
 import type { User } from '../../models/User';
 import { ProDaySurface } from '../ui/ProDaySurface';
+import { MatchChapterIntro } from './MatchChapterIntro';
 import { ProDayText } from '../ui/ProDayText';
 import { ProDayGradient } from '../ui/ProDayGradient';
 import { Icon } from '../ui/Icon';
 import { PressableSpring } from '../motion';
 import { useTabNavigation } from '../../context/TabNavigationContext';
+import { useTranslation } from '../../context/LocaleContext';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { spacing, radius } from '../../theme/designTokens';
 
@@ -22,6 +24,7 @@ export const MatchSeasonStatsPanel: React.FC<MatchSeasonStatsPanelProps> = ({
 }) => {
   const { colors } = useAppTheme();
   const { openAuth } = useTabNavigation();
+  const { t } = useTranslation();
   const season = profile?.profile.season_stats;
 
   const matchHistory = useMemo(() => {
@@ -63,20 +66,20 @@ export const MatchSeasonStatsPanel: React.FC<MatchSeasonStatsPanelProps> = ({
     return (
       <ProDaySurface variant="module" style={styles.empty}>
         <Icon name="trophy" size={32} color={colors.textMuted} />
-        <ProDayText variant="section">Mes stats saison</ProDayText>
+        <ProDayText variant="section">{t('matchs.stats.intro.title')}</ProDayText>
         <ProDayText variant="body" muted style={styles.emptySub}>
           Connectez-vous pour suivre vos buts, passes et notes de match.
         </ProDayText>
         <PressableSpring onPress={() => openAuth('login')} scaleTo={0.97} haptic>
           <ProDayGradient kind="cta" style={styles.guestCta}>
             <ProDayText variant="caption" inverse style={styles.guestCtaText}>
-              Se connecter
+              {t('common.login')}
             </ProDayText>
           </ProDayGradient>
         </PressableSpring>
         <PressableSpring onPress={() => openAuth('signup')} scaleTo={0.98} haptic>
           <ProDayText variant="caption" accent style={styles.guestLink}>
-            Créer un compte
+            {t('common.guest.signup')}
           </ProDayText>
         </PressableSpring>
       </ProDaySurface>
@@ -85,12 +88,10 @@ export const MatchSeasonStatsPanel: React.FC<MatchSeasonStatsPanelProps> = ({
 
   return (
     <View style={styles.wrap}>
-      <ProDayText variant="eyebrow" accent>
-        Mes stats
-      </ProDayText>
-      <ProDayText variant="body" muted style={styles.lead}>
-        Agrégat de vos feuilles de match ProDay et stats saison CV foot.
-      </ProDayText>
+      <MatchChapterIntro
+        title={t('matchs.stats.intro.title')}
+        subtitle={t('matchs.stats.intro.subtitle')}
+      />
 
       <ProDaySurface variant="accent" style={[styles.hero, { borderColor: colors.border }]}>
         <View style={styles.heroGrid}>
@@ -106,7 +107,7 @@ export const MatchSeasonStatsPanel: React.FC<MatchSeasonStatsPanelProps> = ({
         ) : null}
       </ProDaySurface>
 
-      <ProDayText variant="section">Historique feuilles de match</ProDayText>
+      <ProDayText variant="section">{t('matchs.stats.history')}</ProDayText>
       {matchHistory.length === 0 ? (
         <ProDaySurface variant="module" style={[styles.empty, { borderColor: colors.border }]}>
           <Icon name="trophy" size={32} color={colors.textMuted} />

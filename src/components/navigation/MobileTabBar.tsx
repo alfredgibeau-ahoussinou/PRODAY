@@ -14,6 +14,7 @@ import { Icon, type IconName } from '../ui/Icon';
 import { TabOverflowSheet } from './TabOverflowSheet';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { useSessionProfile } from '../../hooks/useSessionProfile';
+import { useTranslation } from '../../context/LocaleContext';
 import { getTabShortLabel } from '../../content/poleExperience';
 import {
   getPhysioTabIcon,
@@ -103,6 +104,7 @@ export const MobileTabBar: React.FC<MobileTabBarProps> = ({
   visibleTabs,
 }) => {
   const { colors, isWoman, productLine } = useAppTheme();
+  const { t } = useTranslation();
   const sessionProfile = useSessionProfile();
   const insets = useSafeAreaInsets();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -138,7 +140,7 @@ export const MobileTabBar: React.FC<MobileTabBarProps> = ({
   const renderSideTab = (tab: MainTabId) => {
     const active = tab === activeTab;
     const icon = resolveIcon(tab, isPhysio, isSponsor);
-    const label = getTabShortLabel(tab, productLine, role);
+    const label = getTabShortLabel(tab, productLine, role, t);
     const badge = tab === 'messages' ? unreadCount : 0;
     const ink = active
       ? immersive

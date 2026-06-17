@@ -12,10 +12,8 @@ import { useAppTheme } from '../context/ProductLineContext';
 import { userStateStore } from '../core/state/userState.store';
 import { trackV3Event } from '../core/analytics/v3Events';
 import { flushBrainState } from '../services/brainState.service';
-import { isV3ShellEnabled } from '../config/featureFlags';
 import { teamEventsService } from '../services/teamEvents.service';
 import type { RsvpStatus } from '../models/TeamEvent';
-import { ProDayScreenCanvas } from '../components/ui/ProDayScreenCanvas';
 import { MatchHomeScreen } from '../components/matchs/MatchHomeScreen';
 import type { MatchChapterId } from '../content/matchChapters';
 import type { SeasonCalendarItem } from '../utils/seasonCalendar';
@@ -27,6 +25,7 @@ import type { MatchHubChapterId } from '../content/matchHubChapters';
 import { prodayHaptics } from '../utils/prodayHaptics';
 import { isInMatchWindow } from '../utils/matchLive';
 import { useRequireAuth } from '../hooks/useRequireAuth';
+import { useTranslation } from '../context/LocaleContext';
 
 type MatchView =
   | 'home'
@@ -44,6 +43,7 @@ export const MatchsScreen: React.FC = () => {
   const { profile } = useAuth();
   const { productLine } = useAppTheme();
   const { requireAuth } = useRequireAuth();
+  const { t } = useTranslation();
   const { pendingMatchsLink, clearPendingMatchs } = useTabNavigation();
   const navActions = useTabNavigationActions();
   const clubId = profile?.profile.club_id;
@@ -133,9 +133,7 @@ export const MatchsScreen: React.FC = () => {
       progression
     );
     trackV3Event('match_joined', { source: 'matchs_tab' });
-    if (isV3ShellEnabled()) {
-      void flushBrainState(profile.uid);
-    }
+    void flushBrainState(profile.uid);
   }, [profile, items.length, pendingConvocations.length, myUpcomingEvents.length]);
 
   const handleRsvp = async (eventId: string, status: RsvpStatus) => {
@@ -235,7 +233,6 @@ export const MatchsScreen: React.FC = () => {
   };
 
   return (
-    <ProDayScreenCanvas flat>
       <MatchHomeScreen
         profile={profile}
         items={items}
@@ -255,15 +252,15 @@ export const MatchsScreen: React.FC = () => {
         getMatchIaScore={getMatchIaScore}
         getMatchHealthWarning={getMatchHealthWarning}
         onPropose={() => {
-          if (!requireAuth('Connectez-vous pour proposer un match amical.')) return;
+          if (!requireAuth(t('matchs.auth.propose'))) return;
           setView('propose');
         }}
         onSearch={() => {
-          if (!requireAuth('Connectez-vous pour rechercher un match.')) return;
+          if (!requireAuth(t('matchs.auth.search'))) return;
           setView('search');
         }}
         onCreateEvent={() => {
-          if (!requireAuth('Connectez-vous pour créer une convocation.')) return;
+          if (!requireAuth(t('matchs.auth.createEvent'))) return;
           setView('create_event');
         }}
         onOpenCalendarItem={openCalendarItem}
@@ -287,6 +284,5 @@ export const MatchsScreen: React.FC = () => {
           navActions.openCarpool({ chapter: 'reserver', eventId })
         }
       />
-    </ProDayScreenCanvas>
   );
 };

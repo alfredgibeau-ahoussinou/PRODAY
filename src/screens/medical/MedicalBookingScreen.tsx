@@ -21,7 +21,6 @@ import {
 import { spacing, radius } from '../../theme/designTokens';
 import { useMedicalStyles } from '../../components/medical/medicalStyles';
 import type { AppColors } from '../../theme/universeTheme';
-import { isV3ShellEnabled } from '../../config/featureFlags';
 import { recordV3UserAction } from '../../utils/recordV3Action';
 
 interface MedicalBookingScreenProps {
@@ -76,9 +75,7 @@ export const MedicalBookingScreen: React.FC<MedicalBookingScreenProps> = ({
         'Demande envoyée',
         `${physio.display_name} confirmera votre rendez-vous du ${formatAppointmentDay(selectedSlot)} à ${formatSlotLabel(selectedSlot)}.`
       );
-      if (isV3ShellEnabled()) {
-        recordV3UserAction(patient, 'book_health');
-      }
+      recordV3UserAction(patient, 'book_health');
       onBooked?.();
       onBack();
     } catch (e) {

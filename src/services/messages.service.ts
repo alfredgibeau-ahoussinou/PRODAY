@@ -29,6 +29,15 @@ import type { User, UserRole } from '../models/User';
 import { validateMessageBody } from '../utils/messagingLimits';
 import { isMinorUser } from '../utils/minor';
 import { evaluateScreenTimeAccess, shouldEnforceScreenTime } from '../utils/parentalScreenTime';
+import { needsOnboardingDocumentUpload } from '../utils/onboardingGate';
+
+function assertDocumentsSubmitted(sender?: User): void {
+  if (sender && needsOnboardingDocumentUpload(sender)) {
+    throw new Error(
+      'Envoyez vos documents de vérification depuis votre profil pour utiliser la messagerie.'
+    );
+  }
+}
 
 function threadIdFor(uidA: string, uidB: string): string {
   return [uidA, uidB].sort().join('__');
@@ -153,6 +162,7 @@ export const messagesService = {
     const database = getDb();
     if (!database) throw new Error('Firebase non configuré');
     await assertMinorMessagingAllowed(sender);
+    assertDocumentsSubmitted(sender);
     const text = validateMessageBody(body);
 
     await addDoc(collection(database, 'messages'), {
@@ -189,6 +199,7 @@ export const messagesService = {
     const database = getDb();
     if (!database) throw new Error('Firebase non configuré');
     await assertMinorMessagingAllowed(sender);
+    assertDocumentsSubmitted(sender);
     const text = validateMessageBody(body);
     const threadRef = doc(database, 'message_threads', threadId);
     const snap = await getDoc(threadRef);

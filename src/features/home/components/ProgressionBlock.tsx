@@ -86,7 +86,7 @@ export const ProgressionBlock: React.FC<ProgressionBlockProps> = ({
 };
 
 const styles = StyleSheet.create({
-  card: { padding: spacing.lg, gap: spacing.sm, marginBottom: spacing.md, marginHorizontal: spacing.lg },
+  card: { padding: spacing.lg, gap: spacing.sm, marginBottom: spacing.md },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   rank: { textTransform: 'uppercase', letterSpacing: 1, fontSize: 9 },
   streak: {

@@ -15,10 +15,10 @@ import type { Application, RecruitmentPost } from '../models/Player';
 import { Icon } from '../components/ui/Icon';
 import { spacing, radius } from '../theme/designTokens';
 import { useThemedScreen } from '../hooks/useThemedScreen';
-import { V3TabShell } from '../components/v3/V3TabShell';
-import { V3ScreenBack } from '../components/v3/V3ScreenBack';
+import { TabScreenShell } from '../components/app/TabScreenShell';
+import { ScreenBackButton } from '../components/ui/ScreenBackButton';
 import { useSectionIntelligence } from '../hooks/useSectionIntelligence';
-import { isV3SubScreenEnabled } from '../hooks/useV3SubScreen';
+import { isSubScreenShellEnabled } from '../hooks/useSubScreenShell';
 import { StaggerReveal } from '../components/motion';
 import { TAB_BAR_CONTENT_INSET } from '../navigation/tabBarLayout';
 
@@ -35,7 +35,7 @@ export const MyApplicationsScreen: React.FC<MyApplicationsScreenProps> = ({
 }) => {
   const { profile } = useAuth();
   const { colors: themeColors, rootStyle, productLine } = useThemedScreen();
-  const useV3Header = isV3SubScreenEnabled(profile, 'player');
+  const useShellHeader = isSubScreenShellEnabled(profile, 'player');
   const [items, setItems] = useState<
     { application: Application; post: RecruitmentPost | null }[]
   >([]);
@@ -149,7 +149,7 @@ export const MyApplicationsScreen: React.FC<MyApplicationsScreenProps> = ({
               ) : null}
             </TouchableOpacity>
           );
-          return useV3Header ? (
+          return useShellHeader ? (
             <StaggerReveal key={application.id} index={Math.min(index, 8)}>
               {card}
             </StaggerReveal>
@@ -160,9 +160,9 @@ export const MyApplicationsScreen: React.FC<MyApplicationsScreenProps> = ({
       </ScrollView>
     );
 
-  if (useV3Header) {
+  if (useShellHeader) {
     return (
-      <V3TabShell
+      <TabScreenShell
         caption="Mercato"
         title="Mes candidatures"
         subtitle={
@@ -170,12 +170,12 @@ export const MyApplicationsScreen: React.FC<MyApplicationsScreenProps> = ({
             ? `${pendingCount} en attente de réponse`
             : `${items.length} candidature(s) envoyée(s)`
         }
-        right={<V3ScreenBack onPress={onBack} />}
-        intelligence={intelligence}
+        right={<ScreenBackButton onPress={onBack} />}
+        
         flat
       >
         {listBody}
-      </V3TabShell>
+      </TabScreenShell>
     );
   }
 

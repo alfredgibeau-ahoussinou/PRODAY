@@ -9,7 +9,7 @@ import { MatchsScreen } from '../screens/MatchsScreen';
 import { CarpoolScreen } from '../screens/CarpoolScreen';
 import { HealthProfessionalsScreen } from '../screens/HealthProfessionalsScreen';
 import { FeedTabScreen } from '../screens/FeedTabScreen';
-import { ReelsScreen } from '../screens/ReelsScreen';
+import { LazyReelsScreen } from '../screens/LazyReelsScreen';
 import { MessagesScreen } from '../screens/MessagesScreen';
 import { ProfilTabScreen } from '../screens/ProfilTabScreen';
 import { ShopScreen } from '../screens/ShopScreen';
@@ -27,7 +27,7 @@ const DEFAULT_SCREENS: Record<MainTabId, ComponentType> = {
   covoiturage: CarpoolScreen,
   sante: HealthProfessionalsScreen,
   feed: FeedTabScreen,
-  reels: ReelsScreen,
+  reels: LazyReelsScreen,
   messages: MessagesScreen,
   profil: ProfilTabScreen,
   shop: ShopScreen,

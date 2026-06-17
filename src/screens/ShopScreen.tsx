@@ -3,7 +3,6 @@ import { Alert, Linking } from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
 import { useAuth } from '../context/AuthContext';
 import { useThemedScreen } from '../hooks/useThemedScreen';
-import { ProDayScreenCanvas } from '../components/ui/ProDayScreenCanvas';
 import { ShopHomeScreen } from '../components/shop/ShopHomeScreen';
 import { ShopProductDetailScreen } from '../components/shop/ShopProductDetailScreen';
 import {
@@ -16,7 +15,6 @@ import { useShopOrders } from '../hooks/useShopOrders';
 import { startShopCheckout } from '../services/shopPayment.service';
 import { parseShopCheckoutReturn } from '../utils/shopCheckoutReturn';
 import { useRequireAuth } from '../hooks/useRequireAuth';
-import { isV3ShellEnabled } from '../config/featureFlags';
 import { trackV3Event } from '../core/analytics/v3Events';
 import { userStateStore } from '../core/state/userState.store';
 import { flushBrainState } from '../services/brainState.service';
@@ -67,7 +65,7 @@ export const ShopScreen: React.FC = () => {
         if (parsed?.status === 'success') {
           clearCart();
           void refreshOrders();
-          if (isV3ShellEnabled() && profile) {
+          if (profile) {
             trackV3Event('shop_checkout_success', { items: cart.length });
             const progression = userStateStore.get()?.progression ?? {
               xp: 0,
@@ -137,7 +135,6 @@ export const ShopScreen: React.FC = () => {
   }
 
   return (
-    <ProDayScreenCanvas flat>
       <ShopHomeScreen
         productLine={productLine}
         profile={profile}
@@ -154,6 +151,5 @@ export const ShopScreen: React.FC = () => {
         shopOrders={orders}
         shopOrdersLoading={ordersLoading}
       />
-    </ProDayScreenCanvas>
   );
 };

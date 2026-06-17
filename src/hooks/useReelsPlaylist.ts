@@ -6,7 +6,17 @@ import {
   youtubeShortsUrl,
   type PlaybackReel,
 } from '../content/footballReels';
-import { seedKey, seedsForUniverse, type ReelPoleId, type ReelSeed } from '../content/reelSeedCatalog';
+import {
+  dedupeSeeds,
+  filterSeedsForPole,
+  seedKey,
+  type ReelPoleId,
+  type ReelSeed,
+} from '../content/reelSeedCatalog';
+import type { ReelThemeId } from '../content/reelThemes';
+import { filterSeedsByTheme } from '../content/reelThemes';
+import { editorialSortSeeds } from '../utils/reelEditorialMix';
+import { seedWithDirectPlayback } from '../utils/communityReelPlayback';
 import {
   resolveReelPlayback,
   shouldUseEmbedPlayback,
@@ -26,32 +36,29 @@ function shuffle<T>(arr: T[]): T[] {
   return copy;
 }
 
-function dedupeSeeds(seeds: ReelSeed[]): ReelSeed[] {
-  const seen = new Set<string>();
-  return seeds.filter((seed) => {
-    const key = seedKey(seed);
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
-}
-
 function sourceUrlForSeed(seed: ReelSeed): string {
+  if (seed.sourceUrl) return seed.sourceUrl;
   switch (seed.source) {
     case 'tiktok':
       return tiktokUrlForVideo(seed.authorHandle, seed.externalId);
     case 'youtube':
       return youtubeShortsUrl(seed.externalId);
+    case 'pexels':
+    case 'proday':
+      return seed.directVideoUrl ?? '';
     default:
       return instagramUrlForShortCode(seed.externalId, seed.authorHandle);
   }
 }
 
 function seedToPlaceholder(
-  seed: ReelSeed,
+  seed: ReelSeed | undefined,
   universe: ProductLineId,
   reelId: string,
-): PlaybackReel {
+): PlaybackReel | null {
+  if (!seed) return null;
+  const direct = seedWithDirectPlayback(seed, universe, reelId);
+  if (direct) return direct;
   return {
     id: reelId,
     bookmarkKey: seedKey(seed),
@@ -71,11 +78,31 @@ function seedToPlaceholder(
 export function useReelsPlaylist(
   universe: ProductLineId,
   pole: ReelPoleId = 'foot',
-  options?: { rankSeeds?: (seeds: ReelSeed[]) => ReelSeed[] },
+  options?: {
+    rankSeeds?: (seeds: ReelSeed[]) => ReelSeed[];
+    theme?: ReelThemeId;
+    extraSeeds?: ReelSeed[];
+    hiddenKeys?: Set<string>;
+    resumeBookmarkKey?: string;
+  },
 ) {
+  const theme = options?.theme ?? 'all';
   const [reels, setReels] = useState<PlaybackReel[]>([]);
   const [loadingMore, setLoadingMore] = useState(false);
-  const uniqueSeeds = useMemo(() => dedupeSeeds(seedsForUniverse(universe, pole)), [universe, pole]);
+  const [resumeIndex, setResumeIndex] = useState(0);
+
+  const uniqueSeeds = useMemo(() => {
+    const base = dedupeSeeds(options?.extraSeeds ?? []).filter((s) =>
+      Boolean(s.directVideoUrl?.trim()),
+    );
+    const poled = filterSeedsForPole(base, pole);
+    const themed = filterSeedsByTheme(poled, theme);
+    const ranked = options?.rankSeeds ? options.rankSeeds(themed) : themed;
+    const mixed = editorialSortSeeds(ranked);
+    if (!options?.hiddenKeys?.size) return mixed;
+    return mixed.filter((s) => !options.hiddenKeys!.has(seedKey(s)));
+  }, [pole, theme, options?.extraSeeds, options?.rankSeeds, options?.hiddenKeys]);
+
   const poolRef = useRef<ReelSeed[]>([]);
   const poolIdxRef = useRef(0);
   const seqRef = useRef(0);
@@ -92,20 +119,20 @@ export function useReelsPlaylist(
 
   const takeSocialSeeds = useCallback(
     (count: number): ReelSeed[] => {
+      if (uniqueSeeds.length === 0) return [];
       const batch: ReelSeed[] = [];
       for (let i = 0; i < count; i++) {
         if (poolIdxRef.current >= poolRef.current.length) {
-          poolRef.current = options?.rankSeeds
-            ? options.rankSeeds([...uniqueSeeds])
-            : shuffle(uniqueSeeds);
+          poolRef.current = shuffle([...uniqueSeeds]);
           poolIdxRef.current = 0;
         }
-        batch.push(poolRef.current[poolIdxRef.current]);
+        const seed = poolRef.current[poolIdxRef.current];
         poolIdxRef.current += 1;
+        if (seed) batch.push(seed);
       }
       return batch;
     },
-    [uniqueSeeds, options?.rankSeeds],
+    [uniqueSeeds],
   );
 
   const takeSocialSeedsRef = useRef(takeSocialSeeds);
@@ -136,6 +163,15 @@ export function useReelsPlaylist(
 
   const resolveReel = useCallback(
     async (reel: PlaybackReel, attempt = 0, force = false): Promise<void> => {
+      if (reel.source === 'proday') {
+        if (reel.videoUrl) {
+          setReels((prev) =>
+            prev.map((r) => (r.id === reel.id ? { ...r, loading: false, failed: false } : r)),
+          );
+        }
+        return;
+      }
+
       if (shouldUseEmbedPlayback()) {
         setReels((prev) =>
           prev.map((r) => (r.id === reel.id ? { ...r, loading: false, failed: false } : r)),
@@ -152,17 +188,20 @@ export function useReelsPlaylist(
         if (attempt < MAX_RESOLVE_RETRIES) {
           const [nextSeed] = takeSocialSeedsRef.current(1);
           const replacement = seedToPlaceholder(nextSeed, universe, reel.id);
-          setReels((prev) =>
-            prev.map((r) => (r.id === reel.id ? replacement : r)),
-          );
+          if (!replacement) {
+            setReels((prev) =>
+              prev.map((r) => (r.id === reel.id ? { ...r, loading: false, failed: true } : r)),
+            );
+            resolvingRef.current.delete(reel.id);
+            return;
+          }
+          setReels((prev) => prev.map((r) => (r.id === reel.id ? replacement : r)));
           resolvingRef.current.delete(reel.id);
           await resolveReel(replacement, attempt + 1, true);
           return;
         }
         setReels((prev) =>
-          prev.map((r) =>
-            r.id === reel.id ? { ...r, loading: false, failed: true } : r,
-          ),
+          prev.map((r) => (r.id === reel.id ? { ...r, loading: false, failed: true } : r)),
         );
         resolvingRef.current.delete(reel.id);
         return;
@@ -191,10 +230,15 @@ export function useReelsPlaylist(
 
   const buildBatch = useCallback(
     (count: number): PlaybackReel[] => {
+      if (uniqueSeeds.length === 0) return [];
       const seeds = takeSocialSeeds(count);
-      return shuffle(seeds.map((seed) => seedToPlaceholder(seed, universe, nextId())));
+      return shuffle(
+        seeds
+          .map((seed) => seedToPlaceholder(seed, universe, nextId()))
+          .filter((reel): reel is PlaybackReel => reel != null),
+      );
     },
-    [takeSocialSeeds, universe],
+    [takeSocialSeeds, universe, uniqueSeeds.length],
   );
 
   const prioritizeReel = useCallback(
@@ -216,9 +260,9 @@ export function useReelsPlaylist(
     resolvingRef.current.delete(reelId);
     const reset: PlaybackReel = {
       ...reel,
-      loading: !shouldUseEmbedPlayback(),
+      loading: reel.source !== 'proday' && !shouldUseEmbedPlayback(),
       failed: false,
-      videoUrl: '',
+      videoUrl: reel.source === 'proday' ? reel.videoUrl : '',
     };
     setReels((prev) => prev.map((r) => (r.id === reelId ? reset : r)));
     if (!shouldUseEmbedPlayback()) {
@@ -257,20 +301,33 @@ export function useReelsPlaylist(
   );
 
   useEffect(() => {
-    poolRef.current = options?.rankSeeds
-      ? options.rankSeeds([...uniqueSeeds])
-      : shuffle(uniqueSeeds);
+    poolRef.current = shuffle([...uniqueSeeds]);
     poolIdxRef.current = 0;
     seqRef.current = 0;
     resolvingRef.current.clear();
     loadingMoreRef.current = false;
 
+    if (uniqueSeeds.length === 0) {
+      setReels([]);
+      setResumeIndex(0);
+      return;
+    }
+
     const items = buildBatchRef.current(INITIAL_BATCH);
     setReels(items);
-    if (items[0]) {
-      prioritizeReelRef.current(items[0].id, 0);
+
+    let startIndex = 0;
+    if (options?.resumeBookmarkKey) {
+      const idx = items.findIndex((r) => r.bookmarkKey === options.resumeBookmarkKey);
+      if (idx >= 0) startIndex = idx;
     }
-  }, [universe, pole, uniqueSeeds, options?.rankSeeds]);
+    setResumeIndex(startIndex);
+
+    const startReel = items[startIndex] ?? items[0];
+    if (startReel) {
+      prioritizeReelRef.current(startReel.id, startIndex);
+    }
+  }, [universe, pole, theme, uniqueSeeds, options?.resumeBookmarkKey]);
 
   const onNearEnd = useCallback(
     (activeIndex: number) => {
@@ -282,13 +339,19 @@ export function useReelsPlaylist(
     [loadMore, reels.length],
   );
 
+  const removeReel = useCallback((bookmarkKey: string) => {
+    setReels((prev) => prev.filter((r) => r.bookmarkKey !== bookmarkKey));
+  }, []);
+
   return {
     reels,
+    resumeIndex,
     hasSeeds: uniqueSeeds.length > 0,
     loadingMore,
     loadMore,
     onNearEnd,
     prioritizeReel,
     retryReel,
+    removeReel,
   };
 }

@@ -3,7 +3,7 @@ import type { SeasonCalendarItem } from './seasonCalendar';
 
 export type MercatoDeepLink = 'home' | 'detections' | 'create_post' | 'stages';
 export type ProfileDeepLink = 'applications' | 'cv';
-export type DashboardDeepLink = 'sponsors' | 'feed';
+export type DashboardDeepLink = 'sponsors' | 'feed' | 'gestion';
 export type MatchsDeepLink = {
   eventId?: string;
   homeTab?: 'season' | 'matches' | 'convocations' | 'centre' | 'stats';

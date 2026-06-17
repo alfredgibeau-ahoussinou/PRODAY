@@ -6,11 +6,10 @@ import { PressableSpring } from '../../../components/motion';
 import { useAppTheme } from '../../../context/ProductLineContext';
 import { spacing } from '../../../theme/designTokens';
 import type { StaffPriorityItem } from '../engines/staffHome.engine';
-import type { MainTabId } from '../../../navigation/mainTabConfig';
 
 interface StaffPrioritiesStripProps {
   items: StaffPriorityItem[];
-  onPress?: (tab: MainTabId) => void;
+  onPress?: (item: StaffPriorityItem) => void;
 }
 
 export const StaffPrioritiesStrip: React.FC<StaffPrioritiesStripProps> = ({ items, onPress }) => {
@@ -29,7 +28,7 @@ export const StaffPrioritiesStrip: React.FC<StaffPrioritiesStripProps> = ({ item
           {items.map((item) => (
             <PressableSpring
               key={item.id}
-              onPress={() => onPress?.(item.tab)}
+              onPress={() => onPress?.(item)}
               style={[styles.row, { borderColor: colors.border }]}
               scaleTo={0.98}
               haptic
@@ -51,7 +50,7 @@ export const StaffPrioritiesStrip: React.FC<StaffPrioritiesStripProps> = ({ item
 };
 
 const styles = StyleSheet.create({
-  wrap: { paddingHorizontal: spacing.lg, marginBottom: spacing.md },
+  wrap: { marginBottom: spacing.md },
   card: { padding: spacing.lg, gap: spacing.sm },
   eyebrow: { fontSize: 10, letterSpacing: 2 },
   list: { gap: spacing.xs, marginTop: spacing.xs },

@@ -4,15 +4,12 @@ import {
   tiktokUrlForVideo,
   youtubeShortsUrl,
 } from '../content/footballReels';
-import { REEL_SEEDS, polesForUniverse, seedKey, seedsForUniverse } from '../content/reelSeedCatalog';
+import { polesForUniverse, seedKey, seedsForUniverse } from '../content/reelSeedCatalog';
 
 describe('reelSeedCatalog', () => {
-  it('fournit des seeds sociales distinctes par univers', () => {
-    for (const universe of ['homme', 'woman', 'pro'] as const) {
-      const seeds = seedsForUniverse(universe);
-      const keys = seeds.map(seedKey);
-      expect(seeds.length).toBeGreaterThanOrEqual(4);
-      expect(new Set(keys).size).toBe(keys.length);
+  it('n’expose plus de seeds externes — contenu acteurs ProDay uniquement', () => {
+    for (const universe of ['homme', 'woman', 'pro', 'sante'] as const) {
+      expect(seedsForUniverse(universe)).toEqual([]);
     }
   });
 
@@ -23,25 +20,15 @@ describe('reelSeedCatalog', () => {
     expect(polesForUniverse('sante')).toEqual(['sante']);
   });
 
-  it('référence des URLs valides par source', () => {
-    for (const universe of ['homme', 'woman', 'pro'] as const) {
-      for (const seed of REEL_SEEDS[universe]) {
-        if (seed.source === 'instagram') {
-          expect(seed.externalId.length).toBeGreaterThanOrEqual(10);
-          expect(instagramUrlForShortCode(seed.externalId, seed.authorHandle)).toMatch(
-            /instagram\.com\/.*reel\//,
-          );
-        }
-        if (seed.source === 'tiktok') {
-          expect(tiktokUrlForVideo(seed.authorHandle, seed.externalId)).toMatch(
-            /tiktok\.com\/@.+\/video\//,
-          );
-        }
-        if (seed.source === 'youtube') {
-          expect(youtubeShortsUrl(seed.externalId)).toMatch(/youtube\.com\/shorts\//);
-        }
-      }
-    }
+  it('génère des clés stables pour les seeds ProDay', () => {
+    const key = seedKey({
+      source: 'proday',
+      externalId: 'abc',
+      authorHandle: 'uid123',
+      authorName: 'Joueur',
+      tags: ['#proday'],
+    });
+    expect(key).toBe('proday-abc-uid123');
   });
 });
 
@@ -59,5 +46,10 @@ describe('footballReels helpers', () => {
     expect(instagramUrlForShortCode('DHHD7GOIRn0', '433')).toBe(
       'https://www.instagram.com/433/reel/DHHD7GOIRn0/',
     );
+  });
+
+  it('construit les URLs TikTok et YouTube Shorts', () => {
+    expect(tiktokUrlForVideo('joueur', '123')).toMatch(/tiktok\.com\/@joueur\/video\/123/);
+    expect(youtubeShortsUrl('abc')).toBe('https://www.youtube.com/shorts/abc');
   });
 });

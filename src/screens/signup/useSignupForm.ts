@@ -25,20 +25,26 @@ import {
   validateAgeForAppSpace,
   needsParentalStep,
   SIGNUP_PAGE_LABELS,
+  getSignupPageLabel,
   getCurrentPhase,
   getPhaseIndex,
   getSignupPhases,
-  MEDICAL_POLE_SPECIALTIES,
   type SignupPageId,
   type SignupFlowKind,
 } from './signupFlowConfig';
-import { WOMAN_SIGNUP_PHASES, suggestFeminineAppSpaceFromAge } from './signupWomanConfig';
-import { MAN_SIGNUP_PHASES } from './signupManConfig';
-import { PRO_SIGNUP_PHASES } from './signupProConfig';
-import { SANTE_SIGNUP_PHASES } from './signupSanteConfig';
+import type { MedicalSpecialtyId } from './signupRoleExperience';
+import {
+  medicalIdToCanonicalLabel,
+  resolveMedicalSpecialtyId,
+} from './signupMedicalI18n';
+import { suggestFeminineAppSpaceFromAge, getWomanSignupPhases } from './signupWomanConfig';
+import { getManSignupPhases } from './signupManConfig';
+import { getProSignupPhases } from './signupProConfig';
+import { getSanteSignupPhases } from './signupSanteConfig';
 import { isRoleAllowedForProductLine } from '../../content/universeRoles';
 import type { ProductLineId } from '../../models/ProductLine';
 import { useProductLine } from '../../context/ProductLineContext';
+import { useTranslation } from '../../context/LocaleContext';
 
 export type { SignupPageId, SignupFlowKind };
 
@@ -49,6 +55,7 @@ export function useSignupForm(initial?: {
   productLine?: ProductLineId;
 }) {
   const { setProductLine } = useProductLine();
+  const { t } = useTranslation();
   const productLine: ProductLineId = initial?.productLine ?? 'homme';
   const isWomanProduct = productLine === 'woman';
   const isProProduct = productLine === 'pro';
@@ -75,9 +82,7 @@ export function useSignupForm(initial?: {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [city, setCity] = useState('');
   const [department, setDepartment] = useState('');
-  const [medicalSpecialty, setMedicalSpecialty] = useState<(typeof MEDICAL_POLE_SPECIALTIES)[number]>(
-    MEDICAL_POLE_SPECIALTIES[0]
-  );
+  const [medicalSpecialty, setMedicalSpecialty] = useState<MedicalSpecialtyId>('kine');
   const [medicalPracticeFocus, setMedicalPracticeFocus] = useState('');
   const [structureName, setStructureName] = useState('');
   const [professionalHeadline, setProfessionalHeadline] = useState('');
@@ -121,13 +126,13 @@ export function useSignupForm(initial?: {
   }, [steps, currentPageId]);
 
   const currentPage = steps[pageIndex] ?? 'welcome';
-  const stepLabel = SIGNUP_PAGE_LABELS[currentPage] ?? 'Inscription';
+  const stepLabel = getSignupPageLabel(currentPage, t);
   const phases = useMemo(() => {
-    if (isWomanProduct) return WOMAN_SIGNUP_PHASES;
-    if (isSanteProduct) return SANTE_SIGNUP_PHASES;
-    if (isProProduct) return PRO_SIGNUP_PHASES;
-    return MAN_SIGNUP_PHASES;
-  }, [isWomanProduct, isSanteProduct, isProProduct]);
+    if (isWomanProduct) return getWomanSignupPhases(t);
+    if (isSanteProduct) return getSanteSignupPhases(t);
+    if (isProProduct) return getProSignupPhases(t);
+    return getManSignupPhases(t);
+  }, [isWomanProduct, isSanteProduct, isProProduct, t]);
   const phaseIndex = getPhaseIndex(flowKind, currentPage);
   const currentPhase = getCurrentPhase(currentPage);
   const needsDocument = ROLES_REQUIRING_VERIFICATION.includes(role);
@@ -135,8 +140,8 @@ export function useSignupForm(initial?: {
 
   const ageSpaceMismatch = useMemo(() => {
     if (parsedAge == null || role !== 'player') return undefined;
-    return validateAgeForAppSpace(parsedAge, appSpace);
-  }, [parsedAge, appSpace, role]);
+    return validateAgeForAppSpace(parsedAge, appSpace, t);
+  }, [parsedAge, appSpace, role, t]);
 
   const clearErrors = useCallback(() => {
     setError(null);
@@ -311,7 +316,7 @@ export function useSignupForm(initial?: {
 
   const validateProgram = () => {
     if (!spaceTouched) {
-      setFieldErrors({ appSpace: 'Sélectionnez un espace ProDay pour continuer' });
+      setFieldErrors({ appSpace: t('signup.form.selectSpace') });
       return false;
     }
     setFieldErrors({});
@@ -577,7 +582,7 @@ export function useSignupForm(initial?: {
       const integrityErrors = validateSignupIntegrity(buildIntegrityInput());
       if (Object.keys(integrityErrors).length > 0) {
         setFieldErrors(integrityErrors);
-        setError('Corrigez les champs signalés avant de créer le compte.');
+        setError(t('signup.form.fixFields'));
         return false;
       }
 
@@ -594,14 +599,15 @@ export function useSignupForm(initial?: {
             role === 'player'
               ? buildPlayerPayload()
               : role === 'physio'
-                ? {
-                    medical_specialty: medicalSpecialty,
-                    job_title: medicalSpecialty,
-                    specialties: [medicalSpecialty, medicalPracticeFocus].filter(Boolean),
-                    bio: medicalPracticeFocus
-                      ? `${medicalSpecialty} — ${medicalPracticeFocus}`
-                      : medicalSpecialty,
-                  }
+                ? (() => {
+                    const label = medicalIdToCanonicalLabel(medicalSpecialty);
+                    return {
+                      medical_specialty: label,
+                      job_title: label,
+                      specialties: [label, medicalPracticeFocus].filter(Boolean),
+                      bio: medicalPracticeFocus ? `${label} — ${medicalPracticeFocus}` : label,
+                    };
+                  })()
                 : role === 'coach'
                   ? {
                       diploma: professionalHeadline.trim() || undefined,

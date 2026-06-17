@@ -22,12 +22,12 @@ import type { RecruitmentStats } from '../../services/stats.service';
 import type { RecruitmentPost } from '../../models/Player';
 import type { ProDayModuleId } from '../../content/prodayModules';
 import type { ProductLineId } from '../../models/ProductLine';
-import { getDiscoverHomeCopy } from '../../content/brandExperience';
+import { useTranslation } from '../../context/LocaleContext';
+import { getLocalizedDiscoverCopy } from '../../i18n/localizedContent';
+import { LanguageSettingControl } from '../settings/LanguageSettingControl';
 import { spacing, BRAND, radius, shadows } from '../../theme/designTokens';
 import { ProDayScreenCanvas } from '../ui/ProDayScreenCanvas';
 import { ProDayGradient } from '../ui/ProDayGradient';
-import { DiscoverV3Teaser } from './DiscoverV3Teaser';
-import { isV3ShellEnabled } from '../../config/featureFlags';
 import type { AppColors } from '../../theme/universeTheme';
 
 const STICKY_CTA_HEIGHT = 56;
@@ -75,13 +75,13 @@ export const DiscoverInteractiveHome: React.FC<DiscoverInteractiveHomeProps> = (
   onUniversePress,
 }) => {
   const { styles: discoverStyles, palette: discoverPalette, colors: c } = useDiscoverStyles();
+  const { t } = useTranslation();
   const metrics = useDiscoverMetrics();
-  const homeCopy = getDiscoverHomeCopy(productLine);
+  const homeCopy = getLocalizedDiscoverCopy(productLine, t);
   const local = useMemo(() => createLocalStyles(c), [c]);
 
   const showHeaderStats = Boolean(stats) && !loading;
   const hasActivity = posts.length > 0;
-  const showV3Teaser = isV3ShellEnabled();
 
   const onQuickPress = (id: DiscoverQuickId) => {
     switch (id) {
@@ -124,14 +124,17 @@ export const DiscoverInteractiveHome: React.FC<DiscoverInteractiveHomeProps> = (
           />
 
           <View style={[local.section, { paddingHorizontal: metrics.pad }]}>
-            <DiscoverSectionLabel>Accès rapide</DiscoverSectionLabel>
+            <DiscoverSectionLabel>{t('discover.quickAccess')}</DiscoverSectionLabel>
             <DiscoverQuickAccess onPress={onQuickPress} hideReels={productLine === 'sante'} />
           </View>
 
-          {showV3Teaser ? <DiscoverV3Teaser /> : null}
+          <View style={[local.section, { paddingHorizontal: metrics.pad }]}>
+            <DiscoverSectionLabel>{t('preferences.language')}</DiscoverSectionLabel>
+            <LanguageSettingControl variant="card" />
+          </View>
 
           <View style={[local.section, { paddingHorizontal: metrics.pad }]}>
-            <DiscoverSectionLabel>Votre parcours</DiscoverSectionLabel>
+            <DiscoverSectionLabel>{t('discover.journey')}</DiscoverSectionLabel>
             <DiscoverGuestJourney productLine={productLine} onStepPress={onStepPress} />
           </View>
 
@@ -147,7 +150,7 @@ export const DiscoverInteractiveHome: React.FC<DiscoverInteractiveHomeProps> = (
 
           {hasActivity || loading ? (
             <View style={[local.section, { paddingHorizontal: metrics.pad }]}>
-              <DiscoverSectionLabel>En direct</DiscoverSectionLabel>
+              <DiscoverSectionLabel>{t('discover.live')}</DiscoverSectionLabel>
               {!loading && stats ? (
                 <PressableSpring
                   style={discoverStyles.statsRow}
@@ -191,7 +194,7 @@ export const DiscoverInteractiveHome: React.FC<DiscoverInteractiveHomeProps> = (
           <View style={[local.stickyBar, { backgroundColor: c.background, borderTopColor: c.border }]}>
             <PressableSpring onPress={onSignup} scaleTo={0.98} haptic style={[local.stickyBtnWrap, shadows.soft]}>
               <ProDayGradient kind="cta" style={local.stickyBtn}>
-                <Text style={local.stickyBtnText}>S&apos;inscrire gratuitement</Text>
+                <Text style={local.stickyBtnText}>{t('discover.signupFree')}</Text>
                 <Icon name="chevron-forward" size={18} color={c.brandInverse} />
               </ProDayGradient>
             </PressableSpring>

@@ -4,16 +4,18 @@ import { PressableSpring } from '../motion/PressableSpring';
 import { prodayHaptics } from '../../utils/prodayHaptics';
 import type { TeamEvent } from '../../models/TeamEvent';
 import { EVENT_TYPE_LABELS } from '../../models/TeamEvent';
-import { formatCalendarDate } from '../../utils/seasonCalendar';
 import {
   carpoolEventSummaryForUser,
   totalCarpoolAvailableSeats,
 } from '../../utils/carpoolBalance';
-import { ProDayGradient } from '../ui/ProDayGradient';
 import { ProDayText } from '../ui/ProDayText';
 import { Icon } from '../ui/Icon';
 import { useAppTheme } from '../../context/ProductLineContext';
+import { useTranslation } from '../../context/LocaleContext';
+import type { TranslateFn } from '../../i18n/types';
+import { tr } from '../../i18n/translate';
 import { spacing, radius, shadows } from '../../theme/designTokens';
+import { CarpoolCardAccent } from './carpoolUi';
 
 interface CarpoolEventCardProps {
   event: TeamEvent;
@@ -24,18 +26,21 @@ interface CarpoolEventCardProps {
 
 export function carpoolStatusLabel(
   event: TeamEvent,
-  profileUid: string
+  profileUid: string,
+  t?: TranslateFn
 ): string {
   const summary = carpoolEventSummaryForUser(event, profileUid);
-  if (summary.isDriver) return 'Vous proposez un trajet';
-  if (summary.myBookingDriverUid) return 'Place réservée';
+  if (summary.isDriver) return tr(t, 'carpool.event.youOffer', 'You are offering a trip');
+  if (summary.myBookingDriverUid) return tr(t, 'carpool.event.booked', 'Seat booked');
   if (summary.driverCount > 0) {
     if (summary.availableTotal != null && summary.availableTotal > 0) {
-      return `${summary.availableTotal} place(s) dispo`;
+      return t
+        ? t('carpool.event.seats', { n: summary.availableTotal })
+        : `${summary.availableTotal} place(s) dispo`;
     }
-    return 'Trajets proposés';
+    return tr(t, 'carpool.event.offers', 'Trips offered');
   }
-  return 'Aucun trajet — proposez le vôtre';
+  return tr(t, 'carpool.event.none', 'No trip — offer yours');
 }
 
 export const CarpoolEventCard: React.FC<CarpoolEventCardProps> = ({
@@ -45,7 +50,8 @@ export const CarpoolEventCard: React.FC<CarpoolEventCardProps> = ({
   onQuickBook,
 }) => {
   const { colors } = useAppTheme();
-  const statusLabel = carpoolStatusLabel(event, profileUid);
+  const { t } = useTranslation();
+  const statusLabel = carpoolStatusLabel(event, profileUid, t);
   const summary = carpoolEventSummaryForUser(event, profileUid);
   const available = totalCarpoolAvailableSeats(event.carpool_slots);
   const needsRide = !summary.isDriver && !summary.myBookingDriverUid;
@@ -54,24 +60,31 @@ export const CarpoolEventCard: React.FC<CarpoolEventCardProps> = ({
     <PressableSpring
       style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }, shadows.soft]}
       onPress={onPress}
-      scaleTo={0.96}
+      scaleTo={0.98}
       haptic
     >
-      <ProDayGradient kind="card" style={styles.accent} />
+      <CarpoolCardAccent />
       <View style={styles.body}>
         <View style={styles.top}>
-          <View style={[styles.kindPill, { backgroundColor: colors.accentSoft }]}>
-            <ProDayText variant="caption" accent style={styles.kindText}>
-              {EVENT_TYPE_LABELS[event.event_type]}
+          <View style={[styles.dateBlock, { backgroundColor: colors.accentSoft }]}>
+            <ProDayText variant="caption" accent style={styles.dateDay}>
+              {event.starts_at.toLocaleDateString('fr-FR', { day: 'numeric' })}
+            </ProDayText>
+            <ProDayText variant="caption" accent style={styles.dateMonth}>
+              {event.starts_at.toLocaleDateString('fr-FR', { month: 'short' })}
             </ProDayText>
           </View>
-          <ProDayText variant="caption" muted>
-            {formatCalendarDate(event.starts_at)}
-          </ProDayText>
+          <View style={styles.topCopy}>
+            <View style={[styles.kindPill, { backgroundColor: colors.surfaceMuted }]}>
+              <ProDayText variant="caption" muted style={styles.kindText}>
+                {EVENT_TYPE_LABELS[event.event_type]}
+              </ProDayText>
+            </View>
+            <ProDayText variant="section" numberOfLines={2}>
+              {event.title}
+            </ProDayText>
+          </View>
         </View>
-        <ProDayText variant="section" numberOfLines={2}>
-          {event.title}
-        </ProDayText>
         <ProDayText variant="body" muted numberOfLines={1}>
           {event.city}
           {event.location_label ? ` · ${event.location_label}` : ''}
@@ -107,7 +120,7 @@ export const CarpoolEventCard: React.FC<CarpoolEventCardProps> = ({
               haptic
             >
               <ProDayText variant="caption" accent style={styles.quickBook}>
-                Réserver →
+                {t('carpool.event.book')}
               </ProDayText>
             </PressableSpring>
           ) : (
@@ -125,17 +138,27 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     overflow: 'hidden',
     marginBottom: spacing.sm,
+    paddingLeft: spacing.sm,
   },
-  accent: { height: 3, width: '100%' },
-  body: { padding: spacing.md },
+  body: { padding: spacing.md, paddingLeft: spacing.sm },
   top: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     marginBottom: spacing.sm,
-    gap: spacing.sm,
+    gap: spacing.md,
   },
+  dateBlock: {
+    width: 52,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.sm,
+    borderRadius: radius.md,
+  },
+  dateDay: { fontWeight: '900', fontSize: 18, lineHeight: 20 },
+  dateMonth: { fontWeight: '800', fontSize: 11, textTransform: 'capitalize' },
+  topCopy: { flex: 1, gap: 4 },
   kindPill: {
+    alignSelf: 'flex-start',
     paddingHorizontal: spacing.sm,
     paddingVertical: 3,
     borderRadius: radius.pill,

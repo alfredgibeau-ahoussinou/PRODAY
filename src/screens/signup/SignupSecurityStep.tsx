@@ -11,6 +11,7 @@ import { SignupStepLayout } from './SignupStepLayout';
 import { SignupFooterButton } from './SignupFooterButton';
 import type { SignupForm } from './useSignupForm';
 import { getPlayerStepMeta } from './signupPlayerStepMeta';
+import { useTranslation } from '../../context/LocaleContext';
 import { getProStepMeta } from './signupProConfig';
 import { getSanteStepMeta } from './signupSanteConfig';
 import { ProDayErrorBanner } from '../../components/ui/ProDayErrorBanner';
@@ -39,17 +40,18 @@ export const SignupSecurityStep: React.FC<SignupSecurityStepProps> = ({
   phaseIndex,
   onBack,
   onSubmit,
-  nextLabel = 'Créer mon compte',
+  nextLabel = undefined,
 }) => {
+  const { t } = useTranslation();
   const { colors: c } = useSignupFlowTheme();
   const styles = useMemo(() => createStyles(c), [c]);
   const passwordStrength =
     form.password.length > 0 ? getPasswordStrength(form.password) : null;
   const meta = form.isSanteProduct
-    ? getSanteStepMeta('security')
+    ? getSanteStepMeta('security', t)
     : form.isProProduct
-      ? getProStepMeta('security')
-      : getPlayerStepMeta(form.productLine, 'security');
+      ? getProStepMeta('security', t)
+      : getPlayerStepMeta(form.productLine, 'security', t);
 
   return (
     <SignupStepLayout
@@ -58,18 +60,27 @@ export const SignupSecurityStep: React.FC<SignupSecurityStepProps> = ({
       stepName={stepName}
       phases={phases}
       phaseIndex={phaseIndex}
-      title={form.isOAuthCompletion ? 'Finaliser l’accès' : meta.title}
+      title={form.isOAuthCompletion ? t('signup.security.oauth.title') : meta.title}
       subtitle={
-        form.isOAuthCompletion
-          ? 'Acceptez les conditions pour activer votre compte.'
-          : meta.subtitle
+        form.isOAuthCompletion ? t('signup.security.oauth.subtitle') : meta.subtitle
       }
       contentKey="security"
       heroIcon={meta.heroIcon}
       onBack={onBack}
       footer={
         <SignupFooterButton
-          label={nextLabel}
+          label={
+            nextLabel ??
+            (form.isOAuthCompletion
+              ? t('signup.form.finalize')
+              : form.isSanteProduct
+                ? t('signup.form.createSante')
+                : form.isProProduct
+                  ? t('signup.form.createPro')
+                  : form.isWomanProduct
+                    ? t('signup.form.createWoman')
+                    : t('signup.form.createAccount'))
+          }
           onPress={onSubmit}
           loading={form.loading}
         />
@@ -85,9 +96,9 @@ export const SignupSecurityStep: React.FC<SignupSecurityStepProps> = ({
         <SignupFormCard>
           <StaggerReveal index={0}>
             <AuthTextField
-              label="Mot de passe"
+              label={t('signup.security.password')}
               icon="lock"
-              placeholder={`${SIGNUP_PASSWORD_MIN} caractères, maj., chiffre, spécial`}
+              placeholder={t('signup.security.passwordPlaceholder', { min: SIGNUP_PASSWORD_MIN })}
               value={form.password}
               onChangeText={form.setPassword}
               secureToggle
@@ -98,20 +109,18 @@ export const SignupSecurityStep: React.FC<SignupSecurityStepProps> = ({
             <StaggerReveal index={1}>
               <SignupPasswordStrengthBar
                 level={passwordStrength.level}
-                label={`Sécurité : ${passwordStrength.label}`}
+                label={t('signup.security.passwordStrength', { label: passwordStrength.label })}
               />
             </StaggerReveal>
           ) : null}
           {!form.fieldErrors.password && form.password.length > 0 ? (
-            <Text style={styles.passwordRules}>
-              Majuscule, minuscule, chiffre et caractère spécial requis.
-            </Text>
+            <Text style={styles.passwordRules}>{t('signup.security.passwordRules')}</Text>
           ) : null}
           <StaggerReveal index={2}>
             <AuthTextField
-              label="Confirmer le mot de passe"
+              label={t('signup.security.confirmPassword')}
               icon="lock"
-              placeholder="Répétez le mot de passe"
+              placeholder={t('signup.form.repeatPassword')}
               value={form.confirmPassword}
               onChangeText={form.setConfirmPassword}
               secureToggle

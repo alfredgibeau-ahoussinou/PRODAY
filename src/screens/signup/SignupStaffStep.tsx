@@ -5,9 +5,11 @@ import { SignupOptionPicker } from '../../components/signup/SignupOptionPicker';
 import { SignupStepLayout } from './SignupStepLayout';
 import { SignupFooterButton } from './SignupFooterButton';
 import type { SignupForm } from './useSignupForm';
-import { getStaffStepSubtitle, MEDICAL_POLE_SPECIALTIES } from './signupFlowConfig';
+import { getStaffStepSubtitle } from './signupFlowConfig';
+import { getMedicalSpecialtyConfigs } from './signupMedicalI18n';
 import { spacing } from '../../theme/designTokens';
 import { useSignupFlowTheme } from './SignupFlowContext';
+import { useTranslation } from '../../context/LocaleContext';
 import type { AppColors } from '../../theme/universeTheme';
 
 interface SignupStaffStepProps {
@@ -30,7 +32,13 @@ export const SignupStaffStep: React.FC<SignupStaffStepProps> = ({
   onBack,
 }) => {
   const { colors: c } = useSignupFlowTheme();
+  const { t } = useTranslation();
   const styles = useMemo(() => createStyles(c), [c]);
+
+  const medicalOptions = useMemo(
+    () => getMedicalSpecialtyConfigs(t).map((c) => ({ label: c.label, value: c.id })),
+    [t]
+  );
 
   return (
     <SignupStepLayout
@@ -39,38 +47,37 @@ export const SignupStaffStep: React.FC<SignupStaffStepProps> = ({
       stepName={stepName}
       phases={phases}
       phaseIndex={phaseIndex}
-      title="Profil professionnel"
-      subtitle={getStaffStepSubtitle(form.role)}
+      title={t('signup.form.proProfile')}
+      subtitle={getStaffStepSubtitle(form.role, t)}
       contentKey={`staff-${form.role}`}
       heroIcon="briefcase"
       onBack={onBack}
       footer={
-        <SignupFooterButton label="Continuer" onPress={() => form.advanceFromCurrentPage()} />
+        <SignupFooterButton label={t('signup.form.continue')} onPress={() => form.advanceFromCurrentPage()} />
       }
     >
       <View>
-        <Text style={styles.staffHint}>
-          Documents vérifiés après confirmation de l&apos;email.
-        </Text>
+        <Text style={styles.staffHint}>{t('signup.staff.hint')}</Text>
       </View>
       {form.role === 'physio' ? (
         <View>
           <SignupOptionPicker
-            label="Spécialité du pôle médical *"
-            options={MEDICAL_POLE_SPECIALTIES}
-            value={form.medicalSpecialty}
-            onChange={(value) =>
-              form.setMedicalSpecialty(value as typeof form.medicalSpecialty)
-            }
+            label={t('signup.form.medicalSpecialty')}
+            options={medicalOptions.map((o) => o.label)}
+            value={medicalOptions.find((o) => o.value === form.medicalSpecialty)?.label ?? ''}
+            onChange={(label) => {
+              const match = medicalOptions.find((o) => o.label === label);
+              if (match) form.setMedicalSpecialty(match.value);
+            }}
             error={form.fieldErrors.medicalSpecialty}
           />
         </View>
       ) : null}
       <View>
         <AuthTextField
-          label="Ville *"
+          label={t('signup.form.cityRequired')}
           icon="location"
-          placeholder="Ex. Paris, Lyon…"
+          placeholder={t('signup.form.cityPlaceholder')}
           value={form.city}
           onChangeText={form.setCity}
           error={form.fieldErrors.city}
@@ -80,11 +87,11 @@ export const SignupStaffStep: React.FC<SignupStaffStepProps> = ({
         <AuthTextField
           label={
             form.role === 'agent' || form.role === 'club' || form.role === 'recruiter'
-              ? 'Département *'
-              : 'Département (optionnel)'
+              ? t('signup.form.departmentRequired')
+              : t('signup.form.departmentOptional')
           }
           icon="location"
-          placeholder="Ex. 75, 69, 2A, 971…"
+          placeholder={t('signup.form.deptPlaceholderLong')}
           value={form.department}
           onChangeText={form.setDepartment}
           error={form.fieldErrors.department}

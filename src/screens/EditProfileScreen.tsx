@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -17,7 +17,6 @@ import { SignupOptionPicker } from '../components/signup/SignupOptionPicker';
 import {
   PLAYER_CATEGORIES,
   PLAYER_LEVELS,
-  PLAYER_POSITIONS,
 } from '../constants/playerProfile';
 import { parseAgeInput } from '../utils/minor';
 import { mergePlayerParentalOnProfileEdit } from '../utils/minorProfileGuard';
@@ -25,6 +24,15 @@ import { isSponsorRole, SPONSOR_THEME } from '../content/sponsorExperience';
 import { spacing, radius } from '../theme/designTokens';
 import { useThemedScreen } from '../hooks/useThemedScreen';
 import type { AppColors } from '../theme/universeTheme';
+import { ProDayTabPager } from '../components/ui/ProDayTabPager';
+import { ProDaySurface } from '../components/ui/ProDaySurface';
+import { ProDayText } from '../components/ui/ProDayText';
+import { ProfileAvatarButton } from '../components/profile/ProfileAvatarButton';
+import { ProfileGalleryEditor } from '../components/profile/ProfileGalleryEditor';
+import { ProfileVideoEditor } from '../components/profile/ProfileVideoEditor';
+import { PlayerPositionPitchPicker } from '../components/profile/PlayerPositionPitchPicker';
+import { pickGalleryImage, pickProfileImage } from '../utils/pickMedia';
+import { pickReelVideo } from '../utils/pickReelVideo';
 
 type FieldUi = {
   surface: string;
@@ -36,6 +44,10 @@ type FieldUi = {
   accent: string;
   onAccent: string;
 };
+
+type PlayerTab = 'media' | 'identity' | 'sport' | 'presentation';
+type StaffTab = 'identity' | 'career' | 'presentation';
+type SponsorTab = 'identity' | 'brand' | 'presentation';
 
 interface EditProfileScreenProps {
   user: User;
@@ -84,20 +96,34 @@ export const EditProfileScreen: React.FC<EditProfileScreenProps> = ({
   const [achievementsText, setAchievementsText] = useState(
     (p.achievements ?? []).join('\n')
   );
-  const [videoUrlsText, setVideoUrlsText] = useState(
-    (p.highlight_video_urls ?? []).join('\n')
-  );
   const [diploma, setDiploma] = useState(p.diploma ?? '');
   const [licenseNumber, setLicenseNumber] = useState(p.license_number ?? '');
   const [jobTitle, setJobTitle] = useState(p.job_title ?? '');
   const [specialtiesText, setSpecialtiesText] = useState(
     (p.specialties ?? []).join(', ')
   );
+  const [galleryUrls, setGalleryUrls] = useState(p.gallery_urls ?? []);
+  const [videoUrls, setVideoUrls] = useState(p.highlight_video_urls ?? []);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [uploadingGallery, setUploadingGallery] = useState(false);
+  const [uploadingVideo, setUploadingVideo] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [playerTab, setPlayerTab] = useState<PlayerTab>('media');
+  const [staffTab, setStaffTab] = useState<StaffTab>('identity');
+  const [sponsorTab, setSponsorTab] = useState<SponsorTab>('identity');
+
   const isSponsor = isSponsorRole(user.role);
+  const isPlayer = user.role === 'player';
+  const isStaff =
+    user.role === 'coach' || user.role === 'agent' || user.role === 'recruiter';
   const { colors: c, productLine, rootStyle } = useThemedScreen();
   const styles = useMemo(() => createStyles(c), [c]);
   const isWoman = productLine === 'woman';
+
+  useEffect(() => {
+    setGalleryUrls(user.profile.gallery_urls ?? []);
+    setVideoUrls(user.profile.highlight_video_urls ?? []);
+  }, [user.profile.gallery_urls, user.profile.highlight_video_urls]);
 
   const ui: FieldUi = useMemo(
     () =>
@@ -125,6 +151,8 @@ export const EditProfileScreen: React.FC<EditProfileScreenProps> = ({
     [isSponsor, c]
   );
 
+  const pagePad = styles.pagePad;
+
   const parseStat = (value: string) => {
     const n = parseInt(value.replace(/\D/g, ''), 10);
     return Number.isFinite(n) && n >= 0 ? n : 0;
@@ -148,6 +176,89 @@ export const EditProfileScreen: React.FC<EditProfileScreenProps> = ({
       .split(',')
       .map((s) => s.trim())
       .filter(Boolean);
+
+  const handleAvatarPick = async () => {
+    const file = await pickProfileImage();
+    if (!file) return;
+    setUploadingAvatar(true);
+    try {
+      await profileService.uploadAvatar(user.uid, file);
+      await onSaved();
+      Alert.alert('Photo mise à jour', 'Votre photo de profil est en ligne.');
+    } catch (e) {
+      Alert.alert('Erreur', e instanceof Error ? e.message : 'Upload impossible.');
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
+  const handleGalleryAdd = async () => {
+    const file = await pickGalleryImage();
+    if (!file) return;
+    setUploadingGallery(true);
+    try {
+      const next = await profileService.addGalleryPhoto(user.uid, file);
+      setGalleryUrls(next);
+      await onSaved();
+    } catch (e) {
+      Alert.alert('Erreur', e instanceof Error ? e.message : 'Ajout impossible.');
+    } finally {
+      setUploadingGallery(false);
+    }
+  };
+
+  const handleGalleryRemove = (url: string) => {
+    Alert.alert('Supprimer la photo', 'Retirer cette image de votre galerie ?', [
+      { text: 'Annuler', style: 'cancel' },
+      {
+        text: 'Supprimer',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            const next = await profileService.removeGalleryPhoto(user.uid, url);
+            setGalleryUrls(next);
+            await onSaved();
+          } catch (e) {
+            Alert.alert('Erreur', e instanceof Error ? e.message : 'Suppression impossible.');
+          }
+        },
+      },
+    ]);
+  };
+
+  const handleVideoAdd = async () => {
+    const file = await pickReelVideo();
+    if (!file) return;
+    setUploadingVideo(true);
+    try {
+      const next = await profileService.addHighlightVideo(user.uid, file);
+      setVideoUrls(next);
+      await onSaved();
+    } catch (e) {
+      Alert.alert('Erreur', e instanceof Error ? e.message : 'Ajout impossible.');
+    } finally {
+      setUploadingVideo(false);
+    }
+  };
+
+  const handleVideoRemove = (url: string) => {
+    Alert.alert('Supprimer la vidéo', 'Retirer cette vidéo de votre profil ?', [
+      { text: 'Annuler', style: 'cancel' },
+      {
+        text: 'Supprimer',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            const next = await profileService.removeHighlightVideo(user.uid, url);
+            setVideoUrls(next);
+            await onSaved();
+          } catch (e) {
+            Alert.alert('Erreur', e instanceof Error ? e.message : 'Suppression impossible.');
+          }
+        },
+      },
+    ]);
+  };
 
   const handleSave = async () => {
     if (!displayName.trim()) {
@@ -185,11 +296,9 @@ export const EditProfileScreen: React.FC<EditProfileScreenProps> = ({
         };
         const achievements = parseLines(achievementsText);
         profileUpdate.achievements = achievements.length > 0 ? achievements : undefined;
-        const videos = parseLines(videoUrlsText).filter((u) => u.startsWith('http'));
-        profileUpdate.highlight_video_urls = videos.length > 0 ? videos : undefined;
       }
 
-      if (user.role === 'coach' || user.role === 'agent' || user.role === 'recruiter') {
+      if (isStaff) {
         profileUpdate.diploma = diploma.trim() || undefined;
         profileUpdate.license_number = licenseNumber.trim() || undefined;
         profileUpdate.job_title = jobTitle.trim() || undefined;
@@ -224,6 +333,283 @@ export const EditProfileScreen: React.FC<EditProfileScreenProps> = ({
     }
   };
 
+  const identityFields = (
+    <>
+      <SectionTitle ui={ui} label="Coordonnées" />
+      <Field styles={styles} label="Nom affiché *" value={displayName} onChangeText={setDisplayName} ui={ui} />
+      <Field styles={styles} label="Email" value={email} editable={false} muted ui={ui} />
+      <Field styles={styles} label="Téléphone" value={phone} onChangeText={setPhone} keyboardType="phone-pad" ui={ui} />
+      <Field styles={styles} label="Ville" value={city} onChangeText={setCity} ui={ui} />
+      <Field styles={styles} label="Département" value={department} onChangeText={setDepartment} ui={ui} />
+    </>
+  );
+
+  const presentationFields = (
+    <Field
+      styles={styles}
+      label="Bio"
+      value={bio}
+      onChangeText={setBio}
+      multiline
+      placeholder={
+        isSponsor
+          ? 'Présentez votre marque en quelques lignes…'
+          : 'Présentez-vous en quelques lignes…'
+      }
+      ui={ui}
+    />
+  );
+
+  const avatarBlock = !isSponsor ? (
+    <ProDaySurface variant="module" style={styles.mediaCard}>
+      <ProDayText variant="section" style={styles.mediaTitle}>
+        Photo de profil
+      </ProDayText>
+      <ProDayText variant="caption" muted style={styles.mediaHint}>
+        Visible sur votre vitrine et dans les recherches.
+      </ProDayText>
+      <View style={styles.avatarRow}>
+        <ProfileAvatarButton
+          displayName={displayName}
+          avatarUrl={user.avatar_url}
+          uploading={uploadingAvatar}
+          onPress={handleAvatarPick}
+          size={96}
+        />
+        <PressableSpring onPress={handleAvatarPick} disabled={uploadingAvatar} scaleTo={0.97}>
+          <ProDayText variant="body" accent>
+            {user.avatar_url ? 'Changer la photo' : 'Ajouter une photo'}
+          </ProDayText>
+        </PressableSpring>
+      </View>
+    </ProDaySurface>
+  ) : null;
+
+  const playerSportFields = (
+    <>
+      <SectionTitle
+        ui={ui}
+        label={isWoman ? 'Profil joueuse' : 'Profil joueur'}
+      />
+      <PlayerPositionPitchPicker
+        value={position}
+        onChange={(next) => setPosition(next)}
+        label="Poste principal"
+        hint="Sélectionnez la zone où vous jouez le plus souvent."
+      />
+      <SignupOptionPicker
+        label="Catégorie"
+        options={PLAYER_CATEGORIES}
+        value={category}
+        onChange={setCategory}
+      />
+      <SignupOptionPicker
+        label="Niveau"
+        options={PLAYER_LEVELS}
+        value={level}
+        onChange={setLevel}
+      />
+      <Text style={[styles.fieldLabel, { color: ui.textSecondary }]}>Pied fort</Text>
+      <View style={styles.chipRow}>
+        {FOOT_OPTIONS.map((opt) => (
+          <PressableSpring
+            key={opt.value}
+            style={[styles.chip, strongFoot === opt.value && styles.chipActive]}
+            onPress={() => setStrongFoot(opt.value)}
+          >
+            <Text style={[styles.chipText, strongFoot === opt.value && styles.chipTextActive]}>
+              {opt.label}
+            </Text>
+          </PressableSpring>
+        ))}
+      </View>
+      <View style={styles.row2}>
+        <View style={styles.half}>
+          <Field styles={styles} label="Âge" value={age} onChangeText={setAge} keyboardType="number-pad" ui={ui} />
+        </View>
+        <View style={styles.half}>
+          <Field styles={styles} label="Exp. (ans)" value={yearsExp} onChangeText={setYearsExp} keyboardType="number-pad" ui={ui} />
+        </View>
+      </View>
+      <View style={styles.row2}>
+        <View style={styles.half}>
+          <Field styles={styles} label="Taille (cm)" value={heightCm} onChangeText={setHeightCm} keyboardType="number-pad" ui={ui} />
+        </View>
+        <View style={styles.half}>
+          <Field styles={styles} label="Poids (kg)" value={weightKg} onChangeText={setWeightKg} keyboardType="number-pad" ui={ui} />
+        </View>
+      </View>
+      <Text style={[styles.fieldLabel, { color: ui.textSecondary }]}>Disponibilité</Text>
+      <View style={styles.chipRow}>
+        {AVAILABILITY_OPTIONS.map((opt) => (
+          <PressableSpring
+            key={opt.value}
+            style={[styles.chip, availability === opt.value && styles.chipActive]}
+            onPress={() => setAvailability(opt.value)}
+          >
+            <Text style={[styles.chipText, availability === opt.value && styles.chipTextActive]}>
+              {opt.label}
+            </Text>
+          </PressableSpring>
+        ))}
+      </View>
+      <Text style={[styles.fieldLabel, { color: ui.textSecondary }]}>Stats saison</Text>
+      <View style={styles.statRow}>
+        <Field styles={styles} label="Matchs" value={statMatches} onChangeText={setStatMatches} keyboardType="number-pad" compact ui={ui} />
+        <Field styles={styles} label="Buts" value={statGoals} onChangeText={setStatGoals} keyboardType="number-pad" compact ui={ui} />
+        <Field styles={styles} label="Passes d." value={statAssists} onChangeText={setStatAssists} keyboardType="number-pad" compact ui={ui} />
+      </View>
+      <Field
+        styles={styles}
+        label="Palmarès (une ligne par distinction)"
+        value={achievementsText}
+        onChangeText={setAchievementsText}
+        multiline
+        ui={ui}
+      />
+    </>
+  );
+
+  const staffCareerFields = (
+    <>
+      <SectionTitle ui={ui} label="Parcours professionnel" />
+      <Field styles={styles} label="Titre / fonction" value={jobTitle} onChangeText={setJobTitle} ui={ui} />
+      <Field styles={styles} label="Diplôme" value={diploma} onChangeText={setDiploma} placeholder="BEF, UEFA B…" ui={ui} />
+      <Field styles={styles} label="N° licence" value={licenseNumber} onChangeText={setLicenseNumber} ui={ui} />
+      <Field
+        styles={styles}
+        label="Spécialités (séparées par des virgules)"
+        value={specialtiesText}
+        onChangeText={setSpecialtiesText}
+        placeholder="Gardien, U17, Préparation physique"
+        ui={ui}
+      />
+    </>
+  );
+
+  const sponsorBrandFields = (
+    <>
+      <SectionTitle ui={ui} label="Marque" />
+      <Field
+        styles={styles}
+        label="Nom de la marque / entreprise *"
+        value={jobTitle}
+        onChangeText={setJobTitle}
+        ui={ui}
+      />
+    </>
+  );
+
+  const scrollProps = { keyboardShouldPersistTaps: 'handled' as const, showsVerticalScrollIndicator: false };
+
+  const playerPages = [
+    {
+      id: 'media' as const,
+      render: () => (
+        <ScrollView contentContainerStyle={pagePad} {...scrollProps}>
+          {avatarBlock}
+          <ProDaySurface variant="module" style={styles.mediaCard}>
+            <ProfileGalleryEditor
+              urls={galleryUrls}
+              productLine={productLine}
+              uploading={uploadingGallery}
+              onAdd={handleGalleryAdd}
+              onRemove={handleGalleryRemove}
+            />
+            <ProfileVideoEditor
+              urls={videoUrls}
+              uploading={uploadingVideo}
+              onAdd={handleVideoAdd}
+              onRemove={handleVideoRemove}
+            />
+          </ProDaySurface>
+        </ScrollView>
+      ),
+    },
+    {
+      id: 'identity' as const,
+      render: () => (
+        <ScrollView contentContainerStyle={pagePad} {...scrollProps}>
+          {identityFields}
+        </ScrollView>
+      ),
+    },
+    {
+      id: 'sport' as const,
+      render: () => (
+        <ScrollView contentContainerStyle={pagePad} {...scrollProps}>
+          {playerSportFields}
+        </ScrollView>
+      ),
+    },
+    {
+      id: 'presentation' as const,
+      render: () => (
+        <ScrollView contentContainerStyle={pagePad} {...scrollProps}>
+          <SectionTitle ui={ui} label="Présentation" />
+          {presentationFields}
+        </ScrollView>
+      ),
+    },
+  ];
+
+  const staffPages = [
+    {
+      id: 'identity' as const,
+      render: () => (
+        <ScrollView contentContainerStyle={pagePad} {...scrollProps}>
+          {avatarBlock}
+          {identityFields}
+        </ScrollView>
+      ),
+    },
+    {
+      id: 'career' as const,
+      render: () => (
+        <ScrollView contentContainerStyle={pagePad} {...scrollProps}>
+          {staffCareerFields}
+        </ScrollView>
+      ),
+    },
+    {
+      id: 'presentation' as const,
+      render: () => (
+        <ScrollView contentContainerStyle={pagePad} {...scrollProps}>
+          <SectionTitle ui={ui} label="Présentation" />
+          {presentationFields}
+        </ScrollView>
+      ),
+    },
+  ];
+
+  const sponsorPages = [
+    {
+      id: 'identity' as const,
+      render: () => (
+        <ScrollView contentContainerStyle={pagePad} {...scrollProps}>
+          {identityFields}
+        </ScrollView>
+      ),
+    },
+    {
+      id: 'brand' as const,
+      render: () => (
+        <ScrollView contentContainerStyle={pagePad} {...scrollProps}>
+          {sponsorBrandFields}
+        </ScrollView>
+      ),
+    },
+    {
+      id: 'presentation' as const,
+      render: () => (
+        <ScrollView contentContainerStyle={pagePad} {...scrollProps}>
+          <SectionTitle ui={ui} label="Présentation" />
+          {presentationFields}
+        </ScrollView>
+      ),
+    },
+  ];
+
   return (
     <View
       style={[
@@ -238,156 +624,60 @@ export const EditProfileScreen: React.FC<EditProfileScreenProps> = ({
         centered
         sponsorDark={isSponsor}
       />
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        {!isSponsor ? <ProfileCompletionBar user={user} /> : null}
+      {!isSponsor ? (
+        <View style={styles.completionWrap}>
+          <ProfileCompletionBar user={user} />
+        </View>
+      ) : null}
 
-        <Text style={[styles.section, { color: ui.accent }]}>Identité</Text>
-        <Field styles={styles} label="Nom affiché *" value={displayName} onChangeText={setDisplayName} ui={ui} />
-        <Field styles={styles} label="Email" value={email} editable={false} muted ui={ui} />
-        <Field styles={styles} label="Téléphone" value={phone} onChangeText={setPhone} keyboardType="phone-pad" ui={ui} />
-        <Field styles={styles} label="Ville" value={city} onChangeText={setCity} ui={ui} />
-        <Field styles={styles} label="Département" value={department} onChangeText={setDepartment} ui={ui} />
-
-        {isSponsor ? (
-          <>
-            <Text style={[styles.section, { color: ui.accent }]}>Marque</Text>
-            <Field
-              styles={styles}
-              label="Nom de la marque / entreprise *"
-              value={jobTitle}
-              onChangeText={setJobTitle}
-              ui={ui}
-            />
-          </>
-        ) : null}
-
-        {user.role === 'player' && (
-          <>
-            <Text style={[styles.section, { color: ui.accent }]}>
-              {isWoman ? 'Joueuse' : 'Joueur'}
-            </Text>
-            <SignupOptionPicker
-              label="Poste"
-              options={PLAYER_POSITIONS}
-              value={position}
-              onChange={setPosition}
-            />
-            <SignupOptionPicker
-              label="Catégorie"
-              options={PLAYER_CATEGORIES}
-              value={category}
-              onChange={setCategory}
-            />
-            <SignupOptionPicker
-              label="Niveau"
-              options={PLAYER_LEVELS}
-              value={level}
-              onChange={setLevel}
-            />
-            <Text style={styles.fieldLabel}>Pied fort</Text>
-            <View style={styles.chipRow}>
-              {FOOT_OPTIONS.map((opt) => (
-                <PressableSpring
-                  key={opt.value}
-                  style={[styles.chip, strongFoot === opt.value && styles.chipActive]}
-                  onPress={() => setStrongFoot(opt.value)}
-                >
-                  <Text style={[styles.chipText, strongFoot === opt.value && styles.chipTextActive]}>
-                    {opt.label}
-                  </Text>
-                </PressableSpring>
-              ))}
-            </View>
-            <View style={styles.row2}>
-              <View style={styles.half}>
-                <Field styles={styles} label="Âge" value={age} onChangeText={setAge} keyboardType="number-pad" ui={ui} />
-              </View>
-              <View style={styles.half}>
-                <Field styles={styles} label="Exp. (ans)" value={yearsExp} onChangeText={setYearsExp} keyboardType="number-pad" ui={ui} />
-              </View>
-            </View>
-            <View style={styles.row2}>
-              <View style={styles.half}>
-                <Field styles={styles} label="Taille (cm)" value={heightCm} onChangeText={setHeightCm} keyboardType="number-pad" ui={ui} />
-              </View>
-              <View style={styles.half}>
-                <Field styles={styles} label="Poids (kg)" value={weightKg} onChangeText={setWeightKg} keyboardType="number-pad" ui={ui} />
-              </View>
-            </View>
-            <Text style={styles.fieldLabel}>Disponibilité</Text>
-            <View style={styles.chipRow}>
-              {AVAILABILITY_OPTIONS.map((opt) => (
-                <PressableSpring
-                  key={opt.value}
-                  style={[styles.chip, availability === opt.value && styles.chipActive]}
-                  onPress={() => setAvailability(opt.value)}
-                >
-                  <Text style={[styles.chipText, availability === opt.value && styles.chipTextActive]}>
-                    {opt.label}
-                  </Text>
-                </PressableSpring>
-              ))}
-            </View>
-            <Text style={styles.fieldLabel}>Stats saison</Text>
-            <View style={styles.statRow}>
-              <Field styles={styles} label="Matchs" value={statMatches} onChangeText={setStatMatches} keyboardType="number-pad" compact ui={ui} />
-              <Field styles={styles} label="Buts" value={statGoals} onChangeText={setStatGoals} keyboardType="number-pad" compact ui={ui} />
-              <Field styles={styles} label="Passes d." value={statAssists} onChangeText={setStatAssists} keyboardType="number-pad" compact ui={ui} />
-            </View>
-            <Field
-              styles={styles}
-              label="Vidéos (une URL par ligne)"
-              value={videoUrlsText}
-              onChangeText={setVideoUrlsText}
-              multiline
-              placeholder="https://youtube.com/…"
-              ui={ui}
-            />
-            <Field
-              styles={styles}
-              label="Palmarès (une ligne par distinction)"
-              value={achievementsText}
-              onChangeText={setAchievementsText}
-              multiline
-              ui={ui}
-            />
-          </>
+      <View style={styles.pager}>
+        {isPlayer ? (
+          <ProDayTabPager
+            variant="pills"
+            compact
+            showFooter={false}
+            chapters={[
+              { id: 'media', label: 'Médias' },
+              { id: 'identity', label: 'Identité' },
+              { id: 'sport', label: 'Sport' },
+              { id: 'presentation', label: 'Bio' },
+            ]}
+            pages={playerPages}
+            activeChapter={playerTab}
+            onChapterChange={setPlayerTab}
+          />
+        ) : isStaff ? (
+          <ProDayTabPager
+            variant="pills"
+            compact
+            showFooter={false}
+            chapters={[
+              { id: 'identity', label: 'Identité' },
+              { id: 'career', label: 'Parcours' },
+              { id: 'presentation', label: 'Bio' },
+            ]}
+            pages={staffPages}
+            activeChapter={staffTab}
+            onChapterChange={setStaffTab}
+          />
+        ) : (
+          <ProDayTabPager
+            variant="pills"
+            compact
+            showFooter={false}
+            chapters={[
+              { id: 'identity', label: 'Identité' },
+              { id: 'brand', label: 'Marque' },
+              { id: 'presentation', label: 'Bio' },
+            ]}
+            pages={sponsorPages}
+            activeChapter={sponsorTab}
+            onChapterChange={setSponsorTab}
+          />
         )}
+      </View>
 
-        {(user.role === 'coach' || user.role === 'agent' || user.role === 'recruiter') && (
-          <>
-            <Text style={[styles.section, { color: ui.accent }]}>Staff</Text>
-            <Field styles={styles} label="Titre / fonction" value={jobTitle} onChangeText={setJobTitle} ui={ui} />
-            <Field styles={styles} label="Diplôme" value={diploma} onChangeText={setDiploma} placeholder="BEF, UEFA B…" ui={ui} />
-            <Field styles={styles} label="N° licence" value={licenseNumber} onChangeText={setLicenseNumber} ui={ui} />
-            <Field
-              styles={styles}
-              label="Spécialités (séparées par des virgules)"
-              value={specialtiesText}
-              onChangeText={setSpecialtiesText}
-              placeholder="Gardien, U17, Préparation physique"
-              ui={ui}
-            />
-          </>
-        )}
-
-        <Text style={[styles.section, { color: ui.accent }]}>Présentation</Text>
-        <Field
-          styles={styles}
-          label="Bio"
-          value={bio}
-          onChangeText={setBio}
-          multiline
-          placeholder={isSponsor ? 'Présentez votre marque en quelques lignes…' : 'Présentez-vous en quelques lignes…'}
-          ui={ui}
-        />
-
-        {!isSponsor ? (
-          <Text style={[styles.hintPhoto, { color: ui.textMuted }]}>
-            Photo et galerie : modifiez-les depuis l’onglet Profil (tap sur la photo ou galerie).
-          </Text>
-        ) : null}
-
+      <View style={[styles.footer, { borderTopColor: ui.border, backgroundColor: isSponsor ? SPONSOR_THEME.surface : c.surface }]}>
         <PressableSpring
           style={[
             styles.primary,
@@ -405,9 +695,21 @@ export const EditProfileScreen: React.FC<EditProfileScreenProps> = ({
             <Text style={[styles.primaryText, isSponsor && { color: ui.onAccent }]}>Enregistrer</Text>
           )}
         </PressableSpring>
-      </ScrollView>
+      </View>
     </View>
   );
+};
+
+const SectionTitle: React.FC<{ label: string; ui: FieldUi }> = ({ label, ui }) => (
+  <Text style={[sectionTitleStyle, { color: ui.accent }]}>{label}</Text>
+);
+
+const sectionTitleStyle = {
+  fontSize: 11,
+  fontWeight: '800' as const,
+  letterSpacing: 1,
+  marginBottom: spacing.sm,
+  marginTop: spacing.xs,
 };
 
 const Field: React.FC<{
@@ -461,60 +763,65 @@ const Field: React.FC<{
 
 function createStyles(c: AppColors) {
   return StyleSheet.create({
-  root: { flex: 1 },
-  content: { padding: spacing.lg, paddingBottom: spacing.xxl },
-  section: {
-    fontSize: 11,
-    fontWeight: '800',
-    color: c.accent,
-    letterSpacing: 1,
-    marginTop: spacing.md,
-    marginBottom: spacing.sm,
-  },
-  field: { marginBottom: spacing.md },
-  fieldCompact: { flex: 1, marginBottom: spacing.sm },
-  fieldLabel: { fontSize: 12, fontWeight: '700', color: c.textSecondary, marginBottom: 4 },
-  input: {
-    backgroundColor: c.surface,
-    borderRadius: radius.md,
-    padding: spacing.md,
-    color: c.text,
-    borderWidth: 1,
-    borderColor: c.border,
-    fontSize: 15,
-  },
-  inputCompact: { textAlign: 'center' },
-  inputMulti: { minHeight: 88, textAlignVertical: 'top' },
-  inputMuted: { color: c.textMuted, backgroundColor: c.surfaceMuted },
-  statRow: { flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.md },
-  row2: { flexDirection: 'row', gap: spacing.sm },
-  half: { flex: 1 },
-  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginBottom: spacing.md },
-  chip: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: radius.pill,
-    borderWidth: 1,
-    borderColor: c.border,
-    backgroundColor: c.surface,
-  },
-  chipActive: { backgroundColor: c.ink, borderColor: c.accent },
-  chipText: { fontSize: 12, fontWeight: '800', color: c.text },
-  chipTextActive: { color: c.brandInverse },
-  hintPhoto: {
-    fontSize: 12,
-    color: c.textMuted,
-    lineHeight: 17,
-    marginBottom: spacing.lg,
-  },
-  primary: {
-    backgroundColor: c.ink,
-    borderRadius: radius.md,
-    padding: spacing.lg,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: c.accent,
-  },
-  primaryText: { color: c.brandInverse, fontWeight: '900', fontSize: 16 },
+    root: { flex: 1 },
+    completionWrap: { paddingHorizontal: spacing.lg, paddingTop: spacing.sm },
+    pager: { flex: 1 },
+    pagePad: { padding: spacing.lg, paddingBottom: spacing.xxl },
+    mediaCard: {
+      padding: spacing.md,
+      marginBottom: spacing.md,
+      gap: spacing.sm,
+    },
+    mediaTitle: { marginBottom: 2 },
+    mediaHint: { marginBottom: spacing.sm },
+    avatarRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.lg,
+    },
+    field: { marginBottom: spacing.md },
+    fieldCompact: { flex: 1, marginBottom: spacing.sm },
+    fieldLabel: { fontSize: 12, fontWeight: '700', marginBottom: 4 },
+    input: {
+      backgroundColor: c.surface,
+      borderRadius: radius.md,
+      padding: spacing.md,
+      color: c.text,
+      borderWidth: 1,
+      borderColor: c.border,
+      fontSize: 15,
+    },
+    inputCompact: { textAlign: 'center' },
+    inputMulti: { minHeight: 120, textAlignVertical: 'top' },
+    statRow: { flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.md },
+    row2: { flexDirection: 'row', gap: spacing.sm },
+    half: { flex: 1 },
+    chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginBottom: spacing.md },
+    chip: {
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      borderRadius: radius.pill,
+      borderWidth: 1,
+      borderColor: c.border,
+      backgroundColor: c.surface,
+    },
+    chipActive: { backgroundColor: c.ink, borderColor: c.accent },
+    chipText: { fontSize: 12, fontWeight: '800', color: c.text },
+    chipTextActive: { color: c.brandInverse },
+    footer: {
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.sm,
+      paddingBottom: spacing.lg,
+      borderTopWidth: 1,
+    },
+    primary: {
+      backgroundColor: c.ink,
+      borderRadius: radius.md,
+      padding: spacing.lg,
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: c.accent,
+    },
+    primaryText: { color: c.brandInverse, fontWeight: '900', fontSize: 16 },
   });
 }

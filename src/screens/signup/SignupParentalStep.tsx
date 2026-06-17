@@ -6,6 +6,7 @@ import { SignupStepLayout } from './SignupStepLayout';
 import { SignupFooterButton } from './SignupFooterButton';
 import type { SignupForm } from './useSignupForm';
 import { getPlayerStepMeta } from './signupPlayerStepMeta';
+import { useTranslation } from '../../context/LocaleContext';
 import { isUnderU13AppSpace } from '../../models/AppSpace';
 import { spacing, radius } from '../../theme/designTokens';
 import { useSignupFlowTheme } from './SignupFlowContext';
@@ -35,11 +36,12 @@ export const SignupParentalStep: React.FC<SignupParentalStepProps> = ({
   const { colors: c, productLine } = useSignupFlowTheme();
   const styles = useMemo(() => createStyles(c), [c]);
   const underU13 = isUnderU13AppSpace(form.appSpace);
-  const meta = getPlayerStepMeta(form.productLine, 'family');
+  const { t } = useTranslation();
+  const meta = getPlayerStepMeta(form.productLine, 'family', t);
   const guardianCopy =
     productLine === 'woman'
-      ? 'Je confirme être mineure et que mon responsable accepte la supervision du compte ProDay.'
-      : 'Je confirme être mineur et que mon responsable accepte la supervision du compte ProDay.';
+      ? t('signup.form.guardianConsentWoman')
+      : t('signup.form.guardianConsentMan');
 
   return (
     <SignupStepLayout
@@ -50,16 +52,14 @@ export const SignupParentalStep: React.FC<SignupParentalStepProps> = ({
       phaseIndex={phaseIndex}
       title={meta.title}
       subtitle={
-        underU13
-          ? 'Espace -13 — un parent ou tuteur valide le compte.'
-          : meta.subtitle
+        underU13 ? t('signup.parental.u13Subtitle') : meta.subtitle
       }
       contentKey={`family-${form.appSpace}`}
       heroIcon={meta.heroIcon}
       onBack={onBack}
       footer={
         <SignupFooterButton
-          label="Continuer"
+          label={t('signup.form.continue')}
           onPress={onSubmit}
           loading={form.loading}
         />
@@ -73,19 +73,24 @@ export const SignupParentalStep: React.FC<SignupParentalStepProps> = ({
 
       <View>
         <View style={styles.infoBox}>
-          <Text style={styles.infoTitle}>Protection activée</Text>
+          <Text style={styles.infoTitle}>{t('signup.parental.protectionTitle')}</Text>
           <Text style={styles.infoBody}>
-            Filtrage des contacts, limite de temps d&apos;écran et rapport d&apos;activité pour
-            les {productLine === 'woman' ? 'joueuses' : 'joueurs'} de moins de 18 ans.
+            {t('signup.parental.protectionBody', {
+              players: t(
+                productLine === 'woman'
+                  ? 'signup.parental.playersWoman'
+                  : 'signup.parental.playersMan'
+              ),
+            })}
           </Text>
         </View>
       </View>
 
       <View>
         <AuthTextField
-          label="Nom du responsable"
+          label={t('signup.form.guardianName')}
           icon="person"
-          placeholder="Parent ou tuteur légal"
+          placeholder={t('signup.form.guardianPlaceholder')}
           value={form.guardianName}
           onChangeText={form.setGuardianName}
           error={form.fieldErrors.guardianName}
@@ -93,9 +98,9 @@ export const SignupParentalStep: React.FC<SignupParentalStepProps> = ({
       </View>
       <View>
         <AuthTextField
-          label="Email du responsable"
+          label={t('signup.form.guardianEmail')}
           icon="mail"
-          placeholder="parent@exemple.com"
+          placeholder={t('signup.form.guardianEmailPlaceholder')}
           value={form.guardianEmail}
           onChangeText={form.setGuardianEmail}
           keyboardType="email-address"

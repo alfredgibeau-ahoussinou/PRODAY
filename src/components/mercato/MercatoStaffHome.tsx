@@ -10,9 +10,9 @@ import type { RecruitmentPost } from '../../models/Player';
 import type { RecruitmentStats } from '../../services/stats.service';
 import type { MercatoExperienceConfig, MercatoQuickTileId } from '../../content/mercatoExperience';
 import {
-  MERCATO_STAFF_CHAPTERS,
   type MercatoStaffChapterId,
 } from '../../content/mercatoStaffChapters';
+import { getMercatoStaffChapters } from '../../i18n/localizedChapters';
 import { AppTabHeader } from '../app';
 import { ProDayGradient } from '../ui/ProDayGradient';
 import { PressableSpring } from '../motion';
@@ -24,7 +24,6 @@ import { SearchBar } from '../ui/SearchBar';
 import { Icon } from '../ui/Icon';
 import { ProDayTabPager } from '../ui/ProDayTabPager';
 import { ProDayActionTiles } from '../ui/ProDayActionTiles';
-import { AppStatChips } from '../app';
 import { ProDayText } from '../ui/ProDayText';
 import { ProDaySurface } from '../ui/ProDaySurface';
 import { formatCount } from '../../services/stats.service';
@@ -32,9 +31,8 @@ import type { AppColors } from '../../theme/universeTheme';
 import type { ProductLineId } from '../../models/ProductLine';
 import { TAB_BAR_CONTENT_INSET } from '../../navigation/tabBarLayout';
 import { spacing, radius, shadows } from '../../theme/designTokens';
-import { V3TabShell } from '../v3/V3TabShell';
-import { isV3ShellEnabled } from '../../config/featureFlags';
-import { useSectionIntelligence } from '../../hooks/useSectionIntelligence';
+import { TabScreenShell } from '../app/TabScreenShell';
+import { useTranslation } from '../../context/LocaleContext';
 import {
   countAuthorPosts,
   countPendingApplications,
@@ -96,8 +94,9 @@ export const MercatoStaffHome: React.FC<MercatoStaffHomeProps> = ({
   onSearchPlayers,
 }) => {
   const [chapter, setChapter] = useState<MercatoStaffChapterId>('explorer');
+  const { t } = useTranslation();
+  const staffChapters = useMemo(() => getMercatoStaffChapters(t), [t]);
   const [pendingApplications, setPendingApplications] = useState(0);
-  const useV3Header = isV3ShellEnabled() && Boolean(profile);
 
   const authorUid = profile?.uid ?? '';
 
@@ -128,50 +127,16 @@ export const MercatoStaffHome: React.FC<MercatoStaffHomeProps> = ({
   }, [myPosts]);
 
   useEffect(() => {
-    if (!useV3Header) return;
     void loadPendingApplications();
-  }, [useV3Header, loadPendingApplications]);
+  }, [loadPendingApplications]);
 
   useEffect(() => {
-    if (!useV3Header) return;
+    if (!profile) return;
     trackV3Event('mercato_staff_open', {
       myPosts: staffSummary.myPostsCount,
       pendingApplications: staffSummary.pendingApplications,
     });
-  }, [useV3Header, staffSummary.myPostsCount, staffSummary.pendingApplications]);
-
-  const intelligence = useSectionIntelligence('recrutement', profile, productLine, {
-    staffMode: true,
-    mercatoPosts: authorUid
-      ? staffSummary.myPostsCount || countAuthorPosts(spacePosts, authorUid)
-      : 0,
-    mercatoApplications: staffSummary.pendingApplications,
-  });
-
-  const statChips = useMemo(
-    () => [
-      {
-        value: stats ? formatCount(stats.players, 'joueur') : '—',
-        label: config.playersStatLabel,
-      },
-      {
-        value: loading ? '…' : String(staffSummary.myPostsCount || filteredPosts.length),
-        label: staffSummary.myPostsCount > 0 ? 'Mes annonces' : 'Annonces',
-        highlight: (staffSummary.myPostsCount || filteredPosts.length) > 0,
-      },
-      {
-        value:
-          staffSummary.pendingApplications > 0
-            ? String(staffSummary.pendingApplications)
-            : stats
-              ? formatCount(stats.coaches + stats.agents, 'profil')
-              : '—',
-        label: staffSummary.pendingApplications > 0 ? 'Candidatures' : 'Staff',
-        highlight: staffSummary.pendingApplications > 0,
-      },
-    ],
-    [stats, loading, staffSummary, filteredPosts.length, config.playersStatLabel]
-  );
+  }, [profile, staffSummary.myPostsCount, staffSummary.pendingApplications]);
 
   const scrollProps = {
     showsVerticalScrollIndicator: false,
@@ -183,12 +148,12 @@ export const MercatoStaffHome: React.FC<MercatoStaffHomeProps> = ({
     () =>
       [
         config.showFavoritesRow
-          ? { id: 'favorites', label: 'Favoris', icon: 'bookmark' as const, onPress: onFavorites }
+          ? { id: 'favorites', label: t('mercato.tools.favorites'), icon: 'bookmark' as const, onPress: onFavorites }
           : null,
         config.showDetectionsHeader
-          ? { id: 'detections', label: 'Détections', icon: 'football' as const, onPress: () => onQuickTile('detections') }
+          ? { id: 'detections', label: t('mercato.tools.detections'), icon: 'football' as const, onPress: () => onQuickTile('detections') }
           : null,
-        { id: 'stages', label: 'Stages', icon: 'calendar' as const, onPress: () => onQuickTile('stages') },
+        { id: 'stages', label: t('mercato.tools.stages'), icon: 'calendar' as const, onPress: () => onQuickTile('stages') },
         onCreatePost
           ? { id: 'create', label: config.fabLabel, icon: 'add' as const, onPress: onCreatePost }
           : null,
@@ -198,7 +163,7 @@ export const MercatoStaffHome: React.FC<MercatoStaffHomeProps> = ({
         icon: 'bookmark' | 'football' | 'calendar' | 'add';
         onPress: () => void;
       }[],
-    [config, onFavorites, onQuickTile, onCreatePost]
+    [config, onFavorites, onQuickTile, onCreatePost, t]
   );
 
   const pages = useMemo(
@@ -292,10 +257,10 @@ export const MercatoStaffHome: React.FC<MercatoStaffHomeProps> = ({
         render: () => (
           <ScrollView contentContainerStyle={pagePad} {...scrollProps}>
             <ProDayText variant="eyebrow" accent style={styles.toolsLead}>
-              Raccourcis
+              {t('mercato.tools.title')}
             </ProDayText>
             <ProDayText variant="body" muted style={styles.toolsSub}>
-              Favoris, détections, stages et publication d&apos;annonces.
+              {t('mercato.tools.subtitle')}
             </ProDayText>
             <ProDayActionTiles
               items={toolItems.map((tool) => ({
@@ -320,12 +285,13 @@ export const MercatoStaffHome: React.FC<MercatoStaffHomeProps> = ({
       search,
       showSpaceBanner,
       toolItems,
+      t,
     ]
   );
 
   const tabPager = (
     <ProDayTabPager
-      chapters={MERCATO_STAFF_CHAPTERS}
+      chapters={staffChapters}
       pages={pages}
       activeChapter={chapter}
       onChapterChange={setChapter}
@@ -352,20 +318,18 @@ export const MercatoStaffHome: React.FC<MercatoStaffHomeProps> = ({
     </PressableSpring>
   ) : null;
 
-  if (useV3Header) {
+  if (profile) {
     return (
-      <V3TabShell
+      <TabScreenShell
         caption={config.eyebrow}
         title={config.screenTitle}
         subtitle={config.screenSubtitle}
         right={headerRight}
-        stats={statChips}
-        intelligence={intelligence}
         flat
       >
         {tabPager}
         {fab}
-      </V3TabShell>
+      </TabScreenShell>
     );
   }
 
@@ -376,7 +340,6 @@ export const MercatoStaffHome: React.FC<MercatoStaffHomeProps> = ({
         title={config.screenTitle}
         subtitle={config.screenSubtitle}
         right={headerRight}
-        footer={<AppStatChips items={statChips} />}
       />
 
       {tabPager}

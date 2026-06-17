@@ -1,6 +1,5 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
-import { GlassCard } from '../../../components/aurora/GlassCard';
 import { ProDayText } from '../../../components/ui/ProDayText';
 import { PressableSpring } from '../../../components/motion';
 import { useAppTheme } from '../../../context/ProductLineContext';
@@ -35,9 +34,10 @@ export const HeroIaBlock: React.FC<HeroIaBlockProps> = ({
   onSecondaryPress,
 }) => {
   const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   return (
-    <GlassCard variant="accent" style={styles.card}>
+    <View style={styles.card}>
       <View style={[styles.statePill, { backgroundColor: colors.accentSoft, borderColor: colors.accentMuted }]}>
         <ProDayText variant="caption" accent style={styles.stateText}>
           {STATE_LABELS[state]}
@@ -68,12 +68,21 @@ export const HeroIaBlock: React.FC<HeroIaBlockProps> = ({
           </PressableSpring>
         ) : null}
       </View>
-    </GlassCard>
+    </View>
   );
 };
 
-const styles = StyleSheet.create({
-  card: { padding: spacing.lg, gap: spacing.sm, marginBottom: spacing.md },
+function createStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
+  return StyleSheet.create({
+    card: {
+      padding: spacing.lg,
+      gap: spacing.sm,
+      marginBottom: spacing.md,
+      backgroundColor: colors.surface,
+      borderRadius: radius.lg,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.border,
+    },
   statePill: {
     alignSelf: 'flex-start',
     paddingHorizontal: spacing.sm,
@@ -100,4 +109,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   secondaryLabel: { fontWeight: '600' },
-});
+  });
+}

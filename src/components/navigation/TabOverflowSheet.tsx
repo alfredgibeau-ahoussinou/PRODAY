@@ -5,6 +5,7 @@ import { AnimatedModalShell } from '../motion/AnimatedModalShell';
 import { Icon, type IconName } from '../ui/Icon';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { getTabShortLabel } from '../../content/poleExperience';
+import { useTranslation } from '../../context/LocaleContext';
 import type { ProductLineId } from '../../models/ProductLine';
 import type { UserRole } from '../../models/User';
 import type { MainTabId } from '../../navigation/mainTabConfig';
@@ -36,16 +37,17 @@ export const TabOverflowSheet: React.FC<TabOverflowSheetProps> = ({
 }) => {
   const insets = useSafeAreaInsets();
   const { colors } = useAppTheme();
+  const { t } = useTranslation();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   return (
-    <AnimatedModalShell visible={visible} onClose={onClose} closeLabel="Fermer">
+    <AnimatedModalShell visible={visible} onClose={onClose} closeLabel={t('common.close')}>
       <View style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, spacing.lg) }]}>
-        <Text style={styles.title}>Navigation</Text>
+        <Text style={styles.title}>{t('nav.overflow')}</Text>
         <View style={styles.grid}>
           {tabs.map((tab) => {
             const active = tab === activeTab;
-            const label = getTabShortLabel(tab, productLine, role);
+            const label = getTabShortLabel(tab, productLine, role, t);
             const badge = tab === 'messages' ? unreadCount : 0;
             return (
               <Pressable

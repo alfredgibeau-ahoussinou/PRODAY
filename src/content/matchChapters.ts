@@ -1,3 +1,5 @@
+import type { IconName } from '../components/ui/Icon';
+
 export type MatchChapterId =
   | 'calendrier'
   | 'centre'
@@ -5,12 +7,17 @@ export type MatchChapterId =
   | 'stats'
   | 'amicaux';
 
-export const MATCH_CHAPTERS: { id: MatchChapterId; label: string }[] = [
-  { id: 'calendrier', label: 'Calendrier' },
-  { id: 'centre', label: 'Centre' },
-  { id: 'convocations', label: 'Convocs' },
-  { id: 'stats', label: 'Stats' },
-  { id: 'amicaux', label: 'Amicaux' },
+export const MATCH_CHAPTERS: {
+  id: MatchChapterId;
+  label: string;
+  shortLabel: string;
+  icon: IconName;
+}[] = [
+  { id: 'calendrier', label: 'Calendrier', shortLabel: 'Agenda', icon: 'calendar' },
+  { id: 'centre', label: 'Centre', shortLabel: 'Live', icon: 'football' },
+  { id: 'convocations', label: 'Convocations', shortLabel: 'Convocs', icon: 'mail' },
+  { id: 'stats', label: 'Stats', shortLabel: 'Stats', icon: 'trophy' },
+  { id: 'amicaux', label: 'Amicaux', shortLabel: 'Amicaux', icon: 'handshake' },
 ];
 
 export type CalendarKindFilter = 'all' | 'team_event' | 'friendly_match';

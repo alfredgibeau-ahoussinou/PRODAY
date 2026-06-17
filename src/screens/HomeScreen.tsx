@@ -1,24 +1,26 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import { useSessionProfile } from '../hooks/useSessionProfile';
 import { useAppTheme } from '../context/ProductLineContext';
 import { useUnreadMessageCount } from '../hooks/useUnreadMessages';
 import { useDashboardData } from '../hooks/useDashboardData';
-import { isV3ShellEnabled } from '../config/featureFlags';
+import { useTabNavigation } from '../context/TabNavigationContext';
 import { DiscoverScreen } from './DiscoverScreen';
-import { DashboardScreen } from './DashboardScreen';
 import { PhysioDashboardScreen } from './medical/PhysioDashboardScreen';
 import { SponsorDashboardScreen } from './sponsor/SponsorDashboardScreen';
 import { HomeIaDashboard } from '../features/home/HomeIaDashboard';
-import { CrossfadeSwitch } from '../components/motion';
+import { TeamManagementScreen } from './TeamManagementScreen';
+import { SponsorsScreen } from './SponsorsScreen';
+import { CrossfadeSwitch, PushScreenTransition } from '../components/motion';
 import { useExperienceTheme } from '../hooks/useExperienceTheme';
 import { SPONSOR_THEME } from '../content/sponsorExperience';
 import { ProDayScreenCanvas } from '../components/ui/ProDayScreenCanvas';
 
+type HomeOverlay = 'team' | 'sponsors' | null;
+
 /**
  * Accueil : découverte interactive avant connexion, dashboard personnel après.
- * Phase 0 : pilote HomeIaDashboard si EXPO_PUBLIC_V3_SHELL=1.
  */
 export const HomeScreen: React.FC = () => {
   const { loading } = useAuth();
@@ -27,8 +29,16 @@ export const HomeScreen: React.FC = () => {
   const { productLine } = useAppTheme();
   const { count: unreadMessages } = useUnreadMessageCount();
   const { refresh } = useDashboardData(profile);
+  const { pendingDashboardView, clearPendingDashboard } = useTabNavigation();
   const [refreshing, setRefreshing] = useState(false);
-  const v3Home = isV3ShellEnabled();
+  const [overlay, setOverlay] = useState<HomeOverlay>(null);
+
+  useEffect(() => {
+    if (!pendingDashboardView || !profile) return;
+    if (pendingDashboardView === 'gestion') setOverlay('team');
+    else if (pendingDashboardView === 'sponsors') setOverlay('sponsors');
+    clearPendingDashboard();
+  }, [pendingDashboardView, clearPendingDashboard, profile]);
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -60,23 +70,35 @@ export const HomeScreen: React.FC = () => {
   return (
     <CrossfadeSwitch switchKey={switchKey}>
       {profile ? (
-        profile.role === 'physio' ? (
-          <PhysioDashboardScreen profile={profile} />
-        ) : profile.role === 'sponsor' ? (
-          <SponsorDashboardScreen profile={profile} />
-        ) : v3Home ? (
-          <ProDayScreenCanvas>
-            <HomeIaDashboard
-              profile={profile}
-              productLine={productLine}
-              unreadMessages={unreadMessages}
-              onRefresh={handleRefresh}
-              refreshing={refreshing}
-            />
-          </ProDayScreenCanvas>
-        ) : (
-          <DashboardScreen profile={profile} />
-        )
+        <View style={styles.root}>
+          {profile.role === 'physio' ? (
+            <PhysioDashboardScreen profile={profile} />
+          ) : profile.role === 'sponsor' ? (
+            <SponsorDashboardScreen profile={profile} />
+          ) : (
+            <ProDayScreenCanvas>
+              <HomeIaDashboard
+                profile={profile}
+                productLine={productLine}
+                unreadMessages={unreadMessages}
+                onRefresh={handleRefresh}
+                refreshing={refreshing}
+              />
+            </ProDayScreenCanvas>
+          )}
+
+          <PushScreenTransition active={overlay === 'team'}>
+            {overlay === 'team' ? (
+              <TeamManagementScreen profile={profile} onBack={() => setOverlay(null)} />
+            ) : null}
+          </PushScreenTransition>
+
+          <PushScreenTransition active={overlay === 'sponsors'}>
+            {overlay === 'sponsors' ? (
+              <SponsorsScreen onBack={() => setOverlay(null)} />
+            ) : null}
+          </PushScreenTransition>
+        </View>
       ) : (
         <DiscoverScreen />
       )}
@@ -85,6 +107,7 @@ export const HomeScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
+  root: { flex: 1 },
   loader: {
     flex: 1,
     justifyContent: 'center',

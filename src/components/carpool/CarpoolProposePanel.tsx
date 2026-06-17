@@ -1,24 +1,27 @@
 import React, { useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, ActivityIndicator, RefreshControl } from 'react-native';
+import { ScrollView, StyleSheet, ActivityIndicator, RefreshControl, View } from 'react-native';
 import type { User } from '../../models/User';
 import type { TeamEvent } from '../../models/TeamEvent';
+import type { StandaloneCarpoolOffer } from '../../models/StandaloneCarpoolOffer';
 import {
   carpoolEventSummaryForUser,
   isCarpoolDriver,
 } from '../../utils/carpoolBalance';
-import { ProDaySurface } from '../ui/ProDaySurface';
 import { ProDayText } from '../ui/ProDayText';
-import { ProDayGradient } from '../ui/ProDayGradient';
-import { Icon } from '../ui/Icon';
-import { PressableSpring } from '../motion';
+import { CarpoolEmptyState, CarpoolSectionIntro } from './carpoolUi';
 import { CarpoolProposeCard } from './CarpoolProposeCard';
+import { StandaloneCarpoolForm } from './StandaloneCarpoolForm';
+import { isUpcomingStandaloneOffer } from '../../utils/standaloneCarpool';
 import { useAppTheme } from '../../context/ProductLineContext';
+import { useTranslation } from '../../context/LocaleContext';
 import { spacing } from '../../theme/designTokens';
 
 interface CarpoolProposePanelProps {
   profile: User | null;
   events: TeamEvent[];
+  standaloneOffers: StandaloneCarpoolOffer[];
   loading: boolean;
+  standaloneLoading?: boolean;
   refreshing: boolean;
   onRefresh: () => void;
   onOpenEvent: (eventId: string) => void;
@@ -34,7 +37,9 @@ function canParticipateInCarpool(event: TeamEvent, uid: string): boolean {
 export const CarpoolProposePanel: React.FC<CarpoolProposePanelProps> = ({
   profile,
   events,
+  standaloneOffers,
   loading,
+  standaloneLoading = false,
   refreshing,
   onRefresh,
   onOpenEvent,
@@ -43,7 +48,9 @@ export const CarpoolProposePanel: React.FC<CarpoolProposePanelProps> = ({
   onLoginRequired,
 }) => {
   const { colors } = useAppTheme();
+  const { t } = useTranslation();
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [standaloneExpanded, setStandaloneExpanded] = useState<string | 'new' | null>('new');
 
   const upcoming = useMemo(() => {
     const now = Date.now() - 6 * 60 * 60 * 1000;
@@ -74,6 +81,14 @@ export const CarpoolProposePanel: React.FC<CarpoolProposePanelProps> = ({
       }).length
     : 0;
 
+  const activeStandalone = useMemo(
+    () =>
+      standaloneOffers.filter(
+        (o) => o.driver_uid === profile?.uid && isUpcomingStandaloneOffer(o)
+      ),
+    [standaloneOffers, profile?.uid]
+  );
+
   const toggleExpanded = (eventId: string) => {
     setExpandedId((prev) => (prev === eventId ? null : eventId));
   };
@@ -81,22 +96,13 @@ export const CarpoolProposePanel: React.FC<CarpoolProposePanelProps> = ({
   if (!profile) {
     return (
       <ScrollView contentContainerStyle={pagePad} {...scrollProps}>
-        <ProDaySurface variant="module" style={styles.empty}>
-          <Icon name="car" size={32} color={colors.textMuted} variant="filled" />
-          <ProDayText variant="section">Connectez-vous</ProDayText>
-          <ProDayText variant="body" muted style={styles.emptySub}>
-            Accédez à vos convocations pour proposer un trajet à l’équipe.
-          </ProDayText>
-          {onLoginRequired ? (
-            <PressableSpring onPress={onLoginRequired} scaleTo={0.97} haptic>
-              <ProDayGradient kind="cta" style={styles.cta}>
-                <ProDayText variant="caption" inverse style={styles.ctaText}>
-                  Se connecter
-                </ProDayText>
-              </ProDayGradient>
-            </PressableSpring>
-          ) : null}
-        </ProDaySurface>
+        <CarpoolEmptyState
+          icon="car"
+          title={t('carpool.login.title')}
+        subtitle={t('carpool.propose.convocationsSub')}
+          ctaLabel={t('carpool.login.cta')}
+          onCta={onLoginRequired}
+        />
       </ScrollView>
     );
   }
@@ -109,40 +115,69 @@ export const CarpoolProposePanel: React.FC<CarpoolProposePanelProps> = ({
       }
       {...scrollProps}
     >
-      <ProDayText variant="eyebrow" accent style={styles.lead}>
-        Proposer un trajet
-      </ProDayText>
-      <ProDayText variant="body" muted style={styles.sub}>
-        Indiquez vos places, l’heure de départ et votre point de rendez-vous (adresse ou GPS). Vos
-        coéquipiers convoqués pourront réserver une place.
+      <CarpoolSectionIntro
+        icon="add"
+        title={t('carpool.propose.title')}
+        subtitle={t('carpool.propose.subtitle')}
+      />
+
+      {standaloneLoading ? (
+        <ActivityIndicator color={colors.accent} style={styles.loader} />
+      ) : (
+        <>
+          <ProDayText variant="section" style={styles.sectionTitle}>
+            {t('carpool.propose.freeTrips')}
+          </ProDayText>
+          <StandaloneCarpoolForm
+            profile={profile}
+            offer={null}
+            expanded={standaloneExpanded === 'new'}
+            onToggle={() =>
+              setStandaloneExpanded((prev) => (prev === 'new' ? null : 'new'))
+            }
+            onSaved={onRefresh}
+          />
+          {activeStandalone.map((offer) => (
+            <StandaloneCarpoolForm
+              key={offer.id}
+              profile={profile}
+              offer={offer}
+              expanded={standaloneExpanded === offer.id}
+              onToggle={() =>
+                setStandaloneExpanded((prev) => (prev === offer.id ? null : offer.id))
+              }
+              onSaved={onRefresh}
+            />
+          ))}
+        </>
+      )}
+
+      <ProDayText variant="section" style={styles.sectionTitle}>
+        {t('carpool.propose.onConvocations')}
       </ProDayText>
 
       {bookedElsewhere > 0 ? (
-        <ProDaySurface variant="accent" style={[styles.hint, { borderColor: colors.border }]}>
+        <View style={[styles.hint, { borderColor: colors.border, backgroundColor: colors.accentSoft }]}>
           <ProDayText variant="caption" accent>
-            Vous avez déjà réservé une place sur {bookedElsewhere} événement
-            {bookedElsewhere > 1 ? 's' : ''} — vous pouvez tout de même proposer votre véhicule sur
-            un autre match.
+            {t('carpool.propose.bookedElsewhere', { n: bookedElsewhere })}
           </ProDayText>
-        </ProDaySurface>
+        </View>
       ) : null}
 
       {loading ? (
         <ActivityIndicator color={colors.accent} style={styles.loader} />
       ) : proposeEvents.length === 0 ? (
-        <ProDaySurface variant="module" style={styles.empty}>
-          <Icon name="calendar" size={32} color={colors.textMuted} />
-          <ProDayText variant="section">Aucune convocation</ProDayText>
-          <ProDayText variant="body" muted style={styles.emptySub}>
-            Vos matchs et entraînements à venir apparaîtront ici pour proposer un covoiturage.
-          </ProDayText>
-        </ProDaySurface>
+        <CarpoolEmptyState
+          icon="calendar"
+          title={t('carpool.propose.noConvocation')}
+          subtitle={t('carpool.propose.noMatchSub')}
+        />
       ) : (
         <>
           {activeOffers.length > 0 ? (
             <>
               <ProDayText variant="section" style={styles.sectionTitle}>
-                Mes trajets publiés ({activeOffers.length})
+                {t('carpool.propose.publishedTrips', { n: activeOffers.length })}
               </ProDayText>
               {activeOffers.map((event) => (
                 <CarpoolProposeCard
@@ -161,8 +196,14 @@ export const CarpoolProposePanel: React.FC<CarpoolProposePanelProps> = ({
           {newProposals.length > 0 ? (
             <>
               <ProDayText variant="section" style={styles.sectionTitle}>
-                {activeOffers.length > 0 ? 'Nouveaux trajets à proposer' : 'Événements à venir'} (
-                {newProposals.length})
+                {t('carpool.propose.upcoming', {
+                  label: t(
+                    activeOffers.length > 0
+                      ? 'carpool.propose.upcomingNew'
+                      : 'carpool.propose.upcomingEvents'
+                  ),
+                  n: newProposals.length,
+                })}
               </ProDayText>
               {newProposals.map((event) => (
                 <CarpoolProposeCard
@@ -177,13 +218,11 @@ export const CarpoolProposePanel: React.FC<CarpoolProposePanelProps> = ({
               ))}
             </>
           ) : activeOffers.length === 0 ? (
-            <ProDaySurface variant="module" style={styles.empty}>
-              <Icon name="car" size={32} color={colors.textMuted} />
-              <ProDayText variant="section">Rien à proposer</ProDayText>
-              <ProDayText variant="body" muted style={styles.emptySub}>
-                Aucun événement convoqué pour le moment.
-              </ProDayText>
-            </ProDaySurface>
+            <CarpoolEmptyState
+              icon="car"
+              title={t('carpool.propose.empty.title')}
+              subtitle={t('carpool.propose.empty.subtitle')}
+            />
           ) : null}
         </>
       )}
@@ -192,8 +231,6 @@ export const CarpoolProposePanel: React.FC<CarpoolProposePanelProps> = ({
 };
 
 const styles = StyleSheet.create({
-  lead: { marginBottom: spacing.xs },
-  sub: { marginBottom: spacing.md },
   hint: {
     padding: spacing.md,
     marginBottom: spacing.md,
@@ -202,17 +239,4 @@ const styles = StyleSheet.create({
   },
   sectionTitle: { marginBottom: spacing.sm, marginTop: spacing.xs },
   loader: { marginVertical: spacing.xl },
-  empty: {
-    alignItems: 'center',
-    gap: spacing.sm,
-    padding: spacing.xl,
-  },
-  emptySub: { textAlign: 'center' },
-  cta: {
-    marginTop: spacing.sm,
-    paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.md,
-    borderRadius: 999,
-  },
-  ctaText: { fontWeight: '800' },
 });

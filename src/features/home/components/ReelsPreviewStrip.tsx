@@ -62,11 +62,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: spacing.lg,
     marginBottom: spacing.sm,
   },
   link: { fontWeight: '600' },
-  scroll: { paddingHorizontal: spacing.lg, gap: spacing.sm },
+  scroll: { gap: spacing.sm },
   card: { width: 140, padding: spacing.sm, gap: 4 },
   thumb: {
     height: 88,

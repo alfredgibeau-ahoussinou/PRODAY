@@ -20,6 +20,7 @@ import { getProWelcomeCopy, PRO_ROLE_PREVIEW } from './signupProConfig';
 import { getSanteWelcomeCopy, SANTE_PHYSIO_PREVIEW } from './signupSanteConfig';
 import { getSignupRoleGroups } from '../../content/poleExperience';
 import { useSignupFlowTheme } from './SignupFlowContext';
+import { useTranslation } from '../../context/LocaleContext';
 import { SignupSegmentTabs } from '../../components/signup/SignupSegmentTabs';
 import { useAuthLayout } from '../../components/auth/useAuthLayout';
 import { spacing, radius } from '../../theme/designTokens';
@@ -49,6 +50,7 @@ const ROLE_META = Object.fromEntries(
 
 const PreviewStepsCard: React.FC<{
   steps: readonly string[];
+  eyebrow: string;
   accent: string;
   accentInverse: string;
   borderColor: string;
@@ -56,9 +58,9 @@ const PreviewStepsCard: React.FC<{
   surfaceMuted: string;
   text: string;
   textMuted: string;
-}> = ({ steps, accent, accentInverse, borderColor, surface, surfaceMuted, text, textMuted }) => (
+}> = ({ steps, eyebrow, accent, accentInverse, borderColor, surface, surfaceMuted, text, textMuted }) => (
   <View style={[styles.previewCard, { borderColor, backgroundColor: surface }]}>
-    <Text style={[styles.previewEyebrow, { color: textMuted }]}>Votre parcours</Text>
+    <Text style={[styles.previewEyebrow, { color: textMuted }]}>{eyebrow}</Text>
     <View style={styles.previewSteps}>
       {steps.map((s, i) => (
         <View
@@ -107,6 +109,7 @@ const PlayerWelcomeHero: React.FC<{
 
 const WomanWelcomeBody: React.FC<{ form: SignupForm }> = ({ form }) => {
   const { colors } = useSignupFlowTheme();
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (form.draftRole !== 'player') form.setDraftRole('player');
@@ -119,11 +122,12 @@ const WomanWelcomeBody: React.FC<{ form: SignupForm }> = ({ form }) => {
         overlayColor="rgba(131, 24, 67, 0.58)"
         badgeIcon="heart"
         badgeText={PRODAY_WOMAN_BRAND.entryCta}
-        title="Profil joueuse"
-        subtitle="Mercato filtré foot féminin, stats et visibilité auprès des clubs F."
+        title={t('signup.welcome.playerWoman.title')}
+        subtitle={t('signup.welcome.playerWoman.subtitle')}
         accentInverse={colors.brandInverse}
       />
       <PreviewStepsCard
+        eyebrow={t('signup.welcome.journey')}
         steps={WOMAN_PLAYER_PREVIEW_STEPS}
         accent={colors.accent}
         accentInverse={colors.brandInverse}
@@ -139,6 +143,7 @@ const WomanWelcomeBody: React.FC<{ form: SignupForm }> = ({ form }) => {
 
 const ManWelcomeBody: React.FC<{ form: SignupForm }> = ({ form }) => {
   const { colors } = useSignupFlowTheme();
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (form.draftRole !== 'player') form.setDraftRole('player');
@@ -151,11 +156,12 @@ const ManWelcomeBody: React.FC<{ form: SignupForm }> = ({ form }) => {
         overlayColor="rgba(12, 12, 14, 0.62)"
         badgeIcon="football"
         badgeText={PRODAY_HOMME_BRAND.entryCta}
-        title="Profil joueur"
-        subtitle="CV en ligne, Mercato M, matchs et visibilité auprès des clubs."
+        title={t('signup.welcome.playerMan.title')}
+        subtitle={t('signup.welcome.playerMan.subtitle')}
         accentInverse={colors.brandInverse}
       />
       <PreviewStepsCard
+        eyebrow={t('signup.welcome.journey')}
         steps={MAN_PLAYER_PREVIEW_STEPS}
         accent={colors.ink}
         accentInverse={colors.brandInverse}
@@ -193,7 +199,9 @@ const ProRoleCard: React.FC<{
   text,
   textMuted,
   width,
-}) => (
+}) => {
+  const { t } = useTranslation();
+  return (
   <Pressable
     style={[
       styles.proRoleCard,
@@ -216,7 +224,7 @@ const ProRoleCard: React.FC<{
       />
     </View>
     <Text style={[styles.proRoleTitle, { color: active ? accentInverse : text }]}>
-      {getRoleLabel(role)}
+      {getRoleLabel(role, t)}
     </Text>
     <Text
       style={[
@@ -233,10 +241,12 @@ const ProRoleCard: React.FC<{
       </View>
     ) : null}
   </Pressable>
-);
+  );
+};
 
 const SanteWelcomeBody: React.FC<{ form: SignupForm }> = ({ form }) => {
   const { colors } = useSignupFlowTheme();
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (form.draftRole !== 'physio') form.setDraftRole('physio');
@@ -249,11 +259,12 @@ const SanteWelcomeBody: React.FC<{ form: SignupForm }> = ({ form }) => {
         overlayColor="rgba(15, 118, 110, 0.62)"
         badgeIcon="heart"
         badgeText={PRODAY_SANTE_BRAND.entryCta}
-        title="Profil praticien"
-        subtitle="Agenda RDV, messagerie patients et visibilité auprès des clubs et joueurs."
+        title={t('signup.welcome.practitioner.title')}
+        subtitle={t('signup.welcome.practitioner.subtitle')}
         accentInverse={colors.brandInverse}
       />
       <PreviewStepsCard
+        eyebrow={t('signup.welcome.journey')}
         steps={SANTE_PHYSIO_PREVIEW}
         accent={colors.accent}
         accentInverse={colors.brandInverse}
@@ -271,6 +282,7 @@ const ProWelcomeBody: React.FC<{ form: SignupForm }> = ({ form }) => {
   const { width: screenWidth } = useWindowDimensions();
   const { compact, contentMaxWidth } = useAuthLayout();
   const { colors } = useSignupFlowTheme();
+  const { t } = useTranslation();
   const roleGroups = useMemo(() => getSignupRoleGroups('pro'), []);
   const [groupIndex, setGroupIndex] = useState(0);
   const activeGroup = roleGroups[groupIndex] ?? roleGroups[0];
@@ -374,8 +386,10 @@ export const SignupWelcomeStep: React.FC<SignupWelcomeStepProps> = ({
   phaseIndex,
   onClose,
 }) => {
+  const { t } = useTranslation();
+
   if (form.isWomanProduct) {
-    const welcome = getWomanWelcomeCopy();
+    const welcome = getWomanWelcomeCopy(t);
     return (
       <SignupStepLayout
         stepIndex={stepIndex}
@@ -389,7 +403,7 @@ export const SignupWelcomeStep: React.FC<SignupWelcomeStepProps> = ({
         onClose={onClose}
         footer={
           <SignupFooterButton
-            label="Commencer mon inscription Woman"
+            label={t('signup.welcome.ctaWoman')}
             onPress={form.confirmRoleAndContinue}
           />
         }
@@ -400,7 +414,7 @@ export const SignupWelcomeStep: React.FC<SignupWelcomeStepProps> = ({
   }
 
   if (form.isSanteProduct) {
-    const welcome = getSanteWelcomeCopy();
+    const welcome = getSanteWelcomeCopy(t);
     return (
       <SignupStepLayout
         stepIndex={stepIndex}
@@ -414,7 +428,7 @@ export const SignupWelcomeStep: React.FC<SignupWelcomeStepProps> = ({
         onClose={onClose}
         footer={
           <SignupFooterButton
-            label="Continuer sur Pro Day Santé"
+            label={t('signup.welcome.ctaSante')}
             onPress={form.confirmRoleAndContinue}
           />
         }
@@ -425,7 +439,7 @@ export const SignupWelcomeStep: React.FC<SignupWelcomeStepProps> = ({
   }
 
   if (form.isProProduct) {
-    const welcome = getProWelcomeCopy(getRoleLabel(form.draftRole));
+    const welcome = getProWelcomeCopy(getRoleLabel(form.draftRole, t), t);
     return (
       <SignupStepLayout
         stepIndex={stepIndex}
@@ -439,7 +453,7 @@ export const SignupWelcomeStep: React.FC<SignupWelcomeStepProps> = ({
         onClose={onClose}
         footer={
           <SignupFooterButton
-            label="Continuer sur Pro Day Pro"
+            label={t('signup.welcome.ctaPro')}
             onPress={form.confirmRoleAndContinue}
           />
         }
@@ -449,7 +463,7 @@ export const SignupWelcomeStep: React.FC<SignupWelcomeStepProps> = ({
     );
   }
 
-  const welcome = getManWelcomeCopy();
+  const welcome = getManWelcomeCopy(t);
   return (
     <SignupStepLayout
       stepIndex={stepIndex}
@@ -463,7 +477,7 @@ export const SignupWelcomeStep: React.FC<SignupWelcomeStepProps> = ({
       onClose={onClose}
       footer={
         <SignupFooterButton
-          label={`Commencer sur ${PRODAY_HOMME_BRAND.name}`}
+          label={t('signup.welcome.ctaMan', { brand: PRODAY_HOMME_BRAND.name })}
           onPress={form.confirmRoleAndContinue}
         />
       }

@@ -153,8 +153,11 @@ export const subscriptionService = {
     );
   },
 
-  /** Paiement store — phase 1 : message informatif (IAP à brancher). */
-  async requestUpgrade(planId: SubscriptionPlanId): Promise<{ ok: boolean; message: string }> {
+  /** Paiement store — IAP natif si disponible, sinon message bêta. */
+  async requestUpgrade(
+    planId: SubscriptionPlanId,
+    billing: 'monthly' | 'yearly' = 'monthly'
+  ): Promise<{ ok: boolean; message: string }> {
     const plan = getPlanForRole(
       planId === 'player_plus'
         ? 'player'
@@ -164,6 +167,14 @@ export const subscriptionService = {
             ? 'club'
             : 'agent'
     );
+
+    if (plan?.pricing.storeAvailable) {
+      const { iapService } = await import('./iap.service');
+      if (iapService.isAvailable()) {
+        return iapService.purchasePlan(planId, billing);
+      }
+    }
+
     if (!plan?.pricing.storeAvailable) {
       return {
         ok: false,
@@ -174,7 +185,7 @@ export const subscriptionService = {
     return {
       ok: false,
       message:
-        'Club Pro sera activé via l’App Store / Google Play à la prochaine mise à jour. Contactez support@proday.app pour un accès anticipé.',
+        'Installez l’application via TestFlight ou Google Play (build EAS) pour souscrire. Expo Go ne prend pas en charge les achats in-app.',
     };
   },
 };

@@ -8,12 +8,15 @@ interface SearchBarProps {
   placeholder?: string;
   value?: string;
   onChangeText?: (text: string) => void;
+  /** Sans marges externes — pour barres d’outils intégrées. */
+  embedded?: boolean;
 }
 
 export const SearchBar: React.FC<SearchBarProps> = ({
   placeholder = 'Rechercher…',
   value,
   onChangeText,
+  embedded = false,
 }) => {
   const { colors } = useAppTheme();
 
@@ -21,6 +24,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
     <View
       style={[
         styles.wrap,
+        embedded && styles.wrapEmbedded,
         {
           backgroundColor: colors.surface,
           borderColor: colors.border,
@@ -51,6 +55,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     gap: spacing.sm,
     minHeight: 44,
+  },
+  wrapEmbedded: {
+    marginHorizontal: 0,
+    marginBottom: 0,
+    flex: 1,
   },
   input: {
     flex: 1,

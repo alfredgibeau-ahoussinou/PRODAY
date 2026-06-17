@@ -2,7 +2,7 @@ import type { IconName } from '../components/ui/Icon';
 import type { ProductLineId } from '../models/ProductLine';
 import type { UserRole } from '../models/User';
 import type { ProDayModuleId } from './prodayModules';
-import { getMercatoTabLabel } from './poleExperience';
+import { getMercatoTabLabel } from './mercatoTabLabel';
 
 export interface RoleDashboardMeta {
   eyebrow: string;

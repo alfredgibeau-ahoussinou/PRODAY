@@ -1,6 +1,6 @@
 import type { ProductLineId } from '../models/ProductLine';
 
-export type ReelSource = 'instagram' | 'tiktok' | 'youtube';
+export type ReelSource = 'instagram' | 'tiktok' | 'youtube' | 'pexels' | 'proday';
 
 export type PlaybackReel = {
   id: string;
@@ -33,6 +33,8 @@ export const REEL_SOURCE_LABEL: Record<ReelSource, string> = {
   instagram: 'Instagram',
   tiktok: 'TikTok',
   youtube: 'Shorts',
+  pexels: 'Pexels',
+  proday: 'ProDay',
 };
 
 export function instagramUrlForShortCode(shortCode: string, authorHandle?: string): string {
@@ -63,7 +65,8 @@ export function embedUrlForReel(reel: PlaybackReel): string | null {
         '?autoplay=1&playsinline=1&loop=1&controls=0&modestbranding=1' +
         `&playlist=${reel.shortCode}`
       );
-    default:
+    case 'pexels':
+    case 'proday':
       return null;
   }
 }
@@ -71,7 +74,7 @@ export function embedUrlForReel(reel: PlaybackReel): string | null {
 const PLAYBACK_UA =
   'Mozilla/5.0 (iPhone; CPU iPhone OS 17_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Mobile/15E148 Safari/604.1';
 
-/** Source expo-av avec en-têtes requis par Instagram / TikTok CDN. */
+/** Source vidéo native (expo-video) avec en-têtes requis par Instagram / TikTok CDN. */
 export function playbackSourceForReel(
   reel: PlaybackReel,
 ): { uri: string; headers?: Record<string, string> } | null {
@@ -101,6 +104,9 @@ export function playbackSourceForReel(
           'User-Agent': PLAYBACK_UA,
         },
       };
+    case 'pexels':
+    case 'proday':
+      return { uri: reel.videoUrl };
     default:
       return { uri: reel.videoUrl };
   }

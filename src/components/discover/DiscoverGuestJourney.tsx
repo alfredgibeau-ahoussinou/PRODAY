@@ -5,10 +5,10 @@ import { Icon } from '../ui/Icon';
 import { spacing, radius } from '../../theme/designTokens';
 import { useAppTheme } from '../../context/ProductLineContext';
 import type { AppColors } from '../../theme/universeTheme';
-import {
-  getDiscoverGuestJourneySteps,
-  type DiscoverJourneyStepId,
-} from '../../content/discoverGuestJourney';
+import { useTranslation } from '../../context/LocaleContext';
+import { getLocalizedGuestJourneySteps } from '../../i18n/localizedContent';
+import type { DiscoverJourneyStepId } from '../../content/discoverGuestJourney';
+
 import type { ProductLineId } from '../../models/ProductLine';
 
 interface DiscoverGuestJourneyProps {
@@ -21,8 +21,12 @@ export const DiscoverGuestJourney: React.FC<DiscoverGuestJourneyProps> = ({
   onStepPress,
 }) => {
   const { colors: c } = useAppTheme();
+  const { t } = useTranslation();
   const styles = useMemo(() => createStyles(c), [c]);
-  const steps = useMemo(() => getDiscoverGuestJourneySteps(productLine), [productLine]);
+  const steps = useMemo(
+    () => getLocalizedGuestJourneySteps(productLine, t),
+    [productLine, t]
+  );
 
   return (
     <View style={styles.row}>

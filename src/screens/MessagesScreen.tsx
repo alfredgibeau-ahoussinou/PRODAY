@@ -1,58 +1,57 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import {
-  View,
-  FlatList,
-  StyleSheet,
-  RefreshControl,
-} from 'react-native';
-import { InteractiveListItem, SkeletonList } from '../components/motion';
-import { SearchBar } from '../components/ui/SearchBar';
-import { ProDayModuleHeader } from '../components/ui/ProDayModuleHeader';
-import { ProDayScreenCanvas } from '../components/ui/ProDayScreenCanvas';
-import { ProDaySurface } from '../components/ui/ProDaySurface';
-import { ProDayText } from '../components/ui/ProDayText';
-import { Icon } from '../components/ui/Icon';
-import { MessageThreadRow } from '../components/messages/MessageThreadRow';
-import { MessagesEmptyState } from '../components/messages/MessagesEmptyState';
-import { useMessagesData } from '../hooks/useAppData';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert } from 'react-native';
+import { useMessagesData } from '../hooks/useAppData';
 import { useAuth } from '../context/AuthContext';
 import { useTabNavigation } from '../context/TabNavigationContext';
 import { useTabNavigationActions } from '../hooks/useTabNavigationActions';
+import { useFavorites } from '../hooks/useFavorites';
 import { profileService } from '../services/profile.service';
-import { ROLES_REQUIRING_VERIFICATION } from '../models/User';
+import { ROLES_REQUIRING_VERIFICATION, type User } from '../models/User';
 import { physioCareThreadLabel } from '../utils/physioMessaging';
 import { ChatScreen } from './ChatScreen';
-import { TAB_BAR_CONTENT_INSET } from '../components/navigation/BottomTabBar';
-import { ProDaySelect } from '../components/ui/ProDaySelect';
-import { spacing, radius } from '../theme/designTokens';
+import { PlayerProfileScreen } from './PlayerProfileScreen';
+import { CoachProfileScreen } from './CoachProfileScreen';
 import { useThemedScreen } from '../hooks/useThemedScreen';
-import type { AppColors } from '../theme/universeTheme';
-import { V3TabShell } from '../components/v3/V3TabShell';
-import { isV3ShellEnabled } from '../config/featureFlags';
-import { useSectionIntelligence } from '../hooks/useSectionIntelligence';
 import { useDashboardData } from '../hooks/useDashboardData';
-import { buildSocialSuggestions } from '../features/v3/engines/socialRecommendation.engine';
+import { fetchSocialSuggestions } from '../services/socialSuggestions.service';
 import type { SocialProfileSuggestion } from '../features/v3/engines/socialRecommendation.engine';
-import { SocialSuggestionsStrip } from '../components/messages/SocialSuggestionsStrip';
 import { openContactConversation } from '../utils/openContactConversation';
 import { usersService } from '../services/users.service';
+import { networkSuggestionsService } from '../services/networkSuggestions.service';
+import { evaluateMessagingPermission } from '../utils/parentalMessaging';
+import { isPlayerProfileRole } from '../utils/isPlayerProfileRole';
 import { trackV3Event } from '../core/analytics/v3Events';
+import type { MessagesThreadFilter } from '../content/messagesChapters';
+import { MessagesHomeScreen } from '../components/messages/MessagesHomeScreen';
+import { useTranslation } from '../context/LocaleContext';
+import {
+  MessagesNetworkSheet,
+  type NetworkSheetAction,
+} from '../components/messages/MessagesNetworkSheet';
 
 export const MessagesScreen: React.FC = () => {
+  const { t } = useTranslation();
   const { profile, loading: authLoading } = useAuth();
   const { pendingChatThreadId, clearPendingChat, openAuth } = useTabNavigation();
   const nav = useTabNavigationActions();
   const { threads, loading, refresh } = useMessagesData(profile?.uid);
   const { data: dashboardData } = useDashboardData(profile);
+  const favorites = useFavorites(profile?.uid);
+
   const [activeThreadId, setActiveThreadId] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState('');
-  const [threadFilter, setThreadFilter] = useState<'all' | 'unread' | 'care'>('all');
-  const { colors: c, productLine } = useThemedScreen();
-  const styles = useMemo(() => createStyles(c), [c]);
+  const [threadFilter, setThreadFilter] = useState<MessagesThreadFilter>('all');
+
+  const [networkSheet, setNetworkSheet] = useState<SocialProfileSuggestion | null>(null);
+  const [networkTarget, setNetworkTarget] = useState<User | null>(null);
+  const [loadingNetworkTarget, setLoadingNetworkTarget] = useState(false);
+  const [favoriteBusy, setFavoriteBusy] = useState(false);
+  const [networkProfileUser, setNetworkProfileUser] = useState<User | null>(null);
+  const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set());
+
+  const { productLine } = useThemedScreen();
   const isWoman = productLine === 'woman';
-  const useV3Header = isV3ShellEnabled();
 
   const mustVerify =
     profile &&
@@ -60,41 +59,47 @@ export const MessagesScreen: React.FC = () => {
     !profileService.canPerformSensitiveAction(profile);
 
   const unreadCount = threads.filter((t) => t.unread).length;
-  const intelligence = useSectionIntelligence('messages', profile, productLine, {
-    unreadMessages: unreadCount,
-  });
 
-  const socialSuggestions = useMemo(() => {
-    if (!useV3Header || !profile) return [];
-    return buildSocialSuggestions({
-      user: profile,
-      userLocation: profile.location,
-      openMatches: dashboardData.openMatches,
-    });
-  }, [useV3Header, profile, dashboardData.openMatches]);
+  const [allSocialSuggestions, setAllSocialSuggestions] = useState<SocialProfileSuggestion[]>([]);
+  const [loadingSocial, setLoadingSocial] = useState(false);
 
-  const handleSocialSuggestion = async (suggestion: SocialProfileSuggestion) => {
-    if (!profile) return;
-    trackV3Event('social_suggestion_tap', {
-      id: suggestion.id,
-      score: suggestion.matchScore,
-    });
-    if (suggestion.targetUid) {
-      const target = await usersService.getById(suggestion.targetUid);
-      if (target) {
-        await openContactConversation(
-          profile,
-          target,
-          suggestion.displayName,
-          setActiveThreadId
-        );
-        return;
-      }
+  const socialSuggestions = useMemo(
+    () => allSocialSuggestions.filter((s) => !dismissedIds.has(s.id)),
+    [allSocialSuggestions, dismissedIds]
+  );
+
+  const hiddenNetworkCount = allSocialSuggestions.length - socialSuggestions.length;
+
+  const loadSocialSuggestions = useCallback(async () => {
+    if (!profile) {
+      setAllSocialSuggestions([]);
+      return;
     }
-    if (suggestion.actionTab) {
-      nav.setActiveTab(suggestion.actionTab);
+    setLoadingSocial(true);
+    try {
+      const list = await fetchSocialSuggestions({
+        user: profile,
+        openMatches: dashboardData.openMatches,
+      });
+      setAllSocialSuggestions(list);
+    } catch {
+      setAllSocialSuggestions([]);
+    } finally {
+      setLoadingSocial(false);
     }
-  };
+  }, [profile, dashboardData.openMatches]);
+
+  useEffect(() => {
+    void loadSocialSuggestions();
+  }, [loadSocialSuggestions]);
+
+  useEffect(() => {
+    if (!profile?.uid) {
+      setDismissedIds(new Set());
+      return;
+    }
+    void networkSuggestionsService.loadDismissedIds(profile.uid).then(setDismissedIds);
+  }, [profile?.uid]);
 
   const filteredThreads = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -114,8 +119,8 @@ export const MessagesScreen: React.FC = () => {
       if (mustVerify) {
         clearPendingChat();
         Alert.alert(
-          'Messagerie bloquée',
-          'Validez votre diplôme ou licence depuis l’onglet Profil.',
+          t('messages.alert.blocked.title'),
+          t('messages.alert.blocked.body'),
         );
         return;
       }
@@ -126,11 +131,152 @@ export const MessagesScreen: React.FC = () => {
 
   const activeThread = threads.find((t) => t.id === activeThreadId);
 
+  const loadNetworkTarget = useCallback(async (suggestion: SocialProfileSuggestion) => {
+    if (!suggestion.targetUid) {
+      setNetworkTarget(null);
+      return;
+    }
+    setLoadingNetworkTarget(true);
+    const user = await usersService.getById(suggestion.targetUid);
+    setNetworkTarget(user);
+    setLoadingNetworkTarget(false);
+  }, []);
+
+  const openNetworkSheet = useCallback(
+    (suggestion: SocialProfileSuggestion) => {
+      if (!profile) return;
+      trackV3Event('social_suggestion_tap', {
+        id: suggestion.id,
+        score: suggestion.matchScore,
+        kind: suggestion.kind,
+      });
+      setNetworkSheet(suggestion);
+      setNetworkTarget(null);
+      void loadNetworkTarget(suggestion);
+    },
+    [profile, loadNetworkTarget]
+  );
+
+  const closeNetworkSheet = useCallback(() => {
+    setNetworkSheet(null);
+    setNetworkTarget(null);
+    setLoadingNetworkTarget(false);
+  }, []);
+
+  const messagePermission = useMemo(() => {
+    if (!profile || !networkTarget) return { allowed: false, message: null as string | null };
+    if (mustVerify) {
+      return {
+        allowed: false,
+        message: t('messages.verifyDiploma'),
+      };
+    }
+    const result = evaluateMessagingPermission(profile, networkTarget);
+    return {
+      allowed: result.allowed,
+      message: result.allowed ? null : result.message ?? t('messages.unavailable'),
+    };
+  }, [profile, networkTarget, mustVerify, t]);
+
+  const handleNetworkSheetAction = async (action: NetworkSheetAction) => {
+    if (!profile || !networkSheet) return;
+
+    switch (action) {
+      case 'profile': {
+        if (!networkTarget) return;
+        closeNetworkSheet();
+        setNetworkProfileUser(networkTarget);
+        return;
+      }
+      case 'favorite': {
+        if (!networkSheet.targetUid || favoriteBusy) return;
+        setFavoriteBusy(true);
+        try {
+          await favorites.toggle(
+            networkSheet.targetUid,
+            networkTarget?.role ?? networkSheet.targetRole
+          );
+        } catch (e) {
+          Alert.alert(
+            t('feed.alert.error'),
+            e instanceof Error ? e.message : t('messages.favoritesError')
+          );
+        } finally {
+          setFavoriteBusy(false);
+        }
+        return;
+      }
+      case 'message': {
+        if (!networkTarget) return;
+        const suggestion = networkSheet;
+        closeNetworkSheet();
+        await openContactConversation(
+          profile,
+          networkTarget,
+          suggestion.displayName,
+          setActiveThreadId
+        );
+        return;
+      }
+      case 'explore': {
+        closeNetworkSheet();
+        if (networkSheet.actionTab === 'recrutement') {
+          nav.setActiveTab('recrutement');
+        } else if (networkSheet.matchId) {
+          nav.openMatchs({ homeTab: 'matches' });
+        } else if (networkSheet.actionTab) {
+          nav.setActiveTab(networkSheet.actionTab);
+        }
+        return;
+      }
+      case 'dismiss': {
+        const next = await networkSuggestionsService.dismiss(profile.uid, networkSheet.id);
+        setDismissedIds(next);
+        closeNetworkSheet();
+        return;
+      }
+      default:
+        return;
+    }
+  };
+
+  const handleContactFromProfile = async (target: User) => {
+    if (!profile) return;
+    setNetworkProfileUser(null);
+    await openContactConversation(profile, target, target.display_name, setActiveThreadId);
+  };
+
   const onRefresh = async () => {
     setRefreshing(true);
-    await refresh();
+    await Promise.all([refresh(), favorites.refresh(), loadSocialSuggestions()]);
     setRefreshing(false);
   };
+
+  const restoreHiddenNetwork = async () => {
+    if (!profile?.uid) return;
+    await networkSuggestionsService.reset(profile.uid);
+    setDismissedIds(new Set());
+  };
+
+  if (networkProfileUser) {
+    if (isPlayerProfileRole(networkProfileUser.role)) {
+      return (
+        <PlayerProfileScreen
+          player={networkProfileUser}
+          onBack={() => setNetworkProfileUser(null)}
+          onContact={(user) => void handleContactFromProfile(user)}
+        />
+      );
+    }
+    return (
+      <CoachProfileScreen
+        staff={networkProfileUser}
+        onBack={() => setNetworkProfileUser(null)}
+        onContact={(user) => void handleContactFromProfile(user)}
+        onHire={(user) => void handleContactFromProfile(user)}
+      />
+    );
+  }
 
   if (activeThreadId && profile && !mustVerify) {
     return (
@@ -147,223 +293,55 @@ export const MessagesScreen: React.FC = () => {
     );
   }
 
-  const messagesBody = (
+  return (
     <>
-        {profile && unreadCount > 0 ? (
-          <ProDaySurface variant="accent" style={styles.unreadBanner}>
-            <Icon name="chat" size={16} color={c.accent} variant="filled" />
-            <ProDayText variant="caption" accent style={styles.unreadBannerText}>
-              {unreadCount} message{unreadCount > 1 ? 's' : ''} non lu{unreadCount > 1 ? 's' : ''}
-            </ProDayText>
-          </ProDaySurface>
-        ) : null}
+      <MessagesHomeScreen
+        profile={profile}
+        authLoading={authLoading}
+        threads={threads}
+        filteredThreads={filteredThreads}
+        loading={loading}
+        refreshing={refreshing}
+        search={search}
+        onSearchChange={setSearch}
+        threadFilter={threadFilter}
+        onThreadFilterChange={setThreadFilter}
+        unreadCount={unreadCount}
+        mustVerify={Boolean(mustVerify)}
+        socialSuggestions={socialSuggestions}
+        loadingSocial={loadingSocial}
+        networkSavedCount={favorites.ids.size}
+        isNetworkSaved={(uid) => (uid ? favorites.isFavorite(uid) : false)}
+        hiddenNetworkCount={hiddenNetworkCount}
+        onRestoreHiddenNetwork={() => void restoreHiddenNetwork()}
+        onSocialSuggestion={openNetworkSheet}
+        onOpenThread={setActiveThreadId}
+        onRefresh={() => void onRefresh()}
+        onLogin={() => openAuth('login')}
+        onSignup={() => openAuth('signup')}
+        onOpenMercato={() => nav.setActiveTab('recrutement')}
+        onResetFilters={() => {
+          setSearch('');
+          setThreadFilter('all');
+        }}
+        kineLabelFor={(thread) => physioCareThreadLabel(thread.thread_kind) ?? undefined}
+        isWoman={isWoman}
+      />
 
-        {profile ? (
-          <ProDaySurface variant="flat" style={styles.notice}>
-            <Icon name="shield" size={16} color={c.textMuted} />
-            <ProDayText variant="caption" muted style={styles.noticeText}>
-              Comptes mineurs : contacts approuvés uniquement. Coachs et agents vérifiés pour
-              contacter un mineur.
-            </ProDayText>
-          </ProDaySurface>
-        ) : null}
-
-        {profile ? (
-          <>
-            <SearchBar placeholder="Rechercher une conversation…" value={search} onChangeText={setSearch} />
-            <ProDaySelect<'all' | 'unread' | 'care'>
-              label="Filtrer"
-              placeholder="Toutes les conversations"
-              options={[
-                { id: 'all', label: 'Tous' },
-                {
-                  id: 'unread',
-                  label: 'Non lus',
-                  hint:
-                    unreadCount > 0
-                      ? `${unreadCount} non lu${unreadCount > 1 ? 's' : ''}`
-                      : undefined,
-                },
-                { id: 'care', label: 'Kiné' },
-              ]}
-              value={threadFilter}
-              onChange={setThreadFilter}
-            />
-          </>
-        ) : null}
-
-        {profile && useV3Header ? (
-          <SocialSuggestionsStrip
-            suggestions={socialSuggestions}
-            onPress={(suggestion) => void handleSocialSuggestion(suggestion)}
-          />
-        ) : null}
-
-        {!authLoading && !profile ? (
-          <MessagesEmptyState
-            variant="guest"
-            title="Connectez-vous"
-            description="Accédez à vos conversations avec les clubs, coachs et kinés de la communauté ProDay."
-            ctaLabel="Se connecter"
-            onCta={() => openAuth('login')}
-            secondaryCtaLabel="Créer un compte"
-            onSecondaryCta={() => openAuth('signup')}
-          />
-        ) : null}
-
-        {mustVerify ? (
-          <ProDaySurface variant="module" style={styles.blocked}>
-            <Icon name="warning" size={22} color={c.warning} />
-            <View style={styles.blockedCopy}>
-              <ProDayText variant="section" style={{ color: c.warning }}>
-                Messagerie bloquée
-              </ProDayText>
-              <ProDayText variant="body" muted>
-                Validez votre diplôme ou licence depuis l&apos;onglet Profil.
-              </ProDayText>
-            </View>
-          </ProDaySurface>
-        ) : null}
-
-        {loading && profile ? (
-          <SkeletonList count={5} variant="row" />
-        ) : profile && threads.length === 0 ? (
-          <MessagesEmptyState
-            title="Aucune conversation"
-            description={
-              isWoman
-                ? 'Contactez une joueuse ou un coach depuis le Mercato pour démarrer un échange.'
-                : 'Contactez un joueur ou un coach depuis le Mercato pour démarrer un échange.'
-            }
-            ctaLabel="Ouvrir le Mercato"
-            onCta={() => nav.setActiveTab('recrutement')}
-          />
-        ) : profile && filteredThreads.length === 0 ? (
-          <MessagesEmptyState
-            title="Aucun résultat"
-            description="Essayez un autre filtre ou une autre recherche."
-            ctaLabel="Réinitialiser les filtres"
-            onCta={() => {
-              setSearch('');
-              setThreadFilter('all');
-            }}
-          />
-        ) : profile ? (
-          <FlatList
-            data={filteredThreads}
-            keyExtractor={(t) => t.id}
-            contentContainerStyle={styles.list}
-            refreshControl={
-              <RefreshControl
-                refreshing={refreshing}
-                onRefresh={onRefresh}
-                tintColor={c.accent}
-              />
-            }
-            renderItem={({ item, index }) => (
-              <InteractiveListItem index={index}>
-                <MessageThreadRow
-                  thread={item}
-                  kineLabel={physioCareThreadLabel(item.thread_kind) ?? undefined}
-                  onPress={() => setActiveThreadId(item.id)}
-                  disabled={!!mustVerify}
-                />
-              </InteractiveListItem>
-            )}
-          />
-        ) : null}
+      <MessagesNetworkSheet
+        visible={Boolean(networkSheet)}
+        suggestion={networkSheet}
+        targetUser={networkTarget}
+        loadingTarget={loadingNetworkTarget}
+        isFavorite={
+          networkSheet?.targetUid ? favorites.isFavorite(networkSheet.targetUid) : false
+        }
+        favoriteBusy={favoriteBusy}
+        canMessage={messagePermission.allowed}
+        messageBlockedReason={messagePermission.message}
+        onClose={closeNetworkSheet}
+        onAction={(action) => void handleNetworkSheetAction(action)}
+      />
     </>
   );
-
-  if (useV3Header) {
-    return (
-      <V3TabShell
-        caption="Messagerie"
-        title="Messages"
-        subtitle={
-          isWoman ? 'Échanges coach, agent & kiné' : 'Échanges coach, agent & kiné'
-        }
-        flat
-        intelligence={intelligence}
-        stats={
-          profile
-            ? [
-                { value: threads.length, label: 'Fils' },
-                {
-                  value: unreadCount,
-                  label: 'Non lus',
-                  highlight: unreadCount > 0,
-                },
-                {
-                  value: threads.filter((t) => t.thread_kind?.startsWith('physio')).length,
-                  label: 'Kiné',
-                },
-              ]
-            : undefined
-        }
-      >
-        {messagesBody}
-      </V3TabShell>
-    );
-  }
-
-  return (
-    <ProDayScreenCanvas flat>
-      <View style={styles.container}>
-        <ProDayModuleHeader
-          eyebrow="Messagerie"
-          title="Messages"
-          subtitle={
-            isWoman
-              ? 'Échanges coach, agent & kiné'
-              : 'Échanges coach, agent & kiné'
-          }
-          icon="chat"
-        />
-
-        {messagesBody}
-      </View>
-    </ProDayScreenCanvas>
-  );
 };
-
-function createStyles(c: AppColors) {
-  return StyleSheet.create({
-    container: { flex: 1 },
-    unreadBanner: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: spacing.sm,
-      marginHorizontal: spacing.lg,
-      marginBottom: spacing.sm,
-      padding: spacing.sm,
-    },
-    unreadBannerText: { fontWeight: '800' },
-    notice: {
-      flexDirection: 'row',
-      alignItems: 'flex-start',
-      gap: spacing.sm,
-      marginHorizontal: spacing.lg,
-      marginBottom: spacing.md,
-      padding: spacing.md,
-    },
-    noticeText: { flex: 1, lineHeight: 18 },
-    loader: { marginTop: spacing.xl },
-    blocked: {
-      flexDirection: 'row',
-      alignItems: 'flex-start',
-      gap: spacing.md,
-      marginHorizontal: spacing.lg,
-      marginBottom: spacing.md,
-      padding: spacing.md,
-      borderColor: c.warning,
-      borderWidth: 1,
-      borderRadius: radius.lg,
-    },
-    blockedCopy: { flex: 1, gap: 4 },
-    list: {
-      paddingHorizontal: spacing.lg,
-      paddingBottom: TAB_BAR_CONTENT_INSET + spacing.lg,
-    },
-  });
-}

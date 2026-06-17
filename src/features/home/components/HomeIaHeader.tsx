@@ -9,6 +9,7 @@ import { ProDayGradient } from '../../../components/ui/ProDayGradient';
 import { ProDayShopButton } from '../../../components/shop/ProDayShopButton';
 import { ProfileAvatarButton } from '../../../components/profile/ProfileAvatarButton';
 import { useAppTheme } from '../../../context/ProductLineContext';
+import { useTranslation } from '../../../context/LocaleContext';
 import { brandForProductLine } from '../../../models/ProductLine';
 import { spacing, radius } from '../../../theme/designTokens';
 
@@ -32,6 +33,7 @@ export const HomeIaHeader: React.FC<HomeIaHeaderProps> = ({
 }) => {
   const insets = useSafeAreaInsets();
   const { colors, productLine } = useAppTheme();
+  const { t } = useTranslation();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const brand = brandForProductLine(productLine);
   const firstName = profile.display_name.split(' ')[0];
@@ -53,7 +55,7 @@ export const HomeIaHeader: React.FC<HomeIaHeaderProps> = ({
                 {brand.name}
               </ProDayText>
               <ProDayText variant="hero" style={styles.title}>
-                Bonjour {firstName}
+                {t('home.greeting', { name: firstName })}
               </ProDayText>
               {profile.city ? (
                 <PressableSpring onPress={onLocationPress} scaleTo={0.98}>
@@ -67,7 +69,7 @@ export const HomeIaHeader: React.FC<HomeIaHeaderProps> = ({
           <View style={styles.actions}>
             <View style={[styles.scorePill, { backgroundColor: colors.accentSoft, borderColor: colors.accentMuted }]}>
               <ProDayText variant="caption" accent style={styles.scoreLabel}>
-                Pulse
+                {t('home.pulse')}
               </ProDayText>
               <ProDayText variant="section" accent style={styles.scoreValue}>
                 {globalScore}

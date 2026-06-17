@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { ScrollView, TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { View } from 'react-native';
 import { useAdminData } from '../../../context/AdminDataContext';
 import { adminService } from '../../../services/admin.service';
 import { AdminPageScaffold } from '../../../components/admin/AdminPageScaffold';
@@ -8,49 +8,156 @@ import { AdminSectionHeader } from '../../../components/admin/AdminSectionHeader
 import { AdminEmptyState } from '../../../components/admin/AdminEmptyState';
 import { adminConfirmDelete } from '../../../utils/adminConfirm';
 import { formatCalendarDate } from '../../../utils/seasonCalendar';
-import { useAdminStyles } from '../../../components/admin/adminStyles';
-import { spacing, radius } from '../../../theme/designTokens';
-import type { AppColors } from '../../../theme/universeTheme';
+import { CarpoolFilterChips } from '../../../components/carpool/carpoolUi';
+import { ProDayText } from '../../../components/ui/ProDayText';
+import type { CommunityReelStatus } from '../../../models/CommunityReel';
 
 type ContentSegment =
+  | 'reels'
+  | 'reports'
   | 'events'
   | 'mercato'
   | 'matches'
   | 'applications'
+  | 'payments'
   | 'sponsors';
 
 const SEGMENTS: { id: ContentSegment; label: string }[] = [
+  { id: 'reels', label: 'Reels' },
+  { id: 'reports', label: 'Signalements' },
   { id: 'events', label: 'Événements' },
   { id: 'mercato', label: 'Mercato' },
   { id: 'matches', label: 'Matchs' },
   { id: 'applications', label: 'Candidatures' },
+  { id: 'payments', label: 'Paiements' },
   { id: 'sponsors', label: 'Sponsors' },
 ];
 
+const REEL_FILTERS: { id: CommunityReelStatus | 'all'; label: string }[] = [
+  { id: 'pending', label: 'En attente' },
+  { id: 'approved', label: 'Publiés' },
+  { id: 'rejected', label: 'Refusés' },
+  { id: 'all', label: 'Tous' },
+];
+
+const STATUS_LABEL: Record<CommunityReelStatus, string> = {
+  pending: 'En attente',
+  approved: 'Publié',
+  rejected: 'Refusé',
+};
+
 export const AdminContentPage: React.FC = () => {
-  const { loading, events, posts, matches, applications, sponsorOffers, fundingGoals, refresh } =
-    useAdminData();
-  const { colors: c } = useAdminStyles();
-  const styles = useMemo(() => createStyles(c), [c]);
-  const [segment, setSegment] = useState<ContentSegment>('events');
+  const {
+    loading,
+    events,
+    posts,
+    matches,
+    applications,
+    sponsorOffers,
+    fundingGoals,
+    payments,
+    communityReels,
+    reelReports,
+    refresh,
+  } = useAdminData();
+  const [segment, setSegment] = useState<ContentSegment>('reels');
+  const [reelFilter, setReelFilter] = useState<CommunityReelStatus | 'all'>('pending');
+
+  const filteredReels = useMemo(() => {
+    if (reelFilter === 'all') return communityReels;
+    return communityReels.filter((r) => r.status === reelFilter);
+  }, [communityReels, reelFilter]);
 
   return (
     <AdminPageScaffold
-      title="Contenu plateforme"
-      subtitle="Événements · mercato · matchs · candidatures · sponsors"
+      title="Modération & contenu"
+      subtitle="Reels ProDay · signalements · mercato · événements"
       loading={loading}
     >
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.segments}>
-        {SEGMENTS.map((s) => (
-          <TouchableOpacity
-            key={s.id}
-            style={[styles.pill, segment === s.id && styles.pillOn]}
-            onPress={() => setSegment(s.id)}
-          >
-            <Text style={[styles.pillText, segment === s.id && styles.pillTextOn]}>{s.label}</Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+      <CarpoolFilterChips options={SEGMENTS} value={segment} onChange={setSegment} />
+
+      {segment === 'reels' ? (
+        <>
+          <View style={{ marginBottom: 8 }}>
+            <CarpoolFilterChips options={REEL_FILTERS} value={reelFilter} onChange={setReelFilter} />
+          </View>
+          <AdminSectionHeader title="REELS COMMUNAUTÉ" count={filteredReels.length} />
+          {filteredReels.length === 0 ? (
+            <AdminEmptyState
+              icon="time"
+              title="Aucun reel"
+              subtitle="Les publications soumises par les joueurs apparaissent ici avant diffusion."
+            />
+          ) : (
+            filteredReels.map((reel) => (
+              <AdminEntityCard
+                key={reel.id}
+                icon="time"
+                title={reel.author_name}
+                subtitle={reel.caption || 'Sans légende'}
+                meta={`${STATUS_LABEL[reel.status]} · ${reel.theme} · ${formatCalendarDate(reel.created_at)}`}
+                primaryLabel={reel.status === 'pending' ? 'Approuver' : undefined}
+                onPrimary={
+                  reel.status === 'pending'
+                    ? () =>
+                        adminService
+                          .updateCommunityReelStatus(reel.id, 'approved')
+                          .then(() => refresh())
+                    : undefined
+                }
+                secondaryLabel={reel.status !== 'rejected' ? 'Refuser' : undefined}
+                onSecondary={
+                  reel.status !== 'rejected'
+                    ? () =>
+                        adminService
+                          .updateCommunityReelStatus(reel.id, 'rejected')
+                          .then(() => refresh())
+                    : undefined
+                }
+                onDelete={() =>
+                  adminConfirmDelete(
+                    'Supprimer le reel',
+                    reel.caption.slice(0, 40) || reel.author_name,
+                    () => adminService.deleteCommunityReel(reel.id),
+                    refresh
+                  )
+                }
+              />
+            ))
+          )}
+        </>
+      ) : null}
+
+      {segment === 'reports' ? (
+        <>
+          <AdminSectionHeader title="SIGNALEMENTS REELS" count={reelReports.length} />
+          {reelReports.length === 0 ? (
+            <AdminEmptyState
+              icon="warning"
+              title="Aucun signalement"
+              subtitle="Les utilisateurs peuvent signaler un reel depuis le fil."
+            />
+          ) : (
+            reelReports.map((report) => (
+              <AdminEntityCard
+                key={report.id}
+                icon="warning"
+                title={report.reason}
+                subtitle={report.source_url}
+                meta={`${report.bookmark_key.slice(0, 24)}… · ${formatCalendarDate(report.created_at)}`}
+                onDelete={() =>
+                  adminConfirmDelete(
+                    'Archiver le signalement',
+                    report.reason,
+                    () => adminService.deleteReelReport(report.id),
+                    refresh
+                  )
+                }
+              />
+            ))
+          )}
+        </>
+      ) : null}
 
       {segment === 'events' && (
         <>
@@ -146,6 +253,34 @@ export const AdminContentPage: React.FC = () => {
         </>
       )}
 
+      {segment === 'payments' && (
+        <>
+          <AdminSectionHeader title="DEMANDES DE PAIEMENT CLUB" count={payments.length} />
+          {payments.length === 0 ? (
+            <AdminEmptyState icon="bag" title="Aucun paiement" subtitle="Cotisations et frais d’équipe." />
+          ) : (
+            payments.map((pay) => (
+              <AdminEntityCard
+                key={pay.id}
+                icon="bag"
+                title={pay.label}
+                subtitle={`${pay.member_name} · ${pay.amount_eur} €`}
+                meta={`Échéance ${formatCalendarDate(pay.due_at)} · ${pay.status}`}
+                secondaryLabel={pay.status === 'pending' ? 'Marquer payé' : undefined}
+                onSecondary={
+                  pay.status === 'pending'
+                    ? () => adminService.updatePaymentStatus(pay.id, 'paid').then(() => refresh())
+                    : undefined
+                }
+                onDelete={() =>
+                  adminConfirmDelete('Supprimer', pay.label, () => adminService.deletePaymentRequest(pay.id), refresh)
+                }
+              />
+            ))
+          )}
+        </>
+      )}
+
       {segment === 'sponsors' && (
         <>
           <AdminSectionHeader title="OFFRES SPONSORS" count={sponsorOffers.length} />
@@ -167,7 +302,9 @@ export const AdminContentPage: React.FC = () => {
           )}
           <AdminSectionHeader title="CAMPAGNES FINANCEMENT" count={fundingGoals.length} />
           {fundingGoals.length === 0 ? (
-            <AdminEmptyState icon="business" title="Aucune campagne" subtitle="Objectifs financement club." />
+            <ProDayText variant="caption" muted style={{ marginBottom: 12 }}>
+              Aucune campagne de financement club.
+            </ProDayText>
           ) : (
             fundingGoals.map((g) => (
               <AdminEntityCard
@@ -187,21 +324,3 @@ export const AdminContentPage: React.FC = () => {
     </AdminPageScaffold>
   );
 };
-
-function createStyles(c: AppColors) {
-  return StyleSheet.create({
-    segments: { maxHeight: 44, marginBottom: spacing.md },
-    pill: {
-      paddingHorizontal: spacing.md,
-      paddingVertical: 8,
-      borderRadius: radius.pill,
-      borderWidth: 1,
-      borderColor: c.border,
-      backgroundColor: c.surface,
-      marginRight: spacing.sm,
-    },
-    pillOn: { backgroundColor: c.ink, borderColor: c.ink },
-    pillText: { fontSize: 12, fontWeight: '800', color: c.text },
-    pillTextOn: { color: c.brandInverse },
-  });
-}

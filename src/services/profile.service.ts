@@ -45,6 +45,7 @@ export interface ProfileUpdatePayload {
 }
 
 const MAX_GALLERY_PHOTOS = 6;
+const MAX_HIGHLIGHT_VIDEOS = 3;
 
 /** Firestore rejette les valeurs undefined — les retirer avant écriture. */
 function stripUndefinedDeep(value: unknown): unknown {
@@ -290,6 +291,42 @@ export const profileService = {
     return next;
   },
 
+  async addHighlightVideo(uid: string, file: UploadFileInput): Promise<string[]> {
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+
+    const snap = await getDoc(doc(database, 'users', uid));
+    if (!snap.exists()) throw new Error('Profil introuvable.');
+
+    const current = snap.data() as Record<string, unknown>;
+    const currentProfile = (current.profile as User['profile']) ?? {};
+    const videos = [...(currentProfile.highlight_video_urls ?? []).filter(Boolean)];
+
+    if (videos.length >= MAX_HIGHLIGHT_VIDEOS) {
+      throw new Error(`Maximum ${MAX_HIGHLIGHT_VIDEOS} vidéos highlight.`);
+    }
+
+    const url = await storageService.uploadProfileHighlightVideo(uid, file);
+    const next = [...videos, url];
+    await this.updateProfile(uid, { profile: { highlight_video_urls: next } });
+    return next;
+  },
+
+  async removeHighlightVideo(uid: string, videoUrl: string): Promise<string[]> {
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+
+    const snap = await getDoc(doc(database, 'users', uid));
+    if (!snap.exists()) throw new Error('Profil introuvable.');
+
+    const current = snap.data() as Record<string, unknown>;
+    const currentProfile = (current.profile as User['profile']) ?? {};
+    const next = (currentProfile.highlight_video_urls ?? []).filter((u) => u !== videoUrl);
+
+    await this.updateProfile(uid, { profile: { highlight_video_urls: next } });
+    return next;
+  },
+
   async updateFcmToken(uid: string, token: string): Promise<void> {
     const database = getDb();
     if (!database) return;
@@ -363,6 +400,7 @@ export const profileService = {
           await updateDoc(doc(database, 'users', uid), {
             verification_status: 'PENDING',
             is_verified: false,
+            onboarding_documents_submitted: true,
             updated_at: serverTimestamp(),
           });
         }

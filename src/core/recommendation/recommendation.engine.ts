@@ -61,10 +61,52 @@ export function buildMatchRecommendations(input: MatchRecommendationInput): Matc
 }
 
 export function buildActionRecommendations(
-  _health: HealthSnapshot,
-  _globalScore: number
+  health: HealthSnapshot,
+  globalScore: number
 ): SmartActionRecommendation[] {
-  return [];
+  const actions: SmartActionRecommendation[] = [];
+
+  if (health.state === 'INJURY_RISK' || health.state === 'OVERLOADED') {
+    actions.push({
+      id: 'recovery',
+      label: 'Planifier une récupération',
+      reason: health.coachMessage,
+      priority: 90,
+      tab: 'sante',
+    });
+  }
+
+  if (!health.allowIntenseMatch) {
+    actions.push({
+      id: 'light-session',
+      label: 'Séance légère aujourd’hui',
+      reason: 'Charge élevée — privilégiez l’entretien.',
+      priority: 82,
+      tab: 'sante',
+    });
+  }
+
+  if (globalScore < 55) {
+    actions.push({
+      id: 'sleep-hydration',
+      label: 'Compléter mon suivi sommeil',
+      reason: 'Score global bas — améliorez votre récupération.',
+      priority: 75,
+      tab: 'sante',
+    });
+  }
+
+  if (actions.length === 0) {
+    actions.push({
+      id: 'open-matches',
+      label: 'Voir les matchs recommandés',
+      reason: 'Profil prêt pour jouer.',
+      priority: 60,
+      tab: 'matchs',
+    });
+  }
+
+  return actions.sort((a, b) => b.priority - a.priority).slice(0, 4);
 }
 
 export function validateMatchJoin(params: {

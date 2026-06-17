@@ -12,12 +12,14 @@ interface AdminTabBarProps {
   activeTab: AdminMainTabId;
   onTabPress: (tab: AdminMainTabId) => void;
   pendingVerifications?: number;
+  pendingModeration?: number;
 }
 
 export const AdminTabBar: React.FC<AdminTabBarProps> = ({
   activeTab,
   onTabPress,
   pendingVerifications = 0,
+  pendingModeration = 0,
 }) => {
   const insets = useSafeAreaInsets();
   const { colors: c } = useAdminStyles();
@@ -32,7 +34,11 @@ export const AdminTabBar: React.FC<AdminTabBarProps> = ({
         {ADMIN_TAB_ITEMS.map((tab) => {
           const active = tab.id === activeTab;
           const badge =
-            tab.id === 'users' && pendingVerifications > 0 ? pendingVerifications : 0;
+            tab.id === 'users'
+              ? pendingVerifications
+              : tab.id === 'contenu'
+                ? pendingModeration
+                : 0;
           return (
             <PressableSpring
               key={tab.id}

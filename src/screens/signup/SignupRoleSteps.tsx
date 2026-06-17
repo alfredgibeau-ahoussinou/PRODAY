@@ -5,16 +5,17 @@ import { SignupOptionPicker } from '../../components/signup/SignupOptionPicker';
 import { SignupStepLayout } from './SignupStepLayout';
 import { SignupFooterButton } from './SignupFooterButton';
 import type { SignupForm } from './useSignupForm';
+import { getStepMetaForRole } from './signupRoleExperience';
 import {
-  getStepMetaForRole,
-  getMedicalPracticeMeta,
-  MEDICAL_SPECIALTY_CONFIGS,
-  getMedicalConfig,
-} from './signupRoleExperience';
+  getMedicalConfigById,
+  getMedicalPracticeMetaById,
+  getMedicalSpecialtyConfigs,
+} from './signupMedicalI18n';
 import { getProStepMeta } from './signupProConfig';
 import { getSanteStepMeta } from './signupSanteConfig';
 import type { SignupPageId } from './signupFlowConfig';
 import { useSignupFlowTheme } from './SignupFlowContext';
+import { useTranslation } from '../../context/LocaleContext';
 import { spacing, radius } from '../../theme/designTokens';
 
 type StepProps = {
@@ -31,11 +32,12 @@ const RoleStepShell: React.FC<
   StepProps & { page: SignupPageId; children: React.ReactNode; hint?: string }
 > = ({ form, page, children, hint, ...layout }) => {
   const { colors, isProSignup, isSanteSignup } = useSignupFlowTheme();
+  const { t } = useTranslation();
   const meta = isSanteSignup
-    ? getSanteStepMeta(page)
+    ? getSanteStepMeta(page, t)
     : isProSignup
-      ? getProStepMeta(page)
-      : getStepMetaForRole(page, form.role);
+      ? getProStepMeta(page, t)
+      : getStepMetaForRole(page, form.role, t);
   return (
     <SignupStepLayout
       {...layout}
@@ -46,7 +48,7 @@ const RoleStepShell: React.FC<
       contentKey={`${page}-${form.role}`}
       onBack={layout.onBack}
       footer={
-        <SignupFooterButton label="Continuer" onPress={() => form.advanceFromCurrentPage()} />
+        <SignupFooterButton label={t('common.continue')} onPress={() => form.advanceFromCurrentPage()} />
       }
     >
       {hint ? (
@@ -59,183 +61,207 @@ const RoleStepShell: React.FC<
   );
 };
 
-export const SignupCoachProStep: React.FC<StepProps> = (props) => (
-  <RoleStepShell
-    {...props}
-    page="coach_pro"
-    hint="Diplôme BEF, UEFA ou équivalent — photographié après confirmation email."
-  >
+import { getSignupRoleStepCopy } from './signupRoleStepCopy';
+
+export const SignupCoachProStep: React.FC<StepProps> = (props) => {
+  const { t } = useTranslation();
+  const copy = getSignupRoleStepCopy(t);
+  return (
+  <RoleStepShell {...props} page="coach_pro" hint={copy.coach.hint}>
     <AuthTextField
-      label="Diplôme ou certification *"
+      label={copy.coach.diplomaLabel}
       icon="school"
-      placeholder="Ex. BEF, UEFA B, DESJEPS…"
+      placeholder={copy.coach.diplomaPlaceholder}
       value={props.form.professionalHeadline}
       onChangeText={props.form.setProfessionalHeadline}
       error={props.form.fieldErrors.professionalHeadline}
     />
     <AuthTextField
-      label="Ville d’exercice *"
+      label={copy.coach.cityLabel}
       icon="location"
-      placeholder="Ex. Lyon, Marseille…"
+      placeholder={copy.coach.cityPlaceholder}
       value={props.form.city}
       onChangeText={props.form.setCity}
       error={props.form.fieldErrors.city}
     />
     <AuthTextField
-      label="Département (optionnel)"
+      label={t('signup.form.departmentOptional')}
       icon="location"
-      placeholder="Ex. 69, 13…"
+      placeholder={copy.departmentPlaceholder}
       value={props.form.department}
       onChangeText={props.form.setDepartment}
       error={props.form.fieldErrors.department}
     />
   </RoleStepShell>
-);
+  );
+};
 
-export const SignupClubProStep: React.FC<StepProps> = (props) => (
-  <RoleStepShell {...props} page="club_pro" hint="Mandat ou statuts du club — vérification IA après l’email.">
+export const SignupClubProStep: React.FC<StepProps> = (props) => {
+  const { t } = useTranslation();
+  const copy = getSignupRoleStepCopy(t);
+  return (
+  <RoleStepShell {...props} page="club_pro" hint={copy.club.hint}>
     <AuthTextField
-      label="Nom du club / structure *"
+      label={copy.club.nameLabel}
       icon="business"
-      placeholder="Ex. FC Exemple, AS Locale…"
+      placeholder={copy.club.namePlaceholder}
       value={props.form.structureName}
       onChangeText={props.form.setStructureName}
       error={props.form.fieldErrors.structureName}
     />
     <AuthTextField
-      label="Ville *"
+      label={copy.club.cityLabel}
       icon="location"
-      placeholder="Ex. Paris, Lille…"
+      placeholder={copy.club.cityPlaceholder}
       value={props.form.city}
       onChangeText={props.form.setCity}
       error={props.form.fieldErrors.city}
     />
     <AuthTextField
-      label="Département *"
+      label={t('signup.form.departmentRequired')}
       icon="location"
-      placeholder="Ex. 75, 59, 971…"
+      placeholder={copy.departmentPlaceholderWide}
       value={props.form.department}
       onChangeText={props.form.setDepartment}
       error={props.form.fieldErrors.department}
     />
   </RoleStepShell>
-);
+  );
+};
 
-export const SignupAgentProStep: React.FC<StepProps> = (props) => (
-  <RoleStepShell {...props} page="agent_pro" hint="Licence agent — contrôle automatique après validation email.">
+export const SignupAgentProStep: React.FC<StepProps> = (props) => {
+  const { t } = useTranslation();
+  const copy = getSignupRoleStepCopy(t);
+  return (
+  <RoleStepShell {...props} page="agent_pro" hint={copy.agent.hint}>
     <AuthTextField
-      label="N° licence ou agrément *"
+      label={copy.agent.licenseLabel}
       icon="document"
-      placeholder="Ex. licence FIFA / FFF…"
+      placeholder={copy.agent.licensePlaceholder}
       value={props.form.professionalHeadline}
       onChangeText={props.form.setProfessionalHeadline}
       error={props.form.fieldErrors.professionalHeadline}
     />
     <AuthTextField
-      label="Ville principale *"
+      label={copy.agent.cityLabel}
       icon="location"
-      placeholder="Ex. Paris, Bordeaux…"
+      placeholder={copy.agent.cityPlaceholder}
       value={props.form.city}
       onChangeText={props.form.setCity}
       error={props.form.fieldErrors.city}
     />
     <AuthTextField
-      label="Département *"
+      label={t('signup.form.departmentRequired')}
       icon="location"
-      placeholder="Ex. 75, 33…"
+      placeholder={copy.departmentPlaceholder}
       value={props.form.department}
       onChangeText={props.form.setDepartment}
       error={props.form.fieldErrors.department}
     />
   </RoleStepShell>
-);
+  );
+};
 
-export const SignupRecruiterProStep: React.FC<StepProps> = (props) => (
+export const SignupRecruiterProStep: React.FC<StepProps> = (props) => {
+  const { t } = useTranslation();
+  const copy = getSignupRoleStepCopy(t);
+  return (
   <RoleStepShell
     {...props}
     page="recruiter_pro"
-    hint="Mandat recruteur ou attestation club — vérification IA après l’email."
+    hint={copy.recruiter.hint}
   >
     <AuthTextField
-      label="Spécialité recrutement *"
+      label={copy.recruiter.specialtyLabel}
       icon="search"
-      placeholder="Ex. Scout indépendant, resp. recrutement, détection…"
+      placeholder={copy.recruiter.specialtyPlaceholder}
       value={props.form.professionalHeadline}
       onChangeText={props.form.setProfessionalHeadline}
       error={props.form.fieldErrors.professionalHeadline}
     />
     <AuthTextField
-      label="Ville principale *"
+      label={copy.recruiter.cityLabel}
       icon="location"
-      placeholder="Ex. Lyon, Lille…"
+      placeholder={copy.recruiter.cityPlaceholder}
       value={props.form.city}
       onChangeText={props.form.setCity}
       error={props.form.fieldErrors.city}
     />
     <AuthTextField
-      label="Département *"
+      label={t('signup.form.departmentRequired')}
       icon="location"
-      placeholder="Ex. 69, 59…"
+      placeholder={copy.departmentPlaceholder}
       value={props.form.department}
       onChangeText={props.form.setDepartment}
       error={props.form.fieldErrors.department}
     />
   </RoleStepShell>
-);
+  );
+};
 
-export const SignupOrganizerProStep: React.FC<StepProps> = (props) => (
-  <RoleStepShell {...props} page="organizer_pro" hint="Tournois, détections — justificatif structure après l’email.">
+export const SignupOrganizerProStep: React.FC<StepProps> = (props) => {
+  const { t } = useTranslation();
+  const copy = getSignupRoleStepCopy(t);
+  return (
+  <RoleStepShell {...props} page="organizer_pro" hint={copy.organizer.hint}>
     <AuthTextField
-      label="Structure / collectif *"
+      label={copy.organizer.structureLabel}
       icon="trophy"
-      placeholder="Ex. Ligue locale, Asso events…"
+      placeholder={copy.organizer.structurePlaceholder}
       value={props.form.structureName}
       onChangeText={props.form.setStructureName}
       error={props.form.fieldErrors.structureName}
     />
     <AuthTextField
-      label="Ville *"
+      label={copy.organizer.cityLabel}
       icon="location"
-      placeholder="Ex. Toulouse, Nantes…"
+      placeholder={copy.organizer.cityPlaceholder}
       value={props.form.city}
       onChangeText={props.form.setCity}
       error={props.form.fieldErrors.city}
     />
     <AuthTextField
-      label="Département (optionnel)"
+      label={t('signup.form.departmentOptional')}
       icon="location"
-      placeholder="Ex. 31, 44…"
+      placeholder={copy.departmentPlaceholder}
       value={props.form.department}
       onChangeText={props.form.setDepartment}
       error={props.form.fieldErrors.department}
     />
   </RoleStepShell>
-);
+  );
+};
 
-export const SignupSponsorProStep: React.FC<StepProps> = (props) => (
-  <RoleStepShell {...props} page="sponsor_pro" hint="Votre marque sera visible sur l’onglet Sponsors des clubs locaux.">
+export const SignupSponsorProStep: React.FC<StepProps> = (props) => {
+  const { t } = useTranslation();
+  const copy = getSignupRoleStepCopy(t);
+  return (
+  <RoleStepShell {...props} page="sponsor_pro" hint={copy.sponsor.hint}>
     <AuthTextField
-      label="Marque ou enseigne *"
+      label={copy.sponsor.brandLabel}
       icon="star-four-points"
-      placeholder="Ex. Sport Shop, Banque locale…"
+      placeholder={copy.sponsor.brandPlaceholder}
       value={props.form.structureName}
       onChangeText={props.form.setStructureName}
       error={props.form.fieldErrors.structureName}
     />
     <AuthTextField
-      label="Ville / territoire *"
+      label={copy.sponsor.territoryLabel}
       icon="location"
-      placeholder="Ex. Région Île-de-France, Lyon…"
+      placeholder={copy.sponsor.territoryPlaceholder}
       value={props.form.city}
       onChangeText={props.form.setCity}
       error={props.form.fieldErrors.city}
     />
   </RoleStepShell>
-);
+  );
+};
 
 export const SignupMedicalSpecialtyStep: React.FC<StepProps> = (props) => {
   const { colors } = useSignupFlowTheme();
-  const meta = getStepMetaForRole('medical_specialty', 'physio');
+  const { t } = useTranslation();
+  const meta = getStepMetaForRole('medical_specialty', 'physio', t);
+  const configs = getMedicalSpecialtyConfigs(t);
 
   return (
     <SignupStepLayout
@@ -246,12 +272,12 @@ export const SignupMedicalSpecialtyStep: React.FC<StepProps> = (props) => {
       stepName={meta.stepName}
       contentKey="medical-specialty"
       footer={
-        <SignupFooterButton label="Continuer" onPress={() => props.form.advanceFromCurrentPage()} />
+        <SignupFooterButton label={t('signup.form.continue')} onPress={() => props.form.advanceFromCurrentPage()} />
       }
     >
       <View style={styles.specialtyGrid}>
-        {MEDICAL_SPECIALTY_CONFIGS.map((cfg) => {
-          const active = props.form.medicalSpecialty === cfg.label;
+        {configs.map((cfg) => {
+          const active = props.form.medicalSpecialty === cfg.id;
           return (
             <Pressable
               key={cfg.id}
@@ -260,7 +286,7 @@ export const SignupMedicalSpecialtyStep: React.FC<StepProps> = (props) => {
                 { borderColor: colors.border, backgroundColor: colors.surface },
                 active && { borderColor: colors.accent, backgroundColor: colors.accentSoft },
               ]}
-              onPress={() => props.form.setMedicalSpecialty(cfg.label)}
+              onPress={() => props.form.setMedicalSpecialty(cfg.id)}
             >
               <Text style={[styles.specialtyTag, active && { color: colors.accent }]}>
                 {cfg.shortLabel}
@@ -281,8 +307,9 @@ export const SignupMedicalSpecialtyStep: React.FC<StepProps> = (props) => {
 };
 
 export const SignupMedicalPracticeStep: React.FC<StepProps> = (props) => {
-  const cfg = getMedicalConfig(props.form.medicalSpecialty);
-  const meta = getMedicalPracticeMeta(props.form.medicalSpecialty);
+  const { t } = useTranslation();
+  const cfg = getMedicalConfigById(props.form.medicalSpecialty, t);
+  const meta = getMedicalPracticeMetaById(props.form.medicalSpecialty, t);
   const { colors } = useSignupFlowTheme();
 
   return (
@@ -294,7 +321,7 @@ export const SignupMedicalPracticeStep: React.FC<StepProps> = (props) => {
       stepName={meta.stepName}
       contentKey={`medical-practice-${cfg.id}`}
       footer={
-        <SignupFooterButton label="Continuer" onPress={() => props.form.advanceFromCurrentPage()} />
+        <SignupFooterButton label={t('signup.form.continue')} onPress={() => props.form.advanceFromCurrentPage()} />
       }
     >
       <View style={[styles.hintBox, { backgroundColor: colors.accentSoft, borderColor: colors.border }]}>
@@ -308,17 +335,17 @@ export const SignupMedicalPracticeStep: React.FC<StepProps> = (props) => {
         error={props.form.fieldErrors.medicalPracticeFocus}
       />
       <AuthTextField
-        label="Ville d’exercice *"
+        label={t('signup.form.cityPractice')}
         icon="location"
-        placeholder="Ex. Paris, Strasbourg…"
+        placeholder={t('signup.form.cityPracticePlaceholder')}
         value={props.form.city}
         onChangeText={props.form.setCity}
         error={props.form.fieldErrors.city}
       />
       <AuthTextField
-        label="Département (optionnel)"
+        label={t('signup.form.departmentOptional')}
         icon="location"
-        placeholder="Ex. 67, 75…"
+        placeholder={t('signup.form.deptPlaceholderShort')}
         value={props.form.department}
         onChangeText={props.form.setDepartment}
         error={props.form.fieldErrors.department}

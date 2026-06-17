@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Alert } from 'react-native';
-import * as DocumentPicker from 'expo-document-picker';
 import type { User } from '../models/User';
 import { profileService } from '../services/profile.service';
-import { pickProfileImage } from '../utils/pickMedia';
+import { pickGalleryImage, pickProfileImage } from '../utils/pickMedia';
 import { EditProfileScreen } from './EditProfileScreen';
 import { VerificationFlowScreen } from './VerificationFlowScreen';
 import { PlayerVerificationScreen } from './PlayerVerificationScreen';
@@ -13,9 +12,9 @@ import { playerVerificationProgress } from '../models/User';
 import { VerificationSuccessScreen } from './VerificationSuccessScreen';
 import { ParentalControlScreen } from './ParentalControlScreen';
 import { GuardianPortalScreen } from './GuardianPortalScreen';
+import { TeamManagementScreen } from './TeamManagementScreen';
 import { CreateClubScreen } from './CreateClubScreen';
 import { JoinClubScreen } from './JoinClubScreen';
-import { MyPaymentsScreen } from './MyPaymentsScreen';
 import { ClubAnnouncementsScreen } from './ClubAnnouncementsScreen';
 import { MyApplicationsScreen } from './MyApplicationsScreen';
 import { PlayerProfileScreen } from './PlayerProfileScreen';
@@ -29,16 +28,17 @@ import { useTabNavigationActions } from '../hooks/useTabNavigationActions';
 import { computeProdayPulse, getPulseBreakdown } from '../utils/prodayPulse';
 import { ProfileHomeScreen } from '../components/profile/ProfileHomeScreen';
 import type { ProfileQuickAction } from '../components/profile/ProfileQuickGrid';
-import { ProDayScreenCanvas } from '../components/ui/ProDayScreenCanvas';
 import { isMinorUser } from '../utils/minor';
-import { shouldShowPlayerVerificationReminder } from '../utils/onboardingGate';
+import { needsOnboardingDocumentUpload, shouldShowPlayerVerificationReminder } from '../utils/onboardingGate';
+import { pickVerificationFromGallery, pickVerificationPdf } from '../utils/pickVerificationDocument';
+import { maybeRecordProfileCompletion } from '../utils/recordV3Action';
 import { verificationDocumentTypeForRole } from '../models/User';
 import { useAppTheme } from '../context/ProductLineContext';
 import { isMedicalPractitionerRole } from '../content/medicalExperience';
 import { useSubscriptionOptional } from '../context/SubscriptionContext';
 import { useProDayBrain } from '../hooks/useProDayBrain';
 import { useSectionIntelligence } from '../hooks/useSectionIntelligence';
-import { maybeRecordProfileCompletion } from '../utils/recordV3Action';
+import { OnboardingDocumentsScreen } from './OnboardingDocumentsScreen';
 
 interface ProfileScreenProps {
   profile: User;
@@ -51,20 +51,22 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
   onRefresh,
   onSignOut,
 }) => {
+  const [showDocumentVerification, setShowDocumentVerification] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [showVerificationFlow, setShowVerificationFlow] = useState(false);
   const [showPlayerVerification, setShowPlayerVerification] = useState(false);
   const { appSpace, setAppSpace } = useAppSpace();
   const [showVerificationSuccess, setShowVerificationSuccess] = useState(false);
   const [showParental, setShowParental] = useState(false);
-  const [showGuardianPortal, setShowGuardianPortal] = useState(false);
+  const [showGuardian, setShowGuardian] = useState(false);
+  const [showTeamManagement, setShowTeamManagement] = useState(false);
   const [showCreateClub, setShowCreateClub] = useState(false);
   const [showJoinClub, setShowJoinClub] = useState(false);
-  const [showPayments, setShowPayments] = useState(false);
   const [showAnnouncements, setShowAnnouncements] = useState(false);
   const [showApplications, setShowApplications] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [uploadingGallery, setUploadingGallery] = useState(false);
+  const [savingPosition, setSavingPosition] = useState(false);
   const [docLoading, setDocLoading] = useState(false);
   const [remindingId, setRemindingId] = useState<string | null>(null);
   const { pendingProfileView, clearPendingProfile } = useTabNavigation();
@@ -114,6 +116,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
     profile.role === 'club';
   const isPlayerMinor = profile.role === 'player' && isMinorUser(profile);
   const showPlayerVerificationReminder = shouldShowPlayerVerificationReminder(profile);
+  const needsDocumentUpload = needsOnboardingDocumentUpload(profile);
   const playerVerifyProgress = showPlayerVerificationReminder
     ? playerVerificationProgress(profile.player_verification)
     : null;
@@ -143,7 +146,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
   };
 
   const handleGalleryAdd = async () => {
-    const file = await pickProfileImage();
+    const file = await pickGalleryImage();
     if (!file) return;
     setUploadingGallery(true);
     try {
@@ -174,19 +177,28 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
     ]);
   };
 
-  const handlePickDocument = async () => {
-    const pick = await DocumentPicker.getDocumentAsync({
-      type: ['image/*', 'application/pdf'],
-      copyToCacheDirectory: true,
-    });
-    if (pick.canceled || !pick.assets?.[0]) return;
+  const handlePositionChange = async (position: string) => {
+    if (profile.profile.position === position) return;
+    setSavingPosition(true);
+    try {
+      await profileService.updateProfile(profile.uid, { profile: { position } });
+      await onRefresh();
+    } catch (e) {
+      Alert.alert('Erreur', e instanceof Error ? e.message : 'Mise à jour impossible.');
+    } finally {
+      setSavingPosition(false);
+    }
+  };
 
-    const asset = pick.assets[0];
+  const handlePickDocument = async () => {
+    const file = (await pickVerificationFromGallery()) ?? (await pickVerificationPdf());
+    if (!file) return;
+
     setDocLoading(true);
     try {
       const result = await profileService.uploadVerificationDocument(
         profile.uid,
-        { uri: asset.uri, mimeType: asset.mimeType ?? 'image/jpeg' },
+        { uri: file.uri, mimeType: file.mimeType },
         verificationDocumentTypeForRole(profile.role)
       );
       if (!result.success) throw new Error(result.error);
@@ -249,6 +261,12 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
       profile.role === 'agent'
     ) {
       actions.push(
+        {
+          id: 'team',
+          label: 'Équipe',
+          icon: 'people',
+          onPress: () => setShowTeamManagement(true),
+        },
         {
           id: 'matchs',
           label: 'Matchs',
@@ -313,6 +331,21 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
     ]);
   };
 
+  if (showDocumentVerification && needsDocumentUpload) {
+    return (
+      <OnboardingDocumentsScreen
+        profile={profile}
+        onComplete={async () => {
+          await onRefresh();
+          setShowDocumentVerification(false);
+        }}
+        onSignOut={onSignOut}
+        onDismiss={() => setShowDocumentVerification(false)}
+        variant="profile"
+      />
+    );
+  }
+
   if (showEdit) {
     return (
       <EditProfileScreen
@@ -348,6 +381,17 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
   if (showParental) {
     return <ParentalControlScreen onBack={() => setShowParental(false)} />;
   }
+  if (showGuardian) {
+    return <GuardianPortalScreen onBack={() => setShowGuardian(false)} />;
+  }
+  if (showTeamManagement && canManageClub) {
+    return (
+      <TeamManagementScreen
+        profile={profile}
+        onBack={() => setShowTeamManagement(false)}
+      />
+    );
+  }
   if (showCreateClub) {
     return (
       <CreateClubScreen
@@ -368,9 +412,6 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
         }}
       />
     );
-  }
-  if (showPayments) {
-    return <MyPaymentsScreen profile={profile} onBack={() => setShowPayments(false)} />;
   }
   if (showAnnouncements) {
     return (
@@ -418,8 +459,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
   }
 
   return (
-    <ProDayScreenCanvas flat>
-      <ProfileHomeScreen
+    <ProfileHomeScreen
         profile={profile}
         productLine={productLine}
         pulse={pulse}
@@ -442,6 +482,8 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
         onOrganizerPress={handleOrganizerPress}
         onRemind={handleQuickRemind}
         showPlayerVerificationReminder={showPlayerVerificationReminder}
+        needsDocumentUpload={needsDocumentUpload}
+        onDocumentVerification={() => setShowDocumentVerification(true)}
         playerVerifyLabel={playerVerifyProgress?.label}
         pendingVerify={pendingVerify}
         docLoading={docLoading}
@@ -459,21 +501,22 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
         onPickDocument={handlePickDocument}
         onVerificationFlow={() => setShowVerificationFlow(true)}
         onAnnouncements={() => setShowAnnouncements(true)}
-        onPayments={() => setShowPayments(true)}
+        onTeamManagement={() => setShowTeamManagement(true)}
         onCreateClub={() => setShowCreateClub(true)}
         onJoinClub={() => setShowJoinClub(true)}
         onVerificationSuccess={() => setShowVerificationSuccess(true)}
         onParental={() => setShowParental(true)}
-        onGuardianPortal={() => setShowGuardianPortal(true)}
+        onGuardian={() => setShowGuardian(true)}
         onLegal={(id) => setLegalDocument(id)}
         onSignOut={handleSignOutPress}
         onSetAppSpace={(space) => void setAppSpace(space)}
         onGalleryAdd={handleGalleryAdd}
         onGalleryRemove={handleGalleryRemove}
+        onPositionChange={handlePositionChange}
+        savingPosition={savingPosition}
         quickActions={quickActions}
         intelligence={intelligence}
         progression={brain.progression}
       />
-    </ProDayScreenCanvas>
   );
 };

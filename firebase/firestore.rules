@@ -64,6 +64,11 @@ service cloud.firestore {
       return resource.data.get('participant_ids', []).hasAny([request.auth.uid]);
     }
 
+    function isMessageThreadParticipant(threadId) {
+      return get(/databases/$(database)/documents/message_threads/$(threadId))
+        .data.get('participant_ids', []).hasAny([request.auth.uid]);
+    }
+
     function isValidThreadCreate() {
       return request.resource.data.participant_ids.size() == 2
         && request.resource.data.participant_ids.hasAny([request.auth.uid])
@@ -84,9 +89,18 @@ service cloud.firestore {
       return userDoc(request.auth.uid).data.is_verified == true;
     }
 
+    function hasSubmittedOnboardingDocuments() {
+      let u = userDoc(request.auth.uid).data;
+      let identityStatus = u.get('player_verification', {}).get('identity', {}).get('status', 'not_submitted');
+      return u.onboarding_documents_submitted == true
+        || u.role == 'sponsor'
+        || (u.role == 'player' && (identityStatus == 'pending' || identityStatus == 'verified'));
+    }
+
     function canSendMessage() {
       let role = userDoc(request.auth.uid).data.role;
       return isSignedIn()
+        && hasSubmittedOnboardingDocuments()
         && (isVerifiedUser() || role == 'physio');
     }
 
@@ -133,8 +147,23 @@ service cloud.firestore {
     function isGuardianOfUser(data) {
       return isSignedIn()
         && request.auth.token.email != null
-        && data.get('parental_settings', {}).get('guardian_email', '') == request.auth.token.email
-        && data.get('parental_settings', {}).get('is_minor', false) == true;
+        && data.get('parental_settings', {}).get('is_minor', false) == true
+        && (
+          data.get('parental_settings', {}).get('guardian_email', '') == request.auth.token.email
+          || data.get('parental_settings', {}).get('guardian_email_secondary', '') == request.auth.token.email
+        );
+    }
+
+    function isCoGuardianInviteLink() {
+      return isSignedIn()
+        && request.auth.token.email != null
+        && resource.data.get('parental_settings', {}).get('is_minor', false) == true
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['parental_settings', 'updated_at'])
+        && request.resource.data.parental_settings.guardian_invite_code
+            == resource.data.parental_settings.guardian_invite_code
+        && request.resource.data.parental_settings.guardian_email
+            == resource.data.parental_settings.guardian_email
+        && request.resource.data.parental_settings.guardian_email_secondary == request.auth.token.email;
     }
 
     function guardianParentalPatchValid(prev, next) {
@@ -167,6 +196,7 @@ service cloud.firestore {
         && request.resource.data.verification_status in ['PENDING', 'NOT_REQUIRED'];
       allow update: if isAdmin()
         || isGuardianParentalUpdate()
+        || isCoGuardianInviteLink()
         || (isOwner(userId) && verificationFieldsUnchanged()
             && (minorParentalProtected() || isOwnerParentalRuntimeSync()));
       allow delete: if isAdmin();
@@ -186,14 +216,20 @@ service cloud.firestore {
       allow read, write: if isOwner(userId);
     }
 
+    match /users/{userId}/v3_prefs/{docId} {
+      allow read, write: if isOwner(userId);
+    }
+
     match /messages/{msgId} {
       allow create: if canSendMessage()
         && request.resource.data.sender_id == request.auth.uid
+        && request.resource.data.thread_id is string
+        && isMessageThreadParticipant(request.resource.data.thread_id)
         && request.resource.data.body.size() > 0
         && request.resource.data.body.size() <= 2000;
       allow read: if isSignedIn()
-        && (resource.data.sender_id == request.auth.uid
-            || resource.data.receiver_id == request.auth.uid);
+        && resource.data.thread_id is string
+        && isMessageThreadParticipant(resource.data.thread_id);
     }
 
     match /tournaments/{tournamentId} {
@@ -249,6 +285,24 @@ service cloud.firestore {
         && (resource.data.organizer_uid == request.auth.uid || isAdmin());
     }
 
+    match /carpool_offers/{offerId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn()
+        && request.resource.data.driver_uid == request.auth.uid
+        && request.resource.data.seats is int
+        && request.resource.data.seats >= 1
+        && request.resource.data.seats <= 8;
+      allow update: if isSignedIn()
+        && (
+          resource.data.driver_uid == request.auth.uid
+          || (
+            request.resource.data.diff(resource.data).affectedKeys().hasOnly(['passengers', 'updated_at'])
+            && request.resource.data.driver_uid == resource.data.driver_uid
+          )
+        );
+      allow delete: if isSignedIn() && resource.data.driver_uid == request.auth.uid;
+    }
+
     match /team_payment_requests/{requestId} {
       allow read: if isSignedIn();
       allow create, update, delete: if isStaffOrAdmin();
@@ -279,6 +333,15 @@ service cloud.firestore {
     match /sponsor_offers/{offerId} {
       allow read: if true;
       allow write: if isSignedIn();
+    }
+
+    match /sponsor_contributions/{contributionId} {
+      allow read: if isSignedIn()
+        && (resource.data.sponsor_uid == request.auth.uid || isAdmin());
+      allow create: if isSignedIn()
+        && request.resource.data.sponsor_uid == request.auth.uid
+        && request.resource.data.amount_eur > 0;
+      allow update, delete: if isAdmin();
     }
 
     match /clubs/{clubId} {
@@ -438,6 +501,38 @@ service cloud.firestore {
             && request.resource.data.diff(resource.data).affectedKeys()
               .hasOnly(['status', 'notes', 'updated_at']));
       allow delete: if isAdmin();
+    }
+
+    match /subscription_purchases/{purchaseId} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
+    /** Reels communautaires — modération avant publication */
+    match /community_reels/{reelId} {
+      allow read: if isAdmin()
+        || (isSignedIn() && resource.data.status == 'approved')
+        || (isSignedIn() && resource.data.author_uid == request.auth.uid);
+      allow create: if isSignedIn()
+        && request.resource.data.author_uid == request.auth.uid
+        && userDoc(request.auth.uid).data.role in ['player', 'club', 'coach']
+        && request.resource.data.status == 'pending'
+        && request.resource.data.theme in ['skills', 'motivation', 'nutrition'];
+      allow update: if isAdmin();
+      allow delete: if isAdmin()
+        || (isSignedIn()
+            && resource.data.author_uid == request.auth.uid
+            && resource.data.status == 'pending');
+    }
+
+    /** Signalements reels */
+    match /reel_reports/{reportId} {
+      allow read: if isAdmin();
+      allow create: if isSignedIn()
+        && request.resource.data.reporter_uid == request.auth.uid
+        && request.resource.data.bookmark_key is string
+        && request.resource.data.reason is string;
+      allow update, delete: if isAdmin();
     }
   }
 }

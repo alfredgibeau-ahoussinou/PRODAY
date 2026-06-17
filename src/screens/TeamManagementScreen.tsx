@@ -14,9 +14,7 @@ import { Icon } from '../components/ui/Icon';
 import type { User } from '../models/User';
 import type { PlayerMatchSheetStat, TeamEvent } from '../models/TeamEvent';
 import { countRsvpYes, getPendingInviteeUids } from '../models/TeamEvent';
-import type { TeamPaymentRequest } from '../models/TeamFinance';
 import { teamEventsService } from '../services/teamEvents.service';
-import { teamFinanceService } from '../services/teamFinance.service';
 import { usersService } from '../services/users.service';
 import { useAuth } from '../context/AuthContext';
 import { TeamEventDetailScreen } from './TeamEventDetailScreen';
@@ -32,7 +30,7 @@ import { radius, spacing } from '../theme/designTokens';
 import { useThemedScreen } from '../hooks/useThemedScreen';
 import type { AppColors } from '../theme/universeTheme';
 
-type TeamTab = 'planning' | 'roster' | 'attendance' | 'stats' | 'payments';
+type TeamTab = 'planning' | 'roster' | 'attendance' | 'stats';
 type HubView = 'hub' | 'event' | 'create' | 'join' | 'announcements' | 'club';
 
 interface TeamManagementScreenProps {
@@ -55,7 +53,6 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
   const [tab, setTab] = useState<TeamTab>('planning');
   const [loading, setLoading] = useState(true);
   const [events, setEvents] = useState<TeamEvent[]>([]);
-  const [payments, setPayments] = useState<TeamPaymentRequest[]>([]);
   const [membersCount, setMembersCount] = useState(0);
   const [members, setMembers] = useState<User[]>([]);
   const [seasonEvents, setSeasonEvents] = useState<TeamEvent[]>([]);
@@ -66,14 +63,12 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [listEvents, listPayments, members, clubSeasonEvents] = await Promise.all([
+      const [listEvents, members, clubSeasonEvents] = await Promise.all([
         teamEventsService.listForUser(profile.uid, clubId),
-        clubId ? teamFinanceService.listByClub(clubId, 80) : Promise.resolve([]),
         clubId ? usersService.listMembersByClubId(clubId) : Promise.resolve([]),
         clubId ? teamEventsService.listForClub(clubId, 120) : Promise.resolve([]),
       ]);
       setEvents(listEvents);
-      setPayments(listPayments);
       setMembersCount(members.length);
       setMembers(members);
       setSeasonEvents(clubSeasonEvents);
@@ -106,15 +101,6 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
     [seasonEvents]
   );
 
-  const paymentStats = useMemo(() => {
-    const expected = payments.reduce((acc, p) => acc + p.amount_eur, 0);
-    const received = payments
-      .filter((p) => p.status === 'paid')
-      .reduce((acc, p) => acc + p.amount_eur, 0);
-    const late = payments.filter((p) => p.status === 'late').length;
-    return { expected, received, late };
-  }, [payments]);
-
   const topStats = useMemo(() => {
     const goals = new Map<string, number>();
     const assists = new Map<string, number>();
@@ -128,95 +114,6 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
     const topAssists = [...assists.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3);
     return { topGoals, topAssists };
   }, [events]);
-
-  const createBulkPayments = async () => {
-    if (!clubId) {
-      Alert.alert('Club requis', 'Associez un club avant de gérer les cotisations.');
-      return;
-    }
-    const players = members.filter((m) => m.role === 'player');
-    const targets = players.length > 0 ? players : members;
-    if (targets.length === 0) {
-      Alert.alert('Effectif vide', 'Aucun membre dans le club.');
-      return;
-    }
-    Alert.alert(
-      'Cotisation équipe',
-      `Créer une demande de 25 € pour ${targets.length} membre(s) ?`,
-      [
-        { text: 'Annuler', style: 'cancel' },
-        {
-          text: 'Créer',
-          onPress: async () => {
-            const n = await teamFinanceService.createBulkForClub(
-              clubId,
-              targets.map((m) => ({ uid: m.uid, name: m.display_name })),
-              {
-                label: 'Cotisation mensuelle',
-                amount_eur: 25,
-                due_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-                created_by_uid: profile.uid,
-              }
-            );
-            await load();
-            Alert.alert('Cotisations créées', `${n} demande(s) envoyée(s).`);
-          },
-        },
-      ]
-    );
-  };
-
-  const createQuickPayment = async () => {
-    if (!clubId) {
-      Alert.alert('Club requis', 'Associez un club avant de gérer les cotisations.');
-      return;
-    }
-    const members = await usersService.listMembersByClubId(clubId);
-    const first = members.find((m) => m.role === 'player') ?? members[0];
-    if (!first) {
-      Alert.alert('Membres manquants', 'Aucun membre trouvé pour ce club.');
-      return;
-    }
-    await teamFinanceService.create({
-      club_id: clubId,
-      label: 'Cotisation mensuelle',
-      amount_eur: 25,
-      due_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-      member_uid: first.uid,
-      member_name: first.display_name,
-      created_by_uid: profile.uid,
-    });
-    await load();
-    Alert.alert('Cotisation créée', `Demande envoyée à ${first.display_name}.`);
-  };
-
-  const markPaid = async (payment: TeamPaymentRequest) => {
-    await teamFinanceService.setStatus(payment.id, 'paid', new Date());
-    await load();
-  };
-
-  const markOverdue = async () => {
-    if (!clubId) return;
-    const n = await teamFinanceService.markOverdueByClub(clubId);
-    await load();
-    Alert.alert('Relance retards', n > 0 ? `${n} cotisation(s) marquée(s) en retard.` : 'Aucun retard détecté.');
-  };
-
-  const exportFinanceCsv = async () => {
-    const csv = teamFinanceService.toCsv(payments);
-    try {
-      await Share.share({
-        message: csv,
-        title: 'Cotisations ProDay',
-      });
-    } catch {
-      Alert.alert(
-        'Export CSV',
-        `Export prêt (${payments.length} lignes). Copiez depuis la console développeur si besoin.`
-      );
-      console.log('[TeamManagementScreen] payments.csv\n' + csv);
-    }
-  };
 
   const updateMyAttendance = async (
     event: TeamEvent,
@@ -433,24 +330,11 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
     <View style={[styles.root, rootStyle]}>
       <ScreenHeader title="Gestion équipe" onBack={onBack} centered />
       <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.hero}>
-          <Text style={styles.heroTitle}>MVP SportEasy — Club Hub</Text>
-          <Text style={styles.heroSub}>
-            Planning, présences, stats et paiements dans un seul espace.
-          </Text>
-          <View style={styles.kpiRow}>
-            <Kpi styles={styles} label="Membres" value={String(membersCount)} />
-            <Kpi styles={styles} label="Événements" value={String(events.length)} />
-            <Kpi styles={styles} label="Paiements" value={String(payments.length)} />
-          </View>
-        </View>
-
         <View style={styles.tabs}>
           <TabBtn styles={styles} id="planning" label="Planning" tab={tab} setTab={setTab} />
           <TabBtn styles={styles} id="roster" label="Effectif" tab={tab} setTab={setTab} />
           <TabBtn styles={styles} id="attendance" label="Présences" tab={tab} setTab={setTab} />
           <TabBtn styles={styles} id="stats" label="Stats" tab={tab} setTab={setTab} />
-          <TabBtn styles={styles} id="payments" label="Paiements" tab={tab} setTab={setTab} />
         </View>
 
         {clubId ? (
@@ -727,41 +611,6 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
             </View>
           </View>
         ) : null}
-
-        {!loading && tab === 'payments' ? (
-          <View style={styles.card}>
-            <Text style={styles.sectionTitle}>Cotisations / trésorerie</Text>
-            <Row styles={styles} title="Attendu" subtitle="Total des demandes" right={`${paymentStats.expected} EUR`} />
-            <Row styles={styles} title="Reçu" subtitle="Paiements validés" right={`${paymentStats.received} EUR`} />
-            <Row styles={styles} title="En retard" subtitle="Demandes late" right={String(paymentStats.late)} />
-            <PressableSpring style={styles.primaryBtn} onPress={() => void createBulkPayments()}>
-              <Text style={styles.primaryBtnText}>Cotisation pour tout l&apos;effectif</Text>
-            </PressableSpring>
-            <PressableSpring style={styles.secondaryBtn} onPress={() => void createQuickPayment()}>
-              <Text style={styles.secondaryBtnText}>Cotisation rapide (1 membre)</Text>
-            </PressableSpring>
-            <View style={styles.inlineBtns}>
-              <MiniBtn styles={styles} label="Marquer retards" onPress={() => void markOverdue()} />
-              <MiniBtn styles={styles} label="Exporter CSV" onPress={() => void exportFinanceCsv()} />
-            </View>
-            {payments.slice(0, 4).map((p) => (
-              <PressableSpring
-                key={p.id}
-                style={styles.paymentRow}
-                onPress={() => void (p.status !== 'paid' ? markPaid(p) : Promise.resolve())}
-              >
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.rowTitle}>{p.member_name}</Text>
-                  <Text style={styles.rowSub}>{p.label}</Text>
-                </View>
-                <Text style={styles.rowRight}>
-                  {p.amount_eur} EUR · {p.status}
-                  {p.payment_method === 'stripe' ? ' · Stripe' : ''}
-                </Text>
-              </PressableSpring>
-            ))}
-          </View>
-        ) : null}
       </ScrollView>
     </View>
   );
@@ -821,24 +670,15 @@ const MiniBtn: React.FC<{
 function createStyles(c: AppColors) {
   return StyleSheet.create({
   root: { flex: 1 },
-  content: { padding: spacing.lg, paddingBottom: spacing.xxl },
-  hero: {
-    backgroundColor: c.surfaceInverse,
-    borderRadius: radius.lg,
-    padding: spacing.lg,
-    marginBottom: spacing.md,
-  },
-  heroTitle: { color: c.brandInverse, fontSize: 18, fontWeight: '900' },
-  heroSub: { color: c.heroMuted, fontSize: 12, marginTop: spacing.xs, lineHeight: 18 },
-  kpiRow: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.md },
+  content: { padding: spacing.lg, paddingBottom: spacing.xxl, gap: spacing.md },
   planningKpiRow: {
     flexDirection: 'row',
     gap: spacing.sm,
     marginBottom: spacing.md,
   },
-  kpi: { flex: 1, backgroundColor: 'rgba(255,255,255,0.12)', borderRadius: radius.md, padding: spacing.sm },
-  kpiValue: { color: c.brandInverse, fontSize: 17, fontWeight: '900' },
-  kpiLabel: { color: c.heroMuted, fontSize: 10, marginTop: 2 },
+  kpi: { flex: 1, backgroundColor: c.surfaceMuted, borderRadius: radius.md, padding: spacing.sm },
+  kpiValue: { color: c.text, fontSize: 17, fontWeight: '900' },
+  kpiLabel: { color: c.textSecondary, fontSize: 10, marginTop: 2 },
   tabs: { flexDirection: 'row', gap: spacing.xs, marginBottom: spacing.md, flexWrap: 'wrap' },
   tabBtn: {
     paddingHorizontal: spacing.md,
@@ -874,7 +714,7 @@ function createStyles(c: AppColors) {
   card: {
     backgroundColor: c.surface,
     borderRadius: radius.lg,
-    borderWidth: 1,
+    borderWidth: StyleSheet.hairlineWidth,
     borderColor: c.border,
     padding: spacing.md,
     gap: spacing.xs,
@@ -922,16 +762,6 @@ function createStyles(c: AppColors) {
     marginTop: spacing.xs,
   },
   secondaryBtnText: { color: c.textSecondary, fontSize: 12, fontWeight: '700' },
-  paymentRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    borderWidth: 1,
-    borderColor: c.border,
-    borderRadius: radius.md,
-    padding: spacing.sm,
-    marginTop: spacing.xs,
-  },
   inlineBlock: {
     marginTop: spacing.sm,
     backgroundColor: c.surfaceMuted,

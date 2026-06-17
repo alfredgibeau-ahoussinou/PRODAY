@@ -1,7 +1,6 @@
 import { validateMatchJoin, buildMatchRecommendations } from '../core/recommendation/recommendation.engine';
 import { computeProgression } from '../core/gamification/progression.engine';
 import { computeHealthSnapshot } from '../core/health/healthState.engine';
-import { isV3ShellEnabled } from '../config/featureFlags';
 
 describe('core Phase 0', () => {
   it('bloque un match si santé en surcharge', () => {
@@ -64,12 +63,5 @@ describe('core Phase 0', () => {
     expect(state.level).toBeGreaterThanOrEqual(1);
     expect(state.xp).toBeGreaterThan(0);
     expect(state.streakDays).toBe(5);
-  });
-
-  it('feature flag V3_SHELL désactivé par défaut', () => {
-    const prev = process.env.EXPO_PUBLIC_V3_SHELL;
-    delete process.env.EXPO_PUBLIC_V3_SHELL;
-    expect(isV3ShellEnabled()).toBe(false);
-    process.env.EXPO_PUBLIC_V3_SHELL = prev;
   });
 });

@@ -24,6 +24,8 @@ import { BRANDING_LOGOS } from '../../../content/brandingAssets';
 import { BRAND, spacing, radius, shadows } from '../../../theme/designTokens';
 import { useAppTheme } from '../../../context/ProductLineContext';
 import type { AppColors } from '../../../theme/universeTheme';
+import { PressableSpring } from '../../motion';
+import { ProDayText } from '../../ui/ProDayText';
 import { UniverseChoicePager } from './UniverseChoicePager';
 import type { ProductLineId } from '../../../models/ProductLine';
 
@@ -68,8 +70,12 @@ export const BrandRevealIntro: React.FC<BrandRevealIntroProps> = ({
         if (done) runOnJS(showChoice)();
       }
     );
-    return () => cancelAnimation(t);
-  }, [phase, showChoice, t]);
+    const fallback = setTimeout(showChoice, LOGO_REVEAL_MS + 400);
+    return () => {
+      clearTimeout(fallback);
+      cancelAnimation(t);
+    };
+  }, [phase, showChoice]);
 
   const sceneStyle = useAnimatedStyle(() => ({
     opacity: interpolate(t.value, [0, 0.1], [0, 1], Extrapolation.CLAMP),
@@ -81,9 +87,17 @@ export const BrandRevealIntro: React.FC<BrandRevealIntroProps> = ({
       accessibilityViewIsModal
     >
       {phase === 'reveal' ? (
-        <View style={[styles.center, { paddingBottom: insets.bottom }]}>
+        <PressableSpring
+          style={[styles.center, { paddingBottom: insets.bottom }]}
+          onPress={showChoice}
+          accessibilityRole="button"
+          accessibilityLabel="Continuer"
+        >
           <BrandMark logoW={logoW} logoH={logoH} t={t} />
-        </View>
+          <ProDayText variant="caption" muted style={styles.skipHint}>
+            Touchez pour continuer
+          </ProDayText>
+        </PressableSpring>
       ) : (
         <Animated.View
           entering={FadeInDown.duration(560).springify().damping(18).stiffness(120)}
@@ -180,6 +194,10 @@ function createStyles(c: AppColors) {
       color: c.textMuted,
       letterSpacing: 0.3,
       ...Platform.select({ android: { includeFontPadding: false } }),
+    },
+    skipHint: {
+      marginTop: spacing.lg,
+      textAlign: 'center',
     },
   });
 }

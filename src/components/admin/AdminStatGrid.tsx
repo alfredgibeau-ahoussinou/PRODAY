@@ -25,8 +25,21 @@ const ITEMS: {
   { key: 'friendlyMatches', label: 'Matchs', icon: 'handshake', getValue: (s) => s.friendlyMatches },
   { key: 'recruitmentPosts', label: 'Annonces', icon: 'search', getValue: (s) => s.recruitmentPosts },
   { key: 'clubs', label: 'Clubs', icon: 'business', getValue: (s) => s.clubs },
-  { key: 'paymentRequests', label: 'Cotisations', icon: 'calendar', getValue: (s) => s.paymentRequests },
   { key: 'applications', label: 'Candidatures', icon: 'document', getValue: (s) => s.applications },
+  {
+    key: 'pendingCommunityReels',
+    label: 'Reels attente',
+    icon: 'time',
+    getValue: (s) => s.pendingCommunityReels,
+    alert: true,
+  },
+  {
+    key: 'reelReports',
+    label: 'Signalements',
+    icon: 'warning',
+    getValue: (s) => s.reelReports,
+    alert: true,
+  },
   {
     key: 'pending',
     label: 'Vérif. attente',

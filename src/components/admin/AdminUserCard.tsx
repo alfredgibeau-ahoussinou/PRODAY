@@ -1,27 +1,16 @@
 import React, { useMemo } from 'react';
+import { useTranslation } from '../../context/LocaleContext';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import type { User, UserRole } from '../../models/User';
-import { ROLES_REQUIRING_VERIFICATION } from '../../models/User';
+import { userNeedsAdminVerificationReview } from '../../utils/adminUserVerification';
 import { Icon } from '../ui/Icon';
 import { useAdminStyles } from './adminStyles';
 import { spacing, radius } from '../../theme/designTokens';
 import type { AppColors } from '../../theme/universeTheme';
-
-const ROLE_LABEL: Record<UserRole, string> = {
-  player: 'Joueur',
-  coach: 'Coach',
-  club: 'Club',
-  agent: 'Agent',
-  recruiter: 'Recruteur',
-  organizer: 'Organisateur',
-  sponsor: 'Sponsor',
-  physio: 'Kinésithérapeute',
-};
+import { getRoleLabel } from '../../screens/signup/signupFlowConfig';
 
 function needsVerificationReview(user: User): boolean {
-  if (user.verification_status !== 'PENDING') return false;
-  if (user.role === 'player') return true;
-  return ROLES_REQUIRING_VERIFICATION.includes(user.role);
+  return userNeedsAdminVerificationReview(user);
 }
 
 interface AdminUserCardProps {
@@ -29,6 +18,7 @@ interface AdminUserCardProps {
   onApprove?: () => void;
   onReject?: () => void;
   onEdit?: () => void;
+  onViewDocuments?: () => void;
   onToggleActive?: () => void;
   onDelete?: () => void;
   documentsCount?: number;
@@ -40,11 +30,13 @@ export const AdminUserCard: React.FC<AdminUserCardProps> = ({
   onApprove,
   onReject,
   onEdit,
+  onViewDocuments,
   onToggleActive,
   onDelete,
   documentsCount,
   approving,
 }) => {
+  const { t } = useTranslation();
   const { colors: c } = useAdminStyles();
   const styles = useMemo(() => createStyles(c), [c]);
   const initial = user.display_name.trim().charAt(0).toUpperCase() || '?';
@@ -71,7 +63,7 @@ export const AdminUserCard: React.FC<AdminUserCardProps> = ({
             </Text>
             <View style={styles.badgeRow}>
               <View style={styles.roleBadge}>
-                <Text style={styles.roleBadgeText}>{ROLE_LABEL[user.role]}</Text>
+                <Text style={styles.roleBadgeText}>{getRoleLabel(user.role, t)}</Text>
               </View>
               {user.city ? (
                 <Text style={styles.city}>{user.city}</Text>
@@ -104,6 +96,15 @@ export const AdminUserCard: React.FC<AdminUserCardProps> = ({
         )}
 
         <View style={styles.actions}>
+          {onViewDocuments ? (
+            <AdminAction
+              icon="document"
+              label="Documents"
+              onPress={onViewDocuments}
+              styles={styles}
+              c={c}
+            />
+          ) : null}
           {onEdit ? (
             <AdminAction icon="settings" label="Modifier" onPress={onEdit} styles={styles} c={c} />
           ) : null}
@@ -131,7 +132,7 @@ export const AdminUserCard: React.FC<AdminUserCardProps> = ({
           {onToggleActive ? (
             <AdminAction
               icon={user.is_active === false ? 'checkmark-circle' : 'warning'}
-              label={user.is_active === false ? 'Activer' : 'Désactiver'}
+              label={user.is_active === false ? t('admin.user.activate') : t('admin.user.deactivate')}
               onPress={onToggleActive}
               styles={styles}
               c={c}
@@ -149,7 +150,7 @@ export const AdminUserCard: React.FC<AdminUserCardProps> = ({
 type CardStyles = ReturnType<typeof createStyles>;
 
 const AdminAction: React.FC<{
-  icon: 'checkmark-circle' | 'close' | 'warning' | 'settings';
+  icon: 'checkmark-circle' | 'close' | 'warning' | 'settings' | 'document';
   label: string;
   onPress: () => void;
   primary?: boolean;

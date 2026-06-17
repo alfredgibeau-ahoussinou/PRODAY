@@ -10,14 +10,12 @@ import { motion } from '../../theme/motion';
 import { prodayHaptics } from '../../utils/prodayHaptics';
 import { spacing, radius, shadows } from '../../theme/designTokens';
 import { useAppTheme } from '../../context/ProductLineContext';
+import { useTranslation } from '../../context/LocaleContext';
 import type { AppColors } from '../../theme/universeTheme';
 
 export type AuthTabId = 'login' | 'signup';
 
-const TABS: { id: AuthTabId; label: string }[] = [
-  { id: 'login', label: 'Connexion' },
-  { id: 'signup', label: 'Inscription' },
-];
+const TAB_IDS: AuthTabId[] = ['login', 'signup'];
 
 interface AuthTabRailProps {
   active: AuthTabId;
@@ -27,12 +25,21 @@ interface AuthTabRailProps {
 
 export const AuthTabRail: React.FC<AuthTabRailProps> = ({ active, onSelect, compact }) => {
   const { colors: c } = useAppTheme();
+  const { t } = useTranslation();
   const styles = useMemo(() => createStyles(c), [c]);
+  const tabs = useMemo(
+    () =>
+      TAB_IDS.map((id) => ({
+        id,
+        label: id === 'login' ? t('auth.login') : t('auth.signup'),
+      })),
+    [t]
+  );
   const [trackW, setTrackW] = useState(0);
   const pillX = useSharedValue(0);
-  const activeIndex = Math.max(0, TABS.findIndex((t) => t.id === active));
+  const activeIndex = Math.max(0, tabs.findIndex((item) => item.id === active));
   const inset = 4;
-  const segW = trackW > 0 ? (trackW - inset * 2) / TABS.length : 0;
+  const segW = trackW > 0 ? (trackW - inset * 2) / tabs.length : 0;
 
   const movePill = useCallback(
     (index: number) => {
@@ -62,7 +69,7 @@ export const AuthTabRail: React.FC<AuthTabRailProps> = ({ active, onSelect, comp
             <View style={styles.pillInner} />
           </Animated.View>
         ) : null}
-        {TABS.map((tab, index) => {
+        {tabs.map((tab, index) => {
           const on = tab.id === active;
           return (
             <PressableSpring

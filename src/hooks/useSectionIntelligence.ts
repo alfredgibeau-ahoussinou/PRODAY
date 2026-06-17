@@ -2,7 +2,6 @@ import { useMemo } from 'react';
 import type { User } from '../models/User';
 import type { MainTabId } from '../navigation/mainTabConfig';
 import type { ProductLineId } from '../models/ProductLine';
-import { isV3IntelligenceUiEnabled } from '../config/featureFlags';
 import { buildSectionIntelligence } from '../features/v3/engines/sectionIntelligence.engine';
 import type { SectionIntelligence } from '../features/v3/models/sectionIntelligence';
 import { useProDayBrain } from './useProDayBrain';
@@ -29,7 +28,7 @@ export function useSectionIntelligence(
   productLine: ProductLineId,
   overrides: SectionIntelligenceOverrides = {}
 ): SectionIntelligence | null {
-  const uiEnabled = isV3IntelligenceUiEnabled();
+  const uiEnabled = false;
   const brain = useProDayBrain(uiEnabled ? profile : null, productLine);
 
   return useMemo(() => {

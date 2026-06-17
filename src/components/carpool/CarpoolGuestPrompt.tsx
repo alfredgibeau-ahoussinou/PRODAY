@@ -6,6 +6,7 @@ import { ProDayText } from '../ui/ProDayText';
 import { Icon } from '../ui/Icon';
 import { PressableSpring } from '../motion';
 import { useAppTheme } from '../../context/ProductLineContext';
+import { useTranslation } from '../../context/LocaleContext';
 import { spacing, radius } from '../../theme/designTokens';
 
 interface CarpoolGuestPromptProps {
@@ -15,6 +16,7 @@ interface CarpoolGuestPromptProps {
 
 export const CarpoolGuestPrompt: React.FC<CarpoolGuestPromptProps> = ({ onLogin, onSignup }) => {
   const { colors } = useAppTheme();
+  const { t } = useTranslation();
   const styles = useMemo(() => createStyles(), []);
 
   return (
@@ -22,15 +24,15 @@ export const CarpoolGuestPrompt: React.FC<CarpoolGuestPromptProps> = ({ onLogin,
       <ProDaySurface variant="module" style={[styles.card, { borderColor: colors.border }]}>
         <Icon name="car" size={36} color={colors.accent} variant="filled" />
         <ProDayText variant="section" style={styles.title}>
-          Covoiturage équipe
+          {t('carpool.guest.title')}
         </ProDayText>
         <ProDayText variant="body" muted style={styles.body}>
-          Connectez-vous pour voir vos convocations, réserver une place ou proposer un trajet.
+          {t('carpool.guest.body')}
         </ProDayText>
         <PressableSpring onPress={onLogin} scaleTo={0.97} haptic>
           <ProDayGradient kind="cta" style={styles.primary}>
             <ProDayText variant="caption" inverse style={styles.btnText}>
-              Se connecter
+              {t('common.login')}
             </ProDayText>
           </ProDayGradient>
         </PressableSpring>
@@ -44,7 +46,7 @@ export const CarpoolGuestPrompt: React.FC<CarpoolGuestPromptProps> = ({ onLogin,
           ]}
         >
           <ProDayText variant="caption" accent style={styles.link}>
-            Créer un compte
+            {t('common.guest.signup')}
           </ProDayText>
         </PressableSpring>
       </ProDaySurface>

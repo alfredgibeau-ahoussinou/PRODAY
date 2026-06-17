@@ -14,7 +14,7 @@ describe('Phase 7 — Chat IA + préférences V3', () => {
       otherName: 'Dr Martin',
       lastIncoming: 'Avez-vous un créneau pour un RDV cette semaine ?',
     });
-    expect(replies.some((r) => r.toLowerCase().includes('disponible'))).toBe(true);
+    expect(replies.some((r) => r.text.toLowerCase().includes('dispo'))).toBe(true);
     expect(replies.length).toBeLessThanOrEqual(4);
   });
 
@@ -24,9 +24,11 @@ describe('Phase 7 — Chat IA + préférences V3', () => {
       otherName: 'Coach Dupont',
       lastIncoming: 'Convocation match samedi',
     });
-    expect(replies.some((r) => r.toLowerCase().includes('présence') || r.includes('coach'))).toBe(
-      true
-    );
+    expect(
+      replies.some(
+        (r) => r.text.toLowerCase().includes('présence') || r.text.toLowerCase().includes('coach')
+      )
+    ).toBe(true);
   });
 
   it('persiste la préférence sync calendrier', async () => {

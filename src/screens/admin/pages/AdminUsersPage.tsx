@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { useTranslation } from '../../../context/LocaleContext';
 import {
   Text,
   ScrollView,
@@ -19,23 +20,17 @@ import {
   type CreateUserFormState,
 } from '../../../components/admin/AdminCreateUserPanel';
 import { AdminUserEditModal, AdminRejectModal } from '../../../components/admin/AdminUserModals';
+import { AdminUserDocumentsModal } from '../../../components/admin/AdminUserDocumentsModal';
 import { adminConfirmDelete, adminActionErrorAlert } from '../../../utils/adminConfirm';
+import { userNeedsAdminVerificationReview } from '../../../utils/adminUserVerification';
 import { getErrorMessage } from '../../../utils/errors';
 import { useAdminStyles } from '../../../components/admin/adminStyles';
 import { spacing, radius } from '../../../theme/designTokens';
 import type { AppColors } from '../../../theme/universeTheme';
 
+import { getRoleLabel } from '../../signup/signupFlowConfig';
+
 const ROLES: UserRole[] = ['player', 'coach', 'club', 'agent', 'recruiter', 'organizer', 'physio', 'sponsor'];
-const ROLE_LABEL: Record<UserRole, string> = {
-  player: 'Joueur',
-  coach: 'Coach',
-  club: 'Club',
-  agent: 'Agent',
-  recruiter: 'Recruteur',
-  organizer: 'Organisateur',
-  sponsor: 'Sponsor',
-  physio: 'Kinésithérapeute',
-};
 
 const EMPTY_FORM: CreateUserFormState = {
   email: '',
@@ -46,6 +41,7 @@ const EMPTY_FORM: CreateUserFormState = {
 };
 
 export const AdminUsersPage: React.FC = () => {
+  const { t } = useTranslation();
   const { loading, users, userDocCounts, refresh } = useAdminData();
   const { colors: c } = useAdminStyles();
   const styles = useMemo(() => createStyles(c), [c]);
@@ -58,11 +54,12 @@ export const AdminUsersPage: React.FC = () => {
   const [editUser, setEditUser] = useState<User | null>(null);
   const [savingUser, setSavingUser] = useState(false);
   const [rejectUser, setRejectUser] = useState<User | null>(null);
+  const [documentsUser, setDocumentsUser] = useState<User | null>(null);
   const [rejecting, setRejecting] = useState(false);
   const [approvingUid, setApprovingUid] = useState<string | null>(null);
 
   const filtered = users.filter((u) => {
-    if (pendingOnly && u.verification_status !== 'PENDING') return false;
+    if (pendingOnly && !userNeedsAdminVerificationReview(u)) return false;
     if (roleFilter !== 'all' && u.role !== roleFilter) return false;
     const q = search.trim().toLowerCase();
     if (!q) return true;
@@ -78,7 +75,7 @@ export const AdminUsersPage: React.FC = () => {
     try {
       const result = await adminService.validateProfile(u.uid, 'approve');
       Alert.alert(
-        'Compte confirmé',
+        t('admin.users.confirmed'),
         result.via === 'firestore'
           ? `${u.display_name} est vérifié (sans notification push — déployez les Functions pour les alertes automatiques).`
           : `${u.display_name} est vérifié. Une notification a été envoyée.`
@@ -106,12 +103,12 @@ export const AdminUsersPage: React.FC = () => {
         role,
         city: city.trim() || undefined,
       });
-      Alert.alert('Compte créé', `Utilisateur ${email} ajouté.`);
+      Alert.alert(t('admin.users.created'), t('admin.users.createdBody', { email }));
       setShowCreate(false);
       setCreateForm(EMPTY_FORM);
       await refresh();
     } catch (e) {
-      Alert.alert('Erreur', getErrorMessage(e, 'Création impossible.'));
+      Alert.alert(t('common.error'), getErrorMessage(e, t('admin.users.createFailed')));
     } finally {
       setCreating(false);
     }
@@ -120,11 +117,11 @@ export const AdminUsersPage: React.FC = () => {
   return (
     <AdminPageScaffold
       title="Utilisateurs"
-      subtitle="Création, rôles, vérifications, activation"
+      subtitle={t('admin.users.subtitle')}
       loading={loading}
     >
       <TouchableOpacity style={styles.fab} onPress={() => setShowCreate(!showCreate)}>
-        <Text style={styles.fabText}>{showCreate ? 'Fermer' : '+ Créer un compte'}</Text>
+        <Text style={styles.fabText}>{showCreate ? t('admin.users.createToggle.close') : t('admin.users.createToggle.open')}</Text>
       </TouchableOpacity>
 
       <AdminCreateUserPanel
@@ -149,7 +146,7 @@ export const AdminUsersPage: React.FC = () => {
           styles={styles}
         />
         <FilterPill
-          label="Vérif. attente"
+          label={t('admin.users.verifyPending')}
           active={pendingOnly}
           onPress={() => {
             setPendingOnly(true);
@@ -160,7 +157,7 @@ export const AdminUsersPage: React.FC = () => {
         {ROLES.map((r) => (
           <FilterPill
             key={r}
-            label={ROLE_LABEL[r]}
+            label={getRoleLabel(r, t)}
             active={roleFilter === r && !pendingOnly}
             onPress={() => {
               setRoleFilter(r);
@@ -183,19 +180,20 @@ export const AdminUsersPage: React.FC = () => {
             documentsCount={userDocCounts[u.uid]}
             approving={approvingUid === u.uid}
             onEdit={() => setEditUser(u)}
+            onViewDocuments={() => setDocumentsUser(u)}
             onApprove={
-              u.verification_status === 'PENDING'
+              userNeedsAdminVerificationReview(u)
                 ? () => void handleApprove(u)
                 : undefined
             }
             onReject={
-              u.verification_status === 'PENDING' ? () => setRejectUser(u) : undefined
+              userNeedsAdminVerificationReview(u) ? () => setRejectUser(u) : undefined
             }
             onToggleActive={() =>
               adminService
                 .updateUser(u.uid, { is_active: u.is_active === false })
                 .then(() => refresh())
-                .catch((e) => adminActionErrorAlert(e, 'Mise à jour impossible'))
+                .catch((e) => adminActionErrorAlert(e, t('admin.users.updateFailed')))
             }
             onDelete={() =>
               adminConfirmDelete(
@@ -209,6 +207,11 @@ export const AdminUsersPage: React.FC = () => {
         ))
       )}
 
+      <AdminUserDocumentsModal
+        visible={Boolean(documentsUser)}
+        user={documentsUser}
+        onClose={() => setDocumentsUser(null)}
+      />
       <AdminUserEditModal
         visible={Boolean(editUser)}
         user={editUser}
@@ -221,7 +224,7 @@ export const AdminUsersPage: React.FC = () => {
             await adminService.updateUser(editUser.uid, patch);
             setEditUser(null);
             await refresh();
-            Alert.alert('Enregistré', 'Profil mis à jour.');
+            Alert.alert(t('admin.users.saved'), t('admin.users.profileUpdated'));
           } catch (e) {
             adminActionErrorAlert(e, 'Mise à jour impossible.');
           } finally {
@@ -246,10 +249,10 @@ export const AdminUsersPage: React.FC = () => {
             setRejectUser(null);
             await refresh();
             Alert.alert(
-              'Compte rejeté',
+              t('admin.users.rejected'),
               result.via === 'firestore'
-                ? 'Statut mis à jour (notification push si Functions déployées).'
-                : 'Le joueur a été notifié du refus.'
+                ? t('admin.users.rejectedPush')
+                : t('admin.users.rejectedNotify')
             );
           } catch (e) {
             adminActionErrorAlert(e, 'Rejet impossible');

@@ -4,7 +4,6 @@ import type { UserActionKind } from '../core/actionDispatch';
 import { userStateStore } from '../core/state/userState.store';
 import { flushBrainState } from '../services/brainState.service';
 import { getProfileCompletion } from './profileCompletion';
-import { isV3ShellEnabled } from '../config/featureFlags';
 import { trackV3Event } from '../core/analytics/v3Events';
 import type { GamificationState } from '../features/v3/models/gamification';
 
@@ -60,7 +59,6 @@ export function resetProfileCompletionAwardCache(): void {
 
 /** XP `complete_profile` une fois le profil ≥ 80 %. */
 export function maybeRecordProfileCompletion(user: User): void {
-  if (!isV3ShellEnabled()) return;
   if (awardedProfileXpUids.has(user.uid)) return;
 
   const completion = getProfileCompletion(user).percent;

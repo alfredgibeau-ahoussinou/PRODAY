@@ -4,7 +4,6 @@ import type { User } from '../models/User';
 import type { FriendlyMatch } from '../models/FriendlyMatch';
 import type { MatchJoinValidation } from '../core/types/recommendation';
 import { validateMatchJoin } from '../core/recommendation/recommendation.engine';
-import { isV3ShellEnabled } from '../config/featureFlags';
 import { distanceBetween } from '../utils/geoLocation';
 import { useProDayBrain } from './useProDayBrain';
 import { useAppTheme } from '../context/ProductLineContext';
@@ -39,10 +38,6 @@ export function useMatchJoinGuard(profile: User | null) {
 
   const guardAction = useCallback(
     (label: string, check: MatchJoinValidation, onProceed: () => void) => {
-      if (!isV3ShellEnabled()) {
-        onProceed();
-        return;
-      }
       if (check.allowed) {
         trackV3Event('match_join_allowed', { action: label });
         onProceed();

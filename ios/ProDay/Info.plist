@@ -46,8 +46,18 @@
       <key>NSAllowsLocalNetworking</key>
       <true/>
     </dict>
+    <key>NSRemindersFullAccessUsageDescription</key>
+    <string>ProDay peut créer des rappels liés à vos matchs et convocations.</string>
+    <key>NSRemindersUsageDescription</key>
+    <string>ProDay peut créer des rappels liés à vos matchs et convocations.</string>
+    <key>NSCalendarsFullAccessUsageDescription</key>
+    <string>ProDay synchronise vos matchs et convocations avec votre calendrier.</string>
+    <key>NSCalendarsUsageDescription</key>
+    <string>ProDay synchronise vos matchs et convocations avec votre calendrier.</string>
     <key>NSCameraUsageDescription</key>
     <string>ProDay utilise la caméra pour photographier votre pièce d'identité ou passeport lors de la vérification.</string>
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>ProDay utilise votre position pour organiser les points de rendez-vous et de prise en charge en covoiturage.</string>
     <key>NSMicrophoneUsageDescription</key>
     <string>Allow $(PRODUCT_NAME) to access your microphone</string>
     <key>NSPhotoLibraryUsageDescription</key>

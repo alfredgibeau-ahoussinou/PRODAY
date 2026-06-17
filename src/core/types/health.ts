@@ -27,4 +27,9 @@ export interface HealthEngineInput {
   recentMatchCount: number;
   streakDays: number;
   profileCompletion: number;
+  /** Données Apple Santé / Google Health (optionnel). */
+  sleepHoursLastNight?: number;
+  stepsToday?: number;
+  restingHeartRate?: number;
+  wearableConnected?: boolean;
 }

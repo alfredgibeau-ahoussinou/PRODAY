@@ -2,8 +2,8 @@ import React, { useMemo } from 'react';
 import { View, ScrollView, StyleSheet } from 'react-native';
 import type { User } from '../models/User';
 import type { TeamEvent } from '../models/TeamEvent';
-import { V3TabShell } from '../components/v3/V3TabShell';
-import { V3ScreenBack } from '../components/v3/V3ScreenBack';
+import { TabScreenShell } from '../components/app/TabScreenShell';
+import { ScreenBackButton } from '../components/ui/ScreenBackButton';
 import { ProDayText } from '../components/ui/ProDayText';
 import { ProDaySurface } from '../components/ui/ProDaySurface';
 import { Icon, type IconName } from '../components/ui/Icon';
@@ -53,11 +53,11 @@ export const ClubHubScreen: React.FC<ClubHubScreenProps> = ({
   );
 
   return (
-    <V3TabShell
+    <TabScreenShell
       caption="Communauté"
       title={clubName}
       subtitle="Salons équipe — messagerie, mercato, trajets"
-      right={<V3ScreenBack onPress={onBack} />}
+      right={<ScreenBackButton onPress={onBack} />}
       flat
     >
       <ScrollView
@@ -126,7 +126,7 @@ export const ClubHubScreen: React.FC<ClubHubScreenProps> = ({
           ))
         )}
       </ScrollView>
-    </V3TabShell>
+    </TabScreenShell>
   );
 };
 

@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { useTranslation } from '../../../context/LocaleContext';
 import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { useAuth } from '../../../context/AuthContext';
 import { useIsAdmin } from '../../../hooks/useIsAdmin';
@@ -7,6 +8,7 @@ import { adminService } from '../../../services/admin.service';
 import { AdminPageScaffold } from '../../../components/admin/AdminPageScaffold';
 import { AdminSectionHeader } from '../../../components/admin/AdminSectionHeader';
 import { Icon } from '../../../components/ui/Icon';
+import { PLATFORM_ADMIN_EMAIL } from '../../../config/admin';
 import { useAdminStyles } from '../../../components/admin/adminStyles';
 import { spacing, radius } from '../../../theme/designTokens';
 import type { AppColors } from '../../../theme/universeTheme';
@@ -16,6 +18,7 @@ interface AdminSystemPageProps {
 }
 
 export const AdminSystemPage: React.FC<AdminSystemPageProps> = ({ onPreviewUserApp }) => {
+  const { t } = useTranslation();
   const { profile, signOut, refreshAdminClaim } = useAuth();
   const { isAdmin } = useIsAdmin();
   const { loading, refresh } = useAdminData();
@@ -40,11 +43,27 @@ export const AdminSystemPage: React.FC<AdminSystemPageProps> = ({ onPreviewUserA
 
   return (
     <AdminPageScaffold
-      title="Système"
-      subtitle="Opérations plateforme · prévisualisation · session"
+      title={t('admin.system.title')}
+      subtitle={t('admin.system.subtitle')}
       loading={loading}
     >
-      <AdminSectionHeader title="OPÉRATIONS" />
+      <AdminSectionHeader title="COMPTE ADMIN" />
+
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>Identifiants plateforme</Text>
+        <Text style={styles.cardSub}>
+          Email : <Text style={styles.mono}>{PLATFORM_ADMIN_EMAIL}</Text>
+          {'\n'}Mot de passe : défini localement via{' '}
+          <Text style={styles.mono}>ADMIN_SETUP_PASSWORD</Text> dans votre fichier{' '}
+          <Text style={styles.mono}>.env</Text> (jamais committé).
+        </Text>
+        <Text style={styles.cardSub}>
+          Création ou réinitialisation :{' '}
+          <Text style={styles.mono}>npm run admin:setup</Text>
+        </Text>
+      </View>
+
+      <AdminSectionHeader title={t('admin.system.ops')} />
 
       <View style={styles.card}>
         <Text style={styles.cardTitle}>Stats page Discover</Text>
@@ -86,7 +105,7 @@ export const AdminSystemPage: React.FC<AdminSystemPageProps> = ({ onPreviewUserA
         </TouchableOpacity>
       </View>
 
-      <AdminSectionHeader title="SESSION & APERÇU" />
+      <AdminSectionHeader title={t('admin.system.session')} />
 
       <TouchableOpacity style={styles.previewBtn} onPress={onPreviewUserApp} activeOpacity={0.88}>
         <Icon name="eye" size={22} color={c.brand} />
@@ -102,9 +121,9 @@ export const AdminSystemPage: React.FC<AdminSystemPageProps> = ({ onPreviewUserA
       <TouchableOpacity
         style={styles.signOutBtn}
         onPress={() => {
-          Alert.alert('Déconnexion', 'Quitter l’espace admin ?', [
+          Alert.alert(t('admin.system.logout.title'), t('admin.system.logout.body'), [
             { text: 'Annuler', style: 'cancel' },
-            { text: 'Se déconnecter', style: 'destructive', onPress: () => void signOut() },
+            { text: t('admin.system.logout.confirm'), style: 'destructive', onPress: () => void signOut() },
           ]);
         }}
       >

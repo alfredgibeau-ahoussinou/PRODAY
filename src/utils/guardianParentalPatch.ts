@@ -3,7 +3,17 @@ import { DEFAULT_PARENTAL_SETTINGS } from '../models/ParentalSettings';
 import { resolveDailyLimitMinutes } from './parentalScreenTimeLimits';
 
 export type GuardianScreenTimePatch = Partial<
-  Pick<ParentalSettings, 'screen_time_enabled' | 'daily_limit_minutes' | 'active_days'>
+  Pick<
+    ParentalSettings,
+    | 'screen_time_enabled'
+    | 'daily_limit_minutes'
+    | 'active_days'
+    | 'approved_contacts'
+    | 'screen_time_bonus_minutes'
+    | 'screen_time_bonus_day'
+    | 'unlock_request'
+    | 'guardian_email_secondary'
+  >
 >;
 
 export function buildGuardianScreenTimeSettings(
@@ -32,5 +42,18 @@ export function buildGuardianScreenTimeSettings(
       patch.screen_time_enabled ?? base.screen_time_enabled ?? true,
     daily_limit_minutes,
     active_days,
+    ...(patch.approved_contacts !== undefined
+      ? { approved_contacts: patch.approved_contacts }
+      : {}),
+    ...(patch.screen_time_bonus_minutes !== undefined
+      ? { screen_time_bonus_minutes: patch.screen_time_bonus_minutes }
+      : {}),
+    ...(patch.screen_time_bonus_day !== undefined
+      ? { screen_time_bonus_day: patch.screen_time_bonus_day }
+      : {}),
+    ...(patch.unlock_request !== undefined ? { unlock_request: patch.unlock_request } : {}),
+    ...(patch.guardian_email_secondary !== undefined
+      ? { guardian_email_secondary: patch.guardian_email_secondary }
+      : {}),
   };
 }

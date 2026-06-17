@@ -13,6 +13,8 @@ interface AdminEntityCardProps {
   onDelete: () => void;
   onSecondary?: () => void;
   secondaryLabel?: string;
+  onPrimary?: () => void;
+  primaryLabel?: string;
 }
 
 export const AdminEntityCard: React.FC<AdminEntityCardProps> = ({
@@ -23,6 +25,8 @@ export const AdminEntityCard: React.FC<AdminEntityCardProps> = ({
   onDelete,
   onSecondary,
   secondaryLabel,
+  onPrimary,
+  primaryLabel,
 }) => {
   const { colors: c } = useAdminStyles();
   const styles = useMemo(() => createStyles(c), [c]);
@@ -42,6 +46,11 @@ export const AdminEntityCard: React.FC<AdminEntityCardProps> = ({
         {meta ? <Text style={styles.meta}>{meta}</Text> : null}
       </View>
       <View style={styles.actionsCol}>
+        {onPrimary && primaryLabel ? (
+          <TouchableOpacity style={styles.primaryBtn} onPress={onPrimary} activeOpacity={0.85}>
+            <Text style={styles.primaryText}>{primaryLabel}</Text>
+          </TouchableOpacity>
+        ) : null}
         {onSecondary && secondaryLabel ? (
           <TouchableOpacity style={styles.secondaryBtn} onPress={onSecondary} activeOpacity={0.85}>
             <Text style={styles.secondaryText}>{secondaryLabel}</Text>
@@ -81,6 +90,13 @@ function createStyles(c: AppColors) {
     subtitle: { fontSize: 12, color: c.textSecondary, marginTop: 4, lineHeight: 17 },
     meta: { fontSize: 11, color: c.textMuted, marginTop: 4, fontWeight: '600' },
     actionsCol: { alignItems: 'flex-end', gap: spacing.xs },
+    primaryBtn: {
+      paddingHorizontal: spacing.sm,
+      paddingVertical: 6,
+      borderRadius: radius.sm,
+      backgroundColor: c.brand,
+    },
+    primaryText: { fontSize: 10, fontWeight: '900', color: c.brandInverse },
     secondaryBtn: {
       paddingHorizontal: spacing.sm,
       paddingVertical: 6,

@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { useTranslation } from '../context/LocaleContext';
 import {
   View,
   Text,
@@ -19,14 +20,14 @@ import { useFavorites } from '../hooks/useFavorites';
 import { spacing, radius, shadows } from '../theme/designTokens';
 import { useThemedScreen } from '../hooks/useThemedScreen';
 import type { AppColors } from '../theme/universeTheme';
-import { V3TabShell } from '../components/v3/V3TabShell';
-import { V3ScreenBack } from '../components/v3/V3ScreenBack';
+import { TabScreenShell } from '../components/app/TabScreenShell';
+import { ScreenBackButton } from '../components/ui/ScreenBackButton';
 import { useSectionIntelligence } from '../hooks/useSectionIntelligence';
-import { isV3SubScreenEnabled } from '../hooks/useV3SubScreen';
+import { isSubScreenShellEnabled } from '../hooks/useSubScreenShell';
 import { StaggerReveal, PressableSpring } from '../components/motion';
 import { TAB_BAR_CONTENT_INSET } from '../navigation/tabBarLayout';
 
-const FILTER_CHIPS = ['Spécialité', 'Niveau', 'Localisation', 'Filtres'] as const;
+
 
 interface CoachesListScreenProps {
   initialType?: StaffType;
@@ -41,6 +42,7 @@ export const CoachesListScreen: React.FC<CoachesListScreenProps> = ({
   onSelect,
   onCreatePost,
 }) => {
+  const { t } = useTranslation();
   const [staffType, setStaffType] = useState<StaffType>(initialType);
   const [query, setQuery] = useState('');
   const [activeChip, setActiveChip] = useState<string | null>(null);
@@ -49,11 +51,20 @@ export const CoachesListScreen: React.FC<CoachesListScreenProps> = ({
   const { users, loading } = useUsersByRole(staffType, query);
   const { colors: c, rootStyle, productLine } = useThemedScreen();
   const styles = useMemo(() => createStyles(c), [c]);
-  const useV3Header = isV3SubScreenEnabled(profile, 'staff');
+  const useShellHeader = isSubScreenShellEnabled(profile, 'staff');
   const intelligence = useSectionIntelligence('recrutement', profile ?? null, productLine, {
     staffMode: true,
     mercatoPosts: users.length,
   });
+  const filterChips = useMemo(
+    () => [
+      t('coaches.filter.specialty'),
+      t('coaches.filter.level'),
+      t('coaches.filter.location'),
+      t('coaches.filter.filters'),
+    ],
+    [t]
+  );
 
   const filtersBlock = (
     <>
@@ -63,7 +74,7 @@ export const CoachesListScreen: React.FC<CoachesListScreenProps> = ({
           onPress={() => setStaffType('coach')}
         >
           <Text style={[styles.toggleText, staffType === 'coach' && styles.toggleTextActive]}>
-            Coachs
+            {t('role.coach')}
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -71,19 +82,21 @@ export const CoachesListScreen: React.FC<CoachesListScreenProps> = ({
           onPress={() => setStaffType('agent')}
         >
           <Text style={[styles.toggleText, staffType === 'agent' && styles.toggleTextActive]}>
-            Agents
+            {t('role.agent')}
           </Text>
         </TouchableOpacity>
       </View>
 
       <SearchBar
-        placeholder={staffType === 'coach' ? 'Rechercher un coach…' : 'Rechercher un agent…'}
+        placeholder={
+          staffType === 'coach' ? t('coaches.search.coach') : t('coaches.search.agent')
+        }
         value={query}
         onChangeText={setQuery}
       />
 
       <View style={styles.chips}>
-        {FILTER_CHIPS.map((chip) => (
+        {filterChips.map((chip) => (
           <TouchableOpacity
             key={chip}
             style={[styles.chip, activeChip === chip && styles.chipActive]}
@@ -96,7 +109,7 @@ export const CoachesListScreen: React.FC<CoachesListScreenProps> = ({
         ))}
       </View>
 
-      {!useV3Header ? (
+      {!useShellHeader ? (
         <Text style={styles.section}>
           {staffType === 'coach' ? 'Coachs populaires' : 'Agents en avant'}
         </Text>
@@ -118,7 +131,7 @@ export const CoachesListScreen: React.FC<CoachesListScreenProps> = ({
       <FlatList
         data={users}
         keyExtractor={(item) => item.uid}
-        ListHeaderComponent={useV3Header ? filtersBlock : undefined}
+        ListHeaderComponent={useShellHeader ? filtersBlock : undefined}
         renderItem={({ item, index }) => {
           const row = (
             <CoachListCard
@@ -128,7 +141,7 @@ export const CoachesListScreen: React.FC<CoachesListScreenProps> = ({
               onBookmark={() => profile && toggle(item.uid, staffType)}
             />
           );
-          return useV3Header ? <StaggerReveal index={Math.min(index, 8)}>{row}</StaggerReveal> : row;
+          return useShellHeader ? <StaggerReveal index={Math.min(index, 8)}>{row}</StaggerReveal> : row;
         }}
         contentContainerStyle={styles.list}
       />
@@ -141,23 +154,22 @@ export const CoachesListScreen: React.FC<CoachesListScreenProps> = ({
     </PressableSpring>
   ) : null;
 
-  if (useV3Header) {
+  if (useShellHeader) {
     return (
-      <V3TabShell
-        caption="Réseau staff"
+      <TabScreenShell
+        caption={t('coaches.caption')}
         title="Recrutement"
         subtitle={
           staffType === 'coach'
             ? `${users.length} coach(s) disponibles`
             : `${users.length} agent(s) disponibles`
         }
-        right={<V3ScreenBack onPress={onBack} />}
-        intelligence={intelligence}
+        right={<ScreenBackButton onPress={onBack} />}
         flat
       >
         {listBody}
         {fab}
-      </V3TabShell>
+      </TabScreenShell>
     );
   }
 

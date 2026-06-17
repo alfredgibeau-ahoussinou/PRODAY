@@ -1,20 +1,15 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { View, StyleSheet, LayoutChangeEvent } from 'react-native';
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-} from 'react-native-reanimated';
+import React, { useMemo } from 'react';
+import { View, Text, StyleSheet, Platform } from 'react-native';
 import {
-  CANDIDATURE_CHAPTERS,
   type CandidatureChapterId,
 } from '../../content/candidatureChapters';
-import { PressableSpring, AnimatedTabLabel } from '../motion';
+import { getCandidatureChapters } from '../../i18n/localizedChapters';
+import { PressableSpring } from '../motion';
 import { prodayHaptics } from '../../utils/prodayHaptics';
-import { SPRING_SNAPPY } from '../discover/animationConfig';
-import { ProDayText } from '../ui/ProDayText';
 import { useAppTheme } from '../../context/ProductLineContext';
-import { spacing } from '../../theme/designTokens';
+import { useTranslation } from '../../context/LocaleContext';
+import { spacing, radius } from '../../theme/designTokens';
+import { fontFamily } from '../../theme/typography';
 
 interface CandidatureTabRailProps {
   active: CandidatureChapterId;
@@ -22,78 +17,53 @@ interface CandidatureTabRailProps {
   suiviBadge?: number;
 }
 
+/** Segments Annonces / Suivi — style pilules natives. */
 export const CandidatureTabRail: React.FC<CandidatureTabRailProps> = ({
   active,
   onSelect,
   suiviBadge,
 }) => {
   const { colors } = useAppTheme();
+  const { t } = useTranslation();
+  const chapters = useMemo(() => getCandidatureChapters(t), [t]);
   const styles = useMemo(() => createStyles(colors), [colors]);
-  const [trackW, setTrackW] = useState(0);
-  const lineX = useSharedValue(0);
-  const activeIndex = Math.max(0, CANDIDATURE_CHAPTERS.findIndex((c) => c.id === active));
-  const tabW = trackW > 0 ? trackW / CANDIDATURE_CHAPTERS.length : 0;
-
-  const moveLine = useCallback(
-    (index: number) => {
-      if (tabW <= 0) return;
-      lineX.value = withSpring(index * tabW, SPRING_SNAPPY);
-    },
-    [lineX, tabW]
-  );
-
-  useEffect(() => {
-    moveLine(activeIndex);
-  }, [activeIndex, moveLine]);
-
-  const lineStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: lineX.value }],
-    width: tabW,
-  }));
 
   return (
     <View style={styles.wrap}>
-      <View
-        style={styles.track}
-        onLayout={(e: LayoutChangeEvent) => setTrackW(e.nativeEvent.layout.width)}
-      >
-        {tabW > 0 ? (
-          <Animated.View style={[styles.line, lineStyle]}>
-            <View style={[styles.lineInner, { backgroundColor: colors.accent }]} />
-          </Animated.View>
-        ) : null}
-        {CANDIDATURE_CHAPTERS.map((ch, index) => {
+      <View style={[styles.track, { backgroundColor: colors.surfaceMuted, borderColor: colors.border }]}>
+        {chapters.map((ch) => {
           const on = ch.id === active;
           const badge = ch.id === 'suivi' && suiviBadge && suiviBadge > 0 ? suiviBadge : null;
           return (
             <PressableSpring
               key={ch.id}
-              style={styles.tab}
+              style={[
+                styles.segment,
+                on && { backgroundColor: colors.surface, borderColor: colors.border },
+              ]}
               onPress={() => {
                 prodayHaptics.tabSwitch();
                 onSelect(ch.id);
-                moveLine(index);
               }}
-              scaleTo={0.96}
+              scaleTo={0.98}
             >
-              <AnimatedTabLabel active={on}>
-                <View style={styles.tabInner}>
-                  <ProDayText
-                    variant="caption"
-                    accent={on}
-                    style={[styles.tabLabel, on && styles.tabLabelOn]}
-                  >
-                    {ch.label}
-                  </ProDayText>
-                  {badge ? (
-                    <View style={[styles.badge, { backgroundColor: colors.accent }]}>
-                      <ProDayText variant="caption" inverse style={styles.badgeText}>
-                        {badge > 9 ? '9+' : badge}
-                      </ProDayText>
-                    </View>
-                  ) : null}
-                </View>
-              </AnimatedTabLabel>
+              <View style={styles.segmentInner}>
+                <Text
+                  style={[
+                    styles.label,
+                    { color: on ? colors.text : colors.textMuted },
+                  ]}
+                >
+                  {ch.label}
+                </Text>
+                {badge ? (
+                  <View style={[styles.badge, { backgroundColor: colors.accent }]}>
+                    <Text style={[styles.badgeText, { color: colors.brandInverse }]}>
+                      {badge > 9 ? '9+' : badge}
+                    </Text>
+                  </View>
+                ) : null}
+              </View>
             </PressableSpring>
           );
         })}
@@ -102,34 +72,41 @@ export const CandidatureTabRail: React.FC<CandidatureTabRailProps> = ({
   );
 };
 
-function createStyles(c: { surface: string; border: string; text: string; textMuted: string }) {
+function createStyles(c: { surface: string }) {
   return StyleSheet.create({
     wrap: {
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.sm,
+      paddingBottom: spacing.md,
       backgroundColor: c.surface,
-      borderBottomWidth: StyleSheet.hairlineWidth,
-      borderBottomColor: c.border,
     },
     track: {
       flexDirection: 'row',
-      height: 44,
-      position: 'relative',
+      padding: 4,
+      borderRadius: radius.lg,
+      borderWidth: StyleSheet.hairlineWidth,
+      gap: 4,
     },
-    line: {
-      position: 'absolute',
-      bottom: 0,
-      left: 0,
-      height: 3,
-    },
-    lineInner: {
+    segment: {
       flex: 1,
-      marginHorizontal: spacing.sm,
-      borderTopLeftRadius: 2,
-      borderTopRightRadius: 2,
+      borderRadius: radius.md,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: 'transparent',
+      minHeight: 40,
+      justifyContent: 'center',
     },
-    tab: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-    tabInner: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-    tabLabel: { fontWeight: '700', color: c.textMuted },
-    tabLabelOn: { fontWeight: '800' },
+    segmentInner: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 6,
+    },
+    label: {
+      fontFamily: fontFamily.extrabold,
+      fontSize: 14,
+      fontWeight: '800',
+      ...Platform.select({ android: { includeFontPadding: false } }),
+    },
     badge: {
       minWidth: 18,
       height: 18,
@@ -138,6 +115,11 @@ function createStyles(c: { surface: string; border: string; text: string; textMu
       justifyContent: 'center',
       paddingHorizontal: 4,
     },
-    badgeText: { fontSize: 10, fontWeight: '900', lineHeight: 12 },
+    badgeText: {
+      fontFamily: fontFamily.extrabold,
+      fontSize: 10,
+      fontWeight: '900',
+      ...Platform.select({ android: { includeFontPadding: false } }),
+    },
   });
 }

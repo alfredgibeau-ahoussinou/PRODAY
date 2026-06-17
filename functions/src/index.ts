@@ -9,8 +9,10 @@ import { runMistralDocumentVerification, verifyOnboardingDocumentEphemeral } fro
 import { onPlatformFeedCreated, onChatMessageCreated } from './feedNotifications';
 import { createSubmitBetaWaitlistHandler } from './betaWaitlist';
 import { onV3BrainWrite } from './v3Brain';
+import { activateStoreSubscription } from './subscriptionIap';
 
 export { createPaymentCheckoutSession, stripeWebhook, createShopCheckoutSession };
+export { activateStoreSubscription };
 export { onPlatformFeedCreated, onChatMessageCreated };
 export { onRecruitmentPostCreated };
 export { onV3BrainWrite };

@@ -30,6 +30,7 @@ import { getWomanLaunchCopy } from './signupWomanConfig';
 import { getManLaunchCopy } from './signupManConfig';
 import { getProLaunchCopy } from './signupProConfig';
 import { getSanteLaunchCopy } from './signupSanteConfig';
+import { useTranslation } from '../../context/LocaleContext';
 
 interface SignupFlowProps {
   onClose: () => void;
@@ -51,6 +52,7 @@ const SignupFlowInner: React.FC<SignupFlowInnerProps> = ({
   form,
 }) => {
   const { colors, isWomanSignup, isProSignup, isSanteSignup } = useSignupFlowTheme();
+  const { t } = useTranslation();
   const { profile, refreshProfile } = useAuth();
 
   const layout = {
@@ -146,17 +148,6 @@ const SignupFlowInner: React.FC<SignupFlowInnerProps> = ({
           {...layout}
           onBack={backUnlessLocked}
           onSubmit={() => void submitSecurity()}
-          nextLabel={
-            form.isOAuthCompletion
-              ? 'Finaliser mon accès'
-              : form.isSanteProduct
-                ? 'Créer mon compte Santé'
-                : form.isProProduct
-                  ? 'Créer mon compte Pro'
-                  : form.isWomanProduct
-                    ? 'Créer mon compte Woman'
-                    : 'Créer mon compte'
-          }
         />
       );
       break;
@@ -169,22 +160,30 @@ const SignupFlowInner: React.FC<SignupFlowInnerProps> = ({
         form.role === 'physio';
 
       const copy = isWomanSignup
-        ? getWomanLaunchCopy({
-            emailVerificationPending: form.createdWithEmailPassword,
-          })
+        ? getWomanLaunchCopy(
+            { emailVerificationPending: form.createdWithEmailPassword },
+            t
+          )
         : isSanteSignup
-          ? getSanteLaunchCopy({
-              emailVerificationPending: form.createdWithEmailPassword,
-              verificationPending,
-            })
-          : isProSignup
-            ? getProLaunchCopy({
+          ? getSanteLaunchCopy(
+              {
                 emailVerificationPending: form.createdWithEmailPassword,
                 verificationPending,
-              })
-            : getManLaunchCopy({
-                emailVerificationPending: form.createdWithEmailPassword,
-              });
+              },
+              t
+            )
+          : isProSignup
+            ? getProLaunchCopy(
+                {
+                  emailVerificationPending: form.createdWithEmailPassword,
+                  verificationPending,
+                },
+                t
+              )
+            : getManLaunchCopy(
+                { emailVerificationPending: form.createdWithEmailPassword },
+                t
+              );
 
       content = (
         <SignupSuccessStep

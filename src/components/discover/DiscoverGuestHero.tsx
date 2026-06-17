@@ -3,14 +3,15 @@ import { View, Text, StyleSheet, Platform, ActivityIndicator } from 'react-nativ
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { ProductLineId } from '../../models/ProductLine';
-import { getDiscoverHomeCopy } from '../../content/brandExperience';
+import { useAppTheme } from '../../context/ProductLineContext';
+import { useTranslation } from '../../context/LocaleContext';
+import { getLocalizedDiscoverCopy } from '../../i18n/localizedContent';
 import { gradientsForLine } from '../../theme/universeGradients';
 import { ProductLineLogo } from '../branding/ProductLineLogo';
 import { ProDayGradient } from '../ui/ProDayGradient';
 import { PressableSpring } from '../motion';
 import { Icon } from '../ui/Icon';
 import { spacing, radius } from '../../theme/designTokens';
-import { useAppTheme } from '../../context/ProductLineContext';
 import type { AppColors } from '../../theme/universeTheme';
 
 interface DiscoverGuestHeroProps {
@@ -36,7 +37,8 @@ export const DiscoverGuestHero: React.FC<DiscoverGuestHeroProps> = ({
 }) => {
   const insets = useSafeAreaInsets();
   const { colors: c } = useAppTheme();
-  const copy = getDiscoverHomeCopy(productLine);
+  const { t } = useTranslation();
+  const copy = getLocalizedDiscoverCopy(productLine, t);
   const stops = gradientsForLine(productLine);
   const styles = useMemo(() => createStyles(c), [c]);
 
@@ -87,12 +89,12 @@ export const DiscoverGuestHero: React.FC<DiscoverGuestHeroProps> = ({
         <View style={styles.ctaRow}>
           <PressableSpring onPress={onSignup} scaleTo={0.98} haptic style={styles.signupWrap}>
             <ProDayGradient kind="cta" style={styles.signupBtn}>
-              <Text style={styles.signupText}>Créer mon compte</Text>
+              <Text style={styles.signupText}>{t('discover.createAccount')}</Text>
               <Icon name="chevron-forward" size={16} color="#FFFFFF" />
             </ProDayGradient>
           </PressableSpring>
           <PressableSpring onPress={onLogin} scaleTo={0.98} style={styles.loginLink}>
-            <Text style={styles.loginLinkText}>J&apos;ai déjà un compte</Text>
+            <Text style={styles.loginLinkText}>{t('discover.hasAccount')}</Text>
           </PressableSpring>
         </View>
       </View>

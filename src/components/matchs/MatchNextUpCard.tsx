@@ -3,6 +3,7 @@ import { StyleSheet, View } from 'react-native';
 import { PressableSpring, AnimatedEntrance } from '../motion';
 import type { SeasonCalendarItem } from '../../utils/seasonCalendar';
 import { formatCalendarDate } from '../../utils/seasonCalendar';
+import { ProDayGradient } from '../ui/ProDayGradient';
 import { ProDayText } from '../ui/ProDayText';
 import { Icon } from '../ui/Icon';
 import { useAppTheme } from '../../context/ProductLineContext';
@@ -18,48 +19,51 @@ export const MatchNextUpCard: React.FC<MatchNextUpCardProps> = ({ item, onPress 
 
   return (
     <AnimatedEntrance kind="zoom" delayStep={0}>
-    <PressableSpring
-      style={[
-        styles.wrap,
-        {
-          backgroundColor: colors.surface,
-          borderColor: colors.border,
-          borderLeftColor: colors.accent,
-        },
-      ]}
-      onPress={onPress}
-      scaleTo={0.98}
-      haptic
-    >
-      <ProDayText variant="caption" accent style={styles.eyebrow}>
-        Prochain rendez-vous
-      </ProDayText>
-      <View style={styles.row}>
-        <View style={styles.copy}>
-          <ProDayText variant="section" numberOfLines={2}>
+      <PressableSpring onPress={onPress} scaleTo={0.98} haptic>
+        <ProDayGradient kind="hero" style={styles.wrap}>
+          <View style={styles.top}>
+            <View style={styles.badge}>
+              <Icon name="time" size={14} color={colors.brandInverse} />
+              <ProDayText variant="caption" inverse style={styles.badgeText}>
+                Prochain rendez-vous
+              </ProDayText>
+            </View>
+            <Icon name="chevron-forward" size={20} color="rgba(255,255,255,0.85)" />
+          </View>
+          <ProDayText variant="section" inverse numberOfLines={2} style={styles.title}>
             {item.title}
           </ProDayText>
-          <ProDayText variant="caption" muted numberOfLines={1}>
+          <ProDayText variant="caption" inverse style={styles.meta}>
             {formatCalendarDate(item.starts_at)} · {item.city}
           </ProDayText>
-        </View>
-        <Icon name="chevron-forward" size={20} color={colors.textMuted} />
-      </View>
-    </PressableSpring>
+        </ProDayGradient>
+      </PressableSpring>
     </AnimatedEntrance>
   );
 };
 
 const styles = StyleSheet.create({
   wrap: {
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderLeftWidth: 3,
+    borderRadius: radius.xl,
     padding: spacing.lg,
     marginBottom: spacing.lg,
     gap: spacing.sm,
   },
-  eyebrow: { fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.4, fontSize: 10 },
-  row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
-  copy: { flex: 1, gap: 4 },
+  top: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  badge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
+    borderRadius: radius.pill,
+    backgroundColor: 'rgba(255,255,255,0.16)',
+  },
+  badgeText: { fontWeight: '800', fontSize: 11 },
+  title: { fontWeight: '800', letterSpacing: -0.2 },
+  meta: { opacity: 0.88, fontWeight: '600' },
 });

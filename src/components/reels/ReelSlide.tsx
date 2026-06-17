@@ -1,6 +1,7 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   Image,
   Linking,
   Platform,
@@ -10,7 +11,7 @@ import {
   Text,
   View,
 } from 'react-native';
-import { Video, ResizeMode } from 'expo-av';
+import { ReelNativeVideo } from './ReelNativeVideo';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Icon } from '../ui/Icon';
 import { PressableSpring } from '../motion/PressableSpring';
@@ -25,6 +26,9 @@ import { authorProfileUrl } from '../../utils/reelAuthorUrls';
 import { shouldUseEmbedPlayback } from '../../services/reelResolver.service';
 import { prodayHaptics } from '../../utils/prodayHaptics';
 import { toggleReelBookmark } from '../../utils/reelBookmarks';
+import { toggleReelLike } from '../../utils/reelLikes';
+import { reportReel } from '../../utils/reelReports';
+import { trackV3Event } from '../../core/analytics/v3Events';
 import { spacing } from '../../theme/designTokens';
 
 type ReelSlideProps = {
@@ -33,7 +37,11 @@ type ReelSlideProps = {
   height: number;
   width: number;
   bookmarked?: boolean;
-  onBookmarkToggle?: (reelId: string) => Promise<boolean>;
+  liked?: boolean;
+  reporterUid?: string;
+  onBookmarkToggle?: (bookmarkKey: string) => Promise<boolean>;
+  onLikeToggle?: (bookmarkKey: string, liked: boolean) => void;
+  onReported?: (bookmarkKey: string) => void;
   onRetry?: () => void;
 };
 
@@ -95,11 +103,14 @@ export const ReelSlide: React.FC<ReelSlideProps> = ({
   height,
   width,
   bookmarked,
+  liked: likedProp,
+  reporterUid,
   onBookmarkToggle,
+  onLikeToggle,
+  onReported,
   onRetry,
 }) => {
   const insets = useSafeAreaInsets();
-  const videoRef = useRef<Video>(null);
   const lastTapRef = useRef(0);
   const [userMuted, setUserMuted] = useState(false);
   const [paused, setPaused] = useState(false);
@@ -154,48 +165,29 @@ export const ReelSlide: React.FC<ReelSlideProps> = ({
     if (bookmarked !== undefined) setSaved(bookmarked);
   }, [bookmarked, reel.id]);
 
-  const startPlayback = useCallback(async () => {
-    const ref = videoRef.current;
-    if (!ref || !playbackSource || !isActive || paused || useEmbed) return;
-    try {
-      await ref.setIsMutedAsync(isMuted);
-      await ref.setVolumeAsync(1);
-      const status = await ref.getStatusAsync();
-      if (!status.isLoaded) {
-        await ref.loadAsync(playbackSource, {
-          shouldPlay: true,
-          isMuted,
-          isLooping: true,
-        });
-        return;
-      }
-      if (!status.isPlaying) {
-        await ref.playAsync();
-      }
-    } catch {
-      setUseEmbed(true);
-    }
-  }, [isActive, isMuted, paused, playbackSource, useEmbed]);
-
   useEffect(() => {
-    if (canPlay && !useEmbed) {
-      const timer = setTimeout(() => {
-        void startPlayback();
-      }, 50);
-      return () => clearTimeout(timer);
-    }
-    if (!isActive && videoRef.current) {
-      void videoRef.current.pauseAsync();
-    }
-    return undefined;
-  }, [canPlay, isActive, startPlayback, useEmbed, reel.videoUrl]);
+    if (likedProp !== undefined) setLiked(likedProp);
+  }, [likedProp, reel.id]);
 
   const profileUrl = authorProfileUrl(reel);
 
+  const applyLike = async (nextLiked: boolean) => {
+    if (onLikeToggle) {
+      await onLikeToggle(reel.bookmarkKey, nextLiked);
+      setLiked(nextLiked);
+    } else {
+      const persisted = await toggleReelLike(reel.bookmarkKey);
+      setLiked(persisted);
+    }
+    if (nextLiked) {
+      setShowBurst(true);
+      prodayHaptics.like();
+    }
+  };
+
   const triggerLike = () => {
-    setLiked(true);
-    setShowBurst(true);
-    prodayHaptics.like();
+    if (liked) return;
+    void applyLike(true);
   };
 
   const onSurfacePress = () => {
@@ -218,6 +210,8 @@ export const ReelSlide: React.FC<ReelSlideProps> = ({
     void Share.share({
       message: `${reel.caption || 'Reel ProDay'}\n${reel.sourceUrl}`,
       url: reel.sourceUrl,
+    }).then(() => {
+      trackV3Event('reel_share', { bookmarkKey: reel.bookmarkKey, source: reel.source });
     });
   };
 
@@ -239,8 +233,28 @@ export const ReelSlide: React.FC<ReelSlideProps> = ({
   };
 
   const onReport = () => {
-    void Linking.openURL(
-      `mailto:support@proday.app?subject=${encodeURIComponent('Signalement reel')}&body=${encodeURIComponent(`Reel: ${reel.id}\nSource: ${reel.sourceUrl}`)}`
+    Alert.alert(
+      'Signaler ce reel',
+      'Ce contenu sera masqué de votre fil. Notre équipe pourra l\'examiner.',
+      [
+        { text: 'Annuler', style: 'cancel' },
+        {
+          text: 'Signaler',
+          style: 'destructive',
+          onPress: () => {
+            void (async () => {
+              await reportReel({
+                bookmarkKey: reel.bookmarkKey,
+                reporterUid,
+                reason: 'Contenu inapproprié',
+                sourceUrl: reel.sourceUrl,
+              });
+              trackV3Event('reel_report', { bookmarkKey: reel.bookmarkKey });
+              onReported?.(reel.bookmarkKey);
+            })();
+          },
+        },
+      ],
     );
   };
 
@@ -266,21 +280,13 @@ iframe{border:0;width:100%;height:100%}</style></head>
       ) : null}
 
       {isActive && !useEmbed && hasMp4 && playbackSource ? (
-        <Video
+        <ReelNativeVideo
           key={playbackSource.uri}
-          ref={videoRef}
-          source={playbackSource}
-          style={styles.media}
-          resizeMode={ResizeMode.COVER}
-          isLooping
-          shouldPlay={isActive && !paused}
+          playbackSource={playbackSource}
+          isActive={isActive}
+          paused={paused}
           isMuted={isMuted}
-          volume={1}
-          useNativeControls={false}
           onError={() => setUseEmbed(true)}
-          onLoad={() => {
-            void startPlayback();
-          }}
         />
       ) : null}
 
@@ -329,10 +335,7 @@ iframe{border:0;width:100%;height:100%}</style></head>
             style={styles.sideBtn}
             scaleTo={0.9}
             haptic
-            onPress={() => {
-              if (!liked) prodayHaptics.like();
-              setLiked((l) => !l);
-            }}
+            onPress={() => void applyLike(!liked)}
           >
             <Icon name={liked ? 'heart' : 'heart-outline'} size={26} color="#fff" />
           </PressableSpring>

@@ -1,4 +1,4 @@
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Platform } from 'react-native';
 import { getFirebaseStorage } from '../lib/firebase';
@@ -117,6 +117,32 @@ export const storageService = {
     const contentType = normalizeImageMimeType(file.mimeType);
     const ext = extensionForMime(contentType);
     const path = `feed/${uid}/${Date.now()}.${ext}`;
+    const storageRef = ref(storage, path);
+    const blob = await uriToBlob(file.uri, contentType);
+    await uploadBytes(storageRef, blob, { contentType });
+    return getDownloadURL(storageRef);
+  },
+
+  async uploadProfileHighlightVideo(uid: string, file: UploadFileInput): Promise<string> {
+    const storage = getFirebaseStorage();
+    if (!storage) {
+      throw new Error('Firebase Storage non configuré pour les vidéos highlight.');
+    }
+    const contentType = file.mimeType.includes('video') ? file.mimeType : 'video/mp4';
+    const path = `highlights/${uid}/${Date.now()}.mp4`;
+    const storageRef = ref(storage, path);
+    const blob = await uriToBlob(file.uri, contentType);
+    await uploadBytes(storageRef, blob, { contentType });
+    return getDownloadURL(storageRef);
+  },
+
+  async uploadCommunityReel(uid: string, file: UploadFileInput): Promise<string> {
+    const storage = getFirebaseStorage();
+    if (!storage) {
+      throw new Error('Firebase Storage non configuré pour les reels.');
+    }
+    const contentType = file.mimeType.includes('video') ? file.mimeType : 'video/mp4';
+    const path = `community_reels/${uid}/${Date.now()}.mp4`;
     const storageRef = ref(storage, path);
     const blob = await uriToBlob(file.uri, contentType);
     await uploadBytes(storageRef, blob, { contentType });

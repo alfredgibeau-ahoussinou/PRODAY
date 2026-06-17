@@ -16,10 +16,10 @@ import { useAuth } from '../context/AuthContext';
 import { spacing } from '../theme/designTokens';
 import { useThemedScreen } from '../hooks/useThemedScreen';
 import type { AppColors } from '../theme/universeTheme';
-import { V3TabShell } from '../components/v3/V3TabShell';
-import { V3ScreenBack } from '../components/v3/V3ScreenBack';
+import { TabScreenShell } from '../components/app/TabScreenShell';
+import { ScreenBackButton } from '../components/ui/ScreenBackButton';
 import { useSectionIntelligence } from '../hooks/useSectionIntelligence';
-import { isV3SubScreenEnabled } from '../hooks/useV3SubScreen';
+import { isSubScreenShellEnabled } from '../hooks/useSubScreenShell';
 import { scoutingScoreMap } from '../features/v3/engines/playerScouting.engine';
 import { StaggerReveal } from '../components/motion';
 import { TAB_BAR_CONTENT_INSET } from '../navigation/tabBarLayout';
@@ -38,8 +38,8 @@ export const FavoritesListScreen: React.FC<FavoritesListScreenProps> = ({
   const styles = useMemo(() => createStyles(c), [c]);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
-  const useV3Header = isV3SubScreenEnabled(profile, 'signed');
-  const isStaff = isV3SubScreenEnabled(profile, 'staff');
+  const useShellHeader = isSubScreenShellEnabled(profile, 'signed');
+  const isStaff = isSubScreenShellEnabled(profile, 'staff');
   const playerFavorites = useMemo(() => users.filter((u) => u.role === 'player'), [users]);
   const scores = useMemo(() => {
     if (!profile || !isStaff) return new Map();
@@ -116,23 +116,23 @@ export const FavoritesListScreen: React.FC<FavoritesListScreenProps> = ({
               }}
             />
           );
-        return useV3Header ? <StaggerReveal index={Math.min(index, 8)}>{row}</StaggerReveal> : row;
+        return useShellHeader ? <StaggerReveal index={Math.min(index, 8)}>{row}</StaggerReveal> : row;
       }}
     />
   );
 
-  if (useV3Header) {
+  if (useShellHeader) {
     return (
-      <V3TabShell
+      <TabScreenShell
         caption="Mercato"
         title="Mes favoris"
         subtitle={`${users.length} profil(s) enregistré(s)`}
-        right={<V3ScreenBack onPress={onBack} />}
-        intelligence={intelligence}
+        right={<ScreenBackButton onPress={onBack} />}
+        
         flat
       >
         {body}
-      </V3TabShell>
+      </TabScreenShell>
     );
   }
 

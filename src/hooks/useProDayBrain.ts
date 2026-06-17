@@ -23,6 +23,8 @@ import type { GeoRadiusKm } from '../core/types/geo';
 import type { PrioritizedNotification } from '../core/notifications/notificationPriority.engine';
 import type { CalendarEntity } from '../core/calendar/calendarSync.engine';
 import type { HealthEngineInput } from '../core/types/health';
+import type { WearableHealthMetrics } from '../services/wearableHealth/types';
+import { applyWearableToHealthInput } from '../services/wearableHealth/mergeHealthInput';
 import type { GamificationState } from '../features/v3/models/gamification';
 import { seedsForUniverse } from '../content/reelSeedCatalog';
 import type { ProductLineId } from '../models/ProductLine';
@@ -50,13 +52,14 @@ export interface ProDayBrainState {
 export function useProDayBrain(
   profile: User | null,
   productLine: ProductLineId,
-  options?: { radiusKm?: GeoRadiusKm; userLocation?: GeoPoint }
+  options?: { radiusKm?: GeoRadiusKm; userLocation?: GeoPoint; wearable?: WearableHealthMetrics | null }
 ): ProDayBrainState {
   const { data, refresh } = useDashboardData(profile);
   const { count: unreadMessages } = useUnreadMessageCount();
   const storedState = useUserStateStore();
   const radiusKm = options?.radiusKm ?? 5;
   const userLocation = options?.userLocation ?? profile?.location;
+  const wearable = options?.wearable ?? null;
 
   return useMemo(() => {
     const emptyHealth = computeHealthSnapshot({
@@ -121,14 +124,17 @@ export function useProDayBrain(
 
     const computedProgression = computeProgression({ globalScore: data.pulse.score, streakDays });
     const progression = mergeProgression(computedProgression, storedState?.progression);
-    const healthInput: HealthEngineInput = {
-      globalScore: data.pulse.score,
-      upcomingEventsCount: data.calendarItems.length,
-      pendingConvocations: data.pendingConvocations.length,
-      recentMatchCount: Math.min(5, data.myUpcomingEvents.length),
-      streakDays,
-      profileCompletion: completion,
-    };
+    const healthInput: HealthEngineInput = applyWearableToHealthInput(
+      {
+        globalScore: data.pulse.score,
+        upcomingEventsCount: data.calendarItems.length,
+        pendingConvocations: data.pendingConvocations.length,
+        recentMatchCount: Math.min(5, data.myUpcomingEvents.length),
+        streakDays,
+        profileCompletion: completion,
+      },
+      wearable
+    );
 
     const health = computeHealthSnapshot(healthInput);
 
@@ -212,5 +218,5 @@ export function useProDayBrain(
       userLocation,
       healthInput,
     };
-  }, [profile, data, unreadMessages, productLine, radiusKm, userLocation, storedState?.refreshToken]);
+  }, [profile, data, unreadMessages, productLine, radiusKm, userLocation, storedState?.refreshToken, wearable]);
 }

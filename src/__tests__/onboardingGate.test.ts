@@ -1,5 +1,6 @@
 import {
   needsOnboardingDocumentUpload,
+  isNavigationLockedUntilDocuments,
   shouldShowPlayerVerificationReminder,
 } from '../utils/onboardingGate';
 import type { User } from '../models/User';
@@ -22,8 +23,9 @@ function baseUser(overrides: Partial<User>): User {
 }
 
 describe('onboardingGate', () => {
-  it('bloque le dashboard tant que les documents ne sont pas envoyés', () => {
+  it('bloque la messagerie tant que les documents ne sont pas envoyés', () => {
     expect(needsOnboardingDocumentUpload(baseUser({ role: 'player' }))).toBe(true);
+    expect(isNavigationLockedUntilDocuments(baseUser({ role: 'player' }))).toBe(false);
     expect(
       needsOnboardingDocumentUpload(
         baseUser({ role: 'player', onboarding_documents_submitted: true })
@@ -44,19 +46,22 @@ describe('onboardingGate', () => {
     ).toBe(false);
   });
 
-  it('contourne les documents pour les emails beta', () => {
+  it('contourne les documents pour le compte démo partenaire', () => {
     expect(
       needsOnboardingDocumentUpload(
-        baseUser({ role: 'coach', email: 'alfredgibeauahoussinou@gmail.com' })
+        baseUser({ role: 'coach', email: 'part@gmail.com' })
       )
     ).toBe(false);
   });
 
-  it('masque le rappel vérification joueur après inscription', () => {
+  it('masque le rappel vérification joueur tant que l’identité n’est pas soumise', () => {
     expect(
       shouldShowPlayerVerificationReminder(
         baseUser({ role: 'player', onboarding_documents_submitted: true })
       )
+    ).toBe(false);
+    expect(
+      shouldShowPlayerVerificationReminder(baseUser({ role: 'player' }))
     ).toBe(false);
     expect(
       shouldShowPlayerVerificationReminder(
@@ -68,17 +73,28 @@ describe('onboardingGate', () => {
           },
         })
       )
-    ).toBe(false);
+    ).toBe(true);
     expect(
       shouldShowPlayerVerificationReminder(
         baseUser({
           role: 'player',
           player_verification: {
-            identity: { status: 'not_submitted' },
+            identity: { status: 'verified' },
             club_license: { status: 'not_submitted' },
           },
         })
       )
     ).toBe(true);
+    expect(
+      shouldShowPlayerVerificationReminder(
+        baseUser({
+          role: 'player',
+          player_verification: {
+            identity: { status: 'pending' },
+            club_license: { status: 'pending' },
+          },
+        })
+      )
+    ).toBe(false);
   });
 });

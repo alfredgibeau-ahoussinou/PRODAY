@@ -22,6 +22,7 @@ import { Icon } from '../ui/Icon';
 import { PressableSpring } from '../motion';
 import { prodayHaptics } from '../../utils/prodayHaptics';
 import { useAppTheme } from '../../context/ProductLineContext';
+import { useTranslation } from '../../context/LocaleContext';
 import { spacing, radius, shadows } from '../../theme/designTokens';
 
 interface CarpoolProposeCardProps {
@@ -42,6 +43,7 @@ export const CarpoolProposeCard: React.FC<CarpoolProposeCardProps> = ({
   onOpenDetail,
 }) => {
   const { colors } = useAppTheme();
+  const { t } = useTranslation();
   const slot = carpoolSlotForDriver(event, profile.uid);
   const isEditing = Boolean(slot);
 
@@ -66,11 +68,11 @@ export const CarpoolProposeCard: React.FC<CarpoolProposeCardProps> = ({
   const publish = async () => {
     const seatsNum = seats.trim() ? parseInt(seats, 10) : undefined;
     if (!seats.trim() || !Number.isFinite(seatsNum) || (seatsNum ?? 0) < 1) {
-      Alert.alert('Places', 'Indiquez le nombre de places disponibles dans votre véhicule.');
+      Alert.alert(t('carpool.propose.seatsRequired'), t('carpool.propose.seatsRequiredBody'));
       return;
     }
     if (!meetingPlace.trim() && !meetingLocation) {
-      Alert.alert('Point de rendez-vous', 'Indiquez où vous récupérez vos coéquipiers.');
+      Alert.alert(t('carpool.standalone.form.pickupRequired'), t('carpool.propose.meetingRequired'));
       return;
     }
 
@@ -91,11 +93,11 @@ export const CarpoolProposeCard: React.FC<CarpoolProposeCardProps> = ({
       prodayHaptics.carpoolBook();
       onPublished();
       Alert.alert(
-        isEditing ? 'Trajet mis à jour' : 'Trajet publié',
-        'Votre proposition est visible par l’équipe convoquée.'
+        isEditing ? t('carpool.propose.updated') : t('carpool.propose.published'),
+        t('carpool.propose.publishedBody')
       );
     } catch (e) {
-      Alert.alert('Erreur', e instanceof Error ? e.message : 'Publication impossible.');
+      Alert.alert(t('common.error'), e instanceof Error ? e.message : t('common.publishFailed'));
     } finally {
       setSaving(false);
     }
@@ -103,16 +105,13 @@ export const CarpoolProposeCard: React.FC<CarpoolProposeCardProps> = ({
 
   const withdraw = () => {
     if (!slot?.volunteered) {
-      Alert.alert(
-        'Trajet assigné',
-        'Ce trajet a été assigné par le staff — contactez votre coach pour le modifier.'
-      );
+      Alert.alert(t('carpool.propose.assignedTitle'), t('carpool.propose.assignedWarning'));
       return;
     }
-    Alert.alert('Retirer votre trajet ?', 'Les réservations sur votre véhicule seront annulées.', [
-      { text: 'Annuler', style: 'cancel' },
+    Alert.alert(t('carpool.propose.remove.title'), t('carpool.propose.remove.body'), [
+      { text: t('common.cancel'), style: 'cancel' },
       {
-        text: 'Retirer',
+        text: t('carpool.propose.remove.cta'),
         style: 'destructive',
         onPress: () => {
           void (async () => {
@@ -121,7 +120,7 @@ export const CarpoolProposeCard: React.FC<CarpoolProposeCardProps> = ({
               await teamEventsService.withdrawCarpoolOffer(event.id, profile.uid);
               onPublished();
             } catch (e) {
-              Alert.alert('Erreur', e instanceof Error ? e.message : 'Retrait impossible.');
+              Alert.alert(t('common.error'), e instanceof Error ? e.message : t('carpool.propose.remove.failed'));
             } finally {
               setSaving(false);
             }
@@ -149,7 +148,7 @@ export const CarpoolProposeCard: React.FC<CarpoolProposeCardProps> = ({
           </ProDayText>
           {isEditing ? (
             <ProDayText variant="caption" accent style={styles.liveBadge}>
-              Trajet actif — {slot?.seats ?? '?'} place(s)
+              {t('carpool.propose.activeTrip', { n: slot?.seats ?? '?' })}
             </ProDayText>
           ) : null}
         </View>
@@ -159,12 +158,12 @@ export const CarpoolProposeCard: React.FC<CarpoolProposeCardProps> = ({
       {expanded ? (
         <View style={styles.form}>
           <ProDayText variant="caption" muted style={styles.formLead}>
-            Destination : {destination || event.city}
+            {t('carpool.propose.destination', { dest: destination || event.city })}
           </ProDayText>
 
           <TextInput
             style={[styles.input, { borderColor: colors.border, color: colors.ink }]}
-            placeholder="Nombre de places (ex. 3)"
+            placeholder={t('carpool.propose.seatsPlaceholder')}
             placeholderTextColor={colors.textMuted}
             keyboardType="number-pad"
             value={seats}
@@ -172,20 +171,20 @@ export const CarpoolProposeCard: React.FC<CarpoolProposeCardProps> = ({
           />
           <TextInput
             style={[styles.input, { borderColor: colors.border, color: colors.ink }]}
-            placeholder="Heure de départ (ex. 13:00)"
+            placeholder={t('carpool.propose.departurePlaceholder')}
             placeholderTextColor={colors.textMuted}
             value={meetingTime}
             onChangeText={setMeetingTime}
           />
           <TextInput
             style={[styles.input, { borderColor: colors.border, color: colors.ink }]}
-            placeholder="Point de rendez-vous (ex. parking du club)"
+            placeholder={t('carpool.propose.meetingPlaceholder')}
             placeholderTextColor={colors.textMuted}
             value={meetingPlace}
             onChangeText={setMeetingPlace}
           />
           <CarpoolLocationCapture
-            label="Position GPS du point de rendez-vous"
+            label={t('carpool.location.gpsLabel')}
             place={meetingPlace}
             location={meetingLocation}
             onPlaceChange={setMeetingPlace}
@@ -197,14 +196,14 @@ export const CarpoolProposeCard: React.FC<CarpoolProposeCardProps> = ({
           {slot?.meeting_location ? (
             <PressableSpring onPress={() => openMapsAt(slot.meeting_location!, slot.meeting_place)} scaleTo={0.96} haptic>
               <ProDayText variant="caption" accent style={styles.mapLink}>
-                Voir le RDV actuel sur la carte
+                {t('carpool.propose.viewMeetingMap')}
               </ProDayText>
             </PressableSpring>
           ) : null}
 
           <TextInput
             style={[styles.input, styles.inputMulti, { borderColor: colors.border, color: colors.ink }]}
-            placeholder="Infos utiles (sièges enfants, retour direct…)"
+            placeholder={t('carpool.propose.notesPlaceholder')}
             placeholderTextColor={colors.textMuted}
             value={notes}
             onChangeText={setNotes}
@@ -217,7 +216,7 @@ export const CarpoolProposeCard: React.FC<CarpoolProposeCardProps> = ({
                 <ActivityIndicator color="#fff" />
               ) : (
                 <ProDayText variant="caption" inverse style={styles.publishText}>
-                  {isEditing ? 'Mettre à jour mon trajet' : 'Publier mon trajet'}
+                  {isEditing ? t('carpool.propose.updateTrip') : t('carpool.propose.publishTrip')}
                 </ProDayText>
               )}
             </ProDayGradient>
@@ -232,14 +231,14 @@ export const CarpoolProposeCard: React.FC<CarpoolProposeCardProps> = ({
               haptic
             >
               <ProDayText variant="caption" muted style={styles.withdrawText}>
-                Retirer ma proposition
+                {t('carpool.propose.withdraw')}
               </ProDayText>
             </PressableSpring>
           ) : null}
 
           <PressableSpring onPress={onOpenDetail} scaleTo={0.96} haptic>
             <ProDayText variant="caption" accent style={styles.detailLink}>
-              Voir l’événement et les réservations →
+              {t('carpool.propose.viewEvent')}
             </ProDayText>
           </PressableSpring>
         </View>

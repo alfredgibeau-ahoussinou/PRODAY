@@ -6,6 +6,7 @@ import { ProDayText } from '../../../components/ui/ProDayText';
 import { PressableSpring, StaggerReveal, AnimatedEntrance } from '../../../components/motion';
 import { Icon } from '../../../components/ui/Icon';
 import { useAppTheme } from '../../../context/ProductLineContext';
+import { useTranslation } from '../../../context/LocaleContext';
 import { formatDistanceKm } from '../../../utils/geoLocation';
 import { spacing, radius } from '../../../theme/designTokens';
 
@@ -22,18 +23,19 @@ export const MatchCarousel: React.FC<MatchCarouselProps> = ({
   onDetails,
 }) => {
   const { colors } = useAppTheme();
+  const { t } = useTranslation();
 
   if (matches.length === 0) {
     return (
       <AnimatedEntrance kind="fadeUp">
         <GlassCard variant="default" style={styles.empty}>
-          <ProDayText variant="section">Matchs pour vous</ProDayText>
+          <ProDayText variant="section">{t('home.matches.title')}</ProDayText>
           <ProDayText variant="body" muted style={styles.emptyCopy}>
-            Aucun match compatible pour le moment.
+            {t('home.matches.empty')}
           </ProDayText>
           <PressableSpring onPress={onDetails} scaleTo={0.98} haptic>
             <ProDayText variant="caption" accent style={styles.link}>
-              Explorer les matchs
+              {t('home.matches.explore')}
             </ProDayText>
           </PressableSpring>
         </GlassCard>
@@ -45,10 +47,10 @@ export const MatchCarousel: React.FC<MatchCarouselProps> = ({
     <AnimatedEntrance kind="fadeUp">
       <View style={styles.shell}>
         <View style={styles.titleRow}>
-          <ProDayText variant="section">Matchs pour vous</ProDayText>
+          <ProDayText variant="section">{t('home.matches.title')}</ProDayText>
           <PressableSpring onPress={onDetails} scaleTo={0.98} haptic>
             <ProDayText variant="caption" accent style={styles.link}>
-              Voir tout
+              {t('home.matches.seeAll')}
             </ProDayText>
           </PressableSpring>
         </View>
@@ -83,7 +85,7 @@ export const MatchCarousel: React.FC<MatchCarouselProps> = ({
             >
               <Icon name="football" size={14} color="#FFFFFF" />
               <ProDayText variant="caption" inverse style={styles.joinLabel}>
-                Rejoindre
+                {t('home.matches.join')}
               </ProDayText>
             </PressableSpring>
               </GlassCard>
@@ -101,11 +103,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: spacing.lg,
     marginBottom: spacing.sm,
   },
   link: { fontWeight: '600' },
-  scroll: { paddingHorizontal: spacing.lg, gap: spacing.sm },
+  scroll: { gap: spacing.sm },
   card: { width: 200, padding: spacing.md, gap: spacing.xs },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   scoreBadge: {

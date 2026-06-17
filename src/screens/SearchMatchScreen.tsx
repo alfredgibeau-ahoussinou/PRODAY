@@ -29,7 +29,6 @@ import { clubsService } from '../services/clubs.service';
 import { usersService } from '../services/users.service';
 import { openContactConversation } from '../utils/openContactConversation';
 import { suggestFieldSlots } from '../features/v3/engines/playtomicFields.engine';
-import { isV3ShellEnabled } from '../config/featureFlags';
 
 const CHIPS = ['Tous', 'Loisir', 'Compétition', 'Mixte'] as const;
 type SortMode = 'date' | 'city' | 'club';
@@ -61,9 +60,7 @@ export const SearchMatchScreen: React.FC<SearchMatchScreenProps> = ({
 
   const fieldSlots = useMemo(
     () =>
-      isV3ShellEnabled()
-        ? suggestFieldSlots({ userLocation: profile?.location, city: profile?.city, limit: 3 })
-        : [],
+      suggestFieldSlots({ userLocation: profile?.location, city: profile?.city, limit: 3 }),
     [profile?.location, profile?.city]
   );
 

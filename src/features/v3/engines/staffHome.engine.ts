@@ -6,6 +6,7 @@ export interface StaffPriorityItem {
   detail: string;
   tab: MainTabId;
   priority: number;
+  action?: 'gestion' | 'sponsors';
 }
 
 /** Priorités staff sur l’accueil V3 (spec §4 — Staff Pro). */
@@ -15,7 +16,16 @@ export function buildStaffPriorities(input: {
   myPostsCount: number;
   upcomingEvents: number;
 }): StaffPriorityItem[] {
-  const items: StaffPriorityItem[] = [];
+  const items: StaffPriorityItem[] = [
+    {
+      id: 'team-mgmt',
+      label: 'Gestion',
+      detail: 'Planning, présences, effectif',
+      tab: 'home',
+      action: 'gestion',
+      priority: 90,
+    },
+  ];
 
   if (input.pendingConvocations > 0) {
     items.push({

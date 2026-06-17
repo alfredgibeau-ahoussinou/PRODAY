@@ -15,10 +15,10 @@ import { spacing, radius, shadows } from '../theme/designTokens';
 import type { AppColors } from '../theme/universeTheme';
 import { useAppTheme } from '../context/ProductLineContext';
 import { useAuth } from '../context/AuthContext';
-import { V3TabShell } from '../components/v3/V3TabShell';
-import { V3ScreenBack } from '../components/v3/V3ScreenBack';
+import { TabScreenShell } from '../components/app/TabScreenShell';
+import { ScreenBackButton } from '../components/ui/ScreenBackButton';
 import { useSectionIntelligence } from '../hooks/useSectionIntelligence';
-import { isV3SubScreenEnabled } from '../hooks/useV3SubScreen';
+import { isSubScreenShellEnabled } from '../hooks/useSubScreenShell';
 
 type TabId = 'profil' | 'experience' | 'diplomes' | 'avis';
 
@@ -45,8 +45,8 @@ export const CoachProfileScreen: React.FC<CoachProfileScreenProps> = ({
   const { colors: themeColors, productLine } = useAppTheme();
   const { profile: myProfile } = useAuth();
   const styles = useMemo(() => createCoachStyles(themeColors), [themeColors]);
-  const useV3Header =
-    isV3SubScreenEnabled(myProfile, 'staff') && myProfile?.uid !== staff.uid;
+  const useShellHeader =
+    isSubScreenShellEnabled(myProfile, 'staff') && myProfile?.uid !== staff.uid;
   const intelligence = useSectionIntelligence('recrutement', myProfile ?? null, productLine, {
     staffMode: true,
   });
@@ -133,18 +133,18 @@ export const CoachProfileScreen: React.FC<CoachProfileScreenProps> = ({
     </>
   );
 
-  if (useV3Header) {
+  if (useShellHeader) {
     return (
-      <V3TabShell
+      <TabScreenShell
         caption="Mercato"
         title={profileTitle}
         subtitle={staff.display_name}
-        right={<V3ScreenBack onPress={onBack} />}
-        intelligence={intelligence}
+        right={<ScreenBackButton onPress={onBack} />}
+        
         flat
       >
         <View style={styles.root}>{scrollBody}</View>
-      </V3TabShell>
+      </TabScreenShell>
     );
   }
 

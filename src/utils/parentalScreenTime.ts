@@ -68,6 +68,16 @@ export async function recordScreenTimeMinute(uid: string): Promise<number> {
   return next;
 }
 
+export function resolveEffectiveLimitMinutes(settings: ParentalSettings): number {
+  const base = resolveDailyLimitMinutes(settings);
+  const bonusDay = settings.screen_time_bonus_day;
+  const bonus = settings.screen_time_bonus_minutes ?? 0;
+  if (bonus > 0 && bonusDay === getScreenTimeDayKey()) {
+    return base + bonus;
+  }
+  return base;
+}
+
 export async function evaluateScreenTimeAccess(
   uid: string,
   settings: ParentalSettings,
@@ -77,7 +87,7 @@ export async function evaluateScreenTimeAccess(
   limitMinutes: number;
   reason?: ScreenTimeBlockReason;
 }> {
-  const limitMinutes = resolveDailyLimitMinutes(settings);
+  const limitMinutes = resolveEffectiveLimitMinutes(settings);
   if (!isScreenTimeActiveDay(settings.active_days)) {
     return { blocked: true, minutesUsed: 0, limitMinutes, reason: 'off_day' };
   }

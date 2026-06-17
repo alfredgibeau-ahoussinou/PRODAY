@@ -44,12 +44,38 @@
       ],
       "expo-web-browser",
       "expo-secure-store",
+      "expo-iap",
+      "expo-asset",
+      "expo-video",
+      "expo-audio",
       [
         "expo-calendar",
         {
-          "calendarPermission": "ProDay synchronise vos matchs et convocations avec votre calendrier."
+          "calendarPermission": "ProDay synchronise vos matchs et convocations avec votre calendrier.",
+          "remindersPermission": "ProDay peut créer des rappels liés à vos matchs et convocations."
+        }
+      ],
+      [
+        "react-native-health",
+        {
+          "healthSharePermission": "ProDay lit vos pas, sommeil et fréquence cardiaque pour affiner votre état santé sportif.",
+          "healthUpdatePermission": "ProDay n'écrit pas de données dans Apple Santé."
+        }
+      ],
+      "expo-health-connect",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "minSdkVersion": 26
+          }
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "db5a18a4-8b0a-4c96-a109-eedbb10a69b9"
+      }
+    }
   }
 }

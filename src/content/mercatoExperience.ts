@@ -10,6 +10,13 @@ import {
 } from '../models/AppSpace';
 import { getUniverseIdentity } from './brandExperience';
 import { getMercatoTabLabel } from './poleExperience';
+import type { TranslateFn } from '../i18n/types';
+
+const tr = (t: TranslateFn | undefined, key: string, fallback: string) => {
+  if (!t) return fallback;
+  const value = t(key);
+  return value === key ? fallback : value;
+};
 
 export type MercatoQuickTileId = 'players' | 'clubs' | 'detections' | 'stages';
 
@@ -46,17 +53,36 @@ function getPlayersTileTitle(line: ProductLineId): string {
   return line === 'woman' ? 'Joueuses' : 'Joueurs';
 }
 
-function getPlayersStatLabel(line: ProductLineId): string {
-  return line === 'woman' ? 'Joueuses' : 'Joueurs';
-}
-
-function getQuickTiles(line: ProductLineId): MercatoQuickTile[] {
-  const playersTitle = getPlayersTileTitle(line);
+function getQuickTiles(line: ProductLineId, t?: TranslateFn): MercatoQuickTile[] {
+  const playersTitle =
+    line === 'woman'
+      ? tr(t, 'mercato.tile.players.woman', 'Joueuses')
+      : tr(t, 'mercato.tile.players', 'Joueurs');
   return [
-    { id: 'players', icon: 'people', title: playersTitle, hint: 'Profils & CV' },
-    { id: 'clubs', icon: 'business', title: 'Clubs', hint: 'Structures' },
-    { id: 'detections', icon: 'football', title: 'Détections', hint: 'Essais & scouting' },
-    { id: 'stages', icon: 'calendar', title: 'Stages', hint: 'Camps & stages' },
+    {
+      id: 'players',
+      icon: 'people',
+      title: playersTitle,
+      hint: tr(t, 'mercato.tile.playersHint', 'Profils & CV'),
+    },
+    {
+      id: 'clubs',
+      icon: 'business',
+      title: tr(t, 'mercato.tile.clubs', 'Clubs'),
+      hint: tr(t, 'mercato.tile.clubsHint', 'Structures'),
+    },
+    {
+      id: 'detections',
+      icon: 'football',
+      title: tr(t, 'mercato.tile.detections', 'Détections'),
+      hint: tr(t, 'mercato.tile.detectionsHint', 'Essais & scouting'),
+    },
+    {
+      id: 'stages',
+      icon: 'calendar',
+      title: tr(t, 'mercato.tile.stages', 'Stages'),
+      hint: tr(t, 'mercato.tile.stagesHint', 'Camps & stages'),
+    },
   ];
 }
 
@@ -155,39 +181,39 @@ function getHeroCopy(
 export function getMercatoExperienceConfig(
   line: ProductLineId,
   role: UserRole | undefined,
-  appSpace: AppSpaceId
+  appSpace: AppSpaceId,
+  t?: TranslateFn
 ): MercatoExperienceConfig {
   const r = role ?? 'player';
   const identity = getUniverseIdentity(line);
   const tabLabel = getMercatoTabLabel(line, r);
   const hero = getHeroCopy(line, r);
-  const playersTitle = getPlayersTileTitle(line);
+  const playersTitle =
+    line === 'woman'
+      ? tr(t, 'mercato.tile.players.woman', 'Joueuses')
+      : tr(t, 'mercato.tile.players', 'Joueurs');
   const isPlayer = r === 'player';
 
   return {
     eyebrow: `${identity.accentLabel} · ${tabLabel}`,
     screenTitle: tabLabel,
-    screenSubtitle: `${APP_SPACE_LABELS[appSpace]} — ${getRoleSubtitle(line, role, appSpace)}`,
+    screenSubtitle: isPlayer
+      ? getRoleSubtitle(line, role, appSpace)
+      : `${APP_SPACE_LABELS[appSpace]} — ${getRoleSubtitle(line, role, appSpace)}`,
     heroTitle: hero.title,
     heroSubtitle: hero.subtitle,
     heroIcon: hero.icon,
-    playersStatLabel: getPlayersStatLabel(line),
-    searchPlaceholder: isPlayer
-      ? line === 'woman'
-        ? 'Rechercher un club F, un poste…'
-        : 'Rechercher un club, un poste…'
-      : line === 'woman'
-        ? `Rechercher une joueuse, un poste…`
-        : 'Rechercher un joueur, un poste…',
-    postsSectionTitle: 'Recrutements populaires',
-    postsEmptyAll:
-      line === 'pro'
-        ? 'Aucune annonce ouverte pour le moment. Publiez la première offre Mercato Pro.'
-        : 'Aucune annonce ouverte pour le moment. Soyez le premier à publier une offre Mercato.',
+    playersStatLabel:
+      line === 'woman'
+        ? tr(t, 'mercato.tile.players.woman', 'Joueuses')
+        : tr(t, 'mercato.tile.players', 'Joueurs'),
+    searchPlaceholder: tr(t, 'mercato.search.placeholder', 'Poste, ville, club…'),
+    postsSectionTitle: tr(t, 'mercato.posts.section', 'Recrutements populaires'),
+    postsEmptyAll: tr(t, 'mercato.posts.empty.all', 'Aucune annonce ouverte pour le moment.'),
     postsEmptySpace: `Aucune annonce ouverte pour ${APP_SPACE_LABELS[appSpace]} pour le moment.`,
-    postsEmptyFiltered: 'Aucune annonce ne correspond à votre recherche.',
-    fabLabel: 'Publier une annonce',
-    quickTiles: getQuickTiles(line),
+    postsEmptyFiltered: tr(t, 'mercato.posts.empty.title', 'Aucune annonce'),
+    fabLabel: tr(t, 'mercato.fab.publish', 'Publier une annonce'),
+    quickTiles: getQuickTiles(line, t),
     showFavoritesHeader: isPlayer,
     showDetectionsHeader: !isPlayer,
     showFavoritesRow: !!role && !isPlayer,

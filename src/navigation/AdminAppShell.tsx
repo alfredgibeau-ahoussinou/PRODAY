@@ -81,6 +81,7 @@ const AdminAppShellInner: React.FC<AdminAppShellProps> = ({ onPreviewUserApp }) 
         activeTab={activeTab}
         onTabPress={setActiveTab}
         pendingVerifications={stats?.pendingVerifications ?? 0}
+        pendingModeration={(stats?.pendingCommunityReels ?? 0) + (stats?.reelReports ?? 0)}
       />
     </SafeAreaView>
   );

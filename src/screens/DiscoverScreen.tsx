@@ -2,6 +2,8 @@ import React, { useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { SponsorsScreen } from './SponsorsScreen';
 import { DiscoverInteractiveHome } from '../components/discover/DiscoverInteractiveHome';
+import { ProDayConfigNotice } from '../components/ui/ProDayConfigNotice';
+import { isFirebaseConfigured } from '../config/firebase';
 import { AnimatedModalShell } from '../components/motion';
 import type { ProDayModuleId } from '../content/prodayModules';
 import type { DiscoverJourneyStepId } from '../content/discoverGuestJourney';
@@ -9,6 +11,8 @@ import { useTabNavigation } from '../context/TabNavigationContext';
 import { useLaunchIntro } from '../context/LaunchIntroContext';
 import { useDiscoverLiveData } from '../hooks/useAppData';
 import { useThemedScreen } from '../hooks/useThemedScreen';
+import { useTranslation } from '../context/LocaleContext';
+import { getLocalizedUniverseLabel } from '../i18n/localizedContent';
 import { formatCount } from '../services/stats.service';
 
 export const DiscoverScreen: React.FC = () => {
@@ -17,14 +21,18 @@ export const DiscoverScreen: React.FC = () => {
   const { stats, posts, loading } = useDiscoverLiveData();
   const [guestModule, setGuestModule] = useState<'sponsors' | null>(null);
   const { rootStyle, productLine } = useThemedScreen();
+  const { t } = useTranslation();
 
   const goLogin = () => openAuth('login');
   const goSignup = () => openAuth('signup');
 
   const statsLabel = useMemo(() => {
-    if (!stats) return 'Communauté ProDay';
-    return `${formatCount(stats.players, 'joueur')} · ${stats.recruitment_posts_open} annonces`;
-  }, [stats]);
+    if (!stats) return t('discover.stats.community');
+    return t('discover.stats.players', {
+      players: formatCount(stats.players, 'joueur'),
+      posts: stats.recruitment_posts_open,
+    });
+  }, [stats, t]);
 
   const onJourneyStep = (id: DiscoverJourneyStepId) => {
     if (id === 'profile') goLogin();
@@ -41,6 +49,11 @@ export const DiscoverScreen: React.FC = () => {
 
   return (
     <View style={[styles.root, rootStyle]}>
+      {!isFirebaseConfigured() ? (
+        <View style={styles.configBanner}>
+          <ProDayConfigNotice compact />
+        </View>
+      ) : null}
       <DiscoverInteractiveHome
         productLine={productLine}
         stats={stats}
@@ -57,22 +70,14 @@ export const DiscoverScreen: React.FC = () => {
         onOpenShop={() => setActiveTab('shop')}
         onModulePress={onModulePress}
         onStepPress={onJourneyStep}
-        universeLabel={
-          productLine === 'woman'
-            ? 'Univers Woman'
-            : productLine === 'pro'
-              ? 'Univers Pro'
-              : productLine === 'sante'
-                ? 'Univers Santé'
-                : 'Univers Homme'
-        }
+        universeLabel={getLocalizedUniverseLabel(productLine, t)}
         onUniversePress={openSpacePicker}
       />
 
       <AnimatedModalShell
         visible={guestModule !== null}
         onClose={() => setGuestModule(null)}
-        closeLabel="Fermer l'aperçu"
+        closeLabel={t('common.close')}
       >
         {guestModule === 'sponsors' ? (
           <SponsorsScreen guestMode onLoginRequired={goLogin} onBack={() => setGuestModule(null)} />
@@ -84,4 +89,5 @@ export const DiscoverScreen: React.FC = () => {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
+  configBanner: { paddingHorizontal: 16, paddingTop: 8 },
 });

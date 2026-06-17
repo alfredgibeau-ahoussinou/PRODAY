@@ -21,10 +21,10 @@ import { postMatchesAppSpace } from '../constants/appSpaces';
 import { formatCalendarDate } from '../utils/seasonCalendar';
 import { spacing, radius } from '../theme/designTokens';
 import type { AppColors } from '../theme/universeTheme';
-import { V3TabShell } from '../components/v3/V3TabShell';
-import { V3ScreenBack } from '../components/v3/V3ScreenBack';
+import { TabScreenShell } from '../components/app/TabScreenShell';
+import { ScreenBackButton } from '../components/ui/ScreenBackButton';
 import { useSectionIntelligence } from '../hooks/useSectionIntelligence';
-import { isV3SubScreenEnabled } from '../hooks/useV3SubScreen';
+import { isSubScreenShellEnabled } from '../hooks/useSubScreenShell';
 import { StaggerReveal, PressableSpring } from '../components/motion';
 import { TAB_BAR_CONTENT_INSET } from '../navigation/tabBarLayout';
 
@@ -50,7 +50,7 @@ export const StagesListScreen: React.FC<StagesListScreenProps> = ({
   const [refreshing, setRefreshing] = useState(false);
 
   const canCreate = profile ? canPublishStages(profile.role) : false;
-  const useV3Header = isV3SubScreenEnabled(profile, 'staff');
+  const useShellHeader = isSubScreenShellEnabled(profile, 'staff');
 
   const filtered = useMemo(
     () => offers.filter((o) => postMatchesAppSpace(o, appSpace, productLine)),
@@ -122,7 +122,7 @@ export const StagesListScreen: React.FC<StagesListScreenProps> = ({
             </View>
           </TouchableOpacity>
         );
-        return useV3Header ? <StaggerReveal index={Math.min(index, 8)}>{card}</StaggerReveal> : card;
+        return useShellHeader ? <StaggerReveal index={Math.min(index, 8)}>{card}</StaggerReveal> : card;
       }}
     />
   );
@@ -135,19 +135,19 @@ export const StagesListScreen: React.FC<StagesListScreenProps> = ({
       </PressableSpring>
     ) : null;
 
-  if (useV3Header) {
+  if (useShellHeader) {
     return (
-      <V3TabShell
+      <TabScreenShell
         caption="Mercato"
         title="Stages & camps"
         subtitle={`${filtered.length} offre(s) ouverte(s)`}
-        right={<V3ScreenBack onPress={onBack} />}
-        intelligence={intelligence}
+        right={<ScreenBackButton onPress={onBack} />}
+        
         flat
       >
         {listBody}
         {fab}
-      </V3TabShell>
+      </TabScreenShell>
     );
   }
 

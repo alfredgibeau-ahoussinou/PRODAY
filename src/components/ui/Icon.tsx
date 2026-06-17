@@ -53,7 +53,8 @@ export type IconName =
   | 'videocam'
   | 'volume-high'
   | 'volume-mute'
-  | 'bag';
+  | 'bag'
+  | 'globe';
 
 const FOOT_ALIAS: Partial<Record<IconName, FootIconName>> = {
   home: 'home',
@@ -125,6 +126,7 @@ const MAP: Record<IconName, keyof typeof Ionicons.glyphMap> = {
   'volume-high': 'volume-high',
   'volume-mute': 'volume-mute',
   bag: 'bag-outline',
+  globe: 'globe-outline',
 };
 
 const FILLED_MAP: Partial<Record<IconName, keyof typeof Ionicons.glyphMap>> = {

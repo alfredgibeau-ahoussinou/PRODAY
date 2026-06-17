@@ -1,7 +1,6 @@
 import { useEffect, useRef } from 'react';
 import type { User } from '../models/User';
 import type { ProductLineId } from '../models/ProductLine';
-import { isV3ShellEnabled } from '../config/featureFlags';
 import { useProDayBrain } from './useProDayBrain';
 import { syncEntitiesToDeviceCalendar } from '../services/deviceCalendar.service';
 import { isCalendarSyncEnabled, setLastCalendarSyncAt } from '../services/v3Preferences.service';
@@ -14,13 +13,12 @@ export function useDeviceCalendarSync(
   profile: User | null | undefined,
   productLine: ProductLineId
 ): void {
-  const enabled = isV3ShellEnabled();
   const brain = useProDayBrain(profile ?? null, productLine);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastToken = useRef<string>('');
 
   useEffect(() => {
-    if (!enabled || !profile?.uid || profile.role === 'physio' || profile.role === 'sponsor') {
+    if (!profile?.uid || profile.role === 'physio' || profile.role === 'sponsor') {
       return;
     }
 
@@ -44,5 +42,5 @@ export function useDeviceCalendarSync(
     return () => {
       if (timer.current) clearTimeout(timer.current);
     };
-  }, [enabled, profile, productLine, brain.calendar]);
+  }, [profile, productLine, brain.calendar]);
 }

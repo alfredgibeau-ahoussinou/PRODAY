@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
+import Constants from 'expo-constants';
 import type { User } from '../models/User';
 import type { TeamEvent } from '../models/TeamEvent';
 import type { FriendlyMatch } from '../models/FriendlyMatch';
@@ -24,7 +25,7 @@ export type ProdayNotificationData = {
 };
 
 async function notificationsModule() {
-  if (Platform.OS === 'web') return null;
+  if (Platform.OS === 'web' || Constants.appOwnership === 'expo') return null;
   try {
     return await import('expo-notifications');
   } catch {

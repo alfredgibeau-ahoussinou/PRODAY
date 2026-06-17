@@ -1,10 +1,10 @@
-import { Platform } from 'react-native';
 import {
   isFirebaseConfigured,
   isFirebaseStorageConfigured,
   firebaseConfig,
 } from './firebase';
-import { googleOAuth, getGoogleAuthRequestConfig } from './oauth';
+
+const isProduction = process.env.EXPO_PUBLIC_APP_ENV === 'production';
 
 export type ConfigSeverity = 'error' | 'warning';
 
@@ -13,16 +13,6 @@ export interface ConfigIssue {
   severity: ConfigSeverity;
   title: string;
   detail: string;
-}
-
-function projectPrefix(clientId: string | undefined): string | null {
-  if (!clientId?.includes('.apps.googleusercontent.com')) return null;
-  const match = clientId.match(/^(\d+)-/);
-  return match?.[1] ?? null;
-}
-
-function isValidGoogleClientId(value: string | undefined): boolean {
-  return Boolean(value?.trim().endsWith('.apps.googleusercontent.com'));
 }
 
 /** Problèmes de configuration détectés au démarrage. */
@@ -50,54 +40,14 @@ export function getAppConfigIssues(): ConfigIssue[] {
     });
   }
 
-  const googleReady = getGoogleAuthRequestConfig() !== null;
-  if (!googleReady) {
+  if (isProduction && !process.env.EXPO_PUBLIC_EAS_PROJECT_ID?.trim()) {
     issues.push({
-      id: 'google-missing',
+      id: 'eas-missing',
       severity: 'warning',
-      title: 'Connexion Google',
+      title: 'Push notifications',
       detail:
-        Platform.OS === 'ios'
-          ? 'Ajoutez EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID et EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID dans .env.'
-          : 'Ajoutez EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID (et Android si besoin) dans .env.',
+        'EXPO_PUBLIC_EAS_PROJECT_ID manquant — les notifications push ne fonctionneront pas en build natif.',
     });
-  } else {
-    if (!isValidGoogleClientId(googleOAuth.webClientId)) {
-      issues.push({
-        id: 'google-web-invalid',
-        severity: 'warning',
-        title: 'ID client Google (Web)',
-        detail: 'Format attendu : xxxxx.apps.googleusercontent.com',
-      });
-    }
-    if (Platform.OS === 'ios' && !isValidGoogleClientId(googleOAuth.iosClientId)) {
-      issues.push({
-        id: 'google-ios-invalid',
-        severity: 'warning',
-        title: 'ID client Google (iOS)',
-        detail: 'EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID invalide ou manquant.',
-      });
-    }
-
-    const webPrefix = projectPrefix(googleOAuth.webClientId);
-    const iosPrefix = projectPrefix(googleOAuth.iosClientId);
-    const firebasePrefix = firebaseConfig.messagingSenderId;
-    if (
-      webPrefix &&
-      iosPrefix &&
-      webPrefix !== iosPrefix &&
-      firebasePrefix &&
-      webPrefix === firebasePrefix &&
-      iosPrefix !== firebasePrefix
-    ) {
-      issues.push({
-        id: 'google-ios-project-mismatch',
-        severity: 'warning',
-        title: 'Clients Google différents',
-        detail:
-          'Le client iOS ne semble pas appartenir au même projet Firebase que le client Web. Créez un client iOS dans le projet proday-155b0.',
-      });
-    }
   }
 
   return issues;

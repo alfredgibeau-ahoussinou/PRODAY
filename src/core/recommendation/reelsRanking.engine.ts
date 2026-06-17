@@ -1,6 +1,18 @@
 import type { ReelSeed, ReelPoleId } from '../../content/reelSeedCatalog';
 import type { HealthState } from '../types/health';
 
+const POSITION_TAG_BOOST: Record<string, string[]> = {
+  gardien: ['recovery', 'prévention', 'kiné', 'warmup'],
+  goalkeeper: ['recovery', 'prévention', 'kiné', 'warmup'],
+  défenseur: ['tactics', 'tactique', 'analyse', 'coaching'],
+  defender: ['tactics', 'tactique', 'analyse', 'coaching'],
+  milieu: ['tactics', 'skills', 'collectif', 'formation'],
+  midfielder: ['tactics', 'skills', 'collectif', 'formation'],
+  attaquant: ['skills', 'motivation', 'viral', 'footwork'],
+  forward: ['skills', 'motivation', 'viral', 'footwork'],
+  striker: ['skills', 'motivation', 'viral', 'footwork'],
+};
+
 const POLE_TAG_BOOST: Record<ReelPoleId, string[]> = {
   foot: ['#skills', '#football', '#ucl', '#match'],
   mercato: ['#mercato', '#transfert', '#club', '#carrière'],
@@ -9,13 +21,29 @@ const POLE_TAG_BOOST: Record<ReelPoleId, string[]> = {
 
 const RECOVERY_TAGS = ['#récup', '#prévention', '#santé', '#mobilité', '#étirement'];
 
-function seedUsefulness(seed: ReelSeed, pole: ReelPoleId, healthState: HealthState): number {
+function seedUsefulness(
+  seed: ReelSeed,
+  pole: ReelPoleId,
+  healthState: HealthState,
+  position?: string,
+  clubId?: string,
+): number {
   const tags = seed.tags.map((t) => t.toLowerCase()).join(' ');
   let score = 0.45;
 
   for (const hint of POLE_TAG_BOOST[pole]) {
     if (tags.includes(hint.replace('#', '')) || tags.includes(hint)) score += 0.12;
   }
+
+  const posKey = (position ?? '').toLowerCase().replace(/\s+/g, '');
+  for (const [key, hints] of Object.entries(POSITION_TAG_BOOST)) {
+    if (posKey.includes(key)) {
+      if (hints.some((h) => tags.includes(h))) score += 0.18;
+      break;
+    }
+  }
+
+  if (clubId && (seed.source === 'proday' || seed.clubId === clubId)) score += 0.2;
 
   if (
     healthState === 'FATIGUED' ||
@@ -37,11 +65,19 @@ export function rankReelSeeds(params: {
   pole: ReelPoleId;
   healthState: HealthState;
   usefulnessMin: number;
+  position?: string;
+  clubId?: string;
 }): ReelSeed[] {
   return [...params.seeds]
     .map((seed) => ({
       seed,
-      usefulness: seedUsefulness(seed, params.pole, params.healthState),
+      usefulness: seedUsefulness(
+        seed,
+        params.pole,
+        params.healthState,
+        params.position,
+        params.clubId,
+      ),
     }))
     .filter((s) => s.usefulness >= params.usefulnessMin)
     .sort((a, b) => b.usefulness - a.usefulness)

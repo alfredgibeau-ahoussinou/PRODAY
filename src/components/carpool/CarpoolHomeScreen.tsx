@@ -7,37 +7,45 @@ import {
 } from 'react-native';
 import type { User } from '../../models/User';
 import type { TeamEvent, CarpoolSlot } from '../../models/TeamEvent';
+import type { StandaloneCarpoolOffer } from '../../models/StandaloneCarpoolOffer';
 import {
-  CARPOOL_CHAPTERS,
-  CARPOOL_EVENT_FILTERS,
   type CarpoolChapterId,
   type CarpoolEventFilter,
 } from '../../content/carpoolChapters';
+import { getCarpoolChapters, getCarpoolEventFilters } from '../../i18n/localizedChapters';
 import {
   carpoolAvailableSeats,
   carpoolEventSummaryForUser,
   findCarpoolBooking,
 } from '../../utils/carpoolBalance';
-import { AppTabHeader, AppStatChips } from '../app';
-import { ProDayGradient } from '../ui/ProDayGradient';
-import { ProDaySurface } from '../ui/ProDaySurface';
 import { ProDayText } from '../ui/ProDayText';
 import { SearchBar } from '../ui/SearchBar';
-import { Icon } from '../ui/Icon';
 import { ProDayTabPager } from '../ui/ProDayTabPager';
 import { CarpoolEventCard } from './CarpoolEventCard';
 import { CarpoolRideCard } from './CarpoolRideCard';
 import { CarpoolBalancePanel } from './CarpoolBalancePanel';
 import { CarpoolProposePanel } from './CarpoolProposePanel';
+import { StandaloneCarpoolRideCard } from './StandaloneCarpoolRideCard';
+import {
+  CarpoolEmptyState,
+  CarpoolFilterChips,
+  CarpoolReminderBanner,
+  CarpoolSectionIntro,
+} from './carpoolUi';
+import {
+  isStandalonePassenger,
+  isUpcomingStandaloneOffer,
+  isPastStandaloneOffer,
+  standaloneAvailableSeats,
+  filterStandaloneOffers,
+  sortStandaloneByProximity,
+} from '../../utils/standaloneCarpool';
 import { useAppTheme } from '../../context/ProductLineContext';
-import { ProDayActionTiles } from '../ui/ProDayActionTiles';
-import { ProDaySelect } from '../ui/ProDaySelect';
+import { useTranslation } from '../../context/LocaleContext';
 import { TAB_BAR_CONTENT_INSET } from '../../navigation/tabBarLayout';
-import { PressableSpring, SkeletonList, InteractiveListItem } from '../motion';
-import { spacing, radius } from '../../theme/designTokens';
-import { V3TabShell } from '../v3/V3TabShell';
-import { isV3ShellEnabled } from '../../config/featureFlags';
-import { useSectionIntelligence } from '../../hooks/useSectionIntelligence';
+import { SkeletonList, InteractiveListItem } from '../motion';
+import { spacing } from '../../theme/designTokens';
+import { TabScreenShell } from '../app/TabScreenShell';
 import {
   buildCarpoolRideRecommendations,
   sortCarpoolRides,
@@ -48,6 +56,9 @@ import {
 interface CarpoolHomeScreenProps {
   profile: User | null;
   events: TeamEvent[];
+  standaloneOffers: StandaloneCarpoolOffer[];
+  standaloneAllOffers?: StandaloneCarpoolOffer[];
+  standaloneLoading?: boolean;
   loading: boolean;
   initialChapter?: CarpoolChapterId;
   onOpenEvent: (eventId: string) => void;
@@ -65,14 +76,33 @@ type RideOffer = { event: TeamEvent; slot: CarpoolSlot };
 export const CarpoolHomeScreen: React.FC<CarpoolHomeScreenProps> = ({
   profile,
   events,
+  standaloneOffers,
+  standaloneAllOffers = [],
+  standaloneLoading = false,
   loading,
   initialChapter = 'evenements',
   onOpenEvent,
   onRefresh,
   onLoginRequired,
 }) => {
-  const { colors, productLine } = useAppTheme();
-  const useV3Header = isV3ShellEnabled() && Boolean(profile);
+  const { colors } = useAppTheme();
+  const { t } = useTranslation();
+  const chapters = useMemo(() => getCarpoolChapters(t), [t]);
+  const eventFilters = useMemo(() => getCarpoolEventFilters(t), [t]);
+  const reserveScopeFilters = useMemo(
+    () => [
+      { id: 'all' as const, label: t('carpool.reserve.filter.all') },
+      { id: 'club' as const, label: t('carpool.reserve.filter.club') },
+    ],
+    [t]
+  );
+  const tripsTabFilters = useMemo(
+    () => [
+      { id: 'upcoming' as const, label: t('carpool.trips.tab.upcoming') },
+      { id: 'past' as const, label: t('carpool.trips.tab.past') },
+    ],
+    [t]
+  );
   const [chapter, setChapter] = useState<CarpoolChapterId>(initialChapter);
 
   useEffect(() => {
@@ -80,6 +110,9 @@ export const CarpoolHomeScreen: React.FC<CarpoolHomeScreenProps> = ({
   }, [initialChapter]);
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<CarpoolEventFilter>('all');
+  const [standaloneCity, setStandaloneCity] = useState('');
+  const [standaloneClubOnly, setStandaloneClubOnly] = useState(false);
+  const [myTripsTab, setMyTripsTab] = useState<'upcoming' | 'past'>('upcoming');
   const [refreshing, setRefreshing] = useState(false);
 
   const upcoming = useMemo(() => {
@@ -117,6 +150,38 @@ export const CarpoolHomeScreen: React.FC<CarpoolHomeScreenProps> = ({
     });
   }, [upcoming, profile]);
 
+  const upcomingStandalone = useMemo(
+    () => standaloneOffers.filter(isUpcomingStandaloneOffer),
+    [standaloneOffers]
+  );
+
+  const bookableStandalone = useMemo(() => {
+    if (!profile) return [];
+    const filtered = filterStandaloneOffers(upcomingStandalone, {
+      city: standaloneCity,
+      clubOnly: standaloneClubOnly,
+      viewerClubId: profile.profile?.club_id,
+    });
+    return sortStandaloneByProximity(
+      filtered.filter((offer) => {
+        if (offer.driver_uid === profile.uid) return false;
+        if (isStandalonePassenger(offer, profile.uid)) return false;
+        return standaloneAvailableSeats(offer) > 0;
+      }),
+      profile.location,
+    );
+  }, [upcomingStandalone, profile, standaloneCity, standaloneClubOnly]);
+
+  const myStandaloneTrips = useMemo(() => {
+    if (!profile) return [];
+    const source = standaloneAllOffers.length ? standaloneAllOffers : standaloneOffers;
+    return source.filter((o) => {
+      const mine = o.driver_uid === profile.uid || isStandalonePassenger(o, profile.uid);
+      if (!mine) return false;
+      return myTripsTab === 'past' ? isPastStandaloneOffer(o) : isUpcomingStandaloneOffer(o);
+    });
+  }, [standaloneAllOffers, standaloneOffers, profile, myTripsTab]);
+
   const availableRides = useMemo((): RideOffer[] => {
     if (!profile) return [];
     const list: RideOffer[] = [];
@@ -144,13 +209,9 @@ export const CarpoolHomeScreen: React.FC<CarpoolHomeScreenProps> = ({
   );
 
   const sortedAvailableRides = useMemo(
-    () => sortCarpoolRides(availableRides, carpoolRecs, useV3Header),
-    [availableRides, carpoolRecs, useV3Header]
+    () => sortCarpoolRides(availableRides, carpoolRecs, Boolean(profile)),
+    [availableRides, carpoolRecs, profile]
   );
-
-  const intelligence = useSectionIntelligence('covoiturage', profile, productLine, {
-    availableRides: availableRides.length,
-  });
 
   const needsRideCount = profile
     ? upcoming.filter((e) => {
@@ -159,8 +220,10 @@ export const CarpoolHomeScreen: React.FC<CarpoolHomeScreenProps> = ({
       }).length
     : 0;
 
-  const offeringCount = profile
-    ? upcoming.filter((e) => carpoolEventSummaryForUser(e, profile.uid).isDriver).length
+  const activeStandaloneCount = profile
+    ? standaloneOffers.filter(
+        (o) => o.driver_uid === profile.uid && isUpcomingStandaloneOffer(o)
+      ).length
     : 0;
 
   const newProposalsCount = profile
@@ -170,12 +233,6 @@ export const CarpoolHomeScreen: React.FC<CarpoolHomeScreenProps> = ({
         return canJoin && !carpoolEventSummaryForUser(e, profile.uid).isDriver;
       }).length
     : 0;
-  const bookedCount = profile
-    ? upcoming.filter((e) =>
-        Boolean(carpoolEventSummaryForUser(e, profile.uid).myBookingDriverUid)
-      ).length
-    : 0;
-
   const reminderEvents = useMemo(() => {
     if (!profile) return [];
     const horizon = Date.now() + 24 * 60 * 60 * 1000;
@@ -214,36 +271,31 @@ export const CarpoolHomeScreen: React.FC<CarpoolHomeScreenProps> = ({
             }
             {...scrollProps}
           >
-            <SearchBar placeholder="Rechercher un événement…" value={search} onChangeText={setSearch} />
-            <ProDaySelect<CarpoolEventFilter>
-              label="Filtrer les événements"
-              placeholder="Tout"
-              options={CARPOOL_EVENT_FILTERS.map((f) => ({ id: f.id, label: f.label }))}
+            <SearchBar
+              placeholder={t('carpool.events.search')}
+              value={search}
+              onChangeText={setSearch}
+              embedded
+            />
+            <CarpoolFilterChips
+              options={eventFilters}
               value={filter}
               onChange={setFilter}
-              inset={false}
             />
             {loading ? (
               <SkeletonList count={4} variant="card" />
             ) : filtered.length === 0 ? (
-              <ProDaySurface variant="module" style={styles.empty}>
-                <Icon name="calendar" size={32} color={colors.textMuted} />
-                <ProDayText variant="section">Aucun événement</ProDayText>
-                <ProDayText variant="body" muted style={styles.emptySub}>
-                  {!profile
-                    ? 'Connectez-vous pour voir vos convocations et organiser les trajets.'
-                    : 'Vos convocations apparaîtront ici pour organiser les trajets.'}
-                </ProDayText>
-                {!profile && onLoginRequired ? (
-                  <PressableSpring onPress={onLoginRequired} scaleTo={0.97} haptic>
-                    <ProDayGradient kind="cta" style={styles.cta}>
-                      <ProDayText variant="caption" inverse style={styles.ctaText}>
-                        Se connecter
-                      </ProDayText>
-                    </ProDayGradient>
-                  </PressableSpring>
-                ) : null}
-              </ProDaySurface>
+              <CarpoolEmptyState
+                icon="calendar"
+                title={t('carpool.events.empty.title')}
+                subtitle={
+                  !profile
+                    ? t('carpool.guest.body')
+                    : 'Vos convocations apparaîtront ici pour organiser les trajets.'
+                }
+                ctaLabel={!profile && onLoginRequired ? t('common.login') : undefined}
+                onCta={onLoginRequired}
+              />
             ) : (
               filtered.map((event, index) => (
                 <InteractiveListItem key={event.id} index={index}>
@@ -272,49 +324,54 @@ export const CarpoolHomeScreen: React.FC<CarpoolHomeScreenProps> = ({
             }
             {...scrollProps}
           >
-            <ProDayText variant="eyebrow" accent style={styles.pageLead}>
-              Être co-voituré
-            </ProDayText>
-            <ProDayText variant="body" muted style={styles.pageSub}>
-              Réservez une place chez un coéquipier ou votre coach — comme BlaBlaCar en équipe.
-            </ProDayText>
+            <CarpoolSectionIntro
+              icon="car"
+              title={t('carpool.reserve.intro.title')}
+              subtitle={t('carpool.reserve.intro.subtitle')}
+            />
 
             {!profile ? (
-              <ProDaySurface variant="module" style={styles.empty}>
-                <ProDayText variant="section">Connectez-vous</ProDayText>
-                <ProDayText variant="body" muted style={styles.emptySub}>
-                  Accédez à vos convocations pour réserver une place.
-                </ProDayText>
-                {onLoginRequired ? (
-                  <PressableSpring onPress={onLoginRequired} scaleTo={0.97} haptic>
-                    <ProDayGradient kind="cta" style={styles.cta}>
-                      <ProDayText variant="caption" inverse style={styles.ctaText}>
-                        Se connecter
-                      </ProDayText>
-                    </ProDayGradient>
-                  </PressableSpring>
-                ) : null}
-              </ProDaySurface>
-            ) : loading ? (
+              <CarpoolEmptyState
+                icon="person"
+                title={t('common.guest.loginTitle')}
+                subtitle={t('carpool.guest.body')}
+                ctaLabel={t('common.login')}
+                onCta={onLoginRequired}
+              />
+            ) : loading && standaloneLoading ? (
               <SkeletonList count={3} variant="card" />
-            ) : availableRides.length === 0 ? (
-              <ProDaySurface variant="module" style={styles.empty}>
-                <Icon name="car" size={32} color={colors.textMuted} />
-                <ProDayText variant="section">Aucun trajet disponible</ProDayText>
-                <ProDayText variant="body" muted style={styles.emptySub}>
-                  Aucune place libre pour le moment. Proposez votre véhicule ou attendez qu’un conducteur
-                  publie des places.
-                </ProDayText>
-                <PressableSpring onPress={openProposerTab} scaleTo={0.97} haptic>
-                  <ProDayGradient kind="cta" style={styles.cta}>
-                    <ProDayText variant="caption" inverse style={styles.ctaText}>
-                      Proposer un trajet
-                    </ProDayText>
-                  </ProDayGradient>
-                </PressableSpring>
-              </ProDaySurface>
+            ) : availableRides.length === 0 && bookableStandalone.length === 0 ? (
+              <CarpoolEmptyState
+                icon="car"
+                title={t('carpool.reserve.empty.title')}
+                subtitle={t('carpool.reserve.empty.subtitle')}
+                ctaLabel={t('carpool.cta.proposeTrip')}
+                onCta={openProposerTab}
+              />
             ) : (
-              sortedAvailableRides.map(({ event, slot }, index) => {
+              <>
+                <SearchBar
+                  value={standaloneCity}
+                  onChangeText={setStandaloneCity}
+                  placeholder={t('carpool.reserve.filter.city')}
+                  embedded
+                />
+                <CarpoolFilterChips
+                  options={reserveScopeFilters}
+                  value={standaloneClubOnly ? 'club' : 'all'}
+                  onChange={(id) => setStandaloneClubOnly(id === 'club')}
+                />
+                {bookableStandalone.map((offer, index) => (
+                  <InteractiveListItem key={`standalone-${offer.id}`} index={index}>
+                    <StandaloneCarpoolRideCard
+                      offer={offer}
+                      profile={profile}
+                      driverHistory={standaloneAllOffers}
+                      onUpdated={onRefresh}
+                    />
+                  </InteractiveListItem>
+                ))}
+                {sortedAvailableRides.map(({ event, slot }, index) => {
                 const rec = findCarpoolRec(carpoolRecs, event.id, slot.driver_uid);
                 const trip = summarizeCarpoolTrip({
                   userLocation: profile?.location,
@@ -322,7 +379,7 @@ export const CarpoolHomeScreen: React.FC<CarpoolHomeScreenProps> = ({
                   rec,
                 });
                 return (
-                <InteractiveListItem key={`${event.id}-${slot.driver_uid}`} index={index}>
+                <InteractiveListItem key={`${event.id}-${slot.driver_uid}`} index={bookableStandalone.length + index}>
                   <CarpoolRideCard
                     event={event}
                     slot={slot}
@@ -335,7 +392,8 @@ export const CarpoolHomeScreen: React.FC<CarpoolHomeScreenProps> = ({
                   />
                 </InteractiveListItem>
               );
-              })
+              })}
+              </>
             )}
           </ScrollView>
         ),
@@ -346,7 +404,9 @@ export const CarpoolHomeScreen: React.FC<CarpoolHomeScreenProps> = ({
           <CarpoolProposePanel
             profile={profile}
             events={events}
+            standaloneOffers={standaloneOffers}
             loading={loading}
+            standaloneLoading={standaloneLoading}
             refreshing={refreshing}
             onRefresh={onRefresh}
             onOpenEvent={onOpenEvent}
@@ -368,31 +428,41 @@ export const CarpoolHomeScreen: React.FC<CarpoolHomeScreenProps> = ({
           >
             {loading ? (
               <SkeletonList count={3} variant="card" />
-            ) : myTrips.length === 0 ? (
-              <ProDaySurface variant="module" style={styles.empty}>
-                <Icon name="car" size={32} color={colors.textMuted} />
-                <ProDayText variant="section">Aucun trajet planifié</ProDayText>
-                <ProDayText variant="body" muted style={styles.emptySub}>
-                  Proposez un véhicule ou réservez une place depuis l&apos;onglet Réserver.
-                </ProDayText>
-                <PressableSpring onPress={openReserveTab} scaleTo={0.97} haptic>
-                  <ProDayGradient kind="cta" style={styles.cta}>
-                    <ProDayText variant="caption" inverse style={styles.ctaText}>
-                      Voir les places dispo
-                    </ProDayText>
-                  </ProDayGradient>
-                </PressableSpring>
-              </ProDaySurface>
+            ) : myTrips.length === 0 && myStandaloneTrips.length === 0 ? (
+              <CarpoolEmptyState
+                icon="car"
+                title={t('carpool.trips.empty.title')}
+                subtitle={t('carpool.trips.empty.subtitle')}
+                ctaLabel={t('carpool.cta.viewSeats')}
+                onCta={openReserveTab}
+              />
             ) : (
-              myTrips.map((event, index) => (
-                <InteractiveListItem key={event.id} index={index}>
+              <>
+                <CarpoolFilterChips
+                  options={tripsTabFilters}
+                  value={myTripsTab}
+                  onChange={setMyTripsTab}
+                />
+                {myStandaloneTrips.map((offer, index) => (
+                  <InteractiveListItem key={`standalone-trip-${offer.id}`} index={index}>
+                    <StandaloneCarpoolRideCard
+                      offer={offer}
+                      profile={profile!}
+                      driverHistory={standaloneAllOffers}
+                      onUpdated={onRefresh}
+                    />
+                  </InteractiveListItem>
+                ))}
+                {myTrips.map((event, index) => (
+                <InteractiveListItem key={event.id} index={myStandaloneTrips.length + index}>
                   <CarpoolEventCard
                     event={event}
                     profileUid={profile?.uid ?? ''}
                     onPress={() => onOpenEvent(event.id)}
                   />
                 </InteractiveListItem>
-              ))
+              ))}
+              </>
             )}
           </ScrollView>
         ),
@@ -415,8 +485,12 @@ export const CarpoolHomeScreen: React.FC<CarpoolHomeScreenProps> = ({
     [
       colors,
       loading,
+      standaloneLoading,
+      standaloneOffers,
       filtered,
       myTrips,
+      myStandaloneTrips,
+      bookableStandalone,
       availableRides,
       profile,
       search,
@@ -427,148 +501,71 @@ export const CarpoolHomeScreen: React.FC<CarpoolHomeScreenProps> = ({
       onRefresh,
       events,
       sortedAvailableRides,
-      useV3Header,
+      carpoolRecs,
+      onLoginRequired,
+      scrollProps,
+      pagePad,
+      openReserveTab,
+      openProposerTab,
+      t,
+      chapters,
+      eventFilters,
+      reserveScopeFilters,
+      tripsTabFilters,
     ]
   );
 
   const subtitle =
-    profile?.role === 'player'
-      ? 'Proposez un trajet ou réservez une place pour vos matchs et entraînements.'
-      : 'Organisez les trajets de votre groupe — propositions ou assignation.';
+    profile?.role === 'player' ? t('carpool.subtitle.player') : t('carpool.subtitle.staff');
 
   const body = (
     <>
       {reminderEvents.length > 0 ? (
-        <ProDaySurface variant="accent" style={[styles.reminder, { borderColor: colors.border }]}>
-          <ProDayText variant="caption" accent style={styles.reminderTitle}>
-            {reminderEvents.length} événement{reminderEvents.length > 1 ? 's' : ''} demain sans trajet
-          </ProDayText>
-          <View style={styles.reminderActions}>
-            <PressableSpring onPress={openReserveTab} scaleTo={0.97} haptic>
-              <ProDayText variant="caption" accent style={styles.reminderCta}>
-                Réserver →
-              </ProDayText>
-            </PressableSpring>
-            <PressableSpring onPress={openProposerTab} scaleTo={0.97} haptic>
-              <ProDayText variant="caption" accent style={styles.reminderCta}>
-                Proposer un trajet →
-              </ProDayText>
-            </PressableSpring>
-          </View>
-        </ProDaySurface>
+        <CarpoolReminderBanner
+          count={reminderEvents.length}
+          onReserve={openReserveTab}
+          onPropose={openProposerTab}
+        />
       ) : null}
 
-      <ProDayActionTiles
-        items={[
-          {
-            id: 'reserver',
-            label: 'Réserver',
-            icon: 'car',
-            badge: availableRides.length > 0 ? availableRides.length : undefined,
-          },
-          {
-            id: 'proposer',
-            label: 'Proposer',
-            icon: 'add',
-            badge: offeringCount > 0 ? offeringCount : newProposalsCount || undefined,
-          },
-          {
-            id: 'equipe',
-            label: 'Équipe',
-            icon: 'people',
-          },
-        ]}
-        onPress={(id) => {
-          if (id === 'reserver') openReserveTab();
-          else if (id === 'proposer') openProposerTab();
-          else if (id === 'equipe') setChapter('equipe');
-        }}
-      />
-
       <ProDayTabPager
-        chapters={CARPOOL_CHAPTERS}
+        chapters={chapters}
         pages={pages}
         activeChapter={chapter}
         onChapterChange={setChapter}
+        variant="pills"
         badges={{
-          reserver: availableRides.length > 0 ? availableRides.length : needsRideCount > 0 ? needsRideCount : undefined,
-          proposer: newProposalsCount > 0 ? newProposalsCount : undefined,
-          mes_trajets: myTrips.length > 0 ? myTrips.length : undefined,
+          reserver:
+            availableRides.length + bookableStandalone.length > 0
+              ? availableRides.length + bookableStandalone.length
+              : needsRideCount > 0
+                ? needsRideCount
+                : undefined,
+          proposer:
+            newProposalsCount > 0 || activeStandaloneCount > 0
+              ? newProposalsCount + activeStandaloneCount
+              : undefined,
+          mes_trajets:
+            myTrips.length + myStandaloneTrips.length > 0
+              ? myTrips.length + myStandaloneTrips.length
+              : undefined,
         }}
       />
     </>
   );
 
-  if (useV3Header) {
-    return (
-      <V3TabShell
-        title="Covoiturage"
-        subtitle={subtitle}
-        flat
-        intelligence={intelligence}
-        stats={[
-          { value: upcoming.length, label: 'Événements' },
-          {
-            value: availableRides.length,
-            label: 'Places',
-            highlight: availableRides.length > 0,
-          },
-          { value: bookedCount, label: 'Réservé', highlight: bookedCount > 0 },
-        ]}
-      >
-        {body}
-      </V3TabShell>
-    );
-  }
-
   return (
-    <View style={styles.root}>
-      <AppTabHeader
-        title="Covoiturage"
-        subtitle={subtitle}
-        footer={
-          <AppStatChips
-            items={[
-              { value: upcoming.length, label: 'Événements' },
-              { value: availableRides.length, label: 'Places', highlight: availableRides.length > 0 },
-              { value: bookedCount, label: 'Réservé', highlight: bookedCount > 0 },
-            ]}
-          />
-        }
-      />
-
+    <TabScreenShell
+      caption={t('carpool.caption')}
+      title={t('carpool.title')}
+      subtitle={subtitle}
+      flat
+    >
       {body}
-    </View>
+    </TabScreenShell>
   );
 };
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  reminder: {
-    marginHorizontal: spacing.lg,
-    marginBottom: spacing.sm,
-    padding: spacing.md,
-    gap: spacing.xs,
-    borderWidth: 1,
-  },
-  reminderTitle: { fontWeight: '800' },
-  reminderActions: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.md,
-    marginTop: spacing.xs,
-  },
-  reminderCta: { fontWeight: '800' },
-  pageLead: { marginBottom: 4 },
-  pageSub: { marginBottom: spacing.lg },
-  loader: { marginVertical: spacing.xl },
-  empty: { alignItems: 'center', padding: spacing.xl, gap: spacing.sm },
-  emptySub: { textAlign: 'center' },
-  cta: {
-    marginTop: spacing.md,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-    borderRadius: radius.pill,
-  },
-  ctaText: { fontWeight: '800' },
 });

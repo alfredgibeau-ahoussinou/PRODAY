@@ -17,6 +17,8 @@ interface ShopSpotlightProps {
   productLine: ProductLineId;
   onPress: () => void;
   onAddToCart?: () => void;
+  /** Recommandation IA affichée sur la sélection. */
+  recommendation?: { iaScore: number; reason: string };
 }
 
 export const ShopSpotlight: React.FC<ShopSpotlightProps> = ({
@@ -24,6 +26,7 @@ export const ShopSpotlight: React.FC<ShopSpotlightProps> = ({
   productLine,
   onPress,
   onAddToCart,
+  recommendation,
 }) => {
   const { colors: c } = useAppTheme();
   const styles = useMemo(() => createStyles(c), [c]);
@@ -57,9 +60,16 @@ export const ShopSpotlight: React.FC<ShopSpotlightProps> = ({
             </ProDayText>
           </View>
         ) : null}
+        {recommendation ? (
+          <View style={[styles.recoPill, { backgroundColor: c.accent }]}>
+            <ProDayText variant="caption" inverse style={styles.recoPillText}>
+              Pour vous · {recommendation.iaScore}%
+            </ProDayText>
+          </View>
+        ) : null}
         <View style={styles.overlayCopy}>
           <ProDayText variant="eyebrow" style={styles.kicker}>
-            Sélection du moment
+            {recommendation ? recommendation.reason : 'Sélection du moment'}
           </ProDayText>
           <ProDayText variant="hero" style={styles.name} numberOfLines={2}>
             {product.name}
@@ -95,7 +105,7 @@ function createStyles(c: AppColors) {
       backgroundColor: c.surface,
     },
     imageWrap: {
-      height: 220,
+      height: 248,
       position: 'relative',
       backgroundColor: c.surfaceMuted,
     },
@@ -117,6 +127,19 @@ function createStyles(c: AppColors) {
       color: c.ink,
       fontWeight: '900',
       fontSize: 10,
+    },
+    recoPill: {
+      position: 'absolute',
+      top: spacing.md,
+      right: spacing.md,
+      paddingHorizontal: spacing.sm,
+      paddingVertical: 5,
+      borderRadius: radius.pill,
+    },
+    recoPillText: {
+      fontWeight: '900',
+      fontSize: 10,
+      letterSpacing: 0.3,
     },
     overlayCopy: {
       position: 'absolute',

@@ -7,6 +7,7 @@ import { Icon, type IconName } from '../ui/Icon';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { useSessionProfile } from '../../hooks/useSessionProfile';
 import { getTabShortLabel, getVisibleMainTabs } from '../../content/poleExperience';
+import { useTranslation } from '../../context/LocaleContext';
 import {
   getPhysioTabIcon,
   isMedicalPractitionerRole,
@@ -48,6 +49,7 @@ export const CompactTabBar: React.FC<CompactTabBarProps> = ({
   visibleTabs,
 }) => {
   const { colors, isWoman, productLine } = useAppTheme();
+  const { t } = useTranslation();
   const sessionProfile = useSessionProfile();
   const insets = useSafeAreaInsets();
   const immersive = activeTab === 'reels';
@@ -101,7 +103,7 @@ export const CompactTabBar: React.FC<CompactTabBarProps> = ({
               ? getSponsorTabIcon(tab.id)
               : TAB_ICONS[tab.id];
           const badge = tab.id === 'messages' ? unreadCount : 0;
-          const label = getTabShortLabel(tab.id, productLine, role) || tab.label;
+          const label = getTabShortLabel(tab.id, productLine, role, t);
           const iconColor = active
             ? immersive
               ? '#fff'

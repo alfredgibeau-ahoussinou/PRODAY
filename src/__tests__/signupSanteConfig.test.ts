@@ -24,6 +24,7 @@ describe('signupSanteConfig', () => {
   it('adapte le message de fin selon la vérification', () => {
     expect(getSanteLaunchCopy({}).title).toMatch(/créé/i);
     expect(getSanteLaunchCopy({ emailVerificationPending: true }).body).toMatch(/email/i);
-    expect(getSanteLaunchCopy({ verificationPending: true }).body).toMatch(/48 h/i);
+    expect(getSanteLaunchCopy({ verificationPending: true }).body).toMatch(/profil/i);
+    expect(getSanteLaunchCopy({ verificationPending: true }).finishLabel).toMatch(/profil/i);
   });
 });

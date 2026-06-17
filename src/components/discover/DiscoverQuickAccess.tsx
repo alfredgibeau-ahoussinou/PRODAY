@@ -5,23 +5,13 @@ import { Icon } from '../ui/Icon';
 import { PressableSpring } from '../motion';
 import { spacing, radius, shadows } from '../../theme/designTokens';
 import { useAppTheme } from '../../context/ProductLineContext';
+import { useTranslation } from '../../context/LocaleContext';
+import { getLocalizedQuickAccessItems } from '../../i18n/localizedContent';
 import type { AppColors } from '../../theme/universeTheme';
 
 export type DiscoverQuickId = 'mercato' | 'matchs' | 'reels' | 'shop' | 'sponsors';
 
-interface QuickItem {
-  id: DiscoverQuickId;
-  label: string;
-  sub: string;
-  icon: IconName;
-}
-
-const ITEMS: QuickItem[] = [
-  { id: 'mercato', label: 'Mercato', sub: 'Annonces', icon: 'search' },
-  { id: 'matchs', label: 'Matchs', sub: 'Convocations', icon: 'handshake' },
-  { id: 'reels', label: 'Reels', sub: 'Découvrir', icon: 'football' },
-  { id: 'shop', label: 'Shop', sub: 'Officiel', icon: 'bag' },
-];
+const ITEM_IDS: DiscoverQuickId[] = ['mercato', 'matchs', 'reels', 'shop'];
 
 interface DiscoverQuickAccessProps {
   onPress: (id: DiscoverQuickId) => void;
@@ -33,11 +23,22 @@ export const DiscoverQuickAccess: React.FC<DiscoverQuickAccessProps> = ({
   hideReels = false,
 }) => {
   const { colors: c } = useAppTheme();
+  const { t } = useTranslation();
   const styles = useMemo(() => createStyles(c), [c]);
-  const items = useMemo(
-    () => (hideReels ? ITEMS.filter((item) => item.id !== 'reels') : ITEMS),
-    [hideReels],
-  );
+  const iconById: Partial<Record<DiscoverQuickId, IconName>> = {
+    mercato: 'search',
+    matchs: 'handshake',
+    reels: 'football',
+    shop: 'bag',
+  };
+  const items = useMemo(() => {
+    const localized = getLocalizedQuickAccessItems(t);
+    const list = localized.map((item) => ({
+      ...item,
+      icon: iconById[item.id] ?? 'search',
+    }));
+    return hideReels ? list.filter((item) => item.id !== 'reels') : list;
+  }, [hideReels, t]);
 
   return (
     <View style={styles.row}>

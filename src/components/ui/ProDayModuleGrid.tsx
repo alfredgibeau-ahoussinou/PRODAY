@@ -5,6 +5,8 @@ import { PRODAY_MODULES, type ProDayModuleId, type ProDayModuleDef } from '../..
 import { getModulesForRoleAndLine } from '../../content/poleExperience';
 import type { UserRole } from '../../models/User';
 import { useAppTheme } from '../../context/ProductLineContext';
+import { useTranslation } from '../../context/LocaleContext';
+import { getLocalizedModules } from '../../i18n/localizedContent';
 import { PressableSpring } from '../motion';
 import { Icon } from './Icon';
 import { spacing, radius, shadows, surfaces } from '../../theme/designTokens';
@@ -57,8 +59,19 @@ export const ProDayModuleGrid: React.FC<ProDayModuleGridProps> = ({
   role,
 }) => {
   const { productLine, colors: c } = useAppTheme();
+  const { t } = useTranslation();
   const styles = useMemo(() => createStyles(c), [c]);
   const modulePalette = useMemo(() => getModuleAccents(c), [c]);
+  const localizedModules = useMemo(() => {
+    const labels = Object.fromEntries(
+      getLocalizedModules(t).map((item) => [item.id, item])
+    );
+    return PRODAY_MODULES.map((mod) => ({
+      ...mod,
+      title: labels[mod.id]?.title ?? mod.title,
+      subtitle: labels[mod.id]?.subtitle ?? mod.subtitle,
+    }));
+  }, [t]);
   const roleLayout = useMemo(
     () => (role ? getModulesForRoleAndLine(role, productLine) : null),
     [role, productLine]
@@ -66,11 +79,11 @@ export const ProDayModuleGrid: React.FC<ProDayModuleGridProps> = ({
 
   const modules = useMemo(() => {
     if (roleLayout) {
-      return orderModules(PRODAY_MODULES, roleLayout.order, roleLayout.fullWidthModuleId);
+      return orderModules(localizedModules, roleLayout.order, roleLayout.fullWidthModuleId);
     }
     const wideId = fullWidthProp ?? 'gestion';
-    return orderModules(PRODAY_MODULES, PRODAY_MODULES.map((m) => m.id), wideId);
-  }, [roleLayout, fullWidthProp]);
+    return orderModules(localizedModules, localizedModules.map((m) => m.id), wideId);
+  }, [roleLayout, fullWidthProp, localizedModules]);
 
   return (
     <View style={styles.grid}>

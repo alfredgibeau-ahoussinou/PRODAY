@@ -3,10 +3,11 @@ import { View, Text, Pressable } from 'react-native';
 import { SignupStepLayout } from './SignupStepLayout';
 import { SignupFooterButton } from './SignupFooterButton';
 import type { SignupForm } from './useSignupForm';
-import { APP_SPACE_GROUPS, WOMAN_APP_SPACE_GROUPS } from './signupFlowConfig';
+import { getAppSpaceGroups } from './signupFlowConfig';
 import { useSignupTheme } from './signupTheme';
 import { useSignupFlowTheme } from './SignupFlowContext';
 import { getPlayerStepMeta } from './signupPlayerStepMeta';
+import { useTranslation } from '../../context/LocaleContext';
 
 interface SignupSpaceStepProps {
   form: SignupForm;
@@ -29,8 +30,9 @@ export const SignupSpaceStep: React.FC<SignupSpaceStepProps> = ({
 }) => {
   const signupTheme = useSignupTheme();
   const { colors } = useSignupFlowTheme();
-  const spaceGroups = form.isWomanProduct ? [...WOMAN_APP_SPACE_GROUPS] : APP_SPACE_GROUPS;
-  const meta = getPlayerStepMeta(form.productLine, 'space');
+  const { t } = useTranslation();
+  const spaceGroups = getAppSpaceGroups(form.isWomanProduct, t);
+  const meta = getPlayerStepMeta(form.productLine, 'space', t);
 
   return (
     <SignupStepLayout
@@ -44,7 +46,7 @@ export const SignupSpaceStep: React.FC<SignupSpaceStepProps> = ({
       heroIcon={meta.heroIcon}
       onBack={onBack}
       footer={
-        <SignupFooterButton label="Continuer" onPress={() => form.advanceFromCurrentPage()} />
+        <SignupFooterButton label={t('signup.form.continue')} onPress={() => form.advanceFromCurrentPage()} />
       }
     >
       {form.fieldErrors.appSpace ? (

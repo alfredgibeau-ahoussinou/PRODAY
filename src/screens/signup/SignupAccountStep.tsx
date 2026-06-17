@@ -7,6 +7,7 @@ import { SignupStepLayout } from './SignupStepLayout';
 import { SignupFooterButton } from './SignupFooterButton';
 import type { SignupForm } from './useSignupForm';
 import { getPlayerStepMeta } from './signupPlayerStepMeta';
+import { useTranslation } from '../../context/LocaleContext';
 import { getProStepMeta } from './signupProConfig';
 import { getSanteStepMeta } from './signupSanteConfig';
 import { ProDayErrorBanner } from '../../components/ui/ProDayErrorBanner';
@@ -30,11 +31,12 @@ export const SignupAccountStep: React.FC<SignupAccountStepProps> = ({
   phaseIndex,
   onBack,
 }) => {
+  const { t } = useTranslation();
   const meta = form.isSanteProduct
-    ? getSanteStepMeta('account')
+    ? getSanteStepMeta('account', t)
     : form.isProProduct
-      ? getProStepMeta('account')
-      : getPlayerStepMeta(form.productLine, 'account');
+      ? getProStepMeta('account', t)
+      : getPlayerStepMeta(form.productLine, 'account', t);
   return (
   <SignupStepLayout
     stepIndex={stepIndex}
@@ -48,7 +50,7 @@ export const SignupAccountStep: React.FC<SignupAccountStepProps> = ({
     heroIcon={meta.heroIcon}
     onBack={onBack}
     footer={
-      <SignupFooterButton label="Continuer" onPress={() => form.advanceFromCurrentPage()} />
+      <SignupFooterButton label={t('signup.form.continue')} onPress={() => form.advanceFromCurrentPage()} />
     }
   >
     {form.error ? (
@@ -60,9 +62,9 @@ export const SignupAccountStep: React.FC<SignupAccountStepProps> = ({
     <SignupFormCard>
       <StaggerReveal index={0}>
         <AuthTextField
-          label="Nom affiché"
+          label={t('signup.form.displayName')}
           icon="person"
-          placeholder="Prénom Nom"
+          placeholder={t('signup.form.displayNamePlaceholder')}
           value={form.displayName}
           onChangeText={form.setDisplayName}
           error={form.fieldErrors.displayName}
@@ -70,9 +72,9 @@ export const SignupAccountStep: React.FC<SignupAccountStepProps> = ({
       </StaggerReveal>
       <StaggerReveal index={1}>
         <AuthTextField
-          label="Email"
+          label={t('signup.form.email')}
           icon="mail"
-          placeholder="vous@exemple.com"
+          placeholder={t('signup.form.emailPlaceholder')}
           value={form.email}
           onChangeText={form.setEmail}
           keyboardType="email-address"
@@ -85,9 +87,9 @@ export const SignupAccountStep: React.FC<SignupAccountStepProps> = ({
     {form.role === 'sponsor' ? (
       <View>
         <AuthTextField
-          label="Ville / région *"
+          label={t('signup.form.cityRegion')}
           icon="location"
-          placeholder="Paris, Lyon…"
+          placeholder={t('signup.form.cityPlaceholder')}
           value={form.city}
           onChangeText={form.setCity}
           error={form.fieldErrors.city}

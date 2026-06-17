@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import type { GeoPoint } from '../../models/User';
 import { useAppTheme } from '../../context/ProductLineContext';
+import { useTranslation } from '../../context/LocaleContext';
 import { Icon } from '../ui/Icon';
 import { ProDayText } from '../ui/ProDayText';
 import { PressableSpring } from '../motion';
@@ -34,6 +35,7 @@ export const CarpoolLocationCapture: React.FC<CarpoolLocationCaptureProps> = ({
   compact = false,
 }) => {
   const { colors } = useAppTheme();
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
 
   const capture = async () => {
@@ -42,12 +44,12 @@ export const CarpoolLocationCapture: React.FC<CarpoolLocationCaptureProps> = ({
       const coords = await captureCurrentLocation();
       onLocationChange(coords);
       if (!place.trim()) {
-        onPlaceChange('Ma position actuelle');
+        onPlaceChange(t('carpool.location.currentPosition'));
       }
     } catch (e) {
       Alert.alert(
-        'Localisation',
-        e instanceof Error ? e.message : 'Impossible d’obtenir votre position.'
+        t('carpool.location.title'),
+        e instanceof Error ? e.message : t('carpool.location.failed')
       );
     } finally {
       setLoading(false);
@@ -64,7 +66,7 @@ export const CarpoolLocationCapture: React.FC<CarpoolLocationCaptureProps> = ({
           styles.input,
           { borderColor: colors.border, color: colors.ink, backgroundColor: colors.surface },
         ]}
-        placeholder="Adresse ou repère (ex. parking club, domicile…)"
+        placeholder={t('carpool.location.addressPlaceholder')}
         placeholderTextColor={colors.textMuted}
         value={place}
         onChangeText={onPlaceChange}
@@ -84,7 +86,7 @@ export const CarpoolLocationCapture: React.FC<CarpoolLocationCaptureProps> = ({
             <>
               <Icon name="location" size={16} color={colors.accent} />
               <ProDayText variant="caption" accent style={styles.geoBtnText}>
-                Utiliser ma position
+                {t('carpool.location.useCurrent')}
               </ProDayText>
             </>
           )}
@@ -98,7 +100,7 @@ export const CarpoolLocationCapture: React.FC<CarpoolLocationCaptureProps> = ({
             haptic
           >
             <ProDayText variant="caption" muted>
-              {formatCoordinates(location)} · Carte
+              {formatCoordinates(location)} · {t('carpool.location.map')}
             </ProDayText>
           </PressableSpring>
         ) : null}

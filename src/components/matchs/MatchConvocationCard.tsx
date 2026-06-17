@@ -61,7 +61,6 @@ export const MatchConvocationCard: React.FC<MatchConvocationCardProps> = ({
       scaleTo={0.98}
       haptic
     >
-      <ProDayGradient kind="cta" style={styles.accent} />
       <View style={styles.body}>
         <View style={styles.top}>
           <View style={[styles.kindPill, { backgroundColor: colors.accentSoft }]}>
@@ -170,12 +169,10 @@ export const MatchConvocationCard: React.FC<MatchConvocationCardProps> = ({
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: radius.xl,
+    borderRadius: radius.lg,
     borderWidth: 1,
-    overflow: 'hidden',
     marginBottom: spacing.sm,
   },
-  accent: { height: 3, width: '100%' },
   body: { padding: spacing.md },
   top: {
     flexDirection: 'row',

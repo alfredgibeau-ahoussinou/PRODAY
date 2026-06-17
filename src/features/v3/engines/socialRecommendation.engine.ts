@@ -1,11 +1,13 @@
-import type { User } from '../../../models/User';
-import type { GeoPoint } from '../../../models/User';
+import type { User, UserRole, GeoPoint } from '../../../models/User';
 import type { FriendlyMatch } from '../../../models/FriendlyMatch';
 import type { MainTabId } from '../../../navigation/mainTabConfig';
 import { distanceBetween } from '../../../utils/geoLocation';
 
+export type SocialSuggestionKind = 'contact' | 'community' | 'mercato';
+
 export interface SocialProfileSuggestion {
   id: string;
+  kind: SocialSuggestionKind;
   displayName: string;
   role: string;
   city: string;
@@ -13,6 +15,8 @@ export interface SocialProfileSuggestion {
   reason: string;
   matchScore: number;
   targetUid?: string;
+  targetRole?: UserRole;
+  matchId?: string;
   actionTab?: MainTabId;
 }
 
@@ -38,6 +42,7 @@ export function buildSocialSuggestions(params: {
 
     suggestions.push({
       id: `club-${match.id}`,
+      kind: 'contact',
       displayName: match.requester_club_name,
       role: 'Club · Match amical',
       city: match.city,
@@ -45,24 +50,11 @@ export function buildSocialSuggestions(params: {
       reason: 'Recherche un adversaire — profil compatible',
       matchScore: 70 + Math.min(20, params.user.profile.level === match.level ? 15 : 0),
       targetUid: match.requester_uid,
+      targetRole: 'club',
+      matchId: match.id,
       actionTab: 'matchs',
     });
   }
 
-  if (params.user.city) {
-    suggestions.push({
-      id: 'community-local',
-      displayName: `Communauté ${params.user.city}`,
-      role: 'Groupe local',
-      city: params.user.city,
-      distanceKm: 0,
-      reason: 'Échanges matchs, entraînements et covoiturage',
-      matchScore: 85,
-      actionTab: 'matchs',
-    });
-  }
-
-  return suggestions
-    .sort((a, b) => b.matchScore - a.matchScore)
-    .slice(0, 6);
+  return suggestions.sort((a, b) => b.matchScore - a.matchScore).slice(0, 6);
 }

@@ -1,37 +1,41 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { ScrollView, StyleSheet, RefreshControl, Alert } from 'react-native';
+import { ScrollView, RefreshControl, Alert, Linking } from 'react-native';
 import type { User } from '../../models/User';
 import type { ProductLineId } from '../../models/ProductLine';
 import { useProDayBrain } from '../../hooks/useProDayBrain';
+import { useGeoLocation } from '../../hooks/useGeoLocation';
 import { useTabNavigationActions } from '../../hooks/useTabNavigationActions';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { validateMatchJoin } from '../../core';
 import { trackV3Event } from '../../core/analytics/v3Events';
 import type { GeoRadiusKm } from '../../core/types/geo';
+import type { GeoMarker } from '../../core/types/geo';
 import type { MatchRecommendation } from '../../core/types/recommendation';
 import { SkeletonList } from '../../components/motion';
 import { TAB_BAR_CONTENT_INSET } from '../../navigation/tabBarLayout';
 import { spacing } from '../../theme/designTokens';
 import { HomeIaHeader } from './components/HomeIaHeader';
-import { TransversalNavBar } from './components/TransversalNavBar';
 import { HeroIaBlock } from './components/HeroIaBlock';
 import { GeoMapPreview } from './components/GeoMapPreview';
 import { MatchCarousel } from './components/MatchCarousel';
+import { useWearableHealth } from '../../hooks/useWearableHealth';
+import { hasWearableData } from '../../services/wearableHealth/formatWearableMetrics';
+import { buildRecoverySuggestions } from '../../services/wearableHealth/recoverySuggestions';
+import { buildHealthReportHtml } from '../../utils/healthReportPdf';
 import { HealthSummaryCard } from './components/HealthSummaryCard';
 import { ProgressionBlock } from './components/ProgressionBlock';
 import { ReelsPreviewStrip } from './components/ReelsPreviewStrip';
-import { SmartCalendarPeek } from '../v3/components/SmartCalendarPeek';
-import { SmartNotificationsPeek } from '../v3/components/SmartNotificationsPeek';
-import { peekCalendar } from '../v3/engines/smartCalendar.engine';
-import { peekNotifications } from '../v3/engines/smartNotifications.engine';
 import { StaffPrioritiesStrip } from '../v3/components/StaffPrioritiesStrip';
 import { buildStaffPriorities } from '../v3/engines/staffHome.engine';
+import type { StaffPriorityItem } from '../v3/engines/staffHome.engine';
 import { useDashboardData } from '../../hooks/useDashboardData';
 import { useStaffMercatoPipeline } from '../../hooks/useStaffMercatoPipeline';
 import { ActivityFeedStrip } from './components/ActivityFeedStrip';
 import { HealthProgramCard } from './components/HealthProgramCard';
 import { buildActivityFeed } from '../v3/engines/activityFeed.engine';
 import { HealthScoreExplainSheet } from '../../components/health/HealthScoreExplainSheet';
+import { ProDayModuleGrid } from '../../components/ui/ProDayModuleGrid';
+import type { ProDayModuleId } from '../../content/prodayModules';
 
 interface HomeIaDashboardProps {
   profile: User;
@@ -42,6 +46,7 @@ interface HomeIaDashboardProps {
 }
 
 const pagePad = {
+  paddingHorizontal: spacing.lg,
   paddingBottom: TAB_BAR_CONTENT_INSET + spacing.lg,
 };
 
@@ -57,7 +62,33 @@ export const HomeIaDashboard: React.FC<HomeIaDashboardProps> = ({
   const nav = useTabNavigationActions();
   const [radiusKm, setRadiusKm] = useState<GeoRadiusKm>(5);
   const [healthExplainOpen, setHealthExplainOpen] = useState(false);
-  const brain = useProDayBrain(profile, productLine, { radiusKm });
+  const { userLocation, refreshLocation, locating, locError } = useGeoLocation(profile);
+  const wearable = useWearableHealth();
+  const wearableForBrain =
+    wearable.connected && wearable.metrics && hasWearableData(wearable.metrics)
+      ? wearable.metrics
+      : null;
+  const brain = useProDayBrain(profile, productLine, {
+    radiusKm,
+    userLocation,
+    wearable: wearableForBrain,
+  });
+  const recoverySuggestions = useMemo(
+    () => buildRecoverySuggestions(wearable.metrics, brain.ai.health),
+    [wearable.metrics, brain.ai.health],
+  );
+  const handleExportHealthReport = useCallback(() => {
+    const html = buildHealthReportHtml(
+      profile.display_name,
+      brain.ai.health,
+      wearable.metrics,
+      wearable.history,
+    );
+    const uri = `data:text/html;charset=utf-8,${encodeURIComponent(html)}`;
+    void Linking.openURL(uri).catch(() => {
+      Alert.alert('Export', 'Ouvrez le rapport dans le navigateur puis « Imprimer → PDF ».');
+    });
+  }, [profile.display_name, brain.ai.health, wearable.metrics, wearable.history]);
   const { data: dashboardData } = useDashboardData(profile);
   const mercatoPipeline = useStaffMercatoPipeline(profile);
   const isStaffHome = profile.role !== 'player';
@@ -79,9 +110,6 @@ export const HomeIaDashboard: React.FC<HomeIaDashboardProps> = ({
       mercatoPipeline.myPostsCount,
     ]
   );
-  const calendarPeek = useMemo(() => peekCalendar(brain.calendar), [brain.calendar]);
-  const notifPeek = useMemo(() => peekNotifications(brain.notifications), [brain.notifications]);
-
   const activityFeed = useMemo(
     () =>
       buildActivityFeed({
@@ -109,6 +137,42 @@ export const HomeIaDashboard: React.FC<HomeIaDashboardProps> = ({
     [nav]
   );
 
+  const handleStaffPriority = useCallback(
+    (item: StaffPriorityItem) => {
+      if (item.action === 'gestion') {
+        nav.openDashboard('gestion');
+        return;
+      }
+      if (item.action === 'sponsors') {
+        nav.openDashboard('sponsors');
+        return;
+      }
+      handleCtaTab(item.tab);
+    },
+    [nav, handleCtaTab]
+  );
+
+  const handleModulePress = useCallback(
+    (id: ProDayModuleId) => {
+      trackV3Event('home_module_tap', { module: id });
+      switch (id) {
+        case 'recrutement':
+          nav.openMercato('home');
+          break;
+        case 'matchs':
+          nav.openMatchs();
+          break;
+        case 'gestion':
+          nav.openDashboard('gestion');
+          break;
+        case 'sponsors':
+          nav.openDashboard('sponsors');
+          break;
+      }
+    },
+    [nav]
+  );
+
   const handleJoinMatch = useCallback(
     (match: MatchRecommendation) => {
       const check = validateMatchJoin({
@@ -123,6 +187,14 @@ export const HomeIaDashboard: React.FC<HomeIaDashboardProps> = ({
       nav.openMatchs();
     },
     [brain.ai.health, nav]
+  );
+
+  const handleGeoMarkerPress = useCallback(
+    (marker: GeoMarker) => {
+      trackV3Event('home_geo_marker_tap', { kind: marker.kind });
+      nav.openMatchs();
+    },
+    [nav]
   );
 
   const notifCount = brain.notifications.push.length + brain.notifications.inbox.length;
@@ -146,37 +218,6 @@ export const HomeIaDashboard: React.FC<HomeIaDashboardProps> = ({
         onNotificationsPress={() => nav.setActiveTab('messages')}
       />
 
-      <TransversalNavBar
-        actions={[
-          {
-            id: 'notif',
-            icon: 'notifications',
-            label: 'Alertes',
-            badge: notifCount,
-            onPress: () => nav.setActiveTab('messages'),
-          },
-          {
-            id: 'chat',
-            icon: 'chat',
-            label: 'Chat',
-            badge: unreadMessages,
-            onPress: () => nav.setActiveTab('messages'),
-          },
-          {
-            id: 'calendar',
-            icon: 'calendar',
-            label: 'Agenda',
-            onPress: () => nav.openMatchs(),
-          },
-          {
-            id: 'search',
-            icon: 'search',
-            label: 'Recherche',
-            onPress: () => nav.openMercato(),
-          },
-        ]}
-      />
-
       {brain.loading ? (
         <SkeletonList count={3} variant="card" />
       ) : (
@@ -196,9 +237,23 @@ export const HomeIaDashboard: React.FC<HomeIaDashboardProps> = ({
           />
 
           {isStaffHome ? (
-            <StaffPrioritiesStrip
-              items={staffPriorities}
-              onPress={(tab) => handleCtaTab(tab)}
+            <StaffPrioritiesStrip items={staffPriorities} onPress={handleStaffPriority} />
+          ) : null}
+
+          {isStaffHome ? (
+            <ProDayModuleGrid
+              role={profile.role}
+              onModulePress={handleModulePress}
+              liveRecruitment={mercatoPipeline.myPostsCount > 0}
+              animated
+            />
+          ) : null}
+
+          {!isStaffHome ? (
+            <ProDayModuleGrid
+              role={profile.role}
+              onModulePress={handleModulePress}
+              animated
             />
           ) : null}
 
@@ -208,10 +263,15 @@ export const HomeIaDashboard: React.FC<HomeIaDashboardProps> = ({
 
           {!isStaffHome ? (
             <GeoMapPreview
+              userLocation={userLocation}
               markers={brain.geoMarkers}
               density={brain.geoDensity}
+              radiusKm={radiusKm}
               onRadiusChange={setRadiusKm}
-              onMarkerPress={() => nav.openMatchs()}
+              onRefreshLocation={() => void refreshLocation()}
+              locating={locating}
+              locError={locError}
+              onMarkerPress={handleGeoMarkerPress}
             />
           ) : null}
 
@@ -227,6 +287,16 @@ export const HomeIaDashboard: React.FC<HomeIaDashboardProps> = ({
             <HealthSummaryCard
               health={brain.ai.health}
               onExplainPress={() => setHealthExplainOpen(true)}
+              wearableConnected={wearable.connected}
+              wearableMetrics={wearable.metrics}
+              wearablePlatformLabel={wearable.platformLabel}
+              wearableSyncing={wearable.syncing}
+              wearableError={wearable.error}
+              onWearableConnect={() => void wearable.connect()}
+              onWearableRefresh={() => void wearable.refresh()}
+              wearableHistory={wearable.history}
+              recoverySuggestions={recoverySuggestions}
+              onExportHealthReport={handleExportHealthReport}
             />
           ) : null}
 
@@ -240,27 +310,19 @@ export const HomeIaDashboard: React.FC<HomeIaDashboardProps> = ({
 
           {isStaffHome ? (
             <GeoMapPreview
+              userLocation={userLocation}
               markers={brain.geoMarkers}
               density={brain.geoDensity}
+              radiusKm={radiusKm}
               onRadiusChange={setRadiusKm}
-              onMarkerPress={() => nav.openMatchs()}
+              onRefreshLocation={() => void refreshLocation()}
+              locating={locating}
+              locError={locError}
+              onMarkerPress={handleGeoMarkerPress}
             />
           ) : null}
 
           <ProgressionBlock progression={brain.progression} />
-
-          <SmartCalendarPeek
-            today={calendarPeek.today}
-            upcoming={calendarPeek.upcoming}
-            onPress={() => nav.openMatchs()}
-          />
-
-          <SmartNotificationsPeek
-            push={notifPeek.push}
-            inboxPreview={notifPeek.inboxPreview}
-            total={notifPeek.total}
-            onPress={() => nav.setActiveTab('messages')}
-          />
 
           <ReelsPreviewStrip items={brain.reelPreviews} onPress={() => nav.setActiveTab('reels')} />
         </>
@@ -275,5 +337,3 @@ export const HomeIaDashboard: React.FC<HomeIaDashboardProps> = ({
     </ScrollView>
   );
 };
-
-const styles = StyleSheet.create({});

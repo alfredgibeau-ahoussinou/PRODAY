@@ -12,6 +12,7 @@ import { ProDayErrorBanner } from '../../components/ui/ProDayErrorBanner';
 import { getErrorMessage } from '../../utils/errors';
 import { spacing } from '../../theme/designTokens';
 import { useSignupFlowTheme } from './SignupFlowContext';
+import { useTranslation } from '../../context/LocaleContext';
 import type { AppColors } from '../../theme/universeTheme';
 
 interface SignupDocumentStepProps {
@@ -49,6 +50,7 @@ export const SignupDocumentStep: React.FC<SignupDocumentStepProps> = ({
   setLoading,
 }) => {
   const { colors: c } = useSignupFlowTheme();
+  const { t } = useTranslation();
   const styles = useMemo(() => createStyles(c), [c]);
   const [aiResult, setAiResult] = useState<AiVerificationResult | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
@@ -69,13 +71,10 @@ export const SignupDocumentStep: React.FC<SignupDocumentStepProps> = ({
       if (isAiVerificationPassing(ai.status)) {
         onUploaded();
       } else {
-        onError(
-          ai.rejection_reason_fr ??
-            'Document refusé par l’analyse IA. Reprenez la photo avec la caméra.'
-        );
+        onError(ai.rejection_reason_fr ?? t('signup.document.rejected'));
       }
     } catch (e) {
-      onError(getErrorMessage(e, 'Analyse IA impossible.'));
+      onError(getErrorMessage(e, t('signup.document.aiFailed')));
     } finally {
       setAnalyzing(false);
       setLoading(false);
@@ -91,15 +90,15 @@ export const SignupDocumentStep: React.FC<SignupDocumentStepProps> = ({
       stepName={stepName}
       phases={phases}
       phaseIndex={phaseIndex}
-      title="Justificatif pro"
-      subtitle="Photographiez votre document avec la caméra — analyse IA instantanée, rien n’est stocké."
+      title={t('signup.document.title')}
+      subtitle={t('signup.document.subtitle')}
       heroIcon="camera"
       contentKey={`doc-${role}`}
       onBack={onBack}
       footer={
         <>
           <SignupFooterButton
-            label={passed ? 'Continuer' : 'Ouvrir la caméra'}
+            label={passed ? t('signup.form.continue') : t('signup.document.openCamera')}
             onPress={passed ? onUploaded : capture}
             loading={loading || analyzing}
             disabled={analyzing}
@@ -107,7 +106,7 @@ export const SignupDocumentStep: React.FC<SignupDocumentStepProps> = ({
           {allowSkip && onSkip && !analyzing && !passed ? (
             <View style={styles.skipWrap}>
               <SignupFooterButton
-                label="Passer cette étape"
+                label={t('signup.form.skipStep')}
                 onPress={onSkip}
                 variant="secondary"
                 showArrow={false}

@@ -10,7 +10,7 @@ export const ADMIN_TAB_ITEMS: {
 }[] = [
   { id: 'pilotage', label: 'Pilotage', shortLabel: 'Pilotage', icon: 'home' },
   { id: 'users', label: 'Utilisateurs', shortLabel: 'Users', icon: 'people' },
-  { id: 'contenu', label: 'Contenu', shortLabel: 'Contenu', icon: 'calendar' },
+  { id: 'contenu', label: 'Modération', shortLabel: 'Modération', icon: 'time' },
   { id: 'clubs', label: 'Clubs', shortLabel: 'Clubs', icon: 'business' },
   { id: 'system', label: 'Système', shortLabel: 'Système', icon: 'settings' },
 ];

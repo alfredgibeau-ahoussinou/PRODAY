@@ -1,14 +1,13 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import type { User } from '../../models/User';
-import { FEED_CHAPTERS, type FeedChapterId } from '../../content/feedChapters';
+import type { FeedChapterId } from '../../content/feedChapters';
+import { getFeedChapters } from '../../i18n/localizedChapters';
 import { FeedScreen } from '../../screens/FeedScreen';
-import { AppTabHeader } from '../app';
 import { ProDayTabPager } from '../ui/ProDayTabPager';
 import { useAppTheme } from '../../context/ProductLineContext';
-import { V3TabShell } from '../v3/V3TabShell';
-import { isV3ShellEnabled } from '../../config/featureFlags';
-import { useSectionIntelligence } from '../../hooks/useSectionIntelligence';
+import { TabScreenShell } from '../app/TabScreenShell';
+import { useTranslation } from '../../context/LocaleContext';
 
 interface FeedHomeScreenProps {
   profile: User;
@@ -22,10 +21,10 @@ export const FeedHomeScreen: React.FC<FeedHomeScreenProps> = ({
   onOpenMessages,
 }) => {
   const { productLine } = useAppTheme();
+  const { t } = useTranslation();
+  const chapters = useMemo(() => getFeedChapters(t), [t]);
   const [chapter, setChapter] = useState<FeedChapterId>('actualites');
   const isWoman = productLine === 'woman';
-  const useV3Header = isV3ShellEnabled();
-  const intelligence = useSectionIntelligence('feed', profile, productLine);
 
   const pages = [
     {
@@ -54,42 +53,25 @@ export const FeedHomeScreen: React.FC<FeedHomeScreenProps> = ({
 
   const pager = (
     <ProDayTabPager
-      chapters={FEED_CHAPTERS}
+      chapters={chapters}
       pages={pages}
       activeChapter={chapter}
       onChapterChange={setChapter}
     />
   );
 
-  const subtitle = isWoman
-    ? 'Actualités et sondages du foot féminin'
-    : 'Actualités et sondages de la plateforme';
-
-  if (useV3Header) {
-    return (
-      <View style={styles.root}>
-        <V3TabShell
-          caption="Communauté"
-          title="Fil"
-          subtitle={subtitle}
-          flat
-          intelligence={intelligence}
-          stats={[
-            { value: profile.city ?? '—', label: 'Ville' },
-            { value: profile.role === 'player' ? 'Joueur' : 'Staff', label: 'Rôle' },
-            { value: 'Actif', label: 'Tri', highlight: true },
-          ]}
-        >
-          {pager}
-        </V3TabShell>
-      </View>
-    );
-  }
+  const subtitle = isWoman ? t('feed.subtitle.woman') : t('feed.subtitle.default');
 
   return (
     <View style={styles.root}>
-      <AppTabHeader title="Fil" subtitle={subtitle} />
-      {pager}
+      <TabScreenShell
+        caption={t('feed.caption')}
+        title={t('feed.title')}
+        subtitle={subtitle}
+        flat
+      >
+        {pager}
+      </TabScreenShell>
     </View>
   );
 };

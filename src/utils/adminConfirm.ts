@@ -17,9 +17,11 @@ export function adminConfirmDelete(
           .then((result) => {
             if (result && result.authDeleted === false) {
               Alert.alert(
-                'Profil supprimé',
-                'Le document Firestore est supprimé. Le compte Auth peut encore exister tant que les Cloud Functions ne sont pas déployées (firebase deploy --only functions).'
+                'Profil supprimé (partiel)',
+                'Le profil Firestore et les documents sont supprimés. Pour effacer aussi le compte de connexion (Auth), déployez les Cloud Functions :\nfirebase deploy --only functions'
               );
+            } else if (result && result.authDeleted === true) {
+              Alert.alert('Compte supprimé', 'Utilisateur retiré de Firebase Auth et Firestore.');
             }
             onDone?.();
           })

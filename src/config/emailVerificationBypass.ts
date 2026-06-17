@@ -1,17 +1,13 @@
 /**
- * Comptes test / beta :
- * - pas de vérification email ni d’écran documents à l’onboarding ;
- * - accès à tous les pôles (Man, Woman, Pro, Santé) sans déconnexion ;
- * - sur Pro : coach · sur Santé : physio (dashboard médical).
+ * Comptes démo partenaire (bypass onboarding + accès Pro sponsor).
+ * Les comptes joueurs réels ne sont plus listés ici.
  */
-export const BETA_ACCOUNT_BYPASS_EMAILS: readonly string[] = [
-  'alfredgibeauahoussinou@gmail.com',
-];
+export const BETA_ACCOUNT_BYPASS_EMAILS: readonly string[] = [];
 
 /** Compte démo partenaire — Pro Day Pro, rôle sponsor. */
 export const PARTNER_POLE_TEST_EMAILS: readonly string[] = ['part@gmail.com'];
 
-/** Alias — comptes autorisés sur tous les univers. */
+/** @deprecated Plus de compte multi-pôles universel — liste vide. */
 export const UNIVERSAL_POLE_TEST_EMAILS = BETA_ACCOUNT_BYPASS_EMAILS;
 
 /** @deprecated Utiliser BETA_ACCOUNT_BYPASS_EMAILS */

@@ -71,11 +71,8 @@ function createVariantStyles(c: AppColors) {
     module: {
       backgroundColor: c.surface,
       borderRadius: radius.lg,
-      borderWidth: 1,
+      borderWidth: StyleSheet.hairlineWidth,
       borderColor: c.border,
-      borderLeftWidth: 3,
-      borderLeftColor: c.accent,
-      ...shadows.card,
     },
   });
 }

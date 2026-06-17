@@ -15,6 +15,7 @@ import { spacing, radius } from '../../theme/designTokens';
 interface ProfileCompletionPanelProps {
   user: User;
   onCompletePress?: () => void;
+  onItemPress?: (itemId: string) => void;
 }
 
 const ITEM_ICONS: Record<string, IconName> = {
@@ -126,6 +127,7 @@ const TaskRow: React.FC<{
 export const ProfileCompletionPanel: React.FC<ProfileCompletionPanelProps> = ({
   user,
   onCompletePress,
+  onItemPress,
 }) => {
   const { colors } = useAppTheme();
   const { percent, items } = useMemo(() => getProfileCompletion(user), [user]);
@@ -185,7 +187,15 @@ export const ProfileCompletionPanel: React.FC<ProfileCompletionPanelProps> = ({
 
       <View style={styles.list}>
         {pending.map((item) => (
-          <TaskRow key={item.id} item={item} onPress={onCompletePress} />
+          <TaskRow
+            key={item.id}
+            item={item}
+            onPress={
+              onItemPress || onCompletePress
+                ? () => (onItemPress ? onItemPress(item.id) : onCompletePress?.())
+                : undefined
+            }
+          />
         ))}
       </View>
 

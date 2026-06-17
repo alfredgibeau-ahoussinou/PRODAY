@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { Platform } from 'react-native';
+import Constants from 'expo-constants';
 import type { ProdayNotificationData } from '../services/prodayLocalNotifications.service';
 import type { MatchsDeepLink } from '../utils/navigationDeepLink';
 
@@ -49,7 +50,7 @@ export function useProdayNotificationRouter(actions: RouterActions): void {
   actionsRef.current = actions;
 
   useEffect(() => {
-    if (Platform.OS === 'web') return;
+    if (Platform.OS === 'web' || Constants.appOwnership === 'expo') return;
 
     let mounted = true;
     let subResponse: { remove: () => void } | undefined;

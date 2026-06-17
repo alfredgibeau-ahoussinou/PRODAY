@@ -69,6 +69,8 @@ export interface CarpoolPassenger {
   pickup_place?: string;
   /** Coordonnées GPS du point de prise en charge */
   pickup_location?: GeoPoint;
+  /** Covoiturage libre — pending jusqu'à validation conducteur */
+  status?: 'pending' | 'confirmed' | 'rejected' | 'cancelled';
 }
 
 /** Détail d’un conducteur pour un événement */

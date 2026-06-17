@@ -8,9 +8,12 @@ import {
 } from 'react-native';
 import Animated, { useAnimatedScrollHandler, useSharedValue } from 'react-native-reanimated';
 import type { MatchChapterId } from '../../content/matchChapters';
-import { MatchTabRail } from './MatchTabRail';
+import { MatchChapterRail } from './MatchChapterRail';
+import { CarouselDot } from '../discover/CarouselDot';
+import { ProDayText } from '../ui/ProDayText';
 import { PagerPage } from '../motion/PagerPage';
 import { useAppTheme } from '../../context/ProductLineContext';
+import { spacing, radius } from '../../theme/designTokens';
 
 export interface MatchPage {
   id: MatchChapterId;
@@ -123,7 +126,7 @@ export const MatchPager: React.FC<MatchPagerProps> = ({
 
   return (
     <View style={styles.root}>
-      <MatchTabRail
+      <MatchChapterRail
         active={activeChapter}
         onSelect={(id) => goToChapter(id, false)}
         amicauxBadge={amicauxBadge}
@@ -153,13 +156,42 @@ export const MatchPager: React.FC<MatchPagerProps> = ({
         ))}
       </Animated.ScrollView>
 
+      <View style={styles.footer}>
+        <View style={styles.dots}>
+          {pages.map((p, i) => (
+            <CarouselDot
+              key={p.id}
+              index={i}
+              scrollX={scrollX}
+              snap={pageWidth}
+              onPress={() => goToIndex(i)}
+            />
+          ))}
+        </View>
+        <ProDayText variant="caption" muted style={styles.hint}>
+          Glissez · {pageNum}/{pages.length}
+        </ProDayText>
+      </View>
     </View>
   );
 };
 
-function createStyles(_c: { surfaceMuted: string; border: string }) {
+function createStyles(c: { surfaceMuted: string; border: string }) {
   return StyleSheet.create({
     root: { flex: 1, minHeight: 0 },
     pager: { flex: 1, minHeight: 0 },
+    footer: {
+      alignItems: 'center',
+      paddingVertical: spacing.sm,
+      gap: 4,
+      marginHorizontal: spacing.lg,
+      marginBottom: spacing.xs,
+      borderRadius: radius.lg,
+      backgroundColor: c.surfaceMuted,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: c.border,
+    },
+    dots: { flexDirection: 'row', gap: 6, alignItems: 'center' },
+    hint: { fontSize: 10, fontWeight: '600' },
   });
 }

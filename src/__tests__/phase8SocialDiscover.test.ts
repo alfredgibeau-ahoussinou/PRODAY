@@ -47,11 +47,11 @@ describe('Phase 8 — Réseau social + Discover', () => {
     expect(suggestions[0].actionTab).toBe('matchs');
   });
 
-  it('inclut la communauté locale', () => {
+  it('ne propose plus de fausse communauté locale', () => {
     const suggestions = buildSocialSuggestions({
       user: profile,
       openMatches: [],
     });
-    expect(suggestions.some((s) => s.id === 'community-local')).toBe(true);
+    expect(suggestions.some((s) => s.id === 'community-local')).toBe(false);
   });
 });

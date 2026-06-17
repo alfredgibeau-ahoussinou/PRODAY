@@ -3,18 +3,21 @@ import { View, StyleSheet, ActivityIndicator } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import { useTabNavigation } from '../context/TabNavigationContext';
 import { FeedHomeScreen } from '../components/feed/FeedHomeScreen';
-import { ProDayScreenCanvas } from '../components/ui/ProDayScreenCanvas';
-import { AppTabHeader } from '../components/app/AppTabHeader';
+import { TabScreenShell } from '../components/app/TabScreenShell';
 import { ProDayText } from '../components/ui/ProDayText';
+import { ProDayGradient } from '../components/ui/ProDayGradient';
+import { PressableSpring } from '../components/motion';
 import { TAB_BAR_CONTENT_INSET } from '../components/navigation/BottomTabBar';
 import { spacing } from '../theme/designTokens';
 import { useThemedScreen } from '../hooks/useThemedScreen';
+import { useTranslation } from '../context/LocaleContext';
 import type { AppColors } from '../theme/universeTheme';
 
 export const FeedTabScreen: React.FC = () => {
   const { profile, loading } = useAuth();
-  const { setActiveTab, openChat } = useTabNavigation();
+  const { setActiveTab, openChat, openAuth } = useTabNavigation();
   const { colors: c, productLine, rootStyle } = useThemedScreen();
+  const { t } = useTranslation();
   const styles = useMemo(() => createStyles(c), [c]);
   const isWoman = productLine === 'woman';
 
@@ -28,37 +31,38 @@ export const FeedTabScreen: React.FC = () => {
 
   if (profile) {
     return (
-      <ProDayScreenCanvas flat>
-        <FeedHomeScreen
-          profile={profile}
-          onOpenChat={(threadId) => openChat(threadId)}
-          onOpenMessages={() => setActiveTab('messages')}
-        />
-      </ProDayScreenCanvas>
+      <FeedHomeScreen
+        profile={profile}
+        onOpenChat={(threadId) => openChat(threadId)}
+        onOpenMessages={() => setActiveTab('messages')}
+      />
     );
   }
 
-  return (
-    <ProDayScreenCanvas>
-      <View style={styles.guestRoot}>
-        <AppTabHeader
-          safeTop={false}
-          title="Fil"
-          subtitle={
-            isWoman
-              ? 'Actualités et sondages du foot féminin'
-              : 'Actualités et sondages de la plateforme'
-          }
-        />
-        <View style={styles.guestBody}>
-          <ProDayText variant="section">Suivez l&apos;activité ProDay</ProDayText>
-          <ProDayText variant="body" muted style={styles.guestSub}>
-            Connectez-vous pour publier, voter aux sondages agents et commenter l&apos;actualité
-            de votre écosystème foot.
+  const guestBody = (
+    <View style={styles.guestBody}>
+      <ProDayText variant="section">{t('feed.guest.title')}</ProDayText>
+      <ProDayText variant="body" muted style={styles.guestSub}>
+        {t('feed.guest.body')}
+      </ProDayText>
+      <PressableSpring onPress={() => openAuth('login')} scaleTo={0.98} haptic>
+        <ProDayGradient kind="cta" style={styles.guestCta}>
+          <ProDayText variant="caption" inverse style={styles.guestCtaText}>
+            {t('common.login')}
           </ProDayText>
-        </View>
-      </View>
-    </ProDayScreenCanvas>
+        </ProDayGradient>
+      </PressableSpring>
+    </View>
+  );
+
+  return (
+    <TabScreenShell
+      title={t('feed.title')}
+      subtitle={isWoman ? t('feed.subtitle.woman') : t('feed.subtitle.default')}
+      flat
+    >
+      {guestBody}
+    </TabScreenShell>
   );
 };
 
@@ -69,7 +73,6 @@ function createStyles(c: AppColors) {
       justifyContent: 'center',
       alignItems: 'center',
     },
-    guestRoot: { flex: 1 },
     guestBody: {
       flex: 1,
       paddingHorizontal: spacing.lg,
@@ -78,5 +81,12 @@ function createStyles(c: AppColors) {
       gap: spacing.sm,
     },
     guestSub: { lineHeight: 22 },
+    guestCta: {
+      marginTop: spacing.lg,
+      borderRadius: 12,
+      paddingVertical: spacing.md,
+      alignItems: 'center',
+    },
+    guestCtaText: { fontWeight: '800', letterSpacing: 0.3 },
   });
 }

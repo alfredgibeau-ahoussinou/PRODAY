@@ -30,6 +30,7 @@ import {
   type SubscriptionPlanVisual,
 } from '../../content/subscriptionPlanVisuals';
 import { subscriptionService } from '../../services/subscription.service';
+import { iapService } from '../../services/iap.service';
 import { useSubscription } from '../../context/SubscriptionContext';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { ProDayScreenCanvas } from '../ui/ProDayScreenCanvas';
@@ -63,6 +64,7 @@ export const SubscriptionPlanView: React.FC<SubscriptionPlanViewProps> = ({
 
   const isPro = subscription?.tier === 'pro';
   const noStorePlan = ROLES_WITHOUT_STORE_PLAN.includes(profile.role);
+  const iapReady = iapService.isAvailable();
   const isDarkHero = visual ? isDarkSubscriptionVisual(visual) : false;
   const isSponsorPlan = visual?.variant === 'sponsor';
 
@@ -91,12 +93,13 @@ export const SubscriptionPlanView: React.FC<SubscriptionPlanViewProps> = ({
     if (!plan) return;
     setUpgrading(true);
     try {
-      const res = await subscriptionService.requestUpgrade(plan.id);
-      Alert.alert(res.ok ? 'Abonnement' : 'Bientôt disponible', res.message);
+      const res = await subscriptionService.requestUpgrade(plan.id, billing);
+      Alert.alert(res.ok ? 'Abonnement activé' : 'Bêta ProDay', res.message);
+      if (res.ok) await refresh();
     } finally {
       setUpgrading(false);
     }
-  }, [plan]);
+  }, [plan, billing, refresh]);
 
   if (!visual || !plan) {
     return (
@@ -268,15 +271,19 @@ export const SubscriptionPlanView: React.FC<SubscriptionPlanViewProps> = ({
                   <ActivityIndicator size="small" color="#FFFFFF" />
                 ) : (
                   <ProDayText variant="caption" inverse style={styles.ctaText}>
-                    {visual.ctaVerb}
+                    {plan.pricing.storeAvailable && iapReady
+                      ? visual.ctaVerb
+                      : 'Infos abonnement'}
                   </ProDayText>
                 )}
               </ProDayGradient>
             </TouchableOpacity>
             <ProDayText variant="caption" muted style={styles.footnote}>
               {plan.pricing.storeAvailable
-                ? 'Paiement App Store / Google Play'
-                : 'Disponible très prochainement'}
+                ? iapReady
+                  ? 'Paiement sécurisé App Store / Google Play'
+                  : 'Accès gratuit pendant la bêta — achats store via build EAS'
+                : 'Accès gratuit pendant la bêta — abonnements store à venir'}
             </ProDayText>
           </View>
         ) : (

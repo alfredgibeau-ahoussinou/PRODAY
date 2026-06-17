@@ -17,6 +17,6 @@ export interface ProDayModuleDef {
 export const PRODAY_MODULES: ProDayModuleDef[] = [
   { id: 'recrutement', icon: 'search', title: 'Recrutement', subtitle: 'Joueurs & clubs' },
   { id: 'matchs', icon: 'calendar', title: 'Matchs', subtitle: 'Amicaux' },
-  { id: 'gestion', icon: 'people', title: 'Gestion équipe', subtitle: 'Planning · présence · caisse' },
+  { id: 'gestion', icon: 'people', title: 'Gestion équipe', subtitle: 'Planning · présences · stats' },
   { id: 'sponsors', icon: 'star', title: 'Sponsors', subtitle: 'Partenaires' },
 ];

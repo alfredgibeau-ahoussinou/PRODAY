@@ -3,31 +3,16 @@ import { isUnderU13AppSpace } from '../../models/AppSpace';
 import type { UserRole } from '../../models/User';
 import { ROLES_REQUIRING_VERIFICATION } from '../../models/User';
 import type { IconName } from '../../components/ui/Icon';
+import { tr } from '../../i18n/translate';
+import type { TranslateFn } from '../../i18n/types';
 import { getRoleWelcomeCopy, getRoleSignupPhases, getRoleLaunchCopy } from './signupRoleExperience';
+import type { SignupPageId, SignupFlowKind, SignupPhase, SignupPhaseId } from './signupFlowTypes';
+import { MEDICAL_POLE_SPECIALTIES } from './signupFlowTypes';
+
+export type { SignupPageId, SignupFlowKind, SignupPhase, SignupPhaseId };
+export { MEDICAL_POLE_SPECIALTIES };
 
 /** Parcours multi-écrans — une info clé par page, transitions animées */
-export type SignupPageId =
-  | 'welcome'
-  | 'space'
-  | 'sport'
-  | 'location'
-  | 'stats'
-  /** @deprecated — utiliser les pages *\_pro par rôle */
-  | 'staff'
-  | 'coach_pro'
-  | 'club_pro'
-  | 'agent_pro'
-  | 'recruiter_pro'
-  | 'organizer_pro'
-  | 'medical_specialty'
-  | 'medical_practice'
-  | 'sponsor_pro'
-  | 'family'
-  | 'account'
-  | 'security'
-  | 'launch';
-
-export type SignupFlowKind = 'player' | 'staff' | 'sponsor';
 
 export const SIGNUP_PAGE_LABELS: Record<SignupPageId, string> = {
   welcome: 'Bienvenue',
@@ -50,13 +35,6 @@ export const SIGNUP_PAGE_LABELS: Record<SignupPageId, string> = {
   launch: 'Lancement',
 };
 
-export type SignupPhaseId = 'vous' | 'acces' | 'launch';
-
-export interface SignupPhase {
-  id: SignupPhaseId;
-  label: string;
-}
-
 export const SIGNUP_PHASES: SignupPhase[] = [
   { id: 'vous', label: 'Vous' },
   { id: 'acces', label: 'Accès' },
@@ -73,16 +51,6 @@ const ROLE_LABELS: Record<UserRole, string> = {
   sponsor: 'Partenaire',
   physio: 'Pôle médical',
 };
-
-export const MEDICAL_POLE_SPECIALTIES = [
-  'Kinésithérapeute du sport',
-  'Ostéopathe',
-  'Médecin du sport',
-  'Préparateur physique',
-  'Coach mental / préparateur mental',
-  'Nutritionniste sportif',
-  'Podologue du sport',
-] as const;
 
 /** @deprecated Préférer getSignupRoleGroups(productLine) dans poleExperience.ts */
 export const ROLE_GROUPS: {
@@ -105,8 +73,14 @@ export const ROLE_GROUPS: {
   },
 ];
 
-export function getRoleLabel(role: UserRole): string {
-  return ROLE_LABELS[role];
+export function getSignupPageLabel(page: SignupPageId, t?: TranslateFn): string {
+  const key = `signup.page.${page}`;
+  return tr(t, key, SIGNUP_PAGE_LABELS[page] ?? 'Inscription');
+}
+
+export function getRoleLabel(role: UserRole, t?: TranslateFn): string {
+  const key = `role.${role}`;
+  return tr(t, key, ROLE_LABELS[role] ?? role);
 }
 
 export function getFlowKind(role: UserRole): SignupFlowKind {
@@ -252,59 +226,88 @@ export function getWelcomeCopy(role: UserRole): { title: string; subtitle: strin
   return getRoleWelcomeCopy(role);
 }
 
-export function getStaffStepSubtitle(role: UserRole): string {
+export function getStaffStepSubtitle(role: UserRole, t?: TranslateFn): string {
   switch (role) {
     case 'coach':
-      return 'Indiquez où vous exercez — justificatif analysé par IA avant confirmation email.';
+      return tr(
+        t,
+        'signup.staff.coach',
+        'Indiquez où vous exercez — justificatif analysé par IA avant confirmation email.'
+      );
     case 'agent':
-      return 'Zone géographique — licence pro vérifiée par IA avant l’email.';
+      return tr(
+        t,
+        'signup.staff.agent',
+        'Zone géographique — licence pro vérifiée par IA avant l’email.'
+      );
     case 'recruiter':
-      return 'Territoire et spécialité recrutement — mandat vérifié par IA avant l’email.';
+      return tr(
+        t,
+        'signup.staff.recruiter',
+        'Territoire et spécialité recrutement — mandat vérifié par IA avant l’email.'
+      );
     case 'organizer':
-      return 'Ville et structure — justificatif + IA Mistral avant l’email.';
+      return tr(
+        t,
+        'signup.staff.organizer',
+        'Ville et structure — justificatif + IA Mistral avant l’email.'
+      );
     case 'club':
-      return 'Structure et localisation — mandat vérifié par IA avant l’email.';
+      return tr(
+        t,
+        'signup.staff.club',
+        'Structure et localisation — mandat vérifié par IA avant l’email.'
+      );
     case 'physio':
-      return 'Spécialité médicale et zone d’intervention pour les sportifs.';
+      return tr(
+        t,
+        'signup.staff.physio',
+        'Spécialité médicale et zone d’intervention pour les sportifs.'
+      );
     default:
-      return 'Quelques infos pour personnaliser votre expérience.';
+      return tr(t, 'signup.staff.default', 'Quelques infos pour personnaliser votre expérience.');
   }
 }
 
-export function getAccessStepMeta(role: UserRole, isOAuth: boolean): { title: string; subtitle: string } {
+export function getAccessStepMeta(
+  role: UserRole,
+  isOAuth: boolean,
+  t?: TranslateFn
+): { title: string; subtitle: string } {
   if (isOAuth) {
     return {
-      title: 'Finaliser l’accès',
-      subtitle: 'Validez votre identité ProDay pour entrer dans l’application.',
+      title: tr(t, 'signup.access.oauth.title', 'Finaliser l’accès'),
+      subtitle: tr(t, 'signup.access.oauth.subtitle', 'Validez votre identité ProDay pour entrer dans l’application.'),
     };
   }
   if (role === 'sponsor') {
     return {
-      title: 'Identifiants partenaire',
-      subtitle: 'Email, mot de passe et zone — accès à l’espace sponsors.',
+      title: tr(t, 'signup.access.sponsor.title', 'Identifiants partenaire'),
+      subtitle: tr(t, 'signup.access.sponsor.subtitle', 'Email, mot de passe et zone — accès à l’espace sponsors.'),
     };
   }
   return {
-    title: 'Sécurisez votre compte',
-    subtitle: 'Email fort, mot de passe robuste — puis confirmation par mail.',
+    title: tr(t, 'signup.access.default.title', 'Sécurisez votre compte'),
+    subtitle: tr(t, 'signup.access.default.subtitle', 'Email fort, mot de passe robuste — puis confirmation par mail.'),
   };
 }
 
 export function validateAgeForAppSpace(
   age: number,
-  appSpace: AppSpaceId
+  appSpace: AppSpaceId,
+  t?: TranslateFn
 ): string | undefined {
   if (isUnderU13AppSpace(appSpace)) {
-    if (age >= 13) return 'Âge incompatible avec l’espace -13 (moins de 13 ans).';
-    if (age < 5) return 'Âge minimum : 5 ans.';
+    if (age >= 13) return tr(t, 'signup.age.u13.incompatible', 'Âge incompatible avec l’espace -13 (moins de 13 ans).');
+    if (age < 5) return tr(t, 'signup.age.min', 'Âge minimum : 5 ans.');
     return undefined;
   }
   if (appSpace === 'boys' || appSpace === 'girls') {
-    if (age < 13 || age > 19) return 'Pour U13–U19, indiquez un âge entre 13 et 19 ans.';
+    if (age < 13 || age > 19) return tr(t, 'signup.age.youth.range', 'Pour U13–U19, indiquez un âge entre 13 et 19 ans.');
     return undefined;
   }
   if (appSpace === 'men' || appSpace === 'women') {
-    if (age < 16) return 'Pour l’espace seniors, l’âge minimum est 16 ans.';
+    if (age < 16) return tr(t, 'signup.age.senior.min', 'Pour l’espace seniors, l’âge minimum est 16 ans.');
     return undefined;
   }
   return undefined;
@@ -320,13 +323,21 @@ export function getPostCreatePage(_role: UserRole): SignupPageId {
   return 'launch';
 }
 
-export function getPlayerVerificationChecks(appSpace: AppSpaceId) {
+export function getPlayerVerificationChecks(appSpace: AppSpaceId, t?: TranslateFn) {
   const identity = {
     id: 'identity' as const,
-    title: 'Pièce d’identité',
+    title: tr(t, 'verification.check.identity.title', 'Pièce d’identité'),
     subtitle: isUnderU13AppSpace(appSpace)
-      ? 'CNI du responsable ou livret de famille — prise de vue caméra'
-      : 'CNI ou passeport — photographiez avec la caméra',
+      ? tr(
+          t,
+          'verification.check.identity.u13Subtitle',
+          'CNI du responsable ou livret de famille — prise de vue caméra'
+        )
+      : tr(
+          t,
+          'verification.check.identity.subtitle',
+          'CNI ou passeport — photographiez avec la caméra'
+        ),
     required: true,
   };
   if (isUnderU13AppSpace(appSpace)) return [identity];
@@ -334,8 +345,12 @@ export function getPlayerVerificationChecks(appSpace: AppSpaceId) {
     identity,
     {
       id: 'club_license' as const,
-      title: 'Licence FFF',
-      subtitle: 'Carte club ou attestation — photographiez avec la caméra',
+      title: tr(t, 'verification.check.license.title', 'Licence FFF'),
+      subtitle: tr(
+        t,
+        'verification.check.license.subtitle',
+        'Carte club ou attestation — photographiez avec la caméra'
+      ),
       required: false,
     },
   ];
@@ -343,13 +358,18 @@ export function getPlayerVerificationChecks(appSpace: AppSpaceId) {
 
 export function getLaunchCopy(
   role: UserRole,
-  flags: { emailVerificationPending?: boolean; verificationPending?: boolean }
+  flags: { emailVerificationPending?: boolean; verificationPending?: boolean },
+  t?: TranslateFn
 ): { title: string; body: string; finishLabel: string } {
   if (flags.emailVerificationPending) {
     return {
-      title: 'Documents validés',
-      body: 'L’IA a traité vos justificatifs. Confirmez votre email — le lien vous attend dans votre boîte mail.',
-      finishLabel: 'Compris',
+      title: tr(t, 'signup.launch.emailValidated.title', 'Documents validés'),
+      body: tr(
+        t,
+        'signup.launch.emailValidated.body',
+        'L’IA a traité vos justificatifs. Confirmez votre email — le lien vous attend dans votre boîte mail.'
+      ),
+      finishLabel: tr(t, 'signup.launch.emailValidated.finish', 'Compris'),
     };
   }
   if (
@@ -357,15 +377,111 @@ export function getLaunchCopy(
     flags.verificationPending
   ) {
     return {
-      title: 'Compte créé',
-      body: 'Prochaine étape après l’email : accès à votre espace dédié. Vos documents passent par l’analyse IA.',
-      finishLabel: 'Continuer',
+      title: tr(t, 'signup.launch.verification.title', 'Compte créé'),
+      body: tr(
+        t,
+        'signup.launch.verification.body',
+        'Prochaine étape après l’email : accès à votre espace dédié. Vos documents passent par l’analyse IA.'
+      ),
+      finishLabel: tr(t, 'signup.launch.verification.finish', 'Continuer'),
     };
   }
-  return getRoleLaunchCopy(role, flags);
+  return getRoleLaunchCopy(role, flags, t);
 }
 
-/** Espaces proposés dans le parcours ProDay Woman uniquement */
+export function getAppSpaceGroups(woman: boolean, t?: TranslateFn) {
+  if (woman) {
+    return [
+      {
+        id: 'feminine' as const,
+        label: tr(t, 'signup.space.woman.universe', 'Ton univers Woman'),
+        icon: 'heart' as const,
+        options: [
+          {
+            id: 'girls' as AppSpaceId,
+            label: tr(t, 'signup.space.girls', 'Jeunes F'),
+            hint: tr(t, 'signup.space.girlsHint', 'U13 F – U19 F'),
+          },
+          {
+            id: 'women' as AppSpaceId,
+            label: tr(t, 'signup.space.women', 'Seniors F'),
+            hint: tr(t, 'signup.space.womenHint', 'D1 F, Régional'),
+          },
+        ],
+      },
+      {
+        id: 'school' as const,
+        label: tr(t, 'signup.space.footSchool', 'École de foot'),
+        icon: 'school' as const,
+        options: [
+          {
+            id: 'under_u13' as AppSpaceId,
+            label: tr(t, 'signup.space.under13', 'Moins de 13 ans'),
+            hint: tr(t, 'signup.space.under13Hint', 'U7 F, U9 F, U11 F'),
+          },
+        ],
+      },
+    ] as const;
+  }
+  return [
+    {
+      id: 'masculine' as const,
+      label: tr(t, 'signup.space.masculine', 'Football masculin'),
+      icon: 'football' as const,
+      options: [
+        {
+          id: 'men' as AppSpaceId,
+          label: tr(t, 'signup.space.men', 'Seniors'),
+          hint: tr(t, 'signup.space.menHint', 'R1, National'),
+        },
+        {
+          id: 'boys' as AppSpaceId,
+          label: tr(t, 'signup.space.boys', 'Jeunes'),
+          hint: tr(t, 'signup.space.boysHint', 'U13 – U19'),
+        },
+      ],
+    },
+    {
+      id: 'school' as const,
+      label: tr(t, 'signup.space.footSchool', 'École de foot'),
+      icon: 'school' as const,
+      options: [
+        {
+          id: 'under_u13' as AppSpaceId,
+          label: tr(t, 'signup.space.under13M', 'Moins de 13 ans'),
+          hint: tr(t, 'signup.space.under13MHint', 'U7, U9, U11'),
+        },
+      ],
+    },
+  ] as const;
+}
+
+export function getRoleGroups(t?: TranslateFn) {
+  return [
+    {
+      id: 'sport',
+      label: tr(t, 'signup.space.roleGroup.sport', 'Sportifs'),
+      hint: tr(
+        t,
+        'signup.space.roleGroup.sportHint',
+        'CV en ligne, stats et candidatures Mercato'
+      ),
+      roles: ['player'] as UserRole[],
+    },
+    {
+      id: 'structure',
+      label: tr(t, 'signup.space.roleGroup.structure', 'Structures'),
+      hint: tr(
+        t,
+        'signup.space.roleGroup.structureHint',
+        'Annonces club, effectifs et événements'
+      ),
+      roles: ['club', 'organizer'] as UserRole[],
+    },
+  ];
+}
+
+/** @deprecated Utiliser getAppSpaceGroups */
 export const WOMAN_APP_SPACE_GROUPS = [
   {
     id: 'feminine' as const,

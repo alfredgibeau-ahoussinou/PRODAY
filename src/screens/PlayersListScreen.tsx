@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -28,9 +28,9 @@ import { ProDayActionTiles } from '../components/ui/ProDayActionTiles';
 import { spacing, radius } from '../theme/designTokens';
 import type { AppColors } from '../theme/universeTheme';
 import { useAppTheme } from '../context/ProductLineContext';
-import { isV3ShellEnabled } from '../config/featureFlags';
-import { V3TabShell } from '../components/v3/V3TabShell';
-import { V3ScreenBack } from '../components/v3/V3ScreenBack';
+import { isSubScreenShellEnabled } from '../hooks/useSubScreenShell';
+import { TabScreenShell } from '../components/app/TabScreenShell';
+import { ScreenBackButton } from '../components/ui/ScreenBackButton';
 import { useSectionIntelligence } from '../hooks/useSectionIntelligence';
 import {
   scoutingScoreMap,
@@ -46,13 +46,19 @@ type FilterPanel = 'poste' | 'categorie' | 'niveau' | 'ville' | 'age' | null;
 interface PlayersListScreenProps {
   onBack: () => void;
   onSelectPlayer: (player: User) => void;
+  initialQuery?: string;
 }
 
 export const PlayersListScreen: React.FC<PlayersListScreenProps> = ({
   onBack,
   onSelectPlayer,
+  initialQuery = '',
 }) => {
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState(initialQuery);
+
+  useEffect(() => {
+    setQuery(initialQuery);
+  }, [initialQuery]);
   const [filters, setFilters] = useState<PlayerListFilters>(DEFAULT_PLAYER_FILTERS);
   const [panel, setPanel] = useState<FilterPanel>(null);
   const { profile } = useAuth();
@@ -60,18 +66,18 @@ export const PlayersListScreen: React.FC<PlayersListScreenProps> = ({
   const { colors: themeColors, productLine } = useAppTheme();
   const { users: rawUsers, loading } = useUsersByRole('player', query);
   const listTitle = productLine === 'woman' ? 'Joueuses' : 'Joueurs';
-  const useV3Header = isV3ShellEnabled() && Boolean(profile && profile.role !== 'player');
+  const useShellHeader = isSubScreenShellEnabled(profile, 'staff');
 
   const filteredUsers = useMemo(() => filterPlayers(rawUsers, filters), [rawUsers, filters]);
   const users = useMemo(() => {
-    if (!useV3Header || !profile) return filteredUsers;
+    if (!useShellHeader || !profile) return filteredUsers;
     return sortPlayersByScouting(profile, filteredUsers);
-  }, [filteredUsers, profile, useV3Header]);
+  }, [filteredUsers, profile, useShellHeader]);
 
   const scores = useMemo(() => {
-    if (!profile || !useV3Header) return new Map<string, PlayerScoutingScore>();
+    if (!profile || !useShellHeader) return new Map<string, PlayerScoutingScore>();
     return scoutingScoreMap(profile, users);
-  }, [profile, users, useV3Header]);
+  }, [profile, users, useShellHeader]);
 
   const intelligence = useSectionIntelligence('recrutement', profile ?? null, productLine, {
     staffMode: true,
@@ -90,7 +96,7 @@ export const PlayersListScreen: React.FC<PlayersListScreenProps> = ({
   };
 
   const handleSelectPlayer = (player: User) => {
-    if (useV3Header) {
+    if (useShellHeader) {
       const scouting = scores.get(player.uid);
       trackV3Event('staff_player_tap', {
         playerUid: player.uid,
@@ -243,7 +249,7 @@ export const PlayersListScreen: React.FC<PlayersListScreenProps> = ({
       data={users}
       keyExtractor={(item) => item.uid}
       contentContainerStyle={styles.list}
-      ListHeaderComponent={useV3Header ? filtersBlock : undefined}
+      ListHeaderComponent={useShellHeader ? filtersBlock : undefined}
       renderItem={({ item, index }) => {
         const scouting = scores.get(item.uid);
         const row = (
@@ -256,7 +262,7 @@ export const PlayersListScreen: React.FC<PlayersListScreenProps> = ({
             scoutingLabel={scouting?.label}
           />
         );
-        return useV3Header ? (
+        return useShellHeader ? (
           <StaggerReveal index={Math.min(index, 8)}>{row}</StaggerReveal>
         ) : (
           row
@@ -276,9 +282,9 @@ export const PlayersListScreen: React.FC<PlayersListScreenProps> = ({
     />
   );
 
-  if (useV3Header) {
+  if (useShellHeader) {
     return (
-      <V3TabShell
+      <TabScreenShell
         caption="Scouting"
         title={listTitle}
         subtitle={
@@ -289,14 +295,13 @@ export const PlayersListScreen: React.FC<PlayersListScreenProps> = ({
         right={
           <View style={styles.headerRight}>
             {resetAction}
-            <V3ScreenBack onPress={onBack} />
+            <ScreenBackButton onPress={onBack} />
           </View>
         }
-        intelligence={intelligence}
         flat
       >
         {listBody}
-      </V3TabShell>
+      </TabScreenShell>
     );
   }
 

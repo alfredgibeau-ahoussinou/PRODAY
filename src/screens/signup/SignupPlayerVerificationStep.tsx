@@ -8,6 +8,8 @@ import { SignupStepLayout } from './SignupStepLayout';
 import { SignupFooterButton } from './SignupFooterButton';
 import { verifyOnboardingDocumentWithAi } from '../../services/onboardingDocument.service';
 import type { PlayerVerificationCheckId } from '../../models/User';
+import { useTranslation } from '../../context/LocaleContext';
+import { tr } from '../../i18n/translate';
 import { getPlayerVerificationChecks } from './signupFlowConfig';
 import { isAiVerificationPassing, type AiVerificationResult } from '../../utils/aiVerification';
 import { captureDocumentWithCamera } from '../../utils/captureIdentityDocument';
@@ -40,9 +42,10 @@ export const SignupPlayerVerificationStep: React.FC<SignupPlayerVerificationStep
   onBack,
   onDone,
 }) => {
+  const { t } = useTranslation();
   const { colors: c } = useSignupFlowTheme();
   const styles = useMemo(() => createStyles(c), [c]);
-  const checks = useMemo(() => getPlayerVerificationChecks(appSpace), [appSpace]);
+  const checks = useMemo(() => getPlayerVerificationChecks(appSpace, t), [appSpace, t]);
   const underU13 = isUnderU13AppSpace(appSpace);
 
   const [checkState, setCheckState] = useState<Partial<Record<PlayerVerificationCheckId, CheckAiState>>>({});
@@ -75,12 +78,12 @@ export const SignupPlayerVerificationStep: React.FC<SignupPlayerVerificationStep
         setCheckState((s) => ({ ...s, [checkId]: 'rejected' }));
         setError(
           ai.rejection_reason_fr ??
-            `Document « ${checkId} » refusé. Reprenez la photo avec la caméra.`
+            tr(t, 'signup.verification.docRejected', `Document « ${checkId} » refusé. Reprenez la photo avec la caméra.`)
         );
       }
     } catch (e) {
       setCheckState((s) => ({ ...s, [checkId]: 'idle' }));
-      setError(e instanceof Error ? e.message : 'Analyse IA impossible');
+      setError(e instanceof Error ? e.message : tr(t, 'signup.verification.aiFailed', 'Analyse IA impossible'));
     } finally {
       setAnalyzing(false);
     }
@@ -89,18 +92,18 @@ export const SignupPlayerVerificationStep: React.FC<SignupPlayerVerificationStep
   const finish = () => {
     if (!identityPassed) {
       Alert.alert(
-        'Identité requise',
-        'Photographiez votre CNI ou passeport avec la caméra avant de continuer.'
+        t('signup.verification.alert.identity.title'),
+        t('signup.verification.alert.identity.body')
       );
       return;
     }
     if (!underU13 && checkState.club_license !== 'passed') {
       Alert.alert(
-        'Licence club',
-        'Sans licence validée, votre profil restera partiel. Continuer ?',
+        t('signup.verification.alert.license.title'),
+        t('signup.verification.alert.license.body'),
         [
-          { text: 'Photographier la licence', style: 'cancel' },
-          { text: 'Continuer', onPress: onDone },
+          { text: t('signup.verification.alert.license.retake'), style: 'cancel' },
+          { text: t('signup.form.continue'), onPress: onDone },
         ]
       );
       return;
@@ -115,18 +118,18 @@ export const SignupPlayerVerificationStep: React.FC<SignupPlayerVerificationStep
       stepName={stepName}
       phases={phases}
       phaseIndex={phaseIndex}
-      title="Vérification par caméra"
+      title={t('signup.verification.camera.title')}
       subtitle={
         underU13
-          ? 'Photographiez la pièce d’identité du responsable — analyse IA instantanée, rien n’est stocké.'
-          : 'CNI ou passeport obligatoire · licence club recommandée · prise de vue directe.'
+          ? t('signup.verification.camera.subtitleU13')
+          : t('signup.verification.camera.subtitle')
       }
       heroIcon="camera"
       contentKey={`player-docs-${appSpace}`}
       onBack={onBack}
       footer={
         <SignupFooterButton
-          label="Continuer vers l’email"
+          label={t('signup.verification.camera.continueEmail')}
           onPress={finish}
           disabled={busy || !identityPassed}
         />
@@ -153,14 +156,12 @@ export const SignupPlayerVerificationStep: React.FC<SignupPlayerVerificationStep
                 </Text>
                 <Text style={styles.cardSub}>{check.subtitle}</Text>
                 {isIdentity ? (
-                  <Text style={styles.cameraTip}>
-                    Cadrez le recto de la carte ou la page photo du passeport, sans reflet.
-                  </Text>
+                  <Text style={styles.cameraTip}>{t('signup.verification.camera.tip')}</Text>
                 ) : null}
                 {state === 'analyzing' ? (
-                  <Text style={styles.aiTag}>Analyse IA…</Text>
+                  <Text style={styles.aiTag}>{t('signup.verification.camera.analyzing')}</Text>
                 ) : null}
-                {passed ? <Text style={styles.aiOk}>Validé — non stocké</Text> : null}
+                {passed ? <Text style={styles.aiOk}>{t('signup.verification.camera.validated')}</Text> : null}
               </View>
             </View>
             <TouchableOpacity
@@ -170,12 +171,12 @@ export const SignupPlayerVerificationStep: React.FC<SignupPlayerVerificationStep
             >
               <Text style={[styles.btnText, passed && styles.btnTextDone]}>
                 {state === 'analyzing'
-                  ? 'Analyse IA…'
+                  ? t('signup.verification.camera.analyzing')
                   : passed
-                    ? 'Reprendre la photo'
+                    ? t('signup.verification.camera.retake')
                     : isIdentity
-                      ? 'Ouvrir la caméra'
-                      : 'Photographier avec la caméra'}
+                      ? t('signup.verification.camera.openCamera')
+                      : t('signup.verification.camera.photograph')}
               </Text>
             </TouchableOpacity>
           </View>
@@ -186,10 +187,7 @@ export const SignupPlayerVerificationStep: React.FC<SignupPlayerVerificationStep
         <SignupDocumentAiPanel result={aiResult ?? undefined} loading={analyzing} />
       ) : null}
 
-      <Text style={styles.hint}>
-        Utilisez la caméra pour photographier vos documents. L’IA Mistral analyse la photo en
-        mémoire — aucune copie n’est enregistrée sur nos serveurs.
-      </Text>
+      <Text style={styles.hint}>{t('signup.verification.camera.hint')}</Text>
     </SignupStepLayout>
   );
 };

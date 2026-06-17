@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, ScrollView, StyleSheet, Pressable } from 'react-native';
 import type { ActivityFeedItem } from '../../v3/engines/activityFeed.engine';
 import { GlassCard } from '../../../components/aurora/GlassCard';
 import { ProDayText } from '../../../components/ui/ProDayText';
 import { Icon, type IconName } from '../../../components/ui/Icon';
 import { useAppTheme } from '../../../context/ProductLineContext';
+import { useTranslation } from '../../../context/LocaleContext';
 import { spacing, radius } from '../../../theme/designTokens';
 import { formatCalendarDate } from '../../../utils/seasonCalendar';
 
@@ -25,15 +26,20 @@ type ActivityFeedStripProps = {
 /** Fil activités type Strava — accueil V3. */
 export const ActivityFeedStrip: React.FC<ActivityFeedStripProps> = ({ items, onPressItem }) => {
   const { colors } = useAppTheme();
+  const { t } = useTranslation();
+  const activityCountLabel = useMemo(
+    () => t('home.activity.count', { n: items.length }),
+    [items.length, t]
+  );
 
   if (items.length === 0) return null;
 
   return (
     <GlassCard variant="default" style={styles.card}>
       <View style={styles.header}>
-        <ProDayText variant="section">Votre activité</ProDayText>
+        <ProDayText variant="section">{t('home.activity.title')}</ProDayText>
         <ProDayText variant="caption" muted>
-          {items.length} action{items.length > 1 ? 's' : ''}
+          {activityCountLabel}
         </ProDayText>
       </View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
@@ -68,7 +74,7 @@ export const ActivityFeedStrip: React.FC<ActivityFeedStripProps> = ({ items, onP
 };
 
 const styles = StyleSheet.create({
-  card: { marginHorizontal: spacing.lg, marginBottom: spacing.md, padding: spacing.lg, gap: spacing.sm },
+  card: { marginBottom: spacing.md, padding: spacing.lg, gap: spacing.sm },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   row: { gap: spacing.sm, paddingRight: spacing.sm },
   tile: {

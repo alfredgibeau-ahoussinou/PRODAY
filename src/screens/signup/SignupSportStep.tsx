@@ -11,6 +11,7 @@ import type { SignupForm } from './useSignupForm';
 import { suggestAppSpaceFromAge } from './signupFlowConfig';
 import { suggestFeminineAppSpaceFromAge } from './signupWomanConfig';
 import { getPlayerStepMeta } from './signupPlayerStepMeta';
+import { useTranslation } from '../../context/LocaleContext';
 import { APP_SPACE_LABELS } from '../../models/AppSpace';
 import { isUnderU13AppSpace } from '../../models/AppSpace';
 import { PLAYER_LEVELS, PLAYER_POSITIONS } from '../../constants/playerProfile';
@@ -59,7 +60,8 @@ export const SignupSportStep: React.FC<SignupSportStepProps> = ({
   const { colors: c } = useSignupFlowTheme();
   const styles = useMemo(() => createStyles(c), [c]);
   const willNeedParental = form.isMinor || isUnderU13AppSpace(form.appSpace);
-  const meta = getPlayerStepMeta(form.productLine, 'sport');
+  const { t } = useTranslation();
+  const meta = getPlayerStepMeta(form.productLine, 'sport', t);
 
   return (
     <SignupStepLayout
@@ -74,7 +76,7 @@ export const SignupSportStep: React.FC<SignupSportStepProps> = ({
       heroIcon={meta.heroIcon}
       onBack={onBack}
       footer={
-        <SignupFooterButton label="Continuer" onPress={() => form.advanceFromCurrentPage()} />
+        <SignupFooterButton label={t('signup.form.continue')} onPress={() => form.advanceFromCurrentPage()} />
       }
     >
       {form.ageSpaceMismatch && suggestedSpace ? (
@@ -87,7 +89,7 @@ export const SignupSportStep: React.FC<SignupSportStepProps> = ({
               scaleTo={0.96}
             >
               <Text style={styles.mismatchBtnText}>
-                Passer à {APP_SPACE_LABELS[suggestedSpace]}
+                {t('signup.sport.switchSpace', { space: APP_SPACE_LABELS[suggestedSpace] })}
               </Text>
             </SignupPressable>
           </View>
@@ -96,7 +98,7 @@ export const SignupSportStep: React.FC<SignupSportStepProps> = ({
 
       <View>
         <SignupOptionPicker
-          label="Poste *"
+          label={t('signup.form.position')}
           options={PLAYER_POSITIONS}
           value={form.position}
           onChange={form.setPosition}
@@ -105,7 +107,7 @@ export const SignupSportStep: React.FC<SignupSportStepProps> = ({
       </View>
       <View>
         <SignupOptionPicker
-          label="Catégorie *"
+          label={t('signup.form.category')}
           options={categoryOptions}
           value={form.category}
           onChange={form.setCategory}
@@ -114,7 +116,7 @@ export const SignupSportStep: React.FC<SignupSportStepProps> = ({
       </View>
       <View>
         <SignupOptionPicker
-          label="Niveau *"
+          label={t('signup.form.level')}
           options={PLAYER_LEVELS}
           value={form.level}
           onChange={form.setLevel}
@@ -123,7 +125,7 @@ export const SignupSportStep: React.FC<SignupSportStepProps> = ({
       </View>
       <View>
         <AuthTextField
-          label="Âge *"
+          label={t('signup.form.age')}
           placeholder="Ex. 17"
           value={form.age}
           onChangeText={form.setAge}

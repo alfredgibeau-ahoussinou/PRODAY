@@ -14,6 +14,7 @@ import {
 } from 'firebase/firestore';
 import { getDb } from '../lib/firebase';
 import { isFirebaseConfigured } from '../config/firebase';
+import { clubsService } from './clubs.service';
 import {
   sponsorOfferFromFirestore,
   fundingGoalFromFirestore,
@@ -220,6 +221,102 @@ function buildDemoActivity(sponsorUid: string, offers: SponsorOffer[]): SponsorA
   return items.sort((a, b) => b.at.getTime() - a.at.getTime());
 }
 
+function contributionFromFirestore(id: string, data: Record<string, unknown>): SponsorContribution {
+  const at = data.created_at;
+  return {
+    id,
+    goal_id: String(data.goal_id ?? ''),
+    goal_title: String(data.goal_title ?? ''),
+    amount_eur: Number(data.amount_eur ?? 0),
+    at:
+      at && typeof at === 'object' && 'toDate' in at
+        ? (at as { toDate: () => Date }).toDate()
+        : new Date(),
+  };
+}
+
+function buildLiveActivity(
+  sponsorUid: string,
+  offers: SponsorOffer[],
+  contributions: SponsorContribution[]
+): SponsorActivityItem[] {
+  const mine = offers.filter((o) => o.sponsor_uid === sponsorUid);
+  const items: SponsorActivityItem[] = [];
+
+  for (const offer of mine) {
+    items.push({
+      id: `pub-${offer.id}`,
+      type: 'offer_published',
+      title: offer.active ? 'Offre active' : 'Offre en pause',
+      subtitle: `${offer.value} · ${offer.city}`,
+      at: offer.created_at,
+    });
+    if ((offer.views_count ?? 0) > 0) {
+      items.push({
+        id: `view-${offer.id}`,
+        type: 'offer_view',
+        title: 'Vues sur votre offre',
+        subtitle: `${offer.company_name} — ${offer.views_count} vues`,
+        at: offer.created_at,
+      });
+    }
+    if ((offer.leads_count ?? 0) > 0) {
+      items.push({
+        id: `lead-${offer.id}`,
+        type: 'lead',
+        title: 'Contacts générés',
+        subtitle: `${offer.leads_count} lead(s) · ${offer.city}`,
+        at: offer.created_at,
+      });
+    }
+  }
+
+  for (const c of contributions) {
+    items.push({
+      id: `contrib-${c.id}`,
+      type: 'contribution',
+      title: 'Soutien enregistré',
+      subtitle: `${c.goal_title} — ${c.amount_eur} €`,
+      at: c.at,
+    });
+  }
+
+  return items.sort((a, b) => b.at.getTime() - a.at.getTime());
+}
+
+async function buildLiveProspects(sponsorUid: string, offers: SponsorOffer[]): Promise<SponsorProspect[]> {
+  const clubs = await clubsService.list(50);
+  if (clubs.length === 0) return [];
+
+  const offerCities = offers
+    .filter((o) => o.sponsor_uid === sponsorUid)
+    .map((o) => o.city.trim().toLowerCase())
+    .filter(Boolean);
+
+  return clubs
+    .map((club) => {
+      const city = club.city.toLowerCase();
+      const zoneMatch =
+        offerCities.length === 0 ||
+        offerCities.some((c) => city.includes(c) || c.includes(city));
+      if (!zoneMatch) return null;
+
+      return {
+        id: club.id,
+        name: club.name,
+        city: club.city,
+        category: club.categories[0] ?? 'Club',
+        match_score: club.verified ? 90 : 75,
+        reason: club.verified
+          ? 'Club vérifié — zone compatible avec vos offres'
+          : 'Club actif sur ProDay',
+      } satisfies SponsorProspect;
+    })
+    .filter((p): p is SponsorProspect => p != null)
+    .sort((a, b) => b.match_score - a.match_score)
+    .slice(0, 8);
+}
+
 const DEMO_PROSPECTS: SponsorProspect[] = [
   {
     id: 'prospect-1',
@@ -315,11 +412,13 @@ export const sponsorsService = {
     const impressions = mine.reduce((s, o) => s + (o.views_count ?? 0), 0);
     const offerClicks = mine.reduce((s, o) => s + (o.clicks_count ?? 0), 0);
     const leads = mine.reduce((s, o) => s + (o.leads_count ?? 0), 0);
+    const contributions = await this.listContributions(sponsorUid);
+    const clubIds = new Set(contributions.map((c) => c.goal_id));
     return {
       impressions,
       profile_views: Math.round(impressions * 0.3),
       offer_clicks: offerClicks,
-      clubs_reached: mine.length * 3,
+      clubs_reached: Math.max(mine.length, clubIds.size),
       leads,
       conversion_rate: offerClicks > 0 ? Math.round((leads / offerClicks) * 100) : 0,
     };
@@ -328,19 +427,46 @@ export const sponsorsService = {
   async listActivity(sponsorUid: string, companyName?: string): Promise<SponsorActivityItem[]> {
     const offers = await this.listOffers(50, sponsorUid, companyName);
     if (!isFirebaseConfigured()) return buildDemoActivity(sponsorUid, offers);
-    return buildDemoActivity(sponsorUid, offers).slice(0, 5);
+    const contributions = await this.listContributions(sponsorUid);
+    return buildLiveActivity(sponsorUid, offers, contributions).slice(0, 12);
   },
 
   async listContributions(sponsorUid: string): Promise<SponsorContribution[]> {
     if (!isFirebaseConfigured()) {
       return [...demoContributions].sort((a, b) => b.at.getTime() - a.at.getTime());
     }
-    return [];
+    const database = getDb();
+    if (!database) return [];
+
+    try {
+      const q = query(
+        collection(database, 'sponsor_contributions'),
+        where('sponsor_uid', '==', sponsorUid),
+        orderBy('created_at', 'desc'),
+        limit(30)
+      );
+      const snap = await getDocs(q);
+      return snap.docs.map((d) =>
+        contributionFromFirestore(d.id, d.data() as Record<string, unknown>)
+      );
+    } catch {
+      const q = query(
+        collection(database, 'sponsor_contributions'),
+        where('sponsor_uid', '==', sponsorUid),
+        limit(30)
+      );
+      const snap = await getDocs(q);
+      return snap.docs
+        .map((d) => contributionFromFirestore(d.id, d.data() as Record<string, unknown>))
+        .sort((a, b) => b.at.getTime() - a.at.getTime());
+    }
   },
 
-  async listProspects(_sponsorUid: string): Promise<SponsorProspect[]> {
+  async listProspects(sponsorUid: string): Promise<SponsorProspect[]> {
     if (!isFirebaseConfigured()) return DEMO_PROSPECTS;
-    return DEMO_PROSPECTS;
+    const offers = await this.listOffers(30, sponsorUid);
+    const prospects = await buildLiveProspects(sponsorUid, offers);
+    return prospects.length > 0 ? prospects : DEMO_PROSPECTS;
   },
 
   async createOffer(input: {
@@ -477,5 +603,15 @@ export const sponsorsService = {
       raised_amount_eur: increment(amountEur),
       updated_at: serverTimestamp(),
     });
+
+    if (sponsorUid) {
+      await addDoc(collection(database, 'sponsor_contributions'), {
+        sponsor_uid: sponsorUid,
+        goal_id: goalId,
+        goal_title: goal.title,
+        amount_eur: amountEur,
+        created_at: serverTimestamp(),
+      });
+    }
   },
 };

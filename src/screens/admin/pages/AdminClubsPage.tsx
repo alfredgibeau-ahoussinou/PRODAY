@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { useTranslation } from '../../../context/LocaleContext';
 import { ScrollView, TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { useAdminData } from '../../../context/AdminDataContext';
 import { adminService } from '../../../services/admin.service';
@@ -11,24 +12,24 @@ import { useAdminStyles } from '../../../components/admin/adminStyles';
 import { spacing, radius } from '../../../theme/designTokens';
 import type { AppColors } from '../../../theme/universeTheme';
 
-type ClubsSegment = 'clubs' | 'finance' | 'announcements';
+type ClubsSegment = 'clubs' | 'announcements';
 
 const SEGMENTS: { id: ClubsSegment; label: string }[] = [
   { id: 'clubs', label: 'Clubs' },
-  { id: 'finance', label: 'Cotisations' },
   { id: 'announcements', label: 'Annonces' },
 ];
 
 export const AdminClubsPage: React.FC = () => {
-  const { loading, clubs, payments, announcements, refresh } = useAdminData();
+  const { t } = useTranslation();
+  const { loading, clubs, announcements, refresh } = useAdminData();
   const { colors: c } = useAdminStyles();
   const styles = useMemo(() => createStyles(c), [c]);
   const [segment, setSegment] = useState<ClubsSegment>('clubs');
 
   return (
     <AdminPageScaffold
-      title="Clubs & finance"
-      subtitle="Structures · cotisations équipe · annonces club"
+      title="Clubs"
+      subtitle="Structures · annonces club"
       loading={loading}
     >
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.segments}>
@@ -47,45 +48,17 @@ export const AdminClubsPage: React.FC = () => {
         <>
           <AdminSectionHeader title="CLUBS" count={clubs.length} />
           {clubs.length === 0 ? (
-            <AdminEmptyState icon="business" title="Aucun club" subtitle="Structures créées." />
+            <AdminEmptyState icon="business" title={t('admin.clubs.empty')} subtitle={t('admin.clubs.emptySub')} />
           ) : (
             clubs.map((club) => (
               <AdminEntityCard
                 key={club.id}
                 icon="business"
                 title={club.name}
-                subtitle={`${club.city}${club.verified ? ' · vérifié' : ''}`}
+                subtitle={`${club.city}${club.verified ? t('admin.clubs.verified') : ''}`}
                 meta={`${club.categories.join(', ') || '—'} · owner ${club.owner_uid.slice(0, 8)}…`}
                 onDelete={() =>
                   adminConfirmDelete('Supprimer le club', club.name, () => adminService.deleteClub(club.id), refresh)
-                }
-              />
-            ))
-          )}
-        </>
-      )}
-
-      {segment === 'finance' && (
-        <>
-          <AdminSectionHeader title="COTISATIONS CLUB" count={payments.length} />
-          {payments.length === 0 ? (
-            <AdminEmptyState icon="calendar" title="Aucune cotisation" subtitle="Demandes de paiement équipe." />
-          ) : (
-            payments.map((p) => (
-              <AdminEntityCard
-                key={p.id}
-                icon="calendar"
-                title={`${p.member_name} — ${p.amount_eur} €`}
-                subtitle={p.label}
-                meta={`${p.status} · échéance ${p.due_at.toLocaleDateString('fr-FR')}`}
-                secondaryLabel={p.status === 'paid' ? 'Remettre pending' : 'Marquer payé'}
-                onSecondary={() =>
-                  adminService
-                    .updatePaymentStatus(p.id, p.status === 'paid' ? 'pending' : 'paid')
-                    .then(() => refresh())
-                }
-                onDelete={() =>
-                  adminConfirmDelete('Supprimer', p.label, () => adminService.deletePaymentRequest(p.id), refresh)
                 }
               />
             ))
@@ -97,7 +70,7 @@ export const AdminClubsPage: React.FC = () => {
         <>
           <AdminSectionHeader title="ANNONCES CLUB" count={announcements.length} />
           {announcements.length === 0 ? (
-            <AdminEmptyState icon="notifications" title="Aucune annonce" subtitle="Annonces publiées par les clubs." />
+            <AdminEmptyState icon="notifications" title={t('admin.clubs.postsEmpty')} subtitle={t('admin.clubs.postsEmptySub')} />
           ) : (
             announcements.map((a) => (
               <AdminEntityCard

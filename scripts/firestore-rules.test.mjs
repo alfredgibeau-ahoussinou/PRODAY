@@ -15,6 +15,11 @@ import {
   setDoc,
   updateDoc,
   deleteDoc,
+  addDoc,
+  getDocs,
+  query,
+  where,
+  orderBy,
   collection,
 } from 'firebase/firestore';
 
@@ -289,6 +294,84 @@ async function run() {
       participant_names: { dave: 'Dave', bob: 'Bob' },
       last_message: '',
       unread_by: [],
+    })
+  );
+
+  // --- Messages : lecture par participant du thread (y compris groupe) ---
+  await testEnv.withSecurityRulesDisabled(async (ctx) => {
+    const db = ctx.firestore();
+    await setDoc(doc(db, 'message_threads/team__ev1'), {
+      participant_ids: ['alice', 'bob'],
+      participant_names: { alice: 'Alice', bob: 'Bob' },
+      last_message: '',
+      unread_by: [],
+    });
+    await setDoc(doc(db, 'messages/msg1'), {
+      thread_id: 'alice__bob',
+      sender_id: 'alice',
+      receiver_id: 'bob',
+      body: 'Salut Bob',
+      created_at: new Date(),
+    });
+    await setDoc(doc(db, 'messages/msg2'), {
+      thread_id: 'alice__bob',
+      sender_id: 'bob',
+      receiver_id: 'alice',
+      body: 'Salut Alice',
+      created_at: new Date(),
+    });
+    await setDoc(doc(db, 'messages/group1'), {
+      thread_id: 'team__ev1',
+      sender_id: 'alice',
+      receiver_id: 'group',
+      body: 'Go team',
+      created_at: new Date(),
+    });
+  });
+
+  await assertSucceeds(
+    getDocs(
+      query(
+        collection(aliceDb, 'messages'),
+        where('thread_id', '==', 'alice__bob'),
+        orderBy('created_at', 'asc')
+      )
+    )
+  );
+
+  await assertSucceeds(getDoc(doc(bobDb, 'messages/msg1')));
+
+  await assertSucceeds(getDoc(doc(bobDb, 'messages/group1')));
+
+  await assertFails(
+    getDocs(
+      query(
+        collection(carolDb, 'messages'),
+        where('thread_id', '==', 'alice__bob'),
+        orderBy('created_at', 'asc')
+      )
+    )
+  );
+
+  await assertFails(getDoc(doc(carolDb, 'messages/group1')));
+
+  await assertSucceeds(
+    addDoc(collection(aliceDb, 'messages'), {
+      thread_id: 'alice__bob',
+      sender_id: 'alice',
+      receiver_id: 'bob',
+      body: 'Nouveau message',
+      created_at: new Date(),
+    })
+  );
+
+  await assertFails(
+    addDoc(collection(daveDb, 'messages'), {
+      thread_id: 'alice__bob',
+      sender_id: 'dave',
+      receiver_id: 'bob',
+      body: 'Intrusion',
+      created_at: new Date(),
     })
   );
 

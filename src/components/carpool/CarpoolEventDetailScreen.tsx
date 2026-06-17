@@ -15,6 +15,7 @@ import { AppDetailHeader } from '../app';
 import { ScreenHeader } from '../ui/ScreenHeader';
 import { ProDayText } from '../ui/ProDayText';
 import { useAppTheme } from '../../context/ProductLineContext';
+import { useTranslation } from '../../context/LocaleContext';
 import { TAB_BAR_CONTENT_INSET } from '../../navigation/tabBarLayout';
 import { spacing } from '../../theme/designTokens';
 
@@ -30,6 +31,7 @@ export const CarpoolEventDetailScreen: React.FC<CarpoolEventDetailScreenProps> =
   onBack,
 }) => {
   const { colors } = useAppTheme();
+  const { t } = useTranslation();
   const [event, setEvent] = useState<TeamEvent | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -62,7 +64,7 @@ export const CarpoolEventDetailScreen: React.FC<CarpoolEventDetailScreenProps> =
 
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
-      <ScreenHeader title="Événement" onBack={onBack} />
+      <ScreenHeader title={t('carpool.event.title')} onBack={onBack} />
 
       <ScrollView
         contentContainerStyle={styles.content}

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { PressableSpring } from '../motion/PressableSpring';
 import { prodayHaptics } from '../../utils/prodayHaptics';
@@ -20,91 +20,119 @@ export const MatchWeekStrip: React.FC<MatchWeekStripProps> = ({
   onSelectDay,
 }) => {
   const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   return (
-    <ScrollView
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      contentContainerStyle={styles.row}
-    >
-      {days.map((day) => {
-        const selected =
-          selectedDate &&
-          day.date.toDateString() === selectedDate.toDateString();
-        const weekday = day.date.toLocaleDateString('fr-FR', { weekday: 'short' });
-        const dom = day.date.getDate();
+    <View style={[styles.panel, { backgroundColor: colors.surfaceMuted, borderColor: colors.border }]}>
+      <ProDayText variant="caption" muted style={styles.label}>
+        Cette semaine
+      </ProDayText>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.row}
+      >
+        {days.map((day) => {
+          const selected =
+            selectedDate && day.date.toDateString() === selectedDate.toDateString();
+          const weekday = day.date.toLocaleDateString('fr-FR', { weekday: 'short' });
+          const dom = day.date.getDate();
 
-        return (
-          <PressableSpring
-            key={day.date.toISOString()}
-            style={[
-              styles.chip,
-              {
-                backgroundColor: selected ? colors.ink : colors.surface,
-                borderColor: day.isToday ? colors.accent : colors.border,
-              },
-            ]}
-            onPress={() => {
-              prodayHaptics.tabSwitch();
-              onSelectDay?.(day.date);
-            }}
-            scaleTo={0.94}
-            haptic
-          >
-            <ProDayText
-              variant="caption"
-              inverse={Boolean(selected)}
-              style={!selected ? { color: colors.textMuted } : undefined}
+          return (
+            <PressableSpring
+              key={day.date.toISOString()}
+              style={[
+                styles.chip,
+                {
+                  backgroundColor: selected ? colors.accent : colors.surface,
+                  borderColor: day.isToday ? colors.accent : 'transparent',
+                },
+              ]}
+              onPress={() => {
+                prodayHaptics.tabSwitch();
+                onSelectDay?.(day.date);
+              }}
+              scaleTo={0.94}
+              haptic
             >
-              {weekday}
-            </ProDayText>
-            <ProDayText variant="section" inverse={Boolean(selected)}>
-              {dom}
-            </ProDayText>
-            {day.count > 0 ? (
-              <View
-                style={[
-                  styles.dot,
-                  { backgroundColor: selected ? colors.brandInverse : colors.accent },
-                ]}
+              <ProDayText
+                variant="caption"
+                inverse={Boolean(selected)}
+                style={!selected ? { color: colors.textMuted, fontSize: 10 } : { fontSize: 10 }}
               >
-                <ProDayText variant="caption" inverse={Boolean(selected)} style={styles.dotText}>
-                  {day.count}
-                </ProDayText>
-              </View>
-            ) : (
-              <View style={styles.dotPlaceholder} />
-            )}
-          </PressableSpring>
-        );
-      })}
-    </ScrollView>
+                {weekday}
+              </ProDayText>
+              <ProDayText variant="section" inverse={Boolean(selected)} style={styles.dom}>
+                {dom}
+              </ProDayText>
+              {day.count > 0 ? (
+                <View
+                  style={[
+                    styles.dot,
+                    { backgroundColor: selected ? colors.brandInverse : colors.accentSoft },
+                  ]}
+                >
+                  <ProDayText
+                    variant="caption"
+                    style={{
+                      color: selected ? colors.accent : colors.accent,
+                      fontWeight: '900',
+                      fontSize: 9,
+                    }}
+                  >
+                    {day.count}
+                  </ProDayText>
+                </View>
+              ) : (
+                <View style={styles.dotPlaceholder} />
+              )}
+            </PressableSpring>
+          );
+        })}
+      </ScrollView>
+    </View>
   );
 };
 
-const styles = StyleSheet.create({
-  row: {
-    gap: spacing.sm,
-    paddingBottom: spacing.sm,
-  },
-  chip: {
-    width: 56,
-    alignItems: 'center',
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.xs,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    gap: 2,
-  },
-  dot: {
-    minWidth: 18,
-    height: 18,
-    borderRadius: 9,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 4,
-    marginTop: 2,
-  },
-  dotText: { fontSize: 10, fontWeight: '900' },
-  dotPlaceholder: { height: 18, marginTop: 2 },
-});
+function createStyles(_colors: ReturnType<typeof useAppTheme>['colors']) {
+  return StyleSheet.create({
+    panel: {
+      borderRadius: radius.lg,
+      borderWidth: StyleSheet.hairlineWidth,
+      padding: spacing.sm,
+      marginBottom: spacing.lg,
+      gap: spacing.xs,
+    },
+    label: {
+      fontWeight: '700',
+      paddingHorizontal: spacing.xs,
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+      fontSize: 10,
+    },
+    row: {
+      gap: spacing.xs,
+      paddingHorizontal: 2,
+    },
+    chip: {
+      width: 52,
+      alignItems: 'center',
+      paddingVertical: spacing.sm,
+      paddingHorizontal: spacing.xs,
+      borderRadius: radius.md,
+      borderWidth: 1.5,
+      gap: 1,
+    },
+    dom: { fontWeight: '800', fontSize: 17, lineHeight: 20 },
+    dot: {
+      minWidth: 16,
+      height: 16,
+      borderRadius: 8,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: 3,
+      marginTop: 2,
+    },
+    dotPlaceholder: { height: 16, marginTop: 2 },
+  });
+}
