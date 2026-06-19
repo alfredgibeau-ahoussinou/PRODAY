@@ -12,12 +12,15 @@ import { SponsorDashboardScreen } from './sponsor/SponsorDashboardScreen';
 import { HomeIaDashboard } from '../features/home/HomeIaDashboard';
 import { TeamManagementScreen } from './TeamManagementScreen';
 import { SponsorsScreen } from './SponsorsScreen';
+import { SponsorPartnerHubScreen } from './sponsor/SponsorPartnerHubScreen';
 import { CrossfadeSwitch, PushScreenTransition } from '../components/motion';
 import { useExperienceTheme } from '../hooks/useExperienceTheme';
 import { SPONSOR_THEME } from '../content/sponsorExperience';
 import { ProDayScreenCanvas } from '../components/ui/ProDayScreenCanvas';
+import { WeeklyQuestionHomePopup } from '../components/weeklyQuestion/WeeklyQuestionHomePopup';
+import { canParticipateWeeklyQuestion } from '../utils/weeklyQuestionAccess';
 
-type HomeOverlay = 'team' | 'sponsors' | null;
+type HomeOverlay = 'team' | 'sponsors' | 'partner-hub' | null;
 
 /**
  * Accueil : découverte interactive avant connexion, dashboard personnel après.
@@ -36,7 +39,7 @@ export const HomeScreen: React.FC = () => {
   useEffect(() => {
     if (!pendingDashboardView || !profile) return;
     if (pendingDashboardView === 'gestion') setOverlay('team');
-    else if (pendingDashboardView === 'sponsors') setOverlay('sponsors');
+    else if (pendingDashboardView === 'sponsors') setOverlay('partner-hub');
     clearPendingDashboard();
   }, [pendingDashboardView, clearPendingDashboard, profile]);
 
@@ -93,11 +96,27 @@ export const HomeScreen: React.FC = () => {
             ) : null}
           </PushScreenTransition>
 
-          <PushScreenTransition active={overlay === 'sponsors'}>
-            {overlay === 'sponsors' ? (
-              <SponsorsScreen onBack={() => setOverlay(null)} />
+          <PushScreenTransition active={overlay === 'partner-hub'}>
+            {overlay === 'partner-hub' ? (
+              <SponsorPartnerHubScreen
+                onBack={() => setOverlay(null)}
+                onBrowseOffers={() => setOverlay('sponsors')}
+              />
             ) : null}
           </PushScreenTransition>
+
+          <PushScreenTransition active={overlay === 'sponsors'}>
+            {overlay === 'sponsors' ? (
+              <SponsorsScreen
+                onBack={() => setOverlay('partner-hub')}
+                onPartnerHub={() => setOverlay('partner-hub')}
+              />
+            ) : null}
+          </PushScreenTransition>
+
+          {profile && canParticipateWeeklyQuestion(profile.role) ? (
+            <WeeklyQuestionHomePopup profile={profile} />
+          ) : null}
         </View>
       ) : (
         <DiscoverScreen />

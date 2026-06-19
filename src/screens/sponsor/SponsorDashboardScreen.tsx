@@ -87,7 +87,7 @@ export const SponsorDashboardScreen: React.FC<SponsorDashboardScreenProps> = ({ 
         <QuickAction icon="add" label="Offre" onPress={() => nav.setActiveTab('matchs')} />
         <QuickAction icon="briefcase" label="Campagnes" onPress={() => nav.setActiveTab('matchs')} />
         <QuickAction icon="chat" label={t('sponsor.network')} onPress={() => nav.setActiveTab('messages')} />
-        <QuickAction icon="people" label="Prospects" onPress={() => nav.setActiveTab('messages')} />
+        <QuickAction icon="star-four-points" label="Tarifs" onPress={() => nav.openDashboard('sponsors')} />
       </View>
 
       <SponsorActivityFeed items={activity} />
@@ -170,7 +170,7 @@ const StatCard: React.FC<{ label: string; value: string; highlight?: boolean }> 
 );
 
 const QuickAction: React.FC<{
-  icon: 'add' | 'briefcase' | 'chat' | 'people';
+  icon: 'add' | 'briefcase' | 'chat' | 'people' | 'star-four-points';
   label: string;
   onPress: () => void;
 }> = ({ icon, label, onPress }) => (

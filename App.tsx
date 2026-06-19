@@ -27,6 +27,7 @@ import {
 } from './src/context/TabNavigationContext';
 import { AuthProvider, useAuth } from './src/context/AuthContext';
 import { LocaleProvider } from './src/context/LocaleContext';
+import { AuthGreetingProvider } from './src/context/AuthGreetingProvider';
 import { SubscriptionProvider } from './src/context/SubscriptionContext';
 import { SubscriptionShell } from './src/components/subscription/SubscriptionShell';
 import { AppSpaceProvider } from './src/context/AppSpaceContext';
@@ -60,6 +61,9 @@ import { useTranslation } from './src/context/LocaleContext';
 import { useParentalScreenTime } from './src/hooks/useParentalScreenTime';
 import { useParentalActivityJournal } from './src/hooks/useParentalActivityJournal';
 import { ParentalScreenTimeBlockedScreen } from './src/screens/ParentalScreenTimeBlockedScreen';
+import { MinorYouthSpaceBridge } from './src/components/appSpace/MinorYouthSpaceBridge';
+import type { UserRole } from './src/models/User';
+import type { ProductLineId } from './src/models/ProductLine';
 
 void SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -98,11 +102,13 @@ export default function App() {
     <SafeAreaProvider onLayout={onLayoutRoot}>
       <AuthProvider>
         <LocaleProvider>
-          <ProductLineProvider>
-            <LaunchIntroProvider>
-              <AppShell />
-            </LaunchIntroProvider>
-          </ProductLineProvider>
+            <ProductLineProvider>
+              <AuthGreetingProvider>
+                <LaunchIntroProvider>
+                  <AppShell />
+                </LaunchIntroProvider>
+              </AuthGreetingProvider>
+            </ProductLineProvider>
         </LocaleProvider>
       </AuthProvider>
     </SafeAreaProvider>
@@ -110,7 +116,7 @@ export default function App() {
 }
 
 function AppShell() {
-  const { colors: themeColors, isWoman, productLine, loading: productLineLoading } =
+  const { colors: themeColors, isWoman, productLine, loading: productLineLoading, setProductLine } =
     useProductLine();
   const sessionProfile = useSessionProfile();
   const {
@@ -136,6 +142,10 @@ function AppShell() {
     null
   );
   const [pendingAuthIntent, setPendingAuthIntent] = useState<AuthIntent | null>(null);
+  const [pendingSignupProductLine, setPendingSignupProductLine] = useState<ProductLineId | null>(
+    null,
+  );
+  const [pendingSignupRole, setPendingSignupRole] = useState<UserRole | null>(null);
   const [pendingDashboardView, setPendingDashboardView] = useState<DashboardDeepLink | null>(
     null
   );
@@ -150,8 +160,8 @@ function AppShell() {
     () =>
       isGuest
         ? getGuestVisibleTabs(productLine)
-        : getVisibleMainTabs(productLine, sessionProfile?.role),
-    [isGuest, productLine, sessionProfile?.role]
+        : getVisibleMainTabs(productLine, sessionProfile?.role, sessionProfile),
+    [isGuest, productLine, sessionProfile],
   );
 
   const screenTabs = useMemo((): MainTabId[] => {
@@ -272,6 +282,7 @@ function AppShell() {
   const mainApp = (
     <AppSpaceProvider>
       <WomanSpaceDefaults />
+      {profile ? <MinorYouthSpaceBridge profile={profile} productLine={productLine} /> : null}
       <TabNavigationProvider
         value={{
           activeTab,
@@ -325,6 +336,19 @@ function AppShell() {
             handleTabPress('profil');
           },
           clearPendingAuthIntent: () => setPendingAuthIntent(null),
+          pendingSignupProductLine,
+          pendingSignupRole,
+          openPartnerSignup: () => {
+            void setProductLine('pro');
+            setPendingSignupProductLine('pro');
+            setPendingSignupRole('sponsor');
+            setPendingAuthIntent('signup');
+            handleTabPress('profil');
+          },
+          clearSignupPreset: () => {
+            setPendingSignupProductLine(null);
+            setPendingSignupRole(null);
+          },
           pendingDashboardView,
           openDashboard: (view) => {
             if (view === 'feed') {

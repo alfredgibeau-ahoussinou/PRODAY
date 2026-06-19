@@ -1,6 +1,6 @@
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
 import { View, StyleSheet } from 'react-native';
-import Animated, { FadeInLeft, FadeInRight } from 'react-native-reanimated';
+import Animated, { Easing, FadeIn } from 'react-native-reanimated';
 import { motion } from '../../theme/motion';
 import { useSignupForm } from './useSignupForm';
 import { SignupWelcomeStep } from './SignupWelcomeStep';
@@ -31,6 +31,7 @@ import { getManLaunchCopy } from './signupManConfig';
 import { getProLaunchCopy } from './signupProConfig';
 import { getSanteLaunchCopy } from './signupSanteConfig';
 import { useTranslation } from '../../context/LocaleContext';
+import type { UserRole } from '../../models/User';
 
 interface SignupFlowProps {
   onClose: () => void;
@@ -38,6 +39,7 @@ interface SignupFlowProps {
   initialEmail?: string;
   initialDisplayName?: string;
   productLine?: ProductLineId;
+  initialRole?: UserRole;
 }
 
 type SignupFormApi = ReturnType<typeof useSignupForm>;
@@ -64,23 +66,7 @@ const SignupFlowInner: React.FC<SignupFlowInnerProps> = ({
   };
 
   const backUnlessLocked = form.accountCreated ? undefined : form.goBack;
-  const prevIndexRef = useRef(form.pageIndex);
-  const direction = form.pageIndex >= prevIndexRef.current ? 1 : -1;
-
-  useEffect(() => {
-    prevIndexRef.current = form.pageIndex;
-  }, [form.pageIndex]);
-
-  const pageEntering =
-    direction > 0
-      ? FadeInRight.springify()
-          .damping(18)
-          .stiffness(160)
-          .duration(motion.duration.normal)
-      : FadeInLeft.springify()
-          .damping(18)
-          .stiffness(160)
-          .duration(motion.duration.normal);
+  const pageEntering = FadeIn.duration(motion.duration.normal).easing(Easing.out(Easing.cubic));
 
   const submitSecurity = async () => {
     if (!form.validateAccount()) return;
@@ -213,6 +199,7 @@ const SignupFlowWithTheme: React.FC<SignupFlowProps> = (props) => {
     initialEmail: props.initialEmail,
     initialDisplayName: props.initialDisplayName,
     productLine: props.productLine ?? 'homme',
+    initialRole: props.initialRole,
   });
 
   return (

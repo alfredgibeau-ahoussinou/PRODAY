@@ -53,6 +53,7 @@ export function useSignupForm(initial?: {
   initialDisplayName?: string;
   startAtAccount?: boolean;
   productLine?: ProductLineId;
+  initialRole?: UserRole;
 }) {
   const { setProductLine } = useProductLine();
   const { t } = useTranslation();
@@ -62,12 +63,12 @@ export function useSignupForm(initial?: {
   const isSanteProduct = productLine === 'sante';
   const isStaffProduct = isProProduct || isSanteProduct;
 
-  const [role, setRoleState] = useState<UserRole>(
-    isSanteProduct ? 'physio' : isProProduct ? 'coach' : 'player'
-  );
-  const [draftRole, setDraftRole] = useState<UserRole>(
-    isSanteProduct ? 'physio' : isProProduct ? 'coach' : 'player'
-  );
+  const defaultRole: UserRole =
+    initial?.initialRole ??
+    (isSanteProduct ? 'physio' : isProProduct ? 'coach' : 'player');
+
+  const [role, setRoleState] = useState<UserRole>(defaultRole);
+  const [draftRole, setDraftRole] = useState<UserRole>(defaultRole);
   const [appSpace, setAppSpaceState] = useState<AppSpaceId>(
     isWomanProduct ? 'girls' : DEFAULT_APP_SPACE
   );

@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { SponsorsScreen } from './SponsorsScreen';
+import { SponsorPartnerHubScreen } from './sponsor/SponsorPartnerHubScreen';
 import { DiscoverInteractiveHome } from '../components/discover/DiscoverInteractiveHome';
 import { ProDayConfigNotice } from '../components/ui/ProDayConfigNotice';
 import { isFirebaseConfigured } from '../config/firebase';
@@ -19,7 +20,7 @@ export const DiscoverScreen: React.FC = () => {
   const { setActiveTab, openAuth, openMercato, openMatchs } = useTabNavigation();
   const { openSpacePicker } = useLaunchIntro();
   const { stats, posts, loading } = useDiscoverLiveData();
-  const [guestModule, setGuestModule] = useState<'sponsors' | null>(null);
+  const [guestModule, setGuestModule] = useState<'partner-hub' | 'sponsors-offers' | null>(null);
   const { rootStyle, productLine } = useThemedScreen();
   const { t } = useTranslation();
 
@@ -41,7 +42,7 @@ export const DiscoverScreen: React.FC = () => {
   };
 
   const onModulePress = (id: ProDayModuleId) => {
-    if (id === 'sponsors') setGuestModule('sponsors');
+    if (id === 'sponsors') setGuestModule('partner-hub');
     else if (id === 'recrutement') openMercato('home');
     else if (id === 'matchs') openMatchs({ homeTab: 'season' });
     else goSignup();
@@ -79,8 +80,17 @@ export const DiscoverScreen: React.FC = () => {
         onClose={() => setGuestModule(null)}
         closeLabel={t('common.close')}
       >
-        {guestModule === 'sponsors' ? (
-          <SponsorsScreen guestMode onLoginRequired={goLogin} onBack={() => setGuestModule(null)} />
+        {guestModule === 'partner-hub' ? (
+          <SponsorPartnerHubScreen
+            onBack={() => setGuestModule(null)}
+            onBrowseOffers={() => setGuestModule('sponsors-offers')}
+          />
+        ) : guestModule === 'sponsors-offers' ? (
+          <SponsorsScreen
+            guestMode
+            onLoginRequired={goLogin}
+            onBack={() => setGuestModule('partner-hub')}
+          />
         ) : null}
       </AnimatedModalShell>
     </View>

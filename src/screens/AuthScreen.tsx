@@ -9,7 +9,7 @@ import {
   Platform,
   type TextInput,
 } from 'react-native';
-import Animated, { FadeInUp } from 'react-native-reanimated';
+import Animated, { Easing, FadeIn } from 'react-native-reanimated';
 import { authService } from '../services/auth.service';
 import { AuthBrandHeader } from '../components/auth/AuthBrandHeader';
 import { AuthPrimaryButton } from '../components/auth/AuthPrimaryButton';
@@ -41,6 +41,7 @@ import { LanguageSettingControl } from '../components/settings/LanguageSettingCo
 import { useTranslation } from '../context/LocaleContext';
 import { getLocalizedAuthCopy } from '../i18n/localizedContent';
 import { getAuthSignupTeaser } from '../i18n/localizedAuth';
+import type { UserRole } from '../models/User';
 import { brandForProductLine, type ProductLineId } from '../models/ProductLine';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -49,11 +50,15 @@ interface AuthScreenProps {
   /** Retour personnalisé (ex. invité → accueil). */
   onDismiss?: () => void;
   initialIntent?: AuthIntent;
+  signupProductLine?: ProductLineId;
+  signupInitialRole?: UserRole;
 }
 
 export const AuthScreen: React.FC<AuthScreenProps> = ({
   onDismiss,
   initialIntent = 'login',
+  signupProductLine,
+  signupInitialRole,
 }) => {
   const authStyles = useAuthStyles();
   const { compact, logoWidth, headerTopPad, tabBarScrollInset: tabInset } = useAuthLayout();
@@ -111,9 +116,16 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
     clearErrors();
   }, []);
 
-  const onSignupComplete = useCallback(() => {
+  const onSignupComplete = useCallback(async () => {
     setSignupOpen(false);
-  }, []);
+    await refreshProfile();
+    setActiveTab('home');
+  }, [refreshProfile, setActiveTab]);
+
+  const goHomeAfterAuth = useCallback(async () => {
+    await refreshProfile();
+    setActiveTab('home');
+  }, [refreshProfile, setActiveTab]);
 
   const validateEmail = (value: string) => {
     if (!value.trim()) return 'Email requis';
@@ -139,7 +151,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
     try {
       await authService.signIn(loginEmail, loginPassword);
       await quickLogin.persistAfterLogin(loginEmail, loginPassword);
-      await refreshProfile();
+      await goHomeAfterAuth();
       prodayHaptics.confirm();
     } catch (e) {
       prodayHaptics.error();
@@ -214,7 +226,8 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
     return (
       <View style={authStyles.root}>
         <SignupFlow
-          productLine={productLine}
+          productLine={signupProductLine ?? productLine}
+          initialRole={signupInitialRole}
           onClose={closeSignup}
           onComplete={onSignupComplete}
           initialEmail={signupPrefill?.email}
@@ -236,7 +249,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
       <ScrollView
         contentContainerStyle={[
           authStyles.scroll,
-          { paddingTop: headerTopPad, paddingBottom: tabInset({ guestMode: true }) },
+          { paddingTop: headerTopPad, paddingBottom: tabInset() },
         ]}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
@@ -270,14 +283,14 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
           </View>
         </AnimatedEntrance>
 
-        <AnimatedEntrance index={1}>
+        <AnimatedEntrance index={1} kind="fadeUp">
           <View style={authStyles.brandRow}>
             <AuthBrandHeader width={logoWidth} tone="light" />
           </View>
         </AnimatedEntrance>
 
         <View style={[authStyles.body, compact && authStyles.bodyCompact]}>
-          <AnimatedEntrance index={2}>
+          <AnimatedEntrance index={2} kind="fadeUp">
             <View style={authStyles.hero}>
               <Text style={authStyles.eyebrow}>{activeBrand.tagline}</Text>
               <Text style={[authStyles.title, compact && authStyles.titleCompact]}>
@@ -306,10 +319,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
 
           <Animated.View
             key={tab}
-            entering={FadeInUp.springify()
-              .damping(17)
-              .stiffness(150)
-              .duration(motion.duration.normal)}
+            entering={FadeIn.duration(motion.duration.fast).easing(Easing.out(Easing.cubic))}
           >
             {tab === 'login' ? (
               <>
@@ -401,7 +411,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                   <StaggerReveal index={quickLogin.canQuickLogin ? 4 : 3}>
                     <AuthSocialButtons
                       disabled={loading}
-                      onSuccess={refreshProfile}
+                      onSuccess={goHomeAfterAuth}
                       onNeedsProfile={(prefill) => {
                         setSignupPrefill(prefill);
                         openSignup();

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import { useSessionProfile } from '../hooks/useSessionProfile';
@@ -12,12 +12,22 @@ import { AuthScreen } from './AuthScreen';
 export const ProfilTabScreen: React.FC = () => {
   const { profile, loading, configured, refreshProfile, signOut } = useAuth();
   const sessionProfile = useSessionProfile();
-  const { pendingAuthIntent, clearPendingAuthIntent, setActiveTab } = useTabNavigation();
+  const { pendingAuthIntent, clearPendingAuthIntent, setActiveTab, pendingSignupProductLine, pendingSignupRole, clearSignupPreset } = useTabNavigation();
   const { colors } = useAppTheme();
+  const wasGuestRef = useRef(!profile);
 
   useEffect(() => {
-    if (profile) clearPendingAuthIntent();
-  }, [profile, clearPendingAuthIntent]);
+    if (!profile) {
+      wasGuestRef.current = true;
+      return;
+    }
+    if (wasGuestRef.current) {
+      wasGuestRef.current = false;
+      setActiveTab('home');
+    }
+    clearPendingAuthIntent();
+    clearSignupPreset();
+  }, [profile, clearPendingAuthIntent, clearSignupPreset, setActiveTab]);
 
   if (!configured) {
     return (
@@ -54,8 +64,11 @@ export const ProfilTabScreen: React.FC = () => {
     <AuthScreen
       key={authIntent}
       initialIntent={authIntent}
+      signupProductLine={pendingSignupProductLine ?? undefined}
+      signupInitialRole={pendingSignupRole ?? undefined}
       onDismiss={() => {
         clearPendingAuthIntent();
+        clearSignupPreset();
         setActiveTab('home');
       }}
     />

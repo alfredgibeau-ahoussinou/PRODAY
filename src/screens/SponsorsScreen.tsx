@@ -29,12 +29,14 @@ interface SponsorsScreenProps {
   onBack?: () => void;
   guestMode?: boolean;
   onLoginRequired?: () => void;
+  onPartnerHub?: () => void;
 }
 
 export const SponsorsScreen: React.FC<SponsorsScreenProps> = ({
   onBack,
   guestMode = false,
   onLoginRequired,
+  onPartnerHub,
 }) => {
   const { profile } = useAuth();
   const { requireAuth } = useRequireAuth();
@@ -137,6 +139,25 @@ export const SponsorsScreen: React.FC<SponsorsScreenProps> = ({
               Données réelles ProDay — connectez-vous pour publier ou soutenir une campagne.
             </Text>
           </View>
+        ) : null}
+
+        {!guestMode && profile?.role !== 'sponsor' ? (
+          <TouchableOpacity
+            style={styles.partnerBanner}
+            onPress={() => onPartnerHub?.()}
+            activeOpacity={0.9}
+          >
+            <View style={styles.partnerBannerIcon}>
+              <Icon name="star-four-points" size={22} color={c.brand} />
+            </View>
+            <View style={styles.partnerBannerBody}>
+              <Text style={styles.partnerBannerTitle}>Devenir partenaire ProDay</Text>
+              <Text style={styles.partnerBannerSub}>
+                Espace dédié, tarifs dès 0 € — visibilité clubs et joueurs
+              </Text>
+            </View>
+            <Icon name="chevron-forward" size={18} color={c.textMuted} />
+          </TouchableOpacity>
         ) : null}
 
         <View style={[styles.hero, shadows.card]}>
@@ -291,6 +312,28 @@ function createStyles(c: AppColors) {
       borderColor: c.brand,
     },
     guestBannerText: { fontSize: 12, color: c.brand, fontWeight: '700', lineHeight: 17 },
+    partnerBanner: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.md,
+      backgroundColor: c.surface,
+      borderRadius: radius.lg,
+      padding: spacing.md,
+      marginBottom: spacing.md,
+      borderWidth: 1,
+      borderColor: c.brand,
+    },
+    partnerBannerIcon: {
+      width: 44,
+      height: 44,
+      borderRadius: radius.md,
+      backgroundColor: c.brandSoft,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    partnerBannerBody: { flex: 1 },
+    partnerBannerTitle: { fontSize: 14, fontWeight: '800', color: c.text },
+    partnerBannerSub: { fontSize: 12, color: c.textSecondary, marginTop: 2, lineHeight: 16 },
     hero: {
       backgroundColor: c.surface,
       borderRadius: radius.lg,

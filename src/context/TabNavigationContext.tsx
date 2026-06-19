@@ -1,6 +1,9 @@
 import React, { createContext, useContext } from 'react';
 import type { MainTabId } from '../navigation/mainTabConfig';
 
+import type { UserRole } from '../models/User';
+import type { ProductLineId } from '../models/ProductLine';
+
 export type AuthIntent = 'login' | 'signup';
 import type {
   CarpoolDeepLink,
@@ -37,6 +40,12 @@ interface TabNavigationContextValue {
   pendingAuthIntent: AuthIntent | null;
   openAuth: (intent: AuthIntent) => void;
   clearPendingAuthIntent: () => void;
+
+  /** Inscription partenaire : ligne Pro + rôle sponsor. */
+  pendingSignupProductLine: ProductLineId | null;
+  pendingSignupRole: UserRole | null;
+  openPartnerSignup: (tier?: 'free' | 'pro') => void;
+  clearSignupPreset: () => void;
 
   pendingDashboardView: DashboardDeepLink | null;
   openDashboard: (view: DashboardDeepLink) => void;
