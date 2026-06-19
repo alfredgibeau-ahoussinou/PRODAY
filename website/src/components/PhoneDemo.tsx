@@ -9,6 +9,8 @@ import {
   Heart,
   Home,
   MessageCircle,
+  Play,
+  Rss,
   Search,
   User,
 } from "lucide-react";
@@ -25,6 +27,8 @@ const ICONS = {
   home: Home,
   search: Search,
   calendar: Calendar,
+  play: Play,
+  rss: Rss,
   car: Car,
   heart: Heart,
   message: MessageCircle,
@@ -60,8 +64,8 @@ const BASE_SCREENS: Record<TabId, ScreenMock> = {
       },
       {
         title: "Modules",
-        body: "Mercato, Matchs, Arena, Shop — accès rapide.",
-        chips: ["Arena ouvert"],
+        body: "Mercato, Matchs, Reels, Fil, Arena — accès rapide.",
+        chips: ["Reels", "Question hebdo"],
       },
     ],
   },
@@ -103,6 +107,52 @@ const BASE_SCREENS: Record<TabId, ScreenMock> = {
         title: "Cette semaine",
         body: "Entraînement mar. · Match amical sam.",
         chips: ["Sam. 15h"],
+      },
+    ],
+  },
+  reels: {
+    caption: "Découverte",
+    title: "Reels",
+    subtitle: "Skills, buts et coulisses — feed vertical par pôle foot.",
+    stats: [
+      { value: "12", label: "Nouveaux" },
+      { value: "Foot", label: "Pôle actif", highlight: true },
+      { value: "4", label: "Favoris" },
+    ],
+    cards: [
+      {
+        title: "Skill du jour",
+        body: "Enchaînement technique — like, partage et ajout au profil.",
+        chips: ["Mercato", "Skills"],
+        accent: true,
+      },
+      {
+        title: "Highlight match",
+        body: "But en direct remonté depuis Live Stats vers votre CV.",
+        chips: ["Live"],
+      },
+    ],
+  },
+  feed: {
+    caption: "Communauté",
+    title: "Fil",
+    subtitle: "Question de la semaine, actualités ProDay et réponses partagées.",
+    stats: [
+      { value: "48", label: "Réponses" },
+      { value: "Hebdo", label: "Question", highlight: true },
+      { value: "3", label: "Sondages" },
+    ],
+    cards: [
+      {
+        title: "Question de la semaine",
+        body: "« Quel est votre objectif principal cette saison ? » — répondez et découvrez la communauté.",
+        chips: ["Question hebdo", "Communauté"],
+        accent: true,
+      },
+      {
+        title: "Actualités ProDay",
+        body: "Nouveautés Arena, Mercato et espace partenaires — restez informés.",
+        chips: ["Actualités"],
       },
     ],
   },
@@ -190,18 +240,31 @@ const UNIVERSE_OVERRIDES: Record<
     home: {
       caption: "ProDay Woman",
       title: "Accueil",
-      subtitle: "Bonjour Léa — Mercato F et Arena dédiés au féminin.",
+      subtitle: "Bonjour Léa — Mercato F, Reels et Fil dédiés au féminin.",
     },
     recruit: { title: "Mercato F" },
+    reels: {
+      title: "Reels F",
+      subtitle: "Skills et highlights joueuses — visibilité sur le foot féminin.",
+    },
+    feed: {
+      subtitle: "Question hebdo et voix des joueuses sur ProDay Woman.",
+    },
     health: { title: "Santé F" },
   },
   pro: {
     home: {
       caption: "Pro Day Pro",
       title: "Accueil",
-      subtitle: "Hub staff — Mercato Pro et réseau vérifié.",
+      subtitle: "Hub staff — Mercato Pro, Reels et réseau vérifié.",
     },
     recruit: { title: "Mercato Pro" },
+    reels: {
+      subtitle: "Coulisses Mercato, détections et pôle santé — format vertical.",
+    },
+    feed: {
+      subtitle: "Actualités réseau pro et sondages staff.",
+    },
   },
   sante: {
     home: {
@@ -229,6 +292,18 @@ const UNIVERSE_OVERRIDES: Record<
   },
 };
 
+const HIDDEN_TABS_BY_UNIVERSE: Record<ProductLineWeb, TabId[]> = {
+  homme: [],
+  woman: [],
+  pro: ["health"],
+  sante: ["recruit", "reels", "feed", "carpool", "health"],
+};
+
+function visibleTabsForUniverse(universe: ProductLineWeb) {
+  const hidden = new Set(HIDDEN_TABS_BY_UNIVERSE[universe]);
+  return TABS.filter((tab) => !hidden.has(tab.id));
+}
+
 function screenForTab(tabId: TabId, universe: ProductLineWeb): ScreenMock {
   const base = BASE_SCREENS[tabId];
   const override = UNIVERSE_OVERRIDES[universe][tabId];
@@ -247,13 +322,13 @@ function screenForTab(tabId: TabId, universe: ProductLineWeb): ScreenMock {
 type PhoneDemoProps = { fullPage?: boolean; universe?: ProductLineWeb };
 
 export function PhoneDemo({ fullPage, universe = "homme" }: PhoneDemoProps) {
-  const [active, setActive] = useState<TabId>("home");
+  const tabs = visibleTabsForUniverse(universe).map((tab) =>
+    tab.id === "recruit" ? { ...tab, label: mercatoTabLabelForWeb(universe) } : tab,
+  );
+  const [active, setActive] = useState<TabId>(tabs[0]?.id ?? "home");
   const theme = UNIVERSE_THEME[universe];
   const brand = BRANDS_BY_LINE[universe];
   const screen = screenForTab(active, universe);
-  const tabs = TABS.map((tab) =>
-    tab.id === "recruit" ? { ...tab, label: mercatoTabLabelForWeb(universe) } : tab,
-  );
 
   return (
     <section
@@ -269,7 +344,7 @@ export function PhoneDemo({ fullPage, universe = "homme" }: PhoneDemoProps) {
               L&apos;app ProDay, écran par écran
             </h2>
             <p className="mt-4 max-w-xl text-neutral-600">
-              Nouveau design : bandeau univers, en-têtes natifs, chips stats et
+              Nouveau design : bandeau univers, Fil & Reels, en-têtes natifs, chips stats et
               boutons contrastés — comme sur iOS et Android.
             </p>
           </Reveal>

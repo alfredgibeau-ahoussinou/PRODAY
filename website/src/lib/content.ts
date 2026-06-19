@@ -118,6 +118,33 @@ export const MODULES = [
     image: "/showcase/classic-exp-sponsors.jpg",
     color: "#57534e",
   },
+  {
+    id: "feed",
+    title: "Fil",
+    subtitle: "Communauté & question hebdo",
+    description:
+      "Publications clubs et joueurs, réactions et question de la semaine — le pouls du terrain.",
+    image: "/showcase/classic-exp-discover.jpg",
+    color: "#6366f1",
+  },
+  {
+    id: "reels",
+    title: "Reels",
+    subtitle: "Vidéos courtes foot",
+    description:
+      "Skills, buts et coulisses en format vertical — découverte et visibilité pour votre profil.",
+    image: "/showcase/classic-discover-hero.jpg",
+    color: "#7c3aed",
+  },
+  {
+    id: "sponsors",
+    title: "Sponsors",
+    subtitle: "Partenaires & financement",
+    description:
+      "Annuaire partenaires, offres équipement ou visibilité et soutien aux campagnes clubs.",
+    image: "/showcase/classic-exp-sponsors.jpg",
+    color: "#1d4ed8",
+  },
 ] as const;
 
 export const PILLARS = [
@@ -148,6 +175,27 @@ export const PILLARS = [
     subtitle: "Match → profil",
     description:
       "Buts, passes, cartons en direct — votre saison et votre CV se mettent à jour.",
+  },
+  {
+    id: "feed",
+    title: "Fil communauté",
+    subtitle: "Question hebdo",
+    description:
+      "Publications, réactions et question de la semaine — restez connectés au terrain.",
+  },
+  {
+    id: "reels",
+    title: "Reels",
+    subtitle: "Vidéos courtes",
+    description:
+      "Skills et moments forts en vertical — visibilité pour joueurs et clubs.",
+  },
+  {
+    id: "sponsors",
+    title: "Espace partenaires",
+    subtitle: "Sponsors & offres",
+    description:
+      "Marques locales et nationales — visibilité clubs, financement et leads mesurés.",
   },
 ] as const;
 
@@ -241,6 +289,17 @@ export const JOURNEYS = [
       "Rapport d'activité",
     ],
   },
+  {
+    id: "sponsor",
+    role: "Partenaire",
+    emoji: "🤝",
+    steps: [
+      "Profil partenaire vérifié",
+      "Offres & campagnes locales",
+      "Visibilité onglet Sponsors",
+      "Stats leads & impressions",
+    ],
+  },
 ] as const;
 
 export function mercatoTabLabelForWeb(line: ProductLineWeb = "homme"): string {
@@ -254,6 +313,8 @@ export const TABS = [
   { id: "home", label: "Accueil", icon: "home" },
   { id: "recruit", label: "Candidater", icon: "search" },
   { id: "matches", label: "Matchs", icon: "calendar" },
+  { id: "reels", label: "Reels", icon: "play" },
+  { id: "feed", label: "Fil", icon: "rss" },
   { id: "carpool", label: "Covoit.", icon: "car" },
   { id: "health", label: "Santé", icon: "heart" },
   { id: "messages", label: "Messages", icon: "message" },
@@ -268,8 +329,8 @@ export const VERIFICATION_STEPS = [
 ] as const;
 
 export const STATS = [
-  { value: "7", label: "Onglets dynamiques" },
-  { value: "8", label: "Piliers produit" },
+  { value: "9", label: "Onglets dynamiques" },
+  { value: "11", label: "Piliers produit" },
   { value: "3", label: "Univers Man · Woman · Pro" },
   { value: "∞", label: "Ambition terrain" },
 ] as const;
@@ -506,6 +567,14 @@ export const PRO_MODULES = [
       "Contacts vérifiés entre staff, agents et structures — fini les échanges non tracés.",
     image: "/showcase/classic-exp-messages.jpg",
   },
+  {
+    id: "sponsor",
+    title: "Espace Partenaires",
+    subtitle: "Visibilité & financement",
+    description:
+      "Offres sponsors, campagnes locales, logo onglet Sponsors et tableau de bord leads — formules Découverte à National Pro.",
+    image: "/showcase/classic-exp-sponsors.jpg",
+  },
 ] as const;
 
 export const UNIVERSE_PAGE_CONFIG = {
@@ -595,6 +664,7 @@ export const UNIVERSE_PAGE_CONFIG = {
       "club",
       "medical",
       "organizer",
+      "sponsor",
     ] as const,
     audienceNote:
       "Joueurs foot M ou F ? Choisissez Pro Day Man ou ProDay Woman à l'inscription.",
@@ -688,7 +758,125 @@ export const ALL_PILLARS = [
     description:
       "Trépieds, t-shirts et maillots par univers — précommande depuis l'app.",
   },
+  {
+    id: "feed-pillar",
+    title: "Fil communauté",
+    subtitle: "Question hebdo",
+    description:
+      "Publications clubs et joueurs, réactions et question de la semaine.",
+  },
+  {
+    id: "reels-pillar",
+    title: "Reels",
+    subtitle: "Vidéos courtes",
+    description:
+      "Skills, buts et coulisses en format vertical — visibilité pour votre profil.",
+  },
+  {
+    id: "sponsors-pillar",
+    title: "Espace partenaires",
+    subtitle: "Sponsors & offres",
+    description:
+      "Annuaire partenaires, campagnes locales et financement clubs — leads mesurés.",
+  },
 ] as const;
+
+export type SponsorPricingTierIdWeb = "starter" | "territorial" | "national";
+
+export type SponsorPricingTierWeb = {
+  id: SponsorPricingTierIdWeb;
+  name: string;
+  tagline: string;
+  monthlyEur: number;
+  yearlyEur: number;
+  highlighted?: boolean;
+  badge?: string;
+  features: readonly string[];
+  subscriptionTier?: "free" | "pro";
+  ctaLabel: string;
+};
+
+export const SPONSOR_PRICING_INTRO = {
+  title: "Espace Partenaires ProDay",
+  subtitle:
+    "Touchez clubs, joueurs et organisateurs sur votre territoire — visibilité mesurable, sans intermédiaire.",
+  footnote:
+    "Tarifs HT · facturation mensuelle ou annuelle (−20 %) · résiliation à tout moment sur les formules en ligne.",
+} as const;
+
+export const SPONSOR_PRICING_TIERS: readonly SponsorPricingTierWeb[] = [
+  {
+    id: "starter",
+    name: "Découverte",
+    tagline: "Tester la visibilité locale",
+    monthlyEur: 0,
+    yearlyEur: 0,
+    subscriptionTier: "free",
+    ctaLabel: "Créer un compte gratuit",
+    features: [
+      "Profil partenaire vérifié",
+      "1 offre active dans l'annuaire",
+      "Zone géographique (ville)",
+      "Messagerie clubs (limitée)",
+      "Statistiques de base",
+    ],
+  },
+  {
+    id: "territorial",
+    name: "Territorial",
+    tagline: "Rayonner sur un département",
+    monthlyEur: 49,
+    yearlyEur: yearlyPriceFromMonthly(49),
+    ctaLabel: "Demander un devis",
+    features: [
+      "Jusqu'à 5 offres actives",
+      "Ciblage par département",
+      "Prospects clubs recommandés",
+      "Messagerie clubs illimitée",
+      "Financement campagnes clubs",
+      "Statistiques mensuelles détaillées",
+    ],
+  },
+  {
+    id: "national",
+    name: "National Pro",
+    tagline: "Visibilité maximale sur ProDay",
+    monthlyEur: 99,
+    yearlyEur: yearlyPriceFromMonthly(99),
+    highlighted: true,
+    badge: "Recommandé",
+    subscriptionTier: "pro",
+    ctaLabel: "Passer National Pro",
+    features: [
+      "Offres illimitées",
+      "Logo mis en avant (onglet Sponsors)",
+      "Campagnes locales ciblées",
+      "Push géolocalisé (déploiement progressif)",
+      "Account manager email",
+      "Priorité support partenaires",
+    ],
+  },
+];
+
+export const SPONSOR_VALUE_PILLARS = [
+  {
+    icon: "people" as const,
+    title: "Clubs qualifiés",
+    body: "Accédez aux structures actives sur ProDay : convocations, Mercato, financement.",
+  },
+  {
+    icon: "star-four-points" as const,
+    title: "Visibilité mesurée",
+    body: "Impressions, clics et leads suivis depuis votre tableau de bord partenaire.",
+  },
+  {
+    icon: "briefcase" as const,
+    title: "Offres & financement",
+    body: "Publiez équipement, visibilité ou soutien financier aux campagnes clubs.",
+  },
+] as const;
+
+export const SPONSOR_PARTNER_CONTACT_EMAIL = "partenaires@proday.app";
 
 export const SUBSCRIPTION_PLANS_WEB = [
   {
@@ -839,7 +1027,7 @@ export const SUBSCRIPTION_PLANS_WEB = [
     id: "sponsor_pro",
     label: "Partenaire Pro",
     tagline: "Visibilité marque & clubs locaux",
-    monthlyEur: 99.99,
+    monthlyEur: 99,
     storeAvailable: false,
     universes: ["pro"] as ProductLineWeb[],
     freeIncludes: [
@@ -1000,7 +1188,7 @@ export const FAQ_ITEMS = [
   },
   {
     q: "Quel tarif pour les partenaires / sponsors ?",
-    a: `Partenaire Pro : ${faqPricing("sponsor_pro")}. Visibilité marque, offres sponsors illimitées et campagnes locales ciblées.`,
+    a: `Trois formules : Découverte (gratuit — profil vérifié, 1 offre, zone ville), Territorial (${formatAnnualPricingLine(49)}), National Pro (${faqPricing("sponsor_pro")}). Devis sur mesure : ${SPONSOR_PARTNER_CONTACT_EMAIL}.`,
   },
   {
     q: "Puis-je exporter mon CV foot ?",
@@ -1062,12 +1250,15 @@ export const ROADMAP_ITEMS = [
       "ProDay Shop",
       "Arena MVP",
       "Contrôle parental",
+      "Fil communauté",
+      "Reels",
+      "Espace partenaires",
     ],
   },
   {
     phase: "En cours",
     status: "active" as const,
-    items: ["Functions Blaze", "Storage", "Site vitrine"],
+    items: ["Functions Blaze", "Storage", "Site vitrine", "Push géo partenaires"],
   },
   {
     phase: "À venir",

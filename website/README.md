@@ -1,6 +1,6 @@
 # Site vitrine ProDay (Next.js)
 
-Site multi-pages interactif — **20 routes** publiques, démos par univers (**Man**, **Woman**, **Pro**) et formulaire bêta avec email de bienvenue.
+Site multi-pages interactif — **21 routes** publiques, démos par univers (**Man**, **Woman**, **Pro**) et formulaire bêta avec email de bienvenue.
 
 ## Pages
 
@@ -10,8 +10,8 @@ Site multi-pages interactif — **20 routes** publiques, démos par univers (**M
 | `/homme` | Univers **Man** — modules, parcours, tarifs, Pulse |
 | `/woman` | Univers **Woman** — foot féminin |
 | `/pro` | Univers **Pro** — staff, recrutement vérifié |
-| `/fonctionnalites` | 8 piliers produit + modules |
-| `/demo` | Démo interactive **7 onglets** (`?u=homme\|woman\|pro`) |
+| `/fonctionnalites` | 11 piliers produit + modules (Fil, Reels, Sponsors…) |
+| `/demo` | Démo interactive **9 onglets** (`?u=homme\|woman\|pro`) |
 | `/pulse` | Simulateur Pulse (thème par univers) |
 | `/live-stats` | Saisie match en direct |
 | `/cv` | Aperçu CV PDF (`?u=` pour le thème) |
@@ -21,7 +21,8 @@ Site multi-pages interactif — **20 routes** publiques, démos par univers (**M
 | `/ecosysteme` | Carte interactive des acteurs |
 | `/confiance` | Vérification diplômes |
 | `/roadmap` | Livré / en cours / à venir |
-| `/tarifs` | Plans Gratuit & Pro (`?u=` pour filtrer par univers) |
+| `/tarifs` | Plans Gratuit & Pro (`?u=` pour filtrer par univers) + grille partenaires |
+| `/partenaires` | Espace Partenaires — Découverte 0 €, Territorial 49 €, National Pro 99 €/mois |
 | `/shop` | ProDay Shop |
 | `/faq` | Questions fréquentes |
 | `/beta` | Waitlist + email de bienvenue |
@@ -29,8 +30,9 @@ Site multi-pages interactif — **20 routes** publiques, démos par univers (**M
 
 ### Démo interactive (`/demo`)
 
-Mock téléphone avec les **7 onglets** de l’app : Accueil, Mercato, Matchs, Covoiturage, Santé, Messages, Profil.
+Mock téléphone avec les **9 onglets** de l’app : Accueil, Mercato, Matchs, Reels, Fil, Covoiturage, Santé, Messages, Profil.
 
+- Contact partenaires : **partenaires@proday.app** — CTA `/beta?role=sponsor`
 - Sélecteur **Man / Woman / Pro** en haut de page
 - Contenu et visuels adaptés par univers (`?u=homme`, `?u=woman`, `?u=pro`)
 - Lien **« Voir la démo »** depuis chaque page univers

@@ -6,7 +6,7 @@ import type { ProductLineWeb } from "@/lib/content";
 export const metadata: Metadata = {
   title: "Démo interactive",
   description:
-    "Testez la navigation ProDay : 7 onglets (Accueil, Mercato, Matchs, Covoiturage, Santé, Messages, Profil) avec transitions fluides.",
+    "Testez la navigation ProDay : 9 onglets (Accueil, Mercato, Matchs, Reels, Fil, Covoiturage, Santé, Messages, Profil) avec transitions fluides.",
 };
 
 function parseUniverseParam(value: string | undefined): ProductLineWeb {
@@ -29,7 +29,7 @@ export default async function DemoPage({
       <PageHeader
         kicker="DÉMO"
         title="Naviguez comme dans l'app"
-        description="Parcourez les 7 onglets — Accueil, Mercato, Matchs, Covoiturage, Santé, Messages et Profil — avec des transitions en temps réel."
+        description="Parcourez les 9 onglets — Accueil, Mercato, Matchs, Reels, Fil, Covoiturage, Santé, Messages et Profil — avec des transitions en temps réel."
         image={
           universe === "woman"
             ? "/showcase/woman/woman-discover-hero.jpg"

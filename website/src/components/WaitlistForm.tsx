@@ -6,13 +6,13 @@ import { BETA_PITCH } from "@/lib/content";
 import { BETA_MEMBER_ROLE, BETA_ROLE_LABELS, type BetaRoleId } from "@/lib/betaWelcomeEmail";
 import { Reveal } from "./Reveal";
 
-type WaitlistFormProps = { fullPage?: boolean };
+type WaitlistFormProps = { fullPage?: boolean; initialRole?: BetaRoleId };
 
 type SubmitState = "idle" | "loading" | "success" | "error";
 
-export function WaitlistForm({ fullPage }: WaitlistFormProps) {
+export function WaitlistForm({ fullPage, initialRole }: WaitlistFormProps) {
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState<BetaRoleId>("player");
+  const [role, setRole] = useState<BetaRoleId>(initialRole ?? "player");
   const [state, setState] = useState<SubmitState>("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [emailSent, setEmailSent] = useState(true);
