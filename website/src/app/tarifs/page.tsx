@@ -39,7 +39,7 @@ export default async function PricingPage({
         <SponsorPricingSection compact showPillars />
         <p className="mx-auto mt-10 max-w-xl px-4 text-center text-sm text-proday-muted sm:px-6">
           Piliers de valeur, devis Territorial et inscription bêta partenaire sur{" "}
-          <Link href={ROUTES.partners} className="font-medium text-proday-ink underline">
+          <Link href={ROUTES.partenaires} className="font-medium text-proday-ink underline">
             la page Partenaires
           </Link>
           .

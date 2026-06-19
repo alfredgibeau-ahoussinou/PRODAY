@@ -25,7 +25,7 @@ Site multi-pages interactif — **21 routes** publiques, démos par univers (**M
 | `/partenaires` | Espace Partenaires — Découverte 0 €, Territorial 49 €, National Pro 99 €/mois |
 | `/shop` | ProDay Shop |
 | `/faq` | Questions fréquentes |
-| `/beta` | Waitlist + email de bienvenue |
+| `/beta` | Waitlist + email de bienvenue (`?role=sponsor` pour partenaires) |
 | `/a-propos` | Vision produit |
 
 ### Démo interactive (`/demo`)
