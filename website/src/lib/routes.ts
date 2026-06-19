@@ -2,6 +2,7 @@ import type { ProductLineWeb } from "./content";
 
 export const ROUTES = {
   home: "/",
+  joueurs: "/joueurs",
   features: "/fonctionnalites",
   demo: "/demo",
   pulse: "/pulse",
@@ -22,19 +23,35 @@ export const ROUTES = {
   compare: "/comparatif",
   ecosystem: "/ecosysteme",
   shop: "/shop",
+  sante: "/sante",
 } as const;
 
 export type RouteKey = keyof typeof ROUTES;
 
-export const NAV_ITEMS = [
-  { href: ROUTES.features, label: "Fonctionnalités" },
-  { href: ROUTES.demo, label: "Démo" },
-  { href: ROUTES.pricing, label: "Tarifs" },
+export const POLE_NAV_ITEMS = [
+  { href: ROUTES.joueurs, label: "Joueurs" },
+  { href: ROUTES.pro, label: "Pro" },
+  { href: ROUTES.sante, label: "Santé" },
   { href: ROUTES.partenaires, label: "Partenaires" },
-  { href: ROUTES.homme, label: "Man", accent: "man" as const },
-  { href: ROUTES.woman, label: "Woman", accent: "woman" as const },
-  { href: ROUTES.pro, label: "Pro", accent: "pro" as const },
+] as const;
+
+export const UTILITY_NAV_ITEMS = [
+  { href: ROUTES.pricing, label: "Tarifs" },
+  { href: ROUTES.features, label: "Fonctionnalités" },
   { href: ROUTES.faq, label: "FAQ" },
+] as const;
+
+/** @deprecated Utiliser POLE_NAV_ITEMS + UTILITY_NAV_ITEMS */
+export const NAV_ITEMS = [
+  ...POLE_NAV_ITEMS,
+  ...UTILITY_NAV_ITEMS,
+] as const;
+
+export const POLE_FOOTER_LINKS = [
+  { href: ROUTES.joueurs, label: "Pôle Joueur", subtitle: "Man & Woman" },
+  { href: ROUTES.pro, label: "Pôle Pro", subtitle: "Staff & structures" },
+  { href: ROUTES.sante, label: "Pôle Santé", subtitle: "Kiné · Mental · Nutrition" },
+  { href: ROUTES.partenaires, label: "Pôle Partenaires", subtitle: "Sponsors & marques" },
 ] as const;
 
 export const EXPLORE_CARDS = [
@@ -126,9 +143,17 @@ export const EXPLORE_CARDS = [
   {
     href: ROUTES.pricing,
     title: "Tarifs",
-    description: "Gratuit et offres Pro — par univers Man, Woman et Pro.",
+    description: "Gratuit et offres Pro — 4 pôles Joueur, Pro, Santé et Partenaires.",
     image: "/showcase/classic-exp-messages.jpg",
     tag: "Tarifs",
+  },
+  {
+    href: ROUTES.joueurs,
+    title: "Pôle Joueur",
+    description: "Man & Woman — Mercato, Reels, Arena, Pulse et CV joueur.",
+    image: "/showcase/classic-discover-hero.jpg",
+    tag: "Joueurs",
+    accent: true,
   },
   {
     href: ROUTES.homme,
@@ -148,9 +173,17 @@ export const EXPLORE_CARDS = [
   {
     href: ROUTES.pro,
     title: "Pro Day Pro",
-    description: "Recruteurs, coach, agent, pôle santé — réseau vérifié du foot pro.",
+    description: "Recruteurs, coach, agent et club — Mercato Pro et réseau vérifié.",
     image: "/showcase/classic-staff.jpg",
     tag: "Pro",
+    accent: true,
+  },
+  {
+    href: ROUTES.sante,
+    title: "Pro Day Santé",
+    description: "Kinés, coach mental et nutrition — annuaire vérifié et RDV en ligne.",
+    image: "/showcase/classic-exp-profile.jpg",
+    tag: "Santé",
     accent: true,
   },
   {

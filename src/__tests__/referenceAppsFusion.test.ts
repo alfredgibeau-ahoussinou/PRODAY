@@ -100,9 +100,9 @@ describe('Fusion références apps — moteurs V3', () => {
     expect(clusters.length).toBeGreaterThan(0);
   });
 
-  it('suggère des terrains (Playtomic)', () => {
+  it('Playtomic masqué tant que l’API n’est pas branchée', () => {
     const fields = suggestFieldSlots({ city: 'Paris', limit: 2 });
-    expect(fields.length).toBeGreaterThan(0);
+    expect(fields).toEqual([]);
   });
 
   it('identifie un thread équipe (Discord/WhatsApp)', () => {

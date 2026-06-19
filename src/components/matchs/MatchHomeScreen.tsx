@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { ScrollView, RefreshControl, View } from 'react-native';
 import type { User } from '../../models/User';
 import type { FriendlyMatch } from '../../models/FriendlyMatch';
+import type { Tournament } from '../../models/Tournament';
 import type { TeamEvent, RsvpStatus } from '../../models/TeamEvent';
 import type { MatchChapterId, CalendarKindFilter, AmicauxStatusFilter } from '../../content/matchChapters';
 import {
@@ -28,6 +29,7 @@ import type { SectionIntelligence } from '../../features/v3/models/sectionIntell
 import { MatchCalendarChapter } from './chapters/MatchCalendarChapter';
 import { MatchConvocationsChapter } from './chapters/MatchConvocationsChapter';
 import { MatchAmicauxChapter } from './chapters/MatchAmicauxChapter';
+import { MatchTournamentsChapter } from './chapters/MatchTournamentsChapter';
 import { MATCH_CHAPTER_PAD } from './chapters/matchChapterLayout';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { useTranslation } from '../../context/LocaleContext';
@@ -37,6 +39,8 @@ interface MatchHomeScreenProps {
   items: SeasonCalendarItem[];
   teamEvents: TeamEvent[];
   matches: FriendlyMatch[];
+  tournaments: Tournament[];
+  loadingTournaments: boolean;
   pendingConvocations: TeamEvent[];
   myUpcomingEvents: TeamEvent[];
   nextItem: SeasonCalendarItem | null;
@@ -57,6 +61,8 @@ interface MatchHomeScreenProps {
   onAcceptMatch: (m: FriendlyMatch) => void;
   onCancelMatch: (m: FriendlyMatch) => void;
   onMarkPlayed: (m: FriendlyMatch) => void;
+  onOpenTournament: (id: string) => void;
+  onCreateTournament?: () => void;
   onRefresh: () => void;
   onOpenCarpoolForEvent?: (eventId: string) => void;
   intelligence?: SectionIntelligence | null;
@@ -69,6 +75,8 @@ export const MatchHomeScreen: React.FC<MatchHomeScreenProps> = ({
   items,
   teamEvents,
   matches,
+  tournaments,
+  loadingTournaments,
   pendingConvocations,
   myUpcomingEvents,
   nextItem,
@@ -89,6 +97,8 @@ export const MatchHomeScreen: React.FC<MatchHomeScreenProps> = ({
   onAcceptMatch,
   onCancelMatch,
   onMarkPlayed,
+  onOpenTournament,
+  onCreateTournament,
   onRefresh,
   onOpenCarpoolForEvent,
   intelligence,
@@ -308,6 +318,21 @@ export const MatchHomeScreen: React.FC<MatchHomeScreenProps> = ({
           onMarkPlayed={onMarkPlayed}
           getMatchIaScore={getMatchIaScore}
           getMatchHealthWarning={getMatchHealthWarning}
+        />
+      ),
+    },
+    {
+      id: 'tournois' as const,
+      render: () => (
+        <MatchTournamentsChapter
+          profile={profile}
+          tournaments={tournaments}
+          loading={loadingTournaments}
+          refreshing={refreshing}
+          onRefresh={handleRefresh}
+          onOpenTournament={onOpenTournament}
+          onCreateTournament={canManageEvents ? onCreateTournament : undefined}
+          myClubId={myClubId}
         />
       ),
     },

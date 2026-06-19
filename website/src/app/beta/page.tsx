@@ -4,11 +4,12 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { StatsBar } from "@/components/StatsBar";
 import { BETA_PITCH } from "@/lib/content";
 import type { BetaRoleId } from "@/lib/betaWelcomeEmail";
+import { ROUTES } from "@/lib/routes";
 
 export const metadata: Metadata = {
-  title: "Rejoindre la bêta",
+  title: "Liste d'attente",
   description:
-    "Inscrivez-vous à la bêta ProDay — informations quotidiennes sur l'avancement et accès prioritaire.",
+    "Inscrivez-vous sur la liste d'attente ProDay — suivi du produit et accès prioritaire au lancement.",
 };
 
 function parseRoleParam(value: string | undefined): BetaRoleId | undefined {
@@ -39,9 +40,11 @@ export default async function BetaPage({
   return (
     <>
       <PageHeader
+        pathname={ROUTES.beta}
         kicker="BÊTA"
-        title="Rejoignez ProDay en avant-première"
+        title="Accédez à ProDay en priorité"
         description={BETA_PITCH.summary}
+        dark
       />
       <StatsBar />
       <WaitlistForm fullPage initialRole={initialRole} />

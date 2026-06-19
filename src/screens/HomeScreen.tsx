@@ -8,14 +8,11 @@ import { useDashboardData } from '../hooks/useDashboardData';
 import { useTabNavigation } from '../context/TabNavigationContext';
 import { DiscoverScreen } from './DiscoverScreen';
 import { PhysioDashboardScreen } from './medical/PhysioDashboardScreen';
-import { SponsorDashboardScreen } from './sponsor/SponsorDashboardScreen';
 import { HomeIaDashboard } from '../features/home/HomeIaDashboard';
 import { TeamManagementScreen } from './TeamManagementScreen';
 import { SponsorsScreen } from './SponsorsScreen';
-import { SponsorPartnerHubScreen } from './sponsor/SponsorPartnerHubScreen';
+import { SponsorHubScreen } from './sponsor/SponsorHubScreen';
 import { CrossfadeSwitch, PushScreenTransition } from '../components/motion';
-import { useExperienceTheme } from '../hooks/useExperienceTheme';
-import { SPONSOR_THEME } from '../content/sponsorExperience';
 import { ProDayScreenCanvas } from '../components/ui/ProDayScreenCanvas';
 import { WeeklyQuestionHomePopup } from '../components/weeklyQuestion/WeeklyQuestionHomePopup';
 import { canParticipateWeeklyQuestion } from '../utils/weeklyQuestionAccess';
@@ -28,7 +25,7 @@ type HomeOverlay = 'team' | 'sponsors' | 'partner-hub' | null;
 export const HomeScreen: React.FC = () => {
   const { loading } = useAuth();
   const profile = useSessionProfile();
-  const { colors, isSponsorExperience } = useExperienceTheme();
+  const { colors } = useAppTheme();
   const { productLine } = useAppTheme();
   const { count: unreadMessages } = useUnreadMessageCount();
   const { refresh } = useDashboardData(profile);
@@ -57,13 +54,10 @@ export const HomeScreen: React.FC = () => {
       <View
         style={[
           styles.loader,
-          { backgroundColor: isSponsorExperience ? SPONSOR_THEME.background : colors.background },
+          { backgroundColor: colors.background },
         ]}
       >
-        <ActivityIndicator
-          size="large"
-          color={isSponsorExperience ? SPONSOR_THEME.primary : colors.brand}
-        />
+        <ActivityIndicator size="large" color={colors.brand} />
       </View>
     );
   }
@@ -76,8 +70,6 @@ export const HomeScreen: React.FC = () => {
         <View style={styles.root}>
           {profile.role === 'physio' ? (
             <PhysioDashboardScreen profile={profile} />
-          ) : profile.role === 'sponsor' ? (
-            <SponsorDashboardScreen profile={profile} />
           ) : (
             <ProDayScreenCanvas>
               <HomeIaDashboard
@@ -98,7 +90,7 @@ export const HomeScreen: React.FC = () => {
 
           <PushScreenTransition active={overlay === 'partner-hub'}>
             {overlay === 'partner-hub' ? (
-              <SponsorPartnerHubScreen
+              <SponsorHubScreen
                 onBack={() => setOverlay(null)}
                 onBrowseOffers={() => setOverlay('sponsors')}
               />

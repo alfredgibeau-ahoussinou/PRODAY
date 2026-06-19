@@ -249,7 +249,7 @@ const ROLE_EXPERIENCES: Record<UserRole, RoleSignupExperience> = {
   },
   sponsor: {
     id: 'sponsor',
-    welcomeTitle: 'Espace partenaire',
+    welcomeTitle: 'Espace sponsor',
     welcomeSubtitle: 'Visibilité locale, offres et soutien aux clubs de votre territoire.',
     previewSteps: ['Territoire', 'Identité', 'Sécurité', 'Lancement'],
     phases: [
@@ -258,7 +258,7 @@ const ROLE_EXPERIENCES: Record<UserRole, RoleSignupExperience> = {
       { id: 'launch', label: 'Go' },
     ],
     accent: { accent: '#BE185D', accentSoft: '#FCE7F3', accentMuted: '#F9A8D4' },
-    launchTitle: 'Vitrine partenaire',
+    launchTitle: 'Vitrine sponsor',
     launchBody: 'Complétez vos offres sponsors et touchez les clubs de votre zone.',
     launchFinishLabel: 'Voir mon espace marque',
   },
@@ -423,7 +423,7 @@ export function getStepMetaForRole(page: SignupPageId, role: UserRole, t?: Trans
         title: metaKey('title', 'Votre territoire'),
         subtitle: metaKey('subtitle', 'Zone d’action et marque — visibilité auprès des clubs locaux.'),
         heroIcon: 'star-four-points',
-        stepName: metaKey('stepName', tr(t, 'signup.page.sponsor_pro', 'Partenaire')),
+        stepName: metaKey('stepName', tr(t, 'signup.page.sponsor_pro', 'Sponsor')),
       };
     case 'family':
       return {
@@ -436,7 +436,7 @@ export function getStepMetaForRole(page: SignupPageId, role: UserRole, t?: Trans
       return {
         title: metaKey(
           'title',
-          role === 'sponsor' ? 'Identité partenaire' : 'Ton identité'
+          role === 'sponsor' ? 'Identité sponsor' : 'Ton identité'
         ),
         subtitle: metaKey('subtitle', 'Nom affiché et email — base de votre espace.'),
         heroIcon: 'person',

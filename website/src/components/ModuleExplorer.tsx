@@ -19,17 +19,19 @@ export function ModuleExplorer({ compact }: ModuleExplorerProps) {
   return (
     <section
       id={compact ? undefined : "modules"}
-      className={compact ? "" : "scroll-mt-24 py-24"}
+      className={compact ? "" : "scroll-mt-24 bg-[#030303] py-24"}
     >
       <div className={compact ? "" : "mx-auto max-w-6xl px-4 sm:px-6"}>
         {!compact && (
           <Reveal>
-            <p className="text-sm font-medium tracking-widest text-proday-muted">
-              MODULES
-            </p>
-            <h2 className="mt-2 text-3xl font-bold sm:text-4xl">
-              Quatre piliers. Une saison.
+            <p className="text-sm font-medium tracking-widest text-white/40">MODULES</p>
+            <h2 className="font-display mt-2 text-3xl font-bold text-white sm:text-4xl">
+              Dix modules. Une saison.
             </h2>
+            <p className="mt-3 max-w-xl text-white/55">
+              Mercato, Reels, Fil, Arena, partenaires, santé et plus — tout l&apos;écosystème
+              ProDay.
+            </p>
           </Reveal>
         )}
 
@@ -44,11 +46,15 @@ export function ModuleExplorer({ compact }: ModuleExplorerProps) {
                 onClick={() => setActive(i)}
                 whileHover={{ x: 4 }}
                 className={`rounded-2xl border p-5 text-left transition ${
-                  active === i ? theme.moduleActive : theme.moduleIdle
+                  active === i
+                    ? theme.moduleActive
+                    : `${theme.moduleIdle} text-white/80`
                 }`}
               >
-                <span className="text-xs opacity-70">{m.subtitle}</span>
-                <span className="mt-1 block text-xl font-bold">{m.title}</span>
+                <span className="mt-1 block text-xs font-semibold uppercase tracking-wider text-white/40">
+                  {m.subtitle}
+                </span>
+                <span className="mt-1 block text-xl font-bold text-white">{m.title}</span>
                 {active === i && (
                   <motion.p
                     initial={{ opacity: 0, height: 0 }}

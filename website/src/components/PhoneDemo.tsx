@@ -2,40 +2,17 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
-import { useState } from "react";
-import {
-  Calendar,
-  Car,
-  Heart,
-  Home,
-  MessageCircle,
-  Play,
-  Rss,
-  Search,
-  User,
-} from "lucide-react";
+import { useEffect, useState } from "react";
 import { Reveal } from "./Reveal";
+import { AppTabBar } from "@/components/demo/AppTabBar";
 import { UNIVERSE_THEME } from "@/components/universe/universeTheme";
 import {
-  BRANDS_BY_LINE,
-  TABS,
-  mercatoTabLabelForWeb,
-  type ProductLineWeb,
-} from "@/lib/content";
-
-const ICONS = {
-  home: Home,
-  search: Search,
-  calendar: Calendar,
-  play: Play,
-  rss: Rss,
-  car: Car,
-  heart: Heart,
-  message: MessageCircle,
-  user: User,
-} as const;
-
-type TabId = (typeof TABS)[number]["id"];
+  getTabLabelForWeb,
+  getVisibleMainTabsForWeb,
+  getVisibleTabsWithLabels,
+  type MainTabId,
+} from "@/lib/appTabs";
+import { BRANDS_BY_LINE, type ProductLineWeb } from "@/lib/content";
 
 type ScreenMock = {
   caption: string;
@@ -46,7 +23,7 @@ type ScreenMock = {
   cards: { title: string; body: string; chips?: string[]; accent?: boolean }[];
 };
 
-const BASE_SCREENS: Record<TabId, ScreenMock> = {
+const BASE_SCREENS: Record<MainTabId, ScreenMock> = {
   home: {
     caption: "Pro Day Man",
     title: "Accueil",
@@ -69,7 +46,7 @@ const BASE_SCREENS: Record<TabId, ScreenMock> = {
       },
     ],
   },
-  recruit: {
+  recrutement: {
     caption: "Mercato",
     title: "Candidater",
     subtitle: "Annonces live, filtres poste et suivi candidatures.",
@@ -81,7 +58,7 @@ const BASE_SCREENS: Record<TabId, ScreenMock> = {
     cards: [
       {
         title: "Attaquant · Régional",
-        body: "FC Nord — Paris 75. Candidature en un tap.",
+        body: "FC Nord — Paris 75. Candidature envoyée.",
         chips: ["Attaquant", "Paris"],
         accent: true,
       },
@@ -92,7 +69,7 @@ const BASE_SCREENS: Record<TabId, ScreenMock> = {
       },
     ],
   },
-  matches: {
+  matchs: {
     caption: "Saison",
     title: "Matchs",
     subtitle: "Calendrier, scores live et convocations.",
@@ -113,7 +90,7 @@ const BASE_SCREENS: Record<TabId, ScreenMock> = {
   reels: {
     caption: "Découverte",
     title: "Reels",
-    subtitle: "Skills, buts et coulisses — feed vertical par pôle foot.",
+    subtitle: "Moments forts et séquences — fil vertical par pôle.",
     stats: [
       { value: "12", label: "Nouveaux" },
       { value: "Foot", label: "Pôle actif", highlight: true },
@@ -123,7 +100,7 @@ const BASE_SCREENS: Record<TabId, ScreenMock> = {
       {
         title: "Skill du jour",
         body: "Enchaînement technique — like, partage et ajout au profil.",
-        chips: ["Mercato", "Skills"],
+        chips: ["Mercato", "Reels"],
         accent: true,
       },
       {
@@ -156,7 +133,7 @@ const BASE_SCREENS: Record<TabId, ScreenMock> = {
       },
     ],
   },
-  carpool: {
+  covoiturage: {
     caption: "Équipe",
     title: "Covoiturage",
     subtitle: "Trajets vers matchs et détections.",
@@ -173,7 +150,7 @@ const BASE_SCREENS: Record<TabId, ScreenMock> = {
       },
     ],
   },
-  health: {
+  sante: {
     caption: "Pro Day Santé",
     title: "Santé",
     subtitle: "Kinés, coach mental, nutrition — RDV ou messagerie.",
@@ -196,13 +173,28 @@ const BASE_SCREENS: Record<TabId, ScreenMock> = {
       },
     ],
   },
+  famille: {
+    caption: "Famille",
+    title: "Espace Famille",
+    subtitle: "Lien tuteur, contrôle parental et espace jeunes.",
+    stats: [
+      { value: "1", label: "Tuteur lié" },
+      { value: "OK", label: "Contrôle", highlight: true },
+    ],
+    cards: [
+      {
+        title: "Portail tuteur",
+        body: "Validation des inscriptions et suivi des activités mineures.",
+        chips: ["Tuteur", "Mineur"],
+        accent: true,
+      },
+    ],
+  },
   messages: {
     caption: "Réseau",
     title: "Messages",
     subtitle: "Conversations entre profils inscrits.",
-    stats: [
-      { value: "3", label: "Non lus", highlight: true },
-    ],
+    stats: [{ value: "3", label: "Non lus", highlight: true }],
     cards: [
       {
         title: "Coach vérifié",
@@ -211,7 +203,7 @@ const BASE_SCREENS: Record<TabId, ScreenMock> = {
       },
     ],
   },
-  profile: {
+  profil: {
     caption: "Pro Day Man",
     title: "Profil",
     subtitle: "Complétion, Pulse et plan d'abonnement.",
@@ -229,11 +221,28 @@ const BASE_SCREENS: Record<TabId, ScreenMock> = {
       },
     ],
   },
+  shop: {
+    caption: "Shop",
+    title: "Boutique",
+    subtitle: "Équipements, abonnements et offres partenaires.",
+    stats: [
+      { value: "12", label: "Articles" },
+      { value: "-15%", label: "Membre", highlight: true },
+    ],
+    cards: [
+      {
+        title: "Pack équipe",
+        body: "Maillots et accessoires avec tarif club.",
+        chips: ["Équipement"],
+        accent: true,
+      },
+    ],
+  },
 };
 
 const UNIVERSE_OVERRIDES: Record<
   ProductLineWeb,
-  Partial<Record<TabId, Partial<ScreenMock>>>
+  Partial<Record<MainTabId, Partial<ScreenMock>>>
 > = {
   homme: {},
   woman: {
@@ -242,15 +251,15 @@ const UNIVERSE_OVERRIDES: Record<
       title: "Accueil",
       subtitle: "Bonjour Léa — Mercato F, Reels et Fil dédiés au féminin.",
     },
-    recruit: { title: "Mercato F" },
+    recrutement: { title: "Mercato F" },
     reels: {
       title: "Reels F",
-      subtitle: "Skills et highlights joueuses — visibilité sur le foot féminin.",
+      subtitle: "Moments forts et séquences — visibilité sur le foot féminin.",
     },
     feed: {
       subtitle: "Question hebdo et voix des joueuses sur ProDay Woman.",
     },
-    health: { title: "Santé F" },
+    sante: { title: "Santé F" },
   },
   pro: {
     home: {
@@ -258,7 +267,7 @@ const UNIVERSE_OVERRIDES: Record<
       title: "Accueil",
       subtitle: "Hub staff — Mercato Pro, Reels et réseau vérifié.",
     },
-    recruit: { title: "Mercato Pro" },
+    recrutement: { title: "Mercato Pro" },
     reels: {
       subtitle: "Coulisses Mercato, détections et pôle santé — format vertical.",
     },
@@ -276,35 +285,23 @@ const UNIVERSE_OVERRIDES: Record<
         { value: "2", label: "Messages", highlight: true },
       ],
     },
-    recruit: {
+    matchs: {
       caption: "Cabinet",
+      title: "Agenda",
+      subtitle: "Créneaux RDV et suivi séances.",
+    },
+    messages: {
       title: "Patients",
-      subtitle: "Suivi blessures et messagerie sécurisée.",
+      subtitle: "Messagerie sécurisée et suivi blessures.",
     },
-    health: {
-      title: "Annuaire",
-      subtitle: "Votre vitrine près des clubs partenaires.",
-    },
-    profile: {
-      title: "Profil praticien",
+    profil: {
+      title: "Cabinet",
       subtitle: "Spécialité, créneaux et abonnement cabinet.",
     },
   },
 };
 
-const HIDDEN_TABS_BY_UNIVERSE: Record<ProductLineWeb, TabId[]> = {
-  homme: [],
-  woman: [],
-  pro: ["health"],
-  sante: ["recruit", "reels", "feed", "carpool", "health"],
-};
-
-function visibleTabsForUniverse(universe: ProductLineWeb) {
-  const hidden = new Set(HIDDEN_TABS_BY_UNIVERSE[universe]);
-  return TABS.filter((tab) => !hidden.has(tab.id));
-}
-
-function screenForTab(tabId: TabId, universe: ProductLineWeb): ScreenMock {
+function screenForTab(tabId: MainTabId, universe: ProductLineWeb): ScreenMock {
   const base = BASE_SCREENS[tabId];
   const override = UNIVERSE_OVERRIDES[universe][tabId];
   const brand = BRANDS_BY_LINE[universe];
@@ -313,8 +310,8 @@ function screenForTab(tabId: TabId, universe: ProductLineWeb): ScreenMock {
     ...override,
     caption: override?.caption ?? brand.name,
   };
-  if (tabId === "recruit") {
-    merged.title = mercatoTabLabelForWeb(universe);
+  if (tabId === "recrutement" || tabId === "matchs" || tabId === "messages" || tabId === "profil") {
+    merged.title = getTabLabelForWeb(tabId, universe);
   }
   return merged;
 }
@@ -322,30 +319,34 @@ function screenForTab(tabId: TabId, universe: ProductLineWeb): ScreenMock {
 type PhoneDemoProps = { fullPage?: boolean; universe?: ProductLineWeb };
 
 export function PhoneDemo({ fullPage, universe = "homme" }: PhoneDemoProps) {
-  const tabs = visibleTabsForUniverse(universe).map((tab) =>
-    tab.id === "recruit" ? { ...tab, label: mercatoTabLabelForWeb(universe) } : tab,
-  );
-  const [active, setActive] = useState<TabId>(tabs[0]?.id ?? "home");
+  const tabs = getVisibleTabsWithLabels(universe);
+  const [active, setActive] = useState<MainTabId>(() => getVisibleMainTabsForWeb(universe)[0] ?? "home");
   const theme = UNIVERSE_THEME[universe];
   const brand = BRANDS_BY_LINE[universe];
   const screen = screenForTab(active, universe);
+  const immersive = active === "reels";
+
+  useEffect(() => {
+    const visible = getVisibleMainTabsForWeb(universe);
+    setActive((current) => (visible.includes(current) ? current : visible[0] ?? "home"));
+  }, [universe]);
 
   return (
     <section
-      className={`${fullPage ? "bg-neutral-100 py-12" : "scroll-mt-24 bg-neutral-100 py-20"}`}
+      className={`${fullPage ? "bg-[#030303] py-12" : "scroll-mt-24 bg-[#030303] py-20"}`}
     >
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         {!fullPage && (
           <Reveal>
-            <p className="text-sm font-bold uppercase tracking-widest text-neutral-500">
-              Démo interactive — UI 2026
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/40">
+              Démo interactive
             </p>
-            <h2 className="mt-2 text-3xl font-bold text-neutral-900 sm:text-4xl">
+            <h2 className="font-display mt-2 text-3xl font-bold text-white sm:text-4xl">
               L&apos;app ProDay, écran par écran
             </h2>
-            <p className="mt-4 max-w-xl text-neutral-600">
-              Nouveau design : bandeau univers, Fil & Reels, en-têtes natifs, chips stats et
-              boutons contrastés — comme sur iOS et Android.
+            <p className="mt-4 max-w-xl text-white/55">
+              Même navigation que l&apos;application — barre mobile avec Reels au centre et menu
+              overflow. Parcourez les onglets comme sur votre téléphone.
             </p>
           </Reveal>
         )}
@@ -357,14 +358,19 @@ export function PhoneDemo({ fullPage, universe = "homme" }: PhoneDemoProps) {
             layout
             className="relative w-full max-w-[340px] shrink-0 rounded-[2.75rem] border-[6px] border-neutral-800 bg-neutral-900 p-2 shadow-2xl"
           >
+            <span className="pointer-events-none absolute right-5 top-5 z-20 rounded-full border border-amber-400/40 bg-amber-500/15 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-amber-200">
+              Démo
+            </span>
             <div className="mb-1.5 flex justify-center">
               <div className="h-5 w-28 rounded-full bg-neutral-800" />
             </div>
 
             <div
-              className={`overflow-hidden rounded-[2.1rem] ${theme.screenBg}`}
+              className={`relative overflow-hidden rounded-[2.1rem] ${
+                immersive ? "bg-black" : theme.screenBg
+              }`}
             >
-              <div className={`h-1 w-full ${theme.accentBar}`} />
+              {!immersive ? <div className={`h-1 w-full ${theme.accentBar}`} /> : null}
 
               <AnimatePresence mode="wait">
                 <motion.div
@@ -375,17 +381,20 @@ export function PhoneDemo({ fullPage, universe = "homme" }: PhoneDemoProps) {
                   transition={{ duration: 0.28 }}
                   className="min-h-[460px] flex flex-col"
                 >
-                  {/* AppTabHeader */}
-                  <div className={`border-b border-black/5 px-4 pb-3 pt-3 ${theme.screenSurface}`}>
+                  <div
+                    className={`border-b border-white/5 px-4 pb-3 pt-3 ${
+                      immersive ? "bg-black" : theme.screenSurface
+                    }`}
+                  >
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0 flex-1">
-                        <p className="text-[10px] font-bold uppercase tracking-wide text-neutral-500">
+                        <p className="text-[10px] font-bold uppercase tracking-wide text-white/40">
                           {screen.caption}
                         </p>
-                        <h3 className="text-xl font-extrabold tracking-tight text-neutral-900">
+                        <h3 className="text-xl font-extrabold tracking-tight text-white">
                           {screen.title}
                         </h3>
-                        <p className="mt-0.5 text-xs leading-snug text-neutral-500">
+                        <p className="mt-0.5 text-xs leading-snug text-white/45">
                           {screen.subtitle}
                         </p>
                       </div>
@@ -414,8 +423,12 @@ export function PhoneDemo({ fullPage, universe = "homme" }: PhoneDemoProps) {
 
                   <div className="flex-1 overflow-y-auto px-3 py-3">
                     {screen.actionTiles ? (
-                      <div className={`mb-3 rounded-2xl border border-black/5 p-2.5 ${theme.screenMuted}`}>
-                        <p className="mb-2 text-[9px] font-bold uppercase tracking-wider text-neutral-500">
+                      <div
+                        className={`mb-3 rounded-2xl border border-white/5 p-2.5 ${
+                          immersive ? "bg-white/5" : theme.screenMuted
+                        }`}
+                      >
+                        <p className="mb-2 text-[9px] font-bold uppercase tracking-wider text-white/40">
                           Actions rapides
                         </p>
                         <div className="grid grid-cols-2 gap-1.5">
@@ -438,13 +451,13 @@ export function PhoneDemo({ fullPage, universe = "homme" }: PhoneDemoProps) {
                         <div
                           key={card.title}
                           className={`rounded-xl p-3 ${
-                            card.accent ? theme.moduleCard : `${theme.screenSurface} border border-black/5`
+                            card.accent
+                              ? theme.moduleCard
+                              : `${immersive ? "bg-white/5" : theme.screenSurface} border border-white/5`
                           }`}
                         >
-                          <p className="text-xs font-extrabold text-neutral-900">
-                            {card.title}
-                          </p>
-                          <p className="mt-1 text-[11px] leading-relaxed text-neutral-600">
+                          <p className="text-xs font-extrabold text-white">{card.title}</p>
+                          <p className="mt-1 text-[11px] leading-relaxed text-white/50">
                             {card.body}
                           </p>
                           {card.chips ? (
@@ -466,44 +479,21 @@ export function PhoneDemo({ fullPage, universe = "homme" }: PhoneDemoProps) {
                 </motion.div>
               </AnimatePresence>
 
-              {/* Tab bar */}
-              <div className={`px-1 py-1.5 ${theme.tabBar}`}>
-                <div className="flex justify-around">
-                  {tabs.map((tab) => {
-                    const Icon = ICONS[tab.icon as keyof typeof ICONS];
-                    const isActive = active === tab.id;
-                    return (
-                      <button
-                        key={tab.id}
-                        type="button"
-                        onClick={() => setActive(tab.id)}
-                        className="flex min-w-0 flex-1 flex-col items-center gap-0.5 px-0.5 py-1"
-                        aria-label={tab.label}
-                        aria-pressed={isActive}
-                      >
-                        <Icon
-                          size={17}
-                          className={isActive ? theme.tabActive : theme.tabInactive}
-                          strokeWidth={isActive ? 2.5 : 2}
-                        />
-                        <span
-                          className={`max-w-full truncate text-[7px] font-bold leading-none ${
-                            isActive ? theme.tabActive : theme.tabInactive
-                          }`}
-                        >
-                          {tab.label}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
+              <AppTabBar
+                activeTab={active}
+                onTabPress={setActive}
+                universe={universe}
+                accentInk={theme.brandAccent}
+                tabActiveClass={theme.tabActive}
+                tabInactiveClass={theme.tabInactive}
+                dockSurfaceClass={theme.screenSurface}
+              />
             </div>
           </motion.div>
 
           <div className="max-w-md flex-1 space-y-2">
-            <p className="mb-3 text-sm font-semibold text-neutral-800">
-              Univers : {brand.name}
+            <p className="mb-3 text-sm font-semibold text-white/70">
+              Univers : {brand.name} — onglets visibles
             </p>
             {tabs.map((tab, i) => {
               const mock = screenForTab(tab.id, universe);
@@ -519,14 +509,20 @@ export function PhoneDemo({ fullPage, universe = "homme" }: PhoneDemoProps) {
                   className={`block w-full rounded-2xl border p-4 text-left transition ${
                     active === tab.id
                       ? `border-transparent ${theme.chipHighlight} text-white`
-                      : "border-neutral-200 bg-white hover:border-neutral-300"
+                      : `${theme.moduleIdle} text-white/70`
                   }`}
                 >
-                  <span className={`text-xs ${active === tab.id ? "text-white/70" : "text-neutral-400"}`}>
+                  <span
+                    className={`text-xs ${active === tab.id ? "text-white/70" : "text-white/40"}`}
+                  >
                     {String(i + 1).padStart(2, "0")}
                   </span>
                   <span className="ml-2 font-bold">{tab.label}</span>
-                  <p className={`mt-1 text-sm ${active === tab.id ? "text-white/85" : "text-neutral-500"}`}>
+                  <p
+                    className={`mt-1 text-sm ${
+                      active === tab.id ? "text-white/85" : "text-white/45"
+                    }`}
+                  >
                     {mock.subtitle}
                   </p>
                 </motion.button>

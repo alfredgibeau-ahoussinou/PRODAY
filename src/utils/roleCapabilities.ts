@@ -9,7 +9,7 @@ export const ROLE_LABELS: Record<UserRole, string> = {
   agent: 'Agent',
   recruiter: 'Recruteur',
   organizer: 'Organisateur',
-  sponsor: 'Partenaire',
+  sponsor: 'Sponsor',
   physio: 'Pôle médical',
 };
 

@@ -40,6 +40,7 @@ import { colors, spacing } from './src/theme/designTokens';
 import { EmailVerificationScreen } from './src/screens/EmailVerificationScreen';
 import { useUnreadMessageCount } from './src/hooks/useUnreadMessages';
 import { AdminAppShell } from './src/navigation/AdminAppShell';
+import { SponsorAppShell } from './src/navigation/SponsorAppShell';
 import { AdminPreviewBanner } from './src/components/admin/AdminPreviewBanner';
 import { useIsAdmin } from './src/hooks/useIsAdmin';
 import type {
@@ -249,6 +250,14 @@ function AppShell() {
     return <AdminAppShell onPreviewUserApp={() => setPreviewUserMode(true)} />;
   }
 
+  if (!authLoading && profile && isSponsorRole(profile.role) && !previewUserMode) {
+    return (
+      <SubscriptionProvider profile={sessionProfile ?? profile}>
+        <SponsorAppShell />
+      </SubscriptionProvider>
+    );
+  }
+
   const handleTabPress = (tab: MainTabId) => {
     if (tab !== activeTab) prodayHaptics.tabSwitch();
     setActiveTab(isGuest ? resolveGuestTab(tab, productLine) : tab);
@@ -338,6 +347,13 @@ function AppShell() {
           clearPendingAuthIntent: () => setPendingAuthIntent(null),
           pendingSignupProductLine,
           pendingSignupRole,
+          openSponsorSignup: () => {
+            void setProductLine('pro');
+            setPendingSignupProductLine('pro');
+            setPendingSignupRole('sponsor');
+            setPendingAuthIntent('signup');
+            handleTabPress('profil');
+          },
           openPartnerSignup: () => {
             void setProductLine('pro');
             setPendingSignupProductLine('pro');

@@ -6,7 +6,7 @@ import { VISION_PILLARS } from "@/lib/content";
 
 export function VisionGrid() {
   return (
-    <section className="py-20">
+    <section className="bg-[#030303] py-20">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <div className="grid gap-6 sm:grid-cols-2">
           {VISION_PILLARS.map((item, i) => (
@@ -16,11 +16,11 @@ export function VisionGrid() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.08 }}
-              className="rounded-2xl border border-neutral-200 bg-white p-8 shadow-sm"
+              className="card-premium rounded-2xl p-8"
             >
               <Reveal>
-                <h3 className="text-xl font-bold">{item.title}</h3>
-                <p className="mt-4 text-proday-muted leading-relaxed">{item.body}</p>
+                <h3 className="font-display text-xl font-bold text-white">{item.title}</h3>
+                <p className="mt-4 leading-relaxed text-white/55">{item.body}</p>
               </Reveal>
             </motion.article>
           ))}

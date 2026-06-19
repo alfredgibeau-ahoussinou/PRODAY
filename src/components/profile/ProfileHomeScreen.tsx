@@ -19,6 +19,7 @@ import { ProfileSection } from './ProfileSection';
 import { ProfileQuickGrid, type ProfileQuickAction } from './ProfileQuickGrid';
 import { getProfileCompletion } from '../../utils/profileCompletion';
 import { ProfileCompletionPanel } from './ProfileCompletionPanel';
+import { MercatoVisibilityChecklist } from '../mercato/MercatoVisibilityChecklist';
 import { ProfileSubscriptionCard } from './ProfileSubscriptionCard';
 import { ProfileMenuSection } from './ProfileMenuSection';
 import { PlayerCvLivePreview } from './PlayerCvLivePreview';
@@ -90,8 +91,6 @@ export interface ProfileHomeScreenProps {
   onCreateClub: () => void;
   onJoinClub: () => void;
   onVerificationSuccess: () => void;
-  onParental: () => void;
-  onGuardian?: () => void;
   onLegal: (id: 'terms' | 'privacy') => void;
   onSignOut: () => void;
   onSetAppSpace: (space: AppSpaceId) => void;
@@ -197,6 +196,9 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
                 onCompletePress={props.onEdit}
                 onItemPress={handleCompletionItem}
               />
+              {props.profile.role === 'player' ? (
+                <MercatoVisibilityChecklist profile={props.profile} />
+              ) : null}
             </ProfileSection>
 
             {props.progression ? (
@@ -492,53 +494,6 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
                           },
                         ]
                       : []),
-                  ]}
-                />
-              </ProfileSection>
-            ) : null}
-
-            {props.isPlayerMinor ? (
-              <ProfileSection title={t('profile.section.family')} subtitle={t('profile.section.familySub')}>
-                <GlassCard variant="accent" style={styles.familyTeaser}>
-                  <View style={styles.familyTeaserRow}>
-                    <Icon name="shield" size={20} color={colors.accent} />
-                    <View style={styles.familyTeaserCopy}>
-                      <ProDayText variant="caption" style={styles.familyTeaserTitle}>
-                        {t('profile.family.safeSpace')}
-                      </ProDayText>
-                      <ProDayText variant="caption" muted>
-                        {t('profile.family.safeSpaceSub')}
-                      </ProDayText>
-                    </View>
-                  </View>
-                </GlassCard>
-                <ProfileMenuSection
-                  title=""
-                  colors={colors}
-                  items={[
-                    {
-                      icon: 'shield',
-                      title: t('profile.parental'),
-                      subtitle: t('profile.parental.overviewSub'),
-                      onPress: props.onParental,
-                    },
-                  ]}
-                />
-              </ProfileSection>
-            ) : null}
-
-            {!props.isPlayerMinor && props.onGuardian ? (
-              <ProfileSection title={t('profile.section.guardian')} subtitle={t('profile.section.guardianSub')}>
-                <ProfileMenuSection
-                  title=""
-                  colors={colors}
-                  items={[
-                    {
-                      icon: 'shield',
-                      title: t('profile.guardian.portal'),
-                      subtitle: t('profile.parental.sub'),
-                      onPress: props.onGuardian,
-                    },
                   ]}
                 />
               </ProfileSection>

@@ -137,7 +137,7 @@ export const MessagesScreen: React.FC = () => {
       return;
     }
     setLoadingNetworkTarget(true);
-    const user = await usersService.getById(suggestion.targetUid);
+    const user = await usersService.getPublicById(suggestion.targetUid);
     setNetworkTarget(user);
     setLoadingNetworkTarget(false);
   }, []);

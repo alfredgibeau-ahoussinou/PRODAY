@@ -44,6 +44,12 @@ export function getMatchChapters(t: TranslateFn) {
       shortLabel: tr(t, 'matchs.chapter.amicaux', 'Amicaux'),
       icon: 'handshake' as IconName,
     },
+    {
+      id: 'tournois' as const,
+      label: tr(t, 'matchs.chapter.tournois', 'Tournois'),
+      shortLabel: tr(t, 'matchs.chapter.tournois', 'Tournois'),
+      icon: 'trophy' as IconName,
+    },
   ] satisfies {
     id: MatchChapterId;
     label: string;
@@ -103,11 +109,18 @@ export function getCarpoolEventFilters(t: TranslateFn) {
   ] satisfies { id: CarpoolEventFilter; label: string }[];
 }
 
-export function getFeedChapters(t: TranslateFn) {
-  return [
-    { id: 'actualites' as const, label: tr(t, 'feed.chapter.news', 'Actualités') },
-    { id: 'publier' as const, label: tr(t, 'feed.chapter.publish', 'Publier') },
-  ] satisfies { id: FeedChapterId; label: string }[];
+export function getFeedChapters(t: TranslateFn, options?: { showWeekly?: boolean }) {
+  const chapters: { id: FeedChapterId; label: string }[] = [
+    { id: 'actualites', label: tr(t, 'feed.chapter.news', 'Actualités') },
+  ];
+  if (options?.showWeekly) {
+    chapters.push({
+      id: 'question',
+      label: tr(t, 'feed.chapter.responses', 'Réponses'),
+    });
+  }
+  chapters.push({ id: 'publier', label: tr(t, 'feed.chapter.publish', 'Publier') });
+  return chapters;
 }
 
 export function getFeedTypeFilters(t: TranslateFn) {

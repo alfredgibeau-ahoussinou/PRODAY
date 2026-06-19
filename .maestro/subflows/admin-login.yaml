@@ -1,0 +1,44 @@
+# Connexion compte administrateur plateforme.
+# Variables : MAESTRO_ADMIN_EMAIL, MAESTRO_ADMIN_PASSWORD
+# Avec claim admin (npm run admin:setup) → console complète.
+# Sans claim → écran gate (si routage App vers AdminAppShell pour email plateforme).
+---
+- launchApp:
+    clearState: false
+
+- extendedWaitUntil:
+    visible:
+      id: admin-gate
+    timeout: 10000
+    optional: true
+
+- extendedWaitUntil:
+    visible: Accueil
+    timeout: 5000
+    optional: true
+
+- runFlow:
+    when:
+      visible: Se connecter
+    commands:
+      - tapOn:
+          text: Profil
+          optional: true
+      - extendedWaitUntil:
+          visible: Se connecter
+          timeout: 8000
+      - tapOn: vous@exemple.com
+      - inputText: ${MAESTRO_ADMIN_EMAIL}
+      - tapOn: "••••••••"
+      - inputText: ${MAESTRO_ADMIN_PASSWORD}
+      - hideKeyboard
+      - tapOn: Se connecter
+      - extendedWaitUntil:
+          visible:
+            id: admin-gate
+          timeout: 45000
+          optional: true
+      - extendedWaitUntil:
+          visible: Accueil
+          timeout: 45000
+          optional: true

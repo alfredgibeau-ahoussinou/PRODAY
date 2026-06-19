@@ -40,6 +40,7 @@ import { TabScreenShell } from '../components/app/TabScreenShell';
 import { ScreenBackButton } from '../components/ui/ScreenBackButton';
 import { useProDayBrain } from '../hooks/useProDayBrain';
 import { getPostMercatoFit } from '../features/v3/engines/mercatoPostDetail.engine';
+import { buildOneClickCoverLetter } from '../utils/recruitmentOneClick';
 
 const MAX_LETTER = 600;
 
@@ -82,7 +83,7 @@ export const RecruitmentPostScreen: React.FC<RecruitmentPostScreenProps> = ({
       const pulseMap: Record<string, number> = {};
       const scored = await Promise.all(
         apps.map(async (app) => {
-          const user = await usersService.getById(app.player_uid);
+          const user = await usersService.getPublicById(app.player_uid);
           const score = user ? computeProdayPulse(user).score : 0;
           pulseMap[app.id] = score;
           return { app, score };
@@ -101,6 +102,11 @@ export const RecruitmentPostScreen: React.FC<RecruitmentPostScreenProps> = ({
   useEffect(() => {
     load();
   }, [load]);
+
+  useEffect(() => {
+    if (!post || !profile || profile.role !== 'player' || applied || coverLetter.trim()) return;
+    setCoverLetter(buildOneClickCoverLetter(profile, post));
+  }, [post, profile, applied, coverLetter]);
 
   const isManager = post && profile && canManagePostApplications(profile, post);
   const brain = useProDayBrain(profile, productLine);
@@ -125,7 +131,16 @@ export const RecruitmentPostScreen: React.FC<RecruitmentPostScreenProps> = ({
     [],
   );
 
-  const handleApply = async () => {
+  const handleOneClickApply = async () => {
+    if (!post || !profile) return;
+    const letter = buildOneClickCoverLetter(profile, post);
+    setCoverLetter(letter);
+    if (letter.trim().length >= 20) {
+      await handleApplyWithLetter(letter, true);
+    }
+  };
+
+  const handleApplyWithLetter = async (letter: string, oneClick = false) => {
     if (!requireAuth('Connectez-vous pour postuler à cette annonce.') || !profile) return;
     if (profile.role !== 'player') {
       Alert.alert(
@@ -136,7 +151,7 @@ export const RecruitmentPostScreen: React.FC<RecruitmentPostScreenProps> = ({
       );
       return;
     }
-    if (!letterOk) {
+    if (letter.trim().length < 20) {
       Alert.alert('Message trop court', 'Rédigez au moins 20 caractères pour vous présenter.');
       return;
     }
@@ -150,13 +165,13 @@ export const RecruitmentPostScreen: React.FC<RecruitmentPostScreenProps> = ({
           post_author_uid: post.author_uid ?? post.club_id,
           player_uid: profile.uid,
           player_name: profile.display_name,
-          cover_letter: coverLetter.trim(),
+          cover_letter: letter.trim(),
         },
         profile
       );
       void subscriptionCtx?.refresh();
       setApplied(true);
-      trackV3Event('mercato_application_sent', { postId: post.id });
+      trackV3Event('mercato_application_sent', { postId: post.id, oneClick });
       const progression = userStateStore.get()?.progression ?? {
         xp: 0,
         level: 1,
@@ -189,6 +204,10 @@ export const RecruitmentPostScreen: React.FC<RecruitmentPostScreenProps> = ({
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleApply = async () => {
+    await handleApplyWithLetter(coverLetter);
   };
 
   const updateStatus = async (
@@ -312,6 +331,7 @@ export const RecruitmentPostScreen: React.FC<RecruitmentPostScreenProps> = ({
                       onViewPlayer ? () => onViewPlayer(app.player_uid) : undefined
                     }
                     onMarkViewed={() => updateStatus(app, 'VIEWED')}
+                    onMarkInProgress={() => updateStatus(app, 'IN_PROGRESS')}
                     onAccept={() => updateStatus(app, 'ACCEPTED')}
                     onReject={(reason) => updateStatus(app, 'REJECTED', reason)}
                   />
@@ -370,6 +390,19 @@ export const RecruitmentPostScreen: React.FC<RecruitmentPostScreenProps> = ({
                     </View>
                   ))}
                 </View>
+
+                <PressableSpring
+                  onPress={() => void handleOneClickApply()}
+                  disabled={submitting}
+                  scaleTo={0.98}
+                  haptic
+                  style={[styles.oneClickBtn, { borderColor: c.brand, backgroundColor: c.accentSoft }]}
+                >
+                  <Icon name="mail" size={16} color={c.brand} variant="filled" />
+                  <ProDayText variant="caption" accent style={{ fontWeight: '800' }}>
+                    Candidature 1 clic — lettre préremplie
+                  </ProDayText>
+                </PressableSpring>
 
                 <TextInput
                   style={[
@@ -529,6 +562,17 @@ const styles = StyleSheet.create({
   tips: { gap: spacing.xs, marginBottom: spacing.md },
   tipRow: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
   tipText: { flex: 1, lineHeight: 18 },
+  oneClickBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    marginBottom: spacing.md,
+  },
   input: {
     minHeight: 140,
     borderRadius: radius.lg,

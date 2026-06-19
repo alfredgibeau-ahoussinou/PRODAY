@@ -60,9 +60,12 @@ export function getCallableErrorMessage(error: unknown): string {
 
 export async function callFunction<TData, TResult>(
   name: string,
-  data: TData
+  data: TData,
+  region?: string
 ): Promise<TResult> {
-  const fns = getFirebaseFunctions();
+  const app = getFirebaseApp();
+  if (!isFirebaseConfigured() || !app) throw new Error('Firebase Functions non configurées');
+  const fns = region ? getFunctions(app, region) : getFirebaseFunctions();
   if (!fns) throw new Error('Firebase Functions non configurées');
   try {
     const fn = httpsCallable<TData, TResult>(fns, name);

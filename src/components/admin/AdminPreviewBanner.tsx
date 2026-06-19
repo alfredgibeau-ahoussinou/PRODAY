@@ -2,9 +2,8 @@ import React, { useMemo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Icon } from '../ui/Icon';
-import { useAdminStyles } from './adminStyles';
+import { adminChrome } from './adminStyles';
 import { spacing } from '../../theme/designTokens';
-import type { AppColors } from '../../theme/universeTheme';
 
 interface AdminPreviewBannerProps {
   onExitPreview: () => void;
@@ -12,8 +11,7 @@ interface AdminPreviewBannerProps {
 
 export const AdminPreviewBanner: React.FC<AdminPreviewBannerProps> = ({ onExitPreview }) => {
   const insets = useSafeAreaInsets();
-  const { colors: c } = useAdminStyles();
-  const styles = useMemo(() => createStyles(c), [c]);
+  const styles = useMemo(() => createStyles(), []);
 
   return (
     <TouchableOpacity
@@ -21,30 +19,40 @@ export const AdminPreviewBanner: React.FC<AdminPreviewBannerProps> = ({ onExitPr
       onPress={onExitPreview}
       activeOpacity={0.9}
     >
-      <Icon name="shield" size={18} color={c.brandInverse} />
+      <View style={styles.iconMark}>
+        <Icon name="shield" size={14} color="#FFFFFF" />
+      </View>
       <View style={styles.body}>
         <Text style={styles.title}>Mode prévisualisation · app utilisateur</Text>
-        <Text style={styles.sub}>Appuyez pour revenir à l’espace admin</Text>
+        <Text style={styles.sub}>Appuyez pour revenir à la console admin</Text>
       </View>
-      <Icon name="chevron-forward" size={16} color={c.brandInverse} />
+      <Icon name="chevron-forward" size={16} color={adminChrome.textMuted} />
     </TouchableOpacity>
   );
 };
 
-function createStyles(c: AppColors) {
+function createStyles() {
   return StyleSheet.create({
     wrap: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: spacing.sm,
-      backgroundColor: c.ink,
+      backgroundColor: adminChrome.shell,
       paddingHorizontal: spacing.md,
       paddingBottom: spacing.sm,
-      borderBottomWidth: 2,
-      borderBottomColor: c.brand,
+      borderBottomWidth: 1,
+      borderBottomColor: adminChrome.shellBorder,
+    },
+    iconMark: {
+      width: 28,
+      height: 28,
+      borderRadius: 8,
+      backgroundColor: adminChrome.accent,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     body: { flex: 1 },
-    title: { color: c.brandInverse, fontSize: 12, fontWeight: '900' },
-    sub: { color: c.heroMuted, fontSize: 10, marginTop: 1 },
+    title: { color: adminChrome.text, fontSize: 12, fontWeight: '800' },
+    sub: { color: adminChrome.textMuted, fontSize: 10, marginTop: 1 },
   });
 }

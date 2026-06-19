@@ -43,11 +43,13 @@ async function run() {
       role: 'player',
       profile: { club_id: 'club1' },
       is_verified: true,
+      onboarding_documents_submitted: true,
     });
     await setDoc(doc(db, 'users/bob'), {
       role: 'coach',
       profile: { club_id: 'club1' },
       is_verified: true,
+      onboarding_documents_submitted: true,
     });
     await setDoc(doc(db, 'team_events/ev1'), {
       organizer_uid: 'bob',
@@ -69,7 +71,7 @@ async function run() {
       body: 'Mercredi 19h',
     });
     await setDoc(doc(db, 'tournaments/t1'), {
-      organizer_id: 'bob',
+      organizer_uid: 'bob',
       name: 'Arena Test',
     });
     await setDoc(doc(db, 'tournaments/t1/matches/m1'), {
@@ -168,6 +170,7 @@ async function run() {
       role: 'player',
       profile: { club_id: 'club1' },
       is_verified: true,
+      onboarding_documents_submitted: true,
     });
     await setDoc(doc(db, 'users/dave'), {
       role: 'coach',
@@ -178,6 +181,7 @@ async function run() {
       role: 'coach',
       profile: { club_id: 'club1' },
       is_verified: true,
+      onboarding_documents_submitted: true,
     });
     await setDoc(doc(db, 'users/minor1'), {
       role: 'player',
@@ -251,6 +255,41 @@ async function run() {
         supervision_enabled: true,
         contacts_filter_enabled: true,
         daily_limit_minutes: 60,
+      },
+    })
+  );
+
+  await assertFails(
+    updateDoc(doc(carolDb, 'users/carol'), {
+      role: 'admin',
+    })
+  );
+
+  await testEnv.withSecurityRulesDisabled(async (ctx) => {
+    const db = ctx.firestore();
+    await setDoc(doc(db, 'users/minor-guard'), {
+      role: 'player',
+      email: 'minor-g@test.com',
+      parental_settings: {
+        is_minor: true,
+        guardian_email: 'parent@test.com',
+        guardian_name: 'Parent',
+        supervision_enabled: true,
+        contacts_filter_enabled: true,
+      },
+    });
+  });
+
+  const minorGuardDb = testEnv.authenticatedContext('minor-guard').firestore();
+
+  await assertFails(
+    updateDoc(doc(minorGuardDb, 'users/minor-guard'), {
+      parental_settings: {
+        is_minor: true,
+        guardian_email: 'hacker@test.com',
+        guardian_name: 'Parent',
+        supervision_enabled: true,
+        contacts_filter_enabled: true,
       },
     })
   );
@@ -457,6 +496,145 @@ async function run() {
         daily_limit_minutes: 45,
         active_days: ['Lun'],
       },
+    })
+  );
+
+  // --- Sponsors : métriques offres & vues profil ---
+  await testEnv.withSecurityRulesDisabled(async (ctx) => {
+    const db = ctx.firestore();
+    await setDoc(doc(db, 'users/sponsor-co'), {
+      role: 'sponsor',
+      profile: { company_name: 'Sponsor Co' },
+      is_verified: true,
+    });
+    await setDoc(doc(db, 'sponsor_offers/offer1'), {
+      sponsor_uid: 'sponsor-co',
+      company_name: 'Sponsor Co',
+      description: 'Équipement',
+      value: '500 €',
+      city: 'Lyon',
+      active: true,
+      views_count: 0,
+      clicks_count: 0,
+      leads_count: 0,
+    });
+  });
+
+  const sponsorDb = testEnv.authenticatedContext('sponsor-co').firestore();
+
+  await assertSucceeds(
+    updateDoc(doc(aliceDb, 'sponsor_offers/offer1'), { views_count: 1 })
+  );
+
+  await assertSucceeds(
+    updateDoc(doc(aliceDb, 'sponsor_offers/offer1'), { leads_count: 1 })
+  );
+
+  await assertFails(
+    updateDoc(doc(aliceDb, 'sponsor_offers/offer1'), { description: 'Hack' })
+  );
+
+  await assertSucceeds(
+    updateDoc(doc(sponsorDb, 'sponsor_offers/offer1'), { active: false })
+  );
+
+  await assertFails(
+    deleteDoc(doc(aliceDb, 'sponsor_offers/offer1'))
+  );
+
+  const guestDb = testEnv.unauthenticatedContext().firestore();
+
+  await assertFails(
+    updateDoc(doc(guestDb, 'sponsor_offers/offer1'), { views_count: 1 })
+  );
+
+  await assertFails(
+    addDoc(collection(guestDb, 'sponsor_profile_views'), {
+      sponsor_uid: 'sponsor-co',
+      viewer_anonymous_id: 'anon-guest',
+      created_at: new Date(),
+    })
+  );
+
+  await assertSucceeds(
+    addDoc(collection(aliceDb, 'sponsor_profile_views'), {
+      sponsor_uid: 'sponsor-co',
+      viewer_uid: 'alice',
+      created_at: new Date(),
+    })
+  );
+
+  await assertFails(
+    addDoc(collection(aliceDb, 'sponsor_profile_views'), {
+      sponsor_uid: 'sponsor-co',
+      viewer_uid: 'bob',
+      created_at: new Date(),
+    })
+  );
+
+  await assertSucceeds(
+    getDocs(
+      query(
+        collection(sponsorDb, 'sponsor_profile_views'),
+        where('sponsor_uid', '==', 'sponsor-co')
+      )
+    )
+  );
+
+  await assertFails(
+    getDocs(
+      query(
+        collection(aliceDb, 'sponsor_profile_views'),
+        where('sponsor_uid', '==', 'sponsor-co')
+      )
+    )
+  );
+
+  // --- Demandes upgrade Territorial ---
+  await testEnv.withSecurityRulesDisabled(async (ctx) => {
+    const db = ctx.firestore();
+    await setDoc(doc(db, 'sponsor_upgrade_requests/req-pending'), {
+      sponsor_uid: 'sponsor-co',
+      tier: 'territorial',
+      company: 'Sponsor Co',
+      city: 'Lyon',
+      status: 'pending',
+      created_at: new Date(),
+    });
+  });
+
+  const adminDb = testEnv.authenticatedContext('admin-1', { admin: true }).firestore();
+
+  await assertSucceeds(
+    updateDoc(doc(adminDb, 'sponsor_upgrade_requests/req-pending'), {
+      status: 'contacted',
+      contacted_at: new Date(),
+      updated_at: new Date(),
+    })
+  );
+
+  await assertSucceeds(
+    updateDoc(doc(adminDb, 'sponsor_upgrade_requests/req-pending'), {
+      status: 'approved',
+      approved_at: new Date(),
+      updated_at: new Date(),
+    })
+  );
+
+  await assertFails(
+    updateDoc(doc(sponsorDb, 'sponsor_upgrade_requests/req-pending'), {
+      status: 'approved',
+    })
+  );
+
+  await assertFails(
+    addDoc(collection(sponsorDb, 'sponsor_upgrade_requests'), {
+      sponsor_uid: 'sponsor-co',
+      tier: 'territorial',
+      company: 'Autre',
+      city: 'Paris',
+      status: 'approved',
+      created_at: new Date(),
     })
   );
 

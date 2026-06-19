@@ -456,7 +456,7 @@ export const TERTIARY_DE: MessageCatalog = {
   'signup.pro.step.security.subtitle': 'Sicheres Passwort, dann professionelle Validierung.',
   'signup.pro.step.security.title': 'Sicherer Zugang',
   'signup.pro.step.sponsor.subtitle': 'Angebote zur Marken-, Gebiets- und Vereinssichtbarkeit.',
-  'signup.pro.step.sponsor.title': 'Partnerprofil',
+  'signup.pro.step.sponsor.title': 'Sponsorprofil',
   'signup.pro.welcome.subtitle': 'Wählen Sie Ihre Rolle – {{role}}, verifiziertes Netzwerk und Profi-Tools.',
   'signup.pro.welcome.title': 'Willkommen bei {{brand}}',
   'signup.role.agent.hint': 'Agentenlizenz – automatische Prüfung nach E-Mail-Validierung.',

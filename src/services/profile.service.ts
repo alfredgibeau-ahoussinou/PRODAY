@@ -332,6 +332,7 @@ export const profileService = {
     if (!database) return;
     await updateDoc(doc(database, 'users', uid), {
       fcm_token: token,
+      'notification_preferences.sponsor_geo_opt_in': true,
       updated_at: serverTimestamp(),
     });
   },

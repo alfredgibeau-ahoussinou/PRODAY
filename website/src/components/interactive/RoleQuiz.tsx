@@ -37,12 +37,12 @@ export function RoleQuiz({ compact }: { compact?: boolean }) {
 
   if (compact && !done) {
     return (
-      <div className="rounded-2xl border border-neutral-200 bg-white p-6">
-        <p className="font-bold">Quel profil ProDay êtes-vous ?</p>
-        <p className="mt-2 text-sm text-proday-muted">3 questions rapides</p>
+      <div className="card-premium rounded-2xl p-6">
+        <p className="font-bold text-white">Quel pôle ProDay vous correspond ?</p>
+        <p className="mt-2 text-sm text-white/55">3 questions — Joueur, Pro, Santé ou Partenaires</p>
         <Link
           href={ROUTES.quiz}
-          className="mt-4 inline-block rounded-full bg-proday-ink px-5 py-2 text-sm text-white"
+          className="mt-4 inline-block rounded-full bg-white px-5 py-2 text-sm font-semibold text-neutral-950"
         >
           Lancer le quiz
         </Link>
@@ -59,19 +59,19 @@ export function RoleQuiz({ compact }: { compact?: boolean }) {
             initial={{ opacity: 0, x: 40 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -40 }}
-            className="rounded-3xl border border-neutral-200 bg-white p-8 shadow-lg"
+            className="card-premium rounded-3xl p-8"
           >
-            <p className="text-xs text-proday-muted">
+            <p className="text-xs text-white/45">
               Question {step + 1} / {QUIZ_QUESTIONS.length}
             </p>
-            <h3 className="mt-2 text-xl font-bold">{q.question}</h3>
+            <h3 className="mt-2 text-xl font-bold text-white">{q.question}</h3>
             <div className="mt-6 space-y-3">
               {q.options.map((opt) => (
                 <button
                   key={opt.label}
                   type="button"
                   onClick={() => pick(opt.role)}
-                  className="block w-full rounded-xl border border-neutral-200 p-4 text-left transition hover:border-proday-ink hover:bg-neutral-50"
+                  className="block w-full rounded-xl border border-white/10 bg-white/5 p-4 text-left text-white/85 transition hover:border-white/25 hover:bg-white/10"
                 >
                   {opt.label}
                 </button>
@@ -83,7 +83,7 @@ export function RoleQuiz({ compact }: { compact?: boolean }) {
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="rounded-3xl bg-proday-ink p-8 text-white"
+            className="rounded-3xl bg-gradient-to-br from-blue-950 to-neutral-950 p-8 text-white ring-1 ring-white/10"
           >
             <p className="text-xs text-white/60">Votre profil</p>
             <h3 className="mt-2 text-2xl font-bold">{result.title}</h3>

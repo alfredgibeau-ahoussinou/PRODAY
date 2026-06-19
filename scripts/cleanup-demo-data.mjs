@@ -95,6 +95,37 @@ async function deleteAuthByEmail(email) {
   }
 }
 
+async function deleteSyntheticUsers() {
+  console.log('\nRecherche des profils synthétiques (scale / démo)…');
+  const snap = await db.collection('users').get();
+  let removed = 0;
+
+  for (const doc of snap.docs) {
+    const data = doc.data();
+    const uid = doc.id;
+    const email = String(data.email ?? '').toLowerCase();
+    const displayName = String(data.display_name ?? '');
+
+    const synthetic =
+      uid.startsWith('seed_') ||
+      uid.startsWith('scale-u') ||
+      uid.startsWith('proday_seed') ||
+      email.endsWith('@scale.test') ||
+      email.includes('.demo@') ||
+      /^Joueur \d+$/.test(displayName.trim());
+
+    if (!synthetic) continue;
+
+    await doc.ref.delete();
+    removed += 1;
+    console.log(`  users/${uid}`);
+    await deleteAuthUser(uid);
+    if (email) await deleteAuthByEmail(email);
+  }
+
+  console.log(removed > 0 ? `  → ${removed} profil(s) synthétique(s) supprimé(s)` : '  → aucun profil synthétique trouvé');
+}
+
 async function cleanup() {
   console.log(`Projet : ${projectId}\nSuppression des données démo…\n`);
 
@@ -107,6 +138,8 @@ async function cleanup() {
       console.log(`  ${collection}/${id}`);
     }
   }
+
+  await deleteSyntheticUsers();
 
   console.log(
     '\n✔ Données démo supprimées. L’app utilise uniquement les comptes créés via Inscription.'

@@ -37,7 +37,7 @@ export function EcosystemMap() {
 
   return (
     <div className="mx-auto max-w-4xl">
-      <div className="relative aspect-[4/3] overflow-hidden rounded-3xl border border-neutral-200 bg-gradient-to-br from-neutral-50 to-white">
+      <div className="relative aspect-[4/3] overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-[#0a0a0c] to-[#111]">
         <svg className="absolute inset-0 h-full w-full" viewBox="0 0 100 100">
           {EDGES.map(([a, b]) => {
             const na = NODES.find((n) => n.id === a)!;
@@ -51,7 +51,7 @@ export function EcosystemMap() {
                 y1={na.y}
                 x2={nb.x}
                 y2={nb.y}
-                stroke={lit ? "#0a0a0a" : "#e5e5e5"}
+                stroke={lit ? "rgba(255,255,255,0.5)" : "rgba(255,255,255,0.08)"}
                 strokeWidth={lit ? 0.4 : 0.2}
                 animate={{ opacity: lit ? 1 : 0.4 }}
               />
@@ -66,9 +66,9 @@ export function EcosystemMap() {
             className={`absolute -translate-x-1/2 -translate-y-1/2 rounded-full px-3 py-2 text-xs font-semibold shadow-md transition sm:text-sm ${
               active === n.id
                 ? "center" in n && n.center
-                  ? "bg-proday-ink text-white ring-4 ring-neutral-200"
-                  : "bg-proday-ink text-white scale-110"
-                : "bg-white text-proday-ink hover:scale-105"
+                  ? "bg-white text-neutral-950 ring-4 ring-white/20"
+                  : "scale-110 bg-white text-neutral-950"
+                : "bg-white/10 text-white hover:scale-105 hover:bg-white/20"
             }`}
             style={{ left: `${n.x}%`, top: `${n.y}%` }}
             whileTap={{ scale: 0.95 }}
@@ -82,10 +82,10 @@ export function EcosystemMap() {
           key={node.id}
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mt-6 rounded-2xl border border-neutral-200 bg-white p-6"
+          className="card-premium mt-6 rounded-2xl p-6"
         >
-          <h3 className="text-lg font-bold">{node.label}</h3>
-          <p className="mt-2 text-proday-muted">
+          <h3 className="text-lg font-bold text-white">{node.label}</h3>
+          <p className="mt-2 text-white/55">
             {DESCRIPTIONS[node.id] ?? "Acteur de l'écosystème ProDay."}
           </p>
         </motion.div>

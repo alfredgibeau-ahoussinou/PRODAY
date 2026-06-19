@@ -95,7 +95,7 @@ export const SearchMatchScreen: React.FC<SearchMatchScreenProps> = ({
       Alert.alert('Information', 'Il s’agit de votre propre proposition.');
       return;
     }
-    const organizer = await usersService.getById(organizerUid);
+    const organizer = await usersService.getPublicById(organizerUid);
     if (!organizer) {
       Alert.alert('Contact indisponible', 'Profil organisateur introuvable.');
       return;
@@ -168,7 +168,12 @@ export const SearchMatchScreen: React.FC<SearchMatchScreenProps> = ({
             </View>
           ))}
         </View>
-      ) : null}
+      ) : (
+        <View style={[styles.fieldsBlock, styles.fieldsEmpty, { borderColor: c.border, backgroundColor: c.surface }]}>
+          <Text style={styles.fieldsTitle}>Réservation de terrains</Text>
+          <Text style={styles.fieldsEmptyText}>Bientôt disponible — créneaux Playtomic en préparation.</Text>
+        </View>
+      )}
 
       <ScrollView contentContainerStyle={styles.list}>
         <View style={styles.chips}>
@@ -326,6 +331,13 @@ function createStyles(c: AppColors) {
   list: { paddingBottom: spacing.xxl },
   fieldsBlock: { paddingHorizontal: spacing.lg, marginBottom: spacing.md, gap: spacing.sm },
   fieldsTitle: { fontSize: 12, fontWeight: '800', color: c.textMuted, textTransform: 'uppercase' },
+  fieldsEmpty: {
+    borderRadius: radius.md,
+    borderWidth: 1,
+    padding: spacing.md,
+    gap: spacing.xs,
+  },
+  fieldsEmptyText: { fontSize: 13, color: c.textSecondary, lineHeight: 18 },
   fieldCard: {
     borderRadius: radius.md,
     borderWidth: 1,

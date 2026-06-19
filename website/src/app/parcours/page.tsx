@@ -1,21 +1,24 @@
 import type { Metadata } from "next";
 import { JourneyRoles } from "@/components/JourneyRoles";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { ROUTES } from "@/lib/routes";
 
 export const metadata: Metadata = {
   title: "Parcours par rôle",
   description:
-    "Joueur, recruteur, pôle santé, organisateur ou parent — découvrez votre chemin dans ProDay.",
+    "Joueur, recruteur, pôle santé, organisateur ou parent — découvrez votre chemin dans ProDay, par pôle.",
 };
 
 export default function JourneysPage() {
   return (
     <>
       <PageHeader
+        pathname={ROUTES.journeys}
         kicker="PARCOURS"
         title="Chaque rôle, un chemin clair"
-        description="Des parcours guidés pour avancer dans l'app — de l'inscription au CV PDF ou au tournoi Arena."
+        description="Des parcours guidés par pôle — de l'inscription au CV PDF, au tournoi Arena ou à l'espace partenaires."
         image="/showcase/classic-profile.jpg"
+        dark
       />
       <JourneyRoles fullPage />
     </>

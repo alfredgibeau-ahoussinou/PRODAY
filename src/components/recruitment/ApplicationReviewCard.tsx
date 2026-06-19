@@ -24,6 +24,7 @@ interface ApplicationReviewCardProps {
   pulseScore?: number;
   onViewProfile?: () => void;
   onMarkViewed: () => Promise<void>;
+  onMarkInProgress?: () => Promise<void>;
   onAccept: () => Promise<void>;
   onReject: (reason: string) => Promise<void>;
   busy?: boolean;
@@ -54,6 +55,7 @@ function createStyles(c: AppColors) {
     pillOk: { backgroundColor: c.accentSoft, borderColor: c.brand },
     pillBad: { backgroundColor: c.errorBg, borderColor: c.error },
     pillViewed: { backgroundColor: c.warningBg, borderColor: c.warning },
+    pillProgress: { backgroundColor: c.accentSoft, borderColor: c.brand },
     pillText: { fontSize: 10, fontWeight: '800', color: c.text },
     letter: { fontSize: 13, color: c.textSecondary, marginTop: spacing.sm, lineHeight: 20 },
     rejectNote: {
@@ -122,7 +124,7 @@ function createStyles(c: AppColors) {
 }
 
 const ActionBtn: React.FC<{
-  icon: 'eye' | 'checkmark-circle' | 'close';
+  icon: 'eye' | 'checkmark-circle' | 'close' | 'time';
   label: string;
   onPress: () => void;
   primary?: boolean;
@@ -159,6 +161,7 @@ export const ApplicationReviewCard: React.FC<ApplicationReviewCardProps> = ({
   pulseScore,
   onViewProfile,
   onMarkViewed,
+  onMarkInProgress,
   onAccept,
   onReject,
   busy = false,
@@ -210,6 +213,7 @@ export const ApplicationReviewCard: React.FC<ApplicationReviewCardProps> = ({
               application.status === 'ACCEPTED' && styles.pillOk,
               application.status === 'REJECTED' && styles.pillBad,
               application.status === 'VIEWED' && styles.pillViewed,
+              application.status === 'IN_PROGRESS' && styles.pillProgress,
             ]}
           >
             <Text style={styles.pillText}>{APPLICATION_STATUS_LABEL[application.status]}</Text>
@@ -239,6 +243,16 @@ export const ApplicationReviewCard: React.FC<ApplicationReviewCardProps> = ({
             icon="checkmark-circle"
             label="Marquer vue"
             onPress={() => run(onMarkViewed)}
+            disabled={loading}
+            styles={styles}
+            colors={colors}
+          />
+        ) : null}
+        {!isFinal && application.status === 'VIEWED' && onMarkInProgress ? (
+          <ActionBtn
+            icon="time"
+            label="En cours"
+            onPress={() => run(onMarkInProgress)}
             disabled={loading}
             styles={styles}
             colors={colors}

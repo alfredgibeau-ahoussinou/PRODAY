@@ -22,12 +22,12 @@ export interface ProfileBlockConfig {
 }
 
 const DEFAULT_BLOCKS: ProfileBlockConfig[] = [
-  { id: 'identity', label: 'Identité', icon: 'person', visible: true },
+  { id: 'identity', label: 'Identité & galerie', icon: 'person', visible: true },
   { id: 'stats', label: 'Stats saison', icon: 'trophy', visible: true },
-  { id: 'videos', label: 'Highlights', icon: 'videocam', visible: true },
-  { id: 'season', label: 'Palmarès', icon: 'trophy', visible: true },
-  { id: 'availability', label: 'Disponibilité', icon: 'calendar', visible: true },
   { id: 'bio', label: 'Bio', icon: 'document', visible: true },
+  { id: 'availability', label: 'Disponibilité', icon: 'calendar', visible: true },
+  { id: 'videos', label: 'Highlights', icon: 'videocam', visible: true },
+  { id: 'season', label: 'Saison & niveau', icon: 'football', visible: true },
 ];
 
 type PlayerProfileBlocksProps = {

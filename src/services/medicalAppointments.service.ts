@@ -28,44 +28,6 @@ import {
 
 const COLLECTION = 'medical_appointments';
 
-function demoAppointments(physioUid: string): MedicalAppointment[] {
-  const now = new Date();
-  const today = startOfDay(now);
-  const hour = Math.max(9, now.getHours() + 1);
-  return [
-    {
-      id: 'demo-1',
-      physio_uid: physioUid,
-      physio_name: 'Cabinet démo',
-      patient_uid: 'demo-patient-1',
-      patient_name: 'Lucas M.',
-      specialty: 'Kinésithérapeute du sport',
-      start_at: new Date(today.getFullYear(), today.getMonth(), today.getDate(), hour, 0),
-      end_at: new Date(today.getFullYear(), today.getMonth(), today.getDate(), hour, 30),
-      duration_min: 30,
-      status: 'confirmed',
-      motif: 'Récupération cheville',
-      location_label: 'Cabinet',
-      created_at: now,
-    },
-    {
-      id: 'demo-2',
-      physio_uid: physioUid,
-      physio_name: 'Cabinet démo',
-      patient_uid: 'demo-patient-2',
-      patient_name: 'Emma F.',
-      specialty: 'Kinésithérapeute du sport',
-      start_at: new Date(today.getFullYear(), today.getMonth(), today.getDate(), hour + 1, 0),
-      end_at: new Date(today.getFullYear(), today.getMonth(), today.getDate(), hour + 1, 30),
-      duration_min: 30,
-      status: 'pending',
-      motif: 'Bilan post-match',
-      location_label: 'Cabinet',
-      created_at: now,
-    },
-  ];
-}
-
 export function getPhysioWeeklyAvailability(profile: User): WeeklyAvailabilityBlock[] {
   const custom = profile.profile.weekly_availability;
   if (custom?.length) return custom;
@@ -86,7 +48,7 @@ export const medicalAppointmentsService = {
     from: Date,
     to: Date
   ): Promise<MedicalAppointment[]> {
-    if (!isFirebaseConfigured()) return demoAppointments(physioUid);
+    if (!isFirebaseConfigured()) return [];
     const database = getDb();
     if (!database) return [];
 
@@ -152,6 +114,8 @@ export const medicalAppointmentsService = {
     startAt: Date;
     motif?: string;
   }): Promise<string> {
+    if (!isFirebaseConfigured()) throw new Error('Firebase non configuré');
+
     const duration = getPhysioConsultationDuration(input.physio);
     const endAt = new Date(input.startAt.getTime() + duration * 60_000);
     const payload = {
@@ -170,7 +134,6 @@ export const medicalAppointmentsService = {
       updated_at: serverTimestamp(),
     };
 
-    if (!isFirebaseConfigured()) return `demo-${Date.now()}`;
     const database = getDb();
     if (!database) throw new Error('Firebase non configuré');
 
@@ -183,7 +146,7 @@ export const medicalAppointmentsService = {
     status: MedicalAppointmentStatus,
     notes?: string
   ): Promise<void> {
-    if (!isFirebaseConfigured()) return;
+    if (!isFirebaseConfigured()) throw new Error('Firebase non configuré');
     const database = getDb();
     if (!database) throw new Error('Firebase non configuré');
 

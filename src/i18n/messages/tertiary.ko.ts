@@ -456,7 +456,7 @@ export const TERTIARY_KO: MessageCatalog = {
   'signup.pro.step.security.subtitle': '강력한 비밀번호와 전문적인 검증.',
   'signup.pro.step.security.title': '보안 액세스',
   'signup.pro.step.sponsor.subtitle': '브랜드, 지역 및 클럽 가시성을 제공합니다.',
-  'signup.pro.step.sponsor.title': '파트너 프로필',
+  'signup.pro.step.sponsor.title': '스폰서 프로필',
   'signup.pro.welcome.subtitle': '귀하의 역할({{role}}, 검증된 네트워크 및 프로 도구)을 선택하십시오.',
   'signup.pro.welcome.title': '{{brand}}에 오신 것을 환영합니다.',
   'signup.role.agent.hint': '에이전트 라이센스 — 이메일 검증 후 자동 확인.',

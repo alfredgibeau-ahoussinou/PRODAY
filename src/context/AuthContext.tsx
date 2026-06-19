@@ -17,6 +17,7 @@ import {
 } from '../utils/productLineAccess';
 import type { User } from '../models/User';
 import { userStateStore } from '../core/state/userState.store';
+import { playAuthGreeting } from '../services/authGreeting.controller';
 
 interface AuthContextValue {
   firebaseUser: FirebaseAuthUser | null;
@@ -124,12 +125,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   }, []);
 
   const signOut = useCallback(async () => {
+    const name = profile?.display_name;
+    if (name) {
+      await playAuthGreeting('goodbye', name);
+    }
     await authService.signOut();
     userStateStore.reset();
     setProfile(null);
     setFirebaseUser(null);
     setIsAdmin(false);
-  }, []);
+  }, [profile]);
 
   return (
     <AuthContext.Provider

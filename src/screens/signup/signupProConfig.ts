@@ -93,7 +93,7 @@ export function getProStepMeta(page: SignupPageId, t?: TranslateFn): {
       };
     case 'sponsor_pro':
       return {
-        title: tr(t, 'signup.pro.step.sponsor.title', 'Profil partenaire'),
+        title: tr(t, 'signup.pro.step.sponsor.title', 'Profil sponsor'),
         subtitle: tr(t, 'signup.pro.step.sponsor.subtitle', 'Marque, territoire et offres de visibilité clubs.'),
         heroIcon: 'star-four-points',
       };
@@ -128,7 +128,7 @@ export const PRO_ROLE_PREVIEW: Partial<Record<UserRole, string[]>> = {
   coach: ['Diplômes & licence', 'Effectif & convocations', 'Annonces Mercato Pro'],
   agent: ['Profil agent vérifié', 'Mandats & repérage', 'Réseau clubs'],
   recruiter: ['Profil recruteur vérifié', 'Annonces Mercato Pro', 'Pipeline candidatures'],
-  sponsor: ['Offre partenaire', 'Clubs cibles', 'Campagnes locales'],
+  sponsor: ['Offre sponsor', 'Clubs cibles', 'Campagnes locales'],
   club: ['Structure club', 'Ville & département', 'Annonces Mercato Pro'],
   organizer: ['Structure orga', 'Zone d’action', 'Événements locaux'],
 };

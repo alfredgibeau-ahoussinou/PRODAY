@@ -1,35 +1,58 @@
 import { useMemo } from 'react';
 import { StyleSheet } from 'react-native';
-import { ADMIN_TAB_BAR_INSET } from '../../navigation/adminTabConfig';
+import { ADMIN_NAV_INSET } from '../../navigation/adminTabConfig';
 import { spacing, radius, shadows } from '../../theme/designTokens';
-import { useAppTheme } from '../../context/ProductLineContext';
+import { ADMIN_COLORS, adminChrome } from '../../theme/adminTheme';
 import type { AppColors } from '../../theme/universeTheme';
+
+export { adminChrome, ADMIN_COLORS };
 
 export function createAdminStyles(c: AppColors) {
   return StyleSheet.create({
     root: { flex: 1, backgroundColor: c.backgroundAlt },
     rootAlt: { flex: 1, backgroundColor: c.background },
     header: {
-      backgroundColor: c.surfaceInverse,
+      backgroundColor: adminChrome.shell,
       paddingHorizontal: spacing.lg,
       paddingTop: spacing.md,
       paddingBottom: spacing.lg,
-      borderBottomWidth: 3,
-      borderBottomColor: c.brand,
+      borderBottomWidth: 1,
+      borderBottomColor: adminChrome.shellBorder,
     },
     headerBrand: {
       color: c.brand,
       fontSize: 10,
-      fontWeight: '900',
-      letterSpacing: 2,
+      fontWeight: '800',
+      letterSpacing: 1.6,
       marginBottom: spacing.sm,
     },
-    headerTitle: { color: c.brandInverse, fontSize: 22, fontWeight: '900' },
-    title: { fontSize: 20, fontWeight: '900', color: c.text },
+    headerTitle: { color: adminChrome.text, fontSize: 22, fontWeight: '800' },
+    pageEyebrow: {
+      fontSize: 11,
+      fontWeight: '700',
+      letterSpacing: 1.4,
+      textTransform: 'uppercase',
+      color: c.brand,
+      marginBottom: spacing.xs,
+    },
+    pageTitle: {
+      fontSize: 28,
+      fontWeight: '800',
+      color: c.text,
+      letterSpacing: -0.5,
+      lineHeight: 32,
+    },
+    pageSubtitle: {
+      fontSize: 14,
+      color: c.textSecondary,
+      marginTop: spacing.xs,
+      lineHeight: 20,
+    },
+    title: { fontSize: 18, fontWeight: '800', color: c.text },
     subtitle: { fontSize: 13, color: c.textSecondary, marginTop: 4 },
     content: {
       padding: spacing.lg,
-      paddingBottom: ADMIN_TAB_BAR_INSET + spacing.xl,
+      paddingBottom: ADMIN_NAV_INSET + spacing.xl,
       gap: spacing.md,
     },
     loaderBox: { flex: 1, alignItems: 'center', justifyContent: 'center' },
@@ -50,20 +73,30 @@ export function createAdminStyles(c: AppColors) {
     },
     sectionLabel: {
       fontSize: 11,
-      fontWeight: '800',
+      fontWeight: '700',
       letterSpacing: 1.2,
       textTransform: 'uppercase',
       color: c.textMuted,
       marginBottom: spacing.sm,
     },
     btn: {
-      backgroundColor: c.ink,
+      backgroundColor: c.brand,
       borderRadius: radius.md,
       paddingHorizontal: spacing.xl,
       paddingVertical: spacing.md,
       alignItems: 'center',
     },
-    btnText: { color: c.brandInverse, fontWeight: '900', fontSize: 14 },
+    btnText: { color: c.brandInverse, fontWeight: '800', fontSize: 14 },
+    btnGhost: {
+      backgroundColor: c.surface,
+      borderRadius: radius.md,
+      borderWidth: 1,
+      borderColor: c.border,
+      paddingHorizontal: spacing.xl,
+      paddingVertical: spacing.md,
+      alignItems: 'center',
+    },
+    btnGhostText: { color: c.text, fontWeight: '700', fontSize: 14 },
     input: {
       backgroundColor: c.surface,
       borderRadius: radius.md,
@@ -83,19 +116,21 @@ export function createAdminStyles(c: AppColors) {
       backgroundColor: c.surface,
     },
     chipActive: {
-      backgroundColor: c.ink,
-      borderColor: c.ink,
+      backgroundColor: c.brand,
+      borderColor: c.brand,
     },
-    chipText: { fontSize: 12, fontWeight: '700', color: c.text },
+    chipText: { fontSize: 12, fontWeight: '700', color: c.textSecondary },
     chipTextActive: { color: c.brandInverse },
     emptyTitle: { fontSize: 16, fontWeight: '800', color: c.text, textAlign: 'center' },
     emptySub: { fontSize: 13, color: c.textSecondary, textAlign: 'center', lineHeight: 20 },
-    statValue: { fontSize: 24, fontWeight: '900', color: c.text },
-    statLabel: { fontSize: 11, fontWeight: '700', color: c.textMuted, marginTop: 2 },
+    statValue: { fontSize: 24, fontWeight: '800', color: c.text },
+    statLabel: { fontSize: 11, fontWeight: '600', color: c.textMuted, marginTop: 2 },
   });
 }
 
 export function useAdminStyles() {
-  const { colors } = useAppTheme();
-  return useMemo(() => ({ styles: createAdminStyles(colors), colors }), [colors]);
+  return useMemo(
+    () => ({ styles: createAdminStyles(ADMIN_COLORS), colors: ADMIN_COLORS }),
+    [],
+  );
 }

@@ -73,7 +73,7 @@ export const SECONDARY_EN: MessageCatalog = {
   'signup.page.organizer_pro': 'Organizer',
   'signup.page.medical_specialty': 'Specialty',
   'signup.page.medical_practice': 'Practice',
-  'signup.page.sponsor_pro': 'Partner',
+  'signup.page.sponsor_pro': 'Sponsor',
   'signup.page.family': 'Family',
   'signup.page.account': 'Identity',
   'signup.page.security': 'Security',
@@ -97,7 +97,7 @@ export const SECONDARY_EN: MessageCatalog = {
 
   'signup.access.oauth.title': 'Finalize access',
   'signup.access.oauth.subtitle': 'Confirm your ProDay identity to enter the app.',
-  'signup.access.sponsor.title': 'Partner credentials',
+  'signup.access.sponsor.title': 'Sponsor credentials',
   'signup.access.sponsor.subtitle': 'Email, password and area — sponsor space access.',
   'signup.access.default.title': 'Secure your account',
   'signup.access.default.subtitle': 'Strong email and password — then email confirmation.',

@@ -81,7 +81,7 @@ export const EventCarpoolPanel: React.FC<EventCarpoolPanelProps> = ({
     void (async () => {
       const map: Record<string, string> = {};
       for (const uid of candidateUids) {
-        const u = await usersService.getById(uid);
+        const u = await usersService.getPublicById(uid);
         map[uid] = u?.display_name ?? uid.slice(0, 8);
       }
       setNames(map);

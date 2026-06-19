@@ -1,0 +1,28 @@
+# Smoke — console admin : gate (sans claim) ou accueil pilotage (avec claim).
+# Prérequis : compte proday.admin@gmail.com (voir npm run admin:setup).
+#
+#   MAESTRO_ADMIN_EMAIL=proday.admin@gmail.com \
+#   MAESTRO_ADMIN_PASSWORD='***' \
+#   maestro test .maestro/admin-gate.yaml
+appId: com.proday.app
+---
+- runFlow: subflows/admin-login.yaml
+
+# Écran gate — compte plateforme sans custom claim admin
+- runFlow:
+    when:
+      visible:
+        id: admin-gate
+    commands:
+      - assertVisible: ProDay Console
+      - assertVisible: Accès refusé
+      - assertVisible: Droits administrateur requis
+      - assertVisible:
+          id: admin-gate-refresh
+
+# Console complète — après npm run admin:setup
+- runFlow:
+    when:
+      visible: Accueil
+    commands:
+      - assertVisible: Accueil

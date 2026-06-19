@@ -1,7 +1,9 @@
 import * as admin from 'firebase-admin';
 import { sendFcmToUser } from './messaging';
 
-const db = admin.firestore();
+function getDb() {
+  return admin.firestore();
+}
 const HOUR_MS = 60 * 60 * 1000;
 
 interface TeamEventDoc {
@@ -22,7 +24,7 @@ export async function processScheduledEventReminders(): Promise<{
   const now = Date.now();
   const horizon = new Date(now + 48 * HOUR_MS);
 
-  const snap = await db
+  const snap = await getDb()
     .collection('team_events')
     .where('starts_at', '>=', admin.firestore.Timestamp.now())
     .where('starts_at', '<=', admin.firestore.Timestamp.fromDate(horizon))

@@ -58,8 +58,7 @@ export function useSponsorDashboard(
   const pausedOffers = useMemo(() => myOffers.filter((o) => !o.active), [myOffers]);
 
   const stats = useMemo(() => {
-    const contributed = contributions.reduce((sum, c) => sum + c.amount_eur, 0);
-    const totalFunded = contributed > 0 ? contributed : 680;
+    const totalFunded = contributions.reduce((sum, c) => sum + c.amount_eur, 0);
     const clubsSupported = new Set(
       goals.filter((g) => g.raised_amount_eur > 0).map((g) => g.club_id)
     ).size;

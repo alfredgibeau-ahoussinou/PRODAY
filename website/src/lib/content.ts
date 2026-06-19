@@ -8,8 +8,54 @@ export const BRAND = {
   name: "ProDay",
   tagline: "CONNECTER • PROGRESSER • RÉUSSIR",
   mission:
-    "Trois univers — Man, Woman et Pro — pour couvrir tout l'écosystème foot amateur et professionnel.",
+    "Quatre pôles — Joueur, Pro, Santé et Partenaires — pour piloter carrière, club et saison dans une seule application.",
 } as const;
+
+/** Nouveautés mises en avant sur la home premium. */
+export const SPOTLIGHT_FEATURES = [
+  {
+    id: "reels",
+    title: "Reels",
+    tagline: "Vidéos courtes",
+    description: "Moments forts et séquences en format vertical — visibilité pour joueurs et clubs.",
+    accent: "from-violet-600/30 to-violet-900/10",
+  },
+  {
+    id: "feed",
+    title: "Fil & question hebdo",
+    tagline: "Communauté",
+    description: "Publications, réactions et question de la semaine — l'activité de votre communauté.",
+    accent: "from-indigo-600/30 to-indigo-900/10",
+  },
+  {
+    id: "partners",
+    title: "Espace partenaires",
+    tagline: "Sponsors",
+    description: "Offre découverte, Territorial 49 € ou National Pro 99 € — performance suivie.",
+    accent: "from-blue-600/30 to-blue-900/10",
+  },
+  {
+    id: "family",
+    title: "Famille & mineurs",
+    tagline: "Sécurité",
+    description: "Espace jeunes, contrôle parental et portail tuteur — foot en confiance.",
+    accent: "from-emerald-600/30 to-emerald-900/10",
+  },
+  {
+    id: "tournaments",
+    title: "Tournois Arena",
+    tagline: "Compétition",
+    description: "Création, inscriptions, tableaux et palmarès — votre saison compétitive.",
+    accent: "from-amber-600/30 to-amber-900/10",
+  },
+  {
+    id: "auth",
+    title: "Accueil vidéo",
+    tagline: "Signature",
+    description: "Séquence de bienvenue à la connexion — une première impression soignée.",
+    accent: "from-rose-600/30 to-rose-900/10",
+  },
+] as const;
 
 export type ProductLineWeb = "homme" | "woman" | "pro" | "sante";
 
@@ -39,7 +85,7 @@ export const PRO_BRAND = {
   logo: UNIVERSE_LOGOS.pro,
   tagline: "EXPERTISE • RÉSEAU • PERFORMANCE",
   mission:
-    "Coach, agent, club recruteur et pôle santé — Mercato Pro, réseau vérifié et accompagnement sportif.",
+    "Coach, agent, club recruteur et organisateur — Mercato Pro, scouting, convocations et réseau vérifié.",
   accent: "#1D4ED8",
   accentDark: "#1E3A8A",
 } as const;
@@ -47,11 +93,11 @@ export const PRO_BRAND = {
 /** Message waitlist / page beta */
 export const BETA_PITCH = {
   summary:
-    "Rejoignez la bêta pour suivre l'avancement de ProDay au quotidien et accéder en avant-première au lancement.",
+    "Inscrivez-vous sur la liste d'attente pour suivre l'avancement du produit et accéder en priorité au lancement.",
   dailyUpdates:
-    "Les inscrits reçoivent des informations quotidiennes sur l'avancement de l'application.",
+    "Les inscrits reçoivent des nouvelles régulières sur le déploiement de l'application.",
   launch:
-    "Soyez prévenus dès que ProDay est disponible sur iOS et Android.",
+    "Notification dès la disponibilité sur iOS et Android.",
 } as const;
 
 export const MODULES = [
@@ -60,7 +106,7 @@ export const MODULES = [
     title: "Mercato",
     subtitle: "Recrutement intelligent",
     description:
-      "Annonces ciblées par poste, niveau et ville. Candidatures en un tap, suivi des réponses.",
+      "Annonces ciblées par poste, niveau et ville. Candidature depuis l'app, suivi des réponses.",
     image: "/showcase/classic-mercato.jpg",
     color: "#0A0A0A",
   },
@@ -96,7 +142,7 @@ export const MODULES = [
     title: "Covoiturage",
     subtitle: "Trajets match & détection",
     description:
-      "Coachs et joueurs proposent ou réservent des places — style BlaBlaCar, intégré aux événements.",
+      "Coachs et joueurs proposent ou réservent des places — intégré aux événements et convocations.",
     image: "/showcase/classic-match.jpg",
     color: "#737373",
   },
@@ -123,7 +169,7 @@ export const MODULES = [
     title: "Fil",
     subtitle: "Communauté & question hebdo",
     description:
-      "Publications clubs et joueurs, réactions et question de la semaine — le pouls du terrain.",
+      "Publications clubs et joueurs, réactions et question de la semaine — au rythme de la saison.",
     image: "/showcase/classic-exp-discover.jpg",
     color: "#6366f1",
   },
@@ -132,7 +178,7 @@ export const MODULES = [
     title: "Reels",
     subtitle: "Vidéos courtes foot",
     description:
-      "Skills, buts et coulisses en format vertical — découverte et visibilité pour votre profil.",
+      "Moments forts en format vertical — découverte et visibilité pour votre profil.",
     image: "/showcase/classic-discover-hero.jpg",
     color: "#7c3aed",
   },
@@ -150,7 +196,7 @@ export const MODULES = [
 export const PILLARS = [
   {
     id: "unified",
-    title: "Écosystème unique",
+    title: "Plateforme unifiée",
     subtitle: "Une seule app",
     description:
       "Carrière, club, convocations, matchs et tournois — tout au même endroit.",
@@ -165,14 +211,14 @@ export const PILLARS = [
   {
     id: "cv",
     title: "CV vivant",
-    subtitle: "Stats → PDF",
+    subtitle: "Stats vers PDF",
     description:
       "Chaque match nourrit votre profil. Export professionnel en un geste.",
   },
   {
     id: "live",
     title: "Live Stats",
-    subtitle: "Match → profil",
+    subtitle: "Match vers profil",
     description:
       "Buts, passes, cartons en direct — votre saison et votre CV se mettent à jour.",
   },
@@ -188,14 +234,14 @@ export const PILLARS = [
     title: "Reels",
     subtitle: "Vidéos courtes",
     description:
-      "Skills et moments forts en vertical — visibilité pour joueurs et clubs.",
+      "Moments forts en vertical — visibilité pour joueurs et clubs.",
   },
   {
     id: "sponsors",
     title: "Espace partenaires",
     subtitle: "Sponsors & offres",
     description:
-      "Marques locales et nationales — visibilité clubs, financement et leads mesurés.",
+      "Marques locales et nationales — visibilité clubs, financement et résultats mesurés.",
   },
 ] as const;
 
@@ -203,7 +249,6 @@ export const JOURNEYS = [
   {
     id: "player",
     role: "Joueur",
-    emoji: "⚽",
     steps: [
       "Profil & Pulse",
       "CV en ligne éditable",
@@ -215,7 +260,6 @@ export const JOURNEYS = [
   {
     id: "coach",
     role: "Coach",
-    emoji: "📋",
     steps: [
       "Vérification diplôme",
       "Gestion effectif",
@@ -226,7 +270,6 @@ export const JOURNEYS = [
   {
     id: "recruiter",
     role: "Recruteur",
-    emoji: "🎯",
     steps: [
       "Profil recruteur vérifié",
       "Territoire & spécialité",
@@ -237,7 +280,6 @@ export const JOURNEYS = [
   {
     id: "agent",
     role: "Agent",
-    emoji: "💼",
     steps: [
       "Profil agent vérifié",
       "Repérage & mandats",
@@ -248,7 +290,6 @@ export const JOURNEYS = [
   {
     id: "club",
     role: "Club",
-    emoji: "🏟️",
     steps: [
       "Profil club & équipes",
       "Annonces Mercato actives",
@@ -259,7 +300,6 @@ export const JOURNEYS = [
   {
     id: "medical",
     role: "Pôle santé",
-    emoji: "🩺",
     steps: [
       "Spécialité (kiné, coach mental…)",
       "Zone & diplômes",
@@ -270,7 +310,6 @@ export const JOURNEYS = [
   {
     id: "organizer",
     role: "Organisateur",
-    emoji: "🏆",
     steps: [
       "Créer un tournoi Arena",
       "Gérer les inscriptions",
@@ -281,7 +320,6 @@ export const JOURNEYS = [
   {
     id: "parent",
     role: "Parent",
-    emoji: "🛡️",
     steps: [
       "Supervision du compte",
       "Contacts approuvés",
@@ -292,12 +330,11 @@ export const JOURNEYS = [
   {
     id: "sponsor",
     role: "Partenaire",
-    emoji: "🤝",
     steps: [
-      "Profil partenaire vérifié",
+      "Profil sponsor vérifié",
       "Offres & campagnes locales",
       "Visibilité onglet Sponsors",
-      "Stats leads & impressions",
+      "Statistiques conversions et impressions",
     ],
   },
 ] as const;
@@ -309,16 +346,17 @@ export function mercatoTabLabelForWeb(line: ProductLineWeb = "homme"): string {
   return "Candidater";
 }
 
+/** Ids alignés sur l'app (`mainTabConfig`) — voir `appTabs.ts` pour la visibilité par univers. */
 export const TABS = [
   { id: "home", label: "Accueil", icon: "home" },
-  { id: "recruit", label: "Candidater", icon: "search" },
-  { id: "matches", label: "Matchs", icon: "calendar" },
-  { id: "reels", label: "Reels", icon: "play" },
-  { id: "feed", label: "Fil", icon: "rss" },
-  { id: "carpool", label: "Covoit.", icon: "car" },
-  { id: "health", label: "Santé", icon: "heart" },
+  { id: "recrutement", label: "Candidater", icon: "search" },
+  { id: "matchs", label: "Matchs", icon: "handshake" },
+  { id: "reels", label: "Reels", icon: "video" },
+  { id: "feed", label: "Fil", icon: "sparkles" },
+  { id: "covoiturage", label: "Covoit.", icon: "car" },
+  { id: "sante", label: "Santé", icon: "heart" },
   { id: "messages", label: "Messages", icon: "message" },
-  { id: "profile", label: "Profil", icon: "user" },
+  { id: "profil", label: "Profil", icon: "user" },
 ] as const;
 
 export const VERIFICATION_STEPS = [
@@ -329,11 +367,15 @@ export const VERIFICATION_STEPS = [
 ] as const;
 
 export const STATS = [
-  { value: "9", label: "Onglets dynamiques" },
-  { value: "11", label: "Piliers produit" },
-  { value: "3", label: "Univers Man · Woman · Pro" },
-  { value: "∞", label: "Ambition terrain" },
+  { value: "9+", label: "Onglets dynamiques", note: "Architecture produit" },
+  { value: "12", label: "Piliers produit", note: "Modules illustratifs" },
+  { value: "3", label: "Univers Man · Woman · Pro", note: "Offre éditoriale" },
+  { value: "3", label: "Formules partenaires", note: "Grille tarifaire" },
 ] as const;
+
+/** Bandeau légal — chiffres marketing, pas des métriques live */
+export const STATS_DISCLAIMER =
+  "Chiffres illustratifs décrivant l’architecture produit — pas des statistiques d’usage en temps réel.";
 
 export const SANTE_BRAND = {
   name: "Pro Day Santé",
@@ -379,7 +421,7 @@ export const MAN_MODULES = [
     title: "Mercato M",
     subtitle: "Recrutement masculin",
     description:
-      "Annonces par poste, niveau et ville. Candidatures en un tap, suivi des réponses sur le Mercato M.",
+      "Annonces par poste, niveau et ville. Candidature depuis l'app, suivi des réponses sur le Mercato M.",
     image: "/showcase/classic-mercato.jpg",
   },
   {
@@ -572,7 +614,7 @@ export const PRO_MODULES = [
     title: "Espace Partenaires",
     subtitle: "Visibilité & financement",
     description:
-      "Offres sponsors, campagnes locales, logo onglet Sponsors et tableau de bord leads — formules Découverte à National Pro.",
+      "Offres sponsors, campagnes locales, logo onglet Sponsors et tableau de bord — formules Découverte à National Pro.",
     image: "/showcase/classic-exp-sponsors.jpg",
   },
 ] as const;
@@ -606,7 +648,7 @@ export const UNIVERSE_PAGE_CONFIG = {
       title: "Créez votre compte Man",
       description:
         "Inscription joueur en quelques minutes — Mercato M, CV en ligne et convocations.",
-      beta: "Rejoindre la beta Man",
+      beta: "Liste d'attente Man",
     },
   },
   woman: {
@@ -637,7 +679,7 @@ export const UNIVERSE_PAGE_CONFIG = {
       title: "Créez votre compte Woman",
       description:
         "Inscription joueuse en quelques minutes — visibilité sur le Mercato F et votre CV en ligne.",
-      beta: "Rejoindre la beta Woman",
+      beta: "Liste d'attente Woman",
     },
   },
   pro: {
@@ -655,33 +697,32 @@ export const UNIVERSE_PAGE_CONFIG = {
     ],
     modulesTitle: "Modules professionnels",
     modulesSubtitle:
-      "Recruteur, coach, agent, pôle santé et réseau Pro — Mercato Pro et pipeline candidatures.",
+      "Recruteur, coach, agent, club et organisateur — Mercato Pro et pipeline candidatures.",
     modules: PRO_MODULES as readonly UniverseModule[],
     journeyIds: [
       "coach",
       "recruiter",
       "agent",
       "club",
-      "medical",
       "organizer",
-      "sponsor",
     ] as const,
     audienceNote:
       "Joueurs foot M ou F ? Choisissez Pro Day Man ou ProDay Woman à l'inscription.",
     showPulse: false,
     showVerification: true,
     pricingPlanIds: [
+      "recruiter_pro",
       "coach_pro",
+      "club_pro",
       "agent_elite",
-      "physio_pro",
       "organizer_pro",
     ] as const,
     pricingTitle: "Formules Pro",
     cta: {
       title: "Créez votre compte Pro",
       description:
-        "Recruteur, coach, agent, club, pôle santé, organisateur ou partenaire — validation métier incluse.",
-      beta: "Rejoindre la beta Pro",
+        "Recruteur, coach, agent, club ou organisateur — validation métier incluse.",
+      beta: "Liste d'attente Pro",
     },
   },
 } as const;
@@ -721,7 +762,7 @@ export const ALL_PILLARS = [
     title: "Mercato intelligent",
     subtitle: "Filtres & candidatures",
     description:
-      "Annonces ciblées, postuler en un tap, suivi des réponses — pour joueurs et clubs.",
+      "Annonces ciblées, candidature depuis l'app, suivi des réponses — pour joueurs et clubs.",
   },
   {
     id: "matches-pillar",
@@ -770,14 +811,21 @@ export const ALL_PILLARS = [
     title: "Reels",
     subtitle: "Vidéos courtes",
     description:
-      "Skills, buts et coulisses en format vertical — visibilité pour votre profil.",
+      "Moments forts en format vertical — visibilité pour votre profil.",
   },
   {
     id: "sponsors-pillar",
     title: "Espace partenaires",
     subtitle: "Sponsors & offres",
     description:
-      "Annuaire partenaires, campagnes locales et financement clubs — leads mesurés.",
+      "Annuaire partenaires, campagnes locales et financement clubs — résultats mesurés.",
+  },
+  {
+    id: "family-pillar",
+    title: "Famille & mineurs",
+    subtitle: "Espace sécurisé",
+    description:
+      "Contrôle parental, portail tuteur et espace jeunes — le foot en confiance pour les mineurs.",
   },
 ] as const;
 
@@ -797,9 +845,9 @@ export type SponsorPricingTierWeb = {
 };
 
 export const SPONSOR_PRICING_INTRO = {
-  title: "Espace Partenaires ProDay",
+  title: "Espace Sponsors ProDay",
   subtitle:
-    "Touchez clubs, joueurs et organisateurs sur votre territoire — visibilité mesurable, sans intermédiaire.",
+    "Sponsor et partenaire : même profil sur ProDay. Touchez clubs, joueurs et organisateurs sur votre territoire — visibilité mesurable, sans intermédiaire.",
   footnote:
     "Tarifs HT · facturation mensuelle ou annuelle (−20 %) · résiliation à tout moment sur les formules en ligne.",
 } as const;
@@ -814,7 +862,7 @@ export const SPONSOR_PRICING_TIERS: readonly SponsorPricingTierWeb[] = [
     subscriptionTier: "free",
     ctaLabel: "Créer un compte gratuit",
     features: [
-      "Profil partenaire vérifié",
+      "Profil sponsor vérifié",
       "1 offre active dans l'annuaire",
       "Zone géographique (ville)",
       "Messagerie clubs (limitée)",
@@ -851,9 +899,9 @@ export const SPONSOR_PRICING_TIERS: readonly SponsorPricingTierWeb[] = [
       "Offres illimitées",
       "Logo mis en avant (onglet Sponsors)",
       "Campagnes locales ciblées",
-      "Push géolocalisé (déploiement progressif)",
+      "Push géolocalisé local (bêta — opt-in joueurs)",
       "Account manager email",
-      "Priorité support partenaires",
+      "Priorité support sponsors",
     ],
   },
 ];
@@ -867,7 +915,7 @@ export const SPONSOR_VALUE_PILLARS = [
   {
     icon: "star-four-points" as const,
     title: "Visibilité mesurée",
-    body: "Impressions, clics et leads suivis depuis votre tableau de bord partenaire.",
+    body: "Impressions, clics et conversions suivis depuis votre tableau de bord sponsor.",
   },
   {
     icon: "briefcase" as const,
@@ -1006,41 +1054,42 @@ export const SUBSCRIPTION_PLANS_WEB = [
   {
     id: "organizer_pro",
     label: "Organisateur Pro",
-    tagline: "Tournois Arena, inscriptions et palmarès",
+    tagline: "Événements, détections et tournois Arena",
     monthlyEur: 14.99,
     storeAvailable: false,
     universes: ["pro"] as ProductLineWeb[],
     freeIncludes: [
       "Profil organisateur vérifié",
-      "1 tournoi Arena actif",
-      "Inscriptions en ligne",
-      "Palmarès publié",
+      "Profil événements visible",
+      "Détections publiées",
+      "Calendrier local",
     ],
     proIncludes: [
-      "Tournois illimités",
+      "Tournois Arena illimités",
       "Visibilité sponsors intégrée",
-      "Exports participants",
+      "Relances participants",
       "Priorité fil événements",
     ],
   },
   {
     id: "sponsor_pro",
-    label: "Partenaire Pro",
-    tagline: "Visibilité marque & clubs locaux",
+    label: "National Pro (partenaires)",
+    tagline: "Formule premium — espace partenaires dédié",
     monthlyEur: 99,
     storeAvailable: false,
     universes: ["pro"] as ProductLineWeb[],
     freeIncludes: [
-      "Profil partenaire vérifié",
-      "Présence annuaire Sponsors",
-      "1 offre active",
-      "Zone géographique",
+      "Formule Découverte (0 €) : profil vérifié",
+      "1 offre active dans l'annuaire",
+      "Zone géographique (ville)",
+      "Messagerie clubs (limitée)",
     ],
     proIncludes: [
-      "Offres sponsors illimitées",
-      "Logo onglet Sponsors",
+      "National Pro : offres illimitées",
+      "Logo mis en avant (onglet Sponsors)",
       "Campagnes locales ciblées",
-      "Push géolocalisé (à venir)",
+      "Espace partenaire dédié dans l'app",
+      "Push géolocalisé local (bêta — opt-in joueurs)",
     ],
   },
 ] as const;
@@ -1188,7 +1237,7 @@ export const FAQ_ITEMS = [
   },
   {
     q: "Quel tarif pour les partenaires / sponsors ?",
-    a: `Trois formules : Découverte (gratuit — profil vérifié, 1 offre, zone ville), Territorial (${formatAnnualPricingLine(49)}), National Pro (${faqPricing("sponsor_pro")}). Devis sur mesure : ${SPONSOR_PARTNER_CONTACT_EMAIL}.`,
+    a: `Trois formules partenaires : Découverte (0 € — profil vérifié, 1 offre), Territorial (${formatAnnualPricingLine(49)} — devis sur ${SPONSOR_PARTNER_CONTACT_EMAIL}), National Pro (${faqPricing("sponsor_pro")} — espace dédié dans l'app).`,
   },
   {
     q: "Puis-je exporter mon CV foot ?",
@@ -1196,15 +1245,15 @@ export const FAQ_ITEMS = [
   },
   {
     q: "Les données sont-elles réelles ?",
-    a: "Comptes sécurisés, données hébergées en Europe via nos prestataires certifiés. La bêta collecte des comptes testeurs réels.",
+    a: "Comptes sécurisés, données hébergées en Europe via nos prestataires certifiés. La liste d'attente recueille des profils testeurs réels.",
   },
   {
     q: "Prochainement disponible sur iOS et Android ?",
-    a: "L'application arrive bientôt sur l'App Store et Google Play. Rejoignez la bêta pour être prévenu du lancement et accéder en avant-première.",
+    a: "L'application arrive sur l'App Store et Google Play. Inscrivez-vous sur la liste d'attente pour être informé du lancement et accéder en priorité.",
   },
   {
-    q: "Que reçoit-on en rejoignant la bêta ?",
-    a: "Des informations quotidiennes sur l'avancement de l'app (nouvelles fonctionnalités, corrections, dates clés) et un accès prioritaire dès l'ouverture sur mobile.",
+    q: "Que reçoit-on en s'inscrivant sur la liste d'attente ?",
+    a: "Des nouvelles régulières sur l'avancement du produit et un accès prioritaire dès l'ouverture sur mobile.",
   },
 ] as const;
 
@@ -1271,7 +1320,7 @@ export const COMPARISON_ROWS = [
   { feature: "Recrutement ciblé", proday: true, whatsapp: false, excel: false },
   { feature: "CV vivant + PDF", proday: true, whatsapp: false, excel: false },
   { feature: "Convocations RSVP", proday: true, whatsapp: "partial" as const, excel: false },
-  { feature: "Live Stats → profil", proday: true, whatsapp: false, excel: false },
+  { feature: "Live Stats vers profil", proday: true, whatsapp: false, excel: false },
   { feature: "Vérification staff", proday: true, whatsapp: false, excel: false },
   { feature: "Tournois Arena", proday: true, whatsapp: false, excel: "partial" as const },
   { feature: "Pulse visibilité", proday: true, whatsapp: false, excel: false },
@@ -1279,6 +1328,9 @@ export const COMPARISON_ROWS = [
   { feature: "Pôle santé & coach mental", proday: true, whatsapp: false, excel: false },
   { feature: "ProDay Shop intégré", proday: true, whatsapp: false, excel: false },
   { feature: "Recruteurs Mercato (club/coach/agent)", proday: true, whatsapp: false, excel: "partial" as const },
+  { feature: "Reels & Fil communauté", proday: true, whatsapp: false, excel: false },
+  { feature: "Espace partenaires & sponsors", proday: true, whatsapp: false, excel: false },
+  { feature: "Contrôle parental & espace famille", proday: true, whatsapp: false, excel: false },
 ] as const;
 
 export const QUIZ_QUESTIONS = [
@@ -1384,7 +1436,7 @@ export const SHOP_HIGHLIGHTS = [
   {
     name: "Trépied ProDay",
     priceEur: 34.9,
-    description: "Filmez matchs et skills pour votre CV — sac de transport inclus.",
+    description: "Filmez matchs et séquences pour votre CV — sac de transport inclus.",
   },
   {
     name: "T-shirt officiel",

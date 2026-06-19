@@ -83,7 +83,7 @@ export const DISCOVER_FEATURES = [
   },
   {
     id: 'sponsors',
-    title: 'Sponsors & partenaires',
+    title: 'Sponsors',
     description:
       'Offres locales, financement club et visibilité marque.',
     icon: 'star' as const,

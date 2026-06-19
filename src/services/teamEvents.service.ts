@@ -427,6 +427,18 @@ export const teamEventsService = {
       match_report_finalized_at: finalized ? serverTimestamp() : null,
       updated_at: serverTimestamp(),
     });
+
+    if (
+      finalized &&
+      event.live_actions?.length &&
+      !event.stats_applied_at
+    ) {
+      try {
+        await this.applyLiveStatsToPlayers(eventId, actor);
+      } catch (error) {
+        console.warn('[teamEvents] applyLiveStatsToPlayers auto:', error);
+      }
+    }
   },
 
   async sendReminders(eventId: string): Promise<number> {
@@ -457,7 +469,7 @@ export const teamEventsService = {
     }
 
     for (const [uid, delta] of Object.entries(tallies)) {
-      const user = await usersService.getById(uid);
+      const user = await usersService.getPublicById(uid);
       if (!user || user.role !== 'player') continue;
       const prev = user.profile.season_stats ?? { matches: 0, goals: 0, assists: 0 };
       await profileService.updateProfile(uid, {

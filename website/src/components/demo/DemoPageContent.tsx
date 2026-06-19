@@ -34,12 +34,12 @@ export function DemoPageContent({ universe }: DemoPageContentProps) {
   return (
     <>
       <div className="mx-auto mb-8 flex max-w-6xl flex-col items-center gap-4 px-4">
-        <p className="text-center text-sm text-neutral-600">
-          Maquette fidèle au nouveau design mobile — univers{" "}
-          <span className="font-semibold text-neutral-900">{brand.name}</span>.
+        <p className="text-center text-sm text-white/55">
+          Même navigation que l&apos;application mobile — univers{" "}
+          <span className="font-semibold text-white">{brand.name}</span>.
         </p>
         <div
-          className="inline-flex flex-wrap justify-center rounded-full border border-neutral-200 bg-white p-1 shadow-sm"
+          className="inline-flex flex-wrap justify-center rounded-full border border-white/10 bg-white/5 p-1 backdrop-blur-sm"
           role="tablist"
           aria-label="Univers ProDay"
         >
@@ -53,7 +53,7 @@ export function DemoPageContent({ universe }: DemoPageContentProps) {
                 aria-selected={active}
                 onClick={() => onUniverseChange(opt.id)}
                 className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
-                  active ? `${theme.pricingAccent} text-white` : "text-neutral-500 hover:text-neutral-800"
+                  active ? `${theme.pricingAccent} text-white` : "text-white/50 hover:text-white"
                 }`}
               >
                 {opt.label}
@@ -66,15 +66,15 @@ export function DemoPageContent({ universe }: DemoPageContentProps) {
       <PhoneDemo key={universe} fullPage universe={universe} />
 
       <div className="mx-auto max-w-6xl px-4 pb-16 pt-10 text-center">
-        <p className="mb-4 text-sm text-neutral-500">
-          Cette démo est illustrative — rejoignez la beta pour tester l&apos;app réelle.
+        <p className="mb-4 text-sm text-white/45">
+          Cette démo est illustrative — inscrivez-vous sur la liste d&apos;attente pour tester l&apos;application.
         </p>
         <div className="flex flex-wrap items-center justify-center gap-3">
           <Link
             href={ROUTES.beta}
             className={`inline-flex rounded-full px-6 py-3 text-sm font-semibold text-white transition hover:opacity-90 ${theme.pricingAccent}`}
           >
-            Rejoindre la beta
+            Accès anticipé
           </Link>
           <Link
             href={ROUTES.pricing}

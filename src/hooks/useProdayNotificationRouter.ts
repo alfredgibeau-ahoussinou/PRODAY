@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { Platform } from 'react-native';
 import Constants from 'expo-constants';
+import type { MainTabId } from '../navigation/mainTabConfig';
 import type { ProdayNotificationData } from '../services/prodayLocalNotifications.service';
 import type { MatchsDeepLink } from '../utils/navigationDeepLink';
 
@@ -8,7 +9,17 @@ type RouterActions = {
   openMatchs: (link?: MatchsDeepLink) => void;
   openCarpool: (link?: { chapter?: 'reserver'; eventId?: string }) => void;
   openMercato: (view: 'detections' | 'create_post' | 'stages') => void;
+  openProfile: () => void;
+  openSponsors?: () => void;
+  setActiveTab: (tab: MainTabId) => void;
 };
+
+function matchsHomeTab(
+  tab: ProdayNotificationData['homeTab'],
+): MatchsDeepLink['homeTab'] | undefined {
+  if (!tab || tab === 'feed') return undefined;
+  return tab;
+}
 
 function routeNotificationData(data: ProdayNotificationData, actions: RouterActions): void {
   switch (data.type) {
@@ -17,7 +28,7 @@ function routeNotificationData(data: ProdayNotificationData, actions: RouterActi
       if (data.eventId) {
         actions.openMatchs({
           eventId: data.eventId,
-          homeTab: data.homeTab ?? 'convocations',
+          homeTab: matchsHomeTab(data.homeTab) ?? 'convocations',
           hubChapter: data.hubChapter ?? 'apercu',
         });
       } else {
@@ -38,6 +49,15 @@ function routeNotificationData(data: ProdayNotificationData, actions: RouterActi
       break;
     case 'mercato_alert':
       actions.openMercato('detections');
+      break;
+    case 'mercato_profile':
+      actions.openProfile();
+      break;
+    case 'weekly_question':
+      actions.setActiveTab('feed');
+      break;
+    case 'sponsor_offer':
+      actions.openSponsors?.();
       break;
     default:
       break;

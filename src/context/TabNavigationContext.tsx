@@ -13,7 +13,7 @@ import type {
   ProfileDeepLink,
 } from '../utils/navigationDeepLink';
 
-interface TabNavigationContextValue {
+export interface TabNavigationContextValue {
   activeTab: MainTabId;
   setActiveTab: (tab: MainTabId) => void;
 
@@ -41,10 +41,12 @@ interface TabNavigationContextValue {
   openAuth: (intent: AuthIntent) => void;
   clearPendingAuthIntent: () => void;
 
-  /** Inscription partenaire : ligne Pro + rôle sponsor. */
+  /** Inscription sponsor : ligne Pro + rôle sponsor. */
   pendingSignupProductLine: ProductLineId | null;
   pendingSignupRole: UserRole | null;
-  openPartnerSignup: (tier?: 'free' | 'pro') => void;
+  openSponsorSignup: (tier?: 'free' | 'pro') => void;
+  /** @deprecated Utiliser openSponsorSignup */
+  openPartnerSignup?: (tier?: 'free' | 'pro') => void;
   clearSignupPreset: () => void;
 
   pendingDashboardView: DashboardDeepLink | null;
@@ -71,4 +73,8 @@ export function useTabNavigation(): TabNavigationContextValue {
   const ctx = useContext(TabNavigationContext);
   if (!ctx) throw new Error('useTabNavigation must be used within TabNavigationProvider');
   return ctx;
+}
+
+export function useTabNavigationOptional(): TabNavigationContextValue | null {
+  return useContext(TabNavigationContext);
 }

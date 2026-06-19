@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { ComparisonTable } from "@/components/interactive/ComparisonTable";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { ROUTES } from "@/lib/routes";
 
 export const metadata: Metadata = {
   title: "Comparatif",
@@ -11,15 +12,17 @@ export default function ComparePage() {
   return (
     <>
       <PageHeader
+        pathname={ROUTES.compare}
         kicker="COMPARATIF"
         title="Pourquoi pas WhatsApp ?"
-        description="Groupes éparpillés, pas de stats structurées, pas de recrutement ciblé — ProDay unifie tout."
+        description="Groupes dispersés, statistiques absentes, recrutement non structuré — ProDay centralise l'essentiel."
+        dark
       />
-      <section className="py-16">
+      <section className="bg-[#030303] py-16">
         <div className="mx-auto max-w-4xl px-4 sm:px-6">
           <ComparisonTable />
-          <p className="mt-8 text-center text-sm text-proday-muted">
-            ✓ Complet · — Partiel · ✗ Absent
+          <p className="mt-8 text-center text-sm text-white/40">
+            Complet · Partiel · Absent
           </p>
         </div>
       </section>

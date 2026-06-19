@@ -1,4 +1,4 @@
-export type FeedChapterId = 'actualites' | 'publier';
+export type FeedChapterId = 'actualites' | 'question' | 'publier';
 
 export const FEED_CHAPTERS: { id: FeedChapterId; label: string }[] = [
   { id: 'actualites', label: 'Actualités' },

@@ -98,7 +98,15 @@ export const UI_EN: MessageCatalog = {
   'modules.gestion.title': 'Team management',
   'modules.gestion.subtitle': 'Schedule · attendance · stats',
   'modules.sponsors.title': 'Sponsors',
-  'modules.sponsors.subtitle': 'Partners',
+  'modules.sponsors.subtitle': 'Sponsors',
+
+  'sponsorPublic.title': 'Sponsor profile',
+  'sponsorPublic.activeOffers': 'Active offers',
+  'sponsorPublic.contact': 'Contact',
+  'sponsorPublic.contactGuest': 'Log in to send a contact request to this sponsor.',
+  'sponsorPublic.contactUnavailable': 'Messaging is unavailable right now.',
+  'sponsorPublic.contactSent': 'Your interest in {{company}} has been recorded. The sponsor may reach out via ProDay.',
+  'sponsorPublic.noOffers': 'No active offers at the moment.',
 
   'auth.login': 'Log in',
   'auth.signup': 'Sign up',
@@ -115,7 +123,7 @@ export const UI_EN: MessageCatalog = {
 
   'auth.loginSub.homme': 'Log in to your Pro Day Man space.',
   'auth.loginSub.woman': 'Log in to your women\'s football space.',
-  'auth.loginSub.pro': 'Log in to Pro Day Pro — staff, clubs and partners.',
+  'auth.loginSub.pro': 'Log in to Pro Day Pro — staff, clubs and sponsors.',
   'auth.loginSub.sante': 'Log in to your Pro Day Health space.',
 
   'auth.signupSub.homme':
@@ -123,7 +131,7 @@ export const UI_EN: MessageCatalog = {
   'auth.signupSub.woman':
     'Create your player account — Transfer F, stats and club visibility.',
   'auth.signupSub.pro':
-    'Create your pro account — coach, club, agent, organizer or partner.',
+    'Create your pro account — coach, club, agent, organizer or sponsor.',
   'auth.signupSub.sante':
     'Create your practitioner account — agenda, messaging and visibility.',
 
@@ -145,4 +153,45 @@ export const UI_EN: MessageCatalog = {
   'profile.section.legalSub': 'Terms and privacy',
   'profile.section.session': 'Session',
   'profile.logout': 'Log out',
+
+  'auth.greeting.welcomeEyebrow': 'Kick-off',
+  'auth.greeting.welcomeSub': 'You\'re on the pitch — have a great match on ProDay.',
+  'auth.greeting.goodbyeEyebrow': 'Full time',
+  'auth.greeting.goodbyeSub': 'You are logged out — see you on the pitch.',
+  'auth.greeting.fallbackName': 'Champ',
+
+  'sponsor.upgrade.territorial.title': 'Territorial plan',
+  'sponsor.upgrade.loginRequired': 'Log in with a sponsor account to submit a commercial request.',
+  'sponsor.upgrade.loginCta': 'Log in',
+  'sponsor.upgrade.success.pending':
+    'Request recorded — the ProDay team will contact you within 2 business days. Activation is not instant.',
+  'sponsor.upgrade.error.firebase': 'Service unavailable. Please try again later.',
+  'sponsor.upgrade.error.profile': 'Complete your company name and city on your sponsor profile.',
+  'sponsor.upgrade.national.title': 'National Pro',
+  'sponsor.upgrade.national.alreadyActive': 'You are already on the National Pro plan.',
+  'sponsor.upgrade.national.activated': 'Subscription activated',
+  'sponsor.upgrade.territorial.activating': 'Territorial activation in progress',
+  'sponsor.upgrade.territorial.activatingSub':
+    'Your request was approved — the ProDay team is finalizing your plan activation.',
+  'sponsor.upgrade.territorial.active': 'Territorial plan active',
+  'sponsor.upgrade.territorial.activeSub':
+    'Up to 5 offers, department targeting, and unlimited club messaging are active on your account.',
+
+  'admin.upgrade.section': 'Territorial requests',
+  'admin.upgrade.empty.title': 'No requests',
+  'admin.upgrade.empty.subtitle': 'Commercial requests for the Territorial plan (€49).',
+  'admin.upgrade.status.pending': 'Pending',
+  'admin.upgrade.status.contacted': 'Contacted',
+  'admin.upgrade.status.approved': 'Approved',
+  'admin.upgrade.status.rejected': 'Rejected',
+  'admin.upgrade.action.contact': 'Mark contacted',
+  'admin.upgrade.action.approve': 'Approve',
+  'admin.upgrade.action.reject': 'Reject',
+  'admin.upgrade.confirm.reject.title': 'Reject request',
+  'admin.upgrade.confirm.reject.message': 'Confirm rejection of {{company}}?',
+  'admin.upgrade.success.contacted': 'Request marked as contacted.',
+  'admin.upgrade.success.approved': 'Request approved.',
+  'admin.upgrade.success.rejected': 'Request rejected.',
+  'admin.upgrade.error.firebase': 'Service unavailable.',
+  'admin.upgrade.error.update': 'Update failed.',
 };

@@ -17,9 +17,9 @@ export interface SponsorPricingTier {
 }
 
 export const SPONSOR_PRICING_INTRO = {
-  title: 'Espace Partenaires ProDay',
+  title: 'Espace Sponsors ProDay',
   subtitle:
-    'Touchez clubs, joueurs et organisateurs sur votre territoire — visibilité mesurable, sans intermédiaire.',
+    'Sponsor et partenaire : même profil sur ProDay. Touchez clubs, joueurs et organisateurs sur votre territoire — visibilité mesurable, sans intermédiaire.',
   footnote:
     'Tarifs HT · facturation mensuelle ou annuelle (−20 %) · résiliation à tout moment sur les formules en ligne.',
 };
@@ -34,7 +34,7 @@ export const SPONSOR_PRICING_TIERS: SponsorPricingTier[] = [
     subscriptionTier: 'free',
     ctaLabel: 'Créer un compte gratuit',
     features: [
-      'Profil partenaire vérifié',
+      'Profil sponsor vérifié',
       '1 offre active dans l’annuaire',
       'Zone géographique (ville)',
       'Messagerie clubs (limitée)',
@@ -47,7 +47,7 @@ export const SPONSOR_PRICING_TIERS: SponsorPricingTier[] = [
     tagline: 'Rayonner sur un département',
     monthlyEur: 49,
     yearlyEur: yearlyPriceFromMonthly(49),
-    ctaLabel: 'Demander un devis',
+    ctaLabel: 'Demande commerciale',
     features: [
       'Jusqu’à 5 offres actives',
       'Ciblage par département',
@@ -71,9 +71,9 @@ export const SPONSOR_PRICING_TIERS: SponsorPricingTier[] = [
       'Offres illimitées',
       'Logo mis en avant (onglet Sponsors)',
       'Campagnes locales ciblées',
-      'Push géolocalisé (déploiement progressif)',
+      "Push géolocalisé local (bêta — opt-in)",
       'Account manager email',
-      'Priorité support partenaires',
+      'Priorité support sponsors',
     ],
   },
 ];
@@ -87,7 +87,7 @@ export const SPONSOR_VALUE_PILLARS = [
   {
     icon: 'star-four-points' as const,
     title: 'Visibilité mesurée',
-    body: 'Impressions, clics et leads suivis depuis votre tableau de bord partenaire.',
+    body: 'Impressions, clics et leads suivis depuis votre tableau de bord sponsor.',
   },
   {
     icon: 'briefcase' as const,
@@ -96,4 +96,7 @@ export const SPONSOR_VALUE_PILLARS = [
   },
 ];
 
-export const SPONSOR_PARTNER_CONTACT_EMAIL = 'partenaires@proday.app';
+/** Contact commercial sponsors (alias historique partenaires@). */
+export const SPONSOR_CONTACT_EMAIL = 'partenaires@proday.app';
+/** @deprecated Utiliser SPONSOR_CONTACT_EMAIL */
+export const SPONSOR_PARTNER_CONTACT_EMAIL = SPONSOR_CONTACT_EMAIL;

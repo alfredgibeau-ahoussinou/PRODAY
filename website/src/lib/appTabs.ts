@@ -1,0 +1,163 @@
+import { mercatoTabLabelForWeb, type ProductLineWeb } from "./content";
+
+/** Aligné sur `src/navigation/mainTabConfig.ts`. */
+export type MainTabId =
+  | "home"
+  | "recrutement"
+  | "matchs"
+  | "covoiturage"
+  | "sante"
+  | "feed"
+  | "reels"
+  | "famille"
+  | "messages"
+  | "profil"
+  | "shop";
+
+export type MobileRailLayout = {
+  left: MainTabId[];
+  center: MainTabId | null;
+  right: MainTabId[];
+  overflow: MainTabId[];
+};
+
+const LEFT_PRIORITY: MainTabId[] = ["home", "feed", "recrutement", "matchs"];
+const SECONDARY_PRIORITY: MainTabId[] = [
+  "recrutement",
+  "matchs",
+  "covoiturage",
+  "sante",
+  "feed",
+  "famille",
+  "shop",
+];
+
+/** Rôles par défaut pour la démo web — alignés sur `getVisibleMainTabs`. */
+function defaultRoleForUniverse(universe: ProductLineWeb): "player" | "coach" | "physio" {
+  if (universe === "sante") return "physio";
+  if (universe === "pro") return "coach";
+  return "player";
+}
+
+function injectCommunityFeedTab(tabs: MainTabId[], role: "player" | "coach" | "physio"): MainTabId[] {
+  const canParticipate = role === "player" || role === "coach" || role === "physio";
+  if (!canParticipate || tabs.includes("feed")) return tabs;
+  const reelsIndex = tabs.indexOf("reels");
+  const anchor = reelsIndex >= 0 ? reelsIndex : tabs.indexOf("matchs");
+  const insertAt = anchor >= 0 ? anchor + 1 : tabs.length;
+  const next = [...tabs];
+  next.splice(insertAt, 0, "feed");
+  return next;
+}
+
+/**
+ * Onglets visibles selon pôle — même logique que l'app (`poleExperience.getVisibleMainTabs`)
+ * sans profil connecté (pas d'onglet Famille sur la démo).
+ */
+export function getVisibleMainTabsForWeb(universe: ProductLineWeb): MainTabId[] {
+  const role = defaultRoleForUniverse(universe);
+  let tabs: MainTabId[];
+
+  if (universe === "sante") {
+    tabs = ["home", "matchs", "messages", "profil"];
+  } else if (universe === "pro") {
+    if (role === "coach") {
+      tabs = ["home", "recrutement", "matchs", "reels", "covoiturage", "messages", "profil"];
+    } else {
+      tabs = ["home", "recrutement", "matchs", "reels", "messages", "profil"];
+    }
+  } else if (role === "player") {
+    tabs = [
+      "home",
+      "recrutement",
+      "matchs",
+      "reels",
+      "covoiturage",
+      "sante",
+      "messages",
+      "profil",
+    ];
+  } else {
+    tabs = ["home", "recrutement", "matchs", "reels", "feed", "messages", "profil"];
+  }
+
+  return injectCommunityFeedTab(tabs, role);
+}
+
+/** Même algo que `src/navigation/mobileTabConfig.ts`. */
+export function getMobileRailLayoutForWeb(visible: MainTabId[]): MobileRailLayout {
+  const left: MainTabId[] = [];
+
+  for (const id of LEFT_PRIORITY) {
+    if (visible.includes(id) && !left.includes(id)) {
+      left.push(id);
+    }
+    if (left.length >= 2) break;
+  }
+
+  if (left.length < 2) {
+    for (const id of SECONDARY_PRIORITY) {
+      if (visible.includes(id) && !left.includes(id)) {
+        left.push(id);
+      }
+      if (left.length >= 2) break;
+    }
+  }
+
+  const center = visible.includes("reels") ? "reels" : null;
+  const right: MainTabId[] = [];
+  if (visible.includes("messages")) right.push("messages");
+  else if (visible.includes("profil")) right.push("profil");
+  else if (visible.includes("shop")) right.push("shop");
+
+  const inRail = new Set<MainTabId>([
+    ...left,
+    ...(center ? ([center] as MainTabId[]) : []),
+    ...right,
+  ]);
+  const overflow = visible.filter((id) => !inRail.has(id));
+
+  return { left, center, right, overflow };
+}
+
+const DEFAULT_LABELS: Record<MainTabId, string> = {
+  home: "Accueil",
+  recrutement: "Mercato",
+  matchs: "Matchs",
+  covoiturage: "Covoiturage",
+  shop: "Shop",
+  sante: "Santé",
+  feed: "Fil",
+  reels: "Reels",
+  famille: "Famille",
+  messages: "Messages",
+  profil: "Profil",
+};
+
+/** Labels courts — alignés sur `getTabShortLabel` pour la démo. */
+export function getTabLabelForWeb(tab: MainTabId, universe: ProductLineWeb): string {
+  if (universe === "sante") {
+    switch (tab) {
+      case "home":
+        return "Accueil";
+      case "matchs":
+        return "Agenda";
+      case "messages":
+        return "Patients";
+      case "profil":
+        return "Cabinet";
+      default:
+        break;
+    }
+  }
+
+  if (tab === "recrutement") return mercatoTabLabelForWeb(universe);
+  return DEFAULT_LABELS[tab];
+}
+
+export function getVisibleTabsWithLabels(universe: ProductLineWeb) {
+  return getVisibleMainTabsForWeb(universe).map((id) => ({
+    id,
+    label: getTabLabelForWeb(id, universe),
+  }));
+}

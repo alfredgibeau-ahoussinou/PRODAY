@@ -1,6 +1,6 @@
 import React from 'react';
 import { type StyleProp, type ViewStyle } from 'react-native';
-import Animated, { FadeInUp } from 'react-native-reanimated';
+import Animated, { FadeIn } from 'react-native-reanimated';
 import { motion } from '../../theme/motion';
 
 interface StaggerRevealProps {
@@ -10,20 +10,18 @@ interface StaggerRevealProps {
   style?: StyleProp<ViewStyle>;
 }
 
-/** Entrée échelonnée pour listes / sections. */
+/** Entrée échelonnée — fondu simple, sans glissement. */
 export const StaggerReveal: React.FC<StaggerRevealProps> = ({
   children,
   index = 0,
-  delayStep = 55,
+  delayStep = 40,
   style,
 }) => (
   <Animated.View
     style={style}
-    entering={FadeInUp.delay(index * delayStep)
-      .springify()
-      .damping(15)
-      .stiffness(150)
-      .duration(motion.duration.normal)}
+    entering={FadeIn.delay(index * delayStep)
+      .duration(motion.duration.fast)
+      .easing(motion.easing.out)}
   >
     {children}
   </Animated.View>

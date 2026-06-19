@@ -25,6 +25,7 @@ import { buildHealthReportHtml } from '../../utils/healthReportPdf';
 import { HealthSummaryCard } from './components/HealthSummaryCard';
 import { ProgressionBlock } from './components/ProgressionBlock';
 import { ReelsPreviewStrip } from './components/ReelsPreviewStrip';
+import { WeeklyQuestionHomeCard } from '../../components/weeklyQuestion/WeeklyQuestionHomeCard';
 import { StaffPrioritiesStrip } from '../v3/components/StaffPrioritiesStrip';
 import { buildStaffPriorities } from '../v3/engines/staffHome.engine';
 import type { StaffPriorityItem } from '../v3/engines/staffHome.engine';
@@ -234,6 +235,11 @@ export const HomeIaDashboard: React.FC<HomeIaDashboardProps> = ({
                 ? () => handleCtaTab(brain.ai.secondaryCta!.tab)
                 : undefined
             }
+          />
+
+          <WeeklyQuestionHomeCard
+            profile={profile}
+            onOpenFeed={() => nav.openDashboard('feed')}
           />
 
           {isStaffHome ? (

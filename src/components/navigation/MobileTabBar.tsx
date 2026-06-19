@@ -37,6 +37,7 @@ const TAB_ICONS: Record<MainTabId, IconName> = {
   sante: 'heart',
   feed: 'star-four-points',
   reels: 'videocam',
+  famille: 'shield',
   messages: 'chat',
   profil: 'person',
   shop: 'bag',

@@ -17,18 +17,24 @@ import { EditProfileScreen } from '../EditProfileScreen';
 import { LegalDocumentScreen } from '../LegalDocumentScreen';
 import type { LegalDocumentId } from '../../content/legalDocuments';
 import { useTabNavigationActions } from '../../hooks/useTabNavigationActions';
+import { useSponsorShellOptional, sponsorTabRoute } from '../../context/SponsorShellContext';
 import { TAB_BAR_CONTENT_INSET } from '../../components/navigation/BottomTabBar';
+import { SPONSOR_NAV_INSET } from '../../navigation/sponsorTabConfig';
 import { getSponsorAppColors, SPONSOR_THEME } from '../../content/sponsorExperience';
 import { spacing, radius } from '../../theme/designTokens';
 import { useSubscriptionOptional } from '../../context/SubscriptionContext';
 import { useSponsorDashboard } from '../../hooks/useSponsorDashboard';
 import { SponsorAnalyticsPanel } from '../../components/sponsor/SponsorAnalyticsPanel';
 
-export const SponsorProfileTabScreen: React.FC = () => {
+export const SponsorProfileTabScreen: React.FC<{ shellMode?: boolean }> = ({
+  shellMode = false,
+}) => {
   const { refreshProfile, signOut } = useAuth();
   const profile = useSessionProfile();
   const sponsorColors = getSponsorAppColors();
   const nav = useTabNavigationActions();
+  const sponsorShell = useSponsorShellOptional();
+  const bottomInset = shellMode ? SPONSOR_NAV_INSET : TAB_BAR_CONTENT_INSET;
   const subscriptionCtx = useSubscriptionOptional();
   const company = profile?.profile.job_title ?? profile?.display_name;
   const { analytics, stats } = useSponsorDashboard(profile?.uid, company);
@@ -64,6 +70,18 @@ export const SponsorProfileTabScreen: React.FC = () => {
 
   const zone = [profile.city, profile.department].filter(Boolean).join(' · ');
 
+  const goTo = (tab: 'offres' | 'reseau' | 'pilotage') => {
+    if (sponsorShell) {
+      sponsorShell.navigate(
+        tab === 'reseau' ? sponsorTabRoute('reseau', 'messages') : sponsorTabRoute(tab),
+      );
+      return;
+    }
+    if (tab === 'offres') nav.setActiveTab('matchs');
+    else if (tab === 'reseau') nav.setActiveTab('messages');
+    else nav.setActiveTab('home');
+  };
+
   const brandItems: ProfileMenuItem[] = [
     {
       title: 'Modifier la marque',
@@ -75,19 +93,19 @@ export const SponsorProfileTabScreen: React.FC = () => {
       title: 'Mes campagnes',
       subtitle: 'Offres et financements clubs',
       icon: 'briefcase',
-      onPress: () => nav.setActiveTab('matchs'),
+      onPress: () => goTo('offres'),
     },
     {
-      title: 'Réseau partenaires',
+      title: 'Réseau sponsors',
       subtitle: `${stats.leads} contacts · prospects locaux`,
       icon: 'chat',
-      onPress: () => nav.setActiveTab('messages'),
+      onPress: () => goTo('reseau'),
     },
     {
       title: 'Performance marque',
       subtitle: `${stats.impressions} impressions ce mois`,
       icon: 'search',
-      onPress: () => nav.setActiveTab('home'),
+      onPress: () => goTo('pilotage'),
     },
   ];
 
@@ -97,18 +115,23 @@ export const SponsorProfileTabScreen: React.FC = () => {
   ];
 
   const handleSignOut = () => {
-    Alert.alert('Déconnexion', 'Quitter votre session partenaire ?', [
+    Alert.alert('Déconnexion', 'Quitter votre session sponsor ?', [
       { text: 'Annuler', style: 'cancel' },
       { text: 'Déconnexion', style: 'destructive', onPress: () => void signOut() },
     ]);
   };
 
   return (
-    <ScrollView style={styles.root} contentContainerStyle={styles.content}>
-      <SponsorScreenHeader
-        title="Ma marque"
-        subtitle="Identité publique, zone d’intervention et abonnement partenaire."
-      />
+    <ScrollView
+      style={styles.root}
+      contentContainerStyle={[styles.content, { paddingBottom: bottomInset + spacing.xl }]}
+    >
+      {!shellMode ? (
+        <SponsorScreenHeader
+          title="Ma marque"
+          subtitle="Identité publique, zone d’intervention et abonnement sponsor."
+        />
+      ) : null}
 
       <View style={styles.identityCard}>
         <View style={styles.identityRow}>
@@ -119,7 +142,7 @@ export const SponsorProfileTabScreen: React.FC = () => {
             <Text style={styles.identityName}>{company}</Text>
             {zone ? <Text style={styles.identityZone}>{zone}</Text> : null}
             <View style={styles.statusPill}>
-              <Text style={styles.statusText}>Compte partenaire vérifié</Text>
+              <Text style={styles.statusText}>Compte sponsor vérifié</Text>
             </View>
           </View>
         </View>
@@ -149,7 +172,7 @@ export const SponsorProfileTabScreen: React.FC = () => {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: SPONSOR_THEME.background },
-  content: { padding: spacing.lg, paddingBottom: TAB_BAR_CONTENT_INSET + spacing.xl },
+  content: { padding: spacing.lg },
   guest: { textAlign: 'center', color: SPONSOR_THEME.textMuted, padding: spacing.xl },
   identityCard: {
     backgroundColor: SPONSOR_THEME.surface,

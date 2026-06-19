@@ -17,11 +17,21 @@ export type ProdayNotificationData = {
     | 'convocation_h2'
     | 'carpool_seat'
     | 'friendly_nearby'
-    | 'mercato_alert';
+    | 'mercato_alert'
+    | 'mercato_profile'
+    | 'weekly_question'
+    | 'medical_j1'
+    | 'sponsor_offer';
   eventId?: string;
   hubChapter?: 'apercu' | 'live' | 'composition' | 'stats' | 'effectif';
-  homeTab?: 'season' | 'matches' | 'convocations' | 'centre' | 'stats';
+  homeTab?: 'season' | 'matches' | 'convocations' | 'centre' | 'stats' | 'feed';
   matchId?: string;
+  offerId?: string;
+};
+
+export type EngagementNotificationHints = {
+  mercatoIncomplete?: boolean;
+  weeklyQuestionOpen?: boolean;
 };
 
 async function notificationsModule() {
@@ -272,11 +282,83 @@ async function syncNearbyFriendlyMatches(
   }
 }
 
+async function syncEngagementReminders(
+  profile: User,
+  hints: EngagementNotificationHints,
+): Promise<string[]> {
+  const ids: string[] = [];
+  const now = Date.now();
+
+  if (hints.mercatoIncomplete && profile.role === 'player') {
+    const when = new Date();
+    when.setDate(when.getDate() + 1);
+    when.setHours(10, 0, 0, 0);
+    const id = await scheduleAt(
+      `mercato-profile-${profile.uid}`,
+      'Profil Mercato incomplet',
+      'Complétez votre checklist pour être visible des clubs.',
+      when,
+      { type: 'mercato_profile', homeTab: 'centre' },
+    );
+    if (id) ids.push(id);
+  }
+
+  if (hints.weeklyQuestionOpen) {
+    const when = new Date();
+    const day = when.getDay();
+    const daysUntilWed = (3 - day + 7) % 7 || 7;
+    when.setDate(when.getDate() + daysUntilWed);
+    when.setHours(18, 0, 0, 0);
+    if (when.getTime() > now + 60_000) {
+      const id = await scheduleAt(
+        `weekly-q-${profile.uid}`,
+        'Question de la semaine',
+        'Partagez votre réponse avec la communauté ProDay.',
+        when,
+        { type: 'weekly_question', homeTab: 'feed' },
+      );
+      if (id) ids.push(id);
+    }
+  }
+
+  return ids;
+}
+
+async function syncMedicalAppointmentReminders(profile: User): Promise<string[]> {
+  if (profile.role !== 'player') return [];
+  const ids: string[] = [];
+  try {
+    const { medicalAppointmentsService } = await import('./medicalAppointments.service');
+    const appointments = await medicalAppointmentsService.listForPatient(profile.uid);
+    const now = Date.now();
+    for (const appt of appointments) {
+      if (appt.status === 'cancelled' || appt.status === 'completed') continue;
+      const start = appt.start_at.getTime();
+      if (start <= now) continue;
+      const j1 = new Date(start - 24 * 60 * 60 * 1000);
+      j1.setHours(18, 0, 0, 0);
+      if (j1.getTime() <= now + 60_000) continue;
+      const id = await scheduleAt(
+        `medical-j1-${appt.id}`,
+        'RDV kiné demain',
+        `${appt.physio_name ?? 'Kiné'} · ${appt.motif ?? 'Consultation'}`,
+        j1,
+        { type: 'medical_j1', homeTab: 'centre' },
+      );
+      if (id) ids.push(id);
+    }
+  } catch {
+    /* ignore */
+  }
+  return ids;
+}
+
 /** Planifie rappels convocation, alertes covoiturage et matchs proches (local). */
 export async function syncProdayLocalNotifications(
   profile: User | null | undefined,
   events: TeamEvent[],
-  matches: FriendlyMatch[]
+  matches: FriendlyMatch[],
+  engagement?: EngagementNotificationHints,
 ): Promise<void> {
   if (!profile || Platform.OS === 'web') return;
   if (!(await ensurePermission())) return;
@@ -284,7 +366,11 @@ export async function syncProdayLocalNotifications(
   await cancelScheduledReminders();
 
   const scheduled = await syncConvocationReminders(profile, events);
-  await saveScheduledIds(scheduled);
+  const engagementIds = engagement
+    ? await syncEngagementReminders(profile, engagement)
+    : [];
+  const medicalIds = await syncMedicalAppointmentReminders(profile);
+  await saveScheduledIds([...scheduled, ...engagementIds, ...medicalIds]);
 
   await syncCarpoolAlerts(profile, events);
   await syncNearbyFriendlyMatches(profile, matches);

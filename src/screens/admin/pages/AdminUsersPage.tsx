@@ -1,18 +1,14 @@
 import React, { useMemo, useState } from 'react';
+import { Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { useTranslation } from '../../../context/LocaleContext';
-import {
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  StyleSheet,
-  Alert,
-} from 'react-native';
+import { AdminFilterChips } from '../../../components/admin/AdminFilterChips';
 import type { User, UserRole } from '../../../models/User';
 import { useAdminData } from '../../../context/AdminDataContext';
 import { adminService } from '../../../services/admin.service';
 import { AdminPageScaffold } from '../../../components/admin/AdminPageScaffold';
 import { AdminUserCard } from '../../../components/admin/AdminUserCard';
 import { AdminSearchField } from '../../../components/admin/AdminSearchField';
+import { AdminKpiStrip } from '../../../components/admin/AdminKpiStrip';
 import { AdminSectionHeader } from '../../../components/admin/AdminSectionHeader';
 import { AdminEmptyState } from '../../../components/admin/AdminEmptyState';
 import {
@@ -32,6 +28,8 @@ import { getRoleLabel } from '../../signup/signupFlowConfig';
 
 const ROLES: UserRole[] = ['player', 'coach', 'club', 'agent', 'recruiter', 'organizer', 'physio', 'sponsor'];
 
+type UserListFilter = 'all' | 'pending' | UserRole;
+
 const EMPTY_FORM: CreateUserFormState = {
   email: '',
   password: '',
@@ -42,11 +40,10 @@ const EMPTY_FORM: CreateUserFormState = {
 
 export const AdminUsersPage: React.FC = () => {
   const { t } = useTranslation();
-  const { loading, users, userDocCounts, refresh } = useAdminData();
+  const { loading, users, userDocCounts, refresh, stats } = useAdminData();
   const { colors: c } = useAdminStyles();
   const styles = useMemo(() => createStyles(c), [c]);
-  const [roleFilter, setRoleFilter] = useState<UserRole | 'all'>('all');
-  const [pendingOnly, setPendingOnly] = useState(false);
+  const [listFilter, setListFilter] = useState<UserListFilter>('all');
   const [search, setSearch] = useState('');
   const [showCreate, setShowCreate] = useState(false);
   const [createForm, setCreateForm] = useState<CreateUserFormState>(EMPTY_FORM);
@@ -59,8 +56,8 @@ export const AdminUsersPage: React.FC = () => {
   const [approvingUid, setApprovingUid] = useState<string | null>(null);
 
   const filtered = users.filter((u) => {
-    if (pendingOnly && !userNeedsAdminVerificationReview(u)) return false;
-    if (roleFilter !== 'all' && u.role !== roleFilter) return false;
+    if (listFilter === 'pending' && !userNeedsAdminVerificationReview(u)) return false;
+    if (listFilter !== 'all' && listFilter !== 'pending' && u.role !== listFilter) return false;
     const q = search.trim().toLowerCase();
     if (!q) return true;
     return (
@@ -114,12 +111,31 @@ export const AdminUsersPage: React.FC = () => {
     }
   };
 
+  const pendingCount = users.filter((u) => userNeedsAdminVerificationReview(u)).length;
+  const activeCount = users.filter((u) => u.is_active !== false).length;
+
   return (
-    <AdminPageScaffold
-      title="Utilisateurs"
-      subtitle={t('admin.users.subtitle')}
-      loading={loading}
-    >
+    <AdminPageScaffold loading={loading}>
+      <AdminKpiStrip
+        items={[
+          { key: 'all', label: 'Comptes chargés', value: users.length, icon: 'people' },
+          { key: 'active', label: 'Actifs', value: activeCount, icon: 'people' },
+          {
+            key: 'pending',
+            label: 'Vérif. en attente',
+            value: pendingCount,
+            icon: 'warning',
+            alert: pendingCount > 0,
+          },
+          {
+            key: 'platform',
+            label: 'Total plateforme',
+            value: stats?.users ?? users.length,
+            icon: 'document',
+          },
+        ]}
+      />
+
       <TouchableOpacity style={styles.fab} onPress={() => setShowCreate(!showCreate)}>
         <Text style={styles.fabText}>{showCreate ? t('admin.users.createToggle.close') : t('admin.users.createToggle.open')}</Text>
       </TouchableOpacity>
@@ -135,40 +151,17 @@ export const AdminUsersPage: React.FC = () => {
 
       <AdminSearchField value={search} onChangeText={setSearch} placeholder="Nom, email, ville…" />
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filters}>
-        <FilterPill
-          label="Tous"
-          active={roleFilter === 'all' && !pendingOnly}
-          onPress={() => {
-            setRoleFilter('all');
-            setPendingOnly(false);
-          }}
-          styles={styles}
-        />
-        <FilterPill
-          label={t('admin.users.verifyPending')}
-          active={pendingOnly}
-          onPress={() => {
-            setPendingOnly(true);
-            setRoleFilter('all');
-          }}
-          styles={styles}
-        />
-        {ROLES.map((r) => (
-          <FilterPill
-            key={r}
-            label={getRoleLabel(r, t)}
-            active={roleFilter === r && !pendingOnly}
-            onPress={() => {
-              setRoleFilter(r);
-              setPendingOnly(false);
-            }}
-            styles={styles}
-          />
-        ))}
-      </ScrollView>
+      <AdminFilterChips
+        options={[
+          { id: 'all' as const, label: 'Tous' },
+          { id: 'pending' as const, label: t('admin.users.verifyPending') },
+          ...ROLES.map((r) => ({ id: r, label: getRoleLabel(r, t) })),
+        ]}
+        value={listFilter}
+        onChange={setListFilter}
+      />
 
-      <AdminSectionHeader title="COMPTES" count={filtered.length} />
+      <AdminSectionHeader title="Comptes" count={filtered.length} />
 
       {filtered.length === 0 ? (
         <AdminEmptyState icon="people" title="Aucun utilisateur" subtitle="Modifiez les filtres." />
@@ -265,41 +258,15 @@ export const AdminUsersPage: React.FC = () => {
   );
 };
 
-type UsersPageStyles = ReturnType<typeof createStyles>;
-
-const FilterPill: React.FC<{
-  label: string;
-  active: boolean;
-  onPress: () => void;
-  styles: UsersPageStyles;
-}> = ({ label, active, onPress, styles }) => (
-  <TouchableOpacity style={[styles.pill, active && styles.pillOn]} onPress={onPress}>
-    <Text style={[styles.pillText, active && styles.pillTextOn]}>{label}</Text>
-  </TouchableOpacity>
-);
-
 function createStyles(c: AppColors) {
   return StyleSheet.create({
     fab: {
-      backgroundColor: c.ink,
+      backgroundColor: c.brand,
       borderRadius: radius.md,
       padding: spacing.md,
       alignItems: 'center',
       marginBottom: spacing.md,
     },
-    fabText: { color: c.brandInverse, fontWeight: '900', fontSize: 14 },
-    filters: { maxHeight: 44, marginBottom: spacing.sm },
-    pill: {
-      paddingHorizontal: spacing.md,
-      paddingVertical: 8,
-      borderRadius: radius.pill,
-      borderWidth: 1,
-      borderColor: c.border,
-      backgroundColor: c.surface,
-      marginRight: spacing.sm,
-    },
-    pillOn: { backgroundColor: c.ink, borderColor: c.ink },
-    pillText: { fontSize: 12, fontWeight: '800', color: c.text },
-    pillTextOn: { color: c.brandInverse },
+    fabText: { color: c.brandInverse, fontWeight: '800', fontSize: 14 },
   });
 }

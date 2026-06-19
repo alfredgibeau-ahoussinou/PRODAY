@@ -98,7 +98,15 @@ export const UI_FR: MessageCatalog = {
   'modules.gestion.title': 'Gestion équipe',
   'modules.gestion.subtitle': 'Planning · présences · stats',
   'modules.sponsors.title': 'Sponsors',
-  'modules.sponsors.subtitle': 'Partenaires',
+  'modules.sponsors.subtitle': 'Sponsors',
+
+  'sponsorPublic.title': 'Profil sponsor',
+  'sponsorPublic.activeOffers': 'Offres actives',
+  'sponsorPublic.contact': 'Contacter',
+  'sponsorPublic.contactGuest': 'Connectez-vous pour envoyer une demande de contact à ce sponsor.',
+  'sponsorPublic.contactUnavailable': 'Messagerie indisponible pour le moment.',
+  'sponsorPublic.contactSent': 'Votre intérêt pour {{company}} a été enregistré. Le sponsor pourra vous recontacter via ProDay.',
+  'sponsorPublic.noOffers': 'Aucune offre active pour le moment.',
 
   'auth.login': 'Connexion',
   'auth.signup': 'Inscription',
@@ -115,7 +123,7 @@ export const UI_FR: MessageCatalog = {
 
   'auth.loginSub.homme': 'Connectez-vous à votre espace Pro Day Man.',
   'auth.loginSub.woman': 'Connectez-vous à votre espace foot féminin.',
-  'auth.loginSub.pro': 'Connectez-vous à Pro Day Pro — staff, structures et partenaires.',
+  'auth.loginSub.pro': 'Connectez-vous à Pro Day Pro — staff, structures et sponsors.',
   'auth.loginSub.sante': 'Connectez-vous à votre espace Pro Day Santé.',
 
   'auth.signupSub.homme':
@@ -123,7 +131,7 @@ export const UI_FR: MessageCatalog = {
   'auth.signupSub.woman':
     'Créez votre compte joueuse — Mercato F, stats et visibilité clubs.',
   'auth.signupSub.pro':
-    'Créez votre compte pro — coach, club, agent, orga ou partenaire.',
+    'Créez votre compte pro — coach, club, agent, orga ou sponsor.',
   'auth.signupSub.sante':
     'Créez votre compte praticien — agenda, messagerie et visibilité.',
 
@@ -145,4 +153,45 @@ export const UI_FR: MessageCatalog = {
   'profile.section.legalSub': 'CGU et confidentialité',
   'profile.section.session': 'Session',
   'profile.logout': 'Se déconnecter',
+
+  'auth.greeting.welcomeEyebrow': 'Coup d\'envoi',
+  'auth.greeting.welcomeSub': 'Tu entres sur le terrain — bon match sur ProDay.',
+  'auth.greeting.goodbyeEyebrow': 'Fin de match',
+  'auth.greeting.goodbyeSub': 'Vous êtes déconnecté — à la prochaine sur le terrain.',
+  'auth.greeting.fallbackName': 'Champion',
+
+  'sponsor.upgrade.territorial.title': 'Formule Territorial',
+  'sponsor.upgrade.loginRequired': 'Connectez-vous avec un compte sponsor pour envoyer une demande commerciale.',
+  'sponsor.upgrade.loginCta': 'Se connecter',
+  'sponsor.upgrade.success.pending':
+    'Demande enregistrée — l’équipe ProDay vous recontacte sous 48 h ouvrées. L’activation n’est pas immédiate.',
+  'sponsor.upgrade.error.firebase': 'Service indisponible. Réessayez plus tard.',
+  'sponsor.upgrade.error.profile': 'Complétez le nom de votre entreprise et votre ville sur votre profil sponsor.',
+  'sponsor.upgrade.national.title': 'National Pro',
+  'sponsor.upgrade.national.alreadyActive': 'Vous êtes déjà sur la formule National Pro.',
+  'sponsor.upgrade.national.activated': 'Abonnement activé',
+  'sponsor.upgrade.territorial.activating': 'Territorial en cours d\'activation',
+  'sponsor.upgrade.territorial.activatingSub':
+    'Votre demande a été approuvée — l’équipe ProDay finalise l’activation de votre formule.',
+  'sponsor.upgrade.territorial.active': 'Formule Territorial active',
+  'sponsor.upgrade.territorial.activeSub':
+    'Jusqu’à 5 offres, ciblage département et messagerie clubs illimitée sont actifs sur votre compte.',
+
+  'admin.upgrade.section': 'Demandes Territorial',
+  'admin.upgrade.empty.title': 'Aucune demande',
+  'admin.upgrade.empty.subtitle': 'Demandes commerciales formule Territorial (49 €).',
+  'admin.upgrade.status.pending': 'En attente',
+  'admin.upgrade.status.contacted': 'Contacté',
+  'admin.upgrade.status.approved': 'Approuvé',
+  'admin.upgrade.status.rejected': 'Refusé',
+  'admin.upgrade.action.contact': 'Marquer contacté',
+  'admin.upgrade.action.approve': 'Approuver',
+  'admin.upgrade.action.reject': 'Refuser',
+  'admin.upgrade.confirm.reject.title': 'Refuser la demande',
+  'admin.upgrade.confirm.reject.message': 'Confirmer le refus de {{company}} ?',
+  'admin.upgrade.success.contacted': 'Demande marquée comme contactée.',
+  'admin.upgrade.success.approved': 'Demande approuvée.',
+  'admin.upgrade.success.rejected': 'Demande refusée.',
+  'admin.upgrade.error.firebase': 'Service indisponible.',
+  'admin.upgrade.error.update': 'Mise à jour impossible.',
 };

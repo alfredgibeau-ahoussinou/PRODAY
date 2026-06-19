@@ -161,6 +161,10 @@ export interface User {
   // Notifications
   fcm_token?: string;
   notification_radius_km?: number; // Pour le géofencing agents (défaut: 50km)
+  /** Préférences push — opt-in explicite offres sponsors locales */
+  notification_preferences?: {
+    sponsor_geo_opt_in?: boolean;
+  };
 
   /** Contrôle parental (compte mineur / supervision famille) */
   parental_settings?: ParentalSettings;
@@ -178,6 +182,10 @@ export interface User {
   subscription_plan_id?: string;
   subscription_status?: 'active' | 'trialing' | 'canceled' | 'past_due';
   subscription_period_end?: Date;
+
+  /** Formule sponsor commerciale (Territorial validé par admin — hors IAP) */
+  sponsor_tier?: 'starter' | 'territorial' | 'national';
+  sponsor_territorial_approved_at?: Date;
 
   /** Vérifications joueur (identité, licence club, etc.) */
   player_verification?: PlayerVerificationState;

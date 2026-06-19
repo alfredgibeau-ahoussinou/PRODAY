@@ -59,7 +59,7 @@ export const FavoritesListScreen: React.FC<FavoritesListScreenProps> = ({
     setLoading(true);
     const ids = await favoritesService.listIds(profile.uid);
     const loaded = (
-      await Promise.all(ids.map((id) => usersService.getById(id)))
+      await Promise.all(ids.map((id) => usersService.getPublicById(id)))
     ).filter((u): u is User => u != null);
     setUsers(loaded);
     setLoading(false);

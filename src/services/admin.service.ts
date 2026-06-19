@@ -8,6 +8,7 @@ import {
   orderBy,
   query,
   updateDoc,
+  setDoc,
   serverTimestamp,
   where,
   writeBatch,
@@ -46,6 +47,9 @@ import type { CommunityReel, CommunityReelStatus } from '../models/CommunityReel
 import type { ReelReport } from '../models/ReelReport';
 import { getErrorCode } from '../utils/errors';
 import { statsService } from './stats.service';
+import { adminAuditService } from './adminAudit.service';
+import { chatMessageFromFirestore } from '../lib/firestoreMappers';
+import type { ChatMessage } from '../lib/firestoreMappers';
 
 export interface PlatformStats {
   users: number;
@@ -63,6 +67,20 @@ export interface PlatformStats {
   pendingCommunityReels: number;
   reelReports: number;
   pendingPayments: number;
+}
+
+export interface PlatformDailySnapshot extends PlatformStats {
+  day_key: string;
+  recorded_at?: Date;
+}
+
+export interface AdminMessageThread {
+  id: string;
+  label: string;
+  participant_ids: string[];
+  last_message: string;
+  updated_at: Date;
+  thread_kind?: string;
 }
 
 export function countPendingUserVerifications(users: User[]): number {
@@ -309,6 +327,15 @@ export const adminService = {
     const database = getDb();
     if (!database) throw new Error('Firebase non configuré');
     await deleteDoc(doc(database, 'clubs', clubId));
+  },
+
+  async updateClubVerified(clubId: string, verified: boolean): Promise<void> {
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+    await updateDoc(doc(database, 'clubs', clubId), {
+      verified,
+      updated_at: serverTimestamp(),
+    });
   },
 
   async listAllPaymentRequests(max = 100): Promise<TeamPaymentRequest[]> {
@@ -578,19 +605,46 @@ export const adminService = {
     }
   },
 
-  async updateCommunityReelStatus(reelId: string, status: 'approved' | 'rejected'): Promise<void> {
+  async updateCommunityReelStatus(
+    reelId: string,
+    status: 'approved' | 'rejected',
+    actor?: { uid: string; email?: string },
+  ): Promise<void> {
     const database = getDb();
     if (!database) throw new Error('Firebase non configuré');
     await updateDoc(doc(database, 'community_reels', reelId), {
       status,
       updated_at: serverTimestamp(),
     });
+    if (actor?.uid) {
+      await adminAuditService.log({
+        action: status === 'approved' ? 'reel_approved' : 'reel_rejected',
+        actor_uid: actor.uid,
+        actor_email: actor.email,
+        target_type: 'community_reel',
+        target_id: reelId,
+        summary: `Reel ${status === 'approved' ? 'approuvé' : 'refusé'}`,
+      });
+    }
   },
 
-  async deleteCommunityReel(reelId: string): Promise<void> {
+  async deleteCommunityReel(
+    reelId: string,
+    actor?: { uid: string; email?: string },
+  ): Promise<void> {
     const database = getDb();
     if (!database) throw new Error('Firebase non configuré');
     await deleteDoc(doc(database, 'community_reels', reelId));
+    if (actor?.uid) {
+      await adminAuditService.log({
+        action: 'reel_deleted',
+        actor_uid: actor.uid,
+        actor_email: actor.email,
+        target_type: 'community_reel',
+        target_id: reelId,
+        summary: 'Reel communauté supprimé',
+      });
+    }
   },
 
   async listReelReports(max = 100): Promise<ReelReport[]> {
@@ -658,7 +712,7 @@ export const adminService = {
       this.listReelReports(200),
     ]);
 
-    return {
+    const stats = {
       users: users.length,
       players: users.filter((u) => u.role === 'player').length,
       coaches: users.filter((u) => u.role === 'coach').length,
@@ -675,5 +729,203 @@ export const adminService = {
       reelReports: reelReports.length,
       pendingPayments: payments.filter((p) => p.status === 'pending').length,
     };
+
+    void this.recordDailyPlatformSnapshot(stats);
+
+    return stats;
+  },
+
+  async recordDailyPlatformSnapshot(stats: PlatformStats): Promise<void> {
+    if (!isFirebaseConfigured()) return;
+    const database = getDb();
+    if (!database) return;
+    const dayKey = new Date().toISOString().slice(0, 10);
+    try {
+      await setDoc(
+        doc(database, 'platform_stats_daily', dayKey),
+        { ...stats, day_key: dayKey, recorded_at: serverTimestamp() },
+        { merge: true },
+      );
+    } catch {
+      /* snapshot optionnel */
+    }
+  },
+
+  async listDailyPlatformSnapshots(maxDays = 14): Promise<PlatformDailySnapshot[]> {
+    if (!isFirebaseConfigured()) return [];
+    const database = getDb();
+    if (!database) return [];
+    try {
+      const snap = await getDocs(
+        query(
+          collection(database, 'platform_stats_daily'),
+          orderBy('day_key', 'desc'),
+          limit(maxDays),
+        ),
+      );
+      return snap.docs.map((d) => {
+        const data = d.data();
+        return {
+          day_key: String(data.day_key ?? d.id),
+          users: Number(data.users ?? 0),
+          players: Number(data.players ?? 0),
+          coaches: Number(data.coaches ?? 0),
+          agents: Number(data.agents ?? 0),
+          clubs: Number(data.clubs ?? 0),
+          teamEvents: Number(data.teamEvents ?? 0),
+          friendlyMatches: Number(data.friendlyMatches ?? 0),
+          recruitmentPosts: Number(data.recruitmentPosts ?? 0),
+          paymentRequests: Number(data.paymentRequests ?? 0),
+          applications: Number(data.applications ?? 0),
+          announcements: Number(data.announcements ?? 0),
+          pendingVerifications: Number(data.pendingVerifications ?? 0),
+          pendingCommunityReels: Number(data.pendingCommunityReels ?? 0),
+          reelReports: Number(data.reelReports ?? 0),
+          pendingPayments: Number(data.pendingPayments ?? 0),
+          recorded_at: data.recorded_at?.toDate?.(),
+        };
+      });
+    } catch {
+      return [];
+    }
+  },
+
+  async listAllMessageThreads(max = 80): Promise<AdminMessageThread[]> {
+    if (!isFirebaseConfigured()) return [];
+    const database = getDb();
+    if (!database) return [];
+    try {
+      const snap = await getDocs(
+        query(collection(database, 'message_threads'), orderBy('updated_at', 'desc'), limit(max)),
+      );
+      return snap.docs.map((d) => {
+        const data = d.data();
+        const names = (data.participant_names as Record<string, string>) ?? {};
+        const ids = (data.participant_ids as string[]) ?? [];
+        const label =
+          data.thread_title != null
+            ? String(data.thread_title)
+            : ids.map((id) => names[id] ?? id.slice(0, 8)).join(' · ') || d.id;
+        const toDate = (v: unknown) =>
+          v && typeof v === 'object' && 'toDate' in v
+            ? (v as { toDate: () => Date }).toDate()
+            : new Date(0);
+        return {
+          id: d.id,
+          label,
+          participant_ids: ids,
+          last_message: String(data.last_message ?? ''),
+          updated_at: toDate(data.updated_at),
+          thread_kind: data.thread_kind ? String(data.thread_kind) : undefined,
+        };
+      });
+    } catch {
+      const snap = await getDocs(collection(database, 'message_threads'));
+      return snap.docs
+        .map((d) => {
+          const data = d.data();
+          const names = (data.participant_names as Record<string, string>) ?? {};
+          const ids = (data.participant_ids as string[]) ?? [];
+          return {
+            id: d.id,
+            label: ids.map((id) => names[id] ?? id.slice(0, 8)).join(' · ') || d.id,
+            participant_ids: ids,
+            last_message: String(data.last_message ?? ''),
+            updated_at: new Date(0),
+            thread_kind: data.thread_kind ? String(data.thread_kind) : undefined,
+          };
+        })
+        .slice(0, max);
+    }
+  },
+
+  async listThreadMessages(threadId: string, max = 100): Promise<ChatMessage[]> {
+    if (!isFirebaseConfigured()) return [];
+    const database = getDb();
+    if (!database) return [];
+    try {
+      const snap = await getDocs(
+        query(
+          collection(database, 'messages'),
+          where('thread_id', '==', threadId),
+          orderBy('created_at', 'desc'),
+          limit(max),
+        ),
+      );
+      return snap.docs
+        .map((d) => chatMessageFromFirestore(d.id, d.data() as Record<string, unknown>))
+        .reverse();
+    } catch {
+      const snap = await getDocs(
+        query(collection(database, 'messages'), where('thread_id', '==', threadId), limit(max)),
+      );
+      return snap.docs
+        .map((d) => chatMessageFromFirestore(d.id, d.data() as Record<string, unknown>))
+        .sort((a, b) => a.created_at.getTime() - b.created_at.getTime());
+    }
+  },
+
+  async deleteMessageAdmin(
+    messageId: string,
+    actorUid: string,
+    actorEmail: string | undefined,
+    threadId: string,
+  ): Promise<void> {
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+    await deleteDoc(doc(database, 'messages', messageId));
+    await adminAuditService.log({
+      action: 'message_deleted',
+      actor_uid: actorUid,
+      actor_email: actorEmail,
+      target_type: 'message',
+      target_id: messageId,
+      summary: `Message supprimé (thread ${threadId.slice(0, 12)}…)`,
+    });
+  },
+
+  async deleteMessageThreadAdmin(
+    threadId: string,
+    actorUid: string,
+    actorEmail: string | undefined,
+    label: string,
+  ): Promise<void> {
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+    const msgs = await getDocs(
+      query(collection(database, 'messages'), where('thread_id', '==', threadId), limit(200)),
+    );
+    const batch = writeBatch(database);
+    msgs.docs.forEach((d) => batch.delete(d.ref));
+    batch.delete(doc(database, 'message_threads', threadId));
+    await batch.commit();
+    await adminAuditService.log({
+      action: 'thread_deleted',
+      actor_uid: actorUid,
+      actor_email: actorEmail,
+      target_type: 'message_thread',
+      target_id: threadId,
+      summary: `Conversation supprimée · ${label}`,
+    });
+  },
+
+  async deleteWeeklyQuestionResponse(
+    questionId: string,
+    responseUid: string,
+    actorUid: string,
+    actorEmail: string | undefined,
+    authorName: string,
+  ): Promise<void> {
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+    await deleteDoc(doc(database, 'weekly_questions', questionId, 'responses', responseUid));
+    await adminAuditService.log({
+      action: 'weekly_response_deleted',
+      actor_uid: actorUid,
+      actor_email: actorEmail,
+      target_type: 'weekly_response',
+      target_id: responseUid,
+      summary: `Réponse fil supprimée · ${authorName}`,
+    });
   },
 };

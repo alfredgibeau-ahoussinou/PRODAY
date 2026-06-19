@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { RoadmapTimeline } from "@/components/interactive/RoadmapTimeline";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { ROUTES } from "@/lib/routes";
 
 export const metadata: Metadata = {
   title: "Roadmap",
@@ -11,11 +12,13 @@ export default function RoadmapPage() {
   return (
     <>
       <PageHeader
+        pathname={ROUTES.roadmap}
         kicker="ROADMAP"
         title="Transparence produit"
         description="Mercato, Live Stats, Arena — et la suite. Voici où en est ProDay."
+        dark
       />
-      <section className="py-16">
+      <section className="bg-[#030303] py-16">
         <RoadmapTimeline />
       </section>
     </>

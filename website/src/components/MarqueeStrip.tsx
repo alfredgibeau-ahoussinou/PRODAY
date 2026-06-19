@@ -4,15 +4,16 @@ import { BRAND } from "@/lib/content";
 
 const ITEMS = [
   "Mercato",
-  "Recruteurs",
-  "Matchs amicaux",
+  "Reels",
+  "Fil",
+  "Partenaires",
+  "Arena",
+  "Matchs",
   "Covoiturage",
   "Pôle santé",
-  "ProDay Shop",
-  "Arena",
   "Pulse ProDay",
   "Live Stats",
-  "CV PDF",
+  "Famille",
   BRAND.tagline,
 ];
 
@@ -20,19 +21,16 @@ export function MarqueeStrip() {
   const row = ITEMS.map((t) => (
     <span
       key={t}
-      className="mx-6 inline-flex items-center gap-3 text-sm font-medium tracking-wide text-neutral-400"
+      className="mx-8 inline-flex items-center gap-3 text-sm font-medium tracking-widest text-white/35"
     >
-      <span className="h-1.5 w-1.5 rounded-full bg-neutral-300" />
+      <span className="h-1 w-1 rounded-full bg-blue-500/60" />
       {t}
     </span>
   ));
 
   return (
-    <div className="overflow-hidden border-y border-neutral-200 bg-white py-4">
-      <div className="flex w-max animate-marquee">
-        {row}
-        {row}
-      </div>
+    <div className="overflow-hidden border-y border-white/8 bg-[#050505] py-5">
+      <div className="flex w-max animate-marquee">{row}{row}</div>
     </div>
   );
 }

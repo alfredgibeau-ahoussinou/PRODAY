@@ -7,6 +7,7 @@ export type MainTabId =
   | 'sante'
   | 'feed'
   | 'reels'
+  | 'famille'
   | 'messages'
   | 'profil'
   | 'shop';
@@ -23,6 +24,7 @@ export const MAIN_TAB_ITEMS: {
   { id: 'sante', label: 'Santé', icon: 'heart' },
   { id: 'feed', label: 'Fil', icon: 'star-four-points' },
   { id: 'reels', label: 'Reels', icon: 'videocam' },
+  { id: 'famille', label: 'Famille', icon: 'shield' },
   { id: 'messages', label: 'Messages', icon: 'chat' },
   { id: 'profil', label: 'Profil', icon: 'user' },
   { id: 'shop', label: 'Shop', icon: 'bag' },

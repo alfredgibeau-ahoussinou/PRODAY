@@ -251,5 +251,25 @@ export const parentalGuardianService = {
     });
     return code;
   },
+
+  async removeSecondaryGuardian(
+    childUid: string,
+    guardianEmail: string,
+  ): Promise<void> {
+    const normalized = normalizeGuardianEmail(guardianEmail);
+    if (!normalized) throw new Error('Email tuteur invalide.');
+
+    await this.updateChildParental(childUid, normalized, async (child) => {
+      if (!guardianEmailsMatch(child.parental_settings?.guardian_email_secondary, normalized)) {
+        throw new Error('Vous n’êtes pas le co-tuteur de ce compte.');
+      }
+      return {
+        ...DEFAULT_PARENTAL_SETTINGS,
+        ...child.parental_settings,
+        is_minor: true,
+        guardian_email_secondary: undefined,
+      };
+    });
+  },
 };
 

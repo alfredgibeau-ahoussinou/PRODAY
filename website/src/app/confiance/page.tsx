@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { PremiumSection } from "@/components/layout/PremiumSection";
 import { VerificationTimeline } from "@/components/VerificationTimeline";
+import { PremiumButton } from "@/components/ui/PremiumButton";
 import { ROUTES } from "@/lib/routes";
 
 export const metadata: Metadata = {
@@ -14,6 +15,7 @@ export default function TrustPage() {
   return (
     <>
       <PageHeader
+        pathname={ROUTES.trust}
         kicker="CONFIANCE"
         title="Staff certifié, familles rassurées"
         description="Diplômes et licences validés avant messagerie complète. Contrôle parental pour les comptes mineurs."
@@ -21,19 +23,16 @@ export default function TrustPage() {
         dark
       />
       <VerificationTimeline fullPage />
-      <section className="border-t border-neutral-200 py-16">
-        <div className="mx-auto max-w-6xl px-4 text-center sm:px-6">
-          <p className="text-proday-muted">
-            Prêt à rejoindre un écosystème de confiance ?
-          </p>
-          <Link
-            href={ROUTES.beta}
-            className="mt-6 inline-block rounded-full bg-proday-ink px-8 py-3 text-sm font-semibold text-white"
-          >
-            S&apos;inscrire à la beta
-          </Link>
+      <PremiumSection
+        kicker="REJOINDRE"
+        title="Prêt pour un écosystème de confiance ?"
+        description="Inscrivez-vous sur la liste d'attente — vérification staff et espace famille dès l'ouverture."
+        bordered
+      >
+        <div className="text-center">
+          <PremiumButton href={ROUTES.beta}>S&apos;inscrire</PremiumButton>
         </div>
-      </section>
+      </PremiumSection>
     </>
   );
 }

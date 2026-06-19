@@ -12,6 +12,8 @@ import { getDb } from '../lib/firebase';
 import { isFirebaseConfigured } from '../config/firebase';
 import { userFromFirestore } from '../lib/firestoreMappers';
 import type { User, UserRole } from '../models/User';
+import { sanitizePublicUser } from '../utils/sanitizePublicUser';
+import { filterRealUsers } from '../utils/realUserFilter';
 
 const LIST_LIMIT = 50;
 const POPULAR_LIMIT = 5;
@@ -48,6 +50,12 @@ export const usersService = {
     return userFromFirestore(snap.id, snap.data() as Record<string, unknown>);
   },
 
+  /** Profil tiers sans email, téléphone ni données parentales. */
+  async getPublicById(uid: string): Promise<User | null> {
+    const user = await this.getById(uid);
+    return user ? sanitizePublicUser(user) : null;
+  },
+
   async listPhysios(search = ''): Promise<User[]> {
     return this.listByRole('physio', search);
   },
@@ -59,9 +67,9 @@ export const usersService = {
 
     const mapDocs = (snap: Awaited<ReturnType<typeof getDocs>>) => {
       const users = snap.docs.map((d) =>
-        userFromFirestore(d.id, d.data() as Record<string, unknown>)
+        sanitizePublicUser(userFromFirestore(d.id, d.data() as Record<string, unknown>))
       );
-      return users
+      return filterRealUsers(users)
         .filter((u) => matchesSearch(u, search.trim()))
         .sort((a, b) => b.created_at.getTime() - a.created_at.getTime());
     };

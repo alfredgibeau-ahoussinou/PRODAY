@@ -7,7 +7,7 @@ import { EditProfileScreen } from './EditProfileScreen';
 import { VerificationFlowScreen } from './VerificationFlowScreen';
 import { PlayerVerificationScreen } from './PlayerVerificationScreen';
 import { useAppSpace } from '../context/AppSpaceContext';
-import { getSelectableAppSpaces } from '../utils/appSpaceProductLine';
+import { getSelectableAppSpacesForUser } from '../utils/minorYouthSpace';
 import { playerVerificationProgress } from '../models/User';
 import { VerificationSuccessScreen } from './VerificationSuccessScreen';
 import { ParentalControlScreen } from './ParentalControlScreen';
@@ -72,7 +72,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
   const { pendingProfileView, clearPendingProfile } = useTabNavigation();
   const nav = useTabNavigationActions();
   const { productLine } = useAppTheme();
-  const selectableAppSpaces = getSelectableAppSpaces(productLine);
+  const selectableAppSpaces = getSelectableAppSpacesForUser(profile, productLine);
   const subscriptionCtx = useSubscriptionOptional();
   const subscriptionTier = subscriptionCtx?.subscription?.tier ?? 'free';
   const brain = useProDayBrain(profile, productLine);
@@ -505,8 +505,6 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
         onCreateClub={() => setShowCreateClub(true)}
         onJoinClub={() => setShowJoinClub(true)}
         onVerificationSuccess={() => setShowVerificationSuccess(true)}
-        onParental={() => setShowParental(true)}
-        onGuardian={() => setShowGuardian(true)}
         onLegal={(id) => setLegalDocument(id)}
         onSignOut={handleSignOutPress}
         onSetAppSpace={(space) => void setAppSpace(space)}

@@ -25,25 +25,25 @@ export function VerificationTimeline({
         embedded
           ? "py-8"
           : fullPage
-            ? "py-12"
-            : "border-t border-neutral-200 py-24"
+            ? "bg-[#030303] py-12"
+            : "border-t border-white/10 bg-[#030303] py-24"
       }
     >
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         {showHeader && (
           <Reveal>
             <div className="flex items-start gap-4">
-              <div className="rounded-2xl bg-proday-ink p-4 text-white">
+              <div className="rounded-2xl bg-white/10 p-4 text-white ring-1 ring-white/10">
                 <Shield size={28} />
               </div>
               <div>
-                <p className="text-sm font-medium tracking-widest text-proday-muted">
+                <p className="text-sm font-medium tracking-widest text-white/40">
                   CONFIANCE
                 </p>
-                <h2 className="mt-1 text-3xl font-bold sm:text-4xl">
+                <h2 className="font-display mt-1 text-3xl font-bold text-white sm:text-4xl">
                   Vérification coach & agent
                 </h2>
-                <p className="mt-3 max-w-xl text-proday-muted">
+                <p className="mt-3 max-w-xl text-white/55">
                   Diplôme ou licence obligatoire. Messagerie limitée jusqu&apos;à
                   validation — transparence pour clubs et familles.
                 </p>
@@ -60,8 +60,8 @@ export function VerificationTimeline({
               onClick={() => setStep(i)}
               className={`rounded-lg px-4 py-2 text-sm transition ${
                 step === i
-                  ? "bg-proday-ink text-white"
-                  : "bg-neutral-100 text-proday-muted hover:bg-neutral-200"
+                  ? "bg-white text-neutral-950"
+                  : "bg-white/5 text-white/60 hover:bg-white/10 hover:text-white"
               }`}
             >
               Étape {s.id}
@@ -82,23 +82,23 @@ export function VerificationTimeline({
                   }}
                   className={`mx-2 rounded-2xl border p-5 ${
                     current
-                      ? "border-proday-warning bg-orange-50"
+                      ? "border-amber-500/40 bg-amber-500/10"
                       : done
-                        ? "border-proday-success/30 bg-green-50"
-                        : "border-neutral-200 bg-white"
+                        ? "border-emerald-500/30 bg-emerald-500/10"
+                        : "card-premium border-white/10"
                   }`}
                 >
-                  <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm">
+                  <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-white/10">
                     {done ? (
-                      <Check className="text-proday-success" size={20} />
+                      <Check className="text-emerald-400" size={20} />
                     ) : current ? (
-                      <Clock className="text-proday-warning" size={20} />
+                      <Clock className="text-amber-400" size={20} />
                     ) : (
-                      <span className="text-sm text-neutral-400">{s.id}</span>
+                      <span className="text-sm text-white/40">{s.id}</span>
                     )}
                   </div>
-                  <p className="font-semibold">{s.label}</p>
-                  <p className="mt-1 text-xs text-proday-muted">
+                  <p className="font-semibold text-white">{s.label}</p>
+                  <p className="mt-1 text-xs text-white/45">
                     {done
                       ? "Validé"
                       : current
@@ -107,7 +107,7 @@ export function VerificationTimeline({
                   </p>
                 </motion.div>
                 {i < VERIFICATION_STEPS.length - 1 && (
-                  <div className="absolute right-0 top-1/2 hidden h-0.5 w-4 translate-x-full bg-neutral-200 sm:block" />
+                  <div className="absolute right-0 top-1/2 hidden h-0.5 w-4 translate-x-full bg-white/15 sm:block" />
                 )}
               </li>
             );

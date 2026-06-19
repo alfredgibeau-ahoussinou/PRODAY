@@ -31,7 +31,9 @@ export function UniverseModuleExplorer({
             onClick={() => setActive(i)}
             whileHover={{ x: 4 }}
             className={`rounded-2xl border p-5 text-left transition ${
-              active === i ? theme.moduleActive : theme.moduleIdle
+              active === i
+                ? theme.moduleActive
+                : `${theme.moduleIdle} text-white/80`
             }`}
           >
             <span className="text-xs opacity-80">{m.subtitle}</span>

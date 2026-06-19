@@ -66,8 +66,8 @@ export const SignupStepLayout: React.FC<SignupStepLayoutProps> = ({
 }) => {
   const { compact, headerTopPad, contentMaxWidth, tabBarScrollInset: tabInset } =
     useAuthLayout();
-  const scrollBottomPad = tabInset({ guestMode: true, stickyFooter: Boolean(footer) });
-  const footerBottomPad = tabInset({ guestMode: true });
+  const scrollBottomPad = tabInset({ stickyFooter: Boolean(footer) });
+  const footerBottomPad = tabInset();
   const { productLine, colors } = useSignupFlowTheme();
   const authStyles = useAuthStyles();
   const brandName = brandForProductLine(productLine).name;

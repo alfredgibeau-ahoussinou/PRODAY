@@ -8,6 +8,7 @@ import { MercatoScreen } from '../screens/MercatoScreen';
 import { MatchsScreen } from '../screens/MatchsScreen';
 import { CarpoolScreen } from '../screens/CarpoolScreen';
 import { HealthProfessionalsScreen } from '../screens/HealthProfessionalsScreen';
+import { FamilleTabScreen } from '../screens/FamilleTabScreen';
 import { FeedTabScreen } from '../screens/FeedTabScreen';
 import { LazyReelsScreen } from '../screens/LazyReelsScreen';
 import { MessagesScreen } from '../screens/MessagesScreen';
@@ -28,6 +29,7 @@ const DEFAULT_SCREENS: Record<MainTabId, ComponentType> = {
   sante: HealthProfessionalsScreen,
   feed: FeedTabScreen,
   reels: LazyReelsScreen,
+  famille: FamilleTabScreen,
   messages: MessagesScreen,
   profil: ProfilTabScreen,
   shop: ShopScreen,

@@ -29,6 +29,7 @@ const TAB_ICONS: Record<MainTabId, IconName> = {
   sante: 'heart',
   feed: 'star-four-points',
   reels: 'videocam',
+  famille: 'shield',
   messages: 'chat',
   profil: 'person',
   shop: 'bag',
@@ -55,8 +56,8 @@ export const CompactTabBar: React.FC<CompactTabBarProps> = ({
   const immersive = activeTab === 'reels';
 
   const visibleTabIds = useMemo(
-    () => visibleTabs ?? getVisibleMainTabs(productLine, sessionProfile?.role),
-    [visibleTabs, productLine, sessionProfile?.role],
+    () => visibleTabs ?? getVisibleMainTabs(productLine, sessionProfile?.role, sessionProfile),
+    [visibleTabs, productLine, sessionProfile],
   );
   const tabItems = useMemo(
     () => MAIN_TAB_ITEMS.filter((t) => visibleTabIds.includes(t.id)),

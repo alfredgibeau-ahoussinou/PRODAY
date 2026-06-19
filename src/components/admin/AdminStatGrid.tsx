@@ -41,6 +41,13 @@ const ITEMS: {
     alert: true,
   },
   {
+    key: 'pendingPayments',
+    label: 'Paiements',
+    icon: 'document',
+    getValue: (s) => s.pendingPayments,
+    alert: true,
+  },
+  {
     key: 'pending',
     label: 'Vérif. attente',
     icon: 'shield',

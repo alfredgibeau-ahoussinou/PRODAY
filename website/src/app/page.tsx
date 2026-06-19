@@ -1,62 +1,70 @@
-import Link from "next/link";
-import { DownloadSection } from "@/components/home/DownloadSection";
+import { HeroSection } from "@/components/HeroSection";
+import { MarqueeStrip } from "@/components/MarqueeStrip";
+import { PhoneDemo } from "@/components/PhoneDemo";
+import { DemoDisclaimer } from "@/components/demo/DemoDisclaimer";
+import { StatsBar } from "@/components/StatsBar";
+import { FeaturesBento } from "@/components/FeaturesBento";
+import { SpotlightGrid } from "@/components/home/SpotlightGrid";
 import { ExploreGrid } from "@/components/home/ExploreGrid";
 import { TestimonialsCarousel } from "@/components/home/TestimonialsCarousel";
-import { UniversePromoGrid } from "@/components/home/UniversePromoGrid";
-import { HeroSection } from "@/components/HeroSection";
-import { PhoneDemo } from "@/components/PhoneDemo";
-import { MarqueeStrip } from "@/components/MarqueeStrip";
-import { RoleQuiz } from "@/components/interactive/RoleQuiz";
-import { FaqAccordion } from "@/components/interactive/FaqAccordion";
-import { StatsBar } from "@/components/StatsBar";
-import { Reveal } from "@/components/Reveal";
+import { PolesHubGrid } from "@/components/home/PolesHubGrid";
+import { DownloadSection } from "@/components/home/DownloadSection";
 import { WaitlistForm } from "@/components/WaitlistForm";
+import { FaqAccordion } from "@/components/interactive/FaqAccordion";
+import { RoleQuiz } from "@/components/interactive/RoleQuiz";
+import { Section } from "@/components/ui/Section";
+import { PremiumButton } from "@/components/ui/PremiumButton";
 import { ROUTES } from "@/lib/routes";
+import Link from "next/link";
 
 export default function HomePage() {
   return (
     <>
       <HeroSection />
       <MarqueeStrip />
-      <PhoneDemo />
+      <SpotlightGrid />
+      <div className="bg-[#030303]">
+        <div className="mx-auto max-w-6xl px-4 pb-4 pt-8 sm:px-6">
+          <DemoDisclaimer />
+        </div>
+        <PhoneDemo />
+      </div>
       <StatsBar />
+      <FeaturesBento />
+      <PolesHubGrid />
       <ExploreGrid />
       <TestimonialsCarousel />
-      <section className="border-t border-neutral-200 py-20">
-        <div className="mx-auto grid max-w-6xl gap-12 px-4 sm:px-6 lg:grid-cols-2">
-          <Reveal>
-            <h2 className="text-2xl font-bold sm:text-3xl">Quiz : votre profil ProDay</h2>
-            <p className="mt-4 text-proday-muted">
-              3 questions pour être orienté vers le bon univers — Man, Woman ou
-              Pro.
-            </p>
-            <Link
-              href={ROUTES.quiz}
-              className="mt-4 inline-block text-sm font-semibold underline"
-            >
-              Quiz complet →
-            </Link>
-          </Reveal>
-          <RoleQuiz compact />
-        </div>
-      </section>
-      <UniversePromoGrid />
-      <section className="bg-neutral-50 py-20">
-        <div className="mx-auto max-w-2xl px-4 sm:px-6">
-          <Reveal>
-            <h2 className="text-center text-2xl font-bold">Questions fréquentes</h2>
-            <Link
-              href={ROUTES.faq}
-              className="mt-2 block text-center text-sm text-proday-muted hover:text-proday-ink"
-            >
-              Voir toute la FAQ →
-            </Link>
-          </Reveal>
-          <div className="mt-10">
-            <FaqAccordion limit={4} />
+      <Section
+        kicker="QUIZ"
+        title="Quel pôle ProDay vous correspond ?"
+        description="3 questions — découvrez votre pôle : Joueur, Pro, Santé ou Partenaires."
+        className="border-t border-white/8"
+      >
+        <div className="grid gap-10 lg:grid-cols-2 lg:items-start">
+          <div>
+            <PremiumButton href={ROUTES.quiz} variant="outline">
+              Parcours guidé
+            </PremiumButton>
+          </div>
+          <div className="card-premium rounded-2xl p-6">
+            <RoleQuiz compact />
           </div>
         </div>
-      </section>
+      </Section>
+      <Section
+        kicker="FAQ"
+        title="Questions fréquentes"
+        description="Tarifs, partenaires, Reels et lancement — les réponses essentielles."
+        className="bg-[#050505]"
+      >
+        <FaqAccordion limit={5} variant="dark" />
+        <Link
+          href={ROUTES.faq}
+          className="mt-8 inline-block text-sm font-medium text-white/50 transition hover:text-white"
+        >
+          Voir toute la FAQ
+        </Link>
+      </Section>
       <DownloadSection />
       <WaitlistForm />
     </>

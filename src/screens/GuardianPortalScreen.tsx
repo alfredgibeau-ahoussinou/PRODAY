@@ -21,7 +21,7 @@ import {
   parentalGuardianService,
   type LinkedMinorProfile,
 } from '../services/parentalGuardian.service';
-import { normalizeGuardianEmail } from '../utils/guardianEmail';
+import { guardianEmailsMatch, normalizeGuardianEmail } from '../utils/guardianEmail';
 import {
   resolveDailyLimitMinutes,
   isScreenTimeActiveDay,
@@ -32,12 +32,17 @@ import { spacing, radius, shadows } from '../theme/designTokens';
 import type { ParentalContact } from '../models/ParentalSettings';
 
 interface GuardianPortalScreenProps {
-  onBack: () => void;
+  onBack?: () => void;
+  /** Intégré dans l’onglet Famille — sans en-tête retour. */
+  embedded?: boolean;
 }
 
 type ViewMode = 'list' | 'time' | 'report' | 'contacts';
 
-export const GuardianPortalScreen: React.FC<GuardianPortalScreenProps> = ({ onBack }) => {
+export const GuardianPortalScreen: React.FC<GuardianPortalScreenProps> = ({
+  onBack,
+  embedded = false,
+}) => {
   const { t } = useTranslation();
   const { profile, firebaseUser } = useAuth();
   const { colors: c, rootStyle } = useThemedScreen();
@@ -174,8 +179,10 @@ export const GuardianPortalScreen: React.FC<GuardianPortalScreenProps> = ({ onBa
   }
 
   return (
-    <View style={[styles.root, rootStyle]}>
-      <ScreenHeader title="Espace tuteur" onBack={onBack} centered />
+    <View style={[styles.root, rootStyle, embedded && styles.embeddedRoot]}>
+      {!embedded ? (
+        <ScreenHeader title="Espace tuteur" onBack={onBack!} centered />
+      ) : null}
 
       <ScrollView contentContainerStyle={styles.content}>
         <ProDaySurface variant="module" style={styles.hero}>
@@ -308,6 +315,46 @@ export const GuardianPortalScreen: React.FC<GuardianPortalScreenProps> = ({ onBa
                   {(child.settings.active_days ?? []).join(', ') || '—'}
                 </ProDayText>
 
+                {(child.settings.activity_journal ?? []).slice(0, 3).map((entry) => (
+                  <ProDayText key={entry.id} variant="caption" muted>
+                    · {entry.label}
+                  </ProDayText>
+                ))}
+
+                {guardianEmail &&
+                guardianEmailsMatch(child.settings.guardian_email_secondary, guardianEmail) ? (
+                  <PressableSpring
+                    onPress={() => {
+                      Alert.alert(
+                        'Retirer le co-tuteur',
+                        `Vous ne serez plus co-tuteur de ${child.display_name}.`,
+                        [
+                          { text: 'Annuler', style: 'cancel' },
+                          {
+                            text: 'Confirmer',
+                            style: 'destructive',
+                            onPress: () =>
+                              void parentalGuardianService
+                                .removeSecondaryGuardian(child.uid, guardianEmail)
+                                .then(load)
+                                .catch((e) =>
+                                  Alert.alert(
+                                    'Erreur',
+                                    e instanceof Error ? e.message : 'Action impossible.',
+                                  ),
+                                ),
+                          },
+                        ],
+                      );
+                    }}
+                    scaleTo={0.98}
+                  >
+                    <ProDayText variant="caption" muted style={styles.editLink}>
+                      Se retirer comme co-tuteur
+                    </ProDayText>
+                  </PressableSpring>
+                ) : null}
+
                 <View style={styles.linksRow}>
                   <PressableSpring
                     onPress={() => {
@@ -356,6 +403,7 @@ export const GuardianPortalScreen: React.FC<GuardianPortalScreenProps> = ({ onBa
 const createStyles = (c: { border: string; warning?: string; warningSoft?: string }) =>
   StyleSheet.create({
     root: { flex: 1 },
+    embeddedRoot: { flex: 1 },
     content: {
       padding: spacing.lg,
       gap: spacing.md,

@@ -27,6 +27,8 @@ function seedUsefulness(
   healthState: HealthState,
   position?: string,
   clubId?: string,
+  city?: string,
+  level?: string,
 ): number {
   const tags = seed.tags.map((t) => t.toLowerCase()).join(' ');
   let score = 0.45;
@@ -34,6 +36,12 @@ function seedUsefulness(
   for (const hint of POLE_TAG_BOOST[pole]) {
     if (tags.includes(hint.replace('#', '')) || tags.includes(hint)) score += 0.12;
   }
+
+  const cityNorm = (city ?? '').toLowerCase().trim();
+  if (cityNorm && tags.includes(cityNorm)) score += 0.22;
+
+  const levelNorm = (level ?? '').toLowerCase().trim();
+  if (levelNorm && tags.includes(levelNorm)) score += 0.18;
 
   const posKey = (position ?? '').toLowerCase().replace(/\s+/g, '');
   for (const [key, hints] of Object.entries(POSITION_TAG_BOOST)) {
@@ -67,6 +75,8 @@ export function rankReelSeeds(params: {
   usefulnessMin: number;
   position?: string;
   clubId?: string;
+  city?: string;
+  level?: string;
 }): ReelSeed[] {
   return [...params.seeds]
     .map((seed) => ({
@@ -77,6 +87,8 @@ export function rankReelSeeds(params: {
         params.healthState,
         params.position,
         params.clubId,
+        params.city,
+        params.level,
       ),
     }))
     .filter((s) => s.usefulness >= params.usefulnessMin)

@@ -1,38 +1,42 @@
 import Image from "next/image";
 import Link from "next/link";
 import { BRAND } from "@/lib/content";
-import { NAV_ITEMS, ROUTES } from "@/lib/routes";
+import { POLE_FOOTER_LINKS, ROUTES, UTILITY_NAV_ITEMS } from "@/lib/routes";
 
 export function SiteFooter() {
   return (
-    <footer className="border-t border-neutral-200 bg-white py-14">
+    <footer className="border-t border-white/8 bg-[#020202] py-16 text-white">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
-          <div>
+        <div className="grid gap-12 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="lg:col-span-1">
             <div className="flex items-center gap-3">
               <Image
-                src="/branding/logo-light.png"
+                src="/branding/logo-dark.png"
                 alt={BRAND.name}
-                width={36}
-                height={36}
+                width={40}
+                height={40}
+                className="rounded-xl"
               />
               <div>
-                <p className="font-bold">{BRAND.name}</p>
-                <p className="text-xs text-proday-muted">{BRAND.tagline}</p>
+                <p className="font-display text-lg font-bold">{BRAND.name}</p>
+                <p className="text-xs tracking-widest text-white/40">{BRAND.tagline}</p>
               </div>
             </div>
+            <p className="mt-4 text-sm leading-relaxed text-white/50">
+              {BRAND.mission}
+            </p>
           </div>
 
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-proday-muted">
-              Explorer
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/40">
+              Produit
             </p>
-            <ul className="mt-4 space-y-2">
-              {NAV_ITEMS.map((l) => (
+            <ul className="mt-4 space-y-2.5">
+              {UTILITY_NAV_ITEMS.map((l) => (
                 <li key={l.href}>
                   <Link
                     href={l.href}
-                    className="text-sm text-proday-muted hover:text-proday-ink"
+                    className="text-sm text-white/60 transition hover:text-white"
                   >
                     {l.label}
                   </Link>
@@ -42,44 +46,51 @@ export function SiteFooter() {
           </div>
 
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-proday-muted">
-              Interactif
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/40">
+              4 pôles
             </p>
-            <ul className="mt-4 space-y-2 text-sm text-proday-muted">
-              <li>
-                <Link href={ROUTES.demo} className="hover:text-proday-ink">
-                  Démo app
-                </Link>
-              </li>
-              <li>
-                <Link href={ROUTES.liveStats} className="hover:text-proday-ink">
-                  Live Stats
-                </Link>
-              </li>
-              <li>
-                <Link href={ROUTES.quiz} className="hover:text-proday-ink">
-                  Quiz profil
-                </Link>
-              </li>
-              <li>
-                <Link href={ROUTES.pricing} className="hover:text-proday-ink">
-                  Tarifs
-                </Link>
-              </li>
+            <ul className="mt-4 space-y-3">
+              {POLE_FOOTER_LINKS.map((pole) => (
+                <li key={pole.href}>
+                  <Link href={pole.href} className="group block hover:text-white">
+                    <span className="text-sm font-medium text-white/80 group-hover:text-white">
+                      {pole.label}
+                    </span>
+                    <span className="mt-0.5 block text-xs text-white/40">
+                      {pole.subtitle}
+                    </span>
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-proday-muted">
-              Liens
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/40">
+              Ressources
             </p>
-            <ul className="mt-4 space-y-2 text-sm text-proday-muted">
+            <ul className="mt-4 space-y-2.5 text-sm text-white/60">
+              <li>
+                <Link href={ROUTES.demo} className="hover:text-white">
+                  Démo interactive
+                </Link>
+              </li>
+              <li>
+                <Link href={ROUTES.roadmap} className="hover:text-white">
+                  Roadmap
+                </Link>
+              </li>
+              <li>
+                <Link href={ROUTES.beta} className="hover:text-white">
+                  Liste d&apos;attente
+                </Link>
+              </li>
               <li>
                 <Link
                   href="https://github.com/alfredgibeau-ahoussinou/PRODAY"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="hover:text-proday-ink"
+                  className="hover:text-white"
                 >
                   GitHub
                 </Link>
@@ -88,7 +99,7 @@ export function SiteFooter() {
           </div>
         </div>
 
-        <p className="mt-12 border-t border-neutral-100 pt-8 text-center text-sm text-proday-muted">
+        <p className="mt-14 border-t border-white/8 pt-8 text-center text-sm text-white/35">
           © {new Date().getFullYear()} ProDay — Application mobile & web
         </p>
       </div>

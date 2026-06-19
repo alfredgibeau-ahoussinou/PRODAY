@@ -2,12 +2,11 @@ import React, { useEffect, useMemo } from 'react';
 import { View, Text, StyleSheet, Dimensions } from 'react-native';
 import { ShowcaseImageBackground } from '../ui/ShowcaseImageBackground';
 import Animated, {
+  FadeIn,
   useAnimatedStyle,
   useSharedValue,
-  withRepeat,
   withTiming,
   interpolate,
-  FadeInDown,
 } from 'react-native-reanimated';
 import { Logo } from '../Logo';
 import { PressableSpring } from '../motion';
@@ -34,19 +33,20 @@ export const DiscoverWelcomePage: React.FC<DiscoverWelcomePageProps> = ({
   const { colors: c } = useDiscoverStyles();
   const styles = useMemo(() => createStyles(c), [c]);
   const showcase = useShowcaseImages();
-  const breathe = useSharedValue(0);
+  const heroIn = useSharedValue(0);
 
   useEffect(() => {
-    breathe.value = withRepeat(withTiming(1, { duration: 3600 }), -1, true);
-  }, [breathe]);
+    heroIn.value = withTiming(1, { duration: 700 });
+  }, [heroIn]);
 
   const photoAnim = useAnimatedStyle(() => ({
-    transform: [{ scale: interpolate(breathe.value, [0, 1], [1, 1.05]) }],
+    opacity: interpolate(heroIn.value, [0, 1], [0.92, 1]),
+    transform: [{ scale: interpolate(heroIn.value, [0, 1], [1.02, 1]) }],
   }));
 
   return (
     <View style={styles.root}>
-      <Animated.View entering={FadeInDown.springify()} style={styles.photoWrap}>
+      <Animated.View entering={FadeIn.duration(400)} style={styles.photoWrap}>
         <ShowcaseImageBackground
           source={showcase.discoverHero}
           variant="hero"
@@ -59,7 +59,7 @@ export const DiscoverWelcomePage: React.FC<DiscoverWelcomePageProps> = ({
       </Animated.View>
 
       <Animated.View
-        entering={FadeInDown.delay(60).springify()}
+        entering={FadeIn.delay(80).duration(420)}
         style={[styles.card, shadows.interactive]}
       >
         <View style={styles.cardAccent} />
@@ -76,7 +76,7 @@ export const DiscoverWelcomePage: React.FC<DiscoverWelcomePageProps> = ({
         </View>
       </Animated.View>
 
-      <Animated.View entering={FadeInDown.delay(120).springify()} style={styles.actions}>
+      <Animated.View entering={FadeIn.delay(140).duration(420)} style={styles.actions}>
         <PressableSpring style={styles.nextBtn} onPress={onNext} scaleTo={0.97}>
           <Text style={styles.nextText}>Découvrir ProDay</Text>
         </PressableSpring>

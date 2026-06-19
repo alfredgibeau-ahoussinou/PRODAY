@@ -5,6 +5,7 @@ import { Apple, Play, Smartphone } from "lucide-react";
 import Link from "next/link";
 import { BETA_PITCH } from "@/lib/content";
 import { ROUTES } from "@/lib/routes";
+import { PremiumButton } from "@/components/ui/PremiumButton";
 
 export function DownloadSection() {
   return (
@@ -14,47 +15,43 @@ export function DownloadSection() {
           whileInView={{ opacity: 1, y: 0 }}
           initial={{ opacity: 0, y: 24 }}
           viewport={{ once: true }}
-          className="grid gap-8 rounded-3xl border border-neutral-200 bg-white p-8 sm:grid-cols-2 sm:p-12"
+          className="card-premium relative overflow-hidden rounded-3xl p-8 sm:grid sm:grid-cols-2 sm:gap-8 sm:p-12"
         >
+          <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-blue-500/10 blur-3xl" />
           <div>
-            <Smartphone className="text-proday-muted" size={32} />
-            <h2 className="mt-4 text-2xl font-bold sm:text-3xl">
+            <Smartphone className="text-blue-400/80" size={32} />
+            <h2 className="font-display mt-4 text-2xl font-bold text-white sm:text-3xl">
               Bientôt sur iOS & Android
             </h2>
-            <p className="mt-3 text-proday-muted leading-relaxed">
-              Prochainement disponible sur iOS et Android. {BETA_PITCH.summary}
-            </p>
-            <p className="mt-2 text-sm text-proday-muted">{BETA_PITCH.dailyUpdates}</p>
+            <p className="mt-3 leading-relaxed text-white/55">{BETA_PITCH.summary}</p>
+            <p className="mt-2 text-sm text-white/40">{BETA_PITCH.dailyUpdates}</p>
           </div>
-          <div className="flex flex-col justify-center gap-3">
+          <div className="mt-8 flex flex-col justify-center gap-3 sm:mt-0">
             <button
               type="button"
-              className="flex items-center justify-center gap-3 rounded-2xl border border-neutral-200 bg-neutral-50 py-4 opacity-70"
+              className="flex items-center justify-center gap-3 rounded-2xl border border-white/10 bg-white/5 py-4 opacity-60"
               disabled
             >
-              <Apple size={22} />
-              <span className="text-left text-sm">
-                <span className="block text-xs text-proday-muted">Bientôt</span>
+              <Apple size={22} className="text-white" />
+              <span className="text-left text-sm text-white">
+                <span className="block text-xs text-white/40">Bientôt</span>
                 App Store
               </span>
             </button>
             <button
               type="button"
-              className="flex items-center justify-center gap-3 rounded-2xl border border-neutral-200 bg-neutral-50 py-4 opacity-70"
+              className="flex items-center justify-center gap-3 rounded-2xl border border-white/10 bg-white/5 py-4 opacity-60"
               disabled
             >
-              <Play size={22} />
-              <span className="text-left text-sm">
-                <span className="block text-xs text-proday-muted">Bientôt</span>
+              <Play size={22} className="text-white" />
+              <span className="text-left text-sm text-white">
+                <span className="block text-xs text-white/40">Bientôt</span>
                 Google Play
               </span>
             </button>
-            <Link
-              href={ROUTES.beta}
-              className="rounded-2xl bg-proday-ink py-4 text-center text-sm font-semibold text-white"
-            >
-              Accès beta maintenant
-            </Link>
+            <PremiumButton href={ROUTES.beta} className="w-full text-center">
+              Accès anticipé
+            </PremiumButton>
           </div>
         </motion.div>
       </div>

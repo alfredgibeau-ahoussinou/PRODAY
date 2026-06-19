@@ -96,6 +96,67 @@
         { "fieldPath": "sponsor_uid", "order": "ASCENDING" },
         { "fieldPath": "created_at", "order": "DESCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "sponsor_offers",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "sponsor_uid", "order": "ASCENDING" },
+        { "fieldPath": "created_at", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "sponsor_upgrade_requests",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "sponsor_uid", "order": "ASCENDING" },
+        { "fieldPath": "tier", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "sponsor_upgrade_requests",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "created_at", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "sponsor_upgrade_requests",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "sponsor_uid", "order": "ASCENDING" },
+        { "fieldPath": "tier", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "approved_at", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "sponsor_profile_views",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "sponsor_uid", "order": "ASCENDING" },
+        { "fieldPath": "viewer_uid", "order": "ASCENDING" },
+        { "fieldPath": "created_at", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "sponsor_profile_views",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "sponsor_uid", "order": "ASCENDING" },
+        { "fieldPath": "viewer_anonymous_id", "order": "ASCENDING" },
+        { "fieldPath": "created_at", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "users",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "notification_preferences.sponsor_geo_opt_in", "order": "ASCENDING" },
+        { "fieldPath": "city", "order": "ASCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []

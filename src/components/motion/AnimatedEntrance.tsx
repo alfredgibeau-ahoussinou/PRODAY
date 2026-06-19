@@ -4,7 +4,6 @@ import Animated, {
   FadeIn,
   FadeInDown,
   FadeInUp,
-  ZoomIn,
 } from 'react-native-reanimated';
 import { motion } from '../../theme/motion';
 
@@ -19,28 +18,31 @@ interface AnimatedEntranceProps {
 }
 
 function buildEntering(kind: EntranceKind, delay: number) {
+  const duration = motion.duration.normal;
+  const easeOut = motion.easing.out;
   const base = {
-    fadeUp: FadeInUp.springify().damping(17).stiffness(140),
-    fadeDown: FadeInDown.springify().damping(17).stiffness(140),
-    fade: FadeIn.springify().damping(20).stiffness(160),
-    zoom: ZoomIn.springify().damping(16).stiffness(150),
+    fadeUp: FadeInUp.duration(duration).easing(easeOut).withInitialValues({
+      transform: [{ translateY: 12 }],
+    }),
+    fadeDown: FadeInDown.duration(duration).easing(easeOut).withInitialValues({
+      transform: [{ translateY: -10 }],
+    }),
+    fade: FadeIn.duration(duration).easing(easeOut),
+    zoom: FadeIn.duration(duration).easing(easeOut),
   }[kind];
 
   return delay > 0 ? base.delay(delay) : base;
 }
 
-/** Entrée animée — headers, sections, tuiles. */
+/** Entrée animée — discrète, sans rebond. */
 export const AnimatedEntrance: React.FC<AnimatedEntranceProps> = ({
   children,
-  kind = 'fadeUp',
+  kind = 'fade',
   index = 0,
-  delayStep = 48,
+  delayStep = 36,
   style,
 }) => (
-  <Animated.View
-    style={style}
-    entering={buildEntering(kind, index * delayStep).duration(motion.duration.normal)}
-  >
+  <Animated.View style={style} entering={buildEntering(kind, index * delayStep)}>
     {children}
   </Animated.View>
 );

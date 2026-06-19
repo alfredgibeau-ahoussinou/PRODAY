@@ -177,11 +177,11 @@ const LINE_PLAN_PATCHES: Record<
       ],
     },
     sponsor_pro: {
-      label: 'Partenaire Pro',
+      label: 'Sponsor Pro',
       tagline: 'Visibilité marque sur l\'écosystème Pro Day Pro',
       mercatoQuotaLabel: 'Offres sponsors actives',
       freeIncludes: [
-        'Profil partenaire vérifié',
+        'Profil sponsor vérifié',
         'Présence annuaire Sponsors Pro',
         '1 offre active',
         'Zone géographique',
@@ -190,7 +190,7 @@ const LINE_PLAN_PATCHES: Record<
         'Offres sponsors illimitées',
         'Logo onglet Sponsors',
         'Campagnes locales ciblées',
-        'Push géolocalisé (à venir)',
+        'Push géolocalisé local (bêta — opt-in)',
       ],
     },
   },

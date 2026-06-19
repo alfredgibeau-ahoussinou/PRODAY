@@ -16,13 +16,28 @@ import type { FriendlyMatch } from '../models/FriendlyMatch';
 import type { SponsorOffer, ClubFundingGoal } from '../models/SponsorOffer';
 import type { CommunityReel } from '../models/CommunityReel';
 import type { ReelReport } from '../models/ReelReport';
-import { adminService, type PlatformStats } from '../services/admin.service';
+import {
+  adminService,
+  type PlatformStats,
+  type PlatformDailySnapshot,
+} from '../services/admin.service';
 import { userNeedsAdminVerificationReview } from '../utils/adminUserVerification';
+import {
+  buildAdminWorkQueue,
+  computeRoleBreakdown,
+  moderationLoadScore,
+  type AdminWorkItem,
+} from '../utils/adminInsights';
 
 interface AdminDataContextValue {
   loading: boolean;
   refreshing: boolean;
+  lastRefreshedAt: Date | null;
   stats: PlatformStats | null;
+  dailySnapshots: PlatformDailySnapshot[];
+  workQueue: AdminWorkItem[];
+  roleBreakdown: { role: User['role']; count: number }[];
+  moderationScore: number;
   users: User[];
   events: TeamEvent[];
   matches: FriendlyMatch[];
@@ -46,7 +61,9 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [lastRefreshedAt, setLastRefreshedAt] = useState<Date | null>(null);
   const [stats, setStats] = useState<PlatformStats | null>(null);
+  const [dailySnapshots, setDailySnapshots] = useState<PlatformDailySnapshot[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [events, setEvents] = useState<TeamEvent[]>([]);
   const [matches, setMatches] = useState<FriendlyMatch[]>([]);
@@ -62,22 +79,25 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({
   const [userDocCounts, setUserDocCounts] = useState<Record<string, number>>({});
 
   const load = useCallback(async () => {
-    const [s, u, e, m, p, c, pay, apps, ann, so, fg, reels, reports] = await Promise.all([
-      adminService.getPlatformStats(),
-      adminService.listAllUsers(),
-      adminService.listAllTeamEvents(),
-      adminService.listAllFriendlyMatches(),
-      adminService.listAllRecruitmentPosts(),
-      adminService.listAllClubs(),
-      adminService.listAllPaymentRequests(),
-      adminService.listAllApplications(),
-      adminService.listAllClubAnnouncements(),
-      adminService.listAllSponsorOffers(),
-      adminService.listAllFundingGoals(),
-      adminService.listCommunityReels(),
-      adminService.listReelReports(),
-    ]);
+    const [s, u, e, m, p, c, pay, apps, ann, so, fg, reels, reports, snapshots] =
+      await Promise.all([
+        adminService.getPlatformStats(),
+        adminService.listAllUsers(),
+        adminService.listAllTeamEvents(),
+        adminService.listAllFriendlyMatches(),
+        adminService.listAllRecruitmentPosts(),
+        adminService.listAllClubs(),
+        adminService.listAllPaymentRequests(),
+        adminService.listAllApplications(),
+        adminService.listAllClubAnnouncements(),
+        adminService.listAllSponsorOffers(),
+        adminService.listAllFundingGoals(),
+        adminService.listCommunityReels(),
+        adminService.listReelReports(),
+        adminService.listDailyPlatformSnapshots(14),
+      ]);
     setStats(s);
+    setDailySnapshots(snapshots);
     setUsers(u);
     setEvents(e);
     setMatches(m);
@@ -90,6 +110,7 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({
     setFundingGoals(fg);
     setCommunityReels(reels);
     setReelReports(reports);
+    setLastRefreshedAt(new Date());
 
     const pendingReview = u.filter((x) => userNeedsAdminVerificationReview(x));
     const docCounts: Record<string, number> = {};
@@ -97,7 +118,7 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({
       pendingReview.slice(0, 24).map(async (x) => {
         const docs = await adminService.listUserDocuments(x.uid);
         docCounts[x.uid] = docs.length;
-      })
+      }),
     );
     setUserDocCounts(docCounts);
   }, []);
@@ -118,11 +139,35 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({
       .finally(() => setLoading(false));
   }, [load]);
 
+  const workQueue = useMemo(
+    () =>
+      buildAdminWorkQueue({
+        users,
+        communityReels,
+        reelReports,
+        payments,
+        applications,
+        posts,
+      }),
+    [users, communityReels, reelReports, payments, applications, posts],
+  );
+
+  const roleBreakdown = useMemo(() => computeRoleBreakdown(users), [users]);
+  const moderationScore = useMemo(
+    () => (stats ? moderationLoadScore(stats) : 0),
+    [stats],
+  );
+
   const value = useMemo(
     () => ({
       loading,
       refreshing,
+      lastRefreshedAt,
       stats,
+      dailySnapshots,
+      workQueue,
+      roleBreakdown,
+      moderationScore,
       users,
       events,
       matches,
@@ -141,7 +186,12 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({
     [
       loading,
       refreshing,
+      lastRefreshedAt,
       stats,
+      dailySnapshots,
+      workQueue,
+      roleBreakdown,
+      moderationScore,
       users,
       events,
       matches,
@@ -156,7 +206,7 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({
       reelReports,
       userDocCounts,
       refresh,
-    ]
+    ],
   );
 
   return (

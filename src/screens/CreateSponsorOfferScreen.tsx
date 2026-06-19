@@ -55,7 +55,7 @@ export const CreateSponsorOfferScreen: React.FC<CreateSponsorOfferScreenProps> =
         sponsor_uid: sponsorUid,
         company_name: company.trim(),
         description: description.trim(),
-        value: value.trim() || 'Offre partenaire',
+        value: value.trim() || 'Offre sponsor',
         city: city.trim() || 'France',
         offer_type: offerType,
         target_categories: categories,
@@ -74,7 +74,7 @@ export const CreateSponsorOfferScreen: React.FC<CreateSponsorOfferScreenProps> =
     <View style={styles.root}>
       <ScreenHeader
         title="Nouvelle offre"
-        subtitle="Espace partenaire ProDay"
+        subtitle="Espace sponsor ProDay"
         onBack={onBack}
         centered
         sponsorDark

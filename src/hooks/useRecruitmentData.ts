@@ -88,7 +88,7 @@ export function useUserProfile(uid: string | null) {
       return;
     }
     setLoading(true);
-    usersService.getById(uid).then((u) => {
+    usersService.getPublicById(uid).then((u) => {
       setUser(u);
       setLoading(false);
     });

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Syne } from "next/font/google";
 import { SiteShell } from "@/components/layout/SiteShell";
 import "./globals.css";
 
@@ -9,6 +9,13 @@ const inter = Inter({
   display: "swap",
 });
 
+const syne = Syne({
+  variable: "--font-syne",
+  subsets: ["latin"],
+  display: "swap",
+  weight: ["500", "600", "700", "800"],
+});
+
 export const metadata: Metadata = {
   metadataBase: new URL("https://proday.app"),
   title: {
@@ -16,11 +23,11 @@ export const metadata: Metadata = {
     template: "%s · ProDay",
   },
   description:
-    "Plateforme mobile foot amateur et semi-pro : Mercato, Matchs, Arena, Pulse ProDay et CV vivant.",
+    "Plateforme foot amateur et semi-pro : Mercato, Matchs, Arena, Reels, Fil, espace partenaires et Pulse ProDay.",
   openGraph: {
     title: "ProDay",
     description:
-      "Une saison. Une app. Recrutement, matchs, tournois et communauté.",
+      "Une saison. Une app. Recrutement, matchs, tournois, communauté et partenaires.",
     images: ["/branding/logo-light.png"],
   },
 };
@@ -31,7 +38,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="fr" className={`${inter.variable} scroll-smooth`}>
+    <html lang="fr" className={`${inter.variable} ${syne.variable} scroll-smooth`}>
       <body className="min-h-screen antialiased">
         <SiteShell>{children}</SiteShell>
       </body>

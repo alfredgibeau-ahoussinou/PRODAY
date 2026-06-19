@@ -5,12 +5,15 @@ import { useAuth } from '../../../context/AuthContext';
 import { useIsAdmin } from '../../../hooks/useIsAdmin';
 import { useAdminData } from '../../../context/AdminDataContext';
 import { adminService } from '../../../services/admin.service';
+import { adminAuditService } from '../../../services/adminAudit.service';
 import { AdminPageScaffold } from '../../../components/admin/AdminPageScaffold';
+import { AdminAuditLogPanel } from '../../../components/admin/AdminAuditLogPanel';
+import { AdminSettingsCard } from '../../../components/admin/AdminSettingsCard';
 import { AdminSectionHeader } from '../../../components/admin/AdminSectionHeader';
 import { Icon } from '../../../components/ui/Icon';
 import { PLATFORM_ADMIN_EMAIL } from '../../../config/admin';
 import { useAdminStyles } from '../../../components/admin/adminStyles';
-import { spacing, radius } from '../../../theme/designTokens';
+import { spacing, radius, shadows } from '../../../theme/designTokens';
 import type { AppColors } from '../../../theme/universeTheme';
 
 interface AdminSystemPageProps {
@@ -19,9 +22,9 @@ interface AdminSystemPageProps {
 
 export const AdminSystemPage: React.FC<AdminSystemPageProps> = ({ onPreviewUserApp }) => {
   const { t } = useTranslation();
-  const { profile, signOut, refreshAdminClaim } = useAuth();
+  const { profile, signOut, refreshAdminClaim, firebaseUser } = useAuth();
   const { isAdmin } = useIsAdmin();
-  const { loading, refresh } = useAdminData();
+  const { loading, refresh, dailySnapshots, stats } = useAdminData();
   const { colors: c } = useAdminStyles();
   const styles = useMemo(() => createStyles(c), [c]);
   const [systemBusy, setSystemBusy] = useState(false);
@@ -32,7 +35,7 @@ export const AdminSystemPage: React.FC<AdminSystemPageProps> = ({ onPreviewUserA
       const published = await adminService.refreshPublicStats();
       Alert.alert(
         'Stats Discover',
-        `Publiées : ${published.players} joueurs, ${published.coaches} coachs, ${published.recruitment_posts_open} annonces ouvertes.`
+        `Publiées : ${published.players} joueurs, ${published.coaches} coachs, ${published.recruitment_posts_open} annonces ouvertes.`,
       );
     } catch (e) {
       Alert.alert('Erreur', e instanceof Error ? e.message : 'Publication impossible.');
@@ -41,81 +44,111 @@ export const AdminSystemPage: React.FC<AdminSystemPageProps> = ({ onPreviewUserA
     }
   };
 
-  return (
-    <AdminPageScaffold
-      title={t('admin.system.title')}
-      subtitle={t('admin.system.subtitle')}
-      loading={loading}
-    >
-      <AdminSectionHeader title="COMPTE ADMIN" />
+  const handleForceSnapshot = async () => {
+    setSystemBusy(true);
+    try {
+      const s = await adminService.getPlatformStats();
+      await adminService.recordDailyPlatformSnapshot(s);
+      await adminAuditService.log({
+        action: 'snapshot_recorded',
+        actor_uid: profile?.uid ?? '',
+        actor_email: firebaseUser?.email ?? profile?.email,
+        target_type: 'platform_stats_daily',
+        target_id: new Date().toISOString().slice(0, 10),
+        summary: 'Snapshot plateforme enregistré manuellement',
+      });
+      await refresh();
+      Alert.alert('Snapshot', 'Snapshot du jour enregistré.');
+    } catch (e) {
+      Alert.alert('Erreur', e instanceof Error ? e.message : 'Échec snapshot.');
+    } finally {
+      setSystemBusy(false);
+    }
+  };
 
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Identifiants plateforme</Text>
-        <Text style={styles.cardSub}>
+  return (
+    <AdminPageScaffold loading={loading}>
+      <AdminSectionHeader title="Compte admin" />
+
+      <AdminSettingsCard icon="shield" title="Identifiants plateforme">
+        <Text style={styles.bodyText}>
           Email : <Text style={styles.mono}>{PLATFORM_ADMIN_EMAIL}</Text>
-          {'\n'}Mot de passe : défini localement via{' '}
-          <Text style={styles.mono}>ADMIN_SETUP_PASSWORD</Text> dans votre fichier{' '}
-          <Text style={styles.mono}>.env</Text> (jamais committé).
         </Text>
-        <Text style={styles.cardSub}>
-          Création ou réinitialisation :{' '}
-          <Text style={styles.mono}>npm run admin:setup</Text>
+        <Text style={styles.bodyText}>
+          Mot de passe via <Text style={styles.mono}>ADMIN_SETUP_PASSWORD</Text> dans{' '}
+          <Text style={styles.mono}>.env</Text>
         </Text>
-      </View>
+        <Text style={styles.bodyText}>
+          Setup : <Text style={styles.mono}>npm run admin:setup</Text>
+        </Text>
+      </AdminSettingsCard>
+
+      <AdminSectionHeader title="Analytics & snapshots" />
+
+      <AdminSettingsCard
+        icon="star-four-points"
+        title="Snapshots quotidiens"
+        actionLabel={systemBusy ? 'Enregistrement…' : 'Forcer snapshot du jour'}
+        onAction={() => void handleForceSnapshot()}
+        actionDisabled={systemBusy}
+      >
+        <Text style={styles.bodyText}>
+          {dailySnapshots.length > 0
+            ? `Dernier : ${dailySnapshots[0]?.day_key} · ${dailySnapshots[0]?.users ?? 0} utilisateurs`
+            : 'Aucun snapshot enregistré.'}
+        </Text>
+        {stats ? (
+          <Text style={styles.bodyText}>
+            État actuel : {stats.users} users · {stats.teamEvents} events · charge modération{' '}
+            {stats.pendingVerifications + stats.pendingCommunityReels + stats.reelReports}.
+          </Text>
+        ) : null}
+      </AdminSettingsCard>
 
       <AdminSectionHeader title={t('admin.system.ops')} />
 
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Stats page Discover</Text>
-        <Text style={styles.cardSub}>
-          Recalcule joueurs, coachs, agents, clubs et annonces ouvertes dans{' '}
+      <AdminSettingsCard
+        icon="business"
+        title="Stats page Discover"
+        actionLabel={systemBusy ? 'Publication…' : 'Publier les stats Discover'}
+        onAction={() => void handleRefreshPublicStats()}
+        actionDisabled={systemBusy}
+      >
+        <Text style={styles.bodyText}>
+          Recalcule joueurs, coachs, agents, clubs et annonces dans{' '}
           <Text style={styles.mono}>platform_stats/recruitment</Text>.
         </Text>
-        <TouchableOpacity
-          style={[styles.btn, systemBusy && styles.btnDisabled]}
-          onPress={() => void handleRefreshPublicStats()}
-          disabled={systemBusy}
-        >
-          <Text style={styles.btnText}>
-            {systemBusy ? 'Publication…' : 'Publier les stats Discover'}
-          </Text>
-        </TouchableOpacity>
-      </View>
+      </AdminSettingsCard>
 
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Cloud Functions</Text>
-        <Text style={styles.cardSub}>
-          Création/suppression utilisateurs, validation profils et push nécessitent le plan Blaze et{' '}
+      <AdminSettingsCard icon="settings" title="Cloud Functions">
+        <Text style={styles.bodyText}>
+          Création utilisateurs, validation profils et push nécessitent Blaze +{' '}
           <Text style={styles.mono}>npm run firebase:deploy:functions</Text>.
         </Text>
-      </View>
+      </AdminSettingsCard>
 
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Token admin</Text>
-        <Text style={styles.cardSub}>
-          Claim actif : {isAdmin ? 'oui' : 'non'}. Email : {profile?.email ?? '—'}
+      <AdminSettingsCard
+        icon="shield"
+        title="Token admin"
+        actionLabel="Rafraîchir le token"
+        onAction={() => void refreshAdminClaim().then(() => refresh())}
+      >
+        <Text style={styles.bodyText}>
+          Claim actif : {isAdmin ? 'oui' : 'non'} · {profile?.email ?? '—'}
         </Text>
-        <TouchableOpacity
-          style={styles.btnOutline}
-          onPress={() => {
-            void refreshAdminClaim().then(() => refresh());
-          }}
-        >
-          <Text style={styles.btnOutlineText}>Rafraîchir le token admin</Text>
-        </TouchableOpacity>
-      </View>
+      </AdminSettingsCard>
 
       <AdminSectionHeader title={t('admin.system.session')} />
 
       <TouchableOpacity style={styles.previewBtn} onPress={onPreviewUserApp} activeOpacity={0.88}>
-        <Icon name="eye" size={22} color={c.brand} />
+        <View style={styles.previewIcon}>
+          <Icon name="eye" size={20} color={c.brand} />
+        </View>
         <View style={styles.previewBody}>
           <Text style={styles.previewTitle}>Prévisualiser l’app utilisateur</Text>
-          <Text style={styles.previewSub}>
-            Ouvrir l’interface membre sans quitter votre session admin
-          </Text>
+          <Text style={styles.previewSub}>Interface membre sans quitter la session admin</Text>
         </View>
-        <Icon name="chevron-forward" size={18} color={c.textSecondary} />
+        <Icon name="chevron-forward" size={18} color={c.textMuted} />
       </TouchableOpacity>
 
       <TouchableOpacity
@@ -129,39 +162,16 @@ export const AdminSystemPage: React.FC<AdminSystemPageProps> = ({ onPreviewUserA
       >
         <Text style={styles.signOutText}>Se déconnecter</Text>
       </TouchableOpacity>
+
+      <AdminAuditLogPanel />
     </AdminPageScaffold>
   );
 };
 
 function createStyles(c: AppColors) {
   return StyleSheet.create({
-    card: {
-      backgroundColor: c.surface,
-      borderRadius: radius.lg,
-      padding: spacing.md,
-      borderWidth: 1,
-      borderColor: c.border,
-      marginBottom: spacing.md,
-    },
-    cardTitle: { fontSize: 15, fontWeight: '900', color: c.text, marginBottom: spacing.xs },
-    cardSub: { fontSize: 13, color: c.textSecondary, lineHeight: 20, marginBottom: spacing.md },
-    mono: { fontFamily: 'monospace', fontSize: 12 },
-    btn: {
-      backgroundColor: c.ink,
-      borderRadius: radius.md,
-      padding: spacing.md,
-      alignItems: 'center',
-    },
-    btnDisabled: { opacity: 0.6 },
-    btnText: { color: c.brandInverse, fontWeight: '900', fontSize: 14 },
-    btnOutline: {
-      borderWidth: 1,
-      borderColor: c.border,
-      borderRadius: radius.md,
-      padding: spacing.md,
-      alignItems: 'center',
-    },
-    btnOutlineText: { color: c.text, fontWeight: '800', fontSize: 14 },
+    bodyText: { fontSize: 13, color: c.textSecondary, lineHeight: 20 },
+    mono: { fontFamily: 'monospace', fontSize: 12, color: c.text },
     previewBtn: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -172,21 +182,29 @@ function createStyles(c: AppColors) {
       borderWidth: 1,
       borderColor: c.border,
       marginBottom: spacing.md,
+      ...shadows.card,
     },
-    previewBody: { flex: 1 },
-    previewTitle: { fontSize: 14, fontWeight: '900', color: c.text },
-    previewSub: { fontSize: 12, color: c.textSecondary, marginTop: 2 },
-    signOutBtn: {
-      flexDirection: 'row',
+    previewIcon: {
+      width: 40,
+      height: 40,
+      borderRadius: radius.md,
+      backgroundColor: c.brandSoft,
       alignItems: 'center',
       justifyContent: 'center',
-      gap: spacing.sm,
+    },
+    previewBody: { flex: 1 },
+    previewTitle: { fontSize: 14, fontWeight: '800', color: c.text },
+    previewSub: { fontSize: 12, color: c.textSecondary, marginTop: 2 },
+    signOutBtn: {
+      alignItems: 'center',
+      justifyContent: 'center',
       padding: spacing.md,
       borderRadius: radius.md,
       borderWidth: 1,
       borderColor: c.error,
       backgroundColor: c.errorBg,
+      marginBottom: spacing.lg,
     },
-    signOutText: { color: c.error, fontWeight: '900', fontSize: 14 },
+    signOutText: { color: c.error, fontWeight: '800', fontSize: 14 },
   });
 }

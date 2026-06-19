@@ -27,6 +27,9 @@ import {
   isSponsorRole,
   SPONSOR_MAIN_TABS,
 } from './sponsorExperience';
+import { canParticipateWeeklyQuestion } from '../utils/weeklyQuestionAccess';
+import { injectFamilyTab } from './familyExperience';
+import type { User } from '../models/User';
 
 /** Groupes de rôles à l'inscription — filtrés par pôle. */
 export interface SignupRoleGroup {
@@ -57,7 +60,7 @@ const PRO_SIGNUP_GROUPS: SignupRoleGroup[] = [
   },
   {
     id: 'partner',
-    label: 'Partenaires',
+    label: 'Sponsors',
     hint: 'Visibilité marque & financement clubs',
     roles: ['sponsor'],
   },
@@ -92,32 +95,45 @@ export function getDashboardLayoutKind(
   return role === 'player' ? 'amateur_player' : 'pro';
 }
 
+/** Ajoute l’onglet Fil pour la question hebdo / communauté. */
+export function injectCommunityFeedTab(
+  tabs: MainTabId[],
+  role?: UserRole | null
+): MainTabId[] {
+  if (!role || !canParticipateWeeklyQuestion(role) || tabs.includes('feed')) {
+    return tabs;
+  }
+  const reelsIndex = tabs.indexOf('reels');
+  const anchor = reelsIndex >= 0 ? reelsIndex : tabs.indexOf('matchs');
+  const insertAt = anchor >= 0 ? anchor + 1 : tabs.length;
+  const next = [...tabs];
+  next.splice(insertAt, 0, 'feed');
+  return next;
+}
+
 /** Onglets visibles selon pôle + rôle connecté. */
 export function getVisibleMainTabs(
   line: ProductLineId,
-  role?: UserRole | null
+  role?: UserRole | null,
+  profile?: User | null,
 ): MainTabId[] {
   const r = role ?? 'player';
+  let tabs: MainTabId[];
 
   if (line === 'sante') {
-    return ['home', 'matchs', 'messages', 'profil'];
-  }
-
-  if (line === 'pro') {
+    tabs = ['home', 'matchs', 'messages', 'profil'];
+  } else if (line === 'pro') {
     if (r === 'sponsor') {
-      return SPONSOR_MAIN_TABS;
+      tabs = [...SPONSOR_MAIN_TABS];
+    } else if (r === 'organizer') {
+      tabs = ['home', 'recrutement', 'matchs', 'reels', 'covoiturage', 'messages', 'profil'];
+    } else if (r === 'coach' || r === 'club' || r === 'agent') {
+      tabs = ['home', 'recrutement', 'matchs', 'reels', 'covoiturage', 'messages', 'profil'];
+    } else {
+      tabs = ['home', 'recrutement', 'matchs', 'reels', 'messages', 'profil'];
     }
-    if (r === 'organizer') {
-      return ['home', 'recrutement', 'matchs', 'reels', 'covoiturage', 'messages', 'profil'];
-    }
-    if (r === 'coach' || r === 'club' || r === 'agent') {
-      return ['home', 'recrutement', 'matchs', 'reels', 'covoiturage', 'messages', 'profil'];
-    }
-    return ['home', 'recrutement', 'matchs', 'reels', 'messages', 'profil'];
-  }
-
-  if (r === 'player') {
-    return [
+  } else if (r === 'player') {
+    tabs = [
       'home',
       'recrutement',
       'matchs',
@@ -127,9 +143,11 @@ export function getVisibleMainTabs(
       'messages',
       'profil',
     ];
+  } else {
+    tabs = ['home', 'recrutement', 'matchs', 'reels', 'feed', 'messages', 'profil'];
   }
 
-  return ['home', 'recrutement', 'matchs', 'reels', 'feed', 'messages', 'profil'];
+  return injectFamilyTab(injectCommunityFeedTab(tabs, r), profile, line);
 }
 
 export { getMercatoTabLabel } from './mercatoTabLabel';
@@ -161,6 +179,7 @@ export function getTabShortLabel(
     sante: 'Santé',
     feed: 'Fil',
     reels: 'Reels',
+    famille: 'Famille',
     messages: 'Messages',
     profil: 'Profil',
   };
@@ -175,7 +194,7 @@ export function getDashboardQuickAccessLabel(
     return 'Mon parcours';
   }
   if (role === 'physio') return 'Pôle santé';
-  if (role === 'sponsor') return 'Partenaires';
+  if (role === 'sponsor') return 'Sponsors';
   return 'Outils métier';
 }
 
@@ -279,7 +298,7 @@ export function getDashboardMetaForLine(
       coach: 'BANC TECHNIQUE PRO',
       agent: 'RÉSEAU AGENT PRO',
       recruiter: 'RECRUTEUR PRO',
-      sponsor: 'PARTENAIRES PRO',
+      sponsor: 'SPONSORS PRO',
       club: 'QG CLUB PRO',
       organizer: 'ARENA PRO',
     };

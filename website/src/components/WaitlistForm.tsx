@@ -68,7 +68,7 @@ export function WaitlistForm({ fullPage, initialRole }: WaitlistFormProps) {
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="relative overflow-hidden rounded-3xl bg-proday-ink px-8 py-16 text-white sm:px-14"
+          className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-[#0c0c12] via-[#0a0a0f] to-[#030303] px-8 py-16 text-white sm:px-14"
         >
           <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-white/5 blur-2xl" />
           <div className="absolute -bottom-16 -left-16 h-48 w-48 rounded-full bg-white/5 blur-2xl" />
@@ -76,26 +76,26 @@ export function WaitlistForm({ fullPage, initialRole }: WaitlistFormProps) {
           <Reveal>
             {!fullPage ? (
               <>
-                <h2 className="text-3xl font-bold sm:text-4xl">
-                  Rejoignez la bêta ProDay
+                <h2 className="font-display text-3xl font-bold sm:text-4xl">
+                  Liste d&apos;attente ProDay
                 </h2>
                 <p className="mt-4 max-w-lg text-white/75">{BETA_PITCH.summary}</p>
-                <p className="mt-3 max-w-lg text-sm text-pink-200/90">
+                <p className="mt-3 max-w-lg text-sm text-white/50">
                   {BETA_PITCH.dailyUpdates}
                 </p>
               </>
             ) : (
               <ul className="max-w-lg space-y-2 text-sm text-white/80">
                 <li className="flex gap-2">
-                  <span className="text-pink-300">•</span>
+                  <span className="text-white/40">—</span>
                   {BETA_PITCH.dailyUpdates}
                 </li>
                 <li className="flex gap-2">
-                  <span className="text-pink-300">•</span>
+                  <span className="text-white/40">—</span>
                   {BETA_PITCH.launch}
                 </li>
                 <li className="flex gap-2">
-                  <span className="text-pink-300">•</span>
+                  <span className="text-white/40">—</span>
                   Un email de bienvenue avec les premières infos ProDay
                 </li>
               </ul>
@@ -161,7 +161,7 @@ export function WaitlistForm({ fullPage, initialRole }: WaitlistFormProps) {
               ) : null}
               <p className="text-xs text-white/50">
                 En vous inscrivant, vous acceptez de recevoir des emails sur la
-                bêta ProDay. Désinscription possible à tout moment.
+                liste d&apos;attente ProDay. Désinscription possible à tout moment.
               </p>
             </form>
           )}

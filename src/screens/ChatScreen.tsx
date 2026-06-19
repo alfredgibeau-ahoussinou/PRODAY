@@ -38,6 +38,7 @@ interface ChatScreenProps {
   otherName: string;
   currentUid: string;
   currentUser?: User | null;
+  initialDraft?: string;
   onBack: () => void;
 }
 
@@ -46,12 +47,13 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
   otherName,
   currentUid,
   currentUser,
+  initialDraft,
   onBack,
 }) => {
   const { t, locale } = useTranslation();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(true);
-  const [text, setText] = useState('');
+  const [text, setText] = useState(initialDraft ?? '');
   const [sending, setSending] = useState(false);
   const [otherUser, setOtherUser] = useState<User | null>(null);
   const [sendBlocked, setSendBlocked] = useState<string | null>(null);
@@ -108,7 +110,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
 
   useEffect(() => {
     if (!otherUid || isGroupChat) return;
-    void usersService.getById(otherUid).then(setOtherUser);
+    void usersService.getPublicById(otherUid).then(setOtherUser);
   }, [otherUid, isGroupChat]);
 
   useEffect(() => {

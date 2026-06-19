@@ -61,11 +61,14 @@ const SAFETY_TIPS: { icon: 'shield' | 'chat' | 'lock' | 'time'; title: string; b
 ];
 
 interface ParentalControlScreenProps {
-  onBack: () => void;
+  onBack?: () => void;
+  /** Intégré dans l’onglet Famille — sans en-tête retour. */
+  embedded?: boolean;
 }
 
 export const ParentalControlScreen: React.FC<ParentalControlScreenProps> = ({
   onBack,
+  embedded = false,
 }) => {
   const { profile, refreshProfile } = useAuth();
   const { colors: c, productLine, rootStyle } = useThemedScreen();
@@ -175,9 +178,10 @@ export const ParentalControlScreen: React.FC<ParentalControlScreenProps> = ({
   };
 
   if (!profile || !isMinorUser(profile)) {
+    if (embedded) return null;
     return (
       <View style={[styles.root, rootStyle]}>
-        <ScreenHeader title="Contrôle parental" onBack={onBack} centered />
+        <ScreenHeader title="Contrôle parental" onBack={onBack!} centered />
         <View style={styles.restricted}>
           <Text style={styles.restrictedTitle}>Réservé aux comptes mineurs</Text>
           <Text style={styles.restrictedSub}>
@@ -232,8 +236,10 @@ export const ParentalControlScreen: React.FC<ParentalControlScreenProps> = ({
   const playerAge = profile.profile?.age;
 
   return (
-    <View style={[styles.root, rootStyle]}>
-      <ScreenHeader title="Contrôle parental" onBack={onBack} centered />
+    <View style={[styles.root, rootStyle, embedded && styles.embeddedRoot]}>
+      {!embedded ? (
+        <ScreenHeader title="Contrôle parental" onBack={onBack!} centered />
+      ) : null}
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {loading ? (
@@ -575,6 +581,7 @@ const ProtectionCard: React.FC<{
 function createStyles(c: AppColors) {
   return StyleSheet.create({
     root: { flex: 1 },
+    embeddedRoot: { flex: 1 },
     content: { padding: spacing.lg, paddingBottom: spacing.xxl },
     loader: { marginTop: spacing.xl },
     dashboard: {

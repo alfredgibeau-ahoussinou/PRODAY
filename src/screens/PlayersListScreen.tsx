@@ -6,42 +6,37 @@ import {
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
-  TextInput,
+  ScrollView,
 } from 'react-native';
 import type { User } from '../models/User';
-import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { SearchBar } from '../components/ui/SearchBar';
 import { PlayerRowCard } from '../components/ui/PlayerRowCard';
-import { useUsersByRole } from '../hooks/useRecruitmentData';
+import { usePlayersDirectory } from '../hooks/usePlayersDirectory';
 import { useAuth } from '../context/AuthContext';
 import { useFavorites } from '../hooks/useFavorites';
 import {
   DEFAULT_PLAYER_FILTERS,
-  PLAYER_CATEGORIES_FILTER,
   PLAYER_LEVELS_FILTER,
   PLAYER_POSITIONS_FILTER,
   countActiveFilters,
   filterPlayers,
   type PlayerListFilters,
 } from '../utils/playerFilters';
-import { ProDayActionTiles } from '../components/ui/ProDayActionTiles';
 import { spacing, radius } from '../theme/designTokens';
 import type { AppColors } from '../theme/universeTheme';
 import { useAppTheme } from '../context/ProductLineContext';
-import { isSubScreenShellEnabled } from '../hooks/useSubScreenShell';
 import { TabScreenShell } from '../components/app/TabScreenShell';
 import { ScreenBackButton } from '../components/ui/ScreenBackButton';
-import { useSectionIntelligence } from '../hooks/useSectionIntelligence';
 import {
   scoutingScoreMap,
   sortPlayersByScouting,
   type PlayerScoutingScore,
 } from '../features/v3/engines/playerScouting.engine';
-import { StaggerReveal } from '../components/motion';
 import { trackV3Event } from '../core/analytics/v3Events';
 import { TAB_BAR_CONTENT_INSET } from '../navigation/tabBarLayout';
-
-type FilterPanel = 'poste' | 'categorie' | 'niveau' | 'ville' | 'age' | null;
+import { Icon } from '../components/ui/Icon';
+import { isSubScreenShellEnabled } from '../hooks/useSubScreenShell';
+import { isSyntheticUser } from '../utils/realUserFilter';
 
 interface PlayersListScreenProps {
   onBack: () => void;
@@ -55,48 +50,60 @@ export const PlayersListScreen: React.FC<PlayersListScreenProps> = ({
   initialQuery = '',
 }) => {
   const [query, setQuery] = useState(initialQuery);
+  const [filters, setFilters] = useState<PlayerListFilters>(DEFAULT_PLAYER_FILTERS);
+  const [nearMe, setNearMe] = useState(false);
+  const { profile } = useAuth();
+  const { isFavorite, toggle } = useFavorites(profile?.uid);
+  const { colors: themeColors, productLine } = useAppTheme();
+  const directory = usePlayersDirectory({
+    search: query,
+    city: filters.city,
+    radiusKm: nearMe && profile?.location ? 50 : undefined,
+    viewerLocation: nearMe ? profile?.location ?? null : null,
+  });
+  const { users: rawUsers, loading, loadingMore, hasMore, loadMore } = directory;
+  const listTitle = productLine === 'woman' ? 'Joueuses' : 'Joueurs';
+  const isStaff = isSubScreenShellEnabled(profile, 'staff');
 
   useEffect(() => {
     setQuery(initialQuery);
   }, [initialQuery]);
-  const [filters, setFilters] = useState<PlayerListFilters>(DEFAULT_PLAYER_FILTERS);
-  const [panel, setPanel] = useState<FilterPanel>(null);
-  const { profile } = useAuth();
-  const { isFavorite, toggle } = useFavorites(profile?.uid);
-  const { colors: themeColors, productLine } = useAppTheme();
-  const { users: rawUsers, loading } = useUsersByRole('player', query);
-  const listTitle = productLine === 'woman' ? 'Joueuses' : 'Joueurs';
-  const useShellHeader = isSubScreenShellEnabled(profile, 'staff');
 
-  const filteredUsers = useMemo(() => filterPlayers(rawUsers, filters), [rawUsers, filters]);
+  const filteredUsers = useMemo(() => {
+    let base = filterPlayers(rawUsers, filters);
+    if (
+      profile?.role === 'player' &&
+      profile.uid &&
+      !isSyntheticUser(profile) &&
+      !base.some((u) => u.uid === profile.uid)
+    ) {
+      base = [profile, ...base];
+    }
+    return base;
+  }, [rawUsers, filters, profile]);
+
   const users = useMemo(() => {
-    if (!useShellHeader || !profile) return filteredUsers;
-    return sortPlayersByScouting(profile, filteredUsers);
-  }, [filteredUsers, profile, useShellHeader]);
+    const base = filteredUsers;
+    if (!isStaff || !profile) return base;
+    return sortPlayersByScouting(profile, base);
+  }, [filteredUsers, profile, isStaff]);
 
   const scores = useMemo(() => {
-    if (!profile || !useShellHeader) return new Map<string, PlayerScoutingScore>();
+    if (!profile || !isStaff) return new Map<string, PlayerScoutingScore>();
     return scoutingScoreMap(profile, users);
-  }, [profile, users, useShellHeader]);
-
-  const intelligence = useSectionIntelligence('recrutement', profile ?? null, productLine, {
-    staffMode: true,
-    mercatoPosts: users.length,
-  });
+  }, [profile, users, isStaff]);
 
   const activeFilterCount = countActiveFilters(filters);
-
-  const togglePanel = (p: FilterPanel) => {
-    setPanel((cur) => (cur === p ? null : p));
-  };
+  const soloProfile =
+    profile?.role === 'player' && users.length === 1 && users[0]?.uid === profile.uid;
 
   const resetFilters = () => {
     setFilters(DEFAULT_PLAYER_FILTERS);
-    setPanel(null);
+    setNearMe(false);
   };
 
   const handleSelectPlayer = (player: User) => {
-    if (useShellHeader) {
+    if (isStaff) {
       const scouting = scores.get(player.uid);
       trackV3Event('staff_player_tap', {
         playerUid: player.uid,
@@ -106,140 +113,82 @@ export const PlayersListScreen: React.FC<PlayersListScreenProps> = ({
     onSelectPlayer(player);
   };
 
-  const resetAction =
-    activeFilterCount > 0 ? (
-      <TouchableOpacity onPress={resetFilters} hitSlop={12}>
-        <Text style={[styles.resetText, { color: themeColors.brand }]}>Réinit.</Text>
-      </TouchableOpacity>
-    ) : undefined;
+  const listHeader = (
+    <View style={styles.headerBlock}>
+      <View style={[styles.infoCard, { backgroundColor: themeColors.surfaceMuted, borderColor: themeColors.border }]}>
+        <View style={[styles.infoIcon, { backgroundColor: themeColors.accentSoft }]}>
+          <Icon name="people" size={22} color={themeColors.brand} variant="filled" />
+        </View>
+        <View style={styles.infoCopy}>
+          <Text style={[styles.infoTitle, { color: themeColors.text }]}>
+            {soloProfile ? 'Votre profil joueur' : 'Profils inscrits sur ProDay'}
+          </Text>
+          <Text style={[styles.infoSub, { color: themeColors.textMuted }]}>
+            {soloProfile
+              ? 'Seul votre compte est visible pour le moment. Les autres joueurs apparaîtront ici après inscription.'
+              : 'Comptes réels uniquement — les profils de démonstration sont exclus.'}
+          </Text>
+        </View>
+      </View>
 
-  const filtersBlock = (
-    <>
       <SearchBar placeholder="Nom, poste, ville…" value={query} onChangeText={setQuery} />
 
-      <ProDayActionTiles
-        items={[
-          {
-            id: 'poste',
-            label: 'Poste',
-            icon: 'football',
-            badge: filters.position !== 'Tous' ? 1 : undefined,
-          },
-          {
-            id: 'categorie',
-            label: 'Catégorie',
-            icon: 'people',
-            badge: filters.category !== 'Tous' ? 1 : undefined,
-          },
-          {
-            id: 'niveau',
-            label: 'Niveau',
-            icon: 'trophy',
-            badge: filters.level !== 'Tous' ? 1 : undefined,
-          },
-          {
-            id: 'ville',
-            label: 'Ville',
-            icon: 'location',
-            badge: filters.city.trim() ? 1 : undefined,
-          },
-          {
-            id: 'age',
-            label: 'Âge max',
-            icon: 'calendar',
-            badge: filters.maxAge.trim() ? 1 : undefined,
-          },
-        ]}
-        activeId={panel}
-        onPress={(id) => togglePanel(id as FilterPanel)}
-      />
-
-      {panel === 'poste' ? (
-        <OptionRow
-          options={PLAYER_POSITIONS_FILTER}
-          selected={filters.position}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.chipRow}
+      >
+        <FilterChip
+          label="Poste"
+          active={filters.position !== 'Tous'}
           colors={themeColors}
-          onSelect={(position) =>
-            setFilters((f) => ({
-              ...f,
-              position: position as PlayerListFilters['position'],
-            }))
-          }
+          onPress={() => cycleFilter(PLAYER_POSITIONS_FILTER, filters.position, (position) =>
+            setFilters((f) => ({ ...f, position: position as PlayerListFilters['position'] }))
+          )}
+          value={filters.position !== 'Tous' ? filters.position : undefined}
         />
-      ) : null}
-
-      {panel === 'categorie' ? (
-        <OptionRow
-          options={PLAYER_CATEGORIES_FILTER}
-          selected={filters.category}
+        <FilterChip
+          label="Niveau"
+          active={filters.level !== 'Tous'}
           colors={themeColors}
-          onSelect={(category) =>
-            setFilters((f) => ({
-              ...f,
-              category: category as PlayerListFilters['category'],
-            }))
-          }
+          onPress={() => cycleFilter(PLAYER_LEVELS_FILTER, filters.level, (level) =>
+            setFilters((f) => ({ ...f, level: level as PlayerListFilters['level'] }))
+          )}
+          value={filters.level !== 'Tous' ? filters.level : undefined}
         />
-      ) : null}
-
-      {panel === 'niveau' ? (
-        <OptionRow
-          options={PLAYER_LEVELS_FILTER}
-          selected={filters.level}
+        <FilterChip
+          label="Ville"
+          active={Boolean(filters.city.trim())}
           colors={themeColors}
-          onSelect={(level) =>
-            setFilters((f) => ({
-              ...f,
-              level: level as PlayerListFilters['level'],
-            }))
-          }
+          onPress={() => {
+            const next = filters.city.trim() ? '' : (profile?.city ?? '');
+            setFilters((f) => ({ ...f, city: next }));
+          }}
+          value={filters.city.trim() || undefined}
         />
-      ) : null}
-
-      {panel === 'ville' ? (
-        <View style={styles.cityRow}>
-          <TextInput
-            style={[
-              styles.cityInput,
-              {
-                backgroundColor: themeColors.surface,
-                borderColor: themeColors.border,
-                color: themeColors.text,
-              },
-            ]}
-            placeholder="Ex. Paris, Lyon…"
-            placeholderTextColor={themeColors.textMuted}
-            value={filters.city}
-            onChangeText={(city) => setFilters((f) => ({ ...f, city }))}
-            autoCapitalize="words"
+        {profile?.location ? (
+          <FilterChip
+            label="Rayon 50 km"
+            active={nearMe}
+            colors={themeColors}
+            onPress={() => setNearMe((v) => !v)}
+            value={nearMe ? 'Autour de moi' : undefined}
           />
-        </View>
-      ) : null}
+        ) : null}
+        {activeFilterCount > 0 || nearMe ? (
+          <TouchableOpacity onPress={resetFilters} style={[styles.resetChip, { borderColor: themeColors.border }]}>
+            <Text style={[styles.resetChipText, { color: themeColors.brand }]}>Réinitialiser</Text>
+          </TouchableOpacity>
+        ) : null}
+      </ScrollView>
 
-      {panel === 'age' ? (
-        <View style={styles.cityRow}>
-          <TextInput
-            style={[
-              styles.cityInput,
-              {
-                backgroundColor: themeColors.surface,
-                borderColor: themeColors.border,
-                color: themeColors.text,
-              },
-            ]}
-            placeholder={
-              productLine === 'woman'
-                ? 'Ex. 17 (joueuses ≤ cet âge)'
-                : 'Ex. 17 (joueurs ≤ cet âge)'
-            }
-            placeholderTextColor={themeColors.textMuted}
-            value={filters.maxAge}
-            onChangeText={(maxAge) => setFilters((f) => ({ ...f, maxAge }))}
-            keyboardType="number-pad"
-          />
-        </View>
+      {!loading && users.length > 0 ? (
+        <Text style={[styles.countLine, { color: themeColors.textMuted }]}>
+          {users.length} profil{users.length > 1 ? 's' : ''}
+          {isStaff ? ' — tri par pertinence scouting' : ''}
+        </Text>
       ) : null}
-    </>
+    </View>
   );
 
   const listBody = loading ? (
@@ -249,140 +198,162 @@ export const PlayersListScreen: React.FC<PlayersListScreenProps> = ({
       data={users}
       keyExtractor={(item) => item.uid}
       contentContainerStyle={styles.list}
-      ListHeaderComponent={useShellHeader ? filtersBlock : undefined}
-      renderItem={({ item, index }) => {
+      ListHeaderComponent={listHeader}
+      ListFooterComponent={
+        loadingMore ? (
+          <ActivityIndicator color={themeColors.brand} style={styles.loader} />
+        ) : null
+      }
+      onEndReached={() => {
+        if (hasMore && !loadingMore) void loadMore();
+      }}
+      onEndReachedThreshold={0.4}
+      renderItem={({ item }) => {
         const scouting = scores.get(item.uid);
-        const row = (
+        const isOwn = profile?.uid === item.uid;
+        return (
           <PlayerRowCard
             user={item}
             onPress={handleSelectPlayer}
             bookmarked={isFavorite(item.uid)}
-            onBookmark={() => profile && toggle(item.uid, 'player')}
+            onBookmark={isOwn ? undefined : () => profile && toggle(item.uid, 'player')}
             scoutingScore={scouting?.score}
             scoutingLabel={scouting?.label}
+            isOwnProfile={isOwn}
           />
-        );
-        return useShellHeader ? (
-          <StaggerReveal index={Math.min(index, 8)}>{row}</StaggerReveal>
-        ) : (
-          row
         );
       }}
       ListEmptyComponent={
-        <Text style={[styles.empty, { color: themeColors.textMuted }]}>
-          {activeFilterCount > 0 || query.trim()
-            ? productLine === 'woman'
-              ? 'Aucune joueuse ne correspond à vos critères.'
-              : 'Aucun joueur ne correspond à vos critères.'
-            : productLine === 'woman'
-              ? 'Aucune joueuse inscrite.'
-              : 'Aucun joueur inscrit.'}
-        </Text>
+        <View style={styles.emptyWrap}>
+          <Icon name="people" size={40} color={themeColors.textMuted} />
+          <Text style={[styles.emptyTitle, { color: themeColors.text }]}>
+            {activeFilterCount > 0 || query.trim()
+              ? 'Aucun résultat'
+              : 'Annuaire vide'}
+          </Text>
+          <Text style={[styles.empty, { color: themeColors.textMuted }]}>
+            {activeFilterCount > 0 || query.trim()
+              ? productLine === 'woman'
+                ? 'Aucune joueuse ne correspond à vos critères.'
+                : 'Aucun joueur ne correspond à vos critères.'
+              : productLine === 'woman'
+                ? 'Aucune joueuse inscrite pour le moment.'
+                : 'Aucun joueur inscrit pour le moment.'}
+          </Text>
+        </View>
       }
     />
   );
 
-  if (useShellHeader) {
-    return (
-      <TabScreenShell
-        caption="Scouting"
-        title={listTitle}
-        subtitle={
-          users.length > 0
-            ? `${users.length} profil(s) — triés par pertinence`
-            : 'Explorez la base joueurs'
-        }
-        right={
-          <View style={styles.headerRight}>
-            {resetAction}
-            <ScreenBackButton onPress={onBack} />
-          </View>
-        }
-        flat
-      >
-        {listBody}
-      </TabScreenShell>
-    );
-  }
-
   return (
-    <View style={[styles.container, { backgroundColor: themeColors.background }]}>
-      <ScreenHeader
-        title={listTitle}
-        onBack={onBack}
-        centered
-        rightAction={resetAction}
-      />
-      {filtersBlock}
+    <TabScreenShell
+      caption="Annuaire"
+      title={listTitle}
+      subtitle={
+        soloProfile
+          ? 'Votre compte ProDay'
+          : users.length > 0
+            ? `${users.length} profil(s) actif(s)`
+            : 'Recherche et filtres'
+      }
+      right={<ScreenBackButton onPress={onBack} />}
+      flat
+    >
       {listBody}
-    </View>
+    </TabScreenShell>
   );
 };
 
-const OptionRow: React.FC<{
-  options: readonly string[];
-  selected: string;
+function cycleFilter(
+  options: readonly string[],
+  current: string,
+  onSelect: (value: string) => void,
+) {
+  const idx = options.indexOf(current);
+  const next = options[(idx + 1) % options.length] ?? 'Tous';
+  onSelect(next);
+}
+
+const FilterChip: React.FC<{
+  label: string;
+  value?: string;
+  active: boolean;
   colors: AppColors;
-  onSelect: (value: string) => void;
-}> = ({ options, selected, onSelect, colors: c }) => (
-  <View style={styles.optionRow}>
-    {options.map((opt) => {
-      const isSelected = selected === opt;
-      return (
-        <TouchableOpacity
-          key={opt}
-          style={[
-            styles.optionChip,
-            {
-              borderColor: isSelected ? c.brand : c.border,
-              backgroundColor: isSelected ? c.accentSoft : c.surface,
-            },
-          ]}
-          onPress={() => onSelect(opt)}
-        >
-          <Text
-            style={[
-              styles.optionText,
-              { color: isSelected ? c.brand : c.textSecondary },
-            ]}
-          >
-            {opt}
-          </Text>
-        </TouchableOpacity>
-      );
-    })}
-  </View>
+  onPress: () => void;
+}> = ({ label, value, active, colors: c, onPress }) => (
+  <TouchableOpacity
+    onPress={onPress}
+    style={[
+      styles.chip,
+      {
+        borderColor: active ? c.brand : c.border,
+        backgroundColor: active ? c.accentSoft : c.surface,
+      },
+    ]}
+  >
+    <Text style={[styles.chipLabel, { color: active ? c.brand : c.textSecondary }]}>
+      {value ? `${label} · ${value}` : label}
+    </Text>
+  </TouchableOpacity>
 );
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  headerRight: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  resetText: { fontSize: 12, fontWeight: '800' },
-  optionRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.xs,
-    paddingHorizontal: spacing.lg,
-    marginBottom: spacing.md,
+  headerBlock: {
+    gap: spacing.md,
+    marginBottom: spacing.sm,
   },
-  optionChip: {
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 6,
+  infoCard: {
+    flexDirection: 'row',
+    gap: spacing.md,
+    padding: spacing.md,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+  },
+  infoIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  infoCopy: { flex: 1, gap: 4 },
+  infoTitle: { fontSize: 15, fontWeight: '800' },
+  infoSub: { fontSize: 13, lineHeight: 18 },
+  chipRow: {
+    gap: spacing.xs,
+    paddingRight: spacing.lg,
+  },
+  chip: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: 8,
     borderRadius: radius.pill,
     borderWidth: 1,
   },
-  optionText: { fontSize: 11, fontWeight: '700' },
-  cityRow: { paddingHorizontal: spacing.lg, marginBottom: spacing.md },
-  cityInput: {
-    borderRadius: radius.md,
-    padding: spacing.md,
+  chipLabel: { fontSize: 12, fontWeight: '700' },
+  resetChip: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: 8,
+    borderRadius: radius.pill,
     borderWidth: 1,
-    fontSize: 15,
+    justifyContent: 'center',
+  },
+  resetChipText: { fontSize: 12, fontWeight: '800' },
+  countLine: {
+    fontSize: 12,
+    fontWeight: '600',
+    paddingHorizontal: 2,
   },
   list: {
     paddingHorizontal: spacing.lg,
     paddingBottom: TAB_BAR_CONTENT_INSET + spacing.lg,
   },
-  empty: { textAlign: 'center', marginTop: 40 },
+  emptyWrap: {
+    alignItems: 'center',
+    marginTop: spacing.xl,
+    gap: spacing.sm,
+    paddingHorizontal: spacing.lg,
+  },
+  emptyTitle: { fontSize: 17, fontWeight: '800', marginTop: spacing.sm },
+  empty: { textAlign: 'center', fontSize: 14, lineHeight: 20 },
   loader: { marginTop: 40 },
 });

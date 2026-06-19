@@ -77,7 +77,7 @@ export function useMatchActions(profile: User | null) {
         if (requesterOrganizerUid && requesterInvitees.length > 0) {
           const requesterOrganizer =
             requesterMembers.find((m) => m.uid === requesterOrganizerUid) ??
-            (await usersService.getById(requesterOrganizerUid));
+            (await usersService.getPublicById(requesterOrganizerUid));
           await teamEventsService.createFriendlyConvocation({
             matchId: match.id,
             opponentName: match.opponent_club_name ?? club.name,

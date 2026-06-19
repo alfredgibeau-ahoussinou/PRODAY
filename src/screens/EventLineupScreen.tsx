@@ -52,7 +52,7 @@ export const EventLineupScreen: React.FC<EventLineupScreenProps> = ({
     const presentUids = getPresentInviteeUids(ev);
     const allPresent: EventLineupSlot[] = [];
     for (const uid of presentUids) {
-      const u = await usersService.getById(uid);
+      const u = await usersService.getPublicById(uid);
       if (u) {
         allPresent.push({
           uid,

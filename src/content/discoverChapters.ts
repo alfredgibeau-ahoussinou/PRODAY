@@ -98,7 +98,7 @@ export const DISCOVER_UNIVERSE_CARDS: DiscoverUniverseCard[] = [
   {
     id: 'sponsors',
     title: 'Sponsors',
-    subtitle: 'Partenaires & financement',
+    subtitle: 'Sponsors & financement',
     image: SHOWCASE_IMAGES.coachFounder,
     icon: 'star',
     accent: '#737373',

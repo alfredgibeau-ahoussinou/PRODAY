@@ -241,6 +241,7 @@ export function buildSectionIntelligence(input: SectionIntelligenceInput): Secti
     sante: 'Bien-être',
     feed: 'Communauté',
     reels: 'Réels sportifs',
+    famille: 'Famille',
     messages: 'Réseau',
     profil: 'Identité',
     shop: 'Boutique',

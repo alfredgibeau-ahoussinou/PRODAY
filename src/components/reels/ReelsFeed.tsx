@@ -103,6 +103,8 @@ export const ReelsFeed: React.FC<ReelsFeedProps> = ({ productLine }) => {
         usefulnessMin: brain.ai.contentFilter.reelsUsefulnessMin,
         position: profile?.profile?.position,
         clubId: profile?.profile?.club_id,
+        city: profile?.city,
+        level: profile?.profile?.level,
       });
       return ranked.length > 0 ? ranked : seeds;
     },
@@ -112,6 +114,8 @@ export const ReelsFeed: React.FC<ReelsFeedProps> = ({ productLine }) => {
       brain.ai.contentFilter.reelsUsefulnessMin,
       profile?.profile?.position,
       profile?.profile?.club_id,
+      profile?.city,
+      profile?.profile?.level,
     ],
   );
 

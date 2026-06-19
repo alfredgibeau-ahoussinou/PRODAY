@@ -12,9 +12,12 @@ import {
   where,
   limit,
 } from 'firebase/firestore';
-import { getDb } from '../lib/firebase';
+import { getDb, getFirebaseAuth } from '../lib/firebase';
 import { isFirebaseConfigured } from '../config/firebase';
+import { callFunction } from '../lib/firebaseFunctions';
+import { getSponsorAnonymousId } from '../utils/sponsorAnonymousId';
 import { clubsService } from './clubs.service';
+import { scoreSponsorProspect } from '../utils/sponsorProspectScoring';
 import {
   sponsorOfferFromFirestore,
   fundingGoalFromFirestore,
@@ -29,196 +32,41 @@ import type {
   SponsorProspect,
 } from '../models/SponsorOffer';
 
-const DEMO_OFFERS: SponsorOffer[] = [
-  {
-    id: 'demo-offer-1',
-    sponsor_uid: 'demo-sponsor',
-    company_name: 'SportEquip Pro',
-    logo_url: '',
-    offer_type: 'equipment',
-    description: 'Maillots et ballons pour clubs U15 locaux.',
-    value: '500 € d’équipement',
-    target_categories: ['U15', 'U17'],
-    city: 'Lyon',
-    active: true,
-    created_at: new Date(),
-    views_count: 1840,
-    clicks_count: 124,
-    leads_count: 18,
-  },
-  {
-    id: 'demo-offer-2',
-    sponsor_uid: 'demo-sponsor',
-    company_name: 'VilleActive',
-    logo_url: '',
-    offer_type: 'visibility',
-    description: 'Banderoles et visibilité sur événements locaux.',
-    value: 'Campagne locale',
-    target_categories: ['Senior'],
-    city: 'Bordeaux',
-    active: true,
-    created_at: new Date(),
-    views_count: 920,
-    clicks_count: 61,
-    leads_count: 9,
-  },
-];
+const trackedViewsThisSession = new Set<string>();
+const trackedProfileViewsThisSession = new Set<string>();
 
-const DEMO_GOALS: ClubFundingGoal[] = [
-  {
-    id: 'demo-goal-1',
-    club_id: 'club-demo-1',
-    title: 'Nouveaux maillots U17',
-    target_amount_eur: 1200,
-    raised_amount_eur: 480,
-    description: 'Renouvellement tenues pour la saison.',
-  },
-  {
-    id: 'demo-goal-2',
-    club_id: 'club-demo-2',
-    title: 'Transport tournoi régional',
-    target_amount_eur: 800,
-    raised_amount_eur: 200,
-    description: 'Covoiturage et frais déplacement équipe fanions.',
-  },
-  {
-    id: 'demo-goal-3',
-    club_id: 'club-demo-3',
-    title: 'Matériel gardien U15',
-    target_amount_eur: 650,
-    raised_amount_eur: 520,
-    description: 'Gants, protège-tibias et sacs sport.',
-  },
-];
+type SponsorTrackEventType = 'offer_view' | 'offer_click' | 'offer_lead' | 'profile_view';
 
-const demoCreatedOffers: SponsorOffer[] = [];
-const demoOfferPatches: Record<string, Partial<SponsorOffer>> = {};
-const demoGoalRaised: Record<string, number> = {};
-const demoContributions: SponsorContribution[] = [];
-
-function demoPartnerSeed(sponsorUid: string, companyName = 'Votre Marque'): SponsorOffer[] {
-  const hasOwn = [...demoCreatedOffers, ...DEMO_OFFERS].some((o) => o.sponsor_uid === sponsorUid);
-  if (hasOwn) return [];
-
-  return [
-    {
-      id: `seed-offer-1-${sponsorUid}`,
-      sponsor_uid: sponsorUid,
-      company_name: companyName,
-      logo_url: '',
-      offer_type: 'visibility',
-      description: 'Visibilité locale sur matchs et tournois — banderoles et réseaux sociaux club.',
-      value: 'Pack visibilité saison',
-      target_categories: ['U15', 'U17', 'Senior'],
-      city: 'Île-de-France',
-      active: true,
-      created_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 12),
-      views_count: 2140,
-      clicks_count: 156,
-      leads_count: 22,
-    },
-    {
-      id: `seed-offer-2-${sponsorUid}`,
-      sponsor_uid: sponsorUid,
-      company_name: companyName,
-      logo_url: '',
-      offer_type: 'equipment',
-      description: 'Remise équipement pour clubs partenaires — maillots entraînement et ballons.',
-      value: '-15 % équipement',
-      target_categories: ['U13', 'U15'],
-      city: 'Île-de-France',
-      active: true,
-      created_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5),
-      views_count: 980,
-      clicks_count: 74,
-      leads_count: 11,
-    },
-  ];
-}
-
-function applyDemoOfferPatch(offer: SponsorOffer): SponsorOffer {
-  const patch = demoOfferPatches[offer.id];
-  return patch ? { ...offer, ...patch } : offer;
-}
-
-function getDemoOffers(sponsorUid?: string, companyName?: string): SponsorOffer[] {
-  const seeded = sponsorUid ? demoPartnerSeed(sponsorUid, companyName) : [];
-  const merged = [...demoCreatedOffers, ...seeded, ...DEMO_OFFERS].map(applyDemoOfferPatch);
-  const seen = new Set<string>();
-  return merged.filter((o) => {
-    if (seen.has(o.id)) return false;
-    seen.add(o.id);
-    return true;
-  });
-}
-
-function getDemoGoals(): ClubFundingGoal[] {
-  return DEMO_GOALS.map((g) => ({
-    ...g,
-    raised_amount_eur: demoGoalRaised[g.id] ?? g.raised_amount_eur,
-  }));
-}
-
-function buildDemoAnalytics(sponsorUid: string, offers: SponsorOffer[]): SponsorAnalytics {
-  const mine = offers.filter((o) => o.sponsor_uid === sponsorUid);
-  const impressions = mine.reduce((s, o) => s + (o.views_count ?? 0), 0) + 420;
-  const offerClicks = mine.reduce((s, o) => s + (o.clicks_count ?? 0), 0);
-  const leads = mine.reduce((s, o) => s + (o.leads_count ?? 0), 0);
-  const clubsReached = Math.max(3, mine.length * 4 + demoContributions.length);
-  return {
-    impressions,
-    profile_views: Math.round(impressions * 0.34),
-    offer_clicks: offerClicks,
-    clubs_reached: clubsReached,
-    leads,
-    conversion_rate: offerClicks > 0 ? Math.round((leads / offerClicks) * 100) : 0,
-  };
-}
-
-function buildDemoActivity(sponsorUid: string, offers: SponsorOffer[]): SponsorActivityItem[] {
-  const mine = offers.filter((o) => o.sponsor_uid === sponsorUid && o.active);
-  const items: SponsorActivityItem[] = [
-    {
-      id: 'act-1',
-      type: 'lead',
-      title: 'Nouveau contact club',
-      subtitle: 'FC Villebon — intéressé par votre offre visibilité',
-      at: new Date(Date.now() - 1000 * 60 * 45),
-    },
-    {
-      id: 'act-2',
-      type: 'offer_view',
-      title: 'Pic de vues',
-      subtitle: `${mine[0]?.company_name ?? 'Votre offre'} — +86 vues aujourd’hui`,
-      at: new Date(Date.now() - 1000 * 60 * 60 * 3),
-    },
-    {
-      id: 'act-3',
-      type: 'contribution',
-      title: 'Soutien club enregistré',
-      subtitle: 'Campagne maillots U17 — 150 €',
-      at: new Date(Date.now() - 1000 * 60 * 60 * 26),
-    },
-    {
-      id: 'act-4',
-      type: 'message',
-      title: 'Message reçu',
-      subtitle: 'AS Saint-Michel — demande de devis équipement',
-      at: new Date(Date.now() - 1000 * 60 * 60 * 48),
-    },
-  ];
-
-  if (mine[0]) {
-    items.unshift({
-      id: 'act-0',
-      type: 'offer_published',
-      title: 'Offre active',
-      subtitle: `${mine[0].value} · ${mine[0].city}`,
-      at: mine[0].created_at,
-    });
+async function invokeSponsorTrack(payload: {
+  event: SponsorTrackEventType;
+  offer_id?: string;
+  sponsor_uid?: string;
+}): Promise<void> {
+  if (!isFirebaseConfigured()) return;
+  try {
+    const anonymous_id = await getSponsorAnonymousId();
+    await callFunction<
+      typeof payload & { anonymous_id: string },
+      { success: boolean }
+    >('trackSponsorEvent', { ...payload, anonymous_id });
+  } catch {
+    // tracking best-effort
   }
+}
 
-  return items.sort((a, b) => b.at.getTime() - a.at.getTime());
+const SPONSOR_GEO_PUSH_REGION = 'europe-west1';
+
+async function invokeSponsorGeoPush(offerId: string, options?: { force?: boolean }): Promise<void> {
+  if (!isFirebaseConfigured()) return;
+  try {
+    await callFunction<{ offerId: string; force?: boolean }, { recipients: number; pushes: number }>(
+      'notifySponsorOfferInCityCallable',
+      { offerId, force: options?.force },
+      SPONSOR_GEO_PUSH_REGION
+    );
+  } catch {
+    // push géo best-effort (callable europe-west1)
+  }
 }
 
 function contributionFromFirestore(id: string, data: Record<string, unknown>): SponsorContribution {
@@ -284,32 +132,38 @@ function buildLiveActivity(
   return items.sort((a, b) => b.at.getTime() - a.at.getTime());
 }
 
-async function buildLiveProspects(sponsorUid: string, offers: SponsorOffer[]): Promise<SponsorProspect[]> {
+async function buildLiveProspects(
+  sponsorUid: string,
+  offers: SponsorOffer[],
+  fundingGoals: ClubFundingGoal[]
+): Promise<SponsorProspect[]> {
   const clubs = await clubsService.list(50);
   if (clubs.length === 0) return [];
 
-  const offerCities = offers
-    .filter((o) => o.sponsor_uid === sponsorUid)
-    .map((o) => o.city.trim().toLowerCase())
-    .filter(Boolean);
+  const sponsorOffers = offers.filter((o) => o.sponsor_uid === sponsorUid);
+  const activeFundingClubIds = new Set(
+    fundingGoals
+      .filter((g) => g.raised_amount_eur < g.target_amount_eur)
+      .map((g) => g.club_id)
+  );
 
   return clubs
     .map((club) => {
-      const city = club.city.toLowerCase();
-      const zoneMatch =
-        offerCities.length === 0 ||
-        offerCities.some((c) => city.includes(c) || c.includes(city));
-      if (!zoneMatch) return null;
+      const scored = scoreSponsorProspect({
+        club,
+        sponsorOffers,
+        hasActiveFundingGoal: activeFundingClubIds.has(club.id),
+      });
+      if (!scored) return null;
 
       return {
         id: club.id,
+        owner_uid: club.owner_uid,
         name: club.name,
         city: club.city,
-        category: club.categories[0] ?? 'Club',
-        match_score: club.verified ? 90 : 75,
-        reason: club.verified
-          ? 'Club vérifié — zone compatible avec vos offres'
-          : 'Club actif sur ProDay',
+        category: scored.category,
+        match_score: scored.match_score,
+        reason: scored.reason,
       } satisfies SponsorProspect;
     })
     .filter((p): p is SponsorProspect => p != null)
@@ -317,48 +171,21 @@ async function buildLiveProspects(sponsorUid: string, offers: SponsorOffer[]): P
     .slice(0, 8);
 }
 
-const DEMO_PROSPECTS: SponsorProspect[] = [
-  {
-    id: 'prospect-1',
-    name: 'FC Villebon',
-    city: 'Villebon-sur-Yvette',
-    category: 'U17',
-    match_score: 92,
-    reason: 'Zone alignée · recherche équipement',
-  },
-  {
-    id: 'prospect-2',
-    name: 'AS Saint-Michel',
-    city: 'Massy',
-    category: 'Senior',
-    match_score: 87,
-    reason: 'Campagne visibilité en cours',
-  },
-  {
-    id: 'prospect-3',
-    name: 'US Torcy Futsal',
-    city: 'Torcy',
-    category: 'Futsal',
-    match_score: 81,
-    reason: 'Catégorie ciblée par votre offre',
-  },
-  {
-    id: 'prospect-4',
-    name: 'Olympique Juvisy',
-    city: 'Juvisy-sur-Orge',
-    category: 'U15',
-    match_score: 78,
-    reason: 'Club actif sur ProDay',
-  },
-];
+const EMPTY_ANALYTICS: SponsorAnalytics = {
+  impressions: 0,
+  profile_views: 0,
+  offer_clicks: 0,
+  clubs_reached: 0,
+  leads: 0,
+  conversion_rate: 0,
+};
 
 export const sponsorsService = {
   async listOffers(max = 20, sponsorUid?: string, companyName?: string): Promise<SponsorOffer[]> {
+    void sponsorUid;
+    void companyName;
     if (!isFirebaseConfigured()) {
-      return getDemoOffers(sponsorUid, companyName)
-        .filter((o) => o.active)
-        .sort((a, b) => b.created_at.getTime() - a.created_at.getTime())
-        .slice(0, max);
+      return [];
     }
     const database = getDb();
     if (!database) return [];
@@ -386,9 +213,7 @@ export const sponsorsService = {
 
   async listFundingGoals(max = 20): Promise<ClubFundingGoal[]> {
     if (!isFirebaseConfigured()) {
-      return getDemoGoals()
-        .sort((a, b) => b.raised_amount_eur - a.raised_amount_eur)
-        .slice(0, max);
+      return [];
     }
     const database = getDb();
     if (!database) return [];
@@ -400,40 +225,109 @@ export const sponsorsService = {
       .slice(0, max);
   },
 
+  async listOffersBySponsor(sponsorUid: string, max = 50): Promise<SponsorOffer[]> {
+    if (!isFirebaseConfigured() || !sponsorUid) return [];
+    const database = getDb();
+    if (!database) return [];
+
+    try {
+      const q = query(
+        collection(database, 'sponsor_offers'),
+        where('sponsor_uid', '==', sponsorUid),
+        orderBy('created_at', 'desc'),
+        limit(max)
+      );
+      const snap = await getDocs(q);
+      return snap.docs.map((d) =>
+        sponsorOfferFromFirestore(d.id, d.data() as Record<string, unknown>)
+      );
+    } catch {
+      const snap = await getDocs(collection(database, 'sponsor_offers'));
+      return snap.docs
+        .map((d) => sponsorOfferFromFirestore(d.id, d.data() as Record<string, unknown>))
+        .filter((o) => o.sponsor_uid === sponsorUid)
+        .sort((a, b) => b.created_at.getTime() - a.created_at.getTime())
+        .slice(0, max);
+    }
+  },
+
+  async listActiveOffersBySponsor(sponsorUid: string, max = 20): Promise<SponsorOffer[]> {
+    const offers = await this.listOffersBySponsor(sponsorUid, max);
+    return offers.filter((o) => o.active);
+  },
+
   async listFundingGoalsForClub(clubId: string): Promise<ClubFundingGoal[]> {
     const all = await this.listFundingGoals(50);
     return all.filter((g) => g.club_id === clubId);
   },
 
   async getAnalytics(sponsorUid: string, companyName?: string): Promise<SponsorAnalytics> {
-    const offers = await this.listOffers(50, sponsorUid, companyName);
-    if (!isFirebaseConfigured()) return buildDemoAnalytics(sponsorUid, offers);
-    const mine = offers.filter((o) => o.sponsor_uid === sponsorUid);
+    void companyName;
+    if (!isFirebaseConfigured()) return { ...EMPTY_ANALYTICS };
+    const mine = await this.listOffersBySponsor(sponsorUid, 100);
     const impressions = mine.reduce((s, o) => s + (o.views_count ?? 0), 0);
     const offerClicks = mine.reduce((s, o) => s + (o.clicks_count ?? 0), 0);
     const leads = mine.reduce((s, o) => s + (o.leads_count ?? 0), 0);
-    const contributions = await this.listContributions(sponsorUid);
-    const clubIds = new Set(contributions.map((c) => c.goal_id));
+    const [contributions, profileViews] = await Promise.all([
+      this.listContributions(sponsorUid),
+      this.countProfileViews(sponsorUid),
+    ]);
+    const fundedGoals = new Set(contributions.map((c) => c.goal_id));
     return {
       impressions,
-      profile_views: Math.round(impressions * 0.3),
+      profile_views: profileViews,
       offer_clicks: offerClicks,
-      clubs_reached: Math.max(mine.length, clubIds.size),
+      clubs_reached: fundedGoals.size,
       leads,
       conversion_rate: offerClicks > 0 ? Math.round((leads / offerClicks) * 100) : 0,
     };
   },
 
+  /**
+   * Compte les viewers uniques (uid authentifié ou id anonyme) par sponsor.
+   * L’écriture côté serveur déduplique déjà les vues sur 24 h ; ici on agrège
+   * l’historique sans double-compter un même viewer.
+   */
+  async countProfileViews(sponsorUid: string): Promise<number> {
+    if (!isFirebaseConfigured()) return 0;
+    const database = getDb();
+    if (!database) return 0;
+
+    try {
+      const snap = await getDocs(
+        query(
+          collection(database, 'sponsor_profile_views'),
+          where('sponsor_uid', '==', sponsorUid),
+          limit(500)
+        )
+      );
+      const seen = new Set<string>();
+      for (const docSnap of snap.docs) {
+        const data = docSnap.data() as Record<string, unknown>;
+        const key =
+          typeof data.viewer_uid === 'string' && data.viewer_uid
+            ? `uid:${data.viewer_uid}`
+            : typeof data.viewer_anonymous_id === 'string' && data.viewer_anonymous_id
+              ? `anon:${data.viewer_anonymous_id}`
+              : `doc:${docSnap.id}`;
+        seen.add(key);
+      }
+      return seen.size;
+    } catch {
+      return 0;
+    }
+  },
+
   async listActivity(sponsorUid: string, companyName?: string): Promise<SponsorActivityItem[]> {
-    const offers = await this.listOffers(50, sponsorUid, companyName);
-    if (!isFirebaseConfigured()) return buildDemoActivity(sponsorUid, offers);
+    if (!isFirebaseConfigured()) return [];
+    const offers = await this.listOffersBySponsor(sponsorUid, 50);
     const contributions = await this.listContributions(sponsorUid);
     return buildLiveActivity(sponsorUid, offers, contributions).slice(0, 12);
   },
 
   async listContributions(sponsorUid: string): Promise<SponsorContribution[]> {
     if (!isFirebaseConfigured()) {
-      return [...demoContributions].sort((a, b) => b.at.getTime() - a.at.getTime());
+      return [];
     }
     const database = getDb();
     if (!database) return [];
@@ -463,10 +357,38 @@ export const sponsorsService = {
   },
 
   async listProspects(sponsorUid: string): Promise<SponsorProspect[]> {
-    if (!isFirebaseConfigured()) return DEMO_PROSPECTS;
-    const offers = await this.listOffers(30, sponsorUid);
-    const prospects = await buildLiveProspects(sponsorUid, offers);
-    return prospects.length > 0 ? prospects : DEMO_PROSPECTS;
+    if (!isFirebaseConfigured()) return [];
+    const [offers, fundingGoals] = await Promise.all([
+      this.listOffers(30, sponsorUid),
+      this.listFundingGoals(50),
+    ]);
+    return buildLiveProspects(sponsorUid, offers, fundingGoals);
+  },
+
+  async trackOfferView(offerId: string): Promise<void> {
+    if (!isFirebaseConfigured() || trackedViewsThisSession.has(offerId)) return;
+    trackedViewsThisSession.add(offerId);
+    await invokeSponsorTrack({ event: 'offer_view', offer_id: offerId });
+  },
+
+  async trackOfferClick(offerId: string): Promise<void> {
+    await invokeSponsorTrack({ event: 'offer_click', offer_id: offerId });
+  },
+
+  async trackOfferLead(offerId: string): Promise<void> {
+    await invokeSponsorTrack({ event: 'offer_lead', offer_id: offerId });
+  },
+
+  async trackSponsorProfileView(sponsorUid: string): Promise<void> {
+    if (!isFirebaseConfigured() || !sponsorUid || trackedProfileViewsThisSession.has(sponsorUid)) {
+      return;
+    }
+    const auth = getFirebaseAuth();
+    const viewerUid = auth?.currentUser?.uid;
+    if (viewerUid === sponsorUid) return;
+
+    trackedProfileViewsThisSession.add(sponsorUid);
+    await invokeSponsorTrack({ event: 'profile_view', sponsor_uid: sponsorUid });
   },
 
   async createOffer(input: {
@@ -478,36 +400,19 @@ export const sponsorsService = {
     offer_type?: SponsorOfferType;
     target_categories?: string[];
   }): Promise<string> {
-    if (!isFirebaseConfigured()) {
-      const id = `demo-created-${Date.now()}`;
-      demoCreatedOffers.unshift({
-        id,
-        sponsor_uid: input.sponsor_uid,
-        company_name: input.company_name,
-        logo_url: '',
-        offer_type: input.offer_type ?? 'equipment',
-        description: input.description,
-        value: input.value,
-        target_categories: input.target_categories ?? [],
-        city: input.city,
-        active: true,
-        created_at: new Date(),
-        views_count: 0,
-        clicks_count: 0,
-        leads_count: 0,
-      });
-      return id;
-    }
+    if (!isFirebaseConfigured()) throw new Error('Firebase non configuré');
 
     const database = getDb();
     if (!database) throw new Error('Firebase non configuré');
 
+    const city = input.city.trim();
     const ref = await addDoc(collection(database, 'sponsor_offers'), {
       sponsor_uid: input.sponsor_uid,
       company_name: input.company_name,
       description: input.description,
       value: input.value,
-      city: input.city,
+      city,
+      geo_target_city: city.toLowerCase(),
       offer_type: input.offer_type ?? 'equipment',
       target_categories: input.target_categories ?? [],
       logo_url: '',
@@ -517,19 +422,16 @@ export const sponsorsService = {
       leads_count: 0,
       created_at: serverTimestamp(),
     });
+    void invokeSponsorGeoPush(ref.id);
     return ref.id;
   },
 
   async toggleOfferActive(offerId: string, active: boolean): Promise<void> {
-    if (!isFirebaseConfigured()) {
-      demoOfferPatches[offerId] = { ...demoOfferPatches[offerId], active };
-      const created = demoCreatedOffers.find((o) => o.id === offerId);
-      if (created) created.active = active;
-      return;
-    }
+    if (!isFirebaseConfigured()) throw new Error('Firebase non configuré');
     const database = getDb();
     if (!database) throw new Error('Firebase non configuré');
     await updateDoc(doc(database, 'sponsor_offers', offerId), { active });
+    if (active) void invokeSponsorGeoPush(offerId);
   },
 
   async duplicateOffer(offer: SponsorOffer): Promise<string> {
@@ -550,6 +452,7 @@ export const sponsorsService = {
     description: string;
     target_amount_eur: number;
   }): Promise<string> {
+    if (!isFirebaseConfigured()) throw new Error('Firebase non configuré');
     const database = getDb();
     if (!database) throw new Error('Firebase non configuré');
 
@@ -565,25 +468,7 @@ export const sponsorsService = {
   },
 
   async contributeToGoal(goalId: string, amountEur: number, sponsorUid?: string): Promise<void> {
-    if (!isFirebaseConfigured()) {
-      const goal = getDemoGoals().find((g) => g.id === goalId);
-      if (!goal) throw new Error('Objectif introuvable');
-      const current = demoGoalRaised[goalId] ?? goal.raised_amount_eur;
-      const next = current + amountEur;
-      if (next > goal.target_amount_eur) {
-        throw new Error('Montant supérieur à l’objectif restant');
-      }
-      demoGoalRaised[goalId] = next;
-      demoContributions.unshift({
-        id: `contrib-${Date.now()}`,
-        goal_id: goalId,
-        goal_title: goal.title,
-        amount_eur: amountEur,
-        at: new Date(),
-      });
-      void sponsorUid;
-      return;
-    }
+    if (!isFirebaseConfigured()) throw new Error('Firebase non configuré');
 
     const database = getDb();
     if (!database) throw new Error('Firebase non configuré');

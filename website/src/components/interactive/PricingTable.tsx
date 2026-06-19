@@ -45,9 +45,9 @@ function PlanPriceBlock({
     ? "w-full rounded-2xl bg-white/10 p-6 text-left sm:w-auto sm:min-w-[260px] sm:text-right"
     : "text-right";
 
-  const mutedClass = premium ? "text-blue-100" : "text-proday-muted";
-  const accentClass = premium ? "text-white" : "text-proday-ink";
-  const savingsClass = premium ? "text-amber-300" : "text-proday-success";
+  const mutedClass = premium ? "text-blue-100" : "text-neutral-500";
+  const accentClass = premium ? "text-white" : "text-neutral-900";
+  const savingsClass = premium ? "text-amber-300" : "text-emerald-700";
 
   return (
     <div className={priceShell}>
@@ -85,7 +85,7 @@ function PlanPriceBlock({
               {formatPriceEur(plan.monthlyEur)} €)
             </span>
           </p>
-          <p className={`mt-1 text-xs ${premium ? "text-blue-200/80" : "text-proday-muted"}`}>
+          <p className={`mt-1 text-xs ${premium ? "text-blue-200/80" : "text-neutral-500"}`}>
             ou {formatPriceEur(plan.monthlyEur)} €/mois sans engagement
           </p>
         </>
@@ -153,7 +153,7 @@ export function PricingTable({
             className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition ${
               universe === u.id
                 ? `${UNIVERSE_THEME[u.id].pricingAccent} text-white`
-                : "bg-neutral-100 text-proday-muted hover:bg-neutral-200"
+                : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200"
             }`}
           >
             <Image
@@ -200,7 +200,7 @@ export function PricingTable({
             className={`rounded-full px-4 py-2 text-sm font-medium transition ${
               activePlan === i
                 ? `${theme.pricingAccent} text-white`
-                : "bg-neutral-100 text-proday-muted hover:bg-neutral-200"
+                : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200"
             }`}
           >
             {p.label}
@@ -246,7 +246,7 @@ export function PricingTable({
               <h3 className={`text-2xl font-bold ${premium ? "mt-3" : ""}`}>
                 {plan.label}
               </h3>
-              <p className={premium ? "mt-1 text-blue-100" : "mt-1 text-proday-muted"}>
+              <p className={premium ? "mt-1 text-blue-100" : "mt-1 text-neutral-600"}>
                 {plan.tagline}
               </p>
             </div>
@@ -262,12 +262,12 @@ export function PricingTable({
         )}
         <div className="grid gap-0 sm:grid-cols-2">
           <div className="border-b border-neutral-100 p-8 sm:border-b-0 sm:border-r">
-            <p className="text-xs font-semibold uppercase tracking-wider text-proday-muted">
+            <p className="text-xs font-semibold uppercase tracking-wider text-neutral-500">
               Gratuit
             </p>
             <ul className="mt-4 space-y-3">
               {plan.freeIncludes.map((f) => (
-                <li key={f} className="flex gap-2 text-sm">
+                <li key={f} className="flex gap-2 text-sm text-neutral-700">
                   <Check size={16} className="shrink-0 text-neutral-400" />
                   {f}
                 </li>
@@ -275,13 +275,13 @@ export function PricingTable({
             </ul>
           </div>
           <div className="p-8">
-            <p className="text-xs font-semibold uppercase tracking-wider text-proday-ink">
+            <p className="text-xs font-semibold uppercase tracking-wider text-neutral-900">
               Pro
             </p>
             <ul className="mt-4 space-y-3">
               {plan.proIncludes.map((f) => (
-                <li key={f} className="flex gap-2 text-sm font-medium">
-                  <Check size={16} className="shrink-0 text-proday-success" />
+                <li key={f} className="flex gap-2 text-sm font-medium text-neutral-800">
+                  <Check size={16} className="shrink-0 text-emerald-600" />
                   {f}
                 </li>
               ))}
@@ -289,7 +289,7 @@ export function PricingTable({
           </div>
         </div>
         <div className="border-t border-neutral-100 bg-neutral-50 p-6 text-center">
-          <p className="text-sm text-proday-muted">
+          <p className="text-sm text-neutral-600">
             IAP en cours de déploiement — bêta gratuite. Inscrits informés
             quotidiennement de l&apos;avancement.
           </p>

@@ -10,13 +10,14 @@ export type MobileRailLayout = {
   overflow: MainTabId[];
 };
 
-const LEFT_PRIORITY: MainTabId[] = ['home', 'recrutement', 'matchs', 'feed'];
+const LEFT_PRIORITY: MainTabId[] = ['home', 'feed', 'recrutement', 'matchs'];
 const SECONDARY_PRIORITY: MainTabId[] = [
   'recrutement',
   'matchs',
   'covoiturage',
   'sante',
   'feed',
+  'famille',
   'shop',
 ];
 

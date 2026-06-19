@@ -5,7 +5,8 @@ export type MatchChapterId =
   | 'centre'
   | 'convocations'
   | 'stats'
-  | 'amicaux';
+  | 'amicaux'
+  | 'tournois';
 
 export const MATCH_CHAPTERS: {
   id: MatchChapterId;
@@ -18,6 +19,7 @@ export const MATCH_CHAPTERS: {
   { id: 'convocations', label: 'Convocations', shortLabel: 'Convocs', icon: 'mail' },
   { id: 'stats', label: 'Stats', shortLabel: 'Stats', icon: 'trophy' },
   { id: 'amicaux', label: 'Amicaux', shortLabel: 'Amicaux', icon: 'handshake' },
+  { id: 'tournois', label: 'Tournois', shortLabel: 'Tournois', icon: 'trophy' },
 ];
 
 export type CalendarKindFilter = 'all' | 'team_event' | 'friendly_match';

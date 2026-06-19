@@ -11,32 +11,60 @@ import {
 import { useSessionProfile } from '../../hooks/useSessionProfile';
 import { useMessagesData } from '../../hooks/useAppData';
 import { useTabNavigation } from '../../context/TabNavigationContext';
+import { useSponsorShellOptional } from '../../context/SponsorShellContext';
 import { useSponsorDashboard } from '../../hooks/useSponsorDashboard';
 import { ChatScreen } from '../ChatScreen';
 import { SponsorScreenHeader } from '../../components/sponsor/SponsorScreenHeader';
 import { SPONSOR_MESSAGE_TEMPLATES } from '../../content/sponsorContent';
 import { TAB_BAR_CONTENT_INSET } from '../../components/navigation/BottomTabBar';
+import { SPONSOR_NAV_INSET } from '../../navigation/sponsorTabConfig';
 import { SPONSOR_THEME } from '../../content/sponsorExperience';
 import { spacing, radius } from '../../theme/designTokens';
+import { openSponsorProspectChat } from '../../utils/openSponsorProspectChat';
+import type { SponsorProspect } from '../../models/SponsorOffer';
 
-export const SponsorNetworkScreen: React.FC = () => {
+interface SponsorNetworkScreenProps {
+  shellMode?: boolean;
+  initialSegment?: 'messages' | 'prospects';
+}
+
+export const SponsorNetworkScreen: React.FC<SponsorNetworkScreenProps> = ({
+  shellMode = false,
+  initialSegment = 'messages',
+}) => {
   const profile = useSessionProfile();
   const company = profile?.profile.job_title ?? profile?.display_name;
-  const { pendingChatThreadId, clearPendingChat } = useTabNavigation();
+  const tabNav = useTabNavigation();
+  const sponsorShell = useSponsorShellOptional();
+  const pendingChatThreadId = sponsorShell?.pendingChatThreadId ?? tabNav.pendingChatThreadId;
+  const pendingChatDraft = sponsorShell?.pendingChatDraft ?? null;
+  const clearPendingChat = sponsorShell?.clearPendingChat ?? tabNav.clearPendingChat;
+  const bottomInset = shellMode ? SPONSOR_NAV_INSET : TAB_BAR_CONTENT_INSET;
   const { threads, loading, refresh } = useMessagesData(profile?.uid);
   const { prospects, analytics, loading: sponsorLoading } = useSponsorDashboard(
     profile?.uid,
     company
   );
   const [activeThreadId, setActiveThreadId] = useState<string | null>(null);
-  const [segment, setSegment] = useState<'messages' | 'prospects'>('messages');
+  const [chatDraft, setChatDraft] = useState<string | undefined>();
+  const [segment, setSegment] = useState<'messages' | 'prospects'>(initialSegment);
 
   useEffect(() => {
     if (pendingChatThreadId) {
       setActiveThreadId(pendingChatThreadId);
+      setChatDraft(pendingChatDraft ?? undefined);
       clearPendingChat();
     }
-  }, [pendingChatThreadId, clearPendingChat]);
+  }, [pendingChatThreadId, pendingChatDraft, clearPendingChat]);
+
+  const handleContactProspect = (prospect: SponsorProspect) => {
+    if (!profile) return;
+    void openSponsorProspectChat(profile, prospect, (threadId, draft) => {
+      setChatDraft(draft);
+      setActiveThreadId(threadId);
+      setSegment('messages');
+    });
+  };
 
   const activeThread = threads.find((t) => t.id === activeThreadId);
 
@@ -51,8 +79,10 @@ export const SponsorNetworkScreen: React.FC = () => {
         otherName={activeThread.participant_name}
         currentUid={profile.uid}
         currentUser={profile}
+        initialDraft={chatDraft}
         onBack={() => {
           setActiveThreadId(null);
+          setChatDraft(undefined);
           refresh();
         }}
       />
@@ -66,8 +96,10 @@ export const SponsorNetworkScreen: React.FC = () => {
         otherName="Contact club"
         currentUid={profile.uid}
         currentUser={profile}
+        initialDraft={chatDraft}
         onBack={() => {
           setActiveThreadId(null);
+          setChatDraft(undefined);
           refresh();
         }}
       />
@@ -78,11 +110,13 @@ export const SponsorNetworkScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <SponsorScreenHeader
-          title="Réseau partenaires"
-          subtitle="Messages clubs, prospects locaux et modèles pour accélérer vos prises de contact."
-        />
+      <ScrollView contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomInset + spacing.xl }]}>
+        {!shellMode ? (
+          <SponsorScreenHeader
+            title="Réseau sponsors"
+            subtitle="Messages clubs, prospects locaux et modèles pour accélérer vos prises de contact."
+          />
+        ) : null}
 
         {analytics ? (
           <View style={styles.statsRow}>
@@ -118,6 +152,7 @@ export const SponsorNetworkScreen: React.FC = () => {
           <TouchableOpacity
             style={[styles.segment, segment === 'messages' && styles.segmentOn]}
             onPress={() => setSegment('messages')}
+            testID="sponsor-network-segment-messages"
           >
             <Text style={[styles.segmentText, segment === 'messages' && styles.segmentTextOn]}>
               Messages ({threads.length})
@@ -126,6 +161,7 @@ export const SponsorNetworkScreen: React.FC = () => {
           <TouchableOpacity
             style={[styles.segment, segment === 'prospects' && styles.segmentOn]}
             onPress={() => setSegment('prospects')}
+            testID="sponsor-network-segment-prospects"
           >
             <Text style={[styles.segmentText, segment === 'prospects' && styles.segmentTextOn]}>
               Prospects ({prospects.length})
@@ -155,11 +191,7 @@ export const SponsorNetworkScreen: React.FC = () => {
                 </View>
                 <TouchableOpacity
                   style={styles.contactBtn}
-                  onPress={() =>
-                    showTemplate(
-                      SPONSOR_MESSAGE_TEMPLATES[0].text.replace('votre club', p.name)
-                    )
-                  }
+                  onPress={() => handleContactProspect(p)}
                 >
                   <Text style={styles.contactBtnText}>Contacter</Text>
                 </TouchableOpacity>
@@ -205,7 +237,6 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.lg,
-    paddingBottom: TAB_BAR_CONTENT_INSET + spacing.lg,
   },
   statsRow: { flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.lg },
   statBox: {

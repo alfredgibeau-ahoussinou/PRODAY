@@ -98,7 +98,14 @@ export const UI_ES: MessageCatalog = {
   'modules.gestion.title': 'Gestión de equipo',
   'modules.gestion.subtitle': 'Planificación · asistencia · stats',
   'modules.sponsors.title': 'Patrocinadores',
-  'modules.sponsors.subtitle': 'Socios',
+  'modules.sponsors.subtitle': 'Patrocinadores',
+
+  'sponsorPublic.title': 'Perfil de patrocinador',
+  'sponsorPublic.activeOffers': 'Ofertas activas',
+  'sponsorPublic.contact': 'Contactar',
+  'sponsorPublic.contactGuest': 'Inicia sesión para enviar una solicitud de contacto a este patrocinador.',
+  'sponsorPublic.contactSent': 'Tu interés en {{company}} ha sido registrado. El patrocinador podrá contactarte por ProDay.',
+  'sponsorPublic.noOffers': 'Ninguna oferta activa por el momento.',
 
   'auth.login': 'Iniciar sesión',
   'auth.signup': 'Registrarse',
@@ -115,7 +122,7 @@ export const UI_ES: MessageCatalog = {
 
   'auth.loginSub.homme': 'Inicia sesión en tu espacio Pro Day Man.',
   'auth.loginSub.woman': 'Inicia sesión en tu espacio de fútbol femenino.',
-  'auth.loginSub.pro': 'Inicia sesión en Pro Day Pro — staff, clubes y socios.',
+  'auth.loginSub.pro': 'Inicia sesión en Pro Day Pro — staff, clubes y patrocinadores.',
   'auth.loginSub.sante': 'Inicia sesión en tu espacio Pro Day Salud.',
 
   'auth.signupSub.homme':
@@ -123,7 +130,7 @@ export const UI_ES: MessageCatalog = {
   'auth.signupSub.woman':
     'Crea tu cuenta de jugadora — mercado F, estadísticas y visibilidad.',
   'auth.signupSub.pro':
-    'Crea tu cuenta pro — entrenador, club, agente u organizador.',
+    'Crea tu cuenta pro — entrenador, club, agente, organizador o patrocinador.',
   'auth.signupSub.sante':
     'Crea tu cuenta de practicante — agenda, mensajería y visibilidad.',
 
@@ -145,4 +152,10 @@ export const UI_ES: MessageCatalog = {
   'profile.section.legalSub': 'Términos y privacidad',
   'profile.section.session': 'Sesión',
   'profile.logout': 'Cerrar sesión',
+
+  'auth.greeting.welcomeEyebrow': 'Saque inicial',
+  'auth.greeting.welcomeSub': 'Entras al campo — buen partido en ProDay.',
+  'auth.greeting.goodbyeEyebrow': 'Final del partido',
+  'auth.greeting.goodbyeSub': 'Has cerrado sesión — nos vemos en el campo.',
+  'auth.greeting.fallbackName': 'Crack',
 };

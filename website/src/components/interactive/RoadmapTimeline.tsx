@@ -6,7 +6,7 @@ import { ROADMAP_ITEMS } from "@/lib/content";
 
 export function RoadmapTimeline() {
   return (
-    <div className="mx-auto max-w-3xl space-y-12">
+    <div className="mx-auto max-w-3xl space-y-12 px-4 sm:px-6">
       {ROADMAP_ITEMS.map((phase, pi) => (
         <motion.div
           key={phase.phase}
@@ -19,10 +19,10 @@ export function RoadmapTimeline() {
           <div
             className={`absolute left-0 flex h-8 w-8 items-center justify-center rounded-full ${
               phase.status === "done"
-                ? "bg-green-100 text-green-700"
+                ? "bg-emerald-500/20 text-emerald-300"
                 : phase.status === "active"
-                  ? "bg-orange-100 text-orange-700"
-                  : "bg-neutral-100 text-neutral-500"
+                  ? "bg-amber-500/20 text-amber-300"
+                  : "bg-white/10 text-white/40"
             }`}
           >
             {phase.status === "done" ? (
@@ -34,14 +34,14 @@ export function RoadmapTimeline() {
             )}
           </div>
           {pi < ROADMAP_ITEMS.length - 1 && (
-            <div className="absolute left-4 top-10 h-full w-px bg-neutral-200" />
+            <div className="absolute left-4 top-10 h-full w-px bg-white/10" />
           )}
-          <h3 className="text-xl font-bold">{phase.phase}</h3>
+          <h3 className="font-display text-xl font-bold text-white">{phase.phase}</h3>
           <ul className="mt-4 flex flex-wrap gap-2">
             {phase.items.map((item) => (
               <li
                 key={item}
-                className="rounded-full border border-neutral-200 bg-white px-4 py-2 text-sm"
+                className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/70"
               >
                 {item}
               </li>

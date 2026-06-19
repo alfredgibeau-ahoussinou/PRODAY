@@ -30,9 +30,10 @@ import {
 } from '../utils/recruitmentValidation';
 
 export const APPLICATION_STATUS_LABEL: Record<Application['status'], string> = {
-  PENDING: 'En attente',
-  VIEWED: 'Consultée',
-  ACCEPTED: 'Acceptée',
+  PENDING: 'Envoyée',
+  VIEWED: 'Vue',
+  IN_PROGRESS: 'En cours',
+  ACCEPTED: 'Retenu',
   REJECTED: 'Refusée',
 };
 
@@ -154,6 +155,7 @@ export const recruitmentService = {
       player_uid: string;
       player_name: string;
       cover_letter: string;
+      cv_pdf_url?: string;
     },
     player?: User
   ): Promise<string> {
@@ -178,7 +180,7 @@ export const recruitmentService = {
       player_uid: input.player_uid,
       player_name: input.player_name,
       cover_letter: coverLetter,
-      cv_pdf_url: '',
+      cv_pdf_url: input.cv_pdf_url ?? '',
       status: 'PENDING',
       created_at: serverTimestamp(),
     });

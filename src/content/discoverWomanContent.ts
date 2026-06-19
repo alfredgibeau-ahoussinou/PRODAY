@@ -65,7 +65,7 @@ export const DISCOVER_UNIVERSE_CARDS_WOMAN = [
   },
   {
     id: 'sponsors' as const,
-    title: 'Partenaires',
+    title: 'Sponsors',
     subtitle: 'Soutien au foot F',
     image: WOMAN_SHOWCASE_IMAGES.coachFounder,
     icon: 'star' as IconName,

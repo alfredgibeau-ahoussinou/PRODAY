@@ -1,7 +1,7 @@
 import type { UserRole } from '../models/User';
 import { yearlyPriceFromMonthly } from '../utils/subscriptionPricing';
 
-/** Identifiant produit store / Stripe (phase 1 : club_pro actif en IAP). */
+/** Identifiant produit store (IAP App Store / Play — build EAS requis). */
 export type SubscriptionPlanId =
   | 'player_plus'
   | 'recruiter_pro'
@@ -23,7 +23,7 @@ export type SubscriptionFeatureId =
 export interface PlanPricing {
   monthlyEur: number;
   yearlyEur: number;
-  /** IAP / Stripe pas encore branché en prod */
+  /** IAP App Store / Play — build EAS requis (pas Expo Go). */
   storeAvailable: boolean;
 }
 
@@ -62,7 +62,7 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionPlanId, SubscriptionPlanDefi
     role: 'player',
     label: 'Joueur Plus',
     tagline: 'CV en ligne, visibilité et Mercato',
-    pricing: planPricing(2.99, false),
+    pricing: planPricing(2.99, true),
     limits: { mercato_apply_per_month: 1 },
     freeIncludes: [
       'Profil, Pulse et CV en ligne',
@@ -83,7 +83,7 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionPlanId, SubscriptionPlanDefi
     role: 'recruiter',
     label: 'Recruteur Pro',
     tagline: 'Scouting, Mercato Pro et pipeline candidatures',
-    pricing: planPricing(7.99, false),
+    pricing: planPricing(7.99, true),
     limits: { recruitment_messages_per_month: 5 },
     freeIncludes: [
       'Profil recruteur vérifié',
@@ -103,7 +103,7 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionPlanId, SubscriptionPlanDefi
     role: 'coach',
     label: 'Coach Pro',
     tagline: 'Recrutement et gestion multi-équipes',
-    pricing: planPricing(7.99, false),
+    pricing: planPricing(7.99, true),
     limits: {
       club_teams: 1,
       recruitment_messages_per_month: 5,
@@ -146,7 +146,7 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionPlanId, SubscriptionPlanDefi
     role: 'agent',
     label: 'Agent Elite',
     tagline: 'CRM joueurs, mandats et pipeline — formule premium',
-    pricing: planPricing(99.99, false),
+    pricing: planPricing(99.99, true),
     limits: { recruitment_messages_per_month: 10 },
     freeIncludes: [
       'Profil agent et vérification',
@@ -165,7 +165,7 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionPlanId, SubscriptionPlanDefi
     role: 'physio',
     label: 'Pôle santé Pro',
     tagline: 'Abonnement léger + visibilité clubs — commission sur les RDV',
-    pricing: planPricing(19.99, false),
+    pricing: planPricing(19.99, true),
     limits: {},
     bookingCommissionPercent: 10,
     bookingCommissionNote:
@@ -188,7 +188,7 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionPlanId, SubscriptionPlanDefi
     role: 'organizer',
     label: 'Organisateur Pro',
     tagline: 'Événements, détections et visibilité locale',
-    pricing: planPricing(14.99, false),
+    pricing: planPricing(14.99, true),
     limits: {},
     freeIncludes: [
       'Profil organisateur vérifié',
@@ -206,12 +206,12 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionPlanId, SubscriptionPlanDefi
   sponsor_pro: {
     id: 'sponsor_pro',
     role: 'sponsor',
-    label: 'Partenaire Pro',
+    label: 'Sponsor Pro',
     tagline: 'Visibilité marque & clubs locaux',
-    pricing: planPricing(99.99, false),
+    pricing: planPricing(99, true),
     limits: {},
     freeIncludes: [
-      'Profil partenaire vérifié',
+      'Profil sponsor vérifié',
       'Présence annuaire Sponsors',
       '1 offre active',
       'Zone géographique',
@@ -220,7 +220,7 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionPlanId, SubscriptionPlanDefi
       'Offres sponsors illimitées',
       'Logo onglet Sponsors',
       'Campagnes locales ciblées',
-      'Push géolocalisé (à venir)',
+      'Push géolocalisé local (bêta — opt-in)',
     ],
   },
 };

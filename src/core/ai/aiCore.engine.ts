@@ -137,6 +137,7 @@ const CTA_BY_TAB: Record<MainTabId, string> = {
   sante: 'Plan santé',
   feed: 'Fil communauté',
   reels: 'Voir les réels',
+  famille: 'Espace famille',
   messages: 'Messages',
   profil: 'Mon profil',
   shop: 'Boutique',

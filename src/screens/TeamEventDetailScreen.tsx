@@ -21,6 +21,7 @@ import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { teamEventsService } from '../services/teamEvents.service';
 import { useAuth } from '../context/AuthContext';
 import { formatCalendarDate } from '../utils/seasonCalendar';
+import { buildConvocationShareMessage } from '../utils/teamEventShare';
 import { EventLineupScreen } from './EventLineupScreen';
 import { EventLiveStatsScreen } from './EventLiveStatsScreen';
 import { EventAttendancePanel } from '../components/team/EventAttendancePanel';
@@ -135,9 +136,7 @@ export const TeamEventDetailScreen: React.FC<TeamEventDetailScreenProps> = ({
 
   const shareConvocation = async () => {
     if (!event) return;
-    const pending = getPendingInviteeUids(event).length;
-    const msg = `Convocation ProDay — ${event.title}\n${formatCalendarDate(event.starts_at)}\n${event.city}${event.location_label ? ` · ${event.location_label}` : ''}\n${pending > 0 ? `${pending} réponse(s) en attente.` : ''}`;
-    await Share.share({ message: msg });
+    await Share.share({ message: buildConvocationShareMessage(event) });
   };
 
   if (loading) {

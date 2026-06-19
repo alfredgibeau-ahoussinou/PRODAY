@@ -19,6 +19,7 @@ import { CreateSponsorOfferScreen } from '../CreateSponsorOfferScreen';
 import { sponsorsService } from '../../services/sponsors.service';
 import { Icon } from '../../components/ui/Icon';
 import { TAB_BAR_CONTENT_INSET } from '../../components/navigation/BottomTabBar';
+import { SPONSOR_NAV_INSET } from '../../navigation/sponsorTabConfig';
 import { SPONSOR_THEME } from '../../content/sponsorExperience';
 import { spacing, radius } from '../../theme/designTokens';
 import type { SponsorOffer } from '../../models/SponsorOffer';
@@ -26,10 +27,20 @@ import type { SponsorOffer } from '../../models/SponsorOffer';
 type CampaignFilter = 'mine' | 'clubs' | 'all';
 type ClubSort = 'progress' | 'amount';
 
-export const SponsorCampaignsScreen: React.FC = () => {
+interface SponsorCampaignsScreenProps {
+  shellMode?: boolean;
+  fixedFilter?: 'mine' | 'clubs' | 'all';
+}
+
+export const SponsorCampaignsScreen: React.FC<SponsorCampaignsScreenProps> = ({
+  shellMode = false,
+  fixedFilter,
+}) => {
   const profile = useSessionProfile();
   const company = profile?.profile.job_title ?? profile?.display_name;
-  const [filter, setFilter] = useState<CampaignFilter>('mine');
+  const [filter, setFilter] = useState<CampaignFilter>(fixedFilter ?? 'mine');
+  const effectiveFilter = fixedFilter ?? filter;
+  const bottomInset = shellMode ? SPONSOR_NAV_INSET : TAB_BAR_CONTENT_INSET;
   const [clubSort, setClubSort] = useState<ClubSort>('progress');
   const [urgentOnly, setUrgentOnly] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
@@ -44,10 +55,10 @@ export const SponsorCampaignsScreen: React.FC = () => {
   );
 
   const filteredOffers = useMemo(() => {
-    if (filter === 'mine') return myOffers;
-    if (filter === 'clubs') return [];
+    if (effectiveFilter === 'mine') return myOffers;
+    if (effectiveFilter === 'clubs') return [];
     return offers;
-  }, [filter, myOffers, offers]);
+  }, [effectiveFilter, myOffers, offers]);
 
   const sortedGoals = useMemo(() => {
     let list = [...goals];
@@ -142,45 +153,53 @@ export const SponsorCampaignsScreen: React.FC = () => {
   return (
     <ScrollView
       style={styles.root}
-      contentContainerStyle={styles.content}
+      contentContainerStyle={[styles.content, { paddingBottom: bottomInset + spacing.xl }]}
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} tintColor={SPONSOR_THEME.primary} />
       }
     >
-      <SponsorScreenHeader
-        title="Campagnes"
-        subtitle="Gérez vos offres, financez les clubs et suivez vos contributions."
-      />
+      {!shellMode ? (
+        <SponsorScreenHeader
+          title="Campagnes"
+          subtitle="Gérez vos offres, financez les clubs et suivez vos contributions."
+        />
+      ) : null}
 
-      <PressableSpring style={styles.createBtn} onPress={() => setShowCreate(true)}>
-        <Icon name="add" size={18} color={SPONSOR_THEME.onPrimary} />
-        <Text style={styles.createBtnText}>Nouvelle offre partenaire</Text>
-      </PressableSpring>
+      {effectiveFilter !== 'clubs' ? (
+        <PressableSpring style={styles.createBtn} onPress={() => setShowCreate(true)}>
+          <Icon name="add" size={18} color={SPONSOR_THEME.onPrimary} />
+          <Text style={styles.createBtnText}>Nouvelle offre sponsor</Text>
+        </PressableSpring>
+      ) : null}
 
-      <View style={styles.filters}>
-        {(
-          [
-            { id: 'mine' as const, label: 'Mes offres' },
-            { id: 'clubs' as const, label: 'Clubs' },
-            { id: 'all' as const, label: 'Écosystème' },
-          ] as const
-        ).map((f) => (
-          <PressableSpring
-            key={f.id}
-            style={[styles.filterChip, filter === f.id && styles.filterChipOn]}
-            onPress={() => setFilter(f.id)}
-          >
-            <Text style={[styles.filterText, filter === f.id && styles.filterTextOn]}>{f.label}</Text>
-          </PressableSpring>
-        ))}
-      </View>
+      {!fixedFilter ? (
+        <View style={styles.filters}>
+          {(
+            [
+              { id: 'mine' as const, label: 'Mes offres' },
+              { id: 'clubs' as const, label: 'Clubs' },
+              { id: 'all' as const, label: 'Écosystème' },
+            ] as const
+          ).map((f) => (
+            <PressableSpring
+              key={f.id}
+              style={[styles.filterChip, effectiveFilter === f.id && styles.filterChipOn]}
+              onPress={() => setFilter(f.id)}
+            >
+              <Text style={[styles.filterText, effectiveFilter === f.id && styles.filterTextOn]}>
+                {f.label}
+              </Text>
+            </PressableSpring>
+          ))}
+        </View>
+      ) : null}
 
       {loading ? <ActivityIndicator color={SPONSOR_THEME.primary} style={styles.loader} /> : null}
 
-      {filter !== 'clubs' ? (
+      {effectiveFilter !== 'clubs' ? (
         <>
           <Text style={styles.sectionTitle}>
-            Offres {filter === 'mine' ? `(${myOffers.length})` : ''}
+            Offres {effectiveFilter === 'mine' ? `(${myOffers.length})` : ''}
           </Text>
           {filteredOffers.length === 0 ? (
             <Text style={styles.empty}>Aucune offre dans cette vue.</Text>
@@ -207,7 +226,7 @@ export const SponsorCampaignsScreen: React.FC = () => {
         </>
       ) : null}
 
-      {filter !== 'mine' ? (
+      {effectiveFilter !== 'mine' ? (
         <>
           <View style={styles.clubToolbar}>
             <Text style={[styles.sectionTitle, styles.sectionGap]}>Campagnes clubs</Text>
@@ -298,7 +317,7 @@ export const SponsorCampaignsScreen: React.FC = () => {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: SPONSOR_THEME.background },
-  content: { padding: spacing.lg, paddingBottom: TAB_BAR_CONTENT_INSET + spacing.xl },
+  content: { padding: spacing.lg },
   guest: { textAlign: 'center', color: SPONSOR_THEME.textMuted, padding: spacing.xl },
   createBtn: {
     flexDirection: 'row',

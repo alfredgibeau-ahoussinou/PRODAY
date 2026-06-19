@@ -2,16 +2,14 @@ import React, { useMemo, useState, useEffect } from 'react';
 import {
   View,
   Text,
-  Image,
   ScrollView,
   StyleSheet,
   Alert,
 } from 'react-native';
 import type { User } from '../models/User';
 import { PressableSpring } from '../components/motion';
-import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { Icon, type IconName } from '../components/ui/Icon';
-import { spacing, radius, shadows } from '../theme/designTokens';
+import { spacing, radius } from '../theme/designTokens';
 import type { AppColors } from '../theme/universeTheme';
 import { useAppTheme } from '../context/ProductLineContext';
 import { buildPlayerCvHtmlFromUser } from '../utils/pdfGenerator';
@@ -27,6 +25,16 @@ import { AnimatedEntrance } from '../components/motion';
 import { ProDayText } from '../components/ui/ProDayText';
 import { trackV3Event } from '../core/analytics/v3Events';
 import { PlayerProfileBlocks, type ProfileBlockId } from '../components/player/PlayerProfileBlocks';
+import {
+  PlayerGalleryGrid,
+  PlayerIdentityDetails,
+  PlayerProfileHero,
+} from '../components/player/PlayerProfileHero';
+import { getProfileCompletion } from '../utils/profileCompletion';
+import { availabilityLabel } from '../utils/playerProfileLabels';
+import { PlayerBadgesRow } from '../components/player/PlayerBadgesRow';
+import { PlayerScoutingShortlistPanel } from '../components/player/PlayerScoutingShortlistPanel';
+import { TAB_BAR_CONTENT_INSET } from '../navigation/tabBarLayout';
 
 interface PlayerProfileScreenProps {
   player: User;
@@ -50,90 +58,39 @@ const StatItem: React.FC<{
 
 function createStyles(c: AppColors) {
   return StyleSheet.create({
-    root: { flex: 1, backgroundColor: c.background },
-    content: { padding: spacing.lg, paddingBottom: 140 },
-    profileCard: {
-      borderRadius: radius.lg,
-      overflow: 'hidden',
-      marginBottom: spacing.xl,
-      borderWidth: 1,
-      borderColor: c.border,
-    },
-    blueBlock: {
-      position: 'relative',
-      backgroundColor: c.brand,
-      padding: spacing.lg,
-      paddingTop: spacing.xl,
-    },
-    positionBadge: {
-      position: 'absolute',
-      top: spacing.md,
-      right: spacing.md,
-      backgroundColor: 'rgba(255,255,255,0.22)',
-      paddingHorizontal: 10,
-      paddingVertical: 4,
-      borderRadius: radius.pill,
-    },
-    positionText: { color: '#FFFFFF', fontSize: 11, fontWeight: '700' },
-    heroRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
-    avatar: {
-      width: 76,
-      height: 76,
-      borderRadius: 38,
-      borderWidth: 3,
-      borderColor: 'rgba(255,255,255,0.45)',
-    },
-    avatarPh: {
-      backgroundColor: c.brandLight,
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    avatarLetter: { fontSize: 30, fontWeight: '800', color: '#FFFFFF' },
-    heroInfo: { flex: 1 },
-    nameRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-    heroName: { fontSize: 20, fontWeight: '800', color: '#FFFFFF' },
-    heroSub: { color: 'rgba(255,255,255,0.92)', fontSize: 13, marginTop: 4 },
+    content: { padding: spacing.lg, paddingBottom: TAB_BAR_CONTENT_INSET + 120 },
     statsStrip: {
       flexDirection: 'row',
-      backgroundColor: c.surface,
-      paddingVertical: spacing.lg,
+      backgroundColor: c.surfaceMuted,
+      borderRadius: radius.md,
+      paddingVertical: spacing.md,
       alignItems: 'center',
     },
     statItem: { flex: 1, alignItems: 'center', gap: 4 },
-    statValue: { fontSize: 20, fontWeight: '800', color: c.text },
+    statValue: { fontSize: 22, fontWeight: '900', color: c.text },
     statLabel: {
       fontSize: 10,
       color: c.textMuted,
       textAlign: 'center',
       paddingHorizontal: 4,
+      fontWeight: '600',
     },
     statDivider: { width: 1, height: 40, backgroundColor: c.border },
-    statsEmpty: {
-      color: c.textMuted,
-      fontSize: 13,
-      textAlign: 'center',
-      paddingVertical: spacing.lg,
-      paddingHorizontal: spacing.lg,
+    bodyText: { fontSize: 14, lineHeight: 22, color: c.textSecondary },
+    emptyText: { fontSize: 13, lineHeight: 20, color: c.textMuted },
+    scoutingBox: {
+      borderWidth: 1,
+      borderRadius: radius.lg,
+      padding: spacing.md,
+      marginBottom: spacing.md,
     },
     galleryHeader: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      marginBottom: spacing.md,
+      marginBottom: spacing.sm,
     },
-    sectionTitle: { fontSize: 16, fontWeight: '700', color: c.text },
-    link: { fontSize: 13, fontWeight: '600', color: c.brand },
-    galleryGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-    galleryCell: {
-      width: '31%' as unknown as number,
-      aspectRatio: 1,
-      borderRadius: radius.md,
-      backgroundColor: c.surfaceMuted,
-      alignItems: 'center',
-      justifyContent: 'center',
-      borderWidth: 1,
-      borderColor: c.border,
-    },
+    link: { fontSize: 13, fontWeight: '700', color: c.brand },
     footer: {
       padding: spacing.lg,
       gap: spacing.sm,
@@ -147,10 +104,10 @@ function createStyles(c: AppColors) {
       justifyContent: 'center',
       gap: spacing.sm,
       backgroundColor: c.brand,
-      borderRadius: radius.md,
+      borderRadius: radius.pill,
       paddingVertical: 15,
     },
-    btnPrimaryText: { color: '#FFFFFF', fontWeight: '700', fontSize: 15 },
+    btnPrimaryText: { color: '#FFFFFF', fontWeight: '800', fontSize: 15 },
     btnOutline: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -158,17 +115,11 @@ function createStyles(c: AppColors) {
       gap: spacing.sm,
       borderWidth: 1,
       borderColor: c.brand,
-      borderRadius: radius.md,
+      borderRadius: radius.pill,
       paddingVertical: 15,
       backgroundColor: c.surface,
     },
-    btnOutlineText: { color: c.brand, fontWeight: '700', fontSize: 15 },
-    scoutingBox: {
-      borderWidth: 1,
-      borderRadius: radius.md,
-      padding: spacing.md,
-      marginBottom: spacing.md,
-    },
+    btnOutlineText: { color: c.brand, fontWeight: '800', fontSize: 15 },
   });
 }
 
@@ -184,240 +135,217 @@ export const PlayerProfileScreen: React.FC<PlayerProfileScreenProps> = ({
   const { isFavorite, toggle } = useFavorites(myProfile?.uid);
   const favorited = isFavorite(player.uid);
   const isOwnProfile = myProfile?.uid === player.uid;
-  const useShellHeader =
+  const isStaffView =
     isSubScreenShellEnabled(myProfile, 'staff') && !isOwnProfile;
-  const showProfileBlocks = isOwnProfile;
+  const [galleryExpanded, setGalleryExpanded] = useState(false);
+
   const scouting = useMemo(() => {
-    if (!useShellHeader || !myProfile) return null;
+    if (!isStaffView || !myProfile) return null;
     return scorePlayerForScouting(myProfile, player);
-  }, [useShellHeader, myProfile, player]);
+  }, [isStaffView, myProfile, player]);
+
+  const completion = useMemo(
+    () => (isOwnProfile ? getProfileCompletion(player) : null),
+    [isOwnProfile, player],
+  );
 
   useEffect(() => {
-    if (useShellHeader && scouting) {
+    if (isStaffView && scouting) {
       trackV3Event('staff_player_profile_open', {
         playerUid: player.uid,
         scoutingScore: scouting.score,
       });
     }
-  }, [useShellHeader, scouting, player.uid]);
+  }, [isStaffView, scouting, player.uid]);
 
-  const profileTitle = productLine === 'woman' ? 'Profil joueuse' : 'Profil joueur';
   const p = player.profile;
+  const stats = p.season_stats;
+  const hasStats = Boolean(stats && (stats.matches > 0 || stats.goals > 0 || stats.assists > 0));
+  const gallery = p.gallery_urls?.filter(Boolean) ?? [];
+  const highlights = p.highlight_video_urls?.filter(Boolean) ?? [];
 
   const handleExportCv = () => {
     const html = buildPlayerCvHtmlFromUser(player);
     openPlayerCvHtml(html, player.display_name);
   };
-  const stats = p.season_stats;
-  const hasStats =
-    stats &&
-    (stats.matches > 0 || stats.goals > 0 || stats.assists > 0);
-  const region = player.city ?? '—';
-  const gallery = p.gallery_urls?.filter(Boolean) ?? [];
-  const [galleryExpanded, setGalleryExpanded] = useState(false);
-  const visibleGallery = galleryExpanded ? gallery : gallery.slice(0, 6);
-  const metaParts: string[] = [];
-  if (p.age) metaParts.push(`${p.age} ans`);
-  if (player.city) metaParts.push(player.city);
-  if (p.height_cm) metaParts.push(`${p.height_cm} cm`);
-  if (p.weight_kg) metaParts.push(`${p.weight_kg} kg`);
+
+  const renderBlock = (id: ProfileBlockId) => {
+    switch (id) {
+      case 'identity':
+        return (
+          <View style={{ gap: spacing.md }}>
+            <PlayerIdentityDetails player={player} colors={themeColors} />
+            {gallery.length > 0 ? (
+              <>
+                <View style={styles.galleryHeader}>
+                  <Text style={[styles.emptyText, { color: themeColors.text, fontWeight: '700' }]}>
+                    Galerie
+                  </Text>
+                  {gallery.length > 6 ? (
+                    <PressableSpring onPress={() => setGalleryExpanded((v) => !v)}>
+                      <Text style={styles.link}>{galleryExpanded ? 'Réduire' : 'Voir tout'}</Text>
+                    </PressableSpring>
+                  ) : null}
+                </View>
+                <PlayerGalleryGrid urls={gallery} colors={themeColors} expanded={galleryExpanded} />
+              </>
+            ) : null}
+          </View>
+        );
+      case 'stats':
+        return hasStats && stats ? (
+          <View style={styles.statsStrip}>
+            <StatItem icon="shirt" value={stats.matches} label="Matchs" brandColor={themeColors.brand} styles={styles} />
+            <View style={styles.statDivider} />
+            <StatItem icon="football" value={stats.goals} label="Buts" brandColor={themeColors.brand} styles={styles} />
+            <View style={styles.statDivider} />
+            <StatItem icon="walk" value={stats.assists} label="Passes D." brandColor={themeColors.brand} styles={styles} />
+          </View>
+        ) : (
+          <Text style={styles.emptyText}>Stats saison non renseignées</Text>
+        );
+      case 'videos':
+        return highlights.length > 0 ? (
+          <Text style={styles.bodyText}>
+            {highlights.length} vidéo highlight enregistrée{highlights.length > 1 ? 's' : ''}
+          </Text>
+        ) : (
+          <Text style={styles.emptyText}>Aucune vidéo highlight</Text>
+        );
+      case 'season': {
+        const parts = [p.level, p.category, p.years_experience ? `${p.years_experience} ans d'exp.` : null]
+          .filter(Boolean)
+          .join(' · ');
+        return parts ? (
+          <Text style={styles.bodyText}>{parts}</Text>
+        ) : (
+          <Text style={styles.emptyText}>Palmarès / saison non renseigné</Text>
+        );
+      }
+      case 'availability': {
+        const label = availabilityLabel(p.availability);
+        return label ? (
+          <Text style={[styles.bodyText, { color: themeColors.brand, fontWeight: '700' }]}>{label}</Text>
+        ) : (
+          <Text style={styles.emptyText}>Disponibilité non indiquée</Text>
+        );
+      }
+      case 'bio':
+        return p.bio?.trim() ? (
+          <Text style={styles.bodyText}>{p.bio.trim()}</Text>
+        ) : (
+          <Text style={styles.emptyText}>Bio non renseignée</Text>
+        );
+      default:
+        return <Text style={styles.emptyText}>À compléter dans l’édition du profil</Text>;
+    }
+  };
 
   const profileScroll = (
-    <ScrollView
-      contentContainerStyle={styles.content}
-      showsVerticalScrollIndicator={false}
-    >
-      {scouting && useShellHeader ? (
-        <AnimatedEntrance kind="fadeUp">
+    <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      {scouting && isStaffView ? (
+        <AnimatedEntrance kind="fade">
           <View style={[styles.scoutingBox, { backgroundColor: themeColors.accentSoft, borderColor: themeColors.accentMuted }]}>
             <ProDayText variant="caption" accent style={{ fontWeight: '800' }}>
-              Pertinence {scouting.score}% — {scouting.label}
+              Pertinence scouting {scouting.score}% — {scouting.label}
             </ProDayText>
           </View>
+          {myProfile ? (
+            <PlayerScoutingShortlistPanel
+              staff={myProfile}
+              player={player}
+              scoutingScore={scouting.score}
+            />
+          ) : null}
         </AnimatedEntrance>
       ) : null}
 
-      <AnimatedEntrance kind="fadeUp">
-        <View style={[styles.profileCard, shadows.card]}>
-          <View style={styles.blueBlock}>
-            {p.position && (
-              <View style={styles.positionBadge}>
-                <Text style={styles.positionText}>{p.position}</Text>
-              </View>
-            )}
-            <View style={styles.heroRow}>
-              {player.avatar_url ? (
-                <Image source={{ uri: player.avatar_url }} style={styles.avatar} />
-              ) : (
-                <View style={[styles.avatar, styles.avatarPh]}>
-                  <Text style={styles.avatarLetter}>
-                    {player.display_name.charAt(0)}
-                  </Text>
-                </View>
-              )}
-              <View style={styles.heroInfo}>
-                <View style={styles.nameRow}>
-                  <Text style={styles.heroName}>{player.display_name}</Text>
-                  <Icon name="checkmark-circle" size={20} color="#7DD3FC" />
-                </View>
-                <Text style={styles.heroSub}>
-                  {metaParts.length > 0 ? metaParts.join(' · ') : region}
-                </Text>
-              </View>
-            </View>
-          </View>
+      {isOwnProfile ? <PlayerBadgesRow user={player} /> : null}
 
-          {!showProfileBlocks && hasStats && stats ? (
-            <View style={styles.statsStrip}>
-              <StatItem
-                icon="shirt"
-                value={stats.matches}
-                label="Matchs"
-                brandColor={themeColors.brand}
-                styles={styles}
-              />
-              <View style={styles.statDivider} />
-              <StatItem
-                icon="football"
-                value={stats.goals}
-                label="Buts"
-                brandColor={themeColors.brand}
-                styles={styles}
-              />
-              <View style={styles.statDivider} />
-              <StatItem
-                icon="walk"
-                value={stats.assists}
-                label="Passes décisives"
-                brandColor={themeColors.brand}
-                styles={styles}
-              />
-            </View>
-          ) : !showProfileBlocks ? (
-            <Text style={styles.statsEmpty}>Stats saison non renseignées</Text>
-          ) : null}
-        </View>
+      <AnimatedEntrance kind="fadeUp">
+        <PlayerProfileHero
+          player={player}
+          colors={themeColors}
+          isOwnProfile={isOwnProfile}
+          completionPercent={completion?.percent}
+        />
       </AnimatedEntrance>
 
-      {showProfileBlocks ? (
-        <PlayerProfileBlocks
-          player={player}
-          editable
-          renderBlock={(id: ProfileBlockId) => {
-            if (id === 'stats') {
-              return hasStats && stats ? (
-                <View style={styles.statsStrip}>
-                  <StatItem icon="shirt" value={stats.matches} label="Matchs" brandColor={themeColors.brand} styles={styles} />
-                  <View style={styles.statDivider} />
-                  <StatItem icon="football" value={stats.goals} label="Buts" brandColor={themeColors.brand} styles={styles} />
-                  <View style={styles.statDivider} />
-                  <StatItem icon="walk" value={stats.assists} label="Passes décisives" brandColor={themeColors.brand} styles={styles} />
-                </View>
-              ) : (
-                <Text style={styles.statsEmpty}>Stats saison non renseignées</Text>
-              );
-            }
-            if (id === 'videos' || id === 'identity') {
-              return gallery.length > 0 ? (
-                <View style={styles.galleryGrid}>
-                  {visibleGallery.map((uri) => (
-                    <Image key={uri} source={{ uri }} style={styles.galleryCell} />
-                  ))}
-                </View>
-              ) : (
-                <Text style={styles.statsEmpty}>Aucune photo dans la galerie</Text>
-              );
-            }
-            if (id === 'bio') {
-              return <Text style={styles.statsEmpty}>{p.bio?.trim() || 'Bio non renseignée'}</Text>;
-            }
-            return <Text style={styles.statsEmpty}>À compléter dans l’édition du profil</Text>;
-          }}
-        />
-      ) : (
-        <>
-      <View style={styles.galleryHeader}>
-        <Text style={styles.sectionTitle}>Galerie photos</Text>
-        {gallery.length > 6 ? (
-          <PressableSpring onPress={() => setGalleryExpanded((v) => !v)}>
-            <Text style={styles.link}>{galleryExpanded ? 'Réduire' : 'Voir tout'}</Text>
-          </PressableSpring>
-        ) : null}
-      </View>
-      {gallery.length > 0 ? (
-        <View style={styles.galleryGrid}>
-          {visibleGallery.map((uri) => (
-            <Image key={uri} source={{ uri }} style={styles.galleryCell} />
-          ))}
-        </View>
-      ) : (
-        <Text style={styles.statsEmpty}>Aucune photo dans la galerie</Text>
-      )}
-        </>
-      )}
+      <PlayerProfileBlocks
+        player={player}
+        editable={isOwnProfile}
+        renderBlock={renderBlock}
+      />
     </ScrollView>
   );
 
   const footer = (
     <View style={styles.footer}>
-      <PressableSpring
-        style={styles.btnPrimary}
-        onPress={() => {
-          if (!requireAuth('Connectez-vous pour contacter ce joueur.')) return;
-          onContact?.(player);
-        }}
-      >
-        <Icon name="mail" size={18} color="#FFFFFF" />
-        <Text style={styles.btnPrimaryText}>Contacter</Text>
-      </PressableSpring>
       {isOwnProfile ? (
-        <PressableSpring style={styles.btnOutline} onPress={handleExportCv}>
-          <Icon name="share" size={18} color={themeColors.brand} />
-          <Text style={styles.btnOutlineText}>Exporter mon CV (PDF)</Text>
+        <PressableSpring style={styles.btnPrimary} onPress={handleExportCv}>
+          <Icon name="share" size={18} color="#FFFFFF" />
+          <Text style={styles.btnPrimaryText}>Exporter mon CV (PDF)</Text>
         </PressableSpring>
       ) : (
-        <PressableSpring
-          style={styles.btnOutline}
-          onPress={async () => {
-            if (!requireAuth('Connectez-vous pour enregistrer des favoris.') || !myProfile) return;
-            try {
-              await toggle(player.uid, 'player');
-            } catch (e) {
-              Alert.alert('Erreur', e instanceof Error ? e.message : 'Action impossible.');
-            }
-          }}
-        >
-          <Icon
-            name={favorited ? 'heart' : 'heart-outline'}
-            size={18}
-            color={themeColors.brand}
-          />
-          <Text style={styles.btnOutlineText}>Ajouter aux favoris</Text>
-        </PressableSpring>
+        <>
+          <PressableSpring
+            style={styles.btnPrimary}
+            onPress={() => {
+              if (!requireAuth('Connectez-vous pour contacter ce joueur.')) return;
+              onContact?.(player);
+            }}
+          >
+            <Icon name="mail" size={18} color="#FFFFFF" />
+            <Text style={styles.btnPrimaryText}>Contacter</Text>
+          </PressableSpring>
+          <PressableSpring
+            style={styles.btnOutline}
+            onPress={async () => {
+              if (!requireAuth('Connectez-vous pour enregistrer des favoris.') || !myProfile) return;
+              try {
+                await toggle(player.uid, 'player');
+              } catch (e) {
+                Alert.alert('Erreur', e instanceof Error ? e.message : 'Action impossible.');
+              }
+            }}
+          >
+            <Icon
+              name={favorited ? 'heart' : 'heart-outline'}
+              size={18}
+              color={themeColors.brand}
+            />
+            <Text style={styles.btnOutlineText}>
+              {favorited ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+            </Text>
+          </PressableSpring>
+        </>
       )}
     </View>
   );
 
-  if (useShellHeader) {
-    return (
-      <TabScreenShell
-        caption="Scouting"
-        title={player.display_name}
-        subtitle={scouting ? `${scouting.label} · ${scouting.score}%` : undefined}
-        right={<ScreenBackButton onPress={onBack} />}
-        flat
-      >
-        {profileScroll}
-        {footer}
-      </TabScreenShell>
-    );
-  }
+  const shellCaption = isStaffView ? 'Scouting' : isOwnProfile ? 'Mon espace' : 'Mercato';
+  const shellTitle = isOwnProfile
+    ? productLine === 'woman'
+      ? 'Ma fiche joueuse'
+      : 'Ma fiche joueur'
+    : player.display_name;
 
   return (
-    <View style={styles.root}>
-      <ScreenHeader title={profileTitle} onBack={onBack} onMenu={() => {}} centered />
+    <TabScreenShell
+      caption={shellCaption}
+      title={shellTitle}
+      subtitle={
+        scouting
+          ? `${scouting.label} · ${scouting.score}%`
+          : isOwnProfile && completion
+            ? `Profil ${completion.percent}% complété`
+            : [p.position, p.level, player.city].filter(Boolean).join(' · ') || undefined
+      }
+      right={<ScreenBackButton onPress={onBack} />}
+      flat
+    >
       {profileScroll}
       {footer}
-    </View>
+    </TabScreenShell>
   );
 };

@@ -147,7 +147,7 @@ export const SponsorDashboardScreen: React.FC<SponsorDashboardScreenProps> = ({ 
   return (
     <View style={styles.root}>
       <TabScreenShell
-        caption="Partenaires"
+        caption="Sponsors"
         title={`Bonjour, ${company}`}
         subtitle={t('sponsor.dashboard.subtitle')}
         flat

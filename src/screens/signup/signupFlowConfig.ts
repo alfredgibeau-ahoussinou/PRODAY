@@ -28,7 +28,7 @@ export const SIGNUP_PAGE_LABELS: Record<SignupPageId, string> = {
   organizer_pro: 'Orga',
   medical_specialty: 'Spécialité',
   medical_practice: 'Cabinet',
-  sponsor_pro: 'Partenaire',
+  sponsor_pro: 'Sponsor',
   family: 'Famille',
   account: 'Identité',
   security: 'Sécurité',
@@ -48,7 +48,7 @@ const ROLE_LABELS: Record<UserRole, string> = {
   agent: 'Agent',
   recruiter: 'Recruteur',
   organizer: 'Organisateur',
-  sponsor: 'Partenaire',
+  sponsor: 'Sponsor',
   physio: 'Pôle médical',
 };
 
@@ -118,7 +118,7 @@ function staffProPage(role: UserRole): SignupPageId {
 }
 
 /**
- * Parcours multi-pages — une séquence par rôle (joueur, coach, club, agent, orga, médical, partenaire).
+ * Parcours multi-pages — une séquence par rôle (joueur, coach, club, agent, orga, médical, sponsor).
  */
 export function buildSignupSteps(
   flowKind: SignupFlowKind,
@@ -282,7 +282,7 @@ export function getAccessStepMeta(
   }
   if (role === 'sponsor') {
     return {
-      title: tr(t, 'signup.access.sponsor.title', 'Identifiants partenaire'),
+      title: tr(t, 'signup.access.sponsor.title', 'Identifiants sponsor'),
       subtitle: tr(t, 'signup.access.sponsor.subtitle', 'Email, mot de passe et zone — accès à l’espace sponsors.'),
     };
   }

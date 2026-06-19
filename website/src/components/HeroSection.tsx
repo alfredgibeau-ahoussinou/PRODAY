@@ -6,14 +6,16 @@ import Link from "next/link";
 import { ArrowRight, Play } from "lucide-react";
 import { BRAND } from "@/lib/content";
 import { ROUTES } from "@/lib/routes";
+import { PremiumButton } from "@/components/ui/PremiumButton";
+import { Kicker } from "@/components/ui/Kicker";
 
 export function HeroSection() {
   const mx = useMotionValue(0);
   const my = useMotionValue(0);
   const sx = useSpring(mx, { stiffness: 80, damping: 20 });
   const sy = useSpring(my, { stiffness: 80, damping: 20 });
-  const rotateX = useTransform(sy, [-0.5, 0.5], [8, -8]);
-  const rotateY = useTransform(sx, [-0.5, 0.5], [-8, 8]);
+  const rotateX = useTransform(sy, [-0.5, 0.5], [6, -6]);
+  const rotateY = useTransform(sx, [-0.5, 0.5], [-6, 6]);
 
   function onMove(e: React.MouseEvent<HTMLDivElement>) {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -27,53 +29,38 @@ export function HeroSection() {
   }
 
   return (
-    <section className="relative min-h-screen overflow-hidden pt-24 gradient-mesh noise">
-      <div className="absolute inset-0 -z-10">
-        <motion.div
-          className="absolute -left-32 top-20 h-96 w-96 rounded-full bg-neutral-200/60 blur-3xl"
-          animate={{ x: [0, 40, 0], y: [0, 20, 0] }}
-          transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
-        />
-        <motion.div
-          className="absolute -right-24 bottom-32 h-80 w-80 rounded-full bg-neutral-300/40 blur-3xl"
-          animate={{ x: [0, -30, 0], y: [0, -25, 0] }}
-          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-        />
+    <section className="relative min-h-screen overflow-hidden pt-24 gradient-mesh noise grid-lines">
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute left-1/2 top-1/3 h-[500px] w-[500px] -translate-x-1/2 rounded-full bg-blue-600/10 blur-[120px]" />
+        <div className="absolute right-0 top-0 h-96 w-96 rounded-full bg-violet-600/8 blur-[100px]" />
       </div>
 
-      <div className="mx-auto grid max-w-6xl gap-12 px-4 pb-20 pt-8 sm:px-6 lg:grid-cols-2 lg:items-center lg:gap-16 lg:pt-16">
+      <div className="relative mx-auto grid max-w-6xl gap-14 px-4 pb-24 pt-12 sm:px-6 lg:grid-cols-2 lg:items-center lg:gap-16 lg:pt-20">
         <div>
-          <motion.p
+          <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="mb-4 inline-flex items-center gap-2 rounded-full border border-neutral-200 bg-white px-4 py-1.5 text-xs font-medium tracking-widest text-proday-muted"
           >
-            <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-proday-success opacity-75" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-proday-success" />
-            </span>
-            {BRAND.tagline}
-          </motion.p>
+            <Kicker>{BRAND.tagline}</Kicker>
+          </motion.div>
 
           <motion.h1
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2, duration: 0.7 }}
-            className="text-4xl font-bold leading-[1.08] tracking-tight sm:text-5xl lg:text-6xl"
+            className="font-display mt-5 text-4xl font-bold leading-[1.05] tracking-tight text-white sm:text-5xl lg:text-6xl xl:text-7xl"
           >
             Une saison.
             <br />
-            <span className="bg-gradient-to-r from-neutral-900 via-neutral-600 to-neutral-900 bg-clip-text text-transparent">
-              Une app.
-            </span>
+            <span className="text-shimmer">Une app.</span>
           </motion.h1>
 
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.35 }}
-            className="mt-6 max-w-lg text-lg text-proday-muted"
+            className="mt-6 max-w-lg text-lg leading-relaxed text-white/60"
           >
             {BRAND.mission}
           </motion.p>
@@ -82,25 +69,32 @@ export function HeroSection() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.45 }}
-            className="mt-8 flex flex-wrap gap-4"
+            className="mt-9 flex flex-wrap gap-3"
           >
-            <Link
-              href={ROUTES.beta}
-              className="group inline-flex items-center gap-2 rounded-full bg-proday-ink px-7 py-3.5 text-sm font-semibold text-white shadow-lg shadow-neutral-900/20 transition hover:scale-[1.02] hover:bg-neutral-800"
-            >
-              Commencer gratuitement
-              <ArrowRight
-                size={16}
-                className="transition group-hover:translate-x-1"
-              />
-            </Link>
-            <Link
-              href={ROUTES.demo}
-              className="inline-flex items-center gap-2 rounded-full border border-neutral-300 bg-white px-7 py-3.5 text-sm font-semibold transition hover:border-neutral-400"
-            >
-              <Play size={16} fill="currentColor" />
+            <PremiumButton href={ROUTES.beta}>Accès anticipé</PremiumButton>
+            <PremiumButton href={ROUTES.joueurs} variant="outline">
+              Pôle Joueur
+            </PremiumButton>
+            <PremiumButton href={ROUTES.demo} variant="outline">
+              <Play size={15} fill="currentColor" />
               Voir la démo
-            </Link>
+            </PremiumButton>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.6 }}
+            className="mt-10 flex flex-wrap gap-2"
+          >
+            {["Mercato", "Reels", "Fil", "Arena", "Partenaires"].map((tag) => (
+              <span
+                key={tag}
+                className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-white/70"
+              >
+                {tag}
+              </span>
+            ))}
           </motion.div>
         </div>
 
@@ -114,33 +108,47 @@ export function HeroSection() {
             initial={{ opacity: 0, scale: 0.92 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.3, duration: 0.8 }}
-            className="relative w-full max-w-sm animate-float"
+            className="relative w-full max-w-[320px] animate-float"
           >
-            <div className="absolute -inset-4 rounded-[2.5rem] bg-gradient-to-br from-neutral-200 to-neutral-100 blur-2xl" />
-            <div className="relative overflow-hidden rounded-[2rem] border border-neutral-200 bg-neutral-900 shadow-2xl shadow-neutral-900/30">
+            <div className="absolute -inset-6 rounded-[3rem] bg-gradient-to-br from-blue-500/20 via-violet-500/10 to-transparent blur-2xl" />
+            <div className="card-premium relative overflow-hidden rounded-[2.25rem]">
+              <div className="absolute inset-x-0 top-0 z-10 h-8 bg-gradient-to-b from-black/40 to-transparent" />
               <Image
                 src="/showcase/classic-discover-hero.jpg"
                 alt="Aperçu ProDay"
                 width={400}
-                height={700}
-                className="h-auto w-full object-cover opacity-90"
+                height={720}
+                className="h-auto w-full object-cover"
                 priority
               />
-              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-6 pt-20">
+              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black via-black/80 to-transparent p-6 pt-24">
+                <p className="mb-3 text-xs tracking-widest text-emerald-400/80 uppercase">
+                  Reels et Fil
+                </p>
                 <Image
                   src="/branding/logo-dark.png"
                   alt=""
-                  width={120}
-                  height={40}
-                  className="mb-2 h-8 w-auto object-contain"
+                  width={110}
+                  height={36}
+                  className="mb-2 h-7 w-auto object-contain"
                 />
-                <p className="text-sm text-white/80">
-                  Mercato · Covoiturage · Santé · Shop
+                <p className="text-sm text-white/70">
+                  Quatre pôles · neuf onglets · une application
                 </p>
               </div>
             </div>
           </motion.div>
         </motion.div>
+      </div>
+
+      <div className="absolute bottom-8 left-1/2 hidden -translate-x-1/2 sm:block">
+        <Link
+          href="#decouvrir"
+          className="flex flex-col items-center gap-2 text-xs tracking-widest text-white/30 transition hover:text-white/60"
+        >
+          Découvrir
+          <ArrowRight size={14} className="rotate-90" />
+        </Link>
       </div>
     </section>
   );

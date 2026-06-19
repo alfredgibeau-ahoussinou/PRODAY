@@ -4,6 +4,7 @@ import { useTabNavigation } from '../context/TabNavigationContext';
 import { openSeasonCalendarItem } from '../utils/navigationDeepLink';
 import { useTabNavigationActions } from '../hooks/useTabNavigationActions';
 import { useFriendlyMatches, useSeasonCalendar } from '../hooks/useAppData';
+import { useTournaments } from '../hooks/useTournaments';
 import { useMatchScreenData } from '../hooks/useMatchScreenData';
 import { useMatchActions } from '../hooks/useMatchActions';
 import { useMatchJoinGuard } from '../hooks/useMatchJoinGuard';
@@ -19,7 +20,9 @@ import type { MatchChapterId } from '../content/matchChapters';
 import type { SeasonCalendarItem } from '../utils/seasonCalendar';
 import { ProposeMatchScreen } from './ProposeMatchScreen';
 import { SearchMatchScreen } from './SearchMatchScreen';
+import { CreateTournamentScreen } from './CreateTournamentScreen';
 import { CreateTeamEventScreen } from './CreateTeamEventScreen';
+import { TournamentDetailScreen } from './TournamentDetailScreen';
 import { MatchEventHubScreen } from './MatchEventHubScreen';
 import type { MatchHubChapterId } from '../content/matchHubChapters';
 import { prodayHaptics } from '../utils/prodayHaptics';
@@ -32,12 +35,15 @@ type MatchView =
   | 'propose'
   | 'search'
   | 'create_event'
+  | 'create_tournament'
+  | 'tournament_detail'
   | 'event_detail';
 
 export const MatchsScreen: React.FC = () => {
   const [view, setView] = React.useState<MatchView>('home');
   const [initialChapter, setInitialChapter] = React.useState<MatchChapterId>('calendrier');
   const [selectedEventId, setSelectedEventId] = React.useState<string | null>(null);
+  const [selectedTournamentId, setSelectedTournamentId] = React.useState<string | null>(null);
   const [hubChapter, setHubChapter] = React.useState<MatchHubChapterId>('apercu');
   const [rsvpBusy, setRsvpBusy] = React.useState(false);
   const { profile } = useAuth();
@@ -55,6 +61,11 @@ export const MatchsScreen: React.FC = () => {
     refresh: refreshCalendar,
   } = useSeasonCalendar(profile?.uid, clubId);
   const { matches, loading: loadingMatches, refresh: refreshMatches } = useFriendlyMatches();
+  const {
+    tournaments,
+    loading: loadingTournaments,
+    refresh: refreshTournaments,
+  } = useTournaments();
   const { acceptMatch, cancelMatch, markPlayed, canAccept } = useMatchActions(profile);
   const { guardAcceptMatch, guardRsvpYes, getMatchIaScore, checkMatch } =
     useMatchJoinGuard(profile);
@@ -107,6 +118,7 @@ export const MatchsScreen: React.FC = () => {
   const refreshAll = () => {
     refreshCalendar();
     refreshMatches();
+    void refreshTournaments();
   };
 
   const recordMatchJoin = useCallback(() => {
@@ -189,6 +201,32 @@ export const MatchsScreen: React.FC = () => {
       />
     );
   }
+  if (view === 'create_tournament' && profile && canManageEvents) {
+    return (
+      <CreateTournamentScreen
+        profile={profile}
+        onBack={() => setView('home')}
+        onCreated={(id) => {
+          refreshAll();
+          setSelectedTournamentId(id);
+          setInitialChapter('tournois');
+          setView('tournament_detail');
+        }}
+      />
+    );
+  }
+  if (view === 'tournament_detail' && profile && selectedTournamentId) {
+    return (
+      <TournamentDetailScreen
+        tournamentId={selectedTournamentId}
+        profile={profile}
+        onBack={() => {
+          setView('home');
+          refreshAll();
+        }}
+      />
+    );
+  }
   if (view === 'create_event' && canManageEvents) {
     return (
       <CreateTeamEventScreen
@@ -238,6 +276,8 @@ export const MatchsScreen: React.FC = () => {
         items={items}
         teamEvents={events}
         matches={matches}
+        tournaments={tournaments}
+        loadingTournaments={loadingTournaments}
         pendingConvocations={pendingConvocations}
         myUpcomingEvents={myUpcomingEvents}
         nextItem={nextItem}
@@ -262,6 +302,15 @@ export const MatchsScreen: React.FC = () => {
         onCreateEvent={() => {
           if (!requireAuth(t('matchs.auth.createEvent'))) return;
           setView('create_event');
+        }}
+        onOpenTournament={(id) => {
+          if (!requireAuth(t('matchs.auth.tournament'))) return;
+          setSelectedTournamentId(id);
+          setView('tournament_detail');
+        }}
+        onCreateTournament={() => {
+          if (!requireAuth(t('matchs.auth.createTournament'))) return;
+          setView('create_tournament');
         }}
         onOpenCalendarItem={openCalendarItem}
         onOpenEvent={(id, hubChapter) => openEvent(id, hubChapter ?? 'apercu')}

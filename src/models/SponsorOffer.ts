@@ -12,6 +12,11 @@ export interface SponsorOffer {
   city: string;
   active: boolean;
   created_at: Date;
+  /** Ville normalisée pour requêtes push géo */
+  geo_target_city?: string;
+  geo_push_sent_at?: Date;
+  geo_push_recipients?: number;
+  geo_push_delivered?: number;
   views_count?: number;
   clicks_count?: number;
   leads_count?: number;
@@ -44,6 +49,7 @@ export interface SponsorContribution {
 
 export interface SponsorProspect {
   id: string;
+  owner_uid: string;
   name: string;
   city: string;
   category: string;

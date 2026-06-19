@@ -11,7 +11,7 @@ import Animated, {
   Easing,
   Extrapolation,
   cancelAnimation,
-  FadeInDown,
+  FadeIn,
   interpolate,
   runOnJS,
   useAnimatedStyle,
@@ -30,7 +30,7 @@ import { UniverseChoicePager } from './UniverseChoicePager';
 import type { ProductLineId } from '../../../models/ProductLine';
 
 const HERO_ASPECT = 0.93;
-const LOGO_REVEAL_MS = 1080;
+const LOGO_REVEAL_MS = 760;
 
 type IntroPhase = 'reveal' | 'choose';
 
@@ -65,12 +65,12 @@ export const BrandRevealIntro: React.FC<BrandRevealIntroProps> = ({
     t.value = 0;
     t.value = withTiming(
       1,
-      { duration: LOGO_REVEAL_MS, easing: Easing.bezier(0.22, 1, 0.36, 1) },
+      { duration: LOGO_REVEAL_MS, easing: Easing.out(Easing.cubic) },
       (done) => {
         if (done) runOnJS(showChoice)();
       }
     );
-    const fallback = setTimeout(showChoice, LOGO_REVEAL_MS + 400);
+    const fallback = setTimeout(showChoice, LOGO_REVEAL_MS + 280);
     return () => {
       clearTimeout(fallback);
       cancelAnimation(t);
@@ -78,7 +78,7 @@ export const BrandRevealIntro: React.FC<BrandRevealIntroProps> = ({
   }, [phase, showChoice]);
 
   const sceneStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(t.value, [0, 0.1], [0, 1], Extrapolation.CLAMP),
+    opacity: interpolate(t.value, [0, 0.35], [0, 1], Extrapolation.CLAMP),
   }));
 
   return (
@@ -100,7 +100,7 @@ export const BrandRevealIntro: React.FC<BrandRevealIntroProps> = ({
         </PressableSpring>
       ) : (
         <Animated.View
-          entering={FadeInDown.duration(560).springify().damping(18).stiffness(120)}
+          entering={FadeIn.duration(420).easing(Easing.out(Easing.cubic))}
           style={[styles.chooseRoot, { paddingBottom: insets.bottom }]}
         >
           <UniverseChoicePager onChoose={onChooseSpace} introTour={introTour} />
@@ -118,25 +118,22 @@ const BrandMark: React.FC<{
   const { colors: c } = useAppTheme();
   const styles = useMemo(() => createStyles(c), [c.background, c.border, c.surface, c.text, c.textMuted]);
   const wrap = useAnimatedStyle(() => ({
-    opacity: interpolate(t.value, [0, 0.18], [0, 1], Extrapolation.CLAMP),
+    opacity: interpolate(t.value, [0, 0.4], [0, 1], Extrapolation.CLAMP),
     transform: [
-      { translateY: interpolate(t.value, [0, 0.5], [32, 0], Extrapolation.CLAMP) },
-      { scale: interpolate(t.value, [0, 0.5], [0.86, 1], Extrapolation.CLAMP) },
+      { translateY: interpolate(t.value, [0, 1], [14, 0], Extrapolation.CLAMP) },
+      { scale: interpolate(t.value, [0, 1], [0.96, 1], Extrapolation.CLAMP) },
     ],
   }));
 
   const nameStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(t.value, [0.38, 0.62], [0, 1], Extrapolation.CLAMP),
+    opacity: interpolate(t.value, [0.45, 0.75], [0, 1], Extrapolation.CLAMP),
     transform: [
-      { translateY: interpolate(t.value, [0.38, 0.62], [10, 0], Extrapolation.CLAMP) },
+      { translateY: interpolate(t.value, [0.45, 0.75], [6, 0], Extrapolation.CLAMP) },
     ],
   }));
 
   const hintStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(t.value, [0.52, 0.78], [0, 1], Extrapolation.CLAMP),
-    transform: [
-      { translateY: interpolate(t.value, [0.52, 0.78], [8, 0], Extrapolation.CLAMP) },
-    ],
+    opacity: interpolate(t.value, [0.6, 0.9], [0, 1], Extrapolation.CLAMP),
   }));
 
   return (

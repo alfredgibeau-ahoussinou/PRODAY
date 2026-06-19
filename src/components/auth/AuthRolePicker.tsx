@@ -86,7 +86,7 @@ export const AuthRolePicker: React.FC<AuthRolePickerProps> = ({
         return { ...r, label: 'Pôle santé', description: 'Kiné, médecin, coach mental…' };
       }
       if (line === 'pro' && r.value === 'sponsor') {
-        return { ...r, label: 'Partenaire', description: 'Visibilité marque & clubs pro' };
+        return { ...r, label: 'Sponsor', description: 'Visibilité marque & clubs pro' };
       }
       return r;
     });

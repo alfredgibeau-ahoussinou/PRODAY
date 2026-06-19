@@ -6,8 +6,41 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
-import { navBrandForPath, UNIVERSE_THEME } from "@/components/universe/universeTheme";
-import { NAV_ITEMS, ROUTES } from "@/lib/routes";
+import { navBrandForPath } from "@/components/universe/universeTheme";
+import { isNavActive } from "@/lib/siteArchitecture";
+import { POLE_NAV_ITEMS, ROUTES, UTILITY_NAV_ITEMS } from "@/lib/routes";
+
+function NavLink({
+  href,
+  label,
+  active,
+  onClick,
+}: {
+  href: string;
+  label: string;
+  active: boolean;
+  onClick?: () => void;
+}) {
+  return (
+    <Link
+      href={href}
+      onClick={onClick}
+      className={`relative rounded-full px-3.5 py-2 text-sm transition xl:px-4 ${
+        active
+          ? "bg-white/10 font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]"
+          : "text-white/60 hover:bg-white/5 hover:text-white"
+      }`}
+    >
+      {label}
+      {active && (
+        <span
+          className="absolute inset-x-3 -bottom-px h-px bg-gradient-to-r from-transparent via-white/50 to-transparent"
+          aria-hidden
+        />
+      )}
+    </Link>
+  );
+}
 
 export function SiteNav() {
   const pathname = usePathname();
@@ -16,72 +49,76 @@ export function SiteNav() {
   const bg = useTransform(
     scrollY,
     [0, 80],
-    ["rgba(247,247,247,0)", "rgba(247,247,247,0.92)"],
+    ["rgba(3, 3, 3, 0.55)", "rgba(3, 3, 3, 0.94)"],
   );
   const border = useTransform(
     scrollY,
     [0, 80],
-    ["rgba(229,229,229,0)", "rgba(229,229,229,1)"],
+    ["rgba(255, 255, 255, 0)", "rgba(255, 255, 255, 0.08)"],
   );
 
   const brand = navBrandForPath(pathname);
+  const isHome = pathname === ROUTES.home;
+
+  const close = () => setOpen(false);
 
   return (
     <motion.header
       style={{ backgroundColor: bg, borderBottomColor: border }}
-      className="fixed top-0 z-50 w-full border-b backdrop-blur-md"
+      className="fixed top-0 z-50 w-full border-b backdrop-blur-xl after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-gradient-to-r after:from-transparent after:via-white/10 after:to-transparent"
     >
-      <nav className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
-        <Link href={ROUTES.home} className="flex items-center gap-2.5">
+      <nav className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
+        <Link href={ROUTES.home} className="group flex shrink-0 items-center gap-2.5">
           <Image
-            src={brand.logo}
+            src={isHome ? "/branding/logo-dark.png" : brand.logo}
             alt={brand.name}
             width={36}
             height={36}
-            className="rounded-lg"
+            className="rounded-lg transition group-hover:scale-105"
           />
-          <span className="text-lg font-bold tracking-tight">{brand.name}</span>
+          <span className="font-display text-lg font-bold tracking-tight text-white">
+            {isHome ? "ProDay" : brand.name}
+          </span>
         </Link>
 
-        <ul className="hidden items-center gap-5 xl:flex">
-          {NAV_ITEMS.map((l) => {
-            const active = pathname === l.href;
-            const accent = "accent" in l ? l.accent : undefined;
-            const accentClass =
-              accent === "woman"
-                ? UNIVERSE_THEME.woman.navLink
-                : accent === "pro"
-                  ? UNIVERSE_THEME.pro.navLink
-                  : accent === "man"
-                    ? UNIVERSE_THEME.homme.navLink
-                    : "text-proday-muted hover:text-proday-ink";
-            return (
+        <div className="hidden items-center gap-1 xl:flex">
+          <ul className="flex items-center gap-0.5">
+            {POLE_NAV_ITEMS.map((l) => (
               <li key={l.href}>
-                <Link
+                <NavLink
                   href={l.href}
-                  className={`text-sm transition ${
-                    active ? "font-semibold text-proday-ink" : accentClass
-                  }`}
-                >
-                  {l.label}
-                </Link>
+                  label={l.label}
+                  active={isNavActive(l.href, pathname)}
+                />
               </li>
-            );
-          })}
-        </ul>
+            ))}
+          </ul>
+          <span className="mx-2 h-4 w-px bg-white/15" aria-hidden />
+          <ul className="flex items-center gap-0.5">
+            {UTILITY_NAV_ITEMS.map((l) => (
+              <li key={l.href}>
+                <NavLink
+                  href={l.href}
+                  label={l.label}
+                  active={pathname === l.href}
+                />
+              </li>
+            ))}
+          </ul>
+        </div>
 
-        <div className="hidden items-center gap-3 md:flex">
+        <div className="hidden shrink-0 md:flex">
           <Link
             href={ROUTES.beta}
-            className={`rounded-full px-5 py-2 text-sm font-medium text-white transition ${brand.theme.navCta}`}
+            className="rounded-full bg-white px-5 py-2 text-sm font-semibold text-neutral-950 transition hover:scale-[1.02] hover:bg-neutral-100"
           >
-            Rejoindre la beta
+            Accès anticipé
           </Link>
         </div>
 
         <button
           type="button"
-          className="rounded-lg p-2 xl:hidden"
+          className="rounded-lg p-2 text-white xl:hidden"
           onClick={() => setOpen(!open)}
           aria-label="Menu"
         >
@@ -93,24 +130,44 @@ export function SiteNav() {
         <motion.div
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: "auto" }}
-          className="border-t bg-white px-4 pb-4 xl:hidden"
+          className="border-t border-white/10 bg-[#030303]/95 px-4 pb-4 backdrop-blur-xl xl:hidden"
         >
-          {NAV_ITEMS.map((l) => (
+          <p className="pt-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-white/35">
+            4 pôles
+          </p>
+          {POLE_NAV_ITEMS.map((l) => (
             <Link
               key={l.href}
               href={l.href}
-              className="block py-3 text-sm"
-              onClick={() => setOpen(false)}
+              className={`block py-3 text-sm ${
+                isNavActive(l.href, pathname) ? "font-semibold text-white" : "text-white/80"
+              }`}
+              onClick={close}
+            >
+              {l.label}
+            </Link>
+          ))}
+          <p className="pt-4 text-[10px] font-semibold uppercase tracking-[0.2em] text-white/35">
+            Produit
+          </p>
+          {UTILITY_NAV_ITEMS.map((l) => (
+            <Link
+              key={l.href}
+              href={l.href}
+              className={`block py-3 text-sm ${
+                pathname === l.href ? "font-semibold text-white" : "text-white/80"
+              }`}
+              onClick={close}
             >
               {l.label}
             </Link>
           ))}
           <Link
             href={ROUTES.beta}
-            className={`mt-2 block rounded-full py-3 text-center text-sm text-white ${brand.theme.navCta}`}
-            onClick={() => setOpen(false)}
+            className="mt-3 block rounded-full bg-white py-3 text-center text-sm font-semibold text-neutral-950"
+            onClick={close}
           >
-            Rejoindre la beta
+            Accès anticipé
           </Link>
         </motion.div>
       )}

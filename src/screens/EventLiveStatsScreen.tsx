@@ -58,7 +58,7 @@ export const EventLiveStatsScreen: React.FC<EventLiveStatsScreenProps> = ({
     if (ev) {
       const list: { uid: string; name: string }[] = [];
       for (const uid of getPresentInviteeUids(ev)) {
-        const u = await usersService.getById(uid);
+        const u = await usersService.getPublicById(uid);
         if (u) list.push({ uid, name: u.display_name });
       }
       if (ev.lineup?.slots.length) {

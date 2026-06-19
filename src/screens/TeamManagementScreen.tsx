@@ -246,7 +246,7 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
       );
       return;
     }
-    const user = await usersService.getById(uid);
+    const user = await usersService.getPublicById(uid);
     if (!user) return;
     const current = statsEvent.player_match_stats?.[uid];
     await teamEventsService.updatePlayerMatchStat(

@@ -7,6 +7,8 @@ import { spacing, radius } from '../../theme/designTokens';
 
 type BillingCycle = 'monthly' | 'yearly';
 
+export type { BillingCycle };
+
 interface SponsorPricingPanelProps {
   onSelectTier: (tier: SponsorPricingTier, billing: BillingCycle) => void;
   compact?: boolean;

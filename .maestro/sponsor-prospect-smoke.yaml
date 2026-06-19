@@ -1,0 +1,30 @@
+# Smoke optionnel — onglet Réseau / segment Prospects.
+# Ne valide pas l’envoi de message (nécessite données Firestore).
+#
+#   MAESTRO_SPONSOR_EMAIL=part@gmail.com \
+#   MAESTRO_SPONSOR_PASSWORD='***' \
+#   maestro test .maestro/sponsor-prospect-smoke.yaml
+appId: com.proday.app
+---
+- runFlow: subflows/sponsor-login.yaml
+
+- tapOn:
+    id: sponsor-menu-button
+- tapOn:
+    id: sponsor-drawer-prospects
+- assertVisible: Prospects
+
+- tapOn:
+    id: sponsor-network-segment-prospects
+- assertVisible:
+    id: sponsor-network-segment-messages
+- assertVisible:
+    id: sponsor-network-segment-prospects
+
+# Liste vide ou cartes prospect
+- assertVisible:
+    text: Aucun prospect pour le moment.
+    optional: true
+- assertVisible:
+    text: Contacter
+    optional: true

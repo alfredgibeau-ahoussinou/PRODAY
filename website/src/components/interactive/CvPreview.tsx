@@ -70,11 +70,14 @@ export function CvPreview({ universe = "homme" }: CvPreviewProps) {
       <motion.div
         initial={{ opacity: 0, rotate: -2 }}
         animate={{ opacity: 1, rotate: 0 }}
-        className="relative flex-1 overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-2xl"
+        className="card-premium relative flex-1 overflow-hidden rounded-2xl"
       >
+        <span className="pointer-events-none absolute right-4 top-4 z-10 rounded-full border border-white/15 bg-black/40 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white/70 backdrop-blur-sm">
+          Illustration
+        </span>
         <div
-          className="border-b border-neutral-100 p-6 text-white"
-          style={{ backgroundColor: theme.pulseStroke }}
+          className="border-b border-white/10 p-6 text-white"
+          style={{ backgroundColor: theme.brandAccent }}
         >
           <div className="flex items-center gap-4">
             <div className="relative h-16 w-16 overflow-hidden rounded-full bg-black/20">
@@ -93,31 +96,31 @@ export function CvPreview({ universe = "homme" }: CvPreviewProps) {
           </div>
         </div>
         <div className="p-6">
-          <p className="text-xs font-semibold uppercase tracking-wider text-proday-muted">
+          <p className="text-xs font-semibold uppercase tracking-wider text-white/40">
             Saison 2025-26
           </p>
           <div className="mt-4 grid grid-cols-4 gap-3">
             {STATS.map((s) => (
               <div
                 key={s.label}
-                className="rounded-xl bg-neutral-50 p-3 text-center"
+                className="rounded-xl bg-white/5 p-3 text-center ring-1 ring-white/10"
               >
-                <p className="text-xl font-bold">{s.value}</p>
-                <p className="text-xs text-proday-muted">{s.label}</p>
+                <p className="text-xl font-bold text-white">{s.value}</p>
+                <p className="text-xs text-white/45">{s.label}</p>
               </div>
             ))}
           </div>
-          <p className="mt-6 text-sm text-proday-muted leading-relaxed">
+          <p className="mt-6 text-sm leading-relaxed text-white/55">
             {copy.footer}
           </p>
           <div className="mt-4 flex items-center gap-2">
             <span
               className="rounded-full px-3 py-1 text-xs font-semibold text-white"
-              style={{ backgroundColor: theme.pulseStroke }}
+              style={{ backgroundColor: theme.brandAccent }}
             >
               Pulse 78
             </span>
-            <span className="text-xs text-proday-muted">Mis à jour après le dernier match</span>
+            <span className="text-xs text-white/45">Mis à jour après le dernier match</span>
           </div>
         </div>
       </motion.div>
@@ -125,7 +128,7 @@ export function CvPreview({ universe = "homme" }: CvPreviewProps) {
       <div className="flex flex-col justify-center gap-4 lg:w-64">
         <button
           type="button"
-          className="flex items-center justify-center gap-2 rounded-full border border-neutral-200 bg-white px-6 py-3 text-sm font-semibold transition hover:bg-neutral-50"
+          className="flex items-center justify-center gap-2 rounded-full border border-white/15 bg-white/5 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
         >
           <Download size={18} />
           Export PDF
@@ -137,7 +140,7 @@ export function CvPreview({ universe = "homme" }: CvPreviewProps) {
           <Share2 size={18} />
           Partager le lien
         </button>
-        <p className="text-sm text-proday-muted">
+        <p className="text-sm text-white/45">
           {universe === "woman"
             ? "Le CV joueuse se met à jour automatiquement depuis l'app Woman."
             : universe === "pro"

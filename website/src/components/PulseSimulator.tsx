@@ -64,18 +64,18 @@ export function PulseSimulator({
 
   return (
     <section
-      className={`${fullPage ? "bg-transparent" : theme.softSectionBg || "bg-white"} ${fullPage ? "py-12" : "scroll-mt-24 py-24"}`}
+      className={`text-white ${fullPage ? "bg-transparent" : theme.softSectionBg || "bg-[#030303]"} ${fullPage ? "py-12" : "scroll-mt-24 py-24"}`}
     >
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         {!fullPage && (
           <Reveal>
-            <p className="text-sm font-medium tracking-widest text-proday-muted">
+            <p className="text-sm font-medium tracking-widest text-white/40">
               PULSE PRODAY
             </p>
-            <h2 className="mt-2 text-3xl font-bold sm:text-4xl">
+            <h2 className="font-display mt-2 text-3xl font-bold text-white sm:text-4xl">
               Simulez votre score de visibilité
             </h2>
-            <p className="mt-4 max-w-lg text-proday-muted">
+            <p className="mt-4 max-w-lg text-white/55">
               Ajustez les curseurs — le Pulse se recalcule en direct, comme dans
               l&apos;application.
             </p>
@@ -88,9 +88,9 @@ export function PulseSimulator({
           <div className="space-y-6">
             {SLIDERS.map((s) => (
               <div key={s.key}>
-                <div className="mb-2 flex justify-between text-sm">
+                <div className="mb-2 flex justify-between text-sm text-white">
                   <span className="font-medium">{s.label}</span>
-                  <span className="text-proday-muted">{values[s.key]}%</span>
+                  <span className="text-white/50">{values[s.key]}%</span>
                 </div>
                 <input
                   type="range"
@@ -103,10 +103,10 @@ export function PulseSimulator({
                       [s.key]: Number(e.target.value),
                     }))
                   }
-                  className={`h-2 w-full cursor-pointer appearance-none rounded-full bg-neutral-200 ${theme.pulseSliderAccent}`}
+                  className={`h-2 w-full cursor-pointer appearance-none rounded-full bg-white/10 ${theme.pulseSliderAccent}`}
                   aria-label={s.label}
                 />
-                <p className="mt-1 text-xs text-proday-muted">{s.hint}</p>
+                <p className="mt-1 text-xs text-white/40">{s.hint}</p>
               </div>
             ))}
           </div>
@@ -119,7 +119,7 @@ export function PulseSimulator({
                   cy={100}
                   r={88}
                   fill="none"
-                  stroke="#e5e5e5"
+                  stroke="rgba(255,255,255,0.08)"
                   strokeWidth={12}
                 />
                 <motion.circle
@@ -140,19 +140,19 @@ export function PulseSimulator({
                 animate={{ scale: 1, opacity: 1 }}
                 className="absolute inset-0 flex flex-col items-center justify-center"
               >
-                <span className="text-5xl font-bold">{score}</span>
-                <span className="text-sm text-proday-muted">/ 100</span>
+                <span className="text-5xl font-bold text-white">{score}</span>
+                <span className="text-sm text-white/45">/ 100</span>
               </motion.div>
             </div>
             <motion.p
               key={scoreLabel(score)}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mt-6 text-lg font-semibold"
+              className="mt-6 text-lg font-semibold text-white"
             >
               {scoreLabel(score)}
             </motion.p>
-            <p className="mt-2 text-center text-sm text-proday-muted">
+            <p className="mt-2 text-center text-sm text-white/50">
               {line === "woman"
                 ? "Plus le Pulse monte, plus vous êtes visible des clubs et coachs F."
                 : line === "pro"

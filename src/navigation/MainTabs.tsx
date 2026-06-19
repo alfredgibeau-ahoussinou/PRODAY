@@ -5,6 +5,7 @@ import { MatchsScreen } from '../screens/MatchsScreen';
 import { SponsorsScreen } from '../screens/SponsorsScreen';
 import { ProfilTabScreen } from '../screens/ProfilTabScreen';
 import { MessagesScreen } from '../screens/MessagesScreen';
+import { FamilleTabScreen } from '../screens/FamilleTabScreen';
 import { FeedTabScreen } from '../screens/FeedTabScreen';
 import { ReelsScreen } from '../screens/ReelsScreen';
 import { HealthProfessionalsScreen } from '../screens/HealthProfessionalsScreen';
@@ -22,6 +23,7 @@ const TAB_SCREENS: Record<MainTabId, React.ComponentType> = {
   sante: HealthProfessionalsScreen,
   feed: FeedTabScreen,
   reels: ReelsScreen,
+  famille: FamilleTabScreen,
   messages: MessagesScreen,
   profil: ProfilTabScreen,
   shop: ShopScreen,

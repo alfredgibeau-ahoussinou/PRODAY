@@ -62,7 +62,7 @@ export const MatchHubLiveTab: React.FC<MatchHubLiveTabProps> = ({
     void (async () => {
       const list: { uid: string; name: string }[] = [];
       for (const uid of getPresentInviteeUids(event)) {
-        const u = await usersService.getById(uid);
+        const u = await usersService.getPublicById(uid);
         if (u) list.push({ uid, name: u.display_name });
       }
       for (const s of event.lineup?.slots ?? []) {

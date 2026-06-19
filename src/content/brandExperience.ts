@@ -174,7 +174,7 @@ export const ACCOUNT_TYPES_BY_LINE = {
     { role: 'recruiter' as const, label: 'Recruteur', description: 'Scouting, Mercato Pro, candidatures' },
     { role: 'club' as const, label: 'Club', description: 'Annonces, équipes, candidatures' },
     { role: 'organizer' as const, label: 'Organisateur', description: 'Événements & détections' },
-    { role: 'sponsor' as const, label: 'Partenaire', description: 'Visibilité marque & clubs pro' },
+    { role: 'sponsor' as const, label: 'Sponsor', description: 'Visibilité marque & clubs pro' },
   ],
   sante: [
     { role: 'physio' as const, label: 'Praticien', description: 'Kiné, médecin, prépa, nutrition…' },

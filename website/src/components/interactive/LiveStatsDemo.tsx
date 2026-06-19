@@ -24,7 +24,7 @@ export function LiveStatsDemo() {
 
   return (
     <div className="mx-auto max-w-4xl">
-      <div className="rounded-3xl border border-neutral-200 bg-neutral-900 p-6 text-white sm:p-8">
+      <div className="rounded-3xl border border-white/10 bg-[#0a0a0a] p-6 text-white sm:p-8">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-xs text-neutral-400">MATCH EN DIRECT</p>
@@ -103,20 +103,20 @@ export function LiveStatsDemo() {
 
       <motion.div
         layout
-        className="mt-6 rounded-2xl border border-neutral-200 bg-white p-6"
+        className="card-premium mt-6 rounded-2xl p-6"
       >
-        <p className="text-sm font-medium text-proday-muted">Impact profil</p>
-        <p className="mt-2 text-lg">
-          <strong>{total}</strong> actions enregistrées → stats saison et CV mis
+        <p className="text-sm font-medium text-white/45">Impact profil</p>
+        <p className="mt-2 text-lg text-white">
+          <strong>{total}</strong> actions enregistrées — stats saison et CV mis à jour
           à jour automatiquement.
         </p>
-        <div className="mt-4 h-2 overflow-hidden rounded-full bg-neutral-100">
+        <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/10">
           <motion.div
-            className="h-full bg-proday-ink"
+            className="h-full bg-emerald-500"
             animate={{ width: `${Math.min(100, total * 12)}%` }}
           />
         </div>
-        <p className="mt-2 text-xs text-proday-muted">
+        <p className="mt-2 text-xs text-white/45">
           Complétion profil Live Stats : {Math.min(100, total * 12)}%
         </p>
       </motion.div>

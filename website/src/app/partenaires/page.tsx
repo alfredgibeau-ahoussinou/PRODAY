@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { PremiumSection } from "@/components/layout/PremiumSection";
 import { SponsorPricingSection } from "@/components/sponsor/SponsorPricingSection";
+import { PremiumButton } from "@/components/ui/PremiumButton";
 import { ROUTES } from "@/lib/routes";
 
 export const metadata: Metadata = {
@@ -14,25 +15,34 @@ export default function PartenairesPage() {
   return (
     <>
       <PageHeader
+        pathname={ROUTES.partenaires}
         kicker="PARTENAIRES"
-        title="Touchez clubs, joueurs et organisateurs"
+        title="Visibilité auprès des clubs et des joueurs"
         description="Visibilité mesurable sur votre territoire — sans intermédiaire. Trois formules adaptées aux marques locales et nationales."
         image="/showcase/classic-exp-sponsors.jpg"
-        accent="pro"
+        accent="sponsor"
+        dark
       />
-      <section className="py-16">
-        <SponsorPricingSection />
-        <div className="mx-auto mt-16 max-w-3xl px-4 text-center sm:px-6">
-          <p className="text-proday-muted">
-            Inscrivez-vous à la bêta en tant que partenaire pour préparer votre espace Sponsors
+      <PremiumSection
+        kicker="FORMULES"
+        title="Trois niveaux de visibilité"
+        description="Découverte gratuite pour tester, Territorial pour les marques locales, National Pro pour une couverture élargie."
+        pole="sponsor"
+        bordered={false}
+      >
+        <SponsorPricingSection dark />
+      </PremiumSection>
+      <section className="border-t border-white/8 bg-[#030303] py-16">
+        <div className="mx-auto max-w-3xl px-4 text-center sm:px-6">
+          <p className="text-white/55">
+            Inscrivez-vous sur la liste d&apos;attente en tant que partenaire pour préparer votre espace Sponsors
             dès l&apos;ouverture mobile.
           </p>
-          <Link
-            href={`${ROUTES.beta}?role=sponsor`}
-            className="mt-6 inline-block rounded-full bg-blue-800 px-8 py-3.5 text-sm font-semibold text-white hover:bg-blue-900"
-          >
-            Rejoindre la bêta — rôle Partenaire
-          </Link>
+          <div className="mt-6 flex justify-center">
+            <PremiumButton href={`${ROUTES.beta}?role=sponsor`}>
+              Accès anticipé — rôle Partenaire
+            </PremiumButton>
+          </div>
         </div>
       </section>
     </>

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { PulseSimulator } from "@/components/PulseSimulator";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { ROUTES } from "@/lib/routes";
 
 export const metadata: Metadata = {
   title: "Pulse ProDay",
@@ -12,10 +13,13 @@ export default function PulsePage() {
   return (
     <>
       <PageHeader
+        pathname={ROUTES.pulse}
         kicker="PULSE PRODAY"
         title="Votre score de visibilité"
         description="Indicateur exclusif ProDay — plus il monte, plus vous êtes visible des clubs et coachs."
         image="/showcase/classic-exp-pulse.jpg"
+        accent="joueur"
+        dark
       />
       <PulseSimulator fullPage />
     </>

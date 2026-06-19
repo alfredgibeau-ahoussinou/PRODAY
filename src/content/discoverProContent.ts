@@ -73,10 +73,10 @@ export const DISCOVER_UNIVERSE_CARDS_PRO = [
   },
   {
     id: 'sponsors' as const,
-    title: 'Pôle santé',
-    subtitle: 'Kiné, mental, nutrition',
-    image: SHOWCASE_IMAGES.expProfile,
-    icon: 'heart' as IconName,
-    accent: '#3B82F6',
+    title: 'Sponsors',
+    subtitle: 'Sponsors & visibilité',
+    image: SHOWCASE_IMAGES.coachFounder,
+    icon: 'star-four-points' as IconName,
+    accent: '#F59E0B',
   },
 ];

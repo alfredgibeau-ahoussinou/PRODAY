@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { CvPreview } from "@/components/interactive/CvPreview";
 import { PageHeader } from "@/components/layout/PageHeader";
 import type { ProductLineWeb } from "@/lib/content";
+import { ROUTES } from "@/lib/routes";
 
 export const metadata: Metadata = {
   title: "CV foot en ligne",
@@ -24,6 +25,7 @@ export default async function CvPage({
   return (
     <>
       <PageHeader
+        pathname={ROUTES.cv}
         kicker="CV VIVANT"
         title={
           universe === "woman"
@@ -40,9 +42,10 @@ export default async function CvPage({
               ? "/showcase/classic-staff.jpg"
               : "/showcase/classic-profile.jpg"
         }
-        accent={universe === "woman" ? "woman" : universe === "pro" ? "pro" : "default"}
+        accent={universe === "woman" ? "woman" : universe === "pro" ? "pro" : "joueur"}
+        dark
       />
-      <section className="py-16 px-4 sm:px-6">
+      <section className="bg-[#030303] py-16 px-4 sm:px-6">
         <CvPreview universe={universe} />
       </section>
     </>

@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -13,17 +13,19 @@ import {
 import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { Icon } from '../components/ui/Icon';
 import { useAuth } from '../context/AuthContext';
+import { useTabNavigationOptional } from '../context/TabNavigationContext';
 import { useSponsorsData } from '../hooks/useAppData';
 import { sponsorsService } from '../services/sponsors.service';
 import { CreateSponsorOfferScreen } from './CreateSponsorOfferScreen';
 import { CreateClubFundingGoalScreen } from './CreateClubFundingGoalScreen';
+import { SponsorPublicProfileScreen } from './SponsorPublicProfileScreen';
 import { TAB_BAR_CONTENT_INSET } from '../components/navigation/BottomTabBar';
 import { spacing, radius, shadows } from '../theme/designTokens';
 import { useThemedScreen } from '../hooks/useThemedScreen';
 import { useRequireAuth } from '../hooks/useRequireAuth';
 import type { AppColors } from '../theme/universeTheme';
 
-type SponsorsView = 'main' | 'create_offer' | 'create_goal';
+type SponsorsView = 'main' | 'create_offer' | 'create_goal' | 'sponsor_profile';
 
 interface SponsorsScreenProps {
   onBack?: () => void;
@@ -39,6 +41,7 @@ export const SponsorsScreen: React.FC<SponsorsScreenProps> = ({
   onPartnerHub,
 }) => {
   const { profile } = useAuth();
+  const tabNav = useTabNavigationOptional();
   const { requireAuth } = useRequireAuth();
   const { colors: c, rootStyle } = useThemedScreen();
   const styles = useMemo(() => createStyles(c), [c]);
@@ -48,6 +51,8 @@ export const SponsorsScreen: React.FC<SponsorsScreenProps> = ({
   const [contributeGoalId, setContributeGoalId] = useState<string | null>(null);
   const [contributeAmount, setContributeAmount] = useState('');
   const [contributing, setContributing] = useState(false);
+  const [profileSponsorUid, setProfileSponsorUid] = useState<string | null>(null);
+  const [profileOfferId, setProfileOfferId] = useState<string | undefined>();
 
   const totalRaised = goals.reduce((sum, g) => sum + g.raised_amount_eur, 0);
   const isSponsor = profile?.role === 'sponsor';
@@ -64,6 +69,25 @@ export const SponsorsScreen: React.FC<SponsorsScreenProps> = ({
     await refresh();
     setRefreshing(false);
   }, [refresh]);
+
+  useEffect(() => {
+    if (loading || offers.length === 0) return;
+    for (const offer of offers) {
+      void sponsorsService.trackOfferView(offer.id);
+    }
+  }, [loading, offers]);
+
+  const openSponsorProfile = (offer: (typeof offers)[number]) => {
+    if (!offer.sponsor_uid) return;
+    void sponsorsService.trackOfferClick(offer.id);
+    setProfileOfferId(offer.id);
+    setProfileSponsorUid(offer.sponsor_uid);
+    setView('sponsor_profile');
+  };
+
+  const handleOfferLead = (offer: (typeof offers)[number]) => {
+    void sponsorsService.trackOfferLead(offer.id);
+  };
 
   const guardAuth = (action: () => void) => {
     if (!requireAuth('Connectez-vous pour utiliser le module Sponsors.')) {
@@ -93,6 +117,23 @@ export const SponsorsScreen: React.FC<SponsorsScreenProps> = ({
       setContributing(false);
     }
   };
+
+  if (view === 'sponsor_profile' && profileSponsorUid) {
+    return (
+      <SponsorPublicProfileScreen
+        sponsorUid={profileSponsorUid}
+        initialOfferId={profileOfferId}
+        guestMode={guestMode}
+        onLoginRequired={onLoginRequired}
+        onOpenChat={(threadId) => tabNav?.openChat(threadId)}
+        onBack={() => {
+          setView('main');
+          setProfileSponsorUid(null);
+          setProfileOfferId(undefined);
+        }}
+      />
+    );
+  }
 
   if (view === 'create_offer' && profile) {
     return (
@@ -126,11 +167,11 @@ export const SponsorsScreen: React.FC<SponsorsScreenProps> = ({
         {onBack ? (
           <ScreenHeader
             title="Sponsors"
-            subtitle={guestMode ? 'Aperçu communauté' : 'Partenaires & financement'}
+            subtitle={guestMode ? 'Aperçu communauté' : 'Sponsors & financement'}
             onBack={onBack}
           />
         ) : (
-          <ScreenHeader title="Sponsors" subtitle="Partenaires locaux & financement" showBrandLogo />
+          <ScreenHeader title="Sponsors" subtitle="Sponsors locaux & financement" showBrandLogo />
         )}
 
         {guestMode ? (
@@ -151,7 +192,7 @@ export const SponsorsScreen: React.FC<SponsorsScreenProps> = ({
               <Icon name="star-four-points" size={22} color={c.brand} />
             </View>
             <View style={styles.partnerBannerBody}>
-              <Text style={styles.partnerBannerTitle}>Devenir partenaire ProDay</Text>
+              <Text style={styles.partnerBannerTitle}>Devenir sponsor ProDay</Text>
               <Text style={styles.partnerBannerSub}>
                 Espace dédié, tarifs dès 0 € — visibilité clubs et joueurs
               </Text>
@@ -167,7 +208,7 @@ export const SponsorsScreen: React.FC<SponsorsScreenProps> = ({
           <Text style={styles.heroEyebrow}>PARTENARIATS PRODAY</Text>
           <Text style={styles.heroTitle}>Soutenez le foot local</Text>
           <Text style={styles.heroSub}>
-            Offres partenaires et campagnes de financement club — connectez votre territoire à
+            Offres sponsors et campagnes de financement club — connectez votre territoire à
             votre projet sportif.
           </Text>
           {!loading && goals.length > 0 ? (
@@ -177,7 +218,7 @@ export const SponsorsScreen: React.FC<SponsorsScreenProps> = ({
           ) : null}
         </View>
 
-        <Text style={styles.sectionLabel}>OFFRES PARTENAIRES</Text>
+        <Text style={styles.sectionLabel}>OFFRES SPONSORS</Text>
         {loading ? (
           <ActivityIndicator color={c.brand} style={styles.loader} />
         ) : offers.length === 0 ? (
@@ -187,7 +228,12 @@ export const SponsorsScreen: React.FC<SponsorsScreenProps> = ({
           </View>
         ) : (
           offers.map((o) => (
-            <View key={o.id} style={styles.offer}>
+            <TouchableOpacity
+              key={o.id}
+              style={styles.offer}
+              activeOpacity={0.92}
+              onPress={() => openSponsorProfile(o)}
+            >
               <View style={styles.offerIcon}>
                 <Icon name="business" size={20} color={c.brand} />
               </View>
@@ -196,8 +242,17 @@ export const SponsorsScreen: React.FC<SponsorsScreenProps> = ({
                 <Text style={styles.offerDesc}>{o.description}</Text>
                 {o.value ? <Text style={styles.offerValue}>{o.value}</Text> : null}
                 {o.city ? <Text style={styles.offerCity}>{o.city}</Text> : null}
+                <TouchableOpacity
+                  style={styles.offerCta}
+                  onPress={() => {
+                    openSponsorProfile(o);
+                    handleOfferLead(o);
+                  }}
+                >
+                  <Text style={styles.offerCtaText}>En savoir plus</Text>
+                </TouchableOpacity>
               </View>
-            </View>
+            </TouchableOpacity>
           ))
         )}
 
@@ -400,6 +455,17 @@ function createStyles(c: AppColors) {
     offerDesc: { color: c.textSecondary, marginTop: 6, fontSize: 13, lineHeight: 18 },
     offerValue: { color: c.brand, marginTop: 8, fontSize: 12, fontWeight: '800' },
     offerCity: { color: c.textMuted, marginTop: 4, fontSize: 11 },
+    offerCta: {
+      marginTop: spacing.sm,
+      alignSelf: 'flex-start',
+      backgroundColor: c.brandSoft,
+      borderRadius: radius.md,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.xs,
+      borderWidth: 1,
+      borderColor: c.brand,
+    },
+    offerCtaText: { color: c.brand, fontWeight: '800', fontSize: 12 },
     progressCard: {
       backgroundColor: c.surface,
       borderRadius: radius.lg,

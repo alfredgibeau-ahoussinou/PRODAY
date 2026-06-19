@@ -14,6 +14,13 @@ import type { PlayerVerificationState } from '../models/User';
 import type { RecruitmentPost, Application } from '../models/Player';
 import type { FriendlyMatch } from '../models/FriendlyMatch';
 import type {
+  Tournament,
+  TournamentFixture,
+  TournamentPool,
+  TournamentRegistration,
+  PoolStandingRow,
+} from '../models/Tournament';
+import type {
   TeamEvent,
   RsvpStatus,
   AttendanceMark,
@@ -119,6 +126,7 @@ export function userFromFirestore(uid: string, data: Record<string, unknown>): U
     is_active: data.is_active !== false && data.isActive !== false,
     fcm_token: data.fcm_token as string | undefined,
     notification_radius_km: data.notification_radius_km as number | undefined,
+    notification_preferences: data.notification_preferences as User['notification_preferences'],
     parental_settings: data.parental_settings as ParentalSettings | undefined,
     parental_runtime: data.parental_runtime as User['parental_runtime'],
     app_space: data.app_space
@@ -134,6 +142,10 @@ export function userFromFirestore(uid: string, data: Record<string, unknown>): U
     subscription_status: data.subscription_status as User['subscription_status'],
     subscription_period_end: data.subscription_period_end
       ? toDate(data.subscription_period_end)
+      : undefined,
+    sponsor_tier: data.sponsor_tier as User['sponsor_tier'],
+    sponsor_territorial_approved_at: data.sponsor_territorial_approved_at
+      ? toDate(data.sponsor_territorial_approved_at)
       : undefined,
   };
 }
@@ -379,6 +391,88 @@ export function friendlyMatchFromFirestore(
   };
 }
 
+function mapTournamentRegistration(raw: Record<string, unknown>): TournamentRegistration {
+  return {
+    id: String(raw.id ?? ''),
+    club_id: String(raw.club_id ?? ''),
+    club_name: String(raw.club_name ?? ''),
+    captain_uid: String(raw.captain_uid ?? ''),
+    captain_name: String(raw.captain_name ?? ''),
+    player_uids: Array.isArray(raw.player_uids) ? raw.player_uids.map(String) : [],
+    player_names: Array.isArray(raw.player_names) ? raw.player_names.map(String) : [],
+    paid: raw.paid !== false,
+    registered_at: toDate(raw.registered_at),
+  };
+}
+
+function mapTournamentFixture(raw: Record<string, unknown>): TournamentFixture {
+  return {
+    id: String(raw.id ?? ''),
+    pool_id: String(raw.pool_id ?? ''),
+    home_registration_id: String(raw.home_registration_id ?? ''),
+    away_registration_id: String(raw.away_registration_id ?? ''),
+    home_name: String(raw.home_name ?? ''),
+    away_name: String(raw.away_name ?? ''),
+    home_score: typeof raw.home_score === 'number' ? raw.home_score : null,
+    away_score: typeof raw.away_score === 'number' ? raw.away_score : null,
+    played: raw.played === true,
+  };
+}
+
+export function tournamentFromFirestore(id: string, data: Record<string, unknown>): Tournament {
+  const registrations = Array.isArray(data.registrations)
+    ? (data.registrations as Record<string, unknown>[]).map(mapTournamentRegistration)
+    : [];
+  const pools: TournamentPool[] = Array.isArray(data.pools)
+    ? (data.pools as Record<string, unknown>[]).map((p) => ({
+        id: String(p.id ?? ''),
+        name: String(p.name ?? ''),
+        registration_ids: Array.isArray(p.registration_ids) ? p.registration_ids.map(String) : [],
+      }))
+    : [];
+  const fixtures = Array.isArray(data.fixtures)
+    ? (data.fixtures as Record<string, unknown>[]).map(mapTournamentFixture)
+    : [];
+  const standingsRaw = (data.standings ?? {}) as Record<string, unknown>;
+  const standings: Record<string, PoolStandingRow[]> = {};
+  for (const [poolId, rows] of Object.entries(standingsRaw)) {
+    standings[poolId] = Array.isArray(rows)
+      ? (rows as Record<string, unknown>[]).map((r) => ({
+          registration_id: String(r.registration_id ?? ''),
+          club_name: String(r.club_name ?? ''),
+          played: Number(r.played ?? 0),
+          won: Number(r.won ?? 0),
+          drawn: Number(r.drawn ?? 0),
+          lost: Number(r.lost ?? 0),
+          goals_for: Number(r.goals_for ?? 0),
+          goals_against: Number(r.goals_against ?? 0),
+          points: Number(r.points ?? 0),
+        }))
+      : [];
+  }
+
+  return {
+    id,
+    title: String(data.title ?? ''),
+    description: data.description ? String(data.description) : undefined,
+    city: String(data.city ?? ''),
+    starts_at: toDate(data.starts_at),
+    ends_at: data.ends_at ? toDate(data.ends_at) : undefined,
+    max_teams: Number(data.max_teams ?? 8),
+    entry_fee_cents: Number(data.entry_fee_cents ?? 0),
+    categories: Array.isArray(data.categories) ? data.categories.map(String) : [],
+    organizer_uid: String(data.organizer_uid ?? ''),
+    organizer_name: String(data.organizer_name ?? ''),
+    status: (data.status as Tournament['status']) ?? 'open',
+    registrations,
+    pools,
+    fixtures,
+    standings,
+    created_at: toDate(data.created_at),
+    updated_at: toDate(data.updated_at),
+  };
+}
+
 export function sponsorOfferFromFirestore(
   id: string,
   data: Record<string, unknown>
@@ -395,6 +489,9 @@ export function sponsorOfferFromFirestore(
     city: String(data.city ?? ''),
     active: data.active !== false,
     created_at: toDate(data.created_at),
+    views_count: data.views_count != null ? Number(data.views_count) : undefined,
+    clicks_count: data.clicks_count != null ? Number(data.clicks_count) : undefined,
+    leads_count: data.leads_count != null ? Number(data.leads_count) : undefined,
   };
 }
 

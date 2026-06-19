@@ -1,3 +1,4 @@
+import type { User } from '../models/User';
 import {
   canAccessSponsorsModule,
   canPublishRecruitmentPost,
@@ -46,17 +47,28 @@ describe('poleExperience', () => {
   });
 
   it('adapte les onglets selon pôle et rôle', () => {
+    const playerProfile = {
+      uid: 'player-1',
+      email: 'player@test.com',
+      display_name: 'Joueur',
+      role: 'player',
+    } as User;
+
     expect(getVisibleMainTabs('homme', 'player')).toEqual([
       'home',
       'recrutement',
       'matchs',
       'reels',
+      'feed',
       'covoiturage',
       'sante',
       'messages',
       'profil',
     ]);
-    expect(getVisibleMainTabs('homme', 'player')).not.toContain('feed');
+    expect(getVisibleMainTabs('homme', 'player', playerProfile)).toContain('famille');
+    expect(getVisibleMainTabs('homme', 'player')).toContain('feed');
+    expect(getVisibleMainTabs('pro', 'coach')).toContain('feed');
+    expect(getVisibleMainTabs('sante', 'physio')).toContain('feed');
     expect(getVisibleMainTabs('pro', 'sponsor')).toEqual([
       'home',
       'matchs',
@@ -67,6 +79,7 @@ describe('poleExperience', () => {
     expect(getVisibleMainTabs('sante', 'physio')).toEqual([
       'home',
       'matchs',
+      'feed',
       'messages',
       'profil',
     ]);

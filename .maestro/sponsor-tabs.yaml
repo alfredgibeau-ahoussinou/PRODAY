@@ -1,0 +1,34 @@
+# Smoke — shell sponsor : pilotage → offres → réseau (messages)
+# Prérequis : simulateur/device, app installée (com.proday.app), compte sponsor.
+#
+#   MAESTRO_SPONSOR_EMAIL=part@gmail.com \
+#   MAESTRO_SPONSOR_PASSWORD='***' \
+#   maestro test .maestro/sponsor-tabs.yaml
+appId: com.proday.app
+---
+- runFlow: subflows/sponsor-login.yaml
+
+- assertVisible:
+    id: sponsor-top-bar
+- assertVisible: Accueil
+
+- tapOn:
+    id: sponsor-menu-button
+- assertVisible:
+    id: sponsor-drawer
+
+- tapOn:
+    id: sponsor-drawer-offres
+- assertVisible: Mes offres
+
+- tapOn:
+    id: sponsor-menu-button
+- tapOn:
+    id: sponsor-drawer-messages
+- assertVisible: Messages
+
+- tapOn:
+    id: sponsor-menu-button
+- tapOn:
+    id: sponsor-drawer-pilotage
+- assertVisible: Accueil

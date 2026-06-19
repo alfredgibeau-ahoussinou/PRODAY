@@ -20,12 +20,12 @@ export const SPONSOR_MESSAGE_TEMPLATES = [
   {
     id: 'intro',
     label: 'Présentation',
-    text: 'Bonjour, nous sommes partenaire ProDay et souhaitons soutenir votre club localement. Pouvons-nous échanger ?',
+    text: 'Bonjour, nous sommes sponsor ProDay et souhaitons soutenir votre club localement. Pouvons-nous échanger ?',
   },
   {
     id: 'offer',
     label: 'Offre active',
-    text: 'Notre offre partenaire est en ligne sur ProDay — elle couvre équipement et visibilité pour les clubs de votre zone.',
+    text: 'Notre offre sponsor est en ligne sur ProDay — elle couvre équipement et visibilité pour les clubs de votre zone.',
   },
   {
     id: 'funding',

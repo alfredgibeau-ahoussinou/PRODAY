@@ -58,6 +58,7 @@ export const en: MessageCatalog = {
   'tabs.sante': 'Health',
   'tabs.feed': 'Feed',
   'tabs.reels': 'Reels',
+  'tabs.famille': 'Family',
   'tabs.messages': 'Messages',
   'tabs.profil': 'Profile',
   'tabs.shop': 'Shop',

@@ -308,7 +308,7 @@ const ProWelcomeBody: React.FC<{ form: SignupForm }> = ({ form }) => {
         </View>
         <Text style={styles.proHeroTitle}>Votre métier</Text>
         <Text style={styles.proHeroSub}>
-          Coach, club, agent, recruteur, organisateur ou partenaire — un parcours dédié.
+          Coach, club, agent, recruteur, organisateur ou sponsor — un parcours dédié.
         </Text>
       </ShowcaseImageBackground>
 

@@ -1,5 +1,6 @@
+import './firebaseAdmin';
 import * as functions from 'firebase-functions';
-import * as admin from 'firebase-admin';
+import { admin } from './firebaseAdmin';
 import { processScheduledEventReminders } from './eventReminders';
 import { sendFcmToUser } from './messaging';
 import { createPaymentCheckoutSession, stripeWebhook } from './stripePayments';
@@ -10,14 +11,19 @@ import { onPlatformFeedCreated, onChatMessageCreated } from './feedNotifications
 import { createSubmitBetaWaitlistHandler } from './betaWaitlist';
 import { onV3BrainWrite } from './v3Brain';
 import { activateStoreSubscription } from './subscriptionIap';
+import {
+  onSponsorOfferCreated,
+  onSponsorOfferUpdated,
+  notifySponsorOfferInCityCallable,
+} from './sponsorGeoPush';
 
 export { createPaymentCheckoutSession, stripeWebhook, createShopCheckoutSession };
+export { onSponsorOfferCreated, onSponsorOfferUpdated, notifySponsorOfferInCityCallable };
 export { activateStoreSubscription };
 export { onPlatformFeedCreated, onChatMessageCreated };
 export { onRecruitmentPostCreated };
 export { onV3BrainWrite };
 
-admin.initializeApp();
 const db = admin.firestore();
 
 /** Document uploadé → PENDING + analyse Mistral IA */
@@ -360,14 +366,14 @@ export const updateApplicationStatus = functions.https.onCall(async (data, conte
 
   const { applicationId, status, rejectionReason } = data as {
     applicationId: string;
-    status: 'VIEWED' | 'ACCEPTED' | 'REJECTED';
+    status: 'VIEWED' | 'IN_PROGRESS' | 'ACCEPTED' | 'REJECTED';
     rejectionReason?: string;
   };
 
   if (!applicationId || !status) {
     throw new functions.https.HttpsError('invalid-argument', 'applicationId et status requis');
   }
-  if (!['VIEWED', 'ACCEPTED', 'REJECTED'].includes(status)) {
+  if (!['VIEWED', 'IN_PROGRESS', 'ACCEPTED', 'REJECTED'].includes(status)) {
     throw new functions.https.HttpsError('invalid-argument', 'status invalide');
   }
 
@@ -510,6 +516,176 @@ export const adminDeleteUser = functions.https.onCall(async (data, context) => {
   } catch (e) {
     console.warn('[adminDeleteUser] auth delete:', e);
   }
+
+  return { success: true };
+});
+
+type SponsorTrackEventType = 'offer_view' | 'offer_click' | 'offer_lead' | 'profile_view';
+
+const SPONSOR_TRACK_EVENTS = new Set<SponsorTrackEventType>([
+  'offer_view',
+  'offer_click',
+  'offer_lead',
+  'profile_view',
+]);
+
+const SPONSOR_RATE_LIMIT_WINDOW_MS = 5 * 60 * 1000;
+const SPONSOR_RATE_LIMIT_MAX = 80;
+const PROFILE_VIEW_DEDUP_MS = 24 * 60 * 60 * 1000;
+
+function sponsorTrackClientIp(context: functions.https.CallableContext): string {
+  const raw = context.rawRequest;
+  if (!raw) return 'unknown';
+  const forwarded = raw.headers['x-forwarded-for'];
+  if (typeof forwarded === 'string' && forwarded.trim()) {
+    return forwarded.split(',')[0].trim();
+  }
+  return raw.ip ?? 'unknown';
+}
+
+function sponsorRateLimitDocId(ip: string, viewerKey: string): string {
+  const key = `${ip}:${viewerKey}`.slice(0, 200);
+  return Buffer.from(key).toString('base64url').slice(0, 120);
+}
+
+async function assertSponsorTrackingRateLimit(ip: string, viewerKey: string): Promise<boolean> {
+  const rateRef = db.doc(`sponsor_tracking_rate/${sponsorRateLimitDocId(ip, viewerKey)}`);
+  const now = Date.now();
+  const snap = await rateRef.get();
+
+  if (!snap.exists) {
+    await rateRef.set({
+      count: 1,
+      window_start: admin.firestore.Timestamp.fromMillis(now),
+    });
+    return true;
+  }
+
+  const data = snap.data()!;
+  const windowStart = (data.window_start as admin.firestore.Timestamp).toMillis();
+  const count = Number(data.count ?? 0);
+
+  if (now - windowStart >= SPONSOR_RATE_LIMIT_WINDOW_MS) {
+    await rateRef.set({
+      count: 1,
+      window_start: admin.firestore.Timestamp.fromMillis(now),
+    });
+    return true;
+  }
+
+  if (count >= SPONSOR_RATE_LIMIT_MAX) {
+    return false;
+  }
+
+  await rateRef.update({ count: admin.firestore.FieldValue.increment(1) });
+  return true;
+}
+
+async function recordSponsorProfileView(
+  sponsorUid: string,
+  viewerUid: string | null,
+  anonymousId: string
+): Promise<{ deduped?: boolean }> {
+  const since = admin.firestore.Timestamp.fromMillis(Date.now() - PROFILE_VIEW_DEDUP_MS);
+  const viewsRef = db.collection('sponsor_profile_views');
+
+  if (viewerUid) {
+    const existing = await viewsRef
+      .where('sponsor_uid', '==', sponsorUid)
+      .where('viewer_uid', '==', viewerUid)
+      .where('created_at', '>', since)
+      .limit(1)
+      .get();
+    if (!existing.empty) return { deduped: true };
+
+    await viewsRef.add({
+      sponsor_uid: sponsorUid,
+      viewer_uid: viewerUid,
+      created_at: admin.firestore.FieldValue.serverTimestamp(),
+    });
+    return {};
+  }
+
+  const existing = await viewsRef
+    .where('sponsor_uid', '==', sponsorUid)
+    .where('viewer_anonymous_id', '==', anonymousId)
+    .where('created_at', '>', since)
+    .limit(1)
+    .get();
+  if (!existing.empty) return { deduped: true };
+
+  await viewsRef.add({
+    sponsor_uid: sponsorUid,
+    viewer_anonymous_id: anonymousId,
+    created_at: admin.firestore.FieldValue.serverTimestamp(),
+  });
+  return {};
+}
+
+/**
+ * Tracking sponsor (vues offres, clics, leads, vues profil) — accessible aux invités.
+ * Rate-limit IP + déduplication vues profil sur 24 h par viewer.
+ */
+export const trackSponsorEvent = functions.https.onCall(async (data, context) => {
+  const { event, offer_id, sponsor_uid, anonymous_id } = data as {
+    event?: string;
+    offer_id?: string;
+    sponsor_uid?: string;
+    anonymous_id?: string;
+  };
+
+  if (!event || !SPONSOR_TRACK_EVENTS.has(event as SponsorTrackEventType)) {
+    throw new functions.https.HttpsError('invalid-argument', 'event invalide');
+  }
+
+  const viewerUid = context.auth?.uid ?? null;
+  const anonId =
+    typeof anonymous_id === 'string' ? anonymous_id.trim().slice(0, 128) : '';
+
+  if (!viewerUid && !anonId) {
+    throw new functions.https.HttpsError('invalid-argument', 'anonymous_id requis');
+  }
+
+  const viewerKey = viewerUid ?? `anon:${anonId}`;
+  const allowed = await assertSponsorTrackingRateLimit(sponsorTrackClientIp(context), viewerKey);
+  if (!allowed) {
+    return { success: true, throttled: true };
+  }
+
+  if (event === 'profile_view') {
+    const targetSponsor = String(sponsor_uid ?? '').trim();
+    if (!targetSponsor) {
+      throw new functions.https.HttpsError('invalid-argument', 'sponsor_uid requis');
+    }
+    if (viewerUid === targetSponsor) {
+      return { success: true, skipped: true };
+    }
+
+    const result = await recordSponsorProfileView(targetSponsor, viewerUid, anonId);
+    return { success: true, ...result };
+  }
+
+  const offerId = String(offer_id ?? '').trim();
+  if (!offerId) {
+    throw new functions.https.HttpsError('invalid-argument', 'offer_id requis');
+  }
+
+  const offerRef = db.doc(`sponsor_offers/${offerId}`);
+  const offerSnap = await offerRef.get();
+  if (!offerSnap.exists) {
+    throw new functions.https.HttpsError('not-found', 'Offre introuvable');
+  }
+
+  const metricField =
+    event === 'offer_view'
+      ? 'views_count'
+      : event === 'offer_click'
+        ? 'clicks_count'
+        : 'leads_count';
+
+  await offerRef.update({
+    [metricField]: admin.firestore.FieldValue.increment(1),
+  });
 
   return { success: true };
 });

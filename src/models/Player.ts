@@ -29,7 +29,7 @@ export interface Application {
   cv_pdf_url: string;
   created_at: Date;
   updated_at?: Date;
-  status: 'PENDING' | 'VIEWED' | 'ACCEPTED' | 'REJECTED';
+  status: 'PENDING' | 'VIEWED' | 'IN_PROGRESS' | 'ACCEPTED' | 'REJECTED';
   rejection_reason?: string;
 }
 

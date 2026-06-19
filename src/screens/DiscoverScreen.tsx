@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { SponsorsScreen } from './SponsorsScreen';
-import { SponsorPartnerHubScreen } from './sponsor/SponsorPartnerHubScreen';
+import { SponsorHubScreen } from './sponsor/SponsorHubScreen';
 import { DiscoverInteractiveHome } from '../components/discover/DiscoverInteractiveHome';
 import { ProDayConfigNotice } from '../components/ui/ProDayConfigNotice';
 import { isFirebaseConfigured } from '../config/firebase';
@@ -81,7 +81,7 @@ export const DiscoverScreen: React.FC = () => {
         closeLabel={t('common.close')}
       >
         {guestModule === 'partner-hub' ? (
-          <SponsorPartnerHubScreen
+          <SponsorHubScreen
             onBack={() => setGuestModule(null)}
             onBrowseOffers={() => setGuestModule('sponsors-offers')}
           />

@@ -13,7 +13,7 @@ import { getDb } from '../lib/firebase';
 import { isFirebaseConfigured } from '../config/firebase';
 import type { User } from '../models/User';
 import type { SubscriptionFeatureId, SubscriptionPlanId } from '../content/subscriptionPlans';
-import { getPlanForRole, planIdForRole } from '../content/subscriptionPlans';
+import { getPlanDefinition, getPlanForRole, planIdForRole } from '../content/subscriptionPlans';
 import type { ProductLineId } from '../models/ProductLine';
 import { getPlanForRoleAndLine } from '../content/subscriptionPlansByLine';
 import type { SubscriptionUsagePeriod, UserSubscription } from '../models/Subscription';
@@ -158,15 +158,7 @@ export const subscriptionService = {
     planId: SubscriptionPlanId,
     billing: 'monthly' | 'yearly' = 'monthly'
   ): Promise<{ ok: boolean; message: string }> {
-    const plan = getPlanForRole(
-      planId === 'player_plus'
-        ? 'player'
-        : planId === 'coach_pro'
-          ? 'coach'
-          : planId === 'club_pro'
-            ? 'club'
-            : 'agent'
-    );
+    const plan = getPlanDefinition(planId);
 
     if (plan?.pricing.storeAvailable) {
       const { iapService } = await import('./iap.service');

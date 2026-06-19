@@ -4,7 +4,7 @@ import { UniversePage } from "@/components/universe/UniversePage";
 export const metadata: Metadata = {
   title: "Pro Day Pro",
   description:
-    "Recruteurs, coach, agent, club, pôle santé et partenaires — Mercato Pro et réseau vérifié.",
+    "Recruteurs, coach, agent, club et organisateur — Mercato Pro et réseau vérifié.",
 };
 
 export default function ProPage() {
