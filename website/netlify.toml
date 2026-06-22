@@ -1,10 +1,9 @@
 # ProDay — Next.js sur Netlify (OpenNext)
 # UI Netlify : Base directory = website
-# publish = ".next" écrase le répertoire « dist » de l’UI.
+# Ne pas définir publish : @netlify/plugin-nextjs gère .netlify/static + fonctions SSR.
 
 [build]
   command = "npm run build"
-  publish = ".next"
 
 [build.environment]
   NODE_VERSION = "20"

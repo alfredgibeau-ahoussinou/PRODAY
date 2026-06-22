@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { BRAND } from "@/lib/content";
+import { PRODAY_LOGO_ON_DARK } from "@/lib/brandingAssets";
 import { POLE_NAV_POLE_IDS, POLE_NAV_STRIPE } from "@/lib/poles";
 import { POLE_FOOTER_LINKS, ROUTES, UTILITY_NAV_ITEMS } from "@/lib/routes";
 
@@ -12,7 +13,7 @@ export function SiteFooter() {
           <div className="lg:col-span-1">
             <div className="flex items-center gap-3">
               <Image
-                src="/branding/logo-dark.png"
+                src={PRODAY_LOGO_ON_DARK}
                 alt={BRAND.name}
                 width={40}
                 height={40}

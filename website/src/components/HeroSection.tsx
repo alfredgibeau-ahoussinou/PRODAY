@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Play } from "lucide-react";
 import { BRAND } from "@/lib/content";
+import { PRODAY_LOGO_ON_DARK } from "@/lib/brandingAssets";
 import { ROUTES } from "@/lib/routes";
 import { PremiumButton } from "@/components/ui/PremiumButton";
 import { Kicker } from "@/components/ui/Kicker";
@@ -126,7 +127,7 @@ export function HeroSection() {
                   Journal & Mercato
                 </p>
                 <Image
-                  src="/branding/logo-dark.png"
+                  src={PRODAY_LOGO_ON_DARK}
                   alt=""
                   width={110}
                   height={36}

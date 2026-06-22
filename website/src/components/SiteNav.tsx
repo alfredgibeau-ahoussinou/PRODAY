@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import { navBrandForPath } from "@/components/universe/universeTheme";
+import { PRODAY_LOGO_ON_DARK } from "@/lib/brandingAssets";
 import { isNavActive, poleForPath } from "@/lib/siteArchitecture";
 import { POLE_NAV_POLE_IDS, POLE_NAV_STRIPE, POLE_STYLES, type PoleId } from "@/lib/poles";
 import { POLE_NAV_ITEMS, ROUTES, UTILITY_NAV_ITEMS } from "@/lib/routes";
@@ -83,7 +84,7 @@ export function SiteNav() {
       <nav className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
         <Link href={ROUTES.home} className="group flex shrink-0 items-center gap-2.5">
           <Image
-            src={isHome ? "/branding/logo-dark.png" : brand.logo}
+            src={isHome ? PRODAY_LOGO_ON_DARK : brand.logo}
             alt={brand.name}
             width={36}
             height={36}
