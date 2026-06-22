@@ -8,7 +8,44 @@ export const BRAND = {
   name: "ProDay",
   tagline: "CONNECTER • PROGRESSER • RÉUSSIR",
   mission:
-    "Quatre pôles — Joueur, Pro, Santé et Partenaires — pour piloter carrière, club et saison dans une seule application.",
+    "Profil, Mercato, journal d'activités et saison — quatre pôles (Joueur, Pro, Santé, Partenaires) dans une app mobile honnête sur ce qui est livré aujourd'hui.",
+} as const;
+
+/** Pitch honnête : capacités réelles vs ambition long terme — pas de métriques fictives. */
+export const PRODUCT_VISION = {
+  intro:
+    "ProDay relie carrière, club et communauté foot amateur et semi-pro. Nous parlons de ce qui existe dans l'app — et de ce qui arrive ensuite.",
+  disclaimer:
+    "Les chiffres du site décrivent l'architecture produit, pas l'audience en temps réel. L'analyse IA concerne vos highlights de séance (vidéo ou poster + notes), pas chaque action sur le terrain.",
+  today: {
+    title: "Aujourd'hui",
+    lead: "Fonctionnalités disponibles ou en déploiement actif dans l'application.",
+    items: [
+      "Profil joueur / staff : Pulse, CV en ligne, galerie et stats saison",
+      "Score carrière et timeline de progression",
+      "Journal d'activités (séances, matchs, highlights)",
+      "Analyse IA des highlights de séance (miniature vidéo ou poster + tags et notes)",
+      "Mercato : annonces, candidatures, pipeline staff et recruteurs",
+      "Matchs, convocations RSVP, Live Stats vers le profil",
+      "Arena : tournois, inscriptions et palmarès",
+      "Fil communauté, Reels et question hebdo",
+      "Espace partenaires / sponsors (Découverte, Territorial, National Pro)",
+      "Pôle santé, covoiturage, contrôle parental et espace famille",
+      "Admin, vérification diplômes et messagerie sécurisée",
+      "Dashboard IA d'accueil (recommandations matchs, progression, alertes)",
+    ],
+  },
+  tomorrow: {
+    title: "Demain",
+    lead: "Ambitions produit — pas encore livrées. Aucune promesse marketing sur ces points.",
+    items: [
+      "Analyse vidéo frame-by-frame avancée (trajectoires, gestes techniques)",
+      "Détection automatique des talents à l'échelle mondiale",
+      "Notifications géolocalisées agents et push partenaires à grande échelle",
+      "Paiements tournois intégrés",
+      "Couverture IAP complète sur tous les plans store",
+    ],
+  },
 } as const;
 
 /** Nouveautés mises en avant sur la home premium. */
@@ -732,19 +769,19 @@ export type UniversePageId = keyof typeof UNIVERSE_PAGE_CONFIG;
 export const VISION_PILLARS = [
   {
     title: "Mission",
-    body: "Connecter • Progresser • Réussir — donner à chaque acteur du foot amateur les outils du haut niveau.",
+    body: "Connecter • Progresser • Réussir — donner à chaque acteur du foot amateur les outils du haut niveau, sans surestimer l'IA.",
   },
   {
-    title: "Écosystème",
-    body: "Recrutement, matchs, covoiturage, pôle santé, Arena et ProDay Shop — sept onglets selon votre rôle, une expérience.",
+    title: "Aujourd'hui",
+    body: "Profil, Mercato, score carrière, journal d'activités, analyse IA des highlights, sponsors, Arena, admin et contrôle parental — dans une app React Native / Expo.",
   },
   {
-    title: "Technologie",
-    body: "React Native / Expo — une app mobile et web unifiée, données synchronisées en temps réel.",
+    title: "IA honnête",
+    body: "L'analyse Mistral porte sur vos séances enregistrées (highlight vidéo ou image + contexte). Ce n'est pas une détection automatique sur chaque geste en match.",
   },
   {
-    title: "Roadmap",
-    body: "Mercato, Live Stats, covoiturage, pôle santé et Shop livrés. Notifications géo et paiements tournois à venir.",
+    title: "Demain",
+    body: "Frame-by-frame avancé, repérage talent mondial automatisé, paiements tournois — voir la page Vision et la roadmap pour le détail.",
   },
 ] as const;
 
@@ -932,7 +969,7 @@ export const SUBSCRIPTION_PLANS_WEB = [
     label: "Joueur Plus",
     tagline: "CV en ligne, visibilité et Mercato",
     monthlyEur: 2.99,
-    storeAvailable: false,
+    storeAvailable: true,
     universes: ["homme", "woman"] as ProductLineWeb[],
     freeIncludes: [
       "Profil, Pulse et CV en ligne",
@@ -953,7 +990,7 @@ export const SUBSCRIPTION_PLANS_WEB = [
     label: "Recruteur Pro",
     tagline: "Scouting, Mercato Pro et pipeline candidatures",
     monthlyEur: 7.99,
-    storeAvailable: false,
+    storeAvailable: true,
     universes: ["pro"] as ProductLineWeb[],
     freeIncludes: [
       "Profil recruteur vérifié",
@@ -973,7 +1010,7 @@ export const SUBSCRIPTION_PLANS_WEB = [
     label: "Coach Pro",
     tagline: "Recrutement et gestion multi-équipes",
     monthlyEur: 7.99,
-    storeAvailable: false,
+    storeAvailable: true,
     universes: ["pro"] as ProductLineWeb[],
     freeIncludes: [
       "Profil staff et vérification",
@@ -1013,7 +1050,7 @@ export const SUBSCRIPTION_PLANS_WEB = [
     label: "Agent Elite",
     tagline: "CRM joueurs, mandats et pipeline — formule premium",
     monthlyEur: 99.99,
-    storeAvailable: false,
+    storeAvailable: true,
     premium: true,
     universes: ["pro"] as ProductLineWeb[],
     freeIncludes: [
@@ -1033,7 +1070,7 @@ export const SUBSCRIPTION_PLANS_WEB = [
     label: "Pôle santé Pro",
     tagline: "Abonnement léger + visibilité clubs — commission sur les RDV",
     monthlyEur: 19.99,
-    storeAvailable: false,
+    storeAvailable: true,
     commissionPercent: 10,
     commissionNote:
       "10 % sur chaque consultation réservée via ProDay (nutrition, coach mental, prépa…). Pas de commission sur les actes médicaux réglementés.",
@@ -1056,7 +1093,7 @@ export const SUBSCRIPTION_PLANS_WEB = [
     label: "Organisateur Pro",
     tagline: "Événements, détections et tournois Arena",
     monthlyEur: 14.99,
-    storeAvailable: false,
+    storeAvailable: true,
     universes: ["pro"] as ProductLineWeb[],
     freeIncludes: [
       "Profil organisateur vérifié",
@@ -1076,7 +1113,7 @@ export const SUBSCRIPTION_PLANS_WEB = [
     label: "National Pro (partenaires)",
     tagline: "Formule premium — espace partenaires dédié",
     monthlyEur: 99,
-    storeAvailable: false,
+    storeAvailable: true,
     universes: ["pro"] as ProductLineWeb[],
     freeIncludes: [
       "Formule Découverte (0 €) : profil vérifié",
@@ -1255,6 +1292,14 @@ export const FAQ_ITEMS = [
     q: "Que reçoit-on en s'inscrivant sur la liste d'attente ?",
     a: "Des nouvelles régulières sur l'avancement du produit et un accès prioritaire dès l'ouverture sur mobile.",
   },
+  {
+    q: "ProDay analyse-t-il chaque action en vidéo ?",
+    a: "Non. L'analyse IA porte sur les highlights que vous enregistrez dans le journal d'activités (miniature vidéo ou image + notes). L'analyse frame-by-frame automatique sur tout le match est une ambition future, pas une promesse actuelle.",
+  },
+  {
+    q: "Quelle est la différence entre aujourd'hui et la vision long terme ?",
+    a: "Aujourd'hui : profil, Mercato, score carrière, journal, analyse IA des séances, sponsors, Arena et admin. Demain : repérage talent mondial automatisé et analyse vidéo avancée — voir la page Vision.",
+  },
 ] as const;
 
 export const TESTIMONIALS = [
@@ -1289,30 +1334,43 @@ export const ROADMAP_ITEMS = [
     phase: "Livré",
     status: "done" as const,
     items: [
-      "Dashboard",
-      "Mercato",
-      "Matchs",
-      "Live Stats",
+      "Dashboard & accueil IA",
+      "Profil, Pulse & CV en ligne",
+      "Score carrière & timeline",
+      "Journal d'activités",
+      "Analyse IA highlights séance",
+      "Mercato & candidatures",
+      "Matchs & Live Stats",
       "Gestion équipe",
       "Covoiturage",
       "Pôle santé",
       "ProDay Shop",
-      "Arena MVP",
+      "Arena (tournois)",
       "Contrôle parental",
-      "Fil communauté",
-      "Reels",
-      "Espace partenaires",
+      "Fil communauté & Reels",
+      "Espace partenaires / sponsors",
+      "Admin & vérification staff",
     ],
   },
   {
     phase: "En cours",
     status: "active" as const,
-    items: ["Functions Blaze", "Storage", "Site vitrine", "Push géo partenaires"],
+    items: [
+      "Functions Blaze & Storage",
+      "Site vitrine aligné produit",
+      "IAP store (16 SKU)",
+      "Push géo partenaires (bêta)",
+    ],
   },
   {
     phase: "À venir",
     status: "pending" as const,
-    items: ["Notifications géo agents", "Paiements tournois", "IAP tous les plans"],
+    items: [
+      "Analyse vidéo frame-by-frame avancée",
+      "Détection talent mondiale automatique",
+      "Notifications géo agents",
+      "Paiements tournois",
+    ],
   },
 ] as const;
 

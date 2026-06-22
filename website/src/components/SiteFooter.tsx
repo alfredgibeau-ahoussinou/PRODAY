@@ -76,6 +76,16 @@ export function SiteFooter() {
                 </Link>
               </li>
               <li>
+                <Link href={ROUTES.vision} className="hover:text-white">
+                  Vision
+                </Link>
+              </li>
+              <li>
+                <Link href={ROUTES.about} className="hover:text-white">
+                  À propos
+                </Link>
+              </li>
+              <li>
                 <Link href={ROUTES.roadmap} className="hover:text-white">
                   Roadmap
                 </Link>

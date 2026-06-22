@@ -4,22 +4,49 @@ Ce guide aligne **exactement** les SKU des stores avec le code (`src/content/iap
 
 Bundle / package : **`com.proday.app`**
 
+**Fiche marketing store** : [APP_STORE_LISTING.md](./APP_STORE_LISTING.md) (description FR, sous-titre, mots-clés).
+
 ## Plans payants (8 × 2 cycles = 16 SKU)
 
-| Plan ID | Mensuel | Annuel |
-|---------|---------|--------|
-| `player_plus` | `com.proday.app.player_plus.monthly` | `com.proday.app.player_plus.yearly` |
-| `recruiter_pro` | `com.proday.app.recruiter_pro.monthly` | `com.proday.app.recruiter_pro.yearly` |
-| `coach_pro` | `com.proday.app.coach_pro.monthly` | `com.proday.app.coach_pro.yearly` |
-| `club_pro` | `com.proday.app.club_pro.monthly` | `com.proday.app.club_pro.yearly` |
-| `agent_elite` | `com.proday.app.agent_elite.monthly` | `com.proday.app.agent_elite.yearly` |
-| `physio_pro` | `com.proday.app.physio_pro.monthly` | `com.proday.app.physio_pro.yearly` |
-| `organizer_pro` | `com.proday.app.organizer_pro.monthly` | `com.proday.app.organizer_pro.yearly` |
-| `sponsor_pro` | `com.proday.app.sponsor_pro.monthly` | `com.proday.app.sponsor_pro.yearly` |
+| Plan ID | Mensuel (€) | SKU mensuel | SKU annuel |
+|---------|-------------|-------------|------------|
+| `player_plus` | 2,99 | `com.proday.app.player_plus.monthly` | `com.proday.app.player_plus.yearly` |
+| `recruiter_pro` | 7,99 | `com.proday.app.recruiter_pro.monthly` | `com.proday.app.recruiter_pro.yearly` |
+| `coach_pro` | 7,99 | `com.proday.app.coach_pro.monthly` | `com.proday.app.coach_pro.yearly` |
+| `club_pro` | 11,99 | `com.proday.app.club_pro.monthly` | `com.proday.app.club_pro.yearly` |
+| `agent_elite` | 99,99 | `com.proday.app.agent_elite.monthly` | `com.proday.app.agent_elite.yearly` |
+| `physio_pro` | 19,99 | `com.proday.app.physio_pro.monthly` | `com.proday.app.physio_pro.yearly` |
+| `organizer_pro` | 14,99 | `com.proday.app.organizer_pro.monthly` | `com.proday.app.organizer_pro.yearly` |
+| `sponsor_pro` | 99,00 | `com.proday.app.sponsor_pro.monthly` | `com.proday.app.sponsor_pro.yearly` |
 
 Convention : `com.proday.app.{plan_id}.monthly` / `com.proday.app.{plan_id}.yearly`
 
-Les prix affichés dans l’app viennent de `src/content/subscriptionPlans.ts` — reporter les mêmes montants dans chaque console store.
+Prix source de vérité : `src/content/subscriptionPlans.ts` — sponsors hors IAP : `src/content/sponsorPricing.ts` (Découverte 0 €, Territorial 49 €, National 99 €).
+
+Les prix affichés dans l’app et sur le site (`website/src/lib/content.ts`) reprennent les mêmes montants.
+
+### Liste copier-coller — 16 identifiants exacts
+
+```
+com.proday.app.player_plus.monthly
+com.proday.app.player_plus.yearly
+com.proday.app.recruiter_pro.monthly
+com.proday.app.recruiter_pro.yearly
+com.proday.app.coach_pro.monthly
+com.proday.app.coach_pro.yearly
+com.proday.app.club_pro.monthly
+com.proday.app.club_pro.yearly
+com.proday.app.agent_elite.monthly
+com.proday.app.agent_elite.yearly
+com.proday.app.physio_pro.monthly
+com.proday.app.physio_pro.yearly
+com.proday.app.organizer_pro.monthly
+com.proday.app.organizer_pro.yearly
+com.proday.app.sponsor_pro.monthly
+com.proday.app.sponsor_pro.yearly
+```
+
+Vérification automatique : `npm test -- iapProducts`
 
 ---
 
@@ -90,9 +117,55 @@ firebase deploy --only functions:activateStoreSubscription
 
 ## Checklist avant mise en prod
 
-- [ ] 16 SKU créés dans App Store Connect (état « Prêt à soumettre » ou approuvé)
-- [ ] 16 abonnements créés dans Play Console (actifs)
-- [ ] Prix cohérents avec l’app
+### App Store Connect (16 abonnements)
+
+- [ ] Groupe d’abonnements créé (ex. `proday_pro`)
+- [ ] `com.proday.app.player_plus.monthly` — 2,99 €/mois
+- [ ] `com.proday.app.player_plus.yearly` — annuel −20 %
+- [ ] `com.proday.app.recruiter_pro.monthly` — 7,99 €/mois
+- [ ] `com.proday.app.recruiter_pro.yearly`
+- [ ] `com.proday.app.coach_pro.monthly` — 7,99 €/mois
+- [ ] `com.proday.app.coach_pro.yearly`
+- [ ] `com.proday.app.club_pro.monthly` — 11,99 €/mois
+- [ ] `com.proday.app.club_pro.yearly`
+- [ ] `com.proday.app.agent_elite.monthly` — 99,99 €/mois
+- [ ] `com.proday.app.agent_elite.yearly`
+- [ ] `com.proday.app.physio_pro.monthly` — 19,99 €/mois
+- [ ] `com.proday.app.physio_pro.yearly`
+- [ ] `com.proday.app.organizer_pro.monthly` — 14,99 €/mois
+- [ ] `com.proday.app.organizer_pro.yearly`
+- [ ] `com.proday.app.sponsor_pro.monthly` — 99,00 €/mois
+- [ ] `com.proday.app.sponsor_pro.yearly`
+- [ ] Contrat fiscal / bancaire actif
+- [ ] Capacité In-App Purchase sur l’App ID
+- [ ] Localisations FR (nom + description par plan)
+- [ ] Fiche store : [APP_STORE_LISTING.md](./APP_STORE_LISTING.md)
+
+### Google Play Console (16 abonnements)
+
+- [ ] `com.proday.app.player_plus.monthly` — 2,99 €/mois
+- [ ] `com.proday.app.player_plus.yearly`
+- [ ] `com.proday.app.recruiter_pro.monthly` — 7,99 €/mois
+- [ ] `com.proday.app.recruiter_pro.yearly`
+- [ ] `com.proday.app.coach_pro.monthly` — 7,99 €/mois
+- [ ] `com.proday.app.coach_pro.yearly`
+- [ ] `com.proday.app.club_pro.monthly` — 11,99 €/mois
+- [ ] `com.proday.app.club_pro.yearly`
+- [ ] `com.proday.app.agent_elite.monthly` — 99,99 €/mois
+- [ ] `com.proday.app.agent_elite.yearly`
+- [ ] `com.proday.app.physio_pro.monthly` — 19,99 €/mois
+- [ ] `com.proday.app.physio_pro.yearly`
+- [ ] `com.proday.app.organizer_pro.monthly` — 14,99 €/mois
+- [ ] `com.proday.app.organizer_pro.yearly`
+- [ ] `com.proday.app.sponsor_pro.monthly` — 99,00 €/mois
+- [ ] `com.proday.app.sponsor_pro.yearly`
+- [ ] Compte marchand Google Payments lié
+- [ ] Piste test interne + comptes licence test
+- [ ] Fiche store : [APP_STORE_LISTING.md](./APP_STORE_LISTING.md)
+
+### Code & serveur
+
+- [ ] Prix cohérents app / site / consoles
 - [ ] `activateStoreSubscription` déployée (plan Blaze)
 - [ ] Test achat sandbox iOS + licence test Android pour au moins `player_plus` et `sponsor_pro`
 - [ ] `npm test -- iapProducts` passe (alignement code)

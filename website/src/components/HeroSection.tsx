@@ -87,7 +87,7 @@ export function HeroSection() {
             transition={{ delay: 0.6 }}
             className="mt-10 flex flex-wrap gap-2"
           >
-            {["Mercato", "Reels", "Fil", "Arena", "Partenaires"].map((tag) => (
+            {["Profil & carrière", "Mercato", "Journal activités", "Arena", "Partenaires"].map((tag) => (
               <span
                 key={tag}
                 className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-white/70"
@@ -123,7 +123,7 @@ export function HeroSection() {
               />
               <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black via-black/80 to-transparent p-6 pt-24">
                 <p className="mb-3 text-xs tracking-widest text-emerald-400/80 uppercase">
-                  Reels et Fil
+                  Journal & Mercato
                 </p>
                 <Image
                   src="/branding/logo-dark.png"
@@ -133,7 +133,7 @@ export function HeroSection() {
                   className="mb-2 h-7 w-auto object-contain"
                 />
                 <p className="text-sm text-white/70">
-                  Quatre pôles · neuf onglets · une application
+                  Analyse IA sur vos highlights — pas sur chaque geste
                 </p>
               </div>
             </div>

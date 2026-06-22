@@ -109,6 +109,12 @@ export const SITE_PAGES: Record<string, PageMeta> = {
     category: "platform",
     accent: "default",
   },
+  [ROUTES.vision]: {
+    path: ROUTES.vision,
+    poleId: null,
+    category: "platform",
+    accent: "default",
+  },
   [ROUTES.journeys]: {
     path: ROUTES.journeys,
     poleId: null,

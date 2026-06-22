@@ -13,6 +13,7 @@ export const ROUTES = {
   pro: "/pro",
   beta: "/beta",
   about: "/a-propos",
+  vision: "/vision",
   pricing: "/tarifs",
   partenaires: "/partenaires",
   faq: "/faq",
@@ -119,11 +120,18 @@ export const EXPLORE_CARDS = [
     tag: "Analyse",
   },
   {
+    href: ROUTES.vision,
+    title: "Vision",
+    description: "Aujourd'hui vs demain — pitch honnête sur les capacités réelles de l'app.",
+    image: "/showcase/classic-exp-discover.jpg",
+    tag: "Vision",
+  },
+  {
     href: ROUTES.ecosystem,
     title: "Écosystème",
     description: "Carte interactive des acteurs reliés par ProDay.",
     image: "/showcase/classic-arena.jpg",
-    tag: "Vision",
+    tag: "Écosystème",
   },
   {
     href: ROUTES.roadmap,
