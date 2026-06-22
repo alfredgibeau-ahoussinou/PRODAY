@@ -19,7 +19,6 @@ import { getTabShortLabel } from '../../content/poleExperience';
 import {
   getPhysioTabIcon,
   isMedicalPractitionerRole,
-  MEDICAL_THEME,
 } from '../../content/medicalExperience';
 import {
   getSponsorTabIcon,
@@ -28,6 +27,10 @@ import {
 } from '../../content/sponsorExperience';
 import { spacing, shadows } from '../../theme/designTokens';
 import type { AppColors } from '../../theme/universeTheme';
+import {
+  getPoleTabBarChrome,
+  resolveTabBarAccent,
+} from '../../theme/poleTabBarTheme';
 
 const TAB_ICONS: Record<MainTabId, IconName> = {
   home: 'home',
@@ -78,7 +81,6 @@ const TabActiveGlow: React.FC<{
 
 const BAR_HEIGHT = 62;
 const SIDE_ICON = 26;
-const CENTER_SIZE = 56;
 const CENTER_ICON = 30;
 
 type MobileTabBarProps = {
@@ -104,7 +106,7 @@ export const MobileTabBar: React.FC<MobileTabBarProps> = ({
   unreadCount = 0,
   visibleTabs,
 }) => {
-  const { colors, isWoman, productLine } = useAppTheme();
+  const { colors, productLine } = useAppTheme();
   const { t } = useTranslation();
   const sessionProfile = useSessionProfile();
   const insets = useSafeAreaInsets();
@@ -121,21 +123,21 @@ export const MobileTabBar: React.FC<MobileTabBarProps> = ({
   );
 
   const menuActive = rail.overflow.includes(activeTab);
-  const accentInk = isPhysio
-    ? MEDICAL_THEME.primary
-    : isSponsor
-      ? SPONSOR_THEME.primary
-      : isWoman
-        ? colors.accent
-        : colors.ink;
+  const chrome = useMemo(
+    () => getPoleTabBarChrome(productLine, role),
+    [productLine, role],
+  );
+  const accentInk = isSponsor
+    ? SPONSOR_THEME.primary
+    : resolveTabBarAccent(productLine, role, colors);
 
   const dockBg = immersive ? 'rgba(0,0,0,0.94)' : colors.surface;
   const dockBorder = immersive ? 'rgba(255,255,255,0.1)' : colors.border;
   const rootBg = immersive ? '#000' : colors.background;
 
   const styles = useMemo(
-    () => createStyles(colors, immersive, accentInk),
-    [colors, immersive, accentInk],
+    () => createStyles(colors, immersive, accentInk, chrome),
+    [colors, immersive, accentInk, chrome],
   );
 
   const renderSideTab = (tab: MainTabId) => {
@@ -206,7 +208,28 @@ export const MobileTabBar: React.FC<MobileTabBarProps> = ({
           },
         ]}
       >
-        <View style={[styles.bar, { backgroundColor: dockBg, borderColor: dockBorder }]}>
+        <View
+          style={[
+            styles.bar,
+            {
+              backgroundColor: dockBg,
+              borderColor: dockBorder,
+              borderWidth: immersive ? 0 : chrome.barBorderWidth,
+            },
+            chrome.barShadow && !immersive && shadows.soft,
+          ]}
+        >
+          {!immersive && chrome.topAccentHeight > 0 ? (
+            <View
+              style={[
+                styles.topAccent,
+                {
+                  height: chrome.topAccentHeight,
+                  backgroundColor: chrome.topAccentColor,
+                },
+              ]}
+            />
+          ) : null}
           <View style={styles.leftCluster}>
             {rail.left.map(renderSideTab)}
           </View>
@@ -223,10 +246,18 @@ export const MobileTabBar: React.FC<MobileTabBarProps> = ({
               <View
                 style={[
                   styles.centerBtn,
+                  {
+                    width: chrome.centerButtonSize,
+                    height: chrome.centerButtonSize,
+                    borderRadius: chrome.centerButtonSize / 2,
+                    backgroundColor: chrome.centerButtonIdle,
+                    borderWidth: chrome.centerButtonBorderWidth,
+                    borderColor: chrome.centerButtonBorder,
+                  },
                   centerActive && styles.centerBtnActive,
                   immersive && [styles.centerBtnImmersive, { backgroundColor: accentInk }],
                   !immersive && centerActive && { backgroundColor: accentInk },
-                  shadows.soft,
+                  !immersive && shadows.soft,
                 ]}
               >
                 <Icon
@@ -315,20 +346,33 @@ export const MobileTabBar: React.FC<MobileTabBarProps> = ({
   );
 };
 
-function createStyles(c: AppColors, immersive: boolean, accent: string) {
+function createStyles(
+  c: AppColors,
+  immersive: boolean,
+  accent: string,
+  chrome: ReturnType<typeof getPoleTabBarChrome>,
+) {
+  const pillInset = chrome.layout === 'pill' && !immersive ? spacing.md : spacing.sm;
+
   return StyleSheet.create({
     root: {
       paddingTop: spacing.xs,
-      paddingHorizontal: spacing.sm,
+      paddingHorizontal: pillInset,
     },
     bar: {
       flexDirection: 'row',
       alignItems: 'flex-end',
       minHeight: BAR_HEIGHT,
-      borderRadius: immersive ? 0 : 18,
-      borderWidth: 1,
+      borderRadius: immersive ? 0 : chrome.barBorderRadius,
       paddingHorizontal: spacing.xs,
       paddingBottom: spacing.xs,
+      overflow: 'hidden',
+    },
+    topAccent: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
     },
     leftCluster: {
       flex: 1,
@@ -366,18 +410,12 @@ function createStyles(c: AppColors, immersive: boolean, accent: string) {
     centerWrap: {
       width: 80,
       alignItems: 'center',
-      marginTop: -14,
+      marginTop: chrome.centerButtonLift,
       gap: 4,
     },
     centerBtn: {
-      width: CENTER_SIZE,
-      height: CENTER_SIZE,
-      borderRadius: CENTER_SIZE / 2,
-      backgroundColor: c.ink,
       alignItems: 'center',
       justifyContent: 'center',
-      borderWidth: 3,
-      borderColor: c.surface,
     },
     centerBtnActive: {
       backgroundColor: accent,
@@ -401,7 +439,7 @@ function createStyles(c: AppColors, immersive: boolean, accent: string) {
       minWidth: 18,
       height: 18,
       borderRadius: 9,
-      backgroundColor: c.ink,
+      backgroundColor: chrome.badgeColor,
       alignItems: 'center',
       justifyContent: 'center',
       paddingHorizontal: 4,

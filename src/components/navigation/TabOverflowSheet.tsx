@@ -10,6 +10,10 @@ import type { ProductLineId } from '../../models/ProductLine';
 import type { UserRole } from '../../models/User';
 import type { MainTabId } from '../../navigation/mainTabConfig';
 import { spacing, radius } from '../../theme/designTokens';
+import {
+  getPoleTabBarChrome,
+  resolveTabBarAccent,
+} from '../../theme/poleTabBarTheme';
 import type { AppColors } from '../../theme/universeTheme';
 
 type TabOverflowSheetProps = {
@@ -38,11 +42,20 @@ export const TabOverflowSheet: React.FC<TabOverflowSheetProps> = ({
   const insets = useSafeAreaInsets();
   const { colors } = useAppTheme();
   const { t } = useTranslation();
-  const styles = useMemo(() => createStyles(colors), [colors]);
+  const chrome = useMemo(
+    () => getPoleTabBarChrome(productLine, role),
+    [productLine, role],
+  );
+  const accent = resolveTabBarAccent(productLine, role, colors);
+  const styles = useMemo(
+    () => createStyles(colors, accent),
+    [colors, accent],
+  );
 
   return (
     <AnimatedModalShell visible={visible} onClose={onClose} closeLabel={t('common.close')}>
       <View style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, spacing.lg) }]}>
+        <Text style={styles.kicker}>{chrome.overflowKicker}</Text>
         <Text style={styles.title}>{t('nav.overflow')}</Text>
         <View style={styles.grid}>
           {tabs.map((tab) => {
@@ -52,7 +65,10 @@ export const TabOverflowSheet: React.FC<TabOverflowSheetProps> = ({
             return (
               <Pressable
                 key={tab}
-                style={[styles.tile, active && styles.tileActive]}
+                style={[
+                  styles.tile,
+                  active && [styles.tileActive, { borderColor: accent }],
+                ]}
                 onPress={() => {
                   onSelect(tab);
                   onClose();
@@ -64,18 +80,21 @@ export const TabOverflowSheet: React.FC<TabOverflowSheetProps> = ({
                   <Icon
                     name={tabIcons[tab]}
                     size={28}
-                    color={active ? colors.ink : colors.textMuted}
+                    color={active ? accent : colors.textMuted}
                     variant={active ? 'filled' : 'outline'}
                   />
                   {badge > 0 ? (
-                    <View style={styles.badge}>
+                    <View style={[styles.badge, { backgroundColor: chrome.badgeColor }]}>
                       <Text style={styles.badgeText}>
                         {badge > 99 ? '99+' : badge}
                       </Text>
                     </View>
                   ) : null}
                 </View>
-                <Text style={[styles.tileLabel, active && styles.tileLabelActive]} numberOfLines={2}>
+                <Text
+                  style={[styles.tileLabel, active && [styles.tileLabelActive, { color: accent }]]}
+                  numberOfLines={2}
+                >
                   {label}
                 </Text>
               </Pressable>
@@ -87,11 +106,18 @@ export const TabOverflowSheet: React.FC<TabOverflowSheetProps> = ({
   );
 };
 
-function createStyles(c: AppColors) {
+function createStyles(c: AppColors, accent: string) {
   return StyleSheet.create({
     sheet: {
       paddingHorizontal: spacing.lg,
       paddingTop: spacing.md,
+    },
+    kicker: {
+      fontSize: 10,
+      fontWeight: '800',
+      letterSpacing: 1.2,
+      color: accent,
+      marginBottom: spacing.xs,
     },
     title: {
       fontSize: 18,
@@ -117,7 +143,7 @@ function createStyles(c: AppColors) {
       gap: spacing.sm,
     },
     tileActive: {
-      borderColor: c.ink,
+      borderColor: accent,
       backgroundColor: c.surface,
     },
     tileIcon: {
@@ -133,7 +159,6 @@ function createStyles(c: AppColors) {
       textAlign: 'center',
     },
     tileLabelActive: {
-      color: c.ink,
       fontWeight: '800',
     },
     badge: {
@@ -143,7 +168,6 @@ function createStyles(c: AppColors) {
       minWidth: 18,
       height: 18,
       borderRadius: 9,
-      backgroundColor: c.ink,
       alignItems: 'center',
       justifyContent: 'center',
       paddingHorizontal: 4,

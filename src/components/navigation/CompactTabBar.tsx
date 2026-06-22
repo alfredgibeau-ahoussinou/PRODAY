@@ -11,7 +11,6 @@ import { useTranslation } from '../../context/LocaleContext';
 import {
   getPhysioTabIcon,
   isMedicalPractitionerRole,
-  MEDICAL_THEME,
 } from '../../content/medicalExperience';
 import {
   getSponsorTabIcon,
@@ -20,6 +19,10 @@ import {
 } from '../../content/sponsorExperience';
 import { spacing } from '../../theme/designTokens';
 import type { AppColors } from '../../theme/universeTheme';
+import {
+  getPoleTabBarChrome,
+  resolveTabBarAccent,
+} from '../../theme/poleTabBarTheme';
 
 const TAB_ICONS: Record<MainTabId, IconName> = {
   home: 'home',
@@ -49,7 +52,7 @@ export const CompactTabBar: React.FC<CompactTabBarProps> = ({
   unreadCount = 0,
   visibleTabs,
 }) => {
-  const { colors, isWoman, productLine } = useAppTheme();
+  const { colors, productLine } = useAppTheme();
   const { t } = useTranslation();
   const sessionProfile = useSessionProfile();
   const insets = useSafeAreaInsets();
@@ -67,15 +70,18 @@ export const CompactTabBar: React.FC<CompactTabBarProps> = ({
   const role = sessionProfile?.role;
   const isPhysio = isMedicalPractitionerRole(role);
   const isSponsor = isSponsorRole(role);
-  const accentInk = isPhysio
-    ? MEDICAL_THEME.primary
-    : isSponsor
-      ? SPONSOR_THEME.primary
-      : isWoman
-        ? colors.accent
-        : colors.ink;
+  const chrome = useMemo(
+    () => getPoleTabBarChrome(productLine, role),
+    [productLine, role],
+  );
+  const accentInk = isSponsor
+    ? SPONSOR_THEME.primary
+    : resolveTabBarAccent(productLine, role, colors);
 
-  const styles = useMemo(() => createStyles(colors, immersive), [colors, immersive]);
+  const styles = useMemo(
+    () => createStyles(colors, immersive, chrome),
+    [colors, immersive, chrome],
+  );
 
   return (
     <View
@@ -93,9 +99,22 @@ export const CompactTabBar: React.FC<CompactTabBarProps> = ({
           {
             backgroundColor: immersive ? 'rgba(0,0,0,0.92)' : colors.surface,
             borderColor: immersive ? 'rgba(255,255,255,0.08)' : colors.border,
+            borderWidth: immersive ? 0 : chrome.barBorderWidth,
+            borderRadius: immersive ? 0 : chrome.barBorderRadius,
           },
         ]}
       >
+        {!immersive && chrome.topAccentHeight > 0 ? (
+          <View
+            style={[
+              styles.topAccent,
+              {
+                height: chrome.topAccentHeight,
+                backgroundColor: chrome.topAccentColor,
+              },
+            ]}
+          />
+        ) : null}
         {tabItems.map((tab) => {
           const active = tab.id === activeTab;
           const icon = isPhysio
@@ -131,7 +150,13 @@ export const CompactTabBar: React.FC<CompactTabBarProps> = ({
                   variant={active ? 'filled' : 'outline'}
                 />
                 {badge > 0 ? (
-                  <View style={[styles.badge, immersive && styles.badgeImmersive]}>
+                  <View
+                    style={[
+                      styles.badge,
+                      immersive && styles.badgeImmersive,
+                      { backgroundColor: chrome.badgeColor },
+                    ]}
+                  >
                     <Text style={styles.badgeText}>
                       {badge > 99 ? '99+' : badge > 9 ? '9+' : badge}
                     </Text>
@@ -146,18 +171,29 @@ export const CompactTabBar: React.FC<CompactTabBarProps> = ({
   );
 };
 
-function createStyles(c: AppColors, immersive: boolean) {
+function createStyles(
+  c: AppColors,
+  immersive: boolean,
+  chrome: ReturnType<typeof getPoleTabBarChrome>,
+) {
+  const pillInset = chrome.layout === 'pill' && !immersive ? spacing.md : spacing.sm;
+
   return StyleSheet.create({
     root: {
       paddingTop: spacing.xs,
-      paddingHorizontal: spacing.sm,
+      paddingHorizontal: pillInset,
     },
     dock: {
       flexDirection: 'row',
       alignItems: 'center',
       height: 44,
-      borderRadius: immersive ? 0 : 14,
-      borderWidth: 1,
+      overflow: 'hidden',
+    },
+    topAccent: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
     },
     tab: {
       flex: 1,
@@ -175,7 +211,6 @@ function createStyles(c: AppColors, immersive: boolean) {
       position: 'absolute',
       top: -2,
       right: -6,
-      backgroundColor: c.ink,
       borderRadius: 8,
       minWidth: 15,
       height: 15,

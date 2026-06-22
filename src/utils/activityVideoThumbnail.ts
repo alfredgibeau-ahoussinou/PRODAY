@@ -1,5 +1,16 @@
-import * as VideoThumbnails from 'expo-video-thumbnails';
 import { storageService } from '../services/storage.service';
+
+/** Chargement paresseux — évite le crash au démarrage si le module natif n'est pas dans le build. */
+async function getThumbnailAsync(videoUrl: string, timeMs: number): Promise<string | null> {
+  try {
+    const VideoThumbnails = await import('expo-video-thumbnails');
+    const { uri } = await VideoThumbnails.getThumbnailAsync(videoUrl, { time: timeMs });
+    return uri;
+  } catch (error) {
+    console.warn('[activityVideoThumbnail] native module unavailable or extraction failed:', error);
+    return null;
+  }
+}
 
 export function activityThumbnailStoragePath(uid: string, activityId: string): string {
   return `player_activity_thumbnails/${uid}/${activityId}.jpg`;
@@ -54,11 +65,13 @@ export async function resolveActivityThumbnail(input: {
 
   if (!isVideoUrl(input.videoUrl)) return null;
 
+  const frameUri = await getThumbnailAsync(input.videoUrl, 1000);
+  if (!frameUri) return null;
+
   try {
-    const { uri } = await VideoThumbnails.getThumbnailAsync(input.videoUrl, { time: 1000 });
-    return storageService.uploadActivityThumbnail(input.uid, input.activityId, uri);
+    return await storageService.uploadActivityThumbnail(input.uid, input.activityId, frameUri);
   } catch (error) {
-    console.warn('[activityVideoThumbnail] frame extraction failed:', error);
+    console.warn('[activityVideoThumbnail] thumbnail upload failed:', error);
     return null;
   }
 }
