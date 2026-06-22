@@ -88,6 +88,23 @@ firebase deploy --only functions:onTeamEventUpdated,functions:syncTeamEventActiv
 
 ---
 
+## Analyse highlight activité (`analyzeActivityHighlight.ts`)
+
+- **`analyzeActivityHighlight`** — Gen2 `onCall`, région `europe-west1`
+- Auth : propriétaire de l'activité ou admin
+- Image / data URL → Mistral Pixtral (vision)
+- MP4 → `thumbnail_url` ou poster profil (`gallery_urls`) si dispo, sinon Mistral texte sur tags + notes
+- Sans vidéo → Mistral texte sur données séance
+- Champs écrits : `analysis_status`, `analysis_summary_fr`, `analysis_strengths`, `analysis_improvements`, `analyzed_at`
+- Sans clé Mistral : `analysis_status: failed`, message « Analyse IA indisponible »
+
+```bash
+cd functions && npm run build
+firebase deploy --only functions:analyzeActivityHighlight
+```
+
+---
+
 ## Migration Gen1 → Gen2 (historique)
 
 Les triggers sponsor geo étaient en Gen1 (`functions.region('europe-west1').firestore`). Ils sont passés en **Gen2** pour compatibilité eur3 et déploiement fiable. Les autres fonctions du projet restent en Gen1 pour l'instant.

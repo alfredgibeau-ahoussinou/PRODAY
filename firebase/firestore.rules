@@ -290,19 +290,46 @@ service cloud.firestore {
       );
     }
 
+    /** Champs analyse IA — écriture serveur uniquement */
+    function activityAnalysisFieldsUnchanged() {
+      let forbidden = [
+        'analysis_status',
+        'analysis_summary_fr',
+        'analysis_strengths',
+        'analysis_improvements',
+        'analysis_tactical_notes',
+        'analysis_confidence',
+        'analyzed_at',
+      ];
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(forbidden);
+    }
+
+    function validActivityCreateAnalysis() {
+      let d = request.resource.data;
+      return !('analysis_summary_fr' in d)
+        && !('analysis_strengths' in d)
+        && !('analysis_improvements' in d)
+        && !('analysis_tactical_notes' in d)
+        && !('analysis_confidence' in d)
+        && !('analyzed_at' in d)
+        && (!('analysis_status' in d) || d.analysis_status == 'pending_analysis');
+    }
+
     match /player_activities/{activityId} {
       allow read: if canReadPlayerActivity();
       allow create: if isSignedIn()
         && request.resource.data.player_uid == request.auth.uid
         && request.resource.data.type in ['match', 'training', 'recovery']
         && request.resource.data.duration_min is int
-        && request.resource.data.duration_min > 0;
+        && request.resource.data.duration_min > 0
+        && validActivityCreateAnalysis();
       allow update: if isSignedIn()
         && resource.data.player_uid == request.auth.uid
         && request.resource.data.player_uid == request.auth.uid
         && request.resource.data.type in ['match', 'training', 'recovery']
         && request.resource.data.duration_min is int
-        && request.resource.data.duration_min > 0;
+        && request.resource.data.duration_min > 0
+        && activityAnalysisFieldsUnchanged();
       allow delete: if isSignedIn() && resource.data.player_uid == request.auth.uid;
     }
 

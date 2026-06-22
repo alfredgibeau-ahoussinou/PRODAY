@@ -5,7 +5,7 @@ export type PlayerActivityType = 'match' | 'training' | 'recovery';
 
 export type PlayerActivitySource = 'manual' | 'team_event';
 
-export type PlayerActivityAnalysisStatus = 'pending_analysis' | 'analyzed';
+export type PlayerActivityAnalysisStatus = 'pending_analysis' | 'analyzed' | 'failed';
 
 export interface PlayerActivity {
   id: string;
@@ -17,10 +17,18 @@ export interface PlayerActivity {
   assists?: number;
   rating_self?: number;
   notes?: string;
-  /** Lien vers un highlight du profil — base analyse vidéo (phase future : IA). */
+  /** Lien vers un highlight du profil — base analyse vidéo IA. */
   video_url?: string;
-  /** Statut pipeline analyse vidéo — pending jusqu'à traitement réel. */
+  /** Miniature image optionnelle (frame poster) pour analyse vision sur MP4. */
+  thumbnail_url?: string;
+  /** Statut pipeline analyse — pending jusqu'à traitement réel. */
   analysis_status?: PlayerActivityAnalysisStatus;
+  analysis_summary_fr?: string;
+  analysis_strengths?: string[];
+  analysis_improvements?: string[];
+  analysis_tactical_notes?: string[];
+  analysis_confidence?: number;
+  analyzed_at?: Date;
   /** Tags performance manuels — agrégation client (IA vidéo = phase 2). */
   performance_tags?: PerformanceTag[];
   source: PlayerActivitySource;

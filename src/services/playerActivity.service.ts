@@ -18,6 +18,7 @@ import { playerActivityFromFirestore } from '../lib/firestoreMappers';
 import type { CreatePlayerActivityInput, PlayerActivity } from '../models/PlayerActivity';
 import type { TeamEvent } from '../models/TeamEvent';
 import { buildActivityFromTeamEvent } from '../utils/teamEventActivitySync';
+import { callFunction } from '../lib/firebaseFunctions';
 
 const COL = 'player_activities';
 
@@ -81,7 +82,13 @@ export const playerActivityService = {
 
     const ref = doc(collection(database, COL));
     await setDoc(ref, activityPayload(input));
-    return ref.id;
+    const activityId = ref.id;
+    if (input.video_url?.trim()) {
+      void playerActivityService.requestAnalysis(activityId).catch((error) => {
+        console.warn('[playerActivityService] auto analysis:', error);
+      });
+    }
+    return activityId;
   },
 
   async upsertFromTeamEvent(input: CreatePlayerActivityInput): Promise<string | null> {
@@ -126,6 +133,16 @@ export const playerActivityService = {
       throw new Error('Activité introuvable');
     }
     await deleteDoc(ref);
+  },
+
+  /** Lance l'analyse IA highlight / séance (callable europe-west1). */
+  async requestAnalysis(activityId: string, force = false): Promise<void> {
+    if (!isFirebaseConfigured()) return;
+    await callFunction<{ activityId: string; force?: boolean }, { status: string }>(
+      'analyzeActivityHighlight',
+      { activityId, force },
+      'europe-west1'
+    );
   },
 };
 

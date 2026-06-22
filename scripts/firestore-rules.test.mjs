@@ -676,6 +676,26 @@ async function run() {
     })
   );
 
+  await assertFails(
+    updateDoc(doc(carolDb, 'player_activities/act1'), {
+      analysis_status: 'analyzed',
+      analysis_summary_fr: 'Hack client',
+    })
+  );
+
+  await assertFails(
+    setDoc(doc(carolDb, 'player_activities/act-fake'), {
+      player_uid: 'carol',
+      type: 'match',
+      date: new Date(),
+      duration_min: 60,
+      source: 'manual',
+      created_at: new Date(),
+      analysis_status: 'analyzed',
+      analysis_summary_fr: 'Faux score IA',
+    })
+  );
+
   await assertSucceeds(
     setDoc(doc(carolDb, 'users/carol/health_program_progress/mental'), {
       completed_days: [1, 2],

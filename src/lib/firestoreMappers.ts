@@ -669,10 +669,27 @@ export function playerActivityFromFirestore(
     rating_self: data.rating_self != null ? Number(data.rating_self) : undefined,
     notes: data.notes != null ? String(data.notes) : undefined,
     video_url: data.video_url != null ? String(data.video_url) : undefined,
+    thumbnail_url: data.thumbnail_url != null ? String(data.thumbnail_url) : undefined,
     analysis_status:
-      data.analysis_status === 'pending_analysis' || data.analysis_status === 'analyzed'
+      data.analysis_status === 'pending_analysis' ||
+      data.analysis_status === 'analyzed' ||
+      data.analysis_status === 'failed'
         ? data.analysis_status
         : undefined,
+    analysis_summary_fr:
+      data.analysis_summary_fr != null ? String(data.analysis_summary_fr) : undefined,
+    analysis_strengths: Array.isArray(data.analysis_strengths)
+      ? (data.analysis_strengths as unknown[]).map(String).filter(Boolean)
+      : undefined,
+    analysis_improvements: Array.isArray(data.analysis_improvements)
+      ? (data.analysis_improvements as unknown[]).map(String).filter(Boolean)
+      : undefined,
+    analysis_tactical_notes: Array.isArray(data.analysis_tactical_notes)
+      ? (data.analysis_tactical_notes as unknown[]).map(String).filter(Boolean)
+      : undefined,
+    analysis_confidence:
+      data.analysis_confidence != null ? Number(data.analysis_confidence) : undefined,
+    analyzed_at: data.analyzed_at ? toDate(data.analyzed_at) : undefined,
     performance_tags: Array.isArray(data.performance_tags)
       ? (data.performance_tags as string[]).filter((t): t is PerformanceTag =>
           PERFORMANCE_TAGS.includes(t as PerformanceTag)

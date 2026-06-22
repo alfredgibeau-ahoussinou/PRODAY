@@ -17,10 +17,12 @@ import {
   notifySponsorOfferInCityCallable,
 } from './sponsorGeoPush';
 import { onTeamEventUpdated, syncTeamEventActivities } from './teamEventActivitySync';
+import { analyzeActivityHighlight } from './analyzeActivityHighlight';
 
 export { createPaymentCheckoutSession, stripeWebhook, createShopCheckoutSession };
 export { onSponsorOfferCreated, onSponsorOfferUpdated, notifySponsorOfferInCityCallable };
 export { onTeamEventUpdated, syncTeamEventActivities };
+export { analyzeActivityHighlight };
 export { activateStoreSubscription };
 export { onPlatformFeedCreated, onChatMessageCreated };
 export { onRecruitmentPostCreated };

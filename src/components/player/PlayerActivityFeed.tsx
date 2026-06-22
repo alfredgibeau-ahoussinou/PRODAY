@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Pressable, Linking } from 'react-native';
+import { View, StyleSheet, Pressable, Linking, ActivityIndicator, Alert } from 'react-native';
 import type { PlayerActivity } from '../../models/PlayerActivity';
 import { GlassCard } from '../aurora/GlassCard';
 import { ProDayText } from '../ui/ProDayText';
@@ -8,6 +8,7 @@ import { PressableSpring } from '../motion';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { useTranslation } from '../../context/LocaleContext';
 import { LogActivityScreen } from '../../screens/LogActivityScreen';
+import { playerActivityService } from '../../services/playerActivity.service';
 import { spacing, radius } from '../../theme/designTokens';
 
 interface PlayerActivityFeedProps {
@@ -29,9 +30,25 @@ export const PlayerActivityFeed: React.FC<PlayerActivityFeedProps> = ({
   const { colors } = useAppTheme();
   const { t } = useTranslation();
   const [logOpen, setLogOpen] = useState(false);
+  const [analyzingId, setAnalyzingId] = useState<string | null>(null);
 
   const formatDate = (d: Date) =>
     d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+
+  const handleAnalyze = async (activityId: string) => {
+    setAnalyzingId(activityId);
+    try {
+      await playerActivityService.requestAnalysis(activityId);
+      onActivityLogged?.();
+    } catch (e) {
+      Alert.alert(
+        t('activity.feed.analyzeError'),
+        e instanceof Error ? e.message : t('common.error')
+      );
+    } finally {
+      setAnalyzingId(null);
+    }
+  };
 
   return (
     <>
@@ -96,17 +113,47 @@ export const PlayerActivityFeed: React.FC<PlayerActivityFeedProps> = ({
                       </ProDayText>
                     </View>
                     {act.analysis_status === 'pending_analysis' ? (
-                      <View style={[styles.videoBadge, { backgroundColor: colors.surfaceMuted }]}>
-                        <ProDayText variant="caption" muted style={styles.badgeText}>
-                          {t('activity.feed.analysisPending')}
+                      <Pressable
+                        onPress={() => void handleAnalyze(act.id)}
+                        disabled={analyzingId === act.id}
+                        style={[styles.videoBadge, { backgroundColor: colors.surfaceMuted }]}
+                      >
+                        {analyzingId === act.id ? (
+                          <ActivityIndicator size="small" color={colors.accent} />
+                        ) : (
+                          <ProDayText variant="caption" accent style={styles.badgeText}>
+                            {t('activity.feed.analyze')}
+                          </ProDayText>
+                        )}
+                      </Pressable>
+                    ) : null}
+                    {act.analysis_status === 'failed' ? (
+                      <Pressable
+                        onPress={() => void handleAnalyze(act.id)}
+                        disabled={analyzingId === act.id}
+                      >
+                        <ProDayText variant="caption" muted style={styles.analysisFailed}>
+                          {act.analysis_summary_fr ?? t('activity.feed.analysisFailed')}
                         </ProDayText>
-                      </View>
+                      </Pressable>
                     ) : null}
                     <Pressable onPress={() => void Linking.openURL(act.video_url!)}>
                       <ProDayText variant="caption" accent style={styles.videoLink}>
                         {t('activity.feed.videoLink')}
                       </ProDayText>
                     </Pressable>
+                  </View>
+                ) : null}
+                {act.analysis_status === 'analyzed' && act.analysis_summary_fr ? (
+                  <View style={styles.analysisBlock}>
+                    <ProDayText variant="caption" style={styles.analysisSummary}>
+                      {act.analysis_summary_fr}
+                    </ProDayText>
+                    {act.analysis_strengths?.length ? (
+                      <ProDayText variant="caption" muted numberOfLines={2}>
+                        + {act.analysis_strengths.slice(0, 2).join(' · ')}
+                      </ProDayText>
+                    ) : null}
                   </View>
                 ) : null}
               </View>
@@ -162,4 +209,7 @@ const styles = StyleSheet.create({
   videoBadge: { paddingHorizontal: spacing.sm, paddingVertical: 2, borderRadius: radius.pill },
   badgeText: { fontWeight: '700', fontSize: 9 },
   videoLink: { fontWeight: '700' },
+  analysisBlock: { marginTop: 4, gap: 2 },
+  analysisSummary: { fontWeight: '600' },
+  analysisFailed: { fontWeight: '600', textDecorationLine: 'underline' },
 });

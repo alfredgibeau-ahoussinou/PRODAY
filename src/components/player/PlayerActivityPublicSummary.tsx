@@ -65,6 +65,11 @@ export const PlayerActivityPublicSummary: React.FC<PlayerActivityPublicSummaryPr
                   {act.notes}
                 </ProDayText>
               ) : null}
+              {act.analysis_status === 'analyzed' && act.analysis_summary_fr ? (
+                <ProDayText variant="caption" accent numberOfLines={2}>
+                  {act.analysis_summary_fr}
+                </ProDayText>
+              ) : null}
             </View>
           </View>
         ))
