@@ -6,6 +6,11 @@ const monorepoRoot = path.join(__dirname, "..");
 const nextConfig: NextConfig = {
   // Monorepo : racine PRODAY, sous-dossier website sur Vercel (Root Directory = website)
   outputFileTracingRoot: monorepoRoot,
+  // Netlify OpenNext : le handler /_next/image renvoie 502 (lambda status 0).
+  // Les assets dans public/ sont servis en statique ; on évite l'optimiseur distant.
+  images: {
+    unoptimized: true,
+  },
   async redirects() {
     return [
       { source: "/joueur", destination: "/joueurs", permanent: true },
