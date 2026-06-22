@@ -4,6 +4,9 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import { useState } from "react";
 import { PRO_MODULES } from "@/lib/content";
+import { UNIVERSE_THEME } from "@/components/universe/universeTheme";
+
+const theme = UNIVERSE_THEME.pro;
 
 export function ProModuleExplorer() {
   const [active, setActive] = useState(0);
@@ -21,8 +24,8 @@ export function ProModuleExplorer() {
               whileHover={{ x: 4 }}
               className={`rounded-2xl border p-5 text-left transition ${
                 active === i
-                  ? "border-blue-600 bg-blue-700 text-white shadow-lg shadow-blue-900/20"
-                  : "border-blue-200 bg-white hover:border-blue-300"
+                  ? theme.moduleActive
+                  : `${theme.moduleIdle} text-white/80`
               }`}
             >
               <span className="text-xs opacity-80">{m.subtitle}</span>
@@ -31,7 +34,7 @@ export function ProModuleExplorer() {
                 <motion.p
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: "auto" }}
-                  className="mt-2 text-sm text-blue-100"
+                  className={`mt-2 text-sm ${theme.moduleDesc}`}
                 >
                   {m.description}
                 </motion.p>

@@ -4,6 +4,9 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import { useState } from "react";
 import { WOMAN_MODULES } from "@/lib/content";
+import { UNIVERSE_THEME } from "@/components/universe/universeTheme";
+
+const theme = UNIVERSE_THEME.woman;
 
 export function WomanModuleExplorer() {
   const [active, setActive] = useState(0);
@@ -21,8 +24,8 @@ export function WomanModuleExplorer() {
               whileHover={{ x: 4 }}
               className={`rounded-2xl border p-5 text-left transition ${
                 active === i
-                  ? "border-pink-600 bg-pink-700 text-white shadow-lg shadow-pink-900/20"
-                  : "border-pink-200 bg-white hover:border-pink-300"
+                  ? theme.moduleActive
+                  : `${theme.moduleIdle} text-white/80`
               }`}
             >
               <span className="text-xs opacity-80">{m.subtitle}</span>
@@ -31,7 +34,7 @@ export function WomanModuleExplorer() {
                 <motion.p
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: "auto" }}
-                  className="mt-2 text-sm text-pink-100"
+                  className={`mt-2 text-sm ${theme.moduleDesc}`}
                 >
                   {m.description}
                 </motion.p>
@@ -44,7 +47,7 @@ export function WomanModuleExplorer() {
           key={mod.id}
           initial={{ opacity: 0, scale: 0.96 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="relative min-h-[400px] overflow-hidden rounded-3xl ring-2 ring-pink-200"
+          className={`relative min-h-[400px] overflow-hidden rounded-3xl ${theme.imageRing}`}
         >
           <Image src={mod.image} alt={mod.title} fill className="object-cover" />
           <div className="absolute inset-0 bg-gradient-to-t from-pink-950/80 via-pink-900/20 to-transparent" />

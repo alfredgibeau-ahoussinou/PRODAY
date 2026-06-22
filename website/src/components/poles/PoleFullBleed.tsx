@@ -6,7 +6,7 @@ type PoleFullBleedProps = {
   id?: string;
 };
 
-/** Échappe le conteneur `.page-light` pour des sections pleine largeur sombres. */
+/** Section pleine largeur (`w-screen`) pour les blocs pôle (tarifs, hero). */
 export function PoleFullBleed({ children, className, id }: PoleFullBleedProps) {
   return (
     <div

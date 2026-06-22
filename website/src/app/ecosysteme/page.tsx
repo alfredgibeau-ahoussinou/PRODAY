@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { EcosystemMap } from "@/components/interactive/EcosystemMap";
+import { PageBody } from "@/components/layout/PageBody";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { ROUTES } from "@/lib/routes";
 
@@ -20,9 +21,9 @@ export default function EcosystemPage() {
         image="/showcase/classic-arena.jpg"
         dark
       />
-      <section className="bg-[#030303] py-16 px-4 sm:px-6">
+      <PageBody py="sm">
         <EcosystemMap />
-      </section>
+      </PageBody>
     </>
   );
 }

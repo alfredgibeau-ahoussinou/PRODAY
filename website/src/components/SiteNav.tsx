@@ -7,32 +7,41 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import { navBrandForPath } from "@/components/universe/universeTheme";
-import { isNavActive } from "@/lib/siteArchitecture";
+import { isNavActive, poleForPath } from "@/lib/siteArchitecture";
+import { POLE_NAV_POLE_IDS, POLE_NAV_STRIPE, POLE_STYLES, type PoleId } from "@/lib/poles";
 import { POLE_NAV_ITEMS, ROUTES, UTILITY_NAV_ITEMS } from "@/lib/routes";
 
 function NavLink({
   href,
   label,
   active,
+  poleId,
   onClick,
 }: {
   href: string;
   label: string;
   active: boolean;
+  poleId?: PoleId | null;
   onClick?: () => void;
 }) {
+  const poleStyle = poleId ? POLE_STYLES[poleId] : null;
+
   return (
     <Link
       href={href}
       onClick={onClick}
       className={`relative rounded-full px-3.5 py-2 text-sm transition xl:px-4 ${
         active
-          ? "bg-white/10 font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]"
-          : "text-white/60 hover:bg-white/5 hover:text-white"
+          ? poleStyle
+            ? `${poleStyle.navActive} shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]`
+            : "bg-white/10 font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]"
+          : poleStyle
+            ? `${poleStyle.nav} font-medium`
+            : "text-white/60 hover:bg-white/5 hover:text-white"
       }`}
     >
       {label}
-      {active && (
+      {active && !poleStyle && (
         <span
           className="absolute inset-x-3 -bottom-px h-px bg-gradient-to-r from-transparent via-white/50 to-transparent"
           aria-hidden
@@ -59,13 +68,17 @@ export function SiteNav() {
 
   const brand = navBrandForPath(pathname);
   const isHome = pathname === ROUTES.home;
+  const currentPole = poleForPath(pathname);
+  const currentPoleStyles = currentPole ? POLE_STYLES[currentPole] : null;
 
   const close = () => setOpen(false);
 
   return (
     <motion.header
       style={{ backgroundColor: bg, borderBottomColor: border }}
-      className="fixed top-0 z-50 w-full border-b backdrop-blur-xl after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-gradient-to-r after:from-transparent after:via-white/10 after:to-transparent"
+      className={`fixed top-0 z-50 w-full border-b backdrop-blur-xl after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-gradient-to-r after:from-transparent after:via-white/10 after:to-transparent ${
+        currentPoleStyles?.accentTop ?? ""
+      }`}
     >
       <nav className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
         <Link href={ROUTES.home} className="group flex shrink-0 items-center gap-2.5">
@@ -89,6 +102,7 @@ export function SiteNav() {
                   href={l.href}
                   label={l.label}
                   active={isNavActive(l.href, pathname)}
+                  poleId={POLE_NAV_POLE_IDS[l.href]}
                 />
               </li>
             ))}
@@ -135,18 +149,31 @@ export function SiteNav() {
           <p className="pt-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-white/35">
             4 pôles
           </p>
-          {POLE_NAV_ITEMS.map((l) => (
-            <Link
-              key={l.href}
-              href={l.href}
-              className={`block py-3 text-sm ${
-                isNavActive(l.href, pathname) ? "font-semibold text-white" : "text-white/80"
-              }`}
-              onClick={close}
-            >
-              {l.label}
-            </Link>
-          ))}
+          {POLE_NAV_ITEMS.map((l) => {
+            const poleId = POLE_NAV_POLE_IDS[l.href];
+            const styles = POLE_STYLES[poleId];
+            const active = isNavActive(l.href, pathname);
+            return (
+              <Link
+                key={l.href}
+                href={l.href}
+                className={`flex items-center gap-3 rounded-xl py-3 pl-3 pr-4 text-sm transition ${
+                  active
+                    ? `${styles.navActive} font-semibold`
+                    : "text-white/80 hover:bg-white/5"
+                }`}
+                onClick={close}
+              >
+                <span
+                  className={`h-8 w-1 shrink-0 rounded-full ${
+                    active ? "bg-white/90" : POLE_NAV_STRIPE[poleId]
+                  }`}
+                  aria-hidden
+                />
+                {l.label}
+              </Link>
+            );
+          })}
           <p className="pt-4 text-[10px] font-semibold uppercase tracking-[0.2em] text-white/35">
             Produit
           </p>

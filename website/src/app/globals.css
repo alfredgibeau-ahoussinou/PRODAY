@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 :root {
-  /* Texte sur fond clair (pages internes via .page-light) */
+  /* Texte sur fond sombre (shell global .page-dark) */
   --proday-ink: #0a0a0a;
   --proday-ink-muted: #525252;
   --proday-bg: #030303;
@@ -128,13 +128,6 @@ body {
     #030303;
 }
 
-.gradient-mesh-light {
-  background:
-    radial-gradient(ellipse 80% 50% at 20% 40%, rgba(10, 10, 10, 0.04), transparent),
-    radial-gradient(ellipse 60% 40% at 80% 20%, rgba(38, 38, 38, 0.03), transparent),
-    #fafafa;
-}
-
 .glass {
   background: rgba(12, 12, 14, 0.72);
   backdrop-filter: blur(20px);
@@ -179,15 +172,6 @@ body {
     linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
   background-size: 64px 64px;
-}
-
-.page-light {
-  --background: #fafafa;
-  --foreground: #0a0a0a;
-  --proday-ink: #0a0a0a;
-  --proday-ink-muted: #525252;
-  background: #fafafa;
-  color: #0a0a0a;
 }
 
 .page-dark {

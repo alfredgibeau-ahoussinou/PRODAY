@@ -81,6 +81,20 @@ export const POLES: PoleDefinition[] = [
   },
 ];
 
+export const POLE_NAV_POLE_IDS: Record<string, PoleId> = {
+  [ROUTES.joueurs]: "joueur",
+  [ROUTES.pro]: "pro",
+  [ROUTES.sante]: "sante",
+  [ROUTES.partenaires]: "sponsor",
+};
+
+export const POLE_NAV_STRIPE: Record<PoleId, string> = {
+  joueur: "bg-emerald-500",
+  pro: "bg-blue-500",
+  sante: "bg-teal-500",
+  sponsor: "bg-amber-400",
+};
+
 export const POLE_STYLES: Record<
   PoleId,
   {

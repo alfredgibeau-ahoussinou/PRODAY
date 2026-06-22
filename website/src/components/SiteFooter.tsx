@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { BRAND } from "@/lib/content";
+import { POLE_NAV_POLE_IDS, POLE_NAV_STRIPE } from "@/lib/poles";
 import { POLE_FOOTER_LINKS, ROUTES, UTILITY_NAV_ITEMS } from "@/lib/routes";
 
 export function SiteFooter() {
@@ -50,18 +51,30 @@ export function SiteFooter() {
               4 pôles
             </p>
             <ul className="mt-4 space-y-3">
-              {POLE_FOOTER_LINKS.map((pole) => (
-                <li key={pole.href}>
-                  <Link href={pole.href} className="group block hover:text-white">
-                    <span className="text-sm font-medium text-white/80 group-hover:text-white">
-                      {pole.label}
-                    </span>
-                    <span className="mt-0.5 block text-xs text-white/40">
-                      {pole.subtitle}
-                    </span>
-                  </Link>
-                </li>
-              ))}
+              {POLE_FOOTER_LINKS.map((pole) => {
+                const poleId = POLE_NAV_POLE_IDS[pole.href];
+                return (
+                  <li key={pole.href}>
+                    <Link
+                      href={pole.href}
+                      className="group flex items-start gap-3 hover:text-white"
+                    >
+                      <span
+                        className={`mt-1 h-8 w-1 shrink-0 rounded-full ${POLE_NAV_STRIPE[poleId]}`}
+                        aria-hidden
+                      />
+                      <span>
+                        <span className="text-sm font-medium text-white/80 group-hover:text-white">
+                          {pole.label}
+                        </span>
+                        <span className="mt-0.5 block text-xs text-white/40">
+                          {pole.subtitle}
+                        </span>
+                      </span>
+                    </Link>
+                  </li>
+                );
+              })}
             </ul>
           </div>
 

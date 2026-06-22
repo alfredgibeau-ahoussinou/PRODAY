@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { DemoDisclaimer } from "@/components/demo/DemoDisclaimer";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { PageCtaBand } from "@/components/layout/PageCtaBand";
 import { PremiumSection } from "@/components/layout/PremiumSection";
 import { PremiumButton } from "@/components/ui/PremiumButton";
 import { HOMME_BRAND, WOMAN_BRAND } from "@/lib/content";
@@ -171,19 +172,17 @@ export default function JoueursPage() {
         </div>
       </PremiumSection>
 
-      <section className="border-t border-white/8 bg-[#030303] py-16">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-4 px-4 sm:px-6">
-          <PremiumButton href={`${ROUTES.pricing}#joueur`} variant="outline">
-            Voir les tarifs Joueur
-          </PremiumButton>
-          <PremiumButton href={demoUrlForUniverse("homme")} variant="outline">
-            Démo interactive
-          </PremiumButton>
-          <PremiumButton href={ROUTES.beta} className="!bg-emerald-500 !text-white hover:!bg-emerald-400">
-            Accès anticipé
-          </PremiumButton>
-        </div>
-      </section>
+      <PageCtaBand pole="joueur">
+        <PremiumButton href={`${ROUTES.pricing}#joueur`} variant="outline">
+          Voir les tarifs Joueur
+        </PremiumButton>
+        <PremiumButton href={demoUrlForUniverse("homme")} variant="outline">
+          Démo interactive
+        </PremiumButton>
+        <PremiumButton href={ROUTES.beta} className="!bg-emerald-500 !text-white hover:!bg-emerald-400">
+          Accès anticipé
+        </PremiumButton>
+      </PageCtaBand>
     </>
   );
 }

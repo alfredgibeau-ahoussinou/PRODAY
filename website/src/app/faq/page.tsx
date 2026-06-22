@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { FaqAccordion } from "@/components/interactive/FaqAccordion";
+import { PageBody } from "@/components/layout/PageBody";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { ROUTES } from "@/lib/routes";
 
@@ -19,17 +20,15 @@ export default function FaqPage() {
         description="Tout ce qu'il faut savoir avant l'inscription — tarifs, pôles, Reels et partenaires."
         dark
       />
-      <section className="bg-[#030303] py-16">
-        <div className="mx-auto max-w-2xl px-4 sm:px-6">
-          <FaqAccordion />
-          <p className="mt-12 text-center text-white/55">
+      <PageBody narrow>
+        <FaqAccordion />
+        <p className="mt-12 text-center text-white/55">
             Une autre question ?{" "}
             <Link href={ROUTES.beta} className="font-semibold text-white underline">
               Nous contacter via la liste d&apos;attente
             </Link>
-          </p>
-        </div>
-      </section>
+        </p>
+      </PageBody>
     </>
   );
 }

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { ComparisonTable } from "@/components/interactive/ComparisonTable";
+import { PageBody } from "@/components/layout/PageBody";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { ROUTES } from "@/lib/routes";
 
@@ -18,14 +19,14 @@ export default function ComparePage() {
         description="Groupes dispersés, statistiques absentes, recrutement non structuré — ProDay centralise l'essentiel."
         dark
       />
-      <section className="bg-[#030303] py-16">
-        <div className="mx-auto max-w-4xl px-4 sm:px-6">
+      <PageBody>
+        <div className="mx-auto max-w-4xl">
           <ComparisonTable />
           <p className="mt-8 text-center text-sm text-white/40">
             Complet · Partiel · Absent
           </p>
         </div>
-      </section>
+      </PageBody>
     </>
   );
 }

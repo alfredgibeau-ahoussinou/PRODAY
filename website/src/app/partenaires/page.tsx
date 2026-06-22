@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { PageCtaBand } from "@/components/layout/PageCtaBand";
 import { PremiumSection } from "@/components/layout/PremiumSection";
 import { SponsorPricingSection } from "@/components/sponsor/SponsorPricingSection";
 import { PremiumButton } from "@/components/ui/PremiumButton";
@@ -32,19 +33,15 @@ export default function PartenairesPage() {
       >
         <SponsorPricingSection dark />
       </PremiumSection>
-      <section className="border-t border-white/8 bg-[#030303] py-16">
-        <div className="mx-auto max-w-3xl px-4 text-center sm:px-6">
-          <p className="text-white/55">
-            Inscrivez-vous sur la liste d&apos;attente en tant que partenaire pour préparer votre espace Sponsors
-            dès l&apos;ouverture mobile.
-          </p>
-          <div className="mt-6 flex justify-center">
-            <PremiumButton href={`${ROUTES.beta}?role=sponsor`}>
-              Accès anticipé — rôle Partenaire
-            </PremiumButton>
-          </div>
-        </div>
-      </section>
+      <PageCtaBand pole="sponsor" align="between">
+        <p className="max-w-xl text-center text-white/55 sm:text-left">
+          Inscrivez-vous sur la liste d&apos;attente en tant que partenaire pour préparer votre espace
+          Sponsors dès l&apos;ouverture mobile.
+        </p>
+        <PremiumButton href={`${ROUTES.beta}?role=sponsor`}>
+          Accès anticipé — rôle Partenaire
+        </PremiumButton>
+      </PageCtaBand>
     </>
   );
 }

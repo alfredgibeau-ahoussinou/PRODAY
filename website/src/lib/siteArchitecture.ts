@@ -218,6 +218,13 @@ export function isPolePage(pathname: string): boolean {
   return pageMetaForPath(pathname).category === "pole";
 }
 
+/** Affiche la barre contextuelle sur les hubs pôle et les pages outils rattachées (pulse, cv…). */
+export function showPoleContextBar(pathname: string): boolean {
+  const meta = pageMetaForPath(pathname);
+  if (meta.category === "pole") return true;
+  return Boolean(meta.poleHubPath && meta.poleId);
+}
+
 export function poleHubForPath(pathname: string): string | null {
   const meta = pageMetaForPath(pathname);
   if (meta.poleHubPath) return meta.poleHubPath;
