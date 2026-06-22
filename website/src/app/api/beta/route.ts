@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { BETA_ROLE_LABELS, isBetaRoleId } from "@/lib/betaWelcomeEmail";
 import { resolveBetaSiteUrl } from "@/lib/betaEmailConfig";
 import {
+  describeBetaEmailJsFailure,
   getEmailJsBetaConfig,
   sendBetaWelcomeEmailViaEmailJs,
 } from "@/lib/betaEmailjs";
@@ -66,9 +67,12 @@ export async function POST(request: Request) {
       siteUrl,
     });
   } catch (e) {
-    const message = e instanceof Error ? e.message : "Envoi impossible";
-    console.error("[api/beta]", message);
-    return NextResponse.json({ error: "Envoi email impossible" }, { status: 502 });
+    const { log, hint } = describeBetaEmailJsFailure(e);
+    console.error("[api/beta]", log, hint ?? "");
+    return NextResponse.json(
+      { error: "Envoi email impossible", ...(hint ? { hint } : {}) },
+      { status: 502 }
+    );
   }
 
   return NextResponse.json({ ok: true, emailSent: true, isNew: true });

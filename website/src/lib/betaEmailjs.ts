@@ -40,6 +40,42 @@ export function buildBetaEmailJsTemplateParams(
   };
 }
 
+/** Message opérateur à partir d'une erreur EmailJS (logs + réponse API). */
+export function describeBetaEmailJsFailure(error: unknown): {
+  log: string;
+  hint?: string;
+} {
+  const raw =
+    error instanceof Error
+      ? error.message
+      : typeof error === "object" && error !== null && "text" in error
+        ? String((error as { text: unknown }).text)
+        : "Envoi impossible";
+
+  if (/invalid grant|gmail_api/i.test(raw)) {
+    return {
+      log: raw,
+      hint:
+        "Reconnectez le compte Gmail dans EmailJS (Email Services → Reconnect).",
+    };
+  }
+  if (/412/.test(raw)) {
+    return {
+      log: raw,
+      hint: "Vérifiez le service email connecté dans le dashboard EmailJS.",
+    };
+  }
+  if (/403|401|unauthorized|forbidden/i.test(raw)) {
+    return {
+      log: raw,
+      hint:
+        "Clés EmailJS invalides ou API non-navigateur désactivée (Account → Security).",
+    };
+  }
+
+  return { log: raw };
+}
+
 /** Envoi via EmailJS (clés serveur — ne jamais exposer côté client). */
 export async function sendBetaWelcomeEmailViaEmailJs(
   config: EmailJsBetaConfig,
@@ -47,10 +83,15 @@ export async function sendBetaWelcomeEmailViaEmailJs(
 ): Promise<void> {
   const templateParams = buildBetaEmailJsTemplateParams(params);
 
-  await emailjs.send(config.serviceId, config.templateId, templateParams, {
-    publicKey: config.publicKey,
-    privateKey: config.privateKey,
-  });
+  try {
+    await emailjs.send(config.serviceId, config.templateId, templateParams, {
+      publicKey: config.publicKey,
+      privateKey: config.privateKey,
+    });
+  } catch (error) {
+    const { log } = describeBetaEmailJsFailure(error);
+    throw new Error(log);
+  }
 }
 
 /** Même envoi via fetch (Cloud Functions, sans dépendance npm). */
