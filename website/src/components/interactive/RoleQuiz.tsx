@@ -91,7 +91,7 @@ export function RoleQuiz({ compact }: { compact?: boolean }) {
             <div className="mt-6 flex flex-wrap gap-3">
               <Link
                 href={result.href}
-                className="rounded-full bg-white px-6 py-2.5 text-sm font-semibold text-proday-ink"
+                className="rounded-full bg-white px-6 py-2.5 text-sm font-semibold text-neutral-950 hover:bg-neutral-100 active:bg-neutral-200"
               >
                 {result.cta}
               </Link>

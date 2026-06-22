@@ -37,8 +37,8 @@ function NavLink({
             ? `${poleStyle.navActive} shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]`
             : "bg-white/10 font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]"
           : poleStyle
-            ? `${poleStyle.nav} font-medium`
-            : "text-white/60 hover:bg-white/5 hover:text-white"
+            ? `${poleStyle.nav} font-medium active:opacity-80`
+            : "text-white/60 hover:bg-white/5 hover:text-white active:bg-white/10 active:text-white"
       }`}
     >
       {label}
@@ -125,7 +125,7 @@ export function SiteNav() {
         <div className="hidden shrink-0 md:flex">
           <Link
             href={ROUTES.beta}
-            className="rounded-full bg-white px-5 py-2 text-sm font-semibold text-neutral-950 transition hover:scale-[1.02] hover:bg-neutral-100"
+            className="rounded-full bg-white px-5 py-2 text-sm font-semibold text-neutral-950 transition hover:scale-[1.02] hover:bg-neutral-100 active:bg-neutral-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/50"
           >
             Accès anticipé
           </Link>
@@ -133,7 +133,7 @@ export function SiteNav() {
 
         <button
           type="button"
-          className="rounded-lg p-2 text-white xl:hidden"
+          className="rounded-lg p-2 text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-white/40 xl:hidden"
           onClick={() => setOpen(!open)}
           aria-label="Menu"
         >

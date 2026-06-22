@@ -20,11 +20,11 @@ export function PremiumButton({
       className={clsx(
         "inline-flex items-center justify-center gap-2 rounded-full px-7 py-3.5 text-sm font-semibold transition duration-300",
         variant === "primary" &&
-          "bg-white text-neutral-950 shadow-lg shadow-white/10 hover:scale-[1.02] hover:bg-neutral-100",
+          "bg-white text-neutral-950 shadow-lg shadow-white/10 hover:scale-[1.02] hover:bg-neutral-100 active:bg-neutral-200",
         variant === "ghost" &&
-          "bg-white/10 text-white backdrop-blur-sm hover:bg-white/15",
+          "bg-white/10 text-white backdrop-blur-sm hover:bg-white/15 active:bg-white/20",
         variant === "outline" &&
-          "border border-white/20 text-white hover:border-white/40 hover:bg-white/5",
+          "border border-white/20 text-white hover:border-white/40 hover:bg-white/5 active:bg-white/10 active:text-white",
         className,
       )}
     >

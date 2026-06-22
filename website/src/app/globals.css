@@ -177,7 +177,6 @@ body {
 .page-dark {
   --background: #030303;
   --foreground: #fafafa;
-  --proday-ink: #fafafa;
   --proday-ink-muted: rgba(255, 255, 255, 0.5);
   background: #030303;
   color: #fafafa;
@@ -187,8 +186,15 @@ body {
   color: rgba(255, 255, 255, 0.5);
 }
 
-.page-dark .text-proday-ink {
-  color: #fafafa;
+/* Champs sur fond sombre — texte lisible à l'autofill et au focus */
+.page-dark input:-webkit-autofill,
+.page-dark input:-webkit-autofill:hover,
+.page-dark input:-webkit-autofill:focus,
+.page-dark input:-webkit-autofill:active {
+  -webkit-text-fill-color: #fafafa;
+  caret-color: #fafafa;
+  box-shadow: 0 0 0 1000px rgba(255, 255, 255, 0.1) inset;
+  transition: background-color 5000s ease-in-out 0s;
 }
 
 /* Sections pôle pleine largeur (tarifs, home) */

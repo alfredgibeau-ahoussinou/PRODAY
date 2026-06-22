@@ -128,10 +128,10 @@ export function WaitlistForm({ fullPage, initialRole }: WaitlistFormProps) {
                     key={r.id}
                     type="button"
                     onClick={() => setRole(r.id)}
-                    className={`rounded-full px-4 py-2 text-sm transition ${
+                    className={`rounded-full px-4 py-2 text-sm transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/50 ${
                       role === r.id
-                        ? "bg-white text-proday-ink"
-                        : "bg-white/10 hover:bg-white/20"
+                        ? "bg-white text-neutral-950 active:bg-neutral-100"
+                        : "bg-white/10 text-white hover:bg-white/20 active:bg-white/25"
                     }`}
                   >
                     {r.label}
@@ -146,12 +146,12 @@ export function WaitlistForm({ fullPage, initialRole }: WaitlistFormProps) {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={state === "loading"}
-                  className="flex-1 rounded-full border-0 bg-white/10 px-5 py-3.5 text-white placeholder:text-white/50 focus:outline focus:outline-2 focus:outline-white/40 disabled:opacity-60"
+                  className="flex-1 rounded-full border-0 bg-white/10 px-5 py-3.5 text-white caret-white placeholder:text-white/50 focus:outline focus:outline-2 focus:outline-white/40 disabled:opacity-60"
                 />
                 <button
                   type="submit"
                   disabled={state === "loading"}
-                  className="rounded-full bg-white px-8 py-3.5 font-semibold text-proday-ink transition hover:bg-neutral-100 disabled:opacity-60"
+                  className="rounded-full bg-white px-8 py-3.5 font-semibold text-neutral-950 transition hover:bg-neutral-100 active:bg-neutral-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/50 disabled:opacity-60"
                 >
                   {state === "loading" ? "Envoi…" : "S'inscrire"}
                 </button>
