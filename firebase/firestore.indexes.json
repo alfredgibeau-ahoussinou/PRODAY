@@ -157,6 +157,22 @@
         { "fieldPath": "notification_preferences.sponsor_geo_opt_in", "order": "ASCENDING" },
         { "fieldPath": "city", "order": "ASCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "player_activities",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "player_uid", "order": "ASCENDING" },
+        { "fieldPath": "date", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "player_activities",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "player_uid", "order": "ASCENDING" },
+        { "fieldPath": "team_event_id", "order": "ASCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []

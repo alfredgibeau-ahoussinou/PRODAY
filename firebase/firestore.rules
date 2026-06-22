@@ -278,6 +278,34 @@ service cloud.firestore {
       allow read, write: if isOwner(userId);
     }
 
+    match /users/{userId}/health_program_progress/{programId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    /** Journal d'activité joueur — propriétaire ou staff recruteur */
+    function canReadPlayerActivity() {
+      return isSignedIn() && (
+        resource.data.player_uid == request.auth.uid
+        || userDoc(request.auth.uid).data.role in ['recruiter', 'club', 'coach', 'agent', 'organizer']
+      );
+    }
+
+    match /player_activities/{activityId} {
+      allow read: if canReadPlayerActivity();
+      allow create: if isSignedIn()
+        && request.resource.data.player_uid == request.auth.uid
+        && request.resource.data.type in ['match', 'training', 'recovery']
+        && request.resource.data.duration_min is int
+        && request.resource.data.duration_min > 0;
+      allow update: if isSignedIn()
+        && resource.data.player_uid == request.auth.uid
+        && request.resource.data.player_uid == request.auth.uid
+        && request.resource.data.type in ['match', 'training', 'recovery']
+        && request.resource.data.duration_min is int
+        && request.resource.data.duration_min > 0;
+      allow delete: if isSignedIn() && resource.data.player_uid == request.auth.uid;
+    }
+
     match /messages/{msgId} {
       allow create: if canSendMessage()
         && request.resource.data.sender_id == request.auth.uid

@@ -33,7 +33,12 @@ import { useDashboardData } from '../../hooks/useDashboardData';
 import { useStaffMercatoPipeline } from '../../hooks/useStaffMercatoPipeline';
 import { ActivityFeedStrip } from './components/ActivityFeedStrip';
 import { HealthProgramCard } from './components/HealthProgramCard';
+import { MentalProgramCard } from './components/MentalProgramCard';
+import { CareerScoreCard } from '../../components/player/CareerScoreCard';
+import { WeeklyGoalSettings } from '../../components/player/WeeklyGoalSettings';
+import { PlayerActivityFeed } from '../../components/player/PlayerActivityFeed';
 import { buildActivityFeed } from '../v3/engines/activityFeed.engine';
+import { usePlayerActivities, useCareerProgression } from '../../hooks/useCareerProgression';
 import { HealthScoreExplainSheet } from '../../components/health/HealthScoreExplainSheet';
 import { ProDayModuleGrid } from '../../components/ui/ProDayModuleGrid';
 import type { ProDayModuleId } from '../../content/prodayModules';
@@ -93,6 +98,13 @@ export const HomeIaDashboard: React.FC<HomeIaDashboardProps> = ({
   const { data: dashboardData } = useDashboardData(profile);
   const mercatoPipeline = useStaffMercatoPipeline(profile);
   const isStaffHome = profile.role !== 'player';
+  const { activities, loading: activitiesLoading, refresh: refreshActivities } =
+    usePlayerActivities(!isStaffHome ? profile.uid : undefined);
+  const career = useCareerProgression(!isStaffHome ? profile : null, {
+    activities,
+    mercatoApplicationsCount: dashboardData.myApplications.length,
+    streakDays: brain.progression.streakDays,
+  });
   const staffPriorities = useMemo(
     () =>
       isStaffHome
@@ -314,6 +326,28 @@ export const HomeIaDashboard: React.FC<HomeIaDashboardProps> = ({
             />
           ) : null}
 
+          {!isStaffHome ? <MentalProgramCard uid={profile.uid} /> : null}
+
+          {!isStaffHome && career ? <CareerScoreCard career={career} /> : null}
+
+          {!isStaffHome && career ? (
+            <WeeklyGoalSettings
+              target={career.weeklySessionTarget}
+              sessionCount={career.weeklySessionCount}
+              onChangeTarget={career.setWeeklySessionTarget}
+            />
+          ) : null}
+
+          {!isStaffHome ? (
+            <PlayerActivityFeed
+              uid={profile.uid}
+              activities={activities}
+              highlightVideoUrls={profile.profile.highlight_video_urls}
+              loading={activitiesLoading}
+              onActivityLogged={() => void refreshActivities()}
+            />
+          ) : null}
+
           {isStaffHome ? (
             <GeoMapPreview
               userLocation={userLocation}
@@ -328,7 +362,10 @@ export const HomeIaDashboard: React.FC<HomeIaDashboardProps> = ({
             />
           ) : null}
 
-          <ProgressionBlock progression={brain.progression} />
+          <ProgressionBlock
+            progression={brain.progression}
+            weeklyGoalPercent={career?.weeklyGoalPercent ?? 0}
+          />
 
           <ReelsPreviewStrip items={brain.reelPreviews} onPress={() => nav.setActiveTab('reels')} />
         </>

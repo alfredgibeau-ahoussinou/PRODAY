@@ -40,6 +40,8 @@ import { callFunction } from '../lib/firebaseFunctions';
 import { usersService } from './users.service';
 import { profileService } from './profile.service';
 import { assertTeamEventManageAccess, assertTeamEventRsvpAccess } from '../utils/teamEventAccess';
+import { buildActivityFromTeamEvent } from '../utils/teamEventActivitySync';
+import { playerActivityService } from './playerActivity.service';
 import type { User } from '../models/User';
 
 export type TeamEventActor = {
@@ -64,6 +66,28 @@ function buildInitialRsvps(inviteeUids: string[]): Record<string, RsvpStatus> {
   const rsvps: Record<string, RsvpStatus> = {};
   for (const uid of inviteeUids) rsvps[uid] = 'pending';
   return rsvps;
+}
+
+async function syncPlayerActivityFromEvent(event: TeamEvent, playerUid: string): Promise<void> {
+  const input = buildActivityFromTeamEvent(event, playerUid);
+  if (!input) return;
+  try {
+    await playerActivityService.upsertFromTeamEvent(input);
+  } catch (error) {
+    console.warn('[teamEvents] syncPlayerActivityFromEvent:', error);
+  }
+}
+
+async function syncTeamEventActivitiesOnServer(eventId: string): Promise<void> {
+  try {
+    await callFunction<{ eventId: string }, { synced: number; skipped: number }>(
+      'syncTeamEventActivities',
+      { eventId },
+      'europe-west1'
+    );
+  } catch {
+    /* trigger ou callable non déployé */
+  }
 }
 
 export const teamEventsService = {
@@ -106,6 +130,38 @@ export const teamEventsService = {
         e.invitee_uids.includes(uid) ||
         (clubId && e.club_id === clubId)
     );
+  },
+
+  /** Historique participation joueur (passé récent) — sync activités carrière. */
+  async listParticipationHistory(uid: string, max = 80): Promise<TeamEvent[]> {
+    if (!isFirebaseConfigured()) return [];
+    const database = getDb();
+    if (!database) return [];
+
+    const cutoff = Date.now() - 90 * 86400000;
+    try {
+      const q = query(collection(database, COL), orderBy('starts_at', 'desc'), limit(max * 2));
+      const snap = await getDocs(q);
+      return snap.docs
+        .map((d) => teamEventFromFirestore(d.id, d.data() as Record<string, unknown>))
+        .filter(
+          (e) =>
+            (e.organizer_uid === uid || e.invitee_uids.includes(uid)) &&
+            e.starts_at.getTime() >= cutoff
+        )
+        .slice(0, max);
+    } catch {
+      const snap = await getDocs(collection(database, COL));
+      return snap.docs
+        .map((d) => teamEventFromFirestore(d.id, d.data() as Record<string, unknown>))
+        .filter(
+          (e) =>
+            (e.organizer_uid === uid || e.invitee_uids.includes(uid)) &&
+            e.starts_at.getTime() >= cutoff
+        )
+        .sort((a, b) => b.starts_at.getTime() - a.starts_at.getTime())
+        .slice(0, max);
+    }
   },
 
   /** Événements club (passés + à venir) — bilan covoiturage saison */
@@ -244,6 +300,7 @@ export const teamEventsService = {
     if (status === 'yes') {
       const updated = { ...event, rsvps: { ...event.rsvps, [uid]: status } };
       await teamChatService.ensureTeamThread(updated);
+      await syncPlayerActivityFromEvent(updated, uid);
     }
   },
 
@@ -275,6 +332,7 @@ export const teamEventsService = {
           : event.rsvp_notes,
       };
       await teamChatService.ensureTeamThread(updated);
+      await syncPlayerActivityFromEvent(updated, uid);
     }
   },
 
@@ -293,6 +351,14 @@ export const teamEventsService = {
       [`attendance_marks.${uid}`]: mark,
       updated_at: serverTimestamp(),
     });
+    if (mark === 'present' || mark === 'late') {
+      const updated = {
+        ...event,
+        attendance_marks: { ...event.attendance_marks, [uid]: mark },
+      };
+      await syncPlayerActivityFromEvent(updated, uid);
+      await syncTeamEventActivitiesOnServer(eventId);
+    }
   },
 
   async addInvitees(eventId: string, uids: string[], actor: TeamEventActor): Promise<void> {
@@ -325,6 +391,11 @@ export const teamEventsService = {
       lineup,
       updated_at: serverTimestamp(),
     });
+    const updated = { ...event, lineup };
+    for (const slot of lineup.slots) {
+      await syncPlayerActivityFromEvent(updated, slot.uid);
+    }
+    await syncTeamEventActivitiesOnServer(eventId);
   },
 
   async addLiveAction(

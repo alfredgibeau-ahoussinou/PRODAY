@@ -64,6 +64,30 @@ firebase deploy --only firestore:rules
 
 ---
 
+## Sync team_events → player_activities (`teamEventActivitySync.ts`)
+
+Quand le staff met à jour la présence, la compo ou les stats d'un `team_event`, le serveur crée ou met à jour les documents `player_activities` des joueurs concernés (déduplication par `player_uid` + `team_event_id`).
+
+### Trigger Firestore Gen2 (`europe-west1`)
+
+- **`onTeamEventUpdated`** — écoute `team_events/{eventId}` (champs présence, compo, stats, RSVP, live)
+
+### Callable (filet de secours)
+
+- **`syncTeamEventActivities`** — Gen2 `onCall`, région `europe-west1`
+- Auth : organisateur de l'événement, staff club (`coach`, `agent`, `organizer`) ou admin
+- Paramètres : `{ eventId: string }`
+- Le client appelle ce callable après `markAttendance` / `saveLineup` (`teamEvents.service.ts`) si le trigger n'est pas déployé.
+
+```bash
+cd functions && npm run build
+firebase deploy --only functions:onTeamEventUpdated,functions:syncTeamEventActivities
+```
+
+**Note** : comme pour les triggers sponsor, un passage Gen1 → Gen2 peut exiger la suppression de l'ancienne fonction avant redéploiement.
+
+---
+
 ## Migration Gen1 → Gen2 (historique)
 
 Les triggers sponsor geo étaient en Gen1 (`functions.region('europe-west1').firestore`). Ils sont passés en **Gen2** pour compatibilité eur3 et déploiement fiable. Les autres fonctions du projet restent en Gen1 pour l'instant.

@@ -16,9 +16,11 @@ import {
   onSponsorOfferUpdated,
   notifySponsorOfferInCityCallable,
 } from './sponsorGeoPush';
+import { onTeamEventUpdated, syncTeamEventActivities } from './teamEventActivitySync';
 
 export { createPaymentCheckoutSession, stripeWebhook, createShopCheckoutSession };
 export { onSponsorOfferCreated, onSponsorOfferUpdated, notifySponsorOfferInCityCallable };
+export { onTeamEventUpdated, syncTeamEventActivities };
 export { activateStoreSubscription };
 export { onPlatformFeedCreated, onChatMessageCreated };
 export { onRecruitmentPostCreated };

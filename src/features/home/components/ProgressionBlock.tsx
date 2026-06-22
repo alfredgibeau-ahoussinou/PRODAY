@@ -4,6 +4,7 @@ import { GlassCard } from '../../../components/aurora/GlassCard';
 import { ProDayText } from '../../../components/ui/ProDayText';
 import { AnimatedEntrance } from '../../../components/motion';
 import { useAppTheme } from '../../../context/ProductLineContext';
+import { useTranslation } from '../../../context/LocaleContext';
 import type { GamificationState } from '../../../features/v3/models/gamification';
 import { spacing, radius } from '../../../theme/designTokens';
 
@@ -15,9 +16,10 @@ interface ProgressionBlockProps {
 /** Bloc progression XP / niveau / streak (spec §4.6). */
 export const ProgressionBlock: React.FC<ProgressionBlockProps> = ({
   progression,
-  weeklyGoalPercent = 65,
+  weeklyGoalPercent = 0,
 }) => {
   const { colors } = useAppTheme();
+  const { t } = useTranslation();
 
   return (
     <AnimatedEntrance kind="fadeUp">
@@ -39,7 +41,7 @@ export const ProgressionBlock: React.FC<ProgressionBlockProps> = ({
               {progression.streakDays}
             </ProDayText>
             <ProDayText variant="caption" muted style={styles.streakLabel}>
-              jours
+              {t('progression.streakDays')}
             </ProDayText>
           </View>
         </View>
@@ -66,7 +68,7 @@ export const ProgressionBlock: React.FC<ProgressionBlockProps> = ({
 
         <View style={styles.goalRow}>
           <ProDayText variant="caption" muted>
-            Objectif hebdo
+            {t('progression.weeklyGoal')}
           </ProDayText>
           <ProDayText variant="caption" accent style={styles.goalValue}>
             {weeklyGoalPercent}%

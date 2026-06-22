@@ -41,6 +41,8 @@ import { ScreenBackButton } from '../components/ui/ScreenBackButton';
 import { useProDayBrain } from '../hooks/useProDayBrain';
 import { getPostMercatoFit } from '../features/v3/engines/mercatoPostDetail.engine';
 import { buildOneClickCoverLetter } from '../utils/recruitmentOneClick';
+import { RecruiterRecommendationsPanel } from '../components/recruitment/RecruiterRecommendationsPanel';
+import { useRecruiterRecommendations } from '../hooks/useRecruiterRecommendations';
 
 const MAX_LETTER = 600;
 
@@ -121,6 +123,14 @@ export const RecruitmentPostScreen: React.FC<RecruitmentPostScreenProps> = ({
   const letterCount = coverLetter.trim().length;
   const letterOk = letterCount >= 20;
   const completion = profile ? getProfileCompletion(profile) : null;
+  const appliedPlayerUids = useMemo(
+    () => applications.map((a) => a.player_uid),
+    [applications]
+  );
+  const recruiterRecs = useRecruiterRecommendations(
+    isManager ? post : null,
+    appliedPlayerUids
+  );
 
   const applyTips = useMemo(
     () => [
@@ -312,7 +322,13 @@ export const RecruitmentPostScreen: React.FC<RecruitmentPostScreenProps> = ({
         ) : null}
 
         {isManager ? (
-          <ProDaySurface variant="module" style={styles.block}>
+          <>
+            <RecruiterRecommendationsPanel
+              matches={recruiterRecs.matches}
+              loading={recruiterRecs.loading}
+              onViewPlayer={onViewPlayer}
+            />
+            <ProDaySurface variant="module" style={styles.block}>
             <ProDayText variant="eyebrow" accent style={styles.blockLabel}>
               Candidatures ({applications.length})
             </ProDayText>
@@ -339,6 +355,7 @@ export const RecruitmentPostScreen: React.FC<RecruitmentPostScreenProps> = ({
               ))
             )}
           </ProDaySurface>
+          </>
         ) : profile?.role === 'player' ? (
           <ProDaySurface variant="elevated" accentBar style={styles.applyBlock}>
             <ProDayText variant="eyebrow" accent>

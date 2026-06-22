@@ -34,6 +34,9 @@ import { getProfileCompletion } from '../utils/profileCompletion';
 import { availabilityLabel } from '../utils/playerProfileLabels';
 import { PlayerBadgesRow } from '../components/player/PlayerBadgesRow';
 import { PlayerScoutingShortlistPanel } from '../components/player/PlayerScoutingShortlistPanel';
+import { usePlayerActivities, useCareerProgression, usePlayerActivitiesForStaff, computePlayerCareerForStaff } from '../hooks/useCareerProgression';
+import { CareerScoreCard } from '../components/player/CareerScoreCard';
+import { PlayerActivityPublicSummary } from '../components/player/PlayerActivityPublicSummary';
 import { TAB_BAR_CONTENT_INSET } from '../navigation/tabBarLayout';
 
 interface PlayerProfileScreenProps {
@@ -137,6 +140,15 @@ export const PlayerProfileScreen: React.FC<PlayerProfileScreenProps> = ({
   const isOwnProfile = myProfile?.uid === player.uid;
   const isStaffView =
     isSubScreenShellEnabled(myProfile, 'staff') && !isOwnProfile;
+  const { activities } = usePlayerActivities(isOwnProfile ? player.uid : undefined);
+  const { activities: staffActivities, loading: staffActivitiesLoading } = usePlayerActivitiesForStaff(
+    isStaffView ? player.uid : undefined
+  );
+  const career = useCareerProgression(isOwnProfile ? player : null, { activities });
+  const staffCareer = useMemo(
+    () => (isStaffView ? computePlayerCareerForStaff(player, staffActivities) : null),
+    [isStaffView, player, staffActivities]
+  );
   const [galleryExpanded, setGalleryExpanded] = useState(false);
 
   const scouting = useMemo(() => {
@@ -262,12 +274,23 @@ export const PlayerProfileScreen: React.FC<PlayerProfileScreenProps> = ({
 
       {isOwnProfile ? <PlayerBadgesRow user={player} /> : null}
 
+      {isStaffView && staffCareer ? (
+        <AnimatedEntrance kind="fadeUp">
+          <CareerScoreCard career={staffCareer} />
+          <PlayerActivityPublicSummary
+            activities={staffActivities}
+            loading={staffActivitiesLoading}
+          />
+        </AnimatedEntrance>
+      ) : null}
+
       <AnimatedEntrance kind="fadeUp">
         <PlayerProfileHero
           player={player}
           colors={themeColors}
           isOwnProfile={isOwnProfile}
           completionPercent={completion?.percent}
+          careerScore={career?.total ?? staffCareer?.total}
         />
       </AnimatedEntrance>
 

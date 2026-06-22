@@ -46,6 +46,10 @@ import { ProgressionBlock } from '../../features/home/components/ProgressionBloc
 import type { SectionIntelligence } from '../../features/v3/models/sectionIntelligence';
 import type { GamificationState } from '../../features/v3/models/gamification';
 import { getRoleLabel } from '../../screens/signup/signupFlowConfig';
+import { PlayerActivityFeed } from '../player/PlayerActivityFeed';
+import { CareerScoreCard } from '../player/CareerScoreCard';
+import { WeeklyGoalSettings } from '../player/WeeklyGoalSettings';
+import { usePlayerActivities, useCareerProgression } from '../../hooks/useCareerProgression';
 
 export interface ProfileHomeScreenProps {
   profile: User;
@@ -131,6 +135,13 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
     () => getProfileCompletion(props.profile).percent,
     [props.profile]
   );
+  const isPlayer = props.profile.role === 'player';
+  const { activities, loading: activitiesLoading, refresh: refreshActivities } =
+    usePlayerActivities(isPlayer ? props.profile.uid : undefined);
+  const career = useCareerProgression(isPlayer ? props.profile : null, {
+    activities,
+    streakDays: props.progression?.streakDays,
+  });
 
   const handleCompletionItem = (itemId: string) => {
     if (itemId === 'position' && props.profile.role === 'player') {
@@ -203,7 +214,28 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
 
             {props.progression ? (
               <ProfileSection title={t('profile.section.progression')} subtitle={t('profile.section.progressionSub')}>
-                <ProgressionBlock progression={props.progression} />
+                <ProgressionBlock
+                  progression={props.progression}
+                  weeklyGoalPercent={career?.weeklyGoalPercent ?? 0}
+                />
+              </ProfileSection>
+            ) : null}
+
+            {isPlayer && career ? (
+              <ProfileSection title={t('career.score.title')} subtitle={t('activity.log.subtitle')}>
+                <CareerScoreCard career={career} />
+                <WeeklyGoalSettings
+                  target={career.weeklySessionTarget}
+                  sessionCount={career.weeklySessionCount}
+                  onChangeTarget={career.setWeeklySessionTarget}
+                />
+                <PlayerActivityFeed
+                  uid={props.profile.uid}
+                  activities={activities}
+                  highlightVideoUrls={props.profile.profile.highlight_video_urls}
+                  loading={activitiesLoading}
+                  onActivityLogged={() => void refreshActivities()}
+                />
               </ProfileSection>
             ) : null}
 

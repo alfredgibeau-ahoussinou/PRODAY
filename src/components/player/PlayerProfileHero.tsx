@@ -16,6 +16,7 @@ interface PlayerProfileHeroProps {
   colors: AppColors;
   isOwnProfile: boolean;
   completionPercent?: number;
+  careerScore?: number;
 }
 
 export const PlayerProfileHero: React.FC<PlayerProfileHeroProps> = ({
@@ -23,6 +24,7 @@ export const PlayerProfileHero: React.FC<PlayerProfileHeroProps> = ({
   colors: c,
   isOwnProfile,
   completionPercent,
+  careerScore,
 }) => {
   const p = player.profile;
   const verified = player.is_verified === true;
@@ -109,19 +111,36 @@ export const PlayerProfileHero: React.FC<PlayerProfileHeroProps> = ({
         </View>
       </ProDayGradient>
 
-      {isOwnProfile && completionPercent != null ? (
+      {isOwnProfile && (completionPercent != null || careerScore != null) ? (
         <View style={[styles.completionRow, { borderTopColor: c.border }]}>
-          <View style={styles.completionCopy}>
-            <Text style={[styles.completionTitle, { color: c.text }]}>Profil complété</Text>
-            <Text style={[styles.completionSub, { color: c.textMuted }]}>
-              {completionPercent >= 80
-                ? 'Bonne visibilité sur le Mercato'
-                : 'Complétez les blocs ci-dessous pour être mieux repéré'}
-            </Text>
-          </View>
-          <View style={[styles.completionRing, { borderColor: c.brand }]}>
-            <Text style={[styles.completionPct, { color: c.brand }]}>{completionPercent}%</Text>
-          </View>
+          {completionPercent != null ? (
+            <View style={styles.metricBlock}>
+              <View style={styles.completionCopy}>
+                <Text style={[styles.completionTitle, { color: c.text }]}>Profil complété</Text>
+                <Text style={[styles.completionSub, { color: c.textMuted }]}>
+                  {completionPercent >= 80
+                    ? 'Bonne visibilité Mercato'
+                    : 'Complétez pour être repéré'}
+                </Text>
+              </View>
+              <View style={[styles.completionRing, { borderColor: c.brand }]}>
+                <Text style={[styles.completionPct, { color: c.brand }]}>{completionPercent}%</Text>
+              </View>
+            </View>
+          ) : null}
+          {careerScore != null ? (
+            <View style={styles.metricBlock}>
+              <View style={styles.completionCopy}>
+                <Text style={[styles.completionTitle, { color: c.text }]}>Score carrière</Text>
+                <Text style={[styles.completionSub, { color: c.textMuted }]}>
+                  Stats · activité · profil
+                </Text>
+              </View>
+              <View style={[styles.completionRing, { borderColor: c.brand }]}>
+                <Text style={[styles.completionPct, { color: c.brand }]}>{careerScore}</Text>
+              </View>
+            </View>
+          ) : null}
         </View>
       ) : null}
     </View>
@@ -294,6 +313,12 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     padding: spacing.md,
     borderTopWidth: 1,
+  },
+  metricBlock: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
   },
   completionCopy: { flex: 1, gap: 2 },
   completionTitle: { fontSize: 14, fontWeight: '800' },

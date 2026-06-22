@@ -638,6 +638,55 @@ async function run() {
     })
   );
 
+  // --- Journal activité joueur ---
+  await assertSucceeds(
+    setDoc(doc(carolDb, 'player_activities/act1'), {
+      player_uid: 'carol',
+      type: 'training',
+      date: new Date(),
+      duration_min: 60,
+      source: 'manual',
+      created_at: new Date(),
+    })
+  );
+
+  await assertSucceeds(
+    getDoc(doc(erinDb, 'player_activities/act1'))
+  );
+
+  await assertSucceeds(
+    updateDoc(doc(carolDb, 'player_activities/act1'), {
+      duration_min: 75,
+      notes: 'Mise à jour sync',
+    })
+  );
+
+  await assertFails(
+    getDoc(doc(aliceDb, 'player_activities/act1'))
+  );
+
+  await assertFails(
+    setDoc(doc(erinDb, 'player_activities/act-hack'), {
+      player_uid: 'carol',
+      type: 'training',
+      date: new Date(),
+      duration_min: 60,
+      source: 'manual',
+      created_at: new Date(),
+    })
+  );
+
+  await assertSucceeds(
+    setDoc(doc(carolDb, 'users/carol/health_program_progress/mental'), {
+      completed_days: [1, 2],
+      updated_at: new Date(),
+    })
+  );
+
+  await assertFails(
+    getDoc(doc(erinDb, 'users/carol/health_program_progress/mental'))
+  );
+
   console.log('✓ Tous les scénarios rules-unit-testing ont réussi.');
   await testEnv.cleanup();
 }

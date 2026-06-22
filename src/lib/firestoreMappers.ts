@@ -34,6 +34,8 @@ import type { SponsorOffer, ClubFundingGoal } from '../models/SponsorOffer';
 import type { ClubAnnouncement } from '../models/ClubAnnouncement';
 import type { StageOffer, StageApplication } from '../models/Stage';
 import type { MedicalAppointment, MedicalAppointmentStatus } from '../models/MedicalAppointment';
+import type { PlayerActivity, PlayerActivitySource, PlayerActivityType } from '../models/PlayerActivity';
+import { PERFORMANCE_TAGS, type PerformanceTag } from '../utils/performanceTags';
 
 function toDate(value: unknown): Date {
   if (
@@ -649,6 +651,36 @@ export function medicalAppointmentFromFirestore(
     notes: data.notes != null ? String(data.notes) : undefined,
     created_at: toDate(data.created_at),
     updated_at: data.updated_at ? toDate(data.updated_at) : undefined,
+  };
+}
+
+export function playerActivityFromFirestore(
+  id: string,
+  data: Record<string, unknown>
+): PlayerActivity {
+  return {
+    id,
+    player_uid: String(data.player_uid ?? ''),
+    type: (data.type as PlayerActivityType) ?? 'training',
+    date: toDate(data.date),
+    duration_min: Number(data.duration_min ?? 0),
+    goals: data.goals != null ? Number(data.goals) : undefined,
+    assists: data.assists != null ? Number(data.assists) : undefined,
+    rating_self: data.rating_self != null ? Number(data.rating_self) : undefined,
+    notes: data.notes != null ? String(data.notes) : undefined,
+    video_url: data.video_url != null ? String(data.video_url) : undefined,
+    analysis_status:
+      data.analysis_status === 'pending_analysis' || data.analysis_status === 'analyzed'
+        ? data.analysis_status
+        : undefined,
+    performance_tags: Array.isArray(data.performance_tags)
+      ? (data.performance_tags as string[]).filter((t): t is PerformanceTag =>
+          PERFORMANCE_TAGS.includes(t as PerformanceTag)
+        )
+      : undefined,
+    source: (data.source as PlayerActivitySource) ?? 'manual',
+    team_event_id: data.team_event_id != null ? String(data.team_event_id) : undefined,
+    created_at: toDate(data.created_at),
   };
 }
 

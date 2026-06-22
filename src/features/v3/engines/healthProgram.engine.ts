@@ -1,6 +1,6 @@
 import type { HealthState } from '../../../core/types/health';
 
-export type HealthProgramId = 'recovery' | 'match_prep' | 'prevention';
+export type HealthProgramId = 'recovery' | 'match_prep' | 'prevention' | 'mental';
 
 export interface HealthProgramDay {
   day: number;
@@ -59,6 +59,20 @@ const PROGRAMS: Record<HealthProgramId, HealthProgram> = {
       { day: 7, title: 'Check-in', task: 'Noter douleurs et charge ressentie', durationMin: 10 },
     ],
   },
+  mental: {
+    id: 'mental',
+    label: 'Mental 7 jours',
+    description: 'Confiance, focus et gestion du stress avant match.',
+    days: [
+      { day: 1, title: 'Respiration', task: 'Cohérence cardiaque 5-5-5 — 10 min', durationMin: 10 },
+      { day: 2, title: 'Visualisation', task: 'Scénario match réussi — yeux fermés', durationMin: 15 },
+      { day: 3, title: 'Focus', task: 'Exercice attention sélective — 12 min', durationMin: 12 },
+      { day: 4, title: 'Routine pré-match', task: 'Écrire votre rituel personnel', durationMin: 10 },
+      { day: 5, title: 'Gestion pression', task: 'Reformulation positive — 3 situations', durationMin: 15 },
+      { day: 6, title: 'Sommeil', task: 'Couvre-feu écrans + relaxation guidée', durationMin: 20 },
+      { day: 7, title: 'Bilan mental', task: 'Auto-évaluation confiance 1–10 + notes', durationMin: 10 },
+    ],
+  },
 };
 
 export function listHealthPrograms(): HealthProgram[] {
@@ -77,6 +91,11 @@ export function pickHealthProgram(healthState: HealthState): HealthProgram {
   }
   if (healthState === 'ACTIVE') return PROGRAMS.match_prep;
   return PROGRAMS.prevention;
+}
+
+/** Programme mental — toujours disponible indépendamment de l'état physique. */
+export function pickMentalProgram(): HealthProgram {
+  return PROGRAMS.mental;
 }
 
 export function programProgress(completedDays: number[], total = 7): number {
