@@ -35,6 +35,7 @@ import { ActivityFeedStrip } from './components/ActivityFeedStrip';
 import { HealthProgramCard } from './components/HealthProgramCard';
 import { MentalProgramCard } from './components/MentalProgramCard';
 import { CareerScoreCard } from '../../components/player/CareerScoreCard';
+import { CareerTimelineCard } from '../../components/player/CareerTimelineCard';
 import { WeeklyGoalSettings } from '../../components/player/WeeklyGoalSettings';
 import { PlayerActivityFeed } from '../../components/player/PlayerActivityFeed';
 import { buildActivityFeed } from '../v3/engines/activityFeed.engine';
@@ -330,6 +331,10 @@ export const HomeIaDashboard: React.FC<HomeIaDashboardProps> = ({
 
           {!isStaffHome && career ? <CareerScoreCard career={career} /> : null}
 
+          {!isStaffHome ? (
+            <CareerTimelineCard activities={activities} loading={activitiesLoading} />
+          ) : null}
+
           {!isStaffHome && career ? (
             <WeeklyGoalSettings
               target={career.weeklySessionTarget}
@@ -343,6 +348,7 @@ export const HomeIaDashboard: React.FC<HomeIaDashboardProps> = ({
               uid={profile.uid}
               activities={activities}
               highlightVideoUrls={profile.profile.highlight_video_urls}
+              highlightGalleryUrls={profile.profile.gallery_urls}
               loading={activitiesLoading}
               onActivityLogged={() => void refreshActivities()}
             />

@@ -18,6 +18,10 @@ import { playerActivityFromFirestore } from '../lib/firestoreMappers';
 import type { CreatePlayerActivityInput, PlayerActivity } from '../models/PlayerActivity';
 import type { TeamEvent } from '../models/TeamEvent';
 import { buildActivityFromTeamEvent } from '../utils/teamEventActivitySync';
+import {
+  resolveActivityThumbnail,
+  type ActivityThumbnailContext,
+} from '../utils/activityVideoThumbnail';
 import { callFunction } from '../lib/firebaseFunctions';
 
 const COL = 'player_activities';
@@ -74,16 +78,41 @@ export const playerActivityService = {
     }
   },
 
-  async create(input: CreatePlayerActivityInput): Promise<string> {
+  async create(
+    input: CreatePlayerActivityInput,
+    thumbnailContext?: ActivityThumbnailContext
+  ): Promise<string> {
     if (!isFirebaseConfigured()) throw new Error('Firebase non configuré');
 
     const database = getDb();
     if (!database) throw new Error('Firebase non configuré');
 
     const ref = doc(collection(database, COL));
-    await setDoc(ref, activityPayload(input));
     const activityId = ref.id;
-    if (input.video_url?.trim()) {
+    const videoUrl = input.video_url?.trim();
+
+    let thumbnailUrl = input.thumbnail_url?.trim();
+    await setDoc(ref, activityPayload({ ...input, thumbnail_url: thumbnailUrl || undefined }));
+
+    if (videoUrl && !thumbnailUrl) {
+      try {
+        thumbnailUrl =
+          (await resolveActivityThumbnail({
+            uid: input.player_uid,
+            activityId,
+            videoUrl,
+            galleryUrls: thumbnailContext?.galleryUrls,
+            highlightVideoUrls: thumbnailContext?.highlightVideoUrls,
+          })) ?? undefined;
+        if (thumbnailUrl) {
+          await updateDoc(doc(database, COL, activityId), { thumbnail_url: thumbnailUrl });
+        }
+      } catch (error) {
+        console.warn('[playerActivityService] thumbnail:', error);
+      }
+    }
+
+    if (videoUrl) {
       void playerActivityService.requestAnalysis(activityId).catch((error) => {
         console.warn('[playerActivityService] auto analysis:', error);
       });
@@ -161,6 +190,7 @@ function activityPayload(
     rating_self: input.rating_self ?? null,
     notes: input.notes?.trim() || null,
     video_url: videoUrl,
+    thumbnail_url: input.thumbnail_url?.trim() || null,
     performance_tags: input.performance_tags?.length ? input.performance_tags : null,
     source: input.source ?? 'manual',
     team_event_id: input.team_event_id ?? null,

@@ -15,6 +15,7 @@ interface PlayerActivityFeedProps {
   uid: string;
   activities: PlayerActivity[];
   highlightVideoUrls?: string[];
+  highlightGalleryUrls?: string[];
   loading?: boolean;
   onActivityLogged?: () => void;
 }
@@ -24,6 +25,7 @@ export const PlayerActivityFeed: React.FC<PlayerActivityFeedProps> = ({
   uid,
   activities,
   highlightVideoUrls = [],
+  highlightGalleryUrls = [],
   loading = false,
   onActivityLogged,
 }) => {
@@ -166,6 +168,7 @@ export const PlayerActivityFeed: React.FC<PlayerActivityFeedProps> = ({
         visible={logOpen}
         uid={uid}
         highlightVideoUrls={highlightVideoUrls}
+        highlightGalleryUrls={highlightGalleryUrls}
         onClose={() => setLogOpen(false)}
         onSaved={() => {
           setLogOpen(false);

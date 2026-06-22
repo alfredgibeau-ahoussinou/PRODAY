@@ -21,12 +21,14 @@ export type ProdayNotificationData = {
     | 'mercato_profile'
     | 'weekly_question'
     | 'medical_j1'
-    | 'sponsor_offer';
+    | 'sponsor_offer'
+    | 'player_activity_analysis';
   eventId?: string;
   hubChapter?: 'apercu' | 'live' | 'composition' | 'stats' | 'effectif';
   homeTab?: 'season' | 'matches' | 'convocations' | 'centre' | 'stats' | 'feed';
   matchId?: string;
   offerId?: string;
+  activityId?: string;
 };
 
 export type EngagementNotificationHints = {

@@ -202,6 +202,9 @@ export const UI_FR: MessageCatalog = {
   'career.weekly.title': 'Objectif hebdomadaire',
   'career.weekly.subtitle': '{{count}} séance(s) / semaine',
   'career.weekly.progress': '{{done}} / {{target}} séances cette semaine',
+  'career.timeline.title': 'Chronologie carrière',
+  'career.timeline.subtitle': '8 dernières séances — données réelles',
+  'career.timeline.empty': 'Aucune séance — enregistrez matchs et entraînements pour alimenter votre timeline.',
   'progression.weeklyGoal': 'Objectif hebdo',
   'progression.streakDays': 'jours',
 

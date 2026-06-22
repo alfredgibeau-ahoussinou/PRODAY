@@ -46,6 +46,8 @@ export interface CreatePlayerActivityInput {
   rating_self?: number;
   notes?: string;
   video_url?: string;
+  /** Miniature frame MP4 — vision IA (Storage ou poster profil). */
+  thumbnail_url?: string;
   performance_tags?: PerformanceTag[];
   source?: PlayerActivitySource;
   team_event_id?: string;

@@ -233,6 +233,7 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
                   uid={props.profile.uid}
                   activities={activities}
                   highlightVideoUrls={props.profile.profile.highlight_video_urls}
+                  highlightGalleryUrls={props.profile.profile.gallery_urls}
                   loading={activitiesLoading}
                   onActivityLogged={() => void refreshActivities()}
                 />

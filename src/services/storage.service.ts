@@ -136,6 +136,19 @@ export const storageService = {
     return getDownloadURL(storageRef);
   },
 
+  async uploadActivityThumbnail(uid: string, activityId: string, localUri: string): Promise<string> {
+    const storage = getFirebaseStorage();
+    if (!storage) {
+      throw new Error('Firebase Storage non configuré pour les miniatures activité.');
+    }
+    const contentType = 'image/jpeg';
+    const path = `player_activity_thumbnails/${uid}/${activityId}.jpg`;
+    const storageRef = ref(storage, path);
+    const blob = await uriToBlob(localUri, contentType);
+    await uploadBytes(storageRef, blob, { contentType });
+    return getDownloadURL(storageRef);
+  },
+
   async uploadCommunityReel(uid: string, file: UploadFileInput): Promise<string> {
     const storage = getFirebaseStorage();
     if (!storage) {

@@ -59,6 +59,9 @@ function routeNotificationData(data: ProdayNotificationData, actions: RouterActi
     case 'sponsor_offer':
       actions.openSponsors?.();
       break;
+    case 'player_activity_analysis':
+      actions.openProfile();
+      break;
     default:
       break;
   }

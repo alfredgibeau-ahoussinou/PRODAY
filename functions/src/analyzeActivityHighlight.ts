@@ -1,6 +1,7 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
+import { sendFcmToUser } from './messaging';
 
 const db = admin.firestore();
 const ACTIVITIES_COL = 'player_activities';
@@ -47,6 +48,21 @@ async function fetchDocumentAsDataUrl(storageUrl: string, mimeHint?: string): Pr
   const buf = Buffer.from(await res.arrayBuffer());
   const base64 = buf.toString('base64');
   return `data:${contentType.split(';')[0]};base64,${base64}`;
+}
+
+/** HEAD HTTP — détecte une URL vidéo mal typée en image (pas d'extraction frame MP4 côté serveur). */
+async function imageUrlFromVideoHead(videoUrl: string): Promise<string | null> {
+  try {
+    const res = await fetch(videoUrl, { method: 'HEAD' });
+    if (!res.ok) return null;
+    const contentType = res.headers.get('content-type') ?? '';
+    if (contentType.startsWith('image/')) {
+      return videoUrl;
+    }
+  } catch (error) {
+    console.warn('[analyzeActivityHighlight] HEAD video url', error);
+  }
+  return null;
 }
 
 function parseAnalysisJson(raw: string): ActivityAnalysisPayload | null {
@@ -223,6 +239,12 @@ async function resolveVisionDataUrl(
   }
 
   if (isVideoUrl(videoUrl)) {
+    const headImage = await imageUrlFromVideoHead(videoUrl);
+    if (headImage) {
+      const dataUrl = await fetchDocumentAsDataUrl(headImage);
+      if (dataUrl) return { dataUrl, source: 'video_head_image' };
+    }
+
     const poster = posterUrlForHighlight(videoUrl, profile);
     if (poster) {
       const dataUrl = await fetchDocumentAsDataUrl(poster);
@@ -325,6 +347,16 @@ export async function runActivityHighlightAnalysis(
     analysis_confidence: analysis.confidence,
     analyzed_at: admin.firestore.FieldValue.serverTimestamp(),
   });
+
+  if (playerUid) {
+    void sendFcmToUser(playerUid, {
+      title: 'Analyse prête',
+      body: 'Analyse de votre séance prête',
+      data: { type: 'player_activity_analysis', activityId },
+    }).catch((error) => {
+      console.warn('[analyzeActivityHighlight] push notification', error);
+    });
+  }
 
   return { status: 'analyzed', activityId };
 }

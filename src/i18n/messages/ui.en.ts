@@ -202,6 +202,9 @@ export const UI_EN: MessageCatalog = {
   'career.weekly.title': 'Weekly goal',
   'career.weekly.subtitle': '{{count}} session(s) / week',
   'career.weekly.progress': '{{done}} / {{target}} sessions this week',
+  'career.timeline.title': 'Career timeline',
+  'career.timeline.subtitle': 'Last 8 sessions — real data',
+  'career.timeline.empty': 'No sessions yet — log matches and training to build your timeline.',
   'progression.weeklyGoal': 'Weekly goal',
   'progression.streakDays': 'days',
 

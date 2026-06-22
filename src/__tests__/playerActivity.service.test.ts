@@ -13,6 +13,12 @@ jest.mock('firebase/firestore', () => ({
   where: jest.fn(),
 }));
 jest.mock('../lib/firebase', () => ({ getDb: jest.fn(() => null) }));
+jest.mock('../lib/firebaseFunctions', () => ({
+  callFunction: jest.fn(),
+}));
+jest.mock('../utils/activityVideoThumbnail', () => ({
+  resolveActivityThumbnail: jest.fn(),
+}));
 jest.mock('../config/firebase', () => ({
   isFirebaseConfigured: jest.fn(),
 }));

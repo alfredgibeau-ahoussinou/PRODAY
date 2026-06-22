@@ -93,12 +93,16 @@ firebase deploy --only functions:onTeamEventUpdated,functions:syncTeamEventActiv
 - **`analyzeActivityHighlight`** — Gen2 `onCall`, région `europe-west1`
 - Auth : propriétaire de l'activité ou admin
 - Image / data URL → Mistral Pixtral (vision)
-- MP4 → `thumbnail_url` ou poster profil (`gallery_urls`) si dispo, sinon Mistral texte sur tags + notes
+- MP4 → `thumbnail_url` (client Storage) ou poster profil (`gallery_urls`) si dispo ; HEAD HTTP si `Content-Type: image/*` ; sinon Mistral texte sur tags + notes (**pas d'extraction frame serveur**)
 - Sans vidéo → Mistral texte sur données séance
+- Push FCM/Expo à la fin : « Analyse de votre séance prête » (`type: player_activity_analysis`)
 - Champs écrits : `analysis_status`, `analysis_summary_fr`, `analysis_strengths`, `analysis_improvements`, `analyzed_at`
 - Sans clé Mistral : `analysis_status: failed`, message « Analyse IA indisponible »
 
+**Configuration clé Mistral** : voir `docs/AI_SETUP.md`
+
 ```bash
+firebase functions:config:set mistral.api_key="VOTRE_CLE"
 cd functions && npm run build
 firebase deploy --only functions:analyzeActivityHighlight
 ```

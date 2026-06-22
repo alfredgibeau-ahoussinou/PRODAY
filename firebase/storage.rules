@@ -45,5 +45,10 @@ service firebase.storage {
       allow read: if request.auth != null;
       allow write: if isOwner(userId) && isSafeImageUpload();
     }
+
+    match /player_activity_thumbnails/{userId}/{fileName} {
+      allow read: if request.auth != null;
+      allow write: if isOwner(userId) && isSafeImageUpload();
+    }
   }
 }

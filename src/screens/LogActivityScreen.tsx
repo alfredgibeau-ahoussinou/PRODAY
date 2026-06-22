@@ -14,6 +14,7 @@ interface LogActivityScreenProps {
   visible: boolean;
   uid: string;
   highlightVideoUrls?: string[];
+  highlightGalleryUrls?: string[];
   onClose: () => void;
   onSaved: () => void;
 }
@@ -25,6 +26,7 @@ export const LogActivityScreen: React.FC<LogActivityScreenProps> = ({
   visible,
   uid,
   highlightVideoUrls = [],
+  highlightGalleryUrls = [],
   onClose,
   onSaved,
 }) => {
@@ -70,20 +72,25 @@ export const LogActivityScreen: React.FC<LogActivityScreenProps> = ({
 
     setSaving(true);
     try {
-      await playerActivityService.create({
-        player_uid: uid,
-        type,
-        date: new Date(),
-        duration_min: durationMin,
-        goals: type === 'match' && goals ? parseInt(goals, 10) : undefined,
-        assists: type === 'match' && assists ? parseInt(assists, 10) : undefined,
-        rating_self: rating ? parseInt(rating, 10) : undefined,
-        notes: notes.trim() || undefined,
-        // Phase future : analyse vidéo IA — pour l'instant lien highlight uniquement
-        video_url: type === 'match' ? videoUrl : undefined,
-        performance_tags: performanceTags.length ? performanceTags : undefined,
-        source: 'manual',
-      });
+      await playerActivityService.create(
+        {
+          player_uid: uid,
+          type,
+          date: new Date(),
+          duration_min: durationMin,
+          goals: type === 'match' && goals ? parseInt(goals, 10) : undefined,
+          assists: type === 'match' && assists ? parseInt(assists, 10) : undefined,
+          rating_self: rating ? parseInt(rating, 10) : undefined,
+          notes: notes.trim() || undefined,
+          video_url: type === 'match' ? videoUrl : undefined,
+          performance_tags: performanceTags.length ? performanceTags : undefined,
+          source: 'manual',
+        },
+        {
+          highlightVideoUrls: highlightVideoUrls,
+          galleryUrls: highlightGalleryUrls,
+        }
+      );
       onSaved();
     } catch (e) {
       Alert.alert(t('activity.log.error'), e instanceof Error ? e.message : t('common.error'));
