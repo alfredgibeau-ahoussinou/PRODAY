@@ -9,6 +9,7 @@ import { useTabNavigation } from '../context/TabNavigationContext';
 import { DiscoverScreen } from './DiscoverScreen';
 import { PhysioDashboardScreen } from './medical/PhysioDashboardScreen';
 import { HomeIaDashboard } from '../features/home/HomeIaDashboard';
+import { resolveRoleHomeDashboard } from '../features/home/roles/resolveRoleHomeDashboard';
 import { TeamManagementScreen } from './TeamManagementScreen';
 import { SponsorsScreen } from './SponsorsScreen';
 import { SponsorHubScreen } from './sponsor/SponsorHubScreen';
@@ -64,22 +65,44 @@ export const HomeScreen: React.FC = () => {
 
   const switchKey = profile?.uid ?? 'guest';
 
+  const renderHomeDashboard = () => {
+    if (!profile) return null;
+    if (profile.role === 'physio') {
+      return <PhysioDashboardScreen profile={profile} />;
+    }
+    const roleHome = resolveRoleHomeDashboard(profile.role);
+    if (roleHome) {
+      const RoleHome = roleHome;
+      return (
+        <RoleHome
+          profile={profile}
+          unreadMessages={unreadMessages}
+          onRefresh={handleRefresh}
+          refreshing={refreshing}
+        />
+      );
+    }
+    return (
+      <HomeIaDashboard
+        profile={profile}
+        productLine={productLine}
+        unreadMessages={unreadMessages}
+        onRefresh={handleRefresh}
+        refreshing={refreshing}
+      />
+    );
+  };
+
+  const isPhysioHome = profile?.role === 'physio';
+
   return (
     <CrossfadeSwitch switchKey={switchKey}>
       {profile ? (
         <View style={styles.root}>
-          {profile.role === 'physio' ? (
-            <PhysioDashboardScreen profile={profile} />
+          {isPhysioHome ? (
+            renderHomeDashboard()
           ) : (
-            <ProDayScreenCanvas>
-              <HomeIaDashboard
-                profile={profile}
-                productLine={productLine}
-                unreadMessages={unreadMessages}
-                onRefresh={handleRefresh}
-                refreshing={refreshing}
-              />
-            </ProDayScreenCanvas>
+            <ProDayScreenCanvas>{renderHomeDashboard()}</ProDayScreenCanvas>
           )}
 
           <PushScreenTransition active={overlay === 'team'}>

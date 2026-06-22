@@ -17,9 +17,6 @@ import { ShopScreen } from '../screens/ShopScreen';
 import { PhysioAgendaScreen } from '../screens/medical/PhysioAgendaScreen';
 import { PhysioMessagesScreen } from '../screens/medical/PhysioMessagesScreen';
 import { PhysioProfileTabScreen } from '../screens/medical/PhysioProfileTabScreen';
-import { SponsorCampaignsScreen } from '../screens/sponsor/SponsorCampaignsScreen';
-import { SponsorNetworkScreen } from '../screens/sponsor/SponsorNetworkScreen';
-import { SponsorProfileTabScreen } from '../screens/sponsor/SponsorProfileTabScreen';
 
 const DEFAULT_SCREENS: Record<MainTabId, ComponentType> = {
   home: HomeScreen,
@@ -42,22 +39,12 @@ const PHYSIO_SCREENS: Partial<Record<MainTabId, ComponentType>> = {
   profil: PhysioProfileTabScreen,
 };
 
-const SPONSOR_SCREENS: Partial<Record<MainTabId, ComponentType>> = {
-  home: HomeScreen,
-  matchs: SponsorCampaignsScreen,
-  messages: SponsorNetworkScreen,
-  profil: SponsorProfileTabScreen,
-};
-
 export function resolveMainTabScreen(
   tab: MainTabId,
   role?: UserRole | null
 ): ComponentType {
   if (isMedicalPractitionerRole(role)) {
     return PHYSIO_SCREENS[tab] ?? DEFAULT_SCREENS[tab];
-  }
-  if (isSponsorRole(role)) {
-    return SPONSOR_SCREENS[tab] ?? DEFAULT_SCREENS[tab];
   }
   return DEFAULT_SCREENS[tab];
 }

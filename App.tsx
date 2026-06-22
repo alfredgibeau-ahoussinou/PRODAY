@@ -250,7 +250,7 @@ function AppShell() {
     return <AdminAppShell onPreviewUserApp={() => setPreviewUserMode(true)} />;
   }
 
-  if (!authLoading && profile && isSponsorRole(profile.role) && !previewUserMode) {
+  if (!authLoading && profile && isSponsorRole(profile.role)) {
     return (
       <SubscriptionProvider profile={sessionProfile ?? profile}>
         <SponsorAppShell />
