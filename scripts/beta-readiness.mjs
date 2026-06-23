@@ -4,11 +4,12 @@
  */
 import { readFileSync, existsSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath } from 'url';
 import { spawnSync } from 'node:child_process';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = resolve(__dirname, '..');
+const siteUrl = process.env.BETA_SITE_URL?.trim() || 'https://proday75.netlify.app';
 
 function loadEnv() {
   const path = resolve(root, '.env');
@@ -23,6 +24,7 @@ function loadEnv() {
 
 const env = loadEnv();
 let failed = 0;
+let warned = 0;
 
 function ok(label) {
   console.log(`✅ ${label}`);
@@ -30,6 +32,7 @@ function ok(label) {
 
 function warn(label) {
   console.log(`⚠️  ${label}`);
+  warned += 1;
 }
 
 function fail(label) {
@@ -69,23 +72,49 @@ if (googleIos || googleAndroid || googleWeb) {
   warn('Aucun client Google OAuth configuré');
 }
 
+if (env.EXPO_PUBLIC_V3_SHELL === '1') ok('V3 shell activé (.env)');
+else warn('EXPO_PUBLIC_V3_SHELL absent — activer pour la bêta (profil EAS preview le force)');
+
 if (env.EXPO_PUBLIC_APP_ENV === 'production') ok('APP_ENV=production');
 else warn(`APP_ENV=${env.EXPO_PUBLIC_APP_ENV ?? 'non défini'} (mettre production pour les stores)`);
 
 const sa = resolve(root, 'firebase/service-account.json');
-const saGlob = existsSync(resolve(root, 'firebase'))
-  ? existsSync(sa)
-  : false;
-if (saGlob) ok('Service account Firebase (scripts admin)');
+if (existsSync(sa)) ok('Service account Firebase (scripts admin)');
 else warn('firebase/service-account.json absent — scripts seed/admin limités');
+
+console.log('\n📄 Pages légales (code)\n');
+
+const legalFiles = [
+  ['website/src/app/confidentialite/page.tsx', '/confidentialite'],
+  ['website/src/app/cgu/page.tsx', '/cgu'],
+  ['website/src/content/legal.ts', 'contenu légal'],
+];
+for (const [rel] of legalFiles) {
+  if (existsSync(resolve(root, rel))) ok(rel);
+  else fail(`Manquant : ${rel}`);
+}
+
+const eas = resolve(root, 'eas.json');
+if (existsSync(eas)) {
+  const easRaw = readFileSync(eas, 'utf8');
+  if (easRaw.includes('EXPO_PUBLIC_V3_SHELL')) ok('EAS preview — V3_SHELL dans eas.json');
+  else warn('eas.json — ajouter EXPO_PUBLIC_V3_SHELL au profil preview');
+  if (easRaw.includes('REPLACE_WITH_APPLE_ID')) {
+    warn('eas.json — renseigner appleId / ascAppId avant soumission stores');
+  }
+} else {
+  fail('eas.json introuvable');
+}
 
 console.log('\n🧪 Tests automatisés\n');
 
-for (const [cmd, args, label] of [
+const testSuites = [
   ['npm', ['run', 'typecheck'], 'TypeScript'],
   ['npm', ['test', '--', '--passWithNoTests'], 'Jest'],
   ['npm', ['run', 'firebase:rules:test'], 'Firestore rules'],
-] as const) {
+];
+
+for (const [cmd, args, label] of testSuites) {
   const r = spawnSync(cmd, args, { cwd: root, stdio: 'pipe', encoding: 'utf8' });
   if (r.status === 0) ok(label);
   else {
@@ -95,16 +124,46 @@ for (const [cmd, args, label] of [
   }
 }
 
-console.log('\n📋 Déploiement manuel restant\n');
-console.log('   npm run firebase:deploy');
-console.log('   npm run firebase:deploy:functions');
-console.log('   npm run firebase:deploy:storage');
-console.log('   npm run eas:build:production');
-console.log('   docs/STORE_RELEASE.md\n');
+console.log('\n🌐 Site production (optionnel)\n');
+
+async function checkSite() {
+  const paths = ['/confidentialite', '/cgu', '/beta'];
+  for (const path of paths) {
+    try {
+      const res = await fetch(`${siteUrl}${path}`, { method: 'GET', redirect: 'follow' });
+      if (res.ok) ok(`${siteUrl}${path} → ${res.status}`);
+      else fail(`${siteUrl}${path} → ${res.status}`);
+    } catch (err) {
+      warn(`${siteUrl}${path} — inaccessible (${err instanceof Error ? err.message : err})`);
+    }
+  }
+
+  try {
+    const res = await fetch(`${siteUrl}/api/beta`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: `beta-check-${Date.now()}@example.com`, role: 'player' }),
+    });
+    const body = await res.json().catch(() => ({}));
+    if (res.ok && body.emailSent) ok(`API bêta — emailSent (${siteUrl})`);
+    else if (res.ok) warn(`API bêta — ${res.status} mais emailSent=false`);
+    else warn(`API bêta — ${res.status} (vérifier EmailJS sur Netlify)`);
+  } catch (err) {
+    warn(`API bêta — inaccessible (${err instanceof Error ? err.message : err})`);
+  }
+}
+
+await checkSite();
+
+console.log('\n📋 Étapes manuelles restantes\n');
+console.log('   cd website && npm run netlify:deploy');
+console.log('   eas build --profile preview --platform ios');
+console.log('   npm run eas:build:preview -- --platform android');
+console.log('   docs/BETA_LAUNCH.md\n');
 
 if (failed > 0) {
-  console.log(`❌ ${failed} contrôle(s) en échec.\n`);
+  console.log(`❌ ${failed} contrôle(s) en échec, ${warned} avertissement(s).\n`);
   process.exit(1);
 }
 
-console.log('✅ Prêt pour la bêta (hors soumission stores).\n');
+console.log(`✅ Prêt pour la bêta fermée (${warned} avertissement(s) — voir ci-dessus).\n`);

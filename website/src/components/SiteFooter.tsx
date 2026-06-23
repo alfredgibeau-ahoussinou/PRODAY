@@ -125,6 +125,14 @@ export function SiteFooter() {
 
         <p className="mt-14 border-t border-white/8 pt-8 text-center text-sm text-white/35">
           © {new Date().getFullYear()} ProDay — Application mobile & web
+          <span className="mx-2">·</span>
+          <Link href={ROUTES.privacy} className="hover:text-white/60">
+            Confidentialité
+          </Link>
+          <span className="mx-2">·</span>
+          <Link href={ROUTES.terms} className="hover:text-white/60">
+            CGU
+          </Link>
         </p>
       </div>
     </footer>

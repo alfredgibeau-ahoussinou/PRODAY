@@ -8,6 +8,8 @@ export const ROUTES = {
   pulse: "/pulse",
   journeys: "/parcours",
   trust: "/confiance",
+  privacy: "/confidentialite",
+  terms: "/cgu",
   homme: "/homme",
   woman: "/woman",
   pro: "/pro",
