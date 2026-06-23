@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "netlify:deploy": "bash scripts/netlify-deploy.sh",
-    "branding:pwa-icons": "node scripts/generate-pwa-icons.mjs"
+    "branding:pwa-icons": "node scripts/generate-pwa-icons.mjs",
+    "branding:white-logo": "node scripts/generate-white-logo.mjs"
   },
   "dependencies": {
     "@emailjs/nodejs": "^5.0.2",
