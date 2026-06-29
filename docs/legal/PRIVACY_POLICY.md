@@ -64,4 +64,5 @@ Mise à jour possible avec révision de la date. Information en cas de changemen
 
 ---
 
-*Source technique unique : `src/content/legal/fr.ts` (synchronisée avec l’app et le site).*
+*Source technique unique : `src/content/legal/fr.ts` (synchronisée avec l’app et le site).*  
+*PDF : `npm run docs:legal` → `website/public/legal/ProDay_Politique_confidentialite.pdf`*

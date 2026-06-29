@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { LegalDocumentView } from "@/components/legal/LegalDocumentView";
-import { PRIVACY_POLICY } from "@/content/legal";
+import { PRIVACY_POLICY, LEGAL_META } from "@/content/legal";
 import { ROUTES } from "@/lib/routes";
 
 export const metadata: Metadata = {
@@ -15,6 +15,7 @@ export default function PrivacyPage() {
       doc={PRIVACY_POLICY}
       pathname={ROUTES.privacy}
       kicker="LÉGAL"
+      pdfHref={LEGAL_META.pdf.privacy}
     />
   );
 }

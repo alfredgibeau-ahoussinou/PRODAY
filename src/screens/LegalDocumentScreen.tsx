@@ -5,6 +5,7 @@ import {
   getLegalDocument,
   LEGAL_CONTACT_EMAIL,
   legalWebUrl,
+  legalPdfUrl,
   type LegalDocumentId,
 } from '../content/legalDocuments';
 import { TAB_BAR_CONTENT_INSET } from '../components/navigation/BottomTabBar';
@@ -92,6 +93,12 @@ export const LegalDocumentScreen: React.FC<LegalDocumentScreenProps> = ({
       <TouchableOpacity onPress={() => void Linking.openURL(legalWebUrl(documentId))}>
         <Text style={[styles.webLink, { color: ui.accent }]}>
           Version complète sur le web
+        </Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity onPress={() => void Linking.openURL(legalPdfUrl(documentId))}>
+        <Text style={[styles.webLink, { color: ui.accent, marginTop: spacing.xs }]}>
+          Télécharger le PDF
         </Text>
       </TouchableOpacity>
 

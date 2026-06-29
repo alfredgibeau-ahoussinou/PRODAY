@@ -9,6 +9,11 @@ export const LEGAL_META = {
   privacyPath: '/confidentialite',
   termsPath: '/cgu',
   updatedAt: '19 juin 2026',
+  pdf: {
+    privacy: '/legal/ProDay_Politique_confidentialite.pdf',
+    terms: '/legal/ProDay_CGU.pdf',
+    sponsor: '/legal/ProDay_Convention_sponsor.pdf',
+  },
 } as const;
 
 export type LegalSectionContent = {

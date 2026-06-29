@@ -60,3 +60,8 @@ export function legalWebUrl(id: LegalDocumentId): string {
   const path = id === 'privacy' ? LEGAL_META.privacyPath : LEGAL_META.termsPath;
   return `${LEGAL_META.siteUrl}${path}`;
 }
+
+export function legalPdfUrl(id: LegalDocumentId): string {
+  const path = id === 'privacy' ? LEGAL_META.pdf.privacy : LEGAL_META.pdf.terms;
+  return `${LEGAL_META.siteUrl}${path}`;
+}

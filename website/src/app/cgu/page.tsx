@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { LegalDocumentView } from "@/components/legal/LegalDocumentView";
-import { TERMS_OF_USE } from "@/content/legal";
+import { TERMS_OF_USE, LEGAL_META } from "@/content/legal";
 import { ROUTES } from "@/lib/routes";
 
 export const metadata: Metadata = {
@@ -15,6 +15,7 @@ export default function TermsPage() {
       doc={TERMS_OF_USE}
       pathname={ROUTES.terms}
       kicker="LÉGAL"
+      pdfHref={LEGAL_META.pdf.terms}
     />
   );
 }

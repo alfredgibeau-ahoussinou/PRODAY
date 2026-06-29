@@ -1,0 +1,3 @@
+# PDF générés localement (gitignored ici).
+# Commande : npm run docs:legal
+# Copies web : website/public/legal/

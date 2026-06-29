@@ -34,3 +34,9 @@ export const TERMS_OF_USE: LegalDocument = {
 };
 
 export { LEGAL_META };
+
+export {
+  SPONSOR_CONVENTION_META,
+  SPONSOR_CONVENTION_PARTIES,
+  SPONSOR_CONVENTION_SECTIONS,
+} from "../../../src/content/legal/sponsorConvention";

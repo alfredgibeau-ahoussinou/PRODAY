@@ -2,15 +2,18 @@ import Link from "next/link";
 import { PageBody } from "@/components/layout/PageBody";
 import { PageHeader } from "@/components/layout/PageHeader";
 import type { LegalDocument } from "@/content/legal";
+import { LEGAL_META } from "@/content/legal";
 import { ROUTES } from "@/lib/routes";
 
 type LegalDocumentViewProps = {
   doc: LegalDocument;
   pathname: string;
   kicker: string;
+  pdfHref?: string;
+  parties?: string[];
 };
 
-export function LegalDocumentView({ doc, pathname, kicker }: LegalDocumentViewProps) {
+export function LegalDocumentView({ doc, pathname, kicker, pdfHref, parties }: LegalDocumentViewProps) {
   return (
     <>
       <PageHeader
@@ -21,10 +24,31 @@ export function LegalDocumentView({ doc, pathname, kicker }: LegalDocumentViewPr
         dark
       />
       <PageBody narrow tone="elevated">
+        {pdfHref ? (
+          <p className="mb-8">
+            <a
+              href={pdfHref}
+              download
+              className="inline-flex items-center rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition hover:border-white/30 hover:bg-white/10"
+            >
+              Télécharger le PDF
+            </a>
+          </p>
+        ) : null}
         {doc.intro ? (
           <p className="text-base leading-relaxed text-white/70">{doc.intro}</p>
         ) : null}
-        <div className="mt-10 space-y-10">
+        {parties?.length ? (
+          <div className="mt-8">
+            <h2 className="font-display text-xl font-bold text-white">Entre</h2>
+            <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-relaxed text-white/65">
+              {parties.map((party) => (
+                <li key={party}>{party}</li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+        <div className={`space-y-10 ${doc.intro || parties?.length ? "mt-10" : ""}`}>
           {doc.sections.map((section, index) => (
             <section key={section.id} id={section.id}>
               <h2 className="font-display text-xl font-bold text-white">
