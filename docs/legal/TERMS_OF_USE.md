@@ -1,66 +1,72 @@
 # Conditions générales d’utilisation (CGU) — ProDay
 
-**Dernière mise à jour :** 27 mai 2026  
-**Contact :** contact@proday.app
+**Dernière mise à jour :** 19 juin 2026  
+**Contact :** contact@proday.app  
+**Version en ligne :** https://proday75.netlify.app/cgu
 
-## 1. Objet
+## 1. Objet et périmètre
 
-Les présentes CGU régissent l’accès et l’utilisation de l’application mobile **ProDay**, plateforme de mise en relation dans l’écosystème football amateur et semi-professionnel.
+ProDay propose une plateforme autour de quatre pôles (Joueur, Pro, Santé, Partenaires) : Mercato, matchs, tournois, messagerie, fil, réels, Pulse, CV joueur, santé et sponsors. Certaines fonctions peuvent être proposées en **bêta fermée** et évoluer sans préavis.
 
 ## 2. Acceptation
 
-En créant un compte ou en utilisant ProDay, vous acceptez ces CGU et notre politique de confidentialité. Si vous n’acceptez pas, n’utilisez pas le service.
+En créant un compte ou en utilisant ProDay, vous acceptez ces CGU et la politique de confidentialité. Capacité juridique requise (ou autorisation du représentant légal pour les mineurs).
 
 ## 3. Compte utilisateur
 
-- Vous devez fournir des informations exactes et les maintenir à jour.
-- Vous êtes responsable de la confidentialité de vos identifiants.
-- Un seul compte par personne physique, sauf comptes professionnels clairement identifiés (club, structure).
-- ProDay peut suspendre ou supprimer un compte en cas de fraude, contenu illicite ou non-respect des CGU.
+- Informations exactes et à jour.
+- Responsabilité des identifiants.
+- Un compte personnel par individu (sauf compte pro identifié).
+- Suspension ou suppression en cas de fraude, contenu illicite ou non-respect des CGU.
 
-## 4. Rôles et vérifications
+## 4. Rôles, vérifications et bêta
 
-Certains rôles (coach, agent, organisateur, joueur pour actions sensibles) exigent une **vérification documentaire**. ProDay peut approuver ou refuser un dossier. La messagerie complète peut être limitée tant que la vérification n’est pas validée.
+Vérification documentaire pour certains rôles. ProDay peut approuver, refuser ou révoquer. Accès limité tant que la vérification n’est pas validée. La bêta peut contenir des bugs ; les retours peuvent être utilisés pour améliorer le produit.
 
 ## 5. Contenus publiés
 
-Vous restez propriétaire de vos contenus (textes, photos, annonces). Vous accordez à ProDay une licence non exclusive pour héberger, afficher et diffuser ces contenus dans le cadre du service.
+Licence non exclusive à ProDay pour héberger et afficher vos contenus dans le cadre du service. Interdit : contenus illégaux, données de tiers sans base légale, spam, fausses identités, atteinte aux droits de tiers.
 
-Il est interdit de publier :
+## 6. Mercato, recrutement et tournois
 
-- contenus illégaux, diffamatoires, discriminatoires ou violents ;
-- données personnelles de tiers sans consentement ;
-- spam ou publicité non autorisée ;
-- fausses identités ou documents falsifiés.
+Mise en relation sans garantie de recrutement, de véracité des annonces ou de tenue d’un événement. Engagements entre utilisateurs sous leur seule responsabilité.
 
-## 6. Mercato et recrutement
+## 7. Messagerie, fil et réels
 
-ProDay facilite la mise en relation ; nous ne garantissons pas l’aboutissement d’un recrutement ni la véracité des annonces. Les engagements entre clubs et joueurs relèvent de leur seule responsabilité.
+Les auteurs sont responsables de leurs échanges. Modération possible. Usage conforme aux CGU et à la loi.
 
-## 7. Messagerie et fil d’actualité
+## 8. Espace Santé
 
-Les échanges entre utilisateurs engagent uniquement leurs auteurs. ProDay peut modérer ou supprimer des contenus signalés. Le fil d’actualité et les sondages agents sont réservés aux usages prévus par l’application.
+Mise en relation et information — pas de conseil médical. En urgence : 15 ou 112.
 
-## 8. Paiements
+## 9. Covoiturage
 
-Certaines cotisations club peuvent être réglées via un prestataire de paiement tiers (Stripe). Les conditions financières sont définies par le club organisateur.
+Coordination entre utilisateurs. ProDay n’est pas transporteur. Responsabilité des participants (véhicule, assurance, code de la route).
 
-## 9. Propriété intellectuelle
+## 10. Abonnements et paiements
 
-La marque ProDay, le design, le code et les contenus éditoriaux de la plateforme sont protégés. Toute reproduction non autorisée est interdite.
+Abonnements Pro via App Store / Google Play. Cotisations club via prestataire tiers (ex. Stripe). Offres partenaires : conditions commerciales distinctes. Remboursement selon loi applicable et conditions store.
 
-## 10. Responsabilité
+## 11. Propriété intellectuelle
 
-ProDay est fourni « en l’état ». Dans les limites autorisées par la loi, nous déclinons toute responsabilité pour les dommages indirects, pertes de données ou litiges entre utilisateurs.
+Marque, logos, design, code et contenus ProDay protégés.
 
-## 11. Résiliation
+## 12. Responsabilité
 
-Vous pouvez supprimer votre compte depuis l’application ou en contactant le support. ProDay peut résilier l’accès en cas de manquement grave, avec ou sans préavis selon la gravité.
+Service « en l’état ». Pas de garantie d’absence d’interruption. Responsabilité limitée au montant versé sur 12 mois sauf faute lourde.
 
-## 12. Droit applicable
+## 13. Résiliation
 
-Les présentes CGU sont soumises au droit français. En cas de litige, les tribunaux français seront compétents, sous réserve des règles impératives de protection des consommateurs.
+Suppression de compte in-app ou par e-mail. Résiliation par ProDay en cas de manquement grave.
 
-## 13. Contact
+## 14. Droit applicable
 
-Pour toute question : **contact@proday.app**
+Droit français. Tribunaux français, sous réserve des règles impératives de protection des consommateurs.
+
+## 15. Contact
+
+**contact@proday.app**
+
+---
+
+*Source technique unique : `src/content/legal/fr.ts` (synchronisée avec l’app et le site).*

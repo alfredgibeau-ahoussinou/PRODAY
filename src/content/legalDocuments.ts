@@ -9,103 +9,54 @@ export interface LegalDocument {
   id: LegalDocumentId;
   title: string;
   updatedAt: string;
+  intro?: string;
   sections: LegalSection[];
 }
 
-export const LEGAL_CONTACT_EMAIL = 'contact@proday.app';
+export {
+  LEGAL_META,
+  flattenSectionParagraphs,
+} from './legal/fr';
+
+import {
+  LEGAL_META,
+  PRIVACY_INTRO,
+  PRIVACY_SECTIONS,
+  TERMS_INTRO,
+  TERMS_SECTIONS,
+  flattenSectionParagraphs,
+} from './legal/fr';
+
+export const LEGAL_CONTACT_EMAIL = LEGAL_META.contactEmail;
+
+function toAppDocument(
+  id: LegalDocumentId,
+  title: string,
+  intro: string,
+  sections: typeof PRIVACY_SECTIONS,
+): LegalDocument {
+  return {
+    id,
+    title,
+    updatedAt: LEGAL_META.updatedAt,
+    intro,
+    sections: sections.map((section) => ({
+      title: section.title,
+      paragraphs: flattenSectionParagraphs(section),
+    })),
+  };
+}
 
 export const LEGAL_DOCUMENTS: Record<LegalDocumentId, LegalDocument> = {
-  privacy: {
-    id: 'privacy',
-    title: 'Politique de confidentialité',
-    updatedAt: '27 mai 2026',
-    sections: [
-      {
-        title: 'Introduction',
-        paragraphs: [
-          'ProDay est une plateforme mobile football (recrutement, matchs, tournois, messagerie, gestion de club). Cette politique décrit les données traitées et vos droits.',
-        ],
-      },
-      {
-        title: 'Données collectées',
-        paragraphs: [
-          'Compte : email, nom, rôle, ville, photo.',
-          'Profil sportif : poste, catégorie, stats, documents de vérification selon votre rôle.',
-          'Contenus : annonces, messages, fil d’actualité, images publiées.',
-          'Technique : identifiant Firebase, jeton push pour les notifications.',
-          'Mineurs : données du responsable légal si contrôle parental activé.',
-        ],
-      },
-      {
-        title: 'Finalités',
-        paragraphs: [
-          'Gestion du compte, mise en relation, vérification des profils, notifications, sécurité et support.',
-        ],
-      },
-      {
-        title: 'Hébergement',
-        paragraphs: [
-          'Données hébergées via Google Firebase. Sous-traitants possibles : Google (auth, base, fichiers), Stripe (paiements), analyse documentaire pour la vérification.',
-        ],
-      },
-      {
-        title: 'Durée et droits',
-        paragraphs: [
-          'Conservation pendant l’utilisation du service. Suppression sous 90 jours après clôture du compte, sauf obligation légale.',
-          'Droits RGPD : accès, rectification, effacement, opposition, portabilité — contact@proday.app. Réclamation CNIL : www.cnil.fr.',
-        ],
-      },
-      {
-        title: 'Sécurité et mineurs',
-        paragraphs: [
-          'Règles d’accès strictes, HTTPS. Signalez toute faille à contact@proday.app.',
-          'Comptes mineurs : usage avec consentement parental et filtrage des contacts.',
-        ],
-      },
-    ],
-  },
-  terms: {
-    id: 'terms',
-    title: 'Conditions générales d’utilisation',
-    updatedAt: '27 mai 2026',
-    sections: [
-      {
-        title: 'Objet',
-        paragraphs: [
-          'Les présentes CGU régissent l’utilisation de l’application ProDay. En vous inscrivant, vous les acceptez.',
-        ],
-      },
-      {
-        title: 'Compte',
-        paragraphs: [
-          'Informations exactes obligatoires. Vous êtes responsable de vos identifiants.',
-          'ProDay peut suspendre un compte en cas de fraude, contenu illicite ou non-respect des CGU.',
-        ],
-      },
-      {
-        title: 'Vérifications',
-        paragraphs: [
-          'Certains rôles exigent une vérification documentaire. ProDay peut approuver ou refuser un dossier.',
-        ],
-      },
-      {
-        title: 'Contenus',
-        paragraphs: [
-          'Vous restez propriétaire de vos contenus et accordez à ProDay une licence d’hébergement et d’affichage.',
-          'Interdit : contenus illégaux, données de tiers sans accord, fausses identités, spam.',
-        ],
-      },
-      {
-        title: 'Mercato et responsabilité',
-        paragraphs: [
-          'ProDay facilite la mise en relation sans garantir un recrutement. Engagements entre parties sous leur seule responsabilité.',
-          'Service fourni « en l’état ». Droit français applicable. Contact : contact@proday.app.',
-        ],
-      },
-    ],
-  },
+  privacy: toAppDocument('privacy', 'Politique de confidentialité', PRIVACY_INTRO, PRIVACY_SECTIONS),
+  terms: toAppDocument('terms', 'Conditions générales d’utilisation', TERMS_INTRO, TERMS_SECTIONS),
 };
 
 export function getLegalDocument(id: LegalDocumentId): LegalDocument {
   return LEGAL_DOCUMENTS[id];
+}
+
+export function legalWebUrl(id: LegalDocumentId): string {
+  const path = id === 'privacy' ? LEGAL_META.privacyPath : LEGAL_META.termsPath;
+  return `${LEGAL_META.siteUrl}${path}`;
 }

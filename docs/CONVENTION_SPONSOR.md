@@ -2,12 +2,12 @@
 
 **Entre :**
 
-- **ProDay** (la Plateforme), représentée par [Nom, prénom, contact]
-- **Le Partenaire** : [Raison sociale, SIRET, adresse]
+- **ProDay** (la Plateforme), contact : contact@proday.app — site : https://proday75.netlify.app
+- **Le Partenaire** : [Raison sociale, SIRET, adresse, représentant légal]
 
 ## Objet
 
-Le Partenaire souhaite gagner en visibilité auprès des clubs et joueurs inscrits sur l'application mobile **ProDay**, en échange d'une contrepartie (financière ou en nature).
+Le Partenaire souhaite gagner en visibilité auprès des clubs et joueurs inscrits sur l'application mobile **ProDay**, en échange d'une contrepartie (financière ou en nature), dans le respect de la [politique de confidentialité](https://proday75.netlify.app/confidentialite) et des [CGU](https://proday75.netlify.app/cgu) applicables aux utilisateurs.
 
 ## Contrepartie du Partenaire (exemples)
 
@@ -27,7 +27,15 @@ Du [date début] au [date fin], renouvelable d'un commun accord.
 
 ## Données & image
 
-Le Partenaire autorise l'utilisation de son logo sur l'application. ProDay s'engage à ne pas revendre les données personnelles des utilisateurs.
+Le Partenaire autorise l'utilisation de son logo et de ses éléments de marque sur l'application et les supports de communication ProDay, dans le cadre défini au présent accord. ProDay s'engage à ne pas revendre les données personnelles des utilisateurs. Le traitement des données est décrit dans la politique de confidentialité ProDay.
+
+## Résiliation
+
+Chaque partie peut résilier l'accord avec un préavis de [30] jours par e-mail, sauf manquement grave. Les contenus du Partenaire seront retirés de la plateforme dans un délai raisonnable.
+
+## Droit applicable
+
+Le présent accord est soumis au droit français. En cas de litige, les parties rechercheront une solution amiable avant toute action judiciaire.
 
 ## Signatures
 

@@ -1,63 +1,67 @@
 # Politique de confidentialité — ProDay
 
-**Dernière mise à jour :** 27 mai 2026  
+**Dernière mise à jour :** 19 juin 2026  
 **Éditeur :** ProDay  
-**Contact :** contact@proday.app
+**Contact :** contact@proday.app  
+**Version en ligne :** https://proday75.netlify.app/confidentialite
 
 ## 1. Introduction
 
-ProDay (« nous », « l’application ») est une plateforme mobile dédiée au football amateur et semi-professionnel (recrutement, matchs, tournois, messagerie, gestion de club). La présente politique explique quelles données nous collectons, pourquoi, et vos droits.
+ProDay (« nous », « l’application ») est une plateforme mobile et web dédiée au football amateur et semi-professionnel : recrutement (Mercato), matchs, tournois, messagerie, fil d’actualité, réels vidéo, espace santé, partenaires et gestion de club. La présente politique décrit les données traitées, les finalités et vos droits au sens du RGPD.
 
 ## 2. Données collectées
 
-- **Compte :** email, nom affiché, rôle (joueur, coach, agent, organisateur, kinésithérapeute, partenaire), ville, photo de profil.
-- **Profil sportif :** poste, catégorie, niveau, statistiques, documents de vérification (identité, licence, diplômes selon le rôle).
-- **Contenu utilisateur :** annonces mercato, messages, publications sur le fil d’actualité, photos publiées.
-- **Données techniques :** identifiant Firebase, jeton de notification push (FCM / Expo Push), logs d’usage anonymisés côté hébergeur.
-- **Mineurs :** avec consentement du responsable légal lorsque requis (contrôle parental).
+- **Compte :** e-mail, nom affiché, rôle, ville, photo, langue.
+- **Profil sportif :** poste, catégorie, niveau, statistiques, CV joueur, badges, Pulse.
+- **Vérification :** pièces d’identité, licences, diplômes — analyse automatisée possible.
+- **Contenus :** annonces Mercato, messages, fil, réels, question de la semaine.
+- **Événements équipe :** convocations, stats live, covoiturage.
+- **Santé :** informations partagées avec un professionnel (pas de dossier médical hospitalier).
+- **Technique :** identifiant Firebase, jetons push, logs, appareil.
+- **Géolocalisation :** si autorisée (covoiturage, suggestions locales, partenaires).
+- **Paiements :** transactions et abonnements via App Store / Google Play.
+- **Bêta / site :** e-mail et rôle sur la liste d’attente.
+- **Mineurs :** âge, contrôle parental, compte tuteur.
 
 ## 3. Finalités
 
-- Création et gestion de votre compte.
-- Mise en relation entre joueurs, clubs, staff et partenaires.
-- Vérification de profils et lutte contre la fraude.
-- Notifications (convocations, candidatures, messages, fil d’actualité).
-- Amélioration du service et support utilisateur.
+Création de compte, mise en relation, vérification, modération, modules produit (Mercato, matchs, tournois, messages, fil, réels, Pulse), notifications, programme bêta, abonnements Pro, support et sécurité.
 
-## 4. Base légale (RGPD)
+## 4. Bases légales (RGPD)
 
-- Exécution du contrat (utilisation de l’app).
-- Intérêt légitime (sécurité, modération).
-- Consentement (notifications, documents, mineurs).
+- Exécution du contrat.
+- Intérêt légitime (sécurité, modération, amélioration).
+- Consentement (push, géolocalisation, documents, mineurs).
+- Obligation légale le cas échéant.
 
 ## 5. Hébergement et sous-traitants
 
-Les données sont hébergées via **Google Firebase** (UE / régions configurées dans la console Firebase). Nous pouvons faire appel à :
-
-- Google (authentification, base de données, stockage fichiers).
-- Stripe (paiements cotisations, le cas échéant).
-- Prestataires d’analyse documentaire (vérification automatisée des justificatifs).
+Données hébergées via **Google Firebase**. Sous-traitants possibles : Google, Apple, Google Play, Stripe, prestataires e-mail (bêta), analyse documentaire / IA, Netlify (site vitrine). Transferts hors UE encadrés par garanties appropriées.
 
 ## 6. Durée de conservation
 
-- Compte actif : conservation pendant l’utilisation du service.
-- Suppression de compte : effacement ou anonymisation sous 90 jours, sauf obligation légale.
-- Documents de vérification : conservés le temps nécessaire à la conformité et aux litiges.
+Compte actif : durée d’utilisation. Suppression : sous 90 jours sauf obligation légale. Documents de vérification : durée de conformité. Liste bêta : jusqu’au lancement ou retrait de la demande.
 
 ## 7. Vos droits
 
-Vous pouvez demander l’accès, la rectification, l’effacement, la limitation ou l’opposition au traitement, et la portabilité de vos données, en écrivant à **contact@proday.app**.
-
-Réclamation possible auprès de la CNIL (www.cnil.fr).
+Accès, rectification, effacement, limitation, opposition, portabilité — **contact@proday.app** (réponse sous un mois). Réclamation CNIL : www.cnil.fr.
 
 ## 8. Sécurité
 
-Nous appliquons des règles d’accès Firestore, le chiffrement en transit (HTTPS), et des contrôles d’authentification. Aucun système n’est totalement invulnérable : signalez toute faille à contact@proday.app.
+Règles Firestore, HTTPS, authentification. Signalement faille : contact@proday.app.
 
-## 9. Mineurs
+## 9. Mineurs et contrôle parental
 
-L’application peut être utilisée par des mineurs avec supervision parentale. Les parents peuvent gérer les contacts autorisés via les paramètres dédiés.
+Usage possible avec accord du responsable légal. Espaces jeunes et filtrage des contacts. Suspension possible si données collectées sans consentement requis.
 
-## 10. Modifications
+## 10. Transferts hors UE
 
-Nous pouvons mettre à jour cette politique. La date en tête de document sera révisée. L’utilisation continue vaut acceptation des changements substantiels notifiés dans l’app.
+Garanties appropriées (adéquation, CCT ou équivalent) lorsque des traitements ont lieu hors EEE.
+
+## 11. Modifications
+
+Mise à jour possible avec révision de la date. Information en cas de changement substantiel.
+
+---
+
+*Source technique unique : `src/content/legal/fr.ts` (synchronisée avec l’app et le site).*

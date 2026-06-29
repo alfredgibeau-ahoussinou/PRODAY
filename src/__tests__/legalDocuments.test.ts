@@ -1,4 +1,4 @@
-import { getLegalDocument, LEGAL_DOCUMENTS } from '../content/legalDocuments';
+import { getLegalDocument, LEGAL_DOCUMENTS, legalWebUrl } from '../content/legalDocuments';
 
 describe('legalDocuments', () => {
   it('expose CGU et confidentialité', () => {
@@ -9,5 +9,10 @@ describe('legalDocuments', () => {
   it('getLegalDocument retourne le bon document', () => {
     expect(getLegalDocument('terms').title).toMatch(/Conditions/i);
     expect(getLegalDocument('privacy').title).toMatch(/confidentialité/i);
+  });
+
+  it('expose les URLs web légales', () => {
+    expect(legalWebUrl('privacy')).toContain('/confidentialite');
+    expect(legalWebUrl('terms')).toContain('/cgu');
   });
 });

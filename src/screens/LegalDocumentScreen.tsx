@@ -4,6 +4,7 @@ import { ScreenHeader } from '../components/ui/ScreenHeader';
 import {
   getLegalDocument,
   LEGAL_CONTACT_EMAIL,
+  legalWebUrl,
   type LegalDocumentId,
 } from '../content/legalDocuments';
 import { TAB_BAR_CONTENT_INSET } from '../components/navigation/BottomTabBar';
@@ -59,6 +60,12 @@ export const LegalDocumentScreen: React.FC<LegalDocumentScreenProps> = ({
       <ScreenHeader title={doc.title} onBack={onBack} centered sponsorDark={sponsorDark} />
       <Text style={[styles.updated, { color: ui.textMuted }]}>Mise à jour : {doc.updatedAt}</Text>
 
+      {doc.intro ? (
+        <View style={[styles.section, { backgroundColor: ui.surface, borderColor: ui.border }]}>
+          <Text style={[styles.paragraph, { color: ui.textSecondary }]}>{doc.intro}</Text>
+        </View>
+      ) : null}
+
       {doc.sections.map((section) => (
         <View
           key={section.title}
@@ -82,8 +89,14 @@ export const LegalDocumentScreen: React.FC<LegalDocumentScreenProps> = ({
         </TouchableOpacity>
       </View>
 
+      <TouchableOpacity onPress={() => void Linking.openURL(legalWebUrl(documentId))}>
+        <Text style={[styles.webLink, { color: ui.accent }]}>
+          Version complète sur le web
+        </Text>
+      </TouchableOpacity>
+
       <Text style={[styles.footer, { color: ui.textMuted }]}>
-        Version complète disponible dans docs/legal/ du dépôt ProDay (publication store).
+        {legalWebUrl(documentId)}
       </Text>
     </ScrollView>
   );
@@ -130,6 +143,12 @@ const styles = StyleSheet.create({
   contactEmail: {
     fontSize: 14,
     fontWeight: '700',
+  },
+  webLink: {
+    fontSize: 13,
+    fontWeight: '700',
+    marginTop: spacing.md,
+    textAlign: 'center',
   },
   footer: {
     fontSize: 11,
