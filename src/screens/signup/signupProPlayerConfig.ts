@@ -130,3 +130,40 @@ export function getProPlayerStepMeta(
       };
   }
 }
+
+export function getProPlayerLaunchCopy(
+  flags: { emailVerificationPending?: boolean; verificationPending?: boolean },
+  t?: TranslateFn,
+): { title: string; body: string; finishLabel: string } {
+  if (flags.emailVerificationPending) {
+    return {
+      title: tr(t, 'signup.launch.emailValidated.title', 'Documents validés'),
+      body: tr(
+        t,
+        'signup.launch.emailValidated.body',
+        'Confirmez votre email — le lien vous attend dans votre boîte mail.',
+      ),
+      finishLabel: tr(t, 'signup.launch.emailValidated.finish', 'Compris'),
+    };
+  }
+  if (flags.verificationPending) {
+    return {
+      title: tr(t, 'signup.proPlayer.launch.pending.title', 'Profil en validation'),
+      body: tr(
+        t,
+        'signup.proPlayer.launch.pending.body',
+        'Votre espace Pro Joueur sera actif après vérification de votre profil.',
+      ),
+      finishLabel: tr(t, 'signup.launch.finish', 'Entrer dans l’app'),
+    };
+  }
+  return {
+    title: tr(t, 'signup.proPlayer.launch.title', 'Bienvenue Pro Joueur'),
+    body: tr(
+      t,
+      'signup.proPlayer.launch.body',
+      'Carrière, portfolio et opportunités pro — votre saison commence maintenant.',
+    ),
+    finishLabel: tr(t, 'signup.launch.finish', 'Entrer dans l’app'),
+  };
+}

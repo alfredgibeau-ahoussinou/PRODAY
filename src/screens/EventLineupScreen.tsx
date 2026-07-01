@@ -30,7 +30,7 @@ export const EventLineupScreen: React.FC<EventLineupScreenProps> = ({
   onBack,
 }) => {
   const { profile } = useAuth();
-  const { colors: c, productLine, rootStyle } = useThemedScreen();
+  const { colors: c, productLine, isWoman, rootStyle } = useThemedScreen();
   const styles = useMemo(() => createStyles(c), [c]);
   const [event, setEvent] = useState<TeamEvent | null>(null);
   const [formation, setFormation] = useState<string>('4-3-3');
@@ -140,7 +140,7 @@ export const EventLineupScreen: React.FC<EventLineupScreenProps> = ({
       <ScreenHeader title="Composition" onBack={onBack} centered />
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.hint}>
-          {productLine === 'woman'
+          {isWoman
             ? 'Titulaires et remplaçants parmi les joueuses ayant confirmé leur présence.'
             : 'Titulaires et remplaçants parmi les joueurs ayant confirmé leur présence.'}
         </Text>
@@ -229,7 +229,7 @@ const Section: React.FC<{
     <Text style={styles.label}>{title}</Text>
     {slots.length === 0 ? (
       <Text style={styles.empty}>
-        {productLine === 'woman' ? 'Aucune joueuse' : 'Aucun joueur'}
+        {isWoman ? 'Aucune joueuse' : 'Aucun joueur'}
       </Text>
     ) : (
       slots.map((s) => (

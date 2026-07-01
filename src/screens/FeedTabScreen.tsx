@@ -16,10 +16,10 @@ import type { AppColors } from '../theme/universeTheme';
 export const FeedTabScreen: React.FC = () => {
   const { profile, loading } = useAuth();
   const { setActiveTab, openChat, openAuth } = useTabNavigation();
-  const { colors: c, productLine, rootStyle } = useThemedScreen();
+  const { colors: c, productLine, isWoman, rootStyle } = useThemedScreen();
   const { t } = useTranslation();
   const styles = useMemo(() => createStyles(c), [c]);
-  const isWoman = productLine === 'woman';
+  
 
   if (loading) {
     return (

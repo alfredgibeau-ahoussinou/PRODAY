@@ -48,9 +48,9 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
 }) => {
   const { isAdmin } = useAuth();
   const { openChat, setActiveTab } = useTabNavigation();
-  const { colors: c, productLine, rootStyle } = useThemedScreen();
+  const { colors: c, productLine, isWoman, rootStyle } = useThemedScreen();
   const styles = useMemo(() => createStyles(c), [c]);
-  const isWoman = productLine === 'woman';
+  
   const [hubView, setHubView] = useState<HubView>(profile.profile.club_id ? 'hub' : 'join');
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [attendanceEventId, setAttendanceEventId] = useState<string | null>(null);

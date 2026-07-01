@@ -53,7 +53,21 @@ export function resolvePlayerSegment(
   return 'male';
 }
 
-/** Clé thème stable pour logs / tests. */
+/** Affichage UI féminin (segment joueur ou legacy woman). */
+export function isFemalePlayerPresentation(
+  playerSegment: PlayerSegment | null | undefined,
+  productLine?: ProductLineId | null,
+): boolean {
+  return playerSegment === 'female' || productLine === 'woman';
+}
+
+export function isFemalePresentationForUser(
+  user: Pick<User, 'profile' | 'product_line' | 'role' | 'app_space' | 'parental_settings'>,
+  productLine: ProductLineId,
+): boolean {
+  return isFemalePlayerPresentation(resolvePlayerSegment(user, productLine), productLine);
+}
+
 export function playerSegmentThemeKey(
   line: ProductLineId,
   segment: PlayerSegment,

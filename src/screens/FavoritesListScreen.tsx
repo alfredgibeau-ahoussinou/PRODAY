@@ -34,7 +34,7 @@ export const FavoritesListScreen: React.FC<FavoritesListScreenProps> = ({
   onSelectUser,
 }) => {
   const { profile } = useAuth();
-  const { colors: c, productLine, rootStyle } = useThemedScreen();
+  const { colors: c, isWoman, rootStyle } = useThemedScreen();
   const styles = useMemo(() => createStyles(c), [c]);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -73,7 +73,7 @@ export const FavoritesListScreen: React.FC<FavoritesListScreenProps> = ({
     <ActivityIndicator color={c.brand} style={styles.loader} />
   ) : users.length === 0 ? (
     <Text style={styles.empty}>
-      {productLine === 'woman'
+      {isWoman
         ? 'Aucun favori. Ajoutez des joueuses ou coachs depuis leurs profils.'
         : 'Aucun favori. Ajoutez des joueurs ou coachs depuis leurs profils.'}
     </Text>

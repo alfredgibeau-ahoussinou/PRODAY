@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Image, StyleSheet, View } from 'react-native';
 import type { User, UserRole } from '../../models/User';
 import type { PlatformFeedPost } from '../../models/PlatformFeed';
-import type { ProductLineId } from '../../models/ProductLine';
 import { platformFeedService } from '../../services/platformFeed.service';
 import { PressableSpring, SkeletonList } from '../motion';
 import { ProDayText } from '../ui/ProDayText';
@@ -15,10 +14,10 @@ import { useAppTheme } from '../../context/ProductLineContext';
 
 function roleLabel(
   role: UserRole,
-  productLine: ProductLineId,
+  isWoman: boolean,
   t: (key: string) => string
 ): string {
-  if (role === 'player' && productLine === 'woman') return t('role.player.woman');
+  if (role === 'player' && isWoman) return t('role.player.woman');
   const key = `role.${role}`;
   const value = t(key);
   return value === key ? role : value;
@@ -30,7 +29,7 @@ interface PlatformFeedSectionProps {
 
 export const PlatformFeedSection: React.FC<PlatformFeedSectionProps> = ({ profile }) => {
   const { t, locale } = useTranslation();
-  const { colors: c, productLine } = useAppTheme();
+  const { colors: c, isWoman } = useAppTheme();
   const styles = useMemo(() => createStyles(c), [c]);
   const [posts, setPosts] = useState<PlatformFeedPost[]>([]);
   const [loading, setLoading] = useState(true);
@@ -97,7 +96,7 @@ export const PlatformFeedSection: React.FC<PlatformFeedSectionProps> = ({ profil
             <Image source={{ uri: item.image_url }} style={styles.cardImage} resizeMode="cover" />
           ) : null}
           <ProDayText variant="caption" muted>
-            {item.author_name} · {roleLabel(item.author_role, productLine, t)}
+            {item.author_name} · {roleLabel(item.author_role, isWoman, t)}
           </ProDayText>
         </PressableSpring>
       ))}

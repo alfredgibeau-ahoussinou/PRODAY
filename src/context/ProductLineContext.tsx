@@ -109,18 +109,6 @@ export const ProductLineProvider: React.FC<{ children: React.ReactNode }> = ({
     ]);
   }, []);
 
-  const enterHommeSpace = useCallback(async () => {
-    setWomanSpaceActive(false);
-    setLineState('homme');
-    await persistLine('homme');
-  }, [persistLine]);
-
-  const enterWomanSpace = useCallback(async () => {
-    setWomanSpaceActive(true);
-    setLineState('woman');
-    await persistLine('woman');
-  }, [persistLine]);
-
   const setProSignupPresetRole = useCallback(async (role: UserRole | null) => {
     setProSignupPresetRoleState(role);
     if (role) {
@@ -159,6 +147,14 @@ export const ProductLineProvider: React.FC<{ children: React.ReactNode }> = ({
     await persistLine('amateur');
   }, [persistLine]);
 
+  const enterHommeSpace = useCallback(async () => {
+    await enterAmateurSpace();
+  }, [enterAmateurSpace]);
+
+  const enterWomanSpace = useCallback(async () => {
+    await enterAmateurSpace();
+  }, [enterAmateurSpace]);
+
   const enterSupporterSpace = useCallback(async () => {
     setWomanSpaceActive(false);
     setLineState('supporter');
@@ -181,14 +177,14 @@ export const ProductLineProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const setProductLine = useCallback(
     async (line: ProductLineId) => {
-      if (line === 'woman') await enterWomanSpace();
+      if (line === 'woman' || line === 'homme') await enterAmateurSpace();
       else if (isProProductLine(line)) await enterProLine(line);
       else if (line === 'amateur') await enterAmateurSpace();
       else if (line === 'supporter') await enterSupporterSpace();
       else if (line === 'sante') await enterSanteSpace();
-      else await enterHommeSpace();
+      else await enterAmateurSpace();
     },
-    [enterHommeSpace, enterWomanSpace, enterProLine, enterAmateurSpace, enterSupporterSpace, enterSanteSpace]
+    [enterProLine, enterAmateurSpace, enterSupporterSpace, enterSanteSpace]
   );
 
   useEffect(() => {

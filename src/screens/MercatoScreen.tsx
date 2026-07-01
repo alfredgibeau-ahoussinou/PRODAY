@@ -36,8 +36,6 @@ import { ROLES_REQUIRING_VERIFICATION } from '../models/User';
 import { profileService } from '../services/profile.service';
 import { CandidatureScreen } from '../components/mercato/CandidatureScreen';
 import { MercatoStaffHome } from '../components/mercato/MercatoStaffHome';
-import { WomenHubScreen } from './women/WomenHubScreen';
-import { UnderU13HubScreen } from './underU13/UnderU13HubScreen';
 import { useAppSpace } from '../context/AppSpaceContext';
 import { useAppTheme } from '../context/ProductLineContext';
 import { postMatchesAppSpace } from '../constants/appSpaces';
@@ -60,9 +58,7 @@ type MercatoView =
   | 'detections'
   | 'stages'
   | 'stage_detail'
-  | 'create_stage'
-  | 'women_hub'
-  | 'under_u13_hub';
+  | 'create_stage';
 
 import type { MercatoPostScope } from '../utils/mercatoPostFilters';
 import {
@@ -185,22 +181,7 @@ export const MercatoScreen: React.FC<MercatoScreenProps> = ({ postScope }) => {
     setView(id);
   };
 
-  const showLegacyHubs = productLine === 'homme' || productLine === 'woman';
   const showYouthSpaceBanner = productLine === 'amateur';
-
-  useEffect(() => {
-    if (!showLegacyHubs && (view === 'women_hub' || view === 'under_u13_hub')) {
-      setView('home');
-    }
-  }, [showLegacyHubs, view]);
-
-  if (showLegacyHubs && view === 'women_hub') {
-    return <WomenHubScreen onBack={() => setView('home')} />;
-  }
-
-  if (showLegacyHubs && view === 'under_u13_hub') {
-    return <UnderU13HubScreen onBack={() => setView('home')} />;
-  }
 
   if (view === 'detections') {
     return <DetectionEventsScreen onBack={() => setView('home')} />;
@@ -464,14 +445,10 @@ export const MercatoScreen: React.FC<MercatoScreenProps> = ({ postScope }) => {
         search={search}
         onSearchChange={setSearch}
         headerRight={headerRight}
-        showSpaceBanner={showYouthSpaceBanner || showLegacyHubs}
+        showSpaceBanner={showYouthSpaceBanner}
         onOpenMenHub={() => setAppSpace('men')}
-        onOpenWomenHub={() =>
-          showLegacyHubs ? setView('women_hub') : setAppSpace('women')
-        }
-        onOpenUnderU13Hub={() =>
-          showLegacyHubs ? setView('under_u13_hub') : setAppSpace('under_u13')
-        }
+        onOpenWomenHub={() => setAppSpace('women')}
+        onOpenUnderU13Hub={() => setAppSpace('under_u13')}
         onQuickTile={handleQuickTile}
         onFavorites={openFavorites}
         onStaff={() => setView('staff')}

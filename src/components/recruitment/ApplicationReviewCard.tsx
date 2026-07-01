@@ -166,9 +166,9 @@ export const ApplicationReviewCard: React.FC<ApplicationReviewCardProps> = ({
   onReject,
   busy = false,
 }) => {
-  const { colors, productLine } = useAppTheme();
+  const { colors, isWoman } = useAppTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
-  const playerFallback = productLine === 'woman' ? 'Joueuse' : 'Joueur';
+  const playerFallback = isWoman ? 'Joueuse' : 'Joueur';
 
   const [rejectOpen, setRejectOpen] = useState(false);
   const [rejectReason, setRejectReason] = useState('');

@@ -27,7 +27,7 @@ export const AppSpaceBanner: React.FC<AppSpaceBannerProps> = ({
   onOpenUnderU13Hub,
 }) => {
   const { appSpace } = useAppSpace();
-  const { productLine, colors: c } = useAppTheme();
+  const { colors: c } = useAppTheme();
   const styles = useMemo(() => createStyles(c), [c]);
 
   const wrapStyle = isUnderU13AppSpace(appSpace)
@@ -60,34 +60,21 @@ export const AppSpaceBanner: React.FC<AppSpaceBannerProps> = ({
 
       {showHubLinks ? (
         <View style={styles.dualWrap}>
-          {productLine === 'homme' ? (
-            <>
-              <TouchableOpacity
-                style={[styles.dualCard, styles.dualMasculine]}
-                onPress={onOpenMenHub}
-                activeOpacity={0.9}
-              >
-                <Icon name="football" size={20} color={c.brand} />
-                <View style={styles.dualCopy}>
-                  <Text style={styles.dualTitle}>Changer — Masculin</Text>
-                  <Text style={styles.dualSub}>Joueurs · clubs M</Text>
-                </View>
-                <Icon name="chevron-forward" size={16} color={c.textMuted} />
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.dualCard, styles.dualFeminine]}
-                onPress={onOpenWomenHub}
-                activeOpacity={0.9}
-              >
-                <Icon name="people" size={20} color={c.brand} />
-                <View style={styles.dualCopy}>
-                  <Text style={styles.dualTitle}>Univers ProDay Woman</Text>
-                  <Text style={styles.dualSub}>Mercato F · joueuses · clubs F</Text>
-                </View>
-                <Icon name="chevron-forward" size={16} color={c.textMuted} />
-              </TouchableOpacity>
-            </>
-          ) : productLine === 'woman' ? (
+          {!isMasculineAppSpace(appSpace) ? (
+            <TouchableOpacity
+              style={[styles.dualCard, styles.dualMasculine]}
+              onPress={onOpenMenHub}
+              activeOpacity={0.9}
+            >
+              <Icon name="football" size={20} color={c.brand} />
+              <View style={styles.dualCopy}>
+                <Text style={styles.dualTitle}>Changer — Masculin</Text>
+                <Text style={styles.dualSub}>Joueurs · clubs M</Text>
+              </View>
+              <Icon name="chevron-forward" size={16} color={c.textMuted} />
+            </TouchableOpacity>
+          ) : null}
+          {!isFeminineAppSpace(appSpace) ? (
             <TouchableOpacity
               style={[styles.dualCard, styles.dualFeminine]}
               onPress={onOpenWomenHub}
@@ -101,6 +88,7 @@ export const AppSpaceBanner: React.FC<AppSpaceBannerProps> = ({
               <Icon name="chevron-forward" size={16} color={c.textMuted} />
             </TouchableOpacity>
           ) : null}
+          {!isUnderU13AppSpace(appSpace) ? (
           <TouchableOpacity
             style={[styles.dualCard, styles.dualUnderU13]}
             onPress={onOpenUnderU13Hub}
@@ -110,11 +98,12 @@ export const AppSpaceBanner: React.FC<AppSpaceBannerProps> = ({
             <View style={styles.dualCopy}>
               <Text style={styles.dualTitle}>Changer — -13 ans</Text>
               <Text style={styles.dualSub}>
-                {productLine === 'woman' ? 'U7 F · U9 F · U11 F' : 'U7 · U9 · U11'}
+                {isFeminineAppSpace(appSpace) ? 'U7 F · U9 F · U11 F' : 'U7 · U9 · U11'}
               </Text>
             </View>
             <Icon name="chevron-forward" size={16} color={c.textMuted} />
           </TouchableOpacity>
+          ) : null}
         </View>
       ) : null}
     </View>

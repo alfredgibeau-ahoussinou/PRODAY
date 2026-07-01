@@ -131,7 +131,7 @@ export const PlayerProfileScreen: React.FC<PlayerProfileScreenProps> = ({
   onBack,
   onContact,
 }) => {
-  const { colors: themeColors, productLine } = useAppTheme();
+  const { colors: themeColors, productLine, isWoman } = useAppTheme();
   const styles = useMemo(() => createStyles(themeColors), [themeColors]);
   const { profile: myProfile } = useAuth();
   const { requireAuth } = useRequireAuth();
@@ -348,7 +348,7 @@ export const PlayerProfileScreen: React.FC<PlayerProfileScreenProps> = ({
 
   const shellCaption = isStaffView ? 'Scouting' : isOwnProfile ? 'Mon espace' : 'Mercato';
   const shellTitle = isOwnProfile
-    ? productLine === 'woman'
+    ? isWoman
       ? 'Ma fiche joueuse'
       : 'Ma fiche joueur'
     : player.display_name;

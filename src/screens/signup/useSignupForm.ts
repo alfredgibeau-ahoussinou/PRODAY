@@ -37,8 +37,8 @@ import {
   medicalIdToCanonicalLabel,
   resolveMedicalSpecialtyId,
 } from './signupMedicalI18n';
-import { suggestFeminineAppSpaceFromAge, getWomanSignupPhases } from './signupWomanConfig';
-import { getManSignupPhases } from './signupManConfig';
+import { suggestFeminineAppSpaceFromAge } from '../../utils/signupAppSpace';
+import { getAmateurSignupPhases } from './signupAmateurConfig';
 import { getProSignupPhases } from './signupProConfig';
 import { getProPlayerSignupPhases } from './signupProPlayerConfig';
 import { getAmateurSignupPhases } from './signupAmateurConfig';
@@ -62,7 +62,6 @@ export function useSignupForm(initial?: {
   const { setProductLine, proSignupPresetRole } = useProductLine();
   const { t } = useTranslation();
   const productLine: ProductLineId = initial?.productLine ?? 'amateur';
-  const isWomanProduct = productLine === 'woman';
   const isProPlayerSignup = productLine === 'pro_player';
   const isProProduct = isProFamilyLine(productLine);
   const isAmateurProduct = productLine === 'amateur';
@@ -72,19 +71,15 @@ export function useSignupForm(initial?: {
   const defaultRole: UserRole =
     initial?.initialRole ??
     proSignupPresetRole ??
-    (isSanteProduct ? 'physio' : isSupporterProduct ? 'supporter' : isProProduct ? 'coach' : 'player');
+    (isSanteProduct ? 'physio' : isSupporterProduct ? 'supporter' : isProPlayerSignup ? 'player' : isProProduct ? 'coach' : 'player');
 
   const [role, setRoleState] = useState<UserRole>(defaultRole);
   const [draftRole, setDraftRole] = useState<UserRole>(defaultRole);
   const isStaffProduct =
     isProProduct || isSanteProduct || (isAmateurProduct && draftRole === 'coach');
-  const [appSpace, setAppSpaceState] = useState<AppSpaceId>(
-    isWomanProduct ? 'girls' : DEFAULT_APP_SPACE
-  );
+  const [appSpace, setAppSpaceState] = useState<AppSpaceId>(DEFAULT_APP_SPACE);
   const [spaceTouched, setSpaceTouched] = useState(false);
-  // Genre — question explicite à l'inscription Amateur (doc architecture §1.4),
-  // remplace l'ancienne distinction de pôles homme/woman au carousel.
-  const [gender, setGenderState] = useState<Gender>(isWomanProduct ? 'women' : 'men');
+  const [gender, setGenderState] = useState<Gender>('men');
   const [genderTouched, setGenderTouched] = useState(false);
   const [parentalRequired, setParentalRequired] = useState(false);
   const [currentPageId, setCurrentPageId] = useState<SignupPageId>('welcome');
@@ -142,14 +137,13 @@ export function useSignupForm(initial?: {
   const currentPage = steps[pageIndex] ?? 'welcome';
   const stepLabel = getSignupPageLabel(currentPage, t);
   const phases = useMemo(() => {
-    if (isWomanProduct) return getWomanSignupPhases(t);
     if (isSanteProduct) return getSanteSignupPhases(t);
     if (isSupporterProduct) return getSupporterSignupPhases(t);
     if (isAmateurProduct) return getAmateurSignupPhases(t);
     if (isProPlayerSignup) return getProPlayerSignupPhases(t);
     if (isProProduct) return getProSignupPhases(t);
-    return getManSignupPhases(t);
-  }, [isWomanProduct, isSanteProduct, isSupporterProduct, isAmateurProduct, isProPlayerSignup, isProProduct, t]);
+    return getAmateurSignupPhases(t);
+  }, [isSanteProduct, isSupporterProduct, isAmateurProduct, isProPlayerSignup, isProProduct, t]);
   const phaseIndex = getPhaseIndex(flowKind, currentPage);
   const currentPhase = getCurrentPhase(currentPage);
   const needsDocument = ROLES_REQUIRING_VERIFICATION.includes(role);
@@ -216,7 +210,7 @@ export function useSignupForm(initial?: {
 
   const confirmRoleAndContinue = useCallback(() => {
     const nextRole =
-      isWomanProduct || (!isStaffProduct && productLine === 'homme') ? 'player' : draftRole;
+      isProPlayerSignup || (isAmateurProduct && !isStaffProduct) ? 'player' : draftRole;
     if (!isRoleAllowedForProductLine(nextRole, productLine)) {
       setError('Ce profil n’est pas disponible sur cet univers ProDay.');
       return;
@@ -604,11 +598,9 @@ export function useSignupForm(initial?: {
     level: level.trim(),
     age: parsedAge ?? undefined,
     gender:
-      isAmateurProduct || (isProProduct && role === 'player')
+      isAmateurProduct || isProPlayerSignup || (isProProduct && role === 'player')
         ? gender
-        : isWomanProduct
-          ? ('women' as const)
-          : undefined,
+        : undefined,
     season_stats: {
       matches: parseStat(statMatches),
       goals: parseStat(statGoals),
@@ -746,7 +738,7 @@ export function useSignupForm(initial?: {
       buildIntegrityInput,
       clearErrors,
       goToPage,
-      isWomanProduct,
+      isProPlayerSignup,
       isProProduct,
       isAmateurProduct,
       isSupporterProduct,
@@ -757,7 +749,7 @@ export function useSignupForm(initial?: {
 
   return {
     productLine,
-    isWomanProduct,
+    isProPlayerSignup,
     isProProduct,
     isAmateurProduct,
     isSupporterProduct,

@@ -67,7 +67,7 @@ export const FeedCommunityPage: React.FC<FeedCommunityPageProps> = ({
     setRefreshSignal((n) => n + 1);
   };
 
-  const isWoman = productLine === 'woman';
+  
   const subtitle = isWoman ? t('feed.subtitle.womanCommunity') : t('feed.subtitle.community');
 
   const renderResponse = ({ item }: { item: WeeklyQuestionResponse }) => (

@@ -11,6 +11,7 @@ import { PressableSpring } from '../motion';
 import { ProDayGradient } from '../ui/ProDayGradient';
 import type { ProductLineId } from '../../models/ProductLine';
 import { getUniverseIdentity } from '../../content/brandExperience';
+import { isFemalePresentationForUser } from '../../utils/playerSegment';
 import { useAppTheme } from '../../context/ProductLineContext';
 import type { ProdayPulseResult } from '../../utils/prodayPulse';
 import { spacing, radius, shadows } from '../../theme/designTokens';
@@ -62,8 +63,9 @@ export const ProfileIdentityHeader: React.FC<ProfileIdentityHeaderProps> = ({
   const styles = useMemo(() => createStyles(c, compact), [c, compact]);
   const brand = getUniverseIdentity(productLine);
   const p = profile.profile;
+  const isWomanPlayer = isFemalePresentationForUser(profile, productLine);
   const roleLabel =
-    profile.role === 'player' && productLine === 'woman'
+    profile.role === 'player' && isWomanPlayer
       ? brand.playerLabel
       : ROLE_LABELS[profile.role];
   const verified = getVerificationBadge(profile).color === 'green';

@@ -41,9 +41,9 @@ export const EventLiveStatsScreen: React.FC<EventLiveStatsScreenProps> = ({
   onBack,
 }) => {
   const { profile, isAdmin } = useAuth();
-  const { colors: c, productLine, rootStyle } = useThemedScreen();
+  const { colors: c, productLine, isWoman, rootStyle } = useThemedScreen();
   const styles = useMemo(() => createStyles(c), [c]);
-  const isWoman = productLine === 'woman';
+  
   const [event, setEvent] = useState<TeamEvent | null>(null);
   const [players, setPlayers] = useState<{ uid: string; name: string }[]>([]);
   const [selectedPlayer, setSelectedPlayer] = useState<string | null>(null);

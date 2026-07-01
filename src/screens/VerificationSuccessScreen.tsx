@@ -19,9 +19,9 @@ export const VerificationSuccessScreen: React.FC<VerificationSuccessScreenProps>
   institution = 'UEFA · 2022',
   verifiedAt = '12 mai 2025',
 }) => {
-  const { colors: c, productLine, rootStyle } = useThemedScreen();
+  const { colors: c, productLine, isWoman, rootStyle } = useThemedScreen();
   const styles = useMemo(() => createStyles(c), [c]);
-  const isWoman = productLine === 'woman';
+  
 
   return (
     <View style={[styles.root, rootStyle]}>

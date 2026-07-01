@@ -11,6 +11,7 @@ import { ProDayText } from '../ui/ProDayText';
 import { Icon } from '../ui/Icon';
 import { PressableSpring } from '../motion';
 import { getUniverseIdentity } from '../../content/brandExperience';
+import { isFemalePresentationForUser } from '../../utils/playerSegment';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { gradientsForLine } from '../../theme/universeGradients';
 import { spacing, radius } from '../../theme/designTokens';
@@ -61,8 +62,9 @@ export const ProfilePassportHeader: React.FC<ProfilePassportHeaderProps> = ({
   const mesh = gradientsForLine(productLine).ambient;
   const brand = getUniverseIdentity(productLine);
   const p = profile.profile;
+  const isWomanPlayer = isFemalePresentationForUser(profile, productLine);
   const roleLabel =
-    profile.role === 'player' && productLine === 'woman'
+    profile.role === 'player' && isWomanPlayer
       ? brand.playerLabel
       : ROLE_LABELS[profile.role];
   const verified = getVerificationBadge(profile).color === 'green';

@@ -26,9 +26,8 @@ import { useAuth } from '../../context/AuthContext';
 import { ROLES_REQUIRING_VERIFICATION } from '../../models/User';
 import type { ProductLineId } from '../../models/ProductLine';
 import { SignupFlowProvider, useSignupFlowTheme } from './SignupFlowContext';
-import { getWomanLaunchCopy } from './signupWomanConfig';
-import { getManLaunchCopy } from './signupManConfig';
 import { getProLaunchCopy } from './signupProConfig';
+import { getProPlayerLaunchCopy } from './signupProPlayerConfig';
 import { getAmateurLaunchCopy } from './signupAmateurConfig';
 import { getSupporterLaunchCopy } from './signupSupporterConfig';
 import { getSanteLaunchCopy } from './signupSanteConfig';
@@ -55,7 +54,8 @@ const SignupFlowInner: React.FC<SignupFlowInnerProps> = ({
   onComplete,
   form,
 }) => {
-  const { colors, isWomanSignup, isProSignup, isAmateurSignup, isSupporterSignup, isSanteSignup } = useSignupFlowTheme();
+  const { colors, isProPlayerSignup, isProSignup, isAmateurSignup, isSupporterSignup, isSanteSignup } =
+    useSignupFlowTheme();
   const { t } = useTranslation();
   const { profile, refreshProfile } = useAuth();
 
@@ -147,24 +147,19 @@ const SignupFlowInner: React.FC<SignupFlowInnerProps> = ({
         ROLES_REQUIRING_VERIFICATION.includes(form.role) ||
         form.role === 'physio';
 
-      const copy = isWomanSignup
-        ? getWomanLaunchCopy(
-            { emailVerificationPending: form.createdWithEmailPassword },
+      const copy = isSanteSignup
+        ? getSanteLaunchCopy(
+            {
+              emailVerificationPending: form.createdWithEmailPassword,
+              verificationPending,
+            },
             t
           )
-        : isSanteSignup
-          ? getSanteLaunchCopy(
-              {
-                emailVerificationPending: form.createdWithEmailPassword,
-                verificationPending,
-              },
+        : isSupporterSignup
+          ? getSupporterLaunchCopy(
+              { emailVerificationPending: form.createdWithEmailPassword },
               t
             )
-          : isSupporterSignup
-            ? getSupporterLaunchCopy(
-                { emailVerificationPending: form.createdWithEmailPassword },
-                t
-              )
           : isAmateurSignup
             ? getAmateurLaunchCopy(
                 {
@@ -174,18 +169,30 @@ const SignupFlowInner: React.FC<SignupFlowInnerProps> = ({
                 form.role,
                 t
               )
-          : isProSignup
-            ? getProLaunchCopy(
-                {
-                  emailVerificationPending: form.createdWithEmailPassword,
-                  verificationPending,
-                },
-                t
-              )
-            : getManLaunchCopy(
-                { emailVerificationPending: form.createdWithEmailPassword },
-                t
-              );
+            : isProPlayerSignup
+              ? getProPlayerLaunchCopy(
+                  {
+                    emailVerificationPending: form.createdWithEmailPassword,
+                    verificationPending,
+                  },
+                  t
+                )
+              : isProSignup
+                ? getProLaunchCopy(
+                    {
+                      emailVerificationPending: form.createdWithEmailPassword,
+                      verificationPending,
+                    },
+                    t
+                  )
+                : getAmateurLaunchCopy(
+                    {
+                      emailVerificationPending: form.createdWithEmailPassword,
+                      verificationPending,
+                    },
+                    form.role,
+                    t
+                  );
 
       content = (
         <SignupSuccessStep

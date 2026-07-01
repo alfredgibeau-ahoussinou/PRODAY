@@ -546,11 +546,6 @@ export const WOMAN_APP_SPACE_GROUPS = [
 /** @deprecated */
 export const GIRL_APP_SPACE_GROUPS = WOMAN_APP_SPACE_GROUPS;
 
-export { getWomanWelcomeCopy } from './signupWomanConfig';
-
-/** @deprecated */
-export { getWomanWelcomeCopy as getGirlWelcomeCopy } from './signupWomanConfig';
-
 /** Espaces inscription ProDay classique — sans football féminin (réservé à ProDay Woman). */
 export const APP_SPACE_GROUPS = [
   {

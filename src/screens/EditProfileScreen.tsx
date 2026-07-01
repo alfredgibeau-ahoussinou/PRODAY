@@ -116,9 +116,9 @@ export const EditProfileScreen: React.FC<EditProfileScreenProps> = ({
   const isPlayer = user.role === 'player';
   const isStaff =
     user.role === 'coach' || user.role === 'agent' || user.role === 'recruiter';
-  const { colors: c, productLine, rootStyle } = useThemedScreen();
+  const { colors: c, productLine, isWoman, rootStyle } = useThemedScreen();
   const styles = useMemo(() => createStyles(c), [c]);
-  const isWoman = productLine === 'woman';
+  
 
   useEffect(() => {
     setGalleryUrls(user.profile.gallery_urls ?? []);

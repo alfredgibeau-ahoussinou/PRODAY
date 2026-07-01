@@ -54,7 +54,7 @@ export const PlayersListScreen: React.FC<PlayersListScreenProps> = ({
   const [nearMe, setNearMe] = useState(false);
   const { profile } = useAuth();
   const { isFavorite, toggle } = useFavorites(profile?.uid);
-  const { colors: themeColors, productLine } = useAppTheme();
+  const { colors: themeColors, isWoman } = useAppTheme();
   const directory = usePlayersDirectory({
     search: query,
     city: filters.city,
@@ -62,7 +62,7 @@ export const PlayersListScreen: React.FC<PlayersListScreenProps> = ({
     viewerLocation: nearMe ? profile?.location ?? null : null,
   });
   const { users: rawUsers, loading, loadingMore, hasMore, loadMore } = directory;
-  const listTitle = productLine === 'woman' ? 'Joueuses' : 'Joueurs';
+  const listTitle = isWoman ? 'Joueuses' : 'Joueurs';
   const isStaff = isSubScreenShellEnabled(profile, 'staff');
 
   useEffect(() => {
@@ -233,10 +233,10 @@ export const PlayersListScreen: React.FC<PlayersListScreenProps> = ({
           </Text>
           <Text style={[styles.empty, { color: themeColors.textMuted }]}>
             {activeFilterCount > 0 || query.trim()
-              ? productLine === 'woman'
+              ? isWoman
                 ? 'Aucune joueuse ne correspond à vos critères.'
                 : 'Aucun joueur ne correspond à vos critères.'
-              : productLine === 'woman'
+              : isWoman
                 ? 'Aucune joueuse inscrite pour le moment.'
                 : 'Aucun joueur inscrit pour le moment.'}
           </Text>

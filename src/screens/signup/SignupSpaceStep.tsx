@@ -32,17 +32,11 @@ export const SignupSpaceStep: React.FC<SignupSpaceStepProps> = ({
   const { colors } = useSignupFlowTheme();
   const { t } = useTranslation();
   const showGenderStep =
-    form.isAmateurProduct || (form.isProProduct && form.role === 'player');
+    form.isAmateurProduct || form.isProPlayerSignup || (form.isProProduct && form.role === 'player');
   const genderOptions = form.isAmateurProduct
     ? (['men', 'women', 'minor'] as const)
     : (['men', 'women'] as const);
-  const isWomanGroup =
-    showGenderStep && form.gender === 'women'
-      ? true
-      : showGenderStep && form.gender === 'minor'
-        ? false
-        : form.isWomanProduct;
-  const spaceGender = showGenderStep ? form.gender : isWomanGroup ? 'women' : 'men';
+  const spaceGender = showGenderStep ? form.gender : 'men';
   const spaceGroups = getAppSpaceGroups(spaceGender, t);
   const meta = getPlayerStepMeta(form.productLine, 'space', t);
 
