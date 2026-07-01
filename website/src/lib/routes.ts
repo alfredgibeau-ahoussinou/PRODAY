@@ -11,6 +11,8 @@ export const ROUTES = {
   privacy: "/confidentialite",
   terms: "/cgu",
   homme: "/homme",
+  amateur: "/amateur",
+  supporter: "/supporter",
   woman: "/woman",
   pro: "/pro",
   beta: "/beta",
@@ -33,6 +35,8 @@ export type RouteKey = keyof typeof ROUTES;
 
 export const POLE_NAV_ITEMS = [
   { href: ROUTES.joueurs, label: "Joueurs" },
+  { href: ROUTES.amateur, label: "Amateur" },
+  { href: ROUTES.supporter, label: "Supporter" },
   { href: ROUTES.pro, label: "Pro" },
   { href: ROUTES.sante, label: "Santé" },
   { href: ROUTES.partenaires, label: "Partenaires" },
@@ -51,8 +55,10 @@ export const NAV_ITEMS = [
 ] as const;
 
 export const POLE_FOOTER_LINKS = [
-  { href: ROUTES.joueurs, label: "Pôle Joueur", subtitle: "Man & Woman" },
-  { href: ROUTES.pro, label: "Pôle Pro", subtitle: "Staff & structures" },
+  { href: ROUTES.joueurs, label: "Pôle Joueur", subtitle: "Man & Woman — joueurs amateur" },
+  { href: ROUTES.amateur, label: "Pôle Amateur", subtitle: "Joueurs & coachs" },
+  { href: ROUTES.supporter, label: "Pôle Supporter", subtitle: "Fans & communauté" },
+  { href: ROUTES.pro, label: "Pôle Pro", subtitle: "Staff & structures pro" },
   { href: ROUTES.sante, label: "Pôle Santé", subtitle: "Kiné · Mental · Nutrition" },
   { href: ROUTES.partenaires, label: "Pôle Partenaires", subtitle: "Sponsors & marques" },
 ] as const;

@@ -39,17 +39,18 @@ export const SignupSportStep: React.FC<SignupSportStepProps> = ({
   onBack,
 }) => {
   const categoryOptions = useMemo(
-    () => [...defaultCategoriesForAppSpace(form.appSpace, form.productLine)],
-    [form.appSpace, form.productLine]
+    () => [...defaultCategoriesForAppSpace(form.appSpace, form.productLine, form.gender)],
+    [form.appSpace, form.productLine, form.gender]
   );
 
+  const isFeminineSpace = form.isWomanProduct || form.gender === 'women';
   const suggestedSpace = useMemo(() => {
     const parsed = parseInt(form.age.replace(/\D/g, ''), 10);
     if (!Number.isFinite(parsed) || parsed < 5) return null;
-    return form.isWomanProduct
+    return isFeminineSpace
       ? suggestFeminineAppSpaceFromAge(parsed)
       : suggestAppSpaceFromAge(parsed);
-  }, [form.age, form.isWomanProduct]);
+  }, [form.age, isFeminineSpace]);
 
   useEffect(() => {
     if (form.category && !categoryOptions.includes(form.category)) {

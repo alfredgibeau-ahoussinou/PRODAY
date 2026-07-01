@@ -453,7 +453,7 @@ export function validateParentalStepFields(input: ParentalValidationInput): Reco
 export interface SignupIntegrityInput {
   role: UserRole;
   productLine?: ProductLineId;
-  flowKind: 'player' | 'staff' | 'sponsor';
+  flowKind: 'player' | 'staff' | 'sponsor' | 'supporter';
   spaceTouched: boolean;
   parentalRequired: boolean;
   staff: StaffValidationInput;

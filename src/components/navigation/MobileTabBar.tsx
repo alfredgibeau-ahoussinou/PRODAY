@@ -1,30 +1,22 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-} from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { MainTabId } from '../../navigation/mainTabConfig';
 import { getMobileRailLayout } from '../../navigation/mobileTabConfig';
 import { PressableSpring } from '../motion/PressableSpring';
-import { motion } from '../../theme/motion';
-import { Icon, type IconName } from '../ui/Icon';
+import { Icon } from '../ui/Icon';
 import { TabOverflowSheet } from './TabOverflowSheet';
+import { TabActiveIndicator } from './TabActiveIndicator';
+import {
+  formatTabBadge,
+  resolveTabIcon,
+  resolveTabInkColors,
+} from './tabBarShared';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { useSessionProfile } from '../../hooks/useSessionProfile';
 import { useTranslation } from '../../context/LocaleContext';
 import { getTabShortLabel } from '../../content/poleExperience';
-import {
-  getPhysioTabIcon,
-  isMedicalPractitionerRole,
-} from '../../content/medicalExperience';
-import {
-  getSponsorTabIcon,
-  isSponsorRole,
-  SPONSOR_THEME,
-} from '../../content/sponsorExperience';
+import { isSponsorRole, SPONSOR_THEME } from '../../content/sponsorExperience';
 import { spacing, shadows } from '../../theme/designTokens';
 import type { AppColors } from '../../theme/universeTheme';
 import {
@@ -32,56 +24,9 @@ import {
   resolveTabBarAccent,
 } from '../../theme/poleTabBarTheme';
 
-const TAB_ICONS: Record<MainTabId, IconName> = {
-  home: 'home',
-  recrutement: 'search',
-  matchs: 'handshake',
-  covoiturage: 'car',
-  sante: 'heart',
-  feed: 'star-four-points',
-  reels: 'videocam',
-  famille: 'shield',
-  messages: 'chat',
-  profil: 'person',
-  shop: 'bag',
-};
-
-const TabActiveGlow: React.FC<{
-  active: boolean;
-  immersive: boolean;
-  accent: string;
-}> = ({ active, immersive, accent }) => {
-  const progress = useSharedValue(active ? 1 : 0);
-
-  useEffect(() => {
-    progress.value = withSpring(active ? 1 : 0, motion.spring.snappy);
-  }, [active, progress]);
-
-  const glowStyle = useAnimatedStyle(() => ({
-    opacity: progress.value * (immersive ? 0.28 : 0.16),
-    transform: [{ scale: 0.88 + progress.value * 0.12 }],
-  }));
-
-  return (
-    <Animated.View
-      pointerEvents="none"
-      style={[
-        {
-          position: 'absolute',
-          width: 44,
-          height: 32,
-          borderRadius: 16,
-          backgroundColor: immersive ? '#fff' : accent,
-        },
-        glowStyle,
-      ]}
-    />
-  );
-};
-
 const BAR_HEIGHT = 62;
-const SIDE_ICON = 26;
-const CENTER_ICON = 30;
+const SIDE_ICON = 24;
+const CENTER_ICON = 28;
 
 type MobileTabBarProps = {
   activeTab: MainTabId;
@@ -89,16 +34,6 @@ type MobileTabBarProps = {
   unreadCount?: number;
   visibleTabs?: MainTabId[];
 };
-
-function resolveIcon(
-  tab: MainTabId,
-  isPhysio: boolean,
-  isSponsor: boolean,
-): IconName {
-  if (isPhysio) return getPhysioTabIcon(tab);
-  if (isSponsor) return getSponsorTabIcon(tab);
-  return TAB_ICONS[tab];
-}
 
 export const MobileTabBar: React.FC<MobileTabBarProps> = ({
   activeTab,
@@ -113,7 +48,6 @@ export const MobileTabBar: React.FC<MobileTabBarProps> = ({
   const [menuOpen, setMenuOpen] = useState(false);
 
   const role = sessionProfile?.role;
-  const isPhysio = isMedicalPractitionerRole(role);
   const isSponsor = isSponsorRole(role);
   const immersive = activeTab === 'reels';
 
@@ -121,6 +55,10 @@ export const MobileTabBar: React.FC<MobileTabBarProps> = ({
     () => getMobileRailLayout(productLine, role, visibleTabs),
     [productLine, role, visibleTabs],
   );
+
+  useEffect(() => {
+    if (menuOpen) setMenuOpen(false);
+  }, [activeTab]);
 
   const menuActive = rail.overflow.includes(activeTab);
   const chrome = useMemo(
@@ -130,6 +68,9 @@ export const MobileTabBar: React.FC<MobileTabBarProps> = ({
   const accentInk = isSponsor
     ? SPONSOR_THEME.primary
     : resolveTabBarAccent(productLine, role, colors);
+
+  const menuLabel = t('nav.menu');
+  const menuA11y = t('nav.menuA11y');
 
   const dockBg = immersive ? 'rgba(0,0,0,0.94)' : colors.surface;
   const dockBorder = immersive ? 'rgba(255,255,255,0.1)' : colors.border;
@@ -142,16 +83,10 @@ export const MobileTabBar: React.FC<MobileTabBarProps> = ({
 
   const renderSideTab = (tab: MainTabId) => {
     const active = tab === activeTab;
-    const icon = resolveIcon(tab, isPhysio, isSponsor);
+    const icon = resolveTabIcon(tab, role);
     const label = getTabShortLabel(tab, productLine, role, t);
     const badge = tab === 'messages' ? unreadCount : 0;
-    const ink = active
-      ? immersive
-        ? '#fff'
-        : accentInk
-      : immersive
-        ? 'rgba(255,255,255,0.78)'
-        : colors.textMuted;
+    const ink = resolveTabInkColors(active, immersive, accentInk, colors.textMuted);
 
     return (
       <PressableSpring
@@ -164,11 +99,11 @@ export const MobileTabBar: React.FC<MobileTabBarProps> = ({
         accessibilityLabel={label}
       >
         <View style={styles.sideIconWrap}>
-          <TabActiveGlow active={active} immersive={immersive} accent={accentInk} />
+          <TabActiveIndicator active={active} color={ink.activePill} />
           <Icon
             name={icon}
             size={SIDE_ICON}
-            color={ink}
+            color={active ? ink.active : ink.inactive}
             variant={active ? 'filled' : 'outline'}
           />
           {badge > 0 ? (
@@ -178,13 +113,18 @@ export const MobileTabBar: React.FC<MobileTabBarProps> = ({
                 immersive && [styles.badgeImmersive, { backgroundColor: accentInk }],
               ]}
             >
-              <Text style={styles.badgeText}>
-                {badge > 99 ? '99+' : badge > 9 ? '9+' : badge}
-              </Text>
+              <Text style={styles.badgeText}>{formatTabBadge(badge)}</Text>
             </View>
           ) : null}
         </View>
-        <Text style={[styles.sideLabel, active && styles.sideLabelActive, { color: ink }]} numberOfLines={1}>
+        <Text
+          style={[
+            styles.sideLabel,
+            active && styles.sideLabelActive,
+            { color: active ? ink.active : ink.inactive },
+          ]}
+          numberOfLines={1}
+        >
           {label}
         </Text>
       </PressableSpring>
@@ -193,9 +133,46 @@ export const MobileTabBar: React.FC<MobileTabBarProps> = ({
 
   const centerTab = rail.center;
   const centerActive = centerTab === activeTab;
-  const centerIcon = centerTab
-    ? resolveIcon(centerTab, isPhysio, isSponsor)
-    : 'videocam';
+  const centerLabel = centerTab
+    ? getTabShortLabel(centerTab, productLine, role, t)
+    : '';
+  const centerIcon = centerTab ? resolveTabIcon(centerTab, role) : 'videocam';
+
+  const renderMenuButton = () => {
+    if (rail.overflow.length === 0) return null;
+    const active = menuActive;
+    const ink = resolveTabInkColors(active, immersive, accentInk, colors.textMuted);
+
+    return (
+      <PressableSpring
+        style={styles.sideTab}
+        onPress={() => setMenuOpen(true)}
+        scaleTo={0.94}
+        accessibilityRole="button"
+        accessibilityLabel={menuA11y}
+        accessibilityState={{ selected: active }}
+      >
+        <View style={styles.sideIconWrap}>
+          <TabActiveIndicator active={active} color={ink.activePill} />
+          <Icon
+            name="menu"
+            size={SIDE_ICON}
+            color={active ? ink.active : ink.inactive}
+            variant={active ? 'filled' : 'outline'}
+          />
+        </View>
+        <Text
+          style={[
+            styles.sideLabel,
+            active && styles.sideLabelActive,
+            { color: active ? ink.active : ink.inactive },
+          ]}
+        >
+          {menuLabel}
+        </Text>
+      </PressableSpring>
+    );
+  };
 
   return (
     <>
@@ -215,6 +192,9 @@ export const MobileTabBar: React.FC<MobileTabBarProps> = ({
               backgroundColor: dockBg,
               borderColor: dockBorder,
               borderWidth: immersive ? 0 : chrome.barBorderWidth,
+              paddingTop: centerTab
+                ? Math.max(-chrome.centerButtonLift, spacing.xs)
+                : spacing.xs,
             },
             chrome.barShadow && !immersive && shadows.soft,
           ]}
@@ -230,9 +210,8 @@ export const MobileTabBar: React.FC<MobileTabBarProps> = ({
               ]}
             />
           ) : null}
-          <View style={styles.leftCluster}>
-            {rail.left.map(renderSideTab)}
-          </View>
+
+          <View style={styles.leftCluster}>{rail.left.map(renderSideTab)}</View>
 
           {centerTab ? (
             <PressableSpring
@@ -241,7 +220,7 @@ export const MobileTabBar: React.FC<MobileTabBarProps> = ({
               scaleTo={0.94}
               accessibilityRole="tab"
               accessibilityState={{ selected: centerActive }}
-              accessibilityLabel="Reels"
+              accessibilityLabel={centerLabel}
             >
               <View
                 style={[
@@ -254,10 +233,9 @@ export const MobileTabBar: React.FC<MobileTabBarProps> = ({
                     borderWidth: chrome.centerButtonBorderWidth,
                     borderColor: chrome.centerButtonBorder,
                   },
-                  centerActive && styles.centerBtnActive,
+                  centerActive && !immersive && { backgroundColor: accentInk },
                   immersive && [styles.centerBtnImmersive, { backgroundColor: accentInk }],
-                  !immersive && centerActive && { backgroundColor: accentInk },
-                  !immersive && shadows.soft,
+                  !immersive && shadows.interactive,
                 ]}
               >
                 <Icon
@@ -272,61 +250,19 @@ export const MobileTabBar: React.FC<MobileTabBarProps> = ({
                   styles.centerLabel,
                   centerActive && styles.centerLabelActive,
                   immersive && { color: '#fff' },
+                  centerActive && !immersive && { color: accentInk },
                 ]}
               >
-                Reels
+                {centerLabel}
               </Text>
             </PressableSpring>
           ) : (
-            <View style={styles.centerWrap} />
+            <View style={styles.centerSpacer} />
           )}
 
           <View style={styles.rightCluster}>
             {rail.right.map(renderSideTab)}
-            {rail.overflow.length > 0 ? (
-              <PressableSpring
-                style={styles.sideTab}
-                onPress={() => setMenuOpen(true)}
-                scaleTo={0.94}
-                accessibilityRole="button"
-                accessibilityLabel="Menu navigation"
-                accessibilityState={{ selected: menuActive }}
-              >
-                <View style={styles.sideIconWrap}>
-                  <Icon
-                    name="menu"
-                    size={SIDE_ICON}
-                    color={
-                      menuActive
-                        ? immersive
-                          ? '#fff'
-                          : accentInk
-                        : immersive
-                          ? 'rgba(255,255,255,0.78)'
-                          : colors.textMuted
-                    }
-                    variant={menuActive ? 'filled' : 'outline'}
-                  />
-                </View>
-                <Text
-                  style={[
-                    styles.sideLabel,
-                    menuActive && styles.sideLabelActive,
-                    {
-                      color: menuActive
-                        ? immersive
-                          ? '#fff'
-                          : accentInk
-                        : immersive
-                          ? 'rgba(255,255,255,0.78)'
-                          : colors.textMuted,
-                    },
-                  ]}
-                >
-                  Menu
-                </Text>
-              </PressableSpring>
-            ) : null}
+            {renderMenuButton()}
           </View>
         </View>
       </View>
@@ -336,7 +272,6 @@ export const MobileTabBar: React.FC<MobileTabBarProps> = ({
         onClose={() => setMenuOpen(false)}
         tabs={rail.overflow}
         activeTab={activeTab}
-        tabIcons={TAB_ICONS}
         productLine={productLine}
         role={role}
         onSelect={onTabPress}
@@ -378,55 +313,61 @@ function createStyles(
       flex: 1,
       flexDirection: 'row',
       justifyContent: 'space-evenly',
+      alignItems: 'flex-end',
     },
     rightCluster: {
       flex: 1,
       flexDirection: 'row',
       justifyContent: 'space-evenly',
+      alignItems: 'flex-end',
     },
     sideTab: {
-      minWidth: 64,
+      minWidth: 56,
+      maxWidth: 88,
       minHeight: 52,
       alignItems: 'center',
       justifyContent: 'center',
       paddingHorizontal: spacing.xs,
-      gap: 4,
+      gap: 3,
     },
     sideIconWrap: {
-      width: 36,
-      height: 32,
+      width: 44,
+      height: 30,
       alignItems: 'center',
       justifyContent: 'center',
     },
     sideLabel: {
-      fontSize: 11,
+      fontSize: 10,
       fontWeight: '600',
-      maxWidth: 72,
+      letterSpacing: 0.1,
+      maxWidth: 76,
       textAlign: 'center',
     },
     sideLabelActive: {
       fontWeight: '800',
     },
     centerWrap: {
-      width: 80,
+      width: 76,
       alignItems: 'center',
       marginTop: chrome.centerButtonLift,
-      gap: 4,
+      gap: 3,
+      zIndex: 2,
+    },
+    centerSpacer: {
+      width: 76,
     },
     centerBtn: {
       alignItems: 'center',
       justifyContent: 'center',
     },
-    centerBtnActive: {
-      backgroundColor: accent,
-    },
     centerBtnImmersive: {
       borderColor: 'rgba(255,255,255,0.2)',
     },
     centerLabel: {
-      fontSize: 11,
+      fontSize: 10,
       fontWeight: '700',
       color: c.textMuted,
+      letterSpacing: 0.1,
     },
     centerLabelActive: {
       color: accent,
@@ -434,17 +375,17 @@ function createStyles(
     },
     badge: {
       position: 'absolute',
-      top: -2,
-      right: -8,
-      minWidth: 18,
-      height: 18,
+      top: -3,
+      right: -4,
+      minWidth: 17,
+      height: 17,
       borderRadius: 9,
       backgroundColor: chrome.badgeColor,
       alignItems: 'center',
       justifyContent: 'center',
       paddingHorizontal: 4,
       borderWidth: 2,
-      borderColor: c.surface,
+      borderColor: immersive ? 'rgba(0,0,0,0.5)' : c.surface,
     },
     badgeImmersive: {
       borderColor: 'rgba(0,0,0,0.5)',

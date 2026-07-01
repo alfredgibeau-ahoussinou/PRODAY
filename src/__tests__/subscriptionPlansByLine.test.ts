@@ -41,6 +41,31 @@ describe('subscriptionPlansByLine', () => {
     expect(plansForProductLine('sante')).toHaveLength(1);
   });
 
+  it('expose les plans joueur et coach sur Amateur', () => {
+    const coach = getPlanForRoleAndLine('coach', 'amateur');
+    const player = getPlanForRoleAndLine('player', 'amateur');
+
+    expect(coach?.label).toBe('Coach Amateur');
+    expect(player?.label).toBe('Joueur Amateur');
+    expect(coach?.freeIncludes.some((i) => i.includes('Mercato Amateur'))).toBe(true);
+    expect(player?.freeIncludes.some((i) => i.includes('Mercato Amateur'))).toBe(true);
+    expect(plansForProductLine('amateur')).toHaveLength(2);
+    expect(isPlanAvailableOnLine('coach_pro', 'amateur')).toBe(true);
+    expect(isPlanAvailableOnLine('player_plus', 'amateur')).toBe(true);
+    expect(isPlanAvailableOnLine('coach_pro', 'homme')).toBe(false);
+  });
+
+  it('expose le plan supporter sur Supporter', () => {
+    const supporter = getPlanForRoleAndLine('supporter', 'supporter');
+
+    expect(supporter?.label).toBe('Supporter Plus');
+    expect(supporter?.freeIncludes.some((i) => i.includes('Fil communautaire'))).toBe(true);
+    expect(plansForProductLine('supporter')).toHaveLength(1);
+    expect(isPlanAvailableOnLine('player_plus', 'supporter')).toBe(true);
+    expect(isPlanAvailableOnLine('player_plus', 'homme')).toBe(true);
+    expect(isPlanAvailableOnLine('coach_pro', 'supporter')).toBe(false);
+  });
+
   it('liste les offres par univers', () => {
     expect(plansForProductLine('homme')).toHaveLength(1);
     expect(plansForProductLine('woman')[0].label).toBe('Joueuse Plus');

@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { View, StyleSheet, useWindowDimensions } from 'react-native';
 import Animated, {
   runOnUI,
@@ -7,29 +7,44 @@ import Animated, {
   useAnimatedScrollHandler,
   useSharedValue,
 } from 'react-native-reanimated';
+import type { CarouselPoleId } from '../../../models/CarouselPole';
+import { productLineToCarouselPole } from '../../../models/CarouselPole';
 import type { ProductLineId } from '../../../models/ProductLine';
 import { prodayHaptics } from '../../../utils/prodayHaptics';
 import { UniverseChoicePage } from './UniverseChoicePage';
 import { UniversePageChrome } from './UniversePageChrome';
 import { useUniverseIntroTour } from './useUniverseIntroTour';
+import { UNIVERSE_CHOICE_ORDER } from './universeChoiceShared';
 
-const UNIVERSE_ORDER: ProductLineId[] = ['homme', 'woman', 'pro', 'sante'];
+// TODO(phase6-carousel): migrer vers la cible 6 pôles (incluant pro_player distinct).
+const UNIVERSE_ORDER = UNIVERSE_CHOICE_ORDER;
 
 interface UniverseChoicePagerProps {
-  onChoose: (line: ProductLineId) => void;
+  onChoose: (pole: CarouselPoleId) => void;
   introTour?: boolean;
+  interactionLocked?: boolean;
+  initialLine?: ProductLineId;
+  initialCarouselPole?: CarouselPoleId;
+  showDismiss?: boolean;
+  onDismiss?: () => void;
 }
 
 export const UniverseChoicePager: React.FC<UniverseChoicePagerProps> = ({
   onChoose,
   introTour = false,
+  interactionLocked = false,
+  initialLine,
+  initialCarouselPole,
+  showDismiss = false,
+  onDismiss,
 }) => {
   const { width } = useWindowDimensions();
   const scrollX = useSharedValue(0);
-  const listRef = useAnimatedRef<Animated.FlatList<ProductLineId>>();
+  const listRef = useAnimatedRef<Animated.FlatList<CarouselPoleId>>();
   const programmaticScroll = useRef(false);
-  const activeLineRef = useRef<ProductLineId>(UNIVERSE_ORDER[0]);
+  const activeLineRef = useRef<CarouselPoleId>(UNIVERSE_ORDER[0]);
   const introTourOnMountRef = useRef(introTour);
+  const initialScrollDoneRef = useRef(false);
   const [listReady, setListReady] = useState(false);
   const [layoutHeight, setLayoutHeight] = useState(0);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -50,6 +65,7 @@ export const UniverseChoicePager: React.FC<UniverseChoicePagerProps> = ({
 
   const scrollToPage = useCallback(
     (index: number, animated: boolean, haptic: boolean) => {
+      if (width <= 0) return;
       const clamped = Math.max(0, Math.min(UNIVERSE_ORDER.length - 1, index));
       programmaticScroll.current = true;
       if (haptic) prodayHaptics.tabSwitch();
@@ -67,11 +83,20 @@ export const UniverseChoicePager: React.FC<UniverseChoicePagerProps> = ({
     setInteractionUnlocked(true);
   }, []);
 
-  const onActiveLine = useCallback((line: ProductLineId) => {
+  const onActiveLine = useCallback((line: CarouselPoleId) => {
     activeLineRef.current = line;
     const index = UNIVERSE_ORDER.indexOf(line);
     if (index >= 0) setCurrentIndex(index);
   }, []);
+
+  useEffect(() => {
+    const pole = initialCarouselPole ?? (initialLine ? productLineToCarouselPole(initialLine) : null);
+    if (!pole || !listReady || width <= 0 || initialScrollDoneRef.current) return;
+    const index = UNIVERSE_ORDER.indexOf(pole);
+    if (index < 0) return;
+    initialScrollDoneRef.current = true;
+    scrollToPage(index, false, false);
+  }, [initialCarouselPole, initialLine, listReady, scrollToPage, width]);
 
   const { endTour: cancelIntroTour } = useUniverseIntroTour({
     enabled: introTourOnMountRef.current,
@@ -108,23 +133,16 @@ export const UniverseChoicePager: React.FC<UniverseChoicePagerProps> = ({
   );
 
   const handleChoose = useCallback(
-    (line: ProductLineId) => {
+    (line: CarouselPoleId) => {
+      if (interactionLocked) return;
       if (touring) dismissTour();
       onChoose(line);
     },
-    [dismissTour, onChoose, touring]
+    [dismissTour, interactionLocked, onChoose, touring]
   );
 
-  const handleNext = useCallback(() => {
-    if (touring) dismissTour();
-    const next = Math.min(UNIVERSE_ORDER.length - 1, currentIndex + 1);
-    scrollToPage(next, true, true);
-  }, [currentIndex, dismissTour, scrollToPage, touring]);
-
-  const canGoNext = currentIndex < UNIVERSE_ORDER.length - 1;
-
   const renderItem = useCallback(
-    ({ item, index }: { item: ProductLineId; index: number }) => (
+    ({ item, index }: { item: CarouselPoleId; index: number }) => (
       <UniverseChoicePage
         line={item}
         index={index}
@@ -153,14 +171,16 @@ export const UniverseChoicePager: React.FC<UniverseChoicePagerProps> = ({
         renderItem={renderItem}
         horizontal
         pagingEnabled
-        scrollEnabled
+        scrollEnabled={!interactionLocked}
         bounces={false}
         showsHorizontalScrollIndicator={false}
         onLayout={() => setListReady(true)}
         onScrollBeginDrag={() => {
+          if (interactionLocked) return;
           if (touring) dismissTour();
         }}
         onScroll={onScroll}
+        decelerationRate="fast"
         scrollEventThrottle={16}
         onMomentumScrollEnd={(e) => onSnap(e.nativeEvent.contentOffset.x)}
         onScrollEndDrag={(e) => onSnap(e.nativeEvent.contentOffset.x)}
@@ -174,14 +194,16 @@ export const UniverseChoicePager: React.FC<UniverseChoicePagerProps> = ({
 
       <UniversePageChrome
         lines={UNIVERSE_ORDER}
+        activeIndex={currentIndex}
         scrollX={scrollX}
         pageWidth={width}
         touring={touring}
+        interactionLocked={interactionLocked}
+        showDismiss={showDismiss}
+        onDismiss={onDismiss}
         onSkip={dismissTour}
         onChoose={handleChoose}
-        getActiveLine={() => activeLineRef.current}
-        onNext={handleNext}
-        canGoNext={canGoNext}
+        onJumpToIndex={(index) => scrollToPage(index, true, true)}
       />
     </View>
   );

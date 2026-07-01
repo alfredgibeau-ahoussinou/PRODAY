@@ -1,4 +1,5 @@
 import type { ProductLineId } from '../models/ProductLine';
+import { withProFamilyRecord } from '../models/ProductLine';
 import type { UserRole } from '../models/User';
 import { isMedicalPractitionerRole } from '../content/medicalExperience';
 import { MEDICAL_THEME } from '../content/medicalExperience';
@@ -9,6 +10,8 @@ import {
   type AppColors,
 } from './universeTheme';
 import { womanColorOverrides } from './prodayWomanTheme';
+import { amateurColorOverrides } from './prodayAmateurTheme';
+import { supporterColorOverrides } from './prodaySupporterTheme';
 import { santeColorOverrides } from './prodaySanteTheme';
 
 export type PoleTabBarLayout = 'pill' | 'dock';
@@ -98,12 +101,48 @@ const SANTE_CHROME: PoleTabBarChrome = {
   overflowKicker: 'PÔLE SANTÉ',
 };
 
-const CHROME_BY_LINE: Record<ProductLineId, PoleTabBarChrome> = {
+const AMATEUR_CHROME: PoleTabBarChrome = {
+  layout: 'pill',
+  accent: amateurColorOverrides.accent,
+  centerButtonIdle: amateurColorOverrides.ink,
+  centerButtonBorder: amateurColorOverrides.accentSoft,
+  centerButtonBorderWidth: 3,
+  centerButtonLift: -14,
+  centerButtonSize: 56,
+  barBorderRadius: 20,
+  barBorderWidth: 1,
+  topAccentColor: amateurColorOverrides.accent,
+  topAccentHeight: 3,
+  barShadow: true,
+  badgeColor: amateurColorOverrides.brand,
+  overflowKicker: 'PÔLE AMATEUR',
+};
+
+const SUPPORTER_CHROME: PoleTabBarChrome = {
+  layout: 'pill',
+  accent: supporterColorOverrides.accent,
+  centerButtonIdle: supporterColorOverrides.ink,
+  centerButtonBorder: supporterColorOverrides.accentSoft,
+  centerButtonBorderWidth: 3,
+  centerButtonLift: -14,
+  centerButtonSize: 56,
+  barBorderRadius: 20,
+  barBorderWidth: 1,
+  topAccentColor: supporterColorOverrides.accent,
+  topAccentHeight: 3,
+  barShadow: true,
+  badgeColor: supporterColorOverrides.brand,
+  overflowKicker: 'PÔLE SUPPORTER',
+};
+
+const CHROME_BY_LINE: Record<ProductLineId, PoleTabBarChrome> = withProFamilyRecord({
   homme: HOMME_CHROME,
   woman: WOMAN_CHROME,
+  amateur: AMATEUR_CHROME,
+  supporter: SUPPORTER_CHROME,
   pro: PRO_CHROME,
   sante: SANTE_CHROME,
-};
+});
 
 export function getPoleTabBarChrome(
   productLine: ProductLineId,

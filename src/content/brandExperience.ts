@@ -5,6 +5,8 @@
 import type { ProductLineId } from '../models/ProductLine';
 import {
   PRODAY_HOMME_BRAND,
+  PRODAY_AMATEUR_BRAND,
+  PRODAY_SUPPORTER_BRAND,
   PRODAY_PRO_BRAND,
   PRODAY_SANTE_BRAND,
   PRODAY_WOMAN_BRAND,
@@ -58,6 +60,34 @@ export const WOMAN_IDENTITY: UniverseIdentity = {
   entrySub: 'Foot au féminin — joueuses, clubs F, sponsors',
 };
 
+export const AMATEUR_IDENTITY: UniverseIdentity = {
+  id: 'amateur',
+  productName: PRODAY_AMATEUR_BRAND.name,
+  tagline: PRODAY_AMATEUR_BRAND.tagline,
+  heroLine: 'Le foot amateur,\nconnecté.',
+  mission:
+    'Joueurs et coachs amateur — Mercato local, matchs, effectif et convocations au même endroit.',
+  accentLabel: 'Univers Amateur',
+  mercatoLabel: 'Mercato Amateur',
+  playerLabel: 'Joueur amateur',
+  cvLabel: 'CV foot en ligne',
+  entrySub: 'Joueur ou coach amateur — district, régional et club local',
+};
+
+export const SUPPORTER_IDENTITY: UniverseIdentity = {
+  id: 'supporter',
+  productName: PRODAY_SUPPORTER_BRAND.name,
+  tagline: PRODAY_SUPPORTER_BRAND.tagline,
+  heroLine: 'Le foot,\nensemble.',
+  mission:
+    'Fans et communauté — matchs, réels et fil en direct, sans Mercato ni covoiturage.',
+  accentLabel: 'Univers Supporter',
+  mercatoLabel: 'Communauté',
+  playerLabel: 'Supporter',
+  cvLabel: 'Profil supporter',
+  entrySub: 'Fans de foot — tribune numérique et fil communautaire',
+};
+
 export const PRO_IDENTITY: UniverseIdentity = {
   id: 'pro',
   productName: PRODAY_PRO_BRAND.name,
@@ -90,6 +120,10 @@ export function getUniverseIdentity(line: ProductLineId): UniverseIdentity {
   switch (line) {
     case 'woman':
       return WOMAN_IDENTITY;
+    case 'amateur':
+      return AMATEUR_IDENTITY;
+    case 'supporter':
+      return SUPPORTER_IDENTITY;
     case 'pro':
       return PRO_IDENTITY;
     case 'sante':
@@ -107,6 +141,7 @@ export function getBrandIdentity(isWoman: boolean): UniverseIdentity {
 export function getDiscoverHomeCopy(line: ProductLineId) {
   const brand = getUniverseIdentity(line);
   const isWoman = line === 'woman';
+  const isAmateur = line === 'amateur';
   const isPro = line === 'pro';
   const isSante = line === 'sante';
 
@@ -128,11 +163,37 @@ export function getDiscoverHomeCopy(line: ProductLineId) {
       heroTitle: brand.heroLine,
       heroSub: brand.mission,
       trustText:
-        'Profils vérifiés pour coachs et agents — messagerie sécurisée après validation.',
+        'Profils vérifiés pour coachs et agents pro — messagerie sécurisée après validation.',
       ctaText: 'Créer un compte Pro',
       sectionExplore: 'Espace Pro Day Pro',
       secondaryMercato: 'Mercato Pro',
       playersStatLabel: 'Pros',
+    };
+  }
+
+  if (isAmateur) {
+    return {
+      heroTitle: brand.heroLine,
+      heroSub: brand.mission,
+      trustText:
+        'Profils vérifiés pour le foot amateur — joueurs et coachs, messagerie sécurisée après validation.',
+      ctaText: 'Créer un compte Amateur',
+      sectionExplore: 'Espace Pro Day Amateur',
+      secondaryMercato: 'Mercato Amateur',
+      playersStatLabel: 'Amateurs',
+    };
+  }
+
+  if (line === 'supporter') {
+    return {
+      heroTitle: brand.heroLine,
+      heroSub: brand.mission,
+      trustText:
+        'Profils supporters — messagerie communautaire sécurisée.',
+      ctaText: 'Créer un compte Supporter',
+      sectionExplore: 'Espace Pro Day Supporter',
+      secondaryMercato: 'Communauté',
+      playersStatLabel: 'Supporters',
     };
   }
 
@@ -167,6 +228,13 @@ export const ACCOUNT_TYPES_BY_LINE = {
   ],
   woman: [
     { role: 'player' as const, label: 'Joueuse', description: 'CV en ligne, stats, Mercato F' },
+  ],
+  amateur: [
+    { role: 'player' as const, label: 'Joueur amateur', description: 'CV, Mercato Amateur, matchs' },
+    { role: 'coach' as const, label: 'Coach amateur', description: 'Effectif, convocations, Mercato local' },
+  ],
+  supporter: [
+    { role: 'supporter' as const, label: 'Supporter', description: 'Matchs, réels et fil communautaire' },
   ],
   pro: [
     { role: 'coach' as const, label: 'Coach', description: 'Effectif, convocations, recrutement' },

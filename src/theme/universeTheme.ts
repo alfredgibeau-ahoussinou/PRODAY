@@ -1,6 +1,8 @@
 import { colors as baseColors } from './designTokens';
 import type { ProductLineId } from '../models/ProductLine';
 import { womanColorOverrides } from './prodayWomanTheme';
+import { amateurColorOverrides } from './prodayAmateurTheme';
+import { supporterColorOverrides } from './prodaySupporterTheme';
 import { santeColorOverrides } from './prodaySanteTheme';
 
 /** Palette ProDay Pro — bleu pro, distinct Homme (noir) et Woman (rose). */
@@ -63,7 +65,11 @@ export const hommeColorOverrides = {
 
 export function getThemedColorsForLine(line: ProductLineId): AppColors {
   if (line === 'woman') return { ...baseColors, ...womanColorOverrides };
-  if (line === 'pro') return { ...baseColors, ...proColorOverrides };
+  if (line === 'amateur') return { ...baseColors, ...amateurColorOverrides };
+  if (line === 'supporter') return { ...baseColors, ...supporterColorOverrides };
+  if (line === 'pro' || line === 'pro_player' || line === 'pro_club' || line === 'pro_staff') {
+    return { ...baseColors, ...proColorOverrides };
+  }
   if (line === 'sante') return { ...baseColors, ...santeColorOverrides };
   return { ...baseColors, ...hommeColorOverrides };
 }
@@ -74,6 +80,8 @@ export function getThemedColors(isWoman: boolean): AppColors {
 }
 
 export { womanColorOverrides, womanGradients } from './prodayWomanTheme';
+export { amateurColorOverrides, amateurGradients } from './prodayAmateurTheme';
+export { supporterColorOverrides, supporterGradients } from './prodaySupporterTheme';
 export { santeColorOverrides, santeGradients } from './prodaySanteTheme';
 
 export const proGradients = {

@@ -8,6 +8,7 @@ const PARTICIPANT_ROLES: UserRole[] = [
   'recruiter',
   'organizer',
   'physio',
+  'supporter',
 ];
 
 export function canParticipateWeeklyQuestion(role: UserRole): boolean {

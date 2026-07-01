@@ -7,7 +7,7 @@ import {
 } from "./content";
 import { ROUTES } from "./routes";
 
-export type PoleId = "joueur" | "pro" | "sante" | "sponsor";
+export type PoleId = "joueur" | "amateur" | "supporter" | "pro" | "sante" | "sponsor";
 
 export type PoleDefinition = {
   id: PoleId;
@@ -36,6 +36,30 @@ export const POLES: PoleDefinition[] = [
     logo: "/branding/logo-man-picto.png",
     planIds: ["player_plus"],
     playerVariants: ["homme", "woman"],
+  },
+  {
+    id: "amateur",
+    kicker: "PÔLE AMATEUR",
+    title: "Foot amateur",
+    subtitle: "Joueurs & coachs · District · Régional",
+    description:
+      "Joueurs et coachs amateur — Mercato local, matchs, effectif et convocations. Distinct du pôle Pro (staff professionnel).",
+    href: ROUTES.amateur,
+    pricingHash: "amateur",
+    logo: "/branding/logo-amateur-picto.png",
+    planIds: ["player_plus", "coach_pro"],
+  },
+  {
+    id: "supporter",
+    kicker: "PÔLE SUPPORTER",
+    title: "Fans & communauté",
+    subtitle: "Matchs · Reels · Fil",
+    description:
+      "Supporters — matchs, réels et fil communautaire. Distinct du pôle Partenaires (sponsors commerciaux sur Pro).",
+    href: ROUTES.supporter,
+    pricingHash: "supporter",
+    logo: "/branding/logo-supporter-picto.png",
+    planIds: ["player_plus"],
   },
   {
     id: "pro",
@@ -83,6 +107,8 @@ export const POLES: PoleDefinition[] = [
 
 export const POLE_NAV_POLE_IDS: Record<string, PoleId> = {
   [ROUTES.joueurs]: "joueur",
+  [ROUTES.amateur]: "amateur",
+  [ROUTES.supporter]: "supporter",
   [ROUTES.pro]: "pro",
   [ROUTES.sante]: "sante",
   [ROUTES.partenaires]: "sponsor",
@@ -90,6 +116,8 @@ export const POLE_NAV_POLE_IDS: Record<string, PoleId> = {
 
 export const POLE_NAV_STRIPE: Record<PoleId, string> = {
   joueur: "bg-emerald-500",
+  amateur: "bg-orange-500",
+  supporter: "bg-violet-600",
   pro: "bg-blue-500",
   sante: "bg-teal-500",
   sponsor: "bg-amber-400",
@@ -124,6 +152,32 @@ export const POLE_STYLES: Record<
     badge: "bg-emerald-500/20 text-emerald-200",
     textMuted: "text-emerald-300/70",
     cta: "bg-emerald-500 text-white hover:bg-emerald-400",
+  },
+  amateur: {
+    nav: "text-orange-300/80 hover:text-white",
+    navActive: "bg-orange-600 text-white",
+    section:
+      "bg-gradient-to-b from-neutral-950 via-orange-950/50 to-neutral-950 text-white",
+    surface: "bg-[#050505] text-white",
+    accentTop: "border-t-2 border-orange-500/35",
+    card: "border border-orange-500/20 bg-white/5 backdrop-blur-sm",
+    cardHighlight: "ring-2 ring-orange-400/50 border-orange-400/30",
+    badge: "bg-orange-500/20 text-orange-200",
+    textMuted: "text-orange-300/70",
+    cta: "bg-orange-500 text-white hover:bg-orange-400",
+  },
+  supporter: {
+    nav: "text-violet-300/80 hover:text-white",
+    navActive: "bg-violet-600 text-white",
+    section:
+      "bg-gradient-to-b from-neutral-950 via-violet-950/50 to-neutral-950 text-white",
+    surface: "bg-[#050505] text-white",
+    accentTop: "border-t-2 border-violet-500/35",
+    card: "border border-violet-500/20 bg-white/5 backdrop-blur-sm",
+    cardHighlight: "ring-2 ring-violet-400/50 border-violet-400/30",
+    badge: "bg-violet-500/20 text-violet-200",
+    textMuted: "text-violet-300/70",
+    cta: "bg-violet-600 text-white hover:bg-violet-500",
   },
   pro: {
     nav: "text-blue-300/80 hover:text-white",
@@ -174,6 +228,14 @@ export function plansForPole(poleId: PoleId): WebSubscriptionPlan[] {
       ...plansForUniverse("homme"),
       ...plansForUniverse("woman"),
     ];
+  }
+
+  if (poleId === "amateur") {
+    return plansForUniverse("amateur");
+  }
+
+  if (poleId === "supporter") {
+    return plansForUniverse("supporter");
   }
 
   return pole.planIds

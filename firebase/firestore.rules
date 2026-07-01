@@ -38,7 +38,7 @@ service cloud.firestore {
 
     function canParticipateWeeklyQuestion() {
       return userDoc(request.auth.uid).data.role in [
-        'player', 'coach', 'club', 'agent', 'recruiter', 'organizer', 'physio'
+        'player', 'coach', 'club', 'agent', 'recruiter', 'organizer', 'physio', 'supporter'
       ];
     }
 
@@ -147,6 +147,33 @@ service cloud.firestore {
         && request.resource.data.get('email', '') == resource.data.get('email', '');
     }
 
+    /** Un joueur ne peut jamais écrire ses stats saison depuis l'app client. */
+    function ownerSeasonStatsUnchanged() {
+      return resource.data.get('role', '') != 'player'
+        || request.resource.data.get('profile', {}).get('season_stats', null)
+            == resource.data.get('profile', {}).get('season_stats', null);
+    }
+
+    /** À la création, un joueur ne peut pas injecter de season_stats côté client. */
+    function playerSeasonStatsEmptyOnCreate() {
+      return request.resource.data.get('role', '') != 'player'
+        || request.resource.data.get('profile', {}).get('season_stats', null) == null;
+    }
+
+    /** Coach/club du même club : patch stats saison joueur uniquement. */
+    function canStaffWritePlayerSeasonStats() {
+      let requester = userDoc(request.auth.uid).data;
+      return isSignedIn()
+        && requester.get('role', '') in ['coach', 'club']
+        && resource.data.get('role', '') == 'player'
+        && requester.get('profile', {}).get('club_id', '') != ''
+        && requester.get('profile', {}).get('club_id', '')
+            == resource.data.get('profile', {}).get('club_id', '')
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['profile', 'updated_at'])
+        && request.resource.data.get('profile', {}).diff(resource.data.get('profile', {})).affectedKeys()
+            .hasOnly(['season_stats']);
+    }
+
     /** Un mineur ne peut pas modifier les coordonnées tuteur enregistrées à l’inscription. */
     function minorGuardianContactUnchanged() {
       return !isMinorAccount()
@@ -162,7 +189,7 @@ service cloud.firestore {
 
     function validUserRole(role) {
       return role in [
-        'player', 'coach', 'club', 'agent', 'recruiter', 'organizer', 'sponsor', 'physio'
+        'player', 'coach', 'club', 'agent', 'recruiter', 'organizer', 'sponsor', 'physio', 'supporter'
       ];
     }
 
@@ -249,12 +276,15 @@ service cloud.firestore {
         || isSignedIn();
       allow create: if isOwner(userId)
         && request.resource.data.verification_status in ['PENDING', 'NOT_REQUIRED']
-        && validUserRole(request.resource.data.role);
+        && validUserRole(request.resource.data.role)
+        && playerSeasonStatsEmptyOnCreate();
       allow update: if isAdmin()
+        || canStaffWritePlayerSeasonStats()
         || isGuardianParentalUpdate()
         || isCoGuardianInviteLink()
         || (isOwner(userId)
             && ownerImmutableFieldsUnchanged()
+            && ownerSeasonStatsUnchanged()
             && minorGuardianContactUnchanged()
             && (minorParentalProtected() || isOwnerParentalRuntimeSync()));
       allow delete: if isAdmin();
@@ -527,6 +557,42 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    function isClubStaffForClub(clubId) {
+      return isSignedIn()
+        && canManageClubEntity()
+        && userDoc(request.auth.uid).data.get('profile', {}).get('club_id', '') == clubId;
+    }
+
+    match /teams/{teamId} {
+      allow read: if true;
+      allow create: if isSignedIn()
+        && canManageClubEntity()
+        && request.resource.data.club_id is string
+        && request.resource.data.name is string;
+      allow update: if isAdmin()
+        || (isSignedIn() && isClubStaffForClub(resource.data.club_id));
+      allow delete: if isAdmin();
+    }
+
+    match /memberships/{membershipId} {
+      allow read: if isAdmin()
+        || (isSignedIn() && resource.data.player_uid == request.auth.uid)
+        || (isSignedIn() && isClubStaffForClub(resource.data.club_id));
+      allow create: if isSignedIn()
+        && request.resource.data.player_uid == request.auth.uid
+        && request.resource.data.status == 'pending'
+        && request.resource.data.club_id is string
+        && request.resource.data.team_id is string
+        && request.resource.data.player_name is string;
+      allow update: if isAdmin()
+        || (isSignedIn()
+            && isClubStaffForClub(resource.data.club_id)
+            && request.resource.data.club_id == resource.data.club_id
+            && request.resource.data.player_uid == resource.data.player_uid
+            && request.resource.data.status in ['active', 'rejected', 'suspended', 'left']);
+      allow delete: if isAdmin();
+    }
+
     match /recruitment_posts/{postId} {
       allow read: if true;
       allow create: if isSignedIn()
@@ -585,6 +651,38 @@ service cloud.firestore {
       allow create: if isSignedIn()
         && request.resource.data.user_uid == request.auth.uid;
       allow delete: if isSignedIn() && resource.data.user_uid == request.auth.uid;
+    }
+
+    match /follows/{followId} {
+      allow read: if isSignedIn() && resource.data.follower_uid == request.auth.uid;
+      allow create: if isSignedIn()
+        && request.resource.data.follower_uid == request.auth.uid
+        && request.resource.data.target_type in ['club', 'tournament', 'player']
+        && request.resource.data.target_id is string
+        && request.resource.data.target_id.size() > 0;
+      allow update: if isSignedIn() && resource.data.follower_uid == request.auth.uid;
+      allow delete: if isSignedIn() && resource.data.follower_uid == request.auth.uid;
+    }
+
+    /** Inbox parent — convocations mineurs (fallback Firestore cross-device). */
+    match /guardian_notifications/{notificationId} {
+      allow read: if isAdmin()
+        || (isSignedIn()
+            && guardianEmail() != ''
+            && resource.data.guardian_email == guardianEmail());
+      allow create: if isStaffOrAdmin()
+        && request.resource.data.guardian_email is string
+        && request.resource.data.child_uid is string
+        && request.resource.data.event_id is string
+        && request.resource.data.event_title is string
+        && request.resource.data.type == 'minor_invite'
+        && request.resource.data.source == 'team_events';
+      allow update: if isSignedIn()
+        && guardianEmail() != ''
+        && resource.data.guardian_email == guardianEmail()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read_at'])
+        && request.resource.data.read_at is timestamp;
+      allow delete: if isAdmin();
     }
 
     /** Compteurs publics (page Discover invité) — écriture admin uniquement */

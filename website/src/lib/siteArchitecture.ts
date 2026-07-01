@@ -7,6 +7,8 @@ export type PageAccent =
   | "default"
   | "joueur"
   | "woman"
+  | "amateur"
+  | "supporter"
   | "pro"
   | "sante"
   | "sponsor";
@@ -54,6 +56,18 @@ export const SITE_PAGES: Record<string, PageMeta> = {
     accent: "woman",
     poleHubPath: ROUTES.joueurs,
     siblingLinks: [{ href: ROUTES.homme, label: "Man" }],
+  },
+  [ROUTES.amateur]: {
+    path: ROUTES.amateur,
+    poleId: "amateur",
+    category: "pole",
+    accent: "amateur",
+  },
+  [ROUTES.supporter]: {
+    path: ROUTES.supporter,
+    poleId: "supporter",
+    category: "pole",
+    accent: "supporter",
   },
   [ROUTES.pro]: {
     path: ROUTES.pro,
@@ -184,6 +198,8 @@ const POLE_PREFIXES: { prefix: string; poleId: PoleId }[] = [
   { prefix: ROUTES.joueurs, poleId: "joueur" },
   { prefix: ROUTES.homme, poleId: "joueur" },
   { prefix: ROUTES.woman, poleId: "joueur" },
+  { prefix: ROUTES.amateur, poleId: "amateur" },
+  { prefix: ROUTES.supporter, poleId: "supporter" },
   { prefix: ROUTES.pro, poleId: "pro" },
   { prefix: ROUTES.sante, poleId: "sante" },
   { prefix: ROUTES.partenaires, poleId: "sponsor" },
@@ -232,6 +248,8 @@ export function poleHubForPath(pathname: string): string | null {
     return ROUTES.joueurs;
   }
   if (meta.poleId === "joueur") return ROUTES.joueurs;
+  if (meta.poleId === "amateur") return ROUTES.amateur;
+  if (meta.poleId === "supporter") return ROUTES.supporter;
   if (meta.poleId === "pro") return ROUTES.pro;
   if (meta.poleId === "sante") return ROUTES.sante;
   if (meta.poleId === "sponsor") return ROUTES.partenaires;
@@ -253,6 +271,8 @@ export function isNavActive(href: string, pathname: string): boolean {
       path === ROUTES.woman
     );
   }
+  if (targetPath === ROUTES.amateur) return path === ROUTES.amateur;
+  if (targetPath === ROUTES.supporter) return path === ROUTES.supporter;
   if (targetPath === ROUTES.pro) return path === ROUTES.pro || path.startsWith(`${ROUTES.pro}/`);
   if (targetPath === ROUTES.sante) return path === ROUTES.sante;
   if (targetPath === ROUTES.partenaires) return path === ROUTES.partenaires;

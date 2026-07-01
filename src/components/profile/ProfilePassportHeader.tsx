@@ -24,6 +24,7 @@ const ROLE_LABELS: Record<UserRole, string> = {
   recruiter: 'Recruteur',
   organizer: 'Organisateur',
   sponsor: 'Sponsor',
+  supporter: 'Supporter',
   physio: 'Pôle santé',
 };
 

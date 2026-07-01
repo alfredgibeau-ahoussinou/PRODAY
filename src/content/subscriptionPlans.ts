@@ -234,6 +234,7 @@ const ROLE_TO_PLAN: Partial<Record<UserRole, SubscriptionPlanId>> = {
   physio: 'physio_pro',
   organizer: 'organizer_pro',
   sponsor: 'sponsor_pro',
+  supporter: 'player_plus',
 };
 
 export function planIdForRole(role: UserRole): SubscriptionPlanId | null {

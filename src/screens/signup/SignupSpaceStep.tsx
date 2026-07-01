@@ -31,7 +31,9 @@ export const SignupSpaceStep: React.FC<SignupSpaceStepProps> = ({
   const signupTheme = useSignupTheme();
   const { colors } = useSignupFlowTheme();
   const { t } = useTranslation();
-  const spaceGroups = getAppSpaceGroups(form.isWomanProduct, t);
+  const showGenderStep = form.isAmateurProduct;
+  const isWomanGroup = showGenderStep ? form.gender === 'women' : form.isWomanProduct;
+  const spaceGroups = getAppSpaceGroups(isWomanGroup, t);
   const meta = getPlayerStepMeta(form.productLine, 'space', t);
 
   return (
@@ -49,6 +51,39 @@ export const SignupSpaceStep: React.FC<SignupSpaceStepProps> = ({
         <SignupFooterButton label={t('signup.form.continue')} onPress={() => form.advanceFromCurrentPage()} />
       }
     >
+      {showGenderStep ? (
+        <View style={{ marginBottom: 12 }}>
+          <Text style={signupTheme.sectionLabel}>{t('signup.form.gender.title')}</Text>
+          {form.fieldErrors.gender ? (
+            <Text style={signupTheme.fieldError}>{form.fieldErrors.gender}</Text>
+          ) : null}
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+            {(['men', 'women'] as const).map((option) => {
+              const active = form.gender === option && form.genderTouched;
+              return (
+                <Pressable
+                  key={option}
+                  style={[
+                    signupTheme.chip,
+                    { flexGrow: 1, minWidth: '46%' },
+                    active && { backgroundColor: colors.brand, borderColor: colors.brand },
+                  ]}
+                  onPress={() => form.setGender(option)}
+                >
+                  <Text
+                    style={[
+                      signupTheme.chipTitle,
+                      active && { color: colors.brandInverse },
+                    ]}
+                  >
+                    {t(`signup.form.gender.${option}`)}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        </View>
+      ) : null}
       {form.fieldErrors.appSpace ? (
         <Text style={signupTheme.fieldError}>{form.fieldErrors.appSpace}</Text>
       ) : null}

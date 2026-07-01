@@ -49,6 +49,7 @@ const ROLE_LABELS: Record<UserRole, string> = {
   recruiter: 'Recruteur',
   organizer: 'Organisateur',
   sponsor: 'Sponsor',
+  supporter: 'Supporter',
   physio: 'Pôle médical',
 };
 
@@ -86,6 +87,7 @@ export function getRoleLabel(role: UserRole, t?: TranslateFn): string {
 export function getFlowKind(role: UserRole): SignupFlowKind {
   if (role === 'player') return 'player';
   if (role === 'sponsor') return 'sponsor';
+  if (role === 'supporter') return 'supporter';
   return 'staff';
 }
 
@@ -135,6 +137,10 @@ export function buildSignupSteps(
 
   if (flowKind === 'sponsor') {
     return ['welcome', 'sponsor_pro', 'account', 'security', 'launch'];
+  }
+
+  if (role === 'supporter') {
+    return ['welcome', 'account', 'security', 'launch'];
   }
 
   if (role === 'physio') {

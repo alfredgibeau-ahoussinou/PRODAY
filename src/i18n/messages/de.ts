@@ -51,6 +51,8 @@ export const de: MessageCatalog = {
   'profile.chapters.settings': 'Einstellungen',
 
   'nav.overflow': 'Navigation',
+  'nav.menu': 'Menü',
+  'nav.menuA11y': 'Navigationsmenü',
 
   'tabs.home': 'Start',
   'tabs.recrutement': 'Transfer',

@@ -9,6 +9,7 @@ import { useTabNavigation } from '../context/TabNavigationContext';
 import { DiscoverScreen } from './DiscoverScreen';
 import { PhysioDashboardScreen } from './medical/PhysioDashboardScreen';
 import { HomeIaDashboard } from '../features/home/HomeIaDashboard';
+import { SupporterHomeDashboard } from '../features/home/roles/SupporterHomeDashboard';
 import { resolveRoleHomeDashboard } from '../features/home/roles/resolveRoleHomeDashboard';
 import { TeamManagementScreen } from './TeamManagementScreen';
 import { SponsorsScreen } from './SponsorsScreen';
@@ -69,6 +70,16 @@ export const HomeScreen: React.FC = () => {
     if (!profile) return null;
     if (profile.role === 'physio') {
       return <PhysioDashboardScreen profile={profile} />;
+    }
+    if (profile.role === 'supporter') {
+      return (
+        <SupporterHomeDashboard
+          profile={profile}
+          unreadMessages={unreadMessages}
+          onRefresh={handleRefresh}
+          refreshing={refreshing}
+        />
+      );
     }
     const roleHome = resolveRoleHomeDashboard(profile.role);
     if (roleHome) {

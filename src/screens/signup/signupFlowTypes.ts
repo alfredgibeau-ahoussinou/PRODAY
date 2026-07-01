@@ -21,7 +21,7 @@ export type SignupPageId =
   | 'security'
   | 'launch';
 
-export type SignupFlowKind = 'player' | 'staff' | 'sponsor';
+export type SignupFlowKind = 'player' | 'staff' | 'sponsor' | 'supporter';
 
 export type SignupPhaseId = 'vous' | 'acces' | 'launch';
 

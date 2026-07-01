@@ -19,6 +19,8 @@ import { ROUTES } from "@/lib/routes";
 
 const POLE_NAV: { id: PoleId; label: string }[] = [
   { id: "joueur", label: "Joueur" },
+  { id: "amateur", label: "Amateur" },
+  { id: "supporter", label: "Supporter" },
   { id: "pro", label: "Pro" },
   { id: "sante", label: "Santé" },
   { id: "sponsor", label: "Partenaires" },
@@ -26,6 +28,8 @@ const POLE_NAV: { id: PoleId; label: string }[] = [
 
 const DOT_ACTIVE: Record<PoleId, string> = {
   joueur: "bg-emerald-500",
+  amateur: "bg-orange-500",
+  supporter: "bg-violet-600",
   pro: "bg-blue-600",
   sante: "bg-teal-500",
   sponsor: "bg-amber-400",
@@ -126,9 +130,15 @@ function PolePricingPanel({ poleId, yearly }: PolePricingPanelProps) {
   );
 }
 
+function initialPoleFromHash(): PoleId {
+  if (typeof window === "undefined") return "joueur";
+  const hash = window.location.hash.replace("#", "");
+  return isPoleId(hash) ? hash : "joueur";
+}
+
 export function PolesPricingLayout() {
   const [yearly, setYearly] = useState(false);
-  const [activePole, setActivePole] = useState<PoleId>("joueur");
+  const [activePole, setActivePole] = useState<PoleId>(initialPoleFromHash);
   const [direction, setDirection] = useState(1);
 
   const goToPole = useCallback((id: PoleId, dir?: number) => {
@@ -154,11 +164,6 @@ export function PolesPricingLayout() {
   }, [activePole, goToPole]);
 
   useEffect(() => {
-    const hash = window.location.hash.replace("#", "");
-    if (isPoleId(hash)) {
-      setActivePole(hash);
-    }
-
     const onHashChange = () => {
       const next = window.location.hash.replace("#", "");
       if (isPoleId(next)) {

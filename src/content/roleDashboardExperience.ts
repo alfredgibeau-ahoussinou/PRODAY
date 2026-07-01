@@ -7,7 +7,7 @@ import { getMercatoTabLabel } from './mercatoTabLabel';
 export interface RoleDashboardMeta {
   eyebrow: string;
   title: string;
-  heroTone: 'player' | 'coach' | 'club' | 'agent' | 'recruiter' | 'organizer' | 'medical' | 'sponsor';
+  heroTone: 'player' | 'coach' | 'club' | 'agent' | 'recruiter' | 'organizer' | 'medical' | 'sponsor' | 'supporter';
   moduleOrder: ProDayModuleId[];
   fullWidthModule?: ProDayModuleId;
   hideModules?: ProDayModuleId[];
@@ -73,6 +73,14 @@ const ROLE_DASHBOARD: Record<UserRole, RoleDashboardMeta> = {
     fullWidthModule: 'sponsors',
     hideModules: ['gestion'],
   },
+  supporter: {
+    eyebrow: 'TRIBUNE SUPPORTER',
+    title: 'Votre tribune numérique',
+    heroTone: 'supporter',
+    moduleOrder: ['matchs', 'gestion', 'recrutement', 'sponsors'],
+    fullWidthModule: 'matchs',
+    hideModules: ['recrutement', 'sponsors'],
+  },
 };
 
 export function getRoleDashboardMeta(role: UserRole): RoleDashboardMeta {
@@ -97,6 +105,7 @@ export const ROLE_HERO_ACCENT: Record<RoleDashboardMeta['heroTone'], string> = {
   organizer: '#B45309',
   medical: '#0F766E',
   sponsor: '#BE185D',
+  supporter: '#7C3AED',
 };
 
 export interface RolePanelAction {
@@ -156,6 +165,13 @@ export function getRolePanelActions(role: UserRole): RolePanelAction[] {
       return [
         { icon: 'star-four-points', title: 'Offres sponsors', sub: 'Visibilité & financement', accent: true },
         { icon: 'business', title: 'Clubs cibles', sub: 'Territoire local' },
+      ];
+    case 'supporter':
+      return [
+        { icon: 'calendar', title: 'Matchs', sub: 'Calendrier & live', accent: true },
+        { icon: 'videocam', title: 'Réels', sub: 'Moments forts foot' },
+        { icon: 'star-four-points', title: 'Fil', sub: 'Communauté & actu' },
+        { icon: 'search', title: 'Découverte', sub: 'Parcourir les joueurs' },
       ];
     default:
       return [];

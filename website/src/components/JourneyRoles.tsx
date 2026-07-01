@@ -20,6 +20,16 @@ const POLE_GROUPS: {
     journeyIds: ["player", "parent"],
   },
   {
+    pole: "amateur",
+    label: "Pôle Amateur",
+    journeyIds: ["player", "coach"],
+  },
+  {
+    pole: "supporter",
+    label: "Pôle Supporter",
+    journeyIds: ["supporter"],
+  },
+  {
     pole: "pro",
     label: "Pôle Pro",
     journeyIds: ["coach", "recruiter", "agent", "club", "organizer"],

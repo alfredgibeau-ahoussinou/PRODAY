@@ -29,6 +29,8 @@ import { SignupFlowProvider, useSignupFlowTheme } from './SignupFlowContext';
 import { getWomanLaunchCopy } from './signupWomanConfig';
 import { getManLaunchCopy } from './signupManConfig';
 import { getProLaunchCopy } from './signupProConfig';
+import { getAmateurLaunchCopy } from './signupAmateurConfig';
+import { getSupporterLaunchCopy } from './signupSupporterConfig';
 import { getSanteLaunchCopy } from './signupSanteConfig';
 import { useTranslation } from '../../context/LocaleContext';
 import type { UserRole } from '../../models/User';
@@ -53,7 +55,7 @@ const SignupFlowInner: React.FC<SignupFlowInnerProps> = ({
   onComplete,
   form,
 }) => {
-  const { colors, isWomanSignup, isProSignup, isSanteSignup } = useSignupFlowTheme();
+  const { colors, isWomanSignup, isProSignup, isAmateurSignup, isSupporterSignup, isSanteSignup } = useSignupFlowTheme();
   const { t } = useTranslation();
   const { profile, refreshProfile } = useAuth();
 
@@ -158,6 +160,20 @@ const SignupFlowInner: React.FC<SignupFlowInnerProps> = ({
               },
               t
             )
+          : isSupporterSignup
+            ? getSupporterLaunchCopy(
+                { emailVerificationPending: form.createdWithEmailPassword },
+                t
+              )
+          : isAmateurSignup
+            ? getAmateurLaunchCopy(
+                {
+                  emailVerificationPending: form.createdWithEmailPassword,
+                  verificationPending,
+                },
+                form.role,
+                t
+              )
           : isProSignup
             ? getProLaunchCopy(
                 {
@@ -198,12 +214,12 @@ const SignupFlowWithTheme: React.FC<SignupFlowProps> = (props) => {
   const form = useSignupForm({
     initialEmail: props.initialEmail,
     initialDisplayName: props.initialDisplayName,
-    productLine: props.productLine ?? 'homme',
+    productLine: props.productLine ?? 'amateur',
     initialRole: props.initialRole,
   });
 
   return (
-    <SignupFlowProvider productLine={props.productLine ?? 'homme'} experienceRole={form.role}>
+    <SignupFlowProvider productLine={props.productLine ?? 'amateur'} experienceRole={form.role}>
       <SignupFlowInner {...props} form={form} />
     </SignupFlowProvider>
   );

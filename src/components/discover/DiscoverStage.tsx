@@ -139,7 +139,7 @@ function createStyles(c: AppColors) {
       width: 8,
       height: 8,
       borderRadius: 4,
-      backgroundColor: c.success,
+      backgroundColor: c.accent,
     },
     statsPillText: {
       flex: 1,

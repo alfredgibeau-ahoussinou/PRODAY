@@ -1,22 +1,28 @@
-import type { ProductLineId } from '../../../models/ProductLine';
+import type { CarouselPoleId } from '../../../models/CarouselPole';
 
-export const UNIVERSE_ACCENT: Record<ProductLineId, string> = {
-  homme: '#15803D',
-  woman: '#BE185D',
-  pro: '#1D4ED8',
+export const UNIVERSE_ACCENT: Record<CarouselPoleId, string> = {
+  amateur: '#EA580C',
+  supporter: '#7C3AED',
+  pro_player: '#1D4ED8',
+  pro_club: '#0369A1',
+  pro_staff: '#4338CA',
   sante: '#0F766E',
 };
 
-export const UNIVERSE_ACCENT_SOFT: Record<ProductLineId, string> = {
-  homme: '#DCFCE7',
-  woman: '#FCE7F3',
-  pro: '#DBEAFE',
+export const UNIVERSE_ACCENT_SOFT: Record<CarouselPoleId, string> = {
+  amateur: '#FFEDD5',
+  supporter: '#EDE9FE',
+  pro_player: '#DBEAFE',
+  pro_club: '#E0F2FE',
+  pro_staff: '#E0E7FF',
   sante: '#CCFBF1',
 };
 
-export const UNIVERSE_SHORT: Record<ProductLineId, string> = {
-  homme: 'Men',
-  woman: 'Women',
-  pro: 'Pro',
+export const UNIVERSE_SHORT: Record<CarouselPoleId, string> = {
+  amateur: 'Amateur',
+  supporter: 'Supporter',
+  pro_player: 'Pro Joueur',
+  pro_club: 'Pro Club',
+  pro_staff: 'Pro Staff',
   sante: 'Santé',
 };

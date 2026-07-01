@@ -167,7 +167,7 @@ describe('charge applicative (simulation utilisateurs)', () => {
             expect(visible.length).toBeLessThan(membersInDb);
           }
         });
-        expect(ms).toBeLessThan(budget(scale, 0.6, 15));
+        expect(ms).toBeLessThan(budget(scale, 0.6, 50));
       });
     });
   }

@@ -21,7 +21,7 @@ export type MobileRailLayout = {
   overflow: MainTabId[];
 };
 
-const LEFT_PRIORITY: MainTabId[] = ["home", "feed", "recrutement", "matchs"];
+const LEFT_PRIORITY: MainTabId[] = ["home", "matchs", "feed", "recrutement"];
 const SECONDARY_PRIORITY: MainTabId[] = [
   "recrutement",
   "matchs",
@@ -35,7 +35,7 @@ const SECONDARY_PRIORITY: MainTabId[] = [
 /** Rôles par défaut pour la démo web — alignés sur `getVisibleMainTabs`. */
 function defaultRoleForUniverse(universe: ProductLineWeb): "player" | "coach" | "physio" {
   if (universe === "sante") return "physio";
-  if (universe === "pro") return "coach";
+  if (universe === "pro" || universe === "amateur") return "coach";
   return "player";
 }
 
@@ -60,6 +60,10 @@ export function getVisibleMainTabsForWeb(universe: ProductLineWeb): MainTabId[] 
 
   if (universe === "sante") {
     tabs = ["home", "matchs", "messages", "profil"];
+  } else if (universe === "supporter") {
+    tabs = ["home", "matchs", "reels", "feed", "messages", "profil"];
+  } else if (universe === "amateur") {
+    tabs = ["home", "recrutement", "matchs", "reels", "covoiturage", "messages", "profil"];
   } else if (universe === "pro") {
     if (role === "coach") {
       tabs = ["home", "recrutement", "matchs", "reels", "covoiturage", "messages", "profil"];
@@ -107,8 +111,8 @@ export function getMobileRailLayoutForWeb(visible: MainTabId[]): MobileRailLayou
   const center = visible.includes("reels") ? "reels" : null;
   const right: MainTabId[] = [];
   if (visible.includes("messages")) right.push("messages");
-  else if (visible.includes("profil")) right.push("profil");
-  else if (visible.includes("shop")) right.push("shop");
+  if (visible.includes("profil")) right.push("profil");
+  if (right.length === 0 && visible.includes("shop")) right.push("shop");
 
   const inRail = new Set<MainTabId>([
     ...left,

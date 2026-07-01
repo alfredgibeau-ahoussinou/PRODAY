@@ -20,6 +20,8 @@ export const UI_EN: MessageCatalog = {
 
   'universe.homme': 'Men\'s universe',
   'universe.woman': 'Women\'s universe',
+  'universe.amateur': 'Amateur universe',
+  'universe.supporter': 'Supporter universe',
   'universe.pro': 'Pro universe',
   'universe.sante': 'Health universe',
 
@@ -42,6 +44,26 @@ export const UI_EN: MessageCatalog = {
   'discover.sectionExplore.woman': 'Explore Woman',
   'discover.secondaryMercato.woman': 'Transfer F',
   'discover.playersStat.woman': 'Players',
+
+  'discover.hero.amateur': 'Amateur football,\nconnected.',
+  'discover.mission.amateur':
+    'Amateur players and coaches — local transfer market, matches, squad and call-ups in one place.',
+  'discover.trust.amateur':
+    'Verified amateur profiles — players and coaches, secure messaging after validation.',
+  'discover.cta.amateur': 'Create an Amateur account',
+  'discover.sectionExplore.amateur': 'Pro Day Amateur space',
+  'discover.secondaryMercato.amateur': 'Amateur Transfer',
+  'discover.playersStat.amateur': 'Amateurs',
+
+  'discover.hero.supporter': 'Football,\ntogether.',
+  'discover.mission.supporter':
+    'Fans and community — matches, reels and live feed, no transfer market.',
+  'discover.trust.supporter':
+    'Supporter profiles — secure community messaging.',
+  'discover.cta.supporter': 'Create a Supporter account',
+  'discover.sectionExplore.supporter': 'Pro Day Supporter space',
+  'discover.secondaryMercato.supporter': 'Community',
+  'discover.playersStat.supporter': 'Supporters',
 
   'discover.hero.pro': 'Football\nprofessionals.',
   'discover.mission.pro':
@@ -317,4 +339,32 @@ export const UI_EN: MessageCatalog = {
   'roleHome.agent.publishCta': 'Publish',
   'roleHome.agent.mercatoScouting': 'Mercato scouting',
   'roleHome.agent.mercatoScoutingSub': 'Browse filtered player profiles',
+
+  'roleHome.supporter.quickActions': 'Quick actions',
+  'roleHome.supporter.quickActionsSub': 'Your stand in one tap',
+  'roleHome.supporter.action.matchs': 'Matches',
+  'roleHome.supporter.action.matchsSub': 'Calendar & live',
+  'roleHome.supporter.action.reels': 'Reels',
+  'roleHome.supporter.action.reelsSub': 'Highlights',
+  'roleHome.supporter.action.feed': 'Feed',
+  'roleHome.supporter.action.feedSub': 'Community & news',
+  'roleHome.supporter.action.discovery': 'Discover',
+  'roleHome.supporter.action.discoverySub': 'Browse players',
+  'roleHome.supporter.action.favorites': 'Favorites',
+  'roleHome.supporter.action.favoritesSub': 'Players you follow',
+  'roleHome.supporter.action.shop': 'Shop',
+  'roleHome.supporter.action.shopSub': 'Gear & goodies',
+  'roleHome.supporter.matchesTitle': 'Upcoming matches',
+  'roleHome.supporter.matchesSub': 'Football calendar near you',
+  'roleHome.supporter.noMatches': 'No upcoming matches — explore the calendar.',
+  'roleHome.supporter.tournamentsTitle': 'Tournaments',
+  'roleHome.supporter.tournamentsSub': 'Upcoming competitions',
+  'roleHome.supporter.noTournaments': 'No tournaments scheduled yet.',
+  'roleHome.supporter.favoritesTitle': 'Favorites',
+  'roleHome.supporter.favoritesSub': 'Players you follow',
+  'roleHome.supporter.favoritesCount': '{n} player(s) followed',
+  'roleHome.supporter.favoritesEmpty': 'No favorites yet',
+  'roleHome.supporter.favoritesHint': 'Add players from discovery',
+  'roleHome.supporter.feedTeaser': 'Community feed',
+  'roleHome.supporter.feedTeaserSub': 'News, debates and highlights',
 };

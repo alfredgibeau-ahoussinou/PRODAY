@@ -11,6 +11,7 @@ import {
   limit,
   serverTimestamp,
   Timestamp,
+  type Firestore,
 } from 'firebase/firestore';
 import { teamChatService } from './teamChat.service';
 import { getDb } from '../lib/firebase';
@@ -43,6 +44,8 @@ import { assertTeamEventManageAccess, assertTeamEventRsvpAccess } from '../utils
 import { buildActivityFromTeamEvent } from '../utils/teamEventActivitySync';
 import { playerActivityService } from './playerActivity.service';
 import type { User } from '../models/User';
+import { parentalGuardianService } from './parentalGuardian.service';
+import { scheduleProdayLocalNotification } from './prodayLocalNotifications.service';
 
 export type TeamEventActor = {
   user: User;
@@ -87,6 +90,48 @@ async function syncTeamEventActivitiesOnServer(eventId: string): Promise<void> {
     );
   } catch {
     /* trigger ou callable non déployé */
+  }
+}
+
+async function notifyGuardiansForMinorInvitees(
+  database: Firestore,
+  eventId: string,
+  inviteeUids: string[],
+  title: string,
+  startsAt?: Date,
+  city?: string,
+): Promise<void> {
+  for (const inviteeUid of inviteeUids) {
+    try {
+      const guardianEmail = await parentalGuardianService.getGuardianEmailForMinor(inviteeUid);
+      if (!guardianEmail) continue;
+      await addDoc(collection(database, 'guardian_notifications'), {
+        guardian_email: guardianEmail,
+        child_uid: inviteeUid,
+        event_id: eventId,
+        event_title: title,
+        event_city: city ?? null,
+        event_starts_at: startsAt ? Timestamp.fromDate(startsAt) : null,
+        type: 'minor_invite',
+        source: 'team_events',
+        read_at: null,
+        created_at: serverTimestamp(),
+      });
+      await scheduleProdayLocalNotification({
+        identifier: `guardian-invite-${eventId}-${inviteeUid}`,
+        title: 'Invitation mineur',
+        body: `Un mineur rattaché (${guardianEmail}) est invité à : ${title}`,
+        data: {
+          type: 'guardian_minor_invite',
+          eventId,
+          guardianEmail,
+          homeTab: 'convocations',
+          hubChapter: 'apercu',
+        },
+      });
+    } catch {
+      // Hook optionnel : ne bloque jamais la création d'événement.
+    }
   }
 }
 
@@ -228,6 +273,14 @@ export const teamEventsService = {
       created_at: serverTimestamp(),
       updated_at: serverTimestamp(),
     });
+    void notifyGuardiansForMinorInvitees(
+      database,
+      ref.id,
+      input.invitee_uids,
+      input.title.trim(),
+      input.starts_at,
+      input.city
+    );
     return ref.id;
   },
 
@@ -530,6 +583,9 @@ export const teamEventsService = {
     }
     if (event.stats_applied_at) {
       throw new Error('Les stats ont déjà été appliquées pour cet événement.');
+    }
+    if (!event.match_report_finalized_at) {
+      throw new Error('Validez d’abord le rapport de match avant d’appliquer les stats saison.');
     }
 
     const tallies: Record<string, { goals: number; assists: number }> = {};

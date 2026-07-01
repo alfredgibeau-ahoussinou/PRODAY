@@ -16,6 +16,9 @@ import type { PlayerMatchSheetStat, TeamEvent } from '../models/TeamEvent';
 import { countRsvpYes, getPendingInviteeUids } from '../models/TeamEvent';
 import { teamEventsService } from '../services/teamEvents.service';
 import { usersService } from '../services/users.service';
+import { membershipsService } from '../services/memberships.service';
+import type { Membership } from '../models/Membership';
+import { isOrganizerCapable } from '../utils/roleCapabilities';
 import { useAuth } from '../context/AuthContext';
 import { TeamEventDetailScreen } from './TeamEventDetailScreen';
 import { CreateTeamEventScreen } from './CreateTeamEventScreen';
@@ -55,28 +58,34 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
   const [events, setEvents] = useState<TeamEvent[]>([]);
   const [membersCount, setMembersCount] = useState(0);
   const [members, setMembers] = useState<User[]>([]);
+  const [pendingMemberships, setPendingMemberships] = useState<Membership[]>([]);
   const [seasonEvents, setSeasonEvents] = useState<TeamEvent[]>([]);
   const [selectedStatUid, setSelectedStatUid] = useState<string | null>(null);
 
   const clubId = profile.profile.club_id;
+  const canManageRoster = isOrganizerCapable(profile.role) || isAdmin;
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [listEvents, members, clubSeasonEvents] = await Promise.all([
+      const [listEvents, members, clubSeasonEvents, pending] = await Promise.all([
         teamEventsService.listForUser(profile.uid, clubId),
         clubId ? usersService.listMembersByClubId(clubId) : Promise.resolve([]),
         clubId ? teamEventsService.listForClub(clubId, 120) : Promise.resolve([]),
+        clubId && canManageRoster
+          ? membershipsService.listByClub(clubId, 'pending')
+          : Promise.resolve([]),
       ]);
       setEvents(listEvents);
       setMembersCount(members.length);
       setMembers(members);
+      setPendingMemberships(pending);
       setSeasonEvents(clubSeasonEvents);
       if (!selectedStatUid && members[0]) setSelectedStatUid(members[0].uid);
     } finally {
       setLoading(false);
     }
-  }, [profile.uid, clubId, selectedStatUid]);
+  }, [profile.uid, clubId, selectedStatUid, canManageRoster]);
 
   useEffect(() => {
     void load();
@@ -326,6 +335,19 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
     Alert.alert('Rapport déverrouillé', 'Le rapport est à nouveau modifiable.');
   };
 
+  const handleMembershipDecision = async (membershipId: string, approve: boolean) => {
+    try {
+      if (approve) {
+        await membershipsService.approve(membershipId, profile.uid);
+      } else {
+        await membershipsService.reject(membershipId, profile.uid);
+      }
+      await load();
+    } catch (e) {
+      Alert.alert('Erreur', e instanceof Error ? e.message : 'Action impossible.');
+    }
+  };
+
   return (
     <View style={[styles.root, rootStyle]}>
       <ScreenHeader title="Gestion équipe" onBack={onBack} centered />
@@ -415,7 +437,37 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
         ) : null}
 
         {!loading && tab === 'roster' ? (
-          <View style={styles.card}>
+          <>
+            {canManageRoster && pendingMemberships.length > 0 ? (
+              <View style={styles.card}>
+                <Text style={styles.sectionTitle}>Demandes d&apos;affiliation</Text>
+                {pendingMemberships.map((m) => (
+                  <View key={m.id} style={styles.pendingRow}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.rowTitle}>{m.player_name}</Text>
+                      <Text style={styles.body}>
+                        Demandé le {m.requested_at.toLocaleDateString('fr-FR')}
+                      </Text>
+                    </View>
+                    <PressableSpring
+                      style={[styles.pendingBtn, { backgroundColor: c.brand }]}
+                      onPress={() => void handleMembershipDecision(m.id, true)}
+                      scaleTo={0.97}
+                    >
+                      <Text style={styles.pendingBtnText}>Valider</Text>
+                    </PressableSpring>
+                    <PressableSpring
+                      style={[styles.pendingBtn, styles.pendingBtnGhost]}
+                      onPress={() => void handleMembershipDecision(m.id, false)}
+                      scaleTo={0.97}
+                    >
+                      <Text style={styles.pendingBtnGhostText}>Refuser</Text>
+                    </PressableSpring>
+                  </View>
+                ))}
+              </View>
+            ) : null}
+            <View style={styles.card}>
             <Text style={styles.sectionTitle}>Effectif club</Text>
             <Text style={styles.body}>
               {membersCount} membre(s) liés à votre structure.
@@ -435,6 +487,7 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
               </Text>
             ) : null}
           </View>
+          </>
         ) : null}
 
         {!loading && tab === 'attendance' ? (
@@ -779,5 +832,25 @@ function createStyles(c: AppColors) {
     paddingVertical: 6,
   },
   miniBtnText: { fontSize: 10, fontWeight: '700', color: c.textSecondary },
+  pendingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    paddingVertical: spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: c.border,
+  },
+  pendingBtn: {
+    borderRadius: radius.pill,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 6,
+  },
+  pendingBtnText: { color: c.brandInverse, fontSize: 11, fontWeight: '800' },
+  pendingBtnGhost: {
+    backgroundColor: c.surface,
+    borderWidth: 1,
+    borderColor: c.border,
+  },
+  pendingBtnGhostText: { color: c.textSecondary, fontSize: 11, fontWeight: '700' },
   });
 }

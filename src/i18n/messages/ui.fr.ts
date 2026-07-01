@@ -20,6 +20,8 @@ export const UI_FR: MessageCatalog = {
 
   'universe.homme': 'Univers Homme',
   'universe.woman': 'Univers Woman',
+  'universe.amateur': 'Univers Amateur',
+  'universe.supporter': 'Univers Supporter',
   'universe.pro': 'Univers Pro',
   'universe.sante': 'Univers Santé',
 
@@ -42,6 +44,26 @@ export const UI_FR: MessageCatalog = {
   'discover.sectionExplore.woman': 'Explorer Woman',
   'discover.secondaryMercato.woman': 'Mercato F',
   'discover.playersStat.woman': 'Joueuses',
+
+  'discover.hero.amateur': 'Le foot amateur,\nconnecté.',
+  'discover.mission.amateur':
+    'Joueurs et coachs amateur — Mercato local, matchs, effectif et convocations au même endroit.',
+  'discover.trust.amateur':
+    'Profils vérifiés pour le foot amateur — joueurs et coachs, messagerie sécurisée après validation.',
+  'discover.cta.amateur': 'Créer un compte Amateur',
+  'discover.sectionExplore.amateur': 'Espace Pro Day Amateur',
+  'discover.secondaryMercato.amateur': 'Mercato Amateur',
+  'discover.playersStat.amateur': 'Amateurs',
+
+  'discover.hero.supporter': 'Le foot,\nensemble.',
+  'discover.mission.supporter':
+    'Fans et communauté — matchs, réels et fil en direct, sans Mercato.',
+  'discover.trust.supporter':
+    'Profils supporters — messagerie communautaire sécurisée.',
+  'discover.cta.supporter': 'Créer un compte Supporter',
+  'discover.sectionExplore.supporter': 'Espace Pro Day Supporter',
+  'discover.secondaryMercato.supporter': 'Communauté',
+  'discover.playersStat.supporter': 'Supporters',
 
   'discover.hero.pro': 'Les pros\ndu foot.',
   'discover.mission.pro':
@@ -317,4 +339,32 @@ export const UI_FR: MessageCatalog = {
   'roleHome.agent.publishCta': 'Publier',
   'roleHome.agent.mercatoScouting': 'Scouting Mercato',
   'roleHome.agent.mercatoScoutingSub': 'Parcourir les profils joueurs filtrés',
+
+  'roleHome.supporter.quickActions': 'Actions rapides',
+  'roleHome.supporter.quickActionsSub': 'Votre tribune en un tap',
+  'roleHome.supporter.action.matchs': 'Matchs',
+  'roleHome.supporter.action.matchsSub': 'Calendrier & live',
+  'roleHome.supporter.action.reels': 'Réels',
+  'roleHome.supporter.action.reelsSub': 'Moments forts',
+  'roleHome.supporter.action.feed': 'Fil',
+  'roleHome.supporter.action.feedSub': 'Communauté & actu',
+  'roleHome.supporter.action.discovery': 'Découverte',
+  'roleHome.supporter.action.discoverySub': 'Parcourir les joueurs',
+  'roleHome.supporter.action.favorites': 'Favoris',
+  'roleHome.supporter.action.favoritesSub': 'Joueurs suivis',
+  'roleHome.supporter.action.shop': 'Shop',
+  'roleHome.supporter.action.shopSub': 'Goodies & équipement',
+  'roleHome.supporter.matchesTitle': 'Prochains matchs',
+  'roleHome.supporter.matchesSub': 'Calendrier foot autour de vous',
+  'roleHome.supporter.noMatches': 'Aucun match à venir — explorez le calendrier.',
+  'roleHome.supporter.tournamentsTitle': 'Tournois',
+  'roleHome.supporter.tournamentsSub': 'Compétitions à venir',
+  'roleHome.supporter.noTournaments': 'Aucun tournoi programmé pour le moment.',
+  'roleHome.supporter.favoritesTitle': 'Favoris',
+  'roleHome.supporter.favoritesSub': 'Joueurs que vous suivez',
+  'roleHome.supporter.favoritesCount': '{n} joueur(s) suivi(s)',
+  'roleHome.supporter.favoritesEmpty': 'Aucun favori pour le moment',
+  'roleHome.supporter.favoritesHint': 'Ajoutez des joueurs depuis la découverte',
+  'roleHome.supporter.feedTeaser': 'Fil communautaire',
+  'roleHome.supporter.feedTeaserSub': 'Actu, débats et moments forts',
 };

@@ -17,10 +17,24 @@ describe('poleExperience', () => {
     expect(getSignupRoleGroups('woman')).toEqual([]);
   });
 
-  it('regroupe les métiers foot sur Pro', () => {
+  it('regroupe joueurs et coachs sur Amateur', () => {
+    expect(rolesForProductLine('amateur')).toEqual(['player', 'coach']);
+    const amateurRoles = getSignupRoleGroups('amateur').flatMap((g) => g.roles);
+    expect(amateurRoles).toEqual(expect.arrayContaining(['player', 'coach']));
+    expect(amateurRoles).toHaveLength(2);
+  });
+
+  it('regroupe les supporters sur Supporter', () => {
+    expect(rolesForProductLine('supporter')).toEqual(['supporter']);
+    const supporterRoles = getSignupRoleGroups('supporter').flatMap((g) => g.roles);
+    expect(supporterRoles).toEqual(['supporter']);
+  });
+
+  it('regroupe les métiers foot sur Pro (inclut joueur pro)', () => {
     const proRoles = getSignupRoleGroups('pro').flatMap((g) => g.roles);
     expect(proRoles).toEqual(
       expect.arrayContaining([
+        'player',
         'coach',
         'agent',
         'recruiter',
@@ -29,7 +43,6 @@ describe('poleExperience', () => {
         'sponsor',
       ])
     );
-    expect(proRoles).not.toContain('player');
     expect(proRoles).not.toContain('physio');
   });
 
@@ -65,9 +78,9 @@ describe('poleExperience', () => {
       'messages',
       'profil',
     ]);
-    expect(getVisibleMainTabs('homme', 'player', playerProfile)).toContain('famille');
+    expect(getVisibleMainTabs('homme', 'player', playerProfile)).not.toContain('famille');
     expect(getVisibleMainTabs('homme', 'player')).toContain('feed');
-    expect(getVisibleMainTabs('pro', 'coach')).toContain('feed');
+    expect(getVisibleMainTabs('pro', 'coach')).not.toContain('feed');
     expect(getVisibleMainTabs('sante', 'physio')).toContain('feed');
     expect(getVisibleMainTabs('pro', 'sponsor')).toEqual([
       'home',
@@ -85,24 +98,67 @@ describe('poleExperience', () => {
     ]);
     expect(getVisibleMainTabs('sante', 'physio')).not.toContain('recrutement');
     expect(getVisibleMainTabs('sante', 'physio')).not.toContain('shop');
-    expect(getVisibleMainTabs('pro', 'club')).toContain('recrutement');
+    expect(getVisibleMainTabs('pro', 'club')).toEqual([
+      'home',
+      'recrutement',
+      'matchs',
+      'messages',
+      'profil',
+    ]);
+    expect(getVisibleMainTabs('pro', 'player')).toEqual([
+      'home',
+      'recrutement',
+      'reels',
+      'matchs',
+      'profil',
+    ]);
     expect(getVisibleMainTabs('pro', 'recruiter')).toContain('recrutement');
+    expect(getVisibleMainTabs('pro', 'recruiter')).toContain('feed');
+    expect(getVisibleMainTabs('pro', 'agent')).toContain('feed');
+    expect(getVisibleMainTabs('pro', 'organizer')).toContain('feed');
     expect(getVisibleMainTabs('pro', 'coach')).toContain('covoiturage');
+    expect(getVisibleMainTabs('amateur', 'coach')).toEqual([
+      'home',
+      'matchs',
+      'recrutement',
+      'messages',
+      'profil',
+    ]);
+    expect(getVisibleMainTabs('amateur', 'player')).not.toContain('sante');
+    expect(getVisibleMainTabs('amateur', 'player')).toContain('covoiturage');
+    expect(getVisibleMainTabs('amateur', 'player')).toContain('recrutement');
+    expect(getVisibleMainTabs('amateur', 'player')).not.toContain('matchs');
+    expect(getVisibleMainTabs('supporter', 'supporter')).toEqual([
+      'matchs',
+      'feed',
+      'messages',
+      'reels',
+      'shop',
+    ]);
+    expect(getVisibleMainTabs('supporter', 'supporter')).toContain('shop');
+    expect(getVisibleMainTabs('supporter', 'supporter')).not.toContain('recrutement');
+    expect(getVisibleMainTabs('supporter', 'supporter')).not.toContain('covoiturage');
+    expect(getVisibleMainTabs('supporter', 'supporter')).not.toContain('sante');
     expect(getVisibleMainTabs('sante', 'physio')).not.toContain('covoiturage');
   });
 
   it('libellé Mercato joueur = Candidater', () => {
     expect(getMercatoTabLabel('homme', 'player')).toBe('Candidater');
+    expect(getMercatoTabLabel('amateur', 'coach')).toBe('Mercato Amateur');
     expect(getMercatoTabLabel('pro', 'coach')).toBe('Mercato Pro');
   });
 
-  it('sépare dashboard amateur et pro', () => {
+  it('sépare dashboard amateur joueur et coach staff', () => {
     expect(getDashboardLayoutKind('homme', 'player')).toBe('amateur_player');
+    expect(getDashboardLayoutKind('amateur', 'player')).toBe('amateur_player');
+    expect(getDashboardLayoutKind('amateur', 'coach')).toBe('pro');
     expect(getDashboardLayoutKind('pro', 'coach')).toBe('pro');
   });
 
-  it('limite le module sponsors au partenaire Pro', () => {
+  it('limite le module sponsors au partenaire Pro Staff', () => {
+    expect(canAccessSponsorsModule('pro_staff', 'sponsor')).toBe(true);
     expect(canAccessSponsorsModule('pro', 'sponsor')).toBe(true);
+    expect(canAccessSponsorsModule('pro_player', 'sponsor')).toBe(false);
     expect(canAccessSponsorsModule('homme', 'player')).toBe(false);
     expect(canAccessSponsorsModule('woman', 'player')).toBe(false);
   });

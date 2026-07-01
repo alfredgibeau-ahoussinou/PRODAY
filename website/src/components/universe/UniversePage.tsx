@@ -23,6 +23,8 @@ import { demoUrlForUniverse, ROUTES } from "@/lib/routes";
 const PATH_BY_UNIVERSE = {
   homme: ROUTES.homme,
   woman: ROUTES.woman,
+  amateur: ROUTES.amateur,
+  supporter: ROUTES.supporter,
   pro: ROUTES.pro,
   sante: ROUTES.sante,
 } as const;
@@ -30,6 +32,8 @@ const PATH_BY_UNIVERSE = {
 const PRICING_HASH_BY_UNIVERSE: Record<UniversePageId, string> = {
   homme: "joueur",
   woman: "joueur",
+  amateur: "amateur",
+  supporter: "supporter",
   pro: "pro",
 };
 

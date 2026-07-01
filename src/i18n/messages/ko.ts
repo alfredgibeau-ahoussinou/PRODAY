@@ -49,6 +49,8 @@ export const ko: MessageCatalog = {
   'profile.chapters.settings': '설정',
 
   'nav.overflow': '탐색',
+  'nav.menu': '메뉴',
+  'nav.menuA11y': '탐색 메뉴',
 
   'tabs.home': '홈',
   'tabs.recrutement': '이적',

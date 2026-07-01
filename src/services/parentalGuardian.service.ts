@@ -3,6 +3,8 @@ import {
   doc,
   getDoc,
   getDocs,
+  onSnapshot,
+  orderBy,
   query,
   updateDoc,
   where,
@@ -34,6 +36,20 @@ export interface LinkedMinorProfile {
   runtime?: ParentalRuntime;
   minutesUsedToday: number;
   alerts: string[];
+}
+
+export interface GuardianNotification {
+  id: string;
+  guardian_email: string;
+  child_uid: string;
+  event_id: string;
+  event_title: string;
+  event_city?: string | null;
+  event_starts_at?: Date | null;
+  type: 'minor_invite';
+  source: 'team_events';
+  read_at?: Date | null;
+  created_at: Date;
 }
 
 function buildAlerts(child: LinkedMinorProfile): string[] {
@@ -78,6 +94,36 @@ function mapLinkedMinor(user: User): LinkedMinorProfile {
   return { ...base, alerts: buildAlerts(base) };
 }
 
+function toDateValue(value: unknown): Date | null {
+  if (!value) return null;
+  if (value instanceof Date) return value;
+  if (
+    typeof value === 'object' &&
+    value !== null &&
+    'toDate' in value &&
+    typeof (value as { toDate?: unknown }).toDate === 'function'
+  ) {
+    return ((value as { toDate: () => Date }).toDate());
+  }
+  return null;
+}
+
+function mapGuardianNotification(id: string, raw: Record<string, unknown>): GuardianNotification {
+  return {
+    id,
+    guardian_email: String(raw.guardian_email ?? ''),
+    child_uid: String(raw.child_uid ?? ''),
+    event_id: String(raw.event_id ?? ''),
+    event_title: String(raw.event_title ?? 'Invitation équipe'),
+    event_city: typeof raw.event_city === 'string' ? raw.event_city : null,
+    event_starts_at: toDateValue(raw.event_starts_at),
+    type: 'minor_invite',
+    source: 'team_events',
+    read_at: toDateValue(raw.read_at),
+    created_at: toDateValue(raw.created_at) ?? new Date(0),
+  };
+}
+
 async function queryMinorsByGuardianField(
   field: 'parental_settings.guardian_email' | 'parental_settings.guardian_email_secondary',
   normalized: string,
@@ -95,6 +141,21 @@ async function queryMinorsByGuardianField(
 }
 
 export const parentalGuardianService = {
+  async getGuardianEmailForMinor(minorUid: string): Promise<string | null> {
+    if (!isFirebaseConfigured() || !minorUid) return null;
+    const database = getDb();
+    if (!database) return null;
+    const snap = await getDoc(doc(database, 'users', minorUid));
+    if (!snap.exists()) return null;
+    const user = userFromFirestore(snap.id, snap.data() as Record<string, unknown>);
+    if (!user.parental_settings?.is_minor) return null;
+    return (
+      normalizeGuardianEmail(user.parental_settings.guardian_email)
+      || normalizeGuardianEmail(user.parental_settings.guardian_email_secondary)
+      || null
+    );
+  },
+
   async listLinkedMinors(guardianEmail: string): Promise<LinkedMinorProfile[]> {
     if (!isFirebaseConfigured()) return [];
     const database = getDb();
@@ -119,6 +180,86 @@ export const parentalGuardianService = {
       console.error('[parentalGuardianService] listLinkedMinors:', error);
       return [];
     }
+  },
+
+  async listGuardianNotifications(guardianEmail: string): Promise<GuardianNotification[]> {
+    if (!isFirebaseConfigured()) return [];
+    const database = getDb();
+    if (!database) return [];
+    const normalized = normalizeGuardianEmail(guardianEmail);
+    if (!normalized) return [];
+
+    try {
+      const q = query(
+        collection(database, 'guardian_notifications'),
+        where('guardian_email', '==', normalized),
+        orderBy('created_at', 'desc'),
+        limit(30),
+      );
+      const snap = await getDocs(q);
+      return snap.docs.map((d) => mapGuardianNotification(d.id, d.data() as Record<string, unknown>));
+    } catch (error) {
+      console.error('[parentalGuardianService] listGuardianNotifications:', error);
+      return [];
+    }
+  },
+
+  subscribeGuardianNotifications(
+    guardianEmail: string,
+    onChange: (items: GuardianNotification[]) => void,
+  ): () => void {
+    if (!isFirebaseConfigured()) {
+      onChange([]);
+      return () => {};
+    }
+    const database = getDb();
+    if (!database) {
+      onChange([]);
+      return () => {};
+    }
+    const normalized = normalizeGuardianEmail(guardianEmail);
+    if (!normalized) {
+      onChange([]);
+      return () => {};
+    }
+
+    const q = query(
+      collection(database, 'guardian_notifications'),
+      where('guardian_email', '==', normalized),
+      orderBy('created_at', 'desc'),
+      limit(30),
+    );
+    return onSnapshot(
+      q,
+      (snap) => {
+        onChange(
+          snap.docs.map((d) => mapGuardianNotification(d.id, d.data() as Record<string, unknown>))
+        );
+      },
+      () => onChange([]),
+    );
+  },
+
+  async markGuardianNotificationsRead(guardianEmail: string): Promise<void> {
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+    const normalized = normalizeGuardianEmail(guardianEmail);
+    if (!normalized) throw new Error('Email tuteur invalide.');
+
+    const q = query(
+      collection(database, 'guardian_notifications'),
+      where('guardian_email', '==', normalized),
+      where('read_at', '==', null),
+      limit(30),
+    );
+    const snap = await getDocs(q);
+    await Promise.all(
+      snap.docs.map((d) =>
+        updateDoc(doc(database, 'guardian_notifications', d.id), {
+          read_at: serverTimestamp(),
+        }),
+      ),
+    );
   },
 
   async updateChildScreenTime(

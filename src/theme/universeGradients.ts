@@ -1,6 +1,7 @@
 import type { ProductLineId } from '../models/ProductLine';
+import type { CarouselPoleId } from '../models/CarouselPole';
 import { gradients } from './designTokens';
-import { proGradients, santeGradients, womanGradients } from './universeTheme';
+import { proGradients, santeGradients, womanGradients, amateurGradients, supporterGradients } from './universeTheme';
 
 export type GradientStops = readonly [string, string, ...string[]];
 
@@ -28,13 +29,31 @@ export function gradientsForLine(line: ProductLineId): {
       ambient: ['#FCE7F3', '#FFF5F8', '#FFF5F8'] as const,
     };
   }
-  if (line === 'pro') {
+  if (line === 'pro' || line === 'pro_player' || line === 'pro_club' || line === 'pro_staff') {
     return {
       hero: proGradients.hero,
       heroDark: proGradients.heroDark,
       card: proGradients.card,
       cta: proGradients.cta,
       ambient: ['#DBEAFE', '#F8FAFC', '#F8FAFC'] as const,
+    };
+  }
+  if (line === 'amateur') {
+    return {
+      hero: amateurGradients.hero,
+      heroDark: amateurGradients.heroDark,
+      card: amateurGradients.card,
+      cta: amateurGradients.cta,
+      ambient: ['#FFEDD5', '#FFFBF5', '#FFFBF5'] as const,
+    };
+  }
+  if (line === 'supporter') {
+    return {
+      hero: supporterGradients.hero,
+      heroDark: supporterGradients.heroDark,
+      card: supporterGradients.card,
+      cta: supporterGradients.cta,
+      ambient: ['#EDE9FE', '#FAFAFF', '#FAFAFF'] as const,
     };
   }
   if (line === 'sante') {
@@ -57,6 +76,44 @@ export function gradientsForLine(line: ProductLineId): {
 
 export function ctaGradient(line: ProductLineId): GradientStops {
   return gradientsForLine(line).cta;
+}
+
+const proClubGradients = {
+  hero: ['#0A0A0A', '#0C4A6E'] as const,
+  heroDark: ['#082f49', '#0A0A0A'] as const,
+  card: ['#F0F9FF', '#FFFFFF'] as const,
+  cta: ['#0A0A0A', '#0369A1'] as const,
+  ambient: ['#E0F2FE', '#F8FAFC', '#F8FAFC'] as const,
+};
+
+const proStaffGradients = {
+  hero: ['#0A0A0A', '#312E81'] as const,
+  heroDark: ['#1e1b4b', '#0A0A0A'] as const,
+  card: ['#EEF2FF', '#FFFFFF'] as const,
+  cta: ['#0A0A0A', '#4338CA'] as const,
+  ambient: ['#E0E7FF', '#F8FAFF', '#F8FAFF'] as const,
+};
+
+export function gradientsForCarouselPole(pole: CarouselPoleId): {
+  hero: GradientStops;
+  heroDark: GradientStops;
+  card: GradientStops;
+  cta: GradientStops;
+  ambient: GradientStops;
+} {
+  if (pole === 'pro_club') return proClubGradients;
+  if (pole === 'pro_staff') return proStaffGradients;
+  if (pole === 'pro_player') {
+    return {
+      hero: proGradients.hero,
+      heroDark: proGradients.heroDark,
+      card: proGradients.card,
+      cta: proGradients.cta,
+      ambient: ['#DBEAFE', '#F8FAFC', '#F8FAFC'] as const,
+    };
+  }
+  const line = pole === 'amateur' || pole === 'supporter' || pole === 'sante' ? pole : 'pro';
+  return gradientsForLine(line);
 }
 
 export { gradients };

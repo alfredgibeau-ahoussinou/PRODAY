@@ -45,14 +45,58 @@ describe('productLineAccess', () => {
     expect(getUserProductLine(physio)).toBe('sante');
   });
 
-  it('déduit pro depuis rôle coach', () => {
-    const coach = { ...baseUser, role: 'coach' as const } as User;
-    expect(getUserProductLine(coach)).toBe('pro');
+  it('canonicalise pro legacy coach vers pro_staff', () => {
+    const coach = { ...baseUser, role: 'coach' as const, product_line: 'pro' as const } as User;
+    expect(getUserProductLine(coach)).toBe('pro_staff');
   });
 
-  it('déduit pro depuis rôle club ou organisateur', () => {
+  it('lit pro_player explicite', () => {
+    const proPlayer = {
+      ...baseUser,
+      role: 'player' as const,
+      product_line: 'pro_player' as const,
+    } as User;
+    expect(getUserProductLine(proPlayer)).toBe('pro_player');
+    expect(profileMatchesActiveLine(proPlayer, 'pro_player')).toBe(true);
+  });
+
+  it('lit amateur player depuis product_line explicite', () => {
+    const amateurPlayer = {
+      ...baseUser,
+      role: 'player' as const,
+      product_line: 'amateur' as const,
+    } as User;
+    expect(getUserProductLine(amateurPlayer)).toBe('amateur');
+    expect(profileMatchesActiveLine(amateurPlayer, 'amateur')).toBe(true);
+    expect(profileMatchesActiveLine(amateurPlayer, 'homme')).toBe(false);
+  });
+
+  it('lit amateur coach depuis product_line explicite', () => {
+    const amateurCoach = {
+      ...baseUser,
+      role: 'coach' as const,
+      product_line: 'amateur' as const,
+    } as User;
+    expect(getUserProductLine(amateurCoach)).toBe('amateur');
+    expect(profileMatchesActiveLine(amateurCoach, 'amateur')).toBe(true);
+    expect(profileMatchesActiveLine(amateurCoach, 'pro_staff')).toBe(false);
+  });
+
+  it('lit supporter depuis product_line explicite', () => {
+    const supporterUser = {
+      ...baseUser,
+      role: 'supporter' as const,
+      product_line: 'supporter' as const,
+    } as User;
+    expect(getUserProductLine(supporterUser)).toBe('supporter');
+    expect(profileMatchesActiveLine(supporterUser, 'supporter')).toBe(true);
+    expect(profileMatchesActiveLine(supporterUser, 'homme')).toBe(false);
+    expect(profileMatchesActiveLine(supporterUser, 'pro_staff')).toBe(false);
+  });
+
+  it('déduit pro_club depuis rôle club legacy sans product_line', () => {
     const club = { ...baseUser, role: 'club' as const } as User;
-    expect(getUserProductLine(club)).toBe('pro');
+    expect(getUserProductLine(club)).toBe('pro_club');
   });
 
   it('refuse connexion cross-version', () => {
@@ -70,26 +114,26 @@ describe('productLineAccess', () => {
     } as User;
     expect(profileMatchesActiveLine(player, 'homme')).toBe(true);
     expect(profileMatchesActiveLine(player, 'woman')).toBe(false);
-    expect(profileMatchesActiveLine(player, 'pro')).toBe(false);
+    expect(profileMatchesActiveLine(player, 'pro_player')).toBe(false);
     expect(profileMatchesActiveLine(player, 'sante')).toBe(false);
     expect(getEffectiveRoleForProductLine(player, 'homme')).toBe('player');
-    expect(getEffectiveRoleForProductLine(player, 'pro')).toBe('player');
-    expect(getSessionProfile(player, 'pro').role).toBe('player');
+    expect(getEffectiveRoleForProductLine(player, 'pro_player')).toBe('player');
+    expect(getSessionProfile(player, 'pro_player').role).toBe('player');
   });
 
-  it('autorise le compte démo partenaire uniquement sur Pro', () => {
+  it('autorise le compte démo partenaire sur toute la famille pro', () => {
     const partner = {
       ...baseUser,
       email: 'part@gmail.com',
       role: 'sponsor' as const,
-      product_line: 'pro' as const,
+      product_line: 'pro_staff' as const,
     } as User;
-    expect(profileMatchesActiveLine(partner, 'pro')).toBe(true);
+    expect(profileMatchesActiveLine(partner, 'pro_staff')).toBe(true);
+    expect(profileMatchesActiveLine(partner, 'pro_player')).toBe(true);
     expect(profileMatchesActiveLine(partner, 'homme')).toBe(false);
-    expect(profileMatchesActiveLine(partner, 'woman')).toBe(false);
-    expect(getEffectiveRoleForProductLine(partner, 'pro')).toBe('sponsor');
-    const session = getSessionProfile(partner, 'pro');
+    expect(getEffectiveRoleForProductLine(partner, 'pro_staff')).toBe('sponsor');
+    const session = getSessionProfile(partner, 'pro_staff');
     expect(session.role).toBe('sponsor');
-    expect(session.product_line).toBe('pro');
+    expect(session.product_line).toBe('pro_staff');
   });
 });

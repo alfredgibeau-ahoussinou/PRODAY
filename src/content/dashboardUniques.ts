@@ -69,5 +69,6 @@ export const ROLE_DASHBOARD_TAGLINE: Record<UserRole, string> = {
   recruiter: 'Scouting, annonces Mercato et suivi candidatures.',
   organizer: 'Animez détections et écosystème local.',
   sponsor: 'Soutenez les clubs de votre territoire.',
+  supporter: 'Matchs, réels et communauté — votre tribune ProDay.',
   physio: 'Kiné, ostéo, médecin du sport — fil ProDay.',
 };

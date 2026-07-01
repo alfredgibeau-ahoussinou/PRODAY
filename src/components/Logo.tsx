@@ -4,6 +4,8 @@ import { BRAND, typography, spacing } from '../theme/designTokens';
 import {
   BRANDING_LOGOS,
   MAN_BRANDING_LOGOS,
+  AMATEUR_BRANDING_LOGOS,
+  SUPPORTER_BRANDING_LOGOS,
   PRO_BRANDING_LOGOS,
   SANTE_BRANDING_LOGOS,
   WOMAN_BRANDING_LOGOS,
@@ -13,6 +15,8 @@ import type { ProductLineId } from '../models/ProductLine';
 import { useAppTheme } from '../context/ProductLineContext';
 import type { AppColors } from '../theme/universeTheme';
 import { ManLogo, manLogoAspect } from './ManLogo';
+import { AmateurLogo, amateurLogoAspect } from './AmateurLogo';
+import { SupporterLogo, supporterLogoAspect } from './SupporterLogo';
 import { ProLogo, proLogoAspect } from './ProLogo';
 import { SanteLogo, santeLogoAspect } from './SanteLogo';
 import { WomanLogo, womanLogoAspect } from './WomanLogo';
@@ -81,6 +85,8 @@ function markForLine(line: ProductLineId): ImageSourcePropType {
   if (line === 'woman') return WOMAN_BRANDING_LOGOS.mark;
   if (line === 'pro') return PRO_BRANDING_LOGOS.mark;
   if (line === 'sante') return SANTE_BRANDING_LOGOS.mark;
+  if (line === 'amateur') return AMATEUR_BRANDING_LOGOS.mark;
+  if (line === 'supporter') return SUPPORTER_BRANDING_LOGOS.mark;
   if (line === 'homme') return MAN_BRANDING_LOGOS.mark;
   return BRANDING_LOGOS.mark;
 }
@@ -107,7 +113,11 @@ export const Logo: React.FC<LogoProps> = ({
     return (
       <Image
         source={markForLine(line)}
-        style={{ width: markW, height: markH, opacity: opacity ?? (watermark ? 0.14 : 1) }}
+        style={{
+          width: markW,
+          height: markH,
+          opacity: opacity ?? (watermark ? 0.14 : 1),
+        }}
         resizeMode="contain"
         accessibilityLabel={brand.name}
       />
@@ -139,6 +149,28 @@ export const Logo: React.FC<LogoProps> = ({
   if (line === 'homme') {
     return (
       <ManLogo
+        width={width}
+        background={background}
+        opacity={opacity}
+        watermark={false}
+      />
+    );
+  }
+
+  if (line === 'amateur') {
+    return (
+      <AmateurLogo
+        width={width}
+        background={background}
+        opacity={opacity}
+        watermark={false}
+      />
+    );
+  }
+
+  if (line === 'supporter') {
+    return (
+      <SupporterLogo
         width={width}
         background={background}
         opacity={opacity}
@@ -202,6 +234,8 @@ export function logoDisplayAspect(
   if (line === 'pro') return proLogoAspect(width);
   if (line === 'sante') return santeLogoAspect(width);
   if (line === 'homme') return manLogoAspect(width);
+  if (line === 'amateur') return amateurLogoAspect(width);
+  if (line === 'supporter') return supporterLogoAspect(width);
   const v = opts.variant ?? 'transparent';
   return LOGO_ASPECT[v] ?? 0.93;
 }

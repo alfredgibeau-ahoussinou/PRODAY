@@ -53,6 +53,13 @@ export const SECONDARY_EN: MessageCatalog = {
   'joinClub.confirm.join': 'Join',
   'joinClub.success.title': 'Club joined',
   'joinClub.success.body': 'You are now a member of {{name}}.',
+  'joinClub.pending.title': 'Request sent',
+  'joinClub.pending.body':
+    'Your request to join {{name}} is pending validation by club staff.',
+  'joinClub.pending.current':
+    'Pending request: {{name}}. You can request another club after staff decision.',
+  'joinClub.active.current':
+    'You are already linked to {{name}}. Manage your roster from your club space.',
   'joinClub.error.join': 'Could not join this club.',
 
   'messages.verifyDiploma': 'Validate your diploma or licence to send messages.',

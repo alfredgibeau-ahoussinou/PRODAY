@@ -37,6 +37,8 @@ export const es: MessageCatalog = {
   'profile.chapters.activity': 'Actividad',
   'profile.chapters.settings': 'Ajustes',
   'nav.overflow': 'Navegación',
+  'nav.menu': 'Menú',
+  'nav.menuA11y': 'Menú de navegación',
   'tabs.home': 'Inicio',
   'tabs.recrutement': 'Mercado',
   'tabs.matchs': 'Partidos',

@@ -4,11 +4,13 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { POLES, POLE_STYLES } from "@/lib/poles";
+import { POLES, POLE_STYLES, type PoleId } from "@/lib/poles";
 import { Section } from "@/components/ui/Section";
 
-const POLE_IMAGES: Record<string, string> = {
+const POLE_IMAGES: Record<PoleId, string> = {
   joueur: "/showcase/classic-discover-hero.jpg",
+  amateur: "/showcase/classic-match.jpg",
+  supporter: "/showcase/classic-match.jpg",
   pro: "/showcase/classic-staff.jpg",
   sante: "/showcase/classic-exp-profile.jpg",
   sponsor: "/showcase/classic-exp-sponsors.jpg",
@@ -17,9 +19,9 @@ const POLE_IMAGES: Record<string, string> = {
 export function PolesHubGrid() {
   return (
     <Section
-      kicker="4 PÔLES"
-      title="Un écosystème, quatre univers distincts"
-      description="Joueur, Pro, Santé ou Partenaires — chaque pôle dispose de sa page, de ses tarifs et de son identité."
+      kicker="6 PÔLES"
+      title="Un écosystème, six univers distincts"
+      description="Joueur, Amateur, Supporter, Pro, Santé ou Partenaires — chaque pôle a sa page, ses tarifs et son identité visuelle."
       className="bg-[#030303]"
     >
       <div className="grid gap-6 sm:grid-cols-2">

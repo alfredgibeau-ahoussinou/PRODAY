@@ -289,11 +289,6 @@ export const EditProfileScreen: React.FC<EditProfileScreenProps> = ({
         profileUpdate.weight_kg = parseOptionalInt(weightKg);
         profileUpdate.years_experience = parseOptionalInt(yearsExp);
         profileUpdate.availability = availability;
-        profileUpdate.season_stats = {
-          matches: parseStat(statMatches),
-          goals: parseStat(statGoals),
-          assists: parseStat(statAssists),
-        };
         const achievements = parseLines(achievementsText);
         profileUpdate.achievements = achievements.length > 0 ? achievements : undefined;
       }
@@ -454,10 +449,13 @@ export const EditProfileScreen: React.FC<EditProfileScreenProps> = ({
         ))}
       </View>
       <Text style={[styles.fieldLabel, { color: ui.textSecondary }]}>Stats saison</Text>
+      <Text style={[styles.statsReadOnlyHint, { color: ui.textMuted }]}>
+        Mises à jour par votre coach après chaque match validé — non modifiables ici.
+      </Text>
       <View style={styles.statRow}>
-        <Field styles={styles} label="Matchs" value={statMatches} onChangeText={setStatMatches} keyboardType="number-pad" compact ui={ui} />
-        <Field styles={styles} label="Buts" value={statGoals} onChangeText={setStatGoals} keyboardType="number-pad" compact ui={ui} />
-        <Field styles={styles} label="Passes d." value={statAssists} onChangeText={setStatAssists} keyboardType="number-pad" compact ui={ui} />
+        <Field styles={styles} label="Matchs" value={statMatches} onChangeText={() => {}} keyboardType="number-pad" compact ui={ui} editable={false} />
+        <Field styles={styles} label="Buts" value={statGoals} onChangeText={() => {}} keyboardType="number-pad" compact ui={ui} editable={false} />
+        <Field styles={styles} label="Passes d." value={statAssists} onChangeText={() => {}} keyboardType="number-pad" compact ui={ui} editable={false} />
       </View>
       <Field
         styles={styles}
@@ -782,6 +780,7 @@ function createStyles(c: AppColors) {
     field: { marginBottom: spacing.md },
     fieldCompact: { flex: 1, marginBottom: spacing.sm },
     fieldLabel: { fontSize: 12, fontWeight: '700', marginBottom: 4 },
+    statsReadOnlyHint: { fontSize: 12, lineHeight: 18, marginBottom: spacing.sm },
     input: {
       backgroundColor: c.surface,
       borderRadius: radius.md,

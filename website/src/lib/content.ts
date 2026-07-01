@@ -94,11 +94,13 @@ export const SPOTLIGHT_FEATURES = [
   },
 ] as const;
 
-export type ProductLineWeb = "homme" | "woman" | "pro" | "sante";
+export type ProductLineWeb = "homme" | "woman" | "amateur" | "supporter" | "pro" | "sante";
 
 export const UNIVERSE_LOGOS: Record<ProductLineWeb, string> = {
   homme: "/branding/logo-man-picto.png",
   woman: "/branding/logo-woman-picto.png",
+  amateur: "/branding/logo-amateur-picto.png",
+  supporter: "/branding/logo-supporter-picto.png",
   pro: "/branding/logo-pro-picto.png",
   sante: "/branding/logo-sante-picto.png",
 };
@@ -113,6 +115,30 @@ export const HOMME_BRAND = {
     "Le foot masculin amateur : Mercato M, matchs, Arena, Pulse, CV joueur, covoiturage, pôle santé et Shop — réservé aux joueurs.",
   accent: "#0A0A0A",
   accentDark: "#262626",
+} as const;
+
+export const AMATEUR_BRAND = {
+  name: "Pro Day Amateur",
+  shortName: "Amateur",
+  fullName: "Pro Day Amateur",
+  logo: UNIVERSE_LOGOS.amateur,
+  tagline: "JOUER • ENCADRER • PARTAGER",
+  mission:
+    "Joueurs et coachs amateur — Mercato local, matchs, effectif et convocations. Distinct du pôle Pro (staff professionnel).",
+  accent: "#EA580C",
+  accentDark: "#9A3412",
+} as const;
+
+export const SUPPORTER_BRAND = {
+  name: "Pro Day Supporter",
+  shortName: "Supporter",
+  fullName: "Pro Day Supporter",
+  logo: UNIVERSE_LOGOS.supporter,
+  tagline: "SUIVRE • VIBRER • PARTAGER",
+  mission:
+    "Fans et communauté — matchs, réels et fil en direct. Distinct du pôle Partenaires (sponsors commerciaux sur Pro).",
+  accent: "#7C3AED",
+  accentDark: "#5B21B6",
 } as const;
 
 export const PRO_BRAND = {
@@ -365,6 +391,17 @@ export const JOURNEYS = [
     ],
   },
   {
+    id: "supporter",
+    role: "Supporter",
+    steps: [
+      "Profil supporter",
+      "Clubs favoris",
+      "Matchs & live",
+      "Reels & fil communautaire",
+      "Messagerie tribune",
+    ],
+  },
+  {
     id: "sponsor",
     role: "Partenaire",
     steps: [
@@ -378,6 +415,8 @@ export const JOURNEYS = [
 
 export function mercatoTabLabelForWeb(line: ProductLineWeb = "homme"): string {
   if (line === "woman") return "Mercato F";
+  if (line === "amateur") return "Mercato Amateur";
+  if (line === "supporter") return "Communauté";
   if (line === "pro") return "Mercato Pro";
   if (line === "sante") return "Cabinet";
   return "Candidater";
@@ -441,12 +480,16 @@ export const WOMAN_BRAND = {
 export type UniverseBrand =
   | typeof HOMME_BRAND
   | typeof WOMAN_BRAND
+  | typeof AMATEUR_BRAND
+  | typeof SUPPORTER_BRAND
   | typeof PRO_BRAND
   | typeof SANTE_BRAND;
 
 export const BRANDS_BY_LINE: Record<ProductLineWeb, UniverseBrand> = {
   homme: HOMME_BRAND,
   woman: WOMAN_BRAND,
+  amateur: AMATEUR_BRAND,
+  supporter: SUPPORTER_BRAND,
   pro: PRO_BRAND,
   sante: SANTE_BRAND,
 };
@@ -588,6 +631,22 @@ export const PRODUCT_LINES = [
     cta: "ProDay Woman",
   },
   {
+    id: "amateur" as const,
+    brand: AMATEUR_BRAND,
+    logo: UNIVERSE_LOGOS.amateur,
+    href: "/amateur",
+    image: "/showcase/classic-staff.jpg",
+    cta: "Pro Day Amateur",
+  },
+  {
+    id: "supporter" as const,
+    brand: SUPPORTER_BRAND,
+    logo: UNIVERSE_LOGOS.supporter,
+    href: "/supporter",
+    image: "/showcase/classic-match.jpg",
+    cta: "Pro Day Supporter",
+  },
+  {
     id: "pro" as const,
     brand: PRO_BRAND,
     logo: UNIVERSE_LOGOS.pro,
@@ -656,6 +715,76 @@ export const PRO_MODULES = [
   },
 ] as const;
 
+export const AMATEUR_MODULES = [
+  {
+    id: "joueur-amateur",
+    title: "Joueur amateur",
+    subtitle: "CV & Mercato local",
+    description:
+      "Profil joueur, CV foot en ligne, candidatures Mercato Amateur et convocations — foot M ou F via l'espace choisi.",
+    image: "/showcase/classic-profile.jpg",
+  },
+  {
+    id: "coach-amateur",
+    title: "Coach amateur",
+    subtitle: "Effectif & convocations",
+    description:
+      "Profil coach vérifié, gestion d'effectif, convocations et stats saison — district et régional.",
+    image: "/showcase/classic-staff.jpg",
+  },
+  {
+    id: "mercato-amateur",
+    title: "Mercato Amateur",
+    subtitle: "Recrutement local",
+    description:
+      "Annonces Mercato local, candidatures joueurs et suivi des réponses — sans la complexité du Mercato Pro.",
+    image: "/showcase/classic-mercato.jpg",
+  },
+  {
+    id: "matchs-amateur",
+    title: "Matchs",
+    subtitle: "Convocations équipe",
+    description:
+      "Calendrier unifié, RSVP joueurs et covoiturage pour vos matchs de championnat ou amicaux.",
+    image: "/showcase/classic-match.jpg",
+  },
+  {
+    id: "reseau-amateur",
+    title: "Réseau local",
+    subtitle: "Messagerie sécurisée",
+    description:
+      "Contacts vérifiés avec joueurs, clubs et coachs de votre zone — fini les groupes WhatsApp éparpillés.",
+    image: "/showcase/classic-exp-messages.jpg",
+  },
+] as const;
+
+export const SUPPORTER_MODULES = [
+  {
+    id: "matchs-supporter",
+    title: "Matchs",
+    subtitle: "Calendrier & live",
+    description:
+      "Suivez le calendrier des matchs, résultats et convocations — votre place en tribune numérique.",
+    image: "/showcase/classic-match.jpg",
+  },
+  {
+    id: "reels-supporter",
+    title: "Reels",
+    subtitle: "Moments forts",
+    description:
+      "Vidéos courtes et séquences des clubs que vous suivez — vibrez avec la communauté.",
+    image: "/showcase/classic-exp-discover.jpg",
+  },
+  {
+    id: "feed-supporter",
+    title: "Fil",
+    subtitle: "Communauté & actu",
+    description:
+      "Publications, réactions et question hebdo — l'activité de votre communauté supporter.",
+    image: "/showcase/classic-exp-messages.jpg",
+  },
+] as const;
+
 export const UNIVERSE_PAGE_CONFIG = {
   homme: {
     line: "homme" as const,
@@ -676,7 +805,7 @@ export const UNIVERSE_PAGE_CONFIG = {
     modules: MAN_MODULES as readonly UniverseModule[],
     journeyIds: ["player"] as const,
     audienceNote:
-      "Coach, club ou recruteur ? Direction Pro Day Pro — univers dédié aux professionnels.",
+      "Même pôle Amateur pour joueurs et coachs. Coach ou staff pro ? Direction Pro Day Pro.",
     showPulse: true,
     showVerification: false,
     pricingPlanIds: ["player_plus"] as const,
@@ -707,7 +836,7 @@ export const UNIVERSE_PAGE_CONFIG = {
     modules: WOMAN_MODULES as readonly UniverseModule[],
     journeyIds: ["player"] as const,
     audienceNote:
-      "Staff, club ou recruteur F ? L'univers Pro Day Pro couvre les structures et le réseau pro.",
+      "Même pôle Amateur pour joueuses et coachs F. Staff pro ou club ? L'univers Pro Day Pro.",
     showPulse: true,
     showVerification: false,
     pricingPlanIds: ["player_plus"] as const,
@@ -717,6 +846,68 @@ export const UNIVERSE_PAGE_CONFIG = {
       description:
         "Inscription joueuse en quelques minutes — visibilité sur le Mercato F et votre CV en ligne.",
       beta: "Liste d'attente Woman",
+    },
+  },
+  amateur: {
+    line: "amateur" as const,
+    brand: AMATEUR_BRAND,
+    hero: {
+      title: "Le foot amateur.",
+      image: "/showcase/classic-discover-hero.jpg",
+    },
+    highlights: [
+      { label: "Public", value: "Joueurs & coachs" },
+      { label: "Mercato", value: "Mercato Amateur" },
+      { label: "Saison", value: "Matchs & effectif" },
+      { label: "Zone", value: "District & régional" },
+    ],
+    modulesTitle: "Foot amateur connecté",
+    modulesSubtitle:
+      "Joueurs et coachs amateur — Mercato local, matchs, effectif et messagerie, distinct du pôle Pro.",
+    modules: AMATEUR_MODULES as readonly UniverseModule[],
+    journeyIds: ["player", "coach"] as const,
+    audienceNote:
+      "Foot M ou F ? Choisissez votre espace à l'inscription. Staff professionnel ? Direction Pro Day Pro.",
+    showPulse: true,
+    showVerification: true,
+    pricingPlanIds: ["player_plus", "coach_pro"] as const,
+    pricingTitle: "Formules amateur",
+    cta: {
+      title: "Créez votre compte Amateur",
+      description:
+        "Joueur ou coach amateur — inscription en quelques minutes, validation pour les coachs.",
+      beta: "Liste d'attente Amateur",
+    },
+  },
+  supporter: {
+    line: "supporter" as const,
+    brand: SUPPORTER_BRAND,
+    hero: {
+      title: "Le foot, ensemble.",
+      image: "/showcase/classic-match.jpg",
+    },
+    highlights: [
+      { label: "Public", value: "Fans & communauté" },
+      { label: "Live", value: "Matchs & réels" },
+      { label: "Fil", value: "Communauté" },
+      { label: "Distinct", value: "Sans Mercato" },
+    ],
+    modulesTitle: "Tribune numérique",
+    modulesSubtitle:
+      "Supporters — matchs, réels et fil communautaire, distinct des pôles joueur, amateur et partenaires.",
+    modules: SUPPORTER_MODULES as readonly UniverseModule[],
+    journeyIds: ["player"] as const,
+    audienceNote:
+      "Joueur ou coach ? Direction Amateur ou Pro. Partenaire commercial ? Direction Partenaires.",
+    showPulse: false,
+    showVerification: false,
+    pricingPlanIds: ["player_plus"] as const,
+    pricingTitle: "Formule supporter",
+    cta: {
+      title: "Créez votre compte Supporter",
+      description:
+        "Inscription supporter en quelques minutes — matchs, réels et fil communautaire.",
+      beta: "Liste d'attente Supporter",
     },
   },
   pro: {
@@ -970,7 +1161,7 @@ export const SUBSCRIPTION_PLANS_WEB = [
     tagline: "CV en ligne, visibilité et Mercato",
     monthlyEur: 2.99,
     storeAvailable: true,
-    universes: ["homme", "woman"] as ProductLineWeb[],
+    universes: ["homme", "woman", "amateur", "supporter"] as ProductLineWeb[],
     freeIncludes: [
       "Profil, Pulse et CV en ligne",
       "Galerie et stats saison",
@@ -1011,7 +1202,7 @@ export const SUBSCRIPTION_PLANS_WEB = [
     tagline: "Recrutement et gestion multi-équipes",
     monthlyEur: 7.99,
     storeAvailable: true,
-    universes: ["pro"] as ProductLineWeb[],
+    universes: ["pro", "amateur"] as ProductLineWeb[],
     freeIncludes: [
       "Profil staff et vérification",
       "1 équipe liée",

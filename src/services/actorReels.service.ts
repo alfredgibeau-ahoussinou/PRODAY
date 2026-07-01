@@ -1,4 +1,5 @@
 import type { ProductLineId } from '../models/ProductLine';
+import { isProFamilyLine } from '../utils/productLineResolution';
 import type { User, UserRole } from '../models/User';
 import type { ReelSeed } from '../content/reelSeedCatalog';
 import { seedKey } from '../content/reelSeedCatalog';
@@ -62,8 +63,8 @@ function matchesUniverse(user: User, productLine: ProductLineId): boolean {
     return user.role === 'physio' || user.role === 'coach';
   }
   if (!user.product_line) return true;
-  if (productLine === 'pro') {
-    return user.role !== 'player' || user.product_line === 'pro';
+  if (isProFamilyLine(productLine)) {
+    return user.role !== 'player' || user.product_line === 'pro' || user.product_line === 'pro_player';
   }
   return user.product_line === productLine;
 }

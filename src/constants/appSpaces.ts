@@ -1,6 +1,7 @@
 import type { AppSpaceId } from '../models/AppSpace';
 import { normalizeAppSpace } from '../models/AppSpace';
 import type { ProductLineId } from '../models/ProductLine';
+import type { Gender } from '../models/User';
 import { PLAYER_CATEGORIES } from './playerProfile';
 
 export const PLAYER_CATEGORIES_WOMEN = [
@@ -86,9 +87,12 @@ export function categoriesForAppSpace(space: AppSpaceId): readonly string[] {
 
 export function defaultCategoriesForAppSpace(
   space: AppSpaceId,
-  line?: ProductLineId
+  line?: ProductLineId,
+  gender?: Gender
 ): readonly string[] {
-  if (space === 'under_u13' && line === 'woman') {
+  // L'espace -13 ne distingue pas le genre (under_u13 unique) — le genre explicite
+  // (pôle Amateur) ou, pour les comptes legacy, le pôle Woman, filtrent la liste.
+  if (space === 'under_u13' && (line === 'woman' || gender === 'women')) {
     return PLAYER_CATEGORIES_UNDER_U13_F;
   }
   const dedicated = categoriesForAppSpace(space);

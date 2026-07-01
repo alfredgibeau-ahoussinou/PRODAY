@@ -5,6 +5,7 @@ import {
   isRoleAllowedForProductLine,
   productLineLabel,
 } from './universeRoles';
+import { isProFamilyLine } from '../utils/productLineResolution';
 import type { MainTabId } from '../navigation/mainTabConfig';
 import type { ProDayModuleId } from './prodayModules';
 import {
@@ -16,6 +17,8 @@ import { getMercatoTabLabel } from './mercatoTabLabel';
 import { DISCOVER_UNIVERSE_CARDS } from './discoverChapters';
 import { DISCOVER_UNIVERSE_CARDS_WOMAN } from './discoverWomanContent';
 import { DISCOVER_UNIVERSE_CARDS_PRO } from './discoverProContent';
+import { DISCOVER_UNIVERSE_CARDS_AMATEUR } from './discoverAmateurContent';
+import { DISCOVER_UNIVERSE_CARDS_SUPPORTER } from './discoverSupporterContent';
 import { DISCOVER_UNIVERSE_CARDS_SANTE } from './discoverSanteContent';
 import {
   getPhysioTabLabel,
@@ -30,6 +33,17 @@ import {
 import { canParticipateWeeklyQuestion } from '../utils/weeklyQuestionAccess';
 import { injectFamilyTab } from './familyExperience';
 import type { User } from '../models/User';
+import {
+  AMATEUR_COACH_SHELL_TABS,
+  AMATEUR_PLAYER_SHELL_TABS,
+  PRO_AGENT_SHELL_TABS,
+  PRO_CLUB_SHELL_TABS,
+  PRO_COACH_SHELL_TABS,
+  PRO_ORGANIZER_SHELL_TABS,
+  PRO_PLAYER_SHELL_TABS,
+  PRO_RECRUITER_SHELL_TABS,
+  SUPPORTER_SHELL_TABS,
+} from '../navigation/shells/productShellTabs';
 
 /** Groupes de rôles à l'inscription — filtrés par pôle. */
 export interface SignupRoleGroup {
@@ -39,7 +53,37 @@ export interface SignupRoleGroup {
   roles: UserRole[];
 }
 
+const AMATEUR_SIGNUP_GROUPS: SignupRoleGroup[] = [
+  {
+    id: 'player',
+    label: 'Joueurs amateur',
+    hint: 'CV, Mercato Amateur, matchs et covoiturage',
+    roles: ['player'],
+  },
+  {
+    id: 'coach',
+    label: 'Coachs amateur',
+    hint: 'Effectif, convocations et Mercato local',
+    roles: ['coach'],
+  },
+];
+
+const SUPPORTER_SIGNUP_GROUPS: SignupRoleGroup[] = [
+  {
+    id: 'supporter',
+    label: 'Supporters',
+    hint: 'Matchs, réels, fil et messagerie communauté',
+    roles: ['supporter'],
+  },
+];
+
 const PRO_SIGNUP_GROUPS: SignupRoleGroup[] = [
+  {
+    id: 'pro_player',
+    label: 'Joueurs pro',
+    hint: 'Carrière, opportunités, portfolio et groupe',
+    roles: ['player'],
+  },
   {
     id: 'recruiter',
     label: 'Recruteurs',
@@ -75,14 +119,47 @@ const SANTE_SIGNUP_GROUPS: SignupRoleGroup[] = [
   },
 ];
 
-export function getSignupRoleGroups(line: ProductLineId): SignupRoleGroup[] {
-  if (line === 'sante') return SANTE_SIGNUP_GROUPS;
-  if (line !== 'pro') return [];
-  const allowed = new Set(rolesForProductLine(line));
-  return PRO_SIGNUP_GROUPS.map((g) => ({
-    ...g,
-    roles: g.roles.filter((r) => allowed.has(r)),
-  })).filter((g) => g.roles.length > 0);
+export function getSignupRoleGroups(
+  line: ProductLineId,
+  presetRole?: UserRole | null,
+): SignupRoleGroup[] {
+  let groups: SignupRoleGroup[];
+  if (line === 'sante') groups = SANTE_SIGNUP_GROUPS;
+  else if (line === 'amateur') groups = AMATEUR_SIGNUP_GROUPS;
+  else if (line === 'supporter') groups = SUPPORTER_SIGNUP_GROUPS;
+  else if (line === 'pro_player') {
+    groups = PRO_SIGNUP_GROUPS.filter((g) => g.roles.includes('player'));
+  } else if (line === 'pro_club') {
+    groups = PRO_SIGNUP_GROUPS.filter((g) => g.roles.includes('club')).map((g) => ({
+      ...g,
+      roles: g.roles.filter((r) => r === 'club'),
+    }));
+  } else if (line === 'pro_staff') {
+    groups = PRO_SIGNUP_GROUPS.filter((g) =>
+      g.roles.some((r) => ['coach', 'agent', 'recruiter', 'organizer', 'sponsor'].includes(r)),
+    );
+  } else if (!isProFamilyLine(line)) groups = [];
+  else {
+    const allowed = new Set(rolesForProductLine(line));
+    groups = PRO_SIGNUP_GROUPS.map((g) => ({
+      ...g,
+      roles: g.roles.filter((r) => allowed.has(r)),
+    })).filter((g) => g.roles.length > 0);
+  }
+
+  if (!presetRole || !isProFamilyLine(line)) return groups;
+
+  if (presetRole === 'player') {
+    return groups.filter((g) => g.roles.includes('player'));
+  }
+  if (presetRole === 'club') {
+    return groups
+      .filter((g) => g.roles.includes('club'))
+      .map((g) => ({ ...g, roles: g.roles.filter((r) => r === 'club') }));
+  }
+  return groups.filter((g) =>
+    g.roles.some((r) => ['coach', 'agent', 'recruiter', 'organizer'].includes(r)),
+  );
 }
 
 export type DashboardLayoutKind = 'amateur_player' | 'pro';
@@ -91,7 +168,9 @@ export function getDashboardLayoutKind(
   line: ProductLineId,
   role: UserRole
 ): DashboardLayoutKind {
-  if (line === 'pro' || line === 'sante') return 'pro';
+  if (isProFamilyLine(line) || line === 'sante') return 'pro';
+  if (line === 'supporter') return 'amateur_player';
+  if (line === 'amateur') return role === 'player' ? 'amateur_player' : 'pro';
   return role === 'player' ? 'amateur_player' : 'pro';
 }
 
@@ -122,15 +201,31 @@ export function getVisibleMainTabs(
 
   if (line === 'sante') {
     tabs = ['home', 'matchs', 'messages', 'profil'];
-  } else if (line === 'pro') {
+  } else if (line === 'amateur') {
+    if (r === 'player') {
+      tabs = [...AMATEUR_PLAYER_SHELL_TABS];
+    } else {
+      tabs = [...AMATEUR_COACH_SHELL_TABS];
+    }
+  } else if (line === 'supporter') {
+    tabs = [...SUPPORTER_SHELL_TABS];
+  } else if (isProFamilyLine(line)) {
     if (r === 'sponsor') {
       tabs = [...SPONSOR_MAIN_TABS];
+    } else if (r === 'player') {
+      tabs = [...PRO_PLAYER_SHELL_TABS];
     } else if (r === 'organizer') {
-      tabs = ['home', 'recrutement', 'matchs', 'reels', 'covoiturage', 'messages', 'profil'];
-    } else if (r === 'coach' || r === 'club' || r === 'agent') {
-      tabs = ['home', 'recrutement', 'matchs', 'reels', 'covoiturage', 'messages', 'profil'];
+      tabs = [...PRO_ORGANIZER_SHELL_TABS];
+    } else if (r === 'coach') {
+      tabs = [...PRO_COACH_SHELL_TABS];
+    } else if (r === 'club') {
+      tabs = [...PRO_CLUB_SHELL_TABS];
+    } else if (r === 'agent') {
+      tabs = [...PRO_AGENT_SHELL_TABS];
+    } else if (r === 'recruiter') {
+      tabs = [...PRO_RECRUITER_SHELL_TABS];
     } else {
-      tabs = ['home', 'recrutement', 'matchs', 'reels', 'messages', 'profil'];
+      tabs = ['home', 'recrutement', 'matchs', 'messages', 'profil'];
     }
   } else if (r === 'player') {
     tabs = [
@@ -147,7 +242,18 @@ export function getVisibleMainTabs(
     tabs = ['home', 'recrutement', 'matchs', 'reels', 'feed', 'messages', 'profil'];
   }
 
-  return injectFamilyTab(injectCommunityFeedTab(tabs, r), profile, line);
+  const keepExplicitShell =
+    line === 'amateur' ||
+    line === 'supporter' ||
+    (isProFamilyLine(line) &&
+      (r === 'player' ||
+        r === 'club' ||
+        r === 'coach' ||
+        r === 'agent' ||
+        r === 'recruiter' ||
+        r === 'organizer'));
+  const withCommunity = keepExplicitShell ? tabs : injectCommunityFeedTab(tabs, r);
+  return injectFamilyTab(withCommunity, profile, line);
 }
 
 export { getMercatoTabLabel } from './mercatoTabLabel';
@@ -158,6 +264,46 @@ export function getTabShortLabel(
   role?: UserRole | null,
   translate?: (key: string) => string
 ): string {
+  if (line === 'amateur') {
+    if (tab === 'home') return 'Équipe';
+    if (tab === 'covoiturage') return 'Déplacements';
+    if (tab === 'recrutement') return 'Club';
+    if (tab === 'profil') return 'Moi';
+  }
+  if (line === 'supporter') {
+    if (tab === 'matchs') return 'Matchs';
+    if (tab === 'feed') return 'Suivis';
+    if (tab === 'messages') return 'Communauté';
+    if (tab === 'reels') return 'Moments';
+    if (tab === 'shop') return 'Shop';
+  }
+  if (isProFamilyLine(line) && role === 'club') {
+    if (tab === 'home') return 'Structure';
+    if (tab === 'recrutement') return 'Recrutement';
+    if (tab === 'matchs') return 'Calendrier';
+    if (tab === 'messages') return 'Communication';
+    if (tab === 'profil') return 'Vitrine';
+  }
+  if (isProFamilyLine(line) && role === 'coach') {
+    if (tab === 'home') return 'Équipe';
+    if (tab === 'matchs') return 'Calendrier';
+  }
+  if (isProFamilyLine(line) && role === 'agent') {
+    if (tab === 'home') return 'Mandats';
+  }
+  if (isProFamilyLine(line) && role === 'recruiter') {
+    if (tab === 'home') return 'Pipeline';
+  }
+  if (isProFamilyLine(line) && role === 'organizer') {
+    if (tab === 'home') return 'Arena';
+  }
+  if (isProFamilyLine(line) && role === 'player') {
+    if (tab === 'home') return 'Carrière';
+    if (tab === 'recrutement') return 'Opportunités';
+    if (tab === 'reels') return 'Portfolio';
+    if (tab === 'matchs') return 'Groupe';
+    if (tab === 'profil') return 'Moi';
+  }
   if (translate) {
     const key = `tabs.${tab}`;
     const translated = translate(key);
@@ -238,7 +384,7 @@ export function canPublishRecruitmentPost(role: UserRole): boolean {
 }
 
 export function canAccessSponsorsModule(line: ProductLineId, role: UserRole): boolean {
-  return line === 'pro' && role === 'sponsor';
+  return role === 'sponsor' && (line === 'pro_staff' || line === 'pro');
 }
 
 const LINE_MODULE_HIDE: Partial<
@@ -249,6 +395,13 @@ const LINE_MODULE_HIDE: Partial<
   },
   woman: {
     player: ['sponsors', 'gestion'],
+  },
+  amateur: {
+    player: ['sponsors', 'gestion'],
+    coach: ['sponsors'],
+  },
+  supporter: {
+    supporter: ['recrutement', 'sponsors'],
   },
   pro: {
     coach: ['sponsors'],
@@ -293,7 +446,24 @@ export function getDashboardMetaForLine(
       eyebrow: womanEyebrows[role] ?? meta.eyebrow,
     };
   }
-  if (line === 'pro') {
+  if (line === 'amateur') {
+    const amateurEyebrows: Partial<Record<UserRole, string>> = {
+      player: 'COCKPIT JOUEUR AMATEUR',
+      coach: 'BANC TECHNIQUE AMATEUR',
+    };
+    return {
+      ...meta,
+      eyebrow: amateurEyebrows[role] ?? meta.eyebrow,
+    };
+  }
+  if (line === 'supporter') {
+    return {
+      ...meta,
+      eyebrow: role === 'supporter' ? 'TRIBUNE SUPPORTER' : meta.eyebrow,
+      title: role === 'supporter' ? 'Votre tribune numérique' : meta.title,
+    };
+  }
+  if (isProFamilyLine(line)) {
     const proEyebrows: Partial<Record<UserRole, string>> = {
       coach: 'BANC TECHNIQUE PRO',
       agent: 'RÉSEAU AGENT PRO',
@@ -318,8 +488,10 @@ export function getDashboardMetaForLine(
 
 export function getDiscoverUniverseCardsForLine(line: ProductLineId) {
   if (line === 'woman') return DISCOVER_UNIVERSE_CARDS_WOMAN;
-  if (line === 'pro') return DISCOVER_UNIVERSE_CARDS_PRO;
+  if (isProFamilyLine(line)) return DISCOVER_UNIVERSE_CARDS_PRO;
   if (line === 'sante') return DISCOVER_UNIVERSE_CARDS_SANTE;
+  if (line === 'amateur') return DISCOVER_UNIVERSE_CARDS_AMATEUR;
+  if (line === 'supporter') return DISCOVER_UNIVERSE_CARDS_SUPPORTER;
   return DISCOVER_UNIVERSE_CARDS;
 }
 
@@ -329,4 +501,17 @@ export function assertRoleAllowedForLine(role: UserRole, line: ProductLineId): v
       `Le rôle « ${role} » n’est pas disponible sur ${productLineLabel(line)}.`
     );
   }
+}
+
+/**
+ * Préparation split carousel Pro (phase light) :
+ * - pro_player
+ * - pro_club
+ * - pro_staff
+ */
+export function getProCarouselSegment(role: UserRole): 'pro_player' | 'pro_club' | 'pro_staff' {
+  if (role === 'player') return 'pro_player';
+  if (role === 'club') return 'pro_club';
+  // TODO(carousel-pro): affiner staff (coach/agent/recruiter/organizer/sponsor) par sous-segment.
+  return 'pro_staff';
 }
