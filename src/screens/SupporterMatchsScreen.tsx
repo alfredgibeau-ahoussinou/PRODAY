@@ -1,51 +1,80 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { TabScreenShell } from '../components/app/TabScreenShell';
+import { SupporterFilterBar } from '../components/supporter/SupporterFilterBar';
+import { SupporterMatchCard } from '../components/supporter/SupporterMatchCard';
 import { PressableSpring } from '../components/motion';
 import { ProDayText } from '../components/ui/ProDayText';
+import { ProDaySurface } from '../components/ui/ProDaySurface';
 import { useAuth } from '../context/AuthContext';
+import { useTranslation } from '../context/LocaleContext';
 import { useSeasonCalendar } from '../hooks/useAppData';
 import { useTournaments } from '../hooks/useTournaments';
+import { useTabNavigationActions } from '../hooks/useTabNavigationActions';
 import { isInMatchWindow } from '../utils/matchLive';
-import { formatCalendarDate } from '../utils/seasonCalendar';
 import { spacing, radius } from '../theme/designTokens';
 import { useAppTheme } from '../context/ProductLineContext';
 import { followsService } from '../services/follows.service';
+import {
+  loadSupporterMatchFilters,
+  saveSupporterMatchFilters,
+  type SupporterMatchFilters,
+} from '../services/supporterPreferences.service';
 import type { Follow } from '../models/Follow';
 import { teamEventsService } from '../services/teamEvents.service';
+import { externalScoresService } from '../services/externalScores.service';
 import {
-  externalScoresService,
-  type ExternalFixture,
-} from '../services/externalScores.service';
+  buildFollowContext,
+  externalFixtureToMatchItem,
+  filterMatchItems,
+  filterTournaments,
+  teamEventToMatchItem,
+  type SupporterMatchViewItem,
+} from '../utils/supporterMatchFilters';
 
 type SupporterMatchsChapter = 'live' | 'today' | 'tournaments' | 'follows';
 
-const CHAPTERS: { id: SupporterMatchsChapter; label: string }[] = [
-  { id: 'live', label: 'En direct' },
-  { id: 'today', label: "Aujourd'hui" },
-  { id: 'tournaments', label: 'Tournois' },
-  { id: 'follows', label: 'Mes suivis' },
+const CHAPTER_KEYS: { id: SupporterMatchsChapter; labelKey: string }[] = [
+  { id: 'live', labelKey: 'supporter.chapters.live' },
+  { id: 'today', labelKey: 'supporter.chapters.today' },
+  { id: 'tournaments', labelKey: 'supporter.chapters.tournaments' },
+  { id: 'follows', labelKey: 'supporter.chapters.follows' },
 ];
 
 export const SupporterMatchsScreen: React.FC = () => {
   const { profile } = useAuth();
   const { colors } = useAppTheme();
-  const { items, events } = useSeasonCalendar(profile?.uid, profile?.profile.club_id);
+  const { t } = useTranslation();
+  const nav = useTabNavigationActions();
+  const { events } = useSeasonCalendar(profile?.uid, profile?.profile.club_id);
   const { tournaments } = useTournaments();
   const [chapter, setChapter] = useState<SupporterMatchsChapter>('live');
   const [follows, setFollows] = useState<Follow[]>([]);
   const [publicEvents, setPublicEvents] = useState<typeof events>([]);
-  const [worldFixtures, setWorldFixtures] = useState<ExternalFixture[]>([]);
+  const [worldFixtures, setWorldFixtures] = useState<Awaited<
+    ReturnType<typeof externalScoresService.listFixtures>
+  >>([]);
+  const [filters, setFilters] = useState<SupporterMatchFilters>({
+    gender: 'all',
+    source: 'all',
+    scope: 'all',
+  });
 
-  React.useEffect(() => {
+  const loadFollows = useCallback(async () => {
     if (!profile?.uid) return;
-    followsService
-      .listByFollower(profile.uid)
-      .then(setFollows)
-      .catch(() => setFollows([]));
+    const list = await followsService.listByFollower(profile.uid);
+    setFollows(list);
   }, [profile?.uid]);
 
-  React.useEffect(() => {
+  useEffect(() => {
+    if (!profile?.uid) return;
+    loadSupporterMatchFilters(profile.uid)
+      .then(setFilters)
+      .catch(() => undefined);
+    void loadFollows();
+  }, [profile?.uid, loadFollows]);
+
+  useEffect(() => {
     teamEventsService
       .listUpcoming(60)
       .then(setPublicEvents)
@@ -56,202 +85,240 @@ export const SupporterMatchsScreen: React.FC = () => {
       .catch(() => setWorldFixtures([]));
   }, []);
 
-  const liveEvents = useMemo(() => events.filter((event) => isInMatchWindow(event)).slice(0, 8), [events]);
-  const localLiveEvents = useMemo(
-    () => publicEvents.filter((event) => isInMatchWindow(event)).slice(0, 8),
-    [publicEvents]
+  const followContext = useMemo(() => buildFollowContext(follows), [follows]);
+  const followedKeys = useMemo(
+    () => new Set(follows.map((f) => `${f.target_type}:${f.target_id}`)),
+    [follows]
   );
+
+  const handleFiltersChange = useCallback(
+    (next: SupporterMatchFilters) => {
+      setFilters(next);
+      if (profile?.uid) {
+        void saveSupporterMatchFilters(profile.uid, next);
+      }
+    },
+    [profile?.uid]
+  );
+
+  const toggleFollow = useCallback(
+    async (type: 'club' | 'tournament', id: string, label: string) => {
+      if (!profile?.uid) return;
+      await followsService.toggle(profile.uid, type, id, label);
+      await loadFollows();
+    },
+    [profile?.uid, loadFollows]
+  );
+
+  const liveItems = useMemo(() => {
+    const localLive = publicEvents.filter((event) => isInMatchWindow(event));
+    const personalLive = events.filter((event) => isInMatchWindow(event));
+    const mergedLocal = localLive.length > 0 ? localLive : personalLive;
+    const worldLive = worldFixtures.filter((fixture) => fixture.status === 'live');
+    const raw: SupporterMatchViewItem[] = [
+      ...worldLive.map(externalFixtureToMatchItem),
+      ...mergedLocal.map(teamEventToMatchItem),
+    ];
+    return filterMatchItems(raw, filters, followContext).slice(0, 12);
+  }, [publicEvents, events, worldFixtures, filters, followContext]);
+
   const todayItems = useMemo(() => {
     const start = new Date();
     start.setHours(0, 0, 0, 0);
     const end = new Date(start);
     end.setDate(start.getDate() + 1);
-    return items.filter((item) => item.starts_at >= start && item.starts_at < end).slice(0, 12);
-  }, [items]);
-  const todayLocalEvents = useMemo(() => {
-    const start = new Date();
-    start.setHours(0, 0, 0, 0);
-    const end = new Date(start);
-    end.setDate(start.getDate() + 1);
-    return publicEvents
-      .filter((event) => event.starts_at >= start && event.starts_at < end)
-      .slice(0, 12);
-  }, [publicEvents]);
-  const todayWorldFixtures = useMemo(() => {
-    const start = new Date();
-    start.setHours(0, 0, 0, 0);
-    const end = new Date(start);
-    end.setDate(start.getDate() + 1);
-    return worldFixtures
-      .filter((fixture) => fixture.starts_at >= start && fixture.starts_at < end)
-      .slice(0, 12);
-  }, [worldFixtures]);
-  const liveWorldFixtures = useMemo(
-    () => worldFixtures.filter((fixture) => fixture.status === 'live').slice(0, 8),
-    [worldFixtures]
-  );
-  const followedClubIds = useMemo(
-    () => new Set(follows.filter((f) => f.target_type === 'club').map((f) => f.target_id)),
-    [follows]
-  );
-  const followedTournamentIds = useMemo(
-    () => new Set(follows.filter((f) => f.target_type === 'tournament').map((f) => f.target_id)),
-    [follows]
-  );
-  const followedLocalEvents = useMemo(() => {
-    if (followedClubIds.size === 0) return [];
-    return publicEvents
-      .filter((event) => event.club_id && followedClubIds.has(event.club_id))
-      .sort((a, b) => a.starts_at.getTime() - b.starts_at.getTime())
-      .slice(0, 12);
-  }, [publicEvents, followedClubIds]);
-  const followedTournaments = useMemo(
-    () => tournaments.filter((tournament) => followedTournamentIds.has(tournament.id)).slice(0, 12),
-    [tournaments, followedTournamentIds]
-  );
 
-  const renderCard = (
-    title: string,
-    subtitle: string,
-    meta?: string,
-    source?: 'Monde' | 'PRODAY'
-  ) => (
-    <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-      {source ? (
-        <View style={styles.sourcePill}>
-          <ProDayText variant="caption" style={{ color: colors.accent }}>
-            {source}
-          </ProDayText>
-        </View>
-      ) : null}
-      <ProDayText variant="section">{title}</ProDayText>
-      <ProDayText variant="caption" muted>{subtitle}</ProDayText>
-      {meta ? <ProDayText variant="caption" style={{ color: colors.accent }}>{meta}</ProDayText> : null}
-    </View>
+    const localToday = publicEvents.filter(
+      (event) => event.starts_at >= start && event.starts_at < end
+    );
+    const calendarToday = events.filter(
+      (event) => event.starts_at >= start && event.starts_at < end
+    );
+    const worldToday = worldFixtures.filter(
+      (fixture) => fixture.starts_at >= start && fixture.starts_at < end
+    );
+
+    const raw: SupporterMatchViewItem[] = [
+      ...localToday.map(teamEventToMatchItem),
+      ...calendarToday.map(teamEventToMatchItem),
+      ...worldToday.map(externalFixtureToMatchItem),
+    ];
+    return filterMatchItems(raw, filters, followContext).slice(0, 16);
+  }, [publicEvents, events, worldFixtures, filters, followContext]);
+
+  const tournamentItems = useMemo(() => {
+    return filterTournaments(tournaments, filters, followContext).slice(0, 12);
+  }, [tournaments, filters, followContext]);
+
+  const followedMatchItems = useMemo(() => {
+    const followedEvents = publicEvents
+      .filter(
+        (event) =>
+          (event.club_id && followContext.clubIds.has(event.club_id)) ||
+          (event.tournament_id && followContext.tournamentIds.has(event.tournament_id))
+      )
+      .map(teamEventToMatchItem);
+    return filterMatchItems(followedEvents, filters, followContext).slice(0, 12);
+  }, [publicEvents, followContext, filters]);
+
+  const renderEmpty = (messageKey: string) => (
+    <ProDaySurface variant="module" style={[styles.empty, { borderColor: colors.border }]}>
+      <ProDayText variant="body">{t(messageKey)}</ProDayText>
+    </ProDaySurface>
   );
 
   let content: React.ReactNode = null;
+
   if (chapter === 'live') {
-    const followedOnly = followedClubIds.size > 0;
-    const scopedLocalLive = followedOnly
-      ? localLiveEvents.filter((event) => event.club_id && followedClubIds.has(event.club_id))
-      : localLiveEvents;
-    content = (
-      <>
-        {liveWorldFixtures.length > 0
-          ? liveWorldFixtures.map((fixture) =>
-              renderCard(
-                `${fixture.home_team} vs ${fixture.away_team}`,
-                `${fixture.competition_label} · ${fixture.venue ?? 'Monde'}`,
-                fixture.minute != null
-                  ? `${fixture.score_home ?? 0}-${fixture.score_away ?? 0} · ${fixture.minute}'`
-                  : 'Live',
-                'Monde'
-              )
-            )
-          : renderCard('Monde (API)', 'Provider scores prêt (mock Ligue 1 / D1 Arkema).', 'Stub API', 'Monde')}
-        {scopedLocalLive.length > 0
-          ? scopedLocalLive.map((event) =>
-              renderCard(
-                event.title,
-                event.city || 'Match en cours',
-                `${formatCalendarDate(event.starts_at)} · ${event.club_name ?? 'Club local'}`,
-                'PRODAY'
-              )
-            )
-          : liveEvents.length > 0
-            ? liveEvents.map((event) =>
-                renderCard(
-                  event.title,
-                  event.city || 'Match en cours',
-                  formatCalendarDate(event.starts_at),
-                  'PRODAY'
-                )
-              )
-            : renderCard('Aucun live local', 'Les matchs en direct apparaîtront ici.', undefined, 'PRODAY')}
-      </>
-    );
-  } else if (chapter === 'today') {
-    const todayCards = [
-      ...todayLocalEvents.map((event) =>
-        renderCard(
-          event.title,
-          `${event.city} · ${event.club_name ?? 'Club local'}`,
-          formatCalendarDate(event.starts_at),
-          'PRODAY'
-        )
-      ),
-      ...todayItems.map((item) =>
-        renderCard(item.title, item.subtitle, formatCalendarDate(item.starts_at), 'PRODAY')
-      ),
-      ...todayWorldFixtures.map((fixture) =>
-        renderCard(
-          `${fixture.home_team} vs ${fixture.away_team}`,
-          fixture.competition_label,
-          fixture.status === 'finished'
-            ? `${fixture.score_home ?? 0}-${fixture.score_away ?? 0}`
-            : formatCalendarDate(fixture.starts_at),
-          'Monde'
-        )
-      ),
-    ];
     content =
-      todayCards.length > 0
-        ? todayCards
-        : renderCard("Pas d'affiche aujourd'hui", 'Revenez plus tard pour les rencontres du jour.');
+      liveItems.length > 0 ? (
+        liveItems.map((item) => (
+          <SupporterMatchCard
+            key={item.id}
+            item={item}
+            isFollowed={
+              item.followTarget
+                ? followedKeys.has(`${item.followTarget.type}:${item.followTarget.id}`)
+                : false
+            }
+            onToggleFollow={
+              item.followTarget
+                ? () =>
+                    void toggleFollow(
+                      item.followTarget!.type,
+                      item.followTarget!.id,
+                      item.followTarget!.label
+                    )
+                : undefined
+            }
+            onDebate={() => nav.setActiveTab('messages')}
+            onMoment={() => nav.setActiveTab('reels')}
+          />
+        ))
+      ) : (
+        renderEmpty('supporter.empty.live')
+      );
+  } else if (chapter === 'today') {
+    content =
+      todayItems.length > 0 ? (
+        todayItems.map((item) => (
+          <SupporterMatchCard
+            key={item.id}
+            item={item}
+            isFollowed={
+              item.followTarget
+                ? followedKeys.has(`${item.followTarget.type}:${item.followTarget.id}`)
+                : false
+            }
+            onToggleFollow={
+              item.followTarget
+                ? () =>
+                    void toggleFollow(
+                      item.followTarget!.type,
+                      item.followTarget!.id,
+                      item.followTarget!.label
+                    )
+                : undefined
+            }
+            onDebate={() => nav.setActiveTab('messages')}
+            onMoment={() => nav.setActiveTab('reels')}
+          />
+        ))
+      ) : (
+        renderEmpty('supporter.empty.today')
+      );
   } else if (chapter === 'tournaments') {
     content =
-      tournaments.length > 0
-        ? tournaments.slice(0, 12).map((tournament) =>
-            renderCard(tournament.title, tournament.city, formatCalendarDate(tournament.starts_at), 'PRODAY')
-          )
-        : renderCard('Aucun tournoi', 'Les tournois à venir seront listés ici.');
+      tournamentItems.length > 0 ? (
+        tournamentItems.map((tournament) => {
+          const item: SupporterMatchViewItem = {
+            id: `tournament-${tournament.id}`,
+            source: 'proday',
+            status: 'upcoming',
+            genderScope: 'unspecified',
+            homeLabel: tournament.title,
+            awayLabel: tournament.city,
+            startsAt: tournament.starts_at,
+            tournamentId: tournament.id,
+            followTarget: {
+              type: 'tournament',
+              id: tournament.id,
+              label: tournament.title,
+            },
+            meta: tournament.categories.join(' · ') || undefined,
+            timeLabel: tournament.starts_at.toLocaleDateString('fr-FR'),
+          };
+          return (
+            <SupporterMatchCard
+              key={item.id}
+              item={item}
+              isFollowed={followedKeys.has(`tournament:${tournament.id}`)}
+              onToggleFollow={() =>
+                void toggleFollow('tournament', tournament.id, tournament.title)
+              }
+              onDebate={() => nav.setActiveTab('messages')}
+              onMoment={() => nav.setActiveTab('reels')}
+            />
+          );
+        })
+      ) : (
+        renderEmpty('supporter.empty.tournaments')
+      );
   } else {
-    const followed = follows.filter((follow) => follow.target_type === 'club' || follow.target_type === 'tournament');
+    const followedOnly = follows.filter(
+      (follow) =>
+        follow.target_type === 'club' ||
+        follow.target_type === 'tournament' ||
+        follow.target_type === 'player'
+    );
     content = (
       <>
-        {followed.length > 0
-          ? followed.map((follow) =>
-              renderCard(
-                follow.target_label ?? follow.target_id,
-                follow.target_type === 'club' ? 'Club suivi' : 'Tournoi suivi',
-                follow.created_at.toLocaleDateString('fr-FR')
-              )
-            )
-          : renderCard('Aucun suivi', 'Ajoutez des clubs et tournois dans l’onglet Suivis.')}
-        {followedLocalEvents.length > 0
-          ? followedLocalEvents.map((event) =>
-              renderCard(
-                event.title,
-                `${event.club_name ?? 'Club'} · ${event.city}`,
-                formatCalendarDate(event.starts_at),
-                'PRODAY'
-              )
-            )
-          : null}
-        {followedTournaments.length > 0
-          ? followedTournaments.map((tournament) =>
-              renderCard(
-                tournament.title,
-                `${tournament.city} · Tournoi suivi`,
-                formatCalendarDate(tournament.starts_at),
-                'PRODAY'
-              )
-            )
-          : null}
+        {followedOnly.length > 0
+          ? followedOnly.map((follow) => (
+              <ProDaySurface
+                key={follow.id}
+                variant="module"
+                style={[styles.followRow, { borderColor: colors.border }]}
+              >
+                <ProDayText variant="section">{follow.target_label ?? follow.target_id}</ProDayText>
+                <ProDayText variant="caption" muted>
+                  {t(`supporter.followType.${follow.target_type}`)}
+                </ProDayText>
+              </ProDaySurface>
+            ))
+          : renderEmpty('supporter.empty.follows')}
+        {followedMatchItems.map((item) => (
+          <SupporterMatchCard
+            key={item.id}
+            item={item}
+            isFollowed
+            onToggleFollow={
+              item.followTarget
+                ? () =>
+                    void toggleFollow(
+                      item.followTarget!.type,
+                      item.followTarget!.id,
+                      item.followTarget!.label
+                    )
+                : undefined
+            }
+            onDebate={() => nav.setActiveTab('messages')}
+            onMoment={() => nav.setActiveTab('reels')}
+          />
+        ))}
       </>
     );
   }
 
   return (
     <TabScreenShell
-      caption="TRIBUNE"
-      title="Matchs supporter"
-      subtitle="Direct, calendrier, tournois et suivis"
+      caption={t('supporter.shell.caption')}
+      title={t('supporter.matchs.title')}
+      subtitle={t('supporter.matchs.subtitle')}
       flat
     >
       <View style={styles.chips}>
-        {CHAPTERS.map((entry) => {
+        {CHAPTER_KEYS.map((entry) => {
           const active = entry.id === chapter;
           return (
             <PressableSpring
@@ -266,12 +333,13 @@ export const SupporterMatchsScreen: React.FC = () => {
               ]}
             >
               <ProDayText variant="caption" style={{ color: active ? '#fff' : colors.textSecondary }}>
-                {entry.label}
+                {t(entry.labelKey)}
               </ProDayText>
             </PressableSpring>
           );
         })}
       </View>
+      <SupporterFilterBar filters={filters} onChange={handleFiltersChange} />
       <ScrollView contentContainerStyle={styles.content}>{content}</ScrollView>
     </TabScreenShell>
   );
@@ -296,18 +364,15 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xxl,
     gap: spacing.sm,
   },
-  card: {
+  empty: {
+    borderWidth: 1,
+    borderRadius: radius.lg,
+    padding: spacing.md,
+  },
+  followRow: {
     borderWidth: 1,
     borderRadius: radius.lg,
     padding: spacing.md,
     gap: 4,
   },
-  sourcePill: {
-    alignSelf: 'flex-start',
-    borderRadius: radius.pill,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 2,
-    backgroundColor: 'rgba(255,255,255,0.04)',
-  },
 });
-

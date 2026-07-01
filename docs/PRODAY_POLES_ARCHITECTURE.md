@@ -1204,6 +1204,16 @@ Done:
   - Helpers : `proPlayerCareerMetrics.ts`
 - **Portefeuille Agent (§4.5)** : `AgentHomeDashboard.tsx` — tableau mandats
   (Joueur | Club actuel | Fin mandat | Statut négo) depuis shortlist + profils publics.
+- **Tribune Supporter §8 (juil. 2026)** :
+  - Filtres persistants : `supporterPreferences.service.ts`, `SupporterFilterBar.tsx`
+  - Cartes match enrichies : `SupporterMatchCard.tsx`, refactor `SupporterMatchsScreen.tsx`
+  - Suivis joueurs + recherche tournois : `SupporterSuivisScreen.tsx`
+  - Helpers filtres : `supporterMatchFilters.ts` + tests `supporterMatchFilters.test.ts`
+  - i18n `supporter.*` (`ui.fr.ts`, `ui.en.ts`)
+- **Structure Club §4.4 (juil. 2026)** :
+  - Écran dédié : `ClubStructureScreen.tsx` (arbre équipes, staff, adhésions pending)
+  - Helpers agrégation : `clubStructureView.ts` + tests `clubStructureView.test.ts`
+  - i18n `clubStructure.*` (`ui.fr.ts`, `ui.en.ts`)
 
 Still stub / pending external dependencies:
 - Connecteur API scores réel (API-Football ou équivalent) + auth/quotas
