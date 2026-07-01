@@ -64,7 +64,18 @@ type MercatoView =
   | 'women_hub'
   | 'under_u13_hub';
 
-export const MercatoScreen: React.FC = () => {
+import type { MercatoPostScope } from '../utils/mercatoPostFilters';
+import {
+  filterRecruitmentPostsByScope,
+  resolveMercatoPostScope,
+} from '../utils/mercatoPostFilters';
+
+type MercatoScreenProps = {
+  /** Filtre les annonces (pro joueur / amateur). */
+  postScope?: MercatoPostScope;
+};
+
+export const MercatoScreen: React.FC<MercatoScreenProps> = ({ postScope }) => {
   const [view, setView] = useState<MercatoView>('home');
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
   const [selectedStaffId, setSelectedStaffId] = useState<string | null>(null);
@@ -82,7 +93,7 @@ export const MercatoScreen: React.FC = () => {
 
   const { profile } = useAuth();
   const { appSpace, setAppSpace } = useAppSpace();
-  const { productLine, colors: themeColors, enterWomanSpace } = useAppTheme();
+  const { productLine, colors: themeColors, playerSegment } = useAppTheme();
   const { openChat, pendingMercatoView, clearPendingMercato } = useTabNavigation();
   const { openProfile } = useTabNavigationActions();
   const { requireAuth } = useRequireAuth();
@@ -90,14 +101,28 @@ export const MercatoScreen: React.FC = () => {
   const { stats, loading: loadingStats, posts, loadingLists, refreshLists } =
     useMercatoHome();
 
+  const mercatoLine =
+    productLine === 'pro_player' || postScope === 'pro'
+      ? 'pro_player'
+      : productLine === 'amateur' || postScope === 'amateur'
+        ? 'amateur'
+        : productLine;
+
   const config = useMemo(
-    () => getMercatoExperienceConfig(productLine, profile?.role, appSpace, t),
-    [productLine, profile?.role, appSpace, t]
+    () => getMercatoExperienceConfig(mercatoLine, profile?.role, appSpace, t, playerSegment),
+    [mercatoLine, profile?.role, appSpace, t, playerSegment],
+  );
+
+  const scope = postScope ?? resolveMercatoPostScope(mercatoLine);
+
+  const scopedPosts = useMemo(
+    () => filterRecruitmentPostsByScope(posts, scope),
+    [posts, scope],
   );
 
   const spacePosts = useMemo(
-    () => posts.filter((ad) => postMatchesAppSpace(ad, appSpace, productLine)),
-    [posts, appSpace, productLine]
+    () => scopedPosts.filter((ad) => postMatchesAppSpace(ad, appSpace, mercatoLine)),
+    [scopedPosts, appSpace, mercatoLine],
   );
 
   const filteredPosts = useMemo(() => {
@@ -160,11 +185,20 @@ export const MercatoScreen: React.FC = () => {
     setView(id);
   };
 
-  if (view === 'women_hub') {
+  const showLegacyHubs = productLine === 'homme' || productLine === 'woman';
+  const showYouthSpaceBanner = productLine === 'amateur';
+
+  useEffect(() => {
+    if (!showLegacyHubs && (view === 'women_hub' || view === 'under_u13_hub')) {
+      setView('home');
+    }
+  }, [showLegacyHubs, view]);
+
+  if (showLegacyHubs && view === 'women_hub') {
     return <WomenHubScreen onBack={() => setView('home')} />;
   }
 
-  if (view === 'under_u13_hub') {
+  if (showLegacyHubs && view === 'under_u13_hub') {
     return <UnderU13HubScreen onBack={() => setView('home')} />;
   }
 
@@ -430,13 +464,13 @@ export const MercatoScreen: React.FC = () => {
         search={search}
         onSearchChange={setSearch}
         headerRight={headerRight}
-        showSpaceBanner={productLine === 'homme' || productLine === 'woman'}
+        showSpaceBanner={showYouthSpaceBanner || showLegacyHubs}
         onOpenMenHub={() => setAppSpace('men')}
         onOpenWomenHub={() =>
-          productLine === 'homme' ? void enterWomanSpace() : setView('women_hub')
+          showLegacyHubs ? setView('women_hub') : setAppSpace('women')
         }
         onOpenUnderU13Hub={() =>
-          productLine === 'homme' ? setAppSpace('under_u13') : setView('under_u13_hub')
+          showLegacyHubs ? setView('under_u13_hub') : setAppSpace('under_u13')
         }
         onQuickTile={handleQuickTile}
         onFavorites={openFavorites}

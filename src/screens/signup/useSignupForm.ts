@@ -40,6 +40,7 @@ import {
 import { suggestFeminineAppSpaceFromAge, getWomanSignupPhases } from './signupWomanConfig';
 import { getManSignupPhases } from './signupManConfig';
 import { getProSignupPhases } from './signupProConfig';
+import { getProPlayerSignupPhases } from './signupProPlayerConfig';
 import { getAmateurSignupPhases } from './signupAmateurConfig';
 import { getSupporterSignupPhases } from './signupSupporterConfig';
 import { getSanteSignupPhases } from './signupSanteConfig';
@@ -62,6 +63,7 @@ export function useSignupForm(initial?: {
   const { t } = useTranslation();
   const productLine: ProductLineId = initial?.productLine ?? 'amateur';
   const isWomanProduct = productLine === 'woman';
+  const isProPlayerSignup = productLine === 'pro_player';
   const isProProduct = isProFamilyLine(productLine);
   const isAmateurProduct = productLine === 'amateur';
   const isSupporterProduct = productLine === 'supporter';
@@ -144,9 +146,10 @@ export function useSignupForm(initial?: {
     if (isSanteProduct) return getSanteSignupPhases(t);
     if (isSupporterProduct) return getSupporterSignupPhases(t);
     if (isAmateurProduct) return getAmateurSignupPhases(t);
+    if (isProPlayerSignup) return getProPlayerSignupPhases(t);
     if (isProProduct) return getProSignupPhases(t);
     return getManSignupPhases(t);
-  }, [isWomanProduct, isSanteProduct, isSupporterProduct, isAmateurProduct, isProProduct, t]);
+  }, [isWomanProduct, isSanteProduct, isSupporterProduct, isAmateurProduct, isProPlayerSignup, isProProduct, t]);
   const phaseIndex = getPhaseIndex(flowKind, currentPage);
   const currentPhase = getCurrentPhase(currentPage);
   const needsDocument = ROLES_REQUIRING_VERIFICATION.includes(role);

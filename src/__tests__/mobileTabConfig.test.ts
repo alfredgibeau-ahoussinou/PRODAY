@@ -24,11 +24,11 @@ describe('mobileTabConfig', () => {
     expect(rail.right).toEqual([]);
   });
 
-  it('affiche le menu amateur joueur en rangée plate orange', () => {
+  it('affiche le menu amateur joueur en rangée plate avec overflow', () => {
     const rail = getMobileRailLayout('amateur', 'player');
     expect(rail.flat).toEqual(['home', 'covoiturage', 'recrutement', 'profil']);
+    expect(rail.overflow).toEqual(expect.arrayContaining(['messages', 'reels', 'sante']));
     expect(rail.center).toBeNull();
-    expect(rail.overflow).toEqual([]);
   });
 
   it('remonte Profil sur le rail à côté de Messages', () => {

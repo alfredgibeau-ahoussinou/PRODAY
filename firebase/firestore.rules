@@ -194,6 +194,16 @@ service cloud.firestore {
         );
     }
 
+    function validProfileGender(gender) {
+      return gender in ['men', 'women', 'minor'];
+    }
+
+    function ownerProfileGenderValid() {
+      let profile = request.resource.data.get('profile', {});
+      let gender = profile.get('gender', null);
+      return gender == null || validProfileGender(gender);
+    }
+
     function validUserRole(role) {
       return role in [
         'player', 'coach', 'club', 'agent', 'recruiter', 'organizer', 'sponsor', 'physio', 'supporter'
@@ -284,7 +294,8 @@ service cloud.firestore {
       allow create: if isOwner(userId)
         && request.resource.data.verification_status in ['PENDING', 'NOT_REQUIRED']
         && validUserRole(request.resource.data.role)
-        && playerSeasonStatsEmptyOnCreate();
+        && playerSeasonStatsEmptyOnCreate()
+        && ownerProfileGenderValid();
       allow update: if isAdmin()
         || canStaffWritePlayerSeasonStats()
         || isGuardianParentalUpdate()
@@ -293,6 +304,7 @@ service cloud.firestore {
             && ownerImmutableFieldsUnchanged()
             && ownerClubIdUnchanged()
             && ownerSeasonStatsUnchanged()
+            && ownerProfileGenderValid()
             && minorGuardianContactUnchanged()
             && (minorParentalProtected() || isOwnerParentalRuntimeSync()));
       allow delete: if isAdmin();

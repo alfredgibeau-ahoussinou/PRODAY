@@ -47,26 +47,28 @@ const LEFT_PRIORITY_BY_PRO_ROLE: Partial<Record<UserRole, MainTabId[]>> = {
 
 type FlatRailRule = {
   match: (line: ProductLineId, role?: UserRole | null) => boolean;
-  order: MainTabId[];
+  primary: MainTabId[];
+  overflow?: MainTabId[];
 };
 
 /** Menus bas plats — un ordre distinct par boule / shell. */
 const FLAT_RAIL_RULES: FlatRailRule[] = [
   {
     match: (line, role) => line === 'supporter' && role === 'supporter',
-    order: ['matchs', 'feed', 'messages', 'reels', 'shop', 'profil'],
+    primary: ['matchs', 'feed', 'messages', 'reels', 'shop', 'profil'],
   },
   {
     match: (line, role) => line === 'amateur' && role === 'player',
-    order: ['home', 'covoiturage', 'recrutement', 'profil'],
+    primary: ['home', 'covoiturage', 'recrutement', 'profil'],
+    overflow: ['matchs', 'messages', 'reels', 'sante', 'feed', 'famille'],
   },
   {
     match: (line, role) => line === 'amateur' && role === 'coach',
-    order: ['home', 'matchs', 'recrutement', 'messages', 'profil'],
+    primary: ['home', 'matchs', 'recrutement', 'messages', 'profil'],
   },
   {
     match: (line, role) => line === 'sante' && role === 'physio',
-    order: ['home', 'matchs', 'feed', 'messages', 'profil'],
+    primary: ['home', 'matchs', 'feed', 'messages', 'profil'],
   },
   {
     match: (line, role) =>
@@ -75,34 +77,39 @@ const FLAT_RAIL_RULES: FlatRailRule[] = [
         line === 'homme' ||
         line === 'woman' ||
         isProProductLine(line)),
-    order: ['home', 'recrutement', 'reels', 'matchs', 'profil'],
+    primary: ['home', 'recrutement', 'reels', 'matchs', 'profil'],
   },
   {
     match: (line, role) =>
       line === 'pro_club' || (isProProductLine(line) && role === 'club'),
-    order: ['home', 'recrutement', 'matchs', 'messages', 'profil'],
+    primary: ['home', 'recrutement', 'matchs', 'messages', 'profil'],
   },
   {
     match: (line, role) => isProProductLine(line) && role === 'coach',
-    order: ['home', 'matchs', 'recrutement', 'covoiturage', 'messages', 'profil'],
+    primary: ['home', 'matchs', 'recrutement', 'covoiturage', 'messages', 'profil'],
   },
   {
     match: (line, role) => isProProductLine(line) && role === 'agent',
-    order: ['home', 'recrutement', 'matchs', 'feed', 'messages', 'profil'],
+    primary: ['home', 'recrutement', 'matchs', 'feed', 'messages', 'profil'],
   },
   {
     match: (line, role) => isProProductLine(line) && role === 'recruiter',
-    order: ['home', 'recrutement', 'matchs', 'feed', 'messages', 'profil'],
+    primary: ['home', 'recrutement', 'matchs', 'feed', 'messages', 'profil'],
   },
   {
     match: (line, role) => isProProductLine(line) && role === 'organizer',
-    order: ['home', 'matchs', 'recrutement', 'feed', 'messages', 'profil'],
+    primary: ['home', 'matchs', 'recrutement', 'feed', 'messages', 'profil'],
   },
 ];
 
-function buildFlatRailLayout(order: MainTabId[], visible: MainTabId[]): MobileRailLayout {
-  const flat = order.filter((id) => visible.includes(id));
-  return { left: [], center: null, right: [], overflow: [], flat };
+function buildFlatRailLayout(
+  primary: MainTabId[],
+  visible: MainTabId[],
+  overflowOrder: MainTabId[] = [],
+): MobileRailLayout {
+  const flat = primary.filter((id) => visible.includes(id));
+  const overflow = overflowOrder.filter((id) => visible.includes(id) && !flat.includes(id));
+  return { left: [], center: null, right: [], overflow, flat };
 }
 
 function buildClassicRailLayout(
@@ -155,13 +162,13 @@ function buildMobileRailLayout(
 ): MobileRailLayout {
   for (const rule of FLAT_RAIL_RULES) {
     if (rule.match(line, role)) {
-      return buildFlatRailLayout(rule.order, visible);
+      return buildFlatRailLayout(rule.primary, visible, rule.overflow ?? []);
     }
   }
   return buildClassicRailLayout(visible, line, role);
 }
 
-/** Répartit les onglets selon le pôle : menu plat dédié ou rail classique (Homme / Woman). */
+/** Répartit les onglets selon le pôle : menu plat dédié ou rail classique. */
 export function getMobileRailLayout(
   line: ProductLineId,
   role?: UserRole | null,

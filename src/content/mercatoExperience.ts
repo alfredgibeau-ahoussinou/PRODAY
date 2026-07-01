@@ -135,13 +135,37 @@ function getRoleSubtitle(
   return getSpaceSubtitle(appSpace);
 }
 
+import type { PlayerSegment } from '../utils/playerSegment';
+
 function getHeroCopy(
   line: ProductLineId,
-  role: UserRole | undefined
+  role: UserRole | undefined,
+  playerSegment?: PlayerSegment | null,
 ): { title: string; subtitle: string; icon: IconName } {
   const r = role ?? 'player';
   const identity = getUniverseIdentity(line);
   const tabLabel = getMercatoTabLabel(line, r);
+  const isFemale = playerSegment === 'female' || line === 'woman';
+
+  if (r === 'player' && (line === 'pro_player' || line === 'pro')) {
+    return {
+      title: isFemale ? 'Opportunités pro' : 'Opportunités pro',
+      subtitle: isFemale
+        ? 'Essais, détections et mandats — offres vérifiées pour joueuses.'
+        : 'Essais, détections et mandats — offres vérifiées niveau R1 à N1.',
+      icon: 'briefcase',
+    };
+  }
+
+  if (r === 'player' && line === 'amateur') {
+    return {
+      title: isFemale ? 'Mercato amateur F' : 'Mercato amateur',
+      subtitle: isFemale
+        ? 'Annonces clubs locaux et stages — trouvez votre prochain club.'
+        : 'Annonces clubs locaux et stages — votre saison commence ici.',
+      icon: 'search',
+    };
+  }
 
   if (r === 'player' && line === 'homme') {
     return {
@@ -182,16 +206,17 @@ export function getMercatoExperienceConfig(
   line: ProductLineId,
   role: UserRole | undefined,
   appSpace: AppSpaceId,
-  t?: TranslateFn
+  t?: TranslateFn,
+  playerSegment?: PlayerSegment | null,
 ): MercatoExperienceConfig {
   const r = role ?? 'player';
   const identity = getUniverseIdentity(line);
   const tabLabel = getMercatoTabLabel(line, r);
-  const hero = getHeroCopy(line, r);
-  const playersTitle =
-    line === 'woman'
-      ? tr(t, 'mercato.tile.players.woman', 'Joueuses')
-      : tr(t, 'mercato.tile.players', 'Joueurs');
+  const hero = getHeroCopy(line, r, playerSegment);
+  const isFemale = playerSegment === 'female' || line === 'woman';
+  const playersTitle = isFemale
+    ? tr(t, 'mercato.tile.players.woman', 'Joueuses')
+    : tr(t, 'mercato.tile.players', 'Joueurs');
   const isPlayer = r === 'player';
 
   return {
@@ -203,10 +228,7 @@ export function getMercatoExperienceConfig(
     heroTitle: hero.title,
     heroSubtitle: hero.subtitle,
     heroIcon: hero.icon,
-    playersStatLabel:
-      line === 'woman'
-        ? tr(t, 'mercato.tile.players.woman', 'Joueuses')
-        : tr(t, 'mercato.tile.players', 'Joueurs'),
+    playersStatLabel: playersTitle,
     searchPlaceholder: tr(t, 'mercato.search.placeholder', 'Poste, ville, club…'),
     postsSectionTitle: tr(t, 'mercato.posts.section', 'Recrutements populaires'),
     postsEmptyAll: tr(t, 'mercato.posts.empty.all', 'Aucune annonce ouverte pour le moment.'),
@@ -217,7 +239,7 @@ export function getMercatoExperienceConfig(
     showFavoritesHeader: isPlayer,
     showDetectionsHeader: !isPlayer,
     showFavoritesRow: !!role && !isPlayer,
-    staffRowLabel: line === 'woman' ? 'Coachs & agents F' : 'Coachs & agents',
+    staffRowLabel: isFemale ? 'Coachs & agents F' : 'Coachs & agents',
     playersSearchHint: `Voir les ${playersTitle.toLowerCase()} correspondant à`,
   };
 }

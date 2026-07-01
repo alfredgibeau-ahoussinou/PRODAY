@@ -120,10 +120,11 @@ describe('poleExperience', () => {
       'messages',
       'profil',
     ]);
-    expect(getVisibleMainTabs('amateur', 'player')).not.toContain('sante');
+    expect(getVisibleMainTabs('amateur', 'player')).toContain('sante');
     expect(getVisibleMainTabs('amateur', 'player')).toContain('covoiturage');
     expect(getVisibleMainTabs('amateur', 'player')).toContain('recrutement');
-    expect(getVisibleMainTabs('amateur', 'player')).not.toContain('matchs');
+    expect(getVisibleMainTabs('amateur', 'player')).toContain('reels');
+    expect(getVisibleMainTabs('amateur', 'player')).toContain('messages');
     expect(getVisibleMainTabs('supporter', 'supporter')).toEqual([
       'matchs',
       'feed',

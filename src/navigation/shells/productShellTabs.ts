@@ -7,6 +7,15 @@ export const AMATEUR_PLAYER_SHELL_TABS: MainTabId[] = [
   'profil', // Moi
 ];
 
+/** Onglets accessibles via le menu overflow (doc §4.1). */
+export const AMATEUR_PLAYER_OVERFLOW_TABS: MainTabId[] = [
+  'matchs',
+  'messages',
+  'reels',
+  'sante',
+  'feed',
+];
+
 export const AMATEUR_COACH_SHELL_TABS: MainTabId[] = [
   'home', // Équipe
   'matchs',

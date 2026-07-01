@@ -14,12 +14,7 @@ import {
   type RoleDashboardMeta,
 } from './roleDashboardExperience';
 import { getMercatoTabLabel } from './mercatoTabLabel';
-import { DISCOVER_UNIVERSE_CARDS } from './discoverChapters';
-import { DISCOVER_UNIVERSE_CARDS_WOMAN } from './discoverWomanContent';
-import { DISCOVER_UNIVERSE_CARDS_PRO } from './discoverProContent';
-import { DISCOVER_UNIVERSE_CARDS_AMATEUR } from './discoverAmateurContent';
-import { DISCOVER_UNIVERSE_CARDS_SUPPORTER } from './discoverSupporterContent';
-import { DISCOVER_UNIVERSE_CARDS_SANTE } from './discoverSanteContent';
+import { getDiscoverUniverseCards } from './discoverContentByLine';
 import {
   getPhysioTabLabel,
   isMedicalPractitionerRole,
@@ -35,6 +30,7 @@ import { injectFamilyTab } from './familyExperience';
 import type { User } from '../models/User';
 import {
   AMATEUR_COACH_SHELL_TABS,
+  AMATEUR_PLAYER_OVERFLOW_TABS,
   AMATEUR_PLAYER_SHELL_TABS,
   PRO_AGENT_SHELL_TABS,
   PRO_CLUB_SHELL_TABS,
@@ -204,7 +200,7 @@ export function getVisibleMainTabs(
     tabs = [...PHYSIO_MAIN_TABS];
   } else if (effectiveLine === 'amateur') {
     if (r === 'player') {
-      tabs = [...AMATEUR_PLAYER_SHELL_TABS];
+      tabs = [...AMATEUR_PLAYER_SHELL_TABS, ...AMATEUR_PLAYER_OVERFLOW_TABS];
     } else {
       tabs = [...AMATEUR_COACH_SHELL_TABS];
     }
@@ -489,12 +485,7 @@ export function getDashboardMetaForLine(
 }
 
 export function getDiscoverUniverseCardsForLine(line: ProductLineId) {
-  if (line === 'woman') return DISCOVER_UNIVERSE_CARDS_WOMAN;
-  if (isProFamilyLine(line)) return DISCOVER_UNIVERSE_CARDS_PRO;
-  if (line === 'sante') return DISCOVER_UNIVERSE_CARDS_SANTE;
-  if (line === 'amateur') return DISCOVER_UNIVERSE_CARDS_AMATEUR;
-  if (line === 'supporter') return DISCOVER_UNIVERSE_CARDS_SUPPORTER;
-  return DISCOVER_UNIVERSE_CARDS;
+  return getDiscoverUniverseCards(line);
 }
 
 export function assertRoleAllowedForLine(role: UserRole, line: ProductLineId): void {

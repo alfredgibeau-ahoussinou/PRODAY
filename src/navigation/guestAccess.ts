@@ -1,22 +1,27 @@
 import type { ProductLineId } from '../models/ProductLine';
 import type { MainTabId } from './mainTabConfig';
 
-/** Onglets rendus pour un invité (accueil, reels, profil, shop). */
-export const GUEST_VISIBLE_TABS: MainTabId[] = ['home', 'reels', 'profil', 'shop'];
+/** Onglets invité — aperçu tribune supporter. */
+const GUEST_VISIBLE_TABS_SUPPORTER: MainTabId[] = ['matchs', 'feed', 'reels', 'profil'];
 
-const GUEST_VISIBLE_TABS_SANTE: MainTabId[] = ['home', 'profil', 'shop'];
+/** Onglets invité — aperçu générique (amateur / pro). */
+const GUEST_VISIBLE_TABS_DEFAULT: MainTabId[] = ['home', 'reels', 'profil'];
+
+const GUEST_VISIBLE_TABS_SANTE: MainTabId[] = ['home', 'profil'];
 
 export function getGuestVisibleTabs(line?: ProductLineId): MainTabId[] {
   if (line === 'sante') return GUEST_VISIBLE_TABS_SANTE;
-  return GUEST_VISIBLE_TABS;
+  if (line === 'supporter') return GUEST_VISIBLE_TABS_SUPPORTER;
+  return GUEST_VISIBLE_TABS_DEFAULT;
 }
 
 export function isGuestTabAllowed(tab: MainTabId, line?: ProductLineId): boolean {
   return getGuestVisibleTabs(line).includes(tab);
 }
 
-/** Redirige vers connexion si l’onglet demandé n’est pas accessible en invité. */
+/** Redirige vers un onglet invité autorisé. */
 export function resolveGuestTab(tab: MainTabId, line?: ProductLineId): MainTabId {
   if (isGuestTabAllowed(tab, line)) return tab;
+  if (line === 'supporter') return 'matchs';
   return 'profil';
 }

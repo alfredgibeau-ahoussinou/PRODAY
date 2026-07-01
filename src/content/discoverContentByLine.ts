@@ -1,14 +1,11 @@
 import type { ProductLineId } from '../models/ProductLine';
 import { brandForProductLine } from '../models/ProductLine';
+import { isProFamilyLine } from '../utils/productLineResolution';
 import {
   DISCOVER_INTRO_SLIDES,
   DISCOVER_UNIVERSE_CARDS,
   type DiscoverIntroSlide,
 } from './discoverChapters';
-import {
-  DISCOVER_INTRO_SLIDES_WOMAN,
-  DISCOVER_UNIVERSE_CARDS_WOMAN,
-} from './discoverWomanContent';
 import {
   DISCOVER_INTRO_SLIDES_PRO,
   DISCOVER_UNIVERSE_CARDS_PRO,
@@ -21,20 +18,37 @@ import {
   DISCOVER_INTRO_SLIDES_SUPPORTER,
   DISCOVER_UNIVERSE_CARDS_SUPPORTER,
 } from './discoverSupporterContent';
+import {
+  DISCOVER_INTRO_SLIDES_SANTE,
+  DISCOVER_UNIVERSE_CARDS_SANTE,
+} from './discoverSanteContent';
+
+function resolveDiscoverLine(line: ProductLineId): ProductLineId {
+  if (line === 'homme' || line === 'woman' || line === 'pro') return 'amateur';
+  if (line === 'pro_player' || line === 'pro_club' || line === 'pro_staff') return line;
+  if (isProFamilyLine(line)) return 'pro_player';
+  return line;
+}
 
 export function getDiscoverIntroSlides(line: ProductLineId): DiscoverIntroSlide[] {
-  if (line === 'woman') return DISCOVER_INTRO_SLIDES_WOMAN;
-  if (line === 'pro') return DISCOVER_INTRO_SLIDES_PRO;
-  if (line === 'amateur') return DISCOVER_INTRO_SLIDES_AMATEUR;
-  if (line === 'supporter') return DISCOVER_INTRO_SLIDES_SUPPORTER;
+  const resolved = resolveDiscoverLine(line);
+  if (resolved === 'pro_player' || resolved === 'pro_club' || resolved === 'pro_staff') {
+    return DISCOVER_INTRO_SLIDES_PRO;
+  }
+  if (resolved === 'amateur') return DISCOVER_INTRO_SLIDES_AMATEUR;
+  if (resolved === 'supporter') return DISCOVER_INTRO_SLIDES_SUPPORTER;
+  if (resolved === 'sante') return DISCOVER_INTRO_SLIDES_SANTE;
   return DISCOVER_INTRO_SLIDES;
 }
 
 export function getDiscoverUniverseCards(line: ProductLineId) {
-  if (line === 'woman') return DISCOVER_UNIVERSE_CARDS_WOMAN;
-  if (line === 'pro') return DISCOVER_UNIVERSE_CARDS_PRO;
-  if (line === 'amateur') return DISCOVER_UNIVERSE_CARDS_AMATEUR;
-  if (line === 'supporter') return DISCOVER_UNIVERSE_CARDS_SUPPORTER;
+  const resolved = resolveDiscoverLine(line);
+  if (resolved === 'pro_player' || resolved === 'pro_club' || resolved === 'pro_staff') {
+    return DISCOVER_UNIVERSE_CARDS_PRO;
+  }
+  if (resolved === 'amateur') return DISCOVER_UNIVERSE_CARDS_AMATEUR;
+  if (resolved === 'supporter') return DISCOVER_UNIVERSE_CARDS_SUPPORTER;
+  if (resolved === 'sante') return DISCOVER_UNIVERSE_CARDS_SANTE;
   return DISCOVER_UNIVERSE_CARDS;
 }
 
@@ -43,38 +57,54 @@ export function getDiscoverCarouselCopy(line: ProductLineId): {
   title: string;
   subtitle: string;
 } {
-  const brand = brandForProductLine(line);
-  if (line === 'woman') {
+  const resolved = resolveDiscoverLine(line);
+  const brand = brandForProductLine(resolved);
+
+  if (resolved === 'pro_player') {
     return {
-      label: 'Univers Woman',
-      title: 'Foot féminin, un seul tap',
-      subtitle: 'Mercato F, matchs, covoiturage, santé et Shop — un seul tap',
+      label: 'Pro Joueur',
+      title: 'Carrière et opportunités',
+      subtitle: 'Visibilité pro, essais et mandats — votre vitrine sportive',
     };
   }
-  if (line === 'pro') {
+  if (resolved === 'pro_club') {
     return {
-      label: 'Univers Pro',
-      title: 'Coach, agent, santé',
-      subtitle: 'Mercato Pro, réseau clubs et pôle santé — un seul tap',
+      label: 'Pro Club',
+      title: 'Structure et recrutement',
+      subtitle: 'Équipes, calendrier et communication club',
     };
   }
-  if (line === 'amateur') {
+  if (resolved === 'pro_staff') {
+    return {
+      label: 'Pro Staff',
+      title: 'Métier du foot pro',
+      subtitle: 'Coach, agent, recruteur — outils métier dédiés',
+    };
+  }
+  if (resolved === 'amateur') {
     return {
       label: 'Univers Amateur',
       title: 'Joueur ou coach amateur',
-      subtitle: 'Mercato Amateur, matchs, effectif et convocations — un seul tap',
+      subtitle: 'Club, déplacements, convocations et Mercato local',
     };
   }
-  if (line === 'supporter') {
+  if (resolved === 'supporter') {
     return {
       label: 'Univers Supporter',
-      title: 'Fans & communauté',
-      subtitle: 'Matchs, réels et fil — votre tribune numérique',
+      title: 'Fans et communauté',
+      subtitle: 'Matchs live, suivis, débats et boutique tribune',
+    };
+  }
+  if (resolved === 'sante') {
+    return {
+      label: 'Univers Santé',
+      title: 'Cabinet et sportifs',
+      subtitle: 'Agenda, demandes et messagerie soignants',
     };
   }
   return {
     label: brand.name,
-    title: '4 mondes, un seul tap',
-    subtitle: 'Swipez — Mercato, matchs et sponsors',
+    title: '6 pôles, un seul tap',
+    subtitle: 'Swipez — chaque métier a sa coque',
   };
 }
