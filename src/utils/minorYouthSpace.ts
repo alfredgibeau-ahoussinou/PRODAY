@@ -17,15 +17,20 @@ export function resolveYouthAppSpaceForMinor(
   productLine: ProductLineId,
 ): AppSpaceId {
   const age = user.profile?.age;
-  const feminine = productLine === 'woman';
+  const feminine =
+    productLine === 'woman' ||
+    user.profile?.gender === 'women' ||
+    user.profile?.gender === 'minor' && user.app_space === 'girls';
 
   if (age != null) {
     if (age < 13) return 'under_u13';
-    return feminine ? 'girls' : 'boys';
+    if (user.profile?.gender === 'women' || user.app_space === 'girls') return 'girls';
+    return 'boys';
   }
 
   const current = normalizeAppSpace(user.app_space);
   if (isYouthAppSpace(current)) return current;
+  if (user.profile?.gender === 'women') return 'girls';
   return feminine ? 'girls' : 'boys';
 }
 

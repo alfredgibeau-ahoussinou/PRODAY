@@ -1,24 +1,34 @@
 import { getMobileRailLayout } from '../navigation/mobileTabConfig';
 
 describe('mobileTabConfig', () => {
-  it('place Accueil + Matchs à gauche et Reels au centre pour Homme', () => {
-    const rail = getMobileRailLayout('homme', 'player');
+  it('place Accueil + Matchs à gauche et Reels au centre pour coach Homme legacy', () => {
+    const rail = getMobileRailLayout('homme', 'coach');
     expect(rail.left).toEqual(['home', 'matchs']);
     expect(rail.center).toBe('reels');
     expect(rail.right).toContain('messages');
     expect(rail.right).toContain('profil');
-    expect(rail.overflow).toContain('recrutement');
-    expect(rail.overflow).not.toContain('matchs');
-    expect(rail.overflow).not.toContain('profil');
   });
 
-  it('priorise Matchs pour Supporter', () => {
+  it('canonise joueur homme vers shell pro joueur plat', () => {
+    const rail = getMobileRailLayout('homme', 'player');
+    expect(rail.flat).toEqual(['home', 'recrutement', 'reels', 'matchs', 'profil']);
+    expect(rail.center).toBeNull();
+  });
+
+  it('affiche une rangée plate pour Supporter (sans Reels central)', () => {
     const rail = getMobileRailLayout('supporter', 'supporter');
-    expect(rail.left).toEqual(['matchs', 'feed']);
-    expect(rail.center).toBe('reels');
-    expect(rail.overflow).not.toContain('matchs');
-    expect(rail.overflow).toContain('shop');
-    expect(rail.right).toContain('messages');
+    expect(rail.flat).toEqual(['matchs', 'feed', 'messages', 'reels', 'shop', 'profil']);
+    expect(rail.center).toBeNull();
+    expect(rail.overflow).toEqual([]);
+    expect(rail.left).toEqual([]);
+    expect(rail.right).toEqual([]);
+  });
+
+  it('affiche le menu amateur joueur en rangée plate orange', () => {
+    const rail = getMobileRailLayout('amateur', 'player');
+    expect(rail.flat).toEqual(['home', 'covoiturage', 'recrutement', 'profil']);
+    expect(rail.center).toBeNull();
+    expect(rail.overflow).toEqual([]);
   });
 
   it('remonte Profil sur le rail à côté de Messages', () => {
@@ -29,31 +39,30 @@ describe('mobileTabConfig', () => {
     expect(rail.overflow).toEqual([]);
   });
 
-  it('garde Profil accessible sur le rail pour Homme', () => {
-    const rail = getMobileRailLayout('homme', 'player');
+  it('garde Profil accessible sur le rail pour coach Homme', () => {
+    const rail = getMobileRailLayout('homme', 'coach');
     expect(rail.right).toContain('profil');
     expect(rail.overflow).not.toContain('profil');
   });
 
-  it('gère Santé sans Reels', () => {
+  it('affiche le menu santé praticien en rangée plate', () => {
     const rail = getMobileRailLayout('sante', 'physio');
-    expect(rail.left).toEqual(['home', 'matchs']);
+    expect(rail.flat).toEqual(['home', 'matchs', 'feed', 'messages', 'profil']);
     expect(rail.center).toBeNull();
-    expect(rail.right).toContain('messages');
+    expect(rail.overflow).toEqual([]);
   });
 
-  it('priorise Structure et Recrutement pour Club Pro', () => {
+  it('affiche le menu club pro en rangée plate', () => {
     const rail = getMobileRailLayout('pro', 'club');
-    expect(rail.left).toEqual(['home', 'recrutement']);
-    expect(rail.right).toContain('messages');
-    expect(rail.right).toContain('profil');
+    expect(rail.flat).toEqual(['home', 'recrutement', 'matchs', 'messages', 'profil']);
+    expect(rail.center).toBeNull();
+    expect(rail.overflow).toEqual([]);
   });
 
-  it('priorise Carrière et Opportunités pour Pro joueur', () => {
+  it('affiche le menu pro joueur en rangée plate', () => {
     const rail = getMobileRailLayout('pro', 'player');
-    expect(rail.left).toEqual(['home', 'recrutement']);
-    expect(rail.center).toBe('reels');
-    expect(rail.right).toEqual(['profil']);
-    expect(rail.overflow).toContain('matchs');
+    expect(rail.flat).toEqual(['home', 'recrutement', 'reels', 'matchs', 'profil']);
+    expect(rail.center).toBeNull();
+    expect(rail.overflow).toEqual([]);
   });
 });

@@ -21,6 +21,7 @@ import {
   isProFamilyLine,
   productLinesEquivalent,
 } from './productLineResolution';
+import { resolvePlayerSegment } from './playerSegment';
 
 /** Ligne produit active (AsyncStorage — même logique que ProductLineContext). */
 export async function getActiveProductLineFromStorage(): Promise<ProductLineId> {
@@ -31,7 +32,8 @@ export async function getActiveProductLineFromStorage(): Promise<ProductLineId> 
   const storedLine = pairs.find(([k]) => k === PRODUCT_LINE_STORAGE_KEY)?.[1] ?? null;
   const spaceFlag = pairs.find(([k]) => k === WOMAN_SPACE_ACTIVE_KEY)?.[1] ?? null;
   const line = normalizeStoredProductLine(storedLine) ?? 'amateur';
-  if (spaceFlag === '1' && line === 'homme') return 'woman';
+  if (spaceFlag === '1' && line === 'homme') return 'amateur';
+  if (line === 'homme' || line === 'woman') return 'amateur';
   return line;
 }
 
@@ -50,10 +52,17 @@ export function getUserProductLine(user: User): ProductLineId {
     stored === 'pro_club' ||
     stored === 'pro_staff'
   ) {
+    if (stored === 'woman' && user.role === 'player') return 'pro_player';
     return stored;
   }
-  if (stored === 'homme' || stored === 'standard') return 'homme';
-  if (user.app_space && isFeminineAppSpace(user.app_space)) return 'woman';
+  if (stored === 'homme' || stored === 'standard') {
+    if (user.role === 'player') return 'pro_player';
+    return 'homme';
+  }
+  if (user.app_space && isFeminineAppSpace(user.app_space)) {
+    if (user.role === 'player') return 'pro_player';
+    return 'woman';
+  }
   return canonicalizeUserProductLine(stored, user.role);
 }
 
@@ -104,7 +113,16 @@ export function profileMatchesActiveLine(user: User, activeLine: ProductLineId):
   if (!productLinesEquivalent(userLine, activeLine, user.role)) return false;
 
   const canonicalActive = canonicalizeActiveProductLine(activeLine, user.role);
-  return isRoleAllowedForProductLine(user.role, canonicalActive);
+  if (!isRoleAllowedForProductLine(user.role, canonicalActive)) return false;
+
+  if (user.role === 'player' && canonicalActive === 'pro_player') {
+    const userSegment = resolvePlayerSegment(user, userLine);
+    const carouselSegment =
+      activeLine === 'woman' ? 'female' : activeLine === 'homme' ? 'male' : null;
+    if (userSegment && carouselSegment && userSegment !== carouselSegment) return false;
+  }
+
+  return true;
 }
 
 export function assertProfileMatchesActiveLine(
@@ -119,12 +137,8 @@ export function assertProfileMatchesActiveLine(
   }
   if (isUniversalPoleTestAccount(user.email)) return;
 
-  const userLine = getUserProductLine(user);
-  const canonicalActive = canonicalizeActiveProductLine(activeLine, user.role);
-  if (
-    !productLinesEquivalent(userLine, activeLine, user.role) ||
-    !isRoleAllowedForProductLine(user.role, canonicalActive)
-  ) {
+  if (!profileMatchesActiveLine(user, activeLine)) {
+    const userLine = getUserProductLine(user);
     throw new ProductLineMismatchError(userLine, activeLine);
   }
 }

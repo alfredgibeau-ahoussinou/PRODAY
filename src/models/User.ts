@@ -38,10 +38,10 @@ export type UserRole =
 export type VerificationStatus = 'PENDING' | 'VERIFIED' | 'REJECTED' | 'NOT_REQUIRED';
 
 /**
- * Genre — dimension explicite collectée à l'inscription (pôle Amateur unifié).
- * Remplace l'ancienne séparation de pôles « homme » / « woman » au carousel.
+ * Genre / segment — collecté à l'inscription (Amateur et Pro Joueur).
+ * `minor` = mineur (interface jeunesse dédiée).
  */
-export type Gender = 'men' | 'women';
+export type Gender = 'men' | 'women' | 'minor';
 
 export interface GeoPoint {
   latitude: number;

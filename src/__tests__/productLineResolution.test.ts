@@ -24,6 +24,12 @@ describe('productLineResolution', () => {
     expect(canonicalizeActiveProductLine('pro_player', 'coach')).toBe('pro_player');
   });
 
+  it('canonicalise homme/woman joueur vers pro_player', () => {
+    expect(canonicalizeUserProductLine('homme', 'player')).toBe('pro_player');
+    expect(canonicalizeUserProductLine('woman', 'player')).toBe('pro_player');
+    expect(canonicalizeUserProductLine(undefined, 'player')).toBe('pro_player');
+  });
+
   it('détecte les comptes à migrer', () => {
     expect(needsProductLineMigration('pro')).toBe(true);
     expect(needsProductLineMigration('pro_player')).toBe(false);

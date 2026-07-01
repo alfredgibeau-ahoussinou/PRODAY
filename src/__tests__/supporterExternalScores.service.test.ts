@@ -34,8 +34,8 @@ describe('externalScoresService', () => {
     expect(state.healthy).toBe(true);
   });
 
-  it('bascule sur le provider API stub quand le mock est désactivé', async () => {
-    process.env.EXPO_PUBLIC_EXTERNAL_SCORES_MOCK = '0';
+  it('n’utilise pas le mock sans flag explicite', async () => {
+    delete process.env.EXPO_PUBLIC_EXTERNAL_SCORES_MOCK;
     const fixtures = await externalScoresService.listFixtures();
     const state = await externalScoresService.getProviderState();
     expect(fixtures).toEqual([]);

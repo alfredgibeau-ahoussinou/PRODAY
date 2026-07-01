@@ -29,6 +29,7 @@ export interface ExternalScoresProvider {
   getState(): Promise<ExternalScoresProviderState>;
 }
 
+/** Fixtures de démo — uniquement si EXPO_PUBLIC_EXTERNAL_SCORES_MOCK=1 (dev). */
 const MOCK_FIXTURES: ExternalFixture[] = [
   {
     id: 'ligue1_psg_om',
@@ -97,6 +98,7 @@ const mockExternalScoresProvider: ExternalScoresProvider = {
       source: 'mock',
       last_sync_at: new Date(),
       healthy: true,
+      message: 'Mode démo développeur',
     };
   },
 };
@@ -104,10 +106,10 @@ const mockExternalScoresProvider: ExternalScoresProvider = {
 async function fetchExternalApiFixtures(
   _competition?: ExternalCompetitionId
 ): Promise<ExternalFixture[]> {
-  // Stub production-ready: branch "api" en place, mapping à implémenter avec la vraie API (API-Football ou équivalent).
+  // Stub production-ready: brancher API-Football (ou équivalent) ici.
   // eslint-disable-next-line no-console
   console.info(
-    '[externalScores] API provider selected but not configured. Set EXPO_PUBLIC_EXTERNAL_SCORES_MOCK=1 to force mock.'
+    '[externalScores] API provider not configured. Set EXPO_PUBLIC_EXTERNAL_SCORES_MOCK=1 for local demo fixtures.'
   );
   return [];
 }
@@ -129,15 +131,13 @@ const apiStubProvider: ExternalScoresProvider = {
       source: 'api_stub',
       last_sync_at: new Date(),
       healthy: false,
-      message: 'Provider API prêt, connecteur distant non branché.',
+      message: 'Connecteur scores monde non configuré.',
     };
   },
 };
 
 function shouldUseMockProvider(): boolean {
-  const flag = process.env.EXPO_PUBLIC_EXTERNAL_SCORES_MOCK;
-  // Mock par défaut pour garder le shell supporter stable en local et preview.
-  return flag == null || flag === '1';
+  return process.env.EXPO_PUBLIC_EXTERNAL_SCORES_MOCK === '1';
 }
 
 function resolveExternalScoresProvider(): ExternalScoresProvider {
@@ -153,4 +153,3 @@ export const externalScoresService = {
     return resolveExternalScoresProvider().getState();
   },
 };
-

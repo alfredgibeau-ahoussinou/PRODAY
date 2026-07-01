@@ -19,6 +19,9 @@ import { PRO_SIGNUP_PRESET_ROLE_KEY } from '../models/CarouselPole';
 import type { UserRole } from '../models/User';
 import { getThemedColorsForLine, type AppColors } from '../theme/universeTheme';
 import { BRAND, colors as defaultColors } from '../theme/designTokens';
+import { useAuth } from './AuthContext';
+import { getUserProductLine } from '../utils/productLineAccess';
+import { resolvePlayerSegment, type PlayerSegment } from '../utils/playerSegment';
 
 interface ProductLineContextValue {
   productLine: ProductLineId;
@@ -34,6 +37,8 @@ interface ProductLineContextValue {
   brandName: string;
   tagline: string;
   colors: AppColors;
+  /** Segment joueur actif (thème homme/femme/mineur). */
+  playerSegment: PlayerSegment | null;
   setProductLine: (line: ProductLineId) => Promise<void>;
   enterHommeSpace: () => Promise<void>;
   enterWomanSpace: () => Promise<void>;
@@ -54,6 +59,7 @@ const ProductLineContext = createContext<ProductLineContextValue | null>(null);
 export const ProductLineProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
+  const { profile } = useAuth();
   // Défaut Amateur (cible doc architecture §1.4) — fusion homme/woman au carousel.
   const [productLine, setLineState] = useState<ProductLineId>('amateur');
   const [womanSpaceActive, setWomanSpaceActive] = useState(false);
@@ -69,12 +75,15 @@ export const ProductLineProvider: React.FC<{ children: React.ReactNode }> = ({
           AsyncStorage.getItem(WOMAN_SPACE_ACTIVE_KEY),
           AsyncStorage.getItem(PRO_SIGNUP_PRESET_ROLE_KEY),
         ]);
-        const line = normalizeStoredProductLine(storedLine) ?? 'amateur';
-        // Compat installs existants — ancien flag woman sans product_line homme/woman explicite.
+        let line = normalizeStoredProductLine(storedLine) ?? 'amateur';
+        // Compat installs — ancien flag woman : bascule vers amateur jusqu’au profil connecté.
         const legacyWoman = spaceFlag === '1' && line === 'homme';
-        const resolved: ProductLineId = legacyWoman ? 'woman' : line;
+        if (legacyWoman) line = 'amateur';
+        // Homme / Woman ne sont plus des pôles carousel — normaliser le stockage invité.
+        if (line === 'homme' || line === 'woman') line = 'amateur';
+        const resolved: ProductLineId = line;
         if (!cancelled) {
-          setWomanSpaceActive(resolved === 'woman');
+          setWomanSpaceActive(false);
           setLineState(resolved);
           setProSignupPresetRoleState((presetRole as UserRole | null) ?? null);
         }
@@ -86,6 +95,12 @@ export const ProductLineProvider: React.FC<{ children: React.ReactNode }> = ({
       cancelled = true;
     };
   }, []);
+
+  const playerSegment = useMemo(() => {
+    if (!profile) return null;
+    const userLine = getUserProductLine(profile);
+    return resolvePlayerSegment(profile, userLine);
+  }, [profile]);
 
   const persistLine = useCallback(async (line: ProductLineId) => {
     await AsyncStorage.multiSet([
@@ -176,13 +191,26 @@ export const ProductLineProvider: React.FC<{ children: React.ReactNode }> = ({
     [enterHommeSpace, enterWomanSpace, enterProLine, enterAmateurSpace, enterSupporterSpace, enterSanteSpace]
   );
 
-  const isWoman = productLine === 'woman';
-  const isHomme = productLine === 'homme';
+  useEffect(() => {
+    if (!profile || loading) return;
+    const userLine = getUserProductLine(profile);
+    if (userLine !== productLine) {
+      void setProductLine(userLine);
+    }
+  }, [profile, loading, productLine, setProductLine]);
+
+  const isWoman = playerSegment === 'female' || productLine === 'woman';
+  const isHomme = playerSegment === 'male' || productLine === 'homme';
   const isPro = isProProductLine(productLine);
   const isAmateur = productLine === 'amateur';
   const isSupporter = productLine === 'supporter';
   const isSante = productLine === 'sante';
   const brand = brandForProductLine(productLine);
+
+  const themedColors = useMemo(
+    () => getThemedColorsForLine(productLine, playerSegment),
+    [productLine, playerSegment],
+  );
 
   const value = useMemo(
     () => ({
@@ -197,7 +225,8 @@ export const ProductLineProvider: React.FC<{ children: React.ReactNode }> = ({
       isGirl: isWoman,
       brandName: brand.name,
       tagline: brand.tagline,
-      colors: getThemedColorsForLine(productLine),
+      colors: themedColors,
+      playerSegment,
       setProductLine,
       enterHommeSpace,
       enterWomanSpace,
@@ -222,6 +251,8 @@ export const ProductLineProvider: React.FC<{ children: React.ReactNode }> = ({
       isSante,
       brand.name,
       brand.tagline,
+      themedColors,
+      playerSegment,
       setProductLine,
       enterHommeSpace,
       enterWomanSpace,
@@ -272,6 +303,7 @@ export function useAppTheme() {
     womanSpaceActive,
     proSignupPresetRole,
     setProSignupPresetRole,
+    playerSegment,
   } = useProductLine();
   return {
     colors,
@@ -285,6 +317,7 @@ export function useAppTheme() {
     brandName,
     tagline,
     productLine,
+    playerSegment,
     setProductLine,
     enterHommeSpace,
     enterWomanSpace,

@@ -94,6 +94,7 @@ export const TERTIARY_EN: MessageCatalog = {
   'signup.form.gender.title': 'Your gender',
   'signup.form.gender.men': 'Male',
   'signup.form.gender.women': 'Female',
+  'signup.form.gender.minor': 'Minor (under 18)',
   'signup.form.fixFields': 'Fix the highlighted fields before creating the account.',
   'signup.form.continue': 'Continue',
   'signup.form.proProfile': 'Professional profile',

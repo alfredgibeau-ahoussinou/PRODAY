@@ -245,15 +245,23 @@ export function useSignupForm(initial?: {
     setGenderState(nextGender);
     setGenderTouched(true);
     setAppSpaceState((current) => {
+      if (nextGender === 'minor') {
+        if (isYouthSpace(current)) return current;
+        return 'boys';
+      }
       if (nextGender === 'women') {
         return current === 'men' || current === 'boys' ? 'women' : current;
       }
       return current === 'women' || current === 'girls' ? 'men' : current;
     });
-    setSpaceTouched(false);
+    setSpaceTouched(nextGender === 'minor');
     setCategory('');
     clearErrors();
   }, [clearErrors]);
+
+  function isYouthSpace(space: AppSpaceId): boolean {
+    return space === 'boys' || space === 'girls' || space === 'under_u13';
+  }
 
   const allowedCategories = useMemo(
     () => [...defaultCategoriesForAppSpace(appSpace, productLine, gender)],
@@ -347,7 +355,9 @@ export function useSignupForm(initial?: {
 
   const validateProgram = () => {
     const errs: Record<string, string> = {};
-    if (isAmateurProduct && !genderTouched) {
+    const needsGender =
+      isAmateurProduct || (isProProduct && role === 'player');
+    if (needsGender && !genderTouched) {
       errs.gender = t('signup.form.selectGender');
     }
     if (!spaceTouched) {
@@ -590,7 +600,12 @@ export function useSignupForm(initial?: {
     category: category.trim(),
     level: level.trim(),
     age: parsedAge ?? undefined,
-    gender: isAmateurProduct ? gender : isWomanProduct ? ('women' as const) : undefined,
+    gender:
+      isAmateurProduct || (isProProduct && role === 'player')
+        ? gender
+        : isWomanProduct
+          ? ('women' as const)
+          : undefined,
     season_stats: {
       matches: parseStat(statMatches),
       goals: parseStat(statGoals),
@@ -684,8 +699,7 @@ export function useSignupForm(initial?: {
           : await authService.signUp({ ...common, password });
 
         await refreshProfile();
-        if (isWomanProduct) await setProductLine('woman');
-        else if (isSanteProduct) await setProductLine('sante');
+        if (isSanteProduct) await setProductLine('sante');
         else if (isAmateurProduct) await setProductLine('amateur');
         else if (isSupporterProduct) await setProductLine('supporter');
         else if (isProProduct) await setProductLine(resolveSignupProductLine(productLine, role));

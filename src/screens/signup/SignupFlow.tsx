@@ -219,7 +219,11 @@ const SignupFlowWithTheme: React.FC<SignupFlowProps> = (props) => {
   });
 
   return (
-    <SignupFlowProvider productLine={props.productLine ?? 'amateur'} experienceRole={form.role}>
+    <SignupFlowProvider
+      productLine={props.productLine ?? 'amateur'}
+      experienceRole={form.role}
+      signupGender={form.genderTouched ? form.gender : null}
+    >
       <SignupFlowInner {...props} form={form} />
     </SignupFlowProvider>
   );

@@ -28,6 +28,7 @@ interface SupporterLogoProps {
   background?: LogoBackground;
   opacity?: number;
   watermark?: boolean;
+  centered?: boolean;
 }
 
 /** Logo Pro Day Supporter — picto + mot-symbole violet. */
@@ -36,6 +37,7 @@ export const SupporterLogo: React.FC<SupporterLogoProps> = ({
   background = 'light',
   opacity = 1,
   watermark = false,
+  centered = false,
 }) => {
   const onDark = background === 'dark' || background === 'photo';
 
@@ -74,7 +76,7 @@ export const SupporterLogo: React.FC<SupporterLogoProps> = ({
   });
 
   return (
-    <View style={[styles.wrap, { width, opacity }]}>
+    <View style={[styles.wrap, { width, opacity }, centered && styles.wrapCentered]}>
       <Image
         source={SUPPORTER_BRANDING_LOGOS.picto}
         style={{ width: layout.pictoW, height: layout.pictoH }}
@@ -83,7 +85,7 @@ export const SupporterLogo: React.FC<SupporterLogoProps> = ({
         accessibilityLabel={PRODAY_SUPPORTER_BRAND.name}
       />
 
-      <View style={[styles.wordBlock, { marginTop: width * 0.024 }]}>
+      <View style={[styles.wordBlock, { marginTop: width * 0.024 }, centered && styles.wordBlockCentered]}>
         <Text
           style={[
             styles.wordLine1,
@@ -120,7 +122,9 @@ export const SupporterLogo: React.FC<SupporterLogoProps> = ({
 
 const styles = StyleSheet.create({
   wrap: { alignItems: 'flex-start' },
+  wrapCentered: { alignItems: 'center' },
   wordBlock: { gap: 1 },
+  wordBlockCentered: { alignItems: 'center', width: '100%' },
   wordLine1: { fontWeight: '900', letterSpacing: -0.5 },
   wordLine2: { fontWeight: '900', letterSpacing: -0.5, marginTop: -2 },
   tagline: {

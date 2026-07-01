@@ -166,10 +166,10 @@ function AppShell() {
   );
 
   const screenTabs = useMemo((): MainTabId[] => {
-    if (!shouldInjectShopTab(sessionProfile?.role)) return visibleTabs;
+    if (!shouldInjectShopTab(sessionProfile?.role, productLine)) return visibleTabs;
     if (visibleTabs.includes('shop')) return visibleTabs;
     return [...visibleTabs, 'shop'];
-  }, [visibleTabs, sessionProfile?.role]);
+  }, [visibleTabs, sessionProfile?.role, productLine]);
 
   useEffect(() => {
     if (activeTab === 'messages') refreshUnread();

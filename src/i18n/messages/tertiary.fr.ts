@@ -421,6 +421,7 @@ export const TERTIARY_FR: MessageCatalog = {
   'signup.form.gender.title': 'Votre genre',
   'signup.form.gender.men': 'Homme',
   'signup.form.gender.women': 'Femme',
+  'signup.form.gender.minor': 'Mineur (-18 ans)',
   'signup.form.skipStep': 'Passer cette étape',
   'signup.form.stats.assists': 'Passes d.',
   'signup.form.stats.goals': 'Buts',

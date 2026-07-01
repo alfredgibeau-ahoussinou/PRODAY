@@ -12,7 +12,7 @@ export function shouldShowFamilyTab(
 ): boolean {
   if (!profile) return false;
   if (profile.role !== 'player') return false;
-  if (line !== 'homme' && line !== 'woman' && line !== 'amateur' && line !== 'pro') return false;
+  if (line !== 'homme' && line !== 'woman' && line !== 'amateur' && line !== 'pro' && line !== 'pro_player') return false;
   if (isSponsorRole(profile.role) || isMedicalPractitionerRole(profile.role)) return false;
   return isMinorUser(profile);
 }

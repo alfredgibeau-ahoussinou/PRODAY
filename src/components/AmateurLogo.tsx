@@ -28,6 +28,7 @@ interface AmateurLogoProps {
   background?: LogoBackground;
   opacity?: number;
   watermark?: boolean;
+  centered?: boolean;
 }
 
 /** Logo Pro Day Amateur — picto + mot-symbole orange (structure alignée Pro / Santé). */
@@ -36,6 +37,7 @@ export const AmateurLogo: React.FC<AmateurLogoProps> = ({
   background = 'light',
   opacity = 1,
   watermark = false,
+  centered = false,
 }) => {
   const onDark = background === 'dark' || background === 'photo';
 
@@ -70,7 +72,7 @@ export const AmateurLogo: React.FC<AmateurLogoProps> = ({
   });
 
   return (
-    <View style={[styles.wrap, { width, opacity }]}>
+    <View style={[styles.wrap, { width, opacity }, centered && styles.wrapCentered]}>
       <Image
         source={AMATEUR_BRANDING_LOGOS.picto}
         style={{ width: layout.pictoW, height: layout.pictoH }}
@@ -79,7 +81,7 @@ export const AmateurLogo: React.FC<AmateurLogoProps> = ({
         accessibilityLabel={PRODAY_AMATEUR_BRAND.name}
       />
 
-      <View style={[styles.wordBlock, { marginTop: width * 0.024 }]}>
+      <View style={[styles.wordBlock, { marginTop: width * 0.024 }, centered && styles.wordBlockCentered]}>
         <Text
           style={[
             styles.wordLine1,
@@ -116,7 +118,9 @@ export const AmateurLogo: React.FC<AmateurLogoProps> = ({
 
 const styles = StyleSheet.create({
   wrap: { alignItems: 'flex-start' },
+  wrapCentered: { alignItems: 'center' },
   wordBlock: { gap: 1 },
+  wordBlockCentered: { alignItems: 'center', width: '100%' },
   wordLine1: { fontWeight: '900', letterSpacing: -0.5 },
   wordLine2: { fontWeight: '900', letterSpacing: -0.5, marginTop: -2 },
   tagline: {

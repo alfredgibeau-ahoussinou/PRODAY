@@ -395,8 +395,45 @@ export function getLaunchCopy(
   return getRoleLaunchCopy(role, flags, t);
 }
 
-export function getAppSpaceGroups(woman: boolean, t?: TranslateFn) {
-  if (woman) {
+export function getAppSpaceGroups(
+  genderOrWoman: boolean | import('../../models/User').Gender,
+  t?: TranslateFn,
+) {
+  const gender =
+    typeof genderOrWoman === 'boolean'
+      ? genderOrWoman
+        ? 'women'
+        : 'men'
+      : genderOrWoman;
+
+  if (gender === 'minor') {
+    return [
+      {
+        id: 'youth' as const,
+        label: tr(t, 'signup.space.youth', 'Football jeunes'),
+        icon: 'school' as const,
+        options: [
+          {
+            id: 'boys' as AppSpaceId,
+            label: tr(t, 'signup.space.boys', 'Garçons'),
+            hint: tr(t, 'signup.space.boysHint', 'U13 – U19'),
+          },
+          {
+            id: 'girls' as AppSpaceId,
+            label: tr(t, 'signup.space.girls', 'Filles'),
+            hint: tr(t, 'signup.space.girlsHint', 'U13 F – U19 F'),
+          },
+          {
+            id: 'under_u13' as AppSpaceId,
+            label: tr(t, 'signup.space.under13', 'Moins de 13 ans'),
+            hint: tr(t, 'signup.space.under13Hint', 'U7 – U11'),
+          },
+        ],
+      },
+    ] as const;
+  }
+
+  if (gender === 'women') {
     return [
       {
         id: 'feminine' as const,

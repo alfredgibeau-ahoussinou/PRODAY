@@ -77,7 +77,7 @@ export const TabOverflowSheet: React.FC<TabOverflowSheetProps> = ({
               >
                 <View style={styles.tileIcon}>
                   <Icon
-                    name={resolveTabIcon(tab, role)}
+                    name={resolveTabIcon(tab, role, productLine)}
                     size={28}
                     color={active ? accent : colors.textMuted}
                     variant={active ? 'filled' : 'outline'}

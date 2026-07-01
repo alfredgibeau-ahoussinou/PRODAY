@@ -332,12 +332,14 @@ export const ShopHomeScreen: React.FC<ShopHomeScreenProps> = ({
           <ShopTrustStrip />
         </View>
 
-        <View style={styles.services}>
-          <ShopCarpoolServicePanel
-            onOpenCarpool={() => openCarpool({ chapter: 'evenements' })}
-            onReserveAsPassenger={() => openCarpool({ chapter: 'reserver' })}
-          />
-        </View>
+        {productLine !== 'supporter' ? (
+          <View style={styles.services}>
+            <ShopCarpoolServicePanel
+              onOpenCarpool={() => openCarpool({ chapter: 'evenements' })}
+              onReserveAsPassenger={() => openCarpool({ chapter: 'reserver' })}
+            />
+          </View>
+        ) : null}
       </ScrollView>
   );
 

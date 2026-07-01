@@ -4,6 +4,9 @@ import { isProProductLine } from '../../models/ProductLine';
 import type { UserRole } from '../../models/User';
 import { getThemedColorsForLine, type AppColors } from '../../theme/universeTheme';
 import { useProductLine } from '../../context/ProductLineContext';
+import type { PlayerSegment } from '../../utils/playerSegment';
+import { genderToPlayerSegment } from '../../utils/playerSegment';
+import type { Gender } from '../../models/User';
 interface SignupFlowContextValue {
   productLine: ProductLineId;
   isWomanSignup: boolean;
@@ -20,8 +23,9 @@ const SignupFlowContext = createContext<SignupFlowContextValue | null>(null);
 export const SignupFlowProvider: React.FC<{
   productLine: ProductLineId;
   experienceRole: UserRole;
+  signupGender?: Gender | null;
   children: React.ReactNode;
-}> = ({ productLine, experienceRole, children }) => {
+}> = ({ productLine, experienceRole, signupGender, children }) => {
   const { enterWomanSpace, enterProLine, enterAmateurSpace, enterSupporterSpace, enterSanteSpace } = useProductLine();
   const isWomanSignup = productLine === 'woman';
   const isProSignup = isProProductLine(productLine);
@@ -29,7 +33,16 @@ export const SignupFlowProvider: React.FC<{
   const isSupporterSignup = productLine === 'supporter';
   const isSanteSignup = productLine === 'sante';
 
-  const colors = useMemo(() => getThemedColorsForLine(productLine), [productLine]);
+  const playerSegment: PlayerSegment | null = useMemo(() => {
+    if (!signupGender) return null;
+    if (productLine !== 'amateur' && productLine !== 'pro_player') return null;
+    return genderToPlayerSegment(signupGender);
+  }, [signupGender, productLine]);
+
+  const colors = useMemo(
+    () => getThemedColorsForLine(productLine, playerSegment),
+    [productLine, playerSegment],
+  );
 
   useEffect(() => {
     if (isWomanSignup) void enterWomanSpace();

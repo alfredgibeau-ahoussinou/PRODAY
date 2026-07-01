@@ -1,4 +1,6 @@
 import type { MainTabId } from '../../navigation/mainTabConfig';
+import type { ProductLineId } from '../../models/ProductLine';
+import { isProProductLine } from '../../models/ProductLine';
 import type { UserRole } from '../../models/User';
 import type { IconName } from '../ui/Icon';
 import {
@@ -24,12 +26,86 @@ export const TAB_ICONS: Record<MainTabId, IconName> = {
   shop: 'bag',
 };
 
+const AMATEUR_TAB_ICONS: Partial<Record<MainTabId, IconName>> = {
+  home: 'shield',
+  covoiturage: 'car',
+  recrutement: 'people',
+  matchs: 'football',
+  messages: 'chat',
+  profil: 'person',
+};
+
+const SUPPORTER_TAB_ICONS: Partial<Record<MainTabId, IconName>> = {
+  matchs: 'football',
+  feed: 'star-four-points',
+  messages: 'chat',
+  reels: 'videocam',
+  shop: 'bag',
+  profil: 'person',
+};
+
+const PRO_PLAYER_TAB_ICONS: Partial<Record<MainTabId, IconName>> = {
+  home: 'briefcase',
+  recrutement: 'search',
+  reels: 'videocam',
+  matchs: 'people',
+  profil: 'person',
+};
+
+const PRO_CLUB_TAB_ICONS: Partial<Record<MainTabId, IconName>> = {
+  home: 'business',
+  recrutement: 'search',
+  matchs: 'calendar',
+  messages: 'chat',
+  profil: 'star',
+};
+
+const PRO_STAFF_TAB_ICONS: Partial<Record<MainTabId, IconName>> = {
+  home: 'home',
+  matchs: 'calendar',
+  recrutement: 'search',
+  covoiturage: 'car',
+  feed: 'star-four-points',
+  messages: 'chat',
+  profil: 'person',
+};
+
+function resolvePoleTabIcon(
+  tab: MainTabId,
+  productLine: ProductLineId,
+  role?: UserRole | null,
+): IconName | undefined {
+  if (productLine === 'amateur') return AMATEUR_TAB_ICONS[tab];
+  if (productLine === 'supporter') return SUPPORTER_TAB_ICONS[tab];
+  if (productLine === 'sante') return getPhysioTabIcon(tab);
+  if (productLine === 'pro_player' || (isProProductLine(productLine) && role === 'player')) {
+    return PRO_PLAYER_TAB_ICONS[tab];
+  }
+  if (productLine === 'pro_club' || (isProProductLine(productLine) && role === 'club')) {
+    return PRO_CLUB_TAB_ICONS[tab];
+  }
+  if (
+    productLine === 'pro_staff' ||
+    (isProProductLine(productLine) &&
+      role &&
+      ['coach', 'agent', 'recruiter', 'organizer'].includes(role))
+  ) {
+    return PRO_STAFF_TAB_ICONS[tab];
+  }
+  return undefined;
+}
+
 export function resolveTabIcon(
   tab: MainTabId,
   role?: UserRole | null,
+  productLine?: ProductLineId | null,
 ): IconName {
   if (isMedicalPractitionerRole(role)) return getPhysioTabIcon(tab);
   if (isSponsorRole(role)) return getSponsorTabIcon(tab);
+  if (productLine) {
+    const poleIcon = resolvePoleTabIcon(tab, productLine, role);
+    if (poleIcon) return poleIcon;
+  }
   return TAB_ICONS[tab];
 }
 

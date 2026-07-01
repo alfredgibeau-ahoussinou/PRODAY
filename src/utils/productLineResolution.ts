@@ -55,10 +55,15 @@ export function canonicalizeUserProductLine(
   if (!line && role !== 'player' && isProDeducedRole(role)) {
     return splitLegacyProByRole(role);
   }
-  if (line === 'woman' || line === 'homme' || line === 'amateur' || line === 'sante') {
+  if (line === 'amateur' || line === 'sante') {
     return line;
   }
-  if (!line && role === 'player') return 'homme';
+  // Migration homme/woman joueur → Pro Joueur (doc architecture split).
+  if ((line === 'homme' || line === 'woman') && role === 'player') {
+    return 'pro_player';
+  }
+  if (line === 'homme' || line === 'woman') return line;
+  if (!line && role === 'player') return 'pro_player';
   return line ?? 'homme';
 }
 
@@ -71,6 +76,7 @@ export function canonicalizeActiveProductLine(
 ): ProductLineId {
   if (line === 'pro') return splitLegacyProByRole(role ?? 'coach');
   if (line === 'pro_player' || line === 'pro_club' || line === 'pro_staff') return line;
+  if ((line === 'homme' || line === 'woman') && role === 'player') return 'pro_player';
   return line;
 }
 

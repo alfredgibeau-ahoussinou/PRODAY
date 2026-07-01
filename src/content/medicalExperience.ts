@@ -62,6 +62,8 @@ export function getPhysioTabIcon(tab: MainTabId): IconName {
       return 'chat';
     case 'profil':
       return 'heart';
+    case 'feed':
+      return 'mail';
     default:
       return 'home';
   }

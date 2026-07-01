@@ -1,6 +1,9 @@
 #!/usr/bin/env node
 /**
- * Migration batch Firestore : product_line `pro` → pro_player | pro_club | pro_staff
+ * Migration batch Firestore :
+ * - `pro` → pro_player | pro_club | pro_staff
+ * - `homme` + player → pro_player (+ profile.gender men)
+ * - `woman` + player → pro_player (+ profile.gender women)
  *
  * Usage: node scripts/migrate-product-lines.mjs [--dry-run]
  */
@@ -17,6 +20,11 @@ function splitLegacyProByRole(role) {
   return 'pro_staff';
 }
 
+function genderForLegacyLine(line) {
+  if (line === 'woman') return 'women';
+  return 'men';
+}
+
 function initAdmin() {
   if (getApps().length) return getFirestore();
   const credPath = process.env.GOOGLE_APPLICATION_CREDENTIALS
@@ -31,8 +39,7 @@ function initAdmin() {
   return getFirestore();
 }
 
-async function main() {
-  const db = initAdmin();
+async function migrateLegacyPro(db) {
   const snap = await db.collection('users').where('product_line', '==', 'pro').get();
   console.log(`Comptes legacy pro: ${snap.size}`);
   let updated = 0;
@@ -40,13 +47,51 @@ async function main() {
     const data = doc.data();
     const role = data.role ?? 'player';
     const target = splitLegacyProByRole(role);
-    console.log(`${dryRun ? '[dry-run] ' : ''}${doc.id} (${role}) -> ${target}`);
+    console.log(`${dryRun ? '[dry-run] ' : ''}${doc.id} (pro/${role}) -> ${target}`);
     if (!dryRun) {
       await doc.ref.update({ product_line: target, updated_at: new Date() });
     }
     updated += 1;
   }
-  console.log(`Terminé — ${updated} document(s) ${dryRun ? 'à migrer' : 'migrés'}.`);
+  return updated;
+}
+
+async function migrateHommeWomanPlayers(db) {
+  const lines = ['homme', 'woman', 'standard'];
+  let updated = 0;
+  for (const line of lines) {
+    const snap = await db
+      .collection('users')
+      .where('product_line', '==', line)
+      .where('role', '==', 'player')
+      .get();
+    console.log(`Joueurs ${line}: ${snap.size}`);
+    for (const doc of snap.docs) {
+      const data = doc.data();
+      const gender = data.profile?.gender ?? genderForLegacyLine(line);
+      console.log(
+        `${dryRun ? '[dry-run] ' : ''}${doc.id} (${line}/player) -> pro_player, gender=${gender}`,
+      );
+      if (!dryRun) {
+        await doc.ref.update({
+          product_line: 'pro_player',
+          profile: { ...(data.profile ?? {}), gender },
+          updated_at: new Date(),
+        });
+      }
+      updated += 1;
+    }
+  }
+  return updated;
+}
+
+async function main() {
+  const db = initAdmin();
+  const proCount = await migrateLegacyPro(db);
+  const playerCount = await migrateHommeWomanPlayers(db);
+  console.log(
+    `Terminé — ${proCount + playerCount} document(s) ${dryRun ? 'à migrer' : 'migrés'}.`,
+  );
 }
 
 main().catch((err) => {

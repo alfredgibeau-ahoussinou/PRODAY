@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
- * Pictos Pro Day Man (anthracite), Pro Day Pro (bleu vif) et Pro Day Santé (teal).
- * Libellés rendus en natif via ManLogo.tsx / ProLogo.tsx / SanteLogo.tsx.
+ * Pictos Pro Day Man (anthracite), Pro, Santé, Amateur (orange) et Supporter (violet).
+ * Libellés rendus en natif via ManLogo.tsx / ProLogo.tsx / SanteLogo.tsx / etc.
  *
  *   node scripts/generate-universe-logos.mjs
  */
@@ -96,6 +96,38 @@ def recolor_sante(im):
     out = Image.fromarray(arr.astype(np.uint8))
     return ImageEnhance.Contrast(out).enhance(1.1)
 
+def recolor_amateur(im):
+    """P orange amateur — distinct Man anthracite et Pro bleu."""
+    arr = np.array(im.convert("RGBA"), dtype=np.float32)
+    rgb = arr[..., :3]
+    a = arr[..., 3]
+    hsv = rgb_to_hsv_arr(rgb)
+    h, s, v = hsv[..., 0], hsv[..., 1], hsv[..., 2]
+    brand = is_brand_pixel(a, h, s, v)
+    h_new = np.where(brand, 0.05, h)
+    s_new = np.where(brand, np.clip(s * 1.2, 0.72, 1.0), s)
+    v_new = np.where(brand, np.clip(v * 1.02, 0.55, 0.95), v)
+    rgb_out = hsv_to_rgb_arr(np.stack([h_new, s_new, v_new], axis=-1))
+    arr[..., :3] = rgb_out
+    out = Image.fromarray(arr.astype(np.uint8))
+    return ImageEnhance.Contrast(out).enhance(1.1)
+
+def recolor_supporter(im):
+    """P violet supporter — distinct Woman rose et Pro bleu."""
+    arr = np.array(im.convert("RGBA"), dtype=np.float32)
+    rgb = arr[..., :3]
+    a = arr[..., 3]
+    hsv = rgb_to_hsv_arr(rgb)
+    h, s, v = hsv[..., 0], hsv[..., 1], hsv[..., 2]
+    brand = is_brand_pixel(a, h, s, v)
+    h_new = np.where(brand, 0.72, h)
+    s_new = np.where(brand, np.clip(s * 1.15, 0.62, 1.0), s)
+    v_new = np.where(brand, np.clip(v * 1.0, 0.52, 0.95), v)
+    rgb_out = hsv_to_rgb_arr(np.stack([h_new, s_new, v_new], axis=-1))
+    arr[..., :3] = rgb_out
+    out = Image.fromarray(arr.astype(np.uint8))
+    return ImageEnhance.Contrast(out).enhance(1.1)
+
 def save_picto(im, name):
     im = crop_visible(im, pad=10)
     w, h = im.size
@@ -120,6 +152,14 @@ save_picto(pro.copy(), "logo-pro-mark-transparent.png")
 sante = recolor_sante(mark.copy())
 save_picto(sante, "logo-sante-picto.png")
 save_picto(sante.copy(), "logo-sante-mark-transparent.png")
+
+amateur = recolor_amateur(mark.copy())
+save_picto(amateur, "logo-amateur-picto.png")
+save_picto(amateur.copy(), "logo-amateur-mark-transparent.png")
+
+supporter = recolor_supporter(mark.copy())
+save_picto(supporter, "logo-supporter-picto.png")
+save_picto(supporter.copy(), "logo-supporter-mark-transparent.png")
 `;
 
 if (!existsSync(resolve(branding, 'logo-mark-transparent.png'))) {

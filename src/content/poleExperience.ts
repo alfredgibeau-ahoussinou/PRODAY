@@ -5,7 +5,7 @@ import {
   isRoleAllowedForProductLine,
   productLineLabel,
 } from './universeRoles';
-import { isProFamilyLine } from '../utils/productLineResolution';
+import { isProFamilyLine, canonicalizeActiveProductLine } from '../utils/productLineResolution';
 import type { MainTabId } from '../navigation/mainTabConfig';
 import type { ProDayModuleId } from './prodayModules';
 import {
@@ -197,19 +197,20 @@ export function getVisibleMainTabs(
   profile?: User | null,
 ): MainTabId[] {
   const r = role ?? 'player';
+  const effectiveLine = canonicalizeActiveProductLine(line, r);
   let tabs: MainTabId[];
 
-  if (line === 'sante') {
+  if (effectiveLine === 'sante') {
     tabs = [...PHYSIO_MAIN_TABS];
-  } else if (line === 'amateur') {
+  } else if (effectiveLine === 'amateur') {
     if (r === 'player') {
       tabs = [...AMATEUR_PLAYER_SHELL_TABS];
     } else {
       tabs = [...AMATEUR_COACH_SHELL_TABS];
     }
-  } else if (line === 'supporter') {
+  } else if (effectiveLine === 'supporter') {
     tabs = [...SUPPORTER_SHELL_TABS];
-  } else if (isProFamilyLine(line)) {
+  } else if (isProFamilyLine(effectiveLine)) {
     if (r === 'sponsor') {
       tabs = [...SPONSOR_MAIN_TABS];
     } else if (r === 'player') {
@@ -243,9 +244,9 @@ export function getVisibleMainTabs(
   }
 
   const keepExplicitShell =
-    line === 'amateur' ||
-    line === 'supporter' ||
-    (isProFamilyLine(line) &&
+    effectiveLine === 'amateur' ||
+    effectiveLine === 'supporter' ||
+    (isProFamilyLine(effectiveLine) &&
       (r === 'player' ||
         r === 'club' ||
         r === 'coach' ||
@@ -253,7 +254,7 @@ export function getVisibleMainTabs(
         r === 'recruiter' ||
         r === 'organizer'));
   const withCommunity = keepExplicitShell ? tabs : injectCommunityFeedTab(tabs, r);
-  return injectFamilyTab(withCommunity, profile, line);
+  return injectFamilyTab(withCommunity, profile, effectiveLine);
 }
 
 export { getMercatoTabLabel } from './mercatoTabLabel';
@@ -273,8 +274,9 @@ export function getTabShortLabel(
   if (line === 'supporter') {
     if (tab === 'matchs') return 'Matchs';
     if (tab === 'feed') return 'Suivis';
-    if (tab === 'messages') return 'Communauté';
+    if (tab === 'messages') return 'Débats';
     if (tab === 'reels') return 'Moments';
+    if (tab === 'profil') return 'Compte';
     if (tab === 'shop') return 'Shop';
   }
   if (isProFamilyLine(line) && role === 'club') {

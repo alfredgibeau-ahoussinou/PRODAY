@@ -19,6 +19,7 @@ interface SanteLogoProps {
   background?: LogoBackground;
   opacity?: number;
   watermark?: boolean;
+  centered?: boolean;
 }
 
 /**
@@ -29,6 +30,7 @@ export const SanteLogo: React.FC<SanteLogoProps> = ({
   background = 'light',
   opacity = 1,
   watermark = false,
+  centered = false,
 }) => {
   const onDark = background === 'dark' || background === 'photo';
 

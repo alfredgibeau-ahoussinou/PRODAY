@@ -91,7 +91,12 @@ export const UniverseChoicePage: React.FC<UniverseChoicePageProps> = ({
         />
 
         <Animated.View style={[styles.logoWrap, logoStyle]}>
-          <ProductLineLogo line={line} width={Math.min(pageWidth * 0.52, 184)} onDark />
+          <ProductLineLogo
+            line={line}
+            width={Math.min(pageWidth * 0.48, 172)}
+            onDark
+            centered
+          />
         </Animated.View>
 
         <Animated.View style={[styles.copy, copyStyle]}>
@@ -138,6 +143,8 @@ function createStyles(pageWidth: number) {
     },
     logoWrap: {
       marginBottom: spacing.lg,
+      width: '100%',
+      alignItems: 'center',
     },
     copy: {
       alignItems: 'center',

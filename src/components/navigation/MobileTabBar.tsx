@@ -41,7 +41,7 @@ export const MobileTabBar: React.FC<MobileTabBarProps> = ({
   unreadCount = 0,
   visibleTabs,
 }) => {
-  const { colors, productLine } = useAppTheme();
+  const { colors, productLine, playerSegment } = useAppTheme();
   const { t } = useTranslation();
   const sessionProfile = useSessionProfile();
   const insets = useSafeAreaInsets();
@@ -62,36 +62,37 @@ export const MobileTabBar: React.FC<MobileTabBarProps> = ({
 
   const menuActive = rail.overflow.includes(activeTab);
   const chrome = useMemo(
-    () => getPoleTabBarChrome(productLine, role),
-    [productLine, role],
+    () => getPoleTabBarChrome(productLine, role, playerSegment),
+    [productLine, role, playerSegment],
   );
   const accentInk = isSponsor
     ? SPONSOR_THEME.primary
-    : resolveTabBarAccent(productLine, role, colors);
+    : resolveTabBarAccent(productLine, role, colors, playerSegment);
 
   const menuLabel = t('nav.menu');
   const menuA11y = t('nav.menuA11y');
 
-  const dockBg = immersive ? 'rgba(0,0,0,0.94)' : colors.surface;
-  const dockBorder = immersive ? 'rgba(255,255,255,0.1)' : colors.border;
-  const rootBg = immersive ? '#000' : colors.background;
+  const dockBg = immersive ? 'rgba(0,0,0,0.94)' : chrome.barBackground;
+  const dockBorder = immersive ? 'rgba(255,255,255,0.1)' : chrome.barBorderColor;
+  const rootBg = immersive ? '#000' : chrome.rootBackground;
+  const inactiveInk = chrome.inactiveIcon;
 
   const styles = useMemo(
     () => createStyles(colors, immersive, accentInk, chrome),
     [colors, immersive, accentInk, chrome],
   );
 
-  const renderSideTab = (tab: MainTabId) => {
+  const renderSideTab = (tab: MainTabId, compact = false) => {
     const active = tab === activeTab;
-    const icon = resolveTabIcon(tab, role);
+    const icon = resolveTabIcon(tab, role, productLine);
     const label = getTabShortLabel(tab, productLine, role, t);
     const badge = tab === 'messages' ? unreadCount : 0;
-    const ink = resolveTabInkColors(active, immersive, accentInk, colors.textMuted);
+    const ink = resolveTabInkColors(active, immersive, accentInk, inactiveInk);
 
     return (
       <PressableSpring
         key={tab}
-        style={styles.sideTab}
+        style={[styles.sideTab, compact && styles.sideTabCompact, rail.flat?.length ? styles.sideTabFlat : null]}
         onPress={() => onTabPress(tab)}
         scaleTo={0.94}
         accessibilityRole="tab"
@@ -102,7 +103,7 @@ export const MobileTabBar: React.FC<MobileTabBarProps> = ({
           <TabActiveIndicator active={active} color={ink.activePill} />
           <Icon
             name={icon}
-            size={SIDE_ICON}
+            size={compact ? 22 : SIDE_ICON}
             color={active ? ink.active : ink.inactive}
             variant={active ? 'filled' : 'outline'}
           />
@@ -120,6 +121,8 @@ export const MobileTabBar: React.FC<MobileTabBarProps> = ({
         <Text
           style={[
             styles.sideLabel,
+            compact && styles.sideLabelCompact,
+            rail.flat?.length ? styles.sideLabelFlat : null,
             active && styles.sideLabelActive,
             { color: active ? ink.active : ink.inactive },
           ]}
@@ -136,12 +139,12 @@ export const MobileTabBar: React.FC<MobileTabBarProps> = ({
   const centerLabel = centerTab
     ? getTabShortLabel(centerTab, productLine, role, t)
     : '';
-  const centerIcon = centerTab ? resolveTabIcon(centerTab, role) : 'videocam';
+  const centerIcon = centerTab ? resolveTabIcon(centerTab, role, productLine) : 'videocam';
 
   const renderMenuButton = () => {
     if (rail.overflow.length === 0) return null;
     const active = menuActive;
-    const ink = resolveTabInkColors(active, immersive, accentInk, colors.textMuted);
+    const ink = resolveTabInkColors(active, immersive, accentInk, inactiveInk);
 
     return (
       <PressableSpring
@@ -211,59 +214,67 @@ export const MobileTabBar: React.FC<MobileTabBarProps> = ({
             />
           ) : null}
 
-          <View style={styles.leftCluster}>{rail.left.map(renderSideTab)}</View>
-
-          {centerTab ? (
-            <PressableSpring
-              style={styles.centerWrap}
-              onPress={() => onTabPress(centerTab)}
-              scaleTo={0.94}
-              accessibilityRole="tab"
-              accessibilityState={{ selected: centerActive }}
-              accessibilityLabel={centerLabel}
-            >
-              <View
-                style={[
-                  styles.centerBtn,
-                  {
-                    width: chrome.centerButtonSize,
-                    height: chrome.centerButtonSize,
-                    borderRadius: chrome.centerButtonSize / 2,
-                    backgroundColor: chrome.centerButtonIdle,
-                    borderWidth: chrome.centerButtonBorderWidth,
-                    borderColor: chrome.centerButtonBorder,
-                  },
-                  centerActive && !immersive && { backgroundColor: accentInk },
-                  immersive && [styles.centerBtnImmersive, { backgroundColor: accentInk }],
-                  !immersive && shadows.interactive,
-                ]}
-              >
-                <Icon
-                  name={centerIcon}
-                  size={CENTER_ICON}
-                  color={centerActive || immersive ? '#fff' : colors.brandInverse}
-                  variant="filled"
-                />
-              </View>
-              <Text
-                style={[
-                  styles.centerLabel,
-                  centerActive && styles.centerLabelActive,
-                  immersive && { color: '#fff' },
-                  centerActive && !immersive && { color: accentInk },
-                ]}
-              >
-                {centerLabel}
-              </Text>
-            </PressableSpring>
+          {rail.flat && rail.flat.length > 0 ? (
+            <View style={styles.flatRow}>
+              {rail.flat.map((tab) => renderSideTab(tab, true))}
+            </View>
           ) : (
-            <View style={styles.centerSpacer} />
-          )}
+            <>
+              <View style={styles.leftCluster}>{rail.left.map((tab) => renderSideTab(tab))}</View>
 
-          <View style={styles.rightCluster}>
-            {rail.right.map(renderSideTab)}
-            {renderMenuButton()}
-          </View>
+              {centerTab ? (
+                <PressableSpring
+                  style={styles.centerWrap}
+                  onPress={() => onTabPress(centerTab)}
+                  scaleTo={0.94}
+                  accessibilityRole="tab"
+                  accessibilityState={{ selected: centerActive }}
+                  accessibilityLabel={centerLabel}
+                >
+                  <View
+                    style={[
+                      styles.centerBtn,
+                      {
+                        width: chrome.centerButtonSize,
+                        height: chrome.centerButtonSize,
+                        borderRadius: chrome.centerButtonSize / 2,
+                        backgroundColor: chrome.centerButtonIdle,
+                        borderWidth: chrome.centerButtonBorderWidth,
+                        borderColor: chrome.centerButtonBorder,
+                      },
+                      centerActive && !immersive && { backgroundColor: accentInk },
+                      immersive && [styles.centerBtnImmersive, { backgroundColor: accentInk }],
+                      !immersive && shadows.interactive,
+                    ]}
+                  >
+                    <Icon
+                      name={centerIcon}
+                      size={CENTER_ICON}
+                      color={centerActive || immersive ? '#fff' : colors.brandInverse}
+                      variant="filled"
+                    />
+                  </View>
+                  <Text
+                    style={[
+                      styles.centerLabel,
+                      centerActive && styles.centerLabelActive,
+                      immersive && { color: '#fff' },
+                      centerActive && !immersive && { color: accentInk },
+                    ]}
+                  >
+                    {centerLabel}
+                  </Text>
+                </PressableSpring>
+              ) : (
+                <View style={styles.centerSpacer} />
+              )}
+
+              <View style={styles.rightCluster}>
+                {rail.right.map((tab) => renderSideTab(tab))}
+                {renderMenuButton()}
+              </View>
+            </>
+          )}
         </View>
       </View>
 
@@ -330,6 +341,15 @@ function createStyles(
       paddingHorizontal: spacing.xs,
       gap: 3,
     },
+    sideTabCompact: {
+      minWidth: 0,
+      maxWidth: undefined,
+      minHeight: 48,
+      paddingHorizontal: 2,
+    },
+    sideTabFlat: {
+      flex: 1,
+    },
     sideIconWrap: {
       width: 44,
       height: 30,
@@ -342,6 +362,21 @@ function createStyles(
       letterSpacing: 0.1,
       maxWidth: 76,
       textAlign: 'center',
+    },
+    sideLabelCompact: {
+      fontSize: 9,
+      maxWidth: 64,
+    },
+    sideLabelFlat: {
+      maxWidth: 72,
+    },
+    flatRow: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'flex-end',
+      justifyContent: 'space-between',
+      paddingHorizontal: spacing.xs,
+      paddingBottom: spacing.xs,
     },
     sideLabelActive: {
       fontWeight: '800',

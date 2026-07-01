@@ -54,16 +54,8 @@ export const ProPlayerGroupScreen: React.FC = () => {
     >
       <ProDaySurface style={styles.banner}>
         <ProDayText variant="caption" muted>
-          Logistique déplacement — pas de gestion compo (réservée au coach staff)
+          Logistique déplacement — consultez le détail de chaque convocation pour le transport groupe.
         </ProDayText>
-        <PressableSpring
-          style={[styles.transport, { borderColor: colors.border }]}
-          onPress={() => nav.setActiveTab('covoiturage')}
-          haptic
-        >
-          <Icon name="car" size={16} color={colors.accent} />
-          <ProDayText variant="caption">Transport groupe</ProDayText>
-        </PressableSpring>
       </ProDaySurface>
 
       {convocations.length === 0 ? (

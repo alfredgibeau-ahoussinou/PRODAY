@@ -22,6 +22,7 @@ import { PhysioProfileTabScreen } from '../screens/medical/PhysioProfileTabScree
 import { PhysioRequestsScreen } from '../screens/medical/PhysioRequestsScreen';
 import { SupporterMatchsScreen } from '../screens/SupporterMatchsScreen';
 import { SupporterSuivisScreen } from '../screens/SupporterSuivisScreen';
+import { SupporterProfileTabScreen } from '../screens/SupporterProfileTabScreen';
 import { ClubStructureScreen } from '../screens/ClubStructureScreen';
 import { AmateurClubScreen } from '../screens/AmateurClubScreen';
 import { ProPlayerCareerScreen } from '../screens/proPlayer/ProPlayerCareerScreen';
@@ -54,7 +55,8 @@ const PHYSIO_SCREENS: Partial<Record<MainTabId, ComponentType>> = {
 const SUPPORTER_SCREENS: Partial<Record<MainTabId, ComponentType>> = {
   matchs: SupporterMatchsScreen,
   feed: SupporterSuivisScreen,
-  messages: FeedTabScreen,
+  messages: MessagesScreen,
+  profil: SupporterProfileTabScreen,
 };
 
 const PRO_CLUB_SCREENS: Partial<Record<MainTabId, ComponentType>> = {
@@ -83,10 +85,10 @@ export function resolveMainTabScreen(
   if (role === 'supporter') {
     return SUPPORTER_SCREENS[tab] ?? DEFAULT_SCREENS[tab];
   }
-  if (isProProductLine(line ?? 'homme') && role === 'club') {
+  if (isProProductLine(line ?? 'pro_player') && role === 'club') {
     return PRO_CLUB_SCREENS[tab] ?? DEFAULT_SCREENS[tab];
   }
-  if (isProProductLine(line ?? 'homme') && role === 'player') {
+  if (isProProductLine(line ?? 'pro_player') && role === 'player') {
     return PRO_PLAYER_SCREENS[tab] ?? DEFAULT_SCREENS[tab];
   }
   if (line === 'amateur' && role === 'player') {
@@ -95,6 +97,10 @@ export function resolveMainTabScreen(
   return DEFAULT_SCREENS[tab];
 }
 
-export function shouldInjectShopTab(role?: UserRole | null): boolean {
-  return !isMedicalPractitionerRole(role) && !isSponsorRole(role);
+export function shouldInjectShopTab(
+  role?: UserRole | null,
+  line?: ProductLineId | null,
+): boolean {
+  if (isMedicalPractitionerRole(role) || isSponsorRole(role)) return false;
+  return role === 'supporter' || line === 'supporter';
 }

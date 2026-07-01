@@ -21,6 +21,7 @@ export const SUPPORTER_SHELL_TABS: MainTabId[] = [
   'messages', // Communauté
   'reels', // Moments
   'shop',
+  'profil', // Compte
 ];
 
 export const PRO_CLUB_SHELL_TABS: MainTabId[] = [

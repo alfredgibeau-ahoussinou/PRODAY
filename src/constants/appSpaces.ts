@@ -92,7 +92,7 @@ export function defaultCategoriesForAppSpace(
 ): readonly string[] {
   // L'espace -13 ne distingue pas le genre (under_u13 unique) — le genre explicite
   // (pôle Amateur) ou, pour les comptes legacy, le pôle Woman, filtrent la liste.
-  if (space === 'under_u13' && (line === 'woman' || gender === 'women')) {
+  if (space === 'under_u13' && (line === 'woman' || gender === 'women' || gender === 'minor')) {
     return PLAYER_CATEGORIES_UNDER_U13_F;
   }
   const dedicated = categoriesForAppSpace(space);

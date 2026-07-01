@@ -31,9 +31,19 @@ export const SignupSpaceStep: React.FC<SignupSpaceStepProps> = ({
   const signupTheme = useSignupTheme();
   const { colors } = useSignupFlowTheme();
   const { t } = useTranslation();
-  const showGenderStep = form.isAmateurProduct;
-  const isWomanGroup = showGenderStep ? form.gender === 'women' : form.isWomanProduct;
-  const spaceGroups = getAppSpaceGroups(isWomanGroup, t);
+  const showGenderStep =
+    form.isAmateurProduct || (form.isProProduct && form.role === 'player');
+  const genderOptions = form.isAmateurProduct
+    ? (['men', 'women', 'minor'] as const)
+    : (['men', 'women'] as const);
+  const isWomanGroup =
+    showGenderStep && form.gender === 'women'
+      ? true
+      : showGenderStep && form.gender === 'minor'
+        ? false
+        : form.isWomanProduct;
+  const spaceGender = showGenderStep ? form.gender : isWomanGroup ? 'women' : 'men';
+  const spaceGroups = getAppSpaceGroups(spaceGender, t);
   const meta = getPlayerStepMeta(form.productLine, 'space', t);
 
   return (
@@ -58,7 +68,7 @@ export const SignupSpaceStep: React.FC<SignupSpaceStepProps> = ({
             <Text style={signupTheme.fieldError}>{form.fieldErrors.gender}</Text>
           ) : null}
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-            {(['men', 'women'] as const).map((option) => {
+            {genderOptions.map((option) => {
               const active = form.gender === option && form.genderTouched;
               return (
                 <Pressable

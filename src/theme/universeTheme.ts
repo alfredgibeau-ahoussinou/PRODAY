@@ -4,6 +4,8 @@ import { womanColorOverrides } from './prodayWomanTheme';
 import { amateurColorOverrides } from './prodayAmateurTheme';
 import { supporterColorOverrides } from './prodaySupporterTheme';
 import { santeColorOverrides } from './prodaySanteTheme';
+import type { PlayerSegment } from '../utils/playerSegment';
+import { getThemedColorsForSegment } from './playerSegmentTheme';
 
 /** Palette ProDay Pro — bleu pro, distinct Homme (noir) et Woman (rose). */
 export const proColorOverrides = {
@@ -63,7 +65,13 @@ export const hommeColorOverrides = {
   gradientEnd: '#15803D',
 } as const;
 
-export function getThemedColorsForLine(line: ProductLineId): AppColors {
+export function getThemedColorsForLine(
+  line: ProductLineId,
+  segment?: PlayerSegment | null,
+): AppColors {
+  if (segment && (line === 'amateur' || line === 'pro_player')) {
+    return getThemedColorsForSegment(line, segment);
+  }
   if (line === 'woman') return { ...baseColors, ...womanColorOverrides };
   if (line === 'amateur') return { ...baseColors, ...amateurColorOverrides };
   if (line === 'supporter') return { ...baseColors, ...supporterColorOverrides };

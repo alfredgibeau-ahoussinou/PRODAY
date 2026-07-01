@@ -36,7 +36,7 @@ export const CompactTabBar: React.FC<CompactTabBarProps> = ({
   unreadCount = 0,
   visibleTabs,
 }) => {
-  const { colors, productLine } = useAppTheme();
+  const { colors, productLine, playerSegment } = useAppTheme();
   const { t } = useTranslation();
   const sessionProfile = useSessionProfile();
   const insets = useSafeAreaInsets();
@@ -54,12 +54,12 @@ export const CompactTabBar: React.FC<CompactTabBarProps> = ({
   const role = sessionProfile?.role;
   const isSponsor = isSponsorRole(role);
   const chrome = useMemo(
-    () => getPoleTabBarChrome(productLine, role),
-    [productLine, role],
+    () => getPoleTabBarChrome(productLine, role, playerSegment),
+    [productLine, role, playerSegment],
   );
   const accentInk = isSponsor
     ? SPONSOR_THEME.primary
-    : resolveTabBarAccent(productLine, role, colors);
+    : resolveTabBarAccent(productLine, role, colors, playerSegment);
 
   const styles = useMemo(
     () => createStyles(colors, immersive, chrome),
@@ -72,7 +72,7 @@ export const CompactTabBar: React.FC<CompactTabBarProps> = ({
         styles.root,
         {
           paddingBottom: Math.max(insets.bottom, spacing.xs),
-          backgroundColor: immersive ? '#000' : colors.background,
+          backgroundColor: immersive ? '#000' : chrome.rootBackground,
         },
       ]}
     >
@@ -80,8 +80,8 @@ export const CompactTabBar: React.FC<CompactTabBarProps> = ({
         style={[
           styles.dock,
           {
-            backgroundColor: immersive ? 'rgba(0,0,0,0.92)' : colors.surface,
-            borderColor: immersive ? 'rgba(255,255,255,0.08)' : colors.border,
+            backgroundColor: immersive ? 'rgba(0,0,0,0.92)' : chrome.barBackground,
+            borderColor: immersive ? 'rgba(255,255,255,0.08)' : chrome.barBorderColor,
             borderWidth: immersive ? 0 : chrome.barBorderWidth,
             borderRadius: immersive ? 0 : chrome.barBorderRadius,
           },
@@ -101,10 +101,10 @@ export const CompactTabBar: React.FC<CompactTabBarProps> = ({
         ) : null}
         {tabItems.map((tab) => {
           const active = tab.id === activeTab;
-          const icon = resolveTabIcon(tab.id, role);
+          const icon = resolveTabIcon(tab.id, role, productLine);
           const badge = tab.id === 'messages' ? unreadCount : 0;
           const label = getTabShortLabel(tab.id, productLine, role, t);
-          const ink = resolveTabInkColors(active, immersive, accentInk, colors.textMuted);
+          const ink = resolveTabInkColors(active, immersive, accentInk, chrome.inactiveIcon);
 
           return (
             <PressableSpring

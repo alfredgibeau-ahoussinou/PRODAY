@@ -12,6 +12,7 @@ import { useSeasonCalendar } from '../hooks/useAppData';
 import { useTournaments } from '../hooks/useTournaments';
 import { useTabNavigationActions } from '../hooks/useTabNavigationActions';
 import { isInMatchWindow } from '../utils/matchLive';
+import { isExternalFixtureLiveNow, isProdayEventLiveNow } from '../utils/supporterLiveMatches';
 import { spacing, radius } from '../theme/designTokens';
 import { useAppTheme } from '../context/ProductLineContext';
 import { followsService } from '../services/follows.service';
@@ -74,16 +75,26 @@ export const SupporterMatchsScreen: React.FC = () => {
     void loadFollows();
   }, [profile?.uid, loadFollows]);
 
-  useEffect(() => {
-    teamEventsService
-      .listUpcoming(60)
-      .then(setPublicEvents)
-      .catch(() => setPublicEvents([]));
-    externalScoresService
-      .listFixtures()
-      .then(setWorldFixtures)
-      .catch(() => setWorldFixtures([]));
+  const loadLiveData = useCallback(async () => {
+    const [upcoming, fixtures] = await Promise.all([
+      teamEventsService.listUpcoming(60).catch(() => [] as typeof events),
+      externalScoresService.listFixtures().catch(() => []),
+    ]);
+    setPublicEvents(upcoming);
+    setWorldFixtures(fixtures);
   }, []);
+
+  useEffect(() => {
+    void loadLiveData();
+  }, [loadLiveData]);
+
+  useEffect(() => {
+    if (chapter !== 'live') return undefined;
+    const timer = setInterval(() => {
+      void loadLiveData();
+    }, 45_000);
+    return () => clearInterval(timer);
+  }, [chapter, loadLiveData]);
 
   const followContext = useMemo(() => buildFollowContext(follows), [follows]);
   const followedKeys = useMemo(
@@ -111,14 +122,17 @@ export const SupporterMatchsScreen: React.FC = () => {
   );
 
   const liveItems = useMemo(() => {
-    const localLive = publicEvents.filter((event) => isInMatchWindow(event));
-    const personalLive = events.filter((event) => isInMatchWindow(event));
-    const mergedLocal = localLive.length > 0 ? localLive : personalLive;
-    const worldLive = worldFixtures.filter((fixture) => fixture.status === 'live');
-    const raw: SupporterMatchViewItem[] = [
-      ...worldLive.map(externalFixtureToMatchItem),
-      ...mergedLocal.map(teamEventToMatchItem),
-    ];
+    const mergedEvents = [...publicEvents, ...events].filter(
+      (event, index, list) => list.findIndex((row) => row.id === event.id) === index
+    );
+    const prodayLive = mergedEvents
+      .filter(isProdayEventLiveNow)
+      .map(teamEventToMatchItem)
+      .filter((item) => item.status === 'live');
+    const worldLive = worldFixtures
+      .filter(isExternalFixtureLiveNow)
+      .map(externalFixtureToMatchItem);
+    const raw: SupporterMatchViewItem[] = [...worldLive, ...prodayLive];
     return filterMatchItems(raw, filters, followContext).slice(0, 12);
   }, [publicEvents, events, worldFixtures, filters, followContext]);
 

@@ -165,7 +165,7 @@ export const authService = {
       throw new Error('Email requis. Utilisez un compte Google/Apple qui partage votre email.');
     }
 
-    const registrationLine: ProductLineId = input.product_line ?? 'homme';
+    const registrationLine: ProductLineId = input.product_line ?? 'amateur';
 
     const existing = await usersService.getById(fb.uid);
     if (existing) {
@@ -206,7 +206,7 @@ export const authService = {
       // Le profil peut quand même être créé ; l'utilisateur pourra renvoyer le mail.
     }
 
-    const registrationLine: ProductLineId = input.product_line ?? 'homme';
+    const registrationLine: ProductLineId = input.product_line ?? 'amateur';
 
     return profileService.createProfile(
       cred.user.uid,
