@@ -10,7 +10,9 @@ import { DiscoverScreen } from './DiscoverScreen';
 import { PhysioDashboardScreen } from './medical/PhysioDashboardScreen';
 import { HomeIaDashboard } from '../features/home/HomeIaDashboard';
 import { SupporterHomeDashboard } from '../features/home/roles/SupporterHomeDashboard';
+import { AmateurPlayerHomeDashboard } from '../features/home/roles/AmateurPlayerHomeDashboard';
 import { resolveRoleHomeDashboard } from '../features/home/roles/resolveRoleHomeDashboard';
+import { getUserProductLine } from '../utils/productLineAccess';
 import { TeamManagementScreen } from './TeamManagementScreen';
 import { SponsorsScreen } from './SponsorsScreen';
 import { SponsorHubScreen } from './sponsor/SponsorHubScreen';
@@ -74,6 +76,20 @@ export const HomeScreen: React.FC = () => {
     if (profile.role === 'supporter') {
       return (
         <SupporterHomeDashboard
+          profile={profile}
+          unreadMessages={unreadMessages}
+          onRefresh={handleRefresh}
+          refreshing={refreshing}
+        />
+      );
+    }
+    const userLine = getUserProductLine(profile);
+    if (
+      profile.role === 'player' &&
+      (userLine === 'amateur' || userLine === 'homme' || userLine === 'woman')
+    ) {
+      return (
+        <AmateurPlayerHomeDashboard
           profile={profile}
           unreadMessages={unreadMessages}
           onRefresh={handleRefresh}

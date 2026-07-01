@@ -1192,6 +1192,18 @@ Done:
   `security`), qui retombaient auparavant sur la copie « Pro Day Man ».
 - Tests : `carouselAmateurMigration.test.ts` (ordre carousel, groupes d'espace
   par genre, copy Amateur dédiée, non-régression Woman legacy).
+- **Accueil Amateur joueur (§4.1)** : `AmateurPlayerHomeDashboard.tsx` câblé dans
+  `HomeScreen.tsx` pour `role === 'player'` + ligne `amateur`/`homme`/`woman` —
+  bandeau RSVP, prochain match + covoiturage, fil coach (placeholder), raccourcis,
+  CTA « Rejoindre un club » si sans affiliation (`amateurPlayerHome.ts` + i18n
+  `roleHome.amateurPlayer.*`).
+- **Écrans Pro joueur enrichis (§4.3)** :
+  - `ProPlayerCareerScreen` — jours contrat, consultations 7j, essais à venir
+  - `ProPlayerPortfolioScreen` — stats saison, badge « Validé coach », export PDF
+  - `ProPlayerGroupScreen` — liste convocations staff (3–5) + transport groupe
+  - Helpers : `proPlayerCareerMetrics.ts`
+- **Portefeuille Agent (§4.5)** : `AgentHomeDashboard.tsx` — tableau mandats
+  (Joueur | Club actuel | Fin mandat | Statut négo) depuis shortlist + profils publics.
 
 Still stub / pending external dependencies:
 - Connecteur API scores réel (API-Football ou équivalent) + auth/quotas
@@ -1203,9 +1215,8 @@ Still stub / pending external dependencies:
   `carouselPoleExperience.ts` + accents/gradients par segment.
 - **Onglet Club amateur joueur** : shell `Équipe · Déplacements · Club · Moi` +
   `AmateurClubScreen` (statut adhésion, annonces, effectif, rejoindre un club).
-- **Écrans Pro joueur dédiés** : `ProPlayerCareerScreen`, `ProPlayerOpportunitiesScreen`,
-  `ProPlayerPortfolioScreen`, `ProPlayerGroupScreen` câblés dans
-  `resolveMainTabScreen` pour `line === 'pro' && role === 'player'`.
+- **Écrans Pro joueur dédiés** : coquilles initiales remplacées par versions enrichies
+  (voir Done ci-dessus) — `resolveMainTabScreen` pour `line === 'pro_player' && role === 'player'`.
 - **Joueur pro à l'inscription** : rôle `player` ajouté à `PRO_PRODUCT_ROLES` et
   groupe signup `pro_player`.
 - **Rename `product_line` en base** (`pro` → `pro_player`/`club`/`staff`) :
