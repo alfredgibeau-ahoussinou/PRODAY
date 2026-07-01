@@ -5,6 +5,7 @@
  * - `pro` → pro_player | pro_club | pro_staff (selon rôle)
  * - `homme`/`woman`/`standard` + player → pro_player (+ profile.gender)
  * - `homme`/`woman`/`standard` + autre rôle → amateur
+ * - product_line absent → canonicalizeUserProductLine (rôle / legacy)
  *
  * Usage:
  *   npm run migrate:product-lines -- --dry-run
@@ -15,18 +16,17 @@ import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { initializeApp, cert, getApps } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
+import {
+  canonicalizeUserProductLine,
+  isMissingProductLine,
+  splitLegacyProByRole,
+} from './lib/productLineResolution.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = resolve(__dirname, '..');
 
 const dryRun = process.argv.includes('--dry-run');
 const confirm = process.argv.includes('--confirm');
-
-function splitLegacyProByRole(role) {
-  if (role === 'club') return 'pro_club';
-  if (role === 'player') return 'pro_player';
-  return 'pro_staff';
-}
 
 function genderForLegacyLine(line) {
   if (line === 'woman') return 'women';
@@ -133,6 +133,29 @@ async function migrateHommeWomanStaff(db) {
   return updated;
 }
 
+async function backfillMissingProductLine(db) {
+  const snap = await db.collection('users').get();
+  const missing = snap.docs.filter((doc) => isMissingProductLine(doc.data().product_line));
+  console.log(`\nComptes sans product_line: ${missing.length} (${snap.size} utilisateurs scannés)`);
+  let updated = 0;
+  for (const doc of missing) {
+    const data = doc.data();
+    const role = data.role ?? 'player';
+    const target = canonicalizeUserProductLine(data.product_line, role);
+    console.log(
+      `${dryRun ? '[dry-run] ' : ''}${doc.id} (absent/${role}) -> ${target}`,
+    );
+    if (!dryRun) {
+      await doc.ref.update({
+        product_line: target,
+        updated_at: FieldValue.serverTimestamp(),
+      });
+    }
+    updated += 1;
+  }
+  return updated;
+}
+
 async function main() {
   if (!dryRun && !confirm) {
     console.error('Migration refusée : ajoutez --dry-run (simulation) ou --confirm (écriture).');
@@ -147,11 +170,12 @@ async function main() {
   const proCount = await migrateLegacyPro(db);
   const playerCount = await migrateHommeWomanPlayers(db);
   const staffCount = await migrateHommeWomanStaff(db);
-  const total = proCount + playerCount + staffCount;
+  const backfillCount = await backfillMissingProductLine(db);
+  const total = proCount + playerCount + staffCount + backfillCount;
 
   console.log(
     `\nTerminé — ${total} document(s) ${dryRun ? 'à migrer' : 'migrés'} ` +
-      `(pro=${proCount}, joueurs=${playerCount}, staff=${staffCount}).`,
+      `(pro=${proCount}, joueurs=${playerCount}, staff=${staffCount}, backfill=${backfillCount}).`,
   );
 }
 
