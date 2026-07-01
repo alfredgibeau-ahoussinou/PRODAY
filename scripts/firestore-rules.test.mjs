@@ -855,6 +855,39 @@ async function run() {
     })
   );
 
+  // --- Memberships : staff invite joueur ---
+  await assertSucceeds(
+    setDoc(doc(coachDb, 'memberships/mem-invite'), {
+      club_id: 'club-mem',
+      team_id: 'unassigned',
+      player_uid: 'player2',
+      player_name: 'Joueur Invité',
+      status: 'pending',
+      invited_by_uid: 'coach1',
+      requested_at: new Date(),
+      created_at: new Date(),
+      updated_at: new Date(),
+    })
+  );
+
+  // --- Users : joueur ne peut pas modifier profile.club_id ---
+  await testEnv.withSecurityRulesDisabled(async (ctx) => {
+    const db = ctx.firestore();
+    await setDoc(doc(db, 'users/player-club'), {
+      role: 'player',
+      profile: { club_id: null },
+      is_verified: true,
+    });
+  });
+
+  const playerClubDb = testEnv.authenticatedContext('player-club').firestore();
+  await assertFails(
+    updateDoc(doc(playerClubDb, 'users/player-club'), {
+      profile: { club_id: 'club-mem' },
+      updated_at: new Date(),
+    })
+  );
+
   console.log('✓ Tous les scénarios rules-unit-testing ont réussi.');
   await testEnv.cleanup();
 }

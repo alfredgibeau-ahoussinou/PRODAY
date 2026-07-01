@@ -19,6 +19,7 @@ import { ShopScreen } from '../screens/ShopScreen';
 import { PhysioAgendaScreen } from '../screens/medical/PhysioAgendaScreen';
 import { PhysioMessagesScreen } from '../screens/medical/PhysioMessagesScreen';
 import { PhysioProfileTabScreen } from '../screens/medical/PhysioProfileTabScreen';
+import { PhysioRequestsScreen } from '../screens/medical/PhysioRequestsScreen';
 import { SupporterMatchsScreen } from '../screens/SupporterMatchsScreen';
 import { SupporterSuivisScreen } from '../screens/SupporterSuivisScreen';
 import { ClubStructureScreen } from '../screens/ClubStructureScreen';
@@ -45,6 +46,7 @@ const DEFAULT_SCREENS: Record<MainTabId, ComponentType> = {
 const PHYSIO_SCREENS: Partial<Record<MainTabId, ComponentType>> = {
   home: HomeScreen,
   matchs: PhysioAgendaScreen,
+  feed: PhysioRequestsScreen,
   messages: PhysioMessagesScreen,
   profil: PhysioProfileTabScreen,
 };

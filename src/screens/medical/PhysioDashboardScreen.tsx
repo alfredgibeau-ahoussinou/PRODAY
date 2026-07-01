@@ -8,7 +8,7 @@ import {
   Alert,
 } from 'react-native';
 import type { User } from '../../models/User';
-import { Icon } from '../../components/ui/Icon';
+import { Icon, type IconName } from '../../components/ui/Icon';
 import { PhysioHomeTopBar } from '../../components/medical/PhysioHomeTopBar';
 import { MedicalAppointmentCard } from '../../components/medical/MedicalAppointmentCard';
 import { PhysioScreenHeader } from '../../components/medical/PhysioScreenHeader';
@@ -22,6 +22,7 @@ import { MEDICAL_THEME } from '../../content/medicalExperience';
 import { useMedicalStyles } from '../../components/medical/medicalStyles';
 import { PressableSpring, PushScreenTransition, SkeletonList, StaggerReveal } from '../../components/motion';
 import { PhysioAvailabilityScreen } from './PhysioAvailabilityScreen';
+import { PhysioPatientsScreen } from './PhysioPatientsScreen';
 import { isPhysioBookingEnabled } from '../../services/medicalAppointments.service';
 import type { AppColors } from '../../theme/universeTheme';
 import { TabScreenShell } from '../../components/app/TabScreenShell';
@@ -39,6 +40,7 @@ export const PhysioDashboardScreen: React.FC<PhysioDashboardScreenProps> = ({ pr
     usePhysioAppointments(profile.uid);
   const [refreshing, setRefreshing] = useState(false);
   const [showAvailability, setShowAvailability] = useState(false);
+  const [showPatients, setShowPatients] = useState(false);
   const bookingOnline = isPhysioBookingEnabled(profile);
 
   const specialty =
@@ -73,6 +75,7 @@ export const PhysioDashboardScreen: React.FC<PhysioDashboardScreenProps> = ({ pr
 
   const goMessages = () => nav.setActiveTab('messages');
   const goAgenda = () => nav.setActiveTab('matchs');
+  const goRequests = () => nav.setActiveTab('feed');
   const goProfile = () => nav.openProfile();
 
   const StatCard: React.FC<{
@@ -87,7 +90,7 @@ export const PhysioDashboardScreen: React.FC<PhysioDashboardScreenProps> = ({ pr
   );
 
   const QuickAction: React.FC<{
-    icon: 'chat' | 'calendar' | 'settings';
+    icon: IconName;
     label: string;
     onPress: () => void;
   }> = ({ icon, label, onPress }) => (
@@ -134,9 +137,9 @@ export const PhysioDashboardScreen: React.FC<PhysioDashboardScreenProps> = ({ pr
       </View>
 
       <View style={styles.quickRow}>
-        <QuickAction icon="chat" label="Patients" onPress={goMessages} />
+        <QuickAction icon="people" label="Patients" onPress={() => setShowPatients(true)} />
         <QuickAction icon="calendar" label="Agenda" onPress={goAgenda} />
-        <QuickAction icon="settings" label="Créneaux" onPress={() => setShowAvailability(true)} />
+        <QuickAction icon="notifications" label="Demandes" onPress={goRequests} />
       </View>
 
       {loading ? <SkeletonList count={2} variant="card" /> : null}
@@ -190,7 +193,7 @@ export const PhysioDashboardScreen: React.FC<PhysioDashboardScreenProps> = ({ pr
           <Text style={[styles.sectionTitle, styles.sectionGap]}>Sportifs suivis</Text>
           {uniquePatients.map((p, index) => (
             <StaggerReveal key={p.uid} index={index}>
-              <PressableSpring style={styles.patientRow} onPress={goMessages} scaleTo={0.98} haptic>
+              <PressableSpring style={styles.patientRow} onPress={() => setShowPatients(true)} scaleTo={0.98} haptic>
                 <View style={styles.patientAvatar}>
                   <Icon name="person" size={18} color="#0F766E" />
                 </View>
@@ -223,6 +226,12 @@ export const PhysioDashboardScreen: React.FC<PhysioDashboardScreenProps> = ({ pr
           profile={profile}
           onBack={() => setShowAvailability(false)}
         />
+      </PushScreenTransition>
+
+      <PushScreenTransition active={showPatients}>
+        {showPatients ? (
+          <PhysioPatientsScreen profile={profile} onBack={() => setShowPatients(false)} />
+        ) : null}
       </PushScreenTransition>
     </View>
   );

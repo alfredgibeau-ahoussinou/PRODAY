@@ -2,12 +2,11 @@ import type { User } from '../models/User';
 import type { Membership } from '../models/Membership';
 import type { TeamEvent } from '../models/TeamEvent';
 
-/** Joueur amateur sans club ni adhésion active/en attente. */
+/** Joueur amateur sans adhésion active ou en attente (ignore profile.club_id legacy). */
 export function isAmateurPlayerWithoutClub(
   profile: User,
   activeMembership: Membership | null,
 ): boolean {
-  if (profile.profile.club_id) return false;
   if (
     activeMembership &&
     (activeMembership.status === 'active' || activeMembership.status === 'pending')

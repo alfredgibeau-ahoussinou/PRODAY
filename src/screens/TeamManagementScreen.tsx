@@ -6,6 +6,7 @@ import {
   Share,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from 'react-native';
 import { PressableSpring } from '../components/motion';
@@ -61,6 +62,10 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
   const [pendingMemberships, setPendingMemberships] = useState<Membership[]>([]);
   const [seasonEvents, setSeasonEvents] = useState<TeamEvent[]>([]);
   const [selectedStatUid, setSelectedStatUid] = useState<string | null>(null);
+  const [playerSearch, setPlayerSearch] = useState('');
+  const [searchResults, setSearchResults] = useState<User[]>([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [invitingUid, setInvitingUid] = useState<string | null>(null);
 
   const clubId = profile.profile.club_id;
   const canManageRoster = isOrganizerCapable(profile.role) || isAdmin;
@@ -348,6 +353,45 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
     }
   };
 
+  const searchPlayers = async () => {
+    if (!playerSearch.trim()) {
+      setSearchResults([]);
+      return;
+    }
+    setSearchLoading(true);
+    try {
+      const players = await usersService.listPlayers(playerSearch.trim());
+      const memberUids = new Set(members.map((m) => m.uid));
+      const pendingUids = new Set(pendingMemberships.map((m) => m.player_uid));
+      setSearchResults(
+        players.filter((p) => !memberUids.has(p.uid) && !pendingUids.has(p.uid)).slice(0, 8),
+      );
+    } finally {
+      setSearchLoading(false);
+    }
+  };
+
+  const handleInvitePlayer = async (player: User) => {
+    if (!clubId) return;
+    setInvitingUid(player.uid);
+    try {
+      await membershipsService.invitePlayer({
+        club_id: clubId,
+        player_uid: player.uid,
+        player_name: player.display_name,
+        invited_by_uid: profile.uid,
+      });
+      Alert.alert('Invitation envoyée', `${player.display_name} doit accepter l'affiliation.`);
+      setPlayerSearch('');
+      setSearchResults([]);
+      await load();
+    } catch (e) {
+      Alert.alert('Erreur', e instanceof Error ? e.message : 'Invitation impossible.');
+    } finally {
+      setInvitingUid(null);
+    }
+  };
+
   return (
     <View style={[styles.root, rootStyle]}>
       <ScreenHeader title="Gestion équipe" onBack={onBack} centered />
@@ -462,6 +506,53 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
                       scaleTo={0.97}
                     >
                       <Text style={styles.pendingBtnGhostText}>Refuser</Text>
+                    </PressableSpring>
+                  </View>
+                ))}
+              </View>
+            ) : null}
+            {canManageRoster && clubId ? (
+              <View style={styles.card}>
+                <Text style={styles.sectionTitle}>Inviter un joueur</Text>
+                <Text style={styles.body}>
+                  Recherchez un joueur ProDay pour lui proposer une affiliation au club.
+                </Text>
+                <View style={styles.inviteRow}>
+                  <TextInput
+                    style={[styles.inviteInput, { borderColor: c.border, color: c.text }]}
+                    placeholder="Nom du joueur…"
+                    placeholderTextColor={c.textMuted}
+                    value={playerSearch}
+                    onChangeText={setPlayerSearch}
+                    onSubmitEditing={() => void searchPlayers()}
+                    returnKeyType="search"
+                  />
+                  <PressableSpring
+                    style={[styles.pendingBtn, { backgroundColor: c.brand }]}
+                    onPress={() => void searchPlayers()}
+                    disabled={searchLoading}
+                    scaleTo={0.97}
+                  >
+                    <Text style={styles.pendingBtnText}>
+                      {searchLoading ? '…' : 'Chercher'}
+                    </Text>
+                  </PressableSpring>
+                </View>
+                {searchResults.map((player) => (
+                  <View key={player.uid} style={styles.pendingRow}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.rowTitle}>{player.display_name}</Text>
+                      <Text style={styles.body}>
+                        {[player.profile.position, player.city].filter(Boolean).join(' · ')}
+                      </Text>
+                    </View>
+                    <PressableSpring
+                      style={[styles.pendingBtn, { backgroundColor: c.brand }]}
+                      onPress={() => void handleInvitePlayer(player)}
+                      disabled={invitingUid === player.uid}
+                      scaleTo={0.97}
+                    >
+                      <Text style={styles.pendingBtnText}>Inviter</Text>
                     </PressableSpring>
                   </View>
                 ))}
@@ -852,5 +943,19 @@ function createStyles(c: AppColors) {
     borderColor: c.border,
   },
   pendingBtnGhostText: { color: c.textSecondary, fontSize: 11, fontWeight: '700' },
+  inviteRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    marginTop: spacing.sm,
+  },
+  inviteInput: {
+    flex: 1,
+    borderWidth: 1,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    fontSize: 14,
+  },
   });
 }

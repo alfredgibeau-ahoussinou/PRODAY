@@ -62,7 +62,7 @@ function event(partial: Partial<TeamEvent> & Pick<TeamEvent, 'id' | 'starts_at'>
 describe('amateurPlayerHome helpers', () => {
   it('détecte joueur sans club ni adhésion', () => {
     expect(isAmateurPlayerWithoutClub(player(), null)).toBe(true);
-    expect(isAmateurPlayerWithoutClub(player({ club_id: 'c1' }), null)).toBe(false);
+    expect(isAmateurPlayerWithoutClub(player({ club_id: 'c1' }), null)).toBe(true);
     expect(isAmateurPlayerWithoutClub(player(), membership('active'))).toBe(false);
     expect(isAmateurPlayerWithoutClub(player(), membership('pending'))).toBe(false);
   });

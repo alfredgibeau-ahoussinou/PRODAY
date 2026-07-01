@@ -28,6 +28,12 @@ import {
   getNextTeamEvent,
   isAmateurPlayerWithoutClub,
 } from '../../../utils/amateurPlayerHome';
+import {
+  canRespondToTeamEvent,
+  canViewTeamEventAsPlayer,
+  hasActiveClubMembership,
+  hasPendingClubMembership,
+} from '../../../utils/membershipAccess';
 import { GlassCard } from '../../../components/aurora/GlassCard';
 import { ProDayText } from '../../../components/ui/ProDayText';
 import { ProDayGradient } from '../../../components/ui/ProDayGradient';
@@ -82,31 +88,38 @@ export const AmateurPlayerHomeDashboard: React.FC<StaffRoleHomeProps> = ({
   const loadMembership = useCallback(async () => {
     setMembershipLoading(true);
     try {
-      const active = await membershipsService.getActiveForPlayer(profile.uid);
-      setMembership(active);
+      const list = await membershipsService.listByPlayer(profile.uid);
+      const active = list.find((m) => m.status === 'active') ?? null;
+      const pending = list.find((m) => m.status === 'pending') ?? null;
+      setMembership(active ?? pending);
     } finally {
       setMembershipLoading(false);
     }
   }, [profile.uid]);
 
+  const visibleEvents = useMemo(
+    () => data.teamEvents.filter((e) => canViewTeamEventAsPlayer(profile, membership, e)),
+    [data.teamEvents, profile, membership],
+  );
+
+  const nextEvent = useMemo(() => getNextTeamEvent(visibleEvents), [visibleEvents]);
+  const nextMatch = useMemo(() => getNextMatchEvent(visibleEvents), [visibleEvents]);
   useEffect(() => {
     void loadMembership();
   }, [loadMembership]);
 
-  const nextEvent = useMemo(() => getNextTeamEvent(data.teamEvents), [data.teamEvents]);
-  const nextMatch = useMemo(() => getNextMatchEvent(data.teamEvents), [data.teamEvents]);
   const matchCarpoolSeats = useMemo(
     () => (nextMatch ? countRemainingCarpoolSeats(nextMatch) : null),
     [nextMatch],
   );
 
   const withoutClub = isAmateurPlayerWithoutClub(profile, membership);
+  const membershipActive = hasActiveClubMembership(profile, membership);
+  const membershipPending = hasPendingClubMembership(membership) && !membershipActive;
   const myRsvp = nextEvent ? userRsvp(nextEvent, profile.uid) : 'pending';
   const canRespond =
-    nextEvent &&
-    (nextEvent.invitee_uids.includes(profile.uid) ||
-      profile.uid === nextEvent.organizer_uid ||
-      nextEvent.event_type === 'detection');
+    nextEvent && membershipActive && canRespondToTeamEvent(profile, membership, nextEvent);
+  const showConvocations = membershipActive || visibleEvents.length > 0;
 
   const handleRefresh = useCallback(async () => {
     await Promise.all([refresh(), loadMembership()]);
@@ -179,8 +192,17 @@ export const AmateurPlayerHomeDashboard: React.FC<StaffRoleHomeProps> = ({
             </ProDayText>
           </PressableSpring>
         </GlassCard>
+      ) : membershipPending ? (
+        <GlassCard style={styles.joinCta}>
+          <ProDayText variant="section">{t('roleHome.amateurPlayer.pendingClubTitle')}</ProDayText>
+          <ProDayText variant="caption" muted>
+            {t('roleHome.amateurPlayer.pendingClubSub')}
+          </ProDayText>
+        </GlassCard>
       ) : null}
 
+      {showConvocations ? (
+        <>
       <StaffSectionTitle
         title={t('roleHome.amateurPlayer.nextEventTitle')}
         subtitle={
@@ -263,6 +285,9 @@ export const AmateurPlayerHomeDashboard: React.FC<StaffRoleHomeProps> = ({
       ) : (
         <StaffEmptyCard message={t('roleHome.amateurPlayer.noMatch')} />
       )}
+
+      </>
+      ) : null}
 
       <StaffSectionTitle
         title={t('roleHome.amateurPlayer.coachFeedTitle')}

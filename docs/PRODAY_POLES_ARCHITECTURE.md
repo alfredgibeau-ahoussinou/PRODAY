@@ -1214,6 +1214,25 @@ Done:
   - Écran dédié : `ClubStructureScreen.tsx` (arbre équipes, staff, adhésions pending)
   - Helpers agrégation : `clubStructureView.ts` + tests `clubStructureView.test.ts`
   - i18n `clubStructure.*` (`ui.fr.ts`, `ui.en.ts`)
+- **Affiliation club §5.2 (juil. 2026)** :
+  - Rules : `ownerClubIdUnchanged()` — joueur ne peut plus auto-modifier `profile.club_id`
+  - Rules : staff club peut créer membership `pending` pour un joueur (`invitePlayer`)
+  - Service : `membershipsService.invitePlayer` + champ `invited_by_uid`
+  - UI coach : recherche joueur + invitation dans `TeamManagementScreen`
+  - Gating convocations : `membershipAccess.ts` + dashboard amateur renforcé
+  - Effectif : `usersService.listMembersByClubId` priorise memberships actifs
+  - Tests : `membershipAccess.test.ts`, rules `firestore-rules.test.mjs`
+- **Shell Santé §4.7 (juil. 2026)** :
+  - Onglets praticien : Accueil · Agenda · Demandes · Messages · Cabinet
+  - `PhysioRequestsScreen.tsx` (onglet Demandes / `feed`)
+  - `PhysioPatientsScreen.tsx` (depuis dashboard accueil)
+  - i18n `medical.shell.*`, `medical.requests.*`, `medical.patients.*`
+- **Partenaires §4.8 (juil. 2026)** :
+  - `SponsorContractScreen.tsx` (formule Starter / Territorial / National)
+  - `SponsorContactsScreen.tsx` (prospects clubs · activation terrain)
+  - Gate campagnes : `isSponsorCampaignAllowed` + `profile.sponsor_approved`
+  - Navigation shell : segments Contrat (Marque) et Contacts (Réseau)
+  - i18n `sponsor.contract.*`, `sponsor.contacts.*`, `sponsor.gate.*`
 
 Still stub / pending external dependencies:
 - Connecteur API scores réel (API-Football ou équivalent) + auth/quotas

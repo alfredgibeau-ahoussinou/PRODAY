@@ -200,7 +200,7 @@ export function getVisibleMainTabs(
   let tabs: MainTabId[];
 
   if (line === 'sante') {
-    tabs = ['home', 'matchs', 'messages', 'profil'];
+    tabs = [...PHYSIO_MAIN_TABS];
   } else if (line === 'amateur') {
     if (r === 'player') {
       tabs = [...AMATEUR_PLAYER_SHELL_TABS];

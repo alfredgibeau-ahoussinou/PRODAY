@@ -123,23 +123,25 @@ export const usersService = {
     return players.slice(0, POPULAR_LIMIT);
   },
 
-  /** Membres liés à un club (convocations). */
+  /** Membres liés à un club (convocations) — memberships actifs en priorité. */
   async listMembersByClubId(clubId: string): Promise<User[]> {
     if (!clubId) return [];
     try {
       const activeMemberships = await membershipsService.listByClub(clubId, 'active');
-      const uniqueUids = Array.from(new Set(activeMemberships.map((m) => m.player_uid).filter(Boolean)));
-      if (uniqueUids.length > 0) {
+      if (activeMemberships.length > 0) {
+        const uniqueUids = Array.from(
+          new Set(activeMemberships.map((m) => m.player_uid).filter(Boolean)),
+        );
         const members = (
           await Promise.all(uniqueUids.map((uid) => this.getPublicById(uid)))
         ).filter((u): u is User => Boolean(u));
-        if (members.length > 0) return members;
+        return members;
       }
     } catch (error) {
       console.warn('[usersService] listMembersByClubId fallback club_id:', error);
     }
 
-    // Fallback legacy: profils directement liés au club.
+    // Fallback legacy: profils directement liés au club (zéro membership actif).
     const players = await this.listPlayers();
     const coaches = await this.listStaff('coach');
     const agents = await this.listStaff('agent');

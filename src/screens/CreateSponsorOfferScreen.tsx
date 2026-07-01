@@ -18,6 +18,9 @@ import {
 import type { SponsorOfferType } from '../models/SponsorOffer';
 import { SPONSOR_THEME } from '../content/sponsorExperience';
 import { spacing, radius } from '../theme/designTokens';
+import { useSessionProfile } from '../hooks/useSessionProfile';
+import { isSponsorCampaignAllowed } from '../utils/sponsorCampaignGate';
+import { useTranslation } from '../context/LocaleContext';
 
 interface CreateSponsorOfferScreenProps {
   sponsorUid: string;
@@ -30,6 +33,8 @@ export const CreateSponsorOfferScreen: React.FC<CreateSponsorOfferScreenProps> =
   onBack,
   onCreated,
 }) => {
+  const profile = useSessionProfile();
+  const { t } = useTranslation();
   const [company, setCompany] = useState('');
   const [description, setDescription] = useState('');
   const [value, setValue] = useState('');
@@ -45,6 +50,14 @@ export const CreateSponsorOfferScreen: React.FC<CreateSponsorOfferScreenProps> =
   };
 
   const submit = async () => {
+    const gate = isSponsorCampaignAllowed(profile);
+    if (!gate.allowed) {
+      Alert.alert(
+        t('sponsor.gate.title'),
+        t(gate.reasonKey ?? 'sponsor.gate.approval'),
+      );
+      return;
+    }
     if (!company.trim() || !description.trim()) {
       Alert.alert('Champs requis', 'Nom et description sont obligatoires.');
       return;

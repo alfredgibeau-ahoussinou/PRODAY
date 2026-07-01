@@ -156,6 +156,7 @@ export function userFromFirestore(uid: string, data: Record<string, unknown>): U
     sponsor_territorial_approved_at: data.sponsor_territorial_approved_at
       ? toDate(data.sponsor_territorial_approved_at)
       : undefined,
+    sponsor_approved: data.sponsor_approved === true ? true : data.sponsor_approved === false ? false : undefined,
   };
 }
 
@@ -188,6 +189,7 @@ export function membershipFromFirestore(
     requested_at: toDate(data.requested_at),
     validated_at: data.validated_at ? toDate(data.validated_at) : undefined,
     validated_by_uid: data.validated_by_uid as string | undefined,
+    invited_by_uid: data.invited_by_uid as string | undefined,
     license_number: data.license_number as string | undefined,
     created_at: toDate(data.created_at),
     updated_at: toDate(data.updated_at),

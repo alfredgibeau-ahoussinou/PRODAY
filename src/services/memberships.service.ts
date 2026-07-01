@@ -12,7 +12,7 @@ import {
 } from 'firebase/firestore';
 import { getDb } from '../lib/firebase';
 import { isFirebaseConfigured } from '../config/firebase';
-import type { Membership, RequestMembershipInput } from '../models/Membership';
+import type { Membership, RequestMembershipInput, InvitePlayerMembershipInput } from '../models/Membership';
 import { canRequestClubMembership } from '../utils/membershipValidation';
 import { profileService } from './profile.service';
 import { clubsService } from './clubs.service';
@@ -99,6 +99,53 @@ export const membershipsService = {
       player_name: input.player_name.trim(),
       status: 'pending',
       license_number: input.license_number?.trim() || null,
+      requested_at: serverTimestamp(),
+      created_at: serverTimestamp(),
+      updated_at: serverTimestamp(),
+    };
+    await setDoc(ref, payload);
+    const snap = await getDoc(ref);
+    return membershipFromFirestore(snap.id, snap.data() as Record<string, unknown>);
+  },
+
+  /** Staff club invite un joueur — membership pending jusqu'à acceptation joueur ou validation staff. */
+  async invitePlayer(input: InvitePlayerMembershipInput): Promise<Membership> {
+    if (!isFirebaseConfigured()) throw new Error('Firebase non configuré');
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+
+    if (input.player_uid === input.invited_by_uid) {
+      throw new Error('Un staff ne peut pas s’inviter lui-même.');
+    }
+
+    const existing = await this.listByPlayer(input.player_uid);
+    const gate = canRequestClubMembership(existing, input.club_id);
+    if (!gate.allowed) {
+      throw new Error(gate.reason ?? 'Invitation impossible.');
+    }
+
+    const club = await clubsService.getById(input.club_id);
+    if (!club) throw new Error('Club introuvable.');
+
+    let teamId = input.team_id ?? null;
+    if (teamId) {
+      const team = await teamsService.getById(teamId);
+      if (!team || team.club_id !== input.club_id) {
+        throw new Error('Équipe invalide pour ce club.');
+      }
+    } else {
+      const defaultTeam = await teamsService.getDefaultTeam(input.club_id);
+      teamId = defaultTeam?.id ?? 'unassigned';
+    }
+
+    const ref = doc(collection(database, COL));
+    const payload = {
+      club_id: input.club_id,
+      team_id: teamId,
+      player_uid: input.player_uid,
+      player_name: input.player_name.trim(),
+      status: 'pending',
+      invited_by_uid: input.invited_by_uid,
       requested_at: serverTimestamp(),
       created_at: serverTimestamp(),
       updated_at: serverTimestamp(),

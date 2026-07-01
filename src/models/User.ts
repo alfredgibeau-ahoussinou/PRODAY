@@ -195,6 +195,8 @@ export interface User {
   /** Formule sponsor commerciale (Territorial validé par admin — hors IAP) */
   sponsor_tier?: 'starter' | 'territorial' | 'national';
   sponsor_territorial_approved_at?: Date;
+  /** Validation admin pour publication campagnes sponsor. */
+  sponsor_approved?: boolean;
 
   /** Vérifications joueur (identité, licence club, etc.) */
   player_verification?: PlayerVerificationState;

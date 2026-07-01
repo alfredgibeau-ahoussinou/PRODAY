@@ -147,6 +147,13 @@ service cloud.firestore {
         && request.resource.data.get('email', '') == resource.data.get('email', '');
     }
 
+    /** Un joueur ne peut pas s’auto-assigner un club — seul staff (approve) ou admin. */
+    function ownerClubIdUnchanged() {
+      return resource.data.get('role', '') != 'player'
+        || request.resource.data.get('profile', {}).get('club_id', null)
+            == resource.data.get('profile', {}).get('club_id', null);
+    }
+
     /** Un joueur ne peut jamais écrire ses stats saison depuis l'app client. */
     function ownerSeasonStatsUnchanged() {
       return resource.data.get('role', '') != 'player'
@@ -284,6 +291,7 @@ service cloud.firestore {
         || isCoGuardianInviteLink()
         || (isOwner(userId)
             && ownerImmutableFieldsUnchanged()
+            && ownerClubIdUnchanged()
             && ownerSeasonStatsUnchanged()
             && minorGuardianContactUnchanged()
             && (minorParentalProtected() || isOwnerParentalRuntimeSync()));
@@ -579,11 +587,15 @@ service cloud.firestore {
         || (isSignedIn() && resource.data.player_uid == request.auth.uid)
         || (isSignedIn() && isClubStaffForClub(resource.data.club_id));
       allow create: if isSignedIn()
-        && request.resource.data.player_uid == request.auth.uid
         && request.resource.data.status == 'pending'
         && request.resource.data.club_id is string
         && request.resource.data.team_id is string
-        && request.resource.data.player_name is string;
+        && request.resource.data.player_name is string
+        && (
+          request.resource.data.player_uid == request.auth.uid
+          || (isClubStaffForClub(request.resource.data.club_id)
+              && request.resource.data.player_uid != request.auth.uid)
+        );
       allow update: if isAdmin()
         || (isSignedIn()
             && isClubStaffForClub(resource.data.club_id)
