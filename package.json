@@ -16,6 +16,7 @@
     "android": "expo run:android",
     "typecheck": "tsc --noEmit",
     "cleanup:demo": "node scripts/cleanup-demo-data.mjs",
+    "migrate:product-lines": "node scripts/migrate-product-lines.mjs",
     "admin:setup": "node scripts/setup-admin.mjs",
     "test-account:setup": "node scripts/setup-test-account.mjs",
     "partner-account:setup": "node scripts/setup-partner-test-account.mjs",
