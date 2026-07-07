@@ -1,0 +1,10 @@
+{
+  "templateKey": "verifyEmailTemplate",
+  "displayName": "ProDay",
+  "subject": "Confirmez votre adresse e-mail ProDay",
+  "replyTo": "contact@proday.app",
+  "senderLocalPart": "noreply",
+  "bodyFormat": "HTML",
+  "htmlFile": "email-verification.html",
+  "plainTextFile": "email-verification.fr.txt"
+}

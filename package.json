@@ -26,6 +26,7 @@
     "firebase:deploy": "firebase deploy --only firestore:rules,firestore:indexes && npm run stats:refresh",
     "firebase:deploy:functions": "firebase deploy --only functions",
     "firebase:deploy:check": "node scripts/firebase-health.mjs",
+    "firebase:deploy:auth-email": "node scripts/deploy-auth-email-template.mjs email-verification",
     "firebase:deploy:storage": "firebase deploy --only storage",
     "firebase:rules:test": "firebase emulators:exec --only firestore \"node scripts/firestore-rules.test.mjs\"",
     "beta:check": "node scripts/beta-readiness.mjs",
