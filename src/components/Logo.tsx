@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Image, ImageSourcePropType } from 'react-native
 import { BRAND, typography, spacing } from '../theme/designTokens';
 import {
   BRANDING_LOGOS,
+  PRODAY_OFFICIAL_LOGO_ASPECT,
   MAN_BRANDING_LOGOS,
   AMATEUR_BRANDING_LOGOS,
   SUPPORTER_BRANDING_LOGOS,
@@ -26,6 +27,7 @@ export type LogoBackground = 'light' | 'dark' | 'photo';
 
 /** Variante forcée (optionnel) */
 export type LogoVariant =
+  | 'official'
   | 'light'
   | 'dark'
   | 'transparent'
@@ -47,11 +49,12 @@ interface LogoProps {
 }
 
 const LOGO_ASPECT: Record<LogoVariant, number> = {
-  light: 1.066,
-  dark: 1.003,
-  transparent: 0.93,
-  transparentDark: 0.946,
-  authDark: 0.93,
+  official: 1024 / 961,
+  light: 1024 / 961,
+  dark: 1024 / 961,
+  transparent: 1024 / 961,
+  transparentDark: 1024 / 961,
+  authDark: 1024 / 961,
   mark: 1.813,
 };
 
@@ -61,13 +64,13 @@ export function logoVariantForBackground(bg: LogoBackground, watermark = false):
   if (watermark) return 'mark';
   switch (bg) {
     case 'light':
-      return 'light';
+      return 'official';
     case 'dark':
-      return 'transparent';
+      return 'official';
     case 'photo':
-      return 'transparent';
+      return 'official';
     default:
-      return 'light';
+      return 'official';
   }
 }
 
@@ -193,7 +196,7 @@ export const Logo: React.FC<LogoProps> = ({
   const source: ImageSourcePropType = BRANDING_LOGOS[resolved];
   const height = width / LOGO_ASPECT[resolved];
   const imageOpacity = opacity ?? (watermark ? 0.14 : 1);
-  const onLightBg = resolved === 'light' || resolved === 'dark';
+  const onLightBg = true;
 
   return (
     <View style={[styles.wrap, watermark && styles.watermarkWrap]}>
@@ -236,8 +239,8 @@ export function logoDisplayAspect(
   if (line === 'homme') return manLogoAspect(width);
   if (line === 'amateur') return amateurLogoAspect(width);
   if (line === 'supporter') return supporterLogoAspect(width);
-  const v = opts.variant ?? 'transparent';
-  return LOGO_ASPECT[v] ?? 0.93;
+  const v = opts.variant ?? 'official';
+  return LOGO_ASPECT[v] ?? PRODAY_OFFICIAL_LOGO_ASPECT;
 }
 
 function createStyles(c: AppColors) {

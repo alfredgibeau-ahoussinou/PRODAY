@@ -5,10 +5,10 @@
     "version": "1.0.0",
     "scheme": "proday",
     "orientation": "portrait",
-    "icon": "./assets/branding/logo-light.png",
+    "icon": "./assets/branding/logo-proday-official.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/branding/logo-light.png",
+      "image": "./assets/branding/logo-proday-official.png",
       "resizeMode": "contain",
       "backgroundColor": "#F1F5F9"
     },
@@ -18,14 +18,14 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/branding/logo-light.png",
+        "foregroundImage": "./assets/branding/logo-proday-official.png",
         "backgroundColor": "#F1F5F9"
       },
       "package": "com.proday.app"
     },
     "web": {
       "bundler": "metro",
-      "favicon": "./assets/branding/logo-light.png"
+      "favicon": "./assets/branding/logo-proday-official.png"
     },
     "plugins": [
       "expo-apple-authentication",

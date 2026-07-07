@@ -1,12 +1,19 @@
 /**
  * Assets logo ProDay — uniquement des fichiers présents dans assets/branding/.
  */
+export const PRODAY_OFFICIAL_LOGO = require('../../assets/branding/logo-proday-official.png');
+
+/** Ratio largeur / hauteur du logo officiel (1024×961). */
+export const PRODAY_OFFICIAL_LOGO_ASPECT = 1024 / 961;
+
+/** Logo principal ProDay — marque générique (pas les pictos pôle). */
 export const BRANDING_LOGOS = {
-  light: require('../../assets/branding/logo-light.png'),
-  dark: require('../../assets/branding/logo-dark.png'),
-  transparent: require('../../assets/branding/logo-transparent-hero.png'),
-  transparentDark: require('../../assets/branding/logo-transparent-dark.png'),
-  authDark: require('../../assets/branding/logo-auth-dark.png'),
+  official: PRODAY_OFFICIAL_LOGO,
+  light: PRODAY_OFFICIAL_LOGO,
+  dark: PRODAY_OFFICIAL_LOGO,
+  transparent: PRODAY_OFFICIAL_LOGO,
+  transparentDark: PRODAY_OFFICIAL_LOGO,
+  authDark: PRODAY_OFFICIAL_LOGO,
   mark: require('../../assets/branding/logo-mark-transparent.png'),
 } as const;
 

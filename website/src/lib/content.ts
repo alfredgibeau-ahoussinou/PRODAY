@@ -7,6 +7,7 @@ import {
 export const BRAND = {
   name: "ProDay",
   tagline: "CONNECTER • PROGRESSER • RÉUSSIR",
+  logo: "/branding/logo-proday-official.png",
   mission:
     "Profil, Mercato, journal d'activités et saison — quatre pôles (Joueur, Pro, Santé, Partenaires) dans une app mobile honnête sur ce qui est livré aujourd'hui.",
 } as const;

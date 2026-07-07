@@ -7,7 +7,7 @@ import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { ChevronDown, Menu, X } from "lucide-react";
 import { navBrandForPath } from "@/components/universe/universeTheme";
-import { PRODAY_LOGO_ON_DARK } from "@/lib/brandingAssets";
+import { PRODAY_LOGO_OFFICIAL, PRODAY_OFFICIAL_LOGO_ASPECT } from "@/lib/brandingAssets";
 import { isNavActive, poleForPath } from "@/lib/siteArchitecture";
 import { POLE_NAV_POLE_IDS, POLE_NAV_STRIPE, POLE_STYLES, type PoleId } from "@/lib/poles";
 import { POLE_NAV_ITEMS, ROUTES, UTILITY_NAV_ITEMS } from "@/lib/routes";
@@ -189,16 +189,30 @@ export function SiteNav() {
           href={ROUTES.home}
           className="group flex min-w-0 shrink-0 items-center gap-2 sm:gap-2.5"
         >
-          <Image
-            src={isHome ? PRODAY_LOGO_ON_DARK : brand.logo}
-            alt={brand.name}
-            width={36}
-            height={36}
-            className="shrink-0 rounded-lg transition group-hover:scale-105"
-          />
-          <span className="font-display truncate text-base font-bold tracking-tight text-white sm:text-lg">
-            {isHome ? "ProDay" : brand.name}
-          </span>
+          {isHome ? (
+            <span className="shrink-0 overflow-hidden rounded-lg bg-white p-0.5 shadow-sm transition group-hover:scale-[1.02]">
+              <Image
+                src={PRODAY_LOGO_OFFICIAL}
+                alt="ProDay"
+                width={Math.round(40 * PRODAY_OFFICIAL_LOGO_ASPECT)}
+                height={40}
+                className="h-10 w-auto"
+              />
+            </span>
+          ) : (
+            <Image
+              src={brand.logo}
+              alt={brand.name}
+              width={36}
+              height={36}
+              className="shrink-0 rounded-lg transition group-hover:scale-105"
+            />
+          )}
+          {!isHome && (
+            <span className="font-display truncate text-base font-bold tracking-tight text-white sm:text-lg">
+              {brand.name}
+            </span>
+          )}
         </Link>
 
         <div className="hidden min-w-0 flex-1 items-center justify-center lg:flex">

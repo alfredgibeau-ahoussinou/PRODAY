@@ -129,7 +129,13 @@ export function PageHeader({
           className="flex flex-wrap items-center gap-4"
         >
           {logo && (
-            <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-black/70 p-1 ring-1 ring-white/15 shadow-lg sm:h-16 sm:w-16 sm:rounded-2xl sm:p-1.5">
+            <div
+              className={`relative h-14 shrink-0 overflow-hidden rounded-xl shadow-lg sm:h-16 sm:rounded-2xl ${
+                logo.includes("logo-proday-official")
+                  ? "w-[60px] bg-white p-1 ring-1 ring-white/20 sm:w-[68px] sm:p-1.5"
+                  : "w-14 bg-black/70 p-1 ring-1 ring-white/15 sm:w-16 sm:p-1.5"
+              }`}
+            >
               <Image
                 src={logo}
                 alt={logoAlt ?? ""}

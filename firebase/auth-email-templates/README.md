@@ -12,7 +12,7 @@ Les fichiers `verification.html` et `password-reset.html` fournissent un rendu v
 - Variables officielles : `%LINK%`, `%EMAIL%`, `%APP_NAME%`, `%DISPLAY_NAME%`
 - `%LINK%` doit apparaître **sur une ligne dédiée** (lien secours en bas) **et** dans le bouton `<a href="%LINK%">`
 
-**Logo** : `https://proday75.netlify.app/branding/logo-white.png` (hébergé dans `website/public/branding/`, accessible publiquement).
+**Logo principal officiel** : `https://proday75.netlify.app/branding/logo-proday-official.png` (fichier source : `website/public/branding/logo-proday-official.png`, fond blanc — affiché dans une carte blanche sur le fond sombre des e-mails).
 
 > Le déploiement automatique via l'API Identity Platform reste bloqué sur ce projet (`EMAIL_TEMPLATE_UPDATE_NOT_ALLOWED`). Configuration manuelle dans la Console.
 
@@ -44,7 +44,7 @@ Si le HTML s'affiche mal (balises visibles, styles ignorés), basculer vers `ver
 ┌─────────────────────────────────────┐
 │  fond #0a0a0a                       │
 │  ┌───────────────────────────────┐  │
-│  │  [Logo ProDay blanc — 120px]  │  │
+│  │  [Logo ProDay officiel — 180px] │  │
 │  │                               │  │
 │  │  Titre cyan #22d3ee           │  │
 │  │  Texte blanc + %EMAIL%        │  │
@@ -75,7 +75,7 @@ Si le HTML s'affiche mal (balises visibles, styles ignorés), basculer vers `ver
 | Lien non cliquable | Vérifier que `%LINK%` est seul sur une ligne (lien secours) et dans le `href` du bouton |
 | Lien mort / erreur | **Authentication → Settings → Authorized domains** |
 | HTML visible / rendu cassé | Basculer vers le `.txt` correspondant |
-| Logo absent | Vérifier que `https://proday75.netlify.app/branding/logo-white.png` répond en 200 |
+| Logo absent | Vérifier que `https://proday75.netlify.app/branding/logo-proday-official.png` répond en 200 |
 
 ## Style personnalisé avancé
 

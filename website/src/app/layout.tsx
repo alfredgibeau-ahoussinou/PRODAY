@@ -43,7 +43,7 @@ export const metadata: Metadata = {
     title: "ProDay",
     description:
       "Une saison. Une app. Recrutement, matchs, tournois, communauté et partenaires.",
-    images: ["/branding/logo-white.png"],
+    images: ["/branding/logo-proday-official.png"],
   },
 };
 

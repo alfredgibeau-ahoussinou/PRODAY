@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Globe, Link2, Mail, Share2 } from "lucide-react";
 import { BRAND } from "@/lib/content";
-import { PRODAY_LOGO_ON_DARK } from "@/lib/brandingAssets";
+import { PRODAY_LOGO_OFFICIAL } from "@/lib/brandingAssets";
 import { POLE_NAV_POLE_IDS, POLE_NAV_STRIPE } from "@/lib/poles";
 import { POLE_FOOTER_LINKS, ROUTES, UTILITY_NAV_ITEMS } from "@/lib/routes";
 
@@ -18,16 +18,15 @@ export function SiteFooter() {
     <footer className="border-t border-white/8 bg-black py-16 text-white">
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <div className="flex flex-col items-center text-center">
-          <Image
-            src={PRODAY_LOGO_ON_DARK}
-            alt={BRAND.name}
-            width={48}
-            height={48}
-            className="rounded-xl"
-          />
-          <p className="font-display mt-4 text-xl font-bold uppercase tracking-wide text-[var(--proday-accent)]">
-            {BRAND.name}
-          </p>
+          <div className="overflow-hidden rounded-2xl bg-white p-2 shadow-lg">
+            <Image
+              src={PRODAY_LOGO_OFFICIAL}
+              alt={BRAND.name}
+              width={160}
+              height={150}
+              className="h-auto w-40"
+            />
+          </div>
           <p className="mt-1 text-xs font-semibold uppercase tracking-[0.28em] text-white/40">
             {BRAND.tagline}
           </p>
