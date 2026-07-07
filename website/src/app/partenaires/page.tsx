@@ -38,7 +38,7 @@ export default function PartenairesPage() {
           Inscrivez-vous sur la liste d&apos;attente en tant que partenaire pour préparer votre espace
           Sponsors dès l&apos;ouverture mobile.
         </p>
-        <PremiumButton href={`${ROUTES.beta}?role=sponsor`}>
+        <PremiumButton href={`${ROUTES.betaWaitlist}?role=sponsor`}>
           Accès anticipé — rôle Partenaire
         </PremiumButton>
       </PageCtaBand>

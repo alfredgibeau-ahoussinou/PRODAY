@@ -114,7 +114,7 @@ export function WaitlistForm({ fullPage, initialRole }: WaitlistFormProps) {
                 <strong>{BETA_MEMBER_ROLE}</strong> (profil{" "}
                 {BETA_ROLE_LABELS[role]}).
                 {emailSent ? (
-                  <> Consultez votre boîte mail.</>
+                  <> Consultez votre boîte mail — le lien personnel vers l&apos;espace bêta s&apos;y trouve.</>
                 ) : (
                   <> L&apos;email de confirmation suivra très prochainement.</>
                 )}

@@ -25,14 +25,15 @@ Site multi-pages interactif — **21 routes** publiques, démos par univers (**M
 | `/partenaires` | Espace Partenaires — Découverte 0 €, Territorial 49 €, National Pro 99 €/mois |
 | `/shop` | ProDay Shop |
 | `/faq` | Questions fréquentes |
-| `/beta` | Waitlist + email de bienvenue (`?role=sponsor` pour partenaires) |
+| `/beta` | Espace bêta privé (lien email avec `?token=`) |
+| `/beta/inscription` | Liste d'attente + email de bienvenue (`?role=sponsor` pour partenaires) |
 | `/a-propos` | Vision produit |
 
 ### Démo interactive (`/demo`)
 
 Mock téléphone avec les **9 onglets** de l’app : Accueil, Mercato, Matchs, Reels, Fil, Covoiturage, Santé, Messages, Profil.
 
-- Contact partenaires : **partenaires@proday.app** — CTA `/beta?role=sponsor`
+- Contact partenaires : **partenaires@proday.app** — CTA `/beta/inscription?role=sponsor`
 - Sélecteur **Man / Woman / Pro** en haut de page
 - Contenu et visuels adaptés par univers (`?u=homme`, `?u=woman`, `?u=pro`)
 - Lien **« Voir la démo »** depuis chaque page univers

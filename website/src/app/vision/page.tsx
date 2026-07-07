@@ -38,7 +38,7 @@ export default function VisionPage() {
           <PremiumButton href={ROUTES.roadmap} variant="outline">
             Voir la roadmap
           </PremiumButton>
-          <PremiumButton href={ROUTES.beta}>Liste d&apos;attente</PremiumButton>
+          <PremiumButton href={ROUTES.betaWaitlist}>Liste d&apos;attente</PremiumButton>
         </div>
       </PageCtaBand>
       <MarqueeStrip />

@@ -48,7 +48,7 @@ export function DownloadSection() {
                 Google Play
               </span>
             </button>
-            <PremiumButton href={ROUTES.beta} className="w-full text-center">
+            <PremiumButton href={ROUTES.betaWaitlist} className="w-full text-center">
               Accès anticipé
             </PremiumButton>
           </div>

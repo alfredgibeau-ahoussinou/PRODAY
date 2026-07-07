@@ -24,7 +24,7 @@ export default function FaqPage() {
         <FaqAccordion />
         <p className="mt-12 text-center text-white/55">
             Une autre question ?{" "}
-            <Link href={ROUTES.beta} className="font-semibold text-white underline">
+            <Link href={ROUTES.betaWaitlist} className="font-semibold text-white underline">
               Nous contacter via la liste d&apos;attente
             </Link>
         </p>

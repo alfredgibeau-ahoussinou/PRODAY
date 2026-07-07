@@ -31,7 +31,15 @@ export type BetaWelcomeEmailParams = {
   email: string;
   roleLabel: string;
   siteUrl?: string;
+  accessToken?: string;
 };
+
+function buildBetaAccessUrl(site: string, accessToken?: string): string {
+  if (accessToken?.trim()) {
+    return `${site}/beta?token=${encodeURIComponent(accessToken.trim())}`;
+  }
+  return `${site}/beta`;
+}
 
 export function buildBetaWelcomeEmail(params: BetaWelcomeEmailParams): {
   subject: string;
@@ -54,7 +62,7 @@ export function buildBetaWelcomeEmail(params: BetaWelcomeEmailParams): {
     "• En attendant, explorez le site : démo interactive, parcours recruteurs, Shop et feuille de route.",
     "",
     `Site : ${site}`,
-    `Page bêta : ${site}/beta`,
+    `Page bêta : ${buildBetaAccessUrl(site, params.accessToken)}`,
     "",
     "À très bientôt sur le terrain,",
     "L'équipe ProDay",
@@ -110,8 +118,8 @@ export function buildBetaWelcomeEmail(params: BetaWelcomeEmailParams): {
                 En attendant le lien de téléchargement, parcourez le site pour voir les démos
                 Mercato, Pulse, parcours par rôle et la feuille de route.
               </p>
-              <a href="${site}/beta" style="display:inline-block;background:#0a0a0a;color:#ffffff;text-decoration:none;font-size:14px;font-weight:600;padding:14px 28px;border-radius:999px;">
-                Voir la page bêta
+              <a href="${buildBetaAccessUrl(site, params.accessToken)}" style="display:inline-block;background:#0a0a0a;color:#ffffff;text-decoration:none;font-size:14px;font-weight:600;padding:14px 28px;border-radius:999px;">
+                Accéder à l'espace bêta
               </a>
             </td>
           </tr>

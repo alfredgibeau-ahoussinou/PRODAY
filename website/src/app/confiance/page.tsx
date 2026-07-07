@@ -30,7 +30,7 @@ export default function TrustPage() {
         bordered
       >
         <div className="text-center">
-          <PremiumButton href={ROUTES.beta}>S&apos;inscrire</PremiumButton>
+          <PremiumButton href={ROUTES.betaWaitlist}>S&apos;inscrire</PremiumButton>
         </div>
       </PremiumSection>
     </>

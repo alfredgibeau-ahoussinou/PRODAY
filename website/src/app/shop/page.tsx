@@ -47,7 +47,7 @@ export default function ShopPage() {
           </a>
         </p>
         <div className="mt-8">
-          <PremiumButton href={ROUTES.beta}>Accès anticipé au Shop</PremiumButton>
+          <PremiumButton href={ROUTES.betaWaitlist}>Accès anticipé au Shop</PremiumButton>
         </div>
       </PremiumSection>
     </>

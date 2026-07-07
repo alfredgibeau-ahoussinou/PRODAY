@@ -1,4 +1,5 @@
 import emailjs from "@emailjs/nodejs";
+import { buildBetaAccessUrl } from "@/lib/betaAccess";
 import type { BetaWelcomeEmailParams } from "./betaWelcomeEmail";
 import { BETA_MEMBER_ROLE } from "./betaWelcomeEmail";
 
@@ -35,7 +36,7 @@ export function buildBetaEmailJsTemplateParams(
     profile_label: params.roleLabel,
     role_label: BETA_MEMBER_ROLE,
     site_url: site,
-    beta_url: `${site}/beta`,
+    beta_url: buildBetaAccessUrl(site, params.accessToken),
     subject: "Vous êtes beta-testeur ProDay",
   };
 }

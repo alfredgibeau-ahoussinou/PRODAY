@@ -8,6 +8,7 @@ import { createShopCheckoutSession } from './shopPayments';
 import { onRecruitmentPostCreated } from './mercatoAlerts';
 import { runMistralDocumentVerification, verifyOnboardingDocumentEphemeral } from './mistralVerification';
 import { onPlatformFeedCreated, onChatMessageCreated } from './feedNotifications';
+import { createValidateBetaAccessHandler } from './betaAccess';
 import { createSubmitBetaWaitlistHandler } from './betaWaitlist';
 import { onV3BrainWrite } from './v3Brain';
 import { activateStoreSubscription } from './subscriptionIap';
@@ -700,3 +701,8 @@ export const trackSponsorEvent = functions.https.onCall(async (data, context) =>
 export const submitBetaWaitlist = functions
   .region('europe-west1')
   .https.onRequest(createSubmitBetaWaitlistHandler(db));
+
+/** Validation jeton d'accès page bêta (lien email). */
+export const validateBetaAccess = functions
+  .region('europe-west1')
+  .https.onRequest(createValidateBetaAccessHandler(db));

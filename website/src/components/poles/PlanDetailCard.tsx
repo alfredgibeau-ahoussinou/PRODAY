@@ -143,7 +143,7 @@ export function PlanDetailCard({
           IAP en cours de déploiement — accès gratuit pour les inscrits.
         </p>
         <Link
-          href={ROUTES.beta}
+          href={ROUTES.betaWaitlist}
           className={`mt-4 inline-block rounded-full px-8 py-3 text-sm font-semibold transition hover:scale-[1.02] ${styles.cta}`}
         >
           Accès anticipé

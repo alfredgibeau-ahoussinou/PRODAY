@@ -235,7 +235,7 @@ export function SiteNav() {
 
         <div className="hidden shrink-0 items-center lg:flex">
           <Link
-            href={ROUTES.beta}
+            href={ROUTES.betaWaitlist}
             className="rounded-full bg-[var(--proday-accent)] px-4 py-2 text-xs font-bold uppercase tracking-wide text-black transition hover:scale-[1.02] hover:bg-cyan-300 active:bg-cyan-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-400/50 xl:px-5 xl:text-sm"
           >
             Accès anticipé
@@ -312,7 +312,7 @@ export function SiteNav() {
               </Link>
             ))}
             <Link
-              href={ROUTES.beta}
+              href={ROUTES.betaWaitlist}
               className="mt-4 flex min-h-11 items-center justify-center rounded-full bg-[var(--proday-accent)] py-3 text-center text-sm font-bold uppercase tracking-wide text-black transition hover:bg-cyan-300 active:bg-cyan-400"
               onClick={close}
             >

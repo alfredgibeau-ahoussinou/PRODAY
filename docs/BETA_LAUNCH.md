@@ -14,7 +14,8 @@ Vérifie : Firebase `.env`, typecheck, Jest, règles Firestore, pages légales, 
 
 | URL | Usage |
 |-----|--------|
-| https://proday75.fr/beta | Inscription waitlist |
+| https://proday75.fr/beta/inscription | Inscription waitlist |
+| https://proday75.fr/beta | Espace bêta (invitation email uniquement) |
 | https://proday75.fr/confidentialite | Politique de confidentialité (stores) |
 | https://proday75.fr/cgu | CGU (stores) |
 | https://proday75.fr/partenaires/convention | Convention sponsor (modèle) |

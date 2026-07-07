@@ -45,7 +45,7 @@ Variables : `to_email`, `member_role`, `profile_label`, `site_url`, `beta_url`, 
    - `member_role` : Beta-testeur
    - `profile_label` : Joueur
    - `site_url` : https://proday-xak9.vercel.app
-   - `beta_url` : https://proday-xak9.vercel.app/beta
+   - `beta_url` : https://proday-xak9.vercel.app/beta?token=TEST
    - `subject` : Vous êtes beta-testeur ProDay
 
 ## 3. Clés API
@@ -82,19 +82,34 @@ firebase functions:config:set \
   beta.emailjs_private_key="xxx" \
   beta.site_url="https://proday75.fr"
 
-firebase deploy --only functions:submitBetaWaitlist,firestore:rules
+firebase deploy --only functions:submitBetaWaitlist,functions:validateBetaAccess,firestore:rules
 ```
 
 Sur Vercel, ajoutez aussi :
 ```env
 BETA_WAITLIST_FUNCTION_URL=https://europe-west1-proday-155b0.cloudfunctions.net/submitBetaWaitlist
+BETA_VALIDATE_FUNCTION_URL=https://europe-west1-proday-155b0.cloudfunctions.net/validateBetaAccess
 ```
 
 ## Flux
 
-1. Formulaire `/beta` → `POST /api/beta`
+1. Formulaire `/beta/inscription` → `POST /api/beta`
 2. API Next.js envoie via `@emailjs/nodejs` (clé privée côté serveur)
-3. L’inscrit reçoit « Bienvenue dans la bêta ProDay »
+3. L’inscrit reçoit « Bienvenue dans la bêta ProDay » avec un lien **`/beta?token=…`**
+4. Le jeton est validé côté serveur (Cloud Function + Firestore, ou jeton signé HMAC)
+
+## Page bêta privée (`/beta`)
+
+- Accès via lien email (`?token=`) ou cookie httpOnly (90 jours, path `/beta`)
+- Sans jeton valide : écran « Accès réservé » — pas de contenu public
+- CTA public du site → `/beta/inscription` (pas `/beta`)
+
+## Variables validation (Netlify / Vercel)
+
+| Variable | Description |
+|----------|-------------|
+| `BETA_VALIDATE_FUNCTION_URL` | URL `validateBetaAccess` (Firestore) |
+| `BETA_ACCESS_SECRET` | Secret HMAC (fallback EmailJS sans Firestore) |
 
 ## Inscrits Firestore
 
@@ -105,5 +120,6 @@ Collection `beta_waitlist` si la Cloud Function est déployée (lecture admin).
 ```bash
 # website/.env.local — voir website/.env.example
 npm run website:dev
-# → http://localhost:3000/beta
+# → http://localhost:3000/beta/inscription (waitlist)
+# → http://localhost:3000/beta?token=… (espace privé)
 ```

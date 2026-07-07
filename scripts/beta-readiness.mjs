@@ -127,7 +127,7 @@ for (const [cmd, args, label] of testSuites) {
 console.log('\n🌐 Site production (optionnel)\n');
 
 async function checkSite() {
-  const paths = ['/confidentialite', '/cgu', '/beta'];
+  const paths = ['/confidentialite', '/cgu', '/beta/inscription'];
   for (const path of paths) {
     try {
       const res = await fetch(`${siteUrl}${path}`, { method: 'GET', redirect: 'follow' });

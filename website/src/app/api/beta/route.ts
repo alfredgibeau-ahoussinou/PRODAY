@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { createEmailJsBetaAccessToken } from "@/lib/betaAccess";
 import { BETA_ROLE_LABELS, isBetaRoleId } from "@/lib/betaWelcomeEmail";
 import { resolveBetaSiteUrl } from "@/lib/betaEmailConfig";
 import {
@@ -59,12 +60,14 @@ export async function POST(request: Request) {
 
   const roleLabel = BETA_ROLE_LABELS[role];
   const siteUrl = resolveBetaSiteUrl();
+  const accessToken = createEmailJsBetaAccessToken(email, role) ?? undefined;
 
   try {
     await sendBetaWelcomeEmailViaEmailJs(emailJs, {
       email,
       roleLabel,
       siteUrl,
+      accessToken,
     });
   } catch (e) {
     const { log, hint } = describeBetaEmailJsFailure(e);

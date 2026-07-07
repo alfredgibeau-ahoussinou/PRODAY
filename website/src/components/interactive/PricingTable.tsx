@@ -290,7 +290,7 @@ export function PricingTable({
             quotidiennement de l&apos;avancement.
           </p>
           <Link
-            href={ROUTES.beta}
+            href={ROUTES.betaWaitlist}
             className={`mt-4 inline-flex min-h-11 items-center rounded-full px-8 py-3 text-sm font-semibold text-white ${theme.pricingAccent}`}
           >
             Rejoindre la beta

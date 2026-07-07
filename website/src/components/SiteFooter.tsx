@@ -8,7 +8,7 @@ import { POLE_FOOTER_LINKS, ROUTES, UTILITY_NAV_ITEMS } from "@/lib/routes";
 
 const SOCIAL_LINKS = [
   { href: "https://github.com/alfredgibeau-ahoussinou/PRODAY", icon: Link2, label: "GitHub" },
-  { href: ROUTES.beta, icon: Mail, label: "Contact" },
+  { href: ROUTES.betaWaitlist, icon: Mail, label: "Contact" },
   { href: ROUTES.home, icon: Share2, label: "Réseaux" },
   { href: ROUTES.home, icon: Globe, label: "Site" },
 ];
@@ -124,7 +124,7 @@ export function SiteFooter() {
                 </Link>
               </li>
               <li>
-                <Link href={ROUTES.beta} className="hover:text-[var(--proday-accent)]">
+                <Link href={ROUTES.betaWaitlist} className="hover:text-[var(--proday-accent)]">
                   Liste d&apos;attente
                 </Link>
               </li>

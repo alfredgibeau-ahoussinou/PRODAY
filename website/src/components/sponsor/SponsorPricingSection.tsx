@@ -151,7 +151,7 @@ export function SponsorPricingSection({
           const detail = tierPriceDetail(tier, yearly);
           const ctaHref =
             tier.id === "starter" || tier.id === "national"
-              ? `${ROUTES.beta}?role=sponsor`
+              ? `${ROUTES.betaWaitlist}?role=sponsor`
               : `mailto:${SPONSOR_PARTNER_CONTACT_EMAIL}?subject=Devis%20Territorial%20ProDay`;
 
           return (

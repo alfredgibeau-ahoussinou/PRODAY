@@ -71,7 +71,7 @@ export function DemoPageContent({ universe }: DemoPageContentProps) {
         </p>
         <div className="flex flex-wrap items-center justify-center gap-3">
           <Link
-            href={ROUTES.beta}
+            href={ROUTES.betaWaitlist}
             className={`inline-flex rounded-full px-6 py-3 text-sm font-semibold text-white transition hover:opacity-90 ${theme.pricingAccent}`}
           >
             Accès anticipé

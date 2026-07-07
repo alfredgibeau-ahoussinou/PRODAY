@@ -1,53 +1,61 @@
 import type { Metadata } from "next";
-import { WaitlistForm } from "@/components/WaitlistForm";
-import { PageHeader } from "@/components/layout/PageHeader";
-import { StatsBar } from "@/components/StatsBar";
-import { BETA_PITCH } from "@/lib/content";
-import type { BetaRoleId } from "@/lib/betaWelcomeEmail";
-import { ROUTES } from "@/lib/routes";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { BetaAccessContent } from "@/components/beta/BetaAccessContent";
+import { BetaAccessDenied } from "@/components/beta/BetaAccessDenied";
+import {
+  BETA_ACCESS_COOKIE,
+  BETA_ACCESS_COOKIE_MAX_AGE,
+  validateBetaAccessToken,
+} from "@/lib/betaAccess";
 
 export const metadata: Metadata = {
-  title: "Liste d'attente",
-  description:
-    "Inscrivez-vous sur la liste d'attente ProDay — suivi du produit et accès prioritaire au lancement.",
+  title: "Espace bêta",
+  description: "Page privée réservée aux beta-testeurs ProDay invités par email.",
+  robots: { index: false, follow: false },
 };
 
-function parseRoleParam(value: string | undefined): BetaRoleId | undefined {
-  const allowed: BetaRoleId[] = [
-    "player",
-    "recruiter",
-    "coach",
-    "club",
-    "agent",
-    "organizer",
-    "physio",
-    "sponsor",
-  ];
-  if (value && allowed.includes(value as BetaRoleId)) {
-    return value as BetaRoleId;
+async function resolveSession(
+  tokenFromQuery: string | undefined,
+  tokenFromCookie: string | undefined,
+) {
+  if (tokenFromQuery?.trim()) {
+    return validateBetaAccessToken(tokenFromQuery);
   }
-  return undefined;
+  if (tokenFromCookie?.trim()) {
+    return validateBetaAccessToken(tokenFromCookie);
+  }
+  return null;
 }
 
-export default async function BetaPage({
+export default async function BetaAccessPage({
   searchParams,
 }: {
-  searchParams: Promise<{ role?: string }>;
+  searchParams: Promise<{ token?: string }>;
 }) {
-  const { role: roleParam } = await searchParams;
-  const initialRole = parseRoleParam(roleParam);
+  const { token: queryToken } = await searchParams;
+  const cookieStore = await cookies();
+  const cookieToken = cookieStore.get(BETA_ACCESS_COOKIE)?.value;
 
-  return (
-    <>
-      <PageHeader
-        pathname={ROUTES.beta}
-        kicker="BÊTA"
-        title="Accédez à ProDay en priorité"
-        description={BETA_PITCH.summary}
-        dark
-      />
-      <StatsBar />
-      <WaitlistForm fullPage initialRole={initialRole} />
-    </>
-  );
+  if (queryToken?.trim()) {
+    const session = await validateBetaAccessToken(queryToken);
+    if (session) {
+      cookieStore.set(BETA_ACCESS_COOKIE, queryToken.trim(), {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: BETA_ACCESS_COOKIE_MAX_AGE,
+        path: "/beta",
+      });
+      redirect("/beta");
+    }
+  }
+
+  const session = await resolveSession(undefined, cookieToken);
+
+  if (session) {
+    return <BetaAccessContent session={session} />;
+  }
+
+  return <BetaAccessDenied />;
 }

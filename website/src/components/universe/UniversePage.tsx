@@ -312,7 +312,7 @@ export function UniversePage({ universe }: UniversePageProps) {
           <p className={`mt-4 ${theme.ctaText}`}>{config.cta.description}</p>
           <div className="mt-8 flex flex-wrap justify-center gap-4">
             <Link
-              href={ROUTES.beta}
+              href={ROUTES.betaWaitlist}
               className={`inline-block rounded-full px-8 py-3.5 text-sm font-semibold ${theme.ctaBtn}`}
             >
               {config.cta.beta}

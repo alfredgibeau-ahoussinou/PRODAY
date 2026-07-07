@@ -315,7 +315,7 @@ export function PolesPricingLayout() {
             Partenaires
           </Link>{" "}
           ·{" "}
-          <Link href={ROUTES.beta} className="font-medium text-white/70 underline hover:text-white">
+          <Link href={ROUTES.betaWaitlist} className="font-medium text-white/70 underline hover:text-white">
             Liste d&apos;attente
           </Link>
         </p>

@@ -1,5 +1,6 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
+import { generateBetaAccessToken } from './betaAccessToken';
 import {
   BETA_ROLE_LABELS,
   isBetaRoleId,
@@ -91,13 +92,16 @@ export function createSubmitBetaWaitlistHandler(db: admin.firestore.Firestore) {
 
     let docRef: admin.firestore.DocumentReference;
     let isNew = false;
+    let accessToken: string;
 
     if (existing.empty) {
+      accessToken = generateBetaAccessToken();
       docRef = db.collection('beta_waitlist').doc();
       await docRef.set({
         email,
         role,
         role_label: roleLabel,
+        access_token: accessToken,
         source: 'website',
         welcome_email_sent: false,
         created_at: now,
@@ -106,9 +110,15 @@ export function createSubmitBetaWaitlistHandler(db: admin.firestore.Firestore) {
       isNew = true;
     } else {
       docRef = existing.docs[0].ref;
+      const existingData = existing.docs[0].data();
+      accessToken =
+        typeof existingData.access_token === 'string' && existingData.access_token.trim()
+          ? existingData.access_token.trim()
+          : generateBetaAccessToken();
       await docRef.update({
         role,
         role_label: roleLabel,
+        access_token: accessToken,
         updated_at: now,
       });
     }
@@ -123,6 +133,7 @@ export function createSubmitBetaWaitlistHandler(db: admin.firestore.Firestore) {
           email,
           roleLabel,
           siteUrl: getBetaSiteUrl(),
+          accessToken,
         });
         emailSent = true;
         await docRef.update({

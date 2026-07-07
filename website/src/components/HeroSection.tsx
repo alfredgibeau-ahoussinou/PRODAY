@@ -70,7 +70,7 @@ export function HeroSection() {
             transition={{ delay: 0.45 }}
             className="mt-6 flex flex-wrap gap-2 sm:mt-9 sm:gap-3"
           >
-            <PremiumButton href={ROUTES.beta}>Accès anticipé</PremiumButton>
+            <PremiumButton href={ROUTES.betaWaitlist}>Accès anticipé</PremiumButton>
             <PremiumButton href={ROUTES.amateur} variant="outline">
               Pôle Amateur
             </PremiumButton>
