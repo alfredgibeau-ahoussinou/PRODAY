@@ -168,7 +168,7 @@ export function UniversePage({ universe }: UniversePageProps) {
         </section>
       )}
 
-      {pricingPlans.length > 0 && (
+      {pricingPlans.length > 0 ? (
         <section className="bg-[#030303] py-16">
           <div className="mx-auto max-w-6xl px-4 sm:px-6">
             <div className="flex flex-wrap items-end justify-between gap-4">
@@ -205,7 +205,29 @@ export function UniversePage({ universe }: UniversePageProps) {
             </div>
           </div>
         </section>
-      )}
+      ) : universe === "supporter" ? (
+        <section className="bg-[#030303] py-16">
+          <div className="mx-auto max-w-6xl px-4 sm:px-6">
+            <h2 className="font-display text-2xl font-bold text-white sm:text-3xl">{config.pricingTitle}</h2>
+            <p className="mt-3 max-w-2xl text-white/55">
+              Matchs live, suivis illimités, débats, réels et shop — sans abonnement, sans paywall.
+              La tribune PRODAY est entièrement gratuite pour les supporters.
+            </p>
+            <div className={`mt-8 rounded-2xl border p-8 ${theme.pricingCard}`}>
+              <p className="text-xs font-semibold uppercase tracking-wider text-violet-300">
+                0 € / mois
+              </p>
+              <p className="mt-3 text-3xl font-bold text-white">Tribune complète incluse</p>
+              <ul className="mt-6 grid gap-2 text-sm text-white/75 sm:grid-cols-2">
+                <li>• Matchs PRODAY et monde (API)</li>
+                <li>• Suivis clubs, joueurs et tournois illimités</li>
+                <li>• Fil communautaire et débats</li>
+                <li>• Moments / réels et shop merch</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+      ) : null}
 
       <section className="border-t border-white/10 bg-[#030303] py-12">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">

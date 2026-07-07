@@ -24,6 +24,12 @@ import { SupporterMatchsScreen } from '../screens/SupporterMatchsScreen';
 import { SupporterSuivisScreen } from '../screens/SupporterSuivisScreen';
 import { SupporterProfileTabScreen } from '../screens/SupporterProfileTabScreen';
 import { ClubStructureScreen } from '../screens/ClubStructureScreen';
+import { ClubRecruitmentScreen } from '../screens/club/ClubRecruitmentScreen';
+import { ClubCalendarScreen } from '../screens/club/ClubCalendarScreen';
+import { ClubCommunicationScreen } from '../screens/club/ClubCommunicationScreen';
+import { ClubVitrineScreen } from '../screens/club/ClubVitrineScreen';
+import { SupporterHomeScreen } from '../screens/supporter/SupporterHomeScreen';
+import { SupporterTribuneFeedScreen } from '../screens/supporter/SupporterTribuneFeedScreen';
 import { AmateurClubScreen } from '../screens/AmateurClubScreen';
 import { ProPlayerCareerScreen } from '../screens/proPlayer/ProPlayerCareerScreen';
 import { ProPlayerOpportunitiesScreen } from '../screens/proPlayer/ProPlayerOpportunitiesScreen';
@@ -53,14 +59,19 @@ const PHYSIO_SCREENS: Partial<Record<MainTabId, ComponentType>> = {
 };
 
 const SUPPORTER_SCREENS: Partial<Record<MainTabId, ComponentType>> = {
+  home: SupporterHomeScreen,
   matchs: SupporterMatchsScreen,
   feed: SupporterSuivisScreen,
-  messages: MessagesScreen,
+  messages: SupporterTribuneFeedScreen,
   profil: SupporterProfileTabScreen,
 };
 
 const PRO_CLUB_SCREENS: Partial<Record<MainTabId, ComponentType>> = {
   home: ClubStructureScreen,
+  recrutement: ClubRecruitmentScreen,
+  matchs: ClubCalendarScreen,
+  messages: ClubCommunicationScreen,
+  profil: ClubVitrineScreen,
 };
 
 const AMATEUR_PLAYER_SCREENS: Partial<Record<MainTabId, ComponentType>> = {

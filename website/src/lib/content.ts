@@ -901,8 +901,8 @@ export const UNIVERSE_PAGE_CONFIG = {
       "Joueur ou coach ? Direction Amateur ou Pro. Partenaire commercial ? Direction Partenaires.",
     showPulse: false,
     showVerification: false,
-    pricingPlanIds: ["player_plus"] as const,
-    pricingTitle: "Formule supporter",
+    pricingPlanIds: [] as const,
+    pricingTitle: "Tribune 100 % gratuite",
     cta: {
       title: "Créez votre compte Supporter",
       description:
@@ -1161,7 +1161,7 @@ export const SUBSCRIPTION_PLANS_WEB = [
     tagline: "CV en ligne, visibilité et Mercato",
     monthlyEur: 2.99,
     storeAvailable: true,
-    universes: ["homme", "woman", "amateur", "supporter"] as ProductLineWeb[],
+    universes: ["homme", "woman", "amateur"] as ProductLineWeb[],
     freeIncludes: [
       "Profil, Pulse et CV en ligne",
       "Galerie et stats saison",

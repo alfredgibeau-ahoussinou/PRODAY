@@ -60,9 +60,14 @@ export function checkFeatureAccess(input: {
   clubTeams?: number;
 }): FeatureCheckResult {
   const { role, tier, feature, usage } = input;
+
+  if (ROLES_WITHOUT_STORE_PLAN.includes(role)) {
+    return { allowed: true, tier, planId: null, feature };
+  }
+
   const planId = resolvePlanId(role, tier, input.planId);
 
-  if (ROLES_WITHOUT_STORE_PLAN.includes(role) || isProTier(tier)) {
+  if (isProTier(tier)) {
     return { allowed: true, tier, planId, feature };
   }
 

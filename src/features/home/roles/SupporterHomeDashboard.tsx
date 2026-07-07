@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import type { User } from '../../../models/User';
 import {
@@ -30,6 +30,9 @@ import { useUserProfile } from '../../../hooks/useRecruitmentData';
 import { spacing, radius } from '../../../theme/designTokens';
 import type { AppColors } from '../../../theme/universeTheme';
 import { trackV3Event } from '../../../core/analytics/v3Events';
+import { SupporterLiveScoresStrip } from '../../../components/supporter/SupporterLiveScoresStrip';
+import { followsService } from '../../../services/follows.service';
+import type { Follow } from '../../../models/Follow';
 
 export interface SupporterHomeProps {
   profile: User;
@@ -114,6 +117,7 @@ export const SupporterHomeDashboard: React.FC<SupporterHomeProps> = ({
   const [overlay, setOverlay] = useState<SupporterOverlay>(null);
   const [playerReturnOverlay, setPlayerReturnOverlay] = useState<SupporterOverlay>('players');
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
+  const [follows, setFollows] = useState<Follow[]>([]);
   const { user: selectedPlayer } = useUserProfile(selectedPlayerId);
 
   const upcomingMatches = useMemo(
@@ -141,9 +145,24 @@ export const SupporterHomeDashboard: React.FC<SupporterHomeProps> = ({
   );
 
   const handleRefresh = useCallback(async () => {
-    await Promise.all([refresh(), refreshTournaments(), refreshFavorites()]);
+    await Promise.all([
+      refresh(),
+      refreshTournaments(),
+      refreshFavorites(),
+      profile?.uid
+        ? followsService.listByFollower(profile.uid).then(setFollows).catch(() => setFollows([]))
+        : Promise.resolve(),
+    ]);
     await onRefresh?.();
-  }, [refresh, refreshTournaments, refreshFavorites, onRefresh]);
+  }, [refresh, refreshTournaments, refreshFavorites, onRefresh, profile?.uid]);
+
+  useEffect(() => {
+    if (!profile?.uid) return;
+    void followsService
+      .listByFollower(profile.uid)
+      .then(setFollows)
+      .catch(() => setFollows([]));
+  }, [profile?.uid]);
 
   const handleQuickAction = (id: SupporterQuickActionId) => {
     trackV3Event('supporter_home_action', { action: id });
@@ -178,6 +197,8 @@ export const SupporterHomeDashboard: React.FC<SupporterHomeProps> = ({
   );
 
   const favoriteCount = favoriteIds.size;
+  const followedClubs = follows.filter((f) => f.target_type === 'club').slice(0, 4);
+  const followedPlayers = follows.filter((f) => f.target_type === 'player').slice(0, 4);
 
   return (
     <>
@@ -220,6 +241,12 @@ export const SupporterHomeDashboard: React.FC<SupporterHomeProps> = ({
         </View>
 
         <StaffSectionTitle
+          title={t('supporter.home.liveTitle')}
+          subtitle={t('supporter.home.liveSub')}
+        />
+        <SupporterLiveScoresStrip onViewAll={() => nav.openMatchs({ homeTab: 'season' })} />
+
+        <StaffSectionTitle
           title={t('roleHome.supporter.matchesTitle')}
           subtitle={t('roleHome.supporter.matchesSub')}
         />
@@ -253,6 +280,42 @@ export const SupporterHomeDashboard: React.FC<SupporterHomeProps> = ({
               subtitle={tournament.city}
               meta={formatCalendarDate(tournament.starts_at)}
               onPress={() => nav.openMatchs({ homeTab: 'tournois' })}
+            />
+          ))
+        )}
+
+        <StaffSectionTitle
+          title={t('supporter.home.followedClubsTitle')}
+          subtitle={t('supporter.home.followedClubsSub')}
+        />
+        {followedClubs.length === 0 ? (
+          <StaffEmptyCard message={t('supporter.home.noFollowedClubs')} />
+        ) : (
+          followedClubs.map((follow, index) => (
+            <StaffListCard
+              key={follow.id}
+              index={index + 6}
+              title={follow.target_label ?? follow.target_id}
+              subtitle={t('supporter.followType.club')}
+              onPress={() => nav.setActiveTab('feed')}
+            />
+          ))
+        )}
+
+        <StaffSectionTitle
+          title={t('supporter.home.followedPlayersTitle')}
+          subtitle={t('supporter.home.followedPlayersSub')}
+        />
+        {followedPlayers.length === 0 ? (
+          <StaffEmptyCard message={t('supporter.home.noFollowedPlayers')} />
+        ) : (
+          followedPlayers.map((follow, index) => (
+            <StaffListCard
+              key={follow.id}
+              index={index + 7}
+              title={follow.target_label ?? follow.target_id}
+              subtitle={t('supporter.followType.player')}
+              onPress={() => nav.setActiveTab('feed')}
             />
           ))
         )}

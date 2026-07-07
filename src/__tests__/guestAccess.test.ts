@@ -7,7 +7,14 @@ import {
 describe('guestAccess', () => {
   it('expose les onglets invité par univers', () => {
     expect(getGuestVisibleTabs('amateur')).toEqual(['home', 'reels', 'profil']);
-    expect(getGuestVisibleTabs('supporter')).toEqual(['matchs', 'feed', 'reels', 'profil']);
+    expect(getGuestVisibleTabs('supporter')).toEqual([
+      'home',
+      'matchs',
+      'feed',
+      'reels',
+      'shop',
+      'profil',
+    ]);
     expect(getGuestVisibleTabs('sante')).toEqual(['home', 'profil']);
   });
 

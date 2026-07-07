@@ -234,7 +234,6 @@ const ROLE_TO_PLAN: Partial<Record<UserRole, SubscriptionPlanId>> = {
   physio: 'physio_pro',
   organizer: 'organizer_pro',
   sponsor: 'sponsor_pro',
-  supporter: 'player_plus',
 };
 
 export function planIdForRole(role: UserRole): SubscriptionPlanId | null {
@@ -252,8 +251,8 @@ export function getPlanForRole(role: UserRole): SubscriptionPlanDefinition | nul
 
 export { getPlanForRoleAndLine, plansForProductLine } from './subscriptionPlansByLine';
 
-/** Rôles sans formule store dédiée (aucun au lancement tarifaire actuel). */
-export const ROLES_WITHOUT_STORE_PLAN: UserRole[] = [];
+/** Rôles sans formule store — tribune supporter 100 % gratuite. */
+export const ROLES_WITHOUT_STORE_PLAN: UserRole[] = ['supporter'];
 
 export const FREE_TIER_LABEL = 'Gratuit';
 export const PRO_TIER_LABEL = 'Pro';

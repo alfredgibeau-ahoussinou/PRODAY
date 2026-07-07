@@ -1,8 +1,15 @@
 import type { ProductLineId } from '../models/ProductLine';
 import type { MainTabId } from './mainTabConfig';
 
-/** Onglets invité — aperçu tribune supporter. */
-const GUEST_VISIBLE_TABS_SUPPORTER: MainTabId[] = ['matchs', 'feed', 'reels', 'profil'];
+/** Onglets invité — aperçu tribune supporter (100 % gratuit, sans paywall). */
+const GUEST_VISIBLE_TABS_SUPPORTER: MainTabId[] = [
+  'home',
+  'matchs',
+  'feed',
+  'reels',
+  'shop',
+  'profil',
+];
 
 /** Onglets invité — aperçu générique (amateur / pro). */
 const GUEST_VISIBLE_TABS_DEFAULT: MainTabId[] = ['home', 'reels', 'profil'];

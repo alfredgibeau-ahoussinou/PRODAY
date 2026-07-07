@@ -59,7 +59,7 @@ export const POLES: PoleDefinition[] = [
     href: ROUTES.supporter,
     pricingHash: "supporter",
     logo: "/branding/logo-supporter-picto.png",
-    planIds: ["player_plus"],
+    planIds: [],
   },
   {
     id: "pro",

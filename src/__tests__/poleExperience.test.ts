@@ -126,6 +126,7 @@ describe('poleExperience', () => {
     expect(getVisibleMainTabs('amateur', 'player')).toContain('reels');
     expect(getVisibleMainTabs('amateur', 'player')).toContain('messages');
     expect(getVisibleMainTabs('supporter', 'supporter')).toEqual([
+      'home',
       'matchs',
       'feed',
       'messages',

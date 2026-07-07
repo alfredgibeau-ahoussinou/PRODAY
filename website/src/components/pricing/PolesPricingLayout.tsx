@@ -115,15 +115,27 @@ function PolePricingPanel({ poleId, yearly }: PolePricingPanelProps) {
             plans.length > 2 ? "lg:grid-cols-2 xl:grid-cols-3" : "lg:grid-cols-2"
           }`}
         >
-          {plans.map((plan) => (
-            <PlanDetailCard
-              key={`${poleId}-${plan.id}-${plan.label}`}
-              plan={plan}
-              yearly={yearly}
-              styles={styles}
-              variantLabel={VARIANT_LABELS[plan.label]}
-            />
-          ))}
+          {plans.length > 0 ? (
+            plans.map((plan) => (
+              <PlanDetailCard
+                key={`${poleId}-${plan.id}-${plan.label}`}
+                plan={plan}
+                yearly={yearly}
+                styles={styles}
+                variantLabel={VARIANT_LABELS[plan.label]}
+              />
+            ))
+          ) : poleId === "supporter" ? (
+            <div className="rounded-2xl border border-violet-400/30 bg-violet-950/40 p-8 lg:col-span-2">
+              <p className="text-xs font-semibold uppercase tracking-wider text-violet-300">
+                0 € / mois
+              </p>
+              <p className="mt-3 text-2xl font-bold text-white">Tribune 100 % gratuite</p>
+              <p className="mt-3 max-w-xl text-sm leading-relaxed text-white/75">
+                Matchs live, suivis illimités, débats, réels et shop — sans abonnement ni paywall.
+              </p>
+            </div>
+          ) : null}
         </div>
       )}
     </div>

@@ -25,6 +25,7 @@ export const AMATEUR_COACH_SHELL_TABS: MainTabId[] = [
 ];
 
 export const SUPPORTER_SHELL_TABS: MainTabId[] = [
+  'home', // Tribune
   'matchs',
   'feed', // Suivis
   'messages', // Communauté

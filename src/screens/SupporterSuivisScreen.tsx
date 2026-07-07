@@ -11,8 +11,6 @@ import { followsService } from '../services/follows.service';
 import {
   loadSupporterMatchFilters,
   saveSupporterMatchFilters,
-  SUPPORTER_FREE_CLUB_LIMIT,
-  SUPPORTER_FREE_PLAYER_LIMIT,
   type SupporterMatchFilters,
 } from '../services/supporterPreferences.service';
 import type { Follow, FollowTargetType } from '../models/Follow';
@@ -34,6 +32,8 @@ export const SupporterSuivisScreen: React.FC = () => {
   const [players, setPlayers] = useState<{ id: string; name: string; city?: string }[]>([]);
   const [follows, setFollows] = useState<Follow[]>([]);
   const [cityQuery, setCityQuery] = useState('');
+  const [playerQuery, setPlayerQuery] = useState('');
+  const [clubQuery, setClubQuery] = useState('');
   const [dateFilter, setDateFilter] = useState<TournamentDateFilter>('all');
   const [filters, setFilters] = useState<SupporterMatchFilters>({
     gender: 'all',
@@ -56,10 +56,39 @@ export const SupporterSuivisScreen: React.FC = () => {
   }, [profile?.uid, loadFollows]);
 
   useEffect(() => {
+    const q = clubQuery.trim();
+    if (q.length >= 2) {
+      clubsService
+        .searchByName(q)
+        .then((rows) =>
+          setClubs(rows.slice(0, 12).map((club) => ({ id: club.id, name: club.name, city: club.city })))
+        )
+        .catch(() => setClubs([]));
+      return;
+    }
     clubsService
       .list(12)
       .then((rows) => setClubs(rows.map((club) => ({ id: club.id, name: club.name, city: club.city }))))
       .catch(() => setClubs([]));
+  }, [clubQuery]);
+
+  useEffect(() => {
+    const q = playerQuery.trim();
+    if (q.length >= 2) {
+      usersService
+        .listPlayers(q)
+        .then((rows) =>
+          setPlayers(
+            rows.slice(0, 12).map((player) => ({
+              id: player.uid,
+              name: player.display_name,
+              city: player.city,
+            }))
+          )
+        )
+        .catch(() => setPlayers([]));
+      return;
+    }
     usersService
       .listRecentPlayers()
       .then((rows) =>
@@ -72,7 +101,7 @@ export const SupporterSuivisScreen: React.FC = () => {
         )
       )
       .catch(() => setPlayers([]));
-  }, []);
+  }, [playerQuery]);
 
   const followedKeys = useMemo(
     () => new Set(follows.map((follow) => `${follow.target_type}:${follow.target_id}`)),
@@ -107,7 +136,7 @@ export const SupporterSuivisScreen: React.FC = () => {
     const ctx = buildFollowContext(follows);
     let rows = tournaments;
     if (filters.scope === 'follows') {
-      rows = rows.filter((t) => ctx.tournamentIds.has(t.id));
+      rows = rows.filter((tournament) => ctx.tournamentIds.has(tournament.id));
     }
     return filterTournamentsBySearch(rows, cityQuery, dateFilter).slice(0, 12);
   }, [tournaments, cityQuery, dateFilter, filters.scope, follows]);
@@ -166,12 +195,14 @@ export const SupporterSuivisScreen: React.FC = () => {
         </ProDayText>
         <View style={[styles.summary, { borderColor: colors.border, backgroundColor: colors.surface }]}>
           <ProDayText variant="caption" muted>
-            {t('supporter.suivis.limits', {
+            {t('supporter.suivis.summary', {
               clubs: String(followedClubs.length),
-              clubMax: String(SUPPORTER_FREE_CLUB_LIMIT),
               players: String(followedPlayers.length),
-              playerMax: String(SUPPORTER_FREE_PLAYER_LIMIT),
+              tournaments: String(followedTournaments.length),
             })}
+          </ProDayText>
+          <ProDayText variant="caption" accent>
+            {t('supporter.suivis.freeUnlimited')}
           </ProDayText>
         </View>
 
@@ -199,8 +230,22 @@ export const SupporterSuivisScreen: React.FC = () => {
         )}
 
         <ProDayText variant="eyebrow" muted style={styles.sectionTitle}>
-          {t('supporter.suivis.suggestedPlayers')}
+          {t('supporter.suivis.searchPlayers')}
         </ProDayText>
+        <TextInput
+          value={playerQuery}
+          onChangeText={setPlayerQuery}
+          placeholder={t('supporter.suivis.playerPlaceholder')}
+          placeholderTextColor={colors.textSecondary}
+          style={[
+            styles.input,
+            {
+              color: colors.text,
+              borderColor: colors.border,
+              backgroundColor: colors.surface,
+            },
+          ]}
+        />
         {players.length > 0 ? (
           players.map((player) =>
             renderRow('player', player.id, player.name, player.city ?? t('supporter.followType.player'))
@@ -212,8 +257,22 @@ export const SupporterSuivisScreen: React.FC = () => {
         )}
 
         <ProDayText variant="eyebrow" muted style={styles.sectionTitle}>
-          {t('supporter.suivis.suggestedClubs')}
+          {t('supporter.suivis.searchClubs')}
         </ProDayText>
+        <TextInput
+          value={clubQuery}
+          onChangeText={setClubQuery}
+          placeholder={t('supporter.suivis.clubPlaceholder')}
+          placeholderTextColor={colors.textSecondary}
+          style={[
+            styles.input,
+            {
+              color: colors.text,
+              borderColor: colors.border,
+              backgroundColor: colors.surface,
+            },
+          ]}
+        />
         {clubs.slice(0, 8).map((club) => renderRow('club', club.id, club.name, club.city))}
 
         <ProDayText variant="eyebrow" muted style={styles.sectionTitle}>
@@ -289,6 +348,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
+    gap: spacing.xs,
   },
   row: {
     borderWidth: 1,
