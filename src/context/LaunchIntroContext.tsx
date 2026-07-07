@@ -9,6 +9,7 @@ import {
 import { useAppLaunchIntro } from '../hooks/useAppLaunchIntro';
 import { useProductLine } from './ProductLineContext';
 import { useAuth } from './AuthContext';
+import { PushScreenTransition } from '../components/motion';
 import { StyleSheet, View } from 'react-native';
 
 interface LaunchIntroContextValue {
@@ -25,8 +26,6 @@ export const LaunchIntroProvider: React.FC<{ children: React.ReactNode }> = ({
   const { productLine, setProductLine, setProSignupPresetRole } = useProductLine();
   const [manualOpen, setManualOpen] = useState(false);
   const [pickerSession, setPickerSession] = useState(0);
-
-  const visible = firstLaunchVisible || manualOpen;
 
   const openSpacePicker = useCallback(() => {
     setPickerSession((session) => session + 1);
@@ -60,18 +59,28 @@ export const LaunchIntroProvider: React.FC<{ children: React.ReactNode }> = ({
     <LaunchIntroContext.Provider value={{ openSpacePicker }}>
       <View style={styles.wrap}>
         {children}
-        {visible ? (
+        {firstLaunchVisible && !manualOpen ? (
           <FirstLaunchIntro
-            key={manualOpen ? `manual-${pickerSession}` : `first-${playKey}`}
+            key={`first-${playKey}`}
             onChooseSpace={onChooseSpace}
             onExitComplete={onIntroExitComplete}
-            onDismiss={manualOpen ? closeSpacePicker : undefined}
-            initialLine={manualOpen ? productLine : undefined}
-            initialRole={manualOpen ? profile?.role : undefined}
-            introTour={firstLaunchVisible && !manualOpen}
-            skipReveal={manualOpen}
+            introTour
           />
         ) : null}
+        <PushScreenTransition active={manualOpen}>
+          {manualOpen ? (
+            <FirstLaunchIntro
+              key={`manual-${pickerSession}`}
+              onChooseSpace={onChooseSpace}
+              onExitComplete={onIntroExitComplete}
+              onDismiss={closeSpacePicker}
+              initialLine={productLine}
+              initialRole={profile?.role}
+              skipReveal
+              skipLocalTransition
+            />
+          ) : null}
+        </PushScreenTransition>
       </View>
     </LaunchIntroContext.Provider>
   );

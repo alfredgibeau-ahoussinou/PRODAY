@@ -27,6 +27,8 @@ interface BrandRevealIntroProps {
   initialRole?: UserRole | null;
   introTour?: boolean;
   skipReveal?: boolean;
+  /** Entrée/sortie gérées par un parent (ex. PushScreenTransition). */
+  skipLocalTransition?: boolean;
 }
 
 /** Carousel minimal plein écran par pôle. */
@@ -38,20 +40,21 @@ export const BrandRevealIntro: React.FC<BrandRevealIntroProps> = ({
   initialRole,
   introTour = false,
   skipReveal = false,
+  skipLocalTransition = false,
 }) => {
   const [leavingLine, setLeavingLine] = useState<IntroSpaceChoice | null>(null);
-  const [interactive, setInteractive] = useState(!skipReveal);
-  const opacity = useSharedValue(skipReveal ? 0 : 1);
+  const [interactive, setInteractive] = useState(!skipReveal || skipLocalTransition);
+  const opacity = useSharedValue(skipReveal && !skipLocalTransition ? 0 : 1);
 
   useEffect(() => {
-    if (!skipReveal) return;
+    if (!skipReveal || skipLocalTransition) return;
     opacity.value = withTiming(1, {
       duration: FADE_IN_MS,
       easing: Easing.out(Easing.cubic),
     });
     const timer = setTimeout(() => setInteractive(true), FADE_IN_MS);
     return () => clearTimeout(timer);
-  }, [opacity, skipReveal]);
+  }, [opacity, skipLocalTransition, skipReveal]);
 
   const finishLeave = useCallback(
     (line: IntroSpaceChoice | null, dismissOnly: boolean) => {
@@ -71,6 +74,11 @@ export const BrandRevealIntro: React.FC<BrandRevealIntroProps> = ({
       if (line) setLeavingLine(line);
       setInteractive(false);
 
+      if (skipLocalTransition) {
+        finishLeave(line, dismissOnly);
+        return;
+      }
+
       opacity.value = withTiming(
         0,
         { duration: FADE_OUT_MS, easing: Easing.in(Easing.cubic) },
@@ -80,7 +88,7 @@ export const BrandRevealIntro: React.FC<BrandRevealIntroProps> = ({
         },
       );
     },
-    [finishLeave, interactive, leavingLine, opacity],
+    [finishLeave, interactive, leavingLine, opacity, skipLocalTransition],
   );
 
   const handleChoose = useCallback(
