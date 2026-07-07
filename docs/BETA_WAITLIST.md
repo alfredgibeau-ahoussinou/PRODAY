@@ -103,6 +103,21 @@ BETA_VALIDATE_FUNCTION_URL=https://europe-west1-proday-155b0.cloudfunctions.net/
 - Accès via lien email (`?token=`) ou cookie httpOnly (90 jours, path `/beta`)
 - Sans jeton valide : écran « Accès réservé » — pas de contenu public
 - CTA public du site → `/beta/inscription` (pas `/beta`)
+- Contenu invité (après validation du jeton) :
+  - Hero « Bienvenue dans la bêta ProDay »
+  - Explication du programme, six pôles testables, modules transverses
+  - Téléchargement **iOS TestFlight** et **Android APK** (liens optionnels via env, sinon « bientôt » + email)
+  - Retours par email (`support@proday.app`), timeline des prochaines étapes
+- Email de bienvenue : CTA **« Accéder à la bêta »** → `{{beta_url}}` (`/beta?token=…`)
+
+### Variables téléchargement (optionnelles)
+
+| Variable | Description |
+|----------|-------------|
+| `NEXT_PUBLIC_BETA_APK_URL` | Lien APK Android — bouton actif sur `/beta` |
+| `NEXT_PUBLIC_BETA_TESTFLIGHT_URL` | Lien TestFlight iOS — bouton actif sur `/beta` |
+
+Sans ces variables, la page indique que les liens arriveront par email.
 
 ## Variables validation (Netlify / Vercel)
 
