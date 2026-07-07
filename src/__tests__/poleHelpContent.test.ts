@@ -5,9 +5,10 @@ jest.mock('@react-native-async-storage/async-storage', () => ({
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
-  getPoleHelpAllQuestions,
   getPoleHelpContent,
   getPoleHelpQuickSuggestions,
+  groupPoleHelpEntriesByCategory,
+  POLE_HELP_CATEGORY_ORDER,
   POLE_HELP_OTHER_QUESTION,
   resolvePoleHelpPoleKey,
   resolvePoleHelpUsesBriefcaseIcon,
@@ -47,23 +48,37 @@ describe('poleHelpContent', () => {
     expect(resolvePoleHelpPoleKey('pro', 'player')).toBe('pro_player');
   });
 
-  it('fournit 10 à 15 entrées FAQ par pôle', () => {
+  it('fournit 25 à 30 entrées FAQ par pôle', () => {
     for (const key of POLE_KEYS) {
       const content = getPoleHelpContent(key);
-      expect(content.entries.length).toBeGreaterThanOrEqual(10);
-      expect(content.entries.length).toBeLessThanOrEqual(15);
+      expect(content.entries.length).toBeGreaterThanOrEqual(25);
+      expect(content.entries.length).toBeLessThanOrEqual(30);
       expect(content.welcome.length).toBeGreaterThan(10);
       expect(content.title.length).toBeGreaterThan(0);
       expect(content.bubbleTeaser.length).toBeGreaterThan(5);
     }
   });
 
-  it('expose 4 suggestions rapides et toutes les questions avec fallback', () => {
+  it('organise chaque entrée dans une catégorie connue', () => {
+    for (const key of POLE_KEYS) {
+      const content = getPoleHelpContent(key);
+      for (const entry of content.entries) {
+        expect(POLE_HELP_CATEGORY_ORDER).toContain(entry.category);
+      }
+    }
+  });
+
+  it('groupe les questions par catégorie avec libellés FR', () => {
+    const content = getPoleHelpContent('amateur');
+    const groups = groupPoleHelpEntriesByCategory(content);
+    expect(groups.length).toBeGreaterThanOrEqual(8);
+    expect(groups.reduce((n, g) => n + g.entries.length, 0)).toBe(content.entries.length);
+    expect(groups[0]?.label.length).toBeGreaterThan(3);
+  });
+
+  it('expose 4 suggestions rapides et un fallback support', () => {
     const content = getPoleHelpContent('supporter');
     expect(getPoleHelpQuickSuggestions(content)).toHaveLength(4);
-    const all = getPoleHelpAllQuestions(content);
-    expect(all).toHaveLength(content.entries.length + 1);
-    expect(all.at(-1)).toEqual(POLE_HELP_OTHER_QUESTION);
     expect(POLE_HELP_OTHER_QUESTION.answer).toContain('support@proday.app');
   });
 
