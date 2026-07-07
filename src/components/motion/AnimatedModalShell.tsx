@@ -20,11 +20,14 @@ interface AnimatedModalShellProps {
   children: React.ReactNode;
   closeLabel?: string;
   presentationStyle?: ModalProps['presentationStyle'];
-  /** `full` = sheet plein écran ; `compact` = bottom sheet ~72 % max. */
+  /** `full` = sheet plein écran ; `compact` = bottom sheet ~58 % max. */
   variant?: AnimatedModalShellVariant;
+  /** Poignée centrée seule, sans bouton « Fermer » (header custom dans le contenu). */
+  handleOnly?: boolean;
 }
 
-const COMPACT_SHEET_MAX_HEIGHT = '72%';
+const COMPACT_SHEET_MAX_HEIGHT = '58%';
+const COMPACT_SHEET_TOP_RADIUS = 20;
 
 /**
  * Modal avec backdrop animé + sheet qui monte depuis le bas.
@@ -36,6 +39,7 @@ export const AnimatedModalShell: React.FC<AnimatedModalShellProps> = ({
   closeLabel = 'Fermer',
   presentationStyle = 'overFullScreen',
   variant = 'full',
+  handleOnly = false,
 }) => {
   const insets = useSafeAreaInsets();
   const { colors: c } = useAppTheme();
@@ -82,16 +86,23 @@ export const AnimatedModalShell: React.FC<AnimatedModalShellProps> = ({
           style={[
             styles.sheet,
             isCompact ? styles.sheetCompact : styles.sheetFull,
+            isCompact && styles.sheetCompactRadius,
             sheetStyle,
             { paddingTop: sheetPaddingTop },
           ]}
         >
-          <View style={styles.handleRow}>
-            <View style={styles.handle} />
-            <Pressable onPress={onClose} hitSlop={12} style={styles.closeBtn}>
-              <Text style={styles.closeText}>{closeLabel}</Text>
-            </Pressable>
-          </View>
+          {handleOnly ? (
+            <View style={styles.handleOnlyRow}>
+              <View style={styles.handle} />
+            </View>
+          ) : (
+            <View style={styles.handleRow}>
+              <View style={styles.handle} />
+              <Pressable onPress={onClose} hitSlop={12} style={styles.closeBtn}>
+                <Text style={styles.closeText}>{closeLabel}</Text>
+              </Pressable>
+            </View>
+          )}
           <View style={styles.body}>{children}</View>
         </Animated.View>
       </View>
@@ -120,6 +131,15 @@ function createStyles(c: AppColors) {
       height: COMPACT_SHEET_MAX_HEIGHT,
       maxHeight: COMPACT_SHEET_MAX_HEIGHT,
       flexGrow: 0,
+    },
+    sheetCompactRadius: {
+      borderTopLeftRadius: COMPACT_SHEET_TOP_RADIUS,
+      borderTopRightRadius: COMPACT_SHEET_TOP_RADIUS,
+    },
+    handleOnlyRow: {
+      alignItems: 'center',
+      paddingTop: spacing.xs,
+      paddingBottom: spacing.sm,
     },
     handleRow: {
       flexDirection: 'row',
