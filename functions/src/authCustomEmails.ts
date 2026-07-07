@@ -21,8 +21,16 @@ type AuthEmailCallableResult = {
 
 function getContinueUrl(): string {
   const authCfg = functions.config().auth ?? {};
-  const url = (authCfg.continue_url as string | undefined)?.trim();
-  return url || 'https://proday.app';
+  const betaCfg = functions.config().beta ?? {};
+  const explicit = (authCfg.continue_url as string | undefined)?.trim();
+  if (explicit) return explicit;
+
+  const siteUrl = (betaCfg.site_url as string | undefined)?.trim();
+  if (siteUrl) return siteUrl;
+
+  const projectId =
+    process.env.GCLOUD_PROJECT ?? process.env.GCP_PROJECT ?? 'proday-155b0';
+  return `https://${projectId}.firebaseapp.com`;
 }
 
 function actionCodeSettings() {

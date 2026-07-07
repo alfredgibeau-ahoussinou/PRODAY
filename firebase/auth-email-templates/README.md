@@ -57,6 +57,9 @@ firebase functions:config:set \
   auth.from_email="ProDay <contact@proday.app>" \
   auth.continue_url="https://proday.app"
 
+# Obligatoire : proday.app doit figurer dans Authentication → Settings → Authorized domains
+# (sinon generateEmailVerificationLink échoue avec auth/unauthorized-continue-uri)
+
 # Optionnel si clé dédiée Auth (sinon beta.resend_api_key est utilisée)
 firebase functions:config:set auth.resend_api_key="re_VOTRE_CLE"
 
@@ -164,8 +167,40 @@ Si le HTML s'affiche mal (balises visibles, styles ignorés), basculer vers `ver
 | Console : « modèle ne peut pas être modifié » | Utiliser **Option A** (callables + Resend) — voir ci-dessus |
 | API : `EMAIL_TEMPLATE_UPDATE_NOT_ALLOWED` | Idem ; contacter support si déblocage Console souhaité |
 | E-mail EN moche reçu | Resend non configuré → activer `auth.enabled` + déployer callables |
+| **Aucun e-mail reçu** | Voir section **Incident juillet 2026** ci-dessous |
 | Lien non cliquable | Vérifier `%LINK%` seul sur une ligne + `href` du bouton |
 | Lien mort / erreur | **Authentication → Settings → Authorized domains** |
 | HTML visible / rendu cassé | Vérifier domaine Resend ; fallback `.txt` côté template |
 | Logo absent | Vérifier `https://proday75.netlify.app/branding/logo-proday-official.png` (HTTP 200) |
 | Callable indisponible | Plan Blaze + `firebase deploy --only functions:sendAuthVerificationEmail,functions:sendAuthPasswordResetEmail` |
+
+### Incident juillet 2026 — e-mails de vérification absents
+
+**Symptôme** : inscription OK, mais aucun mail de confirmation ; le renvoi échoue silencieusement.
+
+**Cause racine** (logs `sendAuthVerificationEmail`) :
+
+```
+FirebaseAuthError: Domain not allowlisted by project
+code: auth/unauthorized-continue-uri
+```
+
+Le callable générait le lien avec `continue_url = https://proday.app` (défaut dans `authCustomEmails.ts`), mais **`proday.app` n’était pas** dans **Authentication → Settings → Authorized domains** (seuls `localhost`, `proday-155b0.firebaseapp.com` et `proday-155b0.web.app` l’étaient).
+
+**Correctifs appliqués** :
+
+1. **Domaines autorisés** : ajout de `proday.app` et `www.proday.app` dans Firebase Auth (Console ou API Identity Platform).
+2. **Code** : `getContinueUrl()` utilise désormais `auth.continue_url` → `beta.site_url` → `https://{projectId}.firebaseapp.com` (fallback sûr).
+3. **App** : erreurs d’envoi visibles sur l’écran « Vérifiez votre email » (plus de catch silencieux au renvoi).
+
+**Retester** :
+
+1. Créer un compte e-mail/mot de passe ou utiliser « Renvoyer l’e-mail ».
+2. Vérifier la boîte + spams ; l’objet attendu est « Confirmez votre adresse e-mail ProDay ».
+3. Logs : `firebase functions:log --only sendAuthVerificationEmail --project proday-155b0 -n 10` — plus d’erreur `unauthorized-continue-uri`.
+
+**Si Resend bloque l’envoi** (domaine `proday.app` non vérifié) :
+
+1. [Resend → Domains](https://resend.com/domains) → ajouter `proday.app`.
+2. Publier les enregistrements DNS (SPF, DKIM) chez le registrar.
+3. Attendre statut **Verified**, puis retester.
