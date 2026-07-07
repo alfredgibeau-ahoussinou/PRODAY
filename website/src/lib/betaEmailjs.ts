@@ -25,7 +25,7 @@ export function getEmailJsBetaConfig(): EmailJsBetaConfig | null {
 export function buildBetaEmailJsTemplateParams(
   params: BetaWelcomeEmailParams
 ): Record<string, string> {
-  const site = (params.siteUrl ?? "https://proday.app").replace(/\/$/, "");
+  const site = (params.siteUrl ?? "https://proday75.fr").replace(/\/$/, "");
 
   return {
     email: params.email,

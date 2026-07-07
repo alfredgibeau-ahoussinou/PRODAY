@@ -55,9 +55,9 @@ Implémenté dans **`functions/src/authCustomEmails.ts`** :
 firebase functions:config:set \
   auth.enabled=true \
   auth.from_email="ProDay <contact@proday.app>" \
-  auth.continue_url="https://proday.app"
+  auth.continue_url="https://proday75.fr"
 
-# Obligatoire : proday.app doit figurer dans Authentication → Settings → Authorized domains
+# Obligatoire : proday75.fr (et www.proday75.fr) doivent figurer dans Authentication → Settings → Authorized domains
 # (sinon generateEmailVerificationLink échoue avec auth/unauthorized-continue-uri)
 
 # Optionnel si clé dédiée Auth (sinon beta.resend_api_key est utilisée)
@@ -106,7 +106,7 @@ Les fichiers `verification.html` et `password-reset.html` fournissent un rendu v
 - Variables officielles : `%LINK%`, `%EMAIL%`, `%APP_NAME%`, `%DISPLAY_NAME%`
 - `%LINK%` doit apparaître **sur une ligne dédiée** (lien secours en bas) **et** dans le bouton `<a href="%LINK%">`
 
-**Logo** : `https://proday75.netlify.app/branding/logo-proday-official.png` (hébergé dans `website/public/branding/`).
+**Logo** : `https://proday75.fr/branding/logo-proday-official.png` (hébergé dans `website/public/branding/`).
 
 Les Cloud Functions enveloppent le fragment HTML dans un document complet avant envoi Resend.
 
@@ -171,7 +171,7 @@ Si le HTML s'affiche mal (balises visibles, styles ignorés), basculer vers `ver
 | Lien non cliquable | Vérifier `%LINK%` seul sur une ligne + `href` du bouton |
 | Lien mort / erreur | **Authentication → Settings → Authorized domains** |
 | HTML visible / rendu cassé | Vérifier domaine Resend ; fallback `.txt` côté template |
-| Logo absent | Vérifier `https://proday75.netlify.app/branding/logo-proday-official.png` (HTTP 200) |
+| Logo absent | Vérifier `https://proday75.fr/branding/logo-proday-official.png` (HTTP 200) |
 | Callable indisponible | Plan Blaze + `firebase deploy --only functions:sendAuthVerificationEmail,functions:sendAuthPasswordResetEmail` |
 
 ### Incident juillet 2026 — e-mails de vérification absents
@@ -185,12 +185,12 @@ FirebaseAuthError: Domain not allowlisted by project
 code: auth/unauthorized-continue-uri
 ```
 
-Le callable générait le lien avec `continue_url = https://proday.app` (défaut dans `authCustomEmails.ts`), mais **`proday.app` n’était pas** dans **Authentication → Settings → Authorized domains** (seuls `localhost`, `proday-155b0.firebaseapp.com` et `proday-155b0.web.app` l’étaient).
+Le callable générait le lien avec `continue_url = https://proday75.fr` (défaut dans `authCustomEmails.ts`), mais **`proday75.fr` n’était pas** dans **Authentication → Settings → Authorized domains** (seuls `localhost`, `proday-155b0.firebaseapp.com` et `proday-155b0.web.app` l’étaient).
 
 **Correctifs appliqués** :
 
-1. **Domaines autorisés** : ajout de `proday.app` et `www.proday.app` dans Firebase Auth (Console ou API Identity Platform).
-2. **Code** : `getContinueUrl()` utilise désormais `auth.continue_url` → `beta.site_url` → `https://{projectId}.firebaseapp.com` (fallback sûr).
+1. **Domaines autorisés** : ajout de `proday75.fr`, `www.proday75.fr` (et legacy `proday.app`) dans Firebase Auth.
+2. **Code** : `getContinueUrl()` utilise `auth.continue_url` → `beta.site_url` → `https://proday75.fr`.
 3. **App** : erreurs d’envoi visibles sur l’écran « Vérifiez votre email » (plus de catch silencieux au renvoi).
 
 **Retester** :

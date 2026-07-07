@@ -12,6 +12,8 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const ALLOWED_ORIGINS = [
   'http://localhost:3000',
   'http://127.0.0.1:3000',
+  'https://proday75.fr',
+  'https://www.proday75.fr',
   'https://proday.app',
   'https://www.proday.app',
   'https://proday.vercel.app',
@@ -47,7 +49,7 @@ function getBetaEmailJsConfig(): EmailJsBetaConfig | null {
 
 function getBetaSiteUrl(): string {
   const cfg = functions.config().beta ?? {};
-  return (cfg.site_url as string | undefined) ?? 'https://proday.app';
+  return (cfg.site_url as string | undefined) ?? 'https://proday75.fr';
 }
 
 /** Inscription bêta depuis le site vitrine — Firestore + email de bienvenue. */

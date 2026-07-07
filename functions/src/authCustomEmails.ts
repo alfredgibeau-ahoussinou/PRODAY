@@ -28,9 +28,7 @@ function getContinueUrl(): string {
   const siteUrl = (betaCfg.site_url as string | undefined)?.trim();
   if (siteUrl) return siteUrl;
 
-  const projectId =
-    process.env.GCLOUD_PROJECT ?? process.env.GCP_PROJECT ?? 'proday-155b0';
-  return `https://${projectId}.firebaseapp.com`;
+  return 'https://proday75.fr';
 }
 
 function actionCodeSettings() {

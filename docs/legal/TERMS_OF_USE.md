@@ -2,7 +2,7 @@
 
 **Dernière mise à jour :** 19 juin 2026  
 **Contact :** contact@proday.app  
-**Version en ligne :** https://proday75.netlify.app/cgu
+**Version en ligne :** https://proday75.fr/cgu
 
 ## 1. Objet et périmètre
 

@@ -18,7 +18,7 @@ const syne = Syne({
 
 export const metadata: Metadata = {
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL ?? "https://proday75.netlify.app",
+    process.env.NEXT_PUBLIC_SITE_URL ?? "https://proday75.fr",
   ),
   title: {
     default: "ProDay — Connecter · Progresser · Réussir",

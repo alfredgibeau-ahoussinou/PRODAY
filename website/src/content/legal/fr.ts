@@ -5,7 +5,7 @@
 export const LEGAL_META = {
   contactEmail: 'contact@proday.app',
   publisher: 'ProDay',
-  siteUrl: 'https://proday75.netlify.app',
+  siteUrl: 'https://proday75.fr',
   privacyPath: '/confidentialite',
   termsPath: '/cgu',
   updatedAt: '19 juin 2026',

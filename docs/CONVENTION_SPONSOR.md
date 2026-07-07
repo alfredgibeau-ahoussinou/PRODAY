@@ -2,12 +2,12 @@
 
 **Entre :**
 
-- **ProDay** (la Plateforme), contact : contact@proday.app — site : https://proday75.netlify.app
+- **ProDay** (la Plateforme), contact : contact@proday.app — site : https://proday75.fr
 - **Le Partenaire** : [Raison sociale, SIRET, adresse, représentant légal]
 
 ## Objet
 
-Le Partenaire souhaite gagner en visibilité auprès des clubs et joueurs inscrits sur l'application mobile **ProDay**, en échange d'une contrepartie (financière ou en nature), dans le respect de la [politique de confidentialité](https://proday75.netlify.app/confidentialite) et des [CGU](https://proday75.netlify.app/cgu) applicables aux utilisateurs.
+Le Partenaire souhaite gagner en visibilité auprès des clubs et joueurs inscrits sur l'application mobile **ProDay**, en échange d'une contrepartie (financière ou en nature), dans le respect de la [politique de confidentialité](https://proday75.fr/confidentialite) et des [CGU](https://proday75.fr/cgu) applicables aux utilisateurs.
 
 ## Contrepartie du Partenaire (exemples)
 

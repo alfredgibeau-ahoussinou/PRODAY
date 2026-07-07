@@ -122,7 +122,7 @@ Configuration Resend :
 
 ```bash
 firebase functions:config:set auth.enabled=true auth.from_email="ProDay <contact@proday.app>"
-firebase functions:config:set auth.continue_url="https://proday.app"
+firebase functions:config:set auth.continue_url="https://proday75.fr"
 # auth.resend_api_key optionnel si beta.resend_api_key déjà défini
 cd functions && npm run build
 firebase deploy --only functions:sendAuthVerificationEmail,functions:sendAuthPasswordResetEmail

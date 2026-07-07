@@ -9,7 +9,7 @@ export const SPONSOR_CONVENTION_META = {
 } as const;
 
 export const SPONSOR_CONVENTION_PARTIES = [
-  'ProDay (la Plateforme), contact : contact@proday.app — site : https://proday75.netlify.app',
+  'ProDay (la Plateforme), contact : contact@proday.app — site : https://proday75.fr',
   'Le Partenaire : [Raison sociale, SIRET, adresse, représentant légal]',
 ];
 

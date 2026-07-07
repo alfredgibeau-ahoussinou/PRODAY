@@ -55,14 +55,14 @@ eas submit --platform android --latest
 
 Hébergez le contenu de `docs/legal/PRIVACY_POLICY.md` sur :
 
-- **https://proday75.netlify.app/confidentialite** (déployé avec le site), ou
+- **https://proday75.fr/confidentialite** (déployé avec le site), ou
 - une page GitHub Pages / Notion publique.
 
 Indiquez cette URL dans App Store Connect et Google Play Console.
 
 ### CGU / Conditions d’utilisation
 
-Même principe avec `docs/legal/TERMS_OF_USE.md` → **https://proday75.netlify.app/cgu**.
+Même principe avec `docs/legal/TERMS_OF_USE.md` → **https://proday75.fr/cgu**.
 
 L’application affiche aussi ces textes dans **Profil → Informations légales**.
 

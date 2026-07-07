@@ -3,7 +3,7 @@
 **Dernière mise à jour :** 19 juin 2026  
 **Éditeur :** ProDay  
 **Contact :** contact@proday.app  
-**Version en ligne :** https://proday75.netlify.app/confidentialite
+**Version en ligne :** https://proday75.fr/confidentialite
 
 ## 1. Introduction
 
