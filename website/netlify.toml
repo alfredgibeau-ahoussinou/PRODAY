@@ -11,3 +11,60 @@
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
+
+# Domaine canonique : https://proday75.fr
+# (dupliqué ici car le build s'exécute depuis website/ — garantit l'application au déploiement)
+
+[[redirects]]
+  from = "http://proday75.fr/*"
+  to = "https://proday75.fr/:splat"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "http://www.proday75.fr/*"
+  to = "https://proday75.fr/:splat"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "https://www.proday75.fr/*"
+  to = "https://proday75.fr/:splat"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "https://proday.app/*"
+  to = "https://proday75.fr/:splat"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "http://proday.app/*"
+  to = "https://proday75.fr/:splat"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "https://www.proday.app/*"
+  to = "https://proday75.fr/:splat"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "http://www.proday.app/*"
+  to = "https://proday75.fr/:splat"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "https://proday75.netlify.app/*"
+  to = "https://proday75.fr/:splat"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "http://proday75.netlify.app/*"
+  to = "https://proday75.fr/:splat"
+  status = 301
+  force = true
