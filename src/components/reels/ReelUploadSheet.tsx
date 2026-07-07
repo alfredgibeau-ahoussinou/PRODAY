@@ -62,14 +62,14 @@ export const ReelUploadSheet: React.FC<ReelUploadSheetProps> = ({
       <View style={styles.backdrop}>
         <View style={styles.sheet}>
           <View style={styles.header}>
-            <ProDayText variant="section">Publier un reel</ProDayText>
+            <ProDayText variant="section">{t('reels.upload.title')}</ProDayText>
             <Pressable onPress={onClose} hitSlop={12}>
               <Icon name="close" size={22} color="#111" />
             </Pressable>
           </View>
 
           <ProDayText variant="caption" muted>
-            Réservé aux joueurs et clubs. Modération avant publication publique.
+            {t('reels.upload.disclaimer')}
           </ProDayText>
 
           <PressableSpring onPress={() => void onPickVideo()} scaleTo={0.98} haptic disabled={uploading}>
@@ -116,7 +116,7 @@ export const ReelUploadSheet: React.FC<ReelUploadSheetProps> = ({
                 <ActivityIndicator color="#fff" />
               ) : (
                 <ProDayText variant="caption" inverse style={styles.ctaText}>
-                  Envoyer pour modération
+                  {t('reels.upload.submit')}
                 </ProDayText>
               )}
             </ProDayGradient>

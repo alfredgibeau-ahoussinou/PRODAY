@@ -369,7 +369,7 @@ export const TERTIARY_FR: MessageCatalog = {
   'reels.community': 'Communauté ProDay',
   'reels.empty.guestHint': 'Les joueurs et clubs publient ici leurs meilleurs moments',
   'reels.empty.hint.profile': 'Highlight profil',
-  'reels.empty.hint.publish': 'Publiez un reel',
+  'reels.empty.hint.publish': 'Publiez un réel',
   'reels.report.hide': 'Ce contenu sera masqué de votre flux. Notre équipe peut l\'examiner.',
   'reels.upload.changeVideo': 'Vidéo sélectionnée — modifier',
   'reels.upload.pickVideo': 'Choisissez une vidéo (max 60 s)',

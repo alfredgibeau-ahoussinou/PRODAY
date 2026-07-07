@@ -60,7 +60,7 @@ export const fr: MessageCatalog = {
   'tabs.covoiturage': 'Covoiturage',
   'tabs.sante': 'Santé',
   'tabs.feed': 'Fil',
-  'tabs.reels': 'Reels',
+  'tabs.reels': 'Réels',
   'tabs.famille': 'Famille',
   'tabs.messages': 'Messages',
   'tabs.profil': 'Profil',

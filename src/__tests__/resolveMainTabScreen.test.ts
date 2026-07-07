@@ -54,9 +54,6 @@ jest.mock('../screens/proPlayer/ProPlayerCareerScreen', () => ({
 jest.mock('../screens/proPlayer/ProPlayerOpportunitiesScreen', () => ({
   ProPlayerOpportunitiesScreen: 'ProPlayerOpportunitiesScreen',
 }));
-jest.mock('../screens/proPlayer/ProPlayerPortfolioScreen', () => ({
-  ProPlayerPortfolioScreen: 'ProPlayerPortfolioScreen',
-}));
 jest.mock('../screens/proPlayer/ProPlayerGroupScreen', () => ({
   ProPlayerGroupScreen: 'ProPlayerGroupScreen',
 }));
@@ -74,6 +71,7 @@ describe('resolveMainTabScreen', () => {
 
   it('utilise les écrans pro joueur hors rôle club', () => {
     expect(resolveMainTabScreen('recrutement', 'player', 'pro')).toBe('ProPlayerOpportunitiesScreen');
+    expect(resolveMainTabScreen('reels', 'player', 'pro')).toBe('LazyReelsScreen');
     expect(resolveMainTabScreen('matchs', 'player', 'pro')).toBe('ProPlayerGroupScreen');
     expect(resolveMainTabScreen('matchs', 'coach', 'pro')).toBe('MatchsScreen');
   });

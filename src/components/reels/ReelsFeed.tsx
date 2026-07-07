@@ -23,6 +23,7 @@ import { PressableSpring } from '../motion';
 import { ProDayScreenCanvas } from '../ui/ProDayScreenCanvas';
 import { ProDayText } from '../ui/ProDayText';
 import { ProDayGradient } from '../ui/ProDayGradient';
+import { Icon } from '../ui/Icon';
 import { UniverseBadge } from '../branding/UniverseBadge';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { prodayHaptics } from '../../utils/prodayHaptics';
@@ -542,6 +543,21 @@ export const ReelsFeed: React.FC<ReelsFeedProps> = ({ productLine }) => {
         uploading={uploading}
         onSubmit={handleUpload}
       />
+
+      {canUpload ? (
+        <PressableSpring
+          style={[styles.fab, { bottom: TAB_BAR_CONTENT_INSET + spacing.md }]}
+          onPress={() => setUploadOpen(true)}
+          scaleTo={0.92}
+          haptic
+          accessibilityRole="button"
+          accessibilityLabel={t('reels.publish')}
+        >
+          <ProDayGradient kind="cta" style={styles.fabInner}>
+            <Icon name="add" size={28} color="#fff" />
+          </ProDayGradient>
+        </PressableSpring>
+      ) : null}
     </ProDayScreenCanvas>
   );
 };
@@ -608,4 +624,21 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.35)',
   },
   actionText: { fontWeight: '800' },
+  fab: {
+    position: 'absolute',
+    right: spacing.lg,
+    zIndex: 10,
+  },
+  fabInner: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 8,
+    elevation: 6,
+  },
 });

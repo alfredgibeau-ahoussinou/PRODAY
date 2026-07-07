@@ -33,7 +33,6 @@ import { SupporterTribuneFeedScreen } from '../screens/supporter/SupporterTribun
 import { AmateurClubScreen } from '../screens/AmateurClubScreen';
 import { ProPlayerCareerScreen } from '../screens/proPlayer/ProPlayerCareerScreen';
 import { ProPlayerOpportunitiesScreen } from '../screens/proPlayer/ProPlayerOpportunitiesScreen';
-import { ProPlayerPortfolioScreen } from '../screens/proPlayer/ProPlayerPortfolioScreen';
 import { ProPlayerGroupScreen } from '../screens/proPlayer/ProPlayerGroupScreen';
 
 const DEFAULT_SCREENS: Record<MainTabId, ComponentType> = {
@@ -81,7 +80,6 @@ const AMATEUR_PLAYER_SCREENS: Partial<Record<MainTabId, ComponentType>> = {
 const PRO_PLAYER_SCREENS: Partial<Record<MainTabId, ComponentType>> = {
   home: ProPlayerCareerScreen,
   recrutement: ProPlayerOpportunitiesScreen,
-  reels: ProPlayerPortfolioScreen,
   matchs: ProPlayerGroupScreen,
 };
 

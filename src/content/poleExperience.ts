@@ -299,7 +299,7 @@ export function getTabShortLabel(
   if (isProFamilyLine(line) && role === 'player') {
     if (tab === 'home') return 'Carrière';
     if (tab === 'recrutement') return 'Opportunités';
-    if (tab === 'reels') return 'Portfolio';
+    if (tab === 'reels') return 'Réels';
     if (tab === 'matchs') return 'Groupe';
     if (tab === 'profil') return 'Moi';
   }

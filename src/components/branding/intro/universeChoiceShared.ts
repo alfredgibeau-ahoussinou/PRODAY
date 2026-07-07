@@ -21,7 +21,7 @@ export const LEGACY_UNIVERSE_CHOICE_ORDER = [
 export const UNIVERSE_FEATURE_CHIPS: Record<CarouselPoleId, string[]> = {
   amateur: ['Mercato local', 'Matchs', 'Joueur & coach'],
   supporter: ['Matchs live', 'Reels', 'Fil'],
-  pro_player: ['Carrière', 'Opportunités', 'Portfolio'],
+  pro_player: ['Carrière', 'Opportunités', 'Réels'],
   pro_club: ['Structure', 'Recrutement', 'Calendrier'],
   pro_staff: ['Mandats', 'Scouting', 'Convocations'],
   sante: ['Agenda', 'Patients', 'Clubs'],

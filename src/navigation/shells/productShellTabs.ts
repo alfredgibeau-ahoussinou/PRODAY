@@ -45,7 +45,7 @@ export const PRO_CLUB_SHELL_TABS: MainTabId[] = [
 export const PRO_PLAYER_SHELL_TABS: MainTabId[] = [
   'home', // Carrière
   'recrutement', // Opportunités
-  'reels', // Portfolio
+  'reels', // Réels
   'matchs', // Groupe
   'profil', // Moi
 ];

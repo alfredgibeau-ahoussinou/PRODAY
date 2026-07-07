@@ -39,7 +39,7 @@ describe('club et staff shells', () => {
     ]);
     expect(getTabShortLabel('home', 'pro', 'player')).toBe('Carrière');
     expect(getTabShortLabel('recrutement', 'pro', 'player')).toBe('Opportunités');
-    expect(getTabShortLabel('reels', 'pro', 'player')).toBe('Portfolio');
+    expect(getTabShortLabel('reels', 'pro', 'player')).toBe('Réels');
     expect(getTabShortLabel('matchs', 'pro', 'player')).toBe('Groupe');
     expect(getTabShortLabel('profil', 'pro', 'player')).toBe('Moi');
   });
