@@ -67,7 +67,7 @@ export const AMATEUR_IDENTITY: UniverseIdentity = {
   heroLine: 'Le foot amateur,\nconnecté.',
   mission:
     'Joueurs et coachs amateur — Mercato local, matchs, effectif et convocations au même endroit.',
-  accentLabel: 'Univers Amateur',
+  accentLabel: 'Pro Day Amateur',
   mercatoLabel: 'Mercato Amateur',
   playerLabel: 'Joueur amateur',
   cvLabel: 'CV foot en ligne',
@@ -81,7 +81,7 @@ export const SUPPORTER_IDENTITY: UniverseIdentity = {
   heroLine: 'Le foot,\nensemble.',
   mission:
     'Fans et communauté — matchs, réels et fil en direct, sans Mercato ni covoiturage.',
-  accentLabel: 'Univers Supporter',
+  accentLabel: 'Pro Day Supporter',
   mercatoLabel: 'Communauté',
   playerLabel: 'Supporter',
   cvLabel: 'Profil supporter',
@@ -95,7 +95,7 @@ export const PRO_IDENTITY: UniverseIdentity = {
   heroLine: 'Les pros\ndu foot.',
   mission:
     'Coach, club et staff — Mercato Pro, convocations, covoiturage et réseau vérifié.',
-  accentLabel: 'Univers Pro',
+  accentLabel: 'Pro Day Pro',
   mercatoLabel: 'Mercato Pro',
   playerLabel: 'Professionnel',
   cvLabel: 'Profil professionnel',
@@ -109,7 +109,7 @@ export const SANTE_IDENTITY: UniverseIdentity = {
   heroLine: 'La santé\nau service du jeu.',
   mission:
     'Agenda, messagerie patients et visibilité auprès des clubs et joueurs.',
-  accentLabel: 'Univers Santé',
+  accentLabel: 'Pro Day Santé',
   mercatoLabel: 'Annuaire santé',
   playerLabel: 'Praticien',
   cvLabel: 'Profil cabinet',
@@ -177,10 +177,10 @@ export function getDiscoverHomeCopy(line: ProductLineId) {
       heroSub: brand.mission,
       trustText:
         'Profils vérifiés pour le foot amateur — joueurs et coachs, messagerie sécurisée après validation.',
-      ctaText: 'Créer un compte Amateur',
-      sectionExplore: 'Vos pôles Amateur',
+      ctaText: 'Créer mon compte Pro Day Amateur',
+      sectionExplore: 'Découvrir Pro Day Amateur',
       secondaryMercato: 'Mercato Amateur',
-      playersStatLabel: 'Amateurs',
+      playersStatLabel: 'Joueurs & coachs',
     };
   }
 

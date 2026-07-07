@@ -361,7 +361,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
 
                   <StaggerReveal index={quickLogin.canQuickLogin ? 3 : 2}>
                     <AuthPrimaryButton
-                      label="Se connecter"
+                      label={t('auth.loginCta')}
                       onPress={() => void handleLogin()}
                       loading={loading}
                     />
@@ -400,7 +400,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                 ))}
                 <StaggerReveal index={signupTeaser.length}>
                   <AuthPrimaryButton
-                    label={`Inscription ${activeBrand.name}`}
+                    label={t('auth.signupCta', { brand: activeBrand.name })}
                     onPress={openSignup}
                   />
                 </StaggerReveal>

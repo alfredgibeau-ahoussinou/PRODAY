@@ -10,9 +10,9 @@ export const SECONDARY_FR: MessageCatalog = {
   'auth.teaser.woman.1': 'CV joueuse, stats et Mercato F',
   'auth.teaser.woman.2': 'Email confirmé — accès à votre espace Woman',
 
-  'auth.teaser.amateur.0': 'Joueur ou coach amateur',
+  'auth.teaser.amateur.0': 'Joueur ou coach sur Pro Day Amateur',
   'auth.teaser.amateur.1': 'CV, effectif, Mercato local et matchs',
-  'auth.teaser.amateur.2': 'Email confirmé — accès à votre espace Amateur',
+  'auth.teaser.amateur.2': 'Email confirmé — accès à votre espace Pro Day Amateur',
 
   'auth.teaser.supporter.0': 'Inscription supporter uniquement',
   'auth.teaser.supporter.1': 'Matchs, réels et fil communautaire',
@@ -109,7 +109,7 @@ export const SECONDARY_FR: MessageCatalog = {
   'signup.page.launch': 'Lancement',
   'signup.phase.vous': 'Vous',
   'signup.phase.acces': 'Accès',
-  'signup.phase.launch': 'Go',
+  'signup.phase.launch': 'Lancement',
   'signup.phase.profile': 'Profil',
   'signup.phase.account': 'Compte',
 
@@ -210,6 +210,98 @@ export const SECONDARY_FR: MessageCatalog = {
   'signup.woman.launch.done.body':
     'Explore le Mercato féminin, tes matchs et ton profil joueuse dès maintenant.',
   'signup.woman.launch.done.finish': 'Entrer dans ProDay Woman',
+
+  'signup.amateur.phase.profile': 'Profil',
+  'signup.amateur.welcome.title': 'Bienvenue sur {{brand}}',
+  'signup.amateur.welcome.subtitle':
+    'Joueur ou coach — Mercato local, matchs, effectif et convocations au même endroit.',
+  'signup.amateur.step.space.title': 'Votre genre et votre espace foot',
+  'signup.amateur.step.space.subtitle':
+    'Genre et catégorie d’âge — Mercato Amateur et matchs adaptés à votre profil.',
+  'signup.amateur.step.sport.title': 'Votre fiche joueur',
+  'signup.amateur.step.sport.subtitle':
+    'Poste, catégorie, niveau et âge — profil visible sur le Mercato Amateur.',
+  'signup.amateur.step.location.title': 'Où vous jouez',
+  'signup.amateur.step.location.subtitle':
+    'Ville et département pour votre club et les détections locales.',
+  'signup.amateur.step.stats.title': 'Vos stats',
+  'signup.amateur.step.stats.subtitle':
+    'Matchs, buts, passes — initialisation, puis validées par votre coach.',
+  'signup.amateur.step.family.title': 'Responsable légal',
+  'signup.amateur.step.family.subtitle':
+    'Obligatoire pour les mineurs — conformité et sécurité Pro Day Amateur.',
+  'signup.amateur.step.coach.title': 'Profil coach',
+  'signup.amateur.step.coach.subtitle':
+    'Club, catégorie et zone — encadrement district et régional.',
+  'signup.amateur.step.account.title': 'Votre identité',
+  'signup.amateur.step.account.subtitle':
+    'Nom affiché et email — votre espace Pro Day Amateur sera lié à ce compte.',
+  'signup.amateur.step.security.title': 'Sécurisez votre compte',
+  'signup.amateur.step.security.subtitle': 'Mot de passe robuste, puis confirmation par email.',
+  'signup.amateur.launch.verification.title': 'Compte coach créé',
+  'signup.amateur.launch.verification.body':
+    'Après confirmation email : accès à votre banc technique — effectif et convocations.',
+  'signup.amateur.launch.player.verification.title': 'Compte joueur créé',
+  'signup.amateur.launch.player.verification.body':
+    'Après confirmation email : accès à votre cockpit joueur — Mercato Amateur et matchs.',
+  'signup.amateur.launch.ready.title': 'Bienvenue coach',
+  'signup.amateur.launch.ready.body':
+    'Votre espace Pro Day Amateur est prêt — gérez votre effectif et suivez le Mercato local.',
+  'signup.amateur.launch.player.ready.title': 'Bienvenue joueur',
+  'signup.amateur.launch.player.ready.body':
+    'Votre espace Pro Day Amateur est prêt — CV en ligne, Mercato Amateur et convocations.',
+
+  'signup.supporter.phase.profile': 'Profil',
+  'signup.supporter.welcome.title': 'Bienvenue sur {{brand}}',
+  'signup.supporter.welcome.subtitle':
+    'Fans et communauté — matchs en direct, réels et fil tribune.',
+  'signup.supporter.step.account.title': 'Identité supporter',
+  'signup.supporter.step.account.subtitle':
+    'Nom affiché et email — espace Pro Day Supporter lié à ce compte.',
+  'signup.supporter.step.security.title': 'Sécuriser l’accès',
+  'signup.supporter.step.security.subtitle':
+    'Mot de passe robuste pour rejoindre la tribune Pro Day Supporter.',
+  'signup.supporter.step.launch.title': 'Tribune activée',
+  'signup.supporter.step.launch.subtitle': 'Votre espace Pro Day Supporter est prêt.',
+  'signup.supporter.launch.email.title': 'Presque prêt',
+  'signup.supporter.launch.email.body':
+    'Confirmez votre email pour activer votre espace Pro Day Supporter.',
+  'signup.supporter.launch.email.finish': 'Entrer dans Pro Day Supporter',
+  'signup.supporter.launch.done.title': 'Bienvenue en tribune',
+  'signup.supporter.launch.done.body':
+    'Votre tribune est prête — matchs, réels et fil communautaire.',
+  'signup.supporter.launch.done.finish': 'Entrer dans Pro Day Supporter',
+
+  'signup.proPlayer.welcome.title': 'Bienvenue sur {{brand}}',
+  'signup.proPlayer.welcome.subtitle':
+    'Inscription joueur pro — carrière, portfolio vidéo et opportunités vérifiées.',
+  'signup.proPlayer.step.space.title': 'Votre profil',
+  'signup.proPlayer.step.space.subtitle':
+    'Homme ou femme — parcours et visibilité adaptés au foot professionnel.',
+  'signup.proPlayer.step.sport.title': 'Votre fiche pro',
+  'signup.proPlayer.step.sport.subtitle':
+    'Poste, niveau (R1–N3), licence et mobilité — profil visible des recruteurs.',
+  'signup.proPlayer.step.location.title': 'Votre zone',
+  'signup.proPlayer.step.location.subtitle':
+    'Ville et département — opportunités géolocalisées.',
+  'signup.proPlayer.step.stats.title': 'Votre saison',
+  'signup.proPlayer.step.stats.subtitle':
+    'Stats validées coach — crédibilité auprès des clubs.',
+  'signup.proPlayer.step.account.title': 'Votre compte',
+  'signup.proPlayer.step.account.subtitle':
+    'Email et identité — accès sécurisé à votre espace Pro Joueur.',
+  'signup.proPlayer.step.security.title': 'Sécurité',
+  'signup.proPlayer.step.security.subtitle':
+    'Mot de passe robuste pour protéger votre profil sportif.',
+  'signup.proPlayer.step.launch.title': 'C’est parti',
+  'signup.proPlayer.step.launch.subtitle':
+    'Votre espace Pro Day Pro Joueur est prêt — bonne saison.',
+  'signup.proPlayer.launch.pending.title': 'Profil en validation',
+  'signup.proPlayer.launch.pending.body':
+    'Votre espace Pro Day Pro Joueur sera actif après vérification de votre profil.',
+  'signup.proPlayer.launch.title': 'Bienvenue Pro Joueur',
+  'signup.proPlayer.launch.body':
+    'Carrière, portfolio et opportunités pro — votre saison commence maintenant.',
 
   'profile.verify.title': 'Vérification',
   'profile.verify.documentsRequired': 'Documents requis',

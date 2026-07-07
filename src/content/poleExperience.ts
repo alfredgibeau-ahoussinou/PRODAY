@@ -52,13 +52,13 @@ export interface SignupRoleGroup {
 const AMATEUR_SIGNUP_GROUPS: SignupRoleGroup[] = [
   {
     id: 'player',
-    label: 'Joueurs amateur',
+    label: 'Joueurs Pro Day Amateur',
     hint: 'CV, Mercato Amateur, matchs et covoiturage',
     roles: ['player'],
   },
   {
     id: 'coach',
-    label: 'Coachs amateur',
+    label: 'Coachs Pro Day Amateur',
     hint: 'Effectif, convocations et Mercato local',
     roles: ['coach'],
   },
