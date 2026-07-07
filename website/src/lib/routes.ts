@@ -2,6 +2,7 @@ import type { ProductLineWeb } from "./content";
 
 export const ROUTES = {
   home: "/",
+  /** @deprecated Redirige vers /amateur — conservé pour liens legacy. */
   joueurs: "/joueurs",
   features: "/fonctionnalites",
   demo: "/demo",
@@ -16,6 +17,10 @@ export const ROUTES = {
   supporter: "/supporter",
   /** @deprecated Redirige vers /amateur — conservé pour liens legacy. */
   woman: "/woman",
+  proJoueur: "/pro-joueur",
+  proClub: "/pro-club",
+  proStaff: "/pro-staff",
+  /** @deprecated Hub legacy — voir pro-joueur, pro-club, pro-staff. */
   pro: "/pro",
   beta: "/beta",
   about: "/a-propos",
@@ -36,12 +41,12 @@ export const ROUTES = {
 export type RouteKey = keyof typeof ROUTES;
 
 export const POLE_NAV_ITEMS = [
-  { href: ROUTES.joueurs, label: "Joueurs" },
   { href: ROUTES.amateur, label: "Amateur" },
   { href: ROUTES.supporter, label: "Supporter" },
-  { href: ROUTES.pro, label: "Pro" },
   { href: ROUTES.sante, label: "Santé" },
-  { href: ROUTES.partenaires, label: "Partenaires" },
+  { href: ROUTES.proJoueur, label: "Pro Joueur" },
+  { href: ROUTES.proClub, label: "Pro Club" },
+  { href: ROUTES.proStaff, label: "Pro Staff" },
 ] as const;
 
 export const UTILITY_NAV_ITEMS = [
@@ -57,11 +62,12 @@ export const NAV_ITEMS = [
 ] as const;
 
 export const POLE_FOOTER_LINKS = [
-  { href: ROUTES.joueurs, label: "Pôle Joueur", subtitle: "Pro joueur · genre H/F/mineur" },
-  { href: ROUTES.amateur, label: "Pôle Amateur", subtitle: "Joueurs & coachs" },
+  { href: ROUTES.amateur, label: "Pôle Amateur", subtitle: "Joueurs & coachs · district & régional" },
   { href: ROUTES.supporter, label: "Pôle Supporter", subtitle: "Fans & communauté" },
-  { href: ROUTES.pro, label: "Pôle Pro", subtitle: "Staff & structures pro" },
   { href: ROUTES.sante, label: "Pôle Santé", subtitle: "Kiné · Mental · Nutrition" },
+  { href: ROUTES.proJoueur, label: "Pôle Pro Joueur", subtitle: "Carrière · visibilité · opportunités" },
+  { href: ROUTES.proClub, label: "Pôle Pro Club", subtitle: "Structures · équipes · recrutement" },
+  { href: ROUTES.proStaff, label: "Pôle Pro Staff", subtitle: "Agent · Recruteur · Coach · Orga" },
   { href: ROUTES.partenaires, label: "Pôle Partenaires", subtitle: "Sponsors & marques" },
 ] as const;
 
@@ -166,11 +172,27 @@ export const EXPLORE_CARDS = [
     tag: "Tarifs",
   },
   {
-    href: ROUTES.joueurs,
-    title: "Pôle Joueur",
-    description: "Man & Woman — Mercato, Reels, Arena, Pulse et CV joueur.",
-    image: "/images/football-action-01.jpg",
-    tag: "Joueurs",
+    href: ROUTES.proJoueur,
+    title: "Pôle Pro Joueur",
+    description: "Carrière, visibilité scouting, portfolio et opportunités — foot professionnel.",
+    image: "/images/football-pro-01.jpg",
+    tag: "Pro Joueur",
+    accent: true,
+  },
+  {
+    href: ROUTES.proClub,
+    title: "Pôle Pro Club",
+    description: "Structures, équipes, recrutement et vitrine — gérez votre club sur PRODAY.",
+    image: "/images/football-club-01.jpg",
+    tag: "Pro Club",
+    accent: true,
+  },
+  {
+    href: ROUTES.proStaff,
+    title: "Pôle Pro Staff",
+    description: "Agent, recruteur, coach pro et organisateur — Mercato Pro et réseau vérifié.",
+    image: "/images/football-coach-01.jpg",
+    tag: "Pro Staff",
     accent: true,
   },
   {
@@ -186,14 +208,6 @@ export const EXPLORE_CARDS = [
     description: "Univers foot féminin — Mercato F, tournois et profil joueuse.",
     image: "/showcase/woman/woman-discover-hero.jpg",
     tag: "Woman",
-    accent: true,
-  },
-  {
-    href: ROUTES.pro,
-    title: "Pro Day Pro",
-    description: "Recruteurs, coach, agent et club — Mercato Pro et réseau vérifié.",
-    image: "/images/football-pro-01.jpg",
-    tag: "Pro",
     accent: true,
   },
   {

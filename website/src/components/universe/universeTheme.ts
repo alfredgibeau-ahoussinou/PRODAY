@@ -3,6 +3,9 @@ import {
   AMATEUR_BRAND,
   SUPPORTER_BRAND,
   PRO_BRAND,
+  PRO_JOUEUR_BRAND,
+  PRO_CLUB_BRAND,
+  PRO_STAFF_BRAND,
   SANTE_BRAND,
   WOMAN_BRAND,
   type ProductLineWeb,
@@ -10,10 +13,10 @@ import {
 import { PRODAY_LOGO_OFFICIAL } from "@/lib/brandingAssets";
 import { ROUTES } from "@/lib/routes";
 
-export const UNIVERSE_THEME: Record<
-  ProductLineWeb,
-  {
-    pageHeaderAccent: "default" | "joueur" | "woman" | "amateur" | "supporter" | "pro" | "sante";
+export type UniverseThemeId = ProductLineWeb | "pro_joueur" | "pro_club" | "pro_staff";
+
+type UniverseThemeTokens = {
+    pageHeaderAccent: "default" | "joueur" | "woman" | "amateur" | "supporter" | "pro" | "pro_club" | "pro_staff" | "sante";
     screenBg: string;
     screenSurface: string;
     screenMuted: string;
@@ -54,8 +57,9 @@ export const UNIVERSE_THEME: Record<
     exploreCard: string;
     exploreBadge: string;
     demoTabActive: string;
-  }
-> = {
+};
+
+export const UNIVERSE_THEME: Record<UniverseThemeId, UniverseThemeTokens> = {
   homme: {
     pageHeaderAccent: "joueur",
     moduleActive: "border-emerald-500/50 bg-emerald-600/30 text-white shadow-lg shadow-emerald-900/20",
@@ -320,9 +324,144 @@ export const UNIVERSE_THEME: Record<
     tabInactive: "text-teal-400/50",
     tabActive: "text-teal-200",
   },
+  pro_joueur: {
+    pageHeaderAccent: "joueur",
+    moduleActive: "border-emerald-500/50 bg-emerald-600/30 text-white shadow-lg shadow-emerald-900/20",
+    moduleIdle: "border-emerald-500/20 bg-white/5 hover:border-emerald-400/40",
+    moduleRing: "ring-2 ring-emerald-500/30",
+    imageGradient: "from-emerald-950/80 via-black/30 to-transparent",
+    imageRing: "ring-2 ring-emerald-500/30",
+    moduleDesc: "text-emerald-100/80",
+    highlightBorder: "border-emerald-500/20 bg-white/5 backdrop-blur-sm",
+    highlightLabel: "text-emerald-300/70",
+    journeyActive: "bg-emerald-600 text-white shadow-md shadow-emerald-900/30",
+    journeyIdle:
+      "bg-white/5 text-white/70 ring-1 ring-white/10 hover:ring-emerald-400/30",
+    pricingCard: "border-emerald-500/20 bg-white/5 hover:border-emerald-400/40",
+    ctaGradient: "from-emerald-950 to-neutral-950",
+    ctaText: "text-emerald-100/80",
+    ctaBtn: "bg-emerald-500 text-white hover:bg-emerald-400",
+    ctaBtnOutline: "border-white/30 text-white hover:bg-white/10",
+    crossCard: "from-emerald-900 to-neutral-950",
+    navCta: "bg-emerald-600 hover:bg-emerald-500",
+    navLink: "font-medium text-emerald-300 hover:text-white",
+    pricingAccent: "bg-emerald-600",
+    softSectionBg: "bg-[#030303]",
+    verificationSectionBg: "bg-[#050505]",
+    verificationTitle: "text-white",
+    pulseStroke: "#10b981",
+    brandAccent: "#059669",
+    pulseSliderAccent: "accent-emerald-500",
+    exploreCard: "border-emerald-500/20 ring-1 ring-emerald-500/10 hover:border-emerald-400/40",
+    exploreBadge: "bg-emerald-600/90 text-white",
+    demoTabActive: "bg-emerald-500/25",
+    screenBg: "bg-[#0a100f]",
+    screenSurface: "bg-[#111816]",
+    screenMuted: "bg-[#0d1210]",
+    accentBar: "bg-gradient-to-r from-emerald-950 to-emerald-500",
+    chip: "bg-white/5 border border-emerald-500/30 text-emerald-100/80",
+    chipHighlight: "bg-emerald-600 text-white border-emerald-600",
+    moduleCard: "bg-white/5 border-l-[3px] border-l-emerald-600 border border-emerald-500/20",
+    actionTile: "bg-white/5 border border-emerald-500/40 text-emerald-50",
+    actionTileActive: "bg-emerald-600 text-white border-emerald-600",
+    tabBar: "bg-[#111816] border-t border-emerald-500/20",
+    tabInactive: "text-emerald-400/50",
+    tabActive: "text-emerald-200",
+  },
+  pro_club: {
+    pageHeaderAccent: "pro_club",
+    moduleActive: "border-blue-500/50 bg-blue-600/30 text-white shadow-lg shadow-blue-900/20",
+    moduleIdle: "border-blue-500/20 bg-white/5 hover:border-blue-400/40",
+    moduleRing: "ring-2 ring-blue-500/30",
+    imageGradient: "from-blue-950/80 via-black/30 to-transparent",
+    imageRing: "ring-2 ring-blue-500/30",
+    moduleDesc: "text-blue-100/80",
+    highlightBorder: "border-blue-500/20 bg-white/5 backdrop-blur-sm",
+    highlightLabel: "text-blue-300/70",
+    journeyActive: "bg-blue-600 text-white shadow-md shadow-blue-900/30",
+    journeyIdle:
+      "bg-white/5 text-white/70 ring-1 ring-white/10 hover:ring-blue-400/30",
+    pricingCard: "border-blue-500/20 bg-white/5 hover:border-blue-400/40",
+    ctaGradient: "from-blue-950 to-neutral-950",
+    ctaText: "text-blue-100/80",
+    ctaBtn: "bg-white text-blue-950 hover:bg-blue-50",
+    ctaBtnOutline: "border-white/30 text-white hover:bg-white/10",
+    crossCard: "from-blue-900 to-slate-950",
+    navCta: "bg-blue-600 hover:bg-blue-500",
+    navLink: "font-medium text-blue-300 hover:text-white",
+    pricingAccent: "bg-blue-600",
+    softSectionBg: "bg-[#030303]",
+    verificationSectionBg: "bg-[#050505]",
+    verificationTitle: "text-white",
+    pulseStroke: "#3b82f6",
+    brandAccent: "#2563eb",
+    pulseSliderAccent: "accent-blue-500",
+    exploreCard: "border-blue-500/20 ring-1 ring-blue-500/10 hover:border-blue-400/40",
+    exploreBadge: "bg-blue-600/90 text-white",
+    demoTabActive: "bg-blue-500/25",
+    screenBg: "bg-[#0a0c12]",
+    screenSurface: "bg-[#111318]",
+    screenMuted: "bg-[#0d0f14]",
+    accentBar: "bg-gradient-to-r from-blue-950 to-blue-600",
+    chip: "bg-white/5 border border-blue-500/30 text-blue-100/80",
+    chipHighlight: "bg-blue-600 text-white border-blue-600",
+    moduleCard: "bg-white/5 border-l-[3px] border-l-blue-600 border border-blue-500/20",
+    actionTile: "bg-white/5 border border-blue-500/40 text-blue-50",
+    actionTileActive: "bg-blue-600 text-white border-blue-600",
+    tabBar: "bg-[#111318] border-t border-blue-500/20",
+    tabInactive: "text-blue-400/50",
+    tabActive: "text-blue-200",
+  },
+  pro_staff: {
+    pageHeaderAccent: "pro_staff",
+    moduleActive: "border-indigo-500/50 bg-indigo-600/30 text-white shadow-lg shadow-indigo-900/20",
+    moduleIdle: "border-indigo-500/20 bg-white/5 hover:border-indigo-400/40",
+    moduleRing: "ring-2 ring-indigo-500/30",
+    imageGradient: "from-indigo-950/80 via-black/30 to-transparent",
+    imageRing: "ring-2 ring-indigo-500/30",
+    moduleDesc: "text-indigo-100/80",
+    highlightBorder: "border-indigo-500/20 bg-white/5 backdrop-blur-sm",
+    highlightLabel: "text-indigo-300/70",
+    journeyActive: "bg-indigo-600 text-white shadow-md shadow-indigo-900/30",
+    journeyIdle:
+      "bg-white/5 text-white/70 ring-1 ring-white/10 hover:ring-indigo-400/30",
+    pricingCard: "border-indigo-500/20 bg-white/5 hover:border-indigo-400/40",
+    ctaGradient: "from-indigo-950 to-neutral-950",
+    ctaText: "text-indigo-100/80",
+    ctaBtn: "bg-indigo-500 text-white hover:bg-indigo-400",
+    ctaBtnOutline: "border-white/30 text-white hover:bg-white/10",
+    crossCard: "from-indigo-900 to-slate-950",
+    navCta: "bg-indigo-600 hover:bg-indigo-500",
+    navLink: "font-medium text-indigo-300 hover:text-white",
+    pricingAccent: "bg-indigo-600",
+    softSectionBg: "bg-[#030303]",
+    verificationSectionBg: "bg-[#050505]",
+    verificationTitle: "text-white",
+    pulseStroke: "#6366f1",
+    brandAccent: "#4f46e5",
+    pulseSliderAccent: "accent-indigo-500",
+    exploreCard: "border-indigo-500/20 ring-1 ring-indigo-500/10 hover:border-indigo-400/40",
+    exploreBadge: "bg-indigo-600/90 text-white",
+    demoTabActive: "bg-indigo-500/25",
+    screenBg: "bg-[#0a0a12]",
+    screenSurface: "bg-[#111118]",
+    screenMuted: "bg-[#0d0d14]",
+    accentBar: "bg-gradient-to-r from-indigo-950 to-indigo-600",
+    chip: "bg-white/5 border border-indigo-500/30 text-indigo-100/80",
+    chipHighlight: "bg-indigo-600 text-white border-indigo-600",
+    moduleCard: "bg-white/5 border-l-[3px] border-l-indigo-600 border border-indigo-500/20",
+    actionTile: "bg-white/5 border border-indigo-500/40 text-indigo-50",
+    actionTileActive: "bg-indigo-600 text-white border-indigo-600",
+    tabBar: "bg-[#111118] border-t border-indigo-500/20",
+    tabInactive: "text-indigo-400/50",
+    tabActive: "text-indigo-200",
+  },
 };
 
 export function universeFromPath(pathname: string): ProductLineWeb | null {
+  if (pathname.startsWith(ROUTES.proJoueur)) return "pro";
+  if (pathname.startsWith(ROUTES.proClub)) return "pro";
+  if (pathname.startsWith(ROUTES.proStaff)) return "pro";
   if (pathname.startsWith(ROUTES.woman)) return "woman";
   if (pathname.startsWith(ROUTES.amateur)) return "amateur";
   if (pathname.startsWith(ROUTES.supporter)) return "supporter";
@@ -331,6 +470,13 @@ export function universeFromPath(pathname: string): ProductLineWeb | null {
   if (pathname.startsWith(ROUTES.homme)) return "homme";
   if (pathname.startsWith(ROUTES.joueurs)) return "homme";
   return null;
+}
+
+export function themeIdForUniverse(universe: import("@/lib/content").UniversePageId): UniverseThemeId {
+  if (universe === "pro_joueur") return "pro_joueur";
+  if (universe === "pro_club") return "pro_club";
+  if (universe === "pro_staff") return "pro_staff";
+  return universe as ProductLineWeb;
 }
 
 export function universeFromExploreHref(href: string): ProductLineWeb | null {
@@ -344,12 +490,14 @@ export function universeFromExploreHref(href: string): ProductLineWeb | null {
 }
 
 export function navBrandForPath(pathname: string) {
-  if (pathname.startsWith(ROUTES.joueurs)) {
-    return {
-      name: "Pôle Joueur",
-      logo: HOMME_BRAND.logo,
-      theme: UNIVERSE_THEME.homme,
-    };
+  if (pathname.startsWith(ROUTES.proJoueur)) {
+    return { name: PRO_JOUEUR_BRAND.name, logo: PRO_JOUEUR_BRAND.logo, theme: UNIVERSE_THEME.pro_joueur };
+  }
+  if (pathname.startsWith(ROUTES.proClub)) {
+    return { name: PRO_CLUB_BRAND.name, logo: PRO_CLUB_BRAND.logo, theme: UNIVERSE_THEME.pro_club };
+  }
+  if (pathname.startsWith(ROUTES.proStaff)) {
+    return { name: PRO_STAFF_BRAND.name, logo: PRO_STAFF_BRAND.logo, theme: UNIVERSE_THEME.pro_staff };
   }
   if (pathname.startsWith(ROUTES.partenaires)) {
     return {

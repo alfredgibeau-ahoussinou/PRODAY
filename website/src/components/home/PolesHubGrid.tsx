@@ -4,28 +4,19 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { POLES, POLE_STYLES, type PoleId } from "@/lib/poles";
+import { CAROUSEL_POLES, POLE_IMAGES, POLE_STYLES } from "@/lib/poles";
 import { Section } from "@/components/ui/Section";
-
-const POLE_IMAGES: Record<PoleId, string> = {
-  joueur: "/images/football-action-01.jpg",
-  amateur: "/images/football-amateur-01.jpg",
-  supporter: "/images/football-supporter-01.jpg",
-  pro: "/images/football-pro-01.jpg",
-  sante: "/images/football-health-01.jpg",
-  sponsor: "/images/football-club-01.jpg",
-};
 
 export function PolesHubGrid() {
   return (
     <Section
       kicker="PÔLES POPULAIRES"
       title="Six univers, une plateforme"
-      description="Joueur, Amateur, Supporter, Pro, Santé ou Partenaires — chaque pôle a sa page, ses tarifs et son identité."
+      description="Amateur, Supporter, Santé, Pro Joueur, Pro Club ou Pro Staff — chaque pôle a sa page, ses tarifs et son identité."
       className="bg-black"
     >
       <div className="flex flex-col gap-5">
-        {POLES.map((pole, i) => {
+        {CAROUSEL_POLES.map((pole, i) => {
           const styles = POLE_STYLES[pole.id];
           return (
             <motion.article

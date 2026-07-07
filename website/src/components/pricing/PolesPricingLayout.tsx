@@ -8,7 +8,7 @@ import { useCallback, useEffect, useState } from "react";
 import { PlanDetailCard } from "@/components/poles/PlanDetailCard";
 import { SponsorPricingSection } from "@/components/sponsor/SponsorPricingSection";
 import {
-  POLES,
+  CAROUSEL_POLES,
   POLE_STYLES,
   plansForPole,
   poleById,
@@ -17,28 +17,32 @@ import {
 import { ANNUAL_DISCOUNT_PERCENT } from "@/lib/pricing";
 import { ROUTES } from "@/lib/routes";
 
-const POLE_NAV: { id: PoleId; label: string }[] = [
-  { id: "joueur", label: "Joueur" },
-  { id: "amateur", label: "Amateur" },
-  { id: "supporter", label: "Supporter" },
-  { id: "pro", label: "Pro" },
-  { id: "sante", label: "Santé" },
-  { id: "sponsor", label: "Partenaires" },
-];
+const POLE_NAV_LABELS: Record<PoleId, string> = {
+  amateur: "Amateur",
+  supporter: "Supporter",
+  sante: "Santé",
+  pro_joueur: "Pro Joueur",
+  pro_club: "Pro Club",
+  pro_staff: "Pro Staff",
+  sponsor: "Partenaires",
+};
+
+const POLE_NAV: { id: PoleId; label: string }[] = CAROUSEL_POLES.map((p) => ({
+  id: p.id,
+  label: POLE_NAV_LABELS[p.id],
+}));
 
 const DOT_ACTIVE: Record<PoleId, string> = {
-  joueur: "bg-emerald-500",
   amateur: "bg-orange-500",
   supporter: "bg-violet-600",
-  pro: "bg-blue-600",
   sante: "bg-teal-500",
+  pro_joueur: "bg-emerald-500",
+  pro_club: "bg-blue-600",
+  pro_staff: "bg-indigo-600",
   sponsor: "bg-amber-400",
 };
 
-const VARIANT_LABELS: Record<string, string> = {
-  "Joueur Plus": "Man",
-  "Joueuse Plus": "Woman",
-};
+const VARIANT_LABELS: Record<string, string> = {};
 
 const SLIDE_OFFSET = 56;
 
@@ -62,7 +66,7 @@ function poleIndex(id: PoleId): number {
 }
 
 function isPoleId(value: string): value is PoleId {
-  return POLE_NAV.some((p) => p.id === value);
+  return value in POLE_NAV_LABELS;
 }
 
 type PolePricingPanelProps = {
@@ -143,9 +147,10 @@ function PolePricingPanel({ poleId, yearly }: PolePricingPanelProps) {
 }
 
 function initialPoleFromHash(): PoleId {
-  if (typeof window === "undefined") return "joueur";
+  if (typeof window === "undefined") return "amateur";
   const hash = window.location.hash.replace("#", "");
-  return isPoleId(hash) ? hash : "joueur";
+  if (hash === "joueur" || hash === "pro") return "pro_joueur";
+  return isPoleId(hash) ? hash : "amateur";
 }
 
 export function PolesPricingLayout() {
@@ -252,7 +257,7 @@ export function PolesPricingLayout() {
 
           <div className="flex flex-col items-center gap-2 text-center">
             <p className={`text-xs font-semibold tracking-[0.2em] ${activeStyles.textMuted}`}>
-              {POLES[activeIndex]?.kicker}
+              {poleById(activePole).kicker}
             </p>
             <div className="flex items-center gap-2">
               {POLE_NAV.map((item, i) => (
@@ -304,6 +309,10 @@ export function PolesPricingLayout() {
           Questions sur les formules ?{" "}
           <Link href={ROUTES.faq} className="font-medium text-white/70 underline hover:text-white">
             FAQ
+          </Link>{" "}
+          ·{" "}
+          <Link href={ROUTES.partenaires} className="font-medium text-white/70 underline hover:text-white">
+            Partenaires
           </Link>{" "}
           ·{" "}
           <Link href={ROUTES.beta} className="font-medium text-white/70 underline hover:text-white">

@@ -4,9 +4,8 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import { poleHubForPath } from "@/lib/siteArchitecture";
+import { poleHubForPath, POLE_HUB_LABELS, type PageAccent } from "@/lib/siteArchitecture";
 import { ROUTES } from "@/lib/routes";
-import type { PageAccent } from "@/lib/siteArchitecture";
 
 type PageHeaderProps = {
   kicker: string;
@@ -27,6 +26,8 @@ const ACCENT_GRADIENTS: Record<PageAccent, string> = {
   amateur: "bg-gradient-to-br from-orange-950 via-black to-black text-white",
   supporter: "bg-gradient-to-br from-violet-950 via-black to-black text-white",
   pro: "bg-gradient-to-br from-blue-950 via-black to-black text-white",
+  pro_club: "bg-gradient-to-br from-blue-950 via-black to-black text-white",
+  pro_staff: "bg-gradient-to-br from-indigo-950 via-black to-black text-white",
   sante: "bg-gradient-to-br from-teal-950 via-black to-black text-white",
   sponsor: "bg-gradient-to-br from-slate-950 via-black to-black text-white",
 };
@@ -38,6 +39,8 @@ const ACCENT_OVERLAYS: Record<PageAccent, string> = {
   amateur: "bg-gradient-to-r from-orange-950/90 via-black/60 to-black/20",
   supporter: "bg-gradient-to-r from-violet-950/90 via-black/60 to-black/20",
   pro: "bg-gradient-to-r from-blue-950/90 via-black/60 to-black/20",
+  pro_club: "bg-gradient-to-r from-blue-950/90 via-black/60 to-black/20",
+  pro_staff: "bg-gradient-to-r from-indigo-950/90 via-black/60 to-black/20",
   sante: "bg-gradient-to-r from-teal-950/90 via-black/60 to-black/20",
   sponsor: "bg-gradient-to-r from-slate-950/90 via-black/60 to-black/20",
 };
@@ -49,6 +52,8 @@ const ACCENT_KICKER: Record<PageAccent, string> = {
   amateur: "text-orange-400",
   supporter: "text-violet-400",
   pro: "text-blue-400",
+  pro_club: "text-blue-400",
+  pro_staff: "text-indigo-400",
   sante: "text-teal-400",
   sponsor: "text-amber-400",
 };
@@ -80,19 +85,7 @@ export function PageHeader({
   const backHref = poleHub && pathname !== poleHub ? poleHub : ROUTES.home;
   const backLabel =
     poleHub && pathname !== poleHub
-      ? backHref === ROUTES.joueurs
-        ? "Pôle Joueur"
-        : backHref === ROUTES.amateur
-          ? "Pôle Amateur"
-          : backHref === ROUTES.supporter
-            ? "Pôle Supporter"
-            : backHref === ROUTES.pro
-              ? "Pôle Pro"
-              : backHref === ROUTES.sante
-                ? "Pôle Santé"
-                : backHref === ROUTES.partenaires
-                  ? "Pôle Partenaires"
-                  : "Retour"
+      ? (POLE_HUB_LABELS[backHref] ?? "Retour")
       : "Accueil";
 
   return (

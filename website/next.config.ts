@@ -13,10 +13,12 @@ const nextConfig: NextConfig = {
   },
   async redirects() {
     return [
-      { source: "/joueur", destination: "/joueurs", permanent: true },
-      { source: "/joueur/:path*", destination: "/joueurs/:path*", permanent: true },
-      { source: "/player", destination: "/joueurs", permanent: true },
-      { source: "/players", destination: "/joueurs", permanent: true },
+      { source: "/joueurs", destination: "/amateur", permanent: true },
+      { source: "/joueurs/:path*", destination: "/amateur", permanent: true },
+      { source: "/joueur", destination: "/pro-joueur", permanent: true },
+      { source: "/joueur/:path*", destination: "/pro-joueur", permanent: true },
+      { source: "/player", destination: "/pro-joueur", permanent: true },
+      { source: "/players", destination: "/pro-joueur", permanent: true },
       { source: "/man", destination: "/amateur", permanent: true },
       { source: "/homme", destination: "/amateur", permanent: true },
       { source: "/homme/:path*", destination: "/amateur", permanent: true },

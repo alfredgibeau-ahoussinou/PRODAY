@@ -4,15 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ChevronRight } from "lucide-react";
 import { POLE_STYLES } from "@/lib/poles";
-import { pageMetaForPath, poleHubForPath } from "@/lib/siteArchitecture";
-import { ROUTES } from "@/lib/routes";
-
-const POLE_HUB_LABELS: Record<string, string> = {
-  [ROUTES.joueurs]: "Pôle Joueur",
-  [ROUTES.pro]: "Pôle Pro",
-  [ROUTES.sante]: "Pôle Santé",
-  [ROUTES.partenaires]: "Pôle Partenaires",
-};
+import { pageMetaForPath, poleHubForPath, POLE_HUB_LABELS } from "@/lib/siteArchitecture";
 
 export function PoleContextBar() {
   const pathname = usePathname();

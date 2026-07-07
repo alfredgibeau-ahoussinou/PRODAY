@@ -15,14 +15,9 @@ const POLE_GROUPS: {
   journeyIds: string[];
 }[] = [
   {
-    pole: "joueur",
-    label: "Pôle Joueur",
-    journeyIds: ["player", "parent"],
-  },
-  {
     pole: "amateur",
     label: "Pôle Amateur",
-    journeyIds: ["player", "coach"],
+    journeyIds: ["player", "coach", "parent"],
   },
   {
     pole: "supporter",
@@ -30,9 +25,19 @@ const POLE_GROUPS: {
     journeyIds: ["supporter"],
   },
   {
-    pole: "pro",
-    label: "Pôle Pro",
-    journeyIds: ["coach", "recruiter", "agent", "club", "organizer"],
+    pole: "pro_joueur",
+    label: "Pôle Pro Joueur",
+    journeyIds: ["player"],
+  },
+  {
+    pole: "pro_club",
+    label: "Pôle Pro Club",
+    journeyIds: ["club"],
+  },
+  {
+    pole: "pro_staff",
+    label: "Pôle Pro Staff",
+    journeyIds: ["coach", "recruiter", "agent", "organizer"],
   },
   {
     pole: "sante",
@@ -51,7 +56,7 @@ function journeysForGroup(ids: string[]) {
 }
 
 export function JourneyRoles({ fullPage }: JourneyRolesProps) {
-  const [activePole, setActivePole] = useState<PoleId>("joueur");
+  const [activePole, setActivePole] = useState<PoleId>("amateur");
   const [activeJourney, setActiveJourney] = useState(0);
 
   const group = POLE_GROUPS.find((g) => g.pole === activePole) ?? POLE_GROUPS[0];

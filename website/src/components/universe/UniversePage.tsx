@@ -9,10 +9,10 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { PulseSimulator } from "@/components/PulseSimulator";
 import { VerificationTimeline } from "@/components/VerificationTimeline";
 import { UniverseModuleExplorer } from "@/components/universe/UniverseModuleExplorer";
-import { UNIVERSE_THEME } from "@/components/universe/universeTheme";
+import { themeIdForUniverse, UNIVERSE_THEME } from "@/components/universe/universeTheme";
+import { CAROUSEL_POLES, POLE_IMAGES } from "@/lib/poles";
 import {
   JOURNEYS,
-  PRODUCT_LINES,
   UNIVERSE_PAGE_CONFIG,
   getWebPlanById,
   type UniversePageId,
@@ -20,21 +20,34 @@ import {
 import { formatPriceEur } from "@/lib/pricing";
 import { demoUrlForUniverse, ROUTES } from "@/lib/routes";
 
-const PATH_BY_UNIVERSE = {
+const PATH_BY_UNIVERSE: Record<UniversePageId, string> = {
   homme: ROUTES.homme,
   woman: ROUTES.woman,
   amateur: ROUTES.amateur,
   supporter: ROUTES.supporter,
   pro: ROUTES.pro,
-  sante: ROUTES.sante,
-} as const;
+  pro_joueur: ROUTES.proJoueur,
+  pro_club: ROUTES.proClub,
+  pro_staff: ROUTES.proStaff,
+};
 
 const PRICING_HASH_BY_UNIVERSE: Record<UniversePageId, string> = {
-  homme: "joueur",
-  woman: "joueur",
+  homme: "amateur",
+  woman: "amateur",
   amateur: "amateur",
   supporter: "supporter",
-  pro: "pro",
+  pro: "pro_staff",
+  pro_joueur: "pro_joueur",
+  pro_club: "pro_club",
+  pro_staff: "pro_staff",
+};
+
+const POLE_ID_BY_UNIVERSE: Partial<Record<UniversePageId, string>> = {
+  amateur: "amateur",
+  supporter: "supporter",
+  pro_joueur: "pro_joueur",
+  pro_club: "pro_club",
+  pro_staff: "pro_staff",
 };
 
 type UniversePageProps = {
@@ -43,7 +56,8 @@ type UniversePageProps = {
 
 export function UniversePage({ universe }: UniversePageProps) {
   const config = UNIVERSE_PAGE_CONFIG[universe];
-  const theme = UNIVERSE_THEME[universe];
+  const themeId = themeIdForUniverse(universe);
+  const theme = UNIVERSE_THEME[themeId];
   const journeys = useMemo(
     () =>
       JOURNEYS.filter((j) =>
@@ -56,7 +70,8 @@ export function UniversePage({ universe }: UniversePageProps) {
   const pricingPlans = config.pricingPlanIds
     .map((id) => getWebPlanById(id))
     .filter((p): p is NonNullable<typeof p> => p != null);
-  const otherUniverses = PRODUCT_LINES.filter((l) => l.id !== universe);
+  const currentPoleId = POLE_ID_BY_UNIVERSE[universe];
+  const otherPoles = CAROUSEL_POLES.filter((p) => p.id !== currentPoleId);
 
   return (
     <>
@@ -92,7 +107,7 @@ export function UniversePage({ universe }: UniversePageProps) {
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <h2 className="font-display text-2xl font-bold text-white sm:text-3xl">{config.modulesTitle}</h2>
           <p className="mt-3 max-w-3xl text-white/55">{config.modulesSubtitle}</p>
-          <UniverseModuleExplorer universe={universe} modules={config.modules} />
+          <UniverseModuleExplorer universe={themeId} modules={config.modules} />
         </div>
       </section>
 
@@ -150,7 +165,7 @@ export function UniversePage({ universe }: UniversePageProps) {
               Score de visibilité exclusif — profil, stats, activité et confiance combinés.
             </p>
           </div>
-          <PulseSimulator fullPage universe={universe} />
+          <PulseSimulator fullPage universe={config.line} />
         </section>
       )}
 
@@ -231,44 +246,62 @@ export function UniversePage({ universe }: UniversePageProps) {
 
       <section className="border-t border-white/10 bg-[#030303] py-12">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <h2 className="font-display text-lg font-bold text-white">Autres univers ProDay</h2>
-          <div className="mt-6 grid gap-4 sm:grid-cols-2">
-            {otherUniverses.map((line) => (
-              <Link
-                key={line.id}
-                href={line.href}
-                className={`group relative min-h-[200px] overflow-hidden rounded-2xl bg-gradient-to-br sm:min-h-[220px] ${UNIVERSE_THEME[line.id].crossCard} text-white`}
-              >
-                <div className="relative z-10 max-w-[58%] p-6 sm:max-w-[55%]">
-                  <Image
-                    src={line.logo}
-                    alt={line.brand.fullName}
-                    width={48}
-                    height={48}
-                    className="rounded-xl bg-white/10 ring-1 ring-white/20"
-                  />
-                  <p className="mt-4 text-xs font-semibold tracking-widest text-white/70">
-                    {line.brand.tagline}
-                  </p>
-                  <p className="mt-2 text-xl font-bold">{line.brand.fullName}</p>
-                  <p className="mt-2 line-clamp-3 text-sm text-white/85">{line.brand.mission}</p>
-                  <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold">
-                    Explorer
-                    <ArrowRight size={16} className="transition group-hover:translate-x-0.5" />
-                  </span>
-                </div>
-                <div className="absolute inset-y-0 right-0 w-[48%] sm:w-[45%]">
-                  <Image
-                    src={line.image}
-                    alt={line.brand.fullName}
-                    fill
-                    className="object-cover object-center transition duration-500 group-hover:scale-105"
-                    sizes="(max-width: 640px) 48vw, 320px"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-r from-black/50 via-black/15 to-transparent" />
-                </div>
-              </Link>
-            ))}
+          <h2 className="font-display text-lg font-bold text-white">Autres pôles ProDay</h2>
+          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {otherPoles.map((pole) => {
+              const crossTheme =
+                pole.id === "sante"
+                  ? UNIVERSE_THEME.sante
+                  : UNIVERSE_THEME[
+                      themeIdForUniverse(
+                        pole.id === "amateur"
+                          ? "amateur"
+                          : pole.id === "supporter"
+                            ? "supporter"
+                            : pole.id === "pro_joueur"
+                              ? "pro_joueur"
+                              : pole.id === "pro_club"
+                                ? "pro_club"
+                                : "pro_staff",
+                      )
+                    ];
+              return (
+                <Link
+                  key={pole.id}
+                  href={pole.href}
+                  className={`group relative min-h-[200px] overflow-hidden rounded-2xl bg-gradient-to-br sm:min-h-[220px] ${crossTheme.crossCard} text-white`}
+                >
+                  <div className="relative z-10 max-w-[58%] p-6 sm:max-w-[55%]">
+                    <Image
+                      src={pole.logo}
+                      alt={pole.title}
+                      width={48}
+                      height={48}
+                      className="rounded-xl bg-white/10 ring-1 ring-white/20"
+                    />
+                    <p className="mt-4 text-xs font-semibold tracking-widest text-white/70">
+                      {pole.kicker}
+                    </p>
+                    <p className="mt-2 text-xl font-bold">{pole.title}</p>
+                    <p className="mt-2 line-clamp-3 text-sm text-white/85">{pole.subtitle}</p>
+                    <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold">
+                      Explorer
+                      <ArrowRight size={16} className="transition group-hover:translate-x-0.5" />
+                    </span>
+                  </div>
+                  <div className="absolute inset-y-0 right-0 w-[48%] sm:w-[45%]">
+                    <Image
+                      src={POLE_IMAGES[pole.id]}
+                      alt={pole.title}
+                      fill
+                      className="object-cover object-center transition duration-500 group-hover:scale-105"
+                      sizes="(max-width: 640px) 48vw, 320px"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-r from-black/50 via-black/15 to-transparent" />
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -285,7 +318,7 @@ export function UniversePage({ universe }: UniversePageProps) {
               {config.cta.beta}
             </Link>
             <Link
-              href={demoUrlForUniverse(universe)}
+              href={demoUrlForUniverse(config.line)}
               className={`inline-block rounded-full border px-8 py-3.5 text-sm font-semibold ${theme.ctaBtnOutline}`}
             >
               Voir la démo

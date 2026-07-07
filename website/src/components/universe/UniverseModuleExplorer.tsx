@@ -4,10 +4,11 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import { useState } from "react";
 import type { ProductLineWeb, UniverseModule } from "@/lib/content";
+import type { UniverseThemeId } from "./universeTheme";
 import { UNIVERSE_THEME } from "./universeTheme";
 
 type UniverseModuleExplorerProps = {
-  universe: ProductLineWeb;
+  universe: UniverseThemeId;
   modules: readonly UniverseModule[];
 };
 

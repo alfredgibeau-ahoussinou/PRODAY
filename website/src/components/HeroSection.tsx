@@ -10,13 +10,13 @@ import { PremiumButton } from "@/components/ui/PremiumButton";
 import { Kicker } from "@/components/ui/Kicker";
 
 const HERO_SLIDES = [
-  { num: "01", label: "Joueur" },
-  { num: "02", label: "Amateur" },
-  { num: "03", label: "Supporter" },
-  { num: "04", label: "Pro" },
-  { num: "05", label: "Santé" },
-  { num: "06", label: "Partenaires" },
-];
+  { num: "01", label: "Amateur", href: ROUTES.amateur },
+  { num: "02", label: "Supporter", href: ROUTES.supporter },
+  { num: "03", label: "Santé", href: ROUTES.sante },
+  { num: "04", label: "Pro Joueur", href: ROUTES.proJoueur },
+  { num: "05", label: "Pro Club", href: ROUTES.proClub },
+  { num: "06", label: "Pro Staff", href: ROUTES.proStaff },
+] as const;
 
 export function HeroSection() {
   return (
@@ -71,8 +71,8 @@ export function HeroSection() {
             className="mt-6 flex flex-wrap gap-2 sm:mt-9 sm:gap-3"
           >
             <PremiumButton href={ROUTES.beta}>Accès anticipé</PremiumButton>
-            <PremiumButton href={ROUTES.joueurs} variant="outline">
-              Pôle Joueur
+            <PremiumButton href={ROUTES.amateur} variant="outline">
+              Pôle Amateur
             </PremiumButton>
             <PremiumButton href={ROUTES.demo} variant="outline">
               <Play size={15} fill="currentColor" />
@@ -109,19 +109,7 @@ export function HeroSection() {
           {HERO_SLIDES.map((slide, i) => (
             <Link
               key={slide.num}
-              href={
-                i === 0
-                  ? ROUTES.joueurs
-                  : i === 1
-                    ? ROUTES.amateur
-                    : i === 2
-                      ? ROUTES.supporter
-                      : i === 3
-                        ? ROUTES.pro
-                        : i === 4
-                          ? ROUTES.sante
-                          : ROUTES.partenaires
-              }
+              href={slide.href}
               className={`flex shrink-0 snap-start items-center gap-2 rounded-full border px-4 py-2.5 text-xs font-bold uppercase tracking-wider transition ${
                 i === 0
                   ? "border-[var(--proday-accent)]/50 bg-[var(--proday-accent-muted)] text-[var(--proday-accent)]"
@@ -144,19 +132,7 @@ export function HeroSection() {
           {HERO_SLIDES.map((slide, i) => (
             <Link
               key={slide.num}
-              href={
-                i === 0
-                  ? ROUTES.joueurs
-                  : i === 1
-                    ? ROUTES.amateur
-                    : i === 2
-                      ? ROUTES.supporter
-                      : i === 3
-                        ? ROUTES.pro
-                        : i === 4
-                          ? ROUTES.sante
-                          : ROUTES.partenaires
-              }
+              href={slide.href}
               className={`group flex items-center gap-4 py-2 transition ${
                 i === 0 ? "text-[var(--proday-accent)]" : "text-white/35 hover:text-white/70"
               }`}
