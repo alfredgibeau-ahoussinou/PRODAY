@@ -4,17 +4,39 @@ import type { User } from '../models/User';
 const CLUB_STAFF_ROLES = new Set(['coach', 'organizer', 'agent', 'club']);
 const MANAGE_STAFF_ROLES = CLUB_STAFF_ROLES;
 
+export interface SupporterFollowContext {
+  clubIds: Set<string>;
+  tournamentIds: Set<string>;
+}
+
+/** Tribune — matchs des clubs ou tournois suivis. */
+export function canViewTeamEventAsSupporter(
+  event: TeamEvent,
+  context: SupporterFollowContext,
+): boolean {
+  if (event.tournament_id && context.tournamentIds.has(event.tournament_id)) return true;
+  if (event.club_id && context.clubIds.has(event.club_id)) return true;
+  return false;
+}
+
 /** Accès lecture au hub match (composition, live, stats internes). */
 export function canViewTeamEvent(
   event: TeamEvent,
   profile: User | null | undefined,
-  options?: { isAdmin?: boolean },
+  options?: { isAdmin?: boolean; supporterFollow?: SupporterFollowContext },
 ): boolean {
   if (!profile) return false;
   if (options?.isAdmin) return true;
   if (event.organizer_uid === profile.uid) return true;
   if (event.invitee_uids.includes(profile.uid)) return true;
   if (event.event_type === 'detection') return true;
+  if (profile.role === 'supporter') {
+    if (event.tournament_id) return true;
+    if (options?.supporterFollow && canViewTeamEventAsSupporter(event, options.supporterFollow)) {
+      return true;
+    }
+    return false;
+  }
   const clubId = profile.profile?.club_id;
   if (clubId && event.club_id && clubId === event.club_id && CLUB_STAFF_ROLES.has(profile.role)) {
     return true;
