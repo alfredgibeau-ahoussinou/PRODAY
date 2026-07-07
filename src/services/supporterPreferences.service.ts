@@ -1,4 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { doc, serverTimestamp, updateDoc } from 'firebase/firestore';
+import { getDb } from '../lib/firebase';
 
 const STORAGE_KEY = 'proday_supporter_filters_v1';
 const NOTIF_STORAGE_KEY = 'proday_supporter_notif_v1';
@@ -64,9 +66,26 @@ export async function loadSupporterNotificationPrefs(
   }
 }
 
+export async function syncSupporterNotificationPrefsToFirestore(
+  uid: string,
+  prefs: SupporterNotificationPreferences
+): Promise<void> {
+  const database = getDb();
+  if (!database) return;
+  try {
+    await updateDoc(doc(database, 'users', uid), {
+      'notification_preferences.supporter': prefs,
+      updated_at: serverTimestamp(),
+    });
+  } catch (e) {
+    console.warn('[supporterPrefs] Firestore sync skipped:', e);
+  }
+}
+
 export async function saveSupporterNotificationPrefs(
   uid: string,
   prefs: SupporterNotificationPreferences
 ): Promise<void> {
   await AsyncStorage.setItem(`${NOTIF_STORAGE_KEY}:${uid}`, JSON.stringify(prefs));
+  await syncSupporterNotificationPrefsToFirestore(uid, prefs);
 }

@@ -55,7 +55,7 @@ export const POLES: PoleDefinition[] = [
     title: "Fans & communauté",
     subtitle: "Matchs · Reels · Fil",
     description:
-      "Supporters — matchs, réels et fil communautaire. Distinct du pôle Partenaires (sponsors commerciaux sur Pro).",
+      "Tribune 100 % gratuite — live scores, suivis illimités, débats, réels et shop. Sans abonnement store.",
     href: ROUTES.supporter,
     pricingHash: "supporter",
     logo: "/branding/logo-supporter-picto.png",
