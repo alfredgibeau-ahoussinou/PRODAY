@@ -21,36 +21,36 @@ type PageHeaderProps = {
 };
 
 const ACCENT_GRADIENTS: Record<PageAccent, string> = {
-  default: "bg-gradient-to-br from-neutral-950 via-[#0a0a0c] to-neutral-950 text-white",
-  joueur: "bg-gradient-to-br from-emerald-950 via-neutral-950 to-emerald-950/80 text-white",
-  woman: "bg-gradient-to-br from-pink-950 via-rose-900 to-neutral-900 text-white",
-  amateur: "bg-gradient-to-br from-orange-950 via-orange-900 to-neutral-900 text-white",
-  supporter: "bg-gradient-to-br from-violet-950 via-violet-900 to-neutral-900 text-white",
-  pro: "bg-gradient-to-br from-blue-950 via-blue-900 to-slate-950 text-white",
-  sante: "bg-gradient-to-br from-teal-950 via-teal-900 to-neutral-900 text-white",
-  sponsor: "bg-gradient-to-br from-slate-950 via-amber-950/40 to-slate-950 text-white",
+  default: "bg-black text-white",
+  joueur: "bg-gradient-to-br from-emerald-950 via-black to-black text-white",
+  woman: "bg-gradient-to-br from-pink-950 via-black to-black text-white",
+  amateur: "bg-gradient-to-br from-orange-950 via-black to-black text-white",
+  supporter: "bg-gradient-to-br from-violet-950 via-black to-black text-white",
+  pro: "bg-gradient-to-br from-blue-950 via-black to-black text-white",
+  sante: "bg-gradient-to-br from-teal-950 via-black to-black text-white",
+  sponsor: "bg-gradient-to-br from-slate-950 via-black to-black text-white",
 };
 
 const ACCENT_OVERLAYS: Record<PageAccent, string> = {
-  default: "bg-gradient-to-r from-neutral-950/88 via-neutral-950/40 to-neutral-950/5",
-  joueur: "bg-gradient-to-r from-emerald-950/88 via-emerald-950/40 to-emerald-950/5",
-  woman: "bg-gradient-to-r from-pink-950/88 via-pink-950/45 to-pink-950/5",
-  amateur: "bg-gradient-to-r from-orange-950/88 via-orange-950/45 to-orange-950/5",
-  supporter: "bg-gradient-to-r from-violet-950/88 via-violet-950/45 to-violet-950/5",
-  pro: "bg-gradient-to-r from-blue-950/88 via-blue-950/45 to-blue-950/5",
-  sante: "bg-gradient-to-r from-teal-950/88 via-teal-950/45 to-teal-950/5",
-  sponsor: "bg-gradient-to-r from-slate-950/90 via-amber-950/35 to-slate-950/5",
+  default: "hero-overlay-side",
+  joueur: "bg-gradient-to-r from-emerald-950/90 via-black/60 to-black/20",
+  woman: "bg-gradient-to-r from-pink-950/90 via-black/60 to-black/20",
+  amateur: "bg-gradient-to-r from-orange-950/90 via-black/60 to-black/20",
+  supporter: "bg-gradient-to-r from-violet-950/90 via-black/60 to-black/20",
+  pro: "bg-gradient-to-r from-blue-950/90 via-black/60 to-black/20",
+  sante: "bg-gradient-to-r from-teal-950/90 via-black/60 to-black/20",
+  sponsor: "bg-gradient-to-r from-slate-950/90 via-black/60 to-black/20",
 };
 
 const ACCENT_KICKER: Record<PageAccent, string> = {
-  default: "text-neutral-400",
-  joueur: "text-emerald-300",
-  woman: "text-pink-300",
-  amateur: "text-orange-300",
-  supporter: "text-violet-300",
-  pro: "text-blue-300",
-  sante: "text-teal-300",
-  sponsor: "text-amber-300",
+  default: "text-[var(--proday-accent)]",
+  joueur: "text-emerald-400",
+  woman: "text-pink-400",
+  amateur: "text-orange-400",
+  supporter: "text-violet-400",
+  pro: "text-blue-400",
+  sante: "text-teal-400",
+  sponsor: "text-amber-400",
 };
 
 export function PageHeader({
@@ -67,37 +67,37 @@ export function PageHeader({
   const hasHeroImage = Boolean(image);
   const isDarkHero = dark || hasHeroImage;
 
-  const headerBg = hasHeroImage
-    ? "bg-neutral-950 text-white"
-    : ACCENT_GRADIENTS[accent];
+  const headerBg = hasHeroImage ? "bg-black text-white" : ACCENT_GRADIENTS[accent];
 
   const overlayGradient = ACCENT_OVERLAYS[accent];
   const kickerClass = isDarkHero ? ACCENT_KICKER[accent] : "text-proday-muted";
-  const descClass = isDarkHero ? "text-white/85" : "text-proday-muted";
-  const backClass = isDarkHero ? "text-white/70 hover:text-white" : "text-proday-muted";
+  const descClass = isDarkHero ? "text-white/75" : "text-proday-muted";
+  const backClass = isDarkHero
+    ? "text-white/60 hover:text-[var(--proday-accent)]"
+    : "text-proday-muted";
 
   const poleHub = pathname ? poleHubForPath(pathname) : null;
   const backHref = poleHub && pathname !== poleHub ? poleHub : ROUTES.home;
   const backLabel =
     poleHub && pathname !== poleHub
-          ? backHref === ROUTES.joueurs
+      ? backHref === ROUTES.joueurs
         ? "Pôle Joueur"
         : backHref === ROUTES.amateur
           ? "Pôle Amateur"
-        : backHref === ROUTES.supporter
-          ? "Pôle Supporter"
-        : backHref === ROUTES.pro
-          ? "Pôle Pro"
-          : backHref === ROUTES.sante
-            ? "Pôle Santé"
-            : backHref === ROUTES.partenaires
-              ? "Pôle Partenaires"
-              : "Retour"
+          : backHref === ROUTES.supporter
+            ? "Pôle Supporter"
+            : backHref === ROUTES.pro
+              ? "Pôle Pro"
+              : backHref === ROUTES.sante
+                ? "Pôle Santé"
+                : backHref === ROUTES.partenaires
+                  ? "Pôle Partenaires"
+                  : "Retour"
       : "Accueil";
 
   return (
     <header
-      className={`relative overflow-hidden pt-24 ${headerBg} ${hasHeroImage ? "min-h-[420px] sm:min-h-[480px]" : ""}`}
+      className={`relative overflow-hidden pt-20 sm:pt-24 ${headerBg} ${hasHeroImage ? "min-h-[280px] sm:min-h-[420px] lg:min-h-[520px]" : ""}`}
     >
       {image && (
         <div className="absolute inset-0">
@@ -110,13 +110,14 @@ export function PageHeader({
             sizes="100vw"
           />
           <div className={`absolute inset-0 ${overlayGradient}`} />
+          <div className="absolute inset-0 hero-overlay" />
         </div>
       )}
 
-      <div className="relative mx-auto max-w-6xl px-4 pb-16 pt-8 sm:px-6 sm:pb-20">
+      <div className="relative mx-auto max-w-6xl px-4 pb-12 pt-6 sm:px-6 sm:pb-20 sm:pt-8">
         <Link
           href={backHref}
-          className={`mb-8 inline-flex items-center gap-2 text-sm transition ${backClass}`}
+          className={`mb-8 inline-flex items-center gap-2 text-sm font-medium uppercase tracking-wide transition ${backClass}`}
         >
           <ArrowLeft size={16} />
           {backLabel}
@@ -128,15 +129,19 @@ export function PageHeader({
           className="flex flex-wrap items-center gap-4"
         >
           {logo && (
-            <Image
-              src={logo}
-              alt={logoAlt ?? ""}
-              width={72}
-              height={72}
-              className="rounded-2xl bg-white/10 shadow-lg ring-1 ring-white/20"
-            />
+            <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-black/70 p-1 ring-1 ring-white/15 shadow-lg sm:h-16 sm:w-16 sm:rounded-2xl sm:p-1.5">
+              <Image
+                src={logo}
+                alt={logoAlt ?? ""}
+                width={64}
+                height={64}
+                className="h-full w-full object-contain object-top"
+              />
+            </div>
           )}
-          <p className={`text-xs font-semibold tracking-[0.2em] ${kickerClass}`}>
+          <p
+            className={`text-xs font-bold uppercase tracking-[0.28em] ${kickerClass}`}
+          >
             {kicker}
           </p>
         </motion.div>
@@ -144,7 +149,9 @@ export function PageHeader({
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.05 }}
-          className="mt-3 max-w-3xl font-display text-4xl font-bold leading-tight tracking-tight sm:text-5xl"
+          className={`mt-3 max-w-3xl font-display text-[clamp(1.75rem,5vw,3.75rem)] font-bold uppercase leading-tight tracking-tight sm:text-5xl lg:text-6xl ${
+            hasHeroImage ? "text-[var(--proday-accent)] text-accent-glow" : "text-white"
+          }`}
         >
           {title}
         </motion.h1>

@@ -2,29 +2,28 @@
 
 import { motion } from "framer-motion";
 import { Apple, Play, Smartphone } from "lucide-react";
-import Link from "next/link";
 import { BETA_PITCH } from "@/lib/content";
 import { ROUTES } from "@/lib/routes";
 import { PremiumButton } from "@/components/ui/PremiumButton";
 
 export function DownloadSection() {
   return (
-    <section className="py-20">
+    <section className="bg-black py-20">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <motion.div
           whileInView={{ opacity: 1, y: 0 }}
           initial={{ opacity: 0, y: 24 }}
           viewport={{ once: true }}
-          className="card-premium relative overflow-hidden rounded-3xl p-8 sm:grid sm:grid-cols-2 sm:gap-8 sm:p-12"
+          className="card-flash relative overflow-hidden rounded-3xl p-8 sm:grid sm:grid-cols-2 sm:gap-8 sm:p-12"
         >
-          <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-blue-500/10 blur-3xl" />
+          <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-[var(--proday-accent)]/10 blur-3xl" />
           <div>
-            <Smartphone className="text-blue-400/80" size={32} />
-            <h2 className="font-display mt-4 text-2xl font-bold text-white sm:text-3xl">
+            <Smartphone className="text-[var(--proday-accent)]" size={32} />
+            <h2 className="font-display mt-4 text-2xl font-bold uppercase tracking-wide text-[var(--proday-accent)] sm:text-3xl">
               Bientôt sur iOS & Android
             </h2>
             <p className="mt-3 leading-relaxed text-white/55">{BETA_PITCH.summary}</p>
-            <p className="mt-2 text-sm text-white/40">{BETA_PITCH.dailyUpdates}</p>
+            <p className="mt-2 text-sm text-white/35">{BETA_PITCH.dailyUpdates}</p>
           </div>
           <div className="mt-8 flex flex-col justify-center gap-3 sm:mt-0">
             <button

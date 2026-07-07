@@ -45,9 +45,9 @@ function PlanPriceBlock({
     ? "w-full rounded-2xl bg-white/10 p-6 text-left sm:w-auto sm:min-w-[260px] sm:text-right"
     : "text-right";
 
-  const mutedClass = premium ? "text-blue-100" : "text-neutral-500";
-  const accentClass = premium ? "text-white" : "text-neutral-900";
-  const savingsClass = premium ? "text-amber-300" : "text-emerald-700";
+  const mutedClass = "text-white/50";
+  const accentClass = "text-white";
+  const savingsClass = premium ? "text-amber-300" : "text-[var(--proday-accent)]";
 
   return (
     <div className={priceShell}>
@@ -59,12 +59,12 @@ function PlanPriceBlock({
 
       {yearly ? (
         <>
-          <p className={`text-xs font-semibold uppercase tracking-wider ${premium ? "text-amber-300" : "text-proday-muted"}`}>
+          <p className="text-xs font-semibold uppercase tracking-wider text-white/45">
             Facturation annuelle · −{ANNUAL_DISCOUNT_PERCENT} %
           </p>
-          <p className={`mt-2 tabular-nums ${premium ? "" : ""}`}>
+          <p className="mt-2 tabular-nums">
             <span
-              className={`font-bold tabular-nums ${premium ? "text-5xl font-black" : "text-4xl"}`}
+              className={`font-bold tabular-nums ${premium ? "text-5xl font-black" : "text-4xl text-white"}`}
             >
               {formatPriceEur(plan.yearlyEur)} €
             </span>
@@ -85,18 +85,18 @@ function PlanPriceBlock({
               {formatPriceEur(plan.monthlyEur)} €)
             </span>
           </p>
-          <p className={`mt-1 text-xs ${premium ? "text-blue-200/80" : "text-neutral-500"}`}>
+          <p className="mt-1 text-xs text-white/40">
             ou {formatPriceEur(plan.monthlyEur)} €/mois sans engagement
           </p>
         </>
       ) : (
         <>
-          <p className={`text-xs font-semibold uppercase tracking-wider ${premium ? "text-amber-300" : "text-proday-muted"}`}>
+          <p className="text-xs font-semibold uppercase tracking-wider text-white/45">
             Tarif de base · mensuel
           </p>
           <p className="mt-2 tabular-nums">
             <span
-              className={`font-bold tabular-nums ${premium ? "text-5xl font-black" : "text-4xl"}`}
+              className={`font-bold tabular-nums text-white ${premium ? "text-5xl font-black" : "text-4xl"}`}
             >
               {formatPriceEur(plan.monthlyEur)} €
             </span>
@@ -111,9 +111,7 @@ function PlanPriceBlock({
         </p>
       )}
       {"commissionPercent" in plan && plan.commissionPercent != null && (
-        <p
-          className={`mt-2 text-xs font-medium ${premium ? "text-amber-200" : "text-blue-800"}`}
-        >
+        <p className="mt-2 text-xs font-medium text-amber-200/90">
           + {plan.commissionPercent} % par RDV via l&apos;app
         </p>
       )}
@@ -150,10 +148,10 @@ export function PricingTable({
             key={u.id}
             type="button"
             onClick={() => selectUniverse(u.id)}
-            className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition ${
+            className={`inline-flex min-h-11 items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition ${
               universe === u.id
                 ? `${UNIVERSE_THEME[u.id].pricingAccent} text-white`
-                : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200"
+                : "border border-white/10 bg-white/5 text-white/60 hover:border-white/20 hover:text-white"
             }`}
           >
             <Image
@@ -169,12 +167,12 @@ export function PricingTable({
       </div>
 
       <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
-        <div className="inline-flex rounded-full border border-neutral-200 bg-neutral-100 p-1">
+        <div className="inline-flex rounded-full border border-white/10 bg-white/5 p-1">
           <button
             type="button"
             onClick={() => setYearly(false)}
-            className={`rounded-full px-5 py-2 text-sm font-medium transition ${
-              !yearly ? "bg-white shadow-sm" : ""
+            className={`min-h-10 rounded-full px-5 py-2 text-sm font-medium transition ${
+              !yearly ? "bg-[var(--proday-accent)] text-black" : "text-white/60"
             }`}
           >
             Mensuel
@@ -182,8 +180,8 @@ export function PricingTable({
           <button
             type="button"
             onClick={() => setYearly(true)}
-            className={`rounded-full px-5 py-2 text-sm font-medium transition ${
-              yearly ? "bg-white shadow-sm" : ""
+            className={`min-h-10 rounded-full px-5 py-2 text-sm font-medium transition ${
+              yearly ? "bg-[var(--proday-accent)] text-black" : "text-white/60"
             }`}
           >
             Annuel (−{ANNUAL_DISCOUNT_PERCENT} %)
@@ -197,10 +195,10 @@ export function PricingTable({
             key={p.id}
             type="button"
             onClick={() => setActivePlan(i)}
-            className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+            className={`min-h-10 rounded-full px-4 py-2 text-sm font-medium transition ${
               activePlan === i
                 ? `${theme.pricingAccent} text-white`
-                : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200"
+                : "border border-white/10 bg-white/5 text-white/60 hover:border-white/20"
             }`}
           >
             {p.label}
@@ -209,7 +207,7 @@ export function PricingTable({
                 className={
                   activePlan === i
                     ? " ml-1.5 font-semibold text-blue-100"
-                    : " ml-1.5 font-semibold text-blue-800"
+                    : " ml-1.5 font-semibold text-blue-300"
                 }
               >
                 · {formatPriceEur(p.monthlyEur)} €/mois
@@ -223,17 +221,15 @@ export function PricingTable({
         key={`${universe}-${plan.id}-${String(yearly)}`}
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
-        className={`mx-auto mt-10 max-w-4xl overflow-hidden rounded-3xl border bg-white shadow-lg ${
-          premium
-            ? "border-blue-900/30 ring-2 ring-amber-400/60"
-            : "border-neutral-200"
+        className={`card-premium mx-auto mt-10 max-w-4xl overflow-hidden rounded-3xl ${
+          premium ? "ring-2 ring-amber-400/40" : ""
         }`}
       >
         <div
-          className={`border-b p-8 sm:p-10 ${
+          className={`border-b border-white/10 p-6 sm:p-10 ${
             premium
-              ? "border-white/10 bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900 text-white"
-              : "border-neutral-100 bg-neutral-50"
+              ? "bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900 text-white"
+              : "bg-[#0a0a0a]"
           }`}
         >
           <div className="flex flex-wrap items-end justify-between gap-6">
@@ -243,10 +239,10 @@ export function PricingTable({
                   Formule Elite
                 </span>
               )}
-              <h3 className={`text-2xl font-bold ${premium ? "mt-3" : ""}`}>
+              <h3 className={`text-2xl font-bold text-white ${premium ? "mt-3" : ""}`}>
                 {plan.label}
               </h3>
-              <p className={premium ? "mt-1 text-blue-100" : "mt-1 text-neutral-600"}>
+              <p className={premium ? "mt-1 text-blue-100" : "mt-1 text-white/55"}>
                 {plan.tagline}
               </p>
             </div>
@@ -254,48 +250,48 @@ export function PricingTable({
           </div>
         </div>
         {"commissionNote" in plan && plan.commissionNote && (
-          <div className="border-b border-neutral-100 bg-blue-50 px-8 py-4 sm:px-10">
-            <p className="text-center text-sm text-blue-900/90">
+          <div className="border-b border-white/10 bg-blue-950/30 px-6 py-4 sm:px-10">
+            <p className="text-center text-sm text-blue-100/90">
               {plan.commissionNote}
             </p>
           </div>
         )}
         <div className="grid gap-0 sm:grid-cols-2">
-          <div className="border-b border-neutral-100 p-8 sm:border-b-0 sm:border-r">
-            <p className="text-xs font-semibold uppercase tracking-wider text-neutral-500">
+          <div className="border-b border-white/8 p-6 sm:border-b-0 sm:border-r sm:p-8">
+            <p className="text-xs font-semibold uppercase tracking-wider text-white/40">
               Gratuit
             </p>
             <ul className="mt-4 space-y-3">
               {plan.freeIncludes.map((f) => (
-                <li key={f} className="flex gap-2 text-sm text-neutral-700">
-                  <Check size={16} className="shrink-0 text-neutral-400" />
+                <li key={f} className="flex gap-2 text-sm text-white/65">
+                  <Check size={16} className="shrink-0 text-white/30" />
                   {f}
                 </li>
               ))}
             </ul>
           </div>
-          <div className="p-8">
-            <p className="text-xs font-semibold uppercase tracking-wider text-neutral-900">
+          <div className="p-6 sm:p-8">
+            <p className="text-xs font-semibold uppercase tracking-wider text-[var(--proday-accent)]">
               Pro
             </p>
             <ul className="mt-4 space-y-3">
               {plan.proIncludes.map((f) => (
-                <li key={f} className="flex gap-2 text-sm font-medium text-neutral-800">
-                  <Check size={16} className="shrink-0 text-emerald-600" />
+                <li key={f} className="flex gap-2 text-sm font-medium text-white/85">
+                  <Check size={16} className="shrink-0 text-[var(--proday-accent)]" />
                   {f}
                 </li>
               ))}
             </ul>
           </div>
         </div>
-        <div className="border-t border-neutral-100 bg-neutral-50 p-6 text-center">
-          <p className="text-sm text-neutral-600">
+        <div className="border-t border-white/8 bg-[#050505] p-6 text-center">
+          <p className="text-sm text-white/50">
             IAP en cours de déploiement — bêta gratuite. Inscrits informés
             quotidiennement de l&apos;avancement.
           </p>
           <Link
             href={ROUTES.beta}
-            className={`mt-4 inline-block rounded-full px-8 py-3 text-sm font-semibold text-white ${theme.pricingAccent}`}
+            className={`mt-4 inline-flex min-h-11 items-center rounded-full px-8 py-3 text-sm font-semibold text-white ${theme.pricingAccent}`}
           >
             Rejoindre la beta
           </Link>

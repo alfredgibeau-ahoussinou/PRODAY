@@ -28,7 +28,7 @@ export function PageBody({
       ? "bg-[#050505]"
       : poleStyles?.surface ?? "bg-[#030303]";
   const pyClass =
-    py === "none" ? "" : py === "sm" ? "py-12" : "py-16 sm:py-20";
+    py === "none" ? "" : py === "sm" ? "py-12 md:py-16" : "py-16 md:py-24";
   const maxW = narrow ? "max-w-2xl" : "max-w-6xl";
 
   return (

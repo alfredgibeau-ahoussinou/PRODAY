@@ -13,13 +13,13 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
   const showPoleBar = showPoleContextBar(pathname);
 
   return (
-    <div className="page-dark relative min-h-screen bg-[#030303] text-white">
+    <div className="page-dark relative min-h-screen bg-black text-white">
       <div
-        className="pointer-events-none fixed inset-0 gradient-mesh"
+        className="pointer-events-none fixed inset-0 gradient-mesh opacity-80"
         aria-hidden
       />
       <div
-        className="pointer-events-none fixed inset-0 grid-lines opacity-[0.28]"
+        className="pointer-events-none fixed inset-0 grid-lines opacity-[0.2]"
         aria-hidden
       />
       <div className="relative z-10">

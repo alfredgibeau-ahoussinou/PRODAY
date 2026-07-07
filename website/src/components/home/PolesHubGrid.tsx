@@ -19,68 +19,77 @@ const POLE_IMAGES: Record<PoleId, string> = {
 export function PolesHubGrid() {
   return (
     <Section
-      kicker="6 PÔLES"
-      title="Un écosystème, six univers distincts"
-      description="Joueur, Amateur, Supporter, Pro, Santé ou Partenaires — chaque pôle a sa page, ses tarifs et son identité visuelle."
-      className="bg-[#030303]"
+      kicker="PÔLES POPULAIRES"
+      title="Six univers, une plateforme"
+      description="Joueur, Amateur, Supporter, Pro, Santé ou Partenaires — chaque pôle a sa page, ses tarifs et son identité."
+      className="bg-black"
     >
-      <div className="grid gap-6 sm:grid-cols-2">
+      <div className="flex flex-col gap-5">
         {POLES.map((pole, i) => {
           const styles = POLE_STYLES[pole.id];
           return (
-            <motion.div
+            <motion.article
               key={pole.id}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, x: i % 2 === 0 ? -20 : 20 }}
+              whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: i * 0.06 }}
-              className={`group relative overflow-hidden rounded-3xl card-premium p-8 ring-1 ring-white/10 ${styles.accentTop}`}
+              transition={{ delay: i * 0.05 }}
+              className="card-flash group grid overflow-hidden sm:grid-cols-[280px_1fr] lg:grid-cols-[340px_1fr]"
             >
-              <div className="relative flex items-start gap-4">
-                <Image
-                  src={pole.logo}
-                  alt=""
-                  width={52}
-                  height={52}
-                  className="shrink-0 rounded-xl bg-white/10 ring-1 ring-white/20"
-                />
-                <div>
-                  <p className={`text-xs font-semibold tracking-widest ${styles.textMuted}`}>
-                    {pole.kicker}
-                  </p>
-                  <h3 className="font-display mt-1 text-xl font-bold text-white sm:text-2xl">
-                    {pole.title}
-                  </h3>
-                  <p className={`mt-1 text-sm ${styles.textMuted}`}>{pole.subtitle}</p>
-                </div>
-              </div>
-              <p className="relative mt-4 text-sm leading-relaxed text-white/70">
-                {pole.description}
-              </p>
-              <div className="relative mt-6 flex flex-wrap gap-3">
-                <Link
-                  href={pole.href}
-                  className={`inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition hover:scale-[1.02] ${styles.cta}`}
-                >
-                  En savoir plus
-                  <ArrowRight size={16} />
-                </Link>
-                <Link
-                  href={`/tarifs#${pole.pricingHash}`}
-                  className="inline-flex items-center gap-2 rounded-full border border-white/20 px-5 py-2.5 text-sm font-semibold text-white/80 transition hover:border-white/40 hover:text-white"
-                >
-                  Tarifs
-                </Link>
-              </div>
-              <div className="relative mt-6 h-28 overflow-hidden rounded-2xl ring-1 ring-white/10">
+              <div className="relative h-48 sm:h-auto sm:min-h-[200px]">
                 <Image
                   src={POLE_IMAGES[pole.id]}
                   alt=""
                   fill
-                  className="object-cover opacity-80 transition group-hover:scale-105"
+                  className="object-cover transition duration-500 group-hover:scale-105"
                 />
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent to-black/60 sm:bg-gradient-to-t sm:from-black/80 sm:to-transparent" />
+                <span className="absolute left-4 top-4 font-display text-3xl font-bold text-[var(--proday-accent)]/80">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
               </div>
-            </motion.div>
+
+              <div className="flex flex-col justify-center p-6 sm:p-8">
+                <div className="flex items-start gap-4">
+                  <Image
+                    src={pole.logo}
+                    alt=""
+                    width={44}
+                    height={44}
+                    className="shrink-0 rounded-xl bg-white/10 ring-1 ring-white/15"
+                  />
+                  <div>
+                    <p
+                      className={`text-xs font-bold uppercase tracking-widest ${styles.textMuted}`}
+                    >
+                      {pole.kicker}
+                    </p>
+                    <h3 className="font-display mt-1 text-xl font-bold uppercase text-white sm:text-2xl">
+                      {pole.title}
+                    </h3>
+                    <p className={`mt-1 text-sm ${styles.textMuted}`}>{pole.subtitle}</p>
+                  </div>
+                </div>
+                <p className="mt-4 text-sm leading-relaxed text-white/65">
+                  {pole.description}
+                </p>
+                <div className="mt-5 flex flex-wrap gap-3">
+                  <Link
+                    href={pole.href}
+                    className={`inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-bold uppercase tracking-wide transition hover:scale-[1.02] ${styles.cta}`}
+                  >
+                    En savoir plus
+                    <ArrowRight size={16} />
+                  </Link>
+                  <Link
+                    href={`/tarifs#${pole.pricingHash}`}
+                    className="inline-flex items-center gap-2 rounded-full border border-white/15 px-5 py-2.5 text-sm font-semibold text-white/75 transition hover:border-[var(--proday-accent)] hover:text-[var(--proday-accent)]"
+                  >
+                    Tarifs
+                  </Link>
+                </div>
+              </div>
+            </motion.article>
           );
         })}
       </div>

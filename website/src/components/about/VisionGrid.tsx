@@ -6,7 +6,7 @@ import { VISION_PILLARS } from "@/lib/content";
 
 export function VisionGrid() {
   return (
-    <section className="bg-[#030303] py-20">
+    <section className="bg-[#030303] py-16 md:py-24">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <div className="grid gap-6 sm:grid-cols-2">
           {VISION_PILLARS.map((item, i) => (

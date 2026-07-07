@@ -58,9 +58,9 @@ export function VerificationTimeline({
               key={s.id}
               type="button"
               onClick={() => setStep(i)}
-              className={`rounded-lg px-4 py-2 text-sm transition ${
+              className={`min-h-10 rounded-lg px-4 py-2 text-sm transition ${
                 step === i
-                  ? "bg-white text-neutral-950"
+                  ? "bg-[var(--proday-accent)] font-semibold text-black"
                   : "bg-white/5 text-white/60 hover:bg-white/10 hover:text-white"
               }`}
             >
@@ -84,13 +84,13 @@ export function VerificationTimeline({
                     current
                       ? "border-amber-500/40 bg-amber-500/10"
                       : done
-                        ? "border-emerald-500/30 bg-emerald-500/10"
+                        ? "border-[var(--proday-accent)]/30 bg-[var(--proday-accent-muted)]"
                         : "card-premium border-white/10"
                   }`}
                 >
                   <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-white/10">
                     {done ? (
-                      <Check className="text-emerald-400" size={20} />
+                      <Check className="text-[var(--proday-accent)]" size={20} />
                     ) : current ? (
                       <Clock className="text-amber-400" size={20} />
                     ) : (
