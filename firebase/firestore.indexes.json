@@ -181,6 +181,22 @@
         { "fieldPath": "player_uid", "order": "ASCENDING" },
         { "fieldPath": "team_event_id", "order": "ASCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "medical_appointments",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "patient_uid", "order": "ASCENDING" },
+        { "fieldPath": "start_at", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "medical_appointments",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "physio_uid", "order": "ASCENDING" },
+        { "fieldPath": "start_at", "order": "ASCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []
