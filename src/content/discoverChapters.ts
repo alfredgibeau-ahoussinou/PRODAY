@@ -16,8 +16,8 @@ export interface DiscoverChapter {
 }
 
 export const DISCOVER_CHAPTERS: DiscoverChapter[] = [
-  { id: 'welcome', label: 'Découvrir', short: '1' },
-  { id: 'explore', label: 'Modules', short: '2' },
+  { id: 'welcome', label: 'Accueil', short: '1' },
+  { id: 'explore', label: 'Pôles', short: '2' },
   { id: 'live', label: 'Live', short: '3' },
   { id: 'journey', label: 'Parcours', short: '4' },
   { id: 'join', label: 'Rejoindre', short: '5' },
@@ -49,12 +49,12 @@ export const DISCOVER_INTRO_SLIDES: DiscoverIntroSlide[] = [
   },
   {
     id: 'modules',
-    kicker: 'MODULES',
-    title: 'Touchez.\nExplorez.',
-    body: 'Les piliers ProDay — swipez ou ouvrez un module en un tap.',
+    kicker: 'VOS PILIERS',
+    title: 'Mercato,\nmatchs, club.',
+    body: 'Les pôles ProDay — recrutement, saison et sponsors en un tap.',
     image: SHOWCASE_IMAGES.mercatoDetection,
     icon: 'search',
-    cta: 'Les modules',
+    cta: 'Voir les pôles',
     action: 'modules',
   },
   {

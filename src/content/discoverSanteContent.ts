@@ -1,24 +1,38 @@
+import type { IconName } from '../components/ui/Icon';
+import type { IntroSlideAction } from './discoverChapters';
 import type { DiscoverUniverseCard } from './discoverChapters';
 import { SHOWCASE_IMAGES } from './showcaseAssets';
 
 export const DISCOVER_INTRO_SLIDES_SANTE = [
   {
-    id: 'agenda',
-    title: 'Agenda cabinet',
-    subtitle: 'RDV et disponibilités en un coup d’œil',
+    id: 'welcome',
+    kicker: 'PRO DAY SANTÉ',
+    title: 'La santé\nau service du jeu.',
+    body: 'Praticiens du sport — agenda, messagerie sécurisée et visibilité auprès des clubs.',
     image: SHOWCASE_IMAGES.coachFounder,
+    icon: 'heart' as IconName,
+    cta: 'Voir l’annuaire',
+    action: 'modules' as IntroSlideAction,
   },
   {
     id: 'patients',
-    title: 'Sportifs suivis',
-    subtitle: 'Messagerie sécurisée et dossiers',
+    kicker: 'CABINET',
+    title: 'Sportifs\nsuivis.',
+    body: 'Messagerie sécurisée, dossiers patients et demandes de soins à proximité.',
     image: SHOWCASE_IMAGES.playerProfile,
+    icon: 'chat' as IconName,
+    cta: 'Voir les pôles',
+    action: 'modules' as IntroSlideAction,
   },
   {
-    id: 'demandes',
-    title: 'Demandes de soins',
-    subtitle: 'Répondez aux joueurs près de chez vous',
+    id: 'join',
+    kicker: 'REJOINDRE',
+    title: 'Votre compte\nSanté.',
+    body: 'Inscription praticien — validation diplôme incluse.',
     image: SHOWCASE_IMAGES.mercatoDetection,
+    icon: 'person' as IconName,
+    cta: 'Créer mon compte',
+    action: 'signup' as IntroSlideAction,
   },
 ] as const;
 

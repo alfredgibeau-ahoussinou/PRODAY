@@ -7,7 +7,9 @@ import {
   type DiscoverIntroSlide,
 } from './discoverChapters';
 import {
-  DISCOVER_INTRO_SLIDES_PRO,
+  DISCOVER_INTRO_SLIDES_PRO_CLUB,
+  DISCOVER_INTRO_SLIDES_PRO_PLAYER,
+  DISCOVER_INTRO_SLIDES_PRO_STAFF,
   DISCOVER_UNIVERSE_CARDS_PRO,
 } from './discoverProContent';
 import {
@@ -32,12 +34,12 @@ function resolveDiscoverLine(line: ProductLineId): ProductLineId {
 
 export function getDiscoverIntroSlides(line: ProductLineId): DiscoverIntroSlide[] {
   const resolved = resolveDiscoverLine(line);
-  if (resolved === 'pro_player' || resolved === 'pro_club' || resolved === 'pro_staff') {
-    return DISCOVER_INTRO_SLIDES_PRO;
-  }
+  if (resolved === 'pro_player') return DISCOVER_INTRO_SLIDES_PRO_PLAYER;
+  if (resolved === 'pro_club') return DISCOVER_INTRO_SLIDES_PRO_CLUB;
+  if (resolved === 'pro_staff') return DISCOVER_INTRO_SLIDES_PRO_STAFF;
   if (resolved === 'amateur') return DISCOVER_INTRO_SLIDES_AMATEUR;
   if (resolved === 'supporter') return DISCOVER_INTRO_SLIDES_SUPPORTER;
-  if (resolved === 'sante') return DISCOVER_INTRO_SLIDES_SANTE;
+  if (resolved === 'sante') return [...DISCOVER_INTRO_SLIDES_SANTE] as unknown as DiscoverIntroSlide[];
   return DISCOVER_INTRO_SLIDES;
 }
 
@@ -104,7 +106,7 @@ export function getDiscoverCarouselCopy(line: ProductLineId): {
   }
   return {
     label: brand.name,
-    title: '6 pôles, un seul tap',
-    subtitle: 'Swipez — chaque métier a sa coque',
+    title: 'Votre univers ProDay',
+    subtitle: 'Swipez pour parcourir chaque pôle',
   };
 }

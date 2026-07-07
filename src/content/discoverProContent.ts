@@ -13,12 +13,45 @@ export interface DiscoverIntroSlidePro {
   action: IntroSlideAction;
 }
 
-export const DISCOVER_INTRO_SLIDES_PRO: DiscoverIntroSlidePro[] = [
+export const DISCOVER_INTRO_SLIDES_PRO_PLAYER: DiscoverIntroSlidePro[] = [
   {
     id: 'welcome',
-    kicker: 'PRODAY PRO',
-    title: 'Les pros\ndu foot.',
-    body: 'Coach, agent et pôle santé — recrutement vérifié et réseau clubs.',
+    kicker: 'PRO JOUEUR',
+    title: 'Votre carrière\npro.',
+    body: 'Portfolio, opportunités et convocations — votre cockpit de joueur professionnel.',
+    image: SHOWCASE_IMAGES.playerProfile,
+    icon: 'person',
+    cta: 'Voir le live',
+    action: 'live',
+  },
+  {
+    id: 'modules',
+    kicker: 'VOS PILIERS',
+    title: 'Carrière &\nopportunités.',
+    body: 'Mercato Pro, mandat agent, groupe et logistique — tout pour performer au plus haut niveau.',
+    image: SHOWCASE_IMAGES.mercatoDetection,
+    icon: 'briefcase',
+    cta: 'Voir les pôles',
+    action: 'modules',
+  },
+  {
+    id: 'join',
+    kicker: 'REJOINDRE',
+    title: 'Votre compte\nPro Joueur.',
+    body: 'Inscription joueur professionnel — validation métier incluse.',
+    image: SHOWCASE_IMAGES.expMessages,
+    icon: 'person',
+    cta: 'Créer mon compte',
+    action: 'signup',
+  },
+];
+
+export const DISCOVER_INTRO_SLIDES_PRO_CLUB: DiscoverIntroSlidePro[] = [
+  {
+    id: 'welcome',
+    kicker: 'PRO CLUB',
+    title: 'Votre structure\nconnectée.',
+    body: 'Équipes, recrutement local, calendrier et communication — la vitrine digitale du club.',
     image: SHOWCASE_IMAGES.coachFounder,
     icon: 'school',
     cta: 'Voir le live',
@@ -26,25 +59,61 @@ export const DISCOVER_INTRO_SLIDES_PRO: DiscoverIntroSlidePro[] = [
   },
   {
     id: 'modules',
-    kicker: 'RÉSEAU PRO',
-    title: 'Expertise.\nContacts.',
-    body: 'Mercato Pro, mandats agent, accompagnement santé — tout l’écosystème pro.',
+    kicker: 'VOS PILIERS',
+    title: 'Effectifs &\nrecrutement.',
+    body: 'Mercato Pro, convocations, annonces et visibilité — pilotez votre structure au quotidien.',
     image: SHOWCASE_IMAGES.expTeam,
-    icon: 'briefcase',
-    cta: 'Les modules',
+    icon: 'people',
+    cta: 'Voir les pôles',
     action: 'modules',
   },
   {
     id: 'join',
     kicker: 'REJOINDRE',
-    title: 'Votre compte\nPro.',
-    body: 'Inscription coach, agent ou praticien — validation métier incluse.',
+    title: 'Votre compte\nPro Club.',
+    body: 'Inscription club ou structure — validation métier incluse.',
     image: SHOWCASE_IMAGES.expMessages,
     icon: 'person',
-    cta: 'Commencer',
+    cta: 'Créer mon compte',
     action: 'signup',
   },
 ];
+
+export const DISCOVER_INTRO_SLIDES_PRO_STAFF: DiscoverIntroSlidePro[] = [
+  {
+    id: 'welcome',
+    kicker: 'PRO STAFF',
+    title: 'Le staff\nau centre.',
+    body: 'Coach, agent, recruteur ou organisateur — mandats, scouting et réseau pro vérifié.',
+    image: SHOWCASE_IMAGES.coachFounder,
+    icon: 'school',
+    cta: 'Voir le live',
+    action: 'live',
+  },
+  {
+    id: 'modules',
+    kicker: 'VOS PILIERS',
+    title: 'Métier &\nréseau.',
+    body: 'Mercato Pro, mandats agent, scouting et convocations — les outils de votre métier.',
+    image: SHOWCASE_IMAGES.expTeam,
+    icon: 'briefcase',
+    cta: 'Voir les pôles',
+    action: 'modules',
+  },
+  {
+    id: 'join',
+    kicker: 'REJOINDRE',
+    title: 'Votre compte\nPro Staff.',
+    body: 'Inscription coach, agent ou recruteur — validation métier incluse.',
+    image: SHOWCASE_IMAGES.expMessages,
+    icon: 'person',
+    cta: 'Créer mon compte',
+    action: 'signup',
+  },
+];
+
+/** @deprecated Préférer les variantes pro_player / pro_club / pro_staff */
+export const DISCOVER_INTRO_SLIDES_PRO: DiscoverIntroSlidePro[] = DISCOVER_INTRO_SLIDES_PRO_STAFF;
 
 export const DISCOVER_UNIVERSE_CARDS_PRO = [
   {
@@ -74,7 +143,7 @@ export const DISCOVER_UNIVERSE_CARDS_PRO = [
   {
     id: 'sponsors' as const,
     title: 'Sponsors',
-    subtitle: 'Sponsors & visibilité',
+    subtitle: 'Visibilité & partenariats',
     image: SHOWCASE_IMAGES.coachFounder,
     icon: 'star-four-points' as IconName,
     accent: '#F59E0B',

@@ -14,7 +14,7 @@ export const UI_FR: MessageCatalog = {
   'discover.quick.matchs': 'Matchs',
   'discover.quick.matchsSub': 'Convocations',
   'discover.quick.reels': 'Reels',
-  'discover.quick.reelsSub': 'Découvrir',
+  'discover.quick.reelsSub': 'Moments forts',
   'discover.quick.shop': 'Shop',
   'discover.quick.shopSub': 'Officiel',
 
@@ -23,6 +23,9 @@ export const UI_FR: MessageCatalog = {
   'universe.amateur': 'Univers Amateur',
   'universe.supporter': 'Univers Supporter',
   'universe.pro': 'Univers Pro',
+  'universe.pro_player': 'Pro Joueur',
+  'universe.pro_club': 'Pro Club',
+  'universe.pro_staff': 'Pro Staff',
   'universe.sante': 'Univers Santé',
 
   'discover.hero.homme': 'Le foot masculin,\namateur pro.',
@@ -51,17 +54,17 @@ export const UI_FR: MessageCatalog = {
   'discover.trust.amateur':
     'Profils vérifiés pour le foot amateur — joueurs et coachs, messagerie sécurisée après validation.',
   'discover.cta.amateur': 'Créer un compte Amateur',
-  'discover.sectionExplore.amateur': 'Espace Pro Day Amateur',
+  'discover.sectionExplore.amateur': 'Vos pôles Amateur',
   'discover.secondaryMercato.amateur': 'Mercato Amateur',
   'discover.playersStat.amateur': 'Amateurs',
 
   'discover.hero.supporter': 'Le foot,\nensemble.',
   'discover.mission.supporter':
-    'Fans et communauté — matchs, réels et fil en direct, sans Mercato.',
+    'Fans et communauté — matchs live, réels et fil, sans Mercato ni covoiturage.',
   'discover.trust.supporter':
     'Profils supporters — messagerie communautaire sécurisée.',
   'discover.cta.supporter': 'Créer un compte Supporter',
-  'discover.sectionExplore.supporter': 'Espace Pro Day Supporter',
+  'discover.sectionExplore.supporter': 'Votre tribune',
   'discover.secondaryMercato.supporter': 'Communauté',
   'discover.playersStat.supporter': 'Supporters',
 
@@ -71,9 +74,39 @@ export const UI_FR: MessageCatalog = {
   'discover.trust.pro':
     'Profils vérifiés pour coachs et agents — messagerie sécurisée après validation.',
   'discover.cta.pro': 'Créer un compte Pro',
-  'discover.sectionExplore.pro': 'Espace Pro Day Pro',
+  'discover.sectionExplore.pro': 'Vos pôles Pro',
   'discover.secondaryMercato.pro': 'Mercato Pro',
   'discover.playersStat.pro': 'Pros',
+
+  'discover.hero.pro_player': 'Votre carrière\npro.',
+  'discover.mission.pro_player':
+    'Portfolio, opportunités, mandat agent et convocations — le cockpit du joueur professionnel.',
+  'discover.trust.pro_player':
+    'Profils vérifiés — messagerie sécurisée après validation métier.',
+  'discover.cta.pro_player': 'Créer un compte Pro Joueur',
+  'discover.sectionExplore.pro_player': 'Vos pôles Pro Joueur',
+  'discover.secondaryMercato.pro_player': 'Opportunités',
+  'discover.playersStat.pro_player': 'Joueurs pro',
+
+  'discover.hero.pro_club': 'Votre structure\nconnectée.',
+  'discover.mission.pro_club':
+    'Équipes, recrutement local, calendrier et communication — la vitrine digitale du club.',
+  'discover.trust.pro_club':
+    'Structures vérifiées — messagerie sécurisée après validation.',
+  'discover.cta.pro_club': 'Créer un compte Pro Club',
+  'discover.sectionExplore.pro_club': 'Vos pôles Pro Club',
+  'discover.secondaryMercato.pro_club': 'Recrutement',
+  'discover.playersStat.pro_club': 'Clubs',
+
+  'discover.hero.pro_staff': 'Le staff\nau centre.',
+  'discover.mission.pro_staff':
+    'Coach, agent, recruteur ou organisateur — mandats, scouting et réseau pro vérifié.',
+  'discover.trust.pro_staff':
+    'Profils staff vérifiés — messagerie sécurisée après validation métier.',
+  'discover.cta.pro_staff': 'Créer un compte Pro Staff',
+  'discover.sectionExplore.pro_staff': 'Vos pôles Pro Staff',
+  'discover.secondaryMercato.pro_staff': 'Réseau pro',
+  'discover.playersStat.pro_staff': 'Staff',
 
   'discover.hero.sante': 'La santé\nau service du jeu.',
   'discover.mission.sante':
@@ -81,7 +114,7 @@ export const UI_FR: MessageCatalog = {
   'discover.trust.sante':
     'Praticiens vérifiés — diplômes contrôlés avant la messagerie complète.',
   'discover.cta.sante': 'Créer un compte Santé',
-  'discover.sectionExplore.sante': 'Espace Pro Day Santé',
+  'discover.sectionExplore.sante': 'Vos pôles Santé',
   'discover.secondaryMercato.sante': 'Annuaire santé',
   'discover.playersStat.sante': 'Praticiens',
 
@@ -112,6 +145,41 @@ export const UI_FR: MessageCatalog = {
   'journey.mercato.body.sante': 'Clubs & sportifs',
   'journey.season.title.sante': 'Agenda',
   'journey.season.body.sante': 'Rendez-vous',
+
+  'journey.profile.title.amateur': 'Profil',
+  'journey.profile.body.amateur': 'CV foot en ligne',
+  'journey.mercato.title.amateur': 'Mercato Amateur',
+  'journey.mercato.body.amateur': 'Annonces & candidatures',
+  'journey.season.title.amateur': 'Saison',
+  'journey.season.body.amateur': 'Matchs & convocations',
+
+  'journey.profile.title.supporter': 'Profil',
+  'journey.profile.body.supporter': 'Votre tribune',
+  'journey.mercato.title.supporter': 'Joueurs',
+  'journey.mercato.body.supporter': 'Parcourir les profils',
+  'journey.season.title.supporter': 'Matchs',
+  'journey.season.body.supporter': 'Calendrier & live',
+
+  'journey.profile.title.pro_player': 'Portfolio',
+  'journey.profile.body.pro_player': 'CV scouting & vidéo',
+  'journey.mercato.title.pro_player': 'Opportunités',
+  'journey.mercato.body.pro_player': 'Essais & mandats',
+  'journey.season.title.pro_player': 'Saison pro',
+  'journey.season.body.pro_player': 'Convocations & groupe',
+
+  'journey.profile.title.pro_club': 'Structure',
+  'journey.profile.body.pro_club': 'Vitrine club',
+  'journey.mercato.title.pro_club': 'Recrutement',
+  'journey.mercato.body.pro_club': 'Annonces & candidatures',
+  'journey.season.title.pro_club': 'Calendrier',
+  'journey.season.body.pro_club': 'Matchs & équipes',
+
+  'journey.profile.title.pro_staff': 'Profil métier',
+  'journey.profile.body.pro_staff': 'Coach, agent, recruteur',
+  'journey.mercato.title.pro_staff': 'Mercato Pro',
+  'journey.mercato.body.pro_staff': 'Scouting & mandats',
+  'journey.season.title.pro_staff': 'Saison',
+  'journey.season.body.pro_staff': 'Convocations & réseau',
 
   'modules.recrutement.title': 'Recrutement',
   'modules.recrutement.subtitle': 'Joueurs & clubs',
@@ -145,15 +213,30 @@ export const UI_FR: MessageCatalog = {
 
   'auth.loginSub.homme': 'Connectez-vous à votre espace Pro Day Man.',
   'auth.loginSub.woman': 'Connectez-vous à votre espace foot féminin.',
+  'auth.loginSub.amateur': 'Connectez-vous à votre espace Pro Day Amateur.',
+  'auth.loginSub.supporter': 'Connectez-vous à votre tribune Pro Day Supporter.',
   'auth.loginSub.pro': 'Connectez-vous à Pro Day Pro — staff, structures et sponsors.',
+  'auth.loginSub.pro_player': 'Connectez-vous à votre espace Pro Joueur.',
+  'auth.loginSub.pro_club': 'Connectez-vous à votre espace Pro Club.',
+  'auth.loginSub.pro_staff': 'Connectez-vous à votre espace Pro Staff.',
   'auth.loginSub.sante': 'Connectez-vous à votre espace Pro Day Santé.',
 
   'auth.signupSub.homme':
     'Créez votre compte joueur — CV en ligne, Mercato M et matchs.',
   'auth.signupSub.woman':
     'Créez votre compte joueuse — Mercato F, stats et visibilité clubs.',
+  'auth.signupSub.amateur':
+    'Créez votre compte — joueur ou coach amateur, Mercato local et matchs.',
+  'auth.signupSub.supporter':
+    'Créez votre compte supporter — matchs, réels et fil communautaire.',
   'auth.signupSub.pro':
     'Créez votre compte pro — coach, club, agent, orga ou sponsor.',
+  'auth.signupSub.pro_player':
+    'Créez votre compte joueur pro — carrière, opportunités et convocations.',
+  'auth.signupSub.pro_club':
+    'Créez votre compte club — structure, effectifs et recrutement.',
+  'auth.signupSub.pro_staff':
+    'Créez votre compte staff — coach, agent ou recruteur, mandats et scouting.',
   'auth.signupSub.sante':
     'Créez votre compte praticien — agenda, messagerie et visibilité.',
 

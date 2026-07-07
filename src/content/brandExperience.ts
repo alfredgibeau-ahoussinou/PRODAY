@@ -152,7 +152,7 @@ export function getDiscoverHomeCopy(line: ProductLineId) {
       trustText:
         'Praticiens vérifiés — diplômes contrôlés avant la messagerie complète.',
       ctaText: 'Créer un compte Santé',
-      sectionExplore: 'Espace Pro Day Santé',
+      sectionExplore: 'Vos pôles Santé',
       secondaryMercato: 'Annuaire santé',
       playersStatLabel: 'Praticiens',
     };
@@ -165,7 +165,7 @@ export function getDiscoverHomeCopy(line: ProductLineId) {
       trustText:
         'Profils vérifiés pour coachs et agents pro — messagerie sécurisée après validation.',
       ctaText: 'Créer un compte Pro',
-      sectionExplore: 'Espace Pro Day Pro',
+      sectionExplore: 'Vos pôles Pro',
       secondaryMercato: 'Mercato Pro',
       playersStatLabel: 'Pros',
     };
@@ -178,7 +178,7 @@ export function getDiscoverHomeCopy(line: ProductLineId) {
       trustText:
         'Profils vérifiés pour le foot amateur — joueurs et coachs, messagerie sécurisée après validation.',
       ctaText: 'Créer un compte Amateur',
-      sectionExplore: 'Espace Pro Day Amateur',
+      sectionExplore: 'Vos pôles Amateur',
       secondaryMercato: 'Mercato Amateur',
       playersStatLabel: 'Amateurs',
     };
@@ -191,7 +191,7 @@ export function getDiscoverHomeCopy(line: ProductLineId) {
       trustText:
         'Profils supporters — messagerie communautaire sécurisée.',
       ctaText: 'Créer un compte Supporter',
-      sectionExplore: 'Espace Pro Day Supporter',
+      sectionExplore: 'Votre tribune',
       secondaryMercato: 'Communauté',
       playersStatLabel: 'Supporters',
     };

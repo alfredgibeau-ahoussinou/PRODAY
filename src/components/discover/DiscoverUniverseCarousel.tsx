@@ -194,7 +194,7 @@ const UniverseCard: React.FC<{
               <Text style={styles.title}>{card.title}</Text>
               <Text style={styles.sub}>{card.subtitle}</Text>
               <View style={styles.tapRow}>
-                <Text style={styles.tapText}>Toucher pour explorer</Text>
+                <Text style={styles.tapText}>Ouvrir</Text>
                 <Icon name="chevron-forward" size={16} color={c.brandInverse} />
               </View>
             </View>

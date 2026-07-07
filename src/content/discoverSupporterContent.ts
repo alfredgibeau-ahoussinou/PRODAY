@@ -27,7 +27,7 @@ export const DISCOVER_INTRO_SLIDES_SUPPORTER = [
     body: 'Calendrier, moments forts et fil communautaire — votre place en tribune numérique.',
     image: SHOWCASE_IMAGES.friendlyMatch,
     icon: 'videocam' as IconName,
-    cta: 'Les modules',
+    cta: 'Explorer la tribune',
     action: 'modules' as IntroSlideAction,
   },
   {
@@ -37,7 +37,7 @@ export const DISCOVER_INTRO_SLIDES_SUPPORTER = [
     body: 'Inscription supporter en quelques minutes.',
     image: SHOWCASE_IMAGES.playerProfile,
     icon: 'person' as IconName,
-    cta: 'Commencer',
+    cta: 'Créer mon compte',
     action: 'signup' as IntroSlideAction,
   },
 ];
@@ -61,8 +61,8 @@ export const DISCOVER_UNIVERSE_CARDS_SUPPORTER = [
   },
   {
     id: 'recrutement' as const,
-    title: 'Découverte',
-    subtitle: 'Parcourir les joueurs',
+    title: 'Joueurs',
+    subtitle: 'Parcourir les profils',
     image: SHOWCASE_IMAGES.mercatoDetection,
     icon: 'people' as IconName,
     accent: SUPPORTER_VIOLET.dark,

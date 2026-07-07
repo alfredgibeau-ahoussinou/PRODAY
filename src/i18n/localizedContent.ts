@@ -102,9 +102,15 @@ export function getLocalizedGuestJourneySteps(
     icon:
       line === 'sante' && id === 'profile'
         ? 'heart'
-        : line === 'pro' && id === 'profile'
+        : (line === 'pro' || line === 'pro_staff') && id === 'profile'
           ? 'school'
-          : JOURNEY_ICONS[id],
+          : line === 'pro_player' && id === 'profile'
+            ? 'person'
+            : line === 'pro_club' && id === 'profile'
+              ? 'school'
+              : line === 'supporter' && id === 'mercato'
+                ? 'people'
+                : JOURNEY_ICONS[id],
     title: t(lineKey(line, `journey.${id}.title`)),
     body: t(lineKey(line, `journey.${id}.body`)),
   }));

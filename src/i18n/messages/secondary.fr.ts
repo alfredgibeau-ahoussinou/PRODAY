@@ -3,17 +3,40 @@ import type { MessageCatalog } from '../types';
 /** Écrans secondaires — français. */
 export const SECONDARY_FR: MessageCatalog = {
   'auth.teaser.homme.0': 'Inscription joueur uniquement',
-  'auth.teaser.homme.1': 'Espace M, fiche sportive et stats',
-  'auth.teaser.homme.2': 'Email confirmé puis accès au Mercato M',
+  'auth.teaser.homme.1': 'CV en ligne, stats et Mercato M',
+  'auth.teaser.homme.2': 'Email confirmé — accès à votre espace Man',
+
   'auth.teaser.woman.0': 'Inscription joueuse uniquement',
-  'auth.teaser.woman.1': 'Catégorie F, fiche et stats',
-  'auth.teaser.woman.2': 'Email confirmé puis accès au Mercato F',
+  'auth.teaser.woman.1': 'CV joueuse, stats et Mercato F',
+  'auth.teaser.woman.2': 'Email confirmé — accès à votre espace Woman',
+
+  'auth.teaser.amateur.0': 'Joueur ou coach amateur',
+  'auth.teaser.amateur.1': 'CV, effectif, Mercato local et matchs',
+  'auth.teaser.amateur.2': 'Email confirmé — accès à votre espace Amateur',
+
+  'auth.teaser.supporter.0': 'Inscription supporter uniquement',
+  'auth.teaser.supporter.1': 'Matchs, réels et fil communautaire',
+  'auth.teaser.supporter.2': 'Email confirmé — bienvenue en tribune',
+
   'auth.teaser.pro.0': 'Coach, club, agent, orga ou sponsor',
-  'auth.teaser.pro.1': 'Parcours métier dédié à votre rôle',
-  'auth.teaser.pro.2': 'Validation pro puis accès à l’écosystème',
+  'auth.teaser.pro.1': 'Parcours métier adapté à votre rôle',
+  'auth.teaser.pro.2': 'Profil vérifié — accès à votre espace Pro',
+
+  'auth.teaser.pro_player.0': 'Inscription joueur professionnel',
+  'auth.teaser.pro_player.1': 'Portfolio, opportunités et convocations',
+  'auth.teaser.pro_player.2': 'Profil vérifié — accès à votre espace Pro Joueur',
+
+  'auth.teaser.pro_club.0': 'Inscription club ou structure',
+  'auth.teaser.pro_club.1': 'Effectifs, recrutement et calendrier',
+  'auth.teaser.pro_club.2': 'Profil vérifié — accès à votre espace Pro Club',
+
+  'auth.teaser.pro_staff.0': 'Coach, agent, recruteur ou organisateur',
+  'auth.teaser.pro_staff.1': 'Mandats, scouting et réseau pro',
+  'auth.teaser.pro_staff.2': 'Profil vérifié — accès à votre espace Pro Staff',
+
   'auth.teaser.sante.0': 'Kinés, médecins et praticiens du sport',
   'auth.teaser.sante.1': 'Agenda, messagerie et visibilité patients',
-  'auth.teaser.sante.2': 'Validation pro puis accès au pôle Santé',
+  'auth.teaser.sante.2': 'Diplôme validé — accès au pôle Santé',
 
   'verification.title.player': 'Vérification joueur',
   'verification.title.player.woman': 'Vérification joueuse',

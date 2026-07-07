@@ -26,12 +26,12 @@ export const DISCOVER_INTRO_SLIDES_WOMAN: DiscoverIntroSlideWoman[] = [
   },
   {
     id: 'modules',
-    kicker: 'MERCATO F',
+    kicker: 'VOS PILIERS',
     title: 'Joueuses.\nClubs F.',
     body: 'Annonces et détections filtrées — visibilité sur le football féminin.',
     image: WOMAN_SHOWCASE_IMAGES.mercatoDetection,
     icon: 'search',
-    cta: 'Les modules',
+    cta: 'Voir les pôles',
     action: 'modules',
   },
   {

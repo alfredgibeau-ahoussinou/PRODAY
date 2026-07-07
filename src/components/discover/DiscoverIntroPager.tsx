@@ -157,7 +157,7 @@ export const DiscoverIntroPager: React.FC<DiscoverIntroPagerProps> = ({
               />
             ))}
           </View>
-          <Text style={styles.swipeHint}>Glissez pour explorer →</Text>
+          <Text style={styles.swipeHint}>Glissez pour continuer →</Text>
         </View>
       ) : null}
     </View>

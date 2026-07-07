@@ -33,12 +33,12 @@ export const DISCOVER_INTRO_SLIDES_AMATEUR: DiscoverIntroSlideAmateur[] = [
   },
   {
     id: 'modules',
-    kicker: 'MODULES',
-    title: 'Joueur ou\ncoach.',
-    body: 'CV, effectif, covoiturage et Mercato Amateur — tout pour votre club local.',
+    kicker: 'VOS PILIERS',
+    title: 'Club, matchs,\nMercato.',
+    body: 'Effectif, convocations, covoiturage et Mercato Amateur — tout pour votre saison locale.',
     image: SHOWCASE_IMAGES.mercatoDetection,
     icon: 'search',
-    cta: 'Les modules',
+    cta: 'Voir les pôles',
     action: 'modules',
   },
   {
@@ -48,7 +48,7 @@ export const DISCOVER_INTRO_SLIDES_AMATEUR: DiscoverIntroSlideAmateur[] = [
     body: 'Inscription joueur ou coach amateur en quelques minutes.',
     image: SHOWCASE_IMAGES.playerProfile,
     icon: 'person',
-    cta: 'Commencer',
+    cta: 'Créer mon compte',
     action: 'signup',
   },
 ];
