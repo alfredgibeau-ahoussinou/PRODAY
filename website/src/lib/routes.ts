@@ -22,8 +22,14 @@ export const ROUTES = {
   proStaff: "/pro-staff",
   /** @deprecated Hub legacy — voir pro-joueur, pro-club, pro-staff. */
   pro: "/pro",
-  /** Page bêta — accès via lien email `?token=` uniquement. */
+  /** Hub bêta — accès via lien email `?token=` uniquement. */
   beta: "/beta",
+  /** Programme bêta (mini-site protégé). */
+  betaProgramme: "/beta/programme",
+  /** Guide installation APK / TestFlight (mini-site protégé). */
+  betaInstaller: "/beta/installer",
+  /** FAQ et support bêta (mini-site protégé). */
+  betaAide: "/beta/aide",
   /** Liste d'attente publique (formulaire d'inscription). */
   betaWaitlist: "/beta/inscription",
   about: "/a-propos",
