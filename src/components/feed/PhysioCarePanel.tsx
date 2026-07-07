@@ -16,6 +16,7 @@ import {
 import { isPhysioBookingEnabled } from '../../services/medicalAppointments.service';
 import { spacing, radius } from '../../theme/designTokens';
 import { useAppTheme } from '../../context/ProductLineContext';
+import { useFemalePlayerPresentation } from '../../hooks/useFemalePlayerPresentation';
 import type { AppColors } from '../../theme/universeTheme';
 import { Icon, type IconName } from '../ui/Icon';
 import { ProDayText } from '../ui/ProDayText';
@@ -45,6 +46,7 @@ export const PhysioCarePanel: React.FC<PhysioCarePanelProps> = ({
   hideHeader = false,
 }) => {
   const { colors: c, productLine } = useAppTheme();
+  const isFemalePresentation = useFemalePlayerPresentation();
   const styles = useMemo(() => createStyles(c), [c]);
   
   const [physios, setPhysios] = useState<User[]>([]);
@@ -103,14 +105,14 @@ export const PhysioCarePanel: React.FC<PhysioCarePanelProps> = ({
           <ProDayText variant="section">
             {isPlayer
               ? 'Pôle médical'
-              : isWoman
+              : isFemalePresentation
                 ? 'Joueuses — suivi blessure'
                 : 'Joueurs — suivi blessure'}
           </ProDayText>
           <ProDayText variant="body" muted style={styles.sub}>
             {isPlayer
               ? 'Réservez un créneau ou contactez kinés, coach mental, nutrition…'
-              : isWoman
+              : isFemalePresentation
                 ? 'Les joueuses réservent en ligne ou vous contactent pour prévention et récupération.'
                 : 'Les joueurs réservent en ligne ou vous contactent pour prévention et récupération.'}
           </ProDayText>

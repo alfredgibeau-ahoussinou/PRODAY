@@ -678,6 +678,8 @@ service cloud.firestore {
     }
 
     match /follows/{followId} {
+      // Lecture privée : un supporter (ou tout compte) ne lit que ses propres follows.
+      // Pas de lecture publique — compteurs futurs via agrégats Cloud Functions si besoin.
       allow read: if isSignedIn() && resource.data.follower_uid == request.auth.uid;
       allow create: if isSignedIn()
         && request.resource.data.follower_uid == request.auth.uid

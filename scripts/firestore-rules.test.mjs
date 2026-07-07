@@ -728,6 +728,55 @@ async function run() {
     })
   );
 
+  // --- Follows supporter : lecture / écriture propres suivis uniquement ---
+  const fan2Db = testEnv.authenticatedContext('fan2').firestore();
+
+  await assertSucceeds(
+    setDoc(doc(fanDb, 'follows/fan1__club__club-a'), {
+      follower_uid: 'fan1',
+      target_type: 'club',
+      target_id: 'club-a',
+      target_label: 'Club A',
+      created_at: new Date(),
+    })
+  );
+
+  await assertSucceeds(
+    getDocs(
+      query(collection(fanDb, 'follows'), where('follower_uid', '==', 'fan1'))
+    )
+  );
+
+  await assertSucceeds(getDoc(doc(fanDb, 'follows/fan1__club__club-a')));
+
+  await assertFails(getDoc(doc(fan2Db, 'follows/fan1__club__club-a')));
+
+  await assertFails(
+    getDocs(
+      query(collection(fan2Db, 'follows'), where('follower_uid', '==', 'fan1'))
+    )
+  );
+
+  await assertFails(
+    setDoc(doc(fan2Db, 'follows/fan2__club__club-a'), {
+      follower_uid: 'fan1',
+      target_type: 'club',
+      target_id: 'club-a',
+      created_at: new Date(),
+    })
+  );
+
+  await assertSucceeds(
+    setDoc(doc(fanDb, 'follows/fan1__player__p1'), {
+      follower_uid: 'fan1',
+      target_type: 'player',
+      target_id: 'p1',
+      created_at: new Date(),
+    })
+  );
+
+  await assertSucceeds(deleteDoc(doc(fanDb, 'follows/fan1__player__p1')));
+
   // --- Journal activité joueur ---
   await assertSucceeds(
     setDoc(doc(carolDb, 'player_activities/act1'), {

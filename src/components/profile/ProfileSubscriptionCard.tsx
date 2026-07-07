@@ -5,10 +5,9 @@ import { Icon } from '../ui/Icon';
 import {
   FREE_TIER_LABEL,
   PRO_TIER_LABEL,
-  getPlanForRoleAndLine,
   ROLES_WITHOUT_STORE_PLAN,
 } from '../../content/subscriptionPlans';
-import { getMercatoQuotaLabel } from '../../content/subscriptionPlansByLine';
+import { getMercatoQuotaLabel, getPlanForRoleAndLine } from '../../content/subscriptionPlansByLine';
 import { getSubscriptionPlanVisual } from '../../content/subscriptionPlanVisuals';
 import type { SubscriptionUsagePeriod } from '../../models/Subscription';
 import { useAppTheme } from '../../context/ProductLineContext';

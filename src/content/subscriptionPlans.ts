@@ -249,8 +249,6 @@ export function getPlanForRole(role: UserRole): SubscriptionPlanDefinition | nul
   return id ? SUBSCRIPTION_PLANS[id] : null;
 }
 
-export { getPlanForRoleAndLine, plansForProductLine } from './subscriptionPlansByLine';
-
 /** Rôles sans formule store — tribune supporter 100 % gratuite. */
 export const ROLES_WITHOUT_STORE_PLAN: UserRole[] = ['supporter'];
 

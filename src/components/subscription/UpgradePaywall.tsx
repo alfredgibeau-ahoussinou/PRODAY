@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import type { User } from '../../models/User';
 import type { SubscriptionFeatureId } from '../../content/subscriptionPlans';
-import { getPlanForRoleAndLine } from '../../content/subscriptionPlans';
+import { getPlanForRoleAndLine } from '../../content/subscriptionPlansByLine';
 import { getSubscriptionPlanVisual } from '../../content/subscriptionPlanVisuals';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { AnimatedDialogShell } from '../motion/AnimatedDialogShell';
