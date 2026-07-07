@@ -39,6 +39,7 @@ import { useSubscriptionOptional } from '../context/SubscriptionContext';
 import { useProDayBrain } from '../hooks/useProDayBrain';
 import { useSectionIntelligence } from '../hooks/useSectionIntelligence';
 import { OnboardingDocumentsScreen } from './OnboardingDocumentsScreen';
+import { PushScreenTransition } from '../components/motion';
 
 interface ProfileScreenProps {
   profile: User;
@@ -346,120 +347,123 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
     );
   }
 
-  if (showEdit) {
-    return (
-      <EditProfileScreen
-        user={profile}
-        onBack={() => setShowEdit(false)}
-        onSaved={onRefresh}
-      />
-    );
-  }
-  if (showVerificationSuccess && verifiedStaff) {
-    return (
-      <VerificationSuccessScreen onBack={() => setShowVerificationSuccess(false)} />
-    );
-  }
-  if (showPlayerVerification && profile.role === 'player') {
-    return (
-      <PlayerVerificationScreen
-        user={profile}
-        onBack={() => setShowPlayerVerification(false)}
-        onUpdated={onRefresh}
-      />
-    );
-  }
-  if (showVerificationFlow && (pendingVerify || verifiedStaff)) {
-    return (
-      <VerificationFlowScreen
-        user={profile}
-        onBack={() => setShowVerificationFlow(false)}
-        initialSuccess={verifiedStaff}
-      />
-    );
-  }
-  if (showParental) {
-    return <ParentalControlScreen onBack={() => setShowParental(false)} />;
-  }
-  if (showGuardian) {
-    return <GuardianPortalScreen onBack={() => setShowGuardian(false)} />;
-  }
-  if (showTeamManagement && canManageClub) {
-    return (
-      <TeamManagementScreen
-        profile={profile}
-        onBack={() => setShowTeamManagement(false)}
-      />
-    );
-  }
-  if (showCreateClub) {
-    return (
-      <CreateClubScreen
-        profile={profile}
-        onBack={() => setShowCreateClub(false)}
-        onCreated={onRefresh}
-      />
-    );
-  }
-  if (showJoinClub) {
-    return (
-      <JoinClubScreen
-        profile={profile}
-        onBack={() => setShowJoinClub(false)}
-        onJoined={() => {
-          setShowJoinClub(false);
-          onRefresh();
-        }}
-      />
-    );
-  }
-  if (showAnnouncements) {
-    return (
-      <ClubAnnouncementsScreen
-        profile={profile}
-        onBack={() => setShowAnnouncements(false)}
-      />
-    );
-  }
-  if (showPublicProfile && profile.role === 'player') {
-    return (
-      <PlayerProfileScreen
-        player={profile}
-        onBack={() => setShowPublicProfile(false)}
-      />
-    );
-  }
+  const renderOverlay = (): React.ReactNode => {
+    if (showEdit) {
+      return (
+        <EditProfileScreen
+          user={profile}
+          onBack={() => setShowEdit(false)}
+          onSaved={onRefresh}
+        />
+      );
+    }
+    if (showVerificationSuccess && verifiedStaff) {
+      return <VerificationSuccessScreen onBack={() => setShowVerificationSuccess(false)} />;
+    }
+    if (showPlayerVerification && profile.role === 'player') {
+      return (
+        <PlayerVerificationScreen
+          user={profile}
+          onBack={() => setShowPlayerVerification(false)}
+          onUpdated={onRefresh}
+        />
+      );
+    }
+    if (showVerificationFlow && (pendingVerify || verifiedStaff)) {
+      return (
+        <VerificationFlowScreen
+          user={profile}
+          onBack={() => setShowVerificationFlow(false)}
+          initialSuccess={verifiedStaff}
+        />
+      );
+    }
+    if (showParental) {
+      return <ParentalControlScreen onBack={() => setShowParental(false)} />;
+    }
+    if (showGuardian) {
+      return <GuardianPortalScreen onBack={() => setShowGuardian(false)} />;
+    }
+    if (showTeamManagement && canManageClub) {
+      return (
+        <TeamManagementScreen profile={profile} onBack={() => setShowTeamManagement(false)} />
+      );
+    }
+    if (showCreateClub) {
+      return (
+        <CreateClubScreen
+          profile={profile}
+          onBack={() => setShowCreateClub(false)}
+          onCreated={onRefresh}
+        />
+      );
+    }
+    if (showJoinClub) {
+      return (
+        <JoinClubScreen
+          profile={profile}
+          onBack={() => setShowJoinClub(false)}
+          onJoined={() => {
+            setShowJoinClub(false);
+            onRefresh();
+          }}
+        />
+      );
+    }
+    if (showAnnouncements) {
+      return (
+        <ClubAnnouncementsScreen profile={profile} onBack={() => setShowAnnouncements(false)} />
+      );
+    }
+    if (showPublicProfile && profile.role === 'player') {
+      return (
+        <PlayerProfileScreen player={profile} onBack={() => setShowPublicProfile(false)} />
+      );
+    }
+    if (showCvEditor && profile.role === 'player') {
+      return (
+        <PlayerCvEditorScreen
+          profile={profile}
+          onBack={() => setShowCvEditor(false)}
+          onSaved={onRefresh}
+        />
+      );
+    }
+    if (showApplications && profile.role === 'player') {
+      return (
+        <MyApplicationsScreen
+          playerUid={profile.uid}
+          onBack={() => setShowApplications(false)}
+        />
+      );
+    }
+    if (legalDocument) {
+      return (
+        <LegalDocumentScreen documentId={legalDocument} onBack={() => setLegalDocument(null)} />
+      );
+    }
+    return null;
+  };
 
-  if (showCvEditor && profile.role === 'player') {
-    return (
-      <PlayerCvEditorScreen
-        profile={profile}
-        onBack={() => setShowCvEditor(false)}
-        onSaved={onRefresh}
-      />
-    );
-  }
-
-  if (showApplications && profile.role === 'player') {
-    return (
-      <MyApplicationsScreen
-        playerUid={profile.uid}
-        onBack={() => setShowApplications(false)}
-      />
-    );
-  }
-
-  if (legalDocument) {
-    return (
-      <LegalDocumentScreen
-        documentId={legalDocument}
-        onBack={() => setLegalDocument(null)}
-      />
-    );
-  }
+  const hasOverlay =
+    showEdit ||
+    (showVerificationSuccess && verifiedStaff) ||
+    (showPlayerVerification && profile.role === 'player') ||
+    (showVerificationFlow && (pendingVerify || verifiedStaff)) ||
+    showParental ||
+    showGuardian ||
+    (showTeamManagement && canManageClub) ||
+    showCreateClub ||
+    showJoinClub ||
+    showAnnouncements ||
+    (showPublicProfile && profile.role === 'player') ||
+    (showCvEditor && profile.role === 'player') ||
+    (showApplications && profile.role === 'player') ||
+    legalDocument != null;
 
   return (
-    <ProfileHomeScreen
+    <>
+      <ProfileHomeScreen
         profile={profile}
         productLine={productLine}
         pulse={pulse}
@@ -516,5 +520,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
         intelligence={intelligence}
         progression={brain.progression}
       />
+      <PushScreenTransition active={hasOverlay}>{renderOverlay()}</PushScreenTransition>
+    </>
   );
 };

@@ -18,6 +18,7 @@ import { useRequireAuth } from '../hooks/useRequireAuth';
 import { trackV3Event } from '../core/analytics/v3Events';
 import { userStateStore } from '../core/state/userState.store';
 import { flushBrainState } from '../services/brainState.service';
+import { PushScreenTransition } from '../components/motion';
 
 export const ShopScreen: React.FC = () => {
   const { productLine } = useThemedScreen();
@@ -119,22 +120,8 @@ export const ShopScreen: React.FC = () => {
     }
   };
 
-  if (selectedProduct) {
-    return (
-      <ShopProductDetailScreen
-        product={selectedProduct}
-        productLine={productLine}
-        wished={wishlist.has(selectedProduct.id)}
-        onBack={() => setSelectedProduct(null)}
-        onOrder={(size) => onOrder(selectedProduct, size)}
-        onAddToCart={() => addToCart(selectedProduct.id)}
-        onToggleWishlist={() => toggleWishlist(selectedProduct.id)}
-        onOpenRelated={setSelectedProduct}
-      />
-    );
-  }
-
   return (
+    <>
       <ShopHomeScreen
         productLine={productLine}
         profile={profile}
@@ -151,5 +138,20 @@ export const ShopScreen: React.FC = () => {
         shopOrders={orders}
         shopOrdersLoading={ordersLoading}
       />
+      <PushScreenTransition active={selectedProduct != null}>
+        {selectedProduct ? (
+          <ShopProductDetailScreen
+            product={selectedProduct}
+            productLine={productLine}
+            wished={wishlist.has(selectedProduct.id)}
+            onBack={() => setSelectedProduct(null)}
+            onOrder={(size) => onOrder(selectedProduct, size)}
+            onAddToCart={() => addToCart(selectedProduct.id)}
+            onToggleWishlist={() => toggleWishlist(selectedProduct.id)}
+            onOpenRelated={setSelectedProduct}
+          />
+        ) : null}
+      </PushScreenTransition>
+    </>
   );
 };

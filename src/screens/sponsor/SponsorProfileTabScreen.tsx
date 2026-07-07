@@ -25,6 +25,7 @@ import { spacing, radius } from '../../theme/designTokens';
 import { useSubscriptionOptional } from '../../context/SubscriptionContext';
 import { useSponsorDashboard } from '../../hooks/useSponsorDashboard';
 import { SponsorAnalyticsPanel } from '../../components/sponsor/SponsorAnalyticsPanel';
+import { PushScreenTransition } from '../../components/motion';
 
 export const SponsorProfileTabScreen: React.FC<{ shellMode?: boolean }> = ({
   shellMode = false,
@@ -46,25 +47,6 @@ export const SponsorProfileTabScreen: React.FC<{ shellMode?: boolean }> = ({
       <View style={styles.root}>
         <Text style={styles.guest}>Connectez-vous pour gérer votre marque.</Text>
       </View>
-    );
-  }
-
-  if (showEdit) {
-    return (
-      <EditProfileScreen
-        user={profile}
-        onBack={() => setShowEdit(false)}
-        onSaved={async () => {
-          await refreshProfile();
-          setShowEdit(false);
-        }}
-      />
-    );
-  }
-
-  if (legalDocument) {
-    return (
-      <LegalDocumentScreen documentId={legalDocument} onBack={() => setLegalDocument(null)} />
     );
   }
 
@@ -122,10 +104,11 @@ export const SponsorProfileTabScreen: React.FC<{ shellMode?: boolean }> = ({
   };
 
   return (
-    <ScrollView
-      style={styles.root}
-      contentContainerStyle={[styles.content, { paddingBottom: bottomInset + spacing.xl }]}
-    >
+    <>
+      <ScrollView
+        style={styles.root}
+        contentContainerStyle={[styles.content, { paddingBottom: bottomInset + spacing.xl }]}
+      >
       {!shellMode ? (
         <SponsorScreenHeader
           title="Ma marque"
@@ -166,7 +149,22 @@ export const SponsorProfileTabScreen: React.FC<{ shellMode?: boolean }> = ({
       <TouchableOpacity style={styles.logoutBtn} onPress={handleSignOut}>
         <Text style={styles.logoutText}>Se déconnecter</Text>
       </TouchableOpacity>
-    </ScrollView>
+      </ScrollView>
+      <PushScreenTransition active={showEdit || legalDocument != null}>
+        {showEdit ? (
+          <EditProfileScreen
+            user={profile}
+            onBack={() => setShowEdit(false)}
+            onSaved={async () => {
+              await refreshProfile();
+              setShowEdit(false);
+            }}
+          />
+        ) : legalDocument ? (
+          <LegalDocumentScreen documentId={legalDocument} onBack={() => setLegalDocument(null)} />
+        ) : null}
+      </PushScreenTransition>
+    </>
   );
 };
 

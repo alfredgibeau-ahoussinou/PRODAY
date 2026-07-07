@@ -22,7 +22,7 @@ import { useAuthStyles } from '../components/auth/authStyles';
 import { useAuthLayout } from '../components/auth/useAuthLayout';
 import { AuthTextField } from '../components/auth/AuthTextField';
 import { AuthSocialButtons } from '../components/auth/AuthSocialButtons';
-import { AnimatedEntrance, PressableSpring, StaggerReveal } from '../components/motion';
+import { AnimatedEntrance, PressableSpring, PushScreenTransition, StaggerReveal } from '../components/motion';
 import { ProDayErrorBanner, type ProDayBannerVariant } from '../components/ui/ProDayErrorBanner';
 import { ProDayConfigNotice } from '../components/ui/ProDayConfigNotice';
 import { AuthFormCard } from '../components/auth/AuthFormCard';
@@ -201,27 +201,6 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
     );
   }
 
-  if (showForgotPassword) {
-    return (
-      <ForgotPasswordScreen
-        initialEmail={email}
-        onBack={() => {
-          setShowForgotPassword(false);
-          clearErrors();
-        }}
-      />
-    );
-  }
-
-  if (legalDocument) {
-    return (
-      <LegalDocumentScreen
-        documentId={legalDocument}
-        onBack={() => setLegalDocument(null)}
-      />
-    );
-  }
-
   if (signupOpen) {
     return (
       <View style={authStyles.root}>
@@ -238,10 +217,11 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
   }
 
   return (
-    <KeyboardAvoidingView
-      style={[authStyles.root, { position: 'relative' }]}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
+    <>
+      <KeyboardAvoidingView
+        style={[authStyles.root, { position: 'relative' }]}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
       <View style={authStyles.ambient} pointerEvents="none">
         <ProDayGradient kind="ambient" style={StyleSheet.absoluteFill} />
       </View>
@@ -458,7 +438,24 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
           </AnimatedEntrance>
         </View>
       </ScrollView>
-    </KeyboardAvoidingView>
+      </KeyboardAvoidingView>
+      <PushScreenTransition active={showForgotPassword || legalDocument != null}>
+        {showForgotPassword ? (
+          <ForgotPasswordScreen
+            initialEmail={email}
+            onBack={() => {
+              setShowForgotPassword(false);
+              clearErrors();
+            }}
+          />
+        ) : legalDocument ? (
+          <LegalDocumentScreen
+            documentId={legalDocument}
+            onBack={() => setLegalDocument(null)}
+          />
+        ) : null}
+      </PushScreenTransition>
+    </>
   );
 };
 

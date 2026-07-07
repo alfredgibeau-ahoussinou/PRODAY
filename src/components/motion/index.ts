@@ -1,4 +1,5 @@
 export { AnimatedTabContent } from './AnimatedTabContent';
+export { AnimatedRouteContent } from './AnimatedRouteContent';
 export { AnimatedEntrance } from './AnimatedEntrance';
 export type { EntranceKind } from './AnimatedEntrance';
 export { PagerPage } from './PagerPage';

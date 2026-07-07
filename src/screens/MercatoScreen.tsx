@@ -65,6 +65,7 @@ import {
   filterRecruitmentPostsByScope,
   resolveMercatoPostScope,
 } from '../utils/mercatoPostFilters';
+import { PushScreenTransition } from '../components/motion';
 
 type MercatoScreenProps = {
   /** Filtre les annonces (pro joueur / amateur). */
@@ -182,201 +183,6 @@ export const MercatoScreen: React.FC<MercatoScreenProps> = ({ postScope }) => {
   };
 
   const showYouthSpaceBanner = productLine === 'amateur';
-
-  if (view === 'detections') {
-    return <DetectionEventsScreen onBack={() => setView('home')} />;
-  }
-
-  if (view === 'stages') {
-    return (
-      <StagesListScreen
-        profile={profile}
-        onBack={() => setView('home')}
-        onSelectStage={(id) => {
-          setSelectedStageId(id);
-          setView('stage_detail');
-        }}
-        onCreateStage={
-          profile && canPublishStages(profile.role)
-            ? () => {
-                if (!guardStaffVerification(profile)) return;
-                setView('create_stage');
-              }
-            : undefined
-        }
-      />
-    );
-  }
-
-  if (view === 'create_stage' && profile) {
-    return (
-      <CreateStageScreen
-        profile={profile}
-        onBack={() => setView('stages')}
-        onCreated={() => setView('stages')}
-      />
-    );
-  }
-
-  if (view === 'stage_detail' && selectedStageId) {
-    return (
-      <StageDetailScreen
-        stageId={selectedStageId}
-        profile={profile}
-        onBack={() => {
-          setSelectedStageId(null);
-          setView('stages');
-        }}
-      />
-    );
-  }
-
-  if (view === 'favorites' && profile) {
-    return (
-      <FavoritesListScreen
-        onBack={() => setView('home')}
-        onSelectUser={(u) => {
-          if (u.role === 'player') {
-            setSelectedPlayerId(u.uid);
-            setReturnView('favorites');
-            setView('player_profile');
-          } else {
-            setSelectedStaffId(u.uid);
-            setReturnView('favorites');
-            setView('staff_profile');
-          }
-        }}
-      />
-    );
-  }
-
-  if (view === 'post_detail' && selectedPostId) {
-    return (
-      <RecruitmentPostScreen
-        postId={selectedPostId}
-        profile={profile}
-        onBack={() => {
-          setSelectedPostId(null);
-          setView('home');
-        }}
-        onViewPlayer={(uid) => {
-          setSelectedPlayerId(uid);
-          setReturnView('post_detail');
-          setView('player_profile');
-        }}
-      />
-    );
-  }
-
-  if (view === 'create_post' && profile) {
-    return (
-      <CreateRecruitmentPostScreen
-        profile={profile}
-        onBack={() => setView('home')}
-        onCreated={refreshLists}
-      />
-    );
-  }
-
-  if (view === 'players') {
-    return (
-      <PlayersListScreen
-        initialQuery={playerListQuery}
-        onBack={() => {
-          setPlayerListQuery('');
-          setView('home');
-        }}
-        onSelectPlayer={(p) => {
-          setSelectedPlayerId(p.uid);
-          setView('player_profile');
-        }}
-      />
-    );
-  }
-
-  if (view === 'player_profile' && selectedPlayerId) {
-    if (loadingPlayer || !selectedPlayer) {
-      return (
-        <View style={[styles.loader, { backgroundColor: themeColors.background }]}>
-          <ActivityIndicator size="large" color={themeColors.brand} />
-        </View>
-      );
-    }
-    return (
-      <PlayerProfileScreen
-        player={selectedPlayer}
-        onBack={() => setView(returnView === 'post_detail' ? 'post_detail' : returnView === 'favorites' ? 'favorites' : 'players')}
-        onContact={handleContact}
-      />
-    );
-  }
-
-  if (view === 'create_club' && profile) {
-    return (
-      <CreateClubScreen
-        profile={profile}
-        onBack={() => setView('clubs')}
-        onCreated={refreshLists}
-      />
-    );
-  }
-
-  if (view === 'clubs') {
-    return (
-      <ClubsListScreen
-        onBack={() => setView('home')}
-        onCreateClub={
-          profile
-            ? () => setView('create_club')
-            : undefined
-        }
-        onSelectClub={(club) => {
-          setSearch(club.name);
-          setView('home');
-        }}
-      />
-    );
-  }
-
-  if (view === 'staff') {
-    return (
-      <CoachesListScreen
-        onBack={() => setView('home')}
-        onSelect={(u) => {
-          setSelectedStaffId(u.uid);
-          setView('staff_profile');
-        }}
-        onCreatePost={
-          profile && canPublishRecruitmentPost(profile.role)
-            ? () => {
-                if (!guardStaffVerification(profile)) return;
-                setReturnView('staff');
-                setView('create_post');
-              }
-            : undefined
-        }
-      />
-    );
-  }
-
-  if (view === 'staff_profile' && selectedStaffId) {
-    if (loadingStaff || !selectedStaff) {
-      return (
-        <View style={[styles.loader, { backgroundColor: themeColors.background }]}>
-          <ActivityIndicator size="large" color={themeColors.brand} />
-        </View>
-      );
-    }
-    return (
-      <CoachProfileScreen
-        staff={selectedStaff}
-        onBack={() => setView(returnView === 'favorites' ? 'favorites' : 'staff')}
-        onContact={handleContact}
-        onHire={handleContact}
-      />
-    );
-  }
-
   const loading = loadingStats || loadingLists;
 
   const openFavorites = () => {
@@ -396,8 +202,9 @@ export const MercatoScreen: React.FC<MercatoScreenProps> = ({ postScope }) => {
 
   const isPlayerHub = profile?.role === 'player';
 
-  if (isPlayerHub && profile) {
-    return (
+  const renderHome = () => {
+    if (isPlayerHub && profile) {
+      return (
         <CandidatureScreen
           profile={profile}
           config={config}
@@ -429,10 +236,10 @@ export const MercatoScreen: React.FC<MercatoScreenProps> = ({ postScope }) => {
             await refreshLists();
           }}
         />
-    );
-  }
+      );
+    }
 
-  return (
+    return (
       <MercatoStaffHome
         profile={profile}
         config={config}
@@ -466,6 +273,186 @@ export const MercatoScreen: React.FC<MercatoScreenProps> = ({ postScope }) => {
         }
         onSearchPlayers={() => setView('players')}
       />
+    );
+  };
+
+  let subView: React.ReactNode = null;
+
+  if (view === 'detections') {
+    subView = <DetectionEventsScreen onBack={() => setView('home')} />;
+  } else if (view === 'stages') {
+    subView = (
+      <StagesListScreen
+        profile={profile}
+        onBack={() => setView('home')}
+        onSelectStage={(id) => {
+          setSelectedStageId(id);
+          setView('stage_detail');
+        }}
+        onCreateStage={
+          profile && canPublishStages(profile.role)
+            ? () => {
+                if (!guardStaffVerification(profile)) return;
+                setView('create_stage');
+              }
+            : undefined
+        }
+      />
+    );
+  } else if (view === 'create_stage' && profile) {
+    subView = (
+      <CreateStageScreen
+        profile={profile}
+        onBack={() => setView('stages')}
+        onCreated={() => setView('stages')}
+      />
+    );
+  } else if (view === 'stage_detail' && selectedStageId) {
+    subView = (
+      <StageDetailScreen
+        stageId={selectedStageId}
+        profile={profile}
+        onBack={() => {
+          setSelectedStageId(null);
+          setView('stages');
+        }}
+      />
+    );
+  } else if (view === 'favorites' && profile) {
+    subView = (
+      <FavoritesListScreen
+        onBack={() => setView('home')}
+        onSelectUser={(u) => {
+          if (u.role === 'player') {
+            setSelectedPlayerId(u.uid);
+            setReturnView('favorites');
+            setView('player_profile');
+          } else {
+            setSelectedStaffId(u.uid);
+            setReturnView('favorites');
+            setView('staff_profile');
+          }
+        }}
+      />
+    );
+  } else if (view === 'post_detail' && selectedPostId) {
+    subView = (
+      <RecruitmentPostScreen
+        postId={selectedPostId}
+        profile={profile}
+        onBack={() => {
+          setSelectedPostId(null);
+          setView('home');
+        }}
+        onViewPlayer={(uid) => {
+          setSelectedPlayerId(uid);
+          setReturnView('post_detail');
+          setView('player_profile');
+        }}
+      />
+    );
+  } else if (view === 'create_post' && profile) {
+    subView = (
+      <CreateRecruitmentPostScreen
+        profile={profile}
+        onBack={() => setView('home')}
+        onCreated={refreshLists}
+      />
+    );
+  } else if (view === 'players') {
+    subView = (
+      <PlayersListScreen
+        initialQuery={playerListQuery}
+        onBack={() => {
+          setPlayerListQuery('');
+          setView('home');
+        }}
+        onSelectPlayer={(p) => {
+          setSelectedPlayerId(p.uid);
+          setView('player_profile');
+        }}
+      />
+    );
+  } else if (view === 'player_profile' && selectedPlayerId) {
+    subView =
+      loadingPlayer || !selectedPlayer ? (
+        <View style={[styles.loader, { backgroundColor: themeColors.background }]}>
+          <ActivityIndicator size="large" color={themeColors.brand} />
+        </View>
+      ) : (
+        <PlayerProfileScreen
+          player={selectedPlayer}
+          onBack={() =>
+            setView(
+              returnView === 'post_detail'
+                ? 'post_detail'
+                : returnView === 'favorites'
+                  ? 'favorites'
+                  : 'players',
+            )
+          }
+          onContact={handleContact}
+        />
+      );
+  } else if (view === 'create_club' && profile) {
+    subView = (
+      <CreateClubScreen
+        profile={profile}
+        onBack={() => setView('clubs')}
+        onCreated={refreshLists}
+      />
+    );
+  } else if (view === 'clubs') {
+    subView = (
+      <ClubsListScreen
+        onBack={() => setView('home')}
+        onCreateClub={profile ? () => setView('create_club') : undefined}
+        onSelectClub={(club) => {
+          setSearch(club.name);
+          setView('home');
+        }}
+      />
+    );
+  } else if (view === 'staff') {
+    subView = (
+      <CoachesListScreen
+        onBack={() => setView('home')}
+        onSelect={(u) => {
+          setSelectedStaffId(u.uid);
+          setView('staff_profile');
+        }}
+        onCreatePost={
+          profile && canPublishRecruitmentPost(profile.role)
+            ? () => {
+                if (!guardStaffVerification(profile)) return;
+                setReturnView('staff');
+                setView('create_post');
+              }
+            : undefined
+        }
+      />
+    );
+  } else if (view === 'staff_profile' && selectedStaffId) {
+    subView =
+      loadingStaff || !selectedStaff ? (
+        <View style={[styles.loader, { backgroundColor: themeColors.background }]}>
+          <ActivityIndicator size="large" color={themeColors.brand} />
+        </View>
+      ) : (
+        <CoachProfileScreen
+          staff={selectedStaff}
+          onBack={() => setView(returnView === 'favorites' ? 'favorites' : 'staff')}
+          onContact={handleContact}
+          onHire={handleContact}
+        />
+      );
+  }
+
+  return (
+    <>
+      {renderHome()}
+      <PushScreenTransition active={view !== 'home'}>{subView}</PushScreenTransition>
+    </>
   );
 };
 

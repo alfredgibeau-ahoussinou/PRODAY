@@ -52,38 +52,6 @@ export const PhysioProfileTabScreen: React.FC = () => {
 
   const verified = profile.verification_status === 'VERIFIED';
 
-  if (showEdit) {
-    return (
-      <EditProfileScreen
-        user={profile}
-        onBack={() => setShowEdit(false)}
-        onSaved={async () => {
-          await refreshProfile();
-          setShowEdit(false);
-        }}
-      />
-    );
-  }
-
-  if (showVerification) {
-    return (
-      <VerificationFlowScreen
-        user={profile}
-        onBack={() => setShowVerification(false)}
-        initialSuccess={verified}
-      />
-    );
-  }
-
-  if (legalDocument) {
-    return (
-      <LegalDocumentScreen
-        documentId={legalDocument}
-        onBack={() => setLegalDocument(null)}
-      />
-    );
-  }
-
   const p = profile.profile;
   const specialty = p.medical_specialty ?? p.job_title ?? 'Praticien';
   const bookingOnline = isPhysioBookingEnabled(profile);
@@ -230,11 +198,33 @@ export const PhysioProfileTabScreen: React.FC = () => {
         </TouchableOpacity>
       </ScrollView>
 
-      <PushScreenTransition active={showAvailability}>
-        <PhysioAvailabilityScreen
-          profile={profile}
-          onBack={() => setShowAvailability(false)}
-        />
+      <PushScreenTransition active={showEdit || showVerification || legalDocument != null || showAvailability}>
+        {showEdit ? (
+          <EditProfileScreen
+            user={profile}
+            onBack={() => setShowEdit(false)}
+            onSaved={async () => {
+              await refreshProfile();
+              setShowEdit(false);
+            }}
+          />
+        ) : showVerification ? (
+          <VerificationFlowScreen
+            user={profile}
+            onBack={() => setShowVerification(false)}
+            initialSuccess={verified}
+          />
+        ) : legalDocument ? (
+          <LegalDocumentScreen
+            documentId={legalDocument}
+            onBack={() => setLegalDocument(null)}
+          />
+        ) : showAvailability ? (
+          <PhysioAvailabilityScreen
+            profile={profile}
+            onBack={() => setShowAvailability(false)}
+          />
+        ) : null}
       </PushScreenTransition>
     </View>
   );

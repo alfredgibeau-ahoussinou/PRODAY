@@ -16,8 +16,10 @@ import { AdminClubsPage } from '../screens/admin/pages/AdminClubsPage';
 import { AdminSystemPage } from '../screens/admin/pages/AdminSystemPage';
 import { AdminGateScreen } from '../screens/admin/AdminGateScreen';
 import { useIsAdmin } from '../hooks/useIsAdmin';
+import { AnimatedRouteContent } from '../components/motion';
 import {
   resolveAdminPageMeta,
+  ADMIN_NAV_ITEMS,
   type AdminContentSegment,
   type AdminMainTabId,
   type AdminRoute,
@@ -28,6 +30,14 @@ import { spacing } from '../theme/designTokens';
 
 interface AdminAppShellProps {
   onPreviewUserApp: () => void;
+}
+
+const ADMIN_ROUTE_ORDER = ADMIN_NAV_ITEMS.map((item) =>
+  item.segment ? `${item.tab}:${item.segment}` : item.tab,
+);
+
+function adminRouteKey(tab: AdminMainTabId, segment?: AdminContentSegment): string {
+  return segment ? `${tab}:${segment}` : tab;
 }
 
 export const AdminAppShell: React.FC<AdminAppShellProps> = ({ onPreviewUserApp }) => {
@@ -70,6 +80,7 @@ const AdminAppShellInner: React.FC<AdminAppShellProps> = ({ onPreviewUserApp }) 
   const { styles } = useAdminStyles();
 
   const pageMeta = resolveAdminPageMeta(activeTab, activeSegment);
+  const routeKey = adminRouteKey(activeTab, activeSegment);
 
   const navigate = (route: AdminRoute) => {
     setActiveTab(route.tab);
@@ -134,7 +145,11 @@ const AdminAppShellInner: React.FC<AdminAppShellProps> = ({ onPreviewUserApp }) 
         onMenu={() => setMenuOpen(true)}
         onSearch={() => setSearchOpen(true)}
       />
-      <View style={shellStyles.screen}>{renderPage()}</View>
+      <View style={shellStyles.screen}>
+        <AnimatedRouteContent routeKey={routeKey} routeOrder={ADMIN_ROUTE_ORDER}>
+          {renderPage()}
+        </AnimatedRouteContent>
+      </View>
       <AdminDrawerMenu
         visible={menuOpen}
         activeTab={activeTab}

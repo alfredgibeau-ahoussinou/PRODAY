@@ -29,6 +29,7 @@ import { prodayHaptics } from '../utils/prodayHaptics';
 import { isInMatchWindow } from '../utils/matchLive';
 import { useRequireAuth } from '../hooks/useRequireAuth';
 import { useTranslation } from '../context/LocaleContext';
+import { PushScreenTransition } from '../components/motion';
 
 type MatchView =
   | 'home'
@@ -180,83 +181,6 @@ export const MatchsScreen: React.FC = () => {
     [checkMatch, matches]
   );
 
-  if (view === 'propose') {
-    return (
-      <ProposeMatchScreen
-        onBack={() => setView('home')}
-        onCreated={() => {
-          refreshAll();
-          setInitialChapter('amicaux');
-          setView('home');
-        }}
-      />
-    );
-  }
-  if (view === 'search') {
-    return (
-      <SearchMatchScreen
-        onBack={() => setView('home')}
-        onAccepted={() => {
-          refreshAll();
-          setInitialChapter('amicaux');
-        }}
-      />
-    );
-  }
-  if (view === 'create_tournament' && profile && canManageEvents) {
-    return (
-      <CreateTournamentScreen
-        profile={profile}
-        onBack={() => setView('home')}
-        onCreated={(id) => {
-          refreshAll();
-          setSelectedTournamentId(id);
-          setInitialChapter('tournois');
-          setView('tournament_detail');
-        }}
-      />
-    );
-  }
-  if (view === 'tournament_detail' && profile && selectedTournamentId) {
-    return (
-      <TournamentDetailScreen
-        tournamentId={selectedTournamentId}
-        profile={profile}
-        onBack={() => {
-          setView('home');
-          refreshAll();
-        }}
-      />
-    );
-  }
-  if (view === 'create_event' && canManageEvents) {
-    return (
-      <CreateTeamEventScreen
-        onBack={() => setView('home')}
-        onCreated={(id) => {
-          refreshAll();
-          setSelectedEventId(id);
-          setView('event_detail');
-        }}
-      />
-    );
-  }
-  if (view === 'event_detail' && selectedEventId) {
-    return (
-      <MatchEventHubScreen
-        eventId={selectedEventId}
-        initialChapter={hubChapter}
-        onBack={() => {
-          setView('home');
-          refreshAll();
-        }}
-        onOpenCarpool={() =>
-          navActions.openCarpool({ chapter: 'reserver', eventId: selectedEventId })
-        }
-      />
-    );
-  }
-
   const openCalendarItem = (item: SeasonCalendarItem) => {
     if (item.team_event_id) {
       setSelectedEventId(item.team_event_id);
@@ -272,7 +196,82 @@ export const MatchsScreen: React.FC = () => {
     setView('event_detail');
   };
 
+  let subView: React.ReactNode = null;
+
+  if (view === 'propose') {
+    subView = (
+      <ProposeMatchScreen
+        onBack={() => setView('home')}
+        onCreated={() => {
+          refreshAll();
+          setInitialChapter('amicaux');
+          setView('home');
+        }}
+      />
+    );
+  } else if (view === 'search') {
+    subView = (
+      <SearchMatchScreen
+        onBack={() => setView('home')}
+        onAccepted={() => {
+          refreshAll();
+          setInitialChapter('amicaux');
+        }}
+      />
+    );
+  } else if (view === 'create_tournament' && profile && canManageEvents) {
+    subView = (
+      <CreateTournamentScreen
+        profile={profile}
+        onBack={() => setView('home')}
+        onCreated={(id) => {
+          refreshAll();
+          setSelectedTournamentId(id);
+          setInitialChapter('tournois');
+          setView('tournament_detail');
+        }}
+      />
+    );
+  } else if (view === 'tournament_detail' && profile && selectedTournamentId) {
+    subView = (
+      <TournamentDetailScreen
+        tournamentId={selectedTournamentId}
+        profile={profile}
+        onBack={() => {
+          setView('home');
+          refreshAll();
+        }}
+      />
+    );
+  } else if (view === 'create_event' && canManageEvents) {
+    subView = (
+      <CreateTeamEventScreen
+        onBack={() => setView('home')}
+        onCreated={(id) => {
+          refreshAll();
+          setSelectedEventId(id);
+          setView('event_detail');
+        }}
+      />
+    );
+  } else if (view === 'event_detail' && selectedEventId) {
+    subView = (
+      <MatchEventHubScreen
+        eventId={selectedEventId}
+        initialChapter={hubChapter}
+        onBack={() => {
+          setView('home');
+          refreshAll();
+        }}
+        onOpenCarpool={() =>
+          navActions.openCarpool({ chapter: 'reserver', eventId: selectedEventId })
+        }
+      />
+    );
+  }
+
   return (
+    <>
       <MatchHomeScreen
         profile={profile}
         items={items}
@@ -335,5 +334,7 @@ export const MatchsScreen: React.FC = () => {
           navActions.openCarpool({ chapter: 'reserver', eventId })
         }
       />
+      <PushScreenTransition active={view !== 'home'}>{subView}</PushScreenTransition>
+    </>
   );
 };

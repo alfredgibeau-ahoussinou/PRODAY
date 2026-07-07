@@ -17,8 +17,10 @@ import { SponsorProfileTabScreen } from '../screens/sponsor/SponsorProfileTabScr
 import { SponsorContractScreen } from '../screens/sponsor/SponsorContractScreen';
 import { SponsorContactsScreen } from '../screens/sponsor/SponsorContactsScreen';
 import { SponsorHubScreen } from '../screens/sponsor/SponsorHubScreen';
+import { AnimatedRouteContent } from '../components/motion';
 import {
   resolveSponsorPageMeta,
+  SPONSOR_NAV_ITEMS,
   type SponsorContentSegment,
   type SponsorMainTabId,
   type SponsorRoute,
@@ -29,6 +31,14 @@ import { useSponsorTabNavigationBridge } from './sponsorTabNavigationBridge';
 import { SubscriptionShell } from '../components/subscription/SubscriptionShell';
 import { useSessionProfile } from '../hooks/useSessionProfile';
 import { openSponsorProspectChat } from '../utils/openSponsorProspectChat';
+
+const SPONSOR_ROUTE_ORDER = SPONSOR_NAV_ITEMS.map((item) =>
+  item.segment ? `${item.tab}:${item.segment}` : item.tab,
+);
+
+function sponsorRouteKey(tab: SponsorMainTabId, segment?: SponsorContentSegment): string {
+  return segment ? `${tab}:${segment}` : tab;
+}
 
 export const SponsorAppShell: React.FC = () => (
   <SponsorDataProvider>
@@ -48,6 +58,7 @@ const SponsorAppShellInner: React.FC = () => {
   const shellStyles = useMemo(() => createShellStyles(), []);
 
   const pageMeta = resolveSponsorPageMeta(activeTab, activeSegment);
+  const routeKey = sponsorRouteKey(activeTab, activeSegment);
 
   const navigate: SponsorShellNavigate = useCallback((route: SponsorRoute) => {
     setActiveTab(route.tab);
@@ -143,7 +154,11 @@ const SponsorAppShellInner: React.FC = () => {
               subtitle={pageMeta.subtitle}
               onMenu={() => setMenuOpen(true)}
             />
-            <View style={shellStyles.screen}>{renderPage()}</View>
+            <View style={shellStyles.screen}>
+              <AnimatedRouteContent routeKey={routeKey} routeOrder={SPONSOR_ROUTE_ORDER}>
+                {renderPage()}
+              </AnimatedRouteContent>
+            </View>
             <SponsorDrawerMenu
               visible={menuOpen}
               activeTab={activeTab}
