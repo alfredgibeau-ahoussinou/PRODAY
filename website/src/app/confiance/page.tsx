@@ -19,7 +19,7 @@ export default function TrustPage() {
         kicker="CONFIANCE"
         title="Staff certifié, familles rassurées"
         description="Diplômes et licences validés avant messagerie complète. Contrôle parental pour les comptes mineurs."
-        image="/showcase/classic-staff.jpg"
+        image="/images/football-coach-01.jpg"
         dark
       />
       <VerificationTimeline fullPage />

@@ -19,7 +19,7 @@ export default function ShopPage() {
         kicker="SHOP"
         title="Équipement & textile officiel"
         description="Trépieds pour filmer vos matchs, t-shirts lifestyle et maillots match — logo ProDay brodé, par univers."
-        image="/showcase/classic-exp-sponsors.jpg"
+        image="/images/football-training-01.jpg"
         dark
       />
       <PremiumSection

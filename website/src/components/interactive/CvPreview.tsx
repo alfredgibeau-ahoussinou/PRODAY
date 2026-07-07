@@ -45,7 +45,7 @@ const CV_COPY: Record<
     role: "Coach · Régional · Toulouse",
     footer:
       "Effectif, convocations et Mercato local — profil coach amateur vérifié pour le district.",
-    image: "/showcase/classic-staff.jpg",
+    image: "/images/football-coach-01.jpg",
   },
   supporter: {
     headerLabel: "PROFIL SUPPORTER PRODAY",
@@ -53,7 +53,7 @@ const CV_COPY: Record<
     role: "Supporter · FC Lyon · Lyon",
     footer:
       "Clubs favoris, matchs en direct et fil communautaire — votre tribune numérique ProDay.",
-    image: "/showcase/classic-match.jpg",
+    image: "/images/football-supporter-01.jpg",
   },
   pro: {
     headerLabel: "CV PRODAY PRO",
@@ -61,7 +61,7 @@ const CV_COPY: Record<
     role: "Coach · National · Bordeaux",
     footer:
       "Parcours staff et certifications — vitrine pro pour le réseau vérifié ProDay.",
-    image: "/showcase/classic-staff.jpg",
+    image: "/images/football-pro-01.jpg",
   },
   sante: {
     headerLabel: "CABINET PRODAY SANTÉ",
@@ -69,7 +69,7 @@ const CV_COPY: Record<
     role: "Kinésithérapeute · Sport · Paris",
     footer:
       "Agenda en ligne, messagerie patients et visibilité auprès des clubs partenaires.",
-    image: "/showcase/classic-exp-profile.jpg",
+    image: "/images/football-health-01.jpg",
   },
 };
 

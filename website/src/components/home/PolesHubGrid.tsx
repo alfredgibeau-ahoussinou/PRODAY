@@ -8,12 +8,12 @@ import { POLES, POLE_STYLES, type PoleId } from "@/lib/poles";
 import { Section } from "@/components/ui/Section";
 
 const POLE_IMAGES: Record<PoleId, string> = {
-  joueur: "/showcase/classic-discover-hero.jpg",
-  amateur: "/showcase/classic-match.jpg",
-  supporter: "/showcase/classic-match.jpg",
-  pro: "/showcase/classic-staff.jpg",
-  sante: "/showcase/classic-exp-profile.jpg",
-  sponsor: "/showcase/classic-exp-sponsors.jpg",
+  joueur: "/images/football-action-01.jpg",
+  amateur: "/images/football-amateur-01.jpg",
+  supporter: "/images/football-supporter-01.jpg",
+  pro: "/images/football-pro-01.jpg",
+  sante: "/images/football-health-01.jpg",
+  sponsor: "/images/football-club-01.jpg",
 };
 
 export function PolesHubGrid() {

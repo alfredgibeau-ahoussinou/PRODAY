@@ -53,10 +53,14 @@ export default async function DemoPage({
           universe === "woman"
             ? "/showcase/woman/woman-discover-hero.jpg"
             : universe === "pro"
-              ? "/showcase/classic-staff.jpg"
+              ? "/images/football-pro-01.jpg"
               : universe === "sante"
-                ? "/showcase/classic-exp-profile.jpg"
-                : "/showcase/classic-discover-hero.jpg"
+                ? "/images/football-health-01.jpg"
+                : universe === "amateur"
+                  ? "/images/football-amateur-01.jpg"
+                  : universe === "supporter"
+                    ? "/images/football-supporter-01.jpg"
+                    : "/images/football-action-01.jpg"
         }
         accent={ACCENT_FOR[universe]}
         dark

@@ -23,7 +23,7 @@ export function HeroSection() {
     <section className="relative max-h-[100dvh] min-h-[100dvh] overflow-hidden lg:max-h-none lg:min-h-screen">
       <div className="absolute inset-0">
         <Image
-          src="/showcase/classic-arena.jpg"
+          src="/images/football-stadium-night-01.jpg"
           alt=""
           fill
           className="object-cover object-center"

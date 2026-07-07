@@ -16,7 +16,7 @@ export default function LiveStatsPage() {
         kicker="LIVE STATS"
         title="Chaque action compte"
         description="Saisissez le match en direct — stats saison et CV alimentés automatiquement."
-        image="/showcase/classic-match.jpg"
+        image="/images/football-match-01.jpg"
         accent="joueur"
         dark
       />

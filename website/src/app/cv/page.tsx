@@ -39,7 +39,7 @@ export default async function CvPage({
           universe === "woman"
             ? "/showcase/woman/woman-profile.jpg"
             : universe === "pro"
-              ? "/showcase/classic-staff.jpg"
+              ? "/images/football-pro-01.jpg"
               : "/showcase/classic-profile.jpg"
         }
         accent={universe === "woman" ? "woman" : universe === "pro" ? "pro" : "joueur"}

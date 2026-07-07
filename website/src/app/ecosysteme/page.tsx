@@ -18,7 +18,7 @@ export default function EcosystemPage() {
         kicker="ÉCOSYSTÈME"
         title="Tous les acteurs, un même réseau"
         description="Cliquez sur les nœuds — découvrez comment ProDay connecte votre saison à travers les 4 pôles."
-        image="/showcase/classic-arena.jpg"
+        image="/images/football-club-01.jpg"
         dark
       />
       <PageBody py="sm">

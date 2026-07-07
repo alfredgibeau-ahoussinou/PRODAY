@@ -22,7 +22,7 @@ const VARIANTS = [
     id: "homme" as const,
     href: ROUTES.homme,
     brand: HOMME_BRAND,
-    image: "/showcase/classic-discover-hero.jpg",
+    image: "/images/football-amateur-01.jpg",
     tag: "Man",
     accent: "emerald" as const,
   },
@@ -48,7 +48,7 @@ const PLAYER_TOOLS = [
     href: ROUTES.liveStats,
     title: "Live Stats",
     description: "Saisissez buts et passes en direct — voyez votre profil se mettre à jour.",
-    image: "/showcase/classic-match.jpg",
+    image: "/images/football-match-01.jpg",
     tag: "Match",
   },
   {
@@ -70,7 +70,7 @@ export default function JoueursPage() {
         kicker="PÔLE JOUEUR"
         title="Man et Woman — une saison, une application"
         description="Mercato, Reels, Fil, Arena, Pulse et CV en ligne. Formule découverte gratuite, Joueur Plus pour les candidatures illimitées."
-        image="/showcase/classic-discover-hero.jpg"
+        image="/images/football-action-01.jpg"
         accent="joueur"
         dark
       />

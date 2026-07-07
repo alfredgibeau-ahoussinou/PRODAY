@@ -17,7 +17,7 @@ export default function JourneysPage() {
         kicker="PARCOURS"
         title="Chaque rôle, un chemin clair"
         description="Des parcours guidés par pôle — de l'inscription au CV PDF, au tournoi Arena ou à l'espace partenaires."
-        image="/showcase/classic-profile.jpg"
+        image="/images/football-team-01.jpg"
         dark
       />
       <JourneyRoles fullPage />

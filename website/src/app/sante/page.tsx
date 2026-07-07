@@ -25,7 +25,7 @@ export default function SantePage() {
         kicker={SANTE_BRAND.tagline}
         title="Le pôle santé du foot."
         description={SANTE_BRAND.mission}
-        image="/showcase/classic-exp-profile.jpg"
+        image="/images/football-health-01.jpg"
         logo={SANTE_BRAND.logo}
         logoAlt={SANTE_BRAND.fullName}
         accent="sante"

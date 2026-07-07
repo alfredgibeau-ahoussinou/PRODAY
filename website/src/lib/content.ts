@@ -180,7 +180,7 @@ export const MODULES = [
     subtitle: "Amicaux & détections",
     description:
       "Proposez ou acceptez un match. Calendrier unifié avec convocations et RSVP.",
-    image: "/showcase/classic-match.jpg",
+    image: "/images/football-match-01.jpg",
     color: "#262626",
   },
   {
@@ -207,7 +207,7 @@ export const MODULES = [
     subtitle: "Trajets match & détection",
     description:
       "Coachs et joueurs proposent ou réservent des places — intégré aux événements et convocations.",
-    image: "/showcase/classic-match.jpg",
+    image: "/images/football-pitch-01.jpg",
     color: "#737373",
   },
   {
@@ -216,7 +216,7 @@ export const MODULES = [
     subtitle: "Kiné, mental, nutrition",
     description:
       "Annuaire praticiens vérifiés — kinés, coach mental, nutritionnistes. Contact sécurisé joueur ↔ pro.",
-    image: "/showcase/classic-exp-profile.jpg",
+    image: "/images/football-health-01.jpg",
     color: "#64748b",
   },
   {
@@ -225,7 +225,7 @@ export const MODULES = [
     subtitle: "Équipement & textile",
     description:
       "Trépieds, t-shirts et maillots officiels par univers — précommande depuis l'app.",
-    image: "/showcase/classic-exp-sponsors.jpg",
+    image: "/images/football-coach-01.jpg",
     color: "#57534e",
   },
   {
@@ -243,7 +243,7 @@ export const MODULES = [
     subtitle: "Vidéos courtes foot",
     description:
       "Moments forts en format vertical — découverte et visibilité pour votre profil.",
-    image: "/showcase/classic-discover-hero.jpg",
+    image: "/images/football-action-01.jpg",
     color: "#7c3aed",
   },
   {
@@ -511,7 +511,7 @@ export const MAN_MODULES = [
     subtitle: "Amicaux & convocations",
     description:
       "Proposez ou acceptez un match. Calendrier unifié avec convocations et RSVP pour votre équipe.",
-    image: "/showcase/classic-match.jpg",
+    image: "/images/football-match-01.jpg",
   },
   {
     id: "arena",
@@ -535,7 +535,7 @@ export const MAN_MODULES = [
     subtitle: "Trajets match & détection",
     description:
       "Proposez ou réservez une place pour matchs et détections — intégré aux événements Man.",
-    image: "/showcase/classic-match.jpg",
+    image: "/images/football-pitch-01.jpg",
   },
   {
     id: "health",
@@ -543,7 +543,7 @@ export const MAN_MODULES = [
     subtitle: "Annuaire praticiens",
     description:
       "Kinés, coach mental, nutritionnistes vérifiés — contact sécurisé joueur ↔ pro depuis l'app Man.",
-    image: "/showcase/classic-exp-profile.jpg",
+    image: "/images/football-health-01.jpg",
   },
   {
     id: "shop",
@@ -551,7 +551,7 @@ export const MAN_MODULES = [
     subtitle: "Équipement & textile",
     description:
       "Trépieds, t-shirts et maillots logo Pro Day Man — précommande depuis l'app.",
-    image: "/showcase/classic-exp-sponsors.jpg",
+    image: "/images/football-training-01.jpg",
   },
 ] as const;
 
@@ -594,7 +594,7 @@ export const WOMAN_MODULES = [
     subtitle: "Trajets match & détection",
     description:
       "Proposez ou réservez une place pour matchs et détections — intégré aux événements Woman.",
-    image: "/showcase/woman/woman-match.jpg",
+    image: "/images/football-women-01.jpg",
   },
   {
     id: "health-f",
@@ -602,7 +602,7 @@ export const WOMAN_MODULES = [
     subtitle: "Annuaire praticiens",
     description:
       "Kinés, coach mental, nutritionnistes vérifiés — contact sécurisé joueuse ↔ pro depuis l'app Woman.",
-    image: "/showcase/woman/woman-profile.jpg",
+    image: "/images/football-health-01.jpg",
   },
   {
     id: "shop-f",
@@ -610,7 +610,7 @@ export const WOMAN_MODULES = [
     subtitle: "Équipement & textile",
     description:
       "Trépieds, t-shirts et maillots logo ProDay Woman — précommande depuis l'app.",
-    image: "/showcase/woman/woman-arena.jpg",
+    image: "/images/football-training-01.jpg",
   },
 ] as const;
 
@@ -636,7 +636,7 @@ export const PRODUCT_LINES = [
     brand: AMATEUR_BRAND,
     logo: UNIVERSE_LOGOS.amateur,
     href: "/amateur",
-    image: "/showcase/classic-staff.jpg",
+    image: "/images/football-amateur-01.jpg",
     cta: "Pro Day Amateur",
   },
   {
@@ -644,7 +644,7 @@ export const PRODUCT_LINES = [
     brand: SUPPORTER_BRAND,
     logo: UNIVERSE_LOGOS.supporter,
     href: "/supporter",
-    image: "/showcase/classic-match.jpg",
+    image: "/images/football-supporter-01.jpg",
     cta: "Pro Day Supporter",
   },
   {
@@ -652,7 +652,7 @@ export const PRODUCT_LINES = [
     brand: PRO_BRAND,
     logo: UNIVERSE_LOGOS.pro,
     href: "/pro",
-    image: "/showcase/classic-staff.jpg",
+    image: "/images/football-pro-01.jpg",
     cta: "Pro Day Pro",
   },
 ] as const;
@@ -688,7 +688,7 @@ export const PRO_MODULES = [
     subtitle: "Mandats & repérage",
     description:
       "CRM joueurs, alertes géolocalisées, pipeline mandats et contacts clubs.",
-    image: "/showcase/classic-mercato.jpg",
+    image: "/images/football-mercato-01.jpg",
   },
   {
     id: "sante",
@@ -696,7 +696,7 @@ export const PRO_MODULES = [
     subtitle: "Kiné, mental, nutrition",
     description:
       "Visibilité près des clubs, messagerie après validation — coach mental inclus.",
-    image: "/showcase/classic-exp-profile.jpg",
+    image: "/images/football-health-01.jpg",
   },
   {
     id: "reseau",
@@ -712,7 +712,7 @@ export const PRO_MODULES = [
     subtitle: "Visibilité & financement",
     description:
       "Offres sponsors, campagnes locales, logo onglet Sponsors et tableau de bord — formules Découverte à National Pro.",
-    image: "/showcase/classic-exp-sponsors.jpg",
+    image: "/images/football-club-01.jpg",
   },
 ] as const;
 
@@ -731,7 +731,7 @@ export const AMATEUR_MODULES = [
     subtitle: "Effectif & convocations",
     description:
       "Profil coach vérifié, gestion d'effectif, convocations et stats saison — district et régional.",
-    image: "/showcase/classic-staff.jpg",
+    image: "/images/football-coach-01.jpg",
   },
   {
     id: "mercato-amateur",
@@ -739,7 +739,7 @@ export const AMATEUR_MODULES = [
     subtitle: "Recrutement local",
     description:
       "Annonces Mercato local, candidatures joueurs et suivi des réponses — sans la complexité du Mercato Pro.",
-    image: "/showcase/classic-mercato.jpg",
+    image: "/images/football-mercato-01.jpg",
   },
   {
     id: "matchs-amateur",
@@ -747,7 +747,7 @@ export const AMATEUR_MODULES = [
     subtitle: "Convocations équipe",
     description:
       "Calendrier unifié, RSVP joueurs et covoiturage pour vos matchs de championnat ou amicaux.",
-    image: "/showcase/classic-match.jpg",
+    image: "/images/football-match-01.jpg",
   },
   {
     id: "reseau-amateur",
@@ -766,7 +766,7 @@ export const SUPPORTER_MODULES = [
     subtitle: "PRODAY & monde",
     description:
       "Scores en direct via API-Football, filtres H/F/mixte et calendrier — votre tribune numérique.",
-    image: "/showcase/classic-match.jpg",
+    image: "/images/football-fans-01.jpg",
   },
   {
     id: "suivis-supporter",
@@ -774,7 +774,7 @@ export const SUPPORTER_MODULES = [
     subtitle: "Clubs · joueurs · tournois",
     description:
       "Suivez sans limite vos clubs, joueurs et tournois favoris — alertes opt-in depuis le profil.",
-    image: "/showcase/classic-exp-discover.jpg",
+    image: "/images/football-supporter-01.jpg",
   },
   {
     id: "debats-supporter",
@@ -790,7 +790,7 @@ export const SUPPORTER_MODULES = [
     subtitle: "Réels & merch",
     description:
       "Vidéos courtes des clubs suivis et boutique merch — sans abonnement store.",
-    image: "/showcase/classic-exp-discover.jpg",
+    image: "/images/football-action-01.jpg",
   },
 ] as const;
 
@@ -862,7 +862,7 @@ export const UNIVERSE_PAGE_CONFIG = {
     brand: AMATEUR_BRAND,
     hero: {
       title: "Le foot amateur.",
-      image: "/showcase/classic-discover-hero.jpg",
+      image: "/images/football-amateur-01.jpg",
     },
     highlights: [
       { label: "Public", value: "Joueurs & coachs" },
@@ -893,7 +893,7 @@ export const UNIVERSE_PAGE_CONFIG = {
     brand: SUPPORTER_BRAND,
     hero: {
       title: "Le foot, ensemble.",
-      image: "/showcase/classic-match.jpg",
+      image: "/images/football-fans-01.jpg",
     },
     highlights: [
       { label: "Tarif", value: "100 % gratuit" },
@@ -924,7 +924,7 @@ export const UNIVERSE_PAGE_CONFIG = {
     brand: PRO_BRAND,
     hero: {
       title: "Les pros du foot.",
-      image: "/showcase/classic-staff.jpg",
+      image: "/images/football-pro-01.jpg",
     },
     highlights: [
       { label: "Rôles", value: "7 profils pro" },
