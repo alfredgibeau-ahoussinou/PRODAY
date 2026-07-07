@@ -5,7 +5,7 @@ import {
   TERMS_INTRO,
   TERMS_SECTIONS,
   type LegalSectionContent,
-} from "../../../src/content/legal/fr";
+} from "./legal/fr";
 
 export type LegalSection = LegalSectionContent;
 
@@ -39,4 +39,4 @@ export {
   SPONSOR_CONVENTION_META,
   SPONSOR_CONVENTION_PARTIES,
   SPONSOR_CONVENTION_SECTIONS,
-} from "../../../src/content/legal/sponsorConvention";
+} from "./legal/sponsorConvention";

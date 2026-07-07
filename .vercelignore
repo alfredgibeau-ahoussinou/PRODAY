@@ -5,8 +5,7 @@ website/.next
 ios
 android
 /functions
-/src/**
-!/src/content/legal/**
+/src
 /assets
 /firebase
 /docs
