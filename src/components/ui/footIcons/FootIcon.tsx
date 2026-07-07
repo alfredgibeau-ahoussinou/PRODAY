@@ -14,6 +14,7 @@ export type FootIconName =
   | 'car'
   | 'person'
   | 'bag'
+  | 'briefcase'
   | 'star';
 
 type FootIconProps = {
@@ -192,6 +193,31 @@ export const FootIcon: React.FC<FootIconProps> = ({
           <Path d="M9 8 V6 C9 4.5 10.5 3 12 3 C13.5 3 15 4.5 15 6 V8" stroke={color} strokeWidth={sw} />
         </Svg>
       );
+    case 'briefcase':
+      return (
+        <Svg width={s} height={s} viewBox="0 0 24 24" fill="none">
+          <Rect
+            x="3.5"
+            y="8.5"
+            width="17"
+            height="11"
+            rx="2.2"
+            stroke={color}
+            strokeWidth={sw}
+            fill={filled ? color : 'none'}
+          />
+          <Path
+            d="M8.5 8.5 V7 C8.5 5.6 9.6 4.5 11 4.5 H13 C14.4 4.5 15.5 5.6 15.5 7 V8.5"
+            stroke={color}
+            strokeWidth={sw}
+            strokeLinecap="round"
+          />
+          <Path d="M3.5 13 H20.5" stroke={color} strokeWidth={filled ? 0 : 1.2} opacity={filled ? 0 : 0.45} />
+          {!filled ? (
+            <Rect x="10.5" y="11.5" width="3" height="2.5" rx="0.8" fill={color} opacity={0.55} />
+          ) : null}
+        </Svg>
+      );
     case 'star':
       return (
         <Svg width={s} height={s} viewBox="0 0 24 24" fill="none">
@@ -222,5 +248,6 @@ export const FOOT_ICON_NAMES = new Set<FootIconName>([
   'car',
   'person',
   'bag',
+  'briefcase',
   'star',
 ]);

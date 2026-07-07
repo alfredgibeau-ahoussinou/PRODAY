@@ -42,7 +42,7 @@ const AMATEUR_HELP: PoleHelpContent = {
   poleKey: 'amateur',
   title: 'Aide Amateur',
   welcome:
-    'Salut ! Je suis ton guide Pro Day Amateur. Choisis une question rapide ou parcours les réponses ci-dessous.',
+    'Salut ! Bienvenue sur Pro Day Amateur. Pose-moi une question rapide ci-dessous.',
   entries: [
     {
       id: 'matchs',
@@ -91,7 +91,7 @@ const SUPPORTER_HELP: PoleHelpContent = {
   poleKey: 'supporter',
   title: 'Aide Supporter',
   welcome:
-    'Bienvenue sur la Tribune ! Je t’aide à retrouver tes matchs, tes suivis et ton fil supporter.',
+    'Bienvenue sur la Tribune ! Je t’aide à retrouver matchs, suivis et Moments.',
   entries: [
     {
       id: 'tribune',
@@ -140,7 +140,7 @@ const SANTE_HELP: PoleHelpContent = {
   poleKey: 'sante',
   title: 'Aide Santé',
   welcome:
-    'Bonjour ! Je t’accompagne dans ton espace praticien : agenda, patients et messagerie médicale.',
+    'Bonjour ! Ton espace praticien t’attend : agenda, patients et messagerie.',
   entries: [
     {
       id: 'rdv',
@@ -189,7 +189,7 @@ const PRO_PLAYER_HELP: PoleHelpContent = {
   poleKey: 'pro_player',
   title: 'Aide Pro Joueur',
   welcome:
-    'Salut ! Je t’aide à naviguer dans ton espace carrière pro : stats, CV et opportunités.',
+    'Salut ! Prêt à booster ta carrière pro ? Stats, CV et opportunités, c’est par ici.',
   entries: [
     {
       id: 'carriere',
@@ -238,7 +238,7 @@ const PRO_CLUB_HELP: PoleHelpContent = {
   poleKey: 'pro_club',
   title: 'Aide Pro Club',
   welcome:
-    'Bonjour ! Je t’oriente dans la gestion de ton club : structure, recrutement et calendrier.',
+    'Bonjour ! Gère ton club sereinement : structure, recrutement et calendrier.',
   entries: [
     {
       id: 'structure',
@@ -287,7 +287,7 @@ const PRO_STAFF_HELP: PoleHelpContent = {
   poleKey: 'pro_staff',
   title: 'Aide Pro Staff',
   welcome:
-    'Salut ! Coach, agent ou recruteur — je t’aide à retrouver Mercato, réseau et calendrier.',
+    'Salut ! Coach, agent ou recruteur — Mercato, réseau et calendrier à portée de main.',
   entries: [
     {
       id: 'mandats',
