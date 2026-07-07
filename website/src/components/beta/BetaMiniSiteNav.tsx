@@ -24,15 +24,15 @@ export function BetaMiniSiteNav() {
   return (
     <nav aria-label="Navigation bêta" className="w-full">
       {/* Tabs mobile / tablette */}
-      <div className="flex gap-1 overflow-x-auto border-b border-white/10 pb-px lg:hidden">
+      <div className="scroll-snap-x -mx-4 flex gap-1 overflow-x-auto border-b border-white/10 px-4 pb-px sm:-mx-6 sm:px-6 lg:hidden">
         {NAV_ITEMS.map(({ href, label, icon: Icon, exact }) => {
           const active = isActive(pathname, href, exact);
           return (
             <Link
-              key={href}
+              key={label}
               href={href}
               className={clsx(
-                "flex shrink-0 items-center gap-2 border-b-2 px-4 py-3 text-sm font-semibold transition",
+                "flex shrink-0 snap-start items-center gap-2 border-b-2 px-3 py-3 text-sm font-semibold transition sm:px-4",
                 active
                   ? "border-[var(--proday-accent)] text-[var(--proday-accent)]"
                   : "border-transparent text-white/50 hover:text-white/80",

@@ -81,7 +81,7 @@ function PolePricingPanel({ poleId, yearly }: PolePricingPanelProps) {
 
   return (
     <div className={`relative min-h-[480px] rounded-3xl ${styles.section} p-6 sm:p-10 lg:p-12`}>
-      <div className="flex flex-wrap items-start gap-6">
+      <div className="flex flex-col items-center gap-6 text-center sm:flex-row sm:items-start sm:text-left">
         <Image
           src={pole.logo}
           alt=""
@@ -89,7 +89,7 @@ function PolePricingPanel({ poleId, yearly }: PolePricingPanelProps) {
           height={64}
           className="rounded-2xl bg-white/10 ring-1 ring-white/20"
         />
-        <div className="min-w-[240px] flex-1">
+        <div className="min-w-0 flex-1">
           <p className={`text-xs font-semibold tracking-[0.2em] ${styles.textMuted}`}>
             {pole.kicker}
           </p>
@@ -198,9 +198,9 @@ export function PolesPricingLayout() {
   return (
     <div className="surface-dark -mt-px pb-16">
       <div className="sticky top-16 z-40 border-b border-white/10 bg-[#030303]/95 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-4 py-3 sm:px-6">
+        <div className="mx-auto flex max-w-6xl flex-col items-center gap-3 px-4 py-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-4 sm:px-6">
           <nav
-            className="scroll-snap-x -mx-4 flex gap-1 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0"
+            className="scroll-snap-x -mx-4 flex w-full gap-1 overflow-x-auto px-4 pb-1 sm:mx-0 sm:w-auto sm:flex-wrap sm:overflow-visible sm:px-0"
             aria-label="Pôles tarifaires"
           >
             {POLE_NAV.map((item) => {

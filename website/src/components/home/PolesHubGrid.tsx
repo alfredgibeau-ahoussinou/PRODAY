@@ -25,7 +25,7 @@ export function PolesHubGrid() {
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.05 }}
-              className="card-flash group grid overflow-hidden sm:grid-cols-[280px_1fr] lg:grid-cols-[340px_1fr]"
+              className="card-flash group grid overflow-hidden sm:grid-cols-[minmax(0,280px)_1fr] lg:grid-cols-[minmax(0,340px)_1fr]"
             >
               <div className="relative h-48 sm:h-auto sm:min-h-[200px]">
                 <Image

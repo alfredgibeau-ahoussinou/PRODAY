@@ -22,7 +22,7 @@ export function PoleContextBar() {
 
   return (
     <div className="border-b border-white/8 bg-[#050505]/90 backdrop-blur-md">
-      <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-2 px-4 py-3 sm:px-6">
+      <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-center gap-2 px-4 py-3 sm:justify-start sm:px-6">
         {!isHub && (
           <>
             <Link

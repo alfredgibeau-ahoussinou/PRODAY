@@ -16,7 +16,7 @@ export function SectionKicker({ children }: { children: ReactNode }) {
 export function BetaSessionBar({ session }: { session: BetaAccessSession }) {
   return (
     <div className="border-b border-white/10 bg-black">
-      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2 px-4 py-3 sm:px-6">
+      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-2 px-4 py-3 text-center sm:justify-between sm:text-left sm:px-6">
         <p className="text-sm text-white/70">
           <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--proday-accent)]">
             Bêta ProDay

@@ -48,7 +48,7 @@ export function SiteFooter() {
         </div>
 
         <div className="mt-14 grid gap-10 border-t border-white/8 pt-12 text-center sm:grid-cols-2 sm:text-left lg:grid-cols-3">
-          <div>
+          <div className="flex flex-col items-center sm:items-start">
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--proday-accent)]">
               Produit
             </p>
@@ -66,7 +66,7 @@ export function SiteFooter() {
             </ul>
           </div>
 
-          <div>
+          <div className="flex flex-col items-center sm:items-start">
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--proday-accent)]">
               6 pôles
             </p>
@@ -98,7 +98,7 @@ export function SiteFooter() {
             </ul>
           </div>
 
-          <div>
+          <div className="flex flex-col items-center sm:items-start">
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--proday-accent)]">
               Ressources
             </p>

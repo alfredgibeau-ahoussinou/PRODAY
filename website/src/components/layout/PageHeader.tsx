@@ -103,14 +103,15 @@ export function PageHeader({
             sizes="100vw"
           />
           <div className={`absolute inset-0 ${overlayGradient}`} />
+          <div className="absolute inset-0 hero-overlay-mobile md:hidden" />
           <div className="absolute inset-0 hero-overlay" />
         </div>
       )}
 
-      <div className="relative mx-auto max-w-7xl px-4 pb-12 pt-6 sm:px-6 sm:pb-20 sm:pt-8">
+      <div className="relative mx-auto max-w-7xl px-4 pb-12 pt-6 text-center sm:px-6 sm:pb-20 sm:pt-8 md:text-left">
         <Link
           href={backHref}
-          className={`mb-8 inline-flex items-center gap-2 text-sm font-medium uppercase tracking-wide transition ${backClass}`}
+          className={`mb-8 inline-flex items-center gap-2 text-sm font-medium uppercase tracking-wide transition md:mx-0 ${backClass}`}
         >
           <ArrowLeft size={16} />
           {backLabel}
@@ -119,7 +120,7 @@ export function PageHeader({
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex flex-wrap items-center gap-4"
+          className="flex flex-wrap items-center justify-center gap-4 md:justify-start"
         >
           {logo && (
             <div
@@ -149,7 +150,7 @@ export function PageHeader({
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.05 }}
-          className={`mt-3 max-w-3xl font-display text-[clamp(1.75rem,5vw,3.75rem)] font-bold uppercase leading-tight tracking-tight sm:text-5xl lg:text-6xl ${
+          className={`mx-auto mt-3 max-w-3xl font-display text-[clamp(1.75rem,5vw,3.75rem)] font-bold uppercase leading-tight tracking-tight sm:text-5xl md:mx-0 lg:text-6xl ${
             hasHeroImage ? "text-[var(--proday-accent)] text-accent-glow" : "text-white"
           }`}
         >
@@ -159,7 +160,7 @@ export function PageHeader({
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className={`mt-5 max-w-2xl text-lg ${descClass}`}
+          className={`mx-auto mt-5 max-w-2xl text-lg md:mx-0 ${descClass}`}
         >
           {description}
         </motion.p>
