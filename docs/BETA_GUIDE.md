@@ -12,12 +12,12 @@ Document de référence unique pour comprendre, exploiter et déployer le progra
 flowchart LR
   A[Visiteur site] -->|CTA Accès anticipé| B["/beta/inscription"]
   B -->|POST /api/beta| C[Email de bienvenue]
-  C -->|lien personnel| D["/beta?token=…"]
+  C -->|lien personnel| D["/beta/programme?token=…"]
   D -->|middleware| E["/api/beta/access"]
-  E -->|cookie 90j| F["/beta — Hub"]
-  F --> G["/beta/programme"]
-  F --> H["/beta/installer"]
-  F --> I["/beta/aide"]
+  E -->|cookie 90j| F["/beta/programme"]
+  F --> G["/beta/installer"]
+  F --> H["/beta/aide"]
+  I["/beta + cookie"] -->|redirect| F
 ```
 
 ---
@@ -27,12 +27,12 @@ flowchart LR
 | URL | Public ? | Qui y accède | Rôle |
 |-----|----------|--------------|------|
 | `/beta/inscription` | **Oui** | Tout visiteur | S'inscrire à la waitlist (formulaire + `POST /api/beta`) |
-| `/beta` | **Non** | Beta-testeur (email + cookie) | **Hub unique** — point d'entrée du mail |
-| `/beta/programme` | **Non** | Beta-testeur (cookie) | Programme, 6 pôles, modules transverses |
+| `/beta` | **Non** | Beta-testeur (cookie) | **Redirect** → `/beta/programme` ; sans cookie → accès refusé |
+| `/beta/programme` | **Non** | Beta-testeur (cookie) | **Point d'entrée email** — programme, 6 pôles, modules transverses |
 | `/beta/installer` | **Non** | Beta-testeur (cookie) | Guides APK Android + TestFlight iOS |
 | `/beta/aide` | **Non** | Beta-testeur (cookie) | FAQ bêta, contact support, retours |
 | `POST /api/beta` | **Oui** | Formulaire inscription | Enregistre l'email + envoie le mail de bienvenue |
-| `GET /api/beta/access` | **Non** | Lien email `?token=` | Valide le jeton, pose le cookie, redirige vers `/beta` |
+| `GET /api/beta/access` | **Non** | Lien email `?token=` | Valide le jeton, pose le cookie, redirige vers `/beta/programme` |
 
 **Règle nav site :** tous les CTA « Accès anticipé » pointent vers `/beta/inscription` uniquement — jamais vers `/beta`.
 
@@ -43,11 +43,16 @@ flowchart LR
 1. **Découverte** — Le visiteur clique sur « Accès anticipé » (nav, hero, tarifs, etc.) → `/beta/inscription`.
 2. **Inscription** — Il choisit son profil (Joueur, Coach, Club…) et saisit son email.
 3. **API** — `POST /api/beta` enregistre l'inscription et déclenche l'email de bienvenue (EmailJS ou Cloud Function Firebase).
-4. **Email** — L'inscrit reçoit « Vous êtes beta-testeur ProDay » avec un bouton **Accéder à la bêta** → `{{beta_url}}` = `https://proday75.fr/beta?token=…`.
-5. **Validation** — Le middleware intercepte `?token=` sur toute URL `/beta/*` et redirige vers `/api/beta/access`.
-6. **Session** — L'API valide le jeton, pose un cookie httpOnly `proday_beta_session` (90 jours, path `/beta`), redirige vers `/beta`.
-7. **Hub** — Le beta-testeur voit le hub avec liens vers Programme, Installer et Aide.
+4. **Email** — L'inscrit reçoit « Vous êtes beta-testeur ProDay » avec un bouton **Accéder à la bêta** → `{{beta_url}}` = `https://proday75.fr/beta/programme?token=…`.
+5. **Validation** — Le middleware intercepte `?token=` sur `/beta` ou `/beta/programme` (et toute URL `/beta/*`) et redirige vers `/api/beta/access`.
+6. **Session** — L'API valide le jeton, pose un cookie httpOnly `proday_beta_session` (90 jours, path `/beta`), redirige vers `/beta/programme`.
+7. **Programme** — Le beta-testeur voit directement le programme (6 pôles) ; nav latérale vers Installer et Aide.
 8. **App mobile** — Liens TestFlight / APK (env ou email ultérieur) ; retours via `/beta/aide` ou `support@proday.app`.
+
+### Visite ultérieure avec cookie
+
+- `/beta` avec cookie valide → redirect automatique vers `/beta/programme`.
+- `/beta` sans cookie → écran « Accéder à la bêta » (lien email requis).
 
 ### Sans jeton valide
 
@@ -94,7 +99,7 @@ website/src/app/beta/
 ├── inscription/page.tsx      # Public — waitlist
 └── (site)/                   # Protégé par cookie
     ├── layout.tsx            # BetaProtectedLayout
-    ├── page.tsx              # Hub (/beta)
+    ├── page.tsx              # /beta → redirect programme si cookie
     ├── programme/page.tsx
     ├── installer/page.tsx
     └── aide/page.tsx
@@ -165,7 +170,7 @@ firebase deploy --only functions:submitBetaWaitlist,functions:validateBetaAccess
 - **Fichier source :** `docs/emailjs/beta-welcome.html`
 - **Dashboard EmailJS :** template `template_zkbezzh`
 - **Sujet :** `Vous êtes beta-testeur ProDay`
-- **CTA :** `{{beta_url}}` → `/beta?token=…` (hub, pas une sous-page)
+- **CTA :** `{{beta_url}}` → `/beta/programme?token=…` (programme directement)
 
 Variables template :
 

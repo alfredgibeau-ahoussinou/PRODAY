@@ -22,7 +22,7 @@ export const ROUTES = {
   proStaff: "/pro-staff",
   /** @deprecated Hub legacy — voir pro-joueur, pro-club, pro-staff. */
   pro: "/pro",
-  /** Hub bêta — accès via lien email `?token=` uniquement. */
+  /** Hub bêta legacy — redirect vers programme si cookie. */
   beta: "/beta",
   /** Programme bêta (mini-site protégé). */
   betaProgramme: "/beta/programme",

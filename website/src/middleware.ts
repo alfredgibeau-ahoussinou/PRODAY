@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-/** Redirige `?token=` vers l'API de session avant le rendu des pages protégées. */
+/** Redirige `?token=` vers l'API de session, puis atterrissage sur `/beta/programme`. */
 export function middleware(request: NextRequest) {
   const { pathname, searchParams } = request.nextUrl;
 

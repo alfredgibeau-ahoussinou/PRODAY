@@ -11,6 +11,8 @@ import {
 
 export const BETA_ACCESS_COOKIE = "proday_beta_session";
 export const BETA_ACCESS_COOKIE_MAX_AGE = 60 * 60 * 24 * 90;
+/** Page d'atterrissage après validation du jeton email ou visite `/beta` avec cookie. */
+export const BETA_LANDING_PATH = "/beta/programme";
 
 export type BetaAccessSession = {
   email: string;
@@ -25,9 +27,9 @@ function roleLabelFor(role: string): string {
 export function buildBetaAccessUrl(siteUrl: string, accessToken?: string): string {
   const site = siteUrl.replace(/\/$/, "");
   if (accessToken?.trim()) {
-    return `${site}/beta?token=${encodeURIComponent(accessToken.trim())}`;
+    return `${site}${BETA_LANDING_PATH}?token=${encodeURIComponent(accessToken.trim())}`;
   }
-  return `${site}/beta`;
+  return `${site}${BETA_LANDING_PATH}`;
 }
 
 export function createEmailJsBetaAccessToken(email: string, role: string): string | null {

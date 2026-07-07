@@ -7,7 +7,7 @@ import { ROUTES } from "@/lib/routes";
 import { clsx } from "clsx";
 
 const NAV_ITEMS = [
-  { href: ROUTES.beta, label: "Accueil", icon: Home, exact: true },
+  { href: ROUTES.betaProgramme, label: "Accueil", icon: Home, exact: true },
   { href: ROUTES.betaProgramme, label: "Programme", icon: BookOpen, exact: false },
   { href: ROUTES.betaInstaller, label: "Installer", icon: Download, exact: false },
   { href: ROUTES.betaAide, label: "Aide", icon: HelpCircle, exact: false },

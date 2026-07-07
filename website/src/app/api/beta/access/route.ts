@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import {
   BETA_ACCESS_COOKIE,
   BETA_ACCESS_COOKIE_MAX_AGE,
+  BETA_LANDING_PATH,
   validateBetaAccessToken,
 } from "@/lib/betaAccess";
 import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
@@ -19,7 +20,7 @@ function setBetaSessionCookie(response: NextResponse, token: string) {
   });
 }
 
-/** Valide un jeton bêta, pose le cookie httpOnly et redirige vers /beta. */
+/** Valide un jeton bêta, pose le cookie httpOnly et redirige vers le programme. */
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const token = url.searchParams.get("token")?.trim();
@@ -56,7 +57,7 @@ export async function GET(request: Request) {
 
   const response = jsonOnly
     ? NextResponse.json({ ok: true, ...session })
-    : NextResponse.redirect(new URL("/beta", request.url));
+    : NextResponse.redirect(new URL(BETA_LANDING_PATH, request.url));
 
   setBetaSessionCookie(response, token);
   return response;

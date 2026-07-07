@@ -34,9 +34,9 @@ export type BetaWelcomeEmailParams = {
 
 function buildBetaAccessUrl(site: string, accessToken?: string): string {
   if (accessToken?.trim()) {
-    return `${site}/beta?token=${encodeURIComponent(accessToken.trim())}`;
+    return `${site}/beta/programme?token=${encodeURIComponent(accessToken.trim())}`;
   }
-  return `${site}/beta`;
+  return `${site}/beta/programme`;
 }
 
 export function buildBetaWelcomeEmail(params: BetaWelcomeEmailParams): {
