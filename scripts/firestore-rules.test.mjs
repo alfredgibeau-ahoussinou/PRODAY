@@ -20,6 +20,7 @@ import {
   query,
   where,
   orderBy,
+  limit,
   collection,
 } from 'firebase/firestore';
 
@@ -879,6 +880,64 @@ async function run() {
       updated_at: new Date(),
     })
   );
+
+  // --- Users : listes publiques par rôle (annuaire / reels) ---
+  await testEnv.withSecurityRulesDisabled(async (ctx) => {
+    const db = ctx.firestore();
+    await setDoc(doc(db, 'users/pub-player'), {
+      role: 'player',
+      is_active: true,
+      created_at: new Date(),
+      display_name: 'Joueur Public',
+    });
+    await setDoc(doc(db, 'users/pub-coach'), {
+      role: 'coach',
+      is_active: true,
+      created_at: new Date(),
+      display_name: 'Coach Public',
+    });
+    await setDoc(doc(db, 'users/inactive-player'), {
+      role: 'player',
+      is_active: false,
+      created_at: new Date(),
+      display_name: 'Inactif',
+    });
+  });
+
+  await assertSucceeds(
+    getDocs(
+      query(
+        collection(guestDb, 'users'),
+        where('role', '==', 'player'),
+        where('is_active', '==', true),
+        limit(50)
+      )
+    )
+  );
+
+  await assertSucceeds(
+    getDocs(
+      query(
+        collection(aliceDb, 'users'),
+        where('role', '==', 'coach'),
+        where('is_active', '==', true),
+        orderBy('created_at', 'desc'),
+        limit(50)
+      )
+    )
+  );
+
+  await assertFails(
+    getDocs(
+      query(
+        collection(guestDb, 'users'),
+        where('role', '==', 'player'),
+        limit(50)
+      )
+    )
+  );
+
+  await assertFails(getDoc(doc(guestDb, 'users/pub-player')));
 
   await assertSucceeds(
     setDoc(doc(playerDb, 'memberships/mem1'), {

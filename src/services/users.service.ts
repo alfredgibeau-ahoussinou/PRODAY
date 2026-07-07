@@ -85,7 +85,14 @@ export const usersService = {
       );
       return mapDocs(await getDocs(q));
     } catch (error) {
-      console.warn(`[usersService] Index Firestore manquant pour ${role}, requête simplifiée`);
+      const code =
+        error && typeof error === 'object' && 'code' in error
+          ? String((error as { code: string }).code)
+          : '';
+      const isIndexError = code === 'failed-precondition';
+      if (isIndexError) {
+        console.warn(`[usersService] Index Firestore manquant pour ${role}, requête simplifiée`);
+      }
       try {
         const qFallback = query(
           collection(database, 'users'),

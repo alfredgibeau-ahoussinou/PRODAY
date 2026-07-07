@@ -210,6 +210,17 @@ service cloud.firestore {
       ];
     }
 
+    /** Profils visibles dans annuaires / reels (requêtes role + is_active). */
+    function isPublicDiscoverableUser() {
+      return resource.data.get('is_active', false) == true
+        && resource.data.role in ['player', 'coach', 'club', 'agent', 'physio', 'organizer'];
+    }
+
+    function usersListQueryAllowed() {
+      return request.query.limit <= 50
+        && (isSignedIn() || isPublicDiscoverableUser());
+    }
+
     function userClubId() {
       let u = userDoc(request.auth.uid).data;
       return u.profile.club_id != null ? u.profile.club_id : request.auth.uid;
@@ -287,10 +298,11 @@ service cloud.firestore {
     }
 
     match /users/{userId} {
-      allow read: if isOwner(userId)
+      allow get: if isOwner(userId)
         || isAdmin()
         || isGuardianOfUser(resource.data)
         || isSignedIn();
+      allow list: if usersListQueryAllowed();
       allow create: if isOwner(userId)
         && request.resource.data.verification_status in ['PENDING', 'NOT_REQUIRED']
         && validUserRole(request.resource.data.role)
