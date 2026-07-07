@@ -4,8 +4,8 @@ import { motion, useScroll, useTransform } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
-import { Menu, Search, X } from "lucide-react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { ChevronDown, Menu, X } from "lucide-react";
 import { navBrandForPath } from "@/components/universe/universeTheme";
 import { PRODAY_LOGO_ON_DARK } from "@/lib/brandingAssets";
 import { isNavActive, poleForPath } from "@/lib/siteArchitecture";
@@ -18,12 +18,14 @@ function NavLink({
   active,
   poleId,
   onClick,
+  compact = false,
 }: {
   href: string;
   label: string;
   active: boolean;
   poleId?: PoleId | null;
   onClick?: () => void;
+  compact?: boolean;
 }) {
   const poleStyle = poleId ? POLE_STYLES[poleId] : null;
 
@@ -31,7 +33,9 @@ function NavLink({
     <Link
       href={href}
       onClick={onClick}
-      className={`relative px-3.5 py-2 text-sm font-semibold uppercase tracking-wide transition xl:px-4 ${
+      className={`relative whitespace-nowrap font-semibold uppercase tracking-wide transition ${
+        compact ? "px-2.5 py-2 text-xs xl:px-3 xl:text-sm" : "px-3 py-2 text-sm xl:px-3.5"
+      } ${
         active
           ? poleStyle
             ? `${poleStyle.navActive} text-[var(--proday-accent)]`
@@ -44,11 +48,107 @@ function NavLink({
       {label}
       {active && (
         <span
-          className="absolute inset-x-2 -bottom-0.5 h-px bg-[var(--proday-accent)] shadow-[0_0_8px_var(--proday-accent-glow)]"
+          className="absolute inset-x-1.5 -bottom-0.5 h-px bg-[var(--proday-accent)] shadow-[0_0_8px_var(--proday-accent-glow)]"
           aria-hidden
         />
       )}
     </Link>
+  );
+}
+
+function PolesDropdown({ pathname }: { pathname: string }) {
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const menuId = useId();
+  const polesActive = POLE_NAV_ITEMS.some((item) => isNavActive(item.href, pathname));
+
+  const close = useCallback(() => setOpen(false), []);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        close();
+        triggerRef.current?.focus();
+      }
+    };
+
+    const onPointerDown = (event: MouseEvent | TouchEvent) => {
+      if (!rootRef.current?.contains(event.target as Node)) close();
+    };
+
+    document.addEventListener("keydown", onKeyDown);
+    document.addEventListener("mousedown", onPointerDown);
+    document.addEventListener("touchstart", onPointerDown);
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      document.removeEventListener("mousedown", onPointerDown);
+      document.removeEventListener("touchstart", onPointerDown);
+    };
+  }, [close, open]);
+
+  return (
+    <div ref={rootRef} className="relative">
+      <button
+        ref={triggerRef}
+        type="button"
+        id={`${menuId}-trigger`}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-controls={`${menuId}-menu`}
+        onClick={() => setOpen((value) => !value)}
+        className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-2 text-xs font-semibold uppercase tracking-wide transition xl:px-3 xl:text-sm ${
+          polesActive || open
+            ? "text-[var(--proday-accent)]"
+            : "text-white/55 hover:text-[var(--proday-accent)]"
+        }`}
+      >
+        Pôles
+        <ChevronDown
+          size={14}
+          className={`shrink-0 transition-transform ${open ? "rotate-180" : ""}`}
+          aria-hidden
+        />
+      </button>
+
+      {open && (
+        <div
+          id={`${menuId}-menu`}
+          role="menu"
+          aria-labelledby={`${menuId}-trigger`}
+          className="absolute left-1/2 top-[calc(100%+0.5rem)] z-50 w-56 -translate-x-1/2 rounded-xl border border-white/10 bg-black/95 p-1.5 shadow-[0_16px_48px_rgba(0,0,0,0.6)] backdrop-blur-xl"
+        >
+          {POLE_NAV_ITEMS.map((item) => {
+            const poleId = POLE_NAV_POLE_IDS[item.href];
+            const styles = POLE_STYLES[poleId];
+            const active = isNavActive(item.href, pathname);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                role="menuitem"
+                onClick={close}
+                className={`flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm transition ${
+                  active
+                    ? `${styles.navActive} font-semibold text-[var(--proday-accent)]`
+                    : "text-white/75 hover:bg-white/5 hover:text-white"
+                }`}
+              >
+                <span
+                  className={`h-6 w-1 shrink-0 rounded-full ${
+                    active ? "bg-[var(--proday-accent)]" : POLE_NAV_STRIPE[poleId]
+                  }`}
+                  aria-hidden
+                />
+                {item.label}
+              </Link>
+            );
+          })}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -81,58 +181,48 @@ export function SiteNav() {
         currentPoleStyles?.accentTop ?? ""
       }`}
     >
-      <nav className="mx-auto grid h-16 max-w-7xl grid-cols-[1fr_auto_1fr] items-center gap-4 px-4 sm:px-6">
-        <Link href={ROUTES.home} className="group flex shrink-0 items-center gap-2.5 justify-self-start">
+      <nav
+        className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-3 px-4 sm:gap-4 sm:px-6"
+        aria-label="Navigation principale"
+      >
+        <Link
+          href={ROUTES.home}
+          className="group flex min-w-0 shrink-0 items-center gap-2 sm:gap-2.5"
+        >
           <Image
             src={isHome ? PRODAY_LOGO_ON_DARK : brand.logo}
             alt={brand.name}
             width={36}
             height={36}
-            className="rounded-lg transition group-hover:scale-105"
+            className="shrink-0 rounded-lg transition group-hover:scale-105"
           />
-          <span className="font-display text-lg font-bold tracking-tight text-white">
+          <span className="font-display truncate text-base font-bold tracking-tight text-white sm:text-lg">
             {isHome ? "ProDay" : brand.name}
           </span>
         </Link>
 
-        <div className="hidden items-center justify-center xl:flex">
-          <ul className="flex items-center gap-1">
-            {POLE_NAV_ITEMS.map((l) => (
-              <li key={l.href}>
+        <div className="hidden min-w-0 flex-1 items-center justify-center lg:flex">
+          <ul className="flex items-center gap-0.5 xl:gap-1">
+            <li>
+              <PolesDropdown pathname={pathname} />
+            </li>
+            {UTILITY_NAV_ITEMS.map((item) => (
+              <li key={item.href}>
                 <NavLink
-                  href={l.href}
-                  label={l.label}
-                  active={isNavActive(l.href, pathname)}
-                  poleId={POLE_NAV_POLE_IDS[l.href]}
-                />
-              </li>
-            ))}
-          </ul>
-          <span className="mx-3 h-4 w-px bg-white/10" aria-hidden />
-          <ul className="flex items-center gap-0.5">
-            {UTILITY_NAV_ITEMS.map((l) => (
-              <li key={l.href}>
-                <NavLink
-                  href={l.href}
-                  label={l.label}
-                  active={pathname === l.href}
+                  href={item.href}
+                  label={item.label}
+                  active={pathname === item.href}
+                  compact
                 />
               </li>
             ))}
           </ul>
         </div>
 
-        <div className="hidden shrink-0 items-center gap-3 justify-self-end md:flex">
-          <Link
-            href={ROUTES.faq}
-            className="rounded-full p-2 text-white/50 transition hover:text-[var(--proday-accent)]"
-            aria-label="Rechercher"
-          >
-            <Search size={18} />
-          </Link>
+        <div className="hidden shrink-0 items-center lg:flex">
           <Link
             href={ROUTES.beta}
-            className="rounded-full bg-[var(--proday-accent)] px-5 py-2 text-sm font-bold uppercase tracking-wide text-black transition hover:scale-[1.02] hover:bg-cyan-300 active:bg-cyan-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-400/50"
+            className="rounded-full bg-[var(--proday-accent)] px-4 py-2 text-xs font-bold uppercase tracking-wide text-black transition hover:scale-[1.02] hover:bg-cyan-300 active:bg-cyan-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-400/50 xl:px-5 xl:text-sm"
           >
             Accès anticipé
           </Link>
@@ -140,7 +230,7 @@ export function SiteNav() {
 
         <button
           type="button"
-          className="col-start-3 flex min-h-11 min-w-11 items-center justify-center rounded-lg text-white xl:hidden"
+          className="flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-lg text-white transition hover:bg-white/5 lg:hidden"
           onClick={() => setOpen(!open)}
           aria-expanded={open}
           aria-label={open ? "Fermer le menu" : "Ouvrir le menu"}
@@ -153,26 +243,26 @@ export function SiteNav() {
         <>
           <button
             type="button"
-            className="fixed inset-0 top-16 z-40 bg-black/90 backdrop-blur-md xl:hidden"
+            className="fixed inset-0 top-16 z-40 bg-black/90 backdrop-blur-md lg:hidden"
             aria-label="Fermer le menu"
             onClick={close}
           />
           <motion.div
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
-            className="relative z-50 min-h-[calc(100dvh-4rem)] overflow-y-auto border-t border-white/10 bg-black/98 px-4 pb-8 backdrop-blur-xl xl:hidden"
+            className="relative z-50 min-h-[calc(100dvh-4rem)] overflow-y-auto border-t border-white/10 bg-black/98 px-4 pb-8 backdrop-blur-xl lg:hidden"
           >
             <p className="pt-4 text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--proday-accent)]">
               6 pôles
             </p>
-            {POLE_NAV_ITEMS.map((l) => {
-              const poleId = POLE_NAV_POLE_IDS[l.href];
+            {POLE_NAV_ITEMS.map((item) => {
+              const poleId = POLE_NAV_POLE_IDS[item.href];
               const styles = POLE_STYLES[poleId];
-              const active = isNavActive(l.href, pathname);
+              const active = isNavActive(item.href, pathname);
               return (
                 <Link
-                  key={l.href}
-                  href={l.href}
+                  key={item.href}
+                  href={item.href}
                   className={`flex min-h-11 items-center gap-3 rounded-xl py-3 pl-3 pr-4 text-sm transition ${
                     active
                       ? `${styles.navActive} font-semibold text-[var(--proday-accent)]`
@@ -186,25 +276,25 @@ export function SiteNav() {
                     }`}
                     aria-hidden
                   />
-                  {l.label}
+                  {item.label}
                 </Link>
               );
             })}
             <p className="pt-5 text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--proday-accent)]">
               Produit
             </p>
-            {UTILITY_NAV_ITEMS.map((l) => (
+            {UTILITY_NAV_ITEMS.map((item) => (
               <Link
-                key={l.href}
-                href={l.href}
+                key={item.href}
+                href={item.href}
                 className={`flex min-h-11 items-center py-3 text-sm ${
-                  pathname === l.href
+                  pathname === item.href
                     ? "font-semibold text-[var(--proday-accent)]"
                     : "text-white/80 hover:text-white"
                 }`}
                 onClick={close}
               >
-                {l.label}
+                {item.label}
               </Link>
             ))}
             <Link

@@ -26,7 +26,7 @@ export function Section({
       id={id}
       className={`relative py-16 md:py-24 ${dark ? "bg-black text-white" : "bg-[#030303] text-white"} ${className}`}
     >
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6">
         {(kicker || title) && (
           <div
             className={`mb-12 max-w-2xl ${centered ? "section-header-centered mx-auto text-center" : ""}`}

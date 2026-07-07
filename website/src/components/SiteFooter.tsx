@@ -16,7 +16,7 @@ const SOCIAL_LINKS = [
 export function SiteFooter() {
   return (
     <footer className="border-t border-white/8 bg-black py-16 text-white">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <div className="flex flex-col items-center text-center">
           <Image
             src={PRODAY_LOGO_ON_DARK}

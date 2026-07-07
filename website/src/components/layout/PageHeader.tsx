@@ -114,7 +114,7 @@ export function PageHeader({
         </div>
       )}
 
-      <div className="relative mx-auto max-w-6xl px-4 pb-12 pt-6 sm:px-6 sm:pb-20 sm:pt-8">
+      <div className="relative mx-auto max-w-7xl px-4 pb-12 pt-6 sm:px-6 sm:pb-20 sm:pt-8">
         <Link
           href={backHref}
           className={`mb-8 inline-flex items-center gap-2 text-sm font-medium uppercase tracking-wide transition ${backClass}`}
@@ -136,6 +136,7 @@ export function PageHeader({
                 width={64}
                 height={64}
                 className="h-full w-full object-contain object-top"
+                style={{ width: "auto", height: "auto" }}
               />
             </div>
           )}
