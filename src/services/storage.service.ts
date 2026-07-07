@@ -1,5 +1,5 @@
 import * as FileSystem from 'expo-file-system/legacy';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { ref, uploadBytes, uploadString, getDownloadURL } from 'firebase/storage';
 import { Platform } from 'react-native';
 import { getFirebaseStorage } from '../lib/firebase';
 
@@ -24,25 +24,45 @@ export function normalizeImageMimeType(mimeType?: string | null): string {
   return 'image/jpeg';
 }
 
-async function uriToBlob(uri: string, mimeType: string): Promise<Blob> {
-  // React Native : fetch(file://) est peu fiable — FileSystem en priorité
-  if (Platform.OS !== 'web' && uri.startsWith('file://')) {
+type UploadPayload =
+  | { kind: 'base64'; base64: string }
+  | { kind: 'blob'; blob: Blob };
+
+function isLocalDeviceUri(uri: string): boolean {
+  return (
+    uri.startsWith('file://') ||
+    uri.startsWith('content://') ||
+    uri.startsWith('ph://') ||
+    uri.startsWith('assets-library://')
+  );
+}
+
+async function readFileForUpload(uri: string): Promise<UploadPayload> {
+  // React Native : pas de Blob(ArrayBuffer) — base64 + uploadString
+  if (Platform.OS !== 'web' && isLocalDeviceUri(uri)) {
     const base64 = await FileSystem.readAsStringAsync(uri, {
       encoding: 'base64',
     });
-    const binary = atob(base64);
-    const bytes = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i += 1) {
-      bytes[i] = binary.charCodeAt(i);
-    }
-    return new Blob([bytes], { type: mimeType });
+    return { kind: 'base64', base64 };
   }
 
   const response = await fetch(uri);
   if (!response.ok) {
     throw new Error('Impossible de lire le fichier sélectionné');
   }
-  return response.blob();
+  return { kind: 'blob', blob: await response.blob() };
+}
+
+async function uploadPayload(
+  storageRef: ReturnType<typeof ref>,
+  payload: UploadPayload,
+  contentType: string
+): Promise<void> {
+  if (payload.kind === 'base64') {
+    await uploadString(storageRef, payload.base64, 'base64', { contentType });
+    return;
+  }
+  await uploadBytes(storageRef, payload.blob, { contentType });
 }
 
 export type ProfileMediaFolder = 'avatars' | 'gallery';
@@ -66,8 +86,8 @@ export const storageService = {
     const storageRef = ref(storage, path);
 
     try {
-      const blob = await uriToBlob(file.uri, contentType);
-      await uploadBytes(storageRef, blob, { contentType });
+      const payload = await readFileForUpload(file.uri);
+      await uploadPayload(storageRef, payload, contentType);
       return getDownloadURL(storageRef);
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);
@@ -104,8 +124,8 @@ export const storageService = {
     const path = `documents/${uid}/${documentType}_${Date.now()}.${ext}`;
     const storageRef = ref(storage, path);
 
-    const blob = await uriToBlob(file.uri, contentType);
-    await uploadBytes(storageRef, blob, { contentType });
+    const payload = await readFileForUpload(file.uri);
+    await uploadPayload(storageRef, payload, contentType);
     return getDownloadURL(storageRef);
   },
 
@@ -118,8 +138,8 @@ export const storageService = {
     const ext = extensionForMime(contentType);
     const path = `feed/${uid}/${Date.now()}.${ext}`;
     const storageRef = ref(storage, path);
-    const blob = await uriToBlob(file.uri, contentType);
-    await uploadBytes(storageRef, blob, { contentType });
+    const payload = await readFileForUpload(file.uri);
+    await uploadPayload(storageRef, payload, contentType);
     return getDownloadURL(storageRef);
   },
 
@@ -131,8 +151,8 @@ export const storageService = {
     const contentType = file.mimeType.includes('video') ? file.mimeType : 'video/mp4';
     const path = `highlights/${uid}/${Date.now()}.mp4`;
     const storageRef = ref(storage, path);
-    const blob = await uriToBlob(file.uri, contentType);
-    await uploadBytes(storageRef, blob, { contentType });
+    const payload = await readFileForUpload(file.uri);
+    await uploadPayload(storageRef, payload, contentType);
     return getDownloadURL(storageRef);
   },
 
@@ -144,8 +164,8 @@ export const storageService = {
     const contentType = 'image/jpeg';
     const path = `player_activity_thumbnails/${uid}/${activityId}.jpg`;
     const storageRef = ref(storage, path);
-    const blob = await uriToBlob(localUri, contentType);
-    await uploadBytes(storageRef, blob, { contentType });
+    const payload = await readFileForUpload(localUri);
+    await uploadPayload(storageRef, payload, contentType);
     return getDownloadURL(storageRef);
   },
 
@@ -157,8 +177,8 @@ export const storageService = {
     const contentType = file.mimeType.includes('video') ? file.mimeType : 'video/mp4';
     const path = `community_reels/${uid}/${Date.now()}.mp4`;
     const storageRef = ref(storage, path);
-    const blob = await uriToBlob(file.uri, contentType);
-    await uploadBytes(storageRef, blob, { contentType });
+    const payload = await readFileForUpload(file.uri);
+    await uploadPayload(storageRef, payload, contentType);
     return getDownloadURL(storageRef);
   },
 };
