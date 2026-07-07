@@ -1,4 +1,5 @@
 import {
+  addDoc,
   collection,
   deleteDoc,
   doc,
@@ -45,10 +46,19 @@ import type { Application } from '../models/Player';
 import type { Club } from '../models/Club';
 import type { CommunityReel, CommunityReelStatus } from '../models/CommunityReel';
 import type { ReelReport } from '../models/ReelReport';
+import type { PlatformFeedPost, FeedAudience } from '../models/PlatformFeed';
+import type { PlatformConfig } from '../models/PlatformConfig';
+import type { StageOffer, StageApplication } from '../models/Stage';
+import type { ShopOrder } from '../models/ShopOrder';
 import { getErrorCode } from '../utils/errors';
 import { statsService } from './stats.service';
 import { adminAuditService } from './adminAudit.service';
-import { chatMessageFromFirestore } from '../lib/firestoreMappers';
+import { platformConfigService } from './platformConfig.service';
+import {
+  chatMessageFromFirestore,
+  stageOfferFromFirestore,
+  stageApplicationFromFirestore,
+} from '../lib/firestoreMappers';
 import type { ChatMessage } from '../lib/firestoreMappers';
 
 export interface PlatformStats {
@@ -81,6 +91,40 @@ export interface AdminMessageThread {
   last_message: string;
   updated_at: Date;
   thread_kind?: string;
+}
+
+export interface BetaWaitlistEntry {
+  id: string;
+  email: string;
+  name?: string;
+  role?: string;
+  city?: string;
+  created_at: Date;
+}
+
+export interface SubscriptionPurchase {
+  id: string;
+  user_uid: string;
+  product_id: string;
+  status: string;
+  amount_eur?: number;
+  created_at: Date;
+}
+
+export interface AdminTeam {
+  id: string;
+  club_id: string;
+  name: string;
+  category?: string;
+}
+
+export interface AdminTournament {
+  id: string;
+  name: string;
+  organizer_uid: string;
+  city?: string;
+  status?: string;
+  created_at: Date;
 }
 
 export function countPendingUserVerifications(users: User[]): number {
@@ -927,5 +971,293 @@ export const adminService = {
       target_id: responseUid,
       summary: `Réponse fil supprimée · ${authorName}`,
     });
+  },
+
+  async getPlatformConfig(): Promise<PlatformConfig> {
+    return platformConfigService.getConfig();
+  },
+
+  async updatePlatformConfig(
+    patch: Parameters<typeof platformConfigService.saveConfig>[0],
+    actorUid: string,
+    actorEmail?: string,
+  ): Promise<void> {
+    await platformConfigService.saveConfig(patch, actorUid);
+    await adminAuditService.log({
+      action: 'platform_config_updated',
+      actor_uid: actorUid,
+      actor_email: actorEmail,
+      target_type: 'platform_config',
+      target_id: 'main',
+      summary: 'Configuration plateforme mise à jour',
+    });
+  },
+
+  async listPlatformFeedPosts(max = 80): Promise<PlatformFeedPost[]> {
+    if (!isFirebaseConfigured()) return [];
+    const database = getDb();
+    if (!database) return [];
+
+    const mapPost = (id: string, data: Record<string, unknown>): PlatformFeedPost => {
+      const pollVotes = data.poll_votes as Record<string, string[]> | undefined;
+      return {
+        id,
+        type: (data.type as PlatformFeedPost['type']) ?? 'news',
+        audience: (data.audience as PlatformFeedPost['audience']) ?? 'all',
+        author_uid: String(data.author_uid ?? ''),
+        author_name: String(data.author_name ?? ''),
+        author_role: (data.author_role as PlatformFeedPost['author_role']) ?? 'club',
+        title: String(data.title ?? ''),
+        body: String(data.body ?? ''),
+        image_url: data.image_url ? String(data.image_url) : undefined,
+        poll_options: Array.isArray(data.poll_options)
+          ? (data.poll_options as string[]).map(String)
+          : undefined,
+        poll_votes: pollVotes,
+        created_at:
+          data.created_at && typeof data.created_at === 'object' && 'toDate' in data.created_at
+            ? (data.created_at as { toDate: () => Date }).toDate()
+            : new Date(0),
+        updated_at:
+          data.updated_at && typeof data.updated_at === 'object' && 'toDate' in data.updated_at
+            ? (data.updated_at as { toDate: () => Date }).toDate()
+            : undefined,
+      };
+    };
+
+    try {
+      const snap = await getDocs(
+        query(collection(database, 'platform_feed'), orderBy('created_at', 'desc'), limit(max)),
+      );
+      return snap.docs.map((d) => mapPost(d.id, d.data() as Record<string, unknown>));
+    } catch {
+      const snap = await getDocs(collection(database, 'platform_feed'));
+      return snap.docs
+        .map((d) => mapPost(d.id, d.data() as Record<string, unknown>))
+        .sort((a, b) => b.created_at.getTime() - a.created_at.getTime())
+        .slice(0, max);
+    }
+  },
+
+  async createPlatformFeedNews(input: {
+    author_uid: string;
+    author_name: string;
+    title: string;
+    body: string;
+    audience?: FeedAudience;
+  }): Promise<string> {
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+
+    const ref = await addDoc(collection(database, 'platform_feed'), {
+      type: 'news',
+      audience: input.audience ?? 'all',
+      author_uid: input.author_uid,
+      author_name: input.author_name.trim(),
+      author_role: 'club',
+      title: input.title.trim(),
+      body: input.body.trim(),
+      created_at: serverTimestamp(),
+      updated_at: serverTimestamp(),
+    });
+    return ref.id;
+  },
+
+  async deletePlatformFeedPost(postId: string): Promise<void> {
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+    await deleteDoc(doc(database, 'platform_feed', postId));
+  },
+
+  async listBetaWaitlist(max = 100): Promise<BetaWaitlistEntry[]> {
+    if (!isFirebaseConfigured()) return [];
+    const database = getDb();
+    if (!database) return [];
+
+    const mapEntry = (id: string, data: Record<string, unknown>): BetaWaitlistEntry => ({
+      id,
+      email: String(data.email ?? ''),
+      name: data.name ? String(data.name) : undefined,
+      role: data.role ? String(data.role) : undefined,
+      city: data.city ? String(data.city) : undefined,
+      created_at:
+        data.created_at && typeof data.created_at === 'object' && 'toDate' in data.created_at
+          ? (data.created_at as { toDate: () => Date }).toDate()
+          : new Date(0),
+    });
+
+    try {
+      const snap = await getDocs(
+        query(collection(database, 'beta_waitlist'), orderBy('created_at', 'desc'), limit(max)),
+      );
+      return snap.docs.map((d) => mapEntry(d.id, d.data() as Record<string, unknown>));
+    } catch {
+      const snap = await getDocs(collection(database, 'beta_waitlist'));
+      return snap.docs
+        .map((d) => mapEntry(d.id, d.data() as Record<string, unknown>))
+        .slice(0, max);
+    }
+  },
+
+  async listSubscriptionPurchases(max = 100): Promise<SubscriptionPurchase[]> {
+    if (!isFirebaseConfigured()) return [];
+    const database = getDb();
+    if (!database) return [];
+
+    const snap = await getDocs(collection(database, 'subscription_purchases'));
+    return snap.docs
+      .map((d) => {
+        const data = d.data() as Record<string, unknown>;
+        return {
+          id: d.id,
+          user_uid: String(data.user_uid ?? data.uid ?? ''),
+          product_id: String(data.product_id ?? data.plan_id ?? '—'),
+          status: String(data.status ?? 'unknown'),
+          amount_eur: data.amount_eur != null ? Number(data.amount_eur) : undefined,
+          created_at:
+            data.created_at && typeof data.created_at === 'object' && 'toDate' in data.created_at
+              ? (data.created_at as { toDate: () => Date }).toDate()
+              : new Date(0),
+        };
+      })
+      .sort((a, b) => b.created_at.getTime() - a.created_at.getTime())
+      .slice(0, max);
+  },
+
+  async listShopOrders(max = 100): Promise<ShopOrder[]> {
+    if (!isFirebaseConfigured()) return [];
+    const database = getDb();
+    if (!database) return [];
+
+    const snap = await getDocs(collection(database, 'shop_orders'));
+    return snap.docs
+      .map((d) => {
+        const data = d.data() as Record<string, unknown>;
+        return {
+          id: d.id,
+          buyer_uid: String(data.buyer_uid ?? ''),
+          product_line: String(data.product_line ?? ''),
+          lines: Array.isArray(data.lines) ? (data.lines as ShopOrder['lines']) : [],
+          total_eur: Number(data.total_eur ?? 0),
+          status: (data.status as ShopOrder['status']) ?? 'pending',
+          created_at:
+            data.created_at && typeof data.created_at === 'object' && 'toDate' in data.created_at
+              ? (data.created_at as { toDate: () => Date }).toDate()
+              : null,
+        };
+      })
+      .sort((a, b) => (b.created_at?.getTime() ?? 0) - (a.created_at?.getTime() ?? 0))
+      .slice(0, max);
+  },
+
+  async listAllStageOffers(max = 80): Promise<StageOffer[]> {
+    if (!isFirebaseConfigured()) return [];
+    const database = getDb();
+    if (!database) return [];
+
+    const snap = await getDocs(collection(database, 'stage_offers'));
+    return snap.docs
+      .map((d) => stageOfferFromFirestore(d.id, d.data() as Record<string, unknown>))
+      .sort((a, b) => b.created_at.getTime() - a.created_at.getTime())
+      .slice(0, max);
+  },
+
+  async listAllStageApplications(max = 100): Promise<StageApplication[]> {
+    if (!isFirebaseConfigured()) return [];
+    const database = getDb();
+    if (!database) return [];
+
+    try {
+      const snap = await getDocs(
+        query(
+          collection(database, 'stage_applications'),
+          orderBy('created_at', 'desc'),
+          limit(max),
+        ),
+      );
+      return snap.docs.map((d) =>
+        stageApplicationFromFirestore(d.id, d.data() as Record<string, unknown>),
+      );
+    } catch {
+      const snap = await getDocs(collection(database, 'stage_applications'));
+      return snap.docs
+        .map((d) => stageApplicationFromFirestore(d.id, d.data() as Record<string, unknown>))
+        .slice(0, max);
+    }
+  },
+
+  async deleteStageOffer(offerId: string): Promise<void> {
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+    await deleteDoc(doc(database, 'stage_offers', offerId));
+  },
+
+  async deleteStageApplication(appId: string): Promise<void> {
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+    await deleteDoc(doc(database, 'stage_applications', appId));
+  },
+
+  async updateStageOfferStatus(offerId: string, status: 'OPEN' | 'CLOSED'): Promise<void> {
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+    await updateDoc(doc(database, 'stage_offers', offerId), {
+      status,
+      updated_at: serverTimestamp(),
+    });
+  },
+
+  async listAllTeams(max = 120): Promise<AdminTeam[]> {
+    if (!isFirebaseConfigured()) return [];
+    const database = getDb();
+    if (!database) return [];
+
+    const snap = await getDocs(query(collection(database, 'teams'), limit(max)));
+    return snap.docs.map((d) => {
+      const data = d.data() as Record<string, unknown>;
+      return {
+        id: d.id,
+        club_id: String(data.club_id ?? ''),
+        name: String(data.name ?? ''),
+        category: data.category ? String(data.category) : undefined,
+      };
+    });
+  },
+
+  async deleteTeam(teamId: string): Promise<void> {
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+    await deleteDoc(doc(database, 'teams', teamId));
+  },
+
+  async listAllTournaments(max = 80): Promise<AdminTournament[]> {
+    if (!isFirebaseConfigured()) return [];
+    const database = getDb();
+    if (!database) return [];
+
+    const snap = await getDocs(collection(database, 'tournaments'));
+    return snap.docs
+      .map((d) => {
+        const data = d.data() as Record<string, unknown>;
+        return {
+          id: d.id,
+          name: String(data.name ?? data.title ?? 'Tournoi'),
+          organizer_uid: String(data.organizer_uid ?? ''),
+          city: data.city ? String(data.city) : undefined,
+          status: data.status ? String(data.status) : undefined,
+          created_at:
+            data.created_at && typeof data.created_at === 'object' && 'toDate' in data.created_at
+              ? (data.created_at as { toDate: () => Date }).toDate()
+              : new Date(0),
+        };
+      })
+      .sort((a, b) => b.created_at.getTime() - a.created_at.getTime())
+      .slice(0, max);
+  },
+
+  async deleteTournament(tournamentId: string): Promise<void> {
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+    await deleteDoc(doc(database, 'tournaments', tournamentId));
   },
 };

@@ -1,7 +1,7 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from '../../../context/LocaleContext';
 import { useAdminData } from '../../../context/AdminDataContext';
-import { adminService } from '../../../services/admin.service';
+import { adminService, type AdminTeam } from '../../../services/admin.service';
 import { AdminPageScaffold } from '../../../components/admin/AdminPageScaffold';
 import { AdminEntityCard } from '../../../components/admin/AdminEntityCard';
 import { AdminSectionHeader } from '../../../components/admin/AdminSectionHeader';
@@ -9,10 +9,11 @@ import { AdminEmptyState } from '../../../components/admin/AdminEmptyState';
 import { AdminFilterChips } from '../../../components/admin/AdminFilterChips';
 import { adminConfirmDelete } from '../../../utils/adminConfirm';
 
-type ClubsSegment = 'clubs' | 'announcements';
+type ClubsSegment = 'clubs' | 'teams' | 'announcements';
 
 const SEGMENTS: { id: ClubsSegment; label: string }[] = [
   { id: 'clubs', label: 'Clubs' },
+  { id: 'teams', label: 'Équipes' },
   { id: 'announcements', label: 'Annonces' },
 ];
 
@@ -20,6 +21,21 @@ export const AdminClubsPage: React.FC = () => {
   const { t } = useTranslation();
   const { loading, clubs, announcements, refresh } = useAdminData();
   const [segment, setSegment] = useState<ClubsSegment>('clubs');
+  const [teams, setTeams] = useState<AdminTeam[]>([]);
+  const [teamsLoading, setTeamsLoading] = useState(false);
+
+  const loadTeams = useCallback(async () => {
+    setTeamsLoading(true);
+    try {
+      setTeams(await adminService.listAllTeams(120));
+    } finally {
+      setTeamsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (segment === 'teams') void loadTeams();
+  }, [segment, loadTeams]);
 
   return (
     <AdminPageScaffold loading={loading}>
@@ -46,6 +62,28 @@ export const AdminClubsPage: React.FC = () => {
                 }
                 onDelete={() =>
                   adminConfirmDelete('Supprimer le club', club.name, () => adminService.deleteClub(club.id), refresh)
+                }
+              />
+            ))
+          )}
+        </>
+      )}
+
+      {segment === 'teams' && (
+        <>
+          <AdminSectionHeader title="Équipes" count={teams.length} />
+          {teamsLoading ? null : teams.length === 0 ? (
+            <AdminEmptyState icon="people" title="Aucune équipe" subtitle="Équipes rattachées aux clubs." />
+          ) : (
+            teams.map((team) => (
+              <AdminEntityCard
+                key={team.id}
+                icon="people"
+                title={team.name}
+                subtitle={`Club ${team.club_id.slice(0, 10)}…`}
+                meta={team.category ?? '—'}
+                onDelete={() =>
+                  adminConfirmDelete('Supprimer', team.name, () => adminService.deleteTeam(team.id), loadTeams)
                 }
               />
             ))

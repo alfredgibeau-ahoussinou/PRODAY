@@ -20,6 +20,9 @@ export type AdminContentSegment =
   | 'applications'
   | 'payments'
   | 'sponsors'
+  | 'feed'
+  | 'stages'
+  | 'tournaments'
   | 'messages';
 
 export type AdminNavSectionId =
@@ -183,6 +186,33 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
     section: 'platform',
   },
   {
+    id: 'feed',
+    tab: 'plateforme',
+    segment: 'feed',
+    label: 'Annonces',
+    description: 'Fil actualités plateforme',
+    icon: 'notifications',
+    section: 'platform',
+  },
+  {
+    id: 'stages',
+    tab: 'plateforme',
+    segment: 'stages',
+    label: 'Stages',
+    description: 'Offres et candidatures',
+    icon: 'calendar',
+    section: 'platform',
+  },
+  {
+    id: 'tournaments',
+    tab: 'plateforme',
+    segment: 'tournaments',
+    label: 'Tournois',
+    description: 'Compétitions organisées',
+    icon: 'star-four-points',
+    section: 'platform',
+  },
+  {
     id: 'analytics',
     tab: 'analytics',
     label: 'Analytics',
@@ -249,6 +279,9 @@ const SEGMENT_META: Partial<Record<AdminContentSegment, { title: string; subtitl
   applications: { title: 'Candidatures', subtitle: 'Postulations Mercato' },
   payments: { title: 'Paiements', subtitle: 'Cotisations et frais d’équipe' },
   sponsors: { title: 'Sponsors', subtitle: 'Offres partenaires et financement' },
+  feed: { title: 'Annonces plateforme', subtitle: 'Fil actualités officiel ProDay' },
+  stages: { title: 'Stages', subtitle: 'Offres et candidatures pôle formation' },
+  tournaments: { title: 'Tournois', subtitle: 'Compétitions et inscriptions clubs' },
 };
 
 export function resolveAdminPageMeta(

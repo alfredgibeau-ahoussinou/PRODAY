@@ -8,6 +8,8 @@ import { adminService } from '../../../services/admin.service';
 import { adminAuditService } from '../../../services/adminAudit.service';
 import { AdminPageScaffold } from '../../../components/admin/AdminPageScaffold';
 import { AdminAuditLogPanel } from '../../../components/admin/AdminAuditLogPanel';
+import { AdminPlatformConfigPanel } from '../../../components/admin/AdminPlatformConfigPanel';
+import { AdminOpsDataPanel } from '../../../components/admin/AdminOpsDataPanel';
 import { AdminSettingsCard } from '../../../components/admin/AdminSettingsCard';
 import { AdminSectionHeader } from '../../../components/admin/AdminSectionHeader';
 import {
@@ -74,6 +76,11 @@ export const AdminSystemPage: React.FC<AdminSystemPageProps> = ({ onPreviewUserA
   return (
     <AdminPageScaffold loading={loading}>
       <AdminPlatformBrief compact />
+
+      <AdminPlatformConfigPanel />
+
+      <AdminSectionHeader title="Données ops (lecture)" />
+      <AdminOpsDataPanel />
 
       <AdminSectionHeader title="Compte admin" />
 

@@ -18,6 +18,7 @@ export type AdminAuditAction =
   | 'weekly_response_deleted'
   | 'payment_marked_paid'
   | 'snapshot_recorded'
+  | 'platform_config_updated'
   | 'other';
 
 export interface AdminAuditEntry {

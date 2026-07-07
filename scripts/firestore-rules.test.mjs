@@ -996,6 +996,61 @@ async function run() {
     })
   );
 
+  // --- Admin : platform_config + platform_feed ---
+  await assertSucceeds(getDoc(doc(adminDb, 'platform_config/main')));
+
+  await assertSucceeds(
+    setDoc(doc(adminDb, 'platform_config/main'), {
+      maintenance_mode: true,
+      maintenance_message: 'Maintenance planifiée',
+      feature_flags: {
+        community_reels: true,
+        mercato: false,
+        supporter: true,
+        shop: true,
+        stages: true,
+        registration_open: false,
+      },
+      updated_at: new Date(),
+    })
+  );
+
+  await assertFails(
+    setDoc(doc(aliceDb, 'platform_config/main'), {
+      maintenance_mode: false,
+    })
+  );
+
+  await testEnv.withSecurityRulesDisabled(async (ctx) => {
+    const db = ctx.firestore();
+    await setDoc(doc(db, 'platform_feed/post-agents'), {
+      type: 'news',
+      audience: 'agents',
+      author_uid: 'agent-1',
+      author_name: 'Agent',
+      author_role: 'agent',
+      title: 'Agents only',
+      body: 'Secret',
+      created_at: new Date(),
+    });
+  });
+
+  await assertSucceeds(getDoc(doc(adminDb, 'platform_feed/post-agents')));
+
+  await assertSucceeds(
+    addDoc(collection(adminDb, 'platform_feed'), {
+      type: 'news',
+      audience: 'all',
+      author_uid: 'admin-1',
+      author_name: 'Admin',
+      author_role: 'club',
+      title: 'Annonce admin',
+      body: 'Info plateforme',
+      created_at: new Date(),
+      updated_at: new Date(),
+    })
+  );
+
   console.log('✓ Tous les scénarios rules-unit-testing ont réussi.');
   await testEnv.cleanup();
 }

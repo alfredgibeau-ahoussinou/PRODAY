@@ -118,9 +118,17 @@ const AdminAppShellInner: React.FC<AdminAppShellProps> = ({ onPreviewUserApp }) 
           <AdminPlatformPage
             activeSegment={
               activeSegment &&
-              ['events', 'mercato', 'matches', 'applications', 'payments', 'sponsors'].includes(
-                activeSegment,
-              )
+              [
+                'events',
+                'mercato',
+                'matches',
+                'applications',
+                'payments',
+                'sponsors',
+                'feed',
+                'stages',
+                'tournaments',
+              ].includes(activeSegment)
                 ? activeSegment
                 : undefined
             }

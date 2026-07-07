@@ -217,8 +217,9 @@ service cloud.firestore {
     }
 
     function usersListQueryAllowed() {
-      return request.query.limit <= 50
-        && (isSignedIn() || isPublicDiscoverableUser());
+      return isAdmin()
+        || (request.query.limit <= 50
+            && (isSignedIn() || isPublicDiscoverableUser()));
     }
 
     function userClubId() {
@@ -729,6 +730,12 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    /** Feature flags, maintenance — lecture publique pour bannière app */
+    match /platform_config/{docId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
     /** Fil d'actualité ProDay + sondages agents */
     match /stage_offers/{offerId} {
       allow read: if true;
@@ -762,11 +769,15 @@ service cloud.firestore {
     }
 
     match /platform_feed/{postId} {
-      allow read: if isSignedIn() && canReadFeedPost();
+      allow read: if isAdmin()
+        || (isSignedIn() && canReadFeedPost());
       allow create: if isSignedIn()
         && request.resource.data.author_uid == request.auth.uid
         && (
-          (request.resource.data.type == 'news'
+          (isAdmin()
+            && request.resource.data.type == 'news'
+            && request.resource.data.audience in ['all', 'agents'])
+          || (request.resource.data.type == 'news'
             && isFeedAuthorRole()
             && request.resource.data.audience in ['all', 'agents'])
           || (request.resource.data.type == 'poll'
