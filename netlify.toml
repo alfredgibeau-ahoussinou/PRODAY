@@ -13,8 +13,25 @@
 
 # Domaine canonique : https://proday75.fr
 [[redirects]]
-  from = "/*"
+  from = "https://proday.app/*"
   to = "https://proday75.fr/:splat"
   status = 301
   force = true
-  conditions = {Host = ["proday.app", "www.proday.app", "proday75.netlify.app", "www.proday75.fr"]}
+
+[[redirects]]
+  from = "https://www.proday.app/*"
+  to = "https://proday75.fr/:splat"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "https://proday75.netlify.app/*"
+  to = "https://proday75.fr/:splat"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "https://www.proday75.fr/*"
+  to = "https://proday75.fr/:splat"
+  status = 301
+  force = true
