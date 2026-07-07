@@ -1,0 +1,12 @@
+Bonjour,
+
+Pour activer votre compte ProDay (%EMAIL%), ouvrez ce lien :
+
+%LINK%
+
+Ce lien expire après quelques heures.
+
+Si vous n'avez pas créé de compte, ignorez cet e-mail.
+
+— ProDay
+contact@proday.app
