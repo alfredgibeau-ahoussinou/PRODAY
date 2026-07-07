@@ -15,6 +15,7 @@ import type { ParentalSettings } from '../models/ParentalSettings';
 import type { AppSpaceId } from '../models/AppSpace';
 import type { ProductLineId } from '../models/ProductLine';
 import { getFirebaseAuth } from '../lib/firebase';
+import { callFunction, isFunctionsUnavailable } from '../lib/firebaseFunctions';
 import { profileService } from './profile.service';
 import { usersService } from './users.service';
 import {
@@ -25,6 +26,42 @@ import {
 import { isBetaAccountBypassed } from '../config/emailVerificationBypass';
 
 export { ProductLineMismatchError } from '../utils/productLineAccess';
+
+const AUTH_EMAIL_FUNCTIONS_REGION = 'europe-west1';
+
+type AuthEmailCallableResult = { enabled: boolean; sent: boolean };
+
+async function tryCustomVerificationEmail(): Promise<boolean> {
+  try {
+    const result = await callFunction<Record<string, never>, AuthEmailCallableResult>(
+      'sendAuthVerificationEmail',
+      {},
+      AUTH_EMAIL_FUNCTIONS_REGION
+    );
+    if (result.enabled) return true;
+  } catch (e) {
+    if (__DEV__ && !isFunctionsUnavailable(e)) {
+      console.warn('[auth] custom verification email:', e);
+    }
+  }
+  return false;
+}
+
+async function tryCustomPasswordResetEmail(email: string): Promise<boolean> {
+  try {
+    const result = await callFunction<{ email: string }, AuthEmailCallableResult>(
+      'sendAuthPasswordResetEmail',
+      { email },
+      AUTH_EMAIL_FUNCTIONS_REGION
+    );
+    if (result.enabled) return true;
+  } catch (e) {
+    if (__DEV__ && !isFunctionsUnavailable(e)) {
+      console.warn('[auth] custom password reset email:', e);
+    }
+  }
+  return false;
+}
 
 export interface SignUpInput {
   email: string;
@@ -201,7 +238,8 @@ export const authService = {
     );
 
     try {
-      await sendEmailVerification(cred.user);
+      const customSent = await tryCustomVerificationEmail();
+      if (!customSent) await sendEmailVerification(cred.user);
     } catch {
       // Le profil peut quand même être créé ; l'utilisateur pourra renvoyer le mail.
     }
@@ -230,7 +268,8 @@ export const authService = {
     const auth = getFirebaseAuth();
     const user = auth?.currentUser;
     if (!user) throw new Error('Session expirée');
-    await sendEmailVerification(user);
+    const customSent = await tryCustomVerificationEmail();
+    if (!customSent) await sendEmailVerification(user);
   },
 
   async reloadAuthUser(): Promise<FirebaseAuthUser | null> {
@@ -288,7 +327,8 @@ export const authService = {
   async sendPasswordReset(email: string): Promise<void> {
     const auth = getFirebaseAuth();
     if (!auth) throw new Error('Firebase non configuré');
-    await sendPasswordResetEmail(auth, email.trim());
+    const customSent = await tryCustomPasswordResetEmail(email.trim());
+    if (!customSent) await sendPasswordResetEmail(auth, email.trim());
   },
 
   getAuthErrorMessage(error: unknown): string {
