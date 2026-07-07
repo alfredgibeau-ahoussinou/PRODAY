@@ -1,9 +1,7 @@
-# Monorepo — site vitrine Next.js dans website/ (voir website/netlify.toml)
-# Ne pas définir publish : @netlify/plugin-nextjs gère .netlify/static + fonctions SSR.
+# Monorepo — site vitrine Next.js dans website/
 [build]
   base = "website"
   command = "npm run build"
-  publish = "."
 
 [build.environment]
   NODE_VERSION = "20"
@@ -12,57 +10,19 @@
 [[plugins]]
   package = "@netlify/plugin-nextjs"
 
-# Domaine canonique : https://proday75.fr
 [[redirects]]
-  from = "http://proday75.fr/*"
+  from = "/*"
   to = "https://proday75.fr/:splat"
   status = 301
   force = true
+  [redirects.conditions]
+    Host = ["proday75.netlify.app", "www.proday75.fr", "proday.app", "www.proday.app"]
 
 [[redirects]]
-  from = "http://www.proday75.fr/*"
+  from = "/*"
   to = "https://proday75.fr/:splat"
   status = 301
   force = true
-
-[[redirects]]
-  from = "https://www.proday75.fr/*"
-  to = "https://proday75.fr/:splat"
-  status = 301
-  force = true
-
-[[redirects]]
-  from = "https://proday.app/*"
-  to = "https://proday75.fr/:splat"
-  status = 301
-  force = true
-
-[[redirects]]
-  from = "http://proday.app/*"
-  to = "https://proday75.fr/:splat"
-  status = 301
-  force = true
-
-[[redirects]]
-  from = "https://www.proday.app/*"
-  to = "https://proday75.fr/:splat"
-  status = 301
-  force = true
-
-[[redirects]]
-  from = "http://www.proday.app/*"
-  to = "https://proday75.fr/:splat"
-  status = 301
-  force = true
-
-[[redirects]]
-  from = "https://proday75.netlify.app/*"
-  to = "https://proday75.fr/:splat"
-  status = 301
-  force = true
-
-[[redirects]]
-  from = "http://proday75.netlify.app/*"
-  to = "https://proday75.fr/:splat"
-  status = 301
-  force = true
+  [redirects.conditions]
+    Host = ["proday75.fr", "www.proday75.fr"]
+    Scheme = ["http"]

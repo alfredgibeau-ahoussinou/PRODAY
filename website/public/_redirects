@@ -1,0 +1,10 @@
+# Domaine canonique (complète netlify.toml — appliqué à la edge Netlify)
+https://proday75.netlify.app/* https://proday75.fr/:splat 301!
+http://proday75.netlify.app/* https://proday75.fr/:splat 301!
+https://www.proday75.fr/* https://proday75.fr/:splat 301!
+http://www.proday75.fr/* https://proday75.fr/:splat 301!
+https://proday.app/* https://proday75.fr/:splat 301!
+http://proday.app/* https://proday75.fr/:splat 301!
+https://www.proday.app/* https://proday75.fr/:splat 301!
+http://www.proday.app/* https://proday75.fr/:splat 301!
+http://proday75.fr/* https://proday75.fr/:splat 301!
