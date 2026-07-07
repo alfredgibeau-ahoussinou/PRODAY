@@ -114,9 +114,24 @@ export function WaitlistForm({ fullPage, initialRole }: WaitlistFormProps) {
                 <strong>{BETA_MEMBER_ROLE}</strong> (profil{" "}
                 {BETA_ROLE_LABELS[role]}).
                 {emailSent ? (
-                  <> Consultez votre boîte mail — le lien personnel vers l&apos;espace bêta s&apos;y trouve.</>
+                  <>
+                    {" "}
+                    Consultez votre boîte mail (et les spams) — le lien personnel
+                    vers l&apos;espace bêta s&apos;y trouve.
+                  </>
                 ) : (
-                  <> L&apos;email de confirmation suivra très prochainement.</>
+                  <>
+                    {" "}
+                    Votre inscription est bien enregistrée, mais l&apos;email de
+                    bienvenue n&apos;a pas pu partir automatiquement. Écrivez-nous à{" "}
+                    <a
+                      href="mailto:support@proday.app?subject=Inscription%20b%C3%AAta%20ProDay"
+                      className="underline decoration-white/40 underline-offset-2 hover:text-white"
+                    >
+                      support@proday.app
+                    </a>{" "}
+                    avec cette adresse pour recevoir votre lien d&apos;accès.
+                  </>
                 )}
               </p>
             </motion.div>

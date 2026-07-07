@@ -1,8 +1,10 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
 import { generateBetaAccessToken } from './betaAccessToken';
+import { getAuthEmailTransportConfig, sendAuthEmailViaResend } from './authEmailTransport';
 import {
   BETA_ROLE_LABELS,
+  buildBetaWelcomeEmail,
   isBetaRoleId,
   sendBetaWelcomeEmailViaEmailJs,
   type EmailJsBetaConfig,
@@ -123,31 +125,41 @@ export function createSubmitBetaWaitlistHandler(db: admin.firestore.Firestore) {
       });
     }
 
+    const siteUrl = getBetaSiteUrl();
+    const welcomeParams = { email, roleLabel, siteUrl, accessToken };
     const emailJs = getBetaEmailJsConfig();
+    const resend = getAuthEmailTransportConfig();
     let emailSent = false;
     let emailError: string | undefined;
 
     if (emailJs) {
       try {
-        await sendBetaWelcomeEmailViaEmailJs(emailJs, {
-          email,
-          roleLabel,
-          siteUrl: getBetaSiteUrl(),
-          accessToken,
-        });
+        await sendBetaWelcomeEmailViaEmailJs(emailJs, welcomeParams);
         emailSent = true;
-        await docRef.update({
-          welcome_email_sent: true,
-          welcome_email_sent_at: admin.firestore.FieldValue.serverTimestamp(),
-        });
       } catch (e) {
         emailError = e instanceof Error ? e.message : 'Envoi email impossible';
-        console.error('[submitBetaWaitlist] email:', e);
+        console.error('[submitBetaWaitlist] EmailJS:', e);
+      }
+    } else if (resend) {
+      try {
+        const { subject, html, text } = buildBetaWelcomeEmail(welcomeParams);
+        await sendAuthEmailViaResend(resend, { to: email, subject, html, text });
+        emailSent = true;
+      } catch (e) {
+        emailError = e instanceof Error ? e.message : 'Envoi email impossible';
+        console.error('[submitBetaWaitlist] Resend:', e);
       }
     } else {
       emailError =
-        'EmailJS non configuré (beta.emailjs_service_id, template_id, public_key, private_key)';
+        'Transport email non configuré (EmailJS ou beta.resend_api_key / auth.resend_api_key)';
       console.warn('[submitBetaWaitlist]', emailError);
+    }
+
+    if (emailSent) {
+      await docRef.update({
+        welcome_email_sent: true,
+        welcome_email_sent_at: admin.firestore.FieldValue.serverTimestamp(),
+      });
     }
 
     res.status(200).json({
