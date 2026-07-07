@@ -43,6 +43,7 @@ import { AdminAppShell } from './src/navigation/AdminAppShell';
 import { SponsorAppShell } from './src/navigation/SponsorAppShell';
 import { SupporterAppShell } from './src/navigation/SupporterAppShell';
 import { AdminPreviewBanner } from './src/components/admin/AdminPreviewBanner';
+import { PoleHelpChatbot } from './src/components/help/PoleHelpChatbot';
 import { useIsAdmin } from './src/hooks/useIsAdmin';
 import { isPlatformAdminEmail } from './src/config/admin';
 import type {
@@ -422,6 +423,7 @@ function AppShell() {
           {profile ? <ProdayNotificationBridge /> : null}
           {profile ? <ProdayBrainBridge /> : null}
           {profile ? <ProdayCalendarSyncBridge /> : null}
+          {profile ? <PoleHelpChatbot /> : null}
           <View style={styles.screen}>
             <AnimatedTabContent activeTab={activeTab} tabOrder={screenTabs}>
               <Screen />

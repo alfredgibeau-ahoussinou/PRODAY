@@ -13,6 +13,7 @@ import { BottomTabBar } from '../components/navigation/BottomTabBar';
 import { AnimatedTabContent } from '../components/motion';
 import { ProdayNotificationBridge } from '../components/ProdayNotificationBridge';
 import { ProdayBrainBridge } from '../components/ProdayBrainBridge';
+import { PoleHelpChatbot } from '../components/help/PoleHelpChatbot';
 import { useSessionProfile } from '../hooks/useSessionProfile';
 import { useUnreadMessageCount } from '../hooks/useUnreadMessages';
 import { getVisibleMainTabs } from '../content/poleExperience';
@@ -150,6 +151,7 @@ export const SupporterAppShell: React.FC = () => {
             <StatusBar style="dark" />
             <ProdayNotificationBridge />
             <ProdayBrainBridge />
+            <PoleHelpChatbot />
             <View style={styles.screen}>
               <AnimatedTabContent activeTab={activeTab} tabOrder={screenTabs}>
                 <Screen />
