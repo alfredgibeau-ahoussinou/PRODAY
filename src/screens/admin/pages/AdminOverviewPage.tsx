@@ -6,6 +6,8 @@ import { AdminPageScaffold } from '../../../components/admin/AdminPageScaffold';
 import { AdminKpiStrip } from '../../../components/admin/AdminKpiStrip';
 import { AdminWorkQueue } from '../../../components/admin/AdminWorkQueue';
 import { AdminRoleBreakdown } from '../../../components/admin/AdminRoleBreakdown';
+import { AdminPlatformBrief } from '../../../components/admin/AdminPlatformBrief';
+import { AdminEmptyState } from '../../../components/admin/AdminEmptyState';
 import { Icon } from '../../../components/ui/Icon';
 import { useAdminStyles } from '../../../components/admin/adminStyles';
 import { spacing, radius, shadows } from '../../../theme/designTokens';
@@ -29,6 +31,8 @@ export const AdminOverviewPage: React.FC<AdminOverviewPageProps> = ({ onNavigate
 
   return (
     <AdminPageScaffold loading={loading}>
+      <AdminPlatformBrief />
+
       {stats ? (
         <>
           <AdminKpiStrip
@@ -127,7 +131,13 @@ export const AdminOverviewPage: React.FC<AdminOverviewPageProps> = ({ onNavigate
             </Text>
           </View>
         </>
-      ) : null}
+      ) : (
+        <AdminEmptyState
+          icon="warning"
+          title="Données plateforme indisponibles"
+          subtitle="Impossible de charger les statistiques Firestore. Vérifiez la connexion Firebase, les règles admin et votre claim, puis tirez pour rafraîchir."
+        />
+      )}
     </AdminPageScaffold>
   );
 };

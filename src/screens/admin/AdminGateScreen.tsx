@@ -30,7 +30,7 @@ export const AdminGateScreen: React.FC = () => {
           <Icon name="shield" size={28} color={c.brandInverse} />
         </View>
         <Text style={styles.eyebrow}>ProDay Console</Text>
-        <Text style={styles.heroTitle}>Accès refusé</Text>
+        <Text style={styles.heroTitle}>{needsSetup ? 'Configuration requise' : 'Accès refusé'}</Text>
       </View>
       <View style={styles.body}>
         <Text style={styles.title}>Droits administrateur requis</Text>

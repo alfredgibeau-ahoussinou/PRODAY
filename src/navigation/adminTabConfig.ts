@@ -206,7 +206,7 @@ const PAGE_META: Record<
 > = {
   pilotage: {
     title: 'Accueil',
-    subtitle: 'Pilotage opérationnel · indicateurs clés',
+    subtitle: 'Pilotage · 6 pôles · proday75.fr',
   },
   inbox: {
     title: 'À traiter',
@@ -234,7 +234,7 @@ const PAGE_META: Record<
   },
   system: {
     title: 'Configuration',
-    subtitle: 'Ops · audit · session admin',
+    subtitle: 'Ops · proday75.fr · audit · session',
   },
 };
 

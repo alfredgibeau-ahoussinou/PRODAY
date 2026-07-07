@@ -10,6 +10,11 @@ import { AdminPageScaffold } from '../../../components/admin/AdminPageScaffold';
 import { AdminAuditLogPanel } from '../../../components/admin/AdminAuditLogPanel';
 import { AdminSettingsCard } from '../../../components/admin/AdminSettingsCard';
 import { AdminSectionHeader } from '../../../components/admin/AdminSectionHeader';
+import {
+  AdminPlatformBrief,
+  ADMIN_PLATFORM_STATUS,
+  ADMIN_SITE_URL,
+} from '../../../components/admin/AdminPlatformBrief';
 import { Icon } from '../../../components/ui/Icon';
 import { PLATFORM_ADMIN_EMAIL } from '../../../config/admin';
 import { useAdminStyles } from '../../../components/admin/adminStyles';
@@ -68,6 +73,8 @@ export const AdminSystemPage: React.FC<AdminSystemPageProps> = ({ onPreviewUserA
 
   return (
     <AdminPageScaffold loading={loading}>
+      <AdminPlatformBrief compact />
+
       <AdminSectionHeader title="Compte admin" />
 
       <AdminSettingsCard icon="shield" title="Identifiants plateforme">
@@ -81,6 +88,14 @@ export const AdminSystemPage: React.FC<AdminSystemPageProps> = ({ onPreviewUserA
         <Text style={styles.bodyText}>
           Setup : <Text style={styles.mono}>npm run admin:setup</Text>
         </Text>
+      </AdminSettingsCard>
+
+      <AdminSettingsCard icon="globe" title="Site proday75.fr">
+        <Text style={styles.bodyText}>
+          URL canonique : <Text style={styles.mono}>{ADMIN_SITE_URL}</Text>
+        </Text>
+        <Text style={styles.bodyText}>{ADMIN_PLATFORM_STATUS.siteHint}</Text>
+        <Text style={styles.bodyText}>{ADMIN_PLATFORM_STATUS.tlsHint}</Text>
       </AdminSettingsCard>
 
       <AdminSectionHeader title="Analytics & snapshots" />

@@ -44,6 +44,7 @@ import { SponsorAppShell } from './src/navigation/SponsorAppShell';
 import { SupporterAppShell } from './src/navigation/SupporterAppShell';
 import { AdminPreviewBanner } from './src/components/admin/AdminPreviewBanner';
 import { useIsAdmin } from './src/hooks/useIsAdmin';
+import { isPlatformAdminEmail } from './src/config/admin';
 import type {
   CarpoolDeepLink,
   DashboardDeepLink,
@@ -130,7 +131,8 @@ function AppShell() {
     resendEmailVerification,
     signOut,
   } = useAuth();
-  const { isAdmin, claimLoading: adminClaimLoading } = useIsAdmin();
+  const { isAdmin, claimLoading: adminClaimLoading, emailHint } = useIsAdmin();
+  const shouldUseAdminShell = isAdmin || emailHint;
   const [previewUserMode, setPreviewUserMode] = useState(false);
   const [activeTab, setActiveTab] = useState<MainTabId>('home');
   const [pendingChatThreadId, setPendingChatThreadId] = useState<string | null>(null);
@@ -190,6 +192,7 @@ function AppShell() {
 
   useEffect(() => {
     if (productLineLoading || authLoading || !profile) return;
+    if (isPlatformAdminEmail(profile.email)) return;
     const userLine = getUserProductLine(profile);
     if (userLine !== productLine) {
       void setProductLine(userLine);
@@ -243,7 +246,7 @@ function AppShell() {
     );
   }
 
-  if (!authLoading && profile && adminClaimLoading && !previewUserMode) {
+  if (!authLoading && profile && adminClaimLoading && shouldUseAdminShell && !previewUserMode) {
     return (
       <SafeAreaView style={styles.adminLoader} edges={['top', 'left', 'right', 'bottom']}>
         <StatusBar style="light" />
@@ -252,7 +255,7 @@ function AppShell() {
     );
   }
 
-  if (!authLoading && profile && isAdmin && !previewUserMode) {
+  if (!authLoading && profile && shouldUseAdminShell && !previewUserMode) {
     return <AdminAppShell onPreviewUserApp={() => setPreviewUserMode(true)} />;
   }
 

@@ -24,16 +24,18 @@ export const AnimatedRouteContent: React.FC<AnimatedRouteContentProps> = ({
   routeOrder,
   children,
 }) => {
+  const hasMounted = useRef(false);
   const prevIndex = useRef(routeOrder.indexOf(routeKey));
   const currentIndex = routeOrder.indexOf(routeKey);
   const direction = currentIndex >= prevIndex.current ? 1 : -1;
 
   useEffect(() => {
     prevIndex.current = currentIndex >= 0 ? currentIndex : prevIndex.current;
+    hasMounted.current = true;
   }, [currentIndex]);
 
-  const entering =
-    direction > 0
+  const entering = hasMounted.current
+    ? direction > 0
       ? SlideInRight.springify()
           .damping(18)
           .stiffness(165)
@@ -43,7 +45,8 @@ export const AnimatedRouteContent: React.FC<AnimatedRouteContentProps> = ({
           .damping(18)
           .stiffness(165)
           .mass(0.85)
-          .duration(motion.duration.normal);
+          .duration(motion.duration.normal)
+    : undefined;
 
   const exiting =
     direction > 0
@@ -51,7 +54,12 @@ export const AnimatedRouteContent: React.FC<AnimatedRouteContentProps> = ({
       : SlideOutRight.duration(motion.duration.fast).easing(motion.easing.in);
 
   return (
-    <Animated.View key={routeKey} style={styles.fill} entering={entering} exiting={exiting}>
+    <Animated.View
+      key={routeKey}
+      style={styles.fill}
+      entering={entering}
+      exiting={hasMounted.current ? exiting : undefined}
+    >
       {children}
     </Animated.View>
   );
