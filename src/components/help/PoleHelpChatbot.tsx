@@ -9,6 +9,7 @@ import {
   Platform,
   UIManager,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -19,8 +20,6 @@ import Animated, {
 import { AnimatedModalShell } from '../motion/AnimatedModalShell';
 import { AnimatedEntrance, PressableSpring } from '../motion';
 import { Icon } from '../ui/Icon';
-import { FootIcon } from '../ui/footIcons/FootIcon';
-import { ProDayGradient } from '../ui/ProDayGradient';
 import { ProDayText } from '../ui/ProDayText';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { usePoleHelpChatbot } from '../../hooks/usePoleHelpChatbot';
@@ -83,21 +82,24 @@ function executePoleHelpNavigate(
   }
 }
 
-function PoleHelpAvatar({
+const FAB_SIZE = 46;
+
+function PoleHelpIcon({
   usesBriefcaseIcon,
-  size = 22,
+  size = 20,
   color,
-  filled = true,
 }: {
   usesBriefcaseIcon: boolean;
   size?: number;
   color: string;
-  filled?: boolean;
 }) {
-  if (usesBriefcaseIcon) {
-    return <FootIcon name="briefcase" size={size} color={color} filled={filled} />;
-  }
-  return <FootIcon name="football" size={size} color={color} filled={filled} />;
+  return (
+    <Ionicons
+      name={usesBriefcaseIcon ? 'briefcase-outline' : 'football-outline'}
+      size={size}
+      color={color}
+    />
+  );
 }
 
 const ChatMessage: React.FC<{
@@ -117,12 +119,7 @@ const ChatMessage: React.FC<{
     >
       {msg.role === 'bot' ? (
         <View style={[styles.botAvatar, { backgroundColor: colors.brandSoft }]}>
-          <PoleHelpAvatar
-            usesBriefcaseIcon={usesBriefcaseIcon}
-            size={14}
-            color={colors.brand}
-            filled
-          />
+          <PoleHelpIcon usesBriefcaseIcon={usesBriefcaseIcon} size={12} color={colors.brand} />
         </View>
       ) : null}
       <View style={styles.bubbleColumn}>
@@ -348,30 +345,18 @@ export const PoleHelpChatbot: React.FC = () => {
                 style={[
                   styles.teaserBubble,
                   {
-                    backgroundColor: brandOverlay(0.06),
-                    borderColor: brandOverlay(0.22),
+                    backgroundColor: colors.surface,
+                    borderColor: colors.border,
                   },
                 ]}
                 accessibilityRole="button"
                 accessibilityLabel={content.bubbleTeaser}
               >
-                <View style={[styles.teaserAvatar, { backgroundColor: colors.brandSoft }]}>
-                  <PoleHelpAvatar
-                    usesBriefcaseIcon={usesBriefcaseIcon}
-                    size={16}
-                    color={colors.brand}
-                    filled
-                  />
-                </View>
-                <View style={styles.teaserCopy}>
-                  <ProDayText variant="caption" style={[styles.teaserLabel, { color: colors.brand }]}>
-                    Assistant ProDay
-                  </ProDayText>
-                  <ProDayText variant="caption" style={[styles.teaserText, { color: colors.text }]}>
-                    {content.bubbleTeaser}
-                  </ProDayText>
-                </View>
-                <View style={[styles.teaserTail, { borderTopColor: brandOverlay(0.12) }]} />
+                <View style={[styles.teaserDot, { backgroundColor: colors.brand }]} />
+                <ProDayText variant="caption" style={[styles.teaserText, { color: colors.text }]}>
+                  {content.bubbleTeaser}
+                </ProDayText>
+                <View style={[styles.teaserTail, { borderTopColor: colors.surface }]} />
               </PressableSpring>
               <PressableSpring
                 onPress={dismissBubble}
@@ -381,7 +366,7 @@ export const PoleHelpChatbot: React.FC = () => {
                 accessibilityRole="button"
                 accessibilityLabel="Fermer l’invite d’aide"
               >
-                <Icon name="close" size={12} color={colors.textMuted} />
+                <Icon name="close" size={11} color={colors.textMuted} />
               </PressableSpring>
             </View>
           </AnimatedEntrance>
@@ -389,53 +374,47 @@ export const PoleHelpChatbot: React.FC = () => {
 
         <Animated.View
           pointerEvents="none"
-          style={[styles.fabPulse, { borderColor: colors.brand }, pulseStyle]}
+          style={[styles.fabPulse, { borderColor: brandOverlay(0.35) }, pulseStyle]}
         />
         <PressableSpring
           style={styles.fabPressable}
           onPress={openChat}
-          scaleTo={0.95}
+          scaleTo={0.94}
           haptic
           accessibilityRole="button"
           accessibilityLabel="Aide Pro Day"
         >
-          <ProDayGradient kind="cta" style={styles.fabCapsule}>
-            <PoleHelpAvatar
-              usesBriefcaseIcon={usesBriefcaseIcon}
-              size={20}
-              color={colors.brandInverse}
-              filled
-            />
-            <ProDayText variant="caption" style={styles.fabCapsuleText}>
-              Aide
-            </ProDayText>
-          </ProDayGradient>
+          <View
+            style={[
+              styles.fabCircle,
+              {
+                backgroundColor: colors.surface,
+                borderColor: brandOverlay(0.28),
+              },
+            ]}
+          >
+            <PoleHelpIcon usesBriefcaseIcon={usesBriefcaseIcon} size={20} color={colors.brand} />
+          </View>
         </PressableSpring>
       </View>
 
-      <AnimatedModalShell visible={open} onClose={() => setOpen(false)} closeLabel="Fermer">
+      <AnimatedModalShell
+        visible={open}
+        onClose={() => setOpen(false)}
+        closeLabel="Fermer"
+        variant="compact"
+      >
         <View style={[styles.sheetHeader, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
-          <View style={[styles.headerAccent, { backgroundColor: colors.brand }]} />
           <View style={styles.headerRow}>
-            <View style={[styles.headerAvatar, { backgroundColor: colors.brandSoft }]}>
-              <PoleHelpAvatar
-                usesBriefcaseIcon={usesBriefcaseIcon}
-                size={20}
-                color={colors.brand}
-                filled
-              />
+            <View style={[styles.headerIcon, { backgroundColor: colors.brandSoft }]}>
+              <PoleHelpIcon usesBriefcaseIcon={usesBriefcaseIcon} size={16} color={colors.brand} />
             </View>
             <View style={styles.headerCopy}>
               <ProDayText variant="section" style={styles.headerTitle}>
                 {content.title}
               </ProDayText>
               <ProDayText variant="caption" muted style={styles.headerSubtitle}>
-                Réponses instantanées · ProDay
-              </ProDayText>
-            </View>
-            <View style={[styles.headerBadge, { backgroundColor: colors.brandSoft }]}>
-              <ProDayText variant="caption" style={[styles.headerBadgeText, { color: colors.brand }]}>
-                {questionCount} questions
+                {questionCount} questions · réponses instantanées
               </ProDayText>
             </View>
           </View>
@@ -579,7 +558,7 @@ function createStyles(c: AppColors) {
       alignItems: 'flex-start',
       gap: spacing.xs,
       marginBottom: spacing.sm,
-      maxWidth: 280,
+      maxWidth: 240,
     },
     teaserBubble: {
       flex: 1,
@@ -593,31 +572,28 @@ function createStyles(c: AppColors) {
       position: 'relative',
       ...shadows.soft,
     },
-    teaserAvatar: {
-      width: 32,
-      height: 32,
-      borderRadius: radius.pill,
-      alignItems: 'center',
-      justifyContent: 'center',
+    teaserDot: {
+      width: 6,
+      height: 6,
+      borderRadius: 3,
+      flexShrink: 0,
     },
-    teaserCopy: { flex: 1, gap: 2 },
-    teaserLabel: { fontWeight: '800', fontSize: 10, letterSpacing: 0.4, textTransform: 'uppercase' },
-    teaserText: { fontWeight: '600', lineHeight: 18 },
+    teaserText: { flex: 1, fontWeight: '600', lineHeight: 17, fontSize: 12 },
     teaserTail: {
       position: 'absolute',
-      bottom: -7,
-      right: spacing.lg,
+      bottom: -6,
+      right: spacing.md + 4,
       width: 0,
       height: 0,
-      borderLeftWidth: 7,
-      borderRightWidth: 7,
-      borderTopWidth: 8,
+      borderLeftWidth: 6,
+      borderRightWidth: 6,
+      borderTopWidth: 7,
       borderLeftColor: 'transparent',
       borderRightColor: 'transparent',
     },
     teaserClose: {
-      width: 24,
-      height: 24,
+      width: 22,
+      height: 22,
       borderRadius: radius.pill,
       alignItems: 'center',
       justifyContent: 'center',
@@ -626,68 +602,45 @@ function createStyles(c: AppColors) {
     },
     fabPulse: {
       position: 'absolute',
-      bottom: 2,
+      bottom: 0,
       right: 0,
-      width: 108,
-      height: 44,
-      borderRadius: radius.pill,
-      borderWidth: 2,
+      width: FAB_SIZE,
+      height: FAB_SIZE,
+      borderRadius: FAB_SIZE / 2,
+      borderWidth: 1.5,
     },
     fabPressable: {
-      borderRadius: radius.pill,
+      borderRadius: FAB_SIZE / 2,
       ...shadows.fab,
     },
-    fabCapsule: {
-      flexDirection: 'row',
+    fabCircle: {
+      width: FAB_SIZE,
+      height: FAB_SIZE,
+      borderRadius: FAB_SIZE / 2,
       alignItems: 'center',
-      gap: spacing.sm,
-      paddingHorizontal: spacing.md + 2,
-      paddingVertical: spacing.sm + 2,
-      borderRadius: radius.pill,
+      justifyContent: 'center',
       borderWidth: 1,
-      borderColor: brandOverlay(0.12),
-      minWidth: 108,
-    },
-    fabCapsuleText: {
-      color: c.brandInverse,
-      fontWeight: '800',
-      fontSize: 13,
-      letterSpacing: 0.3,
     },
     sheetHeader: {
       paddingHorizontal: spacing.lg,
-      paddingVertical: spacing.md,
+      paddingVertical: spacing.sm + 2,
       borderBottomWidth: 1,
-      overflow: 'hidden',
-    },
-    headerAccent: {
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      right: 0,
-      height: 3,
     },
     headerRow: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: spacing.sm,
     },
-    headerAvatar: {
-      width: 40,
-      height: 40,
+    headerIcon: {
+      width: 30,
+      height: 30,
       borderRadius: radius.pill,
       alignItems: 'center',
       justifyContent: 'center',
     },
-    headerCopy: { flex: 1, gap: 2 },
-    headerTitle: { fontWeight: '800', letterSpacing: -0.2 },
+    headerCopy: { flex: 1, gap: 1 },
+    headerTitle: { fontWeight: '800', fontSize: 15, letterSpacing: -0.2 },
     headerSubtitle: { fontWeight: '600', fontSize: 11 },
-    headerBadge: {
-      paddingHorizontal: spacing.sm,
-      paddingVertical: spacing.xs,
-      borderRadius: radius.pill,
-    },
-    headerBadgeText: { fontWeight: '800', fontSize: 10 },
     messages: { flex: 1 },
     messagesContent: {
       paddingHorizontal: spacing.lg,
@@ -719,8 +672,8 @@ function createStyles(c: AppColors) {
     bubbleRowBot: { justifyContent: 'flex-start' },
     bubbleRowUser: { justifyContent: 'flex-end' },
     botAvatar: {
-      width: 28,
-      height: 28,
+      width: 22,
+      height: 22,
       borderRadius: radius.pill,
       alignItems: 'center',
       justifyContent: 'center',
@@ -762,7 +715,8 @@ function createStyles(c: AppColors) {
       borderTopWidth: 1,
       paddingTop: spacing.sm,
       paddingBottom: spacing.md,
-      maxHeight: '42%',
+      maxHeight: 200,
+      flexShrink: 0,
     },
     questionsPanelHead: {
       paddingHorizontal: spacing.lg,

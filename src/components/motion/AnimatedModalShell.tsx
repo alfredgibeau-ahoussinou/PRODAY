@@ -12,16 +12,22 @@ import { useAppTheme } from '../../context/ProductLineContext';
 import { spacing, radius } from '../../theme/designTokens';
 import type { AppColors } from '../../theme/universeTheme';
 
+type AnimatedModalShellVariant = 'full' | 'compact';
+
 interface AnimatedModalShellProps {
   visible: boolean;
   onClose: () => void;
   children: React.ReactNode;
   closeLabel?: string;
   presentationStyle?: ModalProps['presentationStyle'];
+  /** `full` = sheet plein écran ; `compact` = bottom sheet ~72 % max. */
+  variant?: AnimatedModalShellVariant;
 }
 
+const COMPACT_SHEET_MAX_HEIGHT = '72%';
+
 /**
- * Modal plein écran avec backdrop animé + sheet qui monte.
+ * Modal avec backdrop animé + sheet qui monte depuis le bas.
  */
 export const AnimatedModalShell: React.FC<AnimatedModalShellProps> = ({
   visible,
@@ -29,6 +35,7 @@ export const AnimatedModalShell: React.FC<AnimatedModalShellProps> = ({
   children,
   closeLabel = 'Fermer',
   presentationStyle = 'overFullScreen',
+  variant = 'full',
 }) => {
   const insets = useSafeAreaInsets();
   const { colors: c } = useAppTheme();
@@ -52,8 +59,11 @@ export const AnimatedModalShell: React.FC<AnimatedModalShellProps> = ({
 
   const sheetStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: sheetY.value }],
-    opacity: 0.4 + backdrop.value * 0.6,
+    opacity: variant === 'compact' ? backdrop.value : 0.4 + backdrop.value * 0.6,
   }));
+
+  const isCompact = variant === 'compact';
+  const sheetPaddingTop = isCompact ? spacing.sm : Math.max(insets.top, spacing.md);
 
   return (
     <Modal
@@ -71,8 +81,9 @@ export const AnimatedModalShell: React.FC<AnimatedModalShellProps> = ({
         <Animated.View
           style={[
             styles.sheet,
+            isCompact ? styles.sheetCompact : styles.sheetFull,
             sheetStyle,
-            { paddingTop: Math.max(insets.top, spacing.md) },
+            { paddingTop: sheetPaddingTop },
           ]}
         >
           <View style={styles.handleRow}>
@@ -96,7 +107,6 @@ function createStyles(c: AppColors) {
       backgroundColor: motion.modalBackdrop,
     },
     sheet: {
-      flex: 1,
       backgroundColor: c.background,
       borderTopLeftRadius: radius.xl,
       borderTopRightRadius: radius.xl,
@@ -104,6 +114,12 @@ function createStyles(c: AppColors) {
       borderBottomWidth: 0,
       borderColor: c.border,
       overflow: 'hidden',
+    },
+    sheetFull: { flex: 1 },
+    sheetCompact: {
+      height: COMPACT_SHEET_MAX_HEIGHT,
+      maxHeight: COMPACT_SHEET_MAX_HEIGHT,
+      flexGrow: 0,
     },
     handleRow: {
       flexDirection: 'row',
