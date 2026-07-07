@@ -41,7 +41,6 @@ import { suggestFeminineAppSpaceFromAge } from '../../utils/signupAppSpace';
 import { getAmateurSignupPhases } from './signupAmateurConfig';
 import { getProSignupPhases } from './signupProConfig';
 import { getProPlayerSignupPhases } from './signupProPlayerConfig';
-import { getAmateurSignupPhases } from './signupAmateurConfig';
 import { getSupporterSignupPhases } from './signupSupporterConfig';
 import { getSanteSignupPhases } from './signupSanteConfig';
 import { isRoleAllowedForProductLine, resolveSignupProductLine } from '../../content/universeRoles';
