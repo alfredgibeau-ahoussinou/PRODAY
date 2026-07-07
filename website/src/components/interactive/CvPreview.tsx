@@ -39,6 +39,22 @@ const CV_COPY: Record<
       "Profil complet pour le Mercato F — stats saison, galerie et export PDF. Chaque match enrichit votre CV joueuse.",
     image: "/showcase/woman/woman-profile.jpg",
   },
+  amateur: {
+    headerLabel: "PROFIL COACH PRODAY AMATEUR",
+    name: "Marc Lefèvre",
+    role: "Coach · Régional · Toulouse",
+    footer:
+      "Effectif, convocations et Mercato local — profil coach amateur vérifié pour le district.",
+    image: "/showcase/classic-staff.jpg",
+  },
+  supporter: {
+    headerLabel: "PROFIL SUPPORTER PRODAY",
+    name: "Julie Moreau",
+    role: "Supporter · FC Lyon · Lyon",
+    footer:
+      "Clubs favoris, matchs en direct et fil communautaire — votre tribune numérique ProDay.",
+    image: "/showcase/classic-match.jpg",
+  },
   pro: {
     headerLabel: "CV PRODAY PRO",
     name: "Thomas Bernard",
@@ -145,7 +161,9 @@ export function CvPreview({ universe = "homme" }: CvPreviewProps) {
             ? "Le CV joueuse se met à jour automatiquement depuis l'app Woman."
             : universe === "pro"
               ? "Le CV pro est synchronisé avec votre profil staff vérifié."
-              : "Le CV se met à jour automatiquement depuis l'app après chaque match."}
+              : universe === "supporter"
+                ? "Votre profil supporter reflète vos clubs favoris et votre activité communautaire."
+                : "Le CV se met à jour automatiquement depuis l'app après chaque match."}
         </p>
       </div>
     </div>

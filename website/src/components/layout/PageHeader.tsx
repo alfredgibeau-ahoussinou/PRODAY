@@ -24,6 +24,8 @@ const ACCENT_GRADIENTS: Record<PageAccent, string> = {
   default: "bg-gradient-to-br from-neutral-950 via-[#0a0a0c] to-neutral-950 text-white",
   joueur: "bg-gradient-to-br from-emerald-950 via-neutral-950 to-emerald-950/80 text-white",
   woman: "bg-gradient-to-br from-pink-950 via-rose-900 to-neutral-900 text-white",
+  amateur: "bg-gradient-to-br from-orange-950 via-orange-900 to-neutral-900 text-white",
+  supporter: "bg-gradient-to-br from-violet-950 via-violet-900 to-neutral-900 text-white",
   pro: "bg-gradient-to-br from-blue-950 via-blue-900 to-slate-950 text-white",
   sante: "bg-gradient-to-br from-teal-950 via-teal-900 to-neutral-900 text-white",
   sponsor: "bg-gradient-to-br from-slate-950 via-amber-950/40 to-slate-950 text-white",
@@ -33,6 +35,8 @@ const ACCENT_OVERLAYS: Record<PageAccent, string> = {
   default: "bg-gradient-to-r from-neutral-950/88 via-neutral-950/40 to-neutral-950/5",
   joueur: "bg-gradient-to-r from-emerald-950/88 via-emerald-950/40 to-emerald-950/5",
   woman: "bg-gradient-to-r from-pink-950/88 via-pink-950/45 to-pink-950/5",
+  amateur: "bg-gradient-to-r from-orange-950/88 via-orange-950/45 to-orange-950/5",
+  supporter: "bg-gradient-to-r from-violet-950/88 via-violet-950/45 to-violet-950/5",
   pro: "bg-gradient-to-r from-blue-950/88 via-blue-950/45 to-blue-950/5",
   sante: "bg-gradient-to-r from-teal-950/88 via-teal-950/45 to-teal-950/5",
   sponsor: "bg-gradient-to-r from-slate-950/90 via-amber-950/35 to-slate-950/5",
@@ -42,6 +46,8 @@ const ACCENT_KICKER: Record<PageAccent, string> = {
   default: "text-neutral-400",
   joueur: "text-emerald-300",
   woman: "text-pink-300",
+  amateur: "text-orange-300",
+  supporter: "text-violet-300",
   pro: "text-blue-300",
   sante: "text-teal-300",
   sponsor: "text-amber-300",
@@ -74,8 +80,12 @@ export function PageHeader({
   const backHref = poleHub && pathname !== poleHub ? poleHub : ROUTES.home;
   const backLabel =
     poleHub && pathname !== poleHub
-      ? backHref === ROUTES.joueurs
+          ? backHref === ROUTES.joueurs
         ? "Pôle Joueur"
+        : backHref === ROUTES.amateur
+          ? "Pôle Amateur"
+        : backHref === ROUTES.supporter
+          ? "Pôle Supporter"
         : backHref === ROUTES.pro
           ? "Pôle Pro"
           : backHref === ROUTES.sante

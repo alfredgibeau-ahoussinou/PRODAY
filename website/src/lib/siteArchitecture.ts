@@ -23,8 +23,8 @@ export type PageMeta = {
 };
 
 const JOUEUR_SIBLINGS = [
-  { href: ROUTES.homme, label: "Man" },
-  { href: ROUTES.woman, label: "Woman" },
+  { href: ROUTES.amateur, label: "Amateur" },
+  { href: ROUTES.supporter, label: "Supporter" },
 ] as const;
 
 export const SITE_PAGES: Record<string, PageMeta> = {
@@ -43,19 +43,17 @@ export const SITE_PAGES: Record<string, PageMeta> = {
   },
   [ROUTES.homme]: {
     path: ROUTES.homme,
-    poleId: "joueur",
+    poleId: "amateur",
     category: "pole",
-    accent: "joueur",
-    poleHubPath: ROUTES.joueurs,
-    siblingLinks: [{ href: ROUTES.woman, label: "Woman" }],
+    accent: "amateur",
+    poleHubPath: ROUTES.amateur,
   },
   [ROUTES.woman]: {
     path: ROUTES.woman,
-    poleId: "joueur",
+    poleId: "amateur",
     category: "pole",
-    accent: "woman",
-    poleHubPath: ROUTES.joueurs,
-    siblingLinks: [{ href: ROUTES.homme, label: "Man" }],
+    accent: "amateur",
+    poleHubPath: ROUTES.amateur,
   },
   [ROUTES.amateur]: {
     path: ROUTES.amateur,
@@ -196,8 +194,8 @@ export const SITE_PAGES: Record<string, PageMeta> = {
 
 const POLE_PREFIXES: { prefix: string; poleId: PoleId }[] = [
   { prefix: ROUTES.joueurs, poleId: "joueur" },
-  { prefix: ROUTES.homme, poleId: "joueur" },
-  { prefix: ROUTES.woman, poleId: "joueur" },
+  { prefix: ROUTES.homme, poleId: "amateur" },
+  { prefix: ROUTES.woman, poleId: "amateur" },
   { prefix: ROUTES.amateur, poleId: "amateur" },
   { prefix: ROUTES.supporter, poleId: "supporter" },
   { prefix: ROUTES.pro, poleId: "pro" },
@@ -265,13 +263,15 @@ export function isNavActive(href: string, pathname: string): boolean {
   }
 
   if (targetPath === ROUTES.joueurs) {
+    return path === ROUTES.joueurs;
+  }
+  if (targetPath === ROUTES.amateur) {
     return (
-      path === ROUTES.joueurs ||
+      path === ROUTES.amateur ||
       path === ROUTES.homme ||
       path === ROUTES.woman
     );
   }
-  if (targetPath === ROUTES.amateur) return path === ROUTES.amateur;
   if (targetPath === ROUTES.supporter) return path === ROUTES.supporter;
   if (targetPath === ROUTES.pro) return path === ROUTES.pro || path.startsWith(`${ROUTES.pro}/`);
   if (targetPath === ROUTES.sante) return path === ROUTES.sante;

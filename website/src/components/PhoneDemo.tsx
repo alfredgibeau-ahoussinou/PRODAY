@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Reveal } from "./Reveal";
 import { AppTabBar } from "@/components/demo/AppTabBar";
 import { UNIVERSE_THEME } from "@/components/universe/universeTheme";
@@ -261,6 +261,45 @@ const UNIVERSE_OVERRIDES: Record<
     },
     sante: { title: "Santé F" },
   },
+  amateur: {
+    home: {
+      caption: "Pro Day Amateur",
+      title: "Accueil",
+      subtitle: "Joueur ou coach — Mercato local, matchs et effectif.",
+    },
+    recrutement: { title: "Mercato Amateur" },
+    reels: {
+      subtitle: "Coulisses d'équipe et moments forts — format vertical.",
+    },
+    feed: {
+      subtitle: "Actualités réseau amateur — joueurs et coachs.",
+    },
+    sante: { title: "Santé" },
+  },
+  supporter: {
+    home: {
+      caption: "Pro Day Supporter",
+      title: "Accueil",
+      subtitle: "Bonjour Sam — matchs, réels et fil de votre tribune.",
+    },
+    matchs: {
+      title: "Matchs",
+      subtitle: "Calendrier et live des clubs que vous suivez.",
+    },
+    reels: {
+      title: "Reels",
+      subtitle: "Moments forts et séquences — vibrez avec la communauté.",
+    },
+    feed: {
+      subtitle: "Fil communautaire, réactions et question hebdo.",
+    },
+    messages: {
+      subtitle: "Échanges avec la communauté supporter.",
+    },
+    profil: {
+      subtitle: "Clubs favoris et profil tribune.",
+    },
+  },
   pro: {
     home: {
       caption: "Pro Day Pro",
@@ -320,16 +359,13 @@ type PhoneDemoProps = { fullPage?: boolean; universe?: ProductLineWeb };
 
 export function PhoneDemo({ fullPage, universe = "homme" }: PhoneDemoProps) {
   const tabs = getVisibleTabsWithLabels(universe);
-  const [active, setActive] = useState<MainTabId>(() => getVisibleMainTabsForWeb(universe)[0] ?? "home");
+  const visibleTabs = getVisibleMainTabsForWeb(universe);
+  const [selectedTab, setSelectedTab] = useState<MainTabId>(() => visibleTabs[0] ?? "home");
+  const active = visibleTabs.includes(selectedTab) ? selectedTab : visibleTabs[0] ?? "home";
   const theme = UNIVERSE_THEME[universe];
   const brand = BRANDS_BY_LINE[universe];
   const screen = screenForTab(active, universe);
   const immersive = active === "reels";
-
-  useEffect(() => {
-    const visible = getVisibleMainTabsForWeb(universe);
-    setActive((current) => (visible.includes(current) ? current : visible[0] ?? "home"));
-  }, [universe]);
 
   return (
     <section
@@ -481,7 +517,7 @@ export function PhoneDemo({ fullPage, universe = "homme" }: PhoneDemoProps) {
 
               <AppTabBar
                 activeTab={active}
-                onTabPress={setActive}
+                onTabPress={setSelectedTab}
                 universe={universe}
                 accentInk={theme.brandAccent}
                 tabActiveClass={theme.tabActive}
@@ -501,7 +537,7 @@ export function PhoneDemo({ fullPage, universe = "homme" }: PhoneDemoProps) {
                 <motion.button
                   key={tab.id}
                   type="button"
-                  onClick={() => setActive(tab.id)}
+                  onClick={() => setSelectedTab(tab.id)}
                   initial={{ opacity: 0, x: 16 }}
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true }}

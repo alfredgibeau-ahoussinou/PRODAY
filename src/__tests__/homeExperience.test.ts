@@ -18,11 +18,11 @@ describe('homeExperience', () => {
 
   it('adapte les libellés modules selon l’univers', () => {
     const hommeRecrutement = getHomeModules('homme').find((m) => m.id === 'recrutement');
-    const womanRecrutement = getHomeModules('woman').find((m) => m.id === 'recrutement');
+    const womanRecrutement = getHomeModules('woman', 'player').find((m) => m.id === 'recrutement');
 
-    expect(hommeRecrutement?.title).toBe('Mercato');
+    expect(hommeRecrutement?.title).toBe('Mercato Amateur');
     expect(womanRecrutement?.title).toBe('Mercato F');
-    expect(womanRecrutement?.subtitle).toMatch(/féminin/i);
+    expect(womanRecrutement?.subtitle).toMatch(/Annonces clubs/i);
   });
 
   it('personnalise le dashboard joueuse Woman', () => {

@@ -32,7 +32,12 @@ describe('minorYouthSpace', () => {
       'under_u13',
     );
     expect(resolveYouthAppSpaceForMinor(minorBoy, 'homme')).toBe('boys');
-    expect(resolveYouthAppSpaceForMinor(minorBoy, 'woman')).toBe('girls');
+    expect(
+      resolveYouthAppSpaceForMinor(
+        { ...minorBoy, profile: { age: 15, gender: 'women' } },
+        'amateur',
+      ),
+    ).toBe('girls');
   });
 
   it('limite les espaces sélectionnables pour un mineur', () => {

@@ -10,9 +10,11 @@ export const ROUTES = {
   trust: "/confiance",
   privacy: "/confidentialite",
   terms: "/cgu",
+  /** @deprecated Redirige vers /amateur — conservé pour liens legacy. */
   homme: "/homme",
   amateur: "/amateur",
   supporter: "/supporter",
+  /** @deprecated Redirige vers /amateur — conservé pour liens legacy. */
   woman: "/woman",
   pro: "/pro",
   beta: "/beta",
@@ -55,7 +57,7 @@ export const NAV_ITEMS = [
 ] as const;
 
 export const POLE_FOOTER_LINKS = [
-  { href: ROUTES.joueurs, label: "Pôle Joueur", subtitle: "Man & Woman — joueurs amateur" },
+  { href: ROUTES.joueurs, label: "Pôle Joueur", subtitle: "Pro joueur · genre H/F/mineur" },
   { href: ROUTES.amateur, label: "Pôle Amateur", subtitle: "Joueurs & coachs" },
   { href: ROUTES.supporter, label: "Pôle Supporter", subtitle: "Fans & communauté" },
   { href: ROUTES.pro, label: "Pôle Pro", subtitle: "Staff & structures pro" },
