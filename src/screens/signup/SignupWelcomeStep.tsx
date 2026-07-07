@@ -14,23 +14,25 @@ import { SignupStepLayout } from './SignupStepLayout';
 import { SignupFooterButton } from './SignupFooterButton';
 import type { SignupForm } from './useSignupForm';
 import { getRoleLabel } from './signupFlowConfig';
-import { getWomanWelcomeCopy, WOMAN_PLAYER_PREVIEW_STEPS } from './signupWomanConfig';
-import { getManWelcomeCopy, MAN_PLAYER_PREVIEW_STEPS } from './signupManConfig';
 import { getProWelcomeCopy, PRO_ROLE_PREVIEW } from './signupProConfig';
+import { getProPlayerWelcomeCopy } from './signupProPlayerConfig';
+import { getAmateurWelcomeCopy, AMATEUR_COACH_PREVIEW, AMATEUR_PLAYER_PREVIEW } from './signupAmateurConfig';
+import { getSupporterWelcomeCopy, SUPPORTER_PREVIEW } from './signupSupporterConfig';
 import { getSanteWelcomeCopy, SANTE_PHYSIO_PREVIEW } from './signupSanteConfig';
 import { getSignupRoleGroups } from '../../content/poleExperience';
+import { useProductLine } from '../../context/ProductLineContext';
 import { useSignupFlowTheme } from './SignupFlowContext';
 import { useTranslation } from '../../context/LocaleContext';
 import { SignupSegmentTabs } from '../../components/signup/SignupSegmentTabs';
 import { useAuthLayout } from '../../components/auth/useAuthLayout';
 import { spacing, radius } from '../../theme/designTokens';
 import {
-  PRODAY_WOMAN_BRAND,
   PRODAY_PRO_BRAND,
-  PRODAY_HOMME_BRAND,
+  PRODAY_PRO_PLAYER_BRAND,
+  PRODAY_AMATEUR_BRAND,
+  PRODAY_SUPPORTER_BRAND,
   PRODAY_SANTE_BRAND,
 } from '../../models/ProductLine';
-import { WOMAN_SHOWCASE_IMAGES } from '../../content/womanShowcaseAssets';
 import { SHOWCASE_IMAGES } from '../../content/showcaseAssets';
 import type { UserRole } from '../../models/User';
 
@@ -107,74 +109,6 @@ const PlayerWelcomeHero: React.FC<{
   </ShowcaseImageBackground>
 );
 
-const WomanWelcomeBody: React.FC<{ form: SignupForm }> = ({ form }) => {
-  const { colors } = useSignupFlowTheme();
-  const { t } = useTranslation();
-
-  useEffect(() => {
-    if (form.draftRole !== 'player') form.setDraftRole('player');
-  }, [form]);
-
-  return (
-    <>
-      <PlayerWelcomeHero
-        source={WOMAN_SHOWCASE_IMAGES.discoverHero}
-        overlayColor="rgba(131, 24, 67, 0.58)"
-        badgeIcon="heart"
-        badgeText={PRODAY_WOMAN_BRAND.entryCta}
-        title={t('signup.welcome.playerWoman.title')}
-        subtitle={t('signup.welcome.playerWoman.subtitle')}
-        accentInverse={colors.brandInverse}
-      />
-      <PreviewStepsCard
-        eyebrow={t('signup.welcome.journey')}
-        steps={WOMAN_PLAYER_PREVIEW_STEPS}
-        accent={colors.accent}
-        accentInverse={colors.brandInverse}
-        borderColor={colors.border}
-        surface={colors.surface}
-        surfaceMuted={colors.surfaceMuted}
-        text={colors.text}
-        textMuted={colors.textMuted}
-      />
-    </>
-  );
-};
-
-const ManWelcomeBody: React.FC<{ form: SignupForm }> = ({ form }) => {
-  const { colors } = useSignupFlowTheme();
-  const { t } = useTranslation();
-
-  useEffect(() => {
-    if (form.draftRole !== 'player') form.setDraftRole('player');
-  }, [form]);
-
-  return (
-    <>
-      <PlayerWelcomeHero
-        source={SHOWCASE_IMAGES.discoverHero}
-        overlayColor="rgba(12, 12, 14, 0.62)"
-        badgeIcon="football"
-        badgeText={PRODAY_HOMME_BRAND.entryCta}
-        title={t('signup.welcome.playerMan.title')}
-        subtitle={t('signup.welcome.playerMan.subtitle')}
-        accentInverse={colors.brandInverse}
-      />
-      <PreviewStepsCard
-        eyebrow={t('signup.welcome.journey')}
-        steps={MAN_PLAYER_PREVIEW_STEPS}
-        accent={colors.ink}
-        accentInverse={colors.brandInverse}
-        borderColor={colors.border}
-        surface={colors.surface}
-        surfaceMuted={colors.surfaceMuted}
-        text={colors.text}
-        textMuted={colors.textMuted}
-      />
-    </>
-  );
-};
-
 const ProRoleCard: React.FC<{
   role: UserRole;
   active: boolean;
@@ -244,6 +178,137 @@ const ProRoleCard: React.FC<{
   );
 };
 
+const AmateurWelcomeBody: React.FC<{ form: SignupForm }> = ({ form }) => {
+  const { width: screenWidth } = useWindowDimensions();
+  const { compact, contentMaxWidth } = useAuthLayout();
+  const { colors } = useSignupFlowTheme();
+  const { t } = useTranslation();
+  const roleGroups = useMemo(() => getSignupRoleGroups('amateur'), []);
+  const [groupIndex, setGroupIndex] = useState(0);
+  const activeGroup = roleGroups[groupIndex] ?? roleGroups[0];
+  const rolesInGroup = activeGroup?.roles ?? [];
+  const isPlayer = form.draftRole === 'player';
+  const previewSteps = isPlayer ? AMATEUR_PLAYER_PREVIEW : AMATEUR_COACH_PREVIEW;
+
+  const gridWidth = Math.min(screenWidth - spacing.lg * 2, contentMaxWidth);
+  const cardGap = spacing.sm;
+  const cardWidth = (gridWidth - cardGap) / 2;
+
+  return (
+    <>
+      <ShowcaseImageBackground
+        source={isPlayer ? SHOWCASE_IMAGES.playerProfile : SHOWCASE_IMAGES.coachFounder}
+        variant="hero"
+        style={styles.proHero}
+        imageStyle={styles.proHeroImage}
+      >
+        <View style={[styles.proHeroOverlay, { backgroundColor: 'rgba(154, 52, 18, 0.62)' }]} />
+        <View style={styles.proHeroBadge}>
+          <Icon
+            name={isPlayer ? 'football' : 'school'}
+            size={15}
+            color="#FFFFFF"
+            variant="filled"
+          />
+          <Text style={styles.proHeroBadgeText}>{PRODAY_AMATEUR_BRAND.entryCta}</Text>
+        </View>
+        <Text style={styles.proHeroTitle}>
+          {isPlayer
+            ? t('signup.welcome.playerAmateur.title')
+            : t('signup.welcome.coachAmateur.title')}
+        </Text>
+        <Text style={styles.proHeroSub}>
+          {isPlayer
+            ? t('signup.welcome.playerAmateur.subtitle')
+            : t('signup.welcome.coachAmateur.subtitle')}
+        </Text>
+      </ShowcaseImageBackground>
+
+      <View style={styles.proPickerSection}>
+        <SignupSegmentTabs
+          tabs={roleGroups.map((g) => ({ id: g.id, label: g.label }))}
+          active={activeGroup.id}
+          compact={compact}
+          onSelect={(id) => {
+            const idx = roleGroups.findIndex((g) => g.id === id);
+            if (idx >= 0) setGroupIndex(idx);
+            const group = roleGroups.find((g) => g.id === id);
+            if (group?.roles[0]) form.setDraftRole(group.roles[0]);
+          }}
+        />
+        <Text style={[styles.proGroupHint, { color: colors.textSecondary }]}>
+          {activeGroup.hint}
+        </Text>
+
+        <View style={[styles.proRoleGrid, { width: gridWidth, gap: cardGap }]}>
+          {rolesInGroup.map((role) => (
+            <ProRoleCard
+              key={role}
+              role={role}
+              active={form.draftRole === role}
+              onSelect={() => form.setDraftRole(role)}
+              accent={colors.accent}
+              accentInverse={colors.brandInverse}
+              surface={colors.surface}
+              surfaceMuted={colors.surfaceMuted}
+              border={colors.border}
+              text={colors.text}
+              textMuted={colors.textMuted}
+              width={cardWidth}
+            />
+          ))}
+        </View>
+      </View>
+
+      <PreviewStepsCard
+        eyebrow={t('signup.welcome.journey')}
+        steps={previewSteps}
+        accent={colors.accent}
+        accentInverse={colors.brandInverse}
+        borderColor={colors.border}
+        surface={colors.surface}
+        surfaceMuted={colors.surfaceMuted}
+        text={colors.text}
+        textMuted={colors.textMuted}
+      />
+    </>
+  );
+};
+
+const SupporterWelcomeBody: React.FC<{ form: SignupForm }> = ({ form }) => {
+  const { colors } = useSignupFlowTheme();
+  const { t } = useTranslation();
+
+  useEffect(() => {
+    if (form.draftRole !== 'supporter') form.setDraftRole('supporter');
+  }, [form]);
+
+  return (
+    <>
+      <PlayerWelcomeHero
+        source={SHOWCASE_IMAGES.friendlyMatch}
+        overlayColor="rgba(91, 33, 182, 0.62)"
+        badgeIcon="star-four-points"
+        badgeText={PRODAY_SUPPORTER_BRAND.entryCta}
+        title={getSupporterWelcomeCopy(t).title}
+        subtitle={getSupporterWelcomeCopy(t).subtitle}
+        accentInverse={colors.brandInverse}
+      />
+      <PreviewStepsCard
+        eyebrow={t('signup.welcome.journey')}
+        steps={SUPPORTER_PREVIEW}
+        accent={colors.accent}
+        accentInverse={colors.brandInverse}
+        borderColor={colors.border}
+        surface={colors.surface}
+        surfaceMuted={colors.surfaceMuted}
+        text={colors.text}
+        textMuted={colors.textMuted}
+      />
+    </>
+  );
+};
+
 const SanteWelcomeBody: React.FC<{ form: SignupForm }> = ({ form }) => {
   const { colors } = useSignupFlowTheme();
   const { t } = useTranslation();
@@ -282,8 +347,12 @@ const ProWelcomeBody: React.FC<{ form: SignupForm }> = ({ form }) => {
   const { width: screenWidth } = useWindowDimensions();
   const { compact, contentMaxWidth } = useAuthLayout();
   const { colors } = useSignupFlowTheme();
+  const { proSignupPresetRole } = useProductLine();
   const { t } = useTranslation();
-  const roleGroups = useMemo(() => getSignupRoleGroups('pro'), []);
+  const roleGroups = useMemo(
+    () => getSignupRoleGroups('pro', proSignupPresetRole),
+    [proSignupPresetRole],
+  );
   const [groupIndex, setGroupIndex] = useState(0);
   const activeGroup = roleGroups[groupIndex] ?? roleGroups[0];
   const rolesInGroup = activeGroup?.roles ?? [];
@@ -388,31 +457,6 @@ export const SignupWelcomeStep: React.FC<SignupWelcomeStepProps> = ({
 }) => {
   const { t } = useTranslation();
 
-  if (form.isWomanProduct) {
-    const welcome = getWomanWelcomeCopy(t);
-    return (
-      <SignupStepLayout
-        stepIndex={stepIndex}
-        stepTotal={stepTotal}
-        stepName={stepName ?? PRODAY_WOMAN_BRAND.name}
-        phases={phases}
-        phaseIndex={phaseIndex}
-        title={welcome.title}
-        subtitle={welcome.subtitle}
-        heroIcon="heart"
-        onClose={onClose}
-        footer={
-          <SignupFooterButton
-            label={t('signup.welcome.ctaWoman')}
-            onPress={form.confirmRoleAndContinue}
-          />
-        }
-      >
-        <WomanWelcomeBody form={form} />
-      </SignupStepLayout>
-    );
-  }
-
   if (form.isSanteProduct) {
     const welcome = getSanteWelcomeCopy(t);
     return (
@@ -434,6 +478,81 @@ export const SignupWelcomeStep: React.FC<SignupWelcomeStepProps> = ({
         }
       >
         <SanteWelcomeBody form={form} />
+      </SignupStepLayout>
+    );
+  }
+
+  if (form.isSupporterProduct) {
+    const welcome = getSupporterWelcomeCopy(t);
+    return (
+      <SignupStepLayout
+        stepIndex={stepIndex}
+        stepTotal={stepTotal}
+        stepName={stepName ?? PRODAY_SUPPORTER_BRAND.name}
+        phases={phases}
+        phaseIndex={phaseIndex}
+        title={welcome.title}
+        subtitle={welcome.subtitle}
+        heroIcon="star-four-points"
+        onClose={onClose}
+        footer={
+          <SignupFooterButton
+            label={t('signup.welcome.ctaSupporter')}
+            onPress={form.confirmRoleAndContinue}
+          />
+        }
+      >
+        <SupporterWelcomeBody form={form} />
+      </SignupStepLayout>
+    );
+  }
+
+  if (form.isAmateurProduct) {
+    const welcome = getAmateurWelcomeCopy(t);
+    return (
+      <SignupStepLayout
+        stepIndex={stepIndex}
+        stepTotal={stepTotal}
+        stepName={stepName ?? PRODAY_AMATEUR_BRAND.name}
+        phases={phases}
+        phaseIndex={phaseIndex}
+        title={welcome.title}
+        subtitle={welcome.subtitle}
+        heroIcon="school"
+        onClose={onClose}
+        footer={
+          <SignupFooterButton
+            label={t('signup.welcome.ctaAmateur')}
+            onPress={form.confirmRoleAndContinue}
+          />
+        }
+      >
+        <AmateurWelcomeBody form={form} />
+      </SignupStepLayout>
+    );
+  }
+
+  if (form.isProPlayerSignup) {
+    const welcome = getProPlayerWelcomeCopy(t);
+    return (
+      <SignupStepLayout
+        stepIndex={stepIndex}
+        stepTotal={stepTotal}
+        stepName={stepName ?? PRODAY_PRO_PLAYER_BRAND.name}
+        phases={phases}
+        phaseIndex={phaseIndex}
+        title={welcome.title}
+        subtitle={welcome.subtitle}
+        heroIcon="briefcase"
+        onClose={onClose}
+        footer={
+          <SignupFooterButton
+            label={t('signup.welcome.ctaProPlayer', { brand: PRODAY_PRO_PLAYER_BRAND.name })}
+            onPress={form.confirmRoleAndContinue}
+          />
+        }
+      >
+        <AmateurWelcomeBody form={form} />
       </SignupStepLayout>
     );
   }
@@ -463,26 +582,26 @@ export const SignupWelcomeStep: React.FC<SignupWelcomeStepProps> = ({
     );
   }
 
-  const welcome = getManWelcomeCopy(t);
+  const welcome = getAmateurWelcomeCopy(t);
   return (
     <SignupStepLayout
       stepIndex={stepIndex}
       stepTotal={stepTotal}
-      stepName={stepName ?? PRODAY_HOMME_BRAND.name}
+      stepName={stepName ?? PRODAY_AMATEUR_BRAND.name}
       phases={phases}
       phaseIndex={phaseIndex}
       title={welcome.title}
       subtitle={welcome.subtitle}
-      heroIcon="football"
+      heroIcon="school"
       onClose={onClose}
       footer={
         <SignupFooterButton
-          label={t('signup.welcome.ctaMan', { brand: PRODAY_HOMME_BRAND.name })}
+          label={t('signup.welcome.ctaAmateur')}
           onPress={form.confirmRoleAndContinue}
         />
       }
     >
-      <ManWelcomeBody form={form} />
+      <AmateurWelcomeBody form={form} />
     </SignupStepLayout>
   );
 };

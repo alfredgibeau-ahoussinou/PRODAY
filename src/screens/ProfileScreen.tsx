@@ -71,7 +71,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
   const [remindingId, setRemindingId] = useState<string | null>(null);
   const { pendingProfileView, clearPendingProfile } = useTabNavigation();
   const nav = useTabNavigationActions();
-  const { productLine } = useAppTheme();
+  const { productLine, isWoman } = useAppTheme();
   const selectableAppSpaces = getSelectableAppSpacesForUser(profile, productLine);
   const subscriptionCtx = useSubscriptionOptional();
   const subscriptionTier = subscriptionCtx?.subscription?.tier ?? 'free';
@@ -218,7 +218,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
       Alert.alert(
         'Relance',
         n > 0
-          ? productLine === 'woman'
+          ? isWoman
             ? `${n} joueuse${n > 1 ? 's' : ''} relancée${n > 1 ? 's' : ''}.`
             : `${n} joueur${n > 1 ? 's' : ''} relancé${n > 1 ? 's' : ''}.`
           : 'Aucune réponse en attente.'

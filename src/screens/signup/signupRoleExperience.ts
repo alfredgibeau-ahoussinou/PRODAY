@@ -262,6 +262,21 @@ const ROLE_EXPERIENCES: Record<UserRole, RoleSignupExperience> = {
     launchBody: 'Complétez vos offres sponsors et touchez les clubs de votre zone.',
     launchFinishLabel: 'Voir mon espace marque',
   },
+  supporter: {
+    id: 'supporter',
+    welcomeTitle: 'Espace supporter',
+    welcomeSubtitle: 'Matchs, réels et fil — votre tribune numérique ProDay.',
+    previewSteps: ['Clubs', 'Profil', 'Sécurité', 'Lancement'],
+    phases: [
+      { id: 'vous', label: 'Profil' },
+      { id: 'acces', label: 'Compte' },
+      { id: 'launch', label: 'Go' },
+    ],
+    accent: { accent: '#7C3AED', accentSoft: '#EDE9FE', accentMuted: '#C4B5FD' },
+    launchTitle: 'Bienvenue en tribune',
+    launchBody: 'Suivez vos clubs, réagissez au fil et partagez les moments forts.',
+    launchFinishLabel: 'Entrer en tribune',
+  },
 };
 
 export function getRoleSignupExperience(role: UserRole): RoleSignupExperience {

@@ -12,15 +12,24 @@ export const metadata: Metadata = {
 };
 
 function parseUniverseParam(value: string | undefined): ProductLineWeb {
-  if (value === "homme" || value === "woman" || value === "pro" || value === "sante") {
+  if (
+    value === "homme" ||
+    value === "woman" ||
+    value === "amateur" ||
+    value === "supporter" ||
+    value === "pro" ||
+    value === "sante"
+  ) {
     return value;
   }
   return "homme";
 }
 
-const ACCENT_FOR: Record<ProductLineWeb, "joueur" | "woman" | "pro" | "sante"> = {
+const ACCENT_FOR: Record<ProductLineWeb, "joueur" | "woman" | "amateur" | "supporter" | "pro" | "sante"> = {
   homme: "joueur",
   woman: "woman",
+  amateur: "amateur",
+  supporter: "supporter",
   pro: "pro",
   sante: "sante",
 };

@@ -14,6 +14,7 @@ import { userFromFirestore } from '../lib/firestoreMappers';
 import type { User, UserRole } from '../models/User';
 import { sanitizePublicUser } from '../utils/sanitizePublicUser';
 import { filterRealUsers } from '../utils/realUserFilter';
+import { membershipsService } from './memberships.service';
 
 const LIST_LIMIT = 50;
 const POPULAR_LIMIT = 5;
@@ -122,15 +123,29 @@ export const usersService = {
     return players.slice(0, POPULAR_LIMIT);
   },
 
-  /** Membres liés à un club (convocations). */
+  /** Membres liés à un club (convocations) — memberships actifs en priorité. */
   async listMembersByClubId(clubId: string): Promise<User[]> {
     if (!clubId) return [];
+    try {
+      const activeMemberships = await membershipsService.listByClub(clubId, 'active');
+      if (activeMemberships.length > 0) {
+        const uniqueUids = Array.from(
+          new Set(activeMemberships.map((m) => m.player_uid).filter(Boolean)),
+        );
+        const members = (
+          await Promise.all(uniqueUids.map((uid) => this.getPublicById(uid)))
+        ).filter((u): u is User => Boolean(u));
+        return members;
+      }
+    } catch (error) {
+      console.warn('[usersService] listMembersByClubId fallback club_id:', error);
+    }
+
+    // Fallback legacy: profils directement liés au club (zéro membership actif).
     const players = await this.listPlayers();
     const coaches = await this.listStaff('coach');
     const agents = await this.listStaff('agent');
-    return [...players, ...coaches, ...agents].filter(
-      (u) => u.profile.club_id === clubId
-    );
+    return [...players, ...coaches, ...agents].filter((u) => u.profile.club_id === clubId);
   },
 
   isNewProfile,

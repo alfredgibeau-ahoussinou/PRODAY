@@ -45,8 +45,8 @@ export const CreateRecruitmentPostScreen: React.FC<CreateRecruitmentPostScreenPr
   const [submitting, setSubmitting] = useState(false);
   const { appSpace } = useAppSpace();
   const subscriptionCtx = useSubscriptionOptional();
-  const { colors: themeColors, productLine } = useThemedScreen();
-  const defaultTitle = productLine === 'woman' ? 'Recherche joueuse' : 'Recherche joueur';
+  const { colors: themeColors, isWoman } = useThemedScreen();
+  const defaultTitle = isWoman ? 'Recherche joueuse' : 'Recherche joueur';
   const [title, setTitle] = useState(defaultTitle);
   const inputStyle = [
     styles.input,

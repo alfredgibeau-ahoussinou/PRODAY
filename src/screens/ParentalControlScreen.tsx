@@ -71,9 +71,9 @@ export const ParentalControlScreen: React.FC<ParentalControlScreenProps> = ({
   embedded = false,
 }) => {
   const { profile, refreshProfile } = useAuth();
-  const { colors: c, productLine, rootStyle } = useThemedScreen();
+  const { colors: c, productLine, isWoman, rootStyle } = useThemedScreen();
   const styles = useMemo(() => createStyles(c), [c]);
-  const isWoman = productLine === 'woman';
+  
   const [view, setView] = useState<ParentalView>('home');
   const [settings, setSettings] = useState<ParentalSettings>(DEFAULT_PARENTAL_SETTINGS);
   const [contacts, setContacts] = useState<ParentalContact[]>([]);

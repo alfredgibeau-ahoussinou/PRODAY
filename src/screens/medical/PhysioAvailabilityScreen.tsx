@@ -43,9 +43,9 @@ export const PhysioAvailabilityScreen: React.FC<PhysioAvailabilityScreenProps> =
   onBack,
 }) => {
   const { refreshProfile } = useAuth();
-  const { colors: c, productLine, rootStyle } = useThemedScreen();
+  const { colors: c, productLine, isWoman, rootStyle } = useThemedScreen();
   const styles = useMemo(() => createStyles(c), [c]);
-  const isWoman = productLine === 'woman';
+  
   const [bookingEnabled, setBookingEnabled] = useState(isPhysioBookingEnabled(profile));
   const [durationMin, setDurationMin] = useState(
     getPhysioConsultationDuration(profile) || DEFAULT_CONSULTATION_DURATION_MIN

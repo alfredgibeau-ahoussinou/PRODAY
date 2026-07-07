@@ -44,7 +44,7 @@ export const CreateTeamEventScreen: React.FC<CreateTeamEventScreenProps> = ({
   defaultType = 'training',
 }) => {
   const { profile } = useAuth();
-  const { colors: c, productLine, rootStyle } = useThemedScreen();
+  const { colors: c, productLine, isWoman, rootStyle } = useThemedScreen();
   const styles = useMemo(() => createStyles(c), [c]);
   const [eventType, setEventType] = useState<TeamEventType>(defaultType);
   const [title, setTitle] = useState('');
@@ -264,7 +264,7 @@ export const CreateTeamEventScreen: React.FC<CreateTeamEventScreenProps> = ({
           <>
             <Text style={styles.label}>Catégories convoquées (optionnel)</Text>
             <Text style={styles.hint}>
-              {productLine === 'woman'
+              {isWoman
                 ? 'Si vous sélectionnez des catégories, seules les joueuses correspondantes seront convoquées lorsque « Convoquer tout le club » est activé.'
                 : 'Si vous sélectionnez des catégories, seuls les joueurs correspondants seront convoqués lorsque « Convoquer tout le club » est activé.'}
             </Text>
@@ -307,7 +307,7 @@ export const CreateTeamEventScreen: React.FC<CreateTeamEventScreenProps> = ({
             {!inviteClub && clubMembers.length > 0 ? (
               <>
                 <Text style={styles.label}>
-                  {productLine === 'woman' ? 'Joueuses convoquées' : 'Joueurs convoqués'}
+                  {isWoman ? 'Joueuses convoquées' : 'Joueurs convoqués'}
                 </Text>
                 <View style={styles.memberList}>
                   {clubMembers.map((m) => {

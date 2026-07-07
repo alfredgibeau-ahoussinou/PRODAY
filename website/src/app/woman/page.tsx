@@ -1,12 +1,7 @@
-import type { Metadata } from "next";
-import { UniversePage } from "@/components/universe/UniversePage";
+import { redirect } from "next/navigation";
+import { ROUTES } from "@/lib/routes";
 
-export const metadata: Metadata = {
-  title: "ProDay Woman",
-  description:
-    "Le foot au féminin : Mercato F, matchs, Arena, Pulse et profil joueuse — univers Woman.",
-};
-
-export default function WomanPage() {
-  return <UniversePage universe="woman" />;
+/** Legacy — fusionné dans le pôle Amateur (genre à l'inscription). */
+export default function WomanLegacyPage() {
+  redirect(ROUTES.amateur);
 }

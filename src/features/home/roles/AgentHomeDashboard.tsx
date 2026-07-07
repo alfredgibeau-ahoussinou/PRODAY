@@ -1,32 +1,53 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import type { StaffRoleHomeProps } from './resolveRoleHomeDashboard';
 import {
   StaffRoleHomeShell,
   StaffSectionTitle,
   StaffStatRow,
   StaffQuickActions,
-  StaffListCard,
   StaffEmptyCard,
 } from './staffRoleHomeShared';
 import { useDashboardData } from '../../../hooks/useDashboardData';
 import { useTabNavigation } from '../../../context/TabNavigationContext';
 import { useTabNavigationActions } from '../../../hooks/useTabNavigationActions';
 import { useTranslation } from '../../../context/LocaleContext';
+import { useAppTheme } from '../../../context/ProductLineContext';
 import { scoutingShortlistService } from '../../../services/scoutingShortlist.service';
 import { usersService } from '../../../services/users.service';
+import { clubsService } from '../../../services/clubs.service';
 import type { RolePanelAction } from '../../../content/roleDashboardExperience';
 import { FeedPublishModal } from '../../../components/feed/FeedPublishModal';
 import { PressableSpring } from '../../../components/motion';
 import { ProDayText } from '../../../components/ui/ProDayText';
 import { GlassCard } from '../../../components/aurora/GlassCard';
-import { spacing } from '../../../theme/designTokens';
-import { StyleSheet } from 'react-native';
+import { spacing, radius } from '../../../theme/designTokens';
+import { StyleSheet, View } from 'react-native';
 
-interface MandatePlayer {
+interface MandateRow {
   uid: string;
   name: string;
-  position?: string;
-  city?: string;
+  clubLabel: string;
+  mandateEnd: string;
+  negoStatus: string;
+}
+
+function deriveNegoStatus(
+  availability: string | undefined,
+  notes: string | undefined,
+): string {
+  if (availability === 'negotiating') return 'Discussion';
+  if (availability === 'available') return 'Libre';
+  if (availability === 'unavailable') return 'Sous contrat';
+  if (notes?.trim()) return notes.trim().slice(0, 28);
+  return '—';
+}
+
+function formatMandateEnd(updatedAt: Date): string {
+  const end = new Date(updatedAt);
+  end.setFullYear(end.getFullYear() + 1);
+  const days = Math.ceil((end.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+  if (days < 0) return 'Expiré';
+  return `${days} j`;
 }
 
 export const AgentHomeDashboard: React.FC<StaffRoleHomeProps> = ({
@@ -36,12 +57,13 @@ export const AgentHomeDashboard: React.FC<StaffRoleHomeProps> = ({
   refreshing,
 }) => {
   const { t } = useTranslation();
+  const { colors } = useAppTheme();
   const { data, refresh } = useDashboardData(profile);
   const tabNav = useTabNavigation();
   const nav = useTabNavigationActions();
   const clubId = profile.profile.club_id ?? profile.uid;
 
-  const [players, setPlayers] = useState<MandatePlayer[]>([]);
+  const [rows, setRows] = useState<MandateRow[]>([]);
   const [extraLoading, setExtraLoading] = useState(true);
   const [publishOpen, setPublishOpen] = useState(false);
 
@@ -52,19 +74,28 @@ export const AgentHomeDashboard: React.FC<StaffRoleHomeProps> = ({
       const resolved = await Promise.all(
         entries.slice(0, 12).map(async (entry) => {
           const user = await usersService.getPublicById(entry.player_uid);
+          let clubLabel = '—';
+          const playerClubId = user?.profile.club_id;
+          if (playerClubId) {
+            const club = await clubsService.getById(playerClubId);
+            clubLabel = club?.name ?? playerClubId.slice(0, 8);
+          } else if (user?.profile.availability === 'available') {
+            clubLabel = t('roleHome.agent.freeAgent');
+          }
           return {
             uid: entry.player_uid,
             name: user?.display_name ?? entry.player_uid.slice(0, 8),
-            position: user?.profile.position,
-            city: user?.city,
+            clubLabel,
+            mandateEnd: formatMandateEnd(entry.updated_at),
+            negoStatus: deriveNegoStatus(user?.profile.availability, entry.notes),
           };
-        })
+        }),
       );
-      setPlayers(resolved);
+      setRows(resolved);
     } finally {
       setExtraLoading(false);
     }
-  }, [clubId]);
+  }, [clubId, t]);
 
   useEffect(() => {
     void loadMandates();
@@ -89,6 +120,26 @@ export const AgentHomeDashboard: React.FC<StaffRoleHomeProps> = ({
     }
   };
 
+  const tableHeader = useMemo(
+    () => (
+      <View style={[styles.headerRow, { borderBottomColor: colors.border }]}>
+        <ProDayText variant="caption" muted style={styles.colPlayer}>
+          {t('roleHome.agent.colPlayer')}
+        </ProDayText>
+        <ProDayText variant="caption" muted style={styles.colClub}>
+          {t('roleHome.agent.colClub')}
+        </ProDayText>
+        <ProDayText variant="caption" muted style={styles.colEnd}>
+          {t('roleHome.agent.colEnd')}
+        </ProDayText>
+        <ProDayText variant="caption" muted style={styles.colNego}>
+          {t('roleHome.agent.colNego')}
+        </ProDayText>
+      </View>
+    ),
+    [colors.border, t],
+  );
+
   return (
     <>
       <StaffRoleHomeShell
@@ -108,7 +159,7 @@ export const AgentHomeDashboard: React.FC<StaffRoleHomeProps> = ({
           items={[
             {
               label: t('roleHome.agent.represented'),
-              value: String(players.length),
+              value: String(rows.length),
               highlight: true,
             },
             {
@@ -118,18 +169,33 @@ export const AgentHomeDashboard: React.FC<StaffRoleHomeProps> = ({
           ]}
         />
 
-        {players.length === 0 ? (
+        {rows.length === 0 ? (
           <StaffEmptyCard message={t('roleHome.agent.noMandates')} />
         ) : (
-          players.slice(0, 6).map((player, index) => (
-            <StaffListCard
-              key={player.uid}
-              index={index + 1}
-              title={player.name}
-              subtitle={`${player.position ?? ''} · ${player.city ?? ''}`.trim()}
-              onPress={() => nav.openMercato('home')}
-            />
-          ))
+          <GlassCard style={styles.table}>
+            {tableHeader}
+            {rows.slice(0, 8).map((row) => (
+              <PressableSpring
+                key={row.uid}
+                style={[styles.dataRow, { borderBottomColor: colors.border }]}
+                onPress={() => nav.openMercato('home')}
+                scaleTo={0.99}
+              >
+                <ProDayText variant="body" style={styles.colPlayer} numberOfLines={1}>
+                  {row.name}
+                </ProDayText>
+                <ProDayText variant="caption" muted style={styles.colClub} numberOfLines={1}>
+                  {row.clubLabel}
+                </ProDayText>
+                <ProDayText variant="caption" style={styles.colEnd}>
+                  {row.mandateEnd}
+                </ProDayText>
+                <ProDayText variant="caption" accent style={styles.colNego} numberOfLines={1}>
+                  {row.negoStatus}
+                </ProDayText>
+              </PressableSpring>
+            ))}
+          </GlassCard>
         )}
 
         <GlassCard variant="accent" style={styles.cta}>
@@ -148,13 +214,6 @@ export const AgentHomeDashboard: React.FC<StaffRoleHomeProps> = ({
             </ProDayText>
           </PressableSpring>
         </GlassCard>
-
-        <StaffListCard
-          index={5}
-          title={t('roleHome.agent.mercatoScouting')}
-          subtitle={t('roleHome.agent.mercatoScoutingSub')}
-          onPress={() => nav.openMercato('home')}
-        />
 
         <StaffSectionTitle title={t('roleHome.quickActions')} />
         <StaffQuickActions role="agent" onAction={handleQuickAction} />
@@ -178,6 +237,28 @@ export const AgentHomeDashboard: React.FC<StaffRoleHomeProps> = ({
 };
 
 const styles = StyleSheet.create({
+  table: {
+    padding: spacing.md,
+    marginBottom: spacing.md,
+    gap: 0,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    paddingBottom: spacing.sm,
+    marginBottom: spacing.xs,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  dataRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: spacing.sm,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    gap: spacing.xs,
+  },
+  colPlayer: { flex: 2.2, fontWeight: '700' },
+  colClub: { flex: 1.8 },
+  colEnd: { flex: 1, textAlign: 'center' },
+  colNego: { flex: 1.6, textAlign: 'right' },
   cta: {
     marginTop: spacing.md,
     marginBottom: spacing.md,

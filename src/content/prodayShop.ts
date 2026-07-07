@@ -65,8 +65,15 @@ const SHOP_CATEGORIES_SANTE: ShopCategoryDef[] = [
   { id: 'jersey', label: 'Tenues cabinet', icon: 'heart' },
 ];
 
+const SHOP_CATEGORIES_SUPPORTER: ShopCategoryDef[] = [
+  { id: 'apparel', label: 'Collection fan', icon: 'shirt' },
+  { id: 'jersey', label: 'Maillots tribune', icon: 'football' },
+];
+
 export function getShopCategories(line: ProductLineId): ShopCategoryDef[] {
-  return line === 'sante' ? SHOP_CATEGORIES_SANTE : SHOP_CATEGORIES_FOOT;
+  if (line === 'sante') return SHOP_CATEGORIES_SANTE;
+  if (line === 'supporter') return SHOP_CATEGORIES_SUPPORTER;
+  return SHOP_CATEGORIES_FOOT;
 }
 
 export function getShopCategoryLabel(category: ShopProductCategory, line?: ProductLineId): string {
@@ -93,9 +100,11 @@ export function getShopCopy(line: ProductLineId): ShopCopy {
   const subtitle =
     line === 'sante'
       ? `Textile et matériel ${brand.productName} pour votre cabinet.`
-      : `Équipement et textile ${brand.productName} — collection officielle.`;
+      : line === 'supporter'
+        ? 'Textile et maillots Pro Day Supporter — soutenez votre tribune.'
+        : `Équipement et textile ${brand.productName} — collection officielle.`;
   return {
-    title: 'ProDay Store',
+    title: line === 'supporter' ? 'Boutique Supporter' : 'ProDay Store',
     subtitle,
     preorderNote:
       'Précommande ouverte — livraison estimée sous 3 à 4 semaines. Paiement sécurisé par carte dans l’app.',
@@ -107,10 +116,34 @@ function shopLineTag(line: ProductLineId): string {
   if (line === 'woman') return 'Woman';
   if (line === 'pro') return 'Pro';
   if (line === 'sante') return 'Santé';
+  if (line === 'supporter') return 'Supporter';
+  if (line === 'amateur') return 'Amateur';
   return 'Man';
 }
 
 function adaptCatalogForLine(line: ProductLineId, catalog: ShopProduct[]): ShopProduct[] {
+  if (line === 'supporter') {
+    return catalog
+      .filter((product) => product.category !== 'equipment')
+      .map((product) => {
+        if (product.id === 'tee-training') {
+          return {
+            ...product,
+            name: 'T-shirt tribune Supporter',
+            description: 'Dry-fit violet Pro Day — pour les soirs de match et les tournois suivis.',
+            longDescription:
+              'T-shirt technique aux couleurs Supporter pour afficher vos couleurs en tribune, au club ou devant l’écran.',
+          };
+        }
+        if (product.id === 'jersey-home') {
+          return {
+            ...product,
+            description: 'Maillot domicile Pro Day Supporter — personnalisation nom en option.',
+          };
+        }
+        return product;
+      });
+  }
   if (line !== 'sante') return catalog;
   const brand = getUniverseIdentity(line);
   return catalog.map((product) => {

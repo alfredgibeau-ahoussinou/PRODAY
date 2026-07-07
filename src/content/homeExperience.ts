@@ -17,6 +17,7 @@ import {
   getModulesForRoleAndLine,
 } from './poleExperience';
 import { ROLE_DASHBOARD_TAGLINE } from './dashboardUniques';
+import { isFemalePlayerPresentation } from '../utils/playerSegment';
 
 export { getUniverseIdentity, getBrandIdentity, HOMME_IDENTITY, WOMAN_IDENTITY, PRO_IDENTITY };
 
@@ -56,7 +57,7 @@ export function getHomeModules(
     if (role === 'player' && id === 'recrutement' && productLine !== 'pro') {
       return {
         ...mod,
-        title: productLine === 'woman' ? 'Mercato F' : 'Candidater',
+        title: isFemalePlayerPresentation(null, productLine) ? 'Mercato F' : 'Candidater',
         subtitle: 'Annonces clubs — sans publication',
       };
     }

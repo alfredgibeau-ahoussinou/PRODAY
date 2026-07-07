@@ -19,6 +19,7 @@ import { ParentalTimeLimitScreen } from './ParentalTimeLimitScreen';
 import { ParentalActivityReportScreen } from './ParentalActivityReportScreen';
 import {
   parentalGuardianService,
+  type GuardianNotification,
   type LinkedMinorProfile,
 } from '../services/parentalGuardian.service';
 import { guardianEmailsMatch, normalizeGuardianEmail } from '../utils/guardianEmail';
@@ -56,6 +57,7 @@ export const GuardianPortalScreen: React.FC<GuardianPortalScreenProps> = ({
   const [saving, setSaving] = useState(false);
   const [inviteCode, setInviteCode] = useState('');
   const [linking, setLinking] = useState(false);
+  const [notifications, setNotifications] = useState<GuardianNotification[]>([]);
 
   const load = useCallback(async () => {
     if (!guardianEmail) {
@@ -72,9 +74,21 @@ export const GuardianPortalScreen: React.FC<GuardianPortalScreenProps> = ({
     void load();
   }, [load]);
 
+  useEffect(() => {
+    if (!guardianEmail) {
+      setNotifications([]);
+      return;
+    }
+    return parentalGuardianService.subscribeGuardianNotifications(guardianEmail, setNotifications);
+  }, [guardianEmail]);
+
   const totalAlerts = useMemo(
     () => children.reduce((sum, child) => sum + child.alerts.length, 0),
     [children],
+  );
+  const unreadGuardianNotifications = useMemo(
+    () => notifications.filter((n) => !n.read_at),
+    [notifications],
   );
 
   const patchChild = async (
@@ -204,6 +218,28 @@ export const GuardianPortalScreen: React.FC<GuardianPortalScreenProps> = ({
               <ProDayText variant="caption" accent style={{ fontWeight: '700' }}>
                 {totalAlerts} alerte{totalAlerts > 1 ? 's' : ''}
               </ProDayText>
+            </View>
+          ) : null}
+          {unreadGuardianNotifications.length > 0 ? (
+            <View style={[styles.alertRow, { backgroundColor: c.accentSoft }]}>
+              <Icon name="calendar" size={14} color={c.accent} />
+              <ProDayText variant="caption" accent style={{ flex: 1 }}>
+                {unreadGuardianNotifications.length} nouvelle(s) convocation(s) mineur détectée(s)
+              </ProDayText>
+              <PressableSpring
+                onPress={() =>
+                  void parentalGuardianService
+                    .markGuardianNotificationsRead(guardianEmail!)
+                    .catch((e) =>
+                      Alert.alert('Erreur', e instanceof Error ? e.message : 'Action impossible.'),
+                    )
+                }
+                scaleTo={0.97}
+              >
+                <ProDayText variant="caption" accent style={styles.actionLink}>
+                  Marquer vu
+                </ProDayText>
+              </PressableSpring>
             </View>
           ) : null}
         </ProDaySurface>

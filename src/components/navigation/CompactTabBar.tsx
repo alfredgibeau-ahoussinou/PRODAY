@@ -3,40 +3,24 @@ import { View, Text, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MAIN_TAB_ITEMS, type MainTabId } from '../../navigation/mainTabConfig';
 import { PressableSpring } from '../motion';
-import { Icon, type IconName } from '../ui/Icon';
+import { Icon } from '../ui/Icon';
+import { TabActiveIndicator } from './TabActiveIndicator';
+import {
+  formatTabBadge,
+  resolveTabIcon,
+  resolveTabInkColors,
+} from './tabBarShared';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { useSessionProfile } from '../../hooks/useSessionProfile';
 import { getTabShortLabel, getVisibleMainTabs } from '../../content/poleExperience';
 import { useTranslation } from '../../context/LocaleContext';
-import {
-  getPhysioTabIcon,
-  isMedicalPractitionerRole,
-} from '../../content/medicalExperience';
-import {
-  getSponsorTabIcon,
-  isSponsorRole,
-  SPONSOR_THEME,
-} from '../../content/sponsorExperience';
-import { spacing } from '../../theme/designTokens';
+import { isSponsorRole, SPONSOR_THEME } from '../../content/sponsorExperience';
+import { spacing, shadows } from '../../theme/designTokens';
 import type { AppColors } from '../../theme/universeTheme';
 import {
   getPoleTabBarChrome,
   resolveTabBarAccent,
 } from '../../theme/poleTabBarTheme';
-
-const TAB_ICONS: Record<MainTabId, IconName> = {
-  home: 'home',
-  recrutement: 'search',
-  matchs: 'handshake',
-  covoiturage: 'car',
-  sante: 'heart',
-  feed: 'star-four-points',
-  reels: 'videocam',
-  famille: 'shield',
-  messages: 'chat',
-  profil: 'person',
-  shop: 'bag',
-};
 
 type CompactTabBarProps = {
   activeTab: MainTabId;
@@ -52,7 +36,7 @@ export const CompactTabBar: React.FC<CompactTabBarProps> = ({
   unreadCount = 0,
   visibleTabs,
 }) => {
-  const { colors, productLine } = useAppTheme();
+  const { colors, productLine, playerSegment } = useAppTheme();
   const { t } = useTranslation();
   const sessionProfile = useSessionProfile();
   const insets = useSafeAreaInsets();
@@ -63,20 +47,19 @@ export const CompactTabBar: React.FC<CompactTabBarProps> = ({
     [visibleTabs, productLine, sessionProfile],
   );
   const tabItems = useMemo(
-    () => MAIN_TAB_ITEMS.filter((t) => visibleTabIds.includes(t.id)),
+    () => MAIN_TAB_ITEMS.filter((item) => visibleTabIds.includes(item.id)),
     [visibleTabIds],
   );
 
   const role = sessionProfile?.role;
-  const isPhysio = isMedicalPractitionerRole(role);
   const isSponsor = isSponsorRole(role);
   const chrome = useMemo(
-    () => getPoleTabBarChrome(productLine, role),
-    [productLine, role],
+    () => getPoleTabBarChrome(productLine, role, playerSegment),
+    [productLine, role, playerSegment],
   );
   const accentInk = isSponsor
     ? SPONSOR_THEME.primary
-    : resolveTabBarAccent(productLine, role, colors);
+    : resolveTabBarAccent(productLine, role, colors, playerSegment);
 
   const styles = useMemo(
     () => createStyles(colors, immersive, chrome),
@@ -89,7 +72,7 @@ export const CompactTabBar: React.FC<CompactTabBarProps> = ({
         styles.root,
         {
           paddingBottom: Math.max(insets.bottom, spacing.xs),
-          backgroundColor: immersive ? '#000' : colors.background,
+          backgroundColor: immersive ? '#000' : chrome.rootBackground,
         },
       ]}
     >
@@ -97,11 +80,12 @@ export const CompactTabBar: React.FC<CompactTabBarProps> = ({
         style={[
           styles.dock,
           {
-            backgroundColor: immersive ? 'rgba(0,0,0,0.92)' : colors.surface,
-            borderColor: immersive ? 'rgba(255,255,255,0.08)' : colors.border,
+            backgroundColor: immersive ? 'rgba(0,0,0,0.92)' : chrome.barBackground,
+            borderColor: immersive ? 'rgba(255,255,255,0.08)' : chrome.barBorderColor,
             borderWidth: immersive ? 0 : chrome.barBorderWidth,
             borderRadius: immersive ? 0 : chrome.barBorderRadius,
           },
+          chrome.barShadow && !immersive && shadows.soft,
         ]}
       >
         {!immersive && chrome.topAccentHeight > 0 ? (
@@ -117,20 +101,10 @@ export const CompactTabBar: React.FC<CompactTabBarProps> = ({
         ) : null}
         {tabItems.map((tab) => {
           const active = tab.id === activeTab;
-          const icon = isPhysio
-            ? getPhysioTabIcon(tab.id)
-            : isSponsor
-              ? getSponsorTabIcon(tab.id)
-              : TAB_ICONS[tab.id];
+          const icon = resolveTabIcon(tab.id, role, productLine);
           const badge = tab.id === 'messages' ? unreadCount : 0;
           const label = getTabShortLabel(tab.id, productLine, role, t);
-          const iconColor = active
-            ? immersive
-              ? '#fff'
-              : accentInk
-            : immersive
-              ? 'rgba(255,255,255,0.45)'
-              : colors.textMuted;
+          const ink = resolveTabInkColors(active, immersive, accentInk, chrome.inactiveIcon);
 
           return (
             <PressableSpring
@@ -143,10 +117,11 @@ export const CompactTabBar: React.FC<CompactTabBarProps> = ({
               accessibilityLabel={label}
             >
               <View style={styles.iconWrap}>
+                <TabActiveIndicator active={active} color={ink.activePill} />
                 <Icon
                   name={icon}
-                  size={21}
-                  color={iconColor}
+                  size={20}
+                  color={active ? ink.active : ink.inactive}
                   variant={active ? 'filled' : 'outline'}
                 />
                 {badge > 0 ? (
@@ -157,12 +132,20 @@ export const CompactTabBar: React.FC<CompactTabBarProps> = ({
                       { backgroundColor: chrome.badgeColor },
                     ]}
                   >
-                    <Text style={styles.badgeText}>
-                      {badge > 99 ? '99+' : badge > 9 ? '9+' : badge}
-                    </Text>
+                    <Text style={styles.badgeText}>{formatTabBadge(badge)}</Text>
                   </View>
                 ) : null}
               </View>
+              <Text
+                style={[
+                  styles.tabLabel,
+                  active && styles.tabLabelActive,
+                  { color: active ? ink.active : ink.inactive },
+                ]}
+                numberOfLines={1}
+              >
+                {label}
+              </Text>
             </PressableSpring>
           );
         })}
@@ -186,7 +169,8 @@ function createStyles(
     dock: {
       flexDirection: 'row',
       alignItems: 'center',
-      height: 44,
+      minHeight: 52,
+      paddingVertical: spacing.xs,
       overflow: 'hidden',
     },
     topAccent: {
@@ -199,18 +183,28 @@ function createStyles(
       flex: 1,
       alignItems: 'center',
       justifyContent: 'center',
-      height: 44,
+      gap: 2,
+      paddingHorizontal: 2,
     },
     iconWrap: {
-      width: 28,
-      height: 26,
+      width: 40,
+      height: 28,
       alignItems: 'center',
       justifyContent: 'center',
+    },
+    tabLabel: {
+      fontSize: 9,
+      fontWeight: '600',
+      maxWidth: 64,
+      textAlign: 'center',
+    },
+    tabLabelActive: {
+      fontWeight: '800',
     },
     badge: {
       position: 'absolute',
       top: -2,
-      right: -6,
+      right: -4,
       borderRadius: 8,
       minWidth: 15,
       height: 15,
@@ -218,7 +212,7 @@ function createStyles(
       justifyContent: 'center',
       paddingHorizontal: 3,
       borderWidth: 1.5,
-      borderColor: c.surface,
+      borderColor: immersive ? 'rgba(0,0,0,0.5)' : c.surface,
     },
     badgeImmersive: {
       borderColor: 'rgba(0,0,0,0.5)',

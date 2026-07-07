@@ -1,28 +1,27 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { InteractionManager } from 'react-native';
 import {
-  runOnJS,
   runOnUI,
   scrollTo,
   type AnimatedRef,
 } from 'react-native-reanimated';
 import type Animated from 'react-native-reanimated';
-import type { ProductLineId } from '../../../models/ProductLine';
+import type { CarouselPoleId } from '../../../models/CarouselPole';
 import { prodayHaptics } from '../../../utils/prodayHaptics';
 
 const TOUR_HOLD_MS = 1200;
 const TOUR_SCROLL_MS = 700;
 const TOUR_START_MS = 500;
 
-type AnimatedFlatList = Animated.FlatList<ProductLineId>;
+type AnimatedFlatList = Animated.FlatList<CarouselPoleId>;
 
 interface UseUniverseIntroTourOptions {
   enabled: boolean;
   listReady: boolean;
   pageWidth: number;
   listRef: AnimatedRef<AnimatedFlatList>;
-  lines: ProductLineId[];
-  onActiveLine: (line: ProductLineId) => void;
+  lines: CarouselPoleId[];
+  onActiveLine: (line: CarouselPoleId) => void;
   onTourEnd: () => void;
 }
 
@@ -50,11 +49,11 @@ export function useUniverseIntroTour({
 
   const goToPage = useCallback(
     (index: number, animated: boolean) => {
+      if (pageWidth <= 0) return;
       const clamped = Math.max(0, Math.min(index, lines.length - 1));
       onActiveLine(lines[clamped]);
       runOnUI(() => {
         'worklet';
-        if (pageWidth <= 0) return;
         scrollTo(listRef, clamped * pageWidth, 0, animated);
       })();
     },
@@ -83,7 +82,7 @@ export function useUniverseIntroTour({
       }
       if (!cancelled && tourRunId.current === runId) {
         await wait(400);
-        runOnJS(onTourEnd)();
+        onTourEnd();
       }
     };
 

@@ -23,6 +23,8 @@ import { SPONSOR_NAV_INSET } from '../../navigation/sponsorTabConfig';
 import { SPONSOR_THEME } from '../../content/sponsorExperience';
 import { spacing, radius } from '../../theme/designTokens';
 import type { SponsorOffer } from '../../models/SponsorOffer';
+import { isSponsorCampaignAllowed } from '../../utils/sponsorCampaignGate';
+import { useTranslation } from '../../context/LocaleContext';
 
 type CampaignFilter = 'mine' | 'clubs' | 'all';
 type ClubSort = 'progress' | 'amount';
@@ -37,6 +39,7 @@ export const SponsorCampaignsScreen: React.FC<SponsorCampaignsScreenProps> = ({
   fixedFilter,
 }) => {
   const profile = useSessionProfile();
+  const { t } = useTranslation();
   const company = profile?.profile.job_title ?? profile?.display_name;
   const [filter, setFilter] = useState<CampaignFilter>(fixedFilter ?? 'mine');
   const effectiveFilter = fixedFilter ?? filter;
@@ -130,6 +133,15 @@ export const SponsorCampaignsScreen: React.FC<SponsorCampaignsScreenProps> = ({
     );
   }
 
+  const openCreate = () => {
+    const gate = isSponsorCampaignAllowed(profile);
+    if (!gate.allowed) {
+      Alert.alert(t('sponsor.gate.title'), t(gate.reasonKey ?? 'sponsor.gate.approval'));
+      return;
+    }
+    setShowCreate(true);
+  };
+
   if (detailOffer) {
     return (
       <SponsorOfferDetailScreen
@@ -166,7 +178,7 @@ export const SponsorCampaignsScreen: React.FC<SponsorCampaignsScreenProps> = ({
       ) : null}
 
       {effectiveFilter !== 'clubs' ? (
-        <PressableSpring style={styles.createBtn} onPress={() => setShowCreate(true)}>
+        <PressableSpring style={styles.createBtn} onPress={openCreate}>
           <Icon name="add" size={18} color={SPONSOR_THEME.onPrimary} />
           <Text style={styles.createBtnText}>Nouvelle offre sponsor</Text>
         </PressableSpring>

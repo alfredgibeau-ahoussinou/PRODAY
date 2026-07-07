@@ -75,11 +75,13 @@ export const SignupSecurityStep: React.FC<SignupSecurityStepProps> = ({
               ? t('signup.form.finalize')
               : form.isSanteProduct
                 ? t('signup.form.createSante')
-                : form.isProProduct
-                  ? t('signup.form.createPro')
-                  : form.isWomanProduct
-                    ? t('signup.form.createWoman')
-                    : t('signup.form.createAccount'))
+                : form.isProPlayerSignup
+                  ? t('signup.form.createProPlayer')
+                  : form.isProProduct
+                    ? t('signup.form.createPro')
+                    : form.isAmateurProduct
+                      ? t('signup.form.createAmateur')
+                      : t('signup.form.createAccount'))
           }
           onPress={onSubmit}
           loading={form.loading}

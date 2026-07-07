@@ -1,7 +1,7 @@
 import { Platform } from 'react-native';
 
 /** Hauteur du dock (hors safe area) — mobile avec bouton Reels central. */
-export const TAB_BAR_DOCK_HEIGHT = Platform.OS === 'web' ? 44 : 62;
+export const TAB_BAR_DOCK_HEIGHT = Platform.OS === 'web' ? 52 : 62;
 
 /** Marge basse invité (pas de dock). */
 export const GUEST_SCROLL_INSET = 32;
@@ -10,7 +10,7 @@ export const GUEST_SCROLL_INSET = 32;
 export const SIGNUP_STICKY_FOOTER_HEIGHT = 76;
 
 /** Espace réservé en bas pour le contenu scrollable / plein écran. */
-export const TAB_BAR_CONTENT_INSET = Platform.OS === 'web' ? 64 : 84;
+export const TAB_BAR_CONTENT_INSET = Platform.OS === 'web' ? 72 : 84;
 
 export interface TabBarInsetOptions {
   guestMode?: boolean;

@@ -14,6 +14,8 @@ import { SponsorOverviewPage } from '../screens/sponsor/pages/SponsorOverviewPag
 import { SponsorCampaignsScreen } from '../screens/sponsor/SponsorCampaignsScreen';
 import { SponsorNetworkScreen } from '../screens/sponsor/SponsorNetworkScreen';
 import { SponsorProfileTabScreen } from '../screens/sponsor/SponsorProfileTabScreen';
+import { SponsorContractScreen } from '../screens/sponsor/SponsorContractScreen';
+import { SponsorContactsScreen } from '../screens/sponsor/SponsorContactsScreen';
 import { SponsorHubScreen } from '../screens/sponsor/SponsorHubScreen';
 import {
   resolveSponsorPageMeta,
@@ -26,6 +28,7 @@ import { ProdayNotificationBridge } from '../components/ProdayNotificationBridge
 import { useSponsorTabNavigationBridge } from './sponsorTabNavigationBridge';
 import { SubscriptionShell } from '../components/subscription/SubscriptionShell';
 import { useSessionProfile } from '../hooks/useSessionProfile';
+import { openSponsorProspectChat } from '../utils/openSponsorProspectChat';
 
 export const SponsorAppShell: React.FC = () => (
   <SponsorDataProvider>
@@ -90,6 +93,19 @@ const SponsorAppShellInner: React.FC = () => {
       case 'clubs':
         return <SponsorCampaignsScreen shellMode fixedFilter="clubs" />;
       case 'reseau':
+        if (activeSegment === 'contacts') {
+          return (
+            <SponsorContactsScreen
+              shellMode
+              onOpenChat={(prospect) => {
+                if (!profile) return;
+                void openSponsorProspectChat(profile, prospect, (threadId, draft) => {
+                  openChat(threadId, draft);
+                });
+              }}
+            />
+          );
+        }
         return (
           <SponsorNetworkScreen
             shellMode
@@ -97,6 +113,9 @@ const SponsorAppShellInner: React.FC = () => {
           />
         );
       case 'marque':
+        if (activeSegment === 'contract') {
+          return <SponsorContractScreen shellMode />;
+        }
         return <SponsorProfileTabScreen shellMode />;
       case 'tarifs':
         return (

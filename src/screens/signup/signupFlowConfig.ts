@@ -49,6 +49,7 @@ const ROLE_LABELS: Record<UserRole, string> = {
   recruiter: 'Recruteur',
   organizer: 'Organisateur',
   sponsor: 'Sponsor',
+  supporter: 'Supporter',
   physio: 'Pôle médical',
 };
 
@@ -86,6 +87,7 @@ export function getRoleLabel(role: UserRole, t?: TranslateFn): string {
 export function getFlowKind(role: UserRole): SignupFlowKind {
   if (role === 'player') return 'player';
   if (role === 'sponsor') return 'sponsor';
+  if (role === 'supporter') return 'supporter';
   return 'staff';
 }
 
@@ -135,6 +137,10 @@ export function buildSignupSteps(
 
   if (flowKind === 'sponsor') {
     return ['welcome', 'sponsor_pro', 'account', 'security', 'launch'];
+  }
+
+  if (role === 'supporter') {
+    return ['welcome', 'account', 'security', 'launch'];
   }
 
   if (role === 'physio') {
@@ -389,8 +395,45 @@ export function getLaunchCopy(
   return getRoleLaunchCopy(role, flags, t);
 }
 
-export function getAppSpaceGroups(woman: boolean, t?: TranslateFn) {
-  if (woman) {
+export function getAppSpaceGroups(
+  genderOrWoman: boolean | import('../../models/User').Gender,
+  t?: TranslateFn,
+) {
+  const gender =
+    typeof genderOrWoman === 'boolean'
+      ? genderOrWoman
+        ? 'women'
+        : 'men'
+      : genderOrWoman;
+
+  if (gender === 'minor') {
+    return [
+      {
+        id: 'youth' as const,
+        label: tr(t, 'signup.space.youth', 'Football jeunes'),
+        icon: 'school' as const,
+        options: [
+          {
+            id: 'boys' as AppSpaceId,
+            label: tr(t, 'signup.space.boys', 'Garçons'),
+            hint: tr(t, 'signup.space.boysHint', 'U13 – U19'),
+          },
+          {
+            id: 'girls' as AppSpaceId,
+            label: tr(t, 'signup.space.girls', 'Filles'),
+            hint: tr(t, 'signup.space.girlsHint', 'U13 F – U19 F'),
+          },
+          {
+            id: 'under_u13' as AppSpaceId,
+            label: tr(t, 'signup.space.under13', 'Moins de 13 ans'),
+            hint: tr(t, 'signup.space.under13Hint', 'U7 – U11'),
+          },
+        ],
+      },
+    ] as const;
+  }
+
+  if (gender === 'women') {
     return [
       {
         id: 'feminine' as const,
@@ -502,11 +545,6 @@ export const WOMAN_APP_SPACE_GROUPS = [
 
 /** @deprecated */
 export const GIRL_APP_SPACE_GROUPS = WOMAN_APP_SPACE_GROUPS;
-
-export { getWomanWelcomeCopy } from './signupWomanConfig';
-
-/** @deprecated */
-export { getWomanWelcomeCopy as getGirlWelcomeCopy } from './signupWomanConfig';
 
 /** Espaces inscription ProDay classique — sans football féminin (réservé à ProDay Woman). */
 export const APP_SPACE_GROUPS = [

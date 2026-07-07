@@ -1,5 +1,7 @@
 import type { ComponentType } from 'react';
 import type { MainTabId } from './mainTabConfig';
+import type { ProductLineId } from '../models/ProductLine';
+import { isProProductLine } from '../models/ProductLine';
 import type { UserRole } from '../models/User';
 import { isMedicalPractitionerRole } from '../content/medicalExperience';
 import { isSponsorRole } from '../content/sponsorExperience';
@@ -17,6 +19,16 @@ import { ShopScreen } from '../screens/ShopScreen';
 import { PhysioAgendaScreen } from '../screens/medical/PhysioAgendaScreen';
 import { PhysioMessagesScreen } from '../screens/medical/PhysioMessagesScreen';
 import { PhysioProfileTabScreen } from '../screens/medical/PhysioProfileTabScreen';
+import { PhysioRequestsScreen } from '../screens/medical/PhysioRequestsScreen';
+import { SupporterMatchsScreen } from '../screens/SupporterMatchsScreen';
+import { SupporterSuivisScreen } from '../screens/SupporterSuivisScreen';
+import { SupporterProfileTabScreen } from '../screens/SupporterProfileTabScreen';
+import { ClubStructureScreen } from '../screens/ClubStructureScreen';
+import { AmateurClubScreen } from '../screens/AmateurClubScreen';
+import { ProPlayerCareerScreen } from '../screens/proPlayer/ProPlayerCareerScreen';
+import { ProPlayerOpportunitiesScreen } from '../screens/proPlayer/ProPlayerOpportunitiesScreen';
+import { ProPlayerPortfolioScreen } from '../screens/proPlayer/ProPlayerPortfolioScreen';
+import { ProPlayerGroupScreen } from '../screens/proPlayer/ProPlayerGroupScreen';
 
 const DEFAULT_SCREENS: Record<MainTabId, ComponentType> = {
   home: HomeScreen,
@@ -35,20 +47,60 @@ const DEFAULT_SCREENS: Record<MainTabId, ComponentType> = {
 const PHYSIO_SCREENS: Partial<Record<MainTabId, ComponentType>> = {
   home: HomeScreen,
   matchs: PhysioAgendaScreen,
+  feed: PhysioRequestsScreen,
   messages: PhysioMessagesScreen,
   profil: PhysioProfileTabScreen,
 };
 
+const SUPPORTER_SCREENS: Partial<Record<MainTabId, ComponentType>> = {
+  matchs: SupporterMatchsScreen,
+  feed: SupporterSuivisScreen,
+  messages: MessagesScreen,
+  profil: SupporterProfileTabScreen,
+};
+
+const PRO_CLUB_SCREENS: Partial<Record<MainTabId, ComponentType>> = {
+  home: ClubStructureScreen,
+};
+
+const AMATEUR_PLAYER_SCREENS: Partial<Record<MainTabId, ComponentType>> = {
+  recrutement: AmateurClubScreen,
+};
+
+const PRO_PLAYER_SCREENS: Partial<Record<MainTabId, ComponentType>> = {
+  home: ProPlayerCareerScreen,
+  recrutement: ProPlayerOpportunitiesScreen,
+  reels: ProPlayerPortfolioScreen,
+  matchs: ProPlayerGroupScreen,
+};
+
 export function resolveMainTabScreen(
   tab: MainTabId,
-  role?: UserRole | null
+  role?: UserRole | null,
+  line?: ProductLineId | null,
 ): ComponentType {
   if (isMedicalPractitionerRole(role)) {
     return PHYSIO_SCREENS[tab] ?? DEFAULT_SCREENS[tab];
   }
+  if (role === 'supporter') {
+    return SUPPORTER_SCREENS[tab] ?? DEFAULT_SCREENS[tab];
+  }
+  if (isProProductLine(line ?? 'pro_player') && role === 'club') {
+    return PRO_CLUB_SCREENS[tab] ?? DEFAULT_SCREENS[tab];
+  }
+  if (isProProductLine(line ?? 'pro_player') && role === 'player') {
+    return PRO_PLAYER_SCREENS[tab] ?? DEFAULT_SCREENS[tab];
+  }
+  if (line === 'amateur' && role === 'player') {
+    return AMATEUR_PLAYER_SCREENS[tab] ?? DEFAULT_SCREENS[tab];
+  }
   return DEFAULT_SCREENS[tab];
 }
 
-export function shouldInjectShopTab(role?: UserRole | null): boolean {
-  return !isMedicalPractitionerRole(role) && !isSponsorRole(role);
+export function shouldInjectShopTab(
+  role?: UserRole | null,
+  line?: ProductLineId | null,
+): boolean {
+  if (isMedicalPractitionerRole(role) || isSponsorRole(role)) return false;
+  return role === 'supporter' || line === 'supporter';
 }

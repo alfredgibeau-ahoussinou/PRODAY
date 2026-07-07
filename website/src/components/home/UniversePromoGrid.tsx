@@ -7,7 +7,16 @@ import { ArrowRight } from "lucide-react";
 import { PRODUCT_LINES } from "@/lib/content";
 import { Section } from "@/components/ui/Section";
 
-const ACCENT_STYLES = {
+const ACCENT_STYLES: Record<
+  (typeof PRODUCT_LINES)[number]["id"],
+  {
+    gradient: string;
+    tag: string;
+    body: string;
+    btn: string;
+    glow: string;
+  }
+> = {
   homme: {
     gradient: "from-neutral-900 via-neutral-800 to-neutral-950",
     tag: "text-neutral-400",
@@ -22,6 +31,20 @@ const ACCENT_STYLES = {
     btn: "bg-white text-pink-900 hover:bg-pink-50",
     glow: "from-pink-500/25",
   },
+  amateur: {
+    gradient: "from-orange-950 via-orange-900 to-neutral-950",
+    tag: "text-orange-300",
+    body: "text-orange-100",
+    btn: "bg-orange-500 text-white hover:bg-orange-400",
+    glow: "from-orange-500/25",
+  },
+  supporter: {
+    gradient: "from-violet-950 via-violet-900 to-neutral-950",
+    tag: "text-violet-300",
+    body: "text-violet-100",
+    btn: "bg-violet-600 text-white hover:bg-violet-500",
+    glow: "from-violet-500/25",
+  },
   pro: {
     gradient: "from-blue-950 via-blue-900 to-slate-950",
     tag: "text-blue-300",
@@ -29,17 +52,17 @@ const ACCENT_STYLES = {
     btn: "bg-white text-blue-900 hover:bg-blue-50",
     glow: "from-blue-500/25",
   },
-} as const;
+};
 
 export function UniversePromoGrid() {
   return (
     <Section
       kicker="UNIVERS"
-      title="Trois univers, une app"
-      description="Man, Woman ou Pro — choisissez votre écosystème à l'inscription."
+      title="Cinq lignes, une app"
+      description="Man, Woman, Amateur, Supporter ou Pro — choisissez votre écosystème à l'inscription."
       className="bg-[#030303]"
     >
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {PRODUCT_LINES.map((line, i) => {
           const styles = ACCENT_STYLES[line.id];
           return (

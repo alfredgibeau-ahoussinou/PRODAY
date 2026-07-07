@@ -13,7 +13,8 @@ import type { User } from '../models/User';
 import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { SearchBar } from '../components/ui/SearchBar';
 import { clubsService } from '../services/clubs.service';
-import { profileService } from '../services/profile.service';
+import { membershipsService } from '../services/memberships.service';
+import type { Membership } from '../models/Membership';
 import { Icon } from '../components/ui/Icon';
 import { spacing, radius, shadows } from '../theme/designTokens';
 import { useThemedScreen } from '../hooks/useThemedScreen';
@@ -36,17 +37,29 @@ export const JoinClubScreen: React.FC<JoinClubScreenProps> = ({
   const [clubs, setClubs] = useState<Club[]>([]);
   const [loading, setLoading] = useState(true);
   const [joiningId, setJoiningId] = useState<string | null>(null);
+  const [blockingMembership, setBlockingMembership] = useState<Membership | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
-    setClubs(await clubsService.searchByName(query));
+    const [clubResults, memberships] = await Promise.all([
+      clubsService.searchByName(query),
+      membershipsService.listByPlayer(profile.uid),
+    ]);
+    setClubs(clubResults);
+    setBlockingMembership(
+      memberships.find((m) => m.status === 'active' || m.status === 'pending') ?? null
+    );
     setLoading(false);
-  }, [query]);
+  }, [query, profile.uid]);
 
   useEffect(() => {
     const timer = setTimeout(() => void load(), 300);
     return () => clearTimeout(timer);
   }, [load]);
+
+  const blockingClubName = blockingMembership
+    ? clubs.find((club) => club.id === blockingMembership.club_id)?.name ?? blockingMembership.club_id
+    : null;
 
   const handleJoin = async (club: Club) => {
     Alert.alert(t('joinClub.confirm.title'), t('joinClub.confirm.body', { name: club.name }), [
@@ -56,12 +69,14 @@ export const JoinClubScreen: React.FC<JoinClubScreenProps> = ({
         onPress: async () => {
           setJoiningId(club.id);
           try {
-            await profileService.updateProfile(profile.uid, {
-              profile: { club_id: club.id },
+            await membershipsService.requestJoin({
+              club_id: club.id,
+              player_uid: profile.uid,
+              player_name: profile.display_name,
             });
             Alert.alert(
-              t('joinClub.success.title'),
-              t('joinClub.success.body', { name: club.name })
+              t('joinClub.pending.title'),
+              t('joinClub.pending.body', { name: club.name })
             );
             onJoined();
           } catch (e) {
@@ -81,6 +96,13 @@ export const JoinClubScreen: React.FC<JoinClubScreenProps> = ({
     <View style={rootStyle}>
       <ScreenHeader title={t('joinClub.title')} onBack={onBack} centered />
       <Text style={[styles.hint, { color: themeColors.textSecondary }]}>{t('joinClub.hint')}</Text>
+      {blockingMembership ? (
+        <Text style={[styles.blocked, { color: themeColors.warning ?? themeColors.textSecondary }]}>
+          {blockingMembership.status === 'active'
+            ? t('joinClub.active.current', { name: blockingClubName ?? blockingMembership.club_id })
+            : t('joinClub.pending.current', { name: blockingClubName ?? blockingMembership.club_id })}
+        </Text>
+      ) : null}
       <SearchBar placeholder={t('joinClub.search')} value={query} onChangeText={setQuery} />
       {loading ? (
         <ActivityIndicator color={themeColors.brand} style={styles.loader} />
@@ -105,7 +127,7 @@ export const JoinClubScreen: React.FC<JoinClubScreenProps> = ({
                 },
               ]}
               onPress={() => void handleJoin(item)}
-              disabled={joiningId === item.id}
+              disabled={joiningId === item.id || Boolean(blockingMembership)}
             >
               <View style={styles.cardBody}>
                 <Text style={[styles.name, { color: themeColors.text }]}>{item.name}</Text>
@@ -134,6 +156,13 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   loader: { marginTop: spacing.xl },
+  blocked: {
+    fontSize: 12,
+    lineHeight: 18,
+    paddingHorizontal: spacing.lg,
+    marginBottom: spacing.sm,
+    fontWeight: '700',
+  },
   list: { padding: spacing.lg, paddingBottom: spacing.xxl },
   empty: { textAlign: 'center', marginTop: spacing.xl },
   card: {

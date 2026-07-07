@@ -17,7 +17,11 @@ const nextConfig: NextConfig = {
       { source: "/joueur/:path*", destination: "/joueurs/:path*", permanent: true },
       { source: "/player", destination: "/joueurs", permanent: true },
       { source: "/players", destination: "/joueurs", permanent: true },
-      { source: "/man", destination: "/homme", permanent: true },
+      { source: "/man", destination: "/amateur", permanent: true },
+      { source: "/homme", destination: "/amateur", permanent: true },
+      { source: "/homme/:path*", destination: "/amateur", permanent: true },
+      { source: "/woman", destination: "/amateur", permanent: true },
+      { source: "/woman/:path*", destination: "/amateur", permanent: true },
     ];
   },
 };

@@ -9,6 +9,7 @@ import { onAuthStateChanged, type User as FirebaseAuthUser } from 'firebase/auth
 import { getFirebaseAuth } from '../lib/firebase';
 import { isFirebaseConfigured } from '../config/firebase';
 import { authService, needsEmailVerification } from '../services/auth.service';
+import { productLineMigrationService } from '../services/productLineMigration.service';
 import { usersService } from '../services/users.service';
 import { registerPushTokenIfPossible } from '../services/pushToken.service';
 import {
@@ -73,7 +74,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       setProfile(null);
       return;
     }
-    setProfile(await usersService.getById(uid));
+    const loaded = await usersService.getById(uid);
+    if (!loaded) {
+      setProfile(null);
+      return;
+    }
+    setProfile(await productLineMigrationService.migrateUserIfNeeded(loaded));
     await refreshAdminClaim();
   }, [refreshAdminClaim]);
 
@@ -88,13 +94,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       setFirebaseUser(user);
       if (user) {
         const loaded = await usersService.getById(user.uid);
+        const migrated = loaded
+          ? await productLineMigrationService.migrateUserIfNeeded(loaded)
+          : null;
         const activeLine = await getActiveProductLineFromStorage();
-        if (loaded && !profileMatchesActiveLine(loaded, activeLine)) {
+        if (migrated && !profileMatchesActiveLine(migrated, activeLine)) {
           await authService.signOut();
           setProfile(null);
         } else {
-          setProfile(loaded);
-          if (loaded) void registerPushTokenIfPossible(user.uid);
+          setProfile(migrated);
+          if (migrated) void registerPushTokenIfPossible(user.uid);
           void refreshAdminClaim();
         }
       } else {

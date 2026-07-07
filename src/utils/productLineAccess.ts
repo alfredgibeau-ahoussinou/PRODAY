@@ -7,11 +7,21 @@ import {
   type ProductLineId,
 } from '../models/ProductLine';
 import type { User, UserRole } from '../models/User';
-import { isRoleAllowedForProductLine, productLineLabel } from '../content/universeRoles';
+import {
+  isRoleAllowedForProductLine,
+  productLineLabel,
+} from '../content/universeRoles';
 import {
   isPartnerPoleTestAccount,
   isUniversalPoleTestAccount,
 } from '../config/emailVerificationBypass';
+import {
+  canonicalizeActiveProductLine,
+  canonicalizeUserProductLine,
+  isProFamilyLine,
+  productLinesEquivalent,
+} from './productLineResolution';
+import { resolvePlayerSegment } from './playerSegment';
 
 /** Ligne produit active (AsyncStorage — même logique que ProductLineContext). */
 export async function getActiveProductLineFromStorage(): Promise<ProductLineId> {
@@ -21,39 +31,49 @@ export async function getActiveProductLineFromStorage(): Promise<ProductLineId> 
   ]);
   const storedLine = pairs.find(([k]) => k === PRODUCT_LINE_STORAGE_KEY)?.[1] ?? null;
   const spaceFlag = pairs.find(([k]) => k === WOMAN_SPACE_ACTIVE_KEY)?.[1] ?? null;
-  const line = normalizeStoredProductLine(storedLine) ?? 'homme';
-  if (spaceFlag === '1' && line === 'homme') return 'woman';
+  const line = normalizeStoredProductLine(storedLine) ?? 'amateur';
+  if (spaceFlag === '1' && line === 'homme') return 'amateur';
+  if (line === 'homme' || line === 'woman') return 'amateur';
   return line;
 }
 
-/** Ligne d'inscription du compte (champ Firestore ou déduction legacy). */
+/** Ligne canonique du compte (Firestore + déduction legacy). */
 export function getUserProductLine(user: User): ProductLineId {
   const stored = user.product_line;
   if (user.role === 'physio') return 'sante';
-  if (stored === 'woman' || stored === 'pro' || stored === 'sante') return stored;
-  if (stored === 'homme' || stored === 'standard') return 'homme';
-  if (user.app_space && isFeminineAppSpace(user.app_space)) return 'woman';
+  if (user.role === 'supporter') return 'supporter';
+  if (stored === 'pro') return canonicalizeUserProductLine('pro', user.role);
   if (
-    user.role === 'coach' ||
-    user.role === 'agent' ||
-    user.role === 'recruiter' ||
-    user.role === 'sponsor' ||
-    user.role === 'club' ||
-    user.role === 'organizer'
+    stored === 'woman' ||
+    stored === 'sante' ||
+    stored === 'amateur' ||
+    stored === 'supporter' ||
+    stored === 'pro_player' ||
+    stored === 'pro_club' ||
+    stored === 'pro_staff'
   ) {
-    return 'pro';
+    if (stored === 'woman' && user.role === 'player') return 'pro_player';
+    return stored;
   }
-  return 'homme';
+  if (stored === 'homme' || stored === 'standard') {
+    if (user.role === 'player') return 'pro_player';
+    return 'homme';
+  }
+  if (user.app_space && isFeminineAppSpace(user.app_space)) {
+    if (user.role === 'player') return 'pro_player';
+    return 'woman';
+  }
+  return canonicalizeUserProductLine(stored, user.role);
 }
 
 export function getProductLineMismatchMessage(
   userLine: ProductLineId,
-  activeLine: ProductLineId
+  activeLine: ProductLineId,
 ): string {
-  if (userLine === activeLine) {
+  if (productLinesEquivalent(userLine, activeLine, 'player')) {
     return 'Ce compte n’est pas compatible avec cette version de l’application.';
   }
-  return `Ce compte a été créé sur ${productLineLabel(userLine)}. Choisissez « ${productLineLabel(activeLine)} » au lancement pour vous connecter.`;
+  return `Ce compte a été créé sur ${productLineLabel(canonicalizeUserProductLine(userLine, 'player'))}. Choisissez « ${productLineLabel(canonicalizeActiveProductLine(activeLine, 'player'))} » au lancement pour vous connecter.`;
 }
 
 export class ProductLineMismatchError extends Error {
@@ -61,7 +81,7 @@ export class ProductLineMismatchError extends Error {
 
   constructor(
     public readonly userLine: ProductLineId,
-    public readonly activeLine: ProductLineId
+    public readonly activeLine: ProductLineId,
   ) {
     super(getProductLineMismatchMessage(userLine, activeLine));
     this.name = 'ProductLineMismatchError';
@@ -71,41 +91,54 @@ export class ProductLineMismatchError extends Error {
 /** Rôle effectif en session — comptes test multi-pôles. */
 export function getEffectiveRoleForProductLine(
   user: User,
-  activeLine: ProductLineId
+  activeLine: ProductLineId,
 ): UserRole {
   if (isPartnerPoleTestAccount(user.email)) {
-    if (activeLine === 'pro') return 'sponsor';
+    if (isProFamilyLine(activeLine)) return 'sponsor';
     return user.role;
   }
   if (isUniversalPoleTestAccount(user.email)) {
     if (activeLine === 'sante') return 'physio';
-    if (activeLine === 'pro') return 'coach';
+    if (isProFamilyLine(activeLine) || activeLine === 'amateur') return 'coach';
     return 'player';
   }
   return user.role;
 }
 
 export function profileMatchesActiveLine(user: User, activeLine: ProductLineId): boolean {
-  if (isPartnerPoleTestAccount(user.email)) return activeLine === 'pro';
+  if (isPartnerPoleTestAccount(user.email)) return isProFamilyLine(activeLine);
   if (isUniversalPoleTestAccount(user.email)) return true;
+
   const userLine = getUserProductLine(user);
-  if (userLine !== activeLine) return false;
-  return isRoleAllowedForProductLine(user.role, activeLine);
+  if (!productLinesEquivalent(userLine, activeLine, user.role)) return false;
+
+  const canonicalActive = canonicalizeActiveProductLine(activeLine, user.role);
+  if (!isRoleAllowedForProductLine(user.role, canonicalActive)) return false;
+
+  if (user.role === 'player' && canonicalActive === 'pro_player') {
+    const userSegment = resolvePlayerSegment(user, userLine);
+    const carouselSegment =
+      activeLine === 'woman' ? 'female' : activeLine === 'homme' ? 'male' : null;
+    if (userSegment && carouselSegment && userSegment !== carouselSegment) return false;
+  }
+
+  return true;
 }
 
 export function assertProfileMatchesActiveLine(
   user: User,
-  activeLine: ProductLineId
+  activeLine: ProductLineId,
 ): void {
   if (isPartnerPoleTestAccount(user.email)) {
-    if (activeLine !== 'pro') {
-      throw new ProductLineMismatchError('pro', activeLine);
+    if (!isProFamilyLine(activeLine)) {
+      throw new ProductLineMismatchError('pro_staff', activeLine);
     }
     return;
   }
   if (isUniversalPoleTestAccount(user.email)) return;
-  const userLine = getUserProductLine(user);
-  if (userLine !== activeLine || !isRoleAllowedForProductLine(user.role, activeLine)) {
+
+  if (!profileMatchesActiveLine(user, activeLine)) {
+    const userLine = getUserProductLine(user);
     throw new ProductLineMismatchError(userLine, activeLine);
   }
 }
@@ -113,10 +146,11 @@ export function assertProfileMatchesActiveLine(
 /** Profil adapté à l’univers actif (comptes test multi-pôles). */
 export function getSessionProfile(user: User, activeLine: ProductLineId): User {
   if (isPartnerPoleTestAccount(user.email)) {
+    const line = isProFamilyLine(activeLine) ? canonicalizeActiveProductLine(activeLine, 'sponsor') : activeLine;
     return {
       ...user,
-      role: activeLine === 'pro' ? 'sponsor' : user.role,
-      product_line: activeLine,
+      role: isProFamilyLine(activeLine) ? 'sponsor' : user.role,
+      product_line: line,
     };
   }
   if (!isUniversalPoleTestAccount(user.email)) return user;
@@ -124,6 +158,6 @@ export function getSessionProfile(user: User, activeLine: ProductLineId): User {
   return {
     ...user,
     role,
-    product_line: activeLine,
+    product_line: canonicalizeActiveProductLine(activeLine, role),
   };
 }

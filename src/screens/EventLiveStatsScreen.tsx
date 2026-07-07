@@ -41,9 +41,9 @@ export const EventLiveStatsScreen: React.FC<EventLiveStatsScreenProps> = ({
   onBack,
 }) => {
   const { profile, isAdmin } = useAuth();
-  const { colors: c, productLine, rootStyle } = useThemedScreen();
+  const { colors: c, productLine, isWoman, rootStyle } = useThemedScreen();
   const styles = useMemo(() => createStyles(c), [c]);
-  const isWoman = productLine === 'woman';
+  
   const [event, setEvent] = useState<TeamEvent | null>(null);
   const [players, setPlayers] = useState<{ uid: string; name: string }[]>([]);
   const [selectedPlayer, setSelectedPlayer] = useState<string | null>(null);
@@ -126,6 +126,10 @@ export const EventLiveStatsScreen: React.FC<EventLiveStatsScreenProps> = ({
   const applyStats = async () => {
     if (reportLocked) {
       Alert.alert('Rapport verrouillé', 'Ce rapport validé est en lecture seule.');
+      return;
+    }
+    if (!event?.match_report_finalized_at) {
+      Alert.alert('Rapport non validé', 'Validez le rapport de match avant application des stats.');
       return;
     }
     Alert.alert(
@@ -244,7 +248,7 @@ export const EventLiveStatsScreen: React.FC<EventLiveStatsScreenProps> = ({
           ))
         )}
 
-        {timeline.length > 0 && !event?.stats_applied_at && (
+        {timeline.length > 0 && !event?.stats_applied_at && event?.match_report_finalized_at && (
           <TouchableOpacity
             style={styles.applyBtn}
             onPress={applyStats}
@@ -253,6 +257,9 @@ export const EventLiveStatsScreen: React.FC<EventLiveStatsScreenProps> = ({
             <Text style={styles.applyText}>Appliquer aux stats saison</Text>
           </TouchableOpacity>
         )}
+        {timeline.length > 0 && !event?.stats_applied_at && !event?.match_report_finalized_at ? (
+          <Text style={styles.empty}>Validez le rapport pour appliquer les stats saison.</Text>
+        ) : null}
         {event?.stats_applied_at ? (
           <Text style={styles.applied}>Stats saison déjà appliquées.</Text>
         ) : null}

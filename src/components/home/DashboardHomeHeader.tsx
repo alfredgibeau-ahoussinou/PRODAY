@@ -7,6 +7,7 @@ import { UniverseBadge } from '../branding/UniverseBadge';
 import { getHomeDashboardMeta } from '../../content/homeExperience';
 import { getDashboardLayoutKind } from '../../content/poleExperience';
 import { ROLE_LABELS } from '../../utils/roleCapabilities';
+import { isFemalePresentationForUser } from '../../utils/playerSegment';
 import { ProDayPulseInteractive } from '../interactive/ProDayPulseInteractive';
 import { Icon } from '../ui/Icon';
 import { useAppTheme } from '../../context/ProductLineContext';
@@ -43,7 +44,9 @@ export const DashboardHomeHeader: React.FC<DashboardHomeHeaderProps> = ({
   const isAmateurPlayer = getDashboardLayoutKind(productLine, profile.role) === 'amateur_player';
   const firstName = profile.display_name.split(' ')[0];
   const roleLabel =
-    profile.role === 'player' && productLine === 'woman' ? 'Joueuse' : ROLE_LABELS[profile.role];
+    profile.role === 'player' && isFemalePresentationForUser(profile, productLine)
+      ? 'Joueuse'
+      : ROLE_LABELS[profile.role];
   const dashMeta = useMemo(
     () => getHomeDashboardMeta(profile.role, productLine),
     [profile.role, productLine],

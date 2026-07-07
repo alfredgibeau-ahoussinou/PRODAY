@@ -6,30 +6,34 @@ import Animated, {
   useAnimatedStyle,
   type SharedValue,
 } from 'react-native-reanimated';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { spacing, radius } from '../../../theme/designTokens';
 import { PressableSpring } from '../../motion';
 import { Icon } from '../../ui/Icon';
-import type { ProductLineId } from '../../../models/ProductLine';
-import { getUniverseIdentity } from '../../../content/brandExperience';
-import { UNIVERSE_ACCENT } from './universeIntroAccents';
+import type { CarouselPoleId } from '../../../models/CarouselPole';
+import { getCarouselPoleIdentity } from '../../../content/carouselPoleExperience';
+import { UNIVERSE_ACCENT, UNIVERSE_SHORT } from './universeIntroAccents';
 
 interface UniversePageChromeProps {
-  lines: ProductLineId[];
+  lines: CarouselPoleId[];
+  activeIndex: number;
   scrollX: SharedValue<number>;
   pageWidth: number;
   touring: boolean;
+  interactionLocked?: boolean;
+  showDismiss?: boolean;
+  onDismiss?: () => void;
   onSkip: () => void;
-  onChoose: (line: ProductLineId) => void;
-  getActiveLine: () => ProductLineId;
-  onNext: () => void;
-  canGoNext: boolean;
+  onChoose: (line: CarouselPoleId) => void;
+  onJumpToIndex: (index: number) => void;
 }
 
 const StorySegment: React.FC<{
   index: number;
   scrollX: SharedValue<number>;
   pageWidth: number;
-  line: ProductLineId;
+  line: CarouselPoleId;
 }> = ({ index, scrollX, pageWidth, line }) => {
   const accent = UNIVERSE_ACCENT[line];
 
@@ -43,103 +47,97 @@ const StorySegment: React.FC<{
   });
 
   return (
-    <View style={[styles.segmentTrack, { backgroundColor: `${accent}44` }]}>
+    <View style={[styles.segmentTrack, { backgroundColor: `${accent}40` }]}>
       <Animated.View style={[styles.segmentFill, { backgroundColor: accent }, fillStyle]} />
     </View>
   );
 };
 
-const CtaLabelLayer: React.FC<{
-  line: ProductLineId;
-  index: number;
-  scrollX: SharedValue<number>;
-  pageWidth: number;
-}> = ({ line, index, scrollX, pageWidth }) => {
-  const identity = getUniverseIdentity(line);
-
-  const style = useAnimatedStyle(() => {
-    if (pageWidth <= 0) return { opacity: index === 0 ? 1 : 0 };
-    const page = scrollX.value / pageWidth;
-    const opacity = interpolate(
-      page,
-      [index - 0.45, index, index + 0.45],
-      [0, 1, 0],
-      Extrapolation.CLAMP
-    );
-    return { opacity };
-  });
-
-  return (
-    <Animated.Text style={[styles.ctaLabel, style]} numberOfLines={1}>
-      Choisir {identity.productName}
-    </Animated.Text>
-  );
-};
-
-/** Chrome fixe — barres de progression, CTA et navigation. */
+/** Barres de progression, compteur et CTA contextualisé. */
 export const UniversePageChrome: React.FC<UniversePageChromeProps> = ({
   lines,
+  activeIndex,
   scrollX,
   pageWidth,
   touring,
+  interactionLocked = false,
+  showDismiss = false,
+  onDismiss,
   onSkip,
   onChoose,
-  getActiveLine,
-  onNext,
-  canGoNext,
+  onJumpToIndex,
 }) => {
+  const insets = useSafeAreaInsets();
+  const activeLine = lines[activeIndex];
+  const identity = getCarouselPoleIdentity(activeLine);
+
   return (
     <View style={styles.root} pointerEvents="box-none">
-      <View style={styles.top}>
+      <View style={[styles.top, { paddingTop: insets.top + spacing.sm }]}>
         <View style={styles.segments}>
           {lines.map((line, index) => (
-            <StorySegment
+            <Pressable
               key={line}
-              line={line}
-              index={index}
-              scrollX={scrollX}
-              pageWidth={pageWidth}
-            />
+              style={styles.segmentHit}
+              disabled={interactionLocked}
+              onPress={() => onJumpToIndex(index)}
+              accessibilityLabel={UNIVERSE_SHORT[line]}
+              accessibilityState={{ selected: index === activeIndex }}
+            >
+              <StorySegment
+                line={line}
+                index={index}
+                scrollX={scrollX}
+                pageWidth={pageWidth}
+              />
+            </Pressable>
           ))}
         </View>
         {touring ? (
           <Pressable onPress={onSkip} hitSlop={12} accessibilityLabel="Passer la présentation">
             <Text style={styles.skip}>Passer</Text>
           </Pressable>
+        ) : showDismiss && onDismiss ? (
+          <Pressable
+            onPress={onDismiss}
+            disabled={interactionLocked}
+            hitSlop={12}
+            accessibilityLabel="Fermer le sélecteur de pôle"
+          >
+            <Text style={styles.skip}>Fermer</Text>
+          </Pressable>
         ) : (
           <View style={styles.skipSpacer} />
         )}
       </View>
 
-      <View style={styles.bottom} pointerEvents="box-none">
-        <View style={styles.bottomRow}>
-          <PressableSpring
-            onPress={() => onChoose(getActiveLine())}
-            scaleTo={0.98}
-            haptic
-            style={styles.cta}
-          >
-            {lines.map((line, index) => (
-              <CtaLabelLayer
-                key={line}
-                line={line}
-                index={index}
-                scrollX={scrollX}
-                pageWidth={pageWidth}
-              />
-            ))}
-          </PressableSpring>
+      <View style={[styles.bottom, { paddingBottom: insets.bottom + spacing.md }]} pointerEvents="box-none">
+        <LinearGradient
+          colors={['transparent', 'rgba(0,0,0,0.5)']}
+          style={styles.bottomFade}
+          pointerEvents="none"
+        />
 
-          {canGoNext ? (
-            <PressableSpring onPress={onNext} scaleTo={0.94} haptic style={styles.nextBtn}>
-              <Icon name="chevron-forward" size={22} color="#fff" />
-            </PressableSpring>
-          ) : null}
-        </View>
-
-        <Text style={styles.hint}>
-          {touring ? 'Glissez pour changer de page' : 'Glissez ou utilisez la flèche'}
+        <Text style={styles.counter}>
+          {String(activeIndex + 1).padStart(2, '0')} / {String(lines.length).padStart(2, '0')}
+          <Text style={styles.counterSep}> · </Text>
+          {UNIVERSE_SHORT[activeLine]}
         </Text>
+
+        <PressableSpring
+          onPress={() => onChoose(activeLine)}
+          scaleTo={0.98}
+          haptic
+          disabled={interactionLocked}
+          style={styles.cta}
+        >
+          <Text style={styles.ctaText} numberOfLines={1}>
+            Continuer · {identity.productName}
+          </Text>
+          <Icon name="chevron-forward" size={18} color="#0A0A0A" />
+        </PressableSpring>
+
+        <Text style={styles.hint}>Glissez pour parcourir les pôles</Text>
       </View>
     </View>
   );
@@ -155,15 +153,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.md,
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing.sm,
   },
   segments: {
     flex: 1,
     flexDirection: 'row',
-    gap: 5,
+    gap: 4,
+  },
+  segmentHit: {
+    flex: 1,
   },
   segmentTrack: {
-    flex: 1,
     height: 3,
     borderRadius: radius.pill,
     overflow: 'hidden',
@@ -182,47 +181,52 @@ const styles = StyleSheet.create({
   },
   bottom: {
     paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.md,
     gap: spacing.sm,
+    alignItems: 'stretch',
   },
-  bottomRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
+  bottomFade: {
+    ...StyleSheet.absoluteFillObject,
+    top: -40,
   },
-  cta: {
-    flex: 1,
-    minHeight: 54,
-    borderRadius: radius.lg,
-    backgroundColor: 'rgba(255,255,255,0.16)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.28)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: spacing.lg,
-  },
-  ctaLabel: {
-    position: 'absolute',
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '800',
+  counter: {
     textAlign: 'center',
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    color: 'rgba(255,255,255,0.55)',
     ...Platform.select({ android: { includeFontPadding: false } }),
   },
-  nextBtn: {
-    width: 54,
-    height: 54,
-    borderRadius: radius.lg,
-    backgroundColor: 'rgba(255,255,255,0.16)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.28)',
+  counterSep: {
+    color: 'rgba(255,255,255,0.28)',
+  },
+  cta: {
+    minHeight: 54,
+    borderRadius: radius.pill,
+    backgroundColor: '#FFFFFF',
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    gap: spacing.xs,
+    paddingHorizontal: spacing.lg,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.22,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  ctaText: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#0A0A0A',
+    flexShrink: 1,
+    ...Platform.select({ android: { includeFontPadding: false } }),
   },
   hint: {
     fontSize: 11,
     fontWeight: '600',
-    color: 'rgba(255,255,255,0.62)',
+    color: 'rgba(255,255,255,0.45)',
     textAlign: 'center',
+    marginTop: 2,
   },
 });

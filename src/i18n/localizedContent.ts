@@ -9,7 +9,12 @@ import { brandForProductLine } from '../models/ProductLine';
 const LINE_SUFFIX: Record<ProductLineId, string> = {
   homme: 'homme',
   woman: 'woman',
+  amateur: 'amateur',
+  supporter: 'supporter',
   pro: 'pro',
+  pro_player: 'pro_player',
+  pro_club: 'pro_club',
+  pro_staff: 'pro_staff',
   sante: 'sante',
 };
 

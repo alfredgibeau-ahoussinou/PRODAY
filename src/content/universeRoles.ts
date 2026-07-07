@@ -1,5 +1,6 @@
 import type { UserRole } from '../models/User';
 import type { ProductLineId } from '../models/ProductLine';
+import { isProFamilyLine } from '../utils/productLineResolution';
 
 /** Rôles ProDay Man — joueurs uniquement (foot masculin amateur). */
 export const HOMME_PRODUCT_ROLES: UserRole[] = ['player'];
@@ -7,14 +8,32 @@ export const HOMME_PRODUCT_ROLES: UserRole[] = ['player'];
 /** Rôles ProDay Woman — joueuses uniquement (foot féminin). */
 export const WOMAN_PRODUCT_ROLES: UserRole[] = ['player'];
 
-/** Rôles ProDay Pro — staff foot, structures et partenaires. */
-export const PRO_PRODUCT_ROLES: UserRole[] = [
+/** Rôles ProDay Amateur — joueurs et coachs amateur (district, régional, club local). */
+export const AMATEUR_PRODUCT_ROLES: UserRole[] = ['player', 'coach'];
+
+/** Rôles ProDay Supporter — fans et communauté. */
+export const SUPPORTER_PRODUCT_ROLES: UserRole[] = ['supporter'];
+
+/** Rôles Pro joueur. */
+export const PRO_PLAYER_PRODUCT_ROLES: UserRole[] = ['player'];
+
+/** Rôles structure club pro. */
+export const PRO_CLUB_PRODUCT_ROLES: UserRole[] = ['club'];
+
+/** Rôles staff pro (inclut sponsors hors carousel). */
+export const PRO_STAFF_PRODUCT_ROLES: UserRole[] = [
   'coach',
   'agent',
   'recruiter',
-  'sponsor',
-  'club',
   'organizer',
+  'sponsor',
+];
+
+/** @deprecated Union legacy `product_line: pro` */
+export const PRO_PRODUCT_ROLES: UserRole[] = [
+  ...PRO_PLAYER_PRODUCT_ROLES,
+  ...PRO_CLUB_PRODUCT_ROLES,
+  ...PRO_STAFF_PRODUCT_ROLES,
 ];
 
 /** Rôles ProDay Santé — praticiens médicaux et paramédicaux. */
@@ -24,6 +43,16 @@ export function rolesForProductLine(line: ProductLineId): UserRole[] {
   switch (line) {
     case 'woman':
       return WOMAN_PRODUCT_ROLES;
+    case 'amateur':
+      return AMATEUR_PRODUCT_ROLES;
+    case 'supporter':
+      return SUPPORTER_PRODUCT_ROLES;
+    case 'pro_player':
+      return PRO_PLAYER_PRODUCT_ROLES;
+    case 'pro_club':
+      return PRO_CLUB_PRODUCT_ROLES;
+    case 'pro_staff':
+      return PRO_STAFF_PRODUCT_ROLES;
     case 'pro':
       return PRO_PRODUCT_ROLES;
     case 'sante':
@@ -37,9 +66,17 @@ export function isRoleAllowedForProductLine(role: UserRole, line: ProductLineId)
   return rolesForProductLine(line).includes(role);
 }
 
-export function defaultRoleForProductLine(line: ProductLineId): UserRole {
-  if (line === 'pro') return 'coach';
+export function defaultRoleForProductLine(
+  line: ProductLineId,
+  presetRole?: UserRole | null,
+): UserRole {
+  if (presetRole && isRoleAllowedForProductLine(presetRole, line)) return presetRole;
+  if (line === 'pro_player') return 'player';
+  if (line === 'pro_club') return 'club';
+  if (line === 'pro' || line === 'pro_staff') return 'coach';
   if (line === 'sante') return 'physio';
+  if (line === 'amateur') return 'player';
+  if (line === 'supporter') return 'supporter';
   return 'player';
 }
 
@@ -47,6 +84,16 @@ export function productLineLabel(line: ProductLineId): string {
   switch (line) {
     case 'woman':
       return 'ProDay Woman';
+    case 'amateur':
+      return 'Pro Day Amateur';
+    case 'supporter':
+      return 'Pro Day Supporter';
+    case 'pro_player':
+      return 'Pro Day Pro Joueur';
+    case 'pro_club':
+      return 'Pro Day Pro Club';
+    case 'pro_staff':
+      return 'Pro Day Pro Staff';
     case 'pro':
       return 'Pro Day Pro';
     case 'sante':
@@ -54,4 +101,22 @@ export function productLineLabel(line: ProductLineId): string {
     default:
       return 'Pro Day Man';
   }
+}
+
+/** Ligne d’inscription à partir du carousel ou preset (hors legacy homme/woman). */
+export function resolveSignupProductLine(
+  carouselOrContextLine: ProductLineId,
+  role: UserRole,
+): ProductLineId {
+  if (carouselOrContextLine === 'pro_player' || carouselOrContextLine === 'pro_club' || carouselOrContextLine === 'pro_staff') {
+    return carouselOrContextLine;
+  }
+  if (carouselOrContextLine === 'pro' || isProFamilyLine(carouselOrContextLine)) {
+    if (role === 'club') return 'pro_club';
+    if (role === 'player') return 'pro_player';
+    if (['coach', 'agent', 'recruiter', 'organizer', 'sponsor'].includes(role)) {
+      return 'pro_staff';
+    }
+  }
+  return carouselOrContextLine;
 }

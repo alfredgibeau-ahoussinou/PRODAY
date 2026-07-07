@@ -1,4 +1,5 @@
 import type { ProductLineId } from '../models/ProductLine';
+import { withProFamilyRecord } from '../models/ProductLine';
 
 export type ReelSource = 'instagram' | 'tiktok' | 'youtube' | 'pexels' | 'proday';
 
@@ -22,12 +23,14 @@ export type PlaybackReel = {
   failed?: boolean;
 };
 
-export const REEL_UNIVERSE_LABEL: Record<ProductLineId, string> = {
+export const REEL_UNIVERSE_LABEL: Record<ProductLineId, string> = withProFamilyRecord({
   homme: 'Foot masculin',
   woman: 'Foot féminin',
+  amateur: 'Coach amateur',
+  supporter: 'Tribune supporter',
   pro: 'Foot pro & staff',
   sante: 'Santé & performance',
-};
+});
 
 export const REEL_SOURCE_LABEL: Record<ReelSource, string> = {
   instagram: 'Instagram',

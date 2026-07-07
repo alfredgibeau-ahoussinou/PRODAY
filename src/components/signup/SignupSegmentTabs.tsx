@@ -26,9 +26,9 @@ export function SignupSegmentTabs<T extends string>({
   onSelect,
   compact,
 }: SignupSegmentTabsProps<T>) {
-  const { colors: c, isWomanSignup } = useSignupFlowTheme();
+  const { colors: c } = useSignupFlowTheme();
   const styles = useMemo(() => createStyles(c), [c]);
-  const accent = isWomanSignup ? c.brand : c.ink;
+  const accent = c.accent;
 
   return (
     <View style={[styles.wrap, compact && styles.wrapCompact]}>

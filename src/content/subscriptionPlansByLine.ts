@@ -1,4 +1,5 @@
 import type { ProductLineId } from '../models/ProductLine';
+import { withProFamilyRecord } from '../models/ProductLine';
 import type { UserRole } from '../models/User';
 import { getUniverseIdentity } from './brandExperience';
 import {
@@ -16,9 +17,12 @@ type PlanPresentationPatch = Partial<
 };
 
 /** Plans éligibles par univers (aligné site web). */
-export const PLAN_IDS_BY_LINE: Record<ProductLineId, SubscriptionPlanId[]> = {
+export const PLAN_IDS_BY_LINE: Record<ProductLineId, SubscriptionPlanId[]> =
+  withProFamilyRecord({
   homme: ['player_plus'],
   woman: ['player_plus'],
+  amateur: ['player_plus', 'coach_pro'],
+  supporter: ['player_plus'],
   pro: [
     'recruiter_pro',
     'coach_pro',
@@ -28,12 +32,12 @@ export const PLAN_IDS_BY_LINE: Record<ProductLineId, SubscriptionPlanId[]> = {
     'sponsor_pro',
   ],
   sante: ['physio_pro'],
-};
+});
 
 const LINE_PLAN_PATCHES: Record<
   ProductLineId,
   Partial<Record<SubscriptionPlanId, PlanPresentationPatch>>
-> = {
+> = withProFamilyRecord({
   homme: {
     player_plus: {
       label: 'Joueur Plus',
@@ -71,6 +75,62 @@ const LINE_PLAN_PATCHES: Record<
         'Mise en avant dans les recherches F',
         'Alertes nouvelles annonces Mercato F',
         'Export PDF optionnel',
+      ],
+    },
+  },
+  amateur: {
+    player_plus: {
+      label: 'Joueur Amateur',
+      tagline: 'CV joueur, Pulse et Mercato Amateur',
+      mercatoQuotaLabel: 'Candidatures Mercato Amateur',
+      freeIncludes: [
+        'Profil, Pulse et CV foot en ligne',
+        'Galerie et stats saison',
+        'Mercato Amateur en lecture',
+        '1 candidature Mercato Amateur / mois',
+        'Calendrier, covoiturage et RSVP équipe',
+      ],
+      proIncludes: [
+        'Candidatures Mercato Amateur illimitées',
+        'Mise en avant auprès des clubs locaux',
+        'Alertes nouvelles annonces Mercato Amateur',
+        'Export PDF optionnel',
+      ],
+    },
+    coach_pro: {
+      label: 'Coach Amateur',
+      tagline: 'Banc technique — effectif et Mercato local',
+      mercatoQuotaLabel: 'Messages Mercato Amateur',
+      freeIncludes: [
+        'Profil coach amateur vérifié',
+        '1 équipe liée',
+        '5 messages Mercato Amateur / mois',
+        'Annonces Mercato local en lecture',
+      ],
+      proIncludes: [
+        'Équipes illimitées',
+        'Messages Mercato Amateur illimités',
+        'Annonces Mercato local actives',
+        'Statistiques effectif',
+      ],
+    },
+  },
+  supporter: {
+    player_plus: {
+      label: 'Supporter Plus',
+      tagline: 'Tribune numérique — matchs, réels et fil',
+      freeIncludes: [
+        'Profil supporter et clubs favoris',
+        'Calendrier matchs en lecture',
+        'Fil communautaire et réactions',
+        'Reels et moments forts',
+        'Messagerie communauté limitée',
+      ],
+      proIncludes: [
+        'Fil et réactions illimités',
+        'Alertes matchs clubs favoris',
+        'Badge supporter visible',
+        'Accès prioritaire contenus live',
       ],
     },
   },
@@ -213,7 +273,7 @@ const LINE_PLAN_PATCHES: Record<
       ],
     },
   },
-};
+});
 
 function applyLinePatch(
   base: SubscriptionPlanDefinition,

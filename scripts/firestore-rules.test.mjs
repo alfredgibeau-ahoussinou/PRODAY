@@ -100,6 +100,26 @@ async function run() {
     })
   );
 
+  await assertFails(
+    updateDoc(doc(aliceDb, 'users/alice'), {
+      profile: {
+        club_id: 'club1',
+        season_stats: { matches: 99, goals: 99, assists: 99 },
+      },
+      updated_at: new Date(),
+    })
+  );
+
+  await assertSucceeds(
+    updateDoc(doc(bobDb, 'users/alice'), {
+      profile: {
+        club_id: 'club1',
+        season_stats: { matches: 12, goals: 5, assists: 3 },
+      },
+      updated_at: new Date(),
+    })
+  );
+
   // Rapport verrouillé : joueur refusé
   await testEnv.withSecurityRulesDisabled(async (ctx) => {
     const db = ctx.firestore();
@@ -499,6 +519,52 @@ async function run() {
     })
   );
 
+  // --- Inbox tuteur guardian_notifications ---
+  await assertSucceeds(
+    addDoc(collection(bobDb, 'guardian_notifications'), {
+      guardian_email: 'parent@test.com',
+      child_uid: 'minor-linked',
+      event_id: 'ev-guardian-1',
+      event_title: 'Entraînement mercredi',
+      event_city: 'Lyon',
+      type: 'minor_invite',
+      source: 'team_events',
+      read_at: null,
+      created_at: new Date(),
+    })
+  );
+
+  await assertSucceeds(
+    getDocs(
+      query(
+        collection(parentDb, 'guardian_notifications'),
+        where('guardian_email', '==', 'parent@test.com')
+      )
+    )
+  );
+
+  await assertFails(
+    getDocs(
+      query(
+        collection(aliceDb, 'guardian_notifications'),
+        where('guardian_email', '==', 'parent@test.com')
+      )
+    )
+  );
+
+  const parentGuardSnap = await getDocs(
+    query(
+      collection(parentDb, 'guardian_notifications'),
+      where('guardian_email', '==', 'parent@test.com')
+    )
+  );
+  const parentGuardDoc = parentGuardSnap.docs[0];
+  await assertSucceeds(
+    updateDoc(doc(parentDb, 'guardian_notifications', parentGuardDoc.id), {
+      read_at: new Date(),
+    })
+  );
+
   // --- Sponsors : métriques offres & vues profil ---
   await testEnv.withSecurityRulesDisabled(async (ctx) => {
     const db = ctx.firestore();
@@ -638,6 +704,30 @@ async function run() {
     })
   );
 
+  // --- Inscription supporter ---
+  const fanDb = testEnv.authenticatedContext('fan1').firestore();
+
+  await assertSucceeds(
+    setDoc(doc(fanDb, 'users/fan1'), {
+      role: 'supporter',
+      verification_status: 'NOT_REQUIRED',
+      display_name: 'Fan Test',
+      email: 'fan@test.com',
+      profile: { job_title: 'Supporter' },
+      product_line: 'supporter',
+      is_active: true,
+      created_at: new Date(),
+      updated_at: new Date(),
+    })
+  );
+
+  await assertFails(
+    setDoc(doc(testEnv.authenticatedContext('fan2').firestore(), 'users/fan2'), {
+      role: 'invalid_role',
+      verification_status: 'NOT_REQUIRED',
+    })
+  );
+
   // --- Journal activité joueur ---
   await assertSucceeds(
     setDoc(doc(carolDb, 'player_activities/act1'), {
@@ -705,6 +795,97 @@ async function run() {
 
   await assertFails(
     getDoc(doc(erinDb, 'users/carol/health_program_progress/mental'))
+  );
+
+  // --- Memberships : joueur crée demande pending ---
+  await testEnv.withSecurityRulesDisabled(async (ctx) => {
+    const db = ctx.firestore();
+    await setDoc(doc(db, 'users/player1'), {
+      role: 'player',
+      profile: {},
+      is_verified: true,
+    });
+    await setDoc(doc(db, 'users/coach1'), {
+      role: 'coach',
+      profile: { club_id: 'club-mem' },
+      is_verified: true,
+    });
+    await setDoc(doc(db, 'clubs/club-mem'), {
+      name: 'Club Mem',
+      owner_uid: 'coach1',
+      verified: false,
+    });
+  });
+
+  const playerDb = testEnv.authenticatedContext('player1').firestore();
+  const coachDb = testEnv.authenticatedContext('coach1').firestore();
+
+  await assertFails(
+    setDoc(doc(testEnv.authenticatedContext('player-stats').firestore(), 'users/player-stats'), {
+      role: 'player',
+      verification_status: 'PENDING',
+      email: 'stats@test.com',
+      profile: { season_stats: { matches: 99, goals: 99, assists: 99 } },
+      created_at: new Date(),
+      updated_at: new Date(),
+    })
+  );
+
+  await assertSucceeds(
+    setDoc(doc(playerDb, 'memberships/mem1'), {
+      club_id: 'club-mem',
+      team_id: 'unassigned',
+      player_uid: 'player1',
+      player_name: 'Joueur Test',
+      status: 'pending',
+      requested_at: new Date(),
+      created_at: new Date(),
+      updated_at: new Date(),
+    })
+  );
+
+  await assertSucceeds(getDoc(doc(coachDb, 'memberships/mem1')));
+
+  await assertSucceeds(
+    updateDoc(doc(coachDb, 'memberships/mem1'), {
+      status: 'active',
+      validated_by_uid: 'coach1',
+      validated_at: new Date(),
+      updated_at: new Date(),
+    })
+  );
+
+  // --- Memberships : staff invite joueur ---
+  await assertSucceeds(
+    setDoc(doc(coachDb, 'memberships/mem-invite'), {
+      club_id: 'club-mem',
+      team_id: 'unassigned',
+      player_uid: 'player2',
+      player_name: 'Joueur Invité',
+      status: 'pending',
+      invited_by_uid: 'coach1',
+      requested_at: new Date(),
+      created_at: new Date(),
+      updated_at: new Date(),
+    })
+  );
+
+  // --- Users : joueur ne peut pas modifier profile.club_id ---
+  await testEnv.withSecurityRulesDisabled(async (ctx) => {
+    const db = ctx.firestore();
+    await setDoc(doc(db, 'users/player-club'), {
+      role: 'player',
+      profile: { club_id: null },
+      is_verified: true,
+    });
+  });
+
+  const playerClubDb = testEnv.authenticatedContext('player-club').firestore();
+  await assertFails(
+    updateDoc(doc(playerClubDb, 'users/player-club'), {
+      profile: { club_id: 'club-mem' },
+      updated_at: new Date(),
+    })
   );
 
   console.log('✓ Tous les scénarios rules-unit-testing ont réussi.');

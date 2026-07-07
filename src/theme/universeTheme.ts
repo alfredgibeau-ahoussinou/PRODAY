@@ -1,7 +1,11 @@
 import { colors as baseColors } from './designTokens';
 import type { ProductLineId } from '../models/ProductLine';
 import { womanColorOverrides } from './prodayWomanTheme';
+import { amateurColorOverrides } from './prodayAmateurTheme';
+import { supporterColorOverrides } from './prodaySupporterTheme';
 import { santeColorOverrides } from './prodaySanteTheme';
+import type { PlayerSegment } from '../utils/playerSegment';
+import { getThemedColorsForSegment } from './playerSegmentTheme';
 
 /** Palette ProDay Pro — bleu pro, distinct Homme (noir) et Woman (rose). */
 export const proColorOverrides = {
@@ -61,9 +65,19 @@ export const hommeColorOverrides = {
   gradientEnd: '#15803D',
 } as const;
 
-export function getThemedColorsForLine(line: ProductLineId): AppColors {
+export function getThemedColorsForLine(
+  line: ProductLineId,
+  segment?: PlayerSegment | null,
+): AppColors {
+  if (segment && (line === 'amateur' || line === 'pro_player')) {
+    return getThemedColorsForSegment(line, segment);
+  }
   if (line === 'woman') return { ...baseColors, ...womanColorOverrides };
-  if (line === 'pro') return { ...baseColors, ...proColorOverrides };
+  if (line === 'amateur') return { ...baseColors, ...amateurColorOverrides };
+  if (line === 'supporter') return { ...baseColors, ...supporterColorOverrides };
+  if (line === 'pro' || line === 'pro_player' || line === 'pro_club' || line === 'pro_staff') {
+    return { ...baseColors, ...proColorOverrides };
+  }
   if (line === 'sante') return { ...baseColors, ...santeColorOverrides };
   return { ...baseColors, ...hommeColorOverrides };
 }
@@ -74,6 +88,8 @@ export function getThemedColors(isWoman: boolean): AppColors {
 }
 
 export { womanColorOverrides, womanGradients } from './prodayWomanTheme';
+export { amateurColorOverrides, amateurGradients } from './prodayAmateurTheme';
+export { supporterColorOverrides, supporterGradients } from './prodaySupporterTheme';
 export { santeColorOverrides, santeGradients } from './prodaySanteTheme';
 
 export const proGradients = {

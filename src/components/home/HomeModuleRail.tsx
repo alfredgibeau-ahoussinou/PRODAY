@@ -71,8 +71,8 @@ export const HomeModuleRail: React.FC<HomeModuleRailProps> = ({
           </ProDayText>
           {mod.id === 'recrutement' && liveRecruitment ? (
             <View style={styles.live}>
-              <LivePulseDot active size={6} color={colors.success} />
-              <Text style={[styles.liveText, { color: colors.success }]}>Live</Text>
+              <LivePulseDot active size={6} color={colors.accent} />
+              <Text style={[styles.liveText, { color: colors.accent }]}>Live</Text>
             </View>
           ) : null}
         </PressableSpring>

@@ -1,12 +1,17 @@
 import React, { createContext, useCallback, useContext, useState } from 'react';
 import { FirstLaunchIntro } from '../components/branding/FirstLaunchIntro';
 import type { IntroSpaceChoice } from '../components/branding/intro/BrandRevealIntro';
+import { resolveIntroExitAction } from '../components/branding/intro/launchIntroFlow';
+import {
+  carouselPoleSignupPresetRole,
+  carouselPoleToProductLine,
+} from '../models/CarouselPole';
 import { useAppLaunchIntro } from '../hooks/useAppLaunchIntro';
 import { useProductLine } from './ProductLineContext';
+import { useAuth } from './AuthContext';
 import { StyleSheet, View } from 'react-native';
 
 interface LaunchIntroContextValue {
-  /** Rouvre l'écran Homme / Woman / Pro. */
   openSpacePicker: () => void;
 }
 
@@ -16,28 +21,40 @@ export const LaunchIntroProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const { visible: firstLaunchVisible, playKey, markIntroComplete } = useAppLaunchIntro();
-  const { enterHommeSpace, enterWomanSpace, enterProSpace, enterSanteSpace } = useProductLine();
+  const { profile } = useAuth();
+  const { productLine, setProductLine, setProSignupPresetRole } = useProductLine();
   const [manualOpen, setManualOpen] = useState(false);
+  const [pickerSession, setPickerSession] = useState(0);
 
   const visible = firstLaunchVisible || manualOpen;
 
   const openSpacePicker = useCallback(() => {
+    setPickerSession((session) => session + 1);
     setManualOpen(true);
   }, []);
 
+  const closeSpacePicker = useCallback(() => {
+    setManualOpen(false);
+  }, []);
+
   const onChooseSpace = useCallback(
-    (space: IntroSpaceChoice) => {
-      void (async () => {
-        if (space === 'woman') await enterWomanSpace();
-        else if (space === 'pro') await enterProSpace();
-        else if (space === 'sante') await enterSanteSpace();
-        else await enterHommeSpace();
-        await markIntroComplete();
-        setManualOpen(false);
-      })();
+    async (pole: IntroSpaceChoice) => {
+      const preset = carouselPoleSignupPresetRole(pole);
+      await setProSignupPresetRole(preset);
+      const line = carouselPoleToProductLine(pole);
+      await setProductLine(line);
     },
-    [enterHommeSpace, enterWomanSpace, enterProSpace, enterSanteSpace, markIntroComplete]
+    [setProductLine, setProSignupPresetRole],
   );
+
+  const onIntroExitComplete = useCallback(() => {
+    const action = resolveIntroExitAction(manualOpen);
+    if (action === 'close-manual') {
+      setManualOpen(false);
+      return;
+    }
+    void markIntroComplete();
+  }, [manualOpen, markIntroComplete]);
 
   return (
     <LaunchIntroContext.Provider value={{ openSpacePicker }}>
@@ -45,9 +62,14 @@ export const LaunchIntroProvider: React.FC<{ children: React.ReactNode }> = ({
         {children}
         {visible ? (
           <FirstLaunchIntro
-            key={manualOpen ? 'manual' : playKey}
+            key={manualOpen ? `manual-${pickerSession}` : `first-${playKey}`}
             onChooseSpace={onChooseSpace}
+            onExitComplete={onIntroExitComplete}
+            onDismiss={manualOpen ? closeSpacePicker : undefined}
+            initialLine={manualOpen ? productLine : undefined}
+            initialRole={manualOpen ? profile?.role : undefined}
             introTour={firstLaunchVisible && !manualOpen}
+            skipReveal={manualOpen}
           />
         ) : null}
       </View>

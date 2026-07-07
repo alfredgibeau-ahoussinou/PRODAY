@@ -122,7 +122,7 @@ export const profileService = {
         ? 'PENDING'
         : 'NOT_REQUIRED';
 
-    const registrationLine: ProductLineId = options?.product_line ?? 'homme';
+    const registrationLine: ProductLineId = options?.product_line ?? 'amateur';
 
     const newUser: User = {
       uid,

@@ -9,7 +9,7 @@ import { SignupStepLayout } from './SignupStepLayout';
 import { SignupFooterButton } from './SignupFooterButton';
 import type { SignupForm } from './useSignupForm';
 import { suggestAppSpaceFromAge } from './signupFlowConfig';
-import { suggestFeminineAppSpaceFromAge } from './signupWomanConfig';
+import { suggestFeminineAppSpaceFromAge } from '../../utils/signupAppSpace';
 import { getPlayerStepMeta } from './signupPlayerStepMeta';
 import { useTranslation } from '../../context/LocaleContext';
 import { APP_SPACE_LABELS } from '../../models/AppSpace';
@@ -39,17 +39,18 @@ export const SignupSportStep: React.FC<SignupSportStepProps> = ({
   onBack,
 }) => {
   const categoryOptions = useMemo(
-    () => [...defaultCategoriesForAppSpace(form.appSpace, form.productLine)],
-    [form.appSpace, form.productLine]
+    () => [...defaultCategoriesForAppSpace(form.appSpace, form.productLine, form.gender)],
+    [form.appSpace, form.productLine, form.gender]
   );
 
+  const isFeminineSpace = form.gender === 'women';
   const suggestedSpace = useMemo(() => {
     const parsed = parseInt(form.age.replace(/\D/g, ''), 10);
     if (!Number.isFinite(parsed) || parsed < 5) return null;
-    return form.isWomanProduct
+    return isFeminineSpace
       ? suggestFeminineAppSpaceFromAge(parsed)
       : suggestAppSpaceFromAge(parsed);
-  }, [form.age, form.isWomanProduct]);
+  }, [form.age, isFeminineSpace]);
 
   useEffect(() => {
     if (form.category && !categoryOptions.includes(form.category)) {

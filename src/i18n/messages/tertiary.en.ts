@@ -89,7 +89,12 @@ export const TERTIARY_EN: MessageCatalog = {
   'signup.form.guardianPlaceholder': 'Parent or legal guardian',
   'signup.form.guardianConsentWoman': 'I confirm I am a minor and my guardian accepts ProDay account supervision.',
   'signup.form.guardianConsentMan': 'I confirm I am a minor and my guardian accepts ProDay account supervision.',
+  'signup.form.selectGender': 'Select your gender to continue',
   'signup.form.selectSpace': 'Select a ProDay space to continue',
+  'signup.form.gender.title': 'Your gender',
+  'signup.form.gender.men': 'Male',
+  'signup.form.gender.women': 'Female',
+  'signup.form.gender.minor': 'Minor (under 18)',
   'signup.form.fixFields': 'Fix the highlighted fields before creating the account.',
   'signup.form.continue': 'Continue',
   'signup.form.proProfile': 'Professional profile',
@@ -528,6 +533,8 @@ export const TERTIARY_EN: MessageCatalog = {
   'signup.welcome.ctaWoman': 'Start my Woman signup',
   'signup.welcome.ctaSante': 'Continue on Pro Day Health',
   'signup.welcome.ctaPro': 'Continue on Pro Day Pro',
+  'signup.welcome.ctaAmateur': 'Continue on Pro Day Amateur',
+  'signup.welcome.ctaSupporter': 'Continue on Pro Day Supporter',
   'signup.welcome.ctaMan': 'Start on {{brand}}',
   'signup.welcome.playerWoman.title': 'Player profile',
   'signup.welcome.playerWoman.subtitle':
@@ -536,6 +543,12 @@ export const TERTIARY_EN: MessageCatalog = {
   'signup.welcome.playerMan.subtitle':
     'Online CV, Mercato M, matches and visibility with clubs.',
   'signup.welcome.practitioner.title': 'Practitioner profile',
+  'signup.welcome.coachAmateur.title': 'Amateur coach profile',
+  'signup.welcome.coachAmateur.subtitle':
+    'Squad, call-ups and local transfer market — grassroots and regional coaching.',
+  'signup.welcome.playerAmateur.title': 'Amateur player profile',
+  'signup.welcome.playerAmateur.subtitle':
+    'Online CV, Amateur transfer market, matches and carpool — men\'s or women\'s football.',
   'signup.welcome.practitioner.subtitle':
     'Appointment calendar, patient messaging and visibility with clubs and players.',
 

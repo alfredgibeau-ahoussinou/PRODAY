@@ -46,7 +46,7 @@ export const PhysioCarePanel: React.FC<PhysioCarePanelProps> = ({
 }) => {
   const { colors: c, productLine } = useAppTheme();
   const styles = useMemo(() => createStyles(c), [c]);
-  const isWoman = productLine === 'woman';
+  
   const [physios, setPhysios] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');

@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from 'react';
-import type { UserRole } from '../../models/User';
+import type { Gender, UserRole } from '../../models/User';
 import { ROLES_REQUIRING_VERIFICATION } from '../../models/User';
 import { DEFAULT_APP_SPACE, type AppSpaceId } from '../../models/AppSpace';
 import { DEFAULT_PARENTAL_SETTINGS } from '../../models/ParentalSettings';
@@ -37,11 +37,15 @@ import {
   medicalIdToCanonicalLabel,
   resolveMedicalSpecialtyId,
 } from './signupMedicalI18n';
-import { suggestFeminineAppSpaceFromAge, getWomanSignupPhases } from './signupWomanConfig';
-import { getManSignupPhases } from './signupManConfig';
+import { suggestFeminineAppSpaceFromAge } from '../../utils/signupAppSpace';
+import { getAmateurSignupPhases } from './signupAmateurConfig';
 import { getProSignupPhases } from './signupProConfig';
+import { getProPlayerSignupPhases } from './signupProPlayerConfig';
+import { getAmateurSignupPhases } from './signupAmateurConfig';
+import { getSupporterSignupPhases } from './signupSupporterConfig';
 import { getSanteSignupPhases } from './signupSanteConfig';
-import { isRoleAllowedForProductLine } from '../../content/universeRoles';
+import { isRoleAllowedForProductLine, resolveSignupProductLine } from '../../content/universeRoles';
+import { isProFamilyLine } from '../../utils/productLineResolution';
 import type { ProductLineId } from '../../models/ProductLine';
 import { useProductLine } from '../../context/ProductLineContext';
 import { useTranslation } from '../../context/LocaleContext';
@@ -55,24 +59,28 @@ export function useSignupForm(initial?: {
   productLine?: ProductLineId;
   initialRole?: UserRole;
 }) {
-  const { setProductLine } = useProductLine();
+  const { setProductLine, proSignupPresetRole } = useProductLine();
   const { t } = useTranslation();
-  const productLine: ProductLineId = initial?.productLine ?? 'homme';
-  const isWomanProduct = productLine === 'woman';
-  const isProProduct = productLine === 'pro';
+  const productLine: ProductLineId = initial?.productLine ?? 'amateur';
+  const isProPlayerSignup = productLine === 'pro_player';
+  const isProProduct = isProFamilyLine(productLine);
+  const isAmateurProduct = productLine === 'amateur';
+  const isSupporterProduct = productLine === 'supporter';
   const isSanteProduct = productLine === 'sante';
-  const isStaffProduct = isProProduct || isSanteProduct;
 
   const defaultRole: UserRole =
     initial?.initialRole ??
-    (isSanteProduct ? 'physio' : isProProduct ? 'coach' : 'player');
+    proSignupPresetRole ??
+    (isSanteProduct ? 'physio' : isSupporterProduct ? 'supporter' : isProPlayerSignup ? 'player' : isProProduct ? 'coach' : 'player');
 
   const [role, setRoleState] = useState<UserRole>(defaultRole);
   const [draftRole, setDraftRole] = useState<UserRole>(defaultRole);
-  const [appSpace, setAppSpaceState] = useState<AppSpaceId>(
-    isWomanProduct ? 'girls' : DEFAULT_APP_SPACE
-  );
+  const isStaffProduct =
+    isProProduct || isSanteProduct || (isAmateurProduct && draftRole === 'coach');
+  const [appSpace, setAppSpaceState] = useState<AppSpaceId>(DEFAULT_APP_SPACE);
   const [spaceTouched, setSpaceTouched] = useState(false);
+  const [gender, setGenderState] = useState<Gender>('men');
+  const [genderTouched, setGenderTouched] = useState(false);
   const [parentalRequired, setParentalRequired] = useState(false);
   const [currentPageId, setCurrentPageId] = useState<SignupPageId>('welcome');
   const [accountCreated, setAccountCreated] = useState(false);
@@ -129,11 +137,13 @@ export function useSignupForm(initial?: {
   const currentPage = steps[pageIndex] ?? 'welcome';
   const stepLabel = getSignupPageLabel(currentPage, t);
   const phases = useMemo(() => {
-    if (isWomanProduct) return getWomanSignupPhases(t);
     if (isSanteProduct) return getSanteSignupPhases(t);
+    if (isSupporterProduct) return getSupporterSignupPhases(t);
+    if (isAmateurProduct) return getAmateurSignupPhases(t);
+    if (isProPlayerSignup) return getProPlayerSignupPhases(t);
     if (isProProduct) return getProSignupPhases(t);
-    return getManSignupPhases(t);
-  }, [isWomanProduct, isSanteProduct, isProProduct, t]);
+    return getAmateurSignupPhases(t);
+  }, [isSanteProduct, isSupporterProduct, isAmateurProduct, isProPlayerSignup, isProProduct, t]);
   const phaseIndex = getPhaseIndex(flowKind, currentPage);
   const currentPhase = getCurrentPhase(currentPage);
   const needsDocument = ROLES_REQUIRING_VERIFICATION.includes(role);
@@ -178,6 +188,8 @@ export function useSignupForm(initial?: {
   const resetPlayerFields = useCallback(() => {
     setAppSpaceState(DEFAULT_APP_SPACE);
     setSpaceTouched(false);
+    setGenderState('men');
+    setGenderTouched(false);
     setParentalRequired(false);
     setPosition('');
     setCategory('');
@@ -198,7 +210,7 @@ export function useSignupForm(initial?: {
 
   const confirmRoleAndContinue = useCallback(() => {
     const nextRole =
-      isWomanProduct || (!isStaffProduct && productLine === 'homme') ? 'player' : draftRole;
+      isProPlayerSignup || (isAmateurProduct && !isStaffProduct) ? 'player' : draftRole;
     if (!isRoleAllowedForProductLine(nextRole, productLine)) {
       setError('Ce profil n’est pas disponible sur cet univers ProDay.');
       return;
@@ -225,9 +237,32 @@ export function useSignupForm(initial?: {
     clearErrors();
   }, [clearErrors]);
 
+  /** Sélection du genre — réinitialise l'espace foot pour proposer le bon groupe. */
+  const setGender = useCallback((nextGender: Gender) => {
+    setGenderState(nextGender);
+    setGenderTouched(true);
+    setAppSpaceState((current) => {
+      if (nextGender === 'minor') {
+        if (isYouthSpace(current)) return current;
+        return 'boys';
+      }
+      if (nextGender === 'women') {
+        return current === 'men' || current === 'boys' ? 'women' : current;
+      }
+      return current === 'women' || current === 'girls' ? 'men' : current;
+    });
+    setSpaceTouched(nextGender === 'minor');
+    setCategory('');
+    clearErrors();
+  }, [clearErrors]);
+
+  function isYouthSpace(space: AppSpaceId): boolean {
+    return space === 'boys' || space === 'girls' || space === 'under_u13';
+  }
+
   const allowedCategories = useMemo(
-    () => [...defaultCategoriesForAppSpace(appSpace, productLine)],
-    [appSpace, productLine]
+    () => [...defaultCategoriesForAppSpace(appSpace, productLine, gender)],
+    [appSpace, productLine, gender]
   );
 
   const buildIntegrityInput = useCallback(
@@ -316,12 +351,17 @@ export function useSignupForm(initial?: {
   );
 
   const validateProgram = () => {
-    if (!spaceTouched) {
-      setFieldErrors({ appSpace: t('signup.form.selectSpace') });
-      return false;
+    const errs: Record<string, string> = {};
+    const needsGender =
+      isAmateurProduct || (isProProduct && role === 'player');
+    if (needsGender && !genderTouched) {
+      errs.gender = t('signup.form.selectGender');
     }
-    setFieldErrors({});
-    return true;
+    if (!spaceTouched) {
+      errs.appSpace = t('signup.form.selectSpace');
+    }
+    setFieldErrors(errs);
+    return Object.keys(errs).length === 0;
   };
 
   const validateAccount = () => {
@@ -557,6 +597,10 @@ export function useSignupForm(initial?: {
     category: category.trim(),
     level: level.trim(),
     age: parsedAge ?? undefined,
+    gender:
+      isAmateurProduct || isProPlayerSignup || (isProProduct && role === 'player')
+        ? gender
+        : undefined,
     season_stats: {
       matches: parseStat(statMatches),
       goals: parseStat(statGoals),
@@ -634,9 +678,14 @@ export function useSignupForm(initial?: {
                             job_title: structureName.trim() || undefined,
                             bio: structureName.trim() || undefined,
                           }
-                        : undefined,
+                        : role === 'supporter'
+                          ? {
+                              job_title: 'Supporter',
+                              bio: displayName.trim() || undefined,
+                            }
+                          : undefined,
           parental_settings: buildParentalSettings(),
-          product_line: productLine,
+          product_line: resolveSignupProductLine(productLine, role),
           ...(role === 'player' ? { app_space: appSpace } : {}),
         };
 
@@ -645,9 +694,10 @@ export function useSignupForm(initial?: {
           : await authService.signUp({ ...common, password });
 
         await refreshProfile();
-        if (isWomanProduct) await setProductLine('woman');
-        else if (isSanteProduct) await setProductLine('sante');
-        else if (isProProduct) await setProductLine('pro');
+        if (isSanteProduct) await setProductLine('sante');
+        else if (isAmateurProduct) await setProductLine('amateur');
+        else if (isSupporterProduct) await setProductLine('supporter');
+        else if (isProProduct) await setProductLine(resolveSignupProductLine(productLine, role));
         setCreatedDisplayName(user.display_name);
         setCreatedWithEmailPassword(!isOAuthCompletion);
         setAccountCreated(true);
@@ -688,8 +738,10 @@ export function useSignupForm(initial?: {
       buildIntegrityInput,
       clearErrors,
       goToPage,
-      isWomanProduct,
+      isProPlayerSignup,
       isProProduct,
+      isAmateurProduct,
+      isSupporterProduct,
       isSanteProduct,
       setProductLine,
     ]
@@ -697,8 +749,10 @@ export function useSignupForm(initial?: {
 
   return {
     productLine,
-    isWomanProduct,
+    isProPlayerSignup,
     isProProduct,
+    isAmateurProduct,
+    isSupporterProduct,
     isSanteProduct,
     isStaffProduct,
     isOAuthCompletion,
@@ -706,6 +760,9 @@ export function useSignupForm(initial?: {
     appSpace,
     setAppSpace,
     spaceTouched,
+    gender,
+    setGender,
+    genderTouched,
     role,
     draftRole,
     setDraftRole: setDraftRoleOnly,

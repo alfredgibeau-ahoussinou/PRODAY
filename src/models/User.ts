@@ -33,8 +33,15 @@ export type UserRole =
   | 'recruiter'
   | 'organizer'
   | 'sponsor'
+  | 'supporter'
   | 'physio';
 export type VerificationStatus = 'PENDING' | 'VERIFIED' | 'REJECTED' | 'NOT_REQUIRED';
+
+/**
+ * Genre / segment — collecté à l'inscription (Amateur et Pro Joueur).
+ * `minor` = mineur (interface jeunesse dédiée).
+ */
+export type Gender = 'men' | 'women' | 'minor';
 
 export interface GeoPoint {
   latitude: number;
@@ -81,6 +88,8 @@ export interface UserProfile {
   position?: string;          // Attaquant, Défenseur, Milieu, Gardien
   category?: string;          // U15, U17, U19, Seniors, Vétérans
   level?: string;             // Départemental, R3, R2, R1, N3, N2, N1
+  /** Genre déclaré à l'inscription — dimension, pas un pôle (cible doc architecture §1.4). */
+  gender?: Gender;
   strong_foot?: 'left' | 'right' | 'both';
   height_cm?: number;
   weight_kg?: number;
@@ -186,6 +195,8 @@ export interface User {
   /** Formule sponsor commerciale (Territorial validé par admin — hors IAP) */
   sponsor_tier?: 'starter' | 'territorial' | 'national';
   sponsor_territorial_approved_at?: Date;
+  /** Validation admin pour publication campagnes sponsor. */
+  sponsor_approved?: boolean;
 
   /** Vérifications joueur (identité, licence club, etc.) */
   player_verification?: PlayerVerificationState;

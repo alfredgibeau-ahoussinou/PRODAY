@@ -2,7 +2,8 @@ import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AnimatedModalShell } from '../motion/AnimatedModalShell';
-import { Icon, type IconName } from '../ui/Icon';
+import { Icon } from '../ui/Icon';
+import { resolveTabIcon } from './tabBarShared';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { getTabShortLabel } from '../../content/poleExperience';
 import { useTranslation } from '../../context/LocaleContext';
@@ -21,7 +22,6 @@ type TabOverflowSheetProps = {
   onClose: () => void;
   tabs: MainTabId[];
   activeTab: MainTabId;
-  tabIcons: Record<MainTabId, IconName>;
   productLine: ProductLineId;
   role?: UserRole | null;
   onSelect: (tab: MainTabId) => void;
@@ -33,7 +33,6 @@ export const TabOverflowSheet: React.FC<TabOverflowSheetProps> = ({
   onClose,
   tabs,
   activeTab,
-  tabIcons,
   productLine,
   role,
   onSelect,
@@ -78,7 +77,7 @@ export const TabOverflowSheet: React.FC<TabOverflowSheetProps> = ({
               >
                 <View style={styles.tileIcon}>
                   <Icon
-                    name={tabIcons[tab]}
+                    name={resolveTabIcon(tab, role, productLine)}
                     size={28}
                     color={active ? accent : colors.textMuted}
                     variant={active ? 'filled' : 'outline'}

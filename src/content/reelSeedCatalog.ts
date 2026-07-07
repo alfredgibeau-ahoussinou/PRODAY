@@ -1,4 +1,5 @@
 import type { ProductLineId } from '../models/ProductLine';
+import { withProFamilyRecord } from '../models/ProductLine';
 import type { ReelSource } from './footballReels';
 import type { ReelThemeId } from './reelThemes';
 import type { UserRole } from '../models/User';
@@ -21,12 +22,14 @@ export type ReelSeed = {
 };
 
 /** Catalogue statique vide — le feed est alimenté par les acteurs ProDay (Firestore). */
-export const REEL_SEEDS: Record<ProductLineId, ReelSeed[]> = {
+export const REEL_SEEDS: Record<ProductLineId, ReelSeed[]> = withProFamilyRecord({
   homme: [],
   woman: [],
+  amateur: [],
+  supporter: [],
   pro: [],
   sante: [],
-};
+});
 
 export type ReelPoleId = 'foot' | 'mercato' | 'sante';
 

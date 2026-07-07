@@ -196,7 +196,7 @@ function createStyles(c: AppColors) {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: c.successBg,
+    backgroundColor: c.accentSoft,
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: radius.pill,
@@ -205,8 +205,8 @@ function createStyles(c: AppColors) {
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: c.success,
+    backgroundColor: c.accent,
   },
-  liveText: { fontSize: 9, fontWeight: '800', color: c.success },
+  liveText: { fontSize: 9, fontWeight: '800', color: c.accent },
 });
 }

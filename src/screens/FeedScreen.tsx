@@ -43,10 +43,10 @@ interface FeedScreenProps {
 
 function roleLabelForLine(
   role: UserRole,
-  productLine: ProductLineId,
+  isWoman: boolean,
   t: (key: string) => string
 ): string {
-  if (role === 'player' && productLine === 'woman') return t('role.player.woman');
+  if (role === 'player' && isWoman) return t('role.player.woman');
   const key = `role.${role}` as const;
   const value = t(key);
   return value === key ? role : value;
@@ -60,7 +60,7 @@ export const FeedScreen: React.FC<FeedScreenProps> = ({
   onOpenMessages,
 }) => {
   const { t, locale } = useTranslation();
-  const { colors: c, productLine } = useAppTheme();
+  const { colors: c, productLine, isWoman } = useAppTheme();
   const typeFilters = useMemo(() => getFeedTypeFilters(t), [t]);
   const [posts, setPosts] = useState<PlatformFeedPost[]>([]);
   const [loading, setLoading] = useState(true);
@@ -324,7 +324,7 @@ export const FeedScreen: React.FC<FeedScreenProps> = ({
         <Text style={[styles.cardBody, { color: c.textSecondary }]}>{item.body}</Text>
       ) : null}
       <Text style={[styles.meta, { color: c.textMuted }]}>
-        {item.author_name} · {roleLabelForLine(item.author_role, productLine, t)}
+        {item.author_name} · {roleLabelForLine(item.author_role, isWoman, t)}
       </Text>
       {item.type === 'poll' ? renderPoll(item) : null}
     </PressableSpring>

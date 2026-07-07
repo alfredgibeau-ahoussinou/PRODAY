@@ -46,4 +46,16 @@ export const SANTE_BRANDING_LOGOS = {
   mark: require('../../assets/branding/logo-sante-mark-transparent.png'),
 } as const;
 
+/** Pro Day Amateur — picto P orange. Libellé via `AmateurLogo`. */
+export const AMATEUR_BRANDING_LOGOS = {
+  picto: require('../../assets/branding/logo-amateur-picto.png'),
+  mark: require('../../assets/branding/logo-amateur-mark-transparent.png'),
+} as const;
+
+/** Pro Day Supporter — picto P violet. Libellé via `SupporterLogo`. */
+export const SUPPORTER_BRANDING_LOGOS = {
+  picto: require('../../assets/branding/logo-supporter-picto.png'),
+  mark: require('../../assets/branding/logo-supporter-mark-transparent.png'),
+} as const;
+
 export type BrandingLogoKey = keyof typeof BRANDING_LOGOS;

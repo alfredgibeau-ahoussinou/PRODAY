@@ -8,7 +8,7 @@ export type SponsorMainTabId =
   | 'marque'
   | 'tarifs';
 
-export type SponsorContentSegment = 'messages' | 'prospects';
+export type SponsorContentSegment = 'messages' | 'prospects' | 'contacts' | 'contract';
 
 export type SponsorNavSectionId = 'pilotage' | 'commercial' | 'reseau' | 'marque';
 
@@ -90,11 +90,29 @@ export const SPONSOR_NAV_ITEMS: SponsorNavItem[] = [
     badgeKey: 'prospects',
   },
   {
+    id: 'contacts',
+    tab: 'reseau',
+    segment: 'contacts',
+    label: 'Contacts',
+    description: 'Clubs partenaires · activation terrain',
+    icon: 'handshake',
+    section: 'reseau',
+  },
+  {
     id: 'marque',
     tab: 'marque',
     label: 'Marque & compte',
     description: 'Identité, abonnement, légal',
     icon: 'business',
+    section: 'marque',
+  },
+  {
+    id: 'contract',
+    tab: 'marque',
+    segment: 'contract',
+    label: 'Contrat',
+    description: 'Formule et conditions commerciales',
+    icon: 'document',
     section: 'marque',
   },
 ];
@@ -129,6 +147,8 @@ const PAGE_META: Record<SponsorMainTabId, { title: string; subtitle: string }> =
 const SEGMENT_META: Partial<Record<SponsorContentSegment, { title: string; subtitle: string }>> = {
   messages: { title: 'Messages', subtitle: 'Conversations avec les clubs' },
   prospects: { title: 'Prospects', subtitle: 'Clubs recommandés à contacter' },
+  contacts: { title: 'Contacts', subtitle: 'Clubs partenaires · activation terrain' },
+  contract: { title: 'Contrat', subtitle: 'Formule et conditions commerciales' },
 };
 
 export function resolveSponsorPageMeta(

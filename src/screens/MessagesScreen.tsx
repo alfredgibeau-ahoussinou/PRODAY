@@ -50,8 +50,7 @@ export const MessagesScreen: React.FC = () => {
   const [networkProfileUser, setNetworkProfileUser] = useState<User | null>(null);
   const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set());
 
-  const { productLine } = useThemedScreen();
-  const isWoman = productLine === 'woman';
+  const { productLine, isWoman } = useThemedScreen();
 
   const mustVerify =
     profile &&

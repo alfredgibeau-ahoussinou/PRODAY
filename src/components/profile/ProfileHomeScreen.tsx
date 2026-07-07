@@ -35,7 +35,8 @@ import { ProDaySurface } from '../ui/ProDaySurface';
 import { Icon } from '../ui/Icon';
 import { useAppTheme } from '../../context/ProductLineContext';
 import type { AppColors } from '../../theme/universeTheme';
-import type { ProductLineId } from '../../models/ProductLine';
+import { isFemalePresentationForUser } from '../../utils/playerSegment';
+import { isAmateurProductLine, type ProductLineId } from '../../models/ProductLine';
 import type { OrganizerReminderItem } from '../../hooks/useOrganizerReminders';
 import type { SubscriptionUsagePeriod } from '../../models/Subscription';
 import { TAB_BAR_CONTENT_INSET } from '../../navigation/tabBarLayout';
@@ -152,7 +153,7 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
   };
 
   const roleLabel =
-    props.profile.role === 'player' && props.productLine === 'woman'
+    props.profile.role === 'player' && isFemalePresentationForUser(props.profile, props.productLine)
       ? brand.playerLabel
       : getRoleLabel(props.profile.role, t);
 
@@ -368,7 +369,7 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
               </ProfileSection>
             ) : null}
 
-            {(props.productLine === 'homme' || props.productLine === 'woman') &&
+            {isAmateurProductLine(props.productLine) &&
             props.profile.role === 'player' ? (
               <ProfileSection title={t('profile.section.mercatoUniverse')} subtitle={t('profile.section.mercatoUniverseSub')}>
                 <View style={styles.spacePills}>

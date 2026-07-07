@@ -27,9 +27,9 @@ export const PlayerVerificationScreen: React.FC<PlayerVerificationScreenProps> =
   embedded = false,
 }) => {
   const { t } = useTranslation();
-  const { colors: c, productLine, rootStyle } = useThemedScreen();
+  const { colors: c, productLine, isWoman, rootStyle } = useThemedScreen();
   const styles = useMemo(() => createStyles(c), [c]);
-  const isWoman = productLine === 'woman';
+  
   const [loading, setLoading] = useState<PlayerVerificationCheckId | null>(null);
   const [error, setError] = useState<string | null>(null);
   const pv = user.player_verification;

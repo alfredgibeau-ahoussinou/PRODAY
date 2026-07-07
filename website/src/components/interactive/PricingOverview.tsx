@@ -12,6 +12,8 @@ import { ROUTES } from "@/lib/routes";
 const UNIVERSE_LABELS: Record<ProductLineWeb, string> = {
   homme: "Man",
   woman: "Woman",
+  amateur: "Amateur",
+  supporter: "Supporter",
   pro: "Pro",
   sante: "Santé",
 };

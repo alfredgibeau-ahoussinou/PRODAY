@@ -26,9 +26,10 @@ import { useAuth } from '../../context/AuthContext';
 import { ROLES_REQUIRING_VERIFICATION } from '../../models/User';
 import type { ProductLineId } from '../../models/ProductLine';
 import { SignupFlowProvider, useSignupFlowTheme } from './SignupFlowContext';
-import { getWomanLaunchCopy } from './signupWomanConfig';
-import { getManLaunchCopy } from './signupManConfig';
 import { getProLaunchCopy } from './signupProConfig';
+import { getProPlayerLaunchCopy } from './signupProPlayerConfig';
+import { getAmateurLaunchCopy } from './signupAmateurConfig';
+import { getSupporterLaunchCopy } from './signupSupporterConfig';
 import { getSanteLaunchCopy } from './signupSanteConfig';
 import { useTranslation } from '../../context/LocaleContext';
 import type { UserRole } from '../../models/User';
@@ -53,7 +54,8 @@ const SignupFlowInner: React.FC<SignupFlowInnerProps> = ({
   onComplete,
   form,
 }) => {
-  const { colors, isWomanSignup, isProSignup, isSanteSignup } = useSignupFlowTheme();
+  const { colors, isProPlayerSignup, isProSignup, isAmateurSignup, isSupporterSignup, isSanteSignup } =
+    useSignupFlowTheme();
   const { t } = useTranslation();
   const { profile, refreshProfile } = useAuth();
 
@@ -145,31 +147,52 @@ const SignupFlowInner: React.FC<SignupFlowInnerProps> = ({
         ROLES_REQUIRING_VERIFICATION.includes(form.role) ||
         form.role === 'physio';
 
-      const copy = isWomanSignup
-        ? getWomanLaunchCopy(
-            { emailVerificationPending: form.createdWithEmailPassword },
+      const copy = isSanteSignup
+        ? getSanteLaunchCopy(
+            {
+              emailVerificationPending: form.createdWithEmailPassword,
+              verificationPending,
+            },
             t
           )
-        : isSanteSignup
-          ? getSanteLaunchCopy(
-              {
-                emailVerificationPending: form.createdWithEmailPassword,
-                verificationPending,
-              },
+        : isSupporterSignup
+          ? getSupporterLaunchCopy(
+              { emailVerificationPending: form.createdWithEmailPassword },
               t
             )
-          : isProSignup
-            ? getProLaunchCopy(
+          : isAmateurSignup
+            ? getAmateurLaunchCopy(
                 {
                   emailVerificationPending: form.createdWithEmailPassword,
                   verificationPending,
                 },
+                form.role,
                 t
               )
-            : getManLaunchCopy(
-                { emailVerificationPending: form.createdWithEmailPassword },
-                t
-              );
+            : isProPlayerSignup
+              ? getProPlayerLaunchCopy(
+                  {
+                    emailVerificationPending: form.createdWithEmailPassword,
+                    verificationPending,
+                  },
+                  t
+                )
+              : isProSignup
+                ? getProLaunchCopy(
+                    {
+                      emailVerificationPending: form.createdWithEmailPassword,
+                      verificationPending,
+                    },
+                    t
+                  )
+                : getAmateurLaunchCopy(
+                    {
+                      emailVerificationPending: form.createdWithEmailPassword,
+                      verificationPending,
+                    },
+                    form.role,
+                    t
+                  );
 
       content = (
         <SignupSuccessStep
@@ -198,12 +221,16 @@ const SignupFlowWithTheme: React.FC<SignupFlowProps> = (props) => {
   const form = useSignupForm({
     initialEmail: props.initialEmail,
     initialDisplayName: props.initialDisplayName,
-    productLine: props.productLine ?? 'homme',
+    productLine: props.productLine ?? 'amateur',
     initialRole: props.initialRole,
   });
 
   return (
-    <SignupFlowProvider productLine={props.productLine ?? 'homme'} experienceRole={form.role}>
+    <SignupFlowProvider
+      productLine={props.productLine ?? 'amateur'}
+      experienceRole={form.role}
+      signupGender={form.genderTouched ? form.gender : null}
+    >
       <SignupFlowInner {...props} form={form} />
     </SignupFlowProvider>
   );

@@ -22,7 +22,9 @@ export type ProdayNotificationData = {
     | 'weekly_question'
     | 'medical_j1'
     | 'sponsor_offer'
-    | 'player_activity_analysis';
+    | 'player_activity_analysis'
+    | 'guardian_minor_invite';
+  guardianEmail?: string;
   eventId?: string;
   hubChapter?: 'apercu' | 'live' | 'composition' | 'stats' | 'effectif';
   homeTab?: 'season' | 'matches' | 'convocations' | 'centre' | 'stats' | 'feed';
@@ -376,4 +378,31 @@ export async function syncProdayLocalNotifications(
 
   await syncCarpoolAlerts(profile, events);
   await syncNearbyFriendlyMatches(profile, matches);
+}
+
+/** Notification locale immédiate (utilitaire hors synchronisation globale). */
+export async function scheduleProdayLocalNotification(params: {
+  identifier: string;
+  title: string;
+  body: string;
+  data: ProdayNotificationData;
+}): Promise<void> {
+  if (Platform.OS === 'web') return;
+  if (!(await ensurePermission())) return;
+  const Notifications = await notificationsModule();
+  if (!Notifications) return;
+  try {
+    await Notifications.scheduleNotificationAsync({
+      identifier: params.identifier,
+      content: {
+        title: params.title,
+        body: params.body,
+        data: params.data,
+        sound: true,
+      },
+      trigger: null,
+    });
+  } catch {
+    /* no-op */
+  }
 }

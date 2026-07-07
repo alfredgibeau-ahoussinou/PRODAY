@@ -5,16 +5,16 @@ import { isMinorUser } from '../utils/minor';
 import { isMedicalPractitionerRole } from './medicalExperience';
 import { isSponsorRole } from './sponsorExperience';
 
-/** Espace Famille visible sur les pôles joueurs (homme / femme). */
+/** Espace Famille visible sur les lignes joueur (homme / femme / amateur / pro). */
 export function shouldShowFamilyTab(
   profile: User | null | undefined,
   line: ProductLineId,
 ): boolean {
   if (!profile) return false;
-  if (line !== 'homme' && line !== 'woman') return false;
+  if (profile.role !== 'player') return false;
+  if (line !== 'homme' && line !== 'woman' && line !== 'amateur' && line !== 'pro' && line !== 'pro_player') return false;
   if (isSponsorRole(profile.role) || isMedicalPractitionerRole(profile.role)) return false;
-  if (isMinorUser(profile)) return true;
-  return true;
+  return isMinorUser(profile);
 }
 
 /** Insère l’onglet Famille avant Profil. */

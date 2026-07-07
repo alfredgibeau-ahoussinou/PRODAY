@@ -1,0 +1,136 @@
+import React, { useMemo } from 'react';
+import { View, Text, Image, StyleSheet, Platform } from 'react-native';
+import { PRODAY_SUPPORTER_BRAND } from '../models/ProductLine';
+import { SUPPORTER_BRANDING_LOGOS } from '../content/brandingAssets';
+import type { LogoBackground } from './Logo';
+
+const PICTO_ASPECT = 1.78;
+
+export function supporterLogoAspect(width: number): number {
+  const pictoW = width * 0.76;
+  const pictoH = pictoW / PICTO_ASPECT;
+  const line1 = width * 0.1;
+  const line2 = width * 0.115;
+  const tagSize = width * 0.076;
+  const height = pictoH + line1 + line2 + tagSize * 2.2 + width * 0.05;
+  return width / height;
+}
+
+const SUPPORTER_COLORS = {
+  brand: '#5B21B6',
+  accent: '#7C3AED',
+  taglineLight: '#6D28D9',
+  taglineDark: 'rgba(255, 255, 255, 0.92)',
+} as const;
+
+interface SupporterLogoProps {
+  width?: number;
+  background?: LogoBackground;
+  opacity?: number;
+  watermark?: boolean;
+  centered?: boolean;
+}
+
+/** Logo Pro Day Supporter — picto + mot-symbole violet. */
+export const SupporterLogo: React.FC<SupporterLogoProps> = ({
+  width = 200,
+  background = 'light',
+  opacity = 1,
+  watermark = false,
+  centered = false,
+}) => {
+  const onDark = background === 'dark' || background === 'photo';
+
+  const layout = useMemo(() => {
+    const pictoW = width * (watermark ? 1 : 0.76);
+    const pictoH = pictoW / PICTO_ASPECT;
+    const line1 = width * 0.1;
+    const line2 = width * 0.115;
+    const tagSize = width * 0.076;
+    const height = pictoH + line1 + line2 + tagSize * 2.2 + width * 0.05;
+    return { pictoW, pictoH, line1, line2, tagSize, height };
+  }, [width, watermark]);
+
+  if (watermark) {
+    return (
+      <Image
+        source={SUPPORTER_BRANDING_LOGOS.picto}
+        style={{
+          width: layout.pictoW,
+          height: layout.pictoH,
+          opacity: opacity * 0.14,
+        }}
+        resizeMode="contain"
+        accessibilityLabel={PRODAY_SUPPORTER_BRAND.name}
+      />
+    );
+  }
+
+  const shadowSoft = Platform.select({
+    ios: {
+      textShadowColor: onDark ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.9)',
+      textShadowOffset: { width: 0, height: 1 } as const,
+      textShadowRadius: 2,
+    },
+    default: {},
+  });
+
+  return (
+    <View style={[styles.wrap, { width, opacity }, centered && styles.wrapCentered]}>
+      <Image
+        source={SUPPORTER_BRANDING_LOGOS.picto}
+        style={{ width: layout.pictoW, height: layout.pictoH }}
+        resizeMode="contain"
+        accessibilityRole="image"
+        accessibilityLabel={PRODAY_SUPPORTER_BRAND.name}
+      />
+
+      <View style={[styles.wordBlock, { marginTop: width * 0.024 }, centered && styles.wordBlockCentered]}>
+        <Text
+          style={[
+            styles.wordLine1,
+            { fontSize: layout.line1, color: onDark ? '#FFFFFF' : SUPPORTER_COLORS.brand },
+            shadowSoft,
+          ]}
+        >
+          {PRODAY_SUPPORTER_BRAND.logoLine1}
+        </Text>
+        <Text
+          style={[
+            styles.wordLine2,
+            { fontSize: layout.line2, color: SUPPORTER_COLORS.accent },
+            shadowSoft,
+          ]}
+        >
+          {PRODAY_SUPPORTER_BRAND.logoLine2Accent}
+        </Text>
+        <Text
+          style={[
+            styles.tagline,
+            {
+              fontSize: layout.tagSize,
+              color: onDark ? SUPPORTER_COLORS.taglineDark : SUPPORTER_COLORS.taglineLight,
+            },
+          ]}
+        >
+          {PRODAY_SUPPORTER_BRAND.tagline}
+        </Text>
+      </View>
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  wrap: { alignItems: 'flex-start' },
+  wrapCentered: { alignItems: 'center' },
+  wordBlock: { gap: 1 },
+  wordBlockCentered: { alignItems: 'center', width: '100%' },
+  wordLine1: { fontWeight: '900', letterSpacing: -0.5 },
+  wordLine2: { fontWeight: '900', letterSpacing: -0.5, marginTop: -2 },
+  tagline: {
+    fontWeight: '700',
+    letterSpacing: 1.8,
+    marginTop: 6,
+    textTransform: 'uppercase',
+  },
+});

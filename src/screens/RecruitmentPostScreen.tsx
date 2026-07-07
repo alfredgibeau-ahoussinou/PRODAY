@@ -68,7 +68,7 @@ export const RecruitmentPostScreen: React.FC<RecruitmentPostScreenProps> = ({
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [applicationPulse, setApplicationPulse] = useState<Record<string, number>>({});
   const subscriptionCtx = useSubscriptionOptional();
-  const { colors: c, productLine } = useThemedScreen();
+  const { colors: c, productLine, isWoman } = useThemedScreen();
   const { requireAuth } = useRequireAuth();
   const { openAuth } = useTabNavigation();
 
@@ -154,8 +154,8 @@ export const RecruitmentPostScreen: React.FC<RecruitmentPostScreenProps> = ({
     if (!requireAuth('Connectez-vous pour postuler à cette annonce.') || !profile) return;
     if (profile.role !== 'player') {
       Alert.alert(
-        productLine === 'woman' ? 'Réservé aux joueuses' : 'Réservé aux joueurs',
-        productLine === 'woman'
+        isWoman ? 'Réservé aux joueuses' : 'Réservé aux joueurs',
+        isWoman
           ? 'Seules les joueuses peuvent postuler à une annonce.'
           : 'Seuls les joueurs peuvent postuler à une annonce.'
       );

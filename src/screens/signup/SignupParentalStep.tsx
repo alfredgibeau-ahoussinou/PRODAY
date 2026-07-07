@@ -39,7 +39,7 @@ export const SignupParentalStep: React.FC<SignupParentalStepProps> = ({
   const { t } = useTranslation();
   const meta = getPlayerStepMeta(form.productLine, 'family', t);
   const guardianCopy =
-    productLine === 'woman'
+    form.gender === 'women'
       ? t('signup.form.guardianConsentWoman')
       : t('signup.form.guardianConsentMan');
 
@@ -77,7 +77,7 @@ export const SignupParentalStep: React.FC<SignupParentalStepProps> = ({
           <Text style={styles.infoBody}>
             {t('signup.parental.protectionBody', {
               players: t(
-                productLine === 'woman'
+                form.gender === 'women'
                   ? 'signup.parental.playersWoman'
                   : 'signup.parental.playersMan'
               ),

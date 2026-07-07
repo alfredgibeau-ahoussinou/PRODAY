@@ -29,7 +29,7 @@ export const ProfileGalleryEditor: React.FC<ProfileGalleryEditorProps> = ({
   onAdd,
   onRemove,
 }) => {
-  const { colors: c } = useAppTheme();
+  const { colors: c, isWoman } = useAppTheme();
 
   return (
     <View style={styles.wrap}>
@@ -74,7 +74,7 @@ export const ProfileGalleryEditor: React.FC<ProfileGalleryEditorProps> = ({
       </View>
       {urls.length === 0 ? (
         <Text style={[styles.hint, { color: c.textMuted }]}>
-          {productLine === 'woman'
+          {isWoman
             ? 'Ajoutez des photos d’action pour vous démarquer des autres joueuses.'
             : 'Ajoutez des photos d’action pour vous démarquer des autres joueurs.'}
         </Text>

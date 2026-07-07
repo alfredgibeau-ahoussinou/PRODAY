@@ -10,6 +10,7 @@ import type {
 import type { ParentalSettings } from '../models/ParentalSettings';
 import { normalizeAppSpace, type AppSpaceId } from '../models/AppSpace';
 import { normalizeStoredProductLine } from '../models/ProductLine';
+import { canonicalizeUserProductLine } from '../utils/productLineResolution';
 import type { PlayerVerificationState } from '../models/User';
 import type { RecruitmentPost, Application } from '../models/Player';
 import type { FriendlyMatch } from '../models/FriendlyMatch';
@@ -35,6 +36,8 @@ import type { ClubAnnouncement } from '../models/ClubAnnouncement';
 import type { StageOffer, StageApplication } from '../models/Stage';
 import type { MedicalAppointment, MedicalAppointmentStatus } from '../models/MedicalAppointment';
 import type { PlayerActivity, PlayerActivitySource, PlayerActivityType } from '../models/PlayerActivity';
+import type { Team } from '../models/Team';
+import type { Membership } from '../models/Membership';
 import { PERFORMANCE_TAGS, type PerformanceTag } from '../utils/performanceTags';
 
 function toDate(value: unknown): Date {
@@ -134,9 +137,13 @@ export function userFromFirestore(uid: string, data: Record<string, unknown>): U
     app_space: data.app_space
       ? normalizeAppSpace(String(data.app_space))
       : undefined,
-    product_line: normalizeStoredProductLine(
-      data.product_line != null ? String(data.product_line) : null
-    ) ?? undefined,
+    product_line: (() => {
+      const role = (data.role as UserRole) ?? 'player';
+      const normalized =
+        normalizeStoredProductLine(data.product_line != null ? String(data.product_line) : null) ??
+        undefined;
+      return normalized ? canonicalizeUserProductLine(normalized, role) : undefined;
+    })(),
     player_verification: data.player_verification as PlayerVerificationState | undefined,
     subscription_tier:
       data.subscription_tier === 'pro' ? 'pro' : data.subscription_tier === 'free' ? 'free' : undefined,
@@ -149,6 +156,43 @@ export function userFromFirestore(uid: string, data: Record<string, unknown>): U
     sponsor_territorial_approved_at: data.sponsor_territorial_approved_at
       ? toDate(data.sponsor_territorial_approved_at)
       : undefined,
+    sponsor_approved: data.sponsor_approved === true ? true : data.sponsor_approved === false ? false : undefined,
+  };
+}
+
+export function teamFromFirestore(id: string, data: Record<string, unknown>): Team {
+  return {
+    id,
+    club_id: String(data.club_id ?? ''),
+    name: String(data.name ?? ''),
+    category: data.category as string | undefined,
+    gender_scope: (data.gender_scope as Team['gender_scope']) ?? 'unspecified',
+    coach_uids: (data.coach_uids as string[]) ?? [],
+    season_id: data.season_id as string | undefined,
+    is_default: Boolean(data.is_default),
+    created_at: toDate(data.created_at),
+    updated_at: toDate(data.updated_at),
+  };
+}
+
+export function membershipFromFirestore(
+  id: string,
+  data: Record<string, unknown>
+): Membership {
+  return {
+    id,
+    club_id: String(data.club_id ?? ''),
+    team_id: String(data.team_id ?? ''),
+    player_uid: String(data.player_uid ?? ''),
+    player_name: String(data.player_name ?? ''),
+    status: (data.status as Membership['status']) ?? 'pending',
+    requested_at: toDate(data.requested_at),
+    validated_at: data.validated_at ? toDate(data.validated_at) : undefined,
+    validated_by_uid: data.validated_by_uid as string | undefined,
+    invited_by_uid: data.invited_by_uid as string | undefined,
+    license_number: data.license_number as string | undefined,
+    created_at: toDate(data.created_at),
+    updated_at: toDate(data.updated_at),
   };
 }
 

@@ -1,12 +1,7 @@
-import type { Metadata } from "next";
-import { UniversePage } from "@/components/universe/UniversePage";
+import { redirect } from "next/navigation";
+import { ROUTES } from "@/lib/routes";
 
-export const metadata: Metadata = {
-  title: "Pro Day Man",
-  description:
-    "Le foot masculin amateur : Mercato M, matchs, Arena, Pulse et CV joueur — univers réservé aux joueurs.",
-};
-
-export default function HommePage() {
-  return <UniversePage universe="homme" />;
+/** Legacy — fusionné dans le pôle Amateur (genre à l'inscription). */
+export default function HommeLegacyPage() {
+  redirect(ROUTES.amateur);
 }

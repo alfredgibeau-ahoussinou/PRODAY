@@ -37,7 +37,7 @@ export const EventAttendancePanel: React.FC<EventAttendancePanelProps> = ({
   isStaff,
   onUpdated,
 }) => {
-  const { colors: c, productLine } = useAppTheme();
+  const { colors: c, isWoman } = useAppTheme();
   const styles = useMemo(() => createStyles(c), [c]);
   const [names, setNames] = useState<Record<string, string>>({});
 
@@ -60,7 +60,7 @@ export const EventAttendancePanel: React.FC<EventAttendancePanelProps> = ({
   if (event.invitee_uids.length === 0) {
     return (
       <Text style={styles.empty}>
-        {productLine === 'woman'
+        {isWoman
           ? 'Aucune joueuse convoquée sur cet événement.'
           : 'Aucun joueur convoqué sur cet événement.'}
       </Text>

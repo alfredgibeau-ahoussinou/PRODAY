@@ -61,6 +61,12 @@ export const ROLE_OPTIONS: {
     description: 'Visibilité marque & clubs locaux',
     icon: 'star-four-points',
   },
+  {
+    value: 'supporter',
+    label: 'Supporter',
+    description: 'Matchs, réels et fil communautaire',
+    icon: 'star-four-points',
+  },
 ];
 
 interface AuthRolePickerProps {
@@ -87,6 +93,20 @@ export const AuthRolePicker: React.FC<AuthRolePickerProps> = ({
       }
       if (line === 'pro' && r.value === 'sponsor') {
         return { ...r, label: 'Sponsor', description: 'Visibilité marque & clubs pro' };
+      }
+      if (line === 'amateur' && r.value === 'player') {
+        return {
+          ...r,
+          label: 'Joueur amateur',
+          description: 'CV, Mercato Amateur, matchs et covoiturage',
+        };
+      }
+      if (line === 'amateur' && r.value === 'coach') {
+        return {
+          ...r,
+          label: 'Coach amateur',
+          description: 'Effectif, convocations et Mercato local',
+        };
       }
       return r;
     });

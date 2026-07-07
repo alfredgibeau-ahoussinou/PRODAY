@@ -104,6 +104,8 @@ export const MatchsScreen: React.FC = () => {
       setInitialChapter('centre');
     } else if (pendingMatchsLink.homeTab === 'stats') {
       setInitialChapter('stats');
+    } else if (pendingMatchsLink.homeTab === 'tournois') {
+      setInitialChapter('tournois');
     } else {
       setInitialChapter('calendrier');
     }

@@ -360,7 +360,11 @@ export const MatchHubLiveTab: React.FC<MatchHubLiveTabProps> = ({
         ))
       )}
 
-      {canManage && timeline.length > 0 && !event.stats_applied_at && !reportLocked ? (
+      {canManage &&
+      timeline.length > 0 &&
+      !event.stats_applied_at &&
+      !reportLocked &&
+      Boolean(event.match_report_finalized_at) ? (
         <PressableSpring onPress={applyStats} disabled={saving} scaleTo={0.97} haptic={!saving}>
           <ProDayGradient kind="cta" style={styles.saveBtn}>
             {saving ? (
@@ -372,6 +376,12 @@ export const MatchHubLiveTab: React.FC<MatchHubLiveTabProps> = ({
             )}
           </ProDayGradient>
         </PressableSpring>
+      ) : null}
+
+      {canManage && timeline.length > 0 && !event.stats_applied_at && !event.match_report_finalized_at ? (
+        <ProDayText variant="caption" muted style={styles.locked}>
+          Validez le rapport de match pour appliquer les stats saison.
+        </ProDayText>
       ) : null}
 
       {event.stats_applied_at ? (

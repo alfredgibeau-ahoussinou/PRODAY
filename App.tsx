@@ -50,7 +50,7 @@ import type {
   MercatoDeepLink,
   ProfileDeepLink,
 } from './src/utils/navigationDeepLink';
-import { profileMatchesActiveLine } from './src/utils/productLineAccess';
+import { profileMatchesActiveLine, getUserProductLine } from './src/utils/productLineAccess';
 import { getVisibleMainTabs } from './src/content/poleExperience';
 import { useSessionProfile } from './src/hooks/useSessionProfile';
 import { isSponsorRole, SPONSOR_THEME } from './src/content/sponsorExperience';
@@ -166,10 +166,10 @@ function AppShell() {
   );
 
   const screenTabs = useMemo((): MainTabId[] => {
-    if (!shouldInjectShopTab(sessionProfile?.role)) return visibleTabs;
+    if (!shouldInjectShopTab(sessionProfile?.role, productLine)) return visibleTabs;
     if (visibleTabs.includes('shop')) return visibleTabs;
     return [...visibleTabs, 'shop'];
-  }, [visibleTabs, sessionProfile?.role]);
+  }, [visibleTabs, sessionProfile?.role, productLine]);
 
   useEffect(() => {
     if (activeTab === 'messages') refreshUnread();
@@ -189,10 +189,15 @@ function AppShell() {
 
   useEffect(() => {
     if (productLineLoading || authLoading || !profile) return;
+    const userLine = getUserProductLine(profile);
+    if (userLine !== productLine) {
+      void setProductLine(userLine);
+      return;
+    }
     if (!profileMatchesActiveLine(profile, productLine)) {
       void signOut();
     }
-  }, [productLine, productLineLoading, authLoading, profile, signOut]);
+  }, [productLine, productLineLoading, authLoading, profile, setProductLine, signOut]);
 
   useEffect(() => {
     if (authLoading || !profile || !pendingCarpoolLink) return;
@@ -273,7 +278,7 @@ function AppShell() {
     setActiveTab('messages');
   };
 
-  const Screen = resolveMainTabScreen(activeTab, sessionProfile?.role);
+  const Screen = resolveMainTabScreen(activeTab, sessionProfile?.role, productLine);
   const isSponsor = isSponsorRole(sessionProfile?.role);
   const shellBackground = isSponsor ? SPONSOR_THEME.background : themeColors.background;
 

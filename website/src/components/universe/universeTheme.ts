@@ -1,5 +1,7 @@
 import {
   HOMME_BRAND,
+  AMATEUR_BRAND,
+  SUPPORTER_BRAND,
   PRO_BRAND,
   SANTE_BRAND,
   WOMAN_BRAND,
@@ -11,7 +13,7 @@ import { ROUTES } from "@/lib/routes";
 export const UNIVERSE_THEME: Record<
   ProductLineWeb,
   {
-    pageHeaderAccent: "default" | "joueur" | "woman" | "pro" | "sante";
+    pageHeaderAccent: "default" | "joueur" | "woman" | "amateur" | "supporter" | "pro" | "sante";
     screenBg: string;
     screenSurface: string;
     screenMuted: string;
@@ -142,6 +144,94 @@ export const UNIVERSE_THEME: Record<
     tabInactive: "text-pink-400/50",
     tabActive: "text-pink-200",
   },
+  amateur: {
+    pageHeaderAccent: "amateur",
+    moduleActive: "border-orange-500/50 bg-orange-600/30 text-white shadow-lg shadow-orange-900/20",
+    moduleIdle: "border-orange-500/20 bg-white/5 hover:border-orange-400/40",
+    moduleRing: "ring-2 ring-orange-500/30",
+    imageGradient: "from-orange-950/80 via-black/30 to-transparent",
+    imageRing: "ring-2 ring-orange-500/30",
+    moduleDesc: "text-orange-100/80",
+    highlightBorder: "border-orange-500/20 bg-white/5 backdrop-blur-sm",
+    highlightLabel: "text-orange-300/70",
+    journeyActive: "bg-orange-600 text-white shadow-md shadow-orange-900/30",
+    journeyIdle:
+      "bg-white/5 text-white/70 ring-1 ring-white/10 hover:ring-orange-400/30",
+    pricingCard: "border-orange-500/20 bg-white/5 hover:border-orange-400/40",
+    ctaGradient: "from-orange-950 to-neutral-950",
+    ctaText: "text-orange-100/80",
+    ctaBtn: "bg-orange-500 text-white hover:bg-orange-400",
+    ctaBtnOutline: "border-white/30 text-white hover:bg-white/10",
+    crossCard: "from-orange-900 to-neutral-950",
+    navCta: "bg-orange-600 hover:bg-orange-500",
+    navLink: "font-medium text-orange-300 hover:text-white",
+    pricingAccent: "bg-orange-600",
+    softSectionBg: "bg-[#030303]",
+    verificationSectionBg: "bg-[#050505]",
+    verificationTitle: "text-white",
+    pulseStroke: "#f97316",
+    brandAccent: "#ea580c",
+    pulseSliderAccent: "accent-orange-500",
+    exploreCard: "border-orange-500/20 ring-1 ring-orange-500/10 hover:border-orange-400/40",
+    exploreBadge: "bg-orange-600/90 text-white",
+    demoTabActive: "bg-orange-500/25",
+    screenBg: "bg-[#120c08]",
+    screenSurface: "bg-[#181210]",
+    screenMuted: "bg-[#140e0a]",
+    accentBar: "bg-gradient-to-r from-orange-950 to-orange-600",
+    chip: "bg-white/5 border border-orange-500/30 text-orange-100/80",
+    chipHighlight: "bg-orange-600 text-white border-orange-600",
+    moduleCard: "bg-white/5 border-l-[3px] border-l-orange-600 border border-orange-500/20",
+    actionTile: "bg-white/5 border border-orange-500/40 text-orange-50",
+    actionTileActive: "bg-orange-600 text-white border-orange-600",
+    tabBar: "bg-[#181210] border-t border-orange-500/20",
+    tabInactive: "text-orange-400/50",
+    tabActive: "text-orange-200",
+  },
+  supporter: {
+    pageHeaderAccent: "supporter",
+    moduleActive: "border-violet-500/50 bg-violet-600/30 text-white shadow-lg shadow-violet-900/20",
+    moduleIdle: "border-violet-500/20 bg-white/5 hover:border-violet-400/40",
+    moduleRing: "ring-2 ring-violet-500/30",
+    imageGradient: "from-violet-950/80 via-black/30 to-transparent",
+    imageRing: "ring-2 ring-violet-500/30",
+    moduleDesc: "text-violet-100/80",
+    highlightBorder: "border-violet-500/20 bg-white/5 backdrop-blur-sm",
+    highlightLabel: "text-violet-300/70",
+    journeyActive: "bg-violet-600 text-white shadow-md shadow-violet-900/30",
+    journeyIdle:
+      "bg-white/5 text-white/70 ring-1 ring-white/10 hover:ring-violet-400/30",
+    pricingCard: "border-violet-500/20 bg-white/5 hover:border-violet-400/40",
+    ctaGradient: "from-violet-950 to-neutral-950",
+    ctaText: "text-violet-100/80",
+    ctaBtn: "bg-violet-600 text-white hover:bg-violet-500",
+    ctaBtnOutline: "border-white/30 text-white hover:bg-white/10",
+    crossCard: "from-violet-900 to-neutral-950",
+    navCta: "bg-violet-600 hover:bg-violet-500",
+    navLink: "font-medium text-violet-300 hover:text-white",
+    pricingAccent: "bg-violet-600",
+    softSectionBg: "bg-[#030303]",
+    verificationSectionBg: "bg-[#050505]",
+    verificationTitle: "text-white",
+    pulseStroke: "#8b5cf6",
+    brandAccent: "#7c3aed",
+    pulseSliderAccent: "accent-violet-500",
+    exploreCard: "border-violet-500/20 ring-1 ring-violet-500/10 hover:border-violet-400/40",
+    exploreBadge: "bg-violet-600/90 text-white",
+    demoTabActive: "bg-violet-500/25",
+    screenBg: "bg-[#0c0812]",
+    screenSurface: "bg-[#141018]",
+    screenMuted: "bg-[#100c14]",
+    accentBar: "bg-gradient-to-r from-violet-950 to-violet-600",
+    chip: "bg-white/5 border border-violet-500/30 text-violet-100/80",
+    chipHighlight: "bg-violet-600 text-white border-violet-600",
+    moduleCard: "bg-white/5 border-l-[3px] border-l-violet-600 border border-violet-500/20",
+    actionTile: "bg-white/5 border border-violet-500/40 text-violet-50",
+    actionTileActive: "bg-violet-600 text-white border-violet-600",
+    tabBar: "bg-[#141018] border-t border-violet-500/20",
+    tabInactive: "text-violet-400/50",
+    tabActive: "text-violet-200",
+  },
   pro: {
     pageHeaderAccent: "pro",
     moduleActive: "border-blue-500/50 bg-blue-600/30 text-white shadow-lg shadow-blue-900/20",
@@ -234,6 +324,8 @@ export const UNIVERSE_THEME: Record<
 
 export function universeFromPath(pathname: string): ProductLineWeb | null {
   if (pathname.startsWith(ROUTES.woman)) return "woman";
+  if (pathname.startsWith(ROUTES.amateur)) return "amateur";
+  if (pathname.startsWith(ROUTES.supporter)) return "supporter";
   if (pathname.startsWith(ROUTES.pro)) return "pro";
   if (pathname.startsWith(ROUTES.sante)) return "sante";
   if (pathname.startsWith(ROUTES.homme)) return "homme";
@@ -243,6 +335,8 @@ export function universeFromPath(pathname: string): ProductLineWeb | null {
 
 export function universeFromExploreHref(href: string): ProductLineWeb | null {
   if (href === ROUTES.woman) return "woman";
+  if (href === ROUTES.amateur) return "amateur";
+  if (href === ROUTES.supporter) return "supporter";
   if (href === ROUTES.pro) return "pro";
   if (href === ROUTES.homme) return "homme";
   if (href === ROUTES.joueurs) return "homme";
@@ -270,6 +364,9 @@ export function navBrandForPath(pathname: string) {
   }
   if (line === "pro") {
     return { name: PRO_BRAND.name, logo: PRO_BRAND.logo, theme: UNIVERSE_THEME.pro };
+  }
+  if (line === "supporter") {
+    return { name: SUPPORTER_BRAND.name, logo: SUPPORTER_BRAND.logo, theme: UNIVERSE_THEME.supporter };
   }
   if (line === "sante") {
     return { name: SANTE_BRAND.name, logo: SANTE_BRAND.logo, theme: UNIVERSE_THEME.sante };
