@@ -17,6 +17,7 @@ import { useAppTheme } from '../../context/ProductLineContext';
 import { usePoleHelpChatbot } from '../../hooks/usePoleHelpChatbot';
 import { useTabNavigationActions } from '../../hooks/useTabNavigationActions';
 import {
+  getPoleHelpAllQuestions,
   getPoleHelpQuickSuggestions,
   type PoleHelpEntry,
   type PoleHelpNavigateAction,
@@ -143,7 +144,8 @@ const ChatMessage: React.FC<{
 
 export const PoleHelpChatbot: React.FC = () => {
   const { colors, productLine } = useAppTheme();
-  const { visible, content, usesBriefcaseIcon } = usePoleHelpChatbot(productLine);
+  const { visible, content, usesBriefcaseIcon, showBubble, dismissBubble } =
+    usePoleHelpChatbot(productLine);
   const nav = useTabNavigationActions();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const [open, setOpen] = useState(false);
@@ -155,6 +157,15 @@ export const PoleHelpChatbot: React.FC = () => {
     () => getPoleHelpQuickSuggestions(content),
     [content],
   );
+
+  const allQuestions = useMemo(
+    () => getPoleHelpAllQuestions(content),
+    [content],
+  );
+
+  const openChat = useCallback(() => {
+    setOpen(true);
+  }, []);
 
   const resetConversation = useCallback(() => {
     setMessages([
@@ -212,9 +223,43 @@ export const PoleHelpChatbot: React.FC = () => {
 
   if (!visible) return null;
 
+  const bubbleVisible = showBubble && !open;
+
   return (
     <>
       <View style={styles.fabAnchor} pointerEvents="box-none">
+        {bubbleVisible ? (
+          <AnimatedEntrance kind="fadeUp" index={0}>
+            <View style={styles.teaserWrap}>
+              <PressableSpring
+                onPress={openChat}
+                scaleTo={0.98}
+                haptic
+                style={styles.teaserPressable}
+                accessibilityRole="button"
+                accessibilityLabel={content.bubbleTeaser}
+              >
+                <ProDayGradient kind="heroDark" style={styles.teaserBubble}>
+                  <ProDayText variant="caption" style={styles.teaserText}>
+                    {content.bubbleTeaser}
+                  </ProDayText>
+                  <View style={[styles.teaserTail, { borderTopColor: colors.surfaceInverse }]} />
+                </ProDayGradient>
+              </PressableSpring>
+              <PressableSpring
+                onPress={dismissBubble}
+                scaleTo={0.9}
+                haptic
+                style={[styles.teaserClose, { backgroundColor: colors.surface, borderColor: colors.border }]}
+                accessibilityRole="button"
+                accessibilityLabel="Fermer l’invite d’aide"
+              >
+                <Icon name="close" size={12} color={colors.textMuted} />
+              </PressableSpring>
+            </View>
+          </AnimatedEntrance>
+        ) : null}
+
         <Animated.View
           pointerEvents="none"
           style={[
@@ -225,7 +270,7 @@ export const PoleHelpChatbot: React.FC = () => {
         />
         <PressableSpring
           style={styles.fabPressable}
-          onPress={() => setOpen(true)}
+          onPress={openChat}
           scaleTo={0.92}
           haptic
           accessibilityRole="button"
@@ -291,6 +336,41 @@ export const PoleHelpChatbot: React.FC = () => {
               onNavigate={handleNavigate}
             />
           ))}
+
+          {messages.length <= 1 ? (
+            <AnimatedEntrance kind="fadeUp" index={1}>
+              <View style={styles.inlineSuggestions}>
+                <ProDayText variant="caption" muted style={styles.inlineSuggestionsLabel}>
+                  Suggestions rapides
+                </ProDayText>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.suggestionsRow}
+                >
+                  {quickSuggestions.map((entry, index) => (
+                    <PressableSpring
+                      key={entry.id}
+                      style={[
+                        styles.chip,
+                        {
+                          borderColor: colors.borderMedium,
+                          backgroundColor: colors.brandSoft,
+                        },
+                      ]}
+                      onPress={() => handleSuggestion(entry)}
+                      scaleTo={0.96}
+                      haptic
+                    >
+                      <ProDayText variant="caption" style={styles.chipText}>
+                        {entry.question}
+                      </ProDayText>
+                    </PressableSpring>
+                  ))}
+                </ScrollView>
+              </View>
+            </AnimatedEntrance>
+          ) : null}
         </ScrollView>
 
         <View
@@ -303,33 +383,44 @@ export const PoleHelpChatbot: React.FC = () => {
           ]}
         >
           <ProDayText variant="caption" muted style={styles.suggestionsLabel}>
-            Questions fréquentes
+            Toutes les questions
           </ProDayText>
           <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.suggestionsRow}
+            style={styles.allQuestionsScroll}
+            nestedScrollEnabled
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.allQuestionsContent}
           >
-            {quickSuggestions.map((entry, index) => (
-              <AnimatedEntrance key={entry.id} kind="fade" index={index} delayStep={40}>
-                <PressableSpring
-                  style={[
-                    styles.chip,
-                    {
-                      borderColor: colors.borderMedium,
-                      backgroundColor: colors.brandSoft,
-                    },
-                  ]}
-                  onPress={() => handleSuggestion(entry)}
-                  scaleTo={0.96}
-                  haptic
-                >
-                  <ProDayText variant="caption" style={styles.chipText}>
-                    {entry.question}
-                  </ProDayText>
-                </PressableSpring>
-              </AnimatedEntrance>
-            ))}
+            <View style={styles.allQuestionsGrid}>
+              {allQuestions.map((entry, index) => (
+                <AnimatedEntrance key={entry.id} kind="fade" index={index} delayStep={24}>
+                  <PressableSpring
+                    style={[
+                      styles.chip,
+                      entry.id === 'other' && styles.chipOther,
+                      {
+                        borderColor: entry.id === 'other' ? colors.brand : colors.borderMedium,
+                        backgroundColor:
+                          entry.id === 'other' ? brandOverlay(0.12) : colors.brandSoft,
+                      },
+                    ]}
+                    onPress={() => handleSuggestion(entry)}
+                    scaleTo={0.96}
+                    haptic
+                  >
+                    <ProDayText
+                      variant="caption"
+                      style={[
+                        styles.chipText,
+                        entry.id === 'other' && { color: colors.brand },
+                      ]}
+                    >
+                      {entry.question}
+                    </ProDayText>
+                  </PressableSpring>
+                </AnimatedEntrance>
+              ))}
+            </View>
           </ScrollView>
         </View>
       </AnimatedModalShell>
@@ -343,12 +434,57 @@ function createStyles(c: AppColors) {
       position: 'absolute',
       right: spacing.lg,
       bottom: TAB_BAR_CONTENT_INSET + spacing.xs,
-      alignItems: 'center',
+      alignItems: 'flex-end',
       zIndex: 40,
+    },
+    teaserWrap: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      gap: spacing.xs,
+      marginBottom: spacing.sm,
+      maxWidth: 260,
+    },
+    teaserPressable: {
+      flex: 1,
+      ...shadows.soft,
+    },
+    teaserBubble: {
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm + 2,
+      borderRadius: radius.lg,
+      borderWidth: 1,
+      borderColor: brandOverlay(0.2),
+      position: 'relative',
+    },
+    teaserText: {
+      color: c.brandInverse,
+      fontWeight: '700',
+      lineHeight: 18,
+    },
+    teaserTail: {
+      position: 'absolute',
+      bottom: -7,
+      right: spacing.lg,
+      width: 0,
+      height: 0,
+      borderLeftWidth: 7,
+      borderRightWidth: 7,
+      borderTopWidth: 8,
+      borderLeftColor: 'transparent',
+      borderRightColor: 'transparent',
+    },
+    teaserClose: {
+      width: 24,
+      height: 24,
+      borderRadius: radius.pill,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 1,
+      marginTop: 2,
     },
     fabPulse: {
       position: 'absolute',
-      top: 0,
+      bottom: spacing.lg + 2,
       width: 58,
       height: 58,
       borderRadius: radius.pill,
@@ -423,6 +559,16 @@ function createStyles(c: AppColors) {
       paddingBottom: spacing.md,
       gap: spacing.md,
     },
+    inlineSuggestions: {
+      gap: spacing.sm,
+      marginTop: spacing.xs,
+    },
+    inlineSuggestionsLabel: {
+      fontWeight: '700',
+      letterSpacing: 0.4,
+      textTransform: 'uppercase',
+      fontSize: 10,
+    },
     bubbleRow: {
       flexDirection: 'row',
       alignItems: 'flex-end',
@@ -488,15 +634,28 @@ function createStyles(c: AppColors) {
       fontSize: 10,
     },
     suggestionsRow: {
+      gap: spacing.sm,
+    },
+    allQuestionsScroll: {
+      maxHeight: 132,
+    },
+    allQuestionsContent: {
       paddingHorizontal: spacing.lg,
+    },
+    allQuestionsGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
       gap: spacing.sm,
     },
     chip: {
-      maxWidth: 240,
+      maxWidth: '100%',
       paddingHorizontal: spacing.md,
       paddingVertical: spacing.sm + 2,
       borderRadius: radius.pill,
       borderWidth: 1,
+    },
+    chipOther: {
+      borderStyle: 'dashed',
     },
     chipText: {
       fontWeight: '700',
