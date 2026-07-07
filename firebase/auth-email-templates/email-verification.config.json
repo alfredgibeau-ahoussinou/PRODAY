@@ -5,6 +5,6 @@
   "replyTo": "contact@proday.app",
   "senderLocalPart": "noreply",
   "bodyFormat": "HTML",
-  "htmlFile": "email-verification.html",
-  "plainTextFile": "email-verification.fr.txt"
+  "htmlFile": "email-verification-firebase.html",
+  "plainTextFile": "email-verification-firebase.plain.txt"
 }

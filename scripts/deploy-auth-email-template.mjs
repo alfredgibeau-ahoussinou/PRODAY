@@ -74,6 +74,25 @@ function parseArgs(argv) {
   };
 }
 
+/** Corps HTML sans wrapper document — requis par Firebase Console / Identity Platform. */
+function sanitizeHtmlForFirebase(html) {
+  let body = html.trim();
+  if (/^<!DOCTYPE/i.test(body) || /^<html/i.test(body)) {
+    const match = body.match(/<body[^>]*>([\s\S]*)<\/body>/i);
+    if (match) {
+      body = match[1].trim();
+    } else {
+      body = body
+        .replace(/<!DOCTYPE[^>]*>/gi, '')
+        .replace(/<\/?html[^>]*>/gi, '')
+        .replace(/<head[\s\S]*?<\/head>/gi, '')
+        .replace(/<\/?body[^>]*>/gi, '')
+        .trim();
+    }
+  }
+  return body;
+}
+
 function normalizeConfig(raw) {
   const sender = raw.sender || {};
   const templateKey = raw.templateId || raw.templateKey;
@@ -105,10 +124,11 @@ function loadTemplateConfig(templateId) {
   const txtPath = resolve(templatesDir, config.textFile);
   if (!existsSync(htmlPath)) throw new Error(`HTML introuvable : ${htmlPath}`);
   if (!existsSync(txtPath)) throw new Error(`Texte introuvable : ${txtPath}`);
+  const rawHtml = readFileSync(htmlPath, 'utf8');
   return {
     entry,
     config,
-    html: readFileSync(htmlPath, 'utf8'),
+    html: sanitizeHtmlForFirebase(rawHtml),
     plainText: readFileSync(txtPath, 'utf8'),
   };
 }
@@ -188,9 +208,13 @@ function printConsoleInstructions(entry, config, html, plainText) {
   console.log(`4. Nom de l'expéditeur : ${config.displayName}`);
   console.log(`5. Adresse de réponse : ${config.replyTo}`);
   console.log(`6. Objet : ${config.subject}`);
-  console.log(`7. Message : coller le contenu de firebase/auth-email-templates/${config.htmlFile}`);
+  console.log(`7. Message : coller le fragment HTML de firebase/auth-email-templates/${config.htmlFile}`);
+  console.log('   (sans DOCTYPE, <html>, <head> ni <body> — Firebase ajoute son propre wrapper)');
+  console.log(`   Fallback texte : firebase/auth-email-templates/${config.textFile}`);
   console.log('8. URL d\'action : %LINK% (valeur par défaut — ne pas modifier)');
   console.log('9. Enregistrer');
+  console.log('\n--- Aperçu fragment HTML (600 car. max) ---\n');
+  console.log(html.slice(0, 600) + (html.length > 600 ? '…' : ''));
   console.log('\n--- Version texte (fallback) ---\n');
   console.log(plainText);
 }
