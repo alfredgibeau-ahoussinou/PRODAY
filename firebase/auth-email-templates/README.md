@@ -12,6 +12,14 @@ Projet Firebase : **`proday-155b0`** (voir `.firebaserc`).
 | `email-verification.html` | Corps HTML dark `#000` + accent cyan `#22d3ee` |
 | `email-verification.fr.txt` | Version texte (référence / mode `--plain-text`) |
 
+## Fichiers — réinitialisation mot de passe
+
+| Fichier | Rôle |
+| --- | --- |
+| `password-reset.config.json` | Métadonnées (expéditeur, objet, reply-to) |
+| `password-reset.html` | Corps HTML dark `#000` + accent cyan `#22d3ee` |
+| `password-reset.fr.txt` | Version texte (référence / mode `--plain-text`) |
+
 ## Déploiement automatique (recommandé)
 
 Prérequis : clé Admin SDK locale (`firebase/*-adminsdk-*.json`, **gitignored**).
@@ -73,10 +81,59 @@ Si les balises HTML s’affichent en clair dans l’e-mail reçu, le format n’
 
 Pour un deep link `proday://` futur, ajouter `actionCodeSettings` côté app **et** autoriser le domaine dans Authentication → Settings → Authorized domains.
 
+## Réinitialisation mot de passe
+
+### Saisie manuelle — Console Firebase
+
+1. Ouvrir [Firebase Console](https://console.firebase.google.com) → projet **proday-155b0**
+2. **Authentication** → **Templates** → **Réinitialisation du mot de passe**
+3. Remplir **exactement** :
+
+| Champ console | Valeur |
+| --- | --- |
+| **Nom de l'expéditeur** (De) | `ProDay` |
+| **Adresse de réponse** (Reply-to) | `contact@proday.app` |
+| **Objet** | `Réinitialisez votre mot de passe ProDay` |
+| **Message** | Coller le contenu de `password-reset.html` |
+| **URL d'action** | `%LINK%` (valeur par défaut — ne pas modifier) |
+
+4. Vérifier le format **HTML** (via le script ou PATCH `bodyFormat: HTML` ci-dessous).
+5. **Enregistrer**.
+
+### Activer le rendu HTML (reset password)
+
+```http
+PATCH https://identitytoolkit.googleapis.com/admin/v2/projects/proday-155b0/config?updateMask=notification.sendEmail.resetPasswordTemplate.bodyFormat
+
+{
+  "notification": {
+    "sendEmail": {
+      "resetPasswordTemplate": {
+        "bodyFormat": "HTML"
+      }
+    }
+  }
+}
+```
+
+### Comportement app mobile
+
+- `sendPasswordResetEmail()` est appelé **sans** `actionCodeSettings` (`src/services/auth.service.ts`, `ForgotPasswordScreen`).
+
 ## Valeurs finales recommandées
+
+### Validation e-mail
 
 - **Expéditeur** : ProDay
 - **Reply-to** : contact@proday.app
 - **Objet** : Confirmez votre adresse e-mail ProDay
 - **CTA** : Valider mon e-mail (bouton cyan `#22d3ee`)
+- **URL d'action** : `%LINK%`
+
+### Réinitialisation mot de passe
+
+- **Expéditeur** : ProDay (`noreply@proday-155b0.firebaseapp.com`)
+- **Reply-to** : contact@proday.app
+- **Objet** : Réinitialisez votre mot de passe ProDay
+- **CTA** : Réinitialiser mon mot de passe (bouton cyan `#22d3ee`)
 - **URL d'action** : `%LINK%`
