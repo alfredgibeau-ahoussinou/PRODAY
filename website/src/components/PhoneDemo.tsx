@@ -527,10 +527,27 @@ export function PhoneDemo({ fullPage, universe = "homme" }: PhoneDemoProps) {
             </div>
           </motion.div>
 
-          <div className="max-w-md flex-1 space-y-2">
+          <div className="w-full max-w-md flex-1 space-y-2 lg:max-w-none">
             <p className="mb-3 text-sm font-semibold text-white/70">
               Univers : {brand.name} — onglets visibles
             </p>
+            <div className="scroll-snap-x -mx-4 flex gap-2 overflow-x-auto px-4 pb-2 lg:mx-0 lg:hidden lg:flex-col lg:gap-2 lg:overflow-visible lg:px-0 lg:pb-0">
+              {tabs.map((tab) => (
+                <motion.button
+                  key={`mobile-${tab.id}`}
+                  type="button"
+                  onClick={() => setSelectedTab(tab.id)}
+                  className={`shrink-0 snap-start rounded-full border px-4 py-2.5 text-left text-sm transition ${
+                    active === tab.id
+                      ? `border-transparent ${theme.chipHighlight} text-white`
+                      : `${theme.moduleIdle} text-white/70`
+                  }`}
+                >
+                  <span className="font-bold">{tab.label}</span>
+                </motion.button>
+              ))}
+            </div>
+            <div className="hidden space-y-2 lg:block">
             {tabs.map((tab, i) => {
               const mock = screenForTab(tab.id, universe);
               return (
@@ -564,6 +581,7 @@ export function PhoneDemo({ fullPage, universe = "homme" }: PhoneDemoProps) {
                 </motion.button>
               );
             })}
+            </div>
           </div>
         </div>
       </div>

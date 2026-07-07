@@ -77,10 +77,10 @@ Nous ne promettons pas une détection automatique des talents à l'échelle mond
 
 ProDay remplace les groupes éparpillés par un calendrier unifié, un CV vivant et un Mercato ciblé — pour progresser et être visible des bons clubs.
 
-Rejoignez la liste d'attente sur proday.app si l'app n'est pas encore disponible dans votre région.
+Rejoignez la liste d'attente sur proday75.fr si l'app n'est pas encore disponible dans votre région.
 
 Support : partenaires@proday.app
-Site : https://proday.app
+Site : https://proday75.fr
 ```
 
 **Longueur** : ~1 950 caractères (marge confortable sous la limite 4 000).

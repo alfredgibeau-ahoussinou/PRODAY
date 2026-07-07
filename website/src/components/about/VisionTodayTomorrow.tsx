@@ -30,7 +30,7 @@ export function VisionTodayTomorrow() {
             className="card-premium rounded-2xl p-8"
           >
             <div className="mb-6 flex items-center gap-3">
-              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-400">
+              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--proday-accent-muted)] text-[var(--proday-accent)]">
                 <CheckCircle2 size={20} />
               </span>
               <div>
@@ -44,7 +44,7 @@ export function VisionTodayTomorrow() {
                   key={item}
                   className="flex gap-3 text-sm leading-relaxed text-white/70"
                 >
-                  <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400/80" />
+                  <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--proday-accent)]/80" />
                   {item}
                 </li>
               ))}

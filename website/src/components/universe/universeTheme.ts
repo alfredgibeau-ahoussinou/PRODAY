@@ -7,7 +7,7 @@ import {
   WOMAN_BRAND,
   type ProductLineWeb,
 } from "@/lib/content";
-import { PRODAY_LOGO_ON_DARK } from "@/lib/brandingAssets";
+import { PRODAY_LOGO_OFFICIAL } from "@/lib/brandingAssets";
 import { ROUTES } from "@/lib/routes";
 
 export const UNIVERSE_THEME: Record<
@@ -376,7 +376,7 @@ export function navBrandForPath(pathname: string) {
   }
   return {
     name: "ProDay",
-    logo: PRODAY_LOGO_ON_DARK,
+    logo: PRODAY_LOGO_OFFICIAL,
     theme: UNIVERSE_THEME.homme,
   };
 }

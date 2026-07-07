@@ -30,3 +30,9 @@ docs/PRODAY_Restant_et_Ameliorations.tex
 
 # Local Netlify folder
 .netlify
+
+# Certificats SSL (IONOS / Netlify) — ne jamais committer
+*.key
+*.pem
+*certificate*.crt
+*certificate*.pem

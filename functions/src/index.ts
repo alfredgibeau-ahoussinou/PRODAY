@@ -18,8 +18,10 @@ import {
 } from './sponsorGeoPush';
 import { onTeamEventUpdated, syncTeamEventActivities } from './teamEventActivitySync';
 import { analyzeActivityHighlight } from './analyzeActivityHighlight';
+import { sendAuthPasswordResetEmail, sendAuthVerificationEmail } from './authCustomEmails';
 
 export { createPaymentCheckoutSession, stripeWebhook, createShopCheckoutSession };
+export { sendAuthVerificationEmail, sendAuthPasswordResetEmail };
 export { onSponsorOfferCreated, onSponsorOfferUpdated, notifySponsorOfferInCityCallable };
 export { onTeamEventUpdated, syncTeamEventActivities };
 export { analyzeActivityHighlight };

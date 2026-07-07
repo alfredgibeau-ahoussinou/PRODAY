@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, Switch, TouchableOpacity, View } from 'react-native';
 import { TabScreenShell } from '../components/app/TabScreenShell';
 import { ProDayText } from '../components/ui/ProDayText';
 import { ProDaySurface } from '../components/ui/ProDaySurface';
@@ -11,11 +11,13 @@ import { useTabNavigationActions } from '../hooks/useTabNavigationActions';
 import { useTranslation } from '../context/LocaleContext';
 import { useAppTheme } from '../context/ProductLineContext';
 import { followsService } from '../services/follows.service';
+import {
+  loadSupporterNotificationPrefs,
+  saveSupporterNotificationPrefs,
+  type SupporterNotificationPreferences,
+} from '../services/supporterPreferences.service';
 import { spacing, radius } from '../theme/designTokens';
 import { EditProfileScreen } from './EditProfileScreen';
-
-const FREE_CLUB_LIMIT = 5;
-const FREE_PLAYER_LIMIT = 10;
 
 export const SupporterProfileTabScreen: React.FC = () => {
   const { signOut, refreshProfile } = useAuth();
@@ -25,6 +27,8 @@ export const SupporterProfileTabScreen: React.FC = () => {
   const nav = useTabNavigationActions();
   const [clubCount, setClubCount] = useState(0);
   const [playerCount, setPlayerCount] = useState(0);
+  const [tournamentCount, setTournamentCount] = useState(0);
+  const [notifPrefs, setNotifPrefs] = useState<SupporterNotificationPreferences | null>(null);
   const [showEdit, setShowEdit] = useState(false);
 
   const loadFollows = useCallback(async () => {
@@ -32,11 +36,29 @@ export const SupporterProfileTabScreen: React.FC = () => {
     const follows = await followsService.listByFollower(profile.uid);
     setClubCount(follows.filter((f) => f.target_type === 'club').length);
     setPlayerCount(follows.filter((f) => f.target_type === 'player').length);
+    setTournamentCount(follows.filter((f) => f.target_type === 'tournament').length);
+  }, [profile?.uid]);
+
+  const loadNotifPrefs = useCallback(async () => {
+    if (!profile?.uid) return;
+    const prefs = await loadSupporterNotificationPrefs(profile.uid);
+    setNotifPrefs(prefs);
   }, [profile?.uid]);
 
   useEffect(() => {
     void loadFollows();
-  }, [loadFollows]);
+    void loadNotifPrefs();
+  }, [loadFollows, loadNotifPrefs]);
+
+  const updateNotifPref = useCallback(
+    async (key: keyof SupporterNotificationPreferences, value: boolean) => {
+      if (!profile?.uid || !notifPrefs) return;
+      const next = { ...notifPrefs, [key]: value };
+      setNotifPrefs(next);
+      await saveSupporterNotificationPrefs(profile.uid, next);
+    },
+    [profile?.uid, notifPrefs]
+  );
 
   const handleSignOut = useCallback(() => {
     Alert.alert(t('supporter.profile.logoutTitle'), t('supporter.profile.logoutBody'), [
@@ -53,12 +75,35 @@ export const SupporterProfileTabScreen: React.FC = () => {
     () =>
       t('supporter.profile.followSummary', {
         clubs: String(clubCount),
-        clubLimit: String(FREE_CLUB_LIMIT),
         players: String(playerCount),
-        playerLimit: String(FREE_PLAYER_LIMIT),
+        tournaments: String(tournamentCount),
       }),
-    [clubCount, playerCount, t],
+    [clubCount, playerCount, tournamentCount, t]
   );
+
+  const renderNotifRow = (
+    key: keyof SupporterNotificationPreferences,
+    labelKey: string,
+    hintKey: string
+  ) => {
+    if (!notifPrefs) return null;
+    return (
+      <View style={[styles.notifRow, { borderColor: colors.border }]}>
+        <View style={styles.notifCopy}>
+          <ProDayText variant="body">{t(labelKey)}</ProDayText>
+          <ProDayText variant="caption" muted>
+            {t(hintKey)}
+          </ProDayText>
+        </View>
+        <Switch
+          value={notifPrefs[key]}
+          onValueChange={(value) => void updateNotifPref(key, value)}
+          trackColor={{ false: colors.border, true: colors.accentSoft }}
+          thumbColor={notifPrefs[key] ? colors.accent : colors.surfaceMuted}
+        />
+      </View>
+    );
+  };
 
   if (!profile) {
     return (
@@ -71,6 +116,9 @@ export const SupporterProfileTabScreen: React.FC = () => {
         <View style={styles.guest}>
           <ProDayText variant="body" muted>
             {t('supporter.profile.guestHint')}
+          </ProDayText>
+          <ProDayText variant="caption" accent style={styles.freeBadge}>
+            {t('supporter.profile.freeForever')}
           </ProDayText>
         </View>
       </TabScreenShell>
@@ -86,6 +134,15 @@ export const SupporterProfileTabScreen: React.FC = () => {
         flat
       >
         <ScrollView contentContainerStyle={styles.content}>
+          <ProDaySurface variant="module" style={[styles.card, { borderColor: colors.accent }]}>
+            <ProDayText variant="eyebrow" accent>
+              {t('supporter.profile.freeForever')}
+            </ProDayText>
+            <ProDayText variant="caption" muted>
+              {t('supporter.profile.freeForeverHint')}
+            </ProDayText>
+          </ProDaySurface>
+
           <ProDaySurface variant="module" style={[styles.card, { borderColor: colors.border }]}>
             <ProDayText variant="eyebrow" muted>
               {t('supporter.profile.account')}
@@ -109,6 +166,32 @@ export const SupporterProfileTabScreen: React.FC = () => {
               <Icon name="star-four-points" size={16} color={colors.accent} />
               <ProDayText variant="caption">{t('supporter.profile.manageFollows')}</ProDayText>
             </PressableSpring>
+          </ProDaySurface>
+
+          <ProDaySurface variant="module" style={[styles.card, { borderColor: colors.border }]}>
+            <ProDayText variant="eyebrow" muted>
+              {t('supporter.profile.notifications')}
+            </ProDayText>
+            {renderNotifRow(
+              'goalAlerts',
+              'supporter.profile.notif.goals',
+              'supporter.profile.notif.goalsHint'
+            )}
+            {renderNotifRow(
+              'kickoffAlerts',
+              'supporter.profile.notif.kickoff',
+              'supporter.profile.notif.kickoffHint'
+            )}
+            {renderNotifRow(
+              'matchReminders',
+              'supporter.profile.notif.reminders',
+              'supporter.profile.notif.remindersHint'
+            )}
+            {renderNotifRow(
+              'communityDigest',
+              'supporter.profile.notif.digest',
+              'supporter.profile.notif.digestHint'
+            )}
           </ProDaySurface>
 
           <PressableSpring
@@ -165,6 +248,11 @@ const styles = StyleSheet.create({
   },
   guest: {
     padding: spacing.lg,
+    gap: spacing.sm,
+  },
+  freeBadge: {
+    marginTop: spacing.sm,
+    fontWeight: '700',
   },
   card: {
     borderWidth: 1,
@@ -182,6 +270,17 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xs,
     borderRadius: radius.pill,
     borderWidth: StyleSheet.hairlineWidth,
+  },
+  notifRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    paddingVertical: spacing.sm,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  notifCopy: {
+    flex: 1,
+    gap: 2,
   },
   menuRow: {
     flexDirection: 'row',

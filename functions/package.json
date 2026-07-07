@@ -3,7 +3,7 @@
   "private": true,
   "main": "lib/index.js",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && node -e \"require('fs').cpSync('../firebase/auth-email-templates','lib/auth-email-templates',{recursive:true})\"",
     "serve": "npm run build && firebase emulators:start --only functions"
   },
   "engines": {

@@ -119,11 +119,12 @@ export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({
                   Email envoyé
                 </Text>
                 <Text style={authStyles.sub}>
-                  Un lien de réinitialisation a été envoyé à{' '}
+                  Si un compte ProDay existe avec cette adresse, vous recevrez un e-mail de
+                  réinitialisation à{' '}
                   <Text style={local.emailHighlight}>{email.trim()}</Text>.
                   {'\n\n'}
-                  Consultez votre boîte mail et le dossier spam, puis suivez les instructions
-                  pour choisir un nouveau mot de passe.
+                  Consultez votre boîte mail et le dossier spam, puis suivez le lien ProDay pour
+                  choisir un nouveau mot de passe.
                 </Text>
                 <AuthPrimaryButton label="Retour à la connexion" onPress={onBack} />
                 <PressableSpring

@@ -11,6 +11,7 @@ import { Icon } from '../components/ui/Icon';
 import { ProDayErrorBanner } from '../components/ui/ProDayErrorBanner';
 import { spacing, radius } from '../theme/designTokens';
 import { useThemedScreen } from '../hooks/useThemedScreen';
+import { authService } from '../services/auth.service';
 import type { AppColors } from '../theme/universeTheme';
 
 interface EmailVerificationScreenProps {
@@ -54,8 +55,11 @@ export const EmailVerificationScreen: React.FC<EmailVerificationScreenProps> = (
     try {
       await onResend();
       setSent(true);
-    } catch {
-      setError('Envoi impossible. Réessayez dans quelques minutes.');
+    } catch (e) {
+      setError(
+        authService.getAuthErrorMessage(e) ||
+          'Envoi impossible. Réessayez dans quelques minutes.'
+      );
     } finally {
       setSending(false);
     }

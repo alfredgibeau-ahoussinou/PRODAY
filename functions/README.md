@@ -109,6 +109,29 @@ firebase deploy --only functions:analyzeActivityHighlight
 
 ---
 
+## E-mails Auth brandés (`authCustomEmails.ts`)
+
+Contournement lorsque les templates Console Firebase sont verrouillés (`EMAIL_TEMPLATE_UPDATE_NOT_ALLOWED`).
+
+| Callable | Région | Auth |
+| --- | --- | --- |
+| `sendAuthVerificationEmail` | `europe-west1` | Utilisateur connecté |
+| `sendAuthPasswordResetEmail` | `europe-west1` | Public (rate-limit IP + e-mail) |
+
+Configuration Resend :
+
+```bash
+firebase functions:config:set auth.enabled=true auth.from_email="ProDay <contact@proday.app>"
+firebase functions:config:set auth.continue_url="https://proday75.fr"
+# auth.resend_api_key optionnel si beta.resend_api_key déjà défini
+cd functions && npm run build
+firebase deploy --only functions:sendAuthVerificationEmail,functions:sendAuthPasswordResetEmail
+```
+
+Documentation complète : [`firebase/auth-email-templates/README.md`](../firebase/auth-email-templates/README.md).
+
+---
+
 ## Migration Gen1 → Gen2 (historique)
 
 Les triggers sponsor geo étaient en Gen1 (`functions.region('europe-west1').firestore`). Ils sont passés en **Gen2** pour compatibilité eur3 et déploiement fiable. Les autres fonctions du projet restent en Gen1 pour l'instant.

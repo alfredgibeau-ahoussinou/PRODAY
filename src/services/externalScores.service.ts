@@ -1,3 +1,8 @@
+import {
+  createApiFootballProvider,
+  hasExternalScoresApiKey,
+} from './externalScoresApiFootball.provider';
+
 export type ExternalCompetitionId = 'ligue1' | 'd1f';
 
 export type ExternalFixtureStatus = 'scheduled' | 'live' | 'finished';
@@ -16,8 +21,10 @@ export interface ExternalFixture {
   venue?: string;
 }
 
+export type ExternalScoresSource = 'mock' | 'api_football' | 'api_stub';
+
 export interface ExternalScoresProviderState {
-  source: 'mock' | 'api_stub';
+  source: ExternalScoresSource;
   last_sync_at: Date;
   healthy: boolean;
   message?: string;
@@ -103,28 +110,10 @@ const mockExternalScoresProvider: ExternalScoresProvider = {
   },
 };
 
-async function fetchExternalApiFixtures(
-  _competition?: ExternalCompetitionId
-): Promise<ExternalFixture[]> {
-  // Stub production-ready: brancher API-Football (ou équivalent) ici.
-  // eslint-disable-next-line no-console
-  console.info(
-    '[externalScores] API provider not configured. Set EXPO_PUBLIC_EXTERNAL_SCORES_MOCK=1 for local demo fixtures.'
-  );
-  return [];
-}
-
 const apiStubProvider: ExternalScoresProvider = {
   source: 'api_stub',
-  async listFixtures(competition?: ExternalCompetitionId): Promise<ExternalFixture[]> {
-    try {
-      const fixtures = await fetchExternalApiFixtures(competition);
-      return fixtures.sort((a, b) => a.starts_at.getTime() - b.starts_at.getTime());
-    } catch (error) {
-      // eslint-disable-next-line no-console
-      console.warn('[externalScores] provider error:', error);
-      return [];
-    }
+  async listFixtures(): Promise<ExternalFixture[]> {
+    return [];
   },
   async getState(): Promise<ExternalScoresProviderState> {
     return {
@@ -140,13 +129,44 @@ function shouldUseMockProvider(): boolean {
   return process.env.EXPO_PUBLIC_EXTERNAL_SCORES_MOCK === '1';
 }
 
+let cachedProvider: ExternalScoresProvider | null = null;
+
 function resolveExternalScoresProvider(): ExternalScoresProvider {
-  return shouldUseMockProvider() ? mockExternalScoresProvider : apiStubProvider;
+  if (cachedProvider) return cachedProvider;
+
+  if (shouldUseMockProvider()) {
+    cachedProvider = mockExternalScoresProvider;
+    return cachedProvider;
+  }
+
+  if (hasExternalScoresApiKey()) {
+    cachedProvider = createApiFootballProvider();
+    return cachedProvider;
+  }
+
+  cachedProvider = apiStubProvider;
+  return cachedProvider;
+}
+
+/** Réinitialise le provider résolu (tests). */
+export function resetExternalScoresProviderCache(): void {
+  cachedProvider = null;
 }
 
 export const externalScoresService = {
   async listFixtures(competition?: ExternalCompetitionId): Promise<ExternalFixture[]> {
-    return resolveExternalScoresProvider().listFixtures(competition);
+    const provider = resolveExternalScoresProvider();
+    try {
+      const fixtures = await provider.listFixtures(competition);
+      return fixtures.sort((a, b) => a.starts_at.getTime() - b.starts_at.getTime());
+    } catch (error) {
+      if (shouldUseMockProvider()) {
+        return mockExternalScoresProvider.listFixtures(competition);
+      }
+      // eslint-disable-next-line no-console
+      console.warn('[externalScores] provider error:', error);
+      return [];
+    }
   },
 
   async getProviderState(): Promise<ExternalScoresProviderState> {

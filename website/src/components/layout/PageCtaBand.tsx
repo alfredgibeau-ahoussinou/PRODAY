@@ -22,7 +22,7 @@ export function PageCtaBand({
 
   return (
     <section
-      className={`border-t border-white/8 bg-[#030303] py-14 sm:py-16 ${
+      className={`border-t border-white/8 bg-[#030303] py-14 md:py-16 ${
         poleStyles?.accentTop ?? ""
       } ${className}`}
     >

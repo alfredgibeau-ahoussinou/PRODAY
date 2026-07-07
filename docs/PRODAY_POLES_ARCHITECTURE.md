@@ -813,15 +813,20 @@ Buteurs (si rapport validé ou API externe)
 - Source : Tout | Sur PRODAY | Dans le monde  
 - Portée : Tout | Mes suivis  
 
-## 8.5 Supporter Plus
+## 8.5 Tribune supporter — 100 % gratuit *(Supporter Plus obsolète)*
 
-| Feature | Gratuit | Plus |
-|---------|---------|------|
-| Suivis | 5 clubs + 10 joueurs | Illimité |
-| Alertes but | — | Oui |
-| Alertes coup d'envoi favori | — | Oui |
-| Fil / réactions | Limité | Illimité |
-| Badge supporter | — | Visible |
+> **Décision produit (2026)** : le tier payant « Supporter Plus » est **supprimé**.  
+> Pas de paywall, pas de plan store IAP pour le pôle tribune.  
+> Alignement code : `supporterFreeAccess.ts`, `subscriptionPlansByLine.ts` (`supporter: []`).
+
+| Feature | Inclus (gratuit) |
+|---------|------------------|
+| Suivis clubs / joueurs / tournois | Illimité |
+| Matchs PRODAY + monde (API-Football) | Oui |
+| Alertes but / coup d'envoi / rappels | Oui (opt-in profil) |
+| Fil, débats, réactions | Illimité |
+| Shop merch | Accès gratuit |
+| Badge supporter | Visible |
 
 ## 8.6 Parcours type dimanche
 
@@ -1015,9 +1020,9 @@ Annonces recrutement actives, multi-équipes, stats agrégées, vitrine premium.
 
 Recruteur / Coach / Agent / Organisateur — quotas Mercato messages, annonces, événements.
 
-## 12.6 Supporter Plus
+## 12.6 Tribune supporter *(Supporter Plus obsolète)*
 
-Alertes, suivis illimités, badge, fil illimité.
+100 % gratuit — alertes opt-in, suivis illimités, fil et shop sans abonnement store.
 
 ## 12.7 Physio Pro
 
@@ -1065,8 +1070,9 @@ Légende : **C** = créer/modifier, **L** = lecture, **—** = pas d'accès
 | Équipe (Team entity) | Absent | teams + memberships |
 | Stats coach | Partiel (TeamManagement, Live) | Workflow obligatoire + blocage joueur |
 | Joueur édite season_stats | Encore possible (EditProfileScreen) | Interdit |
-| Shell Supporter matchs | MatchsScreen partagé | Shell dédié tribune |
-| Scores monde | Absent | API L1 + D1 Arkema MVP |
+| Shell Supporter matchs | SupporterAppShell déployé | Shell dédié tribune ✓ |
+| Scores monde | API-Football MVP (L1 + D1 Arkema) | API L1 + D1 Arkema MVP ✓ |
+| Supporter Plus / paywall | Supprimé — tribune 100 % gratuite | Gratuit sans IAP ✓ |
 | Famille onglet | homme/woman | amateur + pro_player jeune |
 | Sync score coach -> tournoi | Manuel orga | Automatique |
 | Supporter permissions live | canViewTeamEvent bloque | Vue publique matchs suivis |
@@ -1099,7 +1105,7 @@ Légende : **C** = créer/modifier, **L** = lecture, **—** = pas d'accès
 
 1. Intégration API scores  
 2. Filtres H/F/mixte  
-3. Suivis et alertes Supporter Plus  
+3. Suivis illimités et alertes tribune (gratuit, préférences opt-in)  
 
 ## Phase 5 — Famille renforcée (2 semaines)
 

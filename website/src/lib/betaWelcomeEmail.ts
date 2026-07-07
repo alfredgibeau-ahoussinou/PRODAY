@@ -38,7 +38,7 @@ export function buildBetaWelcomeEmail(params: BetaWelcomeEmailParams): {
   html: string;
   text: string;
 } {
-  const site = (params.siteUrl ?? "https://proday.app").replace(/\/$/, "");
+  const site = (params.siteUrl ?? "https://proday75.fr").replace(/\/$/, "");
   const subject = "Bienvenue dans la bêta ProDay";
 
   const text = [
@@ -60,7 +60,7 @@ export function buildBetaWelcomeEmail(params: BetaWelcomeEmailParams): {
     "L'équipe ProDay",
     "",
     "—",
-    "Vous recevez cet email car vous vous êtes inscrit à la bêta sur proday.app.",
+    "Vous recevez cet email car vous vous êtes inscrit à la bêta sur proday75.fr.",
     "Contact : support@proday.app",
   ].join("\n");
 

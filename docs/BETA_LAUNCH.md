@@ -14,10 +14,10 @@ Vérifie : Firebase `.env`, typecheck, Jest, règles Firestore, pages légales, 
 
 | URL | Usage |
 |-----|--------|
-| https://proday75.netlify.app/beta | Inscription waitlist |
-| https://proday75.netlify.app/confidentialite | Politique de confidentialité (stores) |
-| https://proday75.netlify.app/cgu | CGU (stores) |
-| https://proday75.netlify.app/partenaires/convention | Convention sponsor (modèle) |
+| https://proday75.fr/beta | Inscription waitlist |
+| https://proday75.fr/confidentialite | Politique de confidentialité (stores) |
+| https://proday75.fr/cgu | CGU (stores) |
+| https://proday75.fr/partenaires/convention | Convention sponsor (modèle) |
 | `/legal/*.pdf` | PDF téléchargeables (générés via `npm run docs:legal`) |
 
 Déploiement site : `cd website && npm run netlify:deploy`

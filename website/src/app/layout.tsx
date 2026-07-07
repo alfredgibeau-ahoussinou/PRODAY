@@ -18,7 +18,7 @@ const syne = Syne({
 
 export const metadata: Metadata = {
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL ?? "https://proday75.netlify.app",
+    process.env.NEXT_PUBLIC_SITE_URL ?? "https://proday75.fr",
   ),
   title: {
     default: "ProDay — Connecter · Progresser · Réussir",
@@ -43,12 +43,12 @@ export const metadata: Metadata = {
     title: "ProDay",
     description:
       "Une saison. Une app. Recrutement, matchs, tournois, communauté et partenaires.",
-    images: ["/branding/logo-white.png"],
+    images: ["/branding/logo-proday-official.png"],
   },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#030303",
+  themeColor: "#000000",
 };
 
 export default function RootLayout({

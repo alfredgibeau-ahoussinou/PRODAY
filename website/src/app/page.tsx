@@ -23,7 +23,7 @@ export default function HomePage() {
       <HeroSection />
       <MarqueeStrip />
       <SpotlightGrid />
-      <div className="bg-[#030303]">
+      <div className="bg-black">
         <div className="mx-auto max-w-6xl px-4 pb-4 pt-8 sm:px-6">
           <DemoDisclaimer />
         </div>
@@ -38,7 +38,7 @@ export default function HomePage() {
         kicker="QUIZ"
         title="Quel pôle ProDay vous correspond ?"
         description="3 questions — découvrez votre pôle : Joueur, Pro, Santé ou Partenaires."
-        className="border-t border-white/8"
+        className="border-t border-[var(--proday-accent)]/10"
       >
         <div className="grid gap-10 lg:grid-cols-2 lg:items-start">
           <div>
@@ -46,7 +46,7 @@ export default function HomePage() {
               Parcours guidé
             </PremiumButton>
           </div>
-          <div className="card-premium rounded-2xl p-6">
+          <div className="card-flash rounded-2xl p-6">
             <RoleQuiz compact />
           </div>
         </div>
@@ -55,12 +55,12 @@ export default function HomePage() {
         kicker="FAQ"
         title="Questions fréquentes"
         description="Tarifs, partenaires, Reels et lancement — les réponses essentielles."
-        className="bg-[#050505]"
+        className="bg-neutral-950"
       >
         <FaqAccordion limit={5} variant="dark" />
         <Link
           href={ROUTES.faq}
-          className="mt-8 inline-block text-sm font-medium text-white/50 transition hover:text-white"
+          className="mt-8 inline-block text-sm font-semibold text-[var(--proday-accent)] transition hover:text-cyan-300"
         >
           Voir toute la FAQ
         </Link>

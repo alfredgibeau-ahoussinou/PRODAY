@@ -7,7 +7,7 @@ Envoi via [EmailJS](https://www.emailjs.com/) : pas de domaine DNS à vérifier,
 1. **Site à jour ?** Sur `/beta`, il ne doit plus y avoir « Démo locale ». Si oui → redéployer (Netlify ou Vercel).
 2. **Test API** :
    ```bash
-   curl -s -X POST https://proday75.netlify.app/api/beta \
+   curl -s -X POST https://proday75.fr/api/beta \
      -H "Content-Type: application/json" \
      -d '{"email":"test@example.com","role":"player"}'
    ```
@@ -66,7 +66,7 @@ Variables : `to_email`, `member_role`, `profile_label`, `site_url`, `beta_url`, 
 | `EMAILJS_TEMPLATE_ID` | ID template bêta |
 | `EMAILJS_PUBLIC_KEY` | Clé publique |
 | `EMAILJS_PRIVATE_KEY` | Clé privée (secret) |
-| `NEXT_PUBLIC_SITE_URL` | `https://proday-xak9.vercel.app` ou `https://proday.app` |
+| `NEXT_PUBLIC_SITE_URL` | `https://proday75.fr` |
 
 Redéployez après ajout des variables.
 
@@ -80,7 +80,7 @@ firebase functions:config:set \
   beta.emailjs_template_id="template_xxx" \
   beta.emailjs_public_key="xxx" \
   beta.emailjs_private_key="xxx" \
-  beta.site_url="https://proday.app"
+  beta.site_url="https://proday75.fr"
 
 firebase deploy --only functions:submitBetaWaitlist,firestore:rules
 ```

@@ -22,7 +22,8 @@ export function SpotlightGrid() {
       id="decouvrir"
       kicker="SIGNATURE"
       title="Les fondations de la plateforme"
-      description="Reels, communauté, partenaires, famille et compétition — structurés autour de quatre pôles distincts."
+      description="Reels, communauté, partenaires, famille et compétition — structurés autour de six pôles distincts."
+      className="bg-black"
     >
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {SPOTLIGHT_FEATURES.map((item, i) => (
@@ -32,20 +33,22 @@ export function SpotlightGrid() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: i * 0.06 }}
-            className="card-premium group relative overflow-hidden rounded-2xl p-6 transition duration-300"
+            className="card-flash group relative overflow-hidden rounded-2xl p-6"
           >
             <div
-              className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${item.accent} opacity-60 transition group-hover:opacity-100`}
+              className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${item.accent} opacity-40 transition group-hover:opacity-70`}
             />
             <div className="relative">
-              <p className="text-xs font-medium uppercase tracking-wider text-white/45">
+              <p className="text-xs font-bold uppercase tracking-wider text-[var(--proday-accent)]">
                 {item.tagline}
               </p>
-              <h3 className="font-display mt-2 text-xl font-bold text-white">{item.title}</h3>
+              <h3 className="font-display mt-2 text-xl font-bold uppercase text-white">
+                {item.title}
+              </h3>
               <p className="mt-2 text-sm leading-relaxed text-white/55">{item.description}</p>
               <Link
                 href={LINKS[item.id] ?? ROUTES.features}
-                className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-white/80 transition group-hover:gap-2.5 group-hover:text-white"
+                className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--proday-accent)] transition group-hover:gap-2.5"
               >
                 En savoir plus
                 <ArrowRight size={14} />

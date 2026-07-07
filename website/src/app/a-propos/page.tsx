@@ -21,6 +21,8 @@ export default function AboutPage() {
         kicker="À PROPOS"
         title="Connecter · Progresser · Réussir"
         description={BRAND.mission}
+        logo={BRAND.logo}
+        logoAlt={BRAND.name}
         dark
       />
       <VisionTodayTomorrow />

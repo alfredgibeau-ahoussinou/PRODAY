@@ -41,6 +41,7 @@ import { EmailVerificationScreen } from './src/screens/EmailVerificationScreen';
 import { useUnreadMessageCount } from './src/hooks/useUnreadMessages';
 import { AdminAppShell } from './src/navigation/AdminAppShell';
 import { SponsorAppShell } from './src/navigation/SponsorAppShell';
+import { SupporterAppShell } from './src/navigation/SupporterAppShell';
 import { AdminPreviewBanner } from './src/components/admin/AdminPreviewBanner';
 import { useIsAdmin } from './src/hooks/useIsAdmin';
 import type {
@@ -259,6 +260,18 @@ function AppShell() {
     return (
       <SubscriptionProvider profile={sessionProfile ?? profile}>
         <SponsorAppShell />
+      </SubscriptionProvider>
+    );
+  }
+
+  if (
+    !authLoading &&
+    profile &&
+    (profile.role === 'supporter' || getUserProductLine(profile) === 'supporter')
+  ) {
+    return (
+      <SubscriptionProvider profile={sessionProfile ?? profile}>
+        <SupporterAppShell />
       </SubscriptionProvider>
     );
   }

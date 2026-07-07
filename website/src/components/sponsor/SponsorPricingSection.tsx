@@ -55,7 +55,7 @@ function tierPriceDetail(tier: SponsorPricingTierWeb, yearly: boolean): string |
 export function SponsorPricingSection({
   compact,
   showPillars = !compact,
-  dark = false,
+  dark = true,
   yearly: yearlyProp,
   hideToggle = false,
 }: SponsorPricingSectionProps) {
@@ -216,7 +216,7 @@ export function SponsorPricingSection({
                   highlighted
                     ? "bg-amber-400 text-slate-950 hover:bg-amber-300"
                     : dark
-                      ? "bg-white text-neutral-950 hover:bg-neutral-100"
+                      ? "border border-[var(--proday-accent)]/30 bg-[var(--proday-accent-muted)] text-black hover:bg-cyan-300"
                       : "bg-proday-ink text-white hover:bg-neutral-800"
                 }`}
               >

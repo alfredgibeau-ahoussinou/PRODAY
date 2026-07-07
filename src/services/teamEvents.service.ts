@@ -42,6 +42,13 @@ import { usersService } from './users.service';
 import { profileService } from './profile.service';
 import { assertTeamEventManageAccess, assertTeamEventRsvpAccess } from '../utils/teamEventAccess';
 import { buildActivityFromTeamEvent } from '../utils/teamEventActivitySync';
+import {
+  aggregateSeasonStats,
+  collectMatchSheetPlayerUids,
+  importLiveActionsToMatchSheet,
+  seasonDeltaFromMatchSheet,
+  tallyLiveActionStats,
+} from '../utils/matchSeasonStats';
 import { playerActivityService } from './playerActivity.service';
 import type { User } from '../models/User';
 import { parentalGuardianService } from './parentalGuardian.service';
@@ -552,17 +559,76 @@ export const teamEventsService = {
       updated_at: serverTimestamp(),
     });
 
-    if (
-      finalized &&
-      event.live_actions?.length &&
-      !event.stats_applied_at
-    ) {
+    if (finalized && !event.stats_applied_at) {
       try {
-        await this.applyLiveStatsToPlayers(eventId, actor);
+        await this.applyPlayerMatchStatsToSeason(eventId, actor);
       } catch (error) {
-        console.warn('[teamEvents] applyLiveStatsToPlayers auto:', error);
+        console.warn('[teamEvents] applyPlayerMatchStatsToSeason auto:', error);
       }
     }
+  },
+
+  /** Importe les actions live vers player_match_stats (coach). */
+  async importLiveStatsToMatchSheet(eventId: string, actor: TeamEventActor): Promise<void> {
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+    const event = await this.getById(eventId);
+    if (!event) throw new Error('Événement introuvable');
+    assertManage(event, actor);
+    if (!event.live_actions?.length) {
+      throw new Error('Aucune action live à importer.');
+    }
+
+    const sheets = importLiveActionsToMatchSheet(event);
+    await updateDoc(doc(database, COL, eventId), {
+      player_match_stats: sheets,
+      updated_at: serverTimestamp(),
+    });
+  },
+
+  /** Propagation feuille match → season_stats après validation rapport. */
+  async applyPlayerMatchStatsToSeason(
+    eventId: string,
+    actor: TeamEventActor,
+  ): Promise<void> {
+    const event = await this.getById(eventId);
+    if (!event) throw new Error('Événement introuvable');
+    assertManage(event, actor, { allowWhenReportLocked: true });
+    if (event.stats_applied_at) {
+      throw new Error('Les stats ont déjà été appliquées pour cet événement.');
+    }
+    if (!event.match_report_finalized_at) {
+      throw new Error('Validez d’abord le rapport de match avant d’appliquer les stats saison.');
+    }
+
+    const sheetUids = collectMatchSheetPlayerUids(event);
+    if (sheetUids.length === 0) {
+      if (event.live_actions?.length) {
+        await this.applyLiveStatsToPlayers(eventId, actor);
+        return;
+      }
+      throw new Error('Aucune feuille de match à appliquer.');
+    }
+
+    for (const uid of sheetUids) {
+      const sheet = event.player_match_stats![uid];
+      const user = await usersService.getPublicById(uid);
+      if (!user || user.role !== 'player') continue;
+      const delta = seasonDeltaFromMatchSheet(sheet);
+      const next = aggregateSeasonStats(user.profile.season_stats, delta);
+      await profileService.updateProfile(uid, {
+        profile: { season_stats: next },
+      });
+      await syncPlayerActivityFromEvent(event, uid);
+    }
+
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+    await updateDoc(doc(database, COL, eventId), {
+      stats_applied_at: serverTimestamp(),
+      updated_at: serverTimestamp(),
+    });
+    await syncTeamEventActivitiesOnServer(eventId);
   },
 
   async sendReminders(eventId: string): Promise<number> {
@@ -588,12 +654,7 @@ export const teamEventsService = {
       throw new Error('Validez d’abord le rapport de match avant d’appliquer les stats saison.');
     }
 
-    const tallies: Record<string, { goals: number; assists: number }> = {};
-    for (const a of event.live_actions) {
-      if (!tallies[a.player_uid]) tallies[a.player_uid] = { goals: 0, assists: 0 };
-      if (a.type === 'goal') tallies[a.player_uid].goals += 1;
-      if (a.type === 'assist') tallies[a.player_uid].assists += 1;
-    }
+    const tallies = tallyLiveActionStats(event.live_actions);
 
     for (const [uid, delta] of Object.entries(tallies)) {
       const user = await usersService.getPublicById(uid);
@@ -601,11 +662,11 @@ export const teamEventsService = {
       const prev = user.profile.season_stats ?? { matches: 0, goals: 0, assists: 0 };
       await profileService.updateProfile(uid, {
         profile: {
-          season_stats: {
-            matches: prev.matches + 1,
-            goals: prev.goals + delta.goals,
-            assists: prev.assists + delta.assists,
-          },
+          season_stats: aggregateSeasonStats(prev, {
+            matches: 1,
+            goals: delta.goals,
+            assists: delta.assists,
+          }),
         },
       });
     }

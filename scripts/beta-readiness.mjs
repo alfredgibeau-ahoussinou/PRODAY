@@ -9,7 +9,7 @@ import { spawnSync } from 'node:child_process';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = resolve(__dirname, '..');
-const siteUrl = process.env.BETA_SITE_URL?.trim() || 'https://proday75.netlify.app';
+const siteUrl = process.env.BETA_SITE_URL?.trim() || 'https://proday75.fr';
 
 function loadEnv() {
   const path = resolve(root, '.env');

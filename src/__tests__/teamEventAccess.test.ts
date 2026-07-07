@@ -60,4 +60,16 @@ describe('teamEventAccess', () => {
     expect(canManageTeamEvent(baseEvent, coach)).toBe(true);
     expect(canManageTeamEvent(baseEvent, player('player-2'))).toBe(false);
   });
+
+  it('autorise un supporter sur tournoi ou club suivi', () => {
+    const supporter = { ...player('sup-1'), role: 'supporter' as const } as User;
+    const tournamentEvent = { ...baseEvent, tournament_id: 't1', invitee_uids: [] };
+    expect(canViewTeamEvent(tournamentEvent, supporter)).toBe(true);
+    expect(
+      canViewTeamEvent(baseEvent, supporter, {
+        supporterFollow: { clubIds: new Set(['club-a']), tournamentIds: new Set() },
+      }),
+    ).toBe(true);
+    expect(canViewTeamEvent(baseEvent, supporter)).toBe(false);
+  });
 });

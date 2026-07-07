@@ -20,10 +20,9 @@ import {
   FREE_TIER_LABEL,
   PRO_TIER_LABEL,
   ROLES_WITHOUT_STORE_PLAN,
-  getPlanForRoleAndLine,
   type SubscriptionPlanDefinition,
 } from '../../content/subscriptionPlans';
-import { getMercatoQuotaLabel } from '../../content/subscriptionPlansByLine';
+import { getMercatoQuotaLabel, getPlanForRoleAndLine } from '../../content/subscriptionPlansByLine';
 import {
   getSubscriptionPlanVisual,
   isDarkSubscriptionVisual,

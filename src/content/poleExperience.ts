@@ -268,6 +268,7 @@ export function getTabShortLabel(
     if (tab === 'profil') return 'Moi';
   }
   if (line === 'supporter') {
+    if (tab === 'home') return 'Tribune';
     if (tab === 'matchs') return 'Matchs';
     if (tab === 'feed') return 'Suivis';
     if (tab === 'messages') return 'Débats';

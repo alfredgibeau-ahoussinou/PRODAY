@@ -22,7 +22,7 @@ export const PLAN_IDS_BY_LINE: Record<ProductLineId, SubscriptionPlanId[]> =
   homme: ['player_plus'],
   woman: ['player_plus'],
   amateur: ['player_plus', 'coach_pro'],
-  supporter: ['player_plus'],
+  supporter: [],
   pro: [
     'recruiter_pro',
     'coach_pro',
@@ -112,25 +112,6 @@ const LINE_PLAN_PATCHES: Record<
         'Messages Mercato Amateur illimités',
         'Annonces Mercato local actives',
         'Statistiques effectif',
-      ],
-    },
-  },
-  supporter: {
-    player_plus: {
-      label: 'Supporter Plus',
-      tagline: 'Tribune numérique — matchs, réels et fil',
-      freeIncludes: [
-        'Profil supporter et clubs favoris',
-        'Calendrier matchs en lecture',
-        'Fil communautaire et réactions',
-        'Reels et moments forts',
-        'Messagerie communauté limitée',
-      ],
-      proIncludes: [
-        'Fil et réactions illimités',
-        'Alertes matchs clubs favoris',
-        'Badge supporter visible',
-        'Accès prioritaire contenus live',
       ],
     },
   },

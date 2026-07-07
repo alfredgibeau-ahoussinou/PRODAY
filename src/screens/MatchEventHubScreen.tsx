@@ -13,7 +13,8 @@ import { teamEventsService } from '../services/teamEvents.service';
 import { useAuth } from '../context/AuthContext';
 import { useTabNavigation } from '../context/TabNavigationContext';
 import { resolveLiveState } from '../utils/matchLive';
-import { canViewTeamEvent } from '../utils/teamEventAccess';
+import { canViewTeamEvent, type SupporterFollowContext } from '../utils/teamEventAccess';
+import { followsService } from '../services/follows.service';
 import { EventLineupScreen } from './EventLineupScreen';
 import { MatchLiveScoreboard } from '../components/matchs/hub/MatchLiveScoreboard';
 import { MatchHubOverviewTab } from '../components/matchs/hub/MatchHubOverviewTab';
@@ -55,6 +56,7 @@ export const MatchEventHubScreen: React.FC<MatchEventHubScreenProps> = ({
   const [loading, setLoading] = useState(true);
   const [chapter, setChapter] = useState<MatchHubChapterId>(initialChapter);
   const [rsvpBusy, setRsvpBusy] = useState(false);
+  const [supporterFollow, setSupporterFollow] = useState<SupporterFollowContext | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -70,6 +72,21 @@ export const MatchEventHubScreen: React.FC<MatchEventHubScreenProps> = ({
     setChapter(initialChapter);
   }, [initialChapter]);
 
+  useEffect(() => {
+    if (!profile?.uid || profile.role !== 'supporter') {
+      setSupporterFollow(null);
+      return;
+    }
+    void followsService.listByFollower(profile.uid).then((rows) => {
+      setSupporterFollow({
+        clubIds: new Set(rows.filter((f) => f.target_type === 'club').map((f) => f.target_id)),
+        tournamentIds: new Set(
+          rows.filter((f) => f.target_type === 'tournament').map((f) => f.target_id),
+        ),
+      });
+    });
+  }, [profile?.uid, profile?.role]);
+
   const isStaff =
     Boolean(isAdmin) ||
     profile?.role === 'coach' ||
@@ -77,7 +94,13 @@ export const MatchEventHubScreen: React.FC<MatchEventHubScreenProps> = ({
     profile?.role === 'agent' ||
     profile?.role === 'club';
 
-  const hasAccess = Boolean(event && canViewTeamEvent(event, profile, { isAdmin }));
+  const hasAccess = Boolean(
+    event &&
+      canViewTeamEvent(event, profile, {
+        isAdmin,
+        supporterFollow: supporterFollow ?? undefined,
+      }),
+  );
   const canManageLive = Boolean(isStaff || profile?.uid === event?.organizer_uid);
   const reportLocked = Boolean(event?.match_report_finalized_at) && !canManageLive;
   const live = useMemo(() => (event ? resolveLiveState(event) : null), [event]);

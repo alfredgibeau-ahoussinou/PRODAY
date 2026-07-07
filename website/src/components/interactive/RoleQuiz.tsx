@@ -42,7 +42,7 @@ export function RoleQuiz({ compact }: { compact?: boolean }) {
         <p className="mt-2 text-sm text-white/55">3 questions — Joueur, Pro, Santé ou Partenaires</p>
         <Link
           href={ROUTES.quiz}
-          className="mt-4 inline-block rounded-full bg-white px-5 py-2 text-sm font-semibold text-neutral-950"
+          className="mt-4 inline-flex min-h-11 items-center rounded-full bg-[var(--proday-accent)] px-5 py-2 text-sm font-bold text-black transition hover:bg-cyan-300"
         >
           Lancer le quiz
         </Link>
@@ -71,7 +71,7 @@ export function RoleQuiz({ compact }: { compact?: boolean }) {
                   key={opt.label}
                   type="button"
                   onClick={() => pick(opt.role)}
-                  className="block w-full rounded-xl border border-white/10 bg-white/5 p-4 text-left text-white/85 transition hover:border-white/25 hover:bg-white/10"
+                  className="block w-full min-h-11 rounded-xl border border-white/10 bg-white/5 p-4 text-left text-white/85 transition hover:border-[var(--proday-accent)]/40 hover:bg-[var(--proday-accent-muted)]"
                 >
                   {opt.label}
                 </button>
@@ -83,7 +83,7 @@ export function RoleQuiz({ compact }: { compact?: boolean }) {
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="rounded-3xl bg-gradient-to-br from-blue-950 to-neutral-950 p-8 text-white ring-1 ring-white/10"
+            className="rounded-3xl border border-[var(--proday-accent)]/20 bg-gradient-to-br from-black via-[#0a1520] to-black p-8 text-white ring-1 ring-white/10"
           >
             <p className="text-xs text-white/60">Votre profil</p>
             <h3 className="mt-2 text-2xl font-bold">{result.title}</h3>
@@ -91,7 +91,7 @@ export function RoleQuiz({ compact }: { compact?: boolean }) {
             <div className="mt-6 flex flex-wrap gap-3">
               <Link
                 href={result.href}
-                className="rounded-full bg-white px-6 py-2.5 text-sm font-semibold text-neutral-950 hover:bg-neutral-100 active:bg-neutral-200"
+                className="inline-flex min-h-11 items-center rounded-full bg-[var(--proday-accent)] px-6 py-2.5 text-sm font-bold text-black transition hover:bg-cyan-300"
               >
                 {result.cta}
               </Link>

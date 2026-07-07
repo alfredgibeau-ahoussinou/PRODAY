@@ -7,6 +7,7 @@ import {
 export const BRAND = {
   name: "ProDay",
   tagline: "CONNECTER • PROGRESSER • RÉUSSIR",
+  logo: "/branding/logo-proday-official.png",
   mission:
     "Profil, Mercato, journal d'activités et saison — quatre pôles (Joueur, Pro, Santé, Partenaires) dans une app mobile honnête sur ce qui est livré aujourd'hui.",
 } as const;
@@ -136,7 +137,7 @@ export const SUPPORTER_BRAND = {
   logo: UNIVERSE_LOGOS.supporter,
   tagline: "SUIVRE • VIBRER • PARTAGER",
   mission:
-    "Fans et communauté — matchs, réels et fil en direct. Distinct du pôle Partenaires (sponsors commerciaux sur Pro).",
+    "Tribune 100 % gratuite — matchs live (PRODAY + monde), suivis illimités, débats, réels et shop merch. Sans abonnement ni paywall.",
   accent: "#7C3AED",
   accentDark: "#5B21B6",
 } as const;
@@ -761,27 +762,35 @@ export const AMATEUR_MODULES = [
 export const SUPPORTER_MODULES = [
   {
     id: "matchs-supporter",
-    title: "Matchs",
-    subtitle: "Calendrier & live",
+    title: "Matchs live",
+    subtitle: "PRODAY & monde",
     description:
-      "Suivez le calendrier des matchs, résultats et convocations — votre place en tribune numérique.",
+      "Scores en direct via API-Football, filtres H/F/mixte et calendrier — votre tribune numérique.",
     image: "/showcase/classic-match.jpg",
   },
   {
-    id: "reels-supporter",
-    title: "Reels",
-    subtitle: "Moments forts",
+    id: "suivis-supporter",
+    title: "Suivis",
+    subtitle: "Clubs · joueurs · tournois",
     description:
-      "Vidéos courtes et séquences des clubs que vous suivez — vibrez avec la communauté.",
+      "Suivez sans limite vos clubs, joueurs et tournois favoris — alertes opt-in depuis le profil.",
     image: "/showcase/classic-exp-discover.jpg",
   },
   {
-    id: "feed-supporter",
-    title: "Fil",
-    subtitle: "Communauté & actu",
+    id: "debats-supporter",
+    title: "Débats & fil",
+    subtitle: "Communauté",
     description:
-      "Publications, réactions et question hebdo — l'activité de votre communauté supporter.",
+      "Publications, réactions, débats autour des matchs et question hebdo — 100 % gratuit.",
     image: "/showcase/classic-exp-messages.jpg",
+  },
+  {
+    id: "reels-supporter",
+    title: "Moments & shop",
+    subtitle: "Réels & merch",
+    description:
+      "Vidéos courtes des clubs suivis et boutique merch — sans abonnement store.",
+    image: "/showcase/classic-exp-discover.jpg",
   },
 ] as const;
 
@@ -887,26 +896,26 @@ export const UNIVERSE_PAGE_CONFIG = {
       image: "/showcase/classic-match.jpg",
     },
     highlights: [
-      { label: "Public", value: "Fans & communauté" },
-      { label: "Live", value: "Matchs & réels" },
-      { label: "Fil", value: "Communauté" },
-      { label: "Distinct", value: "Sans Mercato" },
+      { label: "Tarif", value: "100 % gratuit" },
+      { label: "Live", value: "Matchs PRODAY + monde" },
+      { label: "Suivis", value: "Illimités" },
+      { label: "Communauté", value: "Fil & débats" },
     ],
-    modulesTitle: "Tribune numérique",
+    modulesTitle: "Tribune numérique gratuite",
     modulesSubtitle:
-      "Supporters — matchs, réels et fil communautaire, distinct des pôles joueur, amateur et partenaires.",
+      "Supporters — live scores, suivis, débats, réels et shop merch. Sans Mercato ni abonnement store.",
     modules: SUPPORTER_MODULES as readonly UniverseModule[],
     journeyIds: ["player"] as const,
     audienceNote:
       "Joueur ou coach ? Direction Amateur ou Pro. Partenaire commercial ? Direction Partenaires.",
     showPulse: false,
     showVerification: false,
-    pricingPlanIds: ["player_plus"] as const,
-    pricingTitle: "Formule supporter",
+    pricingPlanIds: [] as const,
+    pricingTitle: "Tribune 100 % gratuite",
     cta: {
       title: "Créez votre compte Supporter",
       description:
-        "Inscription supporter en quelques minutes — matchs, réels et fil communautaire.",
+        "Inscription supporter gratuite — matchs live, suivis illimités, débats et shop merch.",
       beta: "Liste d'attente Supporter",
     },
   },
@@ -1161,7 +1170,7 @@ export const SUBSCRIPTION_PLANS_WEB = [
     tagline: "CV en ligne, visibilité et Mercato",
     monthlyEur: 2.99,
     storeAvailable: true,
-    universes: ["homme", "woman", "amateur", "supporter"] as ProductLineWeb[],
+    universes: ["homme", "woman", "amateur"] as ProductLineWeb[],
     freeIncludes: [
       "Profil, Pulse et CV en ligne",
       "Galerie et stats saison",

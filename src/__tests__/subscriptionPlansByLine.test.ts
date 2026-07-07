@@ -55,13 +55,10 @@ describe('subscriptionPlansByLine', () => {
     expect(isPlanAvailableOnLine('coach_pro', 'homme')).toBe(false);
   });
 
-  it('expose le plan supporter sur Supporter', () => {
-    const supporter = getPlanForRoleAndLine('supporter', 'supporter');
-
-    expect(supporter?.label).toBe('Supporter Plus');
-    expect(supporter?.freeIncludes.some((i) => i.includes('Fil communautaire'))).toBe(true);
-    expect(plansForProductLine('supporter')).toHaveLength(1);
-    expect(isPlanAvailableOnLine('player_plus', 'supporter')).toBe(true);
+  it('n’expose aucun plan payant sur Supporter', () => {
+    expect(getPlanForRoleAndLine('supporter', 'supporter')).toBeNull();
+    expect(plansForProductLine('supporter')).toHaveLength(0);
+    expect(isPlanAvailableOnLine('player_plus', 'supporter')).toBe(false);
     expect(isPlanAvailableOnLine('player_plus', 'homme')).toBe(true);
     expect(isPlanAvailableOnLine('coach_pro', 'supporter')).toBe(false);
   });

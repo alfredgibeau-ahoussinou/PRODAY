@@ -112,7 +112,7 @@ export function LiveStatsDemo() {
         </p>
         <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/10">
           <motion.div
-            className="h-full bg-emerald-500"
+            className="h-full bg-[var(--proday-accent)]"
             animate={{ width: `${Math.min(100, total * 12)}%` }}
           />
         </div>

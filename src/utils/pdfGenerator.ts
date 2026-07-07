@@ -222,7 +222,7 @@ export function buildPlayerCvHtml(data: PlayerCvData, logoDataUrl?: string): str
   <h2>Palmarès & distinctions</h2>
   ${achievements}
   <footer class="footer">
-    <span>Document généré via ProDay · proday.app</span>
+    <span>Document généré via ProDay · proday75.fr</span>
     <span>${escapeHtml(data.email ?? '')}</span>
   </footer>
 </body>

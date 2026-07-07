@@ -1,15 +1,21 @@
-import { externalScoresService } from '../services/externalScores.service';
+import { externalScoresService, resetExternalScoresProviderCache } from '../services/externalScores.service';
 
 describe('externalScoresService', () => {
   const previousFlag = process.env.EXPO_PUBLIC_EXTERNAL_SCORES_MOCK;
+  const previousKey = process.env.EXPO_PUBLIC_EXTERNAL_SCORES_API_KEY;
 
   beforeEach(() => {
     process.env.EXPO_PUBLIC_EXTERNAL_SCORES_MOCK = '1';
+    delete process.env.EXPO_PUBLIC_EXTERNAL_SCORES_API_KEY;
+    resetExternalScoresProviderCache();
   });
 
   afterAll(() => {
     if (previousFlag == null) delete process.env.EXPO_PUBLIC_EXTERNAL_SCORES_MOCK;
     else process.env.EXPO_PUBLIC_EXTERNAL_SCORES_MOCK = previousFlag;
+    if (previousKey == null) delete process.env.EXPO_PUBLIC_EXTERNAL_SCORES_API_KEY;
+    else process.env.EXPO_PUBLIC_EXTERNAL_SCORES_API_KEY = previousKey;
+    resetExternalScoresProviderCache();
   });
 
   it('retourne des fixtures mock triées', async () => {
@@ -36,11 +42,20 @@ describe('externalScoresService', () => {
 
   it('n’utilise pas le mock sans flag explicite', async () => {
     delete process.env.EXPO_PUBLIC_EXTERNAL_SCORES_MOCK;
+    resetExternalScoresProviderCache();
     const fixtures = await externalScoresService.listFixtures();
     const state = await externalScoresService.getProviderState();
     expect(fixtures).toEqual([]);
     expect(state.source).toBe('api_stub');
     expect(state.healthy).toBe(false);
+  });
+
+  it('sélectionne le provider API quand une clé est configurée', async () => {
+    delete process.env.EXPO_PUBLIC_EXTERNAL_SCORES_MOCK;
+    process.env.EXPO_PUBLIC_EXTERNAL_SCORES_API_KEY = 'test-key';
+    resetExternalScoresProviderCache();
+    const state = await externalScoresService.getProviderState();
+    expect(state.source).toBe('api_football');
   });
 });
 

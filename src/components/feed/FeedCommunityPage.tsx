@@ -10,6 +10,7 @@ import { ProDayText } from '../ui/ProDayText';
 import { Icon } from '../ui/Icon';
 import { TabScreenShell } from '../app/TabScreenShell';
 import { useAppTheme } from '../../context/ProductLineContext';
+import { useFemalePlayerPresentation } from '../../hooks/useFemalePlayerPresentation';
 import { useTranslation } from '../../context/LocaleContext';
 import { spacing } from '../../theme/designTokens';
 import type { AppColors } from '../../theme/universeTheme';
@@ -36,6 +37,7 @@ export const FeedCommunityPage: React.FC<FeedCommunityPageProps> = ({
   onOpenMessages,
 }) => {
   const { productLine, colors: c } = useAppTheme();
+  const isFemalePresentation = useFemalePlayerPresentation();
   const { t, locale } = useTranslation();
   const styles = useMemo(() => createStyles(c), [c]);
   const [refreshSignal, setRefreshSignal] = useState(0);
@@ -68,7 +70,9 @@ export const FeedCommunityPage: React.FC<FeedCommunityPageProps> = ({
   };
 
   
-  const subtitle = isWoman ? t('feed.subtitle.womanCommunity') : t('feed.subtitle.community');
+  const subtitle = isFemalePresentation
+    ? t('feed.subtitle.womanCommunity')
+    : t('feed.subtitle.community');
 
   const renderResponse = ({ item }: { item: WeeklyQuestionResponse }) => (
     <View>

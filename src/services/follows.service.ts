@@ -9,7 +9,7 @@ import {
   setDoc,
   where,
 } from 'firebase/firestore';
-import { getDb } from '../lib/firebase';
+import { getDb, getFirebaseAuth } from '../lib/firebase';
 import { isFirebaseConfigured } from '../config/firebase';
 import type { Follow, FollowTargetType } from '../models/Follow';
 
@@ -46,6 +46,8 @@ function followId(followerUid: string, targetType: FollowTargetType, targetId: s
 export const followsService = {
   async listByFollower(followerUid: string): Promise<Follow[]> {
     if (!isFirebaseConfigured() || !followerUid) return [];
+    const authUid = getFirebaseAuth()?.currentUser?.uid;
+    if (!authUid || authUid !== followerUid) return [];
     const database = getDb();
     if (!database) return [];
     try {
@@ -66,6 +68,8 @@ export const followsService = {
     targetLabel?: string
   ): Promise<void> {
     if (!isFirebaseConfigured()) throw new Error('Firebase non configuré');
+    const authUid = getFirebaseAuth()?.currentUser?.uid;
+    if (!authUid || authUid !== followerUid) throw new Error('Suivi non autorisé.');
     const database = getDb();
     if (!database) throw new Error('Firebase non configuré');
     if (!followerUid || !targetId) throw new Error('Suivi invalide.');
@@ -86,6 +90,8 @@ export const followsService = {
     targetId: string
   ): Promise<void> {
     if (!isFirebaseConfigured()) throw new Error('Firebase non configuré');
+    const authUid = getFirebaseAuth()?.currentUser?.uid;
+    if (!authUid || authUid !== followerUid) throw new Error('Suivi non autorisé.');
     const database = getDb();
     if (!database) throw new Error('Firebase non configuré');
     const id = followId(followerUid, targetType, targetId);

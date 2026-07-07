@@ -1,7 +1,7 @@
 import type { ProductLineId } from '../models/ProductLine';
 import { colors as baseColors } from './designTokens';
 import { amateurColorOverrides } from './prodayAmateurTheme';
-import { proColorOverrides } from './universeTheme';
+import { proColorOverrides } from './proThemeColors';
 import { womanColorOverrides } from './prodayWomanTheme';
 import type { PlayerSegment } from '../utils/playerSegment';
 import type { AppColors } from './universeTheme';

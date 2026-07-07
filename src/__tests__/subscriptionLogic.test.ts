@@ -54,4 +54,15 @@ describe('subscriptionLogic', () => {
     });
     expect(result.allowed).toBe(true);
   });
+
+  it('autorise le supporter sans quota ni abonnement', () => {
+    const result = checkFeatureAccess({
+      role: 'supporter',
+      tier: 'free',
+      feature: 'mercato_apply',
+      usage: { period: '2026-06', mercato_applications: 50, recruitment_messages: 0 },
+    });
+    expect(result.allowed).toBe(true);
+    expect(result.planId).toBeNull();
+  });
 });

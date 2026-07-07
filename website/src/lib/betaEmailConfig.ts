@@ -3,5 +3,5 @@ export function resolveBetaSiteUrl(): string {
   if (configured) return configured;
   const vercel = process.env.VERCEL_URL?.trim();
   if (vercel) return `https://${vercel}`;
-  return "https://proday.app";
+  return "https://proday75.fr";
 }

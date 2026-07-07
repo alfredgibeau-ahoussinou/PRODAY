@@ -1,43 +1,41 @@
 "use client";
 
-import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
+import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Play } from "lucide-react";
 import { BRAND } from "@/lib/content";
-import { PRODAY_LOGO_ON_DARK } from "@/lib/brandingAssets";
 import { ROUTES } from "@/lib/routes";
 import { PremiumButton } from "@/components/ui/PremiumButton";
 import { Kicker } from "@/components/ui/Kicker";
 
+const HERO_SLIDES = [
+  { num: "01", label: "Joueur" },
+  { num: "02", label: "Amateur" },
+  { num: "03", label: "Supporter" },
+  { num: "04", label: "Pro" },
+  { num: "05", label: "Santé" },
+  { num: "06", label: "Partenaires" },
+];
+
 export function HeroSection() {
-  const mx = useMotionValue(0);
-  const my = useMotionValue(0);
-  const sx = useSpring(mx, { stiffness: 80, damping: 20 });
-  const sy = useSpring(my, { stiffness: 80, damping: 20 });
-  const rotateX = useTransform(sy, [-0.5, 0.5], [6, -6]);
-  const rotateY = useTransform(sx, [-0.5, 0.5], [-6, 6]);
-
-  function onMove(e: React.MouseEvent<HTMLDivElement>) {
-    const rect = e.currentTarget.getBoundingClientRect();
-    mx.set((e.clientX - rect.left) / rect.width - 0.5);
-    my.set((e.clientY - rect.top) / rect.height - 0.5);
-  }
-
-  function onLeave() {
-    mx.set(0);
-    my.set(0);
-  }
-
   return (
-    <section className="relative min-h-screen overflow-hidden pt-24 gradient-mesh noise grid-lines">
-      <div className="pointer-events-none absolute inset-0">
-        <div className="absolute left-1/2 top-1/3 h-[500px] w-[500px] -translate-x-1/2 rounded-full bg-blue-600/10 blur-[120px]" />
-        <div className="absolute right-0 top-0 h-96 w-96 rounded-full bg-violet-600/8 blur-[100px]" />
+    <section className="relative max-h-[100dvh] min-h-[100dvh] overflow-hidden lg:max-h-none lg:min-h-screen">
+      <div className="absolute inset-0">
+        <Image
+          src="/showcase/classic-arena.jpg"
+          alt=""
+          fill
+          className="object-cover object-center"
+          priority
+          sizes="100vw"
+        />
+        <div className="absolute inset-0 hero-overlay" />
+        <div className="absolute inset-0 hero-overlay-side" />
       </div>
 
-      <div className="relative mx-auto grid max-w-6xl gap-14 px-4 pb-24 pt-12 sm:px-6 lg:grid-cols-2 lg:items-center lg:gap-16 lg:pt-20">
-        <div>
+      <div className="relative mx-auto flex max-h-[100dvh] min-h-[100dvh] max-w-7xl flex-col justify-end px-4 pb-14 pt-24 sm:px-6 sm:pb-20 sm:pt-28 lg:max-h-none lg:min-h-screen lg:flex-row lg:items-end lg:justify-between lg:pb-24 lg:pt-32">
+        <div className="max-w-2xl lg:pb-8">
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
@@ -50,18 +48,18 @@ export function HeroSection() {
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2, duration: 0.7 }}
-            className="font-display mt-5 text-4xl font-bold leading-[1.05] tracking-tight text-white sm:text-5xl lg:text-6xl xl:text-7xl"
+            className="font-display mt-5 text-[clamp(2.25rem,8vw,5rem)] font-bold uppercase leading-[0.95] tracking-tight sm:text-6xl lg:text-7xl xl:text-8xl"
           >
-            Une saison.
+            <span className="text-[var(--proday-accent)] text-accent-glow">L&apos;heure</span>
             <br />
-            <span className="text-shimmer">Une app.</span>
+            <span className="text-white">de jouer</span>
           </motion.h1>
 
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.35 }}
-            className="mt-6 max-w-lg text-lg leading-relaxed text-white/60"
+            className="mt-4 max-w-lg text-base leading-relaxed text-white/70 sm:mt-6 sm:text-lg"
           >
             {BRAND.mission}
           </motion.p>
@@ -70,7 +68,7 @@ export function HeroSection() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.45 }}
-            className="mt-9 flex flex-wrap gap-3"
+            className="mt-6 flex flex-wrap gap-2 sm:mt-9 sm:gap-3"
           >
             <PremiumButton href={ROUTES.beta}>Accès anticipé</PremiumButton>
             <PremiumButton href={ROUTES.joueurs} variant="outline">
@@ -86,66 +84,96 @@ export function HeroSection() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.6 }}
-            className="mt-10 flex flex-wrap gap-2"
+            className="mt-5 hidden flex-wrap gap-2 sm:mt-8 sm:flex"
           >
-            {["Profil & carrière", "Mercato", "Journal activités", "Arena", "Partenaires"].map((tag) => (
-              <span
-                key={tag}
-                className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-white/70"
-              >
-                {tag}
-              </span>
-            ))}
+            {["Profil & carrière", "Mercato", "Journal activités", "Arena", "Partenaires"].map(
+              (tag) => (
+                <span
+                  key={tag}
+                  className="rounded-full border border-white/10 bg-black/40 px-3 py-1 text-xs font-medium text-white/70 backdrop-blur-sm"
+                >
+                  {tag}
+                </span>
+              ),
+            )}
           </motion.div>
         </div>
 
         <motion.div
-          className="perspective-[1200px] flex justify-center lg:justify-end"
-          onMouseMove={onMove}
-          onMouseLeave={onLeave}
-          style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4, duration: 0.5 }}
+          className="scroll-snap-x -mx-4 mt-6 flex gap-2 overflow-x-auto px-4 pb-1 lg:hidden"
+          aria-label="Les 6 pôles ProDay"
         >
-          <motion.div
-            initial={{ opacity: 0, scale: 0.92 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.3, duration: 0.8 }}
-            className="relative w-full max-w-[320px] animate-float"
-          >
-            <div className="absolute -inset-6 rounded-[3rem] bg-gradient-to-br from-blue-500/20 via-violet-500/10 to-transparent blur-2xl" />
-            <div className="card-premium relative overflow-hidden rounded-[2.25rem]">
-              <div className="absolute inset-x-0 top-0 z-10 h-8 bg-gradient-to-b from-black/40 to-transparent" />
-              <Image
-                src="/showcase/classic-discover-hero.jpg"
-                alt="Aperçu ProDay"
-                width={400}
-                height={720}
-                className="h-auto w-full object-cover"
-                priority
-              />
-              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black via-black/80 to-transparent p-6 pt-24">
-                <p className="mb-3 text-xs tracking-widest text-emerald-400/80 uppercase">
-                  Journal & Mercato
-                </p>
-                <Image
-                  src={PRODAY_LOGO_ON_DARK}
-                  alt=""
-                  width={110}
-                  height={36}
-                  className="mb-2 h-7 w-auto object-contain"
-                />
-                <p className="text-sm text-white/70">
-                  Analyse IA sur vos highlights — pas sur chaque geste
-                </p>
-              </div>
-            </div>
-          </motion.div>
+          {HERO_SLIDES.map((slide, i) => (
+            <Link
+              key={slide.num}
+              href={
+                i === 0
+                  ? ROUTES.joueurs
+                  : i === 1
+                    ? ROUTES.amateur
+                    : i === 2
+                      ? ROUTES.supporter
+                      : i === 3
+                        ? ROUTES.pro
+                        : i === 4
+                          ? ROUTES.sante
+                          : ROUTES.partenaires
+              }
+              className={`flex shrink-0 snap-start items-center gap-2 rounded-full border px-4 py-2.5 text-xs font-bold uppercase tracking-wider transition ${
+                i === 0
+                  ? "border-[var(--proday-accent)]/50 bg-[var(--proday-accent-muted)] text-[var(--proday-accent)]"
+                  : "border-white/10 bg-black/40 text-white/60 hover:border-white/25 hover:text-white"
+              }`}
+            >
+              <span className="font-display text-lg tabular-nums">{slide.num}</span>
+              {slide.label}
+            </Link>
+          ))}
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.4, duration: 0.6 }}
+          className="mt-12 hidden flex-col items-end gap-1 lg:mt-0 lg:flex"
+          aria-label="Les 6 pôles ProDay — desktop"
+        >
+          {HERO_SLIDES.map((slide, i) => (
+            <Link
+              key={slide.num}
+              href={
+                i === 0
+                  ? ROUTES.joueurs
+                  : i === 1
+                    ? ROUTES.amateur
+                    : i === 2
+                      ? ROUTES.supporter
+                      : i === 3
+                        ? ROUTES.pro
+                        : i === 4
+                          ? ROUTES.sante
+                          : ROUTES.partenaires
+              }
+              className={`group flex items-center gap-4 py-2 transition ${
+                i === 0 ? "text-[var(--proday-accent)]" : "text-white/35 hover:text-white/70"
+              }`}
+            >
+              <span className="font-display text-2xl font-bold tabular-nums">{slide.num}</span>
+              <span className="text-xs font-semibold uppercase tracking-widest opacity-0 transition group-hover:opacity-100">
+                {slide.label}
+              </span>
+            </Link>
+          ))}
         </motion.div>
       </div>
 
       <div className="absolute bottom-8 left-1/2 hidden -translate-x-1/2 sm:block">
         <Link
           href="#decouvrir"
-          className="flex flex-col items-center gap-2 text-xs tracking-widest text-white/30 transition hover:text-white/60"
+          className="flex flex-col items-center gap-2 text-xs font-semibold uppercase tracking-widest text-[var(--proday-accent)]/60 transition hover:text-[var(--proday-accent)]"
         >
           Découvrir
           <ArrowRight size={14} className="rotate-90" />

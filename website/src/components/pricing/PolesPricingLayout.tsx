@@ -115,15 +115,27 @@ function PolePricingPanel({ poleId, yearly }: PolePricingPanelProps) {
             plans.length > 2 ? "lg:grid-cols-2 xl:grid-cols-3" : "lg:grid-cols-2"
           }`}
         >
-          {plans.map((plan) => (
-            <PlanDetailCard
-              key={`${poleId}-${plan.id}-${plan.label}`}
-              plan={plan}
-              yearly={yearly}
-              styles={styles}
-              variantLabel={VARIANT_LABELS[plan.label]}
-            />
-          ))}
+          {plans.length > 0 ? (
+            plans.map((plan) => (
+              <PlanDetailCard
+                key={`${poleId}-${plan.id}-${plan.label}`}
+                plan={plan}
+                yearly={yearly}
+                styles={styles}
+                variantLabel={VARIANT_LABELS[plan.label]}
+              />
+            ))
+          ) : poleId === "supporter" ? (
+            <div className="rounded-2xl border border-violet-400/30 bg-violet-950/40 p-8 lg:col-span-2">
+              <p className="text-xs font-semibold uppercase tracking-wider text-violet-300">
+                0 € / mois
+              </p>
+              <p className="mt-3 text-2xl font-bold text-white">Tribune 100 % gratuite</p>
+              <p className="mt-3 max-w-xl text-sm leading-relaxed text-white/75">
+                Matchs live, suivis illimités, débats, réels et shop — sans abonnement ni paywall.
+              </p>
+            </div>
+          ) : null}
         </div>
       )}
     </div>
@@ -182,7 +194,10 @@ export function PolesPricingLayout() {
     <div className="surface-dark -mt-px pb-16">
       <div className="sticky top-16 z-40 border-b border-white/10 bg-[#030303]/95 backdrop-blur-xl">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-4 py-3 sm:px-6">
-          <nav className="flex flex-wrap gap-1" aria-label="Pôles tarifaires">
+          <nav
+            className="scroll-snap-x -mx-4 flex gap-1 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0"
+            aria-label="Pôles tarifaires"
+          >
             {POLE_NAV.map((item) => {
               const styles = POLE_STYLES[item.id];
               const isActive = activePole === item.id;
@@ -192,7 +207,7 @@ export function PolesPricingLayout() {
                   type="button"
                   onClick={() => goToPole(item.id)}
                   aria-current={isActive ? "true" : undefined}
-                  className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                  className={`shrink-0 snap-start rounded-full px-4 py-2.5 text-sm font-medium transition sm:shrink ${
                     isActive ? styles.navActive : styles.nav
                   }`}
                 >
@@ -205,8 +220,8 @@ export function PolesPricingLayout() {
             <button
               type="button"
               onClick={() => setYearly(false)}
-              className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
-                !yearly ? "bg-white text-neutral-950" : "text-white/60"
+              className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                !yearly ? "bg-[var(--proday-accent)] text-black" : "text-white/60"
               }`}
             >
               Mensuel
@@ -214,8 +229,8 @@ export function PolesPricingLayout() {
             <button
               type="button"
               onClick={() => setYearly(true)}
-              className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
-                yearly ? "bg-white text-neutral-950" : "text-white/60"
+              className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                yearly ? "bg-[var(--proday-accent)] text-black" : "text-white/60"
               }`}
             >
               Annuel (−{ANNUAL_DISCOUNT_PERCENT} %)

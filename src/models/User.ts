@@ -170,9 +170,15 @@ export interface User {
   // Notifications
   fcm_token?: string;
   notification_radius_km?: number; // Pour le géofencing agents (défaut: 50km)
-  /** Préférences push — opt-in explicite offres sponsors locales */
+  /** Préférences push — opt-in explicite offres sponsors locales + tribune supporter */
   notification_preferences?: {
     sponsor_geo_opt_in?: boolean;
+    supporter?: {
+      goalAlerts?: boolean;
+      kickoffAlerts?: boolean;
+      matchReminders?: boolean;
+      communityDigest?: boolean;
+    };
   };
 
   /** Contrôle parental (compte mineur / supervision famille) */
