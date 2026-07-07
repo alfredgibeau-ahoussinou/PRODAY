@@ -22,7 +22,10 @@ export const ROUTES = {
   proStaff: "/pro-staff",
   /** @deprecated Hub legacy — voir pro-joueur, pro-club, pro-staff. */
   pro: "/pro",
+  /** Page bêta — accès via lien email `?token=` uniquement. */
   beta: "/beta",
+  /** Liste d'attente publique (formulaire d'inscription). */
+  betaWaitlist: "/beta/inscription",
   about: "/a-propos",
   vision: "/vision",
   pricing: "/tarifs",

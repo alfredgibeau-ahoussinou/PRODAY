@@ -37,7 +37,7 @@ const BETA_TIMELINE = [
   {
     step: 1,
     title: "Inscription confirmée",
-    description: "Votre email est enregistré. Cette page est votre espace privé jusqu'au lancement public.",
+    description: "Votre inscription est confirmée. Retrouvez ici le programme, les pôles et les liens de téléchargement.",
     done: true,
   },
   {
