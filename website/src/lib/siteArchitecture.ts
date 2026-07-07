@@ -134,6 +134,30 @@ export const SITE_PAGES: Record<string, PageMeta> = {
     category: "platform",
     accent: "default",
   },
+  [ROUTES.betaProgramme]: {
+    path: ROUTES.betaProgramme,
+    poleId: null,
+    category: "platform",
+    accent: "default",
+  },
+  [ROUTES.betaInstaller]: {
+    path: ROUTES.betaInstaller,
+    poleId: null,
+    category: "platform",
+    accent: "default",
+  },
+  [ROUTES.betaAide]: {
+    path: ROUTES.betaAide,
+    poleId: null,
+    category: "platform",
+    accent: "default",
+  },
+  [ROUTES.betaWaitlist]: {
+    path: ROUTES.betaWaitlist,
+    poleId: null,
+    category: "platform",
+    accent: "default",
+  },
   [ROUTES.faq]: {
     path: ROUTES.faq,
     poleId: null,

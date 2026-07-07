@@ -25,8 +25,11 @@ Site multi-pages interactif — **21 routes** publiques, démos par univers (**M
 | `/partenaires` | Espace Partenaires — Découverte 0 €, Territorial 49 €, National Pro 99 €/mois |
 | `/shop` | ProDay Shop |
 | `/faq` | Questions fréquentes |
-| `/beta` | Espace bêta privé (lien email avec `?token=`) |
-| `/beta/inscription` | Liste d'attente + email de bienvenue (`?role=sponsor` pour partenaires) |
+| `/beta/inscription` | Liste d'attente publique + email de bienvenue (`?role=sponsor` pour partenaires) |
+| `/beta` | Hub bêta privé (lien email avec `?token=`) |
+| `/beta/programme` | Programme bêta — six pôles (protégé) |
+| `/beta/installer` | Guides APK / TestFlight (protégé) |
+| `/beta/aide` | FAQ et support bêta (protégé) |
 | `/a-propos` | Vision produit |
 
 ### Démo interactive (`/demo`)
@@ -111,7 +114,7 @@ netlify deploy --prod --no-build \
 
 ## Bêta — email de bienvenue (EmailJS)
 
-Le formulaire `/beta` appelle `POST /api/beta` et envoie un **email de bienvenue** via [EmailJS](https://www.emailjs.com/).
+Le formulaire `/beta/inscription` appelle `POST /api/beta` et envoie un **email de bienvenue** via [EmailJS](https://www.emailjs.com/). Le lien email ouvre `/beta?token=…` (hub protégé).
 
 Variables d’environnement (Vercel / Netlify / `.env.local`) :
 
@@ -123,7 +126,7 @@ EMAILJS_PRIVATE_KEY=xxx
 NEXT_PUBLIC_SITE_URL=https://votre-domaine.com
 ```
 
-Voir `docs/BETA_WAITLIST.md` pour le template EmailJS et l’activation API non-navigateur.
+Voir `docs/BETA_GUIDE.md` (guide opérateur complet) et `docs/BETA_WAITLIST.md` (dépannage EmailJS).
 
 ## Thématisation par univers
 

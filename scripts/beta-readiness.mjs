@@ -94,6 +94,25 @@ for (const [rel] of legalFiles) {
   else fail(`Manquant : ${rel}`);
 }
 
+console.log('\n🧪 Architecture bêta (code)\n');
+
+const betaFiles = [
+  ['website/src/app/beta/inscription/page.tsx', '/beta/inscription — inscription publique'],
+  ['website/src/app/beta/(site)/page.tsx', '/beta — hub beta-testeurs'],
+  ['website/src/app/beta/(site)/programme/page.tsx', '/beta/programme'],
+  ['website/src/app/beta/(site)/installer/page.tsx', '/beta/installer'],
+  ['website/src/app/beta/(site)/aide/page.tsx', '/beta/aide'],
+  ['website/src/app/api/beta/route.ts', 'POST /api/beta'],
+  ['website/src/app/api/beta/access/route.ts', 'GET /api/beta/access'],
+  ['website/src/lib/rateLimit.ts', 'rate limit API bêta'],
+  ['docs/BETA_GUIDE.md', 'guide opérateur'],
+  ['docs/emailjs/beta-welcome.html', 'template email'],
+];
+for (const [rel, label] of betaFiles) {
+  if (existsSync(resolve(root, rel))) ok(label);
+  else fail(`Manquant : ${rel} (${label})`);
+}
+
 const eas = resolve(root, 'eas.json');
 if (existsSync(eas)) {
   const easRaw = readFileSync(eas, 'utf8');
@@ -127,7 +146,15 @@ for (const [cmd, args, label] of testSuites) {
 console.log('\n🌐 Site production (optionnel)\n');
 
 async function checkSite() {
-  const paths = ['/confidentialite', '/cgu', '/beta/inscription'];
+  const paths = [
+    '/confidentialite',
+    '/cgu',
+    '/beta/inscription',
+    '/beta',
+    '/beta/programme',
+    '/beta/installer',
+    '/beta/aide',
+  ];
   for (const path of paths) {
     try {
       const res = await fetch(`${siteUrl}${path}`, { method: 'GET', redirect: 'follow' });
@@ -159,7 +186,7 @@ console.log('\n📋 Étapes manuelles restantes\n');
 console.log('   cd website && npm run netlify:deploy');
 console.log('   eas build --profile preview --platform ios');
 console.log('   npm run eas:build:preview -- --platform android');
-console.log('   docs/BETA_LAUNCH.md\n');
+console.log('   docs/BETA_GUIDE.md\n');
 
 if (failed > 0) {
   console.log(`❌ ${failed} contrôle(s) en échec, ${warned} avertissement(s).\n`);

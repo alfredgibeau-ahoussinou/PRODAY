@@ -1,5 +1,7 @@
 # Inscriptions bêta (site vitrine) — EmailJS
 
+> **Guide opérateur complet :** `docs/BETA_GUIDE.md` (parcours, URLs, déploiement).
+
 Envoi via [EmailJS](https://www.emailjs.com/) : pas de domaine DNS à vérifier, branchement Gmail/Outlook dans le dashboard.
 
 ## Dépannage — pas d'email reçu

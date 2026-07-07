@@ -7,13 +7,34 @@ import {
   getEmailJsBetaConfig,
   sendBetaWelcomeEmailViaEmailJs,
 } from "@/lib/betaEmailjs";
+import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 type BetaPayload = { email?: string; role?: string };
 
+const RATE_LIMIT = 10;
+const RATE_WINDOW_MS = 60_000;
+
 /** Proxy Cloud Function ou envoi EmailJS depuis Vercel. */
 export async function POST(request: Request) {
+  const rate = checkRateLimit(
+    `beta-waitlist:${getClientIp(request)}`,
+    RATE_LIMIT,
+    RATE_WINDOW_MS,
+  );
+  if (!rate.allowed) {
+    return NextResponse.json(
+      { error: "Trop de tentatives. Réessayez dans quelques minutes." },
+      {
+        status: 429,
+        headers: rate.retryAfterSec
+          ? { "Retry-After": String(rate.retryAfterSec) }
+          : undefined,
+      },
+    );
+  }
+
   let body: BetaPayload;
   try {
     body = (await request.json()) as BetaPayload;
