@@ -6,7 +6,7 @@ import { SIGNUP_STICKY_FOOTER_HEIGHT } from '../../navigation/tabBarLayout';
 
 /**
  * Dimensions connexion / inscription (petits écrans, encoches).
- * Même logique que DiscoverGuestHero / AuroraHeader : insets explicites en haut.
+ * Le parent `SafeAreaView` (App.tsx) gère déjà l’encoche — pas de double inset en haut.
  */
 export function useAuthLayout() {
   const { width, height } = useWindowDimensions();
@@ -18,7 +18,7 @@ export function useAuthLayout() {
     const logoWidth = Math.min(compact ? 160 : 188, width - pad * 2);
     const contentMaxWidth = Math.min(420, width - pad * 2);
 
-    const headerTopPad = insets.top + (compact ? spacing.sm : spacing.md);
+    const headerTopPad = compact ? spacing.sm : spacing.md;
 
     const bottomPad = (opts?: { stickyFooter?: boolean; extra?: number }) => {
       let inset = spacing.lg;
