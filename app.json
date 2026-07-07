@@ -14,7 +14,11 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.proday.app"
+      "bundleIdentifier": "com.proday.app",
+      "associatedDomains": [
+        "applinks:proday75.fr",
+        "applinks:www.proday75.fr"
+      ]
     },
     "android": {
       "adaptiveIcon": {
