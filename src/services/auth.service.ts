@@ -24,8 +24,10 @@ import {
   ProductLineMismatchError,
 } from '../utils/productLineAccess';
 import { isBetaAccountBypassed } from '../config/emailVerificationBypass';
+import { AuthNeedsProfileError } from '../utils/authErrors';
 
 export { ProductLineMismatchError } from '../utils/productLineAccess';
+export { AuthNeedsProfileError } from '../utils/authErrors';
 
 const AUTH_EMAIL_FUNCTIONS_REGION = 'europe-west1';
 
@@ -152,19 +154,6 @@ export function needsEmailVerification(
   const email = profileEmail ?? fbUser.email ?? '';
   if (isBetaAccountBypassed(email)) return false;
   return true;
-}
-
-/** Firebase connecté mais profil Firestore absent — compléter via Inscription. */
-export class AuthNeedsProfileError extends Error {
-  readonly code = 'auth/profile-required' as const;
-
-  constructor(
-    public readonly email: string,
-    public readonly displayName?: string
-  ) {
-    super('Complétez votre profil via l’onglet Inscription.');
-    this.name = 'AuthNeedsProfileError';
-  }
 }
 
 async function loadProfileAfterAuth(fbUser: FirebaseAuthUser): Promise<User> {

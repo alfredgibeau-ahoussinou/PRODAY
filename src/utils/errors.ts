@@ -1,4 +1,4 @@
-import { AuthNeedsProfileError } from '../services/auth.service';
+import { AuthNeedsProfileError } from './authErrors';
 
 export function getErrorCode(error: unknown): string {
   if (error && typeof error === 'object' && 'code' in error) {
