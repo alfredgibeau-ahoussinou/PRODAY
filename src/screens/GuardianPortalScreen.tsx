@@ -14,7 +14,7 @@ import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { Icon } from '../components/ui/Icon';
 import { ProDayText } from '../components/ui/ProDayText';
 import { ProDaySurface } from '../components/ui/ProDaySurface';
-import { PressableSpring } from '../components/motion';
+import { PressableSpring, PushScreenTransition } from '../components/motion';
 import { ParentalTimeLimitScreen } from './ParentalTimeLimitScreen';
 import { ParentalActivityReportScreen } from './ParentalActivityReportScreen';
 import {
@@ -129,8 +129,10 @@ export const GuardianPortalScreen: React.FC<GuardianPortalScreenProps> = ({
     void patchChild(child, { approved_contacts: contacts });
   };
 
+  let subView: React.ReactNode = null;
+
   if (mode === 'time' && selected) {
-    return (
+    subView = (
       <ParentalTimeLimitScreen
         minutes={selected.settings.daily_limit_minutes}
         activeDays={selected.settings.active_days}
@@ -144,21 +146,17 @@ export const GuardianPortalScreen: React.FC<GuardianPortalScreenProps> = ({
         }}
       />
     );
-  }
-
-  if (mode === 'report' && selected) {
-    return (
+  } else if (mode === 'report' && selected) {
+    subView = (
       <ParentalActivityReportScreen
         childUid={selected.uid}
         childName={selected.display_name}
         onBack={() => setMode('list')}
       />
     );
-  }
-
-  if (mode === 'contacts' && selected) {
+  } else if (mode === 'contacts' && selected) {
     const contacts = selected.settings.approved_contacts ?? [];
-    return (
+    subView = (
       <View style={[styles.root, rootStyle]}>
         <ScreenHeader title={t('guardian.approvedContacts')} onBack={() => setMode('list')} centered />
         <ScrollView contentContainerStyle={styles.content}>
@@ -193,7 +191,8 @@ export const GuardianPortalScreen: React.FC<GuardianPortalScreenProps> = ({
   }
 
   return (
-    <View style={[styles.root, rootStyle, embedded && styles.embeddedRoot]}>
+    <>
+      <View style={[styles.root, rootStyle, embedded && styles.embeddedRoot]}>
       {!embedded ? (
         <ScreenHeader title="Espace tuteur" onBack={onBack!} centered />
       ) : null}
@@ -432,7 +431,9 @@ export const GuardianPortalScreen: React.FC<GuardianPortalScreenProps> = ({
           })
         )}
       </ScrollView>
-    </View>
+      </View>
+      <PushScreenTransition active={mode !== 'list'}>{subView}</PushScreenTransition>
+    </>
   );
 };
 

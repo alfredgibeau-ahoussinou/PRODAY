@@ -9,7 +9,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { PressableSpring } from '../components/motion';
+import { PressableSpring, PushScreenTransition } from '../components/motion';
 import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { Icon } from '../components/ui/Icon';
 import type { User } from '../models/User';
@@ -150,21 +150,22 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
     profile.role === 'agent' ||
     profile.role === 'club';
 
-  if (hubView === 'join') {
-    return (
+  const joinAsRoot = hubView === 'join' && !clubId;
+
+  let subView: React.ReactNode = null;
+  if (hubView === 'join' && clubId) {
+    subView = (
       <JoinClubScreen
         profile={profile}
-        onBack={onBack}
+        onBack={() => setHubView('hub')}
         onJoined={() => {
           setHubView('hub');
           void load();
         }}
       />
     );
-  }
-
-  if (hubView === 'create') {
-    return (
+  } else if (hubView === 'create') {
+    subView = (
       <CreateTeamEventScreen
         onBack={() => setHubView('hub')}
         onCreated={(id) => {
@@ -173,20 +174,16 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
         }}
       />
     );
-  }
-
-  if (hubView === 'announcements') {
-    return (
+  } else if (hubView === 'announcements') {
+    subView = (
       <ClubAnnouncementsScreen
         profile={profile}
         canManage={isStaff}
         onBack={() => setHubView('hub')}
       />
     );
-  }
-
-  if (hubView === 'club') {
-    return (
+  } else if (hubView === 'club') {
+    subView = (
       <ClubHubScreen
         profile={profile}
         events={events}
@@ -207,13 +204,11 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
           setSelectedEventId(eventId);
           setHubView('event');
         }}
-        onOpenTeamChat={(threadId, title) => openChat(threadId)}
+        onOpenTeamChat={(threadId) => openChat(threadId)}
       />
     );
-  }
-
-  if (hubView === 'event' && selectedEventId) {
-    return (
+  } else if (hubView === 'event' && selectedEventId) {
+    subView = (
       <TeamEventDetailScreen
         eventId={selectedEventId}
         onBack={() => {
@@ -223,6 +218,7 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
       />
     );
   }
+
   const canManageFinalizedReport =
     Boolean(isAdmin) ||
     profile.role === 'coach' ||
@@ -393,7 +389,18 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
   };
 
   return (
-    <View style={[styles.root, rootStyle]}>
+    <>
+      {joinAsRoot ? (
+        <JoinClubScreen
+          profile={profile}
+          onBack={onBack}
+          onJoined={() => {
+            setHubView('hub');
+            void load();
+          }}
+        />
+      ) : (
+        <View style={[styles.root, rootStyle]}>
       <ScreenHeader title="Gestion équipe" onBack={onBack} centered />
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.tabs}>
@@ -757,6 +764,11 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
         ) : null}
       </ScrollView>
     </View>
+      )}
+      {!joinAsRoot ? (
+        <PushScreenTransition active={hubView !== 'hub'}>{subView}</PushScreenTransition>
+      ) : null}
+    </>
   );
 };
 

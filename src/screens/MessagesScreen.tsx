@@ -28,6 +28,7 @@ import {
   MessagesNetworkSheet,
   type NetworkSheetAction,
 } from '../components/messages/MessagesNetworkSheet';
+import { PushScreenTransition } from '../components/motion';
 
 export const MessagesScreen: React.FC = () => {
   const { t } = useTranslation();
@@ -257,17 +258,15 @@ export const MessagesScreen: React.FC = () => {
     setDismissedIds(new Set());
   };
 
+  let profileOverlay: React.ReactNode = null;
   if (networkProfileUser) {
-    if (isPlayerProfileRole(networkProfileUser.role)) {
-      return (
-        <PlayerProfileScreen
-          player={networkProfileUser}
-          onBack={() => setNetworkProfileUser(null)}
-          onContact={(user) => void handleContactFromProfile(user)}
-        />
-      );
-    }
-    return (
+    profileOverlay = isPlayerProfileRole(networkProfileUser.role) ? (
+      <PlayerProfileScreen
+        player={networkProfileUser}
+        onBack={() => setNetworkProfileUser(null)}
+        onContact={(user) => void handleContactFromProfile(user)}
+      />
+    ) : (
       <CoachProfileScreen
         staff={networkProfileUser}
         onBack={() => setNetworkProfileUser(null)}
@@ -277,8 +276,9 @@ export const MessagesScreen: React.FC = () => {
     );
   }
 
+  let chatOverlay: React.ReactNode = null;
   if (activeThreadId && profile && !mustVerify) {
-    return (
+    chatOverlay = (
       <ChatScreen
         threadId={activeThreadId}
         otherName={activeThread?.participant_name ?? 'Conversation'}
@@ -341,6 +341,11 @@ export const MessagesScreen: React.FC = () => {
         onClose={closeNetworkSheet}
         onAction={(action) => void handleNetworkSheetAction(action)}
       />
+
+      <PushScreenTransition active={Boolean(networkProfileUser)}>{profileOverlay}</PushScreenTransition>
+      <PushScreenTransition active={Boolean(activeThreadId && profile && !mustVerify)}>
+        {chatOverlay}
+      </PushScreenTransition>
     </>
   );
 };

@@ -21,7 +21,7 @@ import { TabScreenShell } from '../components/app/TabScreenShell';
 import { ScreenBackButton } from '../components/ui/ScreenBackButton';
 import { useSectionIntelligence } from '../hooks/useSectionIntelligence';
 import { isSubScreenShellEnabled } from '../hooks/useSubScreenShell';
-import { StaggerReveal, PressableSpring } from '../components/motion';
+import { StaggerReveal, PressableSpring, PushScreenTransition } from '../components/motion';
 import { TAB_BAR_CONTENT_INSET } from '../navigation/tabBarLayout';
 
 interface DetectionEventsScreenProps {
@@ -50,8 +50,10 @@ export const DetectionEventsScreen: React.FC<DetectionEventsScreenProps> = ({
       profile.role === 'agent' ||
       profile.role === 'club');
 
+  let subView: React.ReactNode = null;
+
   if (view === 'create' && canCreate) {
-    return (
+    subView = (
       <CreateTeamEventScreen
         defaultType="detection"
         onBack={() => setView('list')}
@@ -62,10 +64,8 @@ export const DetectionEventsScreen: React.FC<DetectionEventsScreenProps> = ({
         }}
       />
     );
-  }
-
-  if (view === 'detail' && selectedId) {
-    return (
+  } else if (view === 'detail' && selectedId) {
+    subView = (
       <TeamEventDetailScreen
         eventId={selectedId}
         onBack={() => {
@@ -181,29 +181,34 @@ export const DetectionEventsScreen: React.FC<DetectionEventsScreenProps> = ({
 
   if (useShellHeader) {
     return (
-      <TabScreenShell
-        caption="Scouting"
-        title="Journées détection"
-        subtitle={`${events.length} session(s) à venir`}
-        right={<ScreenBackButton onPress={onBack} />}
-        
-        flat
-      >
-        {listContent}
-      </TabScreenShell>
+      <>
+        <TabScreenShell
+          caption="Scouting"
+          title="Journées détection"
+          subtitle={`${events.length} session(s) à venir`}
+          right={<ScreenBackButton onPress={onBack} />}
+          flat
+        >
+          {listContent}
+        </TabScreenShell>
+        <PushScreenTransition active={view !== 'list'}>{subView}</PushScreenTransition>
+      </>
     );
   }
 
   return (
-    <View style={[styles.root, { backgroundColor: themeColors.background }]}>
-      <ScreenHeader
-        title="Journées détection"
-        subtitle="Journées de scouting intégrées à votre calendrier ProDay"
-        onBack={onBack}
-        centered
-      />
-      {listContent}
-    </View>
+    <>
+      <View style={[styles.root, { backgroundColor: themeColors.background }]}>
+        <ScreenHeader
+          title="Journées détection"
+          subtitle="Journées de scouting intégrées à votre calendrier ProDay"
+          onBack={onBack}
+          centered
+        />
+        {listContent}
+      </View>
+      <PushScreenTransition active={view !== 'list'}>{subView}</PushScreenTransition>
+    </>
   );
 };
 

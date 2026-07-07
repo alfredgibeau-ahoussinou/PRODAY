@@ -34,6 +34,7 @@ import {
 } from '../utils/parentalScreenTime';
 import { useThemedScreen } from '../hooks/useThemedScreen';
 import type { AppColors } from '../theme/universeTheme';
+import { PushScreenTransition } from '../components/motion';
 
 type ParentalView = 'home' | 'report' | 'time';
 
@@ -194,12 +195,25 @@ export const ParentalControlScreen: React.FC<ParentalControlScreenProps> = ({
     );
   }
 
+  let subView: React.ReactNode = null;
+
   if (view === 'report' && profile.uid) {
-    return (
+    subView = (
       <ParentalActivityReportScreen
         childUid={profile.uid}
         childName={profile.display_name}
         onBack={() => setView('home')}
+      />
+    );
+  } else if (view === 'time') {
+    subView = (
+      <ParentalTimeLimitScreen
+        minutes={settings.daily_limit_minutes}
+        activeDays={settings.active_days}
+        onBack={() => setView('home')}
+        onSave={(daily_limit_minutes, active_days) => {
+          patch({ daily_limit_minutes, active_days, screen_time_enabled: true });
+        }}
       />
     );
   }
@@ -212,19 +226,6 @@ export const ParentalControlScreen: React.FC<ParentalControlScreenProps> = ({
     patch({ approved_contacts: nextContacts });
   };
 
-  if (view === 'time') {
-    return (
-      <ParentalTimeLimitScreen
-        minutes={settings.daily_limit_minutes}
-        activeDays={settings.active_days}
-        onBack={() => setView('home')}
-        onSave={(daily_limit_minutes, active_days) => {
-          patch({ daily_limit_minutes, active_days, screen_time_enabled: true });
-        }}
-      />
-    );
-  }
-
   const limitMinutes = resolveDailyLimitMinutes(settings);
   const screenTimeActiveToday = isScreenTimeActiveDay(settings.active_days);
   const pendingContacts = contacts.filter((contact) => !contact.approved).length;
@@ -236,7 +237,8 @@ export const ParentalControlScreen: React.FC<ParentalControlScreenProps> = ({
   const playerAge = profile.profile?.age;
 
   return (
-    <View style={[styles.root, rootStyle, embedded && styles.embeddedRoot]}>
+    <>
+      <View style={[styles.root, rootStyle, embedded && styles.embeddedRoot]}>
       {!embedded ? (
         <ScreenHeader title="Contrôle parental" onBack={onBack!} centered />
       ) : null}
@@ -536,7 +538,9 @@ export const ParentalControlScreen: React.FC<ParentalControlScreenProps> = ({
           </>
         )}
       </ScrollView>
-    </View>
+      </View>
+      <PushScreenTransition active={view !== 'home'}>{subView}</PushScreenTransition>
+    </>
   );
 };
 

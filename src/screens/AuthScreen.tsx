@@ -201,21 +201,6 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
     );
   }
 
-  if (signupOpen) {
-    return (
-      <View style={authStyles.root}>
-        <SignupFlow
-          productLine={signupProductLine ?? productLine}
-          initialRole={signupInitialRole}
-          onClose={closeSignup}
-          onComplete={onSignupComplete}
-          initialEmail={signupPrefill?.email}
-          initialDisplayName={signupPrefill?.displayName}
-        />
-      </View>
-    );
-  }
-
   return (
     <>
       <KeyboardAvoidingView
@@ -439,6 +424,20 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
         </View>
       </ScrollView>
       </KeyboardAvoidingView>
+      <PushScreenTransition active={signupOpen}>
+        {signupOpen ? (
+          <View style={authStyles.root}>
+            <SignupFlow
+              productLine={signupProductLine ?? productLine}
+              initialRole={signupInitialRole}
+              onClose={closeSignup}
+              onComplete={onSignupComplete}
+              initialEmail={signupPrefill?.email}
+              initialDisplayName={signupPrefill?.displayName}
+            />
+          </View>
+        ) : null}
+      </PushScreenTransition>
       <PushScreenTransition active={showForgotPassword || legalDocument != null}>
         {showForgotPassword ? (
           <ForgotPasswordScreen

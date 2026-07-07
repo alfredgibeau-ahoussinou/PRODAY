@@ -26,6 +26,7 @@ import { spacing, radius } from '../../theme/designTokens';
 import type { SponsorOffer } from '../../models/SponsorOffer';
 import { TabScreenShell } from '../../components/app/TabScreenShell';
 import { useAppTheme } from '../../context/ProductLineContext';
+import { PushScreenTransition } from '../../components/motion';
 
 interface SponsorDashboardScreenProps {
   profile: User;
@@ -55,16 +56,6 @@ export const SponsorDashboardScreen: React.FC<SponsorDashboardScreenProps> = ({ 
     await refresh();
     setRefreshing(false);
   }, [refresh]);
-
-  if (detailOffer) {
-    return (
-      <SponsorOfferDetailScreen
-        offer={detailOffer}
-        onBack={() => setDetailOffer(null)}
-        onUpdated={() => void refresh()}
-      />
-    );
-  }
 
   const dashboardScroll = (
     <ScrollView
@@ -145,6 +136,7 @@ export const SponsorDashboardScreen: React.FC<SponsorDashboardScreenProps> = ({ 
   );
 
   return (
+    <>
     <View style={styles.root}>
       <TabScreenShell
         caption="Sponsors"
@@ -155,6 +147,16 @@ export const SponsorDashboardScreen: React.FC<SponsorDashboardScreenProps> = ({ 
         {dashboardScroll}
       </TabScreenShell>
     </View>
+    <PushScreenTransition active={detailOffer != null}>
+      {detailOffer ? (
+        <SponsorOfferDetailScreen
+          offer={detailOffer}
+          onBack={() => setDetailOffer(null)}
+          onUpdated={() => void refresh()}
+        />
+      ) : null}
+    </PushScreenTransition>
+    </>
   );
 };
 

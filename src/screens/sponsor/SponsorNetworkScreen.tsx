@@ -22,6 +22,7 @@ import { SPONSOR_THEME } from '../../content/sponsorExperience';
 import { spacing, radius } from '../../theme/designTokens';
 import { openSponsorProspectChat } from '../../utils/openSponsorProspectChat';
 import type { SponsorProspect } from '../../models/SponsorOffer';
+import { PushScreenTransition } from '../../components/motion';
 
 interface SponsorNetworkScreenProps {
   shellMode?: boolean;
@@ -72,8 +73,9 @@ export const SponsorNetworkScreen: React.FC<SponsorNetworkScreenProps> = ({
     Alert.alert('Modèle de message', text, [{ text: 'OK' }]);
   };
 
+  let chatOverlay: React.ReactNode = null;
   if (activeThreadId && profile && activeThread) {
-    return (
+    chatOverlay = (
       <ChatScreen
         threadId={activeThreadId}
         otherName={activeThread.participant_name}
@@ -87,10 +89,8 @@ export const SponsorNetworkScreen: React.FC<SponsorNetworkScreenProps> = ({
         }}
       />
     );
-  }
-
-  if (activeThreadId && profile) {
-    return (
+  } else if (activeThreadId && profile) {
+    chatOverlay = (
       <ChatScreen
         threadId={activeThreadId}
         otherName="Contact club"
@@ -109,6 +109,7 @@ export const SponsorNetworkScreen: React.FC<SponsorNetworkScreenProps> = ({
   const isLoading = loading || sponsorLoading;
 
   return (
+    <>
     <View style={styles.container}>
       <ScrollView contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomInset + spacing.xl }]}>
         {!shellMode ? (
@@ -229,6 +230,8 @@ export const SponsorNetworkScreen: React.FC<SponsorNetworkScreenProps> = ({
         )}
       </ScrollView>
     </View>
+    <PushScreenTransition active={Boolean(activeThreadId && profile)}>{chatOverlay}</PushScreenTransition>
+    </>
   );
 };
 

@@ -4,6 +4,7 @@ import type { User } from '../../models/User';
 import { useSubscription } from '../../context/SubscriptionContext';
 import { UpgradePaywall } from './UpgradePaywall';
 import { SubscriptionScreen } from '../../screens/SubscriptionScreen';
+import { PushScreenTransition } from '../motion';
 
 interface SubscriptionShellProps {
   profile: User;
@@ -33,19 +34,15 @@ export const SubscriptionShell: React.FC<SubscriptionShellProps> = ({
         onClose={clearUpgradePrompt}
         onViewPlans={openPlansScreen}
       />
-      {showPlansScreen ? (
-        <View style={styles.overlay}>
+      <PushScreenTransition active={showPlansScreen}>
+        {showPlansScreen ? (
           <SubscriptionScreen profile={profile} onBack={closePlansScreen} />
-        </View>
-      ) : null}
+        ) : null}
+      </PushScreenTransition>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    zIndex: 100,
-  },
 });

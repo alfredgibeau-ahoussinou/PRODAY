@@ -9,7 +9,7 @@ import {
   Alert,
   TextInput,
 } from 'react-native';
-import { PressableSpring } from '../../components/motion';
+import { PressableSpring, PushScreenTransition } from '../../components/motion';
 import { useSessionProfile } from '../../hooks/useSessionProfile';
 import { useSponsorDashboard } from '../../hooks/useSponsorDashboard';
 import { SponsorScreenHeader } from '../../components/sponsor/SponsorScreenHeader';
@@ -142,18 +142,17 @@ export const SponsorCampaignsScreen: React.FC<SponsorCampaignsScreenProps> = ({
     setShowCreate(true);
   };
 
+  let subView: React.ReactNode = null;
   if (detailOffer) {
-    return (
+    subView = (
       <SponsorOfferDetailScreen
         offer={detailOffer}
         onBack={() => setDetailOffer(null)}
         onUpdated={() => void refresh()}
       />
     );
-  }
-
-  if (showCreate) {
-    return (
+  } else if (showCreate) {
+    subView = (
       <CreateSponsorOfferScreen
         sponsorUid={profile.uid}
         onBack={() => setShowCreate(false)}
@@ -163,6 +162,7 @@ export const SponsorCampaignsScreen: React.FC<SponsorCampaignsScreenProps> = ({
   }
 
   return (
+    <>
     <ScrollView
       style={styles.root}
       contentContainerStyle={[styles.content, { paddingBottom: bottomInset + spacing.xl }]}
@@ -324,6 +324,8 @@ export const SponsorCampaignsScreen: React.FC<SponsorCampaignsScreenProps> = ({
         </>
       ) : null}
     </ScrollView>
+    <PushScreenTransition active={detailOffer != null || showCreate}>{subView}</PushScreenTransition>
+    </>
   );
 };
 

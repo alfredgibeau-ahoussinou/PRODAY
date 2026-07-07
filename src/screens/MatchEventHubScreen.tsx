@@ -22,7 +22,7 @@ import { MatchHubLineupTab } from '../components/matchs/hub/MatchHubLineupTab';
 import { MatchHubLiveTab } from '../components/matchs/hub/MatchHubLiveTab';
 import { MatchHubStatsTab } from '../components/matchs/hub/MatchHubStatsTab';
 import { MatchHubSquadTab } from '../components/matchs/hub/MatchHubSquadTab';
-import { PressableSpring } from '../components/motion';
+import { PressableSpring, PushScreenTransition } from '../components/motion';
 import { prodayHaptics } from '../utils/prodayHaptics';
 import { ProDayTabPager } from '../components/ui/ProDayTabPager';
 import { ProDayText } from '../components/ui/ProDayText';
@@ -127,18 +127,6 @@ export const MatchEventHubScreen: React.FC<MatchEventHubScreenProps> = ({
       setRsvpBusy(false);
     }
   };
-
-  if (subView === 'lineup_edit' && profile && event && hasAccess) {
-    return (
-      <EventLineupScreen
-        eventId={eventId}
-        onBack={() => {
-          setSubView('hub');
-          void load();
-        }}
-      />
-    );
-  }
 
   if (loading) {
     return (
@@ -290,6 +278,7 @@ export const MatchEventHubScreen: React.FC<MatchEventHubScreenProps> = ({
   ];
 
   return (
+    <>
     <View style={[styles.root, rootStyle]}>
       <PressableSpring style={styles.backRow} onPress={onBack} scaleTo={0.97} haptic>
         <Icon name="arrow-back" size={22} color={c.text} />
@@ -314,6 +303,18 @@ export const MatchEventHubScreen: React.FC<MatchEventHubScreenProps> = ({
         />
       </View>
     </View>
+    <PushScreenTransition active={subView === 'lineup_edit' && Boolean(profile && event && hasAccess)}>
+      {subView === 'lineup_edit' && profile && event && hasAccess ? (
+        <EventLineupScreen
+          eventId={eventId}
+          onBack={() => {
+            setSubView('hub');
+            void load();
+          }}
+        />
+      ) : null}
+    </PushScreenTransition>
+    </>
   );
 };
 

@@ -8,6 +8,7 @@ import { ProDayScreenCanvas } from '../components/ui/ProDayScreenCanvas';
 import { CarpoolHomeScreen } from '../components/carpool/CarpoolHomeScreen';
 import { CarpoolEventDetailScreen } from '../components/carpool/CarpoolEventDetailScreen';
 import { CarpoolGuestPrompt } from '../components/carpool/CarpoolGuestPrompt';
+import { PushScreenTransition } from '../components/motion';
 
 export const CarpoolScreen: React.FC = () => {
   const { profile } = useAuth();
@@ -35,19 +36,6 @@ export const CarpoolScreen: React.FC = () => {
     clearPendingCarpool();
   }, [pendingCarpoolLink, clearPendingCarpool]);
 
-  if (selectedEventId && profile) {
-    return (
-      <CarpoolEventDetailScreen
-        eventId={selectedEventId}
-        profile={profile}
-        onBack={() => {
-          setSelectedEventId(null);
-          void refreshAll();
-        }}
-      />
-    );
-  }
-
   if (!profile) {
     return (
       <ProDayScreenCanvas flat>
@@ -60,6 +48,7 @@ export const CarpoolScreen: React.FC = () => {
   }
 
   return (
+    <ProDayScreenCanvas flat>
       <CarpoolHomeScreen
         profile={profile}
         events={events}
@@ -72,5 +61,18 @@ export const CarpoolScreen: React.FC = () => {
         onRefresh={refreshAll}
         onLoginRequired={() => openAuth('login')}
       />
+      <PushScreenTransition active={selectedEventId != null}>
+        {selectedEventId ? (
+          <CarpoolEventDetailScreen
+            eventId={selectedEventId}
+            profile={profile}
+            onBack={() => {
+              setSelectedEventId(null);
+              void refreshAll();
+            }}
+          />
+        ) : null}
+      </PushScreenTransition>
+    </ProDayScreenCanvas>
   );
 };

@@ -28,6 +28,7 @@ import { EventAttendancePanel } from '../components/team/EventAttendancePanel';
 import { EventCarpoolPanel } from '../components/team/EventCarpoolPanel';
 import { spacing, radius } from '../theme/designTokens';
 import { useThemedScreen } from '../hooks/useThemedScreen';
+import { PushScreenTransition } from '../components/motion';
 
 interface TeamEventDetailScreenProps {
   eventId: string;
@@ -64,30 +65,6 @@ export const TeamEventDetailScreen: React.FC<TeamEventDetailScreenProps> = ({
   useEffect(() => {
     load();
   }, [load]);
-
-  if (subView === 'lineup') {
-    return (
-      <EventLineupScreen
-        eventId={eventId}
-        onBack={() => {
-          setSubView('detail');
-          load();
-        }}
-      />
-    );
-  }
-
-  if (subView === 'live') {
-    return (
-      <EventLiveStatsScreen
-        eventId={eventId}
-        onBack={() => {
-          setSubView('detail');
-          load();
-        }}
-      />
-    );
-  }
 
   const handleRsvp = async (status: RsvpStatus) => {
     if (!profile) return;
@@ -193,6 +170,7 @@ export const TeamEventDetailScreen: React.FC<TeamEventDetailScreenProps> = ({
   };
 
   return (
+    <>
     <View style={rootStyle}>
       <ScreenHeader title="Convocation" onBack={onBack} centered />
       <ScrollView contentContainerStyle={styles.content}>
@@ -446,6 +424,26 @@ export const TeamEventDetailScreen: React.FC<TeamEventDetailScreenProps> = ({
           )}
       </ScrollView>
     </View>
+    <PushScreenTransition active={subView !== 'detail'}>
+      {subView === 'lineup' ? (
+        <EventLineupScreen
+          eventId={eventId}
+          onBack={() => {
+            setSubView('detail');
+            load();
+          }}
+        />
+      ) : subView === 'live' ? (
+        <EventLiveStatsScreen
+          eventId={eventId}
+          onBack={() => {
+            setSubView('detail');
+            load();
+          }}
+        />
+      ) : null}
+    </PushScreenTransition>
+    </>
   );
 };
 

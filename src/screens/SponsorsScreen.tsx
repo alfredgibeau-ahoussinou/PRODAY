@@ -24,6 +24,7 @@ import { spacing, radius, shadows } from '../theme/designTokens';
 import { useThemedScreen } from '../hooks/useThemedScreen';
 import { useRequireAuth } from '../hooks/useRequireAuth';
 import type { AppColors } from '../theme/universeTheme';
+import { PushScreenTransition } from '../components/motion';
 
 type SponsorsView = 'main' | 'create_offer' | 'create_goal' | 'sponsor_profile';
 
@@ -118,8 +119,10 @@ export const SponsorsScreen: React.FC<SponsorsScreenProps> = ({
     }
   };
 
+  let subView: React.ReactNode = null;
+
   if (view === 'sponsor_profile' && profileSponsorUid) {
-    return (
+    subView = (
       <SponsorPublicProfileScreen
         sponsorUid={profileSponsorUid}
         initialOfferId={profileOfferId}
@@ -133,20 +136,16 @@ export const SponsorsScreen: React.FC<SponsorsScreenProps> = ({
         }}
       />
     );
-  }
-
-  if (view === 'create_offer' && profile) {
-    return (
+  } else if (view === 'create_offer' && profile) {
+    subView = (
       <CreateSponsorOfferScreen
         sponsorUid={profile.uid}
         onBack={() => setView('main')}
         onCreated={refresh}
       />
     );
-  }
-
-  if (view === 'create_goal' && clubId) {
-    return (
+  } else if (view === 'create_goal' && clubId) {
+    subView = (
       <CreateClubFundingGoalScreen
         clubId={clubId}
         onBack={() => setView('main')}
@@ -156,6 +155,7 @@ export const SponsorsScreen: React.FC<SponsorsScreenProps> = ({
   }
 
   return (
+    <>
     <View style={[styles.root, rootStyle]}>
       <ScrollView
         style={styles.container}
@@ -350,6 +350,8 @@ export const SponsorsScreen: React.FC<SponsorsScreenProps> = ({
         </View>
       ) : null}
     </View>
+    <PushScreenTransition active={view !== 'main'}>{subView}</PushScreenTransition>
+    </>
   );
 };
 
