@@ -1,8 +1,8 @@
 # Monorepo — site vitrine Next.js dans website/ (voir website/netlify.toml)
+# Ne pas définir publish : @netlify/plugin-nextjs gère .netlify/static + fonctions SSR.
 [build]
   base = "website"
   command = "npm run build"
-  publish = "website/.next"
 
 [build.environment]
   NODE_VERSION = "20"
