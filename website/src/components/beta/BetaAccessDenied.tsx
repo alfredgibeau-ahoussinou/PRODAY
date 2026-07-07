@@ -13,17 +13,11 @@ export function BetaAccessDenied() {
           Accéder à la bêta
         </h1>
         <p className="mt-4 text-sm leading-relaxed text-white/60">
-          Cet espace est réservé aux beta-testeurs. Ouvrez l&apos;email de bienvenue ProDay et
-          cliquez sur <span className="font-semibold text-white/80">Accéder à la bêta</span> pour
-          obtenir votre lien personnel.
+          Ouvrez l&apos;email de bienvenue ProDay et cliquez sur{" "}
+          <span className="font-semibold text-white/80">Accéder à la bêta</span> pour ouvrir votre
+          espace.
         </p>
         <div className="mt-8 flex flex-col items-center gap-3">
-          <Link
-            href={ROUTES.betaWaitlist}
-            className="inline-flex min-h-11 items-center rounded-full bg-[var(--proday-accent)] px-6 py-2.5 text-sm font-bold text-black transition hover:bg-cyan-300"
-          >
-            S&apos;inscrire à la liste d&apos;attente
-          </Link>
           <Link
             href={ROUTES.home}
             className="text-sm font-medium text-white/50 underline hover:text-white/80"
