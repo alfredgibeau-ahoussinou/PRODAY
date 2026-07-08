@@ -38,7 +38,9 @@ export function buildBetaInternalRedirectUrl(request: Request, pathname: string)
   const host = forwardedHost || new URL(request.url).host;
   const proto =
     request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim() || "https";
-  return `${proto}://${host}${pathname}`;
+  // Netlify réinjecte les query params de la requête si Location n'en a pas (OpenNext #2209).
+  // Un `?` seul force le remplacement et supprime `?token=`.
+  return `${proto}://${host}${pathname}?`;
 }
 
 export function createEmailJsBetaAccessToken(email: string, role: string): string | null {
