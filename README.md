@@ -62,6 +62,7 @@ Navigation principale : Accueil, Mercato, Matchs, Covoiturage, Santé, Feed, Mes
 
 | Document | Description |
 |----------|-------------|
+| [docs/STRUCTURE.md](docs/STRUCTURE.md) | Carte du dépôt (arborescence commentée) |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Diagrammes Mermaid (architecture, validation, données) |
 | [docs/DATABASE_SCHEMA.md](docs/DATABASE_SCHEMA.md) | Schéma Firestore |
 | [docs/API_CONTRACTS.md](docs/API_CONTRACTS.md) | Cloud Functions & services |
@@ -77,21 +78,19 @@ Navigation principale : Accueil, Mercato, Matchs, Covoiturage, Santé, Feed, Mes
 
 ### Structure
 
+Carte complète du dépôt : **[docs/STRUCTURE.md](docs/STRUCTURE.md)** — chaque dossier majeur a son `README.md`.
+
 ```
 PRODAY/
-├── website/                 # Site vitrine Next.js (Vercel / Netlify, root = website)
-├── docs/                    # Architecture, brief, Figma, PDF
-├── src/
-│   ├── theme/               # Thème dynamique Homme / Woman / Pro
-│   ├── models/              # User, Club, Tournament, …
-│   ├── services/            # auth, profile, tournament, notification
-│   ├── screens/             # Écrans par onglet (Mercato, Matchs, Santé…)
-│   ├── components/          # UI, profil, discover, subscription…
-│   ├── navigation/          # MainTabs + modules secondaires
-│   └── utils/               # géofencing, PDF CV, pricing
-├── firebase/                # firestore.rules
-├── functions/               # Cloud Functions TypeScript
-└── assets/diagrams/         # Mermaid
+├── src/                     # App mobile Expo → src/README.md
+├── website/                 # Site vitrine Next.js → website/README.md
+├── functions/               # Cloud Functions → functions/README.md
+├── firebase/                # Règles Firestore / Storage → firebase/README.md
+├── docs/                    # Documentation → docs/README.md
+├── scripts/                 # Outils CLI → scripts/README.md
+├── assets/                  # Branding, diagrammes → assets/README.md
+├── .maestro/                # E2E Maestro → .maestro/README.md
+└── e2e/                     # Guide tests → e2e/README.md
 ```
 
 ### Validation des profils (point clé Yoan)

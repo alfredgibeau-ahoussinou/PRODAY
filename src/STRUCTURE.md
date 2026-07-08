@@ -1,6 +1,7 @@
 # Structure du code — ProDay
 
 > Guide rapide pour naviguer dans `src/` sans se perdre entre legacy et V3.
+> Carte monorepo complète : [../docs/STRUCTURE.md](../docs/STRUCTURE.md)
 
 ## Règle d’or
 

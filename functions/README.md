@@ -1,4 +1,29 @@
-# Cloud Functions — notes d'exploitation
+# Cloud Functions Firebase (`functions/`)
+
+> Logique serveur TypeScript — triggers Firestore, callables, webhooks Stripe, e-mails, IA.
+
+## Structure
+
+| Élément | Rôle |
+|---------|------|
+| `src/index.ts` | Export central de toutes les fonctions |
+| `src/*.ts` | Une fonction ou groupe par fichier |
+| `lib/` | Build compilé (`npm run build`) — ne pas éditer |
+
+Région par défaut : **`europe-west1`** (aligné Firestore eur3).
+
+## Déploiement
+
+```bash
+cd functions && npm run build
+npm run firebase:deploy:functions   # depuis la racine
+```
+
+Contrats : [docs/API_CONTRACTS.md](../docs/API_CONTRACTS.md) · Setup : [docs/FIREBASE_SETUP.md](../docs/FIREBASE_SETUP.md)
+
+---
+
+## Notes d'exploitation
 
 ## Push géo sponsors (`sponsorGeoPush.ts`)
 

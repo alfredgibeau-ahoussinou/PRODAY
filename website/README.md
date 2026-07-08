@@ -2,6 +2,8 @@
 
 Site multi-pages interactif — **21 routes** publiques, démos par univers (**Man**, **Woman**, **Pro**) et formulaire bêta avec email de bienvenue.
 
+Code source : [src/README.md](src/README.md) · Carte monorepo : [docs/STRUCTURE.md](../docs/STRUCTURE.md)
+
 ## Pages
 
 | Route | Contenu |
