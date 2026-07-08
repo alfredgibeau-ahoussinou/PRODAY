@@ -2,7 +2,7 @@
  * Compte démo partenaire (Auth + Firestore sponsor).
  *
  *   TEST_ACCOUNT_EMAIL=part@gmail.com \
- *   TEST_ACCOUNT_PASSWORD='Alfred2005@' \
+ *   TEST_ACCOUNT_PASSWORD='***' \
  *   npm run partner-account:setup
  */
 

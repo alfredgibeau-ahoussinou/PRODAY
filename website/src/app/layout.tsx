@@ -45,6 +45,9 @@ export const metadata: Metadata = {
       "Une saison. Une app. Recrutement, matchs, tournois, communauté et partenaires.",
     images: ["/branding/logo-proday-official.png"],
   },
+  other: {
+    copyright: "© ProDay 2026 — Tous droits réservés",
+  },
 };
 
 export const viewport: Viewport = {

@@ -7,6 +7,8 @@ dist/
 .env
 .env.local
 .env.*.local
+secrets/
+**/secrets/
 *.local
 .DS_Store
 .firebase/

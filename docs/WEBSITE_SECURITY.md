@@ -10,8 +10,11 @@ Configuration appliquée dans `website/netlify.toml`, `netlify.toml` (monorepo) 
 | `X-Frame-Options` | `DENY` |
 | `X-Content-Type-Options` | `nosniff` |
 | `Referrer-Policy` | `strict-origin-when-cross-origin` (sauf redirection jeton bêta → `no-referrer`) |
-| `Permissions-Policy` | `camera=(), microphone=(), geolocation=(), payment=()` |
-| `Content-Security-Policy` | `default-src 'self'` + Google Fonts + scripts inline Next.js |
+| `Permissions-Policy` | Capteurs, caméra, micro, géoloc, paiement, USB, etc. désactivés (liste exhaustive dans `netlify.toml`) |
+| `X-Permitted-Cross-Domain-Policies` | `none` |
+| `Cross-Origin-Opener-Policy` | `same-origin` |
+| `Cross-Origin-Resource-Policy` | `same-origin` |
+| `Content-Security-Policy` | `default-src 'self'` + Google Fonts + EmailJS + Cloud Functions + `upgrade-insecure-requests` |
 
 ## Routes API bêta
 

@@ -15,6 +15,10 @@
 [![Site](https://img.shields.io/badge/Site-proday75.fr-22d3ee?style=flat-square)](https://proday75.fr)
 [![Bêta](https://img.shields.io/badge/Bêta-Inscription-0891b2?style=flat-square)](https://proday75.fr/beta/inscription)
 
+<br />
+
+**© ProDay 2026 — Tous droits réservés** · Code propriétaire — reproduction interdite sans autorisation
+
 </div>
 
 ---
@@ -586,4 +590,4 @@ Inscrivez-vous sur [proday75.fr/beta/inscription](https://proday75.fr/beta/inscr
 
 [proday75.fr](https://proday75.fr) · [contact@proday.app](mailto:contact@proday.app) · [partenaires@proday.app](mailto:partenaires@proday.app) · [Dépôt GitHub](https://github.com/alfredgibeau-ahoussinou/PRODAY)
 
-**ProDay © 2026** — Tous droits réservés · Code propriétaire
+**ProDay © 2026** — Tous droits réservés · Code propriétaire — reproduction interdite sans autorisation · [LICENSE](./LICENSE) · [SECURITY.md](./SECURITY.md)
