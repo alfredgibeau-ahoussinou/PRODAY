@@ -1,18 +1,29 @@
 jest.mock('expo-file-system/legacy', () => ({
   readAsStringAsync: jest.fn(),
   downloadAsync: jest.fn(),
+  uploadAsync: jest.fn(),
   cacheDirectory: 'file:///cache/',
+  FileSystemUploadType: { BINARY_CONTENT: 0, MULTIPART: 1 },
 }));
 
 jest.mock('firebase/storage', () => ({
-  ref: jest.fn(() => ({ path: 'mock-ref' })),
+  ref: jest.fn((_, path: string) => ({ fullPath: path, path: 'mock-ref' })),
   uploadBytes: jest.fn(),
   uploadString: jest.fn(),
   getDownloadURL: jest.fn(),
 }));
 
+jest.mock('../config/firebase', () => ({
+  firebaseConfig: { storageBucket: 'test-bucket.appspot.com' },
+}));
+
 jest.mock('../lib/firebase', () => ({
   getFirebaseStorage: jest.fn(() => ({})),
+  getFirebaseAuth: jest.fn(() => ({
+    currentUser: {
+      getIdToken: jest.fn().mockResolvedValue('mock-id-token'),
+    },
+  })),
 }));
 
 import * as FileSystem from 'expo-file-system/legacy';
@@ -21,6 +32,7 @@ import { uploadBytes, uploadString, getDownloadURL } from 'firebase/storage';
 import {
   normalizeImageMimeType,
   readFileAsBase64ForUpload,
+  resolveLocalFileUriForUpload,
   storageService,
 } from '../services/storage.service';
 
@@ -34,6 +46,10 @@ describe('storage.service', () => {
     (FileSystem.downloadAsync as jest.Mock).mockResolvedValue({
       uri: 'file:///cache/upload_123',
     });
+    (FileSystem.uploadAsync as jest.Mock).mockResolvedValue({
+      status: 200,
+      body: '{"name":"avatars/uid-1/1.jpg"}',
+    });
   });
 
   afterEach(() => {
@@ -46,7 +62,7 @@ describe('storage.service', () => {
     expect(normalizeImageMimeType(null)).toBe('image/jpeg');
   });
 
-  it('upload RN file:// via uploadString base64 (pas de Blob ArrayBuffer)', async () => {
+  it('upload RN file:// via REST uploadAsync (pas uploadString ni Blob)', async () => {
     Object.defineProperty(Platform, 'OS', { configurable: true, value: 'ios' });
 
     const url = await storageService.uploadProfileImage(
@@ -55,21 +71,25 @@ describe('storage.service', () => {
       'avatars'
     );
 
-    expect(FileSystem.readAsStringAsync).toHaveBeenCalledWith('file:///tmp/photo.jpg', {
-      encoding: 'base64',
-    });
-    expect(FileSystem.downloadAsync).not.toHaveBeenCalled();
-    expect(uploadString).toHaveBeenCalledWith(
-      expect.anything(),
-      'aGVsbG8=',
-      'base64',
-      { contentType: 'image/jpeg' }
+    expect(FileSystem.uploadAsync).toHaveBeenCalledWith(
+      expect.stringContaining('firebasestorage.googleapis.com/v0/b/test-bucket.appspot.com/o'),
+      'file:///tmp/photo.jpg',
+      expect.objectContaining({
+        httpMethod: 'POST',
+        uploadType: 0,
+        headers: expect.objectContaining({
+          Authorization: 'Firebase mock-id-token',
+          'Content-Type': 'image/jpeg',
+        }),
+      })
     );
+    expect(FileSystem.readAsStringAsync).not.toHaveBeenCalled();
+    expect(uploadString).not.toHaveBeenCalled();
     expect(uploadBytes).not.toHaveBeenCalled();
     expect(url).toBe('https://cdn.test/avatar.jpg');
   });
 
-  it('upload RN content:// via uploadString base64', async () => {
+  it('upload RN content:// galerie via REST uploadAsync', async () => {
     Object.defineProperty(Platform, 'OS', { configurable: true, value: 'android' });
 
     await storageService.uploadProfileImage(
@@ -78,14 +98,34 @@ describe('storage.service', () => {
       'gallery'
     );
 
-    expect(FileSystem.readAsStringAsync).toHaveBeenCalledWith(
+    expect(FileSystem.uploadAsync).toHaveBeenCalledWith(
+      expect.any(String),
       'content://media/external/images/media/42',
-      { encoding: 'base64' }
+      expect.any(Object)
     );
+    expect(uploadString).not.toHaveBeenCalled();
     expect(uploadBytes).not.toHaveBeenCalled();
   });
 
-  it('upload RN URL distante via downloadAsync + base64', async () => {
+  it('upload RN highlight video via REST uploadAsync', async () => {
+    Object.defineProperty(Platform, 'OS', { configurable: true, value: 'ios' });
+
+    await storageService.uploadProfileHighlightVideo('uid-1', {
+      uri: 'file:///tmp/highlight.mp4',
+      mimeType: 'video/mp4',
+    });
+
+    expect(FileSystem.uploadAsync).toHaveBeenCalledWith(
+      expect.stringContaining('name=highlights%2Fuid-1%2F'),
+      'file:///tmp/highlight.mp4',
+      expect.objectContaining({
+        headers: expect.objectContaining({ 'Content-Type': 'video/mp4' }),
+      })
+    );
+    expect(uploadString).not.toHaveBeenCalled();
+  });
+
+  it('upload RN URL distante via downloadAsync + REST uploadAsync', async () => {
     Object.defineProperty(Platform, 'OS', { configurable: true, value: 'ios' });
 
     await storageService.uploadActivityThumbnail(
@@ -98,10 +138,12 @@ describe('storage.service', () => {
       'https://cdn.test/video-frame.jpg',
       expect.stringMatching(/^file:\/\/\/cache\/upload_\d+$/)
     );
-    expect(FileSystem.readAsStringAsync).toHaveBeenCalledWith('file:///cache/upload_123', {
-      encoding: 'base64',
-    });
-    expect(uploadBytes).not.toHaveBeenCalled();
+    expect(FileSystem.uploadAsync).toHaveBeenCalledWith(
+      expect.any(String),
+      'file:///cache/upload_123',
+      expect.any(Object)
+    );
+    expect(uploadString).not.toHaveBeenCalled();
   });
 
   it('readFileAsBase64ForUpload lit une URI locale sans fetch', async () => {
@@ -113,6 +155,11 @@ describe('storage.service', () => {
     expect(FileSystem.readAsStringAsync).toHaveBeenCalledWith('ph://asset-id/local', {
       encoding: 'base64',
     });
+  });
+
+  it('resolveLocalFileUriForUpload télécharge les URLs distantes', async () => {
+    const localUri = await resolveLocalFileUriForUpload('https://cdn.test/remote.jpg');
+    expect(localUri).toBe('file:///cache/upload_123');
   });
 
   it('upload web via uploadBytes', async () => {
@@ -129,7 +176,7 @@ describe('storage.service', () => {
       'avatars'
     );
 
-    expect(FileSystem.readAsStringAsync).not.toHaveBeenCalled();
+    expect(FileSystem.uploadAsync).not.toHaveBeenCalled();
     expect(uploadBytes).toHaveBeenCalledWith(expect.anything(), blob, {
       contentType: 'image/jpeg',
     });
