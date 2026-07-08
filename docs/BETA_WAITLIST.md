@@ -7,17 +7,13 @@ Envoi via [EmailJS](https://www.emailjs.com/) : pas de domaine DNS à vérifier,
 ## Dépannage — pas d'email reçu
 
 1. **Site à jour ?** Sur `/beta`, il ne doit plus y avoir « Démo locale ». Si oui → redéployer (Netlify ou Vercel).
-2. **Test API** :
+2. **Test API** (ne crée pas d'inscription — vérifie seulement que l'endpoint répond) :
    ```bash
-   curl -s -X POST https://proday75.fr/api/beta \
-     -H "Content-Type: application/json" \
-     -d '{"email":"test@example.com","role":"player"}'
+   curl -s -o /dev/null -w "%{http_code}" -X OPTIONS https://proday75.fr/api/beta
    ```
+   - **204** ou **405** → endpoint OK
    - **404** → redeploy ; build Next.js + fonctions Netlify (`npm run netlify:deploy` depuis `website/`)
-   - **503** → ajouter `EMAILJS_*` (ou `BETA_WAITLIST_FUNCTION_URL`) sur Netlify / Vercel
-   - **502** → EmailJS rejette l'envoi. Réponse typique :
-     - `Gmail_API: Invalid grant` → **reconnecter Gmail** dans [EmailJS](https://dashboard.emailjs.com/admin) → **Email Services** → service Gmail → **Reconnect**
-     - clé privée / template / **Allow EmailJS API for non-browser applications** (Account → Security)
+   - **503** → ajouter `BETA_WAITLIST_FUNCTION_URL` sur Netlify / Vercel
 3. **Netlify** (proday75) → Site configuration → Environment variables → contexte **Production** → redeploy après modification.
 
 ## 1. Compte EmailJS
@@ -95,10 +91,10 @@ BETA_VALIDATE_FUNCTION_URL=https://europe-west1-proday-155b0.cloudfunctions.net/
 
 ## Flux
 
-1. Formulaire `/beta/inscription` → `POST /api/beta`
-2. API Next.js envoie via `@emailjs/nodejs` (clé privée côté serveur)
-3. L’inscrit reçoit « Bienvenue dans la bêta ProDay » avec un lien **`/beta?token=…`**
-4. Le jeton est validé côté serveur (Cloud Function + Firestore, ou jeton signé HMAC)
+1. Formulaire `/beta/inscription` → `POST /api/beta` → Cloud Function `submitBetaWaitlist`
+2. Inscription enregistrée dans Firestore (`beta_waitlist`, statut `pending`)
+3. L'admin approuve depuis l'app ProDay → email de bienvenue avec lien `/beta/programme?token=…`
+4. Le jeton est validé côté serveur (`validateBetaAccess` + Firestore)
 
 ## Page bêta privée (`/beta`)
 

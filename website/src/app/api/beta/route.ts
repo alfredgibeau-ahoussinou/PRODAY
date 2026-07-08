@@ -1,12 +1,5 @@
 import { NextResponse } from "next/server";
-import { createEmailJsBetaAccessToken } from "@/lib/betaAccess";
-import { BETA_ROLE_LABELS, isBetaRoleId } from "@/lib/betaWelcomeEmail";
-import { resolveBetaSiteUrl } from "@/lib/betaEmailConfig";
-import {
-  describeBetaEmailJsFailure,
-  getEmailJsBetaConfig,
-  sendBetaWelcomeEmailViaEmailJs,
-} from "@/lib/betaEmailjs";
+import { isBetaRoleId } from "@/lib/betaWelcomeEmail";
 import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -16,7 +9,7 @@ type BetaPayload = { email?: string; role?: string };
 const RATE_LIMIT = 10;
 const RATE_WINDOW_MS = 60_000;
 
-/** Proxy Cloud Function ou envoi EmailJS depuis Vercel. */
+/** Proxy vers la Cloud Function `submitBetaWaitlist` (inscription en attente de validation admin). */
 export async function POST(request: Request) {
   const rate = checkRateLimit(
     `beta-waitlist:${getClientIp(request)}`,
@@ -55,49 +48,24 @@ export async function POST(request: Request) {
   }
 
   const functionUrl = process.env.BETA_WAITLIST_FUNCTION_URL?.trim();
-  if (functionUrl) {
-    const upstream = await fetch(functionUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, role }),
-    });
-    const data = (await upstream.json().catch(() => ({}))) as Record<
-      string,
-      unknown
-    >;
-    return NextResponse.json(data, { status: upstream.status });
-  }
-
-  const emailJs = getEmailJsBetaConfig();
-  if (!emailJs) {
+  if (!functionUrl) {
     return NextResponse.json(
       {
         error:
-          "Service bêta non configuré. Définissez EMAILJS_* ou BETA_WAITLIST_FUNCTION_URL.",
+          "Service bêta non configuré. Définissez BETA_WAITLIST_FUNCTION_URL.",
       },
-      { status: 503 }
+      { status: 503 },
     );
   }
 
-  const roleLabel = BETA_ROLE_LABELS[role];
-  const siteUrl = resolveBetaSiteUrl();
-  const accessToken = createEmailJsBetaAccessToken(email, role) ?? undefined;
-
-  try {
-    await sendBetaWelcomeEmailViaEmailJs(emailJs, {
-      email,
-      roleLabel,
-      siteUrl,
-      accessToken,
-    });
-  } catch (e) {
-    const { log, hint } = describeBetaEmailJsFailure(e);
-    console.error("[api/beta]", log, hint ?? "");
-    return NextResponse.json(
-      { error: "Envoi email impossible", ...(hint ? { hint } : {}) },
-      { status: 502 }
-    );
-  }
-
-  return NextResponse.json({ ok: true, emailSent: true, isNew: true });
+  const upstream = await fetch(functionUrl, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, role }),
+  });
+  const data = (await upstream.json().catch(() => ({}))) as Record<
+    string,
+    unknown
+  >;
+  return NextResponse.json(data, { status: upstream.status });
 }

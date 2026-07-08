@@ -166,15 +166,9 @@ async function checkSite() {
   }
 
   try {
-    const res = await fetch(`${siteUrl}/api/beta`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: `beta-check-${Date.now()}@example.com`, role: 'player' }),
-    });
-    const body = await res.json().catch(() => ({}));
-    if (res.ok && body.emailSent) ok(`API bêta — emailSent (${siteUrl})`);
-    else if (res.ok) warn(`API bêta — ${res.status} mais emailSent=false`);
-    else warn(`API bêta — ${res.status} (vérifier EmailJS sur Netlify)`);
+    const res = await fetch(`${siteUrl}/api/beta`, { method: "OPTIONS" });
+    if (res.status === 204 || res.status === 405) ok(`API bêta — endpoint présent (${siteUrl})`);
+    else warn(`API bêta — ${res.status} (attendu OPTIONS 204 ou 405)`);
   } catch (err) {
     warn(`API bêta — inaccessible (${err instanceof Error ? err.message : err})`);
   }

@@ -3,19 +3,20 @@
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { BETA_PITCH } from "@/lib/content";
-import { BETA_MEMBER_ROLE, BETA_ROLE_LABELS, type BetaRoleId } from "@/lib/betaWelcomeEmail";
+import { BETA_ROLE_LABELS, type BetaRoleId } from "@/lib/betaWelcomeEmail";
 import { Reveal } from "./Reveal";
 
 type WaitlistFormProps = { fullPage?: boolean; initialRole?: BetaRoleId };
 
 type SubmitState = "idle" | "loading" | "success" | "error";
+type WaitlistStatus = "pending" | "approved" | "rejected";
 
 export function WaitlistForm({ fullPage, initialRole }: WaitlistFormProps) {
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<BetaRoleId>(initialRole ?? "player");
   const [state, setState] = useState<SubmitState>("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [emailSent, setEmailSent] = useState(true);
+  const [waitlistStatus, setWaitlistStatus] = useState<WaitlistStatus>("pending");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -33,7 +34,8 @@ export function WaitlistForm({ fullPage, initialRole }: WaitlistFormProps) {
       });
       const data = (await res.json().catch(() => ({}))) as {
         error?: string;
-        emailSent?: boolean;
+        status?: WaitlistStatus;
+        message?: string;
       };
 
       if (!res.ok) {
@@ -42,7 +44,11 @@ export function WaitlistForm({ fullPage, initialRole }: WaitlistFormProps) {
         return;
       }
 
-      setEmailSent(data.emailSent !== false);
+      const status =
+        data.status === "approved" || data.status === "rejected"
+          ? data.status
+          : "pending";
+      setWaitlistStatus(status);
       setState("success");
     } catch {
       setErrorMessage("Connexion impossible. Vérifiez votre réseau.");
@@ -96,7 +102,8 @@ export function WaitlistForm({ fullPage, initialRole }: WaitlistFormProps) {
                 </li>
                 <li className="flex gap-2">
                   <span className="text-white/40">—</span>
-                  Un email de bienvenue avec les premières infos ProDay
+                  Validation par l&apos;équipe ProDay, puis email d&apos;accès à
+                  l&apos;espace bêta
                 </li>
               </ul>
             )}
@@ -110,27 +117,19 @@ export function WaitlistForm({ fullPage, initialRole }: WaitlistFormProps) {
             >
               <p className="text-lg font-semibold">Merci !</p>
               <p className="mt-2 text-white/80">
-                Inscription confirmée pour <strong>{email}</strong> — statut{" "}
-                <strong>{BETA_MEMBER_ROLE}</strong> (profil{" "}
-                {BETA_ROLE_LABELS[role]}).
-                {emailSent ? (
+                Inscription confirmée pour <strong>{email}</strong> — profil{" "}
+                {BETA_ROLE_LABELS[role]}.
+                {waitlistStatus === "approved" ? (
                   <>
                     {" "}
-                    Consultez votre boîte mail (et les spams) — le lien personnel
-                    vers l&apos;espace bêta s&apos;y trouve.
+                    Votre accès est déjà validé — consultez votre boîte mail
+                    (et les spams) pour le lien vers l&apos;espace bêta.
                   </>
                 ) : (
                   <>
                     {" "}
-                    Votre inscription est bien enregistrée, mais l&apos;email de
-                    bienvenue n&apos;a pas pu partir automatiquement. Écrivez-nous à{" "}
-                    <a
-                      href="mailto:support@proday.app?subject=Inscription%20b%C3%AAta%20ProDay"
-                      className="underline decoration-white/40 underline-offset-2 hover:text-white"
-                    >
-                      support@proday.app
-                    </a>{" "}
-                    avec cette adresse pour recevoir votre lien d&apos;accès.
+                    Votre demande est enregistrée. L&apos;équipe ProDay vous
+                    contactera par email après validation de votre inscription.
                   </>
                 )}
               </p>
