@@ -2,11 +2,34 @@ import { resolveBetaSiteUrl } from "@/lib/betaEmailConfig";
 
 const LOCAL_DEV_HOSTS = new Set(["localhost:3000", "127.0.0.1:3000"]);
 
+/** Hôtes ProDay toujours autorisés (apex, www, Netlify). */
+const TRUSTED_SITE_HOSTS = [
+  "proday75.fr",
+  "www.proday75.fr",
+  "proday75.netlify.app",
+] as const;
+
+function isNetlifyPreviewHost(host: string): boolean {
+  return host.endsWith("--proday75.netlify.app");
+}
+
+function addHostWithWwwVariant(hosts: Set<string>, host: string): void {
+  hosts.add(host);
+  if (host.startsWith("www.")) {
+    hosts.add(host.slice(4));
+  } else if (!host.includes(":")) {
+    hosts.add(`www.${host}`);
+  }
+}
+
 /** Hôtes autorisés pour les requêtes mutantes (protection CSRF basique). */
 function allowedRequestHosts(): Set<string> {
   const hosts = new Set<string>();
+  for (const host of TRUSTED_SITE_HOSTS) {
+    hosts.add(host);
+  }
   try {
-    hosts.add(new URL(resolveBetaSiteUrl()).host);
+    addHostWithWwwVariant(hosts, new URL(resolveBetaSiteUrl()).host);
   } catch {
     // ignore
   }
@@ -18,7 +41,8 @@ function allowedRequestHosts(): Set<string> {
 
 function hostMatchesAllowed(urlString: string, allowed: Set<string>): boolean {
   try {
-    return allowed.has(new URL(urlString).host);
+    const host = new URL(urlString).host;
+    return allowed.has(host) || isNetlifyPreviewHost(host);
   } catch {
     return false;
   }
