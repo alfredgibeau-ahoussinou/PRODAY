@@ -218,3 +218,41 @@ Les adresses e-mail (`contact@proday.app`, etc.) et le bundle iOS/Android `com.p
 
 - [Netlify — DNS externe / apex](https://docs.netlify.com/domains-https/custom-domains/configure-external-dns/)
 - [IONOS — enregistrements DNS](https://www.ionos.fr/assistance/domaines/configurer-vos-enregistrements-dns-cname-mx-etc/)
+
+## Nouvelle tentative CLI/API (2026-07-08 ~19:00 heure Paris)
+
+| Action | Résultat |
+|--------|----------|
+| `PATCH` `custom_domain=proday75.fr`, `domain_aliases=["www.proday75.fr"]` | **422** — provisioning certificate (immédiat + après **60 s**) |
+| `PATCH` `automatic_tls_provisioning=false` seul | **200** mais `automatic_tls_provisioning` reste `true` |
+| `PATCH` `ssl=false` | **200**, primary inchangé (`proday.app`) |
+| `PATCH` `custom_domain=proday75.netlify.app` | **422** — cannot use default domain as custom domain |
+| `PATCH` alias seul `["www.proday75.fr"]` | **422** rate limit alias (3/h plan Free) après plusieurs essais |
+| `POST /ssl`, `provisionSiteTLSCertificate` | **422** — `bad dns for custom domain` |
+| `GET /ssl/certificates?domain=…` | aucun certificat pour les 4 hôtes |
+| `POST /ssl/renew` | `There is no certificate to renew` |
+| `DELETE /ssl` | **404** |
+| GraphQL `api.netlify.com/graphql` | **404** |
+| `createSiteInTeam` + `custom_domain=proday75.fr` | **422** — domain must be unique (déjà sur site `a55cf9f2…`) |
+
+**curl :** `http://proday75.fr` → **301** vers HTTPS ; `https://proday75.fr` → certificat `*.netlify.app` (SAN mismatch). Cause inchangée : primary `proday.app` sans DNS public (`dig proday.app` NXDOMAIN).
+
+### Modèle message support Netlify (FR)
+
+**Objet :** Déblocage provisionnement TLS — impossible de changer le domaine principal (site `proday75`)
+
+Bonjour,
+
+Mon site **proday75** (ID `a55cf9f2-06a5-4632-bffb-8f68d81395ac`, équipe HOLBERTON) est bloqué : je ne peux pas retirer **proday.app** ni définir **proday75.fr** comme domaine principal.
+
+- **Domaine principal actuel :** `proday.app` (plus de zone DNS — je ne souhaite plus utiliser ce domaine).
+- **Alias :** `proday75.fr`, `www.proday75.fr` (DNS OK : A Netlify + zone DNS Netlify pour `proday75.fr`).
+- **Erreur API** sur tout `PATCH` de `custom_domain` : *We're provisioning a certificate for your site, you cannot change custom domains until that process completes*.
+- **`POST /api/v1/sites/{id}/ssl`** : *bad dns for custom domain* (car le primary `proday.app` ne résout pas).
+- **`GET /ssl/certificates`** : aucun certificat ; **`ssl`** = false ; HTTPS sur `proday75.fr` sert un certificat `*.netlify.app`.
+
+**Demande :** annuler ou clôturer le job de provisionnement TLS bloqué, retirer `proday.app` / `www.proday.app` du site, définir **`proday75.fr`** comme domaine principal et provisionner Let's Encrypt pour `proday75.fr` et `www.proday75.fr`.
+
+Merci,
+Alfred Gibeau–Ahoussinou
+
