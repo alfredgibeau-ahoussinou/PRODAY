@@ -15,6 +15,7 @@ interface AdminBetaWaitlistCardProps {
   onReject?: () => void;
   onResend?: () => void;
   onShareLink?: () => void;
+  onDelete?: () => void;
 }
 
 export const AdminBetaWaitlistCard: React.FC<AdminBetaWaitlistCardProps> = ({
@@ -25,6 +26,7 @@ export const AdminBetaWaitlistCard: React.FC<AdminBetaWaitlistCardProps> = ({
   onReject,
   onResend,
   onShareLink,
+  onDelete,
 }) => {
   const { colors: c } = useAdminStyles();
   const styles = useMemo(() => createStyles(c), [c]);
@@ -96,6 +98,16 @@ export const AdminBetaWaitlistCard: React.FC<AdminBetaWaitlistCardProps> = ({
           >
             <Icon name="share" size={14} color={c.brand} />
             <Text style={styles.linkText}>Lien</Text>
+          </TouchableOpacity>
+        ) : null}
+        {onDelete ? (
+          <TouchableOpacity
+            style={[styles.deleteBtn, busy && styles.btnDisabled]}
+            onPress={onDelete}
+            disabled={busy}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.deleteText}>Supprimer</Text>
           </TouchableOpacity>
         ) : null}
       </View>
@@ -173,6 +185,13 @@ function createStyles(c: AppColors) {
       backgroundColor: c.surface,
     },
     linkText: { fontSize: 11, fontWeight: '700', color: c.brand },
+    deleteBtn: {
+      paddingHorizontal: spacing.sm,
+      paddingVertical: 7,
+      borderRadius: radius.sm,
+      backgroundColor: c.error,
+    },
+    deleteText: { fontSize: 11, fontWeight: '800', color: c.brandInverse },
     btnDisabled: { opacity: 0.5 },
   });
 }

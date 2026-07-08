@@ -1150,6 +1150,14 @@ export const adminService = {
     >('adminResendBetaWelcomeEmail', { entryId }, BETA_ADMIN_FUNCTIONS_REGION);
   },
 
+  async deleteBetaWaitlistEntry(entryId: string): Promise<{ success: boolean }> {
+    return callFunction<{ entryId: string }, { success: boolean }>(
+      'adminDeleteBetaWaitlistEntry',
+      { entryId },
+      BETA_ADMIN_FUNCTIONS_REGION,
+    );
+  },
+
   async listSubscriptionPurchases(max = 100): Promise<SubscriptionPurchase[]> {
     if (!isFirebaseConfigured()) return [];
     const database = getDb();

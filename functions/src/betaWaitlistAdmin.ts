@@ -161,3 +161,22 @@ export function createAdminResendBetaWelcomeEmailHandler(db: admin.firestore.Fir
     return { success: true, emailSent, emailError };
   };
 }
+
+/** Supprime une inscription bêta (révoque le jeton d'accès). */
+export function createAdminDeleteBetaWaitlistEntryHandler(db: admin.firestore.Firestore) {
+  return async (
+    data: { entryId?: string },
+    context: functions.https.CallableContext,
+  ): Promise<{ success: boolean }> => {
+    assertAdmin(context);
+    const entryId = String(data.entryId ?? '').trim();
+    if (!entryId) {
+      throw new functions.https.HttpsError('invalid-argument', 'entryId requis');
+    }
+
+    const { ref } = await loadBetaEntry(db, entryId);
+    await ref.delete();
+
+    return { success: true };
+  };
+}

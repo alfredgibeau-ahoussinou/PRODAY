@@ -178,6 +178,33 @@ export const AdminOpsDataPanel: React.FC = () => {
     ]);
   };
 
+  const handleDelete = (entry: BetaWaitlistEntry) => {
+    Alert.alert(
+      'Supprimer l\'inscription',
+      `Retirer définitivement ${entry.email} de la bêta ? Le lien d'accès sera révoqué.`,
+      [
+        { text: 'Annuler', style: 'cancel' },
+        {
+          text: 'Supprimer',
+          style: 'destructive',
+          onPress: () =>
+            void runAction(entry.id, async () => {
+              await adminService.deleteBetaWaitlistEntry(entry.id);
+              await adminAuditService.log({
+                action: 'beta_deleted',
+                actor_uid: profile?.uid ?? '',
+                actor_email: firebaseUser?.email ?? profile?.email,
+                target_type: 'beta_waitlist',
+                target_id: entry.id,
+                summary: `Inscription bêta supprimée — ${entry.email}`,
+              });
+              Alert.alert('Bêta', 'Inscription supprimée.');
+            }),
+        },
+      ],
+    );
+  };
+
   const handleShareLink = async (entry: BetaWaitlistEntry) => {
     if (!entry.access_token) {
       Alert.alert('Lien indisponible', 'Aucun jeton d\'accès — approuvez d\'abord l\'inscription.');
@@ -235,6 +262,7 @@ export const AdminOpsDataPanel: React.FC = () => {
                     ? () => void handleShareLink(entry)
                     : undefined
                 }
+                onDelete={() => handleDelete(entry)}
               />
             ))
           )}

@@ -21,6 +21,7 @@ export type AdminAuditAction =
   | 'platform_config_updated'
   | 'beta_approved'
   | 'beta_rejected'
+  | 'beta_deleted'
   | 'other';
 
 export interface AdminAuditEntry {

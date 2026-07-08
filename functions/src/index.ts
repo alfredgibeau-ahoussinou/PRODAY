@@ -14,6 +14,7 @@ import {
   createAdminApproveBetaAccessHandler,
   createAdminRejectBetaAccessHandler,
   createAdminResendBetaWelcomeEmailHandler,
+  createAdminDeleteBetaWaitlistEntryHandler,
 } from './betaWaitlistAdmin';
 import { onV3BrainWrite } from './v3Brain';
 import { activateStoreSubscription } from './subscriptionIap';
@@ -726,3 +727,8 @@ export const adminRejectBetaAccess = functions
 export const adminResendBetaWelcomeEmail = functions
   .region('europe-west1')
   .https.onCall(createAdminResendBetaWelcomeEmailHandler(db));
+
+/** Supprime une inscription bêta — admin uniquement. */
+export const adminDeleteBetaWaitlistEntry = functions
+  .region('europe-west1')
+  .https.onCall(createAdminDeleteBetaWaitlistEntryHandler(db));
