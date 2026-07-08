@@ -219,6 +219,7 @@ npm run eas:build:preview -- --platform android
 | `503` sur `POST /api/beta` | Variables `EMAILJS_*` absentes | Ajouter sur Netlify → redeploy |
 | `502` + `Invalid grant` | Gmail déconnecté dans EmailJS | Reconnecter le service Gmail |
 | `/beta` sans contenu | Pas de jeton / cookie expiré | Rouvrir le lien email |
+| Trop de redirections | Boucle `?token=` après `/api/beta/access` (Netlify) | Redéployer le site ; vérifier `location: …/beta` sans query |
 | Jeton invalide | Secret HMAC changé ou CF non alignée | Vérifier `BETA_ACCESS_SECRET` / CF |
 
 ---

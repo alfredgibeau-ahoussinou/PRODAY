@@ -3,6 +3,7 @@ import {
   BETA_ACCESS_COOKIE,
   BETA_ACCESS_COOKIE_MAX_AGE,
   BETA_LANDING_PATH,
+  buildBetaInternalRedirectUrl,
   validateBetaAccessToken,
 } from "@/lib/betaAccess";
 import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
@@ -52,12 +53,12 @@ export async function GET(request: Request) {
     if (jsonOnly) {
       return NextResponse.json({ error: "Accès refusé" }, { status: 403 });
     }
-    return NextResponse.redirect(new URL("/beta", request.url));
+    return NextResponse.redirect(buildBetaInternalRedirectUrl(request, "/beta"));
   }
 
   const response = jsonOnly
     ? NextResponse.json({ ok: true, ...session })
-    : NextResponse.redirect(new URL(BETA_LANDING_PATH, request.url));
+    : NextResponse.redirect(buildBetaInternalRedirectUrl(request, BETA_LANDING_PATH));
 
   setBetaSessionCookie(response, token);
   return response;

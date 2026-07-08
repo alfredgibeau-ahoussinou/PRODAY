@@ -32,6 +32,13 @@ export function buildBetaAccessUrl(siteUrl: string, accessToken?: string): strin
   return `${site}${BETA_LANDING_PATH}`;
 }
 
+/** Redirection interne sans reprendre `?token=` (évite une boucle middleware ↔ API sur Netlify). */
+export function buildBetaInternalRedirectUrl(request: Request, pathname: string): URL {
+  const target = new URL(pathname, new URL(request.url).origin);
+  target.search = "";
+  return target;
+}
+
 export function createEmailJsBetaAccessToken(email: string, role: string): string | null {
   const secret = process.env.BETA_ACCESS_SECRET?.trim();
   if (!secret) return null;

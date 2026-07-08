@@ -16,6 +16,22 @@ Envoi via [EmailJS](https://www.emailjs.com/) : pas de domaine DNS à vérifier,
    - **503** → ajouter `BETA_WAITLIST_FUNCTION_URL` sur Netlify / Vercel
 3. **Netlify** (proday75) → Site configuration → Environment variables → contexte **Production** → redeploy après modification.
 
+## Dépannage — lien email « Accéder à la bêta »
+
+Symptômes : page blanche, « trop de redirections », ou retour sur « Accéder à la bêta » sans contenu.
+
+1. **Redéployer le site** (`cd website && npm run netlify:deploy`) — un bug Netlify/OpenNext conservait `?token=` après `/api/beta/access`, provoquant une boucle `/beta/programme` ↔ API. Corrigé dans `buildBetaInternalRedirectUrl`.
+2. **Variables Netlify (Production)** :
+   - `BETA_VALIDATE_FUNCTION_URL` → `https://europe-west1-proday-155b0.cloudfunctions.net/validateBetaAccess`
+   - `NEXT_PUBLIC_SITE_URL` → `https://proday75.fr`
+3. **Test rapide** (jeton fictif — doit finir sur `/beta`, pas boucler) :
+   ```bash
+   curl -sI "https://proday75.fr/api/beta/access?token=TEST" | grep -i location
+   # Attendu : location: https://proday75.fr/beta   (sans ?token=)
+   ```
+4. **Jeton valide** : renvoyer l'email depuis l'admin ProDay (inscription approuvée) ou ouvrir le lien du dernier mail reçu.
+5. **HTTPS** : si le navigateur signale un certificat invalide sur `proday75.fr`, voir `docs/DOMAIN_PRODAY75_FR.md` (certificat Let's Encrypt Netlify).
+
 ## 1. Compte EmailJS
 
 1. [emailjs.com](https://www.emailjs.com/) → créer un compte
@@ -164,5 +180,5 @@ Collection `beta_waitlist` si la Cloud Function est déployée (lecture admin).
 # website/.env.local — voir website/.env.example
 npm run website:dev
 # → http://localhost:3000/beta/inscription (waitlist)
-# → http://localhost:3000/beta?token=… (espace privé)
+# → http://localhost:3000/beta/programme?token=… (programme bêta)
 ```
