@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 import path from "path";
+import { SECURITY_RESPONSE_HEADERS } from "./src/lib/securityHeaders";
 
 const monorepoRoot = path.join(__dirname, "..");
 
@@ -10,6 +11,17 @@ const nextConfig: NextConfig = {
   // Les assets dans public/ sont servis en statique ; on évite l'optimiseur distant.
   images: {
     unoptimized: true,
+  },
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: Object.entries(SECURITY_RESPONSE_HEADERS).map(([key, value]) => ({
+          key,
+          value,
+        })),
+      },
+    ];
   },
   async redirects() {
     return [

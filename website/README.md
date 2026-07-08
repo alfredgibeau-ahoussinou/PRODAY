@@ -101,7 +101,7 @@ Configuration : `website/netlify.toml` (canonique) + `netlify.toml` à la racine
 
 Ne pas publier `dist` ni `.next` manuellement : Next.js a besoin de la **fonction serveur** générée par `@netlify/plugin-nextjs`.
 
-**Variables d’environnement** : mêmes clés EmailJS que Vercel (voir ci-dessus) + `NEXT_PUBLIC_SITE_URL=https://proday-site.netlify.app`.
+**Variables d’environnement** : mêmes clés EmailJS que Vercel (voir ci-dessus) + `NEXT_PUBLIC_SITE_URL=https://proday75.fr`.
 
 **Déploiement manuel (CLI)** depuis `website/` :
 
@@ -114,7 +114,7 @@ netlify deploy --prod --no-build \
 
 ## Bêta — email de bienvenue (EmailJS)
 
-Le formulaire `/beta/inscription` appelle `POST /api/beta` et envoie un **email de bienvenue** via [EmailJS](https://www.emailjs.com/). Le lien email ouvre `/beta?token=…` (hub protégé).
+Le formulaire `/beta/inscription` appelle `POST /api/beta` et envoie un **email de bienvenue** via [EmailJS](https://www.emailjs.com/). Le lien email ouvre `/beta/programme?token=…` (programme bêta directement).
 
 Variables d’environnement (Vercel / Netlify / `.env.local`) :
 
@@ -127,6 +127,10 @@ NEXT_PUBLIC_SITE_URL=https://votre-domaine.com
 ```
 
 Voir `docs/BETA_GUIDE.md` (guide opérateur complet) et `docs/BETA_WAITLIST.md` (dépannage EmailJS).
+
+## Sécurité
+
+En-têtes HTTP (HSTS, CSP, X-Frame-Options…), protection CSRF sur `POST /api/beta`, rate limiting et cookies bêta `httpOnly` : voir [`docs/WEBSITE_SECURITY.md`](../docs/WEBSITE_SECURITY.md).
 
 ## Thématisation par univers
 

@@ -7,9 +7,22 @@ import {
   validateBetaAccessToken,
 } from "@/lib/betaAccess";
 import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
+import {
+  applySecurityHeaders,
+  NO_REFERRER_HEADER,
+} from "@/lib/securityHeaders";
 
 const RATE_LIMIT = 30;
 const RATE_WINDOW_MS = 60_000;
+const MAX_TOKEN_LENGTH = 2048;
+
+function withNoStoreHeaders(response: NextResponse): NextResponse {
+  applySecurityHeaders(response);
+  response.headers.set("Cache-Control", "no-store, no-cache");
+  response.headers.set("Pragma", "no-cache");
+  response.headers.set("Referrer-Policy", NO_REFERRER_HEADER);
+  return response;
+}
 
 function setBetaSessionCookie(response: NextResponse, token: string) {
   response.cookies.set(BETA_ACCESS_COOKIE, token, {
@@ -33,27 +46,41 @@ export async function GET(request: Request) {
     RATE_WINDOW_MS,
   );
   if (!rate.allowed) {
-    return NextResponse.json(
-      { error: "Trop de tentatives. Réessayez plus tard." },
-      {
-        status: 429,
-        headers: rate.retryAfterSec
-          ? { "Retry-After": String(rate.retryAfterSec) }
-          : undefined,
-      },
+    return withNoStoreHeaders(
+      NextResponse.json(
+        { error: "Trop de tentatives. Réessayez plus tard." },
+        {
+          status: 429,
+          headers: rate.retryAfterSec
+            ? { "Retry-After": String(rate.retryAfterSec) }
+            : undefined,
+        },
+      ),
     );
   }
 
   if (!token) {
-    return NextResponse.json({ error: "Token requis" }, { status: 400 });
+    return withNoStoreHeaders(
+      NextResponse.json({ error: "Token requis" }, { status: 400 }),
+    );
+  }
+
+  if (token.length > MAX_TOKEN_LENGTH) {
+    return withNoStoreHeaders(
+      NextResponse.json({ error: "Token invalide" }, { status: 400 }),
+    );
   }
 
   const session = await validateBetaAccessToken(token);
   if (!session) {
     if (jsonOnly) {
-      return NextResponse.json({ error: "Accès refusé" }, { status: 403 });
+      return withNoStoreHeaders(
+        NextResponse.json({ error: "Accès refusé" }, { status: 403 }),
+      );
     }
-    return NextResponse.redirect(buildBetaInternalRedirectUrl(request, "/beta"), 307);
+    return withNoStoreHeaders(
+      NextResponse.redirect(buildBetaInternalRedirectUrl(request, "/beta"), 307),
+    );
   }
 
   const response = jsonOnly
@@ -64,5 +91,5 @@ export async function GET(request: Request) {
       );
 
   setBetaSessionCookie(response, token);
-  return response;
+  return withNoStoreHeaders(response);
 }
