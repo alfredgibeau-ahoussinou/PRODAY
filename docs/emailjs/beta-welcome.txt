@@ -1,0 +1,34 @@
+PRODAY — Connecter · Progresser · Réussir
+
+Bienvenue dans la bêta ProDay
+
+Bonjour,
+
+Merci pour votre inscription en tant que {{profile_label}}.
+Vous êtes officiellement {{member_role}} — parmi les premiers à façonner ProDay sur le terrain.
+
+Inscription enregistrée pour : {{to_email}}
+
+ProDay réunit Mercato, matchs, tournois, Pulse et CV joueur dans une seule app — pour le foot amateur et semi-pro, avec les univers Man, Woman et Pro.
+
+PROCHAINES ÉTAPES
+
+1) Cliquez sur le lien d'accès
+   Ouvrez votre espace bêta personnel pour découvrir le programme et les prochaines actions.
+
+2) Explorez le programme bêta
+   Pôles à tester, feuille de route et infos sur les builds à venir.
+
+3) APK & TestFlight bientôt
+   Vous serez contacté en priorité pour télécharger l'app iOS (TestFlight) et Android (APK).
+
+ACCÉDER À LA BÊTA
+{{beta_url}}
+
+Si le lien ne fonctionne pas, copiez-le dans votre navigateur.
+
+—
+L'équipe ProDay
+support@proday.app · {{site_url}}
+
+Vous recevez cet email car vous vous êtes inscrit à la bêta sur ProDay.

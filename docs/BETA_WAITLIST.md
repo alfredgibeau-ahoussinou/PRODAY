@@ -24,27 +24,57 @@ Envoi via [EmailJS](https://www.emailjs.com/) : pas de domaine DNS à vérifier,
 
 ## 2. Template « Bêta ProDay » (`template_zkbezzh`)
 
+Style ProDay sombre (fond `#0a0f1a`, accent cyan `#22d3ee` / `#06b6d4`) — compatible clients email (tables + CSS inline).
+
+### Copier-coller dans EmailJS
+
 1. Ouvrez **Email Templates** → `template_zkbezzh` → **Edit**
-2. Copiez-collez le HTML depuis **`docs/emailjs/beta-welcome.html`**
-3. Configurez :
+2. Onglet **Content** → basculez en mode **HTML** si besoin
+3. Copiez-collez **tout** le contenu de **`docs/emailjs/beta-welcome.html`** (sans modifier les `{{variables}}`)
+4. *(Optionnel)* Version texte brut pour clients sans HTML : **`docs/emailjs/beta-welcome.txt`** — utile si EmailJS propose un champ Plain Text séparé
+5. Configurez les champs du template :
 
 | Champ | Valeur |
 |-------|--------|
 | **To Email** | `{{email}}` |
 | **From Name** | `ProDay` |
-| **Subject** | `{{subject}}` ou fixe : `Vous êtes beta-testeur ProDay` |
+| **Subject** | `{{subject}}` |
 | **Reply To** | `support@proday.app` |
 | **Content** | HTML de `docs/emailjs/beta-welcome.html` |
 
-Variables : `to_email`, `member_role`, `profile_label`, `site_url`, `beta_url`, `subject`
+### Variables EmailJS (envoyées par le code)
 
-4. **Test** :
-   - `to_email` : votre email
-   - `member_role` : Beta-testeur
-   - `profile_label` : Joueur
-   - `site_url` : https://proday-xak9.vercel.app
-   - `beta_url` : https://proday-xak9.vercel.app/beta?token=TEST
-   - `subject` : Vous êtes beta-testeur ProDay
+Source : `website/src/lib/betaEmailjs.ts` et `functions/src/betaWaitlistEmail.ts` (`buildBetaEmailJsTemplateParams`).
+
+| Variable | Exemple | Description |
+|----------|---------|-------------|
+| `email` | `joueur@exemple.fr` | Destinataire (champ **To Email**) |
+| `to_email` | `joueur@exemple.fr` | Email inscrit (affiché dans le corps) |
+| `user_email` | `joueur@exemple.fr` | Alias de `email` |
+| `member_role` | `Beta-testeur` | Statut membre bêta |
+| `profile_label` | `Joueur` | Rôle choisi à l'inscription |
+| `role_label` | `Beta-testeur` | Alias de `member_role` |
+| `site_url` | `https://proday75.fr` | URL du site vitrine |
+| `beta_url` | `https://proday75.fr/beta/programme?token=…` | Lien CTA « Accéder à la bêta » |
+| `subject` | `Vous êtes beta-testeur ProDay` | Objet de l'email |
+
+> Pas de variable `user_name` pour l'instant — la personnalisation repose sur `profile_label` et `to_email`.
+
+### Test dans le dashboard EmailJS
+
+Remplissez **Test It** avec :
+
+| Variable | Valeur test |
+|----------|-------------|
+| `email` | votre email |
+| `to_email` | votre email |
+| `user_email` | votre email |
+| `member_role` | Beta-testeur |
+| `profile_label` | Joueur |
+| `role_label` | Beta-testeur |
+| `site_url` | `https://proday75.fr` |
+| `beta_url` | `https://proday75.fr/beta/programme?token=TEST` |
+| `subject` | Vous êtes beta-testeur ProDay |
 
 ## 3. Clés API
 
@@ -106,7 +136,7 @@ BETA_VALIDATE_FUNCTION_URL=https://europe-west1-proday-155b0.cloudfunctions.net/
   - Explication du programme, six pôles testables, modules transverses
   - Téléchargement **iOS TestFlight** et **Android APK** (liens optionnels via env, sinon « bientôt » + email)
   - Retours par email (`support@proday.app`), timeline des prochaines étapes
-- Email de bienvenue : CTA **« Accéder à la bêta »** → `{{beta_url}}` (`/beta?token=…`)
+- Email de bienvenue : CTA **« Accéder à la bêta »** → `{{beta_url}}` (`/beta/programme?token=…`)
 
 ### Variables téléchargement (optionnelles)
 
