@@ -1,7 +1,5 @@
-import * as FileSystem from 'expo-file-system/legacy';
-import { Platform } from 'react-native';
 import { callFunction } from '../lib/firebaseFunctions';
-import { normalizeImageMimeType } from './storage.service';
+import { normalizeImageMimeType, readFileAsBase64ForUpload } from './storage.service';
 import type { PlayerVerificationCheckId } from '../models/User';
 import type { AiVerificationResult } from '../utils/aiVerification';
 
@@ -17,19 +15,7 @@ interface EphemeralVerifyResponse {
 }
 
 async function readFileBase64(uri: string): Promise<string> {
-  if (Platform.OS !== 'web' && uri.startsWith('file://')) {
-    return FileSystem.readAsStringAsync(uri, { encoding: 'base64' });
-  }
-  const response = await fetch(uri);
-  if (!response.ok) throw new Error('Impossible de lire le fichier');
-  const blob = await response.blob();
-  const buffer = await blob.arrayBuffer();
-  const bytes = new Uint8Array(buffer);
-  let binary = '';
-  for (let i = 0; i < bytes.length; i += 1) {
-    binary += String.fromCharCode(bytes[i]);
-  }
-  return btoa(binary);
+  return readFileAsBase64ForUpload(uri);
 }
 
 function mapResponse(res: EphemeralVerifyResponse): AiVerificationResult {

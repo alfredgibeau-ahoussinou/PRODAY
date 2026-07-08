@@ -28,22 +28,43 @@ type UploadPayload =
   | { kind: 'base64'; base64: string }
   | { kind: 'blob'; blob: Blob };
 
-function isLocalDeviceUri(uri: string): boolean {
-  return (
-    uri.startsWith('file://') ||
-    uri.startsWith('content://') ||
-    uri.startsWith('ph://') ||
-    uri.startsWith('assets-library://')
-  );
+function isRemoteUri(uri: string): boolean {
+  return uri.startsWith('http://') || uri.startsWith('https://');
+}
+
+function isArrayBufferBlobError(message: string): boolean {
+  return message.includes('ArrayBuffer') || message.includes('ArrayBufferView');
+}
+
+/** Lit un fichier local ou distant en base64 (React Native — jamais fetch().blob()). */
+export async function readFileAsBase64ForUpload(uri: string): Promise<string> {
+  let readUri = uri;
+  if (isRemoteUri(uri)) {
+    const cacheDir = FileSystem.cacheDirectory;
+    if (!cacheDir) {
+      throw new Error('Cache indisponible pour télécharger le fichier');
+    }
+    const downloaded = await FileSystem.downloadAsync(uri, `${cacheDir}upload_${Date.now()}`);
+    readUri = downloaded.uri;
+  }
+  return FileSystem.readAsStringAsync(readUri, { encoding: 'base64' });
 }
 
 async function readFileForUpload(uri: string): Promise<UploadPayload> {
-  // React Native : pas de Blob(ArrayBuffer) — base64 + uploadString
-  if (Platform.OS !== 'web' && isLocalDeviceUri(uri)) {
-    const base64 = await FileSystem.readAsStringAsync(uri, {
-      encoding: 'base64',
-    });
-    return { kind: 'base64', base64 };
+  // React Native : whatwg-fetch fait new Blob([ArrayBuffer]) → erreur RN
+  if (Platform.OS !== 'web') {
+    try {
+      const base64 = await readFileAsBase64ForUpload(uri);
+      return { kind: 'base64', base64 };
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      if (isArrayBufferBlobError(msg)) {
+        throw new Error(
+          'Envoi impossible sur mobile (format fichier non supporté). Choisissez une autre photo.'
+        );
+      }
+      throw new Error(`Impossible de lire le fichier sélectionné (${msg})`);
+    }
   }
 
   const response = await fetch(uri);
@@ -62,7 +83,17 @@ async function uploadPayload(
     await uploadString(storageRef, payload.base64, 'base64', { contentType });
     return;
   }
-  await uploadBytes(storageRef, payload.blob, { contentType });
+  try {
+    await uploadBytes(storageRef, payload.blob, { contentType });
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error);
+    if (isArrayBufferBlobError(msg)) {
+      throw new Error(
+        'Envoi impossible : le navigateur ne peut pas préparer ce fichier. Réessayez avec une autre image.'
+      );
+    }
+    throw error;
+  }
 }
 
 export type ProfileMediaFolder = 'avatars' | 'gallery';

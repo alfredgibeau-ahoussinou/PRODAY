@@ -1,5 +1,7 @@
 jest.mock('expo-file-system/legacy', () => ({
   readAsStringAsync: jest.fn(),
+  downloadAsync: jest.fn(),
+  cacheDirectory: 'file:///cache/',
 }));
 
 jest.mock('firebase/storage', () => ({
@@ -16,7 +18,11 @@ jest.mock('../lib/firebase', () => ({
 import * as FileSystem from 'expo-file-system/legacy';
 import { Platform } from 'react-native';
 import { uploadBytes, uploadString, getDownloadURL } from 'firebase/storage';
-import { normalizeImageMimeType, storageService } from '../services/storage.service';
+import {
+  normalizeImageMimeType,
+  readFileAsBase64ForUpload,
+  storageService,
+} from '../services/storage.service';
 
 describe('storage.service', () => {
   const originalOs = Platform.OS;
@@ -25,6 +31,9 @@ describe('storage.service', () => {
     jest.clearAllMocks();
     (getDownloadURL as jest.Mock).mockResolvedValue('https://cdn.test/avatar.jpg');
     (FileSystem.readAsStringAsync as jest.Mock).mockResolvedValue('aGVsbG8=');
+    (FileSystem.downloadAsync as jest.Mock).mockResolvedValue({
+      uri: 'file:///cache/upload_123',
+    });
   });
 
   afterEach(() => {
@@ -37,7 +46,7 @@ describe('storage.service', () => {
     expect(normalizeImageMimeType(null)).toBe('image/jpeg');
   });
 
-  it('upload RN local file via uploadString base64 (pas de Blob ArrayBuffer)', async () => {
+  it('upload RN file:// via uploadString base64 (pas de Blob ArrayBuffer)', async () => {
     Object.defineProperty(Platform, 'OS', { configurable: true, value: 'ios' });
 
     const url = await storageService.uploadProfileImage(
@@ -49,6 +58,7 @@ describe('storage.service', () => {
     expect(FileSystem.readAsStringAsync).toHaveBeenCalledWith('file:///tmp/photo.jpg', {
       encoding: 'base64',
     });
+    expect(FileSystem.downloadAsync).not.toHaveBeenCalled();
     expect(uploadString).toHaveBeenCalledWith(
       expect.anything(),
       'aGVsbG8=',
@@ -57,6 +67,52 @@ describe('storage.service', () => {
     );
     expect(uploadBytes).not.toHaveBeenCalled();
     expect(url).toBe('https://cdn.test/avatar.jpg');
+  });
+
+  it('upload RN content:// via uploadString base64', async () => {
+    Object.defineProperty(Platform, 'OS', { configurable: true, value: 'android' });
+
+    await storageService.uploadProfileImage(
+      'uid-1',
+      { uri: 'content://media/external/images/media/42', mimeType: 'image/jpeg' },
+      'gallery'
+    );
+
+    expect(FileSystem.readAsStringAsync).toHaveBeenCalledWith(
+      'content://media/external/images/media/42',
+      { encoding: 'base64' }
+    );
+    expect(uploadBytes).not.toHaveBeenCalled();
+  });
+
+  it('upload RN URL distante via downloadAsync + base64', async () => {
+    Object.defineProperty(Platform, 'OS', { configurable: true, value: 'ios' });
+
+    await storageService.uploadActivityThumbnail(
+      'uid-1',
+      'act-1',
+      'https://cdn.test/video-frame.jpg'
+    );
+
+    expect(FileSystem.downloadAsync).toHaveBeenCalledWith(
+      'https://cdn.test/video-frame.jpg',
+      expect.stringMatching(/^file:\/\/\/cache\/upload_\d+$/)
+    );
+    expect(FileSystem.readAsStringAsync).toHaveBeenCalledWith('file:///cache/upload_123', {
+      encoding: 'base64',
+    });
+    expect(uploadBytes).not.toHaveBeenCalled();
+  });
+
+  it('readFileAsBase64ForUpload lit une URI locale sans fetch', async () => {
+    Object.defineProperty(Platform, 'OS', { configurable: true, value: 'ios' });
+
+    const base64 = await readFileAsBase64ForUpload('ph://asset-id/local');
+
+    expect(base64).toBe('aGVsbG8=');
+    expect(FileSystem.readAsStringAsync).toHaveBeenCalledWith('ph://asset-id/local', {
+      encoding: 'base64',
+    });
   });
 
   it('upload web via uploadBytes', async () => {
