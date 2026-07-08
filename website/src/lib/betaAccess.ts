@@ -32,15 +32,18 @@ export function buildBetaAccessUrl(siteUrl: string, accessToken?: string): strin
   return `${site}${BETA_LANDING_PATH}`;
 }
 
+/** Param factice pour que Netlify remplace `?token=` au lieu de le conserver (OpenNext #2209). */
+export const BETA_ACCESS_REDIRECT_PARAM = "from";
+export const BETA_ACCESS_REDIRECT_VALUE = "access";
+
 /** Redirection interne absolue sans query (évite boucle middleware ↔ API sur Netlify). */
 export function buildBetaInternalRedirectUrl(request: Request, pathname: string): string {
   const forwardedHost = request.headers.get("x-forwarded-host")?.split(",")[0]?.trim();
   const host = forwardedHost || new URL(request.url).host;
   const proto =
     request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim() || "https";
-  // Netlify réinjecte les query params de la requête si Location n'en a pas (OpenNext #2209).
-  // Un `?` seul force le remplacement et supprime `?token=`.
-  return `${proto}://${host}${pathname}?`;
+  const param = `${BETA_ACCESS_REDIRECT_PARAM}=${BETA_ACCESS_REDIRECT_VALUE}`;
+  return `${proto}://${host}${pathname}?${param}`;
 }
 
 export function createEmailJsBetaAccessToken(email: string, role: string): string | null {
