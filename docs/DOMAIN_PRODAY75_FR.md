@@ -5,7 +5,7 @@
 **URL canonique :** https://proday75.fr (et https://www.proday75.fr → redirection apex)  
 **URL Netlify par défaut :** https://proday75.netlify.app (redirigée vers `proday75.fr`)
 
-Dernière mise à jour : 2026-07-07
+Dernière mise à jour : 2026-07-08 (audit CLI/API domaines)
 
 ## Clé privée IONOS (`*.proday75.fr_private_key.key`)
 
@@ -24,19 +24,118 @@ Fichier typique dans `~/Downloads/` après achat SSL chez IONOS :
 
 Seule la clé privée a été trouvée localement ; pas de bundle `.crt`/`.pem` IONOS dans `Downloads/` au moment de la migration.
 
+
+## Blocage retrait `proday.app` (2026-07-08 — CLI/API)
+
+**Objectif :** `custom_domain` = `proday75.fr`, alias = `www.proday75.fr`, conserver `proday75.netlify.app`, retirer `proday.app` / `www.proday.app` (sans DNS).
+
+### Auth CLI
+
+```text
+netlify status → utilisateur alfred Gibeau--Ahoussinou, projet proday75, Project URL https://proday.app
+```
+
+### État API `getSite` (après tentatives)
+
+| Champ | Valeur |
+|-------|--------|
+| `custom_domain` | `proday.app` (inchangé) |
+| `domain_aliases` | `proday75.fr`, `www.proday75.fr` (`www.proday.app` absent des alias) |
+| `default_domain` | `proday75.netlify.app` |
+| `quick_setup_in_progress` | `false` (forcé via `PATCH` — succès) |
+| `ssl` / `ssl_status` | `false` / `null` |
+| `managed_dns` | `true` (zone Netlify DNS pour `proday75.fr` via `getDNSForSite`) |
+
+### Endpoints domaine (Open API / `netlify api --list`)
+
+- **Aucun** `removeDomain`, `deleteSiteDomain`, ni équivalent CLI (`netlify sites:*` n’expose pas `sites:update` en CLI 22.2.1).
+- Seul levier public : **`updateSite`** (`PATCH /api/v1/sites/{site_id}`) pour `custom_domain` et `domain_aliases`.
+
+### Erreurs API exactes (support Netlify)
+
+| Action | Réponse |
+|--------|---------|
+| `PATCH` `{"custom_domain":"proday75.fr","domain_aliases":["www.proday75.fr"]}` | **422** — `We're provisioning a certificate for your site, you cannot change custom domains until that process completes` |
+| `PATCH` `{"custom_domain":"proday75.netlify.app"}` | **422** — `You cannot use the default domain as custom domain` |
+| `POST /sites/{id}/ssl` (`provisionSiteTLSCertificate`) | **422** — `{"error":"bad dns for custom domain"}` (primary `proday.app` sans enregistrements A Netlify) |
+| `GET /sites/{id}/ssl` (`showSiteTLSCertificate`) | `null` |
+| `GET /sites/{id}/ssl/certificates?domain=…` | `{"error":"No certificates found for this domain"}` pour `proday.app`, `www.proday.app`, `proday75.fr`, `www.proday75.fr` |
+| `POST /sites/{id}/ssl/renew` | `{"error":"There is no certificate to renew"}` |
+| `DELETE /sites/{id}/ssl` | **404** (pas de certificat à supprimer) |
+| `PATCH` alias trop fréquent (plan Free) | **422** — `{"errors":{"domain_aliases":["can only be changed 3 times per hour on this plan"]}}` |
+| `netlify api updateSite` avec `custom_domain` pendant le blocage | parfois **200** avec site inchangé (`custom_domain` reste `proday.app`) — le changement est **ignoré**, pas appliqué |
+
+### UI
+
+L’utilisateur ne peut pas retirer `proday.app` / `www.proday.app` depuis **Domain management** (bouton Remove / Set primary indisponible ou sans effet) — cohérent avec le verrou TLS ci-dessus.
+
+### Conclusion opérationnelle
+
+**Échec** du retrait de `proday.app` via API/CLI tant que Netlify considère un **provisionnement certificat en cours** pour le site avec primary DNS-invalid (`proday.app`). Contournement côté app : redirects `netlify.toml` vers `https://proday75.fr`.
+
+**Demande support Netlify :** débloquer ou annuler le job TLS bloqué sur le site `a55cf9f2-06a5-4632-bffb-8f68d81395ac` (`proday75`), retirer `proday.app` comme domaine principal, définir `proday75.fr` en primary et provisionner Let’s Encrypt pour `proday75.fr` / `www.proday75.fr`.
+
 ## Statut Netlify
 
 | Élément | Statut |
 |--------|--------|
-| Domaine principal (`custom_domain`) | `proday.app` — bascule vers `proday75.fr` **bloquée** (HTTP 422) tant que le certificat TLS est en provisionnement |
-| Alias ajoutés | `proday75.fr`, `www.proday75.fr`, `www.proday.app` |
+| Domaine principal (`custom_domain`) | `proday.app` — **bloqué API** : 422 *provisioning certificate* ; `updateSite` peut renvoyer 200 sans changer le primary |
+| Alias | `proday75.fr`, `www.proday75.fr` (`www.proday.app` retiré le 2026-07-08) |
 | Redirects `netlify.toml` | `proday.app`, `www.proday.app`, `proday75.netlify.app`, `www.proday75.fr` → `https://proday75.fr` |
-| DNS public (`8.8.8.8`) | `A` → `75.2.60.5`, `99.83.81.81` ; `www` → `proday75.netlify.app` ; **pas d’AAAA** |
-| Certificat Let's Encrypt pour `proday75.fr` | **Pas encore actif** (`ssl: false`) — le navigateur affiche « non sécurisé » car le cert servi est encore `*.netlify.app`, sans SAN `proday75.fr` |
-| Cause HTTPS « non sécurisé » | Certificat Let’s Encrypt **non émis** pour l’apex (pas du mixed content). Vérifier qu’il n’y a **pas de CNAME sur `@`** en plus des A Netlify |
+| DNS public (`8.8.8.8`, 2026-07-08) | `A` → `75.2.60.5`, `99.83.81.81` ; `www` → `proday75.netlify.app` ; **pas d’AAAA** — **OK pour Netlify** |
+| Certificat Let's Encrypt pour `proday75.fr` | **Pas encore actif** (`ssl: false`, `ssl_status: null`) — `curl -svI https://proday75.fr` sert `*.netlify.app` (SAN mismatch) |
+| Cause HTTPS « non sécurisé » | Primary = `proday.app` sans DNS Netlify → `provisionSiteTLSCertificate` renvoie **422** ; Let’s Encrypt non émis pour `proday75.fr` |
 | Cache DNS local | Un **AAAA** ou un ancien **A** IONOS peut encore apparaître sur la machine locale 1–48 h après désactivation (TTL) ; les résolveurs publics sont déjà alignés |
 
-**Suivi :** [Domain management — proday75](https://app.netlify.com/projects/proday75) → attendre HTTPS **Active**, puis **Set as primary domain** ou la commande `updateSite` ci-dessous.
+**Suivi :** [Domain management — proday75](https://app.netlify.com/projects/proday75/domain-management) → retirer **proday.app** (⋮ → Remove domain), puis **Set as primary domain** sur **proday75.fr**. La CLI `updateSite` ne suffit pas tant que `proday.app` reste primary.
+
+### Relancer la vérification DNS / TLS (CLI)
+
+**Vérification DNS public (attendu Netlify) :**
+
+```bash
+dig +short proday75.fr A
+dig +short www.proday75.fr CNAME
+dig +short proday75.fr A @8.8.8.8
+```
+
+**Contrôle côté Netlify (CLI authentifiée) :**
+
+```bash
+netlify status
+netlify api getSite --data '{"site_id": "a55cf9f2-06a5-4632-bffb-8f68d81395ac"}'
+netlify api getDNSForSite --data '{"site_id": "a55cf9f2-06a5-4632-bffb-8f68d81395ac"}'
+netlify api showSiteTLSCertificate --data '{"site_id": "a55cf9f2-06a5-4632-bffb-8f68d81395ac"}'
+```
+
+**Forcer une nouvelle vérification (API publique — pas de bouton « Verify DNS » exposé) :**
+
+1. Retirer puis réajouter l’alias `proday75.fr` (déclenche souvent un nouveau contrôle DNS côté Netlify) :
+
+```bash
+SITE_ID=a55cf9f2-06a5-4632-bffb-8f68d81395ac
+# Alias actuels (sans www.proday.app) :
+netlify api updateSite --data '{"site_id":"'"$SITE_ID"'","domain_aliases":["proday75.fr","www.proday75.fr"]}'
+```
+
+2. Tenter le provisionnement Let’s Encrypt (échoue tant que le **domaine principal** `custom_domain` = `proday.app` n’a pas de DNS valide vers Netlify) :
+
+```bash
+netlify api provisionSiteTLSCertificate --data "{"site_id":"$SITE_ID"}"
+# Réponse typique si proday.app sans A Netlify : {"error":"bad dns for custom domain"}
+```
+
+3. Quand le certificat pour `proday75.fr` est prêt, définir l’apex comme domaine principal :
+
+```bash
+netlify api updateSite --data "{"site_id":"$SITE_ID","custom_domain":"proday75.fr"}"
+```
+
+**Action manuelle dashboard (si le statut reste « Pending » / « DNS verification ») :**
+
+[Domain management — proday75](https://app.netlify.com/projects/proday75/domain-management) → ligne `proday75.fr` → **Verify DNS** ou **Check DNS configuration** (libellé selon l’UI). Netlify ne documente pas d’équivalent CLI pour ce clic.
+
+**Piège connu :** tant que `custom_domain` reste `proday.app` et que `proday.app` n’a **aucun** enregistrement `A` vers Netlify (vérifier avec `dig +short proday.app A @8.8.8.8`), `provisionSiteTLSCertificate` peut renvoyer `bad dns for custom domain` même si `proday75.fr` est déjà correct.
 
 ### Commandes utiles
 
