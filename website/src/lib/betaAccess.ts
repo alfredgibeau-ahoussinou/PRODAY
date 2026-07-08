@@ -32,11 +32,13 @@ export function buildBetaAccessUrl(siteUrl: string, accessToken?: string): strin
   return `${site}${BETA_LANDING_PATH}`;
 }
 
-/** Redirection interne sans reprendre `?token=` (évite une boucle middleware ↔ API sur Netlify). */
-export function buildBetaInternalRedirectUrl(request: Request, pathname: string): URL {
-  const target = new URL(pathname, new URL(request.url).origin);
-  target.search = "";
-  return target;
+/** Redirection interne absolue sans query (évite boucle middleware ↔ API sur Netlify). */
+export function buildBetaInternalRedirectUrl(request: Request, pathname: string): string {
+  const forwardedHost = request.headers.get("x-forwarded-host")?.split(",")[0]?.trim();
+  const host = forwardedHost || new URL(request.url).host;
+  const proto =
+    request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim() || "https";
+  return `${proto}://${host}${pathname}`;
 }
 
 export function createEmailJsBetaAccessToken(email: string, role: string): string | null {

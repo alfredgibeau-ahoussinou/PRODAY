@@ -53,12 +53,15 @@ export async function GET(request: Request) {
     if (jsonOnly) {
       return NextResponse.json({ error: "Accès refusé" }, { status: 403 });
     }
-    return NextResponse.redirect(buildBetaInternalRedirectUrl(request, "/beta"));
+    return NextResponse.redirect(buildBetaInternalRedirectUrl(request, "/beta"), 307);
   }
 
   const response = jsonOnly
     ? NextResponse.json({ ok: true, ...session })
-    : NextResponse.redirect(buildBetaInternalRedirectUrl(request, BETA_LANDING_PATH));
+    : NextResponse.redirect(
+        buildBetaInternalRedirectUrl(request, BETA_LANDING_PATH),
+        307,
+      );
 
   setBetaSessionCookie(response, token);
   return response;
