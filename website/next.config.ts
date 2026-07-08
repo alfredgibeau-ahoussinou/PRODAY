@@ -5,7 +5,7 @@ import { SECURITY_RESPONSE_HEADERS } from "./src/lib/securityHeaders";
 const monorepoRoot = path.join(__dirname, "..");
 
 const nextConfig: NextConfig = {
-  // Monorepo : racine PRODAY, sous-dossier website sur Vercel (Root Directory = website)
+  // Monorepo : racine PRODAY, sous-dossier website sur Netlify (Base directory = website)
   outputFileTracingRoot: monorepoRoot,
   // Netlify OpenNext : le handler /_next/image renvoie 502 (lambda status 0).
   // Les assets dans public/ sont servis en statique ; on évite l'optimiseur distant.

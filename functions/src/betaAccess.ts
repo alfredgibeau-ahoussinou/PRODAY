@@ -9,7 +9,6 @@ const ALLOWED_ORIGINS = [
   'https://www.proday75.fr',
   'https://proday.app',
   'https://www.proday.app',
-  'https://proday.vercel.app',
   'https://proday75.netlify.app',
 ];
 
@@ -18,7 +17,6 @@ function setCors(req: functions.https.Request, res: functions.Response): boolean
   if (
     origin &&
     (ALLOWED_ORIGINS.includes(origin) ||
-      origin.endsWith('.vercel.app') ||
       origin.endsWith('.netlify.app'))
   ) {
     res.set('Access-Control-Allow-Origin', origin);

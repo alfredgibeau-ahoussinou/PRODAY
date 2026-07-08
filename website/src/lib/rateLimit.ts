@@ -2,7 +2,7 @@ type Bucket = { count: number; resetAt: number };
 
 const buckets = new Map<string, Bucket>();
 
-/** Limiteur en mémoire (par clé IP + route) — suffisant pour Vercel/Netlify basique. */
+/** Limiteur en mémoire (par clé IP + route) — suffisant pour Netlify basique. */
 export function checkRateLimit(
   key: string,
   limit: number,

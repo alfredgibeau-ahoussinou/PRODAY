@@ -6,14 +6,14 @@ Envoi via [EmailJS](https://www.emailjs.com/) : pas de domaine DNS à vérifier,
 
 ## Dépannage — pas d'email reçu
 
-1. **Site à jour ?** Sur `/beta`, il ne doit plus y avoir « Démo locale ». Si oui → redéployer (Netlify ou Vercel).
+1. **Site à jour ?** Sur `/beta`, il ne doit plus y avoir « Démo locale ». Si oui → redéployer sur Netlify.
 2. **Test API** (ne crée pas d'inscription — vérifie seulement que l'endpoint répond) :
    ```bash
    curl -s -o /dev/null -w "%{http_code}" -X OPTIONS https://proday75.fr/api/beta
    ```
    - **204** ou **405** → endpoint OK
    - **404** → redeploy ; build Next.js + fonctions Netlify (`npm run netlify:deploy` depuis `website/`)
-   - **503** → ajouter `BETA_WAITLIST_FUNCTION_URL` sur Netlify / Vercel
+   - **503** → ajouter `BETA_WAITLIST_FUNCTION_URL` sur Netlify
 3. **Netlify** (proday75) → Site configuration → Environment variables → contexte **Production** → redeploy après modification.
 
 ## Dépannage — lien email « Accéder à la bêta »
@@ -102,7 +102,7 @@ Remplissez **Test It** avec :
 **Email Services** → Service ID → `EMAILJS_SERVICE_ID`  
 **Email Templates** → Template ID → `EMAILJS_TEMPLATE_ID`
 
-## 4. Vercel (projet `website`)
+## 4. Netlify (projet `website`)
 
 | Variable | Description |
 |----------|-------------|
@@ -112,7 +112,7 @@ Remplissez **Test It** avec :
 | `EMAILJS_PRIVATE_KEY` | Clé privée (secret) |
 | `NEXT_PUBLIC_SITE_URL` | `https://proday75.fr` |
 
-Redéployez après ajout des variables.
+Site configuration → Environment variables → contexte **Production**. Redéployez après ajout des variables.
 
 ## 5. Firebase (optionnel — Firestore + email)
 
@@ -129,7 +129,7 @@ firebase functions:config:set \
 firebase deploy --only functions:submitBetaWaitlist,functions:validateBetaAccess,firestore:rules
 ```
 
-Sur Vercel, ajoutez aussi :
+Sur Netlify, ajoutez aussi :
 ```env
 BETA_WAITLIST_FUNCTION_URL=https://europe-west1-proday-155b0.cloudfunctions.net/submitBetaWaitlist
 BETA_VALIDATE_FUNCTION_URL=https://europe-west1-proday-155b0.cloudfunctions.net/validateBetaAccess
@@ -163,7 +163,7 @@ BETA_VALIDATE_FUNCTION_URL=https://europe-west1-proday-155b0.cloudfunctions.net/
 
 Sans ces variables, la page indique que les liens arriveront par email.
 
-## Variables validation (Netlify / Vercel)
+## Variables validation (Netlify)
 
 | Variable | Description |
 |----------|-------------|

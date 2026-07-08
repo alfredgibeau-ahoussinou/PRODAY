@@ -32,6 +32,6 @@ Thématisation Homme / Woman / Pro : `components/universe/universeTheme.ts`.
 
 ## Liens
 
-- [../README.md](../README.md) — déploiement Vercel / Netlify
+- [../README.md](../README.md) — déploiement Netlify
 - [../../docs/WEBSITE_SECURITY.md](../../docs/WEBSITE_SECURITY.md)
 - [../../docs/BETA_GUIDE.md](../../docs/BETA_GUIDE.md)

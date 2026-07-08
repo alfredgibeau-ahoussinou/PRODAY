@@ -133,7 +133,7 @@ functions/src/
 
 ## Variables d'environnement
 
-### Site (Netlify / Vercel / `.env.local`)
+### Site (Netlify / `.env.local`)
 
 | Variable | Obligatoire | Description |
 |----------|-------------|-------------|

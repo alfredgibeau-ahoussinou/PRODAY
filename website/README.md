@@ -68,28 +68,9 @@ npm run build           # dans website/
 
 ## Déploiement
 
-**Branche Git :** `main` — **Root directory :** `website`
+**Branche Git :** `main` — **Root directory :** `website` — **Hébergeur :** [Netlify](https://www.netlify.com/)
 
-### Vercel (CI recommandé)
-
-Un push sur `main` qui modifie `website/**` déclenche `.github/workflows/deploy-website.yml` (secrets `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`).
-
-**Dashboard :**
-
-1. [vercel.com/new](https://vercel.com/new) → importer le dépôt
-2. **Production Branch** : `main`
-3. **Root Directory** : `website`
-4. Deploy
-
-**CLI :**
-
-```bash
-cd website
-npx vercel login
-npx vercel --prod
-```
-
-### Netlify
+Un push sur `main` déclenche le déploiement automatique via le hook Git Netlify (pas de workflow GitHub Actions).
 
 Configuration : `website/netlify.toml` (canonique) + `netlify.toml` à la racine (`base = "website"` pour le monorepo).
 
@@ -103,7 +84,7 @@ Configuration : `website/netlify.toml` (canonique) + `netlify.toml` à la racine
 
 Ne pas publier `dist` ni `.next` manuellement : Next.js a besoin de la **fonction serveur** générée par `@netlify/plugin-nextjs`.
 
-**Variables d’environnement** : mêmes clés EmailJS que Vercel (voir ci-dessus) + `NEXT_PUBLIC_SITE_URL=https://proday75.fr`.
+**Variables d’environnement** (Site configuration → Environment variables, contexte **Production**) : clés EmailJS + `NEXT_PUBLIC_SITE_URL=https://proday75.fr` (voir section Bêta ci-dessous).
 
 **Déploiement manuel (CLI)** depuis `website/` :
 
@@ -118,7 +99,7 @@ netlify deploy --prod --no-build \
 
 Le formulaire `/beta/inscription` appelle `POST /api/beta` et envoie un **email de bienvenue** via [EmailJS](https://www.emailjs.com/). Le lien email ouvre `/beta/programme?token=…` (programme bêta directement).
 
-Variables d’environnement (Vercel / Netlify / `.env.local`) :
+Variables d’environnement (Netlify / `.env.local`) :
 
 ```env
 EMAILJS_SERVICE_ID=service_xxx

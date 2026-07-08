@@ -75,7 +75,7 @@ website/
 └── netlify.toml      Config déploiement Netlify
 ```
 
-Déploiement : root directory = `website` (Vercel / Netlify). Voir [website/README.md](../website/README.md).
+Déploiement : root directory = `website` (Netlify). Voir [website/README.md](../website/README.md).
 
 ## Backend (`functions/` + `firebase/`)
 
