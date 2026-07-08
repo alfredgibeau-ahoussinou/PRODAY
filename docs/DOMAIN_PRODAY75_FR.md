@@ -28,11 +28,15 @@ Seule la clé privée a été trouvée localement ; pas de bundle `.crt`/`.pem` 
 
 | Élément | Statut |
 |--------|--------|
-| Domaine principal (`custom_domain`) | `proday.app` — **en attente** bascule vers `proday75.fr` (certificat TLS en cours côté Netlify) |
+| Domaine principal (`custom_domain`) | `proday.app` — bascule vers `proday75.fr` **bloquée** (HTTP 422) tant que le certificat TLS est en provisionnement |
 | Alias ajoutés | `proday75.fr`, `www.proday75.fr`, `www.proday.app` |
 | Redirects `netlify.toml` | `proday.app`, `www.proday.app`, `proday75.netlify.app`, `www.proday75.fr` → `https://proday75.fr` |
-| DNS public actuel (`proday75.fr`) | `A` → `217.160.0.39` (parking IONOS) — **à corriger** |
-| Certificat Let's Encrypt pour `proday75.fr` | **Non actif** tant que le DNS ne pointe pas vers Netlify |
+| DNS public (`8.8.8.8`) | `A` → `75.2.60.5`, `99.83.81.81` ; `www` → `proday75.netlify.app` ; **pas d’AAAA** |
+| Certificat Let's Encrypt pour `proday75.fr` | **Pas encore actif** (`ssl: false`) — le navigateur affiche « non sécurisé » car le cert servi est encore `*.netlify.app`, sans SAN `proday75.fr` |
+| Cause HTTPS « non sécurisé » | Certificat Let’s Encrypt **non émis** pour l’apex (pas du mixed content). Vérifier qu’il n’y a **pas de CNAME sur `@`** en plus des A Netlify |
+| Cache DNS local | Un **AAAA** ou un ancien **A** IONOS peut encore apparaître sur la machine locale 1–48 h après désactivation (TTL) ; les résolveurs publics sont déjà alignés |
+
+**Suivi :** [Domain management — proday75](https://app.netlify.com/projects/proday75) → attendre HTTPS **Active**, puis **Set as primary domain** ou la commande `updateSite` ci-dessous.
 
 ### Commandes utiles
 

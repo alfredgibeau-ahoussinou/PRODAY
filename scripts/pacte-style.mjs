@@ -1,7 +1,6 @@
 /** Préambule LaTeX et macros de mise en forme du pacte PRODAY */
 
-export function latexPreamble(person) {
-  const titleShort = person.title.replace(/—/g, '--');
+export function latexPreamble() {
   return `
 \\usepackage{booktabs}
 \\usepackage{array}
@@ -39,7 +38,7 @@ export function latexPreamble(person) {
 \\fancyhf{}
 \\renewcommand{\\headrulewidth}{0.4pt}
 \\fancyhead[L]{\\footnotesize\\textbf{PRODAY}}
-\\fancyhead[R]{\\footnotesize ${titleShort}}
+\\fancyhead[R]{\\footnotesize Pacte unifié -- 4 associés}
 \\fancyfoot[C]{\\footnotesize Page \\thepage}
 \\fancypagestyle{plain}{
   \\fancyhf{}
@@ -112,7 +111,7 @@ export function latexPreamble(person) {
 `;
 }
 
-export function pageGarde(person, logoPath, dateStr) {
+export function pageGarde(logoPath, dateStr) {
   return `
 \\thispagestyle{empty}
 \\begin{center}
@@ -125,7 +124,7 @@ export function pageGarde(person, logoPath, dateStr) {
     \\begin{minipage}{0.85\\linewidth}
     \\centering
     \\vspace{0.5em}
-    {\\large\\textbf{${person.title}}}\\\\[0.4em]
+    {\\large\\textbf{Contrat unique — 4 associés fondateurs}}\\\\[0.4em]
     {\\small ${dateStr}}
     \\vspace{0.5em}
     \\end{minipage}}\\\\[1cm]
@@ -136,10 +135,7 @@ export function pageGarde(person, logoPath, dateStr) {
 \\clearpage`;
 }
 
-export function pageSynthese(person) {
-  const devBlock = person.isAlfred
-    ? `\\item Vous êtes le \\textbf{développeur du groupe} — base technique déjà avancée, MVP à livrer sous 2 mois, puis sortie stores et 3 mois de stabilisation.`
-    : `\\item \\textbf{Alfred (Associé 4)} développe seul la technique~; les Associés 1 à 3 définissent les besoins et valident la recette.`;
+export function pageSynthese() {
   return `
 \\pagenumbering{roman}
 \\setcounter{page}{1}
@@ -157,9 +153,9 @@ Pacte entre \\textbf{4 associés fondateurs} (25\\,\\% chacun) de PRODAY, socié
 \\libelle{Points essentiels}
 \\begin{enumerate}[leftmargin=1.2cm,itemsep=0.2em]
   \\item Société \\textbf{non immatriculée} — avenant après Kbis.
-  ${devBlock}
-  \\item \\textbf{Actuellement}~: app en construction (non publiée en stores), société non immatriculée.
-  \\item \\textbf{Ensuite}~: MVP (2 mois) → sortie stores → 3 mois stabilisation → gestion quotidienne (tarif à fixer).
+  \\item \\textbf{Alfred (Associé 4)} est le développeur du groupe~; application et site déjà très avancés~; il reste la recette formelle, la sortie stores (TestFlight / Play) et 3 mois de stabilisation. Les Associés 1 à 3 définissent les besoins, testent la bêta et valident la recette.
+  \\item \\textbf{Actuellement}~: application mobile très avancée ($\\sim$100 écrans), site vitrine en ligne, bêta fermée prête~; \\textbf{pas encore publiée} sur l'App Store ni Google Play, société non immatriculée.
+  \\item \\textbf{Ensuite}~: recette MVP et bêta testeurs (2 mois max.) $\\rightarrow$ sortie stores $\\rightarrow$ 3 mois stabilisation $\\rightarrow$ gestion quotidienne (tarif à fixer).
   \\item Forfait technique~: \\textbf{10\\,000~€} catalogue → \\textbf{-50\\,\\%} → \\textbf{5\\,000~€ HT net} (apport en industrie).
   \\item Décisions stratégiques~: \\textbf{unanimité}.
   \\item Vesting~: 4 ans, cliff 12 mois.

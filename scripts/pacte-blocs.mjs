@@ -4,10 +4,17 @@ export function champ(w = '5.5cm') {
   return `\\underline{\\hspace{${w}}}`;
 }
 
-export function identiteSignataire(person, myLabel, alfredNote) {
+const ASSOCIES = [
+  { label: 'Associé 1', alfredNote: '' },
+  { label: 'Associé 2', alfredNote: '' },
+  { label: 'Associé 3', alfredNote: '' },
+  { label: 'Associé 4 (Alfred)', alfredNote: ' \\textit{(Alfred)}', fonction: 'Développeur du groupe' },
+];
+
+function ficheIdentite({ label, alfredNote, fonction }) {
+  const fonctionLine = fonction ? ` \\hfill Fonction~: \\textbf{${fonction}}` : '';
   return `
-\\section{Identité du signataire}
-\\addcontentsline{toc}{section}{Identité du signataire}
+\\subsection*{${label}}
 
 \\begin{encadre}
 \\begin{tabularx}{\\linewidth}{@{}>{\\bfseries}p{3.6cm} Y@{}}
@@ -23,84 +30,53 @@ E-mail & ${champ('8.5cm')} \\\\
 \\end{encadre}
 
 \\vspace{0.3em}
-Qualité~: \\textbf{${myLabel}} \\hfill Parts~: \\textbf{25\\,\\%}${
-    person.isAlfred ? ' \\hfill Fonction~: \\textbf{Développeur du groupe}' : ''
-  }`;
+Qualité~: \\textbf{${label}} \\hfill Parts~: \\textbf{25\\,\\%}${fonctionLine}`;
 }
 
-export function tableauAssocies(currentSlot) {
-  const row = (slot, label, divisionCell) => {
-    const b = slot === currentSlot ? '\\textbf{' : '';
-    const e = slot === currentSlot ? '}' : '';
-    return `${b}${label}${e} & ${champ('3.2cm')} & ${champ('3.2cm')} & 25\\,\\% & ${divisionCell} \\\\[0.35em]`;
-  };
+export function identitesSignataires() {
+  return `
+\\section{Identités des signataires}
+\\addcontentsline{toc}{section}{Identités des signataires}
+
+Les quatre associés fondateurs identifient ci-dessous leurs coordonnées personnelles~:
+
+${ASSOCIES.map((a) => ficheIdentite(a)).join('\n\\vspace{0.6em}\n')}`;
+}
+
+export function tableauAssocies() {
+  const row = (label, divisionCell) =>
+    `${label} & ${champ('3.2cm')} & ${champ('3.2cm')} & 25\\,\\% & ${divisionCell} \\\\[0.35em]`;
   return `
 \\small
 \\begin{tabularx}{\\linewidth}{@{}l Y Y c Y@{}}
 \\toprule
 \\textbf{Associé} & \\textbf{Nom} & \\textbf{Prénom} & \\textbf{Parts} & \\textbf{Division / rôle} \\\\
 \\midrule
-${row(1, 'Associé 1', champ('3.2cm'))}
-${row(2, 'Associé 2', champ('3.2cm'))}
-${row(3, 'Associé 3', champ('3.2cm'))}
-${row(4, 'Associé 4', '\\textbf{Alfred — Développeur du groupe}')}
+${row('Associé 1', champ('3.2cm'))}
+${row('Associé 2', champ('3.2cm'))}
+${row('Associé 3', champ('3.2cm'))}
+${row('Associé 4', '\\textbf{Alfred — Développeur du groupe}')}
 \\bottomrule
 \\end{tabularx}
 \\normalsize`;
 }
 
-export function signaturesBloc(myLabel) {
+export function signaturesUnifiees() {
+  const bloc = (label) => `
+\\vspace{1.2em}
+\\noindent\\textbf{${label}}\\\\[0.3em]
+Nom~: ${champ('5.5cm')} \\hfill Prénom~: ${champ('5.5cm')}\\\\[1.8cm]
+Signature~: ${champ('7cm')}\\\\[0.4em]
+{\\footnotesize Mention manuscrite obligatoire~: «~Lu et approuvé, bon pour accord~»}`;
+
   return `
-\\noindent Fait à ${champ('4.5cm')}, le ${champ('3.5cm')}, en quatre (4) exemplaires originaux.
+\\noindent Fait à ${champ('4.5cm')}, le ${champ('3.5cm')}, en un (1) exemplaire original signé par les quatre (4) Associés.
 
-\\vspace{1.8em}
-\\noindent\\textbf{Le signataire — ${myLabel}}
-
-\\vspace{2.6cm}
-\\noindent Signature~: ${champ('7cm')}
-
-\\noindent Mention manuscrite obligatoire~: «~Lu et approuvé, bon pour accord~»
-
-\\vspace{2em}
-\\noindent\\rule{\\textwidth}{0.4pt}
-
-\\vspace{1em}
-\\noindent\\textbf{Contre-signatures des co-associés}
-
-\\noindent
-(Les co-associés peuvent contre-signer sur chaque exemplaire pour renforcer l'opposabilité collective.)
-
-\\vspace{1em}
-\\noindent\\textbf{Associé 1}\\\\[0.3em]
-Nom~: ${champ('5.5cm')} \\hfill Prénom~: ${champ('5.5cm')}\\\\[1.8cm]
-Signature~: ${champ('7cm')}
-
-\\vspace{1em}
-\\noindent\\textbf{Associé 2}\\\\[0.3em]
-Nom~: ${champ('5.5cm')} \\hfill Prénom~: ${champ('5.5cm')}\\\\[1.8cm]
-Signature~: ${champ('7cm')}
-
-\\vspace{1em}
-\\noindent\\textbf{Associé 3}\\\\[0.3em]
-Nom~: ${champ('5.5cm')} \\hfill Prénom~: ${champ('5.5cm')}\\\\[1.8cm]
-Signature~: ${champ('7cm')}
-
-\\vspace{1em}
-\\noindent\\textbf{Associé 4 (Alfred)}\\\\[0.3em]
-Nom~: ${champ('5.5cm')} \\hfill Prénom~: ${champ('5.5cm')}\\\\[1.8cm]
-Signature~: ${champ('7cm')}`;
+${ASSOCIES.map((a) => bloc(a.label)).join('\n')}`;
 }
 
 /** Situation actuelle vs déroulement prévu du développement PRODAY */
-export function articleCadreDeveloppement(person) {
-  const introAlfred = person.isAlfred
-    ? `Le signataire, en sa qualité de \\textbf{développeur du groupe}, expose ci-dessous la situation à la date de signature du Pacte et le déroulement convenu avec les co-associés.`
-    : `Les Associés conviennent de formaliser ci-dessous la situation du développement de l'Application PRODAY à la date de signature du Pacte, ainsi que les modalités de déroulement convenues avec \\textbf{Alfred}, développeur du groupe.`;
-
-  const orgaActuelle = person.isAlfred
-    ? `À ce jour, le développement technique est assuré \\textbf{exclusivement par le signataire} (Alfred, Associé~4). Les Associés 1 à 3 n'interviennent pas dans le code source~; ils contribuent par la définition des besoins métier, les tests utilisateurs, les retours produit et les décisions collectives au Comité de pilotage.`
-    : `À ce jour, le développement technique est assuré \\textbf{exclusivement par Alfred} (Associé~4, développeur du groupe). Les Associés 1 à 3 n'interviennent pas dans le code source~; ils contribuent par la définition des besoins métier, les tests utilisateurs, les retours produit et les décisions collectives au Comité de pilotage.`;
-
+export function articleCadreDeveloppement() {
   const phases = `
 \\paragraph{16.4 — Déroulement prévu (phases).}
 Le développement et la mise à disposition de l'Application suivent les \\textbf{phases successives} ci-dessous, dans l'ordre indiqué~:
@@ -111,10 +87,10 @@ Le développement et la mise à disposition de l'Application suivent les \\textb
 \\toprule
 \\textbf{Phase} & \\textbf{Contenu et échéance} \\\\
 \\midrule
-\\textbf{1 — Finalisation MVP} &
-Développement et consolidation des modules du périmètre MVP (article~18.2), recette interne, corrections bloquantes. \\textbf{Délai~: deux (2) mois} à compter de la date de départ convenue (article~18.1). Jalons~: J+15, J+30, J+45, J+60. \\\\[0.3em]
-\\textbf{2 — Sortie} &
-Builds de production, soumission et publication App Store / Google Play, configuration des environnements de production, documentation de déploiement. \\textbf{Incluse} dans le forfait de lancement (article~19). \\\\[0.3em]
+\\textbf{1 — Finalisation MVP et bêta} &
+Recette interne, corrections bloquantes, liste d'attente bêta, documentation (docs/BETA\\_LAUNCH.md), tests automatisés. \\textbf{Délai~: deux (2) mois} à compter de la date de départ convenue (article~18.1). Jalons~: J+15 recette, J+30 bêta interne, J+45 bêta testeurs, J+60 recette signée. \\\\[0.3em]
+\\textbf{2 — Sortie stores} &
+Builds EAS production, TestFlight (iOS) et piste interne ou production (Android), fiches store, CGU et confidentialité en ligne. \\textbf{Incluse} dans le forfait (article~19). \\\\[0.3em]
 \\textbf{3 — Stabilisation} &
 Pendant \\textbf{trois (3) mois} après la mise en ligne~: correctifs, maintenance corrective, monitoring, support technique aux Associés. \\textbf{Incluse} dans le forfait. \\\\[0.3em]
 \\textbf{4 — Gestion quotidienne} &
@@ -128,22 +104,23 @@ Maintenance courante, évolutions mineures, supervision et support récurrent \\
 \\section{Cadre du développement — situation actuelle et déroulement}
 
 \\paragraph{16.1 — Objet.}
-${introAlfred}
+Les Associés conviennent de formaliser ci-dessous la situation du développement de l'Application PRODAY à la date de signature du Pacte, ainsi que les modalités de déroulement convenues avec \\textbf{Alfred}, développeur du groupe.
 
 \\paragraph{16.2 — Situation à la date de signature du Pacte.}
 À la date de signature du présent Pacte~:
 \\begin{itemize}[leftmargin=1.4cm,itemsep=0.2em]
   \\item la société \\textbf{PRODAY} est \\textbf{en cours de constitution} (non immatriculée, article~3)~;
-  \\item l'\\textbf{Application PRODAY} est en \\textbf{phase de construction active}~: une base technique et fonctionnelle substantielle existe déjà, mais la version MVP n'est \\textbf{pas encore livrée} au sens de l'article~18.6 (recette et critères d'acceptation)~;
-  \\item l'Application \\textbf{n'est pas encore publiée} sur l'App Store ni sur Google Play~;
+  \\item l'\\textbf{Application PRODAY} (mobile) est en \\textbf{phase avancée}~: environ cent (100) écrans, socle technique V3, modules principaux opérationnels en environnement de pré-production, mais la recette formelle (article~18.6) n'est \\textbf{pas encore signée}~;
+  \\item le \\textbf{site vitrine} (Next.js) est \\textbf{en ligne} (hébergement Netlify), avec pages produit, inscription bêta, documents légaux et supports de communication~;
+  \\item l'Application \\textbf{n'est pas encore publiée} sur l'App Store ni sur Google Play (builds EAS / TestFlight en préparation)~;
   \\item le code source, la configuration Firebase et les environnements de développement sont détenus et administrés par le \\textbf{développeur du groupe}~;
   \\item aucune rémunération en numéraire n'est due au titre du forfait de lancement~: celui-ci est traité en \\textbf{apport en industrie} (article~19).
 \\end{itemize}
 
 \\paragraph{16.3 — Organisation actuelle du travail.}
-${orgaActuelle}
+À ce jour, le développement technique est assuré \\textbf{exclusivement par Alfred} (Associé~4, développeur du groupe). Les Associés 1 à 3 n'interviennent pas dans le code source~; ils contribuent par la définition des besoins métier, les tests utilisateurs, les retours produit et les décisions collectives au Comité de pilotage.
 
-\\noindent\\textbf{Stack technique retenue} (sauf décision unanime contraire)~: application mobile \\textbf{Expo / React Native}~; back-end et services \\textbf{Firebase} (authentification, Firestore, Storage, Cloud Functions)~; hébergement et déploiement selon la documentation technique du projet.
+\\noindent\\textbf{Stack technique retenue} (sauf décision unanime contraire)~: application mobile \\textbf{Expo / React Native}~; site vitrine \\textbf{Next.js} (déploiement Netlify)~; back-end et services \\textbf{Firebase} (authentification, Firestore, Storage, Cloud Functions, notifications)~; builds mobiles \\textbf{EAS}~; dépôt de code \\textbf{GitHub} (monorepo PRODAY).
 
 \\paragraph{16.3 bis — État d'avancement technique (à la signature).}
 Les Associés reconnaissent que, \\textbf{à la date de signature}, les éléments suivants reflètent l'état réel du projet~:
@@ -155,11 +132,11 @@ Les Associés reconnaissent que, \\textbf{à la date de signature}, les élémen
 \\textbf{Statut} & \\textbf{Éléments concernés} \\\\
 \\midrule
 \\textbf{Déjà réalisé ou avancé} &
-Architecture Firebase et environnement de développement~; authentification et parcours d'inscription (joueur, coach, club, parental)~; profils utilisateurs et édition~; modules recrutement / mercato, matchs amicaux et tournois (bases fonctionnelles)~; messagerie et notifications~; tableau de bord administrateur (modération, contenus)~; règles Firestore, Storage et fonctions cloud associées~; charte UI et navigation principale de l'application mobile. \\\\
+Architecture Firebase et monorepo (app + site + functions)~; authentification et inscription multi-rôles (joueur, coach, club, staff, parental, partenaire)~; quatre pôles produit (Joueur Man/Woman, Pro, Santé, Partenaires) et navigation dédiée~; Mercato, matchs amicaux, tournois, messagerie, notifications~; réels, fil d'actualité, Pulse, CV joueur, question de la semaine~; console administrateur (modération, utilisateurs, analytics, waitlist bêta)~; site vitrine (20+ pages, bêta, CGU/confidentialité en PDF)~; règles Firestore, Storage, Cloud Functions~; plus de trois cent (300) tests automatisés et contrôle qualité (npm run beta:check). \\\\
 \\textbf{En cours de consolidation} &
-Stabilisation des parcours, tests internes, compléments fonctionnels nécessaires au périmètre MVP (article~18.2), documentation technique et procédures de recette. \\\\
-\\textbf{À réaliser pour le MVP} &
-Recette formelle validée par les Associés (article~18.6), corrections des bugs bloquants, \\textbf{sortie} sur les stores (article~18.3), mise en production et \\textbf{stabilisation} de trois (3) mois (articles~18.4 et~19). \\\\
+Recette MVP avec les Associés 1 à 3, bêta fermée (TestFlight / APK), stabilisation des parcours, configuration définitive des stores (EAS, fiches App Store Connect / Play Console). \\\\
+\\textbf{À réaliser pour clôturer le forfait (art.~19)} &
+Procès-verbal de recette signé (art.~18.6), publication effective ou en cours sur App Store et Google Play, stabilisation de trois (3) mois post-sortie. \\\\
 \\bottomrule
 \\end{tabularx}
 \\normalsize
@@ -182,13 +159,12 @@ ${phases}
 Sont inchangés par le présent article~: la répartition du capital (25\\,\\% chacun), le forfait de lancement de \\textbf{5\\,000~euros HT net} en apport en industrie, le délai de deux (2) mois pour la livraison MVP, et le principe selon lequel la gestion quotidienne post-stabilisation fera l'objet d'une décision et d'un tarif \\textbf{ultérieurs} (article~20).`;
 }
 
-export function articleRoleDeveloppeur(person) {
-  if (person.isAlfred) {
-    return `
-\\section{Rôle du développeur du groupe}
+export function articleRoleDeveloppeur() {
+  return `
+\\section{Rôle du développeur du groupe — Alfred}
 
 \\paragraph{17.1.}
-Le signataire est désigné et reconnu par l'unanimité des Associés comme le \\textbf{développeur du groupe PRODAY}. Il assume personnellement la responsabilité de la gestion, de la création, du développement, de la maintenance et de l'évolution de l'Application (définie à l'article~2).
+Les Associés reconnaissent que \\textbf{Monsieur Alfred}, Associé 4, est le \\textbf{développeur du groupe PRODAY} et le seul responsable de la gestion, de la création, du développement, de la maintenance et de l'évolution de l'Application (définie à l'article~2). La situation actuelle du développement et le déroulement prévu sont détaillés à l'article~16.
 
 \\paragraph{17.2.}
 Sans limitation, le développeur du groupe prend en charge~: l'architecture technique~; le développement des fonctionnalités validées collectivement~; la gestion des dépôts de code et des environnements (développement, test, production)~; les mises en production et correctifs~; la documentation technique~; la sécurité applicative et la conformité RGPD sur le plan technique.
@@ -197,37 +173,31 @@ Sans limitation, le développeur du groupe prend en charge~: l'architecture tech
 Le développeur du groupe valide la faisabilité technique, le calendrier et les priorités de développement, sous réserve des Décisions Stratégiques (article~13). Il ne dispose pas d'un droit de veto sur les décisions commerciales, financières ou juridiques.
 
 \\paragraph{17.4.}
-Aucun prestataire externe ne peut se substituer au développeur du groupe pour la direction technique du produit sans accord unanime des Associés.`;
-  }
-  return `
-\\section{Rôle du développeur du groupe — Alfred}
+Aucun prestataire externe ne peut se substituer au développeur du groupe pour la direction technique du produit sans accord unanime des Associés.
 
-\\paragraph{17.1.}
-Les Associés reconnaissent que \\textbf{Monsieur Alfred}, Associé 4, est le \\textbf{développeur du groupe PRODAY} et le seul responsable de la gestion, de la création, du développement et de la maintenance de l'Application. La situation actuelle du développement et le déroulement prévu sont détaillés à l'article~16.
+\\paragraph{17.5.}
+Les Associés 1 à 3 s'engagent à ne pas interférer de manière abusive dans les choix techniques opérationnels d'Alfred. Les besoins fonctionnels leur sont transmis via le Comité de pilotage.
 
-\\paragraph{17.2.}
-Les co-associés s'engagent à ne pas interférer de manière abusive dans les choix techniques opérationnels d'Alfred. Les besoins fonctionnels leur sont transmis via le Comité de pilotage.
-
-\\paragraph{17.3.}
+\\paragraph{17.6.}
 Toute refonte majeure, changement de stack technologique ou externalisation du développement requiert l'accord d'Alfred et l'unanimité des Associés.`;
 }
 
 /** Barème détaillé : dev + sortie + gestion post-lancement — remise fondateur 50 % (net 5 000 €) */
 export function articleTarifDeveloppement() {
   const lignes = [
-    ['Architecture technique, Firebase et environnements (dev, test, prod)', '750'],
-    ['Authentification, inscription et gestion des comptes', '900'],
-    ['Profils utilisateurs (joueur, coach, club, admin)', '1\\,000'],
-    ['Module recrutement / mercato (annonces, candidatures)', '1\\,250'],
-    ['Module matchs amicaux et tournois', '1\\,000'],
-    ['Messagerie interne et notifications push', '600'],
-    ['Tableau de bord administrateur et modération', '750'],
-    ['Interface mobile (Expo/React Native) et charte UI', '750'],
-    ['API, règles Firestore, Storage et Cloud Functions', '600'],
-    ['Tests, recette interne et documentation technique', '500'],
-    ['\\textbf{Sortie}~: App Store / Google Play, builds EAS, fiches store', '750'],
-    ['\\textbf{Mise en production}~: configuration prod, monitoring, sauvegardes', '600'],
-    ['\\textbf{Stabilisation post-sortie (3 mois)}~: correctifs et support technique limité', '1\\,050'],
+    ['Architecture technique, monorepo, Firebase et environnements', '700'],
+    ['Authentification, inscription multi-rôles et contrôle parental', '850'],
+    ['Quatre pôles produit et profils (Joueur, Pro, Santé, Partenaires)', '1\\,000'],
+    ['Module Mercato (annonces, candidatures, scouting)', '1\\,000'],
+    ['Matchs amicaux, tournois et stats live', '900'],
+    ['Messagerie, notifications et événements équipe', '500'],
+    ['Réels, fil, Pulse, CV joueur et question de la semaine', '800'],
+    ['Console admin (modération, analytics, waitlist bêta)', '750'],
+    ['Interface mobile V3, i18n et charte UI', '650'],
+    ['Site vitrine Next.js (pages produit, bêta, légal)', '600'],
+    ['Règles Firestore, Storage, Functions et tests auto.', '650'],
+    ['\\textbf{Sortie stores}~: EAS, TestFlight, Play, fiches store', '750'],
+    ['\\textbf{Stabilisation post-sortie (3 mois)}~: correctifs et support', '850'],
   ];
   const rows = lignes
     .map(([lib, prix], i) => `${i + 1} & ${lib} & ${prix}~€ \\\\[0.2em]`)
@@ -324,73 +294,67 @@ Cette décision interviendra au plus tard trente (30) jours avant la fin de la p
 Tout tarif retenu devra être proportionné aux ressources financières disponibles de PRODAY au moment de la décision et consigné dans un avenant au Pacte ou un contrat de prestation signé par tous les Associés.`;
 }
 
-export function articleTarifDeveloppementCoAssocies() {
+export function articleEngagementsAlfred() {
   return `
-\\section{Valorisation de l'apport en industrie d'Alfred — gestion future}
-
-\\paragraph{19.1.}
-Les Associés reconnaissent un barème catalogue de \\textbf{10\\,000~euros HT}, une remise fondateur de \\textbf{50\\,\\%} (\\textbf{5\\,000~euros HT}), et un montant net définitif de \\textbf{5\\,000~euros HT} (forfait de lancement), en apport en industrie. Détail et justification dans l'exemplaire d'Alfred.
-
-\\paragraph{19.2.}
-Les co-associés acceptent que ce montant tient compte des moyens limités au démarrage et \\textbf{n'inclut pas} la gestion technique quotidienne après les trois (3) mois de stabilisation, dont le tarif sera fixé \\textbf{plus tard} à l'unanimité (article~20).
-
-${articleGestionQuotidienneFuture()}`;
-}
-
-export function articleEngagementsSpecifiques(person, myLabel) {
-  if (person.isAlfred) {
-    return `
 \\section{Engagements spécifiques d'Alfred — livraison de l'application}
 
 \\paragraph{18.1 — Délai et point de départ.}
-Compte tenu de l'état d'avancement décrit à l'article~16.3 bis, le signataire s'engage à livrer une version exploitable de l'Application (recette article~18.6) dans un délai maximal de \\textbf{deux (2) mois} à compter du ${champ('3.5cm')} (\\textbf{date de départ du sprint de finalisation MVP}), sauf force majeure dûment justifiée et validée par les Associés. Cette date est fixée conjointement à la signature ou au plus tard dans les sept (7) jours suivants.
+Compte tenu de l'état d'avancement décrit à l'article~16.3 bis, Alfred s'engage à \\textbf{finaliser la recette MVP}, assurer la \\textbf{sortie sur les stores} et la \\textbf{stabilisation initiale} dans un délai maximal de \\textbf{deux (2) mois} à compter du ${champ('3.5cm')} (\\textbf{date de départ du sprint de finalisation — recette, bêta et stores}), sauf force majeure dûment justifiée et validée par les Associés. Cette date est fixée conjointement à la signature ou au plus tard dans les sept (7) jours suivants.
 
 \\paragraph{18.2 — Périmètre fonctionnel (développement).}
 Le périmètre minimal comprend notamment~:
 \\begin{itemize}[leftmargin=1.4cm,itemsep=0.15em]
-  \\item inscription, connexion, récupération de mot de passe, rôles utilisateurs~;
-  \\item profils joueur, coach, club et administration~;
-  \\item module recrutement / mercato (publication, candidature, suivi)~;
-  \\item module matchs amicaux et tournois (création, inscription, résultats)~;
-  \\item messagerie interne et notifications de base~;
-  \\item tableau de bord administrateur (modération, statistiques essentielles)~;
-  \\item documentation technique, guide de déploiement et procédure de recette.
+  \\item inscription, connexion, récupération de mot de passe, rôles et espaces (quatre pôles)~;
+  \\item profils joueur, staff, club, santé, partenaire et administration~;
+  \\item module Mercato (publication, candidature, suivi, scouting)~;
+  \\item matchs amicaux, tournois, convocations, covoiturage et résultats~;
+  \\item messagerie, notifications, fil d'actualité, réels et Pulse~;
+  \\item espace santé (annuaire, rendez-vous), contrôle parental et espace jeunes~;
+  \\item espace partenaires / sponsors et site vitrine (présentation, bêta, légal)~;
+  \\item console administrateur (modération, utilisateurs, contenus, waitlist)~;
+  \\item documentation technique, guide bêta (docs/BETA\\_LAUNCH.md) et procédure de recette.
 \\end{itemize}
 
 \\paragraph{18.3 — Sortie de l'application.}
-Alfred prend en charge la \\textbf{sortie} complète~: builds de production, soumission App Store et Google Play (ou équivalent), configuration des environnements de production, et mise à disposition d'une version téléchargeable par les utilisateurs finaux.
+Alfred prend en charge la \\textbf{sortie} complète~: builds EAS de production, distribution TestFlight (iOS) et Google Play (piste interne puis production), fiches store (textes légaux, captures), et mise à disposition d'une version téléchargeable par les utilisateurs finaux.
 
 \\paragraph{18.4 — Stabilisation après sortie (3 mois inclus — hors gestion quotidienne longue durée).}
-Pendant \\textbf{trois (3) mois} suivant la mise en ligne, Alfred assure une phase de \\textbf{stabilisation}~: correction des bugs, maintenance corrective, monitoring et support technique auprès des Associés. Cette période est incluse dans le forfait de l'article~19. Elle ne vaut pas engagement de \\textbf{gestion quotidienne illimitée}, dont le tarif sera décidé ultérieurement (article~20).
+Pendant \\textbf{trois (3) mois} suivant la mise en ligne sur les stores, Alfred assure une phase de \\textbf{stabilisation}~: correction des bugs, maintenance corrective, monitoring et support technique auprès des Associés et des bêta-testeurs. Cette période est incluse dans le forfait de l'article~19. Elle ne vaut pas engagement de \\textbf{gestion quotidienne illimitée}, dont le tarif sera décidé ultérieurement (article~20).
 
 \\paragraph{18.5 — Jalons.}
-\\textbf{J+15}~: architecture et environnements opérationnels. \\textbf{J+30}~: version alpha interne. \\textbf{J+45}~: version bêta. \\textbf{J+60}~: version exploitable soumise à recette.
+\\textbf{J+15}~: plan de recette et version bêta interne. \\textbf{J+30}~: bêta fermée ouverte aux testeurs invités. \\textbf{J+45}~: soumission stores (ou publication en cours). \\textbf{J+60}~: recette signée et application publiée ou en cours de publication effective.
 
 \\paragraph{18.6 — Recette.}
-Le livrable est conforme si l'Application est stable, les fonctions du MVP opérationnelles sans bug bloquant, l'application publiée ou en cours de publication sur les stores, le code source accessible à tous les Associés, et la recette validée par au moins trois (3) Associés sur procès-verbal.
+Le livrable est conforme si l'Application est stable, les fonctions du périmètre (article~18.2) opérationnelles sans bug bloquant, l'application publiée ou en cours de publication validée sur les stores, le site vitrine accessible avec pages légales, le code source et les accès documentés pour tous les Associés (Annexe~E), et la recette validée par au moins trois (3) Associés sur procès-verbal.
 
 \\paragraph{18.7 — Reporting.}
 Point d'avancement hebdomadaire (écrit + oral) au Comité de pilotage~: backlog, risques, besoins de décision. Pendant la phase post-sortie, reporting bi-mensuel suffisant sauf incident critique.
 
 \\paragraph{18.8 — Retard.}
-Tout retard supérieur à quinze (15) jours ouvrés sur la livraison initiale entraîne un plan de rattrapage sous huit (8) jours, puis la procédure de blocage (article~42) si échec.
+Tout retard supérieur à quinze (15) jours ouvrés sur la livraison initiale entraîne un plan de rattrapage sous huit (8) jours, puis la procédure de blocage (article~42) si échec.`;
+}
+
+export function articleEngagementsCoAssocies() {
+  return `
+\\section{Engagements spécifiques des Associés 1, 2 et 3}
+
+\\paragraph{18.9 — Division et missions.}
+Chaque Associé 1, 2 ou 3 exerce la division indiquée au tableau de l'article~6 et détaillée en Annexe~A (à compléter pour sa fiche de poste).
+
+\\paragraph{18.10 — Temps consacré.}
+Chaque Associé 1, 2 ou 3 consacre au minimum vingt pour cent (20\\,\\%) de son temps professionnel à PRODAY pendant les six (6) premiers mois, puis quinze pour cent (15\\,\\%) ensuite, sauf dérogation unanime.
+
+\\paragraph{18.11 — Reporting et pilotage.}
+Chaque Associé 1, 2 ou 3 remet un reporting mensuel écrit (activités, résultats, difficultés, besoins) et participe au Comité de pilotage.
+
+\\paragraph{18.12 — Indicateurs.}
+Les KPI trimestriels applicables figurent en Annexe~B et sont validés collectivement.`;
+}
+
+export function articleEngagementsSpecifiques() {
+  return `${articleEngagementsAlfred()}
+
+${articleEngagementsCoAssocies()}
 
 ${articleTarifDeveloppement()}`;
-  }
-  return `
-\\section{Engagements spécifiques du signataire (${myLabel})}
-
-\\paragraph{18.1.}
-Le signataire exerce la division indiquée au tableau de l'article~6 et détaillée en Annexe~A (à compléter pour sa fiche de poste).
-
-\\paragraph{18.2.}
-Le signataire consacre au minimum vingt pour cent (20\\,\\%) de son temps professionnel à PRODAY pendant les six (6) premiers mois, puis quinze pour cent (15\\,\\%) ensuite, sauf dérogation unanime.
-
-\\paragraph{18.3.}
-Le signataire remet un reporting mensuel écrit (activités, résultats, difficultés, besoins) et participe au Comité de pilotage.
-
-\\paragraph{18.4.}
-Les KPI trimestriels applicables figurent en Annexe~B et sont validés collectivement.
-
-${articleTarifDeveloppementCoAssocies()}`;
 }

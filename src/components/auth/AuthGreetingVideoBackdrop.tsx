@@ -88,7 +88,7 @@ export const AuthGreetingVideoBackdrop: React.FC<AuthGreetingVideoBackdropProps>
           style={styles.video}
           contentFit="cover"
           nativeControls={false}
-          allowsFullscreen={false}
+          fullscreenOptions={{ enable: false }}
           allowsPictureInPicture={false}
         />
       ) : null}

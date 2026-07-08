@@ -52,6 +52,9 @@ export function getCallableErrorMessage(error: unknown): string {
   if (code === 'functions/unauthenticated') {
     return 'Session expirée — reconnectez-vous.';
   }
+  if (code === 'functions/resource-exhausted') {
+    return 'Trop de tentatives. Attendez 15 à 60 minutes avant un nouvel envoi.';
+  }
   if (code === 'functions/not-found') {
     return 'Cloud Function introuvable (région ou déploiement). Actions bêta admin : europe-west1.';
   }

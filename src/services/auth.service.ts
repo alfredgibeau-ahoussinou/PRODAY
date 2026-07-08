@@ -6,16 +6,20 @@ import {
   sendPasswordResetEmail,
   sendEmailVerification,
   reload,
+  fetchSignInMethodsForEmail,
+  linkWithCredential,
   GoogleAuthProvider,
   OAuthProvider,
+  type AuthCredential,
   type User as FirebaseAuthUser,
 } from 'firebase/auth';
+import type { FirebaseError } from 'firebase/app';
 import type { User, UserRole, UserProfile } from '../models/User';
 import type { ParentalSettings } from '../models/ParentalSettings';
 import type { AppSpaceId } from '../models/AppSpace';
 import type { ProductLineId } from '../models/ProductLine';
 import { getFirebaseAuth } from '../lib/firebase';
-import { callFunction, isFunctionsUnavailable } from '../lib/firebaseFunctions';
+import { callFunction, getCallableErrorMessage, isFunctionsUnavailable } from '../lib/firebaseFunctions';
 import { profileService } from './profile.service';
 import { usersService } from './users.service';
 import {
@@ -24,10 +28,16 @@ import {
   ProductLineMismatchError,
 } from '../utils/productLineAccess';
 import { isBetaAccountBypassed } from '../config/emailVerificationBypass';
-import { AuthNeedsProfileError } from '../utils/authErrors';
+import { AuthNeedsProfileError, AuthLinkPasswordRequiredError } from '../utils/authErrors';
+import {
+  decodeJwtEmail,
+  getFirebaseAuthErrorCode,
+  normalizeAuthEmail,
+  oauthProviderLabel,
+} from '../utils/authOAuthLink';
 
 export { ProductLineMismatchError } from '../utils/productLineAccess';
-export { AuthNeedsProfileError } from '../utils/authErrors';
+export { AuthNeedsProfileError, AuthLinkPasswordRequiredError } from '../utils/authErrors';
 
 const AUTH_EMAIL_FUNCTIONS_REGION = 'europe-west1';
 
@@ -51,8 +61,13 @@ async function tryCustomVerificationEmail(): Promise<boolean> {
     );
     if (result.enabled) return true;
   } catch (e) {
-    if (__DEV__ && !isFunctionsUnavailable(e)) {
-      console.warn('[auth] custom verification email:', e);
+    // Ne pas retomber sur sendEmailVerification() si la callable a répondu :
+    // double appel = rate-limit Firebase (TOO_MANY_ATTEMPTS_TRY_LATER).
+    if (!isFunctionsUnavailable(e)) {
+      throw new AuthEmailSendError(getCallableErrorMessage(e));
+    }
+    if (__DEV__) {
+      console.warn('[auth] custom verification email unavailable, fallback Firebase Auth');
     }
   }
   return false;
@@ -126,7 +141,7 @@ function mapAuthError(code: string): string {
     'auth/popup-closed-by-user': 'Connexion annulée.',
     'auth/cancelled-popup-request': 'Connexion annulée.',
     'auth/account-exists-with-different-credential':
-      'Un compte existe déjà avec cet email (autre méthode de connexion).',
+      'Un compte existe déjà avec cet email. Connectez-vous avec votre mot de passe ProDay pour lier Google ou Apple.',
     'auth/operation-not-supported-in-this-environment':
       'Connexion non disponible sur cette plateforme.',
     'auth/invalid-id-token': 'Session Google invalide. Réessayez ou vérifiez les ID clients dans .env.',
@@ -154,6 +169,65 @@ export function needsEmailVerification(
   const email = profileEmail ?? fbUser.email ?? '';
   if (isBetaAccountBypassed(email)) return false;
   return true;
+}
+
+function extractPendingOAuthCredential(
+  error: unknown,
+  provider: 'google' | 'apple'
+): AuthCredential | null {
+  const fbError = error as FirebaseError;
+  if (provider === 'google') {
+    return GoogleAuthProvider.credentialFromError(fbError);
+  }
+  return OAuthProvider.credentialFromError(fbError);
+}
+
+function resolveExistingAccountEmail(
+  error: unknown,
+  fallbackEmail?: string | null
+): string | null {
+  const customEmail =
+    error && typeof error === 'object' && 'customData' in error
+      ? (error as { customData?: { email?: string } }).customData?.email
+      : undefined;
+  return normalizeAuthEmail(customEmail ?? fallbackEmail ?? null);
+}
+
+async function signInWithOAuthCredential(
+  credential: AuthCredential,
+  provider: 'google' | 'apple',
+  fallbackEmail?: string | null
+): Promise<User> {
+  const auth = getFirebaseAuth();
+  if (!auth) throw new Error('Firebase non configuré');
+
+  try {
+    const cred = await signInWithCredential(auth, credential);
+    return loadProfileAfterAuth(cred.user);
+  } catch (error) {
+    const code = getFirebaseAuthErrorCode(error);
+    if (code !== 'auth/account-exists-with-different-credential') {
+      throw error;
+    }
+
+    const pending = extractPendingOAuthCredential(error, provider);
+    if (!pending) throw error;
+
+    const email = resolveExistingAccountEmail(error, fallbackEmail);
+    if (!email) {
+      throw new Error(
+        `Impossible de relier ${oauthProviderLabel(provider)} : email non partagé. ` +
+          'Utilisez votre mot de passe ProDay ou autorisez le partage d’email avec Apple.'
+      );
+    }
+
+    const methods = await fetchSignInMethodsForEmail(auth, email);
+    if (methods.includes('password')) {
+      throw new AuthLinkPasswordRequiredError(email, pending, provider);
+    }
+
+    throw error;
+  }
 }
 
 async function loadProfileAfterAuth(fbUser: FirebaseAuthUser): Promise<User> {
@@ -318,24 +392,43 @@ export const authService = {
   },
 
   async signInWithGoogleIdToken(idToken: string): Promise<User> {
-    const auth = getFirebaseAuth();
-    if (!auth) throw new Error('Firebase non configuré');
-    const cred = await signInWithCredential(
-      auth,
-      GoogleAuthProvider.credential(idToken)
-    );
-    return loadProfileAfterAuth(cred.user);
+    const credential = GoogleAuthProvider.credential(idToken);
+    const email = decodeJwtEmail(idToken);
+    return signInWithOAuthCredential(credential, 'google', email);
   },
 
   async signInWithApple(identityToken: string, rawNonce: string): Promise<User> {
+    const provider = new OAuthProvider('apple.com');
+    const credential = provider.credential({ idToken: identityToken, rawNonce });
+    const email = decodeJwtEmail(identityToken);
+    return signInWithOAuthCredential(credential, 'apple', email);
+  },
+
+  async linkOAuthWithPassword(
+    email: string,
+    password: string,
+    pendingCredential: AuthCredential
+  ): Promise<User> {
     const auth = getFirebaseAuth();
     if (!auth) throw new Error('Firebase non configuré');
-    const provider = new OAuthProvider('apple.com');
-    const cred = await signInWithCredential(
-      auth,
-      provider.credential({ idToken: identityToken, rawNonce })
-    );
-    return loadProfileAfterAuth(cred.user);
+
+    const normalized = normalizeAuthEmail(email);
+    if (!normalized) throw new Error('Email invalide');
+
+    const cred = await signInWithEmailAndPassword(auth, normalized, password);
+    try {
+      const linked = await linkWithCredential(cred.user, pendingCredential);
+      if (linked.user.emailVerified) {
+        await profileService.updateProfile(linked.user.uid, { email_verified: true });
+      }
+      return loadProfileAfterAuth(linked.user);
+    } catch (error) {
+      const code = getFirebaseAuthErrorCode(error);
+      if (code === 'auth/provider-already-linked') {
+        return loadProfileAfterAuth(cred.user);
+      }
+      throw error;
+    }
   },
 
   async signOut(): Promise<void> {
@@ -353,6 +446,7 @@ export const authService = {
   getAuthErrorMessage(error: unknown): string {
     if (error instanceof AuthEmailSendError) return error.message;
     if (error instanceof AuthNeedsProfileError) return error.message;
+    if (error instanceof AuthLinkPasswordRequiredError) return error.message;
     if (error instanceof ProductLineMismatchError) return error.message;
     const code =
       error && typeof error === 'object' && 'code' in error

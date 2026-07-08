@@ -1,7 +1,7 @@
 import type { ProductLineId } from '../models/ProductLine';
 import type { Gender, User } from '../models/User';
 import { isYouthAppSpace } from './minorYouthSpace';
-import { isMinorUser } from './minor';
+import { isMinorAge } from './minor';
 
 /** Segment joueur — pilote thème UI et chrome pôle (homme/femme/mineur). */
 export type PlayerSegment = 'male' | 'female' | 'minor';
@@ -41,10 +41,13 @@ export function resolvePlayerSegment(
   const declared = user.profile?.gender;
   if (declared) return genderToPlayerSegment(declared);
 
-  if (user.product_line === 'woman') return 'female';
-  if (user.product_line === 'homme' || user.product_line === 'standard') return 'male';
+  const storedLine = user.product_line as string | undefined;
+  if (storedLine === 'woman') return 'female';
+  if (storedLine === 'homme' || storedLine === 'standard') return 'male';
 
-  if (isMinorUser(user)) return 'minor';
+  const age = user.profile?.age;
+  if (age != null && isMinorAge(age)) return 'minor';
+  if (user.parental_settings?.is_minor === true) return 'minor';
 
   const space = user.app_space;
   if (space === 'women' || space === 'girls') return 'female';

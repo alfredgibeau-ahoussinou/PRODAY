@@ -167,14 +167,14 @@ export const EventLineupScreen: React.FC<EventLineupScreenProps> = ({
           slots={starters}
           onRemove={removeFromLineup}
           styles={styles}
-          productLine={productLine}
+          isWoman={isWoman}
         />
         <Section
           title={`Remplaçants (${subs.length})`}
           slots={subs}
           onRemove={removeFromLineup}
           styles={styles}
-          productLine={productLine}
+          isWoman={isWoman}
         />
 
         {pool.length > 0 && (
@@ -223,8 +223,8 @@ const Section: React.FC<{
   slots: EventLineupSlot[];
   onRemove: (uid: string) => void;
   styles: ReturnType<typeof createStyles>;
-  productLine: ProductLineId;
-}> = ({ title, slots, onRemove, styles, productLine }) => (
+  isWoman: boolean;
+}> = ({ title, slots, onRemove, styles, isWoman }) => (
   <View style={styles.section}>
     <Text style={styles.label}>{title}</Text>
     {slots.length === 0 ? (

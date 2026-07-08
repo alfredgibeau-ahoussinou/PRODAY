@@ -1,5 +1,6 @@
 import React, { createContext, useCallback, useContext, useState } from 'react';
 import { FirstLaunchIntro } from '../components/branding/FirstLaunchIntro';
+import { LaunchVideoIntro } from '../components/branding/intro/LaunchVideoIntro';
 import type { IntroSpaceChoice } from '../components/branding/intro/BrandRevealIntro';
 import { resolveIntroExitAction } from '../components/branding/intro/launchIntroFlow';
 import {
@@ -26,6 +27,7 @@ export const LaunchIntroProvider: React.FC<{ children: React.ReactNode }> = ({
   const { productLine, setProductLine, setProSignupPresetRole } = useProductLine();
   const [manualOpen, setManualOpen] = useState(false);
   const [pickerSession, setPickerSession] = useState(0);
+  const [videoIntroDone, setVideoIntroDone] = useState(false);
 
   const openSpacePicker = useCallback(() => {
     setPickerSession((session) => session + 1);
@@ -81,6 +83,9 @@ export const LaunchIntroProvider: React.FC<{ children: React.ReactNode }> = ({
             />
           ) : null}
         </PushScreenTransition>
+        {!videoIntroDone ? (
+          <LaunchVideoIntro onFinish={() => setVideoIntroDone(true)} />
+        ) : null}
       </View>
     </LaunchIntroContext.Provider>
   );

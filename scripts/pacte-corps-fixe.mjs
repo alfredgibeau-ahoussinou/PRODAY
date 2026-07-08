@@ -6,7 +6,7 @@ import {
 } from './pacte-blocs.mjs';
 
 /** Corps du pacte : clauses rédigées, structurées par titres numérotés. */
-export function corpsPacte(person, myLabel) {
+export function corpsPacte() {
   return `
 \\part{DISPOSITIONS GÉNÉRALES}
 
@@ -19,7 +19,7 @@ Aux fins du Pacte, les termes suivants ont la signification indiquée~:
   \\item \\textbf{Société}~: la société PRODAY, en cours de constitution (article~3).
   \\item \\textbf{Pacte}~: le présent pacte d'associés et l'ensemble de ses annexes signées.
   \\item \\textbf{Titres}~: parts sociales ou actions représentant le capital, selon la forme juridique retenue.
-  \\item \\textbf{Application}~: la plateforme numérique PRODAY (applications mobiles, interface web, API, back-office, services cloud associés).
+  \\item \\textbf{Application}~: la plateforme numérique PRODAY (applications mobiles iOS et Android, site vitrine, API et services cloud associés, console d'administration).
   \\item \\textbf{Développeur du groupe}~: Alfred, Associé 4, responsable unique de la direction technique et de la création de l'Application.
   \\item \\textbf{Informations Confidentielles}~: toute information non publique relative à PRODAY, à ses Associés, utilisateurs, partenaires, technologies, finances ou stratégie.
   \\item \\textbf{Décision Stratégique}~: toute décision énumérée à l'article~13.
@@ -52,7 +52,7 @@ Dès réception du Kbis, les Associés signent un \\textbf{avenant d'immatricula
 \\paragraph{Projet.}
 \\begin{itemize}[leftmargin=1.4cm,itemsep=0.15em]
   \\item \\textbf{Dénomination}~: PRODAY.
-  \\item \\textbf{Activité}~: conception, développement, édition et exploitation d'une plateforme numérique dédiée au sport, au recrutement, aux événements, au sponsoring et aux services associés.
+  \\item \\textbf{Activité}~: conception, développement, édition et exploitation d'une plateforme numérique dédiée au football amateur et semi-professionnel (recrutement, matchs, tournois, communauté, santé, sponsoring et services associés), organisée autour de quatre pôles produit (Joueur, Pro, Santé, Partenaires).
   \\item \\textbf{Durée}~: quatre-vingt-dix-neuf (99) ans à compter de l'immatriculation.
   \\item \\textbf{Forme et capital}~: fixés conjointement avant dépôt (SAS recommandée), répartition égale entre les quatre Associés.
 \\end{itemize}
@@ -65,7 +65,7 @@ Durée initiale de \\textbf{dix (10) ans}, renouvelable tacitement par périodes
 
 \\section{Répartition initiale du capital}
 
-${tableauAssocies(person.slot)}
+${tableauAssocies()}
 
 Chaque Associé détient \\textbf{25\\,\\%} du capital et des droits de vote, sauf modification unanime. Aucun droit de veto permanent n'est reconnu hors cas expressément prévus.
 
@@ -140,15 +140,15 @@ Chaque Associé reçoit mensuellement~: comptes, trésorerie, indicateurs produi
 
 Associés 1 à 3~: divisions au tableau de l'article~6 et Annexe~A. Associé 4 (Alfred)~: \\textbf{Développeur du groupe} — Application PRODAY.
 
-${articleCadreDeveloppement(person)}
+${articleCadreDeveloppement()}
 
-${articleRoleDeveloppeur(person)}
+${articleRoleDeveloppeur()}
 
 \\section{Loyauté, conflits d'intérêts et déontologie}
 
 Obligation de loyauté et d'agir dans l'intérêt de PRODAY. Activité externe concurrente ou gênante~: accord unanime préalable. Interdiction d'usage personnel des ressources de la Société (comptes, outils, données, marque).
 
-${articleEngagementsSpecifiques(person, myLabel)}
+${articleEngagementsSpecifiques()}
 
 \\section{Évaluation des performances}
 

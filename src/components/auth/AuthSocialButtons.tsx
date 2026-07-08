@@ -24,7 +24,9 @@ import {
 import {
   authService,
   AuthNeedsProfileError,
+  AuthLinkPasswordRequiredError,
 } from '../../services/auth.service';
+import { AuthOAuthLinkModal } from './AuthOAuthLinkModal';
 import { spacing, radius } from '../../theme/designTokens';
 import { useAppTheme } from '../../context/ProductLineContext';
 import type { AppColors } from '../../theme/universeTheme';
@@ -77,6 +79,7 @@ interface GoogleSignInButtonProps {
   onSuccess: () => void | Promise<void>;
   onNeedsProfile: (prefill: { email: string; displayName?: string }) => void;
   onError: (message: string) => void;
+  onLinkPasswordRequired: (error: AuthLinkPasswordRequiredError) => void;
 }
 
 /** Sous-composant : le hook Google ne s’exécute que si la config plateforme est valide. */
@@ -88,6 +91,7 @@ const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
   onSuccess,
   onNeedsProfile,
   onError,
+  onLinkPasswordRequired,
 }) => {
   const { colors: c } = useAppTheme();
   const styles = useMemo(() => createSocialStyles(c), [c]);
@@ -108,10 +112,14 @@ const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
           });
           return;
         }
+        if (e instanceof AuthLinkPasswordRequiredError) {
+          onLinkPasswordRequired(e);
+          return;
+        }
         onError(authService.getAuthErrorMessage(e));
       }
     },
-    [onSuccess, onNeedsProfile, onError]
+    [onSuccess, onNeedsProfile, onError, onLinkPasswordRequired]
   );
 
   const signInWithGoogle = async () => {
@@ -185,6 +193,7 @@ export const AuthSocialButtons: React.FC<AuthSocialButtonsProps> = ({
   const styles = useMemo(() => createSocialStyles(c), [c]);
   const [busy, setBusy] = useState<'google' | 'apple' | null>(null);
   const [appleAvailable, setAppleAvailable] = useState(false);
+  const [linkRequest, setLinkRequest] = useState<AuthLinkPasswordRequiredError | null>(null);
   const googleBlockReason = getGoogleSignInBlockReason();
   const googleConfig = googleBlockReason ? null : getGoogleAuthRequestConfig();
 
@@ -212,6 +221,10 @@ export const AuthSocialButtons: React.FC<AuthSocialButtonsProps> = ({
             email: e.email,
             displayName: e.displayName,
           });
+          return;
+        }
+        if (e instanceof AuthLinkPasswordRequiredError) {
+          setLinkRequest(e);
           return;
         }
         onError(authService.getAuthErrorMessage(e));
@@ -263,6 +276,7 @@ export const AuthSocialButtons: React.FC<AuthSocialButtonsProps> = ({
   const showApple = providers.includes('apple');
 
   return (
+    <>
     <View style={styles.wrap}>
       {showGoogle && googleConfig ? (
         <GoogleSignInButton
@@ -273,6 +287,7 @@ export const AuthSocialButtons: React.FC<AuthSocialButtonsProps> = ({
           onSuccess={onSuccess}
           onNeedsProfile={onNeedsProfile}
           onError={onError}
+          onLinkPasswordRequired={setLinkRequest}
         />
       ) : showGoogle ? (
         <PressableSpring
@@ -311,6 +326,16 @@ export const AuthSocialButtons: React.FC<AuthSocialButtonsProps> = ({
         </PressableSpring>
       ) : null}
     </View>
+    <AuthOAuthLinkModal
+      request={linkRequest}
+      onClose={() => setLinkRequest(null)}
+      onSuccess={async () => {
+        setLinkRequest(null);
+        await onSuccess();
+      }}
+      onError={onError}
+    />
+    </>
   );
 };
 

@@ -44,7 +44,7 @@ describe('matchSeasonStats', () => {
           created_at: new Date(),
         },
       ],
-    } as TeamEvent;
+    } as unknown as TeamEvent;
 
     const sheets = importLiveActionsToMatchSheet(event);
     expect(sheets.p1.goals).toBe(1);

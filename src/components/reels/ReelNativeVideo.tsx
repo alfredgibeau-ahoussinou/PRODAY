@@ -54,7 +54,7 @@ export const ReelNativeVideo: React.FC<ReelNativeVideoProps> = ({
       style={styles.media}
       contentFit="cover"
       nativeControls={false}
-      allowsFullscreen={false}
+      fullscreenOptions={{ enable: false }}
       allowsPictureInPicture={false}
     />
   );

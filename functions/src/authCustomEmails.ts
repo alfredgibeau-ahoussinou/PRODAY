@@ -149,6 +149,13 @@ export const sendAuthVerificationEmail = functions
     try {
       return await sendAuthActionEmail('verification', email, user.displayName ?? undefined);
     } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      if (msg.includes('TOO_MANY_ATTEMPTS') || msg.includes('TOO_MANY_ATTEMPTS_TRY_LATER')) {
+        throw new functions.https.HttpsError(
+          'resource-exhausted',
+          'Trop de tentatives. Attendez 15 à 60 minutes avant un nouvel envoi.'
+        );
+      }
       console.error('[sendAuthVerificationEmail]', e);
       throw new functions.https.HttpsError(
         'internal',

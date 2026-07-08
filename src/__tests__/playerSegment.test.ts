@@ -56,7 +56,7 @@ describe('playerSegment', () => {
       ...basePlayer,
       product_line: 'amateur' as const,
       parental_settings: { is_minor: true },
-    } as User;
+    } as unknown as User;
     expect(resolvePlayerSegment(user, 'amateur')).toBe('minor');
     const colors = getThemedColorsForLine('amateur', 'minor');
     expect(colors.accent).toBe('#D97706');

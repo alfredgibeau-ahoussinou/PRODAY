@@ -34,7 +34,7 @@ export const FavoritesListScreen: React.FC<FavoritesListScreenProps> = ({
   onSelectUser,
 }) => {
   const { profile } = useAuth();
-  const { colors: c, isWoman, rootStyle } = useThemedScreen();
+  const { colors: c, isWoman, productLine, rootStyle } = useThemedScreen();
   const styles = useMemo(() => createStyles(c), [c]);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);

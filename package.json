@@ -33,6 +33,7 @@
     "docs:pdf": "pandoc docs/ProDay_Brief_NonDev.md -o docs/ProDay_Brief_NonDev.pdf --pdf-engine=pdflatex -V lang=fr -V geometry:margin=2.2cm -V colorlinks=true -V linkcolor=003399 2>/dev/null || pandoc docs/ProDay_Brief_NonDev.md -o docs/ProDay_Brief_NonDev.pdf -V lang=fr 2>/dev/null || echo '→ Ouvrir docs/design/ProDay_Brief.html et Imprimer → PDF'",
     "docs:open-mockups": "open docs/design/mockups/index.html",
     "docs:open-brief": "open docs/design/ProDay_Brief.html",
+    "intro:build": "node scripts/build-intro-video.mjs",
     "branding:logos": "node scripts/generate-transparent-logos.mjs",
     "branding:logos:woman": "node scripts/generate-woman-logos.mjs",
     "branding:logos:universes": "node scripts/generate-universe-logos.mjs",
