@@ -5,7 +5,7 @@
 **URL canonique :** https://proday75.fr (et https://www.proday75.fr → redirection apex)  
 **URL Netlify par défaut :** https://proday75.netlify.app (redirigée vers `proday75.fr`)
 
-Dernière mise à jour : 2026-07-08 (audit CLI/API domaines)
+Dernière mise à jour : 2026-07-08 (stratégie séquentielle domaines — CLI/API)
 
 ## Clé privée IONOS (`*.proday75.fr_private_key.key`)
 
@@ -24,6 +24,90 @@ Fichier typique dans `~/Downloads/` après achat SSL chez IONOS :
 
 Seule la clé privée a été trouvée localement ; pas de bundle `.crt`/`.pem` IONOS dans `Downloads/` au moment de la migration.
 
+
+## Stratégie séquentielle domaines (2026-07-08 ~22:06 UTC — agent CLI)
+
+**Objectif exécuté :** retirer les alias `proday75.fr` / `www.proday75.fr`, retirer `proday.app` comme primary, définir `proday75.fr` en primary, réajouter `www.proday75.fr`, provisionner TLS.
+
+**Site ID :** `a55cf9f2-06a5-4632-bffb-8f68d81395ac`
+
+### 1. État initial (`getSite`)
+
+| Champ | Valeur |
+|-------|--------|
+| `custom_domain` | `proday.app` |
+| `domain_aliases` | `proday75.fr`, `www.proday75.fr` |
+| `ssl` / `ssl_status` | `false` / `null` |
+
+### 2. Retrait des alias
+
+| Appel | Réponse exacte |
+|-------|----------------|
+| `netlify api updateSite` `{"domain_aliases":[]}` | **200** — corps JSON renvoyé mais **`domain_aliases` inchangés** (`proday75.fr`, `www.proday75.fr`) — changement **ignoré** |
+| `@netlify/api` `updateSite` `body: { domain_aliases: [] }` (Node, même token CLI) | **200** — `{"custom_domain":"proday.app","domain_aliases":[],"ssl":false}` — **alias vidés** |
+
+### 3. Retrait `proday.app` + primary `proday75.fr`
+
+| Appel | Réponse exacte |
+|-------|----------------|
+| `updateSite` `custom_domain: null` | **200** — `custom_domain: null`, `domain_aliases: []` |
+| `updateSite` `custom_domain: "proday75.fr"` | **200** — `custom_domain: "proday75.fr"`, `domain_aliases: []` |
+| `updateSite` `custom_domain: "proday75.fr"`, `domain_aliases: ["www.proday75.fr"]` | **200** — primary + alias **OK** |
+| `updateSite` combiné **sans** étape alias vide (via CLI seul, état bloqué) | **200** ignoré ou **422** *We're provisioning a certificate…* (historique) |
+
+**Constat :** la séquence **alias vides d’abord** (via client Node / `@netlify/api`) débloque le `PATCH` de `custom_domain` ; le CLI `netlify api updateSite` peut renvoyer **200 sans effet** sur les alias tant que le primary est encore `proday.app`.
+
+### 4. TLS
+
+| Appel | Réponse exacte |
+|-------|----------------|
+| `provisionSiteTLSCertificate` | **422** — `{"error":"bad dns for custom domain"}` |
+| `showSiteTLSCertificate` | `null` |
+
+### 5. État final (`getSite` ~22:09 UTC)
+
+| Champ | Valeur |
+|-------|--------|
+| `custom_domain` | **`proday75.fr`** |
+| `domain_aliases` | **`[]`** — `www.proday75.fr` **non réappliqué** : **422** `{"errors":{"domain_aliases":["can only be changed 3 times per hour on this plan"]}}` après une tentative de « toggle » alias pour relancer la vérif DNS |
+| `url` / `ssl_url` | `http://proday75.fr` / `https://proday75.fr` |
+| `ssl` / `ssl_status` | `false` / `null` |
+| `proday.app` | **absent** du site (plus de primary ni d’alias) |
+
+### 6. Vérifications HTTP(S)
+
+| Test | Résultat |
+|------|----------|
+| `curl -sI http://proday75.fr` | **301** `Location: https://proday75.fr/` — `Server: Netlify` |
+| `curl -svI https://proday75.fr` | **échec vérif certificat** — certificat servi `CN=*.netlify.app`, `subjectAltName does not match host name proday75.fr` |
+| `dig +short proday75.fr A @8.8.8.8` | `75.2.60.5`, `99.83.81.81` |
+| `dig +short www.proday75.fr CNAME @8.8.8.8` | `proday75.netlify.app.` |
+| `getDNSForSite` | zone `proday75.fr`, enregistrement **NETLIFY** → `proday75.netlify.app` |
+
+### 7. Résultat opérationnel
+
+| Étape | Statut |
+|-------|--------|
+| Retirer `proday.app` / `www.proday.app` | **Succès** — primary `null` puis `proday75.fr` |
+| Primary `proday75.fr` | **Succès** |
+| Alias `www.proday75.fr` | **Partiel** — ajouté puis perdu (rate limit alias plan Free) ; **à refaire** |
+| TLS Let’s Encrypt | **En attente / échec API** — `provisionSiteTLSCertificate` → *bad dns* ; HTTPS strict encore en mismatch |
+
+**Actions manuelles utilisateur :**
+
+1. Dans ~1 h (ou via UI Domain management), réajouter l’alias **`www.proday75.fr`** :
+   ```bash
+   netlify api updateSite --data '{"site_id":"a55cf9f2-06a5-4632-bffb-8f68d81395ac","domain_aliases":["www.proday75.fr"]}'
+   ```
+2. Attendre 5–15 min le provisionnement TLS automatique (`automatic_tls_provisioning: true`), puis relancer :
+   ```bash
+   netlify api provisionSiteTLSCertificate --data '{"site_id":"a55cf9f2-06a5-4632-bffb-8f68d81395ac"}'
+   netlify api showSiteTLSCertificate --data '{"site_id":"a55cf9f2-06a5-4632-bffb-8f68d81395ac"}'
+   curl -svI https://proday75.fr
+   ```
+3. Si *bad dns* persiste >24 h avec DNS public OK et primary `proday75.fr`, ouvrir un ticket support (modèle ci-dessous) pour forcer l’émission LE.
+
+---
 
 ## Blocage retrait `proday.app` (2026-07-08 — CLI/API)
 
@@ -79,15 +163,15 @@ L’utilisateur ne peut pas retirer `proday.app` / `www.proday.app` depuis **Dom
 
 | Élément | Statut |
 |--------|--------|
-| Domaine principal (`custom_domain`) | `proday.app` — **bloqué API** : 422 *provisioning certificate* ; `updateSite` peut renvoyer 200 sans changer le primary |
-| Alias | `proday75.fr`, `www.proday75.fr` (`www.proday.app` retiré le 2026-07-08) |
+| Domaine principal (`custom_domain`) | **`proday75.fr`** (depuis 2026-07-08 ~22:08 UTC) — `proday.app` retiré |
+| Alias | **`[]`** — réajouter **`www.proday75.fr`** (rate limit alias 3/h plan Free au moment de la migration) |
 | Redirects `netlify.toml` | `proday.app`, `www.proday.app`, `proday75.netlify.app`, `www.proday75.fr` → `https://proday75.fr` |
-| DNS public (`8.8.8.8`, 2026-07-08) | `A` → `75.2.60.5`, `99.83.81.81` ; `www` → `proday75.netlify.app` ; **pas d’AAAA** — **OK pour Netlify** |
-| Certificat Let's Encrypt pour `proday75.fr` | **Pas encore actif** (`ssl: false`, `ssl_status: null`) — `curl -svI https://proday75.fr` sert `*.netlify.app` (SAN mismatch) |
-| Cause HTTPS « non sécurisé » | Primary = `proday.app` sans DNS Netlify → `provisionSiteTLSCertificate` renvoie **422** ; Let’s Encrypt non émis pour `proday75.fr` |
-| Cache DNS local | Un **AAAA** ou un ancien **A** IONOS peut encore apparaître sur la machine locale 1–48 h après désactivation (TTL) ; les résolveurs publics sont déjà alignés |
+| DNS public (`8.8.8.8`, 2026-07-08) | `A` → `75.2.60.5`, `99.83.81.81` ; `www` → `proday75.netlify.app` ; **OK pour Netlify** |
+| Certificat Let's Encrypt pour `proday75.fr` | **Pas encore actif** (`ssl: false`) — HTTPS strict : certificat `*.netlify.app` (SAN mismatch) |
+| Cause HTTPS « non sécurisé » | `provisionSiteTLSCertificate` → **422** `bad dns for custom domain` malgré primary `proday75.fr` et DNS public OK — délai propagation / job TLS Netlify |
+| Cache DNS local | Un **AAAA** ou un ancien **A** IONOS peut encore apparaître localement (TTL) |
 
-**Suivi :** [Domain management — proday75](https://app.netlify.com/projects/proday75/domain-management) → retirer **proday.app** (⋮ → Remove domain), puis **Set as primary domain** sur **proday75.fr**. La CLI `updateSite` ne suffit pas tant que `proday.app` reste primary.
+**Suivi :** [Domain management — proday75](https://app.netlify.com/projects/proday75/domain-management) → réajouter **`www.proday75.fr`**, surveiller **HTTPS** / **Verify DNS**. Séquence API documentée dans *Stratégie séquentielle domaines* ci-dessus.
 
 ### Relancer la vérification DNS / TLS (CLI)
 
