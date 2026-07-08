@@ -80,6 +80,9 @@ export const AdminSystemPage: React.FC<AdminSystemPageProps> = ({ onPreviewUserA
       <AdminPlatformConfigPanel />
 
       <AdminSectionHeader title="Données ops" />
+      <Text style={styles.bodyText}>
+        Abonnements et commandes shop. Le programme bêta est géré dans la section « Programme bêta ».
+      </Text>
       <AdminOpsDataPanel />
 
       <AdminSectionHeader title="Compte admin" />

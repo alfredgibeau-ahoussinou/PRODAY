@@ -16,6 +16,7 @@ describe('e2e — navigation shell admin', () => {
     'moderation',
     'plateforme',
     'analytics',
+    'beta',
     'system',
   ];
 
@@ -49,6 +50,12 @@ describe('e2e — navigation shell admin', () => {
   it('clés de route pour le drawer admin', () => {
     expect(adminRouteKey({ tab: 'inbox' })).toBe('inbox');
     expect(adminRouteKey({ tab: 'plateforme', segment: 'mercato' })).toBe('plateforme:mercato');
+  });
+
+  it('résout les métadonnées du programme bêta', () => {
+    const beta = resolveAdminPageMeta('beta');
+    expect(beta.title).toBe('Programme bêta');
+    expect(beta.subtitle).toMatch(/Waitlist/i);
   });
 
   it('sections couvrent la file inbox et la modération', () => {

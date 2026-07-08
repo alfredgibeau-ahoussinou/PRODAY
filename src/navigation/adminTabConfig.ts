@@ -8,6 +8,7 @@ export type AdminMainTabId =
   | 'moderation'
   | 'plateforme'
   | 'analytics'
+  | 'beta'
   | 'system';
 
 export type AdminContentSegment =
@@ -31,6 +32,7 @@ export type AdminNavSectionId =
   | 'moderation'
   | 'platform'
   | 'insights'
+  | 'beta'
   | 'system';
 
 export type AdminRoute = {
@@ -55,6 +57,7 @@ export const ADMIN_NAV_SECTIONS: { id: AdminNavSectionId; label: string }[] = [
   { id: 'moderation', label: 'Modération' },
   { id: 'platform', label: 'Contenu plateforme' },
   { id: 'insights', label: 'Insights' },
+  { id: 'beta', label: 'Programme bêta' },
   { id: 'system', label: 'Système' },
 ];
 
@@ -221,6 +224,14 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
     section: 'insights',
   },
   {
+    id: 'beta',
+    tab: 'beta',
+    label: 'Programme bêta',
+    description: 'Waitlist · accès testeurs · emails',
+    icon: 'shield',
+    section: 'beta',
+  },
+  {
     id: 'system',
     tab: 'system',
     label: 'Configuration',
@@ -261,6 +272,10 @@ const PAGE_META: Record<
   analytics: {
     title: 'Analytics',
     subtitle: 'Tendances · snapshots · répartition',
+  },
+  beta: {
+    title: 'Programme bêta',
+    subtitle: 'Waitlist · validation · accès testeurs',
   },
   system: {
     title: 'Configuration',

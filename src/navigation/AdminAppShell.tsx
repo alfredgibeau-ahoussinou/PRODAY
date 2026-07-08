@@ -13,6 +13,7 @@ import { AdminModerationPage } from '../screens/admin/pages/AdminModerationPage'
 import { AdminPlatformPage } from '../screens/admin/pages/AdminPlatformPage';
 import { AdminAnalyticsPage } from '../screens/admin/pages/AdminAnalyticsPage';
 import { AdminClubsPage } from '../screens/admin/pages/AdminClubsPage';
+import { AdminBetaPage } from '../screens/admin/pages/AdminBetaPage';
 import { AdminSystemPage } from '../screens/admin/pages/AdminSystemPage';
 import { AdminGateScreen } from '../screens/admin/AdminGateScreen';
 import { useIsAdmin } from '../hooks/useIsAdmin';
@@ -137,6 +138,8 @@ const AdminAppShellInner: React.FC<AdminAppShellProps> = ({ onPreviewUserApp }) 
         );
       case 'analytics':
         return <AdminAnalyticsPage />;
+      case 'beta':
+        return <AdminBetaPage />;
       case 'system':
         return <AdminSystemPage onPreviewUserApp={onPreviewUserApp} />;
       default:
