@@ -93,7 +93,9 @@ export const AdminOpsDataPanel: React.FC = () => {
       await action();
       await load();
     } catch (e) {
-      Alert.alert('Erreur', getCallableErrorMessage(e));
+      const detail = getCallableErrorMessage(e);
+      Alert.alert('Erreur bêta', detail);
+      if (__DEV__) console.warn('[AdminOpsDataPanel]', detail, e);
     } finally {
       setActionEntryId(null);
     }

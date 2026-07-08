@@ -65,6 +65,9 @@ import {
 } from '../lib/firestoreMappers';
 import type { ChatMessage } from '../lib/firestoreMappers';
 
+/** Callables bêta admin déployées en europe-west1 (voir functions/src/index.ts). */
+const BETA_ADMIN_FUNCTIONS_REGION = 'europe-west1';
+
 export interface PlatformStats {
   users: number;
   players: number;
@@ -1127,13 +1130,15 @@ export const adminService = {
     return callFunction<
       { entryId: string },
       { success: boolean; emailSent: boolean; emailError?: string }
-    >('adminApproveBetaAccess', { entryId });
+    >('adminApproveBetaAccess', { entryId }, BETA_ADMIN_FUNCTIONS_REGION);
   },
 
   async rejectBetaWaitlistEntry(entryId: string): Promise<{ success: boolean }> {
-    return callFunction<{ entryId: string }, { success: boolean }>('adminRejectBetaAccess', {
-      entryId,
-    });
+    return callFunction<{ entryId: string }, { success: boolean }>(
+      'adminRejectBetaAccess',
+      { entryId },
+      BETA_ADMIN_FUNCTIONS_REGION,
+    );
   },
 
   async resendBetaWelcomeEmail(
@@ -1142,7 +1147,7 @@ export const adminService = {
     return callFunction<
       { entryId: string },
       { success: boolean; emailSent: boolean; emailError?: string }
-    >('adminResendBetaWelcomeEmail', { entryId });
+    >('adminResendBetaWelcomeEmail', { entryId }, BETA_ADMIN_FUNCTIONS_REGION);
   },
 
   async listSubscriptionPurchases(max = 100): Promise<SubscriptionPurchase[]> {

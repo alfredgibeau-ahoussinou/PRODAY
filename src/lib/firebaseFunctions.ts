@@ -52,6 +52,9 @@ export function getCallableErrorMessage(error: unknown): string {
   if (code === 'functions/unauthenticated') {
     return 'Session expirée — reconnectez-vous.';
   }
+  if (code === 'functions/not-found') {
+    return 'Cloud Function introuvable (région ou déploiement). Actions bêta admin : europe-west1.';
+  }
   if (isFunctionsUnavailable(error)) {
     return 'Cloud Functions indisponibles (plan Blaze + firebase deploy --only functions).';
   }
