@@ -79,7 +79,7 @@ export const AdminSystemPage: React.FC<AdminSystemPageProps> = ({ onPreviewUserA
 
       <AdminPlatformConfigPanel />
 
-      <AdminSectionHeader title="Données ops (lecture)" />
+      <AdminSectionHeader title="Données ops" />
       <AdminOpsDataPanel />
 
       <AdminSectionHeader title="Compte admin" />

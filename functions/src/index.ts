@@ -10,6 +10,11 @@ import { runMistralDocumentVerification, verifyOnboardingDocumentEphemeral } fro
 import { onPlatformFeedCreated, onChatMessageCreated } from './feedNotifications';
 import { createValidateBetaAccessHandler } from './betaAccess';
 import { createSubmitBetaWaitlistHandler } from './betaWaitlist';
+import {
+  createAdminApproveBetaAccessHandler,
+  createAdminRejectBetaAccessHandler,
+  createAdminResendBetaWelcomeEmailHandler,
+} from './betaWaitlistAdmin';
 import { onV3BrainWrite } from './v3Brain';
 import { activateStoreSubscription } from './subscriptionIap';
 import {
@@ -706,3 +711,18 @@ export const submitBetaWaitlist = functions
 export const validateBetaAccess = functions
   .region('europe-west1')
   .https.onRequest(createValidateBetaAccessHandler(db));
+
+/** Approuve une inscription bêta et envoie l'email de bienvenue — admin uniquement. */
+export const adminApproveBetaAccess = functions
+  .region('europe-west1')
+  .https.onCall(createAdminApproveBetaAccessHandler(db));
+
+/** Refuse une inscription bêta — admin uniquement. */
+export const adminRejectBetaAccess = functions
+  .region('europe-west1')
+  .https.onCall(createAdminRejectBetaAccessHandler(db));
+
+/** Renvoie l'email de bienvenue bêta — admin uniquement. */
+export const adminResendBetaWelcomeEmail = functions
+  .region('europe-west1')
+  .https.onCall(createAdminResendBetaWelcomeEmailHandler(db));

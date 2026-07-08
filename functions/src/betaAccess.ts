@@ -1,5 +1,6 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
+import { isBetaEntryApproved } from './betaWaitlistStatus';
 
 const ALLOWED_ORIGINS = [
   'http://localhost:3000',
@@ -62,6 +63,11 @@ export function createValidateBetaAccessHandler(db: admin.firestore.Firestore) {
 
     const doc = snap.docs[0];
     const data = doc.data();
+
+    if (!isBetaEntryApproved(data)) {
+      res.status(403).json({ error: 'Accès en attente de validation' });
+      return;
+    }
 
     await doc.ref.update({
       last_beta_access_at: admin.firestore.FieldValue.serverTimestamp(),

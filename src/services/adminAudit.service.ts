@@ -19,6 +19,8 @@ export type AdminAuditAction =
   | 'payment_marked_paid'
   | 'snapshot_recorded'
   | 'platform_config_updated'
+  | 'beta_approved'
+  | 'beta_rejected'
   | 'other';
 
 export interface AdminAuditEntry {

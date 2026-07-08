@@ -1051,6 +1051,28 @@ async function run() {
     })
   );
 
+  // --- Bêta waitlist : lecture admin, écriture client refusée ---
+  await testEnv.withSecurityRulesDisabled(async (ctx) => {
+    const db = ctx.firestore();
+    await setDoc(doc(db, 'beta_waitlist/beta-1'), {
+      email: 'testeur@example.com',
+      role: 'player',
+      status: 'pending',
+      access_token: 'tok-test',
+      created_at: new Date(),
+    });
+  });
+
+  await assertSucceeds(getDoc(doc(adminDb, 'beta_waitlist/beta-1')));
+
+  await assertFails(getDoc(doc(aliceDb, 'beta_waitlist/beta-1')));
+  await assertFails(
+    updateDoc(doc(adminDb, 'beta_waitlist/beta-1'), {
+      status: 'approved',
+      updated_at: new Date(),
+    })
+  );
+
   console.log('✓ Tous les scénarios rules-unit-testing ont réussi.');
   await testEnv.cleanup();
 }

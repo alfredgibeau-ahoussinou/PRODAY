@@ -50,6 +50,10 @@ import type { PlatformFeedPost, FeedAudience } from '../models/PlatformFeed';
 import type { PlatformConfig } from '../models/PlatformConfig';
 import type { StageOffer, StageApplication } from '../models/Stage';
 import type { ShopOrder } from '../models/ShopOrder';
+import {
+  resolveBetaWaitlistStatus,
+  type BetaWaitlistStatus as BetaWaitlistStatusUtil,
+} from '../utils/betaWaitlistStatus';
 import { getErrorCode } from '../utils/errors';
 import { statsService } from './stats.service';
 import { adminAuditService } from './adminAudit.service';
@@ -93,12 +97,19 @@ export interface AdminMessageThread {
   thread_kind?: string;
 }
 
+export type BetaWaitlistStatus = 'pending' | 'approved' | 'rejected';
+
 export interface BetaWaitlistEntry {
   id: string;
   email: string;
   name?: string;
   role?: string;
+  role_label?: string;
   city?: string;
+  status: BetaWaitlistStatus;
+  access_token?: string;
+  welcome_email_sent?: boolean;
+  approved_at?: Date;
   created_at: Date;
 }
 
@@ -1074,17 +1085,27 @@ export const adminService = {
     const database = getDb();
     if (!database) return [];
 
-    const mapEntry = (id: string, data: Record<string, unknown>): BetaWaitlistEntry => ({
-      id,
-      email: String(data.email ?? ''),
-      name: data.name ? String(data.name) : undefined,
-      role: data.role ? String(data.role) : undefined,
-      city: data.city ? String(data.city) : undefined,
-      created_at:
-        data.created_at && typeof data.created_at === 'object' && 'toDate' in data.created_at
-          ? (data.created_at as { toDate: () => Date }).toDate()
-          : new Date(0),
-    });
+    const mapEntry = (id: string, data: Record<string, unknown>): BetaWaitlistEntry => {
+      const toDate = (v: unknown): Date | undefined => {
+        if (v && typeof v === 'object' && 'toDate' in v) {
+          return (v as { toDate: () => Date }).toDate();
+        }
+        return undefined;
+      };
+      return {
+        id,
+        email: String(data.email ?? ''),
+        name: data.name ? String(data.name) : undefined,
+        role: data.role ? String(data.role) : undefined,
+        role_label: data.role_label ? String(data.role_label) : undefined,
+        city: data.city ? String(data.city) : undefined,
+        status: resolveBetaWaitlistStatus(data) as BetaWaitlistStatusUtil,
+        access_token: data.access_token ? String(data.access_token) : undefined,
+        welcome_email_sent: data.welcome_email_sent === true,
+        approved_at: toDate(data.approved_at),
+        created_at: toDate(data.created_at) ?? new Date(0),
+      };
+    };
 
     try {
       const snap = await getDocs(
@@ -1095,8 +1116,33 @@ export const adminService = {
       const snap = await getDocs(collection(database, 'beta_waitlist'));
       return snap.docs
         .map((d) => mapEntry(d.id, d.data() as Record<string, unknown>))
+        .sort((a, b) => b.created_at.getTime() - a.created_at.getTime())
         .slice(0, max);
     }
+  },
+
+  async approveBetaWaitlistEntry(
+    entryId: string,
+  ): Promise<{ success: boolean; emailSent: boolean; emailError?: string }> {
+    return callFunction<
+      { entryId: string },
+      { success: boolean; emailSent: boolean; emailError?: string }
+    >('adminApproveBetaAccess', { entryId });
+  },
+
+  async rejectBetaWaitlistEntry(entryId: string): Promise<{ success: boolean }> {
+    return callFunction<{ entryId: string }, { success: boolean }>('adminRejectBetaAccess', {
+      entryId,
+    });
+  },
+
+  async resendBetaWelcomeEmail(
+    entryId: string,
+  ): Promise<{ success: boolean; emailSent: boolean; emailError?: string }> {
+    return callFunction<
+      { entryId: string },
+      { success: boolean; emailSent: boolean; emailError?: string }
+    >('adminResendBetaWelcomeEmail', { entryId });
   },
 
   async listSubscriptionPurchases(max = 100): Promise<SubscriptionPurchase[]> {
