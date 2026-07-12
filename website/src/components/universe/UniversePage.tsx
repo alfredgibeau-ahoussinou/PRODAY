@@ -10,7 +10,7 @@ import { PulseSimulator } from "@/components/PulseSimulator";
 import { VerificationTimeline } from "@/components/VerificationTimeline";
 import { UniverseModuleExplorer } from "@/components/universe/UniverseModuleExplorer";
 import { themeIdForUniverse, UNIVERSE_THEME } from "@/components/universe/universeTheme";
-import { CAROUSEL_POLES, POLE_IMAGES } from "@/lib/poles";
+import { CAROUSEL_POLES, POLE_IMAGES, poleSectionHref } from "@/lib/poles";
 import {
   JOURNEYS,
   UNIVERSE_PAGE_CONFIG,
@@ -103,7 +103,7 @@ export function UniversePage({ universe }: UniversePageProps) {
         </div>
       </section>
 
-      <section className="bg-[#030303] py-16">
+      <section id="modules" className="scroll-mt-24 bg-[#030303] py-16">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <h2 className="font-display text-2xl font-bold text-white sm:text-3xl">{config.modulesTitle}</h2>
           <p className="mt-3 max-w-3xl text-white/55">{config.modulesSubtitle}</p>
@@ -112,7 +112,7 @@ export function UniversePage({ universe }: UniversePageProps) {
       </section>
 
       {journey && (
-        <section className="border-y border-white/10 bg-[#050505] py-16">
+        <section id="parcours" className="scroll-mt-24 border-y border-white/10 bg-[#050505] py-16">
           <div className="mx-auto max-w-6xl px-4 sm:px-6">
             <h2 className="font-display text-2xl font-bold text-white sm:text-3xl">Votre parcours</h2>
             <p className="mt-3 max-w-2xl text-white/55">
@@ -158,7 +158,7 @@ export function UniversePage({ universe }: UniversePageProps) {
       )}
 
       {config.showPulse && (
-        <section className={`py-16 ${theme.softSectionBg || "bg-[#030303]"}`}>
+        <section id="pulse" className={`scroll-mt-24 py-16 ${theme.softSectionBg || "bg-[#030303]"}`}>
           <div className="mx-auto max-w-6xl px-4 sm:px-6">
             <h2 className="font-display text-2xl font-bold text-white sm:text-3xl">Pulse ProDay</h2>
             <p className="mt-3 max-w-2xl text-white/55">
@@ -170,7 +170,7 @@ export function UniversePage({ universe }: UniversePageProps) {
       )}
 
       {config.showVerification && (
-        <section className={`py-16 ${theme.verificationSectionBg || "bg-[#050505]"}`}>
+        <section id="verification" className={`scroll-mt-24 py-16 ${theme.verificationSectionBg || "bg-[#050505]"}`}>
           <div className="mx-auto max-w-6xl px-4 sm:px-6">
             <h2 className={`font-display text-2xl font-bold sm:text-3xl ${theme.verificationTitle || "text-white"}`}>
               Profils vérifiés
@@ -184,7 +184,7 @@ export function UniversePage({ universe }: UniversePageProps) {
       )}
 
       {pricingPlans.length > 0 ? (
-        <section className="bg-[#030303] py-16">
+        <section id="tarifs" className="scroll-mt-24 bg-[#030303] py-16">
           <div className="mx-auto max-w-6xl px-4 sm:px-6">
             <div className="flex flex-wrap items-end justify-between gap-4">
               <div>
@@ -221,7 +221,7 @@ export function UniversePage({ universe }: UniversePageProps) {
           </div>
         </section>
       ) : universe === "supporter" ? (
-        <section className="bg-[#030303] py-16">
+        <section id="tarifs" className="scroll-mt-24 bg-[#030303] py-16">
           <div className="mx-auto max-w-6xl px-4 sm:px-6">
             <h2 className="font-display text-2xl font-bold text-white sm:text-3xl">{config.pricingTitle}</h2>
             <p className="mt-3 max-w-2xl text-white/55">
@@ -244,7 +244,7 @@ export function UniversePage({ universe }: UniversePageProps) {
         </section>
       ) : null}
 
-      <section className="border-t border-white/10 bg-[#030303] py-12">
+      <section id="poles" className="border-t border-white/10 bg-[#030303] py-12 scroll-mt-24">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <h2 className="font-display text-lg font-bold text-white">Autres pôles ProDay</h2>
           <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -268,7 +268,7 @@ export function UniversePage({ universe }: UniversePageProps) {
               return (
                 <Link
                   key={pole.id}
-                  href={pole.href}
+                  href={poleSectionHref(pole)}
                   className={`group relative min-h-[200px] overflow-hidden rounded-2xl bg-gradient-to-br sm:min-h-[220px] ${crossTheme.crossCard} text-white`}
                 >
                   <div className="relative z-10 max-w-[58%] p-6 sm:max-w-[55%]">

@@ -1900,25 +1900,25 @@ export const QUIZ_RESULTS: Record<
   coach: {
     title: "Profil Coach Pro",
     description: "Vérification diplôme, effectif et convocations — univers Pro Day Pro.",
-    href: "/pro",
+    href: "/pro#poles",
     cta: "Découvrir Pro Day Pro",
   },
   recruiter: {
     title: "Profil Recruteur",
     description: "Scouting, Mercato Pro et pipeline candidatures — rôle dédié Pro Day Pro.",
-    href: "/pro",
+    href: "/pro#poles",
     cta: "Découvrir Pro Day Pro",
   },
   club: {
     title: "Profil Club",
     description: "Annonces Mercato, multi-équipes et exports candidatures — univers Pro Day Pro.",
-    href: "/pro",
+    href: "/pro#poles",
     cta: "Découvrir Pro Day Pro",
   },
   organizer: {
     title: "Profil Organisateur",
     description: "Créez vos tournois Arena — inscriptions et palmarès intégrés.",
-    href: "/fonctionnalites",
+    href: "/fonctionnalites#modules",
     cta: "Découvrir Arena",
   },
   woman: {
@@ -1930,25 +1930,25 @@ export const QUIZ_RESULTS: Record<
   parent: {
     title: "Espace Parent",
     description: "Supervision, contacts approuvés et limites de temps.",
-    href: "/confiance",
+    href: "/confiance#verification",
     cta: "Confiance & contrôle",
   },
   agent: {
     title: "Profil Agent",
     description: "CRM joueurs, mandats et contacts Mercato — Agent Elite sur Pro Day Pro.",
-    href: "/pro",
+    href: "/pro#poles",
     cta: "Voir Pro Day Pro",
   },
   homme: {
     title: "Pro Day Man",
     description: "Foot masculin amateur — Mercato M, matchs, Arena et CV joueur.",
-    href: "/homme",
+    href: "/amateur#modules",
     cta: "Explorer Man",
   },
   pro: {
     title: "Univers Pro Day Pro",
     description: "Recruteurs, coach, agent, club, pôle santé et réseau vérifié — Mercato Pro.",
-    href: "/pro",
+    href: "/pro#poles",
     cta: "Explorer Pro",
   },
 };

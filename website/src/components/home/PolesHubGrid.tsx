@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { CAROUSEL_POLES, POLE_IMAGES, POLE_STYLES } from "@/lib/poles";
+import { CAROUSEL_POLES, POLE_IMAGES, POLE_STYLES, poleSectionHref } from "@/lib/poles";
 import { Section } from "@/components/ui/Section";
 
 export function PolesHubGrid() {
@@ -66,7 +66,7 @@ export function PolesHubGrid() {
                 </p>
                 <div className="mt-5 flex flex-wrap gap-3">
                   <Link
-                    href={pole.href}
+                    href={poleSectionHref(pole)}
                     className={`inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-bold uppercase tracking-wide transition hover:scale-[1.02] ${styles.cta}`}
                   >
                     En savoir plus

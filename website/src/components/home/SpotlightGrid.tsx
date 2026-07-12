@@ -4,15 +4,15 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { SPOTLIGHT_FEATURES } from "@/lib/content";
-import { ROUTES } from "@/lib/routes";
+import { ROUTES, routeWithHash } from "@/lib/routes";
 import { Section } from "@/components/ui/Section";
 
 const LINKS: Record<string, string> = {
   reels: ROUTES.demo,
   feed: ROUTES.demo,
-  partners: ROUTES.partenaires,
-  family: ROUTES.trust,
-  tournaments: ROUTES.features,
+  partners: routeWithHash(ROUTES.partenaires, "formules"),
+  family: routeWithHash(ROUTES.trust, "verification"),
+  tournaments: routeWithHash(ROUTES.features, "modules"),
   auth: ROUTES.demo,
 };
 

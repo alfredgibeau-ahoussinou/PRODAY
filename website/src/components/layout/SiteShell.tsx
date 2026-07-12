@@ -5,6 +5,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { SiteNav } from "@/components/SiteNav";
 import { PoleContextBar } from "./PoleContextBar";
 import { PageTransition } from "./PageTransition";
+import { ScrollToHash } from "./ScrollToHash";
 import { showPoleContextBar } from "@/lib/siteArchitecture";
 
 export function SiteShell({ children }: { children: React.ReactNode }) {
@@ -23,6 +24,7 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
         aria-hidden
       />
       <div className="relative z-10">
+        <ScrollToHash />
         <SiteNav />
         <div className={`overflow-x-clip ${isHome ? "surface-dark" : ""}`}>
           {showPoleBar && <PoleContextBar />}

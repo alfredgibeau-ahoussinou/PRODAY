@@ -2,6 +2,7 @@ import { AuthLinkPasswordRequiredError } from '../utils/authErrors';
 import {
   decodeJwtEmail,
   getFirebaseAuthErrorCode,
+  humanizeAuthErrorText,
   normalizeAuthEmail,
   oauthProviderLabel,
 } from '../utils/authOAuthLink';
@@ -34,6 +35,13 @@ describe('authOAuthLink', () => {
       'auth/wrong-password'
     );
     expect(getFirebaseAuthErrorCode(new Error('x'))).toBe('');
+  });
+
+  it('humanizeAuthErrorText masque le JSON Firebase brut', () => {
+    const raw =
+      'An internal error has occurred. Raw server response: "{"error":{"code":400,"message":"TOO_MANY_ATTEMPTS_TRY_LATER"}}"';
+    expect(humanizeAuthErrorText(raw)).toContain('Trop de tentatives');
+    expect(humanizeAuthErrorText(raw)).not.toContain('Raw server response');
   });
 
   it('oauthProviderLabel', () => {

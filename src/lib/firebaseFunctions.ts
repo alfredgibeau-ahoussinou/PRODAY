@@ -7,6 +7,7 @@ import {
 import { getFirebaseApp } from './firebase';
 import { isFirebaseConfigured } from '../config/firebase';
 import { getErrorCode } from '../utils/errors';
+import { humanizeAuthErrorText, AUTH_EMAIL_CONFIG_MESSAGE } from '../utils/authOAuthLink';
 
 let functions: Functions | undefined;
 
@@ -43,7 +44,7 @@ export function isFunctionsUnavailable(error: unknown): boolean {
 export function getCallableErrorMessage(error: unknown): string {
   if (error && typeof error === 'object' && 'message' in error) {
     const msg = String((error as { message: string }).message);
-    if (msg && msg !== 'internal') return msg;
+    if (msg && msg !== 'internal') return humanizeAuthErrorText(msg);
   }
   const code = getErrorCode(error);
   if (code === 'functions/permission-denied') {
@@ -54,6 +55,13 @@ export function getCallableErrorMessage(error: unknown): string {
   }
   if (code === 'functions/resource-exhausted') {
     return 'Trop de tentatives. Attendez 15 à 60 minutes avant un nouvel envoi.';
+  }
+  if (code === 'functions/failed-precondition') {
+    return humanizeAuthErrorText(
+      error && typeof error === 'object' && 'message' in error
+        ? String((error as { message: string }).message)
+        : AUTH_EMAIL_CONFIG_MESSAGE
+    );
   }
   if (code === 'functions/not-found') {
     return 'Cloud Function introuvable (région ou déploiement). Actions bêta admin : europe-west1.';

@@ -16,6 +16,7 @@ import {
 } from "@/lib/poles";
 import { ANNUAL_DISCOUNT_PERCENT } from "@/lib/pricing";
 import { ROUTES } from "@/lib/routes";
+import { scrollToHashElement } from "@/lib/scrollToHash";
 
 const POLE_NAV_LABELS: Record<PoleId, string> = {
   amateur: "Amateur",
@@ -80,7 +81,10 @@ function PolePricingPanel({ poleId, yearly }: PolePricingPanelProps) {
   const plans = plansForPole(poleId);
 
   return (
-    <div className={`relative min-h-[480px] rounded-3xl ${styles.section} p-6 sm:p-10 lg:p-12`}>
+    <div
+      id={poleId}
+      className={`relative min-h-[480px] scroll-mt-32 rounded-3xl ${styles.section} p-6 sm:p-10 lg:p-12`}
+    >
       <div className="flex flex-col items-center gap-6 text-center sm:flex-row sm:items-start sm:text-left">
         <Image
           src={pole.logo}
@@ -191,6 +195,29 @@ export function PolesPricingLayout() {
     window.addEventListener("hashchange", onHashChange);
     return () => window.removeEventListener("hashchange", onHashChange);
   }, [goToPole]);
+
+  useEffect(() => {
+    const hash = window.location.hash.replace("#", "");
+    if (!isPoleId(hash)) return;
+
+    let attempts = 0;
+    let frame = 0;
+
+    const scroll = () => {
+      if (scrollToHashElement(`#${hash}`)) return;
+      attempts += 1;
+      if (attempts < 16) frame = requestAnimationFrame(scroll);
+    };
+
+    const timeout = window.setTimeout(() => {
+      frame = requestAnimationFrame(scroll);
+    }, 80);
+
+    return () => {
+      window.clearTimeout(timeout);
+      cancelAnimationFrame(frame);
+    };
+  }, [activePole]);
 
   const activeStyles = POLE_STYLES[activePole];
   const activeIndex = poleIndex(activePole);

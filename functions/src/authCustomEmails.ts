@@ -3,7 +3,10 @@ import { admin } from './firebaseAdmin';
 import { renderAuthEmailTemplate } from './authEmailTemplates';
 import {
   getAuthEmailTransportConfig,
+  getEmailJsAuthConfig,
   isAuthCustomEmailEnabled,
+  isResendDomainError,
+  sendAuthEmailViaEmailJs,
   sendAuthEmailViaResend,
 } from './authEmailTransport';
 
@@ -107,12 +110,18 @@ async function sendAuthActionEmail(
     displayName,
   });
 
-  await sendAuthEmailViaResend(transport, {
-    to: normalizedEmail,
-    subject,
-    html,
-    text,
-  });
+  const payload = { to: normalizedEmail, subject, html, text };
+
+  try {
+    await sendAuthEmailViaResend(transport, payload);
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    if (!isResendDomainError(msg)) throw e;
+    const emailJs = getEmailJsAuthConfig();
+    if (!emailJs) throw e;
+    console.warn('[authCustomEmails] Resend domain blocked — fallback EmailJS');
+    await sendAuthEmailViaEmailJs(emailJs, payload, link);
+  }
 
   return { enabled: true, sent: true };
 }
@@ -154,6 +163,28 @@ export const sendAuthVerificationEmail = functions
         throw new functions.https.HttpsError(
           'resource-exhausted',
           'Trop de tentatives. Attendez 15 à 60 minutes avant un nouvel envoi.'
+        );
+      }
+      if (
+        msg.includes('unauthorized-continue-uri') ||
+        msg.includes('not allowlisted') ||
+        msg.includes('Domain not allowlisted')
+      ) {
+        throw new functions.https.HttpsError(
+          'failed-precondition',
+          'Domaine proday75.fr non autorisé dans Firebase Auth. Ajoutez-le dans Authorized domains.'
+        );
+      }
+      if (msg.includes('domain is not verified') || msg.includes('Resend 403')) {
+        throw new functions.https.HttpsError(
+          'failed-precondition',
+          'Envoi e-mail temporairement indisponible (domaine Resend). Réessayez dans quelques minutes.'
+        );
+      }
+      if (msg.includes('Resend') && (msg.includes('domain') || msg.includes('403'))) {
+        throw new functions.https.HttpsError(
+          'failed-precondition',
+          'Envoi e-mail temporairement indisponible (domaine Resend). Réessayez dans quelques minutes.'
         );
       }
       console.error('[sendAuthVerificationEmail]', e);

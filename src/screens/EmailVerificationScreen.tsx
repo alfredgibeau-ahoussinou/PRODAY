@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -12,9 +12,14 @@ import { ProDayErrorBanner } from '../components/ui/ProDayErrorBanner';
 import { spacing, radius } from '../theme/designTokens';
 import { useThemedScreen } from '../hooks/useThemedScreen';
 import { authService } from '../services/auth.service';
+import { AUTH_RATE_LIMIT_MESSAGE } from '../utils/authOAuthLink';
+import { consumeVerificationEmailAutoResend } from '../utils/verificationEmailResend';
 import type { AppColors } from '../theme/universeTheme';
 
+const RESEND_COOLDOWN_SEC = 60;
+
 interface EmailVerificationScreenProps {
+  uid: string;
   email: string;
   onCheckVerified: () => Promise<boolean>;
   onResend: () => Promise<void>;
@@ -22,6 +27,7 @@ interface EmailVerificationScreenProps {
 }
 
 export const EmailVerificationScreen: React.FC<EmailVerificationScreenProps> = ({
+  uid,
   email,
   onCheckVerified,
   onResend,
@@ -33,6 +39,46 @@ export const EmailVerificationScreen: React.FC<EmailVerificationScreenProps> = (
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const [autoSending, setAutoSending] = useState(false);
+
+  useEffect(() => {
+    if (!uid || !consumeVerificationEmailAutoResend(uid)) return;
+
+    let cancelled = false;
+    setAutoSending(true);
+    setError(null);
+    void (async () => {
+      try {
+        await onResend();
+        if (!cancelled) {
+          setSent(true);
+          setResendCooldown(RESEND_COOLDOWN_SEC);
+        }
+      } catch (e) {
+        if (!cancelled) {
+          setError(
+            authService.getAuthErrorMessage(e) ||
+              'Premier envoi impossible. Utilisez « Renvoyer l’email » dans quelques minutes.'
+          );
+        }
+      } finally {
+        if (!cancelled) setAutoSending(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [uid, onResend]);
+
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const timer = setInterval(() => {
+      setResendCooldown((sec) => (sec <= 1 ? 0 : sec - 1));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [resendCooldown]);
 
   const handleCheck = async () => {
     setChecking(true);
@@ -42,24 +88,32 @@ export const EmailVerificationScreen: React.FC<EmailVerificationScreenProps> = (
       if (!ok) {
         setError('Email non encore confirmé. Ouvrez le lien reçu puis réessayez.');
       }
-    } catch {
-      setError('Impossible de vérifier le statut. Réessayez.');
+    } catch (e) {
+      setError(
+        authService.getAuthErrorMessage(e) ||
+          'Impossible de vérifier le statut. Réessayez.'
+      );
     } finally {
       setChecking(false);
     }
   };
 
   const handleResend = async () => {
+    if (resendCooldown > 0) return;
     setSending(true);
     setError(null);
     try {
       await onResend();
       setSent(true);
+      setResendCooldown(RESEND_COOLDOWN_SEC);
     } catch (e) {
-      setError(
+      const message =
         authService.getAuthErrorMessage(e) ||
-          'Envoi impossible. Réessayez dans quelques minutes.'
-      );
+        'Envoi impossible. Réessayez dans quelques minutes.';
+      setError(message);
+      if (message === AUTH_RATE_LIMIT_MESSAGE) {
+        setResendCooldown(RESEND_COOLDOWN_SEC * 5);
+      }
     } finally {
       setSending(false);
     }
@@ -87,6 +141,9 @@ export const EmailVerificationScreen: React.FC<EmailVerificationScreenProps> = (
         {sent ? (
           <Text style={styles.sentHint}>Email renvoyé — vérifiez vos spams si besoin.</Text>
         ) : null}
+        {autoSending ? (
+          <Text style={styles.sentHint}>Envoi de l’e-mail de confirmation en cours…</Text>
+        ) : null}
 
         <TouchableOpacity
           style={[styles.primaryBtn, checking && styles.btnDisabled]}
@@ -101,14 +158,18 @@ export const EmailVerificationScreen: React.FC<EmailVerificationScreenProps> = (
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={styles.secondaryBtn}
+          style={[styles.secondaryBtn, (resendCooldown > 0 || autoSending) && styles.btnDisabled]}
           onPress={() => void handleResend()}
-          disabled={sending}
+          disabled={sending || resendCooldown > 0 || autoSending}
         >
           {sending ? (
             <ActivityIndicator color={c.text} />
           ) : (
-            <Text style={styles.secondaryBtnText}>Renvoyer l&apos;email</Text>
+            <Text style={styles.secondaryBtnText}>
+              {resendCooldown > 0
+                ? `Renvoyer l’email (${resendCooldown}s)`
+                : 'Renvoyer l’email'}
+            </Text>
           )}
         </TouchableOpacity>
 

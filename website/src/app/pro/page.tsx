@@ -6,7 +6,7 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { PremiumSection } from "@/components/layout/PremiumSection";
 import { PremiumButton } from "@/components/ui/PremiumButton";
 import { PRO_BRAND } from "@/lib/content";
-import { CAROUSEL_POLES, POLE_IMAGES, POLE_STYLES } from "@/lib/poles";
+import { CAROUSEL_POLES, POLE_IMAGES, POLE_STYLES, poleSectionHref } from "@/lib/poles";
 import { ROUTES } from "@/lib/routes";
 
 export const metadata: Metadata = {
@@ -35,6 +35,7 @@ export default function ProHubPage() {
       />
 
       <PremiumSection
+        id="poles"
         kicker="CHOISIR SON PÔLE"
         title="Où allez-vous ?"
         description="Joueur sous contrat, structure club ou staff métier — sélectionnez le pôle qui correspond à votre rôle."
@@ -47,7 +48,7 @@ export default function ProHubPage() {
             return (
               <Link
                 key={pole.id}
-                href={pole.href}
+                href={poleSectionHref(pole)}
                 className={`group overflow-hidden rounded-3xl ${styles.card} transition hover:ring-2 hover:ring-white/20`}
               >
                 <div className="relative h-44">
@@ -83,7 +84,7 @@ export default function ProHubPage() {
         description="Les marques et sponsors accèdent à l'espace Partenaires — distinct des pôles joueur, club et staff."
         pole="pro_staff"
       >
-        <PremiumButton href={ROUTES.partenaires} variant="outline">
+        <PremiumButton href={`${ROUTES.partenaires}#formules`} variant="outline">
           Espace Partenaires
         </PremiumButton>
       </PremiumSection>

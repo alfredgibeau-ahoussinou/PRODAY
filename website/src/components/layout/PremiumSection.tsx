@@ -30,7 +30,7 @@ export function PremiumSection({
   return (
     <section
       id={id}
-      className={`relative py-16 md:py-24 ${
+      className={`relative py-16 md:py-24 ${id ? "scroll-mt-24" : ""} ${
         poleStyles ? `${poleStyles.surface} ${poleStyles.accentTop}` : "bg-black text-white"
       } ${bordered ? "border-b border-white/8" : ""} ${className}`}
     >

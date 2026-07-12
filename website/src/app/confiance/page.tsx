@@ -22,7 +22,7 @@ export default function TrustPage() {
         image="/images/football-coach-01.jpg"
         dark
       />
-      <VerificationTimeline fullPage />
+      <VerificationTimeline fullPage id="verification" />
       <PremiumSection
         kicker="REJOINDRE"
         title="Prêt pour un écosystème de confiance ?"

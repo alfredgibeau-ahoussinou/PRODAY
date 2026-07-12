@@ -4,7 +4,7 @@ import { ModuleExplorer } from "@/components/ModuleExplorer";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { PremiumSection } from "@/components/layout/PremiumSection";
 import { VerificationTimeline } from "@/components/VerificationTimeline";
-import { POLES } from "@/lib/poles";
+import { POLES, poleSectionHref } from "@/lib/poles";
 import { ROUTES } from "@/lib/routes";
 import Link from "next/link";
 
@@ -27,6 +27,7 @@ export default function FeaturesPage() {
       />
 
       <PremiumSection
+        id="poles"
         kicker="4 PÔLES"
         title="Une fonctionnalité, le bon univers"
         description="Chaque module s'adapte au pôle Joueur, Pro, Santé ou Partenaires — sans mélanger les parcours."
@@ -36,7 +37,7 @@ export default function FeaturesPage() {
           {POLES.map((pole) => (
             <Link
               key={pole.id}
-              href={pole.href}
+              href={poleSectionHref(pole)}
               className="card-premium group rounded-2xl p-6 transition hover:border-white/20"
             >
               <p className="text-xs font-semibold tracking-widest text-white/40">{pole.kicker}</p>
@@ -53,6 +54,7 @@ export default function FeaturesPage() {
       <ModuleExplorer />
       <FeaturesBento extended />
       <PremiumSection
+        id="verification"
         kicker="CONFIANCE"
         title="Confiance intégrée"
         description="Vérification staff, contrôle parental et espace famille — détail sur la page dédiée."

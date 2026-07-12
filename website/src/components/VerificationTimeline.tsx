@@ -9,11 +9,13 @@ import { VERIFICATION_STEPS } from "@/lib/content";
 type VerificationTimelineProps = {
   fullPage?: boolean;
   embedded?: boolean;
+  id?: string;
 };
 
 export function VerificationTimeline({
   fullPage,
   embedded,
+  id,
 }: VerificationTimelineProps) {
   const [step, setStep] = useState(2);
 
@@ -21,11 +23,12 @@ export function VerificationTimeline({
 
   return (
     <section
+      id={id}
       className={
         embedded
-          ? "py-8"
+          ? `py-8${id ? " scroll-mt-24" : ""}`
           : fullPage
-            ? "bg-[#030303] py-12"
+            ? `bg-[#030303] py-12${id ? " scroll-mt-24" : ""}`
             : "border-t border-white/10 bg-[#030303] py-24"
       }
     >

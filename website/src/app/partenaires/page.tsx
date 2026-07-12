@@ -25,6 +25,7 @@ export default function PartenairesPage() {
         dark
       />
       <PremiumSection
+        id="formules"
         kicker="FORMULES"
         title="Trois niveaux de visibilité"
         description="Découverte gratuite pour tester, Territorial pour les marques locales, National Pro pour une couverture élargie."

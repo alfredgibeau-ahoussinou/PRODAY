@@ -82,7 +82,7 @@ export const POLE_FOOTER_LINKS = [
 
 export const EXPLORE_CARDS = [
   {
-    href: ROUTES.features,
+    href: routeWithHash(ROUTES.features, "modules"),
     title: "Fonctionnalités",
     description: "11 piliers produit — Mercato, Fil, Reels, Arena, Sponsors…",
     image: "/showcase/classic-mercato.jpg",
@@ -117,7 +117,7 @@ export const EXPLORE_CARDS = [
     tag: "Export",
   },
   {
-    href: ROUTES.journeys,
+    href: routeWithHash(ROUTES.journeys, "parcours"),
     title: "Parcours par rôle",
     description: "Joueur, recruteur, pôle santé, organisateur ou parent — étape par étape.",
     image: "/images/football-team-01.jpg",
@@ -131,7 +131,7 @@ export const EXPLORE_CARDS = [
     tag: "Quiz",
   },
   {
-    href: ROUTES.trust,
+    href: routeWithHash(ROUTES.trust, "verification"),
     title: "Confiance",
     description: "Vérification diplômes, badges et contrôle parental.",
     image: "/images/football-coach-01.jpg",
@@ -166,7 +166,7 @@ export const EXPLORE_CARDS = [
     tag: "Roadmap",
   },
   {
-    href: ROUTES.partenaires,
+    href: routeWithHash(ROUTES.partenaires, "formules"),
     title: "Espace Partenaires",
     description: "Découverte 0 €, Territorial 49 € ou National Pro 99 €/mois — visibilité clubs.",
     image: "/images/football-club-01.jpg",
@@ -174,14 +174,14 @@ export const EXPLORE_CARDS = [
     accent: true,
   },
   {
-    href: ROUTES.pricing,
+    href: routeWithHash(ROUTES.pricing, "amateur"),
     title: "Tarifs",
     description: "Gratuit et offres Pro — 4 pôles Joueur, Pro, Santé et Partenaires.",
     image: "/showcase/classic-exp-messages.jpg",
     tag: "Tarifs",
   },
   {
-    href: ROUTES.proJoueur,
+    href: routeWithHash(ROUTES.proJoueur, "modules"),
     title: "Pôle Pro Joueur",
     description: "Carrière, visibilité scouting, portfolio et opportunités — foot professionnel.",
     image: "/images/football-pro-01.jpg",
@@ -189,7 +189,7 @@ export const EXPLORE_CARDS = [
     accent: true,
   },
   {
-    href: ROUTES.proClub,
+    href: routeWithHash(ROUTES.proClub, "modules"),
     title: "Pôle Pro Club",
     description: "Structures, équipes, recrutement et vitrine — gérez votre club sur PRODAY.",
     image: "/images/football-club-01.jpg",
@@ -197,7 +197,7 @@ export const EXPLORE_CARDS = [
     accent: true,
   },
   {
-    href: ROUTES.proStaff,
+    href: routeWithHash(ROUTES.proStaff, "modules"),
     title: "Pôle Pro Staff",
     description: "Agent, recruteur, coach pro et organisateur — Mercato Pro et réseau vérifié.",
     image: "/images/football-coach-01.jpg",
@@ -205,7 +205,7 @@ export const EXPLORE_CARDS = [
     accent: true,
   },
   {
-    href: ROUTES.homme,
+    href: routeWithHash(ROUTES.amateur, "modules"),
     title: "Pro Day Man",
     description: "Foot masculin amateur — Mercato M, matchs et CV joueur.",
     image: "/images/football-amateur-01.jpg",
@@ -220,7 +220,7 @@ export const EXPLORE_CARDS = [
     accent: true,
   },
   {
-    href: ROUTES.sante,
+    href: routeWithHash(ROUTES.sante, "modules"),
     title: "Pro Day Santé",
     description: "Kinés, coach mental et nutrition — annuaire vérifié et RDV en ligne.",
     image: "/images/football-health-01.jpg",
@@ -242,6 +242,12 @@ export const EXPLORE_CARDS = [
     tag: "Aide",
   },
 ] as const;
+
+/** Lien vers une page avec ancre de section (scroll précis après navigation). */
+export function routeWithHash(route: string, sectionId: string): string {
+  const base = route.split("#")[0] ?? route;
+  return `${base}#${sectionId}`;
+}
 
 /** URL de la démo interactive pour un univers (homme / woman / pro). */
 export function demoUrlForUniverse(line: ProductLineWeb): string {

@@ -35,6 +35,7 @@ export default function HomePage() {
       <ExploreGrid />
       <TestimonialsCarousel />
       <Section
+        id="quiz"
         kicker="QUIZ"
         title="Quel pôle ProDay vous correspond ?"
         description="3 questions — découvrez votre pôle : Joueur, Pro, Santé ou Partenaires."
@@ -52,6 +53,7 @@ export default function HomePage() {
         </div>
       </Section>
       <Section
+        id="faq"
         kicker="FAQ"
         title="Questions fréquentes"
         description="Tarifs, partenaires, Reels et lancement — les réponses essentielles."

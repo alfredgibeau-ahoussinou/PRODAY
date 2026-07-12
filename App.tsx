@@ -225,6 +225,7 @@ function AppShell() {
   if (!authLoading && profile && needsEmailVerification) {
     return (
       <EmailVerificationScreen
+        uid={profile.uid}
         email={profile.email}
         onCheckVerified={refreshFirebaseUser}
         onResend={resendEmailVerification}

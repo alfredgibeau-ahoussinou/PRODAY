@@ -6,17 +6,24 @@ import Link from "next/link";
 import { ArrowRight, Play } from "lucide-react";
 import { BRAND } from "@/lib/content";
 import { ROUTES } from "@/lib/routes";
+import { CAROUSEL_POLES, poleSectionHref } from "@/lib/poles";
 import { PremiumButton } from "@/components/ui/PremiumButton";
 import { Kicker } from "@/components/ui/Kicker";
 
-const HERO_SLIDES = [
-  { num: "01", label: "Amateur", href: ROUTES.amateur },
-  { num: "02", label: "Supporter", href: ROUTES.supporter },
-  { num: "03", label: "Santé", href: ROUTES.sante },
-  { num: "04", label: "Pro Joueur", href: ROUTES.proJoueur },
-  { num: "05", label: "Pro Club", href: ROUTES.proClub },
-  { num: "06", label: "Pro Staff", href: ROUTES.proStaff },
+const HERO_LABELS = [
+  "Amateur",
+  "Supporter",
+  "Santé",
+  "Pro Joueur",
+  "Pro Club",
+  "Pro Staff",
 ] as const;
+
+const HERO_SLIDES = CAROUSEL_POLES.map((pole, i) => ({
+  num: String(i + 1).padStart(2, "0"),
+  label: HERO_LABELS[i] ?? pole.title,
+  href: poleSectionHref(pole),
+}));
 
 export function HeroSection() {
   return (
@@ -72,7 +79,7 @@ export function HeroSection() {
             className="mt-6 flex flex-wrap justify-center gap-2 sm:mt-9 sm:gap-3 lg:justify-start"
           >
             <PremiumButton href={ROUTES.betaWaitlist}>Accès anticipé</PremiumButton>
-            <PremiumButton href={ROUTES.amateur} variant="outline">
+            <PremiumButton href={poleSectionHref(CAROUSEL_POLES[0]!)} variant="outline">
               Pôle Amateur
             </PremiumButton>
             <PremiumButton href={ROUTES.demo} variant="outline">

@@ -279,4 +279,12 @@ export function poleById(id: PoleId): PoleDefinition {
   return pole;
 }
 
+/** Lien vers une section précise d'une page pôle (ex. #modules). */
+export function poleSectionHref(
+  pole: Pick<PoleDefinition, "href">,
+  section = "modules",
+): string {
+  return `${pole.href}#${section}`;
+}
+
 export { SPONSOR_PRICING_TIERS };

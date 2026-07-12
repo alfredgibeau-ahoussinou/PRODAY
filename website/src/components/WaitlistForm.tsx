@@ -68,7 +68,7 @@ export function WaitlistForm({ fullPage, initialRole }: WaitlistFormProps) {
   ];
 
   return (
-    <section className={fullPage ? "py-12" : "scroll-mt-24 py-24"}>
+    <section id={fullPage ? undefined : "inscription"} className={fullPage ? "py-12" : "scroll-mt-24 py-24"}>
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <motion.div
           initial={{ opacity: 0, y: 40 }}

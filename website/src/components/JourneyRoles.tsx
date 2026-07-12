@@ -65,7 +65,10 @@ export function JourneyRoles({ fullPage }: JourneyRolesProps) {
   const styles = POLE_STYLES[activePole];
 
   return (
-    <section className={`bg-[#030303] ${fullPage ? "py-12" : "scroll-mt-24 py-24"}`}>
+    <section
+      id={fullPage ? "parcours" : undefined}
+      className={`bg-[#030303] ${fullPage ? "scroll-mt-24 py-12" : "scroll-mt-24 py-24"}`}
+    >
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         {!fullPage && (
           <Reveal>

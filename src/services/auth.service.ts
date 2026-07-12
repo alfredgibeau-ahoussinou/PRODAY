@@ -32,9 +32,11 @@ import { AuthNeedsProfileError, AuthLinkPasswordRequiredError } from '../utils/a
 import {
   decodeJwtEmail,
   getFirebaseAuthErrorCode,
+  humanizeAuthErrorText,
   normalizeAuthEmail,
   oauthProviderLabel,
 } from '../utils/authOAuthLink';
+import { markVerificationEmailResend } from '../utils/verificationEmailResend';
 
 export { ProductLineMismatchError } from '../utils/productLineAccess';
 export { AuthNeedsProfileError, AuthLinkPasswordRequiredError } from '../utils/authErrors';
@@ -59,7 +61,8 @@ async function tryCustomVerificationEmail(): Promise<boolean> {
       {},
       AUTH_EMAIL_FUNCTIONS_REGION
     );
-    if (result.enabled) return true;
+    if (result.enabled && result.sent) return true;
+    if (result.enabled && !result.sent) return true;
   } catch (e) {
     // Ne pas retomber sur sendEmailVerification() si la callable a répondu :
     // double appel = rate-limit Firebase (TOO_MANY_ATTEMPTS_TRY_LATER).
@@ -86,9 +89,11 @@ async function sendVerificationEmailForUser(user: FirebaseAuthUser): Promise<voi
         : '';
     const mapped = mapAuthError(code);
     throw new AuthEmailSendError(
-      mapped ||
-        (e instanceof Error && e.message ? e.message : '') ||
-        'Impossible d’envoyer l’e-mail de vérification. Réessayez dans quelques minutes.'
+      humanizeAuthErrorText(
+        mapped ||
+          (e instanceof Error && e.message ? e.message : '') ||
+          'Impossible d’envoyer l’e-mail de vérification. Réessayez dans quelques minutes.'
+      )
     );
   }
 }
@@ -332,10 +337,10 @@ export const authService = {
     try {
       await sendVerificationEmailForUser(cred.user);
     } catch (e) {
+      markVerificationEmailResend(cred.user.uid);
       if (__DEV__) {
         console.warn('[auth] verification email at signup:', e);
       }
-      // Le profil peut quand même être créé ; l'utilisateur pourra renvoyer le mail.
     }
 
     const registrationLine: ProductLineId = input.product_line ?? 'amateur';
@@ -453,9 +458,10 @@ export const authService = {
         ? String((error as { code: string }).code)
         : '';
     const mapped = mapAuthError(code);
-    if (mapped) return mapped;
-    if (error instanceof Error && error.message) return error.message;
-    if (__DEV__ && code) return `Erreur (${code}). Réessayez.`;
-    return 'Erreur de connexion. Réessayez.';
+    const raw =
+      mapped ||
+      (error instanceof Error && error.message ? error.message : '') ||
+      (__DEV__ && code ? `Erreur (${code}). Réessayez.` : 'Erreur de connexion. Réessayez.');
+    return humanizeAuthErrorText(raw);
   },
 };
