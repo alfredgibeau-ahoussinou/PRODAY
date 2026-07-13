@@ -42,8 +42,8 @@ export function HeroSection() {
         <div className="absolute inset-0 hero-overlay-side hidden md:block" />
       </div>
 
-      <div className="relative mx-auto flex max-h-[100dvh] min-h-[100dvh] max-w-7xl flex-col justify-end px-4 pb-14 pt-24 text-center sm:px-6 sm:pb-20 sm:pt-28 lg:max-h-none lg:min-h-screen lg:flex-row lg:items-end lg:justify-between lg:pb-24 lg:pt-32 lg:text-left">
-        <div className="mx-auto max-w-2xl lg:mx-0 lg:pb-8">
+      <div className="relative mx-auto flex max-h-[100dvh] min-h-[100dvh] max-w-7xl flex-col px-4 pt-20 text-center sm:px-6 sm:pt-24 lg:max-h-none lg:min-h-screen lg:flex-row lg:items-end lg:justify-between lg:pb-24 lg:pt-32 lg:text-left">
+        <div className="mx-auto flex max-w-2xl flex-1 flex-col justify-center max-lg:-translate-y-8 sm:max-lg:-translate-y-6 lg:mx-0 lg:flex-none lg:translate-y-0 lg:pb-8">
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
@@ -111,7 +111,7 @@ export function HeroSection() {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4, duration: 0.5 }}
-          className="scroll-snap-x -mx-4 mt-6 flex w-full gap-2 overflow-x-auto px-4 pb-1 lg:hidden"
+          className="scroll-snap-x -mx-4 mt-4 flex w-full shrink-0 gap-2 overflow-x-auto px-4 pb-6 sm:pb-8 lg:hidden"
           aria-label="Les 6 pôles ProDay"
         >
           {HERO_SLIDES.map((slide, i) => (
