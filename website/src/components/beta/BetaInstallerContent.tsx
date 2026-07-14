@@ -11,7 +11,7 @@ import {
   Shield,
 } from "lucide-react";
 import { BetaPageFrame, SectionKicker } from "@/components/beta/BetaSiteShell";
-import { BETA_APK_URL, BETA_APK_AVAILABLE, BETA_APP_VERSION, BETA_TESTFLIGHT_URL } from "@/lib/betaContent";
+import { BETA_APK_URL, BETA_APP_VERSION, BETA_TESTFLIGHT_URL } from "@/lib/betaContent";
 import { ROUTES } from "@/lib/routes";
 
 function StepList({ steps }: { steps: string[] }) {
@@ -40,15 +40,6 @@ function DownloadButton({ href, label }: { href: string; label: string }) {
       {label}
       <ExternalLink size={14} />
     </a>
-  );
-}
-
-function AndroidPendingNotice() {
-  return (
-    <p className="mt-6 rounded-2xl border border-dashed border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-white/45">
-      L&apos;APK Android sera disponible ici, sur l&apos;onglet Installer de votre espace bêta —
-      pas par email. Revenez sur cette page une fois votre inscription validée.
-    </p>
   );
 }
 
@@ -129,7 +120,7 @@ function PlatformSection({
 }
 
 export function BetaInstallerContent() {
-  const apkAvailable = BETA_APK_AVAILABLE;
+  const apkUrl = BETA_APK_URL;
   const testflightAvailable = Boolean(BETA_TESTFLIGHT_URL);
 
   return (
@@ -145,13 +136,13 @@ export function BetaInstallerContent() {
         l&apos;invitation TestFlight arrive par email Apple.
       </p>
 
-      {apkAvailable ? (
+      {apkUrl ? (
         <div className="mb-8 rounded-3xl border border-cyan-500/30 bg-cyan-950/25 p-6">
           <p className="text-sm font-semibold text-white">APK Android prêt à télécharger</p>
           <p className="mt-1 text-sm text-white/55">
-            Utilisez le bouton ci-dessous sur votre téléphone Android — c&apos;est le seul canal
-            officiel pour obtenir l&apos;APK ProDay.
+            Téléchargez directement depuis cette page — aucun email requis.
           </p>
+          <DownloadButton href={apkUrl} label="Télécharger l'APK Android" />
         </div>
       ) : null}
 
@@ -160,8 +151,8 @@ export function BetaInstallerContent() {
           platform="android"
           icon={<Play size={22} className="text-white" />}
           title="Android — APK"
-          subtitle="Installation directe, hors Google Play Store"
-          available={apkAvailable}
+          subtitle="Téléchargement direct depuis cette page"
+          available
         >
           <StepList
             steps={[
@@ -172,16 +163,10 @@ export function BetaInstallerContent() {
             ]}
           />
 
-          {apkAvailable ? (
-            <>
-              <p className="mt-4 text-xs font-medium uppercase tracking-wider text-cyan-300/80">
-                Build bêta · v{BETA_APP_VERSION}
-              </p>
-              <DownloadButton href={BETA_APK_URL} label="Télécharger l'APK Android" />
-            </>
-          ) : (
-            <AndroidPendingNotice />
-          )}
+          <p className="mt-4 text-xs font-medium uppercase tracking-wider text-cyan-300/80">
+            Build bêta · v{BETA_APP_VERSION}
+          </p>
+          <DownloadButton href={apkUrl} label="Télécharger l'APK Android" />
 
           <div className="mt-8 border-t border-white/10 pt-6">
             <div className="flex items-center gap-2">

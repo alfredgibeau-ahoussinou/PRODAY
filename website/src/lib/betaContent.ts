@@ -1,7 +1,6 @@
 import { existsSync } from "node:fs";
 import path from "node:path";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL?.trim() || "https://proday75.fr";
 const DEFAULT_APK_PATH = "/downloads/proday-beta.apk";
 
 function resolveBetaApkUrl(): string {
@@ -10,10 +9,11 @@ function resolveBetaApkUrl(): string {
 
   const localApk = path.join(process.cwd(), "public", "downloads", "proday-beta.apk");
   if (existsSync(localApk)) {
-    return `${SITE_URL}${DEFAULT_APK_PATH}`;
+    return DEFAULT_APK_PATH;
   }
 
-  return "";
+  // Lien sur le site — redirect Netlify vers Firebase Storage en production.
+  return DEFAULT_APK_PATH;
 }
 
 export const BETA_APK_URL = resolveBetaApkUrl();
