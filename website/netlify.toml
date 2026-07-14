@@ -5,9 +5,18 @@
 [build.environment]
   NODE_VERSION = "20"
   NPM_FLAGS = "--include=dev"
+  NEXT_PUBLIC_SITE_URL = "https://proday75.fr"
+  NEXT_PUBLIC_BETA_APP_VERSION = "1.0.0"
+  NEXT_PUBLIC_BETA_APK_URL = "https://storage.googleapis.com/proday-155b0.firebasestorage.app/beta/proday-beta.apk"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
+
+[[redirects]]
+  from = "/downloads/proday-beta.apk"
+  to = "https://storage.googleapis.com/proday-155b0.firebasestorage.app/beta/proday-beta.apk"
+  status = 302
+  force = true
 
 [[redirects]]
   from = "/*"
@@ -40,3 +49,10 @@
     Cross-Origin-Opener-Policy = "same-origin"
     Cross-Origin-Resource-Policy = "same-origin"
     Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https://api.emailjs.com https://*.cloudfunctions.net; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests"
+
+[[headers]]
+  for = "/downloads/*"
+  [headers.values]
+    Content-Type = "application/vnd.android.package-archive"
+    Content-Disposition = "attachment; filename=\"proday-beta.apk\""
+    Cache-Control = "public, max-age=3600"
