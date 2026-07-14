@@ -1,13 +1,19 @@
 import Constants, { ExecutionEnvironment } from 'expo-constants';
 import { Platform } from 'react-native';
 
-/** Identifiants OAuth Google (console Google Cloud / Firebase). */
-export const googleOAuth = {
-  expoClientId: process.env.EXPO_PUBLIC_GOOGLE_EXPO_CLIENT_ID,
-  iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
-  androidClientId: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,
-  webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
-} as const;
+function readGoogleOAuth() {
+  return {
+    expoClientId: process.env.EXPO_PUBLIC_GOOGLE_EXPO_CLIENT_ID,
+    iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
+    androidClientId: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,
+    webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+  } as const;
+}
+
+/** Identifiants OAuth Google (console Google Cloud / Firebase) — lecture à l'appel. */
+export function getGoogleOAuthEnv() {
+  return readGoogleOAuth();
+}
 
 /** App lancée dans Expo Go (redirect `exp://`, pas le schéma natif). */
 export function isExpoGo(): boolean {
@@ -40,6 +46,7 @@ export type GoogleAuthRequestConfig = {
  * - **Dev build / store** : clients natifs iOS / Android + Web client pour Firebase.
  */
 export function getGoogleAuthRequestConfig(): GoogleAuthRequestConfig | null {
+  const googleOAuth = readGoogleOAuth();
   const web = emptyToUndefined(googleOAuth.webClientId);
   const iosExplicit = emptyToUndefined(googleOAuth.iosClientId);
   const expo = emptyToUndefined(googleOAuth.expoClientId);

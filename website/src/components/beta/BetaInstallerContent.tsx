@@ -11,7 +11,7 @@ import {
   Shield,
 } from "lucide-react";
 import { BetaPageFrame, SectionKicker } from "@/components/beta/BetaSiteShell";
-import { BETA_APK_URL, BETA_TESTFLIGHT_URL } from "@/lib/betaContent";
+import { BETA_APK_URL, BETA_APK_AVAILABLE, BETA_APP_VERSION, BETA_TESTFLIGHT_URL } from "@/lib/betaContent";
 import { ROUTES } from "@/lib/routes";
 
 function StepList({ steps }: { steps: string[] }) {
@@ -120,7 +120,7 @@ function PlatformSection({
 }
 
 export function BetaInstallerContent() {
-  const apkAvailable = Boolean(BETA_APK_URL);
+  const apkAvailable = BETA_APK_AVAILABLE;
   const testflightAvailable = Boolean(BETA_TESTFLIGHT_URL);
 
   return (
@@ -153,7 +153,12 @@ export function BetaInstallerContent() {
           />
 
           {apkAvailable ? (
-            <DownloadButton href={BETA_APK_URL} label="Télécharger l'APK Android" />
+            <>
+              <p className="mt-4 text-xs font-medium uppercase tracking-wider text-cyan-300/80">
+                Build bêta · v{BETA_APP_VERSION}
+              </p>
+              <DownloadButton href={BETA_APK_URL} label="Télécharger l'APK Android" />
+            </>
           ) : (
             <PendingLinkNotice />
           )}

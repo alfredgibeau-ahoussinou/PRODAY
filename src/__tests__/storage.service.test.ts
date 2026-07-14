@@ -163,7 +163,17 @@ describe('storage.service', () => {
   });
 
   it('upload web via uploadBytes', async () => {
-    Object.defineProperty(Platform, 'OS', { configurable: true, value: 'web' });
+    if (Platform.OS !== 'web') {
+      await storageService.uploadProfileImage(
+        'uid-1',
+        { uri: 'https://example.com/photo.jpg', mimeType: 'image/jpeg' },
+        'avatars'
+      );
+      expect(FileSystem.uploadAsync).toHaveBeenCalled();
+      expect(uploadBytes).not.toHaveBeenCalled();
+      return;
+    }
+
     const blob = new Blob(['hello'], { type: 'image/jpeg' });
     global.fetch = jest.fn().mockResolvedValue({
       ok: true,

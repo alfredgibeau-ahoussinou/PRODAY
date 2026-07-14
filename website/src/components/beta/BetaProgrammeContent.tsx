@@ -2,7 +2,12 @@ import Link from "next/link";
 import { Sparkles, Smartphone } from "lucide-react";
 import { BetaPageFrame, SectionKicker } from "@/components/beta/BetaSiteShell";
 import type { BetaAccessSession } from "@/lib/betaAccess";
-import { BETA_FEATURES, BETA_TIMELINE } from "@/lib/betaContent";
+import {
+  BETA_APK_AVAILABLE,
+  BETA_FEATURES,
+  getBetaCurrentStep,
+  getBetaTimeline,
+} from "@/lib/betaContent";
 import { CAROUSEL_POLES, SPONSOR_POLE } from "@/lib/poles";
 import { ROUTES } from "@/lib/routes";
 
@@ -11,6 +16,9 @@ type BetaProgrammeContentProps = {
 };
 
 export function BetaProgrammeContent({ session }: BetaProgrammeContentProps) {
+  const timeline = getBetaTimeline();
+  const currentStep = getBetaCurrentStep();
+
   return (
     <BetaPageFrame
       pathname={ROUTES.betaProgramme}
@@ -18,6 +26,23 @@ export function BetaProgrammeContent({ session }: BetaProgrammeContentProps) {
       title="Programme et périmètre de test"
       description="Comprenez le déroulement de la bêta, le calendrier et les six pôles que vous pouvez explorer."
     >
+      {BETA_APK_AVAILABLE ? (
+        <div className="mb-8 rounded-3xl border border-cyan-500/30 bg-cyan-950/25 p-6 sm:flex sm:items-center sm:justify-between sm:gap-6">
+          <div>
+            <p className="text-sm font-semibold text-white">APK Android disponible</p>
+            <p className="mt-1 text-sm text-white/55">
+              Téléchargez ProDay sur votre téléphone Android — guide pas à pas sur la page Installer.
+            </p>
+          </div>
+          <Link
+            href={ROUTES.betaInstaller}
+            className="mt-4 inline-flex min-h-11 items-center justify-center rounded-full bg-[var(--proday-accent)] px-6 py-3 text-sm font-bold text-black transition hover:bg-cyan-300 sm:mt-0"
+          >
+            Installer l&apos;app
+          </Link>
+        </div>
+      ) : null}
+
       <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-8">
         <SectionKicker>Qu&apos;est-ce que la bêta ProDay ?</SectionKicker>
         <p className="mt-4 max-w-3xl text-sm leading-relaxed text-white/65">
@@ -47,11 +72,13 @@ export function BetaProgrammeContent({ session }: BetaProgrammeContentProps) {
       <div className="mt-8 rounded-3xl border border-white/10 bg-white/[0.03] p-8">
         <SectionKicker>Calendrier de la bêta</SectionKicker>
         <p className="mt-4 max-w-3xl text-sm leading-relaxed text-white/65">
-          La bêta se déroule en plusieurs étapes. Vous êtes actuellement à l&apos;étape 1 — les
-          builds mobiles arrivent par vagues selon votre profil ({session.roleLabel}).
+          La bêta se déroule en plusieurs étapes. Vous êtes actuellement à l&apos;étape {currentStep}
+          {currentStep === 2 && BETA_APK_AVAILABLE
+            ? " — l'APK Android est prêt, rendez-vous sur Installer."
+            : ` — les builds mobiles arrivent par vagues selon votre profil (${session.roleLabel}).`}
         </p>
         <ol className="mt-6 space-y-5">
-          {BETA_TIMELINE.map(({ step, title, description, done }) => (
+          {timeline.map(({ step, title, description, done }) => (
             <li key={step} className="flex gap-4">
               <div
                 className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold ${

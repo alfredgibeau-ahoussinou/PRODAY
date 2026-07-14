@@ -1,0 +1,2 @@
+# Les APK bêta sont générés localement ou via EAS, puis copiés ici avant déploiement.
+# Voir : npm run android:apk:beta

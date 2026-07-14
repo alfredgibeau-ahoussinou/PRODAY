@@ -3,11 +3,16 @@ website/node_modules/
 website/.next/
 .expo/
 dist/
+android/local.properties
+android/app/build/
 .env
 .env.local
 .env.*.local
 secrets/
 **/secrets/
+credentials.json
+.env.eas-preview
+*.keystore
 *.local
 .DS_Store
 .firebase/
@@ -30,6 +35,9 @@ docs/PRODAY_Restant_et_Ameliorations.tex
 
 # Local Netlify folder
 .netlify
+
+# APK bêta (hébergé sur Firebase Storage — trop volumineux pour Git)
+website/public/downloads/*.apk
 
 # Certificats SSL (IONOS / Netlify) — ne jamais committer
 *.key

@@ -1,6 +1,28 @@
-export const BETA_APK_URL = process.env.NEXT_PUBLIC_BETA_APK_URL?.trim() ?? "";
+import { existsSync } from "node:fs";
+import path from "node:path";
+
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL?.trim() || "https://proday75.fr";
+const DEFAULT_APK_PATH = "/downloads/proday-beta.apk";
+
+function resolveBetaApkUrl(): string {
+  const fromEnv = process.env.NEXT_PUBLIC_BETA_APK_URL?.trim();
+  if (fromEnv) return fromEnv;
+
+  const localApk = path.join(process.cwd(), "public", "downloads", "proday-beta.apk");
+  if (existsSync(localApk)) {
+    return `${SITE_URL}${DEFAULT_APK_PATH}`;
+  }
+
+  return "";
+}
+
+export const BETA_APK_URL = resolveBetaApkUrl();
+export const BETA_APK_AVAILABLE = Boolean(BETA_APK_URL);
+
 export const BETA_TESTFLIGHT_URL =
   process.env.NEXT_PUBLIC_BETA_TESTFLIGHT_URL?.trim() ?? "";
+
+export const BETA_APP_VERSION = process.env.NEXT_PUBLIC_BETA_APP_VERSION?.trim() || "1.0.0";
 
 export const BETA_FEATURES = [
   "Mercato — annonces, candidatures et suivi des réponses",
@@ -11,7 +33,7 @@ export const BETA_FEATURES = [
   "Parcours par rôle — expérience adaptée à votre profil",
 ] as const;
 
-export const BETA_TIMELINE = [
+const BETA_TIMELINE_BASE = [
   {
     step: 1,
     title: "Inscription confirmée",
@@ -41,6 +63,24 @@ export const BETA_TIMELINE = [
     done: false,
   },
 ] as const;
+
+/** Calendrier bêta — l'étape installation passe en « done » dès que l'APK est disponible. */
+export function getBetaTimeline() {
+  const installReady = BETA_APK_AVAILABLE || Boolean(BETA_TESTFLIGHT_URL);
+  return BETA_TIMELINE_BASE.map((item) =>
+    item.step === 2 ? { ...item, done: installReady || item.done } : item,
+  );
+}
+
+/** Étape courante (1–4) pour affichage dans le programme. */
+export function getBetaCurrentStep(): number {
+  const timeline = getBetaTimeline();
+  const firstPending = timeline.find((item) => !item.done);
+  return firstPending?.step ?? timeline[timeline.length - 1]!.step;
+}
+
+/** @deprecated Utiliser getBetaTimeline() pour tenir compte de l'APK disponible. */
+export const BETA_TIMELINE = BETA_TIMELINE_BASE;
 
 export const BETA_FAQ = [
   {

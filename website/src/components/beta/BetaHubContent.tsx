@@ -11,7 +11,7 @@ import {
 import { PremiumButton } from "@/components/ui/PremiumButton";
 import { BetaPageFrame, SectionKicker } from "@/components/beta/BetaSiteShell";
 import type { BetaAccessSession } from "@/lib/betaAccess";
-import { BETA_TIMELINE } from "@/lib/betaContent";
+import { getBetaTimeline } from "@/lib/betaContent";
 import { ROUTES } from "@/lib/routes";
 
 const HUB_CARDS = [
@@ -40,6 +40,8 @@ type BetaHubContentProps = {
 };
 
 export function BetaHubContent({ session }: BetaHubContentProps) {
+  const timeline = getBetaTimeline();
+
   return (
     <BetaPageFrame
       pathname={ROUTES.beta}
@@ -97,7 +99,7 @@ export function BetaHubContent({ session }: BetaHubContentProps) {
       <div className="mt-8 rounded-3xl border border-white/10 bg-white/[0.03] p-8">
         <SectionKicker>Où en est la bêta ?</SectionKicker>
         <ol className="mt-6 space-y-5">
-          {BETA_TIMELINE.map(({ step, title, description, done }) => (
+          {timeline.map(({ step, title, description, done }) => (
             <li key={step} className="flex gap-4">
               <div
                 className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold ${

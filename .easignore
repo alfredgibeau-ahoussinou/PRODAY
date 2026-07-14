@@ -1,0 +1,39 @@
+# Dossiers hors app mobile Android
+ios/
+website/
+functions/
+docs/
+e2e/
+.maestro/
+scripts/
+firebase/
+.github/
+.cursor/
+
+# Artefacts & caches
+dist/
+.netlify/
+.expo/
+android/app/build/
+android/build/
+android/.gradle/
+android/local.properties
+functions/lib/
+node_modules/
+
+# Git
+.git/
+
+# Secrets locaux (credentials envoyés séparément par EAS CLI)
+secrets/
+credentials.json
+.env
+.env.*
+!.env.example
+
+# Fichiers lourds non embarqués dans l'APK
+*.log
+firestore-debug.log
+assets/social/
+assets/mockups/
+assets/generated/
