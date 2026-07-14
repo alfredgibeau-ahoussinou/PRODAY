@@ -43,11 +43,20 @@ function DownloadButton({ href, label }: { href: string; label: string }) {
   );
 }
 
-function PendingLinkNotice() {
+function AndroidPendingNotice() {
   return (
     <p className="mt-6 rounded-2xl border border-dashed border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-white/45">
-      Le lien vous sera envoyé par email — surveillez votre boîte de réception (et les spams).
-      Cette page affichera le bouton de téléchargement dès que le lien public sera activé.
+      L&apos;APK Android sera disponible ici, sur l&apos;onglet Installer de votre espace bêta —
+      pas par email. Revenez sur cette page une fois votre inscription validée.
+    </p>
+  );
+}
+
+function TestFlightPendingNotice() {
+  return (
+    <p className="mt-6 rounded-2xl border border-dashed border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-white/45">
+      L&apos;invitation TestFlight vous sera envoyée par email Apple sur l&apos;adresse de votre
+      inscription bêta. Surveillez votre boîte de réception (et les spams).
     </p>
   );
 }
@@ -107,7 +116,7 @@ function PlatformSection({
             ) : (
               <span className="inline-flex items-center gap-1 rounded-full bg-white/5 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white/45">
                 <Clock size={10} />
-                Lien par email
+                {platform === "android" ? "Bientôt ici" : "Invitation email"}
               </span>
             )}
           </div>
@@ -131,9 +140,20 @@ export function BetaInstallerContent() {
       description="Guides pas à pas pour Android (APK) et iOS (TestFlight), avec dépannage des problèmes courants."
     >
       <p className="mb-8 max-w-3xl text-sm leading-relaxed text-white/65">
-        Les builds mobiles sont distribués en dehors des stores publics pendant la bêta. Suivez le
-        guide correspondant à votre appareil — iPhone/iPad pour iOS, téléphone Android pour l&apos;APK.
+        Les builds mobiles sont distribués en dehors des stores publics pendant la bêta. Sur Android,
+        téléchargez l&apos;APK directement depuis cette page — aucun envoi par email. Sur iOS,
+        l&apos;invitation TestFlight arrive par email Apple.
       </p>
+
+      {apkAvailable ? (
+        <div className="mb-8 rounded-3xl border border-cyan-500/30 bg-cyan-950/25 p-6">
+          <p className="text-sm font-semibold text-white">APK Android prêt à télécharger</p>
+          <p className="mt-1 text-sm text-white/55">
+            Utilisez le bouton ci-dessous sur votre téléphone Android — c&apos;est le seul canal
+            officiel pour obtenir l&apos;APK ProDay.
+          </p>
+        </div>
+      ) : null}
 
       <div className="space-y-8">
         <PlatformSection
@@ -146,7 +166,7 @@ export function BetaInstallerContent() {
           <StepList
             steps={[
               "Sur votre téléphone Android, ouvrez Réglages → Sécurité (ou Applications) et activez « Installer des applications inconnues » pour votre navigateur ou gestionnaire de fichiers.",
-              "Téléchargez le fichier APK via le bouton ci-dessous ou le lien reçu par email ProDay. Attendez la fin du téléchargement (fichier .apk).",
+              "Depuis votre téléphone Android, ouvrez cette page Installer dans votre espace bêta et appuyez sur « Télécharger l'APK Android ». Attendez la fin du téléchargement (fichier .apk).",
               "Ouvrez le fichier téléchargé depuis la barre de notifications ou l'application Fichiers, puis appuyez sur « Installer ».",
               "Une fois installée, ouvrez ProDay, connectez-vous avec le même email que votre inscription bêta et acceptez les permissions demandées (notifications, stockage si nécessaire).",
             ]}
@@ -160,7 +180,7 @@ export function BetaInstallerContent() {
               <DownloadButton href={BETA_APK_URL} label="Télécharger l'APK Android" />
             </>
           ) : (
-            <PendingLinkNotice />
+            <AndroidPendingNotice />
           )}
 
           <div className="mt-8 border-t border-white/10 pt-6">
@@ -195,7 +215,7 @@ export function BetaInstallerContent() {
               <TroubleshootBlock
                 title="Mise à jour de l'APK"
                 items={[
-                  "Téléchargez la nouvelle version depuis ce hub ou l'email de mise à jour.",
+                  "Téléchargez la nouvelle version depuis cet onglet Installer.",
                   "Installez par-dessus l'ancienne version — vos données de connexion sont conservées.",
                 ]}
               />
@@ -223,7 +243,7 @@ export function BetaInstallerContent() {
           {testflightAvailable ? (
             <DownloadButton href={BETA_TESTFLIGHT_URL} label="Ouvrir TestFlight" />
           ) : (
-            <PendingLinkNotice />
+            <TestFlightPendingNotice />
           )}
 
           <div className="mt-8 border-t border-white/10 pt-6">
@@ -273,8 +293,9 @@ export function BetaInstallerContent() {
           <div>
             <p className="text-sm font-semibold text-white">Sécurité & confiance</p>
             <p className="mt-2 text-sm leading-relaxed text-white/55">
-              Ne téléchargez ProDay que depuis ce hub officiel, l&apos;email ProDay ou TestFlight
-              Apple. N&apos;installez jamais un APK provenant d&apos;une source tierce. En cas de
+              Ne téléchargez l&apos;APK ProDay que depuis cet onglet Installer officiel. Sur iOS,
+              utilisez uniquement TestFlight Apple. N&apos;installez jamais un APK provenant
+              d&apos;une source tierce. En cas de
               doute, contactez{" "}
               <a href="mailto:support@proday.app" className="text-[var(--proday-accent)] underline">
                 support@proday.app

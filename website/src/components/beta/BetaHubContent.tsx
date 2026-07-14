@@ -52,9 +52,9 @@ export function BetaHubContent({ session }: BetaHubContentProps) {
       <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-8">
         <SectionKicker>Votre espace beta-testeur</SectionKicker>
         <p className="mt-4 max-w-3xl text-sm leading-relaxed text-white/65">
-          Merci de faire partie des premiers à tester ProDay. Explorez les six pôles, installez
-          l&apos;app mobile dès réception des liens et partagez vos retours — chaque message est
-          lu par l&apos;équipe produit avant le lancement public.
+          Merci de faire partie des premiers à tester ProDay. Explorez les six pôles, téléchargez
+          l&apos;APK Android depuis l&apos;onglet Installer et partagez vos retours — chaque message
+          est lu par l&apos;équipe produit avant le lancement public.
         </p>
         <div className="mt-6 grid gap-4 sm:grid-cols-3">
           {[

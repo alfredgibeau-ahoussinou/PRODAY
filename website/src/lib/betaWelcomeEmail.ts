@@ -41,6 +41,13 @@ function buildBetaAccessUrl(site: string, accessToken?: string): string {
   return `${site}/beta/programme`;
 }
 
+function buildBetaInstallerUrl(site: string, accessToken?: string): string {
+  if (accessToken?.trim()) {
+    return `${site}/beta/installer?token=${encodeURIComponent(accessToken.trim())}`;
+  }
+  return `${site}/beta/installer`;
+}
+
 export function buildBetaWelcomeEmail(params: BetaWelcomeEmailParams): {
   subject: string;
   html: string;
@@ -57,12 +64,14 @@ export function buildBetaWelcomeEmail(params: BetaWelcomeEmailParams): {
     "ProDay est l'écosystème foot amateur et semi-pro : Mercato, recruteurs vérifiés, matchs, covoiturage, pôle santé, ProDay Shop et CV joueur — trois univers Man, Woman et Pro.",
     "",
     "Prochaines étapes :",
-    "• Vous recevrez des nouvelles sur l'avancement de l'app et les dates de test.",
-    "• Vous serez contacté en priorité dès l'ouverture de la bêta iOS et Android.",
+    "• Accédez à votre espace bêta via le lien ci-dessous.",
+    "• Sur Android : téléchargez l'APK depuis l'onglet Installer — pas par email.",
+    "• Sur iOS : vous recevrez une invitation TestFlight par email Apple.",
     "• En attendant, explorez le site : démo interactive, parcours recruteurs, Shop et feuille de route.",
     "",
     `Site : ${site}`,
-    `Page bêta : ${buildBetaAccessUrl(site, params.accessToken)}`,
+    `Espace bêta : ${buildBetaAccessUrl(site, params.accessToken)}`,
+    `Installer l'APK : ${buildBetaInstallerUrl(site, params.accessToken)}`,
     "",
     "À très bientôt sur le terrain,",
     "L'équipe ProDay",
@@ -107,19 +116,22 @@ export function buildBetaWelcomeEmail(params: BetaWelcomeEmailParams): {
                   <td style="padding:20px 24px;">
                     <p style="margin:0 0 12px;font-size:13px;font-weight:700;color:#0a0a0a;text-transform:uppercase;letter-spacing:0.06em;">Ce qui vous attend</p>
                     <ul style="margin:0;padding-left:18px;font-size:14px;line-height:1.7;color:#475569;">
-                      <li>Des nouvelles régulières sur l'avancement de l'application</li>
-                      <li>Un accès prioritaire à la bêta mobile (iOS &amp; Android)</li>
-                      <li>Les trois univers : <strong>Pro Day Man</strong>, <strong>ProDay Woman</strong> et <strong>Pro Day Pro</strong></li>
+                      <li>Accès à l&apos;espace bêta (programme, pôles, aide)</li>
+                      <li><strong>Android</strong> : APK à télécharger sur l&apos;onglet Installer</li>
+                      <li><strong>iOS</strong> : invitation TestFlight par email Apple</li>
                     </ul>
                   </td>
                 </tr>
               </table>
               <p style="margin:0 0 24px;font-size:14px;line-height:1.6;color:#64748b;">
-                En attendant le lien de téléchargement, parcourez le site pour voir les démos
-                Mercato, Pulse, parcours par rôle et la feuille de route.
+                Sur Android, l&apos;APK n&apos;est pas envoyé par email — rendez-vous directement
+                sur l&apos;onglet Installer une fois connecté à votre espace bêta.
               </p>
-              <a href="${buildBetaAccessUrl(site, params.accessToken)}" style="display:inline-block;background:#0a0a0a;color:#ffffff;text-decoration:none;font-size:14px;font-weight:600;padding:14px 28px;border-radius:999px;">
-                Accéder à l'espace bêta
+              <a href="${buildBetaInstallerUrl(site, params.accessToken)}" style="display:inline-block;background:#0a0a0a;color:#ffffff;text-decoration:none;font-size:14px;font-weight:600;padding:14px 28px;border-radius:999px;margin-right:12px;">
+                Télécharger l&apos;APK (Android)
+              </a>
+              <a href="${buildBetaAccessUrl(site, params.accessToken)}" style="display:inline-block;background:#f1f5f9;color:#0a0a0a;text-decoration:none;font-size:14px;font-weight:600;padding:14px 28px;border-radius:999px;border:1px solid #e2e8f0;">
+                Accéder à l&apos;espace bêta
               </a>
             </td>
           </tr>

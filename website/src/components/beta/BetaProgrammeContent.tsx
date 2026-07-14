@@ -74,8 +74,10 @@ export function BetaProgrammeContent({ session }: BetaProgrammeContentProps) {
         <p className="mt-4 max-w-3xl text-sm leading-relaxed text-white/65">
           La bêta se déroule en plusieurs étapes. Vous êtes actuellement à l&apos;étape {currentStep}
           {currentStep === 2 && BETA_APK_AVAILABLE
-            ? " — l'APK Android est prêt, rendez-vous sur Installer."
-            : ` — les builds mobiles arrivent par vagues selon votre profil (${session.roleLabel}).`}
+            ? " — l'APK Android est prêt : téléchargez-le depuis l'onglet Installer."
+            : currentStep === 2
+              ? " — rendez-vous sur l'onglet Installer pour l'APK Android dès qu'il est publié."
+              : ` — les builds mobiles arrivent par vagues selon votre profil (${session.roleLabel}).`}
         </p>
         <ol className="mt-6 space-y-5">
           {timeline.map(({ step, title, description, done }) => (

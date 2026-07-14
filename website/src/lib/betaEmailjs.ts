@@ -1,5 +1,12 @@
 import emailjs from "@emailjs/nodejs";
 import { buildBetaAccessUrl } from "@/lib/betaAccess";
+
+function buildBetaInstallerUrl(site: string, accessToken?: string): string {
+  if (accessToken?.trim()) {
+    return `${site}/beta/installer?token=${encodeURIComponent(accessToken.trim())}`;
+  }
+  return `${site}/beta/installer`;
+}
 import type { BetaWelcomeEmailParams } from "./betaWelcomeEmail";
 import { BETA_MEMBER_ROLE } from "./betaWelcomeEmail";
 
@@ -37,6 +44,7 @@ export function buildBetaEmailJsTemplateParams(
     role_label: BETA_MEMBER_ROLE,
     site_url: site,
     beta_url: buildBetaAccessUrl(site, params.accessToken),
+    installer_url: buildBetaInstallerUrl(site, params.accessToken),
     subject: "Vous êtes beta-testeur ProDay",
   };
 }

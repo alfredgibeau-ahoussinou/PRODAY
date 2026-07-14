@@ -45,7 +45,7 @@ const BETA_TIMELINE_BASE = [
     step: 2,
     title: "Installation de l'app",
     description:
-      "Recevez et suivez les liens TestFlight (iOS) et APK (Android), puis installez ProDay sur votre téléphone.",
+      "Rendez-vous sur l'onglet Installer pour télécharger l'APK Android. Sur iOS, l'invitation TestFlight arrive par email Apple.",
     done: false,
   },
   {
@@ -89,9 +89,9 @@ export const BETA_FAQ = [
       "Les personnes inscrites sur la liste d'attente et confirmées par email. Chaque lien d'accès est personnel et lié à votre adresse.",
   },
   {
-    question: "Quand recevrai-je les liens de téléchargement ?",
+    question: "Comment télécharger l'application ?",
     answer:
-      "Les builds iOS (TestFlight) et Android (APK) sont déployés par vagues. Vous recevrez une invitation Apple ou un lien APK par email. Cette page affiche aussi les boutons dès que les liens publics sont actifs.",
+      "Android : connectez-vous à votre espace bêta et téléchargez l'APK depuis l'onglet Installer — aucun envoi par email. iOS : vous recevrez une invitation TestFlight par email Apple sur l'adresse de votre inscription.",
   },
   {
     question: "Puis-je tester sur iPhone et Android ?",
