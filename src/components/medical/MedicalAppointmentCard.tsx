@@ -86,9 +86,16 @@ export const MedicalAppointmentCard: React.FC<MedicalAppointmentCardProps> = ({
           </View>
         ) : null}
         {mode === 'physio' && appointment.status === 'confirmed' ? (
-          <PressableSpring style={styles.completeBtn} onPress={onComplete} scaleTo={0.98} haptic>
-            <Text style={styles.completeText}>Marquer terminé</Text>
-          </PressableSpring>
+          <View style={styles.actions}>
+            <PressableSpring style={styles.completeBtnInline} onPress={onComplete} scaleTo={0.98} haptic>
+              <Text style={styles.completeText}>Marquer terminé</Text>
+            </PressableSpring>
+            {onCancel ? (
+              <PressableSpring style={styles.cancelBtn} onPress={onCancel} scaleTo={0.97}>
+                <Text style={styles.cancelText}>Annuler</Text>
+              </PressableSpring>
+            ) : null}
+          </View>
         ) : null}
       </View>
     </>
@@ -167,6 +174,10 @@ function createStyles(c: AppColors) {
       alignSelf: 'flex-start',
       marginTop: spacing.sm,
       paddingVertical: 6,
+    },
+    completeBtnInline: {
+      paddingVertical: 8,
+      paddingHorizontal: spacing.sm,
     },
     completeText: { color: '#1D4ED8', fontWeight: '800', fontSize: 12 },
   });

@@ -22,11 +22,6 @@ import { spacing, radius } from '../../theme/designTokens';
 import { useMedicalStyles } from '../../components/medical/medicalStyles';
 import type { AppColors } from '../../theme/universeTheme';
 import { recordV3UserAction } from '../../utils/recordV3Action';
-import {
-  getPhysioCalComBookingUrl,
-  getPhysioCalComEmbedUrl,
-} from '../../utils/calComBooking';
-import { CalComBookingEmbed } from '../../components/medical/CalComBookingEmbed';
 
 interface MedicalBookingScreenProps {
   physio: User;
@@ -43,8 +38,6 @@ export const MedicalBookingScreen: React.FC<MedicalBookingScreenProps> = ({
 }) => {
   const { colors: c, rootStyle } = useMedicalStyles();
   const styles = useMemo(() => createStyles(c), [c]);
-  const calUrl = getPhysioCalComBookingUrl(physio);
-  const calEmbedUrl = getPhysioCalComEmbedUrl(physio);
   const days = useMemo(() => nextBookingDays(14), []);
   const [selectedDay, setSelectedDay] = useState(days[0]);
   const [slots, setSlots] = useState<Date[]>([]);
@@ -65,9 +58,8 @@ export const MedicalBookingScreen: React.FC<MedicalBookingScreenProps> = ({
   }, [physio, selectedDay]);
 
   useEffect(() => {
-    if (calUrl) return;
     void loadSlots();
-  }, [calUrl, loadSlots]);
+  }, [loadSlots]);
 
   const handleBook = async () => {
     if (!selectedSlot) return;
@@ -116,38 +108,6 @@ export const MedicalBookingScreen: React.FC<MedicalBookingScreenProps> = ({
           </View>
         </View>
 
-        {calUrl && calEmbedUrl ? (
-          <View style={styles.calBlock}>
-            <Text style={styles.sectionLabel}>Réserver un créneau</Text>
-            <Text style={styles.calCopy}>
-              Choisissez un créneau chez {physio.display_name}. Aucun compte Cal.com requis pour
-              vous — indiquez votre email pour confirmer le RDV.
-            </Text>
-            <CalComBookingEmbed
-              embedUrl={calEmbedUrl}
-              bookingUrl={calUrl}
-              height={560}
-              openLabel="Ouvrir en plein écran"
-            />
-            <PressableSpring
-              style={styles.confirmDoneBtn}
-              onPress={() => {
-                recordV3UserAction(patient, 'book_health');
-                onBooked?.();
-                Alert.alert(
-                  'Réservation',
-                  'Si vous avez confirmé un créneau dans Cal.com, le praticien le recevra sur son agenda.'
-                );
-                onBack();
-              }}
-              scaleTo={0.97}
-              haptic
-            >
-              <Text style={styles.confirmDoneText}>J’ai réservé — retour</Text>
-            </PressableSpring>
-          </View>
-        ) : (
-          <>
         <Text style={styles.sectionLabel}>Choisir un jour</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.dayRow}>
           {days.map((day) => {
@@ -212,14 +172,15 @@ export const MedicalBookingScreen: React.FC<MedicalBookingScreenProps> = ({
               <Icon name="calendar" size={18} color={c.brandInverse} />
               <Text style={styles.bookBtnText}>
                 {selectedSlot
-                  ? `Réserver — ${formatSlotLabel(selectedSlot)}`
+                  ? `Demander — ${formatSlotLabel(selectedSlot)}`
                   : 'Sélectionnez un créneau'}
               </Text>
             </>
           )}
         </PressableSpring>
-          </>
-        )}
+        <Text style={styles.hint}>
+          Le praticien reçoit votre demande dans son agenda ProDay et peut confirmer ou refuser.
+        </Text>
       </ScrollView>
     </View>
   );
@@ -314,22 +275,12 @@ function createStyles(c: AppColors) {
     },
     bookBtnDisabled: { opacity: 0.5 },
     bookBtnText: { color: c.brandInverse, fontWeight: '900', fontSize: 15 },
-    calBlock: { gap: spacing.sm, marginBottom: spacing.md },
-    calCopy: {
-      fontSize: 13,
-      color: c.textSecondary,
-      lineHeight: 18,
-      marginBottom: spacing.xs,
-    },
-    confirmDoneBtn: {
+    hint: {
       marginTop: spacing.md,
-      alignItems: 'center',
-      paddingVertical: spacing.md,
-      borderRadius: radius.lg,
-      borderWidth: 1.5,
-      borderColor: '#0F766E',
-      backgroundColor: '#F0FDFA',
+      fontSize: 12,
+      color: c.textMuted,
+      textAlign: 'center',
+      lineHeight: 17,
     },
-    confirmDoneText: { color: '#0F766E', fontWeight: '800', fontSize: 14 },
   });
 }

@@ -14,7 +14,6 @@ import { useAuth } from '../../context/AuthContext';
 import { usePhysioAppointments } from '../../hooks/useMedicalAppointments';
 import { medicalAppointmentsService } from '../../services/medicalAppointments.service';
 import { MedicalAppointmentCard } from '../../components/medical/MedicalAppointmentCard';
-import { CalComBookingEmbed } from '../../components/medical/CalComBookingEmbed';
 import { PhysioScreenHeader } from '../../components/medical/PhysioScreenHeader';
 import { PhysioAvailabilityScreen } from './PhysioAvailabilityScreen';
 import { PressableSpring } from '../../components/motion';
@@ -22,26 +21,18 @@ import { TAB_BAR_CONTENT_INSET } from '../../components/navigation/BottomTabBar'
 import { MEDICAL_THEME } from '../../content/medicalExperience';
 import { spacing, radius } from '../../theme/designTokens';
 import { formatAppointmentDay } from '../../utils/medicalSlots';
-import {
-  getPhysioCalComBookingUrl,
-  getPhysioCalComEmbedUrl,
-  openCalComSignup,
-} from '../../utils/calComBooking';
+import { getPhysioCalComBookingUrl, openCalComSignup } from '../../utils/calComBooking';
 import { useMedicalStyles } from '../../components/medical/medicalStyles';
 import type { AppColors } from '../../theme/universeTheme';
 
 type AgendaFilter = 'all' | 'pending' | 'confirmed';
-type AgendaMode = 'calcom' | 'proday';
 
 export const PhysioAgendaScreen: React.FC = () => {
   const { colors: c, rootStyle } = useMedicalStyles();
   const styles = useMemo(() => createStyles(c), [c]);
   const { refreshProfile } = useAuth();
   const profile = useSessionProfile();
-  const calBookingUrl = profile ? getPhysioCalComBookingUrl(profile) : null;
-  const calEmbedUrl = profile ? getPhysioCalComEmbedUrl(profile) : null;
-  const hasCalCom = Boolean(calEmbedUrl && calBookingUrl);
-  const [mode, setMode] = useState<AgendaMode>('proday');
+  const hasCalCom = Boolean(profile && getPhysioCalComBookingUrl(profile));
   const [showAvailability, setShowAvailability] = useState(false);
   const [filter, setFilter] = useState<AgendaFilter>('all');
   const [refreshing, setRefreshing] = useState(false);
@@ -51,13 +42,9 @@ export const PhysioAgendaScreen: React.FC = () => {
     void refreshProfile();
   }, [refreshProfile]);
 
-  useEffect(() => {
-    if (hasCalCom) setMode('calcom');
-  }, [hasCalCom]);
-
   const filtered = useMemo(() => {
     const list = appointments
-      .filter((a) => a.status !== 'cancelled')
+      .filter((a) => a.status !== 'cancelled' && a.status !== 'completed')
       .sort((a, b) => a.start_at.getTime() - b.start_at.getTime());
     if (filter === 'pending') return list.filter((a) => a.status === 'pending');
     if (filter === 'confirmed') return list.filter((a) => a.status === 'confirmed');
@@ -121,32 +108,14 @@ export const PhysioAgendaScreen: React.FC = () => {
     >
       <PhysioScreenHeader
         title="Agenda"
-        subtitle="Cal.com pour les téléconsultations — les sportifs réservent directement sur votre calendrier."
+        subtitle="Vos rendez-vous : confirmez, refusez ou annulez les demandes des sportifs."
       />
 
-      {hasCalCom ? (
-        <View style={styles.modeRow}>
-          {(
-            [
-              { id: 'calcom' as const, label: 'Cal.com' },
-              { id: 'proday' as const, label: 'Demandes ProDay' },
-            ] as const
-          ).map((m) => (
-            <TouchableOpacity
-              key={m.id}
-              style={[styles.modeChip, mode === m.id && styles.modeChipOn]}
-              onPress={() => setMode(m.id)}
-            >
-              <Text style={[styles.modeText, mode === m.id && styles.modeTextOn]}>{m.label}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      ) : (
+      {!hasCalCom ? (
         <View style={styles.setupCard}>
           <Text style={styles.setupTitle}>Lien Cal.com manquant</Text>
           <Text style={styles.setupBody}>
-            Si vous venez de créer votre compte Cal.com, indiquez votre username ProDay (ex.
-            cabinet-martin-kine) — c’est ce lien qui affiche votre calendrier ici.
+            Indiquez votre username Cal.com pour être réservable depuis votre fiche ProDay.
           </Text>
           <PressableSpring
             style={styles.setupBtn}
@@ -166,84 +135,68 @@ export const PhysioAgendaScreen: React.FC = () => {
             <Text style={styles.setupBtnSecondaryText}>Créer un compte sur Cal.com</Text>
           </PressableSpring>
         </View>
-      )}
+      ) : null}
 
-      {mode === 'calcom' && hasCalCom ? (
-        <View style={styles.calBlock}>
-          <Text style={styles.calHint}>
-            Votre agenda public. Les sportifs y réservent sans créer de compte Cal.com.
+      <View style={styles.filters}>
+        {(
+          [
+            { id: 'all' as const, label: 'Tous' },
+            { id: 'pending' as const, label: 'En attente' },
+            { id: 'confirmed' as const, label: 'Confirmés' },
+          ] as const
+        ).map((f) => (
+          <TouchableOpacity
+            key={f.id}
+            style={[styles.filterChip, filter === f.id && styles.filterChipOn]}
+            onPress={() => setFilter(f.id)}
+          >
+            <Text style={[styles.filterText, filter === f.id && styles.filterTextOn]}>
+              {f.label}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      {loading ? (
+        <ActivityIndicator color={MEDICAL_THEME.primary} style={styles.loader} />
+      ) : null}
+
+      {!loading && grouped.length === 0 ? (
+        <View style={styles.emptyCard}>
+          <Text style={styles.emptyTitle}>Aucun rendez-vous</Text>
+          <Text style={styles.emptySub}>
+            Quand un sportif réserve depuis votre fiche, la demande apparaît ici pour confirmation
+            ou refus.
           </Text>
-          <CalComBookingEmbed
-            embedUrl={calEmbedUrl}
-            bookingUrl={calBookingUrl}
-            height={560}
-            openLabel="Ouvrir mon Cal.com"
-          />
         </View>
       ) : (
-        <>
-          <View style={styles.filters}>
-            {(
-              [
-                { id: 'all' as const, label: 'Tous' },
-                { id: 'pending' as const, label: 'En attente' },
-                { id: 'confirmed' as const, label: 'Confirmés' },
-              ] as const
-            ).map((f) => (
-              <TouchableOpacity
-                key={f.id}
-                style={[styles.filterChip, filter === f.id && styles.filterChipOn]}
-                onPress={() => setFilter(f.id)}
-              >
-                <Text style={[styles.filterText, filter === f.id && styles.filterTextOn]}>
-                  {f.label}
-                </Text>
-              </TouchableOpacity>
+        grouped.map(([day, dayAppointments]) => (
+          <View key={day} style={styles.dayGroup}>
+            <Text style={styles.dayLabel}>{day}</Text>
+            {dayAppointments.map((appt) => (
+              <MedicalAppointmentCard
+                key={appt.id}
+                appointment={appt}
+                mode="physio"
+                onConfirm={
+                  appt.status === 'pending'
+                    ? () => void updateStatus(appt.id, 'confirmed')
+                    : undefined
+                }
+                onCancel={
+                  appt.status === 'pending' || appt.status === 'confirmed'
+                    ? () => void updateStatus(appt.id, 'cancelled')
+                    : undefined
+                }
+                onComplete={
+                  appt.status === 'confirmed'
+                    ? () => void updateStatus(appt.id, 'completed')
+                    : undefined
+                }
+              />
             ))}
           </View>
-
-          {loading ? (
-            <ActivityIndicator color={MEDICAL_THEME.primary} style={styles.loader} />
-          ) : null}
-
-          {!loading && grouped.length === 0 ? (
-            <View style={styles.emptyCard}>
-              <Text style={styles.emptyTitle}>Aucune demande ProDay</Text>
-              <Text style={styles.emptySub}>
-                Les réservations Cal.com apparaissent sur votre compte Cal.com. Les demandes envoyées
-                via l’ancien parcours ProDay restent listées ici.
-              </Text>
-            </View>
-          ) : (
-            grouped.map(([day, dayAppointments]) => (
-              <View key={day} style={styles.dayGroup}>
-                <Text style={styles.dayLabel}>{day}</Text>
-                {dayAppointments.map((appt) => (
-                  <MedicalAppointmentCard
-                    key={appt.id}
-                    appointment={appt}
-                    mode="physio"
-                    onConfirm={
-                      appt.status === 'pending'
-                        ? () => void updateStatus(appt.id, 'confirmed')
-                        : undefined
-                    }
-                    onCancel={
-                      appt.status === 'pending'
-                        ? () => void updateStatus(appt.id, 'cancelled')
-                        : undefined
-                    }
-                    onComplete={
-                      appt.status === 'confirmed'
-                        ? () => void updateStatus(appt.id, 'completed')
-                        : undefined
-                    }
-                  />
-                ))}
-              </View>
-            ))
-          )}
-        </>
+        ))
       )}
     </ScrollView>
   );
@@ -255,32 +208,6 @@ function createStyles(c: AppColors) {
     content: {
       padding: spacing.lg,
       paddingBottom: TAB_BAR_CONTENT_INSET + spacing.xl,
-    },
-    modeRow: {
-      flexDirection: 'row',
-      gap: spacing.sm,
-      marginBottom: spacing.md,
-    },
-    modeChip: {
-      flex: 1,
-      paddingVertical: spacing.sm + 2,
-      borderRadius: radius.pill,
-      borderWidth: 1,
-      borderColor: c.border,
-      backgroundColor: c.surface,
-      alignItems: 'center',
-    },
-    modeChipOn: {
-      backgroundColor: MEDICAL_THEME.primary,
-      borderColor: MEDICAL_THEME.primary,
-    },
-    modeText: { fontSize: 13, fontWeight: '800', color: c.textMuted },
-    modeTextOn: { color: c.brandInverse },
-    calBlock: { gap: spacing.sm, marginBottom: spacing.lg },
-    calHint: {
-      fontSize: 13,
-      color: c.textSecondary,
-      lineHeight: 18,
     },
     setupCard: {
       padding: spacing.lg,
