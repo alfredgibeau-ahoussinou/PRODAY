@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   View,
   ScrollView,
@@ -10,11 +10,13 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { useSessionProfile } from '../../hooks/useSessionProfile';
+import { useAuth } from '../../context/AuthContext';
 import { usePhysioAppointments } from '../../hooks/useMedicalAppointments';
 import { medicalAppointmentsService } from '../../services/medicalAppointments.service';
 import { MedicalAppointmentCard } from '../../components/medical/MedicalAppointmentCard';
 import { CalComBookingEmbed } from '../../components/medical/CalComBookingEmbed';
 import { PhysioScreenHeader } from '../../components/medical/PhysioScreenHeader';
+import { PhysioAvailabilityScreen } from './PhysioAvailabilityScreen';
 import { PressableSpring } from '../../components/motion';
 import { TAB_BAR_CONTENT_INSET } from '../../components/navigation/BottomTabBar';
 import { MEDICAL_THEME } from '../../content/medicalExperience';
@@ -34,13 +36,24 @@ type AgendaMode = 'calcom' | 'proday';
 export const PhysioAgendaScreen: React.FC = () => {
   const { colors: c, rootStyle } = useMedicalStyles();
   const styles = useMemo(() => createStyles(c), [c]);
+  const { refreshProfile } = useAuth();
   const profile = useSessionProfile();
   const calBookingUrl = profile ? getPhysioCalComBookingUrl(profile) : null;
   const calEmbedUrl = profile ? getPhysioCalComEmbedUrl(profile) : null;
-  const [mode, setMode] = useState<AgendaMode>(calBookingUrl ? 'calcom' : 'proday');
+  const hasCalCom = Boolean(calEmbedUrl && calBookingUrl);
+  const [mode, setMode] = useState<AgendaMode>('proday');
+  const [showAvailability, setShowAvailability] = useState(false);
   const [filter, setFilter] = useState<AgendaFilter>('all');
   const [refreshing, setRefreshing] = useState(false);
   const { appointments, loading, refresh } = usePhysioAppointments(profile?.uid);
+
+  useEffect(() => {
+    void refreshProfile();
+  }, [refreshProfile]);
+
+  useEffect(() => {
+    if (hasCalCom) setMode('calcom');
+  }, [hasCalCom]);
 
   const filtered = useMemo(() => {
     const list = appointments
@@ -64,9 +77,9 @@ export const PhysioAgendaScreen: React.FC = () => {
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await refresh();
+    await Promise.all([refresh(), refreshProfile()]);
     setRefreshing(false);
-  }, [refresh]);
+  }, [refresh, refreshProfile]);
 
   const updateStatus = async (
     id: string,
@@ -88,6 +101,12 @@ export const PhysioAgendaScreen: React.FC = () => {
     );
   }
 
+  if (showAvailability) {
+    return (
+      <PhysioAvailabilityScreen profile={profile} onBack={() => setShowAvailability(false)} />
+    );
+  }
+
   return (
     <ScrollView
       style={[styles.root, rootStyle]}
@@ -105,7 +124,7 @@ export const PhysioAgendaScreen: React.FC = () => {
         subtitle="Cal.com pour les téléconsultations — les sportifs réservent directement sur votre calendrier."
       />
 
-      {calEmbedUrl && calBookingUrl ? (
+      {hasCalCom ? (
         <View style={styles.modeRow}>
           {(
             [
@@ -124,25 +143,32 @@ export const PhysioAgendaScreen: React.FC = () => {
         </View>
       ) : (
         <View style={styles.setupCard}>
-          <Text style={styles.setupTitle}>Connectez Cal.com</Text>
+          <Text style={styles.setupTitle}>Lien Cal.com manquant</Text>
           <Text style={styles.setupBody}>
-            Indiquez votre username dans Cabinet → Créneaux pour afficher votre calendrier ici et
-            permettre aux joueurs de réserver.
+            Si vous venez de créer votre compte Cal.com, indiquez votre username ProDay (ex.
+            cabinet-martin-kine) — c’est ce lien qui affiche votre calendrier ici.
           </Text>
           <PressableSpring
             style={styles.setupBtn}
+            onPress={() => setShowAvailability(true)}
+            scaleTo={0.97}
+            haptic
+          >
+            <Text style={styles.setupBtnText}>Renseigner mon username Cal.com</Text>
+          </PressableSpring>
+          <PressableSpring
+            style={styles.setupBtnSecondary}
             onPress={() => {
               void openCalComSignup().catch(() => undefined);
             }}
             scaleTo={0.97}
-            haptic
           >
-            <Text style={styles.setupBtnText}>Créer un compte Cal.com</Text>
+            <Text style={styles.setupBtnSecondaryText}>Créer un compte sur Cal.com</Text>
           </PressableSpring>
         </View>
       )}
 
-      {mode === 'calcom' && calEmbedUrl && calBookingUrl ? (
+      {mode === 'calcom' && hasCalCom ? (
         <View style={styles.calBlock}>
           <Text style={styles.calHint}>
             Votre agenda public. Les sportifs y réservent sans créer de compte Cal.com.
@@ -276,6 +302,16 @@ function createStyles(c: AppColors) {
       paddingVertical: spacing.sm,
     },
     setupBtnText: { color: '#FFFFFF', fontWeight: '800', fontSize: 13 },
+    setupBtnSecondary: {
+      alignSelf: 'flex-start',
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+    },
+    setupBtnSecondaryText: {
+      color: MEDICAL_THEME.primary,
+      fontWeight: '700',
+      fontSize: 13,
+    },
     filters: {
       flexDirection: 'row',
       gap: spacing.sm,

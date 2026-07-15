@@ -281,6 +281,7 @@ export function useSignupForm(initial?: {
         medicalPracticeFocus,
         structureName,
         professionalHeadline,
+        calComUsername,
       },
       player:
         role === 'player'
@@ -330,6 +331,7 @@ export function useSignupForm(initial?: {
       medicalPracticeFocus,
       structureName,
       professionalHeadline,
+      calComUsername,
       position,
       category,
       level,
@@ -724,6 +726,7 @@ export function useSignupForm(initial?: {
       department,
       medicalSpecialty,
       medicalPracticeFocus,
+      calComUsername,
       structureName,
       professionalHeadline,
       position,

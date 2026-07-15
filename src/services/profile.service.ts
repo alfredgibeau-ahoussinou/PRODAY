@@ -114,7 +114,9 @@ export const profileService = {
     const playerVerification = isPlayer
       ? defaultPlayerVerificationState(isMinor)
       : undefined;
-    const profileData: User['profile'] = { ...(options?.profile ?? {}) };
+    const profileData = stripUndefinedDeep({
+      ...(options?.profile ?? {}),
+    }) as User['profile'];
 
     const verificationStatus: VerificationStatus = requiresStaffVerification
       ? 'PENDING'

@@ -132,4 +132,32 @@ describe('signupValidation', () => {
     });
     expect(Object.keys(errs).length).toBeGreaterThan(3);
   });
+
+  it('exige le username Cal.com pour un praticien santé', () => {
+    const errs = validateSignupIntegrity({
+      role: 'physio',
+      flowKind: 'staff',
+      spaceTouched: true,
+      parentalRequired: false,
+      staff: {
+        role: 'physio',
+        city: 'Paris',
+        department: '75',
+        medicalSpecialty: 'kine',
+        medicalPracticeFocus: 'Cabinet',
+        calComUsername: '',
+      },
+      account: {
+        displayName: 'Dr Martin',
+        email: 'martin@cabinet.fr',
+        password: 'MonClub2026!',
+        confirmPassword: 'MonClub2026!',
+        isOAuth: false,
+        role: 'physio',
+        city: 'Paris',
+        acceptedTerms: true,
+      },
+    });
+    expect(errs.calComUsername).toMatch(/Cal\.com/i);
+  });
 });

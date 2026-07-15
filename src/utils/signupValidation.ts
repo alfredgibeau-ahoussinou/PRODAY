@@ -246,6 +246,7 @@ export interface StaffValidationInput {
   medicalPracticeFocus?: string;
   structureName?: string;
   professionalHeadline?: string;
+  calComUsername?: string;
 }
 
 export function validateStaffStepFields(input: StaffValidationInput): Record<string, string> {
@@ -314,6 +315,10 @@ export function validateRoleProFields(input: StaffValidationInput): Record<strin
     if (specErr) errs.medicalSpecialty = specErr;
     if (medicalPracticeFocus !== undefined && !medicalPracticeFocus.trim()) {
       errs.medicalPracticeFocus = 'Sélectionnez votre mode de pratique';
+    }
+    if (medicalPracticeFocus !== undefined) {
+      const calErr = validateCalComBookingInput(input.calComUsername ?? '');
+      if (calErr) errs.calComUsername = calErr;
     }
   }
 
