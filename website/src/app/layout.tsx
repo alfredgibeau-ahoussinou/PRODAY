@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Syne } from "next/font/google";
+import { Cormorant_Garamond, Inter, Syne } from "next/font/google";
 import { SiteShell } from "@/components/layout/SiteShell";
 import "./globals.css";
 
@@ -14,6 +14,14 @@ const syne = Syne({
   subsets: ["latin"],
   display: "swap",
   weight: ["500", "600", "700", "800"],
+});
+
+const cormorant = Cormorant_Garamond({
+  variable: "--font-cormorant",
+  subsets: ["latin"],
+  display: "swap",
+  weight: ["400", "500", "600"],
+  style: ["normal", "italic"],
 });
 
 export const metadata: Metadata = {
@@ -60,7 +68,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="fr" className={`${inter.variable} ${syne.variable} scroll-smooth`}>
+    <html lang="fr" className={`${inter.variable} ${syne.variable} ${cormorant.variable} scroll-smooth`}>
       <body className="min-h-screen antialiased">
         <SiteShell>{children}</SiteShell>
       </body>

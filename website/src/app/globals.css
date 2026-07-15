@@ -48,6 +48,11 @@ body {
   font-family: var(--font-syne), var(--font-inter), system-ui, sans-serif;
 }
 
+.font-signature {
+  font-family: var(--font-cormorant), "Cormorant Garamond", Georgia, "Times New Roman", serif;
+  font-feature-settings: "liga" 1, "kern" 1;
+}
+
 ::selection {
   background: var(--proday-accent);
   color: #000;
