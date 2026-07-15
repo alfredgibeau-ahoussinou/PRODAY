@@ -127,11 +127,18 @@ async function sendViaResend(targetEmail, payload) {
   if (!res.ok) throw new Error(`Resend ${res.status}: ${await res.text()}`);
 }
 
-async function sendViaEmailJs(targetEmail, payload) {
-  const { emailjs_service_id: serviceId, emailjs_template_id: templateId, emailjs_public_key: publicKey, emailjs_private_key: privateKey } = betaCfg;
-  if (!serviceId || !templateId || !publicKey || !privateKey) {
-    throw new Error('EmailJS non configuré');
+async function sendViaEmailJs(targetEmail, payload, link) {
+  const templateId = authCfg.emailjs_template_id?.trim();
+  const serviceId = authCfg.emailjs_service_id?.trim() || betaCfg.emailjs_service_id?.trim();
+  const publicKey = authCfg.emailjs_public_key?.trim() || betaCfg.emailjs_public_key?.trim();
+  const privateKey = authCfg.emailjs_private_key?.trim() || betaCfg.emailjs_private_key?.trim();
+  if (!templateId) {
+    throw new Error('auth.emailjs_template_id absent — ne pas utiliser le template bêta pour la vérification');
   }
+  if (!serviceId || !publicKey || !privateKey) {
+    throw new Error('EmailJS Auth non configuré (service / clés)');
+  }
+  const siteUrl = authCfg.continue_url || betaCfg.site_url || 'https://proday75.fr';
   const res = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -145,8 +152,11 @@ async function sendViaEmailJs(targetEmail, payload) {
         to_email: targetEmail,
         user_email: targetEmail,
         subject: payload.subject,
-        message: payload.text,
-        site_url: betaCfg.site_url || 'https://proday75.fr',
+        site_url: siteUrl,
+        action_link: link,
+        verification_url: link,
+        message_text: payload.text,
+        display_name: '',
       },
     }),
   });
@@ -196,11 +206,11 @@ async function main() {
   }
 
   try {
-    await sendViaEmailJs(email, payload);
-    console.log('✓ E-mail envoyé via EmailJS (secours).');
+    await sendViaEmailJs(email, payload, link);
+    console.log('✓ E-mail envoyé via EmailJS (secours Auth).');
     return;
   } catch (e) {
-    console.warn('EmailJS:', e instanceof Error ? e.message : e);
+    console.warn('EmailJS Auth:', e instanceof Error ? e.message : e);
   }
 
   console.error('✗ Aucun transport e-mail disponible. Vérifiez le domaine sur resend.com/domains.');

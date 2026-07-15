@@ -204,3 +204,9 @@ Le callable générait le lien avec `continue_url = https://proday75.fr` (défau
 1. [Resend → Domains](https://resend.com/domains) → ajouter `proday.app`.
 2. Publier les enregistrements DNS (SPF, DKIM) chez le registrar.
 3. Attendre statut **Verified**, puis retester.
+
+**Si l’utilisateur reçoit un e-mail « Bienvenue dans la bêta » au lieu de « Confirmez votre e-mail »** :
+
+Cause : fallback EmailJS utilisait par erreur `beta.emailjs_template_id` (template waitlist bêta) quand Resend échouait.
+
+Correctif : le fallback EmailJS Auth exige `auth.emailjs_template_id` (template dédié, voir `docs/emailjs/auth-action.html`). Sans ce template, l’app retombe sur l’e-mail Firebase natif plutôt que sur le mail bêta.

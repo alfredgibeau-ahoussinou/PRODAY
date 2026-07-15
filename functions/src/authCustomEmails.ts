@@ -114,16 +114,23 @@ async function sendAuthActionEmail(
 
   try {
     await sendAuthEmailViaResend(transport, payload);
+    return { enabled: true, sent: true };
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     if (!isResendDomainError(msg)) throw e;
-    const emailJs = getEmailJsAuthConfig();
-    if (!emailJs) throw e;
-    console.warn('[authCustomEmails] Resend domain blocked — fallback EmailJS');
-    await sendAuthEmailViaEmailJs(emailJs, payload, link);
-  }
 
-  return { enabled: true, sent: true };
+    const emailJs = getEmailJsAuthConfig();
+    if (emailJs) {
+      console.warn('[authCustomEmails] Resend domain blocked — fallback EmailJS (auth template)');
+      await sendAuthEmailViaEmailJs(emailJs, payload, link, { displayName });
+      return { enabled: true, sent: true };
+    }
+
+    console.warn(
+      '[authCustomEmails] Resend unavailable — client will use Firebase Auth email (no beta EmailJS fallback)'
+    );
+    return disabledResult();
+  }
 }
 
 /**

@@ -37,6 +37,7 @@ import {
   oauthProviderLabel,
 } from '../utils/authOAuthLink';
 import { markVerificationEmailResend } from '../utils/verificationEmailResend';
+import { resolveAuthEmailSendStrategy } from '../utils/authEmailCallableResult';
 
 export { ProductLineMismatchError } from '../utils/productLineAccess';
 export { AuthNeedsProfileError, AuthLinkPasswordRequiredError } from '../utils/authErrors';
@@ -61,8 +62,8 @@ async function tryCustomVerificationEmail(): Promise<boolean> {
       {},
       AUTH_EMAIL_FUNCTIONS_REGION
     );
-    if (result.enabled && result.sent) return true;
-    if (result.enabled && !result.sent) return true;
+    const strategy = resolveAuthEmailSendStrategy(result);
+    if (strategy === 'custom-sent' || strategy === 'skip') return true;
   } catch (e) {
     // Ne pas retomber sur sendEmailVerification() si la callable a répondu :
     // double appel = rate-limit Firebase (TOO_MANY_ATTEMPTS_TRY_LATER).

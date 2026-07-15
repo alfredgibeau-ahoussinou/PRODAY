@@ -20,13 +20,44 @@ export type EmailJsAuthConfig = {
 };
 
 export function getEmailJsAuthConfig(): EmailJsAuthConfig | null {
-  const cfg = functions.config().beta ?? {};
-  const serviceId = (cfg.emailjs_service_id as string | undefined)?.trim();
-  const templateId = (cfg.emailjs_template_id as string | undefined)?.trim();
-  const publicKey = (cfg.emailjs_public_key as string | undefined)?.trim();
-  const privateKey = (cfg.emailjs_private_key as string | undefined)?.trim();
-  if (!serviceId || !templateId || !publicKey || !privateKey) return null;
+  const authCfg = functions.config().auth ?? {};
+  const betaCfg = functions.config().beta ?? {};
+
+  // Ne jamais réutiliser beta.emailjs_template_id : template « bienvenue bêta », pas Auth.
+  const templateId = (authCfg.emailjs_template_id as string | undefined)?.trim();
+  if (!templateId) return null;
+
+  const serviceId =
+    (authCfg.emailjs_service_id as string | undefined)?.trim() ||
+    (betaCfg.emailjs_service_id as string | undefined)?.trim();
+  const publicKey =
+    (authCfg.emailjs_public_key as string | undefined)?.trim() ||
+    (betaCfg.emailjs_public_key as string | undefined)?.trim();
+  const privateKey =
+    (authCfg.emailjs_private_key as string | undefined)?.trim() ||
+    (betaCfg.emailjs_private_key as string | undefined)?.trim();
+
+  if (!serviceId || !publicKey || !privateKey) return null;
   return { serviceId, templateId, publicKey, privateKey };
+}
+
+export function buildAuthEmailJsTemplateParams(
+  payload: AuthEmailPayload,
+  link: string,
+  options?: { displayName?: string; siteUrl?: string }
+): Record<string, string> {
+  const siteUrl = (options?.siteUrl ?? 'https://proday75.fr').replace(/\/$/, '');
+  return {
+    email: payload.to,
+    to_email: payload.to,
+    user_email: payload.to,
+    subject: payload.subject,
+    site_url: siteUrl,
+    action_link: link,
+    verification_url: link,
+    message_text: payload.text,
+    display_name: options?.displayName?.trim() || '',
+  };
 }
 
 export function getAuthEmailTransportConfig(): AuthEmailTransportConfig | null {
@@ -92,9 +123,13 @@ function isResendDomainError(message: string): boolean {
 export async function sendAuthEmailViaEmailJs(
   config: EmailJsAuthConfig,
   payload: AuthEmailPayload,
-  link: string
+  link: string,
+  options?: { displayName?: string; siteUrl?: string }
 ): Promise<void> {
-  const siteUrl = (functions.config().beta?.site_url as string | undefined)?.trim() || 'https://proday75.fr';
+  const authSiteUrl =
+    (functions.config().auth?.continue_url as string | undefined)?.trim() ||
+    (functions.config().beta?.site_url as string | undefined)?.trim() ||
+    'https://proday75.fr';
   const res = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -103,17 +138,10 @@ export async function sendAuthEmailViaEmailJs(
       template_id: config.templateId,
       user_id: config.publicKey,
       accessToken: config.privateKey,
-      template_params: {
-        email: payload.to,
-        to_email: payload.to,
-        user_email: payload.to,
-        subject: payload.subject,
-        site_url: siteUrl,
-        beta_url: link,
-        member_role: 'ProDay',
-        profile_label: 'Confirmation e-mail',
-        role_label: 'Compte ProDay',
-      },
+      template_params: buildAuthEmailJsTemplateParams(payload, link, {
+        displayName: options?.displayName,
+        siteUrl: options?.siteUrl ?? authSiteUrl,
+      }),
     }),
   });
   if (!res.ok) {

@@ -1,0 +1,74 @@
+<!--
+  ProDay — E-mail Auth (vérification / reset mot de passe)
+  EmailJS → auth.emailjs_template_id → Content (HTML)
+
+  Settings EmailJS :
+  - To Email  : {{email}}
+  - From Name : ProDay
+  - Subject   : {{subject}}
+  - Reply To  : contact@proday.app
+
+  Variables (functions/src/authEmailTransport.ts) :
+  - email, to_email, user_email — destinataire
+  - subject — objet (vérification ou reset)
+  - action_link / verification_url — lien Firebase Auth
+  - site_url — ex. https://proday75.fr
+  - message_text — version texte brut (secours)
+  - display_name — prénom optionnel
+-->
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{{subject}}</title>
+</head>
+<body style="margin:0;padding:0;background-color:#0a0a0a;font-family:Arial,Helvetica,sans-serif;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#0a0a0a;padding:40px 16px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="600" cellspacing="0" cellpadding="0" style="max-width:600px;background:#111;border-radius:16px;border:1px solid #1f1f1f;">
+          <tr>
+            <td style="padding:40px 32px 24px;">
+              <p style="margin:0;font-size:22px;font-weight:700;color:#fff;letter-spacing:0.08em;">PRO<span style="color:#22d3ee;">DAY</span></p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:0 32px 16px;">
+              <h1 style="margin:0;font-size:26px;line-height:34px;color:#22d3ee;">Confirmez votre e-mail</h1>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:0 32px 24px;">
+              <p style="margin:0 0 12px;font-size:16px;line-height:26px;color:#e5e5e5;">Bonjour{{display_name}},</p>
+              <p style="margin:0 0 12px;font-size:16px;line-height:26px;color:#e5e5e5;">
+                Pour activer votre compte ProDay, validez l'adresse&nbsp;:
+              </p>
+              <p style="margin:0;font-size:16px;line-height:26px;color:#22d3ee;font-weight:600;word-break:break-all;">{{to_email}}</p>
+            </td>
+          </tr>
+          <tr>
+            <td align="center" style="padding:8px 32px 24px;">
+              <a href="{{action_link}}" style="display:inline-block;background:#22d3ee;color:#0a0a0a;text-decoration:none;font-size:16px;font-weight:700;padding:14px 28px;border-radius:12px;">Valider mon e-mail</a>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:0 32px 32px;">
+              <p style="margin:0 0 8px;font-size:13px;line-height:20px;color:#a3a3a3;">Si le bouton ne fonctionne pas&nbsp;:</p>
+              <p style="margin:0;font-size:12px;line-height:18px;color:#737373;word-break:break-all;">{{action_link}}</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:20px 32px 32px;border-top:1px solid #1f1f1f;">
+              <p style="margin:0;font-size:13px;line-height:20px;color:#737373;">
+                Ce lien expire après quelques heures. Si vous n'avez pas créé de compte, ignorez cet e-mail.<br />
+                — ProDay · <a href="mailto:contact@proday.app" style="color:#22d3ee;">contact@proday.app</a>
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
