@@ -17,6 +17,7 @@ export default function QuizPage() {
         kicker="QUIZ"
         title="Quel pôle ProDay vous correspond ?"
         description="Répondez à 3 questions — nous vous orientons vers le bon pôle parmi Joueur, Pro, Santé et Partenaires."
+        image="/showcase/classic-exp-discover.jpg"
         dark
       />
       <PremiumSection

@@ -45,7 +45,7 @@ const CV_COPY: Record<
     role: "Coach · Régional · Toulouse",
     footer:
       "Effectif, convocations et Mercato local — profil coach amateur vérifié pour le district.",
-    image: "/images/football-coach-01.jpg",
+    image: "/showcase/classic-staff.jpg",
   },
   supporter: {
     headerLabel: "PROFIL SUPPORTER PRODAY",
@@ -61,7 +61,7 @@ const CV_COPY: Record<
     role: "Coach · National · Bordeaux",
     footer:
       "Parcours staff et certifications — vitrine pro pour le réseau vérifié ProDay.",
-    image: "/images/football-pro-01.jpg",
+    image: "/showcase/classic-staff.jpg",
   },
   sante: {
     headerLabel: "CABINET PRODAY SANTÉ",

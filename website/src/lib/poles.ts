@@ -252,7 +252,7 @@ export const POLE_IMAGES: Record<PoleId, string> = {
   sante: "/images/football-health-01.jpg",
   pro_joueur: "/images/football-pro-01.jpg",
   pro_club: "/images/football-club-01.jpg",
-  pro_staff: "/images/football-coach-01.jpg",
+  pro_staff: "/showcase/classic-staff.jpg",
   sponsor: "/images/football-club-01.jpg",
 };
 

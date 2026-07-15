@@ -18,6 +18,7 @@ export default function FaqPage() {
         kicker="FAQ"
         title="Questions fréquentes"
         description="Tout ce qu'il faut savoir avant l'inscription — tarifs, pôles, Reels et partenaires."
+        image="/images/football-pitch-01.jpg"
         dark
       />
       <PageBody narrow>

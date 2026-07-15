@@ -17,6 +17,7 @@ export default function RoadmapPage() {
         kicker="ROADMAP"
         title="Transparence produit"
         description="Mercato, Live Stats, Arena — et la suite. Voici où en est ProDay."
+        image="/images/football-pitch-01.jpg"
         dark
       />
       <PageBody>

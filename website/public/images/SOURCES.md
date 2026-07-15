@@ -12,13 +12,12 @@ Usage commercial autorisé, sans attribution obligatoire (crédit volontaire).
 | `football-match-01.jpg` | [Unsplash](https://unsplash.com/photos/1579952363873) | Match en action |
 | `football-mercato-01.jpg` | [Unsplash](https://unsplash.com/photos/1517466787929) | Ballon / mercato |
 | `football-club-01.jpg` | [Unsplash](https://unsplash.com/photos/1522778119026) | Stade / club |
-| `football-health-01.jpg` | [Unsplash](https://unsplash.com/photos/1576678927484) | Santé sportive |
+| `football-health-01.jpg` | [Pexels #3991878](https://www.pexels.com/photo/man-playing-soccer-on-green-grass-field-during-daytime-3991878/) | Échauffement / préparation sur pelouse |
 | `football-pro-01.jpg` | [Unsplash](https://unsplash.com/photos/1529900748604) | Foot professionnel |
 | `football-fans-01.jpg` | [Pexels #114296](https://www.pexels.com/photo/people-watching-soccer-game-114296/) | Supporters en liesse |
 | `football-team-01.jpg` | [Unsplash](https://unsplash.com/photos/1526232761682) | Équipe / cohésion |
-| `football-stadium-night-01.jpg` | [Pexels #1884574](https://www.pexels.com/photo/football-stadium-under-blue-sky-1884574/) | Stade illuminé |
-| `football-action-01.jpg` | [Pexels #274422](https://www.pexels.com/photo/man-playing-soccer-274422/) | Action joueur |
-| `football-coach-01.jpg` | [Pexels #362110](https://www.pexels.com/photo/man-standing-on-green-grass-field-362110/) | Coach / staff |
+| `football-stadium-night-01.jpg` | [Unsplash](https://unsplash.com/photos/1518609878373) | Stade / pelouse éclairée |
+| `football-coach-01.jpg` | [Pexels #2904163](https://www.pexels.com/photo/man-coaching-soccer-players-2904163/) | Coach / consignes sur le terrain |
 | `football-pitch-01.jpg` | [Pexels #1148820](https://www.pexels.com/photo/green-grass-field-1148820/) | Terrain / pelouse |
 
 Téléchargées le 7 juillet 2026 — résolution ~1400 px, format JPEG.

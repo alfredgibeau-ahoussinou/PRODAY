@@ -22,6 +22,7 @@ export default function VisionPage() {
         kicker="VISION"
         title="Aujourd'hui et demain"
         description={PRODUCT_VISION.intro}
+        image="/images/football-stadium-night-01.jpg"
         dark
       />
       <VisionTodayTomorrow />

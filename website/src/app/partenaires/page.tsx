@@ -20,7 +20,7 @@ export default function PartenairesPage() {
         kicker="PARTENAIRES"
         title="Visibilité auprès des clubs et des joueurs"
         description="Visibilité mesurable sur votre territoire — sans intermédiaire. Trois formules adaptées aux marques locales et nationales."
-        image="/images/football-club-01.jpg"
+        image="/images/football-mercato-01.jpg"
         accent="sponsor"
         dark
       />

@@ -17,6 +17,7 @@ export default function ComparePage() {
         kicker="COMPARATIF"
         title="Pourquoi pas WhatsApp ?"
         description="Groupes dispersés, statistiques absentes, recrutement non structuré — ProDay centralise l'essentiel."
+        image="/showcase/classic-exp-team.jpg"
         dark
       />
       <PageBody>

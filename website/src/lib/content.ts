@@ -261,7 +261,7 @@ export const MODULES = [
     subtitle: "Équipement & textile",
     description:
       "Trépieds, t-shirts et maillots officiels par univers — précommande depuis l'app.",
-    image: "/images/football-coach-01.jpg",
+    image: "/images/football-training-01.jpg",
     color: "#57534e",
   },
   {
@@ -896,7 +896,7 @@ export const AMATEUR_MODULES = [
     subtitle: "Effectif & convocations",
     description:
       "Profil coach vérifié, gestion d'effectif, convocations et stats saison — district et régional.",
-    image: "/images/football-coach-01.jpg",
+    image: "/showcase/classic-staff.jpg",
   },
   {
     id: "mercato-amateur",
@@ -1194,7 +1194,7 @@ export const UNIVERSE_PAGE_CONFIG = {
     brand: PRO_STAFF_BRAND,
     hero: {
       title: "Ton métier du foot pro.",
-      image: "/images/football-coach-01.jpg",
+      image: "/showcase/classic-staff.jpg",
     },
     highlights: [
       { label: "Métiers", value: "4 profils staff" },
