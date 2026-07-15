@@ -42,29 +42,25 @@ export type GoogleAuthRequestConfig = {
 
 /**
  * Config Google valide pour la plateforme courante.
- * - **Expo Go** : redirect `exp://` → client Web obligatoire (pas le client iOS `com.proday.app`).
- * - **Dev build / store** : clients natifs iOS / Android + Web client pour Firebase.
+ * Ne jamais réutiliser le client **Web** comme client iOS/Android : Google refuse
+ * les URI custom scheme (`proday://`) pour le type WEB → erreur 400 invalid_request.
  */
 export function getGoogleAuthRequestConfig(): GoogleAuthRequestConfig | null {
   const googleOAuth = readGoogleOAuth();
   const web = emptyToUndefined(googleOAuth.webClientId);
-  const iosExplicit = emptyToUndefined(googleOAuth.iosClientId);
-  const expo = emptyToUndefined(googleOAuth.expoClientId);
-  const androidExplicit = emptyToUndefined(googleOAuth.androidClientId);
+  const ios = emptyToUndefined(googleOAuth.iosClientId) ?? emptyToUndefined(googleOAuth.expoClientId);
+  const android = emptyToUndefined(googleOAuth.androidClientId);
 
   if (isExpoGo()) {
     return null;
   }
 
-  const ios = iosExplicit ?? expo ?? web;
-  const android = androidExplicit ?? web;
-
   if (Platform.OS === 'ios') {
-    if (!ios) return null;
+    if (!ios || !web) return null;
     return { webClientId: web, iosClientId: ios, androidClientId: android };
   }
   if (Platform.OS === 'android') {
-    if (!android) return null;
+    if (!android || !web) return null;
     return { webClientId: web, iosClientId: ios, androidClientId: android };
   }
   if (!web) return null;
@@ -81,10 +77,10 @@ export function getGoogleAuthSetupHint(): string {
     return getGoogleSignInBlockReason() ?? 'Utilisez un development build pour Google Sign-In.';
   }
   if (Platform.OS === 'ios') {
-    return 'Ajoutez EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID dans .env (obligatoire). EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID est recommandé pour le dev build ; le client Web peut servir de secours. Voir docs/FIREBASE_SETUP.md';
+    return 'Ajoutez EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID (type OAuth « iOS », bundle com.proday.app) et EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID dans .env. Le client Web seul provoque l’erreur « Custom scheme URIs are not allowed for WEB client type ». Voir docs/FIREBASE_SETUP.md';
   }
   if (Platform.OS === 'android') {
-    return 'Ajoutez EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID et EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID dans .env. Voir docs/FIREBASE_SETUP.md';
+    return 'Ajoutez EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID et EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID (type OAuth Android) dans .env. Voir docs/FIREBASE_SETUP.md';
   }
   return 'Ajoutez EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID dans .env. Voir docs/FIREBASE_SETUP.md';
 }

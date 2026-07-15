@@ -38,7 +38,10 @@
    EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID=123456789-zzzz.apps.googleusercontent.com
    ```
 
-   > Sur iOS, `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID` est **obligatoire** (dev build / App Store). Sans lui, le bouton Google affiche un message de configuration au lieu de planter l’app.
+   > Sur iOS, `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID` est **obligatoire** (dev build / App Store).  
+   > **Ne jamais** mettre le Web client ID à la place : Google renvoie  
+   > `Custom scheme URIs are not allowed for 'WEB' client type` (erreur 400).  
+   > Sans client iOS dédié, le bouton Google affiche un message de configuration.
 
    **Expo Go — Google Sign-In impossible**
 
