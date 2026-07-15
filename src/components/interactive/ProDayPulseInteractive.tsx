@@ -124,8 +124,13 @@ export const ProDayPulseInteractive: React.FC<ProDayPulseInteractiveProps> = ({
           <Text style={[styles.score, dark && styles.scoreDark, profileType.pulseScore]}>
             {pulse.score}
           </Text>
-          <Text style={[styles.scoreLabel, dark && styles.scoreLabelDark, profileType.pulseLabel]}>
-            VISIB
+          <Text
+            style={[styles.scoreLabel, dark && styles.scoreLabelDark, profileType.pulseLabel]}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.65}
+          >
+            {PULSE_DISPLAY_NAME}
           </Text>
           <View style={styles.tapBadge}>
             <Icon
@@ -235,8 +240,8 @@ export const ProDayPulseIntro: React.FC<{
 };
 
 function createStyles(c: AppColors, compact: boolean, centered: boolean) {
-  const ringOuter = compact ? 72 : 92;
-  const ringInner = compact ? 64 : 84;
+  const ringOuter = compact ? 88 : 108;
+  const ringInner = compact ? 78 : 98;
   return StyleSheet.create({
     centerRoot: { alignItems: 'center' },
     centerStack: { alignItems: 'center', gap: spacing.sm, width: '100%' },
@@ -280,17 +285,21 @@ function createStyles(c: AppColors, compact: boolean, centered: boolean) {
       alignItems: 'center',
       justifyContent: 'center',
       backgroundColor: c.brandSoft,
+      paddingHorizontal: 6,
     },
     ringDark: {
       backgroundColor: 'rgba(0,51,153,0.35)',
       borderColor: c.accent,
     },
-    score: { fontSize: compact ? 22 : 28, fontWeight: '900', color: c.text },
+    score: { fontSize: compact ? 20 : 26, fontWeight: '900', color: c.text },
     scoreDark: { color: c.brandInverse },
     scoreLabel: {
-      fontSize: 8,
+      marginTop: 1,
+      fontSize: compact ? 8 : 9,
       fontWeight: '800',
-      letterSpacing: 1,
+      letterSpacing: 0,
+      maxWidth: ringInner - 14,
+      textAlign: 'center',
       color: c.textMuted,
     },
     scoreLabelDark: { color: c.heroMuted },

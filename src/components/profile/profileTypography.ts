@@ -74,6 +74,6 @@ export const profileType = {
   pulseLabel: {
     fontFamily: fontFamily.bold,
     fontWeight: '800',
-    letterSpacing: 0.8,
+    letterSpacing: 0,
   },
 } as const satisfies Record<string, TextStyle>;
