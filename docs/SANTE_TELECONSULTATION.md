@@ -24,13 +24,13 @@ Ne pas coder une pile WebRTC propriétaire avant d’avoir validé la demande ki
 Sur Netlify / `.env.local` :
 
 ```bash
-# URL d’iframe Cal.com (ex. https://cal.com/proday-sante/teleconsultation)
-# ou Whereby (ex. https://proday.whereby.com/room-demo?embed=…)
-NEXT_PUBLIC_SANTE_BOOKING_EMBED_URL=
-
-# Optionnel — lien « ouvrir dans un nouvel onglet »
-NEXT_PUBLIC_SANTE_BOOKING_PAGE_URL=
+# Profil Cal.com ProDay (actif)
+NEXT_PUBLIC_SANTE_BOOKING_EMBED_URL=https://cal.com/alfred-gibeau-ahoussinou-crbca7?embed=true
+NEXT_PUBLIC_SANTE_BOOKING_PAGE_URL=https://cal.com/alfred-gibeau-ahoussinou-crbca7
 ```
+
+Créneaux publics actuels : **15 min** et **30 min**
+(`/alfred-gibeau-ahoussinou-crbca7/15min`, `/…/30min`).
 
 Page marketing : [`/sante#teleconsultation`](https://proday75.fr/sante#teleconsultation).
 
