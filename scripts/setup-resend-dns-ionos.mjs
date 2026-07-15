@@ -8,6 +8,7 @@
  *      RESEND_DKIM_TXT=p=MIGfMA0GCS...
  *      RESEND_SPF_TXT=v=spf1 include:amazonses.com ~all
  *      RESEND_MX_TARGET=feedback-smtp.eu-west-1.amazonses.com
+ *      RESEND_DOMAIN_VERIFICATION=resend-domain-verification=<token>
  *
  * Usage :
  *   node scripts/setup-resend-dns-ionos.mjs
@@ -42,6 +43,14 @@ const dkimTxt = env.RESEND_DKIM_TXT?.trim();
 const spfTxt = env.RESEND_SPF_TXT?.trim() || 'v=spf1 include:amazonses.com ~all';
 const mxTarget =
   env.RESEND_MX_TARGET?.trim() || 'feedback-smtp.eu-west-1.amazonses.com';
+
+function verificationTxtFromEnv() {
+  const raw = env.RESEND_DOMAIN_VERIFICATION?.trim();
+  if (!raw) return '';
+  return raw.startsWith('resend-domain-verification=')
+    ? raw
+    : `resend-domain-verification=${raw}`;
+}
 
 async function ionos(path, options = {}) {
   const res = await fetch(`${IONOS_DNS_BASE}${path}`, {
@@ -87,11 +96,16 @@ async function listRecords(zoneId) {
 
 function hasRecord(records, name, type, contentIncludes) {
   return records.some((r) => {
-    const n = r.name || r.properties?.name || '';
+    const n = r.name || r.properties?.name || r.hostname || '';
     const t = (r.type || r.properties?.type || '').toUpperCase();
     const c = r.content || r.properties?.content || r.target || '';
+    const host = n.replace(`.${ZONE_NAME}`, '').replace(ZONE_NAME, '@');
+    const matchName =
+      name === '@'
+        ? host === '@' || host === '' || n === '@' || n === ZONE_NAME
+        : n === name || n === `${name}.${ZONE_NAME}`;
     return (
-      n === name &&
+      matchName &&
       t === type.toUpperCase() &&
       (!contentIncludes || String(c).includes(contentIncludes))
     );
@@ -133,6 +147,7 @@ async function main() {
 
   if (verifyOnly) {
     const checks = [
+      ['@', 'TXT', 'resend-domain-verification'],
       ['resend._domainkey', 'TXT', 'p='],
       ['send', 'TXT', 'spf1'],
       ['send', 'MX', 'amazonses'],
@@ -144,20 +159,32 @@ async function main() {
     return;
   }
 
-  if (!dkimTxt) {
+  const verifyTxt = verificationTxtFromEnv();
+  if (!dkimTxt && !verifyTxt) {
     console.error(
-      'RESEND_DKIM_TXT manquant.\n' +
-        'Copiez la valeur complète depuis Resend → Domaines → proday75.fr → DKIM\n' +
-        'Ajoutez dans .env : RESEND_DKIM_TXT=p=MIGfMA0GCS...'
+      'RESEND_DKIM_TXT et RESEND_DOMAIN_VERIFICATION absents.\n' +
+        'Ajoutez au minimum la TXT apex depuis Resend (vérification domaine).'
     );
     process.exit(1);
   }
+  if (!dkimTxt) {
+    console.warn(
+      '⚠ RESEND_DKIM_TXT manquant — seule la TXT de vérification sera créée.\n' +
+        '   Copiez le DKIM depuis Resend → Domaines → proday75.fr\n'
+    );
+  }
 
-  const plan = [
-    { name: 'resend._domainkey', type: 'TXT', content: dkimTxt },
-    { name: 'send', type: 'TXT', content: spfTxt },
-    { name: 'send', type: 'MX', content: mxTarget, priority: 10 },
-  ];
+  const plan = [];
+  if (verifyTxt) {
+    plan.push({ name: '@', type: 'TXT', content: verifyTxt });
+  }
+  if (dkimTxt) {
+    plan.push(
+      { name: 'resend._domainkey', type: 'TXT', content: dkimTxt },
+      { name: 'send', type: 'TXT', content: spfTxt },
+      { name: 'send', type: 'MX', content: mxTarget, priority: 10 }
+    );
+  }
 
   for (const rec of plan) {
     const hint = rec.type === 'TXT' ? rec.content.slice(0, 8) : 'amazonses';

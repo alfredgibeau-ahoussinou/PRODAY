@@ -9,6 +9,7 @@
  *   - Netlify CLI connecté → enregistrements zone Netlify DNS
  *   - RESEND_API_KEY (clé complète, pas send-only) → récupère le DKIM automatiquement
  *   - RESEND_DKIM_TXT dans .env → valeur DKIM copiée depuis Resend
+ *   - RESEND_DOMAIN_VERIFICATION dans .env → TXT apex (resend-domain-verification=…)
  */
 
 import { readFileSync, existsSync } from 'fs';
@@ -24,6 +25,15 @@ const IONOS_DNS_BASE = 'https://api.hosting.ionos.com/dns/v1';
 
 const SPF = 'v=spf1 include:amazonses.com ~all';
 const MX = 'feedback-smtp.eu-west-1.amazonses.com';
+
+function verificationTxtFromEnv() {
+  const raw = env.RESEND_DOMAIN_VERIFICATION?.trim();
+  if (!raw) return '';
+  return raw.startsWith('resend-domain-verification=')
+    ? raw
+    : `resend-domain-verification=${raw}`;
+}
+
 
 function loadEnv() {
   const path = resolve(root, '.env');
@@ -158,13 +168,25 @@ async function netlifyCreate(hostname, type, value, priority) {
   });
 }
 
-async function applyRecords(provider, listFn, createFn, dkimTxt) {
+function buildResendPlan(dkimTxt) {
+  const plan = [];
+  const verify = verificationTxtFromEnv();
+  if (verify) {
+    plan.push({ host: '@', type: 'TXT', value: verify, hint: 'resend-domain-verification' });
+  }
+  if (dkimTxt) {
+    plan.push(
+      { host: 'resend._domainkey', type: 'TXT', value: dkimTxt, hint: 'p=' },
+      { host: 'send', type: 'TXT', value: SPF, hint: 'spf1' },
+      { host: 'send', type: 'MX', value: MX, hint: 'amazonses', priority: 10 }
+    );
+  }
+  return plan;
+}
+
+async function applyRecords(provider, listFn, createFn, plan) {
+  if (!plan.length) return;
   const records = await listFn();
-  const plan = [
-    { host: 'resend._domainkey', type: 'TXT', value: dkimTxt, hint: 'p=' },
-    { host: 'send', type: 'TXT', value: SPF, hint: 'spf1' },
-    { host: 'send', type: 'MX', value: MX, hint: 'amazonses', priority: 10 },
-  ];
 
   for (const rec of plan) {
     const fqdn = rec.host === '@' ? ZONE_NAME : `${rec.host}.${ZONE_NAME}`;
@@ -180,6 +202,7 @@ async function applyRecords(provider, listFn, createFn, dkimTxt) {
 async function verifyPublic() {
   const { execSync: sh } = await import('child_process');
   const checks = [
+    ['TXT', ZONE_NAME, 'resend-domain-verification'],
     ['TXT', `resend._domainkey.${ZONE_NAME}`, 'p='],
     ['TXT', `send.${ZONE_NAME}`, 'spf1'],
     ['MX', `send.${ZONE_NAME}`, 'amazonses'],
@@ -221,11 +244,15 @@ async function main() {
   }
 
   if (verifyOnly) {
+    if (!env.IONOS_API_KEY) {
+      console.warn('IONOS_API_KEY absent — contrôle API IONOS ignoré.\n');
+    }
     if (env.IONOS_API_KEY) {
       const zoneId = await ionosFindZoneId();
       const records = await ionosListRecords(zoneId);
       console.log('IONOS :');
       for (const [name, type, hint] of [
+        ['@', 'TXT', 'resend-domain-verification'],
         ['resend._domainkey', 'TXT', 'p='],
         ['send', 'TXT', 'spf1'],
         ['send', 'MX', 'amazonses'],
@@ -237,6 +264,7 @@ async function main() {
       const records = await netlifyListRecords();
       console.log('Netlify DNS :');
       for (const [host, type, hint] of [
+        [ZONE_NAME, 'TXT', 'resend-domain-verification'],
         ['resend._domainkey.proday75.fr', 'TXT', 'p='],
         ['send.proday75.fr', 'TXT', 'spf1'],
         ['send.proday75.fr', 'MX', 'amazonses'],
@@ -253,12 +281,19 @@ async function main() {
     return;
   }
 
-  if (!dkimTxt) {
+  const verifyTxt = verificationTxtFromEnv();
+  if (!dkimTxt && !verifyTxt) {
     console.error(
-      'DKIM manquant. Ajoutez RESEND_DKIM_TXT dans .env (copié depuis Resend)\n' +
-        'ou RESEND_API_KEY avec droits domaines (pas send-only).'
+      'Rien à publier. Ajoutez RESEND_DOMAIN_VERIFICATION et/ou RESEND_DKIM_TXT dans .env\n' +
+        '(DKIM : copié depuis Resend, ou RESEND_API_KEY avec droits domaines — pas send-only).'
     );
     process.exit(1);
+  }
+  if (!dkimTxt) {
+    console.warn(
+      '⚠ DKIM absent — seule la TXT de vérification domaine sera créée (si IONOS/Netlify disponible).\n' +
+        '   Il restera : resend._domainkey TXT, send TXT (SPF), send MX.\n'
+    );
   }
 
   let created = false;
@@ -269,8 +304,8 @@ async function main() {
     await applyRecords(
       'IONOS',
       () => ionosListRecords(zoneId),
-      (name, type, value, priority) => ionosCreate(zoneId, name, type, value, priority),
-      dkimTxt
+      (name, type, value, priority) => ionosCreate(zoneId, name === '@' ? '@' : name, type, value, priority),
+      buildResendPlan(dkimTxt)
     );
     created = true;
   } else {
@@ -286,7 +321,7 @@ async function main() {
         const hostname = host === '@' ? ZONE_NAME : `${host}.${ZONE_NAME}`;
         return netlifyCreate(hostname, type, value, priority);
       },
-      dkimTxt
+      buildResendPlan(dkimTxt)
     );
     created = true;
     console.log(
