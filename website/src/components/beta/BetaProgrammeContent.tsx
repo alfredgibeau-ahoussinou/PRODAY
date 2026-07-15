@@ -46,7 +46,7 @@ export function BetaProgrammeContent({ session }: BetaProgrammeContentProps) {
       <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-8">
         <SectionKicker>Qu&apos;est-ce que la bêta ProDay ?</SectionKicker>
         <p className="mt-4 max-w-3xl text-sm leading-relaxed text-white/65">
-          ProDay réunit Mercato, matchs, tournois, Pulse et CV joueur dans une seule app — pour le
+          ProDay réunit Mercato, matchs, tournois, Visibilité et CV joueur dans une seule app — pour le
           foot amateur et semi-pro. En tant que beta-testeur, vous accédez en avant-première aux
           builds iOS (TestFlight) et Android (APK), explorez les six pôles et nous aidez à
           prioriser les fonctionnalités avant l&apos;ouverture au grand public.

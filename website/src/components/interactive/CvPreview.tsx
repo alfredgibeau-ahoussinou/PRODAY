@@ -134,7 +134,7 @@ export function CvPreview({ universe = "homme" }: CvPreviewProps) {
               className="rounded-full px-3 py-1 text-xs font-semibold text-white"
               style={{ backgroundColor: theme.brandAccent }}
             >
-              Pulse 78
+              Visibilité 78
             </span>
             <span className="text-xs text-white/45">Mis à jour après le dernier match</span>
           </div>

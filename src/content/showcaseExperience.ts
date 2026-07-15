@@ -4,9 +4,9 @@ import type { ShowcaseImageKey } from './showcaseAssets';
 export const PRODAY_INFO_SECTIONS = [
   {
     id: 'pulse',
-    title: 'Pulse ProDay',
+    title: 'Visibilité ProDay',
     summary: 'Votre score de visibilité',
-    body: 'Le Pulse combine complétion du profil, stats saison, candidatures et convocations. Plus il monte, plus vous êtes visible des clubs et coachs.',
+    body: 'La Visibilité combine complétion du profil, stats saison, candidatures et convocations. Plus elle monte, plus vous êtes visible des clubs et coachs.',
     tips: ['Complétez bio + photo', 'Jouez et saisissez vos stats', 'Postulez aux annonces'],
   },
   {

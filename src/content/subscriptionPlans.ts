@@ -65,7 +65,7 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionPlanId, SubscriptionPlanDefi
     pricing: planPricing(2.99, true),
     limits: { mercato_apply_per_month: 1 },
     freeIncludes: [
-      'Profil, Pulse et CV en ligne',
+      'Profil, Visibilité et CV en ligne',
       'Galerie et stats saison',
       'Mercato en lecture',
       '1 candidature / mois',

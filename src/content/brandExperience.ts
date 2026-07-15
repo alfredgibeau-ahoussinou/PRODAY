@@ -16,7 +16,7 @@ import {
 export const PRODAY_BRAND_DNA = {
   name: 'ProDay',
   promise: 'Connecter • Progresser • Réussir',
-  pillars: ['Pulse', 'CV vivant', 'Mercato', 'Saison', 'Sponsors'],
+  pillars: ['Visibilité', 'CV vivant', 'Mercato', 'Saison', 'Sponsors'],
 } as const;
 
 export interface UniverseIdentity {

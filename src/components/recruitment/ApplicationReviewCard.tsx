@@ -204,7 +204,7 @@ export const ApplicationReviewCard: React.FC<ApplicationReviewCardProps> = ({
             <Text style={styles.meta}>
               {APPLICATION_STATUS_LABEL[application.status]} ·{' '}
               {formatTimeAgo(application.created_at)}
-              {pulseScore != null ? ` · Pulse ${pulseScore}` : ''}
+              {pulseScore != null ? ` · Visibilité ${pulseScore}` : ''}
             </Text>
           </View>
           <View

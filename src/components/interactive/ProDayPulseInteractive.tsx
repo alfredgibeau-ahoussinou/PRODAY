@@ -11,6 +11,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { ProDayGradient } from '../ui/ProDayGradient';
 import type { ProdayPulseResult, PulseBreakdownItem } from '../../utils/prodayPulse';
+import { PULSE_DISPLAY_NAME, PULSE_DISPLAY_NAME_FULL } from '../../content/pulseBrand';
 import type { RecruitmentStats } from '../../services/stats.service';
 import { PressableSpring } from '../motion';
 import { Icon } from '../ui/Icon';
@@ -124,7 +125,7 @@ export const ProDayPulseInteractive: React.FC<ProDayPulseInteractiveProps> = ({
             {pulse.score}
           </Text>
           <Text style={[styles.scoreLabel, dark && styles.scoreLabelDark, profileType.pulseLabel]}>
-            PULSE
+            VISIB
           </Text>
           <View style={styles.tapBadge}>
             <Icon
@@ -170,7 +171,7 @@ export const ProDayPulseInteractive: React.FC<ProDayPulseInteractiveProps> = ({
       {expanded ? (
         <Animated.View entering={FadeInDown.springify()} style={styles.breakdown}>
           <Text style={[styles.breakdownTitle, dark && styles.breakdownTitleDark]}>
-            Détail Pulse ProDay
+            Détail {PULSE_DISPLAY_NAME_FULL}
           </Text>
           {breakdown.map((item, i) => (
             <BreakdownBar key={item.key} item={item} delay={i * 80} dark={dark} styles={styles} />
@@ -181,14 +182,14 @@ export const ProDayPulseInteractive: React.FC<ProDayPulseInteractiveProps> = ({
         </Animated.View>
       ) : compact ? null : (
         <Text style={[styles.tapHint, dark && styles.tapHintDark]}>
-          Touchez le Pulse pour le détail →
+          Touchez la {PULSE_DISPLAY_NAME} pour le détail →
         </Text>
       )}
     </View>
   );
 };
 
-/** Intro Pulse — chiffres communauté réels, sans score inventé. */
+/** Intro Visibilité — chiffres communauté réels, sans score inventé. */
 export const ProDayPulseIntro: React.FC<{
   stats: RecruitmentStats | null;
   onPress: () => void;
@@ -202,11 +203,11 @@ export const ProDayPulseIntro: React.FC<{
         <ProDayGradient kind="cta" style={styles.teaserIconWrap}>
           <Icon name="star-four-points" size={16} color="#FFFFFF" variant="filled" />
         </ProDayGradient>
-        <Text style={styles.teaserTitle}>Pulse ProDay — exclusif</Text>
+        <Text style={styles.teaserTitle}>{PULSE_DISPLAY_NAME_FULL} — exclusif</Text>
       </View>
       <Text style={styles.teaserBody}>
         Votre score de visibilité se calcule à partir de votre profil, vos stats saison et
-        votre activité sur la plateforme. Connectez-vous pour voir votre Pulse personnel.
+        votre activité sur la plateforme. Connectez-vous pour voir votre {PULSE_DISPLAY_NAME} personnelle.
       </Text>
       {stats ? (
         <View style={styles.teaserStats}>
@@ -226,7 +227,9 @@ export const ProDayPulseIntro: React.FC<{
           </View>
         </View>
       ) : null}
-      <Text style={styles.teaserCta}>Créer mon compte pour activer mon Pulse →</Text>
+      <Text style={styles.teaserCta}>
+        Créer mon compte pour activer ma {PULSE_DISPLAY_NAME} →
+      </Text>
     </PressableSpring>
   );
 };

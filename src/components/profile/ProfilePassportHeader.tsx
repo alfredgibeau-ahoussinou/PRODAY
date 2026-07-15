@@ -160,7 +160,7 @@ export const ProfilePassportHeader: React.FC<ProfilePassportHeaderProps> = ({
 
         <View style={[styles.statsBar, { borderTopColor: c.border, backgroundColor: c.surfaceMuted }]}>
           <StatCell
-            label="Pulse"
+            label="Visibilité"
             value={String(pulseScore)}
             hint={pulseScore >= 70 ? 'En forme' : 'À booster'}
             accent={pulseScore >= 70}

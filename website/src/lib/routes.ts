@@ -97,7 +97,7 @@ export const EXPLORE_CARDS = [
   },
   {
     href: ROUTES.pulse,
-    title: "Pulse ProDay",
+    title: "Visibilité ProDay",
     description: "Simulez votre score de visibilité en temps réel.",
     image: "/showcase/classic-exp-pulse.jpg",
     tag: "Simulateur",

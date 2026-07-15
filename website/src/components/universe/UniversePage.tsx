@@ -149,7 +149,7 @@ export function UniversePage({ universe }: UniversePageProps) {
       {config.showPulse && (
         <section id="pulse" className={`scroll-mt-24 py-16 ${theme.softSectionBg || "bg-[#030303]"}`}>
           <div className="mx-auto max-w-6xl px-4 sm:px-6">
-            <h2 className="font-display text-2xl font-bold text-white sm:text-3xl">Pulse ProDay</h2>
+            <h2 className="font-display text-2xl font-bold text-white sm:text-3xl">Visibilité ProDay</h2>
             <p className="mt-3 max-w-2xl text-white/55">
               Score de visibilité exclusif — profil, stats, activité et confiance combinés.
             </p>

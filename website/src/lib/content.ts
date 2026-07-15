@@ -22,7 +22,7 @@ export const PRODUCT_VISION = {
     title: "Aujourd'hui",
     lead: "Fonctionnalités disponibles ou en déploiement actif dans l'application.",
     items: [
-      "Profil joueur / staff : Pulse, CV en ligne, galerie et stats saison",
+      "Profil joueur / staff : Visibilité, CV en ligne, galerie et stats saison",
       "Score carrière et timeline de progression",
       "Journal d'activités (séances, matchs, highlights)",
       "Analyse IA des highlights de séance (miniature vidéo ou poster + tags et notes)",
@@ -113,7 +113,7 @@ export const HOMME_BRAND = {
   logo: UNIVERSE_LOGOS.homme,
   tagline: "CONNECTER • PROGRESSER • RÉUSSIR",
   mission:
-    "Le foot masculin amateur : Mercato M, matchs, Arena, Pulse, CV joueur, covoiturage, pôle santé et Shop — réservé aux joueurs.",
+    "Le foot masculin amateur : Mercato M, matchs, Arena, Visibilité, CV joueur, covoiturage, pôle santé et Shop — réservé aux joueurs.",
   accent: "#0A0A0A",
   accentDark: "#262626",
 } as const;
@@ -230,7 +230,7 @@ export const MODULES = [
   },
   {
     id: "pulse",
-    title: "Pulse ProDay",
+    title: "Visibilité ProDay",
     subtitle: "Score de visibilité",
     description:
       "Profil, activité et confiance combinés — signature exclusive de la plateforme.",
@@ -350,7 +350,7 @@ export const JOURNEYS = [
     id: "player",
     role: "Joueur",
     steps: [
-      "Profil & Pulse",
+      "Profil & Visibilité",
       "CV en ligne éditable",
       "Stats & galerie",
       "Mercato & candidatures",
@@ -509,7 +509,7 @@ export const WOMAN_BRAND = {
   logo: UNIVERSE_LOGOS.woman,
   tagline: "JOUER • BRILLER • GRANDIR",
   mission:
-    "Le foot au féminin : Mercato F, matchs, Arena, Pulse, CV joueuse, covoiturage, pôle santé et Shop — réservé aux joueuses.",
+    "Le foot au féminin : Mercato F, matchs, Arena, Visibilité, CV joueuse, covoiturage, pôle santé et Shop — réservé aux joueuses.",
   accent: "#BE185D",
   accentDark: "#831843",
 } as const;
@@ -559,10 +559,10 @@ export const MAN_MODULES = [
   },
   {
     id: "pulse-cv",
-    title: "Pulse & CV",
+    title: "Visibilité & CV",
     subtitle: "Visibilité joueur",
     description:
-      "Score Pulse, stats saison, galerie et CV en ligne éditable — votre vitrine sur le Mercato M.",
+      "Score Visibilité, stats saison, galerie et CV en ligne éditable — votre vitrine sur le Mercato M.",
     image: "/showcase/classic-exp-pulse.jpg",
   },
   {
@@ -619,7 +619,7 @@ export const WOMAN_MODULES = [
   {
     id: "profil-f",
     title: "Profil joueuse",
-    subtitle: "Pulse & CV en ligne",
+    subtitle: "Visibilité & CV en ligne",
     description:
       "Stats saison, galerie et CV joueuse éditable — votre vitrine sportive au féminin.",
     image: "/showcase/woman/woman-profile.jpg",
@@ -787,7 +787,7 @@ export const PRO_JOUEUR_MODULES = [
   },
   {
     id: "pulse-pro",
-    title: "Pulse (dans Accueil Carrière)",
+    title: "Visibilité (dans Accueil Carrière)",
     subtitle: "Visibilité scouting",
     description:
       "Score de visibilité sur l'onglet Accueil Carrière — pas un onglet séparé. Profil, activité et confiance pour attirer les recruteurs.",
@@ -956,10 +956,10 @@ export const AMATEUR_MODULES = [
   },
   {
     id: "pulse-amateur",
-    title: "Pulse (dans l'Accueil)",
+    title: "Visibilité (dans l'Accueil)",
     subtitle: "Score de visibilité",
     description:
-      "Pulse n'est pas un onglet : c'est votre score de visibilité affiché sur l'Accueil Équipe, à côté de votre saison.",
+      "Visibilité n'est pas un onglet : c'est votre score de visibilité affiché sur l'Accueil Équipe, à côté de votre saison.",
     image: "/showcase/classic-exp-pulse.jpg",
   },
 ] as const;
@@ -1011,11 +1011,11 @@ export const UNIVERSE_PAGE_CONFIG = {
       { label: "Public", value: "Joueurs M" },
       { label: "Mercato", value: "Mercato M" },
       { label: "Saison", value: "Matchs & Arena" },
-      { label: "Visibilité", value: "Pulse & CV" },
+      { label: "Visibilité", value: "Visibilité & CV" },
     ],
     modulesTitle: "Tout pour votre saison",
     modulesSubtitle:
-      "Mercato M, matchs, Arena, Pulse, covoiturage, pôle santé et Shop — pensé pour les joueurs.",
+      "Mercato M, matchs, Arena, Visibilité, covoiturage, pôle santé et Shop — pensé pour les joueurs.",
     modules: MAN_MODULES as readonly UniverseModule[],
     journeyIds: ["player"] as const,
     audienceNote:
@@ -1042,11 +1042,11 @@ export const UNIVERSE_PAGE_CONFIG = {
       { label: "Public", value: "Joueuses F" },
       { label: "Mercato", value: "Mercato F" },
       { label: "Saison", value: "Matchs & Arena" },
-      { label: "Visibilité", value: "Pulse & CV F" },
+      { label: "Visibilité", value: "Visibilité & CV F" },
     ],
     modulesTitle: "Tout pour votre saison",
     modulesSubtitle:
-      "Mercato F, matchs, Arena, Pulse, covoiturage, pôle santé et Shop — pensé pour les joueuses.",
+      "Mercato F, matchs, Arena, Visibilité, covoiturage, pôle santé et Shop — pensé pour les joueuses.",
     modules: WOMAN_MODULES as readonly UniverseModule[],
     journeyIds: ["player"] as const,
     audienceNote:
@@ -1178,7 +1178,7 @@ export const UNIVERSE_PAGE_CONFIG = {
       { label: "Public", value: "Joueurs pro" },
       { label: "Carrière", value: "Contrat & essais" },
       { label: "Portfolio", value: "Stats validées coach" },
-      { label: "Visibilité", value: "Pulse & scouting" },
+      { label: "Visibilité", value: "Visibilité & scouting" },
     ],
     modulesTitle: "Coque joueur professionnel",
     modulesSubtitle:
@@ -1292,7 +1292,7 @@ export const ALL_PILLARS = [
   ...PILLARS,
   {
     id: "pulse-pillar",
-    title: "Pulse ProDay",
+    title: "Visibilité ProDay",
     subtitle: "Score de visibilité",
     description:
       "Indicateur exclusif : profil, activité et confiance pour vous démarquer.",
@@ -1475,7 +1475,7 @@ export const SUBSCRIPTION_PLANS_WEB = [
     storeAvailable: true,
     universes: ["homme", "woman", "amateur"] as ProductLineWeb[],
     freeIncludes: [
-      "Profil, Pulse et CV en ligne",
+      "Profil, Visibilité et CV en ligne",
       "Galerie et stats saison",
       "Mercato en lecture",
       "1 candidature / mois",
@@ -1648,7 +1648,7 @@ function womanPlayerPlusPlan(
     label: "Joueuse Plus",
     tagline: "CV joueuse, visibilité et Mercato F",
     freeIncludes: [
-      "Profil, Pulse et CV joueuse en ligne",
+      "Profil, Visibilité et CV joueuse en ligne",
       "Galerie et stats saison",
       "Mercato F en lecture",
       "1 candidature Mercato F / mois",
@@ -1717,15 +1717,15 @@ export const FAQ_ITEMS = [
   },
   {
     q: "L'app est-elle gratuite ?",
-    a: "Oui, un compte gratuit couvre profil, Pulse, calendrier, Arena en consultation et limites Mercato. Les offres Pro débloquent candidatures illimitées, multi-équipes, etc.",
+    a: "Oui, un compte gratuit couvre profil, Visibilité, calendrier, Arena en consultation et limites Mercato. Les offres Pro débloquent candidatures illimitées, multi-équipes, etc.",
   },
   {
     q: "Comment fonctionne la vérification coach ?",
     a: "Diplôme ou licence obligatoire à l'inscription. Badge orange pendant la revue, badge vert après validation admin — messagerie complète débloquée.",
   },
   {
-    q: "Qu'est-ce que le Pulse ProDay ?",
-    a: "Score de visibilité combinant profil, stats saison, candidatures et confiance. Plus il monte, plus vous êtes visible des clubs.",
+    q: "Qu'est-ce que la Visibilité ProDay ?",
+    a: "Score de visibilité combinant profil, stats saison, candidatures et confiance. Plus elle monte, plus vous êtes visible des clubs.",
   },
   {
     q: "Qui peut publier sur le Mercato ?",
@@ -1814,7 +1814,7 @@ export const TESTIMONIALS = [
   },
   {
     quote:
-      "Le Pulse m'a poussée à compléter mon profil. Trois clubs m'ont contactée après mes candidatures Mercato F.",
+      "La Visibilité m'a poussée à compléter mon profil. Trois clubs m'ont contactée après mes candidatures Mercato F.",
     author: "Léa M.",
     role: "Joueuse U19, ProDay Woman",
   },
@@ -1838,7 +1838,7 @@ export const ROADMAP_ITEMS = [
     status: "done" as const,
     items: [
       "Dashboard & accueil IA",
-      "Profil, Pulse & CV en ligne",
+      "Profil, Visibilité & CV en ligne",
       "Score carrière & timeline",
       "Journal d'activités",
       "Analyse IA highlights séance",
@@ -1884,7 +1884,7 @@ export const COMPARISON_ROWS = [
   { feature: "Live Stats vers profil", proday: true, whatsapp: false, excel: false },
   { feature: "Vérification staff", proday: true, whatsapp: false, excel: false },
   { feature: "Tournois Arena", proday: true, whatsapp: false, excel: "partial" as const },
-  { feature: "Pulse visibilité", proday: true, whatsapp: false, excel: false },
+  { feature: "Visibilité visibilité", proday: true, whatsapp: false, excel: false },
   { feature: "Covoiturage matchs", proday: true, whatsapp: "partial" as const, excel: false },
   { feature: "Pôle santé & coach mental", proday: true, whatsapp: false, excel: false },
   { feature: "ProDay Shop intégré", proday: true, whatsapp: false, excel: false },
@@ -1933,7 +1933,7 @@ export const QUIZ_RESULTS: Record<
 > = {
   player: {
     title: "Profil sportif",
-    description: "CV en ligne, Pulse et stats — le Mercato vient compléter votre visibilité.",
+    description: "CV en ligne, Visibilité et stats — le Mercato vient compléter votre visibilité.",
     href: "/cv",
     cta: "Découvrir le CV en ligne",
   },

@@ -26,7 +26,7 @@ export const PRODAY_PILLARS = [
   },
   {
     id: 'pulse',
-    title: 'Pulse ProDay',
+    title: 'Visibilité ProDay',
     subtitle: 'Score de visibilité',
     description:
       'Indicateur exclusif : profil, activité et confiance pour vous démarquer.',

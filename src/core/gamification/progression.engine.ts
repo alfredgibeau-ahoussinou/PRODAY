@@ -20,8 +20,8 @@ function buildBadges(xp: number, streakDays: number): Badge[] {
     },
     {
       id: 'elite_pulse',
-      label: 'Pulse Elite',
-      description: 'Score Pulse élevé',
+      label: 'Visibilité Elite',
+      description: 'Score Visibilité élevé',
       icon: 'trophy',
       unlocked: xp >= 600,
     },

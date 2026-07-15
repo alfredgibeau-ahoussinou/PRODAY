@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
 import type { ProdayPulseResult, PulseBreakdownItem } from '../../utils/prodayPulse';
 import { ProDayPulseInteractive } from '../interactive/ProDayPulseInteractive';
+import { PULSE_DISPLAY_NAME_FULL } from '../../content/pulseBrand';
 import { Icon } from '../ui/Icon';
 import { ProDayText } from '../ui/ProDayText';
 import { useAppTheme } from '../../context/ProductLineContext';
@@ -30,7 +31,7 @@ export const ProfilePulseCard: React.FC<ProfilePulseCardProps> = ({
         <View style={styles.titleRow}>
           <Icon name="star-four-points" size={16} color={c.brand} />
           <ProDayText variant="section" inverse style={profileType.menuTitle}>
-            Pulse ProDay
+            {PULSE_DISPLAY_NAME_FULL}
           </ProDayText>
         </View>
       ) : null}

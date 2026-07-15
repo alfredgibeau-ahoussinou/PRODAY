@@ -59,7 +59,7 @@ export function buildBetaWelcomeEmail(params: BetaWelcomeEmailParams): {
     '',
     `Merci de votre inscription à la bêta ProDay en tant que ${params.roleLabel}.`,
     '',
-    'ProDay est l’écosystème foot amateur et semi-pro qui réunit recrutement (Mercato), matchs, tournois, Pulse (score de visibilité) et CV joueur — le tout dans une seule application mobile.',
+    'ProDay est l’écosystème foot amateur et semi-pro qui réunit recrutement (Mercato), matchs, tournois, Visibilité (score de profil) et CV joueur — le tout dans une seule application mobile.',
     '',
     'Prochaines étapes :',
     '• Accédez à votre espace bêta via le lien ci-dessous.',
@@ -106,7 +106,7 @@ export function buildBetaWelcomeEmail(params: BetaWelcomeEmailParams): {
               </p>
               <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#334155;">
                 <strong>ProDay</strong> réunit recrutement (Mercato), matchs amicaux, tournois,
-                le score <strong>Pulse</strong> et un <strong>CV joueur</strong> exportable — une seule app pour
+                le score <strong>Visibilité</strong> et un <strong>CV joueur</strong> exportable — une seule app pour
                 joueurs, coachs, clubs et organisateurs.
               </p>
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:24px 0;background:#f8fafc;border-radius:12px;border:1px solid #e2e8f0;">

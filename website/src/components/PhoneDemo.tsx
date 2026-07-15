@@ -31,7 +31,7 @@ const BASE_SCREENS: Record<MainTabId, ScreenMock> = {
     title: "Accueil",
     subtitle: "Bonjour Alex — votre saison en un coup d'œil.",
     stats: [
-      { value: "72", label: "Pulse" },
+      { value: "72", label: "Visibilité" },
       { value: "3", label: "Convocs", highlight: true },
       { value: "12", label: "Annonces" },
     ],
@@ -208,10 +208,10 @@ const BASE_SCREENS: Record<MainTabId, ScreenMock> = {
   profil: {
     caption: "Pro Day Man",
     title: "Profil",
-    subtitle: "Complétion, Pulse et plan d'abonnement.",
+    subtitle: "Complétion, Visibilité et plan d'abonnement.",
     stats: [
       { value: "86%", label: "Profil" },
-      { value: "72", label: "Pulse" },
+      { value: "72", label: "Visibilité" },
       { value: "Free", label: "Plan" },
     ],
     cards: [

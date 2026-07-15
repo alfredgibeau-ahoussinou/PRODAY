@@ -145,7 +145,7 @@ export function useMatchActions(profile: User | null) {
               await friendlyMatchesService.markPlayed(match.id);
               Alert.alert(
                 'Match enregistré',
-                'Pensez à mettre à jour vos stats saison sur votre profil pour booster votre Pulse.',
+                'Pensez à mettre à jour vos stats saison sur votre profil pour booster votre Visibilité.',
                 [
                   { text: 'Plus tard', style: 'cancel' },
                   { text: 'Mon profil', onPress: onOpenProfile },

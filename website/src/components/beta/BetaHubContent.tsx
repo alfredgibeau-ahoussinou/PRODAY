@@ -123,7 +123,7 @@ export function BetaHubContent({ session }: BetaHubContentProps) {
         <div>
           <SectionKicker>En attendant l&apos;app</SectionKicker>
           <p className="mt-2 max-w-xl text-sm text-white/65">
-            Démo interactive, Mercato, Pulse, feuille de route et les six pôles sur proday75.fr.
+            Démo interactive, Mercato, Visibilité, feuille de route et les six pôles sur proday75.fr.
           </p>
         </div>
         <div className="mt-6 flex flex-wrap gap-3 sm:mt-0">

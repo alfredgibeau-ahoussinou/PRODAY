@@ -13,7 +13,7 @@ const NODES = [
   { id: "organizer", label: "Organisateur", x: 82, y: 78 },
   { id: "health", label: "Pôle santé", x: 28, y: 18 },
   { id: "arena", label: "Arena", x: 72, y: 12 },
-  { id: "pulse", label: "Pulse", x: 50, y: 85 },
+  { id: "pulse", label: "Visibilité", x: 50, y: 85 },
 ] as const;
 
 const EDGES: [string, string][] = [
@@ -97,7 +97,7 @@ export function EcosystemMap() {
 const DESCRIPTIONS: Record<string, string> = {
   mercato:
     "Hub recrutement — annonces, candidatures, filtres poste/niveau/ville. Publié par les recruteurs Pro.",
-  player: "Profil, Pulse, stats, CV PDF, pôle santé, covoiturage et candidatures Mercato.",
+  player: "Profil, Visibilité, stats, CV PDF, pôle santé, covoiturage et candidatures Mercato.",
   coach: "Vérification diplôme, effectif, convocations et Live Stats équipe.",
   agent: "Mandats joueurs, repérage et contacts clubs sur Mercato Pro.",
   recruiter: "Rôle dédié — scouting, annonces Mercato Pro et suivi candidatures.",

@@ -71,7 +71,7 @@ export function computeProdayPulse(
   return { score, label: labels[tier], hint: hints[tier], tier };
 }
 
-/** Détail interactif du Pulse — affiché au tap sur l’anneau ProDay. */
+/** Détail interactif de la Visibilité — affiché au tap sur l’anneau ProDay. */
 export function getPulseBreakdown(
   user: User,
   context?: {

@@ -4,6 +4,7 @@ import { motion, useSpring, useTransform } from "framer-motion";
 import { useMemo, useState } from "react";
 import { Reveal } from "./Reveal";
 import { UNIVERSE_THEME } from "@/components/universe/universeTheme";
+import { PULSE_DISPLAY_KICKER, PULSE_DISPLAY_NAME } from "@/lib/pulseBrand";
 import type { ProductLineWeb } from "@/lib/content";
 
 type SliderKey = "profile" | "stats" | "activity" | "trust";
@@ -70,13 +71,13 @@ export function PulseSimulator({
         {!fullPage && (
           <Reveal>
             <p className="text-sm font-medium tracking-widest text-white/40">
-              PULSE PRODAY
+              {PULSE_DISPLAY_KICKER}
             </p>
             <h2 className="font-display mt-2 text-3xl font-bold text-white sm:text-4xl">
               Simulez votre score de visibilité
             </h2>
             <p className="mt-4 max-w-lg text-white/55">
-              Ajustez les curseurs — le Pulse se recalcule en direct, comme dans
+              Ajustez les curseurs — la {PULSE_DISPLAY_NAME} se recalcule en direct, comme dans
               l&apos;application.
             </p>
           </Reveal>
@@ -154,10 +155,10 @@ export function PulseSimulator({
             </motion.p>
             <p className="mt-2 text-center text-sm text-white/50">
               {line === "woman"
-                ? "Plus le Pulse monte, plus vous êtes visible des clubs et coachs F."
+                ? "Plus la Visibilité monte, plus vous êtes visible des clubs et coachs F."
                 : line === "pro"
-                  ? "Plus le Pulse monte, plus votre profil pro gagne en crédibilité."
-                  : "Plus le Pulse monte, plus vous êtes visible des clubs et coachs."}
+                  ? "Plus la Visibilité monte, plus votre profil pro gagne en crédibilité."
+                  : "Plus la Visibilité monte, plus vous êtes visible des clubs et coachs."}
             </p>
           </div>
         </div>

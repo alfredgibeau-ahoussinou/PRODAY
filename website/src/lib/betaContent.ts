@@ -27,7 +27,7 @@ export const BETA_APP_VERSION = process.env.NEXT_PUBLIC_BETA_APP_VERSION?.trim()
 export const BETA_FEATURES = [
   "Mercato — annonces, candidatures et suivi des réponses",
   "Matchs & tournois — convocations, RSVP et calendrier unifié",
-  "Pulse — score de visibilité et dynamique de profil",
+  "Visibilité — score de visibilité et dynamique de profil",
   "Fil, Reels & Arena — communauté, contenus et événements",
   "CV joueur — profil alimenté par vos matchs et stats",
   "Parcours par rôle — expérience adaptée à votre profil",

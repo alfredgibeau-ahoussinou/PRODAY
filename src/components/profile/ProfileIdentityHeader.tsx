@@ -119,7 +119,7 @@ export const ProfileIdentityHeader: React.FC<ProfileIdentityHeaderProps> = ({
 
         <View style={[styles.chipRow, { paddingLeft: avatarSize + spacing.sm }]}>
           <StatChip label="Profil" value={`${completionPercent}%`} colors={c} />
-          <StatChip label="Pulse" value={String(pulse.score)} colors={c} />
+          <StatChip label="Visibilité" value={String(pulse.score)} colors={c} />
           <StatChip
             label="Plan"
             value={subscriptionTier === 'pro' ? 'Pro' : 'Free'}
@@ -202,7 +202,7 @@ export const ProfileIdentityHeader: React.FC<ProfileIdentityHeaderProps> = ({
           <View style={styles.metrics}>
             <MetricCell label="Complétion" value={`${completionPercent}%`} colors={c} />
             <View style={[styles.metricDivider, { backgroundColor: c.border }]} />
-            <MetricCell label="Pulse" value={String(pulse.score)} colors={c} />
+            <MetricCell label="Visibilité" value={String(pulse.score)} colors={c} />
             <View style={[styles.metricDivider, { backgroundColor: c.border }]} />
             <MetricCell
               label="Plan"

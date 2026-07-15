@@ -19,7 +19,7 @@ export const PRODAY_UNIQUES: {
 }[] = [
   {
     id: 'pulse',
-    title: 'Pulse ProDay',
+    title: 'Visibilité ProDay',
     subtitle: 'Score de visibilité',
     description: 'Un indicateur unique qui combine profil, stats et confiance.',
     icon: 'star-four-points' as IconName,

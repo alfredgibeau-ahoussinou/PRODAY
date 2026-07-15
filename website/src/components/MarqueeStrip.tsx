@@ -11,7 +11,7 @@ const ITEMS = [
   "Matchs",
   "Covoiturage",
   "Pôle santé",
-  "Pulse ProDay",
+  "Visibilité ProDay",
   "Live Stats",
   "Famille",
   BRAND.tagline,

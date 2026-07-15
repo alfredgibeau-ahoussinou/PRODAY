@@ -33,7 +33,7 @@ export const metadata: Metadata = {
     template: "%s · ProDay",
   },
   description:
-    "Plateforme foot amateur et semi-pro : Mercato, Matchs, Arena, Reels, Fil, espace partenaires et Pulse ProDay.",
+    "Plateforme foot amateur et semi-pro : Mercato, Matchs, Arena, Reels, Fil, espace partenaires et Visibilité ProDay.",
   applicationName: "ProDay",
   appleWebApp: {
     capable: true,

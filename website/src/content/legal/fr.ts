@@ -33,7 +33,7 @@ export const PRIVACY_SECTIONS: LegalSectionContent[] = [
     paragraphs: ['Nous traitons notamment les catégories suivantes :'],
     bullets: [
       'Compte : adresse e-mail, nom affiché, rôle (joueur, coach, recruteur, agent, organisateur, kinésithérapeute, partenaire, parent/tuteur), ville, photo de profil, langue.',
-      'Profil sportif : poste, catégorie d’âge, niveau, statistiques, CV joueur, badges, historique d’activité (matchs, candidatures, Pulse).',
+      'Profil sportif : poste, catégorie d’âge, niveau, statistiques, CV joueur, badges, historique d’activité (matchs, candidatures, Visibilité).',
       'Vérification : pièces d’identité, licences, diplômes ou justificatifs selon le rôle — analyse automatisée possible pour accélérer la validation.',
       'Contenus : annonces Mercato, messages, publications fil d’actualité, réponses à la question de la semaine, photos et vidéos (réels).',
       'Événements équipe : convocations, présences, compositions, stats live, covoiturage (lieux de rendez-vous).',
@@ -53,7 +53,7 @@ export const PRIVACY_SECTIONS: LegalSectionContent[] = [
       'Création, authentification et gestion du compte.',
       'Mise en relation entre joueurs, clubs, staff, professionnels de santé et partenaires.',
       'Vérification des profils, lutte contre la fraude et modération des contenus.',
-      'Fonctionnement des modules Mercato, matchs, tournois, messages, fil, réels et Pulse.',
+      'Fonctionnement des modules Mercato, matchs, tournois, messages, fil, réels et Visibilité.',
       'Notifications (convocations, candidatures, messages, actualités).',
       'Programme bêta : invitation, e-mails d’information et collecte de retours.',
       'Facturation des abonnements et offres Pro via les stores.',
@@ -147,7 +147,7 @@ export const TERMS_SECTIONS: LegalSectionContent[] = [
     id: 'objet',
     title: 'Objet et périmètre',
     paragraphs: [
-      'ProDay propose une plateforme numérique organisée autour de quatre pôles (Joueur, Pro, Santé, Partenaires) permettant notamment le recrutement, l’organisation de matchs et tournois, la messagerie, le fil d’actualité, les réels vidéo, le suivi de visibilité (Pulse), le CV joueur et les espaces dédiés aux professionnels et sponsors.',
+      'ProDay propose une plateforme numérique organisée autour de quatre pôles (Joueur, Pro, Santé, Partenaires) permettant notamment le recrutement, l’organisation de matchs et tournois, la messagerie, le fil d’actualité, les réels vidéo, le suivi de visibilité (Visibilité), le CV joueur et les espaces dédiés aux professionnels et sponsors.',
       'Certaines fonctionnalités peuvent être proposées en avant-première dans le cadre d’une bêta fermée : elles peuvent évoluer, être limitées ou retirées sans préavis.',
     ],
   },

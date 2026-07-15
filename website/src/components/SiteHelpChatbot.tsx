@@ -18,11 +18,11 @@ type HelpEntry = {
 const COMMON_ENTRIES: HelpEntry[] = [
   {
     id: "pulse-accueil",
-    question: "Pulse ou Accueil — quelle différence ?",
+    question: "Visibilité ou Accueil — quelle différence ?",
     answer:
-      "Accueil est l'onglet principal de la barre. Pulse est votre score de visibilité, affiché dans l'Accueil — ce n'est pas un onglet séparé.",
+      "Accueil est l'onglet principal de la barre. La Visibilité est votre score affiché dans l'Accueil — ce n'est pas un onglet séparé.",
     href: ROUTES.pulse,
-    hrefLabel: "Voir Pulse ProDay",
+    hrefLabel: "Voir Visibilité ProDay",
   },
   {
     id: "sponsors",
@@ -89,7 +89,7 @@ function entriesForPath(pathname: string, pricingHref: string): HelpEntry[] {
       id: "pole-pro",
       question: "Que regroupe Pro Joueur ?",
       answer:
-        "Carrière (avec Pulse), Opportunités, Réels, Groupe, Shop et Profil — Sponsors via le module Accueil.",
+        "Carrière (avec Visibilité), Opportunités, Réels, Groupe, Shop et Profil — Sponsors via le module Accueil.",
       href: ROUTES.proJoueur,
       hrefLabel: "Pro Joueur",
     });

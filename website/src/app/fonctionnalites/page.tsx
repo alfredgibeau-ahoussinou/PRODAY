@@ -11,7 +11,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "Fonctionnalités",
   description:
-    "Mercato, Reels, Fil, Arena, covoiturage, pôle santé, espace partenaires, Shop, Pulse, CV vivant et Live Stats — organisés par 4 pôles.",
+    "Mercato, Reels, Fil, Arena, covoiturage, pôle santé, espace partenaires, Shop, Visibilité, CV vivant et Live Stats — organisés par 4 pôles.",
 };
 
 export default function FeaturesPage() {

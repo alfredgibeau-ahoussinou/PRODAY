@@ -108,7 +108,7 @@ export function buildBetaWelcomeEmail(params: BetaWelcomeEmailParams): {
               </p>
               <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#334155;">
                 <strong>ProDay</strong> réunit Mercato et recruteurs vérifiés, matchs, covoiturage,
-                pôle santé (kiné, coach mental), le score <strong>Pulse</strong>, le <strong>Shop</strong>
+                pôle santé (kiné, coach mental), le score <strong>Visibilité</strong>, le <strong>Shop</strong>
                 et un <strong>CV foot en ligne</strong> exportable — Man, Woman et Pro.
               </p>
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:24px 0;background:#f8fafc;border-radius:12px;border:1px solid #e2e8f0;">

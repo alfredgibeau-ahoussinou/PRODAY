@@ -16,7 +16,7 @@ export const ROLE_OPTIONS: {
   {
     value: 'player',
     label: 'Joueur',
-    description: 'CV en ligne, stats, Pulse',
+    description: 'CV en ligne, stats, Visibilité',
     icon: 'football',
   },
   {
@@ -86,7 +86,7 @@ export const AuthRolePicker: React.FC<AuthRolePickerProps> = ({
     const allowed = new Set(rolesForProductLine(line));
     return ROLE_OPTIONS.filter((r) => allowed.has(r.value)).map((r) => {
       if (line === 'woman' && r.value === 'player') {
-        return { ...r, label: 'Joueuse', description: 'CV en ligne, stats, Pulse F' };
+        return { ...r, label: 'Joueuse', description: 'CV en ligne, stats, Visibilité' };
       }
       if (line === 'pro' && r.value === 'physio') {
         return { ...r, label: 'Pôle santé', description: 'Kiné, médecin, coach mental…' };

@@ -380,7 +380,7 @@ export const MODULES_FR: MessageCatalog = {
   'mercato.search.placeholder': 'Poste, ville, club…',
 
   'home.greeting': 'Bonjour {{name}}',
-  'home.pulse': 'Pulse',
+  'home.pulse': 'Visibilité',
   'home.matches.title': 'Matchs pour vous',
   'home.matches.empty': 'Aucun match compatible pour le moment.',
   'home.matches.explore': 'Explorer les matchs',

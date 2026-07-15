@@ -41,10 +41,10 @@ const LINE_PLAN_PATCHES: Record<
   homme: {
     player_plus: {
       label: 'Joueur Plus',
-      tagline: 'CV joueur, Pulse et Mercato M',
+      tagline: 'CV joueur, Visibilité et Mercato M',
       mercatoQuotaLabel: 'Candidatures Mercato M',
       freeIncludes: [
-        'Profil, Pulse et CV foot en ligne',
+        'Profil, Visibilité et CV foot en ligne',
         'Galerie et stats saison',
         'Mercato M en lecture',
         '1 candidature Mercato M / mois',
@@ -61,10 +61,10 @@ const LINE_PLAN_PATCHES: Record<
   woman: {
     player_plus: {
       label: 'Joueuse Plus',
-      tagline: 'CV joueuse, Pulse et Mercato F',
+      tagline: 'CV joueuse, Visibilité et Mercato F',
       mercatoQuotaLabel: 'Candidatures Mercato F',
       freeIncludes: [
-        'Profil, Pulse et CV joueuse en ligne',
+        'Profil, Visibilité et CV joueuse en ligne',
         'Galerie et stats saison (catégorie F)',
         'Mercato F en lecture',
         '1 candidature Mercato F / mois',
@@ -81,10 +81,10 @@ const LINE_PLAN_PATCHES: Record<
   amateur: {
     player_plus: {
       label: 'Joueur Amateur',
-      tagline: 'CV joueur, Pulse et Mercato Amateur',
+      tagline: 'CV joueur, Visibilité et Mercato Amateur',
       mercatoQuotaLabel: 'Candidatures Mercato Amateur',
       freeIncludes: [
-        'Profil, Pulse et CV foot en ligne',
+        'Profil, Visibilité et CV foot en ligne',
         'Galerie et stats saison',
         'Mercato Amateur en lecture',
         '1 candidature Mercato Amateur / mois',

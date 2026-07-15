@@ -12,7 +12,7 @@ export function ExploreGrid() {
     <Section
       kicker="GALERIE"
       title="Chaque page, une expérience"
-      description="Démos interactives, simulateurs Pulse, tarifs partenaires et parcours par rôle."
+      description="Démos interactives, simulateurs Visibilité, tarifs partenaires et parcours par rôle."
       className="border-t border-white/8 bg-neutral-950"
     >
       <div className="masonry-grid">
