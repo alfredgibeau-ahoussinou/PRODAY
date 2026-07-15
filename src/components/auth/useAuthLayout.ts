@@ -1,12 +1,14 @@
 import { useMemo } from 'react';
-import { useWindowDimensions } from 'react-native';
+import { Platform, StatusBar, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { spacing } from '../../theme/designTokens';
 import { SIGNUP_STICKY_FOOTER_HEIGHT } from '../../navigation/tabBarLayout';
 
 /**
  * Dimensions connexion / inscription (petits écrans, encoches).
- * Le parent `SafeAreaView` (App.tsx) gère déjà l’encoche — pas de double inset en haut.
+ * `headerTopPad` inclut la barre d’état : les overlays `absoluteFill`
+ * (inscription, MDP oublié) ignorent le SafeAreaView parent, et sans ça
+ * retour / langue / pôle passent sous l’heure et la batterie.
  */
 export function useAuthLayout() {
   const { width, height } = useWindowDimensions();
@@ -18,7 +20,10 @@ export function useAuthLayout() {
     const logoWidth = Math.min(compact ? 160 : 188, width - pad * 2);
     const contentMaxWidth = Math.min(420, width - pad * 2);
 
-    const headerTopPad = compact ? spacing.sm : spacing.md;
+    const statusBarFallback =
+      Platform.OS === 'android' ? StatusBar.currentHeight ?? 0 : 0;
+    const topInset = Math.max(insets.top, statusBarFallback);
+    const headerTopPad = topInset + (compact ? spacing.sm : spacing.md);
 
     const bottomPad = (opts?: { stickyFooter?: boolean; extra?: number }) => {
       let inset = spacing.lg;
