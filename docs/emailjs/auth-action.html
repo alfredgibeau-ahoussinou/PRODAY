@@ -11,6 +11,8 @@
   Variables (functions/src/authEmailTransport.ts) :
   - email, to_email, user_email — destinataire
   - subject — objet (vérification ou reset)
+  - headline — titre affiché (vérification ou reset)
+  - email_kind — verification | password-reset
   - action_link / verification_url — lien Firebase Auth
   - site_url — ex. https://proday75.fr
   - message_text — version texte brut (secours)
@@ -35,7 +37,7 @@
           </tr>
           <tr>
             <td style="padding:0 32px 16px;">
-              <h1 style="margin:0;font-size:26px;line-height:34px;color:#22d3ee;">Confirmez votre e-mail</h1>
+              <h1 style="margin:0;font-size:26px;line-height:34px;color:#22d3ee;">{{headline}}</h1>
             </td>
           </tr>
           <tr>

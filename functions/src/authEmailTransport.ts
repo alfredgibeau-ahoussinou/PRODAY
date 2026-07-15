@@ -44,14 +44,21 @@ export function getEmailJsAuthConfig(): EmailJsAuthConfig | null {
 export function buildAuthEmailJsTemplateParams(
   payload: AuthEmailPayload,
   link: string,
-  options?: { displayName?: string; siteUrl?: string }
+  options?: { displayName?: string; siteUrl?: string; kind?: 'verification' | 'password-reset' }
 ): Record<string, string> {
   const siteUrl = (options?.siteUrl ?? 'https://proday75.fr').replace(/\/$/, '');
+  const kind = options?.kind ?? 'verification';
+  const headline =
+    kind === 'password-reset'
+      ? 'Réinitialisez votre mot de passe'
+      : 'Confirmez votre e-mail';
   return {
     email: payload.to,
     to_email: payload.to,
     user_email: payload.to,
     subject: payload.subject,
+    headline,
+    email_kind: kind,
     site_url: siteUrl,
     action_link: link,
     verification_url: link,
@@ -124,7 +131,7 @@ export async function sendAuthEmailViaEmailJs(
   config: EmailJsAuthConfig,
   payload: AuthEmailPayload,
   link: string,
-  options?: { displayName?: string; siteUrl?: string }
+  options?: { displayName?: string; siteUrl?: string; kind?: 'verification' | 'password-reset' }
 ): Promise<void> {
   const authSiteUrl =
     (functions.config().auth?.continue_url as string | undefined)?.trim() ||
@@ -141,6 +148,7 @@ export async function sendAuthEmailViaEmailJs(
       template_params: buildAuthEmailJsTemplateParams(payload, link, {
         displayName: options?.displayName,
         siteUrl: options?.siteUrl ?? authSiteUrl,
+        kind: options?.kind,
       }),
     }),
   });

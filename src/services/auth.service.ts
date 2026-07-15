@@ -106,10 +106,20 @@ async function tryCustomPasswordResetEmail(email: string): Promise<boolean> {
       { email },
       AUTH_EMAIL_FUNCTIONS_REGION
     );
-    if (result.enabled) return true;
+    const strategy = resolveAuthEmailSendStrategy(result);
+    if (strategy === 'custom-sent' || strategy === 'skip') return true;
+    if (__DEV__) {
+      console.warn(
+        '[auth] custom password reset unavailable, fallback Firebase Auth',
+        result
+      );
+    }
   } catch (e) {
-    if (__DEV__ && !isFunctionsUnavailable(e)) {
-      console.warn('[auth] custom password reset email:', e);
+    if (__DEV__) {
+      console.warn(
+        '[auth] custom password reset failed, fallback Firebase Auth:',
+        isFunctionsUnavailable(e) ? 'functions unavailable' : getCallableErrorMessage(e)
+      );
     }
   }
   return false;

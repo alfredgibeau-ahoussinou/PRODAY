@@ -210,3 +210,24 @@ Le callable générait le lien avec `continue_url = https://proday75.fr` (défau
 Cause : fallback EmailJS utilisait par erreur `beta.emailjs_template_id` (template waitlist bêta) quand Resend échouait.
 
 Correctif : le fallback EmailJS Auth exige `auth.emailjs_template_id` (template dédié, voir `docs/emailjs/auth-action.html`). Sans ce template, l’app retombe sur l’e-mail Firebase natif plutôt que sur le mail bêta.
+
+### Incident juillet 2026 — reset mot de passe en anglais (Firebase natif)
+
+**Symptôme** : « Mot de passe oublié » envoie l’e-mail Firebase EN au lieu de « Réinitialisez votre mot de passe ProDay ».
+
+**Cause racine** (logs `sendAuthPasswordResetEmail`) :
+
+```
+Resend 403: The proday.app domain is not verified
+→ callable 500 (ancienne version) ou `{ enabled: false }` → fallback `sendPasswordResetEmail()` côté app
+```
+
+1. **`from_email`** doit utiliser un domaine vérifié sur Resend (`contact@proday75.fr`, pas `contact@proday.app`).
+2. **Déployer** la dernière version de `sendAuthPasswordResetEmail` (gestion Resend 403 → `disabledResult`, pas 500).
+3. **Client** : `tryCustomPasswordResetEmail` utilise `resolveAuthEmailSendStrategy` (comme la vérification).
+
+**Retester** :
+
+1. Mot de passe oublié dans l’app ou `npm run auth:resend-password-reset -- user@example.com`
+2. Objet attendu : **« Réinitialisez votre mot de passe ProDay »** (HTML brandé FR).
+3. Logs : `firebase functions:log --only sendAuthPasswordResetEmail --project proday-155b0`

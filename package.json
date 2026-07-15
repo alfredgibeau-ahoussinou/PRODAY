@@ -21,6 +21,7 @@
     "migrate:product-lines": "node scripts/migrate-product-lines.mjs",
     "admin:setup": "node scripts/setup-admin.mjs",
     "auth:resend-verification": "node scripts/resend-verification-email.mjs",
+    "auth:resend-password-reset": "node scripts/resend-password-reset-email.mjs",
     "dns:resend": "node scripts/setup-resend-dns-auto.mjs",
     "dns:resend:verify": "node scripts/setup-resend-dns-auto.mjs --verify-only",
     "test-account:setup": "node scripts/setup-test-account.mjs",
