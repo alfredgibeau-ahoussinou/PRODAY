@@ -42,28 +42,52 @@ Implémenté dans **`functions/src/authCustomEmails.ts`** :
 
 **Flux** :
 1. Admin SDK génère le lien sécurisé (`generateEmailVerificationLink` / `generatePasswordResetLink`).
-2. Le HTML ProDay (logo, bouton cyan) est rendu depuis ce dossier.
-3. Envoi via **Resend** (fetch API, pas de dépendance npm).
+2. Le HTML ProDay (logo, bouton cyan) est rendu depuis ce dossier (Resend) ou le template EmailJS (`docs/emailjs/auth-action.html`).
+3. Envoi via **EmailJS** en priorité (Gmail/Outlook connecté dans le dashboard — pas de DNS) ; **Resend** en secours optionnel si configuré.
 4. Le client (`auth.service.ts`) tente le callable **en premier** ; si non configuré ou indisponible → **fallback Firebase natif** (template EN par défaut).
 
-### Activer les e-mails ProDay brandés
+### Activer les e-mails ProDay brandés (EmailJS — recommandé)
 
-**Prérequis** : plan Blaze, domaine vérifié sur [Resend](https://resend.com/domains) (`proday.app`).
+**Prérequis** : plan Blaze, compte [EmailJS](https://www.emailjs.com/) (même compte que la bêta waitlist).
+
+#### 1. Créer le template Auth dans EmailJS
+
+1. [Dashboard EmailJS](https://dashboard.emailjs.com/) → **Email Templates** → **Create New Template**
+2. **Settings** :
+   - **To Email** : `{{email}}`
+   - **From Name** : `{{app_name}}`
+   - **Subject** : `{{subject}}`
+   - **Reply To** : `contact@proday.app`
+3. **Content** : copier-coller **tout** le HTML de `docs/emailjs/auth-action.html`
+4. Noter le **Template ID** (ex. `template_xxxxxx`) — **ne pas** réutiliser `beta.emailjs_template_id` (template bêta waitlist)
+
+**Account → Security** : activer **Allow EmailJS API for non-browser applications**.
+
+#### 2. Configurer Firebase Functions
+
+Les clés `beta.emailjs_service_id`, `beta.emailjs_public_key` et `beta.emailjs_private_key` sont déjà présentes sur le projet — il suffit d’ajouter le template Auth dédié :
 
 ```bash
-# 1. Configurer Resend (réutilise beta.resend_api_key si déjà présent)
 firebase functions:config:set \
   auth.enabled=true \
-  auth.from_email="ProDay <contact@proday.app>" \
+  auth.emailjs_template_id="template_VOTRE_ID_AUTH" \
   auth.continue_url="https://proday75.fr"
+```
 
-# Obligatoire : proday75.fr (et www.proday75.fr) doivent figurer dans Authentication → Settings → Authorized domains
-# (sinon generateEmailVerificationLink échoue avec auth/unauthorized-continue-uri)
+**Obligatoire** : `proday75.fr` (et `www.proday75.fr`) doivent figurer dans **Authentication → Settings → Authorized domains** (sinon `generateEmailVerificationLink` échoue avec `auth/unauthorized-continue-uri`).
 
-# Optionnel si clé dédiée Auth (sinon beta.resend_api_key est utilisée)
-firebase functions:config:set auth.resend_api_key="re_VOTRE_CLE"
+**Clés dédiées Auth** (optionnel — sinon les clés `beta.emailjs_*` sont réutilisées automatiquement) :
 
-# 2. Build + déployer les callables
+```bash
+firebase functions:config:set \
+  auth.emailjs_service_id="service_amt5cj9" \
+  auth.emailjs_public_key="VOTRE_CLE_PUBLIQUE" \
+  auth.emailjs_private_key="VOTRE_CLE_PRIVEE"
+```
+
+#### 3. Build + déployer
+
+```bash
 cd functions && npm run build
 firebase deploy --only functions:sendAuthVerificationEmail,functions:sendAuthPasswordResetEmail
 ```
@@ -71,6 +95,18 @@ firebase deploy --only functions:sendAuthVerificationEmail,functions:sendAuthPas
 **Test** :
 - Inscription e-mail/mot de passe → e-mail « Confirmez votre adresse e-mail ProDay ».
 - Mot de passe oublié → e-mail « Réinitialisez votre mot de passe ProDay ».
+
+### Secours Resend (optionnel)
+
+Si vous préférez aussi Resend en fallback, ajoutez un domaine vérifié sur [Resend](https://resend.com/domains) :
+
+```bash
+firebase functions:config:set \
+  auth.from_email="ProDay <contact@proday75.fr>" \
+  auth.resend_api_key="re_VOTRE_CLE"
+```
+
+Ordre d’envoi : **EmailJS → Resend → Firebase natif** (côté client).
 
 **Désactiver** (retour Firebase natif uniquement) :
 
@@ -166,7 +202,7 @@ Si le HTML s'affiche mal (balises visibles, styles ignorés), basculer vers `ver
 | --- | --- |
 | Console : « modèle ne peut pas être modifié » | Utiliser **Option A** (callables + Resend) — voir ci-dessus |
 | API : `EMAIL_TEMPLATE_UPDATE_NOT_ALLOWED` | Idem ; contacter support si déblocage Console souhaité |
-| E-mail EN moche reçu | Resend non configuré → activer `auth.enabled` + déployer callables |
+| E-mail EN moche reçu | EmailJS / Resend non configuré → activer `auth.emailjs_template_id` + déployer callables |
 | **Aucun e-mail reçu** | Voir section **Incident juillet 2026** ci-dessous |
 | Lien non cliquable | Vérifier `%LINK%` seul sur une ligne + `href` du bouton |
 | Lien mort / erreur | **Authentication → Settings → Authorized domains** |
@@ -199,17 +235,17 @@ Le callable générait le lien avec `continue_url = https://proday75.fr` (défau
 2. Vérifier la boîte + spams ; l’objet attendu est « Confirmez votre adresse e-mail ProDay ».
 3. Logs : `firebase functions:log --only sendAuthVerificationEmail --project proday-155b0 -n 10` — plus d’erreur `unauthorized-continue-uri`.
 
-**Si Resend bloque l’envoi** (domaine `proday.app` non vérifié) :
+**Si Resend bloque l’envoi** (domaine non vérifié) : EmailJS est utilisé en priorité — configurez `auth.emailjs_template_id` (voir ci-dessus). Resend reste un secours optionnel.
 
-1. [Resend → Domains](https://resend.com/domains) → ajouter `proday.app`.
+1. [Resend → Domains](https://resend.com/domains) → ajouter le domaine si vous souhaitez le fallback Resend.
 2. Publier les enregistrements DNS (SPF, DKIM) chez le registrar.
 3. Attendre statut **Verified**, puis retester.
 
 **Si l’utilisateur reçoit un e-mail « Bienvenue dans la bêta » au lieu de « Confirmez votre e-mail »** :
 
-Cause : fallback EmailJS utilisait par erreur `beta.emailjs_template_id` (template waitlist bêta) quand Resend échouait.
+Cause historique : fallback EmailJS utilisait par erreur `beta.emailjs_template_id` (template waitlist bêta).
 
-Correctif : le fallback EmailJS Auth exige `auth.emailjs_template_id` (template dédié, voir `docs/emailjs/auth-action.html`). Sans ce template, l’app retombe sur l’e-mail Firebase natif plutôt que sur le mail bêta.
+Correctif : EmailJS Auth exige `auth.emailjs_template_id` (template dédié, voir `docs/emailjs/auth-action.html`). Le template bêta n’est jamais utilisé pour l’Auth.
 
 ### Incident juillet 2026 — reset mot de passe en anglais (Firebase natif)
 

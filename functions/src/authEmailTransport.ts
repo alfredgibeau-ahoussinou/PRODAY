@@ -1,4 +1,5 @@
 import * as functions from 'firebase-functions';
+import { buildAuthEmailJsTemplateParams } from './authEmailJsParams';
 
 export type AuthEmailPayload = {
   to: string;
@@ -41,31 +42,7 @@ export function getEmailJsAuthConfig(): EmailJsAuthConfig | null {
   return { serviceId, templateId, publicKey, privateKey };
 }
 
-export function buildAuthEmailJsTemplateParams(
-  payload: AuthEmailPayload,
-  link: string,
-  options?: { displayName?: string; siteUrl?: string; kind?: 'verification' | 'password-reset' }
-): Record<string, string> {
-  const siteUrl = (options?.siteUrl ?? 'https://proday75.fr').replace(/\/$/, '');
-  const kind = options?.kind ?? 'verification';
-  const headline =
-    kind === 'password-reset'
-      ? 'Réinitialisez votre mot de passe'
-      : 'Confirmez votre e-mail';
-  return {
-    email: payload.to,
-    to_email: payload.to,
-    user_email: payload.to,
-    subject: payload.subject,
-    headline,
-    email_kind: kind,
-    site_url: siteUrl,
-    action_link: link,
-    verification_url: link,
-    message_text: payload.text,
-    display_name: options?.displayName?.trim() || '',
-  };
-}
+export { buildAuthEmailJsTemplateParams } from './authEmailJsParams';
 
 export function getAuthEmailTransportConfig(): AuthEmailTransportConfig | null {
   const authCfg = functions.config().auth ?? {};
@@ -84,12 +61,16 @@ export function getAuthEmailTransportConfig(): AuthEmailTransportConfig | null {
   return { resendApiKey, fromEmail };
 }
 
+export function hasAuthEmailTransport(): boolean {
+  return getEmailJsAuthConfig() !== null || getAuthEmailTransportConfig() !== null;
+}
+
 export function isAuthCustomEmailEnabled(): boolean {
   const authCfg = functions.config().auth ?? {};
   const explicit = String(authCfg.enabled ?? '').trim().toLowerCase();
   if (explicit === 'false') return false;
-  if (explicit === 'true') return getAuthEmailTransportConfig() !== null;
-  return getAuthEmailTransportConfig() !== null;
+  if (explicit === 'true') return hasAuthEmailTransport();
+  return hasAuthEmailTransport();
 }
 
 export async function sendAuthEmailViaResend(

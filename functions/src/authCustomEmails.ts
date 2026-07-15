@@ -4,6 +4,7 @@ import { renderAuthEmailTemplate } from './authEmailTemplates';
 import {
   getAuthEmailTransportConfig,
   getEmailJsAuthConfig,
+  hasAuthEmailTransport,
   isAuthCustomEmailEnabled,
   isResendDomainError,
   sendAuthEmailViaEmailJs,
@@ -93,9 +94,10 @@ async function sendAuthActionEmail(
   displayName?: string
 ): Promise<AuthEmailCallableResult> {
   if (!isAuthCustomEmailEnabled()) return disabledResult();
+  if (!hasAuthEmailTransport()) return disabledResult();
 
-  const transport = getAuthEmailTransportConfig();
-  if (!transport) return disabledResult();
+  const emailJs = getEmailJsAuthConfig();
+  const resend = getAuthEmailTransportConfig();
 
   const normalizedEmail = email.trim().toLowerCase();
   const link =
@@ -112,25 +114,34 @@ async function sendAuthActionEmail(
 
   const payload = { to: normalizedEmail, subject, html, text };
 
-  try {
-    await sendAuthEmailViaResend(transport, payload);
-    return { enabled: true, sent: true };
-  } catch (e) {
-    const msg = e instanceof Error ? e.message : String(e);
-    if (!isResendDomainError(msg)) throw e;
-
-    const emailJs = getEmailJsAuthConfig();
-    if (emailJs) {
-      console.warn('[authCustomEmails] Resend domain blocked — fallback EmailJS (auth template)');
+  if (emailJs) {
+    try {
       await sendAuthEmailViaEmailJs(emailJs, payload, link, { displayName, kind });
       return { enabled: true, sent: true };
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      console.warn('[authCustomEmails] EmailJS failed — trying Resend fallback:', msg);
+      if (!resend) throw e;
     }
-
-    console.warn(
-      '[authCustomEmails] Resend unavailable — client will use Firebase Auth email (no beta EmailJS fallback)'
-    );
-    return disabledResult();
   }
+
+  if (resend) {
+    try {
+      await sendAuthEmailViaResend(resend, payload);
+      return { enabled: true, sent: true };
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      if (isResendDomainError(msg)) {
+        console.warn(
+          '[authCustomEmails] Resend unavailable (domain) — client will use Firebase Auth email'
+        );
+        return disabledResult();
+      }
+      throw e;
+    }
+  }
+
+  return disabledResult();
 }
 
 /**
