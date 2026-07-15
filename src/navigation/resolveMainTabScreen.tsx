@@ -106,16 +106,24 @@ export function resolveMainTabScreen(
   return DEFAULT_SCREENS[tab];
 }
 
-/** Shop : supporter, amateur (joueur/coach) et pro joueur. */
+/** Shop : tous les pôles sauf Santé (praticien) et sponsor marque. */
 export function shouldInjectShopTab(
   role?: UserRole | null,
   line?: ProductLineId | null,
 ): boolean {
-  if (isMedicalPractitionerRole(role) || isSponsorRole(role)) return false;
+  if (isMedicalPractitionerRole(role) || line === 'sante') return false;
+  if (isSponsorRole(role)) return false;
   if (role === 'supporter' || line === 'supporter') return true;
   if (line === 'amateur' || line === 'homme' || line === 'woman') return true;
-  if (role === 'player' && (line === 'pro_player' || isProProductLine(line ?? null))) {
-    return true;
+  if (
+    role === 'player' ||
+    role === 'club' ||
+    role === 'coach' ||
+    role === 'agent' ||
+    role === 'recruiter' ||
+    role === 'organizer'
+  ) {
+    return line === 'pro_player' || line === 'pro_club' || line === 'pro_staff' || isProProductLine(line ?? null);
   }
   return false;
 }

@@ -41,6 +41,7 @@ export const PRO_CLUB_SHELL_TABS: MainTabId[] = [
   'recrutement', // Recrutement
   'matchs', // Calendrier
   'messages', // Communication
+  'shop',
   'profil', // Vitrine
 ];
 
@@ -59,6 +60,7 @@ export const PRO_COACH_SHELL_TABS: MainTabId[] = [
   'recrutement',
   'covoiturage',
   'messages',
+  'shop',
   'profil',
 ];
 
@@ -68,6 +70,7 @@ export const PRO_AGENT_SHELL_TABS: MainTabId[] = [
   'matchs',
   'feed',
   'messages',
+  'shop',
   'profil',
 ];
 
@@ -77,6 +80,7 @@ export const PRO_RECRUITER_SHELL_TABS: MainTabId[] = [
   'matchs',
   'feed',
   'messages',
+  'shop',
   'profil',
 ];
 
@@ -86,6 +90,7 @@ export const PRO_ORGANIZER_SHELL_TABS: MainTabId[] = [
   'recrutement',
   'feed',
   'messages',
+  'shop',
   'profil',
 ];
 

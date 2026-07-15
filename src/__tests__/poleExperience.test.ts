@@ -101,6 +101,7 @@ describe('poleExperience', () => {
       'recrutement',
       'matchs',
       'messages',
+      'shop',
       'profil',
     ]);
     expect(getVisibleMainTabs('pro', 'player')).toEqual([

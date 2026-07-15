@@ -11,7 +11,7 @@ describe('mobileTabConfig', () => {
 
   it('canonise joueur homme vers shell pro joueur plat', () => {
     const rail = getMobileRailLayout('homme', 'player');
-    expect(rail.flat).toEqual(['home', 'recrutement', 'reels', 'matchs', 'profil']);
+    expect(rail.flat).toEqual(['home', 'recrutement', 'reels', 'matchs', 'shop', 'profil']);
     expect(rail.center).toBeNull();
   });
 
@@ -26,7 +26,7 @@ describe('mobileTabConfig', () => {
 
   it('affiche le menu amateur joueur en rangée plate avec overflow', () => {
     const rail = getMobileRailLayout('amateur', 'player');
-    expect(rail.flat).toEqual(['home', 'covoiturage', 'recrutement', 'profil']);
+    expect(rail.flat).toEqual(['home', 'covoiturage', 'recrutement', 'shop', 'profil']);
     expect(rail.overflow).toEqual(expect.arrayContaining(['messages', 'reels', 'sante']));
     expect(rail.center).toBeNull();
   });
@@ -54,14 +54,14 @@ describe('mobileTabConfig', () => {
 
   it('affiche le menu club pro en rangée plate', () => {
     const rail = getMobileRailLayout('pro', 'club');
-    expect(rail.flat).toEqual(['home', 'recrutement', 'matchs', 'messages', 'profil']);
+    expect(rail.flat).toEqual(['home', 'recrutement', 'matchs', 'messages', 'shop', 'profil']);
     expect(rail.center).toBeNull();
     expect(rail.overflow).toEqual([]);
   });
 
   it('affiche le menu pro joueur en rangée plate', () => {
     const rail = getMobileRailLayout('pro', 'player');
-    expect(rail.flat).toEqual(['home', 'recrutement', 'reels', 'matchs', 'profil']);
+    expect(rail.flat).toEqual(['home', 'recrutement', 'reels', 'matchs', 'shop', 'profil']);
     expect(rail.center).toBeNull();
     expect(rail.overflow).toEqual([]);
   });

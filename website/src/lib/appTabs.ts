@@ -59,17 +59,15 @@ export function getVisibleMainTabsForWeb(universe: ProductLineWeb): MainTabId[] 
   let tabs: MainTabId[];
 
   if (universe === "sante") {
+    // Santé praticien : pas de Shop (parcours cabinet / téléconsultation).
     tabs = ["home", "matchs", "feed", "reels", "messages", "profil"];
   } else if (universe === "supporter") {
     tabs = ["home", "matchs", "reels", "feed", "messages", "shop", "profil"];
   } else if (universe === "amateur") {
     tabs = ["home", "recrutement", "matchs", "reels", "covoiturage", "shop", "messages", "profil"];
   } else if (universe === "pro") {
-    if (role === "coach") {
-      tabs = ["home", "recrutement", "matchs", "reels", "covoiturage", "messages", "profil"];
-    } else {
-      tabs = ["home", "recrutement", "matchs", "reels", "shop", "messages", "profil"];
-    }
+    // Démo Pro = shell coach staff (+ Shop partout hors Santé).
+    tabs = ["home", "recrutement", "matchs", "reels", "covoiturage", "shop", "messages", "profil"];
   } else if (role === "player") {
     tabs = [
       "home",
@@ -83,7 +81,7 @@ export function getVisibleMainTabsForWeb(universe: ProductLineWeb): MainTabId[] 
       "profil",
     ];
   } else {
-    tabs = ["home", "recrutement", "matchs", "reels", "feed", "messages", "profil"];
+    tabs = ["home", "recrutement", "matchs", "reels", "feed", "shop", "messages", "profil"];
   }
 
   return injectCommunityFeedTab(tabs, role);

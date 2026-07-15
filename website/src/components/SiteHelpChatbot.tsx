@@ -36,7 +36,7 @@ const COMMON_ENTRIES: HelpEntry[] = [
     id: "shop",
     question: "Qui a accès au Shop ?",
     answer:
-      "Le Shop est disponible pour Supporter, Amateur et Pro Joueur. Santé et sponsors marque n'ont pas l'onglet boutique.",
+      "Le Shop est dans le menu de chaque pôle (Amateur, Supporter, Pro Joueur, Club, Staff…), sauf le pôle Santé praticien et les sponsors marque.",
     href: ROUTES.shop,
     hrefLabel: "Voir le Shop",
   },
@@ -98,7 +98,7 @@ function entriesForPath(pathname: string, pricingHref: string): HelpEntry[] {
     poleHint.push({
       id: "pole-sante",
       question: "Quels onglets pour un praticien ?",
-      answer: "Accueil, Agenda, Demandes, Vidéos, Messages et Cabinet — sans Shop ni Mercato.",
+      answer: "Accueil, Agenda, Demandes, Vidéos, Messages et Cabinet — sans Shop ni Mercato (parcours praticien).",
       href: ROUTES.sante,
       hrefLabel: "Pôle Santé",
     });

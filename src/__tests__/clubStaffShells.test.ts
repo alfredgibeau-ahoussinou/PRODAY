@@ -1,12 +1,13 @@
 import { getTabShortLabel, getVisibleMainTabs } from '../content/poleExperience';
 
 describe('club et staff shells', () => {
-  it('applique les 5 onglets architecture club', () => {
+  it('applique les onglets architecture club (avec Shop)', () => {
     expect(getVisibleMainTabs('pro', 'club')).toEqual([
       'home',
       'recrutement',
       'matchs',
       'messages',
+      'shop',
       'profil',
     ]);
     expect(getTabShortLabel('home', 'pro', 'club')).toBe('Structure');
@@ -27,6 +28,10 @@ describe('club et staff shells', () => {
     expect(recruiterTabs).toContain('feed');
     expect(organizerTabs).toContain('feed');
     expect(coachTabs).not.toContain('feed');
+    expect(coachTabs).toContain('shop');
+    expect(agentTabs).toContain('shop');
+    expect(recruiterTabs).toContain('shop');
+    expect(organizerTabs).toContain('shop');
   });
 
   it('expose un shell pro joueur dédié', () => {
@@ -35,6 +40,7 @@ describe('club et staff shells', () => {
       'recrutement',
       'reels',
       'matchs',
+      'shop',
       'profil',
     ]);
     expect(getTabShortLabel('home', 'pro', 'player')).toBe('Carrière');

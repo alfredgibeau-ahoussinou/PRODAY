@@ -59,12 +59,12 @@ const FLAT_RAIL_RULES: FlatRailRule[] = [
   },
   {
     match: (line, role) => line === 'amateur' && role === 'player',
-    primary: ['home', 'covoiturage', 'recrutement', 'profil'],
+    primary: ['home', 'covoiturage', 'recrutement', 'shop', 'profil'],
     overflow: ['matchs', 'messages', 'reels', 'sante', 'feed', 'famille'],
   },
   {
     match: (line, role) => line === 'amateur' && role === 'coach',
-    primary: ['home', 'matchs', 'recrutement', 'messages', 'profil'],
+    primary: ['home', 'matchs', 'recrutement', 'messages', 'shop', 'profil'],
   },
   {
     match: (line, role) => line === 'sante' && role === 'physio',
@@ -77,28 +77,28 @@ const FLAT_RAIL_RULES: FlatRailRule[] = [
         line === 'homme' ||
         line === 'woman' ||
         isProProductLine(line)),
-    primary: ['home', 'recrutement', 'reels', 'matchs', 'profil'],
+    primary: ['home', 'recrutement', 'reels', 'matchs', 'shop', 'profil'],
   },
   {
     match: (line, role) =>
       line === 'pro_club' || (isProProductLine(line) && role === 'club'),
-    primary: ['home', 'recrutement', 'matchs', 'messages', 'profil'],
+    primary: ['home', 'recrutement', 'matchs', 'messages', 'shop', 'profil'],
   },
   {
     match: (line, role) => isProProductLine(line) && role === 'coach',
-    primary: ['home', 'matchs', 'recrutement', 'covoiturage', 'messages', 'profil'],
+    primary: ['home', 'matchs', 'recrutement', 'covoiturage', 'messages', 'shop', 'profil'],
   },
   {
     match: (line, role) => isProProductLine(line) && role === 'agent',
-    primary: ['home', 'recrutement', 'matchs', 'feed', 'messages', 'profil'],
+    primary: ['home', 'recrutement', 'matchs', 'feed', 'messages', 'shop', 'profil'],
   },
   {
     match: (line, role) => isProProductLine(line) && role === 'recruiter',
-    primary: ['home', 'recrutement', 'matchs', 'feed', 'messages', 'profil'],
+    primary: ['home', 'recrutement', 'matchs', 'feed', 'messages', 'shop', 'profil'],
   },
   {
     match: (line, role) => isProProductLine(line) && role === 'organizer',
-    primary: ['home', 'matchs', 'recrutement', 'feed', 'messages', 'profil'],
+    primary: ['home', 'matchs', 'recrutement', 'feed', 'messages', 'shop', 'profil'],
   },
 ];
 
