@@ -19,10 +19,13 @@ import {
 } from "lucide-react";
 import {
   getMobileRailLayoutForWeb,
+  getTabLabelForDemoPole,
   getTabLabelForWeb,
+  getVisibleMainTabsForDemoPole,
   getVisibleMainTabsForWeb,
   type MainTabId,
 } from "@/lib/appTabs";
+import type { DemoPoleId } from "@/lib/demoPoles";
 import type { ProductLineWeb } from "@/lib/content";
 import { TabOverflowSheet } from "./TabOverflowSheet";
 
@@ -48,7 +51,9 @@ const PHYSIO_ICONS: Partial<Record<MainTabId, LucideIcon>> = {
 type AppTabBarProps = {
   activeTab: MainTabId;
   onTabPress: (tab: MainTabId) => void;
-  universe: ProductLineWeb;
+  /** Context legacy (embeds). Ignoré si `demoPole` est fourni. */
+  universe?: ProductLineWeb;
+  demoPole?: DemoPoleId;
   unreadCount?: number;
   accentInk?: string;
   tabActiveClass: string;
@@ -59,7 +64,8 @@ type AppTabBarProps = {
 export function AppTabBar({
   activeTab,
   onTabPress,
-  universe,
+  universe = "homme",
+  demoPole,
   unreadCount = 3,
   accentInk = "#10b981",
   tabActiveClass,
@@ -67,13 +73,18 @@ export function AppTabBar({
   dockSurfaceClass,
 }: AppTabBarProps) {
   const [menuOpen, setMenuOpen] = useState(false);
-  const isPhysio = universe === "sante";
+  const isPhysio = demoPole === "sante" || universe === "sante";
   const immersive = activeTab === "reels";
 
   const rail = useMemo(() => {
-    const visible = getVisibleMainTabsForWeb(universe);
+    const visible = demoPole
+      ? getVisibleMainTabsForDemoPole(demoPole)
+      : getVisibleMainTabsForWeb(universe);
     return getMobileRailLayoutForWeb(visible);
-  }, [universe]);
+  }, [demoPole, universe]);
+
+  const labelFor = (tab: MainTabId) =>
+    demoPole ? getTabLabelForDemoPole(tab, demoPole) : getTabLabelForWeb(tab, universe);
 
   const menuActive = rail.overflow.includes(activeTab);
 
@@ -88,7 +99,7 @@ export function AppTabBar({
   const renderSideTab = (tab: MainTabId) => {
     const active = tab === activeTab;
     const Icon = resolveIcon(tab);
-    const label = getTabLabelForWeb(tab, universe);
+    const label = labelFor(tab);
     const badge = tab === "messages" ? unreadCount : 0;
     const ink = active ? inkActive : inkMuted;
 
@@ -104,9 +115,10 @@ export function AppTabBar({
         <span className="relative flex h-8 w-9 items-center justify-center">
           {active ? (
             <span
-              className="absolute inset-0 rounded-2xl"
+              className="absolute inset-0 rounded-2xl transition-colors"
               style={{
                 backgroundColor: immersive ? "rgba(255,255,255,0.28)" : `${accentInk}29`,
+                boxShadow: active && !immersive ? `0 0 16px ${accentInk}44` : undefined,
               }}
             />
           ) : null}
@@ -169,37 +181,36 @@ export function AppTabBar({
               type="button"
               onClick={() => onTabPress(centerTab)}
               className="-mt-3.5 flex w-20 flex-col items-center gap-1"
-              aria-label="Reels"
+              aria-label={labelFor(centerTab)}
               aria-pressed={centerActive}
             >
               <span
                 className={`flex h-14 w-14 items-center justify-center rounded-full border-[3px] shadow-lg ${
-                  centerActive || immersive
-                    ? ""
-                    : "border-[#111816] bg-neutral-900"
+                  centerActive || immersive ? "" : "border-[#111816] bg-neutral-900"
                 }`}
                 style={{
-                  backgroundColor:
-                    centerActive || immersive ? accentInk : undefined,
+                  backgroundColor: centerActive || immersive ? accentInk : undefined,
                   borderColor: immersive
                     ? "rgba(255,255,255,0.2)"
                     : centerActive
                       ? accentInk
                       : undefined,
+                  boxShadow:
+                    centerActive || immersive
+                      ? `0 0 24px ${accentInk}66`
+                      : undefined,
                 }}
               >
                 <Video
                   size={30}
-                  className={
-                    centerActive || immersive ? "text-white" : tabInactiveClass
-                  }
+                  className={centerActive || immersive ? "text-white" : tabInactiveClass}
                   fill="currentColor"
                 />
               </span>
               <span
-                className={`text-[11px] font-bold ${
-                  centerActive ? "font-extrabold" : ""
-                } ${centerActive ? tabActiveClass : tabInactiveClass}`}
+                className={`text-[11px] font-bold ${centerActive ? "font-extrabold" : ""} ${
+                  centerActive ? tabActiveClass : tabInactiveClass
+                }`}
                 style={
                   immersive
                     ? { color: "#fff" }
@@ -208,7 +219,7 @@ export function AppTabBar({
                       : undefined
                 }
               >
-                Reels
+                {labelFor(centerTab)}
               </span>
             </button>
           ) : (
@@ -263,6 +274,7 @@ export function AppTabBar({
         tabs={rail.overflow}
         activeTab={activeTab}
         universe={universe}
+        demoPole={demoPole}
         onSelect={onTabPress}
         accentClass={tabActiveClass}
         immersive={immersive}

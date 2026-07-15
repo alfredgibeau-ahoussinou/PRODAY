@@ -249,7 +249,15 @@ export function routeWithHash(route: string, sectionId: string): string {
   return `${base}#${sectionId}`;
 }
 
-/** URL de la démo interactive pour un univers (homme / woman / pro). */
+/** URL de la démo interactive pour un univers legacy → pôle `?p=`. */
 export function demoUrlForUniverse(line: ProductLineWeb): string {
-  return `${ROUTES.demo}?u=${line}`;
+  const poleByLine: Record<ProductLineWeb, string> = {
+    amateur: "amateur",
+    supporter: "supporter",
+    sante: "sante",
+    homme: "pro_joueur",
+    woman: "pro_joueur",
+    pro: "pro_staff",
+  };
+  return `${ROUTES.demo}?p=${poleByLine[line]}`;
 }

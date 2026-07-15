@@ -17,7 +17,8 @@ import {
   Handshake,
 } from "lucide-react";
 import type { MainTabId } from "@/lib/appTabs";
-import { getTabLabelForWeb } from "@/lib/appTabs";
+import { getTabLabelForDemoPole, getTabLabelForWeb } from "@/lib/appTabs";
+import type { DemoPoleId } from "@/lib/demoPoles";
 import type { ProductLineWeb } from "@/lib/content";
 
 const TAB_ICONS: Record<MainTabId, LucideIcon> = {
@@ -45,6 +46,7 @@ type TabOverflowSheetProps = {
   tabs: MainTabId[];
   activeTab: MainTabId;
   universe: ProductLineWeb;
+  demoPole?: DemoPoleId;
   onSelect: (tab: MainTabId) => void;
   accentClass: string;
   immersive?: boolean;
@@ -56,11 +58,12 @@ export function TabOverflowSheet({
   tabs,
   activeTab,
   universe,
+  demoPole,
   onSelect,
   accentClass,
   immersive = false,
 }: TabOverflowSheetProps) {
-  const isPhysio = universe === "sante";
+  const isPhysio = demoPole === "sante" || universe === "sante";
 
   return (
     <AnimatePresence>
@@ -94,7 +97,9 @@ export function TabOverflowSheet({
               {tabs.map((tab) => {
                 const active = tab === activeTab;
                 const Icon = (isPhysio ? PHYSIO_ICONS[tab] : undefined) ?? TAB_ICONS[tab];
-                const label = getTabLabelForWeb(tab, universe);
+                const label = demoPole
+                  ? getTabLabelForDemoPole(tab, demoPole)
+                  : getTabLabelForWeb(tab, universe);
                 return (
                   <button
                     key={tab}

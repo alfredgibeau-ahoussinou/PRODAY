@@ -1,4 +1,5 @@
 import { mercatoTabLabelForWeb, type ProductLineWeb } from "./content";
+import type { DemoPoleId } from "./demoPoles";
 
 /** Aligné sur `src/navigation/mainTabConfig.ts`. */
 export type MainTabId =
@@ -59,14 +60,12 @@ export function getVisibleMainTabsForWeb(universe: ProductLineWeb): MainTabId[] 
   let tabs: MainTabId[];
 
   if (universe === "sante") {
-    // Santé praticien : pas de Shop (parcours cabinet / téléconsultation).
     tabs = ["home", "matchs", "feed", "reels", "messages", "profil"];
   } else if (universe === "supporter") {
     tabs = ["home", "matchs", "reels", "feed", "messages", "shop", "profil"];
   } else if (universe === "amateur") {
     tabs = ["home", "recrutement", "matchs", "reels", "covoiturage", "shop", "messages", "profil"];
   } else if (universe === "pro") {
-    // Démo Pro = shell coach staff (+ Shop partout hors Santé).
     tabs = ["home", "recrutement", "matchs", "reels", "covoiturage", "shop", "messages", "profil"];
   } else if (role === "player") {
     tabs = [
@@ -85,6 +84,35 @@ export function getVisibleMainTabsForWeb(universe: ProductLineWeb): MainTabId[] 
   }
 
   return injectCommunityFeedTab(tabs, role);
+}
+
+/** Shells app réels — un set d’onglets par pôle démo. */
+export function getVisibleMainTabsForDemoPole(pole: DemoPoleId): MainTabId[] {
+  switch (pole) {
+    case "amateur":
+      return [
+        "home",
+        "covoiturage",
+        "recrutement",
+        "shop",
+        "profil",
+        "matchs",
+        "messages",
+        "reels",
+        "sante",
+        "feed",
+      ];
+    case "supporter":
+      return ["home", "matchs", "feed", "messages", "reels", "shop", "profil"];
+    case "sante":
+      return ["home", "matchs", "feed", "reels", "messages", "profil"];
+    case "pro_joueur":
+      return ["home", "recrutement", "reels", "matchs", "shop", "profil"];
+    case "pro_club":
+      return ["home", "recrutement", "matchs", "messages", "shop", "profil"];
+    case "pro_staff":
+      return ["home", "matchs", "recrutement", "covoiturage", "messages", "shop", "profil"];
+  }
 }
 
 /** Même algo que `src/navigation/mobileTabConfig.ts`. */
@@ -137,6 +165,60 @@ const DEFAULT_LABELS: Record<MainTabId, string> = {
   profil: "Profil",
 };
 
+/** Labels courts — shells pôle (démo). */
+export function getTabLabelForDemoPole(tab: MainTabId, pole: DemoPoleId): string {
+  if (pole === "sante") {
+    switch (tab) {
+      case "home":
+        return "Accueil";
+      case "matchs":
+        return "Agenda";
+      case "feed":
+        return "Demandes";
+      case "reels":
+        return "Vidéos";
+      case "messages":
+        return "Messages";
+      case "profil":
+        return "Cabinet";
+      default:
+        break;
+    }
+  }
+  if (pole === "amateur") {
+    if (tab === "home") return "Équipe";
+    if (tab === "covoiturage") return "Trajets";
+    if (tab === "recrutement") return "Club";
+    if (tab === "profil") return "Moi";
+  }
+  if (pole === "supporter") {
+    if (tab === "home") return "Tribune";
+    if (tab === "feed") return "Suivis";
+    if (tab === "messages") return "Débats";
+    if (tab === "reels") return "Moments";
+    if (tab === "profil") return "Compte";
+  }
+  if (pole === "pro_joueur") {
+    if (tab === "home") return "Carrière";
+    if (tab === "recrutement") return "Opportunités";
+    if (tab === "matchs") return "Groupe";
+    if (tab === "profil") return "Moi";
+  }
+  if (pole === "pro_club") {
+    if (tab === "home") return "Structure";
+    if (tab === "recrutement") return "Recrutement";
+    if (tab === "matchs") return "Calendrier";
+    if (tab === "messages") return "Comm.";
+    if (tab === "profil") return "Vitrine";
+  }
+  if (pole === "pro_staff") {
+    if (tab === "home") return "Équipe";
+    if (tab === "matchs") return "Calendrier";
+    if (tab === "recrutement") return "Mercato";
+  }
+  return DEFAULT_LABELS[tab];
+}
+
 /** Labels courts — alignés sur `getTabShortLabel` pour la démo. */
 export function getTabLabelForWeb(tab: MainTabId, universe: ProductLineWeb): string {
   if (universe === "sante") {
@@ -166,5 +248,12 @@ export function getVisibleTabsWithLabels(universe: ProductLineWeb) {
   return getVisibleMainTabsForWeb(universe).map((id) => ({
     id,
     label: getTabLabelForWeb(id, universe),
+  }));
+}
+
+export function getVisibleTabsWithLabelsForDemoPole(pole: DemoPoleId) {
+  return getVisibleMainTabsForDemoPole(pole).map((id) => ({
+    id,
+    label: getTabLabelForDemoPole(id, pole),
   }));
 }

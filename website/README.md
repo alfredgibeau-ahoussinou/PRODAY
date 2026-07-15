@@ -13,7 +13,7 @@ Code source : [src/README.md](src/README.md) · Carte monorepo : [docs/STRUCTURE
 | `/woman` | Univers **Woman** — foot féminin |
 | `/pro` | Univers **Pro** — staff, recrutement vérifié |
 | `/fonctionnalites` | 11 piliers produit + modules (Fil, Reels, Sponsors…) |
-| `/demo` | Démo interactive **9 onglets** (`?u=homme\|woman\|pro`) |
+| `/demo` | Démo interactive **6 pôles** (`?p=amateur\|supporter\|sante\|pro_joueur\|pro_club\|pro_staff`) |
 | `/pulse` | Simulateur Pulse (thème par univers) |
 | `/live-stats` | Saisie match en direct |
 | `/cv` | Aperçu CV PDF (`?u=` pour le thème) |
@@ -36,12 +36,12 @@ Code source : [src/README.md](src/README.md) · Carte monorepo : [docs/STRUCTURE
 
 ### Démo interactive (`/demo`)
 
-Mock téléphone avec les **9 onglets** de l’app : Accueil, Mercato, Matchs, Reels, Fil, Covoiturage, Santé, Messages, Profil.
+Hero plein écran + téléphone interactif centré sur les **six pôles** (Amateur, Supporter, Santé, Pro Joueur, Pro Club, Pro Staff).
 
-- Contact partenaires : **partenaires@proday.app** — CTA `/beta/inscription?role=sponsor`
-- Sélecteur **Man / Woman / Pro** en haut de page
-- Contenu et visuels adaptés par univers (`?u=homme`, `?u=woman`, `?u=pro`)
+- URL `?p=amateur|supporter|sante|pro_joueur|pro_club|pro_staff` (legacy `?u=` redirigé)
+- Onglets alignés sur les shells app ; contenu illustratif
 - Lien **« Voir la démo »** depuis chaque page univers
+- Contact partenaires : **partenaires@proday.app** — CTA `/beta/inscription?role=sponsor`
 
 ## Lancer en local
 

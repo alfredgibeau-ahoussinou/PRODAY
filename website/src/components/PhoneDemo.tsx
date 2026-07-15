@@ -14,7 +14,7 @@ import {
   type MainTabId,
 } from "@/lib/appTabs";
 import { BRANDS_BY_LINE, type ProductLineWeb } from "@/lib/content";
-import { ROUTES } from "@/lib/routes";
+import { ROUTES, demoUrlForUniverse } from "@/lib/routes";
 
 type ScreenMock = {
   caption: string;
@@ -565,7 +565,7 @@ export function PhoneDemo({ fullPage, compact, universe = "homme" }: PhoneDemoPr
                 ))}
               </div>
               <Link
-                href={ROUTES.demo}
+                href={demoUrlForUniverse(universe)}
                 className="text-sm font-semibold text-[var(--proday-accent)] underline underline-offset-4 transition hover:text-cyan-300"
               >
                 Voir la démo complète
