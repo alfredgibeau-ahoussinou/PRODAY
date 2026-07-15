@@ -23,7 +23,8 @@ export function useAuthLayout() {
     const statusBarFallback =
       Platform.OS === 'android' ? StatusBar.currentHeight ?? 0 : 0;
     const topInset = Math.max(insets.top, statusBarFallback);
-    const headerTopPad = topInset + (compact ? spacing.sm : spacing.md);
+    // Un peu moins de marge que le full inset + md (évite un bandeau trop bas).
+    const headerTopPad = Math.max(topInset - 6, 0) + spacing.xs;
 
     const bottomPad = (opts?: { stickyFooter?: boolean; extra?: number }) => {
       let inset = spacing.lg;
