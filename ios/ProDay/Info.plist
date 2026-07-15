@@ -29,7 +29,13 @@
       <dict>
         <key>CFBundleURLSchemes</key>
         <array>
-          <string>com.googleusercontent.apps.717130341106-i6r7aj16ji7s8nteoa7bucc2css2ce4p</string>
+          <string>proday</string>
+        </array>
+      </dict>
+      <dict>
+        <key>CFBundleURLSchemes</key>
+        <array>
+          <string>com.googleusercontent.apps.277880299213-dkudjt9bm8740v66ljuj3supfv2hetdh</string>
         </array>
       </dict>
     </array>
