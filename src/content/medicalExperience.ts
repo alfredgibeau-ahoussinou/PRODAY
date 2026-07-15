@@ -15,8 +15,15 @@ export function isMedicalPractitionerRole(role?: UserRole | null): boolean {
   return role === 'physio';
 }
 
-/** Onglets barre du bas — expérience praticien (type Doctolib). */
-export const PHYSIO_MAIN_TABS: MainTabId[] = ['home', 'matchs', 'feed', 'messages', 'profil'];
+/** Onglets barre du bas — expérience praticien (type Doctolib) + vidéos content. */
+export const PHYSIO_MAIN_TABS: MainTabId[] = [
+  'home',
+  'matchs',
+  'feed',
+  'reels',
+  'messages',
+  'profil',
+];
 
 export function getPhysioTabLabel(tab: MainTabId): string {
   switch (tab) {
@@ -26,6 +33,8 @@ export function getPhysioTabLabel(tab: MainTabId): string {
       return 'Agenda';
     case 'feed':
       return 'Demandes';
+    case 'reels':
+      return 'Vidéos';
     case 'messages':
       return 'Messages';
     case 'profil':
@@ -43,6 +52,8 @@ export function getPhysioTabLabelKey(tab: MainTabId): string {
       return 'medical.shell.agenda';
     case 'feed':
       return 'medical.shell.requests';
+    case 'reels':
+      return 'medical.shell.videos';
     case 'messages':
       return 'medical.shell.messages';
     case 'profil':
@@ -64,6 +75,8 @@ export function getPhysioTabIcon(tab: MainTabId): IconName {
       return 'heart';
     case 'feed':
       return 'mail';
+    case 'reels':
+      return 'videocam';
     default:
       return 'home';
   }

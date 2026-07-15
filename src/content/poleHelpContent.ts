@@ -104,7 +104,7 @@ const AMATEUR_HELP: PoleHelpContent = {
         id: 'navigation',
         question: 'Comment naviguer dans l’app amateur ?',
         answer:
-          'Accueil Équipe pour le club, Matchs pour le calendrier, Mercato pour le recrutement, Moi pour ton profil. La barre du bas te guide.',
+          'Accueil Équipe pour le club, Matchs pour le calendrier, Club pour le recrutement, Shop pour la boutique, Moi pour ton profil. La barre du bas + le menu Overflow te guident.',
         navigate: { kind: 'tab', tab: 'home' },
         navigateLabel: 'Retour à l’accueil',
       },
@@ -112,9 +112,33 @@ const AMATEUR_HELP: PoleHelpContent = {
         id: 'barre-bas',
         question: 'À quoi sert la barre du bas ?',
         answer:
-          'Elle regroupe tes onglets principaux : accueil, matchs, messages, déplacements et profil. Appuie sur un icône pour changer d’espace.',
+          'Elle regroupe tes onglets principaux : équipe, matchs, club, messages, shop et profil. Les autres modules (Reels, Santé…) sont dans le menu overflow.',
         navigate: { kind: 'tab', tab: 'home' },
         navigateLabel: 'Voir l’accueil',
+      },
+      {
+        id: 'pulse-accueil',
+        question: 'Quelle différence entre Accueil et Pulse ?',
+        answer:
+          'Accueil (Équipe) est ton onglet principal. Pulse est ton score de visibilité, affiché dans l’Accueil — ce n’est pas un onglet séparé.',
+        navigate: { kind: 'tab', tab: 'home' },
+        navigateLabel: 'Voir mon Accueil',
+      },
+      {
+        id: 'sponsors-ou',
+        question: 'Où sont les sponsors ?',
+        answer:
+          'Pas d’onglet Sponsors dans la barre : ouvre l’Accueil puis le module Sponsors (grille Accueil) pour voir offres et partenariats.',
+        navigate: { kind: 'dashboard', view: 'sponsors' },
+        navigateLabel: 'Ouvrir Sponsors',
+      },
+      {
+        id: 'shop-amateur',
+        question: 'Où est la boutique ?',
+        answer:
+          'Onglet Shop dans la barre (ou le menu overflow) : maillots, équipement et offres ProDay pour le foot amateur.',
+        navigate: { kind: 'shop' },
+        navigateLabel: 'Ouvrir le Shop',
       },
       {
         id: 'retour-accueil',
@@ -280,14 +304,6 @@ const AMATEUR_HELP: PoleHelpContent = {
         navigate: { kind: 'matchs', homeTab: 'season' },
         navigateLabel: 'Stats d’équipe',
       },
-      {
-        id: 'stats-comparer',
-        question: 'Comment comparer mes performances ?',
-        answer:
-          'Dans Matchs, consulte tes stats match par match et repère tes séries de performances sur la saison.',
-        navigate: { kind: 'matchs', homeTab: 'matches' },
-        navigateLabel: 'Mes performances',
-      },
     ]),
     ...withCategory('paiement', [
       {
@@ -407,8 +423,9 @@ const SANTE_HELP: PoleHelpContent = {
   welcome: 'Bonjour ! Ton espace praticien t’attend : agenda, patients et messagerie.',
   entries: [
     ...withCategory('navigation', [
-      { id: 'navigation', question: 'Comment naviguer dans l’espace santé ?', answer: 'Accueil pour l’agenda et les patients, Matchs pour le calendrier sportif, Messages pour les échanges, Profil pour tes réglages.', navigate: { kind: 'tab', tab: 'home' }, navigateLabel: 'Retour accueil' },
-      { id: 'onglets-sante', question: 'À quoi servent les onglets santé ?', answer: 'Agenda et patients (Accueil), calendrier sportif (Matchs), messagerie sécurisée (Messages) et paramètres pro (Profil).', navigate: { kind: 'tab', tab: 'home' }, navigateLabel: 'Voir l’accueil' },
+      { id: 'navigation', question: 'Comment naviguer dans l’espace santé ?', answer: 'Accueil pour le cockpit cabinet, Agenda pour le planning, Demandes pour les sollicitations, Vidéos pour vos contenus éducatifs, Messages et Cabinet pour le reste.', navigate: { kind: 'tab', tab: 'home' }, navigateLabel: 'Retour accueil' },
+      { id: 'onglets-sante', question: 'À quoi servent les onglets santé ?', answer: 'Accueil (cockpit), Agenda (RDV), Demandes, Vidéos (conseils & prévention), Messages sécurisés et Cabinet (profil pro).', navigate: { kind: 'tab', tab: 'home' }, navigateLabel: 'Voir l’accueil' },
+      { id: 'videos-sante', question: 'Où publier mes vidéos santé ?', answer: 'Onglet Vidéos : publiez des clips courts (prévention, étirements, récupération) visibles par joueurs et clubs de votre zone.', navigate: { kind: 'tab', tab: 'reels' }, navigateLabel: 'Ouvrir Vidéos' },
       { id: 'recherche-rapide', question: 'Comment retrouver une info rapidement ?', answer: 'Utilise la recherche patient depuis l’accueil ou filtre ton agenda par date pour accéder vite au bon dossier.', navigate: { kind: 'tab', tab: 'home' }, navigateLabel: 'Ouvrir l’accueil' },
     ]),
     ...withCategory('profil', [
@@ -463,8 +480,11 @@ const PRO_PLAYER_HELP: PoleHelpContent = {
   welcome: 'Salut ! Prêt à booster ta carrière pro ? Stats, CV et opportunités, c’est par ici.',
   entries: [
     ...withCategory('navigation', [
-      { id: 'navigation', question: 'Comment naviguer dans l’espace pro joueur ?', answer: 'Carrière pour la vue d’ensemble, Matchs pour le calendrier, Opportunités pour le Mercato, Moi pour ton profil et CV.', navigate: { kind: 'tab', tab: 'home' }, navigateLabel: 'Retour Carrière' },
-      { id: 'barre-pro', question: 'À quoi sert la barre de navigation pro ?', answer: 'Elle regroupe Carrière, Matchs, Opportunités, Messages et Profil — chaque icône mène à un espace clé de ta carrière.', navigate: { kind: 'tab', tab: 'home' }, navigateLabel: 'Accueil Carrière' },
+      { id: 'navigation', question: 'Comment naviguer dans l’espace pro joueur ?', answer: 'Carrière pour la vue d’ensemble (avec ton Pulse), Opportunités pour le Mercato, Réels pour tes vidéos, Groupe pour le calendrier, Shop pour la boutique, Moi pour ton profil et CV.', navigate: { kind: 'tab', tab: 'home' }, navigateLabel: 'Retour Carrière' },
+      { id: 'barre-pro', question: 'À quoi sert la barre de navigation pro ?', answer: 'Elle regroupe Carrière, Opportunités, Réels, Groupe, Shop et Profil — chaque icône mène à un espace clé de ta carrière.', navigate: { kind: 'tab', tab: 'home' }, navigateLabel: 'Accueil Carrière' },
+      { id: 'pulse-accueil', question: 'Quelle différence entre Accueil et Pulse ?', answer: 'Accueil (Carrière) est ton onglet principal. Pulse est ton score de visibilité scouting, affiché dans Carrière — ce n’est pas un onglet séparé.', navigate: { kind: 'tab', tab: 'home' }, navigateLabel: 'Voir mon Pulse' },
+      { id: 'sponsors-ou', question: 'Où sont les sponsors ?', answer: 'Pas d’onglet Sponsors dans la barre : depuis Carrière (Accueil), ouvre le module Sponsors pour les offres partenaires.', navigate: { kind: 'dashboard', view: 'sponsors' }, navigateLabel: 'Ouvrir Sponsors' },
+      { id: 'shop-pro', question: 'Où est la boutique ?', answer: 'Onglet Shop : équipement, merch et offres liées à ta marque / ta carrière.', navigate: { kind: 'shop' }, navigateLabel: 'Ouvrir le Shop' },
       { id: 'raccourcis-carriere', question: 'Où trouver mes raccourcis carrière ?', answer: 'L’accueil Carrière affiche tes objectifs, mandats en cours et liens rapides vers CV et Mercato.', navigate: { kind: 'tab', tab: 'home' }, navigateLabel: 'Ouvrir Carrière' },
     ]),
     ...withCategory('profil', [
@@ -496,7 +516,7 @@ const PRO_PLAYER_HELP: PoleHelpContent = {
     ...withCategory('stats', [
       { id: 'cv', question: 'Comment mettre à jour mon CV / portfolio ?', answer: 'Depuis Profil, complète ton CV sportif, tes vidéos portfolio (Moments) et tes candidatures en cours.', navigate: { kind: 'profile', view: 'cv' }, navigateLabel: 'Ouvrir mon CV' },
       { id: 'portfolio', question: 'Où publier mes highlights ?', answer: 'Moments te permet de publier des clips courts visibles par recruteurs et clubs. Lie-les à ton CV pour plus d’impact.', navigate: { kind: 'tab', tab: 'reels' }, navigateLabel: 'Ouvrir Moments' },
-      { id: 'pulse-stats', question: 'Où voir mon Pulse et mes indicateurs ?', answer: 'Carrière et Matchs affichent ton Pulse, tes stats clés et ta forme récente pour les recruteurs.', navigate: { kind: 'tab', tab: 'home' }, navigateLabel: 'Mon Pulse' },
+      { id: 'pulse-stats', question: 'Où voir mon Pulse et mes indicateurs ?', answer: 'Sur l’Accueil Carrière : Pulse est ton score de visibilité (pas un onglet). Matchs / Groupe affichent aussi tes stats clés et ta forme récente.', navigate: { kind: 'tab', tab: 'home' }, navigateLabel: 'Mon Pulse' },
     ]),
     ...withCategory('paiement', [
       { id: 'paiement', question: 'Où gérer mon abonnement pro ?', answer: 'Offre premium, visibilité Mercato et factures sont dans Profil > Paramètres ou via la boutique ProDay.', navigate: { kind: 'profile' }, navigateLabel: 'Voir mon abonnement' },

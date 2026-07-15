@@ -12,9 +12,9 @@ const GUEST_VISIBLE_TABS_SUPPORTER: MainTabId[] = [
 ];
 
 /** Onglets invité — aperçu générique (amateur / pro). */
-const GUEST_VISIBLE_TABS_DEFAULT: MainTabId[] = ['home', 'reels', 'profil'];
+const GUEST_VISIBLE_TABS_DEFAULT: MainTabId[] = ['home', 'reels', 'shop', 'profil'];
 
-const GUEST_VISIBLE_TABS_SANTE: MainTabId[] = ['home', 'profil'];
+const GUEST_VISIBLE_TABS_SANTE: MainTabId[] = ['home', 'reels', 'profil'];
 
 export function getGuestVisibleTabs(line?: ProductLineId): MainTabId[] {
   if (line === 'sante') return GUEST_VISIBLE_TABS_SANTE;

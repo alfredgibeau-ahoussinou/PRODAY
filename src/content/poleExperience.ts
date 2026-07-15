@@ -265,6 +265,7 @@ export function getTabShortLabel(
     if (tab === 'home') return 'Équipe';
     if (tab === 'covoiturage') return 'Déplacements';
     if (tab === 'recrutement') return 'Club';
+    if (tab === 'shop') return 'Shop';
     if (tab === 'profil') return 'Moi';
   }
   if (line === 'supporter') {
@@ -301,6 +302,7 @@ export function getTabShortLabel(
     if (tab === 'recrutement') return 'Opportunités';
     if (tab === 'reels') return 'Réels';
     if (tab === 'matchs') return 'Groupe';
+    if (tab === 'shop') return 'Shop';
     if (tab === 'profil') return 'Moi';
   }
   if (translate) {

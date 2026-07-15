@@ -106,10 +106,16 @@ export function resolveMainTabScreen(
   return DEFAULT_SCREENS[tab];
 }
 
+/** Shop : supporter, amateur (joueur/coach) et pro joueur. */
 export function shouldInjectShopTab(
   role?: UserRole | null,
   line?: ProductLineId | null,
 ): boolean {
   if (isMedicalPractitionerRole(role) || isSponsorRole(role)) return false;
-  return role === 'supporter' || line === 'supporter';
+  if (role === 'supporter' || line === 'supporter') return true;
+  if (line === 'amateur' || line === 'homme' || line === 'woman') return true;
+  if (role === 'player' && (line === 'pro_player' || isProProductLine(line ?? null))) {
+    return true;
+  }
+  return false;
 }

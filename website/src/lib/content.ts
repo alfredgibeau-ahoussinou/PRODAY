@@ -497,7 +497,7 @@ export const SANTE_BRAND = {
   logo: UNIVERSE_LOGOS.sante,
   tagline: "SOIGNER • ACCOMPAGNER • PERFORMER",
   mission:
-    "Kinés, coach mental et staff médical — annuaire santé, RDV en ligne et messagerie patients.",
+    "Kinés, coach mental et staff médical — annuaire santé, RDV en ligne, vidéos éducatives et messagerie patients.",
   accent: "#0F766E",
   accentDark: "#134E4A",
 } as const;
@@ -747,7 +747,7 @@ export const PRO_MODULES = [
     title: "Espace Partenaires",
     subtitle: "Visibilité & financement",
     description:
-      "Offres sponsors, campagnes locales, logo onglet Sponsors et tableau de bord — formules Découverte à National Pro.",
+      "Offres sponsors, campagnes locales et tableau de bord partenaires — accessibles depuis le module Sponsors de l'Accueil (pas un onglet barre).",
     image: "/images/football-club-01.jpg",
   },
 ] as const;
@@ -787,11 +787,27 @@ export const PRO_JOUEUR_MODULES = [
   },
   {
     id: "pulse-pro",
-    title: "Pulse ProDay",
+    title: "Pulse (dans Accueil Carrière)",
     subtitle: "Visibilité scouting",
     description:
-      "Score de visibilité — profil, activité et confiance pour attirer les recruteurs.",
+      "Score de visibilité sur l'onglet Accueil Carrière — pas un onglet séparé. Profil, activité et confiance pour attirer les recruteurs.",
     image: "/showcase/classic-exp-pulse.jpg",
+  },
+  {
+    id: "shop-pro-joueur",
+    title: "Shop",
+    subtitle: "Boutique joueur",
+    description:
+      "Équipement et merch accessibles depuis l'onglet Shop — même boutique ProDay que les supporters et amateurs.",
+    image: "/images/football-pitch-01.jpg",
+  },
+  {
+    id: "sponsors-pro-joueur",
+    title: "Sponsors",
+    subtitle: "Module Accueil",
+    description:
+      "Partenariats et offres marques — via le module Sponsors de l'Accueil Carrière, pas via un onglet de la barre.",
+    image: "/images/football-club-01.jpg",
   },
 ] as const;
 
@@ -921,6 +937,30 @@ export const AMATEUR_MODULES = [
     description:
       "Contacts vérifiés avec joueurs, clubs et coachs de votre zone — fini les groupes WhatsApp éparpillés.",
     image: "/showcase/classic-exp-messages.jpg",
+  },
+  {
+    id: "shop-amateur",
+    title: "Shop",
+    subtitle: "Équipement & merch",
+    description:
+      "Boutique ProDay — maillots, entraînement et goodies, accessible depuis l'onglet Shop de l'app.",
+    image: "/images/football-pitch-01.jpg",
+  },
+  {
+    id: "sponsors-amateur",
+    title: "Sponsors",
+    subtitle: "Module Accueil",
+    description:
+      "Offres partenaires et financement — accessibles depuis le module Sponsors de l'Accueil (pas un onglet de la barre).",
+    image: "/images/football-mercato-01.jpg",
+  },
+  {
+    id: "pulse-amateur",
+    title: "Pulse (dans l'Accueil)",
+    subtitle: "Score de visibilité",
+    description:
+      "Pulse n'est pas un onglet : c'est votre score de visibilité affiché sur l'Accueil Équipe, à côté de votre saison.",
+    image: "/showcase/classic-exp-pulse.jpg",
   },
 ] as const;
 

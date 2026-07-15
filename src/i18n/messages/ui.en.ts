@@ -120,7 +120,7 @@ export const UI_EN: MessageCatalog = {
   'modules.gestion.title': 'Team management',
   'modules.gestion.subtitle': 'Schedule · attendance · stats',
   'modules.sponsors.title': 'Sponsors',
-  'modules.sponsors.subtitle': 'Sponsors',
+  'modules.sponsors.subtitle': 'From Home · offers & funding',
 
   'sponsorPublic.title': 'Sponsor profile',
   'sponsorPublic.activeOffers': 'Active offers',
@@ -544,6 +544,7 @@ export const UI_EN: MessageCatalog = {
   'medical.shell.home': 'Home',
   'medical.shell.agenda': 'Agenda',
   'medical.shell.requests': 'Requests',
+  'medical.shell.videos': 'Videos',
   'medical.shell.messages': 'Messages',
   'medical.shell.cabinet': 'Practice',
   'medical.requests.subtitle': '{{n}} pending request(s)',

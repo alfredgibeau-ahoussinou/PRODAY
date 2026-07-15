@@ -6,7 +6,7 @@ import {
 
 describe('guestAccess', () => {
   it('expose les onglets invité par univers', () => {
-    expect(getGuestVisibleTabs('amateur')).toEqual(['home', 'reels', 'profil']);
+    expect(getGuestVisibleTabs('amateur')).toEqual(['home', 'reels', 'shop', 'profil']);
     expect(getGuestVisibleTabs('supporter')).toEqual([
       'home',
       'matchs',
@@ -15,13 +15,13 @@ describe('guestAccess', () => {
       'shop',
       'profil',
     ]);
-    expect(getGuestVisibleTabs('sante')).toEqual(['home', 'profil']);
+    expect(getGuestVisibleTabs('sante')).toEqual(['home', 'reels', 'profil']);
   });
 
   it('redirige les onglets réservés', () => {
     expect(resolveGuestTab('covoiturage', 'amateur')).toBe('profil');
     expect(resolveGuestTab('messages', 'supporter')).toBe('matchs');
-    expect(isGuestTabAllowed('shop', 'amateur')).toBe(false);
-    expect(isGuestTabAllowed('reels', 'sante')).toBe(false);
+    expect(isGuestTabAllowed('shop', 'amateur')).toBe(true);
+    expect(isGuestTabAllowed('reels', 'sante')).toBe(true);
   });
 });

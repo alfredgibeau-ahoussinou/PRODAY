@@ -35,7 +35,7 @@ export default function SantePage() {
       <PremiumSection
         kicker="PÔLE SANTÉ"
         title="Praticiens vérifiés, visibles près des clubs"
-        description="Kinésithérapeutes, coachs mental, nutritionnistes et staff médical — un annuaire dédié, distinct du pôle Pro staff."
+        description="Kinésithérapeutes, coachs mental, nutritionnistes et staff médical — un annuaire dédié, distinct du pôle Pro staff. Inclut aussi des vidéos éducatives (prévention, récupération) visibles par joueurs et clubs."
         pole="sante"
         bordered={false}
       >
@@ -50,6 +50,28 @@ export default function SantePage() {
             Voir les tarifs
           </PremiumButton>
         </div>
+      </PremiumSection>
+
+      <PremiumSection
+        kicker="VIDÉOS"
+        title="Conseils santé en images"
+        description="L'onglet Vidéos du pôle Santé permet de publier des clips courts — étirements, prévention blessures, récupération — pour accompagner les sportifs de votre zone."
+        pole="sante"
+      >
+        <ul className="mx-auto max-w-xl space-y-3 text-sm text-white/70">
+          <li className="flex gap-2">
+            <span className="text-teal-400">—</span>
+            Contenu éducatif visible dans l&apos;app (onglet Vidéos)
+          </li>
+          <li className="flex gap-2">
+            <span className="text-teal-400">—</span>
+            Visibilité auprès des joueurs et clubs à proximité
+          </li>
+          <li className="flex gap-2">
+            <span className="text-teal-400">—</span>
+            Complète l&apos;agenda RDV et la messagerie patients
+          </li>
+        </ul>
       </PremiumSection>
 
       {physioPlan && (

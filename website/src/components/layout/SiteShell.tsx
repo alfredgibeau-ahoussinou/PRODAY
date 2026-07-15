@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { SiteFooter } from "@/components/SiteFooter";
+import { SiteHelpChatbot } from "@/components/SiteHelpChatbot";
 import { SiteNav } from "@/components/SiteNav";
 import { PoleContextBar } from "./PoleContextBar";
 import { PageTransition } from "./PageTransition";
@@ -31,6 +32,7 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
           <PageTransition>{children}</PageTransition>
         </div>
         <SiteFooter />
+        <SiteHelpChatbot />
       </div>
     </div>
   );

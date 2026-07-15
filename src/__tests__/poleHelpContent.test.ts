@@ -48,11 +48,11 @@ describe('poleHelpContent', () => {
     expect(resolvePoleHelpPoleKey('pro', 'player')).toBe('pro_player');
   });
 
-  it('fournit 25 à 30 entrées FAQ par pôle', () => {
+  it('fournit 25 à 35 entrées FAQ par pôle', () => {
     for (const key of POLE_KEYS) {
       const content = getPoleHelpContent(key);
       expect(content.entries.length).toBeGreaterThanOrEqual(25);
-      expect(content.entries.length).toBeLessThanOrEqual(30);
+      expect(content.entries.length).toBeLessThanOrEqual(35);
       expect(content.welcome.length).toBeGreaterThan(10);
       expect(content.title.length).toBeGreaterThan(0);
       expect(content.bubbleTeaser.length).toBeGreaterThan(5);

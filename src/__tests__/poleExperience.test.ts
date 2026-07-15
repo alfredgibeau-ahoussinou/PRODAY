@@ -72,6 +72,7 @@ describe('poleExperience', () => {
       'recrutement',
       'reels',
       'matchs',
+      'shop',
       'profil',
     ]);
     expect(getVisibleMainTabs('homme', 'player', playerProfile)).not.toContain('famille');
@@ -89,6 +90,7 @@ describe('poleExperience', () => {
       'home',
       'matchs',
       'feed',
+      'reels',
       'messages',
       'profil',
     ]);
@@ -106,6 +108,7 @@ describe('poleExperience', () => {
       'recrutement',
       'reels',
       'matchs',
+      'shop',
       'profil',
     ]);
     expect(getVisibleMainTabs('pro', 'recruiter')).toContain('recrutement');
@@ -118,6 +121,7 @@ describe('poleExperience', () => {
       'matchs',
       'recrutement',
       'messages',
+      'shop',
       'profil',
     ]);
     expect(getVisibleMainTabs('amateur', 'player')).toContain('sante');
@@ -125,6 +129,7 @@ describe('poleExperience', () => {
     expect(getVisibleMainTabs('amateur', 'player')).toContain('recrutement');
     expect(getVisibleMainTabs('amateur', 'player')).toContain('reels');
     expect(getVisibleMainTabs('amateur', 'player')).toContain('messages');
+    expect(getVisibleMainTabs('amateur', 'player')).toContain('shop');
     expect(getVisibleMainTabs('supporter', 'supporter')).toEqual([
       'home',
       'matchs',

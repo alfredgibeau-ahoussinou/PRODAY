@@ -14,6 +14,7 @@ export const AMATEUR_PLAYER_OVERFLOW_TABS: MainTabId[] = [
   'reels',
   'sante',
   'feed',
+  'shop',
 ];
 
 export const AMATEUR_COACH_SHELL_TABS: MainTabId[] = [
@@ -21,6 +22,7 @@ export const AMATEUR_COACH_SHELL_TABS: MainTabId[] = [
   'matchs',
   'recrutement', // Club
   'messages',
+  'shop',
   'profil', // Moi
 ];
 
@@ -47,6 +49,7 @@ export const PRO_PLAYER_SHELL_TABS: MainTabId[] = [
   'recrutement', // Opportunités
   'reels', // Réels
   'matchs', // Groupe
+  'shop', // Boutique
   'profil', // Moi
 ];
 

@@ -59,16 +59,16 @@ export function getVisibleMainTabsForWeb(universe: ProductLineWeb): MainTabId[] 
   let tabs: MainTabId[];
 
   if (universe === "sante") {
-    tabs = ["home", "matchs", "messages", "profil"];
+    tabs = ["home", "matchs", "feed", "reels", "messages", "profil"];
   } else if (universe === "supporter") {
-    tabs = ["home", "matchs", "reels", "feed", "messages", "profil"];
+    tabs = ["home", "matchs", "reels", "feed", "messages", "shop", "profil"];
   } else if (universe === "amateur") {
-    tabs = ["home", "recrutement", "matchs", "reels", "covoiturage", "messages", "profil"];
+    tabs = ["home", "recrutement", "matchs", "reels", "covoiturage", "shop", "messages", "profil"];
   } else if (universe === "pro") {
     if (role === "coach") {
       tabs = ["home", "recrutement", "matchs", "reels", "covoiturage", "messages", "profil"];
     } else {
-      tabs = ["home", "recrutement", "matchs", "reels", "messages", "profil"];
+      tabs = ["home", "recrutement", "matchs", "reels", "shop", "messages", "profil"];
     }
   } else if (role === "player") {
     tabs = [
@@ -78,6 +78,7 @@ export function getVisibleMainTabsForWeb(universe: ProductLineWeb): MainTabId[] 
       "reels",
       "covoiturage",
       "sante",
+      "shop",
       "messages",
       "profil",
     ];
@@ -146,8 +147,12 @@ export function getTabLabelForWeb(tab: MainTabId, universe: ProductLineWeb): str
         return "Accueil";
       case "matchs":
         return "Agenda";
+      case "feed":
+        return "Demandes";
+      case "reels":
+        return "Vidéos";
       case "messages":
-        return "Patients";
+        return "Messages";
       case "profil":
         return "Cabinet";
       default:
