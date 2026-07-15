@@ -44,9 +44,17 @@ const COMMON_ENTRIES: HelpEntry[] = [
     id: "sante-video",
     question: "Y a-t-il des vidéos dans le pôle Santé ?",
     answer:
-      "Oui — les praticiens ont un onglet Vidéos pour publier conseils, prévention et récupération visibles par joueurs et clubs.",
-    href: ROUTES.sante,
-    hrefLabel: "Pôle Santé",
+      "Oui — onglet Vidéos pour du contenu éducatif. La téléconsultation médicale, elle, passe par un partenaire conforme HDS (Cal.com / Whereby), pas Zoom.",
+    href: `${ROUTES.sante}#teleconsultation`,
+    hrefLabel: "Téléconsultation Santé",
+  },
+  {
+    id: "sante-hds",
+    question: "Pourquoi pas Zoom pour la visio santé ?",
+    answer:
+      "Dès qu’il y a des données de santé, Zoom / Google Meet classiques ne suffisent pas. ProDay branche Cal.com ou Whereby Embedded pour le lancement, avant une éventuelle visio propriétaire.",
+    href: `${ROUTES.sante}#teleconsultation`,
+    hrefLabel: "Voir la téléconsultation",
   },
   {
     id: "demo",

@@ -3,6 +3,7 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { PremiumSection } from "@/components/layout/PremiumSection";
 import { PlanDetailCard } from "@/components/poles/PlanDetailCard";
 import { PoleFullBleed } from "@/components/poles/PoleFullBleed";
+import { SanteTeleconsultSection } from "@/components/sante/SanteTeleconsultSection";
 import { PremiumButton } from "@/components/ui/PremiumButton";
 import { SANTE_BRAND, getWebPlanById } from "@/lib/content";
 import { POLE_STYLES, pricingHrefForPole } from "@/lib/poles";
@@ -11,7 +12,7 @@ import { ROUTES } from "@/lib/routes";
 export const metadata: Metadata = {
   title: "Pro Day Santé",
   description:
-    "Kinés, coach mental et nutrition — annuaire vérifié, visibilité clubs et prise de RDV via l'app.",
+    "Kinés, coach mental et nutrition — annuaire, agenda, téléconsultation sécurisée (HDS) et vidéos éducatives.",
 };
 
 export default function SantePage() {
@@ -35,7 +36,7 @@ export default function SantePage() {
       <PremiumSection
         kicker="PÔLE SANTÉ"
         title="Praticiens vérifiés, visibles près des clubs"
-        description="Kinésithérapeutes, coachs mental, nutritionnistes et staff médical — un annuaire dédié, distinct du pôle Pro staff. Inclut aussi des vidéos éducatives (prévention, récupération) visibles par joueurs et clubs."
+        description="Kinésithérapeutes, coachs mental, nutritionnistes et staff médical — un annuaire dédié, distinct du pôle Pro staff. Agenda app, téléconsultation via partenaire conforme (Cal.com / Whereby), et vidéos éducatives."
         pole="sante"
         bordered={false}
       >
@@ -46,16 +47,21 @@ export default function SantePage() {
           >
             Accès anticipé Santé
           </PremiumButton>
+          <PremiumButton href="#teleconsultation" variant="outline">
+            Téléconsultation
+          </PremiumButton>
           <PremiumButton href={pricingHrefForPole("sante")} variant="outline">
             Voir les tarifs
           </PremiumButton>
         </div>
       </PremiumSection>
 
+      <SanteTeleconsultSection />
+
       <PremiumSection
-        kicker="VIDÉOS"
+        kicker="VIDÉOS ÉDUCATIVES"
         title="Conseils santé en images"
-        description="L'onglet Vidéos du pôle Santé permet de publier des clips courts — étirements, prévention blessures, récupération — pour accompagner les sportifs de votre zone."
+        description="L'onglet Vidéos de l'app sert aux contenus publics (prévention, étirements, récupération) — distinct de la téléconsultation médicale ci-dessus."
         pole="sante"
       >
         <ul className="mx-auto max-w-xl space-y-3 text-sm text-white/70">
@@ -69,7 +75,7 @@ export default function SantePage() {
           </li>
           <li className="flex gap-2">
             <span className="text-teal-400">—</span>
-            Complète l&apos;agenda RDV et la messagerie patients
+            Complète l&apos;agenda RDV — sans remplacer une visio HDS
           </li>
         </ul>
       </PremiumSection>
@@ -96,7 +102,7 @@ export default function SantePage() {
       <PremiumSection
         kicker="REJOINDRE"
         title="Prêt à rejoindre l'annuaire ?"
-        description="Inscrivez-vous sur la liste d'attente — les praticiens sont informés en priorité du déploiement de la prise de rendez-vous."
+        description="Inscrivez-vous sur la liste d'attente — les praticiens sont informés en priorité du déploiement de la prise de rendez-vous et de la téléconsultation."
         pole="sante"
       >
         <div className="text-center">

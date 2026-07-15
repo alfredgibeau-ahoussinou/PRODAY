@@ -497,7 +497,7 @@ export const SANTE_BRAND = {
   logo: UNIVERSE_LOGOS.sante,
   tagline: "SOIGNER • ACCOMPAGNER • PERFORMER",
   mission:
-    "Kinés, coach mental et staff médical — annuaire santé, RDV en ligne, vidéos éducatives et messagerie patients.",
+    "Kinés, coach mental et staff médical — annuaire, agenda, téléconsultation sécurisée (partenaire HDS) et vidéos éducatives.",
   accent: "#0F766E",
   accentDark: "#134E4A",
 } as const;
