@@ -1,22 +1,14 @@
 "use client";
 
-import { ExternalLink, ShieldCheck, Video } from "lucide-react";
+import Link from "next/link";
+import { CalendarCheck, ShieldCheck, Stethoscope, Video } from "lucide-react";
+import { ROUTES } from "@/lib/routes";
 
 /**
- * Embed Cal.com (agenda + Cal Video / Daily.co) ou Whereby.
- * Défaut : profil Cal.com ProDay — override via NEXT_PUBLIC_SANTE_BOOKING_*.
- * Pas de Zoom / Google Meet : exigences HDS / données de santé.
+ * Téléconsultation pôle Santé : chaque praticien inscrit connecte son propre agenda (Cal.com / Whereby).
+ * Pas de calendrier personnel fondateur — le RDV se fait via la fiche praticien (app / annuaire).
  */
-const DEFAULT_CAL_EMBED =
-  "https://cal.com/alfred-gibeau-ahoussinou-crbca7?embed=true";
-const DEFAULT_CAL_PAGE = "https://cal.com/alfred-gibeau-ahoussinou-crbca7";
-
 export function SanteTeleconsultSection() {
-  const embedUrl =
-    process.env.NEXT_PUBLIC_SANTE_BOOKING_EMBED_URL?.trim() || DEFAULT_CAL_EMBED;
-  const bookingPageUrl =
-    process.env.NEXT_PUBLIC_SANTE_BOOKING_PAGE_URL?.trim() || DEFAULT_CAL_PAGE;
-
   return (
     <section
       id="teleconsultation"
@@ -27,30 +19,31 @@ export function SanteTeleconsultSection() {
           Téléconsultation
         </p>
         <h2 className="font-display mt-3 text-center text-2xl font-bold text-white sm:text-3xl">
-          Agenda + visio sécurisée
+          Un agenda par praticien
         </h2>
         <p className="mx-auto mt-3 max-w-2xl text-center text-sm leading-relaxed text-white/65 sm:text-base">
-          Pour le pôle Santé, la prise de RDV et la visioconférence passent par un partenaire
-          conforme (Cal.com / Cal Video · Daily.co) — pas Zoom ni Google Meet lorsque des
-          données de santé sont échangées. Créneaux 15 min et 30 min.
+          Ce ne sont pas les fondateurs ProDay qui reçoivent les sportifs : ce sont les{" "}
+          <strong className="font-semibold text-white/85">professionnels de santé</strong> inscrits
+          sur le pôle Santé. Chaque praticien connecte son propre calendrier (Cal.com / visio
+          conforme) — le sportif réserve depuis la fiche du praticien dans l&apos;annuaire / l&apos;app.
         </p>
 
         <div className="mt-8 grid gap-4 sm:grid-cols-3">
           {[
             {
+              icon: Stethoscope,
+              title: "Praticiens inscrits",
+              body: "Kinés, ostéos, coachs mental, nutritionnistes… : inscription pôle Santé, validation, puis fiche visible près des clubs.",
+            },
+            {
+              icon: CalendarCheck,
+              title: "Leur agenda, pas le nôtre",
+              body: "Chacun branche son Cal.com (ou outil HDS équivalent). Pas de créneau unique « ProDay » au nom d’une personne.",
+            },
+            {
               icon: ShieldCheck,
-              title: "HDS & RGPD",
-              body: "Flux vidéo et agenda via un sous-traitant adapté à la santé européenne — certification HDS côté hébergeur partenaire selon la formule.",
-            },
-            {
-              icon: Video,
-              title: "Lien unique",
-              body: "À chaque créneau confirmé, un lien de visio unique est généré pour le sportif et le praticien — rien à installer.",
-            },
-            {
-              icon: ExternalLink,
-              title: "Lancement rapide",
-              body: "Stack clé en main pour la bêta. Une visio 100 % ProDay (WebRTC) pourra venir plus tard si l’usage le justifie.",
+              title: "Visio conforme",
+              body: "Cal Video / Daily.co ou Whereby — pas Zoom ni Google Meet dès que des données de santé sont échangées.",
             },
           ].map(({ icon: Icon, title, body }) => (
             <div
@@ -64,33 +57,46 @@ export function SanteTeleconsultSection() {
           ))}
         </div>
 
-        <div className="mt-10 overflow-hidden rounded-2xl border border-teal-400/25 bg-black/50">
-          <iframe
-            title="Réservation téléconsultation Pro Day Santé"
-            src={embedUrl}
-            className="h-[min(720px,80vh)] w-full border-0 bg-white"
-            allow="camera; microphone; fullscreen; display-capture; autoplay"
-            loading="lazy"
-            referrerPolicy="no-referrer-when-downgrade"
-          />
-        </div>
+        <div className="mt-10 rounded-2xl border border-teal-400/25 bg-black/50 p-8 text-center sm:p-10">
+          <Video className="mx-auto text-teal-300/90" size={32} />
+          <h3 className="font-display mt-4 text-xl font-bold text-white">
+            Comment ça se passe ?
+          </h3>
+          <ol className="mx-auto mt-5 max-w-lg space-y-3 text-left text-sm text-white/70">
+            <li className="flex gap-3">
+              <span className="font-bold text-teal-300">1.</span>
+              Le praticien s&apos;inscrit au pôle Santé et complète son cabinet.
+            </li>
+            <li className="flex gap-3">
+              <span className="font-bold text-teal-300">2.</span>
+              Il connecte son lien de prise de RDV / visio (Cal.com recommandé pour le lancement).
+            </li>
+            <li className="flex gap-3">
+              <span className="font-bold text-teal-300">3.</span>
+              Le sportif choisit un pro dans l&apos;annuaire et réserve sur{" "}
+              <em className="not-italic text-white/85">la fiche de ce praticien</em>.
+            </li>
+          </ol>
 
-        <p className="mt-4 text-center text-xs text-white/40">
-          Problème d&apos;affichage ?{" "}
-          <a
-            href={bookingPageUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-semibold text-teal-300/90 underline underline-offset-2 hover:text-teal-200"
-          >
-            Ouvrir la prise de RDV dans un nouvel onglet
-          </a>
-        </p>
+          <div className="mt-8 flex flex-wrap justify-center gap-3">
+            <Link
+              href={ROUTES.betaWaitlist}
+              className="inline-flex min-h-11 items-center rounded-full bg-teal-600 px-6 py-2.5 text-sm font-bold text-white transition hover:bg-teal-500"
+            >
+              Je suis praticien — accès anticipé
+            </Link>
+            <Link
+              href={ROUTES.demo}
+              className="inline-flex min-h-11 items-center rounded-full border border-teal-400/40 px-6 py-2.5 text-sm font-semibold text-teal-100 transition hover:border-teal-300 hover:bg-teal-950/50"
+            >
+              Voir la démo app
+            </Link>
+          </div>
+        </div>
 
         <p className="mt-8 text-center text-[11px] leading-relaxed text-white/35">
           Distinct de l&apos;onglet « Vidéos » de l&apos;app (contenus éducatifs publics). La
-          téléconsultation concerne uniquement les RDV praticien ↔ sportif, avec consentement et
-          confidentialité.
+          téléconsultation = RDV praticien ↔ sportif, avec consentement et confidentialité.
         </p>
       </div>
     </section>

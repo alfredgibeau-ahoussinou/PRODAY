@@ -44,17 +44,17 @@ const COMMON_ENTRIES: HelpEntry[] = [
     id: "sante-video",
     question: "Y a-t-il des vidéos dans le pôle Santé ?",
     answer:
-      "Oui — onglet Vidéos pour du contenu éducatif. La téléconsultation médicale, elle, passe par un partenaire conforme HDS (Cal.com / Whereby), pas Zoom.",
+      "Oui — onglet Vidéos pour du contenu éducatif. La téléconsultation, elle, se fait avec le praticien choisi (son agenda Cal.com), pas via un calendrier unique ProDay.",
     href: `${ROUTES.sante}#teleconsultation`,
     hrefLabel: "Téléconsultation Santé",
   },
   {
     id: "sante-hds",
-    question: "Pourquoi pas Zoom pour la visio santé ?",
+    question: "Qui reçoit les rendez-vous santé ?",
     answer:
-      "Dès qu’il y a des données de santé, Zoom / Google Meet classiques ne suffisent pas. ProDay branche Cal.com ou Whereby Embedded pour le lancement, avant une éventuelle visio propriétaire.",
+      "Les professionnels inscrits sur le pôle Santé — chacun son calendrier. Pas un créneau au nom d’un fondateur. Visio conforme (Cal.com / Whereby), pas Zoom.",
     href: `${ROUTES.sante}#teleconsultation`,
-    hrefLabel: "Voir la téléconsultation",
+    hrefLabel: "Voir le parcours",
   },
   {
     id: "demo",

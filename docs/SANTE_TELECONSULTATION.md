@@ -4,40 +4,40 @@
 
 Pour un « Doctolib + visio » sport (kinés, ostéos, coach mental…), **Zoom / Google Meet ne conviennent pas** si des données de santé circulent (HDS / RGPD UE).
 
+## Qui a l’agenda ?
+
+**Les professionnels de santé inscrits sur le pôle Santé**, pas un calendrier au nom du fondateur.
+
+| Acteur | Rôle |
+|--------|------|
+| Praticien (physio, ostéo…) | S’inscrit, valide son cabinet, connecte **son** Cal.com / lien visio |
+| Sportif / club | Choisit un pro dans l’**annuaire** et réserve sur **la fiche de ce praticien** |
+| ProDay | Plateforme + partenaire technique (Cal Video / Whereby) — pas le médecin |
+
+Ne jamais mettre un profil Cal.com personnel (prénom fondateur) comme booking global sur `/sante`.
+
 ## Décision produit (lancement)
 
 | Couche | Choix | Pourquoi |
 |--------|--------|----------|
-| Agenda praticien (app) | Déjà ProDay (`PhysioAgendaScreen`, RDV) | Cockpit métier |
-| Prise de RDV web + visio | **Cal.com** (embed) ou **Whereby Embedded** | Conforme, jours et non mois de dev |
-| Visio custom WebRTC | **Plus tard** (Daily.co / Jitsi) | Seulement si usage massif validé |
+| Agenda praticien (app) | ProDay (`PhysioAgendaScreen`, RDV) | Cockpit métier |
+| Lien booking / visio | **Cal.com de chaque praticien** (ou Whereby) | Conforme, 1 compte par pro |
+| Visio custom WebRTC | **Plus tard** (Daily.co / Jitsi) | Si usage massif validé |
 
-### Recommandation
+### UX web actuelle
 
-1. **Cal.com** si vous voulez agenda public + Cal Video (Daily.co) en un seul produit.
-2. **Whereby Embedded** si l’agenda ProDay suffit et qu’il ne manque que la salle vidéo dans une page.
+Page [`/sante#teleconsultation`](https://proday75.fr/sante#teleconsultation) : explique le parcours + CTA inscription praticiens. **Pas d’iframe Cal.com globale.**
 
-Ne pas coder une pile WebRTC propriétaire avant d’avoir validé la demande kinés / clubs en bêta.
+### Roadmap technique
 
-## Configuration site (`proday75.fr`)
+1. Champ profil praticien `booking_url` / `cal_com_username` (Cal.com du pro).
+2. Depuis la fiche annuaire → ouvrir / embed **son** lien uniquement.
+3. Optionnel plus tard : org Cal.com « Pro Day Santé » multi-membres (team), jamais un prénom individuel en vitrine.
 
-Sur Netlify / `.env.local` :
+## Config
 
-```bash
-# Profil Cal.com ProDay (actif)
-NEXT_PUBLIC_SANTE_BOOKING_EMBED_URL=https://cal.com/alfred-gibeau-ahoussinou-crbca7?embed=true
-NEXT_PUBLIC_SANTE_BOOKING_PAGE_URL=https://cal.com/alfred-gibeau-ahoussinou-crbca7
-```
+Plus de `NEXT_PUBLIC_SANTE_BOOKING_EMBED_URL` obligatoire. CSP conserve `frame-src` Cal.com / Whereby pour les embeds **par fiche praticien** à venir.
 
-Créneaux publics actuels : **15 min** et **30 min**
-(`/alfred-gibeau-ahoussinou-crbca7/15min`, `/…/30min`).
+## HDS / RGPD
 
-Page marketing : [`/sante#teleconsultation`](https://proday75.fr/sante#teleconsultation).
-
-CSP Netlify : `frame-src` autorise Cal.com / Whereby ; caméra / micro autorisés pour ces origines.
-
-## Roadmap
-
-1. **Maintenant** — embed partenaire + mentions HDS / distinction Vidéos éducatives vs téléconsult.
-2. **Bêta** — lier chaque RDV app à un `meeting_url` partenaire (Whereby room ou Cal).
-3. **Post-validation** — éventuelle visio white-label Daily.co / Jitsi sous marque ProDay + audit HDS.
+Visio via Cal Video (Daily.co) ou Whereby Embedded — pas Zoom / Meet classiques pour les échanges médicaux.

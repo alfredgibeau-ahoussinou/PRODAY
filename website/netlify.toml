@@ -8,8 +8,6 @@
   NEXT_PUBLIC_SITE_URL = "https://proday75.fr"
   NEXT_PUBLIC_BETA_APP_VERSION = "1.0.0"
   NEXT_PUBLIC_BETA_APK_URL = "https://storage.googleapis.com/proday-155b0.firebasestorage.app/beta/proday-beta.apk"
-  NEXT_PUBLIC_SANTE_BOOKING_EMBED_URL = "https://cal.com/alfred-gibeau-ahoussinou-crbca7?embed=true"
-  NEXT_PUBLIC_SANTE_BOOKING_PAGE_URL = "https://cal.com/alfred-gibeau-ahoussinou-crbca7"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
