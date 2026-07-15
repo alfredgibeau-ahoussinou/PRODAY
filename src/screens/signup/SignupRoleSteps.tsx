@@ -17,6 +17,7 @@ import type { SignupPageId } from './signupFlowConfig';
 import { useSignupFlowTheme } from './SignupFlowContext';
 import { useTranslation } from '../../context/LocaleContext';
 import { spacing, radius } from '../../theme/designTokens';
+import { openCalComSignup } from '../../utils/calComBooking';
 
 type StepProps = {
   form: SignupForm;
@@ -349,6 +350,32 @@ export const SignupMedicalPracticeStep: React.FC<StepProps> = (props) => {
         value={props.form.department}
         onChangeText={props.form.setDepartment}
         error={props.form.fieldErrors.department}
+      />
+      <View style={[styles.hintBox, { backgroundColor: colors.accentSoft, borderColor: colors.border }]}>
+        <Text style={[styles.hintText, { color: colors.textSecondary }]}>
+          Créez (ou connectez) votre compte Cal.com — c’est votre agenda public pour les téléconsultations.
+          Les sportifs réservent sans créer de compte Cal.com, via votre fiche ProDay.
+        </Text>
+        <Pressable
+          onPress={() => {
+            void openCalComSignup().catch(() => undefined);
+          }}
+          style={{ marginTop: spacing.sm }}
+        >
+          <Text style={{ color: colors.accent, fontWeight: '700', fontSize: 14 }}>
+            Ouvrir l’inscription Cal.com →
+          </Text>
+        </Pressable>
+      </View>
+      <AuthTextField
+        label="Username Cal.com"
+        icon="link"
+        placeholder="ex. cabinet-martin-kine"
+        autoCapitalize="none"
+        autoCorrect={false}
+        value={props.form.calComUsername}
+        onChangeText={props.form.setCalComUsername}
+        error={props.form.fieldErrors.calComUsername}
       />
     </SignupStepLayout>
   );

@@ -22,10 +22,12 @@ export function SanteTeleconsultSection() {
           Un agenda par praticien
         </h2>
         <p className="mx-auto mt-3 max-w-2xl text-center text-sm leading-relaxed text-white/65 sm:text-base">
-          Ce ne sont pas les fondateurs ProDay qui reçoivent les sportifs : ce sont les{" "}
-          <strong className="font-semibold text-white/85">professionnels de santé</strong> inscrits
-          sur le pôle Santé. Chaque praticien connecte son propre calendrier (Cal.com / visio
-          conforme) — le sportif réserve depuis la fiche du praticien dans l&apos;annuaire / l&apos;app.
+          À l&apos;inscription pôle Santé, chaque{" "}
+          <strong className="font-semibold text-white/85">praticien</strong> crée aussi son compte
+          Cal.com (agenda public). Les{" "}
+          <strong className="font-semibold text-white/85">sportifs</strong> n&apos;ont pas besoin
+          de Cal.com : ils réservent comme invités depuis la fiche du pro dans l&apos;annuaire /
+          l&apos;app.
         </p>
 
         <div className="mt-8 grid gap-4 sm:grid-cols-3">
@@ -37,8 +39,8 @@ export function SanteTeleconsultSection() {
             },
             {
               icon: CalendarCheck,
-              title: "Leur agenda, pas le nôtre",
-              body: "Chacun branche son Cal.com (ou outil HDS équivalent). Pas de créneau unique « ProDay » au nom d’une personne.",
+              title: "Cal.com à l’inscription",
+              body: "Obligatoire pour les praticiens (username / lien public). Les joueurs réservent sans créer de compte Cal.com.",
             },
             {
               icon: ShieldCheck,
@@ -65,16 +67,18 @@ export function SanteTeleconsultSection() {
           <ol className="mx-auto mt-5 max-w-lg space-y-3 text-left text-sm text-white/70">
             <li className="flex gap-3">
               <span className="font-bold text-teal-300">1.</span>
-              Le praticien s&apos;inscrit au pôle Santé et complète son cabinet.
+              Le praticien s&apos;inscrit au pôle Santé et renseigne son username Cal.com (inscription
+              Cal.com ouverte depuis le parcours).
             </li>
             <li className="flex gap-3">
               <span className="font-bold text-teal-300">2.</span>
-              Il connecte son lien de prise de RDV / visio (Cal.com recommandé pour le lancement).
+              Son agenda public est lié à sa fiche ProDay (téléconsultation Cal Video / Whereby —
+              pas Zoom).
             </li>
             <li className="flex gap-3">
               <span className="font-bold text-teal-300">3.</span>
               Le sportif choisit un pro dans l&apos;annuaire et réserve sur{" "}
-              <em className="not-italic text-white/85">la fiche de ce praticien</em>.
+              <em className="not-italic text-white/85">ce Cal.com</em> — sans créer de compte Cal.com.
             </li>
           </ol>
 

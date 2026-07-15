@@ -18,6 +18,7 @@ import {
   validateRoleProFields,
   validateSponsorProFields,
 } from '../../utils/signupValidation';
+import { normalizeCalComBookingInput } from '../../utils/calComBooking';
 import {
   buildSignupSteps,
   getFlowKind,
@@ -92,6 +93,7 @@ export function useSignupForm(initial?: {
   const [department, setDepartment] = useState('');
   const [medicalSpecialty, setMedicalSpecialty] = useState<MedicalSpecialtyId>('kine');
   const [medicalPracticeFocus, setMedicalPracticeFocus] = useState('');
+  const [calComUsername, setCalComUsername] = useState('');
   const [structureName, setStructureName] = useState('');
   const [professionalHeadline, setProfessionalHeadline] = useState('');
   const [position, setPosition] = useState('');
@@ -400,7 +402,7 @@ export function useSignupForm(initial?: {
   };
 
   const validateMedicalPracticeOnly = () => {
-    const errs = validateMedicalPracticeStep({ medicalPracticeFocus, city, department });
+    const errs = validateMedicalPracticeStep({ medicalPracticeFocus, city, department, calComUsername });
     setFieldErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -645,11 +647,15 @@ export function useSignupForm(initial?: {
               : role === 'physio'
                 ? (() => {
                     const label = medicalIdToCanonicalLabel(medicalSpecialty);
+                    const cal = normalizeCalComBookingInput(calComUsername);
                     return {
                       medical_specialty: label,
                       job_title: label,
                       specialties: [label, medicalPracticeFocus].filter(Boolean),
                       bio: medicalPracticeFocus ? `${label} — ${medicalPracticeFocus}` : label,
+                      booking_enabled: true,
+                      cal_com_username: cal?.username,
+                      booking_url: cal?.bookingUrl,
                     };
                   })()
                 : role === 'coach'
@@ -784,6 +790,8 @@ export function useSignupForm(initial?: {
     setMedicalSpecialty,
     medicalPracticeFocus,
     setMedicalPracticeFocus,
+    calComUsername,
+    setCalComUsername,
     structureName,
     setStructureName,
     professionalHeadline,

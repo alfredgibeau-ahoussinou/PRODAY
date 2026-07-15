@@ -8,6 +8,7 @@ import {
 import type { MedicalSpecialtyId } from '../screens/signup/signupRoleExperience';
 import { validateAgeForAppSpace } from '../screens/signup/signupFlowConfig';
 import { PLAYER_LEVELS, PLAYER_POSITIONS } from '../constants/playerProfile';
+import { validateCalComBookingInput } from './calComBooking';
 
 export type ValidationResult = string | undefined;
 
@@ -259,7 +260,9 @@ export function validateMedicalSpecialtyStep(medicalSpecialty: string): Record<s
 }
 
 export function validateMedicalPracticeStep(
-  input: Pick<StaffValidationInput, 'medicalPracticeFocus' | 'city' | 'department'>
+  input: Pick<StaffValidationInput, 'medicalPracticeFocus' | 'city' | 'department'> & {
+    calComUsername?: string;
+  }
 ): Record<string, string> {
   const errs: Record<string, string> = {};
   if (!input.medicalPracticeFocus?.trim()) {
@@ -269,6 +272,8 @@ export function validateMedicalPracticeStep(
   if (cityErr) errs.city = cityErr;
   const deptErr = validateFrenchDepartment(input.department);
   if (deptErr) errs.department = deptErr;
+  const calErr = validateCalComBookingInput(input.calComUsername ?? '');
+  if (calErr) errs.calComUsername = calErr;
   return errs;
 }
 

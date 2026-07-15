@@ -14,6 +14,7 @@ import {
   type HealthPoleGroupId,
 } from '../../utils/healthPoleSpecialties';
 import { isPhysioBookingEnabled } from '../../services/medicalAppointments.service';
+import { hasPhysioCalComBooking } from '../../utils/calComBooking';
 import { spacing, radius } from '../../theme/designTokens';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { useFemalePlayerPresentation } from '../../hooks/useFemalePlayerPresentation';
@@ -111,10 +112,10 @@ export const PhysioCarePanel: React.FC<PhysioCarePanelProps> = ({
           </ProDayText>
           <ProDayText variant="body" muted style={styles.sub}>
             {isPlayer
-              ? 'Réservez un créneau ou contactez kinés, coach mental, nutrition…'
+              ? 'Réservez sur l’agenda Cal.com du praticien (sans créer de compte Cal.com) ou contactez-le.'
               : isFemalePresentation
-                ? 'Les joueuses réservent en ligne ou vous contactent pour prévention et récupération.'
-                : 'Les joueurs réservent en ligne ou vous contactent pour prévention et récupération.'}
+                ? 'Les joueuses réservent via votre Cal.com (sans compte Cal.com) ou vous contactent.'
+                : 'Les joueurs réservent via votre Cal.com (sans compte Cal.com) ou vous contactent.'}
           </ProDayText>
         </>
       ) : null}
@@ -159,7 +160,8 @@ export const PhysioCarePanel: React.FC<PhysioCarePanelProps> = ({
                     </Text>
                   </View>
                   <View style={styles.actions}>
-                    {onBookPhysio && isPhysioBookingEnabled(p) ? (
+                    {onBookPhysio &&
+                    (hasPhysioCalComBooking(p) || isPhysioBookingEnabled(p)) ? (
                       <PressableSpring
                         style={styles.bookBtn}
                         onPress={() => onBookPhysio(p)}

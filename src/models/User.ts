@@ -112,6 +112,10 @@ export interface UserProfile {
   specialties?: string[];
   /** Prise de RDV en ligne — pôle médical */
   booking_enabled?: boolean;
+  /** Username Cal.com du praticien (sans https://cal.com/) */
+  cal_com_username?: string;
+  /** Lien public de réservation (Cal.com ou équivalent HDS) */
+  booking_url?: string;
   consultation_duration_min?: number;
   weekly_availability?: {
     weekday: number;

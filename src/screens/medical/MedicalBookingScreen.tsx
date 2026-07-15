@@ -22,6 +22,10 @@ import { spacing, radius } from '../../theme/designTokens';
 import { useMedicalStyles } from '../../components/medical/medicalStyles';
 import type { AppColors } from '../../theme/universeTheme';
 import { recordV3UserAction } from '../../utils/recordV3Action';
+import {
+  getPhysioCalComBookingUrl,
+  openExternalUrl,
+} from '../../utils/calComBooking';
 
 interface MedicalBookingScreenProps {
   physio: User;
@@ -38,6 +42,7 @@ export const MedicalBookingScreen: React.FC<MedicalBookingScreenProps> = ({
 }) => {
   const { colors: c, rootStyle } = useMedicalStyles();
   const styles = useMemo(() => createStyles(c), [c]);
+  const calUrl = getPhysioCalComBookingUrl(physio);
   const days = useMemo(() => nextBookingDays(14), []);
   const [selectedDay, setSelectedDay] = useState(days[0]);
   const [slots, setSlots] = useState<Date[]>([]);
@@ -58,8 +63,9 @@ export const MedicalBookingScreen: React.FC<MedicalBookingScreenProps> = ({
   }, [physio, selectedDay]);
 
   useEffect(() => {
+    if (calUrl) return;
     void loadSlots();
-  }, [loadSlots]);
+  }, [calUrl, loadSlots]);
 
   const handleBook = async () => {
     if (!selectedSlot) return;
@@ -108,6 +114,48 @@ export const MedicalBookingScreen: React.FC<MedicalBookingScreenProps> = ({
           </View>
         </View>
 
+        {calUrl ? (
+          <View style={styles.hero}>
+            <View style={styles.heroCopy}>
+              <Text style={styles.sectionLabel}>Agenda Cal.com du praticien</Text>
+              <Text style={styles.heroMeta}>
+                Réservez sur le calendrier de {physio.display_name}. Vous n’avez pas besoin de créer
+                un compte Cal.com — seulement le praticien.
+              </Text>
+            </View>
+          </View>
+        ) : null}
+
+        {calUrl ? (
+          <PressableSpring
+            style={[styles.bookBtn, booking && styles.bookBtnDisabled]}
+            disabled={booking}
+            onPress={() => {
+              void (async () => {
+                setBooking(true);
+                try {
+                  await openExternalUrl(calUrl);
+                  recordV3UserAction(patient, 'book_health');
+                  onBooked?.();
+                } catch (e) {
+                  Alert.alert('Erreur', e instanceof Error ? e.message : 'Lien indisponible.');
+                } finally {
+                  setBooking(false);
+                }
+              })();
+            }}
+          >
+            {booking ? (
+              <ActivityIndicator color={c.brandInverse} />
+            ) : (
+              <>
+                <Icon name="calendar" size={18} color={c.brandInverse} />
+                <Text style={styles.bookBtnText}>Prendre RDV (Cal.com)</Text>
+              </>
+            )}
+          </PressableSpring>
+        ) : (
+          <>
         <Text style={styles.sectionLabel}>Choisir un jour</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.dayRow}>
           {days.map((day) => {
@@ -178,6 +226,8 @@ export const MedicalBookingScreen: React.FC<MedicalBookingScreenProps> = ({
             </>
           )}
         </PressableSpring>
+          </>
+        )}
       </ScrollView>
     </View>
   );

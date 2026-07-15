@@ -44,7 +44,7 @@ const COMMON_ENTRIES: HelpEntry[] = [
     id: "sante-video",
     question: "Y a-t-il des vidéos dans le pôle Santé ?",
     answer:
-      "Oui — onglet Vidéos pour du contenu éducatif. La téléconsultation, elle, se fait avec le praticien choisi (son agenda Cal.com), pas via un calendrier unique ProDay.",
+      "Oui — onglet Vidéos pour du contenu éducatif. La téléconsultation : le praticien a son Cal.com à l’inscription ; le sportif réserve sans compte Cal.com.",
     href: `${ROUTES.sante}#teleconsultation`,
     hrefLabel: "Téléconsultation Santé",
   },
@@ -52,7 +52,7 @@ const COMMON_ENTRIES: HelpEntry[] = [
     id: "sante-hds",
     question: "Qui reçoit les rendez-vous santé ?",
     answer:
-      "Les professionnels inscrits sur le pôle Santé — chacun son calendrier. Pas un créneau au nom d’un fondateur. Visio conforme (Cal.com / Whereby), pas Zoom.",
+      "Les professionnels du pôle Santé (chacun son Cal.com). Les joueurs / sportifs n’ont pas besoin de compte Cal.com — ils réservent comme invités. Visio conforme (Cal.com / Whereby), pas Zoom.",
     href: `${ROUTES.sante}#teleconsultation`,
     hrefLabel: "Voir le parcours",
   },

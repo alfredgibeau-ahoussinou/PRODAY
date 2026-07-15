@@ -111,6 +111,8 @@ export function userFromFirestore(uid: string, data: Record<string, unknown>): U
       job_title: profile.job_title as string | undefined,
       medical_specialty: profile.medical_specialty as string | undefined,
       booking_enabled: profile.booking_enabled as boolean | undefined,
+      cal_com_username: profile.cal_com_username as string | undefined,
+      booking_url: profile.booking_url as string | undefined,
       consultation_duration_min: profile.consultation_duration_min as number | undefined,
       weekly_availability: profile.weekly_availability as User['profile']['weekly_availability'],
       specialties: profile.specialties as string[] | undefined,
