@@ -2,6 +2,7 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
+import Link from "next/link";
 import { useState } from "react";
 import { Reveal } from "./Reveal";
 import { AppTabBar } from "@/components/demo/AppTabBar";
@@ -13,6 +14,7 @@ import {
   type MainTabId,
 } from "@/lib/appTabs";
 import { BRANDS_BY_LINE, type ProductLineWeb } from "@/lib/content";
+import { ROUTES } from "@/lib/routes";
 
 type ScreenMock = {
   caption: string;
@@ -355,9 +357,9 @@ function screenForTab(tabId: MainTabId, universe: ProductLineWeb): ScreenMock {
   return merged;
 }
 
-type PhoneDemoProps = { fullPage?: boolean; universe?: ProductLineWeb };
+type PhoneDemoProps = { fullPage?: boolean; compact?: boolean; universe?: ProductLineWeb };
 
-export function PhoneDemo({ fullPage, universe = "homme" }: PhoneDemoProps) {
+export function PhoneDemo({ fullPage, compact, universe = "homme" }: PhoneDemoProps) {
   const tabs = getVisibleTabsWithLabels(universe);
   const visibleTabs = getVisibleMainTabsForWeb(universe);
   const [selectedTab, setSelectedTab] = useState<MainTabId>(() => visibleTabs[0] ?? "home");
@@ -369,7 +371,14 @@ export function PhoneDemo({ fullPage, universe = "homme" }: PhoneDemoProps) {
 
   return (
     <section
-      className={`${fullPage ? "bg-[#030303] py-12" : "scroll-mt-24 bg-[#030303] py-20"}`}
+      id={fullPage ? undefined : "decouvrir"}
+      className={`${
+        fullPage
+          ? "bg-[#030303] py-12"
+          : compact
+            ? "scroll-mt-24 bg-[#030303] py-10 md:py-14"
+            : "scroll-mt-24 bg-[#030303] py-20"
+      }`}
     >
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         {!fullPage && (
@@ -377,18 +386,28 @@ export function PhoneDemo({ fullPage, universe = "homme" }: PhoneDemoProps) {
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/40">
               Démo interactive
             </p>
-            <h2 className="font-display mt-2 text-3xl font-bold text-white sm:text-4xl">
+            <h2 className="font-display mt-2 text-2xl font-bold text-white sm:text-3xl">
               L&apos;app ProDay, écran par écran
             </h2>
-            <p className="mt-4 max-w-xl text-white/55">
-              Même navigation que l&apos;application — barre mobile avec Reels au centre et menu
-              overflow. Parcourez les onglets comme sur votre téléphone.
-            </p>
+            {!compact ? (
+              <p className="mt-4 max-w-xl text-white/55">
+                Même navigation que l&apos;application — barre mobile avec Reels au centre et menu
+                overflow. Parcourez les onglets comme sur votre téléphone.
+              </p>
+            ) : (
+              <p className="mt-3 max-w-xl text-sm text-white/55">
+                Parcourez les onglets comme sur votre téléphone — démo complète sur la page dédiée.
+              </p>
+            )}
           </Reveal>
         )}
 
         <div
-          className={`flex flex-col items-center gap-10 lg:flex-row lg:items-start lg:justify-between ${fullPage ? "mt-6" : "mt-12"}`}
+          className={`flex flex-col items-center ${
+            compact
+              ? "gap-6"
+              : "gap-10 lg:flex-row lg:items-start lg:justify-between"
+          } ${fullPage ? "mt-6" : compact ? "mt-8" : "mt-12"}`}
         >
           <motion.div
             layout
@@ -415,7 +434,7 @@ export function PhoneDemo({ fullPage, universe = "homme" }: PhoneDemoProps) {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -8 }}
                   transition={{ duration: 0.28 }}
-                  className="min-h-[460px] flex flex-col"
+                  className={`flex flex-col ${compact ? "min-h-[380px]" : "min-h-[460px]"}`}
                 >
                   <div
                     className={`border-b border-white/5 px-4 pb-3 pt-3 ${
@@ -527,6 +546,32 @@ export function PhoneDemo({ fullPage, universe = "homme" }: PhoneDemoProps) {
             </div>
           </motion.div>
 
+          {compact ? (
+            <div className="flex w-full max-w-xl flex-col items-center gap-5">
+              <div className="scroll-snap-x flex w-full gap-2 overflow-x-auto px-1 pb-1">
+                {tabs.map((tab) => (
+                  <button
+                    key={`compact-${tab.id}`}
+                    type="button"
+                    onClick={() => setSelectedTab(tab.id)}
+                    className={`shrink-0 snap-start rounded-full border px-4 py-2 text-sm transition ${
+                      active === tab.id
+                        ? `border-transparent ${theme.chipHighlight} text-white`
+                        : `${theme.moduleIdle} text-white/70`
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+              <Link
+                href={ROUTES.demo}
+                className="text-sm font-semibold text-[var(--proday-accent)] underline underline-offset-4 transition hover:text-cyan-300"
+              >
+                Voir la démo complète
+              </Link>
+            </div>
+          ) : (
           <div className="w-full max-w-md flex-1 space-y-2 lg:max-w-none">
             <p className="mb-3 text-sm font-semibold text-white/70">
               Univers : {brand.name} — onglets visibles
@@ -583,6 +628,7 @@ export function PhoneDemo({ fullPage, universe = "homme" }: PhoneDemoProps) {
             })}
             </div>
           </div>
+          )}
         </div>
       </div>
     </section>

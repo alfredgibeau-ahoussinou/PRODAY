@@ -3,10 +3,10 @@
 import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Play } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { BRAND } from "@/lib/content";
 import { ROUTES } from "@/lib/routes";
-import { CAROUSEL_POLES, poleSectionHref } from "@/lib/poles";
+import { CAROUSEL_POLES } from "@/lib/poles";
 import { PremiumButton } from "@/components/ui/PremiumButton";
 import { Kicker } from "@/components/ui/Kicker";
 
@@ -22,8 +22,16 @@ const HERO_LABELS = [
 const HERO_SLIDES = CAROUSEL_POLES.map((pole, i) => ({
   num: String(i + 1).padStart(2, "0"),
   label: HERO_LABELS[i] ?? pole.title,
-  href: poleSectionHref(pole),
+  href: pole.href,
 }));
+
+const QUICK_LINKS = [
+  { href: "#decouvrir", label: "Quiz pôle" },
+  { href: ROUTES.demo, label: "Démo" },
+  { href: ROUTES.pricing, label: "Tarifs" },
+  { href: ROUTES.features, label: "Fonctionnalités" },
+  { href: ROUTES.faq, label: "FAQ" },
+] as const;
 
 export function HeroSection() {
   return (
@@ -42,8 +50,8 @@ export function HeroSection() {
         <div className="absolute inset-0 hero-overlay-side hidden md:block" />
       </div>
 
-      <div className="relative mx-auto flex max-h-[100dvh] min-h-[100dvh] max-w-7xl flex-col px-4 pt-20 text-center sm:px-6 sm:pt-24 lg:max-h-none lg:min-h-screen lg:flex-row lg:items-end lg:justify-between lg:pb-24 lg:pt-32 lg:text-left">
-        <div className="mx-auto flex max-w-2xl flex-1 flex-col justify-center max-lg:-translate-y-8 sm:max-lg:-translate-y-6 lg:mx-0 lg:flex-none lg:translate-y-0 lg:pb-8">
+      <div className="relative mx-auto flex max-h-[100dvh] min-h-[100dvh] max-w-7xl flex-col px-4 text-center sm:px-6 lg:max-h-none lg:min-h-screen lg:flex-row lg:items-end lg:justify-between lg:pb-24 lg:pt-32 lg:text-left">
+        <div className="mx-auto flex max-w-2xl flex-1 flex-col items-center justify-center pb-36 pt-16 text-center sm:pb-40 sm:pt-20 lg:mx-0 lg:flex-none lg:items-start lg:justify-end lg:pb-8 lg:pt-0">
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
@@ -76,42 +84,38 @@ export function HeroSection() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.45 }}
-            className="mt-6 flex flex-wrap justify-center gap-2 sm:mt-9 sm:gap-3 lg:justify-start"
+            className="mt-6 flex flex-wrap justify-center gap-2 sm:mt-8 sm:gap-3 lg:justify-start"
           >
-            <PremiumButton href={ROUTES.betaWaitlist}>Accès anticipé</PremiumButton>
-            <PremiumButton href={poleSectionHref(CAROUSEL_POLES[0]!)} variant="outline">
-              Pôle Amateur
-            </PremiumButton>
-            <PremiumButton href={ROUTES.demo} variant="outline">
-              <Play size={15} fill="currentColor" />
-              Voir la démo
+            <PremiumButton href="#inscription">Accès anticipé</PremiumButton>
+            <PremiumButton href="#decouvrir" variant="outline">
+              Trouver mon pôle
             </PremiumButton>
           </motion.div>
 
-          <motion.div
+          <motion.nav
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.6 }}
-            className="mt-5 hidden flex-wrap gap-2 sm:mt-8 sm:flex"
+            transition={{ delay: 0.55 }}
+            aria-label="Explorer ProDay"
+            className="mt-5 flex flex-wrap justify-center gap-2 sm:mt-6 lg:justify-start"
           >
-            {["Profil & carrière", "Mercato", "Journal activités", "Arena", "Partenaires"].map(
-              (tag) => (
-                <span
-                  key={tag}
-                  className="rounded-full border border-white/10 bg-black/40 px-3 py-1 text-xs font-medium text-white/70 backdrop-blur-sm"
-                >
-                  {tag}
-                </span>
-              ),
-            )}
-          </motion.div>
+            {QUICK_LINKS.map((link) => (
+              <Link
+                key={link.label}
+                href={link.href}
+                className="rounded-full border border-white/15 bg-black/40 px-3.5 py-1.5 text-xs font-semibold text-white/75 backdrop-blur-sm transition hover:border-[var(--proday-accent)]/50 hover:text-[var(--proday-accent)]"
+              >
+                {link.label}
+              </Link>
+            ))}
+          </motion.nav>
         </div>
 
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4, duration: 0.5 }}
-          className="scroll-snap-x -mx-4 mt-4 flex w-full shrink-0 gap-2 overflow-x-auto px-4 pb-6 sm:pb-8 lg:hidden"
+          className="absolute inset-x-0 bottom-0 scroll-snap-x flex w-full shrink-0 gap-2 overflow-x-auto px-4 pb-6 sm:pb-8 lg:hidden"
           aria-label="Les 6 pôles ProDay"
         >
           {HERO_SLIDES.map((slide, i) => (

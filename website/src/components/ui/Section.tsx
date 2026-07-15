@@ -9,6 +9,7 @@ type SectionProps = {
   dark?: boolean;
   id?: string;
   centered?: boolean;
+  compact?: boolean;
 };
 
 export function Section({
@@ -20,16 +21,17 @@ export function Section({
   dark = true,
   id,
   centered = true,
+  compact = false,
 }: SectionProps) {
   return (
     <section
       id={id}
-      className={`relative py-16 md:py-24 ${id ? "scroll-mt-24" : ""} ${dark ? "bg-black text-white" : "bg-[#030303] text-white"} ${className}`}
+      className={`relative ${compact ? "py-10 md:py-14" : "py-16 md:py-24"} ${id ? "scroll-mt-24" : ""} ${dark ? "bg-black text-white" : "bg-[#030303] text-white"} ${className}`}
     >
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
         {(kicker || title) && (
           <div
-            className={`mb-12 max-w-2xl ${centered ? "section-header-centered mx-auto text-center" : ""}`}
+            className={`${compact ? "mb-8" : "mb-12"} max-w-2xl ${centered ? "section-header-centered mx-auto text-center" : ""}`}
           >
             {kicker && (
               <Kicker className={dark ? "" : "text-neutral-500"} centered={centered}>

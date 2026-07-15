@@ -43,9 +43,10 @@ const DEFAULT_ICON = LayoutGrid;
 
 type FeaturesBentoProps = {
   extended?: boolean;
+  compact?: boolean;
 };
 
-export function FeaturesBento({ extended }: FeaturesBentoProps) {
+export function FeaturesBento({ extended, compact }: FeaturesBentoProps) {
   const items = extended ? ALL_PILLARS : PILLARS;
 
   const grid = (
@@ -105,6 +106,7 @@ export function FeaturesBento({ extended }: FeaturesBentoProps) {
       title="Tout ce qui fait ProDay"
       description="Recrutement, saison, santé, communauté et partenaires — une plateforme complète pour le foot amateur et semi-pro."
       className="bg-black"
+      compact={compact}
     >
       {grid}
     </Section>

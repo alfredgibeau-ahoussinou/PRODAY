@@ -6,12 +6,17 @@ import { BETA_PITCH } from "@/lib/content";
 import { BETA_ROLE_LABELS, type BetaRoleId } from "@/lib/betaWelcomeEmail";
 import { Reveal } from "./Reveal";
 
-type WaitlistFormProps = { fullPage?: boolean; initialRole?: BetaRoleId };
+type WaitlistFormProps = {
+  fullPage?: boolean;
+  compact?: boolean;
+  minimal?: boolean;
+  initialRole?: BetaRoleId;
+};
 
 type SubmitState = "idle" | "loading" | "success" | "error";
 type WaitlistStatus = "pending" | "approved" | "rejected";
 
-export function WaitlistForm({ fullPage, initialRole }: WaitlistFormProps) {
+export function WaitlistForm({ fullPage, compact, minimal, initialRole }: WaitlistFormProps) {
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<BetaRoleId>(initialRole ?? "player");
   const [state, setState] = useState<SubmitState>("idle");
@@ -67,14 +72,83 @@ export function WaitlistForm({ fullPage, initialRole }: WaitlistFormProps) {
     { id: "sponsor", label: "Partenaire" },
   ];
 
+  if (minimal) {
+    return (
+      <section id="inscription" className="scroll-mt-24 border-t border-white/8 bg-neutral-950 py-8 sm:py-10">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6">
+          {state === "success" ? (
+            <div className="rounded-2xl border border-[var(--proday-accent)]/20 bg-[var(--proday-accent-muted)] p-5 text-white">
+              <p className="font-semibold">Merci — inscription enregistrée.</p>
+              <p className="mt-1 text-sm text-white/75">
+                {email} · {BETA_ROLE_LABELS[role]}
+                {waitlistStatus === "approved"
+                  ? " — consultez votre boîte mail pour l'accès bêta."
+                  : " — l'équipe ProDay vous contactera après validation."}
+              </p>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+              <div className="max-w-md">
+                <h2 className="font-display text-xl font-bold text-white sm:text-2xl">
+                  Liste d&apos;attente
+                </h2>
+                <p className="mt-1 text-sm text-white/55">{BETA_PITCH.summary}</p>
+              </div>
+              <form onSubmit={handleSubmit} className="w-full max-w-xl space-y-3 lg:max-w-2xl">
+                <div className="flex flex-col gap-3 sm:flex-row">
+                  <select
+                    value={role}
+                    onChange={(e) => setRole(e.target.value as BetaRoleId)}
+                    disabled={state === "loading"}
+                    className="min-h-11 rounded-full border-0 bg-white/10 px-4 py-3 text-sm text-white focus:outline focus:outline-2 focus:outline-[var(--proday-accent)]/50 disabled:opacity-60"
+                  >
+                    {roles.map((r) => (
+                      <option key={r.id} value={r.id} className="bg-neutral-900">
+                        {r.label}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    type="email"
+                    required
+                    placeholder="votre@email.fr"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    disabled={state === "loading"}
+                    className="min-h-11 flex-1 rounded-full border-0 bg-white/10 px-5 py-3 text-white caret-white placeholder:text-white/50 focus:outline focus:outline-2 focus:outline-[var(--proday-accent)]/50 disabled:opacity-60"
+                  />
+                  <button
+                    type="submit"
+                    disabled={state === "loading"}
+                    className="min-h-11 shrink-0 rounded-full bg-[var(--proday-accent)] px-6 py-3 text-sm font-bold text-black transition hover:bg-cyan-300 disabled:opacity-60"
+                  >
+                    {state === "loading" ? "Envoi…" : "S'inscrire"}
+                  </button>
+                </div>
+                {state === "error" && errorMessage ? (
+                  <p className="text-sm text-red-300">{errorMessage}</p>
+                ) : null}
+              </form>
+            </div>
+          )}
+        </div>
+      </section>
+    );
+  }
+
   return (
-    <section id={fullPage ? undefined : "inscription"} className={fullPage ? "py-12" : "scroll-mt-24 py-24"}>
+    <section
+      id={fullPage ? undefined : "inscription"}
+      className={fullPage ? "py-12" : compact ? "scroll-mt-24 py-14 md:py-16" : "scroll-mt-24 py-24"}
+    >
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-[#0c0c12] via-[#0a0a0f] to-[#030303] px-8 py-16 text-white sm:px-14"
+          className={`relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-[#0c0c12] via-[#0a0a0f] to-[#030303] text-white ${
+            compact ? "px-6 py-10 sm:px-10" : "px-8 py-16 sm:px-14"
+          }`}
         >
           <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-white/5 blur-2xl" />
           <div className="absolute -bottom-16 -left-16 h-48 w-48 rounded-full bg-white/5 blur-2xl" />

@@ -26,9 +26,9 @@ function AnimatedStat({ value, label }: { value: string; label: string }) {
   );
 }
 
-export function StatsBar() {
+export function StatsBar({ compact = false }: { compact?: boolean }) {
   return (
-    <section className="border-y border-[var(--proday-accent)]/10 bg-neutral-950 py-16">
+    <section className={`border-y border-[var(--proday-accent)]/10 bg-neutral-950 ${compact ? "py-10" : "py-16"}`}>
       <div className="mx-auto grid max-w-4xl grid-cols-2 gap-10 px-4 sm:grid-cols-4 sm:px-6">
         {STATS.map((s) => (
           <AnimatedStat key={s.label} value={s.value} label={s.label} />
