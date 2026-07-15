@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { CAROUSEL_POLES, POLE_IMAGES, POLE_STYLES, poleSectionHref } from "@/lib/poles";
+import { CAROUSEL_POLES, POLE_IMAGES, POLE_STYLES, poleSectionHref, pricingHrefForPole } from "@/lib/poles";
 import { Section } from "@/components/ui/Section";
 
 export function PolesHubGrid() {
@@ -73,7 +73,7 @@ export function PolesHubGrid() {
                     <ArrowRight size={16} />
                   </Link>
                   <Link
-                    href={`/tarifs#${pole.pricingHash}`}
+                    href={pricingHrefForPole(pole.id)}
                     className="inline-flex items-center gap-2 rounded-full border border-white/15 px-5 py-2.5 text-sm font-semibold text-white/75 transition hover:border-[var(--proday-accent)] hover:text-[var(--proday-accent)]"
                   >
                     Tarifs

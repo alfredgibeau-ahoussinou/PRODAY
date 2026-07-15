@@ -1,9 +1,12 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Globe, Link2, Mail, Share2 } from "lucide-react";
 import { BRAND } from "@/lib/content";
 import { PRODAY_LOGO_OFFICIAL } from "@/lib/brandingAssets";
-import { POLE_NAV_POLE_IDS, POLE_NAV_STRIPE } from "@/lib/poles";
+import { POLE_NAV_POLE_IDS, POLE_NAV_STRIPE, pricingHrefForPath } from "@/lib/poles";
 import { POLE_FOOTER_LINKS, ROUTES, UTILITY_NAV_ITEMS } from "@/lib/routes";
 
 const SOCIAL_LINKS = [
@@ -14,6 +17,9 @@ const SOCIAL_LINKS = [
 ];
 
 export function SiteFooter() {
+  const pathname = usePathname();
+  const pricingHref = pricingHrefForPath(pathname);
+
   return (
     <footer className="border-t border-white/8 bg-black py-16 text-white">
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
@@ -56,7 +62,7 @@ export function SiteFooter() {
               {UTILITY_NAV_ITEMS.map((l) => (
                 <li key={l.href}>
                   <Link
-                    href={l.href}
+                    href={l.href === ROUTES.pricing ? pricingHref : l.href}
                     className="text-sm text-white/55 transition hover:text-[var(--proday-accent)]"
                   >
                     {l.label}

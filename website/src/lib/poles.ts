@@ -2,6 +2,7 @@ import {
   getWebPlanById,
   plansForUniverse,
   SPONSOR_PRICING_TIERS,
+  type ProductLineWeb,
   type WebSubscriptionPlan,
   type WebSubscriptionPlanBase,
 } from "./content";
@@ -285,6 +286,62 @@ export function poleSectionHref(
   section = "modules",
 ): string {
   return `${pole.href}#${section}`;
+}
+
+/** Lien tarifs avec ancre pôle (ex. /tarifs#pro_joueur). */
+export function pricingHrefForPole(poleId: PoleId): string {
+  return `${ROUTES.pricing}#${poleId}`;
+}
+
+const PATH_TO_PRICING_POLE: Record<string, PoleId> = {
+  ...POLE_NAV_POLE_IDS,
+  [ROUTES.homme]: "amateur",
+  [ROUTES.woman]: "amateur",
+  [ROUTES.pro]: "pro_joueur",
+};
+
+/** Tarifs contextualisés depuis la page courante (nav, footer). */
+export function pricingHrefForPath(pathname: string): string {
+  const base = pathname.split("?")[0]?.split("#")[0] ?? pathname;
+  const poleId = PATH_TO_PRICING_POLE[base];
+  return poleId ? pricingHrefForPole(poleId) : ROUTES.pricing;
+}
+
+const UNIVERSE_TO_POLE: Record<string, PoleId> = {
+  homme: "amateur",
+  woman: "amateur",
+  amateur: "amateur",
+  supporter: "supporter",
+  pro: "pro_joueur",
+  pro_joueur: "pro_joueur",
+  pro_club: "pro_club",
+  pro_staff: "pro_staff",
+};
+
+/** Tarifs depuis une page univers / pôle (UniversePage). */
+export function pricingHrefForUniverse(universe: string): string {
+  const poleId = UNIVERSE_TO_POLE[universe];
+  return poleId ? pricingHrefForPole(poleId) : ROUTES.pricing;
+}
+
+const PRODUCT_LINE_TO_POLE: Record<ProductLineWeb, PoleId> = {
+  homme: "amateur",
+  woman: "amateur",
+  amateur: "amateur",
+  supporter: "supporter",
+  pro: "pro_joueur",
+  sante: "sante",
+};
+
+/** Tarifs depuis la démo interactive (?u=…). */
+export function pricingHrefForProductLine(line: ProductLineWeb): string {
+  return pricingHrefForPole(PRODUCT_LINE_TO_POLE[line]);
+}
+
+export function resolvePricingPoleFromHash(rawHash: string): PoleId | null {
+  const hash = rawHash.replace(/^#/, "").trim();
+  if (hash === "joueur" || hash === "pro") return "pro_joueur";
+  return POLES.some((p) => p.id === hash) ? (hash as PoleId) : null;
 }
 
 export { SPONSOR_PRICING_TIERS };

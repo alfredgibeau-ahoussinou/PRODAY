@@ -9,7 +9,7 @@ import { ChevronDown, Menu, X } from "lucide-react";
 import { navBrandForPath } from "@/components/universe/universeTheme";
 import { PRODAY_LOGO_OFFICIAL, PRODAY_OFFICIAL_LOGO_ASPECT } from "@/lib/brandingAssets";
 import { isNavActive, poleForPath } from "@/lib/siteArchitecture";
-import { POLE_NAV_POLE_IDS, POLE_NAV_STRIPE, POLE_STYLES, type PoleId } from "@/lib/poles";
+import { POLE_NAV_POLE_IDS, POLE_NAV_STRIPE, POLE_STYLES, pricingHrefForPath, type PoleId } from "@/lib/poles";
 import { POLE_NAV_ITEMS, ROUTES, UTILITY_NAV_ITEMS } from "@/lib/routes";
 
 function NavLink({
@@ -173,6 +173,7 @@ export function SiteNav() {
   const currentPoleStyles = currentPole ? POLE_STYLES[currentPole] : null;
 
   const close = () => setOpen(false);
+  const pricingHref = pricingHrefForPath(pathname);
 
   return (
     <motion.header
@@ -223,7 +224,7 @@ export function SiteNav() {
             {UTILITY_NAV_ITEMS.map((item) => (
               <li key={item.href}>
                 <NavLink
-                  href={item.href}
+                  href={item.href === ROUTES.pricing ? pricingHref : item.href}
                   label={item.label}
                   active={pathname === item.href}
                   compact
@@ -300,7 +301,7 @@ export function SiteNav() {
             {UTILITY_NAV_ITEMS.map((item) => (
               <Link
                 key={item.href}
-                href={item.href}
+                href={item.href === ROUTES.pricing ? pricingHref : item.href}
                 className={`flex min-h-11 items-center py-3 text-sm ${
                   pathname === item.href
                     ? "font-semibold text-[var(--proday-accent)]"

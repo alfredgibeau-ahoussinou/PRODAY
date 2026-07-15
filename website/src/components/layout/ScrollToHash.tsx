@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 import { currentHashId, scrollToHashElement } from "@/lib/scrollToHash";
+import { ROUTES } from "@/lib/routes";
 
 function retryScrollToHash(hash: string, maxAttempts = 16): () => void {
   let attempts = 0;
@@ -28,8 +29,9 @@ export function ScrollToHash() {
     const hash = currentHashId();
     if (!hash) return;
 
-    const cancel = retryScrollToHash(`#${hash}`);
-    const timeout = window.setTimeout(() => scrollToHashElement(`#${hash}`), 120);
+    const delay = pathname === ROUTES.pricing ? 280 : 120;
+    const cancel = retryScrollToHash(`#${hash}`, pathname === ROUTES.pricing ? 32 : 16);
+    const timeout = window.setTimeout(() => scrollToHashElement(`#${hash}`), delay);
 
     return () => {
       cancel();

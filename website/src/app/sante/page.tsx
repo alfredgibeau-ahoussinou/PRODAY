@@ -5,7 +5,7 @@ import { PlanDetailCard } from "@/components/poles/PlanDetailCard";
 import { PoleFullBleed } from "@/components/poles/PoleFullBleed";
 import { PremiumButton } from "@/components/ui/PremiumButton";
 import { SANTE_BRAND, getWebPlanById } from "@/lib/content";
-import { POLE_STYLES } from "@/lib/poles";
+import { POLE_STYLES, pricingHrefForPole } from "@/lib/poles";
 import { ROUTES } from "@/lib/routes";
 
 export const metadata: Metadata = {
@@ -46,7 +46,7 @@ export default function SantePage() {
           >
             Accès anticipé Santé
           </PremiumButton>
-          <PremiumButton href={`${ROUTES.pricing}#sante`} variant="outline">
+          <PremiumButton href={pricingHrefForPole("sante")} variant="outline">
             Voir les tarifs
           </PremiumButton>
         </div>

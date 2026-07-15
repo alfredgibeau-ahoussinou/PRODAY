@@ -12,6 +12,7 @@ import {
   POLE_STYLES,
   plansForPole,
   poleById,
+  resolvePricingPoleFromHash,
   type PoleId,
 } from "@/lib/poles";
 import { ANNUAL_DISCOUNT_PERCENT } from "@/lib/pricing";
@@ -64,10 +65,6 @@ const slideVariants = {
 
 function poleIndex(id: PoleId): number {
   return POLE_NAV.findIndex((p) => p.id === id);
-}
-
-function isPoleId(value: string): value is PoleId {
-  return value in POLE_NAV_LABELS;
 }
 
 type PolePricingPanelProps = {
@@ -150,17 +147,23 @@ function PolePricingPanel({ poleId, yearly }: PolePricingPanelProps) {
   );
 }
 
-function initialPoleFromHash(): PoleId {
-  if (typeof window === "undefined") return "amateur";
-  const hash = window.location.hash.replace("#", "");
-  if (hash === "joueur" || hash === "pro") return "pro_joueur";
-  return isPoleId(hash) ? hash : "amateur";
-}
 
 export function PolesPricingLayout() {
   const [yearly, setYearly] = useState(false);
-  const [activePole, setActivePole] = useState<PoleId>(initialPoleFromHash);
+  const [activePole, setActivePole] = useState<PoleId>("amateur");
   const [direction, setDirection] = useState(1);
+
+  useEffect(() => {
+    const fromHash = resolvePricingPoleFromHash(window.location.hash);
+    if (fromHash) {
+      setActivePole((current) => {
+        if (current !== fromHash) {
+          setDirection(poleIndex(fromHash) > poleIndex(current) ? 1 : -1);
+        }
+        return fromHash;
+      });
+    }
+  }, []);
 
   const goToPole = useCallback((id: PoleId, dir?: number) => {
     setActivePole((current) => {
@@ -186,10 +189,8 @@ export function PolesPricingLayout() {
 
   useEffect(() => {
     const onHashChange = () => {
-      const next = window.location.hash.replace("#", "");
-      if (isPoleId(next)) {
-        goToPole(next);
-      }
+      const fromHash = resolvePricingPoleFromHash(window.location.hash);
+      if (fromHash) goToPole(fromHash);
     };
 
     window.addEventListener("hashchange", onHashChange);
@@ -198,7 +199,7 @@ export function PolesPricingLayout() {
 
   useEffect(() => {
     const hash = window.location.hash.replace("#", "");
-    if (!isPoleId(hash)) return;
+    if (!resolvePricingPoleFromHash(window.location.hash)) return;
 
     let attempts = 0;
     let frame = 0;
@@ -206,12 +207,12 @@ export function PolesPricingLayout() {
     const scroll = () => {
       if (scrollToHashElement(`#${hash}`)) return;
       attempts += 1;
-      if (attempts < 16) frame = requestAnimationFrame(scroll);
+      if (attempts < 24) frame = requestAnimationFrame(scroll);
     };
 
     const timeout = window.setTimeout(() => {
       frame = requestAnimationFrame(scroll);
-    }, 80);
+    }, 120);
 
     return () => {
       window.clearTimeout(timeout);

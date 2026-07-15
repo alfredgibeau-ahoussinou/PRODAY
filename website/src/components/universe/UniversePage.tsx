@@ -10,7 +10,7 @@ import { PulseSimulator } from "@/components/PulseSimulator";
 import { VerificationTimeline } from "@/components/VerificationTimeline";
 import { UniverseModuleExplorer } from "@/components/universe/UniverseModuleExplorer";
 import { themeIdForUniverse, UNIVERSE_THEME } from "@/components/universe/universeTheme";
-import { CAROUSEL_POLES, POLE_IMAGES, poleSectionHref } from "@/lib/poles";
+import { CAROUSEL_POLES, POLE_IMAGES, poleSectionHref, pricingHrefForUniverse } from "@/lib/poles";
 import {
   JOURNEYS,
   UNIVERSE_PAGE_CONFIG,
@@ -29,17 +29,6 @@ const PATH_BY_UNIVERSE: Record<UniversePageId, string> = {
   pro_joueur: ROUTES.proJoueur,
   pro_club: ROUTES.proClub,
   pro_staff: ROUTES.proStaff,
-};
-
-const PRICING_HASH_BY_UNIVERSE: Record<UniversePageId, string> = {
-  homme: "amateur",
-  woman: "amateur",
-  amateur: "amateur",
-  supporter: "supporter",
-  pro: "pro_staff",
-  pro_joueur: "pro_joueur",
-  pro_club: "pro_club",
-  pro_staff: "pro_staff",
 };
 
 const POLE_ID_BY_UNIVERSE: Partial<Record<UniversePageId, string>> = {
@@ -194,7 +183,7 @@ export function UniversePage({ universe }: UniversePageProps) {
                 </p>
               </div>
               <Link
-                href={`${ROUTES.pricing}#${PRICING_HASH_BY_UNIVERSE[universe]}`}
+                href={pricingHrefForUniverse(universe)}
                 className="text-sm font-semibold text-white/70 underline underline-offset-4 hover:text-white"
               >
                 Tous les tarifs {config.brand.name}
@@ -204,7 +193,7 @@ export function UniversePage({ universe }: UniversePageProps) {
               {pricingPlans.map((plan) => (
                 <Link
                   key={plan.id}
-                  href={`${ROUTES.pricing}#${PRICING_HASH_BY_UNIVERSE[universe]}`}
+                  href={pricingHrefForUniverse(universe)}
                   className={`block rounded-2xl border p-6 transition hover:shadow-md ${theme.pricingCard}`}
                 >
                   <p className="text-xs font-semibold uppercase tracking-wider text-white/45">
@@ -324,7 +313,7 @@ export function UniversePage({ universe }: UniversePageProps) {
               Voir la démo
             </Link>
             <Link
-              href={`${ROUTES.pricing}#${PRICING_HASH_BY_UNIVERSE[universe]}`}
+              href={pricingHrefForUniverse(universe)}
               className={`inline-block rounded-full border px-8 py-3.5 text-sm font-semibold ${theme.ctaBtnOutline}`}
             >
               Voir les tarifs

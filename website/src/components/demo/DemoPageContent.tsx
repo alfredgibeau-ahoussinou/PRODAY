@@ -6,6 +6,7 @@ import { useCallback } from "react";
 import { PhoneDemo } from "@/components/PhoneDemo";
 import { UNIVERSE_THEME } from "@/components/universe/universeTheme";
 import { BRANDS_BY_LINE, type ProductLineWeb } from "@/lib/content";
+import { pricingHrefForProductLine } from "@/lib/poles";
 import { demoUrlForUniverse, ROUTES } from "@/lib/routes";
 
 const UNIVERSE_OPTIONS: { id: ProductLineWeb; label: string }[] = [
@@ -77,7 +78,7 @@ export function DemoPageContent({ universe }: DemoPageContentProps) {
             Accès anticipé
           </Link>
           <Link
-            href={ROUTES.pricing}
+            href={pricingHrefForProductLine(universe)}
             className="inline-flex rounded-full border border-neutral-700 px-6 py-3 text-sm font-medium text-neutral-300 transition hover:border-neutral-500 hover:text-white"
           >
             Voir les tarifs
