@@ -39,8 +39,12 @@ describe('oauth config', () => {
         ExecutionEnvironment: { StoreClient: 'storeClient' },
       }));
 
-      const { getGoogleAuthRequestConfig, isGoogleAuthConfigured } =
-        require('../config/oauth') as typeof import('../config/oauth');
+      const {
+        getGoogleAuthRequestConfig,
+        isGoogleAuthConfigured,
+        getGoogleIosRedirectUri,
+        getGoogleIosUrlScheme,
+      } = require('../config/oauth') as typeof import('../config/oauth');
 
       expect(getGoogleAuthRequestConfig()).toEqual({
         webClientId: 'web-client.apps.googleusercontent.com',
@@ -48,6 +52,12 @@ describe('oauth config', () => {
         androidClientId: undefined,
       });
       expect(isGoogleAuthConfigured()).toBe(true);
+      expect(getGoogleIosRedirectUri('277880299213-abc.apps.googleusercontent.com')).toBe(
+        'com.googleusercontent.apps.277880299213-abc:/oauthredirect'
+      );
+      expect(getGoogleIosUrlScheme('277880299213-abc.apps.googleusercontent.com')).toBe(
+        'com.googleusercontent.apps.277880299213-abc'
+      );
     });
   });
 });

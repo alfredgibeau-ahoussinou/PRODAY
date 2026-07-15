@@ -7,6 +7,7 @@ const googleUrlScheme = iosGoogleClientId.includes('.apps.googleusercontent.com'
   : null;
 
 const baseIos = appJson.expo.ios ?? {};
+const existingUrlTypes = baseIos.infoPlist?.CFBundleURLTypes ?? [];
 
 const easProjectId =
   process.env.EAS_PROJECT_ID ?? process.env.EXPO_PUBLIC_EAS_PROJECT_ID ?? '';
@@ -15,6 +16,7 @@ module.exports = () => ({
   ...appJson,
   expo: {
     ...appJson.expo,
+    scheme: appJson.expo.scheme ?? 'proday',
     extra: {
       ...(appJson.expo.extra ?? {}),
       ...(easProjectId ? { eas: { projectId: easProjectId } } : {}),
@@ -22,17 +24,22 @@ module.exports = () => ({
     ios: {
       ...baseIos,
       usesAppleSignIn: true,
-      ...(googleUrlScheme
-        ? {
-            infoPlist: {
-              ...(baseIos.infoPlist ?? {}),
-              CFBundleURLTypes: [
-                ...(baseIos.infoPlist?.CFBundleURLTypes ?? []),
-                { CFBundleURLSchemes: [googleUrlScheme] },
-              ],
-            },
-          }
-        : {}),
+      infoPlist: {
+        ...(baseIos.infoPlist ?? {}),
+        CFBundleURLTypes: [
+          ...existingUrlTypes,
+          {
+            CFBundleURLSchemes: ['proday', 'com.proday.app'],
+          },
+          ...(googleUrlScheme
+            ? [
+                {
+                  CFBundleURLSchemes: [googleUrlScheme],
+                },
+              ]
+            : []),
+        ],
+      },
     },
   },
 });

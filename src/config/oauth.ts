@@ -71,6 +71,22 @@ export function isGoogleAuthConfigured(): boolean {
   return getGoogleAuthRequestConfig() !== null;
 }
 
+/** Redirect natif Google iOS (`reversed client id:/oauthredirect`). */
+export function getGoogleIosRedirectUri(iosClientId: string): string {
+  const guid = iosClientId
+    .trim()
+    .replace(/\.apps\.googleusercontent\.com$/i, '');
+  return `com.googleusercontent.apps.${guid}:/oauthredirect`;
+}
+
+/** Schéma URL à déclarer dans Info.plist pour le client iOS. */
+export function getGoogleIosUrlScheme(iosClientId: string): string {
+  const guid = iosClientId
+    .trim()
+    .replace(/\.apps\.googleusercontent\.com$/i, '');
+  return `com.googleusercontent.apps.${guid}`;
+}
+
 /** Message d’aide si la connexion Google n’est pas prête. */
 export function getGoogleAuthSetupHint(): string {
   if (isExpoGo()) {

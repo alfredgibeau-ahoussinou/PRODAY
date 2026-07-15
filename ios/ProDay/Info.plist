@@ -30,6 +30,7 @@
         <key>CFBundleURLSchemes</key>
         <array>
           <string>proday</string>
+          <string>com.proday.app</string>
         </array>
       </dict>
       <dict>

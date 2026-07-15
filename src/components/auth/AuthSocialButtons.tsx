@@ -18,6 +18,7 @@ import { Ionicons } from '@expo/vector-icons';
 import {
   getGoogleAuthRequestConfig,
   getGoogleAuthSetupHint,
+  getGoogleIosRedirectUri,
   getGoogleSignInBlockReason,
   type GoogleAuthRequestConfig,
 } from '../../config/oauth';
@@ -95,9 +96,17 @@ const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
 }) => {
   const { colors: c } = useAppTheme();
   const styles = useMemo(() => createSocialStyles(c), [c]);
-  const [googleRequest, , promptGoogle] = Google.useIdTokenAuthRequest(config, {
-    path: 'oauthredirect',
-  });
+  const redirectUri = useMemo(
+    () => (config.iosClientId ? getGoogleIosRedirectUri(config.iosClientId) : undefined),
+    [config.iosClientId]
+  );
+  const [googleRequest, , promptGoogle] = Google.useIdTokenAuthRequest(
+    {
+      ...config,
+      ...(redirectUri ? { redirectUri } : {}),
+    },
+    { path: 'oauthredirect' }
+  );
 
   const handleAuthResult = useCallback(
     async (fn: () => Promise<void>) => {
@@ -133,12 +142,17 @@ const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
       if (result?.type !== 'success') {
         if (result?.type === 'error') {
           const msg = result.error?.message ?? '';
-          if (msg.toLowerCase().includes('redirect') || msg.toLowerCase().includes('uri')) {
+          const lower = msg.toLowerCase();
+          if (lower.includes('redirect') || lower.includes('uri')) {
             onError(
-              'Redirection Google refusée. Vérifiez EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID et relancez Expo (app.config.js).'
+              'Redirection Google refusée. Vérifiez EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID et rebuild : npx expo run:ios.'
             );
-          } else if (msg.toLowerCase().includes('access_denied')) {
+          } else if (lower.includes('access_denied')) {
             onError('Connexion Google refusée.');
+          } else if (lower.includes('unknown reason') || lower.includes('authorization attempt')) {
+            onError(
+              'Connexion Google interrompue. Vérifiez que le client OAuth est de type iOS (bundle com.proday.app), puis relancez : npx expo run:ios.'
+            );
           } else {
             onError(msg || 'Connexion Google annulée.');
           }
