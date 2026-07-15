@@ -123,7 +123,12 @@ export function shouldInjectShopTab(
     role === 'recruiter' ||
     role === 'organizer'
   ) {
-    return line === 'pro_player' || line === 'pro_club' || line === 'pro_staff' || isProProductLine(line ?? null);
+    return (
+      line === 'pro_player' ||
+      line === 'pro_club' ||
+      line === 'pro_staff' ||
+      (line != null && isProProductLine(line))
+    );
   }
   return false;
 }

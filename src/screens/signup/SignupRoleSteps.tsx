@@ -369,7 +369,7 @@ export const SignupMedicalPracticeStep: React.FC<StepProps> = (props) => {
       </View>
       <AuthTextField
         label="Username Cal.com"
-        icon="link"
+        icon="globe"
         placeholder="ex. cabinet-martin-kine"
         autoCapitalize="none"
         autoCorrect={false}

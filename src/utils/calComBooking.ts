@@ -62,6 +62,20 @@ export function getPhysioCalComBookingUrl(physio: User): string | null {
   return null;
 }
 
+/** URL Cal.com optimisée pour iframe / WebView (param embed). */
+export function getPhysioCalComEmbedUrl(physio: User): string | null {
+  const booking = getPhysioCalComBookingUrl(physio);
+  if (!booking) return null;
+  try {
+    const u = new URL(booking);
+    u.searchParams.set('embed', 'true');
+    u.searchParams.set('theme', 'light');
+    return u.toString();
+  } catch {
+    return booking;
+  }
+}
+
 export function hasPhysioCalComBooking(physio: User): boolean {
   return Boolean(getPhysioCalComBookingUrl(physio));
 }

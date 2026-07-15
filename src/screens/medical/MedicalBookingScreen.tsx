@@ -24,8 +24,9 @@ import type { AppColors } from '../../theme/universeTheme';
 import { recordV3UserAction } from '../../utils/recordV3Action';
 import {
   getPhysioCalComBookingUrl,
-  openExternalUrl,
+  getPhysioCalComEmbedUrl,
 } from '../../utils/calComBooking';
+import { CalComBookingEmbed } from '../../components/medical/CalComBookingEmbed';
 
 interface MedicalBookingScreenProps {
   physio: User;
@@ -43,6 +44,7 @@ export const MedicalBookingScreen: React.FC<MedicalBookingScreenProps> = ({
   const { colors: c, rootStyle } = useMedicalStyles();
   const styles = useMemo(() => createStyles(c), [c]);
   const calUrl = getPhysioCalComBookingUrl(physio);
+  const calEmbedUrl = getPhysioCalComEmbedUrl(physio);
   const days = useMemo(() => nextBookingDays(14), []);
   const [selectedDay, setSelectedDay] = useState(days[0]);
   const [slots, setSlots] = useState<Date[]>([]);
@@ -114,46 +116,36 @@ export const MedicalBookingScreen: React.FC<MedicalBookingScreenProps> = ({
           </View>
         </View>
 
-        {calUrl ? (
-          <View style={styles.hero}>
-            <View style={styles.heroCopy}>
-              <Text style={styles.sectionLabel}>Agenda Cal.com du praticien</Text>
-              <Text style={styles.heroMeta}>
-                Réservez sur le calendrier de {physio.display_name}. Vous n’avez pas besoin de créer
-                un compte Cal.com — seulement le praticien.
-              </Text>
-            </View>
+        {calUrl && calEmbedUrl ? (
+          <View style={styles.calBlock}>
+            <Text style={styles.sectionLabel}>Réserver un créneau</Text>
+            <Text style={styles.calCopy}>
+              Choisissez un créneau chez {physio.display_name}. Aucun compte Cal.com requis pour
+              vous — indiquez votre email pour confirmer le RDV.
+            </Text>
+            <CalComBookingEmbed
+              embedUrl={calEmbedUrl}
+              bookingUrl={calUrl}
+              height={560}
+              openLabel="Ouvrir en plein écran"
+            />
+            <PressableSpring
+              style={styles.confirmDoneBtn}
+              onPress={() => {
+                recordV3UserAction(patient, 'book_health');
+                onBooked?.();
+                Alert.alert(
+                  'Réservation',
+                  'Si vous avez confirmé un créneau dans Cal.com, le praticien le recevra sur son agenda.'
+                );
+                onBack();
+              }}
+              scaleTo={0.97}
+              haptic
+            >
+              <Text style={styles.confirmDoneText}>J’ai réservé — retour</Text>
+            </PressableSpring>
           </View>
-        ) : null}
-
-        {calUrl ? (
-          <PressableSpring
-            style={[styles.bookBtn, booking && styles.bookBtnDisabled]}
-            disabled={booking}
-            onPress={() => {
-              void (async () => {
-                setBooking(true);
-                try {
-                  await openExternalUrl(calUrl);
-                  recordV3UserAction(patient, 'book_health');
-                  onBooked?.();
-                } catch (e) {
-                  Alert.alert('Erreur', e instanceof Error ? e.message : 'Lien indisponible.');
-                } finally {
-                  setBooking(false);
-                }
-              })();
-            }}
-          >
-            {booking ? (
-              <ActivityIndicator color={c.brandInverse} />
-            ) : (
-              <>
-                <Icon name="calendar" size={18} color={c.brandInverse} />
-                <Text style={styles.bookBtnText}>Prendre RDV (Cal.com)</Text>
-              </>
-            )}
-          </PressableSpring>
         ) : (
           <>
         <Text style={styles.sectionLabel}>Choisir un jour</Text>
@@ -322,5 +314,22 @@ function createStyles(c: AppColors) {
     },
     bookBtnDisabled: { opacity: 0.5 },
     bookBtnText: { color: c.brandInverse, fontWeight: '900', fontSize: 15 },
+    calBlock: { gap: spacing.sm, marginBottom: spacing.md },
+    calCopy: {
+      fontSize: 13,
+      color: c.textSecondary,
+      lineHeight: 18,
+      marginBottom: spacing.xs,
+    },
+    confirmDoneBtn: {
+      marginTop: spacing.md,
+      alignItems: 'center',
+      paddingVertical: spacing.md,
+      borderRadius: radius.lg,
+      borderWidth: 1.5,
+      borderColor: '#0F766E',
+      backgroundColor: '#F0FDFA',
+    },
+    confirmDoneText: { color: '#0F766E', fontWeight: '800', fontSize: 14 },
   });
 }

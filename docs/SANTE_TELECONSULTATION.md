@@ -33,7 +33,9 @@ Page [`/sante#teleconsultation`](https://proday75.fr/sante#teleconsultation) : p
 1. Profil praticien `booking_url` / `cal_com_username`.
 2. Signup pôle Santé (étape cabinet) : validation Cal.com + lien inscription.
 3. Écran disponibilités praticien : édition / sauvegarde Cal.com.
-4. Réservation joueur : CTA « Prendre RDV (Cal.com) » depuis la fiche.
+4. **Agenda praticien** : onglet Cal.com avec calendrier embarqué (WebView / iframe).
+5. **Réservation joueur** : embed Cal.com depuis la fiche praticien (onglet Santé) — sans compte Cal.com patient.
+6. Fallback : ouverture navigateur + demandes RDV ProDay natives si pas de lien Cal.com.
 
 ## Config
 

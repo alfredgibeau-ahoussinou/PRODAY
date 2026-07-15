@@ -112,10 +112,10 @@ export const PhysioCarePanel: React.FC<PhysioCarePanelProps> = ({
           </ProDayText>
           <ProDayText variant="body" muted style={styles.sub}>
             {isPlayer
-              ? 'Réservez sur l’agenda Cal.com du praticien (sans créer de compte Cal.com) ou contactez-le.'
+              ? 'Besoin d’un RDV santé ? Réservez un créneau sur le calendrier du praticien (sans compte Cal.com).'
               : isFemalePresentation
-                ? 'Les joueuses réservent via votre Cal.com (sans compte Cal.com) ou vous contactent.'
-                : 'Les joueurs réservent via votre Cal.com (sans compte Cal.com) ou vous contactent.'}
+                ? 'Les joueuses réservent sur votre Cal.com (sans compte Cal.com) ou vous contactent.'
+                : 'Les joueurs réservent sur votre Cal.com (sans compte Cal.com) ou vous contactent.'}
           </ProDayText>
         </>
       ) : null}
