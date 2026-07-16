@@ -48,6 +48,11 @@ function hostMatchesAllowed(urlString: string, allowed: Set<string>): boolean {
   }
 }
 
+/** Requêtes depuis l'app mobile ProDay (pas d'en-tête Origin). */
+export function isProdayMobileClientRequest(request: Request): boolean {
+  return request.headers.get("x-proday-client")?.trim() === "proday-mobile";
+}
+
 /** Vérifie Origin ou Referer pour les POST navigateur (formulaire bêta). */
 export function isSameOriginBrowserRequest(request: Request): boolean {
   const allowed = allowedRequestHosts();

@@ -44,7 +44,7 @@
     X-Frame-Options = "DENY"
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
-    Permissions-Policy = "accelerometer=(), autoplay=(self), camera=(self \"
+    Permissions-Policy = "accelerometer=(), autoplay=(self), camera=(self \"https://cal.com\" \"https://*.cal.com\" \"https://app.cal.com\" \"https://whereby.com\" \"https://*.whereby.com\" \"https://*.daily.co\"), cross-origin-isolated=(), display-capture=(self \"https://cal.com\" \"https://*.cal.com\" \"https://whereby.com\" \"https://*.whereby.com\"), encrypted-media=(), fullscreen=(self \"https://cal.com\" \"https://*.cal.com\" \"https://app.cal.com\" \"https://whereby.com\" \"https://*.whereby.com\"), geolocation=(), gyroscope=(), magnetometer=(), microphone=(self \"https://cal.com\" \"https://*.cal.com\" \"https://app.cal.com\" \"https://whereby.com\" \"https://*.whereby.com\" \"https://*.daily.co\"), midi=(), payment=(), picture-in-picture=(self), publickey-credentials-get=(), screen-wake-lock=(), sync-xhr=(), usb=(), web-share=(), xr-spatial-tracking=()"
     X-DNS-Prefetch-Control = "off"
     X-Permitted-Cross-Domain-Policies = "none"
     Cross-Origin-Opener-Policy = "same-origin"

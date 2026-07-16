@@ -4,6 +4,7 @@ import { getEmailJsBetaConfig } from "@/lib/betaEmailjs";
 import type { SponsorSignupPayload } from "@/lib/sponsorContent";
 import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 import {
+  isProdayMobileClientRequest,
   isSameOriginBrowserRequest,
   MAX_BETA_EMAIL_LENGTH,
 } from "@/lib/requestSecurity";
@@ -114,7 +115,7 @@ async function notifyPartnersTeam(payload: SponsorSignupPayload): Promise<void> 
 }
 
 export async function POST(request: Request) {
-  if (!isSameOriginBrowserRequest(request)) {
+  if (!isSameOriginBrowserRequest(request) && !isProdayMobileClientRequest(request)) {
     return jsonResponse({ error: "Origine non autorisée" }, { status: 403 });
   }
 
