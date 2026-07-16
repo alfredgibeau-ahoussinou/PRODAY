@@ -1,4 +1,6 @@
 # Monorepo — site vitrine Next.js dans website/
+# Ne pas définir publish : @netlify/plugin-nextjs gère .netlify/static + fonctions SSR.
+# Déploiement manuel : cd website && npm run netlify:deploy
 [build]
   base = "website"
   command = "npm run build"
@@ -17,6 +19,12 @@
   from = "/downloads/proday-beta.apk"
   to = "https://storage.googleapis.com/proday-155b0.firebasestorage.app/beta/proday-beta.apk"
   status = 302
+  force = true
+
+[[redirects]]
+  from = "/partenaires"
+  to = "/sponsor"
+  status = 301
   force = true
 
 [[redirects]]

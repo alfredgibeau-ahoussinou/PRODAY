@@ -19,6 +19,12 @@
   force = true
 
 [[redirects]]
+  from = "/partenaires"
+  to = "/sponsor"
+  status = 301
+  force = true
+
+[[redirects]]
   from = "/*"
   to = "https://proday75.fr/:splat"
   status = 301
