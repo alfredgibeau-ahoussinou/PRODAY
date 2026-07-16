@@ -23,7 +23,9 @@ import { useMedicalStyles } from '../../components/medical/medicalStyles';
 import { PressableSpring, PushScreenTransition, SkeletonList, StaggerReveal } from '../../components/motion';
 import { PhysioAvailabilityScreen } from './PhysioAvailabilityScreen';
 import { PhysioPatientsScreen } from './PhysioPatientsScreen';
+import { VisioSessionScreen } from './VisioSessionScreen';
 import { isPhysioBookingEnabled } from '../../services/medicalAppointments.service';
+import type { MedicalAppointment } from '../../models/MedicalAppointment';
 import type { AppColors } from '../../theme/universeTheme';
 import { TabScreenShell } from '../../components/app/TabScreenShell';
 
@@ -41,6 +43,7 @@ export const PhysioDashboardScreen: React.FC<PhysioDashboardScreenProps> = ({ pr
   const [refreshing, setRefreshing] = useState(false);
   const [showAvailability, setShowAvailability] = useState(false);
   const [showPatients, setShowPatients] = useState(false);
+  const [visioLink, setVisioLink] = useState<string | null>(null);
   const bookingOnline = isPhysioBookingEnabled(profile);
 
   const specialty =
@@ -62,11 +65,14 @@ export const PhysioDashboardScreen: React.FC<PhysioDashboardScreenProps> = ({ pr
   }, [refresh]);
 
   const updateStatus = async (
-    id: string,
+    appt: MedicalAppointment,
     status: 'confirmed' | 'cancelled' | 'completed'
   ) => {
     try {
-      await medicalAppointmentsService.updateStatus(id, status);
+      await medicalAppointmentsService.updateStatus(appt.id, status, {
+        physio: profile,
+        appointment: appt,
+      });
       await refresh();
     } catch (e) {
       Alert.alert('Erreur', e instanceof Error ? e.message : 'Action impossible.');
@@ -162,9 +168,12 @@ export const PhysioDashboardScreen: React.FC<PhysioDashboardScreenProps> = ({ pr
             <MedicalAppointmentCard
               appointment={appt}
               mode="physio"
-              onConfirm={() => void updateStatus(appt.id, 'confirmed')}
-              onCancel={() => void updateStatus(appt.id, 'cancelled')}
-              onComplete={() => void updateStatus(appt.id, 'completed')}
+              onConfirm={() => void updateStatus(appt, 'confirmed')}
+              onCancel={() => void updateStatus(appt, 'cancelled')}
+              onComplete={() => void updateStatus(appt, 'completed')}
+              onJoinVisio={
+                appt.meeting_link ? () => setVisioLink(appt.meeting_link!) : undefined
+              }
             />
           </StaggerReveal>
         ))
@@ -180,8 +189,8 @@ export const PhysioDashboardScreen: React.FC<PhysioDashboardScreenProps> = ({ pr
                 <MedicalAppointmentCard
                   appointment={appt}
                   mode="physio"
-                  onConfirm={() => void updateStatus(appt.id, 'confirmed')}
-                  onCancel={() => void updateStatus(appt.id, 'cancelled')}
+                  onConfirm={() => void updateStatus(appt, 'confirmed')}
+                  onCancel={() => void updateStatus(appt, 'cancelled')}
                 />
               </StaggerReveal>
             ))}
@@ -231,6 +240,12 @@ export const PhysioDashboardScreen: React.FC<PhysioDashboardScreenProps> = ({ pr
       <PushScreenTransition active={showPatients}>
         {showPatients ? (
           <PhysioPatientsScreen profile={profile} onBack={() => setShowPatients(false)} />
+        ) : null}
+      </PushScreenTransition>
+
+      <PushScreenTransition active={visioLink != null}>
+        {visioLink ? (
+          <VisioSessionScreen meetingLink={visioLink} onBack={() => setVisioLink(null)} />
         ) : null}
       </PushScreenTransition>
     </View>

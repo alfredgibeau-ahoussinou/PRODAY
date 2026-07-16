@@ -19,7 +19,8 @@
   - appointment_date, appointment_time, duration_min
   - location_label, motif, status_label
   - email_kind — booking_request_physio | booking_pending_patient | booking_confirmed | booking_cancelled
-  - site_url, app_name
+  - meeting_link — lien téléconsultation (Cal.com)
+  - visio_cta_html — bouton HTML « Rejoindre la visio » (si meeting_link)
 -->
 <!DOCTYPE html>
 <html lang="fr">
@@ -71,6 +72,7 @@
               <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:17px;line-height:28px;color:#e5e5e5;">
                 {{body_action}}
               </p>
+              {{visio_cta_html}}
             </td>
           </tr>
           <tr>

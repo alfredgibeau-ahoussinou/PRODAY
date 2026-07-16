@@ -5,6 +5,8 @@ import { prodayHaptics } from '../../utils/prodayHaptics';
 import type { MedicalAppointment } from '../../models/MedicalAppointment';
 import { MEDICAL_APPOINTMENT_STATUS_LABELS } from '../../models/MedicalAppointment';
 import { formatAppointmentDay, formatSlotLabel } from '../../utils/medicalSlots';
+import { canJoinVisioSession } from '../../utils/visioMeetingLink';
+import { CONSULTATION_TYPE_LABELS } from '../../models/MedicalAppointment';
 import { Icon } from '../ui/Icon';
 import { spacing, radius } from '../../theme/designTokens';
 import { useMedicalStyles } from './medicalStyles';
@@ -16,6 +18,7 @@ interface MedicalAppointmentCardProps {
   onConfirm?: () => void;
   onCancel?: () => void;
   onComplete?: () => void;
+  onJoinVisio?: () => void;
   onPress?: () => void;
 }
 
@@ -25,6 +28,7 @@ export const MedicalAppointmentCard: React.FC<MedicalAppointmentCardProps> = ({
   onConfirm,
   onCancel,
   onComplete,
+  onJoinVisio,
   onPress,
 }) => {
   const { colors: c } = useMedicalStyles();
@@ -41,6 +45,11 @@ export const MedicalAppointmentCard: React.FC<MedicalAppointmentCardProps> = ({
 
   const counterpart =
     mode === 'physio' ? appointment.patient_name : appointment.physio_name;
+
+  const showVisio = canJoinVisioSession(appointment);
+  const consultationLabel = appointment.consultation_type
+    ? CONSULTATION_TYPE_LABELS[appointment.consultation_type]
+    : null;
 
   const cardContent = (
     <>
@@ -59,8 +68,18 @@ export const MedicalAppointmentCard: React.FC<MedicalAppointmentCardProps> = ({
         </View>
         <Text style={styles.meta}>
           {formatAppointmentDay(appointment.start_at)}
-          {appointment.location_label ? ` · ${appointment.location_label}` : ''}
+          {consultationLabel ? ` · ${consultationLabel}` : ''}
+          {appointment.location_label && appointment.consultation_type !== 'visio'
+            ? ` · ${appointment.location_label}`
+            : ''}
         </Text>
+        {appointment.status === 'confirmed' &&
+        appointment.consultation_type !== 'cabinet' &&
+        !appointment.meeting_link ? (
+          <Text style={styles.visioPending}>
+            Le praticien vous enverra le lien de visio.
+          </Text>
+        ) : null}
         {appointment.motif ? (
           <Text style={styles.motif} numberOfLines={2}>
             {appointment.motif}
@@ -87,6 +106,20 @@ export const MedicalAppointmentCard: React.FC<MedicalAppointmentCardProps> = ({
         ) : null}
         {mode === 'physio' && appointment.status === 'confirmed' ? (
           <View style={styles.actions}>
+            {showVisio && onJoinVisio ? (
+              <PressableSpring
+                style={styles.visioBtn}
+                onPress={() => {
+                  prodayHaptics.confirm();
+                  onJoinVisio();
+                }}
+                scaleTo={0.96}
+                haptic
+              >
+                <Icon name="videocam" size={16} color={c.brandInverse} />
+                <Text style={styles.visioText}>Rejoindre la visio</Text>
+              </PressableSpring>
+            ) : null}
             <PressableSpring style={styles.completeBtnInline} onPress={onComplete} scaleTo={0.98} haptic>
               <Text style={styles.completeText}>Marquer terminé</Text>
             </PressableSpring>
@@ -95,6 +128,22 @@ export const MedicalAppointmentCard: React.FC<MedicalAppointmentCardProps> = ({
                 <Text style={styles.cancelText}>Annuler</Text>
               </PressableSpring>
             ) : null}
+          </View>
+        ) : null}
+        {mode === 'patient' && showVisio && onJoinVisio ? (
+          <View style={styles.actions}>
+            <PressableSpring
+              style={styles.visioBtn}
+              onPress={() => {
+                prodayHaptics.confirm();
+                onJoinVisio();
+              }}
+              scaleTo={0.96}
+              haptic
+            >
+              <Icon name="videocam" size={16} color={c.brandInverse} />
+              <Text style={styles.visioText}>Rejoindre la visio</Text>
+            </PressableSpring>
           </View>
         ) : null}
       </View>
@@ -146,6 +195,13 @@ function createStyles(c: AppColors) {
     },
     badgeText: { fontSize: 10, fontWeight: '800' },
     meta: { fontSize: 12, color: c.textSecondary, marginTop: 4 },
+    visioPending: {
+      fontSize: 11,
+      color: '#B45309',
+      marginTop: spacing.xs,
+      fontWeight: '600',
+      fontStyle: 'italic',
+    },
     motif: { fontSize: 12, color: c.textMuted, marginTop: spacing.xs, lineHeight: 17 },
     actions: {
       flexDirection: 'row',
@@ -162,6 +218,16 @@ function createStyles(c: AppColors) {
       paddingVertical: 8,
     },
     confirmText: { color: c.brandInverse, fontWeight: '800', fontSize: 12 },
+    visioBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      backgroundColor: '#0F766E',
+      borderRadius: radius.md,
+      paddingHorizontal: spacing.sm,
+      paddingVertical: 8,
+    },
+    visioText: { color: c.brandInverse, fontWeight: '800', fontSize: 12 },
     cancelBtn: {
       borderRadius: radius.md,
       paddingHorizontal: spacing.sm,

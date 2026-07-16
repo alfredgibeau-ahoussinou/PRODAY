@@ -16,6 +16,7 @@ import { TAB_BAR_CONTENT_INSET } from '../../components/navigation/BottomTabBar'
 import { spacing } from '../../theme/designTokens';
 import { useMedicalStyles } from '../../components/medical/medicalStyles';
 import { StaggerReveal } from '../../components/motion';
+import type { MedicalAppointment } from '../../models/MedicalAppointment';
 import type { AppColors } from '../../theme/universeTheme';
 import { useTranslation } from '../../context/LocaleContext';
 
@@ -45,9 +46,13 @@ export const PhysioRequestsScreen: React.FC = () => {
     setRefreshing(false);
   }, [refresh]);
 
-  const updateStatus = async (id: string, status: 'confirmed' | 'cancelled') => {
+  const updateStatus = async (appt: MedicalAppointment, status: 'confirmed' | 'cancelled') => {
+    if (!profile) return;
     try {
-      await medicalAppointmentsService.updateStatus(id, status);
+      await medicalAppointmentsService.updateStatus(appt.id, status, {
+        physio: profile,
+        appointment: appt,
+      });
       await refresh();
     } catch (e) {
       Alert.alert('Erreur', e instanceof Error ? e.message : 'Action impossible.');
@@ -79,8 +84,8 @@ export const PhysioRequestsScreen: React.FC = () => {
               <MedicalAppointmentCard
                 appointment={appt}
                 mode="physio"
-                onConfirm={() => void updateStatus(appt.id, 'confirmed')}
-                onCancel={() => void updateStatus(appt.id, 'cancelled')}
+                onConfirm={() => void updateStatus(appt, 'confirmed')}
+                onCancel={() => void updateStatus(appt, 'cancelled')}
               />
             </StaggerReveal>
           ))

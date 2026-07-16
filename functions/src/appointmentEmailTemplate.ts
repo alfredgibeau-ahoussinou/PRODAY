@@ -31,6 +31,7 @@ export function buildAppointmentPlainText(params: Record<string, string>): strin
     `Statut : ${params.status_label}`,
     '',
     params.body_action.replace(/<[^>]+>/g, ''),
+    params.meeting_link ? `\nLien visio : ${params.meeting_link}` : '',
     '',
     `— ${params.app_name}`,
     'support@proday.app',

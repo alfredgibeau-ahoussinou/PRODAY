@@ -16,13 +16,15 @@ import { medicalAppointmentsService } from '../../services/medicalAppointments.s
 import { MedicalAppointmentCard } from '../../components/medical/MedicalAppointmentCard';
 import { PhysioScreenHeader } from '../../components/medical/PhysioScreenHeader';
 import { PhysioAvailabilityScreen } from './PhysioAvailabilityScreen';
-import { PressableSpring } from '../../components/motion';
+import { VisioSessionScreen } from './VisioSessionScreen';
+import { PressableSpring, PushScreenTransition } from '../../components/motion';
 import { TAB_BAR_CONTENT_INSET } from '../../components/navigation/BottomTabBar';
 import { MEDICAL_THEME } from '../../content/medicalExperience';
 import { spacing, radius } from '../../theme/designTokens';
 import { formatAppointmentDay } from '../../utils/medicalSlots';
 import { getPhysioCalComBookingUrl, openCalComSignup } from '../../utils/calComBooking';
 import { useMedicalStyles } from '../../components/medical/medicalStyles';
+import type { MedicalAppointment } from '../../models/MedicalAppointment';
 import type { AppColors } from '../../theme/universeTheme';
 
 type AgendaFilter = 'all' | 'pending' | 'confirmed';
@@ -36,6 +38,7 @@ export const PhysioAgendaScreen: React.FC = () => {
   const [showAvailability, setShowAvailability] = useState(false);
   const [filter, setFilter] = useState<AgendaFilter>('all');
   const [refreshing, setRefreshing] = useState(false);
+  const [visioLink, setVisioLink] = useState<string | null>(null);
   const { appointments, loading, refresh } = usePhysioAppointments(profile?.uid);
 
   useEffect(() => {
@@ -69,11 +72,15 @@ export const PhysioAgendaScreen: React.FC = () => {
   }, [refresh, refreshProfile]);
 
   const updateStatus = async (
-    id: string,
+    appt: MedicalAppointment,
     status: 'confirmed' | 'cancelled' | 'completed'
   ) => {
+    if (!profile) return;
     try {
-      await medicalAppointmentsService.updateStatus(id, status);
+      await medicalAppointmentsService.updateStatus(appt.id, status, {
+        physio: profile,
+        appointment: appt,
+      });
       await refresh();
     } catch (e) {
       Alert.alert('Erreur', e instanceof Error ? e.message : 'Action impossible.');
@@ -95,6 +102,7 @@ export const PhysioAgendaScreen: React.FC = () => {
   }
 
   return (
+    <>
     <ScrollView
       style={[styles.root, rootStyle]}
       contentContainerStyle={styles.content}
@@ -180,18 +188,21 @@ export const PhysioAgendaScreen: React.FC = () => {
                 mode="physio"
                 onConfirm={
                   appt.status === 'pending'
-                    ? () => void updateStatus(appt.id, 'confirmed')
+                    ? () => void updateStatus(appt, 'confirmed')
                     : undefined
                 }
                 onCancel={
                   appt.status === 'pending' || appt.status === 'confirmed'
-                    ? () => void updateStatus(appt.id, 'cancelled')
+                    ? () => void updateStatus(appt, 'cancelled')
                     : undefined
                 }
                 onComplete={
                   appt.status === 'confirmed'
-                    ? () => void updateStatus(appt.id, 'completed')
+                    ? () => void updateStatus(appt, 'completed')
                     : undefined
+                }
+                onJoinVisio={
+                  appt.meeting_link ? () => setVisioLink(appt.meeting_link!) : undefined
                 }
               />
             ))}
@@ -199,6 +210,13 @@ export const PhysioAgendaScreen: React.FC = () => {
         ))
       )}
     </ScrollView>
+
+    <PushScreenTransition active={visioLink != null}>
+      {visioLink ? (
+        <VisioSessionScreen meetingLink={visioLink} onBack={() => setVisioLink(null)} />
+      ) : null}
+    </PushScreenTransition>
+    </>
   );
 };
 

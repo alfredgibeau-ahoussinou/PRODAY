@@ -20,7 +20,11 @@ import {
 import { spacing, radius } from '../../theme/designTokens';
 import { useMedicalStyles } from '../../components/medical/medicalStyles';
 import type { AppColors } from '../../theme/universeTheme';
+import { hasPhysioCalComBooking, getPhysioCalComEmbedUrl, getPhysioCalComBookingUrl } from '../../utils/calComBooking';
+import { CalComBookingEmbed } from '../../components/medical/CalComBookingEmbed';
 import { recordV3UserAction } from '../../utils/recordV3Action';
+import type { ConsultationType } from '../../models/MedicalAppointment';
+import { CONSULTATION_TYPE_LABELS } from '../../models/MedicalAppointment';
 import { fontFamily } from '../../theme/typography';
 
 interface MedicalBookingScreenProps {
@@ -43,6 +47,7 @@ export const MedicalBookingScreen: React.FC<MedicalBookingScreenProps> = ({
   const [slots, setSlots] = useState<Date[]>([]);
   const [selectedSlot, setSelectedSlot] = useState<Date | null>(null);
   const [motif, setMotif] = useState('');
+  const [consultationType, setConsultationType] = useState<ConsultationType>('visio');
   const [loadingSlots, setLoadingSlots] = useState(true);
   const [booking, setBooking] = useState(false);
 
@@ -70,6 +75,7 @@ export const MedicalBookingScreen: React.FC<MedicalBookingScreenProps> = ({
         patient,
         startAt: selectedSlot,
         motif,
+        consultationType,
       });
       Alert.alert(
         'Demande envoyée',
@@ -88,6 +94,9 @@ export const MedicalBookingScreen: React.FC<MedicalBookingScreenProps> = ({
   const specialty =
     physio.profile.medical_specialty ?? physio.profile.job_title ?? 'Pôle médical';
   const meta = [specialty, physio.city].filter(Boolean).join(' · ');
+  const calEmbedUrl = getPhysioCalComEmbedUrl(physio);
+  const calBookingUrl = getPhysioCalComBookingUrl(physio);
+  const showCalEmbed = hasPhysioCalComBooking(physio) && calEmbedUrl && calBookingUrl;
 
   return (
     <View style={[styles.root, rootStyle]}>
@@ -140,6 +149,27 @@ export const MedicalBookingScreen: React.FC<MedicalBookingScreenProps> = ({
           </View>
         )}
 
+        <View style={styles.typeSection}>
+          <Text style={styles.typeLabel}>Type de consultation</Text>
+          <View style={styles.typeRow}>
+            {(['visio', 'cabinet', 'both'] as const).map((type) => {
+              const active = consultationType === type;
+              return (
+                <PressableSpring
+                  key={type}
+                  style={[styles.typePill, active && styles.typePillActive]}
+                  onPress={() => setConsultationType(type)}
+                  scaleTo={0.96}
+                >
+                  <Text style={[styles.typeText, active && styles.typeTextActive]}>
+                    {CONSULTATION_TYPE_LABELS[type]}
+                  </Text>
+                </PressableSpring>
+              );
+            })}
+          </View>
+        </View>
+
         <TextInput
           style={styles.noteInput}
           placeholder="Note (optionnel)"
@@ -163,6 +193,18 @@ export const MedicalBookingScreen: React.FC<MedicalBookingScreenProps> = ({
             </Text>
           )}
         </PressableSpring>
+
+        {showCalEmbed ? (
+          <View style={styles.calSection}>
+            <Text style={styles.calLabel}>Ou réserver via Cal.com</Text>
+            <CalComBookingEmbed
+              embedUrl={calEmbedUrl}
+              bookingUrl={calBookingUrl}
+              openLabel="Ouvrir Cal.com"
+              height={420}
+            />
+          </View>
+        ) : null}
       </ScrollView>
     </View>
   );
@@ -222,6 +264,37 @@ function createStyles(c: AppColors) {
       color: c.text,
     },
     slotTextActive: { color: c.brandInverse },
+    typeSection: { gap: spacing.sm },
+    typeLabel: {
+      fontSize: 14,
+      fontWeight: '700',
+      fontFamily: fontFamily.bold,
+      color: c.textSecondary,
+    },
+    typeRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: spacing.sm,
+    },
+    typePill: {
+      paddingVertical: spacing.sm,
+      paddingHorizontal: spacing.md,
+      borderRadius: radius.pill,
+      backgroundColor: c.surface,
+      borderWidth: 1,
+      borderColor: c.border,
+    },
+    typePillActive: {
+      backgroundColor: '#CCFBF1',
+      borderColor: '#0F766E',
+    },
+    typeText: {
+      fontSize: 13,
+      fontWeight: '600',
+      fontFamily: fontFamily.semibold,
+      color: c.text,
+    },
+    typeTextActive: { color: '#0F766E' },
     noteInput: {
       minHeight: 72,
       borderRadius: radius.lg,
@@ -245,6 +318,16 @@ function createStyles(c: AppColors) {
       fontWeight: '700',
       fontFamily: fontFamily.bold,
       fontSize: 17,
+    },
+    calSection: {
+      marginTop: spacing.lg,
+      gap: spacing.sm,
+    },
+    calLabel: {
+      fontSize: 13,
+      fontWeight: '700',
+      color: c.textSecondary,
+      textAlign: 'center',
     },
   });
 }

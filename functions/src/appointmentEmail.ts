@@ -8,6 +8,7 @@ import {
 } from './appointmentEmailTemplate';
 import { getEmailJsConfig } from './emailJsClient';
 import { isBrevoConfigured, sendTransactionalEmail } from './emailTransport';
+import { buildMeetingLinkForAppointment } from './visioMeetingLink';
 
 export type AppointmentEmailKind =
   | 'booking_request_physio'
@@ -25,6 +26,9 @@ type AppointmentDoc = {
   end_at?: admin.firestore.Timestamp | Date;
   duration_min?: number;
   status?: string;
+  consultation_type?: 'cabinet' | 'visio' | 'both';
+  meeting_link?: string | null;
+  visio_provider?: string | null;
   motif?: string | null;
   location_label?: string | null;
 };
@@ -85,6 +89,7 @@ export function buildAppointmentEmailJsParams(input: {
   locationLabel?: string;
   motif?: string;
   specialty?: string;
+  meetingLink?: string;
 }): Record<string, string> {
   const siteUrl = getSiteUrl();
   const dateLabel = formatAppointmentDay(input.startAt);
@@ -123,7 +128,9 @@ export function buildAppointmentEmailJsParams(input: {
       subject: 'Rendez-vous confirmé — ProDay',
       headline: 'Rendez-vous confirmé',
       bodyIntro: `Votre rendez-vous avec <strong>${input.counterpartyName}</strong> est confirmé.`,
-      bodyAction: 'Retrouvez les détails dans l’application ProDay (onglet Santé).',
+      bodyAction: input.meetingLink
+        ? 'Rejoignez la téléconsultation via le bouton ci-dessous ou depuis l’application ProDay (onglet Santé → Mes RDV).'
+        : 'Retrouvez les détails dans l’application ProDay (onglet Santé).',
       statusLabel: 'Confirmé',
     },
     booking_cancelled: {
@@ -136,6 +143,19 @@ export function buildAppointmentEmailJsParams(input: {
   };
 
   const c = copy[input.kind];
+  const meetingLink = input.meetingLink?.trim() ?? '';
+  const visioCtaHtml = meetingLink
+    ? `<table role="presentation" cellspacing="0" cellpadding="0" style="margin:24px auto 0;">
+        <tr>
+          <td align="center" style="border-radius:999px;background:#0F766E;">
+            <a href="${meetingLink}" target="_blank" rel="noopener noreferrer"
+               style="display:inline-block;padding:14px 28px;font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:700;color:#ffffff;text-decoration:none;">
+              Rejoindre la visio
+            </a>
+          </td>
+        </tr>
+      </table>`
+    : '';
 
   return {
     email: input.to,
@@ -157,6 +177,8 @@ export function buildAppointmentEmailJsParams(input: {
     email_kind: input.kind,
     site_url: siteUrl,
     app_name: 'ProDay',
+    meeting_link: meetingLink,
+    visio_cta_html: visioCtaHtml,
   };
 }
 
@@ -213,9 +235,55 @@ async function notifyFromAppointment(
     locationLabel: data.location_label ?? undefined,
     motif: data.motif ?? undefined,
     specialty: data.specialty,
+    meetingLink: data.meeting_link ?? undefined,
   });
 
   await sendAppointmentEmail(email, params);
+}
+
+async function loadPhysioProfile(uid: string): Promise<Record<string, unknown>> {
+  const snap = await firebaseAdmin.firestore().doc(`users/${uid}`).get();
+  const data = snap.data();
+  return (data?.profile as Record<string, unknown>) ?? {};
+}
+
+/** Génère et persiste le lien visio si le RDV est confirmé sans lien. */
+export async function ensureMeetingLinkOnConfirm(
+  appointmentId: string,
+  data: AppointmentDoc
+): Promise<AppointmentDoc> {
+  if (data.status !== 'confirmed') return data;
+  if (data.meeting_link?.trim()) return data;
+
+  const startAt = toDate(data.start_at);
+  if (!startAt) return data;
+
+  const profile = await loadPhysioProfile(data.physio_uid);
+  const link = buildMeetingLinkForAppointment(
+    {
+      cal_com_username: profile.cal_com_username as string | undefined,
+      booking_url: profile.booking_url as string | undefined,
+    },
+    {
+      start_at: startAt,
+      consultation_type: data.consultation_type,
+    }
+  );
+
+  if (!link) return data;
+
+  const patch = {
+    meeting_link: link.meetingLink,
+    visio_provider: link.visioProvider,
+    updated_at: admin.firestore.FieldValue.serverTimestamp(),
+  };
+
+  await firebaseAdmin
+    .firestore()
+    .doc(`medical_appointments/${appointmentId}`)
+    .update(patch);
+
+  return { ...data, meeting_link: link.meetingLink, visio_provider: link.visioProvider };
 }
 
 function parseAppointmentData(raw: FirebaseFirestore.DocumentData): AppointmentDoc {
@@ -249,7 +317,8 @@ export async function onMedicalAppointmentCreatedHandler(
 
 /** Changement de statut → email patient (confirmé / annulé). */
 export async function onMedicalAppointmentUpdatedHandler(
-  change: functions.Change<functions.firestore.QueryDocumentSnapshot>
+  change: functions.Change<functions.firestore.QueryDocumentSnapshot>,
+  appointmentId?: string
 ): Promise<void> {
   const before = parseAppointmentData(change.before.data());
   const after = parseAppointmentData(change.after.data());
@@ -257,12 +326,16 @@ export async function onMedicalAppointmentUpdatedHandler(
   if (before.status === after.status) return;
 
   if (after.status === 'confirmed') {
+    const enriched =
+      appointmentId != null
+        ? await ensureMeetingLinkOnConfirm(appointmentId, after)
+        : after;
     await notifyFromAppointment(
-      after,
+      enriched,
       'booking_confirmed',
-      after.patient_uid,
-      after.patient_name,
-      after.physio_name
+      enriched.patient_uid,
+      enriched.patient_name,
+      enriched.physio_name
     );
     return;
   }
@@ -300,6 +373,6 @@ export const onMedicalAppointmentUpdated = onDocumentUpdated(
     const before = event.data?.before;
     const after = event.data?.after;
     if (!before || !after) return;
-    await onMedicalAppointmentUpdatedHandler({ before, after });
+    await onMedicalAppointmentUpdatedHandler({ before, after }, event.params.appointmentId);
   }
 );

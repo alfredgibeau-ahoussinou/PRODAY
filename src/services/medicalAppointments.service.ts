@@ -16,6 +16,7 @@ import type { User } from '../models/User';
 import type {
   MedicalAppointment,
   MedicalAppointmentStatus,
+  ConsultationType,
   WeeklyAvailabilityBlock,
 } from '../models/MedicalAppointment';
 import {
@@ -25,6 +26,7 @@ import {
   generateDaySlots,
   startOfDay,
 } from '../utils/medicalSlots';
+import { buildMeetingLinkForAppointment } from '../utils/visioMeetingLink';
 
 const COLLECTION = 'medical_appointments';
 
@@ -113,11 +115,13 @@ export const medicalAppointmentsService = {
     patient: User;
     startAt: Date;
     motif?: string;
+    consultationType?: ConsultationType;
   }): Promise<string> {
     if (!isFirebaseConfigured()) throw new Error('Firebase non configuré');
 
     const duration = getPhysioConsultationDuration(input.physio);
     const endAt = new Date(input.startAt.getTime() + duration * 60_000);
+    const consultationType = input.consultationType ?? 'visio';
     const payload = {
       physio_uid: input.physio.uid,
       physio_name: input.physio.display_name,
@@ -128,8 +132,12 @@ export const medicalAppointmentsService = {
       end_at: endAt,
       duration_min: duration,
       status: 'pending' as MedicalAppointmentStatus,
+      consultation_type: consultationType,
       motif: input.motif?.trim() || null,
-      location_label: input.physio.city ?? 'Cabinet',
+      location_label:
+        consultationType === 'visio'
+          ? 'Téléconsultation'
+          : input.physio.city ?? 'Cabinet',
       created_at: serverTimestamp(),
       updated_at: serverTimestamp(),
     };
@@ -144,16 +152,33 @@ export const medicalAppointmentsService = {
   async updateStatus(
     appointmentId: string,
     status: MedicalAppointmentStatus,
-    notes?: string
+    options?: {
+      notes?: string;
+      physio?: User;
+      appointment?: Pick<MedicalAppointment, 'start_at' | 'consultation_type' | 'meeting_link'>;
+    }
   ): Promise<void> {
     if (!isFirebaseConfigured()) throw new Error('Firebase non configuré');
     const database = getDb();
     if (!database) throw new Error('Firebase non configuré');
 
-    await updateDoc(doc(database, COLLECTION, appointmentId), {
+    const patch: Record<string, unknown> = {
       status,
-      notes: notes ?? null,
+      notes: options?.notes ?? null,
       updated_at: serverTimestamp(),
-    });
+    };
+
+    if (status === 'confirmed' && options?.physio && options?.appointment) {
+      const existingLink = options.appointment.meeting_link?.trim();
+      if (!existingLink) {
+        const link = buildMeetingLinkForAppointment(options.physio, options.appointment);
+        if (link) {
+          patch.meeting_link = link.meetingLink;
+          patch.visio_provider = link.visioProvider;
+        }
+      }
+    }
+
+    await updateDoc(doc(database, COLLECTION, appointmentId), patch);
   },
 };
