@@ -93,19 +93,11 @@ export const MedicalBookingScreen: React.FC<MedicalBookingScreenProps> = ({
       <ScreenHeader title="Prendre rendez-vous" onBack={onBack} centered />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.hero}>
-          <View style={styles.heroIcon}>
-            <Icon name="heart" size={22} color="#0F766E" variant="filled" />
-          </View>
-          <View style={styles.heroCopy}>
-            <Text style={styles.heroName}>{physio.display_name}</Text>
-            <Text style={styles.heroMeta}>{specialty}</Text>
-            {physio.city ? (
-              <Text style={styles.heroMeta}>
-                {physio.city}
-                {physio.department ? ` (${physio.department})` : ''}
-              </Text>
-            ) : null}
-          </View>
+          <Text style={styles.heroName}>{physio.display_name}</Text>
+          <Text style={styles.heroMeta}>
+            {specialty}
+            {physio.city ? ` · ${physio.city}` : ''}
+          </Text>
         </View>
 
         <Text style={styles.sectionLabel}>Choisir un jour</Text>
@@ -150,10 +142,10 @@ export const MedicalBookingScreen: React.FC<MedicalBookingScreenProps> = ({
           </View>
         )}
 
-        <Text style={styles.sectionLabel}>Motif de consultation</Text>
+        <Text style={styles.sectionLabel}>Motif (optionnel)</Text>
         <TextInput
           style={styles.motifInput}
-          placeholder="Ex. rééducation genou, bilan post-match, préparation mentale…"
+          placeholder="Ex. genou, bilan, mental…"
           placeholderTextColor={c.textMuted}
           value={motif}
           onChangeText={setMotif}
@@ -178,9 +170,6 @@ export const MedicalBookingScreen: React.FC<MedicalBookingScreenProps> = ({
             </>
           )}
         </PressableSpring>
-        <Text style={styles.hint}>
-          Le praticien reçoit votre demande dans son agenda ProDay et peut confirmer ou refuser.
-        </Text>
       </ScrollView>
     </View>
   );
@@ -191,26 +180,11 @@ function createStyles(c: AppColors) {
     root: { flex: 1 },
     content: { padding: spacing.lg, paddingBottom: spacing.xxl },
     hero: {
-      flexDirection: 'row',
-      gap: spacing.md,
-      backgroundColor: '#F0FDFA',
-      borderRadius: radius.lg,
-      padding: spacing.md,
-      borderWidth: 1,
-      borderColor: '#99F6E4',
       marginBottom: spacing.lg,
+      gap: 4,
     },
-    heroIcon: {
-      width: 48,
-      height: 48,
-      borderRadius: 24,
-      backgroundColor: '#CCFBF1',
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    heroCopy: { flex: 1 },
-    heroName: { fontSize: 18, fontWeight: '900', color: c.text },
-    heroMeta: { fontSize: 12, color: '#0F766E', marginTop: 2, fontWeight: '600' },
+    heroName: { fontSize: 20, fontWeight: '900', color: c.text },
+    heroMeta: { fontSize: 13, color: c.textMuted, fontWeight: '600' },
     sectionLabel: {
       fontSize: 12,
       fontWeight: '800',
@@ -275,12 +249,5 @@ function createStyles(c: AppColors) {
     },
     bookBtnDisabled: { opacity: 0.5 },
     bookBtnText: { color: c.brandInverse, fontWeight: '900', fontSize: 15 },
-    hint: {
-      marginTop: spacing.md,
-      fontSize: 12,
-      color: c.textMuted,
-      textAlign: 'center',
-      lineHeight: 17,
-    },
   });
 }

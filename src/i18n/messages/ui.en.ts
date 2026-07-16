@@ -396,8 +396,8 @@ export const UI_EN: MessageCatalog = {
   'roleHome.amateurPlayer.action.reelsSub': 'Team highlights',
   'roleHome.amateurPlayer.action.messages': 'Messages',
   'roleHome.amateurPlayer.action.messagesSub': 'Team and staff',
-  'roleHome.amateurPlayer.action.health': 'Health appointments',
-  'roleHome.amateurPlayer.action.healthSub': 'Physio, doctor, mental…',
+  'roleHome.amateurPlayer.action.health': 'Book appointment',
+  'roleHome.amateurPlayer.action.healthSub': '',
 
   'roleHome.agent.colPlayer': 'Player',
   'roleHome.agent.colClub': 'Current club',

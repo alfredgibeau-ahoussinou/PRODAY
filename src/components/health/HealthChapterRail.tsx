@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { View, StyleSheet, Platform } from 'react-native';
+import { View, StyleSheet, ScrollView } from 'react-native';
 import { HEALTH_CHAPTERS, type HealthChapterId } from '../../content/healthChapters';
 import { PressableSpring } from '../motion';
 import { prodayHaptics } from '../../utils/prodayHaptics';
@@ -9,15 +9,69 @@ import { useAppTheme } from '../../context/ProductLineContext';
 import { spacing, radius } from '../../theme/designTokens';
 import { fontFamily } from '../../theme/typography';
 
+const BOOKING_CHAPTERS = HEALTH_CHAPTERS.filter((ch) => ch.id !== 'conseils');
+
 interface HealthChapterRailProps {
   active: HealthChapterId;
   onSelect: (id: HealthChapterId) => void;
+  /** Chips horizontaux compacts — page RDV minimaliste. */
+  minimal?: boolean;
 }
 
-/** Grille de pôles santé — icônes, libellés courts, sélection claire. */
-export const HealthChapterRail: React.FC<HealthChapterRailProps> = ({ active, onSelect }) => {
+export const HealthChapterRail: React.FC<HealthChapterRailProps> = ({
+  active,
+  onSelect,
+  minimal = false,
+}) => {
   const { colors } = useAppTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
+
+  if (minimal) {
+    return (
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.minimalRow}
+      >
+        {BOOKING_CHAPTERS.map((ch) => {
+          const on = ch.id === active;
+          return (
+            <PressableSpring
+              key={ch.id}
+              style={[
+                styles.minimalChip,
+                {
+                  backgroundColor: on ? colors.accent : colors.surface,
+                  borderColor: on ? colors.accent : colors.border,
+                },
+              ]}
+              onPress={() => {
+                if (!on) {
+                  prodayHaptics.tabSwitch();
+                  onSelect(ch.id);
+                }
+              }}
+              scaleTo={0.96}
+            >
+              <Icon
+                name={ch.icon}
+                size={14}
+                color={on ? colors.brandInverse : colors.accent}
+                variant={on ? 'filled' : 'outline'}
+              />
+              <ProDayText
+                variant="caption"
+                inverse={on}
+                style={[styles.minimalLabel, on && styles.minimalLabelOn]}
+              >
+                {ch.shortLabel}
+              </ProDayText>
+            </PressableSpring>
+          );
+        })}
+      </ScrollView>
+    );
+  }
 
   return (
     <View style={styles.wrap}>
@@ -47,9 +101,7 @@ export const HealthChapterRail: React.FC<HealthChapterRailProps> = ({ active, on
                 <View
                   style={[
                     styles.iconWrap,
-                    {
-                      backgroundColor: on ? 'rgba(255,255,255,0.18)' : colors.accentSoft,
-                    },
+                    { backgroundColor: on ? 'rgba(255,255,255,0.18)' : colors.accentSoft },
                   ]}
                 >
                   <Icon
@@ -117,16 +169,7 @@ function createStyles(c: { surface: string }) {
       borderWidth: StyleSheet.hairlineWidth,
       gap: 3,
     },
-    tileOn: Platform.select({
-      ios: {
-        shadowColor: '#0A0A0A',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.14,
-        shadowRadius: 8,
-      },
-      android: { elevation: 3 },
-      default: {},
-    }),
+    tileOn: {},
     iconWrap: {
       width: 36,
       height: 36,
@@ -141,14 +184,32 @@ function createStyles(c: { surface: string }) {
       fontSize: 12,
       textAlign: 'center',
     },
-    tileLabelOn: {
-      color: '#FFFFFF',
-    },
+    tileLabelOn: { color: '#FFFFFF' },
     tileTag: {
       fontSize: 9,
       fontWeight: '600',
       letterSpacing: 0.2,
       textAlign: 'center',
     },
+    minimalRow: {
+      flexDirection: 'row',
+      gap: spacing.sm,
+      paddingVertical: spacing.xs,
+    },
+    minimalChip: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.xs,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      borderRadius: radius.pill,
+      borderWidth: StyleSheet.hairlineWidth,
+    },
+    minimalLabel: {
+      fontFamily: fontFamily.extrabold,
+      fontWeight: '800',
+      fontSize: 13,
+    },
+    minimalLabelOn: { color: '#FFFFFF' },
   });
 }

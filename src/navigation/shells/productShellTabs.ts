@@ -47,15 +47,18 @@ export const PRO_CLUB_SHELL_TABS: MainTabId[] = [
 
 export const PRO_PLAYER_SHELL_TABS: MainTabId[] = [
   'home', // Carrière
-  'recrutement', // Opportunités
   'reels', // Réels
   'matchs', // Groupe
-  'shop', // Boutique
   'profil', // Moi
 ];
 
 /** Onglets joueur pro accessibles via le menu (RDV santé, messages…). */
-export const PRO_PLAYER_OVERFLOW_TABS: MainTabId[] = ['sante', 'messages'];
+export const PRO_PLAYER_OVERFLOW_TABS: MainTabId[] = [
+  'sante',
+  'messages',
+  'recrutement',
+  'shop',
+];
 
 export const PRO_COACH_SHELL_TABS: MainTabId[] = [
   'home',

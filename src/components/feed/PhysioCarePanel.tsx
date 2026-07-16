@@ -35,6 +35,8 @@ interface PhysioCarePanelProps {
   expanded?: boolean;
   /** Masque le titre dupliqué quand l’onglet Santé fournit déjà le hero. */
   hideHeader?: boolean;
+  /** Liste épurée — bordures et libellés réduits. */
+  minimal?: boolean;
 }
 
 export const PhysioCarePanel: React.FC<PhysioCarePanelProps> = ({
@@ -45,6 +47,7 @@ export const PhysioCarePanel: React.FC<PhysioCarePanelProps> = ({
   poleGroup,
   expanded = false,
   hideHeader = false,
+  minimal = false,
 }) => {
   const { colors: c, productLine } = useAppTheme();
   const isFemalePresentation = useFemalePlayerPresentation();
@@ -97,7 +100,14 @@ export const PhysioCarePanel: React.FC<PhysioCarePanelProps> = ({
   }
 
   return (
-    <View style={[styles.wrap, expanded && styles.wrapExpanded, { borderColor: c.borderStrong }]}>
+    <View
+      style={[
+        styles.wrap,
+        expanded && styles.wrapExpanded,
+        minimal && styles.wrapMinimal,
+        { borderColor: minimal ? c.border : c.borderStrong },
+      ]}
+    >
       {!hideHeader ? (
         <>
           <ProDayText variant="eyebrow" accent>
@@ -122,12 +132,14 @@ export const PhysioCarePanel: React.FC<PhysioCarePanelProps> = ({
 
       {isPlayer ? (
         <>
-          <ProDayText variant="eyebrow" accent style={styles.listLabel}>
-            Praticiens disponibles
-          </ProDayText>
+          {!minimal ? (
+            <ProDayText variant="eyebrow" accent style={styles.listLabel}>
+              Praticiens disponibles
+            </ProDayText>
+          ) : null}
           <TextInput
-            style={styles.search}
-            placeholder="Ville, nom…"
+            style={[styles.search, minimal && styles.searchMinimal]}
+            placeholder="Rechercher…"
             placeholderTextColor={c.textMuted}
             value={search}
             onChangeText={setSearch}
@@ -204,6 +216,12 @@ function createStyles(c: AppColors) {
     wrapExpanded: {
       backgroundColor: c.surfaceMuted,
     },
+    wrapMinimal: {
+      borderWidth: 0,
+      backgroundColor: 'transparent',
+      padding: 0,
+      marginBottom: 0,
+    },
     sub: { marginTop: 4, marginBottom: spacing.md },
     listLabel: { marginBottom: spacing.xs, fontWeight: '800' },
     search: {
@@ -214,6 +232,11 @@ function createStyles(c: AppColors) {
       marginBottom: spacing.sm,
       color: c.text,
       backgroundColor: c.background,
+    },
+    searchMinimal: {
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: c.border,
+      backgroundColor: c.surface,
     },
     filters: { marginBottom: spacing.sm },
     loader: { marginVertical: spacing.md },

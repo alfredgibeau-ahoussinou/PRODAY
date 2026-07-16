@@ -320,9 +320,11 @@ export const AmateurPlayerHomeDashboard: React.FC<StaffRoleHomeProps> = ({
               <ProDayText variant="body" style={styles.quickTitle}>
                 {t(action.titleKey)}
               </ProDayText>
-              <ProDayText variant="caption" muted numberOfLines={2}>
-                {t(action.subKey)}
-              </ProDayText>
+              {t(action.subKey) ? (
+                <ProDayText variant="caption" muted numberOfLines={2}>
+                  {t(action.subKey)}
+                </ProDayText>
+              ) : null}
             </PressableSpring>
           </StaggerReveal>
         ))}

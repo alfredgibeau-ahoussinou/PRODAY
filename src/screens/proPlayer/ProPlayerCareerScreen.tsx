@@ -146,7 +146,7 @@ export const ProPlayerCareerScreen: React.FC = () => {
         haptic
       >
         <Icon name="heart" size={18} color={colors.accent} />
-        <ProDayText variant="caption">Prendre rendez-vous santé</ProDayText>
+        <ProDayText variant="caption">Prendre rendez-vous</ProDayText>
       </PressableSpring>
     </ProPlayerShell>
   );

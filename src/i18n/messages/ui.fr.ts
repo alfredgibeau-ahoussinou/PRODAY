@@ -481,8 +481,8 @@ export const UI_FR: MessageCatalog = {
   'roleHome.amateurPlayer.action.reelsSub': 'Highlights équipe',
   'roleHome.amateurPlayer.action.messages': 'Messages',
   'roleHome.amateurPlayer.action.messagesSub': 'Équipe et staff',
-  'roleHome.amateurPlayer.action.health': 'Rendez-vous Santé',
-  'roleHome.amateurPlayer.action.healthSub': 'Kiné, médecin, mental…',
+  'roleHome.amateurPlayer.action.health': 'Prendre rendez-vous',
+  'roleHome.amateurPlayer.action.healthSub': '',
 
   'roleHome.agent.colPlayer': 'Joueur',
   'roleHome.agent.colClub': 'Club actuel',
