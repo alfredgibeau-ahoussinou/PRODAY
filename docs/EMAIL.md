@@ -5,8 +5,10 @@ ProDay envoie tous les e-mails utilisateur via **[Brevo](https://www.brevo.com/)
 ## Prérequis Brevo
 
 1. Compte [Brevo](https://app.brevo.com/)
-2. **Expéditeurs & IP** → vérifier l'adresse `contact@proday75.fr` (obligatoire avant envoi)
+2. **Expéditeurs & IP** → vérifier l'adresse utilisée dans `email.from_email` (obligatoire avant envoi)
 3. **SMTP & API** → créer une clé API transactionnelle (`xkeysib-...`)
+
+> **Important :** Brevo peut répondre `201` à l'API puis **rejeter silencieusement** l'envoi si l'expéditeur n'est pas validé. Vérifier les logs transactionnels : `GET /v3/smtp/statistics/events` ou dashboard Brevo → Transactionnel → Logs.
 
 > Ne jamais committer la clé API. Utiliser `firebase functions:config:set` ou les secrets Firebase.
 
@@ -16,7 +18,7 @@ ProDay envoie tous les e-mails utilisateur via **[Brevo](https://www.brevo.com/)
 firebase functions:config:set \
   email.provider="brevo" \
   email.brevo_api_key="xkeysib-VOTRE_CLE" \
-  email.from_email="contact@proday75.fr" \
+  email.from_email="proday.admin@gmail.com" \
   email.from_name="ProDay" \
   auth.enabled=true \
   auth.continue_url="https://proday75.fr" \
@@ -87,7 +89,7 @@ npm run auth:send-password-reset -- user@example.com
 | Symptôme | Action |
 |----------|--------|
 | 401 / clé invalide | Vérifier `email.brevo_api_key` ; régénérer la clé dans Brevo |
-| Expéditeur non vérifié | Dashboard Brevo → Expéditeurs → valider `contact@proday75.fr` |
+| Expéditeur non vérifié | API `201` mais pas de réception → Brevo rejette après coup. Dashboard → Expéditeurs → valider l'adresse ; ou `GET /v3/senders` pour lister les expéditeurs actifs |
 | E-mail Auth EN (Firebase natif) | Brevo indisponible ou `auth.enabled=false` → vérifier config et logs Functions |
 | Bêta sans email | Approuver l'inscription admin ; vérifier `email.brevo_api_key` |
 | RDV sans email | Déployer triggers ; email sur fiche `users/{uid}` ou Auth |

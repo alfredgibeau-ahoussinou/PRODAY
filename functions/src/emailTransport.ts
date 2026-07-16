@@ -47,11 +47,12 @@ export async function sendTransactionalEmail(
 
   if (preferBrevo && brevo) {
     try {
-      await sendViaBrevo(brevo, payload);
+      const { messageId } = await sendViaBrevo(brevo, payload);
+      console.info('[emailTransport] Brevo OK', { to: payload.to, messageId });
       return;
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
-      console.error('[emailTransport] Brevo failed:', msg);
+      console.error('[emailTransport] Brevo failed:', msg, { to: payload.to, from: brevo.fromEmail });
       if (!emailJsFallback) throw e;
       console.warn('[emailTransport] Repli EmailJS');
     }
