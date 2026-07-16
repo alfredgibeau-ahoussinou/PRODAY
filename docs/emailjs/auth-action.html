@@ -2,19 +2,23 @@
   ProDay — E-mail Auth (vérification / reset mot de passe)
   EmailJS → auth.emailjs_template_id → Content (HTML)
 
+  Design aligné sur firebase/auth-email-templates/verification.html et password-reset.html (Resend).
+
   Settings EmailJS :
   - To Email  : {{email}}
   - From Name : {{app_name}}
   - Subject   : {{subject}}
   - Reply To  : contact@proday.app
+  - Plain Text (optionnel) : docs/emailjs/auth-action.txt
 
-  Variables (functions/src/authEmailTransport.ts) :
+  Variables (functions/src/authEmailJsParams.ts) :
   - email, to_email, user_email — destinataire
   - subject — objet (vérification ou reset)
   - headline — titre affiché (vérification ou reset)
   - app_name — ProDay
-  - body_intro — paragraphe d'intro (vérification ou reset)
-  - cta_label — libellé du bouton
+  - body_intro — 1er paragraphe (vérification ou reset)
+  - body_action — 2e paragraphe (« Cliquez sur le bouton… »)
+  - cta_label / button_text — libellé du bouton
   - footer_note — note de bas de page
   - email_kind — verification | password-reset
   - action_link / verification_url — lien Firebase Auth
@@ -30,44 +34,72 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>{{subject}}</title>
 </head>
-<body style="margin:0;padding:0;background-color:#0a0a0a;font-family:Arial,Helvetica,sans-serif;">
-  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#0a0a0a;padding:40px 16px;">
+<body style="margin:0;padding:0;background-color:#0a0a0a;">
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0;padding:0;background-color:#0a0a0a;">
     <tr>
-      <td align="center">
-        <table role="presentation" width="600" cellspacing="0" cellpadding="0" style="max-width:600px;background:#111;border-radius:16px;border:1px solid #1f1f1f;">
+      <td align="center" style="padding:48px 24px;">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" style="max-width:600px;width:100%;background-color:#111111;border-radius:16px;border:1px solid #1f1f1f;">
           <tr>
-            <td style="padding:40px 32px 24px;">
-              <p style="margin:0;font-size:22px;font-weight:700;color:#fff;letter-spacing:0.08em;">PRO<span style="color:#22d3ee;">DAY</span></p>
+            <td align="center" style="padding:48px 40px 32px 40px;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;background-color:#ffffff;border-radius:12px;">
+                <tr>
+                  <td align="center" style="padding:12px 16px;">
+                    <img src="https://proday75.fr/branding/logo-proday-official.png" width="180" alt="ProDay" style="display:block;border:0;outline:none;text-decoration:none;height:auto;margin:0 auto;">
+                  </td>
+                </tr>
+              </table>
             </td>
           </tr>
           <tr>
-            <td style="padding:0 32px 16px;">
-              <h1 style="margin:0;font-size:26px;line-height:34px;color:#22d3ee;">{{headline}}</h1>
+            <td align="center" style="padding:0 40px 16px 40px;">
+              <h1 style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:28px;line-height:36px;font-weight:700;color:#22d3ee;">{{headline}}</h1>
             </td>
           </tr>
           <tr>
-            <td style="padding:0 32px 24px;">
-              <p style="margin:0 0 12px;font-size:16px;line-height:26px;color:#e5e5e5;">Bonjour{{display_name_greeting}},</p>
-              <p style="margin:0 0 12px;font-size:16px;line-height:26px;color:#e5e5e5;">{{body_intro}}</p>
-              <p style="margin:0;font-size:16px;line-height:26px;color:#22d3ee;font-weight:600;word-break:break-all;">{{email}}</p>
+            <td style="padding:0 40px 24px 40px;">
+              <p style="margin:0 0 16px 0;font-family:Arial,Helvetica,sans-serif;font-size:17px;line-height:28px;color:#ffffff;">
+                Bonjour{{display_name_greeting}},
+              </p>
+              <p style="margin:0 0 16px 0;font-family:Arial,Helvetica,sans-serif;font-size:17px;line-height:28px;color:#e5e5e5;">
+                {{body_intro}}
+              </p>
+              <p style="margin:0 0 24px 0;font-family:Arial,Helvetica,sans-serif;font-size:17px;line-height:28px;color:#22d3ee;font-weight:600;word-break:break-all;">
+                {{email}}
+              </p>
+              <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:17px;line-height:28px;color:#e5e5e5;">
+                {{body_action}}
+              </p>
             </td>
           </tr>
           <tr>
-            <td align="center" style="padding:8px 32px 24px;">
-              <a href="{{action_link}}" style="display:inline-block;background:#22d3ee;color:#0a0a0a;text-decoration:none;font-size:16px;font-weight:700;padding:14px 28px;border-radius:12px;">{{cta_label}}</a>
+            <td align="center" style="padding:8px 40px 32px 40px;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td align="center" bgcolor="#22d3ee" style="border-radius:12px;background-color:#22d3ee;">
+                    <a href="{{action_link}}" target="_blank" style="display:inline-block;padding:18px 40px;font-family:Arial,Helvetica,sans-serif;font-size:18px;line-height:24px;font-weight:700;color:#0a0a0a;text-decoration:none;border-radius:12px;">{{cta_label}}</a>
+                  </td>
+                </tr>
+              </table>
             </td>
           </tr>
           <tr>
-            <td style="padding:0 32px 32px;">
-              <p style="margin:0 0 8px;font-size:13px;line-height:20px;color:#a3a3a3;">Si le bouton ne fonctionne pas&nbsp;:</p>
-              <p style="margin:0;font-size:12px;line-height:18px;color:#737373;word-break:break-all;">{{action_link}}</p>
+            <td style="padding:0 40px 32px 40px;">
+              <p style="margin:0 0 12px 0;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:22px;color:#a3a3a3;">
+                Si le bouton ne fonctionne pas, copiez ce lien dans votre navigateur&nbsp;:
+              </p>
+              <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:20px;color:#737373;word-break:break-all;">
+                {{action_link}}
+              </p>
             </td>
           </tr>
           <tr>
-            <td style="padding:20px 32px 32px;border-top:1px solid #1f1f1f;">
-              <p style="margin:0;font-size:13px;line-height:20px;color:#737373;">
-                {{footer_note}}<br />
-                — {{app_name}} · <a href="mailto:contact@proday.app" style="color:#22d3ee;">contact@proday.app</a>
+            <td style="padding:0 40px 40px 40px;border-top:1px solid #1f1f1f;">
+              <p style="margin:24px 0 8px 0;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:22px;color:#a3a3a3;">
+                {{footer_note}}
+              </p>
+              <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:22px;color:#737373;">
+                — {{app_name}}<br>
+                <a href="mailto:contact@proday.app" style="color:#22d3ee;text-decoration:none;">contact@proday.app</a>
               </p>
             </td>
           </tr>

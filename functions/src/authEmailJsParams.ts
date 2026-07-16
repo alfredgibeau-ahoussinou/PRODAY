@@ -18,12 +18,16 @@ export function buildAuthEmailJsTemplateParams(
       : 'Confirmez votre e-mail';
   const bodyIntro =
     kind === 'password-reset'
-      ? `Pour réinitialiser votre mot de passe ${appName}, cliquez ci-dessous&nbsp;:`
-      : `Pour activer votre compte ${appName}, validez l'adresse&nbsp;:`;
+      ? `Une demande de réinitialisation a été faite pour le compte <strong style="color:#ffffff;">${appName}</strong>&nbsp;:`
+      : `Pour activer votre compte <strong style="color:#ffffff;">${appName}</strong>, validez l'adresse suivante&nbsp;:`;
+  const bodyAction =
+    kind === 'password-reset'
+      ? 'Cliquez sur le bouton ci-dessous pour choisir un nouveau mot de passe.'
+      : 'Cliquez sur le bouton ci-dessous pour finaliser votre inscription.';
   const ctaLabel = kind === 'password-reset' ? 'Réinitialiser mon mot de passe' : 'Valider mon e-mail';
   const footerNote =
     kind === 'password-reset'
-      ? "Ce lien expire après une heure. Si vous n'avez pas demandé de réinitialisation, ignorez cet e-mail."
+      ? "Ce lien expire après quelques heures. Si vous n'avez pas demandé cette réinitialisation, ignorez cet e-mail — votre mot de passe actuel reste inchangé."
       : "Ce lien expire après quelques heures. Si vous n'avez pas créé de compte, ignorez cet e-mail.";
   const displayName = options?.displayName?.trim() || '';
   return {
@@ -34,7 +38,9 @@ export function buildAuthEmailJsTemplateParams(
     headline,
     app_name: appName,
     body_intro: bodyIntro,
+    body_action: bodyAction,
     cta_label: ctaLabel,
+    button_text: ctaLabel,
     footer_note: footerNote,
     email_kind: kind,
     site_url: siteUrl,

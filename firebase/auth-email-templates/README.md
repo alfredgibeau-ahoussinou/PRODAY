@@ -59,7 +59,8 @@ Implémenté dans **`functions/src/authCustomEmails.ts`** :
    - **Subject** : `{{subject}}`
    - **Reply To** : `contact@proday.app`
 3. **Content** : copier-coller **tout** le HTML de `docs/emailjs/auth-action.html`
-4. Noter le **Template ID** (ex. `template_xxxxxx`) — **ne pas** réutiliser `beta.emailjs_template_id` (template bêta waitlist)
+4. *(Optionnel)* **Plain Text** : `docs/emailjs/auth-action.txt` (`{{message_text}}` — aligné sur `verification.txt` / `password-reset.txt`)
+5. Noter le **Template ID** (ex. `template_xxxxxx`) — **ne pas** réutiliser `beta.emailjs_template_id` (template bêta waitlist)
 
 **Account → Security** : activer **Allow EmailJS API for non-browser applications**.
 

@@ -21,6 +21,12 @@ test('buildAuthEmailJsTemplateParams — vérification', () => {
   assert.equal(params.action_link, 'https://proday75.fr/verify?oobCode=abc');
   assert.equal(params.display_name_greeting, ' Jean');
   assert.equal(params.email_kind, 'verification');
+  assert.match(params.body_intro, /validez l'adresse suivante/i);
+  assert.equal(
+    params.body_action,
+    'Cliquez sur le bouton ci-dessous pour finaliser votre inscription.'
+  );
+  assert.equal(params.button_text, params.cta_label);
 });
 
 test('buildAuthEmailJsTemplateParams — reset mot de passe', () => {
@@ -38,5 +44,10 @@ test('buildAuthEmailJsTemplateParams — reset mot de passe', () => {
   assert.equal(params.headline, 'Réinitialisez votre mot de passe');
   assert.equal(params.cta_label, 'Réinitialiser mon mot de passe');
   assert.equal(params.email_kind, 'password-reset');
-  assert.match(params.body_intro, /réinitialiser votre mot de passe ProDay/i);
+  assert.match(params.body_intro, /demande de réinitialisation/i);
+  assert.equal(
+    params.body_action,
+    'Cliquez sur le bouton ci-dessous pour choisir un nouveau mot de passe.'
+  );
+  assert.match(params.footer_note, /mot de passe actuel reste inchangé/i);
 });
