@@ -10,15 +10,21 @@ describe('migration carousel Amateur (doc architecture §1.4)', () => {
     expect(UNIVERSE_CHOICE_ORDER).not.toContain('woman');
   });
 
-  it('expose 6 pôles dont pro_player, pro_club et pro_staff', () => {
+  it('expose 7 pôles dont pro_player, pro_club, pro_staff et sponsor', () => {
     expect(UNIVERSE_CHOICE_ORDER).toEqual([
       'amateur',
       'supporter',
       'pro_player',
       'pro_club',
       'pro_staff',
+      'sponsor',
       'sante',
     ]);
+  });
+
+  it('mappe le pôle sponsor vers pro_staff avec rôle sponsor', () => {
+    expect(carouselPoleToProductLine('sponsor')).toBe('pro_staff');
+    expect(carouselPoleSignupPresetRole('sponsor')).toBe('sponsor');
   });
 
   it('mappe les pôles carousel vers product_line stocké', () => {

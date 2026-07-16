@@ -9,6 +9,7 @@ export type CarouselPoleId =
   | 'pro_player'
   | 'pro_club'
   | 'pro_staff'
+  | 'sponsor'
   | 'sante';
 
 export const CAROUSEL_POLE_ORDER: CarouselPoleId[] = [
@@ -17,6 +18,7 @@ export const CAROUSEL_POLE_ORDER: CarouselPoleId[] = [
   'pro_player',
   'pro_club',
   'pro_staff',
+  'sponsor',
   'sante',
 ];
 
@@ -29,7 +31,7 @@ export function isCarouselProPole(pole: CarouselPoleId): boolean {
 export function carouselPoleToProductLine(pole: CarouselPoleId): ProductLineId {
   if (pole === 'pro_player') return 'pro_player';
   if (pole === 'pro_club') return 'pro_club';
-  if (pole === 'pro_staff') return 'pro_staff';
+  if (pole === 'pro_staff' || pole === 'sponsor') return 'pro_staff';
   return pole as ProductLineId;
 }
 
@@ -49,6 +51,8 @@ export function carouselPoleSignupPresetRole(pole: CarouselPoleId): UserRole | n
       return 'club';
     case 'pro_staff':
       return 'coach';
+    case 'sponsor':
+      return 'sponsor';
     default:
       return null;
   }
@@ -61,6 +65,7 @@ export function productLineToCarouselPole(
 ): CarouselPoleId {
   if (line === 'pro_player') return 'pro_player';
   if (line === 'pro_club') return 'pro_club';
+  if (line === 'pro_staff' && role === 'sponsor') return 'sponsor';
   if (line === 'pro_staff') return 'pro_staff';
   if (line === 'pro') {
     const segment = resolveProProductSegmentFromRole(role);

@@ -6,6 +6,7 @@ export const UNIVERSE_ACCENT: Record<CarouselPoleId, string> = {
   pro_player: '#1D4ED8',
   pro_club: '#0369A1',
   pro_staff: '#4338CA',
+  sponsor: '#D4AF37',
   sante: '#0F766E',
 };
 
@@ -15,6 +16,7 @@ export const UNIVERSE_ACCENT_SOFT: Record<CarouselPoleId, string> = {
   pro_player: '#DBEAFE',
   pro_club: '#E0F2FE',
   pro_staff: '#E0E7FF',
+  sponsor: '#FEF3C7',
   sante: '#CCFBF1',
 };
 
@@ -24,5 +26,6 @@ export const UNIVERSE_SHORT: Record<CarouselPoleId, string> = {
   pro_player: 'Pro Joueur',
   pro_club: 'Pro Club',
   pro_staff: 'Pro Staff',
+  sponsor: 'Sponsor',
   sante: 'Santé',
 };

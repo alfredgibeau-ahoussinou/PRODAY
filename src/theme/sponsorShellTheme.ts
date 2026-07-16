@@ -13,7 +13,7 @@ export const sponsorChrome = {
   text: SPONSOR_THEME.text,
   textMuted: SPONSOR_THEME.textMuted,
   overlay: 'rgba(148, 163, 184, 0.08)',
-  overlayStrong: 'rgba(59, 130, 246, 0.18)',
+  overlayStrong: 'rgba(212, 175, 55, 0.18)',
   background: SPONSOR_THEME.background,
 } as const;
 

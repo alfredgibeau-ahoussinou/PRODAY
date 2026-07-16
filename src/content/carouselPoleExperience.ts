@@ -11,6 +11,7 @@ import {
   PRODAY_PRO_CLUB_BRAND,
   PRODAY_PRO_PLAYER_BRAND,
   PRODAY_PRO_STAFF_BRAND,
+  PRODAY_SPONSOR_BRAND,
 } from '../models/ProductLine';
 
 const PRO_PLAYER_IDENTITY: UniverseIdentity = {
@@ -55,6 +56,20 @@ const PRO_STAFF_IDENTITY: UniverseIdentity = {
   entrySub: 'Coach · Agent · Recruteur · Organisateur',
 };
 
+const SPONSOR_IDENTITY: UniverseIdentity = {
+  id: 'pro',
+  productName: PRODAY_SPONSOR_BRAND.name,
+  tagline: PRODAY_SPONSOR_BRAND.tagline,
+  heroLine: 'Votre marque\nsur le terrain.',
+  mission:
+    'Campagnes géolocalisées, tableau de bord ROI et vitrine vérifiée — un espace corporate pour les décideurs marketing.',
+  accentLabel: 'Sponsor',
+  mercatoLabel: 'Campagnes',
+  playerLabel: 'Marque',
+  cvLabel: 'Offres & ROI',
+  entrySub: 'Visibilité mesurée · clubs · financement local',
+};
+
 export function getCarouselPoleIdentity(pole: CarouselPoleId): UniverseIdentity {
   switch (pole) {
     case 'amateur':
@@ -67,6 +82,8 @@ export function getCarouselPoleIdentity(pole: CarouselPoleId): UniverseIdentity 
       return PRO_CLUB_IDENTITY;
     case 'pro_staff':
       return PRO_STAFF_IDENTITY;
+    case 'sponsor':
+      return SPONSOR_IDENTITY;
     case 'sante':
       return SANTE_IDENTITY;
     default:

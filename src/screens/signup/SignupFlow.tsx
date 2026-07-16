@@ -18,6 +18,11 @@ import {
   SignupMedicalPracticeStep,
   SignupSponsorProStep,
 } from './SignupRoleSteps';
+import {
+  SignupSponsorCampaignStep,
+  SignupSponsorCompanyStep,
+  SignupSponsorTargetingStep,
+} from './SignupSponsorSteps';
 import { SignupAccountStep } from './SignupAccountStep';
 import { SignupSecurityStep } from './SignupSecurityStep';
 import { SignupParentalStep } from './SignupParentalStep';
@@ -115,6 +120,15 @@ const SignupFlowInner: React.FC<SignupFlowInnerProps> = ({
       break;
     case 'sponsor_pro':
       content = <SignupSponsorProStep form={form} {...layout} onBack={form.goBack} />;
+      break;
+    case 'sponsor_company':
+      content = <SignupSponsorCompanyStep form={form} {...layout} onBack={form.goBack} />;
+      break;
+    case 'sponsor_campaign':
+      content = <SignupSponsorCampaignStep form={form} {...layout} onBack={form.goBack} />;
+      break;
+    case 'sponsor_targeting':
+      content = <SignupSponsorTargetingStep form={form} {...layout} onBack={form.goBack} />;
       break;
     case 'family':
       content = (

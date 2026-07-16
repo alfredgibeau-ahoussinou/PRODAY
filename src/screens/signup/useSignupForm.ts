@@ -17,6 +17,9 @@ import {
   validateMedicalPracticeStep,
   validateRoleProFields,
   validateSponsorProFields,
+  validateSponsorCompanyStep,
+  validateSponsorCampaignStep,
+  validateSponsorTargetingStep,
 } from '../../utils/signupValidation';
 import { normalizeCalComBookingInput } from '../../utils/calComBooking';
 import {
@@ -48,7 +51,8 @@ import { isRoleAllowedForProductLine, resolveSignupProductLine } from '../../con
 import { isProFamilyLine } from '../../utils/productLineResolution';
 import type { ProductLineId } from '../../models/ProductLine';
 import { useProductLine } from '../../context/ProductLineContext';
-import { useTranslation } from '../../context/LocaleContext';
+import { getRoleSignupPhases } from './signupRoleExperience';
+import { submitSponsorSignup } from '../../services/sponsorSignup.service';
 
 export type { SignupPageId, SignupFlowKind };
 
@@ -75,6 +79,7 @@ export function useSignupForm(initial?: {
 
   const [role, setRoleState] = useState<UserRole>(defaultRole);
   const [draftRole, setDraftRole] = useState<UserRole>(defaultRole);
+  const isSponsorSignup = role === 'sponsor' || draftRole === 'sponsor';
   const isStaffProduct =
     isProProduct || isSanteProduct || (isAmateurProduct && draftRole === 'coach');
   const [appSpace, setAppSpaceState] = useState<AppSpaceId>(DEFAULT_APP_SPACE);
@@ -95,6 +100,13 @@ export function useSignupForm(initial?: {
   const [medicalPracticeFocus, setMedicalPracticeFocus] = useState('');
   const [calComUsername, setCalComUsername] = useState('');
   const [structureName, setStructureName] = useState('');
+  const [sponsorSector, setSponsorSector] = useState('');
+  const [sponsorBudget, setSponsorBudget] = useState('');
+  const [sponsorGoals, setSponsorGoals] = useState<string[]>([]);
+  const [sponsorAudience, setSponsorAudience] = useState<string[]>([]);
+  const [sponsorRegions, setSponsorRegions] = useState<string[]>([]);
+  const [sponsorSports, setSponsorSports] = useState<string[]>([]);
+  const [sponsorPhone, setSponsorPhone] = useState('');
   const [professionalHeadline, setProfessionalHeadline] = useState('');
   const [position, setPosition] = useState('');
   const [category, setCategory] = useState('');
@@ -138,13 +150,14 @@ export function useSignupForm(initial?: {
   const currentPage = steps[pageIndex] ?? 'welcome';
   const stepLabel = getSignupPageLabel(currentPage, t);
   const phases = useMemo(() => {
+    if (isSponsorSignup) return getRoleSignupPhases('sponsor', t);
     if (isSanteProduct) return getSanteSignupPhases(t);
     if (isSupporterProduct) return getSupporterSignupPhases(t);
     if (isAmateurProduct) return getAmateurSignupPhases(t);
     if (isProPlayerSignup) return getProPlayerSignupPhases(t);
     if (isProProduct) return getProSignupPhases(t);
     return getAmateurSignupPhases(t);
-  }, [isSanteProduct, isSupporterProduct, isAmateurProduct, isProPlayerSignup, isProProduct, t]);
+  }, [isSponsorSignup, isSanteProduct, isSupporterProduct, isAmateurProduct, isProPlayerSignup, isProProduct, t]);
   const phaseIndex = getPhaseIndex(flowKind, currentPage);
   const currentPhase = getCurrentPhase(currentPage);
   const needsDocument = ROLES_REQUIRING_VERIFICATION.includes(role);
@@ -415,6 +428,47 @@ export function useSignupForm(initial?: {
     return Object.keys(errs).length === 0;
   };
 
+  const validateSponsorCompany = () => {
+    const errs = validateSponsorCompanyStep(structureName, sponsorSector, displayName);
+    setFieldErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
+
+  const validateSponsorCampaign = () => {
+    const errs = validateSponsorCampaignStep(sponsorBudget, sponsorGoals, sponsorAudience);
+    setFieldErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
+
+  const validateSponsorTargeting = () => {
+    const errs = validateSponsorTargetingStep(sponsorRegions, sponsorSports, city);
+    setFieldErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
+
+  const toggleSponsorListValue = useCallback(
+    (key: 'goals' | 'audience' | 'regions' | 'sports', value: string) => {
+      const setters = {
+        goals: setSponsorGoals,
+        audience: setSponsorAudience,
+        regions: setSponsorRegions,
+        sports: setSponsorSports,
+      } as const;
+      const getters = {
+        goals: sponsorGoals,
+        audience: sponsorAudience,
+        regions: sponsorRegions,
+        sports: sponsorSports,
+      } as const;
+      const current = getters[key];
+      const next = current.includes(value)
+        ? current.filter((v) => v !== value)
+        : [...current, value];
+      setters[key](next);
+    },
+    [sponsorGoals, sponsorAudience, sponsorRegions, sponsorSports],
+  );
+
   const validatePlayer = () => {
     const errs = validatePlayerStepFields({
       position,
@@ -562,6 +616,15 @@ export function useSignupForm(initial?: {
       case 'sponsor_pro':
         if (!validateSponsorPro()) return false;
         break;
+      case 'sponsor_company':
+        if (!validateSponsorCompany()) return false;
+        break;
+      case 'sponsor_campaign':
+        if (!validateSponsorCampaign()) return false;
+        break;
+      case 'sponsor_targeting':
+        if (!validateSponsorTargeting()) return false;
+        break;
       case 'family':
         if (!validateParental()) return false;
         break;
@@ -583,6 +646,9 @@ export function useSignupForm(initial?: {
     validateMedicalSpecialtyOnly,
     validateMedicalPracticeOnly,
     validateSponsorPro,
+    validateSponsorCompany,
+    validateSponsorCampaign,
+    validateSponsorTargeting,
     validateParental,
     validateAccountIdentity,
     isMinor,
@@ -692,6 +758,21 @@ export function useSignupForm(initial?: {
           : await authService.signUp({ ...common, password });
 
         await refreshProfile();
+        if (role === 'sponsor') {
+          void submitSponsorSignup({
+            companyName: structureName.trim(),
+            sector: sponsorSector,
+            contactName: displayName.trim(),
+            budget: sponsorBudget,
+            goals: sponsorGoals,
+            audience: sponsorAudience,
+            regions: sponsorRegions,
+            sports: sponsorSports,
+            email: email.trim().toLowerCase(),
+            phone: sponsorPhone.trim() || undefined,
+            message: professionalHeadline.trim() || undefined,
+          });
+        }
         if (isSanteProduct) await setProductLine('sante');
         else if (isAmateurProduct) await setProductLine('amateur');
         else if (isSupporterProduct) await setProductLine('supporter');
@@ -719,6 +800,13 @@ export function useSignupForm(initial?: {
       medicalPracticeFocus,
       calComUsername,
       structureName,
+      sponsorSector,
+      sponsorBudget,
+      sponsorGoals,
+      sponsorAudience,
+      sponsorRegions,
+      sponsorSports,
+      sponsorPhone,
       professionalHeadline,
       position,
       category,
@@ -753,6 +841,7 @@ export function useSignupForm(initial?: {
     isAmateurProduct,
     isSupporterProduct,
     isSanteProduct,
+    isSponsorSignup,
     isStaffProduct,
     isOAuthCompletion,
     accountCreated,
@@ -788,6 +877,17 @@ export function useSignupForm(initial?: {
     setCalComUsername,
     structureName,
     setStructureName,
+    sponsorSector,
+    setSponsorSector,
+    sponsorBudget,
+    setSponsorBudget,
+    sponsorGoals,
+    sponsorAudience,
+    sponsorRegions,
+    sponsorSports,
+    toggleSponsorListValue,
+    sponsorPhone,
+    setSponsorPhone,
     professionalHeadline,
     setProfessionalHeadline,
     position,

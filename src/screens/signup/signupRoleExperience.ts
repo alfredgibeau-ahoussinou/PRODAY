@@ -250,17 +250,17 @@ const ROLE_EXPERIENCES: Record<UserRole, RoleSignupExperience> = {
   sponsor: {
     id: 'sponsor',
     welcomeTitle: 'Espace sponsor',
-    welcomeSubtitle: 'Visibilité locale, offres et soutien aux clubs de votre territoire.',
-    previewSteps: ['Territoire', 'Identité', 'Sécurité', 'Lancement'],
+    welcomeSubtitle: 'Visibilité mesurée, campagnes géolocalisées et tableau de bord ROI.',
+    previewSteps: ['Marque', 'Campagne', 'Ciblage', 'Compte', 'Lancement'],
     phases: [
       { id: 'vous', label: 'Marque' },
       { id: 'acces', label: 'Compte' },
       { id: 'launch', label: 'Go' },
     ],
-    accent: { accent: '#BE185D', accentSoft: '#FCE7F3', accentMuted: '#F9A8D4' },
-    launchTitle: 'Vitrine sponsor',
-    launchBody: 'Complétez vos offres sponsors et touchez les clubs de votre zone.',
-    launchFinishLabel: 'Voir mon espace marque',
+    accent: { accent: '#D4AF37', accentSoft: 'rgba(212, 175, 55, 0.12)', accentMuted: '#B8941F' },
+    launchTitle: 'Espace sponsor activé',
+    launchBody: 'Publiez vos offres, suivez vos KPIs et touchez les clubs de votre territoire.',
+    launchFinishLabel: 'Ouvrir mon espace marque',
   },
   supporter: {
     id: 'supporter',
@@ -439,6 +439,27 @@ export function getStepMetaForRole(page: SignupPageId, role: UserRole, t?: Trans
         subtitle: metaKey('subtitle', 'Zone d’action et marque — visibilité auprès des clubs locaux.'),
         heroIcon: 'star-four-points',
         stepName: metaKey('stepName', tr(t, 'signup.page.sponsor_pro', 'Sponsor')),
+      };
+    case 'sponsor_company':
+      return {
+        title: metaKey('title', 'Votre marque'),
+        subtitle: metaKey('subtitle', 'Identifiez votre entreprise — ces infos personnalisent votre espace sponsor.'),
+        heroIcon: 'star-four-points',
+        stepName: metaKey('stepName', tr(t, 'signup.page.sponsor_company', 'Entreprise')),
+      };
+    case 'sponsor_campaign':
+      return {
+        title: metaKey('title', 'Objectifs & budget'),
+        subtitle: metaKey('subtitle', 'Calibrons la formule adaptée à votre ambition marketing.'),
+        heroIcon: 'briefcase',
+        stepName: metaKey('stepName', tr(t, 'signup.page.sponsor_campaign', 'Campagne')),
+      };
+    case 'sponsor_targeting':
+      return {
+        title: metaKey('title', 'Territoires & sports'),
+        subtitle: metaKey('subtitle', 'Précisez vos zones et univers sportifs pour un ciblage optimal.'),
+        heroIcon: 'location',
+        stepName: metaKey('stepName', tr(t, 'signup.page.sponsor_targeting', 'Ciblage')),
       };
     case 'family':
       return {

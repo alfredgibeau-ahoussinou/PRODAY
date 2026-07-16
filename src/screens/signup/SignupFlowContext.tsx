@@ -3,6 +3,7 @@ import type { ProductLineId } from '../../models/ProductLine';
 import { isProProductLine } from '../../models/ProductLine';
 import type { UserRole } from '../../models/User';
 import { getThemedColorsForLine, type AppColors } from '../../theme/universeTheme';
+import { getSponsorAppColors } from '../../content/sponsorExperience';
 import { useProductLine } from '../../context/ProductLineContext';
 import type { PlayerSegment } from '../../utils/playerSegment';
 import { genderToPlayerSegment } from '../../utils/playerSegment';
@@ -15,6 +16,7 @@ interface SignupFlowContextValue {
   isAmateurSignup: boolean;
   isSupporterSignup: boolean;
   isSanteSignup: boolean;
+  isSponsorSignup: boolean;
   colors: AppColors;
   experienceRole: UserRole;
 }
@@ -33,6 +35,7 @@ export const SignupFlowProvider: React.FC<{
   const isAmateurSignup = productLine === 'amateur';
   const isSupporterSignup = productLine === 'supporter';
   const isSanteSignup = productLine === 'sante';
+  const isSponsorSignup = experienceRole === 'sponsor';
 
   const playerSegment: PlayerSegment | null = useMemo(() => {
     if (!signupGender) return null;
@@ -41,8 +44,8 @@ export const SignupFlowProvider: React.FC<{
   }, [signupGender, productLine]);
 
   const colors = useMemo(
-    () => getThemedColorsForLine(productLine, playerSegment),
-    [productLine, playerSegment],
+    () => (isSponsorSignup ? getSponsorAppColors() : getThemedColorsForLine(productLine, playerSegment)),
+    [isSponsorSignup, productLine, playerSegment],
   );
 
   useEffect(() => {
@@ -61,6 +64,7 @@ export const SignupFlowProvider: React.FC<{
         isAmateurSignup,
         isSupporterSignup,
         isSanteSignup,
+        isSponsorSignup,
         colors,
         experienceRole,
       }}
@@ -80,6 +84,7 @@ export function useSignupFlowTheme(): SignupFlowContextValue {
       isAmateurSignup: true,
       isSupporterSignup: false,
       isSanteSignup: false,
+      isSponsorSignup: false,
       colors: getThemedColorsForLine('amateur'),
       experienceRole: 'player',
     };

@@ -128,7 +128,7 @@ export const PRO_ROLE_PREVIEW: Partial<Record<UserRole, string[]>> = {
   coach: ['Diplômes & licence', 'Effectif & convocations', 'Annonces Mercato Pro'],
   agent: ['Profil agent vérifié', 'Mandats & repérage', 'Réseau clubs'],
   recruiter: ['Profil recruteur vérifié', 'Annonces Mercato Pro', 'Pipeline candidatures'],
-  sponsor: ['Offre sponsor', 'Clubs cibles', 'Campagnes locales'],
+  sponsor: ['Marque', 'Campagne', 'Ciblage', 'Compte', 'Lancement'],
   club: ['Structure club', 'Ville & département', 'Annonces Mercato Pro'],
   organizer: ['Structure orga', 'Zone d’action', 'Événements locaux'],
 };

@@ -29,6 +29,9 @@ export const SIGNUP_PAGE_LABELS: Record<SignupPageId, string> = {
   medical_specialty: 'Spécialité',
   medical_practice: 'Cabinet',
   sponsor_pro: 'Sponsor',
+  sponsor_company: 'Marque',
+  sponsor_campaign: 'Campagne',
+  sponsor_targeting: 'Ciblage',
   family: 'Famille',
   account: 'Identité',
   security: 'Sécurité',
@@ -136,7 +139,15 @@ export function buildSignupSteps(
   }
 
   if (flowKind === 'sponsor') {
-    return ['welcome', 'sponsor_pro', 'account', 'security', 'launch'];
+    return [
+      'welcome',
+      'sponsor_company',
+      'sponsor_campaign',
+      'sponsor_targeting',
+      'account',
+      'security',
+      'launch',
+    ];
   }
 
   if (role === 'supporter') {
@@ -178,6 +189,9 @@ const PRO_PROFILE_PAGES: SignupPageId[] = [
   'medical_specialty',
   'medical_practice',
   'sponsor_pro',
+  'sponsor_company',
+  'sponsor_campaign',
+  'sponsor_targeting',
 ];
 
 export function getPhaseIndex(_flowKind: SignupFlowKind, page: SignupPageId): number {
@@ -213,7 +227,12 @@ export function getStepHeroIcon(page: SignupPageId): IconName {
     case 'medical_practice':
       return 'heart';
     case 'sponsor_pro':
+    case 'sponsor_company':
       return 'star-four-points';
+    case 'sponsor_campaign':
+      return 'briefcase';
+    case 'sponsor_targeting':
+      return 'location';
     case 'family':
       return 'shield';
     case 'account':

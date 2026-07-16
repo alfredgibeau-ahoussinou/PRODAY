@@ -94,6 +94,14 @@ const proStaffGradients = {
   ambient: ['#E0E7FF', '#F8FAFF', '#F8FAFF'] as const,
 };
 
+const sponsorGradients = {
+  hero: ['#070605', '#1a1508'] as const,
+  heroDark: ['#030303', '#070605'] as const,
+  card: ['#14110a', '#0c0a06'] as const,
+  cta: ['#92700C', '#D4AF37'] as const,
+  ambient: ['#1a1508', '#070605', '#070605'] as const,
+};
+
 export function gradientsForCarouselPole(pole: CarouselPoleId): {
   hero: GradientStops;
   heroDark: GradientStops;
@@ -103,6 +111,7 @@ export function gradientsForCarouselPole(pole: CarouselPoleId): {
 } {
   if (pole === 'pro_club') return proClubGradients;
   if (pole === 'pro_staff') return proStaffGradients;
+  if (pole === 'sponsor') return sponsorGradients;
   if (pole === 'pro_player') {
     return {
       hero: proGradients.hero,

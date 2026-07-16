@@ -66,10 +66,18 @@ describe('signupFlowConfig', () => {
     ]);
   });
 
-  it('parcours partenaire : territoire puis identité', () => {
+  it('parcours partenaire : 5 étapes métier puis identité', () => {
     expect(
       buildSignupSteps('sponsor', { role: 'sponsor', parentalRequired: false })
-    ).toEqual(['welcome', 'sponsor_pro', 'account', 'security', 'launch']);
+    ).toEqual([
+      'welcome',
+      'sponsor_company',
+      'sponsor_campaign',
+      'sponsor_targeting',
+      'account',
+      'security',
+      'launch',
+    ]);
   });
 
   it('phases unifiées Vous / Accès / Go', () => {

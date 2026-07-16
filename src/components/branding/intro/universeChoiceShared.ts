@@ -24,5 +24,6 @@ export const UNIVERSE_FEATURE_CHIPS: Record<CarouselPoleId, string[]> = {
   pro_player: ['Carrière', 'Opportunités', 'Réels'],
   pro_club: ['Structure', 'Recrutement', 'Calendrier'],
   pro_staff: ['Mandats', 'Scouting', 'Convocations'],
+  sponsor: ['Campagnes', 'ROI', 'Clubs'],
   sante: ['Agenda', 'Patients', 'Clubs'],
 };

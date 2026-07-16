@@ -131,9 +131,13 @@ export function getSignupRoleGroups(
       roles: g.roles.filter((r) => r === 'club'),
     }));
   } else if (line === 'pro_staff') {
-    groups = PRO_SIGNUP_GROUPS.filter((g) =>
-      g.roles.some((r) => ['coach', 'agent', 'recruiter', 'organizer', 'sponsor'].includes(r)),
-    );
+    if (presetRole === 'sponsor') {
+      groups = PRO_SIGNUP_GROUPS.filter((g) => g.roles.includes('sponsor'));
+    } else {
+      groups = PRO_SIGNUP_GROUPS.filter((g) =>
+        g.roles.some((r) => ['coach', 'agent', 'recruiter', 'organizer', 'sponsor'].includes(r)),
+      );
+    }
   } else if (!isProFamilyLine(line)) groups = [];
   else {
     const allowed = new Set(rolesForProductLine(line));

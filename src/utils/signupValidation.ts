@@ -335,6 +335,47 @@ export function validateSponsorProFields(structureName: string, city: string): R
   return errs;
 }
 
+export function validateSponsorCompanyStep(
+  structureName: string,
+  sector: string,
+  contactName: string,
+): Record<string, string> {
+  const errs: Record<string, string> = {};
+  if (!structureName.trim() || structureName.trim().length < 2) {
+    errs.structureName = 'Raison sociale / marque requise';
+  }
+  if (!sector.trim()) errs.sponsorSector = 'Secteur requis';
+  if (!contactName.trim() || contactName.trim().length < 2) {
+    errs.displayName = 'Contact principal requis';
+  }
+  return errs;
+}
+
+export function validateSponsorCampaignStep(
+  budget: string,
+  goals: string[],
+  audience: string[],
+): Record<string, string> {
+  const errs: Record<string, string> = {};
+  if (!budget.trim()) errs.sponsorBudget = 'Budget estimé requis';
+  if (goals.length === 0) errs.sponsorGoals = 'Sélectionnez au moins un objectif';
+  if (audience.length === 0) errs.sponsorAudience = 'Sélectionnez au moins un public cible';
+  return errs;
+}
+
+export function validateSponsorTargetingStep(
+  regions: string[],
+  sports: string[],
+  city: string,
+): Record<string, string> {
+  const errs: Record<string, string> = {};
+  if (regions.length === 0) errs.sponsorRegions = 'Sélectionnez au moins une région';
+  if (sports.length === 0) errs.sponsorSports = 'Sélectionnez au moins une catégorie sportive';
+  const cityErr = validateCity(city, { required: true });
+  if (cityErr) errs.city = cityErr;
+  return errs;
+}
+
 export interface PlayerValidationInput {
   position: string;
   category: string;

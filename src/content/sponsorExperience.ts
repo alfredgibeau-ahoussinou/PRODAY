@@ -1,42 +1,41 @@
 import type { IconName } from '../components/ui/Icon';
 import type { MainTabId } from '../navigation/mainTabConfig';
 import type { UserRole } from '../models/User';
-import { proColorOverrides } from '../theme/universeTheme';
 import { colors as baseColors } from '../theme/designTokens';
 import type { AppColors } from '../theme/universeTheme';
 
 /**
- * Espace partenaire — sombre (site Pro : blue-950 → slate-950) + bleu #1D4ED8 + or.
+ * Espace sponsor — sombre corporate or/noir (aligné site proday75.fr/sponsor).
  */
 export const SPONSOR_THEME = {
-  primary: proColorOverrides.bluePrimary,
-  primaryHover: proColorOverrides.accentLight,
-  primaryDark: proColorOverrides.brand,
-  primaryDeeper: '#172554',
-  heroBg: '#172554',
-  heroBgEnd: '#020617',
-  background: '#020617',
-  surface: '#0F172A',
-  surfaceMuted: '#1E293B',
-  surfaceElevated: '#172554',
-  border: 'rgba(30, 58, 138, 0.5)',
-  borderSubtle: 'rgba(148, 163, 184, 0.12)',
-  primarySoft: 'rgba(29, 78, 216, 0.22)',
-  primaryBg: '#020617',
-  primaryBorder: 'rgba(59, 130, 246, 0.28)',
-  text: '#F8FAFC',
-  textSecondary: '#CBD5E1',
-  textMuted: '#94A3B8',
-  gold: '#F59E0B',
-  goldLight: '#FDE68A',
-  goldMuted: '#FBBF24',
-  goldInk: '#78350F',
-  goldSurface: 'rgba(245, 158, 11, 0.12)',
-  onPrimary: '#FFFFFF',
-  heroText: '#FFFFFF',
-  heroSubtext: proColorOverrides.inkFaint,
-  ink: '#E2E8F0',
-  sectionLabel: '#64748B',
+  primary: '#D4AF37',
+  primaryHover: '#F5D76E',
+  primaryDark: '#92700C',
+  primaryDeeper: '#070605',
+  heroBg: '#070605',
+  heroBgEnd: '#030303',
+  background: '#070605',
+  surface: '#0c0a06',
+  surfaceMuted: '#14110a',
+  surfaceElevated: '#1a1508',
+  border: 'rgba(212, 175, 55, 0.22)',
+  borderSubtle: 'rgba(212, 175, 55, 0.1)',
+  primarySoft: 'rgba(212, 175, 55, 0.12)',
+  primaryBg: '#070605',
+  primaryBorder: 'rgba(212, 175, 55, 0.28)',
+  text: '#FAFAF9',
+  textSecondary: '#D6D3D1',
+  textMuted: '#A8A29E',
+  gold: '#D4AF37',
+  goldLight: '#F5D76E',
+  goldMuted: '#B8941F',
+  goldInk: '#1C1917',
+  goldSurface: 'rgba(212, 175, 55, 0.12)',
+  onPrimary: '#1C1917',
+  heroText: '#FAFAF9',
+  heroSubtext: 'rgba(250, 250, 249, 0.65)',
+  ink: '#E7E5E4',
+  sectionLabel: '#78716C',
   success: '#34D399',
   successSurface: 'rgba(52, 211, 153, 0.12)',
 } as const;

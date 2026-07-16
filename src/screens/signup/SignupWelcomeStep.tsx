@@ -14,6 +14,7 @@ import { SignupStepLayout } from './SignupStepLayout';
 import { SignupFooterButton } from './SignupFooterButton';
 import type { SignupForm } from './useSignupForm';
 import { getRoleLabel } from './signupFlowConfig';
+import { getRolePreviewSteps, getRoleWelcomeCopy } from './signupRoleExperience';
 import { getProWelcomeCopy, PRO_ROLE_PREVIEW } from './signupProConfig';
 import { getProPlayerWelcomeCopy } from './signupProPlayerConfig';
 import { getAmateurWelcomeCopy, AMATEUR_COACH_PREVIEW, AMATEUR_PLAYER_PREVIEW } from './signupAmateurConfig';
@@ -32,6 +33,7 @@ import {
   PRODAY_AMATEUR_BRAND,
   PRODAY_SUPPORTER_BRAND,
   PRODAY_SANTE_BRAND,
+  PRODAY_SPONSOR_BRAND,
 } from '../../models/ProductLine';
 import { SHOWCASE_IMAGES } from '../../content/showcaseAssets';
 import type { UserRole } from '../../models/User';
@@ -343,6 +345,40 @@ const SanteWelcomeBody: React.FC<{ form: SignupForm }> = ({ form }) => {
   );
 };
 
+const SponsorWelcomeBody: React.FC<{ form: SignupForm }> = ({ form }) => {
+  const { colors } = useSignupFlowTheme();
+  const previewSteps = getRolePreviewSteps('sponsor');
+
+  useEffect(() => {
+    if (form.draftRole !== 'sponsor') form.setDraftRole('sponsor');
+  }, [form]);
+
+  return (
+    <>
+      <PlayerWelcomeHero
+        source={SHOWCASE_IMAGES.coachFounder}
+        overlayColor="rgba(7, 6, 5, 0.72)"
+        badgeIcon="star-four-points"
+        badgeText={PRODAY_SPONSOR_BRAND.entryCta}
+        title={PRODAY_SPONSOR_BRAND.tagline}
+        subtitle={PRODAY_SPONSOR_BRAND.shortTagline}
+        accentInverse={colors.brandInverse}
+      />
+      <PreviewStepsCard
+        eyebrow="Parcours sponsor"
+        steps={previewSteps}
+        accent={colors.accent}
+        accentInverse={colors.brandInverse}
+        borderColor={colors.border}
+        surface={colors.surface}
+        surfaceMuted={colors.surfaceMuted}
+        text={colors.text}
+        textMuted={colors.textMuted}
+      />
+    </>
+  );
+};
+
 const ProWelcomeBody: React.FC<{ form: SignupForm }> = ({ form }) => {
   const { width: screenWidth } = useWindowDimensions();
   const { compact, contentMaxWidth } = useAuthLayout();
@@ -553,6 +589,31 @@ export const SignupWelcomeStep: React.FC<SignupWelcomeStepProps> = ({
         }
       >
         <AmateurWelcomeBody form={form} />
+      </SignupStepLayout>
+    );
+  }
+
+  if (form.isSponsorSignup) {
+    const welcome = getRoleWelcomeCopy('sponsor', t);
+    return (
+      <SignupStepLayout
+        stepIndex={stepIndex}
+        stepTotal={stepTotal}
+        stepName={stepName ?? PRODAY_SPONSOR_BRAND.name}
+        phases={phases}
+        phaseIndex={phaseIndex}
+        title={welcome.title}
+        subtitle={welcome.subtitle}
+        heroIcon="star-four-points"
+        onClose={onClose}
+        footer={
+          <SignupFooterButton
+            label="Commencer l'inscription sponsor"
+            onPress={form.confirmRoleAndContinue}
+          />
+        }
+      >
+        <SponsorWelcomeBody form={form} />
       </SignupStepLayout>
     );
   }

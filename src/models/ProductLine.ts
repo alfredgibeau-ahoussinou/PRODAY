@@ -102,6 +102,16 @@ export const PRODAY_PRO_STAFF_BRAND = {
   entryCta: 'Espace Staff',
 } as const;
 
+export const PRODAY_SPONSOR_BRAND = {
+  name: 'Pro Day Sponsor',
+  logoLine1: 'Pro Day',
+  logoLine2Lead: '',
+  logoLine2Accent: 'Sponsor',
+  tagline: 'VISIBILITÉ • MESURE • IMPACT',
+  shortTagline: 'Marques et sponsors — campagnes géo, ROI et vitrine vérifiée',
+  entryCta: 'Espace Sponsor',
+} as const;
+
 export const PRODAY_SANTE_BRAND = {
   name: 'Pro Day Santé',
   logoLine1: 'Pro Day',
