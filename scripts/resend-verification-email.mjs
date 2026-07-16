@@ -128,17 +128,21 @@ async function sendViaResend(targetEmail, payload) {
 }
 
 async function sendViaEmailJs(targetEmail, payload, link) {
-  const templateId = authCfg.emailjs_template_id?.trim();
+  const templateId =
+    authCfg.emailjs_verification_template_id?.trim() ||
+    authCfg.emailjs_template_id?.trim();
   const serviceId = authCfg.emailjs_service_id?.trim() || betaCfg.emailjs_service_id?.trim();
   const publicKey = authCfg.emailjs_public_key?.trim() || betaCfg.emailjs_public_key?.trim();
   const privateKey = authCfg.emailjs_private_key?.trim() || betaCfg.emailjs_private_key?.trim();
   if (!templateId) {
-    throw new Error('auth.emailjs_template_id absent — ne pas utiliser le template bêta pour la vérification');
+    throw new Error(
+      'auth.emailjs_verification_template_id absent — ne pas utiliser le template bêta pour la vérification'
+    );
   }
   if (!serviceId || !publicKey || !privateKey) {
     throw new Error('EmailJS Auth non configuré (service / clés)');
   }
-  const siteUrl = authCfg.continue_url || betaCfg.site_url || 'https://proday75.fr';
+  const legacyUnified = !authCfg.emailjs_verification_template_id?.trim();
   const res = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -152,11 +156,27 @@ async function sendViaEmailJs(targetEmail, payload, link) {
         to_email: targetEmail,
         user_email: targetEmail,
         subject: payload.subject,
-        site_url: siteUrl,
+        app_name: 'ProDay',
         action_link: link,
         verification_url: link,
         message_text: payload.text,
         display_name: '',
+        display_name_greeting: '',
+        ...(legacyUnified
+          ? {
+              headline: 'Confirmez votre e-mail',
+              body_intro:
+                'Pour activer votre compte <strong style="color:#ffffff;">ProDay</strong>, validez l\'adresse suivante&nbsp;:',
+              body_action:
+                'Cliquez sur le bouton ci-dessous pour finaliser votre inscription.',
+              cta_label: 'Valider mon e-mail',
+              button_text: 'Valider mon e-mail',
+              footer_note:
+                "Ce lien expire après quelques heures. Si vous n'avez pas créé de compte, ignorez cet e-mail.",
+              email_kind: 'verification',
+              site_url: authCfg.continue_url || betaCfg.site_url || 'https://proday75.fr',
+            }
+          : {}),
       },
     }),
   });

@@ -1,9 +1,11 @@
 import * as functions from 'firebase-functions';
 import { buildAuthEmailJsTemplateParams } from './authEmailJsParams';
 import {
-  getEmailJsConfig,
+  getAuthEmailJsConfig,
+  isAuthEmailJsLegacyUnifiedTemplate,
   isResendFallbackEnabled,
   sendEmailViaEmailJs,
+  type AuthEmailJsKind,
   type EmailJsConfig,
 } from './emailJsClient';
 
@@ -21,8 +23,8 @@ export type AuthEmailTransportConfig = {
 
 export type EmailJsAuthConfig = EmailJsConfig;
 
-export function getEmailJsAuthConfig(): EmailJsAuthConfig | null {
-  return getEmailJsConfig('auth');
+export function getEmailJsAuthConfig(kind: AuthEmailJsKind): EmailJsAuthConfig | null {
+  return getAuthEmailJsConfig(kind);
 }
 
 export { buildAuthEmailJsTemplateParams } from './authEmailJsParams';
@@ -47,7 +49,11 @@ export function getAuthEmailTransportConfig(): AuthEmailTransportConfig | null {
 }
 
 export function hasAuthEmailTransport(): boolean {
-  return getEmailJsAuthConfig() !== null || getAuthEmailTransportConfig() !== null;
+  return (
+    getEmailJsAuthConfig('verification') !== null ||
+    getEmailJsAuthConfig('password-reset') !== null ||
+    getAuthEmailTransportConfig() !== null
+  );
 }
 
 export function isAuthCustomEmailEnabled(): boolean {
@@ -97,8 +103,9 @@ export async function sendAuthEmailViaEmailJs(
   config: EmailJsAuthConfig,
   payload: AuthEmailPayload,
   link: string,
-  options?: { displayName?: string; siteUrl?: string; kind?: 'verification' | 'password-reset' }
+  options?: { displayName?: string; siteUrl?: string; kind?: AuthEmailJsKind }
 ): Promise<void> {
+  const kind = options?.kind ?? 'verification';
   const authSiteUrl =
     (functions.config().auth?.continue_url as string | undefined)?.trim() ||
     (functions.config().beta?.site_url as string | undefined)?.trim() ||
@@ -109,7 +116,8 @@ export async function sendAuthEmailViaEmailJs(
     buildAuthEmailJsTemplateParams(payload, link, {
       displayName: options?.displayName,
       siteUrl: options?.siteUrl ?? authSiteUrl,
-      kind: options?.kind,
+      kind,
+      legacyUnifiedTemplate: isAuthEmailJsLegacyUnifiedTemplate(kind),
     })
   );
 }

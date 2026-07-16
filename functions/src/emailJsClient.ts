@@ -8,6 +8,7 @@ export type EmailJsConfig = {
 };
 
 export type EmailJsNamespace = 'auth' | 'beta' | 'appointment';
+export type AuthEmailJsKind = 'verification' | 'password-reset';
 
 const EMAILJS_API_URL = 'https://api.emailjs.com/api/v1.0/email/send';
 
@@ -45,6 +46,47 @@ export function getEmailJsConfig(namespace: EmailJsNamespace): EmailJsConfig | n
 
   if (!serviceId || !publicKey || !privateKey) return null;
   return { serviceId, templateId, publicKey, privateKey };
+}
+
+/**
+ * Config EmailJS Auth par type d'e-mail (vérification vs reset).
+ * Préfère auth.emailjs_verification_template_id / auth.emailjs_password_reset_template_id ;
+ * repli sur auth.emailjs_template_id (template unifié legacy).
+ */
+export function getAuthEmailJsConfig(kind: AuthEmailJsKind): EmailJsConfig | null {
+  const authCfg = functions.config().auth ?? {};
+  const shared = getSharedEmailJsKeys();
+
+  const kindTemplateKey =
+    kind === 'verification'
+      ? 'emailjs_verification_template_id'
+      : 'emailjs_password_reset_template_id';
+  const templateId =
+    (authCfg[kindTemplateKey] as string | undefined)?.trim() ||
+    (authCfg.emailjs_template_id as string | undefined)?.trim();
+  if (!templateId) return null;
+
+  const serviceId =
+    (authCfg.emailjs_service_id as string | undefined)?.trim() || shared.serviceId;
+  const publicKey =
+    (authCfg.emailjs_public_key as string | undefined)?.trim() || shared.publicKey;
+  const privateKey =
+    (authCfg.emailjs_private_key as string | undefined)?.trim() || shared.privateKey;
+
+  if (!serviceId || !publicKey || !privateKey) return null;
+  return { serviceId, templateId, publicKey, privateKey };
+}
+
+export function isAuthEmailJsLegacyUnifiedTemplate(kind: AuthEmailJsKind): boolean {
+  const authCfg = functions.config().auth ?? {};
+  const kindTemplateKey =
+    kind === 'verification'
+      ? 'emailjs_verification_template_id'
+      : 'emailjs_password_reset_template_id';
+  return (
+    !(authCfg[kindTemplateKey] as string | undefined)?.trim() &&
+    Boolean((authCfg.emailjs_template_id as string | undefined)?.trim())
+  );
 }
 
 export function isResendFallbackEnabled(namespace: 'auth' | 'beta'): boolean {

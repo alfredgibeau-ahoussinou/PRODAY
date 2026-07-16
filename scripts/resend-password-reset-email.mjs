@@ -110,17 +110,21 @@ async function sendViaResend(targetEmail, payload) {
 }
 
 async function sendViaEmailJs(targetEmail, payload, link) {
-  const templateId = authCfg.emailjs_template_id?.trim();
+  const templateId =
+    authCfg.emailjs_password_reset_template_id?.trim() ||
+    authCfg.emailjs_template_id?.trim();
   const serviceId = authCfg.emailjs_service_id?.trim() || betaCfg.emailjs_service_id?.trim();
   const publicKey = authCfg.emailjs_public_key?.trim() || betaCfg.emailjs_public_key?.trim();
   const privateKey = authCfg.emailjs_private_key?.trim() || betaCfg.emailjs_private_key?.trim();
   if (!templateId) {
-    throw new Error('auth.emailjs_template_id absent — template Auth dédié requis');
+    throw new Error(
+      'auth.emailjs_password_reset_template_id absent — template Auth reset dédié requis'
+    );
   }
   if (!serviceId || !publicKey || !privateKey) {
     throw new Error('EmailJS Auth non configuré (service / clés)');
   }
-  const siteUrl = authCfg.continue_url || betaCfg.site_url || 'https://proday75.fr';
+  const legacyUnified = !authCfg.emailjs_password_reset_template_id?.trim();
   const res = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -134,13 +138,27 @@ async function sendViaEmailJs(targetEmail, payload, link) {
         to_email: targetEmail,
         user_email: targetEmail,
         subject: payload.subject,
-        headline: 'Réinitialisez votre mot de passe',
-        email_kind: 'password-reset',
-        site_url: siteUrl,
+        app_name: 'ProDay',
         action_link: link,
         verification_url: link,
         message_text: payload.text,
         display_name: '',
+        display_name_greeting: '',
+        ...(legacyUnified
+          ? {
+              headline: 'Réinitialisez votre mot de passe',
+              body_intro:
+                'Une demande de réinitialisation a été faite pour le compte <strong style="color:#ffffff;">ProDay</strong>&nbsp;:',
+              body_action:
+                'Cliquez sur le bouton ci-dessous pour choisir un nouveau mot de passe.',
+              cta_label: 'Réinitialiser mon mot de passe',
+              button_text: 'Réinitialiser mon mot de passe',
+              footer_note:
+                "Ce lien expire après quelques heures. Si vous n'avez pas demandé cette réinitialisation, ignorez cet e-mail — votre mot de passe actuel reste inchangé.",
+              email_kind: 'password-reset',
+              site_url: authCfg.continue_url || betaCfg.site_url || 'https://proday75.fr',
+            }
+          : {}),
       },
     }),
   });

@@ -13,11 +13,13 @@ ProDay utilise **[EmailJS](https://www.emailjs.com/)** comme transport principal
 
 | Flux | Fichier HTML à copier | Clé config Firebase | Variables env Netlify (site) |
 |------|----------------------|---------------------|------------------------------|
-| Auth (vérification + reset) | `docs/emailjs/auth-action.html` | `auth.emailjs_template_id` | — |
+| Auth — vérification e-mail | `docs/emailjs/auth-verification.html` | `auth.emailjs_verification_template_id` | — |
+| Auth — reset mot de passe | `docs/emailjs/auth-password-reset.html` | `auth.emailjs_password_reset_template_id` | — |
+| Auth — unifié (legacy) | `docs/emailjs/auth-action.html` | `auth.emailjs_template_id` (repli) | — |
 | Bêta bienvenue | `docs/emailjs/beta-welcome.html` | `beta.emailjs_template_id` | `EMAILJS_TEMPLATE_ID` |
 | Rendez-vous Santé | `docs/emailjs/appointment.html` | `appointment.emailjs_template_id` | — |
 
-Texte brut optionnel : `docs/emailjs/auth-action.txt`, `docs/emailjs/beta-welcome.txt`.
+Texte brut optionnel : `docs/emailjs/auth-verification.txt`, `docs/emailjs/auth-password-reset.txt`, `docs/emailjs/auth-action.txt` (legacy), `docs/emailjs/beta-welcome.txt`.
 
 ### Paramètres communs EmailJS (chaque template)
 
@@ -45,13 +47,23 @@ firebase functions:config:set \
 
 Cloud Functions : `sendAuthVerificationEmail`, `sendAuthPasswordResetEmail`.
 
+**Recommandé** — deux templates EmailJS distincts (copie fixe, comme Resend) :
+
 ```bash
 firebase functions:config:set \
-  auth.emailjs_template_id="template_AUTH" \
+  auth.emailjs_verification_template_id="template_VERIF" \
+  auth.emailjs_password_reset_template_id="template_RESET" \
   auth.continue_url="https://proday75.fr"
 ```
 
-Variables template : voir en-tête de `docs/emailjs/auth-action.html` et `functions/src/authEmailJsParams.ts`.
+| Template | Fichier source | Objet suggéré |
+|----------|----------------|---------------|
+| Vérification | `docs/emailjs/auth-verification.html` | `Confirmez votre adresse e-mail ProDay` |
+| Reset | `docs/emailjs/auth-password-reset.html` | `Réinitialisez votre mot de passe ProDay` |
+
+Variables (templates séparés) : `email`, `app_name`, `subject`, `action_link`, `message_text`, `display_name_greeting`.
+
+**Legacy** — un seul template dynamique (`auth.emailjs_template_id` + `docs/emailjs/auth-action.html`) : utilisé en repli si l’ID spécifique au flux est absent. Variables dynamiques : `functions/src/authEmailJsParams.ts`.
 
 Ordre d’envoi : **EmailJS** → Resend (si `auth.resend_fallback=true` **et** EmailJS en échec) → Firebase natif côté app.
 
@@ -124,7 +136,7 @@ firebase deploy --only functions:sendAuthVerificationEmail,functions:sendAuthPas
 
 | Symptôme | Action |
 |----------|--------|
-| E-mail Auth = template bêta | Vérifier `auth.emailjs_template_id` (template dédié) |
+| E-mail Auth = template bêta | Vérifier `auth.emailjs_verification_template_id` / `auth.emailjs_password_reset_template_id` |
 | 403 EmailJS | Activer API non-navigateur ; vérifier clés |
 | 412 Gmail | Reconnecter Gmail dans EmailJS → Email Services |
 | Bêta sans email | Approuver l’inscription admin ; vérifier `beta.emailjs_*` |

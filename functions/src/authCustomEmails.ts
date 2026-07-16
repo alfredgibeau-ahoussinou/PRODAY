@@ -96,7 +96,7 @@ async function sendAuthActionEmail(
   if (!isAuthCustomEmailEnabled()) return disabledResult();
   if (!hasAuthEmailTransport()) return disabledResult();
 
-  const emailJs = getEmailJsAuthConfig();
+  const emailJs = getEmailJsAuthConfig(kind);
   const resend = getAuthEmailTransportConfig();
 
   const normalizedEmail = email.trim().toLowerCase();
