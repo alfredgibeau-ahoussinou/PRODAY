@@ -11,7 +11,6 @@ import {
 import { PressableSpring } from '../../components/motion';
 import type { User } from '../../models/User';
 import { ScreenHeader } from '../../components/ui/ScreenHeader';
-import { Icon } from '../../components/ui/Icon';
 import { medicalAppointmentsService } from '../../services/medicalAppointments.service';
 import {
   formatAppointmentDay,
@@ -22,6 +21,7 @@ import { spacing, radius } from '../../theme/designTokens';
 import { useMedicalStyles } from '../../components/medical/medicalStyles';
 import type { AppColors } from '../../theme/universeTheme';
 import { recordV3UserAction } from '../../utils/recordV3Action';
+import { fontFamily } from '../../theme/typography';
 
 interface MedicalBookingScreenProps {
   physio: User;
@@ -87,30 +87,28 @@ export const MedicalBookingScreen: React.FC<MedicalBookingScreenProps> = ({
 
   const specialty =
     physio.profile.medical_specialty ?? physio.profile.job_title ?? 'Pôle médical';
+  const meta = [specialty, physio.city].filter(Boolean).join(' · ');
 
   return (
     <View style={[styles.root, rootStyle]}>
-      <ScreenHeader title="Prendre rendez-vous" onBack={onBack} centered />
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={styles.hero}>
-          <Text style={styles.heroName}>{physio.display_name}</Text>
-          <Text style={styles.heroMeta}>
-            {specialty}
-            {physio.city ? ` · ${physio.city}` : ''}
-          </Text>
-        </View>
+      <ScreenHeader title={physio.display_name} subtitle={meta} onBack={onBack} />
 
-        <Text style={styles.sectionLabel}>Choisir un jour</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.dayRow}>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.dayRow}
+        >
           {days.map((day) => {
             const active = day.toDateString() === selectedDay.toDateString();
             return (
               <PressableSpring
                 key={day.toISOString()}
-                style={[styles.dayChip, active && styles.dayChipActive]}
+                style={[styles.pill, active && styles.pillActive]}
                 onPress={() => setSelectedDay(day)}
+                scaleTo={0.96}
               >
-                <Text style={[styles.dayChipText, active && styles.dayChipTextActive]}>
+                <Text style={[styles.pillText, active && styles.pillTextActive]}>
                   {formatAppointmentDay(day)}
                 </Text>
               </PressableSpring>
@@ -118,11 +116,10 @@ export const MedicalBookingScreen: React.FC<MedicalBookingScreenProps> = ({
           })}
         </ScrollView>
 
-        <Text style={styles.sectionLabel}>Créneaux disponibles</Text>
         {loadingSlots ? (
-          <ActivityIndicator color="#0F766E" style={styles.loader} />
+          <ActivityIndicator color={c.accent} style={styles.loader} />
         ) : slots.length === 0 ? (
-          <Text style={styles.empty}>Aucun créneau ce jour-là. Essayez une autre date.</Text>
+          <Text style={styles.empty}>Aucun créneau ce jour-là.</Text>
         ) : (
           <View style={styles.slotGrid}>
             {slots.map((slot) => {
@@ -130,8 +127,9 @@ export const MedicalBookingScreen: React.FC<MedicalBookingScreenProps> = ({
               return (
                 <PressableSpring
                   key={slot.toISOString()}
-                  style={[styles.slotChip, active && styles.slotChipActive]}
+                  style={[styles.slotPill, active && styles.slotPillActive]}
                   onPress={() => setSelectedSlot(slot)}
+                  scaleTo={0.96}
                 >
                   <Text style={[styles.slotText, active && styles.slotTextActive]}>
                     {formatSlotLabel(slot)}
@@ -142,10 +140,9 @@ export const MedicalBookingScreen: React.FC<MedicalBookingScreenProps> = ({
           </View>
         )}
 
-        <Text style={styles.sectionLabel}>Motif (optionnel)</Text>
         <TextInput
-          style={styles.motifInput}
-          placeholder="Ex. genou, bilan, mental…"
+          style={styles.noteInput}
+          placeholder="Note (optionnel)"
           placeholderTextColor={c.textMuted}
           value={motif}
           onChangeText={setMotif}
@@ -153,21 +150,17 @@ export const MedicalBookingScreen: React.FC<MedicalBookingScreenProps> = ({
         />
 
         <PressableSpring
-          style={[styles.bookBtn, (!selectedSlot || booking) && styles.bookBtnDisabled]}
+          style={[styles.confirmBtn, (!selectedSlot || booking) && styles.confirmBtnDisabled]}
           onPress={() => void handleBook()}
           disabled={!selectedSlot || booking}
+          scaleTo={0.98}
         >
           {booking ? (
             <ActivityIndicator color={c.brandInverse} />
           ) : (
-            <>
-              <Icon name="calendar" size={18} color={c.brandInverse} />
-              <Text style={styles.bookBtnText}>
-                {selectedSlot
-                  ? `Demander — ${formatSlotLabel(selectedSlot)}`
-                  : 'Sélectionnez un créneau'}
-              </Text>
-            </>
+            <Text style={styles.confirmBtnText}>
+              {selectedSlot ? 'Confirmer' : 'Choisir un créneau'}
+            </Text>
           )}
         </PressableSpring>
       </ScrollView>
@@ -178,76 +171,80 @@ export const MedicalBookingScreen: React.FC<MedicalBookingScreenProps> = ({
 function createStyles(c: AppColors) {
   return StyleSheet.create({
     root: { flex: 1 },
-    content: { padding: spacing.lg, paddingBottom: spacing.xxl },
-    hero: {
-      marginBottom: spacing.lg,
-      gap: 4,
+    content: {
+      padding: spacing.lg,
+      paddingBottom: spacing.xxl,
+      gap: spacing.lg,
     },
-    heroName: { fontSize: 20, fontWeight: '900', color: c.text },
-    heroMeta: { fontSize: 13, color: c.textMuted, fontWeight: '600' },
-    sectionLabel: {
-      fontSize: 12,
-      fontWeight: '800',
-      color: c.textMuted,
-      textTransform: 'uppercase',
-      letterSpacing: 0.8,
-      marginBottom: spacing.sm,
+    dayRow: {
+      flexDirection: 'row',
+      gap: spacing.sm,
     },
-    dayRow: { marginBottom: spacing.lg },
-    dayChip: {
+    pill: {
       paddingHorizontal: spacing.md,
-      paddingVertical: spacing.sm,
+      paddingVertical: spacing.sm + 2,
       borderRadius: radius.pill,
-      borderWidth: 1,
-      borderColor: c.border,
-      marginRight: spacing.sm,
       backgroundColor: c.surface,
     },
-    dayChipActive: { backgroundColor: '#0F766E', borderColor: '#0F766E' },
-    dayChipText: { fontSize: 12, fontWeight: '700', color: c.text },
-    dayChipTextActive: { color: c.brandInverse },
-    loader: { marginVertical: spacing.lg },
-    empty: { fontSize: 13, color: c.textMuted, fontStyle: 'italic', marginBottom: spacing.lg },
+    pillActive: { backgroundColor: c.accent },
+    pillText: {
+      fontSize: 14,
+      fontWeight: '600',
+      fontFamily: fontFamily.semibold,
+      color: c.text,
+    },
+    pillTextActive: { color: c.brandInverse },
+    loader: { marginVertical: spacing.md },
+    empty: {
+      fontSize: 15,
+      color: c.textMuted,
+      textAlign: 'center',
+      paddingVertical: spacing.lg,
+    },
     slotGrid: {
       flexDirection: 'row',
       flexWrap: 'wrap',
       gap: spacing.sm,
-      marginBottom: spacing.lg,
     },
-    slotChip: {
-      minWidth: '30%',
-      paddingVertical: spacing.sm,
-      paddingHorizontal: spacing.sm,
-      borderRadius: radius.md,
-      borderWidth: 1,
-      borderColor: c.border,
+    slotPill: {
+      paddingVertical: spacing.sm + 2,
+      paddingHorizontal: spacing.md + 4,
+      borderRadius: radius.pill,
       backgroundColor: c.surface,
+      minWidth: 72,
       alignItems: 'center',
     },
-    slotChipActive: { backgroundColor: c.accent, borderColor: c.accent },
-    slotText: { fontSize: 13, fontWeight: '800', color: c.text },
+    slotPillActive: { backgroundColor: c.accent },
+    slotText: {
+      fontSize: 15,
+      fontWeight: '600',
+      fontFamily: fontFamily.semibold,
+      color: c.text,
+    },
     slotTextActive: { color: c.brandInverse },
-    motifInput: {
-      minHeight: 88,
-      borderWidth: 1,
-      borderColor: c.border,
-      borderRadius: radius.md,
+    noteInput: {
+      minHeight: 72,
+      borderRadius: radius.lg,
       padding: spacing.md,
       color: c.text,
       backgroundColor: c.surface,
       textAlignVertical: 'top',
-      marginBottom: spacing.lg,
+      fontSize: 16,
     },
-    bookBtn: {
-      flexDirection: 'row',
+    confirmBtn: {
       alignItems: 'center',
       justifyContent: 'center',
-      gap: spacing.sm,
       backgroundColor: c.accent,
-      borderRadius: radius.lg,
-      paddingVertical: spacing.md,
+      borderRadius: radius.xl,
+      paddingVertical: spacing.md + 2,
+      marginTop: spacing.sm,
     },
-    bookBtnDisabled: { opacity: 0.5 },
-    bookBtnText: { color: c.brandInverse, fontWeight: '900', fontSize: 15 },
+    confirmBtnDisabled: { opacity: 0.45 },
+    confirmBtnText: {
+      color: c.brandInverse,
+      fontWeight: '700',
+      fontFamily: fontFamily.bold,
+      fontSize: 17,
+    },
   });
 }

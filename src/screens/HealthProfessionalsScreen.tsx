@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { useAuth } from '../context/AuthContext';
-import { useTabNavigation } from '../context/TabNavigationContext';
 import { useAppTheme } from '../context/ProductLineContext';
 import { ProDayScreenCanvas } from '../components/ui/ProDayScreenCanvas';
 import { ProDayText } from '../components/ui/ProDayText';
@@ -15,7 +14,6 @@ export const HealthProfessionalsScreen: React.FC = () => {
   const { profile } = useAuth();
   const { colors } = useAppTheme();
   const [bookingPhysio, setBookingPhysio] = useState<import('../models/User').User | null>(null);
-  const { openChat, setActiveTab } = useTabNavigation();
 
   if (!profile || profile.role !== 'player') {
     return (
@@ -33,12 +31,7 @@ export const HealthProfessionalsScreen: React.FC = () => {
 
   return (
     <ProDayScreenCanvas flat>
-      <HealthHomeScreen
-        profile={profile}
-        onOpenChat={(threadId) => openChat(threadId)}
-        onOpenMessages={() => setActiveTab('messages')}
-        onBookPhysio={setBookingPhysio}
-      />
+      <HealthHomeScreen onBookPhysio={setBookingPhysio} />
 
       <PushScreenTransition active={bookingPhysio != null}>
         {bookingPhysio ? (
