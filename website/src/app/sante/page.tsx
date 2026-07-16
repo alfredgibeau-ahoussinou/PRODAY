@@ -42,7 +42,7 @@ export default function SantePage() {
       >
         <div className="flex flex-wrap gap-4">
           <PremiumButton
-            href={ROUTES.betaWaitlist}
+            href={`${ROUTES.betaWaitlist}?role=physio`}
             className="!bg-teal-600 !text-white hover:!bg-teal-500"
           >
             Accès anticipé Santé
@@ -106,7 +106,7 @@ export default function SantePage() {
         pole="sante"
       >
         <div className="text-center">
-          <PremiumButton href={ROUTES.betaWaitlist} className="!bg-teal-600 hover:!bg-teal-500">
+          <PremiumButton href={`${ROUTES.betaWaitlist}?role=physio`} className="!bg-teal-600 hover:!bg-teal-500">
             Accès anticipé
           </PremiumButton>
         </div>

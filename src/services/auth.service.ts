@@ -55,7 +55,7 @@ export class AuthEmailSendError extends Error {
   }
 }
 
-async function tryCustomVerificationEmail(): Promise<boolean> {
+async function tryCustomVerificationEmail(user: FirebaseAuthUser): Promise<boolean> {
   try {
     const result = await callFunction<Record<string, never>, AuthEmailCallableResult>(
       'sendAuthVerificationEmail',
@@ -63,7 +63,9 @@ async function tryCustomVerificationEmail(): Promise<boolean> {
       AUTH_EMAIL_FUNCTIONS_REGION
     );
     const strategy = resolveAuthEmailSendStrategy(result);
-    if (strategy === 'custom-sent' || strategy === 'skip') return true;
+    if (strategy === 'custom-sent') return true;
+    // Ne pas traiter « skip » comme un envoi réussi tant que Firebase Auth n’a pas confirmé.
+    if (strategy === 'skip' && user.emailVerified) return true;
   } catch (e) {
     // Ne pas retomber sur sendEmailVerification() si la callable a répondu :
     // double appel = rate-limit Firebase (TOO_MANY_ATTEMPTS_TRY_LATER).
@@ -78,7 +80,7 @@ async function tryCustomVerificationEmail(): Promise<boolean> {
 }
 
 async function sendVerificationEmailForUser(user: FirebaseAuthUser): Promise<void> {
-  const customSent = await tryCustomVerificationEmail();
+  const customSent = await tryCustomVerificationEmail(user);
   if (customSent) return;
 
   try {

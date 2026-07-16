@@ -21,6 +21,8 @@ const RESEND_COOLDOWN_SEC = 60;
 interface EmailVerificationScreenProps {
   uid: string;
   email: string;
+  /** Copie adaptée praticiens Santé (sans mention documents joueur). */
+  variant?: 'default' | 'practitioner';
   onCheckVerified: () => Promise<boolean>;
   onResend: () => Promise<void>;
   onSignOut: () => Promise<void>;
@@ -29,6 +31,7 @@ interface EmailVerificationScreenProps {
 export const EmailVerificationScreen: React.FC<EmailVerificationScreenProps> = ({
   uid,
   email,
+  variant = 'default',
   onCheckVerified,
   onResend,
   onSignOut,
@@ -127,12 +130,15 @@ export const EmailVerificationScreen: React.FC<EmailVerificationScreenProps> = (
         </View>
         <Text style={styles.title}>Vérifiez votre email</Text>
         <Text style={styles.subtitle}>
-          Étape 2 — Vos documents ont été analysés par l’IA. Confirmez maintenant{'\n'}
+          {variant === 'practitioner'
+            ? 'Confirmez votre adresse pour activer votre espace Pro Day Santé —\n'
+            : 'Étape 2 — Vos documents ont été analysés par l’IA. Confirmez maintenant{'\n'}'}
           <Text style={styles.email}>{email}</Text>
         </Text>
         <Text style={styles.body}>
-          Ouvrez le mail ProDay et cliquez sur le lien. Cette étape sécurise votre compte après la
-          vérification documentaire.
+          {variant === 'practitioner'
+            ? 'Ouvrez le mail ProDay et cliquez sur le lien de confirmation. Cette étape sécurise votre compte praticien avant l’accès à l’agenda et aux rendez-vous.'
+            : 'Ouvrez le mail ProDay et cliquez sur le lien. Cette étape sécurise votre compte après la vérification documentaire.'}
         </Text>
 
         {error ? (

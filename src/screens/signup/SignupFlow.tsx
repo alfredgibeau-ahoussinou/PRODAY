@@ -38,6 +38,7 @@ import { getSupporterLaunchCopy } from './signupSupporterConfig';
 import { getSanteLaunchCopy } from './signupSanteConfig';
 import { useTranslation } from '../../context/LocaleContext';
 import type { UserRole } from '../../models/User';
+import { needsOnboardingDocumentUpload } from '../../utils/onboardingGate';
 
 interface SignupFlowProps {
   onClose: () => void;
@@ -159,7 +160,7 @@ const SignupFlowInner: React.FC<SignupFlowInnerProps> = ({
         profile?.verification_status === 'PENDING' ||
         form.role === 'player' ||
         ROLES_REQUIRING_VERIFICATION.includes(form.role) ||
-        form.role === 'physio';
+        (profile != null && needsOnboardingDocumentUpload(profile));
 
       const copy = isSanteSignup
         ? getSanteLaunchCopy(

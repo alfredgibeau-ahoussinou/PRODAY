@@ -695,6 +695,11 @@ export function useSignupForm(initial?: {
       setLoading(true);
       clearErrors();
       try {
+        if (isSanteProduct) await setProductLine('sante');
+        else if (isAmateurProduct) await setProductLine('amateur');
+        else if (isSupporterProduct) await setProductLine('supporter');
+        else if (isProProduct) await setProductLine(resolveSignupProductLine(productLine, role));
+
         const common = {
           email,
           display_name: displayName,
@@ -774,10 +779,6 @@ export function useSignupForm(initial?: {
             message: professionalHeadline.trim() || undefined,
           });
         }
-        if (isSanteProduct) await setProductLine('sante');
-        else if (isAmateurProduct) await setProductLine('amateur');
-        else if (isSupporterProduct) await setProductLine('supporter');
-        else if (isProProduct) await setProductLine(resolveSignupProductLine(productLine, role));
         setCreatedDisplayName(user.display_name);
         setCreatedWithEmailPassword(!isOAuthCompletion);
         setAccountCreated(true);

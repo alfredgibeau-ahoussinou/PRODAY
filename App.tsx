@@ -227,6 +227,7 @@ function AppShell() {
       <EmailVerificationScreen
         uid={profile.uid}
         email={profile.email}
+        variant={profile.role === 'physio' ? 'practitioner' : 'default'}
         onCheckVerified={refreshFirebaseUser}
         onResend={resendEmailVerification}
         onSignOut={signOut}
