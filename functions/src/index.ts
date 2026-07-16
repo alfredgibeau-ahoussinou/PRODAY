@@ -16,6 +16,11 @@ import {
   createAdminResendBetaWelcomeEmailHandler,
   createAdminDeleteBetaWaitlistEntryHandler,
 } from './betaWaitlistAdmin';
+import { createSubmitSponsorQuoteRequestHandler } from './sponsorQuoteRequest';
+import {
+  createAdminSendSponsorQuoteHandler,
+  createAdminRejectSponsorQuoteHandler,
+} from './sponsorQuoteAdmin';
 import { onV3BrainWrite } from './v3Brain';
 import { activateStoreSubscription } from './subscriptionIap';
 import {
@@ -737,4 +742,19 @@ export const adminResendBetaWelcomeEmail = functions
 export const adminDeleteBetaWaitlistEntry = functions
   .region('europe-west1')
   .https.onCall(createAdminDeleteBetaWaitlistEntryHandler(db));
+
+/** Demande de devis sponsor — site vitrine / app mobile. */
+export const submitSponsorQuoteRequest = functions
+  .region('europe-west1')
+  .https.onRequest(createSubmitSponsorQuoteRequestHandler(db));
+
+/** Envoie un devis sponsor personnalisé — admin uniquement. */
+export const adminSendSponsorQuote = functions
+  .region('europe-west1')
+  .https.onCall(createAdminSendSponsorQuoteHandler(db));
+
+/** Refuse une demande de devis sponsor — admin uniquement. */
+export const adminRejectSponsorQuote = functions
+  .region('europe-west1')
+  .https.onCall(createAdminRejectSponsorQuoteHandler(db));
 

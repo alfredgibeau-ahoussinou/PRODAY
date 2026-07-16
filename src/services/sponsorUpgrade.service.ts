@@ -14,6 +14,7 @@ import {
 } from 'firebase/firestore';
 import { getDb } from '../lib/firebase';
 import { isFirebaseConfigured } from '../config/firebase';
+import { sponsorQuoteService } from './sponsorQuote.service';
 import type {
   SponsorUpgradeRequest,
   SponsorUpgradeRequestStatus,
@@ -58,6 +59,9 @@ export const sponsorUpgradeService = {
     tier?: SponsorUpgradeTier;
     company: string;
     city: string;
+    contactEmail?: string;
+    contactName?: string;
+    phone?: string;
   }): Promise<{ ok: boolean; messageKey: string }> {
     if (!isFirebaseConfigured()) {
       return { ok: false, messageKey: 'sponsor.upgrade.error.firebase' };
@@ -99,6 +103,19 @@ export const sponsorUpgradeService = {
       status: 'pending',
       created_at: serverTimestamp(),
     });
+
+    void sponsorQuoteService
+      .submitQuoteRequest({
+        companyName: company,
+        contactEmail: input.contactEmail ?? '',
+        contactName: input.contactName ?? company,
+        phone: input.phone,
+        packageTier: tier === 'territorial' ? 'territorial' : 'custom',
+        message: `Demande commerciale depuis l'app — ${city}`,
+        source: 'app',
+        sponsorUid: input.sponsorUid,
+      })
+      .catch(() => undefined);
 
     return { ok: true, messageKey: 'sponsor.upgrade.success.pending' };
   },

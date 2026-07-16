@@ -22,6 +22,7 @@ export type AdminAuditAction =
   | 'beta_approved'
   | 'beta_rejected'
   | 'beta_deleted'
+  | 'sponsor_quote_sent'
   | 'other';
 
 export interface AdminAuditEntry {

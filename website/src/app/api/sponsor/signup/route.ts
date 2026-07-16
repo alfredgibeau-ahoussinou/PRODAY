@@ -62,6 +62,42 @@ function formatSponsorSummary(payload: SponsorSignupPayload): string {
   return lines.join("\n");
 }
 
+async function submitSponsorQuoteRequest(
+  payload: SponsorSignupPayload & { packageTier?: string },
+): Promise<{ ok: boolean; status?: number; error?: string }> {
+  const functionUrl = process.env.SPONSOR_QUOTE_FUNCTION_URL?.trim();
+  if (!functionUrl) {
+    return { ok: false, error: "Service devis non configuré" };
+  }
+
+  const upstream = await fetch(functionUrl, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      companyName: payload.companyName,
+      contactEmail: payload.email,
+      contactName: payload.contactName,
+      phone: payload.phone,
+      budget: payload.budget,
+      goals: payload.goals,
+      audience: payload.audience,
+      regions: payload.regions,
+      sports: payload.sports,
+      message: payload.message,
+      packageTier: payload.packageTier ?? "custom",
+      sector: payload.sector,
+      source: "website",
+    }),
+  });
+
+  if (!upstream.ok) {
+    const data = (await upstream.json().catch(() => ({}))) as { error?: string };
+    return { ok: false, status: upstream.status, error: data.error ?? "Enregistrement devis impossible" };
+  }
+
+  return { ok: true };
+}
+
 async function submitBetaWaitlist(email: string): Promise<{ ok: boolean; status?: number; error?: string }> {
   const functionUrl = process.env.BETA_WAITLIST_FUNCTION_URL?.trim();
   if (!functionUrl) {
@@ -146,7 +182,7 @@ export async function POST(request: Request) {
     return jsonResponse({ error: "Corps JSON invalide" }, { status: 400 });
   }
 
-  const payload: SponsorSignupPayload = {
+  const payload: SponsorSignupPayload & { packageTier?: string } = {
     companyName: trimStr(body.companyName),
     sector: trimStr(body.sector),
     contactName: trimStr(body.contactName),
@@ -159,6 +195,7 @@ export async function POST(request: Request) {
     phone: trimStr(body.phone, 32),
     logoFileName: body.logoFileName ? trimStr(body.logoFileName, 128) : undefined,
     message: body.message ? trimStr(body.message, MAX_MESSAGE) : undefined,
+    packageTier: trimStr(body.packageTier ?? body.package_tier, 32) || "custom",
   };
 
   if (!payload.companyName || !payload.sector || !payload.contactName) {
@@ -179,6 +216,14 @@ export async function POST(request: Request) {
     return jsonResponse(
       { error: beta.error ?? "Inscription impossible" },
       { status: beta.status ?? 502 },
+    );
+  }
+
+  const quote = await submitSponsorQuoteRequest(payload);
+  if (!quote.ok && quote.status !== 503) {
+    return jsonResponse(
+      { error: quote.error ?? "Enregistrement devis impossible" },
+      { status: quote.status ?? 502 },
     );
   }
 

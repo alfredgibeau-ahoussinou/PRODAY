@@ -139,6 +139,7 @@ export type SponsorSignupPayload = {
   phone: string;
   logoFileName?: string;
   message?: string;
+  packageTier?: "starter" | "territorial" | "national" | "custom";
 };
 
 export const SPONSOR_FAQ = [

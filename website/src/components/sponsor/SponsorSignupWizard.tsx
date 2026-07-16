@@ -2,7 +2,8 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import { Building2, Check, ChevronLeft, ChevronRight, Loader2, Sparkles } from "lucide-react";
-import { useCallback, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   SPONSOR_BUDGET_RANGES,
   SPONSOR_CAMPAIGN_GOALS,
@@ -174,6 +175,17 @@ function stepValid(step: StepId, form: FormState): boolean {
 }
 
 export function SponsorSignupWizard() {
+  const searchParams = useSearchParams();
+  const packageFromUrl = searchParams.get("package");
+  const [packageTier, setPackageTier] = useState<
+    "starter" | "territorial" | "national" | "custom"
+  >(
+    packageFromUrl === "starter" ||
+      packageFromUrl === "territorial" ||
+      packageFromUrl === "national"
+      ? packageFromUrl
+      : "custom",
+  );
   const [stepIndex, setStepIndex] = useState(0);
   const [form, setForm] = useState<FormState>(INITIAL);
   const [submitState, setSubmitState] = useState<SubmitState>("idle");
@@ -185,6 +197,29 @@ export function SponsorSignupWizard() {
   const patch = useCallback((partial: Partial<FormState>) => {
     setForm((prev) => ({ ...prev, ...partial }));
   }, []);
+
+  useEffect(() => {
+    if (
+      packageFromUrl === "starter" ||
+      packageFromUrl === "territorial" ||
+      packageFromUrl === "national"
+    ) {
+      setPackageTier(packageFromUrl);
+    }
+  }, [packageFromUrl]);
+
+  const packageLabel = useMemo(() => {
+    switch (packageTier) {
+      case "starter":
+        return "Découverte";
+      case "territorial":
+        return "Territorial";
+      case "national":
+        return "National Pro";
+      default:
+        return "Sur-mesure";
+    }
+  }, [packageTier]);
 
   const canProceed = useMemo(() => stepValid(step.id, form), [step.id, form]);
 
@@ -216,6 +251,7 @@ export function SponsorSignupWizard() {
       phone: form.phone.trim(),
       logoFileName: form.logoFile?.name,
       message: form.message.trim() || undefined,
+      packageTier,
     };
 
     try {
@@ -492,6 +528,7 @@ export function SponsorSignupWizard() {
                 </div>
                 <dl className="grid gap-4 sm:grid-cols-2">
                   {[
+                    ["Formule", packageLabel],
                     ["Marque", form.companyName],
                     ["Secteur", form.sector],
                     ["Contact", form.contactName],

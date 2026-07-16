@@ -20,6 +20,7 @@ const FILTERS: { id: InboxFilter; label: string }[] = [
   { id: 'report', label: 'Signalements' },
   { id: 'payment', label: 'Paiements' },
   { id: 'application', label: 'Candidatures' },
+  { id: 'quote', label: 'Devis' },
 ];
 
 export const AdminInboxPage: React.FC<AdminInboxPageProps> = ({ onNavigate }) => {

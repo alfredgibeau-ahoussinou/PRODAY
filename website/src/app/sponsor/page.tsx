@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { PageCtaBand } from "@/components/layout/PageCtaBand";
 import { PremiumSection } from "@/components/layout/PremiumSection";
@@ -79,7 +80,9 @@ export default function SponsorPolePage() {
         centered={false}
       >
         <div className="mx-auto max-w-3xl">
-          <SponsorSignupWizard />
+          <Suspense fallback={<div className="py-12 text-center text-white/50">Chargement du formulaire…</div>}>
+            <SponsorSignupWizard />
+          </Suspense>
         </div>
         <p className="mx-auto mt-8 max-w-3xl text-center text-sm text-white/40">
           Vous préférez un échange direct ?{" "}

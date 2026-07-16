@@ -16,6 +16,7 @@ import type { FriendlyMatch } from '../models/FriendlyMatch';
 import type { SponsorOffer, ClubFundingGoal } from '../models/SponsorOffer';
 import type { CommunityReel } from '../models/CommunityReel';
 import type { ReelReport } from '../models/ReelReport';
+import type { SponsorQuoteRequest } from '../models/SponsorQuoteRequest';
 import {
   adminService,
   type PlatformStats,
@@ -28,6 +29,7 @@ import {
   moderationLoadScore,
   type AdminWorkItem,
 } from '../utils/adminInsights';
+import { sponsorQuoteService } from '../services/sponsorQuote.service';
 
 interface AdminDataContextValue {
   loading: boolean;
@@ -50,6 +52,7 @@ interface AdminDataContextValue {
   fundingGoals: ClubFundingGoal[];
   communityReels: CommunityReel[];
   reelReports: ReelReport[];
+  sponsorQuoteRequests: SponsorQuoteRequest[];
   userDocCounts: Record<string, number>;
   refresh: () => Promise<void>;
 }
@@ -76,10 +79,11 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({
   const [fundingGoals, setFundingGoals] = useState<ClubFundingGoal[]>([]);
   const [communityReels, setCommunityReels] = useState<CommunityReel[]>([]);
   const [reelReports, setReelReports] = useState<ReelReport[]>([]);
+  const [sponsorQuoteRequests, setSponsorQuoteRequests] = useState<SponsorQuoteRequest[]>([]);
   const [userDocCounts, setUserDocCounts] = useState<Record<string, number>>({});
 
   const load = useCallback(async () => {
-    const [s, u, e, m, p, c, pay, apps, ann, so, fg, reels, reports, snapshots] =
+    const [s, u, e, m, p, c, pay, apps, ann, so, fg, reels, reports, snapshots, quotes] =
       await Promise.all([
         adminService.getPlatformStats(),
         adminService.listAllUsers(),
@@ -95,6 +99,7 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({
         adminService.listCommunityReels(),
         adminService.listReelReports(),
         adminService.listDailyPlatformSnapshots(14),
+        sponsorQuoteService.listForAdmin('pending', 30),
       ]);
     setStats(s);
     setDailySnapshots(snapshots);
@@ -110,6 +115,7 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({
     setFundingGoals(fg);
     setCommunityReels(reels);
     setReelReports(reports);
+    setSponsorQuoteRequests(quotes);
     setLastRefreshedAt(new Date());
 
     const pendingReview = u.filter((x) => userNeedsAdminVerificationReview(x));
@@ -148,8 +154,9 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({
         payments,
         applications,
         posts,
+        sponsorQuotes: sponsorQuoteRequests,
       }),
-    [users, communityReels, reelReports, payments, applications, posts],
+    [users, communityReels, reelReports, payments, applications, posts, sponsorQuoteRequests],
   );
 
   const roleBreakdown = useMemo(() => computeRoleBreakdown(users), [users]);
@@ -180,6 +187,7 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({
       fundingGoals,
       communityReels,
       reelReports,
+      sponsorQuoteRequests,
       userDocCounts,
       refresh,
     }),
@@ -204,6 +212,7 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({
       fundingGoals,
       communityReels,
       reelReports,
+      sponsorQuoteRequests,
       userDocCounts,
       refresh,
     ],

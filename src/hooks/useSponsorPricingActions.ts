@@ -38,6 +38,9 @@ export function useSponsorPricingActions() {
       sponsorUid: profile.uid,
       company: profile.display_name,
       city: profile.city ?? '',
+      contactEmail: profile.email,
+      contactName: profile.display_name,
+      phone: profile.phone,
     });
 
     Alert.alert(

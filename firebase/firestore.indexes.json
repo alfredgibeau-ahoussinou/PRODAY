@@ -197,6 +197,14 @@
         { "fieldPath": "physio_uid", "order": "ASCENDING" },
         { "fieldPath": "start_at", "order": "ASCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "sponsor_quote_requests",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "created_at", "order": "DESCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []

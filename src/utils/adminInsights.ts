@@ -2,6 +2,7 @@ import type { User, UserRole } from '../models/User';
 import type { PlatformStats } from '../services/admin.service';
 import type { AdminMainTabId, AdminContentSegment } from '../navigation/adminTabConfig';
 import type { Application, RecruitmentPost } from '../models/Player';
+import type { SponsorQuoteRequest } from '../models/SponsorQuoteRequest';
 import type { CommunityReel } from '../models/CommunityReel';
 import type { ReelReport } from '../models/ReelReport';
 import type { TeamPaymentRequest } from '../models/TeamFinance';
@@ -11,7 +12,7 @@ export type AdminWorkPriority = 'critical' | 'high' | 'medium' | 'low';
 
 export type AdminWorkItem = {
   id: string;
-  kind: 'verification' | 'reel' | 'report' | 'payment' | 'application' | 'post';
+  kind: 'verification' | 'reel' | 'report' | 'payment' | 'application' | 'post' | 'quote';
   priority: AdminWorkPriority;
   title: string;
   subtitle: string;
@@ -50,6 +51,7 @@ export function buildAdminWorkQueue(input: {
   payments: TeamPaymentRequest[];
   applications: Application[];
   posts: RecruitmentPost[];
+  sponsorQuotes?: SponsorQuoteRequest[];
 }): AdminWorkItem[] {
   const items: AdminWorkItem[] = [];
 
@@ -121,6 +123,20 @@ export function buildAdminWorkQueue(input: {
     });
   }
 
+  for (const quote of (input.sponsorQuotes ?? []).filter((q) => q.status === 'pending')) {
+    items.push({
+      id: `quote-${quote.id}`,
+      kind: 'quote',
+      priority: 'high',
+      title: `Devis sponsor · ${quote.company_name}`,
+      subtitle: `${quote.contact_name} · ${quote.contact_email}`,
+      meta: quote.package_tier,
+      targetTab: 'plateforme',
+      contentSegment: 'sponsors',
+      createdAt: quote.created_at,
+    });
+  }
+
   return items.sort((a, b) => {
     const p = PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority];
     if (p !== 0) return p;
@@ -138,6 +154,7 @@ export function countWorkByKind(items: AdminWorkItem[]): Record<AdminWorkItem['k
     payment: 0,
     application: 0,
     post: 0,
+    quote: 0,
   };
   for (const item of items) base[item.kind] += 1;
   return base;

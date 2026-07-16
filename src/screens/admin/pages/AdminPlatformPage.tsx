@@ -12,6 +12,7 @@ import { AdminEmptyState } from '../../../components/admin/AdminEmptyState';
 import { AdminFilterChips } from '../../../components/admin/AdminFilterChips';
 import { AdminKpiStrip } from '../../../components/admin/AdminKpiStrip';
 import { AdminPlatformFeedPanel } from '../../../components/admin/AdminPlatformFeedPanel';
+import { AdminSponsorQuotePanel } from '../../../components/admin/AdminSponsorQuotePanel';
 import { adminConfirmDelete } from '../../../utils/adminConfirm';
 import { formatCalendarDate } from '../../../utils/seasonCalendar';
 import { useAdminStyles } from '../../../components/admin/adminStyles';
@@ -314,6 +315,7 @@ export const AdminPlatformPage: React.FC<AdminPlatformPageProps> = ({
 
       {segment === 'sponsors' && (
         <>
+          <AdminSponsorQuotePanel />
           <AdminSectionHeader title={t('admin.upgrade.section')} count={upgradeRequests.length} />
           {upgradeRequests.length === 0 ? (
             <AdminEmptyState

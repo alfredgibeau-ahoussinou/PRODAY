@@ -826,6 +826,12 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    /** Demandes de devis sponsor — création serveur, lecture/admin envoi */
+    match /sponsor_quote_requests/{requestId} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
     /** Rendez-vous pôle santé — praticien ↔ joueur */
     match /medical_appointments/{appointmentId} {
       allow read: if isAdmin()

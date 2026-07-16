@@ -1,0 +1,34 @@
+<!--
+  ProDay — Email devis sponsor (envoi admin)
+  Transport : Brevo via functions/src/sponsorQuoteAdmin.ts
+
+  Variables dynamiques (générées côté serveur) :
+  - contactName, companyName, packageTier, budget, goals, regions
+
+  L'admin peut personnaliser subject + htmlBody avant envoi depuis l'app Admin.
+-->
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Votre devis ProDay Sponsor</title>
+</head>
+<body style="margin:0;padding:0;background:#0a0f1a;font-family:Arial,Helvetica,sans-serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0a0f1a;padding:32px 16px;">
+    <tr><td align="center">
+      <table role="presentation" width="600" style="max-width:600px;background:#111827;border-radius:16px;border:1px solid #1e293b;">
+        <tr><td style="padding:32px;border-bottom:1px solid #1e293b;text-align:center;">
+          <p style="margin:0;font-size:24px;font-weight:700;letter-spacing:0.12em;color:#fff;">PRO<span style="color:#22d3ee;">DAY</span></p>
+          <p style="margin:8px 0 0;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#64748b;">Partenaires &amp; Sponsors</p>
+        </td></tr>
+        <tr><td style="padding:32px;color:#e2e8f0;font-size:15px;line-height:1.65;">
+          <p>Bonjour,</p>
+          <p>Merci pour votre intérêt pour <strong>ProDay Sponsor</strong>.</p>
+          <p>Cordialement,<br/>L'équipe ProDay Partenaires</p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>
