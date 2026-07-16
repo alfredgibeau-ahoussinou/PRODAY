@@ -27,13 +27,14 @@ import { onTeamEventUpdated, syncTeamEventActivities } from './teamEventActivity
 import { analyzeActivityHighlight } from './analyzeActivityHighlight';
 import { sendAuthPasswordResetEmail, sendAuthVerificationEmail } from './authCustomEmails';
 import {
-  onMedicalAppointmentCreatedHandler,
-  onMedicalAppointmentUpdatedHandler,
+  onMedicalAppointmentCreated,
+  onMedicalAppointmentUpdated,
 } from './appointmentEmail';
 
 export { createPaymentCheckoutSession, stripeWebhook, createShopCheckoutSession };
 export { sendAuthVerificationEmail, sendAuthPasswordResetEmail };
 export { onSponsorOfferCreated, onSponsorOfferUpdated, notifySponsorOfferInCityCallable };
+export { onMedicalAppointmentCreated, onMedicalAppointmentUpdated };
 export { onTeamEventUpdated, syncTeamEventActivities };
 export { analyzeActivityHighlight };
 export { activateStoreSubscription };
@@ -737,13 +738,3 @@ export const adminDeleteBetaWaitlistEntry = functions
   .region('europe-west1')
   .https.onCall(createAdminDeleteBetaWaitlistEntryHandler(db));
 
-/** E-mails rendez-vous pôle Santé (Brevo). */
-export const onMedicalAppointmentCreated = functions
-  .region('europe-west1')
-  .firestore.document('medical_appointments/{appointmentId}')
-  .onCreate(onMedicalAppointmentCreatedHandler);
-
-export const onMedicalAppointmentUpdated = functions
-  .region('europe-west1')
-  .firestore.document('medical_appointments/{appointmentId}')
-  .onUpdate(onMedicalAppointmentUpdatedHandler);

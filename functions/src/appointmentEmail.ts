@@ -1,4 +1,5 @@
 import * as functions from 'firebase-functions';
+import { onDocumentCreated, onDocumentUpdated } from 'firebase-functions/v2/firestore';
 import * as admin from 'firebase-admin';
 import { admin as firebaseAdmin } from './firebaseAdmin';
 import {
@@ -276,3 +277,29 @@ export async function onMedicalAppointmentUpdatedHandler(
     );
   }
 }
+
+const firestoreTriggerOptions = {
+  document: 'medical_appointments/{appointmentId}',
+  region: 'europe-west1',
+} as const;
+
+/** Nouveau rendez-vous → email praticien + patient (Gen2, europe-west1). */
+export const onMedicalAppointmentCreated = onDocumentCreated(
+  firestoreTriggerOptions,
+  async (event) => {
+    const snap = event.data;
+    if (!snap) return;
+    await onMedicalAppointmentCreatedHandler(snap);
+  }
+);
+
+/** Changement de statut → email patient confirmé / annulé (Gen2, europe-west1). */
+export const onMedicalAppointmentUpdated = onDocumentUpdated(
+  firestoreTriggerOptions,
+  async (event) => {
+    const before = event.data?.before;
+    const after = event.data?.after;
+    if (!before || !after) return;
+    await onMedicalAppointmentUpdatedHandler({ before, after });
+  }
+);
