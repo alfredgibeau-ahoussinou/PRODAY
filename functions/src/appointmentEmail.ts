@@ -1,7 +1,12 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
 import { admin as firebaseAdmin } from './firebaseAdmin';
-import { getEmailJsConfig, sendEmailViaEmailJs } from './emailJsClient';
+import {
+  buildAppointmentPlainText,
+  renderAppointmentEmailHtml,
+} from './appointmentEmailTemplate';
+import { getEmailJsConfig } from './emailJsClient';
+import { isBrevoConfigured, sendTransactionalEmail } from './emailTransport';
 
 export type AppointmentEmailKind =
   | 'booking_request_physio'
@@ -158,16 +163,25 @@ async function sendAppointmentEmail(
   to: string,
   params: Record<string, string>
 ): Promise<boolean> {
-  const config = getEmailJsConfig('appointment');
-  if (!config) {
-    console.warn('[appointmentEmail] EmailJS non configuré (appointment.emailjs_template_id)');
+  const emailJs = getEmailJsConfig('appointment');
+  if (!isBrevoConfigured() && !emailJs) {
+    console.warn(
+      '[appointmentEmail] Transport non configuré (email.brevo_api_key ou appointment.emailjs_template_id)'
+    );
     return false;
   }
+
+  const html = renderAppointmentEmailHtml(params);
+  const text = buildAppointmentPlainText(params);
+
   try {
-    await sendEmailViaEmailJs(config, params);
+    await sendTransactionalEmail(
+      { to, subject: params.subject, html, text },
+      emailJs ? { config: emailJs, templateParams: params } : undefined
+    );
     return true;
   } catch (e) {
-    console.error('[appointmentEmail] EmailJS:', e);
+    console.error('[appointmentEmail] Envoi email:', e);
     return false;
   }
 }

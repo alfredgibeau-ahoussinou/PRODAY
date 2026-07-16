@@ -3,10 +3,11 @@ import { buildAuthEmailJsTemplateParams } from './authEmailJsParams';
 import {
   getAuthEmailJsConfig,
   isAuthEmailJsLegacyUnifiedTemplate,
-  sendEmailViaEmailJs,
   type AuthEmailJsKind,
   type EmailJsConfig,
 } from './emailJsClient';
+import { getBrevoConfig } from './brevoEmailClient';
+import { sendTransactionalEmail } from './emailTransport';
 
 export type AuthEmailPayload = {
   to: string;
@@ -24,9 +25,10 @@ export function getEmailJsAuthConfig(kind: AuthEmailJsKind): EmailJsAuthConfig |
 export { buildAuthEmailJsTemplateParams } from './authEmailJsParams';
 
 export function hasAuthEmailTransport(): boolean {
+  if (getBrevoConfig()) return true;
   return (
-    getEmailJsAuthConfig('verification') !== null ||
-    getEmailJsAuthConfig('password-reset') !== null
+    getAuthEmailJsConfig('verification') !== null ||
+    getAuthEmailJsConfig('password-reset') !== null
   );
 }
 
@@ -38,8 +40,7 @@ export function isAuthCustomEmailEnabled(): boolean {
   return hasAuthEmailTransport();
 }
 
-export async function sendAuthEmailViaEmailJs(
-  config: EmailJsAuthConfig,
+export async function sendAuthEmail(
   payload: AuthEmailPayload,
   link: string,
   options?: { displayName?: string; siteUrl?: string; kind?: AuthEmailJsKind }
@@ -50,13 +51,29 @@ export async function sendAuthEmailViaEmailJs(
     (functions.config().beta?.site_url as string | undefined)?.trim() ||
     'https://proday75.fr';
 
-  await sendEmailViaEmailJs(
-    config,
-    buildAuthEmailJsTemplateParams(payload, link, {
-      displayName: options?.displayName,
-      siteUrl: options?.siteUrl ?? authSiteUrl,
-      kind,
-      legacyUnifiedTemplate: isAuthEmailJsLegacyUnifiedTemplate(kind),
-    })
-  );
+  const emailJs = getAuthEmailJsConfig(kind);
+  const emailJsFallback = emailJs
+    ? {
+        config: emailJs,
+        templateParams: buildAuthEmailJsTemplateParams(payload, link, {
+          displayName: options?.displayName,
+          siteUrl: options?.siteUrl ?? authSiteUrl,
+          kind,
+          legacyUnifiedTemplate: isAuthEmailJsLegacyUnifiedTemplate(kind),
+        }),
+      }
+    : undefined;
+
+  await sendTransactionalEmail(payload, emailJsFallback);
+}
+
+/** @deprecated Utiliser sendAuthEmail — conservé pour compatibilité interne. */
+export async function sendAuthEmailViaEmailJs(
+  config: EmailJsAuthConfig,
+  payload: AuthEmailPayload,
+  link: string,
+  options?: { displayName?: string; siteUrl?: string; kind?: AuthEmailJsKind }
+): Promise<void> {
+  await sendAuthEmail(payload, link, options);
+  void config;
 }

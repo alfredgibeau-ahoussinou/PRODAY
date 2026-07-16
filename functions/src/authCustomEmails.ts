@@ -2,10 +2,9 @@ import * as functions from 'firebase-functions';
 import { admin } from './firebaseAdmin';
 import { renderAuthEmailTemplate } from './authEmailTemplates';
 import {
-  getEmailJsAuthConfig,
   hasAuthEmailTransport,
   isAuthCustomEmailEnabled,
-  sendAuthEmailViaEmailJs,
+  sendAuthEmail,
 } from './authEmailTransport';
 
 const APP_NAME = 'ProDay';
@@ -93,9 +92,6 @@ async function sendAuthActionEmail(
   if (!isAuthCustomEmailEnabled()) return disabledResult();
   if (!hasAuthEmailTransport()) return disabledResult();
 
-  const emailJs = getEmailJsAuthConfig(kind);
-  if (!emailJs) return disabledResult();
-
   const normalizedEmail = email.trim().toLowerCase();
   const link =
     kind === 'verification'
@@ -112,11 +108,11 @@ async function sendAuthActionEmail(
   const payload = { to: normalizedEmail, subject, html, text };
 
   try {
-    await sendAuthEmailViaEmailJs(emailJs, payload, link, { displayName, kind });
+    await sendAuthEmail(payload, link, { displayName, kind });
     return { enabled: true, sent: true };
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
-    console.error('[authCustomEmails] EmailJS failed:', msg);
+    console.error('[authCustomEmails] Envoi email failed:', msg);
     console.warn('[authCustomEmails] Client will use Firebase Auth native email');
     return disabledResult();
   }

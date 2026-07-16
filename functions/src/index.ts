@@ -737,7 +737,7 @@ export const adminDeleteBetaWaitlistEntry = functions
   .region('europe-west1')
   .https.onCall(createAdminDeleteBetaWaitlistEntryHandler(db));
 
-/** E-mails rendez-vous pôle Santé (EmailJS). */
+/** E-mails rendez-vous pôle Santé (Brevo). */
 export const onMedicalAppointmentCreated = functions
   .region('europe-west1')
   .firestore.document('medical_appointments/{appointmentId}')

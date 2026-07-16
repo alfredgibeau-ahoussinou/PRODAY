@@ -1,10 +1,12 @@
 import * as admin from 'firebase-admin';
 import * as functions from 'firebase-functions';
 import {
-  sendBetaWelcomeEmailViaEmailJs,
+  buildBetaEmailJsTemplateParams,
+  buildBetaWelcomeEmail,
   type EmailJsBetaConfig,
 } from './betaWaitlistEmail';
 import { getEmailJsConfig } from './emailJsClient';
+import { isBrevoConfigured, sendTransactionalEmail } from './emailTransport';
 
 export function getBetaEmailJsConfig(): EmailJsBetaConfig | null {
   return getEmailJsConfig('beta');
@@ -27,24 +29,33 @@ export async function sendBetaWelcomeEmailToEntry(
 ): Promise<BetaWelcomeSendResult> {
   const siteUrl = getBetaSiteUrl();
   const welcomeParams = { email, roleLabel, siteUrl, accessToken };
+  const { subject, html, text } = buildBetaWelcomeEmail(welcomeParams);
   const emailJs = getBetaEmailJsConfig();
 
-  if (emailJs) {
-    try {
-      await sendBetaWelcomeEmailViaEmailJs(emailJs, welcomeParams);
-      return { emailSent: true };
-    } catch (e) {
-      const emailError = e instanceof Error ? e.message : 'Envoi email impossible';
-      console.error('[betaWaitlistMail] EmailJS:', e);
-      return { emailSent: false, emailError };
-    }
+  if (!isBrevoConfigured() && !emailJs) {
+    return {
+      emailSent: false,
+      emailError:
+        'Transport email non configuré (email.brevo_api_key + email.from_email ou beta.emailjs_template_id)',
+    };
   }
 
-  return {
-    emailSent: false,
-    emailError:
-      'Transport email non configuré (beta.emailjs_template_id + clés EmailJS)',
-  };
+  try {
+    await sendTransactionalEmail(
+      { to: email, subject, html, text },
+      emailJs
+        ? {
+            config: emailJs,
+            templateParams: buildBetaEmailJsTemplateParams(welcomeParams),
+          }
+        : undefined
+    );
+    return { emailSent: true };
+  } catch (e) {
+    const emailError = e instanceof Error ? e.message : 'Envoi email impossible';
+    console.error('[betaWaitlistMail] Envoi email:', e);
+    return { emailSent: false, emailError };
+  }
 }
 
 export async function markWelcomeEmailSent(
