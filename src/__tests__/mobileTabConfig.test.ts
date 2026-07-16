@@ -12,6 +12,7 @@ describe('mobileTabConfig', () => {
   it('canonise joueur homme vers shell pro joueur plat', () => {
     const rail = getMobileRailLayout('homme', 'player');
     expect(rail.flat).toEqual(['home', 'recrutement', 'reels', 'matchs', 'shop', 'profil']);
+    expect(rail.overflow).toEqual(expect.arrayContaining(['sante', 'messages']));
     expect(rail.center).toBeNull();
   });
 
@@ -62,7 +63,7 @@ describe('mobileTabConfig', () => {
   it('affiche le menu pro joueur en rangée plate', () => {
     const rail = getMobileRailLayout('pro', 'player');
     expect(rail.flat).toEqual(['home', 'recrutement', 'reels', 'matchs', 'shop', 'profil']);
+    expect(rail.overflow).toEqual(expect.arrayContaining(['sante', 'messages']));
     expect(rail.center).toBeNull();
-    expect(rail.overflow).toEqual([]);
   });
 });

@@ -145,10 +145,11 @@ export const MobileTabBar: React.FC<MobileTabBarProps> = ({
     if (rail.overflow.length === 0) return null;
     const active = menuActive;
     const ink = resolveTabInkColors(active, immersive, accentInk, inactiveInk);
+    const flat = Boolean(rail.flat?.length);
 
     return (
       <PressableSpring
-        style={styles.sideTab}
+        style={[styles.sideTab, flat && styles.sideTabFlat]}
         onPress={() => setMenuOpen(true)}
         scaleTo={0.94}
         accessibilityRole="button"
@@ -217,6 +218,7 @@ export const MobileTabBar: React.FC<MobileTabBarProps> = ({
           {rail.flat && rail.flat.length > 0 ? (
             <View style={styles.flatRow}>
               {rail.flat.map((tab) => renderSideTab(tab, true))}
+              {renderMenuButton()}
             </View>
           ) : (
             <>

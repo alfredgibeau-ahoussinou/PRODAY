@@ -37,6 +37,7 @@ import {
   PRO_COACH_SHELL_TABS,
   PRO_ORGANIZER_SHELL_TABS,
   PRO_PLAYER_SHELL_TABS,
+  PRO_PLAYER_OVERFLOW_TABS,
   PRO_RECRUITER_SHELL_TABS,
   SUPPORTER_SHELL_TABS,
 } from '../navigation/shells/productShellTabs';
@@ -214,7 +215,7 @@ export function getVisibleMainTabs(
     if (r === 'sponsor') {
       tabs = [...SPONSOR_MAIN_TABS];
     } else if (r === 'player') {
-      tabs = [...PRO_PLAYER_SHELL_TABS];
+      tabs = [...PRO_PLAYER_SHELL_TABS, ...PRO_PLAYER_OVERFLOW_TABS];
     } else if (r === 'organizer') {
       tabs = [...PRO_ORGANIZER_SHELL_TABS];
     } else if (r === 'coach') {
@@ -271,6 +272,7 @@ export function getTabShortLabel(
     if (tab === 'recrutement') return 'Club';
     if (tab === 'shop') return 'Shop';
     if (tab === 'profil') return 'Moi';
+    if (tab === 'sante') return 'RDV Santé';
   }
   if (line === 'supporter') {
     if (tab === 'home') return 'Tribune';
@@ -308,7 +310,9 @@ export function getTabShortLabel(
     if (tab === 'matchs') return 'Groupe';
     if (tab === 'shop') return 'Shop';
     if (tab === 'profil') return 'Moi';
+    if (tab === 'sante') return 'RDV Santé';
   }
+  if (role === 'player' && tab === 'sante') return 'RDV Santé';
   if (translate) {
     const key = `tabs.${tab}`;
     const translated = translate(key);

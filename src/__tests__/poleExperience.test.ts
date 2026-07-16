@@ -74,6 +74,8 @@ describe('poleExperience', () => {
       'matchs',
       'shop',
       'profil',
+      'sante',
+      'messages',
     ]);
     expect(getVisibleMainTabs('homme', 'player', playerProfile)).not.toContain('famille');
     expect(getVisibleMainTabs('homme', 'player')).not.toContain('feed');
@@ -111,6 +113,8 @@ describe('poleExperience', () => {
       'matchs',
       'shop',
       'profil',
+      'sante',
+      'messages',
     ]);
     expect(getVisibleMainTabs('pro', 'recruiter')).toContain('recrutement');
     expect(getVisibleMainTabs('pro', 'recruiter')).toContain('feed');

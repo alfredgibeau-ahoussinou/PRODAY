@@ -78,6 +78,7 @@ const FLAT_RAIL_RULES: FlatRailRule[] = [
         line === 'woman' ||
         isProProductLine(line)),
     primary: ['home', 'recrutement', 'reels', 'matchs', 'shop', 'profil'],
+    overflow: ['sante', 'messages'],
   },
   {
     match: (line, role) =>

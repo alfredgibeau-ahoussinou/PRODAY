@@ -47,7 +47,7 @@ const RSVP_OPTIONS: { status: RsvpStatus; labelKey: string }[] = [
   { status: 'maybe', labelKey: 'roleHome.amateurPlayer.rsvpMaybe' },
 ];
 
-type QuickActionId = 'carpool' | 'club' | 'reels';
+type QuickActionId = 'carpool' | 'club' | 'reels' | 'health';
 
 const QUICK_ACTIONS: { id: QuickActionId; icon: IconName; titleKey: string; subKey: string }[] = [
   {
@@ -55,6 +55,12 @@ const QUICK_ACTIONS: { id: QuickActionId; icon: IconName; titleKey: string; subK
     icon: 'car',
     titleKey: 'roleHome.amateurPlayer.action.carpool',
     subKey: 'roleHome.amateurPlayer.action.carpoolSub',
+  },
+  {
+    id: 'health',
+    icon: 'heart',
+    titleKey: 'roleHome.amateurPlayer.action.health',
+    subKey: 'roleHome.amateurPlayer.action.healthSub',
   },
   {
     id: 'club',
@@ -145,6 +151,7 @@ export const AmateurPlayerHomeDashboard: React.FC<StaffRoleHomeProps> = ({
     if (id === 'carpool') nav.setActiveTab('covoiturage');
     if (id === 'club') nav.setActiveTab('recrutement');
     if (id === 'reels') nav.setActiveTab('reels');
+    if (id === 'health') nav.setActiveTab('sante');
   };
 
   const attendanceStats = nextEvent
