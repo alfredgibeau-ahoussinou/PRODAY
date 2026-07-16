@@ -85,7 +85,7 @@ functions/src/
 ├── sponsorGeoPush.ts         Push géo offres sponsors
 ├── teamEventActivitySync.ts  Sync activités joueur
 ├── analyzeActivityHighlight.ts  Analyse IA séances (Mistral)
-├── authCustomEmails.ts       E-mails Auth brandés (Resend)
+├── authCustomEmails.ts       E-mails Auth brandés (EmailJS)
 ├── subscriptionIap.ts        Abonnements store
 ├── betaWaitlist*.ts          Liste d'attente bêta
 └── …

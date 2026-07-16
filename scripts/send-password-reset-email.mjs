@@ -1,7 +1,7 @@
 /**
- * Envoie l'e-mail de réinitialisation ProDay (callable ou Admin SDK + Resend).
+ * Envoie l'e-mail de réinitialisation ProDay via EmailJS (Admin SDK).
  *
- *   node scripts/resend-password-reset-email.mjs user@example.com
+ *   node scripts/send-password-reset-email.mjs user@example.com
  */
 
 import { readFileSync, existsSync, readdirSync } from 'fs';
@@ -48,7 +48,7 @@ const args = process.argv.slice(2);
 const email = (args.find((a) => !a.startsWith('--')) || '').trim().toLowerCase();
 
 if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-  console.error('Usage:\n  node scripts/resend-password-reset-email.mjs user@example.com');
+  console.error('Usage:\n  node scripts/send-password-reset-email.mjs user@example.com');
   process.exit(1);
 }
 
@@ -85,30 +85,6 @@ function buildPasswordResetEmail(link, targetEmail) {
   return { subject, html, text };
 }
 
-async function sendViaResend(targetEmail, payload) {
-  const apiKey = authCfg.resend_api_key || betaCfg.resend_api_key;
-  const from =
-    authCfg.from_email || betaCfg.from_email || 'ProDay <contact@proday75.fr>';
-  if (!apiKey) throw new Error('Clé Resend absente (beta.resend_api_key)');
-
-  const res = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      from,
-      to: [targetEmail],
-      subject: payload.subject,
-      html: payload.html,
-      text: payload.text,
-      reply_to: 'contact@proday.app',
-    }),
-  });
-  if (!res.ok) throw new Error(`Resend ${res.status}: ${await res.text()}`);
-}
-
 async function sendViaEmailJs(targetEmail, payload, link) {
   const templateId =
     authCfg.emailjs_password_reset_template_id?.trim() ||
@@ -118,7 +94,7 @@ async function sendViaEmailJs(targetEmail, payload, link) {
   const privateKey = authCfg.emailjs_private_key?.trim() || betaCfg.emailjs_private_key?.trim();
   if (!templateId) {
     throw new Error(
-      'auth.emailjs_password_reset_template_id absent — template Auth reset dédié requis'
+      'auth.emailjs_password_reset_template_id absent — créez le template dans EmailJS (docs/emailjs/auth-password-reset.html)'
     );
   }
   if (!serviceId || !publicKey || !privateKey) {
@@ -168,7 +144,6 @@ async function sendViaEmailJs(targetEmail, payload, link) {
 async function main() {
   console.log(`Projet : ${projectId}`);
   console.log(`E-mail : ${email}`);
-  console.log(`From   : ${authCfg.from_email || betaCfg.from_email || 'ProDay <contact@proday75.fr>'}`);
 
   try {
     await adminAuth.getUserByEmail(email);
@@ -195,23 +170,13 @@ async function main() {
   const payload = buildPasswordResetEmail(link, email);
 
   try {
-    await sendViaResend(email, payload);
-    console.log('✓ E-mail « Réinitialisez votre mot de passe ProDay » envoyé via Resend.');
-    return;
-  } catch (e) {
-    console.warn('Resend:', e instanceof Error ? e.message : e);
-  }
-
-  try {
     await sendViaEmailJs(email, payload, link);
-    console.log('✓ E-mail envoyé via EmailJS (secours Auth).');
-    return;
+    console.log('✓ E-mail « Réinitialisez votre mot de passe ProDay » envoyé via EmailJS.');
   } catch (e) {
-    console.warn('EmailJS Auth:', e instanceof Error ? e.message : e);
+    console.error('✗ EmailJS:', e instanceof Error ? e.message : e);
+    console.error('→ Vérifiez auth.emailjs_password_reset_template_id et docs/EMAILJS.md');
+    process.exit(1);
   }
-
-  console.error('✗ Aucun transport e-mail disponible. Vérifiez le domaine sur resend.com/domains.');
-  process.exit(1);
 }
 
 main().catch((e) => {

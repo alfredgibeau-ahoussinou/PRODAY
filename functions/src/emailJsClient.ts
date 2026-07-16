@@ -89,11 +89,6 @@ export function isAuthEmailJsLegacyUnifiedTemplate(kind: AuthEmailJsKind): boole
   );
 }
 
-export function isResendFallbackEnabled(namespace: 'auth' | 'beta'): boolean {
-  const cfg = functions.config()[namespace] ?? {};
-  return String(cfg.resend_fallback ?? '').trim().toLowerCase() === 'true';
-}
-
 /** Envoi serveur EmailJS (Cloud Functions — API non-navigateur activée). */
 export async function sendEmailViaEmailJs(
   config: EmailJsConfig,

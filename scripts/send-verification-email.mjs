@@ -1,11 +1,8 @@
 /**
- * Renvoie l'e-mail de vérification ProDay.
- * 1) Callable Cloud Function (Resend brandé, fallback Firebase natif côté app)
- * 2) Admin generateEmailVerificationLink + Resend
- * 3) Admin generateEmailVerificationLink + EmailJS (secours)
+ * Renvoie l'e-mail de vérification ProDay via EmailJS (Admin SDK).
  *
- *   node scripts/resend-verification-email.mjs user@example.com
- *   node scripts/resend-verification-email.mjs user@example.com --verify-admin
+ *   node scripts/send-verification-email.mjs user@example.com
+ *   node scripts/send-verification-email.mjs user@example.com --verify-admin
  */
 
 import { readFileSync, existsSync, readdirSync } from 'fs';
@@ -55,7 +52,7 @@ const email = (args.find((a) => !a.startsWith('--')) || '').trim().toLowerCase()
 
 if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
   console.error(
-    'Usage:\n  node scripts/resend-verification-email.mjs user@example.com\n  node scripts/resend-verification-email.mjs user@example.com --verify-admin'
+    'Usage:\n  node scripts/send-verification-email.mjs user@example.com\n  node scripts/send-verification-email.mjs user@example.com --verify-admin'
   );
   process.exit(1);
 }
@@ -103,30 +100,6 @@ function buildVerificationEmail(link, targetEmail) {
   return { subject, html, text };
 }
 
-async function sendViaResend(targetEmail, payload) {
-  const apiKey = authCfg.resend_api_key || betaCfg.resend_api_key;
-  const from =
-    authCfg.from_email || betaCfg.from_email || 'ProDay <contact@proday75.fr>';
-  if (!apiKey) throw new Error('Clé Resend absente (beta.resend_api_key)');
-
-  const res = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      from,
-      to: [targetEmail],
-      subject: payload.subject,
-      html: payload.html,
-      text: payload.text,
-      reply_to: 'contact@proday.app',
-    }),
-  });
-  if (!res.ok) throw new Error(`Resend ${res.status}: ${await res.text()}`);
-}
-
 async function sendViaEmailJs(targetEmail, payload, link) {
   const templateId =
     authCfg.emailjs_verification_template_id?.trim() ||
@@ -136,7 +109,7 @@ async function sendViaEmailJs(targetEmail, payload, link) {
   const privateKey = authCfg.emailjs_private_key?.trim() || betaCfg.emailjs_private_key?.trim();
   if (!templateId) {
     throw new Error(
-      'auth.emailjs_verification_template_id absent — ne pas utiliser le template bêta pour la vérification'
+      'auth.emailjs_verification_template_id absent — créez le template dans EmailJS (docs/emailjs/auth-verification.html)'
     );
   }
   if (!serviceId || !publicKey || !privateKey) {
@@ -209,7 +182,7 @@ async function main() {
     if (msg.includes('TOO_MANY_ATTEMPTS')) {
       console.error('✗ Rate-limit Firebase. Options :');
       console.error('  1) Attendre 15–60 min puis relancer ce script');
-      console.error(`  2) Contournement admin : node scripts/resend-verification-email.mjs ${email} --verify-admin`);
+      console.error(`  2) Contournement admin : node scripts/send-verification-email.mjs ${email} --verify-admin`);
       process.exit(1);
     }
     throw e;
@@ -218,23 +191,13 @@ async function main() {
   const payload = buildVerificationEmail(link, email);
 
   try {
-    await sendViaResend(email, payload);
-    console.log('✓ E-mail envoyé via Resend.');
-    return;
-  } catch (e) {
-    console.warn('Resend:', e instanceof Error ? e.message : e);
-  }
-
-  try {
     await sendViaEmailJs(email, payload, link);
-    console.log('✓ E-mail envoyé via EmailJS (secours Auth).');
-    return;
+    console.log('✓ E-mail envoyé via EmailJS.');
   } catch (e) {
-    console.warn('EmailJS Auth:', e instanceof Error ? e.message : e);
+    console.error('✗ EmailJS:', e instanceof Error ? e.message : e);
+    console.error('→ Vérifiez auth.emailjs_verification_template_id et docs/EMAILJS.md');
+    process.exit(1);
   }
-
-  console.error('✗ Aucun transport e-mail disponible. Vérifiez le domaine sur resend.com/domains.');
-  process.exit(1);
 }
 
 main().catch((e) => {

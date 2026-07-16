@@ -1,13 +1,13 @@
 # EmailJS — guide maître ProDay
 
-ProDay utilise **[EmailJS](https://www.emailjs.com/)** comme transport principal pour tous les e-mails utilisateur (Auth, bêta, rendez-vous). Resend reste un secours **opt-in** uniquement si explicitement activé.
+ProDay utilise **[EmailJS](https://www.emailjs.com/)** comme **seul** transport pour tous les e-mails utilisateur (Auth, bêta, rendez-vous). En cas d'échec EmailJS côté Auth, l'app retombe sur les e-mails Firebase natifs.
 
 ## Prérequis dashboard EmailJS
 
 1. Compte EmailJS (même compte pour tous les flux)
 2. **Email Services** → connecter Gmail/Outlook (Service ID partagé)
 3. **Account → Security** → activer **Allow EmailJS API for non-browser applications**
-4. Créer **un template par flux** (ne pas réutiliser le template bêta pour l’Auth)
+4. Créer **un template par flux** (ne pas réutiliser le template bêta pour l'Auth)
 
 ## Templates et fichiers source
 
@@ -47,10 +47,11 @@ firebase functions:config:set \
 
 Cloud Functions : `sendAuthVerificationEmail`, `sendAuthPasswordResetEmail`.
 
-**Recommandé** — deux templates EmailJS distincts (copie fixe, comme Resend) :
+**Recommandé** — deux templates EmailJS distincts :
 
 ```bash
 firebase functions:config:set \
+  auth.enabled=true \
   auth.emailjs_verification_template_id="template_VERIF" \
   auth.emailjs_password_reset_template_id="template_RESET" \
   auth.continue_url="https://proday75.fr"
@@ -63,9 +64,9 @@ firebase functions:config:set \
 
 Variables (templates séparés) : `email`, `app_name`, `subject`, `action_link`, `message_text`, `display_name_greeting`.
 
-**Legacy** — un seul template dynamique (`auth.emailjs_template_id` + `docs/emailjs/auth-action.html`) : utilisé en repli si l’ID spécifique au flux est absent. Variables dynamiques : `functions/src/authEmailJsParams.ts`.
+**Legacy** — un seul template dynamique (`auth.emailjs_template_id` + `docs/emailjs/auth-action.html`) : utilisé en repli si l'ID spécifique au flux est absent. Variables dynamiques : `functions/src/authEmailJsParams.ts`.
 
-Ordre d’envoi : **EmailJS** → Resend (si `auth.resend_fallback=true` **et** EmailJS en échec) → Firebase natif côté app.
+Ordre d'envoi : **EmailJS** → Firebase natif côté app (si EmailJS indisponible ou non configuré).
 
 ### Bêta waitlist
 
@@ -87,7 +88,7 @@ EMAILJS_PRIVATE_KEY=xxx
 BETA_WAITLIST_FUNCTION_URL=https://europe-west1-PROJECT.cloudfunctions.net/submitBetaWaitlist
 ```
 
-> Le site n’envoie plus d’e-mail directement : l’envoi passe par Firebase après validation admin.
+> Le site n'envoie plus d'e-mail directement : l'envoi passe par Firebase après validation admin.
 
 ### Rendez-vous (pôle Santé)
 
@@ -113,23 +114,18 @@ Variables : `functions/src/appointmentEmail.ts`, en-tête `docs/emailjs/appointm
 - `getEmailJsConfig('auth' | 'beta' | 'appointment')`
 - `sendEmailViaEmailJs(config, templateParams)`
 
-## Resend (secours optionnel — désactivé par défaut)
-
-Resend n’est **plus** utilisé lorsque EmailJS est configuré, sauf si vous activez explicitement :
-
-```bash
-firebase functions:config:set auth.resend_fallback="true" auth.resend_api_key="re_..."
-# ou
-firebase functions:config:set beta.resend_fallback="true" beta.resend_api_key="re_..."
-```
-
-Sans `*_resend_fallback=true`, seul EmailJS (ou Firebase Auth natif côté client) est utilisé.
-
 ## Déploiement
 
 ```bash
 cd functions && npm run build && npm test
 firebase deploy --only functions:sendAuthVerificationEmail,functions:sendAuthPasswordResetEmail,functions:adminApproveBetaAccess,functions:adminResendBetaWelcomeEmail,functions:onMedicalAppointmentCreated,functions:onMedicalAppointmentUpdated
+```
+
+## Scripts de test manuel
+
+```bash
+npm run auth:send-verification -- user@example.com
+npm run auth:send-password-reset -- user@example.com
 ```
 
 ## Dépannage
@@ -139,11 +135,12 @@ firebase deploy --only functions:sendAuthVerificationEmail,functions:sendAuthPas
 | E-mail Auth = template bêta | Vérifier `auth.emailjs_verification_template_id` / `auth.emailjs_password_reset_template_id` |
 | 403 EmailJS | Activer API non-navigateur ; vérifier clés |
 | 412 Gmail | Reconnecter Gmail dans EmailJS → Email Services |
-| Bêta sans email | Approuver l’inscription admin ; vérifier `beta.emailjs_*` |
+| Bêta sans email | Approuver l'inscription admin ; vérifier `beta.emailjs_*` |
 | RDV sans email | Déployer triggers ; configurer `appointment.emailjs_template_id` ; email sur fiche `users/{uid}` |
+| E-mail Auth EN (Firebase natif) | Templates Auth EmailJS absents ou envoi échoué → configurer les IDs et redéployer |
 
 ## Voir aussi
 
-- `firebase/auth-email-templates/README.md` — Auth détaillé
+- `firebase/auth-email-templates/README.md` — Auth détaillé (fichiers HTML de référence design)
 - `docs/BETA_WAITLIST.md` — bêta waitlist
 - `functions/.env.example` — liste complète des clés

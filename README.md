@@ -352,7 +352,7 @@ flowchart TB
     subgraph Externe
         MISTRAL[Mistral IA]
         APIFOOT[API-Football]
-        EMAIL[EmailJS / Resend]
+        EMAIL[EmailJS]
     end
 
     APP --> AUTH

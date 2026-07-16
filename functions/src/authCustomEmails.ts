@@ -2,13 +2,10 @@ import * as functions from 'firebase-functions';
 import { admin } from './firebaseAdmin';
 import { renderAuthEmailTemplate } from './authEmailTemplates';
 import {
-  getAuthEmailTransportConfig,
   getEmailJsAuthConfig,
   hasAuthEmailTransport,
   isAuthCustomEmailEnabled,
-  isResendDomainError,
   sendAuthEmailViaEmailJs,
-  sendAuthEmailViaResend,
 } from './authEmailTransport';
 
 const APP_NAME = 'ProDay';
@@ -97,7 +94,7 @@ async function sendAuthActionEmail(
   if (!hasAuthEmailTransport()) return disabledResult();
 
   const emailJs = getEmailJsAuthConfig(kind);
-  const resend = getAuthEmailTransportConfig();
+  if (!emailJs) return disabledResult();
 
   const normalizedEmail = email.trim().toLowerCase();
   const link =
@@ -114,35 +111,15 @@ async function sendAuthActionEmail(
 
   const payload = { to: normalizedEmail, subject, html, text };
 
-  if (emailJs) {
-    try {
-      await sendAuthEmailViaEmailJs(emailJs, payload, link, { displayName, kind });
-      return { enabled: true, sent: true };
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
-      console.error('[authCustomEmails] EmailJS failed:', msg);
-      if (!resend) throw e;
-      console.warn('[authCustomEmails] Resend fallback (auth.resend_fallback=true)');
-    }
+  try {
+    await sendAuthEmailViaEmailJs(emailJs, payload, link, { displayName, kind });
+    return { enabled: true, sent: true };
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    console.error('[authCustomEmails] EmailJS failed:', msg);
+    console.warn('[authCustomEmails] Client will use Firebase Auth native email');
+    return disabledResult();
   }
-
-  if (resend) {
-    try {
-      await sendAuthEmailViaResend(resend, payload);
-      return { enabled: true, sent: true };
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
-      if (isResendDomainError(msg)) {
-        console.warn(
-          '[authCustomEmails] Resend unavailable (domain) — client will use Firebase Auth email'
-        );
-        return disabledResult();
-      }
-      throw e;
-    }
-  }
-
-  return disabledResult();
 }
 
 /**
@@ -192,12 +169,6 @@ export const sendAuthVerificationEmail = functions
         throw new functions.https.HttpsError(
           'failed-precondition',
           'Domaine proday75.fr non autorisé dans Firebase Auth. Ajoutez-le dans Authorized domains.'
-        );
-      }
-      if (msg.includes('EmailJS')) {
-        throw new functions.https.HttpsError(
-          'failed-precondition',
-          'Envoi e-mail temporairement indisponible. Vérifiez la config EmailJS ou réessayez dans quelques minutes.'
         );
       }
       console.error('[sendAuthVerificationEmail]', e);
@@ -258,12 +229,6 @@ export const sendAuthPasswordResetEmail = functions
         throw new functions.https.HttpsError(
           'failed-precondition',
           'Domaine proday75.fr non autorisé dans Firebase Auth. Ajoutez-le dans Authorized domains.'
-        );
-      }
-      if (msg.includes('EmailJS')) {
-        throw new functions.https.HttpsError(
-          'failed-precondition',
-          'Envoi e-mail temporairement indisponible. Vérifiez la config EmailJS ou réessayez dans quelques minutes.'
         );
       }
       console.error('[sendAuthPasswordResetEmail]', e);

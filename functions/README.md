@@ -143,12 +143,12 @@ Contournement lorsque les templates Console Firebase sont verrouillés (`EMAIL_T
 | `sendAuthVerificationEmail` | `europe-west1` | Utilisateur connecté |
 | `sendAuthPasswordResetEmail` | `europe-west1` | Public (rate-limit IP + e-mail) |
 
-Configuration Resend :
+Configuration EmailJS :
 
 ```bash
-firebase functions:config:set auth.enabled=true auth.from_email="ProDay <contact@proday.app>"
-firebase functions:config:set auth.continue_url="https://proday75.fr"
-# auth.resend_api_key optionnel si beta.resend_api_key déjà défini
+firebase functions:config:set auth.enabled=true auth.continue_url="https://proday75.fr"
+firebase functions:config:set auth.emailjs_verification_template_id="template_xxx" auth.emailjs_password_reset_template_id="template_xxx"
+# Clés partagées : beta.emailjs_service_id, beta.emailjs_public_key, beta.emailjs_private_key
 cd functions && npm run build
 firebase deploy --only functions:sendAuthVerificationEmail,functions:sendAuthPasswordResetEmail
 ```

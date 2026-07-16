@@ -1,12 +1,10 @@
 import * as admin from 'firebase-admin';
 import * as functions from 'firebase-functions';
-import { getAuthEmailTransportConfig, sendAuthEmailViaResend } from './authEmailTransport';
 import {
-  buildBetaWelcomeEmail,
   sendBetaWelcomeEmailViaEmailJs,
   type EmailJsBetaConfig,
 } from './betaWaitlistEmail';
-import { getEmailJsConfig, isResendFallbackEnabled } from './emailJsClient';
+import { getEmailJsConfig } from './emailJsClient';
 
 export function getBetaEmailJsConfig(): EmailJsBetaConfig | null {
   return getEmailJsConfig('beta');
@@ -30,7 +28,6 @@ export async function sendBetaWelcomeEmailToEntry(
   const siteUrl = getBetaSiteUrl();
   const welcomeParams = { email, roleLabel, siteUrl, accessToken };
   const emailJs = getBetaEmailJsConfig();
-  const resend = isResendFallbackEnabled('beta') ? getAuthEmailTransportConfig() : null;
 
   if (emailJs) {
     try {
@@ -39,18 +36,6 @@ export async function sendBetaWelcomeEmailToEntry(
     } catch (e) {
       const emailError = e instanceof Error ? e.message : 'Envoi email impossible';
       console.error('[betaWaitlistMail] EmailJS:', e);
-      return { emailSent: false, emailError };
-    }
-  }
-
-  if (resend) {
-    try {
-      const { subject, html, text } = buildBetaWelcomeEmail(welcomeParams);
-      await sendAuthEmailViaResend(resend, { to: email, subject, html, text });
-      return { emailSent: true };
-    } catch (e) {
-      const emailError = e instanceof Error ? e.message : 'Envoi email impossible';
-      console.error('[betaWaitlistMail] Resend:', e);
       return { emailSent: false, emailError };
     }
   }

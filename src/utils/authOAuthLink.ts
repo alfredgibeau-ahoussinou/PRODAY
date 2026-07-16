@@ -56,10 +56,6 @@ export function humanizeAuthErrorText(text: string): string {
     return AUTH_EMAIL_CONFIG_MESSAGE;
   }
 
-  if (upper.includes('RESEND') && (upper.includes('DOMAIN') || upper.includes('NOT VERIFIED'))) {
-    return AUTH_EMAIL_CONFIG_MESSAGE;
-  }
-
   if (
     msg.includes('Raw server response') ||
     /"error"\s*:\s*\{/.test(msg) ||
