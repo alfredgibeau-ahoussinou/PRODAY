@@ -35,7 +35,9 @@ export const ROUTES = {
   about: "/a-propos",
   vision: "/vision",
   pricing: "/tarifs",
+  sponsor: "/sponsor",
   partenaires: "/partenaires",
+  partenairesConvention: "/partenaires/convention",
   faq: "/faq",
   liveStats: "/live-stats",
   cv: "/cv",
@@ -56,6 +58,7 @@ export const POLE_NAV_ITEMS = [
   { href: ROUTES.proJoueur, label: "Pro Joueur" },
   { href: ROUTES.proClub, label: "Pro Club" },
   { href: ROUTES.proStaff, label: "Pro Staff" },
+  { href: ROUTES.sponsor, label: "Sponsor" },
 ] as const;
 
 export const UTILITY_NAV_ITEMS = [
@@ -77,7 +80,7 @@ export const POLE_FOOTER_LINKS = [
   { href: ROUTES.proJoueur, label: "Pôle Pro Joueur", subtitle: "Carrière · visibilité · opportunités" },
   { href: ROUTES.proClub, label: "Pôle Pro Club", subtitle: "Structures · équipes · recrutement" },
   { href: ROUTES.proStaff, label: "Pôle Pro Staff", subtitle: "Agent · Recruteur · Coach · Orga" },
-  { href: ROUTES.partenaires, label: "Pôle Partenaires", subtitle: "Sponsors & marques" },
+  { href: ROUTES.sponsor, label: "Pôle Sponsor", subtitle: "Marques & visibilité mesurée" },
 ] as const;
 
 export const EXPLORE_CARDS = [
@@ -166,11 +169,11 @@ export const EXPLORE_CARDS = [
     tag: "Roadmap",
   },
   {
-    href: routeWithHash(ROUTES.partenaires, "formules"),
-    title: "Espace Partenaires",
+    href: routeWithHash(ROUTES.sponsor, "formules"),
+    title: "Pôle Sponsor",
     description: "Découverte 0 €, Territorial 49 € ou National Pro 99 €/mois — visibilité clubs.",
     image: "/images/football-mercato-01.jpg",
-    tag: "Partenaires",
+    tag: "Sponsor",
     accent: true,
   },
   {

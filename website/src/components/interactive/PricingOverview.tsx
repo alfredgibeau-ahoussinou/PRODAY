@@ -86,10 +86,10 @@ export function PricingOverview() {
           ))}
         </div>
         <Link
-          href={ROUTES.partenaires}
+          href={ROUTES.sponsor}
           className="mt-4 inline-block text-sm font-semibold text-amber-300 underline underline-offset-4 hover:text-amber-200"
         >
-          Détail des formules partenaires →
+          Détail des formules sponsor →
         </Link>
       </div>
 

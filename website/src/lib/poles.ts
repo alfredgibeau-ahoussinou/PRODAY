@@ -107,12 +107,12 @@ export const CAROUSEL_POLES: PoleDefinition[] = [
 
 export const SPONSOR_POLE: PoleDefinition = {
   id: "sponsor",
-  kicker: "PÔLE PARTENAIRES",
-  title: "Sponsors & marques",
-  subtitle: "Visibilité mesurée",
+  kicker: "PÔLE SPONSOR",
+  title: "Marques & sponsors",
+  subtitle: "Visibilité · ROI · Campagnes",
   description:
-    "Ta marque sur le terrain — ROI campagnes, visibilité clubs. Hors carousel, entrée depuis proday.fr/partenaires.",
-  href: ROUTES.partenaires,
+    "Votre marque sur le terrain — offres géolocalisées, tableau de bord ROI et vitrine vérifiée auprès des clubs ProDay.",
+  href: ROUTES.sponsor,
   pricingHash: "sponsor",
   logo: "/branding/logo-pro-picto.png",
   planIds: ["sponsor_pro"],
@@ -128,6 +128,7 @@ export const POLE_NAV_POLE_IDS: Record<string, PoleId> = {
   [ROUTES.proJoueur]: "pro_joueur",
   [ROUTES.proClub]: "pro_club",
   [ROUTES.proStaff]: "pro_staff",
+  [ROUTES.sponsor]: "sponsor",
   [ROUTES.partenaires]: "sponsor",
 };
 
@@ -232,16 +233,17 @@ export const POLE_STYLES: Record<
     cta: "bg-indigo-500 text-white hover:bg-indigo-400",
   },
   sponsor: {
-    nav: "text-amber-300/80 hover:text-white",
-    navActive: "bg-amber-500 text-slate-950",
-    section: "bg-gradient-to-b from-slate-950 via-blue-950 to-slate-950 text-white",
-    surface: "bg-[#050505] text-white",
-    accentTop: "border-t-2 border-amber-500/35",
-    card: "border border-amber-500/20 bg-white/5 backdrop-blur-sm",
-    cardHighlight: "ring-2 ring-amber-400/50",
-    badge: "bg-amber-500/20 text-amber-200",
-    textMuted: "text-amber-200/70",
-    cta: "bg-amber-400 text-slate-950 hover:bg-amber-300",
+    nav: "text-amber-300/80 hover:text-amber-200",
+    navActive: "bg-gradient-to-r from-amber-500 to-amber-400 text-slate-950",
+    section:
+      "bg-gradient-to-b from-[#070605] via-[#0a0a0f] to-[#030303] text-white",
+    surface: "bg-[#070605] text-white",
+    accentTop: "border-t-2 border-amber-500/40",
+    card: "border border-amber-500/20 bg-gradient-to-br from-amber-500/[0.04] to-transparent backdrop-blur-sm",
+    cardHighlight: "ring-2 ring-amber-400/50 border-amber-400/30",
+    badge: "bg-amber-500/15 text-amber-200 ring-1 ring-amber-400/25",
+    textMuted: "text-amber-300/60",
+    cta: "bg-gradient-to-r from-amber-500 to-amber-400 text-slate-950 hover:from-amber-400 hover:to-amber-300",
   },
 };
 
@@ -254,7 +256,7 @@ export const POLE_IMAGES: Record<PoleId, string> = {
   pro_joueur: "/images/football-pro-01.jpg",
   pro_club: "/images/football-club-01.jpg",
   pro_staff: "/showcase/classic-staff.jpg",
-  sponsor: "/images/football-club-01.jpg",
+  sponsor: "/showcase/classic-exp-sponsors.jpg",
 };
 
 export function plansForPole(poleId: PoleId): WebSubscriptionPlan[] {

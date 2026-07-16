@@ -84,8 +84,8 @@ export default function ProHubPage() {
         description="Les marques et sponsors accèdent à l'espace Partenaires — distinct des pôles joueur, club et staff."
         pole="pro_staff"
       >
-        <PremiumButton href={`${ROUTES.partenaires}#formules`} variant="outline">
-          Espace Partenaires
+        <PremiumButton href={`${ROUTES.sponsor}#formules`} variant="outline">
+          Pôle Sponsor
         </PremiumButton>
       </PremiumSection>
     </>

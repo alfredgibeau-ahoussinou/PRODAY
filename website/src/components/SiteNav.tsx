@@ -268,7 +268,7 @@ export function SiteNav() {
             className="relative z-50 min-h-[calc(100dvh-4rem)] overflow-y-auto border-t border-white/10 bg-black/98 px-4 pb-8 backdrop-blur-xl lg:hidden"
           >
             <p className="pt-4 text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--proday-accent)]">
-              6 pôles
+              7 pôles
             </p>
             {POLE_NAV_ITEMS.map((item) => {
               const poleId = POLE_NAV_POLE_IDS[item.href];

@@ -109,6 +109,13 @@ export const SITE_PAGES: Record<string, PageMeta> = {
     poleId: "sponsor",
     category: "pole",
     accent: "sponsor",
+    poleHubPath: ROUTES.sponsor,
+  },
+  [ROUTES.sponsor]: {
+    path: ROUTES.sponsor,
+    poleId: "sponsor",
+    category: "pole",
+    accent: "sponsor",
   },
   [ROUTES.pricing]: {
     path: ROUTES.pricing,
@@ -249,7 +256,8 @@ export const POLE_HUB_LABELS: Record<string, string> = {
   [ROUTES.proClub]: "Pôle Pro Club",
   [ROUTES.proStaff]: "Pôle Pro Staff",
   [ROUTES.pro]: "Pôle Pro",
-  [ROUTES.partenaires]: "Pôle Partenaires",
+  [ROUTES.partenaires]: "Pôle Sponsor",
+  [ROUTES.sponsor]: "Pôle Sponsor",
 };
 
 function normalizePath(pathname: string): string {
@@ -297,7 +305,7 @@ export function poleHubForPath(pathname: string): string | null {
   if (meta.poleId === "pro_joueur") return ROUTES.proJoueur;
   if (meta.poleId === "pro_club") return ROUTES.proClub;
   if (meta.poleId === "pro_staff") return ROUTES.proStaff;
-  if (meta.poleId === "sponsor") return ROUTES.partenaires;
+  if (meta.poleId === "sponsor") return ROUTES.sponsor;
   return null;
 }
 
@@ -325,6 +333,9 @@ export function isNavActive(href: string, pathname: string): boolean {
   if (targetPath === ROUTES.proClub) return path === ROUTES.proClub;
   if (targetPath === ROUTES.proStaff) {
     return path === ROUTES.proStaff || path === ROUTES.pro || path.startsWith(`${ROUTES.pro}/`);
+  }
+  if (targetPath === ROUTES.sponsor) {
+    return path === ROUTES.sponsor || path === ROUTES.partenaires || path.startsWith(`${ROUTES.partenaires}/`);
   }
 
   return path === targetPath;

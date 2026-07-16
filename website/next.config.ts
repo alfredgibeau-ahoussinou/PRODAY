@@ -36,6 +36,7 @@ const nextConfig: NextConfig = {
       { source: "/homme/:path*", destination: "/amateur", permanent: true },
       { source: "/woman", destination: "/amateur", permanent: true },
       { source: "/woman/:path*", destination: "/amateur", permanent: true },
+      { source: "/partenaires", destination: "/sponsor", permanent: true },
     ];
   },
 };

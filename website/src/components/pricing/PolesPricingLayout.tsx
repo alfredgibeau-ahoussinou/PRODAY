@@ -339,8 +339,8 @@ export function PolesPricingLayout() {
             FAQ
           </Link>{" "}
           ·{" "}
-          <Link href={ROUTES.partenaires} className="font-medium text-white/70 underline hover:text-white">
-            Partenaires
+          <Link href={ROUTES.sponsor} className="font-medium text-white/70 underline hover:text-white">
+            Sponsor
           </Link>{" "}
           ·{" "}
           <Link href={ROUTES.betaWaitlist} className="font-medium text-white/70 underline hover:text-white">

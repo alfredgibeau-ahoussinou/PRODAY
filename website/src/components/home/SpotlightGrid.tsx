@@ -10,7 +10,7 @@ import { Section } from "@/components/ui/Section";
 const LINKS: Record<string, string> = {
   reels: ROUTES.demo,
   feed: ROUTES.demo,
-  partners: routeWithHash(ROUTES.partenaires, "formules"),
+  partners: routeWithHash(ROUTES.sponsor, "formules"),
   family: routeWithHash(ROUTES.trust, "verification"),
   tournaments: routeWithHash(ROUTES.features, "modules"),
   auth: ROUTES.demo,

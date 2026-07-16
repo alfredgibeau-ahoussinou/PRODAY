@@ -499,9 +499,9 @@ export function navBrandForPath(pathname: string) {
   if (pathname.startsWith(ROUTES.proStaff)) {
     return { name: PRO_STAFF_BRAND.name, logo: PRO_STAFF_BRAND.logo, theme: UNIVERSE_THEME.pro_staff };
   }
-  if (pathname.startsWith(ROUTES.partenaires)) {
+  if (pathname.startsWith(ROUTES.sponsor) || pathname.startsWith(ROUTES.partenaires)) {
     return {
-      name: "Partenaires",
+      name: "Pro Day Sponsor",
       logo: PRO_BRAND.logo,
       theme: UNIVERSE_THEME.pro,
     };

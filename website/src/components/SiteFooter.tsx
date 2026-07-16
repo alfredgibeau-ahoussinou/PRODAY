@@ -74,7 +74,7 @@ export function SiteFooter() {
 
           <div className="flex flex-col items-center sm:items-start">
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--proday-accent)]">
-              6 pôles
+              7 pôles
             </p>
             <ul className="mt-4 space-y-3">
               {POLE_FOOTER_LINKS.map((pole) => {

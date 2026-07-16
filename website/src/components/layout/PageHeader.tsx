@@ -29,7 +29,7 @@ const ACCENT_GRADIENTS: Record<PageAccent, string> = {
   pro_club: "bg-gradient-to-br from-blue-950 via-black to-black text-white",
   pro_staff: "bg-gradient-to-br from-indigo-950 via-black to-black text-white",
   sante: "bg-gradient-to-br from-teal-950 via-black to-black text-white",
-  sponsor: "bg-gradient-to-br from-slate-950 via-black to-black text-white",
+  sponsor: "bg-gradient-to-br from-[#0c0a06] via-[#0a0a0f] to-black text-white",
 };
 
 const ACCENT_OVERLAYS: Record<PageAccent, string> = {
@@ -42,7 +42,7 @@ const ACCENT_OVERLAYS: Record<PageAccent, string> = {
   pro_club: "bg-gradient-to-r from-blue-950/90 via-black/60 to-black/20",
   pro_staff: "bg-gradient-to-r from-indigo-950/90 via-black/60 to-black/20",
   sante: "bg-gradient-to-r from-teal-950/90 via-black/60 to-black/20",
-  sponsor: "bg-gradient-to-r from-slate-950/90 via-black/60 to-black/20",
+  sponsor: "bg-gradient-to-r from-[#0c0a06]/95 via-black/70 to-black/30",
 };
 
 const ACCENT_KICKER: Record<PageAccent, string> = {

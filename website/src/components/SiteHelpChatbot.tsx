@@ -29,8 +29,8 @@ const COMMON_ENTRIES: HelpEntry[] = [
     question: "Où sont les sponsors ?",
     answer:
       "Pas d'onglet Sponsors dans la barre de l'app : ouvrez l'Accueil puis le module Sponsors. Sur le site, c'est la page Partenaires.",
-    href: ROUTES.partenaires,
-    hrefLabel: "Espace partenaires",
+    href: ROUTES.sponsor,
+    hrefLabel: "Pôle Sponsor",
   },
   {
     id: "shop",
