@@ -148,47 +148,63 @@ export const PhysioCarePanel: React.FC<PhysioCarePanelProps> = ({
           {loading ? (
             <SkeletonList count={3} variant="row" />
           ) : list.length === 0 ? (
-            <Text style={styles.empty}>
-              Aucun praticien de ce pôle inscrit pour le moment.
-            </Text>
+            <View style={[styles.emptyCard, { backgroundColor: c.surface, borderColor: c.border }]}>
+              <Icon name="person" size={28} color={c.textMuted} />
+              <Text style={styles.emptyTitle}>Aucun praticien</Text>
+              <Text style={styles.empty}>
+                Aucun praticien de cette spécialité inscrit pour le moment.
+              </Text>
+            </View>
           ) : (
-            list.map((p, index) => (
-              <StaggerReveal key={p.uid} index={index}>
-                <PressableSpring
-                  style={styles.row}
-                  onPress={() =>
-                    void openContactConversation(profile, p, p.display_name, onOpenChat)
-                  }
-                  scaleTo={0.98}
-                  haptic
-                >
-                  <View style={styles.avatar}>
-                    <Icon name={specialtyIcon(p.profile?.medical_specialty)} size={18} color={c.accent} />
-                  </View>
-                  <View style={styles.copy}>
-                    <Text style={styles.name}>{p.display_name}</Text>
-                    <Text style={styles.meta}>
-                      {p.profile?.medical_specialty ?? p.profile?.job_title ?? p.city ?? 'Pôle médical ProDay'}
-                    </Text>
-                  </View>
-                  <View style={styles.actions}>
-                    {onBookPhysio &&
-                    (hasPhysioCalComBooking(p) || isPhysioBookingEnabled(p)) ? (
-                      <PressableSpring
-                        style={styles.bookBtn}
-                        onPress={() => onBookPhysio(p)}
-                        scaleTo={0.96}
-                        haptic
-                      >
-                        <Text style={styles.bookBtnText}>RDV</Text>
-                      </PressableSpring>
-                    ) : (
-                      <Icon name="chevron-forward" size={18} color={c.textMuted} />
-                    )}
-                  </View>
-                </PressableSpring>
-              </StaggerReveal>
-            ))
+            <View style={[styles.listCard, minimal && styles.listCardMinimal, { borderColor: c.border }]}>
+              {list.map((p, index) => (
+                <StaggerReveal key={p.uid} index={index}>
+                  <PressableSpring
+                    style={[
+                      styles.row,
+                      minimal && styles.rowMinimal,
+                      index > 0 && styles.rowBorder,
+                      index > 0 && { borderTopColor: c.border },
+                    ]}
+                    onPress={() =>
+                      void openContactConversation(profile, p, p.display_name, onOpenChat)
+                    }
+                    scaleTo={0.98}
+                    haptic
+                  >
+                    <View style={[styles.avatar, minimal && styles.avatarMinimal]}>
+                      <Icon
+                        name={specialtyIcon(p.profile?.medical_specialty)}
+                        size={minimal ? 22 : 18}
+                        color={c.accent}
+                      />
+                    </View>
+                    <View style={styles.copy}>
+                      <Text style={[styles.name, minimal && styles.nameMinimal]}>{p.display_name}</Text>
+                      <Text style={styles.meta}>
+                        {p.profile?.medical_specialty ?? p.profile?.job_title ?? p.city ?? 'Pôle médical ProDay'}
+                      </Text>
+                    </View>
+                    <View style={styles.actions}>
+                      {onBookPhysio &&
+                      (hasPhysioCalComBooking(p) || isPhysioBookingEnabled(p)) ? (
+                        <PressableSpring
+                          style={[styles.bookBtn, minimal && styles.bookBtnMinimal, { backgroundColor: c.accent }]}
+                          onPress={() => onBookPhysio(p)}
+                          scaleTo={0.96}
+                          haptic
+                        >
+                          <Icon name="calendar" size={14} color={c.brandInverse} />
+                          <Text style={[styles.bookBtnText, { color: c.brandInverse }]}>RDV</Text>
+                        </PressableSpring>
+                      ) : (
+                        <Icon name="chevron-forward" size={18} color={c.textMuted} />
+                      )}
+                    </View>
+                  </PressableSpring>
+                </StaggerReveal>
+              ))}
+            </View>
           )}
         </>
       ) : (
@@ -237,17 +253,44 @@ function createStyles(c: AppColors) {
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: c.border,
       backgroundColor: c.surface,
+      borderRadius: radius.lg,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm + 2,
+      marginBottom: spacing.md,
+      fontSize: 15,
     },
     filters: { marginBottom: spacing.sm },
     loader: { marginVertical: spacing.md },
-    empty: { fontSize: 13, color: c.textMuted, fontStyle: 'italic' },
+    listCard: {
+      borderRadius: radius.xl,
+      borderWidth: StyleSheet.hairlineWidth,
+      overflow: 'hidden',
+    },
+    listCardMinimal: {
+      backgroundColor: c.surface,
+    },
+    emptyCard: {
+      alignItems: 'center',
+      padding: spacing.xl,
+      borderRadius: radius.xl,
+      borderWidth: StyleSheet.hairlineWidth,
+      gap: spacing.sm,
+    },
+    emptyTitle: { fontSize: 16, fontWeight: '800', color: c.text },
+    empty: { fontSize: 13, color: c.textMuted, textAlign: 'center', lineHeight: 19 },
     row: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: spacing.sm,
       paddingVertical: spacing.sm,
-      borderTopWidth: 1,
-      borderTopColor: c.border,
+      paddingHorizontal: spacing.md,
+    },
+    rowBorder: {
+      borderTopWidth: StyleSheet.hairlineWidth,
+    },
+    rowMinimal: {
+      minHeight: 76,
+      paddingVertical: spacing.md,
     },
     avatar: {
       width: 40,
@@ -257,20 +300,33 @@ function createStyles(c: AppColors) {
       alignItems: 'center',
       justifyContent: 'center',
     },
+    avatarMinimal: {
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+    },
     copy: { flex: 1 },
     name: { fontSize: 14, fontWeight: '800', color: c.text },
-    meta: { fontSize: 11, color: c.textMuted, marginTop: 2 },
+    nameMinimal: { fontSize: 16, letterSpacing: -0.2 },
+    meta: { fontSize: 12, color: c.textMuted, marginTop: 3, lineHeight: 16 },
     actions: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
     bookBtnWrap: {
       borderRadius: radius.md,
       overflow: 'hidden',
     },
     bookBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
       paddingHorizontal: spacing.sm + 2,
       paddingVertical: 8,
-      borderRadius: radius.md,
+      borderRadius: radius.pill,
     },
-    bookBtnText: { fontWeight: '900' },
+    bookBtnMinimal: {
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+    },
+    bookBtnText: { fontWeight: '800', fontSize: 13 },
     chatBtn: {
       width: 36,
       height: 36,

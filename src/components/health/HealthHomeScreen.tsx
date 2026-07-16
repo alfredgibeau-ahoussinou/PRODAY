@@ -27,7 +27,7 @@ import { Icon } from '../ui/Icon';
 import { ScreenHeader } from '../ui/ScreenHeader';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { TAB_BAR_CONTENT_INSET } from '../../navigation/tabBarLayout';
-import { spacing, radius } from '../../theme/designTokens';
+import { spacing, radius, shadows } from '../../theme/designTokens';
 import { fontFamily } from '../../theme/typography';
 import type { AppColors } from '../../theme/universeTheme';
 
@@ -221,7 +221,11 @@ export const HealthHomeScreen: React.FC<HealthHomeScreenProps> = ({
                     ) : null}
                   </View>
                   {bookable ? (
-                    <Icon name="chevron-forward" size={18} color={colors.textMuted} />
+                    <View style={[styles.bookPill, { backgroundColor: colors.accentSoft }]}>
+                      <ProDayText variant="caption" accent style={styles.bookPillText}>
+                        Réserver
+                      </ProDayText>
+                    </View>
                   ) : null}
                 </PressableSpring>
               );
@@ -257,6 +261,7 @@ function createStyles(c: AppColors) {
       paddingHorizontal: spacing.lg,
       borderRadius: radius.xl,
       minHeight: 76,
+      ...shadows.soft,
     },
     careIcon: {
       width: 48,
@@ -316,6 +321,16 @@ function createStyles(c: AppColors) {
       fontWeight: '600',
       fontSize: 16,
       color: c.text,
+    },
+    bookPill: {
+      paddingHorizontal: spacing.sm + 2,
+      paddingVertical: spacing.xs + 2,
+      borderRadius: radius.pill,
+    },
+    bookPillText: {
+      fontFamily: fontFamily.bold,
+      fontWeight: '700',
+      fontSize: 12,
     },
   });
 }

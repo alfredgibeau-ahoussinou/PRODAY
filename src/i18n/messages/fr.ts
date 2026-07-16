@@ -51,6 +51,8 @@ export const fr: MessageCatalog = {
   'profile.chapters.settings': 'Paramètres',
 
   'nav.overflow': 'Navigation',
+  'nav.overflowHint': 'Accédez aux sections secondaires de l’app.',
+  'nav.overflowActive': 'Section active',
   'nav.menu': 'Menu',
   'nav.menuA11y': 'Menu navigation',
 

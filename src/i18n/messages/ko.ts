@@ -49,6 +49,8 @@ export const ko: MessageCatalog = {
   'profile.chapters.settings': '설정',
 
   'nav.overflow': '탐색',
+  'nav.overflowHint': '앱의 보조 섹션에 접근합니다.',
+  'nav.overflowActive': '활성 섹션',
   'nav.menu': '메뉴',
   'nav.menuA11y': '탐색 메뉴',
 

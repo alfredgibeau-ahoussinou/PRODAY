@@ -1,12 +1,12 @@
 import React, { useMemo } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { HEALTH_CHAPTERS, type HealthChapterId } from '../../content/healthChapters';
 import { PressableSpring } from '../motion';
 import { prodayHaptics } from '../../utils/prodayHaptics';
 import { ProDayText } from '../ui/ProDayText';
 import { Icon } from '../ui/Icon';
 import { useAppTheme } from '../../context/ProductLineContext';
-import { spacing, radius } from '../../theme/designTokens';
+import { spacing, radius, shadows } from '../../theme/designTokens';
 import { fontFamily } from '../../theme/typography';
 
 const BOOKING_CHAPTERS = HEALTH_CHAPTERS.filter((ch) => ch.id !== 'conseils');
@@ -14,25 +14,87 @@ const BOOKING_CHAPTERS = HEALTH_CHAPTERS.filter((ch) => ch.id !== 'conseils');
 interface HealthChapterRailProps {
   active: HealthChapterId;
   onSelect: (id: HealthChapterId) => void;
-  /** Chips horizontaux compacts — page RDV minimaliste. */
+  /** Chips horizontaux compacts — legacy. */
   minimal?: boolean;
+  /** Grille pleine largeur — sélection spécialité (Doctolib-like). */
+  picker?: boolean;
 }
 
 export const HealthChapterRail: React.FC<HealthChapterRailProps> = ({
   active,
   onSelect,
   minimal = false,
+  picker = false,
 }) => {
   const { colors } = useAppTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
+  if (picker) {
+    return (
+      <View style={styles.pickerGrid}>
+        {BOOKING_CHAPTERS.map((ch) => {
+          const on = ch.id === active;
+          return (
+            <PressableSpring
+              key={ch.id}
+              style={[
+                styles.pickerTile,
+                {
+                  backgroundColor: on ? colors.accent : colors.surface,
+                  borderColor: on ? colors.accent : colors.border,
+                },
+                !on && shadows.soft,
+              ]}
+              onPress={() => {
+                prodayHaptics.tabSwitch();
+                onSelect(ch.id);
+              }}
+              scaleTo={0.97}
+              haptic
+            >
+              <View
+                style={[
+                  styles.pickerIconWrap,
+                  {
+                    backgroundColor: on ? 'rgba(255,255,255,0.16)' : colors.accentSoft,
+                  },
+                ]}
+              >
+                <Icon
+                  name={ch.icon}
+                  size={24}
+                  color={on ? colors.brandInverse : colors.accent}
+                  variant={on ? 'filled' : 'outline'}
+                />
+              </View>
+              <ProDayText
+                variant="section"
+                inverse={on}
+                style={[styles.pickerLabel, on && styles.pickerLabelOn]}
+                numberOfLines={1}
+              >
+                {ch.shortLabel}
+              </ProDayText>
+              <ProDayText
+                variant="caption"
+                style={[
+                  styles.pickerTag,
+                  { color: on ? 'rgba(255,255,255,0.75)' : colors.textMuted },
+                ]}
+                numberOfLines={2}
+              >
+                {ch.tag}
+              </ProDayText>
+            </PressableSpring>
+          );
+        })}
+      </View>
+    );
+  }
+
   if (minimal) {
     return (
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.minimalRow}
-      >
+      <View style={styles.minimalRow}>
         {BOOKING_CHAPTERS.map((ch) => {
           const on = ch.id === active;
           return (
@@ -69,7 +131,7 @@ export const HealthChapterRail: React.FC<HealthChapterRailProps> = ({
             </PressableSpring>
           );
         })}
-      </ScrollView>
+      </View>
     );
   }
 
@@ -88,7 +150,6 @@ export const HealthChapterRail: React.FC<HealthChapterRailProps> = ({
                     backgroundColor: on ? colors.accent : colors.surface,
                     borderColor: on ? colors.accent : colors.border,
                   },
-                  on && styles.tileOn,
                 ]}
                 onPress={() => {
                   if (!on) {
@@ -169,7 +230,6 @@ function createStyles(c: { surface: string }) {
       borderWidth: StyleSheet.hairlineWidth,
       gap: 3,
     },
-    tileOn: {},
     iconWrap: {
       width: 36,
       height: 36,
@@ -191,10 +251,43 @@ function createStyles(c: { surface: string }) {
       letterSpacing: 0.2,
       textAlign: 'center',
     },
+    pickerGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: spacing.md,
+    },
+    pickerTile: {
+      width: '47%',
+      minHeight: 132,
+      padding: spacing.md,
+      borderRadius: radius.xl,
+      borderWidth: StyleSheet.hairlineWidth,
+      alignItems: 'flex-start',
+      justifyContent: 'space-between',
+      gap: spacing.sm,
+    },
+    pickerIconWrap: {
+      width: 48,
+      height: 48,
+      borderRadius: radius.lg,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    pickerLabel: {
+      fontSize: 17,
+      fontWeight: '800',
+      letterSpacing: -0.2,
+    },
+    pickerLabelOn: { color: '#FFFFFF' },
+    pickerTag: {
+      fontSize: 12,
+      fontWeight: '500',
+      lineHeight: 16,
+    },
     minimalRow: {
       flexDirection: 'row',
+      flexWrap: 'wrap',
       gap: spacing.sm,
-      paddingVertical: spacing.xs,
     },
     minimalChip: {
       flexDirection: 'row',
