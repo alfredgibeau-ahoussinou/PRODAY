@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import type { Gender, UserRole } from '../../models/User';
 import { ROLES_REQUIRING_VERIFICATION } from '../../models/User';
 import { DEFAULT_APP_SPACE, type AppSpaceId } from '../../models/AppSpace';
@@ -54,6 +54,7 @@ import { useProductLine } from '../../context/ProductLineContext';
 import { useTranslation } from '../../context/LocaleContext';
 import { getRoleSignupPhases } from './signupRoleExperience';
 import { submitSponsorSignup } from '../../services/sponsorSignup.service';
+import { resolveSignupOAuthState } from '../../utils/authOAuthLink';
 
 export type { SignupPageId, SignupFlowKind };
 
@@ -162,7 +163,21 @@ export function useSignupForm(initial?: {
   const phaseIndex = getPhaseIndex(flowKind, currentPage);
   const currentPhase = getCurrentPhase(currentPage);
   const needsDocument = ROLES_REQUIRING_VERIFICATION.includes(role);
-  const isOAuthCompletion = Boolean(getFirebaseAuth()?.currentUser);
+  const oauthSignup = useMemo(
+    () =>
+      resolveSignupOAuthState(
+        getFirebaseAuth()?.currentUser ?? null,
+        initial?.initialEmail
+      ),
+    [initial?.initialEmail]
+  );
+  const { isOAuthCompletion, providerEmail, isEmailEditable } = oauthSignup;
+
+  useEffect(() => {
+    if (!isEmailEditable && providerEmail && !email.trim()) {
+      setEmail(providerEmail);
+    }
+  }, [isEmailEditable, providerEmail, email]);
 
   const ageSpaceMismatch = useMemo(() => {
     if (parsedAge == null || role !== 'player') return undefined;
@@ -846,6 +861,7 @@ export function useSignupForm(initial?: {
     isSponsorSignup,
     isStaffProduct,
     isOAuthCompletion,
+    isEmailEditable,
     accountCreated,
     appSpace,
     setAppSpace,

@@ -3,8 +3,10 @@ import {
   decodeJwtEmail,
   getFirebaseAuthErrorCode,
   humanizeAuthErrorText,
+  isOAuthProviderUser,
   normalizeAuthEmail,
   oauthProviderLabel,
+  resolveSignupOAuthState,
 } from '../utils/authOAuthLink';
 
 function fakeJwt(payload: Record<string, unknown>): string {
@@ -57,5 +59,60 @@ describe('authOAuthLink', () => {
     expect(err.provider).toBe('google');
     expect(err.message).toContain('a@b.com');
     expect(err.message).toContain('Google');
+  });
+
+  describe('resolveSignupOAuthState', () => {
+    it('inscription email/mot de passe : email éditable sans session OAuth', () => {
+      expect(resolveSignupOAuthState(null)).toEqual({
+        isOAuthCompletion: false,
+        providerEmail: '',
+        isEmailEditable: true,
+      });
+    });
+
+    it('session email/mot de passe existante : email éditable', () => {
+      expect(
+        resolveSignupOAuthState({
+          email: 'user@example.com',
+          providerData: [{ providerId: 'password' }],
+        })
+      ).toEqual({
+        isOAuthCompletion: false,
+        providerEmail: 'user@example.com',
+        isEmailEditable: true,
+      });
+    });
+
+    it('OAuth Google avec email : email verrouillé', () => {
+      expect(
+        resolveSignupOAuthState({
+          email: 'user@gmail.com',
+          providerData: [{ providerId: 'google.com' }],
+        })
+      ).toEqual({
+        isOAuthCompletion: true,
+        providerEmail: 'user@gmail.com',
+        isEmailEditable: false,
+      });
+    });
+
+    it('OAuth Apple sans email partagé : email éditable', () => {
+      expect(
+        resolveSignupOAuthState({
+          email: null,
+          providerData: [{ providerId: 'apple.com' }],
+        })
+      ).toEqual({
+        isOAuthCompletion: true,
+        providerEmail: '',
+        isEmailEditable: true,
+      });
+    });
+
+    it('isOAuthProviderUser détecte Google et Apple uniquement', () => {
+      expect(isOAuthProviderUser({ providerData: [{ providerId: 'google.com' }] })).toBe(true);
+      expect(isOAuthProviderUser({ providerData: [{ providerId: 'apple.com' }] })).toBe(true);
+      expect(isOAuthProviderUser({ providerData: [{ providerId: 'password' }] })).toBe(false);
+    });
   });
 });

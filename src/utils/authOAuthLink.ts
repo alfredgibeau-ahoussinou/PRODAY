@@ -1,3 +1,33 @@
+type OAuthProviderData = { providerId: string };
+
+/** Connexion Google ou Apple (pas email/mot de passe seul). */
+export function isOAuthProviderUser(
+  fbUser: { providerData: OAuthProviderData[] } | null | undefined
+): boolean {
+  return (
+    fbUser?.providerData.some(
+      (p) => p.providerId === 'google.com' || p.providerId === 'apple.com'
+    ) ?? false
+  );
+}
+
+export interface SignupOAuthState {
+  isOAuthCompletion: boolean;
+  providerEmail: string;
+  isEmailEditable: boolean;
+}
+
+/** État OAuth pour l’inscription : verrouiller l’email seulement si le fournisseur en a fourni un. */
+export function resolveSignupOAuthState(
+  fbUser: { email?: string | null; providerData: OAuthProviderData[] } | null | undefined,
+  initialEmail?: string
+): SignupOAuthState {
+  const isOAuthCompletion = isOAuthProviderUser(fbUser);
+  const providerEmail = (initialEmail ?? fbUser?.email ?? '').trim();
+  const isEmailEditable = !isOAuthCompletion || !providerEmail;
+  return { isOAuthCompletion, providerEmail, isEmailEditable };
+}
+
 /** Décode l’email d’un JWT OAuth (Google id_token, Apple identityToken). */
 export function decodeJwtEmail(token: string): string | null {
   try {

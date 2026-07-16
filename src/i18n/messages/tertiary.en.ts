@@ -99,6 +99,8 @@ export const TERTIARY_EN: MessageCatalog = {
   'signup.form.continue': 'Continue',
   'signup.form.proProfile': 'Professional profile',
   'signup.form.email': 'Email',
+  'signup.form.emailOAuthLocked':
+    'Email from your Google or Apple sign-in — it cannot be changed here.',
   'signup.form.emailPlaceholder': 'you@example.com',
   'signup.form.cityRequired': 'City *',
   'signup.form.position': 'Position *',

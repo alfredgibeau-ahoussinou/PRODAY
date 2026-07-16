@@ -1,5 +1,5 @@
-import React from 'react';
-import { View } from 'react-native';
+import React, { useMemo } from 'react';
+import { View, Text, StyleSheet } from 'react-native';
 import { AuthTextField } from '../../components/auth/AuthTextField';
 import { StaggerReveal } from '../../components/motion';
 import { SignupFormCard } from '../../components/signup/SignupFormCard';
@@ -11,6 +11,9 @@ import { useTranslation } from '../../context/LocaleContext';
 import { getProStepMeta } from './signupProConfig';
 import { getSanteStepMeta } from './signupSanteConfig';
 import { ProDayErrorBanner } from '../../components/ui/ProDayErrorBanner';
+import { useSignupFlowTheme } from './SignupFlowContext';
+import type { AppColors } from '../../theme/universeTheme';
+import { spacing } from '../../theme/designTokens';
 
 interface SignupAccountStepProps {
   form: SignupForm;
@@ -32,6 +35,8 @@ export const SignupAccountStep: React.FC<SignupAccountStepProps> = ({
   onBack,
 }) => {
   const { t } = useTranslation();
+  const { colors: c } = useSignupFlowTheme();
+  const styles = useMemo(() => createStyles(c), [c]);
   const meta = form.isSanteProduct
     ? getSanteStepMeta('account', t)
     : form.isProProduct
@@ -79,9 +84,12 @@ export const SignupAccountStep: React.FC<SignupAccountStepProps> = ({
           onChangeText={form.setEmail}
           keyboardType="email-address"
           autoCapitalize="none"
-          editable={!form.isOAuthCompletion}
+          editable={form.isEmailEditable}
           error={form.fieldErrors.email}
         />
+        {!form.isEmailEditable ? (
+          <Text style={styles.emailHint}>{t('signup.form.emailOAuthLocked')}</Text>
+        ) : null}
       </StaggerReveal>
     </SignupFormCard>
     {form.role === 'sponsor' ? (
@@ -99,3 +107,15 @@ export const SignupAccountStep: React.FC<SignupAccountStepProps> = ({
   </SignupStepLayout>
   );
 };
+
+function createStyles(c: AppColors) {
+  return StyleSheet.create({
+    emailHint: {
+      fontSize: 12,
+      lineHeight: 17,
+      color: c.textMuted,
+      marginTop: -spacing.xs,
+      marginBottom: spacing.xs,
+    },
+  });
+}

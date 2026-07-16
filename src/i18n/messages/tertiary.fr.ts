@@ -404,6 +404,8 @@ export const TERTIARY_FR: MessageCatalog = {
   'signup.form.displayName': 'Nom d\'affichage',
   'signup.form.displayNamePlaceholder': 'Premier Dernier',
   'signup.form.email': 'Email',
+  'signup.form.emailOAuthLocked':
+    'Email fourni par votre connexion Google ou Apple — il ne peut pas être modifié ici.',
   'signup.form.emailPlaceholder': 'vous@exemple.com',
   'signup.form.finalize': 'Finaliser mon accès',
   'signup.form.fixFields': 'Corrigez les champs en surbrillance avant de créer le compte.',
