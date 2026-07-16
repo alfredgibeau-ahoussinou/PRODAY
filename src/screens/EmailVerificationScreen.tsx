@@ -132,7 +132,7 @@ export const EmailVerificationScreen: React.FC<EmailVerificationScreenProps> = (
         <Text style={styles.subtitle}>
           {variant === 'practitioner'
             ? 'Confirmez votre adresse pour activer votre espace Pro Day Santé —\n'
-            : 'Étape 2 — Vos documents ont été analysés par l’IA. Confirmez maintenant{'\n'}'}
+            : 'Étape 2 — Vos documents ont été analysés par l’IA. Confirmez maintenant\n'}
           <Text style={styles.email}>{email}</Text>
         </Text>
         <Text style={styles.body}>
