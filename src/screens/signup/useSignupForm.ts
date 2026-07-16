@@ -51,6 +51,7 @@ import { isRoleAllowedForProductLine, resolveSignupProductLine } from '../../con
 import { isProFamilyLine } from '../../utils/productLineResolution';
 import type { ProductLineId } from '../../models/ProductLine';
 import { useProductLine } from '../../context/ProductLineContext';
+import { useTranslation } from '../../context/LocaleContext';
 import { getRoleSignupPhases } from './signupRoleExperience';
 import { submitSponsorSignup } from '../../services/sponsorSignup.service';
 
