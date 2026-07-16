@@ -120,8 +120,9 @@ async function sendAuthActionEmail(
       return { enabled: true, sent: true };
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
-      console.warn('[authCustomEmails] EmailJS failed — trying Resend fallback:', msg);
+      console.error('[authCustomEmails] EmailJS failed:', msg);
       if (!resend) throw e;
+      console.warn('[authCustomEmails] Resend fallback (auth.resend_fallback=true)');
     }
   }
 
@@ -193,16 +194,10 @@ export const sendAuthVerificationEmail = functions
           'Domaine proday75.fr non autorisé dans Firebase Auth. Ajoutez-le dans Authorized domains.'
         );
       }
-      if (msg.includes('domain is not verified') || msg.includes('Resend 403')) {
+      if (msg.includes('EmailJS')) {
         throw new functions.https.HttpsError(
           'failed-precondition',
-          'Envoi e-mail temporairement indisponible (domaine Resend). Réessayez dans quelques minutes.'
-        );
-      }
-      if (msg.includes('Resend') && (msg.includes('domain') || msg.includes('403'))) {
-        throw new functions.https.HttpsError(
-          'failed-precondition',
-          'Envoi e-mail temporairement indisponible (domaine Resend). Réessayez dans quelques minutes.'
+          'Envoi e-mail temporairement indisponible. Vérifiez la config EmailJS ou réessayez dans quelques minutes.'
         );
       }
       console.error('[sendAuthVerificationEmail]', e);
@@ -265,16 +260,10 @@ export const sendAuthPasswordResetEmail = functions
           'Domaine proday75.fr non autorisé dans Firebase Auth. Ajoutez-le dans Authorized domains.'
         );
       }
-      if (msg.includes('domain is not verified') || msg.includes('Resend 403')) {
+      if (msg.includes('EmailJS')) {
         throw new functions.https.HttpsError(
           'failed-precondition',
-          'Envoi e-mail temporairement indisponible (domaine Resend). Réessayez dans quelques minutes.'
-        );
-      }
-      if (msg.includes('Resend') && (msg.includes('domain') || msg.includes('403'))) {
-        throw new functions.https.HttpsError(
-          'failed-precondition',
-          'Envoi e-mail temporairement indisponible (domaine Resend). Réessayez dans quelques minutes.'
+          'Envoi e-mail temporairement indisponible. Vérifiez la config EmailJS ou réessayez dans quelques minutes.'
         );
       }
       console.error('[sendAuthPasswordResetEmail]', e);

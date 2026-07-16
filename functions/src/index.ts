@@ -26,6 +26,10 @@ import {
 import { onTeamEventUpdated, syncTeamEventActivities } from './teamEventActivitySync';
 import { analyzeActivityHighlight } from './analyzeActivityHighlight';
 import { sendAuthPasswordResetEmail, sendAuthVerificationEmail } from './authCustomEmails';
+import {
+  onMedicalAppointmentCreatedHandler,
+  onMedicalAppointmentUpdatedHandler,
+} from './appointmentEmail';
 
 export { createPaymentCheckoutSession, stripeWebhook, createShopCheckoutSession };
 export { sendAuthVerificationEmail, sendAuthPasswordResetEmail };
@@ -703,7 +707,7 @@ export const trackSponsorEvent = functions.https.onCall(async (data, context) =>
   return { success: true };
 });
 
-/** Inscription bêta site vitrine — Firestore + email Resend */
+/** Inscription bêta site vitrine — Firestore + EmailJS (email après validation admin). */
 export const submitBetaWaitlist = functions
   .region('europe-west1')
   .https.onRequest(createSubmitBetaWaitlistHandler(db));
@@ -732,3 +736,14 @@ export const adminResendBetaWelcomeEmail = functions
 export const adminDeleteBetaWaitlistEntry = functions
   .region('europe-west1')
   .https.onCall(createAdminDeleteBetaWaitlistEntryHandler(db));
+
+/** E-mails rendez-vous pôle Santé (EmailJS). */
+export const onMedicalAppointmentCreated = functions
+  .region('europe-west1')
+  .firestore.document('medical_appointments/{appointmentId}')
+  .onCreate(onMedicalAppointmentCreatedHandler);
+
+export const onMedicalAppointmentUpdated = functions
+  .region('europe-west1')
+  .firestore.document('medical_appointments/{appointmentId}')
+  .onUpdate(onMedicalAppointmentUpdatedHandler);

@@ -6,17 +6,10 @@ import {
   sendBetaWelcomeEmailViaEmailJs,
   type EmailJsBetaConfig,
 } from './betaWaitlistEmail';
+import { getEmailJsConfig, isResendFallbackEnabled } from './emailJsClient';
 
 export function getBetaEmailJsConfig(): EmailJsBetaConfig | null {
-  const cfg = functions.config().beta ?? {};
-  const serviceId = (cfg.emailjs_service_id as string | undefined)?.trim();
-  const templateId = (cfg.emailjs_template_id as string | undefined)?.trim();
-  const publicKey = (cfg.emailjs_public_key as string | undefined)?.trim();
-  const privateKey = (cfg.emailjs_private_key as string | undefined)?.trim();
-
-  if (!serviceId || !templateId || !publicKey || !privateKey) return null;
-
-  return { serviceId, templateId, publicKey, privateKey };
+  return getEmailJsConfig('beta');
 }
 
 export function getBetaSiteUrl(): string {
@@ -37,7 +30,7 @@ export async function sendBetaWelcomeEmailToEntry(
   const siteUrl = getBetaSiteUrl();
   const welcomeParams = { email, roleLabel, siteUrl, accessToken };
   const emailJs = getBetaEmailJsConfig();
-  const resend = getAuthEmailTransportConfig();
+  const resend = isResendFallbackEnabled('beta') ? getAuthEmailTransportConfig() : null;
 
   if (emailJs) {
     try {
@@ -65,7 +58,7 @@ export async function sendBetaWelcomeEmailToEntry(
   return {
     emailSent: false,
     emailError:
-      'Transport email non configuré (EmailJS ou beta.resend_api_key / auth.resend_api_key)',
+      'Transport email non configuré (beta.emailjs_template_id + clés EmailJS)',
   };
 }
 

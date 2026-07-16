@@ -1,3 +1,5 @@
+import { sendEmailViaEmailJs } from './emailJsClient';
+
 export type BetaRoleId =
   | 'player'
   | 'coach'
@@ -181,22 +183,5 @@ export async function sendBetaWelcomeEmailViaEmailJs(
   config: EmailJsBetaConfig,
   params: BetaWelcomeEmailParams
 ): Promise<void> {
-  const templateParams = buildBetaEmailJsTemplateParams(params);
-
-  const res = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      service_id: config.serviceId,
-      template_id: config.templateId,
-      user_id: config.publicKey,
-      accessToken: config.privateKey,
-      template_params: templateParams,
-    }),
-  });
-
-  if (!res.ok) {
-    const detail = await res.text();
-    throw new Error(`EmailJS ${res.status}: ${detail}`);
-  }
+  await sendEmailViaEmailJs(config, buildBetaEmailJsTemplateParams(params));
 }

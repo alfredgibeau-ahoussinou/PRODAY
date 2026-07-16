@@ -146,7 +146,7 @@ export const AdminBetaProgramPanel: React.FC = () => {
             } else {
               Alert.alert(
                 'Erreur',
-                result.emailError ?? 'Envoi email impossible. Vérifiez la config EmailJS / Resend.',
+                result.emailError ?? 'Envoi email impossible. Vérifiez la config EmailJS.',
               );
             }
           }),

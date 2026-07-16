@@ -1,5 +1,11 @@
 import * as functions from 'firebase-functions';
 import { buildAuthEmailJsTemplateParams } from './authEmailJsParams';
+import {
+  getEmailJsConfig,
+  isResendFallbackEnabled,
+  sendEmailViaEmailJs,
+  type EmailJsConfig,
+} from './emailJsClient';
 
 export type AuthEmailPayload = {
   to: string;
@@ -13,38 +19,17 @@ export type AuthEmailTransportConfig = {
   fromEmail: string;
 };
 
-export type EmailJsAuthConfig = {
-  serviceId: string;
-  templateId: string;
-  publicKey: string;
-  privateKey: string;
-};
+export type EmailJsAuthConfig = EmailJsConfig;
 
 export function getEmailJsAuthConfig(): EmailJsAuthConfig | null {
-  const authCfg = functions.config().auth ?? {};
-  const betaCfg = functions.config().beta ?? {};
-
-  // Ne jamais réutiliser beta.emailjs_template_id : template « bienvenue bêta », pas Auth.
-  const templateId = (authCfg.emailjs_template_id as string | undefined)?.trim();
-  if (!templateId) return null;
-
-  const serviceId =
-    (authCfg.emailjs_service_id as string | undefined)?.trim() ||
-    (betaCfg.emailjs_service_id as string | undefined)?.trim();
-  const publicKey =
-    (authCfg.emailjs_public_key as string | undefined)?.trim() ||
-    (betaCfg.emailjs_public_key as string | undefined)?.trim();
-  const privateKey =
-    (authCfg.emailjs_private_key as string | undefined)?.trim() ||
-    (betaCfg.emailjs_private_key as string | undefined)?.trim();
-
-  if (!serviceId || !publicKey || !privateKey) return null;
-  return { serviceId, templateId, publicKey, privateKey };
+  return getEmailJsConfig('auth');
 }
 
 export { buildAuthEmailJsTemplateParams } from './authEmailJsParams';
 
 export function getAuthEmailTransportConfig(): AuthEmailTransportConfig | null {
+  if (!isResendFallbackEnabled('auth')) return null;
+
   const authCfg = functions.config().auth ?? {};
   const betaCfg = functions.config().beta ?? {};
 
@@ -118,25 +103,15 @@ export async function sendAuthEmailViaEmailJs(
     (functions.config().auth?.continue_url as string | undefined)?.trim() ||
     (functions.config().beta?.site_url as string | undefined)?.trim() ||
     'https://proday75.fr';
-  const res = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      service_id: config.serviceId,
-      template_id: config.templateId,
-      user_id: config.publicKey,
-      accessToken: config.privateKey,
-      template_params: buildAuthEmailJsTemplateParams(payload, link, {
-        displayName: options?.displayName,
-        siteUrl: options?.siteUrl ?? authSiteUrl,
-        kind: options?.kind,
-      }),
-    }),
-  });
-  if (!res.ok) {
-    const detail = await res.text();
-    throw new Error(`EmailJS ${res.status}: ${detail}`);
-  }
+
+  await sendEmailViaEmailJs(
+    config,
+    buildAuthEmailJsTemplateParams(payload, link, {
+      displayName: options?.displayName,
+      siteUrl: options?.siteUrl ?? authSiteUrl,
+      kind: options?.kind,
+    })
+  );
 }
 
 export { isResendDomainError };

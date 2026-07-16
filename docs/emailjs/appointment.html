@@ -1,0 +1,92 @@
+<!--
+  ProDay — E-mails rendez-vous (pôle Santé)
+  EmailJS → appointment.emailjs_template_id → Content (HTML)
+
+  Design aligné sur docs/emailjs/auth-action.html
+
+  Settings EmailJS :
+  - To Email  : {{email}}
+  - From Name : ProDay
+  - Subject   : {{subject}}
+  - Reply To  : support@proday.app
+
+  Variables (functions/src/appointmentEmail.ts) :
+  - email, to_email, user_email — destinataire
+  - subject, headline — objet et titre
+  - body_intro, body_action — paragraphes principaux
+  - body_detail — détails du créneau (multiligne)
+  - recipient_name, counterparty_name
+  - appointment_date, appointment_time, duration_min
+  - location_label, motif, status_label
+  - email_kind — booking_request_physio | booking_pending_patient | booking_confirmed | booking_cancelled
+  - site_url, app_name
+-->
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{{subject}}</title>
+</head>
+<body style="margin:0;padding:0;background-color:#0a0a0a;">
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0;padding:0;background-color:#0a0a0a;">
+    <tr>
+      <td align="center" style="padding:48px 24px;">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" style="max-width:600px;width:100%;background-color:#111111;border-radius:16px;border:1px solid #1f1f1f;">
+          <tr>
+            <td align="center" style="padding:48px 40px 32px 40px;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;background-color:#ffffff;border-radius:12px;">
+                <tr>
+                  <td align="center" style="padding:12px 16px;">
+                    <img src="https://proday75.fr/branding/logo-proday-official.png" width="180" alt="ProDay" style="display:block;border:0;outline:none;text-decoration:none;height:auto;margin:0 auto;">
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td align="center" style="padding:0 40px 16px 40px;">
+              <h1 style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:28px;line-height:36px;font-weight:700;color:#22d3ee;">{{headline}}</h1>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:0 40px 24px 40px;">
+              <p style="margin:0 0 16px 0;font-family:Arial,Helvetica,sans-serif;font-size:17px;line-height:28px;color:#ffffff;">
+                Bonjour {{recipient_name}},
+              </p>
+              <p style="margin:0 0 16px 0;font-family:Arial,Helvetica,sans-serif;font-size:17px;line-height:28px;color:#e5e5e5;">
+                {{body_intro}}
+              </p>
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:24px 0;background:#1a1a1a;border-radius:12px;border:1px solid #2a2a2a;">
+                <tr>
+                  <td style="padding:20px 24px;">
+                    <p style="margin:0 0 8px;font-family:Arial,Helvetica,sans-serif;font-size:13px;font-weight:700;color:#22d3ee;text-transform:uppercase;letter-spacing:0.06em;">Détails du rendez-vous</p>
+                    <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.8;color:#e5e5e5;white-space:pre-line;">{{body_detail}}</p>
+                    <p style="margin:16px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:22px;color:#a3a3a3;">
+                      Statut : <strong style="color:#ffffff;">{{status_label}}</strong>
+                    </p>
+                  </td>
+                </tr>
+              </table>
+              <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:17px;line-height:28px;color:#e5e5e5;">
+                {{body_action}}
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:0 40px 40px 40px;border-top:1px solid #1f1f1f;">
+              <p style="margin:24px 0 8px 0;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:22px;color:#a3a3a3;">
+                Gérez vos rendez-vous depuis l’application ProDay (pôle Santé).
+              </p>
+              <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:22px;color:#737373;">
+                — {{app_name}}<br>
+                <a href="mailto:support@proday.app" style="color:#22d3ee;text-decoration:none;">support@proday.app</a>
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
