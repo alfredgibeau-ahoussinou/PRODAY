@@ -590,11 +590,6 @@ export function useSignupForm(initial?: {
     goNext,
   ]);
 
-  const parseStat = (value: string) => {
-    const n = parseInt(value.replace(/\D/g, ''), 10);
-    return Number.isFinite(n) && n >= 0 ? n : 0;
-  };
-
   const buildPlayerPayload = () => ({
     position: position.trim(),
     category: category.trim(),
@@ -604,11 +599,7 @@ export function useSignupForm(initial?: {
       isAmateurProduct || isProPlayerSignup || (isProProduct && role === 'player')
         ? gender
         : undefined,
-    season_stats: {
-      matches: parseStat(statMatches),
-      goals: parseStat(statGoals),
-      assists: parseStat(statAssists),
-    },
+    // season_stats : interdit à la création (Firestore rules) — alimenté par le staff après match.
   });
 
   const buildParentalSettings = () => {

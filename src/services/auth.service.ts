@@ -154,6 +154,7 @@ function mapAuthError(code: string): string {
     'auth/invalid-api-key': 'Clé Firebase invalide. Vérifiez le fichier .env.',
     'auth/configuration-not-found': 'Projet Firebase introuvable. Vérifiez le .env.',
     'firestore/permission-denied': 'Accès refusé aux données. Réessayez ou contactez le support.',
+    'permission-denied': 'Accès refusé aux données. Réessayez ou contactez le support.',
     'auth/popup-closed-by-user': 'Connexion annulée.',
     'auth/cancelled-popup-request': 'Connexion annulée.',
     'auth/account-exists-with-different-credential':

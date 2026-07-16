@@ -117,6 +117,10 @@ export const profileService = {
     const profileData = stripUndefinedDeep({
       ...(options?.profile ?? {}),
     }) as User['profile'];
+    // Les joueurs ne peuvent pas écrire season_stats côté client (signup ni update).
+    if (isPlayer && profileData.season_stats) {
+      delete profileData.season_stats;
+    }
 
     const verificationStatus: VerificationStatus = requiresStaffVerification
       ? 'PENDING'
