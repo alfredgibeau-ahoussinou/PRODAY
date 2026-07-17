@@ -31,6 +31,15 @@ function trimStr(value: unknown, max = MAX_STRING): string {
     .slice(0, max);
 }
 
+
+const PACKAGE_TIERS = ["starter", "territorial", "national", "custom"] as const;
+type PackageTier = (typeof PACKAGE_TIERS)[number];
+
+function parsePackageTier(value: unknown): PackageTier {
+  const raw = trimStr(value, 32).toLowerCase();
+  return (PACKAGE_TIERS as readonly string[]).includes(raw) ? (raw as PackageTier) : "custom";
+}
+
 function trimArray(value: unknown, max = MAX_ARRAY): string[] {
   if (!Array.isArray(value)) return [];
   return value
@@ -63,7 +72,7 @@ function formatSponsorSummary(payload: SponsorSignupPayload): string {
 }
 
 async function submitSponsorQuoteRequest(
-  payload: SponsorSignupPayload & { packageTier?: string },
+  payload: SponsorSignupPayload,
 ): Promise<{ ok: boolean; status?: number; error?: string }> {
   const functionUrl = process.env.SPONSOR_QUOTE_FUNCTION_URL?.trim();
   if (!functionUrl) {
@@ -182,7 +191,7 @@ export async function POST(request: Request) {
     return jsonResponse({ error: "Corps JSON invalide" }, { status: 400 });
   }
 
-  const payload: SponsorSignupPayload & { packageTier?: string } = {
+  const payload: SponsorSignupPayload = {
     companyName: trimStr(body.companyName),
     sector: trimStr(body.sector),
     contactName: trimStr(body.contactName),
@@ -195,7 +204,7 @@ export async function POST(request: Request) {
     phone: trimStr(body.phone, 32),
     logoFileName: body.logoFileName ? trimStr(body.logoFileName, 128) : undefined,
     message: body.message ? trimStr(body.message, MAX_MESSAGE) : undefined,
-    packageTier: trimStr(body.packageTier ?? body.package_tier, 32) || "custom",
+    packageTier: parsePackageTier(body.packageTier ?? body.package_tier),
   };
 
   if (!payload.companyName || !payload.sector || !payload.contactName) {
