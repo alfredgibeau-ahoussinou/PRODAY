@@ -1,5 +1,5 @@
 import * as admin from 'firebase-admin';
-import * as functions from 'firebase-functions';
+import { configStr } from './runtimeConfig';
 import {
   buildBetaEmailJsTemplateParams,
   buildBetaWelcomeEmail,
@@ -13,8 +13,7 @@ export function getBetaEmailJsConfig(): EmailJsBetaConfig | null {
 }
 
 export function getBetaSiteUrl(): string {
-  const cfg = functions.config().beta ?? {};
-  return (cfg.site_url as string | undefined) ?? 'https://proday75.fr';
+  return configStr('beta', 'site_url', ['BETA_SITE_URL']) ?? 'https://proday75.fr';
 }
 
 export type BetaWelcomeSendResult = {

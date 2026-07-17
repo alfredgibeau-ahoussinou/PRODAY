@@ -1,4 +1,4 @@
-import * as functions from 'firebase-functions';
+import { configStr } from './runtimeConfig';
 import { getBrevoConfig, sendViaBrevo, type BrevoSendPayload } from './brevoEmailClient';
 import {
   getEmailJsConfig,
@@ -15,8 +15,9 @@ export type EmailJsFallback = {
 };
 
 export function getEmailProvider(): 'brevo' | 'emailjs' {
-  const cfg = functions.config().email ?? {};
-  const provider = String(cfg.provider ?? 'brevo').trim().toLowerCase();
+  const provider = String(configStr('email', 'provider', ['EMAIL_PROVIDER']) ?? 'brevo')
+    .trim()
+    .toLowerCase();
   return provider === 'emailjs' ? 'emailjs' : 'brevo';
 }
 

@@ -1,4 +1,4 @@
-import * as functions from 'firebase-functions';
+import { configStr } from './runtimeConfig';
 import { isBrevoConfigured, sendTransactionalEmail } from './emailTransport';
 
 export type SponsorQuotePackageTier = 'starter' | 'territorial' | 'national' | 'custom';
@@ -164,7 +164,6 @@ export async function notifyAdminNewQuoteRequest(
 }
 
 export function getAdminAlertEmail(): string {
-  const cfg = functions.config().admin ?? {};
-  const override = (cfg.alert_email as string | undefined)?.trim();
+  const override = configStr('admin', 'alert_email', ['ADMIN_ALERT_EMAIL']);
   return override || ADMIN_ALERT_EMAIL;
 }

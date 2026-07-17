@@ -1,4 +1,4 @@
-import * as functions from 'firebase-functions';
+import { configStr } from './runtimeConfig';
 import * as admin from 'firebase-admin';
 import { sendFcmToUser } from './messaging';
 
@@ -14,11 +14,7 @@ interface MistralVerdict {
 }
 
 function getMistralApiKey(): string | null {
-  return (
-    functions.config().mistral?.api_key ??
-    process.env.MISTRAL_API_KEY ??
-    null
-  );
+  return configStr('mistral', 'api_key', ['MISTRAL_API_KEY']) ?? null;
 }
 
 function roleExpectationFr(role: string, verificationCheck?: string): string {

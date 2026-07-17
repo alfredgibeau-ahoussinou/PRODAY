@@ -1,14 +1,14 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
 import Stripe from 'stripe';
+import { configStr } from './runtimeConfig';
 import { sendFcmToUser } from './messaging';
 import { handleShopCheckoutCompleted } from './shopPayments';
 
 const db = admin.firestore();
 
 function getStripe(): Stripe | null {
-  const secret =
-    functions.config().stripe?.secret_key ?? process.env.STRIPE_SECRET_KEY ?? '';
+  const secret = configStr('stripe', 'secret_key', ['STRIPE_SECRET_KEY']) ?? '';
   if (!secret) return null;
   return new Stripe(secret, { apiVersion: '2025-02-24.acacia' });
 }
@@ -95,7 +95,7 @@ export const stripeWebhook = functions.https.onRequest(async (req, res) => {
 
   const stripe = getStripe();
   const webhookSecret =
-    functions.config().stripe?.webhook_secret ?? process.env.STRIPE_WEBHOOK_SECRET ?? '';
+    configStr('stripe', 'webhook_secret', ['STRIPE_WEBHOOK_SECRET']) ?? '';
 
   if (!stripe || !webhookSecret) {
     console.error('[stripeWebhook] Stripe ou webhook secret manquant');

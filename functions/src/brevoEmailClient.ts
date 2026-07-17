@@ -1,4 +1,4 @@
-import * as functions from 'firebase-functions';
+import { configStr } from './runtimeConfig';
 
 const BREVO_API_URL = 'https://api.brevo.com/v3/smtp/email';
 
@@ -16,10 +16,9 @@ export type BrevoSendPayload = {
 };
 
 export function getBrevoConfig(): BrevoConfig | null {
-  const cfg = functions.config().email ?? {};
-  const apiKey = (cfg.brevo_api_key as string | undefined)?.trim();
-  const fromEmail = (cfg.from_email as string | undefined)?.trim();
-  const fromName = (cfg.from_name as string | undefined)?.trim() || 'ProDay';
+  const apiKey = configStr('email', 'brevo_api_key', ['EMAIL_BREVO_API_KEY']);
+  const fromEmail = configStr('email', 'from_email', ['EMAIL_FROM_EMAIL']);
+  const fromName = configStr('email', 'from_name', ['EMAIL_FROM_NAME']) || 'ProDay';
 
   if (!apiKey || !fromEmail) return null;
   return { apiKey, fromEmail, fromName };

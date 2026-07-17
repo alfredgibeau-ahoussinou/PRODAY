@@ -21,6 +21,9 @@ firebase/*adminsdk*.json
 **/service-account*.json
 **/*firebase-adminsdk*.json
 functions/lib/
+functions/.env
+functions/.env.*
+!functions/.env.example
 *.log
 .idea/
 .vscode/

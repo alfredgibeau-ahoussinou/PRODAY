@@ -1,14 +1,14 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
 import Stripe from 'stripe';
+import { configStr } from './runtimeConfig';
 import { sendFcmToUser } from './messaging';
 import { SHOP_STRIPE_PRODUCTS } from './shopStripeCatalog';
 
 const db = admin.firestore();
 
 function getStripe(): Stripe | null {
-  const secret =
-    functions.config().stripe?.secret_key ?? process.env.STRIPE_SECRET_KEY ?? '';
+  const secret = configStr('stripe', 'secret_key', ['STRIPE_SECRET_KEY']) ?? '';
   if (!secret) return null;
   return new Stripe(secret, { apiVersion: '2025-02-24.acacia' });
 }

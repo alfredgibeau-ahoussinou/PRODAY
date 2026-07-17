@@ -1,4 +1,5 @@
-import * as functions from 'firebase-functions';
+import { configStr } from './runtimeConfig';
+import type * as functions from 'firebase-functions';
 import { onDocumentCreated, onDocumentUpdated } from 'firebase-functions/v2/firestore';
 import * as admin from 'firebase-admin';
 import { admin as firebaseAdmin } from './firebaseAdmin';
@@ -58,10 +59,9 @@ function formatAppointmentTime(date: Date): string {
 }
 
 function getSiteUrl(): string {
-  const cfg = functions.config();
   return (
-    (cfg.appointment?.site_url as string | undefined)?.trim() ||
-    (cfg.beta?.site_url as string | undefined)?.trim() ||
+    configStr('appointment', 'site_url', ['APPOINTMENT_SITE_URL']) ||
+    configStr('beta', 'site_url', ['BETA_SITE_URL']) ||
     'https://proday75.fr'
   ).replace(/\/$/, '');
 }

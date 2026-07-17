@@ -1,6 +1,7 @@
 import * as functions from 'firebase-functions';
 import { admin } from './firebaseAdmin';
 import { renderAuthEmailTemplate } from './authEmailTemplates';
+import { configStr } from './runtimeConfig';
 import {
   hasAuthEmailTransport,
   isAuthCustomEmailEnabled,
@@ -20,12 +21,10 @@ type AuthEmailCallableResult = {
 };
 
 function getContinueUrl(): string {
-  const authCfg = functions.config().auth ?? {};
-  const betaCfg = functions.config().beta ?? {};
-  const explicit = (authCfg.continue_url as string | undefined)?.trim();
+  const explicit = configStr('auth', 'continue_url', ['AUTH_CONTINUE_URL']);
   if (explicit) return explicit;
 
-  const siteUrl = (betaCfg.site_url as string | undefined)?.trim();
+  const siteUrl = configStr('beta', 'site_url', ['BETA_SITE_URL']);
   if (siteUrl) return siteUrl;
 
   return 'https://proday75.fr';

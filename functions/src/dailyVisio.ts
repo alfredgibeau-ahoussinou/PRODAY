@@ -1,4 +1,4 @@
-import * as functions from 'firebase-functions';
+import { configStr } from './runtimeConfig';
 
 export interface DailyConfig {
   apiKey: string | null;
@@ -12,13 +12,9 @@ export interface DailyMeetingLinkResult {
 }
 
 export function getDailyConfig(): DailyConfig {
-  const cfg = functions.config().visio ?? {};
   return {
-    apiKey:
-      (cfg.daily_api_key as string | undefined)?.trim() ||
-      process.env.DAILY_API_KEY?.trim() ||
-      null,
-    domain: (cfg.daily_domain as string | undefined)?.trim() || 'proday',
+    apiKey: configStr('visio', 'daily_api_key', ['DAILY_API_KEY', 'VISIO_DAILY_API_KEY']) ?? null,
+    domain: configStr('visio', 'daily_domain', ['VISIO_DAILY_DOMAIN', 'DAILY_DOMAIN']) || 'proday',
   };
 }
 

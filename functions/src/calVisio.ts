@@ -1,4 +1,4 @@
-import * as functions from 'firebase-functions';
+import { configStr, resolveCalDefaultUsername } from './runtimeConfig';
 
 const CAL_COM_HOME_URL = 'https://cal.com';
 const CAL_API_BASE = 'https://api.cal.com/v2';
@@ -32,19 +32,12 @@ export interface PhysioProfileFields {
 }
 
 export function getCalConfig(): CalConfig {
-  const cfg = functions.config().cal ?? {};
   return {
-    apiKey:
-      (cfg.api_key as string | undefined)?.trim() ||
-      process.env.CAL_API_KEY?.trim() ||
-      null,
+    apiKey: configStr('cal', 'api_key', ['CAL_API_KEY']) ?? null,
     eventTypeSlug:
-      (cfg.event_type_slug as string | undefined)?.trim() || DEFAULT_EVENT_TYPE_SLUG,
+      configStr('cal', 'event_type_slug', ['CAL_EVENT_TYPE_SLUG']) || DEFAULT_EVENT_TYPE_SLUG,
     defaultUsername:
-      (cfg.default_username as string | undefined)?.trim() ||
-      (cfg.org_username as string | undefined)?.trim() ||
-      process.env.CAL_DEFAULT_USERNAME?.trim() ||
-      null,
+      configStr('cal', 'default_username', ['CAL_DEFAULT_USERNAME', 'CAL_ORG_USERNAME']) ?? null,
   };
 }
 
@@ -127,14 +120,16 @@ export function parseCalComEventProfile(
 }
 
 /** Profil praticien ou compte Cal.com org ProDay (config cal.default_username). */
-export function resolveCalComEventProfile(
+export async function resolveCalComEventProfile(
   profile: PhysioProfileFields,
   defaultEventTypeSlug?: string
-): CalComEventProfile | null {
+): Promise<CalComEventProfile | null> {
   const fromProfile = parseCalComEventProfile(profile, defaultEventTypeSlug);
   if (fromProfile) return fromProfile;
 
-  const { defaultUsername, eventTypeSlug } = getCalConfig();
+  const { eventTypeSlug } = getCalConfig();
+  const defaultUsername =
+    getCalConfig().defaultUsername ?? (await resolveCalDefaultUsername());
   if (!defaultUsername) return null;
 
   const normalized = normalizeCalComBookingInput(defaultUsername);
@@ -377,7 +372,7 @@ export async function resolveCalVideoMeetingLink(input: {
   attendeeEmail: string;
   appointmentId: string;
 }): Promise<CalVideoMeetingLinkResult | null> {
-  const eventProfile = resolveCalComEventProfile(input.profile);
+  const eventProfile = await resolveCalComEventProfile(input.profile);
   if (!eventProfile) return null;
 
   const fromApi = await createCalVideoBooking({

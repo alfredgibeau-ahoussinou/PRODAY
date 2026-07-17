@@ -1,4 +1,4 @@
-import * as functions from 'firebase-functions';
+import { configStr, getConfigSection } from './runtimeConfig';
 
 export type EmailJsConfig = {
   serviceId: string;
@@ -18,11 +18,10 @@ export function getSharedEmailJsKeys(): {
   publicKey?: string;
   privateKey?: string;
 } {
-  const betaCfg = functions.config().beta ?? {};
   return {
-    serviceId: (betaCfg.emailjs_service_id as string | undefined)?.trim(),
-    publicKey: (betaCfg.emailjs_public_key as string | undefined)?.trim(),
-    privateKey: (betaCfg.emailjs_private_key as string | undefined)?.trim(),
+    serviceId: configStr('beta', 'emailjs_service_id', ['BETA_EMAILJS_SERVICE_ID']),
+    publicKey: configStr('beta', 'emailjs_public_key', ['BETA_EMAILJS_PUBLIC_KEY']),
+    privateKey: configStr('beta', 'emailjs_private_key', ['BETA_EMAILJS_PRIVATE_KEY']),
   };
 }
 
@@ -31,18 +30,15 @@ export function getSharedEmailJsKeys(): {
  * Chaque flux a son propre `emailjs_template_id` ; service/clés héritent de `beta.*` si omis.
  */
 export function getEmailJsConfig(namespace: EmailJsNamespace): EmailJsConfig | null {
-  const cfg = functions.config()[namespace] ?? {};
+  const cfg = getConfigSection(namespace);
   const shared = getSharedEmailJsKeys();
 
-  const templateId = (cfg.emailjs_template_id as string | undefined)?.trim();
+  const templateId = cfg.emailjs_template_id?.trim();
   if (!templateId) return null;
 
-  const serviceId =
-    (cfg.emailjs_service_id as string | undefined)?.trim() || shared.serviceId;
-  const publicKey =
-    (cfg.emailjs_public_key as string | undefined)?.trim() || shared.publicKey;
-  const privateKey =
-    (cfg.emailjs_private_key as string | undefined)?.trim() || shared.privateKey;
+  const serviceId = cfg.emailjs_service_id?.trim() || shared.serviceId;
+  const publicKey = cfg.emailjs_public_key?.trim() || shared.publicKey;
+  const privateKey = cfg.emailjs_private_key?.trim() || shared.privateKey;
 
   if (!serviceId || !publicKey || !privateKey) return null;
   return { serviceId, templateId, publicKey, privateKey };
@@ -54,7 +50,7 @@ export function getEmailJsConfig(namespace: EmailJsNamespace): EmailJsConfig | n
  * repli sur auth.emailjs_template_id (template unifié legacy).
  */
 export function getAuthEmailJsConfig(kind: AuthEmailJsKind): EmailJsConfig | null {
-  const authCfg = functions.config().auth ?? {};
+  const authCfg = getConfigSection('auth');
   const shared = getSharedEmailJsKeys();
 
   const kindTemplateKey =
@@ -62,31 +58,24 @@ export function getAuthEmailJsConfig(kind: AuthEmailJsKind): EmailJsConfig | nul
       ? 'emailjs_verification_template_id'
       : 'emailjs_password_reset_template_id';
   const templateId =
-    (authCfg[kindTemplateKey] as string | undefined)?.trim() ||
-    (authCfg.emailjs_template_id as string | undefined)?.trim();
+    authCfg[kindTemplateKey]?.trim() || authCfg.emailjs_template_id?.trim();
   if (!templateId) return null;
 
-  const serviceId =
-    (authCfg.emailjs_service_id as string | undefined)?.trim() || shared.serviceId;
-  const publicKey =
-    (authCfg.emailjs_public_key as string | undefined)?.trim() || shared.publicKey;
-  const privateKey =
-    (authCfg.emailjs_private_key as string | undefined)?.trim() || shared.privateKey;
+  const serviceId = authCfg.emailjs_service_id?.trim() || shared.serviceId;
+  const publicKey = authCfg.emailjs_public_key?.trim() || shared.publicKey;
+  const privateKey = authCfg.emailjs_private_key?.trim() || shared.privateKey;
 
   if (!serviceId || !publicKey || !privateKey) return null;
   return { serviceId, templateId, publicKey, privateKey };
 }
 
 export function isAuthEmailJsLegacyUnifiedTemplate(kind: AuthEmailJsKind): boolean {
-  const authCfg = functions.config().auth ?? {};
+  const authCfg = getConfigSection('auth');
   const kindTemplateKey =
     kind === 'verification'
       ? 'emailjs_verification_template_id'
       : 'emailjs_password_reset_template_id';
-  return (
-    !(authCfg[kindTemplateKey] as string | undefined)?.trim() &&
-    Boolean((authCfg.emailjs_template_id as string | undefined)?.trim())
-  );
+  return !authCfg[kindTemplateKey]?.trim() && Boolean(authCfg.emailjs_template_id?.trim());
 }
 
 /** Envoi serveur EmailJS (Cloud Functions — API non-navigateur activée). */

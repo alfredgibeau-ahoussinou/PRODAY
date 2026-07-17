@@ -1,6 +1,6 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
-import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
+import { configStr } from './runtimeConfig';
 import { sendFcmToUser } from './messaging';
 
 const db = admin.firestore();
@@ -17,7 +17,7 @@ export interface ActivityAnalysisPayload {
 }
 
 function getMistralApiKey(): string | null {
-  return functions.config().mistral?.api_key ?? process.env.MISTRAL_API_KEY ?? null;
+  return configStr('mistral', 'api_key', ['MISTRAL_API_KEY']) ?? null;
 }
 
 function toDate(value: unknown): Date {

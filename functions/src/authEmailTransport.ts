@@ -1,4 +1,4 @@
-import * as functions from 'firebase-functions';
+import { configStr } from './runtimeConfig';
 import { buildAuthEmailJsTemplateParams } from './authEmailJsParams';
 import {
   getAuthEmailJsConfig,
@@ -33,8 +33,9 @@ export function hasAuthEmailTransport(): boolean {
 }
 
 export function isAuthCustomEmailEnabled(): boolean {
-  const authCfg = functions.config().auth ?? {};
-  const explicit = String(authCfg.enabled ?? '').trim().toLowerCase();
+  const explicit = String(configStr('auth', 'enabled', ['AUTH_ENABLED']) ?? '')
+    .trim()
+    .toLowerCase();
   if (explicit === 'false') return false;
   if (explicit === 'true') return hasAuthEmailTransport();
   return hasAuthEmailTransport();
@@ -47,8 +48,8 @@ export async function sendAuthEmail(
 ): Promise<void> {
   const kind = options?.kind ?? 'verification';
   const authSiteUrl =
-    (functions.config().auth?.continue_url as string | undefined)?.trim() ||
-    (functions.config().beta?.site_url as string | undefined)?.trim() ||
+    configStr('auth', 'continue_url', ['AUTH_CONTINUE_URL']) ||
+    configStr('beta', 'site_url', ['BETA_SITE_URL']) ||
     'https://proday75.fr';
 
   const emailJs = getAuthEmailJsConfig(kind);
