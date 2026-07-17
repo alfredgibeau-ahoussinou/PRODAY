@@ -5,7 +5,7 @@ export type MedicalAppointmentStatus =
   | 'completed'
   | 'no_show';
 
-export type VisioProvider = 'cal' | 'whereby' | 'manual';
+export type VisioProvider = 'daily' | 'cal' | 'whereby' | 'manual';
 
 export type ConsultationType = 'cabinet' | 'visio' | 'both';
 
@@ -29,7 +29,7 @@ export interface MedicalAppointment {
   status: MedicalAppointmentStatus;
   /** visio | cabinet | both — défaut visio si absent */
   consultation_type?: ConsultationType;
-  /** Lien Cal Video / Cal.com pour rejoindre la téléconsultation */
+  /** Lien Daily.co / Cal.com secours pour rejoindre la téléconsultation */
   meeting_link?: string;
   visio_provider?: VisioProvider;
   motif?: string;

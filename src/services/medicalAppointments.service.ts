@@ -171,7 +171,11 @@ export const medicalAppointmentsService = {
     if (status === 'confirmed' && options?.physio && options?.appointment) {
       const existingLink = options.appointment.meeting_link?.trim();
       if (!existingLink) {
-        const link = buildMeetingLinkForAppointment(options.physio, options.appointment);
+        const link = buildMeetingLinkForAppointment(
+          options.physio,
+          options.appointment,
+          appointmentId
+        );
         if (link) {
           patch.meeting_link = link.meetingLink;
           patch.visio_provider = link.visioProvider;

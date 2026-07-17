@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Platform,
@@ -12,36 +12,96 @@ import { MEDICAL_THEME } from '../../content/medicalExperience';
 import { openExternalUrl } from '../../utils/calComBooking';
 import { PressableSpring } from '../../components/motion';
 import { ProDayText } from '../../components/ui/ProDayText';
+import { useAuth } from '../../context/AuthContext';
+import { resolveVisioJoinUrl } from '../../services/visio.service';
+import type { MedicalAppointment } from '../../models/MedicalAppointment';
 
 const NativeWebView =
   Platform.OS !== 'web' ? require('react-native-webview').WebView : null;
 
 type VisioSessionScreenProps = {
-  meetingLink: string;
+  appointment: Pick<
+    MedicalAppointment,
+    'id' | 'meeting_link' | 'visio_provider' | 'physio_uid'
+  >;
   title?: string;
   onBack: () => void;
 };
 
-/** Consultation vidéo embarquée (Cal.com / Cal Video) — pôle Santé. */
+/** Consultation vidéo embarquée (Daily.co natif, Cal.com secours) — pôle Santé. */
 export const VisioSessionScreen: React.FC<VisioSessionScreenProps> = ({
-  meetingLink,
+  appointment,
   title = 'Consultation vidéo',
   onBack,
 }) => {
+  const { profile } = useAuth();
   const { colors: c, rootStyle } = useMedicalStyles();
   const styles = useMemo(() => createStyles(c), [c]);
   const [loading, setLoading] = useState(true);
   const [failed, setFailed] = useState(false);
+  const [joinUrl, setJoinUrl] = useState<string | null>(null);
+
+  const meetingLink = appointment.meeting_link?.trim() ?? '';
+  const isHost = profile?.uid === appointment.physio_uid;
+  const displayName = profile?.display_name?.trim() || 'Participant';
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadJoinUrl() {
+      if (!meetingLink || !profile?.uid) {
+        setFailed(true);
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
+      setFailed(false);
+
+      try {
+        const url = await resolveVisioJoinUrl({
+          appointmentId: appointment.id,
+          meetingLink,
+          visioProvider: appointment.visio_provider,
+          userName: displayName,
+          userId: profile.uid,
+          isHost,
+        });
+        if (!cancelled) {
+          setJoinUrl(url);
+          setLoading(false);
+        }
+      } catch {
+        if (!cancelled) {
+          setFailed(true);
+          setLoading(false);
+        }
+      }
+    }
+
+    void loadJoinUrl();
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    appointment.id,
+    appointment.visio_provider,
+    displayName,
+    isHost,
+    meetingLink,
+    profile?.uid,
+  ]);
 
   const openExternal = () => {
-    void openExternalUrl(meetingLink).catch(() => undefined);
+    void openExternalUrl(joinUrl ?? meetingLink).catch(() => undefined);
   };
 
   const webIframe =
-    Platform.OS === 'web' ? (
+    Platform.OS === 'web' && joinUrl ? (
       React.createElement('iframe', {
         title: 'Consultation vidéo',
-        src: meetingLink,
+        src: joinUrl,
+        allow: 'camera; microphone; fullscreen; display-capture; autoplay',
         style: {
           width: '100%',
           height: '100%',
@@ -83,9 +143,9 @@ export const VisioSessionScreen: React.FC<VisioSessionScreenProps> = ({
 
         {!failed && webIframe}
 
-        {!failed && Platform.OS !== 'web' && NativeWebView ? (
+        {!failed && Platform.OS !== 'web' && NativeWebView && joinUrl ? (
           <NativeWebView
-            source={{ uri: meetingLink }}
+            source={{ uri: joinUrl }}
             style={styles.webview}
             onLoadEnd={() => setLoading(false)}
             onError={() => {
@@ -103,7 +163,8 @@ export const VisioSessionScreen: React.FC<VisioSessionScreenProps> = ({
             thirdPartyCookiesEnabled
             mediaPlaybackRequiresUserAction={false}
             allowsInlineMediaPlayback
-            originWhitelist={['https://*', 'http://*']}
+            mediaCapturePermissionGrantType="grant"
+            originWhitelist={['https://*']}
             setSupportMultipleWindows={false}
           />
         ) : null}
@@ -122,11 +183,13 @@ export const VisioSessionScreen: React.FC<VisioSessionScreenProps> = ({
         ) : null}
       </View>
 
-      <PressableSpring style={styles.externalLink} onPress={openExternal} scaleTo={0.98}>
-        <ProDayText variant="caption" accent style={styles.externalLinkText}>
-          Ouvrir dans le navigateur ↗
-        </ProDayText>
-      </PressableSpring>
+      {!failed && joinUrl ? (
+        <PressableSpring style={styles.externalLink} onPress={openExternal} scaleTo={0.98}>
+          <ProDayText variant="caption" accent style={styles.externalLinkText}>
+            Ouvrir dans le navigateur ↗
+          </ProDayText>
+        </PressableSpring>
+      ) : null}
     </View>
   );
 };

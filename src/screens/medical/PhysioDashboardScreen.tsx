@@ -25,6 +25,7 @@ import { PhysioAvailabilityScreen } from './PhysioAvailabilityScreen';
 import { PhysioPatientsScreen } from './PhysioPatientsScreen';
 import { VisioSessionScreen } from './VisioSessionScreen';
 import { isPhysioBookingEnabled } from '../../services/medicalAppointments.service';
+import { canJoinVisioSession } from '../../utils/visioMeetingLink';
 import type { MedicalAppointment } from '../../models/MedicalAppointment';
 import type { AppColors } from '../../theme/universeTheme';
 import { TabScreenShell } from '../../components/app/TabScreenShell';
@@ -43,7 +44,7 @@ export const PhysioDashboardScreen: React.FC<PhysioDashboardScreenProps> = ({ pr
   const [refreshing, setRefreshing] = useState(false);
   const [showAvailability, setShowAvailability] = useState(false);
   const [showPatients, setShowPatients] = useState(false);
-  const [visioLink, setVisioLink] = useState<string | null>(null);
+  const [visioAppointment, setVisioAppointment] = useState<MedicalAppointment | null>(null);
   const bookingOnline = isPhysioBookingEnabled(profile);
 
   const specialty =
@@ -172,7 +173,9 @@ export const PhysioDashboardScreen: React.FC<PhysioDashboardScreenProps> = ({ pr
               onCancel={() => void updateStatus(appt, 'cancelled')}
               onComplete={() => void updateStatus(appt, 'completed')}
               onJoinVisio={
-                appt.meeting_link ? () => setVisioLink(appt.meeting_link!) : undefined
+                canJoinVisioSession(appt)
+                  ? () => setVisioAppointment(appt)
+                  : undefined
               }
             />
           </StaggerReveal>
@@ -243,9 +246,12 @@ export const PhysioDashboardScreen: React.FC<PhysioDashboardScreenProps> = ({ pr
         ) : null}
       </PushScreenTransition>
 
-      <PushScreenTransition active={visioLink != null}>
-        {visioLink ? (
-          <VisioSessionScreen meetingLink={visioLink} onBack={() => setVisioLink(null)} />
+      <PushScreenTransition active={visioAppointment != null}>
+        {visioAppointment ? (
+          <VisioSessionScreen
+            appointment={visioAppointment}
+            onBack={() => setVisioAppointment(null)}
+          />
         ) : null}
       </PushScreenTransition>
     </View>

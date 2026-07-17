@@ -2,11 +2,16 @@ const CAL_COM_HOME_URL = 'https://cal.com';
 const CAL_USERNAME_RE = /^[a-z0-9]([a-z0-9-]{1,38}[a-z0-9])?$/i;
 
 type ConsultationType = 'cabinet' | 'visio' | 'both';
-type VisioProvider = 'cal' | 'whereby' | 'manual';
+type VisioProvider = 'daily' | 'cal' | 'whereby' | 'manual';
 
 export interface PhysioProfileFields {
   cal_com_username?: string;
   booking_url?: string;
+}
+
+export interface MeetingLinkResult {
+  meetingLink: string;
+  visioProvider: VisioProvider;
 }
 
 function normalizeCalComBookingInput(raw: string): { bookingUrl: string } | null {
@@ -73,10 +78,11 @@ export function buildCalComMeetingLink(bookingUrl: string, startAt?: Date): stri
   }
 }
 
-export function buildMeetingLinkForPhysio(
+/** Cal.com — secours uniquement si Daily indisponible. */
+export function buildCalComMeetingLinkForPhysio(
   profile: PhysioProfileFields,
   startAt?: Date
-): { meetingLink: string; visioProvider: VisioProvider } | null {
+): MeetingLinkResult | null {
   const bookingUrl = getPhysioCalComBookingUrl(profile);
   if (!bookingUrl) return null;
   const meetingLink = buildCalComMeetingLink(bookingUrl, startAt);
@@ -84,10 +90,19 @@ export function buildMeetingLinkForPhysio(
   return { meetingLink, visioProvider: 'cal' };
 }
 
+export function buildMeetingLinkForPhysio(
+  profile: PhysioProfileFields,
+  startAt?: Date
+): MeetingLinkResult | null {
+  return buildCalComMeetingLinkForPhysio(profile, startAt);
+}
+
 export function buildMeetingLinkForAppointment(
   profile: PhysioProfileFields,
   input: { start_at: Date; consultation_type?: ConsultationType }
-): { meetingLink: string; visioProvider: VisioProvider } | null {
+): MeetingLinkResult | null {
   if (!isVisioConsultation(input.consultation_type)) return null;
-  return buildMeetingLinkForPhysio(profile, input.start_at);
+  return buildCalComMeetingLinkForPhysio(profile, input.start_at);
 }
+
+export { buildDailyMeetingLinkFallback } from './dailyVisio';

@@ -35,11 +35,13 @@ import {
   onMedicalAppointmentCreated,
   onMedicalAppointmentUpdated,
 } from './appointmentEmail';
+import { getVisioJoinUrl } from './getVisioJoinUrl';
 
 export { createPaymentCheckoutSession, stripeWebhook, createShopCheckoutSession };
 export { sendAuthVerificationEmail, sendAuthPasswordResetEmail };
 export { onSponsorOfferCreated, onSponsorOfferUpdated, notifySponsorOfferInCityCallable };
 export { onMedicalAppointmentCreated, onMedicalAppointmentUpdated };
+export { getVisioJoinUrl };
 export { onTeamEventUpdated, syncTeamEventActivities };
 export { analyzeActivityHighlight };
 export { activateStoreSubscription };

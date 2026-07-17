@@ -22,6 +22,7 @@ import { TAB_BAR_CONTENT_INSET } from '../../components/navigation/BottomTabBar'
 import { MEDICAL_THEME } from '../../content/medicalExperience';
 import { spacing, radius } from '../../theme/designTokens';
 import { formatAppointmentDay } from '../../utils/medicalSlots';
+import { canJoinVisioSession } from '../../utils/visioMeetingLink';
 import { getPhysioCalComBookingUrl, openCalComSignup } from '../../utils/calComBooking';
 import { useMedicalStyles } from '../../components/medical/medicalStyles';
 import type { MedicalAppointment } from '../../models/MedicalAppointment';
@@ -38,7 +39,7 @@ export const PhysioAgendaScreen: React.FC = () => {
   const [showAvailability, setShowAvailability] = useState(false);
   const [filter, setFilter] = useState<AgendaFilter>('all');
   const [refreshing, setRefreshing] = useState(false);
-  const [visioLink, setVisioLink] = useState<string | null>(null);
+  const [visioAppointment, setVisioAppointment] = useState<MedicalAppointment | null>(null);
   const { appointments, loading, refresh } = usePhysioAppointments(profile?.uid);
 
   useEffect(() => {
@@ -202,7 +203,9 @@ export const PhysioAgendaScreen: React.FC = () => {
                     : undefined
                 }
                 onJoinVisio={
-                  appt.meeting_link ? () => setVisioLink(appt.meeting_link!) : undefined
+                  canJoinVisioSession(appt)
+                    ? () => setVisioAppointment(appt)
+                    : undefined
                 }
               />
             ))}
@@ -211,9 +214,12 @@ export const PhysioAgendaScreen: React.FC = () => {
       )}
     </ScrollView>
 
-    <PushScreenTransition active={visioLink != null}>
-      {visioLink ? (
-        <VisioSessionScreen meetingLink={visioLink} onBack={() => setVisioLink(null)} />
+    <PushScreenTransition active={visioAppointment != null}>
+      {visioAppointment ? (
+        <VisioSessionScreen
+          appointment={visioAppointment}
+          onBack={() => setVisioAppointment(null)}
+        />
       ) : null}
     </PushScreenTransition>
     </>

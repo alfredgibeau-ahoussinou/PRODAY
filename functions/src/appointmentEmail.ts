@@ -8,7 +8,8 @@ import {
 } from './appointmentEmailTemplate';
 import { getEmailJsConfig } from './emailJsClient';
 import { isBrevoConfigured, sendTransactionalEmail } from './emailTransport';
-import { buildMeetingLinkForAppointment } from './visioMeetingLink';
+import { createDailyRoom } from './dailyVisio';
+import { buildCalComMeetingLinkForPhysio, isVisioConsultation } from './visioMeetingLink';
 
 export type AppointmentEmailKind =
   | 'booking_request_physio'
@@ -247,28 +248,37 @@ async function loadPhysioProfile(uid: string): Promise<Record<string, unknown>> 
   return (data?.profile as Record<string, unknown>) ?? {};
 }
 
-/** Génère et persiste le lien visio si le RDV est confirmé sans lien. */
+/** Génère et persiste le lien visio Daily (Cal.com en secours) si RDV confirmé sans lien. */
 export async function ensureMeetingLinkOnConfirm(
   appointmentId: string,
   data: AppointmentDoc
 ): Promise<AppointmentDoc> {
   if (data.status !== 'confirmed') return data;
   if (data.meeting_link?.trim()) return data;
+  if (!isVisioConsultation(data.consultation_type)) return data;
 
-  const startAt = toDate(data.start_at);
-  if (!startAt) return data;
+  const endAt = toDate(data.end_at) ?? toDate(data.start_at);
+  if (!endAt) return data;
 
-  const profile = await loadPhysioProfile(data.physio_uid);
-  const link = buildMeetingLinkForAppointment(
-    {
-      cal_com_username: profile.cal_com_username as string | undefined,
-      booking_url: profile.booking_url as string | undefined,
-    },
-    {
-      start_at: startAt,
-      consultation_type: data.consultation_type,
-    }
-  );
+  let link: { meetingLink: string; visioProvider: string } | null = null;
+
+  try {
+    const daily = await createDailyRoom({ appointmentId, endAt });
+    link = daily;
+  } catch (e) {
+    console.error('[appointmentEmail] Daily room:', e);
+  }
+
+  if (!link) {
+    const profile = await loadPhysioProfile(data.physio_uid);
+    link = buildCalComMeetingLinkForPhysio(
+      {
+        cal_com_username: profile.cal_com_username as string | undefined,
+        booking_url: profile.booking_url as string | undefined,
+      },
+      toDate(data.start_at) ?? undefined
+    );
+  }
 
   if (!link) return data;
 

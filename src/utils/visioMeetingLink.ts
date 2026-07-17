@@ -9,6 +9,8 @@ export interface MeetingLinkResult {
   visioProvider: VisioProvider;
 }
 
+const DEFAULT_DAILY_DOMAIN = 'proday';
+
 /** Indique si la consultation prévoit une visio (ou les deux modes). */
 export function isVisioConsultation(consultationType?: ConsultationType): boolean {
   return consultationType === 'visio' || consultationType === 'both' || !consultationType;
@@ -23,8 +25,56 @@ export function canJoinVisioSession(appointment: MedicalAppointment): boolean {
   );
 }
 
+export function dailyRoomName(appointmentId: string): string {
+  return `proday-rdv-${appointmentId}`;
+}
+
+export function dailyRoomUrl(domain: string, roomName: string): string {
+  return `https://${domain}.daily.co/${roomName}`;
+}
+
+/** Lien Daily déterministe — utilisé côté client si la Cloud Function n'a pas encore créé la salle. */
+export function buildDailyMeetingLink(
+  appointmentId: string,
+  domain = DEFAULT_DAILY_DOMAIN
+): MeetingLinkResult {
+  const roomName = dailyRoomName(appointmentId);
+  return {
+    meetingLink: dailyRoomUrl(domain, roomName),
+    visioProvider: 'daily',
+  };
+}
+
+export function buildDailyJoinUrl(
+  baseUrl: string,
+  opts: {
+    token?: string | null;
+    userName?: string;
+    userId?: string;
+  }
+): string {
+  try {
+    const url = new URL(baseUrl);
+    if (opts.token) url.searchParams.set('t', opts.token);
+    if (opts.userName) url.searchParams.set('userName', opts.userName);
+    if (opts.userId) url.searchParams.set('userId', opts.userId);
+    url.searchParams.set('enablePrejoinUI', 'false');
+    return url.toString();
+  } catch {
+    return baseUrl;
+  }
+}
+
+export function isDailyMeetingLink(link: string): boolean {
+  try {
+    return /\.daily\.co$/i.test(new URL(link).hostname);
+  } catch {
+    return link.includes('daily.co');
+  }
+}
+
 /**
- * Construit l’URL Cal.com pour rejoindre la téléconsultation.
+ * Construit l'URL Cal.com — secours uniquement.
  * MVP : page publique du praticien + paramètres date/créneau si disponibles.
  */
 export function buildCalComMeetingLink(
@@ -51,8 +101,8 @@ export function buildCalComMeetingLink(
   }
 }
 
-/** Génère le lien visio à partir du profil praticien Cal.com. */
-export function buildMeetingLinkForPhysio(
+/** Cal.com — secours si Daily indisponible. */
+export function buildCalComMeetingLinkForPhysio(
   physio: Pick<User, 'profile'>,
   startAt?: Date
 ): MeetingLinkResult | null {
@@ -65,11 +115,20 @@ export function buildMeetingLinkForPhysio(
   return { meetingLink, visioProvider: 'cal' };
 }
 
-/** Génère le lien visio pour un rendez-vous existant (côté praticien ou Cloud Function). */
+/** Daily en priorité, Cal.com en secours. */
 export function buildMeetingLinkForAppointment(
   physio: Pick<User, 'profile'>,
-  appointment: Pick<MedicalAppointment, 'start_at' | 'consultation_type'>
+  appointment: Pick<MedicalAppointment, 'start_at' | 'consultation_type'>,
+  appointmentId: string
 ): MeetingLinkResult | null {
   if (!isVisioConsultation(appointment.consultation_type)) return null;
-  return buildMeetingLinkForPhysio(physio, appointment.start_at);
+  return buildDailyMeetingLink(appointmentId);
+}
+
+/** @deprecated Utiliser buildCalComMeetingLinkForPhysio — Cal.com est un secours. */
+export function buildMeetingLinkForPhysio(
+  physio: Pick<User, 'profile'>,
+  startAt?: Date
+): MeetingLinkResult | null {
+  return buildCalComMeetingLinkForPhysio(physio, startAt);
 }

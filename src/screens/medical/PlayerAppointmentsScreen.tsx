@@ -19,6 +19,7 @@ import { MEDICAL_THEME } from '../../content/medicalExperience';
 import { spacing, radius } from '../../theme/designTokens';
 import { useMedicalStyles } from '../../components/medical/medicalStyles';
 import { formatAppointmentDay } from '../../utils/medicalSlots';
+import { canJoinVisioSession } from '../../utils/visioMeetingLink';
 import type { AppColors } from '../../theme/universeTheme';
 
 type PlayerAppointmentsScreenProps = {
@@ -37,7 +38,7 @@ export const PlayerAppointmentsScreen: React.FC<PlayerAppointmentsScreenProps> =
   const styles = useMemo(() => createStyles(c), [c]);
   const { upcoming, loading, refresh } = usePatientAppointments(patient.uid);
   const [refreshing, setRefreshing] = useState(false);
-  const [visioLink, setVisioLink] = useState<string | null>(null);
+  const [visioAppointment, setVisioAppointment] = useState<MedicalAppointment | null>(null);
 
   const grouped = useMemo(() => {
     const map = new Map<string, MedicalAppointment[]>();
@@ -98,7 +99,9 @@ export const PlayerAppointmentsScreen: React.FC<PlayerAppointmentsScreenProps> =
                 appointment={appt}
                 mode="patient"
                 onJoinVisio={
-                  appt.meeting_link ? () => setVisioLink(appt.meeting_link!) : undefined
+                  canJoinVisioSession(appt)
+                    ? () => setVisioAppointment(appt)
+                    : undefined
                 }
               />
             ))}
@@ -112,9 +115,12 @@ export const PlayerAppointmentsScreen: React.FC<PlayerAppointmentsScreenProps> =
     return (
       <>
         {body}
-        <PushScreenTransition active={visioLink != null}>
-          {visioLink ? (
-            <VisioSessionScreen meetingLink={visioLink} onBack={() => setVisioLink(null)} />
+        <PushScreenTransition active={visioAppointment != null}>
+          {visioAppointment ? (
+            <VisioSessionScreen
+              appointment={visioAppointment}
+              onBack={() => setVisioAppointment(null)}
+            />
           ) : null}
         </PushScreenTransition>
       </>
@@ -124,9 +130,12 @@ export const PlayerAppointmentsScreen: React.FC<PlayerAppointmentsScreenProps> =
   return (
     <View style={[styles.root, rootStyle]}>
       {body}
-      <PushScreenTransition active={visioLink != null}>
-        {visioLink ? (
-          <VisioSessionScreen meetingLink={visioLink} onBack={() => setVisioLink(null)} />
+      <PushScreenTransition active={visioAppointment != null}>
+        {visioAppointment ? (
+          <VisioSessionScreen
+            appointment={visioAppointment}
+            onBack={() => setVisioAppointment(null)}
+          />
         ) : null}
       </PushScreenTransition>
     </View>
