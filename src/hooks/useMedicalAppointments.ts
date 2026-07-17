@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { MedicalAppointment } from '../models/MedicalAppointment';
 import { medicalAppointmentsService } from '../services/medicalAppointments.service';
+import { addDays, endOfDay, startOfDay } from '../utils/medicalSlots';
 import { requiresPhysioConfirmation } from '../utils/visioMeetingLink';
 
 export function usePhysioAppointments(physioUid: string | undefined, daysAhead = 14) {
