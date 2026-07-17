@@ -695,6 +695,7 @@ export function medicalAppointmentFromFirestore(
     consultation_type: data.consultation_type as MedicalAppointment['consultation_type'],
     meeting_link: data.meeting_link != null ? String(data.meeting_link) : undefined,
     visio_provider: data.visio_provider as MedicalAppointment['visio_provider'],
+    cal_booking_uid: data.cal_booking_uid != null ? String(data.cal_booking_uid) : undefined,
     motif: data.motif != null ? String(data.motif) : undefined,
     location_label: data.location_label != null ? String(data.location_label) : undefined,
     notes: data.notes != null ? String(data.notes) : undefined,

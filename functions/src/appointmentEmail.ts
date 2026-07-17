@@ -9,7 +9,7 @@ import {
 import { getEmailJsConfig } from './emailJsClient';
 import { isBrevoConfigured, sendTransactionalEmail } from './emailTransport';
 import { createDailyRoom } from './dailyVisio';
-import { buildCalComMeetingLinkForPhysio, isVisioConsultation } from './visioMeetingLink';
+import { isVisioConsultation, resolveCalVideoMeetingLink } from './visioMeetingLink';
 
 export type AppointmentEmailKind =
   | 'booking_request_physio'
@@ -248,7 +248,7 @@ async function loadPhysioProfile(uid: string): Promise<Record<string, unknown>> 
   return (data?.profile as Record<string, unknown>) ?? {};
 }
 
-/** Génère et persiste le lien visio Daily (Cal.com en secours) si RDV confirmé sans lien. */
+/** Génère et persiste le lien Cal Video (Daily en secours) si RDV confirmé sans lien. */
 export async function ensureMeetingLinkOnConfirm(
   appointmentId: string,
   data: AppointmentDoc
@@ -257,43 +257,64 @@ export async function ensureMeetingLinkOnConfirm(
   if (data.meeting_link?.trim()) return data;
   if (!isVisioConsultation(data.consultation_type)) return data;
 
-  const endAt = toDate(data.end_at) ?? toDate(data.start_at);
-  if (!endAt) return data;
+  const startAt = toDate(data.start_at);
+  const endAt = toDate(data.end_at) ?? startAt;
+  if (!startAt || !endAt) return data;
 
-  let link: { meetingLink: string; visioProvider: string } | null = null;
+  const profile = await loadPhysioProfile(data.physio_uid);
+  const physioProfile = {
+    cal_com_username: profile.cal_com_username as string | undefined,
+    booking_url: profile.booking_url as string | undefined,
+    cal_event_type_slug: profile.cal_event_type_slug as string | undefined,
+  };
+
+  const patientEmail =
+    (await resolveUserEmail(data.patient_uid)) ?? `${data.patient_uid}@proday.app`;
+
+  let link: { meetingLink: string; visioProvider: string; calBookingUid?: string } | null = null;
 
   try {
-    const daily = await createDailyRoom({ appointmentId, endAt });
-    link = daily;
+    link = await resolveCalVideoMeetingLink({
+      profile: physioProfile,
+      startAt,
+      attendeeName: data.patient_name,
+      attendeeEmail: patientEmail,
+      appointmentId,
+    });
   } catch (e) {
-    console.error('[appointmentEmail] Daily room:', e);
+    console.error('[appointmentEmail] Cal Video:', e);
   }
 
   if (!link) {
-    const profile = await loadPhysioProfile(data.physio_uid);
-    link = buildCalComMeetingLinkForPhysio(
-      {
-        cal_com_username: profile.cal_com_username as string | undefined,
-        booking_url: profile.booking_url as string | undefined,
-      },
-      toDate(data.start_at) ?? undefined
-    );
+    try {
+      const daily = await createDailyRoom({ appointmentId, endAt });
+      link = daily;
+    } catch (e) {
+      console.error('[appointmentEmail] Daily room:', e);
+    }
   }
 
   if (!link) return data;
 
-  const patch = {
+  const patch: Record<string, unknown> = {
     meeting_link: link.meetingLink,
     visio_provider: link.visioProvider,
     updated_at: admin.firestore.FieldValue.serverTimestamp(),
   };
+  if (link.calBookingUid) {
+    patch.cal_booking_uid = link.calBookingUid;
+  }
 
   await firebaseAdmin
     .firestore()
     .doc(`medical_appointments/${appointmentId}`)
     .update(patch);
 
-  return { ...data, meeting_link: link.meetingLink, visio_provider: link.visioProvider };
+  return {
+    ...data,
+    meeting_link: link.meetingLink,
+    visio_provider: link.visioProvider,
+  };
 }
 
 function parseAppointmentData(raw: FirebaseFirestore.DocumentData): AppointmentDoc {

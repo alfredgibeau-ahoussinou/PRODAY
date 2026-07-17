@@ -29,9 +29,11 @@ export interface MedicalAppointment {
   status: MedicalAppointmentStatus;
   /** visio | cabinet | both — défaut visio si absent */
   consultation_type?: ConsultationType;
-  /** Lien Daily.co / Cal.com secours pour rejoindre la téléconsultation */
+  /** Lien Cal Video / Cal.com secours pour rejoindre la téléconsultation */
   meeting_link?: string;
   visio_provider?: VisioProvider;
+  /** UID booking Cal.com — lien vidéo direct app.cal.com/video/{uid} */
+  cal_booking_uid?: string;
   motif?: string;
   location_label?: string;
   notes?: string;

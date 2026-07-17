@@ -26,7 +26,6 @@ import {
   generateDaySlots,
   startOfDay,
 } from '../utils/medicalSlots';
-import { buildMeetingLinkForAppointment } from '../utils/visioMeetingLink';
 
 const COLLECTION = 'medical_appointments';
 
@@ -167,21 +166,6 @@ export const medicalAppointmentsService = {
       notes: options?.notes ?? null,
       updated_at: serverTimestamp(),
     };
-
-    if (status === 'confirmed' && options?.physio && options?.appointment) {
-      const existingLink = options.appointment.meeting_link?.trim();
-      if (!existingLink) {
-        const link = buildMeetingLinkForAppointment(
-          options.physio,
-          options.appointment,
-          appointmentId
-        );
-        if (link) {
-          patch.meeting_link = link.meetingLink;
-          patch.visio_provider = link.visioProvider;
-        }
-      }
-    }
 
     await updateDoc(doc(database, COLLECTION, appointmentId), patch);
   },

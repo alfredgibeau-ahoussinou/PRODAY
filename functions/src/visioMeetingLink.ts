@@ -7,11 +7,13 @@ type VisioProvider = 'daily' | 'cal' | 'whereby' | 'manual';
 export interface PhysioProfileFields {
   cal_com_username?: string;
   booking_url?: string;
+  cal_event_type_slug?: string;
 }
 
 export interface MeetingLinkResult {
   meetingLink: string;
   visioProvider: VisioProvider;
+  calBookingUid?: string;
 }
 
 function normalizeCalComBookingInput(raw: string): { bookingUrl: string } | null {
@@ -72,13 +74,16 @@ export function buildCalComMeetingLink(bookingUrl: string, startAt?: Date): stri
       url.searchParams.set('date', `${y}-${m}-${d}`);
       url.searchParams.set('slot', startAt.toISOString());
     }
+
+    const location = JSON.stringify({ value: 'integrations:daily', optionValue: '' });
+    url.searchParams.set('location', location);
     return url.toString();
   } catch {
     return trimmed;
   }
 }
 
-/** Cal.com — secours uniquement si Daily indisponible. */
+/** Cal.com — flux principal (lien secours sans API). */
 export function buildCalComMeetingLinkForPhysio(
   profile: PhysioProfileFields,
   startAt?: Date
@@ -106,3 +111,9 @@ export function buildMeetingLinkForAppointment(
 }
 
 export { buildDailyMeetingLinkFallback } from './dailyVisio';
+export {
+  buildCalVideoJoinUrl,
+  isCalVideoMeetingLink,
+  parseCalComEventProfile,
+  resolveCalVideoMeetingLink,
+} from './calVisio';

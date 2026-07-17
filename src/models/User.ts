@@ -114,6 +114,8 @@ export interface UserProfile {
   booking_enabled?: boolean;
   /** Username Cal.com du praticien (sans https://cal.com/) */
   cal_com_username?: string;
+  /** Slug de l'événement Cal.com visio (ex. teleconsultation) — optionnel */
+  cal_event_type_slug?: string;
   /** Lien public de réservation (Cal.com ou équivalent HDS) */
   booking_url?: string;
   consultation_duration_min?: number;

@@ -22,13 +22,13 @@ const NativeWebView =
 type VisioSessionScreenProps = {
   appointment: Pick<
     MedicalAppointment,
-    'id' | 'meeting_link' | 'visio_provider' | 'physio_uid'
+    'id' | 'meeting_link' | 'visio_provider' | 'physio_uid' | 'cal_booking_uid'
   >;
   title?: string;
   onBack: () => void;
 };
 
-/** Consultation vidéo embarquée (Daily.co natif, Cal.com secours) — pôle Santé. */
+/** Consultation vidéo embarquée (Cal Video natif, Daily secours) — pôle Santé. */
 export const VisioSessionScreen: React.FC<VisioSessionScreenProps> = ({
   appointment,
   title = 'Consultation vidéo',
@@ -41,9 +41,14 @@ export const VisioSessionScreen: React.FC<VisioSessionScreenProps> = ({
   const [failed, setFailed] = useState(false);
   const [joinUrl, setJoinUrl] = useState<string | null>(null);
 
-  const meetingLink = appointment.meeting_link?.trim() ?? '';
+  const meetingLink =
+    appointment.meeting_link?.trim() ||
+    (appointment.cal_booking_uid
+      ? `https://app.cal.com/video/${appointment.cal_booking_uid.trim()}`
+      : '');
   const isHost = profile?.uid === appointment.physio_uid;
   const displayName = profile?.display_name?.trim() || 'Participant';
+  const userEmail = profile?.email?.trim();
 
   useEffect(() => {
     let cancelled = false;
@@ -65,6 +70,7 @@ export const VisioSessionScreen: React.FC<VisioSessionScreenProps> = ({
           visioProvider: appointment.visio_provider,
           userName: displayName,
           userId: profile.uid,
+          userEmail,
           isHost,
         });
         if (!cancelled) {

@@ -5,12 +5,14 @@ import {
   createDailyMeetingToken,
   extractDailyRoomName,
 } from './dailyVisio';
+import { buildCalVideoJoinUrl, isCalVideoMeetingLink } from './calVisio';
 
 type AppointmentDoc = {
   physio_uid: string;
   patient_uid: string;
   meeting_link?: string | null;
   visio_provider?: string | null;
+  cal_booking_uid?: string | null;
   end_at?: FirebaseFirestore.Timestamp | Date;
   status?: string;
 };
@@ -37,7 +39,21 @@ async function resolveUserDisplayName(uid: string): Promise<string> {
   }
 }
 
-/** Callable — URL Daily Prebuilt prête à rejoindre (nom + token auto, sans formulaire). */
+async function resolveUserEmail(uid: string): Promise<string | null> {
+  const snap = await admin.firestore().doc(`users/${uid}`).get();
+  const fromDoc = snap.data()?.email;
+  if (typeof fromDoc === 'string' && fromDoc.trim()) {
+    return fromDoc.trim().toLowerCase();
+  }
+  try {
+    const user = await admin.auth().getUser(uid);
+    return user.email?.trim().toLowerCase() ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/** Callable — URL Cal Video / Daily prête à rejoindre (nom + email auto, sans formulaire). */
 export const getVisioJoinUrl = onCall(
   { region: 'europe-west1' },
   async (request) => {
@@ -71,12 +87,16 @@ export const getVisioJoinUrl = onCall(
       throw new HttpsError('permission-denied', 'Accès refusé');
     }
 
-    const meetingLink = data.meeting_link?.trim();
+    let meetingLink = data.meeting_link?.trim();
+    if (!meetingLink && data.cal_booking_uid?.trim()) {
+      meetingLink = `https://app.cal.com/video/${data.cal_booking_uid.trim()}`;
+    }
     if (!meetingLink) {
       throw new HttpsError('failed-precondition', 'Lien visio indisponible');
     }
 
     const userName = await resolveUserDisplayName(uid);
+    const userEmail = await resolveUserEmail(uid);
     const endAt = toDate(data.end_at) ?? new Date(Date.now() + 60 * 60_000);
     const host = Boolean(isHost) && isPhysio;
 
@@ -99,6 +119,14 @@ export const getVisioJoinUrl = onCall(
       };
     }
 
-    return { joinUrl: meetingLink, provider: (data.visio_provider ?? 'cal') as string };
+    const joinUrl = buildCalVideoJoinUrl(meetingLink, {
+      userName,
+      email: userEmail ?? undefined,
+    });
+
+    return {
+      joinUrl,
+      provider: (isCalVideoMeetingLink(joinUrl) ? 'cal' : data.visio_provider ?? 'cal') as string,
+    };
   }
 );

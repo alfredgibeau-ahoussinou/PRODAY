@@ -20,9 +20,19 @@ export function isVisioConsultation(consultationType?: ConsultationType): boolea
 export function canJoinVisioSession(appointment: MedicalAppointment): boolean {
   return (
     appointment.status === 'confirmed' &&
-    Boolean(appointment.meeting_link?.trim()) &&
+    Boolean(appointment.meeting_link?.trim() || appointment.cal_booking_uid?.trim()) &&
     isVisioConsultation(appointment.consultation_type)
   );
+}
+
+export function isCalVideoMeetingLink(link: string): boolean {
+  try {
+    const url = new URL(link);
+    if (/\/video\//i.test(url.pathname)) return true;
+    return /(^|\.)cal\.(com|app)$/i.test(url.hostname) && url.pathname.includes('/video');
+  } catch {
+    return /cal\.(com|app)\/video/i.test(link) || link.includes('/video/');
+  }
 }
 
 export function dailyRoomName(appointmentId: string): string {
@@ -33,7 +43,7 @@ export function dailyRoomUrl(domain: string, roomName: string): string {
   return `https://${domain}.daily.co/${roomName}`;
 }
 
-/** Lien Daily déterministe — utilisé côté client si la Cloud Function n'a pas encore créé la salle. */
+/** Lien Daily déterministe — secours si Cal.com indisponible. */
 export function buildDailyMeetingLink(
   appointmentId: string,
   domain = DEFAULT_DAILY_DOMAIN
@@ -74,12 +84,13 @@ export function isDailyMeetingLink(link: string): boolean {
 }
 
 /**
- * Construit l'URL Cal.com — secours uniquement.
- * MVP : page publique du praticien + paramètres date/créneau si disponibles.
+ * Construit l'URL Cal.com avec Cal Video pré-sélectionné + créneau.
+ * Utilisé en secours côté client si la Cloud Function n'a pas encore créé le booking.
  */
 export function buildCalComMeetingLink(
   bookingUrl: string,
-  startAt?: Date
+  startAt?: Date,
+  prefill?: { name?: string; email?: string }
 ): string | null {
   const trimmed = bookingUrl.trim();
   if (!trimmed || !/^https?:\/\//i.test(trimmed)) return null;
@@ -95,37 +106,57 @@ export function buildCalComMeetingLink(
       url.searchParams.set('date', `${y}-${m}-${d}`);
       url.searchParams.set('slot', startAt.toISOString());
     }
+
+    if (prefill?.name) url.searchParams.set('name', prefill.name);
+    if (prefill?.email) url.searchParams.set('email', prefill.email);
+
+    const location = JSON.stringify({ value: 'integrations:daily', optionValue: '' });
+    url.searchParams.set('location', location);
     return url.toString();
   } catch {
     return trimmed;
   }
 }
 
-/** Cal.com — secours si Daily indisponible. */
+export function buildCalVideoJoinUrl(
+  baseUrl: string,
+  opts: { userName?: string; email?: string }
+): string {
+  try {
+    const url = new URL(baseUrl);
+    if (opts.userName) url.searchParams.set('name', opts.userName);
+    if (opts.email) url.searchParams.set('email', opts.email);
+    return url.toString();
+  } catch {
+    return baseUrl;
+  }
+}
+
+/** Cal.com — flux principal (lien secours sans API). */
 export function buildCalComMeetingLinkForPhysio(
   physio: Pick<User, 'profile'>,
-  startAt?: Date
+  startAt?: Date,
+  prefill?: { name?: string; email?: string }
 ): MeetingLinkResult | null {
   const bookingUrl = getPhysioCalComBookingUrl(physio as User);
   if (!bookingUrl) return null;
 
-  const meetingLink = buildCalComMeetingLink(bookingUrl, startAt);
+  const meetingLink = buildCalComMeetingLink(bookingUrl, startAt, prefill);
   if (!meetingLink) return null;
 
   return { meetingLink, visioProvider: 'cal' };
 }
 
-/** Daily en priorité, Cal.com en secours. */
+/** Cal.com en priorité — le lien Cal Video est créé par la Cloud Function à la confirmation. */
 export function buildMeetingLinkForAppointment(
   physio: Pick<User, 'profile'>,
   appointment: Pick<MedicalAppointment, 'start_at' | 'consultation_type'>,
-  appointmentId: string
+  _appointmentId: string
 ): MeetingLinkResult | null {
   if (!isVisioConsultation(appointment.consultation_type)) return null;
-  return buildDailyMeetingLink(appointmentId);
+  return buildCalComMeetingLinkForPhysio(physio, appointment.start_at);
 }
 
-/** @deprecated Utiliser buildCalComMeetingLinkForPhysio — Cal.com est un secours. */
 export function buildMeetingLinkForPhysio(
   physio: Pick<User, 'profile'>,
   startAt?: Date
