@@ -75,8 +75,10 @@ export const MedicalBookingScreen: React.FC<MedicalBookingScreenProps> = ({
         consultationType,
       });
       Alert.alert(
-        'Demande envoyée',
-        `${physio.display_name} confirmera votre rendez-vous du ${formatAppointmentDay(selectedSlot)} à ${formatSlotLabel(selectedSlot)}.`
+        isCabinet ? 'Demande envoyée' : 'Rendez-vous confirmé',
+        isCabinet
+          ? `${physio.display_name} confirmera votre rendez-vous du ${formatAppointmentDay(selectedSlot)} à ${formatSlotLabel(selectedSlot)}.`
+          : `Votre téléconsultation avec ${physio.display_name} est confirmée pour le ${formatAppointmentDay(selectedSlot)} à ${formatSlotLabel(selectedSlot)}. Le lien visio est disponible dans Mes RDV.`
       );
       recordV3UserAction(patient, 'book_health');
       onBooked?.();
@@ -181,7 +183,7 @@ export const MedicalBookingScreen: React.FC<MedicalBookingScreenProps> = ({
               {selectedSlot
                 ? isCabinet
                   ? 'Demander ce créneau (cabinet)'
-                  : 'Demander ce créneau (visio)'
+                  : 'Réserver ce créneau (visio)'
                 : 'Choisir un créneau'}
             </Text>
           )}

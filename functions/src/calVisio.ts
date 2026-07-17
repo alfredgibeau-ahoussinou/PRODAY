@@ -9,6 +9,8 @@ const DEFAULT_EVENT_TYPE_SLUG = 'teleconsultation';
 export interface CalConfig {
   apiKey: string | null;
   eventTypeSlug: string;
+  /** Username Cal.com org ProDay — secours si le praticien n'a pas cal_com_username */
+  defaultUsername: string | null;
 }
 
 export interface CalComEventProfile {
@@ -38,6 +40,11 @@ export function getCalConfig(): CalConfig {
       null,
     eventTypeSlug:
       (cfg.event_type_slug as string | undefined)?.trim() || DEFAULT_EVENT_TYPE_SLUG,
+    defaultUsername:
+      (cfg.default_username as string | undefined)?.trim() ||
+      (cfg.org_username as string | undefined)?.trim() ||
+      process.env.CAL_DEFAULT_USERNAME?.trim() ||
+      null,
   };
 }
 
@@ -117,6 +124,32 @@ export function parseCalComEventProfile(
   }
 
   return null;
+}
+
+/** Profil praticien ou compte Cal.com org ProDay (config cal.default_username). */
+export function resolveCalComEventProfile(
+  profile: PhysioProfileFields,
+  defaultEventTypeSlug?: string
+): CalComEventProfile | null {
+  const fromProfile = parseCalComEventProfile(profile, defaultEventTypeSlug);
+  if (fromProfile) return fromProfile;
+
+  const { defaultUsername, eventTypeSlug } = getCalConfig();
+  if (!defaultUsername) return null;
+
+  const normalized = normalizeCalComBookingInput(defaultUsername);
+  if (!normalized) return null;
+
+  const slug =
+    profile.cal_event_type_slug?.trim() ||
+    defaultEventTypeSlug ||
+    eventTypeSlug;
+
+  return {
+    username: normalized.username,
+    eventTypeSlug: slug,
+    bookingUrl: `${CAL_COM_HOME_URL}/${normalized.username}/${slug}`,
+  };
 }
 
 export function isCalVideoMeetingLink(link: string): boolean {
@@ -344,7 +377,7 @@ export async function resolveCalVideoMeetingLink(input: {
   attendeeEmail: string;
   appointmentId: string;
 }): Promise<CalVideoMeetingLinkResult | null> {
-  const eventProfile = parseCalComEventProfile(input.profile);
+  const eventProfile = resolveCalComEventProfile(input.profile);
   if (!eventProfile) return null;
 
   const fromApi = await createCalVideoBooking({

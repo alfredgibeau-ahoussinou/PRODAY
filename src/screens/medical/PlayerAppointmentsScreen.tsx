@@ -72,7 +72,7 @@ export const PlayerAppointmentsScreen: React.FC<PlayerAppointmentsScreenProps> =
       {!embedded ? (
         <ScreenHeader
           title="Mes rendez-vous"
-          subtitle="Consultations confirmées et demandes en attente"
+          subtitle="Téléconsultations confirmées · visio disponible immédiatement"
           onBack={onBack}
         />
       ) : null}
@@ -83,8 +83,9 @@ export const PlayerAppointmentsScreen: React.FC<PlayerAppointmentsScreenProps> =
         <View style={styles.emptyCard}>
           <ProDayText variant="section">Aucun rendez-vous</ProDayText>
           <ProDayText variant="body" muted style={styles.emptySub}>
-            Réservez un créneau avec un praticien du pôle Santé. Une fois confirmé, le bouton
-            « Rejoindre la visio » apparaîtra ici.
+            Réservez un créneau avec un praticien du pôle Santé. Les téléconsultations sont
+            confirmées automatiquement — le bouton « Rejoindre la visio » apparaît dès la
+            réservation.
           </ProDayText>
         </View>
       ) : (

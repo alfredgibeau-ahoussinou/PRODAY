@@ -22,7 +22,7 @@ import { TAB_BAR_CONTENT_INSET } from '../../components/navigation/BottomTabBar'
 import { MEDICAL_THEME } from '../../content/medicalExperience';
 import { spacing, radius } from '../../theme/designTokens';
 import { formatAppointmentDay } from '../../utils/medicalSlots';
-import { canJoinVisioSession } from '../../utils/visioMeetingLink';
+import { canJoinVisioSession, requiresPhysioConfirmation } from '../../utils/visioMeetingLink';
 import { getPhysioCalComBookingUrl, openCalComSignup } from '../../utils/calComBooking';
 import { useMedicalStyles } from '../../components/medical/medicalStyles';
 import type { MedicalAppointment } from '../../models/MedicalAppointment';
@@ -117,7 +117,7 @@ export const PhysioAgendaScreen: React.FC = () => {
     >
       <PhysioScreenHeader
         title="Agenda"
-        subtitle="Vos rendez-vous : confirmez, refusez ou annulez les demandes des sportifs."
+        subtitle="Téléconsultations confirmées automatiquement · cabinet sur demande"
       />
 
       {!hasCalCom ? (
@@ -174,8 +174,8 @@ export const PhysioAgendaScreen: React.FC = () => {
         <View style={styles.emptyCard}>
           <Text style={styles.emptyTitle}>Aucun rendez-vous</Text>
           <Text style={styles.emptySub}>
-            Quand un sportif réserve depuis votre fiche, la demande apparaît ici pour confirmation
-            ou refus.
+            Les téléconsultations sont confirmées automatiquement sur Cal.com. Les demandes au
+            cabinet apparaissent ici pour confirmation ou refus.
           </Text>
         </View>
       ) : (
@@ -188,7 +188,7 @@ export const PhysioAgendaScreen: React.FC = () => {
                 appointment={appt}
                 mode="physio"
                 onConfirm={
-                  appt.status === 'pending'
+                  requiresPhysioConfirmation(appt)
                     ? () => void updateStatus(appt, 'confirmed')
                     : undefined
                 }

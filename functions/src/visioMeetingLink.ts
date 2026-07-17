@@ -115,5 +115,6 @@ export {
   buildCalVideoJoinUrl,
   isCalVideoMeetingLink,
   parseCalComEventProfile,
+  resolveCalComEventProfile,
   resolveCalVideoMeetingLink,
 } from './calVisio';

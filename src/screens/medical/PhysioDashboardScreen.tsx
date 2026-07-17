@@ -25,7 +25,7 @@ import { PhysioAvailabilityScreen } from './PhysioAvailabilityScreen';
 import { PhysioPatientsScreen } from './PhysioPatientsScreen';
 import { VisioSessionScreen } from './VisioSessionScreen';
 import { isPhysioBookingEnabled } from '../../services/medicalAppointments.service';
-import { canJoinVisioSession } from '../../utils/visioMeetingLink';
+import { canJoinVisioSession, requiresPhysioConfirmation } from '../../utils/visioMeetingLink';
 import type { MedicalAppointment } from '../../models/MedicalAppointment';
 import type { AppColors } from '../../theme/universeTheme';
 import { TabScreenShell } from '../../components/app/TabScreenShell';
@@ -186,7 +186,7 @@ export const PhysioDashboardScreen: React.FC<PhysioDashboardScreenProps> = ({ pr
         <>
           <Text style={[styles.sectionTitle, styles.sectionGap]}>Demandes à traiter</Text>
           {appointments
-            .filter((a) => a.status === 'pending')
+            .filter((a) => requiresPhysioConfirmation(a))
             .map((appt, index) => (
               <StaggerReveal key={`pending-${appt.id}`} index={index}>
                 <MedicalAppointmentCard

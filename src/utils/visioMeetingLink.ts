@@ -25,6 +25,19 @@ export function canJoinVisioSession(appointment: MedicalAppointment): boolean {
   );
 }
 
+/** Seuls les RDV cabinet nécessitent une confirmation manuelle du praticien. */
+export function requiresPhysioConfirmation(appointment: MedicalAppointment): boolean {
+  return appointment.status === 'pending' && appointment.consultation_type === 'cabinet';
+}
+
+/** RDV visio synchronisé avec Cal.com (booking API créé à la réservation). */
+export function isCalComSynced(appointment: MedicalAppointment): boolean {
+  return (
+    isVisioConsultation(appointment.consultation_type) &&
+    (appointment.visio_provider === 'cal' || Boolean(appointment.cal_booking_uid?.trim()))
+  );
+}
+
 export function isCalVideoMeetingLink(link: string): boolean {
   try {
     const url = new URL(link);
@@ -147,7 +160,7 @@ export function buildCalComMeetingLinkForPhysio(
   return { meetingLink, visioProvider: 'cal' };
 }
 
-/** Cal.com en priorité — le lien Cal Video est créé par la Cloud Function à la confirmation. */
+/** Cal.com en priorité — le lien Cal Video est créé par la Cloud Function à la réservation visio. */
 export function buildMeetingLinkForAppointment(
   physio: Pick<User, 'profile'>,
   appointment: Pick<MedicalAppointment, 'start_at' | 'consultation_type'>,

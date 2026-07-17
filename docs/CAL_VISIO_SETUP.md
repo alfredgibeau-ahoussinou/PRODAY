@@ -4,7 +4,7 @@ ProDay utilise **Cal Video** (intégré Cal.com) comme flux principal de téléc
 
 ## Prérequis praticien
 
-1. Compte [Cal.com](https://cal.com/signup) avec username public (`cal_com_username` dans ProDay)
+1. Compte [Cal.com](https://cal.com/signup) avec username public (`cal_com_username` dans ProDay) **ou** compte org ProDay partagé (`cal.default_username`)
 2. **Type d'événement visio** avec lieu **Cal Video** activé (Settings → Event Types → Location → Cal Video)
 3. Slug de l'événement connu (ex. `teleconsultation`) — configurable dans le profil ou via Firebase
 
@@ -16,6 +16,9 @@ firebase functions:config:set cal.api_key="cal_live_VOTRE_CLE"
 
 # Slug par défaut de l'événement visio (optionnel, défaut : teleconsultation)
 firebase functions:config:set cal.event_type_slug="teleconsultation"
+
+# Username Cal.com org ProDay — secours si le praticien n'a pas cal_com_username
+firebase functions:config:set cal.default_username="proday-sante"
 
 # Secours Daily (optionnel)
 firebase functions:config:set visio.daily_api_key="VOTRE_CLE_DAILY"
@@ -29,6 +32,7 @@ Variable d'environnement alternative (émulateur local) :
 
 ```bash
 export CAL_API_KEY="cal_live_VOTRE_CLE"
+export CAL_DEFAULT_USERNAME="proday-sante"
 export DAILY_API_KEY="VOTRE_CLE_DAILY"
 ```
 
@@ -36,19 +40,23 @@ export DAILY_API_KEY="VOTRE_CLE_DAILY"
 
 | Champ | Exemple | Rôle |
 |-------|---------|------|
-| `cal_com_username` | `cabinet-martin-kine` | Username Cal.com |
+| `cal_com_username` | `cabinet-martin-kine` | Username Cal.com (optionnel si `cal.default_username` configuré) |
 | `booking_url` | `https://cal.com/cabinet-martin-kine/teleconsultation` | Lien complet (extrait le slug événement) |
 | `cal_event_type_slug` | `teleconsultation` | Slug si booking_url = page racine |
 
-## Flux utilisateur (zéro formulaire)
+**Compte org vs par praticien :** si tous les praticiens partagent le même calendrier Cal.com ProDay, configurez uniquement `cal.default_username` + `cal.event_type_slug`. Sinon, chaque praticien renseigne son `cal_com_username`.
+
+## Flux utilisateur (zéro formulaire, auto-confirm visio)
 
 | Étape | Comportement |
 |-------|--------------|
-| Réservation joueur | Créneau + note — **pas de nom/email** (profil Firebase) |
-| Confirmation praticien | Cloud Function crée un booking Cal.com avec Cal Video via API |
-| Firestore | `meeting_link` = `https://app.cal.com/video/{uid}`, `visio_provider` = `cal` |
-| « Rejoindre la visio » | Callable `getVisioJoinUrl` → URL Cal Video + nom/email depuis le profil |
-| Échec Cal.com API | Lien Cal.com pré-rempli (secours) ou Daily.co si clé configurée |
+| Réservation joueur (visio) | Créneau + note — **pas de nom/email** (profil Firebase) |
+| **Création RDV (Cloud Function)** | Booking Cal.com + Cal Video créé **immédiatement** via API |
+| Firestore | `status: confirmed`, `meeting_link`, `cal_booking_uid`, `visio_provider: cal` |
+| Planning Cal.com praticien | RDV visible **sans confirmation manuelle** |
+| « Rejoindre la visio » | Disponible dès la réservation (callable `getVisioJoinUrl`) |
+| Réservation cabinet | Flux classique : `pending` → confirmation praticien |
+| Échec Cal.com API | Daily.co si clé configurée, sinon RDV reste `pending` |
 
 ## Configurer Cal.com (côté praticien)
 
@@ -61,8 +69,8 @@ export DAILY_API_KEY="VOTRE_CLE_DAILY"
 
 1. Configurer `cal.api_key` et déployer les functions
 2. Créer un RDV visio depuis l'app (joueur)
-3. Confirmer depuis l'agenda praticien
-4. Vérifier Firestore : `meeting_link` contient `app.cal.com/video`, `visio_provider` = `cal`
+3. Vérifier Firestore : `status: confirmed`, `meeting_link` contient `app.cal.com/video`, `visio_provider` = `cal`
+4. Vérifier le planning Cal.com du praticien — le RDV y apparaît
 5. Appuyer sur **Rejoindre la visio** — entrée directe dans Cal Video, sans formulaire email/horaires
 
 ## Sans clé API Cal.com

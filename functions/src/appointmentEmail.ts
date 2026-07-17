@@ -248,18 +248,14 @@ async function loadPhysioProfile(uid: string): Promise<Record<string, unknown>> 
   return (data?.profile as Record<string, unknown>) ?? {};
 }
 
-/** Génère et persiste le lien Cal Video (Daily en secours) si RDV confirmé sans lien. */
-export async function ensureMeetingLinkOnConfirm(
+async function resolveVisioMeetingLink(
   appointmentId: string,
   data: AppointmentDoc
-): Promise<AppointmentDoc> {
-  if (data.status !== 'confirmed') return data;
-  if (data.meeting_link?.trim()) return data;
-  if (!isVisioConsultation(data.consultation_type)) return data;
-
+): Promise<{ meetingLink: string; visioProvider: string; calBookingUid?: string } | null> {
   const startAt = toDate(data.start_at);
   const endAt = toDate(data.end_at) ?? startAt;
-  if (!startAt || !endAt) return data;
+  if (!startAt || !endAt) return null;
+  if (!isVisioConsultation(data.consultation_type)) return null;
 
   const profile = await loadPhysioProfile(data.physio_uid);
   const physioProfile = {
@@ -294,6 +290,57 @@ export async function ensureMeetingLinkOnConfirm(
     }
   }
 
+  return link;
+}
+
+/** Visio — booking Cal.com + auto-confirmation dès la création du RDV. */
+export async function autoConfirmVisioOnCreate(
+  appointmentId: string,
+  data: AppointmentDoc
+): Promise<AppointmentDoc> {
+  if (!isVisioConsultation(data.consultation_type)) return data;
+
+  const link = await resolveVisioMeetingLink(appointmentId, data);
+  if (!link) {
+    console.warn(
+      `[appointmentEmail] Visio auto-confirm impossible pour ${appointmentId} — Cal.com / Daily indisponibles`
+    );
+    return data;
+  }
+
+  const patch: Record<string, unknown> = {
+    meeting_link: link.meetingLink,
+    visio_provider: link.visioProvider,
+    status: 'confirmed',
+    updated_at: admin.firestore.FieldValue.serverTimestamp(),
+  };
+  if (link.calBookingUid) {
+    patch.cal_booking_uid = link.calBookingUid;
+  }
+
+  await firebaseAdmin
+    .firestore()
+    .doc(`medical_appointments/${appointmentId}`)
+    .update(patch);
+
+  return {
+    ...data,
+    status: 'confirmed',
+    meeting_link: link.meetingLink,
+    visio_provider: link.visioProvider,
+  };
+}
+
+/** Génère et persiste le lien Cal Video (Daily en secours) si RDV confirmé sans lien. */
+export async function ensureMeetingLinkOnConfirm(
+  appointmentId: string,
+  data: AppointmentDoc
+): Promise<AppointmentDoc> {
+  if (data.status !== 'confirmed') return data;
+  if (data.meeting_link?.trim()) return data;
+  if (!isVisioConsultation(data.consultation_type)) return data;
+
+  const link = await resolveVisioMeetingLink(appointmentId, data);
   if (!link) return data;
 
   const patch: Record<string, unknown> = {
@@ -321,11 +368,37 @@ function parseAppointmentData(raw: FirebaseFirestore.DocumentData): AppointmentD
   return raw as AppointmentDoc;
 }
 
-/** Nouveau rendez-vous → email praticien + patient. */
+/** Nouveau rendez-vous → visio auto-confirmé + Cal.com, ou emails en attente (cabinet). */
 export async function onMedicalAppointmentCreatedHandler(
   snap: functions.firestore.QueryDocumentSnapshot
 ): Promise<void> {
-  const data = parseAppointmentData(snap.data());
+  const appointmentId = snap.id;
+  let data = parseAppointmentData(snap.data());
+
+  if (isVisioConsultation(data.consultation_type)) {
+    data = await autoConfirmVisioOnCreate(appointmentId, data);
+
+    if (data.status === 'confirmed') {
+      await Promise.all([
+        notifyFromAppointment(
+          data,
+          'booking_confirmed',
+          data.patient_uid,
+          data.patient_name,
+          data.physio_name
+        ),
+        notifyFromAppointment(
+          data,
+          'booking_confirmed',
+          data.physio_uid,
+          data.physio_name,
+          data.patient_name
+        ),
+      ]);
+      return;
+    }
+  }
+
   if (data.status && data.status !== 'pending') return;
 
   await Promise.all([
@@ -357,6 +430,16 @@ export async function onMedicalAppointmentUpdatedHandler(
   if (before.status === after.status) return;
 
   if (after.status === 'confirmed') {
+    const isAutoVisioConfirm =
+      before.status === 'pending' &&
+      after.consultation_type !== 'cabinet' &&
+      isVisioConsultation(after.consultation_type) &&
+      Boolean(after.meeting_link?.trim());
+
+    if (isAutoVisioConfirm) {
+      return;
+    }
+
     const enriched =
       appointmentId != null
         ? await ensureMeetingLinkOnConfirm(appointmentId, after)

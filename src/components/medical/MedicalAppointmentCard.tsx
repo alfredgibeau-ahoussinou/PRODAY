@@ -5,7 +5,7 @@ import { prodayHaptics } from '../../utils/prodayHaptics';
 import type { MedicalAppointment } from '../../models/MedicalAppointment';
 import { MEDICAL_APPOINTMENT_STATUS_LABELS } from '../../models/MedicalAppointment';
 import { formatAppointmentDay, formatSlotLabel } from '../../utils/medicalSlots';
-import { canJoinVisioSession } from '../../utils/visioMeetingLink';
+import { canJoinVisioSession, isCalComSynced, requiresPhysioConfirmation } from '../../utils/visioMeetingLink';
 import { CONSULTATION_TYPE_LABELS } from '../../models/MedicalAppointment';
 import { Icon } from '../ui/Icon';
 import { spacing, radius } from '../../theme/designTokens';
@@ -85,7 +85,10 @@ export const MedicalAppointmentCard: React.FC<MedicalAppointmentCardProps> = ({
             {appointment.motif}
           </Text>
         ) : null}
-        {mode === 'physio' && appointment.status === 'pending' ? (
+        {mode === 'physio' && isCalComSynced(appointment) ? (
+          <Text style={styles.calSync}>Synchronisé avec Cal.com</Text>
+        ) : null}
+        {mode === 'physio' && requiresPhysioConfirmation(appointment) ? (
           <View style={styles.actions}>
             <PressableSpring
               style={styles.confirmBtn}
@@ -103,6 +106,13 @@ export const MedicalAppointmentCard: React.FC<MedicalAppointmentCardProps> = ({
               <Text style={styles.cancelText}>Refuser</Text>
             </PressableSpring>
           </View>
+        ) : null}
+        {mode === 'physio' &&
+        appointment.status === 'pending' &&
+        appointment.consultation_type !== 'cabinet' ? (
+          <Text style={styles.visioPending}>
+            Synchronisation Cal.com en cours…
+          </Text>
         ) : null}
         {mode === 'physio' && appointment.status === 'confirmed' ? (
           <View style={styles.actions}>
@@ -201,6 +211,12 @@ function createStyles(c: AppColors) {
       marginTop: spacing.xs,
       fontWeight: '600',
       fontStyle: 'italic',
+    },
+    calSync: {
+      fontSize: 11,
+      color: '#0F766E',
+      marginTop: spacing.xs,
+      fontWeight: '700',
     },
     motif: { fontSize: 12, color: c.textMuted, marginTop: spacing.xs, lineHeight: 17 },
     actions: {

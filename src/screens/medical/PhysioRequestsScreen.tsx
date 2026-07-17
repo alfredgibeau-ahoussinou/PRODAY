@@ -18,7 +18,7 @@ import { useMedicalStyles } from '../../components/medical/medicalStyles';
 import { StaggerReveal } from '../../components/motion';
 import type { MedicalAppointment } from '../../models/MedicalAppointment';
 import type { AppColors } from '../../theme/universeTheme';
-import { useTranslation } from '../../context/LocaleContext';
+import { requiresPhysioConfirmation } from '../../utils/visioMeetingLink';
 
 /** Onglet Demandes — RDV en attente et demandes joueurs. */
 export const PhysioRequestsScreen: React.FC = () => {
@@ -35,7 +35,7 @@ export const PhysioRequestsScreen: React.FC = () => {
   const pending = useMemo(
     () =>
       appointments
-        .filter((a) => a.status === 'pending')
+        .filter((a) => requiresPhysioConfirmation(a))
         .sort((a, b) => a.start_at.getTime() - b.start_at.getTime()),
     [appointments],
   );

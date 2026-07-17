@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { MedicalAppointment } from '../models/MedicalAppointment';
 import { medicalAppointmentsService } from '../services/medicalAppointments.service';
-import { addDays, endOfDay, startOfDay } from '../utils/medicalSlots';
+import { requiresPhysioConfirmation } from '../utils/visioMeetingLink';
 
 export function usePhysioAppointments(physioUid: string | undefined, daysAhead = 14) {
   const [appointments, setAppointments] = useState<MedicalAppointment[]>([]);
@@ -35,7 +35,7 @@ export function usePhysioAppointments(physioUid: string | undefined, daysAhead =
       a.start_at <= endOfDay(today) &&
       a.status !== 'cancelled'
   );
-  const pendingCount = appointments.filter((a) => a.status === 'pending').length;
+  const pendingCount = appointments.filter((a) => requiresPhysioConfirmation(a)).length;
 
   return {
     appointments,
