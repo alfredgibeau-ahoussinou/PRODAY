@@ -14,6 +14,7 @@ const KIND_ICON: Record<AdminWorkItem['kind'], 'shield' | 'time' | 'warning' | '
   payment: 'document',
   application: 'mail',
   post: 'document',
+  quote: 'document',
 };
 
 const PRIORITY_COLOR = (c: AppColors, p: AdminWorkItem['priority']) => {

@@ -13,6 +13,7 @@ import { medicalAppointmentsService } from '../../services/medicalAppointments.s
 import { MedicalAppointmentCard } from '../../components/medical/MedicalAppointmentCard';
 import { PhysioScreenHeader } from '../../components/medical/PhysioScreenHeader';
 import { TAB_BAR_CONTENT_INSET } from '../../components/navigation/BottomTabBar';
+import { useTranslation } from '../../context/LocaleContext';
 import { spacing } from '../../theme/designTokens';
 import { useMedicalStyles } from '../../components/medical/medicalStyles';
 import { StaggerReveal } from '../../components/motion';

@@ -305,7 +305,7 @@ function createStyles(c: AppColors) {
       alignItems: 'center',
     },
     toggleBtnActive: {
-      backgroundColor: c.brandMuted,
+      backgroundColor: c.brandSoft,
       borderColor: c.brand,
     },
     toggleText: {
@@ -361,7 +361,7 @@ function createStyles(c: AppColors) {
       marginTop: spacing.lg,
       marginBottom: spacing.xl,
       backgroundColor: c.brand,
-      borderRadius: radius.full,
+      borderRadius: radius.pill,
       paddingVertical: spacing.md,
       alignItems: 'center',
     },
