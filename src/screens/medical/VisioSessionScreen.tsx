@@ -14,6 +14,7 @@ import { PressableSpring } from '../../components/motion';
 import { ProDayText } from '../../components/ui/ProDayText';
 import { useAuth } from '../../context/AuthContext';
 import { resolveVisioJoinUrl } from '../../services/visio.service';
+import { getCallableErrorMessage } from '../../lib/firebaseFunctions';
 import type { MedicalAppointment } from '../../models/MedicalAppointment';
 
 const NativeWebView =
@@ -39,6 +40,7 @@ export const VisioSessionScreen: React.FC<VisioSessionScreenProps> = ({
   const styles = useMemo(() => createStyles(c), [c]);
   const [loading, setLoading] = useState(true);
   const [failed, setFailed] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [joinUrl, setJoinUrl] = useState<string | null>(null);
 
   const meetingLink =
@@ -56,12 +58,14 @@ export const VisioSessionScreen: React.FC<VisioSessionScreenProps> = ({
     async function loadJoinUrl() {
       if (!meetingLink || !profile?.uid) {
         setFailed(true);
+        setErrorMessage('Lien de visio manquant pour ce rendez-vous.');
         setLoading(false);
         return;
       }
 
       setLoading(true);
       setFailed(false);
+      setErrorMessage(null);
 
       try {
         const url = await resolveVisioJoinUrl({
@@ -77,9 +81,10 @@ export const VisioSessionScreen: React.FC<VisioSessionScreenProps> = ({
           setJoinUrl(url);
           setLoading(false);
         }
-      } catch {
+      } catch (e) {
         if (!cancelled) {
           setFailed(true);
+          setErrorMessage(getCallableErrorMessage(e));
           setLoading(false);
         }
       }
@@ -135,9 +140,10 @@ export const VisioSessionScreen: React.FC<VisioSessionScreenProps> = ({
 
         {failed ? (
           <View style={styles.fallback}>
-            <ProDayText variant="section">Visio indisponible ici</ProDayText>
+            <ProDayText variant="section">Visio indisponible</ProDayText>
             <ProDayText variant="body" muted style={styles.fallbackBody}>
-              Ouvrez le lien dans votre navigateur pour rejoindre la consultation.
+              {errorMessage ??
+                'La salle n’a pas pu être créée. Réessayez, ou ouvrez le lien dans le navigateur.'}
             </ProDayText>
             <PressableSpring style={styles.fallbackBtn} onPress={openExternal} scaleTo={0.97} haptic>
               <ProDayText variant="caption" inverse style={styles.fallbackBtnText}>

@@ -2,11 +2,7 @@ import { callFunction } from '../lib/firebaseFunctions';
 import type { VisioProvider } from '../models/MedicalAppointment';
 import {
   buildCalVideoJoinUrl,
-  buildDailyJoinUrl,
-  buildDailyMeetingLink,
   isCalVideoMeetingLink,
-  isDailyMeetingLink,
-  isJoinableVisioMeetingLink,
 } from '../utils/visioMeetingLink';
 
 export interface ResolveVisioJoinInput {
@@ -24,43 +20,37 @@ export interface VisioJoinResult {
   provider: VisioProvider | 'cal';
 }
 
-/** Résout l'URL de join direct (Cal Video ou Daily) — sans formulaire de réservation. */
+/**
+ * Résout l'URL de join direct via Cloud Function (crée la salle si besoin).
+ * Pas de fallback Daily local — les URLs déterministes n'existent pas sans API.
+ */
 export async function resolveVisioJoinUrl(input: ResolveVisioJoinInput): Promise<string> {
-  try {
-    const result = await callFunction<
-      { appointmentId: string; isHost?: boolean },
-      VisioJoinResult
-    >(
-      'getVisioJoinUrl',
-      {
-        appointmentId: input.appointmentId,
-        isHost: input.isHost,
-      },
-      'europe-west1'
-    );
-    return result.joinUrl;
-  } catch {
-    // Fallback local : jamais une page booking Cal.com.
-    if (
-      input.visioProvider === 'daily' ||
-      isDailyMeetingLink(input.meetingLink) ||
-      !isJoinableVisioMeetingLink(input.meetingLink)
-    ) {
-      const base =
-        isDailyMeetingLink(input.meetingLink)
-          ? input.meetingLink
-          : buildDailyMeetingLink(input.appointmentId).meetingLink;
-      return buildDailyJoinUrl(base, {
-        userName: input.userName,
-        userId: input.userId,
-      });
-    }
+  const result = await callFunction<
+    { appointmentId: string; isHost?: boolean },
+    VisioJoinResult
+  >(
+    'getVisioJoinUrl',
+    {
+      appointmentId: input.appointmentId,
+      isHost: input.isHost,
+    },
+    'europe-west1'
+  );
 
-    return buildCalVideoJoinUrl(input.meetingLink, {
-      userName: input.userName,
-      email: input.userEmail,
-    });
+  if (!result?.joinUrl?.trim()) {
+    throw new Error('Lien visio vide — réessayez dans un instant.');
   }
+
+  return result.joinUrl;
+}
+
+/** Fallback UI uniquement si le callable a déjà renvoyé une Cal Video. */
+export function enrichLocalCalJoinUrl(
+  meetingLink: string,
+  opts: { userName?: string; email?: string }
+): string | null {
+  if (!isCalVideoMeetingLink(meetingLink)) return null;
+  return buildCalVideoJoinUrl(meetingLink, opts);
 }
 
 export { isCalVideoMeetingLink };

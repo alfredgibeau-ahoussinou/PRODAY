@@ -46,6 +46,7 @@ export function buildDailyJoinUrl(
   }
 }
 
+/** @deprecated Ne plus utiliser pour le join — URL sans création réelle de salle. */
 export function buildDailyMeetingLinkFallback(
   appointmentId: string,
   domain?: string
@@ -64,7 +65,7 @@ async function dailyApiRequest<T>(
   path: string,
   init: RequestInit,
   apiKey: string
-): Promise<T | null> {
+): Promise<{ ok: true; data: T } | { ok: false; status: number; body: string }> {
   const response = await fetch(`https://api.daily.co/v1${path}`, {
     ...init,
     headers: {
@@ -74,27 +75,35 @@ async function dailyApiRequest<T>(
     },
   });
 
+  const body = await response.text();
   if (!response.ok) {
-    const body = await response.text();
     console.warn(`[dailyVisio] ${init.method ?? 'GET'} ${path} → ${response.status}: ${body}`);
-    return null;
+    return { ok: false, status: response.status, body };
   }
 
-  return (await response.json()) as T;
+  try {
+    return { ok: true, data: JSON.parse(body) as T };
+  } catch {
+    return { ok: false, status: response.status, body };
+  }
 }
 
+/**
+ * Crée (ou récupère) une vraie salle Daily.
+ * Retourne null si la clé API est absente ou si l'API échoue — jamais d'URL fictive.
+ */
 export async function createDailyRoom(input: {
   appointmentId: string;
   endAt: Date;
-}): Promise<DailyMeetingLinkResult> {
+}): Promise<DailyMeetingLinkResult | null> {
   const { apiKey, domain } = getDailyConfig();
   const roomName = dailyRoomName(input.appointmentId);
 
   if (!apiKey) {
     console.warn(
-      '[dailyVisio] DAILY_API_KEY absent — lien déterministe sans création de salle (configurer visio.daily_api_key)'
+      '[dailyVisio] DAILY_API_KEY absent — impossible de créer une salle réelle (configurer visio.daily_api_key)'
     );
-    return buildDailyMeetingLinkFallback(input.appointmentId, domain);
+    return null;
   }
 
   const exp = Math.floor(input.endAt.getTime() / 1000) + 3600;
@@ -105,7 +114,7 @@ export async function createDailyRoom(input: {
       method: 'POST',
       body: JSON.stringify({
         name: roomName,
-        privacy: 'private',
+        privacy: 'public',
         properties: {
           enable_prejoin_ui: false,
           enable_knocking: false,
@@ -119,21 +128,40 @@ export async function createDailyRoom(input: {
     apiKey
   );
 
-  if (created?.url) {
-    return { meetingLink: created.url, visioProvider: 'daily', roomName };
+  if (created.ok && created.data.url) {
+    return { meetingLink: created.data.url, visioProvider: 'daily', roomName };
   }
 
+  // Salle déjà existante (409) ou autre — tenter GET.
   const existing = await dailyApiRequest<{ url: string; name: string }>(
     `/rooms/${encodeURIComponent(roomName)}`,
     { method: 'GET' },
     apiKey
   );
 
-  if (existing?.url) {
-    return { meetingLink: existing.url, visioProvider: 'daily', roomName };
+  if (existing.ok && existing.data.url) {
+    // Prolonge l'expiration / désactive le préjoin si possible.
+    await dailyApiRequest(
+      `/rooms/${encodeURIComponent(roomName)}`,
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          properties: {
+            enable_prejoin_ui: false,
+            enable_knocking: false,
+            exp,
+          },
+        }),
+      },
+      apiKey
+    );
+    return { meetingLink: existing.data.url, visioProvider: 'daily', roomName };
   }
 
-  return buildDailyMeetingLinkFallback(input.appointmentId, domain);
+  console.error(
+    `[dailyVisio] Impossible de créer/récupérer la salle ${roomName} (domain=${domain})`
+  );
+  return null;
 }
 
 export async function createDailyMeetingToken(input: {
@@ -166,7 +194,7 @@ export async function createDailyMeetingToken(input: {
     apiKey
   );
 
-  return result?.token ?? null;
+  return result.ok ? result.data.token ?? null : null;
 }
 
 export function extractDailyRoomName(meetingLink: string): string | null {

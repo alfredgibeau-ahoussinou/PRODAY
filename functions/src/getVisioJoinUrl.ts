@@ -7,21 +7,24 @@ import {
   extractDailyRoomName,
   isDailyMeetingLink,
 } from './dailyVisio';
-import { buildCalVideoJoinUrl, isCalVideoMeetingLink } from './calVisio';
+import {
+  buildCalVideoJoinUrl,
+  isCalVideoMeetingLink,
+  resolveCalVideoMeetingLink,
+} from './calVisio';
 
 type AppointmentDoc = {
   physio_uid: string;
   patient_uid: string;
+  patient_name?: string;
   meeting_link?: string | null;
   visio_provider?: string | null;
   cal_booking_uid?: string | null;
+  start_at?: FirebaseFirestore.Timestamp | Date;
   end_at?: FirebaseFirestore.Timestamp | Date;
   status?: string;
+  consultation_type?: string;
 };
-
-function isJoinableMeetingLink(link: string): boolean {
-  return isCalVideoMeetingLink(link) || isDailyMeetingLink(link);
-}
 
 function toDate(value: unknown): Date | null {
   if (!value) return null;
@@ -59,6 +62,107 @@ async function resolveUserEmail(uid: string): Promise<string | null> {
   }
 }
 
+async function loadPhysioProfile(uid: string): Promise<Record<string, unknown>> {
+  const snap = await admin.firestore().doc(`users/${uid}`).get();
+  const data = snap.data();
+  return (data?.profile as Record<string, unknown>) ?? {};
+}
+
+async function persistMeetingLink(
+  appointmentId: string,
+  link: { meetingLink: string; visioProvider: string; calBookingUid?: string }
+): Promise<void> {
+  const patch: Record<string, unknown> = {
+    meeting_link: link.meetingLink,
+    visio_provider: link.visioProvider,
+    updated_at: admin.firestore.FieldValue.serverTimestamp(),
+  };
+  if (link.calBookingUid) {
+    patch.cal_booking_uid = link.calBookingUid;
+  }
+  await admin.firestore().doc(`medical_appointments/${appointmentId}`).update(patch);
+}
+
+/**
+ * Garantit une URL de salle réelle (Cal Video ou Daily créée via API).
+ * Ne renvoie jamais une URL Daily « fictive » (domain/room sans création API).
+ */
+async function resolveJoinableMeeting(input: {
+  appointmentId: string;
+  data: AppointmentDoc;
+}): Promise<{ meetingLink: string; visioProvider: 'cal' | 'daily'; calBookingUid?: string }> {
+  const { appointmentId, data } = input;
+  const endAt = toDate(data.end_at) ?? new Date(Date.now() + 60 * 60_000);
+  const startAt = toDate(data.start_at) ?? new Date();
+
+  const calUid = data.cal_booking_uid?.trim();
+  if (calUid) {
+    return {
+      meetingLink: `https://app.cal.com/video/${calUid}`,
+      visioProvider: 'cal',
+      calBookingUid: calUid,
+    };
+  }
+
+  const existing = data.meeting_link?.trim();
+  if (existing && isCalVideoMeetingLink(existing)) {
+    return { meetingLink: existing, visioProvider: 'cal' };
+  }
+
+  // Daily : toujours (re)créer / récupérer la salle via API — le lien stocké peut être fictif.
+  if (existing && isDailyMeetingLink(existing)) {
+    const daily = await createDailyRoom({ appointmentId, endAt });
+    if (daily) {
+      if (daily.meetingLink !== existing) {
+        await persistMeetingLink(appointmentId, daily);
+      }
+      return daily;
+    }
+    // Pas de clé Daily / API KO → tenter Cal Video ci-dessous.
+  }
+
+  if (!existing || isDailyMeetingLink(existing) || !isCalVideoMeetingLink(existing)) {
+    const daily = await createDailyRoom({ appointmentId, endAt });
+    if (daily) {
+      await persistMeetingLink(appointmentId, daily);
+      return daily;
+    }
+
+    const profile = await loadPhysioProfile(data.physio_uid);
+    const patientEmail =
+      (await resolveUserEmail(data.patient_uid)) ?? `${data.patient_uid}@proday.app`;
+    const cal = await resolveCalVideoMeetingLink({
+      profile: {
+        cal_com_username: profile.cal_com_username as string | undefined,
+        booking_url: profile.booking_url as string | undefined,
+        cal_event_type_slug: profile.cal_event_type_slug as string | undefined,
+      },
+      startAt,
+      attendeeName: data.patient_name?.trim() || 'Patient ProDay',
+      attendeeEmail: patientEmail,
+      appointmentId,
+    });
+
+    if (cal && isCalVideoMeetingLink(cal.meetingLink)) {
+      await persistMeetingLink(appointmentId, {
+        meetingLink: cal.meetingLink,
+        visioProvider: 'cal',
+        calBookingUid: cal.calBookingUid,
+      });
+      return {
+        meetingLink: cal.meetingLink,
+        visioProvider: 'cal',
+        calBookingUid: cal.calBookingUid,
+      };
+    }
+  }
+
+  throw new HttpsError(
+    'failed-precondition',
+    'Salle visio indisponible. Configurez DAILY_API_KEY (ou Cal Video) puis réessayez.'
+  );
+}
+
 /** Callable — URL Cal Video / Daily prête à rejoindre (nom + email auto, sans formulaire). */
 export const getVisioJoinUrl = onCall(
   { region: 'europe-west1' },
@@ -82,7 +186,7 @@ export const getVisioJoinUrl = onCall(
       throw new HttpsError('not-found', 'Rendez-vous introuvable');
     }
 
-    let data = snap.data() as AppointmentDoc;
+    const data = snap.data() as AppointmentDoc;
     if (data.status !== 'confirmed') {
       throw new HttpsError('failed-precondition', 'Rendez-vous non confirmé');
     }
@@ -93,37 +197,14 @@ export const getVisioJoinUrl = onCall(
       throw new HttpsError('permission-denied', 'Accès refusé');
     }
 
-    let meetingLink = data.meeting_link?.trim();
-    if (!meetingLink && data.cal_booking_uid?.trim()) {
-      meetingLink = `https://app.cal.com/video/${data.cal_booking_uid.trim()}`;
-    }
-
-    // Page booking Cal.com / lien invalide → salle Daily joinable immédiatement.
-    if (!meetingLink || !isJoinableMeetingLink(meetingLink)) {
-      const endAt = toDate(data.end_at) ?? new Date(Date.now() + 60 * 60_000);
-      const daily = await createDailyRoom({ appointmentId, endAt });
-      meetingLink = daily.meetingLink;
-      await admin
-        .firestore()
-        .doc(`medical_appointments/${appointmentId}`)
-        .update({
-          meeting_link: daily.meetingLink,
-          visio_provider: 'daily',
-          updated_at: admin.firestore.FieldValue.serverTimestamp(),
-        });
-      data = { ...data, meeting_link: daily.meetingLink, visio_provider: 'daily' };
-    }
-
-    if (!meetingLink) {
-      throw new HttpsError('failed-precondition', 'Lien visio indisponible');
-    }
-
+    const resolved = await resolveJoinableMeeting({ appointmentId, data });
+    const meetingLink = resolved.meetingLink;
     const userName = await resolveUserDisplayName(uid);
     const userEmail = await resolveUserEmail(uid);
     const endAt = toDate(data.end_at) ?? new Date(Date.now() + 60 * 60_000);
     const host = Boolean(isHost) && isPhysio;
 
-    if (data.visio_provider === 'daily' || isDailyMeetingLink(meetingLink)) {
+    if (resolved.visioProvider === 'daily' || isDailyMeetingLink(meetingLink)) {
       const roomName = extractDailyRoomName(meetingLink);
       const token =
         roomName != null
@@ -142,14 +223,12 @@ export const getVisioJoinUrl = onCall(
       };
     }
 
-    const joinUrl = buildCalVideoJoinUrl(meetingLink, {
-      userName,
-      email: userEmail ?? undefined,
-    });
-
     return {
-      joinUrl,
-      provider: (isCalVideoMeetingLink(joinUrl) ? 'cal' : data.visio_provider ?? 'cal') as string,
+      joinUrl: buildCalVideoJoinUrl(meetingLink, {
+        userName,
+        email: userEmail ?? undefined,
+      }),
+      provider: 'cal' as const,
     };
   }
 );

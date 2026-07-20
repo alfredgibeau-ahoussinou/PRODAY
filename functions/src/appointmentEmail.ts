@@ -288,7 +288,9 @@ async function resolveVisioMeetingLink(
   if (!link) {
     try {
       const daily = await createDailyRoom({ appointmentId, endAt });
-      link = daily;
+      if (daily) {
+        link = daily;
+      }
     } catch (e) {
       console.error('[appointmentEmail] Daily room:', e);
     }
