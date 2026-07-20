@@ -75,9 +75,10 @@ export const MedicalAppointmentCard: React.FC<MedicalAppointmentCardProps> = ({
         </Text>
         {appointment.status === 'confirmed' &&
         appointment.consultation_type !== 'cabinet' &&
-        !appointment.meeting_link ? (
+        !appointment.meeting_link &&
+        !appointment.cal_booking_uid ? (
           <Text style={styles.visioPending}>
-            Le praticien vous enverra le lien de visio.
+            Préparation de la salle visio…
           </Text>
         ) : null}
         {appointment.motif ? (
@@ -100,19 +101,16 @@ export const MedicalAppointmentCard: React.FC<MedicalAppointmentCardProps> = ({
               haptic
             >
               <Icon name="checkmark-circle" size={16} color={c.brandInverse} />
-              <Text style={styles.confirmText}>Confirmer</Text>
+              <Text style={styles.confirmText}>
+                {appointment.consultation_type === 'cabinet'
+                  ? 'Confirmer'
+                  : 'Accepter & créer la visio'}
+              </Text>
             </PressableSpring>
             <PressableSpring style={styles.cancelBtn} onPress={onCancel} scaleTo={0.97}>
               <Text style={styles.cancelText}>Refuser</Text>
             </PressableSpring>
           </View>
-        ) : null}
-        {mode === 'physio' &&
-        appointment.status === 'pending' &&
-        appointment.consultation_type !== 'cabinet' ? (
-          <Text style={styles.visioPending}>
-            Synchronisation Cal.com en cours…
-          </Text>
         ) : null}
         {mode === 'physio' && appointment.status === 'confirmed' ? (
           <View style={styles.actions}>

@@ -6,6 +6,7 @@ import {
   buildMeetingLinkForAppointment,
   canJoinVisioSession,
   isCalVideoMeetingLink,
+  isJoinableVisioMeetingLink,
   isVisioConsultation,
 } from '../utils/visioMeetingLink';
 import type { MedicalAppointment } from '../models/MedicalAppointment';
@@ -113,5 +114,11 @@ describe('visioMeetingLink', () => {
         consultation_type: 'cabinet',
       } as MedicalAppointment)
     ).toBe(false);
+  });
+
+  it('détecte les salles joinables vs page booking Cal.com', () => {
+    expect(isJoinableVisioMeetingLink('https://app.cal.com/video/abc')).toBe(true);
+    expect(isJoinableVisioMeetingLink('https://proday.daily.co/proday-rdv-1')).toBe(true);
+    expect(isJoinableVisioMeetingLink('https://cal.com/cabinet?date=2026-07-20')).toBe(false);
   });
 });

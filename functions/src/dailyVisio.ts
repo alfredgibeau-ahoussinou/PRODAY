@@ -179,3 +179,11 @@ export function extractDailyRoomName(meetingLink: string): string | null {
     return null;
   }
 }
+
+export function isDailyMeetingLink(link: string): boolean {
+  try {
+    return /\.daily\.co$/i.test(new URL(link).hostname);
+  } catch {
+    return link.includes('daily.co');
+  }
+}

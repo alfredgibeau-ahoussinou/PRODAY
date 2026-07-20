@@ -270,13 +270,17 @@ async function resolveVisioMeetingLink(
   let link: { meetingLink: string; visioProvider: string; calBookingUid?: string } | null = null;
 
   try {
-    link = await resolveCalVideoMeetingLink({
+    const cal = await resolveCalVideoMeetingLink({
       profile: physioProfile,
       startAt,
       attendeeName: data.patient_name,
       attendeeEmail: patientEmail,
       appointmentId,
     });
+    // Uniquement une vraie salle Cal Video (/video/) — jamais une page de réservation.
+    if (cal && /\/video\//i.test(cal.meetingLink)) {
+      link = cal;
+    }
   } catch (e) {
     console.error('[appointmentEmail] Cal Video:', e);
   }
@@ -331,14 +335,17 @@ export async function autoConfirmVisioOnCreate(
   };
 }
 
-/** Génère et persiste le lien Cal Video (Daily en secours) si RDV confirmé sans lien. */
+/** Génère et persiste le lien Cal Video (Daily en secours) si RDV confirmé sans salle joinable. */
 export async function ensureMeetingLinkOnConfirm(
   appointmentId: string,
   data: AppointmentDoc
 ): Promise<AppointmentDoc> {
   if (data.status !== 'confirmed') return data;
-  if (data.meeting_link?.trim()) return data;
   if (!isVisioConsultation(data.consultation_type)) return data;
+
+  const existing = data.meeting_link?.trim();
+  if (existing && /\/video\//i.test(existing)) return data;
+  if (existing && /\.daily\.co/i.test(existing)) return data;
 
   const link = await resolveVisioMeetingLink(appointmentId, data);
   if (!link) return data;

@@ -364,7 +364,11 @@ export async function createCalVideoBooking(input: {
   };
 }
 
-/** Point d'entrée — Cal Video via API, lien Cal.com en secours. */
+/**
+ * Point d'entrée — Cal Video via API uniquement.
+ * Pas de fallback page booking Cal.com : ce lien force un formulaire
+ * et bloque le « Rejoindre la visio » direct. Le caller bascule sur Daily.
+ */
 export async function resolveCalVideoMeetingLink(input: {
   profile: PhysioProfileFields;
   startAt: Date;
@@ -383,7 +387,15 @@ export async function resolveCalVideoMeetingLink(input: {
     metadata: { prodayAppointmentId: input.appointmentId },
   });
 
-  if (fromApi) return fromApi;
+  if (fromApi && isCalVideoMeetingLink(fromApi.meetingLink)) {
+    return fromApi;
+  }
 
-  return buildCalComMeetingLinkFallback(input.profile, input.startAt);
+  if (fromApi) {
+    console.warn(
+      `[calVisio] Lien Cal non joinable pour ${input.appointmentId} — ignore (Daily)`
+    );
+  }
+
+  return null;
 }

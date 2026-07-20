@@ -3,8 +3,10 @@ import type { VisioProvider } from '../models/MedicalAppointment';
 import {
   buildCalVideoJoinUrl,
   buildDailyJoinUrl,
+  buildDailyMeetingLink,
   isCalVideoMeetingLink,
   isDailyMeetingLink,
+  isJoinableVisioMeetingLink,
 } from '../utils/visioMeetingLink';
 
 export interface ResolveVisioJoinInput {
@@ -22,7 +24,7 @@ export interface VisioJoinResult {
   provider: VisioProvider | 'cal';
 }
 
-/** Résout l'URL de join direct (Cal Video ou Daily secours) via callable. */
+/** Résout l'URL de join direct (Cal Video ou Daily) — sans formulaire de réservation. */
 export async function resolveVisioJoinUrl(input: ResolveVisioJoinInput): Promise<string> {
   try {
     const result = await callFunction<
@@ -38,8 +40,17 @@ export async function resolveVisioJoinUrl(input: ResolveVisioJoinInput): Promise
     );
     return result.joinUrl;
   } catch {
-    if (input.visioProvider === 'daily' || isDailyMeetingLink(input.meetingLink)) {
-      return buildDailyJoinUrl(input.meetingLink, {
+    // Fallback local : jamais une page booking Cal.com.
+    if (
+      input.visioProvider === 'daily' ||
+      isDailyMeetingLink(input.meetingLink) ||
+      !isJoinableVisioMeetingLink(input.meetingLink)
+    ) {
+      const base =
+        isDailyMeetingLink(input.meetingLink)
+          ? input.meetingLink
+          : buildDailyMeetingLink(input.appointmentId).meetingLink;
+      return buildDailyJoinUrl(base, {
         userName: input.userName,
         userId: input.userId,
       });

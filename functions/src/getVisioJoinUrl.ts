@@ -3,7 +3,9 @@ import { admin } from './firebaseAdmin';
 import {
   buildDailyJoinUrl,
   createDailyMeetingToken,
+  createDailyRoom,
   extractDailyRoomName,
+  isDailyMeetingLink,
 } from './dailyVisio';
 import { buildCalVideoJoinUrl, isCalVideoMeetingLink } from './calVisio';
 
@@ -16,6 +18,10 @@ type AppointmentDoc = {
   end_at?: FirebaseFirestore.Timestamp | Date;
   status?: string;
 };
+
+function isJoinableMeetingLink(link: string): boolean {
+  return isCalVideoMeetingLink(link) || isDailyMeetingLink(link);
+}
 
 function toDate(value: unknown): Date | null {
   if (!value) return null;
@@ -76,7 +82,7 @@ export const getVisioJoinUrl = onCall(
       throw new HttpsError('not-found', 'Rendez-vous introuvable');
     }
 
-    const data = snap.data() as AppointmentDoc;
+    let data = snap.data() as AppointmentDoc;
     if (data.status !== 'confirmed') {
       throw new HttpsError('failed-precondition', 'Rendez-vous non confirmé');
     }
@@ -91,6 +97,23 @@ export const getVisioJoinUrl = onCall(
     if (!meetingLink && data.cal_booking_uid?.trim()) {
       meetingLink = `https://app.cal.com/video/${data.cal_booking_uid.trim()}`;
     }
+
+    // Page booking Cal.com / lien invalide → salle Daily joinable immédiatement.
+    if (!meetingLink || !isJoinableMeetingLink(meetingLink)) {
+      const endAt = toDate(data.end_at) ?? new Date(Date.now() + 60 * 60_000);
+      const daily = await createDailyRoom({ appointmentId, endAt });
+      meetingLink = daily.meetingLink;
+      await admin
+        .firestore()
+        .doc(`medical_appointments/${appointmentId}`)
+        .update({
+          meeting_link: daily.meetingLink,
+          visio_provider: 'daily',
+          updated_at: admin.firestore.FieldValue.serverTimestamp(),
+        });
+      data = { ...data, meeting_link: daily.meetingLink, visio_provider: 'daily' };
+    }
+
     if (!meetingLink) {
       throw new HttpsError('failed-precondition', 'Lien visio indisponible');
     }
@@ -100,7 +123,7 @@ export const getVisioJoinUrl = onCall(
     const endAt = toDate(data.end_at) ?? new Date(Date.now() + 60 * 60_000);
     const host = Boolean(isHost) && isPhysio;
 
-    if (data.visio_provider === 'daily' || meetingLink.includes('daily.co')) {
+    if (data.visio_provider === 'daily' || isDailyMeetingLink(meetingLink)) {
       const roomName = extractDailyRoomName(meetingLink);
       const token =
         roomName != null

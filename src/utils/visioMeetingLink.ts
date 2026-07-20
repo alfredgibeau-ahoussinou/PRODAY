@@ -25,9 +25,13 @@ export function canJoinVisioSession(appointment: MedicalAppointment): boolean {
   );
 }
 
-/** Seuls les RDV cabinet nécessitent une confirmation manuelle du praticien. */
+/** Seuls les RDV cabinet (ou visio bloquée en pending) nécessitent une action praticien. */
 export function requiresPhysioConfirmation(appointment: MedicalAppointment): boolean {
-  return appointment.status === 'pending' && appointment.consultation_type === 'cabinet';
+  if (appointment.status !== 'pending') return false;
+  // Cabinet : confirmation manuelle classique.
+  if (appointment.consultation_type === 'cabinet') return true;
+  // Visio/both stuck (Cal/Daily KO) : le praticien peut valider pour relancer la salle.
+  return isVisioConsultation(appointment.consultation_type);
 }
 
 /** RDV visio synchronisé avec Cal.com (booking API créé à la réservation). */
@@ -94,6 +98,11 @@ export function isDailyMeetingLink(link: string): boolean {
   } catch {
     return link.includes('daily.co');
   }
+}
+
+/** Lien réellement joinable (salle vidéo) — pas une page de réservation Cal.com. */
+export function isJoinableVisioMeetingLink(link: string): boolean {
+  return isCalVideoMeetingLink(link) || isDailyMeetingLink(link);
 }
 
 /**
