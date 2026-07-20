@@ -1468,6 +1468,32 @@ export const SPONSOR_PARTNER_CONTACT_EMAIL = "partenaires@proday.app";
 
 export const SUBSCRIPTION_PLANS_WEB = [
   {
+    id: "compte_gratuit",
+    label: "Compte gratuit",
+    tagline: "Tout pour démarrer — sans carte bancaire",
+    monthlyEur: 0,
+    storeAvailable: false,
+    universes: [
+      "homme",
+      "woman",
+      "amateur",
+      "pro",
+      "sante",
+      "supporter",
+    ] as ProductLineWeb[],
+    freeIncludes: [
+      "Création de profil et inscription",
+      "Découverte de l'app et des pôles",
+      "Mercato / annuaire en lecture",
+      "Calendrier et fonctionnalités de base",
+      "Accès bêta selon disponibilité",
+    ],
+    proIncludes: [
+      "Passez à une formule Pro quand vous en avez besoin",
+      "Candidatures, annonces et outils avancés selon le rôle",
+    ],
+  },
+  {
     id: "player_plus",
     label: "Joueur Plus",
     tagline: "CV en ligne, visibilité et Mercato",
@@ -1669,6 +1695,21 @@ export function plansForUniverse(line: ProductLineWeb): WebSubscriptionPlan[] {
       if (line === "woman" && p.id === "player_plus") {
         return womanPlayerPlusPlan(p);
       }
+      if (line === "supporter" && p.id === "compte_gratuit") {
+        return {
+          ...p,
+          label: "Tribune gratuite",
+          tagline: "Matchs live, suivis, débats et shop — sans paywall",
+          yearlyEur: 0,
+          freeIncludes: [
+            "Matchs live PRODAY + monde",
+            "Suivis illimités",
+            "Débats et fil communauté",
+            "Réels et shop merch",
+            "Sans abonnement ni carte bancaire",
+          ],
+        };
+      }
       return {
         ...p,
         yearlyEur: yearlyPriceFromMonthly(p.monthlyEur),
@@ -1689,6 +1730,10 @@ export type WebSubscriptionPlanUnion = WebSubscriptionPlan;
 
 export function isPremiumWebPlan(plan: WebSubscriptionPlan): boolean {
   return "premium" in plan && plan.premium === true;
+}
+
+export function isFreeWebPlan(plan: Pick<WebSubscriptionPlan, "monthlyEur">): boolean {
+  return plan.monthlyEur <= 0;
 }
 
 export function webPlanMonthlyPrice(id: WebSubscriptionPlanBase["id"]): number {

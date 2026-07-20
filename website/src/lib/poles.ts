@@ -41,7 +41,7 @@ export const CAROUSEL_POLES: PoleDefinition[] = [
     href: ROUTES.amateur,
     pricingHash: "amateur",
     logo: "/branding/logo-amateur-picto.png",
-    planIds: ["player_plus", "coach_pro"],
+    planIds: ["compte_gratuit", "player_plus", "coach_pro"],
   },
   {
     id: "supporter",
@@ -53,7 +53,7 @@ export const CAROUSEL_POLES: PoleDefinition[] = [
     href: ROUTES.supporter,
     pricingHash: "supporter",
     logo: "/branding/logo-supporter-picto.png",
-    planIds: [],
+    planIds: ["compte_gratuit"],
   },
   {
     id: "sante",
@@ -65,7 +65,7 @@ export const CAROUSEL_POLES: PoleDefinition[] = [
     href: ROUTES.sante,
     pricingHash: "sante",
     logo: "/branding/logo-sante-picto.png",
-    planIds: ["physio_pro"],
+    planIds: ["compte_gratuit", "physio_pro"],
   },
   {
     id: "pro_joueur",
@@ -77,7 +77,7 @@ export const CAROUSEL_POLES: PoleDefinition[] = [
     href: ROUTES.proJoueur,
     pricingHash: "pro_joueur",
     logo: "/branding/logo-man-picto.png",
-    planIds: ["player_plus"],
+    planIds: ["compte_gratuit", "player_plus"],
   },
   {
     id: "pro_club",
@@ -89,7 +89,7 @@ export const CAROUSEL_POLES: PoleDefinition[] = [
     href: ROUTES.proClub,
     pricingHash: "pro_club",
     logo: "/branding/logo-pro-picto.png",
-    planIds: ["club_pro"],
+    planIds: ["compte_gratuit", "club_pro"],
   },
   {
     id: "pro_staff",
@@ -101,7 +101,13 @@ export const CAROUSEL_POLES: PoleDefinition[] = [
     href: ROUTES.proStaff,
     pricingHash: "pro_staff",
     logo: "/branding/logo-pro-picto.png",
-    planIds: ["recruiter_pro", "coach_pro", "agent_elite", "organizer_pro"],
+    planIds: [
+      "compte_gratuit",
+      "recruiter_pro",
+      "coach_pro",
+      "agent_elite",
+      "organizer_pro",
+    ],
   },
 ];
 
