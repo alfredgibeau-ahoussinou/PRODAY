@@ -1,10 +1,11 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Platform,
   StyleSheet,
   View,
 } from 'react-native';
+import * as WebBrowser from 'expo-web-browser';
 import { ScreenHeader } from '../../components/ui/ScreenHeader';
 import { useMedicalStyles } from '../../components/medical/medicalStyles';
 import { spacing, radius } from '../../theme/designTokens';
@@ -17,9 +18,6 @@ import { resolveVisioJoinUrl } from '../../services/visio.service';
 import { getCallableErrorMessage } from '../../lib/firebaseFunctions';
 import type { MedicalAppointment } from '../../models/MedicalAppointment';
 
-const NativeWebView =
-  Platform.OS !== 'web' ? require('react-native-webview').WebView : null;
-
 type VisioSessionScreenProps = {
   appointment: Pick<
     MedicalAppointment,
@@ -29,7 +27,11 @@ type VisioSessionScreenProps = {
   onBack: () => void;
 };
 
-/** Consultation vidéo embarquée (Cal Video natif, Daily secours) — pôle Santé. */
+/**
+ * Téléconsultation santé.
+ * Sur natif, Daily/Cal Video s'ouvrent dans le navigateur in-app (le WebView iOS
+ * casse Daily avec about:srcdoc → « meeting does not exist »).
+ */
 export const VisioSessionScreen: React.FC<VisioSessionScreenProps> = ({
   appointment,
   title = 'Consultation vidéo',
@@ -40,10 +42,11 @@ export const VisioSessionScreen: React.FC<VisioSessionScreenProps> = ({
   const styles = useMemo(() => createStyles(c), [c]);
   const [loading, setLoading] = useState(true);
   const [failed, setFailed] = useState(false);
+  const [opened, setOpened] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [joinUrl, setJoinUrl] = useState<string | null>(null);
 
-  const meetingLink =
+  const fallbackLink =
     appointment.meeting_link?.trim() ||
     (appointment.cal_booking_uid
       ? `https://app.cal.com/video/${appointment.cal_booking_uid.trim()}`
@@ -52,34 +55,54 @@ export const VisioSessionScreen: React.FC<VisioSessionScreenProps> = ({
   const displayName = profile?.display_name?.trim() || 'Participant';
   const userEmail = profile?.email?.trim();
 
+  const openJoinUrl = useCallback(async (url: string) => {
+    if (Platform.OS === 'web') return;
+    try {
+      await WebBrowser.openBrowserAsync(url, {
+        enableBarCollapsing: true,
+        showTitle: true,
+        controlsColor: MEDICAL_THEME.primary,
+      });
+      setOpened(true);
+    } catch {
+      await openExternalUrl(url);
+      setOpened(true);
+    }
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
 
-    async function loadJoinUrl() {
-      if (!meetingLink || !profile?.uid) {
+    async function loadAndJoin() {
+      if (!profile?.uid) {
         setFailed(true);
-        setErrorMessage('Lien de visio manquant pour ce rendez-vous.');
+        setErrorMessage('Connexion requise pour rejoindre la visio.');
         setLoading(false);
         return;
       }
 
       setLoading(true);
       setFailed(false);
+      setOpened(false);
       setErrorMessage(null);
 
       try {
         const url = await resolveVisioJoinUrl({
           appointmentId: appointment.id,
-          meetingLink,
+          meetingLink: fallbackLink || `daily://${appointment.id}`,
           visioProvider: appointment.visio_provider,
           userName: displayName,
           userId: profile.uid,
           userEmail,
           isHost,
         });
-        if (!cancelled) {
-          setJoinUrl(url);
-          setLoading(false);
+        if (cancelled) return;
+
+        setJoinUrl(url);
+        setLoading(false);
+
+        if (Platform.OS !== 'web') {
+          await openJoinUrl(url);
         }
       } catch (e) {
         if (!cancelled) {
@@ -90,7 +113,7 @@ export const VisioSessionScreen: React.FC<VisioSessionScreenProps> = ({
       }
     }
 
-    void loadJoinUrl();
+    void loadAndJoin();
     return () => {
       cancelled = true;
     };
@@ -98,13 +121,21 @@ export const VisioSessionScreen: React.FC<VisioSessionScreenProps> = ({
     appointment.id,
     appointment.visio_provider,
     displayName,
+    fallbackLink,
     isHost,
-    meetingLink,
+    openJoinUrl,
     profile?.uid,
+    userEmail,
   ]);
 
-  const openExternal = () => {
-    void openExternalUrl(joinUrl ?? meetingLink).catch(() => undefined);
+  const reopen = () => {
+    const url = joinUrl ?? fallbackLink;
+    if (!url) return;
+    if (Platform.OS === 'web') {
+      void openExternalUrl(url).catch(() => undefined);
+      return;
+    }
+    void openJoinUrl(url);
   };
 
   const webIframe =
@@ -130,10 +161,10 @@ export const VisioSessionScreen: React.FC<VisioSessionScreenProps> = ({
 
       <View style={styles.frame}>
         {loading && !failed ? (
-          <View style={styles.loader} pointerEvents="none">
+          <View style={styles.loader}>
             <ActivityIndicator color={MEDICAL_THEME.primary} size="large" />
             <ProDayText variant="caption" muted style={styles.loaderText}>
-              Connexion à la visio…
+              Préparation de la salle…
             </ProDayText>
           </View>
         ) : null}
@@ -143,65 +174,36 @@ export const VisioSessionScreen: React.FC<VisioSessionScreenProps> = ({
             <ProDayText variant="section">Visio indisponible</ProDayText>
             <ProDayText variant="body" muted style={styles.fallbackBody}>
               {errorMessage ??
-                'La salle n’a pas pu être créée. Réessayez, ou ouvrez le lien dans le navigateur.'}
+                'La salle n’a pas pu être créée. Réessayez dans un instant.'}
             </ProDayText>
-            <PressableSpring style={styles.fallbackBtn} onPress={openExternal} scaleTo={0.97} haptic>
+            <PressableSpring style={styles.fallbackBtn} onPress={reopen} scaleTo={0.97} haptic>
               <ProDayText variant="caption" inverse style={styles.fallbackBtnText}>
-                Ouvrir la visio
+                Réessayer
+              </ProDayText>
+            </PressableSpring>
+          </View>
+        ) : null}
+
+        {!failed && !loading && Platform.OS !== 'web' ? (
+          <View style={styles.fallback}>
+            <ProDayText variant="section">
+              {opened ? 'Visio ouverte' : 'Prêt à rejoindre'}
+            </ProDayText>
+            <ProDayText variant="body" muted style={styles.fallbackBody}>
+              {opened
+                ? 'La consultation s’est ouverte dans le navigateur. Autorisez caméra et micro, puis revenez ici à la fin.'
+                : 'Appuyez pour entrer directement dans la salle vidéo.'}
+            </ProDayText>
+            <PressableSpring style={styles.fallbackBtn} onPress={reopen} scaleTo={0.97} haptic>
+              <ProDayText variant="caption" inverse style={styles.fallbackBtnText}>
+                {opened ? 'Rouvrir la visio' : 'Rejoindre la visio'}
               </ProDayText>
             </PressableSpring>
           </View>
         ) : null}
 
         {!failed && webIframe}
-
-        {!failed && Platform.OS !== 'web' && NativeWebView && joinUrl ? (
-          <NativeWebView
-            source={{ uri: joinUrl }}
-            style={styles.webview}
-            onLoadEnd={() => setLoading(false)}
-            onError={() => {
-              setLoading(false);
-              setFailed(true);
-            }}
-            onHttpError={() => {
-              setLoading(false);
-              setFailed(true);
-            }}
-            startInLoadingState
-            javaScriptEnabled
-            domStorageEnabled
-            sharedCookiesEnabled
-            thirdPartyCookiesEnabled
-            mediaPlaybackRequiresUserAction={false}
-            allowsInlineMediaPlayback
-            mediaCapturePermissionGrantType="grant"
-            originWhitelist={['https://*']}
-            setSupportMultipleWindows={false}
-          />
-        ) : null}
-
-        {!failed && Platform.OS !== 'web' && !NativeWebView ? (
-          <View style={styles.fallback}>
-            <ProDayText variant="body" muted>
-              WebView indisponible sur cette plateforme.
-            </ProDayText>
-            <PressableSpring style={styles.fallbackBtn} onPress={openExternal} scaleTo={0.97}>
-              <ProDayText variant="caption" inverse style={styles.fallbackBtnText}>
-                Ouvrir la visio
-              </ProDayText>
-            </PressableSpring>
-          </View>
-        ) : null}
       </View>
-
-      {!failed && joinUrl ? (
-        <PressableSpring style={styles.externalLink} onPress={openExternal} scaleTo={0.98}>
-          <ProDayText variant="caption" accent style={styles.externalLinkText}>
-            Ouvrir dans le navigateur ↗
-          </ProDayText>
-        </PressableSpring>
-      ) : null}
     </View>
   );
 };
@@ -218,16 +220,10 @@ function createStyles(c: import('../../theme/universeTheme').AppColors) {
       borderColor: MEDICAL_THEME.primaryBorder,
       backgroundColor: MEDICAL_THEME.primaryBg,
     },
-    webview: {
-      flex: 1,
-      backgroundColor: MEDICAL_THEME.primaryBg,
-    },
     loader: {
       ...StyleSheet.absoluteFillObject,
       alignItems: 'center',
       justifyContent: 'center',
-      zIndex: 2,
-      backgroundColor: 'rgba(240,253,250,0.9)',
       gap: spacing.sm,
     },
     loaderText: { marginTop: spacing.xs },
@@ -247,12 +243,5 @@ function createStyles(c: import('../../theme/universeTheme').AppColors) {
       paddingVertical: spacing.sm + 2,
     },
     fallbackBtnText: { fontWeight: '800' },
-    externalLink: {
-      paddingVertical: spacing.md,
-      alignItems: 'center',
-      borderTopWidth: StyleSheet.hairlineWidth,
-      borderTopColor: c.border,
-    },
-    externalLinkText: { fontWeight: '700' },
   });
 }

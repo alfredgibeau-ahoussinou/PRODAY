@@ -1,6 +1,7 @@
 import { configStr } from './runtimeConfig';
 import type * as functions from 'firebase-functions';
 import { onDocumentCreated, onDocumentUpdated } from 'firebase-functions/v2/firestore';
+import { defineSecret } from 'firebase-functions/params';
 import * as admin from 'firebase-admin';
 import { admin as firebaseAdmin } from './firebaseAdmin';
 import {
@@ -11,6 +12,8 @@ import { getEmailJsConfig } from './emailJsClient';
 import { isBrevoConfigured, sendTransactionalEmail } from './emailTransport';
 import { createDailyRoom } from './dailyVisio';
 import { isVisioConsultation, resolveCalVideoMeetingLink } from './visioMeetingLink';
+
+const dailyApiKeySecret = defineSecret('DAILY_API_KEY');
 
 export type AppointmentEmailKind =
   | 'booking_request_physio'
@@ -475,9 +478,10 @@ export async function onMedicalAppointmentUpdatedHandler(
 }
 
 const firestoreTriggerOptions = {
-  document: 'medical_appointments/{appointmentId}',
-  region: 'europe-west1',
-} as const;
+  document: 'medical_appointments/{appointmentId}' as const,
+  region: 'europe-west1' as const,
+  secrets: [dailyApiKeySecret],
+};
 
 /** Nouveau rendez-vous → email praticien + patient (Gen2, europe-west1). */
 export const onMedicalAppointmentCreated = onDocumentCreated(

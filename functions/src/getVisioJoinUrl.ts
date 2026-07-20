@@ -1,4 +1,5 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
+import { defineSecret } from 'firebase-functions/params';
 import { admin } from './firebaseAdmin';
 import {
   buildDailyJoinUrl,
@@ -12,6 +13,9 @@ import {
   isCalVideoMeetingLink,
   resolveCalVideoMeetingLink,
 } from './calVisio';
+
+/** Secret Gen2 — injecté dans process.env.DAILY_API_KEY au runtime. */
+const dailyApiKeySecret = defineSecret('DAILY_API_KEY');
 
 type AppointmentDoc = {
   physio_uid: string;
@@ -165,7 +169,7 @@ async function resolveJoinableMeeting(input: {
 
 /** Callable — URL Cal Video / Daily prête à rejoindre (nom + email auto, sans formulaire). */
 export const getVisioJoinUrl = onCall(
-  { region: 'europe-west1' },
+  { region: 'europe-west1', secrets: [dailyApiKeySecret] },
   async (request) => {
     const uid = request.auth?.uid;
     if (!uid) {
