@@ -5,7 +5,7 @@ export const DEFAULT_CONSULTATION_DURATION_MIN = 30;
 
 export const WEEKDAY_LABELS = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'] as const;
 
-export const CONSULTATION_DURATION_OPTIONS = [15, 20, 30, 45, 60] as const;
+export const CONSULTATION_DURATION_OPTIONS = [15, 30] as const;
 
 export interface DayScheduleConfig {
   weekday: number;

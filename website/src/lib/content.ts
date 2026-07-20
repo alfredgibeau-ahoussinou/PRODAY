@@ -1569,6 +1569,24 @@ export const SUBSCRIPTION_PLANS_WEB = [
     ],
   },
   {
+    id: "sante_visio_gratuit",
+    label: "Visio gratuite",
+    tagline: "Téléconsultations 15 et 30 min — sans abonnement",
+    monthlyEur: 0,
+    storeAvailable: false,
+    universes: ["sante"] as ProductLineWeb[],
+    freeIncludes: [
+      "Téléconsultation Daily (15 ou 30 min)",
+      "Rejoindre la visio en un tap (praticien et joueur)",
+      "Prise de rendez-vous via l'app",
+      "Salle sécurisée sans formulaire externe",
+      "Aucune carte bancaire requise",
+    ],
+    proIncludes: [
+      "Passez à Cabinet Pro pour la visibilité prioritaire près des clubs",
+    ],
+  },
+  {
     id: "physio_pro",
     label: "Pôle santé Pro",
     tagline: "Abonnement léger + visibilité clubs — commission sur les RDV",
@@ -1577,17 +1595,18 @@ export const SUBSCRIPTION_PLANS_WEB = [
     commissionPercent: 10,
     commissionNote:
       "10 % sur chaque consultation réservée via ProDay (nutrition, coach mental, prépa…). Pas de commission sur les actes médicaux réglementés.",
-    universes: ["pro"] as ProductLineWeb[],
+    universes: ["pro", "sante"] as ProductLineWeb[],
     freeIncludes: [
       "Profil praticien et vérification",
       "Spécialité et zone d'intervention",
       "Visibilité annuaire (base)",
+      "Téléconsultation visio 15/30 min (incluse)",
       "Messagerie limitée",
     ],
     proIncludes: [
       "Visibilité prioritaire près des clubs",
       "Messagerie complète après vérif.",
-      "Prise de rendez-vous via l'app",
+      "Prise de rendez-vous prioritaire",
       "Commission 10 % uniquement si RDV conclu",
     ],
   },

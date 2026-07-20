@@ -65,7 +65,7 @@ export const CAROUSEL_POLES: PoleDefinition[] = [
     href: ROUTES.sante,
     pricingHash: "sante",
     logo: "/branding/logo-sante-picto.png",
-    planIds: ["physio_pro"],
+    planIds: ["sante_visio_gratuit", "physio_pro"],
   },
   {
     id: "pro_joueur",

@@ -31,6 +31,7 @@ export function PlanDetailCard({
   variantLabel,
 }: PlanDetailCardProps) {
   const premium = isPremiumWebPlan(plan);
+  const isFree = plan.monthlyEur <= 0;
   const fullYear = fullAnnualPrice(plan.monthlyEur);
   const savings = annualSavingsFromMonthly(plan.monthlyEur);
   const monthlyFromYearly = monthlyEquivalentFromYearly(plan.yearlyEur);
@@ -42,11 +43,16 @@ export function PlanDetailCard({
       viewport={{ once: true }}
       className={`overflow-hidden rounded-3xl ${styles.card} ${
         premium ? styles.cardHighlight : ""
-      }`}
+      } ${isFree ? "ring-1 ring-emerald-400/35" : ""}`}
     >
       <div className="border-b border-white/10 p-6 sm:p-8">
         <div className="flex flex-wrap items-end justify-between gap-6">
           <div>
+            {isFree && (
+              <span className="inline-block rounded-full bg-emerald-400 px-3 py-1 text-xs font-bold uppercase tracking-wider text-slate-950">
+                Visio · Gratuit
+              </span>
+            )}
             {variantLabel && (
               <span className={`inline-block rounded-full px-3 py-1 text-xs font-semibold ${styles.badge}`}>
                 {variantLabel}
@@ -63,7 +69,20 @@ export function PlanDetailCard({
             <p className={`mt-1 text-sm ${styles.textMuted}`}>{plan.tagline}</p>
           </div>
           <div className="text-right">
-            {yearly ? (
+            {isFree ? (
+              <>
+                <p className="text-xs font-semibold uppercase tracking-wider text-emerald-300">
+                  Téléconsultation
+                </p>
+                <p className="mt-1 tabular-nums">
+                  <span className="text-4xl font-black text-white">0 €</span>
+                  <span className="text-lg text-white/50"> /séance*</span>
+                </p>
+                <p className={`mt-1 text-sm ${styles.textMuted}`}>
+                  15 ou 30 min · sans abonnement
+                </p>
+              </>
+            ) : yearly ? (
               <>
                 <p className="text-xs font-semibold uppercase tracking-wider text-white/50">
                   Annuel · −{ANNUAL_DISCOUNT_PERCENT} %
@@ -109,44 +128,66 @@ export function PlanDetailCard({
         </div>
       )}
 
-      <div className="grid gap-0 sm:grid-cols-2">
-        <div className="border-b border-white/10 p-6 sm:border-b-0 sm:border-r sm:p-8">
-          <p className="text-xs font-semibold uppercase tracking-wider text-white/40">
-            Gratuit
+      {isFree ? (
+        <div className="p-6 sm:p-8">
+          <p className="text-xs font-semibold uppercase tracking-wider text-emerald-300">
+            Inclus
           </p>
           <ul className="mt-4 space-y-2.5">
             {plan.freeIncludes.map((f) => (
-              <li key={f} className="flex gap-2 text-sm text-white/75">
-                <Check size={16} className="mt-0.5 shrink-0 text-white/30" />
-                {f}
-              </li>
-            ))}
-          </ul>
-        </div>
-        <div className="p-6 sm:p-8">
-          <p className="text-xs font-semibold uppercase tracking-wider text-white/80">
-            Pro
-          </p>
-          <ul className="mt-4 space-y-2.5">
-            {plan.proIncludes.map((f) => (
               <li key={f} className="flex gap-2 text-sm font-medium text-white">
                 <Check size={16} className="mt-0.5 shrink-0 text-emerald-400" />
                 {f}
               </li>
             ))}
           </ul>
+          <p className="mt-4 text-xs text-white/45">
+            * Gratuit côté ProDay / Daily. L&apos;honoraire du praticien reste
+            évent. facturé hors app.
+          </p>
         </div>
-      </div>
+      ) : (
+        <div className="grid gap-0 sm:grid-cols-2">
+          <div className="border-b border-white/10 p-6 sm:border-b-0 sm:border-r sm:p-8">
+            <p className="text-xs font-semibold uppercase tracking-wider text-white/40">
+              Gratuit
+            </p>
+            <ul className="mt-4 space-y-2.5">
+              {plan.freeIncludes.map((f) => (
+                <li key={f} className="flex gap-2 text-sm text-white/75">
+                  <Check size={16} className="mt-0.5 shrink-0 text-white/30" />
+                  {f}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="p-6 sm:p-8">
+            <p className="text-xs font-semibold uppercase tracking-wider text-white/80">
+              Pro
+            </p>
+            <ul className="mt-4 space-y-2.5">
+              {plan.proIncludes.map((f) => (
+                <li key={f} className="flex gap-2 text-sm font-medium text-white">
+                  <Check size={16} className="mt-0.5 shrink-0 text-emerald-400" />
+                  {f}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
 
       <div className="border-t border-white/10 p-6 text-center">
         <p className={`text-sm ${styles.textMuted}`}>
-          IAP en cours de déploiement — accès gratuit pour les inscrits.
+          {isFree
+            ? "Rejoignez la bêta santé — visio incluse dès le compte gratuit."
+            : "IAP en cours de déploiement — accès gratuit pour les inscrits."}
         </p>
         <Link
           href={ROUTES.betaWaitlist}
           className={`mt-4 inline-block rounded-full px-8 py-3 text-sm font-semibold transition hover:scale-[1.02] ${styles.cta}`}
         >
-          Accès anticipé
+          {isFree ? "Tester la visio gratuite" : "Accès anticipé"}
         </Link>
       </div>
     </motion.article>
