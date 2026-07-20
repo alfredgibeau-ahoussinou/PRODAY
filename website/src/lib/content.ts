@@ -1708,7 +1708,7 @@ export function plansForUniverse(line: ProductLineWeb): WebSubscriptionPlan[] {
             "Réels et shop merch",
             "Sans abonnement ni carte bancaire",
           ],
-        } as unknown as WebSubscriptionPlan;
+        };
       }
       return {
         ...p,
