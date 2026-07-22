@@ -8,7 +8,7 @@ import { useCallback, useEffect, useState } from "react";
 import { PlanDetailCard } from "@/components/poles/PlanDetailCard";
 import { SponsorPricingSection } from "@/components/sponsor/SponsorPricingSection";
 import {
-  CAROUSEL_POLES,
+  POLES,
   POLE_STYLES,
   plansForPole,
   poleById,
@@ -29,7 +29,7 @@ const POLE_NAV_LABELS: Record<PoleId, string> = {
   sponsor: "Partenaires",
 };
 
-const POLE_NAV: { id: PoleId; label: string }[] = CAROUSEL_POLES.map((p) => ({
+const POLE_NAV: { id: PoleId; label: string }[] = POLES.map((p) => ({
   id: p.id,
   label: POLE_NAV_LABELS[p.id],
 }));

@@ -43,7 +43,7 @@ function tierPrice(tier: SponsorPricingTierWeb, yearly: boolean): string {
 }
 
 function tierPriceDetail(tier: SponsorPricingTierWeb, yearly: boolean): string | null {
-  if (tier.monthlyEur === 0) return "Gratuit, sans engagement";
+  if (tier.monthlyEur === 0) return "Gratuit · 10 messages clubs / mois";
   if (yearly) {
     const yearlyEur = yearlyPriceFromMonthly(tier.monthlyEur);
     const equiv = monthlyEquivalentFromYearly(yearlyEur);

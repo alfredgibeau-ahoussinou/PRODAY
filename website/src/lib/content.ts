@@ -1405,7 +1405,7 @@ export const SPONSOR_PRICING_TIERS: readonly SponsorPricingTierWeb[] = [
       "Profil sponsor vérifié",
       "1 offre active dans l'annuaire",
       "Zone géographique (ville)",
-      "Messagerie clubs (limitée)",
+      "10 messages clubs / mois",
       "Statistiques de base",
     ],
   },
@@ -1641,7 +1641,7 @@ export const SUBSCRIPTION_PLANS_WEB = [
       "Formule Découverte (0 €) : profil vérifié",
       "1 offre active dans l'annuaire",
       "Zone géographique (ville)",
-      "Messagerie clubs (limitée)",
+      "10 messages clubs / mois",
     ],
     proIncludes: [
       "National Pro : offres illimitées",
@@ -1796,7 +1796,7 @@ export const FAQ_ITEMS = [
   },
   {
     q: "Quel tarif pour les partenaires / sponsors ?",
-    a: `Trois formules partenaires : Découverte (0 € — profil vérifié, 1 offre), Territorial (${formatAnnualPricingLine(49)} — devis sur ${SPONSOR_PARTNER_CONTACT_EMAIL}), National Pro (${faqPricing("sponsor_pro")} — espace dédié dans l'app).`,
+    a: `Trois formules partenaires : Découverte (0 € — profil vérifié, 1 offre, 10 messages clubs / mois), Territorial (${formatAnnualPricingLine(49)} — devis sur ${SPONSOR_PARTNER_CONTACT_EMAIL}), National Pro (${faqPricing("sponsor_pro")} — espace dédié dans l'app).`,
   },
   {
     q: "Puis-je exporter mon CV foot ?",

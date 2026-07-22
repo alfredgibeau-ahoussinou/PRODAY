@@ -37,7 +37,7 @@ export const SPONSOR_PRICING_TIERS: SponsorPricingTier[] = [
       'Profil sponsor vérifié',
       '1 offre active dans l’annuaire',
       'Zone géographique (ville)',
-      'Messagerie clubs (limitée)',
+      '10 messages clubs / mois',
       'Statistiques de base',
     ],
   },

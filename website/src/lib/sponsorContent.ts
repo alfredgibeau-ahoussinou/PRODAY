@@ -149,7 +149,7 @@ export const SPONSOR_FAQ = [
   },
   {
     q: "Puis-je tester avant de m'engager ?",
-    a: "Oui — la formule Découverte (0 €) permet de créer un profil sponsor vérifié et une offre active pour évaluer la plateforme sans engagement.",
+    a: "Oui — la formule Découverte (0 €) permet de créer un profil sponsor vérifié, une offre active et 10 messages clubs / mois pour évaluer la plateforme sans engagement.",
   },
   {
     q: "Comment fonctionne le push géolocalisé ?",
