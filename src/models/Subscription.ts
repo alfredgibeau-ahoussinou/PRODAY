@@ -13,4 +13,5 @@ export interface SubscriptionUsagePeriod {
   period: string;
   mercato_applications: number;
   recruitment_messages: number;
+  sponsor_club_messages: number;
 }

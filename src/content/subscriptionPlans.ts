@@ -17,6 +17,7 @@ export type SubscriptionTier = 'free' | 'pro';
 export type SubscriptionFeatureId =
   | 'mercato_apply'
   | 'recruitment_message'
+  | 'sponsor_club_message'
   | 'club_active_post'
   | 'club_team';
 
@@ -30,6 +31,7 @@ export interface PlanPricing {
 export interface PlanLimits {
   mercato_apply_per_month?: number;
   recruitment_messages_per_month?: number;
+  sponsor_club_messages_per_month?: number;
   club_active_posts?: number;
   club_teams?: number;
 }
@@ -211,12 +213,13 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionPlanId, SubscriptionPlanDefi
     label: 'Sponsor Pro',
     tagline: 'Visibilité marque & clubs locaux',
     pricing: planPricing(99, true),
-    limits: {},
+    limits: { sponsor_club_messages_per_month: 10 },
     freeIncludes: [
       'Profil sponsor vérifié',
       'Présence annuaire Sponsors',
       '1 offre active',
       'Zone géographique',
+      '10 messages clubs / mois',
     ],
     proIncludes: [
       'Offres sponsors illimitées',

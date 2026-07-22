@@ -58,6 +58,8 @@ export function checkFeatureAccess(input: {
   usage: SubscriptionUsagePeriod;
   activeOpenPosts?: number;
   clubTeams?: number;
+  /** Sponsor Territorial ou National Pro — messagerie illimitée. */
+  sponsorUnlimitedMessaging?: boolean;
 }): FeatureCheckResult {
   const { role, tier, feature, usage } = input;
 
@@ -111,6 +113,25 @@ export function checkFeatureAccess(input: {
       }
       return { allowed: true, tier, planId, feature, used, limit };
     }
+    case 'sponsor_club_message': {
+      if (role !== 'sponsor' || input.sponsorUnlimitedMessaging) {
+        return { allowed: true, tier, planId, feature };
+      }
+      const limit = limits.sponsor_club_messages_per_month ?? Infinity;
+      const used = usage.sponsor_club_messages;
+      if (used >= limit) {
+        return {
+          allowed: false,
+          tier,
+          planId,
+          feature,
+          used,
+          limit,
+          message: `Limite gratuite : ${limit} messages clubs par mois. Passez à ${plan.label} pour continuer.`,
+        };
+      }
+      return { allowed: true, tier, planId, feature, used, limit };
+    }
     case 'club_active_post': {
       const limit = limits.club_active_posts ?? Infinity;
       const used = input.activeOpenPosts ?? 0;
@@ -153,13 +174,18 @@ export function emptyUsagePeriod(period = currentUsagePeriod()): SubscriptionUsa
     period,
     mercato_applications: 0,
     recruitment_messages: 0,
+    sponsor_club_messages: 0,
   };
 }
 
 export function usageFieldForFeature(
   feature: SubscriptionFeatureId
-): keyof Pick<SubscriptionUsagePeriod, 'mercato_applications' | 'recruitment_messages'> | null {
+): keyof Pick<
+  SubscriptionUsagePeriod,
+  'mercato_applications' | 'recruitment_messages' | 'sponsor_club_messages'
+> | null {
   if (feature === 'mercato_apply') return 'mercato_applications';
   if (feature === 'recruitment_message') return 'recruitment_messages';
+  if (feature === 'sponsor_club_message') return 'sponsor_club_messages';
   return null;
 }

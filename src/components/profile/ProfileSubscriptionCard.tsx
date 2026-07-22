@@ -36,6 +36,15 @@ export const ProfileSubscriptionCard: React.FC<ProfileSubscriptionCardProps> = (
 
   const quota = useMemo(() => {
     if (!plan || isPro) return null;
+    if (plan.limits.sponsor_club_messages_per_month != null && usage) {
+      const limit = plan.limits.sponsor_club_messages_per_month;
+      return {
+        used: usage.sponsor_club_messages,
+        limit,
+        label: 'Messages clubs',
+        left: Math.max(0, limit - usage.sponsor_club_messages),
+      };
+    }
     const limit = plan.limits.mercato_apply_per_month ?? plan.limits.recruitment_messages_per_month;
     if (limit == null || !usage) return null;
     const used =

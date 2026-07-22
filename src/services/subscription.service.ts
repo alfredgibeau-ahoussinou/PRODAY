@@ -24,6 +24,7 @@ import {
   subscriptionFromUserFields,
   usageFieldForFeature,
 } from '../utils/subscriptionLogic';
+import { isTerritorialSponsorActive } from '../utils/sponsorTier';
 
 export class SubscriptionLimitError extends Error {
   readonly feature: SubscriptionFeatureId;
@@ -75,6 +76,7 @@ export const subscriptionService = {
         period,
         mercato_applications: Number(data.mercato_applications ?? 0),
         recruitment_messages: Number(data.recruitment_messages ?? 0),
+        sponsor_club_messages: Number(data.sponsor_club_messages ?? 0),
       };
     } catch {
       return emptyUsagePeriod(period);
@@ -119,6 +121,9 @@ export const subscriptionService = {
       usage: periodUsage,
       activeOpenPosts,
       clubTeams: user.profile.club_id ? 1 : 0,
+      sponsorUnlimitedMessaging:
+        user.role === 'sponsor' &&
+        (sub.tier === 'pro' || isTerritorialSponsorActive(user)),
     });
   },
 

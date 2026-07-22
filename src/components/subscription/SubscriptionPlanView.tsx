@@ -85,6 +85,13 @@ export const SubscriptionPlanView: React.FC<SubscriptionPlanViewProps> = ({
         limit: plan.limits.recruitment_messages_per_month,
       });
     }
+    if (plan.limits.sponsor_club_messages_per_month != null) {
+      rows.push({
+        label: 'Messages clubs',
+        used: usage.sponsor_club_messages,
+        limit: plan.limits.sponsor_club_messages_per_month,
+      });
+    }
     return rows;
   }, [plan, visual, isPro, noStorePlan, usage, profile.role, productLine]);
 

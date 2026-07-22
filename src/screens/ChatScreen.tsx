@@ -32,6 +32,12 @@ import { isTeamThread } from '../utils/teamChatIds';
 import { trackV3Event } from '../core/analytics/v3Events';
 import { recordV3UserAction } from '../utils/recordV3Action';
 import { useTranslation } from '../context/LocaleContext';
+import { useSubscriptionOptional } from '../context/SubscriptionContext';
+import {
+  subscriptionService,
+  SubscriptionLimitError,
+} from '../services/subscription.service';
+import { isTerritorialSponsorActive } from '../utils/sponsorTier';
 
 interface ChatScreenProps {
   threadId: string;
@@ -51,6 +57,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
   onBack,
 }) => {
   const { t, locale } = useTranslation();
+  const subscription = useSubscriptionOptional();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [text, setText] = useState(initialDraft ?? '');
@@ -194,6 +201,25 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
         return;
       }
     }
+    if (
+      currentUser?.role === 'sponsor' &&
+      currentUser.subscription_tier !== 'pro' &&
+      !isTerritorialSponsorActive(currentUser)
+    ) {
+      try {
+        await subscriptionService.assertFeature(currentUser, 'sponsor_club_message');
+      } catch (e) {
+        if (e instanceof SubscriptionLimitError) {
+          if (subscription) {
+            subscription.openUpgradeForFeature('sponsor_club_message');
+          } else {
+            Alert.alert(t('chat.sendBlocked'), e.message);
+          }
+          return;
+        }
+        throw e;
+      }
+    }
     setSending(true);
     try {
       await messagesService.sendMessage(
@@ -208,6 +234,14 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
       if (currentUser) {
         trackV3Event('message_sent', { threadId });
         recordV3UserAction(currentUser, 'send_message');
+        if (
+          currentUser.role === 'sponsor' &&
+          currentUser.subscription_tier !== 'pro' &&
+          !isTerritorialSponsorActive(currentUser)
+        ) {
+          await subscriptionService.incrementUsage(currentUser.uid, 'sponsor_club_message');
+          void subscription?.refresh();
+        }
       }
     } catch (e) {
       Alert.alert(

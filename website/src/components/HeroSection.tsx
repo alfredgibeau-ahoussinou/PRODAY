@@ -6,22 +6,23 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { BRAND } from "@/lib/content";
 import { ROUTES } from "@/lib/routes";
-import { CAROUSEL_POLES } from "@/lib/poles";
+import { POLES, type PoleId } from "@/lib/poles";
 import { PremiumButton } from "@/components/ui/PremiumButton";
 import { Kicker } from "@/components/ui/Kicker";
 
-const HERO_LABELS = [
-  "Amateur",
-  "Supporter",
-  "Santé",
-  "Pro Joueur",
-  "Pro Club",
-  "Pro Staff",
-] as const;
+const HERO_LABELS: Record<PoleId, string> = {
+  amateur: "Amateur",
+  supporter: "Supporter",
+  sante: "Santé",
+  pro_joueur: "Pro Joueur",
+  pro_club: "Pro Club",
+  pro_staff: "Pro Staff",
+  sponsor: "Partenaires",
+};
 
-const HERO_SLIDES = CAROUSEL_POLES.map((pole, i) => ({
+const HERO_SLIDES = POLES.map((pole, i) => ({
   num: String(i + 1).padStart(2, "0"),
-  label: HERO_LABELS[i] ?? pole.title,
+  label: HERO_LABELS[pole.id],
   href: pole.href,
 }));
 
@@ -116,7 +117,7 @@ export function HeroSection() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4, duration: 0.5 }}
           className="absolute inset-x-0 bottom-0 scroll-snap-x flex w-full shrink-0 gap-2 overflow-x-auto px-4 pb-6 sm:pb-8 lg:hidden"
-          aria-label="Les 6 pôles ProDay"
+          aria-label="Les 7 pôles ProDay"
         >
           {HERO_SLIDES.map((slide, i) => (
             <Link
@@ -139,7 +140,7 @@ export function HeroSection() {
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.4, duration: 0.6 }}
           className="mt-12 hidden flex-col items-end gap-1 lg:mt-0 lg:flex"
-          aria-label="Les 6 pôles ProDay — desktop"
+          aria-label="Les 7 pôles ProDay — desktop"
         >
           {HERO_SLIDES.map((slide, i) => (
             <Link
