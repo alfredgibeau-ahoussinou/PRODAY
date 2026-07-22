@@ -32,11 +32,11 @@ credentials.json
 .env.eas-preview
 
 # Fichiers lourds non embarqués dans l'APK
+# Ne pas ignorer assets/generated — requis par showcaseAssets / womanShowcaseAssets
 *.log
 firestore-debug.log
 assets/social
 assets/mockups
-assets/generated
 assets/diagrams
 
 # Divers
