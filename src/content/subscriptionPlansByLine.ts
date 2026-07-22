@@ -228,6 +228,7 @@ const LINE_PLAN_PATCHES: Record<
         'Présence annuaire Sponsors Pro',
         '1 offre active',
         'Zone géographique',
+        '10 messages clubs / mois',
       ],
       proIncludes: [
         'Offres sponsors illimitées',

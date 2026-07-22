@@ -330,7 +330,8 @@ service cloud.firestore {
     }
 
     match /users/{userId}/subscription_usage/{periodId} {
-      allow read, write: if isOwner(userId);
+      allow read: if isOwner(userId);
+      allow write: if false;
     }
 
     match /users/{userId}/v3_brain/{docId} {

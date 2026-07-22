@@ -24,7 +24,13 @@ import {
   subscriptionFromUserFields,
   usageFieldForFeature,
 } from '../utils/subscriptionLogic';
-import { isTerritorialSponsorActive } from '../utils/sponsorTier';
+import {
+  sponsorActiveOfferLimit,
+  sponsorHasUnlimitedMessaging,
+} from '../utils/sponsorPlanLimits';
+import { callFunction } from '../lib/firebaseFunctions';
+
+const FUNCTIONS_REGION = process.env.EXPO_PUBLIC_FIREBASE_FUNCTIONS_REGION ?? 'europe-west1';
 
 export class SubscriptionLimitError extends Error {
   readonly feature: SubscriptionFeatureId;
@@ -101,16 +107,40 @@ export const subscriptionService = {
     }
   },
 
+  async countActiveOffersBySponsor(sponsorUid: string): Promise<number> {
+    if (!isFirebaseConfigured()) return 0;
+    const database = getDb();
+    if (!database) return 0;
+    try {
+      const q = query(
+        collection(database, 'sponsor_offers'),
+        where('sponsor_uid', '==', sponsorUid),
+        where('active', '==', true),
+        limit(20),
+      );
+      const snap = await getDocs(q);
+      return snap.size;
+    } catch {
+      return 0;
+    }
+  },
+
   async checkFeature(
     user: User,
     feature: SubscriptionFeatureId,
-    usage?: SubscriptionUsagePeriod
+    usage?: SubscriptionUsagePeriod,
+    options?: { activeSponsorOffers?: number },
   ) {
     const sub = userSubscription(user);
     const periodUsage = usage ?? (await this.loadUsage(user.uid));
     const activeOpenPosts =
       feature === 'club_active_post'
         ? await this.countOpenPostsByAuthor(user.uid)
+        : undefined;
+    const activeSponsorOffers =
+      feature === 'sponsor_active_offer'
+        ? (options?.activeSponsorOffers ??
+          (user.role === 'sponsor' ? await this.countActiveOffersBySponsor(user.uid) : 0))
         : undefined;
 
     return checkFeatureAccess({
@@ -121,27 +151,49 @@ export const subscriptionService = {
       usage: periodUsage,
       activeOpenPosts,
       clubTeams: user.profile.club_id ? 1 : 0,
-      sponsorUnlimitedMessaging:
-        user.role === 'sponsor' &&
-        (sub.tier === 'pro' || isTerritorialSponsorActive(user)),
+      sponsorUnlimitedMessaging: sponsorHasUnlimitedMessaging(user),
+      sponsorActiveOfferLimit: sponsorActiveOfferLimit(user),
+      activeSponsorOffers,
     });
   },
 
-  async assertFeature(user: User, feature: SubscriptionFeatureId, usage?: SubscriptionUsagePeriod) {
-    const result = await this.checkFeature(user, feature, usage);
+  async assertFeature(
+    user: User,
+    feature: SubscriptionFeatureId,
+    usage?: SubscriptionUsagePeriod,
+    options?: { activeSponsorOffers?: number },
+  ) {
+    const result = await this.checkFeature(user, feature, usage, options);
     if (!result.allowed) {
       throw new SubscriptionLimitError(
         result.message ?? 'Limite du plan gratuit atteinte.',
         feature,
-        result.planId
+        result.planId,
       );
     }
     return result;
   },
 
+  async assertSponsorCanAddActiveOffer(user: User): Promise<void> {
+    const count = await this.countActiveOffersBySponsor(user.uid);
+    await this.assertFeature(user, 'sponsor_active_offer', undefined, { activeSponsorOffers: count });
+  },
+
   async incrementUsage(uid: string, feature: SubscriptionFeatureId): Promise<void> {
     const field = usageFieldForFeature(feature);
     if (!field || !isFirebaseConfigured()) return;
+
+    try {
+      await callFunction<{ feature: SubscriptionFeatureId }, { ok: boolean }>(
+        'incrementSubscriptionUsage',
+        { feature },
+        FUNCTIONS_REGION,
+      );
+      return;
+    } catch {
+      // Fallback local (dev / Functions indisponibles)
+    }
+
     const database = getDb();
     if (!database) return;
 
@@ -154,7 +206,7 @@ export const subscriptionService = {
         [field]: increment(1),
         updated_at: new Date().toISOString(),
       },
-      { merge: true }
+      { merge: true },
     );
   },
 

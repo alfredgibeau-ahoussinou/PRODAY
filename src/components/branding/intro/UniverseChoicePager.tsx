@@ -16,7 +16,6 @@ import { UniversePageChrome } from './UniversePageChrome';
 import { useUniverseIntroTour } from './useUniverseIntroTour';
 import { UNIVERSE_CHOICE_ORDER } from './universeChoiceShared';
 
-// TODO(phase6-carousel): migrer vers la cible 6 pôles (incluant pro_player distinct).
 const UNIVERSE_ORDER = UNIVERSE_CHOICE_ORDER;
 
 interface UniverseChoicePagerProps {

@@ -7,6 +7,14 @@ import { ScreenHeader } from '../../components/ui/ScreenHeader';
 import { Icon } from '../../components/ui/Icon';
 import { SPONSOR_THEME } from '../../content/sponsorExperience';
 import { spacing, radius } from '../../theme/designTokens';
+import { useSessionProfile } from '../../hooks/useSessionProfile';
+import { useSponsorDashboard } from '../../hooks/useSponsorDashboard';
+import { useSubscriptionOptional } from '../../context/SubscriptionContext';
+import {
+  assertCanActivateSponsorOffer,
+  assertCanPublishActiveSponsorOffer,
+  isSubscriptionLimitError,
+} from '../../utils/sponsorOfferActions';
 
 interface SponsorOfferDetailScreenProps {
   offer: SponsorOffer;
@@ -19,8 +27,16 @@ export const SponsorOfferDetailScreen: React.FC<SponsorOfferDetailScreenProps> =
   onBack,
   onUpdated,
 }) => {
+  const profile = useSessionProfile();
+  const subscription = useSubscriptionOptional();
+  const { activeOffers } = useSponsorDashboard(profile?.uid, profile?.display_name);
+
   const handleToggle = async () => {
+    if (!profile) return;
     try {
+      if (!offer.active) {
+        await assertCanActivateSponsorOffer(profile, offer, activeOffers.length);
+      }
       await sponsorsService.toggleOfferActive(offer.id, !offer.active);
       Alert.alert(
         offer.active ? 'Offre en pause' : 'Offre réactivée',
@@ -31,17 +47,25 @@ export const SponsorOfferDetailScreen: React.FC<SponsorOfferDetailScreenProps> =
       onUpdated();
       onBack();
     } catch (e) {
+      if (isSubscriptionLimitError(e)) {
+        subscription?.openUpgradeForFeature(e.feature);
+      }
       Alert.alert('Erreur', e instanceof Error ? e.message : 'Action impossible.');
     }
   };
 
   const handleDuplicate = async () => {
+    if (!profile) return;
     try {
+      await assertCanPublishActiveSponsorOffer(profile);
       await sponsorsService.duplicateOffer(offer);
       Alert.alert('Offre dupliquée', 'Une copie a été ajoutée à vos campagnes.');
       onUpdated();
       onBack();
     } catch (e) {
+      if (isSubscriptionLimitError(e)) {
+        subscription?.openUpgradeForFeature(e.feature);
+      }
       Alert.alert('Erreur', e instanceof Error ? e.message : 'Duplication impossible.');
     }
   };

@@ -37,7 +37,11 @@ import {
   subscriptionService,
   SubscriptionLimitError,
 } from '../services/subscription.service';
-import { isTerritorialSponsorActive } from '../utils/sponsorTier';
+import { sponsorHasUnlimitedMessaging, sponsorMessageLimit } from '../utils/sponsorPlanLimits';
+import {
+  shouldWarnSponsorMessageQuota,
+  sponsorMessageQuotaWarningText,
+} from '../components/sponsor/SponsorQuotaBanner';
 
 interface ChatScreenProps {
   threadId: string;
@@ -58,6 +62,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
 }) => {
   const { t, locale } = useTranslation();
   const subscription = useSubscriptionOptional();
+  const sponsorQuotaWarnedRef = useRef(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [text, setText] = useState(initialDraft ?? '');
@@ -203,9 +208,16 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
     }
     if (
       currentUser?.role === 'sponsor' &&
-      currentUser.subscription_tier !== 'pro' &&
-      !isTerritorialSponsorActive(currentUser)
+      !sponsorHasUnlimitedMessaging(currentUser)
     ) {
+      const used = subscription?.usage?.sponsor_club_messages ?? 0;
+      const limit = sponsorMessageLimit(currentUser);
+      if (
+        shouldWarnSponsorMessageQuota(currentUser, used, sponsorQuotaWarnedRef.current)
+      ) {
+        sponsorQuotaWarnedRef.current = true;
+        Alert.alert('Quota messages', sponsorMessageQuotaWarningText(used, limit));
+      }
       try {
         await subscriptionService.assertFeature(currentUser, 'sponsor_club_message');
       } catch (e) {
@@ -236,8 +248,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
         recordV3UserAction(currentUser, 'send_message');
         if (
           currentUser.role === 'sponsor' &&
-          currentUser.subscription_tier !== 'pro' &&
-          !isTerritorialSponsorActive(currentUser)
+          !sponsorHasUnlimitedMessaging(currentUser)
         ) {
           await subscriptionService.incrementUsage(currentUser.uid, 'sponsor_club_message');
           void subscription?.refresh();

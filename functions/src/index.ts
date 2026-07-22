@@ -36,9 +36,11 @@ import {
   onMedicalAppointmentUpdated,
 } from './appointmentEmail';
 import { getVisioJoinUrl } from './getVisioJoinUrl';
+import { incrementSubscriptionUsage } from './subscriptionUsage';
 
 export { createPaymentCheckoutSession, stripeWebhook, createShopCheckoutSession };
 export { sendAuthVerificationEmail, sendAuthPasswordResetEmail };
+export { incrementSubscriptionUsage };
 export { onSponsorOfferCreated, onSponsorOfferUpdated, notifySponsorOfferInCityCallable };
 export { onMedicalAppointmentCreated, onMedicalAppointmentUpdated };
 export { getVisioJoinUrl };

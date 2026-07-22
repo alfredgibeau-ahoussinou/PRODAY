@@ -93,4 +93,18 @@ describe('subscriptionLogic', () => {
     });
     expect(result.allowed).toBe(true);
   });
+
+  it('bloque une 2e offre active sponsor Découverte', () => {
+    const result = checkFeatureAccess({
+      role: 'sponsor',
+      tier: 'free',
+      planId: 'sponsor_pro',
+      feature: 'sponsor_active_offer',
+      usage: emptyUsagePeriod('2026-06'),
+      activeSponsorOffers: 1,
+      sponsorActiveOfferLimit: 1,
+    });
+    expect(result.allowed).toBe(false);
+    expect(result.limit).toBe(1);
+  });
 });

@@ -18,6 +18,7 @@ export type SubscriptionFeatureId =
   | 'mercato_apply'
   | 'recruitment_message'
   | 'sponsor_club_message'
+  | 'sponsor_active_offer'
   | 'club_active_post'
   | 'club_team';
 

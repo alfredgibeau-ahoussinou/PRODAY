@@ -18,6 +18,8 @@ import type { SponsorProspect } from '../../../models/SponsorOffer';
 import { useState } from 'react';
 import { openSponsorProspectChat } from '../../../utils/openSponsorProspectChat';
 import { SponsorPageScaffold } from '../../../components/sponsor/SponsorPageScaffold';
+import { SponsorTierStatusBanner } from '../../../components/sponsor/SponsorTierStatusBanner';
+import { SponsorQuotaBanner } from '../../../components/sponsor/SponsorQuotaBanner';
 
 export const SponsorOverviewPage: React.FC = () => {
   const { t } = useTranslation();
@@ -55,6 +57,9 @@ export const SponsorOverviewPage: React.FC = () => {
         <Text style={styles.greeting}>Bonjour, {companyName}</Text>
         <Text style={styles.sub}>{t('sponsor.dashboard.subtitle')}</Text>
       </View>
+
+      <SponsorTierStatusBanner profile={profile} />
+      <SponsorQuotaBanner profile={profile} activeOffers={stats.activeOffers} />
 
       <SponsorKpiStrip
         items={[

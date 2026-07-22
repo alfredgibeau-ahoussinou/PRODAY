@@ -20,6 +20,8 @@ import { SPONSOR_THEME } from '../content/sponsorExperience';
 import { spacing, radius } from '../theme/designTokens';
 import { useSessionProfile } from '../hooks/useSessionProfile';
 import { isSponsorCampaignAllowed } from '../utils/sponsorCampaignGate';
+import { assertCanPublishActiveSponsorOffer, isSubscriptionLimitError } from '../utils/sponsorOfferActions';
+import { useSubscriptionOptional } from '../context/SubscriptionContext';
 import { useTranslation } from '../context/LocaleContext';
 
 interface CreateSponsorOfferScreenProps {
@@ -34,6 +36,7 @@ export const CreateSponsorOfferScreen: React.FC<CreateSponsorOfferScreenProps> =
   onCreated,
 }) => {
   const profile = useSessionProfile();
+  const subscription = useSubscriptionOptional();
   const { t } = useTranslation();
   const [company, setCompany] = useState('');
   const [description, setDescription] = useState('');
@@ -61,6 +64,18 @@ export const CreateSponsorOfferScreen: React.FC<CreateSponsorOfferScreenProps> =
     if (!company.trim() || !description.trim()) {
       Alert.alert('Champs requis', 'Nom et description sont obligatoires.');
       return;
+    }
+    if (profile) {
+      try {
+        await assertCanPublishActiveSponsorOffer(profile);
+      } catch (e) {
+        if (isSubscriptionLimitError(e)) {
+          subscription?.openUpgradeForFeature(e.feature);
+          Alert.alert('Limite atteinte', e.message);
+          return;
+        }
+        throw e;
+      }
     }
     setSaving(true);
     try {

@@ -16,6 +16,7 @@ import { spacing, radius, shadows } from '../../theme/designTokens';
 const FEATURE_HINTS: Partial<Record<SubscriptionFeatureId, string>> = {
   recruitment_message: 'Quota de messages recrutement atteint pour ce mois.',
   sponsor_club_message: 'Quota de 10 messages clubs atteint pour ce mois (formule Découverte).',
+  sponsor_active_offer: 'Nombre maximum d’offres actives sur votre formule.',
   club_active_post: "Nombre maximum d'annonces actives sur le plan gratuit.",
   club_team: 'Le plan gratuit est limité à une équipe.',
 };

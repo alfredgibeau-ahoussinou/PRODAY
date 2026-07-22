@@ -58,8 +58,11 @@ export function checkFeatureAccess(input: {
   usage: SubscriptionUsagePeriod;
   activeOpenPosts?: number;
   clubTeams?: number;
+  activeSponsorOffers?: number;
   /** Sponsor Territorial ou National Pro — messagerie illimitée. */
   sponsorUnlimitedMessaging?: boolean;
+  /** Limite offres actives selon formule sponsor (1 / 5 / ∞). */
+  sponsorActiveOfferLimit?: number;
 }): FeatureCheckResult {
   const { role, tier, feature, usage } = input;
 
@@ -128,6 +131,31 @@ export function checkFeatureAccess(input: {
           used,
           limit,
           message: `Limite gratuite : ${limit} messages clubs par mois. Passez à ${plan.label} pour continuer.`,
+        };
+      }
+      return { allowed: true, tier, planId, feature, used, limit };
+    }
+    case 'sponsor_active_offer': {
+      if (role !== 'sponsor' || isProTier(tier)) {
+        return { allowed: true, tier, planId, feature };
+      }
+      const limit = input.sponsorActiveOfferLimit ?? 1;
+      if (!Number.isFinite(limit)) {
+        return { allowed: true, tier, planId, feature };
+      }
+      const used = input.activeSponsorOffers ?? 0;
+      if (used >= limit) {
+        return {
+          allowed: false,
+          tier,
+          planId,
+          feature,
+          used,
+          limit,
+          message:
+            limit === 1
+              ? `Formule Découverte : ${limit} offre active maximum. Passez à ${plan.label} pour en publier davantage.`
+              : `Limite : ${limit} offres actives sur votre formule. Passez à ${plan.label} pour plus de visibilité.`,
         };
       }
       return { allowed: true, tier, planId, feature, used, limit };

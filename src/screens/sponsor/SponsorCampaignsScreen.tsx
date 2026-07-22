@@ -24,6 +24,12 @@ import { SPONSOR_THEME } from '../../content/sponsorExperience';
 import { spacing, radius } from '../../theme/designTokens';
 import type { SponsorOffer } from '../../models/SponsorOffer';
 import { isSponsorCampaignAllowed } from '../../utils/sponsorCampaignGate';
+import {
+  assertCanActivateSponsorOffer,
+  assertCanPublishActiveSponsorOffer,
+  isSubscriptionLimitError,
+} from '../../utils/sponsorOfferActions';
+import { useSubscriptionOptional } from '../../context/SubscriptionContext';
 import { useTranslation } from '../../context/LocaleContext';
 
 type CampaignFilter = 'mine' | 'clubs' | 'all';
@@ -39,6 +45,7 @@ export const SponsorCampaignsScreen: React.FC<SponsorCampaignsScreenProps> = ({
   fixedFilter,
 }) => {
   const profile = useSessionProfile();
+  const subscription = useSubscriptionOptional();
   const { t } = useTranslation();
   const company = profile?.profile.job_title ?? profile?.display_name;
   const [filter, setFilter] = useState<CampaignFilter>(fixedFilter ?? 'mine');
@@ -52,7 +59,7 @@ export const SponsorCampaignsScreen: React.FC<SponsorCampaignsScreenProps> = ({
   const [contributeId, setContributeId] = useState<string | null>(null);
   const [amount, setAmount] = useState('');
   const [contributing, setContributing] = useState(false);
-  const { offers, myOffers, goals, contributions, loading, refresh } = useSponsorDashboard(
+  const { offers, myOffers, goals, contributions, loading, refresh, activeOffers } = useSponsorDashboard(
     profile?.uid,
     company
   );
@@ -86,20 +93,32 @@ export const SponsorCampaignsScreen: React.FC<SponsorCampaignsScreenProps> = ({
   }, [refresh]);
 
   const handleToggleOffer = async (offer: SponsorOffer) => {
+    if (!profile) return;
     try {
+      if (!offer.active) {
+        await assertCanActivateSponsorOffer(profile, offer, activeOffers.length);
+      }
       await sponsorsService.toggleOfferActive(offer.id, !offer.active);
       await refresh();
     } catch (e) {
+      if (isSubscriptionLimitError(e)) {
+        subscription?.openUpgradeForFeature(e.feature);
+      }
       Alert.alert('Erreur', e instanceof Error ? e.message : 'Action impossible.');
     }
   };
 
   const handleDuplicateOffer = async (offer: SponsorOffer) => {
+    if (!profile) return;
     try {
+      await assertCanPublishActiveSponsorOffer(profile);
       await sponsorsService.duplicateOffer(offer);
       Alert.alert('Offre dupliquée', 'La copie est disponible dans Mes offres.');
       await refresh();
     } catch (e) {
+      if (isSubscriptionLimitError(e)) {
+        subscription?.openUpgradeForFeature(e.feature);
+      }
       Alert.alert('Erreur', e instanceof Error ? e.message : 'Duplication impossible.');
     }
   };

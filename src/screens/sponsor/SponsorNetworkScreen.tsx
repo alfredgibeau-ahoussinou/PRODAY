@@ -23,6 +23,7 @@ import { spacing, radius } from '../../theme/designTokens';
 import { openSponsorProspectChat } from '../../utils/openSponsorProspectChat';
 import type { SponsorProspect } from '../../models/SponsorOffer';
 import { PushScreenTransition } from '../../components/motion';
+import { SponsorQuotaBanner } from '../../components/sponsor/SponsorQuotaBanner';
 
 interface SponsorNetworkScreenProps {
   shellMode?: boolean;
@@ -42,7 +43,7 @@ export const SponsorNetworkScreen: React.FC<SponsorNetworkScreenProps> = ({
   const clearPendingChat = sponsorShell?.clearPendingChat ?? tabNav.clearPendingChat;
   const bottomInset = shellMode ? SPONSOR_NAV_INSET : TAB_BAR_CONTENT_INSET;
   const { threads, loading, refresh } = useMessagesData(profile?.uid);
-  const { prospects, analytics, loading: sponsorLoading } = useSponsorDashboard(
+  const { prospects, analytics, loading: sponsorLoading, stats } = useSponsorDashboard(
     profile?.uid,
     company
   );
@@ -117,6 +118,10 @@ export const SponsorNetworkScreen: React.FC<SponsorNetworkScreenProps> = ({
             title="Réseau sponsors"
             subtitle="Messages clubs, prospects locaux et modèles pour accélérer vos prises de contact."
           />
+        ) : null}
+
+        {profile ? (
+          <SponsorQuotaBanner profile={profile} activeOffers={stats.activeOffers} />
         ) : null}
 
         {analytics ? (
