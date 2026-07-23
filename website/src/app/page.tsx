@@ -35,10 +35,10 @@ export default function HomePage() {
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/75 to-black/45" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_55%_50%_at_50%_40%,rgba(0,84,240,0.18),transparent)]" />
         <div className="relative mx-auto flex min-h-[78vh] max-w-4xl flex-col items-center justify-center px-6 py-24 text-center">
-          <p className="text-xs font-bold uppercase tracking-[0.32em] text-[var(--proday-accent)]">
+          <p className="font-signature text-2xl italic text-[var(--proday-accent)]">
             Une app. Sept pôles.
           </p>
-          <h2 className="font-display mt-5 text-[clamp(1.85rem,5.5vw,3.5rem)] font-bold uppercase leading-[1.02] tracking-[-0.03em] text-white">
+          <h2 className="font-display mt-4 text-[clamp(1.85rem,5.5vw,3.5rem)] font-extrabold uppercase leading-[1.02] tracking-[-0.04em] text-white">
             Le football connecté,
             <br />
             <span className="text-shimmer">sans le bruit.</span>
@@ -48,21 +48,23 @@ export default function HomePage() {
             pensé pour le terrain.
           </p>
           <div className="mt-8">
-            <PremiumButton href={ROUTES.betaWaitlist}>Rejoindre la bêta</PremiumButton>
+            <PremiumButton href={ROUTES.betaWaitlist} className="!bg-white !text-black hover:!bg-[var(--proday-accent)] hover:!text-white">
+              Rejoindre la bêta
+            </PremiumButton>
           </div>
         </div>
       </section>
 
       <section className="border-t border-white/8 bg-black py-16 sm:py-20">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <div className="mx-auto mb-10 max-w-2xl text-center">
-            <p className="text-xs font-bold uppercase tracking-[0.28em] text-[var(--proday-accent)]">
+          <div className="section-rail mx-auto mb-10 max-w-2xl pl-5 text-left sm:text-center sm:pl-0">
+            <p className="font-signature text-2xl italic text-[var(--proday-accent)]">
               Les 7 pôles
             </p>
-            <h2 className="font-display mt-3 text-3xl font-bold uppercase tracking-tight text-white sm:text-4xl">
-              Chaque univers, sa couleur
+            <h2 className="font-display mt-2 text-3xl font-extrabold uppercase tracking-[-0.03em] text-white sm:text-4xl">
+              Chaque univers, sa signature
             </h2>
-            <p className="mt-3 text-sm text-white/50">
+            <p className="mt-3 text-sm text-white/45">
               Alignés sur les logos officiels — du terrain amateur au staff pro.
             </p>
           </div>

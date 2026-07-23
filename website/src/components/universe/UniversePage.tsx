@@ -103,10 +103,10 @@ export function UniversePage({ universe }: UniversePageProps) {
 
       <section id="modules" className="scroll-mt-24 bg-black py-16">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <p className={`text-xs font-bold uppercase tracking-[0.28em] ${theme.highlightLabel}`}>
+          <p className={`font-signature text-2xl italic ${theme.highlightLabel}`}>
             Modules
           </p>
-          <h2 className="font-display mt-2 text-2xl font-bold uppercase tracking-tight text-white sm:text-3xl">{config.modulesTitle}</h2>
+          <h2 className="font-display mt-2 text-2xl font-extrabold uppercase tracking-[-0.03em] text-white sm:text-3xl">{config.modulesTitle}</h2>
           <p className="mt-3 max-w-3xl text-white/55">{config.modulesSubtitle}</p>
           <UniverseModuleExplorer universe={themeId} modules={config.modules} />
         </div>

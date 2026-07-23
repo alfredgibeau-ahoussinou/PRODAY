@@ -238,18 +238,37 @@ body {
 
 .card-premium {
   background: linear-gradient(
-    165deg,
-    rgba(255, 255, 255, 0.045) 0%,
-    rgba(255, 255, 255, 0.012) 100%
+    160deg,
+    rgba(255, 255, 255, 0.055) 0%,
+    rgba(255, 255, 255, 0.015) 100%
   );
-  border: 1px solid rgba(255, 255, 255, 0.09);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 1.25rem;
   box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.025) inset,
-    0 28px 56px -20px rgba(0, 0, 0, 0.7);
+    0 0 0 1px rgba(255, 255, 255, 0.02) inset,
+    0 28px 56px -24px rgba(0, 0, 0, 0.75);
   transition:
     border-color 0.3s ease,
     box-shadow 0.3s ease,
     transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.section-rail {
+  position: relative;
+}
+
+.section-rail::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(
+    to bottom,
+    var(--proday-accent),
+    transparent
+  );
 }
 
 .card-premium:hover {
