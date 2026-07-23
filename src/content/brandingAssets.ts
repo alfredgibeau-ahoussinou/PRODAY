@@ -65,4 +65,10 @@ export const SUPPORTER_BRANDING_LOGOS = {
   mark: require('../../assets/branding/logo-supporter-mark-transparent.png'),
 } as const;
 
+/** Pro Day Sponsor — picto P or (#D4AF37). Libellé via `SponsorLogo`. */
+export const SPONSOR_BRANDING_LOGOS = {
+  picto: require('../../assets/branding/logo-sponsor-picto.png'),
+  mark: require('../../assets/branding/logo-sponsor-mark-transparent.png'),
+} as const;
+
 export type BrandingLogoKey = keyof typeof BRANDING_LOGOS;

@@ -107,7 +107,7 @@ export const PRODAY_SPONSOR_BRAND = {
   logoLine1: 'Pro Day',
   logoLine2Lead: '',
   logoLine2Accent: 'Sponsor',
-  tagline: 'VISIBILITÉ • MESURE • IMPACT',
+  tagline: 'VISIBILITÉ • ROI • TERRAIN',
   shortTagline: 'Marques et sponsors — campagnes géo, ROI et vitrine vérifiée',
   entryCta: 'Espace Sponsor',
 } as const;

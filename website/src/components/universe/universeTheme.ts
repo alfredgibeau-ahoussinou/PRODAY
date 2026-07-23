@@ -513,7 +513,7 @@ export function navBrandForPath(pathname: string) {
   if (pathname.startsWith(ROUTES.sponsor) || pathname.startsWith(ROUTES.partenaires)) {
     return {
       name: "Pro Day Sponsor",
-      logo: PRO_BRAND.logo,
+      logo: "/branding/logo-sponsor-picto.png",
       theme: UNIVERSE_THEME.pro,
     };
   }

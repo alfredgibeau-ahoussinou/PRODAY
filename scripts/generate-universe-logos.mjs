@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 /**
- * Pictos Pro Day Man (anthracite), Pro, Santé, Amateur (orange) et Supporter (violet).
- * Libellés rendus en natif via ManLogo.tsx / ProLogo.tsx / SanteLogo.tsx / etc.
+ * Pictos Pro Day Man, Pro, Santé, Amateur, Supporter et Sponsor (or #D4AF37).
+ * Libellés rendus en natif via ManLogo / ProLogo / SanteLogo / AmateurLogo /
+ * SupporterLogo / SponsorLogo.
  *
  *   node scripts/generate-universe-logos.mjs
  */
@@ -128,6 +129,29 @@ def recolor_supporter(im):
     out = Image.fromarray(arr.astype(np.uint8))
     return ImageEnhance.Contrast(out).enhance(1.1)
 
+def recolor_sponsor(im):
+    """P or sponsor — accent #D4AF37, profondeur #92700C."""
+    arr = np.array(im.convert("RGBA"), dtype=np.float32)
+    rgb = arr[..., :3]
+    a = arr[..., 3]
+    hsv = rgb_to_hsv_arr(rgb)
+    h, s, v = hsv[..., 0], hsv[..., 1], hsv[..., 2]
+    brand = is_brand_pixel(a, h, s, v)
+    # Or métallique : teinte fixe, saturation élevée, valeur modulée pour le relief
+    h_new = np.where(brand, 0.125, h)
+    s_new = np.where(brand, np.clip(0.72 + s * 0.18, 0.68, 0.92), s)
+    v_new = np.where(brand, np.clip(0.38 + v * 0.52, 0.32, 0.90), v)
+    rgb_out = hsv_to_rgb_arr(np.stack([h_new, s_new, v_new], axis=-1))
+    # Ancrage léger vers le gold officiel pour les pixels brand
+    gold = np.array([212.0, 175.0, 55.0], dtype=np.float32)
+    deep = np.array([146.0, 112.0, 12.0], dtype=np.float32)
+    t = np.clip((v - 0.25) / 0.65, 0, 1)[..., None]
+    gold_mix = deep * (1 - t) + gold * t
+    rgb_out = np.where(brand[..., None], rgb_out * 0.35 + gold_mix * 0.65, rgb_out)
+    arr[..., :3] = np.clip(rgb_out, 0, 255)
+    out = Image.fromarray(arr.astype(np.uint8))
+    return ImageEnhance.Contrast(out).enhance(1.12)
+
 def save_picto(im, name):
     im = crop_visible(im, pad=10)
     w, h = im.size
@@ -160,6 +184,10 @@ save_picto(amateur.copy(), "logo-amateur-mark-transparent.png")
 supporter = recolor_supporter(mark.copy())
 save_picto(supporter, "logo-supporter-picto.png")
 save_picto(supporter.copy(), "logo-supporter-mark-transparent.png")
+
+sponsor = recolor_sponsor(mark.copy())
+save_picto(sponsor, "logo-sponsor-picto.png")
+save_picto(sponsor.copy(), "logo-sponsor-mark-transparent.png")
 `;
 
 if (!existsSync(resolve(branding, 'logo-mark-transparent.png'))) {

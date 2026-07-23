@@ -114,7 +114,7 @@ export const SPONSOR_POLE: PoleDefinition = {
     "Votre marque sur le vrai terrain — campagnes ciblées, KPIs lisibles et vitrine vérifiée.",
   href: ROUTES.sponsor,
   pricingHash: "sponsor",
-  logo: "/branding/logo-pro-picto.png",
+  logo: "/branding/logo-sponsor-picto.png",
   planIds: ["sponsor_pro"],
 };
 

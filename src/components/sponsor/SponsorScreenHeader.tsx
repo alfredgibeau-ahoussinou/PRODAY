@@ -11,7 +11,7 @@ interface SponsorScreenHeaderProps {
 }
 
 export const SponsorScreenHeader: React.FC<SponsorScreenHeaderProps> = ({
-  label = 'Sponsors · Pro Day Pro',
+  label = 'Pro Day Sponsor',
   title,
   subtitle,
 }) => (

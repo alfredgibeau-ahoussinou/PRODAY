@@ -8,6 +8,7 @@ export const SPONSOR_BRAND = {
     "Les marques rencontrent clubs, joueurs et organisateurs actifs — campagnes ciblées, KPIs lisibles, sans intermédiaire opaque.",
   accent: "#D4AF37",
   accentDark: "#92700C",
+  logo: "/branding/logo-sponsor-picto.png",
 } as const;
 
 export const SPONSOR_HERO = {

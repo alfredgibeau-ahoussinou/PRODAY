@@ -51,8 +51,6 @@ Libellé **Pro Day Pro** + tagline via `src/components/ProLogo.tsx`.
 
 Libellé **Pro Day Santé** + tagline via `src/components/SanteLogo.tsx`.
 
-Génération pictos Man + Pro + Santé + Amateur + Supporter : `npm run branding:logos:universes` (nécessite `logo-mark-transparent.png`).
-
 ## Pro Day Amateur (orange)
 
 | Fichier | Usage |
@@ -70,3 +68,14 @@ Libellé **Pro Day Amateur** + tagline via `src/components/AmateurLogo.tsx`.
 | `logo-supporter-mark-transparent.png` | Filigrane (= picto) |
 
 Libellé **Pro Day Supporter** + tagline via `src/components/SupporterLogo.tsx`.
+
+## Pro Day Sponsor (or #D4AF37)
+
+| Fichier | Usage |
+|---------|--------|
+| `logo-sponsor-picto.png` | Picto P or sponsor |
+| `logo-sponsor-mark-transparent.png` | Filigrane (= picto) |
+
+Libellé **Pro Day Sponsor** + tagline via `src/components/SponsorLogo.tsx`.
+
+Génération pictos Man + Pro + Santé + Amateur + Supporter + Sponsor : `npm run branding:logos:universes` (nécessite `logo-mark-transparent.png`).

@@ -1,3 +1,4 @@
+import Image from "next/image";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -27,6 +28,8 @@ export default function SponsorPolePage() {
         title={SPONSOR_HERO.title}
         description={SPONSOR_HERO.description}
         image={SPONSOR_HERO.image}
+        logo={SPONSOR_BRAND.logo}
+        logoAlt={SPONSOR_BRAND.name}
         accent="sponsor"
         dark
       />
@@ -36,6 +39,16 @@ export default function SponsorPolePage() {
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(212,175,55,0.08),transparent_60%)]" />
         <div className="relative mx-auto max-w-6xl px-4 sm:px-6">
           <div className="flex flex-col items-center text-center">
+            <div className="mb-6 overflow-hidden rounded-2xl bg-white p-2 shadow-[0_16px_48px_-16px_rgba(212,175,55,0.45)]">
+              <Image
+                src={SPONSOR_BRAND.logo}
+                alt={SPONSOR_BRAND.name}
+                width={72}
+                height={68}
+                className="h-14 w-auto sm:h-16"
+                priority
+              />
+            </div>
             <p className="font-signature text-2xl text-amber-400/90 sm:text-3xl">{SPONSOR_BRAND.tagline}</p>
             <p className="mt-4 max-w-2xl text-sm leading-relaxed text-white/50">{SPONSOR_BRAND.mission}</p>
             <div className="mt-8 flex flex-wrap justify-center gap-3">
