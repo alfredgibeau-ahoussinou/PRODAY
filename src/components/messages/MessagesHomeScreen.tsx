@@ -46,30 +46,12 @@ export const MessagesHomeScreen: React.FC<MessagesHomeScreenProps> = (props) => 
   const { t } = useTranslation();
   const [chapter, setChapter] = useState<MessagesChapterId>('inbox');
 
-  const careCount = useMemo(
-    () => props.threads.filter((t) => t.thread_kind?.startsWith('physio')).length,
-    [props.threads]
-  );
-
   const subtitle = useMemo(() => {
     if (props.unreadCount > 0) {
       return t('messages.subtitle.unread', { n: props.unreadCount });
     }
     return t('messages.subtitle.default');
   }, [props.unreadCount, t]);
-
-  const stats = useMemo(
-    () => [
-      { value: props.threads.length, label: t('messages.stats.threads') },
-      {
-        value: props.unreadCount,
-        label: t('messages.stats.unread'),
-        highlight: props.unreadCount > 0,
-      },
-      { value: careCount, label: t('messages.stats.care'), highlight: careCount > 0 },
-    ],
-    [props.threads.length, props.unreadCount, careCount, t]
-  );
 
   const pages = useMemo(
     () => [
@@ -138,7 +120,6 @@ export const MessagesHomeScreen: React.FC<MessagesHomeScreenProps> = (props) => 
       caption={t('messages.caption')}
       title={t('messages.title')}
       subtitle={subtitle}
-      stats={stats}
       flat
     >
       <MessagesPager
