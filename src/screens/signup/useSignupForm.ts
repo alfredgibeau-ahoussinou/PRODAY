@@ -76,7 +76,9 @@ export function useSignupForm(initial?: {
 
   const defaultRole: UserRole =
     initial?.initialRole ??
-    proSignupPresetRole ??
+    (proSignupPresetRole && isRoleAllowedForProductLine(proSignupPresetRole, productLine)
+      ? proSignupPresetRole
+      : null) ??
     (isSanteProduct ? 'physio' : isSupporterProduct ? 'supporter' : isProPlayerSignup ? 'player' : isProProduct ? 'coach' : 'player');
 
   const [role, setRoleState] = useState<UserRole>(defaultRole);

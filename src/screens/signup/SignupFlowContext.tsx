@@ -8,6 +8,7 @@ import { useProductLine } from '../../context/ProductLineContext';
 import type { PlayerSegment } from '../../utils/playerSegment';
 import { genderToPlayerSegment } from '../../utils/playerSegment';
 import type { Gender } from '../../models/User';
+import { reconcileProSignupPreset } from '../../utils/authBrandContext';
 
 interface SignupFlowContextValue {
   productLine: ProductLineId;
@@ -29,7 +30,8 @@ export const SignupFlowProvider: React.FC<{
   signupGender?: Gender | null;
   children: React.ReactNode;
 }> = ({ productLine, experienceRole, signupGender, children }) => {
-  const { enterProLine, enterAmateurSpace, enterSupporterSpace, enterSanteSpace } = useProductLine();
+  const { enterProLine, enterAmateurSpace, enterSupporterSpace, enterSanteSpace, setProSignupPresetRole } =
+    useProductLine();
   const isProSignup = isProProductLine(productLine);
   const isProPlayerSignup = productLine === 'pro_player';
   const isAmateurSignup = productLine === 'amateur';
@@ -49,11 +51,45 @@ export const SignupFlowProvider: React.FC<{
   );
 
   useEffect(() => {
-    if (isSanteSignup) void enterSanteSpace();
-    else if (isAmateurSignup) void enterAmateurSpace();
-    else if (isSupporterSignup) void enterSupporterSpace();
-    else if (isProSignup) void enterProLine(productLine);
-  }, [isSanteSignup, isAmateurSignup, isSupporterSignup, isProSignup, productLine, enterSanteSpace, enterAmateurSpace, enterSupporterSpace, enterProLine]);
+    let cancelled = false;
+    void (async () => {
+      if (isSanteSignup) {
+        await enterSanteSpace();
+        return;
+      }
+      if (isAmateurSignup) {
+        await enterAmateurSpace();
+        return;
+      }
+      if (isSupporterSignup) {
+        await enterSupporterSpace();
+        return;
+      }
+      if (isProSignup) {
+        const aligned = isSponsorSignup
+          ? 'sponsor'
+          : reconcileProSignupPreset(productLine, experienceRole);
+        await setProSignupPresetRole(aligned);
+        if (!cancelled) await enterProLine(productLine);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    isSponsorSignup,
+    isSanteSignup,
+    isAmateurSignup,
+    isSupporterSignup,
+    isProSignup,
+    productLine,
+    experienceRole,
+    setProSignupPresetRole,
+    enterSanteSpace,
+    enterAmateurSpace,
+    enterSupporterSpace,
+    enterProLine,
+  ]);
 
   return (
     <SignupFlowContext.Provider

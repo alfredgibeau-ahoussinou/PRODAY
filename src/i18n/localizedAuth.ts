@@ -1,8 +1,14 @@
 import type { ProductLineId } from '../models/ProductLine';
+import type { UserRole } from '../models/User';
 import { isProFamilyLine } from '../utils/productLineResolution';
+import { isSponsorAuthPreset } from '../utils/authBrandContext';
 import type { TranslateFn } from './types';
 
-function resolveAuthTeaserPrefix(line: ProductLineId): string {
+function resolveAuthTeaserPrefix(
+  line: ProductLineId,
+  presetRole?: UserRole | null,
+): string {
+  if (isSponsorAuthPreset(presetRole)) return 'auth.teaser.sponsor';
   if (line === 'woman') return 'auth.teaser.woman';
   if (line === 'sante') return 'auth.teaser.sante';
   if (line === 'supporter') return 'auth.teaser.supporter';
@@ -14,7 +20,11 @@ function resolveAuthTeaserPrefix(line: ProductLineId): string {
   return 'auth.teaser.homme';
 }
 
-export function getAuthSignupTeaser(line: ProductLineId, t: TranslateFn): string[] {
-  const prefix = resolveAuthTeaserPrefix(line);
+export function getAuthSignupTeaser(
+  line: ProductLineId,
+  t: TranslateFn,
+  presetRole?: UserRole | null,
+): string[] {
+  const prefix = resolveAuthTeaserPrefix(line, presetRole);
   return [0, 1, 2].map((i) => t(`${prefix}.${i}`));
 }

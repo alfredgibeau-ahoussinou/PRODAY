@@ -387,11 +387,11 @@ const ProWelcomeBody: React.FC<{ form: SignupForm }> = ({ form }) => {
   const { width: screenWidth } = useWindowDimensions();
   const { compact, contentMaxWidth } = useAuthLayout();
   const { colors } = useSignupFlowTheme();
-  const { proSignupPresetRole } = useProductLine();
+  const { productLine, proSignupPresetRole } = useProductLine();
   const { t } = useTranslation();
   const roleGroups = useMemo(
-    () => getSignupRoleGroups('pro', proSignupPresetRole),
-    [proSignupPresetRole],
+    () => getSignupRoleGroups(productLine === 'pro' ? 'pro_staff' : productLine, proSignupPresetRole),
+    [productLine, proSignupPresetRole],
   );
   const [groupIndex, setGroupIndex] = useState(0);
   const activeGroup = roleGroups[groupIndex] ?? roleGroups[0];

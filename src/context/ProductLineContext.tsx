@@ -12,6 +12,7 @@ import {
   isProProductLine,
   normalizeStoredProductLine,
   PRODUCT_LINE_STORAGE_KEY,
+  PRODAY_SPONSOR_BRAND,
   WOMAN_SPACE_ACTIVE_KEY,
   type ProductLineId,
 } from '../models/ProductLine';
@@ -22,6 +23,11 @@ import { BRAND, colors as defaultColors } from '../theme/designTokens';
 import { useAuth } from './AuthContext';
 import { getUserProductLine } from '../utils/productLineAccess';
 import { resolvePlayerSegment, type PlayerSegment } from '../utils/playerSegment';
+import {
+  colorsForAuthContext,
+  isSponsorAuthPreset,
+  reconcileProSignupPreset,
+} from '../utils/authBrandContext';
 
 interface ProductLineContextValue {
   productLine: ProductLineId;
@@ -37,6 +43,8 @@ interface ProductLineContextValue {
   brandName: string;
   tagline: string;
   colors: AppColors;
+  /** Invité sur parcours Sponsor (carousel / CTA) — chrome or sans polluer un user connecté Pro. */
+  isSponsorAuthChrome: boolean;
   /** Segment joueur actif (thème homme/femme/mineur). */
   playerSegment: PlayerSegment | null;
   setProductLine: (line: ProductLineId) => Promise<void>;
@@ -135,6 +143,16 @@ export const ProductLineProvider: React.FC<{ children: React.ReactNode }> = ({
             : line;
       setLineState(resolved);
       await persistLine(resolved);
+      setProSignupPresetRoleState((prev) => {
+        const next = reconcileProSignupPreset(resolved, prev);
+        if (next === prev) return prev;
+        if (next) {
+          void AsyncStorage.setItem(PRO_SIGNUP_PRESET_ROLE_KEY, next);
+        } else {
+          void AsyncStorage.removeItem(PRO_SIGNUP_PRESET_ROLE_KEY);
+        }
+        return next;
+      });
     },
     [persistLine],
   );
@@ -201,11 +219,17 @@ export const ProductLineProvider: React.FC<{ children: React.ReactNode }> = ({
   const isAmateur = productLine === 'amateur';
   const isSupporter = productLine === 'supporter';
   const isSante = productLine === 'sante';
-  const brand = brandForProductLine(productLine);
+  const guestSponsorAuth = !profile && isSponsorAuthPreset(proSignupPresetRole);
+  const brand = guestSponsorAuth
+    ? PRODAY_SPONSOR_BRAND
+    : brandForProductLine(productLine);
 
   const themedColors = useMemo(
-    () => getThemedColorsForLine(productLine, playerSegment),
-    [productLine, playerSegment],
+    () =>
+      guestSponsorAuth
+        ? colorsForAuthContext(productLine, 'sponsor')
+        : getThemedColorsForLine(productLine, playerSegment),
+    [guestSponsorAuth, productLine, playerSegment],
   );
 
   const value = useMemo(
@@ -222,6 +246,7 @@ export const ProductLineProvider: React.FC<{ children: React.ReactNode }> = ({
       brandName: brand.name,
       tagline: brand.tagline,
       colors: themedColors,
+      isSponsorAuthChrome: guestSponsorAuth,
       playerSegment,
       setProductLine,
       enterHommeSpace,
@@ -248,6 +273,7 @@ export const ProductLineProvider: React.FC<{ children: React.ReactNode }> = ({
       brand.name,
       brand.tagline,
       themedColors,
+      guestSponsorAuth,
       playerSegment,
       setProductLine,
       enterHommeSpace,
@@ -297,6 +323,7 @@ export function useAppTheme() {
     enterSanteSpace,
     exitWomanSpace,
     womanSpaceActive,
+    isSponsorAuthChrome,
     proSignupPresetRole,
     setProSignupPresetRole,
     playerSegment,
@@ -323,6 +350,7 @@ export function useAppTheme() {
     enterSanteSpace,
     exitWomanSpace,
     womanSpaceActive,
+    isSponsorAuthChrome,
     proSignupPresetRole,
     setProSignupPresetRole,
   };

@@ -16,7 +16,7 @@ import { useAuthStyles } from '../../components/auth/authStyles';
 import { useAuthLayout } from '../../components/auth/useAuthLayout';
 import type { SignupPhase } from './signupFlowConfig';
 import { useSignupFlowTheme } from './SignupFlowContext';
-import { brandForProductLine } from '../../models/ProductLine';
+import { brandForAuthContext } from '../../utils/authBrandContext';
 import { spacing, radius } from '../../theme/designTokens';
 import type { AppColors } from '../../theme/universeTheme';
 
@@ -68,9 +68,12 @@ export const SignupStepLayout: React.FC<SignupStepLayoutProps> = ({
     useAuthLayout();
   const scrollBottomPad = tabInset({ stickyFooter: Boolean(footer) });
   const footerBottomPad = tabInset();
-  const { productLine, colors } = useSignupFlowTheme();
+  const { productLine, colors, isSponsorSignup, experienceRole } = useSignupFlowTheme();
   const authStyles = useAuthStyles();
-  const brandName = brandForProductLine(productLine).name;
+  const brandName = brandForAuthContext(
+    productLine,
+    isSponsorSignup || experienceRole === 'sponsor' ? 'sponsor' : null,
+  ).name;
   const styles = useMemo(() => createStyles(colors, contentMaxWidth), [colors, contentMaxWidth]);
 
   return (

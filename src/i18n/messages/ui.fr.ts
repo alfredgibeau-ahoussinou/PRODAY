@@ -221,6 +221,7 @@ export const UI_FR: MessageCatalog = {
   'auth.loginSub.pro_player': 'Connectez-vous à votre espace Pro Joueur.',
   'auth.loginSub.pro_club': 'Connectez-vous à votre espace Pro Club.',
   'auth.loginSub.pro_staff': 'Connectez-vous à votre espace Pro Staff.',
+  'auth.loginSub.sponsor': 'Connectez-vous à votre espace Pro Day Sponsor.',
   'auth.loginSub.sante': 'Connectez-vous à votre espace Pro Day Santé.',
 
   'auth.signupSub.homme':
@@ -239,6 +240,8 @@ export const UI_FR: MessageCatalog = {
     'Créez votre compte club — structure, effectifs et recrutement.',
   'auth.signupSub.pro_staff':
     'Créez votre compte staff — coach, agent ou recruteur, mandats et scouting.',
+  'auth.signupSub.sponsor':
+    'Créez votre compte marque — campagnes, ROI et vitrine clubs sur Pro Day Sponsor.',
   'auth.signupSub.sante':
     'Créez votre compte praticien — agenda, messagerie et visibilité.',
 

@@ -158,6 +158,9 @@ export function getSignupRoleGroups(
       .filter((g) => g.roles.includes('club'))
       .map((g) => ({ ...g, roles: g.roles.filter((r) => r === 'club') }));
   }
+  if (presetRole === 'sponsor') {
+    return groups.filter((g) => g.roles.includes('sponsor'));
+  }
   return groups.filter((g) =>
     g.roles.some((r) => ['coach', 'agent', 'recruiter', 'organizer'].includes(r)),
   );

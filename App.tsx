@@ -126,8 +126,14 @@ export default function App() {
 }
 
 function AppShell() {
-  const { colors: themeColors, isWoman, productLine, loading: productLineLoading, setProductLine } =
-    useProductLine();
+  const {
+    colors: themeColors,
+    isWoman,
+    productLine,
+    loading: productLineLoading,
+    setProductLine,
+    setProSignupPresetRole,
+  } = useProductLine();
   const sessionProfile = useSessionProfile();
   const {
     profile,
@@ -377,19 +383,26 @@ function AppShell() {
           clearPendingAuthIntent: () => setPendingAuthIntent(null),
           pendingSignupProductLine,
           pendingSignupRole,
-          openSponsorSignup: () => {
-            void setProductLine('pro');
-            setPendingSignupProductLine('pro');
-            setPendingSignupRole('sponsor');
-            setPendingAuthIntent('signup');
-            handleTabPress('profil');
+          openSponsorSignup: (tier) => {
+            void (async () => {
+              await setProSignupPresetRole('sponsor');
+              await setProductLine('pro_staff');
+              setPendingSignupProductLine('pro_staff');
+              setPendingSignupRole('sponsor');
+              setPendingAuthIntent('signup');
+              handleTabPress('profil');
+              void tier;
+            })();
           },
           openPartnerSignup: () => {
-            void setProductLine('pro');
-            setPendingSignupProductLine('pro');
-            setPendingSignupRole('sponsor');
-            setPendingAuthIntent('signup');
-            handleTabPress('profil');
+            void (async () => {
+              await setProSignupPresetRole('sponsor');
+              await setProductLine('pro_staff');
+              setPendingSignupProductLine('pro_staff');
+              setPendingSignupRole('sponsor');
+              setPendingAuthIntent('signup');
+              handleTabPress('profil');
+            })();
           },
           clearSignupPreset: () => {
             setPendingSignupProductLine(null);

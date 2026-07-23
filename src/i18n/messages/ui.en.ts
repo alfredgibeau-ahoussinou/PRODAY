@@ -146,6 +146,7 @@ export const UI_EN: MessageCatalog = {
   'auth.loginSub.homme': 'Log in to your Pro Day Man space.',
   'auth.loginSub.woman': 'Log in to your women\'s football space.',
   'auth.loginSub.pro': 'Log in to Pro Day Pro — staff, clubs and sponsors.',
+  'auth.loginSub.sponsor': 'Log in to your Pro Day Sponsor space.',
   'auth.loginSub.sante': 'Log in to your Pro Day Health space.',
 
   'auth.signupSub.homme':
@@ -154,6 +155,8 @@ export const UI_EN: MessageCatalog = {
     'Create your player account — Transfer F, stats and club visibility.',
   'auth.signupSub.pro':
     'Create your pro account — coach, club, agent, organizer or sponsor.',
+  'auth.signupSub.sponsor':
+    'Create your brand account — campaigns, ROI and club showcase on Pro Day Sponsor.',
   'auth.signupSub.sante':
     'Create your practitioner account — agenda, messaging and visibility.',
 

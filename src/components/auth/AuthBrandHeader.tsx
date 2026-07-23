@@ -3,7 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import { Logo } from '../Logo';
 import { BRAND, spacing } from '../../theme/designTokens';
 import { useAppTheme } from '../../context/ProductLineContext';
-import { brandForProductLine } from '../../models/ProductLine';
+import { brandForAuthContext, isSponsorAuthPreset } from '../../utils/authBrandContext';
 import type { AppColors } from '../../theme/universeTheme';
 
 interface AuthBrandHeaderProps {
@@ -17,18 +17,19 @@ interface AuthBrandHeaderProps {
 }
 
 /**
- * Logo ProDay — variante selon l'univers actif (Man / Woman / Pro).
+ * Logo ProDay — variante selon l'univers actif (Man / Woman / Pro / Sponsor).
  */
 export const AuthBrandHeader: React.FC<AuthBrandHeaderProps> = ({
   width = 220,
   tone = 'dark',
   showTagline = false,
 }) => {
-  const { productLine, colors: c } = useAppTheme();
+  const { productLine, colors: c, proSignupPresetRole } = useAppTheme();
   const styles = useMemo(() => createStyles(c), [c]);
   const isLight = tone === 'light';
   const background = isLight ? 'light' : 'dark';
-  const brand = brandForProductLine(productLine);
+  const isSponsor = isSponsorAuthPreset(proSignupPresetRole);
+  const brand = brandForAuthContext(productLine, proSignupPresetRole);
 
   const logo = (
     <Logo
@@ -36,6 +37,7 @@ export const AuthBrandHeader: React.FC<AuthBrandHeaderProps> = ({
       width={width}
       showTagline={false}
       productLine={productLine}
+      sponsor={isSponsor}
     />
   );
 
@@ -47,7 +49,7 @@ export const AuthBrandHeader: React.FC<AuthBrandHeaderProps> = ({
           style={[styles.tagline, !isLight && styles.taglineDark]}
           accessibilityRole="text"
         >
-          {productLine === 'homme' ? BRAND.tagline : brand.tagline}
+          {productLine === 'homme' && !isSponsor ? BRAND.tagline : brand.tagline}
         </Text>
       ) : null}
     </View>

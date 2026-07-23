@@ -119,17 +119,22 @@ export function getLocalizedGuestJourneySteps(
 export function getLocalizedAuthCopy(
   line: ProductLineId,
   tab: AuthTabId,
-  t: TranslateFn
+  t: TranslateFn,
+  opts?: { brandName?: string; sponsor?: boolean },
 ): { title: string; sub: string } {
-  const brand = brandForProductLine(line);
+  const brandName = opts?.brandName ?? brandForProductLine(line).name;
   if (tab === 'login') {
     return {
       title: t('auth.welcomeBack'),
-      sub: t(lineKey(line, 'auth.loginSub')),
+      sub: opts?.sponsor
+        ? t('auth.loginSub.sponsor')
+        : t(lineKey(line, 'auth.loginSub')),
     };
   }
   return {
-    title: t('auth.signupTitle', { brand: brand.name }),
-    sub: t(lineKey(line, 'auth.signupSub')),
+    title: t('auth.signupTitle', { brand: brandName }),
+    sub: opts?.sponsor
+      ? t('auth.signupSub.sponsor')
+      : t(lineKey(line, 'auth.signupSub')),
   };
 }

@@ -42,7 +42,11 @@ import { useTranslation } from '../context/LocaleContext';
 import { getLocalizedAuthCopy } from '../i18n/localizedContent';
 import { getAuthSignupTeaser } from '../i18n/localizedAuth';
 import type { UserRole } from '../models/User';
-import { brandForProductLine, type ProductLineId } from '../models/ProductLine';
+import type { ProductLineId } from '../models/ProductLine';
+import {
+  brandForAuthContext,
+  isSponsorAuthPreset,
+} from '../utils/authBrandContext';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -64,13 +68,19 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
   const { compact, logoWidth, headerTopPad, tabBarScrollInset: tabInset } = useAuthLayout();
   const { loading: authLoading, configured, refreshProfile } = useAuth();
   const { setActiveTab } = useTabNavigation();
-  const { productLine, colors } = useAppTheme();
-  const activeBrand = brandForProductLine(productLine);
+  const { productLine, colors, proSignupPresetRole } = useAppTheme();
+  const activeBrand = brandForAuthContext(productLine, proSignupPresetRole);
   const { openSpacePicker } = useLaunchIntro();
   const { t } = useTranslation();
   const [tab, setTab] = useState<AuthTabId>(initialIntent === 'signup' ? 'signup' : 'login');
-  const screenCopy = getLocalizedAuthCopy(productLine, tab, t);
-  const signupTeaser = useMemo(() => getAuthSignupTeaser(productLine, t), [productLine, t]);
+  const screenCopy = getLocalizedAuthCopy(productLine, tab, t, {
+    brandName: activeBrand.name,
+    sponsor: isSponsorAuthPreset(proSignupPresetRole),
+  });
+  const signupTeaser = useMemo(
+    () => getAuthSignupTeaser(productLine, t, proSignupPresetRole),
+    [productLine, t, proSignupPresetRole],
+  );
   const [signupOpen, setSignupOpen] = useState(initialIntent === 'signup');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

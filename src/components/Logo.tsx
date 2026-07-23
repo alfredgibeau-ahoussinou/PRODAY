@@ -112,13 +112,13 @@ export const Logo: React.FC<LogoProps> = ({
   productLine: productLineProp,
   sponsor: sponsorProp,
 }) => {
-  const { productLine: themeLine, colors: c, proSignupPresetRole } = useAppTheme();
+  const { productLine: themeLine, colors: c, isSponsorAuthChrome } = useAppTheme();
   const styles = useMemo(() => createStyles(c), [c]);
   const line = resolveProductLine(productLineProp, womanProp, themeLine);
   const resolved = variant ?? logoVariantForBackground(background, watermark);
   const brand = brandForProductLine(line);
-  /** Or sponsor uniquement si demandé (prop / signup) — pas via role Auth, pour ne pas polluer l’espace Pro. */
-  const useSponsorBrand = sponsorProp === true || proSignupPresetRole === 'sponsor';
+  /** Or sponsor : prop explicite, ou chrome auth invité Sponsor (jamais un user Pro connecté). */
+  const useSponsorBrand = sponsorProp === true || (sponsorProp !== false && isSponsorAuthChrome);
 
   if (useSponsorBrand) {
     if (resolved === 'mark' || watermark) {

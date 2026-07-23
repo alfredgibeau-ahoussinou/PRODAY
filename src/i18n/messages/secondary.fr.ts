@@ -34,6 +34,10 @@ export const SECONDARY_FR: MessageCatalog = {
   'auth.teaser.pro_staff.1': 'Mandats, scouting et réseau pro',
   'auth.teaser.pro_staff.2': 'Profil vérifié — accès à votre espace Pro Staff',
 
+  'auth.teaser.sponsor.0': 'Inscription marque / sponsor uniquement',
+  'auth.teaser.sponsor.1': 'Campagnes géo, ROI et vitrine clubs vérifiée',
+  'auth.teaser.sponsor.2': 'Profil validé — accès à votre espace Sponsor',
+
   'auth.teaser.sante.0': 'Kinés, médecins et praticiens du sport',
   'auth.teaser.sante.1': 'Agenda, messagerie et visibilité patients',
   'auth.teaser.sante.2': 'Diplôme validé — accès au pôle Santé',
