@@ -1,6 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, type StyleProp, type ViewStyle, Platform } from 'react-native';
-import { BlurView } from 'expo-blur';
+import { View, StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { radius } from '../../theme/designTokens';
 
@@ -12,7 +11,11 @@ interface GlassCardProps {
   children: React.ReactNode;
 }
 
-/** Carte glass FLASH — blur + bordure cyan/blanc faible. */
+/**
+ * Carte glass FLASH — fond translucide + bordure.
+ * Pas de BlurView natif : Expo Go / certains builds affichent
+ * « Unimplemented component » (ViewManagerAdapter_ExpoBlur).
+ */
 export const GlassCard: React.FC<GlassCardProps> = ({
   variant = 'default',
   style,
@@ -26,9 +29,6 @@ export const GlassCard: React.FC<GlassCardProps> = ({
 
   return (
     <View style={[styles.wrap, { borderColor }, variant === 'elevated' && styles.elevated, style]}>
-      {Platform.OS === 'ios' ? (
-        <BlurView intensity={28} tint="dark" style={StyleSheet.absoluteFill} />
-      ) : null}
       <View style={[styles.inner, { backgroundColor: tintBg }]}>{children}</View>
     </View>
   );
