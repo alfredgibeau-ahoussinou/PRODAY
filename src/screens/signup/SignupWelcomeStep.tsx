@@ -36,6 +36,7 @@ import {
   PRODAY_SPONSOR_BRAND,
 } from '../../models/ProductLine';
 import { SHOWCASE_IMAGES } from '../../content/showcaseAssets';
+import { SponsorLogo } from '../../components/SponsorLogo';
 import type { UserRole } from '../../models/User';
 
 interface SignupWelcomeStepProps {
@@ -355,6 +356,9 @@ const SponsorWelcomeBody: React.FC<{ form: SignupForm }> = ({ form }) => {
 
   return (
     <>
+      <View style={styles.sponsorLogoWrap}>
+        <SponsorLogo width={168} background="dark" centered />
+      </View>
       <PlayerWelcomeHero
         source={SHOWCASE_IMAGES.coachFounder}
         overlayColor="rgba(7, 6, 5, 0.72)"
@@ -668,6 +672,15 @@ export const SignupWelcomeStep: React.FC<SignupWelcomeStepProps> = ({
 };
 
 const styles = StyleSheet.create({
+  sponsorLogoWrap: {
+    alignItems: 'center',
+    marginBottom: spacing.lg,
+    paddingVertical: spacing.md,
+    borderRadius: radius.xl,
+    backgroundColor: 'rgba(7, 6, 5, 0.92)',
+    borderWidth: 1,
+    borderColor: 'rgba(212, 175, 55, 0.28)',
+  },
   playerHero: {
     borderRadius: radius.xl,
     padding: spacing.lg,

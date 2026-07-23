@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, Image, StyleSheet } from 'react-native';
 import { Icon } from '../ui/Icon';
 import { SPONSOR_THEME } from '../../content/sponsorExperience';
+import { SPONSOR_BRANDING_LOGOS } from '../../content/brandingAssets';
 import { spacing, radius } from '../../theme/designTokens';
 
 interface SponsorScreenHeaderProps {
@@ -19,7 +20,13 @@ export const SponsorScreenHeader: React.FC<SponsorScreenHeaderProps> = ({
     <View style={styles.accentBar} />
     <View style={styles.body}>
       <View style={styles.badge}>
-        <Icon name="briefcase" size={14} color={SPONSOR_THEME.primary} variant="filled" />
+        <View style={styles.badgeLogo}>
+          <Image
+            source={SPONSOR_BRANDING_LOGOS.picto}
+            style={styles.badgeLogoImage}
+            resizeMode="contain"
+          />
+        </View>
         <Text style={styles.badgeText}>{label}</Text>
       </View>
       <Text style={styles.title}>{title}</Text>
@@ -31,12 +38,12 @@ export const SponsorScreenHeader: React.FC<SponsorScreenHeaderProps> = ({
 const styles = StyleSheet.create({
   wrap: {
     flexDirection: 'row',
+    marginBottom: spacing.lg,
+    borderRadius: radius.lg,
+    overflow: 'hidden',
     backgroundColor: SPONSOR_THEME.surface,
-    borderRadius: radius.xl,
     borderWidth: 1,
     borderColor: SPONSOR_THEME.borderSubtle,
-    marginBottom: spacing.lg,
-    overflow: 'hidden',
   },
   accentBar: {
     width: 4,
@@ -44,35 +51,40 @@ const styles = StyleSheet.create({
   },
   body: {
     flex: 1,
-    padding: spacing.lg,
+    padding: spacing.md,
   },
   badge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.xs,
-    alignSelf: 'flex-start',
-    backgroundColor: SPONSOR_THEME.primarySoft,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 4,
-    borderRadius: radius.pill,
+    gap: spacing.sm,
     marginBottom: spacing.sm,
   },
+  badgeLogo: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    backgroundColor: '#FFFFFF',
+    padding: 2,
+    overflow: 'hidden',
+  },
+  badgeLogoImage: { width: '100%', height: '100%' },
   badgeText: {
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '800',
-    color: SPONSOR_THEME.heroSubtext,
-    letterSpacing: 0.5,
+    letterSpacing: 0.8,
     textTransform: 'uppercase',
+    color: SPONSOR_THEME.primary,
   },
   title: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: '900',
     color: SPONSOR_THEME.text,
+    letterSpacing: -0.3,
   },
   sub: {
-    fontSize: 14,
+    marginTop: spacing.xs,
+    fontSize: 13,
+    lineHeight: 18,
     color: SPONSOR_THEME.textSecondary,
-    lineHeight: 20,
-    marginTop: spacing.sm,
   },
 });

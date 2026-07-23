@@ -10,17 +10,21 @@ import {
   PRO_BRANDING_LOGOS,
   SANTE_BRANDING_LOGOS,
   WOMAN_BRANDING_LOGOS,
+  SPONSOR_BRANDING_LOGOS,
 } from '../content/brandingAssets';
 import { brandForProductLine } from '../models/ProductLine';
 import type { ProductLineId } from '../models/ProductLine';
 import { useAppTheme } from '../context/ProductLineContext';
+import { useAuth } from '../context/AuthContext';
 import type { AppColors } from '../theme/universeTheme';
+import { isSponsorRole } from '../content/sponsorExperience';
 import { ManLogo, manLogoAspect } from './ManLogo';
 import { AmateurLogo, amateurLogoAspect } from './AmateurLogo';
 import { SupporterLogo, supporterLogoAspect } from './SupporterLogo';
 import { ProLogo, proLogoAspect } from './ProLogo';
 import { SanteLogo, santeLogoAspect } from './SanteLogo';
 import { WomanLogo, womanLogoAspect } from './WomanLogo';
+import { SponsorLogo, sponsorLogoAspect } from './SponsorLogo';
 
 /** Fond derrière le logo — choisit automatiquement transparent ou non */
 export type LogoBackground = 'light' | 'dark' | 'photo';
@@ -46,6 +50,8 @@ interface LogoProps {
   woman?: boolean;
   /** Force un univers (cartes intro, previews). */
   productLine?: ProductLineId;
+  /** Force le branding Sponsor or (#D4AF37). */
+  sponsor?: boolean;
 }
 
 const LOGO_ASPECT: Record<LogoVariant, number> = {
@@ -84,9 +90,12 @@ function resolveProductLine(
   return themeLine;
 }
 
-function markForLine(line: ProductLineId): ImageSourcePropType {
+function markForLine(line: ProductLineId, sponsor = false): ImageSourcePropType {
+  if (sponsor) return SPONSOR_BRANDING_LOGOS.mark;
   if (line === 'woman') return WOMAN_BRANDING_LOGOS.mark;
-  if (line === 'pro') return PRO_BRANDING_LOGOS.mark;
+  if (line === 'pro' || line === 'pro_player' || line === 'pro_club' || line === 'pro_staff') {
+    return PRO_BRANDING_LOGOS.mark;
+  }
   if (line === 'sante') return SANTE_BRANDING_LOGOS.mark;
   if (line === 'amateur') return AMATEUR_BRANDING_LOGOS.mark;
   if (line === 'supporter') return SUPPORTER_BRANDING_LOGOS.mark;
@@ -103,12 +112,45 @@ export const Logo: React.FC<LogoProps> = ({
   opacity,
   woman: womanProp,
   productLine: productLineProp,
+  sponsor: sponsorProp,
 }) => {
-  const { productLine: themeLine, colors: c } = useAppTheme();
+  const { productLine: themeLine, colors: c, proSignupPresetRole } = useAppTheme();
+  const { profile } = useAuth();
   const styles = useMemo(() => createStyles(c), [c]);
   const line = resolveProductLine(productLineProp, womanProp, themeLine);
   const resolved = variant ?? logoVariantForBackground(background, watermark);
   const brand = brandForProductLine(line);
+  const useSponsorBrand =
+    sponsorProp === true ||
+    isSponsorRole(profile?.role) ||
+    proSignupPresetRole === 'sponsor';
+
+  if (useSponsorBrand) {
+    if (resolved === 'mark' || watermark) {
+      const markW = width * (watermark ? 1 : 0.55);
+      const markH = markW / MARK_ASPECT;
+      return (
+        <Image
+          source={SPONSOR_BRANDING_LOGOS.mark}
+          style={{
+            width: markW,
+            height: markH,
+            opacity: opacity ?? (watermark ? 0.14 : 1),
+          }}
+          resizeMode="contain"
+          accessibilityLabel="Pro Day Sponsor"
+        />
+      );
+    }
+    return (
+      <SponsorLogo
+        width={width}
+        background={background}
+        opacity={opacity}
+        watermark={false}
+      />
+    );
+  }
 
   if (resolved === 'mark' || watermark) {
     const markW = width * (watermark ? 1 : 0.55);
@@ -138,7 +180,7 @@ export const Logo: React.FC<LogoProps> = ({
     );
   }
 
-  if (line === 'pro') {
+  if (line === 'pro' || line === 'pro_player' || line === 'pro_club' || line === 'pro_staff') {
     return (
       <ProLogo
         width={width}
@@ -229,16 +271,21 @@ export function logoDisplayAspect(
     productLine?: ProductLineId;
     variant?: LogoVariant;
     watermark?: boolean;
+    sponsor?: boolean;
   } = {}
 ): number {
+  if (opts.sponsor) return sponsorLogoAspect(width);
   const line = resolveProductLine(opts.productLine, opts.woman, 'homme');
   if (opts.variant === 'mark' || opts.watermark) return MARK_ASPECT;
   if (line === 'woman') return womanLogoAspect(width);
-  if (line === 'pro') return proLogoAspect(width);
+  if (line === 'pro' || line === 'pro_player' || line === 'pro_club' || line === 'pro_staff') {
+    return proLogoAspect(width);
+  }
   if (line === 'sante') return santeLogoAspect(width);
   if (line === 'homme') return manLogoAspect(width);
   if (line === 'amateur') return amateurLogoAspect(width);
   if (line === 'supporter') return supporterLogoAspect(width);
+  if (opts.sponsor) return sponsorLogoAspect(width);
   const v = opts.variant ?? 'official';
   return LOGO_ASPECT[v] ?? PRODAY_OFFICIAL_LOGO_ASPECT;
 }

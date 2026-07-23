@@ -6,10 +6,12 @@ import {
   StyleSheet,
   ScrollView,
   Pressable,
+  Image,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PressableSpring } from '../motion';
 import { Icon } from '../ui/Icon';
+import { SPONSOR_BRANDING_LOGOS } from '../../content/brandingAssets';
 import {
   SPONSOR_NAV_ITEMS,
   SPONSOR_NAV_SECTIONS,
@@ -63,10 +65,15 @@ export const SponsorDrawerMenu: React.FC<SponsorDrawerMenuProps> = ({
         >
           <View style={styles.panelHeader}>
             <View style={styles.logoMark}>
-              <Icon name="star" size={16} color="#FFFFFF" />
+              <Image
+                source={SPONSOR_BRANDING_LOGOS.picto}
+                style={styles.logoImage}
+                resizeMode="contain"
+                accessibilityLabel="Pro Day Sponsor"
+              />
             </View>
             <View style={styles.panelBrand}>
-              <Text style={styles.panelTitle}>ProDay Sponsors</Text>
+              <Text style={styles.panelTitle}>Pro Day Sponsor</Text>
               <Text style={styles.panelSub}>Espace marque & sponsoring</Text>
             </View>
             <PressableSpring onPress={onClose} style={styles.closeBtn} scaleTo={0.92}>
@@ -158,13 +165,18 @@ function createStyles() {
       borderBottomColor: sponsorChrome.shellBorder,
     },
     logoMark: {
-      width: 36,
-      height: 36,
+      width: 40,
+      height: 40,
       borderRadius: radius.md,
-      backgroundColor: sponsorChrome.accent,
+      backgroundColor: '#FFFFFF',
       alignItems: 'center',
       justifyContent: 'center',
+      borderWidth: 1,
+      borderColor: 'rgba(212, 175, 55, 0.35)',
+      overflow: 'hidden',
+      padding: 3,
     },
+    logoImage: { width: '100%', height: '100%' },
     panelBrand: { flex: 1 },
     panelTitle: { color: sponsorChrome.text, fontSize: 16, fontWeight: '800' },
     panelSub: { color: sponsorChrome.textMuted, fontSize: 11, marginTop: 2 },

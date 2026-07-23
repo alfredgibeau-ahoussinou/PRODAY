@@ -5,6 +5,7 @@ import {
   ScrollView,
   StyleSheet,
   TouchableOpacity,
+  Image,
 } from 'react-native';
 import { Icon } from '../../components/ui/Icon';
 import { SponsorScreenHeader } from '../../components/sponsor/SponsorScreenHeader';
@@ -14,6 +15,7 @@ import {
   SPONSOR_VALUE_PILLARS,
 } from '../../content/sponsorPricing';
 import { SPONSOR_THEME } from '../../content/sponsorExperience';
+import { SPONSOR_BRANDING_LOGOS } from '../../content/brandingAssets';
 import { TAB_BAR_CONTENT_INSET } from '../../components/navigation/BottomTabBar';
 import { SPONSOR_NAV_INSET } from '../../navigation/sponsorTabConfig';
 import { spacing, radius } from '../../theme/designTokens';
@@ -62,7 +64,12 @@ export const SponsorHubScreen: React.FC<SponsorHubScreenProps> = ({
 
         <View style={styles.hero}>
           <View style={styles.heroIcon}>
-            <Icon name="star-four-points" size={28} color={SPONSOR_THEME.gold} />
+            <Image
+              source={SPONSOR_BRANDING_LOGOS.picto}
+              style={styles.heroLogo}
+              resizeMode="contain"
+              accessibilityLabel="Pro Day Sponsor"
+            />
           </View>
           <Text style={styles.heroTitle}>Le foot local a besoin de sponsors engagés</Text>
           <Text style={styles.heroBody}>
@@ -132,13 +139,18 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   heroIcon: {
-    width: 52,
-    height: 52,
+    width: 56,
+    height: 56,
     borderRadius: radius.lg,
-    backgroundColor: SPONSOR_THEME.goldSurface,
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(212, 175, 55, 0.35)',
+    overflow: 'hidden',
+    padding: 4,
   },
+  heroLogo: { width: '100%', height: '100%' },
   heroTitle: { fontSize: 20, fontWeight: '800', color: SPONSOR_THEME.text, lineHeight: 26 },
   heroBody: { fontSize: 14, color: SPONSOR_THEME.textSecondary, lineHeight: 21 },
   pillars: { gap: spacing.sm },

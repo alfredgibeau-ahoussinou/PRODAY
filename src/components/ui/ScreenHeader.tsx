@@ -109,7 +109,11 @@ export const ScreenHeader: React.FC<ScreenHeaderProps> = ({
     >
       {showBrandLogo ? (
         <View style={styles.brandRow}>
-          <Logo background={dark ? 'dark' : 'light'} width={72} />
+          <Logo
+            background={isDarkHeader ? 'dark' : 'light'}
+            width={72}
+            sponsor={sponsorDark}
+          />
         </View>
       ) : null}
       <View style={styles.row}>

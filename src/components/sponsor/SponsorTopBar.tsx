@@ -1,8 +1,9 @@
 import React, { useMemo } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Image } from 'react-native';
 import { PressableSpring } from '../motion';
 import { Icon } from '../ui/Icon';
 import { useSponsorData } from '../../context/SponsorDataContext';
+import { SPONSOR_BRANDING_LOGOS } from '../../content/brandingAssets';
 import { sponsorChrome } from './sponsorStyles';
 import { spacing, radius } from '../../theme/designTokens';
 
@@ -32,7 +33,7 @@ export const SponsorTopBar: React.FC<SponsorTopBarProps> = ({ title, subtitle, o
         <Icon name="menu" size={20} color={sponsorChrome.text} />
       </PressableSpring>
       <View style={styles.titleCol}>
-        <Text style={styles.brand}>ProDay Sponsors</Text>
+        <Text style={styles.brand}>Pro Day Sponsor</Text>
         <Text style={styles.title} numberOfLines={1}>
           {title}
         </Text>
@@ -50,7 +51,12 @@ export const SponsorTopBar: React.FC<SponsorTopBarProps> = ({ title, subtitle, o
         )}
       </View>
       <View style={styles.mark}>
-        <Icon name="star" size={16} color={sponsorChrome.gold} />
+        <Image
+          source={SPONSOR_BRANDING_LOGOS.picto}
+          style={styles.markImage}
+          resizeMode="contain"
+          accessibilityLabel="Pro Day Sponsor"
+        />
       </View>
     </View>
   );
@@ -103,11 +109,14 @@ function createStyles() {
       width: 40,
       height: 40,
       borderRadius: radius.md,
-      backgroundColor: 'rgba(245, 158, 11, 0.12)',
+      backgroundColor: '#FFFFFF',
       alignItems: 'center',
       justifyContent: 'center',
       borderWidth: 1,
-      borderColor: 'rgba(245, 158, 11, 0.25)',
+      borderColor: 'rgba(212, 175, 55, 0.35)',
+      overflow: 'hidden',
+      padding: 3,
     },
+    markImage: { width: '100%', height: '100%' },
   });
 }

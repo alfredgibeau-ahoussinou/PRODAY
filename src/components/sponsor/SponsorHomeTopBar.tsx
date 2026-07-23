@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import type { User } from '../../models/User';
-import { Logo } from '../Logo';
+import { SponsorLogo } from '../SponsorLogo';
 import { Icon } from '../ui/Icon';
 import { SPONSOR_THEME } from '../../content/sponsorExperience';
 import { spacing } from '../../theme/designTokens';
@@ -23,7 +23,7 @@ export const SponsorHomeTopBar: React.FC<SponsorHomeTopBarProps> = ({
 
   return (
     <View style={styles.row}>
-      <Logo width={108} productLine="pro" background="dark" showTagline={false} />
+      <SponsorLogo width={118} background="dark" centered={false} />
       <View style={styles.actions}>
         <TouchableOpacity style={styles.iconBtn} onPress={onMessagesPress}>
           <Icon name="chat" size={20} color={SPONSOR_THEME.primary} />
