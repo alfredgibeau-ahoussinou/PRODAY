@@ -13,6 +13,11 @@ import { spacing, radius } from '../../theme/designTokens';
 import { getUpcomingTeamEvents } from '../../utils/amateurPlayerHome';
 import { EVENT_TYPE_LABELS } from '../../models/TeamEvent';
 import { formatCalendarDate } from '../../utils/seasonCalendar';
+import {
+  ConvocationsMiniCalendar,
+  buildConvocationMarks,
+  isSameCalendarDay,
+} from '../../components/proPlayer/ConvocationsMiniCalendar';
 
 const STAFF_EVENT_TYPES = new Set(['training', 'friendly', 'meeting', 'tournament']);
 
@@ -23,14 +28,39 @@ export const ProPlayerGroupScreen: React.FC = () => {
   const nav = useTabNavigationActions();
   const { data, refresh } = useDashboardData(profile);
   const [refreshing, setRefreshing] = useState(false);
+  const [month, setMonth] = useState(() => {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), 1);
+  });
+  const [selectedDay, setSelectedDay] = useState<Date | null>(null);
 
-  const convocations = useMemo(
+  const staffEvents = useMemo(
     () =>
-      getUpcomingTeamEvents(data.teamEvents)
+      [...data.teamEvents]
         .filter((e) => STAFF_EVENT_TYPES.has(e.event_type))
-        .slice(0, 5),
+        .sort((a, b) => a.starts_at.getTime() - b.starts_at.getTime()),
     [data.teamEvents],
   );
+
+  const marks = useMemo(() => buildConvocationMarks(staffEvents), [staffEvents]);
+
+  const upcoming = useMemo(
+    () => getUpcomingTeamEvents(staffEvents),
+    [staffEvents],
+  );
+
+  const displayed = useMemo(() => {
+    if (!selectedDay) return upcoming;
+    return staffEvents.filter((e) => isSameCalendarDay(e.starts_at, selectedDay));
+  }, [selectedDay, upcoming, staffEvents]);
+
+  const listTitle = selectedDay
+    ? selectedDay.toLocaleDateString('fr-FR', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+      })
+    : 'Prochaines convocations';
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -52,20 +82,35 @@ export const ProPlayerGroupScreen: React.FC = () => {
       refreshing={refreshing}
       onRefresh={handleRefresh}
     >
+      <ConvocationsMiniCalendar
+        month={month}
+        onMonthChange={setMonth}
+        marks={marks}
+        selectedDate={selectedDay}
+        onSelectDate={setSelectedDay}
+      />
+
       <ProDaySurface style={styles.banner}>
         <ProDayText variant="caption" muted>
-          Logistique déplacement — consultez le détail de chaque convocation pour le transport groupe.
+          Logistique déplacement — consultez le détail de chaque convocation pour le transport
+          groupe.
         </ProDayText>
       </ProDaySurface>
 
-      {convocations.length === 0 ? (
+      <ProDayText variant="eyebrow" accent style={styles.listTitle}>
+        {listTitle}
+      </ProDayText>
+
+      {displayed.length === 0 ? (
         <ProDaySurface style={styles.empty}>
           <ProDayText variant="body" muted>
-            Aucune convocation staff à venir.
+            {selectedDay
+              ? 'Aucune convocation ce jour-là.'
+              : 'Aucune convocation staff à venir.'}
           </ProDayText>
         </ProDaySurface>
       ) : (
-        convocations.map((event) => (
+        displayed.map((event) => (
           <PressableSpring
             key={event.id}
             style={[styles.card, { borderColor: colors.border, backgroundColor: colors.surface }]}
@@ -105,27 +150,18 @@ const styles = StyleSheet.create({
   banner: {
     padding: spacing.md,
     gap: spacing.xs,
-    marginBottom: spacing.sm,
   },
-  transport: {
-    alignSelf: 'flex-start',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderRadius: radius.md,
-    borderWidth: StyleSheet.hairlineWidth,
+  listTitle: {
+    marginTop: spacing.xs,
+    textTransform: 'capitalize',
   },
   empty: {
     padding: spacing.lg,
-    marginBottom: spacing.sm,
   },
   card: {
     padding: spacing.md,
     borderRadius: radius.lg,
     borderWidth: StyleSheet.hairlineWidth,
-    marginBottom: spacing.sm,
     gap: 2,
   },
   cardTitle: { fontWeight: '700' },
