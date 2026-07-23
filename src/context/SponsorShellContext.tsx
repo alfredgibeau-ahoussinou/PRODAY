@@ -1,5 +1,9 @@
 import React, { createContext, useContext } from 'react';
-import type { SponsorContentSegment, SponsorMainTabId, SponsorRoute } from '../navigation/sponsorTabConfig';
+import type {
+  SponsorContentSegment,
+  SponsorMainTabId,
+  SponsorRoute,
+} from '../navigation/sponsorTabConfig';
 
 export type SponsorShellNavigate = (route: SponsorRoute) => void;
 
@@ -7,8 +11,11 @@ interface SponsorShellContextValue {
   navigate: SponsorShellNavigate;
   pendingChatThreadId: string | null;
   pendingChatDraft: string | null;
+  pendingCreateOffer: boolean;
   openChat: (threadId: string, draft?: string) => void;
   clearPendingChat: () => void;
+  requestCreateOffer: () => void;
+  clearPendingCreateOffer: () => void;
 }
 
 const SponsorShellContext = createContext<SponsorShellContextValue | null>(null);

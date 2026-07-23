@@ -31,6 +31,8 @@ import {
 } from '../../utils/sponsorOfferActions';
 import { useSubscriptionOptional } from '../../context/SubscriptionContext';
 import { useTranslation } from '../../context/LocaleContext';
+import { useSponsorShellOptional } from '../../context/SponsorShellContext';
+import { useEffect } from 'react';
 
 type CampaignFilter = 'mine' | 'clubs' | 'all';
 type ClubSort = 'progress' | 'amount';
@@ -59,10 +61,15 @@ export const SponsorCampaignsScreen: React.FC<SponsorCampaignsScreenProps> = ({
   const [contributeId, setContributeId] = useState<string | null>(null);
   const [amount, setAmount] = useState('');
   const [contributing, setContributing] = useState(false);
-  const { offers, myOffers, goals, contributions, loading, refresh, activeOffers } = useSponsorDashboard(
-    profile?.uid,
-    company
-  );
+  const sponsorShell = useSponsorShellOptional();
+  const { offers, myOffers, goals, contributions, loading, refresh, activeOffers } =
+    useSponsorDashboard(profile?.uid, company);
+
+  useEffect(() => {
+    if (!shellMode || !sponsorShell?.pendingCreateOffer) return;
+    setShowCreate(true);
+    sponsorShell.clearPendingCreateOffer();
+  }, [shellMode, sponsorShell?.pendingCreateOffer, sponsorShell]);
 
   const filteredOffers = useMemo(() => {
     if (effectiveFilter === 'mine') return myOffers;

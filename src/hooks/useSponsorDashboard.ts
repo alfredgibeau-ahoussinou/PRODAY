@@ -28,7 +28,7 @@ export function useSponsorDashboard(
     }
     setLoading(true);
     const [allOffers, allGoals, stats, feed, contrib, leads] = await Promise.all([
-      sponsorsService.listOffers(40, sponsorUid, companyName),
+      sponsorsService.listOffersBySponsor(sponsorUid, 50),
       sponsorsService.listFundingGoals(30),
       sponsorsService.getAnalytics(sponsorUid, companyName),
       sponsorsService.listActivity(sponsorUid, companyName),

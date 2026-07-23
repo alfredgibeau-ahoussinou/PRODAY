@@ -53,6 +53,7 @@ const SponsorAppShellInner: React.FC = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [pendingChatThreadId, setPendingChatThreadId] = useState<string | null>(null);
   const [pendingChatDraft, setPendingChatDraft] = useState<string | null>(null);
+  const [pendingCreateOffer, setPendingCreateOffer] = useState(false);
   const { dashboard, unreadMessages } = useSponsorData();
   const { styles } = useSponsorStyles();
   const shellStyles = useMemo(() => createShellStyles(), []);
@@ -77,15 +78,37 @@ const SponsorAppShellInner: React.FC = () => {
     setPendingChatDraft(null);
   }, []);
 
+  const requestCreateOffer = useCallback(() => {
+    setPendingCreateOffer(true);
+    setActiveTab('offres');
+    setActiveSegment(undefined);
+  }, []);
+
+  const clearPendingCreateOffer = useCallback(() => {
+    setPendingCreateOffer(false);
+  }, []);
+
   const shellValue = useMemo(
     () => ({
       navigate,
       pendingChatThreadId,
       pendingChatDraft,
+      pendingCreateOffer,
       openChat,
       clearPendingChat,
+      requestCreateOffer,
+      clearPendingCreateOffer,
     }),
-    [navigate, pendingChatThreadId, pendingChatDraft, openChat, clearPendingChat],
+    [
+      navigate,
+      pendingChatThreadId,
+      pendingChatDraft,
+      pendingCreateOffer,
+      openChat,
+      clearPendingChat,
+      requestCreateOffer,
+      clearPendingCreateOffer,
+    ],
   );
 
   const tabNavigation = useSponsorTabNavigationBridge({

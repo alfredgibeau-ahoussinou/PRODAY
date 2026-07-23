@@ -359,7 +359,7 @@ export const sponsorsService = {
   async listProspects(sponsorUid: string): Promise<SponsorProspect[]> {
     if (!isFirebaseConfigured()) return [];
     const [offers, fundingGoals] = await Promise.all([
-      this.listOffers(30, sponsorUid),
+      this.listOffersBySponsor(sponsorUid, 50),
       this.listFundingGoals(50),
     ]);
     return buildLiveProspects(sponsorUid, offers, fundingGoals);

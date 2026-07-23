@@ -6,7 +6,6 @@ import {
   ActivityIndicator,
   TouchableOpacity,
   ScrollView,
-  Alert,
 } from 'react-native';
 import { useSessionProfile } from '../../hooks/useSessionProfile';
 import { useMessagesData } from '../../hooks/useAppData';
@@ -49,12 +48,15 @@ export const SponsorNetworkScreen: React.FC<SponsorNetworkScreenProps> = ({
   );
   const [activeThreadId, setActiveThreadId] = useState<string | null>(null);
   const [chatDraft, setChatDraft] = useState<string | undefined>();
+  const [draftNonce, setDraftNonce] = useState(0);
+  const [pendingTemplate, setPendingTemplate] = useState<string | null>(null);
   const [segment, setSegment] = useState<'messages' | 'prospects'>(initialSegment);
 
   useEffect(() => {
     if (pendingChatThreadId) {
       setActiveThreadId(pendingChatThreadId);
       setChatDraft(pendingChatDraft ?? undefined);
+      setDraftNonce((n) => n + 1);
       clearPendingChat();
     }
   }, [pendingChatThreadId, pendingChatDraft, clearPendingChat]);
@@ -62,22 +64,40 @@ export const SponsorNetworkScreen: React.FC<SponsorNetworkScreenProps> = ({
   const handleContactProspect = (prospect: SponsorProspect) => {
     if (!profile) return;
     void openSponsorProspectChat(profile, prospect, (threadId, draft) => {
-      setChatDraft(draft);
+      setChatDraft(pendingTemplate ?? draft);
+      setPendingTemplate(null);
       setActiveThreadId(threadId);
+      setDraftNonce((n) => n + 1);
       setSegment('messages');
     });
   };
 
   const activeThread = threads.find((t) => t.id === activeThreadId);
 
-  const showTemplate = (text: string) => {
-    Alert.alert('Modèle de message', text, [{ text: 'OK' }]);
+  const applyTemplate = (text: string) => {
+    if (activeThreadId) {
+      setChatDraft(text);
+      setPendingTemplate(null);
+      setDraftNonce((n) => n + 1);
+      return;
+    }
+    if (threads.length > 0) {
+      setActiveThreadId(threads[0].id);
+      setChatDraft(text);
+      setPendingTemplate(null);
+      setDraftNonce((n) => n + 1);
+      setSegment('messages');
+      return;
+    }
+    setPendingTemplate(text);
+    setSegment('prospects');
   };
 
   let chatOverlay: React.ReactNode = null;
   if (activeThreadId && profile && activeThread) {
     chatOverlay = (
       <ChatScreen
+        key={`${activeThreadId}-${draftNonce}`}
         threadId={activeThreadId}
         otherName={activeThread.participant_name}
         currentUid={profile.uid}
@@ -93,6 +113,7 @@ export const SponsorNetworkScreen: React.FC<SponsorNetworkScreenProps> = ({
   } else if (activeThreadId && profile) {
     chatOverlay = (
       <ChatScreen
+        key={`${activeThreadId}-${draftNonce}`}
         threadId={activeThreadId}
         otherName="Contact club"
         currentUid={profile.uid}
@@ -142,14 +163,29 @@ export const SponsorNetworkScreen: React.FC<SponsorNetworkScreenProps> = ({
         ) : null}
 
         <Text style={styles.sectionTitle}>Modèles rapides</Text>
+        {pendingTemplate ? (
+          <Text style={styles.templateHint}>
+            Modèle prêt — choisissez un prospect pour l’insérer dans le message.
+          </Text>
+        ) : null}
         <View style={styles.templateRow}>
           {SPONSOR_MESSAGE_TEMPLATES.map((tpl) => (
             <TouchableOpacity
               key={tpl.id}
-              style={styles.templateChip}
-              onPress={() => showTemplate(tpl.text)}
+              style={[
+                styles.templateChip,
+                pendingTemplate === tpl.text && styles.templateChipActive,
+              ]}
+              onPress={() => applyTemplate(tpl.text)}
             >
-              <Text style={styles.templateLabel}>{tpl.label}</Text>
+              <Text
+                style={[
+                  styles.templateLabel,
+                  pendingTemplate === tpl.text && styles.templateLabelActive,
+                ]}
+              >
+                {tpl.label}
+              </Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -267,6 +303,12 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   templateRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginBottom: spacing.lg },
+  templateHint: {
+    fontSize: 12,
+    color: SPONSOR_THEME.gold,
+    marginBottom: spacing.sm,
+    lineHeight: 17,
+  },
   templateChip: {
     backgroundColor: SPONSOR_THEME.primarySoft,
     paddingHorizontal: spacing.md,
@@ -275,7 +317,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: SPONSOR_THEME.primaryBorder,
   },
+  templateChipActive: {
+    borderColor: SPONSOR_THEME.gold,
+    backgroundColor: 'rgba(212, 175, 55, 0.12)',
+  },
   templateLabel: { fontSize: 11, fontWeight: '800', color: SPONSOR_THEME.heroSubtext },
+  templateLabelActive: { color: SPONSOR_THEME.gold },
   segmentRow: { flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.md },
   segment: {
     flex: 1,
