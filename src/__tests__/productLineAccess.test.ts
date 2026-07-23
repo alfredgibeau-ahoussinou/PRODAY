@@ -155,6 +155,8 @@ describe('productLineAccess', () => {
     expect(profileMatchesActiveLine(partner, 'pro_player')).toBe(true);
     expect(profileMatchesActiveLine(partner, 'homme')).toBe(false);
     expect(getEffectiveRoleForProductLine(partner, 'pro_staff')).toBe('sponsor');
+    expect(getEffectiveRoleForProductLine(partner, 'pro_player')).toBe('player');
+    expect(getSessionProfile(partner, 'pro_player').role).toBe('player');
     const session = getSessionProfile(partner, 'pro_staff');
     expect(session.role).toBe('sponsor');
     expect(session.product_line).toBe('pro_staff');

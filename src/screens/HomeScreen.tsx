@@ -40,7 +40,10 @@ export const HomeScreen: React.FC = () => {
   useEffect(() => {
     if (!pendingDashboardView || !profile) return;
     if (pendingDashboardView === 'gestion') setOverlay('team');
-    else if (pendingDashboardView === 'sponsors') setOverlay('partner-hub');
+    else if (pendingDashboardView === 'sponsors') {
+      // Hub partenaire or réservé au rôle sponsor — sinon offres clubs (pas l’espace marque).
+      setOverlay(profile.role === 'sponsor' ? 'partner-hub' : 'sponsors');
+    }
     clearPendingDashboard();
   }, [pendingDashboardView, clearPendingDashboard, profile]);
 

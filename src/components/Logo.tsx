@@ -15,9 +15,7 @@ import {
 import { brandForProductLine } from '../models/ProductLine';
 import type { ProductLineId } from '../models/ProductLine';
 import { useAppTheme } from '../context/ProductLineContext';
-import { useAuth } from '../context/AuthContext';
 import type { AppColors } from '../theme/universeTheme';
-import { isSponsorRole } from '../content/sponsorExperience';
 import { ManLogo, manLogoAspect } from './ManLogo';
 import { AmateurLogo, amateurLogoAspect } from './AmateurLogo';
 import { SupporterLogo, supporterLogoAspect } from './SupporterLogo';
@@ -115,15 +113,12 @@ export const Logo: React.FC<LogoProps> = ({
   sponsor: sponsorProp,
 }) => {
   const { productLine: themeLine, colors: c, proSignupPresetRole } = useAppTheme();
-  const { profile } = useAuth();
   const styles = useMemo(() => createStyles(c), [c]);
   const line = resolveProductLine(productLineProp, womanProp, themeLine);
   const resolved = variant ?? logoVariantForBackground(background, watermark);
   const brand = brandForProductLine(line);
-  const useSponsorBrand =
-    sponsorProp === true ||
-    isSponsorRole(profile?.role) ||
-    proSignupPresetRole === 'sponsor';
+  /** Or sponsor uniquement si demandé (prop / signup) — pas via role Auth, pour ne pas polluer l’espace Pro. */
+  const useSponsorBrand = sponsorProp === true || proSignupPresetRole === 'sponsor';
 
   if (useSponsorBrand) {
     if (resolved === 'mark' || watermark) {

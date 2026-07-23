@@ -94,7 +94,10 @@ export function getEffectiveRoleForProductLine(
   activeLine: ProductLineId,
 ): UserRole {
   if (isPartnerPoleTestAccount(user.email)) {
-    if (isProFamilyLine(activeLine)) return 'sponsor';
+    // Shell sponsor uniquement sur le pôle staff — pas sur Pro Joueur.
+    if (activeLine === 'pro_staff' || activeLine === 'pro') return 'sponsor';
+    if (activeLine === 'pro_player') return 'player';
+    if (activeLine === 'pro_club') return 'club';
     return user.role;
   }
   if (isUniversalPoleTestAccount(user.email)) {
@@ -146,11 +149,11 @@ export function assertProfileMatchesActiveLine(
 /** Profil adapté à l’univers actif (comptes test multi-pôles). */
 export function getSessionProfile(user: User, activeLine: ProductLineId): User {
   if (isPartnerPoleTestAccount(user.email)) {
-    const line = isProFamilyLine(activeLine) ? canonicalizeActiveProductLine(activeLine, 'sponsor') : activeLine;
+    const role = getEffectiveRoleForProductLine(user, activeLine);
     return {
       ...user,
-      role: isProFamilyLine(activeLine) ? 'sponsor' : user.role,
-      product_line: line,
+      role,
+      product_line: canonicalizeActiveProductLine(activeLine, role),
     };
   }
   if (!isUniversalPoleTestAccount(user.email)) return user;

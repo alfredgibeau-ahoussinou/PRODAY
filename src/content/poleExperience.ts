@@ -419,6 +419,22 @@ const LINE_MODULE_HIDE: Partial<
     sponsor: ['recrutement', 'gestion', 'matchs'],
     club: ['sponsors'],
     organizer: ['sponsors'],
+    player: ['sponsors', 'gestion'],
+  },
+  /** Split carousel — mêmes exclusions que `pro` (sinon le module Sponsors fuit dans l’espace Pro). */
+  pro_staff: {
+    coach: ['sponsors'],
+    agent: ['sponsors'],
+    recruiter: ['sponsors', 'gestion'],
+    sponsor: ['recrutement', 'gestion', 'matchs'],
+    club: ['sponsors'],
+    organizer: ['sponsors'],
+  },
+  pro_player: {
+    player: ['sponsors', 'gestion'],
+  },
+  pro_club: {
+    club: ['sponsors'],
   },
   sante: {
     physio: ['sponsors', 'recrutement', 'matchs', 'gestion'],
