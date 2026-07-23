@@ -5,6 +5,7 @@ export type ProductLineId =
   | 'amateur'
   | 'supporter'
   | 'sante'
+  | 'sponsor'
   /** @deprecated Stockage legacy — migré vers pro_player | pro_club | pro_staff */
   | 'pro'
   | 'pro_player'
@@ -150,6 +151,10 @@ export function isProProductLine(line: ProductLineId): boolean {
   );
 }
 
+export function isSponsorProductLine(line: ProductLineId): boolean {
+  return line === 'sponsor';
+}
+
 /**
  * Préparation split Pro (phase light) :
  * - pro_club : structure club
@@ -162,13 +167,7 @@ export function resolveProProductSegmentFromRole(
   role: string | null | undefined
 ): ProProductSegment {
   if (role === 'club') return 'pro_club';
-  if (
-    role === 'coach' ||
-    role === 'agent' ||
-    role === 'recruiter' ||
-    role === 'organizer' ||
-    role === 'sponsor'
-  ) {
+  if (role === 'coach' || role === 'agent' || role === 'recruiter' || role === 'organizer') {
     return 'pro_staff';
   }
   return 'pro_player';
@@ -191,6 +190,7 @@ export function normalizeStoredProductLine(stored: string | null): ProductLineId
   if (stored === 'pro') return 'pro';
   if (stored === 'amateur') return 'amateur';
   if (stored === 'supporter') return 'supporter';
+  if (stored === 'sponsor') return 'sponsor';
   if (stored === 'sante' || stored === 'health') return 'sante';
   if (stored === 'homme' || stored === 'standard') return 'homme';
   return null;
@@ -204,19 +204,21 @@ export function brandForProductLine(line: ProductLineId) {
   if (line === 'pro') return PRODAY_PRO_BRAND;
   if (line === 'amateur') return PRODAY_AMATEUR_BRAND;
   if (line === 'supporter') return PRODAY_SUPPORTER_BRAND;
+  if (line === 'sponsor') return PRODAY_SPONSOR_BRAND;
   if (line === 'sante') return PRODAY_SANTE_BRAND;
   return PRODAY_HOMME_BRAND;
 }
 
-/** Étend un Record partiel pro avec pro_player, pro_club, pro_staff (valeur `pro`). */
+/** Étend un Record partiel pro avec pro_player, pro_club, pro_staff (+ sponsor optionnel). */
 export function withProFamilyRecord<T>(
-  map: Record<string, T> & { pro: T },
+  map: Record<string, T> & { pro: T; sponsor?: T },
 ): Record<ProductLineId, T> {
-  const { pro } = map;
+  const { pro, sponsor } = map;
   return {
     ...map,
     pro_player: pro,
     pro_club: pro,
     pro_staff: pro,
+    sponsor: sponsor ?? pro,
   } as Record<ProductLineId, T>;
 }

@@ -42,6 +42,8 @@ export function getUserProductLine(user: User): ProductLineId {
   const stored = user.product_line;
   if (user.role === 'physio') return 'sante';
   if (user.role === 'supporter') return 'supporter';
+  if (user.role === 'sponsor') return 'sponsor';
+  if (stored === 'sponsor') return 'sponsor';
   if (stored === 'pro') return canonicalizeUserProductLine('pro', user.role);
   if (
     stored === 'woman' ||
@@ -94,10 +96,10 @@ export function getEffectiveRoleForProductLine(
   activeLine: ProductLineId,
 ): UserRole {
   if (isPartnerPoleTestAccount(user.email)) {
-    // Shell sponsor uniquement sur le pôle staff — pas sur Pro Joueur.
-    if (activeLine === 'pro_staff' || activeLine === 'pro') return 'sponsor';
+    if (activeLine === 'sponsor') return 'sponsor';
     if (activeLine === 'pro_player') return 'player';
     if (activeLine === 'pro_club') return 'club';
+    if (activeLine === 'pro_staff' || activeLine === 'pro') return 'coach';
     return user.role;
   }
   if (isUniversalPoleTestAccount(user.email)) {
@@ -109,7 +111,9 @@ export function getEffectiveRoleForProductLine(
 }
 
 export function profileMatchesActiveLine(user: User, activeLine: ProductLineId): boolean {
-  if (isPartnerPoleTestAccount(user.email)) return isProFamilyLine(activeLine);
+  if (isPartnerPoleTestAccount(user.email)) {
+    return activeLine === 'sponsor' || isProFamilyLine(activeLine);
+  }
   if (isUniversalPoleTestAccount(user.email)) return true;
 
   const userLine = getUserProductLine(user);
@@ -133,8 +137,8 @@ export function assertProfileMatchesActiveLine(
   activeLine: ProductLineId,
 ): void {
   if (isPartnerPoleTestAccount(user.email)) {
-    if (!isProFamilyLine(activeLine)) {
-      throw new ProductLineMismatchError('pro_staff', activeLine);
+    if (activeLine !== 'sponsor' && !isProFamilyLine(activeLine)) {
+      throw new ProductLineMismatchError('sponsor', activeLine);
     }
     return;
   }

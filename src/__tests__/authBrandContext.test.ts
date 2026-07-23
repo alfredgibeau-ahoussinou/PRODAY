@@ -21,7 +21,8 @@ describe('authBrandContext', () => {
   it('réaligne le preset quand on change de ligne pro', () => {
     expect(reconcileProSignupPreset('pro_player', 'sponsor')).toBe('player');
     expect(reconcileProSignupPreset('pro_club', 'sponsor')).toBe('club');
-    expect(reconcileProSignupPreset('pro_staff', 'sponsor')).toBe('sponsor');
+    expect(reconcileProSignupPreset('sponsor', null)).toBe('sponsor');
+    expect(reconcileProSignupPreset('pro_staff', 'sponsor')).toBe('coach');
     expect(reconcileProSignupPreset('pro_staff', 'player')).toBe('coach');
   });
 

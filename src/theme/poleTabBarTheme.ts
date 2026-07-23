@@ -252,6 +252,30 @@ const CHROME_BY_LINE: Record<ProductLineId, PoleTabBarChrome> = {
     topAccentColor: '#818CF8',
     barBorderColor: 'rgba(129, 140, 248, 0.35)',
   }),
+  sponsor: makeChrome(
+    {
+      accent: '#D4AF37',
+      brand: '#92700C',
+      ink: '#FAFAF9',
+      accentSoft: 'rgba(212, 175, 55, 0.12)',
+      border: 'rgba(212, 175, 55, 0.22)',
+      borderStrong: 'rgba(212, 175, 55, 0.4)',
+      surface: '#0c0a06',
+      background: '#070605',
+      textMuted: '#A8A29E',
+      brandSoft: 'rgba(212, 175, 55, 0.1)',
+      surfaceMuted: '#14110a',
+      accentLight: '#F5D76E',
+    },
+    {
+      layout: 'dock',
+      flatLayout: true,
+      overflowKicker: 'PRO DAY SPONSOR',
+      accent: '#D4AF37',
+      topAccentColor: '#D4AF37',
+      barBorderColor: 'rgba(212, 175, 55, 0.35)',
+    },
+  ),
 };
 
 const CHROME_BY_SEGMENT: Partial<Record<string, PoleTabBarChrome>> = {

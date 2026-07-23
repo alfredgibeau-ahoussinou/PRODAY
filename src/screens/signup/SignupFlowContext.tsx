@@ -30,14 +30,20 @@ export const SignupFlowProvider: React.FC<{
   signupGender?: Gender | null;
   children: React.ReactNode;
 }> = ({ productLine, experienceRole, signupGender, children }) => {
-  const { enterProLine, enterAmateurSpace, enterSupporterSpace, enterSanteSpace, setProSignupPresetRole } =
-    useProductLine();
+  const {
+    enterProLine,
+    enterAmateurSpace,
+    enterSupporterSpace,
+    enterSanteSpace,
+    enterSponsorSpace,
+    setProSignupPresetRole,
+  } = useProductLine();
   const isProSignup = isProProductLine(productLine);
   const isProPlayerSignup = productLine === 'pro_player';
   const isAmateurSignup = productLine === 'amateur';
   const isSupporterSignup = productLine === 'supporter';
   const isSanteSignup = productLine === 'sante';
-  const isSponsorSignup = experienceRole === 'sponsor';
+  const isSponsorSignup = experienceRole === 'sponsor' || productLine === 'sponsor';
 
   const playerSegment: PlayerSegment | null = useMemo(() => {
     if (!signupGender) return null;
@@ -46,7 +52,10 @@ export const SignupFlowProvider: React.FC<{
   }, [signupGender, productLine]);
 
   const colors = useMemo(
-    () => (isSponsorSignup ? getSponsorAppColors() : getThemedColorsForLine(productLine, playerSegment)),
+    () =>
+      isSponsorSignup
+        ? getSponsorAppColors()
+        : getThemedColorsForLine(productLine, playerSegment),
     [isSponsorSignup, productLine, playerSegment],
   );
 
@@ -65,10 +74,13 @@ export const SignupFlowProvider: React.FC<{
         await enterSupporterSpace();
         return;
       }
+      if (isSponsorSignup) {
+        await setProSignupPresetRole('sponsor');
+        if (!cancelled) await enterSponsorSpace();
+        return;
+      }
       if (isProSignup) {
-        const aligned = isSponsorSignup
-          ? 'sponsor'
-          : reconcileProSignupPreset(productLine, experienceRole);
+        const aligned = reconcileProSignupPreset(productLine, experienceRole);
         await setProSignupPresetRole(aligned);
         if (!cancelled) await enterProLine(productLine);
       }
@@ -88,6 +100,7 @@ export const SignupFlowProvider: React.FC<{
     enterSanteSpace,
     enterAmateurSpace,
     enterSupporterSpace,
+    enterSponsorSpace,
     enterProLine,
   ]);
 

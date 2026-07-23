@@ -17,7 +17,7 @@ export function brandForAuthContext(
   line: ProductLineId,
   presetRole?: UserRole | null,
 ) {
-  if (isSponsorAuthPreset(presetRole)) return PRODAY_SPONSOR_BRAND;
+  if (line === 'sponsor' || isSponsorAuthPreset(presetRole)) return PRODAY_SPONSOR_BRAND;
   return brandForProductLine(line);
 }
 
@@ -26,28 +26,29 @@ export function colorsForAuthContext(
   presetRole?: UserRole | null,
   playerSegment?: PlayerSegment | null,
 ): AppColors {
-  if (isSponsorAuthPreset(presetRole)) return getSponsorAppColors();
+  if (line === 'sponsor' || isSponsorAuthPreset(presetRole)) return getSponsorAppColors();
   return getThemedColorsForLine(line, playerSegment);
 }
 
-/** Alignement preset ↔ ligne pro (évite logo/thème Sponsor sur Pro Joueur). */
+/** Alignement preset ↔ ligne produit (évite fuite Sponsor ↔ Staff). */
 export function reconcileProSignupPreset(
   line: ProductLineId,
   preset: UserRole | null,
 ): UserRole | null {
+  if (line === 'sponsor') return 'sponsor';
   if (!preset) return null;
-  if (line === 'pro_player') return preset === 'player' ? 'player' : 'player';
-  if (line === 'pro_club') return preset === 'club' ? 'club' : 'club';
+  if (line === 'pro_player') return 'player';
+  if (line === 'pro_club') return 'club';
   if (line === 'pro_staff' || line === 'pro') {
     if (
       preset === 'coach' ||
       preset === 'agent' ||
       preset === 'recruiter' ||
-      preset === 'organizer' ||
-      preset === 'sponsor'
+      preset === 'organizer'
     ) {
       return preset;
     }
+    // Ancien preset sponsor ne doit plus rester sous Staff
     return 'coach';
   }
   return null;

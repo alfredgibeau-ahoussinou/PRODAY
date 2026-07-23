@@ -32,6 +32,7 @@ const LEFT_PRIORITY_BY_LINE: Record<ProductLineId, MainTabId[]> = {
   pro_player: ['home', 'recrutement', 'matchs', 'reels'],
   pro_club: ['home', 'recrutement', 'matchs', 'messages'],
   pro_staff: ['home', 'matchs', 'recrutement', 'feed'],
+  sponsor: ['home', 'matchs', 'messages', 'profil'],
   supporter: ['matchs', 'feed', 'messages', 'reels'],
   sante: ['home', 'matchs', 'feed', 'messages'],
 };

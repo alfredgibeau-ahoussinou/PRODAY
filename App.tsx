@@ -386,8 +386,8 @@ function AppShell() {
           openSponsorSignup: (tier) => {
             void (async () => {
               await setProSignupPresetRole('sponsor');
-              await setProductLine('pro_staff');
-              setPendingSignupProductLine('pro_staff');
+              await setProductLine('sponsor');
+              setPendingSignupProductLine('sponsor');
               setPendingSignupRole('sponsor');
               setPendingAuthIntent('signup');
               handleTabPress('profil');
@@ -397,8 +397,8 @@ function AppShell() {
           openPartnerSignup: () => {
             void (async () => {
               await setProSignupPresetRole('sponsor');
-              await setProductLine('pro_staff');
-              setPendingSignupProductLine('pro_staff');
+              await setProductLine('sponsor');
+              setPendingSignupProductLine('sponsor');
               setPendingSignupRole('sponsor');
               setPendingAuthIntent('signup');
               handleTabPress('profil');

@@ -79,7 +79,17 @@ export function useSignupForm(initial?: {
     (proSignupPresetRole && isRoleAllowedForProductLine(proSignupPresetRole, productLine)
       ? proSignupPresetRole
       : null) ??
-    (isSanteProduct ? 'physio' : isSupporterProduct ? 'supporter' : isProPlayerSignup ? 'player' : isProProduct ? 'coach' : 'player');
+    (isSanteProduct
+      ? 'physio'
+      : isSupporterProduct
+        ? 'supporter'
+        : productLine === 'sponsor'
+          ? 'sponsor'
+          : isProPlayerSignup
+            ? 'player'
+            : isProProduct
+              ? 'coach'
+              : 'player');
 
   const [role, setRoleState] = useState<UserRole>(defaultRole);
   const [draftRole, setDraftRole] = useState<UserRole>(defaultRole);

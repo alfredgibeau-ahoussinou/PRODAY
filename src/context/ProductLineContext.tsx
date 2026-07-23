@@ -55,6 +55,7 @@ interface ProductLineContextValue {
   enterAmateurSpace: () => Promise<void>;
   enterSupporterSpace: () => Promise<void>;
   enterSanteSpace: () => Promise<void>;
+  enterSponsorSpace: () => Promise<void>;
   exitWomanSpace: () => Promise<void>;
   /** Rôle présélectionné après choix carousel pro_player / pro_club / pro_staff. */
   proSignupPresetRole: UserRole | null;
@@ -189,6 +190,14 @@ export const ProductLineProvider: React.FC<{ children: React.ReactNode }> = ({
     await persistLine('sante');
   }, [persistLine]);
 
+  const enterSponsorSpace = useCallback(async () => {
+    setWomanSpaceActive(false);
+    setLineState('sponsor');
+    setProSignupPresetRoleState('sponsor');
+    await AsyncStorage.setItem(PRO_SIGNUP_PRESET_ROLE_KEY, 'sponsor');
+    await persistLine('sponsor');
+  }, [persistLine]);
+
   const exitWomanSpace = useCallback(async () => {
     await enterAmateurSpace();
   }, [enterAmateurSpace]);
@@ -196,13 +205,14 @@ export const ProductLineProvider: React.FC<{ children: React.ReactNode }> = ({
   const setProductLine = useCallback(
     async (line: ProductLineId) => {
       if (line === 'woman' || line === 'homme') await enterAmateurSpace();
+      else if (line === 'sponsor') await enterSponsorSpace();
       else if (isProProductLine(line)) await enterProLine(line);
       else if (line === 'amateur') await enterAmateurSpace();
       else if (line === 'supporter') await enterSupporterSpace();
       else if (line === 'sante') await enterSanteSpace();
       else await enterAmateurSpace();
     },
-    [enterProLine, enterAmateurSpace, enterSupporterSpace, enterSanteSpace]
+    [enterProLine, enterAmateurSpace, enterSupporterSpace, enterSanteSpace, enterSponsorSpace]
   );
 
   useEffect(() => {
@@ -219,15 +229,16 @@ export const ProductLineProvider: React.FC<{ children: React.ReactNode }> = ({
   const isAmateur = productLine === 'amateur';
   const isSupporter = productLine === 'supporter';
   const isSante = productLine === 'sante';
-  const guestSponsorAuth = !profile && isSponsorAuthPreset(proSignupPresetRole);
-  const brand = guestSponsorAuth
+  const guestSponsorAuth =
+    !profile && (productLine === 'sponsor' || isSponsorAuthPreset(proSignupPresetRole));
+  const brand = guestSponsorAuth || productLine === 'sponsor'
     ? PRODAY_SPONSOR_BRAND
     : brandForProductLine(productLine);
 
   const themedColors = useMemo(
     () =>
-      guestSponsorAuth
-        ? colorsForAuthContext(productLine, 'sponsor')
+      productLine === 'sponsor' || guestSponsorAuth
+        ? colorsForAuthContext('sponsor', 'sponsor')
         : getThemedColorsForLine(productLine, playerSegment),
     [guestSponsorAuth, productLine, playerSegment],
   );
@@ -256,6 +267,7 @@ export const ProductLineProvider: React.FC<{ children: React.ReactNode }> = ({
       enterAmateurSpace,
       enterSupporterSpace,
       enterSanteSpace,
+      enterSponsorSpace,
       exitWomanSpace,
       proSignupPresetRole,
       setProSignupPresetRole,
@@ -283,6 +295,7 @@ export const ProductLineProvider: React.FC<{ children: React.ReactNode }> = ({
       enterAmateurSpace,
       enterSupporterSpace,
       enterSanteSpace,
+      enterSponsorSpace,
       exitWomanSpace,
       proSignupPresetRole,
       setProSignupPresetRole,

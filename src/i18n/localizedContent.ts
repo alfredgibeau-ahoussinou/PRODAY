@@ -15,6 +15,7 @@ const LINE_SUFFIX: Record<ProductLineId, string> = {
   pro_player: 'pro_player',
   pro_club: 'pro_club',
   pro_staff: 'pro_staff',
+  sponsor: 'sponsor',
   sante: 'sante',
 };
 

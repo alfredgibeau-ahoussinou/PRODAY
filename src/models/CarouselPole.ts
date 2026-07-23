@@ -31,7 +31,8 @@ export function isCarouselProPole(pole: CarouselPoleId): boolean {
 export function carouselPoleToProductLine(pole: CarouselPoleId): ProductLineId {
   if (pole === 'pro_player') return 'pro_player';
   if (pole === 'pro_club') return 'pro_club';
-  if (pole === 'pro_staff' || pole === 'sponsor') return 'pro_staff';
+  if (pole === 'pro_staff') return 'pro_staff';
+  if (pole === 'sponsor') return 'sponsor';
   return pole as ProductLineId;
 }
 
@@ -42,7 +43,7 @@ export function carouselPoleToProSegment(pole: CarouselPoleId): ProProductSegmen
   return null;
 }
 
-/** Rôle présélectionné à l'inscription après choix carousel Pro. */
+/** Rôle présélectionné à l'inscription après choix carousel Pro / Sponsor. */
 export function carouselPoleSignupPresetRole(pole: CarouselPoleId): UserRole | null {
   switch (pole) {
     case 'pro_player':
@@ -63,9 +64,9 @@ export function productLineToCarouselPole(
   line: ProductLineId,
   role?: UserRole | null,
 ): CarouselPoleId {
+  if (line === 'sponsor') return 'sponsor';
   if (line === 'pro_player') return 'pro_player';
   if (line === 'pro_club') return 'pro_club';
-  if (line === 'pro_staff' && role === 'sponsor') return 'sponsor';
   if (line === 'pro_staff') return 'pro_staff';
   if (line === 'pro') {
     const segment = resolveProProductSegmentFromRole(role);

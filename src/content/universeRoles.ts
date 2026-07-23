@@ -20,20 +20,23 @@ export const PRO_PLAYER_PRODUCT_ROLES: UserRole[] = ['player'];
 /** Rôles structure club pro. */
 export const PRO_CLUB_PRODUCT_ROLES: UserRole[] = ['club'];
 
-/** Rôles staff pro (inclut sponsors hors carousel). */
+/** Rôles staff pro (sans sponsor — pôle Sponsor séparé). */
 export const PRO_STAFF_PRODUCT_ROLES: UserRole[] = [
   'coach',
   'agent',
   'recruiter',
   'organizer',
-  'sponsor',
 ];
+
+/** Rôles Pro Day Sponsor — marques partenaires. */
+export const SPONSOR_PRODUCT_ROLES: UserRole[] = ['sponsor'];
 
 /** @deprecated Union legacy `product_line: pro` */
 export const PRO_PRODUCT_ROLES: UserRole[] = [
   ...PRO_PLAYER_PRODUCT_ROLES,
   ...PRO_CLUB_PRODUCT_ROLES,
   ...PRO_STAFF_PRODUCT_ROLES,
+  ...SPONSOR_PRODUCT_ROLES,
 ];
 
 /** Rôles ProDay Santé — praticiens médicaux et paramédicaux. */
@@ -53,6 +56,8 @@ export function rolesForProductLine(line: ProductLineId): UserRole[] {
       return PRO_CLUB_PRODUCT_ROLES;
     case 'pro_staff':
       return PRO_STAFF_PRODUCT_ROLES;
+    case 'sponsor':
+      return SPONSOR_PRODUCT_ROLES;
     case 'pro':
       return PRO_PRODUCT_ROLES;
     case 'sante':
@@ -73,6 +78,7 @@ export function defaultRoleForProductLine(
   if (presetRole && isRoleAllowedForProductLine(presetRole, line)) return presetRole;
   if (line === 'pro_player') return 'player';
   if (line === 'pro_club') return 'club';
+  if (line === 'sponsor') return 'sponsor';
   if (line === 'pro' || line === 'pro_staff') return 'coach';
   if (line === 'sante') return 'physio';
   if (line === 'amateur') return 'player';
@@ -88,6 +94,8 @@ export function productLineLabel(line: ProductLineId): string {
       return 'Pro Day Amateur';
     case 'supporter':
       return 'Pro Day Supporter';
+    case 'sponsor':
+      return 'Pro Day Sponsor';
     case 'pro_player':
       return 'Pro Day Pro Joueur';
     case 'pro_club':
@@ -108,13 +116,14 @@ export function resolveSignupProductLine(
   carouselOrContextLine: ProductLineId,
   role: UserRole,
 ): ProductLineId {
+  if (role === 'sponsor' || carouselOrContextLine === 'sponsor') return 'sponsor';
   if (carouselOrContextLine === 'pro_player' || carouselOrContextLine === 'pro_club' || carouselOrContextLine === 'pro_staff') {
     return carouselOrContextLine;
   }
   if (carouselOrContextLine === 'pro' || isProFamilyLine(carouselOrContextLine)) {
     if (role === 'club') return 'pro_club';
     if (role === 'player') return 'pro_player';
-    if (['coach', 'agent', 'recruiter', 'organizer', 'sponsor'].includes(role)) {
+    if (['coach', 'agent', 'recruiter', 'organizer'].includes(role)) {
       return 'pro_staff';
     }
   }

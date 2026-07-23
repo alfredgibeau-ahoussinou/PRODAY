@@ -15,7 +15,13 @@ describe('productLineResolution', () => {
     expect(splitLegacyProByRole('player')).toBe('pro_player');
     expect(splitLegacyProByRole('club')).toBe('pro_club');
     expect(splitLegacyProByRole('coach')).toBe('pro_staff');
-    expect(splitLegacyProByRole('sponsor')).toBe('pro_staff');
+  });
+
+  it('canonicalise sponsor comme ligne dédiée', () => {
+    expect(canonicalizeUserProductLine('pro', 'sponsor')).toBe('sponsor');
+    expect(canonicalizeUserProductLine('pro_staff', 'sponsor')).toBe('sponsor');
+    expect(canonicalizeUserProductLine('sponsor', 'sponsor')).toBe('sponsor');
+    expect(canonicalizeActiveProductLine('sponsor')).toBe('sponsor');
   });
 
   it('canonicalise pro legacy', () => {

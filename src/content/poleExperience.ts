@@ -132,13 +132,11 @@ export function getSignupRoleGroups(
       roles: g.roles.filter((r) => r === 'club'),
     }));
   } else if (line === 'pro_staff') {
-    if (presetRole === 'sponsor') {
-      groups = PRO_SIGNUP_GROUPS.filter((g) => g.roles.includes('sponsor'));
-    } else {
-      groups = PRO_SIGNUP_GROUPS.filter((g) =>
-        g.roles.some((r) => ['coach', 'agent', 'recruiter', 'organizer', 'sponsor'].includes(r)),
-      );
-    }
+    groups = PRO_SIGNUP_GROUPS.filter((g) =>
+      g.roles.some((r) => ['coach', 'agent', 'recruiter', 'organizer'].includes(r)),
+    );
+  } else if (line === 'sponsor') {
+    groups = PRO_SIGNUP_GROUPS.filter((g) => g.roles.includes('sponsor'));
   } else if (!isProFamilyLine(line)) groups = [];
   else {
     const allowed = new Set(rolesForProductLine(line));
@@ -148,7 +146,7 @@ export function getSignupRoleGroups(
     })).filter((g) => g.roles.length > 0);
   }
 
-  if (!presetRole || !isProFamilyLine(line)) return groups;
+  if (!presetRole || (!isProFamilyLine(line) && line !== 'sponsor')) return groups;
 
   if (presetRole === 'player') {
     return groups.filter((g) => g.roles.includes('player'));
@@ -158,7 +156,7 @@ export function getSignupRoleGroups(
       .filter((g) => g.roles.includes('club'))
       .map((g) => ({ ...g, roles: g.roles.filter((r) => r === 'club') }));
   }
-  if (presetRole === 'sponsor') {
+  if (presetRole === 'sponsor' || line === 'sponsor') {
     return groups.filter((g) => g.roles.includes('sponsor'));
   }
   return groups.filter((g) =>
@@ -214,10 +212,10 @@ export function getVisibleMainTabs(
     }
   } else if (effectiveLine === 'supporter') {
     tabs = [...SUPPORTER_SHELL_TABS];
+  } else if (effectiveLine === 'sponsor' || r === 'sponsor') {
+    tabs = [...SPONSOR_MAIN_TABS];
   } else if (isProFamilyLine(effectiveLine)) {
-    if (r === 'sponsor') {
-      tabs = [...SPONSOR_MAIN_TABS];
-    } else if (r === 'player') {
+    if (r === 'player') {
       tabs = [...PRO_PLAYER_SHELL_TABS, ...PRO_PLAYER_OVERFLOW_TABS];
     } else if (r === 'organizer') {
       tabs = [...PRO_ORGANIZER_SHELL_TABS];
@@ -250,6 +248,7 @@ export function getVisibleMainTabs(
   const keepExplicitShell =
     effectiveLine === 'amateur' ||
     effectiveLine === 'supporter' ||
+    effectiveLine === 'sponsor' ||
     (isProFamilyLine(effectiveLine) &&
       (r === 'player' ||
         r === 'club' ||
@@ -396,7 +395,7 @@ export function canPublishRecruitmentPost(role: UserRole): boolean {
 }
 
 export function canAccessSponsorsModule(line: ProductLineId, role: UserRole): boolean {
-  return role === 'sponsor' && (line === 'pro_staff' || line === 'pro');
+  return role === 'sponsor' && (line === 'sponsor' || line === 'pro_staff' || line === 'pro');
 }
 
 const LINE_MODULE_HIDE: Partial<
@@ -438,6 +437,9 @@ const LINE_MODULE_HIDE: Partial<
   },
   pro_club: {
     club: ['sponsors'],
+  },
+  sponsor: {
+    sponsor: ['recrutement', 'gestion', 'matchs'],
   },
   sante: {
     physio: ['sponsors', 'recrutement', 'matchs', 'gestion'],

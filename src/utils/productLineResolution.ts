@@ -10,7 +10,6 @@ const PRO_DEDUCED_ROLES: UserRole[] = [
   'recruiter',
   'club',
   'organizer',
-  'sponsor',
 ];
 
 export function isProDeducedRole(role: UserRole): boolean {
@@ -46,6 +45,8 @@ export function canonicalizeUserProductLine(
 ): ProductLineId {
   if (role === 'physio') return 'sante';
   if (role === 'supporter') return 'supporter';
+  if (role === 'sponsor') return 'sponsor';
+  if (line === 'sponsor') return 'sponsor';
   if (line === 'pro_player' || line === 'pro_club' || line === 'pro_staff') {
     return line;
   }
@@ -74,6 +75,7 @@ export function canonicalizeActiveProductLine(
   line: ProductLineId,
   role?: UserRole | null,
 ): ProductLineId {
+  if (line === 'sponsor') return 'sponsor';
   if (line === 'pro') return splitLegacyProByRole(role ?? 'coach');
   if (line === 'pro_player' || line === 'pro_club' || line === 'pro_staff') return line;
   if ((line === 'homme' || line === 'woman') && role === 'player') return 'pro_player';

@@ -659,6 +659,7 @@ export function resolvePoleHelpPoleKey(
 ): PoleHelpPoleKey {
   if (productLine === 'supporter') return 'supporter';
   if (productLine === 'sante') return 'sante';
+  if (productLine === 'sponsor' || role === 'sponsor') return 'pro_staff';
   if (productLine === 'pro_player') return 'pro_player';
   if (productLine === 'pro_club') return 'pro_club';
   if (productLine === 'pro_staff') return 'pro_staff';

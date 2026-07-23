@@ -75,7 +75,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
   const [tab, setTab] = useState<AuthTabId>(initialIntent === 'signup' ? 'signup' : 'login');
   const screenCopy = getLocalizedAuthCopy(productLine, tab, t, {
     brandName: activeBrand.name,
-    sponsor: isSponsorAuthPreset(proSignupPresetRole),
+    sponsor: productLine === 'sponsor' || isSponsorAuthPreset(proSignupPresetRole),
   });
   const signupTeaser = useMemo(
     () => getAuthSignupTeaser(productLine, t, proSignupPresetRole),

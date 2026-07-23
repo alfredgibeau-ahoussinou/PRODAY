@@ -144,21 +144,21 @@ describe('productLineAccess', () => {
     expect(getSessionProfile(player, 'pro_player').role).toBe('player');
   });
 
-  it('autorise le compte démo partenaire sur toute la famille pro', () => {
+  it('autorise le compte démo partenaire sur sponsor et la famille pro', () => {
     const partner = {
       ...baseUser,
       email: 'part@gmail.com',
       role: 'sponsor' as const,
-      product_line: 'pro_staff' as const,
+      product_line: 'sponsor' as const,
     } as User;
-    expect(profileMatchesActiveLine(partner, 'pro_staff')).toBe(true);
+    expect(profileMatchesActiveLine(partner, 'sponsor')).toBe(true);
     expect(profileMatchesActiveLine(partner, 'pro_player')).toBe(true);
     expect(profileMatchesActiveLine(partner, 'homme')).toBe(false);
-    expect(getEffectiveRoleForProductLine(partner, 'pro_staff')).toBe('sponsor');
+    expect(getEffectiveRoleForProductLine(partner, 'sponsor')).toBe('sponsor');
     expect(getEffectiveRoleForProductLine(partner, 'pro_player')).toBe('player');
     expect(getSessionProfile(partner, 'pro_player').role).toBe('player');
-    const session = getSessionProfile(partner, 'pro_staff');
+    const session = getSessionProfile(partner, 'sponsor');
     expect(session.role).toBe('sponsor');
-    expect(session.product_line).toBe('pro_staff');
+    expect(session.product_line).toBe('sponsor');
   });
 });

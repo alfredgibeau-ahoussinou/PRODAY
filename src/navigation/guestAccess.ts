@@ -19,6 +19,7 @@ const GUEST_VISIBLE_TABS_SANTE: MainTabId[] = ['home', 'reels', 'profil'];
 export function getGuestVisibleTabs(line?: ProductLineId): MainTabId[] {
   if (line === 'sante') return GUEST_VISIBLE_TABS_SANTE;
   if (line === 'supporter') return GUEST_VISIBLE_TABS_SUPPORTER;
+  if (line === 'sponsor') return ['home', 'matchs', 'messages', 'profil'];
   return GUEST_VISIBLE_TABS_DEFAULT;
 }
 

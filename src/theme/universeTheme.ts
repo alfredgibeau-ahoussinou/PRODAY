@@ -7,6 +7,7 @@ import { santeColorOverrides } from './prodaySanteTheme';
 import type { PlayerSegment } from '../utils/playerSegment';
 import { getThemedColorsForSegment } from './playerSegmentTheme';
 import { proColorOverrides } from './proThemeColors';
+import { getSponsorAppColors } from '../content/sponsorExperience';
 
 export { proColorOverrides, proGradients } from './proThemeColors';
 
@@ -37,6 +38,7 @@ export function getThemedColorsForLine(
   if (line === 'woman') return { ...baseColors, ...womanColorOverrides };
   if (line === 'amateur') return { ...baseColors, ...amateurColorOverrides };
   if (line === 'supporter') return { ...baseColors, ...supporterColorOverrides };
+  if (line === 'sponsor') return getSponsorAppColors();
   if (line === 'pro' || line === 'pro_player' || line === 'pro_club' || line === 'pro_staff') {
     return { ...baseColors, ...proColorOverrides };
   }

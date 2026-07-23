@@ -22,8 +22,8 @@ describe('migration carousel Amateur (doc architecture §1.4)', () => {
     ]);
   });
 
-  it('mappe le pôle sponsor vers pro_staff avec rôle sponsor', () => {
-    expect(carouselPoleToProductLine('sponsor')).toBe('pro_staff');
+  it('mappe le pôle sponsor vers product_line sponsor dédié', () => {
+    expect(carouselPoleToProductLine('sponsor')).toBe('sponsor');
     expect(carouselPoleSignupPresetRole('sponsor')).toBe('sponsor');
   });
 
@@ -31,6 +31,7 @@ describe('migration carousel Amateur (doc architecture §1.4)', () => {
     expect(carouselPoleToProductLine('pro_player')).toBe('pro_player');
     expect(carouselPoleToProductLine('pro_club')).toBe('pro_club');
     expect(carouselPoleToProductLine('pro_staff')).toBe('pro_staff');
+    expect(carouselPoleToProductLine('sponsor')).toBe('sponsor');
   });
 
   it('filtre l’inscription pro selon le preset carousel', () => {
