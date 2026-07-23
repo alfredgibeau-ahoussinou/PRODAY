@@ -123,9 +123,9 @@ export const AMATEUR_BRAND = {
   shortName: "Amateur",
   fullName: "Pro Day Amateur",
   logo: UNIVERSE_LOGOS.amateur,
-  tagline: "JOUER • ENCADRER • PARTAGER",
+  tagline: "District · Régional · Passion",
   mission:
-    "Joueurs et coachs amateur — Mercato local, matchs, effectif et convocations. Distinct du pôle Pro (staff professionnel).",
+    "Le terrain du dimanche, sans le chaos WhatsApp. Mercato local, convocations, effectif coach et CV joueur — pour le foot M et F amateur.",
   accent: "#F03000",
   accentDark: "#841800",
 } as const;
@@ -135,9 +135,9 @@ export const SUPPORTER_BRAND = {
   shortName: "Supporter",
   fullName: "Pro Day Supporter",
   logo: UNIVERSE_LOGOS.supporter,
-  tagline: "SUIVRE • VIBRER • PARTAGER",
+  tagline: "Tribune libre · Zéro paywall",
   mission:
-    "Tribune 100 % gratuite — matchs live (PRODAY + monde), suivis illimités, débats, réels et shop merch. Sans abonnement ni paywall.",
+    "Scores live, clubs favoris, débats et moments — une tribune numérique 100 % gratuite. Pas de Mercato, pas d'abonnement store.",
   accent: "#3C00F0",
   accentDark: "#180078",
 } as const;
@@ -159,9 +159,9 @@ export const PRO_JOUEUR_BRAND = {
   shortName: "Pro Joueur",
   fullName: "Pro Day Pro Joueur",
   logo: UNIVERSE_LOGOS.homme,
-  tagline: "CARRIÈRE • VISIBILITÉ • OPPORTUNITÉS",
+  tagline: "Contrat · Essais · Scouting",
   mission:
-    "Joueur professionnel — carrière, portfolio scouting, essais et mandat agent. Stats validées par le coach staff.",
+    "Ta carrière, pas un CV Word. Portfolio scouting, alertes clubs, stats validées coach et mandat agent — pensé pour le joueur sous contrat.",
   accent: "#0054F0",
   accentDark: "#001854",
 } as const;
@@ -171,9 +171,9 @@ export const PRO_CLUB_BRAND = {
   shortName: "Pro Club",
   fullName: "Pro Day Pro Club",
   logo: UNIVERSE_LOGOS.pro,
-  tagline: "STRUCTURE • ÉQUIPES • RECRUTEMENT",
+  tagline: "U13 → Seniors · Une structure",
   mission:
-    "Président, directeur sportif et secrétariat — arbre des équipes, adhésions, annonces recrutement et vitrine club.",
+    "Toute la structure en un regard : équipes, coachs, adhésions, recrutement et page publique. Pour présidents, DS et secrétariat.",
   accent: "#006CFC",
   accentDark: "#002478",
 } as const;
@@ -183,9 +183,9 @@ export const PRO_STAFF_BRAND = {
   shortName: "Pro Staff",
   fullName: "Pro Day Pro Staff",
   logo: UNIVERSE_LOGOS.pro,
-  tagline: "MÉTIERS • MANDATS • SCOUTING",
+  tagline: "Agent · Recruteur · Coach · Arena",
   mission:
-    "Agent, recruteur, coach pro et organisateur — Mercato Pro, shortlists, convocations groupe et tournois Arena.",
+    "Quatre métiers, une coque pro. Mercato Pro, shortlists, mandats et tournois Arena — avec profils vérifiés et messagerie tracée.",
   accent: "#3B5BFF",
   accentDark: "#001848",
 } as const;
@@ -348,23 +348,34 @@ export const PILLARS = [
 export const JOURNEYS = [
   {
     id: "player",
-    role: "Joueur",
+    role: "Joueur amateur",
     steps: [
-      "Profil & Visibilité",
-      "CV en ligne éditable",
-      "Stats & galerie",
-      "Mercato & candidatures",
-      "Matchs & Arena",
+      "Créer ton profil (M ou F)",
+      "Remplir le CV foot",
+      "Postuler au Mercato local",
+      "Répondre aux convocations",
+      "Suivre ta saison & ta visibilité",
+    ],
+  },
+  {
+    id: "pro_player",
+    role: "Joueur pro",
+    steps: [
+      "Accueil Carrière & contrat",
+      "Portfolio vidéos & stats coach",
+      "Recevoir essais & opportunités",
+      "Échanger avec agent / staff",
+      "Monter ta visibilité scouting",
     ],
   },
   {
     id: "coach",
     role: "Coach",
     steps: [
-      "Vérification diplôme",
-      "Gestion effectif",
-      "Annonces & détections",
-      "Convocations & Live Stats",
+      "Vérifier ton diplôme",
+      "Constituer l'effectif",
+      "Publier une détection",
+      "Convocations & live stats",
     ],
   },
   {
@@ -372,9 +383,9 @@ export const JOURNEYS = [
     role: "Recruteur",
     steps: [
       "Profil recruteur vérifié",
-      "Territoire & spécialité",
-      "Annonces Mercato Pro",
-      "Pipeline candidatures",
+      "Définir territoire & poste",
+      "Publier sur le Mercato Pro",
+      "Piloter le pipeline candidatures",
     ],
   },
   {
@@ -382,19 +393,19 @@ export const JOURNEYS = [
     role: "Agent",
     steps: [
       "Profil agent vérifié",
-      "Repérage & mandats",
-      "Contacts clubs & joueurs",
-      "Pipeline mandats",
+      "Constituer le CRM joueurs",
+      "Activer alertes géolocalisées",
+      "Suivre mandats & clubs",
     ],
   },
   {
     id: "club",
-    role: "Club",
+    role: "Structure club",
     steps: [
-      "Profil club & équipes",
-      "Annonces Mercato actives",
-      "Candidatures & exports",
-      "Convocations & effectif",
+      "Créer la structure & les catégories",
+      "Affecter coachs et staff",
+      "Ouvrir les annonces recrutement",
+      "Publier la vitrine publique",
     ],
   },
   {
@@ -412,9 +423,9 @@ export const JOURNEYS = [
     role: "Organisateur",
     steps: [
       "Créer un tournoi Arena",
-      "Gérer les inscriptions",
+      "Ouvrir les inscriptions",
+      "Gérer poules & scores",
       "Publier le palmarès",
-      "Visibilité sponsors",
     ],
   },
   {
@@ -431,11 +442,10 @@ export const JOURNEYS = [
     id: "supporter",
     role: "Supporter",
     steps: [
-      "Profil supporter",
-      "Clubs favoris",
-      "Matchs & live",
-      "Reels & fil communautaire",
-      "Messagerie tribune",
+      "Créer ton profil tribune",
+      "Suivre clubs & joueurs",
+      "Ouvrir le live le jour J",
+      "Réagir aux débats & moments",
     ],
   },
   {
@@ -495,9 +505,9 @@ export const SANTE_BRAND = {
   shortName: "Santé",
   fullName: "Pro Day Santé",
   logo: UNIVERSE_LOGOS.sante,
-  tagline: "SOIGNER • ACCOMPAGNER • PERFORMER",
+  tagline: "Kiné · Mental · Nutrition",
   mission:
-    "Kinés, coach mental et staff médical — annuaire, agenda, téléconsultation sécurisée (partenaire HDS) et vidéos éducatives.",
+    "L'annuaire santé du foot : praticiens vérifiés près des clubs, agenda app, téléconsultation HDS et contenus éducatifs — distinct du pôle Pro Staff.",
   accent: "#00CCB4",
   accentDark: "#006C60",
 } as const;
@@ -755,10 +765,10 @@ export const PRO_MODULES = [
 export const PRO_JOUEUR_MODULES = [
   {
     id: "carriere",
-    title: "Carrière",
+    title: "Accueil Carrière",
     subtitle: "Contrat & timeline",
     description:
-      "Jours avant fin de contrat, consultations profil, essais à venir et messages agent.",
+      "Jours avant fin de contrat, consultations profil, essais à venir et messages agent — ton tableau de bord pro, dès l'ouverture.",
     image: "/images/football-pro-01.jpg",
   },
   {
@@ -766,15 +776,15 @@ export const PRO_JOUEUR_MODULES = [
     title: "Opportunités",
     subtitle: "Essais & détections",
     description:
-      "Offres correspondant au poste et au niveau — pas le Mercato amateur.",
+      "Offres filtrées par poste et niveau — le circuit pro, pas le Mercato district.",
     image: "/images/football-mercato-01.jpg",
   },
   {
     id: "portfolio",
-    title: "Portfolio",
-    subtitle: "Stats & vidéos",
+    title: "Portfolio scouting",
+    subtitle: "Vidéos & stats coach",
     description:
-      "Vidéos taguées par match, stats saison badge « Validé coach » et export PDF scouting.",
+      "Clips tagués par match, stats saison avec badge « Validé coach », export PDF pour les recruteurs.",
     image: "/showcase/classic-profile.jpg",
   },
   {
@@ -782,31 +792,31 @@ export const PRO_JOUEUR_MODULES = [
     title: "Groupe",
     subtitle: "Convocations staff",
     description:
-      "Entraînements et matchs officiels — transport groupe, sans gestion compo.",
+      "Entraînements et matchs officiels, transport groupe — tu suis, le staff pilote.",
     image: "/images/football-team-01.jpg",
   },
   {
     id: "pulse-pro",
-    title: "Visibilité (dans Accueil Carrière)",
-    subtitle: "Visibilité scouting",
+    title: "Visibilité scouting",
+    subtitle: "Score Accueil Carrière",
     description:
-      "Score de visibilité sur l'onglet Accueil Carrière — pas un onglet séparé. Profil, activité et confiance pour attirer les recruteurs.",
+      "Profil, activité et confiance combinés pour apparaître dans les shortlists — intégré à l'Accueil, pas un onglet en plus.",
     image: "/showcase/classic-exp-pulse.jpg",
   },
   {
     id: "shop-pro-joueur",
-    title: "Shop",
-    subtitle: "Boutique joueur",
+    title: "Shop joueur",
+    subtitle: "Équipement & merch",
     description:
-      "Équipement et merch accessibles depuis l'onglet Shop — même boutique ProDay que les supporters et amateurs.",
+      "La boutique ProDay depuis l'onglet Shop — même catalogue que la communauté, accès direct depuis ta coque.",
     image: "/images/football-pitch-01.jpg",
   },
   {
     id: "sponsors-pro-joueur",
-    title: "Sponsors",
-    subtitle: "Module Accueil",
+    title: "Partenariats",
+    subtitle: "Offres marques",
     description:
-      "Partenariats et offres marques — via le module Sponsors de l'Accueil Carrière, pas via un onglet de la barre.",
+      "Marques qui cherchent des joueurs visibles — depuis le module Sponsors de l'Accueil Carrière.",
     image: "/images/football-club-01.jpg",
   },
 ] as const;
@@ -814,42 +824,42 @@ export const PRO_JOUEUR_MODULES = [
 export const PRO_CLUB_MODULES = [
   {
     id: "structure",
-    title: "Structure",
-    subtitle: "Arbre des équipes",
+    title: "Arbre des équipes",
+    subtitle: "U13 → Seniors",
     description:
-      "U13, U17, Seniors F… — effectifs, coachs affectés et staff club en un coup d'œil.",
+      "Toutes les catégories, coachs affectés et staff club — une structure lisible pour le bureau et le DS.",
     image: "/images/football-club-01.jpg",
   },
   {
     id: "recrutement-club",
-    title: "Recrutement",
-    subtitle: "Annonces & candidatures",
+    title: "Recrutement club",
+    subtitle: "Annonces & shortlist",
     description:
-      "Publiez « Cherche gardien U17 F », recevez candidatures et shortlist locale.",
+      "Publiez « Cherche gardien U17 F », recevez les candidatures et constituez votre shortlist locale.",
     image: "/showcase/classic-mercato.jpg",
   },
   {
     id: "calendrier-club",
-    title: "Calendrier",
+    title: "Calendrier structure",
     subtitle: "Saison multi-équipes",
     description:
-      "Vue agrégée des matchs et entraînements — lecture seule sur les feuilles coach.",
+      "Vue agrégée matchs et entraînements — lecture seule sur les feuilles coach, vision globale pour le bureau.",
     image: "/images/football-match-01.jpg",
   },
   {
     id: "communication-club",
-    title: "Communication",
-    subtitle: "Annonces & effectif",
+    title: "Communication interne",
+    subtitle: "Adhésions & annonces",
     description:
-      "Messages structure, validation adhésions et annonces internes.",
+      "Messages structure, validation des adhésions et annonces internes — sans multiplier les groupes.",
     image: "/showcase/classic-exp-messages.jpg",
   },
   {
     id: "vitrine-club",
-    title: "Vitrine",
-    subtitle: "Page publique club",
+    title: "Vitrine publique",
+    subtitle: "Page club",
     description:
-      "Logo, palmarès, catégories gérées — visible supporters et recruteurs.",
+      "Logo, palmarès, catégories — visible des supporters et des recruteurs qui scannent votre territoire.",
     image: "/images/football-stadium-night-01.jpg",
   },
 ] as const;
@@ -858,41 +868,41 @@ export const PRO_STAFF_MODULES = [
   {
     id: "recruiter",
     title: "Recruteur Pro",
-    subtitle: "Scouting & Mercato",
+    subtitle: "Pipeline & territoire",
     description:
-      "Profil recruteur vérifié, annonces Mercato Pro, pipeline candidatures et covoiturage détections.",
+      "Annonces Mercato Pro, shortlists par poste, covoiturage détections — un pipeline clair, pas un tableur.",
     image: "/showcase/classic-mercato.jpg",
   },
   {
     id: "coach",
     title: "Coach Pro",
-    subtitle: "Effectifs & recrutement",
+    subtitle: "Effectifs & convocations",
     description:
-      "Profil staff vérifié, annonces Mercato, convocations et stats candidatures — multi-équipes.",
+      "Multi-équipes, convocations, stats candidatures et profil staff vérifié — le quotidien hors amateur.",
     image: "/showcase/classic-staff.jpg",
   },
   {
     id: "agent",
     title: "Agent Elite",
-    subtitle: "Mandats & repérage",
+    subtitle: "CRM & mandats",
     description:
-      "CRM joueurs, alertes géolocalisées, pipeline mandats et contacts clubs.",
+      "CRM joueurs, alertes géolocalisées, contacts clubs et suivi des mandats jusqu'à la signature.",
     image: "/images/football-mercato-01.jpg",
   },
   {
     id: "organizer",
-    title: "Organisateur",
-    subtitle: "Tournois Arena",
+    title: "Organisateur Arena",
+    subtitle: "Tournois & poules",
     description:
-      "Création tournoi, inscriptions, poules, scores et classements automatiques.",
+      "Création tournoi, inscriptions, poules, scores et classements — l'Arena pour les organisateurs terrain.",
     image: "/showcase/classic-arena.jpg",
   },
   {
     id: "reseau",
-    title: "Réseau Pro",
-    subtitle: "Messagerie sécurisée",
+    title: "Réseau Pro vérifié",
+    subtitle: "Messagerie tracée",
     description:
-      "Contacts vérifiés entre staff, agents et structures — fini les échanges non tracés.",
+      "Contacts validés entre staff, agents et structures — échanges professionnels, plus de fils non tracés.",
     image: "/showcase/classic-exp-messages.jpg",
   },
 ] as const;
@@ -900,66 +910,66 @@ export const PRO_STAFF_MODULES = [
 export const AMATEUR_MODULES = [
   {
     id: "joueur-amateur",
-    title: "Joueur amateur",
-    subtitle: "CV & Mercato local",
+    title: "Espace joueur",
+    subtitle: "CV & candidatures",
     description:
-      "Profil joueur, CV foot en ligne, candidatures Mercato Amateur et convocations — foot M ou F via l'espace choisi.",
+      "Profil, CV foot, candidatures Mercato Amateur et RSVP convocations — foot masculin ou féminin dès l'inscription.",
     image: "/showcase/classic-profile.jpg",
   },
   {
     id: "coach-amateur",
-    title: "Coach amateur",
-    subtitle: "Effectif & convocations",
+    title: "Espace coach",
+    subtitle: "Effectif & feuille",
     description:
-      "Profil coach vérifié, gestion d'effectif, convocations et stats saison — district et régional.",
+      "Diplôme vérifié, composition d'effectif, convocations et stats saison — du district au régional.",
     image: "/showcase/classic-staff.jpg",
   },
   {
     id: "mercato-amateur",
     title: "Mercato Amateur",
-    subtitle: "Recrutement local",
+    subtitle: "Recrutement de proximité",
     description:
-      "Annonces Mercato local, candidatures joueurs et suivi des réponses — sans la complexité du Mercato Pro.",
+      "Annonces locales, candidatures et réponses suivies — sans la complexité ni les quotas du Mercato Pro.",
     image: "/images/football-mercato-01.jpg",
   },
   {
     id: "matchs-amateur",
-    title: "Matchs",
-    subtitle: "Convocations équipe",
+    title: "Matchs & covoiturage",
+    subtitle: "Le week-end organisé",
     description:
-      "Calendrier unifié, RSVP joueurs et covoiturage pour vos matchs de championnat ou amicaux.",
+      "Calendrier unifié, RSVP joueurs et covoiturage pour championnat, coupe ou amical.",
     image: "/images/football-match-01.jpg",
   },
   {
     id: "reseau-amateur",
-    title: "Réseau local",
-    subtitle: "Messagerie sécurisée",
+    title: "Réseau de zone",
+    subtitle: "Messagerie locale",
     description:
-      "Contacts vérifiés avec joueurs, clubs et coachs de votre zone — fini les groupes WhatsApp éparpillés.",
+      "Contacts vérifiés avec joueurs, clubs et coachs de votre secteur — un fil propre à la place de dix groupes.",
     image: "/showcase/classic-exp-messages.jpg",
   },
   {
     id: "shop-amateur",
-    title: "Shop",
+    title: "Shop Amateur",
     subtitle: "Équipement & merch",
     description:
-      "Boutique ProDay — maillots, entraînement et goodies, accessible depuis l'onglet Shop de l'app.",
+      "Maillots, entraînement et goodies ProDay — accessibles depuis l'onglet Shop de l'app.",
     image: "/images/football-pitch-01.jpg",
   },
   {
     id: "sponsors-amateur",
-    title: "Sponsors",
-    subtitle: "Module Accueil",
+    title: "Sponsors locaux",
+    subtitle: "Financement club",
     description:
-      "Offres partenaires et financement — accessibles depuis le module Sponsors de l'Accueil (pas un onglet de la barre).",
+      "Offres partenaires près de chez vous — depuis le module Sponsors de l'Accueil Équipe.",
     image: "/images/football-mercato-01.jpg",
   },
   {
     id: "pulse-amateur",
-    title: "Visibilité (dans l'Accueil)",
-    subtitle: "Score de visibilité",
+    title: "Visibilité Accueil",
+    subtitle: "Score de saison",
     description:
-      "Visibilité n'est pas un onglet : c'est votre score de visibilité affiché sur l'Accueil Équipe, à côté de votre saison.",
+      "Votre score de visibilité vit sur l'Accueil Équipe, à côté de la saison — pas un onglet supplémentaire.",
     image: "/showcase/classic-exp-pulse.jpg",
   },
 ] as const;
@@ -967,26 +977,26 @@ export const AMATEUR_MODULES = [
 export const SUPPORTER_MODULES = [
   {
     id: "matchs-supporter",
-    title: "Matchs live",
+    title: "Matchs en direct",
     subtitle: "PRODAY & monde",
     description:
-      "Scores en direct via API-Football, filtres H/F/mixte et calendrier — votre tribune numérique.",
+      "Scores live (API-Football), filtres H/F/mixte et calendrier — la tribune s'ouvre le jour du match.",
     image: "/images/football-fans-01.jpg",
   },
   {
     id: "suivis-supporter",
-    title: "Suivis",
+    title: "Suivis illimités",
     subtitle: "Clubs · joueurs · tournois",
     description:
-      "Suivez sans limite vos clubs, joueurs et tournois favoris — alertes opt-in depuis le profil.",
+      "Ajoutez sans limite vos favoris — alertes opt-in depuis le profil, zéro plafond d'abonnement.",
     image: "/images/football-supporter-01.jpg",
   },
   {
     id: "debats-supporter",
     title: "Débats & fil",
-    subtitle: "Communauté",
+    subtitle: "La voix des tribunes",
     description:
-      "Publications, réactions, débats autour des matchs et question hebdo — 100 % gratuit.",
+      "Publications, réactions, débats match et question hebdo — la communauté sans paywall.",
     image: "/showcase/classic-exp-messages.jpg",
   },
   {
@@ -994,7 +1004,7 @@ export const SUPPORTER_MODULES = [
     title: "Moments & shop",
     subtitle: "Réels & merch",
     description:
-      "Vidéos courtes des clubs suivis et boutique merch — sans abonnement store.",
+      "Vidéos courtes des clubs suivis et boutique merch — tout inclus, sans abonnement store.",
     image: "/images/football-action-01.jpg",
   },
 ] as const;
@@ -1066,30 +1076,30 @@ export const UNIVERSE_PAGE_CONFIG = {
     line: "amateur" as const,
     brand: AMATEUR_BRAND,
     hero: {
-      title: "Le foot amateur.",
+      title: "Le dimanche, sans le chaos.",
       image: "/images/football-amateur-01.jpg",
     },
     highlights: [
-      { label: "Public", value: "Joueurs & coachs" },
-      { label: "Mercato", value: "Mercato Amateur" },
+      { label: "Pour qui", value: "Joueurs & coachs" },
+      { label: "Recrutement", value: "Mercato de zone" },
       { label: "Saison", value: "Matchs & effectif" },
-      { label: "Zone", value: "District & régional" },
+      { label: "Terrain", value: "District → régional" },
     ],
-    modulesTitle: "Foot amateur connecté",
+    modulesTitle: "Tout le week-end amateur",
     modulesSubtitle:
-      "Joueurs et coachs amateur — Mercato local, matchs, effectif et messagerie, distinct du pôle Pro.",
+      "Deux espaces dans une même coque : joueur (CV, candidatures) et coach (effectif, convocations) — distinct du pôle Pro.",
     modules: AMATEUR_MODULES as readonly UniverseModule[],
     journeyIds: ["player", "coach"] as const,
     audienceNote:
-      "Foot M ou F ? Choisissez votre espace à l'inscription. Staff professionnel ? Direction Pro Day Pro.",
+      "Foot M ou F : tu choisis à l'inscription. Staff pro, agent ou DS ? Direction les pôles Pro.",
     showPulse: true,
     showVerification: true,
     pricingPlanIds: ["player_plus", "coach_pro"] as const,
-    pricingTitle: "Formules amateur",
+    pricingTitle: "Formules Amateur",
     cta: {
-      title: "Créez votre compte Amateur",
+      title: "Rejoindre le pôle Amateur",
       description:
-        "Joueur ou coach amateur — inscription en quelques minutes, validation pour les coachs.",
+        "Joueur ou coach — inscription rapide, validation diplôme pour les coachs. Mercato local dès le premier profil.",
       beta: "Liste d'attente Amateur",
     },
   },
@@ -1097,30 +1107,30 @@ export const UNIVERSE_PAGE_CONFIG = {
     line: "supporter" as const,
     brand: SUPPORTER_BRAND,
     hero: {
-      title: "Le foot, ensemble.",
+      title: "Ta tribune. Zéro paywall.",
       image: "/images/football-fans-01.jpg",
     },
     highlights: [
-      { label: "Tarif", value: "100 % gratuit" },
-      { label: "Live", value: "Matchs PRODAY + monde" },
-      { label: "Suivis", value: "Illimités" },
-      { label: "Communauté", value: "Fil & débats" },
+      { label: "Prix", value: "Toujours 0 €" },
+      { label: "Live", value: "PRODAY + monde" },
+      { label: "Favoris", value: "Suivis illimités" },
+      { label: "Voix", value: "Débats & moments" },
     ],
-    modulesTitle: "Tribune numérique gratuite",
+    modulesTitle: "La tribune numérique",
     modulesSubtitle:
-      "Supporters — live scores, suivis, débats, réels et shop merch. Sans Mercato ni abonnement store.",
+      "Scores, suivis, fil communautaire et merch — sans Mercato, sans abonnement. Juste le match.",
     modules: SUPPORTER_MODULES as readonly UniverseModule[],
-    journeyIds: ["player"] as const,
+    journeyIds: ["supporter"] as const,
     audienceNote:
-      "Joueur ou coach ? Direction Amateur ou Pro. Partenaire commercial ? Direction Partenaires.",
+      "Tu joues ou tu coaches ? Pôle Amateur ou Pro. Tu représentes une marque ? Pôle Sponsor.",
     showPulse: false,
     showVerification: false,
     pricingPlanIds: [] as const,
-    pricingTitle: "Tribune 100 % gratuite",
+    pricingTitle: "Gratuit. Pour de vrai.",
     cta: {
-      title: "Créez votre compte Supporter",
+      title: "Entrer dans la tribune",
       description:
-        "Inscription supporter gratuite — matchs live, suivis illimités, débats et shop merch.",
+        "Compte supporter gratuit — live le jour J, suivis sans limite, débats et shop merch.",
       beta: "Liste d'attente Supporter",
     },
   },
@@ -1171,30 +1181,30 @@ export const UNIVERSE_PAGE_CONFIG = {
     line: "pro" as const,
     brand: PRO_JOUEUR_BRAND,
     hero: {
-      title: "Ta carrière, ta visibilité.",
+      title: "Ta carrière, pas un CV Word.",
       image: "/images/football-action-01.jpg",
     },
     highlights: [
-      { label: "Public", value: "Joueurs pro" },
-      { label: "Carrière", value: "Contrat & essais" },
-      { label: "Portfolio", value: "Stats validées coach" },
-      { label: "Visibilité", value: "Visibilité & scouting" },
+      { label: "Pour qui", value: "Joueurs sous contrat" },
+      { label: "Focus", value: "Essais & opportunités" },
+      { label: "Preuve", value: "Stats validées coach" },
+      { label: "Réseau", value: "Agent & scouting" },
     ],
-    modulesTitle: "Coque joueur professionnel",
+    modulesTitle: "La coque joueur pro",
     modulesSubtitle:
-      "Carrière, opportunités, portfolio et groupe — distinct du foot amateur et du pôle club.",
+      "Accueil Carrière, portfolio scouting et opportunités — loin du Mercato district, proche des recruteurs.",
     modules: PRO_JOUEUR_MODULES as readonly UniverseModule[],
-    journeyIds: ["player"] as const,
+    journeyIds: ["pro_player"] as const,
     audienceNote:
-      "Foot amateur district ? Direction pôle Amateur. Agent ou recruteur ? Direction Pro Staff.",
+      "Foot district / régional ? Pôle Amateur. Tu recrutes ou tu représentes ? Pôle Pro Staff ou Pro Club.",
     showPulse: true,
     showVerification: true,
     pricingPlanIds: ["player_plus"] as const,
     pricingTitle: "Formule Pro Joueur",
     cta: {
-      title: "Créez votre compte Pro Joueur",
+      title: "Passe en mode Pro Joueur",
       description:
-        "Inscription joueur pro — portfolio scouting, alertes intérêt clubs et mandat agent.",
+        "Portfolio scouting, alertes clubs et mandat agent — la coque pensée pour le terrain pro.",
       beta: "Liste d'attente Pro Joueur",
     },
   },
@@ -1202,30 +1212,30 @@ export const UNIVERSE_PAGE_CONFIG = {
     line: "pro" as const,
     brand: PRO_CLUB_BRAND,
     hero: {
-      title: "Ta structure, tes équipes.",
+      title: "Toute la structure. Un regard.",
       image: "/images/football-club-01.jpg",
     },
     highlights: [
-      { label: "Public", value: "Clubs & DS" },
-      { label: "Structure", value: "Multi-équipes" },
+      { label: "Pour qui", value: "Présidents & DS" },
+      { label: "Organisation", value: "Multi-catégories" },
       { label: "Recrutement", value: "Annonces actives" },
-      { label: "Vitrine", value: "Page publique" },
+      { label: "Image", value: "Vitrine publique" },
     ],
-    modulesTitle: "Gestion de structure",
+    modulesTitle: "Piloter la structure",
     modulesSubtitle:
-      "Président et staff administratif — équipes, adhésions validées et recrutement local.",
+      "Arbre des équipes, adhésions, calendrier global et page publique — le bureau du club, version ProDay.",
     modules: PRO_CLUB_MODULES as readonly UniverseModule[],
     journeyIds: ["club"] as const,
     audienceNote:
-      "Joueur ou coach d'une équipe ? Ils utilisent Pro Joueur ou Amateur. Staff métier ? Pro Staff.",
+      "Joueurs et coachs d'équipe restent sur Pro Joueur ou Amateur. Métiers staff (agent, recruteur) : Pro Staff.",
     showPulse: false,
     showVerification: true,
     pricingPlanIds: ["club_pro"] as const,
     pricingTitle: "Formule Pro Club",
     cta: {
-      title: "Créez votre compte Pro Club",
+      title: "Structurer le club sur ProDay",
       description:
-        "Structure officielle — validation mandat FFF, multi-équipes et annonces recrutement.",
+        "Validation mandat, multi-équipes et recrutement local — pour le bureau et la direction sportive.",
       beta: "Liste d'attente Pro Club",
     },
   },
@@ -1233,22 +1243,22 @@ export const UNIVERSE_PAGE_CONFIG = {
     line: "pro" as const,
     brand: PRO_STAFF_BRAND,
     hero: {
-      title: "Ton métier du foot pro.",
+      title: "Ton métier. Ta coque.",
       image: "/showcase/classic-staff.jpg",
     },
     highlights: [
       { label: "Métiers", value: "4 profils staff" },
-      { label: "Mercato", value: "Mercato Pro" },
-      { label: "Mandats", value: "Agent & scouting" },
-      { label: "Réseau", value: "Messagerie vérifiée" },
+      { label: "Marché", value: "Mercato Pro" },
+      { label: "Agent", value: "Mandats & CRM" },
+      { label: "Confiance", value: "Profils vérifiés" },
     ],
-    modulesTitle: "Outils staff professionnel",
+    modulesTitle: "Outils des métiers pro",
     modulesSubtitle:
-      "Agent, recruteur, coach pro et organisateur — chaque métier a sa coque et ses quotas.",
+      "Recruteur, coach pro, agent et organisateur Arena — chacun son parcours, une messagerie tracée.",
     modules: PRO_STAFF_MODULES as readonly UniverseModule[],
     journeyIds: ["coach", "recruiter", "agent", "organizer"] as const,
     audienceNote:
-      "Joueur pro ? Pro Joueur. Président de club ? Pro Club. Partenaire commercial ? Partenaires.",
+      "Joueur sous contrat ? Pro Joueur. Président / DS ? Pro Club. Marque ? Pôle Sponsor.",
     showPulse: false,
     showVerification: true,
     pricingPlanIds: [
@@ -1259,9 +1269,9 @@ export const UNIVERSE_PAGE_CONFIG = {
     ] as const,
     pricingTitle: "Formules Pro Staff",
     cta: {
-      title: "Créez votre compte Pro Staff",
+      title: "Rejoindre le pôle Pro Staff",
       description:
-        "Agent, recruteur, coach pro ou organisateur — validation diplôme ou licence incluse.",
+        "Agent, recruteur, coach pro ou organisateur — validation diplôme ou licence, puis le terrain.",
       beta: "Liste d'attente Pro Staff",
     },
   },

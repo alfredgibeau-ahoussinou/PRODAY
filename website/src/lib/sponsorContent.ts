@@ -3,18 +3,18 @@ import { SPONSOR_PARTNER_CONTACT_EMAIL } from "./content";
 export const SPONSOR_BRAND = {
   name: "Pro Day Sponsor",
   shortName: "Sponsor",
-  tagline: "VISIBILITÉ • MESURE • IMPACT",
+  tagline: "Visibilité · ROI · Terrain",
   mission:
-    "La plateforme où les marques rencontrent le football amateur et semi-pro — campagnes ciblées, ROI mesurable, sans intermédiaire.",
+    "Les marques rencontrent clubs, joueurs et organisateurs actifs — campagnes ciblées, KPIs lisibles, sans intermédiaire opaque.",
   accent: "#D4AF37",
   accentDark: "#92700C",
 } as const;
 
 export const SPONSOR_HERO = {
   kicker: "PÔLE SPONSOR",
-  title: "Votre marque au cœur du terrain",
+  title: "Votre marque. Le vrai terrain.",
   description:
-    "Touchez clubs, joueurs et organisateurs actifs sur ProDay. Visibilité mesurée, offres géolocalisées et tableau de bord dédié — un espace corporate conçu pour les décideurs marketing.",
+    "Touchez clubs, joueurs et organisateurs actifs sur ProDay. Visibilité mesurée, offres géolocalisées et tableau de bord — un espace pensé pour les décideurs marketing.",
   image: "/showcase/classic-exp-sponsors.jpg",
 } as const;
 
