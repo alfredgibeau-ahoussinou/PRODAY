@@ -156,7 +156,7 @@ function createStyles(c: AppColors) {
       justifyContent: 'center',
       marginTop: 2,
     },
-    checkboxOn: { backgroundColor: c.ink, borderColor: c.ink },
+    checkboxOn: { backgroundColor: c.accent, borderColor: c.accent },
     checkMark: { color: c.brandInverse, fontSize: 14, fontWeight: '900' },
     consentText: { flex: 1, fontSize: 13, color: c.textSecondary, lineHeight: 20 },
   });

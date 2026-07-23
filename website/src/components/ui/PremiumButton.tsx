@@ -4,7 +4,7 @@ import { clsx } from "clsx";
 type PremiumButtonProps = {
   href: string;
   children: React.ReactNode;
-  variant?: "primary" | "ghost" | "outline";
+  variant?: "primary" | "ghost" | "outline" | "sponsor";
   className?: string;
 };
 
@@ -19,12 +19,15 @@ export function PremiumButton({
       href={href}
       className={clsx(
         "inline-flex items-center justify-center gap-2 rounded-full px-7 py-3.5 text-sm font-bold uppercase tracking-wide transition duration-300",
+        "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2",
         variant === "primary" &&
-          "bg-[var(--proday-accent)] text-black shadow-lg shadow-cyan-500/20 hover:scale-[1.02] hover:bg-cyan-300 hover:shadow-cyan-400/30 active:bg-cyan-400",
+          "cta-lift bg-[var(--proday-accent)] text-black shadow-[0_0_0_1px_rgba(34,211,238,0.35),0_12px_40px_-12px_rgba(34,211,238,0.45)] hover:bg-cyan-300 hover:shadow-[0_0_0_1px_rgba(103,232,249,0.45),0_16px_48px_-12px_rgba(34,211,238,0.5)] active:translate-y-0 active:bg-cyan-400 focus-visible:outline-cyan-400/60",
         variant === "ghost" &&
-          "bg-white/5 text-white backdrop-blur-sm hover:bg-[var(--proday-accent-muted)] hover:text-[var(--proday-accent)] active:bg-white/10",
+          "bg-white/[0.04] text-white backdrop-blur-sm hover:bg-[var(--proday-accent-muted)] hover:text-[var(--proday-accent)] active:bg-white/10 focus-visible:outline-cyan-400/40",
         variant === "outline" &&
-          "border border-white/20 text-white hover:border-[var(--proday-accent)] hover:text-[var(--proday-accent)] hover:shadow-[0_0_24px_rgba(34,211,238,0.15)] active:bg-white/5",
+          "border border-white/18 text-white hover:border-[var(--proday-accent)]/70 hover:text-[var(--proday-accent)] hover:shadow-[0_0_28px_rgba(34,211,238,0.12)] active:bg-white/[0.04] focus-visible:outline-cyan-400/40",
+        variant === "sponsor" &&
+          "bg-[#D4AF37] text-[#0a0a0a] shadow-[0_12px_40px_-12px_rgba(212,175,55,0.45)] hover:bg-[#E0C04A] active:bg-[#C4A030] focus-visible:outline-[#D4AF37]/60",
         className,
       )}
     >

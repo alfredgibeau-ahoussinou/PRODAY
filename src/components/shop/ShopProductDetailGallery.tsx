@@ -69,7 +69,7 @@ export const ShopProductDetailGallery: React.FC<ShopProductDetailGalleryProps> =
       </View>
 
       {product.badge ? (
-        <View style={[styles.badge, { backgroundColor: c.ink }]}>
+        <View style={[styles.badge, { backgroundColor: c.accent }]}>
           <ProDayText variant="caption" inverse style={styles.badgeText}>
             {product.badge}
           </ProDayText>

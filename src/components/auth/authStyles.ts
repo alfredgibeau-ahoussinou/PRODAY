@@ -220,7 +220,7 @@ export function createAuthStyles(c: AppColors) {
     formCard: {},
     formCardInner: {},
     primaryBtn: {
-      backgroundColor: c.ink,
+      backgroundColor: c.accent,
       borderRadius: radius.pill,
       paddingVertical: spacing.md + 2,
       alignItems: 'center',
@@ -231,7 +231,7 @@ export function createAuthStyles(c: AppColors) {
     },
     primaryDisabled: { opacity: 0.65 },
     primaryBtnText: {
-      color: c.brandInverse,
+      color: '#000000',
       fontWeight: '800',
       fontSize: 16,
       textAlign: 'center',

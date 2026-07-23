@@ -10,6 +10,10 @@ import {
   Inter_800ExtraBold,
   Inter_900Black,
 } from '@expo-google-fonts/inter';
+import {
+  Syne_700Bold,
+  Syne_800ExtraBold,
+} from '@expo-google-fonts/syne';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { type MainTabId } from './src/navigation/MainTabs';
 import {
@@ -78,6 +82,8 @@ export default function App() {
     Inter_700Bold,
     Inter_800ExtraBold,
     Inter_900Black,
+    Syne_700Bold,
+    Syne_800ExtraBold,
   });
 
   const onLayoutRoot = useCallback(() => {
@@ -418,7 +424,7 @@ function AppShell() {
           style={[styles.root, { backgroundColor: shellBackground }]}
           edges={previewUserMode ? [] : ['top', 'left', 'right']}
         >
-          <StatusBar style={isSponsor ? 'light' : 'dark'} />
+          <StatusBar style="light" />
           {previewUserMode ? (
             <AdminPreviewBanner onExitPreview={() => setPreviewUserMode(false)} />
           ) : null}

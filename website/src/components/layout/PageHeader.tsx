@@ -90,7 +90,7 @@ export function PageHeader({
 
   return (
     <header
-      className={`relative overflow-hidden pt-20 sm:pt-24 ${headerBg} ${hasHeroImage ? "min-h-[280px] sm:min-h-[420px] lg:min-h-[520px]" : ""}`}
+      className={`relative overflow-hidden noise pt-20 sm:pt-24 ${headerBg} ${hasHeroImage ? "min-h-[300px] sm:min-h-[440px] lg:min-h-[540px]" : ""}`}
     >
       {image && (
         <div className="absolute inset-0">
@@ -98,20 +98,24 @@ export function PageHeader({
             src={image}
             alt=""
             fill
-            className="object-cover object-center"
+            className="object-cover object-center scale-[1.02]"
             priority
             sizes="100vw"
           />
           <div className={`absolute inset-0 ${overlayGradient}`} />
           <div className="absolute inset-0 hero-overlay-mobile md:hidden" />
           <div className="absolute inset-0 hero-overlay" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_55%_45%_at_15%_35%,rgba(34,211,238,0.08),transparent)]" />
         </div>
       )}
+      {!image && (
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_50%_at_80%_0%,rgba(34,211,238,0.06),transparent)]" />
+      )}
 
-      <div className="relative mx-auto max-w-7xl px-4 pb-12 pt-6 text-center sm:px-6 sm:pb-20 sm:pt-8 md:text-left">
+      <div className="relative mx-auto max-w-7xl px-4 pb-14 pt-6 text-center sm:px-6 sm:pb-24 sm:pt-8 md:text-left">
         <Link
           href={backHref}
-          className={`mb-8 inline-flex items-center gap-2 text-sm font-medium uppercase tracking-wide transition md:mx-0 ${backClass}`}
+          className={`mb-8 inline-flex items-center gap-2 text-sm font-medium uppercase tracking-[0.14em] transition md:mx-0 ${backClass}`}
         >
           <ArrowLeft size={16} />
           {backLabel}
@@ -141,16 +145,16 @@ export function PageHeader({
             </div>
           )}
           <p
-            className={`text-xs font-bold uppercase tracking-[0.28em] ${kickerClass}`}
+            className={`text-xs font-bold uppercase tracking-[0.32em] ${kickerClass}`}
           >
             {kicker}
           </p>
         </motion.div>
         <motion.h1
-          initial={{ opacity: 0, y: 16 }}
+          initial={{ opacity: 0, y: 18 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.05 }}
-          className={`mx-auto mt-3 max-w-3xl font-display text-[clamp(1.75rem,5vw,3.75rem)] font-bold uppercase leading-tight tracking-tight sm:text-5xl md:mx-0 lg:text-6xl ${
+          transition={{ delay: 0.06, duration: 0.55 }}
+          className={`mx-auto mt-3 max-w-3xl font-display text-[clamp(1.85rem,5.2vw,3.85rem)] font-bold uppercase leading-[1.02] tracking-[-0.03em] sm:text-5xl md:mx-0 lg:text-6xl ${
             hasHeroImage ? "text-[var(--proday-accent)] text-accent-glow" : "text-white"
           }`}
         >
@@ -159,8 +163,8 @@ export function PageHeader({
         <motion.p
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className={`mx-auto mt-5 max-w-2xl text-lg md:mx-0 ${descClass}`}
+          transition={{ delay: 0.12 }}
+          className={`mx-auto mt-5 max-w-2xl text-base leading-relaxed sm:text-lg md:mx-0 ${descClass}`}
         >
           {description}
         </motion.p>

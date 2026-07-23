@@ -194,7 +194,7 @@ function createStyles(c: AppColors) {
       borderTopColor: c.border,
     },
     primaryBtn: {
-      backgroundColor: c.ink,
+      backgroundColor: c.accent,
       borderRadius: radius.pill,
       paddingVertical: spacing.md + 2,
       alignItems: 'center',

@@ -6,27 +6,29 @@ export const fontFamily = {
   bold: 'Inter_700Bold',
   extrabold: 'Inter_800ExtraBold',
   black: 'Inter_900Black',
+  display: 'Syne_700Bold',
+  displayBold: 'Syne_800ExtraBold',
 } as const;
 
 export const textVariants = {
   hero: {
-    fontFamily: fontFamily.black,
-    fontSize: 28,
-    fontWeight: '900' as const,
-    letterSpacing: -0.8,
-    lineHeight: 32,
+    fontFamily: fontFamily.displayBold,
+    fontSize: tokens.sizes.hero,
+    fontWeight: '800' as const,
+    letterSpacing: -0.9,
+    lineHeight: 34,
   },
   title: {
-    fontFamily: fontFamily.extrabold,
+    fontFamily: fontFamily.displayBold,
     fontSize: tokens.sizes.title,
     fontWeight: '800' as const,
     letterSpacing: -0.5,
     lineHeight: 28,
   },
   section: {
-    fontFamily: fontFamily.extrabold,
+    fontFamily: fontFamily.display,
     fontSize: tokens.sizes.section,
-    fontWeight: '800' as const,
+    fontWeight: '700' as const,
     letterSpacing: -0.3,
     lineHeight: 22,
   },
@@ -34,7 +36,7 @@ export const textVariants = {
     fontFamily: fontFamily.bold,
     fontSize: 10,
     fontWeight: '700' as const,
-    letterSpacing: 1.4,
+    letterSpacing: 1.6,
     textTransform: 'uppercase' as const,
   },
   body: {
@@ -50,7 +52,7 @@ export const textVariants = {
     lineHeight: 16,
   },
   brand: {
-    fontFamily: fontFamily.extrabold,
+    fontFamily: fontFamily.displayBold,
     fontSize: 18,
     fontWeight: '800' as const,
     letterSpacing: -0.4,

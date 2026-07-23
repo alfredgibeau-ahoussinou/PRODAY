@@ -1,6 +1,6 @@
 /**
- * ProDay — design system v2
- * Monochrome · noir & neutres · accents discrets
+ * ProDay — design system FLASH
+ * Noir profond · cyan électrique · accents de pôle
  */
 
 export const BRAND = {
@@ -8,82 +8,87 @@ export const BRAND = {
   tagline: 'CONNECTER • PROGRESSER • RÉUSSIR',
 } as const;
 
-/** RGB marque (#0A0A0A) — overlays photos */
-export const BRAND_RGB = '10, 10, 10' as const;
+/** RGB fond FLASH (#000000) — overlays photos */
+export const BRAND_RGB = '0, 0, 0' as const;
+
+/** Cyan FLASH — accent marque (aligné site) */
+export const FLASH_CYAN = '#22D3EE' as const;
+export const FLASH_CYAN_DIM = '#0891B2' as const;
 
 export const colors = {
-  /** Noir ProDay — accent principal */
-  accent: '#0A0A0A',
-  accentLight: '#262626',
-  accentSoft: '#F0F0F0',
-  accentMuted: '#D4D4D4',
+  /** Accent marque FLASH */
+  accent: FLASH_CYAN,
+  accentLight: '#67E8F9',
+  accentSoft: 'rgba(34, 211, 238, 0.12)',
+  accentMuted: 'rgba(34, 211, 238, 0.28)',
 
   /** Texte & marque */
-  brand: '#0A0A0A',
-  brandLight: '#262626',
-  brandSoft: '#F0F0F0',
+  brand: FLASH_CYAN,
+  brandLight: '#67E8F9',
+  brandSoft: 'rgba(34, 211, 238, 0.1)',
   brandInverse: '#FFFFFF',
 
-  ink: '#0A0A0A',
-  inkSecondary: '#525252',
-  inkMuted: '#737373',
-  inkFaint: '#A3A3A3',
+  ink: '#FAFAFA',
+  inkSecondary: '#D4D4D4',
+  inkMuted: '#A3A3A3',
+  inkFaint: '#737373',
 
-  /** Fonds neutres */
-  background: '#F7F7F7',
-  backgroundAlt: '#EEEEEE',
-  surface: '#FFFFFF',
-  surfaceMuted: '#F3F3F3',
-  surfaceInverse: '#0A0A0A',
+  /** Fonds FLASH */
+  background: '#000000',
+  backgroundAlt: '#0A0A0A',
+  surface: '#141414',
+  surfaceMuted: '#1A1A1A',
+  surfaceInverse: '#FAFAFA',
   heroMuted: 'rgba(255, 255, 255, 0.72)',
 
   /** Bordures */
-  border: '#E5E5E5',
-  borderStrong: '#0A0A0A',
-  borderMedium: '#CCCCCC',
+  border: 'rgba(255, 255, 255, 0.1)',
+  borderStrong: 'rgba(255, 255, 255, 0.22)',
+  borderMedium: 'rgba(255, 255, 255, 0.14)',
 
-  text: '#0A0A0A',
-  textSecondary: '#525252',
-  textMuted: '#737373',
+  text: '#FAFAFA',
+  textSecondary: '#D4D4D4',
+  textMuted: '#A3A3A3',
 
-  /** États (sémantiques uniquement — pas la marque) */
+  /** États */
   success: '#16A34A',
-  successBg: '#DCFCE7',
+  successBg: 'rgba(22, 163, 74, 0.15)',
   warning: '#EA580C',
-  warningBg: '#FFEDD5',
-  pending: '#737373',
-  pendingBg: '#F3F3F3',
-  error: '#DC2626',
-  errorBg: '#FEE2E2',
+  warningBg: 'rgba(234, 88, 12, 0.15)',
+  pending: '#A3A3A3',
+  pendingBg: 'rgba(163, 163, 163, 0.12)',
+  error: '#EF4444',
+  errorBg: 'rgba(239, 68, 68, 0.15)',
 
-  /** Modules — nuances de gris */
-  tone1: '#0A0A0A',
-  tone2: '#262626',
-  tone3: '#525252',
-  tone4: '#737373',
+  /** Modules */
+  tone1: FLASH_CYAN,
+  tone2: FLASH_CYAN_DIM,
+  tone3: '#67E8F9',
+  tone4: '#A5F3FC',
 
-  /** Compat héritage → noir */
+  /** Compat héritage */
   navy: '#0A0A0A',
-  navySoft: '#262626',
-  blueBright: '#404040',
-  bluePrimary: '#0A0A0A',
-  blueCyan: '#525252',
-  gradientStart: '#0A0A0A',
-  gradientEnd: '#262626',
+  navySoft: '#171717',
+  blueBright: FLASH_CYAN,
+  bluePrimary: FLASH_CYAN,
+  blueCyan: FLASH_CYAN,
+  gradientStart: '#000000',
+  gradientEnd: FLASH_CYAN_DIM,
 } as const;
 
 export const gradients = {
-  hero: ['#0A0A0A', '#262626'] as const,
-  heroDark: ['#0A0A0A', '#171717'] as const,
-  card: ['#F0F0F0', '#FFFFFF'] as const,
-  cta: ['#0A0A0A', '#262626'] as const,
+  hero: ['#000000', '#0A0A0A'] as const,
+  heroDark: ['#000000', '#000000'] as const,
+  card: ['#1A1A1A', '#0A0A0A'] as const,
+  cta: [FLASH_CYAN, FLASH_CYAN_DIM] as const,
 } as const;
 
 export const typography = {
   fontFamily: 'Inter',
+  displayFamily: 'Syne',
   brandSlant: '-3deg',
   sizes: {
-    hero: 28,
+    hero: 30,
     title: 22,
     section: 17,
     body: 15,
@@ -119,39 +124,37 @@ export const radius = {
 export const shadows = {
   card: {
     shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 16,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.45,
+    shadowRadius: 20,
+    elevation: 4,
   },
   interactive: {
-    shadowColor: '#000000',
+    shadowColor: FLASH_CYAN,
     shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.14,
-    shadowRadius: 20,
-    elevation: 5,
+    shadowOpacity: 0.18,
+    shadowRadius: 22,
+    elevation: 6,
   },
   fab: {
-    shadowColor: '#000000',
+    shadowColor: FLASH_CYAN,
     shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.28,
     shadowRadius: 16,
     elevation: 8,
   },
   soft: {
     shadowColor: '#000000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
     elevation: 2,
   },
 } as const;
 
-/** Overlay sombre sur photos */
 export const brandOverlay = (opacity: number): string =>
   `rgba(${BRAND_RGB}, ${opacity})`;
 
-/** Styles de surface réutilisables */
 export const surfaces = {
   card: {
     backgroundColor: colors.surface,
@@ -161,7 +164,7 @@ export const surfaces = {
     ...shadows.card,
   },
   cardFlat: {
-    backgroundColor: colors.surface,
+    backgroundColor: colors.surfaceMuted,
     borderRadius: radius.lg,
     borderWidth: 1,
     borderColor: colors.border,
@@ -183,12 +186,12 @@ export const discover = {
   inkSecondary: colors.inkSecondary,
   inkMuted: colors.inkMuted,
   inkFaint: colors.inkFaint,
-  hero: colors.surfaceInverse,
+  hero: colors.background,
   heroText: colors.brandInverse,
   heroMuted: colors.heroMuted,
-  heroLine: 'rgba(255, 255, 255, 0.28)',
+  heroLine: 'rgba(255, 255, 255, 0.2)',
   accent: colors.accent,
-  accentText: colors.brandInverse,
+  accentText: '#000000',
   tone1: colors.tone1,
   tone2: colors.tone2,
   tone3: colors.tone3,
@@ -209,7 +212,7 @@ export const discoverType = {
     fontSize: 11,
     fontWeight: '700' as const,
     letterSpacing: 1.8,
-    color: colors.textSecondary,
+    color: colors.accent,
     textTransform: 'uppercase' as const,
   },
   sectionTitle: {

@@ -67,12 +67,12 @@ export function SponsorPricingSection({
       {!compact && (
         <div className="max-w-2xl">
           <p
-            className={`text-xs font-semibold uppercase tracking-[0.2em] ${dark ? "text-blue-300/80" : "text-neutral-500"}`}
+            className={`text-xs font-semibold uppercase tracking-[0.22em] ${dark ? "text-amber-400/90" : "text-neutral-500"}`}
           >
             Partenaires
           </p>
           <h2
-            className={`font-display mt-2 text-3xl font-bold sm:text-4xl ${dark ? "text-white" : "text-neutral-900"}`}
+            className={`font-display mt-2 text-3xl font-bold uppercase tracking-tight sm:text-4xl ${dark ? "text-white" : "text-neutral-900"}`}
           >
             {SPONSOR_PRICING_INTRO.title}
           </h2>
@@ -98,8 +98,8 @@ export function SponsorPricingSection({
                     : "rounded-2xl border border-neutral-200 bg-neutral-50/80 p-5"
                 }
               >
-                <Icon size={22} className={dark ? "text-blue-400" : "text-blue-800"} />
-                <h3 className={`mt-3 font-bold ${dark ? "text-white" : "text-neutral-900"}`}>
+                <Icon size={22} className={dark ? "text-amber-400" : "text-blue-800"} />
+                <h3 className={`mt-3 font-display font-bold ${dark ? "text-white" : "text-neutral-900"}`}>
                   {pillar.title}
                 </h3>
                 <p className={`mt-2 text-sm ${dark ? "text-white/55" : "text-neutral-600"}`}>

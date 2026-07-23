@@ -81,12 +81,12 @@ export function UniversePage({ universe }: UniversePageProps) {
           {config.highlights.map((h) => (
             <div
               key={h.label}
-              className={`rounded-2xl border p-5 ${theme.highlightBorder}`}
+              className={`card-premium rounded-2xl p-5 ${theme.highlightBorder}`}
             >
               <p className={`text-xs font-semibold uppercase tracking-wider ${theme.highlightLabel}`}>
                 {h.label}
               </p>
-              <p className="mt-2 text-lg font-bold text-white">{h.value}</p>
+              <p className="mt-2 font-display text-lg font-bold text-white">{h.value}</p>
             </div>
           ))}
         </div>
@@ -94,7 +94,7 @@ export function UniversePage({ universe }: UniversePageProps) {
 
       <section id="modules" className="scroll-mt-24 bg-[#030303] py-16">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <h2 className="font-display text-2xl font-bold text-white sm:text-3xl">{config.modulesTitle}</h2>
+          <h2 className="font-display text-2xl font-bold uppercase tracking-tight text-white sm:text-3xl">{config.modulesTitle}</h2>
           <p className="mt-3 max-w-3xl text-white/55">{config.modulesSubtitle}</p>
           <UniverseModuleExplorer universe={themeId} modules={config.modules} />
         </div>

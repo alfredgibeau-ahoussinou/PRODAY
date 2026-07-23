@@ -148,7 +148,7 @@ export const PlayerCvEditorScreen: React.FC<PlayerCvEditorScreenProps> = ({
             onSubmitEditing={addAchievement}
           />
           <TouchableOpacity
-            style={[styles.addBtn, { backgroundColor: colors.ink }]}
+            style={[styles.addBtn, { backgroundColor: colors.accent }]}
             onPress={addAchievement}
           >
             <Icon name="add" size={20} color={colors.brandInverse} />
@@ -160,7 +160,7 @@ export const PlayerCvEditorScreen: React.FC<PlayerCvEditorScreenProps> = ({
         </Text>
 
         <TouchableOpacity
-          style={[styles.saveBtn, { backgroundColor: colors.ink }]}
+          style={[styles.saveBtn, { backgroundColor: colors.accent }]}
           onPress={handleSave}
           disabled={saving}
           activeOpacity={0.9}

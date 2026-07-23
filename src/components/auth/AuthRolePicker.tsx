@@ -124,7 +124,7 @@ export const AuthRolePicker: React.FC<AuthRolePickerProps> = ({
             style={[
               styles.card,
               { backgroundColor: colors.surface, borderColor: colors.border },
-              active && { backgroundColor: colors.ink, borderColor: colors.ink },
+              active && { backgroundColor: colors.accent, borderColor: colors.accent },
             ]}
             onPress={() => onChange(r.value)}
             activeOpacity={0.85}
@@ -133,13 +133,13 @@ export const AuthRolePicker: React.FC<AuthRolePickerProps> = ({
               style={[
                 styles.iconWrap,
                 { borderColor: colors.border, backgroundColor: colors.surfaceMuted },
-                active && { backgroundColor: colors.surfaceInverse, borderColor: colors.ink },
+                active && { backgroundColor: colors.surfaceInverse, borderColor: colors.accent },
               ]}
             >
               <Icon
                 name={r.icon}
                 size={22}
-                color={active ? colors.brandInverse : ink}
+                color={active ? colors.accent : ink}
               />
             </View>
             <View style={styles.body}>
@@ -147,7 +147,7 @@ export const AuthRolePicker: React.FC<AuthRolePickerProps> = ({
                 style={[
                   styles.title,
                   { color: colors.text },
-                  active && { color: colors.brandInverse },
+                  active && { color: '#000000' },
                 ]}
               >
                 {r.label}
@@ -156,14 +156,14 @@ export const AuthRolePicker: React.FC<AuthRolePickerProps> = ({
                 style={[
                   styles.desc,
                   { color: colors.textMuted },
-                  active && { color: 'rgba(255,255,255,0.78)' },
+                  active && { color: 'rgba(0,0,0,0.65)' },
                 ]}
               >
                 {r.description}
               </Text>
             </View>
             {active ? (
-              <Icon name="checkmark-circle" size={22} color={colors.brandInverse} />
+              <Icon name="checkmark-circle" size={22} color="#000000" />
             ) : null}
           </TouchableOpacity>
         );

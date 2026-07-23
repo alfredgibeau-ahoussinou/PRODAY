@@ -352,7 +352,7 @@ function createCardStyles(c: AppColors) {
       alignItems: 'center',
       justifyContent: 'center',
       gap: 6,
-      backgroundColor: c.ink,
+      backgroundColor: c.accent,
       borderRadius: radius.md,
       paddingVertical: spacing.sm,
       minHeight: 44,

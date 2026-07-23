@@ -77,7 +77,7 @@ function createStyles(c: AppColors) {
       backgroundColor: c.background,
     },
     actionPrimary: { backgroundColor: c.brand, borderColor: c.brand },
-    actionDanger: { backgroundColor: c.ink, borderColor: c.ink },
+    actionDanger: { backgroundColor: c.accent, borderColor: c.accent },
     actionDisabled: { opacity: 0.5 },
     actionLabel: { fontSize: 11, fontWeight: '800', color: c.text },
     actionLabelLight: { color: c.brandInverse },

@@ -93,8 +93,8 @@ function createStyles(c: AppColors) {
       borderColor: c.border,
     },
     chipOn: {
-      backgroundColor: c.ink,
-      borderColor: c.ink,
+      backgroundColor: c.accent,
+      borderColor: c.accent,
     },
     chipLabel: {
       fontWeight: '700',

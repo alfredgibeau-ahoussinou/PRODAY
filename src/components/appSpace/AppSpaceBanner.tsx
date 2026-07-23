@@ -173,7 +173,7 @@ function createPillStyles(c: AppColors) {
       borderWidth: 1,
       borderColor: c.border,
     },
-    pillOn: { backgroundColor: c.ink, borderColor: c.ink },
+    pillOn: { backgroundColor: c.accent, borderColor: c.accent },
     text: { fontSize: 10, fontWeight: '800', color: c.text },
     textOn: { color: c.brandInverse },
   });

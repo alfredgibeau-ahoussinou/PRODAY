@@ -118,7 +118,7 @@ function createStyles(c: AppColors) {
       backgroundColor: c.background,
     },
     tabActive: {
-      backgroundColor: c.ink,
+      backgroundColor: c.accent,
       borderColor: c.brand,
     },
     tabLabel: {

@@ -804,7 +804,7 @@ function createStyles(c: AppColors) {
       borderColor: c.border,
       backgroundColor: c.surface,
     },
-    chipActive: { backgroundColor: c.ink, borderColor: c.accent },
+    chipActive: { backgroundColor: c.accent, borderColor: c.accent },
     chipText: { fontSize: 12, fontWeight: '800', color: c.text },
     chipTextActive: { color: c.brandInverse },
     footer: {
@@ -814,7 +814,7 @@ function createStyles(c: AppColors) {
       borderTopWidth: 1,
     },
     primary: {
-      backgroundColor: c.ink,
+      backgroundColor: c.accent,
       borderRadius: radius.md,
       padding: spacing.lg,
       alignItems: 'center',

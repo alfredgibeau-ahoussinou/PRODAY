@@ -208,7 +208,7 @@ export const ShopProductDetailScreen: React.FC<ShopProductDetailScreenProps> = (
                       },
                     ]}
                   >
-                    <View style={[styles.stepNum, { backgroundColor: c.ink }]}>
+                    <View style={[styles.stepNum, { backgroundColor: c.accent }]}>
                       <ProDayText variant="caption" inverse style={styles.stepNumText}>
                         {index + 1}
                       </ProDayText>

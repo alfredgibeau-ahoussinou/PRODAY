@@ -141,7 +141,7 @@ export const DiscoverHomeScroll: React.FC<DiscoverHomeScrollProps> = ({
 
       <StaggerReveal index={6}>
         <PressableSpring
-          style={[styles.cta, { backgroundColor: colors.ink }, shadows.interactive]}
+          style={[styles.cta, { backgroundColor: colors.accent }, shadows.interactive]}
           onPress={onSignup}
           scaleTo={0.97}
           haptic

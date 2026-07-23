@@ -63,7 +63,7 @@ export function PlanDetailCard({
                 Elite
               </span>
             )}
-            <h3 className="mt-3 font-display text-2xl font-bold text-white">
+            <h3 className="mt-3 font-display text-2xl font-bold tracking-tight text-white">
               {plan.label}
             </h3>
             <p className={`mt-1 text-sm ${styles.textMuted}`}>{plan.tagline}</p>

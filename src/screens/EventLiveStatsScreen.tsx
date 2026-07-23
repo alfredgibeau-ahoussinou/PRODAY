@@ -284,7 +284,7 @@ function createStyles(c: AppColors) {
     borderWidth: 1,
     borderColor: c.border,
   },
-  playerChipActive: { backgroundColor: c.ink, borderColor: c.ink },
+  playerChipActive: { backgroundColor: c.accent, borderColor: c.accent },
   playerChipText: { fontSize: 12, fontWeight: '700', color: c.textSecondary },
   playerChipTextActive: { color: c.brandInverse },
   input: {
@@ -321,7 +321,7 @@ function createStyles(c: AppColors) {
   timelinePlayer: { fontSize: 12, color: c.textMuted },
   applyBtn: {
     marginTop: spacing.xl,
-    backgroundColor: c.ink,
+    backgroundColor: c.accent,
     padding: spacing.lg,
     borderRadius: radius.md,
     alignItems: 'center',

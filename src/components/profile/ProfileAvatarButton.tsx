@@ -88,7 +88,7 @@ function createStyles(c: AppColors) {
     },
     image: { resizeMode: 'cover' },
     placeholder: {
-      backgroundColor: c.ink,
+      backgroundColor: c.accent,
       alignItems: 'center',
       justifyContent: 'center',
     },

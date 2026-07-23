@@ -844,11 +844,11 @@ function createStyles(c: AppColors) {
     borderColor: c.border,
     backgroundColor: c.surface,
   },
-  tabBtnOn: { backgroundColor: c.ink, borderColor: c.ink },
+  tabBtnOn: { backgroundColor: c.accent, borderColor: c.accent },
   tabText: { color: c.textSecondary, fontSize: 12, fontWeight: '700' },
   tabTextOn: { color: c.brandInverse },
   createEventBtn: {
-    backgroundColor: c.ink,
+    backgroundColor: c.accent,
     borderRadius: radius.md,
     paddingVertical: spacing.md,
     alignItems: 'center',
@@ -900,7 +900,7 @@ function createStyles(c: AppColors) {
   },
   infoText: { flex: 1, color: c.textSecondary, fontSize: 11, lineHeight: 17 },
   primaryBtn: {
-    backgroundColor: c.ink,
+    backgroundColor: c.accent,
     borderRadius: radius.md,
     alignItems: 'center',
     paddingVertical: spacing.md,

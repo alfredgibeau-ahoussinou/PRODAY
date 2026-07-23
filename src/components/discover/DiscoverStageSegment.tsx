@@ -102,7 +102,7 @@ function createStyles(c: AppColors) {
       top: PADDING,
       left: 0,
       bottom: PADDING,
-      backgroundColor: c.ink,
+      backgroundColor: c.accent,
       borderRadius: radius.pill,
     },
     tab: {

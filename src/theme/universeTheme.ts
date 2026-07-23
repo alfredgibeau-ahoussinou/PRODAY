@@ -12,18 +12,18 @@ export { proColorOverrides, proGradients } from './proThemeColors';
 
 export type AppColors = { [K in keyof typeof baseColors]: string };
 
-/** Homme — monochrome + touche terrain (vert discret). */
+/** Homme — FLASH noir + touche terrain (vert discret). */
 export const hommeColorOverrides = {
-  accentSoft: '#F0FDF4',
-  accentMuted: '#BBF7D0',
-  brandSoft: '#F0FDF4',
-  background: '#F6F8F6',
-  backgroundAlt: '#ECFDF5',
-  surfaceMuted: '#F4FAF6',
-  border: '#D8E8DE',
-  borderStrong: '#15803D',
-  borderMedium: '#BBF7D0',
-  tone4: '#15803D',
+  accent: '#4ADE80',
+  accentLight: '#86EFAC',
+  accentSoft: 'rgba(74, 222, 128, 0.14)',
+  accentMuted: 'rgba(74, 222, 128, 0.32)',
+  brand: '#4ADE80',
+  brandLight: '#86EFAC',
+  brandSoft: 'rgba(74, 222, 128, 0.1)',
+  borderStrong: 'rgba(74, 222, 128, 0.55)',
+  borderMedium: 'rgba(74, 222, 128, 0.28)',
+  tone4: '#4ADE80',
   gradientEnd: '#15803D',
 } as const;
 
@@ -53,4 +53,3 @@ export { womanColorOverrides, womanGradients } from './prodayWomanTheme';
 export { amateurColorOverrides, amateurGradients } from './prodayAmateurTheme';
 export { supporterColorOverrides, supporterGradients } from './prodaySupporterTheme';
 export { santeColorOverrides, santeGradients } from './prodaySanteTheme';
-

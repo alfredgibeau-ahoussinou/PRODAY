@@ -2,7 +2,7 @@ import type { ProductLineId } from '../models/ProductLine';
 import { isProProductLine } from '../models/ProductLine';
 import type { UserRole } from '../models/User';
 import { isMedicalPractitionerRole, MEDICAL_THEME } from '../content/medicalExperience';
-import { colors } from './designTokens';
+import { FLASH_CYAN, colors } from './designTokens';
 import {
   hommeColorOverrides,
   proColorOverrides,
@@ -60,6 +60,11 @@ export type PoleTabBarChrome = {
   overflowKicker: string;
 };
 
+/** Dock FLASH sombre partagé */
+const FLASH_DOCK_BG = 'rgba(8, 8, 8, 0.92)';
+const FLASH_DOCK_BORDER = 'rgba(255, 255, 255, 0.1)';
+const FLASH_INACTIVE = '#A3A3A3';
+
 function makeChrome(
   palette: PolePalette,
   config: {
@@ -84,36 +89,36 @@ function makeChrome(
     flatLayout: flat,
     accent,
     activeIcon: config.activeIcon ?? accent,
-    inactiveIcon: palette.textMuted,
-    barBackground: config.barBackground ?? palette.brandSoft,
-    barBorderColor: config.barBorderColor ?? palette.border,
-    rootBackground: palette.background,
-    centerButtonIdle: config.centerButtonIdle ?? palette.ink,
+    inactiveIcon: FLASH_INACTIVE,
+    barBackground: config.barBackground ?? FLASH_DOCK_BG,
+    barBorderColor: config.barBorderColor ?? FLASH_DOCK_BORDER,
+    rootBackground: palette.background || '#000000',
+    centerButtonIdle: config.centerButtonIdle ?? accent,
     centerButtonBorder: palette.accentSoft,
     centerButtonBorderWidth: flat ? 0 : 3,
     centerButtonLift: config.centerButtonLift ?? (flat ? 0 : -14),
     centerButtonSize: config.centerButtonSize ?? (flat ? 0 : 56),
-    barBorderRadius: config.layout === 'dock' ? 16 : 22,
+    barBorderRadius: config.layout === 'dock' ? 18 : 22,
     barBorderWidth: 1,
-    topAccentColor: config.topAccentColor ?? palette.borderStrong,
+    topAccentColor: config.topAccentColor ?? accent,
     topAccentHeight: flat ? 2 : 3,
     barShadow: true,
-    badgeColor: config.badgeColor ?? palette.brand,
+    badgeColor: config.badgeColor ?? accent,
     overflowKicker: config.overflowKicker,
   };
 }
 
 const HOMME_PALETTE: PolePalette = {
-  accent: '#15803D',
-  brand: colors.ink,
+  accent: hommeColorOverrides.accent ?? '#4ADE80',
+  brand: hommeColorOverrides.brand ?? '#4ADE80',
   ink: colors.ink,
   accentSoft: hommeColorOverrides.accentSoft,
-  border: hommeColorOverrides.border,
+  border: colors.border,
   borderStrong: hommeColorOverrides.borderStrong,
-  surface: '#FFFFFF',
-  background: hommeColorOverrides.background,
-  textMuted: '#64748B',
-  brandSoft: '#FFFFFF',
+  surface: colors.surface,
+  background: colors.background,
+  textMuted: colors.textMuted,
+  brandSoft: hommeColorOverrides.brandSoft,
 };
 
 const WOMAN_PALETTE: PolePalette = {
@@ -181,16 +186,16 @@ const CHROME_BY_LINE: Record<ProductLineId, PoleTabBarChrome> = {
   homme: makeChrome(HOMME_PALETTE, {
     layout: 'pill',
     overflowKicker: 'PRO DAY MAN',
-    centerButtonIdle: colors.ink,
-    barBackground: HOMME_PALETTE.surface,
+    accent: HOMME_PALETTE.accent,
+    centerButtonIdle: HOMME_PALETTE.accent,
+    topAccentColor: HOMME_PALETTE.accent,
   }),
   woman: makeChrome(WOMAN_PALETTE, {
     layout: 'pill',
     overflowKicker: 'PRO DAY WOMAN',
-    centerButtonIdle: WOMAN_PALETTE.brand,
+    centerButtonIdle: WOMAN_PALETTE.accent,
     centerButtonLift: -18,
     centerButtonSize: 58,
-    barBackground: WOMAN_PALETTE.surface,
     topAccentColor: WOMAN_PALETTE.accent,
   }),
   amateur: makeChrome(AMATEUR_PALETTE, {
@@ -220,7 +225,6 @@ const CHROME_BY_LINE: Record<ProductLineId, PoleTabBarChrome> = {
     overflowKicker: 'PRO DAY PRO',
     centerButtonLift: -12,
     centerButtonSize: 54,
-    barBackground: PRO_PALETTE.surface,
     topAccentColor: PRO_PALETTE.accent,
   }),
   pro_player: makeChrome(PRO_PLAYER_MALE_PALETTE, {
@@ -228,28 +232,25 @@ const CHROME_BY_LINE: Record<ProductLineId, PoleTabBarChrome> = {
     flatLayout: true,
     overflowKicker: 'PRO JOUEUR',
     accent: PRO_PLAYER_MALE_PALETTE.accent,
-    topAccentColor: '#3B82F6',
-    barBackground: PRO_PLAYER_MALE_PALETTE.brandSoft,
-    barBorderColor: '#BFDBFE',
+    topAccentColor: PRO_PLAYER_MALE_PALETTE.accent,
+    barBorderColor: PRO_PLAYER_MALE_PALETTE.borderStrong,
   }),
   pro_club: makeChrome(PRO_PALETTE, {
     layout: 'dock',
     flatLayout: true,
     overflowKicker: 'PRO CLUB',
-    accent: '#1E3A8A',
-    centerButtonIdle: '#1E3A8A',
-    topAccentColor: '#1E3A8A',
-    barBackground: '#EFF6FF',
-    barBorderColor: '#93C5FD',
+    accent: '#38BDF8',
+    centerButtonIdle: '#38BDF8',
+    topAccentColor: '#38BDF8',
+    barBorderColor: 'rgba(56, 189, 248, 0.35)',
   }),
   pro_staff: makeChrome(PRO_PALETTE, {
     layout: 'dock',
     flatLayout: true,
     overflowKicker: 'PRO STAFF',
-    accent: '#1D4ED8',
-    topAccentColor: '#2563EB',
-    barBackground: PRO_PALETTE.surfaceMuted ?? PRO_PALETTE.brandSoft,
-    barBorderColor: '#BFDBFE',
+    accent: '#818CF8',
+    topAccentColor: '#818CF8',
+    barBorderColor: 'rgba(129, 140, 248, 0.35)',
   }),
 };
 
@@ -259,9 +260,8 @@ const CHROME_BY_SEGMENT: Partial<Record<string, PoleTabBarChrome>> = {
     flatLayout: true,
     overflowKicker: 'PRO JOUEUR',
     accent: PRO_PLAYER_MALE_PALETTE.accent,
-    topAccentColor: '#3B82F6',
-    barBackground: PRO_PLAYER_MALE_PALETTE.brandSoft,
-    barBorderColor: '#BFDBFE',
+    topAccentColor: PRO_PLAYER_MALE_PALETTE.accent,
+    barBorderColor: PRO_PLAYER_MALE_PALETTE.borderStrong,
   }),
   pro_player_female: makeChrome(PRO_PLAYER_FEMALE_PALETTE, {
     layout: 'dock',
@@ -269,11 +269,10 @@ const CHROME_BY_SEGMENT: Partial<Record<string, PoleTabBarChrome>> = {
     overflowKicker: 'PRO JOUEUSE',
     accent: PRO_PLAYER_FEMALE_PALETTE.accent,
     activeIcon: PRO_PLAYER_FEMALE_PALETTE.accent,
-    centerButtonIdle: PRO_PLAYER_FEMALE_PALETTE.ink,
+    centerButtonIdle: PRO_PLAYER_FEMALE_PALETTE.accent,
     topAccentColor: PRO_PLAYER_FEMALE_PALETTE.accent,
-    barBackground: PRO_PLAYER_FEMALE_PALETTE.brandSoft,
-    barBorderColor: PRO_PLAYER_FEMALE_PALETTE.border,
-    badgeColor: PRO_PLAYER_FEMALE_PALETTE.brand,
+    barBorderColor: PRO_PLAYER_FEMALE_PALETTE.borderStrong,
+    badgeColor: PRO_PLAYER_FEMALE_PALETTE.accent,
   }),
   amateur_male: makeChrome(AMATEUR_PALETTE, {
     layout: 'dock',
@@ -288,9 +287,8 @@ const CHROME_BY_SEGMENT: Partial<Record<string, PoleTabBarChrome>> = {
     overflowKicker: 'AMATEUR FÉMININ',
     accent: AMATEUR_FEMALE_PALETTE.accent,
     topAccentColor: AMATEUR_FEMALE_PALETTE.accent,
-    barBackground: AMATEUR_FEMALE_PALETTE.brandSoft,
     barBorderColor: AMATEUR_FEMALE_PALETTE.borderStrong,
-    badgeColor: AMATEUR_FEMALE_PALETTE.brand,
+    badgeColor: AMATEUR_FEMALE_PALETTE.accent,
   }),
   amateur_minor: makeChrome(AMATEUR_MINOR_PALETTE, {
     layout: 'dock',
@@ -298,9 +296,8 @@ const CHROME_BY_SEGMENT: Partial<Record<string, PoleTabBarChrome>> = {
     overflowKicker: 'AMATEUR JEUNES',
     accent: AMATEUR_MINOR_PALETTE.accent,
     topAccentColor: AMATEUR_MINOR_PALETTE.accent,
-    barBackground: AMATEUR_MINOR_PALETTE.brandSoft,
     barBorderColor: AMATEUR_MINOR_PALETTE.borderStrong,
-    badgeColor: AMATEUR_MINOR_PALETTE.brand,
+    badgeColor: AMATEUR_MINOR_PALETTE.accent,
   }),
 };
 
@@ -348,5 +345,5 @@ export function resolveTabBarAccent(
   segment?: PlayerSegment | null,
 ): string {
   if (isMedicalPractitionerRole(role)) return MEDICAL_THEME.primary;
-  return getPoleTabBarChrome(productLine, role, segment).accent ?? appColors.accent;
+  return getPoleTabBarChrome(productLine, role, segment).accent ?? appColors.accent ?? FLASH_CYAN;
 }

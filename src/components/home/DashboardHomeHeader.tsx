@@ -124,7 +124,7 @@ const ProDayGradientPill: React.FC<{
   label: string;
   colors: { ink: string; brandInverse: string; accent: string };
 }> = ({ label, colors }) => (
-  <View style={[styles.rolePill, { backgroundColor: colors.ink }]}>
+  <View style={[styles.rolePill, { backgroundColor: colors.accent }]}>
     <ProDayText variant="caption" inverse style={styles.rolePillText}>
       {label}
     </ProDayText>

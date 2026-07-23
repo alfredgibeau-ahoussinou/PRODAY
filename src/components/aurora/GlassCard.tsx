@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
+import { View, StyleSheet, type StyleProp, type ViewStyle, Platform } from 'react-native';
+import { BlurView } from 'expo-blur';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { radius } from '../../theme/designTokens';
 
@@ -11,42 +12,43 @@ interface GlassCardProps {
   children: React.ReactNode;
 }
 
-/** Carte surface V3 — fond léger, bordure univers. */
+/** Carte glass FLASH — blur + bordure cyan/blanc faible. */
 export const GlassCard: React.FC<GlassCardProps> = ({
   variant = 'default',
   style,
   children,
 }) => {
   const { colors } = useAppTheme();
-  const backgroundColor =
-    variant === 'accent' ? colors.accentSoft : colors.surface;
-  const borderColor = variant === 'accent' ? colors.accentMuted : colors.border;
+  const borderColor =
+    variant === 'accent' ? colors.accentMuted : 'rgba(255, 255, 255, 0.12)';
+  const tintBg =
+    variant === 'accent' ? colors.accentSoft : 'rgba(20, 20, 20, 0.55)';
 
   return (
-    <View
-      style={[
-        styles.card,
-        variant === 'elevated' && styles.elevated,
-        { backgroundColor, borderColor },
-        style,
-      ]}
-    >
-      {children}
+    <View style={[styles.wrap, { borderColor }, variant === 'elevated' && styles.elevated, style]}>
+      {Platform.OS === 'ios' ? (
+        <BlurView intensity={28} tint="dark" style={StyleSheet.absoluteFill} />
+      ) : null}
+      <View style={[styles.inner, { backgroundColor: tintBg }]}>{children}</View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  card: {
+  wrap: {
     borderRadius: radius.lg,
     borderWidth: 1,
     overflow: 'hidden',
+    backgroundColor: 'rgba(20, 20, 20, 0.72)',
+  },
+  inner: {
+    borderRadius: radius.lg,
   },
   elevated: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
+    shadowColor: '#22D3EE',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.12,
+    shadowRadius: 20,
+    elevation: 4,
   },
 });

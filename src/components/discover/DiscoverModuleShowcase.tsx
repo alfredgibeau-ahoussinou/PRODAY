@@ -194,7 +194,7 @@ function createStyles(c: AppColors) {
       width: 40,
       height: 40,
       borderRadius: radius.md,
-      backgroundColor: c.ink,
+      backgroundColor: c.accent,
       alignItems: 'center',
       justifyContent: 'center',
     },

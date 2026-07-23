@@ -262,7 +262,7 @@ function createStyles(c: AppColors) {
     borderWidth: 1,
     borderColor: c.border,
   },
-  chipActive: { backgroundColor: c.ink, borderColor: c.ink },
+  chipActive: { backgroundColor: c.accent, borderColor: c.accent },
   chipText: { fontSize: 12, fontWeight: '800', color: c.textSecondary },
   chipTextActive: { color: c.brandInverse },
   section: { marginBottom: spacing.sm },
@@ -296,7 +296,7 @@ function createStyles(c: AppColors) {
   smallBtnText: { fontSize: 11, fontWeight: '800', color: c.text },
   save: {
     marginTop: spacing.xl,
-    backgroundColor: c.ink,
+    backgroundColor: c.accent,
     padding: spacing.lg,
     borderRadius: radius.md,
     alignItems: 'center',

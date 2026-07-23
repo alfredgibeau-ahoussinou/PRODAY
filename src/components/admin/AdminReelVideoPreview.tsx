@@ -42,7 +42,7 @@ function createStyles(c: AppColors) {
       height: 220,
       borderRadius: radius.md,
       overflow: 'hidden',
-      backgroundColor: c.ink,
+      backgroundColor: c.accent,
       marginBottom: spacing.sm,
     },
     empty: { backgroundColor: c.surfaceMuted },

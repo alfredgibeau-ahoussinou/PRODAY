@@ -689,7 +689,7 @@ function createStyles(c: AppColors) {
     alignItems: 'center',
     justifyContent: 'center',
     gap: spacing.sm,
-    backgroundColor: c.ink,
+    backgroundColor: c.accent,
     borderRadius: radius.md,
     padding: spacing.md,
     marginBottom: spacing.md,

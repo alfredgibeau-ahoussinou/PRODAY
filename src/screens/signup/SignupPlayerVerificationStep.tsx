@@ -215,7 +215,7 @@ function createStyles(c: AppColors) {
     aiTag: { fontSize: 11, fontWeight: '700', color: c.warning, marginTop: 4 },
     aiOk: { fontSize: 11, fontWeight: '700', color: c.success, marginTop: 4 },
     btn: {
-      backgroundColor: c.ink,
+      backgroundColor: c.accent,
       borderRadius: radius.md,
       paddingVertical: spacing.sm,
       alignItems: 'center',

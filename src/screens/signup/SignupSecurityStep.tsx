@@ -182,8 +182,8 @@ function createStyles(c: AppColors) {
       backgroundColor: c.surface,
     },
     checkboxOn: {
-      backgroundColor: c.ink,
-      borderColor: c.ink,
+      backgroundColor: c.accent,
+      borderColor: c.accent,
     },
     termsText: {
       flex: 1,

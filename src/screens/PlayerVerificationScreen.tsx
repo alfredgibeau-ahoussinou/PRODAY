@@ -163,7 +163,7 @@ function createStyles(c: AppColors) {
     cardSub: { fontSize: 12, color: c.textSecondary, marginTop: 2 },
     status: { fontSize: 11, fontWeight: '800', color: c.accent, marginTop: 4 },
     btn: {
-      backgroundColor: c.ink,
+      backgroundColor: c.accent,
       borderRadius: radius.md,
       paddingVertical: spacing.sm,
       alignItems: 'center',

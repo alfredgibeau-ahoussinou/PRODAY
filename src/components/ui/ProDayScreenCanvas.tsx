@@ -25,7 +25,13 @@ export const ProDayScreenCanvas: React.FC<ProDayScreenCanvasProps> = ({
   if (flat) {
     return (
       <View style={[styles.fill, { backgroundColor: colors.background }]}>
-        {children}
+        <ProDayGradient
+          kind="ambient"
+          style={styles.haloFlat}
+          start={{ x: 0.5, y: 0 }}
+          end={{ x: 0.5, y: 1 }}
+        />
+        <View style={styles.content}>{children}</View>
       </View>
     );
   }
@@ -50,8 +56,16 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    height: 280,
-    opacity: 0.95,
+    height: 320,
+    opacity: 1,
+  },
+  haloFlat: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 220,
+    opacity: 0.85,
   },
   content: {
     flex: 1,

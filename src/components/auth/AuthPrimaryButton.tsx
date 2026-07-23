@@ -29,7 +29,7 @@ export const AuthPrimaryButton: React.FC<AuthPrimaryButtonProps> = ({
   const isDisabled = disabled || loading;
 
   const content = loading ? (
-    <ActivityIndicator color={c.brandInverse} />
+    <ActivityIndicator color="#000000" />
   ) : (
     <Text style={styles.label}>{label}</Text>
   );
@@ -79,7 +79,7 @@ function createStyles(c: AppColors) {
       borderRadius: radius.pill,
     },
     solid: {
-      backgroundColor: c.ink,
+      backgroundColor: c.accent,
       marginTop: spacing.md,
       minHeight: 52,
       paddingVertical: spacing.md + 2,
@@ -90,7 +90,7 @@ function createStyles(c: AppColors) {
     },
     disabled: { opacity: 0.65 },
     label: {
-      color: c.brandInverse,
+      color: '#000000',
       fontWeight: '800',
       fontSize: 16,
       textAlign: 'center',

@@ -178,7 +178,7 @@ function createStyles(c: AppColors, compact?: boolean) {
       gap: 2,
     },
     slotSelected: {
-      backgroundColor: c.ink,
+      backgroundColor: c.accent,
       borderColor: c.accent,
       borderWidth: 2,
       shadowColor: c.accent,

@@ -80,9 +80,10 @@ function PolePricingPanel({ poleId, yearly }: PolePricingPanelProps) {
   return (
     <div
       id={poleId}
-      className={`relative min-h-[480px] scroll-mt-32 rounded-3xl ${styles.section} p-6 sm:p-10 lg:p-12`}
+      className={`relative min-h-[480px] scroll-mt-32 overflow-hidden rounded-3xl border border-white/10 ${styles.section} p-6 sm:p-10 lg:p-12`}
     >
-      <div className="flex flex-col items-center gap-6 text-center sm:flex-row sm:items-start sm:text-left">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_50%_40%_at_10%_0%,rgba(34,211,238,0.06),transparent)]" />
+      <div className="relative flex flex-col items-center gap-6 text-center sm:flex-row sm:items-start sm:text-left">
         <Image
           src={pole.logo}
           alt=""
@@ -91,19 +92,19 @@ function PolePricingPanel({ poleId, yearly }: PolePricingPanelProps) {
           className="rounded-2xl bg-white/10 ring-1 ring-white/20"
         />
         <div className="min-w-0 flex-1">
-          <p className={`text-xs font-semibold tracking-[0.2em] ${styles.textMuted}`}>
+          <p className={`text-xs font-semibold tracking-[0.22em] ${styles.textMuted}`}>
             {pole.kicker}
           </p>
-          <h2 className="font-display mt-2 text-3xl font-bold text-white sm:text-4xl">
+          <h2 className="font-display mt-2 text-3xl font-bold uppercase tracking-tight text-white sm:text-4xl">
             {pole.title}
           </h2>
           <p className={`mt-1 text-sm font-medium ${styles.textMuted}`}>{pole.subtitle}</p>
-          <p className="mt-4 max-w-2xl text-sm leading-relaxed text-white/75">
+          <p className="mt-4 max-w-2xl text-sm leading-relaxed text-white/70">
             {pole.description}
           </p>
           <Link
             href={pole.href}
-            className="mt-4 inline-block text-sm font-semibold text-white/80 underline decoration-white/30 underline-offset-4 transition hover:text-white hover:decoration-white/60"
+            className="mt-4 inline-block text-sm font-semibold text-white/75 underline decoration-white/25 underline-offset-4 transition hover:text-[var(--proday-accent)] hover:decoration-[var(--proday-accent)]/50"
           >
             En savoir plus
           </Link>
@@ -111,12 +112,12 @@ function PolePricingPanel({ poleId, yearly }: PolePricingPanelProps) {
       </div>
 
       {poleId === "sponsor" ? (
-        <div className="mt-10">
+        <div className="relative mt-10">
           <SponsorPricingSection compact showPillars dark yearly={yearly} hideToggle />
         </div>
       ) : (
         <div
-          className={`mt-10 grid gap-6 ${
+          className={`relative mt-10 grid gap-6 ${
             plans.length > 2 ? "lg:grid-cols-2 xl:grid-cols-3" : "lg:grid-cols-2"
           }`}
         >
@@ -131,12 +132,12 @@ function PolePricingPanel({ poleId, yearly }: PolePricingPanelProps) {
               />
             ))
           ) : poleId === "supporter" ? (
-            <div className="rounded-2xl border border-violet-400/30 bg-violet-950/40 p-8 lg:col-span-2">
+            <div className="card-premium rounded-2xl border border-violet-400/25 p-8 lg:col-span-2">
               <p className="text-xs font-semibold uppercase tracking-wider text-violet-300">
                 0 € / mois
               </p>
-              <p className="mt-3 text-2xl font-bold text-white">Tribune 100 % gratuite</p>
-              <p className="mt-3 max-w-xl text-sm leading-relaxed text-white/75">
+              <p className="mt-3 font-display text-2xl font-bold text-white">Tribune 100 % gratuite</p>
+              <p className="mt-3 max-w-xl text-sm leading-relaxed text-white/70">
                 Matchs live, suivis illimités, débats, réels et shop — sans abonnement ni paywall.
               </p>
             </div>
@@ -225,7 +226,7 @@ export function PolesPricingLayout() {
 
   return (
     <div className="surface-dark -mt-px pb-16">
-      <div className="sticky top-16 z-40 border-b border-white/10 bg-[#030303]/95 backdrop-blur-xl">
+      <div className="sticky top-16 z-40 border-b border-white/10 bg-[#030303]/88 backdrop-blur-xl backdrop-saturate-150">
         <div className="mx-auto flex max-w-6xl flex-col items-center gap-3 px-4 py-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-4 sm:px-6">
           <nav
             className="scroll-snap-x -mx-4 flex w-full gap-1 overflow-x-auto px-4 pb-1 sm:mx-0 sm:w-auto sm:flex-wrap sm:overflow-visible sm:px-0"
@@ -249,12 +250,12 @@ export function PolesPricingLayout() {
               );
             })}
           </nav>
-          <div className="inline-flex rounded-full border border-white/10 bg-white/5 p-1">
+          <div className="inline-flex rounded-full border border-white/10 bg-white/[0.04] p-1">
             <button
               type="button"
               onClick={() => setYearly(false)}
               className={`rounded-full px-4 py-2 text-sm font-medium transition ${
-                !yearly ? "bg-[var(--proday-accent)] text-black" : "text-white/60"
+                !yearly ? "bg-[var(--proday-accent)] text-black" : "text-white/60 hover:text-white"
               }`}
             >
               Mensuel

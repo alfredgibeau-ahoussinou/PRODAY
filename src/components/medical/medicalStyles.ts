@@ -46,7 +46,7 @@ export function createMedicalStyles(c: AppColors) {
     },
     pillText: { fontSize: 10, fontWeight: '800', color: c.brand },
     btn: {
-      backgroundColor: c.ink,
+      backgroundColor: c.accent,
       borderRadius: radius.md,
       paddingVertical: spacing.md,
       alignItems: 'center',

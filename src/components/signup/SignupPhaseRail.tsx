@@ -75,7 +75,7 @@ function createStyles(c: AppColors) {
     },
     trackFill: {
       height: '100%',
-      backgroundColor: c.ink,
+      backgroundColor: c.accent,
       borderRadius: 1,
     },
     labels: {

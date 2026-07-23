@@ -157,7 +157,7 @@ function createStyles(c: AppColors) {
       alignSelf: 'flex-start',
       paddingVertical: spacing.xs,
       paddingHorizontal: spacing.sm,
-      backgroundColor: c.ink,
+      backgroundColor: c.accent,
       borderRadius: radius.sm,
     },
     mismatchBtnText: { color: c.brandInverse, fontSize: 12, fontWeight: '800' },

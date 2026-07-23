@@ -95,7 +95,7 @@ export const ShopCartSheet: React.FC<ShopCartSheetProps> = ({
             return (
               <PressableSpring
                 key={id}
-                style={[styles.tab, active && { backgroundColor: c.ink }]}
+                style={[styles.tab, active && { backgroundColor: c.accent }]}
                 onPress={() => setTab(id)}
                 scaleTo={0.98}
               >

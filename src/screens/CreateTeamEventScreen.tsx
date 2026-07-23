@@ -374,7 +374,7 @@ function createStyles(c: AppColors) {
     borderColor: c.border,
     backgroundColor: c.surface,
   },
-  typeChipActive: { backgroundColor: c.ink, borderColor: c.ink },
+  typeChipActive: { backgroundColor: c.accent, borderColor: c.accent },
   typeText: { fontSize: 11, fontWeight: '700', color: c.textSecondary },
   typeTextActive: { color: c.brandInverse },
   input: {
@@ -405,11 +405,11 @@ function createStyles(c: AppColors) {
     borderColor: c.border,
     backgroundColor: c.surface,
   },
-  memberChipOn: { backgroundColor: c.ink, borderColor: c.ink },
+  memberChipOn: { backgroundColor: c.accent, borderColor: c.accent },
   memberChipText: { fontSize: 11, fontWeight: '700', color: c.textSecondary },
   memberChipTextOn: { color: c.brandInverse },
   submit: {
-    backgroundColor: c.ink,
+    backgroundColor: c.accent,
     borderRadius: radius.md,
     padding: spacing.lg,
     alignItems: 'center',

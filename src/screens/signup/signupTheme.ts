@@ -48,8 +48,8 @@ export function createSignupTheme(c: AppColors) {
       justifyContent: 'center',
     },
     chipActive: {
-      backgroundColor: c.ink,
-      borderColor: c.ink,
+      backgroundColor: c.accent,
+      borderColor: c.accent,
     },
     chipTitle: {
       fontSize: 15,
@@ -57,7 +57,7 @@ export function createSignupTheme(c: AppColors) {
       color: c.text,
     },
     chipTitleActive: {
-      color: c.brandInverse,
+      color: '#000000',
     },
     chipHint: {
       fontSize: 12,

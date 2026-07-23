@@ -65,7 +65,7 @@ function createStyles(c: AppColors) {
       alignItems: 'center',
       justifyContent: 'center',
     },
-    iconBoxDanger: { backgroundColor: c.ink, borderColor: c.ink },
+    iconBoxDanger: { backgroundColor: c.accent, borderColor: c.accent },
     body: { flex: 1 },
     title: { fontSize: 15, fontWeight: '800', color: c.text },
     titleDanger: { color: c.text },

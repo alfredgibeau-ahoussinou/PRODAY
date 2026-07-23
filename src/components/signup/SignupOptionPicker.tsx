@@ -65,8 +65,8 @@ function createStyles(c: AppColors) {
       backgroundColor: c.surface,
     },
     chipActive: {
-      backgroundColor: c.ink,
-      borderColor: c.ink,
+      backgroundColor: c.accent,
+      borderColor: c.accent,
     },
     chipText: {
       fontSize: 14,
@@ -74,7 +74,7 @@ function createStyles(c: AppColors) {
       color: c.textSecondary,
     },
     chipTextActive: {
-      color: c.brandInverse,
+      color: '#000000',
       fontWeight: '800',
     },
     error: {

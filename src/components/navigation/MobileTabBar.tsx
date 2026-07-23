@@ -252,7 +252,7 @@ export const MobileTabBar: React.FC<MobileTabBarProps> = ({
                     <Icon
                       name={centerIcon}
                       size={CENTER_ICON}
-                      color={centerActive || immersive ? '#fff' : colors.brandInverse}
+                      color="#000000"
                       variant="filled"
                     />
                   </View>

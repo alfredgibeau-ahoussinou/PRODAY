@@ -160,7 +160,7 @@ const TabChip: React.FC<{ label: string; active: boolean; onPress: () => void }>
       style={[
         styles.tabChip,
         active
-          ? { backgroundColor: colors.ink }
+          ? { backgroundColor: colors.accent }
           : { backgroundColor: colors.surfaceMuted, borderColor: colors.border },
       ]}
       onPress={onPress}

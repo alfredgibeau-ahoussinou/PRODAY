@@ -1,16 +1,16 @@
 import type { ProductLineId } from '../models/ProductLine';
 import type { CarouselPoleId } from '../models/CarouselPole';
-import { gradients } from './designTokens';
+import { gradients, FLASH_CYAN, FLASH_CYAN_DIM } from './designTokens';
 import { proGradients, santeGradients, womanGradients, amateurGradients, supporterGradients } from './universeTheme';
 
 export type GradientStops = readonly [string, string, ...string[]];
 
 export const hommeGradients = {
-  hero: ['#0A0A0A', '#14532D'] as const,
-  heroDark: ['#052e16', '#0A0A0A'] as const,
-  card: ['#F0FDF4', '#FFFFFF'] as const,
-  cta: ['#0A0A0A', '#15803D'] as const,
-  ambient: ['#ECFDF5', '#F7F7F7', '#F7F7F7'] as const,
+  hero: ['#000000', '#14532D'] as const,
+  heroDark: ['#000000', '#052e16'] as const,
+  card: ['#1A1A1A', '#0A0A0A'] as const,
+  cta: ['#15803D', '#4ADE80'] as const,
+  ambient: ['rgba(74, 222, 128, 0.12)', '#0A0A0A', '#000000'] as const,
 };
 
 export function gradientsForLine(line: ProductLineId): {
@@ -26,7 +26,7 @@ export function gradientsForLine(line: ProductLineId): {
       heroDark: womanGradients.heroDark,
       card: womanGradients.card,
       cta: womanGradients.cta,
-      ambient: ['#FCE7F3', '#FFF5F8', '#FFF5F8'] as const,
+      ambient: ['rgba(244, 114, 182, 0.14)', '#0A0A0A', '#000000'] as const,
     };
   }
   if (line === 'pro' || line === 'pro_player' || line === 'pro_club' || line === 'pro_staff') {
@@ -35,7 +35,7 @@ export function gradientsForLine(line: ProductLineId): {
       heroDark: proGradients.heroDark,
       card: proGradients.card,
       cta: proGradients.cta,
-      ambient: ['#DBEAFE', '#F8FAFC', '#F8FAFC'] as const,
+      ambient: ['rgba(96, 165, 250, 0.14)', '#0A0A0A', '#000000'] as const,
     };
   }
   if (line === 'amateur') {
@@ -44,7 +44,7 @@ export function gradientsForLine(line: ProductLineId): {
       heroDark: amateurGradients.heroDark,
       card: amateurGradients.card,
       cta: amateurGradients.cta,
-      ambient: ['#FFEDD5', '#FFFBF5', '#FFFBF5'] as const,
+      ambient: ['rgba(249, 115, 22, 0.14)', '#0A0A0A', '#000000'] as const,
     };
   }
   if (line === 'supporter') {
@@ -53,7 +53,7 @@ export function gradientsForLine(line: ProductLineId): {
       heroDark: supporterGradients.heroDark,
       card: supporterGradients.card,
       cta: supporterGradients.cta,
-      ambient: ['#EDE9FE', '#FAFAFF', '#FAFAFF'] as const,
+      ambient: ['rgba(167, 139, 250, 0.14)', '#0A0A0A', '#000000'] as const,
     };
   }
   if (line === 'sante') {
@@ -62,7 +62,7 @@ export function gradientsForLine(line: ProductLineId): {
       heroDark: santeGradients.heroDark,
       card: santeGradients.card,
       cta: santeGradients.cta,
-      ambient: ['#CCFBF1', '#F0FDFA', '#F0FDFA'] as const,
+      ambient: ['rgba(45, 212, 191, 0.14)', '#0A0A0A', '#000000'] as const,
     };
   }
   return {
@@ -79,19 +79,19 @@ export function ctaGradient(line: ProductLineId): GradientStops {
 }
 
 const proClubGradients = {
-  hero: ['#0A0A0A', '#0C4A6E'] as const,
-  heroDark: ['#082f49', '#0A0A0A'] as const,
-  card: ['#F0F9FF', '#FFFFFF'] as const,
-  cta: ['#0A0A0A', '#0369A1'] as const,
-  ambient: ['#E0F2FE', '#F8FAFC', '#F8FAFC'] as const,
+  hero: ['#000000', '#0C4A6E'] as const,
+  heroDark: ['#000000', '#082f49'] as const,
+  card: ['#1A1A1A', '#0A0A0A'] as const,
+  cta: ['#0369A1', '#38BDF8'] as const,
+  ambient: ['rgba(56, 189, 248, 0.14)', '#0A0A0A', '#000000'] as const,
 };
 
 const proStaffGradients = {
-  hero: ['#0A0A0A', '#312E81'] as const,
-  heroDark: ['#1e1b4b', '#0A0A0A'] as const,
-  card: ['#EEF2FF', '#FFFFFF'] as const,
-  cta: ['#0A0A0A', '#4338CA'] as const,
-  ambient: ['#E0E7FF', '#F8FAFF', '#F8FAFF'] as const,
+  hero: ['#000000', '#312E81'] as const,
+  heroDark: ['#000000', '#1e1b4b'] as const,
+  card: ['#1A1A1A', '#0A0A0A'] as const,
+  cta: ['#4338CA', '#818CF8'] as const,
+  ambient: ['rgba(129, 140, 248, 0.14)', '#0A0A0A', '#000000'] as const,
 };
 
 const sponsorGradients = {
@@ -101,6 +101,13 @@ const sponsorGradients = {
   cta: ['#92700C', '#D4AF37'] as const,
   ambient: ['#1a1508', '#070605', '#070605'] as const,
 };
+
+/** Ambient FLASH générique (cyan) */
+export const flashAmbient = [
+  `rgba(34, 211, 238, 0.14)`,
+  '#0A0A0A',
+  '#000000',
+] as const;
 
 export function gradientsForCarouselPole(pole: CarouselPoleId): {
   hero: GradientStops;
@@ -118,11 +125,11 @@ export function gradientsForCarouselPole(pole: CarouselPoleId): {
       heroDark: proGradients.heroDark,
       card: proGradients.card,
       cta: proGradients.cta,
-      ambient: ['#DBEAFE', '#F8FAFC', '#F8FAFC'] as const,
+      ambient: ['rgba(96, 165, 250, 0.14)', '#0A0A0A', '#000000'] as const,
     };
   }
   const line = pole === 'amateur' || pole === 'supporter' || pole === 'sante' ? pole : 'pro';
   return gradientsForLine(line);
 }
 
-export { gradients };
+export { gradients, FLASH_CYAN, FLASH_CYAN_DIM };

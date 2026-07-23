@@ -9,7 +9,7 @@ export function createPitchStyles(c: AppColors) {
   return StyleSheet.create({
     root: {
       flex: 1,
-      backgroundColor: c.ink,
+      backgroundColor: c.accent,
     },
     scrollContent: {
       flexGrow: 1,
@@ -18,7 +18,7 @@ export function createPitchStyles(c: AppColors) {
       alignItems: 'center',
       paddingHorizontal: spacing.xl,
       paddingBottom: spacing.xxl + spacing.lg,
-      backgroundColor: c.ink,
+      backgroundColor: c.accent,
     },
     sheet: {
       marginTop: -spacing.xxl,

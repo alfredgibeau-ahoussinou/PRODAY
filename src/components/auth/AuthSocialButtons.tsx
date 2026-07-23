@@ -371,8 +371,8 @@ function createSocialStyles(c: AppColors) {
       backgroundColor: c.surfaceMuted,
     },
     btnApple: {
-      backgroundColor: c.ink,
-      borderColor: c.ink,
+      backgroundColor: '#FAFAFA',
+      borderColor: '#FAFAFA',
     },
     btnDisabled: { opacity: 0.6 },
     btnText: {
@@ -381,7 +381,7 @@ function createSocialStyles(c: AppColors) {
       color: c.text,
     },
     btnAppleText: {
-      color: c.brandInverse,
+      color: '#000000',
     },
   });
 }

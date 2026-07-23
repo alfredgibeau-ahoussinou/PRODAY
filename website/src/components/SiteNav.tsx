@@ -159,12 +159,12 @@ export function SiteNav() {
   const bg = useTransform(
     scrollY,
     [0, 80],
-    ["rgba(0, 0, 0, 0.25)", "rgba(0, 0, 0, 0.92)"],
+    ["rgba(0, 0, 0, 0.18)", "rgba(8, 8, 8, 0.88)"],
   );
   const border = useTransform(
     scrollY,
     [0, 80],
-    ["rgba(34, 211, 238, 0)", "rgba(34, 211, 238, 0.12)"],
+    ["rgba(34, 211, 238, 0)", "rgba(34, 211, 238, 0.16)"],
   );
 
   const brand = navBrandForPath(pathname);
@@ -178,7 +178,7 @@ export function SiteNav() {
   return (
     <motion.header
       style={{ backgroundColor: bg, borderBottomColor: border }}
-      className={`fixed top-0 z-50 w-full border-b backdrop-blur-md ${
+      className={`fixed top-0 z-50 w-full border-b backdrop-blur-xl backdrop-saturate-150 ${
         currentPoleStyles?.accentTop ?? ""
       }`}
     >
@@ -237,7 +237,7 @@ export function SiteNav() {
         <div className="hidden shrink-0 items-center lg:flex">
           <Link
             href={ROUTES.betaWaitlist}
-            className="rounded-full bg-[var(--proday-accent)] px-4 py-2 text-xs font-bold uppercase tracking-wide text-black transition hover:scale-[1.02] hover:bg-cyan-300 active:bg-cyan-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-400/50 xl:px-5 xl:text-sm"
+            className="cta-lift rounded-full bg-[var(--proday-accent)] px-4 py-2 text-xs font-bold uppercase tracking-wide text-black shadow-[0_0_0_1px_rgba(34,211,238,0.35),0_10px_32px_-10px_rgba(34,211,238,0.45)] transition hover:bg-cyan-300 hover:shadow-[0_0_0_1px_rgba(103,232,249,0.45),0_14px_40px_-10px_rgba(34,211,238,0.5)] active:bg-cyan-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-400/50 xl:px-5 xl:text-sm"
           >
             Accès anticipé
           </Link>

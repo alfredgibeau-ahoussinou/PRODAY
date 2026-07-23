@@ -198,7 +198,7 @@ function createStyles(c: AppColors) {
       borderColor: c.border,
       backgroundColor: c.background,
     },
-    roleChipOn: { backgroundColor: c.ink, borderColor: c.brand },
+    roleChipOn: { backgroundColor: c.accent, borderColor: c.brand },
     roleChipText: { fontSize: 12, fontWeight: '800', color: c.text },
     roleChipTextOn: { color: c.brandInverse },
     submit: {
@@ -206,7 +206,7 @@ function createStyles(c: AppColors) {
       alignItems: 'center',
       justifyContent: 'center',
       gap: spacing.sm,
-      backgroundColor: c.ink,
+      backgroundColor: c.accent,
       borderRadius: radius.md,
       padding: spacing.md,
       borderWidth: 1,
