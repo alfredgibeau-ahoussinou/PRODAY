@@ -120,7 +120,7 @@ export function WaitlistForm({ fullPage, compact, minimal, initialRole }: Waitli
                   <button
                     type="submit"
                     disabled={state === "loading"}
-                    className="min-h-11 shrink-0 rounded-full bg-[var(--proday-accent)] px-6 py-3 text-sm font-bold text-black transition hover:bg-cyan-300 disabled:opacity-60"
+                    className="min-h-11 shrink-0 rounded-full bg-[var(--proday-accent)] px-6 py-3 text-sm font-bold text-white transition hover:bg-[#2a6fff] disabled:opacity-60"
                   >
                     {state === "loading" ? "Envoi…" : "S'inscrire"}
                   </button>
@@ -216,7 +216,7 @@ export function WaitlistForm({ fullPage, compact, minimal, initialRole }: Waitli
                     key={r.id}
                     type="button"
                     onClick={() => setRole(r.id)}
-                    className={`min-h-11 rounded-full px-4 py-2 text-sm transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-400/50 ${
+                    className={`min-h-11 rounded-full px-4 py-2 text-sm transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--proday-accent)]/50 ${
                       role === r.id
                         ? "bg-[var(--proday-accent)] font-semibold text-black"
                         : "bg-white/10 text-white hover:bg-white/20 active:bg-white/25"
@@ -239,7 +239,7 @@ export function WaitlistForm({ fullPage, compact, minimal, initialRole }: Waitli
                 <button
                   type="submit"
                   disabled={state === "loading"}
-                  className="min-h-11 rounded-full bg-[var(--proday-accent)] px-8 py-3.5 font-bold text-black transition hover:bg-cyan-300 active:bg-cyan-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-400/50 disabled:opacity-60"
+                  className="min-h-11 rounded-full bg-[var(--proday-accent)] px-8 py-3.5 font-bold text-white transition hover:bg-[#2a6fff] active:bg-[#0046cc] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--proday-accent)]/50 disabled:opacity-60"
                 >
                   {state === "loading" ? "Envoi…" : "S'inscrire"}
                 </button>

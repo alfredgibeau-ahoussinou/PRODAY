@@ -42,7 +42,7 @@ export function RoleQuiz({ compact, inline }: { compact?: boolean; inline?: bool
         <p className="mt-2 text-sm text-white/55">3 questions — Joueur, Pro, Santé ou Partenaires</p>
         <Link
           href={ROUTES.quiz}
-          className="mt-4 inline-flex min-h-11 items-center rounded-full bg-[var(--proday-accent)] px-5 py-2 text-sm font-bold text-black transition hover:bg-cyan-300"
+          className="mt-4 inline-flex min-h-11 items-center rounded-full bg-[var(--proday-accent)] px-5 py-2 text-sm font-bold text-white transition hover:bg-[#2a6fff]"
         >
           Lancer le quiz
         </Link>
@@ -102,7 +102,7 @@ export function RoleQuiz({ compact, inline }: { compact?: boolean; inline?: bool
             <div className="mt-5 flex flex-wrap gap-3">
               <Link
                 href={result.href}
-                className="inline-flex min-h-11 items-center rounded-full bg-[var(--proday-accent)] px-6 py-2.5 text-sm font-bold text-black transition hover:bg-cyan-300"
+                className="inline-flex min-h-11 items-center rounded-full bg-[var(--proday-accent)] px-6 py-2.5 text-sm font-bold text-white transition hover:bg-[#2a6fff]"
               >
                 {result.cta}
               </Link>

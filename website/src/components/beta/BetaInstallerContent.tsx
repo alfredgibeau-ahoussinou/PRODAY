@@ -35,7 +35,7 @@ function DownloadButton({ href, label }: { href: string; label: string }) {
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="mt-6 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-[var(--proday-accent)] px-6 py-3 text-sm font-bold text-black transition hover:bg-cyan-300 sm:w-auto"
+      className="mt-6 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-[var(--proday-accent)] px-6 py-3 text-sm font-bold text-white transition hover:bg-[#2a6fff] sm:w-auto"
     >
       {label}
       <ExternalLink size={14} />
@@ -88,7 +88,7 @@ function PlatformSection({
       className={`rounded-3xl border p-8 ${
         platform === "ios"
           ? "border-white/10 bg-gradient-to-br from-[#0c0c12] via-[#0a0a0f] to-[#030303]"
-          : "border-cyan-500/20 bg-cyan-950/20"
+          : "border-[var(--proday-accent)]/20 bg-[#001854]/35"
       }`}
     >
       <div className="flex items-start gap-4">
@@ -137,7 +137,7 @@ export function BetaInstallerContent() {
       </p>
 
       {apkUrl ? (
-        <div className="mb-8 rounded-3xl border border-cyan-500/30 bg-cyan-950/25 p-6">
+        <div className="mb-8 rounded-3xl border border-[var(--proday-accent)]/30 bg-[#001854]/40 p-6">
           <p className="text-sm font-semibold text-white">APK Android prêt à télécharger</p>
           <p className="mt-1 text-sm text-white/55">
             Téléchargez directement depuis cette page — aucun email requis.
@@ -163,7 +163,7 @@ export function BetaInstallerContent() {
             ]}
           />
 
-          <p className="mt-4 text-xs font-medium uppercase tracking-wider text-cyan-300/80">
+          <p className="mt-4 text-xs font-medium uppercase tracking-wider text-[#4C8BFF]/80">
             Build bêta · v{BETA_APP_VERSION}
           </p>
           <DownloadButton href={apkUrl} label="Télécharger l'APK Android" />
@@ -272,7 +272,7 @@ export function BetaInstallerContent() {
         </PlatformSection>
       </div>
 
-      <div className="mt-8 rounded-3xl border border-cyan-500/20 bg-cyan-950/20 p-6">
+      <div className="mt-8 rounded-3xl border border-[var(--proday-accent)]/20 bg-[#001854]/35 p-6">
         <div className="flex items-start gap-3">
           <Shield size={22} className="shrink-0 text-[var(--proday-accent)]" />
           <div>

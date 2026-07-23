@@ -114,8 +114,8 @@ export const HOMME_BRAND = {
   tagline: "CONNECTER • PROGRESSER • RÉUSSIR",
   mission:
     "Le foot masculin amateur : Mercato M, matchs, Arena, Visibilité, CV joueur, covoiturage, pôle santé et Shop — réservé aux joueurs.",
-  accent: "#0A0A0A",
-  accentDark: "#262626",
+  accent: "#0054F0",
+  accentDark: "#001854",
 } as const;
 
 export const AMATEUR_BRAND = {
@@ -126,8 +126,8 @@ export const AMATEUR_BRAND = {
   tagline: "JOUER • ENCADRER • PARTAGER",
   mission:
     "Joueurs et coachs amateur — Mercato local, matchs, effectif et convocations. Distinct du pôle Pro (staff professionnel).",
-  accent: "#EA580C",
-  accentDark: "#9A3412",
+  accent: "#F03000",
+  accentDark: "#841800",
 } as const;
 
 export const SUPPORTER_BRAND = {
@@ -138,8 +138,8 @@ export const SUPPORTER_BRAND = {
   tagline: "SUIVRE • VIBRER • PARTAGER",
   mission:
     "Tribune 100 % gratuite — matchs live (PRODAY + monde), suivis illimités, débats, réels et shop merch. Sans abonnement ni paywall.",
-  accent: "#7C3AED",
-  accentDark: "#5B21B6",
+  accent: "#3C00F0",
+  accentDark: "#180078",
 } as const;
 
 export const PRO_BRAND = {
@@ -150,8 +150,8 @@ export const PRO_BRAND = {
   tagline: "EXPERTISE • RÉSEAU • PERFORMANCE",
   mission:
     "Coach, agent, club recruteur et organisateur — Mercato Pro, scouting, convocations et réseau vérifié.",
-  accent: "#1D4ED8",
-  accentDark: "#1E3A8A",
+  accent: "#006CFC",
+  accentDark: "#002478",
 } as const;
 
 export const PRO_JOUEUR_BRAND = {
@@ -162,8 +162,8 @@ export const PRO_JOUEUR_BRAND = {
   tagline: "CARRIÈRE • VISIBILITÉ • OPPORTUNITÉS",
   mission:
     "Joueur professionnel — carrière, portfolio scouting, essais et mandat agent. Stats validées par le coach staff.",
-  accent: "#059669",
-  accentDark: "#047857",
+  accent: "#0054F0",
+  accentDark: "#001854",
 } as const;
 
 export const PRO_CLUB_BRAND = {
@@ -174,8 +174,8 @@ export const PRO_CLUB_BRAND = {
   tagline: "STRUCTURE • ÉQUIPES • RECRUTEMENT",
   mission:
     "Président, directeur sportif et secrétariat — arbre des équipes, adhésions, annonces recrutement et vitrine club.",
-  accent: "#1D4ED8",
-  accentDark: "#1E3A8A",
+  accent: "#006CFC",
+  accentDark: "#002478",
 } as const;
 
 export const PRO_STAFF_BRAND = {
@@ -186,8 +186,8 @@ export const PRO_STAFF_BRAND = {
   tagline: "MÉTIERS • MANDATS • SCOUTING",
   mission:
     "Agent, recruteur, coach pro et organisateur — Mercato Pro, shortlists, convocations groupe et tournois Arena.",
-  accent: "#4F46E5",
-  accentDark: "#3730A3",
+  accent: "#3B5BFF",
+  accentDark: "#001848",
 } as const;
 
 /** Message waitlist / page beta */
@@ -498,8 +498,8 @@ export const SANTE_BRAND = {
   tagline: "SOIGNER • ACCOMPAGNER • PERFORMER",
   mission:
     "Kinés, coach mental et staff médical — annuaire, agenda, téléconsultation sécurisée (partenaire HDS) et vidéos éducatives.",
-  accent: "#0F766E",
-  accentDark: "#134E4A",
+  accent: "#00CCB4",
+  accentDark: "#006C60",
 } as const;
 
 export const WOMAN_BRAND = {
@@ -510,8 +510,8 @@ export const WOMAN_BRAND = {
   tagline: "JOUER • BRILLER • GRANDIR",
   mission:
     "Le foot au féminin : Mercato F, matchs, Arena, Visibilité, CV joueuse, covoiturage, pôle santé et Shop — réservé aux joueuses.",
-  accent: "#BE185D",
-  accentDark: "#831843",
+  accent: "#F00000",
+  accentDark: "#540000",
 } as const;
 
 export type UniverseBrand =

@@ -22,3 +22,10 @@ Usage commercial autorisé, sans attribution obligatoire (crédit volontaire).
 | `football-pitch-01.jpg` | [Unsplash](https://unsplash.com/photos/1575361204480) | Ballon Adidas sur pelouse |
 
 Regénérer : `node scripts/download-football-stock-images.mjs`
+
+## Vidéos hero (stock libre)
+
+| Fichier | Source | Licence |
+|---------|--------|---------|
+| `../videos/hero-stadium.mp4` | [Mixkit 4262 — Football stadium aerial](https://mixkit.co/free-stock-video/football-stadium-aerial-shot-4262/) | Mixkit Stock Video Free (commercial OK) |
+| `../videos/hero-match.mp4` | [Pexels 6077718](https://www.pexels.com/video/6077718/) | Pexels License (commercial OK) |

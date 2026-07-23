@@ -84,7 +84,7 @@ export function BetaHubContent({ session }: BetaHubContentProps) {
             <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-white/10 bg-white/5">
               <Icon className="text-[var(--proday-accent)]" size={22} />
             </div>
-            <h2 className="font-display mt-4 text-lg font-bold uppercase tracking-wide text-white group-hover:text-cyan-200">
+            <h2 className="font-display mt-4 text-lg font-bold uppercase tracking-wide text-white group-hover:text-[#93c5fd]">
               {title}
             </h2>
             <p className="mt-2 flex-1 text-sm leading-relaxed text-white/55">{description}</p>

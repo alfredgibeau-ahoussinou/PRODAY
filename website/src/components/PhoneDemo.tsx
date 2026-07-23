@@ -566,7 +566,7 @@ export function PhoneDemo({ fullPage, compact, universe = "homme" }: PhoneDemoPr
               </div>
               <Link
                 href={demoUrlForUniverse(universe)}
-                className="text-sm font-semibold text-[var(--proday-accent)] underline underline-offset-4 transition hover:text-cyan-300"
+                className="text-sm font-semibold text-[var(--proday-accent)] underline underline-offset-4 transition hover:text-[#4C8BFF]"
               >
                 Voir la démo complète
               </Link>

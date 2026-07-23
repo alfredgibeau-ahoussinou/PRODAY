@@ -216,7 +216,7 @@ export function SponsorPricingSection({
                   highlighted
                     ? "bg-amber-400 text-slate-950 hover:bg-amber-300"
                     : dark
-                      ? "border border-[var(--proday-accent)]/30 bg-[var(--proday-accent-muted)] text-black hover:bg-cyan-300"
+                      ? "border border-[var(--proday-accent)]/30 bg-[var(--proday-accent-muted)] text-black hover:bg-[#2a6fff]"
                       : "bg-proday-ink text-white hover:bg-neutral-800"
                 }`}
               >

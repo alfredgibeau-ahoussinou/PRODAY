@@ -27,7 +27,7 @@ export function BetaProgrammeContent({ session }: BetaProgrammeContentProps) {
       description="Comprenez le déroulement de la bêta, le calendrier et les six pôles que vous pouvez explorer."
     >
       {BETA_APK_AVAILABLE ? (
-        <div className="mb-8 rounded-3xl border border-cyan-500/30 bg-cyan-950/25 p-6 sm:flex sm:items-center sm:justify-between sm:gap-6">
+        <div className="mb-8 rounded-3xl border border-[var(--proday-accent)]/30 bg-[#001854]/40 p-6 sm:flex sm:items-center sm:justify-between sm:gap-6">
           <div>
             <p className="text-sm font-semibold text-white">APK Android disponible</p>
             <p className="mt-1 text-sm text-white/55">
@@ -36,7 +36,7 @@ export function BetaProgrammeContent({ session }: BetaProgrammeContentProps) {
           </div>
           <Link
             href={ROUTES.betaInstaller}
-            className="mt-4 inline-flex min-h-11 items-center justify-center rounded-full bg-[var(--proday-accent)] px-6 py-3 text-sm font-bold text-black transition hover:bg-cyan-300 sm:mt-0"
+            className="mt-4 inline-flex min-h-11 items-center justify-center rounded-full bg-[var(--proday-accent)] px-6 py-3 text-sm font-bold text-white transition hover:bg-[#2a6fff] sm:mt-0"
           >
             Installer l&apos;app
           </Link>
@@ -116,7 +116,7 @@ export function BetaProgrammeContent({ session }: BetaProgrammeContentProps) {
               <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-[var(--proday-accent)]">
                 {pole.kicker}
               </p>
-              <p className="mt-2 font-display text-base font-bold text-white group-hover:text-cyan-200">
+              <p className="mt-2 font-display text-base font-bold text-white group-hover:text-[#93c5fd]">
                 {pole.title}
               </p>
               <p className="mt-1 text-xs text-white/45">{pole.subtitle}</p>
@@ -126,7 +126,7 @@ export function BetaProgrammeContent({ session }: BetaProgrammeContentProps) {
         </div>
         <p className="mt-4 text-xs text-white/40">
           Également :{" "}
-          <Link href={SPONSOR_POLE.href} className="text-[var(--proday-accent)] underline hover:text-cyan-300">
+          <Link href={SPONSOR_POLE.href} className="text-[var(--proday-accent)] underline hover:text-[#4C8BFF]">
             {SPONSOR_POLE.title}
           </Link>{" "}
           — {SPONSOR_POLE.subtitle.toLowerCase()}.

@@ -154,7 +154,7 @@ export function SiteFooter() {
           <span className="text-[10px] font-medium uppercase tracking-[0.55em] text-white/25">
             By
           </span>
-          <p className="font-signature bg-gradient-to-r from-white/90 via-white/75 to-cyan-200/80 bg-clip-text text-[1.75rem] italic leading-none tracking-[0.06em] text-transparent sm:text-[2rem]">
+          <p className="font-signature bg-gradient-to-r from-white/90 via-white/75 to-[#93c5fd]/80 bg-clip-text text-[1.75rem] italic leading-none tracking-[0.06em] text-transparent sm:text-[2rem]">
             Alfred Ahoussinou
           </p>
         </div>

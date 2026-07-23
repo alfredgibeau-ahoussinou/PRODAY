@@ -35,13 +35,13 @@ const POLE_NAV: { id: PoleId; label: string }[] = POLES.map((p) => ({
 }));
 
 const DOT_ACTIVE: Record<PoleId, string> = {
-  amateur: "bg-orange-500",
-  supporter: "bg-violet-600",
-  sante: "bg-teal-500",
-  pro_joueur: "bg-emerald-500",
-  pro_club: "bg-blue-600",
-  pro_staff: "bg-indigo-600",
-  sponsor: "bg-amber-400",
+  amateur: "bg-[#F03000]",
+  supporter: "bg-[#3C00F0]",
+  sante: "bg-[#00CCB4]",
+  pro_joueur: "bg-[#0054F0]",
+  pro_club: "bg-[#006CFC]",
+  pro_staff: "bg-[#3B5BFF]",
+  sponsor: "bg-[#D4AF37]",
 };
 
 const VARIANT_LABELS: Record<string, string> = {};

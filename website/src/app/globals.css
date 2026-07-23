@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 :root {
-  /* ProDay FLASH — dark premium + cyan électrique */
+  /* ProDay — dark premium + bleu logo officiel */
   --proday-ink: #0a0a0a;
   --proday-ink-muted: #a3a3a3;
   --proday-bg: #000000;
@@ -10,10 +10,10 @@
   --proday-overlay: #1a1a1a;
   --proday-border: rgba(255, 255, 255, 0.08);
   --proday-border-strong: rgba(255, 255, 255, 0.14);
-  --proday-accent: #22d3ee;
-  --proday-accent-dim: #0891b2;
-  --proday-accent-glow: rgba(34, 211, 238, 0.28);
-  --proday-accent-muted: rgba(34, 211, 238, 0.12);
+  --proday-accent: #0054F0;
+  --proday-accent-dim: #0038B0;
+  --proday-accent-glow: rgba(0, 84, 240, 0.35);
+  --proday-accent-muted: rgba(0, 84, 240, 0.14);
   --proday-success: #16a34a;
   --proday-warning: #ea580c;
   --background: var(--proday-bg);
@@ -59,7 +59,7 @@ body {
 
 ::selection {
   background: var(--proday-accent);
-  color: #000;
+  color: #fff;
 }
 
 /* ── Accent utilities ── */
@@ -78,8 +78,8 @@ body {
 
 .glow-cyan {
   box-shadow:
-    0 0 0 1px rgba(34, 211, 238, 0.2),
-    0 8px 32px -8px rgba(34, 211, 238, 0.18),
+    0 0 0 1px rgba(0, 84, 240, 0.2),
+    0 8px 32px -8px rgba(0, 84, 240, 0.18),
     0 24px 48px -24px rgba(0, 0, 0, 0.7);
 }
 
@@ -91,10 +91,10 @@ body {
 }
 
 .glow-cyan-hover:hover {
-  border-color: rgba(34, 211, 238, 0.55);
+  border-color: rgba(0, 84, 240, 0.55);
   box-shadow:
-    0 0 0 1px rgba(34, 211, 238, 0.28),
-    0 12px 40px -10px rgba(34, 211, 238, 0.22),
+    0 0 0 1px rgba(0, 84, 240, 0.28),
+    0 12px 40px -10px rgba(0, 84, 240, 0.22),
     0 24px 48px -16px rgba(0, 0, 0, 0.7);
 }
 
@@ -182,9 +182,9 @@ body {
   background: linear-gradient(
     90deg,
     var(--proday-accent) 0%,
-    #67e8f9 40%,
+    #4C8BFF 40%,
     var(--proday-accent) 60%,
-    #0891b2 100%
+    #001854 100%
   );
   background-size: 200% auto;
   -webkit-background-clip: text;
@@ -215,9 +215,9 @@ body {
 
 .gradient-mesh {
   background:
-    radial-gradient(ellipse 80% 50% at 12% 20%, rgba(34, 211, 238, 0.1), transparent),
+    radial-gradient(ellipse 80% 50% at 12% 20%, rgba(0, 84, 240, 0.1), transparent),
     radial-gradient(ellipse 55% 40% at 88% 12%, rgba(6, 182, 212, 0.07), transparent),
-    radial-gradient(ellipse 50% 40% at 50% 92%, rgba(34, 211, 238, 0.05), transparent),
+    radial-gradient(ellipse 50% 40% at 50% 92%, rgba(0, 84, 240, 0.05), transparent),
     #000000;
 }
 
@@ -253,10 +253,10 @@ body {
 }
 
 .card-premium:hover {
-  border-color: rgba(34, 211, 238, 0.32);
+  border-color: rgba(0, 84, 240, 0.32);
   box-shadow:
-    0 0 0 1px rgba(34, 211, 238, 0.1) inset,
-    0 0 40px -12px rgba(34, 211, 238, 0.14),
+    0 0 0 1px rgba(0, 84, 240, 0.1) inset,
+    0 0 40px -12px rgba(0, 84, 240, 0.14),
     0 28px 56px -20px rgba(0, 0, 0, 0.7);
 }
 
@@ -273,8 +273,8 @@ body {
 }
 
 .card-flash:hover {
-  border-color: rgba(34, 211, 238, 0.45);
-  box-shadow: 0 0 48px -16px rgba(34, 211, 238, 0.16);
+  border-color: rgba(0, 84, 240, 0.45);
+  box-shadow: 0 0 48px -16px rgba(0, 84, 240, 0.16);
   transform: translateY(-2px);
 }
 
@@ -289,8 +289,8 @@ body {
 
 .grid-lines {
   background-image:
-    linear-gradient(rgba(34, 211, 238, 0.025) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(34, 211, 238, 0.025) 1px, transparent 1px);
+    linear-gradient(rgba(0, 84, 240, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 84, 240, 0.025) 1px, transparent 1px);
   background-size: 64px 64px;
 }
 
@@ -344,8 +344,8 @@ body {
   opacity: 0.28;
   pointer-events: none;
   background-image:
-    radial-gradient(ellipse 60% 40% at 20% 30%, rgba(34, 211, 238, 0.05), transparent),
-    radial-gradient(ellipse 50% 35% at 80% 70%, rgba(34, 211, 238, 0.035), transparent);
+    radial-gradient(ellipse 60% 40% at 20% 30%, rgba(0, 84, 240, 0.05), transparent),
+    radial-gradient(ellipse 50% 35% at 80% 70%, rgba(0, 84, 240, 0.035), transparent);
 }
 
 .surface-dark {

@@ -23,7 +23,7 @@ export function BetaAideContent({ session }: BetaAideContentProps) {
       title="FAQ, support et retours"
       description="Réponses aux questions fréquentes, contact support et envoi de feedback produit."
     >
-      <div className="rounded-3xl border border-cyan-500/20 bg-cyan-950/20 p-8">
+      <div className="rounded-3xl border border-[var(--proday-accent)]/20 bg-[#001854]/35 p-8">
         <MessageSquare className="text-[var(--proday-accent)]" size={28} />
         <h2 className="font-display mt-4 text-xl font-bold uppercase tracking-wide text-white">
           Envoyer un retour
@@ -35,7 +35,7 @@ export function BetaAideContent({ session }: BetaAideContentProps) {
         </p>
         <a
           href={feedbackMailto}
-          className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-full bg-[var(--proday-accent)] px-6 py-3 text-sm font-bold text-black transition hover:bg-cyan-300"
+          className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-full bg-[var(--proday-accent)] px-6 py-3 text-sm font-bold text-white transition hover:bg-[#2a6fff]"
         >
           <Mail size={16} />
           Envoyer un retour
@@ -75,7 +75,7 @@ export function BetaAideContent({ session }: BetaAideContentProps) {
           </p>
           <Link
             href={ROUTES.betaInstaller}
-            className="mt-4 inline-flex text-sm font-semibold text-[var(--proday-accent)] hover:text-cyan-300"
+            className="mt-4 inline-flex text-sm font-semibold text-[var(--proday-accent)] hover:text-[#4C8BFF]"
           >
             Guide d&apos;installation →
           </Link>
@@ -87,7 +87,7 @@ export function BetaAideContent({ session }: BetaAideContentProps) {
           </p>
           <Link
             href={ROUTES.betaProgramme}
-            className="mt-4 inline-flex text-sm font-semibold text-[var(--proday-accent)] hover:text-cyan-300"
+            className="mt-4 inline-flex text-sm font-semibold text-[var(--proday-accent)] hover:text-[#4C8BFF]"
           >
             Voir le programme →
           </Link>

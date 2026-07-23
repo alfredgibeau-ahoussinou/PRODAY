@@ -164,7 +164,7 @@ export function SiteNav() {
   const border = useTransform(
     scrollY,
     [0, 80],
-    ["rgba(34, 211, 238, 0)", "rgba(34, 211, 238, 0.16)"],
+    ["rgba(0, 84, 240, 0)", "rgba(0, 84, 240, 0.18)"],
   );
 
   const brand = navBrandForPath(pathname);
@@ -237,7 +237,7 @@ export function SiteNav() {
         <div className="hidden shrink-0 items-center lg:flex">
           <Link
             href={ROUTES.betaWaitlist}
-            className="cta-lift rounded-full bg-[var(--proday-accent)] px-4 py-2 text-xs font-bold uppercase tracking-wide text-black shadow-[0_0_0_1px_rgba(34,211,238,0.35),0_10px_32px_-10px_rgba(34,211,238,0.45)] transition hover:bg-cyan-300 hover:shadow-[0_0_0_1px_rgba(103,232,249,0.45),0_14px_40px_-10px_rgba(34,211,238,0.5)] active:bg-cyan-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-400/50 xl:px-5 xl:text-sm"
+            className="cta-lift rounded-full bg-[var(--proday-accent)] px-4 py-2 text-xs font-bold uppercase tracking-wide text-white shadow-[0_0_0_1px_rgba(0,84,240,0.4),0_10px_32px_-10px_rgba(0,84,240,0.5)] transition hover:bg-[#2a6fff] hover:shadow-[0_0_0_1px_rgba(76,139,255,0.45),0_14px_40px_-10px_rgba(0,84,240,0.55)] active:bg-[#0046cc] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--proday-accent)]/50 xl:px-5 xl:text-sm"
           >
             Accès anticipé
           </Link>
@@ -314,7 +314,7 @@ export function SiteNav() {
             ))}
             <Link
               href={ROUTES.betaWaitlist}
-              className="mt-4 flex min-h-11 items-center justify-center rounded-full bg-[var(--proday-accent)] py-3 text-center text-sm font-bold uppercase tracking-wide text-black transition hover:bg-cyan-300 active:bg-cyan-400"
+              className="mt-4 flex min-h-11 items-center justify-center rounded-full bg-[var(--proday-accent)] py-3 text-center text-sm font-bold uppercase tracking-wide text-white transition hover:bg-[#2a6fff] active:bg-[#0046cc]"
               onClick={close}
             >
               Accès anticipé
