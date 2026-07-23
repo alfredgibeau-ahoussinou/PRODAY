@@ -74,10 +74,21 @@ export function WaitlistForm({ fullPage, compact, minimal, initialRole }: Waitli
 
   if (minimal) {
     return (
-      <section id="inscription" className="scroll-mt-24 border-t border-white/8 bg-neutral-950 py-8 sm:py-10">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6">
+      <section id="inscription" className="scroll-mt-28 py-16 sm:py-20">
+        <div className="mx-auto max-w-4xl px-4 sm:px-6">
+          <div className="mb-8 text-center">
+            <p className="font-signature text-2xl italic text-[var(--proday-accent)]">
+              Accès anticipé
+            </p>
+            <h2 className="font-display mt-2 text-3xl font-extrabold uppercase tracking-[-0.03em] text-white">
+              Liste d&apos;attente
+            </h2>
+            <p className="mx-auto mt-3 max-w-lg text-sm text-white/45">
+              {BETA_PITCH.summary}
+            </p>
+          </div>
           {state === "success" ? (
-            <div className="rounded-2xl border border-[var(--proday-accent)]/20 bg-[var(--proday-accent-muted)] p-5 text-white">
+            <div className="rounded-3xl border border-[var(--proday-accent)]/25 bg-[var(--proday-accent-muted)] p-6 text-white">
               <p className="font-semibold">Merci — inscription enregistrée.</p>
               <p className="mt-1 text-sm text-white/75">
                 {email} · {BETA_ROLE_LABELS[role]}
@@ -87,49 +98,44 @@ export function WaitlistForm({ fullPage, compact, minimal, initialRole }: Waitli
               </p>
             </div>
           ) : (
-            <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-              <div className="max-w-md">
-                <h2 className="font-display text-xl font-bold text-white sm:text-2xl">
-                  Liste d&apos;attente
-                </h2>
-                <p className="mt-1 text-sm text-white/55">{BETA_PITCH.summary}</p>
+            <form
+              onSubmit={handleSubmit}
+              className="mx-auto w-full max-w-2xl space-y-3 rounded-3xl border border-white/10 bg-white/[0.03] p-5 sm:p-6"
+            >
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <select
+                  value={role}
+                  onChange={(e) => setRole(e.target.value as BetaRoleId)}
+                  disabled={state === "loading"}
+                  className="min-h-11 rounded-full border-0 bg-white/10 px-4 py-3 text-sm text-white focus:outline focus:outline-2 focus:outline-[var(--proday-accent)]/50 disabled:opacity-60"
+                >
+                  {roles.map((r) => (
+                    <option key={r.id} value={r.id} className="bg-neutral-900">
+                      {r.label}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  type="email"
+                  required
+                  placeholder="votre@email.fr"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={state === "loading"}
+                  className="min-h-11 flex-1 rounded-full border-0 bg-white/10 px-5 py-3 text-white caret-white placeholder:text-white/50 focus:outline focus:outline-2 focus:outline-[var(--proday-accent)]/50 disabled:opacity-60"
+                />
+                <button
+                  type="submit"
+                  disabled={state === "loading"}
+                  className="min-h-11 shrink-0 rounded-full bg-[var(--proday-accent)] px-6 py-3 text-sm font-bold text-white transition hover:bg-[#2a6fff] disabled:opacity-60"
+                >
+                  {state === "loading" ? "Envoi…" : "S'inscrire"}
+                </button>
               </div>
-              <form onSubmit={handleSubmit} className="w-full max-w-xl space-y-3 lg:max-w-2xl">
-                <div className="flex flex-col gap-3 sm:flex-row">
-                  <select
-                    value={role}
-                    onChange={(e) => setRole(e.target.value as BetaRoleId)}
-                    disabled={state === "loading"}
-                    className="min-h-11 rounded-full border-0 bg-white/10 px-4 py-3 text-sm text-white focus:outline focus:outline-2 focus:outline-[var(--proday-accent)]/50 disabled:opacity-60"
-                  >
-                    {roles.map((r) => (
-                      <option key={r.id} value={r.id} className="bg-neutral-900">
-                        {r.label}
-                      </option>
-                    ))}
-                  </select>
-                  <input
-                    type="email"
-                    required
-                    placeholder="votre@email.fr"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    disabled={state === "loading"}
-                    className="min-h-11 flex-1 rounded-full border-0 bg-white/10 px-5 py-3 text-white caret-white placeholder:text-white/50 focus:outline focus:outline-2 focus:outline-[var(--proday-accent)]/50 disabled:opacity-60"
-                  />
-                  <button
-                    type="submit"
-                    disabled={state === "loading"}
-                    className="min-h-11 shrink-0 rounded-full bg-[var(--proday-accent)] px-6 py-3 text-sm font-bold text-white transition hover:bg-[#2a6fff] disabled:opacity-60"
-                  >
-                    {state === "loading" ? "Envoi…" : "S'inscrire"}
-                  </button>
-                </div>
-                {state === "error" && errorMessage ? (
-                  <p className="text-sm text-red-300">{errorMessage}</p>
-                ) : null}
-              </form>
-            </div>
+              {state === "error" && errorMessage ? (
+                <p className="text-sm text-red-300">{errorMessage}</p>
+              ) : null}
+            </form>
           )}
         </div>
       </section>

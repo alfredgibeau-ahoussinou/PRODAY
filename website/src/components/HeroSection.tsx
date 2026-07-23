@@ -3,7 +3,6 @@
 import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
 import { BRAND } from "@/lib/content";
 import { ROUTES } from "@/lib/routes";
 import { POLES, POLE_BRAND_HEX, type PoleId } from "@/lib/poles";
@@ -27,173 +26,117 @@ const HERO_SLIDES = POLES.map((pole, i) => ({
   label: HERO_LABELS[pole.id],
   href: pole.href,
   color: POLE_BRAND_HEX[pole.id],
+  logo: pole.logo,
 }));
-
-const QUICK_LINKS = [
-  { href: "#decouvrir", label: "Quiz pôle" },
-  { href: ROUTES.demo, label: "Démo" },
-  { href: ROUTES.pricing, label: "Tarifs" },
-  { href: ROUTES.features, label: "Fonctionnalités" },
-  { href: ROUTES.faq, label: "FAQ" },
-] as const;
 
 export function HeroSection() {
   return (
-    <section className="relative max-h-[100dvh] min-h-[100dvh] overflow-hidden noise lg:max-h-none lg:min-h-screen">
+    <section className="relative flex min-h-[100dvh] flex-col overflow-hidden lg:min-h-screen">
       <div className="absolute inset-0">
         <HeroVideoBackground
           sources={["/videos/hero-stadium.mp4", "/videos/hero-match.mp4"]}
           poster="/images/football-stadium-night-01.jpg"
           opacity={1}
         />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_70%_55%_at_18%_40%,rgba(0,84,240,0.22),transparent_55%)]" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/45 to-black/25" />
-        <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/25 to-transparent hidden md:block" />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/70 md:hidden" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-black/30" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_50%_at_50%_30%,rgba(0,84,240,0.2),transparent_60%)]" />
       </div>
 
-      <div className="relative mx-auto flex max-h-[100dvh] min-h-[100dvh] max-w-7xl flex-col px-4 text-center sm:px-6 lg:max-h-none lg:min-h-screen lg:flex-row lg:items-end lg:justify-between lg:pb-24 lg:pt-32 lg:text-left">
-        <div className="mx-auto flex max-w-2xl flex-1 flex-col items-center justify-center pb-36 pt-16 text-center sm:pb-40 sm:pt-20 lg:mx-0 lg:flex-none lg:items-start lg:justify-end lg:pb-8 lg:pt-0">
-          <motion.div
-            initial={{ opacity: 0, y: 14, scale: 0.96 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-            className="mb-5 overflow-hidden rounded-2xl bg-white p-1.5 shadow-[0_20px_60px_-20px_rgba(0,84,240,0.55)] ring-1 ring-white/20"
-          >
-            <Image
-              src={PRODAY_LOGO_OFFICIAL}
-              alt="ProDay"
-              width={Math.round(56 * PRODAY_OFFICIAL_LOGO_ASPECT)}
-              height={56}
-              className="h-14 w-auto sm:h-16"
-              priority
-            />
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.12 }}
-          >
-            <Kicker>{BRAND.tagline}</Kicker>
-          </motion.div>
-
-          <motion.h1
-            initial={{ opacity: 0, y: 28 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.22, duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
-            className="font-display mt-5 text-[clamp(2.5rem,9vw,5.5rem)] font-bold uppercase leading-[0.9] tracking-[-0.035em] sm:text-6xl lg:text-7xl xl:text-8xl"
-          >
-            <span className="text-shimmer">L&apos;heure</span>
-            <br />
-            <span className="text-white">de jouer</span>
-          </motion.h1>
-
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.38 }}
-            className="mx-auto mt-4 max-w-lg text-base leading-relaxed text-white/65 sm:mt-6 sm:text-lg lg:mx-0"
-          >
-            {BRAND.mission}
-          </motion.p>
-
-          <motion.div
-            initial={{ opacity: 0, y: 22 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.48, duration: 0.55 }}
-            className="mt-6 flex flex-wrap justify-center gap-2 sm:mt-8 sm:gap-3 lg:justify-start"
-          >
-            <PremiumButton href="#inscription" className="cta-lift glow-cyan">
-              Accès anticipé
-            </PremiumButton>
-            <PremiumButton href="#decouvrir" variant="outline">
-              Trouver mon pôle
-            </PremiumButton>
-          </motion.div>
-
-          <motion.nav
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.62 }}
-            aria-label="Explorer ProDay"
-            className="mt-5 flex flex-wrap justify-center gap-x-4 gap-y-2 sm:mt-6 lg:justify-start"
-          >
-            {QUICK_LINKS.map((link) => (
-              <Link
-                key={link.label}
-                href={link.href}
-                className="group relative text-xs font-semibold uppercase tracking-[0.14em] text-white/55 transition hover:text-[var(--proday-accent)]"
-              >
-                {link.label}
-                <span className="absolute inset-x-0 -bottom-0.5 h-px origin-left scale-x-0 bg-[var(--proday-accent)] transition-transform duration-300 group-hover:scale-x-100" />
-              </Link>
-            ))}
-          </motion.nav>
-        </div>
+      <div className="relative z-10 mx-auto flex w-full max-w-5xl flex-1 flex-col items-center justify-center px-4 pb-36 pt-28 text-center sm:px-6 sm:pb-40 sm:pt-32">
+        <motion.div
+          initial={{ opacity: 0, y: 14, scale: 0.96 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+          className="mb-6 overflow-hidden rounded-2xl bg-white p-1.5 shadow-[0_20px_60px_-20px_rgba(0,84,240,0.55)]"
+        >
+          <Image
+            src={PRODAY_LOGO_OFFICIAL}
+            alt="ProDay"
+            width={Math.round(56 * PRODAY_OFFICIAL_LOGO_ASPECT)}
+            height={56}
+            className="h-14 w-auto sm:h-16"
+            priority
+          />
+        </motion.div>
 
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.55, duration: 0.55 }}
-          className="absolute inset-x-0 bottom-0 scroll-snap-x flex w-full shrink-0 gap-2 overflow-x-auto px-4 pb-6 sm:pb-8 lg:hidden"
-          aria-label="Les 7 pôles ProDay"
+          transition={{ delay: 0.12 }}
         >
-          {HERO_SLIDES.map((slide) => (
-            <Link
-              key={slide.num}
-              href={slide.href}
-              className="flex shrink-0 snap-start items-center gap-2 rounded-full border border-white/12 bg-black/50 px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-white/80 backdrop-blur-md transition hover:border-white/30 hover:text-white"
-              style={{ boxShadow: `inset 0 -2px 0 ${slide.color}` }}
-            >
-              <span className="font-display text-lg tabular-nums" style={{ color: slide.color }}>
-                {slide.num}
-              </span>
-              {slide.label}
-            </Link>
-          ))}
+          <Kicker>{BRAND.tagline}</Kicker>
         </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, x: 24 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.5, duration: 0.65 }}
-          className="mt-12 hidden flex-col items-end gap-0.5 lg:mt-0 lg:flex"
-          aria-label="Les 7 pôles ProDay — desktop"
+        <motion.h1
+          initial={{ opacity: 0, y: 28 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.22, duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
+          className="font-display mt-5 text-[clamp(2.6rem,9vw,5.75rem)] font-extrabold uppercase leading-[0.9] tracking-[-0.04em]"
         >
+          <span className="text-shimmer">L&apos;heure</span>
+          <br />
+          <span className="text-white">de jouer</span>
+        </motion.h1>
+
+        <motion.p
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.38 }}
+          className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-white/65 sm:text-lg"
+        >
+          {BRAND.mission}
+        </motion.p>
+
+        <motion.div
+          initial={{ opacity: 0, y: 22 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.48, duration: 0.55 }}
+          className="mt-8 flex flex-wrap justify-center gap-3"
+        >
+          <PremiumButton
+            href="#inscription"
+            className="!bg-white !text-black hover:!bg-[var(--proday-accent)] hover:!text-white"
+          >
+            Accès anticipé
+          </PremiumButton>
+          <PremiumButton href="#decouvrir" variant="outline">
+            Trouver mon pôle
+          </PremiumButton>
+        </motion.div>
+      </div>
+
+      {/* Bandeau 7 pôles — pleine largeur, centré, desktop + mobile */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.55, duration: 0.55 }}
+        className="absolute inset-x-0 bottom-0 z-10 border-t border-white/10 bg-black/55 backdrop-blur-xl"
+        aria-label="Les 7 pôles ProDay"
+      >
+        <div className="mx-auto grid max-w-6xl grid-cols-7 gap-0 px-1 sm:px-4">
           {HERO_SLIDES.map((slide) => (
             <Link
               key={slide.num}
               href={slide.href}
-              className="group flex items-center gap-4 py-2 text-white/35 transition hover:text-white/80"
+              className="group flex flex-col items-center gap-1.5 px-1 py-4 text-center transition hover:bg-white/[0.04] sm:py-5"
             >
               <span
-                className="font-display text-2xl font-bold tabular-nums tracking-tight transition group-hover:scale-105"
+                className="font-display text-base font-extrabold tabular-nums sm:text-xl"
                 style={{ color: slide.color }}
               >
                 {slide.num}
               </span>
-              <span className="text-xs font-semibold uppercase tracking-[0.18em] opacity-0 transition duration-300 group-hover:opacity-100">
+              <span className="hidden text-[10px] font-semibold uppercase tracking-[0.12em] text-white/55 transition group-hover:text-white sm:block md:text-[11px]">
                 {slide.label}
               </span>
+              <span
+                className="mt-1 h-0.5 w-6 rounded-full opacity-80 transition group-hover:w-8"
+                style={{ background: slide.color }}
+                aria-hidden
+              />
             </Link>
           ))}
-        </motion.div>
-      </div>
-
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.9 }}
-        className="absolute bottom-8 left-1/2 hidden -translate-x-1/2 sm:block"
-      >
-        <Link
-          href="#decouvrir"
-          className="flex flex-col items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--proday-accent)]/60 transition hover:text-[var(--proday-accent)]"
-        >
-          Découvrir
-          <ArrowRight size={14} className="rotate-90 animate-float" />
-        </Link>
+        </div>
       </motion.div>
     </section>
   );

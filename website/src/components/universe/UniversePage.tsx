@@ -83,31 +83,44 @@ export function UniversePage({ universe }: UniversePageProps) {
       />
 
       <section
-        className="border-b border-white/10 py-12"
-        style={{ background: `linear-gradient(180deg, ${theme.brandDeep}22 0%, #000 100%)` }}
+        className="border-b border-white/10 py-14"
+        style={{ background: `linear-gradient(180deg, ${theme.brandDeep}33 0%, #050507 100%)` }}
       >
-        <div className="mx-auto grid max-w-6xl gap-4 px-4 sm:grid-cols-2 sm:px-6 lg:grid-cols-4">
-          {config.highlights.map((h) => (
+        <div className="mx-auto grid max-w-6xl gap-3 px-4 sm:grid-cols-2 sm:px-6 lg:grid-cols-4">
+          {config.highlights.map((h, i) => (
             <div
               key={h.label}
-              className={`rounded-2xl p-5 ${theme.highlightBorder}`}
+              className="relative overflow-hidden rounded-3xl border border-white/10 bg-black/40 p-6 backdrop-blur-sm"
+              style={{ boxShadow: `inset 3px 0 0 ${theme.brandAccent}` }}
             >
-              <p className={`text-xs font-semibold uppercase tracking-wider ${theme.highlightLabel}`}>
+              <span
+                className="font-display text-xs font-bold tabular-nums opacity-50"
+                style={{ color: theme.brandAccent }}
+              >
+                {String(i + 1).padStart(2, "0")}
+              </span>
+              <p className={`mt-3 text-[10px] font-bold uppercase tracking-[0.2em] ${theme.highlightLabel}`}>
                 {h.label}
               </p>
-              <p className="mt-2 font-display text-lg font-bold text-white">{h.value}</p>
+              <p className="font-display mt-2 text-xl font-bold text-white">{h.value}</p>
             </div>
           ))}
         </div>
       </section>
 
-      <section id="modules" className="scroll-mt-24 bg-black py-16">
+      <section id="modules" className="scroll-mt-28 bg-[#050507] py-20">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <p className={`font-signature text-2xl italic ${theme.highlightLabel}`}>
-            Modules
-          </p>
-          <h2 className="font-display mt-2 text-2xl font-extrabold uppercase tracking-[-0.03em] text-white sm:text-3xl">{config.modulesTitle}</h2>
-          <p className="mt-3 max-w-3xl text-white/55">{config.modulesSubtitle}</p>
+          <div className="mb-10 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className={`font-signature text-2xl italic ${theme.highlightLabel}`}>
+                Modules
+              </p>
+              <h2 className="font-display mt-1 text-3xl font-extrabold uppercase tracking-[-0.03em] text-white">
+                {config.modulesTitle}
+              </h2>
+            </div>
+            <p className="max-w-md text-sm text-white/45">{config.modulesSubtitle}</p>
+          </div>
           <UniverseModuleExplorer universe={themeId} modules={config.modules} />
         </div>
       </section>
