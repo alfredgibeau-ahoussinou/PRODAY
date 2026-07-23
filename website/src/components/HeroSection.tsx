@@ -44,13 +44,12 @@ export function HeroSection() {
         <HeroVideoBackground
           sources={["/videos/hero-stadium.mp4", "/videos/hero-match.mp4"]}
           poster="/images/football-stadium-night-01.jpg"
-          opacity={0.92}
+          opacity={1}
         />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_70%_55%_at_18%_40%,rgba(0,84,240,0.28),transparent_55%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_50%_40%_at_85%_20%,rgba(0,24,84,0.45),transparent)]" />
-        <div className="absolute inset-0 hero-overlay" />
-        <div className="absolute inset-0 hero-overlay-mobile md:hidden" />
-        <div className="absolute inset-0 hero-overlay-side hidden md:block" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_70%_55%_at_18%_40%,rgba(0,84,240,0.22),transparent_55%)]" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/45 to-black/25" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/25 to-transparent hidden md:block" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/70 md:hidden" />
       </div>
 
       <div className="relative mx-auto flex max-h-[100dvh] min-h-[100dvh] max-w-7xl flex-col px-4 text-center sm:px-6 lg:max-h-none lg:min-h-screen lg:flex-row lg:items-end lg:justify-between lg:pb-24 lg:pt-32 lg:text-left">

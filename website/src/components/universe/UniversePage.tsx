@@ -63,7 +63,13 @@ export function UniversePage({ universe }: UniversePageProps) {
   const otherPoles = CAROUSEL_POLES.filter((p) => p.id !== currentPoleId);
 
   return (
-    <>
+    <div className="relative">
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 h-[120vh] opacity-100"
+        style={{ background: theme.ambientWash }}
+        aria-hidden
+      />
+      <div className="relative">
       <PageHeader
         pathname={PATH_BY_UNIVERSE[universe]}
         kicker={config.brand.tagline}
@@ -76,12 +82,15 @@ export function UniversePage({ universe }: UniversePageProps) {
         dark
       />
 
-      <section className="border-b border-white/10 bg-[#030303] py-10">
+      <section
+        className="border-b border-white/10 py-12"
+        style={{ background: `linear-gradient(180deg, ${theme.brandDeep}22 0%, #000 100%)` }}
+      >
         <div className="mx-auto grid max-w-6xl gap-4 px-4 sm:grid-cols-2 sm:px-6 lg:grid-cols-4">
           {config.highlights.map((h) => (
             <div
               key={h.label}
-              className={`card-premium rounded-2xl p-5 ${theme.highlightBorder}`}
+              className={`rounded-2xl p-5 ${theme.highlightBorder}`}
             >
               <p className={`text-xs font-semibold uppercase tracking-wider ${theme.highlightLabel}`}>
                 {h.label}
@@ -92,9 +101,12 @@ export function UniversePage({ universe }: UniversePageProps) {
         </div>
       </section>
 
-      <section id="modules" className="scroll-mt-24 bg-[#030303] py-16">
+      <section id="modules" className="scroll-mt-24 bg-black py-16">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <h2 className="font-display text-2xl font-bold uppercase tracking-tight text-white sm:text-3xl">{config.modulesTitle}</h2>
+          <p className={`text-xs font-bold uppercase tracking-[0.28em] ${theme.highlightLabel}`}>
+            Modules
+          </p>
+          <h2 className="font-display mt-2 text-2xl font-bold uppercase tracking-tight text-white sm:text-3xl">{config.modulesTitle}</h2>
           <p className="mt-3 max-w-3xl text-white/55">{config.modulesSubtitle}</p>
           <UniverseModuleExplorer universe={themeId} modules={config.modules} />
         </div>
@@ -327,6 +339,7 @@ export function UniversePage({ universe }: UniversePageProps) {
           </div>
         </div>
       </section>
-    </>
+      </div>
+    </div>
   );
 }
