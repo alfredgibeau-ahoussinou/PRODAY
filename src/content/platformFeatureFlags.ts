@@ -68,7 +68,7 @@ export const PLATFORM_FEATURE_FLAG_META: Record<
     key: 'sante_visio',
     label: 'Visio Santé',
     adminHint:
-      'OFF = écran de coupure plein (pôle Santé + praticiens), comme la maintenance',
+      'OFF = écran de coupure plein (onglet Santé toujours visible)',
     disabledTitle: 'Visio Santé indisponible',
     disabledMessage:
       'La téléconsultation est momentanément fermée. L’équipe ProDay la réouvrira depuis l’admin.',
@@ -80,7 +80,8 @@ export const TAB_FEATURE_FLAG: Partial<Record<MainTabId, PlatformFeatureFlagKey>
   recrutement: 'mercato',
   shop: 'shop',
   reels: 'community_reels',
-  sante: 'sante_visio',
+  // `sante` volontairement absent : l’onglet reste visible ; le contenu est
+  // coupé en plein écran via FeatureBlockedScreen si `sante_visio` est OFF.
 };
 
 export function isPlatformFeatureEnabled(

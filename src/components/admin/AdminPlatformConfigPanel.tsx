@@ -167,7 +167,8 @@ export const AdminPlatformConfigPanel: React.FC = () => {
         </View>
         <Text style={styles.hint}>
           OFF = écran plein « {santeVisioMeta.disabledTitle} » pour le pôle Santé et les
-          praticiens (admins exclus). Les autres pôles perdent l’onglet Santé.
+          praticiens (admins exclus). Sur les autres pôles, l’onglet Santé reste visible
+          mais affiche le même écran de coupure.
         </Text>
       </AdminSettingsCard>
 

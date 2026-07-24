@@ -364,8 +364,10 @@ function AppShell() {
 
   const Screen = resolveMainTabScreen(activeTab, sessionProfile?.role, productLine);
   const disabledFlag = flagForTab(activeTab);
+  const santeVisioBlocked = activeTab === 'sante' && !isEnabled('sante_visio');
   const tabFeatureBlocked =
-    disabledFlag != null && !isEnabled(disabledFlag);
+    santeVisioBlocked || (disabledFlag != null && !isEnabled(disabledFlag));
+  const blockedFlag = santeVisioBlocked ? 'sante_visio' : disabledFlag;
   const isSponsor = isSponsorRole(sessionProfile?.role);
   const shellBackground = isSponsor ? SPONSOR_THEME.background : themeColors.background;
 
@@ -503,11 +505,11 @@ function AppShell() {
           {profile ? <PoleHelpChatbot /> : null}
           <View style={styles.screen}>
             <AnimatedTabContent activeTab={activeTab} tabOrder={screenTabs}>
-              {tabFeatureBlocked && disabledFlag ? (
-                disabledFlag === 'sante_visio' ? (
+              {tabFeatureBlocked && blockedFlag ? (
+                blockedFlag === 'sante_visio' ? (
                   <FeatureBlockedScreen flag="sante_visio" />
                 ) : (
-                  <FeatureDisabledPanel flag={disabledFlag} />
+                  <FeatureDisabledPanel flag={blockedFlag} />
                 )
               ) : (
                 <Screen />
