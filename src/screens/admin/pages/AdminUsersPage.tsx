@@ -25,10 +25,16 @@ import { spacing, radius } from '../../../theme/designTokens';
 import type { AppColors } from '../../../theme/universeTheme';
 
 import { getRoleLabel } from '../../signup/signupFlowConfig';
+import {
+  ADMIN_EDIT_ROLES,
+  ADMIN_PRODUCT_LINES,
+  adminProductLineLabel,
+  resolveAdminProductLine,
+} from '../../../utils/adminProductLine';
+import { getUserProductLine } from '../../../utils/productLineAccess';
+import type { ProductLineId } from '../../../models/ProductLine';
 
-const ROLES: UserRole[] = ['player', 'coach', 'club', 'agent', 'recruiter', 'organizer', 'physio', 'sponsor'];
-
-type UserListFilter = 'all' | 'pending' | UserRole;
+type UserListFilter = 'all' | 'pending' | UserRole | `line:${ProductLineId}`;
 
 const EMPTY_FORM: CreateUserFormState = {
   email: '',
@@ -36,6 +42,7 @@ const EMPTY_FORM: CreateUserFormState = {
   display_name: '',
   city: '',
   role: 'player',
+  product_line: 'pro_player',
 };
 
 export const AdminUsersPage: React.FC = () => {
@@ -57,13 +64,21 @@ export const AdminUsersPage: React.FC = () => {
 
   const filtered = users.filter((u) => {
     if (listFilter === 'pending' && !userNeedsAdminVerificationReview(u)) return false;
-    if (listFilter !== 'all' && listFilter !== 'pending' && u.role !== listFilter) return false;
+    if (listFilter.startsWith('line:')) {
+      const line = listFilter.slice(5) as ProductLineId;
+      if (getUserProductLine(u) !== line) return false;
+    } else if (listFilter !== 'all' && listFilter !== 'pending' && u.role !== listFilter) {
+      return false;
+    }
     const q = search.trim().toLowerCase();
     if (!q) return true;
+    const lineLabel = adminProductLineLabel(getUserProductLine(u)).toLowerCase();
     return (
       u.display_name.toLowerCase().includes(q) ||
       u.email.toLowerCase().includes(q) ||
-      (u.city?.toLowerCase().includes(q) ?? false)
+      (u.city?.toLowerCase().includes(q) ?? false) ||
+      lineLabel.includes(q) ||
+      (u.product_line?.toLowerCase().includes(q) ?? false)
     );
   });
 
@@ -86,7 +101,7 @@ export const AdminUsersPage: React.FC = () => {
   };
 
   const handleCreate = async () => {
-    const { email, password, display_name, city, role } = createForm;
+    const { email, password, display_name, city, role, product_line } = createForm;
     if (!email.trim() || !password || !display_name.trim()) {
       Alert.alert('Champs requis', 'Email, mot de passe et nom sont obligatoires.');
       return;
@@ -99,6 +114,7 @@ export const AdminUsersPage: React.FC = () => {
         display_name: display_name.trim(),
         role,
         city: city.trim() || undefined,
+        product_line: resolveAdminProductLine(role, product_line),
       });
       Alert.alert(t('admin.users.created'), t('admin.users.createdBody', { email }));
       setShowCreate(false);
@@ -155,7 +171,11 @@ export const AdminUsersPage: React.FC = () => {
         options={[
           { id: 'all' as const, label: 'Tous' },
           { id: 'pending' as const, label: t('admin.users.verifyPending') },
-          ...ROLES.map((r) => ({ id: r, label: getRoleLabel(r, t) })),
+          ...ADMIN_PRODUCT_LINES.map((line) => ({
+            id: `line:${line}` as const,
+            label: adminProductLineLabel(line),
+          })),
+          ...ADMIN_EDIT_ROLES.map((r) => ({ id: r, label: getRoleLabel(r, t) })),
         ]}
         value={listFilter}
         onChange={setListFilter}
@@ -214,7 +234,15 @@ export const AdminUsersPage: React.FC = () => {
           if (!editUser) return;
           setSavingUser(true);
           try {
-            await adminService.updateUser(editUser.uid, patch);
+            await adminService.updateUser(editUser.uid, {
+              display_name: patch.display_name,
+              city: patch.city,
+              role: patch.role,
+              product_line: patch.product_line,
+              verification_status: patch.verification_status,
+              is_verified: patch.is_verified,
+              sponsor_approved: patch.sponsor_approved,
+            });
             setEditUser(null);
             await refresh();
             Alert.alert(t('admin.users.saved'), t('admin.users.profileUpdated'));

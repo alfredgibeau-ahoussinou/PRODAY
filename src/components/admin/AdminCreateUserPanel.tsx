@@ -8,12 +8,17 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import type { UserRole } from '../../models/User';
+import type { ProductLineId } from '../../models/ProductLine';
 import { Icon } from '../ui/Icon';
 import { useAdminStyles } from './adminStyles';
 import { spacing, radius } from '../../theme/designTokens';
 import type { AppColors } from '../../theme/universeTheme';
-
-const ROLES: UserRole[] = ['player', 'coach', 'club', 'agent', 'recruiter', 'organizer', 'physio', 'sponsor'];
+import {
+  ADMIN_EDIT_ROLES,
+  ADMIN_PRODUCT_LINES,
+  adminProductLineLabel,
+  resolveAdminProductLine,
+} from '../../utils/adminProductLine';
 
 const ROLE_LABEL: Record<UserRole, string> = {
   player: 'Joueur',
@@ -33,6 +38,7 @@ export interface CreateUserFormState {
   display_name: string;
   city: string;
   role: UserRole;
+  product_line: ProductLineId;
 }
 
 interface AdminCreateUserPanelProps {
@@ -100,13 +106,55 @@ export const AdminCreateUserPanel: React.FC<AdminCreateUserPanelProps> = ({
         textMuted={c.textMuted}
       />
 
+      <Text style={styles.fieldLabel}>Univers</Text>
+      <View style={styles.roleGrid}>
+        {ADMIN_PRODUCT_LINES.map((line) => (
+          <TouchableOpacity
+            key={line}
+            style={[styles.roleChip, form.product_line === line && styles.roleChipOn]}
+            onPress={() => {
+              const role =
+                line === 'sponsor'
+                  ? 'sponsor'
+                  : line === 'sante'
+                    ? 'physio'
+                    : line === 'supporter'
+                      ? 'supporter'
+                      : line === 'pro_club'
+                        ? 'club'
+                        : line === 'pro_staff'
+                          ? 'coach'
+                          : 'player';
+              onChange({
+                product_line: line,
+                role,
+              });
+            }}
+          >
+            <Text
+              style={[
+                styles.roleChipText,
+                form.product_line === line && styles.roleChipTextOn,
+              ]}
+            >
+              {adminProductLineLabel(line)}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
       <Text style={styles.fieldLabel}>Rôle</Text>
       <View style={styles.roleGrid}>
-        {ROLES.map((r) => (
+        {ADMIN_EDIT_ROLES.map((r) => (
           <TouchableOpacity
             key={r}
             style={[styles.roleChip, form.role === r && styles.roleChipOn]}
-            onPress={() => onChange({ role: r })}
+            onPress={() =>
+              onChange({
+                role: r,
+                product_line: resolveAdminProductLine(r, form.product_line),
+              })
+            }
           >
             <Text style={[styles.roleChipText, form.role === r && styles.roleChipTextOn]}>
               {ROLE_LABEL[r]}

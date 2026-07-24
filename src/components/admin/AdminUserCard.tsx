@@ -8,6 +8,8 @@ import { useAdminStyles } from './adminStyles';
 import { spacing, radius } from '../../theme/designTokens';
 import type { AppColors } from '../../theme/universeTheme';
 import { getRoleLabel } from '../../screens/signup/signupFlowConfig';
+import { adminProductLineLabel } from '../../utils/adminProductLine';
+import { getUserProductLine } from '../../utils/productLineAccess';
 
 function needsVerificationReview(user: User): boolean {
   return userNeedsAdminVerificationReview(user);
@@ -41,6 +43,7 @@ export const AdminUserCard: React.FC<AdminUserCardProps> = ({
   const styles = useMemo(() => createStyles(c), [c]);
   const initial = user.display_name.trim().charAt(0).toUpperCase() || '?';
   const showVerify = needsVerificationReview(user);
+  const productLine = getUserProductLine(user);
 
   return (
     <View style={styles.card}>
@@ -65,6 +68,21 @@ export const AdminUserCard: React.FC<AdminUserCardProps> = ({
               <View style={styles.roleBadge}>
                 <Text style={styles.roleBadgeText}>{getRoleLabel(user.role, t)}</Text>
               </View>
+              <View style={styles.lineBadge}>
+                <Text style={styles.lineBadgeText}>{adminProductLineLabel(productLine)}</Text>
+              </View>
+              {user.role === 'sponsor' ? (
+                <View
+                  style={[
+                    styles.sponsorBadge,
+                    user.sponsor_approved ? styles.sponsorOk : styles.sponsorWait,
+                  ]}
+                >
+                  <Text style={styles.sponsorBadgeText}>
+                    {user.sponsor_approved ? 'Campagnes OK' : 'Campagnes en attente'}
+                  </Text>
+                </View>
+              ) : null}
               {user.city ? (
                 <Text style={styles.city}>{user.city}</Text>
               ) : null}
@@ -215,9 +233,21 @@ function createStyles(c: AppColors) {
     headCopy: { flex: 1, minWidth: 0 },
     name: { fontSize: 16, fontWeight: '900', color: c.text },
     email: { fontSize: 12, color: c.textMuted, marginTop: 2 },
-    badgeRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: 6 },
+    badgeRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: spacing.sm, marginTop: 6 },
     roleBadge: { backgroundColor: c.accentSoft, paddingHorizontal: 8, paddingVertical: 2 },
     roleBadgeText: { fontSize: 10, fontWeight: '800', color: c.brand },
+    lineBadge: {
+      backgroundColor: c.surfaceMuted,
+      paddingHorizontal: 8,
+      paddingVertical: 2,
+      borderWidth: 1,
+      borderColor: c.border,
+    },
+    lineBadgeText: { fontSize: 10, fontWeight: '800', color: c.textSecondary },
+    sponsorBadge: { paddingHorizontal: 8, paddingVertical: 2 },
+    sponsorOk: { backgroundColor: c.accentSoft },
+    sponsorWait: { backgroundColor: c.warningBg },
+    sponsorBadgeText: { fontSize: 10, fontWeight: '800', color: c.text },
     city: { fontSize: 11, color: c.textSecondary, fontWeight: '600' },
     statusRow: {
       flexDirection: 'row',

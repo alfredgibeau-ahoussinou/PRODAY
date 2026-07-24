@@ -19,6 +19,8 @@ import {
   computePlayerVerificationStatus,
   defaultPlayerVerificationState,
 } from '../models/User';
+import type { ProductLineId } from '../models/ProductLine';
+import { resolveAdminProductLine } from '../utils/adminProductLine';
 import type { TeamEvent } from '../models/TeamEvent';
 import type { FriendlyMatch } from '../models/FriendlyMatch';
 import type { RecruitmentPost } from '../models/Player';
@@ -170,7 +172,22 @@ export interface AdminCreateUserInput {
   display_name: string;
   role: UserRole;
   city?: string;
+  product_line?: ProductLineId;
 }
+
+export type AdminUserUpdatePatch = {
+  display_name?: string;
+  role?: UserRole;
+  product_line?: ProductLineId;
+  is_active?: boolean;
+  is_verified?: boolean;
+  verification_status?: VerificationStatus;
+  verification_date?: ReturnType<typeof serverTimestamp>;
+  rejection_reason?: string | null;
+  city?: string;
+  sponsor_approved?: boolean;
+  sponsor_tier?: 'starter' | 'territorial' | 'national' | null;
+};
 
 export const adminService = {
   async listAllUsers(max = 200): Promise<User[]> {
@@ -197,19 +214,7 @@ export const adminService = {
     }
   },
 
-  async updateUser(
-    uid: string,
-    patch: {
-      display_name?: string;
-      role?: UserRole;
-      is_active?: boolean;
-      is_verified?: boolean;
-      verification_status?: VerificationStatus;
-      verification_date?: ReturnType<typeof serverTimestamp>;
-      rejection_reason?: string | null;
-      city?: string;
-    }
-  ): Promise<void> {
+  async updateUser(uid: string, patch: AdminUserUpdatePatch): Promise<void> {
     const database = getDb();
     if (!database) throw new Error('Firebase non configuré');
 
@@ -228,6 +233,34 @@ export const adminService = {
       update.rejection_reason = patch.rejection_reason;
     }
     if (patch.city !== undefined) update.city = patch.city;
+    if (patch.sponsor_approved !== undefined) {
+      update.sponsor_approved = patch.sponsor_approved;
+    }
+    if (patch.sponsor_tier !== undefined) {
+      update.sponsor_tier = patch.sponsor_tier;
+    }
+
+    if (patch.product_line !== undefined || patch.role !== undefined) {
+      let role = patch.role;
+      let preferred = patch.product_line;
+      if (role === undefined || preferred === undefined) {
+        const snap = await getDoc(doc(database, 'users', uid));
+        const data = snap.data() as Record<string, unknown> | undefined;
+        role = role ?? (data?.role as UserRole);
+        preferred =
+          preferred ??
+          (typeof data?.product_line === 'string'
+            ? (data.product_line as ProductLineId)
+            : undefined);
+      }
+      if (role) {
+        update.product_line = resolveAdminProductLine(role, preferred);
+      }
+    }
+
+    if (patch.role && patch.role !== 'sponsor' && patch.sponsor_approved === undefined) {
+      update.sponsor_approved = false;
+    }
 
     await updateDoc(doc(database, 'users', uid), update);
   },
@@ -298,6 +331,11 @@ export const adminService = {
       rejection_reason: verified ? null : rejectionReason?.trim() || null,
       updated_at: serverTimestamp(),
     };
+
+    if (role === 'sponsor') {
+      update.sponsor_approved = verified;
+      update.product_line = 'sponsor';
+    }
 
     if (role === 'player' && data.player_verification) {
       const pv = {

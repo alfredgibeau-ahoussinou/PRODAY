@@ -6,7 +6,8 @@ import React, {
   useState,
 } from 'react';
 import { onAuthStateChanged, type User as FirebaseAuthUser } from 'firebase/auth';
-import { getFirebaseAuth } from '../lib/firebase';
+import { doc, onSnapshot } from 'firebase/firestore';
+import { getFirebaseAuth, getDb } from '../lib/firebase';
 import { isFirebaseConfigured } from '../config/firebase';
 import { authService, needsEmailVerification } from '../services/auth.service';
 import { productLineMigrationService } from '../services/productLineMigration.service';
@@ -16,6 +17,7 @@ import {
   getActiveProductLineFromStorage,
   profileMatchesActiveLine,
 } from '../utils/productLineAccess';
+import { userFromFirestore } from '../lib/firestoreMappers';
 import type { User } from '../models/User';
 import { userStateStore } from '../core/state/userState.store';
 import { playAuthGreeting } from '../services/authGreeting.controller';
@@ -90,7 +92,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       return;
     }
 
+    let unsubProfile: (() => void) | undefined;
+
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      unsubProfile?.();
+      unsubProfile = undefined;
       setFirebaseUser(user);
       if (user) {
         const loaded = await usersService.getById(user.uid);
@@ -105,6 +111,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           setProfile(migrated);
           if (migrated) void registerPushTokenIfPossible(user.uid);
           void refreshAdminClaim();
+
+          const database = getDb();
+          if (database && migrated) {
+            unsubProfile = onSnapshot(
+              doc(database, 'users', user.uid),
+              async (snap) => {
+                if (!snap.exists()) {
+                  setProfile(null);
+                  return;
+                }
+                const next = userFromFirestore(
+                  snap.id,
+                  snap.data() as Record<string, unknown>,
+                );
+                setProfile(
+                  await productLineMigrationService.migrateUserIfNeeded(next),
+                );
+              },
+              () => {
+                /* keep last known profile on transient listener errors */
+              },
+            );
+          }
         }
       } else {
         setProfile(null);
@@ -113,7 +142,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       setLoading(false);
     });
 
-    return unsubscribe;
+    return () => {
+      unsubProfile?.();
+      unsubscribe();
+    };
   }, [refreshAdminClaim]);
 
   const refreshFirebaseUser = useCallback(async () => {

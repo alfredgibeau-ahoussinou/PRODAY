@@ -47,7 +47,17 @@ export function canonicalizeUserProductLine(
   if (role === 'supporter') return 'supporter';
   if (role === 'sponsor') return 'sponsor';
   if (line === 'sponsor') return 'sponsor';
+
+  // Split pro stale : réeligner si le rôle ne correspond plus à la ligne stockée
   if (line === 'pro_player' || line === 'pro_club' || line === 'pro_staff') {
+    if (role === 'player' && line !== 'pro_player') return 'pro_player';
+    if (role === 'club' && line !== 'pro_club') return 'pro_club';
+    if (
+      ['coach', 'agent', 'recruiter', 'organizer'].includes(role) &&
+      line !== 'pro_staff'
+    ) {
+      return 'pro_staff';
+    }
     return line;
   }
   if (line === 'pro') {

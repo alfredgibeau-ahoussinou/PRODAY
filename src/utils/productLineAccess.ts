@@ -55,6 +55,9 @@ export function getUserProductLine(user: User): ProductLineId {
     stored === 'pro_staff'
   ) {
     if (stored === 'woman' && user.role === 'player') return 'pro_player';
+    if (stored === 'pro_player' || stored === 'pro_club' || stored === 'pro_staff') {
+      return canonicalizeUserProductLine(stored, user.role);
+    }
     return stored;
   }
   if (stored === 'homme' || stored === 'standard') {

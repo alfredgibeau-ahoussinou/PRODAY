@@ -36,6 +36,12 @@ describe('productLineResolution', () => {
     expect(canonicalizeUserProductLine(undefined, 'player')).toBe('pro_player');
   });
 
+  it('réaligné un split pro stale avec le rôle', () => {
+    expect(canonicalizeUserProductLine('pro_staff', 'player')).toBe('pro_player');
+    expect(canonicalizeUserProductLine('pro_player', 'club')).toBe('pro_club');
+    expect(canonicalizeUserProductLine('pro_club', 'coach')).toBe('pro_staff');
+  });
+
   it('détecte les comptes à migrer', () => {
     expect(needsProductLineMigration('pro')).toBe(true);
     expect(needsProductLineMigration('pro_player')).toBe(false);

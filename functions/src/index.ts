@@ -110,6 +110,8 @@ export const validateProfile = functions.https.onCall(async (data, context) => {
     rejectionReason?: string;
   };
   const verified = action === 'approve';
+  const userSnap = await db.doc(`users/${uid}`).get();
+  const role = String(userSnap.data()?.role ?? '');
   const update: Record<string, unknown> = {
     is_verified: verified,
     verification_status: verified ? 'VERIFIED' : 'REJECTED',
@@ -121,12 +123,18 @@ export const validateProfile = functions.https.onCall(async (data, context) => {
   } else if (verified) {
     update.rejection_reason = admin.firestore.FieldValue.delete();
   }
+  if (role === 'sponsor') {
+    update.sponsor_approved = verified;
+    update.product_line = 'sponsor';
+  }
   await db.doc(`users/${uid}`).update(update);
 
   await sendFcmToUser(uid, {
     title: verified ? 'Profil vérifié' : 'Vérification refusée',
     body: verified
-      ? 'Votre diplôme/licence est validé. Messagerie complète débloquée.'
+      ? role === 'sponsor'
+        ? 'Votre espace marque est validé. Campagnes débloquées.'
+        : 'Votre diplôme/licence est validé. Messagerie complète débloquée.'
       : 'Votre document a été refusé. Mettez à jour votre dossier dans Profil.',
   });
 
@@ -481,22 +489,69 @@ export const adminCreateUser = functions.https.onCall(async (data, context) => {
   if (!context.auth?.token?.admin) {
     throw new functions.https.HttpsError('permission-denied', 'Admin only');
   }
-  const { email, password, display_name, role, city } = data as {
+  const { email, password, display_name, role, city, product_line } = data as {
     email: string;
     password: string;
     display_name: string;
     role: string;
     city?: string;
+    product_line?: string;
   };
   if (!email?.trim() || !password || password.length < 6) {
     throw new functions.https.HttpsError('invalid-argument', 'email et password requis');
   }
-  const allowed = ['player', 'coach', 'agent', 'organizer', 'sponsor', 'physio'];
+  const allowed = [
+    'player',
+    'coach',
+    'club',
+    'agent',
+    'recruiter',
+    'organizer',
+    'sponsor',
+    'physio',
+    'supporter',
+  ];
   if (!allowed.includes(role)) {
     throw new functions.https.HttpsError('invalid-argument', 'role invalide');
   }
 
-  const requiresVerification = role === 'coach' || role === 'agent';
+  const resolveLine = (): string => {
+    if (role === 'sponsor') return 'sponsor';
+    if (role === 'physio') return 'sante';
+    if (role === 'supporter') return 'supporter';
+    if (product_line && typeof product_line === 'string') {
+      const allowedLines = [
+        'amateur',
+        'supporter',
+        'pro_player',
+        'pro_club',
+        'pro_staff',
+        'sponsor',
+        'sante',
+      ];
+      if (allowedLines.includes(product_line)) {
+        if (role === 'club') return 'pro_club';
+        if (role === 'player' && product_line === 'amateur') return 'amateur';
+        if (role === 'player') return product_line === 'pro_player' ? 'pro_player' : product_line === 'amateur' ? 'amateur' : 'pro_player';
+        if (['coach', 'agent', 'recruiter', 'organizer'].includes(role)) {
+          return product_line === 'amateur' && role === 'coach' ? 'amateur' : 'pro_staff';
+        }
+        return product_line;
+      }
+    }
+    if (role === 'player') return 'pro_player';
+    if (role === 'club') return 'pro_club';
+    if (['coach', 'agent', 'recruiter', 'organizer'].includes(role)) return 'pro_staff';
+    return 'amateur';
+  };
+
+  const line = resolveLine();
+  const requiresVerification =
+    role === 'coach' ||
+    role === 'agent' ||
+    role === 'club' ||
+    role === 'organizer' ||
+    role === 'sponsor';
   const userRecord = await admin.auth().createUser({
     email: email.trim().toLowerCase(),
     password,
@@ -507,9 +562,11 @@ export const adminCreateUser = functions.https.onCall(async (data, context) => {
     display_name: display_name.trim(),
     email: email.trim().toLowerCase(),
     role,
+    product_line: line,
     city: city?.trim() || null,
     is_verified: !requiresVerification,
     verification_status: requiresVerification ? 'PENDING' : 'NOT_REQUIRED',
+    sponsor_approved: role === 'sponsor' ? false : null,
     is_active: true,
     profile: {},
     created_at: admin.firestore.FieldValue.serverTimestamp(),
