@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Génère docs/internal/ProDay-Acces-Fondateurs.pdf (confidentiel fondateurs)."""
+"""Génère docs/internal/ProDay-Acces-Fondateurs.pdf (cheatsheet fondateurs non-dev)."""
 
 from __future__ import annotations
 
@@ -13,7 +13,6 @@ from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import cm, mm
 from reportlab.platypus import (
     HRFlowable,
-    KeepTogether,
     ListFlowable,
     ListItem,
     Paragraph,
@@ -128,21 +127,27 @@ def styles():
             "PinFR",
             parent=base["Normal"],
             fontName="Courier-Bold",
-            fontSize=16,
-            leading=20,
+            fontSize=18,
+            leading=22,
             textColor=ACCENT,
             alignment=TA_CENTER,
             spaceBefore=4,
             spaceAfter=4,
         ),
+        "step": ParagraphStyle(
+            "StepFR",
+            parent=base["Normal"],
+            fontName="Helvetica",
+            fontSize=10,
+            leading=14,
+            textColor=INK,
+            spaceAfter=3,
+        ),
     }
 
 
 def kv_table(rows: list[tuple[str, str]], s: dict) -> Table:
-    data = [
-        [Paragraph(k, s["cell_b"]), Paragraph(v, s["cell"])]
-        for k, v in rows
-    ]
+    data = [[Paragraph(k, s["cell_b"]), Paragraph(v, s["cell"])] for k, v in rows]
     t = Table(data, colWidths=[5.2 * cm, 12.0 * cm])
     style_cmds = [
         ("BACKGROUND", (0, 0), (-1, 0), HEADER_BG),
@@ -189,11 +194,7 @@ def add_page_bits(canvas, doc):
     canvas.drawString(1.8 * cm, A4[1] - 1.15 * cm, "ProDay — Accès fondateurs (confidentiel)")
     canvas.drawRightString(A4[0] - 1.8 * cm, A4[1] - 1.15 * cm, "Ne pas diffuser")
     canvas.line(1.8 * cm, 1.3 * cm, A4[0] - 1.8 * cm, 1.3 * cm)
-    canvas.drawCentredString(
-        A4[0] / 2,
-        0.85 * cm,
-        f"Page {doc.page} · Régénérer : python3 scripts/generate-acces-fondateurs-pdf.py",
-    )
+    canvas.drawCentredString(A4[0] / 2, 0.85 * cm, f"Page {doc.page}")
     canvas.restoreState()
 
 
@@ -214,16 +215,15 @@ def build():
     )
 
     story = []
-    story.append(Paragraph("ProDay — Accès fondateurs (confidentiel)", s["title"]))
-    story.append(Paragraph(f"Document opérationnel · {today}", s["subtitle"]))
+    story.append(Paragraph("ProDay — Accès fondateurs", s["title"]))
+    story.append(Paragraph(f"Aide-mémoire partenaires · {today}", s["subtitle"]))
     story.append(Paragraph("CONFIDENTIEL — réservé aux 4 associés fondateurs", s["badge"]))
     story.append(HRFlowable(width="100%", thickness=1, color=ACCENT, spaceAfter=8))
 
     story.append(
         warn_box(
-            "<b>Attention :</b> ce PDF contient le minicode admin. "
-            "Aucune clé API complète (Brevo, Cal, Stripe, comptes de service) n’y figure. "
-            "Les secrets complets restent dans Netlify / Firebase — demander à Alfred.",
+            "<b>Confidentiel :</b> à partager uniquement entre les 4 associés. "
+            "Ne donnez jamais le minicode à des personnes extérieures.",
             s,
         )
     )
@@ -237,7 +237,7 @@ def build():
         [
             Paragraph("4", s["cell"]),
             Paragraph("Alfred Gibeau-Ahoussinou", s["cell"]),
-            Paragraph("Associé · développeur du groupe", s["cell"]),
+            Paragraph("Associé fondateur", s["cell"]),
         ],
     ]
     ct = Table(collab, colWidths=[1.2 * cm, 7.5 * cm, 8.5 * cm])
@@ -258,129 +258,77 @@ def build():
     )
     story.append(ct)
 
-    story.append(Paragraph("2. Site & espaces opérationnels", s["h1"]))
+    story.append(Paragraph("2. Site", s["h1"]))
     story.append(
         kv_table(
             [
-                ("Site vitrine", '<link href="https://proday75.fr">https://proday75.fr</link>'),
+                ("Site", '<link href="https://proday75.fr">https://proday75.fr</link>'),
                 ("Admin bêta", '<link href="https://proday75.fr/admin">https://proday75.fr/admin</link>'),
-                ("Pôle Sponsor", '<link href="https://proday75.fr/sponsor">https://proday75.fr/sponsor</link>'),
-                ("Hub bêta", '<link href="https://proday75.fr/beta">https://proday75.fr/beta</link>'),
+                ("Hub bêta (optionnel)", '<link href="https://proday75.fr/beta">https://proday75.fr/beta</link>'),
                 (
-                    "Inscription bêta",
-                    '<link href="https://proday75.fr/beta/inscription">https://proday75.fr/beta/inscription</link>',
+                    "Pôle Sponsor (optionnel)",
+                    '<link href="https://proday75.fr/sponsor">https://proday75.fr/sponsor</link>',
                 ),
             ],
             s,
         )
     )
-
-    story.append(Paragraph("Minicode admin bêta (BETA_ADMIN_PIN · Netlify proday75)", s["body"]))
-    story.append(Paragraph("739482", s["pin"]))
     story.append(
         Paragraph(
-            "Vérifié le 24/07/2026 via <font face='Courier'>netlify env:list</font>. "
-            "À faire tourner après tout départ ou fuite suspectée.",
+            "Le lien <b>Admin bêta</b> se trouve aussi en bas de page du site (pied de page).",
             s["small"],
         )
     )
 
-    story.append(Paragraph("3. GitHub", s["h1"]))
+    story.append(Paragraph("3. Minicode admin", s["h1"]))
+    story.append(Paragraph("739482", s["pin"]))
+    story.append(
+        Paragraph(
+            "Vérifié le 24/07/2026. Ne communiquez ce code à personne en dehors des 4 associés.",
+            s["small"],
+        )
+    )
+
+    story.append(Paragraph("4. Utiliser l’admin en 3 étapes", s["h1"]))
+    steps = [
+        "Ouvrez <link href='https://proday75.fr/admin'>https://proday75.fr/admin</link> et saisissez le minicode.",
+        "Dans la liste d’attente, validez les personnes qui doivent rejoindre la bêta.",
+        "C’est tout — la personne reçoit ensuite son accès par e-mail.",
+    ]
+    story.append(
+        ListFlowable(
+            [
+                ListItem(Paragraph(step, s["step"]), leftIndent=8, bulletColor=ACCENT)
+                for step in steps
+            ],
+            bulletType="1",
+            start="1",
+            leftIndent=18,
+        )
+    )
+
+    story.append(Paragraph("5. E-mails de contact", s["h1"]))
+    story.append(
+        Paragraph(
+            "À utiliser si quelqu’un vous écrit ou si vous devez répondre :",
+            s["body"],
+        )
+    )
     story.append(
         kv_table(
             [
-                (
-                    "Dépôt privé",
-                    '<link href="https://github.com/alfredgibeau-ahoussinou/PRODAY">'
-                    "alfredgibeau-ahoussinou/PRODAY</link>",
-                ),
-                (
-                    "Docs publiques",
-                    '<link href="https://github.com/alfredgibeau-ahoussinou/PRODAY-docs">'
-                    "alfredgibeau-ahoussinou/PRODAY-docs</link>",
-                ),
+                ("Contact", "contact@proday.app"),
+                ("Admin / suivi", "proday.admin@gmail.com"),
             ],
             s,
         )
     )
 
-    story.append(Paragraph("4. Firebase", s["h1"]))
-    story.append(
-        kv_table(
-            [
-                ("Projet", "proday-155b0"),
-                (
-                    "Console",
-                    '<link href="https://console.firebase.google.com/project/proday-155b0">'
-                    "console.firebase.google.com/project/proday-155b0</link>",
-                ),
-                ("Région Functions", "europe-west1"),
-                ("Secrets", "Firebase functions:config / secrets — demander à Alfred"),
-            ],
-            s,
-        )
-    )
-
-    story.append(Paragraph("5. Netlify", s["h1"]))
-    story.append(
-        kv_table(
-            [
-                ("Projet", "proday75"),
-                ("Domaine", '<link href="https://proday75.fr">https://proday75.fr</link>'),
-                ("Console", '<link href="https://app.netlify.com/">app.netlify.com</link> (site proday75)'),
-                ("Secrets", "Environment variables Netlify — demander à Alfred"),
-            ],
-            s,
-        )
-    )
-
-    story.append(Paragraph("6. E-mails", s["h1"]))
-    story.append(
-        kv_table(
-            [
-                ("Expéditeur Brevo", "proday.admin@gmail.com"),
-                ("Contact produit / légal", "contact@proday.app"),
-                ("Partenaires", "partenaires@proday.app"),
-                ("Clé API Brevo", "Secret Firebase email.brevo_api_key — demander à Alfred"),
-            ],
-            s,
-        )
-    )
-
-    story.append(Paragraph("7. Cal.com (visio Santé)", s["h1"]))
-    story.append(
-        kv_table(
-            [
-                ("Clé API", "Stockée dans Firebase config cal.api_key — ne pas coller ici"),
-                ("Username org (docs)", "proday-sante"),
-                ("Username Alfred", "alfred-gibeau-ahoussinou-crbca7"),
-                ("Console", '<link href="https://app.cal.com/">https://app.cal.com/</link>'),
-            ],
-            s,
-        )
-    )
-
-    story.append(Paragraph("8. Application mobile (Expo / EAS)", s["h1"]))
-    story.append(
-        kv_table(
-            [
-                ("Nom / slug", "ProDay · proday"),
-                ("Bundle / package", "com.proday.app"),
-                ("EAS projectId", "db5a18a4-8b0a-4c96-a109-eedbb10a69b9"),
-                ("Compte admin app", "proday.admin@gmail.com (mot de passe hors Git)"),
-            ],
-            s,
-        )
-    )
-
-    story.append(Paragraph("9. Rappels de sécurité", s["h1"]))
+    story.append(Paragraph("6. Rappels", s["h1"]))
     reminders = [
-        "Document réservé aux <b>4 fondateurs</b> uniquement — ne jamais partager hors de ce cercle.",
-        "Faire <b>tourner le minicode</b> (BETA_ADMIN_PIN) périodiquement et après tout départ.",
-        "Ne jamais committer de clés API (Brevo, Cal, Stripe, service accounts) dans Git.",
-        "Le PDF est gitignoré (<font face='Courier'>docs/**/*.pdf</font>) ; source Markdown : "
-        "<font face='Courier'>docs/internal/ProDay-Acces-Fondateurs.md</font>.",
-        "En cas de doute sur un accès : contacter Alfred avant toute diffusion.",
+        "Document réservé aux <b>4 fondateurs</b> — ne pas le transmettre hors de ce cercle.",
+        "<b>Ne donnez pas le minicode</b> à des tiers (candidats, partenaires, prestataires…).",
+        "En cas de doute : demander à Alfred avant de partager quoi que ce soit.",
     ]
     story.append(
         ListFlowable(
@@ -395,7 +343,7 @@ def build():
     story.append(HRFlowable(width="100%", thickness=0.6, color=LINE, spaceAfter=6))
     story.append(
         Paragraph(
-            "Fin du document · ProDay 2026 · Accès fondateurs · Ne pas imprimer hors cercle des 4",
+            "Fin du document · ProDay 2026 · Accès fondateurs · Ne pas diffuser hors cercle des 4",
             s["footer"],
         )
     )

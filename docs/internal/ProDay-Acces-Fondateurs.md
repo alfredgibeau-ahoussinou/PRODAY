@@ -10,120 +10,58 @@
 
 ## Destinataires (4 collaborateurs)
 
-| # | Nom | Rôle | Initiales |
-|---|-----|------|-----------|
-| 1 | _À compléter_ | Associé fondateur | |
-| 2 | _À compléter_ | Associé fondateur | |
-| 3 | _À compléter_ | Associé fondateur | |
-| 4 | Alfred Gibeau-Ahoussinou | Associé fondateur · développeur du groupe | AGA |
+| # | Nom | Rôle |
+|---|-----|------|
+| 1 | _À compléter_ | Associé fondateur |
+| 2 | _À compléter_ | Associé fondateur |
+| 3 | _À compléter_ | Associé fondateur |
+| 4 | Alfred Gibeau-Ahoussinou | Associé fondateur |
 
 ---
 
-## 1. Site & espaces opérationnels
+## Site
 
 | Accès | URL |
 |-------|-----|
-| Site vitrine | https://proday75.fr |
-| Espace admin bêta (minicode) | https://proday75.fr/admin |
-| Pôle Sponsor | https://proday75.fr/sponsor |
-| Hub bêta (invitation) | https://proday75.fr/beta |
-| Inscription waitlist bêta | https://proday75.fr/beta/inscription |
+| Site | https://proday75.fr |
+| Admin bêta | https://proday75.fr/admin |
+| Hub bêta (optionnel) | https://proday75.fr/beta |
+| Pôle Sponsor (optionnel) | https://proday75.fr/sponsor |
 
-### Minicode admin bêta
-
-- **Code :** `739482`
-- **Variable Netlify :** `BETA_ADMIN_PIN` (site `proday75`, contexte Production)
-- Vérifié le 24/07/2026 via `netlify env:list`
+Le lien **Admin bêta** se trouve aussi en bas de page (pied de page du site).
 
 ---
 
-## 2. GitHub
+## Minicode admin
 
-| Élément | Valeur |
-|---------|--------|
-| Dépôt code (privé) | https://github.com/alfredgibeau-ahoussinou/PRODAY |
-| Documentation publique | https://github.com/alfredgibeau-ahoussinou/PRODAY-docs |
+**Code :** `739482`  
+*(vérifié le 24/07/2026)*
 
----
-
-## 3. Firebase
-
-| Élément | Valeur |
-|---------|--------|
-| Projet | `proday-155b0` |
-| Console | https://console.firebase.google.com/project/proday-155b0 |
-| Région Functions | `europe-west1` |
-
-Secrets Cloud Functions (Brevo, Cal, etc.) : **ne pas coller ici** — stockés dans `firebase functions:config` / secrets Firebase. Demander à Alfred.
+Ne communiquez ce code à personne en dehors des 4 associés.
 
 ---
 
-## 4. Netlify
+## Utiliser l’admin en 3 étapes
 
-| Élément | Valeur |
-|---------|--------|
-| Site / projet | `proday75` |
-| Domaine | https://proday75.fr |
-| Console | https://app.netlify.com/ (rechercher `proday75`) |
-
-Secrets session admin, EmailJS legacy, etc. : **stockés dans Netlify Environment variables** — demander à Alfred. Ne jamais committer.
+1. Ouvrez https://proday75.fr/admin et saisissez le minicode.
+2. Dans la liste d’attente, validez les personnes qui doivent rejoindre la bêta.
+3. C’est tout — la personne reçoit ensuite son accès par e-mail.
 
 ---
 
-## 5. E-mails
+## E-mails de contact
+
+À utiliser si quelqu’un vous écrit ou si vous devez répondre :
 
 | Usage | Adresse |
 |-------|---------|
-| Expéditeur Brevo (transactionnel) | `proday.admin@gmail.com` |
-| Contact produit / légal | `contact@proday.app` |
-| Partenaires (si utilisé) | `partenaires@proday.app` |
-
-Clé API Brevo : **secret stocké dans Firebase** (`email.brevo_api_key`) — demander à Alfred. Ne jamais coller dans ce document.
+| Contact | contact@proday.app |
+| Admin / suivi | proday.admin@gmail.com |
 
 ---
 
-## 6. Cal.com (visio Santé)
+## Rappels
 
-| Élément | Valeur |
-|---------|--------|
-| Clé API | Stockée dans Firebase Functions config `cal.api_key` — **ne pas coller ici** |
-| Username org (défaut docs) | `proday-sante` |
-| Username Alfred (si compte perso) | `alfred-gibeau-ahoussinou-crbca7` |
-| Console | https://app.cal.com/ |
-
----
-
-## 7. Application mobile (Expo / EAS)
-
-| Élément | Valeur |
-|---------|--------|
-| Nom Expo | `ProDay` |
-| Slug | `proday` |
-| Bundle / package | `com.proday.app` |
-| EAS projectId | `db5a18a4-8b0a-4c96-a109-eedbb10a69b9` |
-| Compte admin app (claim) | `proday.admin@gmail.com` (mot de passe hors Git — demander à Alfred) |
-
----
-
-## 8. Secrets — où les trouver (sans les écrire)
-
-| Secret | Emplacement |
-|--------|-------------|
-| `BETA_ADMIN_PIN` | Netlify → proday75 → Environment variables |
-| Session / admin website secrets | Netlify (mêmes variables) |
-| Brevo API key | Firebase `email.brevo_api_key` |
-| Cal.com API key | Firebase `cal.api_key` |
-| Stripe / service accounts | Netlify / Firebase / fichiers locaux gitignorés |
-| Mot de passe admin app | Hors dépôt — Alfred uniquement |
-
-**Règle :** toute clé complète manquante → demander à Alfred. Ne jamais coller de clé `xkeysib-…`, `cal_live_…`, Stripe ou JSON service account dans ce fichier.
-
----
-
-## Rappels de sécurité
-
-1. Ce document est **réservé aux 4 fondateurs**. Ne pas l’envoyer hors de ce cercle.
-2. **Faire tourner le minicode** (`BETA_ADMIN_PIN`) périodiquement et après tout départ / fuite suspectée.
-3. Ne jamais committer de clés API dans Git (même dépôt privé).
-4. Le PDF généré est listé dans `.gitignore` (`docs/**/*.pdf`) — le régénérer localement si besoin.
-5. En cas de doute sur un accès : contacter Alfred avant de partager quoi que ce soit.
+1. Document **réservé aux 4 fondateurs** — ne pas le transmettre hors de ce cercle.
+2. **Ne donnez pas le minicode** à des tiers (candidats, partenaires, prestataires…).
+3. En cas de doute : demander à Alfred avant de partager quoi que ce soit.
