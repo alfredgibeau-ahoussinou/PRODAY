@@ -116,6 +116,16 @@ describe('visioMeetingLink', () => {
     ).toBe(false);
   });
 
+  it('masque le bouton visio si le flag plateforme est OFF', () => {
+    const appt = {
+      status: 'confirmed',
+      meeting_link: 'https://app.cal.com/video/abc123',
+      consultation_type: 'visio',
+    } as MedicalAppointment;
+    expect(canJoinVisioSession(appt, { platformEnabled: false })).toBe(false);
+    expect(canJoinVisioSession(appt, { platformEnabled: true })).toBe(true);
+  });
+
   it('détecte les salles joinables vs page booking Cal.com', () => {
     expect(isJoinableVisioMeetingLink('https://app.cal.com/video/abc')).toBe(true);
     expect(isJoinableVisioMeetingLink('https://proday.daily.co/proday-rdv-1')).toBe(true);

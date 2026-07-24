@@ -17,7 +17,11 @@ export function isVisioConsultation(consultationType?: ConsultationType): boolea
 }
 
 /** Affiche le bouton « Rejoindre la visio » pour un RDV confirmé avec lien. */
-export function canJoinVisioSession(appointment: MedicalAppointment): boolean {
+export function canJoinVisioSession(
+  appointment: MedicalAppointment,
+  options?: { platformEnabled?: boolean },
+): boolean {
+  if (options?.platformEnabled === false) return false;
   return (
     appointment.status === 'confirmed' &&
     Boolean(appointment.meeting_link?.trim() || appointment.cal_booking_uid?.trim()) &&

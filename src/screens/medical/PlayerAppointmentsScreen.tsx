@@ -21,6 +21,8 @@ import { useMedicalStyles } from '../../components/medical/medicalStyles';
 import { formatAppointmentDay } from '../../utils/medicalSlots';
 import { canJoinVisioSession } from '../../utils/visioMeetingLink';
 import type { AppColors } from '../../theme/universeTheme';
+import { useSanteVisioEnabled } from '../../hooks/useSanteVisioEnabled';
+import { SanteVisioBetaBanner } from '../../components/medical/SanteVisioBetaBanner';
 
 type PlayerAppointmentsScreenProps = {
   patient: User;
@@ -37,6 +39,7 @@ export const PlayerAppointmentsScreen: React.FC<PlayerAppointmentsScreenProps> =
   const { colors: c, rootStyle } = useMedicalStyles();
   const styles = useMemo(() => createStyles(c), [c]);
   const { upcoming, loading, refresh } = usePatientAppointments(patient.uid);
+  const { enabled: visioEnabled } = useSanteVisioEnabled();
   const [refreshing, setRefreshing] = useState(false);
   const [visioAppointment, setVisioAppointment] = useState<MedicalAppointment | null>(null);
 
@@ -72,10 +75,16 @@ export const PlayerAppointmentsScreen: React.FC<PlayerAppointmentsScreenProps> =
       {!embedded ? (
         <ScreenHeader
           title="Mes rendez-vous"
-          subtitle="Téléconsultations confirmées · visio disponible immédiatement"
+          subtitle={
+            visioEnabled
+              ? 'Téléconsultations confirmées · visio disponible immédiatement'
+              : 'Téléconsultations · visio en attente d’ouverture bêta'
+          }
           onBack={onBack}
         />
       ) : null}
+
+      {!visioEnabled ? <SanteVisioBetaBanner /> : null}
 
       {loading ? (
         <ActivityIndicator color={MEDICAL_THEME.primary} style={styles.loader} />
@@ -83,9 +92,9 @@ export const PlayerAppointmentsScreen: React.FC<PlayerAppointmentsScreenProps> =
         <View style={styles.emptyCard}>
           <ProDayText variant="section">Aucun rendez-vous</ProDayText>
           <ProDayText variant="body" muted style={styles.emptySub}>
-            Réservez un créneau avec un praticien du pôle Santé. Les téléconsultations sont
-            confirmées automatiquement — le bouton « Rejoindre la visio » apparaît dès la
-            réservation.
+            {visioEnabled
+              ? 'Réservez un créneau avec un praticien du pôle Santé. Les téléconsultations sont confirmées automatiquement — le bouton « Rejoindre la visio » apparaît dès la réservation.'
+              : 'Réservez un créneau avec un praticien du pôle Santé. La visio sera disponible lorsque l’équipe ProDay l’activera pour la bêta.'}
           </ProDayText>
         </View>
       ) : (
@@ -99,8 +108,9 @@ export const PlayerAppointmentsScreen: React.FC<PlayerAppointmentsScreenProps> =
                 key={appt.id}
                 appointment={appt}
                 mode="patient"
+                visioPlatformEnabled={visioEnabled}
                 onJoinVisio={
-                  canJoinVisioSession(appt)
+                  canJoinVisioSession(appt, { platformEnabled: visioEnabled })
                     ? () => setVisioAppointment(appt)
                     : undefined
                 }

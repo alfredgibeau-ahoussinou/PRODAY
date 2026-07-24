@@ -11,6 +11,11 @@ import type { AppColors } from '../../theme/universeTheme';
 
 const FLAG_LABELS: { key: keyof PlatformFeatureFlags; label: string; hint: string }[] = [
   { key: 'registration_open', label: 'Inscriptions ouvertes', hint: 'Nouveaux comptes autorisés' },
+  {
+    key: 'sante_visio',
+    label: 'Visio Santé',
+    hint: 'Téléconsultation Cal/Daily — OFF = message « Bêta actuelle — aucun accès à la visio »',
+  },
   { key: 'community_reels', label: 'Reels communauté', hint: 'Publication et fil reels' },
   { key: 'mercato', label: 'Mercato', hint: 'Annonces et candidatures recrutement' },
   { key: 'stages', label: 'Stages', hint: 'Offres et candidatures stages' },

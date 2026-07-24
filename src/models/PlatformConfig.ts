@@ -6,6 +6,8 @@ export interface PlatformFeatureFlags {
   shop: boolean;
   stages: boolean;
   registration_open: boolean;
+  /** Téléconsultation Santé (Cal/Daily). Défaut OFF en bêta. */
+  sante_visio: boolean;
 }
 
 export interface PlatformConfig {
@@ -26,5 +28,6 @@ export const DEFAULT_PLATFORM_CONFIG: PlatformConfig = {
     shop: true,
     stages: true,
     registration_open: true,
+    sante_visio: false,
   },
 };

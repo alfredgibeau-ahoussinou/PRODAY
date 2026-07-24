@@ -27,6 +27,8 @@ import { getPhysioCalComBookingUrl, openCalComSignup } from '../../utils/calComB
 import { useMedicalStyles } from '../../components/medical/medicalStyles';
 import type { MedicalAppointment } from '../../models/MedicalAppointment';
 import type { AppColors } from '../../theme/universeTheme';
+import { useSanteVisioEnabled } from '../../hooks/useSanteVisioEnabled';
+import { SanteVisioBetaBanner } from '../../components/medical/SanteVisioBetaBanner';
 
 type AgendaFilter = 'all' | 'pending' | 'confirmed';
 
@@ -36,6 +38,7 @@ export const PhysioAgendaScreen: React.FC = () => {
   const { refreshProfile } = useAuth();
   const profile = useSessionProfile();
   const hasCalCom = Boolean(profile && getPhysioCalComBookingUrl(profile));
+  const { enabled: visioEnabled } = useSanteVisioEnabled();
   const [showAvailability, setShowAvailability] = useState(false);
   const [filter, setFilter] = useState<AgendaFilter>('all');
   const [refreshing, setRefreshing] = useState(false);
@@ -120,6 +123,8 @@ export const PhysioAgendaScreen: React.FC = () => {
         subtitle="Téléconsultations confirmées automatiquement · cabinet sur demande"
       />
 
+      {!visioEnabled ? <SanteVisioBetaBanner /> : null}
+
       {!hasCalCom ? (
         <View style={styles.setupCard}>
           <Text style={styles.setupTitle}>Lien Cal.com manquant</Text>
@@ -187,6 +192,7 @@ export const PhysioAgendaScreen: React.FC = () => {
                 key={appt.id}
                 appointment={appt}
                 mode="physio"
+                visioPlatformEnabled={visioEnabled}
                 onConfirm={
                   requiresPhysioConfirmation(appt)
                     ? () => void updateStatus(appt, 'confirmed')
@@ -203,7 +209,7 @@ export const PhysioAgendaScreen: React.FC = () => {
                     : undefined
                 }
                 onJoinVisio={
-                  canJoinVisioSession(appt)
+                  canJoinVisioSession(appt, { platformEnabled: visioEnabled })
                     ? () => setVisioAppointment(appt)
                     : undefined
                 }

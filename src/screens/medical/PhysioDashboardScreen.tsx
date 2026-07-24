@@ -29,6 +29,8 @@ import { canJoinVisioSession, requiresPhysioConfirmation } from '../../utils/vis
 import type { MedicalAppointment } from '../../models/MedicalAppointment';
 import type { AppColors } from '../../theme/universeTheme';
 import { TabScreenShell } from '../../components/app/TabScreenShell';
+import { useSanteVisioEnabled } from '../../hooks/useSanteVisioEnabled';
+import { SanteVisioBetaBanner } from '../../components/medical/SanteVisioBetaBanner';
 
 interface PhysioDashboardScreenProps {
   profile: User;
@@ -41,6 +43,7 @@ export const PhysioDashboardScreen: React.FC<PhysioDashboardScreenProps> = ({ pr
   const { count: unreadCount } = useUnreadMessageCount();
   const { appointments, todayAppointments, pendingCount, loading, refresh } =
     usePhysioAppointments(profile.uid);
+  const { enabled: visioEnabled } = useSanteVisioEnabled();
   const [refreshing, setRefreshing] = useState(false);
   const [showAvailability, setShowAvailability] = useState(false);
   const [showPatients, setShowPatients] = useState(false);
@@ -152,6 +155,7 @@ export const PhysioDashboardScreen: React.FC<PhysioDashboardScreenProps> = ({ pr
       {loading ? <SkeletonList count={2} variant="card" /> : null}
 
       <Text style={styles.sectionTitle}>Rendez-vous du jour</Text>
+      {!visioEnabled ? <SanteVisioBetaBanner compact /> : null}
       {todayAppointments.length === 0 ? (
         <View style={styles.emptyCard}>
           <Icon name="calendar" size={28} color={c.textMuted} />
@@ -169,11 +173,12 @@ export const PhysioDashboardScreen: React.FC<PhysioDashboardScreenProps> = ({ pr
             <MedicalAppointmentCard
               appointment={appt}
               mode="physio"
+              visioPlatformEnabled={visioEnabled}
               onConfirm={() => void updateStatus(appt, 'confirmed')}
               onCancel={() => void updateStatus(appt, 'cancelled')}
               onComplete={() => void updateStatus(appt, 'completed')}
               onJoinVisio={
-                canJoinVisioSession(appt)
+                canJoinVisioSession(appt, { platformEnabled: visioEnabled })
                   ? () => setVisioAppointment(appt)
                   : undefined
               }

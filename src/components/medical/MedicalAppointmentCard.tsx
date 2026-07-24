@@ -11,6 +11,7 @@ import { Icon } from '../ui/Icon';
 import { spacing, radius } from '../../theme/designTokens';
 import { useMedicalStyles } from './medicalStyles';
 import type { AppColors } from '../../theme/universeTheme';
+import { SANTE_VISIO_BETA_OFF_MESSAGE } from '../../hooks/useSanteVisioEnabled';
 
 interface MedicalAppointmentCardProps {
   appointment: MedicalAppointment;
@@ -20,6 +21,8 @@ interface MedicalAppointmentCardProps {
   onComplete?: () => void;
   onJoinVisio?: () => void;
   onPress?: () => void;
+  /** Flag admin `sante_visio` — false = message bêta, pas de join. */
+  visioPlatformEnabled?: boolean;
 }
 
 export const MedicalAppointmentCard: React.FC<MedicalAppointmentCardProps> = ({
@@ -30,6 +33,7 @@ export const MedicalAppointmentCard: React.FC<MedicalAppointmentCardProps> = ({
   onComplete,
   onJoinVisio,
   onPress,
+  visioPlatformEnabled = true,
 }) => {
   const { colors: c } = useMedicalStyles();
   const styles = useMemo(() => createStyles(c), [c]);
@@ -46,10 +50,18 @@ export const MedicalAppointmentCard: React.FC<MedicalAppointmentCardProps> = ({
   const counterpart =
     mode === 'physio' ? appointment.patient_name : appointment.physio_name;
 
-  const showVisio = canJoinVisioSession(appointment);
   const consultationLabel = appointment.consultation_type
     ? CONSULTATION_TYPE_LABELS[appointment.consultation_type]
     : null;
+  const isVisioAppt =
+    appointment.consultation_type === 'visio' ||
+    appointment.consultation_type === 'both' ||
+    !appointment.consultation_type;
+  const showVisio = canJoinVisioSession(appointment, {
+    platformEnabled: visioPlatformEnabled,
+  });
+  const showVisioBetaOff =
+    !visioPlatformEnabled && appointment.status === 'confirmed' && isVisioAppt;
 
   const cardContent = (
     <>
@@ -76,10 +88,14 @@ export const MedicalAppointmentCard: React.FC<MedicalAppointmentCardProps> = ({
         {appointment.status === 'confirmed' &&
         appointment.consultation_type !== 'cabinet' &&
         !appointment.meeting_link &&
-        !appointment.cal_booking_uid ? (
+        !appointment.cal_booking_uid &&
+        visioPlatformEnabled ? (
           <Text style={styles.visioPending}>
             Préparation de la salle visio…
           </Text>
+        ) : null}
+        {showVisioBetaOff ? (
+          <Text style={styles.visioBetaOff}>{SANTE_VISIO_BETA_OFF_MESSAGE}</Text>
         ) : null}
         {appointment.motif ? (
           <Text style={styles.motif} numberOfLines={2}>
@@ -209,6 +225,12 @@ function createStyles(c: AppColors) {
       marginTop: spacing.xs,
       fontWeight: '600',
       fontStyle: 'italic',
+    },
+    visioBetaOff: {
+      fontSize: 11,
+      color: c.textMuted,
+      marginTop: spacing.xs,
+      fontWeight: '700',
     },
     calSync: {
       fontSize: 11,

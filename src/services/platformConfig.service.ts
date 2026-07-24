@@ -23,6 +23,8 @@ function mapConfig(data: Record<string, unknown>): PlatformConfig {
       shop: flags.shop !== false,
       stages: flags.stages !== false,
       registration_open: flags.registration_open !== false,
+      // Opt-in : absent ou false → visio Santé coupée (bêta).
+      sante_visio: flags.sante_visio === true,
     },
     updated_at:
       data.updated_at && typeof data.updated_at === 'object' && 'toDate' in data.updated_at
