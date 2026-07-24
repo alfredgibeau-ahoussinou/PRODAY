@@ -1,1 +1,2 @@
-/** Feature flags produit — réservé aux bascules futures. */
+/** @deprecated Préférer `usePlatformFeatureFlags` + `platformFeatureFlags.ts`. */
+export {};

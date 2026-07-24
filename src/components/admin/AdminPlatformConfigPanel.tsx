@@ -3,24 +3,24 @@ import { View, Text, TextInput, Switch, StyleSheet, Alert, ActivityIndicator } f
 import { useAuth } from '../../context/AuthContext';
 import { adminService } from '../../services/admin.service';
 import type { PlatformConfig, PlatformFeatureFlags } from '../../models/PlatformConfig';
+import {
+  PLATFORM_FEATURE_FLAG_META,
+  type PlatformFeatureFlagKey,
+} from '../../content/platformFeatureFlags';
 import { AdminSectionHeader } from './AdminSectionHeader';
 import { AdminSettingsCard } from './AdminSettingsCard';
 import { useAdminStyles } from './adminStyles';
 import { spacing, radius } from '../../theme/designTokens';
 import type { AppColors } from '../../theme/universeTheme';
 
-const FLAG_LABELS: { key: keyof PlatformFeatureFlags; label: string; hint: string }[] = [
-  { key: 'registration_open', label: 'Inscriptions ouvertes', hint: 'Nouveaux comptes autorisés' },
-  {
-    key: 'sante_visio',
-    label: 'Visio Santé',
-    hint: 'Téléconsultation Cal/Daily — OFF = message « Bêta actuelle — aucun accès à la visio »',
-  },
-  { key: 'community_reels', label: 'Reels communauté', hint: 'Publication et fil reels' },
-  { key: 'mercato', label: 'Mercato', hint: 'Annonces et candidatures recrutement' },
-  { key: 'stages', label: 'Stages', hint: 'Offres et candidatures stages' },
-  { key: 'supporter', label: 'Tribune supporter', hint: 'Espace supporter gratuit' },
-  { key: 'shop', label: 'Boutique ProDay', hint: 'Commandes shop' },
+const FLAG_ROWS: PlatformFeatureFlagKey[] = [
+  'registration_open',
+  'sante_visio',
+  'community_reels',
+  'mercato',
+  'stages',
+  'supporter',
+  'shop',
 ];
 
 export const AdminPlatformConfigPanel: React.FC = () => {
@@ -131,21 +131,28 @@ export const AdminPlatformConfigPanel: React.FC = () => {
       </AdminSettingsCard>
 
       <AdminSettingsCard icon="settings" title="Feature flags">
-        {FLAG_LABELS.map((flag) => (
-          <View key={flag.key} style={styles.switchRow}>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.switchLabel}>{flag.label}</Text>
-              <Text style={styles.hint}>{flag.hint}</Text>
+        <Text style={[styles.hint, { marginBottom: spacing.sm }]}>
+          Les changements s’appliquent en direct via{' '}
+          <Text style={styles.mono}>platform_config/main</Text> (écoute live).
+        </Text>
+        {FLAG_ROWS.map((key) => {
+          const meta = PLATFORM_FEATURE_FLAG_META[key];
+          return (
+            <View key={key} style={styles.switchRow}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.switchLabel}>{meta.label}</Text>
+                <Text style={styles.hint}>{meta.adminHint}</Text>
+              </View>
+              <Switch
+                value={config.feature_flags[key]}
+                onValueChange={(v) => void toggleFlag(key, v)}
+                trackColor={{ false: c.border, true: c.brandSoft }}
+                thumbColor={config.feature_flags[key] ? c.brand : c.textMuted}
+                disabled={saving}
+              />
             </View>
-            <Switch
-              value={config.feature_flags[flag.key]}
-              onValueChange={(v) => void toggleFlag(flag.key, v)}
-              trackColor={{ false: c.border, true: c.brandSoft }}
-              thumbColor={config.feature_flags[flag.key] ? c.brand : c.textMuted}
-              disabled={saving}
-            />
-          </View>
-        ))}
+          );
+        })}
       </AdminSettingsCard>
 
       {config.updated_at ? (

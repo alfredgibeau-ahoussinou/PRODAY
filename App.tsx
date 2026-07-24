@@ -70,8 +70,10 @@ import { useParentalScreenTime } from './src/hooks/useParentalScreenTime';
 import { useParentalActivityJournal } from './src/hooks/useParentalActivityJournal';
 import { ParentalScreenTimeBlockedScreen } from './src/screens/ParentalScreenTimeBlockedScreen';
 import { MaintenanceBlockedScreen } from './src/screens/MaintenanceBlockedScreen';
+import { FeatureDisabledPanel } from './src/components/platform/FeatureDisabledPanel';
 import { MinorYouthSpaceBridge } from './src/components/appSpace/MinorYouthSpaceBridge';
 import { PlatformConfigProvider, usePlatformConfig } from './src/context/PlatformConfigContext';
+import { usePlatformFeatureFlags } from './src/hooks/usePlatformFeatureFlags';
 import type { UserRole } from './src/models/User';
 import type { ProductLineId } from './src/models/ProductLine';
 
@@ -151,6 +153,7 @@ function AppShell() {
   const { isAdmin, claimLoading: adminClaimLoading, emailHint } = useIsAdmin();
   const shouldUseAdminShell = isAdmin || emailHint;
   const { config: platformConfig, loading: platformConfigLoading } = usePlatformConfig();
+  const { filterTabs, isEnabled, flagForTab, disabledCopy } = usePlatformFeatureFlags();
   const [previewUserMode, setPreviewUserMode] = useState(false);
   const [activeTab, setActiveTab] = useState<MainTabId>('home');
   const [pendingChatThreadId, setPendingChatThreadId] = useState<string | null>(null);
@@ -180,17 +183,21 @@ function AppShell() {
 
   const visibleTabs = useMemo(
     () =>
-      isGuest
-        ? getGuestVisibleTabs(productLine)
-        : getVisibleMainTabs(productLine, sessionProfile?.role, sessionProfile),
-    [isGuest, productLine, sessionProfile],
+      filterTabs(
+        isGuest
+          ? getGuestVisibleTabs(productLine)
+          : getVisibleMainTabs(productLine, sessionProfile?.role, sessionProfile),
+      ),
+    [isGuest, productLine, sessionProfile, filterTabs],
   );
 
   const screenTabs = useMemo((): MainTabId[] => {
-    if (!shouldInjectShopTab(sessionProfile?.role, productLine)) return visibleTabs;
+    if (!shouldInjectShopTab(sessionProfile?.role, productLine) || !isEnabled('shop')) {
+      return visibleTabs;
+    }
     if (visibleTabs.includes('shop')) return visibleTabs;
     return [...visibleTabs, 'shop'];
-  }, [visibleTabs, sessionProfile?.role, productLine]);
+  }, [visibleTabs, sessionProfile?.role, productLine, isEnabled]);
 
   useEffect(() => {
     if (activeTab === 'messages') refreshUnread();
@@ -302,6 +309,22 @@ function AppShell() {
     profile &&
     (profile.role === 'supporter' || getUserProductLine(profile) === 'supporter')
   ) {
+    if (!isEnabled('supporter')) {
+      const copy = disabledCopy('supporter');
+      return (
+        <SafeAreaView
+          style={[styles.adminLoader, { backgroundColor: themeColors.background }]}
+          edges={['top', 'left', 'right', 'bottom']}
+        >
+          <StatusBar style={isWoman ? 'dark' : 'light'} />
+          <FeatureDisabledPanel
+            flag="supporter"
+            titleOverride={copy.title}
+            messageOverride={copy.message}
+          />
+        </SafeAreaView>
+      );
+    }
     return (
       <SubscriptionProvider profile={sessionProfile ?? profile}>
         <SupporterAppShell />
@@ -325,6 +348,9 @@ function AppShell() {
   };
 
   const Screen = resolveMainTabScreen(activeTab, sessionProfile?.role, productLine);
+  const disabledFlag = flagForTab(activeTab);
+  const tabFeatureBlocked =
+    disabledFlag != null && !isEnabled(disabledFlag);
   const isSponsor = isSponsorRole(sessionProfile?.role);
   const shellBackground = isSponsor ? SPONSOR_THEME.background : themeColors.background;
 
@@ -462,7 +488,11 @@ function AppShell() {
           {profile ? <PoleHelpChatbot /> : null}
           <View style={styles.screen}>
             <AnimatedTabContent activeTab={activeTab} tabOrder={screenTabs}>
-              <Screen />
+              {tabFeatureBlocked && disabledFlag ? (
+                <FeatureDisabledPanel flag={disabledFlag} />
+              ) : (
+                <Screen />
+              )}
             </AnimatedTabContent>
           </View>
           <BottomTabBar

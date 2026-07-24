@@ -153,7 +153,14 @@ export const MercatoStaffHome: React.FC<MercatoStaffHomeProps> = ({
         config.showDetectionsHeader
           ? { id: 'detections', label: t('mercato.tools.detections'), icon: 'football' as const, onPress: () => onQuickTile('detections') }
           : null,
-        { id: 'stages', label: t('mercato.tools.stages'), icon: 'calendar' as const, onPress: () => onQuickTile('stages') },
+        config.quickTiles.some((tile) => tile.id === 'stages')
+          ? {
+              id: 'stages',
+              label: t('mercato.tools.stages'),
+              icon: 'calendar' as const,
+              onPress: () => onQuickTile('stages'),
+            }
+          : null,
         onCreatePost
           ? { id: 'create', label: config.fabLabel, icon: 'add' as const, onPress: onCreatePost }
           : null,

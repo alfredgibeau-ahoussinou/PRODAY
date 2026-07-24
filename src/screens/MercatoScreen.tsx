@@ -43,6 +43,8 @@ import {
   getMercatoExperienceConfig,
   type MercatoQuickTileId,
 } from '../content/mercatoExperience';
+import { usePlatformFeatureFlags } from '../hooks/usePlatformFeatureFlags';
+import { FeatureDisabledPanel } from '../components/platform/FeatureDisabledPanel';
 
 type MercatoView =
   | 'home'
@@ -95,6 +97,8 @@ export const MercatoScreen: React.FC<MercatoScreenProps> = ({ postScope }) => {
   const { openProfile } = useTabNavigationActions();
   const { requireAuth } = useRequireAuth();
   const { t } = useTranslation();
+  const { isEnabled } = usePlatformFeatureFlags();
+  const stagesEnabled = isEnabled('stages');
   const { stats, loading: loadingStats, posts, loadingLists, refreshLists } =
     useMercatoHome();
 
@@ -105,10 +109,20 @@ export const MercatoScreen: React.FC<MercatoScreenProps> = ({ postScope }) => {
         ? 'amateur'
         : productLine;
 
-  const config = useMemo(
-    () => getMercatoExperienceConfig(mercatoLine, profile?.role, appSpace, t, playerSegment),
-    [mercatoLine, profile?.role, appSpace, t, playerSegment],
-  );
+  const config = useMemo(() => {
+    const base = getMercatoExperienceConfig(
+      mercatoLine,
+      profile?.role,
+      appSpace,
+      t,
+      playerSegment,
+    );
+    if (stagesEnabled) return base;
+    return {
+      ...base,
+      quickTiles: base.quickTiles.filter((tile) => tile.id !== 'stages'),
+    };
+  }, [mercatoLine, profile?.role, appSpace, t, playerSegment, stagesEnabled]);
 
   const scope = postScope ?? resolveMercatoPostScope(mercatoLine);
 
@@ -158,10 +172,10 @@ export const MercatoScreen: React.FC<MercatoScreenProps> = ({ postScope }) => {
     } else if (pendingMercatoView === 'create_post') {
       setView('create_post');
     } else if (pendingMercatoView === 'stages') {
-      setView('stages');
+      if (stagesEnabled) setView('stages');
     }
     clearPendingMercato();
-  }, [pendingMercatoView, clearPendingMercato, profile]);
+  }, [pendingMercatoView, clearPendingMercato, profile, stagesEnabled]);
 
   useEffect(() => {
     if (!profile || profile.role !== 'player') {
@@ -179,6 +193,7 @@ export const MercatoScreen: React.FC<MercatoScreenProps> = ({ postScope }) => {
   };
 
   const handleQuickTile = (id: MercatoQuickTileId) => {
+    if (id === 'stages' && !stagesEnabled) return;
     setView(id);
   };
 
@@ -281,7 +296,9 @@ export const MercatoScreen: React.FC<MercatoScreenProps> = ({ postScope }) => {
   if (view === 'detections') {
     subView = <DetectionEventsScreen onBack={() => setView('home')} />;
   } else if (view === 'stages') {
-    subView = (
+    subView = !stagesEnabled ? (
+      <FeatureDisabledPanel flag="stages" />
+    ) : (
       <StagesListScreen
         profile={profile}
         onBack={() => setView('home')}
@@ -300,7 +317,9 @@ export const MercatoScreen: React.FC<MercatoScreenProps> = ({ postScope }) => {
       />
     );
   } else if (view === 'create_stage' && profile) {
-    subView = (
+    subView = !stagesEnabled ? (
+      <FeatureDisabledPanel flag="stages" />
+    ) : (
       <CreateStageScreen
         profile={profile}
         onBack={() => setView('stages')}
@@ -308,7 +327,9 @@ export const MercatoScreen: React.FC<MercatoScreenProps> = ({ postScope }) => {
       />
     );
   } else if (view === 'stage_detail' && selectedStageId) {
-    subView = (
+    subView = !stagesEnabled ? (
+      <FeatureDisabledPanel flag="stages" />
+    ) : (
       <StageDetailScreen
         stageId={selectedStageId}
         profile={profile}

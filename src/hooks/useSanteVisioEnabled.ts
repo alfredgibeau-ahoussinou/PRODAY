@@ -1,9 +1,13 @@
 import { usePlatformConfig } from '../context/PlatformConfigContext';
 import { platformConfigService } from '../services/platformConfig.service';
+import {
+  getPlatformFeatureMeta,
+  isPlatformFeatureEnabled,
+} from '../content/platformFeatureFlags';
 
 /** Message affiché quand la visio Santé est coupée (bêta). */
 export const SANTE_VISIO_BETA_OFF_MESSAGE =
-  'Bêta actuelle — aucun accès à la visio';
+  getPlatformFeatureMeta('sante_visio').disabledTitle;
 
 /**
  * Flag plateforme `sante_visio` (défaut OFF).
@@ -16,7 +20,7 @@ export function useSanteVisioEnabled(): {
 } {
   const { config, loading } = usePlatformConfig();
   return {
-    enabled: config.feature_flags.sante_visio === true,
+    enabled: isPlatformFeatureEnabled(config.feature_flags, 'sante_visio'),
     loading,
     refresh: async () => {
       await platformConfigService.getConfig();

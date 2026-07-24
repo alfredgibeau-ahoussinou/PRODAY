@@ -47,6 +47,8 @@ import {
   brandForAuthContext,
   isSponsorAuthPreset,
 } from '../utils/authBrandContext';
+import { usePlatformFeatureFlags } from '../hooks/usePlatformFeatureFlags';
+import { FeatureDisabledPanel } from '../components/platform/FeatureDisabledPanel';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -74,7 +76,11 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
     productLine === 'sponsor' || isSponsorAuthPreset(proSignupPresetRole);
   const { openSpacePicker } = useLaunchIntro();
   const { t } = useTranslation();
-  const [tab, setTab] = useState<AuthTabId>(initialIntent === 'signup' ? 'signup' : 'login');
+  const { isEnabled, disabledCopy } = usePlatformFeatureFlags();
+  const registrationOpen = isEnabled('registration_open');
+  const [tab, setTab] = useState<AuthTabId>(
+    initialIntent === 'signup' && registrationOpen ? 'signup' : 'login',
+  );
   const screenCopy = getLocalizedAuthCopy(productLine, tab, t, {
     brandName: activeBrand.name,
     sponsor: isSponsorAuth,
@@ -83,7 +89,9 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
     () => getAuthSignupTeaser(productLine, t, proSignupPresetRole),
     [productLine, t, proSignupPresetRole],
   );
-  const [signupOpen, setSignupOpen] = useState(initialIntent === 'signup');
+  const [signupOpen, setSignupOpen] = useState(
+    initialIntent === 'signup' && registrationOpen,
+  );
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -107,6 +115,11 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
     setEmail((prev) => prev || quickLogin.savedEmail || '');
   }, [quickLogin.hydrated, quickLogin.savedEmail]);
 
+  useEffect(() => {
+    if (registrationOpen) return;
+    setSignupOpen(false);
+  }, [registrationOpen]);
+
   const clearErrors = () => {
     setBanner(null);
     setFieldErrors({});
@@ -117,9 +130,14 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
   };
 
   const openSignup = useCallback(() => {
+    if (!registrationOpen) {
+      showError(disabledCopy('registration_open').message, 'warning');
+      setTab('signup');
+      return;
+    }
     clearErrors();
     setSignupOpen(true);
-  }, []);
+  }, [registrationOpen, disabledCopy]);
 
   const closeSignup = useCallback(() => {
     setSignupOpen(false);
@@ -411,6 +429,10 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                       disabled={loading}
                       onSuccess={goHomeAfterAuth}
                       onNeedsProfile={(prefill) => {
+                        if (!registrationOpen) {
+                          showError(disabledCopy('registration_open').message, 'warning');
+                          return;
+                        }
                         setSignupPrefill(prefill);
                         openSignup();
                       }}
@@ -419,6 +441,8 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                   </StaggerReveal>
                 </AuthFormCard>
               </>
+            ) : !registrationOpen ? (
+              <FeatureDisabledPanel flag="registration_open" />
             ) : (
               <View style={authStyles.signupTeaser}>
                 {signupTeaser.map((line, i) => (
