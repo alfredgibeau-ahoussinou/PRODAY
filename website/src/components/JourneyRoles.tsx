@@ -72,7 +72,7 @@ export function JourneyRoles({ fullPage }: JourneyRolesProps) {
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         {!fullPage && (
           <Reveal>
-            <p className="text-sm font-medium tracking-widest text-white/40">PARCOURS</p>
+            <p className="text-sm font-medium tracking-widest text-white/40">PAR RÔLE</p>
             <h2 className="font-display mt-2 text-3xl font-bold text-white sm:text-4xl">
               Chaque rôle, un chemin clair
             </h2>
@@ -102,7 +102,7 @@ export function JourneyRoles({ fullPage }: JourneyRolesProps) {
         {poleJourneys.length === 0 ? (
           <div className={`mt-12 card-premium rounded-2xl p-8 ${styles.card}`}>
             <p className="text-white/70">
-              Les parcours partenaires (sponsors & marques) sont détaillés sur la page{" "}
+              Les étapes partenaires (sponsors et marques) sont détaillées sur la page{" "}
               <span className="font-semibold text-amber-300">Espace Partenaires</span> : visibilité
               clubs, offres locales et campagnes nationales.
             </p>

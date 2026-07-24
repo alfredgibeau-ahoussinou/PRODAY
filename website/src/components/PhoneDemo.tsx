@@ -29,7 +29,7 @@ const BASE_SCREENS: Record<MainTabId, ScreenMock> = {
   home: {
     caption: "Pro Day Man",
     title: "Accueil",
-    subtitle: "Bonjour Alex. Votre saison en un coup d'œil.",
+    subtitle: "Bonjour Alex. Votre saison sur l'Accueil.",
     stats: [
       { value: "72", label: "Visibilité" },
       { value: "3", label: "Convocs", highlight: true },

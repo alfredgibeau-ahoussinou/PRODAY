@@ -30,7 +30,7 @@ export const BETA_FEATURES = [
   "Visibilité : score et dynamique de profil",
   "Fil, Reels et Arena : communauté, contenus et événements",
   "CV joueur : profil alimenté par vos matchs et stats",
-  "Parcours par rôle : adapté à votre profil",
+  "Étapes selon votre rôle : joueur, coach, staff ou autre",
 ] as const;
 
 const BETA_TIMELINE_BASE = [
@@ -52,14 +52,14 @@ const BETA_TIMELINE_BASE = [
     step: 3,
     title: "Tests & retours",
     description:
-      "Explorez l'app, testez votre pôle et partagez bugs ou idées. On lit chaque message.",
+      "Ouvrez l'app, testez votre pôle et envoyez bugs ou idées. On lit chaque message.",
     done: false,
   },
   {
     step: 4,
     title: "Lancement public",
     description:
-      "Les beta-testeurs conservent l'accès prioritaire ; vous serez informés de la date de sortie grand public.",
+      "Les beta-testeurs gardent l'accès prioritaire. On vous prévient de la date de sortie grand public.",
     done: false,
   },
 ] as const;

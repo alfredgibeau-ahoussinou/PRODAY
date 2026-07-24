@@ -398,7 +398,7 @@ export function SponsorSignupWizard() {
             {step.id === "campaign" && (
               <div className="space-y-8">
                 <p className="text-white/55">
-                  Définissez vos objectifs pour que nous calibrions la formule adaptée à votre ambition.
+                  Indiquez budget, objectifs et public. On s&apos;en sert pour proposer la bonne formule.
                 </p>
                 <div>
                   <FieldLabel required>Budget mensuel estimé</FieldLabel>
@@ -438,7 +438,7 @@ export function SponsorSignupWizard() {
             {step.id === "targeting" && (
               <div className="space-y-8">
                 <p className="text-white/55">
-                  Précisez vos zones géographiques et disciplines pour un ciblage optimal de vos campagnes.
+                  Choisissez les régions et les disciplines à cibler.
                 </p>
                 <div>
                   <FieldLabel required>Régions ciblées</FieldLabel>

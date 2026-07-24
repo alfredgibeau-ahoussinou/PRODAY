@@ -104,7 +104,7 @@ export function FeaturesBento({ extended, compact }: FeaturesBentoProps) {
     <Section
       kicker="FONCTIONNALITÉS"
       title="Tout ce qui fait ProDay"
-      description="Recrutement, saison, santé, communauté et partenaires. Une plateforme complète pour le foot amateur et semi-pro."
+      description="Recrutement, saison, santé, communauté et partenaires. Pour le foot amateur et semi-pro."
       className="bg-black"
       compact={compact}
     >

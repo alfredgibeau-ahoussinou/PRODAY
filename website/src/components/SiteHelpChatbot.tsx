@@ -54,7 +54,7 @@ const COMMON_ENTRIES: HelpEntry[] = [
     answer:
       "Les professionnels du pôle Santé (chacun son Cal.com). Les joueurs / sportifs n’ont pas besoin de compte Cal.com. Ils réservent comme invités. Visio conforme (Cal.com / Whereby), pas Zoom.",
     href: `${ROUTES.sante}#teleconsultation`,
-    hrefLabel: "Voir le parcours",
+    hrefLabel: "Voir la téléconsultation",
   },
   {
     id: "demo",
@@ -99,7 +99,7 @@ function entriesForPath(pathname: string, pricingHref: string): HelpEntry[] {
     poleHint.push({
       id: "pole-sante",
       question: "Quels onglets pour un praticien ?",
-      answer: "Accueil, Agenda, Demandes, Vidéos, Messages et Cabinet. Sans Shop ni Mercato (parcours praticien).",
+      answer: "Accueil, Agenda, Demandes, Vidéos, Messages et Cabinet. Sans Shop ni Mercato (profil praticien).",
       href: ROUTES.sante,
       hrefLabel: "Pôle Santé",
     });

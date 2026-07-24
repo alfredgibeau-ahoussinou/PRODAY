@@ -52,7 +52,7 @@ const SECTION_COPY: Record<
   }
 > = {
   homme: {
-    journeyTitle: "Votre parcours",
+    journeyTitle: "Premières étapes",
     journeySubtitle: "De l'inscription aux premières actions.",
     pulseTitle: "Visibilité ProDay",
     pulseSubtitle: "Profil, stats, activité et confiance.",
@@ -61,7 +61,7 @@ const SECTION_COPY: Record<
     pricingSubtitle: "Gratuit pour démarrer.",
   },
   woman: {
-    journeyTitle: "Votre parcours",
+    journeyTitle: "Premières étapes",
     journeySubtitle: "De l'inscription aux premières actions.",
     pulseTitle: "Visibilité ProDay",
     pulseSubtitle: "Profil, stats, activité et confiance.",
@@ -70,9 +70,9 @@ const SECTION_COPY: Record<
     pricingSubtitle: "Gratuit pour démarrer.",
   },
   amateur: {
-    journeyTitle: "Deux chemins, une coque",
-    journeySubtitle: "Joueur ou coach. Choisis ton entrée. Le reste suit le week-end.",
-    pulseTitle: "Ta visibilité de saison",
+    journeyTitle: "Deux entrées, une coque",
+    journeySubtitle: "Joueur ou coach. Choisissez votre entrée. Le reste suit le week-end.",
+    pulseTitle: "Votre visibilité de saison",
     pulseSubtitle: "Un score sur l'Accueil Équipe. Pas un onglet de plus.",
     verificationTitle: "Coachs vérifiés",
     verificationSubtitle: "Diplômes et licences. Badge puis validation admin.",
@@ -88,8 +88,8 @@ const SECTION_COPY: Record<
     pricingSubtitle: "Aucun abonnement. Aucun paywall.",
   },
   pro: {
-    journeyTitle: "Votre parcours",
-    journeySubtitle: "Selon ton métier staff.",
+    journeyTitle: "Selon votre métier",
+    journeySubtitle: "Choisissez le profil staff qui correspond.",
     pulseTitle: "Visibilité",
     pulseSubtitle: "",
     verificationTitle: "Profils vérifiés",
@@ -97,10 +97,10 @@ const SECTION_COPY: Record<
     pricingSubtitle: "Formules selon le rôle.",
   },
   pro_joueur: {
-    journeyTitle: "Le parcours joueur pro",
+    journeyTitle: "Étapes joueur pro",
     journeySubtitle: "De l'Accueil Carrière aux shortlists recruteurs.",
     pulseTitle: "Visibilité scouting",
-    pulseSubtitle: "Ce que voient les clubs quand ils scannent ton profil.",
+    pulseSubtitle: "Ce que voient les clubs quand ils ouvrent votre profil.",
     verificationTitle: "Confiance club & agent",
     verificationSubtitle: "Justificatifs et badge. Pour rassurer le staff en face.",
     pricingSubtitle: "Formule Pro Joueur. Démarrage gratuit.",
@@ -115,8 +115,8 @@ const SECTION_COPY: Record<
     pricingSubtitle: "Une formule structure. Multi-équipes inclus.",
   },
   pro_staff: {
-    journeyTitle: "Choisir ton métier",
-    journeySubtitle: "Quatre parcours. Un réseau. Une messagerie tracée.",
+    journeyTitle: "Choisir votre métier",
+    journeySubtitle: "Quatre métiers staff. Réseau vérifié. Messagerie tracée.",
     pulseTitle: "Visibilité",
     pulseSubtitle: "",
     verificationTitle: "Métiers vérifiés",
@@ -238,7 +238,7 @@ export function UniversePage({ universe }: UniversePageProps) {
           >
             <div className="mx-auto max-w-6xl px-4 sm:px-6">
               <p className={`font-signature text-2xl italic ${theme.highlightLabel}`}>
-                Parcours
+                Étapes
               </p>
               <h2 className="font-display mt-1 text-3xl font-extrabold uppercase tracking-[-0.03em] text-white sm:text-4xl">
                 {copy.journeyTitle}

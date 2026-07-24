@@ -125,15 +125,15 @@ export const EXPLORE_CARDS = [
   },
   {
     href: routeWithHash(ROUTES.journeys, "parcours"),
-    title: "Parcours par rôle",
+    title: "Étapes par rôle",
     description: "Joueur, recruteur, santé, organisateur ou parent. Étape par étape.",
     image: "/images/football-team-01.jpg",
-    tag: "Parcours",
+    tag: "Rôles",
   },
   {
     href: ROUTES.quiz,
     title: "Quiz profil",
-    description: "3 questions. Man, Woman ou Pro : quel parcours vous correspond.",
+    description: "3 questions. Man, Woman ou Pro : quel pôle vous correspond.",
     image: "/showcase/classic-exp-discover.jpg",
     tag: "Quiz",
   },

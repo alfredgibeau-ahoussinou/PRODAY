@@ -27,7 +27,7 @@ export default function HomePage() {
               Les 7 pôles
             </p>
             <h2 className="font-display mt-1 text-3xl font-extrabold uppercase tracking-[-0.03em] text-white sm:text-4xl">
-              Choisis ton terrain
+              Choisissez votre pôle
             </h2>
           </div>
 

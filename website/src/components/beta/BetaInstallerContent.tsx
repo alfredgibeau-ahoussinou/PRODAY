@@ -221,7 +221,7 @@ export function BetaInstallerContent() {
               "Sur votre iPhone ou iPad, installez l'application TestFlight depuis l'App Store (gratuit, éditeur Apple).",
               "Ouvrez l'email d'invitation sur votre appareil iOS et appuyez sur « View in TestFlight » ou « Commencer les tests ».",
               "Dans TestFlight, acceptez les conditions, puis appuyez sur « Installer » pour ProDay. L'icône apparaît sur votre écran d'accueil.",
-              "Lancez ProDay, connectez-vous avec votre email bêta et explorez l'app. Les mises à jour bêta arrivent automatiquement via TestFlight.",
+              "Lancez ProDay, connectez-vous avec votre email bêta et testez l'app. Les mises à jour bêta arrivent automatiquement via TestFlight.",
             ]}
           />
 

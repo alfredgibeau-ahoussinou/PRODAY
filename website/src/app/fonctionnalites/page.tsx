@@ -30,7 +30,7 @@ export default function FeaturesPage() {
         id="poles"
         kicker="4 PÔLES"
         title="Le bon module, le bon pôle"
-        description="Chaque module s'adapte au pôle Joueur, Pro, Santé ou Partenaires. Sans mélanger les parcours."
+        description="Chaque module s'adapte au pôle Joueur, Pro, Santé ou Partenaires. Sans mélanger les publics."
         bordered={false}
       >
         <div className="grid gap-4 sm:grid-cols-2">
@@ -56,8 +56,8 @@ export default function FeaturesPage() {
       <PremiumSection
         id="verification"
         kicker="CONFIANCE"
-        title="Confiance intégrée"
-        description="Vérification staff, contrôle parental et espace famille. Détail sur la page dédiée."
+        title="Vérification staff et mineurs"
+        description="Vérification staff, contrôle parental et espace famille. Détail sur la page Confiance."
       >
         <VerificationTimeline embedded />
       </PremiumSection>

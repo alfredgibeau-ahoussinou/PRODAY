@@ -73,7 +73,7 @@ export const CAROUSEL_POLES: PoleDefinition[] = [
     title: "Carrière pro",
     subtitle: "Contrat · Essais · Scouting",
     description:
-      "Ta carrière, pas un CV Word. Portfolio scouting, essais, mandat agent et stats validées coach.",
+      "Portfolio scouting, essais, mandat agent et stats validées par le coach.",
     href: ROUTES.proJoueur,
     pricingHash: "pro_joueur",
     logo: "/branding/logo-man-picto.png",
@@ -85,7 +85,7 @@ export const CAROUSEL_POLES: PoleDefinition[] = [
     title: "Structures & équipes",
     subtitle: "U13 → Seniors · Une structure",
     description:
-      "Toute la structure en un regard. Catégories, recrutement, calendrier et vitrine publique.",
+      "Catégories, recrutement, calendrier et vitrine publique. Pour le bureau et la DS.",
     href: ROUTES.proClub,
     pricingHash: "pro_club",
     logo: "/branding/logo-pro-picto.png",
@@ -97,7 +97,7 @@ export const CAROUSEL_POLES: PoleDefinition[] = [
     title: "Métiers du foot pro",
     subtitle: "Agent · Recruteur · Coach · Arena",
     description:
-      "Ton métier, ta coque. Mercato Pro, mandats, shortlists et tournois Arena.",
+      "Mercato Pro, mandats, shortlists et tournois Arena. Selon votre métier staff.",
     href: ROUTES.proStaff,
     pricingHash: "pro_staff",
     logo: "/branding/logo-pro-picto.png",
@@ -111,7 +111,7 @@ export const SPONSOR_POLE: PoleDefinition = {
   title: "Marques & sponsors",
   subtitle: "Visibilité · ROI · Terrain",
   description:
-    "Votre marque sur le vrai terrain. Campagnes ciblées, KPIs lisibles et vitrine vérifiée.",
+    "Campagnes ciblées auprès de clubs et joueurs actifs. KPIs lisibles. Vitrine vérifiée.",
   href: ROUTES.sponsor,
   pricingHash: "sponsor",
   logo: "/branding/logo-sponsor-picto.png",

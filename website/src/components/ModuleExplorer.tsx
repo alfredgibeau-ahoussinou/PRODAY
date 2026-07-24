@@ -26,7 +26,7 @@ export function ModuleExplorer({ compact }: ModuleExplorerProps) {
           <Reveal>
             <p className="text-sm font-medium tracking-widest text-white/40">MODULES</p>
             <h2 className="font-display mt-2 text-3xl font-bold text-white sm:text-4xl">
-              Dix modules. Une saison.
+              Dix modules pour la saison
             </h2>
             <p className="mt-3 max-w-xl text-white/55">
               Mercato, Reels, Fil, Arena, partenaires, santé. Les briques de ProDay.

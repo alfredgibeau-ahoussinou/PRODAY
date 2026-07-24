@@ -52,15 +52,15 @@ export function BetaHubContent({ session }: BetaHubContentProps) {
       <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-8">
         <SectionKicker>Votre espace beta-testeur</SectionKicker>
         <p className="mt-4 max-w-3xl text-sm leading-relaxed text-white/65">
-          Merci de faire partie des premiers à tester ProDay. Explorez les sept pôles, téléchargez
-          l&apos;APK Android depuis l&apos;onglet Installer et partagez vos retours. Chaque message
+          Merci de faire partie des premiers à tester ProDay. Ouvrez les sept pôles, téléchargez
+          l&apos;APK Android depuis l&apos;onglet Installer et envoyez vos retours. Chaque message
           est lu par l&apos;équipe produit avant le lancement public.
         </p>
         <div className="mt-6 grid gap-4 sm:grid-cols-3">
           {[
-            { icon: Sparkles, label: "Avant le public", detail: "Builds iOS et Android en avant-première" },
-            { icon: BookOpen, label: "Guides dédiés", detail: "Installation, programme et FAQ centralisés" },
-            { icon: MessageSquare, label: "Votre voix compte", detail: "Retours pris en compte avant le lancement" },
+            { icon: Sparkles, label: "Avant le public", detail: "Builds iOS et Android avant le lancement" },
+            { icon: BookOpen, label: "Guides d'installation", detail: "Programme, APK et FAQ au même endroit" },
+            { icon: MessageSquare, label: "Envoyez un retour", detail: "Bugs et idées lus avant le lancement" },
           ].map(({ icon: Icon, label, detail }) => (
             <div
               key={label}

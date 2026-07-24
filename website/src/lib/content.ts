@@ -161,7 +161,7 @@ export const PRO_JOUEUR_BRAND = {
   logo: UNIVERSE_LOGOS.homme,
   tagline: "Contrat · Essais · Scouting",
   mission:
-    "Ta carrière, pas un CV Word. Portfolio scouting, alertes clubs, stats validées coach et mandat agent. Pour le joueur sous contrat.",
+    "Portfolio scouting, alertes clubs, stats validées par le coach et mandat agent. Pour le joueur sous contrat.",
   accent: "#0054F0",
   accentDark: "#001854",
 } as const;
@@ -173,7 +173,7 @@ export const PRO_CLUB_BRAND = {
   logo: UNIVERSE_LOGOS.pro,
   tagline: "U13 → Seniors · Une structure",
   mission:
-    "Toute la structure en un regard. Équipes, coachs, adhésions, recrutement et page publique. Pour présidents, DS et secrétariat.",
+    "Équipes, coachs, adhésions, recrutement et page publique. Pour présidents, DS et secrétariat.",
   accent: "#006CFC",
   accentDark: "#002478",
 } as const;
@@ -185,7 +185,7 @@ export const PRO_STAFF_BRAND = {
   logo: UNIVERSE_LOGOS.pro,
   tagline: "Agent · Recruteur · Coach · Arena",
   mission:
-    "Quatre métiers, une coque pro. Mercato Pro, shortlists, mandats et tournois Arena. Profils vérifiés. Messagerie tracée.",
+    "Mercato Pro, shortlists, mandats et tournois Arena pour agent, recruteur, coach et organisateur. Profils vérifiés. Messagerie tracée.",
   accent: "#3B5BFF",
   accentDark: "#001848",
 } as const;
@@ -193,20 +193,20 @@ export const PRO_STAFF_BRAND = {
 /** Message waitlist / page beta */
 export const BETA_PITCH = {
   summary:
-    "Inscris-toi sur la liste d'attente. Tu suis l'avancement. Tu es prévenu en priorité au lancement.",
+    "Inscrivez-vous sur la liste d'attente. Vous suivez l'avancement. On vous prévient en priorité au lancement.",
   dailyUpdates:
     "Les inscrits reçoivent des nouvelles régulières sur le déploiement.",
   launch:
-    "On t'écrit dès que c'est dispo sur iOS et Android.",
+    "On vous écrit dès que c'est dispo sur iOS et Android.",
 } as const;
 
 export const MODULES = [
   {
     id: "mercato",
     title: "Mercato",
-    subtitle: "Recrutement intelligent",
+    subtitle: "Annonces & candidatures",
     description:
-      "Annonces ciblées par poste, niveau et ville. Candidature depuis l'app, suivi des réponses.",
+      "Annonces filtrées par poste, niveau et ville. Candidature depuis l'app. Suivi des réponses.",
     image: "/showcase/classic-mercato.jpg",
     color: "#0A0A0A",
   },
@@ -350,32 +350,32 @@ export const JOURNEYS = [
     id: "player",
     role: "Joueur amateur",
     steps: [
-      "Créer ton profil (M ou F)",
+      "Créer votre profil (M ou F)",
       "Remplir le CV foot",
       "Postuler au Mercato local",
       "Répondre aux convocations",
-      "Suivre ta saison & ta visibilité",
+      "Suivre votre saison et votre visibilité",
     ],
   },
   {
     id: "pro_player",
     role: "Joueur pro",
     steps: [
-      "Accueil Carrière & contrat",
-      "Portfolio vidéos & stats coach",
-      "Recevoir essais & opportunités",
+      "Accueil Carrière et contrat",
+      "Portfolio vidéos et stats coach",
+      "Recevoir essais et opportunités",
       "Échanger avec agent / staff",
-      "Monter ta visibilité scouting",
+      "Suivre votre visibilité scouting",
     ],
   },
   {
     id: "coach",
     role: "Coach",
     steps: [
-      "Vérifier ton diplôme",
+      "Vérifier votre diplôme",
       "Constituer l'effectif",
       "Publier une détection",
-      "Convocations & live stats",
+      "Convocations et live stats",
     ],
   },
   {
@@ -442,10 +442,10 @@ export const JOURNEYS = [
     id: "supporter",
     role: "Supporter",
     steps: [
-      "Créer ton profil tribune",
-      "Suivre clubs & joueurs",
+      "Créer votre profil tribune",
+      "Suivre clubs et joueurs",
       "Ouvrir le live le jour J",
-      "Réagir aux débats & moments",
+      "Réagir aux débats et moments",
     ],
   },
   {
@@ -768,7 +768,7 @@ export const PRO_JOUEUR_MODULES = [
     title: "Accueil Carrière",
     subtitle: "Contrat & timeline",
     description:
-      "Jours avant fin de contrat, consultations profil, essais et messages agent. Ton tableau de bord pro dès l'ouverture.",
+      "Jours avant fin de contrat, consultations profil, essais et messages agent. Votre tableau de bord pro dès l'ouverture.",
     image: "/images/football-pro-01.jpg",
   },
   {
@@ -1091,7 +1091,7 @@ export const UNIVERSE_PAGE_CONFIG = {
     modules: AMATEUR_MODULES as readonly UniverseModule[],
     journeyIds: ["player", "coach"] as const,
     audienceNote:
-      "Foot M ou F : tu choisis à l'inscription. Staff pro, agent ou DS ? Direction les pôles Pro.",
+      "Foot M ou F : vous choisissez à l'inscription. Staff pro, agent ou DS ? Direction les pôles Pro.",
     showPulse: true,
     showVerification: true,
     pricingPlanIds: ["player_plus", "coach_pro"] as const,
@@ -1107,7 +1107,7 @@ export const UNIVERSE_PAGE_CONFIG = {
     line: "supporter" as const,
     brand: SUPPORTER_BRAND,
     hero: {
-      title: "Ta tribune. Zéro paywall.",
+      title: "La tribune. Sans paywall.",
       image: "/images/football-fans-01.jpg",
     },
     highlights: [
@@ -1118,15 +1118,15 @@ export const UNIVERSE_PAGE_CONFIG = {
     ],
     modulesTitle: "La tribune numérique",
     modulesSubtitle:
-      "Scores, suivis, fil et merch. Sans Mercato. Sans abonnement. Juste le match.",
+      "Scores, suivis, fil et merch. Pas de Mercato. Pas d'abonnement. Le match, point.",
     modules: SUPPORTER_MODULES as readonly UniverseModule[],
     journeyIds: ["supporter"] as const,
     audienceNote:
-      "Tu joues ou tu coaches ? Pôle Amateur ou Pro. Tu représentes une marque ? Pôle Sponsor.",
+      "Vous jouez ou vous coachez ? Pôle Amateur ou Pro. Vous représentez une marque ? Pôle Sponsor.",
     showPulse: false,
     showVerification: false,
     pricingPlanIds: [] as const,
-    pricingTitle: "Gratuit. Pour de vrai.",
+    pricingTitle: "Gratuit. Sans abonnement store.",
     cta: {
       title: "Entrer dans la tribune",
       description:
@@ -1181,7 +1181,7 @@ export const UNIVERSE_PAGE_CONFIG = {
     line: "pro" as const,
     brand: PRO_JOUEUR_BRAND,
     hero: {
-      title: "Ta carrière, pas un CV Word.",
+      title: "Votre carrière, hors CV Word.",
       image: "/images/football-action-01.jpg",
     },
     highlights: [
@@ -1192,17 +1192,17 @@ export const UNIVERSE_PAGE_CONFIG = {
     ],
     modulesTitle: "La coque joueur pro",
     modulesSubtitle:
-      "Accueil Carrière, portfolio scouting et opportunités. Loin du Mercato district. Proche des recruteurs.",
+      "Accueil Carrière, portfolio scouting et opportunités. Distinct du Mercato district. Relié aux recruteurs.",
     modules: PRO_JOUEUR_MODULES as readonly UniverseModule[],
     journeyIds: ["pro_player"] as const,
     audienceNote:
-      "Foot district / régional ? Pôle Amateur. Tu recrutes ou tu représentes ? Pôle Pro Staff ou Pro Club.",
+      "Foot district / régional ? Pôle Amateur. Vous recrutez ou vous représentez ? Pôle Pro Staff ou Pro Club.",
     showPulse: true,
     showVerification: true,
     pricingPlanIds: ["player_plus"] as const,
     pricingTitle: "Formule Pro Joueur",
     cta: {
-      title: "Passe en mode Pro Joueur",
+      title: "Passer en mode Pro Joueur",
       description:
         "Portfolio scouting, alertes clubs et mandat agent.",
       beta: "Liste d'attente Pro Joueur",
@@ -1212,7 +1212,7 @@ export const UNIVERSE_PAGE_CONFIG = {
     line: "pro" as const,
     brand: PRO_CLUB_BRAND,
     hero: {
-      title: "Toute la structure. Un regard.",
+      title: "Club : équipes, recrutement, vitrine.",
       image: "/images/football-club-01.jpg",
     },
     highlights: [
@@ -1243,7 +1243,7 @@ export const UNIVERSE_PAGE_CONFIG = {
     line: "pro" as const,
     brand: PRO_STAFF_BRAND,
     hero: {
-      title: "Ton métier. Ta coque.",
+      title: "Votre métier. Votre espace.",
       image: "/showcase/classic-staff.jpg",
     },
     highlights: [
@@ -1254,7 +1254,7 @@ export const UNIVERSE_PAGE_CONFIG = {
     ],
     modulesTitle: "Outils des métiers pro",
     modulesSubtitle:
-      "Recruteur, coach pro, agent et organisateur Arena. Chacun son parcours. Une messagerie tracée.",
+      "Recruteur, coach pro, agent et organisateur Arena. Messagerie tracée entre profils vérifiés.",
     modules: PRO_STAFF_MODULES as readonly UniverseModule[],
     journeyIds: ["coach", "recruiter", "agent", "organizer"] as const,
     audienceNote:
@@ -1282,7 +1282,7 @@ export type UniversePageId = keyof typeof UNIVERSE_PAGE_CONFIG;
 export const VISION_PILLARS = [
   {
     title: "Mission",
-    body: "Connecter. Progresser. Réussir. Les outils du haut niveau pour le foot amateur. Sans surestimer l'IA.",
+    body: "Relier carrière, club et communauté dans le foot amateur. Sans surestimer l'IA.",
   },
   {
     title: "Aujourd'hui",
@@ -1305,14 +1305,14 @@ export const ALL_PILLARS = [
     title: "Visibilité ProDay",
     subtitle: "Score de visibilité",
     description:
-      "Indicateur exclusif : profil, activité et confiance pour vous démarquer.",
+      "Score de visibilité : profil, activité et confiance.",
   },
   {
     id: "recruit-pillar",
-    title: "Mercato intelligent",
+    title: "Mercato",
     subtitle: "Filtres & candidatures",
     description:
-      "Annonces ciblées, candidature depuis l'app, suivi des réponses.",
+      "Annonces filtrées, candidature depuis l'app, suivi des réponses.",
   },
   {
     id: "matches-pillar",
@@ -1422,7 +1422,7 @@ export const SPONSOR_PRICING_TIERS: readonly SponsorPricingTierWeb[] = [
   {
     id: "territorial",
     name: "Territorial",
-    tagline: "Rayonner sur un département",
+    tagline: "Visibilité sur un département",
     monthlyEur: 49,
     yearlyEur: yearlyPriceFromMonthly(49),
     ctaLabel: "Demander un devis",
@@ -1438,7 +1438,7 @@ export const SPONSOR_PRICING_TIERS: readonly SponsorPricingTierWeb[] = [
   {
     id: "national",
     name: "National Pro",
-    tagline: "Visibilité maximale sur ProDay",
+    tagline: "Visibilité nationale sur ProDay",
     monthlyEur: 99,
     yearlyEur: yearlyPriceFromMonthly(99),
     highlighted: true,
@@ -1643,7 +1643,7 @@ export const SUBSCRIPTION_PLANS_WEB = [
   {
     id: "sponsor_pro",
     label: "National Pro (partenaires)",
-    tagline: "Formule premium. Espace partenaires dédié",
+    tagline: "Formule premium. Espace partenaires dans l'app",
     monthlyEur: 99,
     storeAvailable: true,
     universes: ["pro"] as ProductLineWeb[],
@@ -1657,7 +1657,7 @@ export const SUBSCRIPTION_PLANS_WEB = [
       "National Pro : offres illimitées",
       "Logo mis en avant (onglet Sponsors)",
       "Campagnes locales ciblées",
-      "Espace partenaire dédié dans l'app",
+      "Espace partenaire dans l'app",
       "Push géolocalisé local (bêta, opt-in joueurs)",
     ],
   },
@@ -1758,7 +1758,7 @@ export const FAQ_ITEMS = [
   },
   {
     q: "Qui peut publier sur le Mercato ?",
-    a: "Les recruteurs ProDay : rôle Recruteur dédié, clubs, coachs, agents et organisateurs (univers Pro). Les joueurs Man et Woman candidatent sans publier d'annonces.",
+    a: "Les recruteurs ProDay : rôle Recruteur, clubs, coachs, agents et organisateurs (univers Pro). Les joueurs Man et Woman candidatent sans publier d'annonces.",
   },
   {
     q: "Le pôle santé inclut-il le coach mental ?",
@@ -1806,7 +1806,7 @@ export const FAQ_ITEMS = [
   },
   {
     q: "Quel tarif pour les partenaires / sponsors ?",
-    a: `Trois formules partenaires : Découverte (0 €, profil vérifié, 1 offre, 10 messages clubs / mois), Territorial (${formatAnnualPricingLine(49)}, devis sur ${SPONSOR_PARTNER_CONTACT_EMAIL}), National Pro (${faqPricing("sponsor_pro")}, espace dédié dans l'app).`,
+    a: `Trois formules partenaires : Découverte (0 €, profil vérifié, 1 offre, 10 messages clubs / mois), Territorial (${formatAnnualPricingLine(49)}, devis sur ${SPONSOR_PARTNER_CONTACT_EMAIL}), National Pro (${faqPricing("sponsor_pro")}, espace partenaires dans l'app).`,
   },
   {
     q: "Puis-je exporter mon CV foot ?",
@@ -1818,7 +1818,7 @@ export const FAQ_ITEMS = [
   },
   {
     q: "Prochainement disponible sur iOS et Android ?",
-    a: "L'app arrive sur l'App Store et Google Play. Inscris-toi sur la liste d'attente pour être prévenu du lancement.",
+    a: "L'app arrive sur l'App Store et Google Play. Inscrivez-vous sur la liste d'attente pour être prévenu du lancement.",
   },
   {
     q: "Que reçoit-on en s'inscrivant sur la liste d'attente ?",
@@ -1974,7 +1974,7 @@ export const QUIZ_RESULTS: Record<
   },
   recruiter: {
     title: "Profil Recruteur",
-    description: "Scouting, Mercato Pro et pipeline candidatures. Rôle dédié Pro Day Pro.",
+    description: "Scouting, Mercato Pro et pipeline candidatures. Rôle Recruteur sur Pro Day Pro.",
     href: "/pro#poles",
     cta: "Voir Pro Day Pro",
   },
@@ -1986,7 +1986,7 @@ export const QUIZ_RESULTS: Record<
   },
   organizer: {
     title: "Profil Organisateur",
-    description: "Créez vos tournois Arena. Inscriptions et palmarès intégrés.",
+    description: "Créez vos tournois Arena. Inscriptions et palmarès dans le calendrier.",
     href: "/fonctionnalites#modules",
     cta: "Voir Arena",
   },
@@ -1994,7 +1994,7 @@ export const QUIZ_RESULTS: Record<
     title: "Univers ProDay Woman",
     description: "Mercato F, matchs et profil joueuse.",
     href: "/woman",
-    cta: "Explorer Woman",
+    cta: "Voir Woman",
   },
   parent: {
     title: "Espace Parent",
@@ -2012,13 +2012,13 @@ export const QUIZ_RESULTS: Record<
     title: "Pro Day Man",
     description: "Foot masculin amateur. Mercato M, matchs, Arena et CV joueur.",
     href: "/amateur#modules",
-    cta: "Explorer Man",
+    cta: "Voir Man",
   },
   pro: {
     title: "Univers Pro Day Pro",
     description: "Recruteurs, coach, agent, club, pôle santé et réseau vérifié. Mercato Pro.",
     href: "/pro#poles",
-    cta: "Explorer Pro",
+    cta: "Voir Pro",
   },
 };
 

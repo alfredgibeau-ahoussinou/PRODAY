@@ -9,7 +9,7 @@ import { ROUTES } from "@/lib/routes";
 export const metadata: Metadata = {
   title: "Liste d'attente",
   description:
-    "Inscris-toi sur la liste d'attente ProDay. Suivi du produit et accès prioritaire au lancement.",
+    "Inscrivez-vous sur la liste d'attente ProDay. Suivi du produit et accès prioritaire au lancement.",
 };
 
 function parseRoleParam(value: string | undefined): BetaRoleId | undefined {

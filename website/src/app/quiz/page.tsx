@@ -23,7 +23,7 @@ export default function QuizPage() {
       <PremiumSection
         kicker="4 PÔLES"
         title="Joueur · Pro · Santé · Partenaires"
-        description="Le quiz analyse votre profil et vous propose le parcours le plus adapté."
+        description="Le quiz oriente vers le bon pôle : Joueur, Pro, Santé ou Partenaires."
         bordered={false}
       >
         <RoleQuiz />

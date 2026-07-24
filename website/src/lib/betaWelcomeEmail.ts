@@ -67,7 +67,7 @@ export function buildBetaWelcomeEmail(params: BetaWelcomeEmailParams): {
     "• Accédez à votre espace bêta via le lien ci-dessous.",
     "• Sur Android : téléchargez l'APK depuis l'onglet Installer. Pas par email.",
     "• Sur iOS : vous recevrez une invitation TestFlight par email Apple.",
-    "• En attendant, explorez le site : démo interactive, parcours recruteurs, Shop et feuille de route.",
+    "• En attendant, parcourez le site : démo interactive, pages rôles, Shop et feuille de route.",
     "",
     `Site : ${site}`,
     `Espace bêta : ${buildBetaAccessUrl(site, params.accessToken)}`,

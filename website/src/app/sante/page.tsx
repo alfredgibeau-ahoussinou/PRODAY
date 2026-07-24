@@ -79,7 +79,7 @@ export default function SantePage() {
       <PremiumSection
         kicker="PÔLE SANTÉ"
         title="Praticiens vérifiés près des clubs"
-        description="Un pôle dédié. Pas un onglet du Pro Staff. Agenda, téléconsultation et vidéos éducatives."
+        description="Pôle distinct du Pro Staff. Agenda, téléconsultation et vidéos éducatives."
         pole="sante"
         bordered={false}
       >

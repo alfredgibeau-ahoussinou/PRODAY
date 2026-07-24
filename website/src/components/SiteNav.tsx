@@ -133,7 +133,7 @@ function PolesMegaMenu({ pathname }: { pathname: string }) {
                 <div>
                   <p className="font-signature text-lg italic text-white/85">Sept univers</p>
                   <p className="text-[10px] uppercase tracking-[0.22em] text-white/35">
-                    Une identité · sept signatures
+                    ProDay · sept pôles
                   </p>
                 </div>
                 <Link

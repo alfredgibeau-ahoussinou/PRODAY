@@ -11,8 +11,8 @@ export function ExploreGrid() {
   return (
     <Section
       kicker="GALERIE"
-      title="Chaque page, une expérience"
-      description="Démos interactives, simulateurs Visibilité, tarifs partenaires et parcours par rôle."
+      title="Pages utiles"
+      description="Démos, simulateur Visibilité, tarifs partenaires et étapes par rôle."
       className="border-t border-white/8 bg-neutral-950"
     >
       <div className="masonry-grid">

@@ -5,7 +5,7 @@ export const SPONSOR_BRAND = {
   shortName: "Sponsor",
   tagline: "Visibilité · ROI · Terrain",
   mission:
-    "Les marques rencontrent clubs, joueurs et organisateurs actifs. Campagnes ciblées. KPIs lisibles. Sans intermédiaire opaque.",
+    "Publiez des offres auprès de clubs, joueurs et organisateurs actifs. Suivez impressions, clics et leads. Sans intermédiaire opaque.",
   accent: "#D4AF37",
   accentDark: "#92700C",
   logo: "/branding/logo-sponsor-picto.png",
@@ -15,7 +15,7 @@ export const SPONSOR_HERO = {
   kicker: "PÔLE SPONSOR",
   title: "Votre marque sur le terrain.",
   description:
-    "Clubs, joueurs et organisateurs actifs sur ProDay. Visibilité mesurée, offres géolocalisées et tableau de bord. Pour les équipes marketing.",
+    "Clubs, joueurs et organisateurs actifs sur ProDay. Offres géolocalisées, tableau de bord et messagerie clubs. Pour les équipes marketing.",
   image: "/showcase/classic-exp-sponsors.jpg",
 } as const;
 
@@ -65,9 +65,9 @@ export const SPONSOR_SECTORS = [
 
 export const SPONSOR_BUDGET_RANGES = [
   "Moins de 500 € / mois",
-  "500 – 2 000 € / mois",
-  "2 000 – 10 000 € / mois",
-  "10 000 – 50 000 € / mois",
+  "500 à 2 000 € / mois",
+  "2 000 à 10 000 € / mois",
+  "10 000 à 50 000 € / mois",
   "Plus de 50 000 € / mois",
   "À définir ensemble",
 ] as const;
@@ -83,7 +83,7 @@ export const SPONSOR_CAMPAIGN_GOALS = [
 ] as const;
 
 export const SPONSOR_TARGET_AUDIENCES = [
-  "Joueurs amateurs (18–35 ans)",
+  "Joueurs amateurs (18 à 35 ans)",
   "Coachs & staff encadrement",
   "Dirigeants & présidents de club",
   "Organisateurs de tournois",
@@ -114,7 +114,7 @@ export const SPONSOR_SPORTS = [
   "Football semi-pro / Régional",
   "Football féminin",
   "Futsal",
-  "Football jeunes (U13–U19)",
+  "Football jeunes (U13 à U19)",
   "Tournois & événements",
   "Multi-sports",
 ] as const;
@@ -146,18 +146,18 @@ export type SponsorSignupPayload = {
 export const SPONSOR_FAQ = [
   {
     q: "Quelle différence avec les autres pôles ProDay ?",
-    a: "Le pôle Sponsor est réservé aux marques et partenaires commerciaux. Contrairement aux pôles Joueur ou Amateur, vous accédez à un tableau de bord ROI, des offres géolocalisées et une vitrine vérifiée auprès des clubs.",
+    a: "Le pôle Sponsor est réservé aux marques et partenaires commerciaux. Vous publiez des offres, suivez un tableau de bord ROI et contactez les clubs via une vitrine vérifiée.",
   },
   {
     q: "Puis-je tester avant de m'engager ?",
-    a: "Oui. La formule Découverte (0 €) donne un profil vérifié, une offre active et 10 messages clubs / mois. Pour tester sans engagement.",
+    a: "Oui. La formule Découverte (0 €) donne un profil vérifié, une offre active et 10 messages clubs / mois.",
   },
   {
     q: "Comment fonctionne le push géolocalisé ?",
-    a: "Les joueurs opt-in reçoivent une notification lors du lancement d'une offre dans leur ville. Disponible en National Pro (bêta), avec respect strict du consentement RGPD.",
+    a: "Les joueurs opt-in reçoivent une notification lors du lancement d'une offre dans leur ville. Disponible en National Pro (bêta), avec respect du consentement RGPD.",
   },
   {
     q: "Qui traite ma demande d'inscription ?",
-    a: `L'équipe partenaires ProDay (${SPONSOR_PARTNER_CONTACT_EMAIL}) valide chaque dossier sous 48 h ouvrées et vous accompagne pour activer votre espace.`,
+    a: `L'équipe partenaires ProDay (${SPONSOR_PARTNER_CONTACT_EMAIL}) valide chaque dossier sous 48 h ouvrées et vous contacte pour activer votre espace.`,
   },
 ] as const;

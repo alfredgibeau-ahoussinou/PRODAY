@@ -53,7 +53,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "ProDay",
     description:
-      "Une saison. Une app. Recrutement, matchs, tournois, communauté et partenaires.",
+      "App mobile pour le foot amateur et semi-pro. Recrutement, matchs, tournois, communauté et partenaires.",
     images: ["/branding/logo-proday-official.png"],
   },
   other: {

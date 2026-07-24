@@ -21,15 +21,15 @@ const PRO_POLES = CAROUSEL_POLES.filter((p) =>
 
 const PRO_BLURBS: Record<string, { hook: string; forWho: string }> = {
   pro_joueur: {
-    hook: "Ta carrière, pas un CV Word.",
+    hook: "Portfolio scouting, essais et mandat agent.",
     forWho: "Joueurs sous contrat · essais · scouting",
   },
   pro_club: {
-    hook: "Toute la structure. Un regard.",
+    hook: "Équipes, recrutement et vitrine publique.",
     forWho: "Présidents · DS · secrétariat",
   },
   pro_staff: {
-    hook: "Ton métier. Ta coque.",
+    hook: "Mercato Pro, mandats, shortlists, Arena.",
     forWho: "Agent · recruteur · coach · Arena",
   },
 };
@@ -52,7 +52,7 @@ export default function ProHubPage() {
       <PremiumSection
         id="poles"
         kicker="CHOISIR SON PÔLE"
-        title="Où est ta place ?"
+        title="Quelle coque vous correspond ?"
         description="Trois portes d'entrée. Même app ProDay. Trois métiers distincts."
         pole="pro_staff"
         bordered={false}
@@ -88,7 +88,7 @@ export default function ProHubPage() {
                   <p className="mt-2 text-base font-medium text-white/90">{blurb?.hook}</p>
                   <p className="mt-2 text-sm text-white/50">{blurb?.forWho}</p>
                   <span className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-white/80">
-                    Explorer
+                    Voir le pôle
                     <ArrowRight size={16} className="transition group-hover:translate-x-0.5" />
                   </span>
                 </div>

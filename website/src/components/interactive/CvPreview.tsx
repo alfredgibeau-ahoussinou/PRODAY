@@ -60,7 +60,7 @@ const CV_COPY: Record<
     name: "Thomas Bernard",
     role: "Coach · National · Bordeaux",
     footer:
-      "Parcours staff et certifications. Vitrine pro pour le réseau vérifié ProDay.",
+      "Profil staff et certifications. Vitrine pour le réseau vérifié ProDay.",
     image: "/showcase/classic-staff.jpg",
   },
   sante: {

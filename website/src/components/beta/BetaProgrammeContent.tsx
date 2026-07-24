@@ -47,15 +47,15 @@ export function BetaProgrammeContent({ session }: BetaProgrammeContentProps) {
         <SectionKicker>Qu&apos;est-ce que la bêta ProDay ?</SectionKicker>
         <p className="mt-4 max-w-3xl text-sm leading-relaxed text-white/65">
           ProDay réunit Mercato, matchs, tournois, Visibilité et CV joueur dans une seule app. Pour le
-          foot amateur et semi-pro. En tant que beta-testeur, vous accédez en avant-première aux
-          builds iOS (TestFlight) et Android (APK), explorez les sept pôles et aidez-nous à
-          prioriser les fonctionnalités avant l&apos;ouverture au grand public.
+          foot amateur et semi-pro. En tant que beta-testeur, vous accédez aux builds iOS (TestFlight)
+          et Android (APK) avant le public. Testez les sept pôles et aidez-nous à prioriser avant
+          l&apos;ouverture.
         </p>
         <div className="mt-6 grid gap-4 sm:grid-cols-3">
           {[
             { icon: Sparkles, label: "Avant le public", detail: "App mobile avant le lancement public" },
-            { icon: Smartphone, label: "Six pôles", detail: "Amateur, Supporter, Santé et Pro" },
-            { icon: Sparkles, label: "Impact direct", detail: "Vos retours orientent la roadmap" },
+            { icon: Smartphone, label: "Sept pôles", detail: "Amateur, Supporter, Santé, Pro et Sponsor" },
+            { icon: Sparkles, label: "Retours utiles", detail: "Vos messages orientent la roadmap" },
           ].map(({ icon: Icon, label, detail }) => (
             <div
               key={label}
@@ -101,10 +101,10 @@ export function BetaProgrammeContent({ session }: BetaProgrammeContentProps) {
       </div>
 
       <div className="mt-8 rounded-3xl border border-white/10 bg-white/[0.03] p-8">
-        <SectionKicker>Les sept pôles à explorer</SectionKicker>
+        <SectionKicker>Les sept pôles</SectionKicker>
         <p className="mt-4 max-w-3xl text-sm leading-relaxed text-white/65">
-          Chaque pôle propose une expérience dédiée. Votre profil ({session.roleLabel}) oriente
-          nos priorités. Explorez aussi les autres univers pour un regard transversal.
+          Chaque pôle a ses modules et son public. Votre profil ({session.roleLabel}) oriente nos
+          priorités. Les autres univers restent consultables sur le site.
         </p>
         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {POLES.map((pole) => (
