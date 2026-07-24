@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { useTranslation } from '../../../context/LocaleContext';
 import { AdminFilterChips } from '../../../components/admin/AdminFilterChips';
 import type { User, UserRole } from '../../../models/User';
@@ -36,6 +36,7 @@ import type { ProductLineId } from '../../../models/ProductLine';
 import { MEDICAL_CANONICAL_LABELS } from '../../../screens/signup/signupMedicalI18n';
 
 type UserListFilter = 'all' | 'pending' | UserRole | `line:${ProductLineId}`;
+type FilterScope = 'status' | 'universe' | 'role';
 
 const EMPTY_FORM: CreateUserFormState = {
   email: '',
@@ -52,6 +53,7 @@ export const AdminUsersPage: React.FC = () => {
   const { colors: c } = useAdminStyles();
   const styles = useMemo(() => createStyles(c), [c]);
   const [listFilter, setListFilter] = useState<UserListFilter>('all');
+  const [filterScope, setFilterScope] = useState<FilterScope>('status');
   const [search, setSearch] = useState('');
   const [showCreate, setShowCreate] = useState(false);
   const [createForm, setCreateForm] = useState<CreateUserFormState>(EMPTY_FORM);
@@ -62,6 +64,33 @@ export const AdminUsersPage: React.FC = () => {
   const [documentsUser, setDocumentsUser] = useState<User | null>(null);
   const [rejecting, setRejecting] = useState(false);
   const [approvingUid, setApprovingUid] = useState<string | null>(null);
+
+  const filterOptions = useMemo(() => {
+    if (filterScope === 'universe') {
+      return [
+        { id: 'all' as const, label: 'Tous' },
+        ...ADMIN_PRODUCT_LINES.map((line) => ({
+          id: `line:${line}` as const,
+          label: adminProductLineLabel(line),
+        })),
+      ];
+    }
+    if (filterScope === 'role') {
+      return [
+        { id: 'all' as const, label: 'Tous' },
+        ...ADMIN_EDIT_ROLES.map((r) => ({ id: r, label: getRoleLabel(r, t) })),
+      ];
+    }
+    return [
+      { id: 'all' as const, label: 'Tous' },
+      { id: 'pending' as const, label: t('admin.users.verifyPending') },
+    ];
+  }, [filterScope, t]);
+
+  const setScope = (scope: FilterScope) => {
+    setFilterScope(scope);
+    setListFilter('all');
+  };
 
   const filtered = users.filter((u) => {
     if (listFilter === 'pending' && !userNeedsAdminVerificationReview(u)) return false;
@@ -174,16 +203,28 @@ export const AdminUsersPage: React.FC = () => {
 
       <AdminSearchField value={search} onChangeText={setSearch} placeholder="Nom, email, ville…" />
 
+      <View style={styles.scopeRow}>
+        {(
+          [
+            { id: 'status' as const, label: 'Statut' },
+            { id: 'universe' as const, label: 'Univers' },
+            { id: 'role' as const, label: 'Rôle' },
+          ] as const
+        ).map((s) => (
+          <TouchableOpacity
+            key={s.id}
+            style={[styles.scopeChip, filterScope === s.id && styles.scopeChipOn]}
+            onPress={() => setScope(s.id)}
+          >
+            <Text style={[styles.scopeText, filterScope === s.id && styles.scopeTextOn]}>
+              {s.label}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
       <AdminFilterChips
-        options={[
-          { id: 'all' as const, label: 'Tous' },
-          { id: 'pending' as const, label: t('admin.users.verifyPending') },
-          ...ADMIN_PRODUCT_LINES.map((line) => ({
-            id: `line:${line}` as const,
-            label: adminProductLineLabel(line),
-          })),
-          ...ADMIN_EDIT_ROLES.map((r) => ({ id: r, label: getRoleLabel(r, t) })),
-        ]}
+        options={filterOptions}
         value={listFilter}
         onChange={setListFilter}
       />
@@ -305,5 +346,24 @@ function createStyles(c: AppColors) {
       marginBottom: spacing.md,
     },
     fabText: { color: c.brandInverse, fontWeight: '800', fontSize: 14 },
+    scopeRow: {
+      flexDirection: 'row',
+      gap: spacing.xs,
+      marginBottom: spacing.sm,
+    },
+    scopeChip: {
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      borderRadius: radius.pill,
+      borderWidth: 1,
+      borderColor: c.border,
+      backgroundColor: c.surface,
+    },
+    scopeChipOn: {
+      backgroundColor: c.brand,
+      borderColor: c.brand,
+    },
+    scopeText: { fontSize: 12, fontWeight: '800', color: c.textSecondary },
+    scopeTextOn: { color: c.brandInverse },
   });
 }

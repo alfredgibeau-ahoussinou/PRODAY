@@ -11,6 +11,7 @@ export type PoleHelpPoleKey =
   | 'amateur'
   | 'supporter'
   | 'sante'
+  | 'sponsor'
   | 'pro_player'
   | 'pro_club'
   | 'pro_staff';
@@ -587,6 +588,248 @@ const PRO_CLUB_HELP: PoleHelpContent = {
   ],
 };
 
+const SPONSOR_HELP: PoleHelpContent = {
+  poleKey: 'sponsor',
+  title: 'Aide Sponsor',
+  bubbleTeaser: 'Une question sur votre marque ?',
+  welcome:
+    'Bienvenue sur Pro Day Sponsor. Campagnes, ROI et réseau clubs — je vous guide.',
+  entries: [
+    ...withCategory('navigation', [
+      {
+        id: 'nav-sponsor',
+        question: 'Comment naviguer dans l’espace Sponsor ?',
+        answer:
+          'Pilotage pour le tableau de bord, Offres pour les campagnes, Clubs pour le financement, Réseau pour messages et prospects, Marque pour le profil et les formules.',
+        navigate: { kind: 'tab', tab: 'home' },
+        navigateLabel: 'Ouvrir le pilotage',
+      },
+      {
+        id: 'onglets-sponsor',
+        question: 'À quoi servent les onglets Sponsor ?',
+        answer:
+          'Pilotage (KPI), Offres (campagnes), Clubs (financement), Réseau (prospects / messages) et Marque (profil, documents, formules).',
+        navigate: { kind: 'tab', tab: 'home' },
+        navigateLabel: 'Explorer le pilotage',
+      },
+      {
+        id: 'creer-offre',
+        question: 'Comment créer une offre / campagne ?',
+        answer:
+          'Offres > Nouvelle offre : choisissez type (visibilité, équipement, financement), zone et budget. La publication est ouverte après validation admin de votre marque.',
+        navigate: { kind: 'matchs' },
+        navigateLabel: 'Mes offres',
+      },
+      {
+        id: 'types-offres',
+        question: 'Quels types d’offres puis-je publier ?',
+        answer:
+          'Visibilité (maillots, panneaux, digital), équipement (dotation) et financement (soutien club). Chaque type a ses champs budget et contreparties.',
+        navigate: { kind: 'matchs' },
+        navigateLabel: 'Créer une offre',
+      },
+    ]),
+    ...withCategory('profil', [
+      {
+        id: 'validation-marque',
+        question: 'Pourquoi mes campagnes sont bloquées ?',
+        answer:
+          'Après inscription, l’équipe partenaires valide votre dossier (~48 h). Une fois approuvé, vous pouvez publier. Suivez le statut sur l’accueil Pilotage.',
+        navigate: { kind: 'tab', tab: 'home' },
+        navigateLabel: 'Voir mon statut',
+      },
+      {
+        id: 'formules',
+        question: 'Quelles sont les formules Sponsor ?',
+        answer:
+          'Découverte (1 offre, messages limités), Territorial (plus d’offres, messagerie illimitée) et National. Comparez-les dans Marque > Formules / tarifs.',
+        navigate: { kind: 'profile' },
+        navigateLabel: 'Voir les formules',
+      },
+      {
+        id: 'profil-marque',
+        question: 'Comment compléter mon profil marque ?',
+        answer:
+          'Marque : logo, description, zone d’intervention et documents. Un profil complet accélère la validation et rassure les clubs.',
+        navigate: { kind: 'profile' },
+        navigateLabel: 'Éditer ma marque',
+      },
+      {
+        id: 'documents-sponsor',
+        question: 'Quels documents fournir pour la validation ?',
+        answer:
+          'KBIS / identité légale, et éventuellement charte visuelle. Déposez-les dans Marque > Documents ; l’admin les examine avant d’approuver.',
+        navigate: { kind: 'profile' },
+        navigateLabel: 'Mes documents',
+      },
+    ]),
+    ...withCategory('matchs', [
+      {
+        id: 'calendrier-campagnes',
+        question: 'Où suivre le calendrier de mes campagnes ?',
+        answer:
+          'Pilotage et détail d’offre affichent dates de début / fin. Planifiez plusieurs campagnes pour couvrir la saison.',
+        navigate: { kind: 'tab', tab: 'home' },
+        navigateLabel: 'Voir le pilotage',
+      },
+      {
+        id: 'pause-campagne',
+        question: 'Puis-je mettre une campagne en pause ?',
+        answer:
+          'Oui : depuis Offres, ouvrez la campagne et passez-la en brouillon ou inactive. Elle n’apparaît plus aux clubs tant qu’elle n’est pas republicée.',
+        navigate: { kind: 'matchs' },
+        navigateLabel: 'Gérer mes offres',
+      },
+      {
+        id: 'zone-campagne',
+        question: 'Comment cibler une zone géographique ?',
+        answer:
+          'À la création / édition d’offre, choisissez département ou région. Les clubs de cette zone voient votre campagne en priorité.',
+        navigate: { kind: 'matchs' },
+        navigateLabel: 'Mes offres',
+      },
+    ]),
+    ...withCategory('messages', [
+      {
+        id: 'prospects',
+        question: 'Comment contacter des clubs ?',
+        answer:
+          'Réseau > Prospects : liste des clubs de votre zone. Ouvrez une conversation ou utilisez un modèle de message. Respectez le quota Découverte si vous n’êtes pas Territorial.',
+        navigate: { kind: 'tab', tab: 'messages' },
+        navigateLabel: 'Ouvrir le réseau',
+      },
+      {
+        id: 'modeles-message',
+        question: 'Comment utiliser un modèle de message ?',
+        answer:
+          'Dans Réseau, choisissez un modèle (présentation marque, offre équipement, etc.), personnalisez-le, puis envoyez. Les modèles accélèrent le premier contact.',
+        navigate: { kind: 'tab', tab: 'messages' },
+        navigateLabel: 'Réseau Sponsor',
+      },
+      {
+        id: 'quota-messages',
+        question: 'Pourquoi mon envoi de message est limité ?',
+        answer:
+          'La formule Découverte plafonne les messages sortants. Passez en Territorial pour une messagerie illimitée vers les clubs.',
+        navigate: { kind: 'profile' },
+        navigateLabel: 'Voir les formules',
+      },
+    ]),
+    ...withCategory('club', [
+      {
+        id: 'financement-clubs',
+        question: 'Comment proposer un financement à un club ?',
+        answer:
+          'Onglet Clubs : explorez les besoins, répondez à une demande ou envoyez votre offre de financement liée à une campagne.',
+        navigate: { kind: 'tab', tab: 'home' },
+        navigateLabel: 'Explorer les clubs',
+      },
+      {
+        id: 'reponses-clubs',
+        question: 'Où voir les réponses des clubs ?',
+        answer:
+          'Réseau et détail d’offre listent leads et conversations. Un club intéressé apparaît aussi dans Pilotage (leads récents).',
+        navigate: { kind: 'tab', tab: 'messages' },
+        navigateLabel: 'Voir les réponses',
+      },
+      {
+        id: 'contreparties',
+        question: 'Comment définir les contreparties ?',
+        answer:
+          'Dans l’offre : logo maillot, panneaux, posts réseaux, naming, etc. Plus c’est clair, plus le club peut accepter rapidement.',
+        navigate: { kind: 'matchs' },
+        navigateLabel: 'Éditer une offre',
+      },
+    ]),
+    ...withCategory('stats', [
+      {
+        id: 'roi',
+        question: 'Où voir le ROI de mes campagnes ?',
+        answer:
+          'Pilotage affiche impressions, leads et activité. Chaque offre détaille vues / clics / contacts générés.',
+        navigate: { kind: 'tab', tab: 'home' },
+        navigateLabel: 'Tableau de bord',
+      },
+      {
+        id: 'stats-offre',
+        question: 'Comment lire les stats d’une offre ?',
+        answer:
+          'Ouvrez l’offre : vues (clubs qui ont consulté), clics / contacts, et statut (brouillon, active, terminée).',
+        navigate: { kind: 'matchs' },
+        navigateLabel: 'Mes offres',
+      },
+      {
+        id: 'export-roi',
+        question: 'Puis-je exporter mon reporting ?',
+        answer:
+          'Le reporting détaillé et exports avancés arrivent avec Territorial / National. En Découverte, consultez Pilotage et le détail d’offre.',
+        navigate: { kind: 'tab', tab: 'home' },
+        navigateLabel: 'Pilotage',
+      },
+    ]),
+    ...withCategory('paiement', [
+      {
+        id: 'upgrade-territorial',
+        question: 'Comment passer en Territorial ?',
+        answer:
+          'Depuis Formules, demandez Territorial : un conseiller partenaires vous recontacte. L’admin valide ensuite le passage sur votre compte.',
+        navigate: { kind: 'profile' },
+        navigateLabel: 'Formules',
+      },
+      {
+        id: 'facture-sponsor',
+        question: 'Où trouver mes factures Sponsor ?',
+        answer:
+          'Marque > Facturation (ou support@proday.app). Les formules payantes y listent historique et reçus.',
+        navigate: { kind: 'profile' },
+        navigateLabel: 'Facturation',
+      },
+      {
+        id: 'national',
+        question: 'Quand passer en National ?',
+        answer:
+          'Si vous ciblez plusieurs régions ou un volume élevé de clubs. National débloque quotas et accompagnement dédié — comparez dans Formules.',
+        navigate: { kind: 'profile' },
+        navigateLabel: 'Comparer les formules',
+      },
+    ]),
+    ...withCategory('pole', [
+      {
+        id: 'diff-staff',
+        question: 'En quoi Sponsor diffère de Pro Staff ?',
+        answer:
+          'Sponsor est pour marques et partenaires (offres, ROI, clubs). Pro Staff sert coaches, agents et recruteurs (Mercato, mandats).',
+        navigate: { kind: 'tab', tab: 'home' },
+        navigateLabel: 'Espace Sponsor',
+      },
+      {
+        id: 'guest-sponsor',
+        question: 'Que puis-je voir sans compte ?',
+        answer:
+          'L’aperçu Discover et certains écrans invité. Pour publier ou contacter des clubs, créez un compte Sponsor puis attendez la validation.',
+        navigate: { kind: 'tab', tab: 'home' },
+        navigateLabel: 'Découvrir Sponsor',
+      },
+      {
+        id: 'support-sponsor',
+        question: 'Comment contacter le support partenaires ?',
+        answer:
+          'Écrivez à support@proday.app en indiquant le nom de votre marque. Pour l’upgrade Territorial / National, utilisez aussi le bouton Formules.',
+        navigate: { kind: 'profile' },
+        navigateLabel: 'Mon profil marque',
+      },
+      {
+        id: 'bonnes-pratiques',
+        question: 'Quelles bonnes pratiques pour réussir ?',
+        answer:
+          'Profil complet, offre claire avec contreparties, zone réaliste, premier message personnalisé. Pilotage vous montre ce qui convertit.',
+        navigate: { kind: 'tab', tab: 'home' },
+        navigateLabel: 'Voir le pilotage',
+      },
+    ]),
+  ],
+};
+
 const PRO_STAFF_HELP: PoleHelpContent = {
   poleKey: 'pro_staff',
   title: 'Aide Pro Staff',
@@ -646,6 +889,7 @@ const POLE_HELP_BY_KEY: Record<PoleHelpPoleKey, PoleHelpContent> = {
   amateur: AMATEUR_HELP,
   supporter: SUPPORTER_HELP,
   sante: SANTE_HELP,
+  sponsor: SPONSOR_HELP,
   pro_player: PRO_PLAYER_HELP,
   pro_club: PRO_CLUB_HELP,
   pro_staff: PRO_STAFF_HELP,
@@ -659,7 +903,7 @@ export function resolvePoleHelpPoleKey(
 ): PoleHelpPoleKey {
   if (productLine === 'supporter') return 'supporter';
   if (productLine === 'sante') return 'sante';
-  if (productLine === 'sponsor' || role === 'sponsor') return 'pro_staff';
+  if (productLine === 'sponsor' || role === 'sponsor') return 'sponsor';
   if (productLine === 'pro_player') return 'pro_player';
   if (productLine === 'pro_club') return 'pro_club';
   if (productLine === 'pro_staff') return 'pro_staff';

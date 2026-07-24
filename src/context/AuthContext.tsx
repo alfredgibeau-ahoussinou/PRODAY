@@ -125,9 +125,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
                   snap.id,
                   snap.data() as Record<string, unknown>,
                 );
-                setProfile(
-                  await productLineMigrationService.migrateUserIfNeeded(next),
-                );
+                const migratedNext =
+                  await productLineMigrationService.migrateUserIfNeeded(next);
+                setProfile(migratedNext);
               },
               () => {
                 /* keep last known profile on transient listener errors */

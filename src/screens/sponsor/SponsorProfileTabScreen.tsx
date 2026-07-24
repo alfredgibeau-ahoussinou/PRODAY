@@ -26,6 +26,7 @@ import { useSubscriptionOptional } from '../../context/SubscriptionContext';
 import { useSponsorDashboard } from '../../hooks/useSponsorDashboard';
 import { SponsorAnalyticsPanel } from '../../components/sponsor/SponsorAnalyticsPanel';
 import { PushScreenTransition } from '../../components/motion';
+import { SponsorGuestGate } from '../../components/sponsor/SponsorGuestGate';
 
 export const SponsorProfileTabScreen: React.FC<{ shellMode?: boolean }> = ({
   shellMode = false,
@@ -43,11 +44,7 @@ export const SponsorProfileTabScreen: React.FC<{ shellMode?: boolean }> = ({
   const [legalDocument, setLegalDocument] = useState<LegalDocumentId | null>(null);
 
   if (!profile) {
-    return (
-      <View style={styles.root}>
-        <Text style={styles.guest}>Connectez-vous pour gérer votre marque.</Text>
-      </View>
-    );
+    return <SponsorGuestGate message="Connectez-vous pour gérer votre marque, formules et réglages." />;
   }
 
   const zone = [profile.city, profile.department].filter(Boolean).join(' · ');

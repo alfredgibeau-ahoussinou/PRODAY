@@ -24,6 +24,7 @@ import { SPONSOR_THEME } from '../../content/sponsorExperience';
 import { spacing, radius } from '../../theme/designTokens';
 import type { SponsorOffer } from '../../models/SponsorOffer';
 import { isSponsorCampaignAllowed } from '../../utils/sponsorCampaignGate';
+import { SponsorGuestGate } from '../../components/sponsor/SponsorGuestGate';
 import {
   assertCanActivateSponsorOffer,
   assertCanPublishActiveSponsorOffer,
@@ -152,11 +153,7 @@ export const SponsorCampaignsScreen: React.FC<SponsorCampaignsScreenProps> = ({
   };
 
   if (!profile) {
-    return (
-      <View style={styles.root}>
-        <Text style={styles.guest}>Connectez-vous pour gérer vos campagnes.</Text>
-      </View>
-    );
+    return <SponsorGuestGate message="Connectez-vous pour gérer vos campagnes et financer les clubs." />;
   }
 
   const openCreate = () => {

@@ -22,16 +22,19 @@ const POLE_KEYS = [
   'amateur',
   'supporter',
   'sante',
+  'sponsor',
   'pro_player',
   'pro_club',
   'pro_staff',
 ] as const;
 
 describe('poleHelpContent', () => {
-  it('résout la clé pôle pour les 6 univers carousel', () => {
+  it('résout la clé pôle pour les univers carousel', () => {
     expect(resolvePoleHelpPoleKey('amateur')).toBe('amateur');
     expect(resolvePoleHelpPoleKey('supporter')).toBe('supporter');
     expect(resolvePoleHelpPoleKey('sante')).toBe('sante');
+    expect(resolvePoleHelpPoleKey('sponsor')).toBe('sponsor');
+    expect(resolvePoleHelpPoleKey('pro_staff', 'sponsor')).toBe('sponsor');
     expect(resolvePoleHelpPoleKey('pro_player')).toBe('pro_player');
     expect(resolvePoleHelpPoleKey('pro_club')).toBe('pro_club');
     expect(resolvePoleHelpPoleKey('pro_staff')).toBe('pro_staff');

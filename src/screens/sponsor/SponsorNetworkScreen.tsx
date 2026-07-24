@@ -23,6 +23,7 @@ import { openSponsorProspectChat } from '../../utils/openSponsorProspectChat';
 import type { SponsorProspect } from '../../models/SponsorOffer';
 import { PushScreenTransition } from '../../components/motion';
 import { SponsorQuotaBanner } from '../../components/sponsor/SponsorQuotaBanner';
+import { SponsorGuestGate } from '../../components/sponsor/SponsorGuestGate';
 
 interface SponsorNetworkScreenProps {
   shellMode?: boolean;
@@ -214,7 +215,7 @@ export const SponsorNetworkScreen: React.FC<SponsorNetworkScreenProps> = ({
         {isLoading ? (
           <ActivityIndicator color={SPONSOR_THEME.primary} style={styles.loader} />
         ) : !profile ? (
-          <Text style={styles.empty}>Connectez-vous pour accéder au réseau.</Text>
+          <SponsorGuestGate message="Connectez-vous pour accéder aux messages et prospects clubs." />
         ) : segment === 'prospects' ? (
           prospects.length === 0 ? (
             <Text style={styles.empty}>Aucun prospect pour le moment.</Text>
