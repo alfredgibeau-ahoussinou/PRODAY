@@ -25,8 +25,13 @@ export const LaunchVideoIntro: React.FC<LaunchVideoIntroProps> = ({ onFinish }) 
   const opacity = useSharedValue(1);
 
   const player = useVideoPlayer(LAUNCH_INTRO_VIDEO, (instance) => {
-    instance.loop = false;
-    instance.muted = false;
+    try {
+      instance.loop = false;
+      // Muet par défaut sur Android : limite les crashes audio natifs au cold start.
+      instance.muted = true;
+    } catch {
+      /* ignore */
+    }
   });
 
   const finish = useCallback(() => {
@@ -47,9 +52,12 @@ export const LaunchVideoIntro: React.FC<LaunchVideoIntroProps> = ({ onFinish }) 
     );
   }, [onFinish, opacity, player]);
 
-  // Son audible même en mode silencieux (iOS) + démarrage.
+  // Démarrage prudent : si le lecteur échoue, on entre dans l’app sans bloquer.
   useEffect(() => {
     let active = true;
+    const bootFailSafe = setTimeout(() => {
+      if (active) finish();
+    }, 2500);
     void (async () => {
       try {
         const { setAudioModeAsync } = await import('expo-audio');
@@ -59,32 +67,40 @@ export const LaunchVideoIntro: React.FC<LaunchVideoIntroProps> = ({ onFinish }) 
       }
       if (!active) return;
       try {
+        player.muted = false;
         player.play();
       } catch {
-        /* ignore */
+        finish();
       }
     })();
     return () => {
       active = false;
+      clearTimeout(bootFailSafe);
     };
-  }, [player]);
+  }, [finish, player]);
 
   // Fin de lecture / erreur.
   useEffect(() => {
-    const endSub = player.addListener('playToEnd', () => finish());
-    const statusSub = player.addListener('statusChange', ({ status }) => {
-      if (status === 'error') finish();
-      if (status === 'readyToPlay') {
-        try {
-          player.play();
-        } catch {
-          /* ignore */
+    let endSub: { remove: () => void } | null = null;
+    let statusSub: { remove: () => void } | null = null;
+    try {
+      endSub = player.addListener('playToEnd', () => finish());
+      statusSub = player.addListener('statusChange', ({ status }) => {
+        if (status === 'error') finish();
+        if (status === 'readyToPlay') {
+          try {
+            player.play();
+          } catch {
+            finish();
+          }
         }
-      }
-    });
+      });
+    } catch {
+      finish();
+    }
     return () => {
-      endSub.remove();
-      statusSub.remove();
+      endSub?.remove();
+      statusSub?.remove();
     };
   }, [finish, player]);
 
