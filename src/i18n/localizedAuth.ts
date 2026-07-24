@@ -17,7 +17,8 @@ function resolveAuthTeaserPrefix(
   if (line === 'pro_club') return 'auth.teaser.pro_club';
   if (line === 'pro_staff') return 'auth.teaser.pro_staff';
   if (line === 'pro' || isProFamilyLine(line)) return 'auth.teaser.pro';
-  return 'auth.teaser.homme';
+  if (line === 'homme') return 'auth.teaser.homme';
+  return 'auth.teaser.amateur';
 }
 
 export function getAuthSignupTeaser(

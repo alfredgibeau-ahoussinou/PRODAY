@@ -18,6 +18,12 @@ describe('subscriptionPlansByLine', () => {
     expect(getMercatoQuotaLabel('player', 'woman')).toContain('Mercato F');
   });
 
+  it('applique la copy Joueuse sur Amateur + segment female', () => {
+    const plan = getPlanForRoleAndLine('player', 'amateur', 'female');
+    expect(plan?.label).toBe('Joueuse Plus');
+    expect(getMercatoQuotaLabel('player', 'amateur', 'female')).toContain('Mercato F');
+  });
+
   it('n’expose pas les plans Pro sur Man/Woman', () => {
     expect(isPlanAvailableOnLine('coach_pro', 'homme')).toBe(false);
     expect(isPlanAvailableOnLine('physio_pro', 'woman')).toBe(false);

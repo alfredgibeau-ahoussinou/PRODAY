@@ -16,12 +16,14 @@ describe('homeExperience', () => {
     expect(homme.playersStatLabel).toBe('Joueurs');
   });
 
-  it('adapte les libellés modules selon l’univers', () => {
+  it('adapte les libellés modules selon l’univers / segment', () => {
     const hommeRecrutement = getHomeModules('homme').find((m) => m.id === 'recrutement');
     const womanRecrutement = getHomeModules('woman', 'player').find((m) => m.id === 'recrutement');
+    const amateurF = getHomeModules('amateur', 'player', 'female').find((m) => m.id === 'recrutement');
 
     expect(hommeRecrutement?.title).toBe('Mercato Amateur');
     expect(womanRecrutement?.title).toBe('Mercato F');
+    expect(amateurF?.title).toBe('Mercato F');
     expect(womanRecrutement?.subtitle).toMatch(/Annonces clubs/i);
   });
 

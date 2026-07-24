@@ -40,9 +40,15 @@ export const UpgradePaywall: React.FC<UpgradePaywallProps> = ({
   onClose,
   onViewPlans,
 }) => {
-  const { productLine, colors } = useAppTheme();
-  const plan = getPlanForRoleAndLine(profile.role, productLine);
-  const visual = getSubscriptionPlanVisual(profile.role, productLine);
+  const { productLine, playerSegment, colors } = useAppTheme();
+  const plan = useMemo(
+    () => getPlanForRoleAndLine(profile.role, productLine, playerSegment),
+    [profile.role, productLine, playerSegment],
+  );
+  const visual = useMemo(
+    () => getSubscriptionPlanVisual(profile.role, productLine, playerSegment),
+    [profile.role, productLine, playerSegment],
+  );
 
   const hint = useMemo(() => {
     if (feature === 'mercato_apply') {

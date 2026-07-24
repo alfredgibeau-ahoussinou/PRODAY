@@ -1,6 +1,7 @@
 import type { IconName } from '../components/ui/Icon';
 import type { ProductLineId } from '../models/ProductLine';
 import type { UserRole } from '../models/User';
+import type { PlayerSegment } from '../utils/playerSegment';
 import { MEDICAL_THEME } from './medicalExperience';
 import { SPONSOR_THEME } from './sponsorExperience';
 import { planIdForRole, type SubscriptionPlanId } from './subscriptionPlans';
@@ -262,13 +263,17 @@ const PLAN_VARIANT: Record<SubscriptionPlanId, SubscriptionVisualVariant> = {
 
 export function getSubscriptionPlanVisual(
   role: UserRole,
-  line: ProductLineId
+  line: ProductLineId,
+  segment?: PlayerSegment | null,
 ): SubscriptionPlanVisual | null {
   const planId = planIdForRole(role);
   if (!planId) return null;
 
   let variant = PLAN_VARIANT[planId];
-  if (planId === 'player_plus' && (line === 'woman')) {
+  if (
+    planId === 'player_plus' &&
+    (line === 'woman' || (line === 'amateur' && segment === 'female'))
+  ) {
     variant = 'woman_player';
   }
 

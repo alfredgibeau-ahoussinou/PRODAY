@@ -135,18 +135,23 @@ export function getUniverseIdentity(line: ProductLineId): UniverseIdentity {
   switch (line) {
     case 'woman':
       return WOMAN_IDENTITY;
+    case 'homme':
+      return HOMME_IDENTITY;
     case 'amateur':
       return AMATEUR_IDENTITY;
     case 'supporter':
       return SUPPORTER_IDENTITY;
     case 'pro':
+    case 'pro_player':
+    case 'pro_club':
+    case 'pro_staff':
       return PRO_IDENTITY;
     case 'sante':
       return SANTE_IDENTITY;
     case 'sponsor':
       return SPONSOR_IDENTITY;
     default:
-      return HOMME_IDENTITY;
+      return AMATEUR_IDENTITY;
   }
 }
 
@@ -232,10 +237,10 @@ export function getDiscoverHomeCopy(line: ProductLineId) {
     heroSub: brand.mission,
     trustText:
       'Profils vérifiés pour le foot amateur — messagerie sécurisée après validation.',
-    ctaText: 'Créer un compte Man',
-    sectionExplore: 'Explorer Man',
-    secondaryMercato: 'Mercato',
-    playersStatLabel: 'Joueurs',
+    ctaText: 'Créer mon compte Pro Day',
+    sectionExplore: 'Découvrir Pro Day',
+    secondaryMercato: brand.mercatoLabel,
+    playersStatLabel: brand.playerLabel === 'Joueuse' ? 'Joueuses' : 'Joueurs',
   };
 }
 

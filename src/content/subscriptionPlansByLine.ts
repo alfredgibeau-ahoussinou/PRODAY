@@ -1,6 +1,7 @@
 import type { ProductLineId } from '../models/ProductLine';
 import { withProFamilyRecord } from '../models/ProductLine';
 import type { UserRole } from '../models/User';
+import type { PlayerSegment } from '../utils/playerSegment';
 import { getUniverseIdentity } from './brandExperience';
 import {
   SUBSCRIPTION_PLANS,
@@ -283,26 +284,41 @@ export function isPlanAvailableOnLine(
   return PLAN_IDS_BY_LINE[line].includes(planId);
 }
 
+/** Patch présentation : Amateur + segment F → copy Joueuse (clés woman legacy). */
+function presentationLineForPlan(
+  line: ProductLineId,
+  segment?: PlayerSegment | null,
+): ProductLineId {
+  if (line === 'amateur' && segment === 'female') return 'woman';
+  return line;
+}
+
 export function getMercatoQuotaLabel(
   role: UserRole,
-  line: ProductLineId
+  line: ProductLineId,
+  segment?: PlayerSegment | null,
 ): string | null {
   const planId = planIdForRole(role);
   if (!planId) return null;
-  const patch = LINE_PLAN_PATCHES[line]?.[planId];
+  const presentationLine = presentationLineForPlan(line, segment);
+  const patch = LINE_PLAN_PATCHES[presentationLine]?.[planId];
   if (patch?.mercatoQuotaLabel) return patch.mercatoQuotaLabel;
-  const identity = getUniverseIdentity(line);
+  const identity = getUniverseIdentity(presentationLine);
   if (role === 'player') return `Candidatures ${identity.mercatoLabel}`;
   return 'Messages recrutement';
 }
 
 export function getPlanForRoleAndLine(
   role: UserRole,
-  line: ProductLineId
+  line: ProductLineId,
+  segment?: PlayerSegment | null,
 ): SubscriptionPlanDefinition | null {
   const planId = planIdForRole(role);
   if (!planId || !isPlanAvailableOnLine(planId, line)) return null;
-  return applyLinePatch(getPlanDefinition(planId), line);
+  return applyLinePatch(
+    getPlanDefinition(planId),
+    presentationLineForPlan(line, segment),
+  );
 }
 
 export function plansForProductLine(line: ProductLineId): SubscriptionPlanDefinition[] {

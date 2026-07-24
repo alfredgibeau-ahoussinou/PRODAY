@@ -31,13 +31,13 @@ export const HomeModuleRail: React.FC<HomeModuleRailProps> = ({
   modules: modulesProp,
   style,
 }) => {
-  const { colors, productLine } = useAppTheme();
+  const { colors, productLine, playerSegment } = useAppTheme();
 
   const modules = useMemo(() => {
     if (modulesProp) return modulesProp;
-    if (role) return getHomeModules(productLine, role);
-    return getHomeModules(productLine);
-  }, [modulesProp, productLine, role]);
+    if (role) return getHomeModules(productLine, role, playerSegment);
+    return getHomeModules(productLine, undefined, playerSegment);
+  }, [modulesProp, productLine, role, playerSegment]);
 
   return (
     <ScrollView

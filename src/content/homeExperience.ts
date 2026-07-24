@@ -17,7 +17,7 @@ import {
   getModulesForRoleAndLine,
 } from './poleExperience';
 import { ROLE_DASHBOARD_TAGLINE } from './dashboardUniques';
-import { isFemalePlayerPresentation } from '../utils/playerSegment';
+import { isFemalePlayerPresentation, type PlayerSegment } from '../utils/playerSegment';
 
 export { getUniverseIdentity, getBrandIdentity, HOMME_IDENTITY, WOMAN_IDENTITY, PRO_IDENTITY };
 
@@ -38,7 +38,8 @@ export function getDiscoverHomeCopy(line: ProductLineId | boolean): DiscoverHome
 
 export function getHomeModules(
   line: ProductLineId | boolean,
-  role?: UserRole
+  role?: UserRole,
+  playerSegment?: PlayerSegment | null,
 ): ProDayModuleDef[] {
   const productLine = typeof line === 'boolean' ? (line ? 'woman' : 'homme') : line;
   const cards = getDiscoverUniverseCardsForLine(productLine);
@@ -51,14 +52,17 @@ export function getHomeModules(
   if (!role) return base;
   const { order } = getModulesForRoleAndLine(role, productLine);
   const byId = Object.fromEntries(base.map((m) => [m.id, m]));
+  const feminine = isFemalePlayerPresentation(playerSegment, productLine);
   return order.map((id) => {
     const mod = byId[id];
     if (!mod) return null;
     if (role === 'player' && id === 'recrutement' && productLine !== 'pro') {
       return {
         ...mod,
-        title: isFemalePlayerPresentation(null, productLine) ? 'Mercato F' : 'Candidater',
-        subtitle: 'Annonces clubs — sans publication',
+        title: feminine ? 'Mercato F' : productLine === 'amateur' ? 'Mercato Amateur' : 'Candidater',
+        subtitle: feminine
+          ? 'Annonces clubs F — sans publication'
+          : 'Annonces clubs — sans publication',
       };
     }
     return mod;

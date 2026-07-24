@@ -55,9 +55,9 @@ export const SubscriptionPlanView: React.FC<SubscriptionPlanViewProps> = ({
   onBack,
 }) => {
   const { subscription, usage, loading, refresh } = useSubscription();
-  const { productLine, colors } = useAppTheme();
-  const plan = getPlanForRoleAndLine(profile.role, productLine);
-  const visual = getSubscriptionPlanVisual(profile.role, productLine);
+  const { productLine, playerSegment, colors } = useAppTheme();
+  const plan = getPlanForRoleAndLine(profile.role, productLine, playerSegment);
+  const visual = getSubscriptionPlanVisual(profile.role, productLine, playerSegment);
   const [upgrading, setUpgrading] = useState(false);
   const [billing, setBilling] = useState<BillingCycle>('monthly');
 
@@ -70,7 +70,7 @@ export const SubscriptionPlanView: React.FC<SubscriptionPlanViewProps> = ({
   const meters = useMemo(() => {
     if (!plan || !visual || isPro || noStorePlan || !usage) return [];
     const rows: { label: string; used: number; limit: number }[] = [];
-    const mercatoLabel = getMercatoQuotaLabel(profile.role, productLine);
+    const mercatoLabel = getMercatoQuotaLabel(profile.role, productLine, playerSegment);
     if (plan.limits.mercato_apply_per_month != null && mercatoLabel) {
       rows.push({
         label: mercatoLabel,
@@ -93,7 +93,7 @@ export const SubscriptionPlanView: React.FC<SubscriptionPlanViewProps> = ({
       });
     }
     return rows;
-  }, [plan, visual, isPro, noStorePlan, usage, profile.role, productLine]);
+  }, [plan, visual, isPro, noStorePlan, usage, profile.role, productLine, playerSegment]);
 
   const handleUpgrade = useCallback(async () => {
     if (!plan) return;

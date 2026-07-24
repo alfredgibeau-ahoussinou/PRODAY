@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Logo } from '../Logo';
-import { BRAND, spacing } from '../../theme/designTokens';
+import { spacing } from '../../theme/designTokens';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { brandForAuthContext, isSponsorAuthPreset } from '../../utils/authBrandContext';
 import type { AppColors } from '../../theme/universeTheme';
@@ -49,7 +49,7 @@ export const AuthBrandHeader: React.FC<AuthBrandHeaderProps> = ({
           style={[styles.tagline, !isLight && styles.taglineDark]}
           accessibilityRole="text"
         >
-          {productLine === 'homme' && !isSponsor ? BRAND.tagline : brand.tagline}
+          {brand.tagline}
         </Text>
       ) : null}
     </View>

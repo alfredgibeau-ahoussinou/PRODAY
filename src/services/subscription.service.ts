@@ -29,6 +29,7 @@ import {
   sponsorHasUnlimitedMessaging,
 } from '../utils/sponsorPlanLimits';
 import { callFunction } from '../lib/firebaseFunctions';
+import { resolvePlayerSegment } from '../utils/playerSegment';
 
 const FUNCTIONS_REGION = process.env.EXPO_PUBLIC_FIREBASE_FUNCTIONS_REGION ?? 'europe-west1';
 
@@ -65,7 +66,8 @@ export const subscriptionService = {
   },
 
   getPlanForUser(user: User, line: ProductLineId = 'amateur') {
-    return getPlanForRoleAndLine(user.role, line) ?? getPlanForRole(user.role);
+    const segment = resolvePlayerSegment(user, line);
+    return getPlanForRoleAndLine(user.role, line, segment) ?? getPlanForRole(user.role);
   },
 
   async loadUsage(uid: string): Promise<SubscriptionUsagePeriod> {

@@ -28,11 +28,11 @@ export const ProfileSubscriptionCard: React.FC<ProfileSubscriptionCardProps> = (
   usage,
   onPress,
 }) => {
-  const { productLine, colors } = useAppTheme();
-  const plan = getPlanForRoleAndLine(profile.role, productLine);
-  const visual = getSubscriptionPlanVisual(profile.role, productLine);
+  const { productLine, playerSegment, colors } = useAppTheme();
+  const plan = getPlanForRoleAndLine(profile.role, productLine, playerSegment);
+  const visual = getSubscriptionPlanVisual(profile.role, productLine, playerSegment);
   const isPro = tier === 'pro';
-  const mercatoLabel = getMercatoQuotaLabel(profile.role, productLine);
+  const mercatoLabel = getMercatoQuotaLabel(profile.role, productLine, playerSegment);
 
   const quota = useMemo(() => {
     if (!plan || isPro) return null;
