@@ -1,7 +1,7 @@
 import type { ProductLineId } from '../models/ProductLine';
 import { isProProductLine } from '../models/ProductLine';
 import type { UserRole } from '../models/User';
-import { isMedicalPractitionerRole, MEDICAL_THEME } from '../content/medicalExperience';
+import { isMedicalPractitionerRole } from '../content/medicalExperience';
 import { FLASH_CYAN, colors } from './designTokens';
 import {
   hommeColorOverrides,
@@ -350,12 +350,10 @@ export function getPoleTabBarChrome(
   }
 
   if (isMedicalPractitionerRole(role)) {
+    // Même accent clair que le pôle Santé — MEDICAL_THEME.primary (#0F766E)
+    // est trop sombre sur le dock FLASH noir.
     return {
       ...CHROME_BY_LINE.sante,
-      accent: MEDICAL_THEME.primary,
-      activeIcon: MEDICAL_THEME.primary,
-      centerButtonIdle: MEDICAL_THEME.primary,
-      badgeColor: MEDICAL_THEME.primary,
       overflowKicker: 'CABINET SANTÉ',
     };
   }
@@ -368,6 +366,6 @@ export function resolveTabBarAccent(
   appColors: AppColors,
   segment?: PlayerSegment | null,
 ): string {
-  if (isMedicalPractitionerRole(role)) return MEDICAL_THEME.primary;
+  if (isMedicalPractitionerRole(role)) return santeColorOverrides.accent;
   return getPoleTabBarChrome(productLine, role, segment).accent ?? appColors.accent ?? FLASH_CYAN;
 }

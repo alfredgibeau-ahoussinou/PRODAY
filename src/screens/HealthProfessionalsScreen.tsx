@@ -46,7 +46,8 @@ export const HealthProfessionalsScreen: React.FC = () => {
             key={item.id}
             style={[
               styles.tabChip,
-              tab === item.id && { backgroundColor: '#0F766E' },
+              { backgroundColor: colors.brandSoft },
+              tab === item.id && { backgroundColor: colors.accent },
             ]}
             onPress={() => setTab(item.id)}
           >
@@ -54,7 +55,8 @@ export const HealthProfessionalsScreen: React.FC = () => {
               variant="caption"
               style={[
                 styles.tabText,
-                tab === item.id && styles.tabTextActive,
+                { color: colors.accent },
+                tab === item.id && { color: colors.brandInverse },
               ]}
             >
               {item.label}
@@ -104,8 +106,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: radius.pill,
-    backgroundColor: '#CCFBF1',
   },
-  tabText: { fontWeight: '700', color: '#0F766E' },
-  tabTextActive: { color: '#FFFFFF' },
+  tabText: { fontWeight: '700' },
 });

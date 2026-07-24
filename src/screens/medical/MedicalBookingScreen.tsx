@@ -203,7 +203,7 @@ function createStyles(c: AppColors) {
     },
     visioHint: {
       fontSize: 13,
-      color: '#0F766E',
+      color: c.accent,
       lineHeight: 18,
       fontWeight: '600',
       fontFamily: fontFamily.semibold,
