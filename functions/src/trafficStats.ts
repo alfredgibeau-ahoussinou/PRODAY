@@ -81,6 +81,8 @@ async function incrementTraffic(
 
   await db.runTransaction(async (tx) => {
     const totalsSnap = await tx.get(totalsRef);
+    const dailySnap = await tx.get(dailyRef);
+
     if (!totalsSnap.exists) {
       tx.set(totalsRef, {
         site_visits: source === 'site' ? 1 : 0,
@@ -95,7 +97,6 @@ async function incrementTraffic(
       });
     }
 
-    const dailySnap = await tx.get(dailyRef);
     if (!dailySnap.exists) {
       tx.set(dailyRef, {
         day_key: day,
