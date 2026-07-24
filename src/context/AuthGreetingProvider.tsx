@@ -1,5 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { AuthGreetingOverlay } from '../components/auth/AuthGreetingOverlay';
+import React, { Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react';
 import {
   completeAuthGreeting,
   playAuthGreeting,
@@ -7,6 +6,13 @@ import {
   type AuthGreetingPayload,
 } from '../services/authGreeting.controller';
 import { useAuth } from './AuthContext';
+
+/** Lazy : évite de charger expo-video (AuthGreetingVideoBackdrop) au cold start. */
+const AuthGreetingOverlay = lazy(() =>
+  import('../components/auth/AuthGreetingOverlay').then((module) => ({
+    default: module.AuthGreetingOverlay,
+  })),
+);
 
 interface AuthGreetingProviderProps {
   children: React.ReactNode;
@@ -47,7 +53,11 @@ export const AuthGreetingProvider: React.FC<AuthGreetingProviderProps> = ({ chil
   return (
     <>
       {children}
-      {greeting ? <AuthGreetingOverlay greeting={greeting} onDone={handleDone} /> : null}
+      {greeting ? (
+        <Suspense fallback={null}>
+          <AuthGreetingOverlay greeting={greeting} onDone={handleDone} />
+        </Suspense>
+      ) : null}
     </>
   );
 };

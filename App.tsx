@@ -37,6 +37,7 @@ import { SubscriptionShell } from './src/components/subscription/SubscriptionShe
 import { AppSpaceProvider } from './src/context/AppSpaceContext';
 import { ProductLineProvider, useProductLine } from './src/context/ProductLineContext';
 import { LaunchIntroProvider } from './src/context/LaunchIntroContext';
+import { AppErrorBoundary } from './src/components/AppErrorBoundary';
 import { BottomTabBar } from './src/components/navigation/BottomTabBar';
 import { WomanSpaceDefaults } from './src/components/appSpace/WomanSpaceDefaults';
 import { AnimatedTabContent } from './src/components/motion';
@@ -115,21 +116,23 @@ export default function App() {
   }
 
   return (
-    <SafeAreaProvider onLayout={onLayoutRoot}>
-      <AuthProvider>
-        <LocaleProvider>
+    <AppErrorBoundary>
+      <SafeAreaProvider onLayout={onLayoutRoot}>
+        <AuthProvider>
+          <LocaleProvider>
             <PlatformConfigProvider>
-            <ProductLineProvider>
-              <AuthGreetingProvider>
-                <LaunchIntroProvider>
-                  <AppShell />
-                </LaunchIntroProvider>
-              </AuthGreetingProvider>
-            </ProductLineProvider>
+              <ProductLineProvider>
+                <AuthGreetingProvider>
+                  <LaunchIntroProvider>
+                    <AppShell />
+                  </LaunchIntroProvider>
+                </AuthGreetingProvider>
+              </ProductLineProvider>
             </PlatformConfigProvider>
-        </LocaleProvider>
-      </AuthProvider>
-    </SafeAreaProvider>
+          </LocaleProvider>
+        </AuthProvider>
+      </SafeAreaProvider>
+    </AppErrorBoundary>
   );
 }
 

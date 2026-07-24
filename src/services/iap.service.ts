@@ -16,8 +16,13 @@ async function ensureConnection(): Promise<boolean> {
   if (!isNativeStoreBuild()) return false;
   if (!connectionPromise) {
     connectionPromise = (async () => {
-      const iap = await import('expo-iap');
-      return iap.initConnection();
+      try {
+        const iap = await import('expo-iap');
+        return await iap.initConnection();
+      } catch {
+        connectionPromise = null;
+        return false;
+      }
     })();
   }
   return connectionPromise;

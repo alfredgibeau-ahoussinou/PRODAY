@@ -1,11 +1,19 @@
-import {
-  initialize,
-  requestPermission,
-  readRecords,
-  getSdkStatus,
-  SdkAvailabilityStatus,
-} from 'react-native-health-connect';
 import type { WearableHealthMetrics } from './types';
+
+type HealthConnectModule = typeof import('react-native-health-connect');
+
+let healthConnectPromise: Promise<HealthConnectModule> | null = null;
+
+/** Charge Health Connect uniquement à la demande (pas au require du home). */
+async function getHealthConnect(): Promise<HealthConnectModule> {
+  if (!healthConnectPromise) {
+    healthConnectPromise = import('react-native-health-connect').catch((error) => {
+      healthConnectPromise = null;
+      throw error;
+    });
+  }
+  return healthConnectPromise;
+}
 
 function startOfToday(): Date {
   const d = new Date();
@@ -19,17 +27,19 @@ function startOfYesterday(): Date {
   return d;
 }
 
-async function ensureInitialized(): Promise<void> {
-  const status = await getSdkStatus();
-  if (status !== SdkAvailabilityStatus.SDK_AVAILABLE) {
+async function ensureInitialized(): Promise<HealthConnectModule> {
+  const hc = await getHealthConnect();
+  const status = await hc.getSdkStatus();
+  if (status !== hc.SdkAvailabilityStatus.SDK_AVAILABLE) {
     throw new Error('Google Health Connect n’est pas disponible sur cet appareil.');
   }
-  const ok = await initialize();
+  const ok = await hc.initialize();
   if (!ok) throw new Error('Impossible d’initialiser Google Health Connect.');
+  return hc;
 }
 
-async function requestHealthPermissions(): Promise<void> {
-  const granted = await requestPermission([
+async function requestHealthPermissions(hc: HealthConnectModule): Promise<void> {
+  const granted = await hc.requestPermission([
     { accessType: 'read', recordType: 'Steps' },
     { accessType: 'read', recordType: 'SleepSession' },
     { accessType: 'read', recordType: 'HeartRate' },
@@ -40,11 +50,11 @@ async function requestHealthPermissions(): Promise<void> {
   }
 }
 
-async function readSteps(): Promise<number | null> {
+async function readSteps(hc: HealthConnectModule): Promise<number | null> {
   try {
     const startTime = startOfToday().toISOString();
     const endTime = new Date().toISOString();
-    const { records } = await readRecords('Steps', {
+    const { records } = await hc.readRecords('Steps', {
       timeRangeFilter: { operator: 'between', startTime, endTime },
     });
     if (!records.length) return null;
@@ -55,11 +65,11 @@ async function readSteps(): Promise<number | null> {
   }
 }
 
-async function readSleepHours(): Promise<number | null> {
+async function readSleepHours(hc: HealthConnectModule): Promise<number | null> {
   try {
     const startTime = startOfYesterday().toISOString();
     const endTime = new Date().toISOString();
-    const { records } = await readRecords('SleepSession', {
+    const { records } = await hc.readRecords('SleepSession', {
       timeRangeFilter: { operator: 'between', startTime, endTime },
     });
     if (!records.length) return null;
@@ -75,15 +85,15 @@ async function readSleepHours(): Promise<number | null> {
   }
 }
 
-async function readRestingHeartRate(): Promise<number | null> {
+async function readRestingHeartRate(hc: HealthConnectModule): Promise<number | null> {
   const startTime = startOfYesterday().toISOString();
   const endTime = new Date().toISOString();
   try {
-    const { records } = await readRecords('RestingHeartRate', {
+    const { records } = await hc.readRecords('RestingHeartRate', {
       timeRangeFilter: { operator: 'between', startTime, endTime },
     });
     const sorted = [...records].sort(
-      (a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()
+      (a, b) => new Date(b.time).getTime() - new Date(a.time).getTime(),
     );
     const bpm = sorted[0]?.beatsPerMinute;
     return bpm && bpm > 0 ? Math.round(bpm) : null;
@@ -93,17 +103,17 @@ async function readRestingHeartRate(): Promise<number | null> {
 }
 
 export async function connectWearableHealth(): Promise<WearableHealthMetrics> {
-  await ensureInitialized();
-  await requestHealthPermissions();
+  const hc = await ensureInitialized();
+  await requestHealthPermissions(hc);
   return fetchWearableMetrics();
 }
 
 export async function fetchWearableMetrics(): Promise<WearableHealthMetrics> {
-  await ensureInitialized();
+  const hc = await ensureInitialized();
   const [stepsToday, sleepHoursLastNight, restingHeartRate] = await Promise.all([
-    readSteps(),
-    readSleepHours(),
-    readRestingHeartRate(),
+    readSteps(hc),
+    readSleepHours(hc),
+    readRestingHeartRate(hc),
   ]);
 
   return {

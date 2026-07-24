@@ -1,7 +1,14 @@
-import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import React, {
+  Suspense,
+  createContext,
+  lazy,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { FirstLaunchIntro } from '../components/branding/FirstLaunchIntro';
-import { LaunchVideoIntro } from '../components/branding/intro/LaunchVideoIntro';
 import { LaunchVideoErrorBoundary } from '../components/branding/intro/LaunchVideoErrorBoundary';
 import type { IntroSpaceChoice } from '../components/branding/intro/BrandRevealIntro';
 import { resolveIntroExitAction } from '../components/branding/intro/launchIntroFlow';
@@ -17,6 +24,16 @@ import { Platform, StyleSheet, View } from 'react-native';
 
 /** Une seule lecture de la vidéo d’intro par installation (évite crash natif répété). */
 export const LAUNCH_VIDEO_SEEN_KEY = 'proday_launch_video_seen_v1';
+
+/**
+ * Import dynamique : `expo-video` ne doit pas être `require` au cold start Android.
+ * Le chunk n’est chargé que si la vidéo monte (iOS uniquement).
+ */
+const LaunchVideoIntroLazy = lazy(() =>
+  import('../components/branding/intro/LaunchVideoIntro').then((module) => ({
+    default: module.LaunchVideoIntro,
+  })),
+);
 
 interface LaunchIntroContextValue {
   openSpacePicker: () => void;
@@ -42,8 +59,7 @@ export const LaunchIntroProvider: React.FC<{ children: React.ReactNode }> = ({
       try {
         const seen = await AsyncStorage.getItem(LAUNCH_VIDEO_SEEN_KEY);
         if (!cancelled) {
-          // Android : la vidéo d’intro a provoqué des crashes natifs au cold start sur certains APK.
-          // On la saute pour garantir l’ouverture de l’app ; iOS conserve l’intro une fois.
+          // Android : jamais de vidéo d’intro (évite crash natif expo-video au cold start).
           const playVideo = Platform.OS !== 'android' && seen !== '1';
           setShouldPlayVideo(playVideo);
           setVideoReady(true);
@@ -51,7 +67,6 @@ export const LaunchIntroProvider: React.FC<{ children: React.ReactNode }> = ({
         }
       } catch {
         if (!cancelled) {
-          // En cas d’échec stockage : on saute la vidéo pour ne pas bloquer le démarrage.
           setShouldPlayVideo(false);
           setVideoIntroDone(true);
           setVideoReady(true);
@@ -98,6 +113,9 @@ export const LaunchIntroProvider: React.FC<{ children: React.ReactNode }> = ({
     void markIntroComplete();
   }, [manualOpen, markIntroComplete]);
 
+  const showLaunchVideo =
+    Platform.OS !== 'android' && videoReady && shouldPlayVideo && !videoIntroDone;
+
   return (
     <LaunchIntroContext.Provider value={{ openSpacePicker }}>
       <View style={styles.wrap}>
@@ -124,9 +142,11 @@ export const LaunchIntroProvider: React.FC<{ children: React.ReactNode }> = ({
             />
           ) : null}
         </PushScreenTransition>
-        {videoReady && shouldPlayVideo && !videoIntroDone ? (
+        {showLaunchVideo ? (
           <LaunchVideoErrorBoundary onError={finishVideoIntro}>
-            <LaunchVideoIntro onFinish={finishVideoIntro} />
+            <Suspense fallback={null}>
+              <LaunchVideoIntroLazy onFinish={finishVideoIntro} />
+            </Suspense>
           </LaunchVideoErrorBoundary>
         ) : null}
       </View>
