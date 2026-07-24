@@ -1,5 +1,4 @@
 import React, { Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react';
-import { Platform } from 'react-native';
 import {
   completeAuthGreeting,
   playAuthGreeting,
@@ -8,15 +7,12 @@ import {
 } from '../services/authGreeting.controller';
 import { useAuth } from './AuthContext';
 
-/** Lazy iOS : expo-video exclu du binary Android. */
-const AuthGreetingOverlay =
-  Platform.OS === 'android'
-    ? null
-    : lazy(() =>
-        import('../components/auth/AuthGreetingOverlay').then((module) => ({
-          default: module.AuthGreetingOverlay,
-        })),
-      );
+/** Lazy : expo-video chargé uniquement quand un greeting est joué. */
+const AuthGreetingOverlay = lazy(() =>
+  import('../components/auth/AuthGreetingOverlay').then((module) => ({
+    default: module.AuthGreetingOverlay,
+  })),
+);
 
 interface AuthGreetingProviderProps {
   children: React.ReactNode;
@@ -54,17 +50,10 @@ export const AuthGreetingProvider: React.FC<AuthGreetingProviderProps> = ({ chil
     completeAuthGreeting();
   }, []);
 
-  useEffect(() => {
-    if (Platform.OS === 'android' && greeting) {
-      setGreeting(null);
-      completeAuthGreeting();
-    }
-  }, [greeting]);
-
   return (
     <>
       {children}
-      {greeting && AuthGreetingOverlay ? (
+      {greeting ? (
         <Suspense fallback={null}>
           <AuthGreetingOverlay greeting={greeting} onDone={handleDone} />
         </Suspense>

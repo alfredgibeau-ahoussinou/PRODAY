@@ -2,7 +2,7 @@
   "expo": {
     "name": "ProDay",
     "slug": "proday",
-    "version": "1.0.5",
+    "version": "1.0.6",
     "scheme": "proday",
     "orientation": "portrait",
     "icon": "./assets/branding/logo-proday-official.png",
@@ -26,7 +26,7 @@
         "backgroundColor": "#F1F5F9"
       },
       "package": "com.proday.app",
-      "versionCode": 6,
+      "versionCode": 7,
       "googleServicesFile": "./google-services.json"
     },
     "web": {
@@ -68,6 +68,7 @@
           "healthUpdatePermission": "ProDay n'écrit pas de données dans Apple Santé."
         }
       ],
+      "expo-health-connect",
       [
         "expo-build-properties",
         {

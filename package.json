@@ -120,14 +120,7 @@
     "autolinking": {
       "android": {
         "exclude": [
-          "expo-video",
-          "expo-video-thumbnails",
-          "expo-audio",
-          "expo-iap",
-          "expo-health-connect",
-          "react-native-health-connect",
-          "react-native-health",
-          "expo-blur"
+          "react-native-health"
         ]
       }
     }

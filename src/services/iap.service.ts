@@ -7,8 +7,6 @@ import { isFirebaseConfigured } from '../config/firebase';
 
 function isNativeStoreBuild(): boolean {
   if (Platform.OS === 'web') return false;
-  // Android : expo-iap temporairement exclu du binary (crash cold start).
-  if (Platform.OS === 'android') return false;
   return Constants.executionEnvironment !== ExecutionEnvironment.StoreClient;
 }
 

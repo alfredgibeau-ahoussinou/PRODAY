@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { Component, useMemo, type ErrorInfo, type ReactNode } from 'react';
 import {
   Platform,
   StyleSheet,
@@ -70,7 +70,7 @@ function WebMapFallback({
       />
     );
   }
-  // Android sans react-native-maps (exclu pour stabiliser le cold start / Honor sans GMS).
+  // Fallback OSM (WebView) : Honor/Huawei sans GMS, ou crash Google Maps.
   try {
     const { WebView } = require('react-native-webview') as typeof import('react-native-webview');
     return (
@@ -87,7 +87,27 @@ function WebMapFallback({
   }
 }
 
-/** Carte native (Apple/Google) sur mobile, embed léger sur web. */
+class NativeMapErrorBoundary extends Component<
+  { children: ReactNode; fallback: ReactNode },
+  { failed: boolean }
+> {
+  state = { failed: false };
+
+  static getDerivedStateFromError(): { failed: boolean } {
+    return { failed: true };
+  }
+
+  componentDidCatch(_error: Error, _info: ErrorInfo): void {
+    /* fallback OSM ci-dessous */
+  }
+
+  render() {
+    if (this.state.failed) return this.props.fallback;
+    return this.props.children;
+  }
+}
+
+/** Carte native (Apple/Google) sur mobile, embed OSM en fallback. */
 export const ProDayLiveMap: React.FC<ProDayLiveMapProps> = ({
   center,
   radiusKm,
@@ -104,53 +124,59 @@ export const ProDayLiveMap: React.FC<ProDayLiveMapProps> = ({
     [resolvedCenter, radiusKm]
   );
 
+  const osmFallback = (
+    <View style={StyleSheet.absoluteFill}>
+      <WebMapFallback
+        center={resolvedCenter}
+        radiusKm={radiusKm}
+        height={height}
+        colors={colors}
+      />
+    </View>
+  );
+
   const mapBody =
     Platform.OS !== 'web' && NativeMapView && NativeMarker && NativeCircle ? (
-      <NativeMapView
-        style={styles.map}
-        region={mapRegion}
-        scrollEnabled={false}
-        zoomEnabled={false}
-        rotateEnabled={false}
-        pitchEnabled={false}
-        showsUserLocation
-        showsMyLocationButton={false}
-        showsCompass={false}
-        toolbarEnabled={false}
-        loadingEnabled
-        loadingIndicatorColor={colors.accent}
-        mapType={Platform.OS === 'ios' ? 'mutedStandard' : 'standard'}
-      >
-        <NativeCircle
-          center={resolvedCenter}
-          radius={radiusKm * 1000}
-          fillColor={`${colors.accent}18`}
-          strokeColor={colors.accent}
-          strokeWidth={1.5}
-        />
-        {markers.map((marker) => (
-          <NativeMarker
-            key={marker.id}
-            coordinate={{
-              latitude: marker.location.latitude,
-              longitude: marker.location.longitude,
-            }}
-            onPress={() => onMarkerPress?.(marker.id)}
-            tracksViewChanges={false}
-          >
-            <GeoMapPin kind={marker.kind} accent={colors.accent} />
-          </NativeMarker>
-        ))}
-      </NativeMapView>
+      <NativeMapErrorBoundary fallback={osmFallback}>
+        <NativeMapView
+          style={styles.map}
+          region={mapRegion}
+          scrollEnabled={false}
+          zoomEnabled={false}
+          rotateEnabled={false}
+          pitchEnabled={false}
+          showsUserLocation
+          showsMyLocationButton={false}
+          showsCompass={false}
+          toolbarEnabled={false}
+          loadingEnabled
+          loadingIndicatorColor={colors.accent}
+          mapType={Platform.OS === 'ios' ? 'mutedStandard' : 'standard'}
+        >
+          <NativeCircle
+            center={resolvedCenter}
+            radius={radiusKm * 1000}
+            fillColor={`${colors.accent}18`}
+            strokeColor={colors.accent}
+            strokeWidth={1.5}
+          />
+          {markers.map((marker) => (
+            <NativeMarker
+              key={marker.id}
+              coordinate={{
+                latitude: marker.location.latitude,
+                longitude: marker.location.longitude,
+              }}
+              onPress={() => onMarkerPress?.(marker.id)}
+              tracksViewChanges={false}
+            >
+              <GeoMapPin kind={marker.kind} accent={colors.accent} />
+            </NativeMarker>
+          ))}
+        </NativeMapView>
+      </NativeMapErrorBoundary>
     ) : (
-      <View style={StyleSheet.absoluteFill}>
-        <WebMapFallback
-          center={resolvedCenter}
-          radiusKm={radiusKm}
-          height={height}
-          colors={colors}
-        />
-      </View>
+      osmFallback
     );
 
   return (

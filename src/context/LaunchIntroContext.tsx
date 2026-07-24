@@ -20,14 +20,14 @@ import { useAppLaunchIntro } from '../hooks/useAppLaunchIntro';
 import { useProductLine } from './ProductLineContext';
 import { useAuth } from './AuthContext';
 import { PushScreenTransition } from '../components/motion';
-import { Platform, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 /** Une seule lecture de la vidéo d’intro par installation (évite crash natif répété). */
 export const LAUNCH_VIDEO_SEEN_KEY = 'proday_launch_video_seen_v1';
 
 /**
- * Import dynamique : `expo-video` ne doit pas être `require` au cold start Android.
- * Le chunk n’est chargé que si la vidéo monte (iOS uniquement).
+ * Import dynamique : `expo-video` n’est chargé que si la vidéo d’intro monte
+ * (évite de tirer le module au cold start JS).
  */
 const LaunchVideoIntroLazy = lazy(() =>
   import('../components/branding/intro/LaunchVideoIntro').then((module) => ({
@@ -59,8 +59,7 @@ export const LaunchIntroProvider: React.FC<{ children: React.ReactNode }> = ({
       try {
         const seen = await AsyncStorage.getItem(LAUNCH_VIDEO_SEEN_KEY);
         if (!cancelled) {
-          // Android : jamais de vidéo d’intro (évite crash natif expo-video au cold start).
-          const playVideo = Platform.OS !== 'android' && seen !== '1';
+          const playVideo = seen !== '1';
           setShouldPlayVideo(playVideo);
           setVideoReady(true);
           if (!playVideo) setVideoIntroDone(true);
@@ -113,8 +112,7 @@ export const LaunchIntroProvider: React.FC<{ children: React.ReactNode }> = ({
     void markIntroComplete();
   }, [manualOpen, markIntroComplete]);
 
-  const showLaunchVideo =
-    Platform.OS !== 'android' && videoReady && shouldPlayVideo && !videoIntroDone;
+  const showLaunchVideo = videoReady && shouldPlayVideo && !videoIntroDone;
 
   return (
     <LaunchIntroContext.Provider value={{ openSpacePicker }}>
