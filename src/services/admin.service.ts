@@ -173,6 +173,7 @@ export interface AdminCreateUserInput {
   role: UserRole;
   city?: string;
   product_line?: ProductLineId;
+  medical_specialty?: string;
 }
 
 export type AdminUserUpdatePatch = {

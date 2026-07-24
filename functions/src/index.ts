@@ -489,13 +489,14 @@ export const adminCreateUser = functions.https.onCall(async (data, context) => {
   if (!context.auth?.token?.admin) {
     throw new functions.https.HttpsError('permission-denied', 'Admin only');
   }
-  const { email, password, display_name, role, city, product_line } = data as {
+  const { email, password, display_name, role, city, product_line, medical_specialty } = data as {
     email: string;
     password: string;
     display_name: string;
     role: string;
     city?: string;
     product_line?: string;
+    medical_specialty?: string;
   };
   if (!email?.trim() || !password || password.length < 6) {
     throw new functions.https.HttpsError('invalid-argument', 'email et password requis');
@@ -558,6 +559,11 @@ export const adminCreateUser = functions.https.onCall(async (data, context) => {
     displayName: display_name.trim(),
   });
 
+  const specialty =
+    role === 'physio' && typeof medical_specialty === 'string' && medical_specialty.trim()
+      ? medical_specialty.trim()
+      : null;
+
   await db.doc(`users/${userRecord.uid}`).set({
     display_name: display_name.trim(),
     email: email.trim().toLowerCase(),
@@ -568,7 +574,9 @@ export const adminCreateUser = functions.https.onCall(async (data, context) => {
     verification_status: requiresVerification ? 'PENDING' : 'NOT_REQUIRED',
     sponsor_approved: role === 'sponsor' ? false : null,
     is_active: true,
-    profile: {},
+    profile: specialty
+      ? { medical_specialty: specialty, job_title: specialty }
+      : {},
     created_at: admin.firestore.FieldValue.serverTimestamp(),
     updated_at: admin.firestore.FieldValue.serverTimestamp(),
   });

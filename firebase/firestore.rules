@@ -124,6 +124,19 @@ service cloud.firestore {
         );
     }
 
+    /**
+     * Campagnes sponsor — aligné sur isSponsorCampaignAllowed (client).
+     * Quotas d’offres actives restent contrôlés côté app / callable (pas de count() en rules).
+     */
+    function canCreateSponsorOffer() {
+      let u = userDoc(request.auth.uid).data;
+      let vs = u.get('verification_status', 'NOT_REQUIRED');
+      return u.get('role', '') == 'sponsor'
+        && u.get('sponsor_approved', false) == true
+        && (vs == 'VERIFIED' || vs == 'NOT_REQUIRED')
+        && request.resource.data.sponsor_uid == request.auth.uid;
+    }
+
     function verificationFieldsUnchanged() {
       return !request.resource.data.diff(resource.data).affectedKeys()
         .hasAny([
@@ -137,6 +150,7 @@ service cloud.firestore {
           'product_line',
           'sponsor_tier',
           'sponsor_territorial_approved_at',
+          'sponsor_approved',
         ]);
     }
 
@@ -513,8 +527,7 @@ service cloud.firestore {
 
     match /sponsor_offers/{offerId} {
       allow read: if true;
-      allow create: if isSignedIn()
-        && request.resource.data.sponsor_uid == request.auth.uid;
+      allow create: if isSignedIn() && (isAdmin() || canCreateSponsorOffer());
       allow update: if isSignedIn()
         && (
           isAdmin()

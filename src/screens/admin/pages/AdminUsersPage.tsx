@@ -110,23 +110,19 @@ export const AdminUsersPage: React.FC = () => {
     }
     setCreating(true);
     try {
-      const created = await adminService.createUser({
+      const specialtyLabel =
+        role === 'physio'
+          ? MEDICAL_CANONICAL_LABELS[medical_specialty ?? 'kine']
+          : undefined;
+      await adminService.createUser({
         email: email.trim(),
         password,
         display_name: display_name.trim(),
         role,
         city: city.trim() || undefined,
         product_line: resolveAdminProductLine(role, product_line),
+        medical_specialty: specialtyLabel,
       });
-      if (role === 'physio' && created?.uid) {
-        const specialtyId = medical_specialty ?? 'kine';
-        const label = MEDICAL_CANONICAL_LABELS[specialtyId];
-        await adminService.updateUser(created.uid, {
-          medical_specialty: label,
-          job_title: label,
-          product_line: 'sante',
-        });
-      }
       Alert.alert(t('admin.users.created'), t('admin.users.createdBody', { email }));
       setShowCreate(false);
       setCreateForm(EMPTY_FORM);
