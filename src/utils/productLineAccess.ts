@@ -39,36 +39,15 @@ export async function getActiveProductLineFromStorage(): Promise<ProductLineId> 
 
 /** Ligne canonique du compte (Firestore + déduction legacy). */
 export function getUserProductLine(user: User): ProductLineId {
-  const stored = user.product_line;
-  if (user.role === 'physio') return 'sante';
-  if (user.role === 'supporter') return 'supporter';
-  if (user.role === 'sponsor') return 'sponsor';
-  if (stored === 'sponsor') return 'sponsor';
-  if (stored === 'pro') return canonicalizeUserProductLine('pro', user.role);
-  if (
-    stored === 'woman' ||
-    stored === 'sante' ||
-    stored === 'amateur' ||
-    stored === 'supporter' ||
-    stored === 'pro_player' ||
-    stored === 'pro_club' ||
-    stored === 'pro_staff'
-  ) {
-    if (stored === 'woman' && user.role === 'player') return 'pro_player';
-    if (stored === 'pro_player' || stored === 'pro_club' || stored === 'pro_staff') {
-      return canonicalizeUserProductLine(stored, user.role);
-    }
-    return stored;
+  if (user.product_line) {
+    return canonicalizeUserProductLine(user.product_line, user.role);
   }
-  if (stored === 'homme' || stored === 'standard') {
-    if (user.role === 'player') return 'pro_player';
-    return 'homme';
-  }
+  // Legacy sans product_line : espace féminin → Amateur (ou Pro Joueur si joueur).
   if (user.app_space && isFeminineAppSpace(user.app_space)) {
     if (user.role === 'player') return 'pro_player';
-    return 'woman';
+    return 'amateur';
   }
-  return canonicalizeUserProductLine(stored, user.role);
+  return canonicalizeUserProductLine(undefined, user.role);
 }
 
 export function getProductLineMismatchMessage(

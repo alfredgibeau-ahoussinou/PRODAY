@@ -19,7 +19,7 @@ const HUB_CARDS = [
     href: ROUTES.betaProgramme,
     icon: BookOpen,
     title: "Programme",
-    description: "Calendrier, six pôles et modules à tester selon votre profil.",
+    description: "Calendrier, sept pôles et modules à tester selon votre profil.",
   },
   {
     href: ROUTES.betaInstaller,
@@ -52,7 +52,7 @@ export function BetaHubContent({ session }: BetaHubContentProps) {
       <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-8">
         <SectionKicker>Votre espace beta-testeur</SectionKicker>
         <p className="mt-4 max-w-3xl text-sm leading-relaxed text-white/65">
-          Merci de faire partie des premiers à tester ProDay. Explorez les six pôles, téléchargez
+          Merci de faire partie des premiers à tester ProDay. Explorez les sept pôles, téléchargez
           l&apos;APK Android depuis l&apos;onglet Installer et partagez vos retours — chaque message
           est lu par l&apos;équipe produit avant le lancement public.
         </p>
@@ -123,7 +123,7 @@ export function BetaHubContent({ session }: BetaHubContentProps) {
         <div>
           <SectionKicker>En attendant l&apos;app</SectionKicker>
           <p className="mt-2 max-w-xl text-sm text-white/65">
-            Démo interactive, Mercato, Visibilité, feuille de route et les six pôles sur proday75.fr.
+            Démo interactive, Mercato, Visibilité, feuille de route et les sept pôles sur proday75.fr.
           </p>
         </div>
         <div className="mt-6 flex flex-wrap gap-3 sm:mt-0">

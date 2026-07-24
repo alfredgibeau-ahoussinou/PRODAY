@@ -25,7 +25,7 @@ interface ProfileGalleryEditorProps {
 export const ProfileGalleryEditor: React.FC<ProfileGalleryEditorProps> = ({
   urls,
   uploading,
-  productLine = 'homme',
+  productLine = 'amateur',
   onAdd,
   onRemove,
 }) => {

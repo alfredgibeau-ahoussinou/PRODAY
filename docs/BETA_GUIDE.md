@@ -28,7 +28,7 @@ flowchart LR
 |-----|----------|--------------|------|
 | `/beta/inscription` | **Oui** | Tout visiteur | S'inscrire à la waitlist (formulaire + `POST /api/beta`) |
 | `/beta` | **Non** | Beta-testeur (cookie) | **Redirect** → `/beta/programme` ; sans cookie → accès refusé |
-| `/beta/programme` | **Non** | Beta-testeur (cookie) | **Point d'entrée email** — programme, 6 pôles, modules transverses |
+| `/beta/programme` | **Non** | Beta-testeur (cookie) | **Point d'entrée email** — programme, 7 pôles, modules transverses |
 | `/beta/installer` | **Non** | Beta-testeur (cookie) | Guides APK Android + TestFlight iOS |
 | `/beta/aide` | **Non** | Beta-testeur (cookie) | FAQ bêta, contact support, retours |
 | `POST /api/beta` | **Oui** | Formulaire inscription | Enregistre l'email + envoie le mail de bienvenue |
@@ -46,7 +46,7 @@ flowchart LR
 4. **Email** — L'inscrit reçoit « Vous êtes beta-testeur ProDay » avec un bouton **Accéder à la bêta** → `{{beta_url}}` = `https://proday75.fr/beta/programme?token=…`.
 5. **Validation** — Le middleware intercepte `?token=` sur `/beta` ou `/beta/programme` (et toute URL `/beta/*`) et redirige vers `/api/beta/access`.
 6. **Session** — L'API valide le jeton, pose un cookie httpOnly `proday_beta_session` (90 jours, path `/beta`), redirige vers `/beta/programme`.
-7. **Programme** — Le beta-testeur voit directement le programme (6 pôles) ; nav latérale vers Installer et Aide.
+7. **Programme** — Le beta-testeur voit directement le programme (7 pôles) ; nav latérale vers Installer et Aide.
 8. **App mobile** — Liens TestFlight / APK (env ou email ultérieur) ; retours via `/beta/aide` ou `support@proday.app`.
 
 ### Visite ultérieure avec cookie

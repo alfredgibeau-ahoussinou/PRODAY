@@ -60,7 +60,7 @@ const COMMON_ENTRIES: HelpEntry[] = [
     id: "demo",
     question: "Comment tester l'app ?",
     answer:
-      "La démo interactive reprend la navigation réelle des six pôles (Amateur, Supporter, Santé, Pro Joueur, Club, Staff) — téléphone et onglets, sans compte.",
+      "La démo interactive reprend la navigation réelle des pôles (Amateur, Supporter, Santé, Pro Joueur, Club, Staff, Sponsor) — téléphone et onglets, sans compte.",
     href: ROUTES.demo,
     hrefLabel: "Ouvrir la démo",
   },

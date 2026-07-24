@@ -83,7 +83,7 @@ export function BetaAideContent({ session }: BetaAideContentProps) {
         <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-6">
           <SectionKicker>Programme</SectionKicker>
           <p className="mt-3 text-sm leading-relaxed text-white/55">
-            Calendrier, six pôles et modules à tester selon votre profil beta-testeur.
+            Calendrier, sept pôles et modules à tester selon votre profil beta-testeur.
           </p>
           <Link
             href={ROUTES.betaProgramme}

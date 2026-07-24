@@ -270,7 +270,7 @@ export function logoDisplayAspect(
   } = {}
 ): number {
   if (opts.sponsor) return sponsorLogoAspect(width);
-  const line = resolveProductLine(opts.productLine, opts.woman, 'homme');
+  const line = resolveProductLine(opts.productLine, opts.woman, 'amateur');
   if (opts.variant === 'mark' || opts.watermark) return MARK_ASPECT;
   if (line === 'woman') return womanLogoAspect(width);
   if (line === 'pro' || line === 'pro_player' || line === 'pro_club' || line === 'pro_staff') {

@@ -8,7 +8,7 @@ import {
   getBetaCurrentStep,
   getBetaTimeline,
 } from "@/lib/betaContent";
-import { CAROUSEL_POLES, SPONSOR_POLE } from "@/lib/poles";
+import { POLES } from "@/lib/poles";
 import { ROUTES } from "@/lib/routes";
 
 type BetaProgrammeContentProps = {
@@ -24,7 +24,7 @@ export function BetaProgrammeContent({ session }: BetaProgrammeContentProps) {
       pathname={ROUTES.betaProgramme}
       kicker="Programme bêta"
       title="Programme et périmètre de test"
-      description="Comprenez le déroulement de la bêta, le calendrier et les six pôles que vous pouvez explorer."
+      description="Comprenez le déroulement de la bêta, le calendrier et les sept pôles que vous pouvez explorer."
     >
       {BETA_APK_AVAILABLE ? (
         <div className="mb-8 rounded-3xl border border-[var(--proday-accent)]/30 bg-[#001854]/40 p-6 sm:flex sm:items-center sm:justify-between sm:gap-6">
@@ -48,7 +48,7 @@ export function BetaProgrammeContent({ session }: BetaProgrammeContentProps) {
         <p className="mt-4 max-w-3xl text-sm leading-relaxed text-white/65">
           ProDay réunit Mercato, matchs, tournois, Visibilité et CV joueur dans une seule app — pour le
           foot amateur et semi-pro. En tant que beta-testeur, vous accédez en avant-première aux
-          builds iOS (TestFlight) et Android (APK), explorez les six pôles et nous aidez à
+          builds iOS (TestFlight) et Android (APK), explorez les sept pôles et nous aidez à
           prioriser les fonctionnalités avant l&apos;ouverture au grand public.
         </p>
         <div className="mt-6 grid gap-4 sm:grid-cols-3">
@@ -101,13 +101,13 @@ export function BetaProgrammeContent({ session }: BetaProgrammeContentProps) {
       </div>
 
       <div className="mt-8 rounded-3xl border border-white/10 bg-white/[0.03] p-8">
-        <SectionKicker>Les six pôles à explorer</SectionKicker>
+        <SectionKicker>Les sept pôles à explorer</SectionKicker>
         <p className="mt-4 max-w-3xl text-sm leading-relaxed text-white/65">
           Chaque pôle propose une expérience dédiée. Votre profil ({session.roleLabel}) oriente
           nos priorités — explorez aussi les autres univers pour un regard transversal.
         </p>
         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {CAROUSEL_POLES.map((pole) => (
+          {POLES.map((pole) => (
             <Link
               key={pole.id}
               href={pole.href}
@@ -124,13 +124,6 @@ export function BetaProgrammeContent({ session }: BetaProgrammeContentProps) {
             </Link>
           ))}
         </div>
-        <p className="mt-4 text-xs text-white/40">
-          Également :{" "}
-          <Link href={SPONSOR_POLE.href} className="text-[var(--proday-accent)] underline hover:text-[#4C8BFF]">
-            {SPONSOR_POLE.title}
-          </Link>{" "}
-          — {SPONSOR_POLE.subtitle.toLowerCase()}.
-        </p>
       </div>
 
       <div className="mt-8 rounded-3xl border border-white/10 bg-white/[0.03] p-8">

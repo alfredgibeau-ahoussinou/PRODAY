@@ -18,7 +18,7 @@ Vérifie : Firebase `.env`, typecheck, Jest, règles Firestore, pages légales, 
 |-----|--------|
 | https://proday75.fr/beta/inscription | Inscription waitlist (public) |
 | https://proday75.fr/beta | Hub bêta (invitation email uniquement) |
-| https://proday75.fr/beta/programme | Programme — six pôles (protégé) |
+| https://proday75.fr/beta/programme | Programme — sept pôles (protégé) |
 | https://proday75.fr/beta/installer | Guides APK / TestFlight (protégé) |
 | https://proday75.fr/beta/aide | FAQ et support bêta (protégé) |
 | https://proday75.fr/confidentialite | Politique de confidentialité (stores) |

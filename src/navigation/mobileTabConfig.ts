@@ -25,8 +25,9 @@ const SECONDARY_PRIORITY: MainTabId[] = [
 ];
 
 const LEFT_PRIORITY_BY_LINE: Record<ProductLineId, MainTabId[]> = {
-  homme: ['home', 'matchs', 'recrutement', 'feed'],
-  woman: ['home', 'matchs', 'recrutement', 'feed'],
+  // Legacy homme/woman : même rail que Amateur (migration live).
+  homme: ['home', 'covoiturage', 'matchs', 'recrutement'],
+  woman: ['home', 'covoiturage', 'matchs', 'recrutement'],
   amateur: ['home', 'covoiturage', 'matchs', 'recrutement'],
   pro: ['home', 'matchs', 'recrutement', 'feed'],
   pro_player: ['home', 'recrutement', 'matchs', 'reels'],
@@ -122,7 +123,7 @@ function buildClassicRailLayout(
   const leftPriority =
     (line && isProProductLine(line) && role ? LEFT_PRIORITY_BY_PRO_ROLE[role] : undefined) ??
     LEFT_PRIORITY_BY_LINE[line] ??
-    LEFT_PRIORITY_BY_LINE.homme;
+    LEFT_PRIORITY_BY_LINE.amateur;
   const left: MainTabId[] = [];
 
   for (const id of leftPriority) {

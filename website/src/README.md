@@ -18,7 +18,7 @@
 |-------|---------|
 | `/` | `app/page.tsx` |
 | `/homme` · `/woman` · `/pro` | Univers produit |
-| `/demo` | Démo interactive 6 pôles |
+| `/demo` | Démo interactive 6 pôles carousel (+ Sponsor) |
 | `/beta/*` | Inscription et hub bêta |
 | `/api/beta` | Endpoint liste d'attente |
 

@@ -64,7 +64,7 @@ export const subscriptionService = {
     return userSubscription(user);
   },
 
-  getPlanForUser(user: User, line: ProductLineId = 'homme') {
+  getPlanForUser(user: User, line: ProductLineId = 'amateur') {
     return getPlanForRoleAndLine(user.role, line) ?? getPlanForRole(user.role);
   },
 

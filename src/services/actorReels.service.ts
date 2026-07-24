@@ -91,7 +91,7 @@ export async function fetchActorReelSeeds(options?: {
   clubId?: string;
   productLine?: ProductLineId;
 }): Promise<ReelSeed[]> {
-  const productLine = options?.productLine ?? 'homme';
+  const productLine = options?.productLine ?? 'amateur';
 
   const [community, players, coaches, clubs] = await Promise.all([
     communityReelsService.listApproved(50),

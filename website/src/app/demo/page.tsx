@@ -6,7 +6,7 @@ import { parseDemoPoleParam } from "@/lib/demoPoles";
 export const metadata: Metadata = {
   title: "Démo interactive",
   description:
-    "Naviguez dans ProDay comme dans l’app : six pôles, onglets réels, sans compte connecté.",
+    "Naviguez dans ProDay comme dans l’app : sept pôles, onglets réels, sans compte connecté.",
 };
 
 export default async function DemoPage({

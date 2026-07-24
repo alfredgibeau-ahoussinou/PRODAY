@@ -149,7 +149,7 @@ BETA_VALIDATE_FUNCTION_URL=https://europe-west1-proday-155b0.cloudfunctions.net/
 - CTA public du site → `/beta/inscription` (pas `/beta`)
 - Contenu invité (après validation du jeton) :
   - Hero « Bienvenue dans la bêta ProDay »
-  - Explication du programme, six pôles testables, modules transverses
+  - Explication du programme, sept pôles testables, modules transverses
   - Téléchargement **iOS TestFlight** et **Android APK** (liens optionnels via env, sinon « bientôt » + email)
   - Retours par email (`support@proday.app`), timeline des prochaines étapes
 - Email de bienvenue : CTA **« Accéder à la bêta »** → `{{beta_url}}` (`/beta/programme?token=…`)

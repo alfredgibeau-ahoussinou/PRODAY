@@ -13,7 +13,7 @@ Code source : [src/README.md](src/README.md) · Carte monorepo : [docs/STRUCTURE
 | `/woman` | Univers **Woman** — foot féminin |
 | `/pro` | Univers **Pro** — staff, recrutement vérifié |
 | `/fonctionnalites` | 11 piliers produit + modules (Fil, Reels, Sponsors…) |
-| `/demo` | Démo interactive **6 pôles** (`?p=amateur\|supporter\|sante\|pro_joueur\|pro_club\|pro_staff`) |
+| `/demo` | Démo interactive **6 pôles carousel** (+ Sponsor) (`?p=amateur\|supporter\|sante\|pro_joueur\|pro_club\|pro_staff`) |
 | `/pulse` | Simulateur Pulse (thème par univers) |
 | `/live-stats` | Saisie match en direct |
 | `/cv` | Aperçu CV PDF (`?u=` pour le thème) |
@@ -29,14 +29,14 @@ Code source : [src/README.md](src/README.md) · Carte monorepo : [docs/STRUCTURE
 | `/faq` | Questions fréquentes |
 | `/beta/inscription` | Liste d'attente publique + email de bienvenue (`?role=sponsor` pour partenaires) |
 | `/beta` | Hub bêta privé (lien email avec `?token=`) |
-| `/beta/programme` | Programme bêta — six pôles (protégé) |
+| `/beta/programme` | Programme bêta — sept pôles (protégé) |
 | `/beta/installer` | Guides APK / TestFlight (protégé) |
 | `/beta/aide` | FAQ et support bêta (protégé) |
 | `/a-propos` | Vision produit |
 
 ### Démo interactive (`/demo`)
 
-Hero plein écran + téléphone interactif centré sur les **six pôles** (Amateur, Supporter, Santé, Pro Joueur, Pro Club, Pro Staff).
+Hero plein écran + téléphone interactif centré sur les **six pôles carousel** (Amateur, Supporter, Santé, Pro Joueur, Pro Club, Pro Staff) + Sponsor.
 
 - URL `?p=amateur|supporter|sante|pro_joueur|pro_club|pro_staff` (legacy `?u=` redirigé)
 - Onglets alignés sur les shells app ; contenu illustratif

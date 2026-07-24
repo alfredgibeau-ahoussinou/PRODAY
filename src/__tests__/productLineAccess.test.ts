@@ -31,9 +31,9 @@ describe('productLineAccess', () => {
     expect(getUserProductLine(user)).toBe('pro_player');
   });
 
-  it('déduit woman depuis app_space legacy (non joueur)', () => {
+  it('déduit amateur depuis app_space féminin legacy (non joueur)', () => {
     const user = { ...baseUser, role: 'coach' as const, app_space: 'women' as const };
-    expect(getUserProductLine(user)).toBe('woman');
+    expect(getUserProductLine(user)).toBe('amateur');
   });
 
   it('compte pro_player par défaut pour joueur sans ligne', () => {
