@@ -6,9 +6,9 @@ import Link from "next/link";
 import { BRAND } from "@/lib/content";
 import { POLES, POLE_BRAND_HEX, type PoleId } from "@/lib/poles";
 import { PremiumButton } from "@/components/ui/PremiumButton";
-import { Kicker } from "@/components/ui/Kicker";
 import { HeroVideoBackground } from "@/components/HeroVideoBackground";
 import { PRODAY_LOGO_OFFICIAL, PRODAY_OFFICIAL_LOGO_ASPECT } from "@/lib/brandingAssets";
+import { ROUTES } from "@/lib/routes";
 
 const HERO_LABELS: Record<PoleId, string> = {
   amateur: "Amateur",
@@ -46,11 +46,11 @@ export function HeroSection() {
           initial={{ opacity: 0, y: 14, scale: 0.96 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-          className="mb-6 overflow-hidden rounded-2xl bg-white p-1.5 shadow-[0_20px_60px_-20px_rgba(0,84,240,0.55)]"
+          className="mb-5 overflow-hidden rounded-2xl bg-white p-1.5 shadow-[0_20px_60px_-20px_rgba(0,84,240,0.55)]"
         >
           <Image
             src={PRODAY_LOGO_OFFICIAL}
-            alt="ProDay"
+            alt=""
             width={Math.round(56 * PRODAY_OFFICIAL_LOGO_ASPECT)}
             height={56}
             className="h-14 w-auto sm:h-16"
@@ -58,38 +58,37 @@ export function HeroSection() {
           />
         </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.12 }}
-        >
-          <Kicker>{BRAND.tagline}</Kicker>
-        </motion.div>
-
         <motion.h1
-          initial={{ opacity: 0, y: 28 }}
+          initial={{ opacity: 0, y: 22 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.22, duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
-          className="font-display mt-5 text-[clamp(2.6rem,9vw,5.75rem)] font-extrabold uppercase leading-[0.9] tracking-[-0.04em]"
+          transition={{ delay: 0.1, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+          className="font-display text-[clamp(2.75rem,10vw,6rem)] font-extrabold uppercase leading-[0.9] tracking-[-0.04em] text-shimmer"
         >
-          <span className="text-shimmer">L&apos;heure</span>
-          <br />
-          <span className="text-white">de jouer</span>
+          {BRAND.name}
         </motion.h1>
 
         <motion.p
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 18 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.38 }}
-          className="mx-auto mt-5 max-w-lg text-base leading-relaxed text-white/65 sm:text-lg"
+          transition={{ delay: 0.22, duration: 0.6 }}
+          className="font-display mx-auto mt-5 max-w-2xl text-balance text-[clamp(1.15rem,3.2vw,1.65rem)] font-bold leading-snug tracking-[-0.02em] text-white"
         >
-          Une app pour le foot amateur et semi-pro. Sept pôles. On dit clairement ce qui est déjà là.
+          {BRAND.mission}
+        </motion.p>
+
+        <motion.p
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.34 }}
+          className="mx-auto mt-4 max-w-md text-base leading-relaxed text-white/65 sm:text-lg"
+        >
+          {BRAND.heroSupport}
         </motion.p>
 
         <motion.div
           initial={{ opacity: 0, y: 22 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.48, duration: 0.55 }}
+          transition={{ delay: 0.46, duration: 0.55 }}
           className="mt-8 flex flex-wrap justify-center gap-3"
         >
           <PremiumButton
@@ -98,8 +97,8 @@ export function HeroSection() {
           >
             Rejoindre la bêta
           </PremiumButton>
-          <PremiumButton href="#decouvrir" variant="outline">
-            Trouver mon pôle
+          <PremiumButton href={ROUTES.features} variant="outline">
+            Voir l&apos;app
           </PremiumButton>
         </motion.div>
       </div>

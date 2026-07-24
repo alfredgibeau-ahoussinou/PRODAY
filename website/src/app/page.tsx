@@ -22,13 +22,17 @@ export default function HomePage() {
 
       <section className="border-y border-white/10 bg-[#070709] py-16 sm:py-20">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <div className="mb-10">
+          <div className="mb-10 max-w-2xl">
             <p className="font-signature text-2xl italic text-[var(--proday-accent)]">
-              Les 7 pôles
+              C&apos;est quoi ?
             </p>
             <h2 className="font-display mt-1 text-3xl font-extrabold uppercase tracking-[-0.03em] text-white sm:text-4xl">
               Choisissez votre pôle
             </h2>
+            <p className="mt-3 text-base leading-relaxed text-white/55">
+              ProDay, c&apos;est une app mobile pour le foot. Joueurs, clubs, staff,
+              santé ou partenaires : chaque pôle correspond à votre rôle.
+            </p>
           </div>
 
           <div className="grid gap-3 md:grid-cols-2">

@@ -33,7 +33,7 @@ export const metadata: Metadata = {
     template: "%s · ProDay",
   },
   description:
-    "Plateforme foot amateur et semi-pro : Mercato, Matchs, Arena, Reels, Fil, espace partenaires et Visibilité ProDay.",
+    "ProDay, l'app mobile qui réunit joueurs, clubs, staff, santé et partenaires autour du foot. Profil, matchs, RDV et sponsors.",
   applicationName: "ProDay",
   appleWebApp: {
     capable: true,
@@ -53,7 +53,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "ProDay",
     description:
-      "App mobile pour le foot amateur et semi-pro. Recrutement, matchs, tournois, communauté et partenaires.",
+      "ProDay, l'app mobile qui réunit joueurs, clubs, staff, santé et partenaires autour du foot.",
     images: ["/branding/logo-proday-official.png"],
   },
   other: {

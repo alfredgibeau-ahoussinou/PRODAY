@@ -8,8 +8,11 @@ export const BRAND = {
   name: "ProDay",
   tagline: "CONNECTER • PROGRESSER • RÉUSSIR",
   logo: "/branding/logo-proday-official.png",
+  /** Phrase d’accueil : ce que fait l’app, en une ligne. */
   mission:
-    "Profil, Mercato, journal d'activités et saison. Sept pôles dans une app mobile. On dit clairement ce qui est déjà là.",
+    "L'app mobile qui réunit joueurs, clubs, staff, santé et partenaires autour du foot.",
+  heroSupport:
+    "Profil, matchs, RDV santé et sponsors dans une seule app. La bêta est ouverte.",
 } as const;
 
 /** Pitch honnête : capacités réelles vs ambition long terme. Pas de métriques fictives. */
