@@ -147,6 +147,10 @@ export function SiteFooter() {
             <Link href={ROUTES.terms} className="hover:text-white/60">
               CGU
             </Link>
+            <span className="mx-2">·</span>
+            <Link href={ROUTES.admin} className="hover:text-white/60">
+              Admin bêta
+            </Link>
           </p>
           <p className="font-signature text-xl italic text-white/45">Alfred Ahoussinou</p>
         </div>
