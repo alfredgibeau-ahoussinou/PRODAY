@@ -9,7 +9,7 @@ import {
   ADMIN_LOGIN_PATH,
   ADMIN_SESSION_COOKIE,
   hasAdminSessionCookieValue,
-} from "@/lib/adminSession";
+} from "@/lib/adminSessionConstants";
 import {
   applySecurityHeaders,
   NO_REFERRER_HEADER,

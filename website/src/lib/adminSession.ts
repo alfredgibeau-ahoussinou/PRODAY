@@ -1,12 +1,18 @@
 import { createHmac, timingSafeEqual } from "crypto";
 import { cookies } from "next/headers";
+import {
+  ADMIN_SESSION_COOKIE,
+  ADMIN_SESSION_MAX_AGE,
+  ADMIN_SESSION_TOKEN_PREFIX,
+} from "@/lib/adminSessionConstants";
 
-export const ADMIN_SESSION_COOKIE = "proday_admin_session";
-export const ADMIN_SESSION_MAX_AGE = 60 * 60 * 24 * 7; // 7 jours
-export const ADMIN_LOGIN_PATH = "/admin/login";
-export const ADMIN_HOME_PATH = "/admin/beta";
-
-const TOKEN_PREFIX = "adm1.";
+export {
+  ADMIN_SESSION_COOKIE,
+  ADMIN_SESSION_MAX_AGE,
+  ADMIN_LOGIN_PATH,
+  ADMIN_HOME_PATH,
+  hasAdminSessionCookieValue,
+} from "@/lib/adminSessionConstants";
 
 type AdminSessionPayload = {
   role: "founder";
@@ -58,15 +64,15 @@ export function createAdminSessionToken(): string | null {
   };
   const body = Buffer.from(JSON.stringify(payload)).toString("base64url");
   const sig = createHmac("sha256", secret).update(body).digest("base64url");
-  return `${TOKEN_PREFIX}${body}.${sig}`;
+  return `${ADMIN_SESSION_TOKEN_PREFIX}${body}.${sig}`;
 }
 
 export function verifyAdminSessionToken(token: string | undefined | null): boolean {
-  if (!token?.startsWith(TOKEN_PREFIX)) return false;
+  if (!token?.startsWith(ADMIN_SESSION_TOKEN_PREFIX)) return false;
   const secret = getSessionSecret();
   if (!secret) return false;
 
-  const rest = token.slice(TOKEN_PREFIX.length);
+  const rest = token.slice(ADMIN_SESSION_TOKEN_PREFIX.length);
   const dot = rest.lastIndexOf(".");
   if (dot <= 0) return false;
 
@@ -90,11 +96,6 @@ export function verifyAdminSessionToken(token: string | undefined | null): boole
   } catch {
     return false;
   }
-}
-
-/** Cookie présent (contrôle léger middleware Edge — validation crypto côté serveur). */
-export function hasAdminSessionCookieValue(value: string | undefined): boolean {
-  return Boolean(value?.startsWith(TOKEN_PREFIX) && value.length > 20);
 }
 
 export async function getAdminSessionFromCookies(): Promise<boolean> {
