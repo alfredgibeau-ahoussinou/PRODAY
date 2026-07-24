@@ -19,7 +19,6 @@ import { PhysioAvailabilityScreen } from './PhysioAvailabilityScreen';
 import { VisioSessionScreen } from './VisioSessionScreen';
 import { PressableSpring, PushScreenTransition } from '../../components/motion';
 import { TAB_BAR_CONTENT_INSET } from '../../components/navigation/BottomTabBar';
-import { MEDICAL_THEME } from '../../content/medicalExperience';
 import { spacing, radius } from '../../theme/designTokens';
 import { formatAppointmentDay } from '../../utils/medicalSlots';
 import { canJoinVisioSession, requiresPhysioConfirmation } from '../../utils/visioMeetingLink';
@@ -114,7 +113,7 @@ export const PhysioAgendaScreen: React.FC = () => {
         <RefreshControl
           refreshing={refreshing}
           onRefresh={() => void onRefresh()}
-          tintColor={MEDICAL_THEME.primary}
+          tintColor={c.accent}
         />
       }
     >
@@ -172,7 +171,7 @@ export const PhysioAgendaScreen: React.FC = () => {
       </View>
 
       {loading ? (
-        <ActivityIndicator color={MEDICAL_THEME.primary} style={styles.loader} />
+        <ActivityIndicator color={c.accent} style={styles.loader} />
       ) : null}
 
       {!loading && grouped.length === 0 ? (
@@ -243,8 +242,8 @@ function createStyles(c: AppColors) {
       padding: spacing.lg,
       borderRadius: radius.lg,
       borderWidth: 1,
-      borderColor: MEDICAL_THEME.primaryBorder,
-      backgroundColor: MEDICAL_THEME.primaryBg,
+      borderColor: c.borderMedium,
+      backgroundColor: c.surface,
       marginBottom: spacing.lg,
       gap: spacing.sm,
     },
@@ -253,19 +252,19 @@ function createStyles(c: AppColors) {
     setupBtn: {
       alignSelf: 'flex-start',
       marginTop: spacing.xs,
-      backgroundColor: MEDICAL_THEME.primary,
+      backgroundColor: c.accent,
       borderRadius: radius.pill,
       paddingHorizontal: spacing.md,
       paddingVertical: spacing.sm,
     },
-    setupBtnText: { color: '#FFFFFF', fontWeight: '800', fontSize: 13 },
+    setupBtnText: { color: c.brandInverse, fontWeight: '800', fontSize: 13 },
     setupBtnSecondary: {
       alignSelf: 'flex-start',
       paddingHorizontal: spacing.md,
       paddingVertical: spacing.sm,
     },
     setupBtnSecondaryText: {
-      color: MEDICAL_THEME.primary,
+      color: c.accent,
       fontWeight: '700',
       fontSize: 13,
     },
@@ -283,8 +282,8 @@ function createStyles(c: AppColors) {
       backgroundColor: c.surface,
     },
     filterChipOn: {
-      backgroundColor: MEDICAL_THEME.primary,
-      borderColor: MEDICAL_THEME.primary,
+      backgroundColor: c.accent,
+      borderColor: c.accent,
     },
     filterText: { fontSize: 12, fontWeight: '700', color: c.textMuted },
     filterTextOn: { color: c.brandInverse },
@@ -293,7 +292,7 @@ function createStyles(c: AppColors) {
     dayLabel: {
       fontSize: 12,
       fontWeight: '900',
-      color: MEDICAL_THEME.primary,
+      color: c.accent,
       textTransform: 'uppercase',
       letterSpacing: 0.8,
       marginBottom: spacing.sm,

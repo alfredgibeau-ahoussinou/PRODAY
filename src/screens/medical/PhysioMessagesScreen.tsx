@@ -221,8 +221,8 @@ function createStyles(c: AppColors) {
       borderColor: c.border,
     },
     threadCare: {
-      borderColor: MEDICAL_THEME.primaryBorder,
-      backgroundColor: MEDICAL_THEME.primaryBg,
+      borderColor: c.borderMedium,
+      backgroundColor: c.brandSoft,
     },
     avatar: {
       width: 44,
@@ -233,7 +233,7 @@ function createStyles(c: AppColors) {
       alignItems: 'center',
       marginRight: spacing.md,
     },
-    avatarCare: { backgroundColor: MEDICAL_THEME.primary },
+    avatarCare: { backgroundColor: c.accent },
     avatarText: { fontSize: 18, fontWeight: '900', color: c.brandInverse },
     threadBody: { flex: 1 },
     threadTop: { flexDirection: 'row', justifyContent: 'space-between' },
@@ -242,8 +242,8 @@ function createStyles(c: AppColors) {
     careBadge: {
       fontSize: 9,
       fontWeight: '900',
-      color: MEDICAL_THEME.primary,
-      backgroundColor: MEDICAL_THEME.primarySoft,
+      color: c.accent,
+      backgroundColor: c.brandSoft,
       paddingHorizontal: 6,
       paddingVertical: 2,
       borderRadius: 4,

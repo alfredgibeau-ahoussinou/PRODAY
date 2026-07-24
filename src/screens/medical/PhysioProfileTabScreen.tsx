@@ -23,7 +23,6 @@ import { isPhysioBookingEnabled } from '../../services/medicalAppointments.servi
 import { pickProfileImage } from '../../utils/pickMedia';
 import { profileService } from '../../services/profile.service';
 import { TAB_BAR_CONTENT_INSET } from '../../components/navigation/BottomTabBar';
-import { MEDICAL_THEME } from '../../content/medicalExperience';
 import { spacing, radius } from '../../theme/designTokens';
 import { useSubscriptionOptional } from '../../context/SubscriptionContext';
 import { useMedicalStyles } from '../../components/medical/medicalStyles';
@@ -131,7 +130,7 @@ export const PhysioProfileTabScreen: React.FC = () => {
         <View style={styles.identityCard}>
           <TouchableOpacity style={styles.avatarWrap} onPress={() => void handleAvatarPick()}>
             {uploadingAvatar ? (
-              <ActivityIndicator color={MEDICAL_THEME.primary} />
+              <ActivityIndicator color={c.accent} />
             ) : (
               <View style={styles.avatar}>
                 <Text style={styles.avatarLetter}>
@@ -147,7 +146,7 @@ export const PhysioProfileTabScreen: React.FC = () => {
           <View style={styles.identityCopy}>
             <Text style={styles.name}>{profile.display_name}</Text>
             <View style={styles.specialtyRow}>
-              <Icon name="heart" size={14} color={MEDICAL_THEME.primary} variant="filled" />
+              <Icon name="heart" size={14} color={c.accent} variant="filled" />
               <Text style={styles.specialty}>{specialty}</Text>
             </View>
             {profile.city ? (
@@ -257,7 +256,7 @@ function createStyles(c: AppColors) {
       width: 72,
       height: 72,
       borderRadius: 36,
-      backgroundColor: MEDICAL_THEME.primary,
+      backgroundColor: c.accent,
       alignItems: 'center',
       justifyContent: 'center',
     },
@@ -269,7 +268,7 @@ function createStyles(c: AppColors) {
       width: 24,
       height: 24,
       borderRadius: 12,
-      backgroundColor: MEDICAL_THEME.primary,
+      backgroundColor: c.accent,
       alignItems: 'center',
       justifyContent: 'center',
       borderWidth: 2,
@@ -283,7 +282,7 @@ function createStyles(c: AppColors) {
       gap: spacing.xs,
       marginTop: spacing.xs,
     },
-    specialty: { fontSize: 13, fontWeight: '800', color: MEDICAL_THEME.primary },
+    specialty: { fontSize: 13, fontWeight: '800', color: c.accent },
     location: { fontSize: 12, color: c.textMuted, marginTop: 4, fontWeight: '600' },
     statusPill: {
       alignSelf: 'flex-start',
@@ -292,10 +291,10 @@ function createStyles(c: AppColors) {
       paddingVertical: 4,
       borderRadius: radius.pill,
     },
-    statusOn: { backgroundColor: MEDICAL_THEME.primarySoft },
+    statusOn: { backgroundColor: c.accent },
     statusOff: { backgroundColor: c.surfaceMuted },
     statusText: { fontSize: 10, fontWeight: '900', textTransform: 'uppercase' },
-    statusTextOn: { color: MEDICAL_THEME.primary },
+    statusTextOn: { color: c.brandInverse },
     statusTextOff: { color: c.textMuted },
     bioCard: {
       backgroundColor: c.surface,
