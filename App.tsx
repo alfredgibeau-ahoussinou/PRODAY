@@ -79,6 +79,7 @@ import { usePlatformFeatureFlags } from './src/hooks/usePlatformFeatureFlags';
 import { isMedicalPractitionerRole } from './src/content/medicalExperience';
 import type { UserRole } from './src/models/User';
 import type { ProductLineId } from './src/models/ProductLine';
+import { trafficService } from './src/services/traffic.service';
 
 void SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -110,6 +111,11 @@ export default function App() {
     }, 2500);
     return () => clearTimeout(failSafe);
   }, []);
+
+  useEffect(() => {
+    if (!fontsLoaded) return;
+    trafficService.recordAppOpenOnce();
+  }, [fontsLoaded]);
 
   if (!fontsLoaded) {
     return null;

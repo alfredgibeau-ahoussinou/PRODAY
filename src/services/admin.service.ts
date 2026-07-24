@@ -93,6 +93,19 @@ export interface PlatformDailySnapshot extends PlatformStats {
   recorded_at?: Date;
 }
 
+export interface TrafficTotals {
+  site_visits: number;
+  app_opens: number;
+  tracking_started_at?: Date | null;
+  updated_at?: Date | null;
+}
+
+export interface TrafficDailyRow {
+  day_key: string;
+  site_visits: number;
+  app_opens: number;
+}
+
 export interface AdminMessageThread {
   id: string;
   label: string;
@@ -888,6 +901,56 @@ export const adminService = {
           reelReports: Number(data.reelReports ?? 0),
           pendingPayments: Number(data.pendingPayments ?? 0),
           recorded_at: data.recorded_at?.toDate?.(),
+        };
+      });
+    } catch {
+      return [];
+    }
+  },
+
+  async getTrafficTotals(): Promise<TrafficTotals> {
+    const empty: TrafficTotals = {
+      site_visits: 0,
+      app_opens: 0,
+      tracking_started_at: null,
+      updated_at: null,
+    };
+    if (!isFirebaseConfigured()) return empty;
+    const database = getDb();
+    if (!database) return empty;
+    try {
+      const snap = await getDoc(doc(database, 'traffic_stats', 'totals'));
+      if (!snap.exists()) return empty;
+      const data = snap.data();
+      return {
+        site_visits: Number(data.site_visits ?? 0),
+        app_opens: Number(data.app_opens ?? 0),
+        tracking_started_at: data.tracking_started_at?.toDate?.() ?? null,
+        updated_at: data.updated_at?.toDate?.() ?? null,
+      };
+    } catch {
+      return empty;
+    }
+  },
+
+  async listTrafficDaily(maxDays = 30): Promise<TrafficDailyRow[]> {
+    if (!isFirebaseConfigured()) return [];
+    const database = getDb();
+    if (!database) return [];
+    try {
+      const snap = await getDocs(
+        query(
+          collection(database, 'traffic_stats_daily'),
+          orderBy('day_key', 'desc'),
+          limit(maxDays),
+        ),
+      );
+      return snap.docs.map((d) => {
+        const data = d.data();
+        return {
+          day_key: String(data.day_key ?? d.id),
+          site_visits: Number(data.site_visits ?? 0),
+          app_opens: Number(data.app_opens ?? 0),
         };
       });
     } catch {

@@ -17,6 +17,10 @@ import {
   createAdminDeleteBetaWaitlistEntryHandler,
 } from './betaWaitlistAdmin';
 import { createWebsiteBetaWaitlistAdminHandler } from './betaWaitlistWebsiteAdmin';
+import {
+  createRecordTrafficVisitHandler,
+  createWebsiteTrafficStatsAdminHandler,
+} from './trafficStats';
 import { createSubmitSponsorQuoteRequestHandler } from './sponsorQuoteRequest';
 import {
   createAdminSendSponsorQuoteHandler,
@@ -799,6 +803,16 @@ export const validateBetaAccess = functions
 export const websiteBetaWaitlistAdmin = functions
   .region('europe-west1')
   .https.onRequest(createWebsiteBetaWaitlistAdminHandler(db));
+
+/** Compteur de visites site / ouvertures app (public, rate-limité). */
+export const recordTrafficVisit = functions
+  .region('europe-west1')
+  .https.onRequest(createRecordTrafficVisitHandler(db));
+
+/** Lecture stats trafic pour l’admin site — secret partagé. */
+export const websiteTrafficStatsAdmin = functions
+  .region('europe-west1')
+  .https.onRequest(createWebsiteTrafficStatsAdminHandler(db));
 
 /** Approuve une inscription bêta et envoie l'email de bienvenue — admin uniquement. */
 export const adminApproveBetaAccess = functions

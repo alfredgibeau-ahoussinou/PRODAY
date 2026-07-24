@@ -897,6 +897,17 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    /** Compteurs de trafic site / app — écriture via Cloud Functions uniquement */
+    match /traffic_stats/{docId} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
+    match /traffic_stats_daily/{dayKey} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
     /** Journal d'audit actions admin */
     match /admin_audit_log/{entryId} {
       allow read: if isAdmin();

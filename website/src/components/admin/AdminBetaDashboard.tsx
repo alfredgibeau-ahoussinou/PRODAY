@@ -2,6 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { AdminNav } from "@/components/admin/AdminNav";
 import type {
   BetaAdminCounts,
   BetaAdminStatus,
@@ -124,12 +125,6 @@ export function AdminBetaDashboard({
     }
   }
 
-  async function logout() {
-    await fetch("/api/admin/logout", { method: "POST" });
-    router.replace("/admin/login");
-    router.refresh();
-  }
-
   return (
     <main className="relative mx-auto w-full max-w-5xl px-6 py-12">
       <header className="flex flex-col gap-4 border-b border-white/10 pb-8 sm:flex-row sm:items-end sm:justify-between">
@@ -145,7 +140,8 @@ export function AdminBetaDashboard({
             bienvenue. Réservé aux fondateurs.
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-col items-stretch gap-2 sm:items-end">
+          <AdminNav />
           <button
             type="button"
             disabled={isPending}
@@ -157,13 +153,6 @@ export function AdminBetaDashboard({
             className="rounded-full border border-white/15 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-white/80 transition hover:border-white/30 hover:text-white disabled:opacity-50"
           >
             {isPending ? "…" : "Actualiser"}
-          </button>
-          <button
-            type="button"
-            onClick={() => void logout()}
-            className="rounded-full border border-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-white/50 transition hover:border-white/25 hover:text-white/80"
-          >
-            Quitter
           </button>
         </div>
       </header>

@@ -36,6 +36,8 @@ export const ROUTES = {
   admin: "/admin",
   adminLogin: "/admin/login",
   adminBeta: "/admin/beta",
+  /** Tableau de suivi des visites site / app. */
+  adminVisites: "/admin/visites",
   about: "/a-propos",
   vision: "/vision",
   pricing: "/tarifs",

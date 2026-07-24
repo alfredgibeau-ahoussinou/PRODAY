@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHelpChatbot } from "@/components/SiteHelpChatbot";
 import { SiteNav } from "@/components/SiteNav";
+import { SiteVisitTracker } from "@/components/analytics/SiteVisitTracker";
 import { PoleContextBar } from "./PoleContextBar";
 import { PageTransition } from "./PageTransition";
 import { ScrollToHash } from "./ScrollToHash";
@@ -39,6 +40,7 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
   }
   return (
     <MotionConfig reducedMotion="user">
+      <SiteVisitTracker />
       <div
         className="page-dark relative min-h-screen bg-black text-white"
         style={

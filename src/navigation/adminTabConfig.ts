@@ -219,7 +219,7 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
     id: 'analytics',
     tab: 'analytics',
     label: 'Analytics',
-    description: 'Tendances et snapshots',
+    description: 'Visites site/app · tendances',
     icon: 'star-four-points',
     section: 'insights',
   },
@@ -271,7 +271,7 @@ const PAGE_META: Record<
   },
   analytics: {
     title: 'Analytics',
-    subtitle: 'Tendances · snapshots · répartition',
+    subtitle: 'Visites · tendances · snapshots',
   },
   beta: {
     title: 'Programme bêta',

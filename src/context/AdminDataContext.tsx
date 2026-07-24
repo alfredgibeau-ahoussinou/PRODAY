@@ -21,6 +21,8 @@ import {
   adminService,
   type PlatformStats,
   type PlatformDailySnapshot,
+  type TrafficTotals,
+  type TrafficDailyRow,
 } from '../services/admin.service';
 import { userNeedsAdminVerificationReview } from '../utils/adminUserVerification';
 import {
@@ -37,6 +39,8 @@ interface AdminDataContextValue {
   lastRefreshedAt: Date | null;
   stats: PlatformStats | null;
   dailySnapshots: PlatformDailySnapshot[];
+  trafficTotals: TrafficTotals;
+  trafficDaily: TrafficDailyRow[];
   workQueue: AdminWorkItem[];
   roleBreakdown: { role: User['role']; count: number }[];
   moderationScore: number;
@@ -67,6 +71,13 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({
   const [lastRefreshedAt, setLastRefreshedAt] = useState<Date | null>(null);
   const [stats, setStats] = useState<PlatformStats | null>(null);
   const [dailySnapshots, setDailySnapshots] = useState<PlatformDailySnapshot[]>([]);
+  const [trafficTotals, setTrafficTotals] = useState<TrafficTotals>({
+    site_visits: 0,
+    app_opens: 0,
+    tracking_started_at: null,
+    updated_at: null,
+  });
+  const [trafficDaily, setTrafficDaily] = useState<TrafficDailyRow[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [events, setEvents] = useState<TeamEvent[]>([]);
   const [matches, setMatches] = useState<FriendlyMatch[]>([]);
@@ -83,26 +94,47 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({
   const [userDocCounts, setUserDocCounts] = useState<Record<string, number>>({});
 
   const load = useCallback(async () => {
-    const [s, u, e, m, p, c, pay, apps, ann, so, fg, reels, reports, snapshots, quotes] =
-      await Promise.all([
-        adminService.getPlatformStats(),
-        adminService.listAllUsers(),
-        adminService.listAllTeamEvents(),
-        adminService.listAllFriendlyMatches(),
-        adminService.listAllRecruitmentPosts(),
-        adminService.listAllClubs(),
-        adminService.listAllPaymentRequests(),
-        adminService.listAllApplications(),
-        adminService.listAllClubAnnouncements(),
-        adminService.listAllSponsorOffers(),
-        adminService.listAllFundingGoals(),
-        adminService.listCommunityReels(),
-        adminService.listReelReports(),
-        adminService.listDailyPlatformSnapshots(14),
-        sponsorQuoteService.listForAdmin('pending', 30),
-      ]);
+    const [
+      s,
+      u,
+      e,
+      m,
+      p,
+      c,
+      pay,
+      apps,
+      ann,
+      so,
+      fg,
+      reels,
+      reports,
+      snapshots,
+      quotes,
+      trafficT,
+      trafficD,
+    ] = await Promise.all([
+      adminService.getPlatformStats(),
+      adminService.listAllUsers(),
+      adminService.listAllTeamEvents(),
+      adminService.listAllFriendlyMatches(),
+      adminService.listAllRecruitmentPosts(),
+      adminService.listAllClubs(),
+      adminService.listAllPaymentRequests(),
+      adminService.listAllApplications(),
+      adminService.listAllClubAnnouncements(),
+      adminService.listAllSponsorOffers(),
+      adminService.listAllFundingGoals(),
+      adminService.listCommunityReels(),
+      adminService.listReelReports(),
+      adminService.listDailyPlatformSnapshots(14),
+      sponsorQuoteService.listForAdmin('pending', 30),
+      adminService.getTrafficTotals(),
+      adminService.listTrafficDaily(30),
+    ]);
     setStats(s);
     setDailySnapshots(snapshots);
+    setTrafficTotals(trafficT);
+    setTrafficDaily(trafficD);
     setUsers(u);
     setEvents(e);
     setMatches(m);
@@ -172,6 +204,8 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({
       lastRefreshedAt,
       stats,
       dailySnapshots,
+      trafficTotals,
+      trafficDaily,
       workQueue,
       roleBreakdown,
       moderationScore,
@@ -197,6 +231,8 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({
       lastRefreshedAt,
       stats,
       dailySnapshots,
+      trafficTotals,
+      trafficDaily,
       workQueue,
       roleBreakdown,
       moderationScore,
