@@ -16,7 +16,7 @@ export default function RoadmapPage() {
         pathname={ROUTES.roadmap}
         kicker="ROADMAP"
         title="Transparence produit"
-        description="Mercato, Live Stats, Arena — et la suite. Voici où en est ProDay."
+        description="Mercato, Live Stats, Arena. Et la suite. Voici où en est ProDay."
         image="/images/football-pitch-01.jpg"
         dark
       />

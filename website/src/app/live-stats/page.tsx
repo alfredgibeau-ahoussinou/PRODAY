@@ -5,7 +5,7 @@ import { ROUTES } from "@/lib/routes";
 
 export const metadata: Metadata = {
   title: "Live Stats",
-  description: "Saisie en direct — buts, passes, cartons. Votre profil se met à jour.",
+  description: "Saisie en direct. Buts, passes, cartons. Votre profil se met à jour.",
 };
 
 export default function LiveStatsPage() {
@@ -15,7 +15,7 @@ export default function LiveStatsPage() {
         pathname={ROUTES.liveStats}
         kicker="LIVE STATS"
         title="Chaque action compte"
-        description="Saisissez le match en direct — stats saison et CV alimentés automatiquement."
+        description="Saisissez le match en direct. Stats saison et CV alimentés automatiquement."
         image="/images/football-match-01.jpg"
         accent="joueur"
         dark

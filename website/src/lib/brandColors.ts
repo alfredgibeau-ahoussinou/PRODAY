@@ -1,6 +1,6 @@
 /**
  * Couleurs extraites des logos officiels ProDay (PNG branding/).
- * Source de vérité pour le site — ne pas inventer de cyan hors logo.
+ * Source de vérité pour le site. ne pas inventer de cyan hors logo.
  */
 
 export const OFFICIAL_BRAND = {
@@ -13,7 +13,7 @@ export const OFFICIAL_BRAND = {
   white: "#FFFFFF",
 } as const;
 
-/** Accents par pôle — échantillons réels des pictos. */
+/** Accents par pôle. échantillons réels des pictos. */
 export const POLE_BRAND_COLORS = {
   amateur: {
     deep: "#841800",

@@ -6,7 +6,7 @@ import { ROUTES } from "@/lib/routes";
 
 /**
  * Téléconsultation pôle Santé : chaque praticien inscrit connecte son propre agenda (Cal.com / Whereby).
- * Pas de calendrier personnel fondateur — le RDV se fait via la fiche praticien (app / annuaire).
+ * Pas de calendrier personnel fondateur. le RDV se fait via la fiche praticien (app / annuaire).
  */
 export function SanteTeleconsultSection() {
   return (
@@ -45,7 +45,7 @@ export function SanteTeleconsultSection() {
             {
               icon: ShieldCheck,
               title: "Visio conforme",
-              body: "Cal Video / Daily.co ou Whereby — pas Zoom ni Google Meet dès que des données de santé sont échangées.",
+              body: "Cal Video / Daily.co ou Whereby. Pas Zoom ni Google Meet dès que des données de santé sont échangées.",
             },
           ].map(({ icon: Icon, title, body }) => (
             <div
@@ -72,13 +72,12 @@ export function SanteTeleconsultSection() {
             </li>
             <li className="flex gap-3">
               <span className="font-bold text-teal-300">2.</span>
-              Son agenda public est lié à sa fiche ProDay (téléconsultation Cal Video / Whereby —
-              pas Zoom).
+              Son agenda public est lié à sa fiche ProDay (téléconsultation Cal Video / Whereby. Pas Zoom).
             </li>
             <li className="flex gap-3">
               <span className="font-bold text-teal-300">3.</span>
               Le sportif choisit un pro dans l&apos;annuaire et réserve sur{" "}
-              <em className="not-italic text-white/85">ce Cal.com</em> — sans créer de compte Cal.com.
+              <em className="not-italic text-white/85">ce Cal.com</em>, sans créer de compte Cal.com.
             </li>
           </ol>
 
@@ -87,7 +86,7 @@ export function SanteTeleconsultSection() {
               href={ROUTES.betaWaitlist}
               className="inline-flex min-h-11 items-center rounded-full bg-teal-600 px-6 py-2.5 text-sm font-bold text-white transition hover:bg-teal-500"
             >
-              Je suis praticien — accès anticipé
+              Je suis praticien · rejoindre la bêta
             </Link>
             <Link
               href={ROUTES.demo}

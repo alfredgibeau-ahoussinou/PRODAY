@@ -4,7 +4,7 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-/** Layout admin — sans indexation ; chrome site masqué via SiteShell. */
+/** Layout admin. sans indexation ; chrome site masqué via SiteShell. */
 export default function AdminLayout({
   children,
 }: {

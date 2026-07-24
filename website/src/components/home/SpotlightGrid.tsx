@@ -22,7 +22,7 @@ export function SpotlightGrid() {
       id="decouvrir"
       kicker="SIGNATURE"
       title="Les fondations de la plateforme"
-      description="Reels, communauté, partenaires, famille et compétition — structurés autour de sept pôles distincts."
+      description="Reels, communauté, partenaires, famille et compétition. Structurés autour de sept pôles distincts."
       className="bg-black"
     >
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

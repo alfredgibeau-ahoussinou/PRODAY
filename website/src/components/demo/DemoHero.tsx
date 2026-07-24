@@ -54,7 +54,7 @@ export function DemoHero({ pole }: DemoHeroProps) {
           transition={{ delay: 0.22, duration: 0.5 }}
           className="mt-4 max-w-md text-base leading-relaxed text-white/65 sm:text-lg"
         >
-          Choisissez un pôle, parcourez les onglets — navigation illustrative, sans compte
+          Choisissez un pôle, parcourez les onglets. navigation illustrative, sans compte
           connecté.
         </motion.p>
 
@@ -75,7 +75,7 @@ export function DemoHero({ pole }: DemoHeroProps) {
             href={ROUTES.betaWaitlist}
             className="inline-flex min-h-12 items-center rounded-full border border-white/25 px-7 py-3 text-sm font-semibold text-white transition hover:border-white/50 hover:bg-white/5"
           >
-            Accès anticipé
+            Rejoindre la bêta
           </Link>
         </motion.div>
       </div>

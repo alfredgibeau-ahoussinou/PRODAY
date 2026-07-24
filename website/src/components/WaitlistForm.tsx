@@ -78,7 +78,7 @@ export function WaitlistForm({ fullPage, compact, minimal, initialRole }: Waitli
         <div className="mx-auto max-w-4xl px-4 sm:px-6">
           <div className="mb-8 text-center">
             <p className="font-signature text-2xl italic text-[var(--proday-accent)]">
-              Accès anticipé
+              Bêta
             </p>
             <h2 className="font-display mt-2 text-3xl font-extrabold uppercase tracking-[-0.03em] text-white">
               Liste d&apos;attente
@@ -89,12 +89,12 @@ export function WaitlistForm({ fullPage, compact, minimal, initialRole }: Waitli
           </div>
           {state === "success" ? (
             <div className="rounded-3xl border border-[var(--proday-accent)]/25 bg-[var(--proday-accent-muted)] p-6 text-white">
-              <p className="font-semibold">Merci — inscription enregistrée.</p>
+              <p className="font-semibold">Merci. Inscription enregistrée.</p>
               <p className="mt-1 text-sm text-white/75">
                 {email} · {BETA_ROLE_LABELS[role]}
                 {waitlistStatus === "approved"
-                  ? " — consultez votre boîte mail pour l'accès bêta."
-                  : " — l'équipe ProDay vous contactera après validation."}
+                  ? ". Consultez votre boîte mail pour l'accès bêta."
+                  : ". L'équipe ProDay vous contactera après validation."}
               </p>
             </div>
           ) : (
@@ -173,15 +173,15 @@ export function WaitlistForm({ fullPage, compact, minimal, initialRole }: Waitli
             ) : (
               <ul className="max-w-lg space-y-2 text-sm text-white/80">
                 <li className="flex gap-2">
-                  <span className="text-white/40">—</span>
+                  <span className="text-white/40">·</span>
                   {BETA_PITCH.dailyUpdates}
                 </li>
                 <li className="flex gap-2">
-                  <span className="text-white/40">—</span>
+                  <span className="text-white/40">·</span>
                   {BETA_PITCH.launch}
                 </li>
                 <li className="flex gap-2">
-                  <span className="text-white/40">—</span>
+                  <span className="text-white/40">·</span>
                   Validation par l&apos;équipe ProDay, puis email d&apos;accès à
                   l&apos;espace bêta
                 </li>
@@ -197,19 +197,19 @@ export function WaitlistForm({ fullPage, compact, minimal, initialRole }: Waitli
             >
               <p className="text-lg font-semibold">Merci !</p>
               <p className="mt-2 text-white/80">
-                Inscription confirmée pour <strong>{email}</strong> — profil{" "}
-                {BETA_ROLE_LABELS[role]}.
+                Inscription confirmée pour <strong>{email}</strong> (
+                {BETA_ROLE_LABELS[role]}).
                 {waitlistStatus === "approved" ? (
                   <>
                     {" "}
-                    Votre accès est déjà validé — consultez votre boîte mail
+                    Votre accès est déjà validé. Consultez votre boîte mail
                     (et les spams) pour le lien vers l&apos;espace bêta.
                   </>
                 ) : (
                   <>
                     {" "}
                     Votre demande est enregistrée. L&apos;équipe ProDay vous
-                    contactera par email après validation de votre inscription.
+                    contactera par email après validation.
                   </>
                 )}
               </p>

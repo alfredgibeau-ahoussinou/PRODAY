@@ -71,21 +71,21 @@ const SECTION_COPY: Record<
   },
   amateur: {
     journeyTitle: "Deux chemins, une coque",
-    journeySubtitle: "Joueur ou coach — choisis ton entrée, le reste suit le week-end.",
+    journeySubtitle: "Joueur ou coach. Choisis ton entrée. Le reste suit le week-end.",
     pulseTitle: "Ta visibilité de saison",
-    pulseSubtitle: "Un score sur l'Accueil Équipe — pas un onglet de plus.",
+    pulseSubtitle: "Un score sur l'Accueil Équipe. Pas un onglet de plus.",
     verificationTitle: "Coachs vérifiés",
-    verificationSubtitle: "Diplômes et licences — badge puis validation admin.",
-    pricingSubtitle: "Joueur Plus et Coach Pro — démarrage gratuit.",
+    verificationSubtitle: "Diplômes et licences. Badge puis validation admin.",
+    pricingSubtitle: "Joueur Plus et Coach Pro. Démarrage gratuit.",
   },
   supporter: {
     journeyTitle: "Entrer dans la tribune",
-    journeySubtitle: "Quatre gestes — et le live s'ouvre le jour du match.",
+    journeySubtitle: "Quatre gestes. Le live s'ouvre le jour du match.",
     pulseTitle: "Visibilité",
     pulseSubtitle: "",
     verificationTitle: "Vérification",
     verificationSubtitle: "",
-    pricingSubtitle: "Aucun abonnement. Aucun paywall. Jamais.",
+    pricingSubtitle: "Aucun abonnement. Aucun paywall.",
   },
   pro: {
     journeyTitle: "Votre parcours",
@@ -102,8 +102,8 @@ const SECTION_COPY: Record<
     pulseTitle: "Visibilité scouting",
     pulseSubtitle: "Ce que voient les clubs quand ils scannent ton profil.",
     verificationTitle: "Confiance club & agent",
-    verificationSubtitle: "Justificatifs et badge — pour rassurer le staff en face.",
-    pricingSubtitle: "Formule Pro Joueur — démarrage gratuit.",
+    verificationSubtitle: "Justificatifs et badge. Pour rassurer le staff en face.",
+    pricingSubtitle: "Formule Pro Joueur. Démarrage gratuit.",
   },
   pro_club: {
     journeyTitle: "Installer la structure",
@@ -111,17 +111,17 @@ const SECTION_COPY: Record<
     pulseTitle: "Visibilité",
     pulseSubtitle: "",
     verificationTitle: "Structure vérifiée",
-    verificationSubtitle: "Mandat et identité club — avant le recrutement ouvert.",
-    pricingSubtitle: "Une formule structure — multi-équipes inclus.",
+    verificationSubtitle: "Mandat et identité club. Avant le recrutement ouvert.",
+    pricingSubtitle: "Une formule structure. Multi-équipes inclus.",
   },
   pro_staff: {
     journeyTitle: "Choisir ton métier",
-    journeySubtitle: "Quatre parcours — un réseau, une messagerie tracée.",
+    journeySubtitle: "Quatre parcours. Un réseau. Une messagerie tracée.",
     pulseTitle: "Visibilité",
     pulseSubtitle: "",
     verificationTitle: "Métiers vérifiés",
-    verificationSubtitle: "Diplôme, licence ou mandat — le badge avant le pipeline.",
-    pricingSubtitle: "Tarifs selon le métier — démarrage gratuit.",
+    verificationSubtitle: "Diplôme, licence ou mandat. Le badge avant le pipeline.",
+    pricingSubtitle: "Tarifs selon le métier. Démarrage gratuit.",
   },
 };
 
@@ -173,7 +173,7 @@ export function UniversePage({ universe }: UniversePageProps) {
           dark
         />
 
-        {/* Highlights — bandeau éditorial */}
+        {/* Highlights. bandeau éditorial */}
         <section
           className="border-b border-white/10"
           style={{
@@ -429,7 +429,7 @@ export function UniversePage({ universe }: UniversePageProps) {
           <div className="mx-auto max-w-6xl px-4 sm:px-6">
             <div className="mb-8 flex items-end justify-between gap-4">
               <div>
-                <p className="font-signature text-xl italic text-white/50">Écosystème</p>
+                <p className="font-signature text-xl italic text-white/50">Autres pôles</p>
                 <h2 className="font-display mt-1 text-2xl font-extrabold uppercase tracking-[-0.03em] text-white">
                   Les autres pôles
                 </h2>

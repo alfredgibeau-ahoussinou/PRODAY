@@ -37,7 +37,7 @@ export const CAROUSEL_POLES: PoleDefinition[] = [
     title: "Foot amateur",
     subtitle: "Joueurs & coachs · District · Régional",
     description:
-      "Le dimanche sans le chaos WhatsApp — Mercato local, convocations, effectif coach. Genre H/F à l'inscription.",
+      "Le dimanche sans le chaos WhatsApp. Mercato local, convocations, effectif coach. Genre H/F à l'inscription.",
     href: ROUTES.amateur,
     pricingHash: "amateur",
     logo: "/branding/logo-amateur-picto.png",
@@ -49,7 +49,7 @@ export const CAROUSEL_POLES: PoleDefinition[] = [
     title: "Fans & communauté",
     subtitle: "Live · Suivis · Débats · 0 €",
     description:
-      "Tribune numérique 100 % gratuite — scores live, suivis illimités, débats et moments.",
+      "Tribune 100 % gratuite. Scores live, suivis illimités, débats et moments.",
     href: ROUTES.supporter,
     pricingHash: "supporter",
     logo: "/branding/logo-supporter-picto.png",
@@ -61,7 +61,7 @@ export const CAROUSEL_POLES: PoleDefinition[] = [
     title: "Praticiens & staff médical",
     subtitle: "Kiné · Ostéo · Médecin · Prépa · Mental · Nutrition · Podologue",
     description:
-      "Soigner près du terrain — 7 métiers, annuaire vérifié, agenda app et téléconsultation HDS.",
+      "Soigner près du terrain. 7 métiers, annuaire vérifié, agenda et téléconsultation HDS.",
     href: ROUTES.sante,
     pricingHash: "sante",
     logo: "/branding/logo-sante-picto.png",
@@ -73,7 +73,7 @@ export const CAROUSEL_POLES: PoleDefinition[] = [
     title: "Carrière pro",
     subtitle: "Contrat · Essais · Scouting",
     description:
-      "Ta carrière, pas un CV Word — portfolio scouting, essais, mandat agent et stats validées coach.",
+      "Ta carrière, pas un CV Word. Portfolio scouting, essais, mandat agent et stats validées coach.",
     href: ROUTES.proJoueur,
     pricingHash: "pro_joueur",
     logo: "/branding/logo-man-picto.png",
@@ -85,7 +85,7 @@ export const CAROUSEL_POLES: PoleDefinition[] = [
     title: "Structures & équipes",
     subtitle: "U13 → Seniors · Une structure",
     description:
-      "Toute la structure en un regard — catégories, recrutement, calendrier et vitrine publique.",
+      "Toute la structure en un regard. Catégories, recrutement, calendrier et vitrine publique.",
     href: ROUTES.proClub,
     pricingHash: "pro_club",
     logo: "/branding/logo-pro-picto.png",
@@ -97,7 +97,7 @@ export const CAROUSEL_POLES: PoleDefinition[] = [
     title: "Métiers du foot pro",
     subtitle: "Agent · Recruteur · Coach · Arena",
     description:
-      "Ton métier, ta coque — Mercato Pro, mandats, shortlists et tournois Arena.",
+      "Ton métier, ta coque. Mercato Pro, mandats, shortlists et tournois Arena.",
     href: ROUTES.proStaff,
     pricingHash: "pro_staff",
     logo: "/branding/logo-pro-picto.png",
@@ -111,7 +111,7 @@ export const SPONSOR_POLE: PoleDefinition = {
   title: "Marques & sponsors",
   subtitle: "Visibilité · ROI · Terrain",
   description:
-    "Votre marque sur le vrai terrain — campagnes ciblées, KPIs lisibles et vitrine vérifiée.",
+    "Votre marque sur le vrai terrain. Campagnes ciblées, KPIs lisibles et vitrine vérifiée.",
   href: ROUTES.sponsor,
   pricingHash: "sponsor",
   logo: "/branding/logo-sponsor-picto.png",
@@ -132,7 +132,7 @@ export const POLE_NAV_POLE_IDS: Record<string, PoleId> = {
   [ROUTES.partenaires]: "sponsor",
 };
 
-/** Rayures nav — hex logos officiels. */
+/** Rayures nav. Hex logos officiels. */
 export const POLE_NAV_STRIPE: Record<PoleId, string> = {
   amateur: "bg-[#F03000]",
   supporter: "bg-[#3C00F0]",
@@ -143,7 +143,7 @@ export const POLE_NAV_STRIPE: Record<PoleId, string> = {
   sponsor: "bg-[#D4AF37]",
 };
 
-/** Hex logo — usage JS (hero, inline styles). */
+/** Hex logo. Usage JS (hero, inline styles). */
 export const POLE_BRAND_HEX: Record<PoleId, string> = {
   amateur: "#F03000",
   supporter: "#3C00F0",

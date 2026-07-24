@@ -10,17 +10,17 @@ export type DemoScreenMock = {
 const SHARED: Partial<Record<MainTabId, DemoScreenMock>> = {
   shop: {
     title: "Shop",
-    subtitle: "Équipement et merch ProDay — catalogue lié à votre pôle.",
+    subtitle: "Équipement et merch ProDay. Catalogue lié à votre pôle.",
     focus: [
-      { title: "Pack entraînement", body: "Maillot, short et accessoires — stock illustrative." },
+      { title: "Pack entraînement", body: "Maillot, short et accessoires (démo)." },
       { title: "Offres membres", body: "Réductions liées à votre plan d’abonnement (démo)." },
     ],
   },
   messages: {
     title: "Messages",
-    subtitle: "Conversations entre profils du même écosystème.",
+    subtitle: "Conversations entre profils du même réseau.",
     focus: [
-      { title: "Fils ouverts", body: "Messagerie illustrative — aucun envoi réel." },
+      { title: "Fils ouverts", body: "Messagerie illustrative. Aucun envoi réel." },
     ],
   },
 };
@@ -31,7 +31,7 @@ const BY_POLE: Record<DemoPoleId, Partial<Record<MainTabId, DemoScreenMock>>> = 
       title: "Équipe",
       subtitle: "Votre semaine : convocations, entraînements, déplacements.",
       focus: [
-        { title: "Sam. 15h — Stade Nord", body: "Convocation confirmée · amical loisir." },
+        { title: "Sam. 15h. Stade Nord", body: "Convocation confirmée · amical loisir." },
         { title: "Covoiturage", body: "2 places restantes pour le match." },
       ],
     },
@@ -43,7 +43,7 @@ const BY_POLE: Record<DemoPoleId, Partial<Record<MainTabId, DemoScreenMock>>> = 
     recrutement: {
       title: "Club",
       subtitle: "Mercato local et annonces de votre secteur.",
-      focus: [{ title: "Attaquant · Régional", body: "FC Nord — Paris 75." }],
+      focus: [{ title: "Attaquant · Régional", body: "FC Nord. Paris 75." }],
     },
     matchs: {
       title: "Matchs",
@@ -52,7 +52,7 @@ const BY_POLE: Record<DemoPoleId, Partial<Record<MainTabId, DemoScreenMock>>> = 
     },
     reels: {
       title: "Reels",
-      subtitle: "Moments d’équipe — format vertical.",
+      subtitle: "Moments d’équipe. Format vertical.",
       focus: [{ title: "Highlight entraînement", body: "Séquence illustrative pour la démo." }],
     },
     sante: {
@@ -63,21 +63,21 @@ const BY_POLE: Record<DemoPoleId, Partial<Record<MainTabId, DemoScreenMock>>> = 
     feed: {
       title: "Fil",
       subtitle: "Actualités du réseau amateur.",
-      focus: [{ title: "Question hebdo", body: "Objectif de saison — réponses illustratives." }],
+      focus: [{ title: "Question hebdo", body: "Objectif de saison. Réponses illustratives." }],
     },
     profil: {
       title: "Moi",
       subtitle: "Profil, Visibilité et CV.",
-      focus: [{ title: "Visibilité 72", body: "Score de profil — indiquez stats et bio." }],
+      focus: [{ title: "Visibilité 72", body: "Score de profil. Indiquez stats et bio." }],
     },
   },
   supporter: {
     home: {
       title: "Tribune",
-      subtitle: "Matchs près de chez vous et dans le monde — 100 % gratuit.",
+      subtitle: "Matchs près de chez vous et dans le monde. 100 % gratuit.",
       focus: [
         { title: "Ce soir · Live", body: "Deux rencontres suivies dans votre fil." },
-        { title: "Clubs favoris", body: "Suivis illimités — aucune donnée réelle." },
+        { title: "Clubs favoris", body: "Suivis illimités. Aucune donnée réelle." },
       ],
     },
     matchs: {
@@ -98,7 +98,7 @@ const BY_POLE: Record<DemoPoleId, Partial<Record<MainTabId, DemoScreenMock>>> = 
     reels: {
       title: "Moments",
       subtitle: "Réels et highlights community.",
-      focus: [{ title: "But du week-end", body: "Clip vertical — démo." }],
+      focus: [{ title: "But du week-end", body: "Clip vertical. Démo." }],
     },
     profil: {
       title: "Compte",
@@ -109,7 +109,7 @@ const BY_POLE: Record<DemoPoleId, Partial<Record<MainTabId, DemoScreenMock>>> = 
   sante: {
     home: {
       title: "Accueil",
-      subtitle: "Cockpit cabinet — RDV du jour et demandes.",
+      subtitle: "Cockpit cabinet. RDV du jour et demandes.",
       focus: [
         { title: "5 RDV aujourd’hui", body: "Agenda lié à votre Cal.com." },
         { title: "2 demandes", body: "Sportifs en attente de créneau." },
@@ -118,17 +118,17 @@ const BY_POLE: Record<DemoPoleId, Partial<Record<MainTabId, DemoScreenMock>>> = 
     matchs: {
       title: "Agenda",
       subtitle: "Créneaux et séances de suivi.",
-      focus: [{ title: "14h — Rééducation", body: "Patient illustratif · cabinet." }],
+      focus: [{ title: "14h. Rééducation", body: "Patient illustratif · cabinet." }],
     },
     feed: {
       title: "Demandes",
       subtitle: "Sollicitations de sportifs et clubs.",
-      focus: [{ title: "Bilan post-match", body: "Demande reçue — démo." }],
+      focus: [{ title: "Bilan post-match", body: "Demande reçue. Démo." }],
     },
     reels: {
       title: "Vidéos",
       subtitle: "Contenus éducatifs (prévention, étirements).",
-      focus: [{ title: "Conseil récupération", body: "Clip public — pas la téléconsultation." }],
+      focus: [{ title: "Conseil récupération", body: "Clip public. Pas la téléconsultation." }],
     },
     messages: {
       title: "Messages",
@@ -138,7 +138,7 @@ const BY_POLE: Record<DemoPoleId, Partial<Record<MainTabId, DemoScreenMock>>> = 
     profil: {
       title: "Cabinet",
       subtitle: "Spécialité, zone et lien Cal.com.",
-      focus: [{ title: "Cal.com connecté", body: "Username praticien — obligatoire à l’inscription." }],
+      focus: [{ title: "Cal.com connecté", body: "Username praticien. Obligatoire à l’inscription." }],
     },
   },
   pro_joueur: {
@@ -146,14 +146,14 @@ const BY_POLE: Record<DemoPoleId, Partial<Record<MainTabId, DemoScreenMock>>> = 
       title: "Carrière",
       subtitle: "Visibilité, saison et opportunités en un coup d’œil.",
       focus: [
-        { title: "Visibilité 78", body: "Score ProDay — profil + stats + activité." },
+        { title: "Visibilité 78", body: "Score ProDay. Profil + stats + activité." },
         { title: "3 opportunités", body: "Annonces Mercato ciblées." },
       ],
     },
     recrutement: {
       title: "Opportunités",
-      subtitle: "Mercato pro — clubs et essais.",
-      focus: [{ title: "Essai · National", body: "Club illustratif — candidature." }],
+      subtitle: "Mercato pro. Clubs et essais.",
+      focus: [{ title: "Essai · National", body: "Club illustratif. Candidature." }],
     },
     reels: {
       title: "Réels",
@@ -174,7 +174,7 @@ const BY_POLE: Record<DemoPoleId, Partial<Record<MainTabId, DemoScreenMock>>> = 
   pro_club: {
     home: {
       title: "Structure",
-      subtitle: "Pilotage club — recrutement et calendrier.",
+      subtitle: "Pilotage club. Recrutement et calendrier.",
       focus: [
         { title: "Pipeline candidatures", body: "12 dossiers en revue (illustratif)." },
         { title: "Matchs du week-end", body: "Deux rencontres à confirmer." },
@@ -183,7 +183,7 @@ const BY_POLE: Record<DemoPoleId, Partial<Record<MainTabId, DemoScreenMock>>> = 
     recrutement: {
       title: "Recrutement",
       subtitle: "Annonces et shortlists.",
-      focus: [{ title: "Poste milieu", body: "Annonce ouverte — démo." }],
+      focus: [{ title: "Poste milieu", body: "Annonce ouverte. Démo." }],
     },
     matchs: {
       title: "Calendrier",
@@ -218,7 +218,7 @@ const BY_POLE: Record<DemoPoleId, Partial<Record<MainTabId, DemoScreenMock>>> = 
     recrutement: {
       title: "Mercato",
       subtitle: "Repérage et annonces ciblées.",
-      focus: [{ title: "Profil latéral", body: "Alert scouting — démo." }],
+      focus: [{ title: "Profil latéral", body: "Alert scouting. Démo." }],
     },
     covoiturage: {
       title: "Déplacements",
@@ -228,7 +228,7 @@ const BY_POLE: Record<DemoPoleId, Partial<Record<MainTabId, DemoScreenMock>>> = 
     profil: {
       title: "Profil",
       subtitle: "Badge staff et vérifications.",
-      focus: [{ title: "Compte vérifié", body: "Licence / diplôme — statut illustratif." }],
+      focus: [{ title: "Compte vérifié", body: "Licence / diplôme. Statut illustratif." }],
     },
   },
 };
@@ -241,6 +241,6 @@ export function screenForDemoPole(pole: DemoPoleId, tab: MainTabId): DemoScreenM
   return {
     title: tab,
     subtitle: "Écran illustratif ProDay.",
-    focus: [{ title: "Démo", body: "Contenu fictif — aucune donnée réelle." }],
+    focus: [{ title: "Démo", body: "Contenu fictif. Aucune donnée réelle." }],
   };
 }

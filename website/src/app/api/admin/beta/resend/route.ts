@@ -12,7 +12,7 @@ function jsonResponse(body: Record<string, unknown>, init?: ResponseInit) {
   return response;
 }
 
-/** Renvoie l'email de bienvenue bêta — session admin requise. */
+/** Renvoie l'email de bienvenue bêta. session admin requise. */
 export async function POST(request: Request) {
   if (!isSameOriginBrowserRequest(request)) {
     return jsonResponse({ error: "Origine non autorisée" }, { status: 403 });

@@ -49,7 +49,7 @@ export function DownloadSection() {
               </span>
             </button>
             <PremiumButton href={ROUTES.betaWaitlist} className="w-full text-center">
-              Accès anticipé
+              Rejoindre la bêta
             </PremiumButton>
           </div>
         </motion.div>

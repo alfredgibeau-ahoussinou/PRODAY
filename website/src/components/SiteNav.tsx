@@ -305,7 +305,7 @@ export function SiteNav() {
                 href={ROUTES.betaWaitlist}
                 className="inline-flex items-center gap-1.5 rounded-full bg-white px-4 py-2.5 text-[11px] font-bold uppercase tracking-[0.14em] text-black transition hover:bg-[var(--proday-accent)] hover:text-white"
               >
-                Accès anticipé
+                Rejoindre la bêta
                 <ArrowUpRight size={13} />
               </Link>
             </div>
@@ -390,7 +390,7 @@ export function SiteNav() {
                 className="mt-4 flex min-h-12 items-center justify-center rounded-full bg-white text-sm font-bold uppercase tracking-[0.14em] text-black"
                 onClick={close}
               >
-                Accès anticipé
+                Rejoindre la bêta
               </Link>
             </motion.div>
           </>

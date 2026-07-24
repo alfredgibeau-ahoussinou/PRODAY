@@ -6,7 +6,7 @@ import { ROUTES } from "@/lib/routes";
 export const metadata: Metadata = {
   title: "Parcours par rôle",
   description:
-    "Joueur, recruteur, pôle santé, organisateur ou parent — découvrez votre chemin dans ProDay, par pôle.",
+    "Joueur, recruteur, santé, organisateur ou parent. Votre chemin dans ProDay, par pôle.",
 };
 
 export default function JourneysPage() {
@@ -16,7 +16,7 @@ export default function JourneysPage() {
         pathname={ROUTES.journeys}
         kicker="PARCOURS"
         title="Chaque rôle, un chemin clair"
-        description="Des parcours guidés par pôle — de l'inscription au CV PDF, au tournoi Arena ou à l'espace partenaires."
+        description="Des parcours par pôle. De l'inscription au CV PDF, au tournoi Arena ou aux partenaires."
         image="/images/football-team-01.jpg"
         dark
       />

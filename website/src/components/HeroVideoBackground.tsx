@@ -12,7 +12,7 @@ type HeroVideoBackgroundProps = {
 };
 
 /**
- * Fond vidéo full-bleed — muted, loop, playsInline.
+ * Fond vidéo full-bleed. muted, loop, playsInline.
  * Fallback poster si autoplay bloqué ou erreur.
  */
 export function HeroVideoBackground({
@@ -31,7 +31,7 @@ export function HeroVideoBackground({
     el.playsInline = true;
     const play = () => {
       void el.play().catch(() => {
-        /* autoplay policy — poster reste visible */
+        /* autoplay policy. poster reste visible */
       });
     };
     play();

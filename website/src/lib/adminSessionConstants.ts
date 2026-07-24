@@ -7,7 +7,7 @@ export const ADMIN_HOME_PATH = "/admin/beta";
 
 const TOKEN_PREFIX = "adm1.";
 
-/** Cookie présent (contrôle léger middleware Edge — validation crypto côté serveur). */
+/** Cookie présent (contrôle léger middleware Edge. validation crypto côté serveur). */
 export function hasAdminSessionCookieValue(value: string | undefined): boolean {
   return Boolean(value?.startsWith(TOKEN_PREFIX) && value.length > 20);
 }

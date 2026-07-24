@@ -6,7 +6,7 @@ import { ROUTES } from "@/lib/routes";
 export const metadata: Metadata = {
   title: "Politique de confidentialité",
   description:
-    "Politique de confidentialité ProDay — données collectées, RGPD, droits des utilisateurs et contact.",
+    "Politique de confidentialité ProDay. Données, RGPD, droits et contact.",
 };
 
 export default function PrivacyPage() {

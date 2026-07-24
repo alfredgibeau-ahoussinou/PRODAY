@@ -12,29 +12,29 @@ import { ROUTES } from "@/lib/routes";
 export const metadata: Metadata = {
   title: "Pro Day Santé",
   description:
-    "Kinés, coach mental et nutrition — annuaire près des clubs, agenda, téléconsultation HDS et vidéos éducatives.",
+    "Kinés, coach mental et nutrition. Annuaire près des clubs, agenda et téléconsultation HDS.",
 };
 
 const SANTE_PILLARS = [
   {
     num: "01",
     title: "Annuaire vérifié",
-    body: "Kinés, coachs mental, nutritionnistes — visibles des joueurs et clubs de votre zone.",
+    body: "Kinés, coachs mental, nutritionnistes. Visibles des joueurs et clubs de votre zone.",
   },
   {
     num: "02",
     title: "Agenda dans l'app",
-    body: "Prise de rendez-vous native, rappels et suivi — sans multiplier les outils.",
+    body: "Prise de rendez-vous, rappels et suivi. Sans multiplier les outils.",
   },
   {
     num: "03",
     title: "Téléconsultation HDS",
-    body: "Visio via partenaire conforme (Cal.com / Whereby) — distinct des vidéos éducatives.",
+    body: "Visio via partenaire conforme (Cal.com / Whereby). Distinct des vidéos éducatives.",
   },
   {
     num: "04",
     title: "Contenus éducatifs",
-    body: "Prévention, étirements, récupération — l'onglet Vidéos pour le public, pas la consultation.",
+    body: "Prévention, étirements, récupération. Pour le public. Pas pour remplacer une consultation.",
   },
 ] as const;
 
@@ -47,7 +47,7 @@ export default function SantePage() {
       <PageHeader
         pathname={ROUTES.sante}
         kicker={SANTE_BRAND.tagline}
-        title="Soigner le foot. Près du terrain."
+        title="Soigner près du terrain."
         description={SANTE_BRAND.mission}
         image="/images/football-health-01.jpg"
         logo={SANTE_BRAND.logo}
@@ -78,8 +78,8 @@ export default function SantePage() {
 
       <PremiumSection
         kicker="PÔLE SANTÉ"
-        title="Praticiens vérifiés, visibles près des clubs"
-        description="Un pôle dédié — pas un onglet du Pro Staff. Agenda, téléconsultation sécurisée et vidéos éducatives pour accompagner joueurs et structures."
+        title="Praticiens vérifiés près des clubs"
+        description="Un pôle dédié. Pas un onglet du Pro Staff. Agenda, téléconsultation et vidéos éducatives."
         pole="sante"
         bordered={false}
       >
@@ -88,7 +88,7 @@ export default function SantePage() {
             href={`${ROUTES.betaWaitlist}?role=physio`}
             className="!bg-[#00CCB4] !text-black hover:!bg-[#00e0c4]"
           >
-            Accès anticipé Santé
+            Rejoindre la bêta Santé
           </PremiumButton>
           <PremiumButton href="#teleconsultation" variant="outline">
             Téléconsultation
@@ -101,28 +101,6 @@ export default function SantePage() {
 
       <SanteTeleconsultSection />
 
-      <PremiumSection
-        kicker="VIDÉOS ÉDUCATIVES"
-        title="Conseils santé en images"
-        description="L'onglet Vidéos sert aux contenus publics (prévention, étirements, récupération) — distinct de la téléconsultation médicale."
-        pole="sante"
-      >
-        <ul className="mx-auto max-w-xl space-y-3 text-sm text-white/70">
-          <li className="flex gap-2">
-            <span className="text-[#00CCB4]">→</span>
-            Contenu éducatif visible dans l&apos;app (onglet Vidéos)
-          </li>
-          <li className="flex gap-2">
-            <span className="text-[#00CCB4]">→</span>
-            Visibilité auprès des joueurs et clubs à proximité
-          </li>
-          <li className="flex gap-2">
-            <span className="text-[#00CCB4]">→</span>
-            Complète l&apos;agenda RDV — sans remplacer une visio HDS
-          </li>
-        </ul>
-      </PremiumSection>
-
       {physioPlan && (
         <PoleFullBleed className={`${styles.section} py-20`}>
           <div className="mx-auto max-w-3xl px-4 sm:px-6">
@@ -131,7 +109,7 @@ export default function SantePage() {
               Pôle santé Pro
             </h2>
             <p className={`mt-2 text-sm ${styles.textMuted}`}>
-              Formule découverte gratuite, formule Pro pour la visibilité prioritaire.
+              Formule découverte gratuite. Formule Pro pour la visibilité prioritaire.
             </p>
             <div className="mt-10">
               <PlanDetailCard plan={physioPlan} yearly={false} styles={styles} />
@@ -139,22 +117,6 @@ export default function SantePage() {
           </div>
         </PoleFullBleed>
       )}
-
-      <PremiumSection
-        kicker="REJOINDRE"
-        title="Prêt à rejoindre l'annuaire ?"
-        description="Liste d'attente praticiens — priorité sur le déploiement agenda et téléconsultation."
-        pole="sante"
-      >
-        <div className="text-center">
-          <PremiumButton
-            href={`${ROUTES.betaWaitlist}?role=physio`}
-            className="!bg-[#00CCB4] !text-black hover:!bg-[#00e0c4]"
-          >
-            Accès anticipé
-          </PremiumButton>
-        </div>
-      </PremiumSection>
     </>
   );
 }

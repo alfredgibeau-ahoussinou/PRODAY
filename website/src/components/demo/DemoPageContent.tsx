@@ -74,7 +74,7 @@ export function DemoPageContent({ pole }: DemoPageContentProps) {
         >
           Navigation{" "}
           <span className="font-semibold text-white/80">{DEMO_POLE_SHORT_LABEL[pole]}</span>
-          {" — "}
+          {" · "}
           touchez les onglets
         </motion.p>
         <DemoPhoneStage pole={pole} />
@@ -90,7 +90,7 @@ export function DemoPageContent({ pole }: DemoPageContentProps) {
             href={ROUTES.betaWaitlist}
             className={`inline-flex min-h-12 items-center rounded-full px-8 py-3 text-sm font-bold text-white transition hover:opacity-90 ${theme.pricingAccent}`}
           >
-            Accès anticipé
+            Rejoindre la bêta
           </Link>
         </div>
         <p className="mt-4 text-sm text-white/40">

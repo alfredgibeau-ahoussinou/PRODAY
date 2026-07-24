@@ -17,7 +17,7 @@ export default function PulsePage() {
         pathname={ROUTES.pulse}
         kicker={PULSE_DISPLAY_KICKER}
         title="Votre score de visibilité"
-        description="Indicateur exclusif ProDay — plus il monte, plus vous êtes visible des clubs et coachs."
+        description="Plus le score monte, plus vous êtes visible des clubs et coachs."
         image="/showcase/classic-exp-pulse.jpg"
         accent="joueur"
         dark

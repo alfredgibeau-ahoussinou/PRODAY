@@ -8,7 +8,7 @@ type SignedBetaPayload = {
   exp: number;
 };
 
-/** Jeton signé HMAC (fallback sans Firestore — envoi EmailJS direct). */
+/** Jeton signé HMAC (fallback sans Firestore. envoi EmailJS direct). */
 export function createSignedBetaAccessToken(
   payload: { email: string; role: string },
   secret: string,

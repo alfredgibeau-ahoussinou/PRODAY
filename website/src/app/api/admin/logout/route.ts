@@ -13,7 +13,7 @@ function jsonResponse(body: Record<string, unknown>, init?: ResponseInit) {
   return response;
 }
 
-/** Déconnexion admin — efface le cookie de session. */
+/** Déconnexion admin. efface le cookie de session. */
 export async function POST(request: Request) {
   if (!isSameOriginBrowserRequest(request)) {
     return jsonResponse({ error: "Origine non autorisée" }, { status: 403 });

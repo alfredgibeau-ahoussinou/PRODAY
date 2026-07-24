@@ -10,7 +10,7 @@ import {
 export const metadata: Metadata = {
   title: "Convention partenariat sponsor",
   description:
-    "Modèle de convention de partenariat sponsor ProDay — visibilité clubs et joueurs.",
+    "Modèle de convention de partenariat sponsor ProDay. Visibilité clubs et joueurs.",
 };
 
 const SPONSOR_DOC = {

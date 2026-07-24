@@ -28,7 +28,7 @@ const CV_COPY: Record<
     name: "Alex Martin",
     role: "Milieu offensif · Régional · Paris",
     footer:
-      "Profil polyvalent, vision de jeu et volume physique. Alimenté par Live Stats ProDay — chaque match met à jour ce document.",
+      "Profil polyvalent, vision de jeu et volume physique. Alimenté par Live Stats ProDay. Chaque match met à jour ce document.",
     image: "/showcase/classic-profile.jpg",
   },
   woman: {
@@ -36,7 +36,7 @@ const CV_COPY: Record<
     name: "Léa Dupont",
     role: "Milieu · Régional F · Lyon",
     footer:
-      "Profil complet pour le Mercato F — stats saison, galerie et export PDF. Chaque match enrichit votre CV joueuse.",
+      "Profil complet pour le Mercato F. Stats saison, galerie et export PDF. Chaque match enrichit votre CV joueuse.",
     image: "/showcase/woman/woman-profile.jpg",
   },
   amateur: {
@@ -44,7 +44,7 @@ const CV_COPY: Record<
     name: "Marc Lefèvre",
     role: "Coach · Régional · Toulouse",
     footer:
-      "Effectif, convocations et Mercato local — profil coach amateur vérifié pour le district.",
+      "Effectif, convocations et Mercato local. Profil coach amateur vérifié pour le district.",
     image: "/showcase/classic-staff.jpg",
   },
   supporter: {
@@ -52,7 +52,7 @@ const CV_COPY: Record<
     name: "Julie Moreau",
     role: "Supporter · FC Lyon · Lyon",
     footer:
-      "Clubs favoris, matchs en direct et fil communautaire — votre tribune numérique ProDay.",
+      "Clubs favoris, matchs en direct et fil communautaire. Votre tribune numérique ProDay.",
     image: "/images/football-supporter-01.jpg",
   },
   pro: {
@@ -60,7 +60,7 @@ const CV_COPY: Record<
     name: "Thomas Bernard",
     role: "Coach · National · Bordeaux",
     footer:
-      "Parcours staff et certifications — vitrine pro pour le réseau vérifié ProDay.",
+      "Parcours staff et certifications. Vitrine pro pour le réseau vérifié ProDay.",
     image: "/showcase/classic-staff.jpg",
   },
   sante: {

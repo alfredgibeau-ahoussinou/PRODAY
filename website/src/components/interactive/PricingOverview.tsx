@@ -30,7 +30,7 @@ export function PricingOverview() {
         Tous les tarifs ProDay
       </h2>
       <p className="mt-3 max-w-2xl text-white/55">
-        Compte gratuit pour chaque rôle — upgrade Pro au tarif mensuel de base, ou annuel
+        Compte gratuit pour chaque rôle. upgrade Pro au tarif mensuel de base, ou annuel
         avec 20 % de remise. Partenaires : trois formules (dont gratuite et devis).
       </p>
 

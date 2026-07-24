@@ -53,12 +53,12 @@ export function BetaHubContent({ session }: BetaHubContentProps) {
         <SectionKicker>Votre espace beta-testeur</SectionKicker>
         <p className="mt-4 max-w-3xl text-sm leading-relaxed text-white/65">
           Merci de faire partie des premiers à tester ProDay. Explorez les sept pôles, téléchargez
-          l&apos;APK Android depuis l&apos;onglet Installer et partagez vos retours — chaque message
+          l&apos;APK Android depuis l&apos;onglet Installer et partagez vos retours. Chaque message
           est lu par l&apos;équipe produit avant le lancement public.
         </p>
         <div className="mt-6 grid gap-4 sm:grid-cols-3">
           {[
-            { icon: Sparkles, label: "Accès anticipé", detail: "Builds iOS et Android en avant-première" },
+            { icon: Sparkles, label: "Avant le public", detail: "Builds iOS et Android en avant-première" },
             { icon: BookOpen, label: "Guides dédiés", detail: "Installation, programme et FAQ centralisés" },
             { icon: MessageSquare, label: "Votre voix compte", detail: "Retours pris en compte avant le lancement" },
           ].map(({ icon: Icon, label, detail }) => (

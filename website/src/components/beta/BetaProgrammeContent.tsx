@@ -31,7 +31,7 @@ export function BetaProgrammeContent({ session }: BetaProgrammeContentProps) {
           <div>
             <p className="text-sm font-semibold text-white">APK Android disponible</p>
             <p className="mt-1 text-sm text-white/55">
-              Téléchargez ProDay sur votre téléphone Android — guide pas à pas sur la page Installer.
+              Téléchargez ProDay sur votre téléphone Android. Guide pas à pas sur la page Installer.
             </p>
           </div>
           <Link
@@ -46,14 +46,14 @@ export function BetaProgrammeContent({ session }: BetaProgrammeContentProps) {
       <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-8">
         <SectionKicker>Qu&apos;est-ce que la bêta ProDay ?</SectionKicker>
         <p className="mt-4 max-w-3xl text-sm leading-relaxed text-white/65">
-          ProDay réunit Mercato, matchs, tournois, Visibilité et CV joueur dans une seule app — pour le
+          ProDay réunit Mercato, matchs, tournois, Visibilité et CV joueur dans une seule app. Pour le
           foot amateur et semi-pro. En tant que beta-testeur, vous accédez en avant-première aux
-          builds iOS (TestFlight) et Android (APK), explorez les sept pôles et nous aidez à
+          builds iOS (TestFlight) et Android (APK), explorez les sept pôles et aidez-nous à
           prioriser les fonctionnalités avant l&apos;ouverture au grand public.
         </p>
         <div className="mt-6 grid gap-4 sm:grid-cols-3">
           {[
-            { icon: Sparkles, label: "Accès anticipé", detail: "App mobile avant le lancement public" },
+            { icon: Sparkles, label: "Avant le public", detail: "App mobile avant le lancement public" },
             { icon: Smartphone, label: "Six pôles", detail: "Amateur, Supporter, Santé et Pro" },
             { icon: Sparkles, label: "Impact direct", detail: "Vos retours orientent la roadmap" },
           ].map(({ icon: Icon, label, detail }) => (
@@ -74,10 +74,10 @@ export function BetaProgrammeContent({ session }: BetaProgrammeContentProps) {
         <p className="mt-4 max-w-3xl text-sm leading-relaxed text-white/65">
           La bêta se déroule en plusieurs étapes. Vous êtes actuellement à l&apos;étape {currentStep}
           {currentStep === 2 && BETA_APK_AVAILABLE
-            ? " — l'APK Android est prêt : téléchargez-le depuis l'onglet Installer."
+            ? ". L'APK Android est prêt : téléchargez-le depuis l'onglet Installer."
             : currentStep === 2
-              ? " — rendez-vous sur l'onglet Installer pour l'APK Android dès qu'il est publié."
-              : ` — les builds mobiles arrivent par vagues selon votre profil (${session.roleLabel}).`}
+              ? ". Rendez-vous sur l'onglet Installer pour l'APK Android dès qu'il est publié."
+              : `. Les builds mobiles arrivent par vagues selon votre profil (${session.roleLabel}).`}
         </p>
         <ol className="mt-6 space-y-5">
           {timeline.map(({ step, title, description, done }) => (
@@ -104,7 +104,7 @@ export function BetaProgrammeContent({ session }: BetaProgrammeContentProps) {
         <SectionKicker>Les sept pôles à explorer</SectionKicker>
         <p className="mt-4 max-w-3xl text-sm leading-relaxed text-white/65">
           Chaque pôle propose une expérience dédiée. Votre profil ({session.roleLabel}) oriente
-          nos priorités — explorez aussi les autres univers pour un regard transversal.
+          nos priorités. Explorez aussi les autres univers pour un regard transversal.
         </p>
         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {POLES.map((pole) => (

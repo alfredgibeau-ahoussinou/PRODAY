@@ -23,9 +23,9 @@ export function BetaSessionBar({ session }: { session: BetaAccessSession }) {
           </span>
           <span className="mx-2 text-white/25">·</span>
           <span className="font-semibold text-white">{session.email}</span>
-          <span className="text-white/40"> — {session.roleLabel}</span>
+          <span className="text-white/40">. {session.roleLabel}</span>
         </p>
-        <p className="text-xs text-white/35">Lien personnel — ne pas partager</p>
+        <p className="text-xs text-white/35">Lien personnel. Ne pas partager</p>
       </div>
     </div>
   );

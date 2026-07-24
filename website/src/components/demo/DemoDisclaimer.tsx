@@ -2,7 +2,7 @@ type DemoDisclaimerProps = {
   className?: string;
 };
 
-/** Bandeau — écrans et données de démo, pas l’app connectée. */
+/** Bandeau. écrans et données de démo, pas l’app connectée. */
 export function DemoDisclaimer({ className = "" }: DemoDisclaimerProps) {
   return (
     <div
@@ -10,7 +10,7 @@ export function DemoDisclaimer({ className = "" }: DemoDisclaimerProps) {
       role="note"
     >
       <span className="font-semibold text-amber-200">Démo interactive</span>
-      {" — "}
+      {" · "}
       Navigation et contenus illustratifs. Aucune donnée réelle ni compte connecté.
     </div>
   );

@@ -13,7 +13,7 @@ export function UniversePromoGrid() {
     <Section
       kicker="UNIVERS"
       title="Cinq lignes, une app"
-      description="Man, Woman, Amateur, Supporter ou Pro — choisissez votre écosystème à l'inscription."
+      description="Man, Woman, Amateur, Supporter ou Pro. Vous choisissez à l'inscription."
       className="bg-[#030303]"
     >
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">

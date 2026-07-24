@@ -18,9 +18,9 @@ type HelpEntry = {
 const COMMON_ENTRIES: HelpEntry[] = [
   {
     id: "pulse-accueil",
-    question: "Visibilité ou Accueil — quelle différence ?",
+    question: "Visibilité ou Accueil. Quelle différence ?",
     answer:
-      "Accueil est l'onglet principal de la barre. La Visibilité est votre score affiché dans l'Accueil — ce n'est pas un onglet séparé.",
+      "Accueil est l'onglet principal de la barre. La Visibilité est votre score affiché dans l'Accueil. Ce n'est pas un onglet séparé.",
     href: ROUTES.pulse,
     hrefLabel: "Voir Visibilité ProDay",
   },
@@ -44,7 +44,7 @@ const COMMON_ENTRIES: HelpEntry[] = [
     id: "sante-video",
     question: "Y a-t-il des vidéos dans le pôle Santé ?",
     answer:
-      "Oui — onglet Vidéos pour du contenu éducatif. La téléconsultation : le praticien a son Cal.com à l’inscription ; le sportif réserve sans compte Cal.com.",
+      "Oui. Onglet Vidéos pour du contenu éducatif. La téléconsultation : le praticien a son Cal.com à l’inscription ; le sportif réserve sans compte Cal.com.",
     href: `${ROUTES.sante}#teleconsultation`,
     hrefLabel: "Téléconsultation Santé",
   },
@@ -52,7 +52,7 @@ const COMMON_ENTRIES: HelpEntry[] = [
     id: "sante-hds",
     question: "Qui reçoit les rendez-vous santé ?",
     answer:
-      "Les professionnels du pôle Santé (chacun son Cal.com). Les joueurs / sportifs n’ont pas besoin de compte Cal.com — ils réservent comme invités. Visio conforme (Cal.com / Whereby), pas Zoom.",
+      "Les professionnels du pôle Santé (chacun son Cal.com). Les joueurs / sportifs n’ont pas besoin de compte Cal.com. Ils réservent comme invités. Visio conforme (Cal.com / Whereby), pas Zoom.",
     href: `${ROUTES.sante}#teleconsultation`,
     hrefLabel: "Voir le parcours",
   },
@@ -60,14 +60,14 @@ const COMMON_ENTRIES: HelpEntry[] = [
     id: "demo",
     question: "Comment tester l'app ?",
     answer:
-      "La démo interactive reprend la navigation réelle des pôles (Amateur, Supporter, Santé, Pro Joueur, Club, Staff, Sponsor) — téléphone et onglets, sans compte.",
+      "La démo interactive reprend la navigation réelle des pôles (Amateur, Supporter, Santé, Pro Joueur, Club, Staff, Sponsor). Téléphone et onglets, sans compte.",
     href: ROUTES.demo,
     hrefLabel: "Ouvrir la démo",
   },
   {
     id: "beta",
     question: "Comment rejoindre la bêta ?",
-    answer: "Inscrivez-vous sur la liste d'attente — validation par l'équipe, puis accès à l'espace bêta par email.",
+    answer: "Inscrivez-vous sur la liste d'attente. Validation par l'équipe, puis accès à l'espace bêta par email.",
     href: ROUTES.betaWaitlist,
     hrefLabel: "Liste d'attente",
   },
@@ -80,7 +80,7 @@ function entriesForPath(pathname: string, pricingHref: string): HelpEntry[] {
       id: "pole-amateur",
       question: "Que regroupe le pôle Amateur ?",
       answer:
-        "Équipe, Club, Matchs, Covoiturage, Reels, Shop et Santé — plus le module Sponsors depuis l'Accueil.",
+        "Équipe, Club, Matchs, Covoiturage, Reels, Shop et Santé. Plus le module Sponsors depuis l'Accueil.",
       href: ROUTES.amateur,
       hrefLabel: "Pôle Amateur",
     });
@@ -90,7 +90,7 @@ function entriesForPath(pathname: string, pricingHref: string): HelpEntry[] {
       id: "pole-pro",
       question: "Que regroupe Pro Joueur ?",
       answer:
-        "Carrière (avec Visibilité), Opportunités, Réels, Groupe, Shop et Profil — Sponsors via le module Accueil.",
+        "Carrière (avec Visibilité), Opportunités, Réels, Groupe, Shop et Profil. Sponsors via le module Accueil.",
       href: ROUTES.proJoueur,
       hrefLabel: "Pro Joueur",
     });
@@ -99,7 +99,7 @@ function entriesForPath(pathname: string, pricingHref: string): HelpEntry[] {
     poleHint.push({
       id: "pole-sante",
       question: "Quels onglets pour un praticien ?",
-      answer: "Accueil, Agenda, Demandes, Vidéos, Messages et Cabinet — sans Shop ni Mercato (parcours praticien).",
+      answer: "Accueil, Agenda, Demandes, Vidéos, Messages et Cabinet. Sans Shop ni Mercato (parcours praticien).",
       href: ROUTES.sante,
       hrefLabel: "Pôle Santé",
     });
@@ -108,7 +108,7 @@ function entriesForPath(pathname: string, pricingHref: string): HelpEntry[] {
     poleHint.push({
       id: "pole-supporter",
       question: "Que regroupe le pôle Supporter ?",
-      answer: "Tribune, Matchs, Suivis, Débats, Moments (vidéos), Shop et Compte — 100 % gratuit.",
+      answer: "Tribune, Matchs, Suivis, Débats, Moments (vidéos), Shop et Compte. 100 % gratuit.",
       href: ROUTES.supporter,
       hrefLabel: "Pôle Supporter",
     });

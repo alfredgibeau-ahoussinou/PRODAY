@@ -33,7 +33,7 @@ const SECONDARY_PRIORITY: MainTabId[] = [
   "shop",
 ];
 
-/** Rôles par défaut pour la démo web — alignés sur `getVisibleMainTabs`. */
+/** Rôles par défaut pour la démo web. alignés sur `getVisibleMainTabs`. */
 function defaultRoleForUniverse(universe: ProductLineWeb): "player" | "coach" | "physio" {
   if (universe === "sante") return "physio";
   if (universe === "pro" || universe === "amateur") return "coach";
@@ -52,7 +52,7 @@ function injectCommunityFeedTab(tabs: MainTabId[], role: "player" | "coach" | "p
 }
 
 /**
- * Onglets visibles selon pôle — même logique que l'app (`poleExperience.getVisibleMainTabs`)
+ * Onglets visibles selon pôle. même logique que l'app (`poleExperience.getVisibleMainTabs`)
  * sans profil connecté (pas d'onglet Famille sur la démo).
  */
 export function getVisibleMainTabsForWeb(universe: ProductLineWeb): MainTabId[] {
@@ -86,7 +86,7 @@ export function getVisibleMainTabsForWeb(universe: ProductLineWeb): MainTabId[] 
   return injectCommunityFeedTab(tabs, role);
 }
 
-/** Shells app réels — un set d’onglets par pôle démo. */
+/** Shells app réels. un set d’onglets par pôle démo. */
 export function getVisibleMainTabsForDemoPole(pole: DemoPoleId): MainTabId[] {
   switch (pole) {
     case "amateur":
@@ -165,7 +165,7 @@ const DEFAULT_LABELS: Record<MainTabId, string> = {
   profil: "Profil",
 };
 
-/** Labels courts — shells pôle (démo). */
+/** Labels courts. shells pôle (démo). */
 export function getTabLabelForDemoPole(tab: MainTabId, pole: DemoPoleId): string {
   if (pole === "sante") {
     switch (tab) {
@@ -219,7 +219,7 @@ export function getTabLabelForDemoPole(tab: MainTabId, pole: DemoPoleId): string
   return DEFAULT_LABELS[tab];
 }
 
-/** Labels courts — alignés sur `getTabShortLabel` pour la démo. */
+/** Labels courts. alignés sur `getTabShortLabel` pour la démo. */
 export function getTabLabelForWeb(tab: MainTabId, universe: ProductLineWeb): string {
   if (universe === "sante") {
     switch (tab) {

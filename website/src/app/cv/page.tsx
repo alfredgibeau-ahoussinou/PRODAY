@@ -6,7 +6,7 @@ import { ROUTES } from "@/lib/routes";
 
 export const metadata: Metadata = {
   title: "CV foot en ligne",
-  description: "CV foot vivant exportable en PDF — alimenté par Live Stats.",
+  description: "CV foot vivant exportable en PDF. Alimenté par Live Stats.",
 };
 
 function parseUniverseParam(value: string | undefined): ProductLineWeb {

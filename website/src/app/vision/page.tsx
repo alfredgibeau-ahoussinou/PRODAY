@@ -11,7 +11,7 @@ import { ROUTES } from "@/lib/routes";
 
 export const metadata: Metadata = {
   title: "Vision",
-  description: `${BRAND.name} — ${PRODUCT_VISION.intro}`,
+  description: `${BRAND.name}. ${PRODUCT_VISION.intro}`,
 };
 
 export default function VisionPage() {
@@ -31,7 +31,7 @@ export default function VisionPage() {
         <div>
           <p className="font-display text-xl font-bold text-white">Transparence produit</p>
           <p className="mt-2 max-w-xl text-sm text-white/55">
-            La roadmap détaille le calendrier. Les démos du site sont illustratives — pas de
+            La roadmap détaille le calendrier. Les démos du site sont illustratives. Pas de
             données live ni de métriques d&apos;audience inventées.
           </p>
         </div>

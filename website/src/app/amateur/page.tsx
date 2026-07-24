@@ -4,7 +4,7 @@ import { UniversePage } from "@/components/universe/UniversePage";
 export const metadata: Metadata = {
   title: "Pro Day Amateur",
   description:
-    "Joueurs et coachs amateur — Mercato local, matchs, effectif et convocations.",
+    "Joueurs et coachs amateur. Mercato local, matchs, effectif et convocations.",
 };
 
 export default function AmateurPage() {

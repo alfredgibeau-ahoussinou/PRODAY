@@ -5,7 +5,7 @@ export const SPONSOR_BRAND = {
   shortName: "Sponsor",
   tagline: "Visibilité · ROI · Terrain",
   mission:
-    "Les marques rencontrent clubs, joueurs et organisateurs actifs — campagnes ciblées, KPIs lisibles, sans intermédiaire opaque.",
+    "Les marques rencontrent clubs, joueurs et organisateurs actifs. Campagnes ciblées. KPIs lisibles. Sans intermédiaire opaque.",
   accent: "#D4AF37",
   accentDark: "#92700C",
   logo: "/branding/logo-sponsor-picto.png",
@@ -13,9 +13,9 @@ export const SPONSOR_BRAND = {
 
 export const SPONSOR_HERO = {
   kicker: "PÔLE SPONSOR",
-  title: "Votre marque. Le vrai terrain.",
+  title: "Votre marque sur le terrain.",
   description:
-    "Touchez clubs, joueurs et organisateurs actifs sur ProDay. Visibilité mesurée, offres géolocalisées et tableau de bord — un espace pensé pour les décideurs marketing.",
+    "Clubs, joueurs et organisateurs actifs sur ProDay. Visibilité mesurée, offres géolocalisées et tableau de bord. Pour les équipes marketing.",
   image: "/showcase/classic-exp-sponsors.jpg",
 } as const;
 
@@ -24,7 +24,7 @@ export const SPONSOR_CAPABILITIES = [
     id: "offers",
     title: "Offres & financement",
     description:
-      "Publiez équipement, visibilité ou soutien financier aux campagnes clubs — jusqu'à des offres illimitées en National Pro.",
+      "Publiez équipement, visibilité ou soutien financier aux campagnes clubs. Offres illimitées en National Pro.",
     metric: "1 à ∞ offres",
   },
   {
@@ -38,7 +38,7 @@ export const SPONSOR_CAPABILITIES = [
     id: "dashboard",
     title: "Tableau de bord ROI",
     description:
-      "Impressions, clics, leads et vues profil — suivez la performance de chaque offre depuis l'app mobile.",
+      "Impressions, clics, leads et vues profil. Suivez chaque offre depuis l'app.",
     metric: "KPIs en temps réel",
   },
   {
@@ -150,7 +150,7 @@ export const SPONSOR_FAQ = [
   },
   {
     q: "Puis-je tester avant de m'engager ?",
-    a: "Oui — la formule Découverte (0 €) permet de créer un profil sponsor vérifié, une offre active et 10 messages clubs / mois pour évaluer la plateforme sans engagement.",
+    a: "Oui. La formule Découverte (0 €) donne un profil vérifié, une offre active et 10 messages clubs / mois. Pour tester sans engagement.",
   },
   {
     q: "Comment fonctionne le push géolocalisé ?",

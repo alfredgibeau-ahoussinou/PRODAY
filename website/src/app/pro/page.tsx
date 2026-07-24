@@ -10,7 +10,7 @@ import { CAROUSEL_POLES, POLE_IMAGES, POLE_STYLES, poleSectionHref } from "@/lib
 import { ROUTES } from "@/lib/routes";
 
 export const metadata: Metadata = {
-  title: "Pro Day Pro — Hub",
+  title: "Pro Day Pro",
   description:
     "Trois pôles pro : Pro Joueur (carrière), Pro Club (structure) et Pro Staff (métiers).",
 };
@@ -39,7 +39,7 @@ export default function ProHubPage() {
     <>
       <PageHeader
         pathname={ROUTES.pro}
-        kicker="Trois coques · un écosystème"
+        kicker="Trois coques"
         title="Le pro, découpé pour de vrai."
         description="Fini l'univers Pro fourre-tout. Joueur, club et staff ont chacun leur navigation, leurs modules et leurs tarifs."
         image="/images/football-pro-01.jpg"
@@ -53,7 +53,7 @@ export default function ProHubPage() {
         id="poles"
         kicker="CHOISIR SON PÔLE"
         title="Où est ta place ?"
-        description="Trois portes d'entrée — même écosystème ProDay, trois métiers distincts."
+        description="Trois portes d'entrée. Même app ProDay. Trois métiers distincts."
         pole="pro_staff"
         bordered={false}
       >
@@ -101,7 +101,7 @@ export default function ProHubPage() {
       <PremiumSection
         kicker="MARQUES"
         title="Et les partenaires ?"
-        description="Les marques ont leur propre espace — campagnes, ROI et vitrine sponsor, hors des trois coques sportives."
+        description="Les marques ont leur propre espace. Campagnes, ROI et vitrine sponsor. Hors des trois coques sportives."
         pole="pro_staff"
       >
         <PremiumButton href={`${ROUTES.sponsor}#formules`} variant="outline">

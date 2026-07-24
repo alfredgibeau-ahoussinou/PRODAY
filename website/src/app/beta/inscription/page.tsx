@@ -9,7 +9,7 @@ import { ROUTES } from "@/lib/routes";
 export const metadata: Metadata = {
   title: "Liste d'attente",
   description:
-    "Inscrivez-vous sur la liste d'attente ProDay — suivi du produit et accès prioritaire au lancement.",
+    "Inscris-toi sur la liste d'attente ProDay. Suivi du produit et accès prioritaire au lancement.",
 };
 
 function parseRoleParam(value: string | undefined): BetaRoleId | undefined {
@@ -42,7 +42,7 @@ export default async function BetaWaitlistPage({
       <PageHeader
         pathname={ROUTES.betaWaitlist}
         kicker="BÊTA"
-        title="Accédez à ProDay en priorité"
+        title="Rejoindre la bêta ProDay"
         description={BETA_PITCH.summary}
         dark
       />

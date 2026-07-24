@@ -4,7 +4,6 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import { BRAND } from "@/lib/content";
-import { ROUTES } from "@/lib/routes";
 import { POLES, POLE_BRAND_HEX, type PoleId } from "@/lib/poles";
 import { PremiumButton } from "@/components/ui/PremiumButton";
 import { Kicker } from "@/components/ui/Kicker";
@@ -82,9 +81,9 @@ export function HeroSection() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.38 }}
-          className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-white/65 sm:text-lg"
+          className="mx-auto mt-5 max-w-lg text-base leading-relaxed text-white/65 sm:text-lg"
         >
-          {BRAND.mission}
+          Une app pour le foot amateur et semi-pro. Sept pôles. On dit clairement ce qui est déjà là.
         </motion.p>
 
         <motion.div
@@ -97,7 +96,7 @@ export function HeroSection() {
             href="#inscription"
             className="!bg-white !text-black hover:!bg-[var(--proday-accent)] hover:!text-white"
           >
-            Accès anticipé
+            Rejoindre la bêta
           </PremiumButton>
           <PremiumButton href="#decouvrir" variant="outline">
             Trouver mon pôle
@@ -105,7 +104,7 @@ export function HeroSection() {
         </motion.div>
       </div>
 
-      {/* Bandeau 7 pôles — pleine largeur, centré, desktop + mobile */}
+      {/* Bandeau 7 pôles. pleine largeur, centré, desktop + mobile */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

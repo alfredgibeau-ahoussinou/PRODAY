@@ -29,7 +29,7 @@ export const metadata: Metadata = {
     process.env.NEXT_PUBLIC_SITE_URL ?? "https://proday75.fr",
   ),
   title: {
-    default: "ProDay — Connecter · Progresser · Réussir",
+    default: "ProDay · Connecter · Progresser · Réussir",
     template: "%s · ProDay",
   },
   description:
@@ -57,7 +57,7 @@ export const metadata: Metadata = {
     images: ["/branding/logo-proday-official.png"],
   },
   other: {
-    copyright: "© ProDay 2026 — Tous droits réservés",
+    copyright: "© ProDay 2026 · Tous droits réservés",
   },
 };
 

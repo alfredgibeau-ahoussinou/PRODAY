@@ -8,7 +8,7 @@ import { ROUTES } from "@/lib/routes";
 export const metadata: Metadata = {
   title: "Confiance ProDay",
   description:
-    "Vérification coach et agent, badges, contrôle parental — transparence pour clubs et familles.",
+    "Vérification coach et agent, badges, contrôle parental. Pour clubs et familles.",
 };
 
 export default function TrustPage() {
@@ -25,8 +25,8 @@ export default function TrustPage() {
       <VerificationTimeline fullPage id="verification" />
       <PremiumSection
         kicker="REJOINDRE"
-        title="Prêt pour un écosystème de confiance ?"
-        description="Inscrivez-vous sur la liste d'attente — vérification staff et espace famille dès l'ouverture."
+        title="Prêt pour un cadre de confiance ?"
+        description="Inscrivez-vous sur la liste d'attente. Vérification staff et espace famille dès l'ouverture."
         bordered
       >
         <div className="text-center">

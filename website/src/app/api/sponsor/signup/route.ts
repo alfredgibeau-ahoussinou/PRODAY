@@ -148,7 +148,7 @@ async function notifyPartnersTeam(payload: SponsorSignupPayload): Promise<void> 
         to_email: SPONSOR_PARTNER_CONTACT_EMAIL,
         user_email: payload.email,
         reply_to: payload.email,
-        subject: `[ProDay Sponsor] ${payload.companyName} — ${payload.sector}`,
+        subject: `[ProDay Sponsor] ${payload.companyName} · ${payload.sector}`,
         message: summary,
         company_name: payload.companyName,
         contact_name: payload.contactName,

@@ -109,7 +109,7 @@ export function AdminBetaDashboard({
         if (data.emailSent) {
           setMessage("Email de bienvenue envoyé.");
         } else if (data.emailError) {
-          setMessage(`Action OK — email non envoyé : ${data.emailError}`);
+          setMessage(`Action OK. email non envoyé : ${data.emailError}`);
         } else {
           setMessage("Action enregistrée.");
         }

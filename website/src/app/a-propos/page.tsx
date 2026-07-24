@@ -10,7 +10,7 @@ import { ROUTES } from "@/lib/routes";
 
 export const metadata: Metadata = {
   title: "À propos",
-  description: `Mission ProDay : ${BRAND.tagline} — ${PRODUCT_VISION.intro}`,
+  description: `Mission ProDay : ${BRAND.tagline}. ${PRODUCT_VISION.intro}`,
 };
 
 export default function AboutPage() {

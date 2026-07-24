@@ -22,7 +22,7 @@ function jsonResponse(body: Record<string, unknown>, init?: ResponseInit) {
   return response;
 }
 
-/** Connexion admin fondateurs — minicode (PIN) → cookie httpOnly 7 jours. */
+/** Connexion admin fondateurs. minicode (PIN) → cookie httpOnly 7 jours. */
 export async function POST(request: Request) {
   if (!isSameOriginBrowserRequest(request)) {
     return jsonResponse({ error: "Origine non autorisée" }, { status: 403 });

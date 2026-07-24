@@ -28,7 +28,7 @@ export function LiveStatsDemo() {
         <div className="flex items-center justify-between">
           <div>
             <p className="text-xs text-neutral-400">MATCH EN DIRECT</p>
-            <p className="text-2xl font-bold">FC ProDay 2 — 1 Rivaux</p>
+            <p className="text-2xl font-bold">FC ProDay 2-1 Rivaux</p>
           </div>
           <motion.span
             key={minute}
@@ -107,7 +107,7 @@ export function LiveStatsDemo() {
       >
         <p className="text-sm font-medium text-white/45">Impact profil</p>
         <p className="mt-2 text-lg text-white">
-          <strong>{total}</strong> actions enregistrées — stats saison et CV mis à jour
+          <strong>{total}</strong> actions enregistrées. Stats saison et CV mis à jour
           à jour automatiquement.
         </p>
         <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/10">

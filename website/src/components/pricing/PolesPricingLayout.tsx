@@ -138,7 +138,7 @@ function PolePricingPanel({ poleId, yearly }: PolePricingPanelProps) {
               </p>
               <p className="mt-3 font-display text-2xl font-bold text-white">Tribune 100 % gratuite</p>
               <p className="mt-3 max-w-xl text-sm leading-relaxed text-white/70">
-                Matchs live, suivis illimités, débats, réels et shop — sans abonnement ni paywall.
+                Matchs live, suivis illimités, débats, réels et shop. sans abonnement ni paywall.
               </p>
             </div>
           ) : null}
@@ -332,7 +332,7 @@ export function PolesPricingLayout() {
         </div>
 
         <p className="mt-10 text-center text-xs text-white/35">
-          Tarifs et quotas affichés à titre informatif — pas de métriques d&apos;audience live.
+          Tarifs et quotas affichés à titre informatif. Pas de métriques d&apos;audience live.
         </p>
         <p className="mt-4 text-center text-sm text-white/45">
           Questions sur les formules ?{" "}

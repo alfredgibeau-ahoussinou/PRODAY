@@ -1,4 +1,4 @@
-/** Template email bêta — garder aligné avec functions/src/betaWaitlistEmail.ts */
+/** Template email bêta. garder aligné avec functions/src/betaWaitlistEmail.ts */
 
 export const BETA_MEMBER_ROLE = "Beta-testeur";
 
@@ -61,11 +61,11 @@ export function buildBetaWelcomeEmail(params: BetaWelcomeEmailParams): {
     "",
     `Merci de votre inscription à la bêta ProDay en tant que ${params.roleLabel}.`,
     "",
-    "ProDay est l'écosystème foot amateur et semi-pro : Mercato, recruteurs vérifiés, matchs, covoiturage, pôle santé, ProDay Shop et CV joueur — trois univers Man, Woman et Pro.",
+    "ProDay, c'est le foot amateur et semi-pro : Mercato, recruteurs vérifiés, matchs, covoiturage, santé, Shop et CV joueur. Trois univers : Man, Woman et Pro.",
     "",
     "Prochaines étapes :",
     "• Accédez à votre espace bêta via le lien ci-dessous.",
-    "• Sur Android : téléchargez l'APK depuis l'onglet Installer — pas par email.",
+    "• Sur Android : téléchargez l'APK depuis l'onglet Installer. Pas par email.",
     "• Sur iOS : vous recevrez une invitation TestFlight par email Apple.",
     "• En attendant, explorez le site : démo interactive, parcours recruteurs, Shop et feuille de route.",
     "",
@@ -109,7 +109,7 @@ export function buildBetaWelcomeEmail(params: BetaWelcomeEmailParams): {
               <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#334155;">
                 <strong>ProDay</strong> réunit Mercato et recruteurs vérifiés, matchs, covoiturage,
                 pôle santé (kiné, coach mental), le score <strong>Visibilité</strong>, le <strong>Shop</strong>
-                et un <strong>CV foot en ligne</strong> exportable — Man, Woman et Pro.
+                et un <strong>CV foot en ligne</strong> exportable. Man, Woman et Pro.
               </p>
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:24px 0;background:#f8fafc;border-radius:12px;border:1px solid #e2e8f0;">
                 <tr>
@@ -124,7 +124,7 @@ export function buildBetaWelcomeEmail(params: BetaWelcomeEmailParams): {
                 </tr>
               </table>
               <p style="margin:0 0 24px;font-size:14px;line-height:1.6;color:#64748b;">
-                Sur Android, l&apos;APK n&apos;est pas envoyé par email — rendez-vous directement
+                Sur Android, l&apos;APK n&apos;est pas envoyé par email. Rendez-vous directement
                 sur l&apos;onglet Installer une fois connecté à votre espace bêta.
               </p>
               <a href="${buildBetaInstallerUrl(site, params.accessToken)}" style="display:inline-block;background:#0a0a0a;color:#ffffff;text-decoration:none;font-size:14px;font-weight:600;padding:14px 28px;border-radius:999px;margin-right:12px;">

@@ -29,8 +29,7 @@ export function ModuleExplorer({ compact }: ModuleExplorerProps) {
               Dix modules. Une saison.
             </h2>
             <p className="mt-3 max-w-xl text-white/55">
-              Mercato, Reels, Fil, Arena, partenaires, santé et plus — tout l&apos;écosystème
-              ProDay.
+              Mercato, Reels, Fil, Arena, partenaires, santé. Les briques de ProDay.
             </p>
           </Reveal>
         )}

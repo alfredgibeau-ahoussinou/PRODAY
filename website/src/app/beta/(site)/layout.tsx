@@ -4,7 +4,7 @@ import { BetaProtectedLayout } from "@/components/beta/BetaSiteShell";
 export const metadata: Metadata = {
   title: "Bêta ProDay",
   description:
-    "Espace beta-testeur ProDay — programme, installation et support.",
+    "Espace beta-testeur ProDay. Programme, installation et support.",
   robots: { index: false, follow: false },
 };
 

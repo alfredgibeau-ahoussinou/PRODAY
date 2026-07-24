@@ -11,7 +11,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "Fonctionnalités",
   description:
-    "Mercato, Reels, Fil, Arena, covoiturage, pôle santé, espace sponsor, Shop, Visibilité, CV vivant et Live Stats — organisés par 7 pôles.",
+    "Mercato, Reels, Fil, Arena, covoiturage, pôle santé, espace sponsor, Shop, Visibilité, CV vivant et Live Stats. Organisés par 7 pôles.",
 };
 
 export default function FeaturesPage() {
@@ -20,8 +20,8 @@ export default function FeaturesPage() {
       <PageHeader
         pathname={ROUTES.features}
         kicker="FONCTIONNALITÉS"
-        title="L'ensemble de votre saison, structuré"
-        description="12 piliers produit — recrutement, communauté, partenaires, tournois et confiance intégrée. Organisés par pôle."
+        title="Ce que fait ProDay"
+        description="12 piliers produit. Recrutement, communauté, partenaires, tournois et confiance."
         image="/showcase/classic-mercato.jpg"
         dark
       />
@@ -29,8 +29,8 @@ export default function FeaturesPage() {
       <PremiumSection
         id="poles"
         kicker="4 PÔLES"
-        title="Une fonctionnalité, le bon univers"
-        description="Chaque module s'adapte au pôle Joueur, Pro, Santé ou Partenaires — sans mélanger les parcours."
+        title="Le bon module, le bon pôle"
+        description="Chaque module s'adapte au pôle Joueur, Pro, Santé ou Partenaires. Sans mélanger les parcours."
         bordered={false}
       >
         <div className="grid gap-4 sm:grid-cols-2">
@@ -57,7 +57,7 @@ export default function FeaturesPage() {
         id="verification"
         kicker="CONFIANCE"
         title="Confiance intégrée"
-        description="Vérification staff, contrôle parental et espace famille — détail sur la page dédiée."
+        description="Vérification staff, contrôle parental et espace famille. Détail sur la page dédiée."
       >
         <VerificationTimeline embedded />
       </PremiumSection>

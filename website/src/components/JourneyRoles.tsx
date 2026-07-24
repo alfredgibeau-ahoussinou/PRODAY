@@ -103,7 +103,7 @@ export function JourneyRoles({ fullPage }: JourneyRolesProps) {
           <div className={`mt-12 card-premium rounded-2xl p-8 ${styles.card}`}>
             <p className="text-white/70">
               Les parcours partenaires (sponsors & marques) sont détaillés sur la page{" "}
-              <span className="font-semibold text-amber-300">Espace Partenaires</span> — visibilité
+              <span className="font-semibold text-amber-300">Espace Partenaires</span> : visibilité
               clubs, offres locales et campagnes nationales.
             </p>
           </div>

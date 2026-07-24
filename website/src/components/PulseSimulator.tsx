@@ -77,7 +77,7 @@ export function PulseSimulator({
               Simulez votre score de visibilité
             </h2>
             <p className="mt-4 max-w-lg text-white/55">
-              Ajustez les curseurs — la {PULSE_DISPLAY_NAME} se recalcule en direct, comme dans
+              Ajustez les curseurs. la {PULSE_DISPLAY_NAME} se recalcule en direct, comme dans
               l&apos;application.
             </p>
           </Reveal>

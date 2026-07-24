@@ -6,7 +6,7 @@ import { ROUTES } from "@/lib/routes";
 
 export const metadata: Metadata = {
   title: "Comparatif",
-  description: "ProDay vs WhatsApp vs tableur — pourquoi une seule app pour votre saison.",
+  description: "ProDay vs WhatsApp vs tableur. Pourquoi une seule app pour votre saison.",
 };
 
 export default function ComparePage() {
@@ -16,7 +16,7 @@ export default function ComparePage() {
         pathname={ROUTES.compare}
         kicker="COMPARATIF"
         title="Pourquoi pas WhatsApp ?"
-        description="Groupes dispersés, statistiques absentes, recrutement non structuré — ProDay centralise l'essentiel."
+        description="Groupes dispersés, stats absentes, recrutement flou. ProDay regroupe l'essentiel."
         image="/showcase/classic-exp-team.jpg"
         dark
       />

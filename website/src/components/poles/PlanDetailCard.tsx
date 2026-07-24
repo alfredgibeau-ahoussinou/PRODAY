@@ -180,14 +180,14 @@ export function PlanDetailCard({
       <div className="border-t border-white/10 p-6 text-center">
         <p className={`text-sm ${styles.textMuted}`}>
           {isFree
-            ? "Rejoignez la bêta santé — visio incluse dès le compte gratuit."
-            : "IAP en cours de déploiement — accès gratuit pour les inscrits."}
+            ? "Rejoignez la bêta santé. Visio incluse dès le compte gratuit."
+            : "IAP en cours de déploiement. Accès gratuit pour les inscrits."}
         </p>
         <Link
           href={ROUTES.betaWaitlist}
           className={`mt-4 inline-block rounded-full px-8 py-3 text-sm font-semibold transition hover:scale-[1.02] ${styles.cta}`}
         >
-          {isFree ? "Tester la visio gratuite" : "Accès anticipé"}
+          {isFree ? "Tester la visio gratuite" : "Rejoindre la bêta"}
         </Link>
       </div>
     </motion.article>

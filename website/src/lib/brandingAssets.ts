@@ -1,7 +1,7 @@
 /** Logo principal officiel ProDay (P dégradé + coureur + wordmark + tagline, fond blanc). */
 export const PRODAY_LOGO_OFFICIAL = "/branding/logo-proday-official.png";
 
-/** @deprecated Alias — préférer PRODAY_LOGO_OFFICIAL */
+/** @deprecated Alias. préférer PRODAY_LOGO_OFFICIAL */
 export const PRODAY_LOGO_ON_DARK = PRODAY_LOGO_OFFICIAL;
 
 /** Logo sur fond clair (Open Graph, documents). */

@@ -2,7 +2,7 @@ import type { ProductLineWeb } from "./content";
 
 export const ROUTES = {
   home: "/",
-  /** @deprecated Redirige vers /amateur — conservé pour liens legacy. */
+  /** @deprecated Redirige vers /amateur. conservé pour liens legacy. */
   joueurs: "/joueurs",
   features: "/fonctionnalites",
   demo: "/demo",
@@ -11,18 +11,18 @@ export const ROUTES = {
   trust: "/confiance",
   privacy: "/confidentialite",
   terms: "/cgu",
-  /** @deprecated Redirige vers /amateur — conservé pour liens legacy. */
+  /** @deprecated Redirige vers /amateur. conservé pour liens legacy. */
   homme: "/homme",
   amateur: "/amateur",
   supporter: "/supporter",
-  /** @deprecated Redirige vers /amateur — conservé pour liens legacy. */
+  /** @deprecated Redirige vers /amateur. conservé pour liens legacy. */
   woman: "/woman",
   proJoueur: "/pro-joueur",
   proClub: "/pro-club",
   proStaff: "/pro-staff",
-  /** @deprecated Hub legacy — voir pro-joueur, pro-club, pro-staff. */
+  /** @deprecated Hub legacy. voir pro-joueur, pro-club, pro-staff. */
   pro: "/pro",
-  /** Hub bêta legacy — redirect vers programme si cookie. */
+  /** Hub bêta legacy. redirect vers programme si cookie. */
   beta: "/beta",
   /** Programme bêta (mini-site protégé). */
   betaProgramme: "/beta/programme",
@@ -91,14 +91,14 @@ export const EXPLORE_CARDS = [
   {
     href: routeWithHash(ROUTES.features, "modules"),
     title: "Fonctionnalités",
-    description: "11 piliers produit — Mercato, Fil, Reels, Arena, Sponsors…",
+    description: "Mercato, Fil, Reels, Arena, Sponsors et le reste.",
     image: "/showcase/classic-mercato.jpg",
     tag: "Produit",
   },
   {
     href: ROUTES.demo,
     title: "Démo interactive",
-    description: "Naviguez les 9 onglets dynamiques — Fil, Reels, Mercato et plus.",
+    description: "Naviguez les 9 onglets. Fil, Reels, Mercato et plus.",
     image: "/images/football-action-01.jpg",
     tag: "Essayer",
   },
@@ -112,7 +112,7 @@ export const EXPLORE_CARDS = [
   {
     href: ROUTES.liveStats,
     title: "Live Stats",
-    description: "Saisissez buts et passes — voyez votre profil se mettre à jour.",
+    description: "Saisissez buts et passes. Voyez le profil se mettre à jour.",
     image: "/images/football-match-01.jpg",
     tag: "Match",
   },
@@ -126,14 +126,14 @@ export const EXPLORE_CARDS = [
   {
     href: routeWithHash(ROUTES.journeys, "parcours"),
     title: "Parcours par rôle",
-    description: "Joueur, recruteur, pôle santé, organisateur ou parent — étape par étape.",
+    description: "Joueur, recruteur, santé, organisateur ou parent. Étape par étape.",
     image: "/images/football-team-01.jpg",
     tag: "Parcours",
   },
   {
     href: ROUTES.quiz,
     title: "Quiz profil",
-    description: "3 questions — Man, Woman ou Pro : quel parcours vous correspond.",
+    description: "3 questions. Man, Woman ou Pro : quel parcours vous correspond.",
     image: "/showcase/classic-exp-discover.jpg",
     tag: "Quiz",
   },
@@ -147,35 +147,35 @@ export const EXPLORE_CARDS = [
   {
     href: ROUTES.compare,
     title: "Comparatif",
-    description: "ProDay vs WhatsApp vs tableur — pourquoi une seule app.",
+    description: "ProDay vs WhatsApp vs tableur. Pourquoi une seule app.",
     image: "/showcase/classic-exp-team.jpg",
     tag: "Analyse",
   },
   {
     href: ROUTES.vision,
     title: "Vision",
-    description: "Aujourd'hui vs demain — pitch honnête sur les capacités réelles de l'app.",
+    description: "Aujourd'hui vs demain. Ce que l'app fait vraiment.",
     image: "/images/football-stadium-night-01.jpg",
     tag: "Vision",
   },
   {
     href: ROUTES.ecosystem,
-    title: "Écosystème",
-    description: "Carte interactive des acteurs reliés par ProDay.",
+    title: "Carte des acteurs",
+    description: "Qui est relié à qui sur ProDay.",
     image: "/showcase/classic-arena.jpg",
-    tag: "Écosystème",
+    tag: "Carte",
   },
   {
     href: ROUTES.roadmap,
     title: "Roadmap",
-    description: "Livré, en cours et à venir — transparence produit.",
+    description: "Livré, en cours et à venir.",
     image: "/images/football-pitch-01.jpg",
     tag: "Roadmap",
   },
   {
     href: routeWithHash(ROUTES.sponsor, "formules"),
     title: "Pôle Sponsor",
-    description: "Découverte 0 €, Territorial 49 € ou National Pro 99 €/mois — visibilité clubs.",
+    description: "Découverte 0 €, Territorial 49 € ou National Pro 99 €/mois.",
     image: "/images/football-mercato-01.jpg",
     tag: "Sponsor",
     accent: true,
@@ -183,14 +183,14 @@ export const EXPLORE_CARDS = [
   {
     href: routeWithHash(ROUTES.pricing, "amateur"),
     title: "Tarifs",
-    description: "Gratuit et offres Pro — 7 pôles Amateur, Supporter, Santé, Pro et Sponsor.",
+    description: "Gratuit et offres Pro. 7 pôles : Amateur, Supporter, Santé, Pro et Sponsor.",
     image: "/showcase/classic-exp-messages.jpg",
     tag: "Tarifs",
   },
   {
     href: routeWithHash(ROUTES.proJoueur, "modules"),
     title: "Pôle Pro Joueur",
-    description: "Carrière, visibilité scouting, portfolio et opportunités — foot professionnel.",
+    description: "Carrière, visibilité scouting, portfolio et opportunités.",
     image: "/images/football-pro-01.jpg",
     tag: "Pro Joueur",
     accent: true,
@@ -198,7 +198,7 @@ export const EXPLORE_CARDS = [
   {
     href: routeWithHash(ROUTES.proClub, "modules"),
     title: "Pôle Pro Club",
-    description: "Structures, équipes, recrutement et vitrine — gérez votre club sur PRODAY.",
+    description: "Structures, équipes, recrutement et vitrine.",
     image: "/images/football-club-01.jpg",
     tag: "Pro Club",
     accent: true,
@@ -206,7 +206,7 @@ export const EXPLORE_CARDS = [
   {
     href: routeWithHash(ROUTES.proStaff, "modules"),
     title: "Pôle Pro Staff",
-    description: "Agent, recruteur, coach pro et organisateur — Mercato Pro et réseau vérifié.",
+    description: "Agent, recruteur, coach pro et organisateur. Mercato Pro et réseau vérifié.",
     image: "/showcase/classic-staff.jpg",
     tag: "Pro Staff",
     accent: true,
@@ -214,14 +214,14 @@ export const EXPLORE_CARDS = [
   {
     href: routeWithHash(ROUTES.amateur, "modules"),
     title: "Pro Day Man",
-    description: "Foot masculin amateur — Mercato M, matchs et CV joueur.",
+    description: "Foot masculin amateur. Mercato M, matchs et CV joueur.",
     image: "/images/football-amateur-01.jpg",
     tag: "Man",
   },
   {
     href: ROUTES.woman,
     title: "ProDay Woman",
-    description: "Univers foot féminin — Mercato F, tournois et profil joueuse.",
+    description: "Foot féminin. Mercato F, tournois et profil joueuse.",
     image: "/showcase/woman/woman-discover-hero.jpg",
     tag: "Woman",
     accent: true,
@@ -229,7 +229,7 @@ export const EXPLORE_CARDS = [
   {
     href: routeWithHash(ROUTES.sante, "modules"),
     title: "Pro Day Santé",
-    description: "Kinés, coach mental et nutrition — annuaire vérifié et RDV en ligne.",
+    description: "Kinés, coach mental et nutrition. Annuaire vérifié et RDV en ligne.",
     image: "/images/football-health-01.jpg",
     tag: "Santé",
     accent: true,
@@ -237,7 +237,7 @@ export const EXPLORE_CARDS = [
   {
     href: ROUTES.shop,
     title: "ProDay Shop",
-    description: "Trépieds, t-shirts et maillots officiels — par univers Man, Woman et Pro.",
+    description: "Trépieds, t-shirts et maillots officiels. Man, Woman et Pro.",
     image: "/images/football-training-01.jpg",
     tag: "Shop",
   },

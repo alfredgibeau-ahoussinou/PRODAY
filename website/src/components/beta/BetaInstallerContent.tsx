@@ -132,7 +132,7 @@ export function BetaInstallerContent() {
     >
       <p className="mb-8 max-w-3xl text-sm leading-relaxed text-white/65">
         Les builds mobiles sont distribués en dehors des stores publics pendant la bêta. Sur Android,
-        téléchargez l&apos;APK directement depuis cette page — aucun envoi par email. Sur iOS,
+        téléchargez l&apos;APK directement depuis cette page. Aucun envoi par email. Sur iOS,
         l&apos;invitation TestFlight arrive par email Apple.
       </p>
 
@@ -140,7 +140,7 @@ export function BetaInstallerContent() {
         <div className="mb-8 rounded-3xl border border-[var(--proday-accent)]/30 bg-[#001854]/40 p-6">
           <p className="text-sm font-semibold text-white">APK Android prêt à télécharger</p>
           <p className="mt-1 text-sm text-white/55">
-            Téléchargez directement depuis cette page — aucun email requis.
+            Téléchargez directement depuis cette page. Aucun email requis.
           </p>
           <DownloadButton href={apkUrl} label="Télécharger l'APK Android" />
         </div>
@@ -150,7 +150,7 @@ export function BetaInstallerContent() {
         <PlatformSection
           platform="android"
           icon={<Play size={22} className="text-white" />}
-          title="Android — APK"
+          title="Android. APK"
           subtitle="Téléchargement direct depuis cette page"
           available
         >
@@ -177,7 +177,7 @@ export function BetaInstallerContent() {
               <TroubleshootBlock
                 title="Play Protect bloque l'installation"
                 items={[
-                  "Appuyez sur « Plus de détails » puis « Installer quand même » — l'APK ProDay est signé par notre équipe.",
+                  "Appuyez sur « Plus de détails » puis « Installer quand même ». L'APK ProDay est signé par notre équipe.",
                   "Si le blocage persiste, désactivez temporairement Play Protect dans le Play Store → Profil → Play Protect.",
                 ]}
               />
@@ -201,7 +201,7 @@ export function BetaInstallerContent() {
                 title="Mise à jour de l'APK"
                 items={[
                   "Téléchargez la nouvelle version depuis cet onglet Installer.",
-                  "Installez par-dessus l'ancienne version — vos données de connexion sont conservées.",
+                  "Installez par-dessus l'ancienne version. Vos données de connexion sont conservées.",
                 ]}
               />
             </div>
@@ -211,7 +211,7 @@ export function BetaInstallerContent() {
         <PlatformSection
           platform="ios"
           icon={<Apple size={22} className="text-white" />}
-          title="iOS — TestFlight"
+          title="iOS. TestFlight"
           subtitle="Distribution Apple officielle pour beta-testeurs"
           available={testflightAvailable}
         >
@@ -264,7 +264,7 @@ export function BetaInstallerContent() {
                 title="Build expirée (90 jours)"
                 items={[
                   "Apple limite chaque build bêta à 90 jours d'utilisation.",
-                  "Nous publions régulièrement de nouvelles builds — mettez à jour via TestFlight.",
+                  "Nous publions régulièrement de nouvelles builds. Mettez à jour via TestFlight.",
                 ]}
               />
             </div>

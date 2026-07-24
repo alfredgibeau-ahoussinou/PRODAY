@@ -85,7 +85,7 @@ export function describeBetaEmailJsFailure(error: unknown): {
   return { log: raw };
 }
 
-/** Envoi via EmailJS (clés serveur — ne jamais exposer côté client). */
+/** Envoi via EmailJS (clés serveur. ne jamais exposer côté client). */
 export async function sendBetaWelcomeEmailViaEmailJs(
   config: EmailJsBetaConfig,
   params: BetaWelcomeEmailParams

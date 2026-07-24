@@ -86,7 +86,7 @@ export function EcosystemMap() {
         >
           <h3 className="text-lg font-bold text-white">{node.label}</h3>
           <p className="mt-2 text-white/55">
-            {DESCRIPTIONS[node.id] ?? "Acteur de l'écosystème ProDay."}
+            {DESCRIPTIONS[node.id] ?? "Acteur ProDay."}
           </p>
         </motion.div>
       )}
@@ -96,14 +96,14 @@ export function EcosystemMap() {
 
 const DESCRIPTIONS: Record<string, string> = {
   mercato:
-    "Hub recrutement — annonces, candidatures, filtres poste/niveau/ville. Publié par les recruteurs Pro.",
-  player: "Profil, Visibilité, stats, CV PDF, pôle santé, covoiturage et candidatures Mercato.",
+    "Recrutement : annonces, candidatures, filtres poste / niveau / ville. Publié par les recruteurs Pro.",
+  player: "Profil, Visibilité, stats, CV PDF, santé, covoiturage et candidatures Mercato.",
   coach: "Vérification diplôme, effectif, convocations et Live Stats équipe.",
   agent: "Mandats joueurs, repérage et contacts clubs sur Mercato Pro.",
-  recruiter: "Rôle dédié — scouting, annonces Mercato Pro et suivi candidatures.",
-  club: "Recruteur Pro — annonces actives, multi-équipes, exports candidatures.",
-  organizer: "Tournois Arena — inscriptions et palmarès publiés.",
-  health: "Kinés, coach mental, nutrition — annuaire vérifié et messagerie sécurisée.",
+  recruiter: "Scouting, annonces Mercato Pro et suivi candidatures.",
+  club: "Annonces actives, multi-équipes, exports candidatures.",
+  organizer: "Tournois Arena. Inscriptions et palmarès publiés.",
+  health: "Kinés, coach mental, nutrition. Annuaire vérifié et messagerie sécurisée.",
   arena: "Compétitions locales intégrées au calendrier saison.",
-  pulse: "Score de visibilité — profil, activité et confiance.",
+  pulse: "Score de visibilité. Profil, activité et confiance.",
 };

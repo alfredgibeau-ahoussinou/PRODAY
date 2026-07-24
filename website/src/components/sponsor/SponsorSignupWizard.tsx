@@ -287,7 +287,7 @@ export function SponsorSignupWizard() {
         </div>
         <h3 className="font-display mt-6 text-2xl font-bold text-white">Demande enregistrée</h3>
         <p className="mx-auto mt-3 max-w-md text-white/60">
-          Merci {form.contactName.split(" ")[0]} — l&apos;équipe partenaires ProDay analyse votre dossier{" "}
+          Merci {form.contactName.split(" ")[0]}. L&apos;équipe partenaires ProDay analyse votre dossier{" "}
           <strong className="text-amber-200/90">{form.companyName}</strong> sous 48 h ouvrées. Un email de
           confirmation a été envoyé à {form.email}.
         </p>
@@ -388,7 +388,7 @@ export function SponsorSignupWizard() {
                   <TextInput
                     value={form.contactName}
                     onChange={(v) => patch({ contactName: v })}
-                    placeholder="Prénom Nom — Responsable marketing"
+                    placeholder="Prénom Nom. Responsable marketing"
                     required
                   />
                 </div>
@@ -493,7 +493,7 @@ export function SponsorSignupWizard() {
                 </div>
                 <div>
                   <FieldLabel>Logo de la marque (optionnel)</FieldLabel>
-                  <p className="mt-1 text-xs text-white/40">PNG ou SVG — max. 2 Mo. Sera demandé si absent.</p>
+                  <p className="mt-1 text-xs text-white/40">PNG ou SVG, max. 2 Mo. Sera demandé si absent.</p>
                   <input
                     type="file"
                     accept="image/png,image/jpeg,image/svg+xml,image/webp"

@@ -29,7 +29,7 @@ const BASE_SCREENS: Record<MainTabId, ScreenMock> = {
   home: {
     caption: "Pro Day Man",
     title: "Accueil",
-    subtitle: "Bonjour Alex — votre saison en un coup d'œil.",
+    subtitle: "Bonjour Alex. Votre saison en un coup d'œil.",
     stats: [
       { value: "72", label: "Visibilité" },
       { value: "3", label: "Convocs", highlight: true },
@@ -43,7 +43,7 @@ const BASE_SCREENS: Record<MainTabId, ScreenMock> = {
       },
       {
         title: "Modules",
-        body: "Mercato, Matchs, Reels, Fil, Arena — accès rapide.",
+        body: "Mercato, Matchs, Reels, Fil, Arena. Accès rapide.",
         chips: ["Reels", "Question hebdo"],
       },
     ],
@@ -60,13 +60,13 @@ const BASE_SCREENS: Record<MainTabId, ScreenMock> = {
     cards: [
       {
         title: "Attaquant · Régional",
-        body: "FC Nord — Paris 75. Candidature envoyée.",
+        body: "FC Nord · Paris 75. Candidature envoyée.",
         chips: ["Attaquant", "Paris"],
         accent: true,
       },
       {
         title: "Milieu · National",
-        body: "AS Lumière — recherche profil technique.",
+        body: "AS Lumière. Recherche profil technique.",
         chips: ["Milieu", "Lyon"],
       },
     ],
@@ -92,7 +92,7 @@ const BASE_SCREENS: Record<MainTabId, ScreenMock> = {
   reels: {
     caption: "Découverte",
     title: "Reels",
-    subtitle: "Moments forts et séquences — fil vertical par pôle.",
+    subtitle: "Moments forts et séquences. Fil vertical par pôle.",
     stats: [
       { value: "12", label: "Nouveaux" },
       { value: "Foot", label: "Pôle actif", highlight: true },
@@ -101,7 +101,7 @@ const BASE_SCREENS: Record<MainTabId, ScreenMock> = {
     cards: [
       {
         title: "Skill du jour",
-        body: "Enchaînement technique — like, partage et ajout au profil.",
+        body: "Enchaînement technique. Like, partage et ajout au profil.",
         chips: ["Mercato", "Reels"],
         accent: true,
       },
@@ -124,13 +124,13 @@ const BASE_SCREENS: Record<MainTabId, ScreenMock> = {
     cards: [
       {
         title: "Question de la semaine",
-        body: "« Quel est votre objectif principal cette saison ? » — répondez et découvrez la communauté.",
+        body: "« Quel est votre objectif principal cette saison ? » Répondez et voyez la communauté.",
         chips: ["Question hebdo", "Communauté"],
         accent: true,
       },
       {
         title: "Actualités ProDay",
-        body: "Nouveautés Arena, Mercato et espace partenaires — restez informés.",
+        body: "Nouveautés Arena, Mercato et partenaires.",
         chips: ["Actualités"],
       },
     ],
@@ -146,7 +146,7 @@ const BASE_SCREENS: Record<MainTabId, ScreenMock> = {
     cards: [
       {
         title: "Trajet Stade Nord",
-        body: "Départ parking club — 2 places restantes.",
+        body: "Départ parking club. 2 places restantes.",
         chips: ["2 places", "Sam. 13h30"],
         accent: true,
       },
@@ -155,7 +155,7 @@ const BASE_SCREENS: Record<MainTabId, ScreenMock> = {
   sante: {
     caption: "Pro Day Santé",
     title: "Santé",
-    subtitle: "Kinés, coach mental, nutrition — RDV ou messagerie.",
+    subtitle: "Kinés, coach mental, nutrition. RDV ou messagerie.",
     stats: [
       { value: "3", label: "Spécialités" },
       { value: "RDV", label: "En ligne" },
@@ -251,12 +251,12 @@ const UNIVERSE_OVERRIDES: Record<
     home: {
       caption: "ProDay Woman",
       title: "Accueil",
-      subtitle: "Bonjour Léa — Mercato F, Reels et Fil dédiés au féminin.",
+      subtitle: "Bonjour Léa. Mercato F, Reels et Fil dédiés au féminin.",
     },
     recrutement: { title: "Mercato F" },
     reels: {
       title: "Reels F",
-      subtitle: "Moments forts et séquences — visibilité sur le foot féminin.",
+      subtitle: "Moments forts et séquences. Visibilité sur le foot féminin.",
     },
     feed: {
       subtitle: "Question hebdo et voix des joueuses sur ProDay Woman.",
@@ -267,14 +267,14 @@ const UNIVERSE_OVERRIDES: Record<
     home: {
       caption: "Pro Day Amateur",
       title: "Accueil",
-      subtitle: "Joueur ou coach — Mercato local, matchs et effectif.",
+      subtitle: "Joueur ou coach. Mercato local, matchs et effectif.",
     },
     recrutement: { title: "Mercato Amateur" },
     reels: {
-      subtitle: "Coulisses d'équipe et moments forts — format vertical.",
+      subtitle: "Coulisses d'équipe et moments forts. Format vertical.",
     },
     feed: {
-      subtitle: "Actualités réseau amateur — joueurs et coachs.",
+      subtitle: "Actualités réseau amateur. Joueurs et coachs.",
     },
     sante: { title: "Santé" },
   },
@@ -282,7 +282,7 @@ const UNIVERSE_OVERRIDES: Record<
     home: {
       caption: "Pro Day Supporter",
       title: "Accueil",
-      subtitle: "Bonjour Sam — matchs, réels et fil de votre tribune.",
+      subtitle: "Bonjour Sam. Matchs, réels et fil de votre tribune.",
     },
     matchs: {
       title: "Matchs",
@@ -290,7 +290,7 @@ const UNIVERSE_OVERRIDES: Record<
     },
     reels: {
       title: "Reels",
-      subtitle: "Moments forts et séquences — vibrez avec la communauté.",
+      subtitle: "Moments forts et séquences. Vibrez avec la communauté.",
     },
     feed: {
       subtitle: "Fil communautaire, réactions et question hebdo.",
@@ -306,11 +306,11 @@ const UNIVERSE_OVERRIDES: Record<
     home: {
       caption: "Pro Day Pro",
       title: "Accueil",
-      subtitle: "Hub staff — Mercato Pro, Reels et réseau vérifié.",
+      subtitle: "Hub staff. Mercato Pro, Reels et réseau vérifié.",
     },
     recrutement: { title: "Mercato Pro" },
     reels: {
-      subtitle: "Coulisses Mercato, détections et pôle santé — format vertical.",
+      subtitle: "Coulisses Mercato, détections et pôle santé. Format vertical.",
     },
     feed: {
       subtitle: "Actualités réseau pro et sondages staff.",
@@ -391,12 +391,12 @@ export function PhoneDemo({ fullPage, compact, universe = "homme" }: PhoneDemoPr
             </h2>
             {!compact ? (
               <p className="mt-4 max-w-xl text-white/55">
-                Même navigation que l&apos;application — barre mobile avec Reels au centre et menu
+                Même navigation que l&apos;application. Barre mobile avec Reels au centre et menu
                 overflow. Parcourez les onglets comme sur votre téléphone.
               </p>
             ) : (
               <p className="mt-3 max-w-xl text-sm text-white/55">
-                Parcourez les onglets comme sur votre téléphone — démo complète sur la page dédiée.
+                Parcourez les onglets comme sur votre téléphone. Démo complète sur la page dédiée.
               </p>
             )}
           </Reveal>
@@ -574,7 +574,7 @@ export function PhoneDemo({ fullPage, compact, universe = "homme" }: PhoneDemoPr
           ) : (
           <div className="w-full max-w-md flex-1 space-y-2 lg:max-w-none">
             <p className="mb-3 text-sm font-semibold text-white/70">
-              Univers : {brand.name} — onglets visibles
+              Univers : {brand.name}. Onglets visibles
             </p>
             <div className="scroll-snap-x -mx-4 flex gap-2 overflow-x-auto px-4 pb-2 lg:mx-0 lg:hidden lg:flex-col lg:gap-2 lg:overflow-visible lg:px-0 lg:pb-0">
               {tabs.map((tab) => (

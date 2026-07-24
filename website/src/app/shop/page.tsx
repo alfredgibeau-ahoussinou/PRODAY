@@ -8,7 +8,7 @@ import { ROUTES } from "@/lib/routes";
 export const metadata: Metadata = {
   title: "ProDay Shop",
   description:
-    "Trépieds, t-shirts et maillots officiels ProDay — par univers Man, Woman et Pro.",
+    "Trépieds, t-shirts et maillots officiels ProDay. Man, Woman et Pro.",
 };
 
 export default function ShopPage() {
@@ -18,14 +18,14 @@ export default function ShopPage() {
         pathname={ROUTES.shop}
         kicker="SHOP"
         title="Équipement & textile officiel"
-        description="Trépieds pour filmer vos matchs, t-shirts lifestyle et maillots match — logo ProDay brodé, par univers."
+        description="Trépieds pour filmer vos matchs, t-shirts et maillots. Logo ProDay brodé, par univers."
         image="/images/football-training-01.jpg"
         dark
       />
       <PremiumSection
         kicker="CATALOGUE"
         title="Textile & équipement ProDay"
-        description="Le catalogue complet est disponible dans l'application — bouton Shop sur l'accueil de chaque univers."
+        description="Le catalogue complet est dans l'app. Bouton Shop sur l'accueil de chaque univers."
         bordered={false}
       >
         <div className="grid gap-6 sm:grid-cols-3">
@@ -47,7 +47,7 @@ export default function ShopPage() {
           </a>
         </p>
         <div className="mt-8">
-          <PremiumButton href={ROUTES.betaWaitlist}>Accès anticipé au Shop</PremiumButton>
+          <PremiumButton href={ROUTES.betaWaitlist}>Voir la liste d'attente</PremiumButton>
         </div>
       </PremiumSection>
     </>

@@ -48,7 +48,7 @@ export function VerificationTimeline({
                 </h2>
                 <p className="mt-3 max-w-xl text-white/55">
                   Diplôme ou licence obligatoire. Messagerie limitée jusqu&apos;à
-                  validation — transparence pour clubs et familles.
+                  validation. transparence pour clubs et familles.
                 </p>
               </div>
             </div>

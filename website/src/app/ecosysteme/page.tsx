@@ -5,9 +5,9 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { ROUTES } from "@/lib/routes";
 
 export const metadata: Metadata = {
-  title: "Écosystème",
+  title: "Carte des acteurs",
   description:
-    "Joueurs, recruteurs, pôle santé et organisateurs — reliés par Mercato et Arena.",
+    "Joueurs, recruteurs, santé et organisateurs. Reliés par Mercato et Arena.",
 };
 
 export default function EcosystemPage() {
@@ -15,9 +15,9 @@ export default function EcosystemPage() {
     <>
       <PageHeader
         pathname={ROUTES.ecosystem}
-        kicker="ÉCOSYSTÈME"
+        kicker="ACTEURS"
         title="Tous les acteurs, un même réseau"
-        description="Cliquez sur les nœuds — découvrez comment ProDay connecte votre saison à travers les 7 pôles."
+        description="Cliquez sur les nœuds. Comment ProDay relie votre saison à travers les 7 pôles."
         image="/images/football-club-01.jpg"
         dark
       />

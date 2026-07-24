@@ -12,7 +12,7 @@ function jsonResponse(body: Record<string, unknown>, init?: ResponseInit) {
   return response;
 }
 
-/** Liste waitlist bêta — session admin requise. */
+/** Liste waitlist bêta. session admin requise. */
 export async function GET(request: Request) {
   const site = request.headers.get("sec-fetch-site");
   const sameSiteFetch =
