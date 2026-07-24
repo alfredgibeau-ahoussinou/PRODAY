@@ -26,6 +26,7 @@ export const UI_FR: MessageCatalog = {
   'universe.pro_player': 'Pro Day Pro Joueur',
   'universe.pro_club': 'Pro Day Pro Club',
   'universe.pro_staff': 'Pro Day Pro Staff',
+  'universe.sponsor': 'Pro Day Sponsor',
   'universe.sante': 'Pro Day Santé',
 
   'discover.hero.homme': 'Le foot masculin,\namateur pro.',
@@ -108,6 +109,16 @@ export const UI_FR: MessageCatalog = {
   'discover.secondaryMercato.pro_staff': 'Réseau pro',
   'discover.playersStat.pro_staff': 'Staff',
 
+  'discover.hero.sponsor': 'Votre marque\nsur le terrain.',
+  'discover.mission.sponsor':
+    'Campagnes géolocalisées, ROI mesurable et vitrine auprès des clubs — l’espace dédié aux marques partenaires.',
+  'discover.trust.sponsor':
+    'Marques vérifiées — validation ProDay avant activation des campagnes.',
+  'discover.cta.sponsor': 'Créer mon espace Pro Day Sponsor',
+  'discover.sectionExplore.sponsor': 'Pilier marque',
+  'discover.secondaryMercato.sponsor': 'Campagnes',
+  'discover.playersStat.sponsor': 'Clubs',
+
   'discover.hero.sante': 'La santé\nau service du jeu.',
   'discover.mission.sante':
     'Agenda, messagerie patients et visibilité auprès des clubs et joueurs.',
@@ -180,6 +191,13 @@ export const UI_FR: MessageCatalog = {
   'journey.mercato.body.pro_staff': 'Scouting & mandats',
   'journey.season.title.pro_staff': 'Saison',
   'journey.season.body.pro_staff': 'Convocations & réseau',
+
+  'journey.profile.title.sponsor': 'Espace marque',
+  'journey.profile.body.sponsor': 'Identité & offres',
+  'journey.mercato.title.sponsor': 'Campagnes',
+  'journey.mercato.body.sponsor': 'Visibilité & ROI',
+  'journey.season.title.sponsor': 'Réseau clubs',
+  'journey.season.body.sponsor': 'Prospects & messages',
 
   'modules.recrutement.title': 'Recrutement',
   'modules.recrutement.subtitle': 'Joueurs & clubs',

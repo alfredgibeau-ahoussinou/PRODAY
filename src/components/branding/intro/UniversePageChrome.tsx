@@ -14,6 +14,7 @@ import { Icon } from '../../ui/Icon';
 import type { CarouselPoleId } from '../../../models/CarouselPole';
 import { getCarouselPoleIdentity } from '../../../content/carouselPoleExperience';
 import { UNIVERSE_ACCENT, UNIVERSE_SHORT } from './universeIntroAccents';
+import { UNIVERSE_FEATURE_CHIPS } from './universeChoiceShared';
 
 interface UniversePageChromeProps {
   lines: CarouselPoleId[];
@@ -124,12 +125,33 @@ export const UniversePageChrome: React.FC<UniversePageChromeProps> = ({
           {UNIVERSE_SHORT[activeLine]}
         </Text>
 
+        <View style={styles.chips}>
+          {UNIVERSE_FEATURE_CHIPS[activeLine].map((chip) => (
+            <View
+              key={chip}
+              style={[
+                styles.chip,
+                activeLine === 'sponsor' && styles.chipSponsor,
+              ]}
+            >
+              <Text
+                style={[
+                  styles.chipText,
+                  activeLine === 'sponsor' && styles.chipTextSponsor,
+                ]}
+              >
+                {chip}
+              </Text>
+            </View>
+          ))}
+        </View>
+
         <PressableSpring
           onPress={() => onChoose(activeLine)}
           scaleTo={0.98}
           haptic
           disabled={interactionLocked}
-          style={styles.cta}
+          style={[styles.cta, activeLine === 'sponsor' && styles.ctaSponsor]}
         >
           <Text style={styles.ctaText} numberOfLines={1}>
             Continuer · {identity.productName}
@@ -200,6 +222,35 @@ const styles = StyleSheet.create({
   counterSep: {
     color: 'rgba(255,255,255,0.28)',
   },
+  chips: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 6,
+    marginBottom: 2,
+  },
+  chip: {
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    borderRadius: radius.pill,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(255,255,255,0.18)',
+  },
+  chipSponsor: {
+    backgroundColor: 'rgba(212, 175, 55, 0.16)',
+    borderColor: 'rgba(212, 175, 55, 0.45)',
+  },
+  chipText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: 'rgba(255,255,255,0.82)',
+    letterSpacing: 0.2,
+    ...Platform.select({ android: { includeFontPadding: false } }),
+  },
+  chipTextSponsor: {
+    color: '#F5D76E',
+  },
   cta: {
     minHeight: 54,
     borderRadius: radius.pill,
@@ -214,6 +265,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.22,
     shadowRadius: 16,
     elevation: 8,
+  },
+  ctaSponsor: {
+    backgroundColor: '#D4AF37',
+    shadowColor: '#D4AF37',
+    shadowOpacity: 0.35,
   },
   ctaText: {
     fontSize: 15,

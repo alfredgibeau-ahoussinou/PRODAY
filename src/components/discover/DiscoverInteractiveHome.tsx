@@ -8,6 +8,7 @@ import {
   Platform,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { DiscoverSponsorHome } from './DiscoverSponsorHome';
 import { DiscoverGuestHero } from './DiscoverGuestHero';
 import { DiscoverQuickAccess, type DiscoverQuickId } from './DiscoverQuickAccess';
 import { DiscoverActivityStrip } from './DiscoverActivityStrip';
@@ -79,6 +80,20 @@ export const DiscoverInteractiveHome: React.FC<DiscoverInteractiveHomeProps> = (
   const metrics = useDiscoverMetrics();
   const homeCopy = getLocalizedDiscoverCopy(productLine, t);
   const local = useMemo(() => createLocalStyles(c), [c]);
+
+  if (productLine === 'sponsor') {
+    return (
+      <DiscoverSponsorHome
+        productLine={productLine}
+        onSignup={onSignup}
+        onLogin={onLogin}
+        onModulePress={onModulePress}
+        onStepPress={onStepPress}
+        universeLabel={universeLabel}
+        onUniversePress={onUniversePress}
+      />
+    );
+  }
 
   const showHeaderStats = Boolean(stats) && !loading;
   const hasActivity = posts.length > 0;

@@ -22,6 +22,14 @@ export function getDiscoverGuestJourneySteps(line: ProductLineId): DiscoverJourn
     ];
   }
 
+  if (line === 'sponsor') {
+    return [
+      { id: 'profile', title: 'Espace marque', body: 'Identité & offres', icon: 'star-four-points' },
+      { id: 'mercato', title: 'Campagnes', body: 'Visibilité & ROI', icon: 'briefcase' },
+      { id: 'season', title: 'Réseau clubs', body: 'Prospects & messages', icon: 'people' },
+    ];
+  }
+
   if (line === 'pro') {
     return [
       { id: 'profile', title: 'Profil staff', body: 'Coach, club, agent', icon: 'school' },

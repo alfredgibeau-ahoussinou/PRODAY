@@ -23,6 +23,7 @@ export const UI_EN: MessageCatalog = {
   'universe.amateur': 'Amateur universe',
   'universe.supporter': 'Supporter universe',
   'universe.pro': 'Pro universe',
+  'universe.sponsor': 'Pro Day Sponsor',
   'universe.sante': 'Health universe',
 
   'discover.hero.homme': 'Men\'s amateur\nfootball, pro level.',
@@ -74,6 +75,16 @@ export const UI_EN: MessageCatalog = {
   'discover.sectionExplore.pro': 'Pro Day Pro space',
   'discover.secondaryMercato.pro': 'Pro Transfer',
   'discover.playersStat.pro': 'Pros',
+
+  'discover.hero.sponsor': 'Your brand\non the pitch.',
+  'discover.mission.sponsor':
+    'Geo campaigns, measurable ROI and club showcase — the dedicated space for partner brands.',
+  'discover.trust.sponsor':
+    'Verified brands — ProDay validation before campaigns go live.',
+  'discover.cta.sponsor': 'Create my Pro Day Sponsor space',
+  'discover.sectionExplore.sponsor': 'Brand pillars',
+  'discover.secondaryMercato.sponsor': 'Campaigns',
+  'discover.playersStat.sponsor': 'Clubs',
 
   'discover.hero.sante': 'Health\nat the service of play.',
   'discover.mission.sante':

@@ -9,6 +9,7 @@ import {
   PRODAY_SUPPORTER_BRAND,
   PRODAY_PRO_BRAND,
   PRODAY_SANTE_BRAND,
+  PRODAY_SPONSOR_BRAND,
   PRODAY_WOMAN_BRAND,
   brandForProductLine,
 } from '../models/ProductLine';
@@ -116,6 +117,20 @@ export const SANTE_IDENTITY: UniverseIdentity = {
   entrySub: 'Kiné · Médecin · Prépa · Nutrition · Coach mental',
 };
 
+export const SPONSOR_IDENTITY: UniverseIdentity = {
+  id: 'sponsor',
+  productName: PRODAY_SPONSOR_BRAND.name,
+  tagline: PRODAY_SPONSOR_BRAND.tagline,
+  heroLine: 'Votre marque\nsur le terrain.',
+  mission:
+    'Campagnes géolocalisées, tableau de bord ROI et vitrine vérifiée — un espace corporate pour les décideurs marketing.',
+  accentLabel: 'Sponsor',
+  mercatoLabel: 'Campagnes',
+  playerLabel: 'Marque',
+  cvLabel: 'Offres & ROI',
+  entrySub: 'Visibilité mesurée · clubs · financement local',
+};
+
 export function getUniverseIdentity(line: ProductLineId): UniverseIdentity {
   switch (line) {
     case 'woman':
@@ -128,6 +143,8 @@ export function getUniverseIdentity(line: ProductLineId): UniverseIdentity {
       return PRO_IDENTITY;
     case 'sante':
       return SANTE_IDENTITY;
+    case 'sponsor':
+      return SPONSOR_IDENTITY;
     default:
       return HOMME_IDENTITY;
   }

@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useTranslation } from '../../../context/LocaleContext';
 import { useSessionProfile } from '../../../hooks/useSessionProfile';
 import { useSponsorData } from '../../../context/SponsorDataContext';
@@ -21,6 +22,7 @@ import { SponsorPageScaffold } from '../../../components/sponsor/SponsorPageScaf
 import { SponsorTierStatusBanner } from '../../../components/sponsor/SponsorTierStatusBanner';
 import { SponsorQuotaBanner } from '../../../components/sponsor/SponsorQuotaBanner';
 import { SPONSOR_BRANDING_LOGOS } from '../../../content/brandingAssets';
+import { SHOWCASE_IMAGES } from '../../../content/showcaseAssets';
 
 export const SponsorOverviewPage: React.FC = () => {
   const { t } = useTranslation();
@@ -54,17 +56,27 @@ export const SponsorOverviewPage: React.FC = () => {
 
   return (
     <SponsorPageScaffold loading={loading}>
-      <View style={styles.heroRow}>
-        <View style={styles.heroLogo}>
-          <Image
-            source={SPONSOR_BRANDING_LOGOS.picto}
-            style={styles.heroLogoImage}
-            resizeMode="contain"
-            accessibilityLabel="Pro Day Sponsor"
-          />
-        </View>
-        <View style={styles.heroCopy}>
-          <Text style={styles.eyebrow}>Espace sponsor</Text>
+      <View style={styles.heroBleed}>
+        <Image
+          source={SHOWCASE_IMAGES.expSponsors}
+          style={StyleSheet.absoluteFillObject}
+          resizeMode="cover"
+          accessibilityIgnoresInvertColors
+        />
+        <LinearGradient
+          colors={['rgba(7,6,5,0.35)', 'rgba(7,6,5,0.92)']}
+          style={StyleSheet.absoluteFill}
+        />
+        <View style={styles.heroInner}>
+          <View style={styles.heroLogo}>
+            <Image
+              source={SPONSOR_BRANDING_LOGOS.picto}
+              style={styles.heroLogoImage}
+              resizeMode="contain"
+              accessibilityLabel="Pro Day Sponsor"
+            />
+          </View>
+          <Text style={styles.eyebrow}>Pro Day Sponsor</Text>
           <Text style={styles.greeting}>Bonjour, {companyName}</Text>
           <Text style={styles.sub}>{t('sponsor.dashboard.subtitle')}</Text>
         </View>
@@ -223,23 +235,33 @@ export const SponsorOverviewPage: React.FC = () => {
 
 function createStyles() {
   return StyleSheet.create({
-    heroRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: spacing.md,
+    heroBleed: {
+      marginHorizontal: -spacing.lg,
+      marginTop: -spacing.md,
+      marginBottom: spacing.lg,
+      minHeight: 220,
+      overflow: 'hidden',
+      borderBottomWidth: 1,
+      borderBottomColor: sponsorChrome.gold,
+    },
+    heroInner: {
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.xl,
+      paddingBottom: spacing.lg,
+      gap: spacing.xs,
     },
     heroLogo: {
-      width: 56,
-      height: 56,
+      width: 52,
+      height: 52,
       borderRadius: radius.md,
-      backgroundColor: sponsorChrome.overlayStrong,
+      backgroundColor: 'rgba(7,6,5,0.72)',
       alignItems: 'center',
       justifyContent: 'center',
       borderWidth: 1,
       borderColor: sponsorChrome.gold,
+      marginBottom: spacing.sm,
     },
-    heroLogoImage: { width: 40, height: 40 },
-    heroCopy: { flex: 1 },
+    heroLogoImage: { width: 36, height: 36 },
     eyebrow: {
       fontSize: 11,
       fontWeight: '700',
@@ -251,15 +273,21 @@ function createStyles() {
     greeting: {
       fontSize: 28,
       fontWeight: '900',
-      color: sponsorChrome.text,
+      color: '#FAFAF9',
       letterSpacing: -0.5,
     },
     sub: {
       fontSize: 14,
-      color: sponsorChrome.textMuted,
-      marginTop: spacing.xs,
+      color: 'rgba(250,250,249,0.72)',
       lineHeight: 20,
+      marginTop: 2,
     },
+    heroRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.md,
+    },
+    heroCopy: { flex: 1 },
     onboardingCard: {
       backgroundColor: sponsorChrome.overlayStrong,
       borderRadius: radius.lg,

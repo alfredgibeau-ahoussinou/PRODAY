@@ -24,10 +24,15 @@ import {
   DISCOVER_INTRO_SLIDES_SANTE,
   DISCOVER_UNIVERSE_CARDS_SANTE,
 } from './discoverSanteContent';
+import {
+  DISCOVER_INTRO_SLIDES_SPONSOR,
+  DISCOVER_UNIVERSE_CARDS_SPONSOR,
+} from './discoverSponsorContent';
 
 function resolveDiscoverLine(line: ProductLineId): ProductLineId {
   if (line === 'homme' || line === 'woman' || line === 'pro') return 'amateur';
   if (line === 'pro_player' || line === 'pro_club' || line === 'pro_staff') return line;
+  if (line === 'sponsor') return 'sponsor';
   if (isProFamilyLine(line)) return 'pro_player';
   return line;
 }
@@ -40,6 +45,9 @@ export function getDiscoverIntroSlides(line: ProductLineId): DiscoverIntroSlide[
   if (resolved === 'amateur') return DISCOVER_INTRO_SLIDES_AMATEUR;
   if (resolved === 'supporter') return DISCOVER_INTRO_SLIDES_SUPPORTER;
   if (resolved === 'sante') return [...DISCOVER_INTRO_SLIDES_SANTE] as unknown as DiscoverIntroSlide[];
+  if (resolved === 'sponsor') {
+    return [...DISCOVER_INTRO_SLIDES_SPONSOR] as unknown as DiscoverIntroSlide[];
+  }
   return DISCOVER_INTRO_SLIDES;
 }
 
@@ -51,6 +59,7 @@ export function getDiscoverUniverseCards(line: ProductLineId) {
   if (resolved === 'amateur') return DISCOVER_UNIVERSE_CARDS_AMATEUR;
   if (resolved === 'supporter') return DISCOVER_UNIVERSE_CARDS_SUPPORTER;
   if (resolved === 'sante') return DISCOVER_UNIVERSE_CARDS_SANTE;
+  if (resolved === 'sponsor') return DISCOVER_UNIVERSE_CARDS_SPONSOR;
   return DISCOVER_UNIVERSE_CARDS;
 }
 
@@ -102,6 +111,13 @@ export function getDiscoverCarouselCopy(line: ProductLineId): {
       label: 'Univers Santé',
       title: 'Cabinet et sportifs',
       subtitle: 'Agenda, demandes et messagerie soignants',
+    };
+  }
+  if (resolved === 'sponsor') {
+    return {
+      label: 'Pro Day Sponsor',
+      title: 'Votre marque sur le terrain',
+      subtitle: 'Campagnes géo, ROI et réseau clubs — espace marque dédié',
     };
   }
   return {

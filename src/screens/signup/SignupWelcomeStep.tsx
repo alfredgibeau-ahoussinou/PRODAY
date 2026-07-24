@@ -360,7 +360,7 @@ const SponsorWelcomeBody: React.FC<{ form: SignupForm }> = ({ form }) => {
         <SponsorLogo width={168} background="dark" centered />
       </View>
       <PlayerWelcomeHero
-        source={SHOWCASE_IMAGES.coachFounder}
+        source={SHOWCASE_IMAGES.expSponsors}
         overlayColor="rgba(7, 6, 5, 0.72)"
         badgeIcon="star-four-points"
         badgeText={PRODAY_SPONSOR_BRAND.entryCta}

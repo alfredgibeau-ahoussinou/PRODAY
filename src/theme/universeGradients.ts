@@ -65,6 +65,9 @@ export function gradientsForLine(line: ProductLineId): {
       ambient: ['rgba(45, 212, 191, 0.14)', '#0A0A0A', '#000000'] as const,
     };
   }
+  if (line === 'sponsor') {
+    return sponsorGradients;
+  }
   return {
     hero: hommeGradients.hero,
     heroDark: hommeGradients.heroDark,
@@ -99,7 +102,7 @@ const sponsorGradients = {
   heroDark: ['#030303', '#070605'] as const,
   card: ['#14110a', '#0c0a06'] as const,
   cta: ['#92700C', '#D4AF37'] as const,
-  ambient: ['#1a1508', '#070605', '#070605'] as const,
+  ambient: ['rgba(212, 175, 55, 0.2)', '#070605', '#030303'] as const,
 };
 
 /** Ambient FLASH générique (cyan) */

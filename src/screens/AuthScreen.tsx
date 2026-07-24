@@ -70,12 +70,14 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
   const { setActiveTab } = useTabNavigation();
   const { productLine, colors, proSignupPresetRole } = useAppTheme();
   const activeBrand = brandForAuthContext(productLine, proSignupPresetRole);
+  const isSponsorAuth =
+    productLine === 'sponsor' || isSponsorAuthPreset(proSignupPresetRole);
   const { openSpacePicker } = useLaunchIntro();
   const { t } = useTranslation();
   const [tab, setTab] = useState<AuthTabId>(initialIntent === 'signup' ? 'signup' : 'login');
   const screenCopy = getLocalizedAuthCopy(productLine, tab, t, {
     brandName: activeBrand.name,
-    sponsor: productLine === 'sponsor' || isSponsorAuthPreset(proSignupPresetRole),
+    sponsor: isSponsorAuth,
   });
   const signupTeaser = useMemo(
     () => getAuthSignupTeaser(productLine, t, proSignupPresetRole),
@@ -244,15 +246,36 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
             <View style={authStyles.toolbarEnd}>
               <LanguageSettingControl variant="chip" />
               <PressableSpring
-                style={authStyles.universeChip}
+                style={[
+                  authStyles.universeChip,
+                  isSponsorAuth && {
+                    backgroundColor: 'rgba(212, 175, 55, 0.14)',
+                    borderColor: 'rgba(212, 175, 55, 0.45)',
+                  },
+                ]}
                 onPress={openSpacePicker}
                 scaleTo={0.96}
                 haptic
                 accessibilityLabel={t('auth.changeUniverse')}
               >
-                <Icon name="star-four-points" size={14} color={colors.accent} />
-                <Text style={authStyles.universeChipText}>{activeBrand.name}</Text>
-                <Icon name="chevron-down" size={14} color={colors.textMuted} />
+                <Icon
+                  name="star-four-points"
+                  size={14}
+                  color={isSponsorAuth ? '#D4AF37' : colors.accent}
+                />
+                <Text
+                  style={[
+                    authStyles.universeChipText,
+                    isSponsorAuth && { color: '#F5D76E' },
+                  ]}
+                >
+                  {activeBrand.name}
+                </Text>
+                <Icon
+                  name="chevron-down"
+                  size={14}
+                  color={isSponsorAuth ? '#D4AF37' : colors.textMuted}
+                />
               </PressableSpring>
             </View>
           </View>
@@ -260,7 +283,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
 
         <AnimatedEntrance index={1} kind="fadeUp">
           <View style={authStyles.brandRow}>
-            <AuthBrandHeader width={logoWidth} tone="light" />
+            <AuthBrandHeader width={logoWidth} tone={isSponsorAuth ? 'dark' : 'light'} />
           </View>
         </AnimatedEntrance>
 

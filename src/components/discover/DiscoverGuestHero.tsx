@@ -89,8 +89,19 @@ export const DiscoverGuestHero: React.FC<DiscoverGuestHeroProps> = ({
         <View style={styles.ctaRow}>
           <PressableSpring onPress={onSignup} scaleTo={0.98} haptic style={styles.signupWrap}>
             <ProDayGradient kind="cta" style={styles.signupBtn}>
-              <Text style={styles.signupText}>{t('discover.createAccount')}</Text>
-              <Icon name="chevron-forward" size={16} color="#FFFFFF" />
+              <Text
+                style={[
+                  styles.signupText,
+                  productLine === 'sponsor' && styles.signupTextSponsor,
+                ]}
+              >
+                {productLine === 'sponsor' ? copy.ctaText : t('discover.createAccount')}
+              </Text>
+              <Icon
+                name="chevron-forward"
+                size={16}
+                color={productLine === 'sponsor' ? '#1C1917' : '#FFFFFF'}
+              />
             </ProDayGradient>
           </PressableSpring>
           <PressableSpring onPress={onLogin} scaleTo={0.98} style={styles.loginLink}>
@@ -203,6 +214,9 @@ function createStyles(c: AppColors) {
       fontSize: 15,
       fontWeight: '800',
       color: '#FFFFFF',
+    },
+    signupTextSponsor: {
+      color: '#1C1917',
     },
     loginLink: {
       alignSelf: 'center',
