@@ -1,0 +1,38 @@
+{
+  "project_info": {
+    "project_number": "277880299213",
+    "firebase_url": "https://proday-155b0-default-rtdb.firebaseio.com",
+    "project_id": "proday-155b0",
+    "storage_bucket": "proday-155b0.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:277880299213:android:1f068bc098699541fa9384",
+        "android_client_info": {
+          "package_name": "com.proday.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAqc2-NNS1G8BUKtKaaqLPVQFgooJjJZtA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "277880299213-t7rjm7vmumkl75bp0qj4oej82t59he2l.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.proday.app"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

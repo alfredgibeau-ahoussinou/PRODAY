@@ -111,5 +111,20 @@
     "jest": "^29.7.0",
     "jest-expo": "~54.0.0",
     "typescript": "~5.9.2"
+  },
+  "expo": {
+    "autolinking": {
+      "android": {
+        "exclude": [
+          "expo-video",
+          "expo-video-thumbnails",
+          "expo-audio",
+          "expo-iap",
+          "expo-health-connect",
+          "react-native-health-connect",
+          "react-native-health"
+        ]
+      }
+    }
   }
 }

@@ -19,10 +19,16 @@ let NativeMarker: typeof import('react-native-maps').Marker | null = null;
 let NativeCircle: typeof import('react-native-maps').Circle | null = null;
 
 if (Platform.OS !== 'web') {
-  const maps = require('react-native-maps') as typeof import('react-native-maps');
-  NativeMapView = maps.default;
-  NativeMarker = maps.Marker;
-  NativeCircle = maps.Circle;
+  try {
+    const maps = require('react-native-maps') as typeof import('react-native-maps');
+    NativeMapView = maps.default;
+    NativeMarker = maps.Marker;
+    NativeCircle = maps.Circle;
+  } catch {
+    NativeMapView = null;
+    NativeMarker = null;
+    NativeCircle = null;
+  }
 }
 
 export const GEO_MAP_HEIGHT = 260;
