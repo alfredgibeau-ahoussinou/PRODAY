@@ -222,8 +222,9 @@ def build():
 
     story.append(
         warn_box(
-            "<b>Confidentiel :</b> à partager uniquement entre les 4 associés. "
-            "Ne donnez jamais le minicode à des personnes extérieures.",
+            "<b>Confidentiel :</b> à partager uniquement entre les 4 associés "
+            "(Alfred, Ben, Arthurus, Yohan). "
+            "Ne donnez jamais le minicode ni le mot de passe mail à des personnes extérieures.",
             s,
         )
     )
@@ -231,14 +232,14 @@ def build():
     story.append(Paragraph("1. Destinataires (4 collaborateurs)", s["h1"]))
     collab = [
         [Paragraph("#", s["cell_b"]), Paragraph("Nom", s["cell_b"]), Paragraph("Rôle", s["cell_b"])],
-        [Paragraph("1", s["cell"]), Paragraph("_À compléter_", s["cell"]), Paragraph("Associé fondateur", s["cell"])],
-        [Paragraph("2", s["cell"]), Paragraph("_À compléter_", s["cell"]), Paragraph("Associé fondateur", s["cell"])],
-        [Paragraph("3", s["cell"]), Paragraph("_À compléter_", s["cell"]), Paragraph("Associé fondateur", s["cell"])],
         [
-            Paragraph("4", s["cell"]),
+            Paragraph("1", s["cell"]),
             Paragraph("Alfred Gibeau-Ahoussinou", s["cell"]),
             Paragraph("Associé fondateur", s["cell"]),
         ],
+        [Paragraph("2", s["cell"]), Paragraph("Ben", s["cell"]), Paragraph("Associé fondateur", s["cell"])],
+        [Paragraph("3", s["cell"]), Paragraph("Arthurus", s["cell"]), Paragraph("Associé fondateur", s["cell"])],
+        [Paragraph("4", s["cell"]), Paragraph("Yohan", s["cell"]), Paragraph("Associé fondateur", s["cell"])],
     ]
     ct = Table(collab, colWidths=[1.2 * cm, 7.5 * cm, 8.5 * cm])
     ct.setStyle(
@@ -307,13 +308,38 @@ def build():
         )
     )
 
-    story.append(Paragraph("5. E-mails de contact", s["h1"]))
+    story.append(Paragraph("5. Boîte mail ProDay (accès partagé)", s["h1"]))
     story.append(
         Paragraph(
-            "À utiliser si quelqu’un vous écrit ou si vous devez répondre :",
+            "Pour lire et répondre aux messages reçus par ProDay (contact, candidatures, etc.) :",
             s["body"],
         )
     )
+    story.append(
+        kv_table(
+            [
+                ("Adresse principale (Gmail)", "proday.admin@gmail.com"),
+                ("Adresse contact affichée", "contact@proday.app"),
+                ("Mot de passe boîte mail ProDay", "<b>Proday2026@</b>"),
+            ],
+            s,
+        )
+    )
+    story.append(
+        Paragraph(
+            "Ouvrez Gmail avec <b>proday.admin@gmail.com</b> et le mot de passe ci-dessus. "
+            "Les messages envoyés à <b>contact@proday.app</b> arrivent aussi de ce côté.",
+            s["small"],
+        )
+    )
+    story.append(
+        Paragraph(
+            "<b>Important :</b> ce mot de passe est réservé aux 4 fondateurs. Ne le communiquez à personne d’extérieur.",
+            s["small"],
+        )
+    )
+
+    story.append(Paragraph("6. E-mails de contact (rappel)", s["h1"]))
     story.append(
         kv_table(
             [
@@ -324,10 +350,10 @@ def build():
         )
     )
 
-    story.append(Paragraph("6. Rappels", s["h1"]))
+    story.append(Paragraph("7. Rappels", s["h1"]))
     reminders = [
-        "Document réservé aux <b>4 fondateurs</b> — ne pas le transmettre hors de ce cercle.",
-        "<b>Ne donnez pas le minicode</b> à des tiers (candidats, partenaires, prestataires…).",
+        "Document réservé aux <b>4 fondateurs</b> (Alfred, Ben, Arthurus, Yohan) — ne pas le transmettre hors de ce cercle.",
+        "<b>Ne donnez pas le minicode</b> ni le <b>mot de passe mail</b> à des tiers (candidats, partenaires, prestataires…).",
         "En cas de doute : demander à Alfred avant de partager quoi que ce soit.",
     ]
     story.append(

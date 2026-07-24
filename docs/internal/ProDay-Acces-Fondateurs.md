@@ -12,10 +12,10 @@
 
 | # | Nom | Rôle |
 |---|-----|------|
-| 1 | _À compléter_ | Associé fondateur |
-| 2 | _À compléter_ | Associé fondateur |
-| 3 | _À compléter_ | Associé fondateur |
-| 4 | Alfred Gibeau-Ahoussinou | Associé fondateur |
+| 1 | Alfred Gibeau-Ahoussinou | Associé fondateur |
+| 2 | Ben | Associé fondateur |
+| 3 | Arthurus | Associé fondateur |
+| 4 | Yohan | Associé fondateur |
 
 ---
 
@@ -49,9 +49,23 @@ Ne communiquez ce code à personne en dehors des 4 associés.
 
 ---
 
-## E-mails de contact
+## Boîte mail ProDay (accès partagé)
 
-À utiliser si quelqu’un vous écrit ou si vous devez répondre :
+Pour lire et répondre aux messages reçus par ProDay (contact, candidatures, etc.) :
+
+| Élément | Valeur |
+|---------|--------|
+| Adresse principale (Gmail) | proday.admin@gmail.com |
+| Adresse contact affichée | contact@proday.app |
+| Mot de passe boîte mail ProDay | `Proday2026@` |
+
+**Comment faire :** ouvrez Gmail avec `proday.admin@gmail.com` et le mot de passe ci-dessus. Les messages envoyés à `contact@proday.app` arrivent aussi de ce côté.
+
+**Important :** ce mot de passe est **réservé aux 4 fondateurs**. Ne le communiquez à personne d’extérieur.
+
+---
+
+## E-mails de contact (rappel)
 
 | Usage | Adresse |
 |-------|---------|
@@ -62,6 +76,6 @@ Ne communiquez ce code à personne en dehors des 4 associés.
 
 ## Rappels
 
-1. Document **réservé aux 4 fondateurs** — ne pas le transmettre hors de ce cercle.
-2. **Ne donnez pas le minicode** à des tiers (candidats, partenaires, prestataires…).
+1. Document **réservé aux 4 fondateurs** (Alfred, Ben, Arthurus, Yohan) — ne pas le transmettre hors de ce cercle.
+2. **Ne donnez pas le minicode** ni le **mot de passe mail** à des tiers (candidats, partenaires, prestataires…).
 3. En cas de doute : demander à Alfred avant de partager quoi que ce soit.
