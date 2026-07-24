@@ -14,23 +14,15 @@ import { useAdminStyles } from './adminStyles';
 import { spacing, radius } from '../../theme/designTokens';
 import type { AppColors } from '../../theme/universeTheme';
 import {
-  ADMIN_EDIT_ROLES,
   ADMIN_PRODUCT_LINES,
   adminProductLineLabel,
+  adminRoleHint,
+  adminRolesForProductLine,
   resolveAdminProductLine,
 } from '../../utils/adminProductLine';
-
-const ROLE_LABEL: Record<UserRole, string> = {
-  player: 'Joueur',
-  coach: 'Coach',
-  club: 'Club',
-  agent: 'Agent',
-  recruiter: 'Recruteur',
-  organizer: 'Organisateur',
-  sponsor: 'Sponsor',
-  supporter: 'Supporter',
-  physio: 'Kinésithérapeute',
-};
+import { defaultRoleForProductLine } from '../../content/universeRoles';
+import { getRoleLabel } from '../../screens/signup/signupFlowConfig';
+import { useTranslation } from '../../context/LocaleContext';
 
 export interface CreateUserFormState {
   email: string;
@@ -59,7 +51,9 @@ export const AdminCreateUserPanel: React.FC<AdminCreateUserPanelProps> = ({
   submitting,
 }) => {
   const { colors: c } = useAdminStyles();
+  const { t } = useTranslation();
   const styles = useMemo(() => createStyles(c), [c]);
+  const metierRoles = adminRolesForProductLine(form.product_line);
 
   if (!visible) return null;
 
@@ -113,20 +107,12 @@ export const AdminCreateUserPanel: React.FC<AdminCreateUserPanelProps> = ({
             key={line}
             style={[styles.roleChip, form.product_line === line && styles.roleChipOn]}
             onPress={() => {
-              const role =
-                line === 'sponsor'
-                  ? 'sponsor'
-                  : line === 'sante'
-                    ? 'physio'
-                    : line === 'supporter'
-                      ? 'supporter'
-                      : line === 'pro_club'
-                        ? 'club'
-                        : line === 'pro_staff'
-                          ? 'coach'
-                          : 'player';
+              const allowed = adminRolesForProductLine(line);
+              const role = allowed.includes(form.role)
+                ? form.role
+                : defaultRoleForProductLine(line);
               onChange({
-                product_line: line,
+                product_line: resolveAdminProductLine(role, line),
                 role,
               });
             }}
@@ -143,24 +129,36 @@ export const AdminCreateUserPanel: React.FC<AdminCreateUserPanelProps> = ({
         ))}
       </View>
 
-      <Text style={styles.fieldLabel}>Rôle</Text>
-      <View style={styles.roleGrid}>
-        {ADMIN_EDIT_ROLES.map((r) => (
-          <TouchableOpacity
-            key={r}
-            style={[styles.roleChip, form.role === r && styles.roleChipOn]}
-            onPress={() =>
-              onChange({
-                role: r,
-                product_line: resolveAdminProductLine(r, form.product_line),
-              })
-            }
-          >
-            <Text style={[styles.roleChipText, form.role === r && styles.roleChipTextOn]}>
-              {ROLE_LABEL[r]}
-            </Text>
-          </TouchableOpacity>
-        ))}
+      <Text style={styles.fieldLabel}>Rôle métier</Text>
+      <Text style={styles.hint}>
+        Rôles compatibles avec {adminProductLineLabel(form.product_line)}
+      </Text>
+      <View style={styles.roleList}>
+        {metierRoles.map((r) => {
+          const active = form.role === r;
+          const hint = adminRoleHint(r);
+          return (
+            <TouchableOpacity
+              key={r}
+              style={[styles.roleCard, active && styles.roleCardOn]}
+              onPress={() =>
+                onChange({
+                  role: r,
+                  product_line: resolveAdminProductLine(r, form.product_line),
+                })
+              }
+            >
+              <Text style={[styles.roleCardTitle, active && styles.roleCardTitleOn]}>
+                {getRoleLabel(r, t)}
+              </Text>
+              {hint ? (
+                <Text style={[styles.roleCardHint, active && styles.roleCardHintOn]}>
+                  {hint}
+                </Text>
+              ) : null}
+            </TouchableOpacity>
+          );
+        })}
       </View>
 
       <TouchableOpacity style={styles.submit} onPress={onSubmit} disabled={submitting}>
@@ -228,6 +226,12 @@ function createStyles(c: AppColors) {
       marginBottom: 4,
       letterSpacing: 0.3,
     },
+    hint: {
+      fontSize: 11,
+      color: c.textMuted,
+      marginBottom: spacing.sm,
+      marginTop: -2,
+    },
     input: {
       backgroundColor: c.background,
       borderWidth: 1,
@@ -249,6 +253,23 @@ function createStyles(c: AppColors) {
     roleChipOn: { backgroundColor: c.accent, borderColor: c.brand },
     roleChipText: { fontSize: 12, fontWeight: '800', color: c.text },
     roleChipTextOn: { color: c.brandInverse },
+    roleList: { gap: spacing.xs, marginBottom: spacing.lg },
+    roleCard: {
+      borderWidth: 1,
+      borderColor: c.border,
+      borderRadius: radius.md,
+      paddingVertical: spacing.sm,
+      paddingHorizontal: spacing.md,
+      backgroundColor: c.background,
+    },
+    roleCardOn: {
+      backgroundColor: c.accent,
+      borderColor: c.brand,
+    },
+    roleCardTitle: { fontSize: 14, fontWeight: '800', color: c.text },
+    roleCardTitleOn: { color: c.brandInverse },
+    roleCardHint: { fontSize: 11, color: c.textMuted, marginTop: 2 },
+    roleCardHintOn: { color: c.brandInverse, opacity: 0.85 },
     submit: {
       flexDirection: 'row',
       alignItems: 'center',

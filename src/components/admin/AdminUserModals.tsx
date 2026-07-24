@@ -18,12 +18,16 @@ import { useAdminStyles } from './adminStyles';
 import { spacing, radius } from '../../theme/designTokens';
 import type { AppColors } from '../../theme/universeTheme';
 import {
-  ADMIN_EDIT_ROLES,
   ADMIN_PRODUCT_LINES,
   adminProductLineLabel,
+  adminRoleHint,
+  adminRolesForProductLine,
   resolveAdminProductLine,
 } from '../../utils/adminProductLine';
 import { getUserProductLine } from '../../utils/productLineAccess';
+import { getRoleLabel } from '../../screens/signup/signupFlowConfig';
+import { defaultRoleForProductLine } from '../../content/universeRoles';
+import { useTranslation } from '../../context/LocaleContext';
 
 const VERIFY: VerificationStatus[] = ['NOT_REQUIRED', 'PENDING', 'VERIFIED', 'REJECTED'];
 
@@ -35,6 +39,7 @@ export type AdminUserEditPatch = {
   verification_status: VerificationStatus;
   is_verified: boolean;
   sponsor_approved: boolean;
+  job_title: string;
 };
 
 interface AdminUserEditModalProps {
@@ -53,9 +58,11 @@ export const AdminUserEditModal: React.FC<AdminUserEditModalProps> = ({
   onSave,
 }) => {
   const { colors: c } = useAdminStyles();
+  const { t } = useTranslation();
   const styles = useMemo(() => createStyles(c), [c]);
   const [displayName, setDisplayName] = useState('');
   const [city, setCity] = useState('');
+  const [jobTitle, setJobTitle] = useState('');
   const [role, setRole] = useState<UserRole>('player');
   const [productLine, setProductLine] = useState<ProductLineId>('amateur');
   const [verificationStatus, setVerificationStatus] = useState<VerificationStatus>('NOT_REQUIRED');
@@ -65,6 +72,7 @@ export const AdminUserEditModal: React.FC<AdminUserEditModalProps> = ({
     if (!user) return;
     setDisplayName(user.display_name);
     setCity(user.city ?? '');
+    setJobTitle(user.profile?.job_title ?? '');
     setRole(user.role);
     setProductLine(getUserProductLine(user));
     setVerificationStatus(user.verification_status);
@@ -77,12 +85,31 @@ export const AdminUserEditModal: React.FC<AdminUserEditModalProps> = ({
     if (next !== 'sponsor') setSponsorApproved(false);
   };
 
+  const applyProductLine = (line: ProductLineId) => {
+    const allowed = adminRolesForProductLine(line);
+    const nextRole = allowed.includes(role) ? role : defaultRoleForProductLine(line);
+    setRole(nextRole);
+    if (nextRole !== 'sponsor') setSponsorApproved(false);
+    setProductLine(resolveAdminProductLine(nextRole, line));
+  };
+
+  const metierRoles = adminRolesForProductLine(productLine);
+
   if (!user) return null;
 
   const needsVerifyUi =
     role === 'player' ||
     role === 'sponsor' ||
     ROLES_REQUIRING_VERIFICATION.includes(role);
+
+  const showJobTitle =
+    role === 'coach' ||
+    role === 'agent' ||
+    role === 'recruiter' ||
+    role === 'organizer' ||
+    role === 'club' ||
+    role === 'sponsor' ||
+    role === 'physio';
 
   return (
     <AnimatedModalShell visible={visible} onClose={onClose} closeLabel="Fermer">
@@ -105,27 +132,13 @@ export const AdminUserEditModal: React.FC<AdminUserEditModalProps> = ({
             placeholderTextColor={c.textMuted}
           />
 
-          <Text style={styles.label}>Univers (product line)</Text>
+          <Text style={styles.label}>Univers</Text>
           <View style={styles.chipRow}>
             {ADMIN_PRODUCT_LINES.map((line) => (
               <TouchableOpacity
                 key={line}
                 style={[styles.chip, productLine === line && styles.chipOn]}
-                onPress={() => {
-                  setProductLine(line);
-                  if (line === 'sponsor') applyRole('sponsor');
-                  else if (line === 'sante') applyRole('physio');
-                  else if (line === 'supporter') applyRole('supporter');
-                  else if (line === 'pro_club') applyRole('club');
-                  else if (line === 'pro_player' && role !== 'player') applyRole('player');
-                  else if (line === 'pro_staff' && !['coach', 'agent', 'recruiter', 'organizer'].includes(role)) {
-                    applyRole('coach');
-                  } else if (line === 'amateur' && !['player', 'coach'].includes(role)) {
-                    applyRole('player');
-                  } else {
-                    setProductLine(resolveAdminProductLine(role, line));
-                  }
-                }}
+                onPress={() => applyProductLine(line)}
               >
                 <Text style={[styles.chipText, productLine === line && styles.chipTextOn]}>
                   {adminProductLineLabel(line)}
@@ -135,17 +148,44 @@ export const AdminUserEditModal: React.FC<AdminUserEditModalProps> = ({
           </View>
 
           <Text style={styles.label}>Rôle métier</Text>
-          <View style={styles.chipRow}>
-            {ADMIN_EDIT_ROLES.map((r) => (
-              <TouchableOpacity
-                key={r}
-                style={[styles.chip, role === r && styles.chipOn]}
-                onPress={() => applyRole(r)}
-              >
-                <Text style={[styles.chipText, role === r && styles.chipTextOn]}>{r}</Text>
-              </TouchableOpacity>
-            ))}
+          <Text style={styles.hint}>
+            Rôles compatibles avec {adminProductLineLabel(productLine)}
+          </Text>
+          <View style={styles.roleList}>
+            {metierRoles.map((r) => {
+              const active = role === r;
+              const hint = adminRoleHint(r);
+              return (
+                <TouchableOpacity
+                  key={r}
+                  style={[styles.roleCard, active && styles.roleCardOn]}
+                  onPress={() => applyRole(r)}
+                >
+                  <Text style={[styles.roleCardTitle, active && styles.roleCardTitleOn]}>
+                    {getRoleLabel(r, t)}
+                  </Text>
+                  {hint ? (
+                    <Text style={[styles.roleCardHint, active && styles.roleCardHintOn]}>
+                      {hint}
+                    </Text>
+                  ) : null}
+                </TouchableOpacity>
+              );
+            })}
           </View>
+
+          {showJobTitle ? (
+            <>
+              <Text style={styles.label}>Intitulé métier (profil)</Text>
+              <TextInput
+                style={styles.input}
+                value={jobTitle}
+                onChangeText={setJobTitle}
+                placeholder="Ex. Coach U17, Agent FIFA, Kiné du sport…"
+                placeholderTextColor={c.textMuted}
+              />
+            </>
+          ) : null}
 
           {needsVerifyUi ? (
             <>
@@ -203,6 +243,7 @@ export const AdminUserEditModal: React.FC<AdminUserEditModalProps> = ({
                 verification_status: verificationStatus,
                 is_verified: verificationStatus === 'VERIFIED',
                 sponsor_approved: role === 'sponsor' ? sponsorApproved : false,
+                job_title: jobTitle.trim(),
               })
             }
           >
@@ -293,6 +334,12 @@ function createStyles(c: AppColors) {
       marginTop: spacing.sm,
       marginBottom: spacing.xs,
     },
+    hint: {
+      fontSize: 11,
+      color: c.textMuted,
+      marginBottom: spacing.sm,
+      marginTop: -2,
+    },
     input: {
       borderWidth: 1,
       borderColor: c.border,
@@ -314,6 +361,23 @@ function createStyles(c: AppColors) {
     chipOn: { backgroundColor: c.accent, borderColor: c.accent },
     chipText: { fontSize: 11, fontWeight: '700', color: c.textSecondary },
     chipTextOn: { color: c.brandInverse },
+    roleList: { gap: spacing.xs, marginBottom: spacing.sm },
+    roleCard: {
+      borderWidth: 1,
+      borderColor: c.border,
+      borderRadius: radius.md,
+      paddingVertical: spacing.sm,
+      paddingHorizontal: spacing.md,
+      backgroundColor: c.background,
+    },
+    roleCardOn: {
+      backgroundColor: c.accent,
+      borderColor: c.accent,
+    },
+    roleCardTitle: { fontSize: 14, fontWeight: '800', color: c.text },
+    roleCardTitleOn: { color: c.brandInverse },
+    roleCardHint: { fontSize: 11, color: c.textMuted, marginTop: 2 },
+    roleCardHintOn: { color: c.brandInverse, opacity: 0.85 },
     switchRow: {
       flexDirection: 'row',
       alignItems: 'center',

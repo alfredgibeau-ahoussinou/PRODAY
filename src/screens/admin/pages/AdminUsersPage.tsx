@@ -242,6 +242,7 @@ export const AdminUsersPage: React.FC = () => {
               verification_status: patch.verification_status,
               is_verified: patch.is_verified,
               sponsor_approved: patch.sponsor_approved,
+              job_title: patch.job_title,
             });
             setEditUser(null);
             await refresh();

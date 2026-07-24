@@ -71,6 +71,11 @@ export const AdminUserCard: React.FC<AdminUserCardProps> = ({
               <View style={styles.lineBadge}>
                 <Text style={styles.lineBadgeText}>{adminProductLineLabel(productLine)}</Text>
               </View>
+              {user.profile?.job_title ? (
+                <Text style={styles.city} numberOfLines={1}>
+                  {user.profile.job_title}
+                </Text>
+              ) : null}
               {user.role === 'sponsor' ? (
                 <View
                   style={[

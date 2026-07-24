@@ -1,6 +1,6 @@
 import type { UserRole } from '../models/User';
 import type { ProductLineId } from '../models/ProductLine';
-import { productLineLabel } from '../content/universeRoles';
+import { productLineLabel, rolesForProductLine } from '../content/universeRoles';
 import { splitLegacyProByRole } from './productLineResolution';
 
 /** Lignes produit gérables dans l’espace admin (pôles actuels). */
@@ -16,6 +16,27 @@ export const ADMIN_PRODUCT_LINES: ProductLineId[] = [
 
 export function adminProductLineLabel(line: ProductLineId): string {
   return productLineLabel(line);
+}
+
+/** Rôles métier compatibles avec l’univers sélectionné en admin. */
+export function adminRolesForProductLine(line: ProductLineId): UserRole[] {
+  return rolesForProductLine(line);
+}
+
+const ROLE_HINTS: Partial<Record<UserRole, string>> = {
+  player: 'CV, Mercato, saison',
+  coach: 'Staff technique / entraînement',
+  club: 'Structure & recrutement',
+  agent: 'Mandats & représentation',
+  recruiter: 'Scouting & détection',
+  organizer: 'Événements & tournois',
+  sponsor: 'Marque & campagnes',
+  supporter: 'Fan & communauté',
+  physio: 'Cabinet & suivi médical',
+};
+
+export function adminRoleHint(role: UserRole): string {
+  return ROLE_HINTS[role] ?? '';
 }
 
 /**
@@ -44,7 +65,7 @@ export function resolveAdminProductLine(
     : splitLegacyProByRole(role);
 }
 
-/** Rôles métier proposés à la création / édition admin. */
+/** Rôles métier proposés à la création / édition admin (tous univers). */
 export const ADMIN_EDIT_ROLES: UserRole[] = [
   'player',
   'coach',

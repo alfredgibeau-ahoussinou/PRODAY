@@ -187,6 +187,7 @@ export type AdminUserUpdatePatch = {
   city?: string;
   sponsor_approved?: boolean;
   sponsor_tier?: 'starter' | 'territorial' | 'national' | null;
+  job_title?: string;
 };
 
 export const adminService = {
@@ -238,6 +239,9 @@ export const adminService = {
     }
     if (patch.sponsor_tier !== undefined) {
       update.sponsor_tier = patch.sponsor_tier;
+    }
+    if (patch.job_title !== undefined) {
+      update['profile.job_title'] = patch.job_title || null;
     }
 
     if (patch.product_line !== undefined || patch.role !== undefined) {

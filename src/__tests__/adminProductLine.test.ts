@@ -1,6 +1,7 @@
 import {
   resolveAdminProductLine,
   ADMIN_PRODUCT_LINES,
+  adminRolesForProductLine,
 } from '../utils/adminProductLine';
 
 describe('adminProductLine', () => {
@@ -19,6 +20,17 @@ describe('adminProductLine', () => {
     expect(resolveAdminProductLine('player', 'pro_staff')).toBe('pro_player');
     expect(resolveAdminProductLine('club', 'amateur')).toBe('pro_club');
     expect(resolveAdminProductLine('agent', 'pro_player')).toBe('pro_staff');
+  });
+
+  it('expose les rôles métier par univers', () => {
+    expect(adminRolesForProductLine('pro_staff')).toEqual([
+      'coach',
+      'agent',
+      'recruiter',
+      'organizer',
+    ]);
+    expect(adminRolesForProductLine('amateur')).toEqual(['player', 'coach']);
+    expect(adminRolesForProductLine('sponsor')).toEqual(['sponsor']);
   });
 
   it('expose les pôles admin actuels', () => {
