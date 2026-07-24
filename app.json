@@ -2,7 +2,7 @@
   "expo": {
     "name": "ProDay",
     "slug": "proday",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "scheme": "proday",
     "orientation": "portrait",
     "icon": "./assets/branding/logo-proday-official.png",
@@ -25,7 +25,8 @@
         "foregroundImage": "./assets/branding/logo-proday-official.png",
         "backgroundColor": "#F1F5F9"
       },
-      "package": "com.proday.app"
+      "package": "com.proday.app",
+      "versionCode": 2
     },
     "web": {
       "bundler": "metro",
