@@ -87,6 +87,10 @@ function buildConfigFromEnv(): RuntimeConfig {
       emailjs_template_id: readEnv('BETA_EMAILJS_TEMPLATE_ID'),
       emailjs_public_key: readEnv('BETA_EMAILJS_PUBLIC_KEY'),
       emailjs_private_key: readEnv('BETA_EMAILJS_PRIVATE_KEY'),
+      website_admin_secret: readEnv(
+        'BETA_WEBSITE_ADMIN_SECRET',
+        'BETA_ADMIN_API_SECRET',
+      ),
     },
     cal: {
       api_key: readEnv('CAL_API_KEY'),

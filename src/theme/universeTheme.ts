@@ -32,10 +32,12 @@ export function getThemedColorsForLine(
   line: ProductLineId,
   segment?: PlayerSegment | null,
 ): AppColors {
-  if (segment && (line === 'amateur' || line === 'pro_player')) {
-    return getThemedColorsForSegment(line, segment);
+  if (segment && (line === 'amateur' || line === 'pro_player' || line === 'homme' || line === 'woman')) {
+    const themeLine = line === 'homme' || line === 'woman' ? 'amateur' : line;
+    return getThemedColorsForSegment(themeLine, segment);
   }
-  if (line === 'woman') return { ...baseColors, ...womanColorOverrides };
+  if (line === 'woman') return getThemedColorsForSegment('amateur', 'female');
+  if (line === 'homme') return getThemedColorsForSegment('amateur', 'male');
   if (line === 'amateur') return { ...baseColors, ...amateurColorOverrides };
   if (line === 'supporter') return { ...baseColors, ...supporterColorOverrides };
   if (line === 'sponsor') return getSponsorAppColors();
@@ -43,7 +45,7 @@ export function getThemedColorsForLine(
     return { ...baseColors, ...proColorOverrides };
   }
   if (line === 'sante') return { ...baseColors, ...santeColorOverrides };
-  return { ...baseColors, ...hommeColorOverrides };
+  return { ...baseColors, ...amateurColorOverrides };
 }
 
 /** @deprecated Préférer getThemedColorsForLine */

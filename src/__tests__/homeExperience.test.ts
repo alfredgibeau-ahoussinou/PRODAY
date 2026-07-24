@@ -38,10 +38,12 @@ describe('homeExperience', () => {
 });
 
 describe('appSpaceProductLine', () => {
-  it('n’expose que les espaces compatibles avec la ligne produit', () => {
+  it('n’expose que les espaces compatibles avec la ligne produit / segment', () => {
     expect(getSelectableAppSpaces('homme')).toEqual(['men', 'boys', 'under_u13']);
     expect(getSelectableAppSpaces('pro')).toEqual(['men', 'boys', 'under_u13']);
     expect(getSelectableAppSpaces('woman')).toEqual(['women', 'girls', 'under_u13']);
+    expect(getSelectableAppSpaces('amateur', 'female')).toEqual(['women', 'girls', 'under_u13']);
+    expect(getSelectableAppSpaces('amateur', 'male')).toEqual(['men', 'boys', 'under_u13']);
   });
 
   it('refuse les espaces croisés', () => {
@@ -52,5 +54,6 @@ describe('appSpaceProductLine', () => {
     expect(isAppSpaceAllowedForProductLine('under_u13', 'homme')).toBe(true);
     expect(isAppSpaceAllowedForProductLine('men', 'homme')).toBe(true);
     expect(isAppSpaceAllowedForProductLine('men', 'pro')).toBe(true);
+    expect(isAppSpaceAllowedForProductLine('women', 'amateur', 'female')).toBe(true);
   });
 });

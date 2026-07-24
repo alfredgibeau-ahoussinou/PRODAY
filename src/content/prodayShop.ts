@@ -114,11 +114,14 @@ export function getShopCopy(line: ProductLineId): ShopCopy {
 
 function shopLineTag(line: ProductLineId): string {
   if (line === 'woman') return 'Woman';
-  if (line === 'pro') return 'Pro';
+  if (line === 'pro' || line === 'pro_player' || line === 'pro_club' || line === 'pro_staff') {
+    return 'Pro';
+  }
   if (line === 'sante') return 'Santé';
   if (line === 'supporter') return 'Supporter';
-  if (line === 'amateur') return 'Amateur';
-  return 'Man';
+  if (line === 'sponsor') return 'Sponsor';
+  if (line === 'amateur' || line === 'homme') return 'Amateur';
+  return 'Amateur';
 }
 
 function adaptCatalogForLine(line: ProductLineId, catalog: ShopProduct[]): ShopProduct[] {

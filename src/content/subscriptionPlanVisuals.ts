@@ -268,7 +268,7 @@ export function getSubscriptionPlanVisual(
   if (!planId) return null;
 
   let variant = PLAN_VARIANT[planId];
-  if (planId === 'player_plus' && line === 'woman') {
+  if (planId === 'player_plus' && (line === 'woman')) {
     variant = 'woman_player';
   }
 

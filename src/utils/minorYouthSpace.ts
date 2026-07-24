@@ -4,6 +4,7 @@ import type { ProductLineId } from '../models/ProductLine';
 import type { User } from '../models/User';
 import { getSelectableAppSpaces } from './appSpaceProductLine';
 import { isMinorUser } from './minor';
+import { isFemalePresentationForUser, resolvePlayerSegment } from './playerSegment';
 
 const YOUTH_SPACES: AppSpaceId[] = ['under_u13', 'boys', 'girls'];
 
@@ -17,28 +18,26 @@ export function resolveYouthAppSpaceForMinor(
   productLine: ProductLineId,
 ): AppSpaceId {
   const age = user.profile?.age;
-  const feminine =
-    productLine === 'woman' ||
-    user.profile?.gender === 'women' ||
-    user.profile?.gender === 'minor' && user.app_space === 'girls';
+  const feminine = isFemalePresentationForUser(user, productLine);
 
   if (age != null) {
     if (age < 13) return 'under_u13';
-    if (user.profile?.gender === 'women' || user.app_space === 'girls') return 'girls';
+    if (feminine || user.app_space === 'girls') return 'girls';
     return 'boys';
   }
 
   const current = normalizeAppSpace(user.app_space);
   if (isYouthAppSpace(current)) return current;
-  if (user.profile?.gender === 'women') return 'girls';
-  return feminine ? 'girls' : 'boys';
+  if (feminine) return 'girls';
+  return 'boys';
 }
 
 export function getSelectableAppSpacesForUser(
   user: User,
   productLine: ProductLineId,
 ): AppSpaceId[] {
-  const all = getSelectableAppSpaces(productLine);
+  const segment = resolvePlayerSegment(user, productLine);
+  const all = getSelectableAppSpaces(productLine, segment);
   if (!isMinorUser(user)) return all;
   return all.filter((space) => isYouthAppSpace(space));
 }

@@ -6,17 +6,17 @@ import {
   isAppSpaceAllowedForProductLine,
 } from '../../utils/appSpaceProductLine';
 
-/** Aligne l’espace Mercato actif sur la ligne produit (classique ↔ Woman). */
+/** Aligne l’espace Mercato actif sur le pôle / segment (classique ↔ féminin). */
 export function WomanSpaceDefaults() {
-  const { productLine } = useProductLine();
+  const { productLine, playerSegment } = useProductLine();
   const { appSpace, setAppSpace } = useAppSpace();
 
   useEffect(() => {
-    if (isAppSpaceAllowedForProductLine(appSpace, productLine)) return;
-    const next = defaultAppSpaceForProductLine(productLine);
+    if (isAppSpaceAllowedForProductLine(appSpace, productLine, playerSegment)) return;
+    const next = defaultAppSpaceForProductLine(productLine, playerSegment);
     if (next === appSpace) return;
     void setAppSpace(next);
-  }, [productLine, appSpace, setAppSpace]);
+  }, [productLine, playerSegment, appSpace, setAppSpace]);
 
   return null;
 }

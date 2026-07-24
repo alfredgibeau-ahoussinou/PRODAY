@@ -1,9 +1,9 @@
 import { getMercatoExperienceConfig } from '../content/mercatoExperience';
 
 describe('getMercatoExperienceConfig', () => {
-  it('adapte le hero pour joueur homme', () => {
+  it('adapte le hero pour joueur homme legacy (→ opportunités pro)', () => {
     const cfg = getMercatoExperienceConfig('homme', 'player', 'men');
-    expect(cfg.heroTitle).toContain('Candidater');
+    expect(cfg.heroTitle).toContain('Opportunités');
     expect(cfg.screenTitle).toBe('Candidater');
     expect(cfg.showFavoritesHeader).toBe(true);
     expect(cfg.showFavoritesRow).toBe(false);
@@ -16,6 +16,13 @@ describe('getMercatoExperienceConfig', () => {
     expect(cfg.screenTitle).toBe('Mercato F');
     expect(cfg.playersStatLabel).toBe('Joueuses');
     expect(cfg.quickTiles.find((t) => t.id === 'players')?.title).toBe('Joueuses');
+  });
+
+  it('utilise le segment féminin sur Amateur', () => {
+    const cfg = getMercatoExperienceConfig('amateur', 'player', 'women', undefined, 'female');
+    expect(cfg.heroTitle).toBe('Mercato F');
+    expect(cfg.screenTitle).toBe('Mercato F');
+    expect(cfg.playersStatLabel).toBe('Joueuses');
   });
 
   it('adapte le hero pour staff pro', () => {

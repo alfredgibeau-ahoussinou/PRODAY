@@ -2,6 +2,7 @@ import type { IconName } from '../components/ui/Icon';
 import type { ProductLineId } from '../models/ProductLine';
 import type { UserRole } from '../models/User';
 import type { ProDayModuleId } from './prodayModules';
+import type { PlayerSegment } from '../utils/playerSegment';
 import { getMercatoTabLabel } from './mercatoTabLabel';
 
 export interface RoleDashboardMeta {
@@ -180,11 +181,14 @@ export function getRolePanelActions(role: UserRole): RolePanelAction[] {
 
 export function getRolePanelActionsForLine(
   role: UserRole,
-  line: ProductLineId
+  line: ProductLineId,
+  playerSegment?: PlayerSegment | null,
 ): RolePanelAction[] {
   const actions = getRolePanelActions(role);
+  const feminine =
+    line === 'woman' || playerSegment === 'female';
 
-  if (role === 'player' && line === 'woman') {
+  if (role === 'player' && feminine) {
     return actions.map((a) => {
       if (a.title === 'Mon CV en ligne') {
         return {
@@ -204,15 +208,15 @@ export function getRolePanelActionsForLine(
     });
   }
 
-  if (role === 'player' && line === 'homme') {
+  if (role === 'player' && (line === 'homme' || line === 'amateur' || line === 'pro_player')) {
     return actions.map((a) =>
       a.title === 'Candidater'
-        ? { ...a, title: getMercatoTabLabel(line, role) }
+        ? { ...a, title: getMercatoTabLabel(line, role, playerSegment) }
         : a
     );
   }
 
-  if (line === 'pro') {
+  if (line === 'pro' || line === 'pro_club' || line === 'pro_staff') {
     return actions.map((a) => {
       if (a.title === 'Mercato' || a.title === 'Recrutement') {
         return { ...a, title: 'Mercato Pro', sub: a.sub };

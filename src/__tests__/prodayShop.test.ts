@@ -17,7 +17,7 @@ describe('prodayShop', () => {
     const woman = getShopCatalog('woman');
     const pro = getShopCatalog('pro');
 
-    expect(man.find((p) => p.id === 'jersey-home')?.name).toMatch(/Man/);
+    expect(man.find((p) => p.id === 'jersey-home')?.name).toMatch(/Amateur/);
     expect(woman.find((p) => p.id === 'jersey-home')?.name).toMatch(/Woman/);
     expect(pro.find((p) => p.id === 'jersey-home')?.name).toMatch(/Pro/);
     expect(man.some((p) => p.id === 'tripod-pro')).toBe(true);

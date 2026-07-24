@@ -1,0 +1,323 @@
+import * as functions from 'firebase-functions';
+import * as admin from 'firebase-admin';
+import { timingSafeEqual } from 'crypto';
+import { generateBetaAccessToken } from './betaAccessToken';
+import { BETA_ROLE_LABELS, isBetaRoleId } from './betaWaitlistEmail';
+import { markWelcomeEmailSent, sendBetaWelcomeEmailToEntry } from './betaWaitlistMail';
+import { resolveBetaWaitlistStatus } from './betaWaitlistStatus';
+import { configStr } from './runtimeConfig';
+
+const ALLOWED_ORIGINS = [
+  'http://localhost:3000',
+  'http://127.0.0.1:3000',
+  'https://proday75.fr',
+  'https://www.proday75.fr',
+  'https://proday.app',
+  'https://www.proday.app',
+  'https://proday75.netlify.app',
+];
+
+const WEBSITE_ADMIN_ACTOR = 'website-admin';
+const MAX_LIST = 200;
+
+type AdminAction = 'list' | 'approve' | 'reject' | 'resend';
+
+function setCors(req: functions.https.Request, res: functions.Response): boolean {
+  const origin = req.get('Origin') ?? '';
+  if (
+    origin &&
+    (ALLOWED_ORIGINS.includes(origin) || origin.endsWith('.netlify.app'))
+  ) {
+    res.set('Access-Control-Allow-Origin', origin);
+  }
+  res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Admin-Secret');
+  return req.method === 'OPTIONS';
+}
+
+function getConfiguredSecret(): string | null {
+  return (
+    configStr('beta', 'website_admin_secret', [
+      'BETA_WEBSITE_ADMIN_SECRET',
+      'BETA_ADMIN_API_SECRET',
+    ]) ?? null
+  );
+}
+
+function extractProvidedSecret(req: functions.https.Request): string {
+  const headerSecret = String(req.get('X-Admin-Secret') ?? '').trim();
+  if (headerSecret) return headerSecret;
+
+  const auth = String(req.get('Authorization') ?? '').trim();
+  if (auth.toLowerCase().startsWith('bearer ')) {
+    return auth.slice(7).trim();
+  }
+  return '';
+}
+
+function secretsMatch(provided: string, expected: string): boolean {
+  const a = Buffer.from(provided);
+  const b = Buffer.from(expected);
+  if (a.length === 0 || a.length !== b.length) return false;
+  return timingSafeEqual(a, b);
+}
+
+function assertWebsiteAdmin(req: functions.https.Request): void {
+  const expected = getConfiguredSecret();
+  if (!expected) {
+    throw new functions.https.HttpsError(
+      'failed-precondition',
+      'Secret admin site non configuré (BETA_WEBSITE_ADMIN_SECRET)',
+    );
+  }
+  const provided = extractProvidedSecret(req);
+  if (!secretsMatch(provided, expected)) {
+    throw new functions.https.HttpsError('permission-denied', 'Secret invalide');
+  }
+}
+
+function toIso(value: unknown): string | null {
+  if (value && typeof value === 'object' && 'toDate' in value) {
+    try {
+      return (value as { toDate: () => Date }).toDate().toISOString();
+    } catch {
+      return null;
+    }
+  }
+  if (typeof value === 'string' && value.trim()) return value;
+  return null;
+}
+
+function resolveAccessToken(data: admin.firestore.DocumentData): string {
+  const existing =
+    typeof data.access_token === 'string' && data.access_token.trim()
+      ? data.access_token.trim()
+      : '';
+  return existing || generateBetaAccessToken();
+}
+
+function resolveRoleLabel(data: admin.firestore.DocumentData): string {
+  if (typeof data.role_label === 'string' && data.role_label.trim()) {
+    return data.role_label.trim();
+  }
+  const role = String(data.role ?? 'player');
+  return isBetaRoleId(role) ? BETA_ROLE_LABELS[role] : role;
+}
+
+async function listWaitlist(db: admin.firestore.Firestore) {
+  let snap: admin.firestore.QuerySnapshot;
+  try {
+    snap = await db
+      .collection('beta_waitlist')
+      .orderBy('created_at', 'desc')
+      .limit(MAX_LIST)
+      .get();
+  } catch {
+    snap = await db.collection('beta_waitlist').limit(MAX_LIST).get();
+  }
+
+  const entries = snap.docs.map((doc) => {
+    const data = doc.data();
+    const status = resolveBetaWaitlistStatus(data);
+    return {
+      id: doc.id,
+      email: String(data.email ?? ''),
+      role: data.role ? String(data.role) : undefined,
+      role_label: resolveRoleLabel(data),
+      status,
+      welcome_email_sent: data.welcome_email_sent === true,
+      created_at: toIso(data.created_at),
+      approved_at: toIso(data.approved_at),
+    };
+  });
+
+  entries.sort((a, b) => {
+    const ta = a.created_at ? Date.parse(a.created_at) : 0;
+    const tb = b.created_at ? Date.parse(b.created_at) : 0;
+    return tb - ta;
+  });
+
+  const counts = {
+    all: entries.length,
+    pending: entries.filter((e) => e.status === 'pending').length,
+    approved: entries.filter((e) => e.status === 'approved').length,
+    rejected: entries.filter((e) => e.status === 'rejected').length,
+  };
+
+  return { ok: true, entries, counts };
+}
+
+async function approveEntry(db: admin.firestore.Firestore, entryId: string) {
+  const ref = db.collection('beta_waitlist').doc(entryId);
+  const snap = await ref.get();
+  if (!snap.exists) {
+    throw new functions.https.HttpsError('not-found', 'Inscription introuvable');
+  }
+  const entry = snap.data()!;
+  const status = resolveBetaWaitlistStatus(entry);
+  if (status === 'rejected') {
+    throw new functions.https.HttpsError(
+      'failed-precondition',
+      'Inscription refusée — réactivez manuellement si besoin',
+    );
+  }
+
+  const email = String(entry.email ?? '').trim().toLowerCase();
+  if (!email) {
+    throw new functions.https.HttpsError('failed-precondition', 'Email manquant');
+  }
+
+  const accessToken = resolveAccessToken(entry);
+  const roleLabel = resolveRoleLabel(entry);
+  const now = admin.firestore.FieldValue.serverTimestamp();
+
+  await ref.update({
+    status: 'approved',
+    access_token: accessToken,
+    approved_at: now,
+    approved_by: WEBSITE_ADMIN_ACTOR,
+    updated_at: now,
+  });
+
+  const { emailSent, emailError } = await sendBetaWelcomeEmailToEntry(
+    email,
+    roleLabel,
+    accessToken,
+  );
+  if (emailSent) await markWelcomeEmailSent(ref);
+
+  return { ok: true, success: true, emailSent, emailError };
+}
+
+async function rejectEntry(db: admin.firestore.Firestore, entryId: string) {
+  const ref = db.collection('beta_waitlist').doc(entryId);
+  const snap = await ref.get();
+  if (!snap.exists) {
+    throw new functions.https.HttpsError('not-found', 'Inscription introuvable');
+  }
+
+  const now = admin.firestore.FieldValue.serverTimestamp();
+  await ref.update({
+    status: 'rejected',
+    rejected_at: now,
+    rejected_by: WEBSITE_ADMIN_ACTOR,
+    updated_at: now,
+  });
+
+  return { ok: true, success: true };
+}
+
+async function resendWelcome(db: admin.firestore.Firestore, entryId: string) {
+  const ref = db.collection('beta_waitlist').doc(entryId);
+  const snap = await ref.get();
+  if (!snap.exists) {
+    throw new functions.https.HttpsError('not-found', 'Inscription introuvable');
+  }
+  const entry = snap.data()!;
+  const status = resolveBetaWaitlistStatus(entry);
+  if (status !== 'approved') {
+    throw new functions.https.HttpsError(
+      'failed-precondition',
+      "Approuvez l'inscription avant de renvoyer l'email",
+    );
+  }
+
+  const email = String(entry.email ?? '').trim().toLowerCase();
+  const accessToken = resolveAccessToken(entry);
+  const roleLabel = resolveRoleLabel(entry);
+
+  await ref.update({
+    access_token: accessToken,
+    updated_at: admin.firestore.FieldValue.serverTimestamp(),
+  });
+
+  const { emailSent, emailError } = await sendBetaWelcomeEmailToEntry(
+    email,
+    roleLabel,
+    accessToken,
+  );
+  if (emailSent) await markWelcomeEmailSent(ref);
+
+  return { ok: true, success: true, emailSent, emailError };
+}
+
+function httpsErrorStatus(code: functions.https.FunctionsErrorCode): number {
+  switch (code) {
+    case 'invalid-argument':
+      return 400;
+    case 'unauthenticated':
+    case 'permission-denied':
+      return 403;
+    case 'not-found':
+      return 404;
+    case 'failed-precondition':
+      return 409;
+    default:
+      return 500;
+  }
+}
+
+/** Admin waitlist depuis le site vitrine — secret partagé (pas de Firebase Auth). */
+export function createWebsiteBetaWaitlistAdminHandler(db: admin.firestore.Firestore) {
+  return async (req: functions.https.Request, res: functions.Response): Promise<void> => {
+    if (setCors(req, res)) {
+      res.status(204).send('');
+      return;
+    }
+
+    try {
+      assertWebsiteAdmin(req);
+
+      let action: AdminAction = 'list';
+      let entryId = '';
+
+      if (req.method === 'GET') {
+        action = 'list';
+      } else if (req.method === 'POST') {
+        const body = (req.body ?? {}) as { action?: string; entryId?: string };
+        const raw = String(body.action ?? 'list').trim().toLowerCase();
+        if (
+          raw !== 'list' &&
+          raw !== 'approve' &&
+          raw !== 'reject' &&
+          raw !== 'resend'
+        ) {
+          res.status(400).json({ error: 'action invalide' });
+          return;
+        }
+        action = raw;
+        entryId = String(body.entryId ?? '').trim();
+      } else {
+        res.status(405).json({ error: 'Method not allowed' });
+        return;
+      }
+
+      if (action === 'list') {
+        res.status(200).json(await listWaitlist(db));
+        return;
+      }
+
+      if (!entryId) {
+        res.status(400).json({ error: 'entryId requis' });
+        return;
+      }
+
+      if (action === 'approve') {
+        res.status(200).json(await approveEntry(db, entryId));
+        return;
+      }
+      if (action === 'reject') {
+        res.status(200).json(await rejectEntry(db, entryId));
+        return;
+      }
+      res.status(200).json(await resendWelcome(db, entryId));
+    } catch (e) {
+      if (e instanceof functions.https.HttpsError) {
+        res.status(httpsErrorStatus(e.code)).json({ error: e.message });
+        return;
+      }
+      console.error('[websiteBetaWaitlistAdmin]', e);
+      res.status(500).json({ error: 'Erreur serveur' });
+    }
+  };
+}

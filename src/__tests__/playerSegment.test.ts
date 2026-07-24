@@ -46,7 +46,7 @@ describe('playerSegment', () => {
     } as User;
     expect(resolvePlayerSegment(user, 'pro_player')).toBe('male');
     const colors = getThemedColorsForLine('pro_player', 'male');
-    expect(colors.accent).toBe('#1D4ED8');
+    expect(colors.accent).toBe('#60A5FA');
     const chrome = getPoleTabBarChrome('pro_player', 'player', 'female');
     expect(chrome.overflowKicker).toBe('PRO JOUEUSE');
   });
@@ -59,7 +59,7 @@ describe('playerSegment', () => {
     } as unknown as User;
     expect(resolvePlayerSegment(user, 'amateur')).toBe('minor');
     const colors = getThemedColorsForLine('amateur', 'minor');
-    expect(colors.accent).toBe('#D97706');
+    expect(colors.accent).toBe('#FBBF24');
   });
 
   it('déduit le segment féminin depuis product_line woman legacy', () => {

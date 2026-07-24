@@ -2,7 +2,6 @@ import type { ProductLineId } from '../models/ProductLine';
 import { colors as baseColors } from './designTokens';
 import { amateurColorOverrides } from './prodayAmateurTheme';
 import { proColorOverrides } from './proThemeColors';
-import { womanColorOverrides } from './prodayWomanTheme';
 import type { PlayerSegment } from '../utils/playerSegment';
 import type { AppColors } from './universeTheme';
 
@@ -96,12 +95,12 @@ export function getSegmentColorOverrides(
   if (line === 'pro_player') {
     return segment === 'female' ? proPlayerFemaleOverrides : proPlayerMaleOverrides;
   }
-  if (line === 'amateur') {
+  if (line === 'amateur' || line === 'homme') {
     if (segment === 'female') return amateurFemaleOverrides;
     if (segment === 'minor') return amateurMinorOverrides;
     return amateurMaleOverrides;
   }
-  if (line === 'woman') return womanColorOverrides;
+  if (line === 'woman') return amateurFemaleOverrides;
   if (line === 'pro' || line === 'pro_club' || line === 'pro_staff') {
     return proColorOverrides;
   }

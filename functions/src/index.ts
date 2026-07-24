@@ -16,6 +16,7 @@ import {
   createAdminResendBetaWelcomeEmailHandler,
   createAdminDeleteBetaWaitlistEntryHandler,
 } from './betaWaitlistAdmin';
+import { createWebsiteBetaWaitlistAdminHandler } from './betaWaitlistWebsiteAdmin';
 import { createSubmitSponsorQuoteRequestHandler } from './sponsorQuoteRequest';
 import {
   createAdminSendSponsorQuoteHandler,
@@ -793,6 +794,11 @@ export const submitBetaWaitlist = functions
 export const validateBetaAccess = functions
   .region('europe-west1')
   .https.onRequest(createValidateBetaAccessHandler(db));
+
+/** Admin waitlist depuis le site vitrine — secret partagé (PIN session côté Netlify). */
+export const websiteBetaWaitlistAdmin = functions
+  .region('europe-west1')
+  .https.onRequest(createWebsiteBetaWaitlistAdminHandler(db));
 
 /** Approuve une inscription bêta et envoie l'email de bienvenue — admin uniquement. */
 export const adminApproveBetaAccess = functions
