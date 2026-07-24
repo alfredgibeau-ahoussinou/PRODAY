@@ -67,7 +67,15 @@ export const AdminPlatformConfigPanel: React.FC = () => {
   };
 
   const toggleMaintenance = async (value: boolean) => {
-    await save({ maintenance_mode: value, maintenance_message: maintenanceMessage.trim() || undefined });
+    if (!config) return;
+    // Optimistic — l’écoute live des autres clients se déclenche après Firestore.
+    setConfig({ ...config, maintenance_mode: value });
+    await save({
+      maintenance_mode: value,
+      maintenance_message:
+        maintenanceMessage.trim() ||
+        'ProDay est momentanément indisponible pour maintenance.',
+    });
   };
 
   const toggleFlag = async (key: keyof PlatformFeatureFlags, value: boolean) => {
@@ -90,6 +98,13 @@ export const AdminPlatformConfigPanel: React.FC = () => {
         onAction={() => void save({ maintenance_message: maintenanceMessage.trim() })}
         actionDisabled={saving}
       >
+        {config.maintenance_mode ? (
+          <View style={styles.liveBanner}>
+            <Text style={styles.liveBannerText}>
+              Maintenance ACTIVE — les utilisateurs voient l’écran de coupure en direct.
+            </Text>
+          </View>
+        ) : null}
         <View style={styles.switchRow}>
           <Text style={styles.switchLabel}>Maintenance active</Text>
           <Switch
@@ -101,8 +116,9 @@ export const AdminPlatformConfigPanel: React.FC = () => {
           />
         </View>
         <Text style={styles.hint}>
-          Quand activé, l’app peut afficher une bannière ou bloquer l’accès (lecture publique via{' '}
-          <Text style={styles.mono}>platform_config/main</Text>).
+          Quand activé, tous les utilisateurs (hors admins) voient immédiatement un écran
+          « Maintenance en cours » — écoute live de{' '}
+          <Text style={styles.mono}>platform_config/main</Text>.
         </Text>
         <TextInput
           style={[styles.input, { color: c.text, borderColor: c.border, backgroundColor: c.surfaceMuted }]}
@@ -152,6 +168,19 @@ function createStyles(c: AppColors) {
     switchLabel: { fontSize: 14, fontWeight: '700', color: c.text },
     hint: { fontSize: 11, color: c.textMuted, lineHeight: 16, marginTop: 2 },
     mono: { fontFamily: 'monospace', fontSize: 11, color: c.textSecondary },
+    liveBanner: {
+      backgroundColor: c.brandSoft,
+      borderRadius: radius.md,
+      paddingHorizontal: spacing.sm,
+      paddingVertical: spacing.sm,
+      marginBottom: spacing.sm,
+    },
+    liveBannerText: {
+      fontSize: 12,
+      fontWeight: '700',
+      color: c.brand,
+      lineHeight: 17,
+    },
     input: {
       minHeight: 72,
       borderWidth: 1,

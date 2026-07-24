@@ -1,4 +1,11 @@
-import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import {
+  doc,
+  getDoc,
+  setDoc,
+  serverTimestamp,
+  onSnapshot,
+  type Unsubscribe,
+} from 'firebase/firestore';
 import { getDb } from '../lib/firebase';
 import { isFirebaseConfigured } from '../config/firebase';
 import {
@@ -6,33 +13,11 @@ import {
   type PlatformConfig,
   type PlatformFeatureFlags,
 } from '../models/PlatformConfig';
+import { mapPlatformConfig } from '../utils/platformConfigMap';
+
+export { mapPlatformConfig };
 
 const DOC_PATH = 'platform_config/main';
-
-function mapConfig(data: Record<string, unknown>): PlatformConfig {
-  const flags = (data.feature_flags as Record<string, unknown> | undefined) ?? {};
-  return {
-    maintenance_mode: Boolean(data.maintenance_mode),
-    maintenance_message: String(
-      data.maintenance_message ?? DEFAULT_PLATFORM_CONFIG.maintenance_message,
-    ),
-    feature_flags: {
-      community_reels: flags.community_reels !== false,
-      mercato: flags.mercato !== false,
-      supporter: flags.supporter !== false,
-      shop: flags.shop !== false,
-      stages: flags.stages !== false,
-      registration_open: flags.registration_open !== false,
-      // Opt-in : absent ou false → visio Santé coupée (bêta).
-      sante_visio: flags.sante_visio === true,
-    },
-    updated_at:
-      data.updated_at && typeof data.updated_at === 'object' && 'toDate' in data.updated_at
-        ? (data.updated_at as { toDate: () => Date }).toDate()
-        : undefined,
-    updated_by_uid: data.updated_by_uid ? String(data.updated_by_uid) : undefined,
-  };
-}
 
 export const platformConfigService = {
   async getConfig(): Promise<PlatformConfig> {
@@ -42,7 +27,34 @@ export const platformConfigService = {
 
     const snap = await getDoc(doc(database, DOC_PATH));
     if (!snap.exists()) return DEFAULT_PLATFORM_CONFIG;
-    return mapConfig(snap.data() as Record<string, unknown>);
+    return mapPlatformConfig(snap.data() as Record<string, unknown>);
+  },
+
+  /** Écoute live — les clients voient maintenance / flags sans redémarrer. */
+  subscribeConfig(onUpdate: (config: PlatformConfig) => void): Unsubscribe | null {
+    if (!isFirebaseConfigured()) {
+      onUpdate(DEFAULT_PLATFORM_CONFIG);
+      return null;
+    }
+    const database = getDb();
+    if (!database) {
+      onUpdate(DEFAULT_PLATFORM_CONFIG);
+      return null;
+    }
+
+    return onSnapshot(
+      doc(database, DOC_PATH),
+      (snap) => {
+        if (!snap.exists()) {
+          onUpdate(DEFAULT_PLATFORM_CONFIG);
+          return;
+        }
+        onUpdate(mapPlatformConfig(snap.data() as Record<string, unknown>));
+      },
+      () => {
+        onUpdate(DEFAULT_PLATFORM_CONFIG);
+      },
+    );
   },
 
   async saveConfig(

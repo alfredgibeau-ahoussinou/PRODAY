@@ -69,7 +69,9 @@ import { useTranslation } from './src/context/LocaleContext';
 import { useParentalScreenTime } from './src/hooks/useParentalScreenTime';
 import { useParentalActivityJournal } from './src/hooks/useParentalActivityJournal';
 import { ParentalScreenTimeBlockedScreen } from './src/screens/ParentalScreenTimeBlockedScreen';
+import { MaintenanceBlockedScreen } from './src/screens/MaintenanceBlockedScreen';
 import { MinorYouthSpaceBridge } from './src/components/appSpace/MinorYouthSpaceBridge';
+import { PlatformConfigProvider, usePlatformConfig } from './src/context/PlatformConfigContext';
 import type { UserRole } from './src/models/User';
 import type { ProductLineId } from './src/models/ProductLine';
 
@@ -112,6 +114,7 @@ export default function App() {
     <SafeAreaProvider onLayout={onLayoutRoot}>
       <AuthProvider>
         <LocaleProvider>
+            <PlatformConfigProvider>
             <ProductLineProvider>
               <AuthGreetingProvider>
                 <LaunchIntroProvider>
@@ -119,6 +122,7 @@ export default function App() {
                 </LaunchIntroProvider>
               </AuthGreetingProvider>
             </ProductLineProvider>
+            </PlatformConfigProvider>
         </LocaleProvider>
       </AuthProvider>
     </SafeAreaProvider>
@@ -146,6 +150,7 @@ function AppShell() {
   } = useAuth();
   const { isAdmin, claimLoading: adminClaimLoading, emailHint } = useIsAdmin();
   const shouldUseAdminShell = isAdmin || emailHint;
+  const { config: platformConfig, loading: platformConfigLoading } = usePlatformConfig();
   const [previewUserMode, setPreviewUserMode] = useState(false);
   const [activeTab, setActiveTab] = useState<MainTabId>('home');
   const [pendingChatThreadId, setPendingChatThreadId] = useState<string | null>(null);
@@ -245,6 +250,16 @@ function AppShell() {
         onSignOut={signOut}
       />
     );
+  }
+
+  // Maintenance : bloque invités + utilisateurs ; les admins (claim ou email plateforme) passent.
+  const bypassMaintenance = isAdmin || emailHint;
+  if (
+    !platformConfigLoading &&
+    platformConfig.maintenance_mode &&
+    !bypassMaintenance
+  ) {
+    return <MaintenanceBlockedScreen message={platformConfig.maintenance_message} />;
   }
 
   if (!authLoading && profile && screenTime.blocked) {
