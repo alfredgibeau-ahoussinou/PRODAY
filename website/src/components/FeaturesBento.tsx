@@ -59,11 +59,11 @@ export function FeaturesBento({ extended, compact }: FeaturesBentoProps) {
         return (
           <motion.article
             key={p.id}
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 14 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: i * 0.05 }}
-            whileHover={{ y: -4, transition: { duration: 0.2 } }}
+            viewport={{ once: true, margin: "-40px" }}
+            transition={{ delay: Math.min(i * 0.04, 0.28), duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+            whileHover={{ y: -3, transition: { duration: 0.18 } }}
             className={`card-flash group rounded-2xl p-6 ${
               featured ? "sm:col-span-2" : ""
             }`}

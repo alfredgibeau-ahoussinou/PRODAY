@@ -18,6 +18,11 @@
   --proday-warning: #ea580c;
   --background: var(--proday-bg);
   --foreground: #fafafa;
+  --ease-out-premium: cubic-bezier(0.22, 1, 0.36, 1);
+  --duration-fast: 160ms;
+  --duration-base: 220ms;
+  --duration-slow: 320ms;
+  --nav-offset: 5.5rem;
 }
 
 @theme inline {
@@ -37,6 +42,8 @@
 
 html {
   scroll-behavior: smooth;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
@@ -44,7 +51,92 @@ body {
   color: var(--foreground);
   font-family: var(--font-inter), system-ui, sans-serif;
   overflow-x: hidden;
+  overscroll-behavior-y: none;
   -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Sticky dock: GPU layer + CSS scroll state (évite le thrashing Framer au scroll) */
+.site-nav-dock {
+  background-color: rgba(6, 6, 8, 0.55);
+  border-color: rgba(255, 255, 255, 0.1);
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backdrop-filter: blur(18px) saturate(1.35);
+  backdrop-filter: blur(18px) saturate(1.35);
+  transition:
+    background-color var(--duration-base) var(--ease-out-premium),
+    border-color var(--duration-base) var(--ease-out-premium),
+    box-shadow var(--duration-base) ease;
+}
+
+.site-nav-dock.is-scrolled {
+  background-color: rgba(6, 6, 8, 0.92);
+  border-color: rgba(255, 255, 255, 0.18);
+  box-shadow: 0 20px 60px -28px rgba(0, 0, 0, 0.85);
+}
+
+@media (max-width: 1023px) {
+  .site-nav-dock {
+    -webkit-backdrop-filter: blur(14px) saturate(1.25);
+    backdrop-filter: blur(14px) saturate(1.25);
+  }
+}
+
+body.nav-lock {
+  overflow: hidden;
+  touch-action: none;
+}
+
+/* Ancres sous le header sticky */
+[id] {
+  scroll-margin-top: var(--nav-offset);
+}
+
+a,
+button,
+[role="button"],
+summary,
+label[for] {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* États actifs tactiles plus nets */
+@media (hover: none) {
+  .cta-lift:active,
+  .card-premium:active,
+  .card-flash:active {
+    transform: scale(0.985);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .animate-marquee,
+  .animate-float,
+  .text-shimmer,
+  .pulse-ring::before {
+    animation: none !important;
+  }
+
+  .text-shimmer {
+    background: none;
+    color: var(--proday-accent);
+    -webkit-text-fill-color: var(--proday-accent);
+  }
 }
 
 .font-display {
@@ -100,8 +192,10 @@ body {
 
 .cta-lift {
   transition:
-    transform 0.25s cubic-bezier(0.22, 1, 0.36, 1),
-    box-shadow 0.25s ease;
+    transform var(--duration-base) var(--ease-out-premium),
+    box-shadow var(--duration-base) ease,
+    background-color var(--duration-base) ease,
+    color var(--duration-base) ease;
 }
 
 .cta-lift:hover {
@@ -352,7 +446,7 @@ body {
 }
 
 .pole-section {
-  scroll-margin-top: 5.5rem;
+  scroll-margin-top: var(--nav-offset);
   overflow-x: clip;
 }
 

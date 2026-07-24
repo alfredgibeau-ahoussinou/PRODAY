@@ -1,3 +1,13 @@
+function preferredScrollBehavior(
+  behavior: ScrollBehavior = "smooth",
+): ScrollBehavior {
+  if (behavior === "auto") return "auto";
+  if (typeof window === "undefined") return behavior;
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ? "auto"
+    : behavior;
+}
+
 /** Défile vers l'élément ciblé par l'ancre (respecte scroll-margin-top sur la cible). */
 export function scrollToHashElement(
   hash: string,
@@ -9,7 +19,10 @@ export function scrollToHashElement(
   const el = document.getElementById(id);
   if (!el) return false;
 
-  el.scrollIntoView({ behavior, block: "start" });
+  el.scrollIntoView({
+    behavior: preferredScrollBehavior(behavior),
+    block: "start",
+  });
   return true;
 }
 

@@ -1,10 +1,10 @@
 "use client";
 
-import { motion, type Variants } from "framer-motion";
+import { motion, useReducedMotion, type Variants } from "framer-motion";
 import { type ReactNode } from "react";
 
 const variants: Variants = {
-  hidden: { opacity: 0, y: 32 },
+  hidden: { opacity: 0, y: 20 },
   visible: { opacity: 1, y: 0 },
 };
 
@@ -21,20 +21,26 @@ export function Reveal({
   delay = 0,
   direction = "up",
 }: RevealProps) {
+  const reduceMotion = useReducedMotion();
+
   const offset =
     direction === "left"
-      ? { x: -40, y: 0 }
+      ? { x: -18, y: 0 }
       : direction === "right"
-        ? { x: 40, y: 0 }
-        : { x: 0, y: 32 };
+        ? { x: 18, y: 0 }
+        : { x: 0, y: 18 };
+
+  if (reduceMotion) {
+    return <div className={className}>{children}</div>;
+  }
 
   return (
     <motion.div
       className={className}
       initial={{ opacity: 0, ...offset }}
       whileInView={{ opacity: 1, x: 0, y: 0 }}
-      viewport={{ once: true, margin: "-80px" }}
-      transition={{ duration: 0.65, delay, ease: [0.22, 1, 0.36, 1] }}
+      viewport={{ once: true, margin: "-48px", amount: 0.15 }}
+      transition={{ duration: 0.45, delay, ease: [0.22, 1, 0.36, 1] }}
       variants={variants}
     >
       {children}

@@ -116,7 +116,7 @@ export function HeroSection() {
             <Link
               key={slide.num}
               href={slide.href}
-              className="group flex flex-col items-center gap-1.5 px-1 py-4 text-center transition hover:bg-white/[0.04] sm:py-5"
+              className="group flex flex-col items-center gap-1.5 px-1 py-4 text-center transition-[background-color,transform] duration-200 hover:bg-white/[0.04] active:scale-[0.98] sm:py-5"
             >
               <span
                 className="font-display text-base font-extrabold tabular-nums sm:text-xl"
@@ -124,11 +124,11 @@ export function HeroSection() {
               >
                 {slide.num}
               </span>
-              <span className="hidden text-[10px] font-semibold uppercase tracking-[0.12em] text-white/55 transition group-hover:text-white sm:block md:text-[11px]">
+              <span className="hidden text-[10px] font-semibold uppercase tracking-[0.12em] text-white/55 transition-colors duration-200 group-hover:text-white sm:block md:text-[11px]">
                 {slide.label}
               </span>
               <span
-                className="mt-1 h-0.5 w-6 rounded-full opacity-80 transition group-hover:w-8"
+                className="mt-1 h-0.5 w-6 rounded-full opacity-80 transition-[width] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:w-8"
                 style={{ background: slide.color }}
                 aria-hidden
               />

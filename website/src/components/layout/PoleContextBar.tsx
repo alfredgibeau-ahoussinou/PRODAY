@@ -22,11 +22,11 @@ export function PoleContextBar() {
 
   return (
     <div className="border-b border-white/8 bg-black/40 backdrop-blur-md">
-      <div className="mx-auto flex max-w-7xl items-center gap-1 overflow-x-auto px-4 py-0 sm:px-6">
+      <div className="mx-auto flex max-w-7xl items-center gap-1 overflow-x-auto overscroll-x-contain scroll-smooth px-4 py-0 [-webkit-overflow-scrolling:touch] sm:px-6">
         {!isHub && (
           <Link
             href={hub}
-            className="shrink-0 border-b-2 border-transparent px-3 py-3.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-white/45 transition hover:text-white"
+            className="shrink-0 border-b-2 border-transparent px-3 py-3.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-white/45 transition-colors duration-200 hover:text-white"
           >
             ← {hubLabel}
           </Link>
@@ -45,7 +45,7 @@ export function PoleContextBar() {
             <Link
               key={link.href}
               href={link.href}
-              className={`shrink-0 border-b-2 px-3 py-3.5 text-[11px] font-semibold uppercase tracking-[0.16em] transition ${
+              className={`shrink-0 border-b-2 px-3 py-3.5 text-[11px] font-semibold uppercase tracking-[0.16em] transition-[color,border-color] duration-200 ${
                 active
                   ? "text-white"
                   : "border-transparent text-white/40 hover:text-white/80"

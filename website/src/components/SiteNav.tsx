@@ -1,6 +1,6 @@
 "use client";
 
-import { AnimatePresence, motion, useScroll, useTransform } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -20,6 +20,8 @@ import { isNavActive, poleForPath } from "@/lib/siteArchitecture";
 import { POLE_BRAND_HEX, POLES, pricingHrefForPath, type PoleId } from "@/lib/poles";
 import { POLE_NAV_ITEMS, ROUTES, UTILITY_NAV_ITEMS } from "@/lib/routes";
 
+const easeOut = [0.22, 1, 0.36, 1] as const;
+
 function NavLink({
   href,
   label,
@@ -35,13 +37,13 @@ function NavLink({
     <Link
       href={href}
       onClick={onClick}
-      className={`group relative px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] transition xl:px-3.5 ${
+      className={`group relative px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] transition-colors duration-200 xl:px-3.5 ${
         active ? "text-white" : "text-white/45 hover:text-white"
       }`}
     >
       {label}
       <span
-        className={`absolute inset-x-3 -bottom-0.5 h-[2px] origin-left rounded-full bg-[var(--proday-accent)] transition-transform duration-300 ${
+        className={`absolute inset-x-3 -bottom-0.5 h-[2px] origin-left rounded-full bg-[var(--proday-accent)] transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
           active ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
         }`}
         aria-hidden
@@ -122,12 +124,12 @@ function PolesMegaMenu({ pathname }: { pathname: string }) {
               id={`${menuId}-menu`}
               role="menu"
               aria-labelledby={`${menuId}-trigger`}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 6 }}
-              transition={{ duration: 0.18 }}
+              initial={{ opacity: 0, y: 8, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 6, scale: 0.98 }}
+              transition={{ duration: 0.2, ease: easeOut }}
               style={panelStyle}
-              className="rounded-2xl border border-white/15 bg-[#0a0a0c]/98 p-3 shadow-[0_32px_80px_-20px_rgba(0,0,0,0.9)] backdrop-blur-2xl"
+              className="rounded-2xl border border-white/15 bg-[#0a0a0c]/98 p-3 shadow-[0_32px_80px_-20px_rgba(0,0,0,0.9)] backdrop-blur-xl"
             >
               <div className="mb-2 flex items-end justify-between px-2 pb-2">
                 <div>
@@ -139,7 +141,7 @@ function PolesMegaMenu({ pathname }: { pathname: string }) {
                 <Link
                   href={ROUTES.pricing}
                   onClick={close}
-                  className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--proday-accent)]"
+                  className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--proday-accent)] transition-opacity duration-200 hover:opacity-80"
                 >
                   Tarifs <ArrowUpRight size={12} />
                 </Link>
@@ -154,10 +156,10 @@ function PolesMegaMenu({ pathname }: { pathname: string }) {
                       href={pole.href}
                       role="menuitem"
                       onClick={close}
-                      className={`flex items-center gap-3 rounded-xl border px-3 py-3 transition ${
+                      className={`flex items-center gap-3 rounded-xl border px-3 py-3 transition-[background-color,border-color,transform] duration-200 ${
                         active
                           ? "border-white/20 bg-white/[0.08]"
-                          : "border-white/5 hover:border-white/15 hover:bg-white/[0.05]"
+                          : "border-white/5 hover:border-white/15 hover:bg-white/[0.05] active:scale-[0.99]"
                       }`}
                     >
                       <span
@@ -204,14 +206,14 @@ function PolesMegaMenu({ pathname }: { pathname: string }) {
         aria-expanded={open}
         aria-controls={`${menuId}-menu`}
         onClick={() => setOpen((value) => !value)}
-        className={`inline-flex items-center gap-1.5 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] transition ${
+        className={`inline-flex items-center gap-1.5 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] transition-colors duration-200 ${
           polesActive || open ? "text-white" : "text-white/45 hover:text-white"
         }`}
       >
         Univers
         <ChevronDown
           size={13}
-          className={`shrink-0 transition-transform duration-300 ${open ? "rotate-180" : ""}`}
+          className={`shrink-0 transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${open ? "rotate-180" : ""}`}
           aria-hidden
         />
       </button>
@@ -223,29 +225,47 @@ function PolesMegaMenu({ pathname }: { pathname: string }) {
 export function SiteNav() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
-  const { scrollY } = useScroll();
-  const dockOpacity = useTransform(scrollY, [0, 60], [0.55, 0.94]);
-  const dockBorder = useTransform(
-    scrollY,
-    [0, 60],
-    ["rgba(255,255,255,0.1)", "rgba(255,255,255,0.18)"],
-  );
-  const dockBg = useTransform(dockOpacity, (o) => `rgba(6,6,8,${o})`);
+  const [scrolled, setScrolled] = useState(false);
 
   const brand = navBrandForPath(pathname);
   const isHome = pathname === ROUTES.home;
   const currentPole = poleForPath(pathname);
   const accent = currentPole ? POLE_BRAND_HEX[currentPole] : "#0054F0";
 
-  const close = () => setOpen(false);
+  const close = useCallback(() => setOpen(false), []);
   const pricingHref = pricingHrefForPath(pathname);
+
+  useEffect(() => {
+    close();
+  }, [pathname, close]);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 28);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    document.body.classList.add("nav-lock");
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") close();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.body.classList.remove("nav-lock");
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [open, close]);
 
   return (
     <>
       <div className="pointer-events-none fixed inset-x-0 top-0 z-50 flex justify-center px-3 pt-3 sm:px-5 sm:pt-4">
-        <motion.header
-          style={{ backgroundColor: dockBg, borderColor: dockBorder }}
-          className="pointer-events-auto relative w-full max-w-6xl rounded-2xl border shadow-[0_20px_60px_-28px_rgba(0,0,0,0.75)] backdrop-blur-2xl backdrop-saturate-150"
+        <header
+          className={`site-nav-dock pointer-events-auto relative w-full max-w-6xl rounded-2xl border shadow-[0_20px_60px_-28px_rgba(0,0,0,0.75)] ${
+            scrolled ? "is-scrolled" : ""
+          }`}
         >
           <div
             className="pointer-events-none absolute inset-x-8 top-0 h-px"
@@ -259,13 +279,14 @@ export function SiteNav() {
             aria-label="Navigation principale"
           >
             <Link href={ROUTES.home} className="group flex min-w-0 shrink-0 items-center gap-2.5">
-              <span className="shrink-0 overflow-hidden rounded-xl bg-white p-0.5 shadow-[0_8px_24px_-12px_rgba(0,84,240,0.55)] transition group-hover:scale-[1.03]">
+              <span className="shrink-0 overflow-hidden rounded-xl bg-white p-0.5 shadow-[0_8px_24px_-12px_rgba(0,84,240,0.55)] transition-transform duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.03]">
                 <Image
                   src={isHome ? PRODAY_LOGO_OFFICIAL : brand.logo}
                   alt={isHome ? "ProDay" : brand.name}
                   width={isHome ? Math.round(36 * PRODAY_OFFICIAL_LOGO_ASPECT) : 34}
                   height={36}
                   className="h-9 w-auto"
+                  priority
                 />
               </span>
               <span className="hidden min-w-0 flex-col sm:flex">
@@ -297,13 +318,13 @@ export function SiteNav() {
             <div className="hidden shrink-0 items-center gap-2 lg:flex">
               <Link
                 href={ROUTES.demo}
-                className="px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-white/45 transition hover:text-white"
+                className="px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-white/45 transition-colors duration-200 hover:text-white"
               >
                 Démo
               </Link>
               <Link
                 href={ROUTES.betaWaitlist}
-                className="inline-flex items-center gap-1.5 rounded-full bg-white px-4 py-2.5 text-[11px] font-bold uppercase tracking-[0.14em] text-black transition hover:bg-[var(--proday-accent)] hover:text-white"
+                className="inline-flex items-center gap-1.5 rounded-full bg-white px-4 py-2.5 text-[11px] font-bold uppercase tracking-[0.14em] text-black transition-[background-color,color,transform] duration-200 hover:bg-[var(--proday-accent)] hover:text-white active:scale-[0.98]"
               >
                 Rejoindre la bêta
                 <ArrowUpRight size={13} />
@@ -312,15 +333,41 @@ export function SiteNav() {
 
             <button
               type="button"
-              className="flex min-h-10 min-w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 text-white transition hover:bg-white/5 lg:hidden"
-              onClick={() => setOpen(!open)}
+              className="flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-xl border border-white/10 text-white transition-[background-color,border-color,transform] duration-200 hover:bg-white/5 active:scale-95 lg:hidden"
+              onClick={() => setOpen((value) => !value)}
               aria-expanded={open}
               aria-label={open ? "Fermer le menu" : "Ouvrir le menu"}
             >
-              {open ? <X size={20} /> : <Menu size={20} />}
+              <span className="relative flex h-5 w-5 items-center justify-center">
+                <AnimatePresence mode="wait" initial={false}>
+                  {open ? (
+                    <motion.span
+                      key="close"
+                      initial={{ opacity: 0, rotate: -45, scale: 0.8 }}
+                      animate={{ opacity: 1, rotate: 0, scale: 1 }}
+                      exit={{ opacity: 0, rotate: 45, scale: 0.8 }}
+                      transition={{ duration: 0.16, ease: easeOut }}
+                      className="absolute"
+                    >
+                      <X size={20} />
+                    </motion.span>
+                  ) : (
+                    <motion.span
+                      key="menu"
+                      initial={{ opacity: 0, rotate: 45, scale: 0.8 }}
+                      animate={{ opacity: 1, rotate: 0, scale: 1 }}
+                      exit={{ opacity: 0, rotate: -45, scale: 0.8 }}
+                      transition={{ duration: 0.16, ease: easeOut }}
+                      className="absolute"
+                    >
+                      <Menu size={20} />
+                    </motion.span>
+                  )}
+                </AnimatePresence>
+              </span>
             </button>
           </nav>
-        </motion.header>
+        </header>
       </div>
 
       <AnimatePresence>
@@ -331,43 +378,53 @@ export function SiteNav() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-40 bg-black/80 backdrop-blur-md lg:hidden"
+              transition={{ duration: 0.22, ease: easeOut }}
+              className="fixed inset-0 z-40 bg-black/75 backdrop-blur-sm lg:hidden"
               aria-label="Fermer le menu"
               onClick={close}
             />
             <motion.div
-              initial={{ opacity: 0, y: -12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              className="fixed inset-x-3 top-[4.5rem] z-50 max-h-[calc(100dvh-5.5rem)] overflow-y-auto rounded-2xl border border-white/12 bg-[#0a0a0c]/98 p-4 shadow-2xl backdrop-blur-2xl lg:hidden"
+              initial={{ opacity: 0, y: -16, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -10, scale: 0.98 }}
+              transition={{ duration: 0.26, ease: easeOut }}
+              className="fixed inset-x-3 top-[4.5rem] z-50 max-h-[calc(100dvh-5.5rem)] overflow-y-auto overscroll-contain rounded-2xl border border-white/12 bg-[#0a0a0c]/98 p-4 shadow-2xl backdrop-blur-xl lg:hidden"
             >
               <p className="font-signature text-xl italic text-white/70">Univers</p>
               <div className="mt-3 grid gap-2">
-                {POLES.map((pole) => {
+                {POLES.map((pole, i) => {
                   const color = POLE_BRAND_HEX[pole.id];
                   const active = isNavActive(pole.href, pathname);
                   return (
-                    <Link
+                    <motion.div
                       key={pole.href}
-                      href={pole.href}
-                      onClick={close}
-                      className={`flex min-h-12 items-center gap-3 rounded-xl border px-3 py-2.5 ${
-                        active ? "border-white/20 bg-white/[0.06]" : "border-white/8"
-                      }`}
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.03 + i * 0.025, duration: 0.22, ease: easeOut }}
                     >
-                      <Image
-                        src={pole.logo}
-                        alt=""
-                        width={32}
-                        height={32}
-                        className="rounded-md bg-white p-0.5"
-                      />
-                      <span className="text-sm font-semibold text-white">{pole.title}</span>
-                      <span
-                        className="ml-auto h-2 w-2 rounded-full"
-                        style={{ background: color }}
-                      />
-                    </Link>
+                      <Link
+                        href={pole.href}
+                        onClick={close}
+                        className={`flex min-h-12 items-center gap-3 rounded-xl border px-3 py-2.5 transition-[background-color,border-color,transform] duration-200 active:scale-[0.99] ${
+                          active
+                            ? "border-white/20 bg-white/[0.06]"
+                            : "border-white/8 hover:border-white/15 hover:bg-white/[0.04]"
+                        }`}
+                      >
+                        <Image
+                          src={pole.logo}
+                          alt=""
+                          width={32}
+                          height={32}
+                          className="rounded-md bg-white p-0.5"
+                        />
+                        <span className="text-sm font-semibold text-white">{pole.title}</span>
+                        <span
+                          className="ml-auto h-2 w-2 rounded-full"
+                          style={{ background: color }}
+                        />
+                      </Link>
+                    </motion.div>
                   );
                 })}
               </div>
@@ -376,18 +433,27 @@ export function SiteNav() {
                   <Link
                     key={item.href}
                     href={item.href === ROUTES.pricing ? pricingHref : item.href}
-                    className={`flex min-h-11 items-center text-sm tracking-wide ${
-                      pathname === item.href ? "font-semibold text-white" : "text-white/65"
+                    className={`flex min-h-12 items-center text-sm tracking-wide transition-colors duration-200 ${
+                      pathname === item.href
+                        ? "font-semibold text-white"
+                        : "text-white/65 hover:text-white"
                     }`}
                     onClick={close}
                   >
                     {item.label}
                   </Link>
                 ))}
+                <Link
+                  href={ROUTES.demo}
+                  className="flex min-h-12 items-center text-sm tracking-wide text-white/65 transition-colors duration-200 hover:text-white"
+                  onClick={close}
+                >
+                  Démo
+                </Link>
               </div>
               <Link
                 href={ROUTES.betaWaitlist}
-                className="mt-4 flex min-h-12 items-center justify-center rounded-full bg-white text-sm font-bold uppercase tracking-[0.14em] text-black"
+                className="mt-4 flex min-h-12 items-center justify-center rounded-full bg-white text-sm font-bold uppercase tracking-[0.14em] text-black transition-[transform,background-color] duration-200 active:scale-[0.98] hover:bg-[var(--proday-accent)] hover:text-white"
                 onClick={close}
               >
                 Rejoindre la bêta
