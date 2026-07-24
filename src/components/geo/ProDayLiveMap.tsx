@@ -56,18 +56,35 @@ function WebMapFallback({
   colors: ReturnType<typeof useAppTheme>['colors'];
 }) {
   const embedUrl = useMemo(() => buildOsmEmbedUrl(center, radiusKm), [center, radiusKm]);
-  return (
-    <iframe
-      title="Carte ProDay"
-      src={embedUrl}
-      style={{
-        width: '100%',
-        height: '100%',
-        border: 'none',
-        backgroundColor: colors.surfaceMuted,
-      }}
-    />
-  );
+  if (Platform.OS === 'web') {
+    return (
+      <iframe
+        title="Carte ProDay"
+        src={embedUrl}
+        style={{
+          width: '100%',
+          height: '100%',
+          border: 'none',
+          backgroundColor: colors.surfaceMuted,
+        }}
+      />
+    );
+  }
+  // Android sans react-native-maps (exclu pour stabiliser le cold start / Honor sans GMS).
+  try {
+    const { WebView } = require('react-native-webview') as typeof import('react-native-webview');
+    return (
+      <WebView
+        source={{ uri: embedUrl }}
+        style={{ flex: 1, backgroundColor: colors.surfaceMuted, height }}
+        originWhitelist={['*']}
+        javaScriptEnabled
+        domStorageEnabled
+      />
+    );
+  } catch {
+    return <View style={{ flex: 1, height, backgroundColor: colors.surfaceMuted }} />;
+  }
 }
 
 /** Carte native (Apple/Google) sur mobile, embed léger sur web. */

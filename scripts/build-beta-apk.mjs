@@ -19,6 +19,12 @@ const androidHome =
   process.env.ANDROID_SDK_ROOT?.trim() ||
   resolve(process.env.HOME ?? "", "Library/Android/sdk");
 
+/** JDK 17 requis pour CMake/NDK (JDK 24 casse configureCMakeRelWithDebInfo). */
+const jdk17Home = "/opt/homebrew/opt/openjdk@17";
+const javaHome =
+  process.env.JAVA_HOME?.trim() ||
+  (existsSync(resolve(jdk17Home, "bin/java")) ? jdk17Home : undefined);
+
 const localProperties = resolve(androidDir, "local.properties");
 if (!existsSync(localProperties) && existsSync(androidHome)) {
   writeFileSync(localProperties, `sdk.dir=${androidHome}\n`, "utf8");
@@ -35,6 +41,12 @@ function run(command, args, options = {}) {
     cwd: root,
     env: {
       ...process.env,
+      ...(javaHome ? { JAVA_HOME: javaHome } : {}),
+      ...(javaHome
+        ? { PATH: `${resolve(javaHome, "bin")}:${process.env.PATH ?? ""}` }
+        : {}),
+      ANDROID_HOME: process.env.ANDROID_HOME || androidHome,
+      ANDROID_SDK_ROOT: process.env.ANDROID_SDK_ROOT || androidHome,
       EXPO_PUBLIC_APP_ENV: "production",
       EXPO_PUBLIC_V3_SHELL: "1",
     },

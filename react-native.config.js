@@ -10,5 +10,14 @@ module.exports = {
     'react-native-health': {
       platforms: { android: null },
     },
+    // Google Maps SDK : crash possible sans GMS (Honor/Huawei) + poids natif inutile
+    // tant que le cold start n'est pas stable.
+    'react-native-maps': {
+      platforms: { android: null },
+    },
+    // Worklets retiré (Reanimated 3 / Legacy Arch).
+    'react-native-worklets': {
+      platforms: { android: null },
+    },
   },
 };
