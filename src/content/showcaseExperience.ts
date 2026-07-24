@@ -20,7 +20,7 @@ export const PRODAY_INFO_SECTIONS = [
     id: 'season',
     title: 'Saison 360°',
     summary: 'Tout au même endroit',
-    body: 'Convocations, matchs amicaux et détections partagent le même calendrier — fini les groupes WhatsApp éparpillés.',
+    body: 'Convocations, matchs amicaux et détections partagent le même calendrier. Fini les groupes WhatsApp éparpillés.',
     tips: ['RSVP convocations', 'Relances coach', 'Calendrier unifié'],
   },
   {

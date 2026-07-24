@@ -66,7 +66,7 @@ export const DiscoverStage: React.FC<DiscoverStageProps> = ({
 
           <Text style={pitchStyles.sheetTitle}>Le foot amateur, enfin connecté</Text>
           <Text style={pitchStyles.sheetSub}>
-            Mercato, matchs et sponsors — une seule app pour votre saison.
+            Mercato, matchs et sponsors. Une seule app pour votre saison.
           </Text>
 
           {!loading && stats ? (
@@ -91,7 +91,7 @@ export const DiscoverStage: React.FC<DiscoverStageProps> = ({
             <Icon name="shield" size={18} color={c.ink} variant="filled" />
             <Text style={styles.trustText}>
               <Text style={styles.trustBold}>Profils vérifiés</Text>
-              {' — coachs et agents validés avant la messagerie complète.'}
+              {'. Coachs et agents validés avant la messagerie complète.'}
             </Text>
           </View>
 

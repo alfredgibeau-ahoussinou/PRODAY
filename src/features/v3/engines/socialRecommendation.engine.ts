@@ -47,7 +47,7 @@ export function buildSocialSuggestions(params: {
       role: 'Club · Match amical',
       city: match.city,
       distanceKm,
-      reason: 'Recherche un adversaire — profil compatible',
+      reason: 'Recherche un adversaire. Profil compatible',
       matchScore: 70 + Math.min(20, params.user.profile.level === match.level ? 15 : 0),
       targetUid: match.requester_uid,
       targetRole: 'club',

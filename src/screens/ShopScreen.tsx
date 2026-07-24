@@ -35,7 +35,7 @@ export const ShopScreen: React.FC = () => {
     const line = cart.find((l) => l.productId === product.id);
     const qty = line?.qty ?? 1;
     const sizeLine = size ? `\n- Taille : ${size}` : '';
-    const subject = encodeURIComponent(`Précommande ProDay — ${product.name}`);
+    const subject = encodeURIComponent(`Précommande ProDay. ${product.name}`);
     const body = encodeURIComponent(
       `Bonjour,\n\nJe souhaite précommander :\n- ${product.name}\n- Quantité : ${qty}\n- Prix indicatif : ${formatShopPrice(product.priceEur)}${sizeLine}\n- Univers : ${productLine}\n\nMerci !`
     );

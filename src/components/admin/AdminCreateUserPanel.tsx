@@ -173,7 +173,7 @@ export const AdminCreateUserPanel: React.FC<AdminCreateUserPanelProps> = ({
       {form.role === 'physio' || form.product_line === 'sante' ? (
         <>
           <Text style={styles.fieldLabel}>Spécialité santé</Text>
-          <Text style={styles.hint}>7 métiers du pôle — précise le profil praticien</Text>
+          <Text style={styles.hint}>7 métiers du pôle. Précise le profil praticien</Text>
           <View style={styles.roleList}>
             {medicalConfigs.map((cfg) => {
               const active = selectedSpecialty === cfg.id;

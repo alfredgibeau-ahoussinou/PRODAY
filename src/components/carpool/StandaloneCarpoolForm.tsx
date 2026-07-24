@@ -172,7 +172,7 @@ export const StandaloneCarpoolForm: React.FC<StandaloneCarpoolFormProps> = ({
           <ProDayText variant="caption" muted>
             {isEditing
               ? `${formatFrenchDepartureDate(offer!.departs_at)} · ${standaloneAvailableSeats(offer!)} place(s) restante(s)`
-              : 'Places, horaire, RDV et destination — sans convocation'}
+              : 'Places, horaire, RDV et destination. Sans convocation'}
           </ProDayText>
         </View>
         <Icon name={expanded ? 'chevron-up' : 'chevron-down'} size={18} color={colors.textMuted} />

@@ -36,7 +36,7 @@ export function getAmateurWelcomeCopy(t?: TranslateFn) {
       : `Bienvenue sur ${PRODAY_AMATEUR_BRAND.name}`,
     subtitle: t
       ? t('signup.amateur.welcome.subtitle')
-      : 'Joueur ou coach amateur — Mercato local, matchs et effectif.',
+      : 'Joueur ou coach amateur. Mercato local, matchs et effectif.',
   };
 }
 
@@ -60,7 +60,7 @@ export function getAmateurStepMeta(page: SignupPageId, t?: TranslateFn): {
         subtitle: tr(
           t,
           'signup.amateur.step.space.subtitle',
-          'Genre, catégorie d’âge — Mercato Amateur et matchs adaptés.'
+          'Genre, catégorie d’âge. Mercato Amateur et matchs adaptés.'
         ),
         heroIcon: 'person',
       };
@@ -70,7 +70,7 @@ export function getAmateurStepMeta(page: SignupPageId, t?: TranslateFn): {
         subtitle: tr(
           t,
           'signup.amateur.step.sport.subtitle',
-          'Poste, catégorie, niveau et âge — profil visible sur le Mercato Amateur.'
+          'Poste, catégorie, niveau et âge. Profil visible sur le Mercato Amateur.'
         ),
         heroIcon: 'shirt',
       };
@@ -90,7 +90,7 @@ export function getAmateurStepMeta(page: SignupPageId, t?: TranslateFn): {
         subtitle: tr(
           t,
           'signup.amateur.step.stats.subtitle',
-          'Matchs, buts, passes — initialisation, puis validées par votre coach.'
+          'Matchs, buts, passes. Initialisation, puis validées par votre coach.'
         ),
         heroIcon: 'star',
       };
@@ -100,7 +100,7 @@ export function getAmateurStepMeta(page: SignupPageId, t?: TranslateFn): {
         subtitle: tr(
           t,
           'signup.amateur.step.family.subtitle',
-          'Obligatoire pour les mineurs — conformité et sécurité Pro Day Amateur.'
+          'Obligatoire pour les mineurs. Conformité et sécurité Pro Day Amateur.'
         ),
         heroIcon: 'shield',
       };
@@ -110,7 +110,7 @@ export function getAmateurStepMeta(page: SignupPageId, t?: TranslateFn): {
         subtitle: tr(
           t,
           'signup.amateur.step.coach.subtitle',
-          'Club, catégorie et zone — encadrement amateur et district.'
+          'Club, catégorie et zone. Encadrement amateur et district.'
         ),
         heroIcon: 'school',
       };
@@ -120,7 +120,7 @@ export function getAmateurStepMeta(page: SignupPageId, t?: TranslateFn): {
         subtitle: tr(
           t,
           'signup.amateur.step.account.subtitle',
-          'Nom affiché et email — votre espace Amateur sera lié à ce compte.'
+          'Nom affiché et email. Votre espace Amateur sera lié à ce compte.'
         ),
         heroIcon: 'person',
       };
@@ -155,7 +155,7 @@ export function getAmateurLaunchCopy(
       body: tr(
         t,
         'signup.launch.emailValidated.body',
-        'L’IA a traité vos justificatifs. Confirmez votre email — le lien vous attend dans votre boîte mail.'
+        'L’IA a traité vos justificatifs. Confirmez votre email. Le lien vous attend dans votre boîte mail.'
       ),
       finishLabel: tr(t, 'signup.launch.emailValidated.finish', 'Compris'),
     };
@@ -169,12 +169,12 @@ export function getAmateurLaunchCopy(
         ? tr(
             t,
             'signup.amateur.launch.verification.body',
-            'Après confirmation email : accès à votre banc technique amateur — effectif et convocations.'
+            'Après confirmation email : accès à votre banc technique amateur. Effectif et convocations.'
           )
         : tr(
             t,
             'signup.amateur.launch.player.verification.body',
-            'Après confirmation email : accès à votre cockpit joueur amateur — Mercato et matchs.'
+            'Après confirmation email : accès à votre cockpit joueur amateur. Mercato et matchs.'
           ),
       finishLabel: tr(t, 'signup.launch.verification.finish', 'Continuer'),
     };
@@ -187,12 +187,12 @@ export function getAmateurLaunchCopy(
       ? tr(
           t,
           'signup.amateur.launch.ready.body',
-          'Votre espace amateur est prêt — gérez votre effectif et suivez le Mercato local.'
+          'Votre espace amateur est prêt. Gérez votre effectif et suivez le Mercato local.'
         )
       : tr(
           t,
           'signup.amateur.launch.player.ready.body',
-          'Votre espace amateur est prêt — CV en ligne, Mercato Amateur et convocations.'
+          'Votre espace amateur est prêt. CV en ligne, Mercato Amateur et convocations.'
         ),
     finishLabel: tr(t, 'signup.launch.ready.finish', 'Entrer dans l’app'),
   };

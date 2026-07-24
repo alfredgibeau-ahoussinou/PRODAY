@@ -267,8 +267,8 @@ export const ParentalControlScreen: React.FC<ParentalControlScreenProps> = ({
               <Text style={styles.dashboardTitle}>Espace famille ProDay</Text>
               <Text style={styles.dashboardSub}>
                 {playerAge
-                  ? `${profile.display_name}, ${playerAge} ans — votre compte est encadré pour un usage sportif sûr.`
-                  : `${profile.display_name} — votre compte est encadré pour un usage sportif sûr.`}
+                  ? `${profile.display_name}, ${playerAge} ans. Votre compte est encadré pour un usage sportif sûr.`
+                  : `${profile.display_name}. Votre compte est encadré pour un usage sportif sûr.`}
               </Text>
               {settings.guardian_name || settings.guardian_email ? (
                 <View style={styles.guardianCard}>
@@ -284,7 +284,7 @@ export const ParentalControlScreen: React.FC<ParentalControlScreenProps> = ({
                 </View>
               ) : (
                 <Text style={styles.guardianMissing}>
-                  Aucun tuteur enregistré — demandez à un parent de compléter l’inscription
+                  Aucun tuteur enregistré. Demandez à un parent de compléter l’inscription
                   familiale.
                 </Text>
               )}
@@ -321,7 +321,7 @@ export const ParentalControlScreen: React.FC<ParentalControlScreenProps> = ({
                 value={
                   settings.screen_time_enabled && screenTimeActiveToday
                     ? `${minutesUsedToday}/${limitMinutes}`
-                    : '—'
+                    : '…'
                 }
                 label="Min. aujourd’hui"
                 colors={c}
@@ -336,7 +336,7 @@ export const ParentalControlScreen: React.FC<ParentalControlScreenProps> = ({
                     <Text style={styles.screenSub}>
                       {screenTimeActiveToday
                         ? `${minutesUsedToday} min utilisées sur ${limitMinutes} min`
-                        : `Limite de ${limitMinutes} min — jour hors plage autorisée`}
+                        : `Limite de ${limitMinutes} min. Jour hors plage autorisée`}
                     </Text>
                   </View>
                   <TouchableOpacity onPress={() => setView('time')} hitSlop={8}>
@@ -356,7 +356,7 @@ export const ParentalControlScreen: React.FC<ParentalControlScreenProps> = ({
                   />
                 </View>
                 <Text style={styles.activeDays}>
-                  Jours actifs : {(settings.active_days ?? []).join(' · ') || '—'}
+                  Jours actifs : {(settings.active_days ?? []).join(' · ') || '…'}
                 </Text>
               </View>
             ) : null}
@@ -451,7 +451,7 @@ export const ParentalControlScreen: React.FC<ParentalControlScreenProps> = ({
               <>
                 <Text style={styles.sectionTitle}>Journal simplifié</Text>
                 <Text style={styles.contactsHint}>
-                  Connexions, messages envoyés et temps par section — sans contenu des messages.
+                  Connexions, messages envoyés et temps par section. Sans contenu des messages.
                 </Text>
                 {journal.slice(0, 6).map((entry) => (
                   <View key={entry.id} style={[styles.activityRow, shadows.card]}>

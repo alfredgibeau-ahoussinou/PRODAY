@@ -29,7 +29,7 @@ export const DiscoverJourneyPage: React.FC<DiscoverJourneyPageProps> = ({
     <DiscoverSectionHeader
       label="Parcours"
       title="Vivez l'expérience"
-      subtitle="Étapes interactives — touchez pour explorer"
+      subtitle="Étapes interactives. Touchez pour explorer"
       compact
     />
 

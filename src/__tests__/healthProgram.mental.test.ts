@@ -10,7 +10,7 @@ describe('healthProgram mental', () => {
     expect(ids).toContain('mental');
   });
 
-  it('programme mental — 7 jours', () => {
+  it('programme mental. 7 jours', () => {
     const mental = pickMentalProgram();
     expect(mental.id).toBe('mental');
     expect(mental.days).toHaveLength(7);

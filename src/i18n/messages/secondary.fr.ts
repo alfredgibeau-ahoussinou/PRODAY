@@ -4,58 +4,58 @@ import type { MessageCatalog } from '../types';
 export const SECONDARY_FR: MessageCatalog = {
   'auth.teaser.homme.0': 'Inscription joueur uniquement',
   'auth.teaser.homme.1': 'CV en ligne, stats et Mercato M',
-  'auth.teaser.homme.2': 'Email confirmé — accès à votre espace Man',
+  'auth.teaser.homme.2': 'Email confirmé. Accès à votre espace Man',
 
   'auth.teaser.woman.0': 'Inscription joueuse uniquement',
   'auth.teaser.woman.1': 'CV joueuse, stats et Mercato F',
-  'auth.teaser.woman.2': 'Email confirmé — accès à votre espace Woman',
+  'auth.teaser.woman.2': 'Email confirmé. Accès à votre espace Woman',
 
   'auth.teaser.amateur.0': 'Joueur ou coach sur Pro Day Amateur',
   'auth.teaser.amateur.1': 'CV, effectif, Mercato local et matchs',
-  'auth.teaser.amateur.2': 'Email confirmé — accès à votre espace Pro Day Amateur',
+  'auth.teaser.amateur.2': 'Email confirmé. Accès à votre espace Pro Day Amateur',
 
   'auth.teaser.supporter.0': 'Inscription supporter uniquement',
   'auth.teaser.supporter.1': 'Matchs, réels et fil communautaire',
-  'auth.teaser.supporter.2': 'Email confirmé — bienvenue en tribune',
+  'auth.teaser.supporter.2': 'Email confirmé. Bienvenue en tribune',
 
   'auth.teaser.pro.0': 'Coach, club, agent, orga ou sponsor',
   'auth.teaser.pro.1': 'Parcours métier adapté à votre rôle',
-  'auth.teaser.pro.2': 'Profil vérifié — accès à votre espace Pro',
+  'auth.teaser.pro.2': 'Profil vérifié. Accès à votre espace Pro',
 
   'auth.teaser.pro_player.0': 'Inscription joueur professionnel',
   'auth.teaser.pro_player.1': 'Portfolio, opportunités et convocations',
-  'auth.teaser.pro_player.2': 'Profil vérifié — accès à votre espace Pro Joueur',
+  'auth.teaser.pro_player.2': 'Profil vérifié. Accès à votre espace Pro Joueur',
 
   'auth.teaser.pro_club.0': 'Inscription club ou structure',
   'auth.teaser.pro_club.1': 'Effectifs, recrutement et calendrier',
-  'auth.teaser.pro_club.2': 'Profil vérifié — accès à votre espace Pro Club',
+  'auth.teaser.pro_club.2': 'Profil vérifié. Accès à votre espace Pro Club',
 
   'auth.teaser.pro_staff.0': 'Coach, agent, recruteur ou organisateur',
   'auth.teaser.pro_staff.1': 'Mandats, scouting et réseau pro',
-  'auth.teaser.pro_staff.2': 'Profil vérifié — accès à votre espace Pro Staff',
+  'auth.teaser.pro_staff.2': 'Profil vérifié. Accès à votre espace Pro Staff',
 
   'auth.teaser.sponsor.0': 'Inscription marque / sponsor uniquement',
   'auth.teaser.sponsor.1': 'Campagnes géo, ROI et vitrine clubs vérifiée',
-  'auth.teaser.sponsor.2': 'Profil validé — accès à votre espace Sponsor',
+  'auth.teaser.sponsor.2': 'Profil validé. Accès à votre espace Sponsor',
 
   'auth.teaser.sante.0': 'Kinés, médecins et praticiens du sport',
   'auth.teaser.sante.1': 'Agenda, messagerie et visibilité patients',
-  'auth.teaser.sante.2': 'Diplôme validé — accès au pôle Santé',
+  'auth.teaser.sante.2': 'Diplôme validé. Accès au pôle Santé',
 
   'verification.title.player': 'Vérification joueur',
   'verification.title.player.woman': 'Vérification joueuse',
   'verification.progress':
-    'Progression {{label}} — image ou PDF · identité obligatoire pour la messagerie.',
+    'Progression {{label}}. Image ou PDF · identité obligatoire pour la messagerie.',
   'verification.check.identity.title': 'Pièce d’identité',
   'verification.check.identity.subtitle': 'CNI ou passeport',
   'verification.check.license.title': 'Licence / carte club',
   'verification.check.license.subtitle': 'Justificatif FFF',
   'verification.status.verified': 'Validé',
   'verification.status.pending': 'En analyse',
-  'verification.status.rejected': 'Refusé — renvoyer',
+  'verification.status.rejected': 'Refusé. Renvoyer',
   'verification.status.todo': 'À envoyer',
   'verification.alert.sent.title': 'Document envoyé',
-  'verification.alert.sent.body': 'Analyse en cours — vous serez notifié du résultat.',
+  'verification.alert.sent.body': 'Analyse en cours. Vous serez notifié du résultat.',
   'verification.upload.image': 'Image',
   'verification.upload.pdf': 'PDF',
   'verification.upload.sending': 'Envoi…',
@@ -118,31 +118,31 @@ export const SECONDARY_FR: MessageCatalog = {
   'signup.phase.account': 'Compte',
 
   'signup.staff.coach':
-    'Indiquez où vous exercez — justificatif analysé par IA avant confirmation email.',
-  'signup.staff.agent': 'Zone géographique — licence pro vérifiée par IA avant l’email.',
+    'Indiquez où vous exercez. Justificatif analysé par IA avant confirmation email.',
+  'signup.staff.agent': 'Zone géographique. Licence pro vérifiée par IA avant l’email.',
   'signup.staff.recruiter':
-    'Territoire et spécialité recrutement — mandat vérifié par IA avant l’email.',
+    'Territoire et spécialité recrutement. Mandat vérifié par IA avant l’email.',
   'signup.staff.organizer':
-    'Ville et structure — justificatif + IA Mistral avant l’email.',
-  'signup.staff.club': 'Structure et localisation — mandat vérifié par IA avant l’email.',
+    'Ville et structure. Justificatif + IA Mistral avant l’email.',
+  'signup.staff.club': 'Structure et localisation. Mandat vérifié par IA avant l’email.',
   'signup.staff.physio': 'Spécialité médicale et zone d’intervention pour les sportifs.',
   'signup.staff.default': 'Quelques infos pour personnaliser votre expérience.',
 
   'signup.access.oauth.title': 'Finaliser l’accès',
   'signup.access.oauth.subtitle': 'Validez votre identité ProDay pour entrer dans l’application.',
   'signup.access.sponsor.title': 'Identifiants sponsor',
-  'signup.access.sponsor.subtitle': 'Email, mot de passe et zone — accès à l’espace sponsors.',
+  'signup.access.sponsor.subtitle': 'Email, mot de passe et zone. Accès à l’espace sponsors.',
   'signup.access.default.title': 'Sécurisez votre compte',
-  'signup.access.default.subtitle': 'Email fort, mot de passe robuste — puis confirmation par mail.',
+  'signup.access.default.subtitle': 'Email fort, mot de passe robuste. Puis confirmation par mail.',
 
   'signup.age.u13.incompatible': 'Âge incompatible avec l’espace -13 (moins de 13 ans).',
   'signup.age.min': 'Âge minimum : 5 ans.',
-  'signup.age.youth.range': 'Pour U13–U19, indiquez un âge entre 13 et 19 ans.',
+  'signup.age.youth.range': 'Pour U13 à U19, indiquez un âge entre 13 et 19 ans.',
   'signup.age.senior.min': 'Pour l’espace seniors, l’âge minimum est 16 ans.',
 
   'signup.launch.emailValidated.title': 'Documents validés',
   'signup.launch.emailValidated.body':
-    'L’IA a traité vos justificatifs. Confirmez votre email — le lien vous attend dans votre boîte mail.',
+    'L’IA a traité vos justificatifs. Confirmez votre email. Le lien vous attend dans votre boîte mail.',
   'signup.launch.emailValidated.finish': 'Compris',
   'signup.launch.verification.title': 'Compte créé',
   'signup.launch.verification.body':
@@ -151,24 +151,24 @@ export const SECONDARY_FR: MessageCatalog = {
 
   'signup.man.welcome.title': 'Bienvenue sur {{brand}}',
   'signup.man.welcome.subtitle':
-    'Inscription joueur — CV en ligne, Mercato M, matchs et visibilité auprès des clubs.',
+    'Inscription joueur. CV en ligne, Mercato M, matchs et visibilité auprès des clubs.',
   'signup.man.step.space.title': 'Ton espace',
   'signup.man.step.space.subtitle':
-    'Garçons, U13, seniors M — tout le parcours est adapté à ton profil.',
+    'Garçons, U13, seniors M. Tout le parcours est adapté à ton profil.',
   'signup.man.step.sport.title': 'Ta fiche joueur',
   'signup.man.step.sport.subtitle':
-    'Poste, catégorie, niveau et âge — profil visible sur le Mercato M.',
+    'Poste, catégorie, niveau et âge. Profil visible sur le Mercato M.',
   'signup.man.step.location.title': 'Où tu joues',
   'signup.man.step.location.subtitle':
     'Ville et département pour les clubs et détections autour de chez toi.',
   'signup.man.step.stats.title': 'Tes stats',
-  'signup.man.step.stats.subtitle': 'Matchs, buts, passes — valorise ton CV foot.',
+  'signup.man.step.stats.subtitle': 'Matchs, buts, passes. Valorise ton CV foot.',
   'signup.man.step.family.title': 'Responsable légal',
   'signup.man.step.family.subtitle':
-    'Obligatoire pour les mineurs — conformité et sécurité Pro Day Man.',
+    'Obligatoire pour les mineurs. Conformité et sécurité Pro Day Man.',
   'signup.man.step.account.title': 'Ton identité',
   'signup.man.step.account.subtitle':
-    'Nom affiché et email — ton espace Man sera lié à ce compte.',
+    'Nom affiché et email. Ton espace Man sera lié à ce compte.',
   'signup.man.step.security.title': 'Sécurise ton compte',
   'signup.man.step.security.subtitle': 'Mot de passe robuste, puis confirmation par email.',
   'signup.man.step.launch.title': 'Bienvenue dans Man',
@@ -184,24 +184,24 @@ export const SECONDARY_FR: MessageCatalog = {
 
   'signup.woman.welcome.title': 'Bienvenue sur {{brand}}',
   'signup.woman.welcome.subtitle':
-    'Inscription joueuse — CV en ligne, Mercato F, matchs, covoiturage, pôle santé et visibilité auprès des clubs.',
+    'Inscription joueuse. CV en ligne, Mercato F, matchs, covoiturage, pôle santé et visibilité auprès des clubs.',
   'signup.woman.step.space.title': 'Ta catégorie',
   'signup.woman.step.space.subtitle':
-    'Jeunes F, -13 ans, seniors F — tout le parcours est adapté à ton profil.',
+    'Jeunes F, -13 ans, seniors F. Tout le parcours est adapté à ton profil.',
   'signup.woman.step.sport.title': 'Ta fiche joueuse',
   'signup.woman.step.sport.subtitle':
-    'Poste, catégorie F, niveau et âge — profil visible sur le Mercato Woman.',
+    'Poste, catégorie F, niveau et âge. Profil visible sur le Mercato Woman.',
   'signup.woman.step.location.title': 'Où tu joues',
   'signup.woman.step.location.subtitle':
     'Ville et département pour les clubs et détections autour de chez toi.',
   'signup.woman.step.stats.title': 'Tes stats',
-  'signup.woman.step.stats.subtitle': 'Matchs, buts, passes — valorise ton profil joueuse.',
+  'signup.woman.step.stats.subtitle': 'Matchs, buts, passes. Valorise ton profil joueuse.',
   'signup.woman.step.family.title': 'Responsable légal',
   'signup.woman.step.family.subtitle':
-    'Obligatoire pour les mineures — conformité et sécurité ProDay Woman.',
+    'Obligatoire pour les mineures. Conformité et sécurité ProDay Woman.',
   'signup.woman.step.account.title': 'Ton identité',
   'signup.woman.step.account.subtitle':
-    'Nom affiché et email — ton espace Woman sera lié à ce compte.',
+    'Nom affiché et email. Ton espace Woman sera lié à ce compte.',
   'signup.woman.step.security.title': 'Sécurise ton compte',
   'signup.woman.step.security.subtitle': 'Mot de passe robuste, puis confirmation par email.',
   'signup.woman.step.launch.title': 'Bienvenue dans Woman',
@@ -218,50 +218,50 @@ export const SECONDARY_FR: MessageCatalog = {
   'signup.amateur.phase.profile': 'Profil',
   'signup.amateur.welcome.title': 'Bienvenue sur {{brand}}',
   'signup.amateur.welcome.subtitle':
-    'Joueur ou coach — Mercato local, matchs, effectif et convocations au même endroit.',
+    'Joueur ou coach. Mercato local, matchs, effectif et convocations au même endroit.',
   'signup.amateur.step.space.title': 'Votre genre et votre espace foot',
   'signup.amateur.step.space.subtitle':
-    'Genre et catégorie d’âge — Mercato Amateur et matchs adaptés à votre profil.',
+    'Genre et catégorie d’âge. Mercato Amateur et matchs adaptés à votre profil.',
   'signup.amateur.step.sport.title': 'Votre fiche joueur',
   'signup.amateur.step.sport.subtitle':
-    'Poste, catégorie, niveau et âge — profil visible sur le Mercato Amateur.',
+    'Poste, catégorie, niveau et âge. Profil visible sur le Mercato Amateur.',
   'signup.amateur.step.location.title': 'Où vous jouez',
   'signup.amateur.step.location.subtitle':
     'Ville et département pour votre club et les détections locales.',
   'signup.amateur.step.stats.title': 'Vos stats',
   'signup.amateur.step.stats.subtitle':
-    'Matchs, buts, passes — initialisation, puis validées par votre coach.',
+    'Matchs, buts, passes. Initialisation, puis validées par votre coach.',
   'signup.amateur.step.family.title': 'Responsable légal',
   'signup.amateur.step.family.subtitle':
-    'Obligatoire pour les mineurs — conformité et sécurité Pro Day Amateur.',
+    'Obligatoire pour les mineurs. Conformité et sécurité Pro Day Amateur.',
   'signup.amateur.step.coach.title': 'Profil coach',
   'signup.amateur.step.coach.subtitle':
-    'Club, catégorie et zone — encadrement district et régional.',
+    'Club, catégorie et zone. Encadrement district et régional.',
   'signup.amateur.step.account.title': 'Votre identité',
   'signup.amateur.step.account.subtitle':
-    'Nom affiché et email — votre espace Pro Day Amateur sera lié à ce compte.',
+    'Nom affiché et email. Votre espace Pro Day Amateur sera lié à ce compte.',
   'signup.amateur.step.security.title': 'Sécurisez votre compte',
   'signup.amateur.step.security.subtitle': 'Mot de passe robuste, puis confirmation par email.',
   'signup.amateur.launch.verification.title': 'Compte coach créé',
   'signup.amateur.launch.verification.body':
-    'Après confirmation email : accès à votre banc technique — effectif et convocations.',
+    'Après confirmation email : accès à votre banc technique. Effectif et convocations.',
   'signup.amateur.launch.player.verification.title': 'Compte joueur créé',
   'signup.amateur.launch.player.verification.body':
-    'Après confirmation email : accès à votre cockpit joueur — Mercato Amateur et matchs.',
+    'Après confirmation email : accès à votre cockpit joueur. Mercato Amateur et matchs.',
   'signup.amateur.launch.ready.title': 'Bienvenue coach',
   'signup.amateur.launch.ready.body':
-    'Votre espace Pro Day Amateur est prêt — gérez votre effectif et suivez le Mercato local.',
+    'Votre espace Pro Day Amateur est prêt. Gérez votre effectif et suivez le Mercato local.',
   'signup.amateur.launch.player.ready.title': 'Bienvenue joueur',
   'signup.amateur.launch.player.ready.body':
-    'Votre espace Pro Day Amateur est prêt — CV en ligne, Mercato Amateur et convocations.',
+    'Votre espace Pro Day Amateur est prêt. CV en ligne, Mercato Amateur et convocations.',
 
   'signup.supporter.phase.profile': 'Profil',
   'signup.supporter.welcome.title': 'Bienvenue sur {{brand}}',
   'signup.supporter.welcome.subtitle':
-    'Fans et communauté — matchs en direct, réels et fil tribune.',
+    'Fans et communauté. Matchs en direct, réels et fil tribune.',
   'signup.supporter.step.account.title': 'Identité supporter',
   'signup.supporter.step.account.subtitle':
-    'Nom affiché et email — espace Pro Day Supporter lié à ce compte.',
+    'Nom affiché et email. Espace Pro Day Supporter lié à ce compte.',
   'signup.supporter.step.security.title': 'Sécuriser l’accès',
   'signup.supporter.step.security.subtitle':
     'Mot de passe robuste pour rejoindre la tribune Pro Day Supporter.',
@@ -273,39 +273,39 @@ export const SECONDARY_FR: MessageCatalog = {
   'signup.supporter.launch.email.finish': 'Entrer dans Pro Day Supporter',
   'signup.supporter.launch.done.title': 'Bienvenue en tribune',
   'signup.supporter.launch.done.body':
-    'Votre tribune est prête — matchs, réels et fil communautaire.',
+    'Votre tribune est prête. Matchs, réels et fil communautaire.',
   'signup.supporter.launch.done.finish': 'Entrer dans Pro Day Supporter',
 
   'signup.proPlayer.welcome.title': 'Bienvenue sur {{brand}}',
   'signup.proPlayer.welcome.subtitle':
-    'Inscription joueur pro — carrière, portfolio vidéo et opportunités vérifiées.',
+    'Inscription joueur pro. Carrière, portfolio vidéo et opportunités vérifiées.',
   'signup.proPlayer.step.space.title': 'Votre profil',
   'signup.proPlayer.step.space.subtitle':
-    'Homme ou femme — parcours et visibilité adaptés au foot professionnel.',
+    'Homme ou femme. Parcours et visibilité adaptés au foot professionnel.',
   'signup.proPlayer.step.sport.title': 'Votre fiche pro',
   'signup.proPlayer.step.sport.subtitle':
-    'Poste, niveau (R1–N3), licence et mobilité — profil visible des recruteurs.',
+    'Poste, niveau (R1 à N3), licence et mobilité. Profil visible des recruteurs.',
   'signup.proPlayer.step.location.title': 'Votre zone',
   'signup.proPlayer.step.location.subtitle':
-    'Ville et département — opportunités géolocalisées.',
+    'Ville et département. Opportunités géolocalisées.',
   'signup.proPlayer.step.stats.title': 'Votre saison',
   'signup.proPlayer.step.stats.subtitle':
-    'Stats validées coach — crédibilité auprès des clubs.',
+    'Stats validées coach. Crédibilité auprès des clubs.',
   'signup.proPlayer.step.account.title': 'Votre compte',
   'signup.proPlayer.step.account.subtitle':
-    'Email et identité — accès sécurisé à votre espace Pro Joueur.',
+    'Email et identité. Accès sécurisé à votre espace Pro Joueur.',
   'signup.proPlayer.step.security.title': 'Sécurité',
   'signup.proPlayer.step.security.subtitle':
     'Mot de passe robuste pour protéger votre profil sportif.',
   'signup.proPlayer.step.launch.title': 'C’est parti',
   'signup.proPlayer.step.launch.subtitle':
-    'Votre espace Pro Day Pro Joueur est prêt — bonne saison.',
+    'Votre espace Pro Day Pro Joueur est prêt. Bonne saison.',
   'signup.proPlayer.launch.pending.title': 'Profil en validation',
   'signup.proPlayer.launch.pending.body':
     'Votre espace Pro Day Pro Joueur sera actif après vérification de votre profil.',
   'signup.proPlayer.launch.title': 'Bienvenue Pro Joueur',
   'signup.proPlayer.launch.body':
-    'Carrière, portfolio et opportunités pro — votre saison commence maintenant.',
+    'Carrière, portfolio et opportunités pro. Votre saison commence maintenant.',
 
   'profile.verify.title': 'Vérification',
   'profile.verify.documentsRequired': 'Documents requis',
@@ -317,7 +317,7 @@ export const SECONDARY_FR: MessageCatalog = {
   'profile.verify.identityHint':
     'Pièce d\'identité pour la messagerie. Licence club pour le badge complet.',
   'profile.verify.player.body':
-    'Image (JPG, PNG) ou fichier PDF. Vous pouvez explorer l’app — la messagerie s’ouvrira après envoi.',
+    'Image (JPG, PNG) ou fichier PDF. Vous pouvez explorer l’app. La messagerie s’ouvrira après envoi.',
   'profile.verify.complete': 'Compléter',
   'profile.verify.staff.title': 'Vérification requise',
   'profile.verify.staff.body': 'Envoyez votre diplôme ou licence pour débloquer la messagerie.',

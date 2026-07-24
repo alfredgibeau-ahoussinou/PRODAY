@@ -31,7 +31,7 @@ export const SmartCalendarPeek: React.FC<SmartCalendarPeekProps> = ({ today, upc
       </ProDayText>
       {items.length === 0 ? (
         <ProDayText variant="body" muted>
-          Aucun événement planifié — des objectifs apparaîtront ici.
+          Aucun événement planifié. Des objectifs apparaîtront ici.
         </ProDayText>
       ) : (
         <View style={styles.list}>

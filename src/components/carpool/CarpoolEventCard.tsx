@@ -40,7 +40,7 @@ export function carpoolStatusLabel(
     }
     return tr(t, 'carpool.event.offers', 'Trips offered');
   }
-  return tr(t, 'carpool.event.none', 'No trip — offer yours');
+  return tr(t, 'carpool.event.none', 'No trip. Offer yours');
 }
 
 export const CarpoolEventCard: React.FC<CarpoolEventCardProps> = ({

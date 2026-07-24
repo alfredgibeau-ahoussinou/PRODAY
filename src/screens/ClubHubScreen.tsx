@@ -56,7 +56,7 @@ export const ClubHubScreen: React.FC<ClubHubScreenProps> = ({
     <TabScreenShell
       caption="Communauté"
       title={clubName}
-      subtitle="Salons équipe — messagerie, mercato, trajets"
+      subtitle="Salons équipe. Messagerie, mercato, trajets"
       right={<ScreenBackButton onPress={onBack} />}
       flat
     >
@@ -95,7 +95,7 @@ export const ClubHubScreen: React.FC<ClubHubScreenProps> = ({
         {upcoming.length === 0 ? (
           <ProDaySurface variant="module" style={styles.empty}>
             <ProDayText variant="body" muted>
-              Aucun événement à venir — les groupes apparaissent après RSVP.
+              Aucun événement à venir. Les groupes apparaissent après RSVP.
             </ProDayText>
           </ProDaySurface>
         ) : (

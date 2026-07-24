@@ -90,7 +90,7 @@ const PRO_SIGNUP_GROUPS: SignupRoleGroup[] = [
   {
     id: 'staff',
     label: 'Staff',
-    hint: 'Coach et agent — encadrement et mandats',
+    hint: 'Coach et agent. Encadrement et mandats',
     roles: ['coach', 'agent'],
   },
   {

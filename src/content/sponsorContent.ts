@@ -25,7 +25,7 @@ export const SPONSOR_MESSAGE_TEMPLATES = [
   {
     id: 'offer',
     label: 'Offre active',
-    text: 'Notre offre sponsor est en ligne sur ProDay — elle couvre équipement et visibilité pour les clubs de votre zone.',
+    text: 'Notre offre sponsor est en ligne sur ProDay. Elle couvre équipement et visibilité pour les clubs de votre zone.',
   },
   {
     id: 'funding',

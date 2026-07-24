@@ -3,13 +3,13 @@ import type { LegalSectionContent } from './fr';
 
 export const SPONSOR_CONVENTION_META = {
   title: 'Convention de partenariat sponsor',
-  subtitle: 'Modèle indicatif — à faire valider par un conseil juridique avant signature',
+  subtitle: 'Modèle indicatif. À faire valider par un conseil juridique avant signature',
   updatedAt: '19 juin 2026',
   contact: 'contact@proday.app',
 } as const;
 
 export const SPONSOR_CONVENTION_PARTIES = [
-  'ProDay (la Plateforme), contact : contact@proday.app — site : https://proday75.fr',
+  'ProDay (la Plateforme), contact : contact@proday.app. Site : https://proday75.fr',
   'Le Partenaire : [Raison sociale, SIRET, adresse, représentant légal]',
 ];
 

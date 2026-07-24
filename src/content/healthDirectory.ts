@@ -33,7 +33,7 @@ export const HEALTH_POLE_CONTENT: Record<HealthPoleGroupId, HealthPoleContent> =
     eyebrow: 'Rééducation & mobilité',
     title: 'Kiné & ostéo',
     subtitle:
-      'Blessures, douleurs articulaires et retour au terrain — rééducation structurée et suivi de la mobilité.',
+      'Blessures, douleurs articulaires et retour au terrain. Rééducation structurée et suivi de la mobilité.',
     icon: 'walk',
     whenToConsult: [
       'Douleur persistante après un match ou entraînement',
@@ -121,7 +121,7 @@ export const HEALTH_POLE_CONTENT: Record<HealthPoleGroupId, HealthPoleContent> =
     eyebrow: 'Préparation mentale',
     title: 'Coach mental',
     subtitle:
-      'Confiance, gestion du stress et routines de match — travailler la tête autant que le corps.',
+      'Confiance, gestion du stress et routines de match. Travailler la tête autant que le corps.',
     icon: 'shield',
     whenToConsult: [
       'Stress ou trac avant match ou compétition importante',
@@ -162,7 +162,7 @@ export const HEALTH_POLE_CONTENT: Record<HealthPoleGroupId, HealthPoleContent> =
     eyebrow: 'Alimentation & récupération',
     title: 'Nutrition sportive',
     subtitle:
-      'Plans alimentaires, hydratation et récupération — fuel votre performance sur toute la saison.',
+      'Plans alimentaires, hydratation et récupération. Fuel votre performance sur toute la saison.',
     icon: 'heart',
     whenToConsult: [
       'Plan nutrition avant match, tournoi ou double séance',
@@ -203,7 +203,7 @@ export const HEALTH_POLE_CONTENT: Record<HealthPoleGroupId, HealthPoleContent> =
     eyebrow: 'Pied & appui',
     title: 'Podologie sportive',
     subtitle:
-      'Semelles, chaussures et analyse de la foulée — prévenir et traiter les douleurs du pied en sport.',
+      'Semelles, chaussures et analyse de la foulée. Prévenir et traiter les douleurs du pied en sport.',
     icon: 'walk',
     whenToConsult: [
       'Douleur plantaire, métatarsalgie ou épine calcanéenne',
@@ -261,7 +261,7 @@ export const HEALTH_WELLBEING_TIPS = [
   {
     icon: 'shield' as const,
     title: 'Prévention',
-    body: 'Signalez toute douleur persistante tôt — mieux vaut consulter avant la blessure.',
+    body: 'Signalez toute douleur persistante tôt. Mieux vaut consulter avant la blessure.',
   },
   {
     icon: 'walk' as const,

@@ -29,7 +29,7 @@ export const SignupDocumentAiPanel: React.FC<SignupDocumentAiPanelProps> = ({
         <View style={styles.copy}>
           <Text style={styles.title}>Analyse IA Mistral en cours…</Text>
           <Text style={styles.body}>
-            Vérification instantanée par caméra — le fichier n'est pas enregistré sur nos serveurs.
+            Vérification instantanée par caméra. Le fichier n'est pas enregistré sur nos serveurs.
           </Text>
         </View>
       </View>
@@ -66,7 +66,7 @@ export const SignupDocumentAiPanel: React.FC<SignupDocumentAiPanelProps> = ({
         ) : null}
         {passing ? (
           <Text style={styles.privacy}>
-            Aucune copie du document n'a été stockée — conforme au plan gratuit.
+            Aucune copie du document n'a été stockée. Conforme au plan gratuit.
           </Text>
         ) : null}
       </View>

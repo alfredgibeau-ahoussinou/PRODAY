@@ -127,7 +127,7 @@ export interface UserProfile {
   experiences?: WorkExperience[];
   diplomas_list?: DiplomaRecord[];
   reviews?: ProfileReview[];
-  rating?: number;            // moyenne 1–5
+  rating?: number;            // moyenne 1 à 5
   
   // Commun
   bio?: string;

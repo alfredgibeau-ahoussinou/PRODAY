@@ -136,7 +136,7 @@ export const RecruitmentPostScreen: React.FC<RecruitmentPostScreenProps> = ({
     () => [
       'Présentez votre poste et votre niveau actuel',
       'Mentionnez votre disponibilité et votre ville',
-      'Restez concis — le club lit des dizaines de profils',
+      'Restez concis. Le club lit des dizaines de profils',
     ],
     [],
   );
@@ -368,7 +368,7 @@ export const RecruitmentPostScreen: React.FC<RecruitmentPostScreenProps> = ({
             {mercatoFit ? (
               <View style={[styles.fitBox, { backgroundColor: c.accentSoft, borderColor: c.accentMuted }]}>
                 <ProDayText variant="caption" accent style={{ fontWeight: '800' }}>
-                  Compatibilité {mercatoFit.iaScore}% — {mercatoFit.fitLabel}
+                  Compatibilité {mercatoFit.iaScore}%. {mercatoFit.fitLabel}
                 </ProDayText>
               </View>
             ) : null}
@@ -390,7 +390,7 @@ export const RecruitmentPostScreen: React.FC<RecruitmentPostScreenProps> = ({
                 {completion && completion.percent < 80 ? (
                   <View style={[styles.completionBox, { backgroundColor: c.accentSoft, borderColor: c.accentMuted }]}>
                     <ProDayText variant="caption" accent style={{ fontWeight: '800' }}>
-                      Profil à {completion.percent}% — complétez avant de postuler
+                      Profil à {completion.percent}%. Complétez avant de postuler
                     </ProDayText>
                     <ProDayText variant="caption" muted>
                       {completion.missingLabels.slice(0, 3).join(' · ')}
@@ -417,7 +417,7 @@ export const RecruitmentPostScreen: React.FC<RecruitmentPostScreenProps> = ({
                 >
                   <Icon name="mail" size={16} color={c.brand} variant="filled" />
                   <ProDayText variant="caption" accent style={{ fontWeight: '800' }}>
-                    Candidature 1 clic — lettre préremplie
+                    Candidature 1 clic. Lettre préremplie
                   </ProDayText>
                 </PressableSpring>
 

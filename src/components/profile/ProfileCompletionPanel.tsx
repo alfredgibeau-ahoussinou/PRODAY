@@ -144,7 +144,7 @@ export const ProfileCompletionPanel: React.FC<ProfileCompletionPanelProps> = ({
           Profil complet
         </ProDayText>
         <ProDayText variant="caption" muted style={styles.doneSub}>
-          Tous les critères ProDay sont remplis — bravo !
+          Tous les critères ProDay sont remplis. Bravo !
         </ProDayText>
       </ProDaySurface>
     );

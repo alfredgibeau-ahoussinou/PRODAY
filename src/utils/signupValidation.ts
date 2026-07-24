@@ -98,7 +98,7 @@ export function validateSignupPassword(
   if (/\s/.test(password)) return 'Le mot de passe ne doit pas contenir d’espaces';
   const lower = password.toLowerCase();
   if (WEAK_PASSWORDS.has(lower)) {
-    return 'Mot de passe trop courant — choisissez-en un plus unique';
+    return 'Mot de passe trop courant. Choisissez-en un plus unique';
   }
   if (context?.email) {
     const local = normalizeEmail(context.email).split('@')[0];
@@ -209,7 +209,7 @@ export function validateSelection(
   fieldLabel: string
 ): ValidationResult {
   if (!value.trim()) return `${fieldLabel} requis`;
-  if (!allowed.includes(value)) return `${fieldLabel} invalide — sélectionnez une option`;
+  if (!allowed.includes(value)) return `${fieldLabel} invalide. Sélectionnez une option`;
   return undefined;
 }
 
@@ -409,7 +409,7 @@ export function validatePlayerStepFields(input: PlayerValidationInput): Record<s
   if (deptErr) errs.department = deptErr;
 
   if (input.parsedAge == null) {
-    errs.age = 'Âge valide requis (5–99 ans)';
+    errs.age = 'Âge valide requis (5 à 99 ans)';
   } else {
     const ageSpaceErr = validateAgeForAppSpace(input.parsedAge, input.appSpace);
     if (ageSpaceErr) errs.age = ageSpaceErr;

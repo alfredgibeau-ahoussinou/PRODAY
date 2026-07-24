@@ -347,7 +347,7 @@ export const GuardianPortalScreen: React.FC<GuardianPortalScreenProps> = ({
 
                 <ProDayText variant="caption" muted style={styles.limitLine}>
                   Limite : {resolveDailyLimitMinutes(child.settings)} min · Jours :{' '}
-                  {(child.settings.active_days ?? []).join(', ') || '—'}
+                  {(child.settings.active_days ?? []).join(', ') || '…'}
                 </ProDayText>
 
                 {(child.settings.activity_journal ?? []).slice(0, 3).map((entry) => (

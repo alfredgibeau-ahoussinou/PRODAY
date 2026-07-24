@@ -18,5 +18,5 @@ export function openPrintableHtml(html: string, title: string): void {
 
 /** Ouvre le CV HTML (web : nouvel onglet + impression ; mobile : message). */
 export function openPlayerCvHtml(html: string, displayName: string): void {
-  openPrintableHtml(html, `CV — ${displayName}`);
+  openPrintableHtml(html, `CV. ${displayName}`);
 }

@@ -49,7 +49,7 @@ export const PRODAY_AMATEUR_BRAND = {
   logoLine2Lead: '',
   logoLine2Accent: 'Amateur',
   tagline: 'JOUER • ENCADRER • PARTAGER',
-  shortTagline: 'Joueurs et coachs amateur — Mercato local, matchs et effectif',
+  shortTagline: 'Joueurs et coachs amateur. Mercato local, matchs et effectif',
   entryCta: 'Espace Amateur',
 } as const;
 
@@ -59,7 +59,7 @@ export const PRODAY_SUPPORTER_BRAND = {
   logoLine2Lead: '',
   logoLine2Accent: 'Supporter',
   tagline: 'SUIVRE • VIBRER • PARTAGER',
-  shortTagline: 'Fans et communauté — matchs, réels et fil en direct',
+  shortTagline: 'Fans et communauté. Matchs, réels et fil en direct',
   entryCta: 'Espace Supporter',
 } as const;
 
@@ -69,7 +69,7 @@ export const PRODAY_PRO_BRAND = {
   logoLine2Lead: '',
   logoLine2Accent: 'Pro',
   tagline: 'EXPERTISE • RÉSEAU • PERFORMANCE',
-  shortTagline: 'Coach, agent et staff — l’écosystème pro du foot',
+  shortTagline: 'Coach, agent et staff. Le réseau pro du foot',
   entryCta: 'Espace Pro',
 } as const;
 
@@ -79,7 +79,7 @@ export const PRODAY_PRO_PLAYER_BRAND = {
   logoLine2Lead: 'Pro ',
   logoLine2Accent: 'Joueur',
   tagline: 'CARRIÈRE • OPPORTUNITÉS • PERFORMANCE',
-  shortTagline: 'Joueur professionnel — carrière, portfolio et groupe',
+  shortTagline: 'Joueur professionnel. Carrière, portfolio et groupe',
   entryCta: 'Espace Pro Joueur',
 } as const;
 
@@ -89,7 +89,7 @@ export const PRODAY_PRO_CLUB_BRAND = {
   logoLine2Lead: 'Pro ',
   logoLine2Accent: 'Club',
   tagline: 'STRUCTURE • RECRUTEMENT • CALENDRIER',
-  shortTagline: 'Club et structure — équipes, recrutement et communication',
+  shortTagline: 'Club et structure. Équipes, recrutement et communication',
   entryCta: 'Espace Club',
 } as const;
 
@@ -109,7 +109,7 @@ export const PRODAY_SPONSOR_BRAND = {
   logoLine2Lead: '',
   logoLine2Accent: 'Sponsor',
   tagline: 'VISIBILITÉ • ROI • TERRAIN',
-  shortTagline: 'Marques et sponsors — campagnes géo, ROI et vitrine vérifiée',
+  shortTagline: 'Marques et sponsors. Campagnes géo, ROI et vitrine vérifiée',
   entryCta: 'Espace Sponsor',
 } as const;
 
@@ -119,7 +119,7 @@ export const PRODAY_SANTE_BRAND = {
   logoLine2Lead: '',
   logoLine2Accent: 'Santé',
   tagline: 'SOIGNER • ACCOMPAGNER • PERFORMER',
-  shortTagline: 'Kiné, médecin et staff médical — l’écosystème santé du foot',
+  shortTagline: 'Kiné, médecin et staff médical. Le pôle santé du foot',
   entryCta: 'Espace Santé',
 } as const;
 

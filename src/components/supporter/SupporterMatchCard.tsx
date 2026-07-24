@@ -62,7 +62,7 @@ export const SupporterMatchCard: React.FC<SupporterMatchCardProps> = ({
           </ProDayText>
         ) : (
           <ProDayText variant="caption" muted>
-            {item.timeLabel ?? '—'}
+            {item.timeLabel ?? '…'}
           </ProDayText>
         )}
         <ProDayText variant="section" style={[styles.teamName, styles.teamAway]} numberOfLines={2}>

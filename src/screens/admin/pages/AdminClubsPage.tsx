@@ -53,7 +53,7 @@ export const AdminClubsPage: React.FC = () => {
                 icon="business"
                 title={club.name}
                 subtitle={`${club.city}${club.verified ? t('admin.clubs.verified') : ''}`}
-                meta={`${club.categories.join(', ') || '—'} · owner ${club.owner_uid.slice(0, 8)}…`}
+                meta={`${club.categories.join(', ') || '. '} · owner ${club.owner_uid.slice(0, 8)}…`}
                 primaryLabel={club.verified ? 'Retirer badge' : 'Vérifier'}
                 onPrimary={() =>
                   void adminService
@@ -81,7 +81,7 @@ export const AdminClubsPage: React.FC = () => {
                 icon="people"
                 title={team.name}
                 subtitle={`Club ${team.club_id.slice(0, 10)}…`}
-                meta={team.category ?? '—'}
+                meta={team.category ?? '…'}
                 onDelete={() =>
                   adminConfirmDelete('Supprimer', team.name, () => adminService.deleteTeam(team.id), loadTeams)
                 }

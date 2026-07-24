@@ -52,7 +52,7 @@ export const DiscoverJourney: React.FC<DiscoverJourneyProps> = ({
         <DiscoverSectionHeader
           label="Parcours"
           title="Testez l'expérience"
-          subtitle="Touchez une étape — aperçu interactif"
+          subtitle="Touchez une étape. Aperçu interactif"
         />
       ) : null}
 

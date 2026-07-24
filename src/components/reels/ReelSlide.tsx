@@ -61,7 +61,7 @@ const ReelEmbed: React.FC<ReelEmbedProps> = ({ embedUrl, html, reelId }) => {
   if (Platform.OS === 'web') {
     return (
       <View style={styles.media} accessibilityLabel="Lecture reel">
-        {/* iframe natif — WebView indisponible sur react-native-web */}
+        {/* iframe natif. WebView indisponible sur react-native-web */}
         <iframe
           title={`reel-${reelId}`}
           src={embedUrl}

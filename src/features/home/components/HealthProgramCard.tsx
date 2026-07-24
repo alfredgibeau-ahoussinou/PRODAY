@@ -105,7 +105,7 @@ export const HealthProgramCard: React.FC<HealthProgramCardProps> = ({
       {today ? (
         <View style={[styles.today, { borderColor: colors.border }]}>
           <ProDayText variant="caption" accent style={styles.todayTitle}>
-            Jour {today.day} — {today.title}
+            Jour {today.day}. {today.title}
           </ProDayText>
           <ProDayText variant="body" muted>
             {today.task} · {today.durationMin} min

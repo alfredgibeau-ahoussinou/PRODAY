@@ -39,7 +39,7 @@ function deriveNegoStatus(
   if (availability === 'available') return 'Libre';
   if (availability === 'unavailable') return 'Sous contrat';
   if (notes?.trim()) return notes.trim().slice(0, 28);
-  return '—';
+  return '…';
 }
 
 function formatMandateEnd(updatedAt: Date): string {
@@ -74,7 +74,7 @@ export const AgentHomeDashboard: React.FC<StaffRoleHomeProps> = ({
       const resolved = await Promise.all(
         entries.slice(0, 12).map(async (entry) => {
           const user = await usersService.getPublicById(entry.player_uid);
-          let clubLabel = '—';
+          let clubLabel = '…';
           const playerClubId = user?.profile.club_id;
           if (playerClubId) {
             const club = await clubsService.getById(playerClubId);

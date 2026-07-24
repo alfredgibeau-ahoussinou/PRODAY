@@ -96,7 +96,7 @@ export function useMatchActions(profile: User | null) {
         Alert.alert(
           'Match accepté',
           profile.profile.club_id
-            ? `Convocations créées pour les deux clubs — ${match.requester_club_name}.`
+            ? `Convocations créées pour les deux clubs. ${match.requester_club_name}.`
             : `Vous affrontez ${match.requester_club_name}.`
         );
         onDone?.();

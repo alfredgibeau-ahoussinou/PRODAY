@@ -16,7 +16,7 @@ interface OfflineCacheBannerProps {
 export const OfflineCacheBanner: React.FC<OfflineCacheBannerProps> = ({
   visible,
   onRefresh,
-  message = 'Données hors ligne — dernière synchro enregistrée',
+  message = 'Données hors ligne. Dernière synchro enregistrée',
 }) => {
   const { colors } = useAppTheme();
   if (!visible) return null;

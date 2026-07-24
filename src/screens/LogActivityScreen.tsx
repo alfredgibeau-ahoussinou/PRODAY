@@ -168,7 +168,7 @@ export const LogActivityScreen: React.FC<LogActivityScreenProps> = ({
               <View style={styles.statField}>
                 <ProDayText variant="caption" muted>{t('activity.log.rating')}</ProDayText>
                 <PressableSpring onPress={() => setRating(String(Math.min(10, (parseInt(rating, 10) || 0) + 1)))}>
-                  <ProDayText variant="section" accent>{rating || '—'}/10</ProDayText>
+                  <ProDayText variant="section" accent>{rating || '…'}/10</ProDayText>
                 </PressableSpring>
               </View>
             </View>

@@ -29,7 +29,7 @@ function footLabel(foot?: string): string {
   if (foot === 'left') return 'Gauche';
   if (foot === 'right') return 'Droit';
   if (foot === 'both') return 'Ambidextre';
-  return '—';
+  return '…';
 }
 
 /** Transforme le profil joueur en données structurées pour génération PDF / HTML. */
@@ -70,13 +70,13 @@ export function buildPlayerCvHtml(data: PlayerCvData, logoDataUrl?: string): str
   const achievements =
     data.achievements?.length ?
       `<ul>${data.achievements.map((a) => `<li>${escapeHtml(a)}</li>`).join('')}</ul>`
-    : '<p class="muted">—</p>';
+    : '<p class="muted">. </p>';
 
   return `<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <title>CV — ${escapeHtml(data.display_name)} | ProDay</title>
+  <title>CV. ${escapeHtml(data.display_name)} | ProDay</title>
   <style>
     @page { size: A4; margin: 18mm 16mm; }
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -188,7 +188,7 @@ export function buildPlayerCvHtml(data: PlayerCvData, logoDataUrl?: string): str
   </style>
 </head>
 <body>
-  <p class="print-hint">ProDay — Utilisez <strong>Fichier → Imprimer → Enregistrer au format PDF</strong> pour exporter ce CV.</p>
+  <p class="print-hint">ProDay. Utilisez <strong>Fichier → Imprimer → Enregistrer au format PDF</strong> pour exporter ce CV.</p>
   <header class="header">
     <div>
       ${logoBlock}
@@ -202,10 +202,10 @@ export function buildPlayerCvHtml(data: PlayerCvData, logoDataUrl?: string): str
   <h1>${escapeHtml(data.display_name)}</h1>
   <p class="role">${escapeHtml([data.position, data.category, data.level].filter(Boolean).join(' · ') || 'Joueur')}</p>
   <div class="grid">
-    <div class="card"><label>Ville</label><strong>${escapeHtml(data.city ?? '—')}${data.department ? ` (${escapeHtml(data.department)})` : ''}</strong></div>
+    <div class="card"><label>Ville</label><strong>${escapeHtml(data.city ?? '…')}${data.department ? ` (${escapeHtml(data.department)})` : ''}</strong></div>
     <div class="card"><label>Pied fort</label><strong>${footLabel(data.strong_foot)}</strong></div>
-    <div class="card"><label>Âge</label><strong>${data.age != null ? `${data.age} ans` : '—'}</strong></div>
-    <div class="card"><label>Morphologie</label><strong>${data.height_cm ? `${data.height_cm} cm` : '—'}${data.weight_kg ? ` · ${data.weight_kg} kg` : ''}</strong></div>
+    <div class="card"><label>Âge</label><strong>${data.age != null ? `${data.age} ans` : '…'}</strong></div>
+    <div class="card"><label>Morphologie</label><strong>${data.height_cm ? `${data.height_cm} cm` : '…'}${data.weight_kg ? ` · ${data.weight_kg} kg` : ''}</strong></div>
   </div>
   ${
     hasStats && stats
@@ -218,7 +218,7 @@ export function buildPlayerCvHtml(data: PlayerCvData, logoDataUrl?: string): str
       : ''
   }
   <h2>Présentation</h2>
-  <p class="bio">${escapeHtml(data.bio?.trim() || 'Profil ProDay — complétez votre bio dans l’application.')}</p>
+  <p class="bio">${escapeHtml(data.bio?.trim() || 'Profil ProDay. Complétez votre bio dans l’application.')}</p>
   <h2>Palmarès & distinctions</h2>
   ${achievements}
   <footer class="footer">

@@ -71,7 +71,7 @@ export function buildActivityFeed(params: {
       items.push({
         id: `rsvp-${event.id}`,
         kind: 'rsvp_yes',
-        title: `Confirmé — ${event.title}`,
+        title: `Confirmé. ${event.title}`,
         subtitle: event.location_label || event.city,
         at: event.starts_at,
         tab: 'matchs',
@@ -80,7 +80,7 @@ export function buildActivityFeed(params: {
       items.push({
         id: `conv-${event.id}`,
         kind: 'convocation',
-        title: `Convocation — ${event.title}`,
+        title: `Convocation. ${event.title}`,
         subtitle: 'Répondez à la convocation',
         at: event.starts_at,
         tab: 'matchs',
@@ -97,7 +97,7 @@ export function buildActivityFeed(params: {
       items.push({
         id: `carpool-${event.id}`,
         kind: 'carpool',
-        title: `Trajet — ${event.title}`,
+        title: `Trajet. ${event.title}`,
         subtitle: 'Covoiturage planifié',
         at: event.starts_at,
         tab: 'covoiturage',

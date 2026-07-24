@@ -20,12 +20,12 @@ const PRO_PLAYER_IDENTITY: UniverseIdentity = {
   tagline: PRODAY_PRO_PLAYER_BRAND.tagline,
   heroLine: 'Votre carrière\npro.',
   mission:
-    'Contrat, opportunités, portfolio vidéo et logistique groupe — le cockpit du joueur professionnel.',
+    'Contrat, opportunités, portfolio vidéo et logistique groupe. Le cockpit du joueur professionnel.',
   accentLabel: 'Pro Joueur',
   mercatoLabel: 'Opportunités',
   playerLabel: 'Joueur pro',
   cvLabel: 'Portfolio scouting',
-  entrySub: 'Joueur professionnel — carrière, mandat agent et convocations staff',
+  entrySub: 'Joueur professionnel. Carrière, mandat agent et convocations staff',
 };
 
 const PRO_CLUB_IDENTITY: UniverseIdentity = {
@@ -34,12 +34,12 @@ const PRO_CLUB_IDENTITY: UniverseIdentity = {
   tagline: PRODAY_PRO_CLUB_BRAND.tagline,
   heroLine: 'Votre structure\nconnectée.',
   mission:
-    'Équipes, recrutement local, calendrier et communication — la vitrine digitale du club.',
+    'Équipes, recrutement local, calendrier et communication. La vitrine digitale du club.',
   accentLabel: 'Pro Club',
   mercatoLabel: 'Recrutement',
   playerLabel: 'Structure',
   cvLabel: 'Vitrine club',
-  entrySub: 'Dirigeants et staff administratif — structure, effectifs et annonces',
+  entrySub: 'Dirigeants et staff administratif. Structure, effectifs et annonces',
 };
 
 const PRO_STAFF_IDENTITY: UniverseIdentity = {
@@ -48,7 +48,7 @@ const PRO_STAFF_IDENTITY: UniverseIdentity = {
   tagline: PRODAY_PRO_STAFF_BRAND.tagline,
   heroLine: 'Le staff\nau centre.',
   mission:
-    'Coach, agent, recruteur ou organisateur — mandats, scouting, convocations et réseau pro.',
+    'Coach, agent, recruteur ou organisateur. Mandats, scouting, convocations et réseau pro.',
   accentLabel: 'Pro Staff',
   mercatoLabel: 'Réseau pro',
   playerLabel: 'Staff',
@@ -62,7 +62,7 @@ const SPONSOR_IDENTITY: UniverseIdentity = {
   tagline: PRODAY_SPONSOR_BRAND.tagline,
   heroLine: 'Votre marque\nsur le terrain.',
   mission:
-    'Campagnes géolocalisées, tableau de bord ROI et vitrine vérifiée — un espace corporate pour les décideurs marketing.',
+    'Campagnes géolocalisées, tableau de bord ROI et vitrine vérifiée. Pour les équipes marketing.',
   accentLabel: 'Sponsor',
   mercatoLabel: 'Campagnes',
   playerLabel: 'Marque',

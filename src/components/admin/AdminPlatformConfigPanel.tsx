@@ -114,7 +114,7 @@ export const AdminPlatformConfigPanel: React.FC = () => {
         {config.maintenance_mode ? (
           <View style={styles.liveBanner}>
             <Text style={styles.liveBannerText}>
-              Maintenance ACTIVE — les utilisateurs voient l’écran de coupure en direct.
+              Maintenance ACTIVE. Les utilisateurs voient l’écran de coupure en direct.
             </Text>
           </View>
         ) : null}
@@ -130,7 +130,7 @@ export const AdminPlatformConfigPanel: React.FC = () => {
         </View>
         <Text style={styles.hint}>
           Quand activé, tous les utilisateurs (hors admins) voient immédiatement un écran
-          « Maintenance en cours » — écoute live de{' '}
+          « Maintenance en cours ». Écoute live de{' '}
           <Text style={styles.mono}>platform_config/main</Text>.
         </Text>
         <TextInput
@@ -147,7 +147,7 @@ export const AdminPlatformConfigPanel: React.FC = () => {
         {!santeVisioOn ? (
           <View style={styles.liveBanner}>
             <Text style={styles.liveBannerText}>
-              Visio Santé COUPÉE — pôle Santé et praticiens voient l’écran de coupure en
+              Visio Santé COUPÉE. Pôle Santé et praticiens voient l’écran de coupure en
               direct (comme la maintenance).
             </Text>
           </View>

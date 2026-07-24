@@ -22,7 +22,7 @@ export function getSanteWelcomeCopy(t?: TranslateFn) {
     subtitle: tr(
       t,
       'signup.sante.welcome.subtitle',
-      'Kiné, ostéo, médecin du sport, prépa, coach mental, nutritionniste ou podologue — un parcours dédié aux praticiens.'
+      'Kiné, ostéo, médecin du sport, prépa, coach mental, nutritionniste ou podologue. Un parcours dédié aux praticiens.'
     ),
   };
 }
@@ -58,7 +58,7 @@ export function getSanteStepMeta(page: SignupPageId, t?: TranslateFn): {
     case 'account':
       return {
         title: tr(t, 'signup.sante.step.account.title', 'Identité praticien'),
-        subtitle: tr(t, 'signup.sante.step.account.subtitle', 'Nom affiché et email — espace Santé lié à ce compte.'),
+        subtitle: tr(t, 'signup.sante.step.account.subtitle', 'Nom affiché et email. Espace Santé lié à ce compte.'),
         heroIcon: 'person',
       };
     case 'security':
@@ -101,7 +101,7 @@ export function getSanteLaunchCopy(
   }
   if (flags.verificationPending) {
     return {
-      title: tr(t, 'signup.sante.launch.verify.title', 'Compte créé — vérification requise'),
+      title: tr(t, 'signup.sante.launch.verify.title', 'Compte créé. Vérification requise'),
       body: tr(
         t,
         'signup.sante.launch.verify.body',

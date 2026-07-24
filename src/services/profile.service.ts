@@ -501,7 +501,7 @@ export const profileService = {
   ): Promise<void> {
     // [FIREBASE] Appeler une Cloud Function ou envoyer un email admin
     console.log(
-      `[AdminAlert] Nouveau profil en attente: ${displayName} (${role}) — UID: ${uid}`
+      `[AdminAlert] Nouveau profil en attente: ${displayName} (${role}). UID: ${uid}`
     );
   },
 

@@ -197,7 +197,7 @@ export const AdminUserEditModal: React.FC<AdminUserEditModalProps> = ({
             <>
               <Text style={styles.label}>Spécialité santé</Text>
               <Text style={styles.hint}>
-                Les 7 métiers du pôle Santé — précise le profil visible dans l’app
+                Les 7 métiers du pôle Santé. Précise le profil visible dans l’app
               </Text>
               <View style={styles.roleList}>
                 {medicalConfigs.map((cfg) => {
@@ -339,7 +339,7 @@ export const AdminRejectModal: React.FC<AdminRejectModalProps> = ({
           style={[styles.input, styles.textArea]}
           value={reason}
           onChangeText={setReason}
-          placeholder="Motif (optionnel) — visible dans la notification"
+          placeholder="Motif (optionnel). Visible dans la notification"
           placeholderTextColor={c.textMuted}
           multiline
         />

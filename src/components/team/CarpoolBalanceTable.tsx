@@ -30,7 +30,7 @@ export const CarpoolBalanceTable: React.FC<CarpoolBalanceTableProps> = ({
 
   return (
     <View>
-      <Text style={styles.hint}>Bilan {seasonLabel} — roulement des conducteurs.</Text>
+      <Text style={styles.hint}>Bilan {seasonLabel}. Roulement des conducteurs.</Text>
       <View style={styles.tableHead}>
         <Text style={[styles.th, styles.colName]}>Conducteur</Text>
         <Text style={[styles.th, styles.colTrips]}>Trajets</Text>
@@ -53,7 +53,7 @@ export const CarpoolBalanceTable: React.FC<CarpoolBalanceTableProps> = ({
                   day: 'numeric',
                   month: 'short',
                 })
-              : '—'}
+              : '…'}
           </Text>
         </View>
       ))}

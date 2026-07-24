@@ -69,7 +69,7 @@ export const MEDICAL_SPECIALTY_CONFIGS: MedicalSpecialtyConfig[] = [
     label: 'Préparateur physique',
     shortLabel: 'Prépa',
     icon: 'football',
-    tagline: 'Charge, perf et prévention — du terrain au labo.',
+    tagline: 'Charge, perf et prévention. Du terrain au labo.',
     practiceTitle: 'Vos équipes',
     practiceSubtitle: 'Qui formez-vous au quotidien ?',
     practiceFocusLabel: 'Profil accompagné *',
@@ -158,7 +158,7 @@ const ROLE_EXPERIENCES: Record<UserRole, RoleSignupExperience> = {
   player: {
     id: 'player',
     welcomeTitle: 'Devenir joueur ProDay',
-    welcomeSubtitle: 'Mercato, stats live et candidatures — construisez votre saison.',
+    welcomeSubtitle: 'Mercato, stats live et candidatures. Construisez votre saison.',
     previewSteps: ['Espace', 'Fiche sport', 'Ville', 'Stats', 'Identité', 'Accès'],
     phases: [
       { id: 'vous', label: 'Terrain' },
@@ -167,7 +167,7 @@ const ROLE_EXPERIENCES: Record<UserRole, RoleSignupExperience> = {
     ],
     accent: { accent: '#0A0A0A', accentSoft: '#E8F5E9', accentMuted: '#C8E6C9' },
     launchTitle: 'Terrain prêt',
-    launchBody: 'Votre cockpit joueur s’active après confirmation email — Mercato et stats vous attendent.',
+    launchBody: 'Votre cockpit joueur s’active après confirmation email. Mercato et stats vous attendent.',
     launchFinishLabel: 'Entrer sur le terrain',
   },
   coach: {
@@ -188,7 +188,7 @@ const ROLE_EXPERIENCES: Record<UserRole, RoleSignupExperience> = {
   club: {
     id: 'club',
     welcomeTitle: 'Espace club',
-    welcomeSubtitle: 'Recrutement, stages et vie de structure — mandat vérifié.',
+    welcomeSubtitle: 'Recrutement, stages et vie de structure. Mandat vérifié.',
     previewSteps: ['Structure', 'Identité', 'Sécurité', 'Lancement'],
     phases: [
       { id: 'vous', label: 'Club' },
@@ -203,7 +203,7 @@ const ROLE_EXPERIENCES: Record<UserRole, RoleSignupExperience> = {
   agent: {
     id: 'agent',
     welcomeTitle: 'Espace agent',
-    welcomeSubtitle: 'Scouting, mandats et placement — licence pro contrôlée.',
+    welcomeSubtitle: 'Scouting, mandats et placement. Licence pro contrôlée.',
     previewSteps: ['Zone pro', 'Identité', 'Sécurité', 'Lancement'],
     phases: [
       { id: 'vous', label: 'Mandat' },
@@ -218,7 +218,7 @@ const ROLE_EXPERIENCES: Record<UserRole, RoleSignupExperience> = {
   recruiter: {
     id: 'recruiter',
     welcomeTitle: 'Espace recruteur',
-    welcomeSubtitle: 'Scouting, annonces Mercato et pipeline candidatures — profil vérifié.',
+    welcomeSubtitle: 'Scouting, annonces Mercato et pipeline candidatures. Profil vérifié.',
     previewSteps: ['Profil recruteur', 'Identité', 'Sécurité', 'Lancement'],
     phases: [
       { id: 'vous', label: 'Recrutement' },
@@ -248,7 +248,7 @@ const ROLE_EXPERIENCES: Record<UserRole, RoleSignupExperience> = {
   physio: {
     id: 'physio',
     welcomeTitle: 'Pôle médical ProDay',
-    welcomeSubtitle: 'Chaque spécialité a son parcours — kiné, médecin, prépa, nutrition…',
+    welcomeSubtitle: 'Chaque spécialité a son parcours. Kiné, médecin, prépa, nutrition…',
     previewSteps: ['Spécialité', 'Cabinet', 'Identité', 'Sécurité', 'Go'],
     phases: [
       { id: 'vous', label: 'Métier' },
@@ -257,7 +257,7 @@ const ROLE_EXPERIENCES: Record<UserRole, RoleSignupExperience> = {
     ],
     accent: { accent: '#0F766E', accentSoft: '#CCFBF1', accentMuted: '#5EEAD4' },
     launchTitle: 'Cabinet enregistré',
-    launchBody: 'Votre spécialité apparaît sur le fil santé — validation des diplômes à suivre.',
+    launchBody: 'Votre spécialité apparaît sur le fil santé. Validation des diplômes à suivre.',
     launchFinishLabel: 'Ouvrir mon cabinet',
   },
   sponsor: {
@@ -278,7 +278,7 @@ const ROLE_EXPERIENCES: Record<UserRole, RoleSignupExperience> = {
   supporter: {
     id: 'supporter',
     welcomeTitle: 'Espace supporter',
-    welcomeSubtitle: 'Matchs, réels et fil — votre tribune numérique ProDay.',
+    welcomeSubtitle: 'Matchs, réels et fil. Votre tribune numérique ProDay.',
     previewSteps: ['Clubs', 'Profil', 'Sécurité', 'Lancement'],
     phases: [
       { id: 'vous', label: 'Profil' },
@@ -372,14 +372,14 @@ export function getStepMetaForRole(page: SignupPageId, role: UserRole, t?: Trans
     case 'space':
       return {
         title: metaKey('title', 'Ton univers foot'),
-        subtitle: metaKey('subtitle', 'Féminin, masculin ou école — tout le parcours s’adapte.'),
+        subtitle: metaKey('subtitle', 'Féminin, masculin ou école. Tout le parcours s’adapte.'),
         heroIcon: 'football',
         stepName: metaKey('stepName', tr(t, 'signup.page.space', 'Espace')),
       };
     case 'sport':
       return {
         title: metaKey('title', 'Ta fiche sportive'),
-        subtitle: metaKey('subtitle', 'Poste, catégorie, niveau — une page, une étape.'),
+        subtitle: metaKey('subtitle', 'Poste, catégorie, niveau. Une page, une étape.'),
         heroIcon: 'shirt',
         stepName: metaKey('stepName', tr(t, 'signup.page.sport', 'Sport')),
       };
@@ -393,49 +393,49 @@ export function getStepMetaForRole(page: SignupPageId, role: UserRole, t?: Trans
     case 'stats':
       return {
         title: metaKey('title', 'Tes stats saison'),
-        subtitle: metaKey('subtitle', 'Matchs, buts, passes — alimentent ton CV vivant.'),
+        subtitle: metaKey('subtitle', 'Matchs, buts, passes. Alimentent ton CV vivant.'),
         heroIcon: 'star',
         stepName: metaKey('stepName', tr(t, 'signup.page.stats', 'Stats')),
       };
     case 'coach_pro':
       return {
         title: metaKey('title', 'Profil coach'),
-        subtitle: metaKey('subtitle', 'Diplôme, ville et zone d’intervention — vérification IA après l’email.'),
+        subtitle: metaKey('subtitle', 'Diplôme, ville et zone d’intervention. Vérification IA après l’email.'),
         heroIcon: 'school',
         stepName: metaKey('stepName', tr(t, 'signup.page.coach_pro', 'Coach')),
       };
     case 'club_pro':
       return {
         title: metaKey('title', 'Votre structure'),
-        subtitle: metaKey('subtitle', 'Nom du club, ville et département — mandat contrôlé ensuite.'),
+        subtitle: metaKey('subtitle', 'Nom du club, ville et département. Mandat contrôlé ensuite.'),
         heroIcon: 'business',
         stepName: metaKey('stepName', tr(t, 'signup.page.club_pro', 'Club')),
       };
     case 'agent_pro':
       return {
         title: metaKey('title', 'Profil agent'),
-        subtitle: metaKey('subtitle', 'Licence, territoire et ville — accès messagerie après validation.'),
+        subtitle: metaKey('subtitle', 'Licence, territoire et ville. Accès messagerie après validation.'),
         heroIcon: 'briefcase',
         stepName: metaKey('stepName', tr(t, 'signup.page.agent_pro', 'Agent')),
       };
     case 'recruiter_pro':
       return {
         title: metaKey('title', 'Profil recruteur'),
-        subtitle: metaKey('subtitle', 'Spécialité, territoire et ville — mandat contrôlé après l’email.'),
+        subtitle: metaKey('subtitle', 'Spécialité, territoire et ville. Mandat contrôlé après l’email.'),
         heroIcon: 'search',
         stepName: metaKey('stepName', tr(t, 'signup.page.recruiter_pro', 'Recruteur')),
       };
     case 'organizer_pro':
       return {
         title: metaKey('title', 'Profil organisateur'),
-        subtitle: metaKey('subtitle', 'Structure, ville — tournois et détections sur ProDay.'),
+        subtitle: metaKey('subtitle', 'Structure, ville. Tournois et détections sur ProDay.'),
         heroIcon: 'trophy',
         stepName: metaKey('stepName', tr(t, 'signup.page.organizer_pro', 'Orga')),
       };
     case 'medical_specialty':
       return {
         title: metaKey('title', 'Votre spécialité'),
-        subtitle: metaKey('subtitle', 'Choisissez votre domaine — le parcours suivant est dédié à ce métier.'),
+        subtitle: metaKey('subtitle', 'Choisissez votre domaine. Le parcours suivant est dédié à ce métier.'),
         heroIcon: 'heart',
         stepName: metaKey('stepName', tr(t, 'signup.page.medical_specialty', 'Spécialité')),
       };
@@ -449,14 +449,14 @@ export function getStepMetaForRole(page: SignupPageId, role: UserRole, t?: Trans
     case 'sponsor_pro':
       return {
         title: metaKey('title', 'Votre territoire'),
-        subtitle: metaKey('subtitle', 'Zone d’action et marque — visibilité auprès des clubs locaux.'),
+        subtitle: metaKey('subtitle', 'Zone d’action et marque. Visibilité auprès des clubs locaux.'),
         heroIcon: 'star-four-points',
         stepName: metaKey('stepName', tr(t, 'signup.page.sponsor_pro', 'Sponsor')),
       };
     case 'sponsor_company':
       return {
         title: metaKey('title', 'Votre marque'),
-        subtitle: metaKey('subtitle', 'Identifiez votre entreprise — ces infos personnalisent votre espace sponsor.'),
+        subtitle: metaKey('subtitle', 'Identifiez votre entreprise. Ces infos personnalisent votre espace sponsor.'),
         heroIcon: 'star-four-points',
         stepName: metaKey('stepName', tr(t, 'signup.page.sponsor_company', 'Entreprise')),
       };
@@ -477,7 +477,7 @@ export function getStepMetaForRole(page: SignupPageId, role: UserRole, t?: Trans
     case 'family':
       return {
         title: metaKey('title', 'Responsable légal'),
-        subtitle: metaKey('subtitle', 'Obligatoire pour les mineurs — conformité ProDay.'),
+        subtitle: metaKey('subtitle', 'Obligatoire pour les mineurs. Conformité ProDay.'),
         heroIcon: 'shield',
         stepName: metaKey('stepName', tr(t, 'signup.page.family', 'Famille')),
       };
@@ -487,7 +487,7 @@ export function getStepMetaForRole(page: SignupPageId, role: UserRole, t?: Trans
           'title',
           role === 'sponsor' ? 'Identité sponsor' : 'Ton identité'
         ),
-        subtitle: metaKey('subtitle', 'Nom affiché et email — base de votre espace.'),
+        subtitle: metaKey('subtitle', 'Nom affiché et email. Base de votre espace.'),
         heroIcon: 'person',
         stepName: metaKey('stepName', tr(t, 'signup.page.account', 'Identité')),
       };

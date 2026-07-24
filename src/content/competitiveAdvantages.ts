@@ -2,10 +2,10 @@
 export const PRODAY_PILLARS = [
   {
     id: 'unified',
-    title: 'Écosystème unique',
+    title: 'Tout au même endroit',
     subtitle: 'Une seule app',
     description:
-      'Carrière, club, convocations, matchs et tournois — tout votre foot amateur au même endroit.',
+      'Carrière, club, convocations, matchs et tournois. Tout votre foot amateur au même endroit.',
     icon: 'people' as const,
   },
   {
@@ -37,7 +37,7 @@ export const PRODAY_PILLARS = [
     title: 'Mercato ciblé',
     subtitle: 'Filtres & candidatures',
     description:
-      'Annonces ciblées, postuler en un tap, suivi des réponses — pour joueurs et clubs.',
+      'Annonces ciblées, postuler en un tap, suivi des réponses. Pour joueurs et clubs.',
     icon: 'search' as const,
   },
   {
@@ -53,7 +53,7 @@ export const PRODAY_PILLARS = [
     title: 'Convocations ProDay',
     subtitle: 'RSVP & relances',
     description:
-      'Présent, absent, peut-être — avec relances et composition d’équipe.',
+      'Présent, absent, peut-être. Avec relances et composition d’équipe.',
     icon: 'calendar' as const,
   },
   {

@@ -93,7 +93,7 @@ export const PlayerAppointmentsScreen: React.FC<PlayerAppointmentsScreenProps> =
           <ProDayText variant="section">Aucun rendez-vous</ProDayText>
           <ProDayText variant="body" muted style={styles.emptySub}>
             {visioEnabled
-              ? 'Réservez un créneau avec un praticien du pôle Santé. Les téléconsultations sont confirmées automatiquement — le bouton « Rejoindre la visio » apparaît dès la réservation.'
+              ? 'Réservez un créneau avec un praticien du pôle Santé. Les téléconsultations sont confirmées automatiquement. Le bouton « Rejoindre la visio » apparaît dès la réservation.'
               : 'Réservez un créneau avec un praticien du pôle Santé. La visio sera disponible lorsque l’équipe ProDay l’activera pour la bêta.'}
           </ProDayText>
         </View>

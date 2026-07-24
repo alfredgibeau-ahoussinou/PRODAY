@@ -76,7 +76,7 @@ export const ParentalActivityReportScreen: React.FC<ParentalActivityReportScreen
               </Text>
               <Text style={styles.statusSub}>
                 {hasActivity
-                  ? `Résumé pour ${childName} — ${periodLabel}.`
+                  ? `Résumé pour ${childName}. ${periodLabel}.`
                   : `Aucune interaction récente pour ${childName} sur ${periodLabel}.`}
               </Text>
             </View>

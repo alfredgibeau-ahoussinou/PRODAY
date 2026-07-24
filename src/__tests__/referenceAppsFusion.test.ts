@@ -9,7 +9,7 @@ import { estimateTravelMinutes, formatTravelEta } from '../utils/geoEta';
 import { teamThreadId } from '../utils/teamChatIds';
 import type { TeamEvent } from '../models/TeamEvent';
 
-describe('Fusion références apps — moteurs V3', () => {
+describe('Fusion références apps. Moteurs V3', () => {
   it('calcule ETA trajet (Uber)', () => {
     expect(estimateTravelMinutes(10)).toBe(14);
     expect(formatTravelEta(14)).toBe('~14 min');

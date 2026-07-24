@@ -19,7 +19,7 @@ export const SponsorTopBar: React.FC<SponsorTopBarProps> = ({ title, subtitle, o
 
   const syncLabel = lastRefreshedAt
     ? lastRefreshedAt.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
-    : '—';
+    : '…';
 
   return (
     <View style={styles.bar} testID="sponsor-top-bar">

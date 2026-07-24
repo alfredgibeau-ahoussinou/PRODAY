@@ -30,7 +30,7 @@ export function formatHeartRateValue(bpm: number | null | undefined): string {
 }
 
 export function formatWearableSyncedAt(syncedAt: string | undefined): string {
-  if (!syncedAt) return '—';
+  if (!syncedAt) return '…';
   return new Date(syncedAt).toLocaleString('fr-FR', {
     day: 'numeric',
     month: 'short',

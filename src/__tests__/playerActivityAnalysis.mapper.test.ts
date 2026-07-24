@@ -1,6 +1,6 @@
 import { playerActivityFromFirestore } from '../lib/firestoreMappers';
 
-describe('playerActivityFromFirestore — champs analyse IA', () => {
+describe('playerActivityFromFirestore. Champs analyse IA', () => {
   it('mappe summary, forces, axes et statut analyzed', () => {
     const analyzedAt = '2026-06-20T12:00:00.000Z';
     const activity = playerActivityFromFirestore('act-1', {

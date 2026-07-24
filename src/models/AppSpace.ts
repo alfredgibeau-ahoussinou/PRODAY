@@ -20,11 +20,11 @@ export const APP_SPACE_LABELS: Record<AppSpaceId, string> = {
 };
 
 export const APP_SPACE_DESCRIPTIONS: Record<AppSpaceId, string> = {
-  women: 'Football féminin — D1 F, Régional, détections et clubs féminins.',
-  girls: 'U13 à U19 filles — formations et détections dédiées.',
-  men: 'Football masculin — Seniors, Régional, National et détections.',
-  boys: 'U13 à U19 garçons — formations et détections dédiées.',
-  under_u13: 'U7, U9, U11 — école de foot, initiation et détections poussins.',
+  women: 'Football féminin. D1 F, Régional, détections et clubs féminins.',
+  girls: 'U13 à U19 filles. Formations et détections dédiées.',
+  men: 'Football masculin. Seniors, Régional, National et détections.',
+  boys: 'U13 à U19 garçons. Formations et détections dédiées.',
+  under_u13: 'U7, U9, U11. École de foot, initiation et détections poussins.',
 };
 
 /** Ancien espace « mixte » ou valeur inconnue → espace par défaut */

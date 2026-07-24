@@ -7,7 +7,7 @@ import {
   type SponsorMainTabId,
 } from '../../navigation/sponsorTabConfig';
 
-describe('e2e — navigation shell sponsor', () => {
+describe('e2e. Navigation shell sponsor', () => {
   const mainTabs: SponsorMainTabId[] = [
     'pilotage',
     'offres',
@@ -31,7 +31,7 @@ describe('e2e — navigation shell sponsor', () => {
     }
   });
 
-  it('segments réseau — messages et prospects', () => {
+  it('segments réseau. Messages et prospects', () => {
     expect(resolveSponsorPageMeta('reseau', 'messages').title).toBe('Messages');
     expect(resolveSponsorPageMeta('reseau', 'prospects').title).toBe('Prospects');
     expect(

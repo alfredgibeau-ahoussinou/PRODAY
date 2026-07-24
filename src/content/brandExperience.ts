@@ -44,7 +44,7 @@ export const HOMME_IDENTITY: UniverseIdentity = {
   mercatoLabel: 'Mercato',
   playerLabel: 'Joueur',
   cvLabel: 'CV foot en ligne',
-  entrySub: 'Football masculin & jeunes — joueurs, clubs, sponsors',
+  entrySub: 'Football masculin & jeunes. Joueurs, clubs, sponsors',
 };
 
 export const WOMAN_IDENTITY: UniverseIdentity = {
@@ -58,7 +58,7 @@ export const WOMAN_IDENTITY: UniverseIdentity = {
   mercatoLabel: 'Mercato F',
   playerLabel: 'Joueuse',
   cvLabel: 'CV joueuse en ligne',
-  entrySub: 'Foot au féminin — joueuses, clubs F, sponsors',
+  entrySub: 'Foot au féminin. Joueuses, clubs F, sponsors',
 };
 
 export const AMATEUR_IDENTITY: UniverseIdentity = {
@@ -67,12 +67,12 @@ export const AMATEUR_IDENTITY: UniverseIdentity = {
   tagline: PRODAY_AMATEUR_BRAND.tagline,
   heroLine: 'Le foot amateur,\nconnecté.',
   mission:
-    'Joueurs et coachs amateur — Mercato local, matchs, effectif et convocations au même endroit.',
+    'Joueurs et coachs amateur. Mercato local, matchs, effectif et convocations au même endroit.',
   accentLabel: 'Pro Day Amateur',
   mercatoLabel: 'Mercato Amateur',
   playerLabel: 'Joueur amateur',
   cvLabel: 'CV foot en ligne',
-  entrySub: 'Joueur ou coach amateur — district, régional et club local',
+  entrySub: 'Joueur ou coach amateur. District, régional et club local',
 };
 
 export const SUPPORTER_IDENTITY: UniverseIdentity = {
@@ -81,12 +81,12 @@ export const SUPPORTER_IDENTITY: UniverseIdentity = {
   tagline: PRODAY_SUPPORTER_BRAND.tagline,
   heroLine: 'Le foot,\nensemble.',
   mission:
-    'Fans et communauté — matchs, réels et fil en direct, sans Mercato ni covoiturage.',
+    'Fans et communauté. Matchs, réels et fil en direct, sans Mercato ni covoiturage.',
   accentLabel: 'Pro Day Supporter',
   mercatoLabel: 'Communauté',
   playerLabel: 'Supporter',
   cvLabel: 'Profil supporter',
-  entrySub: 'Fans de foot — tribune numérique et fil communautaire',
+  entrySub: 'Fans de foot. Tribune numérique et fil communautaire',
 };
 
 export const PRO_IDENTITY: UniverseIdentity = {
@@ -95,7 +95,7 @@ export const PRO_IDENTITY: UniverseIdentity = {
   tagline: PRODAY_PRO_BRAND.tagline,
   heroLine: 'Les pros\ndu foot.',
   mission:
-    'Coach, club et staff — Mercato Pro, convocations, covoiturage et réseau vérifié.',
+    'Coach, club et staff. Mercato Pro, convocations, covoiturage et réseau vérifié.',
   accentLabel: 'Pro Day Pro',
   mercatoLabel: 'Mercato Pro',
   playerLabel: 'Professionnel',
@@ -123,7 +123,7 @@ export const SPONSOR_IDENTITY: UniverseIdentity = {
   tagline: PRODAY_SPONSOR_BRAND.tagline,
   heroLine: 'Votre marque\nsur le terrain.',
   mission:
-    'Campagnes géolocalisées, tableau de bord ROI et vitrine vérifiée — un espace corporate pour les décideurs marketing.',
+    'Campagnes géolocalisées, tableau de bord ROI et vitrine vérifiée. Pour les équipes marketing.',
   accentLabel: 'Sponsor',
   mercatoLabel: 'Campagnes',
   playerLabel: 'Marque',
@@ -172,7 +172,7 @@ export function getDiscoverHomeCopy(line: ProductLineId) {
       heroTitle: brand.heroLine,
       heroSub: brand.mission,
       trustText:
-        'Praticiens vérifiés — diplômes contrôlés avant la messagerie complète.',
+        'Praticiens vérifiés. Diplômes contrôlés avant la messagerie complète.',
       ctaText: 'Créer un compte Santé',
       sectionExplore: 'Vos pôles Santé',
       secondaryMercato: 'Annuaire santé',
@@ -185,7 +185,7 @@ export function getDiscoverHomeCopy(line: ProductLineId) {
       heroTitle: brand.heroLine,
       heroSub: brand.mission,
       trustText:
-        'Profils vérifiés pour coachs et agents pro — messagerie sécurisée après validation.',
+        'Profils vérifiés pour coachs et agents pro. Messagerie sécurisée après validation.',
       ctaText: 'Créer un compte Pro',
       sectionExplore: 'Vos pôles Pro',
       secondaryMercato: 'Mercato Pro',
@@ -198,7 +198,7 @@ export function getDiscoverHomeCopy(line: ProductLineId) {
       heroTitle: brand.heroLine,
       heroSub: brand.mission,
       trustText:
-        'Profils vérifiés pour le foot amateur — joueurs et coachs, messagerie sécurisée après validation.',
+        'Profils vérifiés pour le foot amateur. Joueurs et coachs, messagerie sécurisée après validation.',
       ctaText: 'Créer mon compte Pro Day Amateur',
       sectionExplore: 'Découvrir Pro Day Amateur',
       secondaryMercato: 'Mercato Amateur',
@@ -211,7 +211,7 @@ export function getDiscoverHomeCopy(line: ProductLineId) {
       heroTitle: brand.heroLine,
       heroSub: brand.mission,
       trustText:
-        'Profils supporters — messagerie communautaire sécurisée.',
+        'Profils supporters. Messagerie communautaire sécurisée.',
       ctaText: 'Créer un compte Supporter',
       sectionExplore: 'Votre tribune',
       secondaryMercato: 'Communauté',
@@ -224,7 +224,7 @@ export function getDiscoverHomeCopy(line: ProductLineId) {
       heroTitle: brand.heroLine,
       heroSub: brand.mission,
       trustText:
-        'Profils vérifiés pour le foot au féminin — messagerie sécurisée après validation.',
+        'Profils vérifiés pour le foot au féminin. Messagerie sécurisée après validation.',
       ctaText: 'Créer un compte Woman',
       sectionExplore: 'Explorer Woman',
       secondaryMercato: 'Mercato F',
@@ -236,7 +236,7 @@ export function getDiscoverHomeCopy(line: ProductLineId) {
     heroTitle: brand.heroLine,
     heroSub: brand.mission,
     trustText:
-      'Profils vérifiés pour le foot amateur — messagerie sécurisée après validation.',
+      'Profils vérifiés pour le foot amateur. Messagerie sécurisée après validation.',
     ctaText: 'Créer mon compte Pro Day',
     sectionExplore: 'Découvrir Pro Day',
     secondaryMercato: brand.mercatoLabel,

@@ -15,7 +15,7 @@ interface ShopCarpoolServicePanelProps {
 const STEPS = [
   { icon: 'calendar' as const, title: 'Choisissez un événement', body: 'Match, entraînement ou détection de votre calendrier.' },
   { icon: 'car' as const, title: 'Trouvez un conducteur', body: 'Consultez les trajets proposés par vos coéquipiers.' },
-  { icon: 'checkmark-circle' as const, title: 'Réservez votre place', body: 'Inscription en un clic — le conducteur est notifié.' },
+  { icon: 'checkmark-circle' as const, title: 'Réservez votre place', body: 'Inscription en un clic. Le conducteur est notifié.' },
 ];
 
 export const ShopCarpoolServicePanel: React.FC<ShopCarpoolServicePanelProps> = ({
@@ -29,7 +29,7 @@ export const ShopCarpoolServicePanel: React.FC<ShopCarpoolServicePanelProps> = (
       <View style={styles.lead}>
         <ProDayText variant="section">Covoiturage équipe</ProDayText>
         <ProDayText variant="body" muted>
-          Inscrivez-vous comme passager pour vos déplacements club — gratuit entre coéquipiers.
+          Inscrivez-vous comme passager pour vos déplacements club. Gratuit entre coéquipiers.
         </ProDayText>
       </View>
 

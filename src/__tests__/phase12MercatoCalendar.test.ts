@@ -40,7 +40,7 @@ const post: RecruitmentPost = {
   status: 'OPEN',
 };
 
-describe('Phase 12 — Mercato détail + calendrier', () => {
+describe('Phase 12. Mercato détail + calendrier', () => {
   it('calcule le score IA sur une annonce unique', () => {
     const fit = getPostMercatoFit({ profile: player, post, pulseScore: 72 });
     expect(fit).not.toBeNull();

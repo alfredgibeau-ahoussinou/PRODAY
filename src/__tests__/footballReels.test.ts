@@ -7,7 +7,7 @@ import {
 import { polesForUniverse, seedKey, seedsForUniverse } from '../content/reelSeedCatalog';
 
 describe('reelSeedCatalog', () => {
-  it('n’expose plus de seeds externes — contenu acteurs ProDay uniquement', () => {
+  it('n’expose plus de seeds externes. Contenu acteurs ProDay uniquement', () => {
     for (const universe of ['homme', 'woman', 'pro', 'sante'] as const) {
       expect(seedsForUniverse(universe)).toEqual([]);
     }

@@ -119,7 +119,7 @@ export const AdminUsersPage: React.FC = () => {
       Alert.alert(
         t('admin.users.confirmed'),
         result.via === 'firestore'
-          ? `${u.display_name} est vérifié (sans notification push — déployez les Functions pour les alertes automatiques).`
+          ? `${u.display_name} est vérifié (sans notification push. Déployez les Functions pour les alertes automatiques).`
           : `${u.display_name} est vérifié. Une notification a été envoyée.`
       );
       await refresh();

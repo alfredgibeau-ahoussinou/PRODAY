@@ -90,7 +90,7 @@ export const MentalProgramCard: React.FC<MentalProgramCardProps> = ({ uid }) => 
       {today ? (
         <View style={[styles.today, { borderColor: colors.border }]}>
           <ProDayText variant="caption" accent style={styles.todayTitle}>
-            {t('mental.program.day', { n: today.day })} — {today.title}
+            {t('mental.program.day', { n: today.day })}. {today.title}
           </ProDayText>
           <ProDayText variant="body" muted>
             {today.task} · {today.durationMin} min

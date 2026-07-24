@@ -27,7 +27,7 @@ export const MatchCard: React.FC<MatchCardProps> = ({ match, onAccept }) => {
     <View style={[styles.card, shadows.card]}>
       <Text style={styles.club}>{match.club_name}</Text>
       <Text style={styles.line}>
-        {match.category} {match.level} — {match.city}
+        {match.category} {match.level}. {match.city}
       </Text>
       <Text style={styles.date}>
         {match.date.toLocaleString('fr-FR', {

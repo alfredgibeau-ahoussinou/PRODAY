@@ -257,31 +257,31 @@ export function getStaffStepSubtitle(role: UserRole, t?: TranslateFn): string {
       return tr(
         t,
         'signup.staff.coach',
-        'Indiquez où vous exercez — justificatif analysé par IA avant confirmation email.'
+        'Indiquez où vous exercez. Justificatif analysé par IA avant confirmation email.'
       );
     case 'agent':
       return tr(
         t,
         'signup.staff.agent',
-        'Zone géographique — licence pro vérifiée par IA avant l’email.'
+        'Zone géographique. Licence pro vérifiée par IA avant l’email.'
       );
     case 'recruiter':
       return tr(
         t,
         'signup.staff.recruiter',
-        'Territoire et spécialité recrutement — mandat vérifié par IA avant l’email.'
+        'Territoire et spécialité recrutement. Mandat vérifié par IA avant l’email.'
       );
     case 'organizer':
       return tr(
         t,
         'signup.staff.organizer',
-        'Ville et structure — justificatif + IA Mistral avant l’email.'
+        'Ville et structure. Justificatif + IA Mistral avant l’email.'
       );
     case 'club':
       return tr(
         t,
         'signup.staff.club',
-        'Structure et localisation — mandat vérifié par IA avant l’email.'
+        'Structure et localisation. Mandat vérifié par IA avant l’email.'
       );
     case 'physio':
       return tr(
@@ -308,12 +308,12 @@ export function getAccessStepMeta(
   if (role === 'sponsor') {
     return {
       title: tr(t, 'signup.access.sponsor.title', 'Identifiants sponsor'),
-      subtitle: tr(t, 'signup.access.sponsor.subtitle', 'Email, mot de passe et zone — accès à l’espace sponsors.'),
+      subtitle: tr(t, 'signup.access.sponsor.subtitle', 'Email, mot de passe et zone. Accès à l’espace sponsors.'),
     };
   }
   return {
     title: tr(t, 'signup.access.default.title', 'Sécurisez votre compte'),
-    subtitle: tr(t, 'signup.access.default.subtitle', 'Email fort, mot de passe robuste — puis confirmation par mail.'),
+    subtitle: tr(t, 'signup.access.default.subtitle', 'Email fort, mot de passe robuste. Puis confirmation par mail.'),
   };
 }
 
@@ -328,7 +328,7 @@ export function validateAgeForAppSpace(
     return undefined;
   }
   if (appSpace === 'boys' || appSpace === 'girls') {
-    if (age < 13 || age > 19) return tr(t, 'signup.age.youth.range', 'Pour U13–U19, indiquez un âge entre 13 et 19 ans.');
+    if (age < 13 || age > 19) return tr(t, 'signup.age.youth.range', 'Pour U13 à U19, indiquez un âge entre 13 et 19 ans.');
     return undefined;
   }
   if (appSpace === 'men' || appSpace === 'women') {
@@ -356,12 +356,12 @@ export function getPlayerVerificationChecks(appSpace: AppSpaceId, t?: TranslateF
       ? tr(
           t,
           'verification.check.identity.u13Subtitle',
-          'CNI du responsable ou livret de famille — prise de vue caméra'
+          'CNI du responsable ou livret de famille. Prise de vue caméra'
         )
       : tr(
           t,
           'verification.check.identity.subtitle',
-          'CNI ou passeport — photographiez avec la caméra'
+          'CNI ou passeport. Photographiez avec la caméra'
         ),
     required: true,
   };
@@ -374,7 +374,7 @@ export function getPlayerVerificationChecks(appSpace: AppSpaceId, t?: TranslateF
       subtitle: tr(
         t,
         'verification.check.license.subtitle',
-        'Carte club ou attestation — photographiez avec la caméra'
+        'Carte club ou attestation. Photographiez avec la caméra'
       ),
       required: false,
     },
@@ -392,7 +392,7 @@ export function getLaunchCopy(
       body: tr(
         t,
         'signup.launch.emailValidated.body',
-        'L’IA a traité vos justificatifs. Confirmez votre email — le lien vous attend dans votre boîte mail.'
+        'L’IA a traité vos justificatifs. Confirmez votre email. Le lien vous attend dans votre boîte mail.'
       ),
       finishLabel: tr(t, 'signup.launch.emailValidated.finish', 'Compris'),
     };
@@ -435,17 +435,17 @@ export function getAppSpaceGroups(
           {
             id: 'boys' as AppSpaceId,
             label: tr(t, 'signup.space.boys', 'Garçons'),
-            hint: tr(t, 'signup.space.boysHint', 'U13 – U19'),
+            hint: tr(t, 'signup.space.boysHint', 'U13 à U19'),
           },
           {
             id: 'girls' as AppSpaceId,
             label: tr(t, 'signup.space.girls', 'Filles'),
-            hint: tr(t, 'signup.space.girlsHint', 'U13 F – U19 F'),
+            hint: tr(t, 'signup.space.girlsHint', 'U13 F à U19 F'),
           },
           {
             id: 'under_u13' as AppSpaceId,
             label: tr(t, 'signup.space.under13', 'Moins de 13 ans'),
-            hint: tr(t, 'signup.space.under13Hint', 'U7 – U11'),
+            hint: tr(t, 'signup.space.under13Hint', 'U7 à U11'),
           },
         ],
       },
@@ -462,7 +462,7 @@ export function getAppSpaceGroups(
           {
             id: 'girls' as AppSpaceId,
             label: tr(t, 'signup.space.girls', 'Jeunes F'),
-            hint: tr(t, 'signup.space.girlsHint', 'U13 F – U19 F'),
+            hint: tr(t, 'signup.space.girlsHint', 'U13 F à U19 F'),
           },
           {
             id: 'women' as AppSpaceId,
@@ -499,7 +499,7 @@ export function getAppSpaceGroups(
         {
           id: 'boys' as AppSpaceId,
           label: tr(t, 'signup.space.boys', 'Jeunes'),
-          hint: tr(t, 'signup.space.boysHint', 'U13 – U19'),
+          hint: tr(t, 'signup.space.boysHint', 'U13 à U19'),
         },
       ],
     },
@@ -550,7 +550,7 @@ export const WOMAN_APP_SPACE_GROUPS = [
     label: 'Ton univers Woman',
     icon: 'heart' as const,
     options: [
-      { id: 'girls' as AppSpaceId, label: 'Jeunes F', hint: 'U13 F – U19 F' },
+      { id: 'girls' as AppSpaceId, label: 'Jeunes F', hint: 'U13 F à U19 F' },
       { id: 'women' as AppSpaceId, label: 'Seniors F', hint: 'D1 F, Régional' },
     ],
   },
@@ -573,7 +573,7 @@ export const APP_SPACE_GROUPS = [
     icon: 'football' as const,
     options: [
       { id: 'men' as AppSpaceId, label: 'Seniors', hint: 'R1, National' },
-      { id: 'boys' as AppSpaceId, label: 'Jeunes', hint: 'U13 – U19' },
+      { id: 'boys' as AppSpaceId, label: 'Jeunes', hint: 'U13 à U19' },
     ],
   },
   {

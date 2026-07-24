@@ -450,7 +450,7 @@ export const EditProfileScreen: React.FC<EditProfileScreenProps> = ({
       </View>
       <Text style={[styles.fieldLabel, { color: ui.textSecondary }]}>Stats saison</Text>
       <Text style={[styles.statsReadOnlyHint, { color: ui.textMuted }]}>
-        Mises à jour par votre coach après chaque match validé — non modifiables ici.
+        Mises à jour par votre coach après chaque match validé. Non modifiables ici.
       </Text>
       <View style={styles.statRow}>
         <Field styles={styles} label="Matchs" value={statMatches} onChangeText={() => {}} keyboardType="number-pad" compact ui={ui} editable={false} />

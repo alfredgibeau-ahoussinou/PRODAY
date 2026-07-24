@@ -19,7 +19,7 @@ export const AdminTopBar: React.FC<AdminTopBarProps> = ({ title, subtitle, onMen
 
   const syncLabel = lastRefreshedAt
     ? lastRefreshedAt.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
-    : '—';
+    : '…';
 
   return (
     <View style={styles.bar}>

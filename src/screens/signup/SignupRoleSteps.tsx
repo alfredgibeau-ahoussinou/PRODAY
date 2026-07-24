@@ -353,7 +353,7 @@ export const SignupMedicalPracticeStep: React.FC<StepProps> = (props) => {
       />
       <View style={[styles.hintBox, { backgroundColor: colors.accentSoft, borderColor: colors.border }]}>
         <Text style={[styles.hintText, { color: colors.textSecondary }]}>
-          Créez (ou connectez) votre compte Cal.com — c’est votre agenda public pour les téléconsultations.
+          Créez (ou connectez) votre compte Cal.com. C’est votre agenda public pour les téléconsultations.
           Les sportifs réservent sans créer de compte Cal.com, via votre fiche ProDay.
         </Text>
         <Pressable

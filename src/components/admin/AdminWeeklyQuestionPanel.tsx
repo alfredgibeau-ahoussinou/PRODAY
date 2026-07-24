@@ -129,7 +129,7 @@ export const AdminWeeklyQuestionPanel: React.FC = () => {
     <View>
       <AdminSectionHeader title="QUESTION HEBDOMADAIRE" />
       <ProDayText variant="body" muted style={styles.intro}>
-        Publiez une question pour la communauté. Les réponses du Fil sont listées ci-dessous —
+        Publiez une question pour la communauté. Les réponses du Fil sont listées ci-dessous 
         touchez une question pour les afficher.
       </ProDayText>
       <ProDayText variant="caption" muted style={styles.week}>
@@ -193,7 +193,7 @@ export const AdminWeeklyQuestionPanel: React.FC = () => {
                       {item.question}
                     </ProDayText>
                     <ProDayText variant="caption" accent style={{ fontWeight: '800', marginTop: 4 }}>
-                      {count} réponse{count > 1 ? 's' : ''} — {expanded ? 'Réduire' : 'Voir les réponses'}
+                      {count} réponse{count > 1 ? 's' : ''}. {expanded ? 'Réduire' : 'Voir les réponses'}
                     </ProDayText>
                   </View>
                   <Icon name={expanded ? 'chevron-up' : 'chevron-down'} size={18} color={c.brand} />

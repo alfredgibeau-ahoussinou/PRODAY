@@ -92,7 +92,7 @@ export const ProPlayerGroupScreen: React.FC = () => {
 
       <ProDaySurface style={styles.banner}>
         <ProDayText variant="caption" muted>
-          Logistique déplacement — consultez le détail de chaque convocation pour le transport
+          Logistique déplacement. Consultez le détail de chaque convocation pour le transport
           groupe.
         </ProDayText>
       </ProDaySurface>

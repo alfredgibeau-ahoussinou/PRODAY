@@ -73,7 +73,7 @@ export const SponsorHubScreen: React.FC<SponsorHubScreenProps> = ({
           </View>
           <Text style={styles.heroTitle}>Le foot local a besoin de sponsors engagés</Text>
           <Text style={styles.heroBody}>
-            Équipementiers, enseignes locales, marques régionales — ProDay connecte votre offre aux
+            Équipementiers, enseignes locales, marques régionales. ProDay connecte votre offre aux
             clubs qui recrutent, organisent et financent leur saison sur l’app.
           </Text>
         </View>

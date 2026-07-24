@@ -61,8 +61,8 @@ export function getHomeModules(
         ...mod,
         title: feminine ? 'Mercato F' : productLine === 'amateur' ? 'Mercato Amateur' : 'Candidater',
         subtitle: feminine
-          ? 'Annonces clubs F — sans publication'
-          : 'Annonces clubs — sans publication',
+          ? 'Annonces clubs F. Sans publication'
+          : 'Annonces clubs. Sans publication',
       };
     }
     return mod;

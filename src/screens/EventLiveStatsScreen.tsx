@@ -182,12 +182,12 @@ export const EventLiveStatsScreen: React.FC<EventLiveStatsScreenProps> = ({
       <ScreenHeader title="Live Stats" onBack={onBack} centered />
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.hint}>
-          Saisie en direct des actions — alimente le CV foot après validation.
+          Saisie en direct des actions. Alimente le CV foot après validation.
         </Text>
         {event?.match_report_finalized_at ? (
           <Text style={styles.lockedMsg}>
             Rapport validé le{' '}
-            {event.match_report_finalized_at.toLocaleDateString('fr-FR')} — édition verrouillée.
+            {event.match_report_finalized_at.toLocaleDateString('fr-FR')}. Édition verrouillée.
           </Text>
         ) : null}
 

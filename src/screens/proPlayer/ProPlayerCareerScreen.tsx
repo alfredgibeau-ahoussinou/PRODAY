@@ -123,7 +123,7 @@ export const ProPlayerCareerScreen: React.FC = () => {
       ) : (
         <ProDaySurface style={styles.trials}>
           <ProDayText variant="caption" muted>
-            Aucun essai planifié — consultez l’onglet Opportunités.
+            Aucun essai planifié. Consultez l’onglet Opportunités.
           </ProDayText>
         </ProDaySurface>
       )}

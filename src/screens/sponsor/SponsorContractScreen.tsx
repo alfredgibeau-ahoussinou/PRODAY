@@ -29,7 +29,7 @@ export const SponsorContractScreen: React.FC<SponsorContractScreenProps> = ({
   );
 
   const contactCommercial = () => {
-    const subject = encodeURIComponent(`Contrat sponsor ProDay — ${tier.name}`);
+    const subject = encodeURIComponent(`Contrat sponsor ProDay. ${tier.name}`);
     const body = encodeURIComponent(
       `Bonjour,\n\nJe souhaite en savoir plus sur la formule ${tier.name}.\n\nEntreprise : ${profile?.profile.job_title ?? profile?.display_name ?? ''}\n`,
     );

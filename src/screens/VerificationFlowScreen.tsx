@@ -39,7 +39,7 @@ function buildSteps(user: User): VerificationStep[] {
     return [
       { id: 1, label: 'Document reçu', state: 'done', date: dateStr },
       { id: 2, label: 'Contrôle', state: 'done' },
-      { id: 3, label: 'Résultat', state: 'active', sub: 'Rejeté — renvoyez un document' },
+      { id: 3, label: 'Résultat', state: 'active', sub: 'Rejeté. Renvoyez un document' },
       { id: 4, label: 'Accès complet', state: 'pending' },
     ];
   }

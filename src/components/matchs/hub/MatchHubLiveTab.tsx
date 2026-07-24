@@ -340,7 +340,7 @@ export const MatchHubLiveTab: React.FC<MatchHubLiveTabProps> = ({
       <ProDayText variant="section">Fil du match</ProDayText>
       {timeline.length === 0 ? (
         <ProDayText variant="body" muted>
-          Aucune action — les buts, cartons et remplacements apparaîtront ici.
+          Aucune action. Les buts, cartons et remplacements apparaîtront ici.
         </ProDayText>
       ) : (
         timeline.map((a, index) => (
@@ -392,7 +392,7 @@ export const MatchHubLiveTab: React.FC<MatchHubLiveTabProps> = ({
 
       {reportLocked ? (
         <ProDayText variant="caption" muted style={styles.locked}>
-          Rapport validé — édition verrouillée.
+          Rapport validé. Édition verrouillée.
         </ProDayText>
       ) : null}
     </View>

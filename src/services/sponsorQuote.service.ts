@@ -55,7 +55,7 @@ function sortByCreatedDesc(items: SponsorQuoteRequest[]): SponsorQuoteRequest[] 
 
 export function buildDefaultQuoteSubject(companyName: string): string {
   const name = companyName.trim() || 'votre entreprise';
-  return `Votre devis ProDay Sponsor — ${name}`;
+  return `Votre devis ProDay Sponsor. ${name}`;
 }
 
 export function buildDefaultQuoteHtmlPreview(request: SponsorQuoteRequest): string {
@@ -125,7 +125,7 @@ export const sponsorQuoteService = {
       }
       return { ok: true };
     } catch {
-      return { ok: false, error: 'Connexion impossible — réessayez plus tard' };
+      return { ok: false, error: 'Connexion impossible. Réessayez plus tard' };
     }
   },
 

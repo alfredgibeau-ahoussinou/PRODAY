@@ -50,7 +50,7 @@ export const SmartNotificationsPeek: React.FC<SmartNotificationsPeekProps> = ({
       </ProDayText>
       {items.length === 0 ? (
         <ProDayText variant="body" muted>
-          Aucune alerte — votre journée est sous contrôle.
+          Aucune alerte. Votre journée est sous contrôle.
         </ProDayText>
       ) : (
         <View style={styles.list}>

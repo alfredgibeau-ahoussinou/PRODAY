@@ -10,7 +10,7 @@ function escapeHtml(value: string): string {
 }
 
 function fmt(value: number | null | undefined, suffix = ''): string {
-  if (value == null) return '—';
+  if (value == null) return '…';
   return `${value}${suffix}`;
 }
 
@@ -37,7 +37,7 @@ export function buildHealthReportHtml(
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <title>Rapport santé — ${escapeHtml(displayName)} | ProDay</title>
+  <title>Rapport santé. ${escapeHtml(displayName)} | ProDay</title>
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; color: #0f172a; padding: 32px; }
     h1 { font-size: 22px; margin-bottom: 4px; }
@@ -68,7 +68,7 @@ export function buildHealthReportHtml(
     <thead><tr><th>Date</th><th>Pas</th><th>Sommeil</th><th>FC repos</th></tr></thead>
     <tbody>${historyRows || '<tr><td colspan="4">Pas encore d’historique.</td></tr>'}</tbody>
   </table>
-  <p class="note">Document informatif — ne remplace pas un avis médical. Partagez uniquement avec votre consentement.</p>
+  <p class="note">Document informatif. Ne remplace pas un avis médical. Partagez uniquement avec votre consentement.</p>
 </body>
 </html>`;
 }

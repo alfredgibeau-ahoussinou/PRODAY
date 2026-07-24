@@ -66,7 +66,7 @@ export const MatchHubOverviewTab: React.FC<MatchHubOverviewTabProps> = ({
   const pendingCount = getPendingInviteeUids(event).length;
 
   const shareConvocation = async () => {
-    const msg = `Match ProDay — ${event.title}\n${formatCalendarDate(event.starts_at)}\n${live.home_label} ${live.home_score}-${live.away_score} ${live.opponent_name}\n${event.city}`;
+    const msg = `Match ProDay. ${event.title}\n${formatCalendarDate(event.starts_at)}\n${live.home_label} ${live.home_score}-${live.away_score} ${live.opponent_name}\n${event.city}`;
     await Share.share({ message: msg });
   };
 

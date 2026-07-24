@@ -720,7 +720,7 @@ export const teamEventsService = {
     const slot = (event.carpool_slots ?? []).find((s) => s.driver_uid === driverUid);
     if (!slot) throw new Error('Aucun trajet à retirer.');
     if (slot.volunteered !== true) {
-      throw new Error('Ce trajet a été assigné par le staff — contactez votre coach.');
+      throw new Error('Ce trajet a été assigné par le staff. Contactez votre coach.');
     }
 
     const carpool_slots = (event.carpool_slots ?? []).filter((s) => s.driver_uid !== driverUid);

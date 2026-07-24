@@ -113,7 +113,7 @@ export function explainHealthScores(
     recoveryFactors.push({
       id: 'rest',
       label: 'Repos récent',
-      detail: 'Peu ou pas de charge récente — récupération favorisée',
+      detail: 'Peu ou pas de charge récente. Récupération favorisée',
       impact: 'positive',
       weight: 12,
     });
@@ -125,7 +125,7 @@ export function explainHealthScores(
       label: 'Risque blessure',
       detail:
         snapshot.injuryRisk === 'high'
-          ? 'Charge élevée — priorité récupération'
+          ? 'Charge élevée. Priorité récupération'
           : 'Surveillez la charge cette semaine',
       impact: 'negative',
       weight: snapshot.injuryRisk === 'high' ? 20 : 10,

@@ -21,7 +21,7 @@ export function getProWelcomeCopy(roleLabel = 'professionnel', t?: TranslateFn) 
       : `Bienvenue sur ${PRODAY_PRO_BRAND.name}`,
     subtitle: t
       ? t('signup.pro.welcome.subtitle', { role: roleLabel })
-      : `Choisissez votre métier — ${roleLabel}, réseau vérifié et outils pro.`,
+      : `Choisissez votre métier. ${roleLabel}, réseau vérifié et outils pro.`,
   };
 }
 
@@ -100,7 +100,7 @@ export function getProStepMeta(page: SignupPageId, t?: TranslateFn): {
     case 'account':
       return {
         title: tr(t, 'signup.pro.step.account.title', 'Identité pro'),
-        subtitle: tr(t, 'signup.pro.step.account.subtitle', 'Nom affiché et email — espace Pro lié à ce compte.'),
+        subtitle: tr(t, 'signup.pro.step.account.subtitle', 'Nom affiché et email. Espace Pro lié à ce compte.'),
         heroIcon: 'person',
       };
     case 'security':
@@ -146,7 +146,7 @@ export function getProLaunchCopy(
   }
   if (flags.verificationPending) {
     return {
-      title: tr(t, 'signup.pro.launch.verify.title', 'Compte créé — vérification requise'),
+      title: tr(t, 'signup.pro.launch.verify.title', 'Compte créé. Vérification requise'),
       body: tr(
         t,
         'signup.pro.launch.verify.body',

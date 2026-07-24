@@ -96,7 +96,7 @@ export function scoreSponsorProspect(input: ProspectScoreInput): ProspectScoreRe
   const reasons: string[] = [];
   if (zone === 'exact') reasons.push('Même ville que vos offres');
   else if (zone === 'partial') reasons.push('Zone compatible avec vos offres');
-  else if (zone === 'open') reasons.push('Aucune zone offre — club visible');
+  else if (zone === 'open') reasons.push('Aucune zone offre. Club visible');
 
   if (categoryScore >= 25) reasons.push('Catégories alignées avec vos offres');
   else if (categoryScore >= 12) reasons.push('Catégories partiellement alignées');

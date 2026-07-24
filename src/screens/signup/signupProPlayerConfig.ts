@@ -21,7 +21,7 @@ export function getProPlayerWelcomeCopy(t?: TranslateFn) {
     subtitle: tr(
       t,
       'signup.proPlayer.welcome.subtitle',
-      'Inscription joueur pro — carrière, portfolio vidéo et opportunités vérifiées.',
+      'Inscription joueur pro. Carrière, portfolio vidéo et opportunités vérifiées.',
     ),
   };
 }
@@ -58,7 +58,7 @@ export function getProPlayerStepMeta(
         subtitle: tr(
           t,
           'signup.proPlayer.step.space.subtitle',
-          'Homme ou femme — parcours et visibilité adaptés au foot pro.',
+          'Homme ou femme. Parcours et visibilité adaptés au foot pro.',
         ),
         heroIcon: 'person',
       };
@@ -68,7 +68,7 @@ export function getProPlayerStepMeta(
         subtitle: tr(
           t,
           'signup.proPlayer.step.sport.subtitle',
-          'Poste, niveau (R1–N3), licence et mobilité — profil recruteurs.',
+          'Poste, niveau (R1 à N3), licence et mobilité. Profil recruteurs.',
         ),
         heroIcon: 'shirt',
       };
@@ -78,7 +78,7 @@ export function getProPlayerStepMeta(
         subtitle: tr(
           t,
           'signup.proPlayer.step.location.subtitle',
-          'Ville et département — opportunités géolocalisées.',
+          'Ville et département. Opportunités géolocalisées.',
         ),
         heroIcon: 'location',
       };
@@ -88,7 +88,7 @@ export function getProPlayerStepMeta(
         subtitle: tr(
           t,
           'signup.proPlayer.step.stats.subtitle',
-          'Stats validées coach — crédibilité auprès des clubs.',
+          'Stats validées coach. Crédibilité auprès des clubs.',
         ),
         heroIcon: 'star',
       };
@@ -98,7 +98,7 @@ export function getProPlayerStepMeta(
         subtitle: tr(
           t,
           'signup.proPlayer.step.account.subtitle',
-          'Email et identité — accès sécurisé à ton espace pro.',
+          'Email et identité. Accès sécurisé à ton espace pro.',
         ),
         heroIcon: 'person',
       };
@@ -118,7 +118,7 @@ export function getProPlayerStepMeta(
         subtitle: tr(
           t,
           'signup.proPlayer.step.launch.subtitle',
-          'Ton espace Pro Joueur est prêt — bonne saison.',
+          'Ton espace Pro Joueur est prêt. Bonne saison.',
         ),
         heroIcon: 'checkmark-circle',
       };
@@ -141,7 +141,7 @@ export function getProPlayerLaunchCopy(
       body: tr(
         t,
         'signup.launch.emailValidated.body',
-        'Confirmez votre email — le lien vous attend dans votre boîte mail.',
+        'Confirmez votre email. Le lien vous attend dans votre boîte mail.',
       ),
       finishLabel: tr(t, 'signup.launch.emailValidated.finish', 'Compris'),
     };
@@ -162,7 +162,7 @@ export function getProPlayerLaunchCopy(
     body: tr(
       t,
       'signup.proPlayer.launch.body',
-      'Carrière, portfolio et opportunités pro — votre saison commence maintenant.',
+      'Carrière, portfolio et opportunités pro. Votre saison commence maintenant.',
     ),
     finishLabel: tr(t, 'signup.launch.finish', 'Entrer dans l’app'),
   };

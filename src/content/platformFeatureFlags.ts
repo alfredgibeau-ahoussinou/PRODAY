@@ -21,7 +21,7 @@ export const PLATFORM_FEATURE_FLAG_META: Record<
   registration_open: {
     key: 'registration_open',
     label: 'Inscriptions ouvertes',
-    adminHint: 'Nouveaux comptes — OFF = login OK, signup bloqué',
+    adminHint: 'Nouveaux comptes. OFF = login OK, signup bloqué',
     disabledTitle: 'Inscriptions fermées',
     disabledMessage:
       'Les créations de compte sont temporairement fermées. Connectez-vous si vous avez déjà un compte, ou réessayez plus tard.',
@@ -29,7 +29,7 @@ export const PLATFORM_FEATURE_FLAG_META: Record<
   community_reels: {
     key: 'community_reels',
     label: 'Reels communauté',
-    adminHint: 'Onglet Reels — OFF = masqué + écran indisponible',
+    adminHint: 'Onglet Reels. OFF = masqué + écran indisponible',
     disabledTitle: 'Reels indisponibles',
     disabledMessage:
       'Les Reels communauté sont temporairement désactivés par l’équipe ProDay.',
@@ -37,7 +37,7 @@ export const PLATFORM_FEATURE_FLAG_META: Record<
   mercato: {
     key: 'mercato',
     label: 'Mercato',
-    adminHint: 'Onglet Candidater / Mercato — OFF = masqué',
+    adminHint: 'Onglet Candidater / Mercato. OFF = masqué',
     disabledTitle: 'Mercato indisponible',
     disabledMessage:
       'Le Mercato et le recrutement sont temporairement désactivés.',
@@ -45,14 +45,14 @@ export const PLATFORM_FEATURE_FLAG_META: Record<
   stages: {
     key: 'stages',
     label: 'Stages',
-    adminHint: 'Offres stages dans le Mercato — OFF = section masquée',
+    adminHint: 'Offres stages dans le Mercato. OFF = section masquée',
     disabledTitle: 'Stages indisponibles',
     disabledMessage: 'Les offres de stages sont temporairement désactivées.',
   },
   supporter: {
     key: 'supporter',
     label: 'Tribune supporter',
-    adminHint: 'Espace Supporter — OFF = coque bloquée pour les fans',
+    adminHint: 'Espace Supporter. OFF = coque bloquée pour les fans',
     disabledTitle: 'Tribune temporairement fermée',
     disabledMessage:
       'L’espace Supporter est temporairement désactivé. Réessayez bientôt.',
@@ -60,7 +60,7 @@ export const PLATFORM_FEATURE_FLAG_META: Record<
   shop: {
     key: 'shop',
     label: 'Boutique ProDay',
-    adminHint: 'Onglet Shop — OFF = masqué',
+    adminHint: 'Onglet Shop. OFF = masqué',
     disabledTitle: 'Boutique indisponible',
     disabledMessage: 'La boutique ProDay est temporairement fermée.',
   },

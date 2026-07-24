@@ -213,7 +213,7 @@ export const SponsorCampaignsScreen: React.FC<SponsorCampaignsScreenProps> = ({
             [
               { id: 'mine' as const, label: 'Mes offres' },
               { id: 'clubs' as const, label: 'Clubs' },
-              { id: 'all' as const, label: 'Écosystème' },
+              { id: 'all' as const, label: 'Tout' },
             ] as const
           ).map((f) => (
             <PressableSpring

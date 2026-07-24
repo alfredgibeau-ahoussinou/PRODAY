@@ -148,7 +148,7 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionPlanId, SubscriptionPlanDefi
     id: 'agent_elite',
     role: 'agent',
     label: 'Agent Elite',
-    tagline: 'CRM joueurs, mandats et pipeline — formule premium',
+    tagline: 'CRM joueurs, mandats et pipeline. Formule premium',
     pricing: planPricing(99.99, true),
     limits: { recruitment_messages_per_month: 10 },
     freeIncludes: [
@@ -167,12 +167,12 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionPlanId, SubscriptionPlanDefi
     id: 'physio_pro',
     role: 'physio',
     label: 'Pôle santé Pro',
-    tagline: 'Abonnement léger + visibilité clubs — commission sur les RDV',
+    tagline: 'Abonnement léger + visibilité clubs. Commission sur les RDV',
     pricing: planPricing(19.99, true),
     limits: {},
     bookingCommissionPercent: 10,
     bookingCommissionNote:
-      'Sur chaque consultation réservée via ProDay (nutrition, coach mental, prépa physique…). Pas de commission sur les actes médicaux réglementés — règlement au cabinet.',
+      'Sur chaque consultation réservée via ProDay (nutrition, coach mental, prépa physique…). Pas de commission sur les actes médicaux réglementés. Règlement au cabinet.',
     freeIncludes: [
       'Profil praticien et vérification',
       'Spécialité et zone d\'intervention',
@@ -226,7 +226,7 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionPlanId, SubscriptionPlanDefi
       'Offres sponsors illimitées',
       'Logo onglet Sponsors',
       'Campagnes locales ciblées',
-      'Push géolocalisé local (bêta — opt-in)',
+      'Push géolocalisé local (bêta, sur opt-in)',
     ],
   },
 };

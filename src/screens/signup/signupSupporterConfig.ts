@@ -21,7 +21,7 @@ export function getSupporterWelcomeCopy(t?: TranslateFn) {
     subtitle: tr(
       t,
       'signup.supporter.welcome.subtitle',
-      'Fans et communauté — matchs, réels et fil en direct.'
+      'Fans et communauté. Matchs, réels et fil en direct.'
     ),
   };
 }
@@ -46,7 +46,7 @@ export function getSupporterStepMeta(page: SignupPageId, t?: TranslateFn): {
         subtitle: tr(
           t,
           'signup.supporter.step.account.subtitle',
-          'Nom affiché et email — espace Supporter lié à ce compte.'
+          'Nom affiché et email. Espace Supporter lié à ce compte.'
         ),
         heroIcon: 'person',
       };
@@ -102,7 +102,7 @@ export function getSupporterLaunchCopy(
     body: tr(
       t,
       'signup.supporter.launch.done.body',
-      'Votre espace supporter est prêt — matchs, réels et fil communautaire.'
+      'Votre espace supporter est prêt. Matchs, réels et fil communautaire.'
     ),
     finishLabel: tr(t, 'signup.supporter.launch.done.finish', 'Entrer dans l’app'),
   };

@@ -111,7 +111,7 @@ export const sponsorUpgradeService = {
         contactName: input.contactName ?? company,
         phone: input.phone,
         packageTier: tier === 'territorial' ? 'territorial' : 'custom',
-        message: `Demande commerciale depuis l'app — ${city}`,
+        message: `Demande commerciale depuis l'app. ${city}`,
         source: 'app',
         sponsorUid: input.sponsorUid,
       })

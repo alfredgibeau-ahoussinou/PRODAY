@@ -45,7 +45,7 @@ const completePlayer: User = {
   is_active: true,
 };
 
-describe('Phase 9 — Santé, profil, notifications', () => {
+describe('Phase 9. Santé, profil, notifications', () => {
   const prevV3 = process.env.EXPO_PUBLIC_V3_SHELL;
 
   beforeEach(() => {

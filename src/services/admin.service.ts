@@ -1217,7 +1217,7 @@ export const adminService = {
         return {
           id: d.id,
           user_uid: String(data.user_uid ?? data.uid ?? ''),
-          product_id: String(data.product_id ?? data.plan_id ?? '—'),
+          product_id: String(data.product_id ?? data.plan_id ?? '…'),
           status: String(data.status ?? 'unknown'),
           amount_eur: data.amount_eur != null ? Number(data.amount_eur) : undefined,
           created_at:

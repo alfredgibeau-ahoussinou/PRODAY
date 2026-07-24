@@ -62,7 +62,7 @@ export const SponsorQuotaBanner: React.FC<SponsorQuotaBannerProps> = ({
       {messageLine ? (
         <Text style={[styles.line, nearMessageLimit ? styles.lineWarn : null]}>
           {messageLine}
-          {nearMessageLimit ? ' — formule Découverte' : ''}
+          {nearMessageLimit ? '. Formule Découverte' : ''}
         </Text>
       ) : null}
       {offerLine ? <Text style={styles.line}>{offerLine}</Text> : null}

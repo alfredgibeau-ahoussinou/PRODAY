@@ -20,6 +20,6 @@ export async function submitSponsorSignup(
     }
     return { ok: true };
   } catch {
-    return { ok: false, error: 'Connexion impossible — réessayez plus tard' };
+    return { ok: false, error: 'Connexion impossible. Réessayez plus tard' };
   }
 }

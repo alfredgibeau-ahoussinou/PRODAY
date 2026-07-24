@@ -106,7 +106,7 @@ export const AdminSponsorQuotePanel: React.FC = () => {
         actor_email: firebaseUser?.email ?? profile?.email,
         target_type: 'sponsor_quote_requests',
         target_id: selected.id,
-        summary: `Devis envoyé — ${selected.company_name} (${selected.contact_email})`,
+        summary: `Devis envoyé. ${selected.company_name} (${selected.contact_email})`,
       });
       if (result.emailSent) {
         Alert.alert('Devis sponsor', `Devis envoyé à ${selected.contact_email}.`);

@@ -35,7 +35,7 @@ const matches: FriendlyMatch[] = [
   },
 ];
 
-describe('Phase 8 — Réseau social + Discover', () => {
+describe('Phase 8. Réseau social + Discover', () => {
   it('suggère des clubs proches avec uid contactable', () => {
     const suggestions = buildSocialSuggestions({
       user: profile,

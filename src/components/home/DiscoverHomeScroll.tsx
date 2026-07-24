@@ -152,7 +152,7 @@ export const DiscoverHomeScroll: React.FC<DiscoverHomeScrollProps> = ({
 
         <PressableSpring style={styles.loginLink} onPress={onLogin} scaleTo={0.99}>
           <Text style={[styles.loginText, { color: colors.textSecondary }]}>
-            J’ai déjà un compte —{' '}
+            J’ai déjà un compte. {' '}
             <Text style={[styles.loginAccent, { color: colors.ink }]}>Se connecter</Text>
           </Text>
         </PressableSpring>
@@ -168,7 +168,7 @@ export const DiscoverHomeScroll: React.FC<DiscoverHomeScrollProps> = ({
           scaleTo={0.99}
         >
           <Text style={[styles.spaceLinkText, { color: colors.textSecondary }]}>
-            {brand.productName} — changer d’univers
+            {brand.productName}. Changer d’univers
           </Text>
           <Icon name="chevron-down" size={14} color={colors.accent} />
         </PressableSpring>

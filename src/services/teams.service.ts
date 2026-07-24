@@ -53,7 +53,7 @@ export const teamsService = {
     if (existing) return existing;
     return this.create({
       club_id: clubId,
-      name: clubName ? `${clubName} — ${DEFAULT_TEAM_NAME}` : DEFAULT_TEAM_NAME,
+      name: clubName ? `${clubName}. ${DEFAULT_TEAM_NAME}` : DEFAULT_TEAM_NAME,
       is_default: true,
       gender_scope: 'unspecified',
     });

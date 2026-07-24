@@ -117,8 +117,8 @@ export const PhysioCarePanel: React.FC<PhysioCarePanelProps> = ({
             {isPlayer
               ? 'Pôle médical'
               : isFemalePresentation
-                ? 'Joueuses — suivi blessure'
-                : 'Joueurs — suivi blessure'}
+                ? 'Joueuses. Suivi blessure'
+                : 'Joueurs. Suivi blessure'}
           </ProDayText>
           <ProDayText variant="body" muted style={styles.sub}>
             {isPlayer

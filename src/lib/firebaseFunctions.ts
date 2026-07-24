@@ -51,7 +51,7 @@ export function getCallableErrorMessage(error: unknown): string {
     return 'Droits admin requis. Déconnectez-vous, reconnectez-vous après npm run admin:setup.';
   }
   if (code === 'functions/unauthenticated') {
-    return 'Session expirée — reconnectez-vous.';
+    return 'Session expirée. Reconnectez-vous.';
   }
   if (code === 'functions/resource-exhausted') {
     return 'Trop de tentatives. Attendez 15 à 60 minutes avant un nouvel envoi.';

@@ -2,7 +2,7 @@ import { buildDeviceCalendarDrafts } from '../core/calendar/deviceCalendar.mappe
 import { buildSectionIntelligence } from '../features/v3/engines/sectionIntelligence.engine';
 import type { CalendarEntity } from '../core/calendar/calendarSync.engine';
 
-describe('Phase 6 — Staff dashboards + calendrier device', () => {
+describe('Phase 6. Staff dashboards + calendrier device', () => {
   it('prépare les brouillons calendrier device', () => {
     const start = new Date(Date.now() + 7200000);
     const entities: CalendarEntity[] = [

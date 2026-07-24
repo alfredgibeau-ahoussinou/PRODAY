@@ -744,7 +744,7 @@ export function useSignupForm(initial?: {
                       medical_specialty: label,
                       job_title: label,
                       specialties: [label, medicalPracticeFocus].filter(Boolean),
-                      bio: medicalPracticeFocus ? `${label} — ${medicalPracticeFocus}` : label,
+                      bio: medicalPracticeFocus ? `${label}. ${medicalPracticeFocus}` : label,
                       booking_enabled: true,
                       cal_com_username: cal?.username,
                       booking_url: cal?.bookingUrl,

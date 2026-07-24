@@ -146,7 +146,7 @@ export function useCandidatureMercato(
     void notifyNewMercatoMatches(
       profile.uid,
       matches.map((p) => p.id),
-      `${sample.club_name} — ${sample.position}`
+      `${sample.club_name}. ${sample.position}`
     );
   }, [posts, alertCriteria, profile.uid]);
 

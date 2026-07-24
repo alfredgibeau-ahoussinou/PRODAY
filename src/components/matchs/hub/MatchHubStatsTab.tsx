@@ -38,8 +38,8 @@ export const MatchHubStatsTab: React.FC<MatchHubStatsTabProps> = ({ event, profi
           </ProDayText>
           {myStat ? (
             <View style={styles.statGrid}>
-              <StatPill label="Note" value={myStat.rating?.toFixed(1) ?? '—'} />
-              <StatPill label="Min" value={String(myStat.minutes_played ?? '—')} />
+              <StatPill label="Note" value={myStat.rating?.toFixed(1) ?? '…'} />
+              <StatPill label="Min" value={String(myStat.minutes_played ?? '…')} />
               <StatPill label="Buts" value={String(myStat.goals ?? 0)} />
               <StatPill label="Passes" value={String(myStat.assists ?? 0)} />
               <StatPill label="J" value={String(myStat.yellow_cards ?? 0)} />
@@ -98,10 +98,10 @@ export const MatchHubStatsTab: React.FC<MatchHubStatsTabProps> = ({ event, profi
                 {r.player_name}
               </ProDayText>
               <ProDayText variant="caption" accent style={styles.colNum}>
-                {r.rating?.toFixed(1) ?? '—'}
+                {r.rating?.toFixed(1) ?? '…'}
               </ProDayText>
               <ProDayText variant="caption" style={styles.colNum}>
-                {r.minutes_played ?? '—'}
+                {r.minutes_played ?? '…'}
               </ProDayText>
               <ProDayText variant="caption" style={styles.colNum}>
                 {r.goals ?? 0}

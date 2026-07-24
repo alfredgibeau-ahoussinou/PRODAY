@@ -77,7 +77,7 @@ export const ShopCartSheet: React.FC<ShopCartSheetProps> = ({
       ({ product, qty }) =>
         `- ${product.name} × ${qty} (${formatShopPrice(product.priceEur * qty)})`
     );
-    const subject = encodeURIComponent('Précommande ProDay — mon panier');
+    const subject = encodeURIComponent('Précommande ProDay. Mon panier');
     const body = encodeURIComponent(
       `Bonjour,\n\nJe souhaite précommander :\n${lines.join('\n')}\n\nTotal : ${formatShopPrice(cartTotal)}\nUnivers : ${productLine}\n\nMerci !`
     );
@@ -184,7 +184,7 @@ export const ShopCartSheet: React.FC<ShopCartSheetProps> = ({
             <View style={styles.empty}>
               <Icon name="bookmark" size={36} color={c.textMuted} />
               <ProDayText variant="body" muted style={styles.emptyText}>
-                Aucun favori — touchez le signet sur un produit.
+                Aucun favori. Touchez le signet sur un produit.
               </ProDayText>
               {onBrowseCatalog ? (
                 <PressableSpring onPress={onBrowseCatalog} scaleTo={0.96} haptic>

@@ -39,7 +39,7 @@ export function watchDocumentAiVerification(
       );
       onUpdate(mapped ?? { status: 'processing' });
     },
-    () => onUpdate({ status: 'skipped', summary_fr: 'Suivi IA indisponible — revue manuelle.' })
+    () => onUpdate({ status: 'skipped', summary_fr: 'Suivi IA indisponible. Revue manuelle.' })
   );
 }
 

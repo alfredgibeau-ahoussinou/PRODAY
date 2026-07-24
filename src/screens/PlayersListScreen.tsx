@@ -126,7 +126,7 @@ export const PlayersListScreen: React.FC<PlayersListScreenProps> = ({
           <Text style={[styles.infoSub, { color: themeColors.textMuted }]}>
             {soloProfile
               ? 'Seul votre compte est visible pour le moment. Les autres joueurs apparaîtront ici après inscription.'
-              : 'Comptes réels uniquement — les profils de démonstration sont exclus.'}
+              : 'Comptes réels uniquement. Les profils de démonstration sont exclus.'}
           </Text>
         </View>
       </View>
@@ -185,7 +185,7 @@ export const PlayersListScreen: React.FC<PlayersListScreenProps> = ({
       {!loading && users.length > 0 ? (
         <Text style={[styles.countLine, { color: themeColors.textMuted }]}>
           {users.length} profil{users.length > 1 ? 's' : ''}
-          {isStaff ? ' — tri par pertinence scouting' : ''}
+          {isStaff ? '. Tri par pertinence scouting' : ''}
         </Text>
       ) : null}
     </View>

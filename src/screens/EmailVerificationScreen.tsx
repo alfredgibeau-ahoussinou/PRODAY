@@ -131,8 +131,8 @@ export const EmailVerificationScreen: React.FC<EmailVerificationScreenProps> = (
         <Text style={styles.title}>Vérifiez votre email</Text>
         <Text style={styles.subtitle}>
           {variant === 'practitioner'
-            ? 'Confirmez votre adresse pour activer votre espace Pro Day Santé —\n'
-            : 'Étape 2 — Vos documents ont été analysés par l’IA. Confirmez maintenant\n'}
+            ? 'Confirmez votre adresse pour activer votre espace Pro Day Santé. \n'
+            : 'Étape 2. Vos documents ont été analysés par l’IA. Confirmez maintenant\n'}
           <Text style={styles.email}>{email}</Text>
         </Text>
         <Text style={styles.body}>
@@ -145,7 +145,7 @@ export const EmailVerificationScreen: React.FC<EmailVerificationScreenProps> = (
           <ProDayErrorBanner message={error} onDismiss={() => setError(null)} />
         ) : null}
         {sent ? (
-          <Text style={styles.sentHint}>Email renvoyé — vérifiez vos spams si besoin.</Text>
+          <Text style={styles.sentHint}>Email renvoyé. Vérifiez vos spams si besoin.</Text>
         ) : null}
         {autoSending ? (
           <Text style={styles.sentHint}>Envoi de l’e-mail de confirmation en cours…</Text>

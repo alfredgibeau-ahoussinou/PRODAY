@@ -70,7 +70,7 @@ export const MatchLiveScoreboard: React.FC<MatchLiveScoreboardProps> = ({
           <AnimatedScore value={state.home_score} />
         </View>
         <ProDayText variant="section" inverse muted style={styles.sep}>
-          —
+          
         </ProDayText>
         <View style={styles.teamCol}>
           <ProDayText variant="caption" inverse muted numberOfLines={2} style={styles.teamName}>

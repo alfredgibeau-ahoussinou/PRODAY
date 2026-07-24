@@ -101,7 +101,7 @@ export const DetectionEventsScreen: React.FC<DetectionEventsScreenProps> = ({
         <View style={styles.heroCopy}>
           <Text style={[styles.heroTitle, { color: themeColors.text }]}>Scouting ProDay</Text>
           <Text style={[styles.heroSub, { color: themeColors.textSecondary }]}>
-            Journées de détection reliées à votre calendrier — inscrivez-vous ou organisez une
+            Journées de détection reliées à votre calendrier. Inscrivez-vous ou organisez une
             session pour votre club.
           </Text>
         </View>

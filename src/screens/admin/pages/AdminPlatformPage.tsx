@@ -223,7 +223,7 @@ export const AdminPlatformPage: React.FC<AdminPlatformPageProps> = ({
               <AdminEntityCard
                 key={p.id}
                 icon="briefcase"
-                title={`${p.club_name} — ${p.position}`}
+                title={`${p.club_name}. ${p.position}`}
                 subtitle={`${p.city} · ${p.category}`}
                 meta={`Statut : ${p.status}`}
                 secondaryLabel={p.status === 'OPEN' ? 'Clôturer' : 'Rouvrir'}
@@ -251,7 +251,7 @@ export const AdminPlatformPage: React.FC<AdminPlatformPageProps> = ({
               <AdminEntityCard
                 key={m.id}
                 icon="handshake"
-                title={`${m.requester_club_name} vs ${m.opponent_club_name ?? '—'}`}
+                title={`${m.requester_club_name} vs ${m.opponent_club_name ?? '. '}`}
                 subtitle={formatCalendarDate(m.date)}
                 meta={`${m.city} · ${m.status}`}
                 onDelete={() =>
@@ -274,7 +274,7 @@ export const AdminPlatformPage: React.FC<AdminPlatformPageProps> = ({
                 key={a.id}
                 icon="document"
                 title={a.player_name ?? a.player_uid}
-                subtitle={a.cover_letter.slice(0, 100) || '—'}
+                subtitle={a.cover_letter.slice(0, 100) || '…'}
                 meta={`${a.status} · post ${a.post_id.slice(0, 8)}…`}
                 onDelete={() =>
                   adminConfirmDelete('Supprimer', 'Candidature', () => adminService.deleteApplication(a.id), refresh)
@@ -417,7 +417,7 @@ export const AdminPlatformPage: React.FC<AdminPlatformPageProps> = ({
                 key={app.id}
                 icon="document"
                 title={app.player_name}
-                subtitle={app.message.slice(0, 100) || '—'}
+                subtitle={app.message.slice(0, 100) || '…'}
                 meta={`${STAGE_APPLICATION_STATUS_LABEL[app.status]} · stage ${app.stage_id.slice(0, 8)}…`}
                 onDelete={() =>
                   adminConfirmDelete(
@@ -444,8 +444,8 @@ export const AdminPlatformPage: React.FC<AdminPlatformPageProps> = ({
                 key={t.id}
                 icon="star-four-points"
                 title={t.name}
-                subtitle={t.city ?? '—'}
-                meta={`${t.status ?? '—'} · org. ${t.organizer_uid.slice(0, 8)}… · ${formatCalendarDate(t.created_at)}`}
+                subtitle={t.city ?? '…'}
+                meta={`${t.status ?? '. '} · org. ${t.organizer_uid.slice(0, 8)}… · ${formatCalendarDate(t.created_at)}`}
                 onDelete={() =>
                   adminConfirmDelete('Supprimer', t.name, () => adminService.deleteTournament(t.id), loadTournaments)
                 }

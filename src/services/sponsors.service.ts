@@ -104,7 +104,7 @@ function buildLiveActivity(
         id: `view-${offer.id}`,
         type: 'offer_view',
         title: 'Vues sur votre offre',
-        subtitle: `${offer.company_name} — ${offer.views_count} vues`,
+        subtitle: `${offer.company_name}. ${offer.views_count} vues`,
         at: offer.created_at,
       });
     }
@@ -124,7 +124,7 @@ function buildLiveActivity(
       id: `contrib-${c.id}`,
       type: 'contribution',
       title: 'Soutien enregistré',
-      subtitle: `${c.goal_title} — ${c.amount_eur} €`,
+      subtitle: `${c.goal_title}. ${c.amount_eur} €`,
       at: c.at,
     });
   }

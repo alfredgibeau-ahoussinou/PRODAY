@@ -45,7 +45,7 @@ const baseProgression: GamificationState = {
   ],
 };
 
-describe('Phase 4 — Brain persistence + charge moteurs', () => {
+describe('Phase 4. Brain persistence + charge moteurs', () => {
   it('sérialise et restaure le snapshot Brain', () => {
     const state: BrainPersistedState = {
       version: 1,

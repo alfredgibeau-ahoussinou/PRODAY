@@ -93,7 +93,7 @@ export const PlayerCvEditorScreen: React.FC<PlayerCvEditorScreenProps> = ({
         keyboardShouldPersistTaps="handled"
       >
         <Text style={[styles.lead, { color: colors.textSecondary }]}>
-          Complétez votre CV directement ici — visible sur votre profil et partageable sans PDF.
+          Complétez votre CV directement ici. Visible sur votre profil et partageable sans PDF.
         </Text>
 
         <PlayerCvLivePreview user={previewUser} colors={colors} />

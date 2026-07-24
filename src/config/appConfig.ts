@@ -36,7 +36,7 @@ export function getAppConfigIssues(): ConfigIssue[] {
       severity: 'warning',
       title: 'Firebase Storage',
       detail:
-        'EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET manquant — photos de profil et documents indisponibles.',
+        'EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET manquant. Photos de profil et documents indisponibles.',
     });
   }
 
@@ -46,7 +46,7 @@ export function getAppConfigIssues(): ConfigIssue[] {
       severity: 'warning',
       title: 'Push notifications',
       detail:
-        'EXPO_PUBLIC_EAS_PROJECT_ID manquant — les notifications push ne fonctionneront pas en build natif.',
+        'EXPO_PUBLIC_EAS_PROJECT_ID manquant. Les notifications push ne fonctionneront pas en build natif.',
     });
   }
 

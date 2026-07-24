@@ -22,7 +22,7 @@ const staff: User = {
   city: 'Paris',
 };
 
-describe('Phase 11 — Staff actions + accueil staff', () => {
+describe('Phase 11. Staff actions + accueil staff', () => {
   it('attribue XP publish_mercato et review_application', () => {
     const publish = dispatchUserAction(staff, 'publish_mercato', {
       upcomingEventsCount: 0,

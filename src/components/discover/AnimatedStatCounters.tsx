@@ -29,7 +29,7 @@ const STAT_META: Record<
 > = {
   players: {
     label: 'Joueurs',
-    detail: 'Profils actifs sur le Mercato ProDay — joueurs, coachs et agents.',
+    detail: 'Profils actifs sur le Mercato ProDay. Joueurs, coachs et agents.',
     icon: 'people',
   },
   clubs: {
@@ -39,7 +39,7 @@ const STAT_META: Record<
   },
   recruitment_posts_open: {
     label: 'Annonces',
-    detail: 'Offres ouvertes en ce moment — filtres poste, niveau, ville.',
+    detail: 'Offres ouvertes en ce moment. Filtres poste, niveau, ville.',
     icon: 'briefcase',
   },
 };

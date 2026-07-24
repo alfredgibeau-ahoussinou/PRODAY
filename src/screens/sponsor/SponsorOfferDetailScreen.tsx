@@ -71,7 +71,7 @@ export const SponsorOfferDetailScreen: React.FC<SponsorOfferDetailScreenProps> =
   };
 
   const handleShare = async () => {
-    const message = `${offer.company_name} — ${offer.value}\n${offer.description}\n${offer.city} · ProDay Sponsors`;
+    const message = `${offer.company_name}. ${offer.value}\n${offer.description}\n${offer.city} · ProDay Sponsors`;
     await Share.share({ message });
   };
 

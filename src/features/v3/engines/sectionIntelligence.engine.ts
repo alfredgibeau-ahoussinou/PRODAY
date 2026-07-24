@@ -39,7 +39,7 @@ export function buildSectionIntelligence(input: SectionIntelligenceInput): Secti
     insights.push({
       id: 'health-rest',
       label: 'Récupération',
-      detail: input.coachMessage ?? 'Charge élevée — adaptez votre activité.',
+      detail: input.coachMessage ?? 'Charge élevée. Adaptez votre activité.',
       priority: 95,
       tab: 'sante',
     });
@@ -136,7 +136,7 @@ export function buildSectionIntelligence(input: SectionIntelligenceInput): Secti
         insights.push({
           id: 'visibility',
           label: 'Visibilité',
-          detail: `Score global ${input.globalScore ?? 0} — postulez pour progresser`,
+          detail: `Score global ${input.globalScore ?? 0}. Postulez pour progresser`,
           priority: 70,
         });
       }
@@ -172,7 +172,7 @@ export function buildSectionIntelligence(input: SectionIntelligenceInput): Secti
         insights.push({
           id: 'social',
           label: 'Messages en attente',
-          detail: `${input.unreadMessages} non lu(s) — répondez pour garder le contact`,
+          detail: `${input.unreadMessages} non lu(s). Répondez pour garder le contact`,
           priority: 82,
           tab: 'messages',
         });

@@ -259,7 +259,7 @@ export const PlayerProfileScreen: React.FC<PlayerProfileScreenProps> = ({
         <AnimatedEntrance kind="fade">
           <View style={[styles.scoutingBox, { backgroundColor: themeColors.accentSoft, borderColor: themeColors.accentMuted }]}>
             <ProDayText variant="caption" accent style={{ fontWeight: '800' }}>
-              Pertinence scouting {scouting.score}% — {scouting.label}
+              Pertinence scouting {scouting.score}%. {scouting.label}
             </ProDayText>
           </View>
           {myProfile ? (

@@ -133,8 +133,8 @@ export const PhysioDashboardScreen: React.FC<PhysioDashboardScreenProps> = ({ pr
         <Icon name="calendar" size={18} color={bookingOnline ? '#0F766E' : c.textMuted} />
         <Text style={styles.bookingBannerText}>
           {bookingOnline
-            ? 'RDV en ligne actifs — les joueurs peuvent réserver'
-            : 'RDV en ligne désactivés — activez vos créneaux'}
+            ? 'RDV en ligne actifs. Les joueurs peuvent réserver'
+            : 'RDV en ligne désactivés. Activez vos créneaux'}
         </Text>
         <PressableSpring
           style={styles.bookingBannerBtn}
@@ -232,7 +232,7 @@ export const PhysioDashboardScreen: React.FC<PhysioDashboardScreenProps> = ({ pr
       <TabScreenShell
         caption="Cabinet Santé"
         title={`Bonjour, ${profile.display_name}`}
-        subtitle={`${specialty}${profile.city ? ` · ${profile.city}` : ''} — votre journée de consultations.`}
+        subtitle={`${specialty}${profile.city ? ` · ${profile.city}` : ''}. Votre journée de consultations.`}
         flat
       >
         {dashboardScroll}

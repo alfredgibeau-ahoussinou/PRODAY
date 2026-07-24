@@ -7,7 +7,7 @@ import { buildChatQuickReplies } from '../core/social/chatQuickReply.engine';
 import { isCalendarSyncEnabled, setCalendarSyncEnabled } from '../services/v3Preferences.service';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-describe('Phase 7 — Chat IA + préférences V3', () => {
+describe('Phase 7. Chat IA + préférences V3', () => {
   it('propose des réponses rapides pour un RDV kiné', () => {
     const replies = buildChatQuickReplies({
       otherRole: 'physio',

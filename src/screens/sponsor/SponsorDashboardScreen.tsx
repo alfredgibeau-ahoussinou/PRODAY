@@ -91,7 +91,7 @@ export const SponsorDashboardScreen: React.FC<SponsorDashboardScreenProps> = ({ 
           <Icon name="briefcase" size={24} color={SPONSOR_THEME.primary} />
           <Text style={styles.emptyTitle}>Publiez votre première offre</Text>
           <Text style={styles.emptySub}>
-            Équipement, visibilité ou financement — touchez les clubs de votre zone.
+            Équipement, visibilité ou financement. Touchez les clubs de votre zone.
           </Text>
           <TouchableOpacity style={styles.cta} onPress={() => nav.setActiveTab('matchs')}>
             <Text style={styles.ctaText}>Créer une offre</Text>

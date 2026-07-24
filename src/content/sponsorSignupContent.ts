@@ -15,9 +15,9 @@ export const SPONSOR_SECTORS = [
 
 export const SPONSOR_BUDGET_RANGES = [
   'Moins de 500 € / mois',
-  '500 – 2 000 € / mois',
-  '2 000 – 10 000 € / mois',
-  '10 000 – 50 000 € / mois',
+  '500 à 2 000 € / mois',
+  '2 000 à 10 000 € / mois',
+  '10 000 à 50 000 € / mois',
   'Plus de 50 000 € / mois',
   'À définir ensemble',
 ] as const;
@@ -33,7 +33,7 @@ export const SPONSOR_CAMPAIGN_GOALS = [
 ] as const;
 
 export const SPONSOR_TARGET_AUDIENCES = [
-  'Joueurs amateurs (18–35 ans)',
+  'Joueurs amateurs (18 à 35 ans)',
   'Coachs & staff encadrement',
   'Dirigeants & présidents de club',
   'Organisateurs de tournois',
@@ -64,7 +64,7 @@ export const SPONSOR_SPORTS = [
   'Football semi-pro / Régional',
   'Football féminin',
   'Futsal',
-  'Football jeunes (U13–U19)',
+  'Football jeunes (U13 à U19)',
   'Tournois & événements',
   'Multi-sports',
 ] as const;

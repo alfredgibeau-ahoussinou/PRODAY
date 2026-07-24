@@ -70,7 +70,7 @@ const applications: Application[] = [
   },
 ];
 
-describe('Phase 10 — Mercato staff + bienvenue V3', () => {
+describe('Phase 10. Mercato staff + bienvenue V3', () => {
   it('résume le pipeline staff Mercato', () => {
     const summary = summarizeStaffMercato({
       posts,

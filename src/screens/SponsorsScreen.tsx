@@ -177,7 +177,7 @@ export const SponsorsScreen: React.FC<SponsorsScreenProps> = ({
         {guestMode ? (
           <View style={styles.guestBanner}>
             <Text style={styles.guestBannerText}>
-              Données réelles ProDay — connectez-vous pour publier ou soutenir une campagne.
+              Données réelles ProDay. Connectez-vous pour publier ou soutenir une campagne.
             </Text>
           </View>
         ) : null}
@@ -194,7 +194,7 @@ export const SponsorsScreen: React.FC<SponsorsScreenProps> = ({
             <View style={styles.partnerBannerBody}>
               <Text style={styles.partnerBannerTitle}>Devenir sponsor ProDay</Text>
               <Text style={styles.partnerBannerSub}>
-                Espace dédié, tarifs dès 0 € — visibilité clubs et joueurs
+                Espace dédié, tarifs dès 0 €. Visibilité clubs et joueurs
               </Text>
             </View>
             <Icon name="chevron-forward" size={18} color={c.textMuted} />
@@ -208,7 +208,7 @@ export const SponsorsScreen: React.FC<SponsorsScreenProps> = ({
           <Text style={styles.heroEyebrow}>PARTENARIATS PRODAY</Text>
           <Text style={styles.heroTitle}>Soutenez le foot local</Text>
           <Text style={styles.heroSub}>
-            Offres sponsors et campagnes de financement club — connectez votre territoire à
+            Offres sponsors et campagnes de financement club. Connectez votre territoire à
             votre projet sportif.
           </Text>
           {!loading && goals.length > 0 ? (
@@ -279,7 +279,7 @@ export const SponsorsScreen: React.FC<SponsorsScreenProps> = ({
                 </View>
                 <Text style={styles.progressMeta}>
                   {g.raised_amount_eur.toLocaleString('fr-FR')} € /{' '}
-                  {g.target_amount_eur.toLocaleString('fr-FR')} € — {pct} %
+                  {g.target_amount_eur.toLocaleString('fr-FR')} €. {pct} %
                 </Text>
                 {!guestMode && remaining > 0 ? (
                   isContributing ? (

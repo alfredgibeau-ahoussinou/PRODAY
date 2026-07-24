@@ -194,7 +194,7 @@ export const CarpoolRideCard: React.FC<CarpoolRideCardProps> = ({
               const dist = pickupDistanceFromMeeting(slot, p);
               return (
                 <ProDayText key={p.uid} variant="caption" muted>
-                  {p.name} — {p.pickup_place?.trim() || 'GPS'}
+                  {p.name}. {p.pickup_place?.trim() || 'GPS'}
                   {dist ? ` (${dist} du RDV)` : ''}
                 </ProDayText>
               );

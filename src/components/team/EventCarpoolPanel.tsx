@@ -226,7 +226,7 @@ export const EventCarpoolPanel: React.FC<EventCarpoolPanelProps> = ({
     if (!pickupPlace.trim() && !pickupLocation) {
       Alert.alert(
         'Point de prise en charge',
-        'Indiquez où vous souhaitez être récupéré(e) — adresse ou position GPS.'
+        'Indiquez où vous souhaitez être récupéré(e). Adresse ou position GPS.'
       );
       return;
     }
@@ -437,7 +437,7 @@ export const EventCarpoolPanel: React.FC<EventCarpoolPanelProps> = ({
                       return (
                         <View key={p.uid} style={styles.pickupRow}>
                           <Text style={styles.pickupName}>
-                            {p.name} — {p.pickup_place?.trim() || 'Position GPS'}
+                            {p.name}. {p.pickup_place?.trim() || 'Position GPS'}
                             {dist ? ` · ${dist} du RDV` : ''}
                           </Text>
                           {p.pickup_location ? (
@@ -496,7 +496,7 @@ export const EventCarpoolPanel: React.FC<EventCarpoolPanelProps> = ({
         </View>
       ) : (
         <Text style={styles.empty}>
-          Aucun trajet pour l’instant — proposez le vôtre ou attendez les coéquipiers.
+          Aucun trajet pour l’instant. Proposez le vôtre ou attendez les coéquipiers.
         </Text>
       )}
 
@@ -567,7 +567,7 @@ export const EventCarpoolPanel: React.FC<EventCarpoolPanelProps> = ({
 
       {canManage ? (
         <View style={styles.staffBox}>
-          <Text style={styles.staffTitle}>Staff — assignation rapide</Text>
+          <Text style={styles.staffTitle}>Staff. Assignation rapide</Text>
           {!pickMode ? (
             <PressableSpring
               style={styles.secondaryBtn}

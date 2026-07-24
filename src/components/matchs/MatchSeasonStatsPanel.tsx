@@ -58,7 +58,7 @@ export const MatchSeasonStatsPanel: React.FC<MatchSeasonStatsPanelProps> = ({
       goals,
       assists,
       minutes,
-      avgRating: rated > 0 ? (ratingSum / rated).toFixed(1) : '—',
+      avgRating: rated > 0 ? (ratingSum / rated).toFixed(1) : '…',
     };
   }, [events, profile, matchHistory.length]);
 
@@ -98,7 +98,7 @@ export const MatchSeasonStatsPanel: React.FC<MatchSeasonStatsPanelProps> = ({
           <StatBlock label="Matchs" value={String(season?.matches ?? totals?.matches ?? 0)} />
           <StatBlock label="Buts" value={String(season?.goals ?? totals?.goals ?? 0)} highlight />
           <StatBlock label="Passes" value={String(season?.assists ?? totals?.assists ?? 0)} />
-          <StatBlock label="Note moy." value={totals?.avgRating ?? '—'} />
+          <StatBlock label="Note moy." value={totals?.avgRating ?? '…'} />
         </View>
         {totals && totals.minutes > 0 ? (
           <ProDayText variant="caption" muted style={styles.minutes}>
@@ -112,7 +112,7 @@ export const MatchSeasonStatsPanel: React.FC<MatchSeasonStatsPanelProps> = ({
         <ProDaySurface variant="module" style={[styles.empty, { borderColor: colors.border }]}>
           <Icon name="trophy" size={32} color={colors.textMuted} />
           <ProDayText variant="body" muted style={styles.emptySub}>
-            Jouez des matchs convoqués — le staff renseignera vos notes et stats ici.
+            Jouez des matchs convoqués. Le staff renseignera vos notes et stats ici.
           </ProDayText>
         </ProDaySurface>
       ) : (
@@ -138,7 +138,7 @@ export const MatchSeasonStatsPanel: React.FC<MatchSeasonStatsPanelProps> = ({
               </View>
               <View style={styles.rowStats}>
                 <ProDayText variant="caption" accent style={styles.statNum}>
-                  {s.rating?.toFixed(1) ?? '—'}
+                  {s.rating?.toFixed(1) ?? '…'}
                 </ProDayText>
                 <ProDayText variant="caption" muted>
                   {s.goals ?? 0}B · {s.assists ?? 0}P

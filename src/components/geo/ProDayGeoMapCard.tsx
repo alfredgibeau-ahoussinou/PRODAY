@@ -135,7 +135,7 @@ export const ProDayGeoMapCard: React.FC<ProDayGeoMapCardProps> = ({
         {locError ? (
           <Pressable onPress={onRefreshLocation}>
             <ProDayText variant="caption" style={{ color: colors.error }}>
-              {locError} — Réessayer
+              {locError}. Réessayer
             </ProDayText>
           </Pressable>
         ) : null}

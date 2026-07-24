@@ -58,7 +58,7 @@ function simulateExpert(
       if (input.unreadMessages > 0) {
         return {
           expert,
-          reason: 'Réseau actif — messages en attente',
+          reason: 'Réseau actif. Messages en attente',
           weight: EXPERT_WEIGHTS.social,
           primaryTab: 'messages',
         };

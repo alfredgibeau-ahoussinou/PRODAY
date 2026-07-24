@@ -43,10 +43,10 @@ export const AppSpaceBanner: React.FC<AppSpaceBannerProps> = ({
       : 'football';
 
   const sub = isUnderU13AppSpace(appSpace)
-    ? 'Mercato filtré — U7, U9, U11'
+    ? 'Mercato filtré. U7, U9, U11'
     : isFeminineAppSpace(appSpace)
-      ? 'Mercato filtré — football féminin'
-      : 'Mercato filtré — football masculin';
+      ? 'Mercato filtré. Football féminin'
+      : 'Mercato filtré. Football masculin';
 
   return (
     <View style={styles.root}>
@@ -68,7 +68,7 @@ export const AppSpaceBanner: React.FC<AppSpaceBannerProps> = ({
             >
               <Icon name="football" size={20} color={c.brand} />
               <View style={styles.dualCopy}>
-                <Text style={styles.dualTitle}>Changer — Masculin</Text>
+                <Text style={styles.dualTitle}>Changer. Masculin</Text>
                 <Text style={styles.dualSub}>Joueurs · clubs M</Text>
               </View>
               <Icon name="chevron-forward" size={16} color={c.textMuted} />
@@ -82,7 +82,7 @@ export const AppSpaceBanner: React.FC<AppSpaceBannerProps> = ({
             >
               <Icon name="people" size={20} color={c.brand} />
               <View style={styles.dualCopy}>
-                <Text style={styles.dualTitle}>Changer — Féminin</Text>
+                <Text style={styles.dualTitle}>Changer. Féminin</Text>
                 <Text style={styles.dualSub}>Seniors F · jeunes F · -13 F</Text>
               </View>
               <Icon name="chevron-forward" size={16} color={c.textMuted} />
@@ -96,7 +96,7 @@ export const AppSpaceBanner: React.FC<AppSpaceBannerProps> = ({
           >
             <Icon name="school" size={20} color="#4ade80" />
             <View style={styles.dualCopy}>
-              <Text style={styles.dualTitle}>Changer — -13 ans</Text>
+              <Text style={styles.dualTitle}>Changer. -13 ans</Text>
               <Text style={styles.dualSub}>
                 {isFeminineAppSpace(appSpace) ? 'U7 F · U9 F · U11 F' : 'U7 · U9 · U11'}
               </Text>

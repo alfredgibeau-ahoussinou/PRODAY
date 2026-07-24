@@ -19,7 +19,7 @@ export interface SponsorPricingTier {
 export const SPONSOR_PRICING_INTRO = {
   title: 'Espace Sponsors ProDay',
   subtitle:
-    'Sponsor et partenaire : même profil sur ProDay. Touchez clubs, joueurs et organisateurs sur votre territoire — visibilité mesurable, sans intermédiaire.',
+    'Sponsor et partenaire : même profil sur ProDay. Touchez clubs, joueurs et organisateurs sur votre territoire. Visibilité mesurable, sans intermédiaire.',
   footnote:
     'Tarifs HT · facturation mensuelle ou annuelle (−20 %) · résiliation à tout moment sur les formules en ligne.',
 };
@@ -71,7 +71,7 @@ export const SPONSOR_PRICING_TIERS: SponsorPricingTier[] = [
       'Offres illimitées',
       'Logo mis en avant (onglet Sponsors)',
       'Campagnes locales ciblées',
-      "Push géolocalisé local (bêta — opt-in)",
+      "Push géolocalisé local (bêta, sur opt-in)",
       'Account manager email',
       'Priorité support sponsors',
     ],

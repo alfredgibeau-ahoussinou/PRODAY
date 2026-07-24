@@ -63,9 +63,9 @@ export function computeProdayPulse(
 
   const hints: Record<ProdayPulseResult['tier'], string> = {
     starter: 'Complétez votre profil pour exploser votre visibilité.',
-    rising: 'Vous êtes sur la bonne trajectoire — continuez.',
+    rising: 'Vous êtes sur la bonne trajectoire. Continuez.',
     pro: 'Les clubs et coachs vous repèrent facilement.',
-    elite: 'Profil optimal — maximisez opportunités & convocations.',
+    elite: 'Profil optimal. Maximisez opportunités & convocations.',
   };
 
   return { score, label: labels[tier], hint: hints[tier], tier };

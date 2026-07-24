@@ -85,7 +85,7 @@ export function computeHealthSnapshot(input: HealthEngineInput): HealthSnapshot 
   const coachByState: Record<HealthState, { hint: string; message: string }> = {
     OPTIMAL: {
       hint: 'Séance technique ou match modéré',
-      message: 'Votre charge est équilibrée — bon moment pour performer.',
+      message: 'Votre charge est équilibrée. Bon moment pour performer.',
     },
     ACTIVE: {
       hint: 'Match ou entraînement ciblé',
@@ -97,7 +97,7 @@ export function computeHealthSnapshot(input: HealthEngineInput): HealthSnapshot 
     },
     OVERLOADED: {
       hint: 'Repos actif uniquement',
-      message: 'Charge élevée détectée — évitez les matchs intenses.',
+      message: 'Charge élevée détectée. Évitez les matchs intenses.',
     },
     INJURY_RISK: {
       hint: 'Repos + bilan kiné si douleur',

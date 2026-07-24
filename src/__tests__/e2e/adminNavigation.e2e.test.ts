@@ -7,7 +7,7 @@ import {
   type AdminMainTabId,
 } from '../../navigation/adminTabConfig';
 
-describe('e2e — navigation shell admin', () => {
+describe('e2e. Navigation shell admin', () => {
   const mainTabs: AdminMainTabId[] = [
     'pilotage',
     'inbox',
@@ -32,7 +32,7 @@ describe('e2e — navigation shell admin', () => {
     expect(pilotage.subtitle).toMatch(/Pilotage/i);
   });
 
-  it('segments modération — reels et signalements', () => {
+  it('segments modération. Reels et signalements', () => {
     expect(resolveAdminPageMeta('moderation', 'reels').title).toBe('Reels');
     expect(resolveAdminPageMeta('moderation', 'reports').title).toBe('Signalements');
     expect(

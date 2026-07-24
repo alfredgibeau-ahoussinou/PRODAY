@@ -135,7 +135,7 @@ export const AdminPlatformFeedPanel: React.FC = () => {
             key={post.id}
             icon={post.type === 'poll' ? 'star-four-points' : 'notifications'}
             title={post.title}
-            subtitle={post.body.slice(0, 120) || '—'}
+            subtitle={post.body.slice(0, 120) || '…'}
             meta={`${post.author_name} · ${post.audience} · ${formatCalendarDate(post.created_at)}`}
             onDelete={() =>
               adminConfirmDelete('Supprimer', post.title, () => adminService.deletePlatformFeedPost(post.id), load)

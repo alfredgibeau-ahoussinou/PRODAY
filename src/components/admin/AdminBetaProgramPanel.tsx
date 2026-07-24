@@ -94,7 +94,7 @@ export const AdminBetaProgramPanel: React.FC = () => {
                 actor_email: firebaseUser?.email ?? profile?.email,
                 target_type: 'beta_waitlist',
                 target_id: entry.id,
-                summary: `Accès bêta approuvé — ${entry.email}`,
+                summary: `Accès bêta approuvé. ${entry.email}`,
               });
               if (result.emailSent) {
                 Alert.alert('Bêta', `Accès validé. Email envoyé à ${entry.email}.`);
@@ -125,7 +125,7 @@ export const AdminBetaProgramPanel: React.FC = () => {
               actor_email: firebaseUser?.email ?? profile?.email,
               target_type: 'beta_waitlist',
               target_id: entry.id,
-              summary: `Inscription bêta refusée — ${entry.email}`,
+              summary: `Inscription bêta refusée. ${entry.email}`,
             });
             Alert.alert('Bêta', 'Inscription refusée.');
           }),
@@ -172,7 +172,7 @@ export const AdminBetaProgramPanel: React.FC = () => {
                 actor_email: firebaseUser?.email ?? profile?.email,
                 target_type: 'beta_waitlist',
                 target_id: entry.id,
-                summary: `Inscription bêta supprimée — ${entry.email}`,
+                summary: `Inscription bêta supprimée. ${entry.email}`,
               });
               Alert.alert('Bêta', 'Inscription supprimée.');
             }),
@@ -183,7 +183,7 @@ export const AdminBetaProgramPanel: React.FC = () => {
 
   const handleShareLink = async (entry: BetaWaitlistEntry) => {
     if (!entry.access_token) {
-      Alert.alert('Lien indisponible', 'Aucun jeton d\'accès — approuvez d\'abord l\'inscription.');
+      Alert.alert('Lien indisponible', 'Aucun jeton d\'accès. Approuvez d\'abord l\'inscription.');
       return;
     }
     const url = buildBetaProgrammeUrl(ADMIN_SITE_URL, entry.access_token);

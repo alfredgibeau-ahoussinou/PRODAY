@@ -159,7 +159,7 @@ export const AdminSystemPage: React.FC<AdminSystemPageProps> = ({ onPreviewUserA
         onAction={() => void refreshAdminClaim().then(() => refresh())}
       >
         <Text style={styles.bodyText}>
-          Claim actif : {isAdmin ? 'oui' : 'non'} · {profile?.email ?? '—'}
+          Claim actif : {isAdmin ? 'oui' : 'non'} · {profile?.email ?? '…'}
         </Text>
       </AdminSettingsCard>
 

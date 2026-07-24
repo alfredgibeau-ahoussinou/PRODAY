@@ -75,7 +75,7 @@ export function getDiscoverCarouselCopy(line: ProductLineId): {
     return {
       label: 'Pro Joueur',
       title: 'Carrière et opportunités',
-      subtitle: 'Visibilité pro, essais et mandats — votre vitrine sportive',
+      subtitle: 'Visibilité pro, essais et mandats. Votre vitrine sportive',
     };
   }
   if (resolved === 'pro_club') {
@@ -89,7 +89,7 @@ export function getDiscoverCarouselCopy(line: ProductLineId): {
     return {
       label: 'Pro Staff',
       title: 'Métier du foot pro',
-      subtitle: 'Coach, agent, recruteur — outils métier dédiés',
+      subtitle: 'Coach, agent, recruteur. Outils métier dédiés',
     };
   }
   if (resolved === 'amateur') {
@@ -117,7 +117,7 @@ export function getDiscoverCarouselCopy(line: ProductLineId): {
     return {
       label: 'Pro Day Sponsor',
       title: 'Votre marque sur le terrain',
-      subtitle: 'Campagnes géo, ROI et réseau clubs — espace marque dédié',
+      subtitle: 'Campagnes géo, ROI et réseau clubs. Espace marque dédié',
     };
   }
   return {

@@ -91,7 +91,7 @@ export const AdminOpsDataPanel: React.FC = () => {
                 title={`${order.total_eur} € · ${order.status}`}
                 subtitle={`${order.product_line} · ${order.lines.length} article(s)`}
                 meta={`Acheteur ${order.buyer_uid.slice(0, 10)}… · ${
-                  order.created_at ? formatCalendarDate(order.created_at) : '—'
+                  order.created_at ? formatCalendarDate(order.created_at) : '…'
                 }`}
               />
             ))

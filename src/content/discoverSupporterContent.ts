@@ -24,7 +24,7 @@ export const DISCOVER_INTRO_SLIDES_SUPPORTER = [
     id: 'modules',
     kicker: 'TRIBUNE',
     title: 'Matchs &\nréels.',
-    body: 'Calendrier, moments forts et fil communautaire — votre place en tribune numérique.',
+    body: 'Calendrier, moments forts et fil communautaire. Votre place en tribune numérique.',
     image: SHOWCASE_IMAGES.friendlyMatch,
     icon: 'videocam' as IconName,
     cta: 'Explorer la tribune',

@@ -90,7 +90,7 @@ export const POLE_HELP_OTHER_QUESTION: PoleHelpEntry = {
   category: 'pole',
   question: 'Autre question',
   answer:
-    'Pour toute autre demande, contactez support@proday.app — notre équipe vous répond sous 24 h.',
+    'Pour toute autre demande, contactez support@proday.app. Notre équipe vous répond sous 24 h.',
 };
 
 const AMATEUR_HELP: PoleHelpContent = {
@@ -121,7 +121,7 @@ const AMATEUR_HELP: PoleHelpContent = {
         id: 'pulse-accueil',
         question: 'Quelle différence entre Accueil et Visibilité ?',
         answer:
-          'Accueil (Équipe) est ton onglet principal. Visibilité est ton score de visibilité, affiché dans l’Accueil — ce n’est pas un onglet séparé.',
+          'Accueil (Équipe) est ton onglet principal. Visibilité est ton score de visibilité, affiché dans l’Accueil. Ce n’est pas un onglet séparé.',
         navigate: { kind: 'tab', tab: 'home' },
         navigateLabel: 'Voir mon Accueil',
       },
@@ -426,7 +426,7 @@ const SANTE_HELP: PoleHelpContent = {
     ...withCategory('navigation', [
       { id: 'navigation', question: 'Comment naviguer dans l’espace santé ?', answer: 'Accueil pour le cockpit cabinet, Agenda pour le planning, Demandes pour les sollicitations, Vidéos pour vos contenus éducatifs, Messages et Cabinet pour le reste.', navigate: { kind: 'tab', tab: 'home' }, navigateLabel: 'Retour accueil' },
       { id: 'onglets-sante', question: 'À quoi servent les onglets santé ?', answer: 'Accueil (cockpit), Agenda (RDV), Demandes, Vidéos (conseils & prévention), Messages sécurisés et Cabinet (profil pro).', navigate: { kind: 'tab', tab: 'home' }, navigateLabel: 'Voir l’accueil' },
-      { id: 'videos-sante', question: 'Où publier mes vidéos santé ?', answer: 'Onglet Vidéos : clips éducatifs publics (prévention, étirements). Ce n’est pas la téléconsultation médicale — celle-ci passe par un partenaire conforme (Cal.com / Whereby), pas Zoom.', navigate: { kind: 'tab', tab: 'reels' }, navigateLabel: 'Ouvrir Vidéos' },
+      { id: 'videos-sante', question: 'Où publier mes vidéos santé ?', answer: 'Onglet Vidéos : clips éducatifs publics (prévention, étirements). Ce n’est pas la téléconsultation médicale. Celle-ci passe par un partenaire conforme (Cal.com / Whereby), pas Zoom.', navigate: { kind: 'tab', tab: 'reels' }, navigateLabel: 'Ouvrir Vidéos' },
       { id: 'teleconsult-hds', question: 'Comment marche la téléconsultation ?', answer: 'Les sportifs réservent depuis l’annuaire Santé. La visio (15 ou 30 min) est gratuite côté ProDay : praticien et joueur rejoignent en un tap, sans abonnement. L’honoraire du praticien reste évent. hors app. Jamais Zoom pour des données de santé.', navigate: { kind: 'tab', tab: 'matchs' }, navigateLabel: 'Voir mon agenda' },
       { id: 'recherche-rapide', question: 'Comment retrouver une info rapidement ?', answer: 'Utilise la recherche patient depuis l’accueil ou filtre ton agenda par date pour accéder vite au bon dossier.', navigate: { kind: 'tab', tab: 'home' }, navigateLabel: 'Ouvrir l’accueil' },
     ]),
@@ -483,9 +483,9 @@ const PRO_PLAYER_HELP: PoleHelpContent = {
   entries: [
     ...withCategory('navigation', [
       { id: 'navigation', question: 'Comment naviguer dans l’espace pro joueur ?', answer: 'Carrière pour la vue d’ensemble (avec ta Visibilité), Opportunités pour le Mercato, Réels pour tes vidéos, Groupe pour le calendrier, Shop pour la boutique, Moi pour ton profil et CV.', navigate: { kind: 'tab', tab: 'home' }, navigateLabel: 'Retour Carrière' },
-      { id: 'barre-pro', question: 'À quoi sert la barre de navigation pro ?', answer: 'Elle regroupe Carrière, Opportunités, Réels, Groupe, Shop et Profil — chaque icône mène à un espace clé de ta carrière.', navigate: { kind: 'tab', tab: 'home' }, navigateLabel: 'Accueil Carrière' },
-      { id: 'pulse-accueil', question: 'Quelle différence entre Accueil et Visibilité ?', answer: 'Accueil (Carrière) est ton onglet principal. Visibilité est ton score de visibilité scouting, affiché dans Carrière — ce n’est pas un onglet séparé.', navigate: { kind: 'tab', tab: 'home' }, navigateLabel: 'Voir ma Visibilité' },
-      { id: 'sponsors-ou', question: 'Où sont les sponsors ?', answer: 'L’espace Sponsor (logo or) est réservé aux marques partenaires. En tant que joueur pro, tu suis les partenariats via ton club (Groupe) et les opportunités Mercato — pas via un hub marque.', navigate: { kind: 'matchs', homeTab: 'convocations' }, navigateLabel: 'Voir Groupe' },
+      { id: 'barre-pro', question: 'À quoi sert la barre de navigation pro ?', answer: 'Elle regroupe Carrière, Opportunités, Réels, Groupe, Shop et Profil. Chaque icône mène à un espace clé de ta carrière.', navigate: { kind: 'tab', tab: 'home' }, navigateLabel: 'Accueil Carrière' },
+      { id: 'pulse-accueil', question: 'Quelle différence entre Accueil et Visibilité ?', answer: 'Accueil (Carrière) est ton onglet principal. Visibilité est ton score de visibilité scouting, affiché dans Carrière. Ce n’est pas un onglet séparé.', navigate: { kind: 'tab', tab: 'home' }, navigateLabel: 'Voir ma Visibilité' },
+      { id: 'sponsors-ou', question: 'Où sont les sponsors ?', answer: 'L’espace Sponsor (logo or) est réservé aux marques partenaires. En tant que joueur pro, tu suis les partenariats via ton club (Groupe) et les opportunités Mercato. Pas via un hub marque.', navigate: { kind: 'matchs', homeTab: 'convocations' }, navigateLabel: 'Voir Groupe' },
       { id: 'shop-pro', question: 'Où est la boutique ?', answer: 'Onglet Shop : équipement, merch et offres liées à ta marque / ta carrière.', navigate: { kind: 'shop' }, navigateLabel: 'Ouvrir le Shop' },
       { id: 'raccourcis-carriere', question: 'Où trouver mes raccourcis carrière ?', answer: 'L’accueil Carrière affiche tes objectifs, mandats en cours et liens rapides vers CV et Mercato.', navigate: { kind: 'tab', tab: 'home' }, navigateLabel: 'Ouvrir Carrière' },
     ]),
@@ -593,7 +593,7 @@ const SPONSOR_HELP: PoleHelpContent = {
   title: 'Aide Sponsor',
   bubbleTeaser: 'Une question sur votre marque ?',
   welcome:
-    'Bienvenue sur Pro Day Sponsor. Campagnes, ROI et réseau clubs — je vous guide.',
+    'Bienvenue sur Pro Day Sponsor. Campagnes, ROI et réseau clubs. Je vous guide.',
   entries: [
     ...withCategory('navigation', [
       {
@@ -788,7 +788,7 @@ const SPONSOR_HELP: PoleHelpContent = {
         id: 'national',
         question: 'Quand passer en National ?',
         answer:
-          'Si vous ciblez plusieurs régions ou un volume élevé de clubs. National débloque quotas et accompagnement dédié — comparez dans Formules.',
+          'Si vous ciblez plusieurs régions ou un volume élevé de clubs. National débloque quotas et accompagnement dédié. Comparez dans Formules.',
         navigate: { kind: 'profile' },
         navigateLabel: 'Comparer les formules',
       },
@@ -834,7 +834,7 @@ const PRO_STAFF_HELP: PoleHelpContent = {
   poleKey: 'pro_staff',
   title: 'Aide Pro Staff',
   bubbleTeaser: 'Je peux vous guider',
-  welcome: 'Salut ! Coach, agent ou recruteur — Mercato, réseau et calendrier à portée de main.',
+  welcome: 'Salut ! Coach, agent ou recruteur. Mercato, réseau et calendrier à portée de main.',
   entries: [
     ...withCategory('navigation', [
       { id: 'navigation', question: 'Comment naviguer dans l’espace staff ?', answer: 'Accueil pour les mandats, Mercato pour le recrutement, Calendrier pour les événements, Messages pour le réseau, Profil pour tes réglages.', navigate: { kind: 'tab', tab: 'home' }, navigateLabel: 'Retour accueil' },

@@ -1,7 +1,7 @@
 import { sponsorProspectDraftMessage } from '../../utils/sponsorProspectMessage';
 import { scoreSponsorProspect } from '../../utils/sponsorProspectScoring';
 
-describe('e2e — parcours prospect sponsor', () => {
+describe('e2e. Parcours prospect sponsor', () => {
   it('score un club compatible puis prépare le message', () => {
     const clubName = 'FC Lyon';
     const prospect = scoreSponsorProspect({
@@ -23,7 +23,7 @@ describe('e2e — parcours prospect sponsor', () => {
     expect(draft).toMatch(/Bonjour/);
   });
 
-  it('rejette un prospect hors zone — pas de message à envoyer', () => {
+  it('rejette un prospect hors zone. Pas de message à envoyer', () => {
     const prospect = scoreSponsorProspect({
       club: {
         city: 'Marseille',

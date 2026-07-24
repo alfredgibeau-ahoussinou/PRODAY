@@ -1,7 +1,7 @@
 import { validateMatchJoin } from '../core/recommendation/recommendation.engine';
 import { computeHealthSnapshot } from '../core/health/healthState.engine';
 
-describe('Phase 1 — boucle santé → match', () => {
+describe('Phase 1. Boucle santé → match', () => {
   const overloadedHealth = computeHealthSnapshot({
     globalScore: 40,
     upcomingEventsCount: 6,

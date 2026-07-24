@@ -19,7 +19,7 @@ const slot = {
   meeting_location: { latitude: 48.86, longitude: 2.35 },
 } as CarpoolSlot;
 
-describe('Phase 3 — Covoit. Réels Shop', () => {
+describe('Phase 3. Covoit. Réels Shop', () => {
   it('priorise les trajets proches', () => {
     const recs = buildCarpoolRideRecommendations({
       userLocation: { latitude: 48.87, longitude: 2.34 },

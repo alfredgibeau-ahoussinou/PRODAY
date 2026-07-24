@@ -166,7 +166,7 @@ export const SponsorNetworkScreen: React.FC<SponsorNetworkScreenProps> = ({
         <Text style={styles.sectionTitle}>Modèles rapides</Text>
         {pendingTemplate ? (
           <Text style={styles.templateHint}>
-            Modèle prêt — choisissez un prospect pour l’insérer dans le message.
+            Modèle prêt. Choisissez un prospect pour l’insérer dans le message.
           </Text>
         ) : null}
         <View style={styles.templateRow}>

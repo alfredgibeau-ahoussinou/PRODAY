@@ -158,7 +158,7 @@ export const AmateurPlayerHomeDashboard: React.FC<StaffRoleHomeProps> = ({
     ? [
         {
           label: t('roleHome.amateurPlayer.present'),
-          value: `${countRsvpYes(nextEvent)}/${nextEvent.invitee_uids.length || '—'}`,
+          value: `${countRsvpYes(nextEvent)}/${nextEvent.invitee_uids.length || '. '}`,
           highlight: true,
         },
         {

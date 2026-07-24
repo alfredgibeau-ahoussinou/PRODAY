@@ -67,8 +67,8 @@ export const ROLE_DASHBOARD_TAGLINE: Record<UserRole, string> = {
   club: 'Stages, recrutement et vie de club.',
   agent: 'Repérez, convoquez, placez.',
   recruiter: 'Scouting, annonces Mercato et suivi candidatures.',
-  organizer: 'Animez détections et écosystème local.',
+  organizer: 'Animez détections et réseau local.',
   sponsor: 'Soutenez les clubs de votre territoire.',
-  supporter: 'Matchs, réels et communauté — votre tribune ProDay.',
-  physio: 'Kiné, ostéo, médecin du sport — fil ProDay.',
+  supporter: 'Matchs, réels et communauté. Votre tribune ProDay.',
+  physio: 'Kiné, ostéo, médecin du sport. Fil ProDay.',
 };

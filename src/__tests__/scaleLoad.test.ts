@@ -147,7 +147,7 @@ describe('charge applicative (simulation utilisateurs)', () => {
         expect(ms).toBeLessThan(25);
       });
 
-      it('listMembersByClubId — couverture club dense', () => {
+      it('listMembersByClubId. Couverture club dense', () => {
         const denseClub = 'club-0';
         const membersInDb = users.filter((u) => u.profile.club_id === denseClub).length;
         const ms = bench(() => {

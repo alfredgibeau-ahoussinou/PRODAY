@@ -80,7 +80,7 @@ export function buildActionRecommendations(
     actions.push({
       id: 'light-session',
       label: 'Séance légère aujourd’hui',
-      reason: 'Charge élevée — privilégiez l’entretien.',
+      reason: 'Charge élevée. Privilégiez l’entretien.',
       priority: 82,
       tab: 'sante',
     });
@@ -90,7 +90,7 @@ export function buildActionRecommendations(
     actions.push({
       id: 'sleep-hydration',
       label: 'Compléter mon suivi sommeil',
-      reason: 'Score global bas — améliorez votre récupération.',
+      reason: 'Score global bas. Améliorez votre récupération.',
       priority: 75,
       tab: 'sante',
     });

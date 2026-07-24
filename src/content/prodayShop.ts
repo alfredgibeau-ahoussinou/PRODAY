@@ -86,7 +86,7 @@ export function getShopCategoryLabel(category: ShopProductCategory, line?: Produ
 
 export const SHOP_TRUST_ITEMS = [
   { icon: 'shield' as const, title: 'Logo brodé', body: 'Qualité officielle ProDay' },
-  { icon: 'time' as const, title: '3–4 semaines', body: 'Livraison France' },
+  { icon: 'time' as const, title: '3 à 4 semaines', body: 'Livraison France' },
   { icon: 'bag' as const, title: 'Précommande', body: 'Carte ou email' },
 ] as const;
 
@@ -101,13 +101,13 @@ export function getShopCopy(line: ProductLineId): ShopCopy {
     line === 'sante'
       ? `Textile et matériel ${brand.productName} pour votre cabinet.`
       : line === 'supporter'
-        ? 'Textile et maillots Pro Day Supporter — soutenez votre tribune.'
-        : `Équipement et textile ${brand.productName} — collection officielle.`;
+        ? 'Textile et maillots Pro Day Supporter. Soutenez votre tribune.'
+        : `Équipement et textile ${brand.productName}. Collection officielle.`;
   return {
     title: line === 'supporter' ? 'Boutique Supporter' : 'ProDay Store',
     subtitle,
     preorderNote:
-      'Précommande ouverte — livraison estimée sous 3 à 4 semaines. Paiement sécurisé par carte dans l’app.',
+      'Précommande ouverte. Livraison estimée sous 3 à 4 semaines. Paiement sécurisé par carte dans l’app.',
     contactEmail: 'shop@proday.app',
   };
 }
@@ -133,7 +133,7 @@ function adaptCatalogForLine(line: ProductLineId, catalog: ShopProduct[]): ShopP
           return {
             ...product,
             name: 'T-shirt tribune Supporter',
-            description: 'Dry-fit violet Pro Day — pour les soirs de match et les tournois suivis.',
+            description: 'Dry-fit violet Pro Day. Pour les soirs de match et les tournois suivis.',
             longDescription:
               'T-shirt technique aux couleurs Supporter pour afficher vos couleurs en tribune, au club ou devant l’écran.',
           };
@@ -141,7 +141,7 @@ function adaptCatalogForLine(line: ProductLineId, catalog: ShopProduct[]): ShopP
         if (product.id === 'jersey-home') {
           return {
             ...product,
-            description: 'Maillot domicile Pro Day Supporter — personnalisation nom en option.',
+            description: 'Maillot domicile Pro Day Supporter. Personnalisation nom en option.',
           };
         }
         return product;
@@ -168,13 +168,13 @@ function adaptCatalogForLine(line: ProductLineId, catalog: ShopProduct[]): ShopP
             { label: 'Poids', value: '420 g' },
             { label: 'Usage', value: 'Cabinet · terrain' },
             { label: 'Univers', value: brand.productName },
-            { label: 'Livraison', value: '3–4 semaines' },
+            { label: 'Livraison', value: '3 à 4 semaines' },
           ],
         };
       case 'tripod-flex':
         return {
           ...product,
-          description: 'Mini support flexible — banc, table de soin ou vestiaire club.',
+          description: 'Mini support flexible. Banc, table de soin ou vestiaire club.',
           longDescription:
             'Format discret pour filmer une séance en salle ou sur le bord du terrain. Se pose sur une table, une rambarde ou un dossier de chaise.',
         };
@@ -182,7 +182,7 @@ function adaptCatalogForLine(line: ProductLineId, catalog: ShopProduct[]): ShopP
         return {
           ...product,
           name: 'Polo technique cabinet',
-          description: 'Dry-fit, respirant — pour les consultations et déplacements club.',
+          description: 'Dry-fit, respirant. Pour les consultations et déplacements club.',
           longDescription:
             'Polo technique pour l’activité quotidienne du praticien : consultations, déplacements club et interventions terrain.',
         };
@@ -190,8 +190,8 @@ function adaptCatalogForLine(line: ProductLineId, catalog: ShopProduct[]): ShopP
         return {
           ...product,
           name: 'Polo cabinet Santé',
-          description: `Polo professionnel ${brand.productName} — logo brodé, coupe soignée.`,
-          longDescription: `Polo cabinet officiel ${brand.productName} — tissu confortable, finitions soignées et logo brodé pour votre pratique au club ou en cabinet.`,
+          description: `Polo professionnel ${brand.productName}. Logo brodé, coupe soignée.`,
+          longDescription: `Polo cabinet officiel ${brand.productName}. Tissu confortable, finitions soignées et logo brodé pour votre pratique au club ou en cabinet.`,
           highlights: [
             `Logo ${brand.productName} brodé`,
             'Coupe professionnelle',
@@ -205,7 +205,7 @@ function adaptCatalogForLine(line: ProductLineId, catalog: ShopProduct[]): ShopP
         return {
           ...product,
           name: 'Veste softshell cabinet',
-          description: 'Veste légère — déplacements club, matchs et interventions extérieures.',
+          description: 'Veste légère. Déplacements club, matchs et interventions extérieures.',
           longDescription:
             'Veste softshell coupe-vent pour les praticiens en déplacement : matchs, stages et interventions sur le terrain.',
           icon: 'heart',
@@ -221,7 +221,7 @@ export function getShopCatalog(line: ProductLineId): ShopProduct[] {
   const lineTag = shopLineTag(line);
 
   const apparelSizes = 'XS · S · M · L · XL · XXL';
-  const jerseySizes = 'Enfant 10–14 ans · S · M · L · XL';
+  const jerseySizes = 'Enfant 10 à 14 ans · S · M · L · XL';
 
   const catalog: ShopProduct[] = [
     {
@@ -242,7 +242,7 @@ export function getShopCatalog(line: ProductLineId): ShopProduct[] {
         { label: 'Poids', value: '420 g' },
         { label: 'Matériau', value: 'Aluminium + ABS' },
         { label: 'Usage', value: 'CV, skills, matchs' },
-        { label: 'Livraison', value: '3–4 semaines' },
+        { label: 'Livraison', value: '3 à 4 semaines' },
       ],
       priceEur: 34.9,
       icon: 'camera',
@@ -253,7 +253,7 @@ export function getShopCatalog(line: ProductLineId): ShopProduct[] {
       id: 'tripod-flex',
       category: 'equipment',
       name: 'Mini-trépied flexible',
-      description: 'Pince universelle + pieds flexibles — idéal touche et banc de touche.',
+      description: 'Pince universelle + pieds flexibles. Idéal touche et banc de touche.',
       longDescription:
         'Le compagnon discret du banc et du vestiaire. Se pose sur une rambarde, s’accroche à un poteau ou se tient en mode mini sur une table.',
       highlights: [
@@ -266,7 +266,7 @@ export function getShopCatalog(line: ProductLineId): ShopProduct[] {
         { label: 'Poids', value: '180 g' },
         { label: 'Hauteur max', value: '28 cm' },
         { label: 'Compatibilité', value: 'Tous smartphones' },
-        { label: 'Livraison', value: '3–4 semaines' },
+        { label: 'Livraison', value: '3 à 4 semaines' },
       ],
       priceEur: 19.9,
       icon: 'camera',
@@ -276,7 +276,7 @@ export function getShopCatalog(line: ProductLineId): ShopProduct[] {
       category: 'apparel',
       name: `T-shirt ${brand.productName}`,
       description: `Coton premium, logo ${brand.productName} poitrine. Coupe unisexe.`,
-      longDescription: `T-shirt lifestyle ${brand.productName} — à porter au club, en déplacement ou au quotidien. Logo officiel brodé, coupe confortable unisexe.`,
+      longDescription: `T-shirt lifestyle ${brand.productName}. À porter au club, en déplacement ou au quotidien. Logo officiel brodé, coupe confortable unisexe.`,
       sizes: ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
       highlights: [
         `Logo ${brand.productName} brodé`,
@@ -288,7 +288,7 @@ export function getShopCatalog(line: ProductLineId): ShopProduct[] {
         { label: 'Matière', value: '100 % coton' },
         { label: 'Entretien', value: 'Lavage 30°' },
         { label: 'Univers', value: brand.productName },
-        { label: 'Livraison', value: '3–4 semaines' },
+        { label: 'Livraison', value: '3 à 4 semaines' },
       ],
       priceEur: 29.9,
       icon: 'shirt',
@@ -297,9 +297,9 @@ export function getShopCatalog(line: ProductLineId): ShopProduct[] {
       id: 'tee-training',
       category: 'apparel',
       name: `T-shirt training ${lineTag}`,
-      description: 'Dry-fit, respirant — pour l’entraînement et l’échauffement.',
+      description: 'Dry-fit, respirant. Pour l’entraînement et l’échauffement.',
       longDescription:
-        'T-shirt technique pour séances, échauffements et footing. Évacue la transpiration et sèche vite — pensé pour l’effort.',
+        'T-shirt technique pour séances, échauffements et footing. Évacue la transpiration et sèche vite. Pensé pour l’effort.',
       sizes: ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
       highlights: [
         'Tissu dry-fit respirant',
@@ -311,7 +311,7 @@ export function getShopCatalog(line: ProductLineId): ShopProduct[] {
         { label: 'Matière', value: 'Polyester recyclé' },
         { label: 'Usage', value: 'Entraînement / match' },
         { label: 'Univers', value: brand.productName },
-        { label: 'Livraison', value: '3–4 semaines' },
+        { label: 'Livraison', value: '3 à 4 semaines' },
       ],
       priceEur: 34.9,
       icon: 'shirt',
@@ -322,7 +322,7 @@ export function getShopCatalog(line: ProductLineId): ShopProduct[] {
       category: 'jersey',
       name: `Maillot domicile ${lineTag}`,
       description: `Maillot match avec logo ProDay et bandeau ${brand.accentLabel}. Personnalisation nom + numéro en option.`,
-      longDescription: `Maillot officiel domicile ${lineTag} — tissu match léger, coupe athlétique, finitions ${brand.accentLabel}. Parfait pour tournois, photos CV et équipe.`,
+      longDescription: `Maillot officiel domicile ${lineTag}. Tissu match léger, coupe athlétique, finitions ${brand.accentLabel}. Parfait pour tournois, photos CV et équipe.`,
       sizes: ['10-14', 'S', 'M', 'L', 'XL'],
       highlights: [
         `Bandeau ${brand.accentLabel}`,
@@ -334,7 +334,7 @@ export function getShopCatalog(line: ProductLineId): ShopProduct[] {
         { label: 'Matière', value: 'Polyester mesh 150 g/m²' },
         { label: 'Personnalisation', value: 'Nom & numéro optionnels' },
         { label: 'Univers', value: brand.productName },
-        { label: 'Livraison', value: '4–5 semaines' },
+        { label: 'Livraison', value: '4 à 5 semaines' },
       ],
       priceEur: 59.9,
       icon: 'football',
@@ -344,8 +344,8 @@ export function getShopCatalog(line: ProductLineId): ShopProduct[] {
       id: 'jersey-away',
       category: 'jersey',
       name: `Maillot extérieur ${lineTag}`,
-      description: 'Version alternative — même qualité technique, logo brodé.',
-      longDescription: `Maillot extérieur ${lineTag} — coloris alternatif, même qualité que le domicile. Idéal déplacements et double match week-end.`,
+      description: 'Version alternative. Même qualité technique, logo brodé.',
+      longDescription: `Maillot extérieur ${lineTag}. Coloris alternatif, même qualité que le domicile. Idéal déplacements et double match week-end.`,
       sizes: ['10-14', 'S', 'M', 'L', 'XL'],
       highlights: [
         'Coloris extérieur exclusif',
@@ -357,7 +357,7 @@ export function getShopCatalog(line: ProductLineId): ShopProduct[] {
         { label: 'Matière', value: 'Polyester mesh 150 g/m²' },
         { label: 'Personnalisation', value: 'Nom & numéro optionnels' },
         { label: 'Univers', value: brand.productName },
-        { label: 'Livraison', value: '4–5 semaines' },
+        { label: 'Livraison', value: '4 à 5 semaines' },
       ],
       priceEur: 59.9,
       icon: 'football-outline',
@@ -420,14 +420,14 @@ export function getRelatedProducts(
 
 export const SHOP_DELIVERY_STEPS = [
   { title: 'Précommande', body: 'Vous recevez un email de confirmation sous 24 h.' },
-  { title: 'Production', body: 'Fabrication et broderie logo — 2 à 3 semaines.' },
+  { title: 'Production', body: 'Fabrication et broderie logo. 2 à 3 semaines.' },
   { title: 'Expédition', body: 'Livraison suivie en France métropolitaine.' },
 ] as const;
 
 export const SHOP_FAQ = [
   {
     q: 'Paiement dans l’app ?',
-    a: 'Oui — ajoutez au panier puis payez par carte (Stripe). La précommande par email reste disponible.',
+    a: 'Oui. Ajoutez au panier puis payez par carte (Stripe). La précommande par email reste disponible.',
   },
   {
     q: 'Échanges & retours',
@@ -435,6 +435,6 @@ export const SHOP_FAQ = [
   },
   {
     q: 'Personnalisation maillot',
-    a: 'Nom et numéro en option (+8 €) — indiquez-les dans votre email de précommande.',
+    a: 'Nom et numéro en option (+8 €). Indiquez-les dans votre email de précommande.',
   },
 ] as const;

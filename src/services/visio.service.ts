@@ -38,7 +38,7 @@ export async function resolveVisioJoinUrl(input: ResolveVisioJoinInput): Promise
   );
 
   if (!result?.joinUrl?.trim()) {
-    throw new Error('Lien visio vide — réessayez dans un instant.');
+    throw new Error('Lien visio vide. Réessayez dans un instant.');
   }
 
   return result.joinUrl;

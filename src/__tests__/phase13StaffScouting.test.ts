@@ -57,7 +57,7 @@ const playerB: User = {
   city: 'Lyon',
 };
 
-describe('Phase 13 — Scouting staff + animations', () => {
+describe('Phase 13. Scouting staff + animations', () => {
   it('score plus haut pour un profil complet et local', () => {
     const scoreA = scorePlayerForScouting(coach, playerA);
     const scoreB = scorePlayerForScouting(coach, playerB);

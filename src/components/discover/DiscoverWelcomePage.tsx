@@ -80,7 +80,7 @@ export const DiscoverWelcomePage: React.FC<DiscoverWelcomePageProps> = ({
         <PressableSpring style={styles.nextBtn} onPress={onNext} scaleTo={0.97}>
           <Text style={styles.nextText}>Découvrir ProDay</Text>
         </PressableSpring>
-        <ShimmerCTA label="Créer mon compte — gratuit" onPress={onSignup} variant="secondary" />
+        <ShimmerCTA label="Créer mon compte. Gratuit" onPress={onSignup} variant="secondary" />
       </Animated.View>
 
       <MarqueePillars />

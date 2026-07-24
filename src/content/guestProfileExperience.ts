@@ -12,7 +12,7 @@ const PLAYER_UNLOCK: GuestUnlockItem[] = [
   {
     step: '01',
     title: 'Fiche & identité',
-    body: 'Photo, poste, ville et niveau — votre carte de visite sportive.',
+    body: 'Photo, poste, ville et niveau. Votre carte de visite sportive.',
     icon: 'person',
   },
   {
@@ -33,7 +33,7 @@ const PRO_UNLOCK: GuestUnlockItem[] = [
   {
     step: '01',
     title: 'Profil staff',
-    body: 'Club, zone d’intervention et mandat — visible par les joueurs.',
+    body: 'Club, zone d’intervention et mandat. Visible par les joueurs.',
     icon: 'school',
   },
   {
@@ -66,7 +66,7 @@ const SANTE_UNLOCK: GuestUnlockItem[] = [
   {
     step: '03',
     title: 'Messagerie sécurisée',
-    body: 'Échanges avec joueurs et staff — dossier médical confidentiel.',
+    body: 'Échanges avec joueurs et staff. Dossier médical confidentiel.',
     icon: 'chat',
   },
 ];
@@ -85,10 +85,10 @@ export function getGuestProfileUnlockItems(line: ProductLineId): GuestUnlockItem
 export function getGuestProfileHeroCopy(line: ProductLineId, brandName: string): string {
   switch (line) {
     case 'pro':
-      return `Votre espace staff ${brandName} — profil, matchs, mercato et vérification.`;
+      return `Votre espace staff ${brandName}. Profil, matchs, mercato et vérification.`;
     case 'sante':
-      return `Votre espace praticien ${brandName} — cabinet, agenda et messagerie patients.`;
+      return `Votre espace praticien ${brandName}. Cabinet, agenda et messagerie patients.`;
     default:
-      return `Votre espace personnel ${brandName} — fiche, CV, paramètres et abonnement.`;
+      return `Votre espace personnel ${brandName}. Fiche, CV, paramètres et abonnement.`;
   }
 }

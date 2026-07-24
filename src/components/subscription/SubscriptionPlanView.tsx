@@ -288,8 +288,8 @@ export const SubscriptionPlanView: React.FC<SubscriptionPlanViewProps> = ({
               {plan.pricing.storeAvailable
                 ? iapReady
                   ? 'Paiement sécurisé App Store / Google Play'
-                  : 'Accès gratuit pendant la bêta — achats store via build EAS'
-                : 'Accès gratuit pendant la bêta — abonnements store à venir'}
+                  : 'Accès gratuit pendant la bêta. Achats store via build EAS'
+                : 'Accès gratuit pendant la bêta. Abonnements store à venir'}
             </ProDayText>
           </View>
         ) : (

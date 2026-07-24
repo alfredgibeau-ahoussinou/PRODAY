@@ -108,7 +108,7 @@ export const PhysioMessagesScreen: React.FC = () => {
 
       {mustVerify && (
         <Text style={styles.blocked}>
-          Messagerie bloquée — validez votre diplôme depuis l'onglet Cabinet.
+          Messagerie bloquée. Validez votre diplôme depuis l'onglet Cabinet.
         </Text>
       )}
 

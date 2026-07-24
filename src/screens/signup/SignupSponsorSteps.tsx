@@ -114,7 +114,7 @@ export const SignupSponsorCompanyStep: React.FC<StepProps> = (props) => (
     <AuthTextField
       label="Contact principal"
       icon="person"
-      placeholder="Prénom Nom — Responsable marketing"
+      placeholder="Prénom Nom. Responsable marketing"
       value={props.form.displayName}
       onChangeText={props.form.setDisplayName}
       error={props.form.fieldErrors.displayName}

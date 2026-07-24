@@ -99,7 +99,7 @@ async function fetchLeagueFixtures(
   });
 
   if (response.status === 429) {
-    throw new Error('Quota API scores monde dépassé — réessayez dans quelques minutes.');
+    throw new Error('Quota API scores monde dépassé. Réessayez dans quelques minutes.');
   }
 
   if (!response.ok) {

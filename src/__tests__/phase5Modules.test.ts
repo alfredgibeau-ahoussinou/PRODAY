@@ -21,7 +21,7 @@ const profile: User = {
   city: 'Paris',
 };
 
-describe('Phase 5 — Mercato Profil Feed Calendrier', () => {
+describe('Phase 5. Mercato Profil Feed Calendrier', () => {
   it('priorise les annonces compatibles', () => {
     const posts: RecruitmentPost[] = [
       {

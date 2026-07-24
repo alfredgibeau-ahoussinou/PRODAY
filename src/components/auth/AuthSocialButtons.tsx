@@ -213,7 +213,7 @@ export const AuthSocialButtons: React.FC<AuthSocialButtonsProps> = ({
 
   const showGoogleSetupAlert = () => {
     Alert.alert(
-      googleBlockReason ? 'Google — Expo Go' : 'Google non configuré',
+      googleBlockReason ? 'Google. Expo Go' : 'Google non configuré',
       googleBlockReason ?? getGoogleAuthSetupHint()
     );
   };
@@ -310,7 +310,7 @@ export const AuthSocialButtons: React.FC<AuthSocialButtonsProps> = ({
           disabled={isDisabled}
           scaleTo={0.97}
           accessibilityRole="button"
-          accessibilityLabel="Se connecter avec Google — configuration requise"
+          accessibilityLabel="Se connecter avec Google. Configuration requise"
         >
           <Ionicons name="logo-google" size={20} color="#4285F4" />
           <Text style={styles.btnText}>Se connecter avec Google</Text>

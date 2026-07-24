@@ -171,7 +171,7 @@ export const SearchMatchScreen: React.FC<SearchMatchScreenProps> = ({
       ) : (
         <View style={[styles.fieldsBlock, styles.fieldsEmpty, { borderColor: c.border, backgroundColor: c.surface }]}>
           <Text style={styles.fieldsTitle}>Réservation de terrains</Text>
-          <Text style={styles.fieldsEmptyText}>Bientôt disponible — créneaux Playtomic en préparation.</Text>
+          <Text style={styles.fieldsEmptyText}>Bientôt disponible. Créneaux Playtomic en préparation.</Text>
         </View>
       )}
 

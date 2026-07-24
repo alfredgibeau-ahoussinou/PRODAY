@@ -8,7 +8,7 @@ export function getSignupRoleStepCopy(t: TranslateFn) {
       hint: tr(
         t,
         'signup.role.coach.hint',
-        'BEF, UEFA or equivalent diploma — photographed after email confirmation.'
+        'BEF, UEFA or equivalent diploma. Photographed after email confirmation.'
       ),
       diplomaLabel: tr(t, 'signup.role.diplomaLabel', 'Diploma or certification *'),
       diplomaPlaceholder: tr(t, 'signup.role.diplomaPlaceholder', 'E.g. BEF, UEFA B, DESJEPS…'),
@@ -19,7 +19,7 @@ export function getSignupRoleStepCopy(t: TranslateFn) {
       hint: tr(
         t,
         'signup.role.club.hint',
-        'Club mandate or statutes — AI verification after email.'
+        'Club mandate or statutes. AI verification after email.'
       ),
       nameLabel: tr(t, 'signup.role.clubNameLabel', 'Club / organization name *'),
       namePlaceholder: tr(t, 'signup.role.clubNamePlaceholder', 'E.g. FC Example, Local AS…'),
@@ -30,7 +30,7 @@ export function getSignupRoleStepCopy(t: TranslateFn) {
       hint: tr(
         t,
         'signup.role.agent.hint',
-        'Agent licence — automatic check after email validation.'
+        'Agent licence. Automatic check after email validation.'
       ),
       licenseLabel: tr(t, 'signup.role.licenseLabel', 'Licence or approval no. *'),
       licensePlaceholder: tr(t, 'signup.role.licensePlaceholder', 'E.g. FIFA / FFF licence…'),
@@ -41,7 +41,7 @@ export function getSignupRoleStepCopy(t: TranslateFn) {
       hint: tr(
         t,
         'signup.role.recruiter.hint',
-        'Recruiter mandate or club certificate — AI verification after email.'
+        'Recruiter mandate or club certificate. AI verification after email.'
       ),
       specialtyLabel: tr(t, 'signup.role.recruitSpecialtyLabel', 'Recruitment specialty *'),
       specialtyPlaceholder: tr(
@@ -56,7 +56,7 @@ export function getSignupRoleStepCopy(t: TranslateFn) {
       hint: tr(
         t,
         'signup.role.organizer.hint',
-        'Tournaments, trials — organization proof after email.'
+        'Tournaments, trials. Organization proof after email.'
       ),
       structureLabel: tr(t, 'signup.role.structureLabel', 'Organization / collective *'),
       structurePlaceholder: tr(t, 'signup.role.structurePlaceholder', 'E.g. local league, events assoc…'),

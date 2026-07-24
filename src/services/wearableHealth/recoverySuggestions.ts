@@ -33,7 +33,7 @@ export function buildRecoverySuggestions(
     out.push({
       id: 'high-load',
       title: 'Charge élevée',
-      body: 'Beaucoup de pas aujourd’hui — évitez un double entraînement intense.',
+      body: 'Beaucoup de pas aujourd’hui. Évitez un double entraînement intense.',
       priority: 'medium',
     });
   }
@@ -42,7 +42,7 @@ export function buildRecoverySuggestions(
     out.push({
       id: 'green-light',
       title: 'Bonne forme',
-      body: 'Sommeil et récupération OK — vous pouvez viser l’intensité prévue.',
+      body: 'Sommeil et récupération OK. Vous pouvez viser l’intensité prévue.',
       priority: 'low',
     });
   }

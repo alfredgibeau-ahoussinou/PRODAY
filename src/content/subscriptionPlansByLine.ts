@@ -100,7 +100,7 @@ const LINE_PLAN_PATCHES: Record<
     },
     coach_pro: {
       label: 'Coach Amateur',
-      tagline: 'Banc technique — effectif et Mercato local',
+      tagline: 'Banc technique. Effectif et Mercato local',
       mercatoQuotaLabel: 'Messages Mercato Amateur',
       freeIncludes: [
         'Profil coach amateur vérifié',
@@ -136,7 +136,7 @@ const LINE_PLAN_PATCHES: Record<
     },
     coach_pro: {
       label: 'Coach Pro',
-      tagline: 'Banc technique — Mercato Pro et multi-équipes',
+      tagline: 'Banc technique. Mercato Pro et multi-équipes',
       mercatoQuotaLabel: 'Messages Mercato Pro',
       freeIncludes: [
         'Profil staff et vérification',
@@ -153,7 +153,7 @@ const LINE_PLAN_PATCHES: Record<
     },
     club_pro: {
       label: 'Club Pro',
-      tagline: 'Structure club — annonces Mercato Pro',
+      tagline: 'Structure club. Annonces Mercato Pro',
       mercatoQuotaLabel: 'Annonces Mercato Pro actives',
       freeIncludes: [
         'Profil club et vérification',
@@ -170,7 +170,7 @@ const LINE_PLAN_PATCHES: Record<
     },
     agent_elite: {
       label: 'Agent Elite',
-      tagline: 'CRM mandats — réseau Mercato Pro premium',
+      tagline: 'CRM mandats. Réseau Mercato Pro premium',
       mercatoQuotaLabel: 'Contacts Mercato Pro',
       freeIncludes: [
         'Profil agent et vérification',
@@ -186,7 +186,7 @@ const LINE_PLAN_PATCHES: Record<
     },
     physio_pro: {
       label: 'Cabinet Pro',
-      tagline: 'Agenda RDV, visibilité clubs — commission sur les consultations',
+      tagline: 'Agenda RDV, visibilité clubs. Commission sur les consultations',
       mercatoQuotaLabel: 'Messages patients',
       freeIncludes: [
         'Profil praticien et vérification',
@@ -222,7 +222,7 @@ const LINE_PLAN_PATCHES: Record<
     },
     sponsor_pro: {
       label: 'Sponsor Pro',
-      tagline: 'Visibilité marque sur l\'écosystème Pro Day Pro',
+      tagline: 'Visibilité marque sur le réseau Pro Day Pro',
       mercatoQuotaLabel: 'Offres sponsors actives',
       freeIncludes: [
         'Profil sponsor vérifié',
@@ -235,7 +235,7 @@ const LINE_PLAN_PATCHES: Record<
         'Offres sponsors illimitées',
         'Logo onglet Sponsors',
         'Campagnes locales ciblées',
-        'Push géolocalisé local (bêta — opt-in)',
+        'Push géolocalisé local (bêta, sur opt-in)',
       ],
     },
   },

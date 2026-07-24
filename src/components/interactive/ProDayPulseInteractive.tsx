@@ -149,7 +149,7 @@ export const ProDayPulseInteractive: React.FC<ProDayPulseInteractiveProps> = ({
       {centered ? (
         <View style={styles.centerStack}>
           <Text style={[styles.hint, dark && styles.hintDark, profileType.pulseHint]}>
-            {pulse.label} — {pulse.hint}
+            {pulse.label}. {pulse.hint}
           </Text>
           {ringControl}
         </View>
@@ -157,7 +157,7 @@ export const ProDayPulseInteractive: React.FC<ProDayPulseInteractiveProps> = ({
         <View style={styles.row}>
           <View style={styles.copy}>
             <Text style={[styles.hint, dark && styles.hintDark]}>
-              {pulse.label} — {pulse.hint}
+              {pulse.label}. {pulse.hint}
             </Text>
           </View>
           {ringControl}
@@ -208,7 +208,7 @@ export const ProDayPulseIntro: React.FC<{
         <ProDayGradient kind="cta" style={styles.teaserIconWrap}>
           <Icon name="star-four-points" size={16} color="#FFFFFF" variant="filled" />
         </ProDayGradient>
-        <Text style={styles.teaserTitle}>{PULSE_DISPLAY_NAME_FULL} — exclusif</Text>
+        <Text style={styles.teaserTitle}>{PULSE_DISPLAY_NAME_FULL}. Exclusif</Text>
       </View>
       <Text style={styles.teaserBody}>
         Votre score de visibilité se calcule à partir de votre profil, vos stats saison et

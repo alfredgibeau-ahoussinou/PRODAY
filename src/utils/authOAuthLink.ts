@@ -62,7 +62,7 @@ export const AUTH_RATE_LIMIT_MESSAGE =
   'Trop de tentatives d’envoi. Attendez 15 à 60 minutes, vérifiez vos spams, ou ouvrez le lien déjà reçu.';
 
 export const AUTH_EMAIL_CONFIG_MESSAGE =
-  'Envoi e-mail temporairement indisponible (configuration ProDay). Contactez contact@proday.app — nous vous enverrons le lien manuellement.';
+  'Envoi e-mail temporairement indisponible (configuration ProDay). Contactez contact@proday.app. Nous vous enverrons le lien manuellement.';
 
 /** Évite d’afficher le JSON brut Firebase (ex. TOO_MANY_ATTEMPTS_TRY_LATER). */
 export function humanizeAuthErrorText(text: string): string {

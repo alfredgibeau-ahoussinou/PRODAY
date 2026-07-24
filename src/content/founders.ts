@@ -2,7 +2,7 @@
 export const FOUNDERS_LETTER = {
   title: 'Un mot des fondateurs',
   intro:
-    'Nous avons créé ProDay parce que le foot amateur et semi-pro mérite les mêmes outils que le haut niveau : trouver un club, un match, un coach vérifié, un sponsor — sans perdre des semaines dans des groupes WhatsApp.',
+    'Nous avons créé ProDay parce que le foot amateur et semi-pro mérite les mêmes outils que le haut niveau : trouver un club, un match, un coach vérifié, un sponsor. Sans perdre des semaines dans des groupes WhatsApp.',
   body: `ProDay, c'est quatre parcours complémentaires réunis autour d'une même conviction : connecter les bonnes personnes au bon moment. Chaque profil est réel, chaque annonce est traçable, et les coachs comme les agents passent par une vérification avant d'échanger en messagerie.
 
 Rejoignez-nous, construisez votre saison, et faites progresser votre projet sportif avec une communauté qui avance avec vous.`,
@@ -45,7 +45,7 @@ export const DISCOVER_FEATURES = [
     id: 'recruit',
     title: 'Recrutement',
     description:
-      'Annonces, candidatures en un tap, filtres poste / niveau / ville — le Mercato ProDay.',
+      'Annonces, candidatures en un tap, filtres poste / niveau / ville. Le Mercato ProDay.',
     icon: 'search' as const,
     color: '#0A0A0A',
   },
@@ -61,7 +61,7 @@ export const DISCOVER_FEATURES = [
     id: 'matches',
     title: 'Matchs amicaux',
     description:
-      'Proposez ou acceptez un match amical — complétez votre planning de saison.',
+      'Proposez ou acceptez un match amical. Complétez votre planning de saison.',
     icon: 'handshake' as const,
     color: '#0A0A0A',
   },

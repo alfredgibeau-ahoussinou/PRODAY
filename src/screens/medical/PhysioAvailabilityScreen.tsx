@@ -203,13 +203,13 @@ export const PhysioAvailabilityScreen: React.FC<PhysioAvailabilityScreenProps> =
             <View style={styles.blockRow}>
               <BlockToggle
                 styles={styles}
-                label="Matin 9h–12h"
+                label="Matin 9h. 12h"
                 active={day.morning}
                 onPress={() => toggleDayBlock(day.weekday, 'morning')}
               />
               <BlockToggle
                 styles={styles}
-                label={day.weekday === 5 ? 'Après-midi 14h–17h' : 'Après-midi 14h–18h'}
+                label={day.weekday === 5 ? 'Après-midi 14h. 17h' : 'Après-midi 14h. 18h'}
                 active={day.afternoon}
                 onPress={() => toggleDayBlock(day.weekday, 'afternoon')}
               />
@@ -218,7 +218,7 @@ export const PhysioAvailabilityScreen: React.FC<PhysioAvailabilityScreenProps> =
         ))}
 
         <TouchableOpacity style={styles.resetBtn} onPress={resetDefaults}>
-          <Text style={styles.resetText}>Réinitialiser (lun–ven, horaires standards)</Text>
+          <Text style={styles.resetText}>Réinitialiser (lun à ven, horaires standards)</Text>
         </TouchableOpacity>
 
         <TouchableOpacity

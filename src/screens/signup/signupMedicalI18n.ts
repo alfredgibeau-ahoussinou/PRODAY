@@ -76,7 +76,7 @@ const BASE: Record<
   },
   prepa: {
     icon: 'football',
-    tagline: 'Charge, perf et prévention — du terrain au labo.',
+    tagline: 'Charge, perf et prévention. Du terrain au labo.',
     practiceTitle: 'Vos équipes',
     practiceSubtitle: 'Qui formez-vous au quotidien ?',
     practiceFocusLabel: 'Profil accompagné *',

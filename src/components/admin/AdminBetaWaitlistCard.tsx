@@ -49,7 +49,7 @@ export const AdminBetaWaitlistCard: React.FC<AdminBetaWaitlistCardProps> = ({
             {entry.email}
           </Text>
           <Text style={styles.subtitle} numberOfLines={1}>
-            {entry.role_label ?? entry.role ?? '—'}
+            {entry.role_label ?? entry.role ?? '…'}
           </Text>
           <View style={styles.metaRow}>
             <Text style={[styles.badge, statusStyle]}>{statusLabel}</Text>

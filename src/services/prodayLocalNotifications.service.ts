@@ -132,8 +132,8 @@ async function syncConvocationReminders(profile: User, events: TeamEvent[]): Pro
         `convoc-j1-${event.id}`,
         'Convocation demain',
         status === 'pending'
-          ? `${label} — pensez à répondre`
-          : `${label} — match demain`,
+          ? `${label}. Pensez à répondre`
+          : `${label}. Match demain`,
         j1,
         {
           type: 'convocation_j1',

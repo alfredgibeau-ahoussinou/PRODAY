@@ -90,7 +90,7 @@ function getQuickTiles(
 
 function getSpaceSubtitle(appSpace: AppSpaceId): string {
   if (isUnderU13AppSpace(appSpace)) {
-    return 'U7, U9, U11 — école de foot et détections poussins.';
+    return 'U7, U9, U11. École de foot et détections poussins.';
   }
   if (isFeminineAppSpace(appSpace)) {
     return 'Annonces et profils filtrés pour le football féminin.';
@@ -114,9 +114,9 @@ function getRoleSubtitle(
       return 'Parcourez les annonces foot féminin et candidatez en un tap.';
     }
     if (line === 'pro' || line === 'pro_player') {
-      return 'Opportunités pro vérifiées — candidatez depuis votre profil.';
+      return 'Opportunités pro vérifiées. Candidatez depuis votre profil.';
     }
-    return 'Parcourez les annonces et candidatez — la publication est réservée aux clubs.';
+    return 'Parcourez les annonces et candidatez. La publication est réservée aux clubs.';
   }
 
   if (r === 'recruiter') {
@@ -132,7 +132,7 @@ function getRoleSubtitle(
   }
 
   if (line === 'pro' || line === 'pro_club' || line === 'pro_staff') {
-    return 'Mercato Pro — recrutement vérifié et réseau clubs.';
+    return 'Mercato Pro. Recrutement vérifié et réseau clubs.';
   }
 
   return getSpaceSubtitle(appSpace);
@@ -152,8 +152,8 @@ function getHeroCopy(
     return {
       title: 'Opportunités pro',
       subtitle: isFemale
-        ? 'Essais, détections et mandats — offres vérifiées pour joueuses.'
-        : 'Essais, détections et mandats — offres vérifiées niveau R1 à N1.',
+        ? 'Essais, détections et mandats. Offres vérifiées pour joueuses.'
+        : 'Essais, détections et mandats. Offres vérifiées niveau R1 à N1.',
       icon: 'briefcase',
     };
   }
@@ -162,8 +162,8 @@ function getHeroCopy(
     return {
       title: isFemale ? 'Mercato F' : 'Mercato amateur',
       subtitle: isFemale
-        ? 'Annonces clubs locaux et stages — trouvez votre prochain club.'
-        : 'Annonces clubs locaux et stages — votre saison commence ici.',
+        ? 'Annonces clubs locaux et stages. Trouvez votre prochain club.'
+        : 'Annonces clubs locaux et stages. Votre saison commence ici.',
       icon: isFemale ? 'people' : 'search',
     };
   }
@@ -172,7 +172,7 @@ function getHeroCopy(
     return {
       title: tabLabel,
       subtitle:
-        'Recrutement pro, mandats staff et scouting — l’écosystème Mercato de Pro Day Pro.',
+        'Recrutement pro, mandats staff et scouting. Le Mercato de Pro Day Pro.',
       icon: 'briefcase',
     };
   }
@@ -180,7 +180,7 @@ function getHeroCopy(
   return {
     title: identity.mercatoLabel,
     subtitle:
-      'Annonces ciblées, profils vérifiés et candidatures en un tap — votre saison commence ici.',
+      'Annonces ciblées, profils vérifiés et candidatures en un tap. Votre saison commence ici.',
     icon: 'search',
   };
 }
@@ -207,7 +207,7 @@ export function getMercatoExperienceConfig(
     screenTitle: tabLabel,
     screenSubtitle: isPlayer
       ? getRoleSubtitle(line, role, appSpace, playerSegment)
-      : `${APP_SPACE_LABELS[appSpace]} — ${getRoleSubtitle(line, role, appSpace, playerSegment)}`,
+      : `${APP_SPACE_LABELS[appSpace]}. ${getRoleSubtitle(line, role, appSpace, playerSegment)}`,
     heroTitle: hero.title,
     heroSubtitle: hero.subtitle,
     heroIcon: hero.icon,

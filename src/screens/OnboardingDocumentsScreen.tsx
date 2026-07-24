@@ -252,7 +252,7 @@ export const OnboardingDocumentsScreen: React.FC<OnboardingDocumentsScreenProps>
           <Text style={styles.title}>Envoyez vos justificatifs</Text>
           <Text style={styles.sub}>
             Choisissez une photo (caméra ou galerie) ou un fichier PDF. Vous pouvez continuer à
-            explorer l’application — seule la messagerie reste bloquée jusqu’à validation.
+            explorer l’application. Seule la messagerie reste bloquée jusqu’à validation.
           </Text>
         </View>
 
@@ -261,7 +261,7 @@ export const OnboardingDocumentsScreen: React.FC<OnboardingDocumentsScreenProps>
         {isPlayer ? (
           <>
             <Text style={styles.sectionLabel}>
-              Progression {playerProgress.label} — identité obligatoire
+              Progression {playerProgress.label}. Identité obligatoire
             </Text>
             {playerChecks.map((check) => {
               const st = profile.player_verification?.[check.id]?.status ?? 'not_submitted';

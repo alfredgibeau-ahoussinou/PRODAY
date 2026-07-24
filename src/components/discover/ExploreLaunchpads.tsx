@@ -49,7 +49,7 @@ export const ExploreLaunchpads: React.FC<ExploreLaunchpadsProps> = ({
 
   return (
     <View style={styles.wrap}>
-      <DiscoverSectionHeader label="Accès direct" title="Plongez dans l'app" compact />
+      <DiscoverSectionHeader label="Accès direct" title="Ouvrir l'app" compact />
       <Launchpad
         icon="search"
         title="Mercato & recrutement"

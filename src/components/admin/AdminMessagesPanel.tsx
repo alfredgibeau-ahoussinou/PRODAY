@@ -143,7 +143,7 @@ export const AdminMessagesPanel: React.FC = () => {
     <View>
       <AdminSectionHeader title="MESSAGERIE" count={threads.length} />
       <ProDayText variant="caption" muted style={{ marginBottom: spacing.sm, lineHeight: 18 }}>
-        Modération des conversations ProDay — lecture et suppression.
+        Modération des conversations ProDay. Lecture et suppression.
       </ProDayText>
       {threads.length === 0 ? (
         <AdminEmptyState icon="chat" title="Aucune conversation" subtitle="Les threads apparaîtront ici." />
@@ -166,7 +166,7 @@ export const AdminMessagesPanel: React.FC = () => {
                 </ProDayText>
               </View>
               <ProDayText variant="caption" muted numberOfLines={2}>
-                {thread.last_message || '—'}
+                {thread.last_message || '…'}
               </ProDayText>
               <ProDayText variant="caption" muted style={{ marginTop: 2 }}>
                 {thread.participant_ids.length} participant(s) ·{' '}

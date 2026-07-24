@@ -149,8 +149,8 @@ export const ClubStructureScreen: React.FC = () => {
                     <ProDayText variant="caption" muted>
                       {t('clubStructure.licensedCount', { n: String(row.licensedCount) })}
                       {row.coachNames.length > 0
-                        ? ` — ${t('clubStructure.coach', { name: row.coachNames.join(', ') })}`
-                        : ` — ${t('clubStructure.noCoach')}`}
+                        ? `. ${t('clubStructure.coach', { name: row.coachNames.join(', ') })}`
+                        : `. ${t('clubStructure.noCoach')}`}
                     </ProDayText>
                   </ProDaySurface>
                 </View>
@@ -218,7 +218,7 @@ export const ClubStructureScreen: React.FC = () => {
               {topScorers.length > 0 ? (
                 topScorers.map((scorer, index) => (
                   <ProDayText key={scorer.uid} variant="caption" muted>
-                    {index + 1}. {scorer.name} — {scorer.goals} {t('clubStructure.goals')}
+                    {index + 1}. {scorer.name}. {scorer.goals} {t('clubStructure.goals')}
                   </ProDayText>
                 ))
               ) : (

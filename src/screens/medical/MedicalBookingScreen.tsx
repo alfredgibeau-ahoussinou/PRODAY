@@ -101,7 +101,7 @@ export const MedicalBookingScreen: React.FC<MedicalBookingScreenProps> = ({
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Text style={styles.visioHint}>
-          Téléconsultation par défaut — vos informations de compte ProDay seront utilisées
+          Téléconsultation par défaut. Vos informations de compte ProDay seront utilisées
           automatiquement.
         </Text>
 
