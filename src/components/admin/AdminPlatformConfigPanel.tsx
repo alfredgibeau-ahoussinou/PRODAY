@@ -15,7 +15,6 @@ import type { AppColors } from '../../theme/universeTheme';
 
 const FLAG_ROWS: PlatformFeatureFlagKey[] = [
   'registration_open',
-  'sante_visio',
   'community_reels',
   'mercato',
   'stages',
@@ -78,6 +77,17 @@ export const AdminPlatformConfigPanel: React.FC = () => {
     });
   };
 
+  const toggleSanteVisio = async (value: boolean) => {
+    if (!config) return;
+    setConfig({
+      ...config,
+      feature_flags: { ...config.feature_flags, sante_visio: value },
+    });
+    await save({
+      feature_flags: { ...config.feature_flags, sante_visio: value },
+    });
+  };
+
   const toggleFlag = async (key: keyof PlatformFeatureFlags, value: boolean) => {
     if (!config) return;
     await save({ feature_flags: { ...config.feature_flags, [key]: value } });
@@ -86,6 +96,9 @@ export const AdminPlatformConfigPanel: React.FC = () => {
   if (loading || !config) {
     return <ActivityIndicator color={c.brand} style={{ marginVertical: spacing.lg }} />;
   }
+
+  const santeVisioMeta = PLATFORM_FEATURE_FLAG_META.sante_visio;
+  const santeVisioOn = config.feature_flags.sante_visio;
 
   return (
     <View>
@@ -128,6 +141,34 @@ export const AdminPlatformConfigPanel: React.FC = () => {
           onChangeText={setMaintenanceMessage}
           multiline
         />
+      </AdminSettingsCard>
+
+      <AdminSettingsCard icon="heart" title="Visio Santé">
+        {!santeVisioOn ? (
+          <View style={styles.liveBanner}>
+            <Text style={styles.liveBannerText}>
+              Visio Santé COUPÉE — pôle Santé et praticiens voient l’écran de coupure en
+              direct (comme la maintenance).
+            </Text>
+          </View>
+        ) : null}
+        <View style={styles.switchRow}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.switchLabel}>{santeVisioMeta.label} ouverte</Text>
+            <Text style={styles.hint}>{santeVisioMeta.adminHint}</Text>
+          </View>
+          <Switch
+            value={santeVisioOn}
+            onValueChange={(v) => void toggleSanteVisio(v)}
+            trackColor={{ false: c.border, true: c.brandSoft }}
+            thumbColor={santeVisioOn ? c.brand : c.textMuted}
+            disabled={saving}
+          />
+        </View>
+        <Text style={styles.hint}>
+          OFF = écran plein « {santeVisioMeta.disabledTitle} » pour le pôle Santé et les
+          praticiens (admins exclus). Les autres pôles perdent l’onglet Santé.
+        </Text>
       </AdminSettingsCard>
 
       <AdminSettingsCard icon="settings" title="Feature flags">

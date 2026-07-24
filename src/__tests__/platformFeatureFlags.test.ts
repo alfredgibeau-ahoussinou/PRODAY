@@ -29,7 +29,18 @@ describe('platformFeatureFlags', () => {
     expect(featureFlagForTab('recrutement')).toBe('mercato');
     expect(featureFlagForTab('shop')).toBe('shop');
     expect(featureFlagForTab('reels')).toBe('community_reels');
+    expect(featureFlagForTab('sante')).toBe('sante_visio');
     expect(featureFlagForTab('home')).toBeNull();
+  });
+
+  it('masque l’onglet Santé si sante_visio OFF', () => {
+    const flags = {
+      ...DEFAULT_PLATFORM_CONFIG.feature_flags,
+      sante_visio: false,
+    };
+    expect(
+      filterTabsByFeatureFlags(['home', 'sante', 'profil'], flags),
+    ).toEqual(['home', 'profil']);
   });
 
   it('isPlatformFeatureEnabled lit strictement true', () => {

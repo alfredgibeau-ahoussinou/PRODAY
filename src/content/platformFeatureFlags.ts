@@ -67,10 +67,11 @@ export const PLATFORM_FEATURE_FLAG_META: Record<
   sante_visio: {
     key: 'sante_visio',
     label: 'Visio Santé',
-    adminHint: 'Téléconsultation Cal/Daily — OFF = message bêta',
-    disabledTitle: 'Bêta actuelle — aucun accès à la visio',
+    adminHint:
+      'OFF = écran de coupure plein (pôle Santé + praticiens), comme la maintenance',
+    disabledTitle: 'Visio Santé indisponible',
     disabledMessage:
-      'La téléconsultation visio n’est pas encore ouverte sur cette bêta. L’équipe ProDay l’activera depuis l’admin.',
+      'La téléconsultation est momentanément fermée. L’équipe ProDay la réouvrira depuis l’admin.',
   },
 };
 
@@ -79,6 +80,7 @@ export const TAB_FEATURE_FLAG: Partial<Record<MainTabId, PlatformFeatureFlagKey>
   recrutement: 'mercato',
   shop: 'shop',
   reels: 'community_reels',
+  sante: 'sante_visio',
 };
 
 export function isPlatformFeatureEnabled(

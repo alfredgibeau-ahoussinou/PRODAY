@@ -70,10 +70,12 @@ import { useParentalScreenTime } from './src/hooks/useParentalScreenTime';
 import { useParentalActivityJournal } from './src/hooks/useParentalActivityJournal';
 import { ParentalScreenTimeBlockedScreen } from './src/screens/ParentalScreenTimeBlockedScreen';
 import { MaintenanceBlockedScreen } from './src/screens/MaintenanceBlockedScreen';
+import { FeatureBlockedScreen } from './src/screens/FeatureBlockedScreen';
 import { FeatureDisabledPanel } from './src/components/platform/FeatureDisabledPanel';
 import { MinorYouthSpaceBridge } from './src/components/appSpace/MinorYouthSpaceBridge';
 import { PlatformConfigProvider, usePlatformConfig } from './src/context/PlatformConfigContext';
 import { usePlatformFeatureFlags } from './src/hooks/usePlatformFeatureFlags';
+import { isMedicalPractitionerRole } from './src/content/medicalExperience';
 import type { UserRole } from './src/models/User';
 import type { ProductLineId } from './src/models/ProductLine';
 
@@ -267,6 +269,19 @@ function AppShell() {
     !bypassMaintenance
   ) {
     return <MaintenanceBlockedScreen message={platformConfig.maintenance_message} />;
+  }
+
+  // Visio Santé OFF : même UX plein écran que la maintenance pour le pôle Santé / praticiens.
+  const isSanteAudience =
+    productLine === 'sante' ||
+    isMedicalPractitionerRole(sessionProfile?.role ?? profile?.role);
+  if (
+    !platformConfigLoading &&
+    !isEnabled('sante_visio') &&
+    isSanteAudience &&
+    !bypassMaintenance
+  ) {
+    return <FeatureBlockedScreen flag="sante_visio" />;
   }
 
   if (!authLoading && profile && screenTime.blocked) {
@@ -489,7 +504,11 @@ function AppShell() {
           <View style={styles.screen}>
             <AnimatedTabContent activeTab={activeTab} tabOrder={screenTabs}>
               {tabFeatureBlocked && disabledFlag ? (
-                <FeatureDisabledPanel flag={disabledFlag} />
+                disabledFlag === 'sante_visio' ? (
+                  <FeatureBlockedScreen flag="sante_visio" />
+                ) : (
+                  <FeatureDisabledPanel flag={disabledFlag} />
+                )
               ) : (
                 <Screen />
               )}
