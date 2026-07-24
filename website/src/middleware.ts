@@ -5,6 +5,12 @@ import {
   BETA_ACCESS_REDIRECT_VALUE,
 } from "@/lib/betaAccess";
 import {
+  ADMIN_HOME_PATH,
+  ADMIN_LOGIN_PATH,
+  ADMIN_SESSION_COOKIE,
+  hasAdminSessionCookieValue,
+} from "@/lib/adminSession";
+import {
   applySecurityHeaders,
   NO_REFERRER_HEADER,
 } from "@/lib/securityHeaders";
@@ -14,9 +20,36 @@ function withSecurityHeaders(response: NextResponse): NextResponse {
   return response;
 }
 
-/** Redirige `?token=` vers l'API de session, puis atterrissage sur `/beta/programme`. */
+function hasAdminCookie(request: NextRequest): boolean {
+  return hasAdminSessionCookieValue(
+    request.cookies.get(ADMIN_SESSION_COOKIE)?.value,
+  );
+}
+
+/** Protège /admin/* (minicode) et gère les jetons bêta /beta. */
 export function middleware(request: NextRequest) {
   const { pathname, searchParams } = request.nextUrl;
+
+  if (pathname.startsWith("/admin")) {
+    const isLogin = pathname === ADMIN_LOGIN_PATH;
+    const authed = hasAdminCookie(request);
+
+    if (isLogin && authed) {
+      const url = request.nextUrl.clone();
+      url.pathname = ADMIN_HOME_PATH;
+      url.search = "";
+      return withSecurityHeaders(NextResponse.redirect(url));
+    }
+
+    if (!isLogin && !authed) {
+      const url = request.nextUrl.clone();
+      url.pathname = ADMIN_LOGIN_PATH;
+      url.search = "";
+      return withSecurityHeaders(NextResponse.redirect(url));
+    }
+
+    return withSecurityHeaders(NextResponse.next());
+  }
 
   if (pathname === "/beta/inscription") {
     return withSecurityHeaders(NextResponse.next());
@@ -42,5 +75,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/beta/:path*"],
+  matcher: ["/beta/:path*", "/admin", "/admin/:path*"],
 };

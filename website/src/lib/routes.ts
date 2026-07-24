@@ -32,6 +32,10 @@ export const ROUTES = {
   betaAide: "/beta/aide",
   /** Liste d'attente publique (formulaire d'inscription). */
   betaWaitlist: "/beta/inscription",
+  /** Espace admin fondateurs (protégé par minicode). */
+  admin: "/admin",
+  adminLogin: "/admin/login",
+  adminBeta: "/admin/beta",
   about: "/a-propos",
   vision: "/vision",
   pricing: "/tarifs",

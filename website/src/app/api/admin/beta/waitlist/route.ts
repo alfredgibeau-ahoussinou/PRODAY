@@ -14,7 +14,10 @@ function jsonResponse(body: Record<string, unknown>, init?: ResponseInit) {
 
 /** Liste waitlist bêta — session admin requise. */
 export async function GET(request: Request) {
-  if (!isSameOriginBrowserRequest(request)) {
+  const site = request.headers.get("sec-fetch-site");
+  const sameSiteFetch =
+    site === "same-origin" || site === "same-site" || site === "none";
+  if (!isSameOriginBrowserRequest(request) && !sameSiteFetch) {
     return jsonResponse({ error: "Origine non autorisée" }, { status: 403 });
   }
 

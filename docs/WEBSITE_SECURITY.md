@@ -21,6 +21,13 @@ Configuration appliquée dans `website/netlify.toml`, `netlify.toml` (monorepo) 
 - `POST /api/beta` : rate limit (10/min/IP), validation email/rôle, contrôle `Origin`/`Referer`, réponse filtrée.
 - `GET /api/beta/access` : rate limit (30/min/IP), cookie `httpOnly`, `Cache-Control: no-store`, longueur jeton plafonnée.
 
+## Routes API admin fondateurs (`/admin`)
+
+- Accès UI : middleware + cookie `proday_admin_session` (HMAC, 7 jours) après `POST /api/admin/login` avec minicode.
+- Rate limit PIN : 5 tentatives / 15 min / IP.
+- `GET /api/admin/beta/waitlist`, `POST …/approve|reject|resend` : session requise, `Origin`/`Referer` (CSRF), proxy vers CF `websiteBetaWaitlistAdmin` avec secret serveur.
+- Ne jamais préfixer `BETA_ADMIN_PIN`, `BETA_ADMIN_SESSION_SECRET`, `BETA_WEBSITE_ADMIN_SECRET` par `NEXT_PUBLIC_`.
+
 ## Secrets (serveur uniquement)
 
 Ne jamais préfixer par `NEXT_PUBLIC_` :
@@ -28,6 +35,8 @@ Ne jamais préfixer par `NEXT_PUBLIC_` :
 - `EMAILJS_*`, `EMAILJS_PRIVATE_KEY`
 - `BETA_ACCESS_SECRET`
 - `BETA_WAITLIST_FUNCTION_URL`, `BETA_VALIDATE_FUNCTION_URL`
+- `BETA_ADMIN_PIN` / `ADMIN_MINICODE`, `BETA_ADMIN_SESSION_SECRET`
+- `BETA_WAITLIST_ADMIN_FUNCTION_URL`, `BETA_WEBSITE_ADMIN_SECRET`
 
 Variables publiques autorisées : `NEXT_PUBLIC_SITE_URL`, liens APK/TestFlight optionnels.
 

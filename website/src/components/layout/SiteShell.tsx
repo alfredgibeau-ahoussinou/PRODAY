@@ -13,11 +13,27 @@ import { navBrandForPath } from "@/components/universe/universeTheme";
 export function SiteShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isHome = pathname === "/";
+  const isAdmin = pathname.startsWith("/admin");
   const showPoleBar = showPoleContextBar(pathname);
   const brand = navBrandForPath(pathname);
   const accent = brand.theme?.brandAccent ?? "#0054F0";
   const deep = brand.theme?.brandDeep ?? "#001854";
 
+  if (isAdmin) {
+    return (
+      <div className="page-dark relative min-h-screen bg-black text-white">
+        <div
+          className="pointer-events-none fixed inset-0 opacity-90"
+          style={{
+            background:
+              "radial-gradient(ellipse 70% 50% at 15% 0%, rgba(0,84,240,0.16), transparent 55%), radial-gradient(ellipse 50% 40% at 90% 10%, rgba(0,24,84,0.35), transparent 50%), #000",
+          }}
+          aria-hidden
+        />
+        <div className="relative z-10">{children}</div>
+      </div>
+    );
+  }
   return (
     <div
       className="page-dark relative min-h-screen bg-black text-white"

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import type {
   BetaAdminCounts,
@@ -36,58 +36,50 @@ function formatDate(value: string | null | undefined): string {
   }).format(d);
 }
 
-export function AdminBetaDashboard() {
+type Props = {
+  initialEntries: BetaAdminWaitlistEntry[];
+  initialCounts: BetaAdminCounts;
+  initialError?: string | null;
+};
+
+export function AdminBetaDashboard({
+  initialEntries,
+  initialCounts,
+  initialError = null,
+}: Props) {
   const router = useRouter();
   const [filter, setFilter] = useState<Filter>("pending");
-  const [entries, setEntries] = useState<BetaAdminWaitlistEntry[]>([]);
-  const [counts, setCounts] = useState<BetaAdminCounts>({
-    all: 0,
-    pending: 0,
-    approved: 0,
-    rejected: 0,
-  });
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [entries, setEntries] = useState(initialEntries);
+  const [counts, setCounts] = useState(initialCounts);
+  const [error, setError] = useState<string | null>(initialError);
   const [message, setMessage] = useState<string | null>(null);
   const [actionId, setActionId] = useState<string | null>(null);
-
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch("/api/admin/beta/waitlist", { cache: "no-store" });
-      if (res.status === 401) {
-        router.replace("/admin/login");
-        return;
-      }
-      const data = (await res.json().catch(() => ({}))) as {
-        error?: string;
-        entries?: BetaAdminWaitlistEntry[];
-        counts?: BetaAdminCounts;
-      };
-      if (!res.ok) {
-        setError(data.error ?? "Chargement impossible");
-        return;
-      }
-      setEntries(data.entries ?? []);
-      setCounts(
-        data.counts ?? { all: 0, pending: 0, approved: 0, rejected: 0 },
-      );
-    } catch {
-      setError("Erreur réseau");
-    } finally {
-      setLoading(false);
-    }
-  }, [router]);
-
-  useEffect(() => {
-    void load();
-  }, [load]);
+  const [isPending, startTransition] = useTransition();
 
   const filtered = useMemo(() => {
     if (filter === "all") return entries;
     return entries.filter((e) => e.status === filter);
   }, [entries, filter]);
+
+  async function refreshList() {
+    setError(null);
+    const res = await fetch("/api/admin/beta/waitlist", { cache: "no-store" });
+    if (res.status === 401) {
+      router.replace("/admin/login");
+      return;
+    }
+    const data = (await res.json().catch(() => ({}))) as {
+      error?: string;
+      entries?: BetaAdminWaitlistEntry[];
+      counts?: BetaAdminCounts;
+    };
+    if (!res.ok) {
+      setError(data.error ?? "Chargement impossible");
+      return;
+    }
+    setEntries(data.entries ?? []);
+    setCounts(data.counts ?? { all: 0, pending: 0, approved: 0, rejected: 0 });
+  }
 
   async function runAction(
     id: string,
@@ -124,7 +116,7 @@ export function AdminBetaDashboard() {
       } else {
         setMessage("Inscription refusée.");
       }
-      await load();
+      await refreshList();
     } catch {
       setError("Erreur réseau");
     } finally {
@@ -156,10 +148,15 @@ export function AdminBetaDashboard() {
         <div className="flex gap-2">
           <button
             type="button"
-            onClick={() => void load()}
-            className="rounded-full border border-white/15 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-white/80 transition hover:border-white/30 hover:text-white"
+            disabled={isPending}
+            onClick={() =>
+              startTransition(() => {
+                void refreshList();
+              })
+            }
+            className="rounded-full border border-white/15 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-white/80 transition hover:border-white/30 hover:text-white disabled:opacity-50"
           >
-            Actualiser
+            {isPending ? "…" : "Actualiser"}
           </button>
           <button
             type="button"
@@ -227,9 +224,7 @@ export function AdminBetaDashboard() {
       ) : null}
 
       <section className="mt-8 space-y-3">
-        {loading ? (
-          <p className="py-12 text-center text-sm text-white/45">Chargement…</p>
-        ) : filtered.length === 0 ? (
+        {filtered.length === 0 ? (
           <p className="py-12 text-center text-sm text-white/45">
             Aucune inscription dans ce filtre.
           </p>

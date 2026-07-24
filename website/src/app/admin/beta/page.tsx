@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { AdminBetaDashboard } from "@/components/admin/AdminBetaDashboard";
+import { fetchBetaWaitlistAdmin } from "@/lib/adminBetaApi";
 import {
   ADMIN_LOGIN_PATH,
   getAdminSessionFromCookies,
@@ -15,5 +16,14 @@ export default async function AdminBetaPage() {
   if (!(await getAdminSessionFromCookies())) {
     redirect(ADMIN_LOGIN_PATH);
   }
-  return <AdminBetaDashboard />;
+
+  const result = await fetchBetaWaitlistAdmin();
+
+  return (
+    <AdminBetaDashboard
+      initialEntries={result.entries}
+      initialCounts={result.counts}
+      initialError={result.ok ? null : (result.error ?? "Chargement impossible")}
+    />
+  );
 }

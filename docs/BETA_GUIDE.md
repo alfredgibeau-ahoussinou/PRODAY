@@ -63,12 +63,31 @@ flowchart LR
 
 ## Parcours admin
 
-### Console app (lecture seule)
+### Site web — espace fondateurs (minicode)
+
+URL : **https://proday75.fr/admin** (redirige vers `/admin/login` ou `/admin/beta`).
+
+1. Les 4 fondateurs saisissent le **minicode** partagé (`BETA_ADMIN_PIN` sur Netlify).
+2. Un cookie httpOnly `proday_admin_session` (7 jours) ouvre `/admin/beta`.
+3. Depuis le tableau de bord : liste waitlist, compteurs, **Approuver** / **Refuser** / **Renvoyer email**.
+
+Variables Netlify (serveur uniquement) :
+
+| Variable | Rôle |
+|----------|------|
+| `BETA_ADMIN_PIN` | Minicode partagé (ex. 6 chiffres) — jamais dans le repo |
+| `BETA_ADMIN_SESSION_SECRET` | Secret HMAC cookie (≥ 16 car.) |
+| `BETA_WAITLIST_ADMIN_FUNCTION_URL` | URL CF `websiteBetaWaitlistAdmin` |
+| `BETA_WEBSITE_ADMIN_SECRET` | Secret partagé site ↔ Firebase (même valeur côté Functions) |
+
+Firebase Functions : définir `BETA_WEBSITE_ADMIN_SECRET` (ou `beta.website_admin_secret`) puis déployer `websiteBetaWaitlistAdmin`.
+
+### Console app (Firebase Auth admin)
 
 Dans l'app ProDay → panneau admin → segment **Bêta waitlist** :
 
 - Liste les inscriptions Firestore (`beta_waitlist`) si la Cloud Function est déployée.
-- Affiche email, profil, date d'inscription.
+- Affiche email, profil, date d'inscription ; actions via callables `adminApproveBetaAccess`, etc.
 
 ### Firestore (optionnel)
 
@@ -78,6 +97,7 @@ Collection `beta_waitlist` — champs typiques :
 |-------|-------------|
 | `email` | Adresse inscrite |
 | `role` | ID profil (`player`, `coach`, …) |
+| `status` | `pending` / `approved` / `rejected` |
 | `access_token` | Jeton Firestore (si CF active) |
 | `created_at` | Horodatage |
 
@@ -104,6 +124,11 @@ website/src/app/beta/
     ├── installer/page.tsx
     └── aide/page.tsx
 
+website/src/app/admin/
+├── page.tsx                  # Redirect login ou /admin/beta
+├── login/page.tsx            # Minicode fondateurs
+└── beta/page.tsx             # Waitlist + approve / reject / resend
+
 website/src/components/beta/
 ├── BetaHubContent.tsx
 ├── BetaProgrammeContent.tsx
@@ -119,11 +144,15 @@ website/src/lib/
 ├── betaEmailjs.ts            # Envoi EmailJS serveur
 ├── betaWelcomeEmail.ts       # Rôles + template fallback
 ├── betaContent.ts            # FAQ, timeline, liens APK/TestFlight
-└── getBetaSession.ts         # Session RSC (cookie)
+├── getBetaSession.ts         # Session RSC (cookie)
+├── adminSession.ts           # Minicode + cookie admin
+└── adminBetaApi.ts           # Proxy CF websiteBetaWaitlistAdmin
 
 functions/src/
 ├── betaWaitlist.ts           # submitBetaWaitlist (Firestore + email)
 ├── betaAccess.ts             # validateBetaAccess
+├── betaWaitlistAdmin.ts      # Callables app (Firebase Auth admin)
+├── betaWaitlistWebsiteAdmin.ts # HTTP admin site (secret partagé)
 └── betaWaitlistEmail.ts      # EmailJS côté Firebase
 ```
 
@@ -145,6 +174,10 @@ functions/src/
 | `BETA_ACCESS_SECRET` | Recommandé | Secret HMAC ≥ 32 car. (jetons signés sans Firestore) |
 | `BETA_WAITLIST_FUNCTION_URL` | Optionnel | CF `submitBetaWaitlist` |
 | `BETA_VALIDATE_FUNCTION_URL` | Optionnel | CF `validateBetaAccess` |
+| `BETA_ADMIN_PIN` | Admin site | Minicode fondateurs (`/admin`) |
+| `BETA_ADMIN_SESSION_SECRET` | Admin site | Secret cookie session (≥ 16 car.) |
+| `BETA_WAITLIST_ADMIN_FUNCTION_URL` | Admin site | CF `websiteBetaWaitlistAdmin` |
+| `BETA_WEBSITE_ADMIN_SECRET` | Admin site + CF | Secret API partagé |
 | `NEXT_PUBLIC_BETA_APK_URL` | Optionnel | Lien APK sur `/beta/installer` |
 | `NEXT_PUBLIC_BETA_TESTFLIGHT_URL` | Optionnel | Lien TestFlight sur `/beta/installer` |
 

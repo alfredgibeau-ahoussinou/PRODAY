@@ -139,8 +139,22 @@ BETA_VALIDATE_FUNCTION_URL=https://europe-west1-proday-155b0.cloudfunctions.net/
 
 1. Formulaire `/beta/inscription` → `POST /api/beta` → Cloud Function `submitBetaWaitlist`
 2. Inscription enregistrée dans Firestore (`beta_waitlist`, statut `pending`)
-3. L'admin approuve depuis l'app ProDay → email de bienvenue avec lien `/beta/programme?token=…`
+3. L'admin approuve depuis **https://proday75.fr/admin** (minicode) ou l'app ProDay → email de bienvenue avec lien `/beta/programme?token=…`
 4. Le jeton est validé côté serveur (`validateBetaAccess` + Firestore)
+
+### Admin site (fondateurs)
+
+| Variable Netlify | Description |
+|------------------|-------------|
+| `BETA_ADMIN_PIN` | Minicode partagé (placeholder local : `CHANGEME`) |
+| `BETA_ADMIN_SESSION_SECRET` | Secret cookie session (≥ 16 car.) |
+| `BETA_WAITLIST_ADMIN_FUNCTION_URL` | URL `websiteBetaWaitlistAdmin` |
+| `BETA_WEBSITE_ADMIN_SECRET` | Secret API (= Firebase `BETA_WEBSITE_ADMIN_SECRET`) |
+
+```bash
+firebase functions:config:set beta.website_admin_secret="votre-secret-partage"
+firebase deploy --only functions:websiteBetaWaitlistAdmin
+```
 
 ## Page bêta privée (`/beta`)
 
