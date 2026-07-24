@@ -52,7 +52,7 @@ export const ROLE_OPTIONS: {
   {
     value: 'physio',
     label: 'Pôle santé',
-    description: 'Kiné, médecin, coach mental, nutrition…',
+    description: 'Kiné, ostéo, médecin, prépa, mental, nutrition, podo…',
     icon: 'heart',
   },
   {
