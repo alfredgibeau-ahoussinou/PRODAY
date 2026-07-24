@@ -65,6 +65,24 @@ Pour lire et répondre aux messages reçus par ProDay (contact, candidatures, et
 
 ---
 
+## Compte admin app (simulateur / prod)
+
+Pour ouvrir l’**application ProDay en mode admin** (TestFlight, téléphone, ou simulateur) :
+
+| Élément | Valeur |
+|---------|--------|
+| E-mail | `proday.admin@gmail.com` |
+| Mot de passe | `Alfred2005@` |
+| Usage | Connexion dans l’app → espace Admin (pilotage, utilisateurs, modération…) |
+
+**Comment faire :** lancez l’app ProDay → écran Connexion → saisissez l’e-mail et le mot de passe ci-dessus. Vous arrivez dans la console admin.
+
+> Ce mot de passe est **différent** du mot de passe Gmail (`Proday2026@`). Même adresse e-mail, deux usages distincts : boîte mail vs compte Firebase de l’app.
+
+**Important :** réservé aux 4 fondateurs. Ne le communiquez à personne d’extérieur.
+
+---
+
 ## E-mails de contact (rappel)
 
 | Usage | Adresse |
@@ -77,5 +95,5 @@ Pour lire et répondre aux messages reçus par ProDay (contact, candidatures, et
 ## Rappels
 
 1. Document **réservé aux 4 fondateurs** (Alfred, Ben, Arthurus, Yohan) — ne pas le transmettre hors de ce cercle.
-2. **Ne donnez pas le minicode** ni le **mot de passe mail** à des tiers (candidats, partenaires, prestataires…).
+2. **Ne donnez pas le minicode**, le **mot de passe mail** ni le **mot de passe admin app** à des tiers (candidats, partenaires, prestataires…).
 3. En cas de doute : demander à Alfred avant de partager quoi que ce soit.

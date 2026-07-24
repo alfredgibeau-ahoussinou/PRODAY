@@ -224,7 +224,8 @@ def build():
         warn_box(
             "<b>Confidentiel :</b> à partager uniquement entre les 4 associés "
             "(Alfred, Ben, Arthurus, Yohan). "
-            "Ne donnez jamais le minicode ni le mot de passe mail à des personnes extérieures.",
+            "Ne donnez jamais le minicode, le mot de passe mail ni le mot de passe admin app "
+            "à des personnes extérieures.",
             s,
         )
     )
@@ -339,7 +340,48 @@ def build():
         )
     )
 
-    story.append(Paragraph("6. E-mails de contact (rappel)", s["h1"]))
+    story.append(Paragraph("6. Compte admin app (simulateur / prod)", s["h1"]))
+    story.append(
+        Paragraph(
+            "Pour ouvrir l’<b>application ProDay en mode admin</b> (TestFlight, téléphone ou simulateur) :",
+            s["body"],
+        )
+    )
+    story.append(
+        kv_table(
+            [
+                ("E-mail", "proday.admin@gmail.com"),
+                ("Mot de passe", "<b>Alfred2005@</b>"),
+                (
+                    "Usage",
+                    "Connexion dans l’app → espace Admin (pilotage, utilisateurs, modération…)",
+                ),
+            ],
+            s,
+        )
+    )
+    story.append(
+        Paragraph(
+            "Lancez l’app ProDay → écran Connexion → saisissez l’e-mail et le mot de passe ci-dessus. "
+            "Vous arrivez dans la console admin.",
+            s["small"],
+        )
+    )
+    story.append(
+        Paragraph(
+            "<b>Attention :</b> ce mot de passe est <b>différent</b> du mot de passe Gmail "
+            "(<b>Proday2026@</b>). Même adresse e-mail, deux usages : boîte mail vs compte Firebase de l’app.",
+            s["small"],
+        )
+    )
+    story.append(
+        Paragraph(
+            "<b>Important :</b> réservé aux 4 fondateurs. Ne le communiquez à personne d’extérieur.",
+            s["small"],
+        )
+    )
+
+    story.append(Paragraph("7. E-mails de contact (rappel)", s["h1"]))
     story.append(
         kv_table(
             [
@@ -350,10 +392,11 @@ def build():
         )
     )
 
-    story.append(Paragraph("7. Rappels", s["h1"]))
+    story.append(Paragraph("8. Rappels", s["h1"]))
     reminders = [
         "Document réservé aux <b>4 fondateurs</b> (Alfred, Ben, Arthurus, Yohan) — ne pas le transmettre hors de ce cercle.",
-        "<b>Ne donnez pas le minicode</b> ni le <b>mot de passe mail</b> à des tiers (candidats, partenaires, prestataires…).",
+        "<b>Ne donnez pas le minicode</b>, le <b>mot de passe mail</b> ni le <b>mot de passe admin app</b> "
+        "à des tiers (candidats, partenaires, prestataires…).",
         "En cas de doute : demander à Alfred avant de partager quoi que ce soit.",
     ]
     story.append(
