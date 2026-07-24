@@ -29,7 +29,7 @@ export type PoleDefinition = {
   planIds: WebSubscriptionPlanBase["id"][];
 };
 
-/** Les 6 pôles du carousel et de la navigation principale (hors Partenaires). */
+/** Les 6 pôles du carousel marketing (le 7ᵉ Sponsor a sa page / coque dédiées). */
 export const CAROUSEL_POLES: PoleDefinition[] = [
   {
     id: "amateur",
@@ -59,9 +59,9 @@ export const CAROUSEL_POLES: PoleDefinition[] = [
     id: "sante",
     kicker: "PÔLE SANTÉ",
     title: "Praticiens & staff médical",
-    subtitle: "Kiné · Mental · Nutrition",
+    subtitle: "Kiné · Ostéo · Médecin · Prépa · Mental · Nutrition · Podologue",
     description:
-      "Soigner près du terrain — annuaire vérifié, agenda app et téléconsultation HDS.",
+      "Soigner près du terrain — 7 métiers, annuaire vérifié, agenda app et téléconsultation HDS.",
     href: ROUTES.sante,
     pricingHash: "sante",
     logo: "/branding/logo-sante-picto.png",
@@ -118,7 +118,7 @@ export const SPONSOR_POLE: PoleDefinition = {
   planIds: ["sponsor_pro"],
 };
 
-/** Tous les pôles (6 carousel + Partenaires). */
+/** Tous les pôles produit (6 carousel + Sponsor). */
 export const POLES: PoleDefinition[] = [...CAROUSEL_POLES, SPONSOR_POLE];
 
 export const POLE_NAV_POLE_IDS: Record<string, PoleId> = {

@@ -250,7 +250,6 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
           currentUser.role === 'sponsor' &&
           !sponsorHasUnlimitedMessaging(currentUser)
         ) {
-          await subscriptionService.incrementUsage(currentUser.uid, 'sponsor_club_message');
           void subscription?.refresh();
         }
       }

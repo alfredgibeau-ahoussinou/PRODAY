@@ -37,10 +37,12 @@ import {
 } from './appointmentEmail';
 import { getVisioJoinUrl } from './getVisioJoinUrl';
 import { incrementSubscriptionUsage } from './subscriptionUsage';
+import { sendSponsorClubMessage } from './sendSponsorClubMessage';
 
 export { createPaymentCheckoutSession, stripeWebhook, createShopCheckoutSession };
 export { sendAuthVerificationEmail, sendAuthPasswordResetEmail };
 export { incrementSubscriptionUsage };
+export { sendSponsorClubMessage };
 export { onSponsorOfferCreated, onSponsorOfferUpdated, notifySponsorOfferInCityCallable };
 export { onMedicalAppointmentCreated, onMedicalAppointmentUpdated };
 export { getVisioJoinUrl };

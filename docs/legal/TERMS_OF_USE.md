@@ -6,7 +6,7 @@
 
 ## 1. Objet et périmètre
 
-ProDay propose une plateforme autour de quatre pôles (Joueur, Pro, Santé, Partenaires) : Mercato, matchs, tournois, messagerie, fil, réels, Pulse, CV joueur, santé et sponsors. Certaines fonctions peuvent être proposées en **bêta fermée** et évoluer sans préavis.
+ProDay propose une plateforme autour de sept pôles (Amateur, Supporter, Santé, Pro Joueur, Pro Club, Pro Staff, Sponsor) : Mercato, matchs, tournois, messagerie, fil, réels, Pulse, CV joueur, santé et sponsors. Certaines fonctions peuvent être proposées en **bêta fermée** et évoluer sans préavis.
 
 ## 2. Acceptation
 

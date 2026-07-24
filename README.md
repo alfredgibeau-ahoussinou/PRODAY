@@ -30,7 +30,7 @@
 
 1. [ProDay en bref](#proday-en-bref)
 2. [Vision & mission](#vision--mission)
-3. [Les six univers ProDay](#les-six-univers-proday)
+3. [Les sept univers ProDay](#les-sept-univers-proday)
 4. [Parcours utilisateur](#parcours-utilisateur)
 5. [Fonctionnalités clés](#fonctionnalités-clés)
 6. [Sécurité & validation](#sécurité--validation)
@@ -80,9 +80,9 @@ ProDay naît d'un constat simple : une équipe U17 jongle entre cinq groupes Wha
 
 ---
 
-## Les six univers ProDay
+## Les sept univers ProDay
 
-Comme sur [proday75.fr](https://proday75.fr), la navigation s'articule autour de **six pôles** dans le carousel principal. Le **pôle Partenaires** (sponsors & marques) est accessible depuis [proday75.fr/partenaires](https://proday75.fr/partenaires), hors carousel.
+Comme sur [proday75.fr](https://proday75.fr), le produit s’organise autour de **sept pôles**. Le carousel marketing en affiche six ; le **pôle Sponsor** (marques & partenaires) est aussi une coque app dédiée — entrée web [proday75.fr/sponsor](https://proday75.fr/sponsor) (alias `/partenaires`).
 
 ### Tableau des pôles
 
@@ -90,11 +90,11 @@ Comme sur [proday75.fr](https://proday75.fr), la navigation s'articule autour de
 |------|--------|---------|-----------|
 | **Amateur** | Joueurs & coachs | *JOUER • ENCADRER • PARTAGER* | Ton club, ta semaine, tes déplacements — convocations, covoiturage et effectif. Genre H/F choisi à l'inscription. Mercato local, district & régional. Distinct du pôle Pro (staff professionnel). |
 | **Supporter** | Fans & communauté | *SUIVRE • VIBRER • PARTAGER* | Tribune **100 % gratuite** — matchs live (PRODAY + monde via API-Football), suivis illimités, débats, Reels et shop merch. Sans Mercato ni abonnement store. |
-| **Santé** | Praticiens & staff médical | *SOIGNER • ACCOMPAGNER • PERFORMER* | Kinés, coach mental, nutritionnistes — annuaire vérifié, prise de RDV près des clubs. Messagerie complète après validation des diplômes. |
+| **Santé** | Praticiens & staff médical | *SOIGNER • ACCOMPAGNER • PERFORMER* | Kiné · Ostéo · Médecin · Prépa · Mental · Nutrition · Podologue — annuaire vérifié, prise de RDV près des clubs. Messagerie complète après validation des diplômes. |
 | **Pro Joueur** | Joueurs pro | *CARRIÈRE • VISIBILITÉ • OPPORTUNITÉS* | Carrière, portfolio scouting, essais et mandat agent. Stats badge « Validé coach ». Distinct du foot amateur district. |
 | **Pro Club** | Structures & équipes | *STRUCTURE • ÉQUIPES • RECRUTEMENT* | Président, DS, secrétariat — arbre des catégories (U13, U17, Seniors F…), adhésions, annonces recrutement et vitrine club publique. |
 | **Pro Staff** | Agent · Recruteur · Coach · Orga | *MÉTIERS • MANDATS • SCOUTING* | Mercato Pro, shortlists scouting, convocations groupe, tournois Arena. Chaque métier a sa coque et ses quotas d'abonnement. |
-| **Partenaires** *(hors carousel)* | Sponsors & marques | Visibilité mesurée | Découverte (0 €), Territorial (49 €/mois), National Pro (99 €/mois) — ROI campagnes, visibilité clubs, push géo local (bêta). |
+| **Sponsor** | Marques & partenaires | *VISIBILITÉ • ROI • TERRAIN* | Découverte (0 €), Territorial (49 €/mois), National Pro (99 €/mois) — ROI campagnes, messagerie clubs (quota serveur), push géo local (bêta). |
 
 ### Écosystème des pôles
 
@@ -127,13 +127,13 @@ mindmap
       Mercato Pro
       Agent CRM mandats
       Arena tournois
-    Partenaires
+    Sponsor
       Découverte 0€
       Territorial 49€
       National Pro 99€
 ```
 
-> **Man & Woman** — Les univers *Pro Day Man* et *ProDay Woman* (foot masculin / féminin amateur) partagent le pôle Amateur pour les coachs, avec des coques Mercato M / Mercato F dédiées aux joueurs. Voir [proday75.fr/homme](https://proday75.fr/homme) et [proday75.fr/woman](https://proday75.fr/woman).
+> **Genre H/F** — Le genre (masculin / féminin / mineur) est un **segment UI** sur Amateur et Pro Joueur, plus un pôle produit. Les anciennes URLs `/homme` et `/woman` redirigent vers Amateur.
 
 ---
 
@@ -151,13 +151,15 @@ flowchart TD
     C --> D4[Pro Joueur]
     C --> D5[Pro Club]
     C --> D6[Pro Staff]
+    C --> D7[Sponsor]
 
     D1 --> E[Profil + Pulse + CV]
     D2 --> F[Clubs favoris + live]
     D3 --> G[Spécialité + zone]
     D4 --> H[Portfolio + carrière]
     D5 --> I[Structure + équipes]
-    D6 --> J[Rôle staff vérifié]
+    D6 --> J[Mercato + mandats]
+    D7 --> S[Campagnes + ROI]
 
     E --> K{Modules transverses}
     F --> K
@@ -165,6 +167,7 @@ flowchart TD
     H --> K
     I --> K
     J --> K
+    S --> K
 
     K --> M1[Mercato & candidatures]
     K --> M2[Matchs & convocations RSVP]
@@ -289,7 +292,7 @@ flowchart LR
 | URL | Accès | Rôle |
 |-----|-------|------|
 | [proday75.fr/beta/inscription](https://proday75.fr/beta/inscription) | Public | Inscription waitlist |
-| [proday75.fr/beta/programme](https://proday75.fr/beta/programme) | Cookie bêta | Programme — six pôles, modules |
+| [proday75.fr/beta/programme](https://proday75.fr/beta/programme) | Cookie bêta | Programme — 7 pôles, modules |
 | [proday75.fr/beta/installer](https://proday75.fr/beta/installer) | Cookie bêta | Guides APK / TestFlight |
 | [proday75.fr/beta/aide](https://proday75.fr/beta/aide) | Cookie bêta | FAQ et support bêta |
 
@@ -434,7 +437,7 @@ PRODAY/                          Monorepo ProDay (app + site + backend)
 |---------|-------------------|--------------------|
 | `src/` | Toute l'app mobile | Feature mobile, navigation, écrans |
 | `website/src/lib/content.ts` | Copy produit site (source marketing) | Textes pôles, tarifs, FAQ |
-| `website/src/lib/poles.ts` | Définition des 6 pôles carousel | Navigation site, pricing par pôle |
+| `website/src/lib/poles.ts` | Définition des 6 pôles carousel + Sponsor | Navigation site, pricing par pôle |
 | `functions/src/` | Logique serveur (IAP, IA, bêta, push) | Backend, webhooks, triggers |
 | `firebase/` | Règles sécurité + index Firestore | Permissions, déploiement rules |
 | `docs/` | Guides opérateur, architecture, juridique | Bêta, stores, admin |
@@ -559,7 +562,7 @@ Liste complète : `package.json` · [scripts/README.md](scripts/README.md)
 | [docs/FIREBASE_SETUP.md](docs/FIREBASE_SETUP.md) | Configuration projet Firebase |
 | [docs/BETA_LAUNCH.md](docs/BETA_LAUNCH.md) | Checklist go/no-go lancement bêta |
 | [docs/BETA_GUIDE.md](docs/BETA_GUIDE.md) | Guide opérateur bêta (URLs, parcours, env) |
-| [docs/PRODAY_POLES_ARCHITECTURE.md](docs/PRODAY_POLES_ARCHITECTURE.md) | Architecture des six pôles produit |
+| [docs/PRODAY_POLES_ARCHITECTURE.md](docs/PRODAY_POLES_ARCHITECTURE.md) | Architecture des sept pôles produit |
 | [docs/PRICING_STRATEGY.md](docs/PRICING_STRATEGY.md) | Grille tarifaire et IAP |
 | [docs/design/DESIGN_SYSTEM.md](docs/design/DESIGN_SYSTEM.md) | Logo, couleurs, composants UI |
 | [src/README.md](src/README.md) | Guide navigation app mobile |

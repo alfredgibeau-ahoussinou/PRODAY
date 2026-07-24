@@ -13,6 +13,7 @@ export function sponsorHasUnlimitedMessaging(
   if (!user || user.role !== 'sponsor') return true;
   if (user.subscription_tier === 'pro') return true;
   if (user.sponsor_tier === 'territorial') return true;
+  if (user.sponsor_tier === 'national') return true;
   return false;
 }
 

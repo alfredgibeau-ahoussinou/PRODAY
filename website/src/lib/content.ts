@@ -9,7 +9,7 @@ export const BRAND = {
   tagline: "CONNECTER • PROGRESSER • RÉUSSIR",
   logo: "/branding/logo-proday-official.png",
   mission:
-    "Profil, Mercato, journal d'activités et saison — quatre pôles (Joueur, Pro, Santé, Partenaires) dans une app mobile honnête sur ce qui est livré aujourd'hui.",
+    "Profil, Mercato, journal d'activités et saison — sept pôles produit (Amateur, Supporter, Santé, Pro Joueur, Pro Club, Pro Staff, Sponsor) dans une app mobile honnête sur ce qui est livré aujourd'hui.",
 } as const;
 
 /** Pitch honnête : capacités réelles vs ambition long terme — pas de métriques fictives. */

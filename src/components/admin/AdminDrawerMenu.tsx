@@ -65,7 +65,7 @@ export const AdminDrawerMenu: React.FC<AdminDrawerMenuProps> = ({
             </View>
             <View style={styles.panelBrand}>
               <Text style={styles.panelTitle}>ProDay Console</Text>
-              <Text style={styles.panelSub}>6 pôles · proday75.fr · ops plateforme</Text>
+              <Text style={styles.panelSub}>7 pôles · proday75.fr · ops plateforme</Text>
             </View>
             <PressableSpring onPress={onClose} style={styles.closeBtn} scaleTo={0.92}>
               <Icon name="close" size={20} color={adminChrome.textMuted} />

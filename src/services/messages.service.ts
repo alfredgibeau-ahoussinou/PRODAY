@@ -30,6 +30,10 @@ import { validateMessageBody } from '../utils/messagingLimits';
 import { isMinorUser } from '../utils/minor';
 import { evaluateScreenTimeAccess, shouldEnforceScreenTime } from '../utils/parentalScreenTime';
 import { needsOnboardingDocumentUpload } from '../utils/onboardingGate';
+import { callFunction } from '../lib/firebaseFunctions';
+import { getErrorCode } from '../utils/errors';
+
+const SPONSOR_MESSAGE_FUNCTIONS_REGION = 'europe-west1';
 
 function assertDocumentsSubmitted(sender?: User): void {
   if (sender && needsOnboardingDocumentUpload(sender)) {
@@ -164,6 +168,29 @@ export const messagesService = {
     await assertMinorMessagingAllowed(sender);
     assertDocumentsSubmitted(sender);
     const text = validateMessageBody(body);
+
+    // Sponsor : quota + écriture atomiques côté Cloud Function (rules bloquent addDoc).
+    if (sender?.role === 'sponsor') {
+      try {
+        await callFunction<
+          { threadId: string; receiverUid: string; body: string },
+          { ok: boolean }
+        >(
+          'sendSponsorClubMessage',
+          { threadId, receiverUid, body: text },
+          SPONSOR_MESSAGE_FUNCTIONS_REGION,
+        );
+        return;
+      } catch (e) {
+        const code = getErrorCode(e);
+        if (code === 'functions/resource-exhausted') {
+          throw new Error(
+            e instanceof Error ? e.message : 'Quota messages clubs atteint pour ce mois.',
+          );
+        }
+        throw e instanceof Error ? e : new Error('Envoi message sponsor impossible.');
+      }
+    }
 
     await addDoc(collection(database, 'messages'), {
       thread_id: threadId,

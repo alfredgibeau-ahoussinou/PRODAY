@@ -247,7 +247,7 @@ const PAGE_META: Record<
 > = {
   pilotage: {
     title: 'Accueil',
-    subtitle: 'Pilotage · 6 pôles · proday75.fr',
+    subtitle: 'Pilotage · 7 pôles · proday75.fr',
   },
   inbox: {
     title: 'À traiter',

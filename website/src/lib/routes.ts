@@ -179,7 +179,7 @@ export const EXPLORE_CARDS = [
   {
     href: routeWithHash(ROUTES.pricing, "amateur"),
     title: "Tarifs",
-    description: "Gratuit et offres Pro — 4 pôles Joueur, Pro, Santé et Partenaires.",
+    description: "Gratuit et offres Pro — 7 pôles Amateur, Supporter, Santé, Pro et Sponsor.",
     image: "/showcase/classic-exp-messages.jpg",
     tag: "Tarifs",
   },

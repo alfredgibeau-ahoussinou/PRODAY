@@ -412,8 +412,10 @@ service cloud.firestore {
     }
 
     match /messages/{msgId} {
+      // Sponsors : création uniquement via Cloud Function (quota atomique).
       allow create: if canSendMessage()
         && request.resource.data.sender_id == request.auth.uid
+        && userDoc(request.auth.uid).data.role != 'sponsor'
         && request.resource.data.thread_id is string
         && isMessageThreadParticipant(request.resource.data.thread_id)
         && request.resource.data.body.size() > 0

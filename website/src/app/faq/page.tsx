@@ -7,7 +7,7 @@ import { ROUTES } from "@/lib/routes";
 
 export const metadata: Metadata = {
   title: "FAQ",
-  description: "Questions fréquentes sur ProDay, les quatre pôles et le lancement.",
+  description: "Questions fréquentes sur ProDay, les sept pôles et le lancement.",
 };
 
 export default function FaqPage() {

@@ -42,13 +42,24 @@ describe('productLineResolution', () => {
     expect(canonicalizeUserProductLine('pro_club', 'coach')).toBe('pro_staff');
   });
 
+  it('canonicalise homme/woman hors joueur vers pôles canoniques', () => {
+    expect(canonicalizeUserProductLine('homme', 'coach')).toBe('pro_staff');
+    expect(canonicalizeUserProductLine('woman', 'club')).toBe('pro_club');
+    expect(canonicalizeUserProductLine('homme', 'physio')).toBe('sante');
+  });
+
   it('détecte les comptes à migrer', () => {
     expect(needsProductLineMigration('pro')).toBe(true);
+    expect(needsProductLineMigration('homme')).toBe(true);
+    expect(needsProductLineMigration('woman')).toBe(true);
     expect(needsProductLineMigration('pro_player')).toBe(false);
   });
 
   it('résout la valeur persistée pour inscription', () => {
     expect(resolvePersistedProductLine('pro', 'player')).toBe('pro_player');
     expect(resolvePersistedProductLine('pro_club', 'club')).toBe('pro_club');
+    expect(resolvePersistedProductLine('homme', 'player')).toBe('pro_player');
+    expect(resolvePersistedProductLine('woman', 'coach')).toBe('pro_staff');
+    expect(resolvePersistedProductLine('homme', 'supporter')).toBe('supporter');
   });
 });

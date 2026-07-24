@@ -6,7 +6,7 @@ import { ROUTES } from "@/lib/routes";
 export const metadata: Metadata = {
   title: "Tarifs",
   description:
-    "4 pôles distincts — Joueur, Pro, Santé et Partenaires. Gratuit et Pro, mensuel ou annuel −20 %.",
+    "Sept pôles — Amateur, Supporter, Santé, Pro Joueur, Pro Club, Pro Staff, Sponsor. Gratuit et Pro, mensuel ou annuel −20 %.",
 };
 
 export default function PricingPage() {

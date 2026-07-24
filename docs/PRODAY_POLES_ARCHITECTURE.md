@@ -249,16 +249,17 @@ users/{uid}
 
 ## 3.7 Pro Day Santé
 
-- welcome -> medical_specialty (kiné, médecin, ostéo, prépa, nutrition) -> medical_practice (ville, zone, RDV en ligne oui/non) -> account -> security -> launch  
+- welcome -> medical_specialty (kiné, ostéo, médecin, prépa, mental, nutrition, podologue) -> medical_practice (ville, zone, RDV en ligne oui/non) -> account -> security -> launch  
 - Vérification : diplôme + carte professionnelle  
 
 ---
 
-## 3.8 Partenaires (hors carousel)
+## 3.8 Sponsor (7ᵉ pôle produit)
 
-- Entrée depuis site `proday.fr/partenaires`  
+- Entrée app (coque Sponsor) + site `proday75.fr/sponsor` (alias `/partenaires`)  
 - welcome -> sponsor_pro (entreprise, secteur, territoire, budget indicatif) -> account -> security -> launch  
-- Validation **admin / commercial** avant activation campagnes  
+- Validation **admin / commercial** (`sponsor_approved`) avant publication de campagnes  
+- Messagerie clubs : quota Découverte **serveur** (`sendSponsorClubMessage`) ; Territorial / National illimités  
 
 \newpage
 

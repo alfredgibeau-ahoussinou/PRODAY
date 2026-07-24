@@ -36,7 +36,9 @@ function recruitmentLimitForRole(role: string): number {
 
 function sponsorMessagingUnlimited(data: FirebaseFirestore.DocumentData): boolean {
   return data.role === 'sponsor' && (
-    data.subscription_tier === 'pro' || data.sponsor_tier === 'territorial'
+    data.subscription_tier === 'pro'
+    || data.sponsor_tier === 'territorial'
+    || data.sponsor_tier === 'national'
   );
 }
 

@@ -69,13 +69,17 @@ export function canonicalizeUserProductLine(
   if (line === 'amateur' || line === 'sante') {
     return line;
   }
-  // Migration homme/woman joueur → Pro Joueur (doc architecture split).
-  if ((line === 'homme' || line === 'woman') && role === 'player') {
-    return 'pro_player';
+  // Legacy homme/woman → pôles canoniques (persister via migration).
+  if (line === 'homme' || line === 'woman') {
+    if (role === 'player') return 'pro_player';
+    if (role === 'club') return 'pro_club';
+    if (['coach', 'agent', 'recruiter', 'organizer'].includes(role)) {
+      return 'pro_staff';
+    }
+    return 'amateur';
   }
-  if (line === 'homme' || line === 'woman') return line;
   if (!line && role === 'player') return 'pro_player';
-  return line ?? 'homme';
+  return line ?? 'amateur';
 }
 
 /**
@@ -117,13 +121,15 @@ export function resolvePersistedProductLine(
   role: UserRole,
 ): ProductLineId {
   if (isProSplitLine(line)) return line;
-  if (line === 'pro') return splitLegacyProByRole(role);
+  if (line === 'pro' || line === 'homme' || line === 'woman') {
+    return canonicalizeUserProductLine(line, role);
+  }
   return line;
 }
 
-/** Indique si le document Firestore doit être migré hors de `pro`. */
+/** Indique si le document Firestore doit être migré hors des lignes legacy. */
 export function needsProductLineMigration(
   stored: ProductLineId | undefined,
-): stored is 'pro' {
-  return stored === 'pro';
+): stored is 'pro' | 'homme' | 'woman' {
+  return stored === 'pro' || stored === 'homme' || stored === 'woman';
 }
