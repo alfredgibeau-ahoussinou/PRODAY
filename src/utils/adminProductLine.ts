@@ -32,7 +32,7 @@ const ROLE_HINTS: Partial<Record<UserRole, string>> = {
   organizer: 'Événements & tournois',
   sponsor: 'Marque & campagnes',
   supporter: 'Fan & communauté',
-  physio: 'Cabinet & suivi médical',
+  physio: 'Pôle santé · 7 spécialités',
 };
 
 export function adminRoleHint(role: UserRole): string {

@@ -10,6 +10,7 @@ export type MedicalSpecialtyId =
   | 'osteo'
   | 'medecin'
   | 'prepa'
+  | 'mental'
   | 'nutrition'
   | 'podologue';
 
@@ -74,6 +75,18 @@ export const MEDICAL_SPECIALTY_CONFIGS: MedicalSpecialtyConfig[] = [
     practiceFocusLabel: 'Profil accompagné *',
     practiceFocusOptions: ['Individuel', 'Groupe / équipe', 'Centre de formation', 'Réathlétisation'],
     practiceHint: 'Votre vitrine prépa sera mise en avant sur les profils clubs.',
+  },
+  {
+    id: 'mental',
+    label: 'Coach mental / préparateur mental',
+    shortLabel: 'Mental',
+    icon: 'shield',
+    tagline: 'Confiance, concentration et gestion de la pression match.',
+    practiceTitle: 'Votre accompagnement',
+    practiceSubtitle: 'Publics et formats de suivi mental.',
+    practiceFocusLabel: 'Format principal *',
+    practiceFocusOptions: ['Individuel', 'Groupe / équipe', 'Avant match', 'Retour de blessure'],
+    practiceHint: 'Les joueurs pourront vous trouver dans l’annuaire Coach mental.',
   },
   {
     id: 'nutrition',

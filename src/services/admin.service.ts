@@ -188,6 +188,7 @@ export type AdminUserUpdatePatch = {
   sponsor_approved?: boolean;
   sponsor_tier?: 'starter' | 'territorial' | 'national' | null;
   job_title?: string;
+  medical_specialty?: string | null;
 };
 
 export const adminService = {
@@ -242,6 +243,9 @@ export const adminService = {
     }
     if (patch.job_title !== undefined) {
       update['profile.job_title'] = patch.job_title || null;
+    }
+    if (patch.medical_specialty !== undefined) {
+      update['profile.medical_specialty'] = patch.medical_specialty || null;
     }
 
     if (patch.product_line !== undefined || patch.role !== undefined) {

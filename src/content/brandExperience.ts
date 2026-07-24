@@ -114,7 +114,7 @@ export const SANTE_IDENTITY: UniverseIdentity = {
   mercatoLabel: 'Annuaire santé',
   playerLabel: 'Praticien',
   cvLabel: 'Profil cabinet',
-  entrySub: 'Kiné · Médecin · Prépa · Nutrition · Coach mental',
+  entrySub: 'Kiné · Ostéo · Médecin · Prépa · Mental · Nutrition · Podologue',
 };
 
 export const SPONSOR_IDENTITY: UniverseIdentity = {

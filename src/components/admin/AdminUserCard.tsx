@@ -10,9 +10,18 @@ import type { AppColors } from '../../theme/universeTheme';
 import { getRoleLabel } from '../../screens/signup/signupFlowConfig';
 import { adminProductLineLabel } from '../../utils/adminProductLine';
 import { getUserProductLine } from '../../utils/productLineAccess';
+import { MEDICAL_CANONICAL_LABELS, resolveMedicalSpecialtyId } from '../../screens/signup/signupMedicalI18n';
 
 function needsVerificationReview(user: User): boolean {
   return userNeedsAdminVerificationReview(user);
+}
+
+function healthSpecialtyLabel(user: User): string | null {
+  if (user.role !== 'physio') return null;
+  const raw = user.profile?.medical_specialty || user.profile?.job_title;
+  if (!raw) return null;
+  const id = resolveMedicalSpecialtyId(raw);
+  return id ? MEDICAL_CANONICAL_LABELS[id] : raw;
 }
 
 interface AdminUserCardProps {
@@ -44,6 +53,7 @@ export const AdminUserCard: React.FC<AdminUserCardProps> = ({
   const initial = user.display_name.trim().charAt(0).toUpperCase() || '?';
   const showVerify = needsVerificationReview(user);
   const productLine = getUserProductLine(user);
+  const specialty = healthSpecialtyLabel(user);
 
   return (
     <View style={styles.card}>
@@ -66,12 +76,14 @@ export const AdminUserCard: React.FC<AdminUserCardProps> = ({
             </Text>
             <View style={styles.badgeRow}>
               <View style={styles.roleBadge}>
-                <Text style={styles.roleBadgeText}>{getRoleLabel(user.role, t)}</Text>
+                <Text style={styles.roleBadgeText}>
+                  {specialty ?? getRoleLabel(user.role, t)}
+                </Text>
               </View>
               <View style={styles.lineBadge}>
                 <Text style={styles.lineBadgeText}>{adminProductLineLabel(productLine)}</Text>
               </View>
-              {user.profile?.job_title ? (
+              {user.profile?.job_title && !specialty ? (
                 <Text style={styles.city} numberOfLines={1}>
                   {user.profile.job_title}
                 </Text>

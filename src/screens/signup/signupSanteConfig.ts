@@ -22,7 +22,7 @@ export function getSanteWelcomeCopy(t?: TranslateFn) {
     subtitle: tr(
       t,
       'signup.sante.welcome.subtitle',
-      'Kiné, médecin du sport, préparateur ou nutritionniste — un parcours dédié aux praticiens.'
+      'Kiné, ostéo, médecin du sport, prépa, coach mental, nutritionniste ou podologue — un parcours dédié aux praticiens.'
     ),
   };
 }
@@ -83,8 +83,8 @@ export function getSanteStepMeta(page: SignupPageId, t?: TranslateFn): {
 }
 
 export const SANTE_PHYSIO_PREVIEW = [
-  'Spécialité & diplômes',
-  'Zone d’intervention',
+  'Choisir votre spécialité',
+  'Cabinet & zone d’intervention',
   'Visibilité clubs & joueurs',
 ];
 

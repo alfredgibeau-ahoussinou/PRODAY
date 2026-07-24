@@ -33,6 +33,7 @@ import {
 } from '../../../utils/adminProductLine';
 import { getUserProductLine } from '../../../utils/productLineAccess';
 import type { ProductLineId } from '../../../models/ProductLine';
+import { MEDICAL_CANONICAL_LABELS } from '../../../screens/signup/signupMedicalI18n';
 
 type UserListFilter = 'all' | 'pending' | UserRole | `line:${ProductLineId}`;
 
@@ -101,14 +102,15 @@ export const AdminUsersPage: React.FC = () => {
   };
 
   const handleCreate = async () => {
-    const { email, password, display_name, city, role, product_line } = createForm;
+    const { email, password, display_name, city, role, product_line, medical_specialty } =
+      createForm;
     if (!email.trim() || !password || !display_name.trim()) {
       Alert.alert('Champs requis', 'Email, mot de passe et nom sont obligatoires.');
       return;
     }
     setCreating(true);
     try {
-      await adminService.createUser({
+      const created = await adminService.createUser({
         email: email.trim(),
         password,
         display_name: display_name.trim(),
@@ -116,6 +118,15 @@ export const AdminUsersPage: React.FC = () => {
         city: city.trim() || undefined,
         product_line: resolveAdminProductLine(role, product_line),
       });
+      if (role === 'physio' && created?.uid) {
+        const specialtyId = medical_specialty ?? 'kine';
+        const label = MEDICAL_CANONICAL_LABELS[specialtyId];
+        await adminService.updateUser(created.uid, {
+          medical_specialty: label,
+          job_title: label,
+          product_line: 'sante',
+        });
+      }
       Alert.alert(t('admin.users.created'), t('admin.users.createdBody', { email }));
       setShowCreate(false);
       setCreateForm(EMPTY_FORM);
@@ -243,6 +254,7 @@ export const AdminUsersPage: React.FC = () => {
               is_verified: patch.is_verified,
               sponsor_approved: patch.sponsor_approved,
               job_title: patch.job_title,
+              medical_specialty: patch.medical_specialty,
             });
             setEditUser(null);
             await refresh();

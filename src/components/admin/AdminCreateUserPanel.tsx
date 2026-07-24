@@ -23,6 +23,11 @@ import {
 import { defaultRoleForProductLine } from '../../content/universeRoles';
 import { getRoleLabel } from '../../screens/signup/signupFlowConfig';
 import { useTranslation } from '../../context/LocaleContext';
+import type { MedicalSpecialtyId } from '../../screens/signup/signupRoleExperience';
+import {
+  MEDICAL_CANONICAL_LABELS,
+  getMedicalSpecialtyConfigs,
+} from '../../screens/signup/signupMedicalI18n';
 
 export interface CreateUserFormState {
   email: string;
@@ -31,6 +36,7 @@ export interface CreateUserFormState {
   city: string;
   role: UserRole;
   product_line: ProductLineId;
+  medical_specialty?: MedicalSpecialtyId;
 }
 
 interface AdminCreateUserPanelProps {
@@ -54,6 +60,8 @@ export const AdminCreateUserPanel: React.FC<AdminCreateUserPanelProps> = ({
   const { t } = useTranslation();
   const styles = useMemo(() => createStyles(c), [c]);
   const metierRoles = adminRolesForProductLine(form.product_line);
+  const medicalConfigs = useMemo(() => getMedicalSpecialtyConfigs(t), [t]);
+  const selectedSpecialty = form.medical_specialty ?? 'kine';
 
   if (!visible) return null;
 
@@ -114,6 +122,7 @@ export const AdminCreateUserPanel: React.FC<AdminCreateUserPanelProps> = ({
               onChange({
                 product_line: resolveAdminProductLine(role, line),
                 role,
+                medical_specialty: role === 'physio' ? form.medical_specialty ?? 'kine' : undefined,
               });
             }}
           >
@@ -160,6 +169,32 @@ export const AdminCreateUserPanel: React.FC<AdminCreateUserPanelProps> = ({
           );
         })}
       </View>
+
+      {form.role === 'physio' || form.product_line === 'sante' ? (
+        <>
+          <Text style={styles.fieldLabel}>Spécialité santé</Text>
+          <Text style={styles.hint}>7 métiers du pôle — précise le profil praticien</Text>
+          <View style={styles.roleList}>
+            {medicalConfigs.map((cfg) => {
+              const active = selectedSpecialty === cfg.id;
+              return (
+                <TouchableOpacity
+                  key={cfg.id}
+                  style={[styles.roleCard, active && styles.roleCardOn]}
+                  onPress={() => onChange({ medical_specialty: cfg.id, role: 'physio' })}
+                >
+                  <Text style={[styles.roleCardTitle, active && styles.roleCardTitleOn]}>
+                    {cfg.label}
+                  </Text>
+                  <Text style={[styles.roleCardHint, active && styles.roleCardHintOn]}>
+                    {cfg.tagline}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </>
+      ) : null}
 
       <TouchableOpacity style={styles.submit} onPress={onSubmit} disabled={submitting}>
         {submitting ? (

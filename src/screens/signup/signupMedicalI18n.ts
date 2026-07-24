@@ -8,6 +8,7 @@ export const MEDICAL_SPECIALTY_IDS: MedicalSpecialtyId[] = [
   'osteo',
   'medecin',
   'prepa',
+  'mental',
   'nutrition',
   'podologue',
 ];
@@ -18,6 +19,7 @@ export const MEDICAL_CANONICAL_LABELS: Record<MedicalSpecialtyId, string> = {
   osteo: 'Ostéopathe',
   medecin: 'Médecin du sport',
   prepa: 'Préparateur physique',
+  mental: 'Coach mental / préparateur mental',
   nutrition: 'Nutritionniste sportif',
   podologue: 'Podologue du sport',
 };
@@ -82,6 +84,17 @@ const BASE: Record<
     practiceHint: 'Votre vitrine prépa sera mise en avant sur les profils clubs.',
     shortLabel: 'Prépa',
     label: 'Préparateur physique',
+  },
+  mental: {
+    icon: 'shield',
+    tagline: 'Confiance, concentration et gestion de la pression match.',
+    practiceTitle: 'Votre accompagnement',
+    practiceSubtitle: 'Publics et formats de suivi mental.',
+    practiceFocusLabel: 'Format principal *',
+    practiceFocusOptions: ['Individuel', 'Groupe / équipe', 'Avant match', 'Retour de blessure'],
+    practiceHint: 'Les joueurs pourront vous trouver dans l’annuaire Coach mental.',
+    shortLabel: 'Mental',
+    label: 'Coach mental / préparateur mental',
   },
   nutrition: {
     icon: 'heart',
@@ -155,5 +168,14 @@ export function medicalIdToCanonicalLabel(id: MedicalSpecialtyId): string {
 export function resolveMedicalSpecialtyId(value: string): MedicalSpecialtyId | null {
   if ((MEDICAL_SPECIALTY_IDS as string[]).includes(value)) return value as MedicalSpecialtyId;
   const byLabel = MEDICAL_SPECIALTY_IDS.find((id) => MEDICAL_CANONICAL_LABELS[id] === value);
-  return byLabel ?? null;
+  if (byLabel) return byLabel;
+  const lower = value.toLowerCase();
+  if (lower.includes('mental')) return 'mental';
+  if (lower.includes('kiné') || lower.includes('kine')) return 'kine';
+  if (lower.includes('ostéo') || lower.includes('osteo')) return 'osteo';
+  if (lower.includes('médecin') || lower.includes('medecin')) return 'medecin';
+  if (lower.includes('préparateur physique') || lower.includes('prepa')) return 'prepa';
+  if (lower.includes('nutrition')) return 'nutrition';
+  if (lower.includes('podo')) return 'podologue';
+  return null;
 }

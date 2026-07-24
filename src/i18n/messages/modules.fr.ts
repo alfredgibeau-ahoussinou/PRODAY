@@ -291,7 +291,7 @@ export const MODULES_FR: MessageCatalog = {
   'role.recruiter': 'Recruteur',
   'role.organizer': 'Organisateur',
   'role.sponsor': 'Sponsor',
-  'role.physio': 'Kinésithérapeute',
+  'role.physio': 'Praticien santé',
   'feed.health.title': 'Pôle médical',
   'feed.health.player.woman': 'Joueuses — suivi blessure',
   'feed.health.player.default': 'Joueurs — suivi blessure',
