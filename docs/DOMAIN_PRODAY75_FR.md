@@ -5,7 +5,65 @@
 **URL canonique :** https://proday75.fr (et https://www.proday75.fr → redirection apex)  
 **URL Netlify par défaut :** https://proday75.netlify.app (redirigée vers `proday75.fr`)
 
-Dernière mise à jour : 2026-07-08 (stratégie séquentielle domaines — CLI/API)
+Dernière mise à jour : 2026-07-24 (incident `ERR_CERT_AUTHORITY_INVALID` — A record obsolète)
+
+## Incident HTTPS Chrome (2026-07-24) — cause et correctif
+
+### Symptôme
+
+Chrome : « Votre connexion n'est pas privée » / `NET::ERR_CERT_AUTHORITY_INVALID` + HSTS (pas de contournement).
+
+### Cause exacte
+
+Le DNS public apex (`proday75.fr`) a **deux** enregistrements **A** :
+
+| IP | Comportement TLS (SNI `proday75.fr`) |
+|----|-------------------------------------|
+| `75.2.60.5` | Certificat Let's Encrypt valide (`CN=proday75.fr`, émetteur `YE2`) — Netlify OK |
+| `99.83.81.81` | Certificat **Amazon Internal** (`CN=bigmac-traymanager-…amazonaws.com`, CA interne) — **non fiable** |
+
+Chrome choisit l’IP en round-robin. Quand il tombe sur `99.83.81.81`, la CA interne Amazon déclenche `ERR_CERT_AUTHORITY_INVALID`. HSTS empêche le bypass.
+
+Ce n’est **pas** un certificat auto-signé Netlify, ni un cert expiré, ni un SAN mismatch. Le certificat LE Netlify est **émis et valide** (`ssl: true`, domaines `proday75.fr` + `www.proday75.fr`, expire ~2026-10-07).
+
+`99.83.81.81` était une ancienne IP load balancer Netlify documentée dans d’anciens guides ; **Netlify ne la recommande plus**. Docs actuelles : **un seul** A → `75.2.60.5` (ou ALIAS/ANAME → `apex-loadbalancer.netlify.com`). Plusieurs A sur l’apex cassent HTTPS / provisioning.
+
+### Correctif DNS (IONOS — action manuelle obligatoire)
+
+1. [IONOS](https://www.ionos.fr/) → Domaines & SSL → **proday75.fr** → **DNS**
+2. **Supprimer** l’enregistrement **A** `@` → `99.83.81.81`
+3. **Conserver uniquement** :
+
+| Type | Hôte | Valeur |
+|------|------|--------|
+| **A** | `@` | `75.2.60.5` |
+| **CNAME** | `www` | `proday75.netlify.app` |
+
+4. Optionnel (meilleure résilience) : si IONOS propose ALIAS/ANAME, remplacer le A par un ALIAS `@` → `apex-loadbalancer.netlify.com` (résout aujourd’hui vers `75.2.60.5` + `99.83.231.61`).
+5. Attendre la propagation (TTL ~1 h typiquement), puis vider le cache Chrome HSTS si besoin : `chrome://net-internals/#hsts` → Delete domain `proday75.fr`.
+
+### Vérification
+
+```bash
+dig +short A proday75.fr @8.8.8.8
+# Attendu : UNIQUEMENT 75.2.60.5 (plus de 99.83.81.81)
+
+# Doit réussir (verify ok, HTTP 200) :
+curl -vI --resolve proday75.fr:443:75.2.60.5 https://proday75.fr
+curl -vI https://proday75.fr
+
+# Doit ÉCHOUER tant que le mauvais A existe encore :
+curl -vI --resolve proday75.fr:443:99.83.81.81 https://proday75.fr
+```
+
+### État Netlify après correctif CLI (2026-07-24)
+
+| Champ | Valeur |
+|-------|--------|
+| `custom_domain` | `proday75.fr` |
+| `domain_aliases` | `www.proday75.fr` (réajouté via API) |
+| `ssl` | `true` — certificat LE `issued` |
+| DNS autoritaire | toujours **IONOS** (`ns*.ui-dns.*`) — la zone Netlify DNS existe mais n’est **pas** utilisée tant que les NS IONOS restent |
 
 ## Clé privée IONOS (`*.proday75.fr_private_key.key`)
 
@@ -234,20 +292,21 @@ netlify api getSite --data '{"site_id": "a55cf9f2-06a5-4632-bffb-8f68d81395ac"}'
 Connexion : [IONOS](https://www.ionos.fr/) → **Domaines & SSL** → **proday75.fr** → **DNS**.
 
 1. **Désactiver** toute redirection / page parking / « redirection du domaine » vers une page IONOS.
-2. **Supprimer ou remplacer** l’enregistrement **A** existant pour la racine (`@`) qui pointe vers `217.160.0.39`.
-3. **Ajouter / conserver** les enregistrements suivants :
+2. **Supprimer** tout **A** racine autre que `75.2.60.5` (notamment l’ancien `99.83.81.81` et tout A IONOS type `217.160.0.39`).
+3. **Ajouter / conserver** uniquement :
 
 | Type | Hôte / Nom | Valeur / Cible | TTL |
 |------|------------|----------------|-----|
 | **A** | `@` (racine) | `75.2.60.5` | 3600 s ou défaut |
-| **A** | `@` | `99.83.81.81` | idem |
 | **CNAME** | `www` | `proday75.netlify.app` | idem |
 
 Notes IONOS :
 
-- Deux enregistrements **A** sur `@` : configuration recommandée par Netlify pour l’apex avec DNS externe.
+- **Un seul** enregistrement **A** sur `@` → `75.2.60.5` ([docs Netlify](https://docs.netlify.com/manage/domains/configure-domains/configure-external-dns/)). Ne pas ajouter `99.83.81.81` (IP dépréciée → certificat Amazon interne → `ERR_CERT_AUTHORITY_INVALID`).
+- Si ALIAS/ANAME disponible : préférer `@` → `apex-loadbalancer.netlify.com` à la place du A.
 - CNAME `www` : si IONOS exige un point final → `proday75.netlify.app.`
 - Ne pas créer de CNAME sur `@` (racine).
+- Pas d’enregistrement **AAAA** sur l’apex (non supporté par le LB Netlify standard).
 - Laisser les **NS** IONOS (`ui-dns.*`) sauf migration DNS complète vers Netlify.
 
 ## Après propagation DNS (souvent 15 min à 48 h)
@@ -257,7 +316,7 @@ Notes IONOS :
    dig +short proday75.fr A
    dig +short www.proday75.fr CNAME
    ```
-   Attendu : `75.2.60.5` / `99.83.81.81` et `proday75.netlify.app` pour `www`.
+   Attendu : **uniquement** `75.2.60.5` et `proday75.netlify.app` pour `www`.
 
 2. Netlify → **Domain management** → `proday75.fr` **Verified**, certificat HTTPS **Active**.
 

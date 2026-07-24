@@ -30,7 +30,7 @@ Symptômes : page blanche, « trop de redirections », ou retour sur « Accéder
    # Attendu : location: https://proday75.fr/beta   (sans ?token=)
    ```
 4. **Jeton valide** : renvoyer l'email depuis l'admin ProDay (inscription approuvée) ou ouvrir le lien du dernier mail reçu.
-5. **HTTPS** : si le navigateur signale un certificat invalide sur `proday75.fr`, voir `docs/DOMAIN_PRODAY75_FR.md` (certificat Let's Encrypt Netlify).
+5. **HTTPS** : si Chrome affiche `ERR_CERT_AUTHORITY_INVALID` sur `proday75.fr`, voir `docs/DOMAIN_PRODAY75_FR.md` § Incident 2026-07-24 (souvent l’ancien A `99.83.81.81` à supprimer chez IONOS).
 
 ## 1. Compte EmailJS
 
