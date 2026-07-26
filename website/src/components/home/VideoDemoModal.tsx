@@ -50,85 +50,32 @@ export function VideoDemoModal({ isOpen, onClose }: VideoDemoModalProps) {
 
               <div className="p-6 sm:p-8">
                 <h3 className="font-display text-2xl font-extrabold uppercase tracking-[-0.03em] text-white sm:text-3xl">
-                  Découvrez ProDay en 45 secondes
+                  Vidéo de présentation
                 </h3>
 
                 <div className="mt-6 aspect-video overflow-hidden rounded-2xl bg-white/5">
                   <div className="flex h-full items-center justify-center">
-                    <div className="text-center">
+                    <div className="text-center px-6">
                       <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[var(--proday-accent)]/20">
                         <svg
                           className="h-8 w-8 text-[var(--proday-accent)]"
-                          fill="currentColor"
+                          fill="none"
+                          stroke="currentColor"
                           viewBox="0 0 24 24"
                         >
-                          <path d="M8 5v14l11-7z" />
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+                          />
                         </svg>
                       </div>
-                      <p className="text-sm text-white/45">Vidéo de démonstration</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-6 space-y-3">
-                  <p className="text-base leading-relaxed text-white/70">
-                    Découvrez rapidement comment ProDay peut vous aider à atteindre vos
-                    objectifs cette saison.
-                  </p>
-
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-3">
-                      <svg
-                        className="h-5 w-5 text-[var(--proday-accent)]"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M5 13l4 4L19 7"
-                        />
-                      </svg>
-                      <p className="text-sm text-white/70">
-                        Trouvez un club ou recrutez des talents
+                      <p className="text-base font-semibold text-white">
+                        Vidéo en cours de production
                       </p>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <svg
-                        className="h-5 w-5 text-[var(--proday-accent)]"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M5 13l4 4L19 7"
-                        />
-                      </svg>
-                      <p className="text-sm text-white/70">
-                        Gérez votre équipe et organisez vos matchs
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <svg
-                        className="h-5 w-5 text-[var(--proday-accent)]"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M5 13l4 4L19 7"
-                        />
-                      </svg>
-                      <p className="text-sm text-white/70">
-                        Connectez-vous avec la communauté football
+                      <p className="mt-2 text-sm text-white/50">
+                        La vidéo de présentation sera bientôt disponible.
                       </p>
                     </div>
                   </div>
