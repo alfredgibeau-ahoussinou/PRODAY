@@ -83,6 +83,7 @@ export function UniverseModuleExplorer({
           fill
           className="object-cover object-center"
           sizes="(max-width: 1024px) 100vw, 50vw"
+          loading="lazy"
         />
         <div className={`absolute inset-0 bg-gradient-to-t ${theme.imageGradient}`} />
         <div className="absolute inset-x-0 bottom-0 p-7 pt-28 sm:p-9">

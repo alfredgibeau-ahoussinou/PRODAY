@@ -102,6 +102,7 @@ export function CvPreview({ universe = "homme" }: CvPreviewProps) {
                 alt=""
                 fill
                 className="object-cover"
+                loading="lazy"
               />
             </div>
             <div>

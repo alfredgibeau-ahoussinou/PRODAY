@@ -49,7 +49,7 @@ export function WomanModuleExplorer() {
           animate={{ opacity: 1, scale: 1 }}
           className={`relative min-h-[400px] overflow-hidden rounded-3xl ${theme.imageRing}`}
         >
-          <Image src={mod.image} alt={mod.title} fill className="object-cover" />
+          <Image src={mod.image} alt={mod.title} fill className="object-cover" loading="lazy" />
           <div className="absolute inset-0 bg-gradient-to-t from-pink-950/80 via-pink-900/20 to-transparent" />
           <div className="absolute bottom-0 p-8">
             <h3 className="text-2xl font-bold text-white">{mod.title}</h3>

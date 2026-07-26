@@ -80,6 +80,7 @@ export function ModuleExplorer({ compact }: ModuleExplorerProps) {
               fill
               className="object-cover object-center"
               sizes="(max-width: 768px) 100vw, 50vw"
+              loading="lazy"
             />
             <div className={`absolute inset-0 bg-gradient-to-t ${theme.imageGradient}`} />
             <div className="absolute inset-x-0 bottom-0 p-8 pt-20">
