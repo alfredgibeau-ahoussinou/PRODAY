@@ -28,6 +28,14 @@ export function WaitlistForm({ fullPage, compact, minimal, initialRole }: Waitli
     const value = email.trim();
     if (!value) return;
 
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(value)) {
+      setErrorMessage("Email invalide. Vérifiez le format.");
+      setState("error");
+      return;
+    }
+
     setState("loading");
     setErrorMessage(null);
 
@@ -122,6 +130,7 @@ export function WaitlistForm({ fullPage, compact, minimal, initialRole }: Waitli
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={state === "loading"}
+                  aria-label="Adresse email"
                   className="min-h-11 flex-1 rounded-full border-0 bg-white/10 px-5 py-3 text-white caret-white placeholder:text-white/50 focus:outline focus:outline-2 focus:outline-[var(--proday-accent)]/50 disabled:opacity-60"
                 />
                 <button
@@ -240,6 +249,7 @@ export function WaitlistForm({ fullPage, compact, minimal, initialRole }: Waitli
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={state === "loading"}
+                  aria-label="Adresse email"
                   className="flex-1 rounded-full border-0 bg-white/10 px-5 py-3.5 text-white caret-white placeholder:text-white/50 focus:outline focus:outline-2 focus:outline-[var(--proday-accent)]/50 disabled:opacity-60"
                 />
                 <button
