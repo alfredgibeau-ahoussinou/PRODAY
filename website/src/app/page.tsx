@@ -5,6 +5,7 @@ import { RoleQuiz } from "@/components/interactive/RoleQuiz";
 import { WaitlistForm } from "@/components/WaitlistForm";
 import { OnboardingPriorityQuestion } from "@/components/home/OnboardingPriorityQuestion";
 import { POLES, POLE_BRAND_HEX } from "@/lib/poles";
+import { Testimonials } from "@/components/Testimonials";
 
 const POLE_SHORT: Record<string, string> = {
   amateur: "Amateur",
@@ -37,6 +38,8 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      <Testimonials />
 
       <section className="border-t border-white/10 bg-[#050507]">
         <WaitlistForm minimal />
