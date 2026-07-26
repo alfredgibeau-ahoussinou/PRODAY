@@ -2,8 +2,7 @@
 
 import { MotionConfig } from "framer-motion";
 import { usePathname } from "next/navigation";
-import { SiteFooter } from "@/components/SiteFooter";
-import { SiteHelpChatbot } from "@/components/SiteHelpChatbot";
+import { Suspense, lazy } from "react";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteVisitTracker } from "@/components/analytics/SiteVisitTracker";
 import { PoleContextBar } from "./PoleContextBar";
@@ -11,6 +10,9 @@ import { PageTransition } from "./PageTransition";
 import { ScrollToHash } from "./ScrollToHash";
 import { showPoleContextBar } from "@/lib/siteArchitecture";
 import { navBrandForPath } from "@/components/universe/universeTheme";
+
+const SiteFooter = lazy(() => import("@/components/SiteFooter").then(mod => ({ default: mod.SiteFooter })));
+const SiteHelpChatbot = lazy(() => import("@/components/SiteHelpChatbot").then(mod => ({ default: mod.SiteHelpChatbot })));
 
 export function SiteShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -79,8 +81,12 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
               <PageTransition pathname={pathname}>{children}</PageTransition>
             </main>
           </div>
-          <SiteFooter />
-          <SiteHelpChatbot />
+          <Suspense fallback={null}>
+            <SiteFooter />
+          </Suspense>
+          <Suspense fallback={null}>
+            <SiteHelpChatbot />
+          </Suspense>
         </div>
       </div>
     </MotionConfig>
