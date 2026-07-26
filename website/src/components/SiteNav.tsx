@@ -13,12 +13,13 @@ import {
   type CSSProperties,
 } from "react";
 import { createPortal } from "react-dom";
-import { ArrowUpRight, ChevronDown, Menu, X } from "lucide-react";
+import { ArrowUpRight, ChevronDown, Menu, X, Search } from "lucide-react";
 import { navBrandForPath } from "@/components/universe/universeTheme";
 import { PRODAY_LOGO_OFFICIAL, PRODAY_OFFICIAL_LOGO_ASPECT } from "@/lib/brandingAssets";
 import { isNavActive, poleForPath } from "@/lib/siteArchitecture";
 import { POLE_BRAND_HEX, POLES, pricingHrefForPath, type PoleId } from "@/lib/poles";
 import { POLE_NAV_ITEMS, ROUTES, UTILITY_NAV_ITEMS } from "@/lib/routes";
+import { SearchModal } from "@/components/SearchModal";
 
 const easeOut = [0.22, 1, 0.36, 1] as const;
 
@@ -227,6 +228,7 @@ export function SiteNav() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
 
   const brand = navBrandForPath(pathname);
   const isHome = pathname === ROUTES.home;
@@ -252,6 +254,10 @@ export function SiteNav() {
     document.body.classList.add("nav-lock");
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") close();
+      if (event.key === "k" && (event.metaKey || event.ctrlKey)) {
+        event.preventDefault();
+        setSearchOpen(true);
+      }
     };
     window.addEventListener("keydown", onKeyDown);
     return () => {
@@ -262,6 +268,7 @@ export function SiteNav() {
 
   return (
     <>
+      <SearchModal isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
       <div className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-[#050507]/95 backdrop-blur-lg">
         <header className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <Link href={ROUTES.home} className="group flex items-center gap-2.5">
@@ -302,6 +309,14 @@ export function SiteNav() {
           </div>
 
           <div className="hidden shrink-0 items-center gap-3 lg:flex">
+            <button
+              onClick={() => setSearchOpen(true)}
+              className="p-2 text-white/45 transition-colors hover:text-white"
+              aria-label="Rechercher"
+              title="Rechercher (Cmd/Ctrl + K)"
+            >
+              <Search size={18} />
+            </button>
             <Link
               href={ROUTES.demo}
               className="px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-white/45 transition-colors duration-200 hover:text-white"
@@ -415,6 +430,16 @@ export function SiteNav() {
                 })}
               </div>
               <div className="mt-5 border-t border-white/10 pt-4">
+                <button
+                  onClick={() => {
+                    setSearchOpen(true);
+                    close();
+                  }}
+                  className="flex min-h-12 items-center gap-3 text-sm tracking-wide text-white/65 transition-colors duration-200 hover:text-white"
+                >
+                  <Search size={18} />
+                  Rechercher
+                </button>
                 {UTILITY_NAV_ITEMS.map((item) => (
                   <Link
                     key={item.href}
