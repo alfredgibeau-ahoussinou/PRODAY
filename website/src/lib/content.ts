@@ -10,9 +10,9 @@ export const BRAND = {
   logo: "/branding/logo-proday-official.png",
   /** Phrase d’accueil : ce que fait l’app, en une ligne. */
   mission:
-    "L'app mobile qui réunit joueurs, clubs, staff, santé et partenaires autour du foot.",
+    "L'app pour le foot. Ton profil, tes matchs, ton club. Tout au même endroit.",
   heroSupport:
-    "Profil, matchs, RDV santé et sponsors dans une seule app. La bêta est ouverte.",
+    "Que tu sois joueur, coach, club ou supporter, ProDay t'accompagne. La bêta est ouverte.",
 } as const;
 
 /** Pitch honnête : capacités réelles vs ambition long terme. Pas de métriques fictives. */
@@ -1929,97 +1929,127 @@ export const COMPARISON_ROWS = [
 export const QUIZ_QUESTIONS = [
   {
     id: "q1",
-    question: "Votre priorité cette saison ?",
+    question: "Si tu pouvais accomplir une seule chose cette saison, ce serait quoi ?",
     options: [
-      { label: "Trouver un club / être recruté", role: "player" },
-      { label: "Gérer mon équipe et recruter", role: "coach" },
-      { label: "Annonces et structure club", role: "club" },
-      { label: "Organiser un tournoi", role: "organizer" },
+      { label: "Décrocher un contrat dans un club qui me correspond", role: "player" },
+      { label: "Mener mon équipe vers la victoire et voir mes joueurs progresser", role: "coach" },
+      { label: "Faire grandir mon club et le rendre plus professionnel", role: "club" },
+      { label: "Créer des événements inoubliables pour la communauté", role: "organizer" },
     ],
   },
   {
     id: "q2",
-    question: "Vous utilisez surtout…",
+    question: "Dans ton quotidien, ce qui te ferait vraiment gagner du temps, c'est quoi ?",
     options: [
-      { label: "Mon profil sportif et stats", role: "player" },
-      { label: "Diplômes et détections", role: "coach" },
-      { label: "Plusieurs équipes au club", role: "club" },
-      { label: "Inscriptions et tableaux", role: "organizer" },
+      { label: "Avoir mon profil visible par les recruteurs sans effort", role: "player" },
+      { label: "Gérer facilement mes joueurs, convocations et diplômes", role: "coach" },
+      { label: "Centraliser tout mon club, équipes et calendriers au même endroit", role: "club" },
+      { label: "Automatiser les inscriptions et l'organisation des tournois", role: "organizer" },
     ],
   },
   {
     id: "q3",
-    question: "Côté foot féminin ?",
+    question: "Ce qui te motive le plus dans le foot, c'est quoi ?",
     options: [
-      { label: "Oui, c'est mon univers", role: "woman" },
-      { label: "Mixte / plutôt masculin", role: "homme" },
-      { label: "Je supervise un enfant", role: "parent" },
-      { label: "Je représente des joueurs", role: "agent" },
+      { label: "La compétition et l'envie de me dépasser chaque jour", role: "player" },
+      { label: "Transmettre mon savoir et voir des talents s'épanouir", role: "coach" },
+      { label: "Construire quelque chose de durable et structuré", role: "club" },
+      { label: "Rassembler les gens et créer des moments forts", role: "organizer" },
+    ],
+  },
+  {
+    id: "q4",
+    question: "Le week-end, tu passes ton temps plutôt à…",
+    options: [
+      { label: "M'entraîner, jouer et analyser mes performances", role: "player" },
+      { label: "Préparer mes séances et suivre mes joueurs", role: "coach" },
+      { label: "Gérer l'administratif et l'organisation du club", role: "club" },
+      { label: "Coordonner des événements et gérer les logistiques", role: "organizer" },
+    ],
+  },
+  {
+    id: "q5",
+    question: "En vrai, ton rêve dans le foot, c'est quoi ?",
+    options: [
+      { label: "Me faire repérer et vivre de ma passion", role: "player" },
+      { label: "Devenir un coach reconnu et former des champions", role: "coach" },
+      { label: "Diriger un club pro et le mener au sommet", role: "club" },
+      { label: "Organiser des compétitions de référence dans ma région", role: "organizer" },
     ],
   },
 ] as const;
 
 export const QUIZ_RESULTS: Record<
   string,
-  { title: string; description: string; href: string; cta: string }
+  { title: string; description: string; thought: string; href: string; cta: string }
 > = {
   player: {
     title: "Profil sportif",
-    description: "CV en ligne, Visibilité et stats. Le Mercato complète votre visibilité.",
-    href: "/cv",
-    cta: "Voir le CV en ligne",
+    description: "Visibilité, stats et opportunités. Le Mercato complète votre profil.",
+    thought: "Le foot, c'est avant tout une question de passion et de dépassement de soi. Chaque entraînement, chaque match compte pour construire ton parcours. ProDay t'accompagne pour que ton talent ne passe plus inaperçu.",
+    href: "/pro-joueur",
+    cta: "Voir le pôle Joueur",
   },
   coach: {
     title: "Profil Coach Pro",
     description: "Vérification diplôme, effectif et convocations. Univers Pro Day Pro.",
+    thought: "Un coach, c'est bien plus qu'un tacticien. C'est un mentor, un guide qui façonne les caractères et construit les champions de demain. Ta vision mérite d'être structurée et reconnue.",
     href: "/pro#poles",
     cta: "Voir Pro Day Pro",
   },
   recruiter: {
     title: "Profil Recruteur",
     description: "Scouting, Mercato Pro et pipeline candidatures. Rôle Recruteur sur Pro Day Pro.",
+    thought: "Repérer le talent, c'est un art. Entre intuition et analyse, tu cherches ces pépites qui feront la différence demain. ProDay te donne les outils pour transformer cette vision en réalité.",
     href: "/pro#poles",
     cta: "Voir Pro Day Pro",
   },
   club: {
     title: "Profil Club",
     description: "Annonces Mercato, multi-équipes et exports candidatures. Univers Pro Day Pro.",
+    thought: "Un club, c'est une famille, une vision, un projet. Construire quelque chose de durable demande de la rigueur et de l'organisation. Ton ambition mérite les meilleurs outils pour grandir.",
     href: "/pro#poles",
     cta: "Voir Pro Day Pro",
   },
   organizer: {
     title: "Profil Organisateur",
     description: "Créez vos tournois Arena. Inscriptions et palmarès dans le calendrier.",
+    thought: "Créer des moments inoubliables, rassembler la communauté autour d'une passion commune. C'est ça, la magie de l'organisation. ProDay simplifie la logistique pour que tu puisses te concentrer sur l'essentiel.",
     href: "/fonctionnalites#modules",
     cta: "Voir Arena",
   },
   woman: {
     title: "Univers ProDay Woman",
     description: "Mercato F, matchs et profil joueuse.",
+    thought: "Le foot féminin écrit son histoire chaque jour. Talenteuse, déterminée, tu portes l'avenir de ce sport. ProDay t'offre la visibilité que tu mérites pour briller.",
     href: "/woman",
     cta: "Voir Woman",
   },
   parent: {
     title: "Espace Parent",
     description: "Supervision, contacts approuvés et limites de temps.",
+    thought: "Voir son enfant s'épanouir sur le terrain, c'est une fierté immense. L'accompagner dans son parcours demande du temps, de l'écoute et les bons outils. ProDay facilite ce rôle de guide.",
     href: "/confiance#verification",
     cta: "Confiance & contrôle",
   },
   agent: {
     title: "Profil Agent",
     description: "CRM joueurs, mandats et contacts Mercato. Agent Elite sur Pro Day Pro.",
+    thought: "Un agent, c'est le lien entre le talent et l'opportunité. Tu connais la valeur de chaque joueur et tu sais où elle peut s'exprimer. ProDay te donne la visibilité pour faire les bons matchs.",
     href: "/pro#poles",
     cta: "Voir Pro Day Pro",
   },
   homme: {
     title: "Pro Day Man",
     description: "Foot masculin amateur. Mercato M, matchs, Arena et CV joueur.",
+    thought: "Le foot amateur, c'est la passion pure. Sans pression, juste le plaisir de jouer et de progresser. ProDay te permet de vivre cette passion avec des outils professionnels.",
     href: "/amateur#modules",
     cta: "Voir Man",
   },
   pro: {
     title: "Univers Pro Day Pro",
     description: "Recruteurs, coach, agent, club, pôle santé et réseau vérifié. Mercato Pro.",
+    thought: "L'excellence demande un environnement d'excellence. Tu évolues dans un monde où chaque détail compte, chaque relation est précieuse. ProDay t'offre l'écosystème qui correspond à tes ambitions.",
     href: "/pro#poles",
     cta: "Voir Pro",
   },

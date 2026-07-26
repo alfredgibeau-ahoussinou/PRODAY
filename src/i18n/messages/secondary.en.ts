@@ -2,16 +2,16 @@ import type { MessageCatalog } from '../types';
 
 /** Secondary screens — English source. */
 export const SECONDARY_EN: MessageCatalog = {
-  'auth.teaser.homme.0': 'Player signup only',
+  'auth.teaser.homme.0': 'Create your player profile',
   'auth.teaser.homme.1': 'Man space, sports profile and stats',
   'auth.teaser.homme.2': 'Confirmed email then access to Mercato M',
-  'auth.teaser.woman.0': 'Player signup only',
+  'auth.teaser.woman.0': 'Create your player profile',
   'auth.teaser.woman.1': 'Women\'s category, profile and stats',
   'auth.teaser.woman.2': 'Confirmed email then access to Mercato F',
   'auth.teaser.pro.0': 'Coach, club, agent, organizer or partner',
   'auth.teaser.pro.1': 'Career path tailored to your role',
   'auth.teaser.pro.2': 'Pro validation then access to the ecosystem',
-  'auth.teaser.sponsor.0': 'Brand / sponsor signup only',
+  'auth.teaser.sponsor.0': 'Brand or sponsor',
   'auth.teaser.sponsor.1': 'Geo campaigns, ROI and verified club showcase',
   'auth.teaser.sponsor.2': 'Validated profile — access your Sponsor space',
   'auth.teaser.sante.0': 'Physios, doctors and sports practitioners',

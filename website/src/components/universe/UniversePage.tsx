@@ -227,6 +227,115 @@ export function UniversePage({ universe }: UniversePageProps) {
           </div>
         </section>
 
+        {/* Women's Football Section - Pro Joueur only */}
+        {universe === "pro_joueur" && (
+          <section
+            className="scroll-mt-28 border-y border-white/10 py-20"
+            style={{
+              background: `linear-gradient(135deg, ${theme.brandDeep}22 0%, #050505 40%, #030303 100%)`,
+            }}
+          >
+            <div className="mx-auto max-w-6xl px-4 sm:px-6">
+              <div className="mb-8 flex items-center gap-4">
+                <div
+                  className="flex h-16 w-16 items-center justify-center rounded-2xl"
+                  style={{ background: `${theme.brandAccent}22` }}
+                >
+                  <span className="text-3xl">⚽</span>
+                </div>
+                <div>
+                  <p className={`font-signature text-2xl italic ${theme.highlightLabel}`}>
+                    Foot féminin
+                  </p>
+                  <h2 className="font-display mt-1 text-3xl font-extrabold uppercase tracking-[-0.03em] text-white sm:text-4xl">
+                    Opportunités et clubs dédiés
+                  </h2>
+                </div>
+              </div>
+              <p className="max-w-2xl text-base text-white/60">
+                ProDay s'engage à promouvoir le football féminin avec des opportunités spécifiques
+                pour les joueuses professionnelles et les clubs dédiés au football féminin.
+              </p>
+              <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                <div
+                  className="rounded-2xl border border-white/10 bg-black/30 p-6"
+                  style={{ borderColor: `${theme.brandAccent}33` }}
+                >
+                  <p
+                    className="text-[10px] font-bold uppercase tracking-[0.2em]"
+                    style={{ color: theme.brandAccent }}
+                  >
+                    Profil
+                  </p>
+                  <p className="mt-3 font-display text-xl font-bold text-white">
+                    Portfolio joueuse
+                  </p>
+                  <p className="mt-2 text-sm text-white/60">
+                    CV complet avec stats, vidéos et parcours carrière
+                  </p>
+                </div>
+                <div
+                  className="rounded-2xl border border-white/10 bg-black/30 p-6"
+                  style={{ borderColor: `${theme.brandAccent}33` }}
+                >
+                  <p
+                    className="text-[10px] font-bold uppercase tracking-[0.2em]"
+                    style={{ color: theme.brandAccent }}
+                  >
+                    Recrutement
+                  </p>
+                  <p className="mt-3 font-display text-xl font-bold text-white">
+                    Clubs féminins
+                  </p>
+                  <p className="mt-2 text-sm text-white/60">
+                    Accès direct aux clubs et opportunités D1, D2 et D3
+                  </p>
+                </div>
+                <div
+                  className="rounded-2xl border border-white/10 bg-black/30 p-6"
+                  style={{ borderColor: `${theme.brandAccent}33` }}
+                >
+                  <p
+                    className="text-[10px] font-bold uppercase tracking-[0.2em]"
+                    style={{ color: theme.brandAccent }}
+                  >
+                    Réseau
+                  </p>
+                  <p className="mt-3 font-display text-xl font-bold text-white">
+                    Communauté
+                  </p>
+                  <p className="mt-2 text-sm text-white/60">
+                    Connexion avec joueuses, staff et agents du foot féminin
+                  </p>
+                </div>
+              </div>
+              <div className="mt-10">
+                <Link
+                  href={ROUTES.proJoueur}
+                  className="inline-flex items-center gap-2 rounded-full border border-white/25 px-6 py-3 text-sm font-semibold text-white transition hover:border-white/50 hover:bg-white/5"
+                  style={{ borderColor: theme.brandAccent }}
+                >
+                  Voir les opportunités
+                  <ArrowRight size={16} />
+                </Link>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* FFF Agents Section - Pro Staff only */}
+        {universe === "pro_staff" && (
+          <section
+            className="scroll-mt-28 border-y border-white/10 py-20"
+            style={{
+              background: `linear-gradient(135deg, ${theme.brandDeep}22 0%, #050505 40%, #030303 100%)`,
+            }}
+          >
+            <div className="mx-auto max-w-6xl px-4 sm:px-6">
+            </div>
+          </section>
+        )}
+
         {/* Parcours */}
         {journey && (
           <section

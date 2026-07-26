@@ -156,6 +156,14 @@ export const ClubHomeDashboard: React.FC<StaffRoleHomeProps> = ({
           onPress={() => setShowDetections(true)}
         />
 
+        <StaffSectionTitle title={t('roleHome.club.officialsTitle')} />
+        <StaffListCard
+          index={7}
+          title={t('roleHome.club.addOfficial')}
+          subtitle={t('roleHome.club.addOfficialSub')}
+          onPress={() => nav.openDashboard('gestion')}
+        />
+
         <StaffSectionTitle title={t('roleHome.quickActions')} />
         <StaffQuickActions role="club" onAction={handleQuickAction} />
       </StaffRoleHomeShell>

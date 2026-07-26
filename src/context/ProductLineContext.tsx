@@ -16,6 +16,7 @@ import {
   WOMAN_SPACE_ACTIVE_KEY,
   type ProductLineId,
 } from '../models/ProductLine';
+import { canAccessProductLine } from '../content/universeRoles';
 import { PRO_SIGNUP_PRESET_ROLE_KEY } from '../models/CarouselPole';
 import type { UserRole } from '../models/User';
 import { getThemedColorsForLine, type AppColors } from '../theme/universeTheme';
@@ -204,6 +205,12 @@ export const ProductLineProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const setProductLine = useCallback(
     async (line: ProductLineId) => {
+      // Enforce pole exclusivity for authenticated users
+      if (profile && !canAccessProductLine(profile.role, line)) {
+        console.warn(`User with role ${profile.role} cannot access product line ${line}`);
+        return;
+      }
+      
       if (line === 'woman' || line === 'homme') await enterAmateurSpace();
       else if (line === 'sponsor') await enterSponsorSpace();
       else if (isProProductLine(line)) await enterProLine(line);
@@ -212,7 +219,7 @@ export const ProductLineProvider: React.FC<{ children: React.ReactNode }> = ({
       else if (line === 'sante') await enterSanteSpace();
       else await enterAmateurSpace();
     },
-    [enterProLine, enterAmateurSpace, enterSupporterSpace, enterSanteSpace, enterSponsorSpace]
+    [enterProLine, enterAmateurSpace, enterSupporterSpace, enterSanteSpace, enterSponsorSpace, profile]
   );
 
   useEffect(() => {

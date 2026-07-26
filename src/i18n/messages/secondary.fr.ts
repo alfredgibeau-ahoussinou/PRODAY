@@ -2,19 +2,19 @@ import type { MessageCatalog } from '../types';
 
 /** Écrans secondaires — français. */
 export const SECONDARY_FR: MessageCatalog = {
-  'auth.teaser.homme.0': 'Inscription joueur uniquement',
+  'auth.teaser.homme.0': 'Créez votre profil joueur',
   'auth.teaser.homme.1': 'CV en ligne, stats et Mercato M',
   'auth.teaser.homme.2': 'Email confirmé. Accès à votre espace Man',
 
-  'auth.teaser.woman.0': 'Inscription joueuse uniquement',
+  'auth.teaser.woman.0': 'Créez votre profil joueuse',
   'auth.teaser.woman.1': 'CV joueuse, stats et Mercato F',
   'auth.teaser.woman.2': 'Email confirmé. Accès à votre espace Woman',
 
-  'auth.teaser.amateur.0': 'Joueur ou coach sur Pro Day Amateur',
+  'auth.teaser.amateur.0': 'Joueur ou coach amateur',
   'auth.teaser.amateur.1': 'CV, effectif, Mercato local et matchs',
   'auth.teaser.amateur.2': 'Email confirmé. Accès à votre espace Pro Day Amateur',
 
-  'auth.teaser.supporter.0': 'Inscription supporter uniquement',
+  'auth.teaser.supporter.0': 'Rejoignez la communauté',
   'auth.teaser.supporter.1': 'Matchs, réels et fil communautaire',
   'auth.teaser.supporter.2': 'Email confirmé. Bienvenue en tribune',
 
@@ -22,11 +22,11 @@ export const SECONDARY_FR: MessageCatalog = {
   'auth.teaser.pro.1': 'Parcours métier adapté à votre rôle',
   'auth.teaser.pro.2': 'Profil vérifié. Accès à votre espace Pro',
 
-  'auth.teaser.pro_player.0': 'Inscription joueur professionnel',
+  'auth.teaser.pro_player.0': 'Joueur professionnel',
   'auth.teaser.pro_player.1': 'Portfolio, opportunités et convocations',
   'auth.teaser.pro_player.2': 'Profil vérifié. Accès à votre espace Pro Joueur',
 
-  'auth.teaser.pro_club.0': 'Inscription club ou structure',
+  'auth.teaser.pro_club.0': 'Club ou structure',
   'auth.teaser.pro_club.1': 'Effectifs, recrutement et calendrier',
   'auth.teaser.pro_club.2': 'Profil vérifié. Accès à votre espace Pro Club',
 
@@ -34,7 +34,7 @@ export const SECONDARY_FR: MessageCatalog = {
   'auth.teaser.pro_staff.1': 'Mandats, scouting et réseau pro',
   'auth.teaser.pro_staff.2': 'Profil vérifié. Accès à votre espace Pro Staff',
 
-  'auth.teaser.sponsor.0': 'Inscription marque / sponsor uniquement',
+  'auth.teaser.sponsor.0': 'Marque ou sponsor',
   'auth.teaser.sponsor.1': 'Campagnes géo, ROI et vitrine clubs vérifiée',
   'auth.teaser.sponsor.2': 'Profil validé. Accès à votre espace Sponsor',
 

@@ -75,7 +75,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fr" className={`${inter.variable} ${syne.variable} ${cormorant.variable} scroll-smooth`}>
-      <body className="min-h-screen antialiased">
+      <body className="min-h-screen antialiased pt-16">
         <SiteShell>{children}</SiteShell>
       </body>
     </html>

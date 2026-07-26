@@ -43,6 +43,31 @@ export function isPhysioBookingEnabled(profile: User): boolean {
   return profile.profile.booking_enabled !== false;
 }
 
+export async function countFreeVideoConsultationsForPatient(patientUid: string): Promise<number> {
+  if (!isFirebaseConfigured()) return 0;
+  const database = getDb();
+  if (!database) return 0;
+
+  try {
+    const q = query(
+      collection(database, COLLECTION),
+      where('patient_uid', '==', patientUid),
+      where('consultation_type', '==', 'visio'),
+      where('status', 'in', ['pending', 'confirmed', 'completed'])
+    );
+    const snap = await getDocs(q);
+    return snap.docs.length;
+  } catch (error) {
+    console.warn('[medicalAppointmentsService] countFreeVideoConsultationsForPatient:', error);
+    return 0;
+  }
+}
+
+export async function canBookFreeVideoConsultation(patientUid: string): Promise<boolean> {
+  const count = await countFreeVideoConsultationsForPatient(patientUid);
+  return count < 1;
+}
+
 export const medicalAppointmentsService = {
   async listForPhysio(
     physioUid: string,

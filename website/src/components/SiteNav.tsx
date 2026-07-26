@@ -240,7 +240,7 @@ export function SiteNav() {
   }, [pathname, close]);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 28);
+    const onScroll = () => setScrolled(window.scrollY > 50);
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
@@ -261,112 +261,96 @@ export function SiteNav() {
 
   return (
     <>
-      <div className="pointer-events-none fixed inset-x-0 top-0 z-50 flex justify-center px-3 pt-3 sm:px-5 sm:pt-4">
-        <header
-          className={`site-nav-dock pointer-events-auto relative w-full max-w-6xl rounded-2xl border shadow-[0_20px_60px_-28px_rgba(0,0,0,0.75)] ${
-            scrolled ? "is-scrolled" : ""
-          }`}
-        >
-          <div
-            className="pointer-events-none absolute inset-x-8 top-0 h-px"
-            style={{
-              background: `linear-gradient(90deg, transparent, ${accent}, transparent)`,
-            }}
-            aria-hidden
-          />
-          <nav
-            className="relative flex h-[3.75rem] items-center justify-between gap-3 px-3 sm:h-16 sm:px-4"
-            aria-label="Navigation principale"
-          >
-            <Link href={ROUTES.home} className="group flex min-w-0 shrink-0 items-center gap-2.5">
-              <span className="shrink-0 overflow-hidden rounded-xl bg-white p-0.5 shadow-[0_8px_24px_-12px_rgba(0,84,240,0.55)] transition-transform duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.03]">
-                <Image
-                  src={isHome ? PRODAY_LOGO_OFFICIAL : brand.logo}
-                  alt={isHome ? "ProDay" : brand.name}
-                  width={isHome ? Math.round(36 * PRODAY_OFFICIAL_LOGO_ASPECT) : 34}
-                  height={36}
-                  className="h-9 w-auto"
-                  priority
+      <div className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-[#050507]/95 backdrop-blur-lg">
+        <header className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+          <Link href={ROUTES.home} className="group flex items-center gap-2.5">
+            <span className="shrink-0 overflow-hidden rounded-lg bg-white p-0.5 shadow-md transition-transform duration-200 group-hover:scale-105">
+              <Image
+                src={isHome ? PRODAY_LOGO_OFFICIAL : brand.logo}
+                alt={isHome ? "ProDay" : brand.name}
+                width={isHome ? Math.round(36 * PRODAY_OFFICIAL_LOGO_ASPECT) : 34}
+                height={36}
+                className="h-9 w-auto"
+                priority
+              />
+            </span>
+            <span className="hidden min-w-0 flex-col sm:flex">
+              <span className="font-display truncate text-[15px] font-extrabold tracking-[-0.03em] text-white">
+                {isHome
+                  ? "ProDay"
+                  : brand.name.replace(/^Pro Day /, "").replace(/^ProDay /, "")}
+              </span>
+              <span className="font-signature text-[13px] italic leading-none text-white/40">
+                {isHome ? "Connecter · Progresser" : "Univers officiel"}
+              </span>
+            </span>
+          </Link>
+
+          <div className="hidden min-w-0 flex-1 items-center justify-center lg:flex">
+            <div className="flex items-center gap-1">
+              <PolesMegaMenu pathname={pathname} />
+              {UTILITY_NAV_ITEMS.map((item) => (
+                <NavLink
+                  key={item.href}
+                  href={item.href === ROUTES.pricing ? pricingHref : item.href}
+                  label={item.label}
+                  active={pathname === item.href}
                 />
-              </span>
-              <span className="hidden min-w-0 flex-col sm:flex">
-                <span className="font-display truncate text-[15px] font-extrabold tracking-[-0.03em] text-white">
-                  {isHome
-                    ? "ProDay"
-                    : brand.name.replace(/^Pro Day /, "").replace(/^ProDay /, "")}
-                </span>
-                <span className="font-signature text-[13px] italic leading-none text-white/40">
-                  {isHome ? "Connecter · Progresser" : "Univers officiel"}
-                </span>
-              </span>
-            </Link>
-
-            <div className="hidden min-w-0 flex-1 items-center justify-center lg:flex">
-              <div className="flex items-center rounded-full border border-white/[0.08] bg-white/[0.03] px-1.5 py-1">
-                <PolesMegaMenu pathname={pathname} />
-                {UTILITY_NAV_ITEMS.map((item) => (
-                  <NavLink
-                    key={item.href}
-                    href={item.href === ROUTES.pricing ? pricingHref : item.href}
-                    label={item.label}
-                    active={pathname === item.href}
-                  />
-                ))}
-              </div>
+              ))}
             </div>
+          </div>
 
-            <div className="hidden shrink-0 items-center gap-2 lg:flex">
-              <Link
-                href={ROUTES.demo}
-                className="px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-white/45 transition-colors duration-200 hover:text-white"
-              >
-                Démo
-              </Link>
-              <Link
-                href={ROUTES.betaWaitlist}
-                className="inline-flex items-center gap-1.5 rounded-full bg-white px-4 py-2.5 text-[11px] font-bold uppercase tracking-[0.14em] text-black transition-[background-color,color,transform] duration-200 hover:bg-[var(--proday-accent)] hover:text-white active:scale-[0.98]"
-              >
-                Rejoindre la bêta
-                <ArrowUpRight size={13} />
-              </Link>
-            </div>
-
-            <button
-              type="button"
-              className="flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-xl border border-white/10 text-white transition-[background-color,border-color,transform] duration-200 hover:bg-white/5 active:scale-95 lg:hidden"
-              onClick={() => setOpen((value) => !value)}
-              aria-expanded={open}
-              aria-label={open ? "Fermer le menu" : "Ouvrir le menu"}
+          <div className="hidden shrink-0 items-center gap-3 lg:flex">
+            <Link
+              href={ROUTES.demo}
+              className="px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-white/45 transition-colors duration-200 hover:text-white"
             >
-              <span className="relative flex h-5 w-5 items-center justify-center">
-                <AnimatePresence mode="wait" initial={false}>
-                  {open ? (
-                    <motion.span
-                      key="close"
-                      initial={{ opacity: 0, rotate: -45, scale: 0.8 }}
-                      animate={{ opacity: 1, rotate: 0, scale: 1 }}
-                      exit={{ opacity: 0, rotate: 45, scale: 0.8 }}
-                      transition={{ duration: 0.16, ease: easeOut }}
-                      className="absolute"
-                    >
-                      <X size={20} />
-                    </motion.span>
-                  ) : (
-                    <motion.span
-                      key="menu"
-                      initial={{ opacity: 0, rotate: 45, scale: 0.8 }}
-                      animate={{ opacity: 1, rotate: 0, scale: 1 }}
-                      exit={{ opacity: 0, rotate: -45, scale: 0.8 }}
-                      transition={{ duration: 0.16, ease: easeOut }}
-                      className="absolute"
-                    >
-                      <Menu size={20} />
-                    </motion.span>
-                  )}
-                </AnimatePresence>
-              </span>
-            </button>
-          </nav>
+              Démo
+            </Link>
+            <Link
+              href={ROUTES.betaWaitlist}
+              className="inline-flex items-center gap-1.5 rounded-full bg-white px-4 py-2.5 text-[11px] font-bold uppercase tracking-[0.14em] text-black transition-[background-color,color,transform] duration-200 hover:bg-[var(--proday-accent)] hover:text-white active:scale-[0.98]"
+            >
+              Rejoindre la bêta
+              <ArrowUpRight size={13} />
+            </Link>
+          </div>
+
+          <button
+            type="button"
+            className="flex min-h-10 min-w-10 shrink-0 items-center justify-center rounded-lg border border-white/10 text-white transition-[background-color,border-color,transform] duration-200 hover:bg-white/5 active:scale-95 lg:hidden"
+            onClick={() => setOpen((value) => !value)}
+            aria-expanded={open}
+            aria-label={open ? "Fermer le menu" : "Ouvrir le menu"}
+          >
+            <span className="relative flex h-5 w-5 items-center justify-center">
+              <AnimatePresence mode="wait" initial={false}>
+                {open ? (
+                  <motion.span
+                    key="close"
+                    initial={{ opacity: 0, rotate: -45, scale: 0.8 }}
+                    animate={{ opacity: 1, rotate: 0, scale: 1 }}
+                    exit={{ opacity: 0, rotate: 45, scale: 0.8 }}
+                    transition={{ duration: 0.16, ease: easeOut }}
+                    className="absolute"
+                  >
+                    <X size={20} />
+                  </motion.span>
+                ) : (
+                  <motion.span
+                    key="menu"
+                    initial={{ opacity: 0, rotate: 45, scale: 0.8 }}
+                    animate={{ opacity: 1, rotate: 0, scale: 1 }}
+                    exit={{ opacity: 0, rotate: -45, scale: 0.8 }}
+                    transition={{ duration: 0.16, ease: easeOut }}
+                    className="absolute"
+                  >
+                    <Menu size={20} />
+                  </motion.span>
+                )}
+              </AnimatePresence>
+            </span>
+          </button>
         </header>
       </div>
 

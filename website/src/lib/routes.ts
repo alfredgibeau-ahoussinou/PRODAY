@@ -119,13 +119,6 @@ export const EXPLORE_CARDS = [
     tag: "Match",
   },
   {
-    href: ROUTES.cv,
-    title: "CV joueur",
-    description: "Aperçu du CV foot en ligne alimenté par vos matchs.",
-    image: "/showcase/classic-profile.jpg",
-    tag: "Export",
-  },
-  {
     href: routeWithHash(ROUTES.journeys, "parcours"),
     title: "Étapes par rôle",
     description: "Joueur, recruteur, santé, organisateur ou parent. Étape par étape.",

@@ -9,6 +9,18 @@ export const UI_FR: MessageCatalog = {
   'discover.createAccount': 'Créer mon compte',
   'discover.hasAccount': 'Déjà un compte ? Se connecter',
 
+  'onboarding.priority.title': 'Quelle est votre priorité cette saison ?',
+  'onboarding.priority.subtitle': 'Répondez pour accéder directement aux fonctionnalités qui vous concernent',
+  'onboarding.priority.skip': 'Passer cette étape',
+
+  'videoDemo.title': 'Découvrez ProDay en 45 secondes',
+  'videoDemo.placeholder': 'Vidéo de démonstration',
+  'videoDemo.description': 'Découvrez rapidement comment ProDay peut vous aider à atteindre vos objectifs cette saison.',
+  'videoDemo.feature1': 'Trouvez un club ou recrutez des talents',
+  'videoDemo.feature2': 'Gérez votre équipe et organisez vos matchs',
+  'videoDemo.feature3': 'Connectez-vous avec la communauté football',
+  'videoDemo.button': 'Compris, commencer',
+
   'discover.quick.mercato': 'Mercato',
   'discover.quick.mercatoSub': 'Annonces',
   'discover.quick.matchs': 'Matchs',
@@ -29,9 +41,9 @@ export const UI_FR: MessageCatalog = {
   'universe.sponsor': 'Pro Day Sponsor',
   'universe.sante': 'Pro Day Santé',
 
-  'discover.hero.homme': 'Le foot masculin,\namateur pro.',
+  'discover.hero.homme': 'L\'application tout-en-un\ndu football.',
   'discover.mission.homme':
-    'CV en ligne, Mercato M, matchs, covoiturage équipe et saison amateur.',
+    'Trouvez un club, gérez votre équipe et organisez vos matchs. Tout au même endroit.',
   'discover.trust.homme':
     'Profils vérifiés pour le foot amateur. Messagerie sécurisée après validation.',
   'discover.cta.homme': 'Créer mon compte Pro Day Man',
@@ -39,9 +51,9 @@ export const UI_FR: MessageCatalog = {
   'discover.secondaryMercato.homme': 'Mercato',
   'discover.playersStat.homme': 'Joueurs',
 
-  'discover.hero.woman': 'Le foot féminin,\nconnecté.',
+  'discover.hero.woman': 'L\'application tout-en-un\ndu football féminin.',
   'discover.mission.woman':
-    'CV en ligne, Mercato F, matchs et covoiturage dédiés au foot au féminin.',
+    'Développez votre carrière, trouvez un club et connectez-vous avec le milieu professionnel.',
   'discover.trust.woman':
     'Profils vérifiés pour le foot au féminin. Messagerie sécurisée après validation.',
   'discover.cta.woman': 'Créer mon compte ProDay Woman',
@@ -49,9 +61,9 @@ export const UI_FR: MessageCatalog = {
   'discover.secondaryMercato.woman': 'Mercato F',
   'discover.playersStat.woman': 'Joueuses',
 
-  'discover.hero.amateur': 'Le foot amateur,\nconnecté.',
+  'discover.hero.amateur': 'L\'application tout-en-un\ndu football amateur.',
   'discover.mission.amateur':
-    'Joueurs et coachs amateur. Mercato local, matchs, effectif et convocations au même endroit.',
+    'Joueurs et coachs. Trouvez un club, gérez votre équipe et organisez vos matchs.',
   'discover.trust.amateur':
     'Profils vérifiés pour le foot amateur. Joueurs et coachs, messagerie sécurisée après validation.',
   'discover.cta.amateur': 'Créer mon compte Pro Day Amateur',
@@ -412,6 +424,9 @@ export const UI_FR: MessageCatalog = {
   'roleHome.club.noFunding': 'Aucune campagne sponsor active.',
   'roleHome.club.detections': 'Journées détection',
   'roleHome.club.detectionsSub': 'Scouting et événements publics',
+  'roleHome.club.officialsTitle': 'Arbitres et officiels',
+  'roleHome.club.addOfficial': 'Ajouter un arbitre',
+  'roleHome.club.addOfficialSub': 'Gérer les contacts arbitraux',
 
   'roleHome.recruiter.pipelineTitle': 'Pipeline recrutement',
   'roleHome.recruiter.pipelineSub': 'Annonces actives et candidatures',
@@ -422,6 +437,9 @@ export const UI_FR: MessageCatalog = {
   'roleHome.recruiter.mercatoCta': 'Publier sur le Mercato',
   'roleHome.recruiter.mercatoCtaSub': 'Diffusez une annonce et suivez les candidatures.',
   'roleHome.recruiter.publish': 'Créer une annonce',
+  'roleHome.recruiter.fffAgentsTitle': 'Agents FFF',
+  'roleHome.recruiter.fffAgents': 'Agents licenciés FFF',
+  'roleHome.recruiter.fffAgentsSub': 'Accéder à la liste officielle des agents agréés',
 
   'roleHome.organizer.tournamentsTitle': 'Tournois à venir',
   'roleHome.organizer.tournamentsSub': 'Vos compétitions organisées',

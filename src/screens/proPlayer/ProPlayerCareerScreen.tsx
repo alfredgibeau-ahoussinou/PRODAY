@@ -99,6 +99,28 @@ export const ProPlayerCareerScreen: React.FC = () => {
         </View>
       </ProDaySurface>
 
+      <ProDaySurface style={styles.womensFootballSection}>
+        <View style={styles.womensFootballHeader}>
+          <Icon name="football" size={24} color={colors.accent} />
+          <ProDayText variant="section" style={styles.womensFootballTitle}>
+            Foot féminin
+          </ProDayText>
+        </View>
+        <ProDayText variant="body" muted style={styles.womensFootballSub}>
+          Opportunités et clubs dédiés au football féminin
+        </ProDayText>
+        <PressableSpring
+          onPress={() => nav.openMercato('home')}
+          style={styles.womensFootballButton}
+          scaleTo={0.98}
+        >
+          <ProDayText variant="caption" accent style={styles.womensFootballButtonText}>
+            Voir les opportunités
+          </ProDayText>
+          <Icon name="chevron-forward" size={16} color={colors.accent} />
+        </PressableSpring>
+      </ProDaySurface>
+
       <ProDaySurface style={styles.metricRow}>
         <View style={styles.metric}>
           <ProDayText variant="eyebrow" muted>
@@ -161,6 +183,39 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   metric: { flex: 1, minWidth: 90, gap: spacing.xs },
+  womensFootballSection: {
+    padding: spacing.lg,
+    gap: spacing.md,
+    marginBottom: spacing.sm,
+  },
+  womensFootballHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  womensFootballTitle: {
+    fontSize: 17,
+    fontWeight: '700',
+  },
+  womensFootballSub: {
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  womensFootballButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: 'transparent',
+  },
+  womensFootballButtonText: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
   trials: {
     padding: spacing.lg,
     gap: spacing.sm,

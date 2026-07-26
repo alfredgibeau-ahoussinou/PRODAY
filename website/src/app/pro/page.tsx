@@ -39,7 +39,7 @@ export default function ProHubPage() {
     <>
       <PageHeader
         pathname={ROUTES.pro}
-        kicker="Trois coques"
+        kicker="Trois pôles"
         title="Le pro, découpé pour de vrai."
         description="Fini l'univers Pro fourre-tout. Joueur, club et staff ont chacun leur navigation, leurs modules et leurs tarifs."
         image="/images/football-pro-01.jpg"
@@ -52,7 +52,7 @@ export default function ProHubPage() {
       <PremiumSection
         id="poles"
         kicker="CHOISIR SON PÔLE"
-        title="Quelle coque vous correspond ?"
+        title="Quel pôle vous correspond ?"
         description="Trois portes d'entrée. Même app ProDay. Trois métiers distincts."
         pole="pro_staff"
         bordered={false}
@@ -76,9 +76,6 @@ export default function ProHubPage() {
                     sizes="(max-width: 1024px) 100vw, 33vw"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/55 to-transparent" />
-                  <span className="absolute left-4 top-4 font-display text-2xl font-extrabold tabular-nums text-white/50">
-                    {String(index + 1).padStart(2, "0")}
-                  </span>
                 </div>
                 <div className="p-6">
                   <p className={`text-[10px] font-bold uppercase tracking-[0.2em] ${styles.textMuted}`}>

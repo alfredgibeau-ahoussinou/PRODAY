@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
@@ -9,6 +10,7 @@ import { PremiumButton } from "@/components/ui/PremiumButton";
 import { HeroVideoBackground } from "@/components/HeroVideoBackground";
 import { PRODAY_LOGO_OFFICIAL, PRODAY_OFFICIAL_LOGO_ASPECT } from "@/lib/brandingAssets";
 import { ROUTES } from "@/lib/routes";
+import { VideoDemoModal } from "@/components/home/VideoDemoModal";
 
 const HERO_LABELS: Record<PoleId, string> = {
   amateur: "Amateur",
@@ -29,8 +31,11 @@ const HERO_SLIDES = POLES.map((pole, i) => ({
 }));
 
 export function HeroSection() {
+  const [showVideoDemo, setShowVideoDemo] = useState(false);
+
   return (
     <section className="relative flex min-h-[100dvh] flex-col overflow-hidden lg:min-h-screen">
+      <VideoDemoModal isOpen={showVideoDemo} onClose={() => setShowVideoDemo(false)} />
       <div className="absolute inset-0">
         <HeroVideoBackground
           sources={["/videos/hero-stadium.mp4", "/videos/hero-match.mp4"]}
@@ -89,7 +94,7 @@ export function HeroSection() {
           initial={{ opacity: 0, y: 22 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.46, duration: 0.55 }}
-          className="mt-8 flex flex-wrap justify-center gap-3"
+          className="mt-8 flex flex-wrap items-center justify-center gap-4"
         >
           <PremiumButton
             href="#inscription"
@@ -97,45 +102,14 @@ export function HeroSection() {
           >
             Rejoindre la bêta
           </PremiumButton>
-          <PremiumButton href={ROUTES.features} variant="outline">
-            Voir l&apos;app
-          </PremiumButton>
+          <button
+            onClick={() => setShowVideoDemo(true)}
+            className="rounded-xl border border-white/20 bg-white/5 px-6 py-3 font-display font-bold uppercase tracking-[-0.02em] text-white transition hover:bg-white/10"
+          >
+            Voir la vidéo
+          </button>
         </motion.div>
       </div>
-
-      {/* Bandeau 7 pôles. pleine largeur, centré, desktop + mobile */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.55, duration: 0.55 }}
-        className="absolute inset-x-0 bottom-0 z-10 border-t border-white/10 bg-black/55 backdrop-blur-xl"
-        aria-label="Les 7 pôles ProDay"
-      >
-        <div className="mx-auto grid max-w-6xl grid-cols-7 gap-0 px-1 sm:px-4">
-          {HERO_SLIDES.map((slide) => (
-            <Link
-              key={slide.num}
-              href={slide.href}
-              className="group flex flex-col items-center gap-1.5 px-1 py-4 text-center transition-[background-color,transform] duration-200 hover:bg-white/[0.04] active:scale-[0.98] sm:py-5"
-            >
-              <span
-                className="font-display text-base font-extrabold tabular-nums sm:text-xl"
-                style={{ color: slide.color }}
-              >
-                {slide.num}
-              </span>
-              <span className="hidden text-[10px] font-semibold uppercase tracking-[0.12em] text-white/55 transition-colors duration-200 group-hover:text-white sm:block md:text-[11px]">
-                {slide.label}
-              </span>
-              <span
-                className="mt-1 h-0.5 w-6 rounded-full opacity-80 transition-[width] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:w-8"
-                style={{ background: slide.color }}
-                aria-hidden
-              />
-            </Link>
-          ))}
-        </div>
-      </motion.div>
     </section>
   );
 }

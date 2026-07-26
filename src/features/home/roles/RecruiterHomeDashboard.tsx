@@ -178,6 +178,14 @@ export const RecruiterHomeDashboard: React.FC<StaffRoleHomeProps> = ({
 
       <StaffSectionTitle title={t('roleHome.quickActions')} />
       <StaffQuickActions role="recruiter" onAction={handleQuickAction} />
+
+      <StaffSectionTitle title={t('roleHome.recruiter.fffAgentsTitle')} />
+      <StaffListCard
+        index={10}
+        title={t('roleHome.recruiter.fffAgents')}
+        subtitle={t('roleHome.recruiter.fffAgentsSub')}
+        onPress={() => nav.openMercato('home')}
+      />
     </StaffRoleHomeShell>
   );
 };

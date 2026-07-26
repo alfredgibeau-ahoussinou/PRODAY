@@ -58,21 +58,21 @@ body {
 
 /* Sticky dock: GPU layer + CSS scroll state (évite le thrashing Framer au scroll) */
 .site-nav-dock {
-  background-color: rgba(6, 6, 8, 0.55);
-  border-color: rgba(255, 255, 255, 0.1);
+  background-color: rgba(6, 6, 8, 0.75);
+  border-color: rgba(255, 255, 255, 0.12);
   transform: translateZ(0);
   backface-visibility: hidden;
   -webkit-backdrop-filter: blur(18px) saturate(1.35);
   backdrop-filter: blur(18px) saturate(1.35);
   transition:
-    background-color var(--duration-base) var(--ease-out-premium),
-    border-color var(--duration-base) var(--ease-out-premium),
-    box-shadow var(--duration-base) ease;
+    background-color 0.4s ease,
+    border-color 0.4s ease,
+    box-shadow 0.4s ease;
 }
 
 .site-nav-dock.is-scrolled {
-  background-color: rgba(6, 6, 8, 0.92);
-  border-color: rgba(255, 255, 255, 0.18);
+  background-color: rgba(6, 6, 8, 0.95);
+  border-color: rgba(255, 255, 255, 0.15);
   box-shadow: 0 20px 60px -28px rgba(0, 0, 0, 0.85);
 }
 

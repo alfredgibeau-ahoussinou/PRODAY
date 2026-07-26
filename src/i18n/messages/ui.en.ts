@@ -9,6 +9,18 @@ export const UI_EN: MessageCatalog = {
   'discover.createAccount': 'Create my account',
   'discover.hasAccount': 'I already have an account',
 
+  'onboarding.priority.title': 'What is your priority this season?',
+  'onboarding.priority.subtitle': 'Answer to access the features that matter to you directly',
+  'onboarding.priority.skip': 'Skip this step',
+
+  'videoDemo.title': 'Discover ProDay in 45 seconds',
+  'videoDemo.placeholder': 'Demo video',
+  'videoDemo.description': 'Quickly discover how ProDay can help you achieve your goals this season.',
+  'videoDemo.feature1': 'Find a club or recruit talents',
+  'videoDemo.feature2': 'Manage your team and organize matches',
+  'videoDemo.feature3': 'Connect with the football community',
+  'videoDemo.button': 'Got it, let\'s start',
+
   'discover.quick.mercato': 'Transfer',
   'discover.quick.mercatoSub': 'Listings',
   'discover.quick.matchs': 'Matches',
@@ -26,9 +38,9 @@ export const UI_EN: MessageCatalog = {
   'universe.sponsor': 'Pro Day Sponsor',
   'universe.sante': 'Health universe',
 
-  'discover.hero.homme': 'Men\'s amateur\nfootball, pro level.',
+  'discover.hero.homme': 'The all-in-one\nfootball app.',
   'discover.mission.homme':
-    'Online CV, Transfer Market, matches, team carpool and amateur season.',
+    'Find a club, manage your team and organize matches. Everything in one place.',
   'discover.trust.homme':
     'Verified profiles for amateur football — secure messaging after validation.',
   'discover.cta.homme': 'Create a Man account',
@@ -36,9 +48,9 @@ export const UI_EN: MessageCatalog = {
   'discover.secondaryMercato.homme': 'Transfer',
   'discover.playersStat.homme': 'Players',
 
-  'discover.hero.woman': 'Women\'s football,\nconnected.',
+  'discover.hero.woman': 'The all-in-one\nwomen\'s football app.',
   'discover.mission.woman':
-    'Online CV, Transfer Market F, matches and carpool for women\'s football.',
+    'Develop your career, find a club and connect with the professional world.',
   'discover.trust.woman':
     'Verified profiles for women\'s football — secure messaging after validation.',
   'discover.cta.woman': 'Create a Woman account',
@@ -46,9 +58,9 @@ export const UI_EN: MessageCatalog = {
   'discover.secondaryMercato.woman': 'Transfer F',
   'discover.playersStat.woman': 'Players',
 
-  'discover.hero.amateur': 'Amateur football,\nconnected.',
+  'discover.hero.amateur': 'The all-in-one\namateur football app.',
   'discover.mission.amateur':
-    'Amateur players and coaches — local transfer market, matches, squad and call-ups in one place.',
+    'Players and coaches. Find a club, manage your team and organize matches.',
   'discover.trust.amateur':
     'Verified amateur profiles — players and coaches, secure messaging after validation.',
   'discover.cta.amateur': 'Create an Amateur account',
@@ -320,6 +332,9 @@ export const UI_EN: MessageCatalog = {
   'roleHome.club.noFunding': 'No active sponsor campaigns.',
   'roleHome.club.detections': 'Detection days',
   'roleHome.club.detectionsSub': 'Scouting and public events',
+  'roleHome.club.officialsTitle': 'Referees and officials',
+  'roleHome.club.addOfficial': 'Add a referee',
+  'roleHome.club.addOfficialSub': 'Manage referee contacts',
 
   'roleHome.recruiter.pipelineTitle': 'Recruitment pipeline',
   'roleHome.recruiter.pipelineSub': 'Active posts and applications',
@@ -330,6 +345,9 @@ export const UI_EN: MessageCatalog = {
   'roleHome.recruiter.mercatoCta': 'Post on Mercato',
   'roleHome.recruiter.mercatoCtaSub': 'Publish a listing and track applications.',
   'roleHome.recruiter.publish': 'Create listing',
+  'roleHome.recruiter.fffAgentsTitle': 'FFF Agents',
+  'roleHome.recruiter.fffAgents': 'FFF Licensed Agents',
+  'roleHome.recruiter.fffAgentsSub': 'Access the official list of licensed agents',
 
   'roleHome.organizer.tournamentsTitle': 'Upcoming tournaments',
   'roleHome.organizer.tournamentsSub': 'Your organized competitions',

@@ -71,6 +71,50 @@ export function isRoleAllowedForProductLine(role: UserRole, line: ProductLineId)
   return rolesForProductLine(line).includes(role);
 }
 
+/**
+ * Returns incompatible product lines for a given role to enforce pole exclusivity.
+ * Users with a specific role should not be able to access poles meant for other roles.
+ */
+export function getIncompatibleProductLines(role: UserRole): ProductLineId[] {
+  switch (role) {
+    case 'coach':
+      // Coaches belong to Staff pole, cannot access Club pole
+      return ['pro_club'];
+    case 'club':
+      // Club belongs to Club pole, cannot access Staff pole
+      return ['pro_staff'];
+    case 'agent':
+    case 'recruiter':
+    case 'organizer':
+      // Staff roles belong to Staff pole, cannot access Club pole
+      return ['pro_club'];
+    case 'player':
+      // Players can access both pro_player and amateur, but not staff/club specific poles
+      return ['pro_club', 'pro_staff'];
+    case 'sponsor':
+      // Sponsors have their own pole
+      return ['pro_club', 'pro_staff', 'pro_player', 'amateur', 'homme', 'woman'];
+    case 'supporter':
+      // Supporters have their own pole
+      return ['pro_club', 'pro_staff', 'pro_player', 'amateur', 'homme', 'woman', 'sante'];
+    case 'physio':
+      // Health practitioners have their own pole
+      return ['pro_club', 'pro_staff', 'pro_player', 'amateur', 'homme', 'woman', 'supporter'];
+    default:
+      return [];
+  }
+}
+
+/**
+ * Checks if a user with a given role can access a specific product line.
+ * This enforces pole exclusivity by blocking incompatible poles.
+ */
+export function canAccessProductLine(role: UserRole, line: ProductLineId): boolean {
+  const incompatible = getIncompatibleProductLines(role);
+  if (incompatible.includes(line)) return false;
+  return isRoleAllowedForProductLine(role, line);
+}
+
 export function defaultRoleForProductLine(
   line: ProductLineId,
   presetRole?: UserRole | null,
