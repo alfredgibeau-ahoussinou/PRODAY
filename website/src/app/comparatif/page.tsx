@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
-import { ComparisonTable } from "@/components/interactive/ComparisonTable";
+import { PoleComparison } from "@/components/PoleComparison";
 import { PageBody } from "@/components/layout/PageBody";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { ROUTES } from "@/lib/routes";
 
 export const metadata: Metadata = {
-  title: "Comparatif",
-  description: "ProDay vs WhatsApp vs tableur. Pourquoi une seule app pour votre saison.",
+  title: "Comparatif des pôles",
+  description: "Comparez les fonctionnalités de chaque pôle ProDay : Joueur, Pro, Santé, Partenaires et Supporter.",
 };
 
 export default function ComparePage() {
@@ -15,17 +15,14 @@ export default function ComparePage() {
       <PageHeader
         pathname={ROUTES.compare}
         kicker="COMPARATIF"
-        title="Pourquoi pas WhatsApp ?"
-        description="Groupes dispersés, stats absentes, recrutement flou. ProDay regroupe l'essentiel."
+        title="Comparez les pôles ProDay"
+        description="Joueur, Pro, Santé, Partenaires ou Supporter : trouvez le pôle qui vous correspond."
         image="/showcase/classic-exp-team.jpg"
         dark
       />
       <PageBody>
-        <div className="mx-auto max-w-4xl">
-          <ComparisonTable />
-          <p className="mt-8 text-center text-sm text-white/40">
-            Complet · Partiel · Absent
-          </p>
+        <div className="mx-auto max-w-7xl">
+          <PoleComparison />
         </div>
       </PageBody>
     </>
