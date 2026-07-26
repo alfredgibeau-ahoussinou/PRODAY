@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
 import { clsx } from "clsx";
+import { useState } from "react";
 
 type PremiumButtonProps = {
   href: string;
@@ -14,12 +17,15 @@ export function PremiumButton({
   variant = "primary",
   className,
 }: PremiumButtonProps) {
+  const [isPressed, setIsPressed] = useState(false);
+
   return (
     <Link
       href={href}
       className={clsx(
-        "inline-flex items-center justify-center gap-2 rounded-full px-7 py-3.5 text-sm font-bold uppercase tracking-wide transition duration-300",
+        "inline-flex items-center justify-center gap-2 rounded-full px-7 py-3.5 text-sm font-bold uppercase tracking-wide transition-all duration-300",
         "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2",
+        "hover:scale-105 active:scale-95",
         variant === "primary" &&
           "cta-lift bg-[var(--proday-accent)] text-white shadow-[0_0_0_1px_rgba(0,84,240,0.45),0_12px_40px_-12px_rgba(0,84,240,0.55)] hover:bg-[#2a6fff] hover:shadow-[0_0_0_1px_rgba(76,139,255,0.5),0_16px_48px_-12px_rgba(0,84,240,0.55)] active:translate-y-0 active:bg-[#0046cc] focus-visible:outline-[var(--proday-accent)]/60",
         variant === "ghost" &&
@@ -30,6 +36,12 @@ export function PremiumButton({
           "bg-[#D4AF37] text-[#0a0a0a] shadow-[0_12px_40px_-12px_rgba(212,175,55,0.45)] hover:bg-[#E0C04A] active:bg-[#C4A030] focus-visible:outline-[#D4AF37]/60",
         className,
       )}
+      onMouseDown={() => setIsPressed(true)}
+      onMouseUp={() => setIsPressed(false)}
+      onMouseLeave={() => setIsPressed(false)}
+      style={{
+        transform: isPressed ? "scale(0.95)" : undefined,
+      }}
     >
       {children}
     </Link>
