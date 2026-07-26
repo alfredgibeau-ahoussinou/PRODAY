@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Check, X, Minus } from "lucide-react";
+import { Check, X, Minus, Filter } from "lucide-react";
 import { useState } from "react";
 
 const poles = [
@@ -118,25 +118,42 @@ const poles = [
 ];
 
 const features = [
-  { id: "profile", label: "Profil personnalisé" },
-  { id: "stats", label: "Stats de match" },
-  { id: "mercato", label: "Mercato & recrutement" },
-  { id: "matches", label: "Gestion des matchs" },
-  { id: "arena", label: "Tournois Arena" },
-  { id: "covoiturage", label: "Covoiturage" },
-  { id: "messaging", label: "Messagerie" },
-  { id: "calendar", label: "Calendrier" },
-  { id: "cvExport", label: "Export CV PDF" },
-  { id: "visibility", label: "Score de visibilité" },
-  { id: "recruiting", label: "Outils recrutement" },
-  { id: "teamManagement", label: "Gestion effectif" },
-  { id: "booking", label: "Prise de RDV" },
-  { id: "sponsorship", label: "Partenariats" },
-  { id: "community", label: "Fil communautaire" },
+  { id: "profile", label: "Profil personnalisé", category: "Base" },
+  { id: "stats", label: "Stats de match", category: "Performance" },
+  { id: "mercato", label: "Mercato & recrutement", category: "Recrutement" },
+  { id: "matches", label: "Gestion des matchs", category: "Compétition" },
+  { id: "arena", label: "Tournois Arena", category: "Compétition" },
+  { id: "covoiturage", label: "Covoiturage", category: "Logistique" },
+  { id: "messaging", label: "Messagerie", category: "Communication" },
+  { id: "calendar", label: "Calendrier", category: "Organisation" },
+  { id: "cvExport", label: "Export CV PDF", category: "Carrière" },
+  { id: "visibility", label: "Score de visibilité", category: "Carrière" },
+  { id: "recruiting", label: "Outils recrutement", category: "Recrutement" },
+  { id: "teamManagement", label: "Gestion effectif", category: "Management" },
+  { id: "booking", label: "Prise de RDV", category: "Services" },
+  { id: "sponsorship", label: "Partenariats", category: "Business" },
+  { id: "community", label: "Fil communautaire", category: "Social" },
 ];
+
+const categories = ["Tous", "Base", "Performance", "Recrutement", "Compétition", "Logistique", "Communication", "Organisation", "Carrière", "Management", "Services", "Business", "Social"];
 
 export function PoleComparison() {
   const [selectedPole, setSelectedPole] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string>("Tous");
+  const [showOnlyAvailable, setShowOnlyAvailable] = useState(false);
+
+  const filteredFeatures = selectedCategory === "Tous" 
+    ? features 
+    : features.filter(f => f.category === selectedCategory);
+
+  const filteredPoles = showOnlyAvailable 
+    ? poles.filter(pole => {
+        const hasSelectedFeatures = filteredFeatures.every(feature => 
+          pole.features[feature.id as keyof typeof pole.features] === true
+        );
+        return hasSelectedFeatures;
+      })
+    : poles;
 
   return (
     <div className="space-y-8">
@@ -163,6 +180,37 @@ export function PoleComparison() {
         ))}
       </div>
 
+      <div className="flex flex-wrap items-center gap-4 rounded-2xl border border-white/10 bg-white/5 p-4">
+        <div className="flex items-center gap-2">
+          <Filter size={18} className="text-white/50" />
+          <span className="text-sm font-medium text-white/70">Filtrer par :</span>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {categories.map((category) => (
+            <button
+              key={category}
+              onClick={() => setSelectedCategory(category)}
+              className={`px-3 py-1.5 text-xs font-medium rounded-full transition ${
+                selectedCategory === category
+                  ? "bg-[var(--proday-accent)] text-white"
+                  : "bg-white/10 text-white/70 hover:bg-white/20"
+              }`}
+            >
+              {category}
+            </button>
+          ))}
+        </div>
+        <label className="flex items-center gap-2 ml-auto cursor-pointer">
+          <input
+            type="checkbox"
+            checked={showOnlyAvailable}
+            onChange={(e) => setShowOnlyAvailable(e.target.checked)}
+            className="w-4 h-4 rounded border-white/30 bg-white/10 text-[var(--proday-accent)] focus:ring-[var(--proday-accent)]"
+          />
+          <span className="text-sm text-white/70">Uniquement disponibles</span>
+        </label>
+      </div>
+
       <div className="overflow-x-auto rounded-2xl border border-white/10 bg-white/5">
         <table className="w-full min-w-[800px]">
           <thead>
@@ -170,7 +218,7 @@ export function PoleComparison() {
               <th className="px-4 py-3 text-left text-sm font-semibold text-white/70">
                 Fonctionnalité
               </th>
-              {poles.map((pole) => (
+              {filteredPoles.map((pole) => (
                 <th
                   key={pole.id}
                   className="px-4 py-3 text-center text-sm font-semibold text-white"
@@ -182,7 +230,7 @@ export function PoleComparison() {
             </tr>
           </thead>
           <tbody>
-            {features.map((feature, index) => (
+            {filteredFeatures.map((feature, index) => (
               <motion.tr
                 key={feature.id}
                 initial={{ opacity: 0, x: -20 }}
@@ -190,8 +238,13 @@ export function PoleComparison() {
                 transition={{ delay: index * 0.05 }}
                 className="border-b border-white/5 last:border-0"
               >
-                <td className="px-4 py-3 text-sm text-white/90">{feature.label}</td>
-                {poles.map((pole) => {
+                <td className="px-4 py-3 text-sm text-white/90">
+                  <div>
+                    <div>{feature.label}</div>
+                    <div className="text-xs text-white/40">{feature.category}</div>
+                  </div>
+                </td>
+                {filteredPoles.map((pole) => {
                   const hasFeature = pole.features[feature.id as keyof typeof pole.features];
                   return (
                     <td key={pole.id} className="px-4 py-3 text-center">
