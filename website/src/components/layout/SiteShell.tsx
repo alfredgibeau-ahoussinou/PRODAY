@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { Suspense, lazy } from "react";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteVisitTracker } from "@/components/analytics/SiteVisitTracker";
+import { BackToTop } from "@/components/BackToTop";
 import { PoleContextBar } from "./PoleContextBar";
 import { PageTransition } from "./PageTransition";
 import { ScrollToHash } from "./ScrollToHash";
@@ -87,6 +88,7 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
           <Suspense fallback={null}>
             <SiteHelpChatbot />
           </Suspense>
+          <BackToTop />
         </div>
       </div>
     </MotionConfig>
