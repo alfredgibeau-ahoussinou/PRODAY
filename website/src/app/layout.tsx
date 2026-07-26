@@ -29,11 +29,15 @@ export const metadata: Metadata = {
     process.env.NEXT_PUBLIC_SITE_URL ?? "https://proday75.fr",
   ),
   title: {
-    default: "ProDay · Connecter · Progresser · Réussir",
+    default: "ProDay · L'app pour le foot · Connecter · Progresser · Réussir",
     template: "%s · ProDay",
   },
   description:
-    "ProDay, l'app mobile qui réunit joueurs, clubs, staff, santé et partenaires autour du foot. Profil, matchs, RDV et sponsors.",
+    "ProDay, l'app pour le foot. Ton profil, tes matchs, ton club. Tout au même endroit. Que tu sois joueur, coach, club ou supporter, ProDay t'accompagne.",
+  keywords: ["foot", "football", "app", "application", "joueur", "coach", "club", "supporter", "matchs", "profil", "équipe"],
+  authors: [{ name: "ProDay" }],
+  creator: "ProDay",
+  publisher: "ProDay",
   applicationName: "ProDay",
   appleWebApp: {
     capable: true,
@@ -51,10 +55,42 @@ export const metadata: Metadata = {
     shortcut: ["/favicon.ico"],
   },
   openGraph: {
-    title: "ProDay",
+    type: "website",
+    locale: "fr_FR",
+    url: "https://proday75.fr",
+    title: "ProDay · L'app pour le foot",
     description:
-      "ProDay, l'app mobile qui réunit joueurs, clubs, staff, santé et partenaires autour du foot.",
+      "ProDay, l'app pour le foot. Ton profil, tes matchs, ton club. Tout au même endroit.",
+    siteName: "ProDay",
+    images: [
+      {
+        url: "/branding/logo-proday-official.png",
+        width: 1200,
+        height: 630,
+        alt: "ProDay - L'app pour le foot",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "ProDay · L'app pour le foot",
+    description:
+      "ProDay, l'app pour le foot. Ton profil, tes matchs, ton club. Tout au même endroit.",
     images: ["/branding/logo-proday-official.png"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  verification: {
+    google: "google-site-verification",
   },
   other: {
     copyright: "© ProDay 2026 · Tous droits réservés",

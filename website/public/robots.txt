@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://proday75.fr/sitemap.xml
