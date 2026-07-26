@@ -31,6 +31,7 @@ export function VideoDemoModal({ isOpen, onClose }: VideoDemoModalProps) {
             <div className="relative w-full max-w-2xl overflow-hidden rounded-3xl border border-white/10 bg-[#0c0c10] shadow-2xl">
               <button
                 onClick={onClose}
+                aria-label="Fermer la modal"
                 className="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20"
               >
                 <svg

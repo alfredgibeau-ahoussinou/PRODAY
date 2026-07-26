@@ -104,6 +104,7 @@ export function HeroSection() {
           </PremiumButton>
           <button
             onClick={() => setShowVideoDemo(true)}
+            aria-label="Ouvrir la vidéo de présentation"
             className="rounded-xl border border-white/20 bg-white/5 px-6 py-3 font-display font-bold uppercase tracking-[-0.02em] text-white transition hover:bg-white/10"
           >
             Voir la vidéo

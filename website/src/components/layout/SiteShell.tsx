@@ -75,7 +75,9 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
           <SiteNav />
           <div className={`overflow-x-clip ${isHome ? "surface-dark" : ""}`}>
             {showPoleBar && <PoleContextBar />}
-            <PageTransition pathname={pathname}>{children}</PageTransition>
+            <main id="main-content" tabIndex={-1}>
+              <PageTransition pathname={pathname}>{children}</PageTransition>
+            </main>
           </div>
           <SiteFooter />
           <SiteHelpChatbot />
