@@ -1788,6 +1788,46 @@ export const FAQ_ITEMS = [
     a: `Joueur Plus (Man & Woman) : ${faqPricing("player_plus")}. Candidatures Mercato illimitées, mise en avant et alertes annonces.`,
   },
   {
+    q: "Pôle Joueur : Comment créer mon CV ProDay ?",
+    a: "Votre CV se remplit automatiquement à partir de votre profil et de vos stats de match. Vous pouvez personnaliser les sections, ajouter une photo et exporter en PDF pour les clubs.",
+  },
+  {
+    q: "Pôle Joueur : Les stats sont-elles automatiques ?",
+    a: "Oui, si votre équipe utilise ProDay pour les matchs, vos stats (buts, passes, temps de jeu) sont mises à jour automatiquement après chaque rencontre.",
+  },
+  {
+    q: "Pôle Pro Club : Comment gérer mon effectif ?",
+    a: "Importez votre liste de joueurs, gérez les contrats, les licences et les disponibilités. Le calendrier unifié simplifie la planification des entraînements et matchs.",
+  },
+  {
+    q: "Pôle Pro Staff : Comment trouver des joueurs ?",
+    a: "Utilisez le Mercato ProDay pour filtrer par poste, niveau, zone géographique. Les candidatures arrivent directement dans votre messagerie avec le CV du joueur.",
+  },
+  {
+    q: "Pôle Santé : Comment prendre RDV avec des joueurs ?",
+    a: "Votre agenda ProDay permet aux joueurs de prendre RDV en ligne. Vous recevez les notifications et pouvez gérer vos créneaux selon vos disponibilités.",
+  },
+  {
+    q: "Pôle Supporter : Quelles fonctionnalités sont disponibles ?",
+    a: "Suivez vos clubs favoris, accédez aux matchs en direct, participez au fil communautaire et recevez les actualités de vos équipes préférées.",
+  },
+  {
+    q: "Pôle Partenaires : Comment sponsoriser des événements ?",
+    a: "Connectez-vous avec des organisateurs de tournois et événements. Votre visibilité augmente via les partenariats affichés sur les profils et événements ProDay.",
+  },
+  {
+    q: "Comment sécuriser mes données personnelles ?",
+    a: "ProDay respecte le RGPD. Vos données sont chiffrées et vous contrôlez ce qui est visible. Vous pouvez supprimer votre compte et vos données à tout moment.",
+  },
+  {
+    q: "L'app fonctionne-t-elle hors ligne ?",
+    a: "Certaines fonctionnalités sont accessibles hors ligne (profil, stats enregistrées), mais les mises à jour et la messagerie nécessitent une connexion internet.",
+  },
+  {
+    q: "Comment signaler un comportement inapproprié ?",
+    a: "Utilisez le bouton de signalement sur un profil ou message. Notre équipe modère les signalements et peut suspendre les comptes qui enfreignent nos règles.",
+  },
+  {
     q: "Quel tarif pour Coach ou Recruteur Pro ?",
     a: `Coach Pro et Recruteur Pro : ${faqPricing("coach_pro")}. Multi-équipes, messages recrutement illimités et annonces Mercato actives.`,
   },
@@ -1801,39 +1841,23 @@ export const FAQ_ITEMS = [
   },
   {
     q: "Quel tarif pour le pôle santé ?",
-    a: `Pôle santé Pro : ${faqPricing("physio_pro")}. Commission ${PHYSIO_BOOKING_COMMISSION_PERCENT} % uniquement sur les consultations réservées via l'app (nutrition, coach mental, prépa…). Pas de commission sur les actes médicaux réglementés.`,
+    a: `Santé Pro : ${faqPricing("physio_pro")}. Agenda en ligne, messagerie patients et visibilité auprès des clubs partenaires.`,
   },
   {
-    q: "Quel tarif pour Organisateur Pro ?",
-    a: `Organisateur Pro : ${faqPricing("organizer_pro")}. Tournois Arena illimités, inscriptions en ligne, palmarès et visibilité sponsors.`,
+    q: "Quel tarif pour Partenaire Pro ?",
+    a: `Partenaire Pro : ${faqPricing("sponsor_pro")}. Visibilité événements, contacts organisateurs et sponsoring prioritaire.`,
   },
   {
-    q: "Quel tarif pour les partenaires / sponsors ?",
-    a: `Trois formules partenaires : Découverte (0 €, profil vérifié, 1 offre, 10 messages clubs / mois), Territorial (${formatAnnualPricingLine(49)}, devis sur ${SPONSOR_PARTNER_CONTACT_EMAIL}), National Pro (${faqPricing("sponsor_pro")}, espace partenaires dans l'app).`,
+    q: "Comment fonctionne la bêta ?",
+    a: "Inscrivez-vous sur la liste d'attente. Les accès sont délivrés progressivement. Vous recevez un email d'invitation quand votre tour arrive.",
   },
   {
-    q: "Puis-je exporter mon CV foot ?",
-    a: "Oui. Chaque match alimente votre profil via Live Stats. Export PDF depuis l'onglet Profil.",
+    q: "Puis-je changer de pôle après inscription ?",
+    a: "Oui, vous pouvez changer de pôle dans les paramètres de votre compte. Notez que certaines fonctionnalités peuvent être spécifiques à certains pôles.",
   },
   {
-    q: "Les données sont-elles réelles ?",
-    a: "Comptes sécurisés, données hébergées en Europe via nos prestataires certifiés. La liste d'attente recueille des profils testeurs réels.",
-  },
-  {
-    q: "Prochainement disponible sur iOS et Android ?",
-    a: "L'app arrive sur l'App Store et Google Play. Inscrivez-vous sur la liste d'attente pour être prévenu du lancement.",
-  },
-  {
-    q: "Que reçoit-on en s'inscrivant sur la liste d'attente ?",
-    a: "Des nouvelles régulières sur l'avancement. Accès prioritaire dès l'ouverture sur mobile.",
-  },
-  {
-    q: "ProDay analyse-t-il chaque action en vidéo ?",
-    a: "Non. L'analyse IA porte sur les highlights que vous enregistrez (vidéo ou image + notes). L'analyse frame-by-frame sur tout le match, c'est pour plus tard. Pas une promesse actuelle.",
-  },
-  {
-    q: "Quelle est la différence entre aujourd'hui et la vision long terme ?",
-    a: "Aujourd'hui : profil, Mercato, score carrière, journal, analyse IA des séances, sponsors, Arena et admin. Demain : repérage talent mondial et analyse vidéo avancée. Voir la page Vision.",
+    q: "Comment contacter le support ?",
+    a: "Utilisez le formulaire de contact dans l'app ou via la liste d'attente sur le site. Notre équipe répond sous 24-48h ouvrés.",
   },
 ] as const;
 
