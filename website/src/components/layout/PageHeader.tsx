@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { poleHubForPath, POLE_HUB_LABELS, type PageAccent } from "@/lib/siteArchitecture";
 import { ROUTES } from "@/lib/routes";
+import { Breadcrumb } from "./Breadcrumb";
 
 type PageHeaderProps = {
   kicker: string;
@@ -122,6 +123,8 @@ export function PageHeader({
 
       <div className="relative mx-auto grid max-w-7xl gap-10 px-4 pb-16 pt-4 sm:px-6 sm:pb-24 lg:grid-cols-[1.15fr_0.85fr] lg:items-end">
         <div>
+          <Breadcrumb />
+          
           <Link
             href={backHref}
             className={`mb-8 inline-flex items-center gap-2 border-b border-white/15 pb-1 text-[11px] font-semibold uppercase tracking-[0.2em] transition hover:border-white/40 ${backClass}`}
