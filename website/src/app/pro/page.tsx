@@ -84,10 +84,36 @@ export default function ProHubPage() {
                   <h3 className="font-display mt-2 text-xl font-bold text-white">{pole.title}</h3>
                   <p className="mt-2 text-base font-medium text-white/90">{blurb?.hook}</p>
                   <p className="mt-2 text-sm text-white/50">{blurb?.forWho}</p>
-                  <span className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-white/80">
-                    Voir le pôle
-                    <ArrowRight size={16} className="transition group-hover:translate-x-0.5" />
-                  </span>
+                  <div className="mt-5 flex flex-col gap-3">
+                    <span className="inline-flex items-center gap-2 text-sm font-semibold text-white/80">
+                      Voir le pôle
+                      <ArrowRight size={16} className="transition group-hover:translate-x-0.5" />
+                    </span>
+                    {pole.id === "pro_joueur" && (
+                      <Link
+                        href={ROUTES.betaWaitlist}
+                        className="text-xs text-[var(--proday-accent)] hover:underline"
+                      >
+                        Rejoindre la bêta Joueur
+                      </Link>
+                    )}
+                    {pole.id === "pro_club" && (
+                      <Link
+                        href={ROUTES.betaWaitlist}
+                        className="text-xs text-[var(--proday-accent)] hover:underline"
+                      >
+                        Inscrire mon club
+                      </Link>
+                    )}
+                    {pole.id === "pro_staff" && (
+                      <Link
+                        href={ROUTES.betaWaitlist}
+                        className="text-xs text-[var(--proday-accent)] hover:underline"
+                      >
+                        Accès recruteur Pro
+                      </Link>
+                    )}
+                  </div>
                 </div>
               </Link>
             );
