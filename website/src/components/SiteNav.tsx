@@ -390,6 +390,7 @@ export function SiteNav() {
                       <Link
                         href={pole.href}
                         onClick={close}
+                        aria-current={active ? "page" : undefined}
                         className={`flex min-h-12 items-center gap-3 rounded-xl border px-3 py-2.5 transition-[background-color,border-color,transform] duration-200 active:scale-[0.99] ${
                           active
                             ? "border-white/20 bg-white/[0.06]"
@@ -418,6 +419,7 @@ export function SiteNav() {
                   <Link
                     key={item.href}
                     href={item.href === ROUTES.pricing ? pricingHref : item.href}
+                    aria-current={pathname === item.href ? "page" : undefined}
                     className={`flex min-h-12 items-center text-sm tracking-wide transition-colors duration-200 ${
                       pathname === item.href
                         ? "font-semibold text-white"
