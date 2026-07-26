@@ -3,12 +3,13 @@
 import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
-import { BRAND } from "@/lib/content";
+import { useState } from "react";
+import { BRAND, DEMO_VIDEO_URL } from "@/lib/content";
 import { POLES, POLE_BRAND_HEX, type PoleId } from "@/lib/poles";
 import { PremiumButton } from "@/components/ui/PremiumButton";
 import { HeroVideoBackground } from "@/components/HeroVideoBackground";
+import { DemoVideoModal } from "@/components/DemoVideoModal";
 import { PRODAY_LOGO_OFFICIAL, PRODAY_OFFICIAL_LOGO_ASPECT } from "@/lib/brandingAssets";
-import { ROUTES } from "@/lib/routes";
 
 const HERO_LABELS: Record<PoleId, string> = {
   amateur: "Amateur",
@@ -29,6 +30,8 @@ const HERO_SLIDES = POLES.map((pole, i) => ({
 }));
 
 export function HeroSection() {
+  const [demoOpen, setDemoOpen] = useState(false);
+
   return (
     <section className="relative flex min-h-[100dvh] flex-col overflow-hidden lg:min-h-screen">
       <div className="absolute inset-0">
@@ -97,13 +100,16 @@ export function HeroSection() {
           >
             Rejoindre la bêta
           </PremiumButton>
-          <PremiumButton href={ROUTES.features} variant="outline">
-            Voir l&apos;app
-          </PremiumButton>
+          <button
+            type="button"
+            onClick={() => setDemoOpen(true)}
+            className="inline-flex items-center justify-center gap-2 rounded-full border border-white/18 px-7 py-3.5 text-sm font-bold uppercase tracking-wide text-white transition duration-300 hover:border-[var(--proday-accent)]/70 hover:text-[var(--proday-accent)] hover:shadow-[0_0_28px_rgba(0,84,240,0.18)]"
+          >
+            Voir la démonstration
+          </button>
         </motion.div>
       </div>
 
-      {/* Bandeau 7 pôles. pleine largeur, centré, desktop + mobile */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -136,6 +142,12 @@ export function HeroSection() {
           ))}
         </div>
       </motion.div>
+
+      <DemoVideoModal
+        open={demoOpen}
+        onClose={() => setDemoOpen(false)}
+        videoUrl={DEMO_VIDEO_URL || undefined}
+      />
     </section>
   );
 }

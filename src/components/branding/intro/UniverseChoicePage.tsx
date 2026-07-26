@@ -13,6 +13,7 @@ import { ProductLineLogo } from '../ProductLineLogo';
 import { gradientsForCarouselPole } from '../../../theme/universeGradients';
 import { spacing } from '../../../theme/designTokens';
 import { UNIVERSE_ACCENT, UNIVERSE_SHORT } from './universeIntroAccents';
+import { poleExclusivityNote } from '../../../utils/roleCapabilities';
 
 interface UniverseChoicePageProps {
   line: CarouselPoleId;
@@ -111,6 +112,11 @@ export const UniverseChoicePage: React.FC<UniverseChoicePageProps> = ({
           <Text style={styles.mission} numberOfLines={2}>
             {identity.mission}
           </Text>
+          {line === 'pro_club' || line === 'pro_staff' ? (
+            <Text style={styles.exclusivity} numberOfLines={3}>
+              {poleExclusivityNote(line)}
+            </Text>
+          ) : null}
         </Animated.View>
       </View>
     </View>
@@ -194,6 +200,15 @@ function createStyles(pageWidth: number) {
       color: 'rgba(255,255,255,0.62)',
       textAlign: 'center',
       marginTop: spacing.xs,
+    },
+    exclusivity: {
+      marginTop: spacing.sm,
+      fontSize: 12,
+      lineHeight: 17,
+      fontWeight: '600',
+      color: 'rgba(255,220,180,0.78)',
+      textAlign: 'center',
+      maxWidth: 300,
     },
   });
 }

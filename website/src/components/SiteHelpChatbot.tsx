@@ -44,7 +44,7 @@ const COMMON_ENTRIES: HelpEntry[] = [
     id: "sante-video",
     question: "Y a-t-il des vidéos dans le pôle Santé ?",
     answer:
-      "Oui. Onglet Vidéos pour du contenu éducatif. La téléconsultation : le praticien a son Cal.com à l’inscription ; le sportif réserve sans compte Cal.com.",
+      "Oui. Onglet Vidéos pour du contenu éducatif. La téléconsultation : 1 visio offerte en essai pour le praticien, puis abonnement. Le sportif réserve sans compte Cal.com.",
     href: `${ROUTES.sante}#teleconsultation`,
     hrefLabel: "Téléconsultation Santé",
   },
@@ -138,13 +138,13 @@ export function SiteHelpChatbot() {
   if (pathname.startsWith("/beta")) return null;
 
   return (
-    <div className="pointer-events-none fixed bottom-5 right-4 z-[60] flex flex-col items-end gap-3 sm:bottom-6 sm:right-6">
+    <div className="pointer-events-none fixed bottom-5 right-4 z-[60] flex flex-col items-end gap-3 sm:bottom-7 sm:right-7">
       {open ? (
-        <div className="pointer-events-auto flex max-h-[min(70vh,520px)] w-[min(100vw-2rem,22rem)] flex-col overflow-hidden rounded-2xl border border-white/15 bg-[#0a0a0f]/95 shadow-2xl shadow-black/50 backdrop-blur-xl">
-          <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
+        <div className="pointer-events-auto flex max-h-[min(78vh,580px)] w-[min(100vw-1.5rem,26rem)] flex-col overflow-hidden rounded-3xl border border-white/15 bg-[#0a0a0f]/96 shadow-2xl shadow-black/50 backdrop-blur-xl">
+          <div className="flex items-center justify-between border-b border-white/10 px-4 py-3.5">
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--proday-accent)]">
-                Aide ProDay
+                Centre d&apos;aide
               </p>
               <p className="mt-0.5 text-sm text-white/70">Une question rapide ?</p>
             </div>
@@ -202,12 +202,12 @@ export function SiteHelpChatbot() {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="pointer-events-auto inline-flex items-center gap-2 rounded-full bg-[var(--proday-accent)] px-4 py-3 text-sm font-bold text-black shadow-lg shadow-[0_12px_32px_-10px_rgba(0,84,240,0.35)] transition hover:bg-[#2a6fff]"
+        className="pointer-events-auto inline-flex min-h-[52px] items-center gap-2.5 rounded-full bg-[var(--proday-accent)] px-5 py-3.5 text-sm font-extrabold text-black shadow-[0_16px_40px_-10px_rgba(0,84,240,0.55)] ring-2 ring-white/20 transition hover:bg-[#2a6fff] sm:min-h-[56px] sm:px-6 sm:text-base"
         aria-expanded={open}
-        aria-label={open ? "Fermer l'aide" : "Ouvrir l'aide ProDay"}
+        aria-label={open ? "Fermer le centre d'aide" : "Ouvrir le centre d'aide ProDay"}
       >
-        {open ? <X size={18} /> : <MessageCircle size={18} />}
-        <span className="hidden sm:inline">{open ? "Fermer" : "Aide"}</span>
+        {open ? <X size={22} /> : <MessageCircle size={22} />}
+        <span>{open ? "Fermer" : "Centre d'aide"}</span>
       </button>
     </div>
   );

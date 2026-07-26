@@ -18,21 +18,32 @@ export function isClubRole(role: UserRole): boolean {
   return role === 'club';
 }
 
-/** Gestion d'équipe, convocations, détections, stages */
+/**
+ * Gestion d'équipe, convocations, détections (banc technique / orga).
+ * Le président (rôle club) gère l'image et la structure, pas l'effectif coach.
+ */
 export function isOrganizerCapable(role: UserRole): boolean {
-  return role === 'coach' || role === 'organizer' || role === 'club' || role === 'agent';
+  return role === 'coach' || role === 'organizer' || role === 'agent';
 }
 
-/** Création / rattachement entité club */
+/** Création / rattachement entité club — réservé aux dirigeants (pôle Club). */
 export function canManageClubEntity(role: UserRole): boolean {
-  return role === 'club' || role === 'coach' || role === 'organizer' || role === 'agent';
+  return role === 'club';
 }
 
-/** Publication stages, annonces institutionnelles */
+/** Publication stages / annonces institutionnelles — pôle Club (+ orga événements). */
 export function canPublishStages(role: UserRole): boolean {
-  return role === 'club' || role === 'organizer' || role === 'coach';
+  return role === 'club' || role === 'organizer';
 }
 
 export function isStaffRole(role: UserRole): boolean {
   return role !== 'player' && role !== 'sponsor' && role !== 'supporter';
+}
+
+/** Message d'exclusivité Club ↔ Staff (pôles incompatibles). */
+export function poleExclusivityNote(pole: 'pro_club' | 'pro_staff'): string {
+  if (pole === 'pro_club') {
+    return 'Pôle Club uniquement — réservé aux présidents et dirigeants. Incompatible avec le pôle Staff.';
+  }
+  return 'Pôle Staff uniquement — coachs et staff technique. Incompatible avec le pôle Club.';
 }

@@ -16,6 +16,7 @@ import {
   carouselPoleSignupPresetRole,
   carouselPoleToProductLine,
 } from '../models/CarouselPole';
+import type { UserRole } from '../models/User';
 import { useAppLaunchIntro } from '../hooks/useAppLaunchIntro';
 import { useProductLine } from './ProductLineContext';
 import { useAuth } from './AuthContext';
@@ -94,8 +95,9 @@ export const LaunchIntroProvider: React.FC<{ children: React.ReactNode }> = ({
   }, []);
 
   const onChooseSpace = useCallback(
-    async (pole: IntroSpaceChoice) => {
-      const preset = carouselPoleSignupPresetRole(pole);
+    async (pole: IntroSpaceChoice, presetRole?: UserRole | null) => {
+      const preset =
+        presetRole !== undefined ? presetRole : carouselPoleSignupPresetRole(pole);
       await setProSignupPresetRole(preset);
       const line = carouselPoleToProductLine(pole);
       await setProductLine(line);

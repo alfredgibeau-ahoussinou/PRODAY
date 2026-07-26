@@ -20,7 +20,8 @@ export type SubscriptionFeatureId =
   | 'sponsor_club_message'
   | 'sponsor_active_offer'
   | 'club_active_post'
-  | 'club_team';
+  | 'club_team'
+  | 'sante_visio';
 
 export interface PlanPricing {
   monthlyEur: number;
@@ -35,6 +36,8 @@ export interface PlanLimits {
   sponsor_club_messages_per_month?: number;
   club_active_posts?: number;
   club_teams?: number;
+  /** Téléconsultations visio gratuites (compte praticien free). */
+  free_visio_sessions?: number;
 }
 
 export interface SubscriptionPlanDefinition {
@@ -135,7 +138,7 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionPlanId, SubscriptionPlanDefi
       'Profil club et vérification',
       '1 équipe',
       '2 annonces Mercato actives',
-      'Gestion convocations (base)',
+      'Vitrine, structure et annonces',
     ],
     proIncludes: [
       'Annonces actives illimitées',
@@ -169,7 +172,7 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionPlanId, SubscriptionPlanDefi
     label: 'Pôle santé Pro',
     tagline: 'Abonnement léger + visibilité clubs. Commission sur les RDV',
     pricing: planPricing(19.99, true),
-    limits: {},
+    limits: { free_visio_sessions: 1 },
     bookingCommissionPercent: 10,
     bookingCommissionNote:
       'Sur chaque consultation réservée via ProDay (nutrition, coach mental, prépa physique…). Pas de commission sur les actes médicaux réglementés. Règlement au cabinet.',
@@ -177,11 +180,12 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionPlanId, SubscriptionPlanDefi
       'Profil praticien et vérification',
       'Spécialité et zone d\'intervention',
       'Visibilité annuaire (base)',
-      'Téléconsultation visio 15/30 min (gratuite)',
+      '1 téléconsultation visio offerte (essai)',
       'Prise de rendez-vous via l\'app',
       'Messagerie limitée',
     ],
     proIncludes: [
+      'Téléconsultations visio illimitées',
       'Visibilité prioritaire près des clubs',
       'Messagerie complète après vérif.',
       'Mise en avant annuaire',

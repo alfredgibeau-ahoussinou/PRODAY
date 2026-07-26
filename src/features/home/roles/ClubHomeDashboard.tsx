@@ -19,6 +19,7 @@ import type { ClubFundingGoal } from '../../../models/SponsorOffer';
 import type { RolePanelAction } from '../../../content/roleDashboardExperience';
 import { PushScreenTransition } from '../../../components/motion';
 import { DetectionEventsScreen } from '../../../screens/DetectionEventsScreen';
+import { ClubContactsScreen } from '../../../screens/club/ClubContactsScreen';
 
 export const ClubHomeDashboard: React.FC<StaffRoleHomeProps> = ({
   profile,
@@ -36,6 +37,7 @@ export const ClubHomeDashboard: React.FC<StaffRoleHomeProps> = ({
   const [fundingGoals, setFundingGoals] = useState<ClubFundingGoal[]>([]);
   const [extraLoading, setExtraLoading] = useState(true);
   const [showDetections, setShowDetections] = useState(false);
+  const [showContacts, setShowContacts] = useState(false);
 
   const loadClubData = useCallback(async () => {
     setExtraLoading(true);
@@ -67,8 +69,8 @@ export const ClubHomeDashboard: React.FC<StaffRoleHomeProps> = ({
       nav.openDashboard('gestion');
       return;
     }
-    if (action.title === 'Gestion effectif') {
-      nav.openDashboard('gestion');
+    if (action.title === 'Structure club') {
+      nav.setActiveTab('home');
       return;
     }
     if (action.title === 'Détections') {
@@ -116,7 +118,13 @@ export const ClubHomeDashboard: React.FC<StaffRoleHomeProps> = ({
           index={1}
           title={t('roleHome.club.manageRoster')}
           subtitle={t('roleHome.club.manageRosterSub')}
-          onPress={() => nav.openDashboard('gestion')}
+          onPress={() => nav.setActiveTab('home')}
+        />
+        <StaffListCard
+          index={2}
+          title={t('roleHome.club.contacts')}
+          subtitle={t('roleHome.club.contactsSub')}
+          onPress={() => setShowContacts(true)}
         />
 
         <StaffSectionTitle title={t('roleHome.club.announcementsTitle')} />
@@ -126,7 +134,7 @@ export const ClubHomeDashboard: React.FC<StaffRoleHomeProps> = ({
           announcements.slice(0, 4).map((item, index) => (
             <StaffListCard
               key={item.id}
-              index={index + 2}
+              index={index + 3}
               title={item.title}
               subtitle={item.body}
               onPress={() => nav.openDashboard('gestion')}
@@ -141,7 +149,7 @@ export const ClubHomeDashboard: React.FC<StaffRoleHomeProps> = ({
           fundingGoals.slice(0, 3).map((goal, index) => (
             <StaffListCard
               key={goal.id}
-              index={index + 3}
+              index={index + 4}
               title={goal.title}
               subtitle={goal.description}
               meta={`${goal.raised_amount_eur}€ / ${goal.target_amount_eur}€`}
@@ -150,7 +158,7 @@ export const ClubHomeDashboard: React.FC<StaffRoleHomeProps> = ({
         )}
 
         <StaffListCard
-          index={6}
+          index={7}
           title={t('roleHome.club.detections')}
           subtitle={t('roleHome.club.detectionsSub')}
           onPress={() => setShowDetections(true)}
@@ -163,6 +171,16 @@ export const ClubHomeDashboard: React.FC<StaffRoleHomeProps> = ({
       <PushScreenTransition active={showDetections}>
         {showDetections ? (
           <DetectionEventsScreen onBack={() => setShowDetections(false)} />
+        ) : null}
+      </PushScreenTransition>
+
+      <PushScreenTransition active={showContacts}>
+        {showContacts ? (
+          <ClubContactsScreen
+            clubId={clubId}
+            canEdit
+            onBack={() => setShowContacts(false)}
+          />
         ) : null}
       </PushScreenTransition>
     </>

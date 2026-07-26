@@ -63,6 +63,8 @@ export function checkFeatureAccess(input: {
   sponsorUnlimitedMessaging?: boolean;
   /** Limite offres actives selon formule sponsor (1 / 5 / ∞). */
   sponsorActiveOfferLimit?: number;
+  /** Téléconsultations visio déjà utilisées (essai gratuit praticien). */
+  freeVisioUsed?: number;
 }): FeatureCheckResult {
   const { role, tier, feature, usage } = input;
 
@@ -188,6 +190,22 @@ export function checkFeatureAccess(input: {
           used,
           limit,
           message: `Limite gratuite : ${limit} équipe. Passez à ${plan.label} pour le multi-équipes.`,
+        };
+      }
+      return { allowed: true, tier, planId, feature, used, limit };
+    }
+    case 'sante_visio': {
+      const limit = limits.free_visio_sessions ?? Infinity;
+      const used = input.freeVisioUsed ?? 0;
+      if (used >= limit) {
+        return {
+          allowed: false,
+          tier,
+          planId,
+          feature,
+          used,
+          limit,
+          message: `Essai gratuit terminé : ${limit} téléconsultation visio. Passez à ${plan.label} pour continuer.`,
         };
       }
       return { allowed: true, tier, planId, feature, used, limit };

@@ -31,10 +31,11 @@ const ROLE_DASHBOARD: Record<UserRole, RoleDashboardMeta> = {
   },
   club: {
     eyebrow: 'QG CLUB',
-    title: 'Votre structure sur ProDay',
+    title: 'Image et structure du club',
     heroTone: 'club',
-    moduleOrder: ['recrutement', 'gestion', 'matchs', 'sponsors'],
+    moduleOrder: ['recrutement', 'sponsors', 'matchs', 'gestion'],
     fullWidthModule: 'recrutement',
+    hideModules: ['gestion'],
   },
   agent: {
     eyebrow: 'RÉSEAU AGENT',
@@ -133,8 +134,8 @@ export function getRolePanelActions(role: UserRole): RolePanelAction[] {
       ];
     case 'club':
       return [
-        { icon: 'business', title: 'Annonces club', sub: 'Recrutement & stages', accent: true },
-        { icon: 'people', title: 'Gestion effectif', sub: 'Planning & présences' },
+        { icon: 'business', title: 'Annonces club', sub: 'Recrutement & image club', accent: true },
+        { icon: 'people', title: 'Structure club', sub: 'Équipes, adhésions, dirigeants' },
         { icon: 'football', title: 'Détections', sub: 'Journées scouting' },
         { icon: 'calendar', title: 'Stages', sub: 'Camps & stages foot' },
       ];

@@ -113,6 +113,11 @@ export function SiteFooter() {
                 </Link>
               </li>
               <li>
+                <span className="text-white/60">
+                  Centre d&apos;aide — bouton bleu en bas à droite
+                </span>
+              </li>
+              <li>
                 <Link href={ROUTES.vision} className="hover:text-white">
                   Vision
                 </Link>

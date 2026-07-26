@@ -21,7 +21,11 @@ import { PressableSpring } from '../../../components/motion';
 import { ProDayText } from '../../../components/ui/ProDayText';
 import { GlassCard } from '../../../components/aurora/GlassCard';
 import { spacing, radius } from '../../../theme/designTokens';
-import { StyleSheet, View } from 'react-native';
+import { Linking, StyleSheet, View } from 'react-native';
+import {
+  FFF_AGENTS_SECTION,
+  FFF_LICENSED_AGENTS_URL,
+} from '../../../content/fffAgentsDirectory';
 
 interface MandateRow {
   uid: string;
@@ -211,6 +215,26 @@ export const AgentHomeDashboard: React.FC<StaffRoleHomeProps> = ({
           >
             <ProDayText variant="body" accent>
               {t('roleHome.agent.publishCta')}
+            </ProDayText>
+          </PressableSpring>
+        </GlassCard>
+
+        <StaffSectionTitle
+          title={FFF_AGENTS_SECTION.title}
+          subtitle={FFF_AGENTS_SECTION.subtitle}
+        />
+        <GlassCard style={styles.cta}>
+          <ProDayText variant="caption" muted>
+            Source officielle Fédération Française de Football.
+          </ProDayText>
+          <PressableSpring
+            style={styles.ctaBtn}
+            onPress={() => void Linking.openURL(FFF_LICENSED_AGENTS_URL)}
+            scaleTo={0.97}
+            haptic
+          >
+            <ProDayText variant="body" accent>
+              {FFF_AGENTS_SECTION.cta}
             </ProDayText>
           </PressableSpring>
         </GlassCard>

@@ -72,7 +72,7 @@ export const ROLE_GROUPS: {
   {
     id: 'structure',
     label: 'Structures',
-    hint: 'Annonces club, effectifs et événements',
+    hint: 'Image club, structure, annonces et partenariats',
     roles: ['club', 'organizer'],
   },
 ];
@@ -536,7 +536,7 @@ export function getRoleGroups(t?: TranslateFn) {
       hint: tr(
         t,
         'signup.space.roleGroup.structureHint',
-        'Annonces club, effectifs et événements'
+        'Image club, structure, annonces et partenariats'
       ),
       roles: ['club', 'organizer'] as UserRole[],
     },

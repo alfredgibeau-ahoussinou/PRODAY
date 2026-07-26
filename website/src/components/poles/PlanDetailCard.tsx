@@ -50,7 +50,7 @@ export function PlanDetailCard({
           <div>
             {isFree && (
               <span className="inline-block rounded-full bg-emerald-400 px-3 py-1 text-xs font-bold uppercase tracking-wider text-slate-950">
-                Visio · Gratuit
+                1 visio offerte
               </span>
             )}
             {variantLabel && (
@@ -187,7 +187,7 @@ export function PlanDetailCard({
           href={ROUTES.betaWaitlist}
           className={`mt-4 inline-block rounded-full px-8 py-3 text-sm font-semibold transition hover:scale-[1.02] ${styles.cta}`}
         >
-          {isFree ? "Tester la visio gratuite" : "Rejoindre la bêta"}
+          {isFree ? "Tester la 1ʳᵉ visio offerte" : "Rejoindre la bêta"}
         </Link>
       </div>
     </motion.article>

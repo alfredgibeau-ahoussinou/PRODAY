@@ -38,6 +38,7 @@ import { GlassCard } from '../../../components/aurora/GlassCard';
 import { ProDayText } from '../../../components/ui/ProDayText';
 import { ProDayGradient } from '../../../components/ui/ProDayGradient';
 import { Icon, type IconName } from '../../../components/ui/Icon';
+import { FffAgentsDirectoryCard } from '../../../components/agents/FffAgentsDirectoryCard';
 import { PressableSpring, StaggerReveal } from '../../../components/motion';
 import { spacing, radius } from '../../../theme/designTokens';
 
@@ -305,6 +306,8 @@ export const AmateurPlayerHomeDashboard: React.FC<StaffRoleHomeProps> = ({
           {t('roleHome.amateurPlayer.coachFeedPlaceholder')}
         </ProDayText>
       </GlassCard>
+
+      <FffAgentsDirectoryCard />
 
       <StaffSectionTitle title={t('roleHome.quickActions')} />
       <View style={styles.quickGrid}>

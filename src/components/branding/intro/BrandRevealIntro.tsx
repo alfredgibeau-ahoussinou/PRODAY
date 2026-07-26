@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Animated, {
   Easing,
   runOnJS,
@@ -9,10 +10,15 @@ import Animated, {
 } from 'react-native-reanimated';
 import type { CarouselPoleId } from '../../../models/CarouselPole';
 import { UniverseChoicePager } from './UniverseChoicePager';
+import { SeasonPriorityStep } from './SeasonPriorityStep';
 import { shouldSkipPoleTransition } from './launchIntroFlow';
 import type { ProductLineId } from '../../../models/ProductLine';
 import type { UserRole } from '../../../models/User';
 import { productLineToCarouselPole } from '../../../models/CarouselPole';
+import {
+  SEASON_PRIORITY_STORAGE_KEY,
+  type SeasonPriorityOption,
+} from '../../../content/seasonPriority';
 
 export type IntroSpaceChoice = CarouselPoleId;
 
@@ -20,7 +26,10 @@ const FADE_IN_MS = 220;
 const FADE_OUT_MS = 280;
 
 interface BrandRevealIntroProps {
-  onChooseSpace: (space: IntroSpaceChoice) => void | Promise<void>;
+  onChooseSpace: (
+    space: IntroSpaceChoice,
+    presetRole?: UserRole | null,
+  ) => void | Promise<void>;
   onExitComplete: () => void;
   onDismiss?: () => void;
   initialLine?: ProductLineId;
@@ -31,7 +40,7 @@ interface BrandRevealIntroProps {
   skipLocalTransition?: boolean;
 }
 
-/** Carousel minimal plein écran par pôle. */
+/** Carousel minimal plein écran par pôle (+ question priorité en first-run). */
 export const BrandRevealIntro: React.FC<BrandRevealIntroProps> = ({
   onChooseSpace,
   onExitComplete,
@@ -44,6 +53,9 @@ export const BrandRevealIntro: React.FC<BrandRevealIntroProps> = ({
 }) => {
   const [leavingLine, setLeavingLine] = useState<IntroSpaceChoice | null>(null);
   const [interactive, setInteractive] = useState(!skipReveal || skipLocalTransition);
+  const [priorityDone, setPriorityDone] = useState(!introTour);
+  const [priorityPresetRole, setPriorityPresetRole] = useState<UserRole | null>(null);
+  const [priorityPole, setPriorityPole] = useState<CarouselPoleId | undefined>();
   const opacity = useSharedValue(skipReveal && !skipLocalTransition ? 0 : 1);
 
   useEffect(() => {
@@ -57,25 +69,25 @@ export const BrandRevealIntro: React.FC<BrandRevealIntroProps> = ({
   }, [opacity, skipLocalTransition, skipReveal]);
 
   const finishLeave = useCallback(
-    (line: IntroSpaceChoice | null, dismissOnly: boolean) => {
+    (line: IntroSpaceChoice | null, dismissOnly: boolean, role?: UserRole | null) => {
       if (dismissOnly) {
         onDismiss?.();
         return;
       }
-      if (line) void onChooseSpace(line);
+      if (line) void onChooseSpace(line, role ?? priorityPresetRole);
       onExitComplete();
     },
-    [onChooseSpace, onDismiss, onExitComplete],
+    [onChooseSpace, onDismiss, onExitComplete, priorityPresetRole],
   );
 
   const beginLeave = useCallback(
-    (line: IntroSpaceChoice | null, dismissOnly: boolean) => {
+    (line: IntroSpaceChoice | null, dismissOnly: boolean, role?: UserRole | null) => {
       if (!interactive || leavingLine) return;
       if (line) setLeavingLine(line);
       setInteractive(false);
 
       if (skipLocalTransition) {
-        finishLeave(line, dismissOnly);
+        finishLeave(line, dismissOnly, role);
         return;
       }
 
@@ -84,7 +96,7 @@ export const BrandRevealIntro: React.FC<BrandRevealIntroProps> = ({
         { duration: FADE_OUT_MS, easing: Easing.in(Easing.cubic) },
         (finished) => {
           'worklet';
-          if (finished) runOnJS(finishLeave)(line, dismissOnly);
+          if (finished) runOnJS(finishLeave)(line, dismissOnly, role ?? null);
         },
       );
     },
@@ -97,22 +109,41 @@ export const BrandRevealIntro: React.FC<BrandRevealIntroProps> = ({
         beginLeave(null, true);
         return;
       }
-      beginLeave(line, false);
+      beginLeave(line, false, priorityPresetRole);
     },
-    [beginLeave, initialLine, initialRole, skipReveal],
+    [beginLeave, initialLine, initialRole, priorityPresetRole, skipReveal],
   );
 
   const handleDismiss = useCallback(() => {
     beginLeave(null, true);
   }, [beginLeave]);
 
+  const handlePrioritySelect = useCallback(
+    (option: SeasonPriorityOption) => {
+      setPriorityPresetRole(option.presetRole);
+      setPriorityPole(option.pole);
+      setPriorityDone(true);
+      void AsyncStorage.setItem(SEASON_PRIORITY_STORAGE_KEY, option.id).catch(() => {
+        /* ignore */
+      });
+      // Orientation automatique : on applique le pôle sans repasser par le carousel.
+      void onChooseSpace(option.pole, option.presetRole);
+      onExitComplete();
+    },
+    [onChooseSpace, onExitComplete],
+  );
+
   const contentStyle = useAnimatedStyle(() => ({
     opacity: opacity.value,
   }));
 
-  const initialCarouselPole = initialLine
-    ? productLineToCarouselPole(initialLine, initialRole)
-    : undefined;
+  const initialCarouselPole =
+    priorityPole ??
+    (initialLine ? productLineToCarouselPole(initialLine, initialRole) : undefined);
+
+  if (introTour && !priorityDone) {
+    return <SeasonPriorityStep onSelect={handlePrioritySelect} />;
+  }
 
   return (
     <View style={styles.root} accessibilityViewIsModal>

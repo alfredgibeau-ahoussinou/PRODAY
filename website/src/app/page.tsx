@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { HeroSection } from "@/components/HeroSection";
+import { HeroRoleShortcuts } from "@/components/HeroRoleShortcuts";
 import { RoleQuiz } from "@/components/interactive/RoleQuiz";
 import { WaitlistForm } from "@/components/WaitlistForm";
 import { POLES, POLE_BRAND_HEX } from "@/lib/poles";
@@ -19,8 +20,9 @@ export default function HomePage() {
   return (
     <>
       <HeroSection />
+      <HeroRoleShortcuts />
 
-      <section className="border-y border-white/10 bg-[#070709] py-16 sm:py-20">
+      <section id="poles" className="border-y border-white/10 bg-[#070709] py-16 sm:py-20">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <div className="mb-10 max-w-2xl">
             <p className="font-signature text-2xl italic text-[var(--proday-accent)]">
@@ -30,8 +32,8 @@ export default function HomePage() {
               Choisissez votre pôle
             </h2>
             <p className="mt-3 text-base leading-relaxed text-white/55">
-              ProDay, c&apos;est une app mobile pour le foot. Joueurs, clubs, staff,
-              santé ou partenaires : chaque pôle correspond à votre rôle.
+              Une app pour le foot, sans jargon. Joueurs, clubs, staff, santé ou
+              partenaires : chaque pôle correspond à votre rôle du quotidien.
             </p>
           </div>
 

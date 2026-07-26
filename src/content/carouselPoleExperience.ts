@@ -20,40 +20,40 @@ const PRO_PLAYER_IDENTITY: UniverseIdentity = {
   tagline: PRODAY_PRO_PLAYER_BRAND.tagline,
   heroLine: 'Votre carrière\npro.',
   mission:
-    'Contrat, opportunités, portfolio vidéo et logistique groupe. Le cockpit du joueur professionnel.',
+    'Contrats, opportunités et portfolio. Pour les joueurs et les joueuses qui veulent progresser.',
   accentLabel: 'Pro Joueur',
   mercatoLabel: 'Opportunités',
-  playerLabel: 'Joueur pro',
+  playerLabel: 'Joueur·euse pro',
   cvLabel: 'Portfolio scouting',
-  entrySub: 'Joueur professionnel. Carrière, mandat agent et convocations staff',
+  entrySub: 'Joueurs et joueuses. Carrière, mandat agent et convocations staff',
 };
 
 const PRO_CLUB_IDENTITY: UniverseIdentity = {
   id: 'pro',
   productName: PRODAY_PRO_CLUB_BRAND.name,
   tagline: PRODAY_PRO_CLUB_BRAND.tagline,
-  heroLine: 'Votre structure\nconnectée.',
+  heroLine: 'L’image de\nvotre club.',
   mission:
-    'Équipes, recrutement local, calendrier et communication. La vitrine digitale du club.',
+    'Vitrine, structure, annonces et partenariats. L’espace des présidents et dirigeants.',
   accentLabel: 'Pro Club',
   mercatoLabel: 'Recrutement',
   playerLabel: 'Structure',
   cvLabel: 'Vitrine club',
-  entrySub: 'Dirigeants et staff administratif. Structure, effectifs et annonces',
+  entrySub: 'Présidents et dirigeants. Image, structure et annonces — pas l’effectif coach',
 };
 
 const PRO_STAFF_IDENTITY: UniverseIdentity = {
   id: 'pro',
   productName: PRODAY_PRO_STAFF_BRAND.name,
   tagline: PRODAY_PRO_STAFF_BRAND.tagline,
-  heroLine: 'Le staff\nau centre.',
+  heroLine: 'Votre effectif\nen main.',
   mission:
-    'Coach, agent, recruteur ou organisateur. Mandats, scouting, convocations et réseau pro.',
+    'Coach : effectif, entraînements et convocations. Agents, recruteurs et orga aussi.',
   accentLabel: 'Pro Staff',
   mercatoLabel: 'Réseau pro',
   playerLabel: 'Staff',
   cvLabel: 'Profil métier',
-  entrySub: 'Coach · Agent · Recruteur · Organisateur',
+  entrySub: 'Coach · Agent · Recruteur · Organisateur — incompatible avec le pôle Club',
 };
 
 const SPONSOR_IDENTITY: UniverseIdentity = {

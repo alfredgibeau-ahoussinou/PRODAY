@@ -26,6 +26,7 @@ import {
   generateDaySlots,
   startOfDay,
 } from '../utils/medicalSlots';
+import { checkFeatureAccess, emptyUsagePeriod } from '../utils/subscriptionLogic';
 
 const COLLECTION = 'medical_appointments';
 
@@ -109,6 +110,24 @@ export const medicalAppointmentsService = {
     );
   },
 
+  async countVisioForPhysio(physioUid: string): Promise<number> {
+    if (!isFirebaseConfigured()) return 0;
+    const database = getDb();
+    if (!database) return 0;
+    try {
+      const q = query(
+        collection(database, COLLECTION),
+        where('physio_uid', '==', physioUid),
+        where('consultation_type', '==', 'visio'),
+      );
+      const snap = await getDocs(q);
+      return snap.size;
+    } catch (error) {
+      console.warn('[medicalAppointmentsService] countVisioForPhysio:', error);
+      return 0;
+    }
+  },
+
   async bookAppointment(input: {
     physio: User;
     patient: User;
@@ -121,6 +140,27 @@ export const medicalAppointmentsService = {
     const duration = getPhysioConsultationDuration(input.physio);
     const endAt = new Date(input.startAt.getTime() + duration * 60_000);
     const consultationType = input.consultationType ?? 'visio';
+
+    if (consultationType === 'visio' && input.physio.role === 'physio') {
+      const used = await this.countVisioForPhysio(input.physio.uid);
+      const access = checkFeatureAccess({
+        role: 'physio',
+        tier: input.physio.subscription_tier === 'pro' ? 'pro' : 'free',
+        planId: input.physio.subscription_plan_id as
+          | import('../content/subscriptionPlans').SubscriptionPlanId
+          | undefined,
+        feature: 'sante_visio',
+        usage: emptyUsagePeriod(),
+        freeVisioUsed: used,
+      });
+      if (!access.allowed) {
+        throw new Error(
+          access.message ??
+            'Essai visio gratuit terminé. Passez à l’abonnement Pôle santé Pro.',
+        );
+      }
+    }
+
     const payload = {
       physio_uid: input.physio.uid,
       physio_name: input.physio.display_name,

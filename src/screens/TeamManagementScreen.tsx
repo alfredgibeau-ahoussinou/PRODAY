@@ -415,15 +415,20 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
             <PressableSpring style={styles.createEventBtn} onPress={() => setHubView('create')}>
               <Text style={styles.createEventBtnText}>+ Nouvelle convocation</Text>
             </PressableSpring>
-            <PressableSpring
-              style={styles.secondaryHubBtn}
-              onPress={() => setHubView('announcements')}
-            >
-              <Text style={styles.secondaryHubBtnText}>Annonces club</Text>
-            </PressableSpring>
-            <PressableSpring style={styles.secondaryHubBtn} onPress={() => setHubView('club')}>
-              <Text style={styles.secondaryHubBtnText}>Communauté club</Text>
-            </PressableSpring>
+            {/* Annonces / image club = pôle Club (dirigeants). Le coach reste sur l'effectif. */}
+            {profile.role === 'club' ? (
+              <>
+                <PressableSpring
+                  style={styles.secondaryHubBtn}
+                  onPress={() => setHubView('announcements')}
+                >
+                  <Text style={styles.secondaryHubBtnText}>Annonces club</Text>
+                </PressableSpring>
+                <PressableSpring style={styles.secondaryHubBtn} onPress={() => setHubView('club')}>
+                  <Text style={styles.secondaryHubBtnText}>Communauté club</Text>
+                </PressableSpring>
+              </>
+            ) : null}
           </>
         ) : (
           <PressableSpring style={styles.createEventBtn} onPress={() => setHubView('join')}>

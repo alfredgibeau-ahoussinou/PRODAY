@@ -9,11 +9,13 @@ export const BRAND = {
   tagline: "CONNECTER • PROGRESSER • RÉUSSIR",
   logo: "/branding/logo-proday-official.png",
   /** Phrase d’accueil : ce que fait l’app, en une ligne. */
-  mission:
-    "L'app mobile qui réunit joueurs, clubs, staff, santé et partenaires autour du foot.",
+  mission: "L'application tout-en-un du football.",
   heroSupport:
-    "Profil, matchs, RDV santé et sponsors dans une seule app. La bêta est ouverte.",
+    "Joueurs, clubs, santé et sponsors : gérez votre carrière et votre réseau au même endroit. La bêta est ouverte.",
 } as const;
+
+/** Brancher ici l’URL YouTube/Vimeo/mp4 dès que la vidéo 45s est prête. */
+export const DEMO_VIDEO_URL = "" as const;
 
 /** Pitch honnête : capacités réelles vs ambition long terme. Pas de métriques fictives. */
 export const PRODUCT_VISION = {
@@ -1583,20 +1585,20 @@ export const SUBSCRIPTION_PLANS_WEB = [
   },
   {
     id: "sante_visio_gratuit",
-    label: "Visio gratuite",
-    tagline: "Téléconsultations 15 et 30 min. Sans abonnement",
+    label: "1 visio offerte",
+    tagline: "Une téléconsultation d'essai, puis abonnement",
     monthlyEur: 0,
     storeAvailable: false,
     universes: ["sante"] as ProductLineWeb[],
     freeIncludes: [
-      "Téléconsultation Daily (15 ou 30 min)",
+      "1 téléconsultation visio offerte (15 ou 30 min)",
       "Rejoindre la visio en un tap (praticien et joueur)",
       "Prise de rendez-vous via l'app",
       "Salle sécurisée sans formulaire externe",
-      "Aucune carte bancaire requise",
+      "Ensuite : passez à Pôle santé Pro",
     ],
     proIncludes: [
-      "Passez à Cabinet Pro pour la visibilité prioritaire près des clubs",
+      "Visio illimitées + visibilité prioritaire près des clubs",
     ],
   },
   {

@@ -5,7 +5,7 @@ import { ProDayText } from '../components/ui/ProDayText';
 import { ProDaySurface } from '../components/ui/ProDaySurface';
 import { PressableSpring, PushScreenTransition } from '../components/motion';
 import { HomeScreen } from './HomeScreen';
-import { TeamManagementScreen } from './TeamManagementScreen';
+import { ClubContactsScreen } from './club/ClubContactsScreen';
 import { useSessionProfile } from '../hooks/useSessionProfile';
 import { useTranslation } from '../context/LocaleContext';
 import { useAppTheme } from '../context/ProductLineContext';
@@ -40,7 +40,7 @@ export const ClubStructureScreen: React.FC = () => {
   const [coachNames, setCoachNames] = useState<Map<string, string>>(new Map());
   const [loading, setLoading] = useState(true);
   const [actionId, setActionId] = useState<string | null>(null);
-  const [showManagement, setShowManagement] = useState(false);
+  const [showContacts, setShowContacts] = useState(false);
 
   const clubId = profile?.profile.club_id ?? profile?.uid;
 
@@ -229,32 +229,42 @@ export const ClubStructureScreen: React.FC = () => {
             </ProDaySurface>
 
             <PressableSpring
-              onPress={() => setShowManagement(true)}
+              onPress={() => setShowContacts(true)}
               style={[styles.linkBtn, { borderColor: colors.accent, backgroundColor: colors.accentSoft }]}
             >
               <ProDayText variant="caption" style={{ color: colors.accent }}>
-                {t('clubStructure.assignCoach')}
+                Contacter arbitres & dirigeants
               </ProDayText>
             </PressableSpring>
 
             <PressableSpring
-              onPress={() => {
-                setShowManagement(true);
-                nav.openDashboard('gestion');
-              }}
+              onPress={() => nav.openProfile()}
               style={[styles.linkBtn, { borderColor: colors.border, backgroundColor: colors.surface }]}
             >
               <ProDayText variant="caption" muted>
-                {t('clubStructure.detailedManagement')}
+                Vitrine & image du club
+              </ProDayText>
+            </PressableSpring>
+
+            <PressableSpring
+              onPress={() => nav.openMercato('home')}
+              style={[styles.linkBtn, { borderColor: colors.border, backgroundColor: colors.surface }]}
+            >
+              <ProDayText variant="caption" muted>
+                Annonces & recrutement
               </ProDayText>
             </PressableSpring>
           </ScrollView>
         )}
       </TabScreenShell>
 
-      <PushScreenTransition active={showManagement}>
-        {showManagement ? (
-          <TeamManagementScreen profile={profile} onBack={() => setShowManagement(false)} />
+      <PushScreenTransition active={showContacts}>
+        {showContacts && clubId ? (
+          <ClubContactsScreen
+            clubId={clubId}
+            canEdit
+            onBack={() => setShowContacts(false)}
+          />
         ) : null}
       </PushScreenTransition>
     </>

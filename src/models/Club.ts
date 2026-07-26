@@ -1,4 +1,5 @@
 import type { GeoPoint } from './User';
+import type { ClubOfficialContact } from './ClubOfficialContact';
 
 export interface Club {
   id: string;
@@ -12,4 +13,6 @@ export interface Club {
   sponsor_ids: string[];
   owner_uid: string;
   created_at: Date;
+  /** Contacts utiles (arbitres, dirigeants) — pôle Club. */
+  official_contacts?: ClubOfficialContact[];
 }
