@@ -48,7 +48,7 @@ export function RoleQuiz({ compact, inline }: { compact?: boolean; inline?: bool
     return (
       <div className="card-premium rounded-2xl p-6">
         <p className="font-bold text-white">Quel pôle ProDay vous correspond ?</p>
-        <p className="mt-2 text-sm text-white/55">3 questions. Joueur, Pro, Santé ou Partenaires</p>
+        <p className="mt-2 text-sm text-white/55">5 questions. Joueur, Pro, Santé ou Partenaires</p>
         <Link
           href={ROUTES.quiz}
           className="mt-4 inline-flex min-h-11 items-center rounded-full bg-[var(--proday-accent)] px-5 py-2 text-sm font-bold text-white transition hover:bg-[#2a6fff]"

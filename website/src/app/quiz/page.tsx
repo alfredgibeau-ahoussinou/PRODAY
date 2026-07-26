@@ -6,7 +6,7 @@ import { ROUTES } from "@/lib/routes";
 
 export const metadata: Metadata = {
   title: "Quiz profil",
-  description: "3 questions pour trouver votre pôle. Joueur, Pro, Santé ou Partenaires.",
+  description: "5 questions pour trouver votre pôle. Joueur, Pro, Santé ou Partenaires.",
 };
 
 export default function QuizPage() {
@@ -16,7 +16,7 @@ export default function QuizPage() {
         pathname={ROUTES.quiz}
         kicker="QUIZ"
         title="Quel pôle ProDay vous correspond ?"
-        description="3 questions. On vous oriente vers le bon pôle : Joueur, Pro, Santé ou Partenaires."
+        description="5 questions. On vous oriente vers le bon pôle : Joueur, Pro, Santé ou Partenaires."
         image="/showcase/classic-exp-discover.jpg"
         dark
       />

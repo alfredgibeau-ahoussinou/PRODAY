@@ -128,7 +128,7 @@ export const EXPLORE_CARDS = [
   {
     href: ROUTES.quiz,
     title: "Quiz profil",
-    description: "3 questions. Man, Woman ou Pro : quel pôle vous correspond.",
+    description: "5 questions. Man, Woman ou Pro : quel pôle vous correspond.",
     image: "/showcase/classic-exp-discover.jpg",
     tag: "Quiz",
   },
