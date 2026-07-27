@@ -10,6 +10,7 @@ const NAV = [
   { href: ROUTES.adminDashboard, label: "Dashboard" },
   { href: ROUTES.adminUsers, label: "Utilisateurs" },
   { href: ROUTES.adminContent, label: "Contenu" },
+  { href: ROUTES.adminPoles, label: "Pôles" },
   { href: ROUTES.adminAnalytics, label: "Analytics" },
 ] as const;
 
