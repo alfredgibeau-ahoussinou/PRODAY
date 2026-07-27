@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import { AdminNav } from "@/components/admin/AdminNav";
-import { Plus, Edit, Trash2, Eye, MessageSquare, FileText, Image as ImageIcon, Save, X } from "lucide-react";
+import { Modal } from "@/components/admin/Modal";
+import { ToastContainer, useToast, toast } from "@/components/admin/Toast";
+import { Plus, Edit, Trash2, Eye, MessageSquare, FileText, Image as ImageIcon, Save, X, RefreshCw } from "lucide-react";
 
 interface FAQItem {
   id: string;
@@ -58,95 +60,144 @@ const mockTestimonials: Testimonial[] = [
 ];
 
 export function AdminContent() {
+  const { toasts, removeToast } = useToast();
   const [activeTab, setActiveTab] = useState<"faq" | "testimonials">("faq");
   const [faq, setFaq] = useState<FAQItem[]>(mockFAQ);
   const [testimonials, setTestimonials] = useState<Testimonial[]>(mockTestimonials);
   const [editingItem, setEditingItem] = useState<FAQItem | Testimonial | null>(null);
   const [isCreating, setIsCreating] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<{ id: string; type: "faq" | "testimonials" } | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handlePublish = (id: string, type: "faq" | "testimonials") => {
     if (type === "faq") {
       setFaq((prev) =>
-        prev.map((item) =>
-          item.id === id ? { ...item, published: !item.published } : item
-        )
+        prev.map((item) => {
+          if (item.id === id) {
+            toast(item.published ? "FAQ dépubliée" : "FAQ publiée", item.published ? "warning" : "success");
+            return { ...item, published: !item.published };
+          }
+          return item;
+        })
       );
     } else {
       setTestimonials((prev) =>
-        prev.map((item) =>
-          item.id === id ? { ...item, published: !item.published } : item
-        )
+        prev.map((item) => {
+          if (item.id === id) {
+            toast(item.published ? "Témoignage dépublié" : "Témoignage publié", item.published ? "warning" : "success");
+            return { ...item, published: !item.published };
+          }
+          return item;
+        })
       );
     }
   };
 
   const handleDelete = (id: string, type: "faq" | "testimonials") => {
-    if (!confirm("Êtes-vous sûr de vouloir supprimer cet élément ?")) return;
-    
-    if (type === "faq") {
-      setFaq((prev) => prev.filter((item) => item.id !== id));
-    } else {
-      setTestimonials((prev) => prev.filter((item) => item.id !== id));
+    setItemToDelete({ id, type });
+    setDeleteModalOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (itemToDelete) {
+      if (itemToDelete.type === "faq") {
+        setFaq((prev) => prev.filter((item) => item.id !== itemToDelete.id));
+        toast("FAQ supprimée", "error");
+      } else {
+        setTestimonials((prev) => prev.filter((item) => item.id !== itemToDelete.id));
+        toast("Témoignage supprimé", "error");
+      }
+      setDeleteModalOpen(false);
+      setItemToDelete(null);
     }
   };
 
   const handleSave = (item: FAQItem | Testimonial) => {
-    if (activeTab === "faq") {
-      if (isCreating) {
-        setFaq((prev) => [...prev, item as FAQItem]);
+    setIsLoading(true);
+    setTimeout(() => {
+      if (activeTab === "faq") {
+        if (isCreating) {
+          setFaq((prev) => [...prev, { ...item as FAQItem, id: Date.now().toString() }]);
+          toast("FAQ créée", "success");
+        } else {
+          setFaq((prev) =>
+            prev.map((i) => (i.id === item.id ? item as FAQItem : i))
+          );
+          toast("FAQ modifiée", "success");
+        }
       } else {
-        setFaq((prev) =>
-          prev.map((i) => (i.id === item.id ? item as FAQItem : i))
-        );
+        if (isCreating) {
+          setTestimonials((prev) => [...prev, { ...item as Testimonial, id: Date.now().toString() }]);
+          toast("Témoignage créé", "success");
+        } else {
+          setTestimonials((prev) =>
+            prev.map((i) => (i.id === item.id ? item as Testimonial : i))
+          );
+          toast("Témoignage modifié", "success");
+        }
       }
-    } else {
-      if (isCreating) {
-        setTestimonials((prev) => [...prev, item as Testimonial]);
-      } else {
-        setTestimonials((prev) =>
-          prev.map((i) => (i.id === item.id ? item as Testimonial : i))
-        );
-      }
-    }
-    setEditingItem(null);
-    setIsCreating(false);
+      setEditingItem(null);
+      setIsCreating(false);
+      setIsLoading(false);
+    }, 500);
+  };
+
+  const handleRefresh = () => {
+    setIsLoading(true);
+    setTimeout(() => {
+      setIsLoading(false);
+      toast("Données actualisées", "success");
+    }, 1000);
   };
 
   return (
-    <main className="relative mx-auto w-full max-w-7xl px-6 py-12">
-      <header className="flex flex-col gap-4 border-b border-white/10 pb-8 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="font-[family-name:var(--font-syne)] text-xs font-semibold uppercase tracking-[0.22em] text-[#4C8BFF]">
-            Admin · Contenu
-          </p>
-          <h1 className="mt-2 font-[family-name:var(--font-syne)] text-3xl font-bold text-white">
-            Gestion du contenu
-          </h1>
-          <p className="mt-2 max-w-xl text-sm text-white/55">
-            Gérez la FAQ, les témoignages et le contenu du site.
-          </p>
-        </div>
-        <AdminNav />
-      </header>
+    <>
+      <ToastContainer toasts={toasts} onClose={removeToast} />
+      <main className="relative mx-auto w-full max-w-7xl px-6 py-12">
+        <header className="flex flex-col gap-4 border-b border-white/10 pb-8 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="font-[family-name:var(--font-syne)] text-xs font-semibold uppercase tracking-[0.22em] text-[#4C8BFF]">
+              Admin · Contenu
+            </p>
+            <h1 className="mt-2 font-[family-name:var(--font-syne)] text-3xl font-bold text-white">
+              Gestion du contenu
+            </h1>
+            <p className="mt-2 max-w-xl text-sm text-white/55">
+              Gérez la FAQ, les témoignages et le contenu du site.
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleRefresh}
+              disabled={isLoading}
+              className="rounded-full p-2 text-white/60 transition hover:bg-white/10 hover:text-white disabled:opacity-50"
+              title="Actualiser"
+            >
+              <RefreshCw size={20} className={isLoading ? "animate-spin" : ""} />
+            </button>
+            <AdminNav />
+          </div>
+        </header>
 
       {/* Onglets */}
       <section className="mt-8 flex gap-2">
         <button
           onClick={() => setActiveTab("faq")}
-          className={`rounded-full px-4 py-2 text-sm font-semibold uppercase tracking-wide transition ${
+          className={`rounded-full px-4 py-2 text-sm font-semibold uppercase tracking-wide transition-all duration-200 ${
             activeTab === "faq"
-              ? "bg-white text-black"
-              : "bg-white/[0.06] text-white/60 hover:text-white"
+              ? "bg-white text-black scale-105"
+              : "bg-white/[0.06] text-white/60 hover:text-white hover:bg-white/[0.1]"
           }`}
         >
           FAQ
         </button>
         <button
           onClick={() => setActiveTab("testimonials")}
-          className={`rounded-full px-4 py-2 text-sm font-semibold uppercase tracking-wide transition ${
+          className={`rounded-full px-4 py-2 text-sm font-semibold uppercase tracking-wide transition-all duration-200 ${
             activeTab === "testimonials"
-              ? "bg-white text-black"
-              : "bg-white/[0.06] text-white/60 hover:text-white"
+              ? "bg-white text-black scale-105"
+              : "bg-white/[0.06] text-white/60 hover:text-white hover:bg-white/[0.1]"
           }`}
         >
           Témoignages
@@ -164,7 +215,7 @@ export function AdminContent() {
                 : { id: "", name: "", role: "", content: "", rating: 5, published: false }
             );
           }}
-          className="flex items-center gap-2 rounded-full bg-[#0054F0] px-4 py-2 text-sm font-bold uppercase tracking-wide text-white transition hover:bg-[#2a6fff]"
+          className="flex items-center gap-2 rounded-full bg-[#0054F0] px-4 py-2 text-sm font-bold uppercase tracking-wide text-white transition-all duration-200 hover:bg-[#2a6fff] hover:scale-105"
         >
           <Plus size={16} />
           Ajouter
@@ -173,7 +224,7 @@ export function AdminContent() {
 
       {/* Formulaire d'édition/création */}
       {editingItem && (
-        <section className="mt-6 rounded-2xl border border-white/10 bg-white/[0.03] p-6">
+        <section className="mt-6 rounded-2xl border border-white/10 bg-white/[0.03] p-6 animate-in slide-in-from-top-2 duration-300">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-display text-lg font-semibold text-white">
               {isCreating ? "Créer" : "Modifier"} {activeTab === "faq" ? "une FAQ" : "un témoignage"}
@@ -291,7 +342,8 @@ export function AdminContent() {
             </button>
             <button
               onClick={() => handleSave(editingItem)}
-              className="flex items-center gap-2 rounded-full bg-[#0054F0] px-4 py-2 text-sm font-bold uppercase tracking-wide text-white transition hover:bg-[#2a6fff]"
+              disabled={isLoading}
+              className="flex items-center gap-2 rounded-full bg-[#0054F0] px-4 py-2 text-sm font-bold uppercase tracking-wide text-white transition hover:bg-[#2a6fff] disabled:opacity-50"
             >
               <Save size={16} />
               Enregistrer
@@ -303,10 +355,11 @@ export function AdminContent() {
       {/* Liste des éléments */}
       <section className="mt-8 space-y-4">
         {activeTab === "faq" ? (
-          faq.map((item) => (
+          faq.map((item, index) => (
             <article
               key={item.id}
-              className="rounded-2xl border border-white/10 bg-white/[0.03] p-6"
+              className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 transition-all duration-300 hover:border-white/20 hover:bg-white/[0.05] animate-in slide-in-from-left-2"
+              style={{ animationDelay: `${index * 50}ms` }}
             >
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1">
@@ -357,10 +410,11 @@ export function AdminContent() {
             </article>
           ))
         ) : (
-          testimonials.map((item) => (
+          testimonials.map((item, index) => (
             <article
               key={item.id}
-              className="rounded-2xl border border-white/10 bg-white/[0.03] p-6"
+              className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 transition-all duration-300 hover:border-white/20 hover:bg-white/[0.05] animate-in slide-in-from-left-2"
+              style={{ animationDelay: `${index * 50}ms` }}
             >
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1">
@@ -424,6 +478,42 @@ export function AdminContent() {
           ))
         )}
       </section>
+
+      {/* Modal de confirmation de suppression */}
+      <Modal
+        isOpen={deleteModalOpen}
+        onClose={() => {
+          setDeleteModalOpen(false);
+          setItemToDelete(null);
+        }}
+        title="Confirmer la suppression"
+        size="sm"
+      >
+        <div className="space-y-4">
+          <p className="text-white/80">
+            Êtes-vous sûr de vouloir supprimer cet élément ?
+          </p>
+          <p className="text-sm text-white/60">Cette action est irréversible.</p>
+          <div className="flex justify-end gap-3 mt-6">
+            <button
+              onClick={() => {
+                setDeleteModalOpen(false);
+                setItemToDelete(null);
+              }}
+              className="rounded-full border border-white/10 px-4 py-2 text-sm font-semibold uppercase tracking-wide text-white/70 transition hover:bg-white/10"
+            >
+              Annuler
+            </button>
+            <button
+              onClick={confirmDelete}
+              className="rounded-full bg-red-500 px-4 py-2 text-sm font-bold uppercase tracking-wide text-white transition hover:bg-red-600"
+            >
+              Supprimer
+            </button>
+          </div>
+        </div>
+      </Modal>
     </main>
+    </>
   );
 }

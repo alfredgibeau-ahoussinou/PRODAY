@@ -15,6 +15,14 @@ import { applySecurityHeaders } from "@/lib/securityHeaders";
 const PIN_RATE_LIMIT = 5;
 const PIN_RATE_WINDOW_MS = 15 * 60_000;
 
+const ADMIN_EMAILS = [
+  "alfred.ahoussinou@gmail.com",
+];
+
+function isValidAdminEmail(email: string): boolean {
+  return ADMIN_EMAILS.includes(email.toLowerCase().trim());
+}
+
 function jsonResponse(body: Record<string, unknown>, init?: ResponseInit) {
   const response = NextResponse.json(body, init);
   applySecurityHeaders(response);
@@ -55,20 +63,37 @@ export async function POST(request: Request) {
     );
   }
 
-  let body: { pin?: string };
+  let body: { pin?: string; email?: string };
   try {
-    body = (await request.json()) as { pin?: string };
+    body = (await request.json()) as { pin?: string; email?: string };
   } catch {
     return jsonResponse({ error: "Corps JSON invalide" }, { status: 400 });
   }
 
   const pin = String(body.pin ?? "").trim();
-  if (!pin || pin.length > 32) {
-    return jsonResponse({ error: "Minicode invalide" }, { status: 400 });
-  }
+  const email = String(body.email ?? "").trim().toLowerCase();
 
-  if (!verifyAdminPin(pin)) {
-    return jsonResponse({ error: "Minicode incorrect" }, { status: 401 });
+  // Authentification par PIN
+  if (pin && !email) {
+    if (!pin || pin.length > 32) {
+      return jsonResponse({ error: "Minicode invalide" }, { status: 400 });
+    }
+    if (!verifyAdminPin(pin)) {
+      return jsonResponse({ error: "Minicode incorrect" }, { status: 401 });
+    }
+  }
+  // Authentification par email
+  else if (email && !pin) {
+    if (!email || !email.includes("@")) {
+      return jsonResponse({ error: "Email invalide" }, { status: 400 });
+    }
+    if (!isValidAdminEmail(email)) {
+      return jsonResponse({ error: "Email non autorisé" }, { status: 401 });
+    }
+  }
+  // Ni PIN ni email fourni
+  else {
+    return jsonResponse({ error: "Minicode ou email requis" }, { status: 400 });
   }
 
   const token = createAdminSessionToken();
