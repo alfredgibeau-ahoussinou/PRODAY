@@ -7,6 +7,10 @@ import { ROUTES } from "@/lib/routes";
 const NAV = [
   { href: ROUTES.adminBeta, label: "Liste d’attente" },
   { href: ROUTES.adminVisites, label: "Visites" },
+  { href: ROUTES.adminDashboard, label: "Dashboard" },
+  { href: ROUTES.adminUsers, label: "Utilisateurs" },
+  { href: ROUTES.adminContent, label: "Contenu" },
+  { href: ROUTES.adminAnalytics, label: "Analytics" },
 ] as const;
 
 export function AdminNav() {

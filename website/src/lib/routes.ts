@@ -38,6 +38,14 @@ export const ROUTES = {
   adminBeta: "/admin/beta",
   /** Tableau de suivi des visites site / app. */
   adminVisites: "/admin/visites",
+  /** Dashboard admin principal. */
+  adminDashboard: "/admin/dashboard",
+  /** Gestion des utilisateurs. */
+  adminUsers: "/admin/users",
+  /** Gestion du contenu (FAQ, témoignages). */
+  adminContent: "/admin/content",
+  /** Analytics détaillés. */
+  adminAnalytics: "/admin/analytics",
   about: "/a-propos",
   vision: "/vision",
   pricing: "/tarifs",
