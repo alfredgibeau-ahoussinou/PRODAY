@@ -48,6 +48,8 @@ export const ROUTES = {
   adminAnalytics: "/admin/analytics",
   /** Gestion des pôles et fonctionnalités. */
   adminPoles: "/admin/poles",
+  /** Gestion des emails et notifications. */
+  adminEmails: "/admin/emails",
   about: "/a-propos",
   vision: "/vision",
   pricing: "/tarifs",

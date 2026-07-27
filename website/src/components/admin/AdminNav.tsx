@@ -12,6 +12,7 @@ const NAV = [
   { href: ROUTES.adminContent, label: "Contenu" },
   { href: ROUTES.adminPoles, label: "Pôles" },
   { href: ROUTES.adminAnalytics, label: "Analytics" },
+  { href: ROUTES.adminEmails, label: "Emails" },
 ] as const;
 
 export function AdminNav() {
