@@ -1,118 +1,107 @@
 # ProDay — Pitch & présentation
 
-Diaporama HTML interactif : ouvrir [`index.html`](./index.html) dans un navigateur (flèches ← → ou clic sur les bords).
+Ouvre [`index.html`](./index.html) dans un navigateur. Tu navigues avec les flèches ← →, la barre d'espace, ou les boutons sur les côtés.
 
 ---
 
-## Elevator pitch (30 secondes)
+## En 30 secondes
 
-**ProDay**, c'est l'app qui unifie le foot amateur et semi-pro : profil, matchs, recrutement, club et communauté — **tout au même endroit**.
+ProDay, c'est l'app pour le foot amateur et semi-pro : ton profil, tes matchs, ton club, le recrutement, la communauté — le tout au même endroit.
 
-Aujourd'hui, une équipe U17 jongle entre cinq groupes WhatsApp, un Excel pour les convocations et des annonces Mercato éparpillées sur les réseaux. ProDay remplace ce chaos par **une seule plateforme mobile**, avec des données réelles et une IA **honnête** sur ce qu'elle analyse vraiment.
+Concrètement, une équipe U17 aujourd'hui, c'est cinq groupes WhatsApp, un Excel pour les convocs, et des annonces Mercato perdues sur Facebook. ProDay remplace tout ça par une seule app mobile, avec de vraies données. Et on est transparents sur l'IA : elle analyse les highlights de séance que tu enregistres, pas tout le match en temps réel.
 
-**Connecter • Progresser • Réussir** — pour joueurs, coachs, clubs, supporters, staff pro, praticiens santé et sponsors.
+**Connecter • Progresser • Réussir**
 
-→ [proday75.fr](https://proday75.fr) · Bêta ouverte : [proday75.fr/beta/inscription](https://proday75.fr/beta/inscription)
+→ [proday75.fr](https://proday75.fr) · Bêta : [proday75.fr/beta/inscription](https://proday75.fr/beta/inscription)
 
 ---
 
-## Pitch complet (3–5 minutes)
+## Le pitch complet (~4 min)
 
 ### 1. Le problème
 
-Le foot amateur et semi-pro fonctionne encore avec des outils fragmentés :
+Le foot amateur tourne encore au bricolage :
 
-- **Convocations** dans WhatsApp, relances manuelles, absences non tracées
-- **Recrutement (Mercato)** sur Facebook, LeBonCoin ou bouche-à-oreille
-- **Stats et carrière** dans des tableurs ou pas du tout
-- **Supporters** sans fil conducteur entre clubs, matchs live et communauté
-- **Staff et praticiens** sans annuaire fiable ni confiance graduée
+- Les convocs partent sur WhatsApp, les relances sont manuelles, personne ne sait vraiment qui vient.
+- Le Mercato, c'est Facebook, LeBonCoin ou le réseau du vestiaire.
+- Les stats et la carrière ? Excel, ou rien du tout.
+- Les supporters n'ont pas de fil conducteur entre clubs, live et communauté.
+- Staff et praticiens : pas d'annuaire fiable, pas de confiance claire.
 
-Résultat : perte de temps, visibilité faible pour les joueurs, clubs qui peinent à recruter, et zéro CV vivant alimenté par la vraie activité terrain.
+Résultat : du temps perdu, peu de visibilité pour les joueurs, des clubs qui galèrent à recruter, et aucun CV qui se construit tout seul à partir de ce qui se passe vraiment sur le terrain.
 
-### 2. La solution — ProDay
+### 2. Ce qu'on propose
 
-ProDay est une **application mobile** (React Native / Expo) + **site vitrine** ([proday75.fr](https://proday75.fr)) qui relie **carrière, club et communauté** dans un seul écosystème.
+ProDay, c'est une app mobile + un site ([proday75.fr](https://proday75.fr)) qui met carrière, club et communauté dans le même écosystème.
 
-Notre promesse : donner à chaque acteur du foot amateur les **outils du haut niveau**, sans surestimer l'IA.
+L'idée : donner aux acteurs du foot amateur des outils dignes du haut niveau, sans promettre la lune côté IA.
 
-**Ce qui est livré aujourd'hui :**
+**Déjà en place :**
 
-| Pilier | Concret |
-|--------|---------|
-| **Profil & Pulse** | Score de visibilité, CV en ligne, export PDF, timeline carrière |
-| **Mercato** | Annonces ciblées, candidatures, pipeline staff/recruteurs |
-| **Matchs & Arena** | Convocations RSVP, Live Stats, tournois et palmarès |
-| **Communauté** | Fil, Reels, question hebdo |
-| **Transversal** | Covoiturage, pôle santé, espace sponsors, contrôle parental |
+- **Profil & Pulse** — score de visibilité, CV en ligne, export PDF, timeline carrière
+- **Mercato** — annonces, candidatures, pipeline pour staff et recruteurs
+- **Matchs & Arena** — convocations avec RSVP, live stats, tournois
+- **Communauté** — fil, Reels, question de la semaine
+- **Le reste** — covoiturage, pôle santé, espace sponsors, contrôle parental
 
-L'analyse IA porte sur les **highlights de séance** enregistrés dans le journal (vidéo ou image + notes) — pas une promesse frame-by-frame sur tout le terrain. On dit ce qu'on fait, pas ce qu'on rêve.
+Sur l'IA : on analyse les highlights que le joueur ou le coach enregistre dans son journal (vidéo, photo, notes). On ne prétend pas décortiquer tout le terrain image par image. On dit ce qu'on fait.
 
-### 3. Les sept univers
+### 3. Les 7 pôles
 
-ProDay s'organise autour de **7 pôles**, chacun avec une coque app adaptée :
+Une seule app, sept univers selon qui tu es :
 
-| Pôle | Public | Promesse |
-|------|--------|----------|
-| **Amateur** | Joueurs & coachs | Jouer, encadrer, partager — convocations, Mercato local, covoiturage |
-| **Supporter** | Fans | 100 % gratuit — live scores, suivis, Reels, shop |
-| **Santé** | Kiné, médecin, prépa… | Annuaire vérifié, RDV près des clubs |
-| **Pro Joueur** | Joueurs pro | Portfolio scouting, stats validées coach, mandat agent |
-| **Pro Club** | Structures | Arbre équipes, recrutement, vitrine publique |
-| **Pro Staff** | Agent, recruteur, coach, orga | Mercato Pro, scouting, Arena |
-| **Sponsor** | Marques | Visibilité terrain, ROI campagnes, push géo |
+- **Amateur** — joueurs et coachs : convocs, Mercato local, covoiturage
+- **Supporter** — 100 % gratuit : live, Reels, shop
+- **Santé** — kinés, médecins, préparateurs : annuaire vérifié, RDV près des clubs
+- **Pro Joueur** — portfolio scouting, stats validées par le coach
+- **Pro Club** — arbre d'équipes, recrutement, vitrine publique
+- **Pro Staff** — agents, recruteurs, coachs, orgas Arena
+- **Sponsor** — visibilité terrain, ROI des campagnes
 
-Un seul produit, **neuf onglets dynamiques** selon le rôle — Accueil, Mercato, Matchs, Reels, Fil, Covoit., Santé, Messages, Profil.
+L'interface s'adapte au rôle : Accueil, Mercato, Matchs, Reels, Fil, Covoit., Santé, Messages, Profil.
 
-### 4. Confiance & sécurité
+### 4. Confiance
 
-ProDay applique une **confiance graduée** :
+Pas tout le monde a les mêmes droits d'emblée :
 
 - Joueurs et supporters : accès rapide
-- Coach, agent, recruteur, praticien, club : **vérification diplôme** avant messagerie complète
-- Mineurs : contrôle parental, contacts approuvés, espace jeunes
+- Coach, agent, recruteur, praticien, club : vérification du diplôme avant la messagerie complète
+- Mineurs : contrôle parental, contacts approuvés
 
-Badge orange en revue → badge vert validé. Firestore rules + Cloud Functions pour les champs sensibles.
+Badge orange pendant la revue, badge vert une fois validé. Côté technique : règles Firestore + Cloud Functions sur les données sensibles.
 
-### 5. Modèle économique
+### 5. Comment on gagne de l'argent
 
-| Segment | Modèle |
-|---------|--------|
-| **Joueur / Supporter** | Freemium — profil, Pulse, limites Mercato ; offres Plus/Pro via IAP |
-| **Coach / Staff** | Abonnements Pro (multi-équipes, pipeline, quotas) |
-| **Sponsor** | Découverte (0 €), Territorial (49 €/mois), National Pro (99 €/mois) |
-| **Santé** | Abonnement léger + 10 % commission sur RDV réservés via ProDay |
+- **Joueur / Supporter** — gratuit au départ, offres Plus/Pro en abonnement in-app
+- **Coach / Staff** — abonnements Pro (multi-équipes, pipeline, quotas scouting)
+- **Sponsor** — Découverte 0 €, Territorial 49 €/mois, National Pro 99 €/mois
+- **Santé** — abonnement léger + 10 % sur les RDV pris via ProDay
 
-16 SKU IAP en déploiement progressif. En bêta, activation Pro manuelle Firestore.
+Les abonnements in-app sont en cours de déploiement. En bêta, l'activation Pro se fait encore à la main.
 
-### 6. Traction & bêta
+### 6. Où on en est
 
-- **Bêta fermée** en cours — TestFlight iOS / APK Android
-- Waitlist sur [proday75.fr/beta/inscription](https://proday75.fr/beta/inscription)
-- Démo navigateur sans install : [proday75.fr/demo](https://proday75.fr/demo)
-- Site 21+ routes, admin panel, analytics portfolio
+- Bêta fermée en cours — TestFlight iOS, APK Android
+- Liste d'attente : [proday75.fr/beta/inscription](https://proday75.fr/beta/inscription)
+- Démo sans install : [proday75.fr/demo](https://proday75.fr/demo)
 
-### 7. Stack & exécution
+### 7. La technique (en bref)
 
-Monorepo : **Expo SDK 54** (app) + **Next.js** (site) + **Firebase** (Auth, Firestore, Functions, FCM) + **Mistral** (IA highlights).
+App Expo / React Native, site Next.js, backend Firebase (Auth, Firestore, Functions, notifications). IA Mistral pour les highlights. Une seule base de données, des vraies données en prod — pas de démo bidon.
 
-Une seule source de vérité Firestore. Données réelles en production — pas de mock. Équipe capable de shipper mobile + web + backend.
+### 8. La suite
 
-### 8. Roadmap honnête
-
-| Phase | Exemples |
-|-------|----------|
-| ✅ **Livré** | Dashboard IA, Mercato, Live Stats, Arena, Fil/Reels, sponsors, admin |
-| 🔄 **En cours** | IAP store, push géo sponsors, Cloud Functions Blaze |
-| 📋 **Demain** | Analyse vidéo avancée, détection talent, paiements tournois |
+- **Déjà livré** — dashboard IA, Mercato, live stats, Arena, fil/Reels, sponsors, admin
+- **En cours** — abonnements store, push géo sponsors, montée en puissance Firebase
+- **Plus tard** — analyse vidéo poussée, détection de talents, paiements tournois (pas promis pour aujourd'hui)
 
 ### 9. Ce qu'on cherche
 
-- **Testeurs bêta** — joueurs, coachs, clubs en Île-de-France et au-delà
-- **Partenaires** — marques locales et nationales (pôle Sponsor)
-- **Investisseurs / advisors** — sport-tech, SaaS mobile, communautés sportives
+- Des testeurs bêta — joueurs, coachs, clubs (Île-de-France et au-delà)
+- Des partenaires — marques locales et nationales
+- Des investisseurs ou advisors — sport-tech, mobile, communautés sportives
 
-### 10. Closing
+### 10. Pour finir
 
 > **ProDay — L'app pour le foot. Ton profil, tes matchs, ton club. Tout au même endroit.**
 
@@ -120,37 +109,35 @@ Une seule source de vérité Firestore. Données réelles en production — pas 
 
 ---
 
-## Notes présentateur
+## Notes pour présenter
 
-| Slide | Durée | Point clé |
-|-------|-------|-----------|
-| Titre | 15 s | Accroche mission |
-| Problème | 30 s | WhatsApp + Excel + Facebook |
-| Solution | 45 s | Une app, données réelles |
-| 7 pôles | 45 s | Écosystème complet |
-| Fonctionnalités | 40 s | Pulse, Mercato, Live Stats |
-| Confiance | 25 s | Vérification diplômes |
-| Business | 30 s | Freemium + sponsors |
-| Bêta | 25 s | Waitlist + démo |
-| Tech | 20 s | Monorepo Firebase |
-| Roadmap | 25 s | Honnêteté IA |
+| Slide | ~Durée | À retenir |
+|-------|--------|-----------|
+| Titre | 15 s | La mission en une phrase |
+| Problème | 30 s | WhatsApp, Excel, Facebook |
+| Solution | 45 s | Une app, des vraies données |
+| 7 pôles | 45 s | Tout l'écosystème |
+| Fonctionnalités | 40 s | Pulse, Mercato, live stats |
+| Confiance | 25 s | Diplômes vérifiés |
+| Business | 30 s | Gratuit + Pro + sponsors |
+| Bêta | 25 s | Waitlist et démo |
+| Tech | 20 s | Mobile + web + Firebase |
+| Roadmap | 25 s | On ne sur-vend pas l'IA |
 | CTA | 15 s | Rejoindre la bêta |
 
-**Total : ~4 min 30**
+**Total : environ 4 min 30**
 
 ---
 
-## Raccourcis diaporama
+## Raccourcis clavier
 
 | Touche | Action |
 |--------|--------|
 | `→` `↓` `Espace` | Slide suivante |
 | `←` `↑` | Slide précédente |
-| `Home` | Première slide |
-| `End` | Dernière slide |
+| `Home` / `End` | Première / dernière slide |
 | `F` | Plein écran |
-| `Esc` | Quitter plein écran |
 
 ---
 
-© ProDay 2026 — Tous droits réservés
+© ProDay 2026
