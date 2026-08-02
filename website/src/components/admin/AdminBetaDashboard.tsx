@@ -125,6 +125,48 @@ export function AdminBetaDashboard({
     }
   }
 
+  async function runCampaignAction(
+    action:
+      | "broadcast_ios_pre_announcement"
+      | "trigger_ios_launch"
+      | "send_engagement_round",
+    confirmLabel: string,
+  ) {
+    if (!window.confirm(confirmLabel)) return;
+    setMessage(null);
+    setError(null);
+    try {
+      const res = await fetch("/api/admin/beta/campaign", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action }),
+      });
+      const data = (await res.json().catch(() => ({}))) as {
+        error?: string;
+        sent?: number;
+        skipped?: number;
+        failed?: number;
+        testflightUrl?: string;
+      };
+      if (!res.ok) {
+        setError(data.error ?? "Action impossible");
+        return;
+      }
+      const parts = [
+        data.sent != null ? `${data.sent} envoyé(s)` : null,
+        data.skipped != null ? `${data.skipped} ignoré(s)` : null,
+        data.failed != null && data.failed > 0 ? `${data.failed} échec(s)` : null,
+      ].filter(Boolean);
+      setMessage(
+        parts.length
+          ? `Campagne OK — ${parts.join(", ")}.${data.testflightUrl ? ` TestFlight : ${data.testflightUrl}` : ""}`
+          : "Campagne exécutée.",
+      );
+    } catch {
+      setError("Erreur réseau");
+    }
+  }
+
   return (
     <main className="relative mx-auto w-full max-w-5xl px-6 py-12">
       <header className="flex flex-col gap-4 border-b border-white/10 pb-8 sm:flex-row sm:items-end sm:justify-between">
@@ -182,6 +224,55 @@ export function AdminBetaDashboard({
             </p>
           </button>
         ))}
+      </section>
+
+      <section className="mt-10 rounded-2xl border border-[#0054F0]/25 bg-[#001854]/30 p-6">
+        <h2 className="font-[family-name:var(--font-syne)] text-lg font-bold text-white">
+          Campagne bêta iOS
+        </h2>
+        <p className="mt-2 max-w-2xl text-sm text-white/55">
+          Ouverture TestFlight le <strong className="text-white/80">11 août 2026 à 18 h</strong>.
+          Emails d&apos;engagement automatiques tous les 2 jours après le lancement (Cloud Function
+          horaire).
+        </p>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() =>
+              void runCampaignAction(
+                "broadcast_ios_pre_announcement",
+                "Envoyer l'email d'annonce iOS (11 août 18 h) à tous les inscrits non refusés ?",
+              )
+            }
+            className="rounded-full bg-[#0054F0] px-4 py-2 text-xs font-bold uppercase tracking-wide text-white"
+          >
+            Annonce date iOS
+          </button>
+          <button
+            type="button"
+            onClick={() =>
+              void runCampaignAction(
+                "trigger_ios_launch",
+                "Lancer la bêta iOS maintenant (emails TestFlight + marquer comme ouvert) ?",
+              )
+            }
+            className="rounded-full border border-emerald-500/40 bg-emerald-500/10 px-4 py-2 text-xs font-bold uppercase tracking-wide text-emerald-200"
+          >
+            Ouvrir bêta iOS
+          </button>
+          <button
+            type="button"
+            onClick={() =>
+              void runCampaignAction(
+                "send_engagement_round",
+                "Envoyer la prochaine email d'engagement (astuces / fonctionnalités) ?",
+              )
+            }
+            className="rounded-full border border-white/15 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-white/75"
+          >
+            Email engagement
+          </button>
+        </div>
       </section>
 
       <div className="mt-6 flex flex-wrap gap-2">

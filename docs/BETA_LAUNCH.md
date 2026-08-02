@@ -1,6 +1,8 @@
 # Lancement bêta fermée — ProDay
 
 > **Guide opérateur complet :** `docs/BETA_GUIDE.md` (architecture, URLs, variables env).
+>
+> **Bêta iOS :** ouverture **11 août 2026 à 18 h** (TestFlight) — voir [`docs/BETA_IOS_LAUNCH.md`](./BETA_IOS_LAUNCH.md).
 
 Checklist pour distribuer l'app aux testeurs inscrits sur la waitlist (50–200 personnes).
 
@@ -48,8 +50,10 @@ Après build Android : partager l'APK ou piste interne Play Console.
 
 ```bash
 firebase deploy --only firestore:rules,storage
-firebase deploy --only functions:onV3BrainWrite,functions:submitBetaWaitlist
+firebase deploy --only functions:onV3BrainWrite,functions:submitBetaWaitlist,functions:scheduledBetaIosCampaign,functions:websiteBetaWaitlistAdmin
 ```
+
+Campagne iOS (annonce + lancement auto + engagement) : [`BETA_IOS_LAUNCH.md`](./BETA_IOS_LAUNCH.md).
 
 `activateStoreSubscription` : optionnel en bêta (accès Pro manuel Firestore).
 

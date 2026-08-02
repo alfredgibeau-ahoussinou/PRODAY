@@ -17,6 +17,7 @@ import {
   createAdminDeleteBetaWaitlistEntryHandler,
 } from './betaWaitlistAdmin';
 import { createWebsiteBetaWaitlistAdminHandler } from './betaWaitlistWebsiteAdmin';
+import { processScheduledBetaIosCampaign } from './betaIosCampaign';
 import {
   createRecordTrafficVisitHandler,
   createWebsiteTrafficStatsAdminHandler,
@@ -188,6 +189,21 @@ export const scheduledEventReminders = functions.pubsub
   .onRun(async () => {
     const result = await processScheduledEventReminders();
     console.log('[scheduledEventReminders]', result);
+    return result;
+  });
+
+/**
+ * Campagne bêta iOS : lancement TestFlight (11 août 2026 18 h Paris)
+ * + emails d'engagement tous les 2 jours après ouverture.
+ *
+ * Déployer : firebase deploy --only functions:scheduledBetaIosCampaign
+ */
+export const scheduledBetaIosCampaign = functions.pubsub
+  .schedule('every 1 hours')
+  .timeZone('Europe/Paris')
+  .onRun(async () => {
+    const result = await processScheduledBetaIosCampaign(db);
+    console.log('[scheduledBetaIosCampaign]', result);
     return result;
   });
 
@@ -619,6 +635,33 @@ export const adminDeleteUser = functions.https.onCall(async (data, context) => {
   return { success: true };
 });
 
+/** Suppression de son propre compte — parcours requis pour les comptes créés dans l'app. */
+export const deleteMyAccount = functions.https.onCall(async (_data, context) => {
+  const uid = context.auth?.uid;
+  if (!uid) {
+    throw new functions.https.HttpsError('unauthenticated', 'Connexion requise');
+  }
+
+  // Les documents de vérification sont privés et doivent disparaître avec le compte.
+  const documents = await db.collection(`users/${uid}/documents`).get();
+  const batch = db.batch();
+  documents.docs.forEach((document) => batch.delete(document.ref));
+  batch.delete(db.doc(`users/${uid}`));
+  await batch.commit();
+
+  try {
+    await admin.auth().deleteUser(uid);
+  } catch (error) {
+    console.error('[deleteMyAccount] auth delete:', error);
+    throw new functions.https.HttpsError(
+      'internal',
+      'La suppression du compte n’a pas pu être finalisée. Réessayez ou contactez le support.'
+    );
+  }
+
+  return { success: true };
+});
+
 type SponsorTrackEventType = 'offer_view' | 'offer_click' | 'offer_lead' | 'profile_view';
 
 const SPONSOR_TRACK_EVENTS = new Set<SponsorTrackEventType>([
@@ -848,4 +891,3 @@ export const adminSendSponsorQuote = functions
 export const adminRejectSponsorQuote = functions
   .region('europe-west1')
   .https.onCall(createAdminRejectSponsorQuoteHandler(db));
-
