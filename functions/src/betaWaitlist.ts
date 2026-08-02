@@ -1,6 +1,7 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
 import { generateBetaAccessToken } from './betaAccessToken';
+import { sendIosPreAnnouncementAfterSignup } from './betaIosCampaign';
 import { BETA_ROLE_LABELS, isBetaRoleId } from './betaWaitlistEmail';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -86,6 +87,9 @@ export function createSubmitBetaWaitlistHandler(db: admin.firestore.Firestore) {
       });
       isNew = true;
       status = 'pending';
+      void sendIosPreAnnouncementAfterSignup(db, docRef).catch((err) => {
+        console.error('[submitBetaWaitlist] pre-announcement email:', err);
+      });
     } else {
       docRef = existing.docs[0].ref;
       const existingData = existing.docs[0].data();
@@ -103,6 +107,9 @@ export function createSubmitBetaWaitlistHandler(db: admin.firestore.Firestore) {
         role_label: roleLabel,
         access_token: accessToken,
         updated_at: now,
+      });
+      void sendIosPreAnnouncementAfterSignup(db, docRef).catch((err) => {
+        console.error('[submitBetaWaitlist] pre-announcement email:', err);
       });
     }
 

@@ -196,11 +196,12 @@ export const PRO_STAFF_BRAND = {
 /** Message waitlist / page beta */
 export const BETA_PITCH = {
   summary:
-    "Inscrivez-vous sur la liste d'attente. Vous suivez l'avancement. On vous prévient en priorité au lancement.",
+    "Inscrivez-vous sur la liste d'attente. Bêta iOS via TestFlight à partir du 11 août 2026 à 18 h.",
   dailyUpdates:
-    "Les inscrits reçoivent des nouvelles régulières sur le déploiement.",
+    "Les inscrits reçoivent des emails réguliers : date iOS, ouverture TestFlight, astuces et nouveautés (tous les 2 jours après le lancement).",
   launch:
-    "On vous écrit dès que c'est dispo sur iOS et Android.",
+    "Bêta iOS ouverte le 11 août 2026 à 18 h — lien TestFlight envoyé par email. APK Android disponible dès validation.",
+  iosLaunchLabel: "11 août 2026 à 18 h",
 } as const;
 
 export const MODULES = [

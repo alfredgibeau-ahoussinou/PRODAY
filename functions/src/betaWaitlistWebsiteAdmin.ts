@@ -4,7 +4,14 @@ import { timingSafeEqual } from 'crypto';
 import { generateBetaAccessToken } from './betaAccessToken';
 import { BETA_ROLE_LABELS, isBetaRoleId } from './betaWaitlistEmail';
 import { markWelcomeEmailSent, sendBetaWelcomeEmailToEntry } from './betaWaitlistMail';
+import {
+  broadcastIosPreAnnouncement,
+  executeIosBetaLaunch,
+  sendEngagementRound,
+  sendIosPreAnnouncementAfterSignup,
+} from './betaIosCampaign';
 import { resolveBetaWaitlistStatus } from './betaWaitlistStatus';
+import { isIosBetaLaunched } from './betaIosCampaignConstants';
 import { configStr } from './runtimeConfig';
 
 const ALLOWED_ORIGINS = [
@@ -20,7 +27,14 @@ const ALLOWED_ORIGINS = [
 const WEBSITE_ADMIN_ACTOR = 'website-admin';
 const MAX_LIST = 200;
 
-type AdminAction = 'list' | 'approve' | 'reject' | 'resend';
+type AdminAction =
+  | 'list'
+  | 'approve'
+  | 'reject'
+  | 'resend'
+  | 'broadcast_ios_pre_announcement'
+  | 'trigger_ios_launch'
+  | 'send_engagement_round';
 
 function setCors(req: functions.https.Request, res: functions.Response): boolean {
   const origin = req.get('Origin') ?? '';
@@ -186,6 +200,13 @@ async function approveEntry(db: admin.firestore.Firestore, entryId: string) {
   );
   if (emailSent) await markWelcomeEmailSent(ref);
 
+  // Avant le lancement iOS : s'assurer que l'annonce date a bien été envoyée.
+  if (!isIosBetaLaunched()) {
+    void sendIosPreAnnouncementAfterSignup(db, ref).catch((err) => {
+      console.error('[websiteBetaWaitlistAdmin] pre-announcement after approve:', err);
+    });
+  }
+
   return { ok: true, success: true, emailSent, emailError };
 }
 
@@ -280,7 +301,10 @@ export function createWebsiteBetaWaitlistAdminHandler(db: admin.firestore.Firest
           raw !== 'list' &&
           raw !== 'approve' &&
           raw !== 'reject' &&
-          raw !== 'resend'
+          raw !== 'resend' &&
+          raw !== 'broadcast_ios_pre_announcement' &&
+          raw !== 'trigger_ios_launch' &&
+          raw !== 'send_engagement_round'
         ) {
           res.status(400).json({ error: 'action invalide' });
           return;
@@ -294,6 +318,30 @@ export function createWebsiteBetaWaitlistAdminHandler(db: admin.firestore.Firest
 
       if (action === 'list') {
         res.status(200).json(await listWaitlist(db));
+        return;
+      }
+
+      if (action === 'broadcast_ios_pre_announcement') {
+        res.status(200).json({ ok: true, ...(await broadcastIosPreAnnouncement(db)) });
+        return;
+      }
+
+      if (action === 'trigger_ios_launch') {
+        try {
+          res.status(200).json({ ok: true, ...(await executeIosBetaLaunch(db)) });
+        } catch (e) {
+          const msg = e instanceof Error ? e.message : 'Lancement iOS impossible';
+          res.status(409).json({ error: msg });
+        }
+        return;
+      }
+
+      if (action === 'send_engagement_round') {
+        const body = (req.body ?? {}) as { round?: number };
+        const stateSnap = await db.doc('beta_campaign/state').get();
+        const current = (stateSnap.data()?.engagement_round as number | undefined) ?? 0;
+        const round = typeof body.round === 'number' && body.round > 0 ? body.round : current + 1;
+        res.status(200).json({ ok: true, round, ...(await sendEngagementRound(db, round)) });
         return;
       }
 

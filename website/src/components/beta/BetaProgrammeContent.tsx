@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Sparkles, Smartphone } from "lucide-react";
 import { BetaPageFrame, SectionKicker } from "@/components/beta/BetaSiteShell";
+import { BetaIosLaunchBanner } from "@/components/beta/BetaIosLaunchBanner";
 import type { BetaAccessSession } from "@/lib/betaAccess";
 import {
   BETA_APK_AVAILABLE,
@@ -26,6 +27,7 @@ export function BetaProgrammeContent({ session }: BetaProgrammeContentProps) {
       title="Programme et périmètre de test"
       description="Comprenez le déroulement de la bêta, le calendrier et les sept pôles que vous pouvez explorer."
     >
+      <BetaIosLaunchBanner />
       {BETA_APK_AVAILABLE ? (
         <div className="mb-8 rounded-3xl border border-[var(--proday-accent)]/30 bg-[#001854]/40 p-6 sm:flex sm:items-center sm:justify-between sm:gap-6">
           <div>

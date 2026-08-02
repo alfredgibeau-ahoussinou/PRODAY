@@ -33,6 +33,7 @@
     "firebase:deploy:storage": "firebase deploy --only storage",
     "firebase:rules:test": "firebase emulators:exec --only firestore \"node scripts/firestore-rules.test.mjs\"",
     "beta:check": "node scripts/beta-readiness.mjs",
+    "beta:broadcast-ios": "node scripts/broadcast-beta-ios-pre-announcement.mjs",
     "docs:cv": "node scripts/generate-player-cv.mjs",
     "docs:pdf": "pandoc docs/ProDay_Brief_NonDev.md -o docs/ProDay_Brief_NonDev.pdf --pdf-engine=pdflatex -V lang=fr -V geometry:margin=2.2cm -V colorlinks=true -V linkcolor=003399 2>/dev/null || pandoc docs/ProDay_Brief_NonDev.md -o docs/ProDay_Brief_NonDev.pdf -V lang=fr 2>/dev/null || echo '→ Ouvrir docs/design/ProDay_Brief.html et Imprimer → PDF'",
     "docs:open-mockups": "open docs/design/mockups/index.html",

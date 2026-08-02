@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { BETA_PITCH } from "@/lib/content";
+import { IOS_BETA_LAUNCH_LABEL } from "@/lib/betaIosLaunch";
 import { BETA_ROLE_LABELS, type BetaRoleId } from "@/lib/betaWelcomeEmail";
 import { Reveal } from "./Reveal";
 
@@ -102,7 +103,7 @@ export function WaitlistForm({ fullPage, compact, minimal, initialRole }: Waitli
                 {email} · {BETA_ROLE_LABELS[role]}
                 {waitlistStatus === "approved"
                   ? ". Consultez votre boîte mail pour l'accès bêta."
-                  : ". L'équipe ProDay vous contactera après validation."}
+                  : `. Bêta iOS le ${IOS_BETA_LAUNCH_LABEL} — email de confirmation envoyé.`}
               </p>
             </div>
           ) : (
@@ -217,8 +218,8 @@ export function WaitlistForm({ fullPage, compact, minimal, initialRole }: Waitli
                 ) : (
                   <>
                     {" "}
-                    Votre demande est enregistrée. L&apos;équipe ProDay vous
-                    contactera par email après validation.
+                    Bêta iOS le {IOS_BETA_LAUNCH_LABEL}. Un email de confirmation vient de vous
+                    être envoyé.
                   </>
                 )}
               </p>

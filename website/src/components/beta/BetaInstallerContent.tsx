@@ -10,8 +10,14 @@ import {
   Settings,
   Shield,
 } from "lucide-react";
-import { BetaPageFrame, SectionKicker } from "@/components/beta/BetaSiteShell";
-import { BETA_APK_URL, BETA_APP_VERSION, BETA_TESTFLIGHT_URL } from "@/lib/betaContent";
+import { BetaPageFrame } from "@/components/beta/BetaSiteShell";
+import { BetaIosLaunchBanner } from "@/components/beta/BetaIosLaunchBanner";
+import { BETA_APK_URL, BETA_APP_VERSION } from "@/lib/betaContent";
+import {
+  IOS_BETA_LAUNCH_LABEL,
+  getTestFlightUrl,
+  isTestFlightAvailable,
+} from "@/lib/betaIosLaunch";
 import { ROUTES } from "@/lib/routes";
 
 function StepList({ steps }: { steps: string[] }) {
@@ -46,8 +52,9 @@ function DownloadButton({ href, label }: { href: string; label: string }) {
 function TestFlightPendingNotice() {
   return (
     <p className="mt-6 rounded-2xl border border-dashed border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-white/45">
-      L&apos;invitation TestFlight vous sera envoyée par email Apple sur l&apos;adresse de votre
-      inscription bêta. Surveillez votre boîte de réception (et les spams).
+      La bêta iOS via TestFlight sera disponible à partir du{" "}
+      <strong className="text-white/70">{IOS_BETA_LAUNCH_LABEL}</strong>. Vous recevrez le lien
+      TestFlight par email dès l&apos;ouverture.
     </p>
   );
 }
@@ -121,7 +128,8 @@ function PlatformSection({
 
 export function BetaInstallerContent() {
   const apkUrl = BETA_APK_URL;
-  const testflightAvailable = Boolean(BETA_TESTFLIGHT_URL);
+  const testflightUrl = getTestFlightUrl();
+  const testflightAvailable = isTestFlightAvailable();
 
   return (
     <BetaPageFrame
@@ -130,10 +138,11 @@ export function BetaInstallerContent() {
       title="Installer ProDay sur votre téléphone"
       description="Guides pas à pas pour Android (APK) et iOS (TestFlight), avec dépannage des problèmes courants."
     >
+      <BetaIosLaunchBanner />
       <p className="mb-8 max-w-3xl text-sm leading-relaxed text-white/65">
         Les builds mobiles sont distribués en dehors des stores publics pendant la bêta. Sur Android,
-        téléchargez l&apos;APK directement depuis cette page. Aucun envoi par email. Sur iOS,
-        l&apos;invitation TestFlight arrive par email Apple.
+        téléchargez l&apos;APK directement depuis cette page. Sur iOS, la bêta TestFlight ouvre le{" "}
+        {IOS_BETA_LAUNCH_LABEL} — lien envoyé par email à tous les inscrits.
       </p>
 
       {apkUrl ? (
@@ -226,7 +235,7 @@ export function BetaInstallerContent() {
           />
 
           {testflightAvailable ? (
-            <DownloadButton href={BETA_TESTFLIGHT_URL} label="Ouvrir TestFlight" />
+            <DownloadButton href={testflightUrl} label="Ouvrir TestFlight" />
           ) : (
             <TestFlightPendingNotice />
           )}
