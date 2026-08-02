@@ -9,6 +9,7 @@ import { ProDayText } from '../ui/ProDayText';
 import { Icon } from '../ui/Icon';
 import { PressableSpring } from '../motion';
 import { ProDayGradient } from '../ui/ProDayGradient';
+import { PlayerLevelBadgePill } from '../player/PlayerLevelBadgePill';
 import type { ProductLineId } from '../../models/ProductLine';
 import { getUniverseIdentity } from '../../content/brandExperience';
 import { isFemalePresentationForUser } from '../../utils/playerSegment';
@@ -99,6 +100,9 @@ export const ProfileIdentityHeader: React.FC<ProfileIdentityHeaderProps> = ({
                   {roleLabel}
                 </ProDayText>
               </View>
+              {profile.role === 'player' ? (
+                <PlayerLevelBadgePill user={profile} compact showVerified={false} />
+              ) : null}
               {verified ? <VerificationBadge user={profile} /> : null}
               {meta.length > 0 ? (
                 <ProDayText variant="caption" muted numberOfLines={1} style={styles.metaInline}>
@@ -189,6 +193,7 @@ export const ProfileIdentityHeader: React.FC<ProfileIdentityHeaderProps> = ({
                     {roleLabel}
                   </ProDayText>
                 </View>
+                {profile.role === 'player' ? <PlayerLevelBadgePill user={profile} /> : null}
                 {verified ? <VerificationBadge user={profile} /> : null}
               </View>
               {meta.length > 0 ? (

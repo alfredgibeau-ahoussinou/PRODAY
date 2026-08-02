@@ -25,6 +25,8 @@ import type { AppSpaceId } from '../models/AppSpace';
 import type { ProductLineId } from '../models/ProductLine';
 import type { ParentalSettings } from '../models/ParentalSettings';
 import { DEFAULT_PARENTAL_SETTINGS } from '../models/ParentalSettings';
+import type { PlayerLevelId } from '../models/PlayerLevel';
+import type { ContactPrivacySettings } from '../models/ContactPrivacy';
 import { enforceMinorParentalPatch } from '../utils/minorProfileGuard';
 import { getDb } from '../lib/firebase';
 import { storageService, type UploadFileInput } from './storage.service';
@@ -42,6 +44,8 @@ export interface ProfileUpdatePayload {
   onboarding_documents_submitted?: boolean;
   profile?: Partial<User['profile']>;
   parental_settings?: Partial<ParentalSettings>;
+  player_level?: PlayerLevelId;
+  contact_privacy?: ContactPrivacySettings;
 }
 
 const MAX_GALLERY_PHOTOS = 6;
@@ -238,6 +242,12 @@ export const profileService = {
         ...currentParental,
         ...safePatch,
       });
+    }
+    if (payload.player_level !== undefined) {
+      update.player_level = payload.player_level;
+    }
+    if (payload.contact_privacy !== undefined) {
+      update.contact_privacy = stripUndefinedDeep(payload.contact_privacy);
     }
 
     const cleaned = stripUndefinedDeep(update) as Record<string, unknown>;

@@ -151,7 +151,20 @@ service cloud.firestore {
           'sponsor_tier',
           'sponsor_territorial_approved_at',
           'sponsor_approved',
+          // Serveur / admin uniquement
+          'agent_launch_offer',
+          'club_certification_verified',
         ]);
+    }
+
+    function validPlayerLevel() {
+      return !('player_level' in request.resource.data)
+        || request.resource.data.player_level in ['amateur', 'academy', 'professional'];
+    }
+
+    function validContactPrivacy() {
+      return !('contact_privacy' in request.resource.data)
+        || request.resource.data.contact_privacy is map;
     }
 
     /** Empêche l’escalade de privilèges ou le vol d’identité via auto-édition. */
@@ -332,6 +345,8 @@ service cloud.firestore {
             && ownerClubIdUnchanged()
             && ownerSeasonStatsUnchanged()
             && ownerProfileGenderValid()
+            && validPlayerLevel()
+            && validContactPrivacy()
             && minorGuardianContactUnchanged()
             && (minorParentalProtected() || isOwnerParentalRuntimeSync()));
       allow delete: if isAdmin();
@@ -696,6 +711,35 @@ service cloud.firestore {
       allow update: if isSignedIn()
         && isThreadParticipant()
         && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['participant_ids']);
+      allow delete: if isAdmin();
+    }
+
+    /**
+     * Demandes de message joueur ↔ agent (miroir thread).
+     * Accept / refuse : destinataire ; cancel : demandeur.
+     */
+    match /message_requests/{requestId} {
+      allow read: if isAdmin()
+        || (isSignedIn()
+            && (resource.data.requester_uid == request.auth.uid
+                || resource.data.recipient_uid == request.auth.uid));
+      allow create: if isSignedIn()
+        && request.resource.data.requester_uid == request.auth.uid
+        && request.resource.data.recipient_uid is string
+        && request.resource.data.thread_id is string
+        && request.resource.data.status == 'pending'
+        && request.resource.data.pair_kind == 'player_agent';
+      allow update: if isSignedIn()
+        && (
+          (resource.data.recipient_uid == request.auth.uid
+            && request.resource.data.status in ['accepted', 'refused']
+            && request.resource.data.diff(resource.data).affectedKeys()
+                .hasOnly(['status', 'updated_at', 'resolved_at']))
+          || (resource.data.requester_uid == request.auth.uid
+            && request.resource.data.status == 'cancelled'
+            && request.resource.data.diff(resource.data).affectedKeys()
+                .hasOnly(['status', 'updated_at', 'resolved_at']))
+        );
       allow delete: if isAdmin();
     }
 

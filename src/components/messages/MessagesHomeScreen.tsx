@@ -17,6 +17,7 @@ export interface MessagesHomeScreenProps {
   authLoading: boolean;
   threads: MessageThread[];
   filteredThreads: MessageThread[];
+  pendingRequestThreads: MessageThread[];
   loading: boolean;
   refreshing: boolean;
   search: string;
@@ -33,6 +34,8 @@ export interface MessagesHomeScreenProps {
   onRestoreHiddenNetwork: () => void;
   onSocialSuggestion: (suggestion: SocialProfileSuggestion) => void;
   onOpenThread: (threadId: string) => void;
+  onAcceptRequest: (threadId: string) => void;
+  onRefuseRequest: (threadId: string) => void;
   onRefresh: () => void;
   onLogin: () => void;
   onSignup: () => void;
@@ -61,6 +64,8 @@ export const MessagesHomeScreen: React.FC<MessagesHomeScreenProps> = (props) => 
           <MessagesInboxPage
             threads={props.threads}
             filteredThreads={props.filteredThreads}
+            pendingRequestThreads={props.pendingRequestThreads}
+            currentUid={props.profile?.uid ?? ''}
             loading={props.loading}
             refreshing={props.refreshing}
             search={props.search}
@@ -70,6 +75,8 @@ export const MessagesHomeScreen: React.FC<MessagesHomeScreenProps> = (props) => 
             unreadCount={props.unreadCount}
             mustVerify={props.mustVerify}
             onOpenThread={props.onOpenThread}
+            onAcceptRequest={props.onAcceptRequest}
+            onRefuseRequest={props.onRefuseRequest}
             onRefresh={props.onRefresh}
             onResetFilters={props.onResetFilters}
             onOpenMercato={props.onOpenMercato}

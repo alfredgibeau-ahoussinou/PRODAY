@@ -3,6 +3,7 @@ import { View, ScrollView, StyleSheet, RefreshControl } from 'react-native';
 import type { MessageThread } from '../../../lib/firestoreMappers';
 import type { MessagesThreadFilter } from '../../../content/messagesChapters';
 import { MessagesInboxHeader } from '../MessagesInboxHeader';
+import { MessageRequestsPanel } from '../MessageRequestsPanel';
 import { ProDayText } from '../../ui/ProDayText';
 import { Icon } from '../../ui/Icon';
 import { MessageThreadRow } from '../MessageThreadRow';
@@ -22,6 +23,8 @@ const scrollProps = {
 export interface MessagesInboxPageProps {
   threads: MessageThread[];
   filteredThreads: MessageThread[];
+  pendingRequestThreads: MessageThread[];
+  currentUid: string;
   loading: boolean;
   refreshing: boolean;
   search: string;
@@ -31,6 +34,8 @@ export interface MessagesInboxPageProps {
   unreadCount: number;
   mustVerify: boolean;
   onOpenThread: (threadId: string) => void;
+  onAcceptRequest: (threadId: string) => void;
+  onRefuseRequest: (threadId: string) => void;
   onRefresh: () => void;
   onResetFilters: () => void;
   onOpenMercato: () => void;
@@ -41,6 +46,8 @@ export interface MessagesInboxPageProps {
 export const MessagesInboxPage: React.FC<MessagesInboxPageProps> = ({
   threads,
   filteredThreads,
+  pendingRequestThreads,
+  currentUid,
   loading,
   refreshing,
   search,
@@ -49,6 +56,8 @@ export const MessagesInboxPage: React.FC<MessagesInboxPageProps> = ({
   onThreadFilterChange,
   mustVerify,
   onOpenThread,
+  onAcceptRequest,
+  onRefuseRequest,
   onRefresh,
   onResetFilters,
   onOpenMercato,
@@ -73,6 +82,15 @@ export const MessagesInboxPage: React.FC<MessagesInboxPageProps> = ({
         onThreadFilterChange={onThreadFilterChange}
         resultCount={filteredThreads.length}
         loading={loading}
+      />
+
+      <MessageRequestsPanel
+        pendingThreads={pendingRequestThreads}
+        loading={loading}
+        currentUid={currentUid}
+        onAccept={onAcceptRequest}
+        onRefuse={onRefuseRequest}
+        onOpen={onOpenThread}
       />
 
       {mustVerify ? (

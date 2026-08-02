@@ -59,10 +59,17 @@ ProDay = écosystème foot complet : joueurs, clubs, agents, staff, académies, 
 | Site | `website/src/lib/poles.ts`, `routes.ts`, `/joueur`, `/evenements` |
 | Tests | `src/__tests__/ecosystemPolesEvolution.test.ts` |
 
-## Suivi produit
+## Suivi produit (suite)
 
-1. UI app : pills badges, filtres Mercato, écran privacy, inbox demandes message
-2. Firestore rules + indexes pour `message_requests`, `pipeline_stage`
-3. Compteur seats agent lancement (Cloud Function / admin)
-4. Paiements Pôle Événements
-5. Migration données : `product_line` pro_player → amateur + `player_level: professional` (optionnel)
+### Livré (follow-up)
+1. UI app : pills badges, filtres badge recruteur (annuaire), privacy + badge settings profil, inbox demandes message
+2. Firestore rules + indexes : `message_requests`, `request_status` sur threads, `player_level`
+3. Compteur seats agent : callable `claimAgentLaunchSeat` + hook `activateStoreSubscription` (`platform_config/agent_launch`)
+4. Migration : `npm run migrate:joueur-pole -- --dry-run` puis `--confirm`
+5. Événements : helpers listes/résultats (`eventOrganizerScaffold`) — paiements toujours TODO
+
+### Restant
+- Paiements Pôle Événements (Stripe / IAP)
+- UI organisateur native (création événement, listes live)
+- Déployer rules/indexes/functions (`firebase deploy --only firestore,functions`)
+- Affiner `canResolveRequests` (vérifier recipient_uid vs requester_uid côté UI)

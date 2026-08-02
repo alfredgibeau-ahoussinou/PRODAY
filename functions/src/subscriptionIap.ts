@@ -1,6 +1,7 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
 import { planIdForIapSku, isKnownIapSku } from './iapSkus';
+import { claimAgentLaunchSeatInTransaction } from './agentLaunchSeats';
 
 const db = admin.firestore();
 
@@ -77,9 +78,19 @@ export const activateStoreSubscription = functions.https.onCall(
       });
     });
 
+    let launch: Awaited<ReturnType<typeof claimAgentLaunchSeatInTransaction>> | null = null;
+    if (planId === 'agent_elite') {
+      try {
+        launch = await claimAgentLaunchSeatInTransaction(uid);
+      } catch (e) {
+        console.warn('[activateStoreSubscription] agent launch seat:', e);
+      }
+    }
+
     return {
       ok: true,
       message: 'Abonnement activé. Profitez de vos avantages Pro.',
+      agentLaunch: launch,
     };
   }
 );

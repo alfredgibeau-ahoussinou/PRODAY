@@ -25,6 +25,12 @@ import {
   type ChatMessage,
 } from '../lib/firestoreMappers';
 import { threadKindForParticipants, type ThreadKind } from '../utils/physioMessaging';
+import {
+  canSendInConversation,
+  conversationAccessFromRequest,
+  requiresMessageRequest,
+  resolveMessageRequest,
+} from '../utils/messageRequestState';
 import type { User, UserRole } from '../models/User';
 import { validateMessageBody } from '../utils/messagingLimits';
 import { isMinorUser } from '../utils/minor';
@@ -32,6 +38,7 @@ import { evaluateScreenTimeAccess, shouldEnforceScreenTime } from '../utils/pare
 import { needsOnboardingDocumentUpload } from '../utils/onboardingGate';
 import { callFunction } from '../lib/firebaseFunctions';
 import { getErrorCode } from '../utils/errors';
+import type { MessageRequestStatus } from '../models/MessageRequest';
 
 const SPONSOR_MESSAGE_FUNCTIONS_REGION = 'europe-west1';
 
@@ -103,7 +110,13 @@ export const messagesService = {
         ? threadKindForParticipants(options.currentRole, options.otherRole)
         : 'standard';
 
+    const needsRequest =
+      options?.currentRole && options?.otherRole
+        ? requiresMessageRequest(options.currentRole, options.otherRole)
+        : false;
+
     if (!snap.exists()) {
+      const requestId = needsRequest ? `req_${id}` : undefined;
       await setDoc(ref, {
         participant_ids: [currentUid, otherUid],
         participant_names: {
@@ -111,10 +124,29 @@ export const messagesService = {
           [otherUid]: otherName,
         },
         thread_kind: threadKind,
-        last_message: '',
+        last_message: needsRequest ? 'Demande de message' : '',
         updated_at: serverTimestamp(),
-        unread_by: [],
+        unread_by: needsRequest ? [otherUid] : [],
+        ...(needsRequest
+          ? {
+              request_status: 'pending' as MessageRequestStatus,
+              request_id: requestId,
+              request_requester_uid: currentUid,
+              request_recipient_uid: otherUid,
+            }
+          : {}),
       });
+      if (needsRequest && requestId) {
+        await setDoc(doc(database, 'message_requests', requestId), {
+          thread_id: id,
+          requester_uid: currentUid,
+          recipient_uid: otherUid,
+          pair_kind: 'player_agent',
+          status: 'pending',
+          created_at: serverTimestamp(),
+          updated_at: serverTimestamp(),
+        });
+      }
     } else {
       const names = (snap.data().participant_names ?? {}) as Record<string, string>;
       const patch: Record<string, unknown> = {
@@ -125,13 +157,58 @@ export const messagesService = {
         },
         updated_at: serverTimestamp(),
       };
-      if (!snap.data().thread_kind && threadKind === 'physio_care') {
+      if (!snap.data().thread_kind && (threadKind === 'physio_care' || threadKind === 'message_request')) {
         patch.thread_kind = threadKind;
       }
       await updateDoc(ref, patch);
     }
 
     return id;
+  },
+
+  async resolveThreadRequest(
+    threadId: string,
+    actorUid: string,
+    action: 'accept' | 'refuse' | 'cancel',
+  ): Promise<MessageRequestStatus> {
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+    const ref = doc(database, 'message_threads', threadId);
+    const snap = await getDoc(ref);
+    if (!snap.exists()) throw new Error('Conversation introuvable.');
+    const data = snap.data();
+    const current = (data.request_status as MessageRequestStatus | undefined) ?? 'pending';
+    const requester = String(data.request_requester_uid ?? '');
+    const recipient = String(data.request_recipient_uid ?? '');
+    const actor: 'recipient' | 'requester' =
+      actorUid === recipient ? 'recipient' : actorUid === requester ? 'requester' : 'recipient';
+    if (actorUid !== recipient && actorUid !== requester) {
+      throw new Error('Vous ne pouvez pas traiter cette demande.');
+    }
+    const next = resolveMessageRequest(current, action, actor);
+    if (!next) throw new Error('Action impossible sur cette demande.');
+
+    await updateDoc(ref, {
+      request_status: next,
+      thread_kind: next === 'accepted' ? 'standard' : data.thread_kind ?? 'message_request',
+      updated_at: serverTimestamp(),
+      last_message:
+        next === 'accepted'
+          ? 'Demande acceptée'
+          : next === 'refused'
+            ? 'Demande refusée'
+            : data.last_message ?? '',
+    });
+
+    const requestId = data.request_id ? String(data.request_id) : null;
+    if (requestId) {
+      await updateDoc(doc(database, 'message_requests', requestId), {
+        status: next,
+        updated_at: serverTimestamp(),
+        resolved_at: serverTimestamp(),
+      });
+    }
+    return next;
   },
 
   async listMessages(threadId: string, max = 80): Promise<ChatMessage[]> {
@@ -168,6 +245,27 @@ export const messagesService = {
     await assertMinorMessagingAllowed(sender);
     assertDocumentsSubmitted(sender);
     const text = validateMessageBody(body);
+
+    const threadSnap = await getDoc(doc(database, 'message_threads', threadId));
+    if (threadSnap.exists()) {
+      const td = threadSnap.data();
+      const status = td.request_status as MessageRequestStatus | undefined;
+      const kind =
+        td.thread_kind === 'message_request' || status
+          ? 'player_agent'
+          : 'standard';
+      const access = conversationAccessFromRequest(
+        status ? { status } : null,
+        kind,
+      );
+      if (!canSendInConversation(access) && kind === 'player_agent') {
+        throw new Error(
+          access === 'request_pending'
+            ? 'Demande en attente — la conversation s’ouvre après acceptation.'
+            : 'Cette conversation n’est pas active.',
+        );
+      }
+    }
 
     // Sponsor : quota + écriture atomiques côté Cloud Function (rules bloquent addDoc).
     if (sender?.role === 'sponsor') {

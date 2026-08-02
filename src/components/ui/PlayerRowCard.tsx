@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import type { User } from '../../models/User';
 import { Icon } from './Icon';
+import { PlayerLevelBadgePill } from '../player/PlayerLevelBadgePill';
 import { spacing, radius, shadows } from '../../theme/designTokens';
 import { useAppTheme } from '../../context/ProductLineContext';
 
@@ -67,6 +68,11 @@ export const PlayerRowCard: React.FC<PlayerRowCardProps> = ({
         <Text style={[styles.meta, { color: colors.textSecondary }]} numberOfLines={2}>
           {meta || 'Profil joueur ProDay'}
         </Text>
+        {user.role === 'player' ? (
+          <View style={styles.badgeRow}>
+            <PlayerLevelBadgePill user={user} compact />
+          </View>
+        ) : null}
         {scoutingScore != null ? (
           <Text style={[styles.scouting, { color: colors.accent }]}>
             Match {scoutingScore}%
@@ -133,6 +139,7 @@ const styles = StyleSheet.create({
   },
   ownBadgeText: { fontSize: 10, fontWeight: '800', letterSpacing: 0.3 },
   meta: { fontSize: 13, marginTop: 3, lineHeight: 18 },
+  badgeRow: { marginTop: 4 },
   scouting: { fontSize: 11, marginTop: 4, fontWeight: '700' },
   bookmarkBtn: { paddingLeft: spacing.xs },
 });

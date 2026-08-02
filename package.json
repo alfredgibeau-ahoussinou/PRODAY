@@ -19,6 +19,7 @@
     "typecheck": "tsc --noEmit",
     "cleanup:demo": "node scripts/cleanup-demo-data.mjs",
     "migrate:product-lines": "node scripts/migrate-product-lines.mjs",
+    "migrate:joueur-pole": "node scripts/migrate-joueur-pole.mjs",
     "admin:setup": "node scripts/setup-admin.mjs",
     "auth:send-verification": "node scripts/send-verification-email.mjs",
     "auth:send-password-reset": "node scripts/send-password-reset-email.mjs",
