@@ -1,5 +1,6 @@
 import { existsSync } from "node:fs";
 import path from "node:path";
+import { isTestFlightAvailable } from "./betaIosLaunch";
 
 const DEFAULT_APK_PATH = "/downloads/proday-beta.apk";
 
@@ -45,7 +46,7 @@ const BETA_TIMELINE_BASE = [
     step: 2,
     title: "Installation de l'app",
     description:
-      "Rendez-vous sur l'onglet Installer pour télécharger l'APK Android. Sur iOS, l'invitation TestFlight arrive par email Apple.",
+      "Android : APK sur l'onglet Installer. iOS : bêta TestFlight disponible à partir du 11 août 2026 à 18 h — lien envoyé par email à l'ouverture.",
     done: false,
   },
   {
@@ -64,9 +65,9 @@ const BETA_TIMELINE_BASE = [
   },
 ] as const;
 
-/** Calendrier bêta. L'étape installation passe en « done » dès que l'APK est disponible. */
+/** Calendrier bêta. L'étape installation passe en « done » dès que l'APK ou TestFlight est disponible. */
 export function getBetaTimeline() {
-  const installReady = BETA_APK_AVAILABLE || Boolean(BETA_TESTFLIGHT_URL);
+  const installReady = BETA_APK_AVAILABLE || isTestFlightAvailable();
   return BETA_TIMELINE_BASE.map((item) =>
     item.step === 2 ? { ...item, done: installReady || item.done } : item,
   );
@@ -91,7 +92,7 @@ export const BETA_FAQ = [
   {
     question: "Comment télécharger l'application ?",
     answer:
-      "Android : connectez-vous à l'espace bêta et téléchargez l'APK depuis Installer. Pas d'envoi par email. IOS : invitation TestFlight par email Apple sur l'adresse d'inscription.",
+      "Android : connectez-vous à l'espace bêta et téléchargez l'APK depuis Installer. iOS : bêta TestFlight à partir du 11 août 2026 à 18 h — vous recevrez le lien par email à l'ouverture.",
   },
   {
     question: "Puis-je tester sur iPhone et Android ?",

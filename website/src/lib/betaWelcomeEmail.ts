@@ -66,7 +66,7 @@ export function buildBetaWelcomeEmail(params: BetaWelcomeEmailParams): {
     "Prochaines étapes :",
     "• Accédez à votre espace bêta via le lien ci-dessous.",
     "• Sur Android : téléchargez l'APK depuis l'onglet Installer. Pas par email.",
-    "• Sur iOS : vous recevrez une invitation TestFlight par email Apple.",
+    "• Sur iOS : bêta TestFlight à partir du 11 août 2026 à 18 h — lien envoyé à l'ouverture.",
     "• En attendant, parcourez le site : démo interactive, pages rôles, Shop et feuille de route.",
     "",
     `Site : ${site}`,
@@ -118,7 +118,7 @@ export function buildBetaWelcomeEmail(params: BetaWelcomeEmailParams): {
                     <ul style="margin:0;padding-left:18px;font-size:14px;line-height:1.7;color:#475569;">
                       <li>Accès à l&apos;espace bêta (programme, pôles, aide)</li>
                       <li><strong>Android</strong> : APK à télécharger sur l&apos;onglet Installer</li>
-                      <li><strong>iOS</strong> : invitation TestFlight par email Apple</li>
+                      <li><strong>iOS</strong> : bêta TestFlight à partir du 11 août 2026 à 18 h</li>
                     </ul>
                   </td>
                 </tr>

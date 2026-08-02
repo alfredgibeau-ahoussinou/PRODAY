@@ -2,7 +2,7 @@
 
 Document de référence unique pour comprendre, exploiter et déployer le programme bêta fermé (site proday75.fr + app mobile).
 
-> Voir aussi : `docs/BETA_WAITLIST.md` (dépannage EmailJS détaillé) et `docs/BETA_LAUNCH.md` (checklist go/no-go mobile).
+> Voir aussi : `docs/BETA_WAITLIST.md` (dépannage EmailJS détaillé), `docs/BETA_LAUNCH.md` (checklist go/no-go mobile) et `docs/BETA_IOS_LAUNCH.md` (campagne iOS — 11 août 2026 à 18 h).
 
 ---
 
@@ -179,7 +179,7 @@ functions/src/
 | `BETA_WAITLIST_ADMIN_FUNCTION_URL` | Admin site | CF `websiteBetaWaitlistAdmin` |
 | `BETA_WEBSITE_ADMIN_SECRET` | Admin site + CF | Secret API partagé |
 | `NEXT_PUBLIC_BETA_APK_URL` | Optionnel | Lien APK sur `/beta/installer` |
-| `NEXT_PUBLIC_BETA_TESTFLIGHT_URL` | Optionnel | Lien TestFlight sur `/beta/installer` |
+| `NEXT_PUBLIC_BETA_TESTFLIGHT_URL` | Optionnel | Lien TestFlight — affiché sur `/beta/installer` **après** le 11 août 2026 à 18 h |
 
 \* Ou `BETA_WAITLIST_FUNCTION_URL` à la place des clés EmailJS.
 

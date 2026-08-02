@@ -41,7 +41,18 @@ function getAdminFunctionConfig(): { url: string; secret: string } | null {
 }
 
 async function callAdminFunction(
-  body: { action: "list" | "approve" | "reject" | "resend"; entryId?: string },
+  body: {
+    action:
+      | "list"
+      | "approve"
+      | "reject"
+      | "resend"
+      | "broadcast_ios_pre_announcement"
+      | "trigger_ios_launch"
+      | "send_engagement_round";
+    entryId?: string;
+    round?: number;
+  },
 ): Promise<{ status: number; data: Record<string, unknown> }> {
   const config = getAdminFunctionConfig();
   if (!config) {
@@ -113,6 +124,68 @@ export async function rejectBetaWaitlistAdmin(entryId: string) {
 
 export async function resendBetaWaitlistAdmin(entryId: string) {
   return callAction("resend", entryId);
+}
+
+export async function broadcastIosPreAnnouncementAdmin() {
+  return callCampaignAction("broadcast_ios_pre_announcement");
+}
+
+export async function triggerIosLaunchAdmin() {
+  return callCampaignAction("trigger_ios_launch");
+}
+
+export async function sendEngagementRoundAdmin(round?: number) {
+  const { status, data } = await callAdminFunction({
+    action: "send_engagement_round",
+    round,
+  });
+  const parsed = data as UpstreamAction & { sent?: number; skipped?: number; failed?: number };
+  if (!upstreamOk(status, parsed)) {
+    return {
+      ok: false,
+      status,
+      error: String(parsed.error ?? "Envoi impossible"),
+    };
+  }
+  return { ok: true, status, ...parsed };
+}
+
+async function callCampaignAction(
+  action: "broadcast_ios_pre_announcement" | "trigger_ios_launch",
+): Promise<{
+  ok: boolean;
+  status: number;
+  sent?: number;
+  skipped?: number;
+  failed?: number;
+  errors?: string[];
+  testflightUrl?: string;
+  error?: string;
+}> {
+  const { status, data } = await callAdminFunction({ action });
+  const parsed = data as UpstreamAction & {
+    sent?: number;
+    skipped?: number;
+    failed?: number;
+    errors?: string[];
+    testflightUrl?: string;
+  };
+  if (!upstreamOk(status, parsed)) {
+    return {
+      ok: false,
+      status,
+      error: String(parsed.error ?? "Action impossible"),
+    };
+  }
+  return {
+    ok: true,
+    status,
+    sent: parsed.sent,
+    skipped: parsed.skipped,
+    failed: parsed.failed,
+    errors: parsed.errors,
+    testflightUrl: parsed.testflightUrl,
+  };
 }
 
 async function callAction(

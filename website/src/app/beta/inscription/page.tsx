@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { WaitlistForm } from "@/components/WaitlistForm";
+import { BetaIosLaunchBanner } from "@/components/beta/BetaIosLaunchBanner";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { StatsBar } from "@/components/StatsBar";
 import { BETA_PITCH } from "@/lib/content";
@@ -46,6 +47,9 @@ export default async function BetaWaitlistPage({
         description={BETA_PITCH.summary}
         dark
       />
+      <div className="mx-auto max-w-4xl px-4 sm:px-6">
+        <BetaIosLaunchBanner />
+      </div>
       <StatsBar />
       <WaitlistForm fullPage initialRole={initialRole} />
     </>

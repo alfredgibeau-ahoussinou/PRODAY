@@ -273,6 +273,8 @@ flowchart TD
 
 ProDay est en **bêta fermée** : l'app n'est pas encore sur les stores publics. Les testeurs s'inscrivent sur la liste d'attente et reçoivent un accès prioritaire (TestFlight iOS / APK Android).
 
+> **Bêta iOS** : ouverture **11 août 2026 à 18 h** via TestFlight — détails opérateur dans [docs/BETA_IOS_LAUNCH.md](docs/BETA_IOS_LAUNCH.md).
+
 > Inscrivez-vous sur la [liste d'attente](https://proday75.fr/beta/inscription) pour suivre l'avancement du produit et accéder en priorité au lancement.
 
 ### Parcours waitlist → app
