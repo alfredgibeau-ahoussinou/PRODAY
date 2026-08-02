@@ -41,8 +41,10 @@ const PRO_SEGMENT_COLORS: Record<'pro' | 'pro_player' | 'pro_club' | 'pro_staff'
 
 function resolveSegment(segment: ProSegment): 'pro' | 'pro_player' | 'pro_club' | 'pro_staff' {
   if (segment === 'pro_club') return 'pro_club';
-  if (segment === 'pro_staff') return 'pro_staff';
-  if (segment === 'pro_player') return 'pro_player';
+  if (segment === 'pro_staff' || segment === 'evenements') return 'pro_staff';
+  if (segment === 'pro_player' || segment === 'joueur' || segment === 'amateur') {
+    return 'pro_player';
+  }
   return 'pro';
 }
 

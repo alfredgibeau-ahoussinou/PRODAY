@@ -18,8 +18,8 @@ export function PolesHubGrid({ compact = false }: PolesHubGridProps) {
       title="Six univers, une plateforme"
       description={
         compact
-          ? "Amateur, Supporter, Santé, Pro Joueur, Pro Club ou Pro Staff. Choisissez votre pôle."
-          : "Amateur, Supporter, Santé, Pro Joueur, Pro Club ou Pro Staff. Chaque pôle a sa page, ses tarifs et son identité."
+          ? "Joueur, Supporter, Santé, Club, Staff ou Événements. Choisissez votre pôle."
+          : "Joueur, Supporter, Santé, Club, Staff ou Événements. Chaque pôle a sa page, ses tarifs et son identité."
       }
       className="bg-black"
       compact={compact}

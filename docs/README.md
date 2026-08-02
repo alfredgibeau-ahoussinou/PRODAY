@@ -16,7 +16,8 @@
 | Document | Sujet |
 |----------|-------|
 | [PRODAY_VISION.md](./PRODAY_VISION.md) | Vision long terme |
-| [PRODAY_POLES_ARCHITECTURE.md](./PRODAY_POLES_ARCHITECTURE.md) | Six pôles produit (détail) |
+| [PRODAY_POLES_ARCHITECTURE.md](./PRODAY_POLES_ARCHITECTURE.md) | Architecture pôles (détail) |
+| [ECOSYSTEM_POLES_EVOLUTION.md](./ECOSYSTEM_POLES_EVOLUTION.md) | Fusion Joueur, Club/Staff, agent 19,99 €, events, privacy |
 | [PRODAY_V3_MODULES.md](./PRODAY_V3_MODULES.md) | Modules V3 |
 | [PRODAY_V3_PRODUCT_ANALYSIS.md](./PRODAY_V3_PRODUCT_ANALYSIS.md) | Analyse produit V3 |
 | [PRICING_STRATEGY.md](./PRICING_STRATEGY.md) | Stratégie tarifaire |

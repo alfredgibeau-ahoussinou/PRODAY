@@ -135,26 +135,28 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionPlanId, SubscriptionPlanDefi
       'Profil club et vérification',
       '1 équipe',
       '2 annonces Mercato actives',
-      'Gestion convocations (base)',
+      'Vitrine publique',
     ],
     proIncludes: [
       'Annonces actives illimitées',
       'Multi-équipes',
       'Priorité dans le fil Mercato',
-      'Exports candidatures',
+      'Exports candidatures & pipeline kanban',
     ],
   },
   agent_elite: {
     id: 'agent_elite',
     role: 'agent',
     label: 'Agent Elite',
-    tagline: 'CRM joueurs, mandats et pipeline. Formule premium',
-    pricing: planPricing(99.99, true),
+    tagline: 'CRM joueurs, mandats et pipeline. Offre lancement 19,99 € (20 premiers)',
+    /** Tarif standard post-lancement ; voir agentLaunchPricing pour 19,99 €. */
+    pricing: planPricing(29.99, true),
     limits: { recruitment_messages_per_month: 10 },
     freeIncludes: [
       'Profil agent et vérification',
       '10 contacts recrutement / mois',
       'Mercato en lecture',
+      'Demandes de message joueurs (accept / refuse)',
     ],
     proIncludes: [
       'Contacts illimités',

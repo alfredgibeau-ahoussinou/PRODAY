@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { UniversePage } from "@/components/universe/UniversePage";
 
 export const metadata: Metadata = {
-  title: "Pro Day Pro Club",
+  title: "Pôle Club — Structures & recrutement",
   description:
-    "Structures et clubs. Équipes, recrutement, calendrier et vitrine.",
+    "Structures et clubs. Équipes, pipeline candidatures kanban et vitrine. Calendrier et convocations : Pôle Staff.",
 };
 
 export default function ProClubPage() {

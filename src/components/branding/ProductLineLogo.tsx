@@ -29,7 +29,7 @@ export const ProductLineLogo: React.FC<ProductLineLogoProps> = ({
   if (line === 'woman') {
     return <WomanLogo width={width} background={background} />;
   }
-  if (line === 'amateur') {
+  if (line === 'amateur' || line === 'joueur') {
     return <AmateurLogo width={width} background={background} centered={centered} />;
   }
   if (line === 'supporter') {

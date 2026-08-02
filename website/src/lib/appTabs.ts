@@ -89,7 +89,7 @@ export function getVisibleMainTabsForWeb(universe: ProductLineWeb): MainTabId[] 
 /** Shells app réels. un set d’onglets par pôle démo. */
 export function getVisibleMainTabsForDemoPole(pole: DemoPoleId): MainTabId[] {
   switch (pole) {
-    case "amateur":
+    case "joueur":
       return [
         "home",
         "covoiturage",
@@ -106,12 +106,12 @@ export function getVisibleMainTabsForDemoPole(pole: DemoPoleId): MainTabId[] {
       return ["home", "matchs", "feed", "messages", "reels", "shop", "profil"];
     case "sante":
       return ["home", "matchs", "feed", "reels", "messages", "profil"];
-    case "pro_joueur":
-      return ["home", "recrutement", "reels", "matchs", "shop", "profil"];
     case "pro_club":
       return ["home", "recrutement", "matchs", "messages", "shop", "profil"];
     case "pro_staff":
       return ["home", "matchs", "recrutement", "covoiturage", "messages", "shop", "profil"];
+    case "evenements":
+      return ["home", "matchs", "recrutement", "messages", "shop", "profil"];
   }
 }
 
@@ -185,10 +185,11 @@ export function getTabLabelForDemoPole(tab: MainTabId, pole: DemoPoleId): string
         break;
     }
   }
-  if (pole === "amateur") {
-    if (tab === "home") return "Équipe";
+  if (pole === "joueur") {
+    if (tab === "home") return "Carrière";
     if (tab === "covoiturage") return "Trajets";
-    if (tab === "recrutement") return "Club";
+    if (tab === "recrutement") return "Mercato";
+    if (tab === "matchs") return "Matchs";
     if (tab === "profil") return "Moi";
   }
   if (pole === "supporter") {
@@ -198,11 +199,11 @@ export function getTabLabelForDemoPole(tab: MainTabId, pole: DemoPoleId): string
     if (tab === "reels") return "Moments";
     if (tab === "profil") return "Compte";
   }
-  if (pole === "pro_joueur") {
-    if (tab === "home") return "Carrière";
-    if (tab === "recrutement") return "Opportunités";
-    if (tab === "matchs") return "Groupe";
-    if (tab === "profil") return "Moi";
+  if (pole === "evenements") {
+    if (tab === "home") return "Événements";
+    if (tab === "matchs") return "Calendrier";
+    if (tab === "recrutement") return "Inscriptions";
+    if (tab === "profil") return "Orga";
   }
   if (pole === "pro_club") {
     if (tab === "home") return "Structure";

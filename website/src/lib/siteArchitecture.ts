@@ -24,10 +24,11 @@ export type PageMeta = {
   siblingLinks?: { href: string; label: string }[];
 };
 
-const PRO_SIBLINGS = [
-  { href: ROUTES.proJoueur, label: "Pro Joueur" },
-  { href: ROUTES.proClub, label: "Pro Club" },
-  { href: ROUTES.proStaff, label: "Pro Staff" },
+const ECOSYSTEM_SIBLINGS = [
+  { href: ROUTES.joueur, label: "Joueur" },
+  { href: ROUTES.proClub, label: "Club" },
+  { href: ROUTES.proStaff, label: "Staff" },
+  { href: ROUTES.evenements, label: "Événements" },
 ] as const;
 
 export const SITE_PAGES: Record<string, PageMeta> = {
@@ -39,30 +40,38 @@ export const SITE_PAGES: Record<string, PageMeta> = {
   },
   [ROUTES.joueurs]: {
     path: ROUTES.joueurs,
-    poleId: "amateur",
+    poleId: "joueur",
     category: "pole",
-    accent: "amateur",
-    poleHubPath: ROUTES.amateur,
+    accent: "joueur",
+    poleHubPath: ROUTES.joueur,
   },
   [ROUTES.homme]: {
     path: ROUTES.homme,
-    poleId: "amateur",
+    poleId: "joueur",
     category: "pole",
-    accent: "amateur",
-    poleHubPath: ROUTES.amateur,
+    accent: "joueur",
+    poleHubPath: ROUTES.joueur,
   },
   [ROUTES.woman]: {
     path: ROUTES.woman,
-    poleId: "amateur",
+    poleId: "joueur",
     category: "pole",
-    accent: "amateur",
-    poleHubPath: ROUTES.amateur,
+    accent: "woman",
+    poleHubPath: ROUTES.joueur,
   },
   [ROUTES.amateur]: {
     path: ROUTES.amateur,
-    poleId: "amateur",
+    poleId: "joueur",
     category: "pole",
-    accent: "amateur",
+    accent: "joueur",
+    poleHubPath: ROUTES.joueur,
+  },
+  [ROUTES.joueur]: {
+    path: ROUTES.joueur,
+    poleId: "joueur",
+    category: "pole",
+    accent: "joueur",
+    siblingLinks: ECOSYSTEM_SIBLINGS.filter((l) => l.href !== ROUTES.joueur),
   },
   [ROUTES.supporter]: {
     path: ROUTES.supporter,
@@ -78,24 +87,31 @@ export const SITE_PAGES: Record<string, PageMeta> = {
   },
   [ROUTES.proJoueur]: {
     path: ROUTES.proJoueur,
-    poleId: "pro_joueur",
+    poleId: "joueur",
     category: "pole",
     accent: "joueur",
-    siblingLinks: PRO_SIBLINGS.filter((l) => l.href !== ROUTES.proJoueur),
+    poleHubPath: ROUTES.joueur,
   },
   [ROUTES.proClub]: {
     path: ROUTES.proClub,
     poleId: "pro_club",
     category: "pole",
     accent: "pro_club",
-    siblingLinks: PRO_SIBLINGS.filter((l) => l.href !== ROUTES.proClub),
+    siblingLinks: ECOSYSTEM_SIBLINGS.filter((l) => l.href !== ROUTES.proClub),
   },
   [ROUTES.proStaff]: {
     path: ROUTES.proStaff,
     poleId: "pro_staff",
     category: "pole",
     accent: "pro_staff",
-    siblingLinks: PRO_SIBLINGS.filter((l) => l.href !== ROUTES.proStaff),
+    siblingLinks: ECOSYSTEM_SIBLINGS.filter((l) => l.href !== ROUTES.proStaff),
+  },
+  [ROUTES.evenements]: {
+    path: ROUTES.evenements,
+    poleId: "evenements",
+    category: "pole",
+    accent: "pro",
+    siblingLinks: ECOSYSTEM_SIBLINGS.filter((l) => l.href !== ROUTES.evenements),
   },
   [ROUTES.pro]: {
     path: ROUTES.pro,
@@ -191,24 +207,24 @@ export const SITE_PAGES: Record<string, PageMeta> = {
   },
   [ROUTES.pulse]: {
     path: ROUTES.pulse,
-    poleId: "pro_joueur",
+    poleId: "joueur",
     category: "platform",
     accent: "joueur",
-    poleHubPath: ROUTES.proJoueur,
+    poleHubPath: ROUTES.joueur,
   },
   [ROUTES.liveStats]: {
     path: ROUTES.liveStats,
-    poleId: "pro_joueur",
+    poleId: "joueur",
     category: "platform",
     accent: "joueur",
-    poleHubPath: ROUTES.proJoueur,
+    poleHubPath: ROUTES.joueur,
   },
   [ROUTES.cv]: {
     path: ROUTES.cv,
-    poleId: "pro_joueur",
+    poleId: "joueur",
     category: "platform",
     accent: "joueur",
-    poleHubPath: ROUTES.proJoueur,
+    poleHubPath: ROUTES.joueur,
   },
   [ROUTES.quiz]: {
     path: ROUTES.quiz,
@@ -249,13 +265,15 @@ export const SITE_PAGES: Record<string, PageMeta> = {
 };
 
 export const POLE_HUB_LABELS: Record<string, string> = {
-  [ROUTES.amateur]: "Pôle Amateur",
+  [ROUTES.joueur]: "Pôle Joueur",
+  [ROUTES.amateur]: "Pôle Joueur",
   [ROUTES.supporter]: "Pôle Supporter",
   [ROUTES.sante]: "Pôle Santé",
-  [ROUTES.proJoueur]: "Pôle Pro Joueur",
-  [ROUTES.proClub]: "Pôle Pro Club",
-  [ROUTES.proStaff]: "Pôle Pro Staff",
-  [ROUTES.pro]: "Pôle Pro",
+  [ROUTES.proJoueur]: "Pôle Joueur",
+  [ROUTES.proClub]: "Pôle Club",
+  [ROUTES.proStaff]: "Pôle Staff",
+  [ROUTES.evenements]: "Pôle Événements",
+  [ROUTES.pro]: "Pôle Staff",
   [ROUTES.partenaires]: "Pôle Sponsor",
   [ROUTES.sponsor]: "Pôle Sponsor",
 };
@@ -299,12 +317,14 @@ export function poleHubForPath(pathname: string): string | null {
   const meta = pageMetaForPath(pathname);
   if (meta.poleHubPath) return meta.poleHubPath;
   if (meta.category === "pole" && meta.path) return meta.path;
-  if (meta.poleId === "amateur") return ROUTES.amateur;
+  if (meta.poleId === "joueur" || meta.poleId === "amateur" || meta.poleId === "pro_joueur") {
+    return ROUTES.joueur;
+  }
   if (meta.poleId === "supporter") return ROUTES.supporter;
   if (meta.poleId === "sante") return ROUTES.sante;
-  if (meta.poleId === "pro_joueur") return ROUTES.proJoueur;
   if (meta.poleId === "pro_club") return ROUTES.proClub;
   if (meta.poleId === "pro_staff") return ROUTES.proStaff;
+  if (meta.poleId === "evenements") return ROUTES.evenements;
   if (meta.poleId === "sponsor") return ROUTES.sponsor;
   return null;
 }
@@ -317,20 +337,26 @@ export function isNavActive(href: string, pathname: string): boolean {
     return path === targetPath || path.startsWith(`${targetPath}/`);
   }
 
-  if (targetPath === ROUTES.amateur) {
+  if (targetPath === ROUTES.joueur || targetPath === ROUTES.amateur) {
     return (
+      path === ROUTES.joueur ||
       path === ROUTES.amateur ||
+      path === ROUTES.proJoueur ||
       path === ROUTES.homme ||
       path === ROUTES.woman ||
-      path === ROUTES.joueurs
+      path === ROUTES.joueurs ||
+      path === ROUTES.pulse ||
+      path === ROUTES.cv ||
+      path === ROUTES.liveStats
     );
   }
   if (targetPath === ROUTES.supporter) return path === ROUTES.supporter;
   if (targetPath === ROUTES.sante) return path === ROUTES.sante;
   if (targetPath === ROUTES.proJoueur) {
-    return path === ROUTES.proJoueur || path === ROUTES.pulse || path === ROUTES.cv || path === ROUTES.liveStats;
+    return path === ROUTES.proJoueur || path === ROUTES.joueur || path === ROUTES.pulse || path === ROUTES.cv || path === ROUTES.liveStats;
   }
   if (targetPath === ROUTES.proClub) return path === ROUTES.proClub;
+  if (targetPath === ROUTES.evenements) return path === ROUTES.evenements;
   if (targetPath === ROUTES.proStaff) {
     return path === ROUTES.proStaff || path === ROUTES.pro || path.startsWith(`${ROUTES.pro}/`);
   }

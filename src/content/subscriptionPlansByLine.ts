@@ -159,23 +159,24 @@ const LINE_PLAN_PATCHES: Record<
         'Profil club et vérification',
         '1 équipe',
         '2 annonces Mercato Pro actives',
-        'Gestion convocations (base)',
+        'Vitrine publique (sans convocations)',
       ],
       proIncludes: [
         'Annonces Mercato Pro illimitées',
         'Multi-équipes',
         'Priorité dans le fil Mercato Pro',
-        'Exports candidatures',
+        'Pipeline candidatures kanban',
       ],
     },
     agent_elite: {
       label: 'Agent Elite',
-      tagline: 'CRM mandats. Réseau Mercato Pro premium',
+      tagline: 'CRM mandats. Lancement 19,99 € puis 29,99 €/mois',
       mercatoQuotaLabel: 'Contacts Mercato Pro',
       freeIncludes: [
         'Profil agent et vérification',
         '10 contacts Mercato Pro / mois',
         'Mercato Pro en lecture',
+        'Demandes de message joueurs',
       ],
       proIncludes: [
         'Contacts Mercato Pro illimités',

@@ -1,12 +1,7 @@
-import type { Metadata } from "next";
-import { UniversePage } from "@/components/universe/UniversePage";
+import { redirect } from "next/navigation";
+import { ROUTES } from "@/lib/routes";
 
-export const metadata: Metadata = {
-  title: "Pro Day Amateur",
-  description:
-    "Joueurs et coachs amateur. Mercato local, matchs, effectif et convocations.",
-};
-
-export default function AmateurPage() {
-  return <UniversePage universe="amateur" />;
+/** @deprecated Pôle Amateur fusionné dans Pôle Joueur. */
+export default function AmateurRedirectPage() {
+  redirect(ROUTES.joueur);
 }

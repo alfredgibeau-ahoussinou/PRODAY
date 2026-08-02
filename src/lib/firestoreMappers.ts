@@ -564,8 +564,11 @@ export interface MessageThread {
   last_message: string;
   updated_at: Date;
   unread: boolean;
-  thread_kind?: 'standard' | 'physio_care' | 'team_group';
+  thread_kind?: 'standard' | 'physio_care' | 'team_group' | 'message_request';
   thread_title?: string;
+  /** Demande joueur↔agent : pending jusqu'à acceptation. */
+  request_status?: 'pending' | 'accepted' | 'refused' | 'cancelled';
+  request_id?: string;
 }
 
 export function messageThreadFromFirestore(
@@ -584,6 +587,7 @@ export function messageThreadFromFirestore(
   const threadKind = data.thread_kind as MessageThread['thread_kind'] | undefined;
   const threadTitle = data.thread_title ? String(data.thread_title) : undefined;
   const isTeam = threadKind === 'team_group';
+  const requestStatus = data.request_status as MessageThread['request_status'] | undefined;
 
   return {
     id,
@@ -594,8 +598,17 @@ export function messageThreadFromFirestore(
     last_message: String(data.last_message ?? ''),
     updated_at: toDate(data.updated_at),
     unread: unreadBy.includes(currentUid) || Boolean(data.unread),
-    thread_kind: threadKind === 'physio_care' ? 'physio_care' : threadKind === 'team_group' ? 'team_group' : 'standard',
+    thread_kind:
+      threadKind === 'physio_care'
+        ? 'physio_care'
+        : threadKind === 'team_group'
+          ? 'team_group'
+          : threadKind === 'message_request'
+            ? 'message_request'
+            : 'standard',
     thread_title: threadTitle,
+    request_status: requestStatus,
+    request_id: data.request_id ? String(data.request_id) : undefined,
   };
 }
 

@@ -82,58 +82,53 @@ ProDay naît d'un constat simple : une équipe U17 jongle entre cinq groupes Wha
 
 ## Les sept univers ProDay
 
-Comme sur [proday75.fr](https://proday75.fr), le produit s’organise autour de **sept pôles**. Le carousel marketing en affiche six ; le **pôle Sponsor** (marques & partenaires) est aussi une coque app dédiée — entrée web [proday75.fr/sponsor](https://proday75.fr/sponsor) (alias `/partenaires`).
+Comme sur [proday75.fr](https://proday75.fr), le produit s’organise autour de **pôles métier**. Le carousel marketing en affiche six ; le **pôle Sponsor** est aussi une coque app dédiée — [proday75.fr/sponsor](https://proday75.fr/sponsor). Voir [docs/ECOSYSTEM_POLES_EVOLUTION.md](docs/ECOSYSTEM_POLES_EVOLUTION.md).
 
 ### Tableau des pôles
 
 | Pôle | Public | Tagline | En détail |
 |------|--------|---------|-----------|
-| **Amateur** | Joueurs & coachs | *JOUER • ENCADRER • PARTAGER* | Ton club, ta semaine, tes déplacements — convocations, covoiturage et effectif. Genre H/F choisi à l'inscription. Mercato local, district & régional. Distinct du pôle Pro (staff professionnel). |
-| **Supporter** | Fans & communauté | *SUIVRE • VIBRER • PARTAGER* | Tribune **100 % gratuite** — matchs live (PRODAY + monde via API-Football), suivis illimités, débats, Reels et shop merch. Sans Mercato ni abonnement store. |
-| **Santé** | Praticiens & staff médical | *SOIGNER • ACCOMPAGNER • PERFORMER* | Kiné · Ostéo · Médecin · Prépa · Mental · Nutrition · Podologue — annuaire vérifié, prise de RDV près des clubs. Messagerie complète après validation des diplômes. |
-| **Pro Joueur** | Joueurs pro | *CARRIÈRE • VISIBILITÉ • OPPORTUNITÉS* | Carrière, portfolio scouting, essais et mandat agent. Stats badge « Validé coach ». Distinct du foot amateur district. |
-| **Pro Club** | Structures & équipes | *STRUCTURE • ÉQUIPES • RECRUTEMENT* | Président, DS, secrétariat — arbre des catégories (U13, U17, Seniors F…), adhésions, annonces recrutement et vitrine club publique. |
-| **Pro Staff** | Agent · Recruteur · Coach · Orga | *MÉTIERS • MANDATS • SCOUTING* | Mercato Pro, shortlists scouting, convocations groupe, tournois Arena. Chaque métier a sa coque et ses quotas d'abonnement. |
-| **Sponsor** | Marques & partenaires | *VISIBILITÉ • ROI • TERRAIN* | Découverte (0 €), Territorial (49 €/mois), National Pro (99 €/mois) — ROI campagnes, messagerie clubs (quota serveur), push géo local (bêta). |
+| **Joueur** | Joueurs (amateur → pro) | *AMATEUR • CENTRE • PRO* | Un seul espace. Badges Amateur (bleu), Centre / Aspirant (vert), Professionnel (jaune). Signature pro = badge uniquement. Genre H/F à l'inscription. |
+| **Supporter** | Fans & communauté | *SUIVRE • VIBRER • PARTAGER* | Tribune **100 % gratuite** — matchs live, suivis, débats, Reels. Sans Mercato ni abonnement store. |
+| **Santé** | Praticiens & staff médical | *SOIGNER • ACCOMPAGNER • PERFORMER* | 7 métiers — annuaire vérifié, RDV près des clubs. |
+| **Club** | Structures & équipes | *STRUCTURE • RECRUTEMENT • VITRINE* | Pipeline candidatures kanban, multi-équipes, vitrine. Calendrier & convocations → Staff. |
+| **Staff** | Agent · Recruteur · Coach | *MANDATS • SCOUTING • CONVOCATIONS* | Calendrier structure, convocations premium, Mercato. Agent : 19,99 € (20 premiers) puis 29,99 €. |
+| **Événements** | Organisateurs | *TOURNOIS • ACADÉMIES • DÉTECTIONS* | Création, inscriptions, listes, résultats, médias (paiements à brancher). |
+| **Sponsor** | Marques & partenaires | *VISIBILITÉ • ROI • TERRAIN* | Découverte (0 €), Territorial (49 €/mois), National Pro (99 €/mois). |
 
 ### Écosystème des pôles
 
 ```mermaid
 mindmap
   root((ProDay))
-    Amateur
-      Mercato local
-      Convocations RSVP
-      Covoiturage
-      Effectif coach
+    Joueur
+      Badges Amateur Centre Pro
+      Mercato filtres
+      Joueur vérifié
     Supporter
       Live scores
       Suivis illimités
-      Fil & Reels
       100% gratuit
     Santé
       Annuaire vérifié
       RDV en ligne
-      Kiné Mental Nutrition
-    Pro Joueur
-      Portfolio scouting
-      Stats validées coach
-      Mandat agent
-    Pro Club
-      Arbre équipes
-      Recrutement
+    Club
+      Pipeline kanban
       Vitrine publique
-    Pro Staff
-      Mercato Pro
-      Agent CRM mandats
-      Arena tournois
+    Staff
+      Calendrier structure
+      Convocations premium
+      Agent 19.99 lancement
+    Événements
+      Tournois camps
+      Inscriptions
     Sponsor
       Découverte 0€
       Territorial 49€
       National Pro 99€
 ```
 
-> **Genre H/F** — Le genre (masculin / féminin / mineur) est un **segment UI** sur Amateur et Pro Joueur, plus un pôle produit. Les anciennes URLs `/homme` et `/woman` redirigent vers Amateur.
+> **Genre H/F** — Segment UI sur le Pôle Joueur, pas un pôle produit. `/homme`, `/woman`, `/amateur`, `/pro-joueur` → `/joueur`.
 
 ---
 

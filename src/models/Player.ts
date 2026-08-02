@@ -1,5 +1,7 @@
 import type { GeoPoint } from './User';
 import type { AppSpaceId } from './AppSpace';
+import type { ClubApplicationStage, ClubApplicationPriority } from './ClubApplicationPipeline';
+import type { PlayerLevelId, RecruiterPlayerLevelFilter } from './PlayerLevel';
 
 export interface RecruitmentPost {
   id: string;
@@ -29,7 +31,13 @@ export interface Application {
   cv_pdf_url: string;
   created_at: Date;
   updated_at?: Date;
+  /** @deprecated Préférer `pipeline_stage` (kanban club). */
   status: 'PENDING' | 'VIEWED' | 'IN_PROGRESS' | 'ACCEPTED' | 'REJECTED';
+  /** Étape pipeline club simplifié (inbox → hired). */
+  pipeline_stage?: ClubApplicationStage;
+  priority?: ClubApplicationPriority;
+  club_notes?: string;
+  trial_date?: Date;
   rejection_reason?: string;
 }
 
@@ -37,6 +45,10 @@ export interface RecruitmentFilters {
   position?: string;
   category?: string;
   level?: string;
+  /** Filtre badge Pôle Joueur (recruteurs). */
+  player_level?: RecruiterPlayerLevelFilter;
+  /** Niveau exact si besoin (hors filtre agrégé). */
+  player_level_exact?: PlayerLevelId;
   max_distance_km?: number;
   city?: string;
 }
