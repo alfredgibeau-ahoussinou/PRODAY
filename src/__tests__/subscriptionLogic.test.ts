@@ -2,11 +2,40 @@ import {
   checkFeatureAccess,
   currentUsagePeriod,
   emptyUsagePeriod,
+  isSubscriptionAccessActive,
+  subscriptionFromUserFields,
 } from '../utils/subscriptionLogic';
 
 describe('subscriptionLogic', () => {
   it('formate la période mensuelle', () => {
     expect(currentUsagePeriod(new Date('2026-06-15T12:00:00Z'))).toBe('2026-06');
+  });
+
+  it('retire le Pro si period_end est passé', () => {
+    expect(
+      isSubscriptionAccessActive({
+        subscription_tier: 'pro',
+        subscription_status: 'canceled',
+        subscription_period_end: new Date('2020-01-01T00:00:00Z'),
+      })
+    ).toBe(false);
+    expect(
+      subscriptionFromUserFields({
+        subscription_tier: 'pro',
+        subscription_status: 'active',
+        subscription_period_end: new Date(Date.now() + 86400000),
+      }).tier
+    ).toBe('pro');
+  });
+
+  it('refuse past_due même avant period_end', () => {
+    expect(
+      isSubscriptionAccessActive({
+        subscription_tier: 'pro',
+        subscription_status: 'past_due',
+        subscription_period_end: new Date(Date.now() + 86400000),
+      })
+    ).toBe(false);
   });
 
   it('autorise un joueur pro sans limite', () => {

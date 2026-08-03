@@ -52,19 +52,20 @@ export function AdminSubscriptions({
   return (
     <AdminShell
       title="Abonnements"
-      subtitle="Champs Firestore `subscription_tier` / `subscription_status`. MRR Stripe non branché."
+      subtitle="Champs Firestore `subscription_tier` / `subscription_status` (RevenueCat + stores)."
     >
       {error ? <AdminBanner tone="warning">{error}</AdminBanner> : null}
       <AdminBanner tone="info">
-        Le MRR / revenu Stripe n’est pas calculé ici. Les euros inventés ont été retirés.
+        Les abonnements Pro passent par App Store / Google Play via RevenueCat. Stripe reste
+        réservé aux paiements ponctuels (shop, cotisations).
       </AdminBanner>
 
       <section className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <AdminKpiCard label="Comptes Pro" value={proCount} accent="emerald" />
         <AdminKpiCard
-          label="MRR Stripe"
-          value="Non disponible"
-          hint="Nécessite Stripe Billing API"
+          label="MRR store"
+          value="RevenueCat"
+          hint="Voir dashboard RevenueCat / App Store / Play"
           accent="blue"
         />
         <AdminKpiCard

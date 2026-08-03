@@ -94,7 +94,7 @@ export function PricingOverview() {
       </div>
 
       <p className="mt-6 text-center text-xs text-white/35">
-        Tarifs HT · IAP en déploiement progressif · bêta gratuite pendant le lancement
+        Tarifs HT · Abonnements App Store / Google Play (RevenueCat) · bêta gratuite pendant le lancement
       </p>
     </div>
   );

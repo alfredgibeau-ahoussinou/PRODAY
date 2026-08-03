@@ -140,7 +140,7 @@ export function PlanDetailCard({
 
       <div className="border-t border-white/10 p-6 text-center">
         <p className={`text-sm ${styles.textMuted}`}>
-          IAP en cours de déploiement. Accès gratuit pour les inscrits.
+          Abonnements App Store / Google Play. Accès gratuit pour les inscrits.
         </p>
         <Link
           href={ROUTES.betaWaitlist}

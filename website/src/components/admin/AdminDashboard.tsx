@@ -193,7 +193,7 @@ export function AdminDashboard({
               href: ROUTES.adminSubscriptions,
               icon: CreditCard,
               title: "Abonnements",
-              desc: "Tiers Pro — MRR Stripe non dispo",
+              desc: "Tiers Pro — RevenueCat / stores",
             },
             {
               href: ROUTES.adminReferrals,
@@ -237,15 +237,15 @@ export function AdminDashboard({
 
       <section className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <AdminKpiCard
-          label="Abonnements (Stripe MRR)"
+          label="Abonnements (RevenueCat)"
           value="—"
-          hint="Non disponible — pas d’API Billing"
+          hint="MRR dans le dashboard RevenueCat"
           accent="blue"
         />
         <AdminKpiCard
           label="Revenu estimé"
           value="—"
-          hint="Non disponible"
+          hint="Voir App Store / Play / RevenueCat"
           accent="navy"
         />
       </section>

@@ -30,6 +30,7 @@ import {
 } from './sponsorQuoteAdmin';
 import { onV3BrainWrite } from './v3Brain';
 import { activateStoreSubscription } from './subscriptionIap';
+import { revenueCatWebhook } from './revenueCatWebhook';
 import { claimAgentLaunchSeat } from './agentLaunchSeats';
 import { ensureReferralCode, claimReferralCode } from './referral';
 import {
@@ -58,6 +59,7 @@ export { getVisioJoinUrl };
 export { onTeamEventUpdated, syncTeamEventActivities };
 export { analyzeActivityHighlight };
 export { activateStoreSubscription };
+export { revenueCatWebhook };
 export { claimAgentLaunchSeat };
 export { ensureReferralCode, claimReferralCode };
 export { onPlatformFeedCreated, onChatMessageCreated };

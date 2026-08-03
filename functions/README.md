@@ -62,14 +62,15 @@ Variables : plan Blaze, `firebase use` sur le bon projet.
 
 ---
 
-## IAP — `activateStoreSubscription`
+## IAP / RevenueCat — abonnements Pro
 
-Voir [`docs/STORE_SETUP.md`](../docs/STORE_SETUP.md) pour la création des 16 SKU store.
+Voir [`docs/STORE_SETUP.md`](../docs/STORE_SETUP.md) (16 SKU + RevenueCat).
 
 ```bash
-firebase deploy --only functions:activateStoreSubscription
+firebase deploy --only functions:activateStoreSubscription,functions:revenueCatWebhook
 ```
 
+Stripe Checkout (`createPaymentCheckoutSession`, `createShopCheckoutSession`, `stripeWebhook`) reste pour les paiements **ponctuels** uniquement — pas de Stripe Billing.
 ---
 
 ## Activation Territorial (admin)

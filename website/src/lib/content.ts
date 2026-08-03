@@ -47,7 +47,7 @@ export const PRODUCT_VISION = {
       "Détection automatique des talents à l'échelle mondiale",
       "Notifications géolocalisées agents et push partenaires à grande échelle",
       "Paiements tournois intégrés",
-      "Couverture IAP complète sur tous les plans store",
+      "Suivi RevenueCat (renouvellements / annulations) sur tous les plans store",
     ],
   },
 } as const;
