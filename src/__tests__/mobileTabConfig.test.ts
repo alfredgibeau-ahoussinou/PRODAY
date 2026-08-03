@@ -11,7 +11,7 @@ describe('mobileTabConfig', () => {
 
   it('canonise joueur homme vers shell pro joueur plat', () => {
     const rail = getMobileRailLayout('homme', 'player');
-    expect(rail.flat).toEqual(['home', 'reels', 'matchs', 'profil']);
+    expect(rail.flat).toEqual(['home', 'covoiturage', 'reels', 'matchs', 'profil']);
     expect(rail.overflow).toEqual(expect.arrayContaining(['sante', 'messages', 'recrutement', 'shop']));
     expect(rail.center).toBeNull();
   });
@@ -88,9 +88,10 @@ describe('mobileTabConfig', () => {
     ]);
   });
 
-  it('affiche le menu pro joueur en rangée plate', () => {
+  it('affiche le menu pro joueur en rangée plate avec covoiturage', () => {
     const rail = getMobileRailLayout('pro', 'player');
-    expect(rail.flat).toEqual(['home', 'reels', 'matchs', 'profil']);
+    expect(rail.flat).toEqual(['home', 'covoiturage', 'reels', 'matchs', 'profil']);
+    expect(rail.flat?.[1]).toBe('covoiturage');
     expect(rail.overflow).toEqual(expect.arrayContaining(['sante', 'messages', 'recrutement', 'shop']));
     expect(rail.center).toBeNull();
   });

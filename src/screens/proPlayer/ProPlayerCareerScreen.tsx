@@ -155,6 +155,15 @@ export const ProPlayerCareerScreen: React.FC = () => {
 
       <PressableSpring
         style={[styles.link, { borderColor: colors.border }]}
+        onPress={() => nav.openCarpool()}
+        haptic
+      >
+        <Icon name="car" size={18} color={colors.accent} />
+        <ProDayText variant="caption">Covoiturage</ProDayText>
+      </PressableSpring>
+
+      <PressableSpring
+        style={[styles.link, { borderColor: colors.border }]}
         onPress={() => nav.setActiveTab('recrutement')}
         haptic
       >

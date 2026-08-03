@@ -49,6 +49,7 @@ export const PRO_CLUB_SHELL_TABS: MainTabId[] = [
 
 export const PRO_PLAYER_SHELL_TABS: MainTabId[] = [
   'home', // Carrière
+  'covoiturage', // Différenciateur — trajets match / entraînement
   'reels', // Réels
   'matchs', // Groupe
   'profil', // Moi
