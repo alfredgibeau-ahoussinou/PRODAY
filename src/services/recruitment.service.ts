@@ -28,7 +28,9 @@ import {
   validateCoverLetter,
   validateRecruitmentPostInput,
 } from '../utils/recruitmentValidation';
+export { applicationPipelineLabel } from '../utils/clubApplicationPipeline';
 
+/** Labels joueur (suivi candidature). */
 export const APPLICATION_STATUS_LABEL: Record<Application['status'], string> = {
   PENDING: 'Envoyée',
   VIEWED: 'Vue',
@@ -182,6 +184,8 @@ export const recruitmentService = {
       cover_letter: coverLetter,
       cv_pdf_url: input.cv_pdf_url ?? '',
       status: 'PENDING',
+      pipeline_stage: 'inbox',
+      priority: 'normal',
       created_at: serverTimestamp(),
     });
 

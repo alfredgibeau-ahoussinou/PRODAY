@@ -23,6 +23,7 @@ import { useSectionIntelligence } from '../hooks/useSectionIntelligence';
 import { isSubScreenShellEnabled } from '../hooks/useSubScreenShell';
 import { StaggerReveal, PressableSpring, PushScreenTransition } from '../components/motion';
 import { TAB_BAR_CONTENT_INSET } from '../navigation/tabBarLayout';
+import { userCanManageConvocations } from '../utils/clubFeatureAccess';
 
 interface DetectionEventsScreenProps {
   onBack: () => void;
@@ -43,12 +44,7 @@ export const DetectionEventsScreen: React.FC<DetectionEventsScreenProps> = ({
     openMatches: events.length,
   });
 
-  const canCreate =
-    profile &&
-    (profile.role === 'coach' ||
-      profile.role === 'organizer' ||
-      profile.role === 'agent' ||
-      profile.role === 'club');
+  const canCreate = userCanManageConvocations(profile);
 
   let subView: React.ReactNode = null;
 

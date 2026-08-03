@@ -20,6 +20,7 @@ import { usersService } from '../services/users.service';
 import { membershipsService } from '../services/memberships.service';
 import type { Membership } from '../models/Membership';
 import { isOrganizerCapable } from '../utils/roleCapabilities';
+import { userCanManageConvocations } from '../utils/clubFeatureAccess';
 import { useAuth } from '../context/AuthContext';
 import { TeamEventDetailScreen } from './TeamEventDetailScreen';
 import { CreateTeamEventScreen } from './CreateTeamEventScreen';
@@ -69,6 +70,7 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
 
   const clubId = profile.profile.club_id;
   const canManageRoster = isOrganizerCapable(profile.role) || isAdmin;
+  const canCreateConvocations = userCanManageConvocations(profile) || Boolean(isAdmin);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -164,7 +166,7 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
         }}
       />
     );
-  } else if (hubView === 'create') {
+  } else if (hubView === 'create' && canCreateConvocations) {
     subView = (
       <CreateTeamEventScreen
         onBack={() => setHubView('hub')}
@@ -412,9 +414,11 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
 
         {clubId ? (
           <>
-            <PressableSpring style={styles.createEventBtn} onPress={() => setHubView('create')}>
-              <Text style={styles.createEventBtnText}>+ Nouvelle convocation</Text>
-            </PressableSpring>
+            {canCreateConvocations ? (
+              <PressableSpring style={styles.createEventBtn} onPress={() => setHubView('create')}>
+                <Text style={styles.createEventBtnText}>+ Nouvelle convocation</Text>
+              </PressableSpring>
+            ) : null}
             <PressableSpring
               style={styles.secondaryHubBtn}
               onPress={() => setHubView('announcements')}
@@ -476,11 +480,15 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
               {events.length === 0 ? (
                 <View style={styles.emptyBlock}>
                   <Text style={styles.empty}>
-                    Aucun événement planifié pour le moment.
+                    {canCreateConvocations
+                      ? 'Aucun événement planifié pour le moment.'
+                      : 'Aucun événement. Les convocations sont gérées par le Pôle Staff (coach Pro).'}
                   </Text>
-                  <PressableSpring style={styles.createEventBtn} onPress={() => setHubView('create')} scaleTo={0.97} haptic>
-                    <Text style={styles.createEventBtnText}>Créer une convocation</Text>
-                  </PressableSpring>
+                  {canCreateConvocations ? (
+                    <PressableSpring style={styles.createEventBtn} onPress={() => setHubView('create')} scaleTo={0.97} haptic>
+                      <Text style={styles.createEventBtnText}>Créer une convocation</Text>
+                    </PressableSpring>
+                  ) : null}
                 </View>
               ) : null}
             </View>

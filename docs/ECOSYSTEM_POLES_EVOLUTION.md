@@ -69,7 +69,12 @@ ProDay = écosystème foot complet : joueurs, clubs, agents, staff, académies, 
 5. Événements : helpers listes/résultats (`eventOrganizerScaffold`) — paiements toujours TODO
 
 ### Restant
-- Paiements Pôle Événements (Stripe / IAP)
-- UI organisateur native (création événement, listes live)
-- Déployer rules/indexes/functions (`firebase deploy --only firestore,functions`)
+- Paiements / UI organisateur native : branche `feature/pole-evenements` (PR #18) — hors scope « prévoir futur » (scaffolding main suffit)
+- Déployer rules/indexes/functions (`firebase deploy --only firestore,functions`) si pas déjà fait
 - Affiner `canResolveRequests` (vérifier recipient_uid vs requester_uid côté UI)
+
+### Correctifs checklist (post-merge #17)
+- Gates UI convocations branchées sur `userCanManageConvocations` (Matchs, Gestion équipe, Création événement, Détections)
+- `canManageTeamEvent` : rôle `club` exclu de la gestion (Staff uniquement)
+- Pipeline candidatures : `pipeline_stage` à la création + labels kanban dans `ApplicationReviewCard`
+- Docs store agent : 29,99 € (lancement 19,99 €)

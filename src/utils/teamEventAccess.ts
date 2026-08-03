@@ -1,8 +1,10 @@
 import type { TeamEvent } from '../models/TeamEvent';
 import type { User } from '../models/User';
 
-const CLUB_STAFF_ROLES = new Set(['coach', 'organizer', 'agent', 'club']);
-const MANAGE_STAFF_ROLES = CLUB_STAFF_ROLES;
+/** Lecture calendrier / hub — staff + compte club (vitrine structure). */
+const CLUB_STAFF_ROLES = new Set(['coach', 'organizer', 'agent', 'club', 'recruiter']);
+/** Gestion convocations / live — Pôle Staff (pas le rôle club). */
+const MANAGE_STAFF_ROLES = new Set(['coach', 'organizer', 'agent']);
 
 export interface SupporterFollowContext {
   clubIds: Set<string>;

@@ -14,7 +14,7 @@ Bundle / package : **`com.proday.app`**
 | `recruiter_pro` | 7,99 | `com.proday.app.recruiter_pro.monthly` | `com.proday.app.recruiter_pro.yearly` |
 | `coach_pro` | 7,99 | `com.proday.app.coach_pro.monthly` | `com.proday.app.coach_pro.yearly` |
 | `club_pro` | 11,99 | `com.proday.app.club_pro.monthly` | `com.proday.app.club_pro.yearly` |
-| `agent_elite` | 99,99 | `com.proday.app.agent_elite.monthly` | `com.proday.app.agent_elite.yearly` |
+| `agent_elite` | 29,99 (lancement 19,99 × 20 premiers) | `com.proday.app.agent_elite.monthly` | `com.proday.app.agent_elite.yearly` |
 | `physio_pro` | 19,99 | `com.proday.app.physio_pro.monthly` | `com.proday.app.physio_pro.yearly` |
 | `organizer_pro` | 14,99 | `com.proday.app.organizer_pro.monthly` | `com.proday.app.organizer_pro.yearly` |
 | `sponsor_pro` | 99,00 | `com.proday.app.sponsor_pro.monthly` | `com.proday.app.sponsor_pro.yearly` |
@@ -128,7 +128,7 @@ firebase deploy --only functions:activateStoreSubscription
 - [ ] `com.proday.app.coach_pro.yearly`
 - [ ] `com.proday.app.club_pro.monthly` — 11,99 €/mois
 - [ ] `com.proday.app.club_pro.yearly`
-- [ ] `com.proday.app.agent_elite.monthly` — 99,99 €/mois
+- [ ] `com.proday.app.agent_elite.monthly` — 29,99 €/mois (offre lancement 19,99 € pour 20 premiers via `claimAgentLaunchSeat`)
 - [ ] `com.proday.app.agent_elite.yearly`
 - [ ] `com.proday.app.physio_pro.monthly` — 19,99 €/mois
 - [ ] `com.proday.app.physio_pro.yearly`
@@ -151,7 +151,7 @@ firebase deploy --only functions:activateStoreSubscription
 - [ ] `com.proday.app.coach_pro.yearly`
 - [ ] `com.proday.app.club_pro.monthly` — 11,99 €/mois
 - [ ] `com.proday.app.club_pro.yearly`
-- [ ] `com.proday.app.agent_elite.monthly` — 99,99 €/mois
+- [ ] `com.proday.app.agent_elite.monthly` — 29,99 €/mois (lancement 19,99 € × 20)
 - [ ] `com.proday.app.agent_elite.yearly`
 - [ ] `com.proday.app.physio_pro.monthly` — 19,99 €/mois
 - [ ] `com.proday.app.physio_pro.yearly`

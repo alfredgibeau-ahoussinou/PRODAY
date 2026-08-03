@@ -11,10 +11,8 @@ import { Icon } from '../ui/Icon';
 import { AnimatedDialogShell } from '../motion/AnimatedDialogShell';
 import { PressableSpring } from '../motion/PressableSpring';
 import { prodayHaptics } from '../../utils/prodayHaptics';
-import {
-  APPLICATION_STATUS_LABEL,
-  formatTimeAgo,
-} from '../../services/recruitment.service';
+import { formatTimeAgo } from '../../services/recruitment.service';
+import { applicationPipelineLabel } from '../../utils/clubApplicationPipeline';
 import { spacing, radius } from '../../theme/designTokens';
 import type { AppColors } from '../../theme/universeTheme';
 import { useAppTheme } from '../../context/ProductLineContext';
@@ -202,7 +200,7 @@ export const ApplicationReviewCard: React.FC<ApplicationReviewCardProps> = ({
               {application.player_name ?? playerFallback}
             </Text>
             <Text style={styles.meta}>
-              {APPLICATION_STATUS_LABEL[application.status]} ·{' '}
+              {applicationPipelineLabel(application)} ·{' '}
               {formatTimeAgo(application.created_at)}
               {pulseScore != null ? ` · Visibilité ${pulseScore}` : ''}
             </Text>
@@ -216,7 +214,7 @@ export const ApplicationReviewCard: React.FC<ApplicationReviewCardProps> = ({
               application.status === 'IN_PROGRESS' && styles.pillProgress,
             ]}
           >
-            <Text style={styles.pillText}>{APPLICATION_STATUS_LABEL[application.status]}</Text>
+            <Text style={styles.pillText}>{applicationPipelineLabel(application)}</Text>
           </View>
         </View>
       </PressableSpring>
@@ -241,7 +239,7 @@ export const ApplicationReviewCard: React.FC<ApplicationReviewCardProps> = ({
         {!isFinal && isPending ? (
           <ActionBtn
             icon="checkmark-circle"
-            label="Marquer vue"
+            label="En revue"
             onPress={() => run(onMarkViewed)}
             disabled={loading}
             styles={styles}
@@ -251,7 +249,7 @@ export const ApplicationReviewCard: React.FC<ApplicationReviewCardProps> = ({
         {!isFinal && application.status === 'VIEWED' && onMarkInProgress ? (
           <ActionBtn
             icon="time"
-            label="En cours"
+            label="Shortlist"
             onPress={() => run(onMarkInProgress)}
             disabled={loading}
             styles={styles}
@@ -262,7 +260,7 @@ export const ApplicationReviewCard: React.FC<ApplicationReviewCardProps> = ({
           <>
             <ActionBtn
               icon="checkmark-circle"
-              label="Accepter"
+              label="Recruter"
               primary
               onPress={() => {
                 prodayHaptics.confirm();
