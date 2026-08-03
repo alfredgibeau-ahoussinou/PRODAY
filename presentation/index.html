@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ProDay — Présentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --accent: #0054F0;
+      --accent-soft: rgba(0, 84, 240, 0.22);
+      --deep: #001854;
+      --navy: #000C30;
+      --black: #07090F;
+      --white: #FFFFFF;
+      --muted: rgba(255, 255, 255, 0.64);
+      --muted-2: rgba(255, 255, 255, 0.42);
+      --card: rgba(255, 255, 255, 0.055);
+      --border: rgba(255, 255, 255, 0.12);
+      --glow: rgba(0, 84, 240, 0.45);
+      --font: "Outfit", "Avenir Next", "Segoe UI", sans-serif;
+      --display: "Syne", "Avenir Next", "Segoe UI", sans-serif;
+      --joueur: #0054F0;
+      --amateur: #2563EB;
+      --centre: #16A34A;
+      --pro: #EAB308;
+      --supporter: #3C00F0;
+      --sante: #00CCB4;
+      --club: #006CFC;
+      --staff: #3B5BFF;
+      --events: #0891B2;
+      --sponsor: #D4AF37;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      overflow: hidden;
+      background: var(--black);
+      color: var(--white);
+      font-family: var(--font);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 55% at 50% -10%, rgba(0, 84, 240, 0.28), transparent 55%),
+        radial-gradient(ellipse 45% 35% at 100% 100%, rgba(0, 28, 100, 0.45), transparent 50%),
+        radial-gradient(ellipse 30% 25% at 0% 80%, rgba(0, 204, 180, 0.08), transparent 45%),
+        linear-gradient(165deg, var(--navy) 0%, var(--black) 55%, #05070C 100%);
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+      background-size: 64px 64px;
+      mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, black, transparent);
+      z-index: 0;
+      pointer-events: none;
+      opacity: 0.7;
+    }
+
+    .deck {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      height: 100%;
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: clamp(2rem, 5vw, 4rem) clamp(2rem, 8vw, 6.5rem);
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transform: translateY(28px) scale(0.985);
+      transition:
+        opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+        transform 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+        visibility 0.5s;
+    }
+
+    .slide.active {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+      transform: translateY(0) scale(1);
+    }
+
+    .slide.exit-up {
+      opacity: 0;
+      transform: translateY(-18px) scale(0.99);
+    }
+
+    .slide-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 0.85rem;
+      opacity: 0;
+      transform: translateY(10px);
+    }
+
+    .slide.active .slide-label {
+      animation: rise-in 0.55s 0.08s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+
+    h1, h2 {
+      font-family: var(--display);
+      font-weight: 800;
+      letter-spacing: -0.035em;
+      line-height: 1.05;
+    }
+
+    h1 {
+      font-size: clamp(2.4rem, 6.5vw, 4.75rem);
+      text-transform: uppercase;
+      max-width: 18ch;
+    }
+
+    h2 {
+      font-size: clamp(1.7rem, 4.2vw, 2.85rem);
+      margin-bottom: 1rem;
+      max-width: 22ch;
+      opacity: 0;
+      transform: translateY(14px);
+    }
+
+    .slide.active h2 {
+      animation: rise-in 0.6s 0.14s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+
+    .tagline {
+      font-size: clamp(0.8rem, 1.4vw, 0.95rem);
+      font-weight: 700;
+      letter-spacing: 0.22em;
+      color: var(--accent);
+      margin-top: 1.1rem;
+    }
+
+    .lead {
+      font-size: clamp(1.05rem, 2vw, 1.4rem);
+      line-height: 1.5;
+      color: var(--muted);
+      max-width: 48rem;
+      margin-top: 0.85rem;
+      opacity: 0;
+      transform: translateY(12px);
+    }
+
+    .slide.active .lead {
+      animation: rise-in 0.6s 0.22s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+
+    .logo-wrap {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--white);
+      border-radius: 1.1rem;
+      padding: 0.85rem 1.4rem;
+      margin-bottom: 1.6rem;
+      box-shadow: 0 24px 70px -24px var(--glow);
+      position: relative;
+      opacity: 0;
+      transform: translateY(16px) scale(0.96);
+    }
+
+    .slide.active .logo-wrap {
+      animation:
+        rise-in 0.65s 0.05s cubic-bezier(0.22, 1, 0.36, 1) forwards,
+        logo-glow 3.6s 0.8s ease-in-out infinite;
+    }
+
+    .logo-wrap img {
+      height: clamp(48px, 7.5vw, 70px);
+      width: auto;
+      display: block;
+    }
+
+    .accent-line {
+      width: 0;
+      height: 3px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--accent), rgba(0, 84, 240, 0.15));
+      margin: 1.1rem 0 0.25rem;
+    }
+
+    .slide.active .accent-line {
+      animation: draw-line 0.7s 0.28s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+
+    .grid-2, .grid-3, .grid-4, .poles, .badges, .price-row, .cta-box, .timeline, .feature-list {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+
+    .slide.active .grid-2,
+    .slide.active .grid-3,
+    .slide.active .grid-4,
+    .slide.active .poles,
+    .slide.active .badges,
+    .slide.active .price-row,
+    .slide.active .cta-box,
+    .slide.active .timeline,
+    .slide.active .feature-list {
+      animation: rise-in 0.65s 0.3s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 0.9rem;
+      margin-top: 1.4rem;
+      max-width: 56rem;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 0.75rem;
+      margin-top: 1.25rem;
+      max-width: 62rem;
+    }
+
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 0.7rem;
+      margin-top: 1.25rem;
+      max-width: 64rem;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 1rem;
+      padding: 1.05rem 1.2rem;
+      backdrop-filter: blur(10px);
+      transition: border-color 0.25s ease, background 0.25s ease;
+    }
+
+    .card h3 {
+      font-size: 0.98rem;
+      font-weight: 700;
+      margin-bottom: 0.35rem;
+    }
+
+    .card p, .card li {
+      font-size: 0.86rem;
+      line-height: 1.45;
+      color: var(--muted);
+    }
+
+    .card ul {
+      list-style: none;
+      margin-top: 0.45rem;
+    }
+
+    .card li + li { margin-top: 0.28rem; }
+
+    .card li::before {
+      content: "→ ";
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .poles {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 0.7rem;
+      margin-top: 1.35rem;
+      max-width: 64rem;
+    }
+
+    .pole {
+      border-left: 3px solid var(--accent);
+      min-height: 7.2rem;
+    }
+
+    .pole.joueur { border-color: var(--joueur); }
+    .pole.supporter { border-color: var(--supporter); }
+    .pole.sante { border-color: var(--sante); }
+    .pole.club { border-color: var(--club); }
+    .pole.staff { border-color: var(--staff); }
+    .pole.events { border-color: var(--events); }
+    .pole.sponsor { border-color: var(--sponsor); }
+
+    .pole-tag {
+      display: block;
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted-2);
+      margin-bottom: 0.35rem;
+    }
+
+    .badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-top: 1.35rem;
+      max-width: 56rem;
+    }
+
+    .badge-card {
+      flex: 1 1 160px;
+      border-top: 3px solid var(--accent);
+    }
+
+    .badge-card.amateur { border-top-color: var(--amateur); }
+    .badge-card.centre { border-top-color: var(--centre); }
+    .badge-card.pro { border-top-color: var(--pro); }
+
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.4rem 0.75rem;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.04);
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--muted);
+    }
+
+    .pill strong { color: var(--white); font-weight: 700; }
+
+    .price-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 0.85rem;
+      margin-top: 1.35rem;
+      max-width: 56rem;
+    }
+
+    .price {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .price .amount {
+      font-family: var(--display);
+      font-size: clamp(1.6rem, 3vw, 2.2rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: var(--white);
+      margin: 0.35rem 0 0.2rem;
+    }
+
+    .price .amount span {
+      font-size: 0.55em;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .price.highlight {
+      border-color: rgba(0, 84, 240, 0.45);
+      background: linear-gradient(160deg, rgba(0, 84, 240, 0.18), rgba(255, 255, 255, 0.04));
+      box-shadow: 0 0 0 1px rgba(0, 84, 240, 0.15), 0 20px 50px -30px var(--glow);
+    }
+
+    .price .ribbon {
+      position: absolute;
+      top: 0.7rem;
+      right: 0.7rem;
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent);
+      background: rgba(0, 84, 240, 0.15);
+      border: 1px solid rgba(0, 84, 240, 0.35);
+      border-radius: 999px;
+      padding: 0.2rem 0.55rem;
+    }
+
+    .feature-list {
+      display: grid;
+      gap: 0.55rem;
+      margin-top: 1.25rem;
+      max-width: 44rem;
+    }
+
+    .feature-list li {
+      list-style: none;
+      display: flex;
+      gap: 0.75rem;
+      align-items: flex-start;
+      font-size: clamp(0.95rem, 1.5vw, 1.1rem);
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    .feature-list .dot {
+      flex-shrink: 0;
+      width: 0.55rem;
+      height: 0.55rem;
+      margin-top: 0.45rem;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 12px var(--glow);
+    }
+
+    .callout {
+      margin-top: 1.35rem;
+      padding: 1rem 1.2rem;
+      border-radius: 1rem;
+      border: 1px solid rgba(0, 84, 240, 0.35);
+      background: linear-gradient(120deg, rgba(0, 84, 240, 0.16), rgba(255, 255, 255, 0.03));
+      max-width: 48rem;
+      font-size: 0.95rem;
+      color: var(--muted);
+      opacity: 0;
+      transform: translateY(12px);
+    }
+
+    .slide.active .callout {
+      animation: rise-in 0.6s 0.38s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+
+    .callout strong { color: var(--white); }
+
+    .timeline {
+      display: grid;
+      gap: 0.85rem;
+      margin-top: 1.35rem;
+      max-width: 48rem;
+    }
+
+    .timeline-item {
+      display: grid;
+      grid-template-columns: 8.5rem 1fr;
+      gap: 1rem;
+      align-items: start;
+      padding: 0.85rem 1rem;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 0.9rem;
+    }
+
+    .timeline-item .when {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent);
+      padding-top: 0.15rem;
+    }
+
+    .timeline-item p {
+      font-size: 0.92rem;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    .cta-box {
+      margin-top: 1.6rem;
+      max-width: 40rem;
+    }
+
+    .cta-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.55rem;
+      padding: 0.95rem 1.45rem;
+      border-radius: 999px;
+      background: var(--accent);
+      color: var(--white);
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 1rem;
+      letter-spacing: 0.01em;
+      box-shadow: 0 18px 50px -18px var(--glow);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .slide.active .cta-link {
+      animation: cta-breathe 2.8s 0.9s ease-in-out infinite;
+    }
+
+    .cta-link:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 22px 55px -16px var(--glow);
+    }
+
+    .cta-secondary {
+      margin-top: 1.1rem;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
+    .cta-secondary a {
+      color: var(--white);
+      text-decoration: none;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.25);
+    }
+
+    .hero-sub {
+      margin-top: 0.35rem;
+      font-size: clamp(1.05rem, 2vw, 1.35rem);
+      color: var(--muted);
+      max-width: 34rem;
+      line-height: 1.45;
+      opacity: 0;
+      transform: translateY(12px);
+    }
+
+    .slide.active .hero-sub {
+      animation: rise-in 0.6s 0.22s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+
+    .slide.active h1 {
+      opacity: 0;
+      transform: translateY(14px);
+      animation: rise-in 0.65s 0.14s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+
+    .slide.active .tagline {
+      opacity: 0;
+      transform: translateY(10px);
+      animation: rise-in 0.6s 0.32s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+
+    .nav {
+      position: fixed;
+      z-index: 20;
+      bottom: 1.4rem;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.45rem 0.55rem;
+      border-radius: 999px;
+      background: rgba(7, 9, 15, 0.72);
+      border: 1px solid var(--border);
+      backdrop-filter: blur(14px);
+    }
+
+    .nav button {
+      width: 2.4rem;
+      height: 2.4rem;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--white);
+      cursor: pointer;
+      font-size: 1rem;
+      transition: background 0.2s ease, opacity 0.2s ease;
+    }
+
+    .nav button:hover:not(:disabled) { background: rgba(0, 84, 240, 0.25); }
+    .nav button:disabled { opacity: 0.35; cursor: default; }
+
+    #counter {
+      min-width: 3.6rem;
+      text-align: center;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--muted);
+      letter-spacing: 0.04em;
+    }
+
+    .progress-track {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: rgba(255, 255, 255, 0.06);
+      z-index: 30;
+    }
+
+    #progress {
+      height: 100%;
+      width: 0;
+      background: linear-gradient(90deg, #0040C0, var(--accent), #4D8AFF);
+      box-shadow: 0 0 16px var(--glow);
+      transition: width 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .hint {
+      position: fixed;
+      top: 1rem;
+      right: 1.2rem;
+      z-index: 20;
+      font-size: 0.68rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted-2);
+      font-weight: 600;
+    }
+
+    @keyframes rise-in {
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    @keyframes draw-line {
+      to { width: min(8rem, 28vw); }
+    }
+
+    @keyframes logo-glow {
+      0%, 100% { box-shadow: 0 24px 70px -24px var(--glow); }
+      50% { box-shadow: 0 28px 80px -18px rgba(0, 84, 240, 0.65); }
+    }
+
+    @keyframes cta-breathe {
+      0%, 100% { box-shadow: 0 18px 50px -18px var(--glow); }
+      50% { box-shadow: 0 22px 58px -14px rgba(0, 84, 240, 0.7); }
+    }
+
+    @media (max-width: 720px) {
+      .slide { padding: 1.5rem 1.25rem 5rem; justify-content: flex-start; padding-top: 2.5rem; }
+      .timeline-item { grid-template-columns: 1fr; gap: 0.35rem; }
+      .hint { display: none; }
+      h1 { max-width: none; }
+      h2 { max-width: none; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .slide, .slide.active *, #progress { animation: none !important; transition: opacity 0.2s ease !important; }
+      .slide { transform: none; }
+      .slide.active .slide-label,
+      .slide.active h1,
+      .slide.active h2,
+      .slide.active .lead,
+      .slide.active .hero-sub,
+      .slide.active .tagline,
+      .slide.active .logo-wrap,
+      .slide.active .grid-2,
+      .slide.active .grid-3,
+      .slide.active .grid-4,
+      .slide.active .poles,
+      .slide.active .badges,
+      .slide.active .price-row,
+      .slide.active .cta-box,
+      .slide.active .timeline,
+      .slide.active .feature-list,
+      .slide.active .callout,
+      .slide.active .accent-line {
+        opacity: 1;
+        transform: none;
+        width: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="progress-track"><div id="progress"></div></div>
+  <p class="hint">← → · Espace · F plein écran</p>
+
+  <div class="deck">
+    <!-- 1. Titre -->
+    <section class="slide active" data-label="Titre">
+      <div class="logo-wrap">
+        <img src="assets/logo-proday-official.png" alt="ProDay" />
+      </div>
+      <h1>L'app pour le foot</h1>
+      <div class="accent-line"></div>
+      <p class="hero-sub">Ton profil, tes matchs, ton club. Sept pôles. Une seule plateforme.</p>
+      <p class="tagline">CONNECTER • PROGRESSER • RÉUSSIR</p>
+    </section>
+
+    <!-- 2. Problème -->
+    <section class="slide" data-label="Problème">
+      <p class="slide-label">Le constat</p>
+      <h2>Le foot amateur tourne encore au bricolage</h2>
+      <div class="accent-line"></div>
+      <div class="grid-2">
+        <div class="card">
+          <h3>Organisation</h3>
+          <ul>
+            <li>Convocs sur WhatsApp, relances manuelles</li>
+            <li>Excel pour les effectifs</li>
+            <li>Personne ne sait vraiment qui vient</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Visibilité</h3>
+          <ul>
+            <li>Mercato perdu sur Facebook</li>
+            <li>Pas de CV qui se construit tout seul</li>
+            <li>Staff & praticiens sans annuaire fiable</li>
+          </ul>
+        </div>
+      </div>
+      <p class="callout"><strong>Résultat :</strong> du temps perdu, peu de visibilité pour les joueurs, des clubs qui galèrent à recruter.</p>
+    </section>
+
+    <!-- 3. Solution -->
+    <section class="slide" data-label="Solution">
+      <p class="slide-label">La proposition</p>
+      <h2>Une app. Tout l'écosystème du foot.</h2>
+      <div class="accent-line"></div>
+      <p class="lead">Carrière, club, communauté, santé, événements — au même endroit. Des outils dignes du haut niveau, sans sur-vendre l'IA.</p>
+      <ul class="feature-list">
+        <li><span class="dot"></span>Profil, CV, Mercato, matchs & RSVP, Arena, fil & Reels</li>
+        <li><span class="dot"></span>Covoiturage intégré — le différenciateur ProDay</li>
+        <li><span class="dot"></span>IA honnête : highlights de séance, pas le match frame-by-frame</li>
+      </ul>
+    </section>
+
+    <!-- 4. Sept pôles -->
+    <section class="slide" data-label="Pôles">
+      <p class="slide-label">L'écosystème</p>
+      <h2>Sept pôles. Une seule app.</h2>
+      <div class="accent-line"></div>
+      <div class="poles">
+        <div class="card pole joueur">
+          <span class="pole-tag">Pôle Joueur</span>
+          <h3>Amateur → Pro</h3>
+          <p>Un seul espace. Badges &amp; genre.</p>
+        </div>
+        <div class="card pole supporter">
+          <span class="pole-tag">Pôle Supporter</span>
+          <h3>Fans</h3>
+          <p>Tribune 100 % gratuite.</p>
+        </div>
+        <div class="card pole sante">
+          <span class="pole-tag">Pôle Santé</span>
+          <h3>Praticiens</h3>
+          <p>Annuaire, agenda, visio.</p>
+        </div>
+        <div class="card pole club">
+          <span class="pole-tag">Pôle Club</span>
+          <h3>Structures</h3>
+          <p>Catégories &amp; recrutement.</p>
+        </div>
+        <div class="card pole staff">
+          <span class="pole-tag">Pôle Staff</span>
+          <h3>Métiers</h3>
+          <p>Coach · Recruteur · Agent.</p>
+        </div>
+        <div class="card pole events">
+          <span class="pole-tag">Pôle Événements</span>
+          <h3>Organisateurs</h3>
+          <p>Tournois &amp; détections.</p>
+        </div>
+        <div class="card pole sponsor">
+          <span class="pole-tag">Pôle Sponsor</span>
+          <h3>Marques</h3>
+          <p>Campagnes ciblées.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. Joueur -->
+    <section class="slide" data-label="Joueur">
+      <p class="slide-label">Pôle Joueur — unique</p>
+      <h2>Plus de séparation Amateur / Pro Joueur</h2>
+      <div class="accent-line"></div>
+      <p class="lead">Un seul espace joueur. Homme ou Femme à l'inscription. Le niveau, c'est le badge — le profil reste le même.</p>
+      <div class="badges">
+        <div class="card badge-card amateur">
+          <h3>Amateur</h3>
+          <p>District, régional, passion. Mercato local et CV.</p>
+        </div>
+        <div class="card badge-card centre">
+          <h3>Centre / Aspirant</h3>
+          <p>Formation ou aspirant. Visibilité scouting.</p>
+        </div>
+        <div class="card badge-card pro">
+          <h3>Professionnel</h3>
+          <p>Sous contrat. Même profil — seul le badge change.</p>
+        </div>
+      </div>
+      <div class="pill-row">
+        <span class="pill"><strong>Genre</strong> Homme</span>
+        <span class="pill"><strong>Genre</strong> Femme</span>
+        <span class="pill">Coach = <strong>Pôle Staff</strong>, pas Joueur</span>
+      </div>
+    </section>
+
+    <!-- 6. Covoiturage -->
+    <section class="slide" data-label="Covoiturage">
+      <p class="slide-label">Différenciateur</p>
+      <h2>Le covoiturage, transversal</h2>
+      <div class="accent-line"></div>
+      <p class="lead">Comme un BlaBlaCar du foot — matchs, entraînements, détections, événements. Pas un module collé après coup.</p>
+      <div class="grid-3">
+        <div class="card">
+          <h3>Proposer</h3>
+          <p>Trajet, places, horaires liés à un match ou un lieu.</p>
+        </div>
+        <div class="card">
+          <h3>Chercher</h3>
+          <p>Filtres par match, entraînement, événement.</p>
+        </div>
+        <div class="card">
+          <h3>Réserver</h3>
+          <p>Contact conducteur en messagerie ProDay.</p>
+        </div>
+      </div>
+      <p class="callout">Présent sur Joueur, Club et Événements. ProDay n'est <strong>pas</strong> transporteur — coordination entre utilisateurs.</p>
+    </section>
+
+    <!-- 7. Staff -->
+    <section class="slide" data-label="Staff">
+      <p class="slide-label">Pôle Staff</p>
+      <h2>Les métiers du foot, côté pro</h2>
+      <div class="accent-line"></div>
+      <p class="lead">Mercato, mandats, shortlists, calendrier structure et convocations premium.</p>
+      <div class="grid-4">
+        <div class="card"><h3>Coach</h3><p>Convocs, multi-équipes · 7,99 €/mois Pro</p></div>
+        <div class="card"><h3>Recruteur</h3><p>Pipeline &amp; shortlists · 7,99 €/mois Pro</p></div>
+        <div class="card"><h3>Agent</h3><p>CRM, mandats, alertes géo</p></div>
+        <div class="card"><h3>Organisateur</h3><p>Via Pôle Événements · 14,99 €/mois</p></div>
+      </div>
+      <div class="price-row">
+        <div class="card price highlight">
+          <span class="ribbon">Lancement</span>
+          <h3>Agent Elite</h3>
+          <p class="amount">19,99 € <span>/mois</span></p>
+          <p>Pour les 20 premiers — puis 29,99 €/mois.</p>
+        </div>
+        <div class="card price">
+          <h3>Puis tarif plein</h3>
+          <p class="amount">29,99 € <span>/mois</span></p>
+          <p>CRM, alertes géo, mandats, contacts illimités.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8. Santé -->
+    <section class="slide" data-label="Santé">
+      <p class="slide-label">Pôle Santé</p>
+      <h2>Soigner près du terrain</h2>
+      <div class="accent-line"></div>
+      <p class="lead">Sept métiers, annuaire vérifié, agenda. La téléconsultation visio fait partie de l'offre Pro — ce n'est pas gratuit.</p>
+      <div class="price-row">
+        <div class="card price highlight">
+          <h3>Santé Pro</h3>
+          <p class="amount">19,99 € <span>/mois</span></p>
+          <p>Visio 15 / 30 min · agenda RDV · visibilité clubs.</p>
+        </div>
+        <div class="card price">
+          <h3>Commission</h3>
+          <p class="amount">10 %</p>
+          <p>Sur les RDV non médicaux réservés via ProDay.</p>
+        </div>
+      </div>
+      <div class="pill-row">
+        <span class="pill">Kiné</span>
+        <span class="pill">Ostéo</span>
+        <span class="pill">Médecin</span>
+        <span class="pill">Prépa</span>
+        <span class="pill">Mental</span>
+        <span class="pill">Nutrition</span>
+        <span class="pill">Podologue</span>
+      </div>
+    </section>
+
+    <!-- 9. Business -->
+    <section class="slide" data-label="Modèle">
+      <p class="slide-label">Modèle économique</p>
+      <h2>Gratuit pour entrer. Pro pour accélérer.</h2>
+      <div class="accent-line"></div>
+      <div class="grid-3">
+        <div class="card">
+          <h3>Joueur / Supporter</h3>
+          <p>Gratuit au départ. Joueur Plus 2,99 €. Tribune supporter 0 €.</p>
+        </div>
+        <div class="card">
+          <h3>Club &amp; Staff</h3>
+          <p>Club Pro 11,99 €. Coach / Recruteur 7,99 €. Agent 19,99 → 29,99 €.</p>
+        </div>
+        <div class="card">
+          <h3>Sponsor &amp; Events</h3>
+          <p>Découverte 0 € · Territorial 49 € · National 99 €. Orga Pro 14,99 €.</p>
+        </div>
+      </div>
+      <p class="callout"><strong>Parrainage :</strong> 2 filleuls abonnés à une offre payante → 1 mois Pro offert. (Pas pour les supporters.)</p>
+    </section>
+
+    <!-- 10. Confiance -->
+    <section class="slide" data-label="Confiance">
+      <p class="slide-label">Confiance</p>
+      <h2>Pas les mêmes droits pour tout le monde</h2>
+      <div class="accent-line"></div>
+      <div class="grid-2">
+        <div class="card">
+          <h3>Accès rapide</h3>
+          <p>Joueurs et supporters — onboarding direct.</p>
+        </div>
+        <div class="card">
+          <h3>Vérification diplôme</h3>
+          <p>Coach, agent, recruteur, praticien, club — avant la messagerie complète.</p>
+        </div>
+        <div class="card">
+          <h3>Mineurs</h3>
+          <p>Contrôle parental, contacts approuvés.</p>
+        </div>
+        <div class="card">
+          <h3>Transparence</h3>
+          <p>Pas de métriques d'audience inventées. On parle produit.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 11. Bêta -->
+    <section class="slide" data-label="Bêta">
+      <p class="slide-label">Lancement</p>
+      <h2>Bêta iOS — 11 août 2026 à 18 h</h2>
+      <div class="accent-line"></div>
+      <p class="lead">TestFlight via email pour les inscrits. APK Android dès validation.</p>
+      <div class="timeline">
+        <div class="timeline-item">
+          <span class="when">Inscription</span>
+          <p>proday75.fr/beta/inscription — liste d'attente ouverte.</p>
+        </div>
+        <div class="timeline-item">
+          <span class="when">11 août · 18 h</span>
+          <p>Ouverture TestFlight iOS. Lien envoyé par email.</p>
+        </div>
+        <div class="timeline-item">
+          <span class="when">Android</span>
+          <p>APK disponible dès validation — pas de promesse de date store.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 12. CTA -->
+    <section class="slide" data-label="Contact">
+      <div class="logo-wrap">
+        <img src="assets/logo-proday-official.png" alt="ProDay" />
+      </div>
+      <h2>On construit la plateforme du foot avec vous</h2>
+      <div class="accent-line"></div>
+      <p class="lead">Testeurs, clubs, partenaires, advisors — la bêta ouvre le 11 août à 18 h.</p>
+      <div class="cta-box">
+        <a class="cta-link" href="https://proday75.fr/beta/inscription" target="_blank" rel="noopener">Rejoindre la bêta</a>
+        <p class="cta-secondary">
+          <a href="https://proday75.fr">proday75.fr</a> ·
+          <a href="mailto:contact@proday.app">contact@proday.app</a> ·
+          <a href="mailto:partenaires@proday.app">partenaires@proday.app</a>
+        </p>
+      </div>
+      <p class="tagline">CONNECTER • PROGRESSER • RÉUSSIR</p>
+    </section>
+  </div>
+
+  <nav class="nav" aria-label="Navigation des slides">
+    <button type="button" id="prev" aria-label="Slide précédente">←</button>
+    <span id="counter">1 / 12</span>
+    <button type="button" id="next" aria-label="Slide suivante">→</button>
+  </nav>
+
+  <script>
+    (function () {
+      var slides = Array.prototype.slice.call(document.querySelectorAll(".slide"));
+      var progress = document.getElementById("progress");
+      var counter = document.getElementById("counter");
+      var prevBtn = document.getElementById("prev");
+      var nextBtn = document.getElementById("next");
+      var current = 0;
+      var animating = false;
+
+      function goTo(index) {
+        if (index < 0 || index >= slides.length || index === current || animating) return;
+        animating = true;
+        var prev = slides[current];
+        prev.classList.remove("active");
+        prev.classList.add("exit-up");
+        current = index;
+        var next = slides[current];
+        // Force reflow so entrance animation restarts
+        void next.offsetWidth;
+        next.classList.add("active");
+        var pct = ((current + 1) / slides.length) * 100;
+        progress.style.width = pct + "%";
+        counter.textContent = (current + 1) + " / " + slides.length;
+        prevBtn.disabled = current === 0;
+        nextBtn.disabled = current === slides.length - 1;
+        document.title = "ProDay — " + (next.getAttribute("data-label") || "Présentation");
+        window.setTimeout(function () {
+          prev.classList.remove("exit-up");
+          animating = false;
+        }, 480);
+      }
+
+      function next() { goTo(current + 1); }
+      function prev() { goTo(current - 1); }
+
+      prevBtn.addEventListener("click", prev);
+      nextBtn.addEventListener("click", next);
+
+      document.addEventListener("keydown", function (e) {
+        if (e.key === "ArrowRight" || e.key === "ArrowDown" || e.key === " " || e.key === "PageDown") {
+          e.preventDefault();
+          next();
+        } else if (e.key === "ArrowLeft" || e.key === "ArrowUp" || e.key === "PageUp") {
+          e.preventDefault();
+          prev();
+        } else if (e.key === "Home") {
+          goTo(0);
+        } else if (e.key === "End") {
+          goTo(slides.length - 1);
+        } else if (e.key === "f" || e.key === "F") {
+          if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(function () {});
+          } else {
+            document.exitFullscreen();
+          }
+        }
+      });
+
+      var touchStartX = 0;
+      document.addEventListener("touchstart", function (e) {
+        touchStartX = e.changedTouches[0].screenX;
+      }, { passive: true });
+
+      document.addEventListener("touchend", function (e) {
+        var diff = e.changedTouches[0].screenX - touchStartX;
+        if (Math.abs(diff) > 50) {
+          if (diff < 0) next();
+          else prev();
+        }
+      }, { passive: true });
+
+      progress.style.width = (1 / slides.length) * 100 + "%";
+      prevBtn.disabled = true;
+    })();
+  </script>
+</body>
+</html>
