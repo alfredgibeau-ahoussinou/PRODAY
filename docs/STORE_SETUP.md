@@ -61,8 +61,13 @@ Vérification automatique : `npm test -- iapProducts`
 5. Clés publiques SDK → `.env` local (gitignoré) + **EAS secrets** (pas dans le repo) :
    - Sandbox : `EXPO_PUBLIC_REVENUECAT_*_API_KEY=test_…`
    - Prod : iOS `appl_…` / Android `goog_…`
-   - EAS : `eas secret:create --name EXPO_PUBLIC_REVENUECAT_IOS_API_KEY --value …` (idem Android)
+   - Local : après ajout/modif dans `.env`, **relancer Metro avec cache clean** :
+     `npx expo start -c` (Expo Go / dev client ; un vieux binaire EAS sans secrets restera sans clés jusqu’au rebuild).
+   - `app.config.js` expose aussi les clés dans `extra.revenueCat` (lues via `expo-constants` en secours de `process.env`).
+   - EAS : `eas secret:create --name EXPO_PUBLIC_REVENUECAT_IOS_API_KEY --value …` (idem Android).
+     Les secrets du même nom sont injectés au build ; **ne pas** les mettre vides dans `eas.json` `env` (ça écraserait les secrets).
    - L’app appelle `revenueCatService.init()` au démarrage (`App.tsx`) → un seul `Purchases.configure` dans `revenueCat.service.ts` (`LOG_LEVEL.VERBOSE` uniquement en `__DEV__`).
+   - Si RC n’est pas configurable, `iap.service` bascule sur **expo-iap** (pas d’alerte « clés manquantes » bloquante).
 6. Webhook :
    - URL : `https://REGION-PROJECT.cloudfunctions.net/revenueCatWebhook`
    - Authorization : valeur = `REVENUECAT_WEBHOOK_AUTH` (functions `.env.<projectId>`)

@@ -1,6 +1,9 @@
 /**
  * Store IAP via RevenueCat (preferred) or expo-iap fallback.
  * Stripe Billing is not used for Pro subscriptions — see revenueCat.service.ts.
+ *
+ * Fallback when RC public keys are missing, or Purchases.configure fails
+ * (stale Metro env, EAS binary without secrets, native module error).
  */
 import { Platform } from 'react-native';
 import Constants, { ExecutionEnvironment } from 'expo-constants';
@@ -158,7 +161,11 @@ export const iapService = {
     }
 
     if (revenueCatService.isAvailable()) {
-      return revenueCatService.purchasePlan(planId, billing);
+      const rc = await revenueCatService.purchasePlan(planId, billing);
+      if (rc.ok || !rc.useExpoIapFallback) {
+        return { ok: rc.ok, message: rc.message };
+      }
+      // Keys present but SDK configure failed, or keys missing mid-flight → store IAP.
     }
 
     return purchaseViaExpoIap(planId, billing, sku);
@@ -166,11 +173,16 @@ export const iapService = {
 
   async restorePurchases(): Promise<{ ok: boolean; message: string }> {
     if (revenueCatService.isAvailable()) {
-      return revenueCatService.restorePurchases();
+      const rc = await revenueCatService.restorePurchases();
+      if (rc.ok || !rc.useExpoIapFallback) {
+        return { ok: rc.ok, message: rc.message };
+      }
     }
     return {
       ok: false,
-      message: 'Restauration disponible via RevenueCat (clés API requises).',
+      message: revenueCatService.hasApiKey()
+        ? 'Restauration RevenueCat indisponible sur ce build. Réessayez après rebuild EAS avec les secrets RC.'
+        : 'Restauration via RevenueCat : ajoutez les clés EXPO_PUBLIC_REVENUECAT_* (`.env` + restart Metro, ou secrets EAS).',
     };
   },
 
