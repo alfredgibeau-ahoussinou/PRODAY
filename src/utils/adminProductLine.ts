@@ -2,20 +2,50 @@ import type { UserRole } from '../models/User';
 import type { ProductLineId } from '../models/ProductLine';
 import { productLineLabel, rolesForProductLine } from '../content/universeRoles';
 import { splitLegacyProByRole } from './productLineResolution';
+import { isJoueurProductLine } from './playerLevelBadge';
 
-/** Lignes produit gérables dans l’espace admin (pôles actuels). */
+/**
+ * Lignes produit gérables dans l’espace admin (pôles actuels).
+ * Pôle Joueur unifié : une seule entrée `amateur` (UI « Joueur ») —
+ * `pro_player` / legacy homme·woman restent en stockage, filtrés via isJoueurProductLine.
+ */
 export const ADMIN_PRODUCT_LINES: ProductLineId[] = [
   'amateur',
   'supporter',
-  'pro_player',
   'pro_club',
   'pro_staff',
   'sponsor',
   'sante',
 ];
 
+/** Libellé admin — préfère « Joueur » pour le pôle unifié (stockage inchangé). */
 export function adminProductLineLabel(line: ProductLineId): string {
-  return productLineLabel(line);
+  if (isJoueurProductLine(line)) return 'Joueur';
+  switch (line) {
+    case 'supporter':
+      return 'Supporter';
+    case 'sponsor':
+      return 'Sponsor';
+    case 'pro_club':
+      return 'Pro Club';
+    case 'pro_staff':
+      return 'Pro Staff';
+    case 'sante':
+      return 'Santé';
+    default:
+      return productLineLabel(line);
+  }
+}
+
+/** Filtre liste admin : le chip Joueur (`amateur`) couvre tout le pôle unifié. */
+export function adminUserMatchesProductLineFilter(
+  userLine: ProductLineId,
+  filterLine: ProductLineId,
+): boolean {
+  if (isJoueurProductLine(filterLine)) {
+    return isJoueurProductLine(userLine);
+  }
+  return userLine === filterLine;
 }
 
 /** Rôles métier compatibles avec l’univers sélectionné en admin. */

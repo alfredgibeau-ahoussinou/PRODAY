@@ -29,8 +29,10 @@ import {
   ADMIN_EDIT_ROLES,
   ADMIN_PRODUCT_LINES,
   adminProductLineLabel,
+  adminUserMatchesProductLineFilter,
   resolveAdminProductLine,
 } from '../../../utils/adminProductLine';
+import { adminGenderLabel } from '../../../utils/adminUserDisplay';
 import { getUserProductLine } from '../../../utils/productLineAccess';
 import type { ProductLineId } from '../../../models/ProductLine';
 import { MEDICAL_CANONICAL_LABELS } from '../../../screens/signup/signupMedicalI18n';
@@ -44,7 +46,7 @@ const EMPTY_FORM: CreateUserFormState = {
   display_name: '',
   city: '',
   role: 'player',
-  product_line: 'pro_player',
+  product_line: 'amateur',
 };
 
 export const AdminUsersPage: React.FC = () => {
@@ -96,18 +98,20 @@ export const AdminUsersPage: React.FC = () => {
     if (listFilter === 'pending' && !userNeedsAdminVerificationReview(u)) return false;
     if (listFilter.startsWith('line:')) {
       const line = listFilter.slice(5) as ProductLineId;
-      if (getUserProductLine(u) !== line) return false;
+      if (!adminUserMatchesProductLineFilter(getUserProductLine(u), line)) return false;
     } else if (listFilter !== 'all' && listFilter !== 'pending' && u.role !== listFilter) {
       return false;
     }
     const q = search.trim().toLowerCase();
     if (!q) return true;
     const lineLabel = adminProductLineLabel(getUserProductLine(u)).toLowerCase();
+    const genderLabel = adminGenderLabel(u.profile?.gender).toLowerCase();
     return (
       u.display_name.toLowerCase().includes(q) ||
       u.email.toLowerCase().includes(q) ||
       (u.city?.toLowerCase().includes(q) ?? false) ||
       lineLabel.includes(q) ||
+      genderLabel.includes(q) ||
       (u.product_line?.toLowerCase().includes(q) ?? false)
     );
   });

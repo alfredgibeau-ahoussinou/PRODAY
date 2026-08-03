@@ -20,6 +20,7 @@ import {
   adminRolesForProductLine,
   resolveAdminProductLine,
 } from '../../utils/adminProductLine';
+import { isJoueurProductLine } from '../../utils/playerLevelBadge';
 import { defaultRoleForProductLine } from '../../content/universeRoles';
 import { getRoleLabel } from '../../screens/signup/signupFlowConfig';
 import { useTranslation } from '../../context/LocaleContext';
@@ -59,7 +60,9 @@ export const AdminCreateUserPanel: React.FC<AdminCreateUserPanelProps> = ({
   const { colors: c } = useAdminStyles();
   const { t } = useTranslation();
   const styles = useMemo(() => createStyles(c), [c]);
-  const metierRoles = adminRolesForProductLine(form.product_line);
+  const metierRoles = adminRolesForProductLine(
+    isJoueurProductLine(form.product_line) ? 'amateur' : form.product_line,
+  );
   const medicalConfigs = useMemo(() => getMedicalSpecialtyConfigs(t), [t]);
   const selectedSpecialty = form.medical_specialty ?? 'kine';
 
@@ -110,32 +113,32 @@ export const AdminCreateUserPanel: React.FC<AdminCreateUserPanelProps> = ({
 
       <Text style={styles.fieldLabel}>Univers</Text>
       <View style={styles.roleGrid}>
-        {ADMIN_PRODUCT_LINES.map((line) => (
-          <TouchableOpacity
-            key={line}
-            style={[styles.roleChip, form.product_line === line && styles.roleChipOn]}
-            onPress={() => {
-              const allowed = adminRolesForProductLine(line);
-              const role = allowed.includes(form.role)
-                ? form.role
-                : defaultRoleForProductLine(line);
-              onChange({
-                product_line: resolveAdminProductLine(role, line),
-                role,
-                medical_specialty: role === 'physio' ? form.medical_specialty ?? 'kine' : undefined,
-              });
-            }}
-          >
-            <Text
-              style={[
-                styles.roleChipText,
-                form.product_line === line && styles.roleChipTextOn,
-              ]}
+        {ADMIN_PRODUCT_LINES.map((line) => {
+          const active = isJoueurProductLine(line)
+            ? isJoueurProductLine(form.product_line)
+            : form.product_line === line;
+          return (
+            <TouchableOpacity
+              key={line}
+              style={[styles.roleChip, active && styles.roleChipOn]}
+              onPress={() => {
+                const allowed = adminRolesForProductLine(line);
+                const role = allowed.includes(form.role)
+                  ? form.role
+                  : defaultRoleForProductLine(line);
+                onChange({
+                  product_line: resolveAdminProductLine(role, line),
+                  role,
+                  medical_specialty: role === 'physio' ? form.medical_specialty ?? 'kine' : undefined,
+                });
+              }}
             >
-              {adminProductLineLabel(line)}
-            </Text>
-          </TouchableOpacity>
-        ))}
+              <Text style={[styles.roleChipText, active && styles.roleChipTextOn]}>
+                {adminProductLineLabel(line)}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
       </View>
 
       <Text style={styles.fieldLabel}>Rôle métier</Text>

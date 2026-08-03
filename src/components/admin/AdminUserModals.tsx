@@ -24,6 +24,7 @@ import {
   adminRolesForProductLine,
   resolveAdminProductLine,
 } from '../../utils/adminProductLine';
+import { adminGenderLabel } from '../../utils/adminUserDisplay';
 import { getUserProductLine } from '../../utils/productLineAccess';
 import { getRoleLabel } from '../../screens/signup/signupFlowConfig';
 import { defaultRoleForProductLine } from '../../content/universeRoles';
@@ -34,6 +35,8 @@ import {
   getMedicalSpecialtyConfigs,
   resolveMedicalSpecialtyId,
 } from '../../screens/signup/signupMedicalI18n';
+import { PlayerLevelBadgePill } from '../player/PlayerLevelBadgePill';
+import { isJoueurProductLine, playerLevelBadgeFor } from '../../utils/playerLevelBadge';
 
 const VERIFY: VerificationStatus[] = ['NOT_REQUIRED', 'PENDING', 'VERIFIED', 'REJECTED'];
 
@@ -109,10 +112,17 @@ export const AdminUserEditModal: React.FC<AdminUserEditModalProps> = ({
     const nextRole = allowed.includes(role) ? role : defaultRoleForProductLine(line);
     setRole(nextRole);
     if (nextRole !== 'sponsor') setSponsorApproved(false);
+    // Pôle Joueur unifié : conserver le stockage existant (amateur / pro_player / legacy).
+    if (isJoueurProductLine(line) && isJoueurProductLine(productLine)) {
+      setProductLine(resolveAdminProductLine(nextRole, productLine));
+      return;
+    }
     setProductLine(resolveAdminProductLine(nextRole, line));
   };
 
-  const metierRoles = adminRolesForProductLine(productLine);
+  const metierRoles = adminRolesForProductLine(
+    isJoueurProductLine(productLine) ? 'amateur' : productLine,
+  );
 
   if (!user) return null;
 
@@ -136,6 +146,24 @@ export const AdminUserEditModal: React.FC<AdminUserEditModalProps> = ({
         <Text style={styles.title}>Modifier l&apos;utilisateur</Text>
         <Text style={styles.sub}>{user.email}</Text>
         <ScrollView keyboardShouldPersistTaps="handled">
+          {(user.role === 'player' || user.profile?.gender != null) && (
+            <View style={styles.readOnlyBlock}>
+              <Text style={styles.label}>Genre (lecture seule)</Text>
+              <Text style={styles.readOnlyValue}>{adminGenderLabel(user.profile?.gender)}</Text>
+              {user.role === 'player' ? (
+                <>
+                  <Text style={styles.label}>Badge niveau joueur (lecture seule)</Text>
+                  <View style={styles.readOnlyBadgeRow}>
+                    <PlayerLevelBadgePill user={user} showVerified={false} />
+                    <Text style={styles.readOnlyHint}>
+                      {playerLevelBadgeFor(user).label}
+                    </Text>
+                  </View>
+                </>
+              ) : null}
+            </View>
+          )}
+
           <Text style={styles.label}>Nom affiché</Text>
           <TextInput
             style={styles.input}
@@ -153,17 +181,22 @@ export const AdminUserEditModal: React.FC<AdminUserEditModalProps> = ({
 
           <Text style={styles.label}>Univers</Text>
           <View style={styles.chipRow}>
-            {ADMIN_PRODUCT_LINES.map((line) => (
-              <TouchableOpacity
-                key={line}
-                style={[styles.chip, productLine === line && styles.chipOn]}
-                onPress={() => applyProductLine(line)}
-              >
-                <Text style={[styles.chipText, productLine === line && styles.chipTextOn]}>
-                  {adminProductLineLabel(line)}
-                </Text>
-              </TouchableOpacity>
-            ))}
+            {ADMIN_PRODUCT_LINES.map((line) => {
+              const active = isJoueurProductLine(line)
+                ? isJoueurProductLine(productLine)
+                : productLine === line;
+              return (
+                <TouchableOpacity
+                  key={line}
+                  style={[styles.chip, active && styles.chipOn]}
+                  onPress={() => applyProductLine(line)}
+                >
+                  <Text style={[styles.chipText, active && styles.chipTextOn]}>
+                    {adminProductLineLabel(line)}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
           </View>
 
           <Text style={styles.label}>Rôle métier</Text>
@@ -379,6 +412,23 @@ function createStyles(c: AppColors) {
     },
     title: { fontSize: 20, fontWeight: '900', color: c.text },
     sub: { fontSize: 13, color: c.textMuted, marginBottom: spacing.md },
+    readOnlyBlock: {
+      marginBottom: spacing.sm,
+      padding: spacing.md,
+      borderRadius: radius.md,
+      borderWidth: 1,
+      borderColor: c.border,
+      backgroundColor: c.surfaceMuted,
+    },
+    readOnlyValue: { fontSize: 15, fontWeight: '800', color: c.text, marginBottom: spacing.xs },
+    readOnlyBadgeRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      alignItems: 'center',
+      gap: spacing.sm,
+      marginTop: 2,
+    },
+    readOnlyHint: { fontSize: 11, color: c.textMuted, fontWeight: '600' },
     label: {
       fontSize: 11,
       fontWeight: '800',
