@@ -3,7 +3,16 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { AdminShell } from "@/components/admin/AdminShell";
-import { AdminKpiCard, AdminMockBadge, AdminTableShell } from "@/components/admin/adminUi";
+import {
+  AdminButton,
+  AdminEmptyState,
+  AdminInput,
+  AdminKpiCard,
+  AdminMockBadge,
+  AdminSelect,
+  AdminStatusBadge,
+  AdminTableShell,
+} from "@/components/admin/adminUi";
 import { Search, Ban, Check, Mail, User } from "lucide-react";
 
 type UserStatus = "active" | "inactive" | "suspended";
@@ -96,10 +105,10 @@ const ROLE_LABELS: Record<UserRole, string> = {
   user: "Utilisateur",
 };
 
-const STATUS_COLORS: Record<UserStatus, string> = {
-  active: "text-green-400 bg-green-500/20",
-  inactive: "text-gray-400 bg-gray-500/20",
-  suspended: "text-red-400 bg-red-500/20",
+const STATUS_TONES: Record<UserStatus, "success" | "neutral" | "danger"> = {
+  active: "success",
+  inactive: "neutral",
+  suspended: "danger",
 };
 
 const GENDER_LABELS: Record<Gender, string> = {
@@ -108,10 +117,10 @@ const GENDER_LABELS: Record<Gender, string> = {
   minor: "Mineur",
 };
 
-const PLAYER_LEVEL_LABELS: Record<PlayerLevel, { label: string; className: string }> = {
-  amateur: { label: "Amateur", className: "text-blue-300 bg-blue-500/20" },
-  academy: { label: "Centre de formation", className: "text-green-300 bg-green-500/20" },
-  professional: { label: "Professionnel", className: "text-yellow-300 bg-yellow-500/20" },
+const PLAYER_LEVEL_LABELS: Record<PlayerLevel, { label: string; tone: "info" | "success" | "warning" }> = {
+  amateur: { label: "Amateur", tone: "info" },
+  academy: { label: "Centre de formation", tone: "success" },
+  professional: { label: "Professionnel", tone: "warning" },
 };
 
 export function AdminUsers() {
@@ -162,42 +171,40 @@ export function AdminUsers() {
       actions={<AdminMockBadge />}
     >
       {/* Hook: remplacer mockUsers par fetch('/api/admin/users') */}
-      <section className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40" size={18} />
-          <input
+      <section className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="relative max-w-md flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-white/35" size={16} />
+          <AdminInput
             type="text"
             placeholder="Rechercher par email, nom, genre ou pôle..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-full border border-white/10 bg-white/5 pl-10 pr-4 py-2.5 text-white placeholder:text-white/40 focus:border-white/20 focus:outline-none"
+            className="pl-10"
           />
         </div>
-        <div className="flex gap-2">
-          <select
+        <div className="flex flex-wrap gap-2">
+          <AdminSelect
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as UserStatus | "all")}
-            className="rounded-full border border-white/10 bg-white/5 px-4 py-2.5 text-white focus:border-white/20 focus:outline-none"
           >
             <option value="all">Tous les statuts</option>
             <option value="active">Actif</option>
             <option value="inactive">Inactif</option>
             <option value="suspended">Suspendu</option>
-          </select>
-          <select
+          </AdminSelect>
+          <AdminSelect
             value={roleFilter}
             onChange={(e) => setRoleFilter(e.target.value as UserRole | "all")}
-            className="rounded-full border border-white/10 bg-white/5 px-4 py-2.5 text-white focus:border-white/20 focus:outline-none"
           >
             <option value="all">Tous les rôles</option>
             <option value="admin">Admin</option>
             <option value="moderator">Modérateur</option>
             <option value="user">Utilisateur</option>
-          </select>
+          </AdminSelect>
         </div>
       </section>
 
-      <section className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-4">
+      <section className="grid grid-cols-1 gap-3 sm:grid-cols-4">
         <AdminKpiCard label="Total" value={users.length} accent="blue" />
         <AdminKpiCard
           label="Actifs"
@@ -207,7 +214,7 @@ export function AdminUsers() {
         <AdminKpiCard
           label="Inactifs"
           value={users.filter((u) => u.status === "inactive").length}
-          accent="cyan"
+          accent="navy"
         />
         <AdminKpiCard
           label="Suspendus"
@@ -217,40 +224,24 @@ export function AdminUsers() {
       </section>
 
       <AdminTableShell>
-          <table className="mt-8 w-full">
+          <table className="min-w-[960px]">
             <thead>
-              <tr className="border-b border-white/10">
-                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-white/60">
-                  Utilisateur
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-white/60">
-                  Rôle
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-white/60">
-                  Genre
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-white/60">
-                  Badge
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-white/60">
-                  Statut
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-white/60">
-                  Pôle
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-white/60">
-                  Dernière connexion
-                </th>
-                <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wide text-white/60">
-                  Actions
-                </th>
+              <tr>
+                <th>Utilisateur</th>
+                <th>Rôle</th>
+                <th>Genre</th>
+                <th>Badge</th>
+                <th>Statut</th>
+                <th>Pôle</th>
+                <th>Dernière connexion</th>
+                <th className="text-right">Actions</th>
               </tr>
             </thead>
             <tbody>
               {filteredUsers.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-6 py-12 text-center text-sm text-white/40">
-                    Aucun utilisateur trouvé
+                  <td colSpan={8} className="!p-0">
+                    <AdminEmptyState title="Aucun utilisateur trouvé" />
                   </td>
                 </tr>
               ) : (
@@ -259,79 +250,73 @@ export function AdminUsers() {
                     ? PLAYER_LEVEL_LABELS[user.playerLevel]
                     : null;
                   return (
-                    <tr key={user.id} className="border-b border-white/5 last:border-0">
-                      <td className="px-6 py-4">
+                    <tr key={user.id}>
+                      <td>
                         <div className="flex items-center gap-3">
-                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-blue-500/20 to-purple-500/20 text-white">
-                            <User size={18} />
+                          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#0054F0]/15 text-[#7AA7FF] ring-1 ring-[#0054F0]/20">
+                            <User size={16} />
                           </div>
                           <div>
                             <p className="font-medium text-white">{user.name}</p>
-                            <p className="text-sm text-white/60">{user.email}</p>
+                            <p className="text-xs text-white/45">{user.email}</p>
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4">
-                        <span className="inline-flex rounded-full bg-white/10 px-2.5 py-1 text-xs font-medium text-white">
+                      <td>
+                        <AdminStatusBadge tone="neutral">
                           {ROLE_LABELS[user.role]}
-                        </span>
+                        </AdminStatusBadge>
                       </td>
-                      <td className="px-6 py-4">
-                        <span className="text-sm text-white/80">
-                          {user.gender ? GENDER_LABELS[user.gender] : "—"}
-                        </span>
+                      <td className="text-white/65">
+                        {user.gender ? GENDER_LABELS[user.gender] : "—"}
                       </td>
-                      <td className="px-6 py-4">
+                      <td>
                         {level ? (
-                          <span
-                            className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${level.className}`}
-                          >
-                            {level.label}
-                          </span>
+                          <AdminStatusBadge tone={level.tone}>{level.label}</AdminStatusBadge>
                         ) : (
-                          <span className="text-sm text-white/40">—</span>
+                          <span className="text-white/35">—</span>
                         )}
                       </td>
-                      <td className="px-6 py-4">
-                        <span
-                          className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${STATUS_COLORS[user.status]}`}
-                        >
+                      <td>
+                        <AdminStatusBadge tone={STATUS_TONES[user.status]}>
                           {STATUS_LABELS[user.status]}
-                        </span>
+                        </AdminStatusBadge>
                       </td>
-                      <td className="px-6 py-4">
-                        <span className="text-sm text-white/80">{user.pole || "—"}</span>
+                      <td className="text-white/65">{user.pole || "—"}</td>
+                      <td className="whitespace-nowrap text-white/45">
+                        {formatDate(user.lastLogin)}
                       </td>
-                      <td className="px-6 py-4">
-                        <span className="text-sm text-white/60">
-                          {formatDate(user.lastLogin)}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
+                      <td className="text-right">
+                        <div className="flex items-center justify-end gap-1">
                           {user.status === "active" ? (
-                            <button
+                            <AdminButton
+                              size="sm"
+                              variant="ghost"
                               onClick={() => handleStatusChange(user.id, "suspended")}
-                              className="rounded-full p-2 text-white/60 transition hover:bg-white/10 hover:text-red-400"
                               title="Suspendre"
+                              className="!px-2"
                             >
-                              <Ban size={16} />
-                            </button>
+                              <Ban size={14} />
+                            </AdminButton>
                           ) : (
-                            <button
+                            <AdminButton
+                              size="sm"
+                              variant="ghost"
                               onClick={() => handleStatusChange(user.id, "active")}
-                              className="rounded-full p-2 text-white/60 transition hover:bg-white/10 hover:text-green-400"
                               title="Activer"
+                              className="!px-2"
                             >
-                              <Check size={16} />
-                            </button>
+                              <Check size={14} />
+                            </AdminButton>
                           )}
-                          <button
-                            className="rounded-full p-2 text-white/60 transition hover:bg-white/10 hover:text-white"
+                          <AdminButton
+                            size="sm"
+                            variant="ghost"
                             title="Envoyer email"
+                            className="!px-2"
                           >
-                            <Mail size={16} />
-                          </button>
+                            <Mail size={14} />
+                          </AdminButton>
                         </div>
                       </td>
                     </tr>

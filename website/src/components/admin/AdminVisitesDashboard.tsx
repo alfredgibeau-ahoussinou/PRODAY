@@ -3,7 +3,15 @@
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { AdminShell } from "@/components/admin/AdminShell";
-import { AdminBanner, AdminKpiCard, AdminTableShell } from "@/components/admin/adminUi";
+import {
+  AdminBanner,
+  AdminButton,
+  AdminEmptyState,
+  AdminFilterChip,
+  AdminKpiCard,
+  AdminSectionHeading,
+  AdminTableShell,
+} from "@/components/admin/adminUi";
 import type {
   TrafficDailyRow,
   TrafficTotals,
@@ -130,49 +138,38 @@ export function AdminVisitesDashboard({
       title="Visites"
       subtitle={`Sessions site et ouvertures app depuis ${formatDateFr(totals.tracking_started_at)}.`}
       actions={
-        <button
-          type="button"
+        <AdminButton
           disabled={isPending}
           onClick={() =>
             startTransition(() => {
               void refresh();
             })
           }
-          className="rounded-full border border-white/15 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-white/80 transition hover:border-white/30 hover:text-white disabled:opacity-50"
         >
           {isPending ? "…" : "Actualiser"}
-        </button>
+        </AdminButton>
       }
     >
-      {error ? (
-        <div className="mb-6">
-          <AdminBanner tone="warning">{error}</AdminBanner>
-        </div>
-      ) : null}
+      {error ? <AdminBanner tone="warning">{error}</AdminBanner> : null}
 
       <div className="flex flex-wrap gap-2">
         {PERIODS.map((p) => (
-          <button
+          <AdminFilterChip
             key={p.id}
-            type="button"
+            active={period === p.id}
             onClick={() => setPeriod(p.id)}
-            className={`rounded-full px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wide transition ${
-              period === p.id
-                ? "bg-white text-black"
-                : "bg-white/[0.06] text-white/60 hover:text-white"
-            }`}
           >
             {p.label}
-          </button>
+          </AdminFilterChip>
         ))}
       </div>
 
-      <section className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <section className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <AdminKpiCard
           label="Visites site"
           value={displaySite}
           hint="Sessions navigateur (1 par onglet)"
-          accent="violet"
+          accent="navy"
         />
         <AdminKpiCard
           label="Ouvertures app"
@@ -182,38 +179,33 @@ export function AdminVisitesDashboard({
         />
       </section>
 
-      <section className="mt-10">
-        <h2 className="font-[family-name:var(--font-syne)] text-sm font-semibold uppercase tracking-[0.18em] text-white/50">
-          Détail journalier
-        </h2>
+      <section>
+        <AdminSectionHeading title="Détail journalier" />
         {tableRows.length === 0 ? (
-          <p className="mt-4 text-sm text-white/45">
-            Aucune visite enregistrée sur cette période (0 depuis le
-            déploiement du tracking).
-          </p>
+          <AdminEmptyState
+            title="Aucune visite sur cette période"
+            description="0 depuis le déploiement du tracking."
+          />
         ) : (
           <AdminTableShell>
-            <table className="mt-4 w-full min-w-[420px] text-left text-sm">
+            <table className="min-w-[420px]">
               <thead>
-                <tr className="border-b border-white/10 bg-white/[0.04] text-[11px] uppercase tracking-wide text-white/45">
-                  <th className="px-4 py-3 font-semibold">Jour</th>
-                  <th className="px-4 py-3 font-semibold">Site</th>
-                  <th className="px-4 py-3 font-semibold">App</th>
-                  <th className="px-4 py-3 font-semibold">Total</th>
+                <tr>
+                  <th>Jour</th>
+                  <th>Site</th>
+                  <th>App</th>
+                  <th>Total</th>
                 </tr>
               </thead>
               <tbody>
                 {tableRows.map((row) => (
-                  <tr
-                    key={row.day_key}
-                    className="border-b border-white/5 text-white/80 last:border-0"
-                  >
-                    <td className="px-4 py-3 font-medium text-white">
+                  <tr key={row.day_key}>
+                    <td className="font-medium text-white">
                       {formatDayLabel(row.day_key)}
                     </td>
-                    <td className="px-4 py-3 tabular-nums">{row.site_visits}</td>
-                    <td className="px-4 py-3 tabular-nums">{row.app_opens}</td>
-                    <td className="px-4 py-3 tabular-nums text-white/55">
+                    <td className="tabular-nums text-white/75">{row.site_visits}</td>
+                    <td className="tabular-nums text-white/75">{row.app_opens}</td>
+                    <td className="tabular-nums text-white/45">
                       {row.site_visits + row.app_opens}
                     </td>
                   </tr>

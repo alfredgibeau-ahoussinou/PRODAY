@@ -5,8 +5,11 @@ import { Search } from "lucide-react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import {
   AdminBanner,
+  AdminEmptyState,
+  AdminInput,
   AdminKpiCard,
   AdminMockBadge,
+  AdminStatusBadge,
   AdminTableShell,
   formatAdminDate,
 } from "@/components/admin/adminUi";
@@ -86,46 +89,68 @@ export function AdminSubscriptions() {
         Billing ou collection Firestore <code className="text-white/80">subscriptions</code>.
       </AdminBanner>
 
-      <section className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <section className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <AdminKpiCard label="Abonnements actifs" value={2} accent="emerald" />
         <AdminKpiCard label="MRR (démo)" value={`${mrr.toFixed(2)} €`} accent="blue" />
         <AdminKpiCard label="Impayés" value={1} accent="amber" />
       </section>
 
-      <div className="relative mt-8 max-w-md">
+      <div className="relative max-w-md">
         <Search
           size={16}
           className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-white/35"
         />
-        <input
+        <AdminInput
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Rechercher email ou plan…"
-          className="w-full rounded-xl border border-white/10 bg-white/[0.04] py-2.5 pl-10 pr-3 text-sm text-white outline-none placeholder:text-white/35 focus:border-[#0054F0]/50"
+          className="pl-10"
         />
       </div>
 
       <AdminTableShell>
-        <table className="mt-4 w-full min-w-[720px] text-left text-sm">
-          <thead className="border-b border-white/10 text-xs uppercase tracking-wide text-white/40">
+        <table className="min-w-[720px]">
+          <thead>
             <tr>
-              <th className="px-4 py-3">Email</th>
-              <th className="px-4 py-3">Plan</th>
-              <th className="px-4 py-3">Statut</th>
-              <th className="px-4 py-3">MRR</th>
-              <th className="px-4 py-3">Renouvellement</th>
+              <th>Email</th>
+              <th>Plan</th>
+              <th>Statut</th>
+              <th>MRR</th>
+              <th>Renouvellement</th>
             </tr>
           </thead>
           <tbody>
-            {rows.map((r) => (
-              <tr key={r.id} className="border-b border-white/5">
-                <td className="px-4 py-3 text-white">{r.email}</td>
-                <td className="px-4 py-3 text-white/70">{r.plan}</td>
-                <td className="px-4 py-3 text-white/70">{STATUS_LABEL[r.status]}</td>
-                <td className="px-4 py-3 tabular-nums text-white/70">{r.mrr.toFixed(2)} €</td>
-                <td className="px-4 py-3 text-white/50">{formatAdminDate(r.renewsAt)}</td>
+            {rows.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="!p-0">
+                  <AdminEmptyState title="Aucun abonnement" />
+                </td>
               </tr>
-            ))}
+            ) : (
+              rows.map((r) => {
+                const tone =
+                  r.status === "active"
+                    ? "success"
+                    : r.status === "trialing"
+                      ? "info"
+                      : r.status === "past_due"
+                        ? "warning"
+                        : "neutral";
+                return (
+                  <tr key={r.id}>
+                    <td className="font-medium text-white">{r.email}</td>
+                    <td className="text-white/65">{r.plan}</td>
+                    <td>
+                      <AdminStatusBadge tone={tone}>{STATUS_LABEL[r.status]}</AdminStatusBadge>
+                    </td>
+                    <td className="tabular-nums text-white/65">{r.mrr.toFixed(2)} €</td>
+                    <td className="whitespace-nowrap text-white/45">
+                      {formatAdminDate(r.renewsAt)}
+                    </td>
+                  </tr>
+                );
+              })
+            )}
           </tbody>
         </table>
       </AdminTableShell>

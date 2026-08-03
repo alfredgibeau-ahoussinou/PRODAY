@@ -37,7 +37,7 @@ export function AdminSettings() {
         cette refonte.
       </AdminBanner>
 
-      <div className="mt-6 grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-2">
         {configured.map((item) => (
           <AdminPanel key={item.label} className="p-5">
             <div className="flex items-start justify-between gap-3">
@@ -45,7 +45,7 @@ export function AdminSettings() {
                 <h2 className="font-semibold text-white">{item.label}</h2>
                 <p className="mt-1 font-mono text-xs text-white/40">{item.hint}</p>
               </div>
-              <span className="rounded-full bg-emerald-500/15 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-emerald-200">
+              <span className="rounded-md border border-emerald-500/25 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-emerald-200">
                 Requis
               </span>
             </div>
@@ -53,8 +53,8 @@ export function AdminSettings() {
         ))}
       </div>
 
-      <AdminPanel className="mt-6 p-5">
-        <h2 className="font-[family-name:var(--font-syne)] text-lg font-bold text-white">
+      <AdminPanel className="p-5 sm:p-6">
+        <h2 className="font-display text-lg font-bold tracking-tight text-white">
           Campagne iOS
         </h2>
         <p className="mt-2 text-sm text-white/55">

@@ -10,5 +10,5 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <div className="min-h-screen bg-black text-white">{children}</div>;
+  return <div className="min-h-screen bg-[#05070d] text-white">{children}</div>;
 }

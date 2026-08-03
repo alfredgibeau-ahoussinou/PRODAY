@@ -4,6 +4,7 @@ import Link from "next/link";
 import {
   Activity,
   AlertCircle,
+  ArrowUpRight,
   CheckCircle,
   ClipboardList,
   CreditCard,
@@ -11,7 +12,12 @@ import {
   Users,
 } from "lucide-react";
 import { AdminShell } from "@/components/admin/AdminShell";
-import { AdminBanner, AdminKpiCard, AdminPanel } from "@/components/admin/adminUi";
+import {
+  AdminBanner,
+  AdminKpiCard,
+  AdminPanel,
+  AdminSectionHeading,
+} from "@/components/admin/adminUi";
 import { ROUTES } from "@/lib/routes";
 
 type BetaCounts = {
@@ -48,7 +54,7 @@ export function AdminDashboard({
       pendingBetaCount={betaCounts.pending}
     >
       {(betaError || visitsError) && (
-        <div className="mb-6 space-y-2">
+        <div className="space-y-2">
           {betaError ? <AdminBanner tone="warning">Bêta : {betaError}</AdminBanner> : null}
           {visitsError ? (
             <AdminBanner tone="warning">Visites : {visitsError}</AdminBanner>
@@ -56,59 +62,44 @@ export function AdminDashboard({
         </div>
       )}
 
-      <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <AdminKpiCard
-          label="Inscriptions bêta"
-          value={betaCounts.all}
-          hint={`${betaCounts.approved} approuvés`}
-          accent="blue"
+      <section>
+        <AdminSectionHeading
+          title="Indicateurs clés"
+          description="Priorité : file d’attente bêta et trafic."
         />
-        <AdminKpiCard
-          label="En attente d’approbation"
-          value={betaCounts.pending}
-          hint="Action prioritaire"
-          accent="amber"
-        />
-        <AdminKpiCard
-          label="Visites site"
-          value={visitStats.siteVisits}
-          hint={
-            visitStats.siteWeek != null
-              ? `${visitStats.siteWeek} sur 7 jours`
-              : "Total suivi"
-          }
-          accent="violet"
-        />
-        <AdminKpiCard
-          label="Ouvertures app"
-          value={visitStats.appOpens}
-          hint="Tracking Firebase"
-          accent="cyan"
-        />
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <AdminKpiCard
+            label="Inscriptions bêta"
+            value={betaCounts.all}
+            hint={`${betaCounts.approved} approuvés · ${betaCounts.rejected} refusés`}
+            accent="blue"
+          />
+          <AdminKpiCard
+            label="En attente"
+            value={betaCounts.pending}
+            hint="Action prioritaire"
+            accent="amber"
+          />
+          <AdminKpiCard
+            label="Visites site"
+            value={visitStats.siteVisits}
+            hint={
+              visitStats.siteWeek != null
+                ? `${visitStats.siteWeek} sur 7 jours`
+                : "Total suivi"
+            }
+            accent="navy"
+          />
+          <AdminKpiCard
+            label="Ouvertures app"
+            value={visitStats.appOpens}
+            hint="Tracking Firebase"
+            accent="cyan"
+          />
+        </div>
       </section>
 
-      <section className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <AdminKpiCard
-          label="Approuvés"
-          value={betaCounts.approved}
-          accent="emerald"
-        />
-        <AdminKpiCard label="Refusés" value={betaCounts.rejected} accent="red" />
-        <AdminKpiCard
-          label="Abonnements (Stripe)"
-          value="—"
-          hint="À brancher sur Stripe"
-          accent="blue"
-        />
-        <AdminKpiCard
-          label="Revenu estimé"
-          value="—"
-          hint="Nécessite Stripe Billing API"
-          accent="violet"
-        />
-      </section>
-
-      <section className="mt-8">
+      <section>
         {betaCounts.pending > 0 ? (
           <AdminBanner tone="warning">
             <div className="flex items-start gap-3">
@@ -120,9 +111,10 @@ export function AdminDashboard({
                 </p>
                 <Link
                   href={ROUTES.adminBeta}
-                  className="mt-1 inline-block text-sm font-medium text-amber-200 hover:text-white"
+                  className="mt-1 inline-flex items-center gap-1 text-sm font-medium text-amber-200 transition hover:text-white"
                 >
-                  Ouvrir la liste d’attente →
+                  Ouvrir la liste d’attente
+                  <ArrowUpRight size={14} />
                 </Link>
               </div>
             </div>
@@ -137,53 +129,84 @@ export function AdminDashboard({
         )}
       </section>
 
-      <section className="mt-8 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {[
-          {
-            href: ROUTES.adminBeta,
-            icon: ClipboardList,
-            title: "Liste d’attente",
-            desc: "Approuver / refuser avec note interne",
-          },
-          {
-            href: ROUTES.adminUsers,
-            icon: Users,
-            title: "Utilisateurs",
-            desc: "Comptes, rôles et suspension",
-          },
-          {
-            href: ROUTES.adminSubscriptions,
-            icon: CreditCard,
-            title: "Abonnements",
-            desc: "Plans Free / Pro (hooks Stripe)",
-          },
-          {
-            href: ROUTES.adminReferrals,
-            icon: Gift,
-            title: "Parrainage",
-            desc: "Codes et récompenses",
-          },
-          {
-            href: ROUTES.adminVisites,
-            icon: Activity,
-            title: "Visites",
-            desc: "Trafic site et ouvertures app",
-          },
-          {
-            href: ROUTES.adminReports,
-            icon: AlertCircle,
-            title: "Modération",
-            desc: "Signalements et files",
-          },
-        ].map((item) => (
-          <Link key={item.href} href={item.href}>
-            <AdminPanel className="h-full p-5 transition hover:border-[#0054F0]/40 hover:bg-white/[0.05]">
-              <item.icon className="text-[#4C8BFF]" size={22} />
-              <h3 className="mt-3 font-semibold text-white">{item.title}</h3>
-              <p className="mt-1 text-sm text-white/50">{item.desc}</p>
-            </AdminPanel>
-          </Link>
-        ))}
+      <section>
+        <AdminSectionHeading
+          title="Raccourcis"
+          description="Accès rapide aux modules fondateurs."
+        />
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+          {[
+            {
+              href: ROUTES.adminBeta,
+              icon: ClipboardList,
+              title: "Liste d’attente",
+              desc: "Approuver / refuser avec note interne",
+            },
+            {
+              href: ROUTES.adminUsers,
+              icon: Users,
+              title: "Utilisateurs",
+              desc: "Comptes, rôles et suspension",
+            },
+            {
+              href: ROUTES.adminSubscriptions,
+              icon: CreditCard,
+              title: "Abonnements",
+              desc: "Plans Free / Pro (hooks Stripe)",
+            },
+            {
+              href: ROUTES.adminReferrals,
+              icon: Gift,
+              title: "Parrainage",
+              desc: "Codes et récompenses",
+            },
+            {
+              href: ROUTES.adminVisites,
+              icon: Activity,
+              title: "Visites",
+              desc: "Trafic site et ouvertures app",
+            },
+            {
+              href: ROUTES.adminReports,
+              icon: AlertCircle,
+              title: "Modération",
+              desc: "Signalements et files",
+            },
+          ].map((item) => (
+            <Link key={item.href} href={item.href} className="group block">
+              <AdminPanel className="h-full p-5 transition group-hover:border-[#0054F0]/35 group-hover:bg-white/[0.04]">
+                <div className="flex items-start justify-between gap-3">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0054F0]/15 text-[#7AA7FF] ring-1 ring-[#0054F0]/20 transition group-hover:bg-[#0054F0] group-hover:text-white">
+                    <item.icon size={18} />
+                  </span>
+                  <ArrowUpRight
+                    size={16}
+                    className="text-white/25 transition group-hover:text-[#7AA7FF]"
+                  />
+                </div>
+                <h3 className="mt-4 font-display text-base font-semibold tracking-tight text-white">
+                  {item.title}
+                </h3>
+                <p className="mt-1 text-sm leading-relaxed text-white/45">{item.desc}</p>
+              </AdminPanel>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      <section className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <AdminKpiCard
+          label="Abonnements (Stripe)"
+          value="—"
+          hint="À brancher sur Stripe"
+          accent="blue"
+        />
+        <AdminKpiCard
+          label="Revenu estimé"
+          value="—"
+          hint="Nécessite Stripe Billing API"
+          accent="navy"
+        />
       </section>
     </AdminShell>
   );
