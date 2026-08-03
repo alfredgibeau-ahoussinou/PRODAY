@@ -6,6 +6,7 @@
  * - Envoie un e-mail « définir mon mot de passe » (Brevo / transport auth)
  */
 import * as functions from 'firebase-functions';
+import { onDocumentCreated } from 'firebase-functions/v2/firestore';
 import * as crypto from 'crypto';
 import { admin } from './firebaseAdmin';
 import { renderAuthEmailTemplate } from './authEmailTemplates';
@@ -234,21 +235,24 @@ export async function provisionParentForMinorUser(
   return { parentUid, created, emailSent, linked: true };
 }
 
-/** Trigger : inscription mineur → provision parent. */
-export const onMinorUserCreatedProvisionParent = functions.firestore
-  .document('users/{uid}')
-  .onCreate(async (snap, context) => {
+/** Trigger : inscription mineur → provision parent (Gen2, europe-west1 / Firestore eur3). */
+export const onMinorUserCreatedProvisionParent = onDocumentCreated(
+  { document: 'users/{uid}', region: 'europe-west1' },
+  async (event) => {
+    const snap = event.data;
+    if (!snap) return;
     const data = snap.data();
     if (!data) return;
     try {
-      const result = await provisionParentForMinorUser(context.params.uid, data);
+      const result = await provisionParentForMinorUser(event.params.uid, data);
       if (result) {
-        console.log('[parentAccount] provisioned', context.params.uid, result);
+        console.log('[parentAccount] provisioned', event.params.uid, result);
       }
     } catch (e) {
-      console.error('[parentAccount] onCreate failed', context.params.uid, e);
+      console.error('[parentAccount] onCreate failed', event.params.uid, e);
     }
-  });
+  },
+);
 
 /**
  * Callable : le mineur (ou admin) peut relancer la provision / l’e-mail.
