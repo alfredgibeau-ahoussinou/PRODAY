@@ -10,14 +10,14 @@ const CHOICES = [
     title: "Joueur",
     subtitle: "Trouver un club ou des opportunités",
     icon: "⚽",
-    href: ROUTES.proJoueur,
+    href: ROUTES.joueur,
   },
   {
     id: "coach",
     title: "Coach",
     subtitle: "Gérer une équipe et recruter",
     icon: "🏆",
-    href: ROUTES.amateur,
+    href: ROUTES.proStaff,
   },
   {
     id: "club",

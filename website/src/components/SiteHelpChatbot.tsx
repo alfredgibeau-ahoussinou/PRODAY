@@ -75,24 +75,30 @@ const COMMON_ENTRIES: HelpEntry[] = [
 
 function entriesForPath(pathname: string, pricingHref: string): HelpEntry[] {
   const poleHint: HelpEntry[] = [];
-  if (pathname.startsWith("/amateur") || pathname.startsWith("/homme") || pathname.startsWith("/woman")) {
+  if (
+    pathname.startsWith("/joueur") ||
+    pathname.startsWith("/amateur") ||
+    pathname.startsWith("/pro-joueur") ||
+    pathname.startsWith("/homme") ||
+    pathname.startsWith("/woman")
+  ) {
     poleHint.push({
-      id: "pole-amateur",
-      question: "Que regroupe le pôle Amateur ?",
+      id: "pole-joueur",
+      question: "Que regroupe le Pôle Joueur ?",
       answer:
-        "Équipe, Club, Matchs, Covoiturage, Reels, Shop et Santé. Plus le module Sponsors depuis l'Accueil.",
-      href: ROUTES.amateur,
-      hrefLabel: "Pôle Amateur",
+        "Un seul espace Amateur → Centre → Pro. Badges, Mercato, CV, confidentialité contacts et demandes de message agent.",
+      href: ROUTES.joueur,
+      hrefLabel: "Pôle Joueur",
     });
   }
-  if (pathname.startsWith("/pro-joueur") || pathname.startsWith("/pro")) {
+  if (pathname.startsWith("/pro-club") || pathname.startsWith("/pro-staff") || pathname === "/pro") {
     poleHint.push({
       id: "pole-pro",
-      question: "Que regroupe Pro Joueur ?",
+      question: "Club ou Staff ?",
       answer:
-        "Carrière (avec Visibilité), Opportunités, Réels, Groupe, Shop et Profil. Sponsors via le module Accueil.",
-      href: ROUTES.proJoueur,
-      hrefLabel: "Pro Joueur",
+        "Club : structure, recrutement kanban et vitrine. Staff : calendrier structure, convocations premium, agent et Mercato Pro.",
+      href: ROUTES.proStaff,
+      hrefLabel: "Pôle Staff",
     });
   }
   if (pathname.startsWith("/sante")) {
