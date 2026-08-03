@@ -22,6 +22,7 @@ import {
   createRecordTrafficVisitHandler,
   createWebsiteTrafficStatsAdminHandler,
 } from './trafficStats';
+import { createWebsiteAdminStatsHandler } from './websiteAdminStats';
 import { createSubmitSponsorQuoteRequestHandler } from './sponsorQuoteRequest';
 import {
   createAdminSendSponsorQuoteHandler,
@@ -860,6 +861,12 @@ export const recordTrafficVisit = functions
 export const websiteTrafficStatsAdmin = functions
   .region('europe-west1')
   .https.onRequest(createWebsiteTrafficStatsAdminHandler(db));
+
+/** Agrégats users / abonnements / parrainage / signalements — admin site. */
+export const websiteAdminStats = functions
+  .region('europe-west1')
+  .runWith({ timeoutSeconds: 60, memory: '512MB' })
+  .https.onRequest(createWebsiteAdminStatsHandler(db));
 
 /** Approuve une inscription bêta et envoie l'email de bienvenue — admin uniquement. */
 export const adminApproveBetaAccess = functions

@@ -3,11 +3,11 @@
 import { AdminShell } from "@/components/admin/AdminShell";
 import {
   AdminBanner,
-  AdminMockBadge,
   AdminPanel,
   AdminTableShell,
 } from "@/components/admin/adminUi";
 
+/** Matrice documentaire des droits futurs — pas des stats inventées. */
 const ROLES = [
   {
     id: "founder",
@@ -35,20 +35,17 @@ export function AdminRoles() {
   return (
     <AdminShell
       title="Rôles & permissions"
-      subtitle="Matrice des droits admin. Aujourd’hui le site utilise un minicode fondateur unique."
-      actions={<AdminMockBadge />}
+      subtitle="Cible produit. Aujourd’hui le site utilise un minicode fondateur unique — pas de comptes rôles live."
     >
       <AdminBanner tone="info">
-        Auth actuelle : session PIN fondateur. Hook futur : rôles Firebase Custom Claims +{" "}
-        <code className="text-white/80">/api/admin/roles</code>.
+        Auth actuelle : session PIN fondateur. Cette page décrit la matrice prévue, pas des
+        utilisateurs fictifs.
       </AdminBanner>
 
-      <div className="mt-6 grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-2">
         {ROLES.map((role) => (
           <AdminPanel key={role.id} className="p-5">
-            <h2 className="font-[family-name:var(--font-syne)] text-lg font-bold text-white">
-              {role.label}
-            </h2>
+            <h2 className="font-display text-lg font-bold text-white">{role.label}</h2>
             <p className="mt-1 text-xs uppercase tracking-wide text-white/40">{role.id}</p>
             <ul className="mt-4 space-y-1.5">
               {role.perms.map((p) => (
@@ -65,28 +62,27 @@ export function AdminRoles() {
       </div>
 
       <AdminTableShell>
-        <table className="mt-8 w-full min-w-[640px] text-left text-sm">
-          <thead className="border-b border-white/10 text-xs uppercase tracking-wide text-white/40">
+        <table className="min-w-[640px]">
+          <thead>
             <tr>
-              <th className="px-4 py-3">Permission</th>
-              <th className="px-4 py-3">Fondateur</th>
-              <th className="px-4 py-3">Modérateur</th>
-              <th className="px-4 py-3">Support</th>
+              <th>Permission</th>
+              <th>Fondateur</th>
+              <th>Modérateur</th>
+              <th>Support</th>
             </tr>
           </thead>
-          <tbody className="text-white/70">
+          <tbody>
             {[
               ["Approuver bêta", "Oui", "Non", "Non"],
               ["Modérer signalements", "Oui", "Oui", "Non"],
-              ["Renvoyer emails", "Oui", "Non", "Oui"],
-              ["Voir analytics", "Oui", "Oui", "Oui"],
-            ].map((row) => (
-              <tr key={row[0]} className="border-b border-white/5">
-                {row.map((cell) => (
-                  <td key={cell} className="px-4 py-3">
-                    {cell}
-                  </td>
-                ))}
+              ["Lire utilisateurs", "Oui", "Oui", "Oui"],
+              ["Campagnes iOS", "Oui", "Non", "Non"],
+            ].map(([perm, a, b, c]) => (
+              <tr key={perm}>
+                <td className="text-white">{perm}</td>
+                <td className="text-white/65">{a}</td>
+                <td className="text-white/65">{b}</td>
+                <td className="text-white/65">{c}</td>
               </tr>
             ))}
           </tbody>
