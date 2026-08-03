@@ -6,32 +6,36 @@
   <title>ProDay — Présentation</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
   <style>
     :root {
       --accent: #0054F0;
+      --accent-2: #3D7EFF;
       --accent-soft: rgba(0, 84, 240, 0.22);
       --deep: #001854;
       --navy: #000C30;
-      --black: #07090F;
+      --black: #05070E;
       --white: #FFFFFF;
-      --muted: rgba(255, 255, 255, 0.64);
-      --muted-2: rgba(255, 255, 255, 0.42);
-      --card: rgba(255, 255, 255, 0.055);
-      --border: rgba(255, 255, 255, 0.12);
-      --glow: rgba(0, 84, 240, 0.45);
-      --font: "Outfit", "Avenir Next", "Segoe UI", sans-serif;
+      --muted: rgba(255, 255, 255, 0.66);
+      --muted-2: rgba(255, 255, 255, 0.4);
+      --card: rgba(255, 255, 255, 0.045);
+      --card-hover: rgba(255, 255, 255, 0.08);
+      --border: rgba(255, 255, 255, 0.11);
+      --border-strong: rgba(255, 255, 255, 0.2);
+      --glow: rgba(0, 84, 240, 0.5);
+      --glass: rgba(8, 12, 28, 0.55);
+      --font: "Instrument Sans", "Avenir Next", "Segoe UI", sans-serif;
       --display: "Syne", "Avenir Next", "Segoe UI", sans-serif;
-      --joueur: #0054F0;
-      --amateur: #2563EB;
-      --centre: #16A34A;
-      --pro: #EAB308;
-      --supporter: #3C00F0;
+      --joueur: #4D8AFF;
+      --supporter: #6B7CFF;
       --sante: #00CCB4;
+      --sante-glow: rgba(0, 204, 180, 0.45);
       --club: #006CFC;
-      --staff: #3B5BFF;
+      --staff: #5B7CFF;
       --events: #0891B2;
       --sponsor: #D4AF37;
+      --covoit: #0054F0;
+      --ease: cubic-bezier(0.22, 1, 0.36, 1);
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -45,17 +49,19 @@
       -webkit-font-smoothing: antialiased;
     }
 
+    /* Atmosphere */
     body::before {
       content: "";
       position: fixed;
       inset: 0;
       background:
-        radial-gradient(ellipse 80% 55% at 50% -10%, rgba(0, 84, 240, 0.28), transparent 55%),
-        radial-gradient(ellipse 45% 35% at 100% 100%, rgba(0, 28, 100, 0.45), transparent 50%),
-        radial-gradient(ellipse 30% 25% at 0% 80%, rgba(0, 204, 180, 0.08), transparent 45%),
-        linear-gradient(165deg, var(--navy) 0%, var(--black) 55%, #05070C 100%);
+        radial-gradient(ellipse 90% 60% at 50% -15%, rgba(0, 84, 240, 0.32), transparent 58%),
+        radial-gradient(ellipse 40% 40% at 95% 85%, rgba(0, 40, 140, 0.35), transparent 55%),
+        radial-gradient(ellipse 35% 30% at 5% 75%, rgba(0, 204, 180, 0.07), transparent 50%),
+        linear-gradient(168deg, var(--navy) 0%, var(--black) 48%, #03050A 100%);
       z-index: 0;
       pointer-events: none;
+      animation: atmosphere-shift 18s ease-in-out infinite alternate;
     }
 
     body::after {
@@ -63,13 +69,57 @@
       position: fixed;
       inset: 0;
       background-image:
-        linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
-      background-size: 64px 64px;
-      mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, black, transparent);
+        linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px);
+      background-size: 72px 72px;
+      mask-image: radial-gradient(ellipse 65% 55% at 50% 38%, black, transparent);
       z-index: 0;
       pointer-events: none;
-      opacity: 0.7;
+      opacity: 0.55;
+    }
+
+    .orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(80px);
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.45;
+      animation: orb-float 14s ease-in-out infinite;
+    }
+
+    .orb-a {
+      width: 38vw;
+      height: 38vw;
+      max-width: 520px;
+      max-height: 520px;
+      background: rgba(0, 84, 240, 0.35);
+      top: -8%;
+      right: -6%;
+    }
+
+    .orb-b {
+      width: 28vw;
+      height: 28vw;
+      max-width: 380px;
+      max-height: 380px;
+      background: rgba(0, 204, 180, 0.12);
+      bottom: 5%;
+      left: -8%;
+      animation-delay: -4s;
+      animation-duration: 18s;
+    }
+
+    .orb-c {
+      width: 18vw;
+      height: 18vw;
+      max-width: 240px;
+      max-height: 240px;
+      background: rgba(61, 126, 255, 0.2);
+      top: 42%;
+      left: 48%;
+      animation-delay: -8s;
+      animation-duration: 12s;
     }
 
     .deck {
@@ -79,21 +129,24 @@
       height: 100%;
     }
 
+    /* Slides */
     .slide {
       position: absolute;
       inset: 0;
       display: flex;
       flex-direction: column;
       justify-content: center;
-      padding: clamp(2rem, 5vw, 4rem) clamp(2rem, 8vw, 6.5rem);
+      padding: clamp(2rem, 5vw, 4.25rem) clamp(2rem, 8vw, 6.75rem);
       opacity: 0;
       visibility: hidden;
       pointer-events: none;
-      transform: translateY(28px) scale(0.985);
+      transform: translateY(36px) scale(0.978);
+      filter: blur(6px);
       transition:
-        opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1),
-        transform 0.55s cubic-bezier(0.22, 1, 0.36, 1),
-        visibility 0.5s;
+        opacity 0.55s var(--ease),
+        transform 0.65s var(--ease),
+        filter 0.55s var(--ease),
+        visibility 0.55s;
     }
 
     .slide.active {
@@ -101,73 +154,110 @@
       visibility: visible;
       pointer-events: auto;
       transform: translateY(0) scale(1);
+      filter: blur(0);
     }
 
     .slide.exit-up {
       opacity: 0;
-      transform: translateY(-18px) scale(0.99);
+      transform: translateY(-28px) scale(0.985);
+      filter: blur(4px);
     }
+
+    .slide.exit-down {
+      opacity: 0;
+      transform: translateY(28px) scale(0.985);
+      filter: blur(4px);
+    }
+
+    /* Theme accents per slide */
+    .slide[data-theme="covoit"].active ~ .theme-tint,
+    .slide[data-theme="covoit"].active { --slide-accent: var(--covoit); }
 
     .slide-label {
-      font-size: 0.72rem;
+      font-size: 0.7rem;
       font-weight: 700;
-      letter-spacing: 0.2em;
+      letter-spacing: 0.22em;
       text-transform: uppercase;
-      color: var(--accent);
-      margin-bottom: 0.85rem;
-      opacity: 0;
-      transform: translateY(10px);
-    }
-
-    .slide.active .slide-label {
-      animation: rise-in 0.55s 0.08s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-    }
-
-    h1, h2 {
-      font-family: var(--display);
-      font-weight: 800;
-      letter-spacing: -0.035em;
-      line-height: 1.05;
-    }
-
-    h1 {
-      font-size: clamp(2.4rem, 6.5vw, 4.75rem);
-      text-transform: uppercase;
-      max-width: 18ch;
-    }
-
-    h2 {
-      font-size: clamp(1.7rem, 4.2vw, 2.85rem);
-      margin-bottom: 1rem;
-      max-width: 22ch;
+      color: var(--accent-2);
+      margin-bottom: 0.9rem;
       opacity: 0;
       transform: translateY(14px);
     }
 
+    .slide.active .slide-label {
+      animation: rise-in 0.6s 0.06s var(--ease) forwards;
+    }
+
+    .slide[data-theme="sante"] .slide-label { color: var(--sante); }
+    .slide[data-theme="covoit"] .slide-label { color: var(--accent-2); }
+
+    h1, h2 {
+      font-family: var(--display);
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      line-height: 1.02;
+    }
+
+    h1 {
+      font-size: clamp(2.5rem, 6.8vw, 5rem);
+      text-transform: uppercase;
+      max-width: 16ch;
+    }
+
+    h2 {
+      font-size: clamp(1.75rem, 4.4vw, 3rem);
+      margin-bottom: 0.35rem;
+      max-width: 20ch;
+      opacity: 0;
+      transform: translateY(18px);
+    }
+
     .slide.active h2 {
-      animation: rise-in 0.6s 0.14s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+      animation: rise-in 0.65s 0.12s var(--ease) forwards;
+    }
+
+    .kinetic {
+      display: inline-block;
+      background: linear-gradient(105deg, #fff 0%, #fff 40%, var(--accent-2) 50%, #fff 60%, #fff 100%);
+      background-size: 220% 100%;
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .slide.active .kinetic {
+      animation:
+        rise-in 0.65s 0.12s var(--ease) forwards,
+        kinetic-shimmer 4.5s 1s ease-in-out infinite;
+    }
+
+    .slide[data-theme="sante"] .kinetic {
+      background: linear-gradient(105deg, #fff 0%, #fff 40%, var(--sante) 50%, #fff 60%, #fff 100%);
+      background-size: 220% 100%;
+      -webkit-background-clip: text;
+      background-clip: text;
     }
 
     .tagline {
-      font-size: clamp(0.8rem, 1.4vw, 0.95rem);
+      font-size: clamp(0.78rem, 1.35vw, 0.92rem);
       font-weight: 700;
-      letter-spacing: 0.22em;
-      color: var(--accent);
-      margin-top: 1.1rem;
+      letter-spacing: 0.24em;
+      color: var(--accent-2);
+      margin-top: 1.15rem;
     }
 
     .lead {
-      font-size: clamp(1.05rem, 2vw, 1.4rem);
+      font-size: clamp(1.05rem, 2vw, 1.38rem);
       line-height: 1.5;
       color: var(--muted);
-      max-width: 48rem;
-      margin-top: 0.85rem;
+      max-width: 46rem;
+      margin-top: 0.9rem;
       opacity: 0;
-      transform: translateY(12px);
+      transform: translateY(14px);
     }
 
     .slide.active .lead {
-      animation: rise-in 0.6s 0.22s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+      animation: rise-in 0.65s 0.2s var(--ease) forwards;
     }
 
     .logo-wrap {
@@ -175,23 +265,23 @@
       align-items: center;
       justify-content: center;
       background: var(--white);
-      border-radius: 1.1rem;
-      padding: 0.85rem 1.4rem;
-      margin-bottom: 1.6rem;
-      box-shadow: 0 24px 70px -24px var(--glow);
+      border-radius: 1.15rem;
+      padding: 0.9rem 1.45rem;
+      margin-bottom: 1.7rem;
+      box-shadow: 0 28px 80px -28px var(--glow);
       position: relative;
       opacity: 0;
-      transform: translateY(16px) scale(0.96);
+      transform: translateY(18px) scale(0.94);
     }
 
     .slide.active .logo-wrap {
       animation:
-        rise-in 0.65s 0.05s cubic-bezier(0.22, 1, 0.36, 1) forwards,
-        logo-glow 3.6s 0.8s ease-in-out infinite;
+        rise-in 0.7s 0.04s var(--ease) forwards,
+        logo-glow 3.8s 0.9s ease-in-out infinite;
     }
 
     .logo-wrap img {
-      height: clamp(48px, 7.5vw, 70px);
+      height: clamp(50px, 7.5vw, 72px);
       width: auto;
       display: block;
     }
@@ -200,92 +290,284 @@
       width: 0;
       height: 3px;
       border-radius: 999px;
-      background: linear-gradient(90deg, var(--accent), rgba(0, 84, 240, 0.15));
-      margin: 1.1rem 0 0.25rem;
+      background: linear-gradient(90deg, var(--accent), transparent);
+      margin: 1.15rem 0 0.3rem;
     }
 
     .slide.active .accent-line {
-      animation: draw-line 0.7s 0.28s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+      animation: draw-line 0.8s 0.26s var(--ease) forwards;
     }
 
-    .grid-2, .grid-3, .grid-4, .poles, .badges, .price-row, .cta-box, .timeline, .feature-list {
+    .slide[data-theme="sante"] .accent-line {
+      background: linear-gradient(90deg, var(--sante), transparent);
+    }
+
+    /* Stagger containers */
+    .stagger > * {
       opacity: 0;
-      transform: translateY(16px);
+      transform: translateY(20px);
+    }
+
+    .slide.active .stagger > *:nth-child(1) { animation: rise-in 0.55s 0.28s var(--ease) forwards; }
+    .slide.active .stagger > *:nth-child(2) { animation: rise-in 0.55s 0.36s var(--ease) forwards; }
+    .slide.active .stagger > *:nth-child(3) { animation: rise-in 0.55s 0.44s var(--ease) forwards; }
+    .slide.active .stagger > *:nth-child(4) { animation: rise-in 0.55s 0.52s var(--ease) forwards; }
+    .slide.active .stagger > *:nth-child(5) { animation: rise-in 0.55s 0.6s var(--ease) forwards; }
+    .slide.active .stagger > *:nth-child(6) { animation: rise-in 0.55s 0.68s var(--ease) forwards; }
+    .slide.active .stagger > *:nth-child(7) { animation: rise-in 0.55s 0.76s var(--ease) forwards; }
+
+    .grid-2, .grid-3, .grid-4, .poles, .flow, .hero-duo, .price-row, .cta-box, .timeline, .feature-list, .master-grid {
+      opacity: 0;
+      transform: translateY(18px);
     }
 
     .slide.active .grid-2,
     .slide.active .grid-3,
     .slide.active .grid-4,
     .slide.active .poles,
-    .slide.active .badges,
+    .slide.active .flow,
+    .slide.active .hero-duo,
     .slide.active .price-row,
     .slide.active .cta-box,
     .slide.active .timeline,
-    .slide.active .feature-list {
-      animation: rise-in 0.65s 0.3s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    .slide.active .feature-list,
+    .slide.active .master-grid {
+      animation: rise-in 0.7s 0.28s var(--ease) forwards;
     }
 
     .grid-2 {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 0.9rem;
-      margin-top: 1.4rem;
+      gap: 0.95rem;
+      margin-top: 1.45rem;
       max-width: 56rem;
     }
 
     .grid-3 {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-      gap: 0.75rem;
-      margin-top: 1.25rem;
-      max-width: 62rem;
+      gap: 0.8rem;
+      margin-top: 1.3rem;
+      max-width: 64rem;
     }
 
     .grid-4 {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 0.7rem;
-      margin-top: 1.25rem;
+      gap: 0.75rem;
+      margin-top: 1.3rem;
       max-width: 64rem;
     }
 
+    /* Glass cards */
     .card {
-      background: var(--card);
+      background: linear-gradient(155deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.025));
       border: 1px solid var(--border);
-      border-radius: 1rem;
-      padding: 1.05rem 1.2rem;
-      backdrop-filter: blur(10px);
-      transition: border-color 0.25s ease, background 0.25s ease;
+      border-radius: 1.15rem;
+      padding: 1.15rem 1.25rem;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      transition:
+        border-color 0.3s ease,
+        background 0.3s ease,
+        transform 0.35s var(--ease),
+        box-shadow 0.35s ease;
+      position: relative;
+      overflow: hidden;
     }
 
+    .card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(125deg, rgba(255, 255, 255, 0.08), transparent 42%);
+      opacity: 0;
+      transition: opacity 0.35s ease;
+      pointer-events: none;
+    }
+
+    .card:hover,
+    .card:focus-within {
+      border-color: var(--border-strong);
+      background: linear-gradient(155deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.04));
+      transform: translateY(-4px);
+      box-shadow: 0 22px 50px -28px rgba(0, 84, 240, 0.55);
+    }
+
+    .card:hover::before,
+    .card:focus-within::before { opacity: 1; }
+
     .card h3 {
-      font-size: 0.98rem;
+      font-size: 1rem;
       font-weight: 700;
-      margin-bottom: 0.35rem;
+      margin-bottom: 0.4rem;
+      letter-spacing: -0.02em;
     }
 
     .card p, .card li {
-      font-size: 0.86rem;
-      line-height: 1.45;
+      font-size: 0.88rem;
+      line-height: 1.48;
       color: var(--muted);
     }
 
-    .card ul {
-      list-style: none;
-      margin-top: 0.45rem;
-    }
-
-    .card li + li { margin-top: 0.28rem; }
-
+    .card ul { list-style: none; margin-top: 0.5rem; }
+    .card li + li { margin-top: 0.3rem; }
     .card li::before {
       content: "→ ";
-      color: var(--accent);
+      color: var(--accent-2);
       font-weight: 700;
     }
 
+    .card .icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 2.2rem;
+      height: 2.2rem;
+      border-radius: 0.65rem;
+      margin-bottom: 0.75rem;
+      font-size: 0.95rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      background: rgba(0, 84, 240, 0.18);
+      border: 1px solid rgba(0, 84, 240, 0.35);
+      color: var(--accent-2);
+    }
+
+    .card.sante-card .icon {
+      background: rgba(0, 204, 180, 0.15);
+      border-color: rgba(0, 204, 180, 0.35);
+      color: var(--sante);
+    }
+
+    /* Dual hero */
+    .hero-duo {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.1rem;
+      margin-top: 1.6rem;
+      max-width: 58rem;
+    }
+
+    .hero-pillar {
+      padding: 1.6rem 1.5rem 1.5rem;
+      min-height: 11.5rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+    }
+
+    .hero-pillar.covoit {
+      border-color: rgba(0, 84, 240, 0.4);
+      background:
+        radial-gradient(ellipse 80% 70% at 10% 0%, rgba(0, 84, 240, 0.28), transparent 55%),
+        linear-gradient(160deg, rgba(0, 84, 240, 0.16), rgba(255, 255, 255, 0.03));
+      box-shadow: 0 0 0 1px rgba(0, 84, 240, 0.12), 0 28px 60px -36px var(--glow);
+    }
+
+    .hero-pillar.sante {
+      border-color: rgba(0, 204, 180, 0.35);
+      background:
+        radial-gradient(ellipse 80% 70% at 10% 0%, rgba(0, 204, 180, 0.2), transparent 55%),
+        linear-gradient(160deg, rgba(0, 204, 180, 0.12), rgba(255, 255, 255, 0.03));
+      box-shadow: 0 0 0 1px rgba(0, 204, 180, 0.1), 0 28px 60px -36px var(--sante-glow);
+    }
+
+    .hero-pillar .pillar-kicker {
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      margin-bottom: 0.55rem;
+      color: var(--accent-2);
+    }
+
+    .hero-pillar.sante .pillar-kicker { color: var(--sante); }
+
+    .hero-pillar h3 {
+      font-family: var(--display);
+      font-size: clamp(1.45rem, 2.8vw, 1.9rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin-bottom: 0.5rem;
+    }
+
+    .hero-pillar p {
+      font-size: 0.95rem;
+      color: var(--muted);
+      max-width: 28ch;
+    }
+
+    .slide.active .hero-pillar.covoit {
+      animation: float-soft 5.5s 1s ease-in-out infinite;
+    }
+
+    .slide.active .hero-pillar.sante {
+      animation: float-soft 5.5s 1.4s ease-in-out infinite;
+    }
+
+    /* Masterpiece flow */
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 0.7rem;
+      margin-top: 1.35rem;
+      max-width: 64rem;
+      counter-reset: step;
+    }
+
+    .flow-step {
+      position: relative;
+      padding-top: 1.35rem;
+    }
+
+    .flow-step::before {
+      counter-increment: step;
+      content: "0" counter(step);
+      position: absolute;
+      top: 0.95rem;
+      right: 1rem;
+      font-family: var(--display);
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      color: rgba(255, 255, 255, 0.22);
+    }
+
+    .master-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 0.8rem;
+      margin-top: 1.15rem;
+      max-width: 64rem;
+    }
+
+    .live-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #7CF0C8;
+      margin-bottom: 0.45rem;
+    }
+
+    .live-badge::before {
+      content: "";
+      width: 0.45rem;
+      height: 0.45rem;
+      border-radius: 50%;
+      background: #22C55E;
+      box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.5);
+      animation: pulse-dot 1.6s ease-out infinite;
+    }
+
+    /* Poles secondary */
     .poles {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
       gap: 0.7rem;
       margin-top: 1.35rem;
       max-width: 64rem;
@@ -293,12 +575,12 @@
 
     .pole {
       border-left: 3px solid var(--accent);
-      min-height: 7.2rem;
+      min-height: 6.4rem;
+      opacity: 0.88;
     }
 
     .pole.joueur { border-color: var(--joueur); }
     .pole.supporter { border-color: var(--supporter); }
-    .pole.sante { border-color: var(--sante); }
     .pole.club { border-color: var(--club); }
     .pole.staff { border-color: var(--staff); }
     .pole.events { border-color: var(--events); }
@@ -306,7 +588,7 @@
 
     .pole-tag {
       display: block;
-      font-size: 0.62rem;
+      font-size: 0.6rem;
       font-weight: 700;
       letter-spacing: 0.14em;
       text-transform: uppercase;
@@ -314,41 +596,38 @@
       margin-bottom: 0.35rem;
     }
 
-    .badges {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.75rem;
-      margin-top: 1.35rem;
-      max-width: 56rem;
-    }
-
-    .badge-card {
-      flex: 1 1 160px;
-      border-top: 3px solid var(--accent);
-    }
-
-    .badge-card.amateur { border-top-color: var(--amateur); }
-    .badge-card.centre { border-top-color: var(--centre); }
-    .badge-card.pro { border-top-color: var(--pro); }
-
     .pill-row {
       display: flex;
       flex-wrap: wrap;
       gap: 0.5rem;
-      margin-top: 1rem;
+      margin-top: 1.1rem;
+      opacity: 0;
+      transform: translateY(12px);
+    }
+
+    .slide.active .pill-row {
+      animation: rise-in 0.6s 0.42s var(--ease) forwards;
     }
 
     .pill {
       display: inline-flex;
       align-items: center;
       gap: 0.35rem;
-      padding: 0.4rem 0.75rem;
+      padding: 0.42rem 0.8rem;
       border-radius: 999px;
       border: 1px solid var(--border);
       background: rgba(255, 255, 255, 0.04);
       font-size: 0.78rem;
       font-weight: 600;
       color: var(--muted);
+      transition: border-color 0.25s ease, background 0.25s ease, transform 0.25s ease;
+    }
+
+    .pill:hover {
+      border-color: rgba(0, 84, 240, 0.4);
+      background: rgba(0, 84, 240, 0.12);
+      transform: translateY(-2px);
+      color: var(--white);
     }
 
     .pill strong { color: var(--white); font-weight: 700; }
@@ -356,23 +635,20 @@
     .price-row {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 0.85rem;
+      gap: 0.9rem;
       margin-top: 1.35rem;
       max-width: 56rem;
     }
 
-    .price {
-      position: relative;
-      overflow: hidden;
-    }
+    .price { position: relative; overflow: hidden; }
 
     .price .amount {
       font-family: var(--display);
-      font-size: clamp(1.6rem, 3vw, 2.2rem);
+      font-size: clamp(1.65rem, 3vw, 2.25rem);
       font-weight: 800;
       letter-spacing: -0.03em;
       color: var(--white);
-      margin: 0.35rem 0 0.2rem;
+      margin: 0.4rem 0 0.25rem;
     }
 
     .price .amount span {
@@ -383,67 +659,78 @@
 
     .price.highlight {
       border-color: rgba(0, 84, 240, 0.45);
-      background: linear-gradient(160deg, rgba(0, 84, 240, 0.18), rgba(255, 255, 255, 0.04));
-      box-shadow: 0 0 0 1px rgba(0, 84, 240, 0.15), 0 20px 50px -30px var(--glow);
+      background: linear-gradient(160deg, rgba(0, 84, 240, 0.2), rgba(255, 255, 255, 0.04));
+      box-shadow: 0 0 0 1px rgba(0, 84, 240, 0.15), 0 24px 55px -30px var(--glow);
+    }
+
+    .price.sante-highlight {
+      border-color: rgba(0, 204, 180, 0.4);
+      background: linear-gradient(160deg, rgba(0, 204, 180, 0.16), rgba(255, 255, 255, 0.04));
+      box-shadow: 0 0 0 1px rgba(0, 204, 180, 0.12), 0 24px 55px -30px var(--sante-glow);
     }
 
     .price .ribbon {
       position: absolute;
-      top: 0.7rem;
-      right: 0.7rem;
-      font-size: 0.62rem;
+      top: 0.75rem;
+      right: 0.75rem;
+      font-size: 0.6rem;
       font-weight: 700;
-      letter-spacing: 0.08em;
+      letter-spacing: 0.1em;
       text-transform: uppercase;
-      color: var(--accent);
-      background: rgba(0, 84, 240, 0.15);
+      color: var(--accent-2);
+      background: rgba(0, 84, 240, 0.18);
       border: 1px solid rgba(0, 84, 240, 0.35);
       border-radius: 999px;
-      padding: 0.2rem 0.55rem;
+      padding: 0.22rem 0.55rem;
     }
 
     .feature-list {
       display: grid;
-      gap: 0.55rem;
-      margin-top: 1.25rem;
-      max-width: 44rem;
+      gap: 0.6rem;
+      margin-top: 1.3rem;
+      max-width: 46rem;
     }
 
     .feature-list li {
       list-style: none;
       display: flex;
-      gap: 0.75rem;
+      gap: 0.8rem;
       align-items: flex-start;
-      font-size: clamp(0.95rem, 1.5vw, 1.1rem);
+      font-size: clamp(0.95rem, 1.5vw, 1.12rem);
       color: var(--muted);
-      line-height: 1.4;
+      line-height: 1.42;
     }
 
     .feature-list .dot {
       flex-shrink: 0;
       width: 0.55rem;
       height: 0.55rem;
-      margin-top: 0.45rem;
+      margin-top: 0.48rem;
       border-radius: 50%;
       background: var(--accent);
-      box-shadow: 0 0 12px var(--glow);
+      box-shadow: 0 0 14px var(--glow);
     }
 
     .callout {
-      margin-top: 1.35rem;
-      padding: 1rem 1.2rem;
-      border-radius: 1rem;
+      margin-top: 1.4rem;
+      padding: 1.05rem 1.25rem;
+      border-radius: 1.1rem;
       border: 1px solid rgba(0, 84, 240, 0.35);
       background: linear-gradient(120deg, rgba(0, 84, 240, 0.16), rgba(255, 255, 255, 0.03));
-      max-width: 48rem;
+      max-width: 50rem;
       font-size: 0.95rem;
       color: var(--muted);
       opacity: 0;
-      transform: translateY(12px);
+      transform: translateY(14px);
     }
 
     .slide.active .callout {
-      animation: rise-in 0.6s 0.38s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+      animation: rise-in 0.65s 0.48s var(--ease) forwards;
+    }
+
+    .callout.sante-callout {
+      border-color: rgba(0, 204, 180, 0.35);
+      background: linear-gradient(120deg, rgba(0, 204, 180, 0.12), rgba(255, 255, 255, 0.03));
     }
 
     .callout strong { color: var(--white); }
@@ -460,18 +747,25 @@
       grid-template-columns: 8.5rem 1fr;
       gap: 1rem;
       align-items: start;
-      padding: 0.85rem 1rem;
-      background: var(--card);
+      padding: 0.9rem 1.05rem;
+      background: linear-gradient(155deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
       border: 1px solid var(--border);
-      border-radius: 0.9rem;
+      border-radius: 1rem;
+      backdrop-filter: blur(12px);
+      transition: transform 0.3s var(--ease), border-color 0.3s ease;
+    }
+
+    .timeline-item:hover {
+      transform: translateX(4px);
+      border-color: rgba(0, 84, 240, 0.35);
     }
 
     .timeline-item .when {
-      font-size: 0.72rem;
+      font-size: 0.7rem;
       font-weight: 700;
       letter-spacing: 0.1em;
       text-transform: uppercase;
-      color: var(--accent);
+      color: var(--accent-2);
       padding-top: 0.15rem;
     }
 
@@ -481,38 +775,35 @@
       line-height: 1.4;
     }
 
-    .cta-box {
-      margin-top: 1.6rem;
-      max-width: 40rem;
-    }
+    .cta-box { margin-top: 1.65rem; max-width: 40rem; }
 
     .cta-link {
       display: inline-flex;
       align-items: center;
       gap: 0.55rem;
-      padding: 0.95rem 1.45rem;
+      padding: 1rem 1.55rem;
       border-radius: 999px;
-      background: var(--accent);
+      background: linear-gradient(135deg, #0046D0, var(--accent));
       color: var(--white);
       text-decoration: none;
       font-weight: 700;
-      font-size: 1rem;
+      font-size: 1.02rem;
       letter-spacing: 0.01em;
-      box-shadow: 0 18px 50px -18px var(--glow);
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      box-shadow: 0 20px 55px -18px var(--glow);
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
     }
 
     .slide.active .cta-link {
-      animation: cta-breathe 2.8s 0.9s ease-in-out infinite;
+      animation: cta-breathe 2.8s 1s ease-in-out infinite;
     }
 
     .cta-link:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 22px 55px -16px var(--glow);
+      transform: translateY(-3px);
+      box-shadow: 0 26px 60px -14px rgba(0, 84, 240, 0.75);
     }
 
     .cta-secondary {
-      margin-top: 1.1rem;
+      margin-top: 1.15rem;
       font-size: 0.9rem;
       color: var(--muted);
     }
@@ -521,34 +812,53 @@
       color: var(--white);
       text-decoration: none;
       border-bottom: 1px solid rgba(255, 255, 255, 0.25);
+      transition: border-color 0.2s ease;
     }
 
+    .cta-secondary a:hover { border-bottom-color: var(--accent-2); }
+
     .hero-sub {
-      margin-top: 0.35rem;
+      margin-top: 0.4rem;
       font-size: clamp(1.05rem, 2vw, 1.35rem);
       color: var(--muted);
       max-width: 34rem;
       line-height: 1.45;
       opacity: 0;
-      transform: translateY(12px);
+      transform: translateY(14px);
     }
 
     .slide.active .hero-sub {
-      animation: rise-in 0.6s 0.22s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+      animation: rise-in 0.65s 0.2s var(--ease) forwards;
     }
 
     .slide.active h1 {
       opacity: 0;
-      transform: translateY(14px);
-      animation: rise-in 0.65s 0.14s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+      transform: translateY(16px);
+      animation: rise-in 0.7s 0.12s var(--ease) forwards;
     }
 
     .slide.active .tagline {
       opacity: 0;
-      transform: translateY(10px);
-      animation: rise-in 0.6s 0.32s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+      transform: translateY(12px);
+      animation: rise-in 0.65s 0.34s var(--ease) forwards;
     }
 
+    .diff-mark {
+      display: inline-block;
+      margin-left: 0.35rem;
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      vertical-align: middle;
+      padding: 0.18rem 0.45rem;
+      border-radius: 999px;
+      background: rgba(0, 84, 240, 0.2);
+      border: 1px solid rgba(0, 84, 240, 0.4);
+      color: var(--accent-2);
+    }
+
+    /* Nav */
     .nav {
       position: fixed;
       z-index: 20;
@@ -560,28 +870,33 @@
       gap: 0.75rem;
       padding: 0.45rem 0.55rem;
       border-radius: 999px;
-      background: rgba(7, 9, 15, 0.72);
+      background: rgba(5, 7, 14, 0.72);
       border: 1px solid var(--border);
-      backdrop-filter: blur(14px);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      box-shadow: 0 12px 40px -20px rgba(0, 0, 0, 0.8);
     }
 
     .nav button {
-      width: 2.4rem;
-      height: 2.4rem;
+      width: 2.45rem;
+      height: 2.45rem;
       border-radius: 50%;
       border: 1px solid var(--border);
       background: rgba(255, 255, 255, 0.04);
       color: var(--white);
       cursor: pointer;
       font-size: 1rem;
-      transition: background 0.2s ease, opacity 0.2s ease;
+      transition: background 0.2s ease, opacity 0.2s ease, transform 0.2s ease;
     }
 
-    .nav button:hover:not(:disabled) { background: rgba(0, 84, 240, 0.25); }
+    .nav button:hover:not(:disabled) {
+      background: rgba(0, 84, 240, 0.28);
+      transform: scale(1.05);
+    }
     .nav button:disabled { opacity: 0.35; cursor: default; }
 
     #counter {
-      min-width: 3.6rem;
+      min-width: 3.8rem;
       text-align: center;
       font-size: 0.78rem;
       font-weight: 600;
@@ -595,28 +910,58 @@
       left: 0;
       right: 0;
       height: 3px;
-      background: rgba(255, 255, 255, 0.06);
+      background: rgba(255, 255, 255, 0.05);
       z-index: 30;
     }
 
     #progress {
       height: 100%;
       width: 0;
-      background: linear-gradient(90deg, #0040C0, var(--accent), #4D8AFF);
-      box-shadow: 0 0 16px var(--glow);
-      transition: width 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+      background: linear-gradient(90deg, #0038B0, var(--accent), #5B9AFF);
+      box-shadow: 0 0 18px var(--glow);
+      transition: width 0.5s var(--ease);
     }
 
     .hint {
       position: fixed;
       top: 1rem;
-      right: 1.2rem;
+      right: 1.25rem;
       z-index: 20;
-      font-size: 0.68rem;
-      letter-spacing: 0.08em;
+      font-size: 0.66rem;
+      letter-spacing: 0.1em;
       text-transform: uppercase;
       color: var(--muted-2);
       font-weight: 600;
+      opacity: 0;
+      animation: fade-hint 0.8s 1.2s var(--ease) forwards;
+    }
+
+    .dots {
+      position: fixed;
+      z-index: 20;
+      left: 1.25rem;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .dots button {
+      width: 0.4rem;
+      height: 0.4rem;
+      border-radius: 999px;
+      border: none;
+      padding: 0;
+      background: rgba(255, 255, 255, 0.22);
+      cursor: pointer;
+      transition: height 0.35s var(--ease), background 0.35s ease, box-shadow 0.35s ease;
+    }
+
+    .dots button.active {
+      height: 1.15rem;
+      background: var(--accent);
+      box-shadow: 0 0 12px var(--glow);
     }
 
     @keyframes rise-in {
@@ -624,30 +969,63 @@
     }
 
     @keyframes draw-line {
-      to { width: min(8rem, 28vw); }
+      to { width: min(9rem, 30vw); }
     }
 
     @keyframes logo-glow {
-      0%, 100% { box-shadow: 0 24px 70px -24px var(--glow); }
-      50% { box-shadow: 0 28px 80px -18px rgba(0, 84, 240, 0.65); }
+      0%, 100% { box-shadow: 0 28px 80px -28px var(--glow); }
+      50% { box-shadow: 0 32px 90px -20px rgba(0, 84, 240, 0.7); }
     }
 
     @keyframes cta-breathe {
-      0%, 100% { box-shadow: 0 18px 50px -18px var(--glow); }
-      50% { box-shadow: 0 22px 58px -14px rgba(0, 84, 240, 0.7); }
+      0%, 100% { box-shadow: 0 20px 55px -18px var(--glow); }
+      50% { box-shadow: 0 24px 62px -12px rgba(0, 84, 240, 0.75); }
+    }
+
+    @keyframes float-soft {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
+    }
+
+    @keyframes orb-float {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(-3%, 4%) scale(1.08); }
+    }
+
+    @keyframes atmosphere-shift {
+      from { filter: hue-rotate(0deg) brightness(1); }
+      to { filter: hue-rotate(-6deg) brightness(1.05); }
+    }
+
+    @keyframes kinetic-shimmer {
+      0%, 100% { background-position: 100% 0; }
+      50% { background-position: 0% 0; }
+    }
+
+    @keyframes pulse-dot {
+      0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.55); }
+      70% { box-shadow: 0 0 0 8px rgba(34, 197, 94, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+    }
+
+    @keyframes fade-hint {
+      to { opacity: 1; }
     }
 
     @media (max-width: 720px) {
-      .slide { padding: 1.5rem 1.25rem 5rem; justify-content: flex-start; padding-top: 2.5rem; }
+      .slide { padding: 1.5rem 1.25rem 5.5rem; justify-content: flex-start; padding-top: 2.5rem; }
       .timeline-item { grid-template-columns: 1fr; gap: 0.35rem; }
-      .hint { display: none; }
-      h1 { max-width: none; }
-      h2 { max-width: none; }
+      .hint, .dots { display: none; }
+      h1, h2 { max-width: none; }
+      .orb { opacity: 0.28; }
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .slide, .slide.active *, #progress { animation: none !important; transition: opacity 0.2s ease !important; }
-      .slide { transform: none; }
+      .slide, .slide.active *, #progress, .orb, body::before, .hint {
+        animation: none !important;
+        transition: opacity 0.2s ease !important;
+      }
+      .slide { transform: none; filter: none; }
       .slide.active .slide-label,
       .slide.active h1,
       .slide.active h2,
@@ -659,23 +1037,32 @@
       .slide.active .grid-3,
       .slide.active .grid-4,
       .slide.active .poles,
-      .slide.active .badges,
+      .slide.active .flow,
+      .slide.active .hero-duo,
       .slide.active .price-row,
       .slide.active .cta-box,
       .slide.active .timeline,
       .slide.active .feature-list,
+      .slide.active .master-grid,
       .slide.active .callout,
-      .slide.active .accent-line {
+      .slide.active .accent-line,
+      .slide.active .pill-row,
+      .slide.active .stagger > * {
         opacity: 1;
         transform: none;
         width: auto;
       }
+      .kinetic { color: var(--white); background: none; -webkit-background-clip: unset; background-clip: unset; }
     }
   </style>
 </head>
 <body>
+  <div class="orb orb-a" aria-hidden="true"></div>
+  <div class="orb orb-b" aria-hidden="true"></div>
+  <div class="orb orb-c" aria-hidden="true"></div>
   <div class="progress-track"><div id="progress"></div></div>
   <p class="hint">← → · Espace · F plein écran</p>
+  <div class="dots" id="dots" aria-hidden="true"></div>
 
   <div class="deck">
     <!-- 1. Titre -->
@@ -685,7 +1072,7 @@
       </div>
       <h1>L'app pour le foot</h1>
       <div class="accent-line"></div>
-      <p class="hero-sub">Ton profil, tes matchs, ton club. Sept pôles. Une seule plateforme.</p>
+      <p class="hero-sub">Ton profil, tes matchs, ton club — et deux différenciateurs que personne d'autre ne possède.</p>
       <p class="tagline">CONNECTER • PROGRESSER • RÉUSSIR</p>
     </section>
 
@@ -694,25 +1081,25 @@
       <p class="slide-label">Le constat</p>
       <h2>Le foot amateur tourne encore au bricolage</h2>
       <div class="accent-line"></div>
-      <div class="grid-2">
-        <div class="card">
+      <div class="grid-2 stagger">
+        <div class="card" tabindex="0">
           <h3>Organisation</h3>
           <ul>
-            <li>Convocs sur WhatsApp, relances manuelles</li>
+            <li>Convocs WhatsApp, relances manuelles</li>
             <li>Excel pour les effectifs</li>
-            <li>Personne ne sait vraiment qui vient</li>
+            <li>Trajets bricolés la veille du match</li>
           </ul>
         </div>
-        <div class="card">
-          <h3>Visibilité</h3>
+        <div class="card" tabindex="0">
+          <h3>Visibilité &amp; santé</h3>
           <ul>
             <li>Mercato perdu sur Facebook</li>
-            <li>Pas de CV qui se construit tout seul</li>
-            <li>Staff & praticiens sans annuaire fiable</li>
+            <li>Pas d'annuaire praticiens fiable</li>
+            <li>Visio « gratuite » qui n'existe pas vraiment</li>
           </ul>
         </div>
       </div>
-      <p class="callout"><strong>Résultat :</strong> du temps perdu, peu de visibilité pour les joueurs, des clubs qui galèrent à recruter.</p>
+      <p class="callout"><strong>Résultat :</strong> du temps perdu, peu de visibilité, des clubs qui galèrent à recruter — et zéro outil pour aller ensemble au match.</p>
     </section>
 
     <!-- 3. Solution -->
@@ -721,217 +1108,216 @@
       <h2>Une app. Tout l'écosystème du foot.</h2>
       <div class="accent-line"></div>
       <p class="lead">Carrière, club, communauté, santé, événements — au même endroit. Des outils dignes du haut niveau, sans sur-vendre l'IA.</p>
-      <ul class="feature-list">
-        <li><span class="dot"></span>Profil, CV, Mercato, matchs & RSVP, Arena, fil & Reels</li>
-        <li><span class="dot"></span>Covoiturage intégré — le différenciateur ProDay</li>
-        <li><span class="dot"></span>IA honnête : highlights de séance, pas le match frame-by-frame</li>
+      <ul class="feature-list stagger">
+        <li><span class="dot"></span><strong style="color:#fff">Covoiturage intégré</strong> — proposer, chercher, réserver, géoloc live</li>
+        <li><span class="dot"></span><strong style="color:#fff">Pôle Santé Pro</strong> — praticiens vérifiés, agenda, vraie visio HD (Daily)</li>
+        <li><span class="dot"></span>Profil, CV, Mercato, matchs &amp; RSVP — IA honnête (highlights de séance)</li>
       </ul>
     </section>
 
-    <!-- 4. Sept pôles -->
-    <section class="slide" data-label="Pôles">
-      <p class="slide-label">L'écosystème</p>
-      <h2>Sept pôles. Une seule app.</h2>
+    <!-- 4. Dual hero -->
+    <section class="slide" data-label="Différenciateurs">
+      <p class="slide-label">Ce qui change tout</p>
+      <h2><span class="kinetic">Deux différenciateurs</span></h2>
       <div class="accent-line"></div>
-      <div class="poles">
-        <div class="card pole joueur">
-          <span class="pole-tag">Pôle Joueur</span>
-          <h3>Amateur → Pro</h3>
-          <p>Un seul espace. Badges &amp; genre.</p>
+      <p class="lead">Pas des modules collés après coup — le cœur du pitch ProDay.</p>
+      <div class="hero-duo">
+        <div class="card hero-pillar covoit" tabindex="0">
+          <span class="pillar-kicker">Différenciateur 01</span>
+          <h3>Covoiturage</h3>
+          <p>Le BlaBlaCar du foot — matchs, entraînements, détections, géoloc live.</p>
         </div>
-        <div class="card pole supporter">
-          <span class="pole-tag">Pôle Supporter</span>
+        <div class="card hero-pillar sante" tabindex="0">
+          <span class="pillar-kicker">Différenciateur 02</span>
+          <h3>Pôle Santé</h3>
+          <p>Annuaire vérifié, booking, visio HD Daily — dans l'offre Pro, pas gratuite.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. Covoiturage masterpiece -->
+    <section class="slide" data-theme="covoit" data-label="Covoiturage">
+      <p class="slide-label">Différenciateur · Covoiturage</p>
+      <h2><span class="kinetic">Aller ensemble au match</span></h2>
+      <div class="accent-line"></div>
+      <p class="lead">Proposer · chercher · réserver. Filtres par match ou événement. Messagerie intégrée. Géoloc live pendant le trajet.</p>
+      <div class="flow stagger">
+        <div class="card flow-step" tabindex="0">
+          <div class="icon">1</div>
+          <h3>Proposer</h3>
+          <p>Trajet, places, horaires liés à un match, un entraînement ou un lieu.</p>
+        </div>
+        <div class="card flow-step" tabindex="0">
+          <div class="icon">2</div>
+          <h3>Chercher</h3>
+          <p>Filtres par match, événement, détection — pas une liste générique.</p>
+        </div>
+        <div class="card flow-step" tabindex="0">
+          <div class="icon">3</div>
+          <h3>Réserver</h3>
+          <p>Place confirmée + contact conducteur en messagerie ProDay.</p>
+        </div>
+        <div class="card flow-step" tabindex="0">
+          <span class="live-badge">Live</span>
+          <h3>Géo en trajet</h3>
+          <p>Position du conducteur partagée aux participants pendant le trajet actif.</p>
+        </div>
+      </div>
+      <div class="master-grid stagger" style="margin-top:0.85rem">
+        <div class="card" tabindex="0">
+          <h3>Messagerie</h3>
+          <p>Coordination dans l'app — plus de threads WhatsApp éparpillés.</p>
+        </div>
+        <div class="card" tabindex="0">
+          <h3>Transversal</h3>
+          <p>Joueur, Club, Événements — le même flux partout.</p>
+        </div>
+        <div class="card" tabindex="0">
+          <h3>Cadre clair</h3>
+          <p>ProDay coordonne. Ce n'est <strong style="color:#fff">pas</strong> un transporteur.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. Santé masterpiece -->
+    <section class="slide" data-theme="sante" data-label="Santé">
+      <p class="slide-label">Différenciateur · Pôle Santé</p>
+      <h2><span class="kinetic">Soigner près du terrain</span></h2>
+      <div class="accent-line"></div>
+      <p class="lead">Praticiens vérifiés, agenda, vraie téléconsultation HD via Daily — réservée à l'offre Pro. Pas de visio gratuite.</p>
+      <div class="master-grid stagger">
+        <div class="card sante-card" tabindex="0">
+          <div class="icon">✓</div>
+          <h3>Praticiens vérifiés</h3>
+          <p>Diplôme contrôlé avant messagerie complète — confiance côté joueur &amp; club.</p>
+        </div>
+        <div class="card sante-card" tabindex="0">
+          <div class="icon">◷</div>
+          <h3>Booking &amp; agenda</h3>
+          <p>RDV en app. Visibilité clubs. Commission 10 % sur RDV non médicaux.</p>
+        </div>
+        <div class="card sante-card" tabindex="0">
+          <div class="icon">◉</div>
+          <h3>Visio HD · Daily</h3>
+          <p>Vraie salle vidéo. Sessions 15 / 30 min — dans Santé Pro uniquement.</p>
+        </div>
+      </div>
+      <div class="price-row">
+        <div class="card price sante-highlight" tabindex="0">
+          <span class="ribbon" style="color:var(--sante);border-color:rgba(0,204,180,0.4);background:rgba(0,204,180,0.15)">Pro</span>
+          <h3>Santé Pro</h3>
+          <p class="amount">19,99 € <span>/mois</span></p>
+          <p>Visio HD · agenda · visibilité. Pas de plan « visio gratuite ».</p>
+        </div>
+        <div class="card price" tabindex="0">
+          <h3>7 métiers</h3>
+          <p class="amount" style="font-size:1.35rem">Annuaire</p>
+          <p>Kiné · Ostéo · Médecin · Prépa · Mental · Nutrition · Podologue</p>
+        </div>
+      </div>
+      <p class="callout sante-callout"><strong>Positionnement honnête :</strong> la téléconsultation n'est pas un gadget gratuit — c'est le cœur de l'abonnement Pro.</p>
+    </section>
+
+    <!-- 7. Autres pôles (secondaires) -->
+    <section class="slide" data-label="Écosystème">
+      <p class="slide-label">Autour des différenciateurs</p>
+      <h2>Six autres pôles — sans les éclipser</h2>
+      <div class="accent-line"></div>
+      <p class="lead">L'écosystème complet. Joueur, Staff, Club… présents, mais le pitch reste ancré sur Covoiturage &amp; Santé.</p>
+      <div class="poles stagger">
+        <div class="card pole joueur" tabindex="0">
+          <span class="pole-tag">Joueur</span>
+          <h3>Amateur → Pro</h3>
+          <p>Un espace. Badges &amp; genre.</p>
+        </div>
+        <div class="card pole supporter" tabindex="0">
+          <span class="pole-tag">Supporter</span>
           <h3>Fans</h3>
           <p>Tribune 100 % gratuite.</p>
         </div>
-        <div class="card pole sante">
-          <span class="pole-tag">Pôle Santé</span>
-          <h3>Praticiens</h3>
-          <p>Annuaire, agenda, visio.</p>
-        </div>
-        <div class="card pole club">
-          <span class="pole-tag">Pôle Club</span>
+        <div class="card pole club" tabindex="0">
+          <span class="pole-tag">Club</span>
           <h3>Structures</h3>
           <p>Catégories &amp; recrutement.</p>
         </div>
-        <div class="card pole staff">
-          <span class="pole-tag">Pôle Staff</span>
+        <div class="card pole staff" tabindex="0">
+          <span class="pole-tag">Staff</span>
           <h3>Métiers</h3>
           <p>Coach · Recruteur · Agent.</p>
         </div>
-        <div class="card pole events">
-          <span class="pole-tag">Pôle Événements</span>
+        <div class="card pole events" tabindex="0">
+          <span class="pole-tag">Événements</span>
           <h3>Organisateurs</h3>
           <p>Tournois &amp; détections.</p>
         </div>
-        <div class="card pole sponsor">
-          <span class="pole-tag">Pôle Sponsor</span>
+        <div class="card pole sponsor" tabindex="0">
+          <span class="pole-tag">Sponsor</span>
           <h3>Marques</h3>
           <p>Campagnes ciblées.</p>
         </div>
       </div>
-    </section>
-
-    <!-- 5. Joueur -->
-    <section class="slide" data-label="Joueur">
-      <p class="slide-label">Pôle Joueur — unique</p>
-      <h2>Plus de séparation Amateur / Pro Joueur</h2>
-      <div class="accent-line"></div>
-      <p class="lead">Un seul espace joueur. Homme ou Femme à l'inscription. Le niveau, c'est le badge — le profil reste le même.</p>
-      <div class="badges">
-        <div class="card badge-card amateur">
-          <h3>Amateur</h3>
-          <p>District, régional, passion. Mercato local et CV.</p>
-        </div>
-        <div class="card badge-card centre">
-          <h3>Centre / Aspirant</h3>
-          <p>Formation ou aspirant. Visibilité scouting.</p>
-        </div>
-        <div class="card badge-card pro">
-          <h3>Professionnel</h3>
-          <p>Sous contrat. Même profil — seul le badge change.</p>
-        </div>
-      </div>
       <div class="pill-row">
-        <span class="pill"><strong>Genre</strong> Homme</span>
-        <span class="pill"><strong>Genre</strong> Femme</span>
-        <span class="pill">Coach = <strong>Pôle Staff</strong>, pas Joueur</span>
+        <span class="pill">Agent Elite <strong>19,99 → 29,99 €</strong></span>
+        <span class="pill">Coach / Recruteur <strong>7,99 €</strong></span>
+        <span class="pill">Club Pro <strong>11,99 €</strong></span>
+        <span class="pill">Covoiturage + Santé <span class="diff-mark">Hero</span></span>
       </div>
     </section>
 
-    <!-- 6. Covoiturage -->
-    <section class="slide" data-label="Covoiturage">
-      <p class="slide-label">Différenciateur</p>
-      <h2>Le covoiturage, transversal</h2>
-      <div class="accent-line"></div>
-      <p class="lead">Comme un BlaBlaCar du foot — matchs, entraînements, détections, événements. Pas un module collé après coup.</p>
-      <div class="grid-3">
-        <div class="card">
-          <h3>Proposer</h3>
-          <p>Trajet, places, horaires liés à un match ou un lieu.</p>
-        </div>
-        <div class="card">
-          <h3>Chercher</h3>
-          <p>Filtres par match, entraînement, événement.</p>
-        </div>
-        <div class="card">
-          <h3>Réserver</h3>
-          <p>Contact conducteur en messagerie ProDay.</p>
-        </div>
-      </div>
-      <p class="callout">Présent sur Joueur, Club et Événements. ProDay n'est <strong>pas</strong> transporteur — coordination entre utilisateurs.</p>
-    </section>
-
-    <!-- 7. Staff -->
-    <section class="slide" data-label="Staff">
-      <p class="slide-label">Pôle Staff</p>
-      <h2>Les métiers du foot, côté pro</h2>
-      <div class="accent-line"></div>
-      <p class="lead">Mercato, mandats, shortlists, calendrier structure et convocations premium.</p>
-      <div class="grid-4">
-        <div class="card"><h3>Coach</h3><p>Convocs, multi-équipes · 7,99 €/mois Pro</p></div>
-        <div class="card"><h3>Recruteur</h3><p>Pipeline &amp; shortlists · 7,99 €/mois Pro</p></div>
-        <div class="card"><h3>Agent</h3><p>CRM, mandats, alertes géo</p></div>
-        <div class="card"><h3>Organisateur</h3><p>Via Pôle Événements · 14,99 €/mois</p></div>
-      </div>
-      <div class="price-row">
-        <div class="card price highlight">
-          <span class="ribbon">Lancement</span>
-          <h3>Agent Elite</h3>
-          <p class="amount">19,99 € <span>/mois</span></p>
-          <p>Pour les 20 premiers — puis 29,99 €/mois.</p>
-        </div>
-        <div class="card price">
-          <h3>Puis tarif plein</h3>
-          <p class="amount">29,99 € <span>/mois</span></p>
-          <p>CRM, alertes géo, mandats, contacts illimités.</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- 8. Santé -->
-    <section class="slide" data-label="Santé">
-      <p class="slide-label">Pôle Santé</p>
-      <h2>Soigner près du terrain</h2>
-      <div class="accent-line"></div>
-      <p class="lead">Sept métiers, annuaire vérifié, agenda. La téléconsultation visio fait partie de l'offre Pro — ce n'est pas gratuit.</p>
-      <div class="price-row">
-        <div class="card price highlight">
-          <h3>Santé Pro</h3>
-          <p class="amount">19,99 € <span>/mois</span></p>
-          <p>Visio 15 / 30 min · agenda RDV · visibilité clubs.</p>
-        </div>
-        <div class="card price">
-          <h3>Commission</h3>
-          <p class="amount">10 %</p>
-          <p>Sur les RDV non médicaux réservés via ProDay.</p>
-        </div>
-      </div>
-      <div class="pill-row">
-        <span class="pill">Kiné</span>
-        <span class="pill">Ostéo</span>
-        <span class="pill">Médecin</span>
-        <span class="pill">Prépa</span>
-        <span class="pill">Mental</span>
-        <span class="pill">Nutrition</span>
-        <span class="pill">Podologue</span>
-      </div>
-    </section>
-
-    <!-- 9. Business -->
+    <!-- 8. Modèle -->
     <section class="slide" data-label="Modèle">
       <p class="slide-label">Modèle économique</p>
       <h2>Gratuit pour entrer. Pro pour accélérer.</h2>
       <div class="accent-line"></div>
-      <div class="grid-3">
-        <div class="card">
+      <div class="grid-3 stagger">
+        <div class="card" tabindex="0">
           <h3>Joueur / Supporter</h3>
           <p>Gratuit au départ. Joueur Plus 2,99 €. Tribune supporter 0 €.</p>
         </div>
-        <div class="card">
+        <div class="card" tabindex="0">
           <h3>Club &amp; Staff</h3>
           <p>Club Pro 11,99 €. Coach / Recruteur 7,99 €. Agent 19,99 → 29,99 €.</p>
         </div>
-        <div class="card">
-          <h3>Sponsor &amp; Events</h3>
-          <p>Découverte 0 € · Territorial 49 € · National 99 €. Orga Pro 14,99 €.</p>
+        <div class="card" tabindex="0">
+          <h3>Santé · Events · Sponsor</h3>
+          <p>Santé Pro 19,99 €. Orga 14,99 €. Sponsor 0 / 49 / 99 €.</p>
         </div>
       </div>
       <p class="callout"><strong>Parrainage :</strong> 2 filleuls abonnés à une offre payante → 1 mois Pro offert. (Pas pour les supporters.)</p>
     </section>
 
-    <!-- 10. Confiance -->
+    <!-- 9. Confiance -->
     <section class="slide" data-label="Confiance">
       <p class="slide-label">Confiance</p>
       <h2>Pas les mêmes droits pour tout le monde</h2>
       <div class="accent-line"></div>
-      <div class="grid-2">
-        <div class="card">
+      <div class="grid-2 stagger">
+        <div class="card" tabindex="0">
           <h3>Accès rapide</h3>
           <p>Joueurs et supporters — onboarding direct.</p>
         </div>
-        <div class="card">
+        <div class="card" tabindex="0">
           <h3>Vérification diplôme</h3>
           <p>Coach, agent, recruteur, praticien, club — avant la messagerie complète.</p>
         </div>
-        <div class="card">
+        <div class="card" tabindex="0">
           <h3>Mineurs</h3>
           <p>Contrôle parental, contacts approuvés.</p>
         </div>
-        <div class="card">
+        <div class="card" tabindex="0">
           <h3>Transparence</h3>
-          <p>Pas de métriques d'audience inventées. On parle produit.</p>
+          <p>Pas de métriques inventées. Visio Santé = Pro, point.</p>
         </div>
       </div>
     </section>
 
-    <!-- 11. Bêta -->
+    <!-- 10. Bêta -->
     <section class="slide" data-label="Bêta">
       <p class="slide-label">Lancement</p>
       <h2>Bêta iOS — 11 août 2026 à 18 h</h2>
       <div class="accent-line"></div>
       <p class="lead">TestFlight via email pour les inscrits. APK Android dès validation.</p>
-      <div class="timeline">
+      <div class="timeline stagger">
         <div class="timeline-item">
           <span class="when">Inscription</span>
           <p>proday75.fr/beta/inscription — liste d'attente ouverte.</p>
@@ -947,14 +1333,14 @@
       </div>
     </section>
 
-    <!-- 12. CTA -->
+    <!-- 11. CTA -->
     <section class="slide" data-label="Contact">
       <div class="logo-wrap">
         <img src="assets/logo-proday-official.png" alt="ProDay" />
       </div>
       <h2>On construit la plateforme du foot avec vous</h2>
       <div class="accent-line"></div>
-      <p class="lead">Testeurs, clubs, partenaires, advisors — la bêta ouvre le 11 août à 18 h.</p>
+      <p class="lead">Covoiturage. Santé Pro. Sept pôles. La bêta ouvre le 11 août à 18 h.</p>
       <div class="cta-box">
         <a class="cta-link" href="https://proday75.fr/beta/inscription" target="_blank" rel="noopener">Rejoindre la bêta</a>
         <p class="cta-secondary">
@@ -969,7 +1355,7 @@
 
   <nav class="nav" aria-label="Navigation des slides">
     <button type="button" id="prev" aria-label="Slide précédente">←</button>
-    <span id="counter">1 / 12</span>
+    <span id="counter">1 / 11</span>
     <button type="button" id="next" aria-label="Slide suivante">→</button>
   </nav>
 
@@ -980,18 +1366,30 @@
       var counter = document.getElementById("counter");
       var prevBtn = document.getElementById("prev");
       var nextBtn = document.getElementById("next");
+      var dotsWrap = document.getElementById("dots");
       var current = 0;
       var animating = false;
+      var direction = 1;
+
+      slides.forEach(function (_, i) {
+        var b = document.createElement("button");
+        b.type = "button";
+        b.setAttribute("aria-label", "Slide " + (i + 1));
+        if (i === 0) b.classList.add("active");
+        b.addEventListener("click", function () { goTo(i); });
+        dotsWrap.appendChild(b);
+      });
+      var dots = Array.prototype.slice.call(dotsWrap.querySelectorAll("button"));
 
       function goTo(index) {
         if (index < 0 || index >= slides.length || index === current || animating) return;
         animating = true;
+        direction = index > current ? 1 : -1;
         var prev = slides[current];
         prev.classList.remove("active");
-        prev.classList.add("exit-up");
+        prev.classList.add(direction > 0 ? "exit-up" : "exit-down");
         current = index;
         var next = slides[current];
-        // Force reflow so entrance animation restarts
         void next.offsetWidth;
         next.classList.add("active");
         var pct = ((current + 1) / slides.length) * 100;
@@ -999,11 +1397,12 @@
         counter.textContent = (current + 1) + " / " + slides.length;
         prevBtn.disabled = current === 0;
         nextBtn.disabled = current === slides.length - 1;
+        dots.forEach(function (d, i) { d.classList.toggle("active", i === current); });
         document.title = "ProDay — " + (next.getAttribute("data-label") || "Présentation");
         window.setTimeout(function () {
-          prev.classList.remove("exit-up");
+          prev.classList.remove("exit-up", "exit-down");
           animating = false;
-        }, 480);
+        }, 520);
       }
 
       function next() { goTo(current + 1); }
