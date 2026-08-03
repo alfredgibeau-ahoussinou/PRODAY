@@ -440,7 +440,7 @@
       color: var(--sante);
     }
 
-    /* Dual hero */
+    /* Dual focus */
     .hero-duo {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -450,60 +450,32 @@
     }
 
     .hero-pillar {
-      padding: 1.6rem 1.5rem 1.5rem;
-      min-height: 11.5rem;
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-end;
+      padding: 1.35rem 1.35rem 1.3rem;
     }
 
     .hero-pillar.covoit {
-      border-color: rgba(0, 84, 240, 0.4);
-      background:
-        radial-gradient(ellipse 80% 70% at 10% 0%, rgba(0, 84, 240, 0.28), transparent 55%),
-        linear-gradient(160deg, rgba(0, 84, 240, 0.16), rgba(255, 255, 255, 0.03));
-      box-shadow: 0 0 0 1px rgba(0, 84, 240, 0.12), 0 28px 60px -36px var(--glow);
+      border-color: rgba(0, 84, 240, 0.35);
+      border-left: 3px solid var(--covoit);
     }
 
     .hero-pillar.sante {
-      border-color: rgba(0, 204, 180, 0.35);
-      background:
-        radial-gradient(ellipse 80% 70% at 10% 0%, rgba(0, 204, 180, 0.2), transparent 55%),
-        linear-gradient(160deg, rgba(0, 204, 180, 0.12), rgba(255, 255, 255, 0.03));
-      box-shadow: 0 0 0 1px rgba(0, 204, 180, 0.1), 0 28px 60px -36px var(--sante-glow);
+      border-color: rgba(0, 204, 180, 0.3);
+      border-left: 3px solid var(--sante);
     }
-
-    .hero-pillar .pillar-kicker {
-      font-size: 0.65rem;
-      font-weight: 700;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      margin-bottom: 0.55rem;
-      color: var(--accent-2);
-    }
-
-    .hero-pillar.sante .pillar-kicker { color: var(--sante); }
 
     .hero-pillar h3 {
       font-family: var(--display);
-      font-size: clamp(1.45rem, 2.8vw, 1.9rem);
+      font-size: clamp(1.35rem, 2.6vw, 1.75rem);
       font-weight: 800;
       letter-spacing: -0.03em;
-      margin-bottom: 0.5rem;
+      margin-bottom: 0.45rem;
     }
 
     .hero-pillar p {
       font-size: 0.95rem;
       color: var(--muted);
-      max-width: 28ch;
-    }
-
-    .slide.active .hero-pillar.covoit {
-      animation: float-soft 5.5s 1s ease-in-out infinite;
-    }
-
-    .slide.active .hero-pillar.sante {
-      animation: float-soft 5.5s 1.4s ease-in-out infinite;
+      max-width: 32ch;
+      line-height: 1.45;
     }
 
     /* Masterpiece flow */
@@ -540,28 +512,6 @@
       gap: 0.8rem;
       margin-top: 1.15rem;
       max-width: 64rem;
-    }
-
-    .live-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-      font-size: 0.68rem;
-      font-weight: 700;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: #7CF0C8;
-      margin-bottom: 0.45rem;
-    }
-
-    .live-badge::before {
-      content: "";
-      width: 0.45rem;
-      height: 0.45rem;
-      border-radius: 50%;
-      background: #22C55E;
-      box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.5);
-      animation: pulse-dot 1.6s ease-out infinite;
     }
 
     /* Poles secondary */
@@ -843,21 +793,6 @@
       animation: rise-in 0.65s 0.34s var(--ease) forwards;
     }
 
-    .diff-mark {
-      display: inline-block;
-      margin-left: 0.35rem;
-      font-size: 0.62rem;
-      font-weight: 700;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      vertical-align: middle;
-      padding: 0.18rem 0.45rem;
-      border-radius: 999px;
-      background: rgba(0, 84, 240, 0.2);
-      border: 1px solid rgba(0, 84, 240, 0.4);
-      color: var(--accent-2);
-    }
-
     /* Nav */
     .nav {
       position: fixed;
@@ -982,11 +917,6 @@
       50% { box-shadow: 0 24px 62px -12px rgba(0, 84, 240, 0.75); }
     }
 
-    @keyframes float-soft {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-6px); }
-    }
-
     @keyframes orb-float {
       0%, 100% { transform: translate(0, 0) scale(1); }
       50% { transform: translate(-3%, 4%) scale(1.08); }
@@ -1000,12 +930,6 @@
     @keyframes kinetic-shimmer {
       0%, 100% { background-position: 100% 0; }
       50% { background-position: 0% 0; }
-    }
-
-    @keyframes pulse-dot {
-      0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.55); }
-      70% { box-shadow: 0 0 0 8px rgba(34, 197, 94, 0); }
-      100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
     }
 
     @keyframes fade-hint {
@@ -1072,20 +996,20 @@
       </div>
       <h1>L'app pour le foot</h1>
       <div class="accent-line"></div>
-      <p class="hero-sub">Ton profil, tes matchs, ton club — et deux différenciateurs que personne d'autre ne possède.</p>
+      <p class="hero-sub">Profil, matchs, club. Plus le covoiturage et la santé — dans la même app.</p>
       <p class="tagline">CONNECTER • PROGRESSER • RÉUSSIR</p>
     </section>
 
     <!-- 2. Problème -->
     <section class="slide" data-label="Problème">
-      <p class="slide-label">Le constat</p>
-      <h2>Le foot amateur tourne encore au bricolage</h2>
+      <p class="slide-label">Le problème</p>
+      <h2>Le foot amateur se gère encore au bricolage</h2>
       <div class="accent-line"></div>
       <div class="grid-2 stagger">
         <div class="card" tabindex="0">
           <h3>Organisation</h3>
           <ul>
-            <li>Convocs WhatsApp, relances manuelles</li>
+            <li>Convocs WhatsApp, relances à la main</li>
             <li>Excel pour les effectifs</li>
             <li>Trajets bricolés la veille du match</li>
           </ul>
@@ -1095,111 +1019,109 @@
           <ul>
             <li>Mercato perdu sur Facebook</li>
             <li>Pas d'annuaire praticiens fiable</li>
-            <li>Visio « gratuite » qui n'existe pas vraiment</li>
+            <li>Pas de vraie visio santé dans les apps foot</li>
           </ul>
         </div>
       </div>
-      <p class="callout"><strong>Résultat :</strong> du temps perdu, peu de visibilité, des clubs qui galèrent à recruter — et zéro outil pour aller ensemble au match.</p>
+      <p class="callout"><strong>Résultat :</strong> du temps perdu, peu de visibilité, des clubs qui peinent à recruter — et personne pour organiser le trajet.</p>
     </section>
 
     <!-- 3. Solution -->
     <section class="slide" data-label="Solution">
-      <p class="slide-label">La proposition</p>
-      <h2>Une app. Tout l'écosystème du foot.</h2>
+      <p class="slide-label">La solution</p>
+      <h2>Une app. Le foot organisé.</h2>
       <div class="accent-line"></div>
-      <p class="lead">Carrière, club, communauté, santé, événements — au même endroit. Des outils dignes du haut niveau, sans sur-vendre l'IA.</p>
+      <p class="lead">Profil, matchs, club, santé, événements — au même endroit. On met en avant ce que les autres n'ont pas.</p>
       <ul class="feature-list stagger">
-        <li><span class="dot"></span><strong style="color:#fff">Covoiturage intégré</strong> — proposer, chercher, réserver, géoloc live</li>
-        <li><span class="dot"></span><strong style="color:#fff">Pôle Santé Pro</strong> — praticiens vérifiés, agenda, vraie visio HD (Daily)</li>
-        <li><span class="dot"></span>Profil, CV, Mercato, matchs &amp; RSVP — IA honnête (highlights de séance)</li>
+        <li><span class="dot"></span><strong style="color:#fff">Covoiturage</strong> — proposer, chercher, réserver, géoloc pendant le trajet</li>
+        <li><span class="dot"></span><strong style="color:#fff">Santé Pro</strong> — praticiens vérifiés, agenda, visio HD (Daily)</li>
+        <li><span class="dot"></span>Profil, CV, Mercato, matchs &amp; RSVP — IA limitée aux highlights de séance</li>
       </ul>
     </section>
 
-    <!-- 4. Dual hero -->
-    <section class="slide" data-label="Différenciateurs">
-      <p class="slide-label">Ce qui change tout</p>
-      <h2><span class="kinetic">Deux différenciateurs</span></h2>
+    <!-- 4. Dual focus -->
+    <section class="slide" data-label="Covoiturage & Santé">
+      <p class="slide-label">Le cœur du pitch</p>
+      <h2><span class="kinetic">Covoiturage &amp; Santé</span></h2>
       <div class="accent-line"></div>
-      <p class="lead">Pas des modules collés après coup — le cœur du pitch ProDay.</p>
+      <p class="lead">Deux fonctions absentes ailleurs. C'est ça qu'on veut faire retenir.</p>
       <div class="hero-duo">
         <div class="card hero-pillar covoit" tabindex="0">
-          <span class="pillar-kicker">Différenciateur 01</span>
           <h3>Covoiturage</h3>
-          <p>Le BlaBlaCar du foot — matchs, entraînements, détections, géoloc live.</p>
+          <p>Proposer un trajet, trouver une place, suivre le conducteur en live. Lié aux matchs et aux événements.</p>
         </div>
         <div class="card hero-pillar sante" tabindex="0">
-          <span class="pillar-kicker">Différenciateur 02</span>
           <h3>Pôle Santé</h3>
-          <p>Annuaire vérifié, booking, visio HD Daily — dans l'offre Pro, pas gratuite.</p>
+          <p>Annuaire vérifié, prise de RDV, visio HD via Daily. Dans Santé Pro — pas en gratuit.</p>
         </div>
       </div>
     </section>
 
-    <!-- 5. Covoiturage masterpiece -->
+    <!-- 5. Covoiturage -->
     <section class="slide" data-theme="covoit" data-label="Covoiturage">
-      <p class="slide-label">Différenciateur · Covoiturage</p>
-      <h2><span class="kinetic">Aller ensemble au match</span></h2>
+      <p class="slide-label">Covoiturage</p>
+      <h2><span class="kinetic">Aller au match ensemble</span></h2>
       <div class="accent-line"></div>
-      <p class="lead">Proposer · chercher · réserver. Filtres par match ou événement. Messagerie intégrée. Géoloc live pendant le trajet.</p>
+      <p class="lead">Proposer, chercher, réserver. Filtres par match ou événement. Messagerie dans l'app. Géoloc pendant le trajet.</p>
       <div class="flow stagger">
         <div class="card flow-step" tabindex="0">
           <div class="icon">1</div>
           <h3>Proposer</h3>
-          <p>Trajet, places, horaires liés à un match, un entraînement ou un lieu.</p>
+          <p>Trajet, places, horaires — liés à un match, un entraînement ou un lieu.</p>
         </div>
         <div class="card flow-step" tabindex="0">
           <div class="icon">2</div>
           <h3>Chercher</h3>
-          <p>Filtres par match, événement, détection — pas une liste générique.</p>
+          <p>Filtres par match, événement, détection. Pas une liste générique.</p>
         </div>
         <div class="card flow-step" tabindex="0">
           <div class="icon">3</div>
           <h3>Réserver</h3>
-          <p>Place confirmée + contact conducteur en messagerie ProDay.</p>
+          <p>Place confirmée. Contact du conducteur en messagerie ProDay.</p>
         </div>
         <div class="card flow-step" tabindex="0">
-          <span class="live-badge">Live</span>
+          <div class="icon">4</div>
           <h3>Géo en trajet</h3>
-          <p>Position du conducteur partagée aux participants pendant le trajet actif.</p>
+          <p>Position du conducteur partagée aux participants pendant le trajet.</p>
         </div>
       </div>
       <div class="master-grid stagger" style="margin-top:0.85rem">
         <div class="card" tabindex="0">
           <h3>Messagerie</h3>
-          <p>Coordination dans l'app — plus de threads WhatsApp éparpillés.</p>
+          <p>On se coordonne dans l'app. Plus de fils WhatsApp partout.</p>
         </div>
         <div class="card" tabindex="0">
-          <h3>Transversal</h3>
-          <p>Joueur, Club, Événements — le même flux partout.</p>
+          <h3>Partout dans l'app</h3>
+          <p>Même flux pour joueur, club et événements.</p>
         </div>
         <div class="card" tabindex="0">
           <h3>Cadre clair</h3>
-          <p>ProDay coordonne. Ce n'est <strong style="color:#fff">pas</strong> un transporteur.</p>
+          <p>ProDay met en relation. Ce n'est <strong style="color:#fff">pas</strong> un transporteur.</p>
         </div>
       </div>
     </section>
 
-    <!-- 6. Santé masterpiece -->
+    <!-- 6. Santé -->
     <section class="slide" data-theme="sante" data-label="Santé">
-      <p class="slide-label">Différenciateur · Pôle Santé</p>
-      <h2><span class="kinetic">Soigner près du terrain</span></h2>
+      <p class="slide-label">Pôle Santé</p>
+      <h2><span class="kinetic">Soins près du terrain</span></h2>
       <div class="accent-line"></div>
-      <p class="lead">Praticiens vérifiés, agenda, vraie téléconsultation HD via Daily — réservée à l'offre Pro. Pas de visio gratuite.</p>
+      <p class="lead">Praticiens vérifiés, agenda, téléconsultation HD via Daily. Réservé à Santé Pro. Pas de visio gratuite.</p>
       <div class="master-grid stagger">
         <div class="card sante-card" tabindex="0">
           <div class="icon">✓</div>
           <h3>Praticiens vérifiés</h3>
-          <p>Diplôme contrôlé avant messagerie complète — confiance côté joueur &amp; club.</p>
+          <p>Diplôme contrôlé avant messagerie complète.</p>
         </div>
         <div class="card sante-card" tabindex="0">
           <div class="icon">◷</div>
           <h3>Booking &amp; agenda</h3>
-          <p>RDV en app. Visibilité clubs. Commission 10 % sur RDV non médicaux.</p>
+          <p>RDV dans l'app. Visibilité clubs. Commission 10 % sur RDV non médicaux.</p>
         </div>
         <div class="card sante-card" tabindex="0">
           <div class="icon">◉</div>
           <h3>Visio HD · Daily</h3>
-          <p>Vraie salle vidéo. Sessions 15 / 30 min — dans Santé Pro uniquement.</p>
+          <p>Vraie salle vidéo. Sessions 15 ou 30 min — Santé Pro uniquement.</p>
         </div>
       </div>
       <div class="price-row">
@@ -1207,7 +1129,7 @@
           <span class="ribbon" style="color:var(--sante);border-color:rgba(0,204,180,0.4);background:rgba(0,204,180,0.15)">Pro</span>
           <h3>Santé Pro</h3>
           <p class="amount">19,99 € <span>/mois</span></p>
-          <p>Visio HD · agenda · visibilité. Pas de plan « visio gratuite ».</p>
+          <p>Visio HD, agenda, visibilité. Pas de plan « visio gratuite ».</p>
         </div>
         <div class="card price" tabindex="0">
           <h3>7 métiers</h3>
@@ -1215,15 +1137,15 @@
           <p>Kiné · Ostéo · Médecin · Prépa · Mental · Nutrition · Podologue</p>
         </div>
       </div>
-      <p class="callout sante-callout"><strong>Positionnement honnête :</strong> la téléconsultation n'est pas un gadget gratuit — c'est le cœur de l'abonnement Pro.</p>
+      <p class="callout sante-callout"><strong>À retenir :</strong> la visio santé est dans l'abonnement Pro. Pas un gadget gratuit.</p>
     </section>
 
-    <!-- 7. Autres pôles (secondaires) -->
-    <section class="slide" data-label="Écosystème">
-      <p class="slide-label">Autour des différenciateurs</p>
-      <h2>Six autres pôles — sans les éclipser</h2>
+    <!-- 7. Autres pôles -->
+    <section class="slide" data-label="Autres pôles">
+      <p class="slide-label">Autour</p>
+      <h2>Six autres pôles</h2>
       <div class="accent-line"></div>
-      <p class="lead">L'écosystème complet. Joueur, Staff, Club… présents, mais le pitch reste ancré sur Covoiturage &amp; Santé.</p>
+      <p class="lead">Joueur, club, staff… présents. Le pitch reste sur covoiturage et santé.</p>
       <div class="poles stagger">
         <div class="card pole joueur" tabindex="0">
           <span class="pole-tag">Joueur</span>
@@ -1260,14 +1182,14 @@
         <span class="pill">Agent Elite <strong>19,99 → 29,99 €</strong></span>
         <span class="pill">Coach / Recruteur <strong>7,99 €</strong></span>
         <span class="pill">Club Pro <strong>11,99 €</strong></span>
-        <span class="pill">Covoiturage + Santé <span class="diff-mark">Hero</span></span>
+        <span class="pill">Santé Pro <strong>19,99 €</strong></span>
       </div>
     </section>
 
     <!-- 8. Modèle -->
     <section class="slide" data-label="Modèle">
-      <p class="slide-label">Modèle économique</p>
-      <h2>Gratuit pour entrer. Pro pour accélérer.</h2>
+      <p class="slide-label">Tarifs</p>
+      <h2>Gratuit pour commencer. Payant pour aller plus loin.</h2>
       <div class="accent-line"></div>
       <div class="grid-3 stagger">
         <div class="card" tabindex="0">
@@ -1283,7 +1205,7 @@
           <p>Santé Pro 19,99 €. Orga 14,99 €. Sponsor 0 / 49 / 99 €.</p>
         </div>
       </div>
-      <p class="callout"><strong>Parrainage :</strong> 2 filleuls abonnés à une offre payante → 1 mois Pro offert. (Pas pour les supporters.)</p>
+      <p class="callout"><strong>Parrainage :</strong> 2 filleuls abonnés à une offre payante → 1 mois Pro offert. Pas pour les supporters.</p>
     </section>
 
     <!-- 9. Confiance -->
@@ -1294,7 +1216,7 @@
       <div class="grid-2 stagger">
         <div class="card" tabindex="0">
           <h3>Accès rapide</h3>
-          <p>Joueurs et supporters — onboarding direct.</p>
+          <p>Joueurs et supporters — inscription directe.</p>
         </div>
         <div class="card" tabindex="0">
           <h3>Vérification diplôme</h3>
@@ -1306,7 +1228,7 @@
         </div>
         <div class="card" tabindex="0">
           <h3>Transparence</h3>
-          <p>Pas de métriques inventées. Visio Santé = Pro, point.</p>
+          <p>Pas de chiffres inventés. Visio Santé = Pro, point.</p>
         </div>
       </div>
     </section>
@@ -1316,7 +1238,7 @@
       <p class="slide-label">Lancement</p>
       <h2>Bêta iOS — 11 août 2026 à 18 h</h2>
       <div class="accent-line"></div>
-      <p class="lead">TestFlight via email pour les inscrits. APK Android dès validation.</p>
+      <p class="lead">TestFlight par email pour les inscrits. APK Android dès validation.</p>
       <div class="timeline stagger">
         <div class="timeline-item">
           <span class="when">Inscription</span>
@@ -1328,7 +1250,7 @@
         </div>
         <div class="timeline-item">
           <span class="when">Android</span>
-          <p>APK disponible dès validation — pas de promesse de date store.</p>
+          <p>APK dès validation — pas de date store promise.</p>
         </div>
       </div>
     </section>
@@ -1338,9 +1260,9 @@
       <div class="logo-wrap">
         <img src="assets/logo-proday-official.png" alt="ProDay" />
       </div>
-      <h2>On construit la plateforme du foot avec vous</h2>
+      <h2>On construit ProDay avec vous</h2>
       <div class="accent-line"></div>
-      <p class="lead">Covoiturage. Santé Pro. Sept pôles. La bêta ouvre le 11 août à 18 h.</p>
+      <p class="lead">Covoiturage. Santé Pro. La bêta ouvre le 11 août à 18 h.</p>
       <div class="cta-box">
         <a class="cta-link" href="https://proday75.fr/beta/inscription" target="_blank" rel="noopener">Rejoindre la bêta</a>
         <p class="cta-secondary">
