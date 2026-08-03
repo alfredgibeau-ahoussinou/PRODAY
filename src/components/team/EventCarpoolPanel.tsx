@@ -26,8 +26,13 @@ import {
 } from '../../utils/carpoolBalance';
 import { Icon } from '../ui/Icon';
 import { CarpoolLocationCapture } from '../carpool/CarpoolLocationCapture';
+import { CarpoolLiveTripPanel } from '../carpool/CarpoolLiveTripPanel';
 import { openMapsAt } from '../../utils/geoLocation';
 import { pickupDistanceFromMeeting } from '../../utils/carpoolGeo';
+import {
+  eventTripId,
+  slotTripStatus,
+} from '../../utils/carpoolLiveTrip';
 import { prodayHaptics } from '../../utils/prodayHaptics';
 import { spacing, radius } from '../../theme/designTokens';
 
@@ -359,6 +364,17 @@ export const EventCarpoolPanel: React.FC<EventCarpoolPanelProps> = ({
           >
             <Text style={styles.secondaryBtnText}>Mettre à jour ma position</Text>
           </PressableSpring>
+          <CarpoolLiveTripPanel
+            tripId={eventTripId(event.id, myBooking.driverUid)}
+            viewerUid={profile.uid}
+            driverUid={myBooking.driverUid}
+            driverName={myBooking.slot.driver_name}
+            passengers={myBooking.slot.passengers}
+            tripStatus={slotTripStatus(myBooking.slot)}
+            onStartTrip={() => teamEventsService.startCarpoolTrip(event.id, profile.uid)}
+            onEndTrip={() => teamEventsService.endCarpoolTrip(event.id, profile.uid)}
+            onTripChanged={onUpdated}
+          />
         </View>
       ) : null}
 
@@ -562,6 +578,17 @@ export const EventCarpoolPanel: React.FC<EventCarpoolPanelProps> = ({
               <Text style={styles.secondaryBtnText}>Retirer ma proposition</Text>
             </PressableSpring>
           ) : null}
+          <CarpoolLiveTripPanel
+            tripId={eventTripId(event.id, mySlot.driver_uid)}
+            viewerUid={profile.uid}
+            driverUid={mySlot.driver_uid}
+            driverName={mySlot.driver_name}
+            passengers={mySlot.passengers}
+            tripStatus={slotTripStatus(mySlot)}
+            onStartTrip={() => teamEventsService.startCarpoolTrip(event.id, profile.uid)}
+            onEndTrip={() => teamEventsService.endCarpoolTrip(event.id, profile.uid)}
+            onTripChanged={onUpdated}
+          />
         </View>
       ) : null}
 

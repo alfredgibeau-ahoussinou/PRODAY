@@ -1,5 +1,6 @@
 import type { GeoPoint } from './User';
 import type { CarpoolPassenger } from './TeamEvent';
+import type { CarpoolTripStatus } from './CarpoolLiveTrip';
 
 /** Proposition de covoiturage sans événement / convocation liée. */
 export interface StandaloneCarpoolOffer {
@@ -18,7 +19,10 @@ export interface StandaloneCarpoolOffer {
   seats: number;
   notes?: string;
   passengers?: CarpoolPassenger[];
-  status: 'open' | 'closed' | 'completed' | 'cancelled';
+  /** Réservation : open/closed ; trajet : in_progress/completed/cancelled */
+  status: 'open' | 'closed' | 'in_progress' | 'completed' | 'cancelled';
+  /** Cycle de vie trajet (prioritaire sur le mapping legacy via status). */
+  trip_status?: CarpoolTripStatus;
   /** Visible uniquement aux membres du même club */
   club_only?: boolean;
   created_at: Date;

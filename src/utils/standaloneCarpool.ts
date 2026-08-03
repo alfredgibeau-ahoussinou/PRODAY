@@ -43,7 +43,10 @@ export function isUpcomingStandaloneOffer(
   graceMs = 6 * 60 * 60 * 1000,
 ): boolean {
   return (
-    (offer.status === 'open' || offer.status === 'closed') &&
+    (offer.status === 'open' ||
+      offer.status === 'closed' ||
+      offer.status === 'in_progress' ||
+      offer.trip_status === 'in_progress') &&
     offer.departs_at.getTime() >= Date.now() - graceMs
   );
 }

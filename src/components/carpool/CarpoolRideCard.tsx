@@ -25,6 +25,12 @@ import { useTabNavigationOptional } from '../../context/TabNavigationContext';
 import { spacing, radius, shadows } from '../../theme/designTokens';
 import { CarpoolCardAccent } from './carpoolUi';
 import { openCarpoolDriverChat } from '../../utils/openCarpoolDriverChat';
+import { CarpoolLiveTripPanel } from './CarpoolLiveTripPanel';
+import {
+  eventTripId,
+  slotTripStatus,
+} from '../../utils/carpoolLiveTrip';
+import { isPassengerConfirmed } from '../../utils/standaloneCarpool';
 
 interface CarpoolRideCardProps {
   event: TeamEvent;
@@ -302,6 +308,23 @@ export const CarpoolRideCard: React.FC<CarpoolRideCardProps> = ({
             </ProDayText>
           ) : null}
         </View>
+
+        {isMine ||
+        (slot.passengers ?? []).some(
+          (p) => p.uid === profile.uid && isPassengerConfirmed(p),
+        ) ? (
+          <CarpoolLiveTripPanel
+            tripId={eventTripId(event.id, slot.driver_uid)}
+            viewerUid={profile.uid}
+            driverUid={slot.driver_uid}
+            driverName={slot.driver_name}
+            passengers={slot.passengers}
+            tripStatus={slotTripStatus(slot)}
+            onStartTrip={() => teamEventsService.startCarpoolTrip(event.id, profile.uid)}
+            onEndTrip={() => teamEventsService.endCarpoolTrip(event.id, profile.uid)}
+            onTripChanged={onUpdated}
+          />
+        ) : null}
       </View>
     </PressableSpring>
   );

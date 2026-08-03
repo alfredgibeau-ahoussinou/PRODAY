@@ -549,6 +549,37 @@ service cloud.firestore {
       allow delete: if isSignedIn() && resource.data.driver_uid == request.auth.uid;
     }
 
+    /** Position live du conducteur — lecture réservée aux participants du trajet. */
+    match /carpool_trip_live/{tripId} {
+      allow read: if isSignedIn()
+        && resource.data.participant_uids.hasAny([request.auth.uid]);
+      allow create: if isSignedIn()
+        && request.resource.data.driver_uid == request.auth.uid
+        && request.resource.data.participant_uids.hasAny([request.auth.uid])
+        && request.resource.data.keys().hasAll([
+          'trip_id', 'kind', 'driver_uid', 'participant_uids', 'active', 'updated_at'
+        ]);
+      allow update: if isSignedIn()
+        && resource.data.driver_uid == request.auth.uid
+        && request.resource.data.driver_uid == resource.data.driver_uid
+        && request.resource.data.trip_id == resource.data.trip_id
+        && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly([
+              'location',
+              'heading',
+              'accuracy_m',
+              'active',
+              'participant_uids',
+              'started_at',
+              'ended_at',
+              'updated_at',
+              'offer_id',
+              'event_id',
+              'kind'
+            ]);
+      allow delete: if isSignedIn() && resource.data.driver_uid == request.auth.uid;
+    }
+
     match /team_payment_requests/{requestId} {
       allow read: if isSignedIn();
       allow create, update, delete: if isStaffOrAdmin();

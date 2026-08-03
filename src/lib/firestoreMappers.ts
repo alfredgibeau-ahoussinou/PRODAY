@@ -363,6 +363,13 @@ function mapEventTasks(raw: unknown) {
   });
 }
 
+function mapCarpoolTripStatus(
+  raw: unknown,
+): import('../models/CarpoolLiveTrip').CarpoolTripStatus | undefined {
+  if (raw === 'scheduled' || raw === 'in_progress' || raw === 'completed') return raw;
+  return undefined;
+}
+
 function mapCarpoolSlots(raw: unknown) {
   if (!Array.isArray(raw)) return undefined;
   return raw.map((item) => {
@@ -377,14 +384,23 @@ function mapCarpoolSlots(raw: unknown) {
       meeting_location: toGeoPoint(s.meeting_location),
       notes: s.notes ? String(s.notes) : undefined,
       volunteered: s.volunteered === true,
+      trip_status: mapCarpoolTripStatus(s.trip_status),
       passengers: Array.isArray(passengersRaw)
         ? passengersRaw.map((p) => {
             const row = p as Record<string, unknown>;
+            const status =
+              row.status === 'pending' ||
+              row.status === 'confirmed' ||
+              row.status === 'rejected' ||
+              row.status === 'cancelled'
+                ? row.status
+                : undefined;
             return {
               uid: String(row.uid ?? ''),
               name: String(row.name ?? ''),
               pickup_place: row.pickup_place ? String(row.pickup_place) : undefined,
               pickup_location: toGeoPoint(row.pickup_location),
+              status,
             };
           })
         : undefined,
