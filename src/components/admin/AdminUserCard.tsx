@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { useTranslation } from '../../context/LocaleContext';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
-import type { User, UserRole } from '../../models/User';
+import type { User } from '../../models/User';
 import { userNeedsAdminVerificationReview } from '../../utils/adminUserVerification';
 import { Icon } from '../ui/Icon';
 import { useAdminStyles } from './adminStyles';
@@ -9,8 +9,10 @@ import { spacing, radius } from '../../theme/designTokens';
 import type { AppColors } from '../../theme/universeTheme';
 import { getRoleLabel } from '../../screens/signup/signupFlowConfig';
 import { adminProductLineLabel } from '../../utils/adminProductLine';
+import { adminGenderLabel } from '../../utils/adminUserDisplay';
 import { getUserProductLine } from '../../utils/productLineAccess';
 import { MEDICAL_CANONICAL_LABELS, resolveMedicalSpecialtyId } from '../../screens/signup/signupMedicalI18n';
+import { PlayerLevelBadgePill } from '../player/PlayerLevelBadgePill';
 
 function needsVerificationReview(user: User): boolean {
   return userNeedsAdminVerificationReview(user);
@@ -54,6 +56,8 @@ export const AdminUserCard: React.FC<AdminUserCardProps> = ({
   const showVerify = needsVerificationReview(user);
   const productLine = getUserProductLine(user);
   const specialty = healthSpecialtyLabel(user);
+  const genderLabel = adminGenderLabel(user.profile?.gender);
+  const showGender = user.role === 'player' || user.profile?.gender != null;
 
   return (
     <View style={styles.card}>
@@ -83,6 +87,14 @@ export const AdminUserCard: React.FC<AdminUserCardProps> = ({
               <View style={styles.lineBadge}>
                 <Text style={styles.lineBadgeText}>{adminProductLineLabel(productLine)}</Text>
               </View>
+              {showGender ? (
+                <View style={styles.metaBadge}>
+                  <Text style={styles.metaBadgeText}>Genre · {genderLabel}</Text>
+                </View>
+              ) : null}
+              {user.role === 'player' ? (
+                <PlayerLevelBadgePill user={user} compact showVerified={false} />
+              ) : null}
               {user.profile?.job_title && !specialty ? (
                 <Text style={styles.city} numberOfLines={1}>
                   {user.profile.job_title}
@@ -261,6 +273,14 @@ function createStyles(c: AppColors) {
       borderColor: c.border,
     },
     lineBadgeText: { fontSize: 10, fontWeight: '800', color: c.textSecondary },
+    metaBadge: {
+      backgroundColor: c.surfaceMuted,
+      paddingHorizontal: 8,
+      paddingVertical: 2,
+      borderWidth: 1,
+      borderColor: c.border,
+    },
+    metaBadgeText: { fontSize: 10, fontWeight: '700', color: c.textSecondary },
     sponsorBadge: { paddingHorizontal: 8, paddingVertical: 2 },
     sponsorOk: { backgroundColor: c.accentSoft },
     sponsorWait: { backgroundColor: c.warningBg },

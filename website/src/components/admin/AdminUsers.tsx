@@ -3,10 +3,12 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { AdminNav } from "@/components/admin/AdminNav";
-import { Search, Filter, MoreVertical, Edit, Ban, Check, Mail, Calendar, User } from "lucide-react";
+import { Search, Ban, Check, Mail, User } from "lucide-react";
 
 type UserStatus = "active" | "inactive" | "suspended";
 type UserRole = "admin" | "moderator" | "user";
+type Gender = "men" | "women" | "minor";
+type PlayerLevel = "amateur" | "academy" | "professional";
 
 interface User {
   id: string;
@@ -16,7 +18,10 @@ interface User {
   status: UserStatus;
   createdAt: string;
   lastLogin: string;
+  /** Pôle UI — « Joueur » pour le pôle unifié (mock prototype). */
   pole?: string;
+  gender?: Gender;
+  playerLevel?: PlayerLevel;
 }
 
 const mockUsers: User[] = [
@@ -28,7 +33,9 @@ const mockUsers: User[] = [
     status: "active",
     createdAt: "2024-01-15T10:30:00Z",
     lastLogin: "2024-07-26T14:20:00Z",
-    pole: "joueur",
+    pole: "Joueur",
+    gender: "men",
+    playerLevel: "amateur",
   },
   {
     id: "2",
@@ -38,7 +45,7 @@ const mockUsers: User[] = [
     status: "active",
     createdAt: "2024-02-20T09:15:00Z",
     lastLogin: "2024-07-25T16:45:00Z",
-    pole: "pro",
+    pole: "Pro Staff",
   },
   {
     id: "3",
@@ -48,7 +55,31 @@ const mockUsers: User[] = [
     status: "inactive",
     createdAt: "2024-03-10T11:00:00Z",
     lastLogin: "2024-06-30T08:30:00Z",
-    pole: "sante",
+    pole: "Santé",
+  },
+  {
+    id: "4",
+    email: "lea.moreau@example.com",
+    name: "Léa Moreau",
+    role: "user",
+    status: "active",
+    createdAt: "2024-04-02T12:00:00Z",
+    lastLogin: "2024-07-28T09:10:00Z",
+    pole: "Joueur",
+    gender: "women",
+    playerLevel: "academy",
+  },
+  {
+    id: "5",
+    email: "karim.benali@example.com",
+    name: "Karim Benali",
+    role: "user",
+    status: "active",
+    createdAt: "2024-05-18T08:40:00Z",
+    lastLogin: "2024-07-29T18:00:00Z",
+    pole: "Joueur",
+    gender: "men",
+    playerLevel: "professional",
   },
 ];
 
@@ -70,6 +101,18 @@ const STATUS_COLORS: Record<UserStatus, string> = {
   suspended: "text-red-400 bg-red-500/20",
 };
 
+const GENDER_LABELS: Record<Gender, string> = {
+  men: "Homme",
+  women: "Femme",
+  minor: "Mineur",
+};
+
+const PLAYER_LEVEL_LABELS: Record<PlayerLevel, { label: string; className: string }> = {
+  amateur: { label: "Amateur", className: "text-blue-300 bg-blue-500/20" },
+  academy: { label: "Centre de formation", className: "text-green-300 bg-green-500/20" },
+  professional: { label: "Professionnel", className: "text-yellow-300 bg-yellow-500/20" },
+};
+
 export function AdminUsers() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
@@ -81,7 +124,11 @@ export function AdminUsers() {
   const filteredUsers = users.filter((user) => {
     const matchesSearch =
       user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.name.toLowerCase().includes(searchQuery.toLowerCase());
+      user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (user.pole?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false) ||
+      (user.gender
+        ? GENDER_LABELS[user.gender].toLowerCase().includes(searchQuery.toLowerCase())
+        : false);
     const matchesStatus = statusFilter === "all" || user.status === statusFilter;
     const matchesRole = roleFilter === "all" || user.role === roleFilter;
     return matchesSearch && matchesStatus && matchesRole;
@@ -103,13 +150,9 @@ export function AdminUsers() {
     );
   };
 
-  const handleRoleChange = (userId: string, newRole: UserRole) => {
-    setUsers((prev) =>
-      prev.map((user) =>
-        user.id === userId ? { ...user, role: newRole } : user
-      )
-    );
-  };
+  void router;
+  void isPending;
+  void startTransition;
 
   return (
     <main className="relative mx-auto w-full max-w-7xl px-6 py-12">
@@ -122,19 +165,18 @@ export function AdminUsers() {
             Gestion des utilisateurs
           </h1>
           <p className="mt-2 max-w-xl text-sm text-white/55">
-            Gérez les comptes utilisateurs, les rôles et les statuts.
+            Prototype mock — Genre et badge niveau joueur (aligné app). Pas branché sur l’API.
           </p>
         </div>
         <AdminNav />
       </header>
 
-      {/* Filtres et recherche */}
       <section className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40" size={18} />
           <input
             type="text"
-            placeholder="Rechercher par email ou nom..."
+            placeholder="Rechercher par email, nom, genre ou pôle..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full rounded-full border border-white/10 bg-white/5 pl-10 pr-4 py-2.5 text-white placeholder:text-white/40 focus:border-white/20 focus:outline-none"
@@ -164,7 +206,6 @@ export function AdminUsers() {
         </div>
       </section>
 
-      {/* Statistiques rapides */}
       <section className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-4">
         <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
           <p className="text-sm text-white/60">Total utilisateurs</p>
@@ -190,7 +231,6 @@ export function AdminUsers() {
         </div>
       </section>
 
-      {/* Tableau des utilisateurs */}
       <section className="mt-8 overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03]">
         <div className="overflow-x-auto">
           <table className="w-full">
@@ -201,6 +241,12 @@ export function AdminUsers() {
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-white/60">
                   Rôle
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-white/60">
+                  Genre
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-white/60">
+                  Badge
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-white/60">
                   Statut
@@ -219,75 +265,94 @@ export function AdminUsers() {
             <tbody>
               {filteredUsers.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-sm text-white/40">
+                  <td colSpan={8} className="px-6 py-12 text-center text-sm text-white/40">
                     Aucun utilisateur trouvé
                   </td>
                 </tr>
               ) : (
-                filteredUsers.map((user) => (
-                  <tr key={user.id} className="border-b border-white/5 last:border-0">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-blue-500/20 to-purple-500/20 text-white">
-                          <User size={18} />
+                filteredUsers.map((user) => {
+                  const level = user.playerLevel
+                    ? PLAYER_LEVEL_LABELS[user.playerLevel]
+                    : null;
+                  return (
+                    <tr key={user.id} className="border-b border-white/5 last:border-0">
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-blue-500/20 to-purple-500/20 text-white">
+                            <User size={18} />
+                          </div>
+                          <div>
+                            <p className="font-medium text-white">{user.name}</p>
+                            <p className="text-sm text-white/60">{user.email}</p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="font-medium text-white">{user.name}</p>
-                          <p className="text-sm text-white/60">{user.email}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="inline-flex rounded-full bg-white/10 px-2.5 py-1 text-xs font-medium text-white">
-                        {ROLE_LABELS[user.role]}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span
-                        className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${STATUS_COLORS[user.status]}`}
-                      >
-                        {STATUS_LABELS[user.status]}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="text-sm text-white/80 capitalize">
-                        {user.pole || "—"}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="text-sm text-white/60">
-                        {formatDate(user.lastLogin)}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        {user.status === "active" ? (
-                          <button
-                            onClick={() => handleStatusChange(user.id, "suspended")}
-                            className="rounded-full p-2 text-white/60 transition hover:bg-white/10 hover:text-red-400"
-                            title="Suspendre"
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="inline-flex rounded-full bg-white/10 px-2.5 py-1 text-xs font-medium text-white">
+                          {ROLE_LABELS[user.role]}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-sm text-white/80">
+                          {user.gender ? GENDER_LABELS[user.gender] : "—"}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        {level ? (
+                          <span
+                            className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${level.className}`}
                           >
-                            <Ban size={16} />
-                          </button>
+                            {level.label}
+                          </span>
                         ) : (
-                          <button
-                            onClick={() => handleStatusChange(user.id, "active")}
-                            className="rounded-full p-2 text-white/60 transition hover:bg-white/10 hover:text-green-400"
-                            title="Activer"
-                          >
-                            <Check size={16} />
-                          </button>
+                          <span className="text-sm text-white/40">—</span>
                         )}
-                        <button
-                          className="rounded-full p-2 text-white/60 transition hover:bg-white/10 hover:text-white"
-                          title="Envoyer email"
+                      </td>
+                      <td className="px-6 py-4">
+                        <span
+                          className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${STATUS_COLORS[user.status]}`}
                         >
-                          <Mail size={16} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                          {STATUS_LABELS[user.status]}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-sm text-white/80">{user.pole || "—"}</span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-sm text-white/60">
+                          {formatDate(user.lastLogin)}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          {user.status === "active" ? (
+                            <button
+                              onClick={() => handleStatusChange(user.id, "suspended")}
+                              className="rounded-full p-2 text-white/60 transition hover:bg-white/10 hover:text-red-400"
+                              title="Suspendre"
+                            >
+                              <Ban size={16} />
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => handleStatusChange(user.id, "active")}
+                              className="rounded-full p-2 text-white/60 transition hover:bg-white/10 hover:text-green-400"
+                              title="Activer"
+                            >
+                              <Check size={16} />
+                            </button>
+                          )}
+                          <button
+                            className="rounded-full p-2 text-white/60 transition hover:bg-white/10 hover:text-white"
+                            title="Envoyer email"
+                          >
+                            <Mail size={16} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
