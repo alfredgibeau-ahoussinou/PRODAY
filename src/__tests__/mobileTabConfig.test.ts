@@ -53,11 +53,39 @@ describe('mobileTabConfig', () => {
     expect(rail.overflow).toEqual([]);
   });
 
-  it('affiche le menu club pro en rangée plate', () => {
+  it('affiche le menu club pro en rangée plate avec covoiturage', () => {
     const rail = getMobileRailLayout('pro', 'club');
-    expect(rail.flat).toEqual(['home', 'recrutement', 'matchs', 'messages', 'shop', 'profil']);
+    expect(rail.flat).toEqual([
+      'home',
+      'covoiturage',
+      'recrutement',
+      'matchs',
+      'messages',
+      'shop',
+      'profil',
+    ]);
     expect(rail.center).toBeNull();
     expect(rail.overflow).toEqual([]);
+  });
+
+  it('affiche le menu organisateur avec covoiturage en 2e position', () => {
+    const rail = getMobileRailLayout('pro', 'organizer');
+    expect(rail.flat?.[0]).toBe('home');
+    expect(rail.flat?.[1]).toBe('covoiturage');
+    expect(rail.flat).toContain('matchs');
+  });
+
+  it('place covoiturage en 2e pour coach pro', () => {
+    const rail = getMobileRailLayout('pro', 'coach');
+    expect(rail.flat).toEqual([
+      'home',
+      'covoiturage',
+      'matchs',
+      'recrutement',
+      'messages',
+      'shop',
+      'profil',
+    ]);
   });
 
   it('affiche le menu pro joueur en rangée plate', () => {

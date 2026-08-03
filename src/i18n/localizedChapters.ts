@@ -2,7 +2,7 @@ import type { IconName } from '../components/ui/Icon';
 import type { TranslateFn } from './types';
 import type { MatchChapterId, CalendarKindFilter, AmicauxStatusFilter } from '../content/matchChapters';
 import type { MessagesChapterId, MessagesThreadFilter } from '../content/messagesChapters';
-import type { CarpoolChapterId, CarpoolEventFilter } from '../content/carpoolChapters';
+import type { CarpoolChapterId, CarpoolEventFilter, CarpoolScopeFilter } from '../content/carpoolChapters';
 import type { FeedChapterId, FeedTypeFilter } from '../content/feedChapters';
 import type { CandidatureChapterId, PositionFilterId } from '../content/candidatureChapters';
 import type { MercatoStaffChapterId } from '../content/mercatoStaffChapters';
@@ -107,6 +107,15 @@ export function getCarpoolEventFilters(t: TranslateFn) {
     { id: 'offering' as const, label: tr(t, 'carpool.filter.offering', 'Je conduis') },
     { id: 'booked' as const, label: tr(t, 'carpool.filter.booked', 'Réservé') },
   ] satisfies { id: CarpoolEventFilter; label: string }[];
+}
+
+export function getCarpoolScopeFilters(t: TranslateFn) {
+  return [
+    { id: 'all' as const, label: tr(t, 'carpool.scope.all', 'Tous types') },
+    { id: 'match' as const, label: tr(t, 'carpool.scope.match', 'Match') },
+    { id: 'training' as const, label: tr(t, 'carpool.scope.training', 'Entraînement') },
+    { id: 'event' as const, label: tr(t, 'carpool.scope.event', 'Événement') },
+  ] satisfies { id: CarpoolScopeFilter; label: string }[];
 }
 
 export function getFeedChapters(t: TranslateFn, options?: { showWeekly?: boolean }) {

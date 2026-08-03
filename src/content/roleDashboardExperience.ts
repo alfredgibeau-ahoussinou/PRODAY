@@ -128,12 +128,14 @@ export function getRolePanelActions(role: UserRole): RolePanelAction[] {
     case 'coach':
       return [
         { icon: 'calendar', title: 'Calendrier équipe', sub: 'Convocations & Live Stats', accent: true },
+        { icon: 'car', title: 'Covoiturage', sub: 'Trajets matchs & entraînements' },
         { icon: 'search', title: 'Recrutement', sub: 'Publier une annonce' },
         { icon: 'school', title: 'Diplômes', sub: 'Statut vérification' },
       ];
     case 'club':
       return [
         { icon: 'business', title: 'Annonces club', sub: 'Recrutement & stages', accent: true },
+        { icon: 'car', title: 'Covoiturage', sub: 'Places vers matchs & détections' },
         { icon: 'people', title: 'Gestion effectif', sub: 'Planning & présences' },
         { icon: 'football', title: 'Détections', sub: 'Journées scouting' },
         { icon: 'calendar', title: 'Stages', sub: 'Camps & stages foot' },
@@ -153,6 +155,7 @@ export function getRolePanelActions(role: UserRole): RolePanelAction[] {
     case 'organizer':
       return [
         { icon: 'calendar', title: 'Événements', sub: 'Détections & calendrier local', accent: true },
+        { icon: 'car', title: 'Covoiturage', sub: 'Trajets vers tournois & détections' },
         { icon: 'football', title: 'Détections', sub: 'Journées publiques' },
         { icon: 'handshake', title: 'Matchs', sub: 'Rencontres & convocations' },
       ];

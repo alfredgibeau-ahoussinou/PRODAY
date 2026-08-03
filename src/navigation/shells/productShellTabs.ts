@@ -2,7 +2,7 @@ import type { MainTabId } from '../mainTabConfig';
 
 export const AMATEUR_PLAYER_SHELL_TABS: MainTabId[] = [
   'home', // Équipe
-  'covoiturage', // Déplacements
+  'covoiturage', // Différenciateur — trajets match / entraînement
   'recrutement', // Club
   'profil', // Moi
 ];
@@ -19,6 +19,7 @@ export const AMATEUR_PLAYER_OVERFLOW_TABS: MainTabId[] = [
 
 export const AMATEUR_COACH_SHELL_TABS: MainTabId[] = [
   'home', // Équipe
+  'covoiturage',
   'matchs',
   'recrutement', // Club
   'messages',
@@ -38,6 +39,7 @@ export const SUPPORTER_SHELL_TABS: MainTabId[] = [
 
 export const PRO_CLUB_SHELL_TABS: MainTabId[] = [
   'home', // Structure
+  'covoiturage',
   'recrutement', // Recrutement
   'matchs', // Calendrier
   'messages', // Communication
@@ -62,9 +64,9 @@ export const PRO_PLAYER_OVERFLOW_TABS: MainTabId[] = [
 
 export const PRO_COACH_SHELL_TABS: MainTabId[] = [
   'home',
+  'covoiturage',
   'matchs',
   'recrutement',
-  'covoiturage',
   'messages',
   'shop',
   'profil',
@@ -92,6 +94,7 @@ export const PRO_RECRUITER_SHELL_TABS: MainTabId[] = [
 
 export const PRO_ORGANIZER_SHELL_TABS: MainTabId[] = [
   'home',
+  'covoiturage',
   'matchs',
   'recrutement',
   'feed',

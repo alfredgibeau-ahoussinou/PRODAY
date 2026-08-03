@@ -29,10 +29,10 @@ const LEFT_PRIORITY_BY_LINE: Record<ProductLineId, MainTabId[]> = {
   homme: ['home', 'covoiturage', 'matchs', 'recrutement'],
   woman: ['home', 'covoiturage', 'matchs', 'recrutement'],
   amateur: ['home', 'covoiturage', 'matchs', 'recrutement'],
-  pro: ['home', 'matchs', 'recrutement', 'feed'],
+  pro: ['home', 'covoiturage', 'matchs', 'recrutement'],
   pro_player: ['home', 'recrutement', 'matchs', 'reels'],
-  pro_club: ['home', 'recrutement', 'matchs', 'messages'],
-  pro_staff: ['home', 'matchs', 'recrutement', 'feed'],
+  pro_club: ['home', 'covoiturage', 'recrutement', 'matchs'],
+  pro_staff: ['home', 'covoiturage', 'matchs', 'recrutement'],
   sponsor: ['home', 'matchs', 'messages', 'profil'],
   supporter: ['matchs', 'feed', 'messages', 'reels'],
   sante: ['home', 'matchs', 'feed', 'messages'],
@@ -40,11 +40,11 @@ const LEFT_PRIORITY_BY_LINE: Record<ProductLineId, MainTabId[]> = {
 
 const LEFT_PRIORITY_BY_PRO_ROLE: Partial<Record<UserRole, MainTabId[]>> = {
   player: ['home', 'recrutement', 'matchs', 'reels'],
-  club: ['home', 'recrutement', 'matchs', 'messages'],
-  coach: ['home', 'matchs', 'recrutement', 'covoiturage'],
+  club: ['home', 'covoiturage', 'recrutement', 'matchs'],
+  coach: ['home', 'covoiturage', 'matchs', 'recrutement'],
   agent: ['home', 'recrutement', 'matchs', 'feed'],
   recruiter: ['home', 'recrutement', 'matchs', 'feed'],
-  organizer: ['home', 'matchs', 'recrutement', 'feed'],
+  organizer: ['home', 'covoiturage', 'matchs', 'recrutement'],
 };
 
 type FlatRailRule = {
@@ -66,7 +66,7 @@ const FLAT_RAIL_RULES: FlatRailRule[] = [
   },
   {
     match: (line, role) => line === 'amateur' && role === 'coach',
-    primary: ['home', 'matchs', 'recrutement', 'messages', 'shop', 'profil'],
+    primary: ['home', 'covoiturage', 'matchs', 'recrutement', 'messages', 'shop', 'profil'],
   },
   {
     match: (line, role) => line === 'sante' && role === 'physio',
@@ -85,11 +85,11 @@ const FLAT_RAIL_RULES: FlatRailRule[] = [
   {
     match: (line, role) =>
       line === 'pro_club' || (isProProductLine(line) && role === 'club'),
-    primary: ['home', 'recrutement', 'matchs', 'messages', 'shop', 'profil'],
+    primary: ['home', 'covoiturage', 'recrutement', 'matchs', 'messages', 'shop', 'profil'],
   },
   {
     match: (line, role) => isProProductLine(line) && role === 'coach',
-    primary: ['home', 'matchs', 'recrutement', 'covoiturage', 'messages', 'shop', 'profil'],
+    primary: ['home', 'covoiturage', 'matchs', 'recrutement', 'messages', 'shop', 'profil'],
   },
   {
     match: (line, role) => isProProductLine(line) && role === 'agent',
@@ -101,7 +101,7 @@ const FLAT_RAIL_RULES: FlatRailRule[] = [
   },
   {
     match: (line, role) => isProProductLine(line) && role === 'organizer',
-    primary: ['home', 'matchs', 'recrutement', 'feed', 'messages', 'shop', 'profil'],
+    primary: ['home', 'covoiturage', 'matchs', 'recrutement', 'feed', 'messages', 'shop', 'profil'],
   },
 ];
 

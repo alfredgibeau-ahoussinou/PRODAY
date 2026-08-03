@@ -47,6 +47,10 @@ export const OrganizerHomeDashboard: React.FC<StaffRoleHomeProps> = ({
       nav.openMatchs({ homeTab: 'season' });
       return;
     }
+    if (action.title === 'Covoiturage') {
+      nav.openCarpool();
+      return;
+    }
     if (action.title === 'Détections') {
       setShowDetections(true);
       return;

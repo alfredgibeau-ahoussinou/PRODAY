@@ -1,4 +1,5 @@
 import type { CarpoolDriverBalance, CarpoolSlot, TeamEvent } from '../models/TeamEvent';
+import type { CarpoolScopeFilter } from '../content/carpoolChapters';
 
 /** Agrège le nombre de trajets par conducteur sur une liste d’événements. */
 export function aggregateCarpoolBalance(events: TeamEvent[]): CarpoolDriverBalance[] {
@@ -99,4 +100,21 @@ export function newCarpoolMessageId(): string {
 
 export function newEventTaskId(): string {
   return `task_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+}
+
+/** Match / entraînement / événement (détection, réunion, autre). */
+export function matchesCarpoolScopeFilter(
+  event: Pick<TeamEvent, 'event_type'>,
+  scope: CarpoolScopeFilter,
+): boolean {
+  if (scope === 'all') return true;
+  if (scope === 'match') {
+    return event.event_type === 'friendly' || event.event_type === 'tournament';
+  }
+  if (scope === 'training') return event.event_type === 'training';
+  return (
+    event.event_type === 'detection' ||
+    event.event_type === 'meeting' ||
+    event.event_type === 'other'
+  );
 }
