@@ -12,7 +12,7 @@ function jsonResponse(body: Record<string, unknown>, init?: ResponseInit) {
   return response;
 }
 
-/** Refuse une inscription bêta. session admin requise. */
+/** Refuse une inscription bêta. session admin requise. Envoie un email de refus. */
 export async function POST(request: Request) {
   if (!isSameOriginBrowserRequest(request)) {
     return jsonResponse({ error: "Origine non autorisée" }, { status: 403 });
@@ -34,9 +34,13 @@ export async function POST(request: Request) {
     );
   }
 
-  let body: { id?: string };
+  let body: { id?: string; admin_note?: string; adminNote?: string };
   try {
-    body = (await request.json()) as { id?: string };
+    body = (await request.json()) as {
+      id?: string;
+      admin_note?: string;
+      adminNote?: string;
+    };
   } catch {
     return jsonResponse({ error: "Corps JSON invalide" }, { status: 400 });
   }
@@ -46,7 +50,8 @@ export async function POST(request: Request) {
     return jsonResponse({ error: "id requis" }, { status: 400 });
   }
 
-  const result = await rejectBetaWaitlistAdmin(id);
+  const note = String(body.admin_note ?? body.adminNote ?? "").trim();
+  const result = await rejectBetaWaitlistAdmin(id, note || undefined);
   if (!result.ok) {
     return jsonResponse(
       { error: result.error ?? "Refus impossible" },
@@ -54,5 +59,9 @@ export async function POST(request: Request) {
     );
   }
 
-  return jsonResponse({ ok: true });
+  return jsonResponse({
+    ok: true,
+    emailSent: result.emailSent,
+    emailError: result.emailError,
+  });
 }

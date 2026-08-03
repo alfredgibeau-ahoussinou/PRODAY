@@ -153,6 +153,92 @@ export function buildBetaWelcomeEmail(params: BetaWelcomeEmailParams): {
   return { subject, html, text };
 }
 
+export type BetaRejectEmailParams = {
+  email: string;
+  roleLabel: string;
+  siteUrl?: string;
+};
+
+export function buildBetaRejectEmail(params: BetaRejectEmailParams): {
+  subject: string;
+  html: string;
+  text: string;
+} {
+  const site = (params.siteUrl ?? 'https://proday75.fr').replace(/\/$/, '');
+  const subject = 'Votre demande d’accès à la bêta ProDay';
+
+  const text = [
+    'Bonjour,',
+    '',
+    `Nous avons bien reçu votre inscription à la bêta ProDay (${params.roleLabel}).`,
+    '',
+    'Pour le moment, nous ne pouvons pas vous ouvrir l’accès. La capacité de la bêta est limitée et nous priorisons certains profils pour cette phase.',
+    '',
+    'Vous restez dans notre liste : nous pourrons vous recontacter lors d’une prochaine vague. En attendant, vous pouvez suivre ProDay sur le site.',
+    '',
+    `Site : ${site}`,
+    '',
+    'Merci de votre intérêt,',
+    'L’équipe ProDay',
+    '',
+    '—',
+    'Contact : support@proday.app',
+  ].join('\n');
+
+  const html = `<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>${subject}</title>
+</head>
+<body style="margin:0;padding:0;background:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#0a0a0a;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f1f5f9;padding:32px 16px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;background:#ffffff;border-radius:16px;overflow:hidden;border:1px solid #e2e8f0;">
+          <tr>
+            <td style="background:#0a0a0a;padding:28px 32px;">
+              <p style="margin:0;font-size:22px;font-weight:700;color:#ffffff;letter-spacing:0.04em;">PRODAY</p>
+              <p style="margin:8px 0 0;font-size:12px;color:#94a3b8;letter-spacing:0.12em;text-transform:uppercase;">Connecter • Progresser • Réussir</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:32px;">
+              <h1 style="margin:0 0 16px;font-size:22px;line-height:1.3;color:#0a0a0a;">Demande d&apos;accès reçue</h1>
+              <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#334155;">
+                Merci pour votre inscription en tant que <strong>${params.roleLabel}</strong>.
+              </p>
+              <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#334155;">
+                Pour le moment, nous ne pouvons pas vous ouvrir l&apos;accès à la bêta.
+                La capacité est limitée et nous priorisons certains profils pour cette phase.
+              </p>
+              <p style="margin:0 0 24px;font-size:15px;line-height:1.6;color:#334155;">
+                Vous restez dans notre liste : nous pourrons vous recontacter lors d&apos;une prochaine vague.
+              </p>
+              <a href="${site}" style="display:inline-block;background:#0a0a0a;color:#ffffff;text-decoration:none;font-size:14px;font-weight:600;padding:14px 28px;border-radius:999px;">
+                Découvrir ProDay
+              </a>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:20px 32px 28px;border-top:1px solid #e2e8f0;">
+              <p style="margin:0;font-size:12px;line-height:1.6;color:#94a3b8;">
+                Message envoyé à ${params.email}.<br />
+                Questions ? <a href="mailto:support@proday.app" style="color:#475569;">support@proday.app</a>
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+
+  return { subject, html, text };
+}
+
 export type EmailJsBetaConfig = {
   serviceId: string;
   templateId: string;

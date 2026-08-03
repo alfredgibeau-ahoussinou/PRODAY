@@ -34,9 +34,13 @@ export async function POST(request: Request) {
     );
   }
 
-  let body: { id?: string };
+  let body: { id?: string; admin_note?: string; adminNote?: string };
   try {
-    body = (await request.json()) as { id?: string };
+    body = (await request.json()) as {
+      id?: string;
+      admin_note?: string;
+      adminNote?: string;
+    };
   } catch {
     return jsonResponse({ error: "Corps JSON invalide" }, { status: 400 });
   }
@@ -46,7 +50,8 @@ export async function POST(request: Request) {
     return jsonResponse({ error: "id requis" }, { status: 400 });
   }
 
-  const result = await approveBetaWaitlistAdmin(id);
+  const note = String(body.admin_note ?? body.adminNote ?? "").trim();
+  const result = await approveBetaWaitlistAdmin(id, note || undefined);
   if (!result.ok) {
     return jsonResponse(
       { error: result.error ?? "Approbation impossible" },

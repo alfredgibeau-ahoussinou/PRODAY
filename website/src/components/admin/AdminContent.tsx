@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { AdminNav } from "@/components/admin/AdminNav";
+import { AdminShell } from "@/components/admin/AdminShell";
+import { AdminMockBadge } from "@/components/admin/adminUi";
 import { Plus, Edit, Trash2, Eye, MessageSquare, FileText, Image as ImageIcon, Save, X } from "lucide-react";
 
 interface FAQItem {
@@ -113,21 +114,11 @@ export function AdminContent() {
   };
 
   return (
-    <main className="relative mx-auto w-full max-w-7xl px-6 py-12">
-      <header className="flex flex-col gap-4 border-b border-white/10 pb-8 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="font-[family-name:var(--font-syne)] text-xs font-semibold uppercase tracking-[0.22em] text-[#4C8BFF]">
-            Admin · Contenu
-          </p>
-          <h1 className="mt-2 font-[family-name:var(--font-syne)] text-3xl font-bold text-white">
-            Gestion du contenu
-          </h1>
-          <p className="mt-2 max-w-xl text-sm text-white/55">
-            Gérez la FAQ, les témoignages et le contenu du site.
-          </p>
-        </div>
-        <AdminNav />
-      </header>
+    <AdminShell
+      title="Contenu"
+      subtitle="FAQ, témoignages et médias du site. Hook: CRUD /api/admin/content."
+      actions={<AdminMockBadge />}
+    >
 
       {/* Onglets */}
       <section className="mt-8 flex gap-2">
@@ -424,6 +415,6 @@ export function AdminContent() {
           ))
         )}
       </section>
-    </main>
+    </AdminShell>
   );
 }

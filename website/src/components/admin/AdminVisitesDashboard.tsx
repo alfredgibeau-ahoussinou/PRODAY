@@ -2,7 +2,8 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { AdminNav } from "@/components/admin/AdminNav";
+import { AdminShell } from "@/components/admin/AdminShell";
+import { AdminBanner, AdminKpiCard, AdminTableShell } from "@/components/admin/adminUi";
 import type {
   TrafficDailyRow,
   TrafficTotals,
@@ -125,46 +126,31 @@ export function AdminVisitesDashboard({
       : aggregated.rows;
 
   return (
-    <main className="relative mx-auto w-full max-w-5xl px-6 py-12">
-      <header className="flex flex-col gap-4 border-b border-white/10 pb-8 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="font-[family-name:var(--font-syne)] text-xs font-semibold uppercase tracking-[0.22em] text-[#4C8BFF]">
-            Admin · Trafic
-          </p>
-          <h1 className="mt-2 font-[family-name:var(--font-syne)] text-3xl font-bold text-white">
-            Visites
-          </h1>
-          <p className="mt-2 max-w-xl text-sm text-white/55">
-            Sessions du site proday75.fr et ouvertures de l’application.
-            Compteurs réels depuis {formatDateFr(totals.tracking_started_at)}
-            {" "}
-            — pas d’historique avant cette date.
-          </p>
-        </div>
-        <div className="flex flex-col items-stretch gap-2 sm:items-end">
-          <AdminNav />
-          <button
-            type="button"
-            disabled={isPending}
-            onClick={() =>
-              startTransition(() => {
-                void refresh();
-              })
-            }
-            className="rounded-full border border-white/15 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-white/80 transition hover:border-white/30 hover:text-white disabled:opacity-50"
-          >
-            {isPending ? "…" : "Actualiser"}
-          </button>
-        </div>
-      </header>
-
+    <AdminShell
+      title="Visites"
+      subtitle={`Sessions site et ouvertures app depuis ${formatDateFr(totals.tracking_started_at)}.`}
+      actions={
+        <button
+          type="button"
+          disabled={isPending}
+          onClick={() =>
+            startTransition(() => {
+              void refresh();
+            })
+          }
+          className="rounded-full border border-white/15 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-white/80 transition hover:border-white/30 hover:text-white disabled:opacity-50"
+        >
+          {isPending ? "…" : "Actualiser"}
+        </button>
+      }
+    >
       {error ? (
-        <p className="mt-6 rounded-xl border border-amber-500/25 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
-          {error}
-        </p>
+        <div className="mb-6">
+          <AdminBanner tone="warning">{error}</AdminBanner>
+        </div>
       ) : null}
 
-      <div className="mt-6 flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-2">
         {PERIODS.map((p) => (
           <button
             key={p.id}
@@ -182,28 +168,18 @@ export function AdminVisitesDashboard({
       </div>
 
       <section className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-5">
-          <p className="text-xs uppercase tracking-wide text-white/45">
-            Visites site
-          </p>
-          <p className="mt-1 font-[family-name:var(--font-syne)] text-3xl font-bold text-white">
-            {displaySite}
-          </p>
-          <p className="mt-2 text-xs text-white/40">
-            Sessions navigateur (1 par onglet)
-          </p>
-        </div>
-        <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-5">
-          <p className="text-xs uppercase tracking-wide text-white/45">
-            Ouvertures app
-          </p>
-          <p className="mt-1 font-[family-name:var(--font-syne)] text-3xl font-bold text-white">
-            {displayApp}
-          </p>
-          <p className="mt-2 text-xs text-white/40">
-            Cold start / lancement de l’app
-          </p>
-        </div>
+        <AdminKpiCard
+          label="Visites site"
+          value={displaySite}
+          hint="Sessions navigateur (1 par onglet)"
+          accent="violet"
+        />
+        <AdminKpiCard
+          label="Ouvertures app"
+          value={displayApp}
+          hint="Cold start / lancement de l’app"
+          accent="cyan"
+        />
       </section>
 
       <section className="mt-10">
@@ -216,8 +192,8 @@ export function AdminVisitesDashboard({
             déploiement du tracking).
           </p>
         ) : (
-          <div className="mt-4 overflow-x-auto rounded-2xl border border-white/10">
-            <table className="w-full min-w-[420px] text-left text-sm">
+          <AdminTableShell>
+            <table className="mt-4 w-full min-w-[420px] text-left text-sm">
               <thead>
                 <tr className="border-b border-white/10 bg-white/[0.04] text-[11px] uppercase tracking-wide text-white/45">
                   <th className="px-4 py-3 font-semibold">Jour</th>
@@ -244,9 +220,9 @@ export function AdminVisitesDashboard({
                 ))}
               </tbody>
             </table>
-          </div>
+          </AdminTableShell>
         )}
       </section>
-    </main>
+    </AdminShell>
   );
 }

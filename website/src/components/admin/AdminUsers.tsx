@@ -2,7 +2,8 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { AdminNav } from "@/components/admin/AdminNav";
+import { AdminShell } from "@/components/admin/AdminShell";
+import { AdminKpiCard, AdminMockBadge, AdminTableShell } from "@/components/admin/adminUi";
 import { Search, Ban, Check, Mail, User } from "lucide-react";
 
 type UserStatus = "active" | "inactive" | "suspended";
@@ -155,23 +156,13 @@ export function AdminUsers() {
   void startTransition;
 
   return (
-    <main className="relative mx-auto w-full max-w-7xl px-6 py-12">
-      <header className="flex flex-col gap-4 border-b border-white/10 pb-8 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="font-[family-name:var(--font-syne)] text-xs font-semibold uppercase tracking-[0.22em] text-[#4C8BFF]">
-            Admin · Utilisateurs
-          </p>
-          <h1 className="mt-2 font-[family-name:var(--font-syne)] text-3xl font-bold text-white">
-            Gestion des utilisateurs
-          </h1>
-          <p className="mt-2 max-w-xl text-sm text-white/55">
-            Prototype mock — Genre et badge niveau joueur (aligné app). Pas branché sur l’API.
-          </p>
-        </div>
-        <AdminNav />
-      </header>
-
-      <section className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <AdminShell
+      title="Utilisateurs"
+      subtitle="Comptes, rôles et suspension. Données démo — brancher GET /api/admin/users quand disponible."
+      actions={<AdminMockBadge />}
+    >
+      {/* Hook: remplacer mockUsers par fetch('/api/admin/users') */}
+      <section className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40" size={18} />
           <input
@@ -207,33 +198,26 @@ export function AdminUsers() {
       </section>
 
       <section className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-4">
-        <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-          <p className="text-sm text-white/60">Total utilisateurs</p>
-          <p className="mt-2 font-display text-2xl font-bold text-white">{users.length}</p>
-        </div>
-        <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-          <p className="text-sm text-white/60">Actifs</p>
-          <p className="mt-2 font-display text-2xl font-bold text-green-400">
-            {users.filter((u) => u.status === "active").length}
-          </p>
-        </div>
-        <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-          <p className="text-sm text-white/60">Inactifs</p>
-          <p className="mt-2 font-display text-2xl font-bold text-gray-400">
-            {users.filter((u) => u.status === "inactive").length}
-          </p>
-        </div>
-        <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-          <p className="text-sm text-white/60">Suspendus</p>
-          <p className="mt-2 font-display text-2xl font-bold text-red-400">
-            {users.filter((u) => u.status === "suspended").length}
-          </p>
-        </div>
+        <AdminKpiCard label="Total" value={users.length} accent="blue" />
+        <AdminKpiCard
+          label="Actifs"
+          value={users.filter((u) => u.status === "active").length}
+          accent="emerald"
+        />
+        <AdminKpiCard
+          label="Inactifs"
+          value={users.filter((u) => u.status === "inactive").length}
+          accent="cyan"
+        />
+        <AdminKpiCard
+          label="Suspendus"
+          value={users.filter((u) => u.status === "suspended").length}
+          accent="red"
+        />
       </section>
 
-      <section className="mt-8 overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03]">
-        <div className="overflow-x-auto">
-          <table className="w-full">
+      <AdminTableShell>
+          <table className="mt-8 w-full">
             <thead>
               <tr className="border-b border-white/10">
                 <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-white/60">
@@ -356,8 +340,7 @@ export function AdminUsers() {
               )}
             </tbody>
           </table>
-        </div>
-      </section>
-    </main>
+      </AdminTableShell>
+    </AdminShell>
   );
 }

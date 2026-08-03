@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import {
-  ADMIN_HOME_PATH,
   ADMIN_LOGIN_PATH,
   getAdminSessionFromCookies,
 } from "@/lib/adminSession";
 import { AdminDashboard } from "@/components/admin/AdminDashboard";
+import { fetchBetaWaitlistAdmin } from "@/lib/adminBetaApi";
+import { fetchTrafficStatsAdmin } from "@/lib/adminTrafficApi";
 
 export const metadata: Metadata = {
   title: "Dashboard Admin - ProDay",
@@ -18,19 +19,35 @@ export default async function AdminDashboardPage() {
     redirect(ADMIN_LOGIN_PATH);
   }
 
-  // Récupérer les données pour le dashboard
-  const [betaData, visitsData] = await Promise.all([
-    fetch("/api/admin/beta/waitlist", { cache: "no-store" }),
-    fetch("/api/admin/visites", { cache: "no-store" }),
+  const [beta, visits] = await Promise.all([
+    fetchBetaWaitlistAdmin(),
+    fetchTrafficStatsAdmin(),
   ]);
 
-  const beta = await betaData.json().catch(() => ({ counts: { all: 0, pending: 0, approved: 0, rejected: 0 } }));
-  const visits = await visitsData.json().catch(() => ({ total: 0, today: 0, week: 0 }));
+  const days = visits.data.days ?? [];
+  const todayKey = new Date().toISOString().slice(0, 10);
+  const weekCutoff = new Date();
+  weekCutoff.setUTCDate(weekCutoff.getUTCDate() - 6);
+  const weekKey = weekCutoff.toISOString().slice(0, 10);
+
+  const siteToday = days
+    .filter((d) => d.day_key === todayKey)
+    .reduce((a, d) => a + d.site_visits, 0);
+  const siteWeek = days
+    .filter((d) => d.day_key >= weekKey)
+    .reduce((a, d) => a + d.site_visits, 0);
 
   return (
     <AdminDashboard
       betaCounts={beta.counts}
-      visitStats={visits}
+      betaError={beta.ok ? null : (beta.error ?? "Chargement bêta impossible")}
+      visitsError={visits.ok ? null : (visits.error ?? "Chargement visites impossible")}
+      visitStats={{
+        siteVisits: visits.data.totals.site_visits,
+        appOpens: visits.data.totals.app_opens,
+        siteToday,
+        siteWeek,
+      }}
     />
   );
 }
