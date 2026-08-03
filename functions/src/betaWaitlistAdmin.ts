@@ -2,7 +2,12 @@ import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
 import { generateBetaAccessToken } from './betaAccessToken';
 import { BETA_ROLE_LABELS, isBetaRoleId } from './betaWaitlistEmail';
-import { markWelcomeEmailSent, sendBetaWelcomeEmailToEntry } from './betaWaitlistMail';
+import {
+  markRejectEmailSent,
+  markWelcomeEmailSent,
+  sendBetaRejectEmailToEntry,
+  sendBetaWelcomeEmailToEntry,
+} from './betaWaitlistMail';
 import { resolveBetaWaitlistStatus } from './betaWaitlistStatus';
 
 function assertAdmin(context: functions.https.CallableContext): string {
@@ -92,19 +97,21 @@ export function createAdminApproveBetaAccessHandler(db: admin.firestore.Firestor
   };
 }
 
-/** Refuse une inscription bêta. */
+/** Refuse une inscription bêta et envoie l'email de refus. */
 export function createAdminRejectBetaAccessHandler(db: admin.firestore.Firestore) {
   return async (
     data: { entryId?: string },
     context: functions.https.CallableContext,
-  ): Promise<{ success: boolean }> => {
+  ): Promise<{ success: boolean; emailSent: boolean; emailError?: string }> => {
     const adminUid = assertAdmin(context);
     const entryId = String(data.entryId ?? '').trim();
     if (!entryId) {
       throw new functions.https.HttpsError('invalid-argument', 'entryId requis');
     }
 
-    const { ref } = await loadBetaEntry(db, entryId);
+    const { ref, data: entry } = await loadBetaEntry(db, entryId);
+    const email = String(entry.email ?? '').trim().toLowerCase();
+    const roleLabel = resolveRoleLabel(entry);
     const now = admin.firestore.FieldValue.serverTimestamp();
 
     await ref.update({
@@ -114,7 +121,18 @@ export function createAdminRejectBetaAccessHandler(db: admin.firestore.Firestore
       updated_at: now,
     });
 
-    return { success: true };
+    let emailSent = false;
+    let emailError: string | undefined;
+    if (email) {
+      const result = await sendBetaRejectEmailToEntry(email, roleLabel);
+      emailSent = result.emailSent;
+      emailError = result.emailError;
+      if (emailSent) {
+        await markRejectEmailSent(ref);
+      }
+    }
+
+    return { success: true, emailSent, emailError };
   };
 }
 

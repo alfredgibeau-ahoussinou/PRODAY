@@ -164,6 +164,7 @@ async function listWaitlist(db: admin.firestore.Firestore) {
       status,
       welcome_email_sent: data.welcome_email_sent === true,
       reject_email_sent: data.reject_email_sent === true,
+      confirmation_email_sent: data.confirmation_email_sent === true,
       admin_note: typeof data.admin_note === 'string' ? data.admin_note : null,
       referral_code: typeof data.referral_code === 'string' ? data.referral_code : null,
       created_at: toIso(data.created_at),

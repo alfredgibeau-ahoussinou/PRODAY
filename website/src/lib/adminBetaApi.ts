@@ -9,6 +9,7 @@ export type BetaAdminWaitlistEntry = {
   status: BetaAdminStatus;
   welcome_email_sent?: boolean;
   reject_email_sent?: boolean;
+  confirmation_email_sent?: boolean;
   admin_note?: string | null;
   referral_code?: string | null;
   created_at: string | null;

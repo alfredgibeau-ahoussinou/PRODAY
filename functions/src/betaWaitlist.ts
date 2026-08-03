@@ -3,6 +3,10 @@ import * as admin from 'firebase-admin';
 import { generateBetaAccessToken } from './betaAccessToken';
 import { sendIosPreAnnouncementAfterSignup } from './betaIosCampaign';
 import { BETA_ROLE_LABELS, isBetaRoleId } from './betaWaitlistEmail';
+import {
+  markConfirmationEmailSent,
+  sendBetaConfirmationEmailToEntry,
+} from './betaWaitlistMail';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -28,6 +32,29 @@ function setCors(req: functions.https.Request, res: functions.Response): boolean
   res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.set('Access-Control-Allow-Headers', 'Content-Type');
   return req.method === 'OPTIONS';
+}
+
+async function maybeSendConfirmationEmail(
+  docRef: admin.firestore.DocumentReference,
+  email: string,
+  alreadySent: boolean,
+): Promise<boolean> {
+  if (alreadySent) {
+    return false;
+  }
+  try {
+    const { emailSent, emailError } = await sendBetaConfirmationEmailToEntry(email);
+    if (emailSent) {
+      await markConfirmationEmailSent(docRef);
+      return true;
+    }
+    if (emailError) {
+      console.error('[submitBetaWaitlist] confirmation email failed:', emailError);
+    }
+  } catch (err) {
+    console.error('[submitBetaWaitlist] confirmation email:', err);
+  }
+  return false;
 }
 
 /** Inscription bêta depuis le site vitrine — Firestore, validation admin requise avant accès. */
@@ -75,6 +102,7 @@ export function createSubmitBetaWaitlistHandler(db: admin.firestore.Firestore) {
     let docRef: admin.firestore.DocumentReference;
     let isNew = false;
     let status: 'pending' | 'approved' | 'rejected' = 'pending';
+    let confirmationAlreadySent = false;
 
     if (existing.empty) {
       const accessToken = generateBetaAccessToken();
@@ -87,6 +115,7 @@ export function createSubmitBetaWaitlistHandler(db: admin.firestore.Firestore) {
         status: 'pending',
         source: 'website',
         welcome_email_sent: false,
+        confirmation_email_sent: false,
         ...(referralCode.length >= 6 ? { referral_code: referralCode } : {}),
         created_at: now,
         updated_at: now,
@@ -104,6 +133,7 @@ export function createSubmitBetaWaitlistHandler(db: admin.firestore.Firestore) {
         existingStatus === 'approved' || existingStatus === 'rejected'
           ? existingStatus
           : 'pending';
+      confirmationAlreadySent = existingData.confirmation_email_sent === true;
       const accessToken =
         typeof existingData.access_token === 'string' && existingData.access_token.trim()
           ? existingData.access_token.trim()
@@ -120,11 +150,21 @@ export function createSubmitBetaWaitlistHandler(db: admin.firestore.Firestore) {
       });
     }
 
+    // Confirmation for new/pending entries only — never block signup on email failure.
+    let confirmationEmailSent = false;
+    if (status === 'pending') {
+      confirmationEmailSent = await maybeSendConfirmationEmail(
+        docRef,
+        email,
+        confirmationAlreadySent,
+      );
+    }
+
     res.status(200).json({
       ok: true,
       isNew,
       status,
-      emailSent: false,
+      emailSent: confirmationEmailSent,
       message:
         status === 'approved'
           ? 'Inscription déjà validée — consultez votre email.'

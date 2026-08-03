@@ -1,4 +1,4 @@
-/** Template email bêta. garder aligné avec functions/src/betaWaitlistEmail.ts */
+/** Template email bêta — garder aligné avec functions/src/betaWaitlistEmail.ts */
 
 export const BETA_MEMBER_ROLE = "Beta-testeur";
 
@@ -54,35 +54,26 @@ export function buildBetaWelcomeEmail(params: BetaWelcomeEmailParams): {
   text: string;
 } {
   const site = (params.siteUrl ?? "https://proday75.fr").replace(/\/$/, "");
-  const subject = "Bienvenue dans la bêta ProDay";
+  const accessUrl = buildBetaAccessUrl(site, params.accessToken);
+  const subject = "Welcome to the ProDay Beta";
 
   const text = [
-    "Bonjour,",
+    "Congratulations!",
     "",
-    `Merci de votre inscription à la bêta ProDay en tant que ${params.roleLabel}.`,
+    "Your beta access request has been approved.",
     "",
-    "ProDay, c'est le foot amateur et semi-pro : Mercato, recruteurs vérifiés, matchs, covoiturage, santé, Shop et CV joueur. Trois univers : Man, Woman et Pro.",
+    "You can now access ProDay and discover all of its features.",
     "",
-    "Prochaines étapes :",
-    "• Accédez à votre espace bêta via le lien ci-dessous.",
-    "• Sur Android : téléchargez l'APK depuis l'onglet Installer. Pas par email.",
-    "• Sur iOS : bêta TestFlight à partir du 11 août 2026 à 18 h — lien envoyé à l'ouverture.",
-    "• En attendant, parcourez le site : démo interactive, pages rôles, Shop et feuille de route.",
+    "Our team will contact you again soon with additional information.",
     "",
-    `Site : ${site}`,
-    `Espace bêta : ${buildBetaAccessUrl(site, params.accessToken)}`,
-    `Installer l'APK : ${buildBetaInstallerUrl(site, params.accessToken)}`,
+    "Welcome to ProDay!",
     "",
-    "À très bientôt sur le terrain,",
-    "L'équipe ProDay",
-    "",
-    "—",
-    "Vous recevez cet email car vous vous êtes inscrit à la bêta sur proday75.fr.",
-    "Contact : proday.admin@gmail.com",
+    `Access your beta space: ${accessUrl}`,
+    `Installer (Android APK): ${buildBetaInstallerUrl(site, params.accessToken)}`,
   ].join("\n");
 
   const html = `<!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -101,45 +92,32 @@ export function buildBetaWelcomeEmail(params: BetaWelcomeEmailParams): {
           </tr>
           <tr>
             <td style="padding:32px;">
-              <h1 style="margin:0 0 16px;font-size:22px;line-height:1.3;color:#0a0a0a;">Bienvenue dans la bêta</h1>
+              <h1 style="margin:0 0 16px;font-size:22px;line-height:1.3;color:#0a0a0a;">Welcome to the ProDay Beta</h1>
               <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#334155;">
-                Merci pour votre inscription en tant que <strong>${params.roleLabel}</strong>.
-                Vous faites partie des premiers à suivre le lancement de ProDay.
+                Congratulations!
               </p>
               <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#334155;">
-                <strong>ProDay</strong> réunit Mercato et recruteurs vérifiés, matchs, covoiturage,
-                pôle santé (kiné, coach mental), le score <strong>Visibilité</strong>, le <strong>Shop</strong>
-                et un <strong>CV foot en ligne</strong> exportable. Man, Woman et Pro.
+                Your beta access request has been approved.
               </p>
-              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:24px 0;background:#f8fafc;border-radius:12px;border:1px solid #e2e8f0;">
-                <tr>
-                  <td style="padding:20px 24px;">
-                    <p style="margin:0 0 12px;font-size:13px;font-weight:700;color:#0a0a0a;text-transform:uppercase;letter-spacing:0.06em;">Ce qui vous attend</p>
-                    <ul style="margin:0;padding-left:18px;font-size:14px;line-height:1.7;color:#475569;">
-                      <li>Accès à l&apos;espace bêta (programme, pôles, aide)</li>
-                      <li><strong>Android</strong> : APK à télécharger sur l&apos;onglet Installer</li>
-                      <li><strong>iOS</strong> : bêta TestFlight à partir du 11 août 2026 à 18 h</li>
-                    </ul>
-                  </td>
-                </tr>
-              </table>
-              <p style="margin:0 0 24px;font-size:14px;line-height:1.6;color:#64748b;">
-                Sur Android, l&apos;APK n&apos;est pas envoyé par email. Rendez-vous directement
-                sur l&apos;onglet Installer une fois connecté à votre espace bêta.
+              <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#334155;">
+                You can now access ProDay and discover all of its features.
               </p>
-              <a href="${buildBetaInstallerUrl(site, params.accessToken)}" style="display:inline-block;background:#0a0a0a;color:#ffffff;text-decoration:none;font-size:14px;font-weight:600;padding:14px 28px;border-radius:999px;margin-right:12px;">
-                Télécharger l&apos;APK (Android)
-              </a>
-              <a href="${buildBetaAccessUrl(site, params.accessToken)}" style="display:inline-block;background:#f1f5f9;color:#0a0a0a;text-decoration:none;font-size:14px;font-weight:600;padding:14px 28px;border-radius:999px;border:1px solid #e2e8f0;">
-                Accéder à l&apos;espace bêta
+              <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#334155;">
+                Our team will contact you again soon with additional information.
+              </p>
+              <p style="margin:0 0 24px;font-size:15px;line-height:1.6;color:#334155;">
+                Welcome to ProDay!
+              </p>
+              <a href="${accessUrl}" style="display:inline-block;background:#0a0a0a;color:#ffffff;text-decoration:none;font-size:14px;font-weight:600;padding:14px 28px;border-radius:999px;">
+                Access your beta space
               </a>
             </td>
           </tr>
           <tr>
             <td style="padding:20px 32px 28px;border-top:1px solid #e2e8f0;">
               <p style="margin:0;font-size:12px;line-height:1.6;color:#94a3b8;">
-                Inscription enregistrée pour ${params.email}.<br />
-                Questions ? <a href="mailto:proday.admin@gmail.com" style="color:#475569;">proday.admin@gmail.com</a>
+                Message sent to ${params.email}.<br />
+                Questions? <a href="mailto:proday.admin@gmail.com" style="color:#475569;">proday.admin@gmail.com</a>
               </p>
             </td>
           </tr>
