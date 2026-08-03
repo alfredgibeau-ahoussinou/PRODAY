@@ -21,6 +21,7 @@ import { filterMembersByCategory, memberUidsExcluding } from '../utils/clubMembe
 import { spacing, radius } from '../theme/designTokens';
 import { useThemedScreen } from '../hooks/useThemedScreen';
 import type { AppColors } from '../theme/universeTheme';
+import { userCanManageConvocations } from '../utils/clubFeatureAccess';
 
 const EVENT_TYPES: { id: TeamEventType; label: string }[] = [
   { id: 'training', label: 'Entraînement' },
@@ -95,6 +96,13 @@ export const CreateTeamEventScreen: React.FC<CreateTeamEventScreenProps> = ({
 
   const handleSubmit = async () => {
     if (!profile) return;
+    if (!userCanManageConvocations(profile)) {
+      Alert.alert(
+        'Pôle Staff',
+        'Les convocations sont réservées au coach Pro (Pôle Staff). Le Club free n’y a plus accès.',
+      );
+      return;
+    }
     if (!title.trim() || !city.trim()) {
       Alert.alert('Champs requis', 'Titre et ville obligatoires.');
       return;

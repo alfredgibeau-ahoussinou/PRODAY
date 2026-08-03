@@ -30,6 +30,7 @@ import { isInMatchWindow } from '../utils/matchLive';
 import { useRequireAuth } from '../hooks/useRequireAuth';
 import { useTranslation } from '../context/LocaleContext';
 import { PushScreenTransition } from '../components/motion';
+import { userCanManageConvocations } from '../utils/clubFeatureAccess';
 
 type MatchView =
   | 'home'
@@ -84,12 +85,14 @@ export const MatchsScreen: React.FC = () => {
     liveMatches: events.filter((e) => isInMatchWindow(e)).length,
   });
 
-  const canManageEvents =
+  /** Convocations = Staff premium ; tournois = organisateur / staff coach. */
+  const canManageConvocations = userCanManageConvocations(profile);
+  const canManageTournaments = Boolean(
     profile &&
-    (profile.role === 'coach' ||
-      profile.role === 'organizer' ||
-      profile.role === 'agent' ||
-      profile.role === 'club');
+      (profile.role === 'organizer' ||
+        profile.role === 'coach' ||
+        profile.role === 'agent'),
+  );
 
   React.useEffect(() => {
     setMyClubId(profile ? profile.profile.club_id ?? profile.uid : null);
@@ -219,7 +222,7 @@ export const MatchsScreen: React.FC = () => {
         }}
       />
     );
-  } else if (view === 'create_tournament' && profile && canManageEvents) {
+  } else if (view === 'create_tournament' && profile && canManageTournaments) {
     subView = (
       <CreateTournamentScreen
         profile={profile}
@@ -243,7 +246,7 @@ export const MatchsScreen: React.FC = () => {
         }}
       />
     );
-  } else if (view === 'create_event' && canManageEvents) {
+  } else if (view === 'create_event' && canManageConvocations) {
     subView = (
       <CreateTeamEventScreen
         onBack={() => setView('home')}
@@ -284,7 +287,8 @@ export const MatchsScreen: React.FC = () => {
         nextItem={nextItem}
         loadingCalendar={loadingCalendar}
         loadingMatches={loadingMatches}
-        canManageEvents={Boolean(canManageEvents)}
+        canManageEvents={canManageConvocations}
+        canManageTournaments={canManageTournaments}
         myClubId={myClubId}
         initialChapter={initialChapter}
         rsvpBusy={rsvpBusy}

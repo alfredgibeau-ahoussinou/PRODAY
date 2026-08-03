@@ -27,7 +27,7 @@ export const SECONDARY_FR: MessageCatalog = {
   'auth.teaser.pro_player.2': 'Profil vérifié. Accès à votre espace Pro Joueur',
 
   'auth.teaser.pro_club.0': 'Club ou structure',
-  'auth.teaser.pro_club.1': 'Effectifs, recrutement et calendrier',
+  'auth.teaser.pro_club.1': 'Effectifs, recrutement et pipeline candidatures',
   'auth.teaser.pro_club.2': 'Profil vérifié. Accès à votre espace Pro Club',
 
   'auth.teaser.pro_staff.0': 'Coach, agent, recruteur ou organisateur',

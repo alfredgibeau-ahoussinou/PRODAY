@@ -47,7 +47,10 @@ interface MatchHomeScreenProps {
   loadingCalendar: boolean;
   loadingMatches: boolean;
   fromCache?: boolean;
+  /** Création convocations / événements équipe (Staff premium). */
   canManageEvents: boolean;
+  /** Création tournois — défaut = canManageEvents. */
+  canManageTournaments?: boolean;
   myClubId: string | null;
   initialChapter?: MatchChapterId;
   rsvpBusy?: boolean;
@@ -84,6 +87,7 @@ export const MatchHomeScreen: React.FC<MatchHomeScreenProps> = ({
   loadingMatches,
   fromCache = false,
   canManageEvents,
+  canManageTournaments,
   myClubId,
   initialChapter = 'calendrier',
   rsvpBusy,
@@ -331,7 +335,9 @@ export const MatchHomeScreen: React.FC<MatchHomeScreenProps> = ({
           refreshing={refreshing}
           onRefresh={handleRefresh}
           onOpenTournament={onOpenTournament}
-          onCreateTournament={canManageEvents ? onCreateTournament : undefined}
+          onCreateTournament={
+            (canManageTournaments ?? canManageEvents) ? onCreateTournament : undefined
+          }
           myClubId={myClubId}
         />
       ),

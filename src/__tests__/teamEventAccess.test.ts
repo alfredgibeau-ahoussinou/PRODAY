@@ -51,13 +51,19 @@ describe('teamEventAccess', () => {
     expect(canRespondToTeamEvent(detection, player('player-2'))).toBe(true);
   });
 
-  it('autorise le staff du club à gérer l’événement', () => {
+  it('autorise le staff du club à gérer l’événement (pas le rôle club)', () => {
     const coach = {
       ...player('coach-1'),
       role: 'coach' as const,
       profile: { club_id: 'club-a' },
     } as User;
+    const clubAccount = {
+      ...player('club-1'),
+      role: 'club' as const,
+      profile: { club_id: 'club-a' },
+    } as User;
     expect(canManageTeamEvent(baseEvent, coach)).toBe(true);
+    expect(canManageTeamEvent(baseEvent, clubAccount)).toBe(false);
     expect(canManageTeamEvent(baseEvent, player('player-2'))).toBe(false);
   });
 

@@ -3,6 +3,7 @@ import type {
   LegacyApplicationStatus,
 } from '../models/ClubApplicationPipeline';
 import {
+  CLUB_APPLICATION_STAGE_LABELS,
   CLUB_APPLICATION_TERMINAL_STAGES,
 } from '../models/ClubApplicationPipeline';
 
@@ -78,4 +79,13 @@ export function pipelineStageToLegacyStatus(
     default:
       return 'PENDING';
   }
+}
+
+/** Label kanban pour UI club (à partir du stage ou du statut legacy). */
+export function applicationPipelineLabel(input: {
+  status: LegacyApplicationStatus;
+  pipeline_stage?: ClubApplicationStage;
+}): string {
+  const stage = input.pipeline_stage ?? legacyStatusToPipelineStage(input.status);
+  return CLUB_APPLICATION_STAGE_LABELS[stage];
 }

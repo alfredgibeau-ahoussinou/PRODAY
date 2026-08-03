@@ -24,6 +24,7 @@ import {
   resolveMessageRequest,
 } from '../utils/messageRequestState';
 import {
+  applicationPipelineLabel,
   canTransitionClubApplication,
   legacyStatusToPipelineStage,
   pipelineStageToLegacyStatus,
@@ -37,6 +38,7 @@ import {
   canEditStructureCalendar,
   canManageConvocations,
   clubFreeTierIncludesConvocations,
+  userCanManageConvocations,
 } from '../utils/clubFeatureAccess';
 import {
   CAROUSEL_POLE_ORDER,
@@ -193,6 +195,22 @@ describe('ecosystem — joueur vérifié & club features', () => {
     expect(canManageConvocations({ role: 'coach', tier: 'pro' })).toBe(true);
     expect(canEditStructureCalendar({ role: 'coach', tier: 'pro' })).toBe(true);
     expect(canEditStructureCalendar({ role: 'club', tier: 'pro' })).toBe(false);
+    expect(
+      userCanManageConvocations({ role: 'club', subscription_tier: 'pro' } as User),
+    ).toBe(false);
+    expect(
+      userCanManageConvocations({ role: 'coach', subscription_tier: 'pro' } as User),
+    ).toBe(true);
+  });
+
+  it('expose les labels pipeline kanban pour les candidatures club', () => {
+    expect(applicationPipelineLabel({ status: 'PENDING' })).toBe('Boîte de réception');
+    expect(applicationPipelineLabel({ status: 'VIEWED', pipeline_stage: 'reviewing' })).toBe(
+      'En revue',
+    );
+    expect(applicationPipelineLabel({ status: 'IN_PROGRESS', pipeline_stage: 'shortlist' })).toBe(
+      'Shortlist',
+    );
   });
 });
 

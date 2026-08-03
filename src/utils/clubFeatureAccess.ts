@@ -1,5 +1,5 @@
 import type { SubscriptionTier } from '../content/subscriptionPlans';
-import type { UserRole } from '../models/User';
+import type { User, UserRole } from '../models/User';
 
 /**
  * Convocations : feature premium Pôle Staff (coach).
@@ -11,7 +11,7 @@ export function canManageConvocations(input: {
   tier: SubscriptionTier;
 }): boolean {
   if (input.role === 'coach' && input.tier === 'pro') return true;
-  // Recruteur / agent : pas de convocations équipe
+  // Recruteur / agent / club : pas de convocations équipe
   return false;
 }
 
@@ -35,4 +35,26 @@ export function canEditStructureCalendar(input: {
 
 export function clubFreeTierIncludesConvocations(): boolean {
   return false;
+}
+
+export function subscriptionTierOf(
+  user: Pick<User, 'subscription_tier'> | null | undefined,
+): SubscriptionTier {
+  return user?.subscription_tier === 'pro' ? 'pro' : 'free';
+}
+
+/** Gate UI/service — convocations (création / gestion staff). */
+export function userCanManageConvocations(
+  user: Pick<User, 'role' | 'subscription_tier'> | null | undefined,
+): boolean {
+  if (!user) return false;
+  return canManageConvocations({ role: user.role, tier: subscriptionTierOf(user) });
+}
+
+/** Gate UI — édition calendrier structure (Staff pro). */
+export function userCanEditStructureCalendar(
+  user: Pick<User, 'role' | 'subscription_tier'> | null | undefined,
+): boolean {
+  if (!user) return false;
+  return canEditStructureCalendar({ role: user.role, tier: subscriptionTierOf(user) });
 }

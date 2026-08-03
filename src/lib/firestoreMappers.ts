@@ -13,6 +13,7 @@ import { normalizeStoredProductLine } from '../models/ProductLine';
 import { canonicalizeUserProductLine } from '../utils/productLineResolution';
 import type { PlayerVerificationState } from '../models/User';
 import type { RecruitmentPost, Application } from '../models/Player';
+import { legacyStatusToPipelineStage } from '../utils/clubApplicationPipeline';
 import type { FriendlyMatch } from '../models/FriendlyMatch';
 import type {
   Tournament,
@@ -217,6 +218,10 @@ export function applicationFromFirestore(
   id: string,
   data: Record<string, unknown>
 ): Application {
+  const status = (data.status as Application['status']) ?? 'PENDING';
+  const pipelineStage =
+    (data.pipeline_stage as Application['pipeline_stage'] | undefined) ??
+    legacyStatusToPipelineStage(status);
   return {
     id,
     post_id: String(data.post_id ?? ''),
@@ -227,7 +232,11 @@ export function applicationFromFirestore(
     cv_pdf_url: String(data.cv_pdf_url ?? ''),
     created_at: toDate(data.created_at),
     updated_at: data.updated_at ? toDate(data.updated_at) : undefined,
-    status: (data.status as Application['status']) ?? 'PENDING',
+    status,
+    pipeline_stage: pipelineStage,
+    priority: data.priority as Application['priority'] | undefined,
+    club_notes: data.club_notes as string | undefined,
+    trial_date: data.trial_date ? toDate(data.trial_date) : undefined,
     rejection_reason: data.rejection_reason as string | undefined,
   };
 }
