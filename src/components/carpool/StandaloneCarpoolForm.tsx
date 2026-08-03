@@ -11,7 +11,9 @@ import {
   formatFrenchDepartureTime,
   parseFrenchDeparture,
   standaloneAvailableSeats,
+  standalonePassengerCount,
 } from '../../utils/standaloneCarpool';
+import { CarpoolSeatPicker } from './CarpoolSeatPicker';
 import { ProDaySurface } from '../ui/ProDaySurface';
 import { ProDayText } from '../ui/ProDayText';
 import { ProDayGradient } from '../ui/ProDayGradient';
@@ -210,13 +212,11 @@ export const StandaloneCarpoolForm: React.FC<StandaloneCarpoolFormProps> = ({
               onChangeText={setMeetingTime}
             />
           </View>
-          <TextInput
-            style={[styles.input, { borderColor: colors.border, color: colors.ink }]}
-            placeholder={t('carpool.propose.seatsPlaceholder')}
-            placeholderTextColor={colors.textMuted}
-            keyboardType="number-pad"
-            value={seats}
-            onChangeText={setSeats}
+          <CarpoolSeatPicker
+            seats={parseInt(seats, 10) || 0}
+            maxSeats={6}
+            taken={offer ? standalonePassengerCount(offer) : 0}
+            onChange={(n) => setSeats(String(n))}
           />
           <TextInput
             style={[styles.input, { borderColor: colors.border, color: colors.ink }]}
