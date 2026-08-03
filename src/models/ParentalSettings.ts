@@ -24,6 +24,20 @@ export interface ParentalJournalEntry {
   minutes?: number;
 }
 
+export interface ParentalEmergencyContact {
+  id: string;
+  name: string;
+  phone: string;
+  relation?: string;
+}
+
+export interface ParentalPrivacySettings {
+  /** Partager la position live covoiturage avec le parent */
+  share_live_carpool?: boolean;
+  /** Le parent peut consulter les messages (métadonnées + contenus) */
+  parent_can_read_messages?: boolean;
+}
+
 export interface ParentalSettings {
   /** Compte enregistré comme mineur (< 18 ans) */
   is_minor?: boolean;
@@ -31,6 +45,8 @@ export interface ParentalSettings {
   guardian_email?: string;
   /** Co-tuteur (second email autorisé) */
   guardian_email_secondary?: string;
+  /** UID Auth du compte parent principal (≠ uid enfant) */
+  parent_uid?: string;
   /** Code à 6 chiffres pour lier un co-tuteur */
   guardian_invite_code?: string;
   guardian_consent?: boolean;
@@ -47,6 +63,12 @@ export interface ParentalSettings {
   unlock_request?: ParentalUnlockRequest;
   /** Journal d'activité simplifié (sans contenu des messages) */
   activity_journal?: ParentalJournalEntry[];
+  /** Contacts d'urgence gérés par le parent */
+  emergency_contacts?: ParentalEmergencyContact[];
+  /** Restriction messagerie (bloque nouveaux contacts hors liste) */
+  messaging_restricted?: boolean;
+  /** Confidentialité / permissions parent */
+  privacy?: ParentalPrivacySettings;
 }
 
 /** Usage temps d’écran synchronisé depuis l’appareil du mineur (lecture tuteur). */
@@ -62,4 +84,10 @@ export const DEFAULT_PARENTAL_SETTINGS: ParentalSettings = {
   daily_limit_minutes: 90,
   active_days: ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven'],
   approved_contacts: [],
+  messaging_restricted: true,
+  emergency_contacts: [],
+  privacy: {
+    share_live_carpool: true,
+    parent_can_read_messages: true,
+  },
 };

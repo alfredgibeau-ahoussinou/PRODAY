@@ -47,6 +47,8 @@ import { useUnreadMessageCount } from './src/hooks/useUnreadMessages';
 import { AdminAppShell } from './src/navigation/AdminAppShell';
 import { SponsorAppShell } from './src/navigation/SponsorAppShell';
 import { SupporterAppShell } from './src/navigation/SupporterAppShell';
+import { ParentAppShell } from './src/navigation/ParentAppShell';
+import { parentPortalService } from './src/services/parentPortal.service';
 import { AdminPreviewBanner } from './src/components/admin/AdminPreviewBanner';
 import { PoleHelpChatbot } from './src/components/help/PoleHelpChatbot';
 import { useIsAdmin } from './src/hooks/useIsAdmin';
@@ -341,6 +343,18 @@ function AppShell() {
     return (
       <SubscriptionProvider profile={sessionProfile ?? profile}>
         <SponsorAppShell />
+      </SubscriptionProvider>
+    );
+  }
+
+  if (
+    !authLoading &&
+    (sessionProfile ?? profile) &&
+    parentPortalService.isParentRole((sessionProfile ?? profile)!.role)
+  ) {
+    return (
+      <SubscriptionProvider profile={sessionProfile ?? profile}>
+        <ParentAppShell />
       </SubscriptionProvider>
     );
   }

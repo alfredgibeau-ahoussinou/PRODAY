@@ -42,6 +42,10 @@ import { onTeamEventUpdated, syncTeamEventActivities } from './teamEventActivity
 import { analyzeActivityHighlight } from './analyzeActivityHighlight';
 import { sendAuthPasswordResetEmail, sendAuthVerificationEmail } from './authCustomEmails';
 import {
+  onMinorUserCreatedProvisionParent,
+  provisionParentAccount,
+} from './parentAccount';
+import {
   onMedicalAppointmentCreated,
   onMedicalAppointmentUpdated,
 } from './appointmentEmail';
@@ -51,6 +55,7 @@ import { sendSponsorClubMessage } from './sendSponsorClubMessage';
 
 export { createPaymentCheckoutSession, stripeWebhook, createShopCheckoutSession };
 export { sendAuthVerificationEmail, sendAuthPasswordResetEmail };
+export { onMinorUserCreatedProvisionParent, provisionParentAccount };
 export { incrementSubscriptionUsage };
 export { sendSponsorClubMessage };
 export { onSponsorOfferCreated, onSponsorOfferUpdated, notifySponsorOfferInCityCallable };

@@ -27,6 +27,7 @@ const ROLE_LABELS: Record<UserRole, string> = {
   sponsor: 'Sponsor',
   supporter: 'Supporter',
   physio: 'Pôle santé',
+  parent: 'Parent',
 };
 
 export interface ProfilePassportHeaderProps {

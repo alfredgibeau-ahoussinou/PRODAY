@@ -54,6 +54,7 @@ const ROLE_LABELS: Record<UserRole, string> = {
   sponsor: 'Sponsor',
   supporter: 'Supporter',
   physio: 'Praticien santé',
+  parent: 'Parent',
 };
 
 /** @deprecated Préférer getSignupRoleGroups(productLine) dans poleExperience.ts */

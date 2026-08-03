@@ -290,6 +290,21 @@ const ROLE_EXPERIENCES: Record<UserRole, RoleSignupExperience> = {
     launchBody: 'Suivez vos clubs, réagissez au fil et partagez les moments forts.',
     launchFinishLabel: 'Entrer en tribune',
   },
+  parent: {
+    id: 'parent',
+    welcomeTitle: 'Espace parent',
+    welcomeSubtitle: 'Supervisez le compte mineur de votre enfant sur ProDay.',
+    previewSteps: ['Enfant', 'Sécurité', 'Lancement'],
+    phases: [
+      { id: 'vous', label: 'Famille' },
+      { id: 'acces', label: 'Compte' },
+      { id: 'launch', label: 'Go' },
+    ],
+    accent: { accent: '#0F766E', accentSoft: '#CCFBF1', accentMuted: '#5EEAD4' },
+    launchTitle: 'Portail parent prêt',
+    launchBody: 'Définissez votre mot de passe via l’e-mail reçu, puis connectez-vous.',
+    launchFinishLabel: 'Ouvrir l’espace parent',
+  },
 };
 
 export function getRoleSignupExperience(role: UserRole): RoleSignupExperience {

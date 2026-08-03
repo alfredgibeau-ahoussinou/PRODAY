@@ -12,6 +12,7 @@ export const ROLE_LABELS: Record<UserRole, string> = {
   sponsor: 'Sponsor',
   supporter: 'Supporter',
   physio: 'Pôle médical',
+  parent: 'Parent',
 };
 
 export function isClubRole(role: UserRole): boolean {
@@ -34,5 +35,10 @@ export function canPublishStages(role: UserRole): boolean {
 }
 
 export function isStaffRole(role: UserRole): boolean {
-  return role !== 'player' && role !== 'sponsor' && role !== 'supporter';
+  return (
+    role !== 'player' &&
+    role !== 'sponsor' &&
+    role !== 'supporter' &&
+    role !== 'parent'
+  );
 }

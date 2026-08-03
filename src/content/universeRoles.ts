@@ -42,6 +42,9 @@ export const PRO_PRODUCT_ROLES: UserRole[] = [
 /** Rôles ProDay Santé — praticiens médicaux et paramédicaux. */
 export const SANTE_PRODUCT_ROLES: UserRole[] = ['physio'];
 
+/** Rôles Portail Parent / Famille. */
+export const PARENT_PRODUCT_ROLES: UserRole[] = ['parent'];
+
 export function rolesForProductLine(line: ProductLineId): UserRole[] {
   switch (line) {
     case 'woman':
@@ -62,6 +65,8 @@ export function rolesForProductLine(line: ProductLineId): UserRole[] {
       return PRO_PRODUCT_ROLES;
     case 'sante':
       return SANTE_PRODUCT_ROLES;
+    case 'parent':
+      return PARENT_PRODUCT_ROLES;
     default:
       return HOMME_PRODUCT_ROLES;
   }
@@ -100,6 +105,18 @@ export function getIncompatibleProductLines(role: UserRole): ProductLineId[] {
     case 'physio':
       // Health practitioners have their own pole
       return ['pro_club', 'pro_staff', 'pro_player', 'amateur', 'homme', 'woman', 'supporter'];
+    case 'parent':
+      return [
+        'pro_club',
+        'pro_staff',
+        'pro_player',
+        'amateur',
+        'homme',
+        'woman',
+        'supporter',
+        'sante',
+        'sponsor',
+      ];
     default:
       return [];
   }
@@ -127,6 +144,7 @@ export function defaultRoleForProductLine(
   if (line === 'sante') return 'physio';
   if (line === 'amateur') return 'player';
   if (line === 'supporter') return 'supporter';
+  if (line === 'parent') return 'parent';
   return 'player';
 }
 
@@ -150,6 +168,8 @@ export function productLineLabel(line: ProductLineId): string {
       return 'Pro Day Pro';
     case 'sante':
       return 'Pro Day Santé';
+    case 'parent':
+      return 'Pro Day Famille';
     default:
       return 'Pro Day Man';
   }

@@ -82,6 +82,14 @@ const ROLE_DASHBOARD: Record<UserRole, RoleDashboardMeta> = {
     fullWidthModule: 'matchs',
     hideModules: ['recrutement', 'sponsors'],
   },
+  parent: {
+    eyebrow: 'ESPACE PARENT',
+    title: 'Supervisez le parcours de votre enfant',
+    heroTone: 'supporter',
+    moduleOrder: ['gestion', 'matchs', 'recrutement', 'sponsors'],
+    fullWidthModule: 'gestion',
+    hideModules: ['recrutement', 'sponsors'],
+  },
 };
 
 export function getRoleDashboardMeta(role: UserRole): RoleDashboardMeta {

@@ -56,6 +56,7 @@ import { getRoleSignupPhases } from './signupRoleExperience';
 import { submitSponsorSignup } from '../../services/sponsorSignup.service';
 import { resolveSignupOAuthState } from '../../utils/authOAuthLink';
 import { referralService } from '../../services/referral.service';
+import { parentPortalService } from '../../services/parentPortal.service';
 
 export type { SignupPageId, SignupFlowKind };
 
@@ -804,6 +805,12 @@ export function useSignupForm(initial?: {
           codeFromForm: referralCode,
           role,
         });
+        if (parentalRequired) {
+          // Provision compte parent + e-mail set-password (trigger Firestore + callable backup)
+          void parentPortalService.provisionParentAccount(user.uid).catch((err) => {
+            console.warn('[signup] provisionParentAccount:', err);
+          });
+        }
         if (role === 'sponsor') {
           void submitSponsorSignup({
             companyName: structureName.trim(),

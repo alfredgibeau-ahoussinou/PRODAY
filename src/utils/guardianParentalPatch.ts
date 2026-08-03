@@ -13,6 +13,10 @@ export type GuardianScreenTimePatch = Partial<
     | 'screen_time_bonus_day'
     | 'unlock_request'
     | 'guardian_email_secondary'
+    | 'emergency_contacts'
+    | 'messaging_restricted'
+    | 'privacy'
+    | 'contacts_filter_enabled'
   >
 >;
 
@@ -42,6 +46,8 @@ export function buildGuardianScreenTimeSettings(
       patch.screen_time_enabled ?? base.screen_time_enabled ?? true,
     daily_limit_minutes,
     active_days,
+    contacts_filter_enabled:
+      patch.contacts_filter_enabled ?? base.contacts_filter_enabled ?? true,
     ...(patch.approved_contacts !== undefined
       ? { approved_contacts: patch.approved_contacts }
       : {}),
@@ -54,6 +60,15 @@ export function buildGuardianScreenTimeSettings(
     ...(patch.unlock_request !== undefined ? { unlock_request: patch.unlock_request } : {}),
     ...(patch.guardian_email_secondary !== undefined
       ? { guardian_email_secondary: patch.guardian_email_secondary }
+      : {}),
+    ...(patch.emergency_contacts !== undefined
+      ? { emergency_contacts: patch.emergency_contacts }
+      : {}),
+    ...(patch.messaging_restricted !== undefined
+      ? { messaging_restricted: patch.messaging_restricted }
+      : {}),
+    ...(patch.privacy !== undefined
+      ? { privacy: { ...base.privacy, ...patch.privacy } }
       : {}),
   };
 }

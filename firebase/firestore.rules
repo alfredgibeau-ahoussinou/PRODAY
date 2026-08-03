@@ -236,6 +236,8 @@ service cloud.firestore {
             == resource.data.get('parental_settings', {}).get('guardian_name', '')
           && request.resource.data.get('parental_settings', {}).get('guardian_invite_code', '')
             == resource.data.get('parental_settings', {}).get('guardian_invite_code', '')
+          && request.resource.data.get('parental_settings', {}).get('parent_uid', '')
+            == resource.data.get('parental_settings', {}).get('parent_uid', '')
         );
     }
 
@@ -251,8 +253,48 @@ service cloud.firestore {
 
     function validUserRole(role) {
       return role in [
-        'player', 'coach', 'club', 'agent', 'recruiter', 'organizer', 'sponsor', 'physio', 'supporter'
+        'player', 'coach', 'club', 'agent', 'recruiter', 'organizer', 'sponsor', 'physio', 'supporter', 'parent'
       ];
+    }
+
+    /** Compte parent lié via parent_of[] ou parental_settings.parent_uid. */
+    function parentOfUids() {
+      return userDoc(request.auth.uid).data.get('parent_of', []);
+    }
+
+    /** Parent lit / supervise un thread où un enfant lié est participant. */
+    function isParentOfThreadParticipant() {
+      return isSignedIn()
+        && userDoc(request.auth.uid).data.role == 'parent'
+        && parentOfUids().size() > 0
+        && resource.data.participant_ids.hasAny(parentOfUids());
+    }
+
+    function isParentOfMessageChild() {
+      return isSignedIn()
+        && userDoc(request.auth.uid).data.role == 'parent'
+        && parentOfUids().size() > 0
+        && (
+          parentOfUids().hasAny([resource.data.sender_id])
+          || parentOfUids().hasAny([resource.data.receiver_id])
+        );
+    }
+
+    function isParentOfLiveTripChild() {
+      return isSignedIn()
+        && userDoc(request.auth.uid).data.role == 'parent'
+        && parentOfUids().size() > 0
+        && resource.data.participant_uids.hasAny(parentOfUids());
+    }
+
+    function isParentOfMessageRequestChild() {
+      return isSignedIn()
+        && userDoc(request.auth.uid).data.role == 'parent'
+        && parentOfUids().size() > 0
+        && (
+          parentOfUids().hasAny([resource.data.requester_uid])
+          || parentOfUids().hasAny([resource.data.recipient_uid])
+        );
     }
 
     /** Profils visibles dans annuaires / reels (requêtes role + is_active). */
@@ -299,11 +341,16 @@ service cloud.firestore {
 
     function isGuardianOfUser(data) {
       return isSignedIn()
-        && guardianEmail() != ''
         && data.get('parental_settings', {}).get('is_minor', false) == true
         && (
-          data.get('parental_settings', {}).get('guardian_email', '') == guardianEmail()
-          || data.get('parental_settings', {}).get('guardian_email_secondary', '') == guardianEmail()
+          (
+            guardianEmail() != ''
+            && (
+              data.get('parental_settings', {}).get('guardian_email', '') == guardianEmail()
+              || data.get('parental_settings', {}).get('guardian_email_secondary', '') == guardianEmail()
+            )
+          )
+          || data.get('parental_settings', {}).get('parent_uid', '') == request.auth.uid
         );
     }
 
@@ -324,6 +371,7 @@ service cloud.firestore {
       let pNext = next.get('parental_settings', {});
       return pNext.get('is_minor', false) == true
         && pNext.get('guardian_email', '') == pPrev.get('guardian_email', '')
+        && pNext.get('parent_uid', '') == pPrev.get('parent_uid', '')
         && pNext.get('supervision_enabled', true) == true
         && pNext.get('contacts_filter_enabled', true) == true;
     }
@@ -472,7 +520,7 @@ service cloud.firestore {
       allow read: if isAdmin()
         || (isSignedIn()
             && resource.data.thread_id is string
-            && isMessageThreadParticipant(resource.data.thread_id));
+            && (isMessageThreadParticipant(resource.data.thread_id) || isParentOfMessageChild()));
       allow delete: if isAdmin();
     }
 
@@ -549,10 +597,13 @@ service cloud.firestore {
       allow delete: if isSignedIn() && resource.data.driver_uid == request.auth.uid;
     }
 
-    /** Position live du conducteur — lecture réservée aux participants du trajet. */
+    /** Position live du conducteur — lecture réservée aux participants du trajet + parent lié. */
     match /carpool_trip_live/{tripId} {
       allow read: if isSignedIn()
-        && resource.data.participant_uids.hasAny([request.auth.uid]);
+        && (
+          resource.data.participant_uids.hasAny([request.auth.uid])
+          || isParentOfLiveTripChild()
+        );
       allow create: if isSignedIn()
         && request.resource.data.driver_uid == request.auth.uid
         && request.resource.data.participant_uids.hasAny([request.auth.uid])
@@ -769,25 +820,27 @@ service cloud.firestore {
     }
 
     match /message_threads/{threadId} {
-      allow read: if isAdmin() || (isSignedIn() && isThreadParticipant());
+      allow read: if isAdmin()
+        || (isSignedIn() && (isThreadParticipant() || isParentOfThreadParticipant()));
       allow create: if isSignedIn()
         && canSendMessage()
         && isValidThreadCreate();
       allow update: if isSignedIn()
-        && isThreadParticipant()
+        && (isThreadParticipant() || isParentOfThreadParticipant())
         && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['participant_ids']);
       allow delete: if isAdmin();
     }
 
     /**
      * Demandes de message joueur ↔ agent (miroir thread).
-     * Accept / refuse : destinataire ; cancel : demandeur.
+     * Accept / refuse : destinataire ou parent lié ; cancel : demandeur.
      */
     match /message_requests/{requestId} {
       allow read: if isAdmin()
         || (isSignedIn()
             && (resource.data.requester_uid == request.auth.uid
-                || resource.data.recipient_uid == request.auth.uid));
+                || resource.data.recipient_uid == request.auth.uid
+                || isParentOfMessageRequestChild()));
       allow create: if isSignedIn()
         && request.resource.data.requester_uid == request.auth.uid
         && request.resource.data.recipient_uid is string
@@ -797,6 +850,11 @@ service cloud.firestore {
       allow update: if isSignedIn()
         && (
           (resource.data.recipient_uid == request.auth.uid
+            && request.resource.data.status in ['accepted', 'refused']
+            && request.resource.data.diff(resource.data).affectedKeys()
+                .hasOnly(['status', 'updated_at', 'resolved_at']))
+          || (isParentOfMessageRequestChild()
+            && parentOfUids().hasAny([resource.data.recipient_uid])
             && request.resource.data.status in ['accepted', 'refused']
             && request.resource.data.diff(resource.data).affectedKeys()
                 .hasOnly(['status', 'updated_at', 'resolved_at']))

@@ -276,6 +276,14 @@ const CHROME_BY_LINE: Record<ProductLineId, PoleTabBarChrome> = {
       barBorderColor: 'rgba(212, 175, 55, 0.35)',
     },
   ),
+  parent: makeChrome(AMATEUR_PALETTE, {
+    layout: 'dock',
+    flatLayout: true,
+    overflowKicker: 'PRO DAY FAMILLE',
+    accent: '#0F766E',
+    topAccentColor: '#0F766E',
+    barBorderColor: 'rgba(15, 118, 110, 0.35)',
+  }),
 };
 
 const CHROME_BY_SEGMENT: Partial<Record<string, PoleTabBarChrome>> = {
