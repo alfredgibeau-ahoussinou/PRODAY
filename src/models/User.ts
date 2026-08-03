@@ -146,6 +146,8 @@ export interface User {
   display_name: string;
   email: string;
   phone?: string;
+  /** Contact alternatif (Instagram, site…) — soumis à `contact_privacy.other`. */
+  other_contact?: string;
   avatar_url?: string;
   role: UserRole;
 

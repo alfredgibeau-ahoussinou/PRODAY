@@ -15,6 +15,7 @@ import {
   canViewContactField,
   filterContactFieldsForViewer,
   normalizeContactPrivacy,
+  resolveContactViewerRelation,
 } from '../utils/contactPrivacyVisibility';
 import {
   canSendInConversation,
@@ -121,6 +122,26 @@ describe('ecosystem — contact privacy', () => {
     );
     expect(filtered.phone).toBeUndefined();
     expect(filtered.email).toBeUndefined();
+  });
+
+  it('résout la relation viewer pour le profil public', () => {
+    expect(
+      resolveContactViewerRelation({ targetUid: 'a', viewerUid: 'a', viewerRole: 'player' }),
+    ).toBe('self');
+    expect(
+      resolveContactViewerRelation({ targetUid: 'a', viewerUid: 'b', viewerRole: 'agent' }),
+    ).toBe('agent');
+    expect(
+      resolveContactViewerRelation({
+        targetUid: 'a',
+        viewerUid: 'b',
+        viewerRole: 'player',
+        isConnection: true,
+      }),
+    ).toBe('connection');
+    expect(
+      resolveContactViewerRelation({ targetUid: 'a', viewerUid: null, viewerRole: null }),
+    ).toBe('stranger');
   });
 });
 

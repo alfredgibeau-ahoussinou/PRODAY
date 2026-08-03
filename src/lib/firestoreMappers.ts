@@ -76,6 +76,7 @@ export function userFromFirestore(uid: string, data: Record<string, unknown>): U
     display_name: String(data.display_name ?? data.displayName ?? ''),
     email: String(data.email ?? ''),
     phone: data.phone as string | undefined,
+    other_contact: data.other_contact as string | undefined,
     avatar_url: (data.avatar_url ?? data.avatarUrl) as string | undefined,
     role: (data.role as UserRole) ?? 'player',
     email_verified: Boolean(data.email_verified ?? data.emailVerified ?? false),

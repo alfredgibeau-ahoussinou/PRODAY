@@ -13,6 +13,7 @@ import { isFirebaseConfigured } from '../config/firebase';
 import { userFromFirestore } from '../lib/firestoreMappers';
 import type { User, UserRole } from '../models/User';
 import { sanitizePublicUser } from '../utils/sanitizePublicUser';
+import { resolveContactViewerRelation } from '../utils/contactPrivacyVisibility';
 import { filterRealUsers } from '../utils/realUserFilter';
 import { membershipsService } from './memberships.service';
 
@@ -20,6 +21,13 @@ const LIST_LIMIT = 50;
 const POPULAR_LIMIT = 5;
 
 export type StaffType = 'coach' | 'agent';
+
+export type PublicProfileViewerContext = {
+  viewerUid?: string | null;
+  viewerRole?: UserRole | null;
+  /** Favori / connexion mutuelle — audience `connections`. */
+  isConnection?: boolean;
+};
 
 function matchesSearch(user: User, q: string): boolean {
   if (!q) return true;
@@ -51,10 +59,23 @@ export const usersService = {
     return userFromFirestore(snap.id, snap.data() as Record<string, unknown>);
   },
 
-  /** Profil tiers sans email, téléphone ni données parentales. */
-  async getPublicById(uid: string): Promise<User | null> {
+  /**
+   * Profil public : données parentales retirées ; contacts filtrés selon
+   * `contact_privacy` et la relation du viewer (stranger par défaut).
+   */
+  async getPublicById(
+    uid: string,
+    viewer?: PublicProfileViewerContext,
+  ): Promise<User | null> {
     const user = await this.getById(uid);
-    return user ? sanitizePublicUser(user) : null;
+    if (!user) return null;
+    const viewerRelation = resolveContactViewerRelation({
+      targetUid: uid,
+      viewerUid: viewer?.viewerUid,
+      viewerRole: viewer?.viewerRole,
+      isConnection: viewer?.isConnection,
+    });
+    return sanitizePublicUser(user, { viewerRelation });
   },
 
   async listPhysios(search = ''): Promise<User[]> {

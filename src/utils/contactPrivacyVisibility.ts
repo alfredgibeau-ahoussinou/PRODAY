@@ -5,6 +5,7 @@ import {
   type ContactViewerRelation,
   type ContactVisibilityAudience,
 } from '../models/ContactPrivacy';
+import type { UserRole } from '../models/User';
 
 function audiencesForField(
   settings: ContactPrivacySettings | undefined,
@@ -83,4 +84,33 @@ export function normalizeContactPrivacy(
     email: partial?.email?.length ? [...partial.email] : [...DEFAULT_CONTACT_PRIVACY.email],
     other: partial?.other?.length ? [...partial.other] : [...DEFAULT_CONTACT_PRIVACY.other],
   };
+}
+
+/**
+ * Relation viewer → profil cible pour appliquer `contact_privacy`.
+ * Priorité : self > rôle métier > connexion > stranger.
+ */
+export function resolveContactViewerRelation(input: {
+  targetUid: string;
+  viewerUid?: string | null;
+  viewerRole?: UserRole | null;
+  isConnection?: boolean;
+}): ContactViewerRelation {
+  if (input.viewerUid && input.viewerUid === input.targetUid) return 'self';
+  if (!input.viewerUid) return 'stranger';
+
+  switch (input.viewerRole) {
+    case 'agent':
+      return 'agent';
+    case 'recruiter':
+      return 'recruiter';
+    case 'coach':
+    case 'club':
+      return 'club_staff';
+    default:
+      break;
+  }
+
+  if (input.isConnection) return 'connection';
+  return 'stranger';
 }
