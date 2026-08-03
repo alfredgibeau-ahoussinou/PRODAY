@@ -47,3 +47,6 @@ website/public/downloads/*.apk
 *.pem
 *certificate*.crt
 *certificate*.pem
+
+# Intro video build venv (Pillow)
+.venv-intro/

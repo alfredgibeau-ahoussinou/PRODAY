@@ -1,8 +1,6 @@
 "use client";
 
-import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { PremiumButton } from "@/components/ui/PremiumButton";
 
 interface VideoDemoModalProps {
   isOpen: boolean;
@@ -28,7 +26,7 @@ export function VideoDemoModal({ isOpen, onClose }: VideoDemoModalProps) {
             transition={{ duration: 0.3 }}
             className="fixed inset-0 z-50 flex items-center justify-center p-4"
           >
-            <div className="relative w-full max-w-2xl overflow-hidden rounded-3xl border border-white/10 bg-[#0c0c10] shadow-2xl">
+            <div className="relative w-full max-w-3xl overflow-hidden rounded-3xl border border-white/10 bg-[#0c0c10] shadow-2xl">
               <button
                 onClick={onClose}
                 aria-label="Fermer la modal"
@@ -53,33 +51,22 @@ export function VideoDemoModal({ isOpen, onClose }: VideoDemoModalProps) {
                 <h3 className="font-display text-2xl font-extrabold uppercase tracking-[-0.03em] text-white sm:text-3xl">
                   Vidéo de présentation
                 </h3>
+                <p className="mt-2 text-sm text-white/55">
+                  Connecter · Progresser · Réussir — Pôle Joueur, 7 pôles, covoiturage.
+                </p>
 
-                <div className="mt-6 aspect-video overflow-hidden rounded-2xl bg-white/5">
-                  <div className="flex h-full items-center justify-center">
-                    <div className="text-center px-6">
-                      <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[var(--proday-accent)]/20">
-                        <svg
-                          className="h-8 w-8 text-[var(--proday-accent)]"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
-                          />
-                        </svg>
-                      </div>
-                      <p className="text-base font-semibold text-white">
-                        Vidéo en cours de production
-                      </p>
-                      <p className="mt-2 text-sm text-white/50">
-                        La vidéo de présentation sera bientôt disponible.
-                      </p>
-                    </div>
-                  </div>
+                <div className="mt-6 aspect-video overflow-hidden rounded-2xl bg-black">
+                  <video
+                    className="h-full w-full object-contain"
+                    controls
+                    autoPlay
+                    playsInline
+                    preload="metadata"
+                    aria-label="Vidéo de présentation ProDay"
+                  >
+                    <source src="/videos/proday-intro.mp4" type="video/mp4" />
+                    Votre navigateur ne peut pas lire cette vidéo.
+                  </video>
                 </div>
 
                 <div className="mt-6">
