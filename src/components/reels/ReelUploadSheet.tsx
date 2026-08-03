@@ -61,20 +61,21 @@ export const ReelUploadSheet: React.FC<ReelUploadSheetProps> = ({
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <View style={styles.backdrop}>
         <View style={styles.sheet}>
+          <View style={styles.handle} />
           <View style={styles.header}>
-            <ProDayText variant="section">{t('reels.upload.title')}</ProDayText>
+            <ProDayText variant="title" style={styles.title}>{t('reels.upload.title')}</ProDayText>
             <Pressable onPress={onClose} hitSlop={12}>
-              <Icon name="close" size={22} color="#111" />
+              <Icon name="close" size={22} color="rgba(255,255,255,0.7)" />
             </Pressable>
           </View>
 
-          <ProDayText variant="caption" muted>
+          <ProDayText variant="caption" style={styles.disclaimer}>
             {t('reels.upload.disclaimer')}
           </ProDayText>
 
           <PressableSpring onPress={() => void onPickVideo()} scaleTo={0.98} haptic disabled={uploading}>
-            <View style={styles.pickBox}>
-              <Icon name="videocam" size={28} color={hasVideo ? '#16a34a' : '#666'} />
+            <View style={[styles.pickBox, hasVideo && styles.pickBoxOn]}>
+              <Icon name="videocam" size={28} color={hasVideo ? '#22D3EE' : 'rgba(255,255,255,0.5)'} />
               <ProDayText variant="caption" accent>
                 {hasVideo ? t('reels.upload.changeVideo') : t('reels.upload.pickVideo')}
               </ProDayText>
@@ -85,7 +86,7 @@ export const ReelUploadSheet: React.FC<ReelUploadSheetProps> = ({
             value={caption}
             onChangeText={setCaption}
             placeholder={t('reels.upload.captionPlaceholder')}
-            placeholderTextColor="#999"
+            placeholderTextColor="rgba(255,255,255,0.4)"
             style={styles.input}
             multiline
             maxLength={220}
@@ -101,7 +102,7 @@ export const ReelUploadSheet: React.FC<ReelUploadSheetProps> = ({
                   scaleTo={0.96}
                 >
                   <View style={[styles.themeChip, on && styles.themeChipOn]}>
-                    <ProDayText variant="caption" style={on ? styles.themeOn : undefined}>
+                    <ProDayText variant="caption" style={on ? styles.themeOn : styles.themeOff}>
                       {chip.label}
                     </ProDayText>
                   </View>
@@ -131,48 +132,68 @@ const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
     justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0,0,0,0.55)',
+    backgroundColor: 'rgba(0,0,0,0.6)',
   },
   sheet: {
-    backgroundColor: '#fff',
-    borderTopLeftRadius: radius.xl,
-    borderTopRightRadius: radius.xl,
-    padding: spacing.lg,
+    backgroundColor: '#0B0D10',
+    borderTopLeftRadius: radius.xxl,
+    borderTopRightRadius: radius.xxl,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    padding: spacing.xl,
     gap: spacing.md,
+  },
+  handle: {
+    alignSelf: 'center',
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    marginBottom: spacing.xs,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
+  title: { color: '#FFFFFF' },
+  disclaimer: { color: 'rgba(255,255,255,0.55)', lineHeight: 17 },
   pickBox: {
     alignItems: 'center',
     gap: spacing.xs,
     padding: spacing.lg,
     borderRadius: radius.lg,
     borderWidth: 1,
-    borderColor: '#e5e7eb',
+    borderColor: 'rgba(255,255,255,0.16)',
     borderStyle: 'dashed',
+    backgroundColor: 'rgba(255,255,255,0.03)',
+  },
+  pickBoxOn: {
+    borderColor: 'rgba(34,211,238,0.5)',
+    backgroundColor: 'rgba(34,211,238,0.06)',
   },
   input: {
     borderWidth: 1,
-    borderColor: '#e5e7eb',
+    borderColor: 'rgba(255,255,255,0.12)',
     borderRadius: radius.md,
     padding: spacing.md,
     minHeight: 80,
     textAlignVertical: 'top',
     fontSize: 15,
+    color: '#FFFFFF',
+    backgroundColor: 'rgba(255,255,255,0.03)',
   },
   themeRow: { flexDirection: 'row', gap: spacing.sm, flexWrap: 'wrap' },
   themeChip: {
     paddingHorizontal: spacing.md,
-    paddingVertical: 6,
+    paddingVertical: 7,
     borderRadius: radius.pill,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: 'rgba(255,255,255,0.16)',
   },
-  themeChipOn: { backgroundColor: '#111', borderColor: '#111' },
-  themeOn: { color: '#fff', fontWeight: '800' },
+  themeChipOn: { backgroundColor: '#FFFFFF', borderColor: '#FFFFFF' },
+  themeOn: { color: '#0B0D10', fontWeight: '800' },
+  themeOff: { color: 'rgba(255,255,255,0.75)' },
   cta: {
     alignItems: 'center',
     paddingVertical: spacing.md,

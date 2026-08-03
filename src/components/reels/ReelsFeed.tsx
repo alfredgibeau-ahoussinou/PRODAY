@@ -1,18 +1,19 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
   StyleSheet,
   View,
   useWindowDimensions,
   type ViewToken,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ReelSlide } from './ReelSlide';
 import { ReelFavoritesSheet } from './ReelFavoritesSheet';
 import { ReelUploadSheet } from './ReelUploadSheet';
 import { ReelsEmptyState } from './ReelsEmptyState';
+import { ReelCollectionSheet } from './ReelCollectionSheet';
 import { useReelsPlaylist } from '../../hooks/useReelsPlaylist';
 import type { PlaybackReel } from '../../content/footballReels';
 import { polesForUniverse, type ReelPoleId, type ReelSeed } from '../../content/reelSeedCatalog';
@@ -22,9 +23,7 @@ import { TAB_BAR_CONTENT_INSET } from '../navigation/BottomTabBar';
 import { PressableSpring } from '../motion';
 import { ProDayScreenCanvas } from '../ui/ProDayScreenCanvas';
 import { ProDayText } from '../ui/ProDayText';
-import { ProDayGradient } from '../ui/ProDayGradient';
 import { Icon } from '../ui/Icon';
-import { UniverseBadge } from '../branding/UniverseBadge';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { prodayHaptics } from '../../utils/prodayHaptics';
 import {
@@ -36,7 +35,7 @@ import {
 import { loadReelLikes, toggleReelLike } from '../../utils/reelLikes';
 import { loadHiddenReels } from '../../utils/reelReports';
 import { loadReelResume, saveReelResume } from '../../utils/reelResume';
-import { spacing, radius } from '../../theme/designTokens';
+import { spacing } from '../../theme/designTokens';
 import { useAuth } from '../../context/AuthContext';
 import { useTranslation } from '../../context/LocaleContext';
 import { useProDayBrain } from '../../hooks/useProDayBrain';
@@ -64,17 +63,22 @@ export const ReelsFeed: React.FC<ReelsFeedProps> = ({ productLine }) => {
   const listRef = useRef<FlatList<PlaybackReel>>(null);
 
   const allowedPoles = useMemo(() => polesForUniverse(productLine), [productLine]);
-  const poleChips = useMemo(() => {
-    const poleLabels: Record<ReelPoleId, string> = {
+  const poleLabels = useMemo<Record<ReelPoleId, string>>(
+    () => ({
       foot: t('reels.pole.foot'),
       mercato: t('reels.pole.mercato'),
       sante: t('reels.pole.sante'),
-    };
-    return POLE_CHIP_IDS.filter((id) => allowedPoles.includes(id)).map((id) => ({
-      id,
-      label: poleLabels[id],
-    }));
-  }, [allowedPoles, t]);
+    }),
+    [t],
+  );
+  const poleOptions = useMemo(
+    () =>
+      POLE_CHIP_IDS.filter((id) => allowedPoles.includes(id)).map((id) => ({
+        id,
+        label: poleLabels[id],
+      })),
+    [allowedPoles, poleLabels],
+  );
 
   const [pole, setPole] = useState<ReelPoleId>(() => polesForUniverse(productLine)[0] ?? 'foot');
   const [theme, setTheme] = useState<ReelThemeId>('all');
@@ -87,13 +91,21 @@ export const ReelsFeed: React.FC<ReelsFeedProps> = ({ productLine }) => {
   const [actorSeedsLoading, setActorSeedsLoading] = useState(true);
   const [resumeBookmarkKey, setResumeBookmarkKey] = useState<string | undefined>();
   const [favoritesOpen, setFavoritesOpen] = useState(false);
+  const [collectionOpen, setCollectionOpen] = useState(false);
   const [uploadOpen, setUploadOpen] = useState(false);
   const [pickedVideo, setPickedVideo] = useState<{ uri: string; mimeType: string } | null>(null);
   const [uploading, setUploading] = useState(false);
 
-  const canUpload =
-    profile &&
-    ['player', 'club', 'coach'].includes(profile.role);
+  const canUpload = profile && ['player', 'club', 'coach'].includes(profile.role);
+
+  const currentThemeLabel = useMemo(
+    () => REEL_THEME_CHIPS.find((c) => c.id === theme)?.label ?? '',
+    [theme],
+  );
+  const collectionLabel = t('reels.collection.current', {
+    focus: poleLabels[pole],
+    theme: currentThemeLabel,
+  });
 
   const rankSeeds = useCallback(
     (seeds: ReelSeed[]) => {
@@ -411,100 +423,46 @@ export const ReelsFeed: React.FC<ReelsFeedProps> = ({ productLine }) => {
         style={styles.list}
       />
 
-      <View style={[styles.header, { top: insets.top + spacing.sm }]} pointerEvents="box-none">
-        <View style={styles.headerRow}>
-          <ProDayText variant="brand" inverse style={styles.brandTitle}>
+      {/* Voile haut — la marque et le contrôle restent lisibles sur vidéo claire */}
+      <LinearGradient
+        colors={['rgba(0,0,0,0.55)', 'transparent']}
+        style={[styles.topScrim, { height: insets.top + 96 }]}
+        pointerEvents="none"
+      />
+
+      <View style={[styles.topBar, { top: insets.top + spacing.sm }]} pointerEvents="box-none">
+        <View style={styles.brandRow} pointerEvents="none">
+          <ProDayText variant="brand" inverse style={styles.brandWord}>
             {t('reels.title')}
           </ProDayText>
-          <UniverseBadge productLine={productLine} colors={colors} compact />
-        </View>
-        <ProDayGradient
-          kind="cta"
-          style={styles.headerLine}
-          start={{ x: 0, y: 0.5 }}
-          end={{ x: 1, y: 0.5 }}
-        />
-        <ProDayText variant="caption" inverse muted style={styles.headerSub}>
-          {t('reels.subtitle')}
-        </ProDayText>
-
-        <View style={styles.poleRow}>
-          {poleChips.length > 1
-            ? poleChips.map((chip) => {
-                const on = chip.id === pole;
-                return (
-                  <PressableSpring
-                    key={chip.id}
-                    style={[styles.poleChip, on && styles.poleChipOn]}
-                    onPress={() => {
-                      prodayHaptics.tabSwitch();
-                      setPole(chip.id);
-                      setResumeBookmarkKey(undefined);
-                    }}
-                    scaleTo={0.94}
-                    haptic
-                  >
-                    <ProDayText
-                      variant="caption"
-                      inverse={on}
-                      style={on ? styles.poleTextOn : styles.poleText}
-                    >
-                      {chip.label}
-                    </ProDayText>
-                  </PressableSpring>
-                );
-              })
-            : null}
+          <View style={[styles.brandTick, { backgroundColor: colors.accent }]} />
         </View>
 
-        <View style={styles.poleRow}>
-          {REEL_THEME_CHIPS.map((chip) => {
-            const on = chip.id === theme;
-            return (
-              <PressableSpring
-                key={chip.id}
-                style={[styles.themeChip, on && styles.poleChipOn]}
-                onPress={() => {
-                  prodayHaptics.tabSwitch();
-                  setTheme(chip.id);
-                  setResumeBookmarkKey(undefined);
-                }}
-                scaleTo={0.94}
-                haptic
-              >
-                <ProDayText
-                  variant="caption"
-                  inverse={on}
-                  style={on ? styles.poleTextOn : styles.poleText}
-                >
-                  {chip.label}
-                </ProDayText>
-              </PressableSpring>
-            );
-          })}
-        </View>
-
-        <View style={styles.actionRow}>
+        <View style={styles.topActions}>
           <PressableSpring
-            style={styles.actionBtn}
-            onPress={() => setFavoritesOpen(true)}
-            scaleTo={0.96}
+            style={styles.collection}
+            scaleTo={0.97}
             haptic
+            onPress={() => setCollectionOpen(true)}
+            accessibilityRole="button"
+            accessibilityLabel={t('reels.collection.title')}
           >
-            <ProDayText variant="caption" inverse style={styles.actionText}>
-              {t('reels.favorites', { n: bookmarkEntries.length })}
+            <ProDayText variant="caption" inverse style={styles.collectionText} numberOfLines={1}>
+              {collectionLabel}
             </ProDayText>
+            <Icon name="chevron-down" size={15} color="rgba(255,255,255,0.75)" />
           </PressableSpring>
+
           {canUpload ? (
             <PressableSpring
-              style={styles.actionBtn}
-              onPress={() => setUploadOpen(true)}
-              scaleTo={0.96}
+              style={styles.create}
+              scaleTo={0.9}
               haptic
+              onPress={() => setUploadOpen(true)}
+              accessibilityRole="button"
+              accessibilityLabel={t('reels.create')}
             >
-              <ProDayText variant="caption" inverse style={styles.actionText}>
-                {t('reels.publish')}
-              </ProDayText>
+              <Icon name="add" size={26} color="#fff" />
             </PressableSpring>
           ) : null}
         </View>
@@ -518,6 +476,26 @@ export const ReelsFeed: React.FC<ReelsFeedProps> = ({ productLine }) => {
           onPublish={() => setUploadOpen(true)}
         />
       ) : null}
+
+      <ReelCollectionSheet
+        visible={collectionOpen}
+        onClose={() => setCollectionOpen(false)}
+        poleOptions={poleOptions}
+        pole={pole}
+        onPoleChange={(id) => {
+          prodayHaptics.tabSwitch();
+          setPole(id);
+          setResumeBookmarkKey(undefined);
+        }}
+        themeOptions={REEL_THEME_CHIPS}
+        theme={theme}
+        onThemeChange={(id) => {
+          setTheme(id);
+          setResumeBookmarkKey(undefined);
+        }}
+        favoritesCount={bookmarkEntries.length}
+        onOpenFavorites={() => setFavoritesOpen(true)}
+      />
 
       <ReelFavoritesSheet
         visible={favoritesOpen}
@@ -543,21 +521,6 @@ export const ReelsFeed: React.FC<ReelsFeedProps> = ({ productLine }) => {
         uploading={uploading}
         onSubmit={handleUpload}
       />
-
-      {canUpload ? (
-        <PressableSpring
-          style={[styles.fab, { bottom: TAB_BAR_CONTENT_INSET + spacing.md }]}
-          onPress={() => setUploadOpen(true)}
-          scaleTo={0.92}
-          haptic
-          accessibilityRole="button"
-          accessibilityLabel={t('reels.publish')}
-        >
-          <ProDayGradient kind="cta" style={styles.fabInner}>
-            <Icon name="add" size={28} color="#fff" />
-          </ProDayGradient>
-        </PressableSpring>
-      ) : null}
     </ProDayScreenCanvas>
   );
 };
@@ -569,76 +532,57 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: '#000',
   },
-  header: {
+  topScrim: {
     position: 'absolute',
-    alignSelf: 'center',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: spacing.lg,
-    width: '100%',
+    top: 0,
+    left: 0,
+    right: 0,
   },
-  headerRow: {
+  topBar: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    paddingHorizontal: spacing.lg,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  brandRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
   },
-  brandTitle: { color: '#fff' },
-  headerLine: { width: 48, height: 3, borderRadius: 2 },
-  headerSub: { color: 'rgba(255,255,255,0.65)', textAlign: 'center' },
-  poleRow: {
+  brandWord: {
+    color: '#fff',
+    fontSize: 20,
+  },
+  brandTick: {
+    width: 20,
+    height: 2,
+    borderRadius: 1,
+  },
+  topActions: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    gap: spacing.xs,
-    marginTop: spacing.xs,
+    alignItems: 'center',
+    gap: spacing.md,
   },
-  poleChip: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: 6,
-    borderRadius: radius.pill,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.55)',
-    backgroundColor: 'rgba(0,0,0,0.42)',
+  collection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    maxWidth: 180,
   },
-  themeChip: {
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 5,
-    borderRadius: radius.pill,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.45)',
-    backgroundColor: 'rgba(0,0,0,0.35)',
+  collectionText: {
+    color: 'rgba(255,255,255,0.9)',
+    fontWeight: '700',
+    letterSpacing: 0.2,
   },
-  poleChipOn: {
-    backgroundColor: 'rgba(255,255,255,0.92)',
-    borderColor: 'rgba(255,255,255,0.92)',
-  },
-  poleText: { color: 'rgba(255,255,255,0.95)', fontWeight: '700' },
-  poleTextOn: { color: '#111', fontWeight: '800' },
-  actionRow: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.xs },
-  actionBtn: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: 6,
-    borderRadius: radius.pill,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.35)',
-  },
-  actionText: { fontWeight: '800' },
-  fab: {
-    position: 'absolute',
-    right: spacing.lg,
-    zIndex: 10,
-  },
-  fabInner: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
+  create: {
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35,
-    shadowRadius: 8,
-    elevation: 6,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.5,
+    shadowRadius: 4,
   },
 });

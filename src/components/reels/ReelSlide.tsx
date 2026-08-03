@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -11,6 +11,13 @@ import {
   Text,
   View,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
 import { ReelNativeVideo } from './ReelNativeVideo';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Icon } from '../ui/Icon';
@@ -29,6 +36,9 @@ import { toggleReelBookmark } from '../../utils/reelBookmarks';
 import { toggleReelLike } from '../../utils/reelLikes';
 import { reportReel } from '../../utils/reelReports';
 import { trackV3Event } from '../../core/analytics/v3Events';
+import { useTranslation } from '../../context/LocaleContext';
+import { useAppTheme } from '../../context/ProductLineContext';
+import { motion } from '../../theme/motion';
 import { spacing } from '../../theme/designTokens';
 
 type ReelSlideProps = {
@@ -97,6 +107,8 @@ const ReelEmbed: React.FC<ReelEmbedProps> = ({ embedUrl, html, reelId }) => {
   );
 };
 
+const AnimatedIcon = Animated.createAnimatedComponent(View);
+
 export const ReelSlide: React.FC<ReelSlideProps> = ({
   reel,
   isActive,
@@ -111,6 +123,8 @@ export const ReelSlide: React.FC<ReelSlideProps> = ({
   onRetry,
 }) => {
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
+  const { colors } = useAppTheme();
   const lastTapRef = useRef(0);
   const [userMuted, setUserMuted] = useState(false);
   const [paused, setPaused] = useState(false);
@@ -129,7 +143,21 @@ export const ReelSlide: React.FC<ReelSlideProps> = ({
   const showLoader = isActive && !canPlay && !reel.failed && !embedFailed;
   const showError = isActive && (reel.failed || embedFailed);
   const caption = reel.caption.trim();
-  const bottomPad = Math.max(insets.bottom, spacing.md) + spacing.lg;
+  const bottomPad = Math.max(insets.bottom, spacing.md) + spacing.xl;
+
+  // Motion : révélation douce de la légende quand la vidéo devient active.
+  const reveal = useSharedValue(isActive ? 1 : 0);
+  const likeScale = useSharedValue(1);
+
+  useEffect(() => {
+    reveal.value = withTiming(isActive ? 1 : 0, { duration: 340, easing: motion.easing.out });
+  }, [isActive, reveal]);
+
+  const metaStyle = useAnimatedStyle(() => ({
+    opacity: 0.25 + reveal.value * 0.75,
+    transform: [{ translateY: (1 - reveal.value) * 14 }],
+  }));
+  const likeStyle = useAnimatedStyle(() => ({ transform: [{ scale: likeScale.value }] }));
 
   useEffect(() => {
     setPaused(false);
@@ -172,6 +200,10 @@ export const ReelSlide: React.FC<ReelSlideProps> = ({
   const profileUrl = authorProfileUrl(reel);
 
   const applyLike = async (nextLiked: boolean) => {
+    likeScale.value = withSpring(nextLiked ? 1.25 : 1, motion.spring.bouncy);
+    setTimeout(() => {
+      likeScale.value = withSpring(1, motion.spring.snappy);
+    }, 130);
     if (onLikeToggle) {
       await onLikeToggle(reel.bookmarkKey, nextLiked);
       setLiked(nextLiked);
@@ -232,30 +264,35 @@ export const ReelSlide: React.FC<ReelSlideProps> = ({
     else onOpenSource();
   };
 
-  const onReport = () => {
-    Alert.alert(
-      'Signaler ce reel',
-      'Ce contenu sera masqué de votre fil. Notre équipe pourra l\'examiner.',
-      [
-        { text: 'Annuler', style: 'cancel' },
-        {
-          text: 'Signaler',
-          style: 'destructive',
-          onPress: () => {
-            void (async () => {
-              await reportReel({
-                bookmarkKey: reel.bookmarkKey,
-                reporterUid,
-                reason: 'Contenu inapproprié',
-                sourceUrl: reel.sourceUrl,
-              });
-              trackV3Event('reel_report', { bookmarkKey: reel.bookmarkKey });
-              onReported?.(reel.bookmarkKey);
-            })();
-          },
-        },
-      ],
-    );
+  const doReport = () => {
+    void (async () => {
+      await reportReel({
+        bookmarkKey: reel.bookmarkKey,
+        reporterUid,
+        reason: 'Contenu inapproprié',
+        sourceUrl: reel.sourceUrl,
+      });
+      trackV3Event('reel_report', { bookmarkKey: reel.bookmarkKey });
+      onReported?.(reel.bookmarkKey);
+    })();
+  };
+
+  // Appui long — options discrètes (signaler / ouvrir la source), sans encombrer le rail.
+  const onLongPress = () => {
+    prodayHaptics.tabSwitch();
+    Alert.alert(reel.authorName, undefined, [
+      { text: t('reels.openSource'), onPress: onOpenExternal },
+      {
+        text: t('reels.report.action'),
+        style: 'destructive',
+        onPress: () =>
+          Alert.alert('', t('reels.report.hide'), [
+            { text: t('common.cancel'), style: 'cancel' },
+            { text: t('reels.report.action'), style: 'destructive', onPress: doReport },
+          ]),
+      },
+      { text: t('common.cancel'), style: 'cancel' },
+    ]);
   };
 
   const embedHtml = embedUrl
@@ -266,13 +303,14 @@ iframe{border:0;width:100%;height:100%}</style></head>
     : null;
 
   return (
-    <Pressable style={[styles.slide, { width, height }]} onPress={onSurfacePress}>
+    <Pressable
+      style={[styles.slide, { width, height }]}
+      onPress={onSurfacePress}
+      onLongPress={onLongPress}
+      delayLongPress={320}
+    >
       {!canPlay && reel.posterUrl ? (
-        <Image
-          source={{ uri: reel.posterUrl }}
-          style={styles.media}
-          resizeMode="cover"
-        />
+        <Image source={{ uri: reel.posterUrl }} style={styles.media} resizeMode="cover" />
       ) : null}
 
       {isActive && useEmbed && embedUrl && embedHtml ? (
@@ -323,68 +361,78 @@ iframe{border:0;width:100%;height:100%}</style></head>
 
       {paused && isActive && canPlay ? (
         <View style={styles.pauseBadge} pointerEvents="none">
-          <Icon name="videocam" size={48} color="rgba(255,255,255,0.9)" />
+          <View style={styles.pauseGlyph}>
+            <Icon name="football" size={30} color="rgba(255,255,255,0.92)" />
+          </View>
         </View>
       ) : null}
 
       <ReelLikeBurst visible={showBurst} onDone={() => setShowBurst(false)} />
 
+      {/* Voile bas — atmosphère issue de la vidéo, pas de carte ni de barre */}
+      <LinearGradient
+        colors={['transparent', 'rgba(0,0,0,0.35)', 'rgba(0,0,0,0.88)']}
+        locations={[0, 0.55, 1]}
+        style={[styles.scrim, { height: height * 0.42 }]}
+        pointerEvents="none"
+      />
+
       <View style={[styles.overlay, { paddingBottom: bottomPad }]} pointerEvents="box-none">
         <View style={styles.sidebar}>
           <PressableSpring
             style={styles.sideBtn}
-            scaleTo={0.9}
+            scaleTo={0.86}
             haptic
             onPress={() => void applyLike(!liked)}
+            accessibilityRole="button"
           >
-            <Icon name={liked ? 'heart' : 'heart-outline'} size={26} color="#fff" />
+            <AnimatedIcon style={likeStyle}>
+              <Icon
+                name={liked ? 'heart' : 'heart-outline'}
+                size={30}
+                color={liked ? '#FF3B5C' : '#fff'}
+                variant={liked ? 'filled' : undefined}
+              />
+            </AnimatedIcon>
           </PressableSpring>
-          <PressableSpring style={styles.sideBtn} scaleTo={0.9} haptic onPress={() => void onToggleSave()}>
-            <Icon name="bookmark" size={22} color="#fff" variant={saved ? 'filled' : undefined} />
+          <PressableSpring style={styles.sideBtn} scaleTo={0.86} haptic onPress={() => void onToggleSave()}>
+            <Icon name={saved ? 'bookmark' : 'bookmark-outline'} size={27} color="#fff" />
           </PressableSpring>
-          <PressableSpring style={styles.sideBtn} scaleTo={0.9} haptic onPress={onOpenSource}>
-            <Icon name="share" size={22} color="#fff" />
+          <PressableSpring style={styles.sideBtn} scaleTo={0.86} haptic onPress={onOpenSource}>
+            <Icon name="share" size={26} color="#fff" />
           </PressableSpring>
-          <PressableSpring style={styles.sideBtn} scaleTo={0.9} onPress={onReport}>
-            <Icon name="alert-circle" size={22} color="#fff" />
-          </PressableSpring>
-          <PressableSpring style={styles.sideBtn} scaleTo={0.9} haptic onPress={() => setUserMuted((m) => !m)}>
-            <Icon name={userMuted ? 'volume-mute' : 'volume-high'} size={24} color="#fff" />
+          <PressableSpring
+            style={styles.sideBtn}
+            scaleTo={0.86}
+            haptic
+            onPress={() => setUserMuted((m) => !m)}
+            accessibilityRole="button"
+            accessibilityLabel={userMuted ? t('reels.sound.off') : t('reels.sound.on')}
+          >
+            <Icon name={userMuted ? 'volume-mute' : 'volume-high'} size={22} color="rgba(255,255,255,0.72)" />
           </PressableSpring>
         </View>
 
-        <View style={styles.meta}>
-          <View style={styles.authorRow}>
-            <Pressable onPress={onOpenProfile} style={styles.authorTap}>
-              <View style={styles.avatarRing}>
-                <View style={styles.avatar}>
-                  <Text style={styles.avatarLetter}>
-                    {reel.authorName.charAt(0).toUpperCase()}
-                  </Text>
-                </View>
-              </View>
-              <Text style={styles.handle}>
-                @{reel.authorHandle}
-                <Text style={styles.sourceBadge}> · {REEL_SOURCE_LABEL[reel.source]}</Text>
-              </Text>
-            </Pressable>
-            <PressableSpring style={styles.followBtn} scaleTo={0.97} haptic onPress={onOpenProfile}>
-              <Text style={styles.followText}>Profil</Text>
-            </PressableSpring>
-          </View>
+        <Animated.View style={[styles.meta, metaStyle]}>
+          <Pressable onPress={onOpenProfile} style={styles.authorRow}>
+            <View style={styles.avatar}>
+              <Text style={styles.avatarLetter}>{reel.authorName.charAt(0).toUpperCase()}</Text>
+            </View>
+            <Text style={styles.handle} numberOfLines={1}>
+              @{reel.authorHandle}
+            </Text>
+            <View style={[styles.authorTick, { backgroundColor: colors.accent }]} />
+            <Text style={styles.source} numberOfLines={1}>
+              {REEL_SOURCE_LABEL[reel.source]}
+            </Text>
+          </Pressable>
 
           {caption ? (
-            <Text style={styles.caption} numberOfLines={3}>
+            <Text style={styles.caption} numberOfLines={2}>
               {caption}
             </Text>
           ) : null}
-
-          {reel.tags.length > 0 ? (
-            <Text style={styles.tags} numberOfLines={1}>
-              {reel.tags.join(' ')}
-            </Text>
-          ) : null}
-        </View>
+        </Animated.View>
       </View>
     </Pressable>
   );
@@ -446,103 +494,90 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(0,0,0,0.25)',
+  },
+  pauseGlyph: {
+    width: 74,
+    height: 74,
+    borderRadius: 37,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0,0,0,0.32)',
+  },
+  scrim: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
     justifyContent: 'flex-end',
-    paddingHorizontal: spacing.md,
+    paddingHorizontal: spacing.lg,
   },
   sidebar: {
     position: 'absolute',
-    right: spacing.sm,
-    bottom: spacing.lg + 20,
+    right: spacing.md,
+    bottom: spacing.xl + 44,
     alignItems: 'center',
-    gap: spacing.md,
+    gap: spacing.xl,
   },
   sideBtn: {
     alignItems: 'center',
     justifyContent: 'center',
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(0,0,0,0.38)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.22)',
+    // Ombre douce unique pour la lisibilité sur vidéo claire — pas de pastille.
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.5,
+    shadowRadius: 4,
   },
   meta: {
-    paddingRight: 64,
+    paddingRight: 68,
+    gap: spacing.sm,
   },
   authorRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
-    marginBottom: spacing.sm,
-  },
-  authorTap: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  avatarRing: {
-    padding: 2,
-    borderRadius: 22,
-    borderWidth: 2,
-    borderColor: '#fff',
   },
   avatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255,255,255,0.16)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   avatarLetter: {
     color: '#fff',
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '800',
   },
   handle: {
     color: '#fff',
     fontWeight: '800',
-    fontSize: 14,
-    flex: 1,
-    textShadowColor: 'rgba(0,0,0,0.5)',
+    fontSize: 15,
+    letterSpacing: -0.2,
+    textShadowColor: 'rgba(0,0,0,0.55)',
     textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
+    textShadowRadius: 3,
   },
-  sourceBadge: {
+  authorTick: {
+    width: 14,
+    height: 2,
+    borderRadius: 1,
+  },
+  source: {
+    color: 'rgba(255,255,255,0.55)',
+    fontSize: 12,
     fontWeight: '600',
-    fontSize: 12,
-    color: 'rgba(255,255,255,0.75)',
-  },
-  followBtn: {
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.65)',
-    borderRadius: 8,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 5,
-  },
-  followText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: '700',
   },
   caption: {
-    color: '#fff',
+    color: 'rgba(255,255,255,0.92)',
     fontSize: 14,
-    lineHeight: 19,
+    lineHeight: 20,
     fontWeight: '400',
-    textShadowColor: 'rgba(0,0,0,0.5)',
+    textShadowColor: 'rgba(0,0,0,0.55)',
     textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
-  },
-  tags: {
-    marginTop: spacing.xs,
-    color: 'rgba(255,255,255,0.9)',
-    fontSize: 13,
-    fontWeight: '600',
+    textShadowRadius: 3,
   },
 });

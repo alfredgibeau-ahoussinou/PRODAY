@@ -30,15 +30,16 @@ export const ReelFavoritesSheet: React.FC<ReelFavoritesSheetProps> = ({
   <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
     <View style={styles.backdrop}>
       <View style={styles.sheet}>
+        <View style={styles.handle} />
         <View style={styles.header}>
-          <ProDayText variant="section">Mes favoris</ProDayText>
+          <ProDayText variant="title" style={styles.headerTitle}>Mes favoris</ProDayText>
           <Pressable onPress={onClose} hitSlop={12}>
-            <Icon name="close" size={22} color="#111" />
+            <Icon name="close" size={22} color="rgba(255,255,255,0.7)" />
           </Pressable>
         </View>
         <ScrollView contentContainerStyle={styles.list}>
           {entries.length === 0 ? (
-            <ProDayText variant="body" muted style={styles.empty}>
+            <ProDayText variant="body" style={styles.empty}>
               Aucun reel en favori. Appuyez sur l’icône signet pendant la lecture.
             </ProDayText>
           ) : (
@@ -56,7 +57,7 @@ export const ReelFavoritesSheet: React.FC<ReelFavoritesSheetProps> = ({
                   <ProDayText variant="caption" style={styles.rowTitle}>
                     @{entry.authorName}
                   </ProDayText>
-                  <ProDayText variant="caption" muted numberOfLines={2}>
+                  <ProDayText variant="caption" style={styles.rowCaption} numberOfLines={2}>
                     {entry.caption || entry.bookmarkKey}
                   </ProDayText>
                   <ProDayText variant="caption" accent style={styles.resume}>
@@ -64,7 +65,7 @@ export const ReelFavoritesSheet: React.FC<ReelFavoritesSheetProps> = ({
                   </ProDayText>
                 </PressableSpring>
                 <Pressable onPress={() => onRemove(entry.bookmarkKey)} hitSlop={8}>
-                  <Icon name="close" size={18} color="#888" />
+                  <Icon name="close" size={18} color="rgba(255,255,255,0.45)" />
                 </Pressable>
               </View>
             ))
@@ -79,33 +80,46 @@ const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
     justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0,0,0,0.55)',
+    backgroundColor: 'rgba(0,0,0,0.6)',
   },
   sheet: {
     maxHeight: '70%',
-    backgroundColor: '#fff',
-    borderTopLeftRadius: radius.xl,
-    borderTopRightRadius: radius.xl,
-    padding: spacing.lg,
+    backgroundColor: '#0B0D10',
+    borderTopLeftRadius: radius.xxl,
+    borderTopRightRadius: radius.xxl,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    padding: spacing.xl,
     gap: spacing.md,
+  },
+  handle: {
+    alignSelf: 'center',
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    marginBottom: spacing.xs,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
+  headerTitle: { color: '#FFFFFF' },
   list: { gap: spacing.sm, paddingBottom: spacing.xl },
-  empty: { textAlign: 'center', lineHeight: 22 },
+  empty: { textAlign: 'center', lineHeight: 22, color: 'rgba(255,255,255,0.6)' },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: '#e5e7eb',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
     borderRadius: radius.md,
-    padding: spacing.sm,
+    padding: spacing.md,
+    backgroundColor: 'rgba(255,255,255,0.03)',
   },
   rowMain: { flex: 1, gap: 2 },
-  rowTitle: { fontWeight: '800' },
+  rowTitle: { fontWeight: '800', color: '#FFFFFF' },
+  rowCaption: { color: 'rgba(255,255,255,0.55)' },
   resume: { fontWeight: '700', marginTop: 4 },
 });
