@@ -150,9 +150,9 @@ export function SponsorPricingSection({
           const highlighted = tier.highlighted === true;
           const detail = tierPriceDetail(tier, yearly);
           const ctaHref =
-            tier.id === "starter" || tier.id === "national"
-              ? `${ROUTES.sponsor}#inscription${tier.id !== "starter" ? `?package=${tier.id}` : ""}`
-              : `${ROUTES.sponsor}#inscription?package=territorial`;
+            tier.id === "starter"
+              ? `${ROUTES.sponsorDevis}?package=starter`
+              : `${ROUTES.sponsorDevis}?package=${tier.id}`;
 
           return (
             <motion.article
@@ -231,6 +231,13 @@ export function SponsorPricingSection({
         className={`text-center text-sm ${compact ? "mt-8" : "mt-10"} ${dark ? "text-white/45" : "text-neutral-500"}`}
       >
         Devis Territorial ou sur-mesure :{" "}
+        <Link
+          href={ROUTES.sponsorDevis}
+          className={`font-medium underline ${dark ? "text-white/80" : "text-proday-ink"}`}
+        >
+          demander un devis en ligne
+        </Link>
+        {" · "}
         <a
           href={`mailto:${SPONSOR_PARTNER_CONTACT_EMAIL}`}
           className={`font-medium underline ${dark ? "text-white/80" : "text-proday-ink"}`}

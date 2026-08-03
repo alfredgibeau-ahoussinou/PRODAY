@@ -127,6 +127,108 @@ export const SPONSOR_SIGNUP_STEPS = [
   { id: "review", label: "Validation", title: "Récapitulatif" },
 ] as const;
 
+export const SPONSOR_CONTACT_ROLES = [
+  "Directeur / Directrice marketing",
+  "Responsable partenariats",
+  "Brand manager",
+  "CEO / Fondateur",
+  "Chargé(e) de communication",
+  "Responsable commercial",
+  "Autre",
+] as const;
+
+export type SponsorPackageTier = "starter" | "territorial" | "national" | "custom";
+
+/** Étapes du parcours devis multi-pages (`/sponsor/devis/...`). */
+export const SPONSOR_DEVIS_STEPS = [
+  {
+    id: "entreprise",
+    path: "/sponsor/devis/entreprise",
+    label: "Entreprise",
+    title: "Votre marque",
+    description: "Raison sociale et secteur d'activité.",
+  },
+  {
+    id: "contact",
+    path: "/sponsor/devis/contact",
+    label: "Contact",
+    title: "Vos coordonnées",
+    description: "Personne à recontacter pour le devis.",
+  },
+  {
+    id: "formule",
+    path: "/sponsor/devis/formule",
+    label: "Formule",
+    title: "Formule & budget",
+    description: "Niveau d'intérêt et enveloppe indicative.",
+  },
+  {
+    id: "projet",
+    path: "/sponsor/devis/projet",
+    label: "Projet",
+    title: "Votre projet",
+    description: "Objectifs, ciblage et message libre.",
+  },
+  {
+    id: "recap",
+    path: "/sponsor/devis/recap",
+    label: "Envoi",
+    title: "Récapitulatif",
+    description: "Vérifiez puis envoyez votre demande à ProDay.",
+  },
+] as const;
+
+export type SponsorDevisStepId = (typeof SPONSOR_DEVIS_STEPS)[number]["id"];
+
+export type SponsorDevisFormState = {
+  companyName: string;
+  sector: string;
+  contactName: string;
+  contactRole: string;
+  email: string;
+  phone: string;
+  packageTier: SponsorPackageTier;
+  budget: string;
+  goals: string[];
+  audience: string[];
+  regions: string[];
+  sports: string[];
+  message: string;
+};
+
+export const SPONSOR_DEVIS_INITIAL: SponsorDevisFormState = {
+  companyName: "",
+  sector: "",
+  contactName: "",
+  contactRole: "",
+  email: "",
+  phone: "",
+  packageTier: "custom",
+  budget: "",
+  goals: [],
+  audience: [],
+  regions: [],
+  sports: [],
+  message: "",
+};
+
+export type SponsorQuotePayload = {
+  companyName: string;
+  sector: string;
+  contactName: string;
+  contactRole?: string;
+  email: string;
+  phone?: string;
+  packageTier: SponsorPackageTier;
+  budget?: string;
+  goals?: string[];
+  audience?: string[];
+  regions?: string[];
+  sports?: string[];
+  message?: string;
+  source?: "website" | "app";
+};
+
 export type SponsorSignupPayload = {
   companyName: string;
   sector: string;
@@ -140,7 +242,7 @@ export type SponsorSignupPayload = {
   phone: string;
   logoFileName?: string;
   message?: string;
-  packageTier?: "starter" | "territorial" | "national" | "custom";
+  packageTier?: SponsorPackageTier;
 };
 
 export const SPONSOR_FAQ = [
@@ -158,6 +260,10 @@ export const SPONSOR_FAQ = [
   },
   {
     q: "Qui traite ma demande d'inscription ?",
-    a: `L'équipe partenaires ProDay (${SPONSOR_PARTNER_CONTACT_EMAIL}) valide chaque dossier sous 48 h ouvrées et vous contacte pour activer votre espace.`,
+    a: `L'équipe partenaires ProDay (${SPONSOR_PARTNER_CONTACT_EMAIL}) reçoit chaque devis en ligne et vous contacte sous 48 h ouvrées pour activer votre espace.`,
+  },
+  {
+    q: "Comment demander un devis ?",
+    a: "Utilisez le parcours /sponsor/devis (entreprise, contact, formule, projet). À l'envoi, la demande est enregistrée et un email part vers proday.admin@gmail.com.",
   },
 ] as const;

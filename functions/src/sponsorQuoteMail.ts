@@ -14,6 +14,7 @@ export type SponsorQuoteRequestData = {
   company_name: string;
   contact_email: string;
   contact_name: string;
+  contact_role?: string;
   phone?: string;
   budget?: string;
   goals?: string[];
@@ -140,10 +141,16 @@ export async function notifyAdminNewQuoteRequest(
     `Nouvelle demande de devis sponsor (${request.source})`,
     '',
     `Entreprise : ${request.company_name}`,
+    request.sector ? `Secteur : ${request.sector}` : '',
     `Contact : ${request.contact_name} · ${request.contact_email}`,
+    request.contact_role ? `Fonction : ${request.contact_role}` : '',
     request.phone ? `Téléphone : ${request.phone}` : '',
     `Formule : ${packageLabel}`,
     request.budget ? `Budget : ${request.budget}` : '',
+    request.goals?.length ? `Objectifs : ${request.goals.join(', ')}` : '',
+    request.audience?.length ? `Public cible : ${request.audience.join(', ')}` : '',
+    request.regions?.length ? `Régions : ${request.regions.join(', ')}` : '',
+    request.sports?.length ? `Sports : ${request.sports.join(', ')}` : '',
     request.message ? `Message : ${request.message}` : '',
     '',
     `ID Firestore : sponsor_quote_requests/${requestId}`,
