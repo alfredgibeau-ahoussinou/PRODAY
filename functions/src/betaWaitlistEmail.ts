@@ -34,6 +34,17 @@ export type BetaWelcomeEmailParams = {
   accessToken?: string;
 };
 
+export type BetaConfirmationEmailParams = {
+  email: string;
+  siteUrl?: string;
+};
+
+export type BetaRejectEmailParams = {
+  email: string;
+  roleLabel: string;
+  siteUrl?: string;
+};
+
 function buildBetaAccessUrl(site: string, accessToken?: string): string {
   if (accessToken?.trim()) {
     return `${site}/beta/programme?token=${encodeURIComponent(accessToken.trim())}`;
@@ -48,45 +59,19 @@ function buildBetaInstallerUrl(site: string, accessToken?: string): string {
   return `${site}/beta/installer`;
 }
 
-export function buildBetaWelcomeEmail(params: BetaWelcomeEmailParams): {
+function emailShell(opts: {
   subject: string;
-  html: string;
-  text: string;
-} {
-  const site = (params.siteUrl ?? 'https://proday75.fr').replace(/\/$/, '');
-  const subject = 'Bienvenue dans la bêta ProDay';
-
-  const text = [
-    'Bonjour,',
-    '',
-    `Merci de votre inscription à la bêta ProDay en tant que ${params.roleLabel}.`,
-    '',
-    'ProDay est l’écosystème foot amateur et semi-pro qui réunit recrutement (Mercato), matchs, tournois, Visibilité (score de profil) et CV joueur — le tout dans une seule application mobile.',
-    '',
-    'Prochaines étapes :',
-    '• Accédez à votre espace bêta via le lien ci-dessous.',
-    '• Sur Android : téléchargez l\'APK depuis l\'onglet Installer — pas par email.',
-    '• Sur iOS : bêta TestFlight disponible à partir du 11 août 2026 à 18 h — lien envoyé à l\'ouverture.',
-    '• En attendant, explorez le site pour découvrir les fonctionnalités et l\'univers ProDay Woman.',
-    '',
-    `Site : ${site}`,
-    `Espace bêta : ${buildBetaAccessUrl(site, params.accessToken)}`,
-    `Installer l'APK : ${buildBetaInstallerUrl(site, params.accessToken)}`,
-    '',
-    'À très bientôt sur le terrain,',
-    'L’équipe ProDay',
-    '',
-    '—',
-    'Vous recevez cet email car vous vous êtes inscrit à la bêta sur proday75.fr.',
-    'Contact : proday.admin@gmail.com',
-  ].join('\n');
-
-  const html = `<!DOCTYPE html>
-<html lang="fr">
+  lang: string;
+  title: string;
+  bodyHtml: string;
+  footerEmail: string;
+}): string {
+  return `<!DOCTYPE html>
+<html lang="${opts.lang}">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>${subject}</title>
+  <title>${opts.subject}</title>
 </head>
 <body style="margin:0;padding:0;background:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#0a0a0a;">
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f1f5f9;padding:32px 16px;">
@@ -101,45 +86,15 @@ export function buildBetaWelcomeEmail(params: BetaWelcomeEmailParams): {
           </tr>
           <tr>
             <td style="padding:32px;">
-              <h1 style="margin:0 0 16px;font-size:22px;line-height:1.3;color:#0a0a0a;">Bienvenue dans la bêta</h1>
-              <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#334155;">
-                Merci pour votre inscription en tant que <strong>${params.roleLabel}</strong>.
-                Vous faites partie des premiers à suivre le lancement de ProDay.
-              </p>
-              <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#334155;">
-                <strong>ProDay</strong> réunit recrutement (Mercato), matchs amicaux, tournois,
-                le score <strong>Visibilité</strong> et un <strong>CV joueur</strong> exportable — une seule app pour
-                joueurs, coachs, clubs et organisateurs.
-              </p>
-              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:24px 0;background:#f8fafc;border-radius:12px;border:1px solid #e2e8f0;">
-                <tr>
-                  <td style="padding:20px 24px;">
-                    <p style="margin:0 0 12px;font-size:13px;font-weight:700;color:#0a0a0a;text-transform:uppercase;letter-spacing:0.06em;">Ce qui vous attend</p>
-                    <ul style="margin:0;padding-left:18px;font-size:14px;line-height:1.7;color:#475569;">
-                      <li>Accès à l&apos;espace bêta (programme, pôles, aide)</li>
-                      <li><strong>Android</strong> : APK à télécharger sur l&apos;onglet Installer</li>
-                      <li><strong>iOS</strong> : bêta TestFlight à partir du 11 août 2026 à 18 h</li>
-                    </ul>
-                  </td>
-                </tr>
-              </table>
-              <p style="margin:0 0 24px;font-size:14px;line-height:1.6;color:#64748b;">
-                Sur Android, l&apos;APK n&apos;est pas envoyé par email — rendez-vous directement
-                sur l&apos;onglet Installer une fois connecté à votre espace bêta.
-              </p>
-              <a href="${buildBetaInstallerUrl(site, params.accessToken)}" style="display:inline-block;background:#0a0a0a;color:#ffffff;text-decoration:none;font-size:14px;font-weight:600;padding:14px 28px;border-radius:999px;margin-right:12px;">
-                Télécharger l&apos;APK (Android)
-              </a>
-              <a href="${buildBetaAccessUrl(site, params.accessToken)}" style="display:inline-block;background:#f1f5f9;color:#0a0a0a;text-decoration:none;font-size:14px;font-weight:600;padding:14px 28px;border-radius:999px;border:1px solid #e2e8f0;">
-                Accéder à l&apos;espace bêta
-              </a>
+              <h1 style="margin:0 0 16px;font-size:22px;line-height:1.3;color:#0a0a0a;">${opts.title}</h1>
+              ${opts.bodyHtml}
             </td>
           </tr>
           <tr>
             <td style="padding:20px 32px 28px;border-top:1px solid #e2e8f0;">
               <p style="margin:0;font-size:12px;line-height:1.6;color:#94a3b8;">
-                Inscription enregistrée pour ${params.email}.<br />
-                Questions ? <a href="mailto:proday.admin@gmail.com" style="color:#475569;">proday.admin@gmail.com</a>
+                Message sent to ${opts.footerEmail}.<br />
+                Questions? <a href="mailto:proday.admin@gmail.com" style="color:#475569;">proday.admin@gmail.com</a>
               </p>
             </td>
           </tr>
@@ -149,15 +104,108 @@ export function buildBetaWelcomeEmail(params: BetaWelcomeEmailParams): {
   </table>
 </body>
 </html>`;
+}
+
+export function buildBetaConfirmationEmail(params: BetaConfirmationEmailParams): {
+  subject: string;
+  html: string;
+  text: string;
+} {
+  const subject = 'Beta Request Received';
+
+  const text = [
+    'Thank you for your interest in ProDay.',
+    '',
+    'We have successfully received your beta access request.',
+    'Our team will review your application as soon as possible.',
+    '',
+    'You will receive another email once a decision has been made.',
+    '',
+    'Thank you for your patience.',
+    'The ProDay Team.',
+  ].join('\n');
+
+  const bodyHtml = `
+              <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#334155;">
+                Thank you for your interest in ProDay.
+              </p>
+              <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#334155;">
+                We have successfully received your beta access request.<br />
+                Our team will review your application as soon as possible.
+              </p>
+              <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#334155;">
+                You will receive another email once a decision has been made.
+              </p>
+              <p style="margin:0;font-size:15px;line-height:1.6;color:#334155;">
+                Thank you for your patience.<br />
+                The ProDay Team.
+              </p>`;
+
+  const html = emailShell({
+    subject,
+    lang: 'en',
+    title: 'Beta Request Received',
+    bodyHtml,
+    footerEmail: params.email,
+  });
 
   return { subject, html, text };
 }
 
-export type BetaRejectEmailParams = {
-  email: string;
-  roleLabel: string;
-  siteUrl?: string;
-};
+export function buildBetaWelcomeEmail(params: BetaWelcomeEmailParams): {
+  subject: string;
+  html: string;
+  text: string;
+} {
+  const site = (params.siteUrl ?? 'https://proday75.fr').replace(/\/$/, '');
+  const accessUrl = buildBetaAccessUrl(site, params.accessToken);
+  const subject = 'Welcome to the ProDay Beta';
+
+  const text = [
+    'Congratulations!',
+    '',
+    'Your beta access request has been approved.',
+    '',
+    'You can now access ProDay and discover all of its features.',
+    '',
+    'Our team will contact you again soon with additional information.',
+    '',
+    'Welcome to ProDay!',
+    '',
+    `Access your beta space: ${accessUrl}`,
+    `Installer (Android APK): ${buildBetaInstallerUrl(site, params.accessToken)}`,
+  ].join('\n');
+
+  const bodyHtml = `
+              <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#334155;">
+                Congratulations!
+              </p>
+              <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#334155;">
+                Your beta access request has been approved.
+              </p>
+              <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#334155;">
+                You can now access ProDay and discover all of its features.
+              </p>
+              <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#334155;">
+                Our team will contact you again soon with additional information.
+              </p>
+              <p style="margin:0 0 24px;font-size:15px;line-height:1.6;color:#334155;">
+                Welcome to ProDay!
+              </p>
+              <a href="${accessUrl}" style="display:inline-block;background:#0a0a0a;color:#ffffff;text-decoration:none;font-size:14px;font-weight:600;padding:14px 28px;border-radius:999px;">
+                Access your beta space
+              </a>`;
+
+  const html = emailShell({
+    subject,
+    lang: 'en',
+    title: 'Welcome to the ProDay Beta',
+    bodyHtml,
+    footerEmail: params.email,
+  });
+
+  return { subject, html, text };
+}
 
 export function buildBetaRejectEmail(params: BetaRejectEmailParams): {
   subject: string;
@@ -165,76 +213,47 @@ export function buildBetaRejectEmail(params: BetaRejectEmailParams): {
   text: string;
 } {
   const site = (params.siteUrl ?? 'https://proday75.fr').replace(/\/$/, '');
-  const subject = 'Votre demande d’accès à la bêta ProDay';
+  const subject = 'Update Regarding Your Beta Request';
 
   const text = [
-    'Bonjour,',
+    'Thank you for your interest in ProDay.',
     '',
-    `Nous avons bien reçu votre inscription à la bêta ProDay (${params.roleLabel}).`,
+    'After reviewing your request, we are unfortunately unable to grant beta access at this time.',
     '',
-    'Pour le moment, nous ne pouvons pas vous ouvrir l’accès. La capacité de la bêta est limitée et nous priorisons certains profils pour cette phase.',
+    'We appreciate your interest and will contact you again if new places become available.',
     '',
-    'Vous restez dans notre liste : nous pourrons vous recontacter lors d’une prochaine vague. En attendant, vous pouvez suivre ProDay sur le site.',
+    'Thank you for your understanding.',
     '',
-    `Site : ${site}`,
+    'The ProDay Team.',
     '',
-    'Merci de votre intérêt,',
-    'L’équipe ProDay',
-    '',
-    '—',
-    'Contact : proday.admin@gmail.com',
+    `Site: ${site}`,
   ].join('\n');
 
-  const html = `<!DOCTYPE html>
-<html lang="fr">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>${subject}</title>
-</head>
-<body style="margin:0;padding:0;background:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#0a0a0a;">
-  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f1f5f9;padding:32px 16px;">
-    <tr>
-      <td align="center">
-        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;background:#ffffff;border-radius:16px;overflow:hidden;border:1px solid #e2e8f0;">
-          <tr>
-            <td style="background:#0a0a0a;padding:28px 32px;">
-              <p style="margin:0;font-size:22px;font-weight:700;color:#ffffff;letter-spacing:0.04em;">PRODAY</p>
-              <p style="margin:8px 0 0;font-size:12px;color:#94a3b8;letter-spacing:0.12em;text-transform:uppercase;">Connecter • Progresser • Réussir</p>
-            </td>
-          </tr>
-          <tr>
-            <td style="padding:32px;">
-              <h1 style="margin:0 0 16px;font-size:22px;line-height:1.3;color:#0a0a0a;">Demande d&apos;accès reçue</h1>
+  const bodyHtml = `
               <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#334155;">
-                Merci pour votre inscription en tant que <strong>${params.roleLabel}</strong>.
+                Thank you for your interest in ProDay.
               </p>
               <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#334155;">
-                Pour le moment, nous ne pouvons pas vous ouvrir l&apos;accès à la bêta.
-                La capacité est limitée et nous priorisons certains profils pour cette phase.
+                After reviewing your request, we are unfortunately unable to grant beta access at this time.
+              </p>
+              <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#334155;">
+                We appreciate your interest and will contact you again if new places become available.
               </p>
               <p style="margin:0 0 24px;font-size:15px;line-height:1.6;color:#334155;">
-                Vous restez dans notre liste : nous pourrons vous recontacter lors d&apos;une prochaine vague.
+                Thank you for your understanding.<br />
+                The ProDay Team.
               </p>
               <a href="${site}" style="display:inline-block;background:#0a0a0a;color:#ffffff;text-decoration:none;font-size:14px;font-weight:600;padding:14px 28px;border-radius:999px;">
-                Découvrir ProDay
-              </a>
-            </td>
-          </tr>
-          <tr>
-            <td style="padding:20px 32px 28px;border-top:1px solid #e2e8f0;">
-              <p style="margin:0;font-size:12px;line-height:1.6;color:#94a3b8;">
-                Message envoyé à ${params.email}.<br />
-                Questions ? <a href="mailto:proday.admin@gmail.com" style="color:#475569;">proday.admin@gmail.com</a>
-              </p>
-            </td>
-          </tr>
-        </table>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>`;
+                Discover ProDay
+              </a>`;
+
+  const html = emailShell({
+    subject,
+    lang: 'en',
+    title: 'Update Regarding Your Beta Request',
+    bodyHtml,
+    footerEmail: params.email,
+  });
 
   return { subject, html, text };
 }
@@ -261,7 +280,7 @@ export function buildBetaEmailJsTemplateParams(
     site_url: site,
     beta_url: buildBetaAccessUrl(site, params.accessToken),
     installer_url: buildBetaInstallerUrl(site, params.accessToken),
-    subject: 'Vous êtes beta-testeur ProDay',
+    subject: 'Welcome to the ProDay Beta',
   };
 }
 

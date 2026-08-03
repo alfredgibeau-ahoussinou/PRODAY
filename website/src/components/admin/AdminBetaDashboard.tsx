@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Check, RefreshCw, Search, X } from "lucide-react";
+import { Check, Mail, RefreshCw, Search, X } from "lucide-react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import {
   AdminBanner,
@@ -470,6 +470,11 @@ export function AdminBetaDashboard({
                           email bienvenue OK
                         </span>
                       ) : null}
+                      {entry.confirmation_email_sent ? (
+                        <span className="mt-1.5 block text-[10px] text-white/35">
+                          confirmation OK
+                        </span>
+                      ) : null}
                     </td>
                     <td className="max-w-[160px] truncate text-white/40">
                       {entry.admin_note || "—"}
@@ -514,6 +519,20 @@ export function AdminBetaDashboard({
                             onClick={() => void resendEmail(entry.id, entry.email)}
                           >
                             Renvoyer email
+                          </AdminButton>
+                        ) : null}
+                        {entry.email ? (
+                          <AdminButton
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => {
+                              const subject = encodeURIComponent(
+                                "Re: Your ProDay Beta request",
+                              );
+                              window.location.href = `mailto:${entry.email}?subject=${subject}`;
+                            }}
+                          >
+                            <Mail size={12} /> Répondre par e-mail
                           </AdminButton>
                         ) : null}
                       </div>
