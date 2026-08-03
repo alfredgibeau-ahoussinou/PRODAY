@@ -27,6 +27,15 @@ import {
   standaloneAvailableSeats,
   standalonePassengerCount,
 } from '../utils/standaloneCarpool';
+import {
+  buildTripParticipantUids,
+  nextTripStatusOnEnd,
+  nextTripStatusOnStart,
+  standaloneOfferTripStatus,
+  standaloneTripId,
+} from '../utils/carpoolLiveTrip';
+import { carpoolLiveTripService } from './carpoolLiveTrip.service';
+import type { CarpoolTripStatus } from '../models/CarpoolLiveTrip';
 
 const COL = 'carpool_offers';
 
@@ -39,6 +48,7 @@ async function autoCloseExpiredOffers(offers: StandaloneCarpoolOffer[]): Promise
       .filter(
         (o) =>
           o.status === 'open' &&
+          o.trip_status !== 'in_progress' &&
           (o.departs_at.getTime() < now || standalonePassengerCount(o) >= o.seats),
       )
       .map((o) =>
@@ -86,7 +96,20 @@ function mapPassengers(raw: unknown): CarpoolPassenger[] {
   return out;
 }
 
+function mapTripStatus(raw: unknown): CarpoolTripStatus | undefined {
+  if (raw === 'scheduled' || raw === 'in_progress' || raw === 'completed') return raw;
+  return undefined;
+}
+
 function offerFromFirestore(id: string, data: Record<string, unknown>): StandaloneCarpoolOffer {
+  const statusRaw = data.status;
+  const status: StandaloneCarpoolOffer['status'] =
+    statusRaw === 'closed' ||
+    statusRaw === 'completed' ||
+    statusRaw === 'cancelled' ||
+    statusRaw === 'in_progress'
+      ? statusRaw
+      : 'open';
   return {
     id,
     driver_uid: String(data.driver_uid ?? ''),
@@ -103,10 +126,8 @@ function offerFromFirestore(id: string, data: Record<string, unknown>): Standalo
     seats: Number(data.seats ?? 0),
     notes: data.notes as string | undefined,
     passengers: mapPassengers(data.passengers),
-    status:
-      data.status === 'closed' || data.status === 'completed' || data.status === 'cancelled'
-        ? (data.status as StandaloneCarpoolOffer['status'])
-        : 'open',
+    status,
+    trip_status: mapTripStatus(data.trip_status),
     club_only: data.club_only === true,
     created_at: toDate(data.created_at),
     updated_at: toDate(data.updated_at),
@@ -278,6 +299,9 @@ export const carpoolOffersService = {
     const offer = await this.getById(offerId);
     if (!offer) throw new Error('Trajet introuvable.');
     if (offer.status !== 'open') throw new Error('Ce trajet n’est plus disponible.');
+    if (offer.trip_status === 'in_progress' || offer.status === 'in_progress') {
+      throw new Error('Ce trajet est déjà en cours.');
+    }
     if (offer.driver_uid === passengerUid) {
       throw new Error('Vous ne pouvez pas réserver votre propre véhicule.');
     }
@@ -337,6 +361,52 @@ export const carpoolOffersService = {
     const passengers = (offer.passengers ?? []).filter((p) => p.uid !== passengerUid);
     await updateDoc(doc(database, COL, offerId), {
       passengers,
+      updated_at: serverTimestamp(),
+    });
+  },
+
+  /** Conducteur — démarre le trajet (géoloc live pour les participants). */
+  async startTrip(offerId: string, driverUid: string): Promise<void> {
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+    const offer = await this.getById(offerId);
+    if (!offer) throw new Error('Trajet introuvable.');
+    if (offer.driver_uid !== driverUid) throw new Error('Action réservée au conducteur.');
+
+    const current = standaloneOfferTripStatus(offer);
+    nextTripStatusOnStart(current);
+
+    await carpoolLiveTripService.startSharing({
+      tripId: standaloneTripId(offerId),
+      kind: 'standalone',
+      driverUid,
+      participantUids: buildTripParticipantUids(driverUid, offer.passengers),
+      offerId,
+    });
+
+    await updateDoc(doc(database, COL, offerId), {
+      status: 'in_progress',
+      trip_status: 'in_progress',
+      updated_at: serverTimestamp(),
+    });
+  },
+
+  /** Conducteur — termine le trajet et arrête le partage de position. */
+  async endTrip(offerId: string, driverUid: string): Promise<void> {
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+    const offer = await this.getById(offerId);
+    if (!offer) throw new Error('Trajet introuvable.');
+    if (offer.driver_uid !== driverUid) throw new Error('Action réservée au conducteur.');
+
+    const current = standaloneOfferTripStatus(offer);
+    nextTripStatusOnEnd(current);
+
+    await carpoolLiveTripService.stopSharing(standaloneTripId(offerId), driverUid);
+
+    await updateDoc(doc(database, COL, offerId), {
+      status: 'completed',
+      trip_status: 'completed',
       updated_at: serverTimestamp(),
     });
   },

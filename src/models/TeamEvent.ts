@@ -1,4 +1,5 @@
 import type { GeoPoint } from './User';
+import type { CarpoolTripStatus } from './CarpoolLiveTrip';
 
 export type TeamEventType =
   | 'training'
@@ -87,6 +88,8 @@ export interface CarpoolSlot {
   volunteered?: boolean;
   /** Coéquipiers ayant réservé une place */
   passengers?: CarpoolPassenger[];
+  /** Trajet démarré / terminé (géoloc live pendant in_progress) */
+  trip_status?: CarpoolTripStatus;
 }
 
 export interface CarpoolMessage {

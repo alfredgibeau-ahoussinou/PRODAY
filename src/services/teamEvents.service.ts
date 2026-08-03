@@ -37,6 +37,14 @@ import {
   newCarpoolMessageId,
   newEventTaskId,
 } from '../utils/carpoolBalance';
+import {
+  buildTripParticipantUids,
+  eventTripId,
+  nextTripStatusOnEnd,
+  nextTripStatusOnStart,
+  slotTripStatus,
+} from '../utils/carpoolLiveTrip';
+import { carpoolLiveTripService } from './carpoolLiveTrip.service';
 import { callFunction } from '../lib/firebaseFunctions';
 import { usersService } from './users.service';
 import { profileService } from './profile.service';
@@ -908,6 +916,7 @@ export const teamEventsService = {
           notes: prev?.notes,
           volunteered: false,
           passengers: prev?.passengers,
+          trip_status: prev?.trip_status,
         };
       }),
       ...volunteeredKeep,
@@ -958,6 +967,58 @@ export const teamEventsService = {
     if (idx < 0) throw new Error('Vous n’êtes pas désigné chauffeur sur cet événement.');
 
     slots[idx] = { ...slots[idx], ...patch };
+    await updateDoc(doc(database, COL, eventId), {
+      carpool_slots: slots,
+      updated_at: serverTimestamp(),
+    });
+  },
+
+  /** Conducteur — démarre le trajet événement (géoloc live). */
+  async startCarpoolTrip(eventId: string, driverUid: string): Promise<void> {
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+    const event = await this.getById(eventId);
+    if (!event) throw new Error('Événement introuvable');
+
+    const slots = [...(event.carpool_slots ?? [])];
+    const idx = slots.findIndex((s) => s.driver_uid === driverUid);
+    if (idx < 0) throw new Error('Vous n’êtes pas chauffeur sur cet événement.');
+
+    const slot = slots[idx];
+    nextTripStatusOnStart(slotTripStatus(slot));
+
+    await carpoolLiveTripService.startSharing({
+      tripId: eventTripId(eventId, driverUid),
+      kind: 'event',
+      driverUid,
+      participantUids: buildTripParticipantUids(driverUid, slot.passengers),
+      eventId,
+    });
+
+    slots[idx] = { ...slot, trip_status: 'in_progress' };
+    await updateDoc(doc(database, COL, eventId), {
+      carpool_slots: slots,
+      updated_at: serverTimestamp(),
+    });
+  },
+
+  /** Conducteur — termine le trajet événement et stoppe le partage. */
+  async endCarpoolTrip(eventId: string, driverUid: string): Promise<void> {
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+    const event = await this.getById(eventId);
+    if (!event) throw new Error('Événement introuvable');
+
+    const slots = [...(event.carpool_slots ?? [])];
+    const idx = slots.findIndex((s) => s.driver_uid === driverUid);
+    if (idx < 0) throw new Error('Vous n’êtes pas chauffeur sur cet événement.');
+
+    const slot = slots[idx];
+    nextTripStatusOnEnd(slotTripStatus(slot));
+
+    await carpoolLiveTripService.stopSharing(eventTripId(eventId, driverUid), driverUid);
+
+    slots[idx] = { ...slot, trip_status: 'completed' };
     await updateDoc(doc(database, COL, eventId), {
       carpool_slots: slots,
       updated_at: serverTimestamp(),

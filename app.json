@@ -59,7 +59,7 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "ProDay utilise votre position pour organiser les points de rendez-vous et de prise en charge en covoiturage."
+          "locationWhenInUsePermission": "ProDay utilise votre position pour les points de rendez-vous covoiturage et pour partager votre position en direct avec les passagers pendant un trajet en cours."
         }
       ],
       "expo-web-browser",

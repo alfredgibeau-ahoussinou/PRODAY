@@ -28,6 +28,12 @@ import { useTabNavigationOptional } from '../../context/TabNavigationContext';
 import { spacing, radius, shadows } from '../../theme/designTokens';
 import { CarpoolCardAccent } from './carpoolUi';
 import { openCarpoolDriverChat } from '../../utils/openCarpoolDriverChat';
+import { CarpoolLiveTripPanel } from './CarpoolLiveTripPanel';
+import {
+  standaloneOfferTripStatus,
+  standaloneTripId,
+} from '../../utils/carpoolLiveTrip';
+import { isStandaloneConfirmedPassenger } from '../../utils/standaloneCarpool';
 
 interface StandaloneCarpoolRideCardProps {
   offer: StandaloneCarpoolOffer;
@@ -334,6 +340,20 @@ export const StandaloneCarpoolRideCard: React.FC<StandaloneCarpoolRideCardProps>
               </View>
             ))}
         </View>
+      ) : null}
+
+      {isMine || isStandaloneConfirmedPassenger(offer, profile.uid) ? (
+        <CarpoolLiveTripPanel
+          tripId={standaloneTripId(offer.id)}
+          viewerUid={profile.uid}
+          driverUid={offer.driver_uid}
+          driverName={offer.driver_name}
+          passengers={offer.passengers}
+          tripStatus={standaloneOfferTripStatus(offer)}
+          onStartTrip={() => carpoolOffersService.startTrip(offer.id, profile.uid)}
+          onEndTrip={() => carpoolOffersService.endTrip(offer.id, profile.uid)}
+          onTripChanged={onUpdated}
+        />
       ) : null}
       </View>
     </View>
