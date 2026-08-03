@@ -4,7 +4,7 @@
  * Decision (audit 2026-08): no Stripe Billing path existed for Pro — Stripe is
  * one-time Checkout only (shop + club dues). IAP via expo-iap grants Pro but
  * lacked renewals/cancel sync. RevenueCat is the sole recurring provider;
- * expo-iap remains a fallback when RC API keys are unset.
+ * expo-iap remains a fallback when RC API keys are unset or SDK configure fails.
  */
 import { Linking, Platform } from 'react-native';
 import Constants, { ExecutionEnvironment } from 'expo-constants';
@@ -13,18 +13,52 @@ import { getIapSku, type IapBillingCycle } from '../content/iapProducts';
 import { callFunction } from '../lib/firebaseFunctions';
 import { isFirebaseConfigured } from '../config/firebase';
 
-const IOS_API_KEY = process.env.EXPO_PUBLIC_REVENUECAT_IOS_API_KEY?.trim() ?? '';
-const ANDROID_API_KEY = process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY?.trim() ?? '';
+export type RevenueCatPurchaseResult = {
+  ok: boolean;
+  message: string;
+  /** When true, `iap.service` should try expo-iap instead of surfacing this error. */
+  useExpoIapFallback?: boolean;
+};
+
+type RevenueCatExtra = {
+  iosApiKey?: string;
+  androidApiKey?: string;
+};
+
+function coalesceKey(...candidates: Array<string | undefined | null>): string {
+  for (const c of candidates) {
+    const v = typeof c === 'string' ? c.trim() : '';
+    if (v) return v;
+  }
+  return '';
+}
+
+function extraRevenueCat(): RevenueCatExtra {
+  const extra = Constants.expoConfig?.extra as { revenueCat?: RevenueCatExtra } | null | undefined;
+  return extra?.revenueCat ?? {};
+}
+
+/** Prefer Metro-inlined EXPO_PUBLIC_* then app.config `extra` (EAS / restart-safe). */
+function platformApiKey(): string {
+  const fromExtra = extraRevenueCat();
+  if (Platform.OS === 'ios') {
+    return coalesceKey(
+      process.env.EXPO_PUBLIC_REVENUECAT_IOS_API_KEY,
+      fromExtra.iosApiKey
+    );
+  }
+  if (Platform.OS === 'android') {
+    return coalesceKey(
+      process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY,
+      fromExtra.androidApiKey
+    );
+  }
+  return '';
+}
 
 function isNativeStoreBuild(): boolean {
   if (Platform.OS === 'web') return false;
   return Constants.executionEnvironment !== ExecutionEnvironment.StoreClient;
-}
-
-function platformApiKey(): string {
-  if (Platform.OS === 'ios') return IOS_API_KEY;
-  if (Platform.OS === 'android') return ANDROID_API_KEY;
-  return '';
 }
 
 let configured = false;
@@ -74,7 +108,7 @@ async function syncPurchaseToFirestore(params: {
   planId: SubscriptionPlanId;
   productId: string;
   transactionId: string;
-}): Promise<{ ok: boolean; message: string }> {
+}): Promise<RevenueCatPurchaseResult> {
   const platform = Platform.OS === 'ios' ? 'ios' : 'android';
   return callFunction<
     {
@@ -101,6 +135,10 @@ export const revenueCatService = {
     return isNativeStoreBuild() && isFirebaseConfigured() && Boolean(platformApiKey());
   },
 
+  hasApiKey(): boolean {
+    return Boolean(platformApiKey());
+  },
+
   /** Call once at app startup — configures SDK if keys are present (no duplicate configure). */
   async init(): Promise<void> {
     if (!this.isAvailable()) return;
@@ -125,7 +163,7 @@ export const revenueCatService = {
   async purchasePlan(
     planId: SubscriptionPlanId,
     billing: IapBillingCycle
-  ): Promise<{ ok: boolean; message: string }> {
+  ): Promise<RevenueCatPurchaseResult> {
     const sku = getIapSku(planId, billing);
     if (!sku) {
       return {
@@ -135,10 +173,13 @@ export const revenueCatService = {
     }
 
     if (!(await ensureConfigured())) {
+      const hasKey = Boolean(platformApiKey());
       return {
         ok: false,
-        message:
-          'RevenueCat non configuré. Ajoutez EXPO_PUBLIC_REVENUECAT_IOS_API_KEY / ANDROID_API_KEY (build EAS).',
+        useExpoIapFallback: true,
+        message: hasKey
+          ? 'RevenueCat indisponible sur ce build (SDK). Repli store natif…'
+          : 'RevenueCat non configuré. Ajoutez EXPO_PUBLIC_REVENUECAT_IOS_API_KEY / ANDROID_API_KEY dans `.env`, relancez Metro (`npx expo start -c`), ou définissez les secrets EAS puis rebuild.',
       };
     }
 
@@ -181,9 +222,13 @@ export const revenueCatService = {
     }
   },
 
-  async restorePurchases(): Promise<{ ok: boolean; message: string }> {
+  async restorePurchases(): Promise<RevenueCatPurchaseResult> {
     if (!(await ensureConfigured())) {
-      return { ok: false, message: 'RevenueCat non disponible.' };
+      return {
+        ok: false,
+        useExpoIapFallback: true,
+        message: 'RevenueCat non disponible — restauration via clés API requise.',
+      };
     }
     try {
       const Purchases = (await import('react-native-purchases')).default;
