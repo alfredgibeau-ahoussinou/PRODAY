@@ -454,6 +454,30 @@ service cloud.firestore {
         || (isSignedIn() && resource.data.organizer_uid == request.auth.uid);
     }
 
+    match /organizer_events/{eventId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn()
+        && request.resource.data.organizer_uid == request.auth.uid;
+      allow update: if isSignedIn()
+        && (resource.data.organizer_uid == request.auth.uid || isAdmin());
+      allow delete: if isAdmin()
+        || (isSignedIn() && resource.data.organizer_uid == request.auth.uid);
+    }
+
+    match /event_registrations/{registrationId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn()
+        && request.resource.data.user_uid == request.auth.uid
+        && request.resource.data.event_id is string;
+      allow update: if isSignedIn()
+        && (resource.data.user_uid == request.auth.uid
+            || isAdmin()
+            || (resource.data.event_id is string
+                && get(/databases/$(database)/documents/organizer_events/$(resource.data.event_id)).data.organizer_uid
+                  == request.auth.uid));
+      allow delete: if isAdmin();
+    }
+
     match /friendly_matches/{matchId} {
       allow read: if isSignedIn();
       allow create, update: if isSignedIn();

@@ -5,6 +5,7 @@ import { processScheduledEventReminders } from './eventReminders';
 import { sendFcmToUser } from './messaging';
 import { createPaymentCheckoutSession, stripeWebhook } from './stripePayments';
 import { createShopCheckoutSession } from './shopPayments';
+import { createEventRegistrationCheckoutSession } from './eventRegistrationPayments';
 import { onRecruitmentPostCreated } from './mercatoAlerts';
 import { runMistralDocumentVerification, verifyOnboardingDocumentEphemeral } from './mistralVerification';
 import { onPlatformFeedCreated, onChatMessageCreated } from './feedNotifications';
@@ -47,6 +48,7 @@ import { incrementSubscriptionUsage } from './subscriptionUsage';
 import { sendSponsorClubMessage } from './sendSponsorClubMessage';
 
 export { createPaymentCheckoutSession, stripeWebhook, createShopCheckoutSession };
+export { createEventRegistrationCheckoutSession };
 export { sendAuthVerificationEmail, sendAuthPasswordResetEmail };
 export { incrementSubscriptionUsage };
 export { sendSponsorClubMessage };

@@ -38,7 +38,42 @@ import type { MedicalAppointment, MedicalAppointmentStatus } from '../models/Med
 import type { PlayerActivity, PlayerActivitySource, PlayerActivityType } from '../models/PlayerActivity';
 import type { Team } from '../models/Team';
 import type { Membership } from '../models/Membership';
+import type {
+  EventRegistration,
+  EventRegistrationStatus,
+  EventOrganizerKind,
+  EventOrganizerStatus,
+  EventResults,
+  OrganizerEvent,
+} from '../models/EventOrganizer';
 import { PERFORMANCE_TAGS, type PerformanceTag } from '../utils/performanceTags';
+
+const EVENT_ORGANIZER_KINDS: EventOrganizerKind[] = [
+  'tournament',
+  'academy',
+  'camp',
+  'detection',
+  'showcase',
+  'partner',
+];
+
+const EVENT_ORGANIZER_STATUSES: EventOrganizerStatus[] = [
+  'draft',
+  'published',
+  'registration_open',
+  'registration_closed',
+  'live',
+  'completed',
+  'cancelled',
+];
+
+const EVENT_REGISTRATION_STATUSES: EventRegistrationStatus[] = [
+  'pending',
+  'confirmed',
+  'waitlist',
+  'cancelled',
+  'paid',
+];
 
 function toDate(value: unknown): Date {
   if (
@@ -784,6 +819,83 @@ export function playerActivityFromFirestore(
     source: (data.source as PlayerActivitySource) ?? 'manual',
     team_event_id: data.team_event_id != null ? String(data.team_event_id) : undefined,
     created_at: toDate(data.created_at),
+  };
+}
+
+export function organizerEventFromFirestore(
+  id: string,
+  data: Record<string, unknown>,
+): OrganizerEvent {
+  const kindRaw = String(data.kind ?? 'tournament');
+  const kind = EVENT_ORGANIZER_KINDS.includes(kindRaw as EventOrganizerKind)
+    ? (kindRaw as EventOrganizerKind)
+    : 'tournament';
+  const statusRaw = String(data.status ?? 'draft');
+  const status = EVENT_ORGANIZER_STATUSES.includes(statusRaw as EventOrganizerStatus)
+    ? (statusRaw as EventOrganizerStatus)
+    : 'draft';
+
+  let results: EventResults | undefined;
+  if (data.results && typeof data.results === 'object') {
+    const r = data.results as Record<string, unknown>;
+    results = {
+      event_id: String(r.event_id ?? id),
+      entries: Array.isArray(r.entries)
+        ? (r.entries as Record<string, unknown>[]).map((e) => ({
+            rank: Number(e.rank ?? 0),
+            label: String(e.label ?? ''),
+            score: e.score != null ? String(e.score) : undefined,
+          }))
+        : [],
+      published: Boolean(r.published),
+      published_at: r.published_at ? toDate(r.published_at) : undefined,
+    };
+  }
+
+  return {
+    id,
+    organizer_uid: String(data.organizer_uid ?? ''),
+    organizer_name: data.organizer_name != null ? String(data.organizer_name) : undefined,
+    kind,
+    title: String(data.title ?? ''),
+    description: data.description != null ? String(data.description) : undefined,
+    city: data.city != null ? String(data.city) : undefined,
+    venue: data.venue != null ? String(data.venue) : undefined,
+    starts_at: toDate(data.starts_at),
+    ends_at: data.ends_at ? toDate(data.ends_at) : undefined,
+    status,
+    capacity: data.capacity == null ? null : Number(data.capacity),
+    registration_price_cents:
+      data.registration_price_cents == null ? null : Number(data.registration_price_cents),
+    media_urls: Array.isArray(data.media_urls)
+      ? (data.media_urls as unknown[]).map(String).filter(Boolean)
+      : undefined,
+    results,
+    created_at: toDate(data.created_at),
+    updated_at: toDate(data.updated_at),
+  };
+}
+
+export function eventRegistrationFromFirestore(
+  id: string,
+  data: Record<string, unknown>,
+): EventRegistration {
+  const statusRaw = String(data.status ?? 'pending');
+  const status = EVENT_REGISTRATION_STATUSES.includes(statusRaw as EventRegistrationStatus)
+    ? (statusRaw as EventRegistrationStatus)
+    : 'pending';
+
+  return {
+    id,
+    event_id: String(data.event_id ?? ''),
+    user_uid: String(data.user_uid ?? ''),
+    display_name: data.display_name != null ? String(data.display_name) : undefined,
+    email: data.email != null ? String(data.email) : undefined,
+    status,
+    payment_ref: data.payment_ref != null ? String(data.payment_ref) : undefined,
+    amount_cents: data.amount_cents != null ? Number(data.amount_cents) : undefined,
+    created_at: toDate(data.created_at),
+    updated_at: toDate(data.updated_at),
   };
 }
 

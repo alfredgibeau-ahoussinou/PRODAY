@@ -1,11 +1,12 @@
 /**
- * Helpers Pôle Événements — listes, résultats, inscriptions (sans paiements).
- * TODO: Stripe / IAP pour registration_price_cents.
+ * Helpers Pôle Événements — listes, résultats, inscriptions, partage.
  */
 
 import type {
   EventRegistration,
   EventRegistrationStatus,
+  EventResults,
+  EventResultEntry,
   OrganizerEvent,
   EventOrganizerStatus,
 } from '../models/EventOrganizer';
@@ -39,15 +40,23 @@ export function assignRegistrationStatus(
   return 'confirmed';
 }
 
-/** Stub résultats — structure pour classements futurs. */
-export type EventResultStub = {
-  event_id: string;
-  entries: { rank: number; label: string; score?: string }[];
-  published: boolean;
-};
+/** @deprecated Prefer EventResults — kept for tests / migration. */
+export type EventResultStub = EventResults;
 
-export function emptyEventResults(eventId: string): EventResultStub {
+export function emptyEventResults(eventId: string): EventResults {
   return { event_id: eventId, entries: [], published: false };
+}
+
+export function publishEventResults(
+  eventId: string,
+  entries: EventResultEntry[],
+): EventResults {
+  return {
+    event_id: eventId,
+    entries: [...entries].sort((a, b) => a.rank - b.rank),
+    published: true,
+    published_at: new Date(),
+  };
 }
 
 export function sortRegistrationsByStatus(regs: EventRegistration[]): EventRegistration[] {
@@ -61,4 +70,14 @@ export function sortRegistrationsByStatus(regs: EventRegistration[]): EventRegis
   return [...regs].sort(
     (a, b) => order.indexOf(a.status) - order.indexOf(b.status),
   );
+}
+
+export function eventRequiresPayment(
+  event: Pick<OrganizerEvent, 'registration_price_cents'>,
+): boolean {
+  return (event.registration_price_cents ?? 0) > 0;
+}
+
+export function countActiveRegistrations(regs: EventRegistration[]): number {
+  return regs.filter((r) => registrationIsActive(r.status)).length;
 }

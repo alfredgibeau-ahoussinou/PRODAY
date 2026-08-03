@@ -183,6 +183,14 @@ export const EVENEMENTS_BRAND = {
   accentDark: "#0e4a5c",
 } as const;
 
+export const EVENEMENTS_AUDIENCES = [
+  "Tournois associatifs et de quartier",
+  "Académies football & centres",
+  "Stages et camps d’entraînement",
+  "Journées de détection",
+  "Showcases et événements partenaires",
+] as const;
+
 export const PRO_CLUB_BRAND = {
   name: "Pro Day Pro Club",
   shortName: "Pro Club",
@@ -931,7 +939,7 @@ export const EVENEMENTS_MODULES = [
     title: "Créer un événement",
     subtitle: "Tournois · camps · détections",
     description:
-      "Publiez tournois, académies, stages, détections, showcases ou événements partenaires.",
+      "Publiez tournois, académies, stages, détections, showcases ou événements partenaires depuis l’app organisateur.",
     image: "/showcase/classic-arena.jpg",
   },
   {
@@ -939,23 +947,23 @@ export const EVENEMENTS_MODULES = [
     title: "Inscriptions en ligne",
     subtitle: "Listes & capacités",
     description:
-      "Ouverture / fermeture des inscriptions, liste d'attente et export participants.",
+      "Ouverture / fermeture des inscriptions, liste d’attente automatique et suivi des participants.",
     image: "/showcase/classic-exp-team.jpg",
   },
   {
     id: "payments",
     title: "Paiements",
-    subtitle: "Bientôt",
+    subtitle: "Stripe Checkout",
     description:
-      "Encaissement des droits d'inscription. TODO : Stripe / IAP — scaffolding prêt côté modèle.",
+      "Droits d’inscription encaissés via Stripe (carte). Paiement manuel possible côté organisateur.",
     image: "/images/football-mercato-01.jpg",
   },
   {
     id: "results-media",
     title: "Résultats & médias",
-    subtitle: "Partage",
+    subtitle: "Partage natif",
     description:
-      "Scores, classements et galerie. Partagez les moments forts avec clubs et joueurs.",
+      "Publiez classements, ajoutez photos/vidéos et partagez depuis l’app avec clubs et joueurs.",
     image: "/images/football-stadium-night-01.jpg",
   },
 ] as const;

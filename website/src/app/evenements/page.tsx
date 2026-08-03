@@ -1,17 +1,24 @@
 import type { Metadata } from "next";
-import { ArrowRight, CalendarDays, CreditCard, ListChecks, Share2 } from "lucide-react";
+import {
+  ArrowRight,
+  CalendarDays,
+  CreditCard,
+  ListChecks,
+  Share2,
+  Trophy,
+} from "lucide-react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { PageBody } from "@/components/layout/PageBody";
 import { PremiumSection } from "@/components/layout/PremiumSection";
 import { PremiumButton } from "@/components/ui/PremiumButton";
 import { ROUTES } from "@/lib/routes";
-import { EVENEMENTS_BRAND, EVENEMENTS_MODULES } from "@/lib/content";
+import { EVENEMENTS_BRAND, EVENEMENTS_MODULES, EVENEMENTS_AUDIENCES } from "@/lib/content";
 import { pricingHrefForPole } from "@/lib/poles";
 
 export const metadata: Metadata = {
   title: "Pôle Événements — Organisateurs",
   description:
-    "Tournois, académies, camps, détections et showcases. Créez, inscrivez, encaissez et partagez.",
+    "Tournois associatifs et de quartier, académies, camps, détections et showcases. Créez, inscrivez, encaissez et partagez.",
 };
 
 const ICONS = [CalendarDays, ListChecks, CreditCard, Share2];
@@ -20,17 +27,37 @@ export default function EvenementsPolePage() {
   return (
     <>
       <PageHeader
-        accent="pro"
+        accent="evenements"
         kicker={EVENEMENTS_BRAND.tagline}
         title={EVENEMENTS_BRAND.name}
         description={EVENEMENTS_BRAND.mission}
+        image="/showcase/classic-arena.jpg"
       />
       <PageBody>
+        <PremiumSection
+          id="audiences"
+          pole="evenements"
+          title="Pour qui ?"
+          description="Du tournoi de quartier au camp académie — un même outil organisateur."
+        >
+          <ul className="mt-6 grid gap-3 sm:grid-cols-2">
+            {EVENEMENTS_AUDIENCES.map((a) => (
+              <li
+                key={a}
+                className="flex gap-3 border-t border-cyan-700/40 pt-3 text-sm text-white/85"
+              >
+                <Trophy className="mt-0.5 h-4 w-4 shrink-0 text-cyan-400" />
+                {a}
+              </li>
+            ))}
+          </ul>
+        </PremiumSection>
+
         <PremiumSection
           id="modules"
           pole="evenements"
           title="Espace organisateurs"
-          description="Scaffolding produit : modèles et parcours prêts. Paiements en ligne à brancher."
+          description="Création, inscriptions en ligne, paiements Stripe, listes, résultats et partage média — dans l’app."
         >
           <div className="mt-8 grid gap-8 sm:grid-cols-2">
             {EVENEMENTS_MODULES.map((mod, i) => {
@@ -47,9 +74,6 @@ export default function EvenementsPolePage() {
               );
             })}
           </div>
-          <p className="mt-8 text-xs text-white/45">
-            TODO : encaissement Stripe / IAP, sync listes live, résultats et partage média natif.
-          </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <PremiumButton href={ROUTES.betaWaitlist} variant="primary">
               Rejoindre la bêta
