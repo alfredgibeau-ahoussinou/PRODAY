@@ -50,11 +50,11 @@ export const fr: MessageCatalog = {
   'profile.chapters.activity': 'Activité',
   'profile.chapters.settings': 'Paramètres',
 
-  'nav.overflow': 'Navigation',
-  'nav.overflowHint': 'Accédez aux sections secondaires de l’app.',
-  'nav.overflowActive': 'Section active',
-  'nav.menu': 'Menu',
-  'nav.menuA11y': 'Menu navigation',
+  'nav.overflow': 'Plus',
+  'nav.overflowHint': 'Covoiturage, club, santé et le reste.',
+  'nav.overflowActive': 'Ouvert',
+  'nav.menu': 'Plus',
+  'nav.menuA11y': 'Plus d’onglets',
 
   'tabs.home': 'Accueil',
   'tabs.recrutement': 'Mercato',

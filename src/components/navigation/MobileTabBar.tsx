@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { MainTabId } from '../../navigation/mainTabConfig';
 import { getMobileRailLayout } from '../../navigation/mobileTabConfig';
@@ -24,9 +24,10 @@ import {
   resolveTabBarAccent,
 } from '../../theme/poleTabBarTheme';
 
-const BAR_HEIGHT = 62;
-const SIDE_ICON = 24;
+const BAR_HEIGHT = 56;
+const SIDE_ICON = 26;
 const CENTER_ICON = 28;
+const CLEAN_ICON = 28;
 
 type MobileTabBarProps = {
   activeTab: MainTabId;
@@ -35,6 +36,7 @@ type MobileTabBarProps = {
   visibleTabs?: MainTabId[];
 };
 
+/** Barre basse — style Instagram (clean) pour shells plats, rail classique sinon. */
 export const MobileTabBar: React.FC<MobileTabBarProps> = ({
   activeTab,
   onTabPress,
@@ -65,6 +67,7 @@ export const MobileTabBar: React.FC<MobileTabBarProps> = ({
     () => getPoleTabBarChrome(productLine, role, playerSegment),
     [productLine, role, playerSegment],
   );
+  const clean = chrome.cleanStyle && !immersive;
   const accentInk = isSponsor
     ? SPONSOR_THEME.primary
     : resolveTabBarAccent(productLine, role, colors, playerSegment);
@@ -76,6 +79,7 @@ export const MobileTabBar: React.FC<MobileTabBarProps> = ({
   const dockBorder = immersive ? 'rgba(255,255,255,0.1)' : chrome.barBorderColor;
   const rootBg = immersive ? '#000' : chrome.rootBackground;
   const inactiveInk = chrome.inactiveIcon;
+  const activeInk = chrome.activeIcon;
 
   const styles = useMemo(
     () => createStyles(colors, immersive, accentInk, chrome),
@@ -87,23 +91,30 @@ export const MobileTabBar: React.FC<MobileTabBarProps> = ({
     const icon = resolveTabIcon(tab, role, productLine);
     const label = getTabShortLabel(tab, productLine, role, t);
     const badge = tab === 'messages' ? unreadCount : 0;
-    const ink = resolveTabInkColors(active, immersive, accentInk, inactiveInk);
+    const ink = resolveTabInkColors(active, immersive, clean ? activeInk : accentInk, inactiveInk);
 
     return (
       <PressableSpring
         key={tab}
-        style={[styles.sideTab, compact && styles.sideTabCompact, rail.flat?.length ? styles.sideTabFlat : null]}
+        style={[
+          styles.sideTab,
+          compact && styles.sideTabCompact,
+          rail.flat?.length ? styles.sideTabFlat : null,
+          clean && styles.sideTabClean,
+        ]}
         onPress={() => onTabPress(tab)}
-        scaleTo={0.94}
+        scaleTo={0.92}
         accessibilityRole="tab"
         accessibilityState={{ selected: active }}
         accessibilityLabel={label}
       >
-        <View style={styles.sideIconWrap}>
-          <TabActiveIndicator active={active} color={ink.activePill} />
+        <View style={[styles.sideIconWrap, clean && styles.sideIconWrapClean]}>
+          {!clean ? (
+            <TabActiveIndicator active={active} color={ink.activePill} />
+          ) : null}
           <Icon
             name={icon}
-            size={compact ? 22 : SIDE_ICON}
+            size={clean ? CLEAN_ICON : compact ? 22 : SIDE_ICON}
             color={active ? ink.active : ink.inactive}
             variant={active ? 'filled' : 'outline'}
           />
@@ -111,25 +122,30 @@ export const MobileTabBar: React.FC<MobileTabBarProps> = ({
             <View
               style={[
                 styles.badge,
+                clean && styles.badgeClean,
                 immersive && [styles.badgeImmersive, { backgroundColor: accentInk }],
               ]}
             >
-              <Text style={styles.badgeText}>{formatTabBadge(badge)}</Text>
+              {!clean ? (
+                <Text style={styles.badgeText}>{formatTabBadge(badge)}</Text>
+              ) : null}
             </View>
           ) : null}
         </View>
-        <Text
-          style={[
-            styles.sideLabel,
-            compact && styles.sideLabelCompact,
-            rail.flat?.length ? styles.sideLabelFlat : null,
-            active && styles.sideLabelActive,
-            { color: active ? ink.active : ink.inactive },
-          ]}
-          numberOfLines={1}
-        >
-          {label}
-        </Text>
+        {!clean ? (
+          <Text
+            style={[
+              styles.sideLabel,
+              compact && styles.sideLabelCompact,
+              rail.flat?.length ? styles.sideLabelFlat : null,
+              active && styles.sideLabelActive,
+              { color: active ? ink.active : ink.inactive },
+            ]}
+            numberOfLines={1}
+          >
+            {label}
+          </Text>
+        ) : null}
       </PressableSpring>
     );
   };
@@ -144,36 +160,44 @@ export const MobileTabBar: React.FC<MobileTabBarProps> = ({
   const renderMenuButton = () => {
     if (rail.overflow.length === 0) return null;
     const active = menuActive;
-    const ink = resolveTabInkColors(active, immersive, accentInk, inactiveInk);
+    const ink = resolveTabInkColors(active, immersive, clean ? activeInk : accentInk, inactiveInk);
     const flat = Boolean(rail.flat?.length);
 
     return (
       <PressableSpring
-        style={[styles.sideTab, flat && styles.sideTabFlat]}
+        style={[
+          styles.sideTab,
+          flat && styles.sideTabFlat,
+          clean && styles.sideTabClean,
+        ]}
         onPress={() => setMenuOpen(true)}
-        scaleTo={0.94}
+        scaleTo={0.92}
         accessibilityRole="button"
         accessibilityLabel={menuA11y}
         accessibilityState={{ selected: active }}
       >
-        <View style={styles.sideIconWrap}>
-          <TabActiveIndicator active={active} color={ink.activePill} />
+        <View style={[styles.sideIconWrap, clean && styles.sideIconWrapClean]}>
+          {!clean ? (
+            <TabActiveIndicator active={active} color={ink.activePill} />
+          ) : null}
           <Icon
             name="menu"
-            size={SIDE_ICON}
+            size={clean ? CLEAN_ICON : SIDE_ICON}
             color={active ? ink.active : ink.inactive}
             variant={active ? 'filled' : 'outline'}
           />
         </View>
-        <Text
-          style={[
-            styles.sideLabel,
-            active && styles.sideLabelActive,
-            { color: active ? ink.active : ink.inactive },
-          ]}
-        >
-          {menuLabel}
-        </Text>
+        {!clean ? (
+          <Text
+            style={[
+              styles.sideLabel,
+              active && styles.sideLabelActive,
+              { color: active ? ink.active : ink.inactive },
+            ]}
+          >
+            {menuLabel}
+          </Text>
+        ) : null}
       </PressableSpring>
     );
   };
@@ -183,8 +207,11 @@ export const MobileTabBar: React.FC<MobileTabBarProps> = ({
       <View
         style={[
           styles.root,
+          clean && styles.rootClean,
           {
-            paddingBottom: Math.max(insets.bottom, spacing.sm),
+            paddingBottom: clean
+              ? Math.max(insets.bottom, 4)
+              : Math.max(insets.bottom, spacing.sm),
             backgroundColor: rootBg,
           },
         ]}
@@ -192,15 +219,22 @@ export const MobileTabBar: React.FC<MobileTabBarProps> = ({
         <View
           style={[
             styles.bar,
+            clean && styles.barClean,
             {
               backgroundColor: dockBg,
               borderColor: dockBorder,
               borderWidth: immersive ? 0 : chrome.barBorderWidth,
+              borderTopWidth: clean && !immersive ? StyleSheet.hairlineWidth : chrome.barBorderWidth,
+              borderLeftWidth: clean ? 0 : chrome.barBorderWidth,
+              borderRightWidth: clean ? 0 : chrome.barBorderWidth,
+              borderBottomWidth: clean ? 0 : chrome.barBorderWidth,
               paddingTop: centerTab
                 ? Math.max(-chrome.centerButtonLift, spacing.xs)
-                : spacing.xs,
+                : clean
+                  ? 6
+                  : spacing.xs,
             },
-            chrome.barShadow && !immersive && shadows.soft,
+            chrome.barShadow && !immersive && !clean && shadows.soft,
           ]}
         >
           {!immersive && chrome.topAccentHeight > 0 ? (
@@ -216,7 +250,7 @@ export const MobileTabBar: React.FC<MobileTabBarProps> = ({
           ) : null}
 
           {rail.flat && rail.flat.length > 0 ? (
-            <View style={styles.flatRow}>
+            <View style={[styles.flatRow, clean && styles.flatRowClean]}>
               {rail.flat.map((tab) => renderSideTab(tab, true))}
               {renderMenuButton()}
             </View>
@@ -300,12 +334,17 @@ function createStyles(
   accent: string,
   chrome: ReturnType<typeof getPoleTabBarChrome>,
 ) {
-  const pillInset = chrome.layout === 'pill' && !immersive ? spacing.md : spacing.sm;
+  const clean = chrome.cleanStyle && !immersive;
+  const pillInset = chrome.layout === 'pill' && !immersive && !clean ? spacing.md : 0;
 
   return StyleSheet.create({
     root: {
       paddingTop: spacing.xs,
       paddingHorizontal: pillInset,
+    },
+    rootClean: {
+      paddingTop: 0,
+      paddingHorizontal: 0,
     },
     bar: {
       flexDirection: 'row',
@@ -315,6 +354,13 @@ function createStyles(
       paddingHorizontal: spacing.xs,
       paddingBottom: spacing.xs,
       overflow: 'hidden',
+    },
+    barClean: {
+      minHeight: 50,
+      borderRadius: 0,
+      paddingHorizontal: 0,
+      paddingBottom: Platform.OS === 'ios' ? 2 : 6,
+      alignItems: 'center',
     },
     topAccent: {
       position: 'absolute',
@@ -352,11 +398,20 @@ function createStyles(
     sideTabFlat: {
       flex: 1,
     },
+    sideTabClean: {
+      minHeight: 44,
+      gap: 0,
+      paddingHorizontal: 0,
+    },
     sideIconWrap: {
       width: 44,
       height: 30,
       alignItems: 'center',
       justifyContent: 'center',
+    },
+    sideIconWrapClean: {
+      width: 48,
+      height: 32,
     },
     sideLabel: {
       fontSize: 10,
@@ -379,6 +434,11 @@ function createStyles(
       justifyContent: 'space-between',
       paddingHorizontal: spacing.xs,
       paddingBottom: spacing.xs,
+    },
+    flatRowClean: {
+      alignItems: 'center',
+      paddingHorizontal: spacing.sm,
+      paddingBottom: 0,
     },
     sideLabelActive: {
       fontWeight: '800',
@@ -423,6 +483,16 @@ function createStyles(
       paddingHorizontal: 4,
       borderWidth: 2,
       borderColor: immersive ? 'rgba(0,0,0,0.5)' : c.surface,
+    },
+    badgeClean: {
+      top: -2,
+      right: 2,
+      minWidth: 8,
+      height: 8,
+      borderRadius: 4,
+      paddingHorizontal: 0,
+      borderWidth: 1.5,
+      borderColor: '#000',
     },
     badgeImmersive: {
       borderColor: 'rgba(0,0,0,0.5)',
