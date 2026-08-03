@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ProDay — Présentation</title>
+  <title>ProDay Présentation</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
@@ -410,14 +410,6 @@
       color: var(--muted);
     }
 
-    .card ul { list-style: none; margin-top: 0.5rem; }
-    .card li + li { margin-top: 0.3rem; }
-    .card li::before {
-      content: "→ ";
-      color: var(--accent-2);
-      font-weight: 700;
-    }
-
     .card .icon {
       display: flex;
       align-items: center;
@@ -641,8 +633,7 @@
       max-width: 46rem;
     }
 
-    .feature-list li {
-      list-style: none;
+    .feature-list p {
       display: flex;
       gap: 0.8rem;
       align-items: flex-start;
@@ -763,7 +754,10 @@
       text-decoration: none;
       border-bottom: 1px solid rgba(255, 255, 255, 0.25);
       transition: border-color 0.2s ease;
+      margin-right: 1rem;
     }
+
+    .cta-secondary a:last-child { margin-right: 0; }
 
     .cta-secondary a:hover { border-bottom-color: var(--accent-2); }
 
@@ -985,7 +979,7 @@
   <div class="orb orb-b" aria-hidden="true"></div>
   <div class="orb orb-c" aria-hidden="true"></div>
   <div class="progress-track"><div id="progress"></div></div>
-  <p class="hint">← → · Espace · F plein écran</p>
+  <p class="hint">← → Espace F plein écran</p>
   <div class="dots" id="dots" aria-hidden="true"></div>
 
   <div class="deck">
@@ -996,8 +990,8 @@
       </div>
       <h1>L'app pour le foot</h1>
       <div class="accent-line"></div>
-      <p class="hero-sub">Profil, matchs, club. Plus le covoiturage et la santé — dans la même app.</p>
-      <p class="tagline">CONNECTER • PROGRESSER • RÉUSSIR</p>
+      <p class="hero-sub">Profil, matchs, club. Plus le covoiturage et la santé, dans la même app.</p>
+      <p class="tagline">CONNECTER. PROGRESSER. RÉUSSIR</p>
     </section>
 
     <!-- 2. Problème -->
@@ -1008,22 +1002,14 @@
       <div class="grid-2 stagger">
         <div class="card" tabindex="0">
           <h3>Organisation</h3>
-          <ul>
-            <li>Convocs WhatsApp, relances à la main</li>
-            <li>Excel pour les effectifs</li>
-            <li>Trajets bricolés la veille du match</li>
-          </ul>
+          <p>Convocs WhatsApp, relances à la main. Excel pour les effectifs. Trajets bricolés la veille du match.</p>
         </div>
         <div class="card" tabindex="0">
           <h3>Visibilité &amp; santé</h3>
-          <ul>
-            <li>Mercato perdu sur Facebook</li>
-            <li>Pas d'annuaire praticiens fiable</li>
-            <li>Pas de vraie visio santé dans les apps foot</li>
-          </ul>
+          <p>Mercato perdu sur Facebook. Pas d'annuaire praticiens fiable. Pas de vraie visio santé dans les apps foot.</p>
         </div>
       </div>
-      <p class="callout"><strong>Résultat :</strong> du temps perdu, peu de visibilité, des clubs qui peinent à recruter — et personne pour organiser le trajet.</p>
+      <p class="callout"><strong>Résultat :</strong> du temps perdu, peu de visibilité, des clubs qui peinent à recruter, et personne pour organiser le trajet.</p>
     </section>
 
     <!-- 3. Solution -->
@@ -1031,12 +1017,12 @@
       <p class="slide-label">La solution</p>
       <h2>Une app. Le foot organisé.</h2>
       <div class="accent-line"></div>
-      <p class="lead">Profil, matchs, club, santé, événements — au même endroit. On met en avant ce que les autres n'ont pas.</p>
-      <ul class="feature-list stagger">
-        <li><span class="dot"></span><strong style="color:#fff">Covoiturage</strong> — proposer, chercher, réserver, géoloc pendant le trajet</li>
-        <li><span class="dot"></span><strong style="color:#fff">Santé Pro</strong> — praticiens vérifiés, agenda, visio HD (Daily)</li>
-        <li><span class="dot"></span>Profil, CV, Mercato, matchs &amp; RSVP — IA limitée aux highlights de séance</li>
-      </ul>
+      <p class="lead">Profil, matchs, club, santé, événements, au même endroit. On met en avant ce que les autres n'ont pas.</p>
+      <div class="feature-list stagger">
+        <p><span class="dot"></span><strong style="color:#fff">Covoiturage.</strong> Proposer, chercher, réserver, géoloc pendant le trajet.</p>
+        <p><span class="dot"></span><strong style="color:#fff">Santé Pro.</strong> Praticiens vérifiés, agenda, visio HD (Daily).</p>
+        <p><span class="dot"></span>Profil, CV, Mercato, matchs et RSVP. IA limitée aux highlights de séance.</p>
+      </div>
     </section>
 
     <!-- 4. Dual focus -->
@@ -1052,7 +1038,7 @@
         </div>
         <div class="card hero-pillar sante" tabindex="0">
           <h3>Pôle Santé</h3>
-          <p>Annuaire vérifié, prise de RDV, visio HD via Daily. Dans Santé Pro — pas en gratuit.</p>
+          <p>Annuaire vérifié, prise de RDV, visio HD via Daily. Dans Santé Pro, pas en gratuit.</p>
         </div>
       </div>
     </section>
@@ -1067,7 +1053,7 @@
         <div class="card flow-step" tabindex="0">
           <div class="icon">1</div>
           <h3>Proposer</h3>
-          <p>Trajet, places, horaires — liés à un match, un entraînement ou un lieu.</p>
+          <p>Trajet, places, horaires, liés à un match, un entraînement ou un lieu.</p>
         </div>
         <div class="card flow-step" tabindex="0">
           <div class="icon">2</div>
@@ -1115,13 +1101,13 @@
         </div>
         <div class="card sante-card" tabindex="0">
           <div class="icon">◷</div>
-          <h3>Booking &amp; agenda</h3>
+          <h3>Booking et agenda</h3>
           <p>RDV dans l'app. Visibilité clubs. Commission 10 % sur RDV non médicaux.</p>
         </div>
         <div class="card sante-card" tabindex="0">
           <div class="icon">◉</div>
-          <h3>Visio HD · Daily</h3>
-          <p>Vraie salle vidéo. Sessions 15 ou 30 min — Santé Pro uniquement.</p>
+          <h3>Visio HD Daily</h3>
+          <p>Vraie salle vidéo. Sessions 15 ou 30 min, Santé Pro uniquement.</p>
         </div>
       </div>
       <div class="price-row">
@@ -1134,7 +1120,7 @@
         <div class="card price" tabindex="0">
           <h3>7 métiers</h3>
           <p class="amount" style="font-size:1.35rem">Annuaire</p>
-          <p>Kiné · Ostéo · Médecin · Prépa · Mental · Nutrition · Podologue</p>
+          <p>Kiné, Ostéo, Médecin, Prépa, Mental, Nutrition, Podologue</p>
         </div>
       </div>
       <p class="callout sante-callout"><strong>À retenir :</strong> la visio santé est dans l'abonnement Pro. Pas un gadget gratuit.</p>
@@ -1149,8 +1135,8 @@
       <div class="poles stagger">
         <div class="card pole joueur" tabindex="0">
           <span class="pole-tag">Joueur</span>
-          <h3>Amateur → Pro</h3>
-          <p>Un espace. Badges &amp; genre.</p>
+          <h3>Amateur vers Pro</h3>
+          <p>Un espace. Badges et genre.</p>
         </div>
         <div class="card pole supporter" tabindex="0">
           <span class="pole-tag">Supporter</span>
@@ -1160,17 +1146,17 @@
         <div class="card pole club" tabindex="0">
           <span class="pole-tag">Club</span>
           <h3>Structures</h3>
-          <p>Catégories &amp; recrutement.</p>
+          <p>Catégories et recrutement.</p>
         </div>
         <div class="card pole staff" tabindex="0">
           <span class="pole-tag">Staff</span>
           <h3>Métiers</h3>
-          <p>Coach · Recruteur · Agent.</p>
+          <p>Coach, Recruteur, Agent.</p>
         </div>
         <div class="card pole events" tabindex="0">
           <span class="pole-tag">Événements</span>
           <h3>Organisateurs</h3>
-          <p>Tournois &amp; détections.</p>
+          <p>Tournois et détections.</p>
         </div>
         <div class="card pole sponsor" tabindex="0">
           <span class="pole-tag">Sponsor</span>
@@ -1179,7 +1165,7 @@
         </div>
       </div>
       <div class="pill-row">
-        <span class="pill">Agent Elite <strong>19,99 → 29,99 €</strong></span>
+        <span class="pill">Agent Elite <strong>19,99 puis 29,99 €</strong></span>
         <span class="pill">Coach / Recruteur <strong>7,99 €</strong></span>
         <span class="pill">Club Pro <strong>11,99 €</strong></span>
         <span class="pill">Santé Pro <strong>19,99 €</strong></span>
@@ -1198,14 +1184,14 @@
         </div>
         <div class="card" tabindex="0">
           <h3>Club &amp; Staff</h3>
-          <p>Club Pro 11,99 €. Coach / Recruteur 7,99 €. Agent 19,99 → 29,99 €.</p>
+          <p>Club Pro 11,99 €. Coach / Recruteur 7,99 €. Agent 19,99 puis 29,99 €.</p>
         </div>
         <div class="card" tabindex="0">
-          <h3>Santé · Events · Sponsor</h3>
+          <h3>Santé, Events, Sponsor</h3>
           <p>Santé Pro 19,99 €. Orga 14,99 €. Sponsor 0 / 49 / 99 €.</p>
         </div>
       </div>
-      <p class="callout"><strong>Parrainage :</strong> 2 filleuls abonnés à une offre payante → 1 mois Pro offert. Pas pour les supporters.</p>
+      <p class="callout"><strong>Parrainage :</strong> 2 filleuls abonnés à une offre payante, 1 mois Pro offert. Pas pour les supporters.</p>
     </section>
 
     <!-- 9. Confiance -->
@@ -1216,11 +1202,11 @@
       <div class="grid-2 stagger">
         <div class="card" tabindex="0">
           <h3>Accès rapide</h3>
-          <p>Joueurs et supporters — inscription directe.</p>
+          <p>Joueurs et supporters, inscription directe.</p>
         </div>
         <div class="card" tabindex="0">
           <h3>Vérification diplôme</h3>
-          <p>Coach, agent, recruteur, praticien, club — avant la messagerie complète.</p>
+          <p>Coach, agent, recruteur, praticien, club : avant la messagerie complète.</p>
         </div>
         <div class="card" tabindex="0">
           <h3>Mineurs</h3>
@@ -1236,21 +1222,21 @@
     <!-- 10. Bêta -->
     <section class="slide" data-label="Bêta">
       <p class="slide-label">Lancement</p>
-      <h2>Bêta iOS — 11 août 2026 à 18 h</h2>
+      <h2>Bêta iOS, 11 août 2026 à 18 h</h2>
       <div class="accent-line"></div>
       <p class="lead">TestFlight par email pour les inscrits. APK Android dès validation.</p>
       <div class="timeline stagger">
         <div class="timeline-item">
           <span class="when">Inscription</span>
-          <p>proday75.fr/beta/inscription — liste d'attente ouverte.</p>
+          <p>proday75.fr/beta/inscription. Liste d'attente ouverte.</p>
         </div>
         <div class="timeline-item">
-          <span class="when">11 août · 18 h</span>
+          <span class="when">11 août, 18 h</span>
           <p>Ouverture TestFlight iOS. Lien envoyé par email.</p>
         </div>
         <div class="timeline-item">
           <span class="when">Android</span>
-          <p>APK dès validation — pas de date store promise.</p>
+          <p>APK dès validation. Pas de date store promise.</p>
         </div>
       </div>
     </section>
@@ -1266,12 +1252,12 @@
       <div class="cta-box">
         <a class="cta-link" href="https://proday75.fr/beta/inscription" target="_blank" rel="noopener">Rejoindre la bêta</a>
         <p class="cta-secondary">
-          <a href="https://proday75.fr">proday75.fr</a> ·
-          <a href="mailto:contact@proday.app">contact@proday.app</a> ·
+          <a href="https://proday75.fr">proday75.fr</a>
+          <a href="mailto:contact@proday.app">contact@proday.app</a>
           <a href="mailto:partenaires@proday.app">partenaires@proday.app</a>
         </p>
       </div>
-      <p class="tagline">CONNECTER • PROGRESSER • RÉUSSIR</p>
+      <p class="tagline">CONNECTER. PROGRESSER. RÉUSSIR</p>
     </section>
   </div>
 
@@ -1320,7 +1306,7 @@
         prevBtn.disabled = current === 0;
         nextBtn.disabled = current === slides.length - 1;
         dots.forEach(function (d, i) { d.classList.toggle("active", i === current); });
-        document.title = "ProDay — " + (next.getAttribute("data-label") || "Présentation");
+        document.title = "ProDay " + (next.getAttribute("data-label") || "Présentation");
         window.setTimeout(function () {
           prev.classList.remove("exit-up", "exit-down");
           animating = false;
