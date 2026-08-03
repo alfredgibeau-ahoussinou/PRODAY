@@ -2,7 +2,9 @@ import React, { useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
 import type { TeamEvent } from '../../../models/TeamEvent';
 import type { User } from '../../../models/User';
+import { getPresentInviteeUids } from '../../../models/TeamEvent';
 import { getMyMatchStat } from '../../../utils/matchLive';
+import { MotmVotePanel } from './MotmVotePanel';
 import { ProDaySurface } from '../../ui/ProDaySurface';
 import { ProDayText } from '../../ui/ProDayText';
 import { Icon } from '../../ui/Icon';
@@ -113,6 +115,26 @@ export const MatchHubStatsTab: React.FC<MatchHubStatsTabProps> = ({ event, profi
           ))}
         </ProDaySurface>
       )}
+
+      <MotmVotePanel
+        teamEventId={event.id}
+        voterUid={profile.uid}
+        nominees={[
+          ...getPresentInviteeUids(event).map((uid) => ({
+            uid,
+            name:
+              event.lineup?.slots.find((s) => s.uid === uid)?.display_name ??
+              event.player_match_stats?.[uid]?.player_name ??
+              uid,
+          })),
+          ...(event.lineup?.slots ?? []).map((s) => ({
+            uid: s.uid,
+            name: s.display_name,
+          })),
+        ].filter(
+          (n, i, arr) => arr.findIndex((x) => x.uid === n.uid) === i
+        )}
+      />
     </View>
   );
 };

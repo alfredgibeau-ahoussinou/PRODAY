@@ -38,6 +38,8 @@ import { CareerScoreCard } from '../../components/player/CareerScoreCard';
 import { CareerTimelineCard } from '../../components/player/CareerTimelineCard';
 import { WeeklyGoalSettings } from '../../components/player/WeeklyGoalSettings';
 import { PlayerActivityFeed } from '../../components/player/PlayerActivityFeed';
+import { PulseLeaderboardCard } from '../../components/player/PulseLeaderboardCard';
+import { OpponentScoutingCard } from '../../components/player/OpponentScoutingCard';
 import { buildActivityFeed } from '../v3/engines/activityFeed.engine';
 import { usePlayerActivities, useCareerProgression } from '../../hooks/useCareerProgression';
 import { HealthScoreExplainSheet } from '../../components/health/HealthScoreExplainSheet';
@@ -346,12 +348,26 @@ export const HomeIaDashboard: React.FC<HomeIaDashboardProps> = ({
           {!isStaffHome ? (
             <PlayerActivityFeed
               uid={profile.uid}
+              displayName={profile.display_name}
+              city={profile.city}
+              level={profile.profile.level}
+              category={profile.profile.category}
+              clubId={profile.profile.club_id}
+              isGoalkeeper={profile.profile.position?.toLowerCase().includes('gardien')}
               activities={activities}
               highlightVideoUrls={profile.profile.highlight_video_urls}
               highlightGalleryUrls={profile.profile.gallery_urls}
               loading={activitiesLoading}
               onActivityLogged={() => void refreshActivities()}
             />
+          ) : null}
+
+          {!isStaffHome ? (
+            <PulseLeaderboardCard city={profile.city} level={profile.profile.level} />
+          ) : null}
+
+          {!isStaffHome ? (
+            <OpponentScoutingCard clubId={profile.profile.club_id} />
           ) : null}
 
           {isStaffHome ? (

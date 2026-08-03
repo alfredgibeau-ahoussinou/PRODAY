@@ -1,18 +1,28 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { View, StyleSheet, Pressable, ScrollView, Alert, ActivityIndicator, TextInput } from 'react-native';
+import { View, StyleSheet, Pressable, ScrollView, Alert, ActivityIndicator, TextInput, Switch } from 'react-native';
 import { AnimatedModalShell } from '../components/motion/AnimatedModalShell';
 import { ProDayText } from '../components/ui/ProDayText';
 import { PressableSpring } from '../components/motion';
+import { VoiceReflectionRecorder } from '../components/player/VoiceReflectionRecorder';
 import { useAppTheme } from '../context/ProductLineContext';
 import { useTranslation } from '../context/LocaleContext';
 import { playerActivityService } from '../services/playerActivity.service';
+import { playerPulseLeaderboardService } from '../services/playerPulseLeaderboard.service';
+import { storageService } from '../services/storage.service';
 import type { PlayerActivityType } from '../models/PlayerActivity';
 import { PERFORMANCE_TAGS, type PerformanceTag } from '../utils/performanceTags';
+import { computeMatchPulseRating, type MatchResult } from '../utils/prodayMatchRating';
 import { spacing, radius } from '../theme/designTokens';
 
 interface LogActivityScreenProps {
   visible: boolean;
   uid: string;
+  displayName?: string;
+  city?: string;
+  level?: string;
+  category?: string;
+  clubId?: string;
+  isGoalkeeper?: boolean;
   highlightVideoUrls?: string[];
   highlightGalleryUrls?: string[];
   onClose: () => void;
@@ -20,11 +30,19 @@ interface LogActivityScreenProps {
 }
 
 const TYPES: PlayerActivityType[] = ['training', 'match', 'recovery'];
+const RESULTS: MatchResult[] = ['win', 'draw', 'loss'];
+const DRILL_PRESETS = ['technique', 'physique', 'tactique', 'gardien', 'set_pieces'] as const;
 
-/** Formulaire journal d'activité — lien vidéo highlight pour base analyse future (pas d'IA). */
+/** Formulaire journal d'activité — match Tonsser-like + voix + Pulse. */
 export const LogActivityScreen: React.FC<LogActivityScreenProps> = ({
   visible,
   uid,
+  displayName,
+  city,
+  level,
+  category,
+  clubId,
+  isGoalkeeper,
   highlightVideoUrls = [],
   highlightGalleryUrls = [],
   onClose,
@@ -36,13 +54,50 @@ export const LogActivityScreen: React.FC<LogActivityScreenProps> = ({
   const [duration, setDuration] = useState('60');
   const [goals, setGoals] = useState('');
   const [assists, setAssists] = useState('');
+  const [yellow, setYellow] = useState('');
+  const [red, setRed] = useState('');
+  const [minutes, setMinutes] = useState('90');
+  const [cleanSheet, setCleanSheet] = useState(false);
+  const [matchResult, setMatchResult] = useState<MatchResult | undefined>();
   const [rating, setRating] = useState('');
   const [notes, setNotes] = useState('');
+  const [drills, setDrills] = useState<string[]>([]);
+  const [intensity, setIntensity] = useState('3');
   const [videoUrl, setVideoUrl] = useState<string | undefined>();
+  const [voiceUri, setVoiceUri] = useState<string | undefined>();
   const [performanceTags, setPerformanceTags] = useState<PerformanceTag[]>([]);
   const [saving, setSaving] = useState(false);
 
   const videos = useMemo(() => highlightVideoUrls.filter(Boolean), [highlightVideoUrls]);
+
+  const previewPulse = useMemo(() => {
+    if (type !== 'match') return null;
+    return computeMatchPulseRating({
+      goals: goals ? parseInt(goals, 10) : 0,
+      assists: assists ? parseInt(assists, 10) : 0,
+      yellow_cards: yellow ? parseInt(yellow, 10) : 0,
+      red_cards: red ? parseInt(red, 10) : 0,
+      minutes_played: minutes ? parseInt(minutes, 10) : Number(duration) || 90,
+      clean_sheet: cleanSheet,
+      match_result: matchResult,
+      rating_self: rating ? parseInt(rating, 10) : undefined,
+      is_goalkeeper: isGoalkeeper,
+      performance_tags_count: performanceTags.length,
+    });
+  }, [
+    type,
+    goals,
+    assists,
+    yellow,
+    red,
+    minutes,
+    duration,
+    cleanSheet,
+    matchResult,
+    rating,
+    isGoalkeeper,
+    performanceTags.length,
+  ]);
 
   useEffect(() => {
     if (!visible) {
@@ -50,9 +105,17 @@ export const LogActivityScreen: React.FC<LogActivityScreenProps> = ({
       setDuration('60');
       setGoals('');
       setAssists('');
+      setYellow('');
+      setRed('');
+      setMinutes('90');
+      setCleanSheet(false);
+      setMatchResult(undefined);
       setRating('');
       setNotes('');
+      setDrills([]);
+      setIntensity('3');
       setVideoUrl(undefined);
+      setVoiceUri(undefined);
       setPerformanceTags([]);
     }
   }, [visible]);
@@ -61,6 +124,14 @@ export const LogActivityScreen: React.FC<LogActivityScreenProps> = ({
     setPerformanceTags((prev) =>
       prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
     );
+  };
+
+  const toggleDrill = (drill: string) => {
+    setDrills((prev) => (prev.includes(drill) ? prev.filter((d) => d !== drill) : [...prev, drill]));
+  };
+
+  const bump = (value: string, setter: (v: string) => void, max = 20) => {
+    setter(String(Math.min(max, (parseInt(value, 10) || 0) + 1)));
   };
 
   const handleSave = async () => {
@@ -72,7 +143,27 @@ export const LogActivityScreen: React.FC<LogActivityScreenProps> = ({
 
     setSaving(true);
     try {
-      await playerActivityService.create(
+      const minutesPlayed =
+        type === 'match'
+          ? parseInt(minutes, 10) || durationMin
+          : undefined;
+      const ratingPulse =
+        type === 'match'
+          ? computeMatchPulseRating({
+              goals: goals ? parseInt(goals, 10) : 0,
+              assists: assists ? parseInt(assists, 10) : 0,
+              yellow_cards: yellow ? parseInt(yellow, 10) : 0,
+              red_cards: red ? parseInt(red, 10) : 0,
+              minutes_played: minutesPlayed,
+              clean_sheet: cleanSheet,
+              match_result: matchResult,
+              rating_self: rating ? parseInt(rating, 10) : undefined,
+              is_goalkeeper: isGoalkeeper,
+              performance_tags_count: performanceTags.length,
+            })
+          : undefined;
+
+      const activityId = await playerActivityService.create(
         {
           player_uid: uid,
           type,
@@ -80,8 +171,16 @@ export const LogActivityScreen: React.FC<LogActivityScreenProps> = ({
           duration_min: durationMin,
           goals: type === 'match' && goals ? parseInt(goals, 10) : undefined,
           assists: type === 'match' && assists ? parseInt(assists, 10) : undefined,
+          yellow_cards: type === 'match' && yellow ? parseInt(yellow, 10) : undefined,
+          red_cards: type === 'match' && red ? parseInt(red, 10) : undefined,
+          minutes_played: minutesPlayed,
+          clean_sheet: type === 'match' ? cleanSheet : undefined,
+          match_result: type === 'match' ? matchResult : undefined,
+          rating_pulse: ratingPulse,
           rating_self: rating ? parseInt(rating, 10) : undefined,
           notes: notes.trim() || undefined,
+          drills: type === 'training' && drills.length ? drills : undefined,
+          intensity: type === 'training' && intensity ? parseInt(intensity, 10) : undefined,
           video_url: type === 'match' ? videoUrl : undefined,
           performance_tags: performanceTags.length ? performanceTags : undefined,
           source: 'manual',
@@ -91,6 +190,33 @@ export const LogActivityScreen: React.FC<LogActivityScreenProps> = ({
           galleryUrls: highlightGalleryUrls,
         }
       );
+
+      if (voiceUri && type === 'match') {
+        try {
+          const url = await storageService.uploadVoiceReflection(uid, activityId, voiceUri);
+          await playerActivityService.setVoiceReflectionUrl(activityId, uid, url);
+        } catch (voiceErr) {
+          console.warn('[LogActivity] voice upload:', voiceErr);
+        }
+      }
+
+      if (type === 'match' && displayName) {
+        const activities = await playerActivityService.listForPlayer(uid, 40);
+        await playerPulseLeaderboardService.upsertFromActivities({
+          uid,
+          display_name: displayName,
+          city,
+          level,
+          category,
+          club_id: clubId,
+          pulse_avg: ratingPulse ?? 0,
+          matches_count: 0,
+          goals: 0,
+          assists: 0,
+          activities,
+        });
+      }
+
       onSaved();
     } catch (e) {
       Alert.alert(t('activity.log.error'), e instanceof Error ? e.message : t('common.error'));
@@ -154,24 +280,108 @@ export const LogActivityScreen: React.FC<LogActivityScreenProps> = ({
           <>
             <View style={styles.statsRow}>
               <View style={styles.statField}>
-                <ProDayText variant="caption" muted>{t('activity.log.goals')}</ProDayText>
-                <PressableSpring onPress={() => setGoals(String((parseInt(goals, 10) || 0) + 1))}>
-                  <ProDayText variant="section" accent>{goals || '0'}</ProDayText>
+                <ProDayText variant="caption" muted>
+                  {t('activity.log.goals')}
+                </ProDayText>
+                <PressableSpring onPress={() => bump(goals, setGoals)}>
+                  <ProDayText variant="section" accent>
+                    {goals || '0'}
+                  </ProDayText>
                 </PressableSpring>
               </View>
               <View style={styles.statField}>
-                <ProDayText variant="caption" muted>{t('activity.log.assists')}</ProDayText>
-                <PressableSpring onPress={() => setAssists(String((parseInt(assists, 10) || 0) + 1))}>
-                  <ProDayText variant="section" accent>{assists || '0'}</ProDayText>
+                <ProDayText variant="caption" muted>
+                  {t('activity.log.assists')}
+                </ProDayText>
+                <PressableSpring onPress={() => bump(assists, setAssists)}>
+                  <ProDayText variant="section" accent>
+                    {assists || '0'}
+                  </ProDayText>
                 </PressableSpring>
               </View>
               <View style={styles.statField}>
-                <ProDayText variant="caption" muted>{t('activity.log.rating')}</ProDayText>
-                <PressableSpring onPress={() => setRating(String(Math.min(10, (parseInt(rating, 10) || 0) + 1)))}>
-                  <ProDayText variant="section" accent>{rating || '…'}/10</ProDayText>
+                <ProDayText variant="caption" muted>
+                  {t('activity.log.minutes')}
+                </ProDayText>
+                <PressableSpring onPress={() => bump(minutes, setMinutes, 120)}>
+                  <ProDayText variant="section" accent>
+                    {minutes || '90'}
+                  </ProDayText>
                 </PressableSpring>
               </View>
             </View>
+
+            <View style={styles.statsRow}>
+              <View style={styles.statField}>
+                <ProDayText variant="caption" muted>
+                  {t('activity.log.yellow')}
+                </ProDayText>
+                <PressableSpring onPress={() => bump(yellow, setYellow, 2)}>
+                  <ProDayText variant="section" accent>
+                    {yellow || '0'}
+                  </ProDayText>
+                </PressableSpring>
+              </View>
+              <View style={styles.statField}>
+                <ProDayText variant="caption" muted>
+                  {t('activity.log.red')}
+                </ProDayText>
+                <PressableSpring onPress={() => bump(red, setRed, 1)}>
+                  <ProDayText variant="section" accent>
+                    {red || '0'}
+                  </ProDayText>
+                </PressableSpring>
+              </View>
+              <View style={styles.statField}>
+                <ProDayText variant="caption" muted>
+                  {t('activity.log.rating')}
+                </ProDayText>
+                <PressableSpring
+                  onPress={() => setRating(String(Math.min(10, (parseInt(rating, 10) || 0) + 1)))}
+                >
+                  <ProDayText variant="section" accent>
+                    {rating || '…'}/10
+                  </ProDayText>
+                </PressableSpring>
+              </View>
+            </View>
+
+            <View style={styles.switchRow}>
+              <ProDayText variant="caption">{t('activity.log.cleanSheet')}</ProDayText>
+              <Switch value={cleanSheet} onValueChange={setCleanSheet} />
+            </View>
+
+            <ProDayText variant="caption" accent style={styles.label}>
+              {t('activity.log.result')}
+            </ProDayText>
+            <View style={styles.typeRow}>
+              {RESULTS.map((r) => (
+                <Pressable
+                  key={r}
+                  onPress={() => setMatchResult(matchResult === r ? undefined : r)}
+                  style={[
+                    styles.typeChip,
+                    {
+                      backgroundColor:
+                        matchResult === r ? colors.accentSoft : colors.surfaceMuted,
+                      borderColor: matchResult === r ? colors.accent : colors.border,
+                    },
+                  ]}
+                >
+                  <ProDayText variant="caption" accent={matchResult === r}>
+                    {t(`activity.log.result.${r}`)}
+                  </ProDayText>
+                </Pressable>
+              ))}
+            </View>
+
+            {previewPulse != null ? (
+              <View style={[styles.pulsePreview, { backgroundColor: colors.accentSoft }]}>
+                <ProDayText variant="caption" accent style={{ fontWeight: '800' }}>
+                  {t('activity.log.pulsePreview', { score: previewPulse.toFixed(1) })}
+                </ProDayText>
+              </View>
+            ) : null}
 
             {videos.length > 0 ? (
               <>
@@ -186,7 +396,8 @@ export const LogActivityScreen: React.FC<LogActivityScreenProps> = ({
                       style={[
                         styles.videoChip,
                         {
-                          backgroundColor: videoUrl === url ? colors.accentSoft : colors.surfaceMuted,
+                          backgroundColor:
+                            videoUrl === url ? colors.accentSoft : colors.surfaceMuted,
                           borderColor: videoUrl === url ? colors.accent : colors.border,
                         },
                       ]}
@@ -220,6 +431,67 @@ export const LogActivityScreen: React.FC<LogActivityScreenProps> = ({
                 >
                   <ProDayText variant="caption" accent={performanceTags.includes(tag)}>
                     {t(`activity.performance.${tag}`)}
+                  </ProDayText>
+                </Pressable>
+              ))}
+            </View>
+
+            <ProDayText variant="caption" accent style={styles.label}>
+              {t('activity.log.voice')}
+            </ProDayText>
+            <VoiceReflectionRecorder
+              active={visible && type === 'match'}
+              uri={voiceUri}
+              onUriChange={setVoiceUri}
+            />
+          </>
+        ) : null}
+
+        {type === 'training' ? (
+          <>
+            <ProDayText variant="caption" accent style={styles.label}>
+              {t('activity.log.drills')}
+            </ProDayText>
+            <View style={styles.typeRow}>
+              {DRILL_PRESETS.map((drill) => (
+                <Pressable
+                  key={drill}
+                  onPress={() => toggleDrill(drill)}
+                  style={[
+                    styles.typeChip,
+                    {
+                      backgroundColor: drills.includes(drill)
+                        ? colors.accentSoft
+                        : colors.surfaceMuted,
+                      borderColor: drills.includes(drill) ? colors.accent : colors.border,
+                    },
+                  ]}
+                >
+                  <ProDayText variant="caption" accent={drills.includes(drill)}>
+                    {t(`activity.log.drill.${drill}`)}
+                  </ProDayText>
+                </Pressable>
+              ))}
+            </View>
+            <ProDayText variant="caption" accent style={styles.label}>
+              {t('activity.log.intensity')}
+            </ProDayText>
+            <View style={styles.typeRow}>
+              {[1, 2, 3, 4, 5].map((n) => (
+                <Pressable
+                  key={n}
+                  onPress={() => setIntensity(String(n))}
+                  style={[
+                    styles.typeChip,
+                    {
+                      backgroundColor:
+                        intensity === String(n) ? colors.accentSoft : colors.surfaceMuted,
+                      borderColor: intensity === String(n) ? colors.accent : colors.border,
+                    },
+                  ]}
+                >
+                  <ProDayText variant="caption" accent={intensity === String(n)}>
+                    {n}
                   </ProDayText>
                 </Pressable>
               ))}
@@ -285,6 +557,17 @@ const styles = StyleSheet.create({
   durationValue: { fontWeight: '800', minWidth: 100, textAlign: 'center' },
   statsRow: { flexDirection: 'row', gap: spacing.md, marginTop: spacing.sm },
   statField: { flex: 1, alignItems: 'center', gap: 4 },
+  switchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: spacing.sm,
+  },
+  pulsePreview: {
+    marginTop: spacing.sm,
+    padding: spacing.md,
+    borderRadius: radius.md,
+  },
   videoRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
   videoChip: {
     paddingHorizontal: spacing.md,

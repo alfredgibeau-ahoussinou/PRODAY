@@ -38,6 +38,7 @@ import { PlayerScoutingShortlistPanel } from '../components/player/PlayerScoutin
 import { usePlayerActivities, useCareerProgression, usePlayerActivitiesForStaff, computePlayerCareerForStaff } from '../hooks/useCareerProgression';
 import { CareerScoreCard } from '../components/player/CareerScoreCard';
 import { PlayerActivityPublicSummary } from '../components/player/PlayerActivityPublicSummary';
+import { SkillEndorsementsCard } from '../components/player/SkillEndorsementsCard';
 import { TAB_BAR_CONTENT_INSET } from '../navigation/tabBarLayout';
 import { usersService } from '../services/users.service';
 
@@ -324,6 +325,22 @@ export const PlayerProfileScreen: React.FC<PlayerProfileScreenProps> = ({
       ) : null}
 
       {isOwnProfile ? <PlayerBadgesRow user={player} /> : null}
+
+      <AnimatedEntrance kind="fadeUp">
+        <SkillEndorsementsCard
+          playerUid={player.uid}
+          viewerUid={myProfile?.uid}
+          viewerName={myProfile?.display_name}
+          clubId={myProfile?.profile.club_id ?? player.profile.club_id}
+          canEndorse={
+            !!myProfile &&
+            myProfile.uid !== player.uid &&
+            (myProfile.role === 'player' ||
+              myProfile.role === 'coach' ||
+              myProfile.role === 'club')
+          }
+        />
+      </AnimatedEntrance>
 
       {isStaffView && staffCareer ? (
         <AnimatedEntrance kind="fadeUp">
