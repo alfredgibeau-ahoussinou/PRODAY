@@ -50,7 +50,11 @@ async function ensureConfigured(appUserId?: string): Promise<boolean> {
   if (!configurePromise) {
     configurePromise = (async () => {
       try {
-        const Purchases = (await import('react-native-purchases')).default;
+        const PurchasesMod = await import('react-native-purchases');
+        const Purchases = PurchasesMod.default;
+        if (__DEV__) {
+          Purchases.setLogLevel(PurchasesMod.LOG_LEVEL.VERBOSE);
+        }
         Purchases.configure({
           apiKey,
           appUserID: appUserId || undefined,
@@ -95,6 +99,12 @@ export const revenueCatService = {
   /** True when native build + Firebase + RC public API key for this OS. */
   isAvailable(): boolean {
     return isNativeStoreBuild() && isFirebaseConfigured() && Boolean(platformApiKey());
+  },
+
+  /** Call once at app startup — configures SDK if keys are present (no duplicate configure). */
+  async init(): Promise<void> {
+    if (!this.isAvailable()) return;
+    await ensureConfigured();
   },
 
   async identify(uid: string): Promise<void> {
