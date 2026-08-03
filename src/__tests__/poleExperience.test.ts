@@ -71,6 +71,7 @@ describe('poleExperience', () => {
 
     expect(getVisibleMainTabs('homme', 'player')).toEqual([
       'home',
+      'covoiturage',
       'reels',
       'matchs',
       'profil',
@@ -111,6 +112,7 @@ describe('poleExperience', () => {
     ]);
     expect(getVisibleMainTabs('pro', 'player')).toEqual([
       'home',
+      'covoiturage',
       'reels',
       'matchs',
       'profil',
@@ -119,6 +121,7 @@ describe('poleExperience', () => {
       'recrutement',
       'shop',
     ]);
+    expect(getVisibleMainTabs('pro', 'player').indexOf('covoiturage')).toBe(1);
     expect(getVisibleMainTabs('pro', 'recruiter')).toContain('recrutement');
     expect(getVisibleMainTabs('pro', 'recruiter')).toContain('feed');
     expect(getVisibleMainTabs('pro', 'agent')).toContain('feed');

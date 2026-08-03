@@ -30,7 +30,7 @@ const LEFT_PRIORITY_BY_LINE: Record<ProductLineId, MainTabId[]> = {
   woman: ['home', 'covoiturage', 'matchs', 'recrutement'],
   amateur: ['home', 'covoiturage', 'matchs', 'recrutement'],
   pro: ['home', 'covoiturage', 'matchs', 'recrutement'],
-  pro_player: ['home', 'recrutement', 'matchs', 'reels'],
+  pro_player: ['home', 'covoiturage', 'reels', 'matchs'],
   pro_club: ['home', 'covoiturage', 'recrutement', 'matchs'],
   pro_staff: ['home', 'covoiturage', 'matchs', 'recrutement'],
   sponsor: ['home', 'matchs', 'messages', 'profil'],
@@ -39,7 +39,7 @@ const LEFT_PRIORITY_BY_LINE: Record<ProductLineId, MainTabId[]> = {
 };
 
 const LEFT_PRIORITY_BY_PRO_ROLE: Partial<Record<UserRole, MainTabId[]>> = {
-  player: ['home', 'recrutement', 'matchs', 'reels'],
+  player: ['home', 'covoiturage', 'reels', 'matchs'],
   club: ['home', 'covoiturage', 'recrutement', 'matchs'],
   coach: ['home', 'covoiturage', 'matchs', 'recrutement'],
   agent: ['home', 'recrutement', 'matchs', 'feed'],
@@ -79,7 +79,7 @@ const FLAT_RAIL_RULES: FlatRailRule[] = [
         line === 'homme' ||
         line === 'woman' ||
         isProProductLine(line)),
-    primary: ['home', 'reels', 'matchs', 'profil'],
+    primary: ['home', 'covoiturage', 'reels', 'matchs', 'profil'],
     overflow: ['sante', 'messages', 'recrutement', 'shop'],
   },
   {
