@@ -21,12 +21,12 @@ import { formatPriceEur } from "@/lib/pricing";
 import { demoUrlForUniverse, ROUTES } from "@/lib/routes";
 
 const PATH_BY_UNIVERSE: Record<UniversePageId, string> = {
-  homme: ROUTES.homme,
-  woman: ROUTES.woman,
-  amateur: ROUTES.amateur,
+  homme: ROUTES.joueur,
+  woman: ROUTES.joueur,
+  amateur: ROUTES.joueur,
   supporter: ROUTES.supporter,
   pro: ROUTES.pro,
-  pro_joueur: ROUTES.proJoueur,
+  pro_joueur: ROUTES.joueur,
   pro_club: ROUTES.proClub,
   pro_staff: ROUTES.proStaff,
 };
@@ -311,7 +311,7 @@ export function UniversePage({ universe }: UniversePageProps) {
               </div>
               <div className="mt-10">
                 <Link
-                  href={ROUTES.proJoueur}
+                  href={ROUTES.joueur}
                   className="inline-flex items-center gap-2 rounded-full border border-white/25 px-6 py-3 text-sm font-semibold text-white transition hover:border-white/50 hover:bg-white/5"
                   style={{ borderColor: theme.brandAccent }}
                 >

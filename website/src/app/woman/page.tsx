@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { ROUTES } from "@/lib/routes";
 
-/** Legacy. fusionné dans le pôle Amateur (genre à l'inscription). */
-export default function WomanLegacyPage() {
-  redirect(ROUTES.amateur);
+/** @deprecated ProDay Woman fusionné dans Pôle Joueur. */
+export default function WomanRedirectPage() {
+  redirect(ROUTES.joueur);
 }

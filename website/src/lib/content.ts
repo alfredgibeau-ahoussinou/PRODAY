@@ -183,6 +183,14 @@ export const EVENEMENTS_BRAND = {
   accentDark: "#0e4a5c",
 } as const;
 
+export const EVENEMENTS_AUDIENCES = [
+  "Tournois associatifs et de quartier",
+  "Académies football & centres",
+  "Stages et camps d’entraînement",
+  "Journées de détection",
+  "Showcases et événements partenaires",
+] as const;
+
 export const PRO_CLUB_BRAND = {
   name: "Pro Day Pro Club",
   shortName: "Pro Club",
@@ -324,7 +332,7 @@ export const PILLARS = [
     title: "Confiance ProDay",
     subtitle: "Staff certifié",
     description:
-      "Diplômes validés avant messagerie complète. Contrôle parental pour les mineurs.",
+      "Diplômes staff et badge joueur vérifié. Confidentialité contacts et demandes de message. Contrôle parental pour les mineurs.",
   },
   {
     id: "cv",
@@ -699,9 +707,9 @@ export const PRODUCT_LINES = [
     id: "amateur" as const,
     brand: AMATEUR_BRAND,
     logo: UNIVERSE_LOGOS.amateur,
-    href: "/amateur",
+    href: "/joueur",
     image: "/images/football-amateur-01.jpg",
-    cta: "Pro Day Amateur",
+    cta: "Pôle Joueur",
   },
   {
     id: "supporter" as const,
@@ -888,7 +896,7 @@ export const PRO_STAFF_MODULES = [
     title: "Recruteur Pro",
     subtitle: "Pipeline & territoire",
     description:
-      "Annonces Mercato Pro, shortlists par poste, covoiturage détections. Un pipeline clair. Pas un tableur.",
+      "Annonces Mercato Pro, shortlists, filtres par badge joueur (Amateur / Centre / Pro) et covoiturage détections. Un pipeline clair. Pas un tableur.",
     image: "/showcase/classic-mercato.jpg",
   },
   {
@@ -931,7 +939,7 @@ export const EVENEMENTS_MODULES = [
     title: "Créer un événement",
     subtitle: "Tournois · camps · détections",
     description:
-      "Publiez tournois, académies, stages, détections, showcases ou événements partenaires.",
+      "Publiez tournois, académies, stages, détections, showcases ou événements partenaires depuis l’app organisateur.",
     image: "/showcase/classic-arena.jpg",
   },
   {
@@ -939,23 +947,23 @@ export const EVENEMENTS_MODULES = [
     title: "Inscriptions en ligne",
     subtitle: "Listes & capacités",
     description:
-      "Ouverture / fermeture des inscriptions, liste d'attente et export participants.",
+      "Ouverture / fermeture des inscriptions, liste d’attente automatique et suivi des participants.",
     image: "/showcase/classic-exp-team.jpg",
   },
   {
     id: "payments",
     title: "Paiements",
-    subtitle: "Bientôt",
+    subtitle: "Stripe Checkout",
     description:
-      "Encaissement des droits d'inscription. TODO : Stripe / IAP — scaffolding prêt côté modèle.",
+      "Droits d’inscription encaissés via Stripe (carte). Paiement manuel possible côté organisateur.",
     image: "/images/football-mercato-01.jpg",
   },
   {
     id: "results-media",
     title: "Résultats & médias",
-    subtitle: "Partage",
+    subtitle: "Partage natif",
     description:
-      "Scores, classements et galerie. Partagez les moments forts avec clubs et joueurs.",
+      "Publiez classements, ajoutez photos/vidéos et partagez depuis l’app avec clubs et joueurs.",
     image: "/images/football-stadium-night-01.jpg",
   },
 ] as const;
@@ -1276,11 +1284,11 @@ export const UNIVERSE_PAGE_CONFIG = {
     ],
     modulesTitle: "Piloter la structure",
     modulesSubtitle:
-      "Arbre des équipes, adhésions, calendrier global et page publique.",
+      "Arbre des équipes, adhésions, recrutement kanban et page publique. Calendrier & convocations : Pôle Staff.",
     modules: PRO_CLUB_MODULES as readonly UniverseModule[],
     journeyIds: ["club"] as const,
     audienceNote:
-      "Joueurs et coachs d'équipe restent sur Pro Joueur ou Amateur. Métiers staff (agent, recruteur) : Pro Staff.",
+      "Joueurs restent sur le Pôle Joueur. Métiers staff (coach, agent, recruteur) et calendrier structure : Pôle Staff.",
     showPulse: false,
     showVerification: true,
     pricingPlanIds: ["club_pro"] as const,
@@ -1561,12 +1569,13 @@ export const SUBSCRIPTION_PLANS_WEB = [
     freeIncludes: [
       "Profil recruteur vérifié",
       "Territoire & spécialité",
-      "Mercato en lecture",
+      "Mercato en lecture (filtres badge Amateur / Centre / Pro)",
       "5 messages recrutement / mois",
     ],
     proIncludes: [
       "Annonces Mercato Pro actives",
       "Pipeline candidatures",
+      "Filtres badge joueur (Amateur / Centre / Professionnel)",
       "Messages recrutement illimités",
       "Statistiques scouting & candidatures",
     ],
@@ -1574,7 +1583,7 @@ export const SUBSCRIPTION_PLANS_WEB = [
   {
     id: "coach_pro",
     label: "Coach Pro",
-    tagline: "Recrutement et gestion multi-équipes",
+    tagline: "Calendrier structure, convocations et multi-équipes",
     monthlyEur: 7.99,
     storeAvailable: true,
     universes: ["pro", "amateur"] as ProductLineWeb[],
@@ -1586,6 +1595,7 @@ export const SUBSCRIPTION_PLANS_WEB = [
     ],
     proIncludes: [
       "Équipes illimitées",
+      "Calendrier structure & convocations",
       "Messages recrutement illimités",
       "Annonces Mercato Pro actives",
       "Statistiques candidatures",
@@ -1594,7 +1604,7 @@ export const SUBSCRIPTION_PLANS_WEB = [
   {
     id: "club_pro",
     label: "Club Pro",
-    tagline: "Annonces et structure club",
+    tagline: "Annonces, structure et pipeline — sans calendrier Club",
     monthlyEur: 11.99,
     storeAvailable: true,
     universes: ["pro"] as ProductLineWeb[],
@@ -1602,13 +1612,14 @@ export const SUBSCRIPTION_PLANS_WEB = [
       "Profil club et vérification",
       "1 équipe",
       "2 annonces Mercato Pro actives",
-      "Vitrine publique (sans convocations)",
+      "Vitrine publique (sans calendrier ni convocations)",
     ],
     proIncludes: [
       "Annonces actives illimitées",
       "Multi-équipes",
       "Priorité dans le fil Mercato Pro",
       "Pipeline candidatures kanban",
+      "Calendrier & convocations : Pôle Staff",
     ],
   },
   {
@@ -1623,12 +1634,13 @@ export const SUBSCRIPTION_PLANS_WEB = [
       "Profil agent et vérification",
       "10 contacts recrutement / mois",
       "Mercato en lecture",
-      "Demandes de message joueurs",
+      "Demandes de message joueurs (accept / refuse)",
     ],
     proIncludes: [
       "Contacts illimités",
       "Alertes géolocalisées",
       "Pipeline mandats",
+      "Demandes de message illimitées",
       "Exports et rapports",
     ],
   },
@@ -1848,11 +1860,11 @@ export const FAQ_ITEMS = [
   },
   {
     q: "Pôle Pro Club : Comment gérer mon effectif ?",
-    a: "Importez votre liste de joueurs, gérez les contrats, les licences et les disponibilités. Le calendrier unifié simplifie la planification des entraînements et matchs.",
+    a: "Importez votre liste de joueurs, gérez les contrats, les licences et le recrutement kanban. Le calendrier structure et les convocations sont portés par le Pôle Staff (pas le Club freemium).",
   },
   {
     q: "Pôle Pro Staff : Comment trouver des joueurs ?",
-    a: "Utilisez le Mercato ProDay pour filtrer par poste, niveau, zone géographique. Les candidatures arrivent directement dans votre messagerie avec le CV du joueur.",
+    a: "Utilisez le Mercato ProDay pour filtrer par poste, niveau, zone et badge (Amateur / Centre / Professionnel). Les candidatures arrivent dans votre messagerie avec le CV du joueur.",
   },
   {
     q: "Pôle Santé : Comment prendre RDV avec des joueurs ?",
@@ -1884,7 +1896,7 @@ export const FAQ_ITEMS = [
   },
   {
     q: "Quel tarif pour Club Pro ?",
-    a: `Club Pro : ${faqPricing("club_pro")}. Annonces illimitées, multi-équipes et priorité dans le fil Mercato.`,
+    a: `Club Pro : ${faqPricing("club_pro")}. Annonces illimitées, multi-équipes, pipeline kanban et priorité Mercato. Calendrier et convocations : offre Staff.`,
   },
   {
     q: "Quel tarif pour Agent Elite ?",
@@ -2060,45 +2072,45 @@ export const QUIZ_RESULTS: Record<
 > = {
   player: {
     title: "Profil sportif",
-    description: "Visibilité, stats et opportunités. Le Mercato complète votre profil.",
+    description: "Visibilité, stats et opportunités. Badges Amateur / Centre / Pro sur un seul profil.",
     thought: "Le foot, c'est avant tout une question de passion et de dépassement de soi. Chaque entraînement, chaque match compte pour construire ton parcours. ProDay t'accompagne pour que ton talent ne passe plus inaperçu.",
-    href: "/pro-joueur",
+    href: "/joueur",
     cta: "Voir le pôle Joueur",
   },
   coach: {
     title: "Profil Coach Pro",
-    description: "Vérification diplôme, effectif et convocations. Univers Pro Day Pro.",
+    description: "Vérification diplôme, effectif, calendrier structure et convocations. Pôle Staff.",
     thought: "Un coach, c'est bien plus qu'un tacticien. C'est un mentor, un guide qui façonne les caractères et construit les champions de demain. Ta vision mérite d'être structurée et reconnue.",
-    href: "/pro#poles",
-    cta: "Voir Pro Day Pro",
+    href: "/pro-staff",
+    cta: "Voir le Pôle Staff",
   },
   recruiter: {
     title: "Profil Recruteur",
-    description: "Scouting, Mercato Pro et pipeline candidatures. Rôle Recruteur sur Pro Day Pro.",
+    description: "Scouting, filtres badge joueur et pipeline candidatures. Pôle Staff.",
     thought: "Repérer le talent, c'est un art. Entre intuition et analyse, tu cherches ces pépites qui feront la différence demain. ProDay te donne les outils pour transformer cette vision en réalité.",
-    href: "/pro#poles",
-    cta: "Voir Pro Day Pro",
+    href: "/pro-staff",
+    cta: "Voir le Pôle Staff",
   },
   club: {
     title: "Profil Club",
-    description: "Annonces Mercato, multi-équipes et exports candidatures. Univers Pro Day Pro.",
+    description: "Annonces Mercato, multi-équipes et pipeline kanban. Calendrier : Staff.",
     thought: "Un club, c'est une famille, une vision, un projet. Construire quelque chose de durable demande de la rigueur et de l'organisation. Ton ambition mérite les meilleurs outils pour grandir.",
-    href: "/pro#poles",
-    cta: "Voir Pro Day Pro",
+    href: "/pro-club",
+    cta: "Voir le Pôle Club",
   },
   organizer: {
     title: "Profil Organisateur",
-    description: "Créez vos tournois Arena. Inscriptions et palmarès dans le calendrier.",
+    description: "Tournois, académies, détections. Inscriptions et paiements — Pôle Événements.",
     thought: "Créer des moments inoubliables, rassembler la communauté autour d'une passion commune. C'est ça, la magie de l'organisation. ProDay simplifie la logistique pour que tu puisses te concentrer sur l'essentiel.",
-    href: "/fonctionnalites#modules",
-    cta: "Voir Arena",
+    href: "/evenements",
+    cta: "Voir le Pôle Événements",
   },
   woman: {
     title: "Univers ProDay Woman",
-    description: "Mercato F, matchs et profil joueuse.",
+    description: "Mercato F, matchs et profil joueuse — dans le Pôle Joueur unifié.",
     thought: "Le foot féminin écrit son histoire chaque jour. Talenteuse, déterminée, tu portes l'avenir de ce sport. ProDay t'offre la visibilité que tu mérites pour briller.",
-    href: "/woman",
-    cta: "Voir Woman",
+    href: "/joueur",
+    cta: "Voir le pôle Joueur",
   },
   parent: {
     title: "Espace Parent",
@@ -2109,24 +2121,24 @@ export const QUIZ_RESULTS: Record<
   },
   agent: {
     title: "Profil Agent",
-    description: "CRM joueurs, mandats et contacts Mercato. Agent Elite sur Pro Day Pro.",
+    description: "CRM, demandes de message et mandats. Agent Elite 19,99 € (20 premiers) puis 29,99 €.",
     thought: "Un agent, c'est le lien entre le talent et l'opportunité. Tu connais la valeur de chaque joueur et tu sais où elle peut s'exprimer. ProDay te donne la visibilité pour faire les bons matchs.",
-    href: "/pro#poles",
-    cta: "Voir Pro Day Pro",
+    href: "/pro-staff",
+    cta: "Voir le Pôle Staff",
   },
   homme: {
     title: "Pro Day Man",
-    description: "Foot masculin amateur. Mercato M, matchs, Arena et CV joueur.",
+    description: "Foot masculin. Mercato, matchs, Arena et CV — dans le Pôle Joueur.",
     thought: "Le foot amateur, c'est la passion pure. Sans pression, juste le plaisir de jouer et de progresser. ProDay te permet de vivre cette passion avec des outils professionnels.",
-    href: "/amateur#modules",
-    cta: "Voir Man",
+    href: "/joueur",
+    cta: "Voir le pôle Joueur",
   },
   pro: {
     title: "Univers Pro Day Pro",
-    description: "Recruteurs, coach, agent, club, pôle santé et réseau vérifié. Mercato Pro.",
+    description: "Club, Staff et Événements. Recrutement, calendrier et réseau vérifié.",
     thought: "L'excellence demande un environnement d'excellence. Tu évolues dans un monde où chaque détail compte, chaque relation est précieuse. ProDay t'offre l'écosystème qui correspond à tes ambitions.",
-    href: "/pro#poles",
-    cta: "Voir Pro",
+    href: "/pro-staff",
+    cta: "Voir le Pôle Staff",
   },
 };
 

@@ -2,7 +2,7 @@ import type { ProductLineWeb } from "./content";
 
 export const ROUTES = {
   home: "/",
-  /** @deprecated Redirige vers /amateur. conservé pour liens legacy. */
+  /** @deprecated Redirige vers /joueur. conservé pour liens legacy. */
   joueurs: "/joueurs",
   features: "/fonctionnalites",
   demo: "/demo",
@@ -11,13 +11,14 @@ export const ROUTES = {
   trust: "/confiance",
   privacy: "/confidentialite",
   terms: "/cgu",
-  /** @deprecated Redirige vers /amateur. conservé pour liens legacy. */
+  /** @deprecated Redirige vers /joueur. conservé pour liens legacy. */
   homme: "/homme",
+  /** @deprecated Redirige vers /joueur. */
   amateur: "/amateur",
   /** Pôle Joueur unifié (amateur → pro). */
   joueur: "/joueur",
   supporter: "/supporter",
-  /** @deprecated Redirige vers /amateur. conservé pour liens legacy. */
+  /** @deprecated Redirige vers /joueur. conservé pour liens legacy. */
   woman: "/woman",
   /** @deprecated Redirige vers /joueur. */
   proJoueur: "/pro-joueur",
