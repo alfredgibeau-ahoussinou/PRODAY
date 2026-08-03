@@ -4,6 +4,7 @@ import {
   buildCalVideoJoinUrl,
   isCalVideoMeetingLink,
 } from '../utils/visioMeetingLink';
+import { parseDailyJoinCredentials } from '../components/medical/visio/parseDailyJoinCredentials';
 
 export interface ResolveVisioJoinInput {
   appointmentId: string;
@@ -18,13 +19,16 @@ export interface ResolveVisioJoinInput {
 export interface VisioJoinResult {
   joinUrl: string;
   provider: VisioProvider | 'cal';
+  roomUrl?: string | null;
+  token?: string | null;
 }
 
 /**
- * Résout l'URL de join direct via Cloud Function (crée la salle si besoin).
- * Pas de fallback Daily local — les URLs déterministes n'existent pas sans API.
+ * Résout la session visio via Cloud Function (crée la salle privée + token si besoin).
  */
-export async function resolveVisioJoinUrl(input: ResolveVisioJoinInput): Promise<string> {
+export async function resolveVisioJoinSession(
+  input: ResolveVisioJoinInput
+): Promise<VisioJoinResult> {
   const result = await callFunction<
     { appointmentId: string; isHost?: boolean },
     VisioJoinResult
@@ -41,7 +45,30 @@ export async function resolveVisioJoinUrl(input: ResolveVisioJoinInput): Promise
     throw new Error('Lien visio vide. Réessayez dans un instant.');
   }
 
-  return result.joinUrl;
+  const provider = result.provider === 'daily' ? 'daily' : 'cal';
+  let roomUrl = result.roomUrl?.trim() || null;
+  let token = result.token?.trim() || null;
+
+  if (provider === 'daily' && (!roomUrl || roomUrl === result.joinUrl)) {
+    const parsed = parseDailyJoinCredentials(result.joinUrl);
+    if (parsed) {
+      roomUrl = parsed.roomUrl;
+      token = token || parsed.token;
+    }
+  }
+
+  return {
+    joinUrl: result.joinUrl,
+    provider,
+    roomUrl,
+    token,
+  };
+}
+
+/** @deprecated Prefer resolveVisioJoinSession — conserve l’URL seule. */
+export async function resolveVisioJoinUrl(input: ResolveVisioJoinInput): Promise<string> {
+  const session = await resolveVisioJoinSession(input);
+  return session.joinUrl;
 }
 
 /** Fallback UI uniquement si le callable a déjà renvoyé une Cal Video. */

@@ -269,30 +269,31 @@ async function resolveVisioMeetingLink(
 
   let link: { meetingLink: string; visioProvider: string; calBookingUid?: string } | null = null;
 
+  // Daily en priorité : salle privée + token, UI in-app (cam/mic/chat/écran).
   try {
-    const cal = await resolveCalVideoMeetingLink({
-      profile: physioProfile,
-      startAt,
-      attendeeName: data.patient_name,
-      attendeeEmail: patientEmail,
-      appointmentId,
-    });
-    // Uniquement une vraie salle Cal Video (/video/) — jamais une page de réservation.
-    if (cal && /\/video\//i.test(cal.meetingLink)) {
-      link = cal;
+    const daily = await createDailyRoom({ appointmentId, endAt });
+    if (daily) {
+      link = daily;
     }
   } catch (e) {
-    console.error('[appointmentEmail] Cal Video:', e);
+    console.error('[appointmentEmail] Daily room:', e);
   }
 
   if (!link) {
     try {
-      const daily = await createDailyRoom({ appointmentId, endAt });
-      if (daily) {
-        link = daily;
+      const cal = await resolveCalVideoMeetingLink({
+        profile: physioProfile,
+        startAt,
+        attendeeName: data.patient_name,
+        attendeeEmail: patientEmail,
+        appointmentId,
+      });
+      // Uniquement une vraie salle Cal Video (/video/) — jamais une page de réservation.
+      if (cal && /\/video\//i.test(cal.meetingLink)) {
+        link = cal;
       }
     } catch (e) {
-      console.error('[appointmentEmail] Daily room:', e);
+      console.error('[appointmentEmail] Cal Video:', e);
     }
   }
 

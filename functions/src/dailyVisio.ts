@@ -108,21 +108,27 @@ export async function createDailyRoom(input: {
 
   const exp = Math.floor(input.endAt.getTime() / 1000) + 3600;
 
+  const roomProperties = {
+    enable_prejoin_ui: false,
+    enable_knocking: false,
+    enable_chat: true,
+    enable_screenshare: true,
+    enable_emoji_reactions: false,
+    exp,
+    max_participants: 4,
+    start_video_off: false,
+    start_audio_off: false,
+  };
+
   const created = await dailyApiRequest<{ url: string; name: string }>(
     '/rooms',
     {
       method: 'POST',
       body: JSON.stringify({
         name: roomName,
-        privacy: 'public',
-        properties: {
-          enable_prejoin_ui: false,
-          enable_knocking: false,
-          exp,
-          max_participants: 4,
-          start_video_off: false,
-          start_audio_off: false,
-        },
+        /** Token meeting requis pour rejoindre (créé côté getVisioJoinUrl). */
+        privacy: 'private',
+        properties: roomProperties,
       }),
     },
     apiKey
@@ -140,17 +146,14 @@ export async function createDailyRoom(input: {
   );
 
   if (existing.ok && existing.data.url) {
-    // Prolonge l'expiration / désactive le préjoin si possible.
+    // Prolonge l'expiration, force private + chat / screenshare.
     await dailyApiRequest(
       `/rooms/${encodeURIComponent(roomName)}`,
       {
         method: 'POST',
         body: JSON.stringify({
-          properties: {
-            enable_prejoin_ui: false,
-            enable_knocking: false,
-            exp,
-          },
+          privacy: 'private',
+          properties: roomProperties,
         }),
       },
       apiKey

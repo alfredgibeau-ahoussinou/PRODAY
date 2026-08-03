@@ -5,8 +5,8 @@ import { CalendarCheck, ShieldCheck, Stethoscope, Video } from "lucide-react";
 import { ROUTES } from "@/lib/routes";
 
 /**
- * Téléconsultation pôle Santé : chaque praticien inscrit connecte son propre agenda (Cal.com / Whereby).
- * Pas de calendrier personnel fondateur. le RDV se fait via la fiche praticien (app / annuaire).
+ * Téléconsultation pôle Santé — salles Daily sécurisées in-app (cam/mic/écran/chat).
+ * Cal.com reste l’agenda public du praticien ; la visio rejoint depuis l’app ProDay.
  */
 export function SanteTeleconsultSection() {
   return (
@@ -19,15 +19,15 @@ export function SanteTeleconsultSection() {
           Téléconsultation
         </p>
         <h2 className="font-display mt-3 text-center text-2xl font-bold text-white sm:text-3xl">
-          Un agenda par praticien
+          Visio sécurisée dans l&apos;app
         </h2>
         <p className="mx-auto mt-3 max-w-2xl text-center text-sm leading-relaxed text-white/65 sm:text-base">
-          À l&apos;inscription pôle Santé, chaque{" "}
-          <strong className="font-semibold text-white/85">praticien</strong> crée aussi son compte
-          Cal.com (agenda public). Les{" "}
-          <strong className="font-semibold text-white/85">sportifs</strong> n&apos;ont pas besoin
-          de Cal.com : ils réservent comme invités depuis la fiche du pro dans l&apos;annuaire /
-          l&apos;app.
+          Chaque{" "}
+          <strong className="font-semibold text-white/85">praticien</strong> lie son agenda
+          (Cal.com) à sa fiche ProDay. Les{" "}
+          <strong className="font-semibold text-white/85">sportifs</strong> réservent depuis
+          l&apos;annuaire, puis rejoignent une salle Daily privée (lien unique + token) —
+          caméra, micro, partage d&apos;écran et chat pendant la consultation.
         </p>
 
         <div className="mt-8 grid gap-4 sm:grid-cols-3">
@@ -39,13 +39,13 @@ export function SanteTeleconsultSection() {
             },
             {
               icon: CalendarCheck,
-              title: "Cal.com à l’inscription",
-              body: "Obligatoire pour les praticiens (username / lien public). Les joueurs réservent sans créer de compte Cal.com.",
+              title: "Agenda + confirmation",
+              body: "Créneaux ProDay et identité Cal.com du praticien. Le sportif réserve sans compte Cal.com.",
             },
             {
               icon: ShieldCheck,
-              title: "Visio conforme",
-              body: "Cal Video / Daily.co ou Whereby. Pas Zoom ni Google Meet dès que des données de santé sont échangées.",
+              title: "Salle Daily privée",
+              body: "Visio HD dans l’app (token sécurisé). Pas Zoom ni Google Meet dès que des données de santé sont échangées.",
             },
           ].map(({ icon: Icon, title, body }) => (
             <div
@@ -62,28 +62,28 @@ export function SanteTeleconsultSection() {
         <div className="mt-10 rounded-2xl border border-teal-400/25 bg-black/50 p-8 text-center sm:p-10">
           <Video className="mx-auto text-teal-300/90" size={32} />
           <h3 className="font-display mt-4 text-xl font-bold text-white">
-            Comment ça se passe ?
+            Comment rejoindre un appel ?
           </h3>
           <ol className="mx-auto mt-5 max-w-lg space-y-3 text-left text-sm text-white/70">
             <li className="flex gap-3">
               <span className="font-bold text-teal-300">1.</span>
-              Le praticien s&apos;inscrit au pôle Santé et renseigne son username Cal.com (inscription
-              Cal.com ouverte depuis le parcours).
+              Le praticien s&apos;inscrit au pôle Santé et renseigne son username Cal.com.
             </li>
             <li className="flex gap-3">
               <span className="font-bold text-teal-300">2.</span>
-              Son agenda public est lié à sa fiche ProDay (téléconsultation Cal Video / Whereby. Pas Zoom).
+              Le sportif réserve un créneau visio depuis la fiche praticien dans l&apos;app.
             </li>
             <li className="flex gap-3">
               <span className="font-bold text-teal-300">3.</span>
-              Le sportif choisit un pro dans l&apos;annuaire et réserve sur{" "}
-              <em className="not-italic text-white/85">ce Cal.com</em>, sans créer de compte Cal.com.
+              Une fois le RDV confirmé, praticien et joueur appuient sur{" "}
+              <em className="not-italic text-white/85">Rejoindre la visio</em> — salle privée
+              Daily, contrôles caméra / micro / écran / chat, puis fin d&apos;appel.
             </li>
           </ol>
 
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             <Link
-              href={ROUTES.betaWaitlist}
+              href={`${ROUTES.betaWaitlist}?role=physio`}
               className="inline-flex min-h-11 items-center rounded-full bg-teal-600 px-6 py-2.5 text-sm font-bold text-white transition hover:bg-teal-500"
             >
               Je suis praticien · rejoindre la bêta
@@ -100,6 +100,8 @@ export function SanteTeleconsultSection() {
         <p className="mt-8 text-center text-[11px] leading-relaxed text-white/35">
           Distinct de l&apos;onglet « Vidéos » de l&apos;app (contenus éducatifs publics). La
           téléconsultation = RDV praticien ↔ sportif, avec consentement et confidentialité.
+          Flag admin <code className="text-white/50">sante_visio</code> requis pour activer
+          le join en production.
         </p>
       </div>
     </section>

@@ -22,7 +22,7 @@ Ne jamais mettre un profil Cal.com personnel (prénom fondateur) comme booking g
 |--------|--------|----------|
 | Inscription praticien | Champ `cal_com_username` + `booking_url` | Cal.com obligatoire dès le cabinet |
 | Booking sportif (app) | Créneaux ProDay → demande `pending` dans l’agenda du praticien | Confirm / refuse dans ProDay |
-| Visio | **Cal Video** (Cal.com) — Daily.co en secours | Conforme HDS — pas Zoom / Meet |
+| Visio | **Daily.co** (Call Object in-app) — Cal Video en secours | Salle privée + token ; pas Zoom / Meet |
 
 ### UX web
 
@@ -43,4 +43,4 @@ Pas de `NEXT_PUBLIC_SANTE_BOOKING_EMBED_URL` obligatoire. CSP conserve `frame-sr
 
 ## HDS / RGPD
 
-Visio via **Cal Video** (Cal.com) — Daily.co en secours. Voir [CAL_VISIO_SETUP.md](./CAL_VISIO_SETUP.md).
+Visio via **Daily.co** (salle privée + token in-app) — Cal Video en secours. Voir [DAILY_VISIO_SETUP.md](./DAILY_VISIO_SETUP.md).

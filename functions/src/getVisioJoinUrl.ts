@@ -84,7 +84,7 @@ async function persistMeetingLink(
 }
 
 /**
- * Garantit une URL de salle réelle (Cal Video ou Daily créée via API).
+ * Garantit une URL de salle réelle (Daily prioritaire pour l'UI in-app, Cal Video en secours).
  * Ne renvoie jamais une URL Daily « fictive » (domain/room sans création API).
  */
 async function resolveJoinableMeeting(input: {
@@ -94,6 +94,16 @@ async function resolveJoinableMeeting(input: {
   const { appointmentId, data } = input;
   const endAt = toDate(data.end_at) ?? new Date(Date.now() + 60 * 60_000);
   const startAt = toDate(data.start_at) ?? new Date();
+  const existing = data.meeting_link?.trim();
+
+  // Daily en priorité : salle privée + token pour Call Object in-app.
+  const daily = await createDailyRoom({ appointmentId, endAt });
+  if (daily) {
+    if (daily.meetingLink !== existing || data.visio_provider !== 'daily') {
+      await persistMeetingLink(appointmentId, daily);
+    }
+    return daily;
+  }
 
   const calUid = data.cal_booking_uid?.trim();
   if (calUid) {
@@ -104,57 +114,36 @@ async function resolveJoinableMeeting(input: {
     };
   }
 
-  const existing = data.meeting_link?.trim();
   if (existing && isCalVideoMeetingLink(existing)) {
     return { meetingLink: existing, visioProvider: 'cal' };
   }
 
-  // Daily : toujours (re)créer / récupérer la salle via API — le lien stocké peut être fictif.
-  if (existing && isDailyMeetingLink(existing)) {
-    const daily = await createDailyRoom({ appointmentId, endAt });
-    if (daily) {
-      if (daily.meetingLink !== existing) {
-        await persistMeetingLink(appointmentId, daily);
-      }
-      return daily;
-    }
-    // Pas de clé Daily / API KO → tenter Cal Video ci-dessous.
-  }
+  const profile = await loadPhysioProfile(data.physio_uid);
+  const patientEmail =
+    (await resolveUserEmail(data.patient_uid)) ?? `${data.patient_uid}@proday.app`;
+  const cal = await resolveCalVideoMeetingLink({
+    profile: {
+      cal_com_username: profile.cal_com_username as string | undefined,
+      booking_url: profile.booking_url as string | undefined,
+      cal_event_type_slug: profile.cal_event_type_slug as string | undefined,
+    },
+    startAt,
+    attendeeName: data.patient_name?.trim() || 'Patient ProDay',
+    attendeeEmail: patientEmail,
+    appointmentId,
+  });
 
-  if (!existing || isDailyMeetingLink(existing) || !isCalVideoMeetingLink(existing)) {
-    const daily = await createDailyRoom({ appointmentId, endAt });
-    if (daily) {
-      await persistMeetingLink(appointmentId, daily);
-      return daily;
-    }
-
-    const profile = await loadPhysioProfile(data.physio_uid);
-    const patientEmail =
-      (await resolveUserEmail(data.patient_uid)) ?? `${data.patient_uid}@proday.app`;
-    const cal = await resolveCalVideoMeetingLink({
-      profile: {
-        cal_com_username: profile.cal_com_username as string | undefined,
-        booking_url: profile.booking_url as string | undefined,
-        cal_event_type_slug: profile.cal_event_type_slug as string | undefined,
-      },
-      startAt,
-      attendeeName: data.patient_name?.trim() || 'Patient ProDay',
-      attendeeEmail: patientEmail,
-      appointmentId,
+  if (cal && isCalVideoMeetingLink(cal.meetingLink)) {
+    await persistMeetingLink(appointmentId, {
+      meetingLink: cal.meetingLink,
+      visioProvider: 'cal',
+      calBookingUid: cal.calBookingUid,
     });
-
-    if (cal && isCalVideoMeetingLink(cal.meetingLink)) {
-      await persistMeetingLink(appointmentId, {
-        meetingLink: cal.meetingLink,
-        visioProvider: 'cal',
-        calBookingUid: cal.calBookingUid,
-      });
-      return {
-        meetingLink: cal.meetingLink,
-        visioProvider: 'cal',
-        calBookingUid: cal.calBookingUid,
-      };
-    }
+    return {
+      meetingLink: cal.meetingLink,
+      visioProvider: 'cal',
+      calBookingUid: cal.calBookingUid,
+    };
   }
 
   throw new HttpsError(
@@ -226,8 +215,11 @@ export const getVisioJoinUrl = onCall(
             })
           : null;
 
+      const roomUrl = meetingLink.split('?')[0];
       return {
-        joinUrl: buildDailyJoinUrl(meetingLink, { token, userName, userId: uid }),
+        joinUrl: buildDailyJoinUrl(roomUrl, { token, userName, userId: uid }),
+        roomUrl,
+        token,
         provider: 'daily' as const,
       };
     }
@@ -237,6 +229,8 @@ export const getVisioJoinUrl = onCall(
         userName,
         email: userEmail ?? undefined,
       }),
+      roomUrl: meetingLink.split('?')[0],
+      token: null,
       provider: 'cal' as const,
     };
   }
