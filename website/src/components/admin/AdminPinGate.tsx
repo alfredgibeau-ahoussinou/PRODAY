@@ -27,7 +27,7 @@ export function AdminPinGate() {
         setError(data.error ?? "Connexion impossible");
         return;
       }
-      router.replace(data.redirect ?? "/admin/beta");
+      router.replace(data.redirect ?? "/admin/dashboard");
       router.refresh();
     } catch {
       setError("Erreur réseau. Réessayez.");
@@ -46,7 +46,7 @@ export function AdminPinGate() {
       </h1>
       <p className="mt-3 text-sm leading-relaxed text-white/60">
         Accès réservé aux 4 membres de l&apos;équipe. Saisissez le minicode
-        partagé.
+        partagé pour ouvrir le tableau de bord fondateurs.
       </p>
 
       <form onSubmit={onSubmit} className="mt-10 space-y-5">

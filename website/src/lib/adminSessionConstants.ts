@@ -3,7 +3,7 @@
 export const ADMIN_SESSION_COOKIE = "proday_admin_session";
 export const ADMIN_SESSION_MAX_AGE = 60 * 60 * 24 * 7; // 7 jours
 export const ADMIN_LOGIN_PATH = "/admin/login";
-export const ADMIN_HOME_PATH = "/admin/beta";
+export const ADMIN_HOME_PATH = "/admin/dashboard";
 
 const TOKEN_PREFIX = "adm1.";
 

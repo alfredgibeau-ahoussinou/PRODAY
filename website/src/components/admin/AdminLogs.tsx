@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { AdminNav } from "@/components/admin/AdminNav";
+import { AdminShell } from "@/components/admin/AdminShell";
+import { AdminMockBadge } from "@/components/admin/adminUi";
 import { Search, Filter, Download, AlertTriangle, Info, CheckCircle, XCircle, Clock, User, Settings, Shield, Calendar, FileText, Mail, X } from "lucide-react";
 
 type LogLevel = "info" | "warning" | "error" | "success";
@@ -175,21 +176,11 @@ export function AdminLogs() {
   };
 
   return (
-    <main className="relative mx-auto w-full max-w-7xl px-6 py-12">
-      <header className="flex flex-col gap-4 border-b border-white/10 pb-8 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="font-[family-name:var(--font-syne)] text-xs font-semibold uppercase tracking-[0.22em] text-[#4C8BFF]">
-            Admin · Logs
-          </p>
-          <h1 className="mt-2 font-[family-name:var(--font-syne)] text-3xl font-bold text-white">
-            Logs et audit trail
-          </h1>
-          <p className="mt-2 max-w-xl text-sm text-white/55">
-            Consultez l'historique des actions système et le journal d'audit.
-          </p>
-        </div>
-        <AdminNav />
-      </header>
+    <AdminShell
+      title="Journal d’activité"
+      subtitle="Audit trail des actions admin. Hook: /api/admin/logs."
+      actions={<AdminMockBadge />}
+    >
 
       {/* Filtres et recherche */}
       <section className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -418,6 +409,6 @@ export function AdminLogs() {
           </div>
         </div>
       )}
-    </main>
+    </AdminShell>
   );
 }

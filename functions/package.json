@@ -4,7 +4,7 @@
   "main": "lib/index.js",
   "scripts": {
     "build": "tsc && node -e \"const fs=require('fs'); fs.cpSync('../firebase/auth-email-templates','lib/auth-email-templates',{recursive:true}); fs.mkdirSync('lib/email-templates',{recursive:true}); fs.cpSync('../docs/emailjs/appointment.html','lib/email-templates/appointment.html')\"",
-    "test": "npm run build && node --test test/authEmailJsParams.test.mjs test/appointmentEmailJsParams.test.mjs test/sponsorQuoteMail.test.mjs test/visioMeetingLink.test.mjs test/referralLogic.test.mjs",
+    "test": "npm run build && node --test test/authEmailJsParams.test.mjs test/appointmentEmailJsParams.test.mjs test/sponsorQuoteMail.test.mjs test/visioMeetingLink.test.mjs test/referralLogic.test.mjs test/betaWaitlistEmail.test.mjs",
     "serve": "npm run build && firebase emulators:start --only functions"
   },
   "engines": {

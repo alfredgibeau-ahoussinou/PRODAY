@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { AdminNav } from "@/components/admin/AdminNav";
+import { AdminShell } from "@/components/admin/AdminShell";
+import { AdminMockBadge } from "@/components/admin/adminUi";
 import { Plus, Edit, Trash2, Eye, Save, X, Layers, Check, X as XIcon } from "lucide-react";
 
 interface Pole {
@@ -177,21 +178,11 @@ export function AdminPoles() {
   };
 
   return (
-    <main className="relative mx-auto w-full max-w-7xl px-6 py-12">
-      <header className="flex flex-col gap-4 border-b border-white/10 pb-8 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="font-[family-name:var(--font-syne)] text-xs font-semibold uppercase tracking-[0.22em] text-[#4C8BFF]">
-            Admin · Pôles
-          </p>
-          <h1 className="mt-2 font-[family-name:var(--font-syne)] text-3xl font-bold text-white">
-            Gestion des pôles et fonctionnalités
-          </h1>
-          <p className="mt-2 max-w-xl text-sm text-white/55">
-            Configurez les pôles ProDay et leurs fonctionnalités associées.
-          </p>
-        </div>
-        <AdminNav />
-      </header>
+    <AdminShell
+      title="Pôles"
+      subtitle="Activation des pôles produit. Hook: /api/admin/poles."
+      actions={<AdminMockBadge />}
+    >
 
       {/* Onglets */}
       <section className="mt-8 flex gap-2">
@@ -515,6 +506,6 @@ export function AdminPoles() {
           ))
         )}
       </section>
-    </main>
+    </AdminShell>
   );
 }

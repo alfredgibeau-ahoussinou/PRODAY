@@ -3,12 +3,17 @@ export type BetaAdminStatus = "pending" | "approved" | "rejected";
 export type BetaAdminWaitlistEntry = {
   id: string;
   email: string;
+  name?: string | null;
   role?: string;
   role_label?: string;
   status: BetaAdminStatus;
   welcome_email_sent?: boolean;
+  reject_email_sent?: boolean;
+  admin_note?: string | null;
+  referral_code?: string | null;
   created_at: string | null;
   approved_at: string | null;
+  rejected_at?: string | null;
 };
 
 export type BetaAdminCounts = {
@@ -31,6 +36,15 @@ type UpstreamAction = {
   emailSent?: boolean;
   emailError?: string;
   error?: string;
+  approved?: number;
+  failed?: number;
+  results?: Array<{
+    id: string;
+    ok: boolean;
+    emailSent?: boolean;
+    emailError?: string;
+    error?: string;
+  }>;
 };
 
 function getAdminFunctionConfig(): { url: string; secret: string } | null {
@@ -47,10 +61,13 @@ async function callAdminFunction(
       | "approve"
       | "reject"
       | "resend"
+      | "bulk_approve"
       | "broadcast_ios_pre_announcement"
       | "trigger_ios_launch"
       | "send_engagement_round";
     entryId?: string;
+    entryIds?: string[];
+    admin_note?: string;
     round?: number;
   },
 ): Promise<{ status: number; data: Record<string, unknown> }> {
@@ -114,16 +131,55 @@ export async function fetchBetaWaitlistAdmin(): Promise<{
   };
 }
 
-export async function approveBetaWaitlistAdmin(entryId: string) {
-  return callAction("approve", entryId);
+export async function approveBetaWaitlistAdmin(
+  entryId: string,
+  adminNote?: string,
+) {
+  return callAction("approve", entryId, adminNote);
 }
 
-export async function rejectBetaWaitlistAdmin(entryId: string) {
-  return callAction("reject", entryId);
+export async function rejectBetaWaitlistAdmin(
+  entryId: string,
+  adminNote?: string,
+) {
+  return callAction("reject", entryId, adminNote);
 }
 
 export async function resendBetaWaitlistAdmin(entryId: string) {
   return callAction("resend", entryId);
+}
+
+export async function bulkApproveBetaWaitlistAdmin(
+  entryIds: string[],
+  adminNote?: string,
+): Promise<{
+  ok: boolean;
+  status: number;
+  approved?: number;
+  failed?: number;
+  results?: UpstreamAction["results"];
+  error?: string;
+}> {
+  const { status, data } = await callAdminFunction({
+    action: "bulk_approve",
+    entryIds,
+    ...(adminNote?.trim() ? { admin_note: adminNote.trim() } : {}),
+  });
+  const parsed = data as UpstreamAction;
+  if (!upstreamOk(status, parsed)) {
+    return {
+      ok: false,
+      status,
+      error: String(parsed.error ?? "Approbation groupée impossible"),
+    };
+  }
+  return {
+    ok: true,
+    status,
+    approved: parsed.approved,
+    failed: parsed.failed,
+    results: parsed.results,
+  };
 }
 
 export async function broadcastIosPreAnnouncementAdmin() {
@@ -139,7 +195,11 @@ export async function sendEngagementRoundAdmin(round?: number) {
     action: "send_engagement_round",
     round,
   });
-  const parsed = data as UpstreamAction & { sent?: number; skipped?: number; failed?: number };
+  const parsed = data as UpstreamAction & {
+    sent?: number;
+    skipped?: number;
+    failed?: number;
+  };
   if (!upstreamOk(status, parsed)) {
     return {
       ok: false,
@@ -191,6 +251,7 @@ async function callCampaignAction(
 async function callAction(
   action: "approve" | "reject" | "resend",
   entryId: string,
+  adminNote?: string,
 ): Promise<{
   ok: boolean;
   status: number;
@@ -198,7 +259,11 @@ async function callAction(
   emailError?: string;
   error?: string;
 }> {
-  const { status, data } = await callAdminFunction({ action, entryId });
+  const { status, data } = await callAdminFunction({
+    action,
+    entryId,
+    ...(adminNote?.trim() ? { admin_note: adminNote.trim() } : {}),
+  });
   const parsed = data as UpstreamAction;
   if (!upstreamOk(status, parsed)) {
     return {

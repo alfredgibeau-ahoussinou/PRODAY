@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { AdminNav } from "@/components/admin/AdminNav";
+import { AdminShell } from "@/components/admin/AdminShell";
+import { AdminMockBadge } from "@/components/admin/adminUi";
 import { TrendingUp, Users, Eye, MousePointer, Clock, BarChart3, Calendar, Download } from "lucide-react";
 
 interface AnalyticsData {
@@ -60,21 +61,11 @@ export function AdminAnalytics() {
   };
 
   return (
-    <main className="relative mx-auto w-full max-w-7xl px-6 py-12">
-      <header className="flex flex-col gap-4 border-b border-white/10 pb-8 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="font-[family-name:var(--font-syne)] text-xs font-semibold uppercase tracking-[0.22em] text-[#4C8BFF]">
-            Admin · Analytics
-          </p>
-          <h1 className="mt-2 font-[family-name:var(--font-syne)] text-3xl font-bold text-white">
-            Statistiques détaillées
-          </h1>
-          <p className="mt-2 max-w-xl text-sm text-white/55">
-            Analyse du trafic, comportement des utilisateurs et performance du site.
-          </p>
-        </div>
-        <AdminNav />
-      </header>
+    <AdminShell
+      title="Analytics"
+      subtitle="Trafic et performance (données démo). Hook: GET /api/admin/analytics."
+      actions={<AdminMockBadge />}
+    >
 
       {/* Sélecteur de période */}
       <section className="mt-8 flex items-center justify-between">
@@ -297,6 +288,6 @@ export function AdminAnalytics() {
           </div>
         </div>
       </section>
-    </main>
+    </AdminShell>
   );
 }

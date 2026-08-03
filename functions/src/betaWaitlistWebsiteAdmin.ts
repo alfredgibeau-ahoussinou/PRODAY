@@ -3,7 +3,12 @@ import * as admin from 'firebase-admin';
 import { timingSafeEqual } from 'crypto';
 import { generateBetaAccessToken } from './betaAccessToken';
 import { BETA_ROLE_LABELS, isBetaRoleId } from './betaWaitlistEmail';
-import { markWelcomeEmailSent, sendBetaWelcomeEmailToEntry } from './betaWaitlistMail';
+import {
+  markRejectEmailSent,
+  markWelcomeEmailSent,
+  sendBetaRejectEmailToEntry,
+  sendBetaWelcomeEmailToEntry,
+} from './betaWaitlistMail';
 import {
   broadcastIosPreAnnouncement,
   executeIosBetaLaunch,
@@ -26,12 +31,15 @@ const ALLOWED_ORIGINS = [
 
 const WEBSITE_ADMIN_ACTOR = 'website-admin';
 const MAX_LIST = 200;
+const MAX_BULK = 50;
+const MAX_NOTE_LENGTH = 500;
 
 type AdminAction =
   | 'list'
   | 'approve'
   | 'reject'
   | 'resend'
+  | 'bulk_approve'
   | 'broadcast_ios_pre_announcement'
   | 'trigger_ios_launch'
   | 'send_engagement_round';
@@ -118,6 +126,20 @@ function resolveRoleLabel(data: admin.firestore.DocumentData): string {
   return isBetaRoleId(role) ? BETA_ROLE_LABELS[role] : role;
 }
 
+function resolveDisplayName(data: admin.firestore.DocumentData): string | undefined {
+  const candidates = [data.name, data.full_name, data.display_name];
+  for (const c of candidates) {
+    if (typeof c === 'string' && c.trim()) return c.trim();
+  }
+  return undefined;
+}
+
+function normalizeAdminNote(raw: unknown): string | undefined {
+  if (typeof raw !== 'string') return undefined;
+  const trimmed = raw.trim().slice(0, MAX_NOTE_LENGTH);
+  return trimmed || undefined;
+}
+
 async function listWaitlist(db: admin.firestore.Firestore) {
   let snap: admin.firestore.QuerySnapshot;
   try {
@@ -136,12 +158,17 @@ async function listWaitlist(db: admin.firestore.Firestore) {
     return {
       id: doc.id,
       email: String(data.email ?? ''),
+      name: resolveDisplayName(data) ?? null,
       role: data.role ? String(data.role) : undefined,
       role_label: resolveRoleLabel(data),
       status,
       welcome_email_sent: data.welcome_email_sent === true,
+      reject_email_sent: data.reject_email_sent === true,
+      admin_note: typeof data.admin_note === 'string' ? data.admin_note : null,
+      referral_code: typeof data.referral_code === 'string' ? data.referral_code : null,
       created_at: toIso(data.created_at),
       approved_at: toIso(data.approved_at),
+      rejected_at: toIso(data.rejected_at),
     };
   });
 
@@ -161,7 +188,11 @@ async function listWaitlist(db: admin.firestore.Firestore) {
   return { ok: true, entries, counts };
 }
 
-async function approveEntry(db: admin.firestore.Firestore, entryId: string) {
+async function approveEntry(
+  db: admin.firestore.Firestore,
+  entryId: string,
+  adminNote?: string,
+) {
   const ref = db.collection('beta_waitlist').doc(entryId);
   const snap = await ref.get();
   if (!snap.exists) {
@@ -184,6 +215,7 @@ async function approveEntry(db: admin.firestore.Firestore, entryId: string) {
   const accessToken = resolveAccessToken(entry);
   const roleLabel = resolveRoleLabel(entry);
   const now = admin.firestore.FieldValue.serverTimestamp();
+  const note = normalizeAdminNote(adminNote);
 
   await ref.update({
     status: 'approved',
@@ -191,6 +223,7 @@ async function approveEntry(db: admin.firestore.Firestore, entryId: string) {
     approved_at: now,
     approved_by: WEBSITE_ADMIN_ACTOR,
     updated_at: now,
+    ...(note ? { admin_note: note } : {}),
   });
 
   const { emailSent, emailError } = await sendBetaWelcomeEmailToEntry(
@@ -210,22 +243,91 @@ async function approveEntry(db: admin.firestore.Firestore, entryId: string) {
   return { ok: true, success: true, emailSent, emailError };
 }
 
-async function rejectEntry(db: admin.firestore.Firestore, entryId: string) {
+async function rejectEntry(
+  db: admin.firestore.Firestore,
+  entryId: string,
+  adminNote?: string,
+) {
   const ref = db.collection('beta_waitlist').doc(entryId);
   const snap = await ref.get();
   if (!snap.exists) {
     throw new functions.https.HttpsError('not-found', 'Inscription introuvable');
   }
 
+  const entry = snap.data()!;
+  const email = String(entry.email ?? '').trim().toLowerCase();
+  const roleLabel = resolveRoleLabel(entry);
   const now = admin.firestore.FieldValue.serverTimestamp();
+  const note = normalizeAdminNote(adminNote);
+
   await ref.update({
     status: 'rejected',
     rejected_at: now,
     rejected_by: WEBSITE_ADMIN_ACTOR,
     updated_at: now,
+    ...(note ? { admin_note: note } : {}),
   });
 
-  return { ok: true, success: true };
+  let emailSent = false;
+  let emailError: string | undefined;
+  if (email) {
+    const result = await sendBetaRejectEmailToEntry(email, roleLabel);
+    emailSent = result.emailSent;
+    emailError = result.emailError;
+    if (emailSent) await markRejectEmailSent(ref);
+  }
+
+  return { ok: true, success: true, emailSent, emailError };
+}
+
+async function bulkApprove(
+  db: admin.firestore.Firestore,
+  entryIds: string[],
+  adminNote?: string,
+) {
+  const unique = [...new Set(entryIds.map((id) => id.trim()).filter(Boolean))].slice(
+    0,
+    MAX_BULK,
+  );
+  if (unique.length === 0) {
+    throw new functions.https.HttpsError('invalid-argument', 'entryIds requis');
+  }
+
+  const results: Array<{
+    id: string;
+    ok: boolean;
+    emailSent?: boolean;
+    emailError?: string;
+    error?: string;
+  }> = [];
+
+  for (const id of unique) {
+    try {
+      const r = await approveEntry(db, id, adminNote);
+      results.push({
+        id,
+        ok: true,
+        emailSent: r.emailSent,
+        emailError: r.emailError,
+      });
+    } catch (e) {
+      const msg =
+        e instanceof functions.https.HttpsError
+          ? e.message
+          : e instanceof Error
+            ? e.message
+            : 'Échec';
+      results.push({ id, ok: false, error: msg });
+    }
+  }
+
+  return {
+    ok: true,
+    success: true,
+    approved: results.filter((r) => r.ok).length,
+    failed: results.filter((r) => !r.ok).length,
+    results,
+  };
 }
 
 async function resendWelcome(db: admin.firestore.Firestore, entryId: string) {
@@ -291,17 +393,27 @@ export function createWebsiteBetaWaitlistAdminHandler(db: admin.firestore.Firest
 
       let action: AdminAction = 'list';
       let entryId = '';
+      let entryIds: string[] = [];
+      let adminNote: string | undefined;
 
       if (req.method === 'GET') {
         action = 'list';
       } else if (req.method === 'POST') {
-        const body = (req.body ?? {}) as { action?: string; entryId?: string };
+        const body = (req.body ?? {}) as {
+          action?: string;
+          entryId?: string;
+          entryIds?: string[];
+          admin_note?: string;
+          adminNote?: string;
+          round?: number;
+        };
         const raw = String(body.action ?? 'list').trim().toLowerCase();
         if (
           raw !== 'list' &&
           raw !== 'approve' &&
           raw !== 'reject' &&
           raw !== 'resend' &&
+          raw !== 'bulk_approve' &&
           raw !== 'broadcast_ios_pre_announcement' &&
           raw !== 'trigger_ios_launch' &&
           raw !== 'send_engagement_round'
@@ -311,6 +423,10 @@ export function createWebsiteBetaWaitlistAdminHandler(db: admin.firestore.Firest
         }
         action = raw;
         entryId = String(body.entryId ?? '').trim();
+        entryIds = Array.isArray(body.entryIds)
+          ? body.entryIds.map((id) => String(id ?? '').trim()).filter(Boolean)
+          : [];
+        adminNote = normalizeAdminNote(body.admin_note ?? body.adminNote);
       } else {
         res.status(405).json({ error: 'Method not allowed' });
         return;
@@ -345,17 +461,22 @@ export function createWebsiteBetaWaitlistAdminHandler(db: admin.firestore.Firest
         return;
       }
 
+      if (action === 'bulk_approve') {
+        res.status(200).json(await bulkApprove(db, entryIds, adminNote));
+        return;
+      }
+
       if (!entryId) {
         res.status(400).json({ error: 'entryId requis' });
         return;
       }
 
       if (action === 'approve') {
-        res.status(200).json(await approveEntry(db, entryId));
+        res.status(200).json(await approveEntry(db, entryId, adminNote));
         return;
       }
       if (action === 'reject') {
-        res.status(200).json(await rejectEntry(db, entryId));
+        res.status(200).json(await rejectEntry(db, entryId, adminNote));
         return;
       }
       res.status(200).json(await resendWelcome(db, entryId));
