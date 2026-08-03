@@ -41,8 +41,8 @@ interface ProDayTabPagerProps<T extends string> {
   showFooter?: boolean;
   /** Rail d’onglets plus bas (40 px). */
   compact?: boolean;
-  /** Rail souligné (défaut) ou pills scrollables. */
-  variant?: 'rail' | 'pills';
+  /** Rail souligné (défaut), pills scrollables, ou sans rail (piloté à l'extérieur). */
+  variant?: 'rail' | 'pills' | 'headless';
 }
 
 export function ProDayTabPager<T extends string>({
@@ -176,6 +176,7 @@ export function ProDayTabPager<T extends string>({
 
   return (
     <View style={styles.root} onLayout={onRootLayout}>
+      {variant === 'headless' ? null : (
       <View style={styles.railWrap}>
         {variant === 'pills' ? (
           <ScrollView
@@ -288,6 +289,7 @@ export function ProDayTabPager<T extends string>({
         </View>
         )}
       </View>
+      )}
 
       <Animated.ScrollView
         ref={scrollRef}
@@ -336,7 +338,7 @@ export function ProDayTabPager<T extends string>({
 function createStyles(
   c: { surface: string; border: string; text: string; textMuted: string; surfaceMuted: string; accent: string },
   compact: boolean,
-  variant: 'rail' | 'pills',
+  variant: 'rail' | 'pills' | 'headless',
 ) {
   return StyleSheet.create({
     root: { flex: 1, minHeight: 0 },

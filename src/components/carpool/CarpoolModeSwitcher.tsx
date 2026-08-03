@@ -1,11 +1,16 @@
-import React, { useMemo } from 'react';
-import { View, StyleSheet } from 'react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import { View, StyleSheet, type LayoutChangeEvent } from 'react-native';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+} from 'react-native-reanimated';
 import { PressableSpring } from '../motion';
 import { ProDayText } from '../ui/ProDayText';
-import { Icon } from '../ui/Icon';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { useTranslation } from '../../context/LocaleContext';
-import { spacing, radius } from '../../theme/designTokens';
+import { motion } from '../../theme/motion';
+import { spacing } from '../../theme/designTokens';
 import { prodayHaptics } from '../../utils/prodayHaptics';
 
 export type CarpoolHubMode = 'ride' | 'drive' | 'live';
@@ -16,13 +21,16 @@ interface CarpoolModeSwitcherProps {
   liveActive?: boolean;
 }
 
-const MODES: { id: CarpoolHubMode; icon: 'car' | 'walk' | 'location' }[] = [
-  { id: 'ride', icon: 'walk' },
-  { id: 'drive', icon: 'car' },
-  { id: 'live', icon: 'location' },
+const MODES: { id: CarpoolHubMode; labelKey: string }[] = [
+  { id: 'ride', labelKey: 'carpool.chapter.reserve' },
+  { id: 'drive', labelKey: 'carpool.chapter.propose' },
+  { id: 'live', labelKey: 'carpool.chapter.trips' },
 ];
 
-/** Basculer Passager / Conducteur / Live — hub covoiturage. */
+/**
+ * Ruban de navigation unique — trois voies, un repère souligné qui glisse.
+ * Pas de boîte, pas de pilule, pas d'icône : une seule surface de contrôle calme.
+ */
 export const CarpoolModeSwitcher: React.FC<CarpoolModeSwitcherProps> = ({
   mode,
   onChange,
@@ -31,9 +39,33 @@ export const CarpoolModeSwitcher: React.FC<CarpoolModeSwitcherProps> = ({
   const { colors } = useAppTheme();
   const { t } = useTranslation();
   const styles = useMemo(() => createStyles(colors), [colors]);
+  const [trackW, setTrackW] = useState(0);
+  const tabW = trackW > 0 ? trackW / MODES.length : 0;
+  const activeIndex = Math.max(0, MODES.findIndex((m) => m.id === mode));
+  const x = useSharedValue(0);
+
+  useEffect(() => {
+    if (tabW > 0) x.value = withSpring(activeIndex * tabW, motion.spring.snappy);
+  }, [activeIndex, tabW, x]);
+
+  const markerStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: x.value }],
+    width: tabW,
+  }));
+
+  const onTrackLayout = (e: LayoutChangeEvent) => {
+    const w = Math.round(e.nativeEvent.layout.width);
+    setTrackW((prev) => (prev !== w ? w : prev));
+  };
 
   return (
-    <View style={[styles.wrap, { backgroundColor: colors.surfaceMuted, borderColor: colors.border }]}>
+    <View style={[styles.wrap, { borderBottomColor: colors.border }]} onLayout={onTrackLayout}>
+      {tabW > 0 ? (
+        <Animated.View style={[styles.markerTrack, markerStyle]} pointerEvents="none">
+          <View style={[styles.marker, { backgroundColor: colors.accent }]} />
+        </Animated.View>
+      ) : null}
+
       {MODES.map((item) => {
         const active = mode === item.id;
         return (
@@ -43,32 +75,22 @@ export const CarpoolModeSwitcher: React.FC<CarpoolModeSwitcherProps> = ({
               prodayHaptics.tabSwitch();
               onChange(item.id);
             }}
-            scaleTo={0.96}
-            style={[
-              styles.chip,
-              active && { backgroundColor: colors.accent, borderColor: colors.accent },
-            ]}
+            scaleTo={0.98}
+            style={styles.tab}
             accessibilityRole="button"
             accessibilityState={{ selected: active }}
           >
-            <View>
-              <Icon
-                name={item.icon}
-                size={16}
-                color={active ? '#000' : colors.textMuted}
-                variant={active ? 'filled' : 'outline'}
-              />
+            <View style={styles.labelRow}>
+              <ProDayText
+                variant="caption"
+                style={[styles.label, { color: active ? colors.text : colors.textMuted }]}
+              >
+                {t(item.labelKey)}
+              </ProDayText>
               {item.id === 'live' && liveActive ? (
-                <View style={[styles.liveDot, { backgroundColor: colors.error ?? '#EF4444' }]} />
+                <View style={[styles.liveDot, { backgroundColor: colors.accent }]} />
               ) : null}
             </View>
-            <ProDayText
-              variant="caption"
-              style={[styles.label, active && styles.labelActive]}
-              inverse={active}
-            >
-              {t(`carpool.hub.mode.${item.id}`)}
-            </ProDayText>
           </PressableSpring>
         );
       })}
@@ -76,37 +98,34 @@ export const CarpoolModeSwitcher: React.FC<CarpoolModeSwitcherProps> = ({
   );
 };
 
-function createStyles(colors: { error?: string }) {
+function createStyles(_colors: ReturnType<typeof useAppTheme>['colors']) {
   return StyleSheet.create({
     wrap: {
       flexDirection: 'row',
-      padding: 4,
-      borderRadius: radius.pill,
-      borderWidth: StyleSheet.hairlineWidth,
-      gap: 4,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      paddingHorizontal: spacing.md,
     },
-    chip: {
-      flex: 1,
-      flexDirection: 'row',
+    markerTrack: {
+      position: 'absolute',
+      bottom: 0,
+      left: 0,
+      height: 2,
       alignItems: 'center',
       justifyContent: 'center',
-      gap: 6,
-      paddingVertical: 10,
-      borderRadius: radius.pill,
-      borderWidth: 1,
-      borderColor: 'transparent',
     },
-    label: { fontWeight: '700', fontSize: 12 },
-    labelActive: { fontWeight: '900' },
-    liveDot: {
-      position: 'absolute',
-      top: -2,
-      right: -4,
-      width: 7,
-      height: 7,
-      borderRadius: 4,
-      borderWidth: 1,
-      borderColor: '#000',
+    marker: { height: 2, width: 26, borderRadius: 1 },
+    tab: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 14,
     },
+    labelRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+    label: {
+      fontWeight: '700',
+      fontSize: 13,
+      letterSpacing: 0.2,
+    },
+    liveDot: { width: 6, height: 6, borderRadius: 3 },
   });
 }
