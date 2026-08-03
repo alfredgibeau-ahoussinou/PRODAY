@@ -15,12 +15,13 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
+  withSequence,
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
 import { ReelNativeVideo } from './ReelNativeVideo';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Icon } from '../ui/Icon';
+import { Icon, type IconName } from '../ui/Icon';
 import { PressableSpring } from '../motion/PressableSpring';
 import { ReelLikeBurst } from './ReelLikeBurst';
 import {
@@ -34,11 +35,13 @@ import { shouldUseEmbedPlayback } from '../../services/reelResolver.service';
 import { prodayHaptics } from '../../utils/prodayHaptics';
 import { toggleReelBookmark } from '../../utils/reelBookmarks';
 import { toggleReelLike } from '../../utils/reelLikes';
+import { reelAuthorKey, toggleReelFollow } from '../../utils/reelFollows';
 import { reportReel } from '../../utils/reelReports';
 import { trackV3Event } from '../../core/analytics/v3Events';
 import { useTranslation } from '../../context/LocaleContext';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { motion } from '../../theme/motion';
+import { fontFamily } from '../../theme/typography';
 import { spacing } from '../../theme/designTokens';
 
 type ReelSlideProps = {
@@ -48,9 +51,13 @@ type ReelSlideProps = {
   width: number;
   bookmarked?: boolean;
   liked?: boolean;
+  following?: boolean;
+  commentCount?: number;
   reporterUid?: string;
   onBookmarkToggle?: (bookmarkKey: string) => Promise<boolean>;
   onLikeToggle?: (bookmarkKey: string, liked: boolean) => void;
+  onFollowToggle?: (authorKey: string, following: boolean) => void;
+  onOpenComments?: (reel: PlaybackReel) => void;
   onReported?: (bookmarkKey: string) => void;
   onRetry?: () => void;
 };
@@ -107,7 +114,39 @@ const ReelEmbed: React.FC<ReelEmbedProps> = ({ embedUrl, html, reelId }) => {
   );
 };
 
-const AnimatedIcon = Animated.createAnimatedComponent(View);
+const AnimatedView = Animated.createAnimatedComponent(View);
+
+/** Un bouton flottant du rail — glyphe minimal sur voile doux, cible large et espacée. */
+const Fab: React.FC<{
+  icon: IconName;
+  onPress: () => void;
+  color?: string;
+  size?: number;
+  filled?: boolean;
+  label?: string;
+  accessibilityLabel: string;
+  animatedStyle?: ReturnType<typeof useAnimatedStyle>;
+}> = ({ icon, onPress, color = '#FFFFFF', size = 28, filled, label, accessibilityLabel, animatedStyle }) => (
+  <PressableSpring
+    style={styles.fab}
+    scaleTo={0.84}
+    haptic
+    onPress={onPress}
+    accessibilityRole="button"
+    accessibilityLabel={accessibilityLabel}
+  >
+    <View style={styles.fabScrim}>
+      <AnimatedView style={animatedStyle}>
+        <Icon name={icon} size={size} color={color} variant={filled ? 'filled' : undefined} />
+      </AnimatedView>
+    </View>
+    {label ? (
+      <Text style={styles.fabLabel} numberOfLines={1}>
+        {label}
+      </Text>
+    ) : null}
+  </PressableSpring>
+);
 
 export const ReelSlide: React.FC<ReelSlideProps> = ({
   reel,
@@ -116,9 +155,13 @@ export const ReelSlide: React.FC<ReelSlideProps> = ({
   width,
   bookmarked,
   liked: likedProp,
+  following: followingProp,
+  commentCount = 0,
   reporterUid,
   onBookmarkToggle,
   onLikeToggle,
+  onFollowToggle,
+  onOpenComments,
   onReported,
   onRetry,
 }) => {
@@ -130,6 +173,7 @@ export const ReelSlide: React.FC<ReelSlideProps> = ({
   const [paused, setPaused] = useState(false);
   const [liked, setLiked] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [following, setFollowing] = useState(false);
   const [showBurst, setShowBurst] = useState(false);
   const [useEmbed, setUseEmbed] = useState(shouldUseEmbedPlayback());
   const [loadTimedOut, setLoadTimedOut] = useState(false);
@@ -148,16 +192,24 @@ export const ReelSlide: React.FC<ReelSlideProps> = ({
   // Motion : révélation douce de la légende quand la vidéo devient active.
   const reveal = useSharedValue(isActive ? 1 : 0);
   const likeScale = useSharedValue(1);
+  const followScale = useSharedValue(1);
 
   useEffect(() => {
-    reveal.value = withTiming(isActive ? 1 : 0, { duration: 340, easing: motion.easing.out });
+    reveal.value = withTiming(isActive ? 1 : 0, { duration: 360, easing: motion.easing.out });
   }, [isActive, reveal]);
 
   const metaStyle = useAnimatedStyle(() => ({
-    opacity: 0.25 + reveal.value * 0.75,
-    transform: [{ translateY: (1 - reveal.value) * 14 }],
+    opacity: 0.2 + reveal.value * 0.8,
+    transform: [{ translateY: (1 - reveal.value) * 16 }],
+  }));
+  const railStyle = useAnimatedStyle(() => ({
+    opacity: 0.4 + reveal.value * 0.6,
+    transform: [{ translateX: (1 - reveal.value) * 20 }],
   }));
   const likeStyle = useAnimatedStyle(() => ({ transform: [{ scale: likeScale.value }] }));
+  const followStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: followScale.value }],
+  }));
 
   useEffect(() => {
     setPaused(false);
@@ -197,10 +249,14 @@ export const ReelSlide: React.FC<ReelSlideProps> = ({
     if (likedProp !== undefined) setLiked(likedProp);
   }, [likedProp, reel.id]);
 
+  useEffect(() => {
+    if (followingProp !== undefined) setFollowing(followingProp);
+  }, [followingProp, reel.id]);
+
   const profileUrl = authorProfileUrl(reel);
 
   const applyLike = async (nextLiked: boolean) => {
-    likeScale.value = withSpring(nextLiked ? 1.25 : 1, motion.spring.bouncy);
+    likeScale.value = withSpring(nextLiked ? 1.28 : 1, motion.spring.bouncy);
     setTimeout(() => {
       likeScale.value = withSpring(1, motion.spring.snappy);
     }, 130);
@@ -220,6 +276,26 @@ export const ReelSlide: React.FC<ReelSlideProps> = ({
   const triggerLike = () => {
     if (liked) return;
     void applyLike(true);
+  };
+
+  // Motion : confirmation du suivi — pop du bouton + apparition du check.
+  const onToggleFollow = () => {
+    const next = !following;
+    setFollowing(next);
+    followScale.value = withSequence(
+      withSpring(next ? 1.3 : 0.88, motion.spring.bouncy),
+      withSpring(1, motion.spring.snappy),
+    );
+    if (next) prodayHaptics.confirm();
+    const authorKey = reelAuthorKey(reel);
+    if (onFollowToggle) {
+      onFollowToggle(authorKey, next);
+    } else {
+      void toggleReelFollow(authorKey);
+    }
+    trackV3Event(next ? 'reel_follow' : 'reel_unfollow', {
+      author: reel.authorHandle || reel.authorName,
+    });
   };
 
   const onSurfacePress = () => {
@@ -302,6 +378,9 @@ iframe{border:0;width:100%;height:100%}</style></head>
 <body><div id="w"><iframe src="${embedUrl}" allow="autoplay;encrypted-media;fullscreen" allowfullscreen></iframe></div></body></html>`
     : null;
 
+  const initial = reel.authorName.charAt(0).toUpperCase();
+  const commentLabel = commentCount > 0 ? String(commentCount) : undefined;
+
   return (
     <Pressable
       style={[styles.slide, { width, height }]}
@@ -371,60 +450,85 @@ iframe{border:0;width:100%;height:100%}</style></head>
 
       {/* Voile bas — atmosphère issue de la vidéo, pas de carte ni de barre */}
       <LinearGradient
-        colors={['transparent', 'rgba(0,0,0,0.35)', 'rgba(0,0,0,0.88)']}
-        locations={[0, 0.55, 1]}
-        style={[styles.scrim, { height: height * 0.42 }]}
+        colors={['transparent', 'rgba(0,0,0,0.32)', 'rgba(0,0,0,0.9)']}
+        locations={[0, 0.5, 1]}
+        style={[styles.scrim, { height: height * 0.46 }]}
         pointerEvents="none"
       />
 
       <View style={[styles.overlay, { paddingBottom: bottomPad }]} pointerEvents="box-none">
-        <View style={styles.sidebar}>
-          <PressableSpring
-            style={styles.sideBtn}
-            scaleTo={0.86}
-            haptic
+        {/* Rail flottant — social premium, glyphes espacés */}
+        <Animated.View style={[styles.rail, railStyle]}>
+          <Fab
+            icon={following ? 'checkmark-circle' : 'add'}
+            onPress={onToggleFollow}
+            color={following ? colors.accent : '#FFFFFF'}
+            filled={following}
+            size={26}
+            accessibilityLabel={following ? t('reels.following') : t('reels.follow')}
+            animatedStyle={followStyle}
+          />
+          <Fab
+            icon={liked ? 'heart' : 'heart-outline'}
             onPress={() => void applyLike(!liked)}
-            accessibilityRole="button"
-          >
-            <AnimatedIcon style={likeStyle}>
-              <Icon
-                name={liked ? 'heart' : 'heart-outline'}
-                size={30}
-                color={liked ? '#FF3B5C' : '#fff'}
-                variant={liked ? 'filled' : undefined}
-              />
-            </AnimatedIcon>
-          </PressableSpring>
-          <PressableSpring style={styles.sideBtn} scaleTo={0.86} haptic onPress={() => void onToggleSave()}>
-            <Icon name={saved ? 'bookmark' : 'bookmark-outline'} size={27} color="#fff" />
-          </PressableSpring>
-          <PressableSpring style={styles.sideBtn} scaleTo={0.86} haptic onPress={onOpenSource}>
-            <Icon name="share" size={26} color="#fff" />
-          </PressableSpring>
+            color={liked ? '#FF3B5C' : '#FFFFFF'}
+            filled={liked}
+            size={30}
+            accessibilityLabel={t('reels.like')}
+            animatedStyle={likeStyle}
+          />
+          <Fab
+            icon="chat"
+            onPress={() => onOpenComments?.(reel)}
+            size={27}
+            label={commentLabel}
+            accessibilityLabel={t('reels.comments.title')}
+          />
+          <Fab
+            icon="share"
+            onPress={onOpenSource}
+            size={26}
+            accessibilityLabel={t('reels.share')}
+          />
+          <Fab
+            icon={saved ? 'bookmark' : 'bookmark-outline'}
+            onPress={() => void onToggleSave()}
+            size={26}
+            accessibilityLabel={t('reels.save')}
+          />
           <PressableSpring
-            style={styles.sideBtn}
-            scaleTo={0.86}
+            style={styles.soundBtn}
+            scaleTo={0.84}
             haptic
             onPress={() => setUserMuted((m) => !m)}
             accessibilityRole="button"
             accessibilityLabel={userMuted ? t('reels.sound.off') : t('reels.sound.on')}
           >
-            <Icon name={userMuted ? 'volume-mute' : 'volume-high'} size={22} color="rgba(255,255,255,0.72)" />
+            <Icon
+              name={userMuted ? 'volume-mute' : 'volume-high'}
+              size={20}
+              color="rgba(255,255,255,0.75)"
+            />
           </PressableSpring>
-        </View>
+        </Animated.View>
 
+        {/* Créateur — avatar + nom + club/source, épuré, sans carte */}
         <Animated.View style={[styles.meta, metaStyle]}>
           <Pressable onPress={onOpenProfile} style={styles.authorRow}>
-            <View style={styles.avatar}>
-              <Text style={styles.avatarLetter}>{reel.authorName.charAt(0).toUpperCase()}</Text>
+            <View style={[styles.avatar, { borderColor: colors.accent }]}>
+              <Text style={styles.avatarLetter}>{initial}</Text>
             </View>
-            <Text style={styles.handle} numberOfLines={1}>
-              @{reel.authorHandle}
-            </Text>
-            <View style={[styles.authorTick, { backgroundColor: colors.accent }]} />
-            <Text style={styles.source} numberOfLines={1}>
-              {REEL_SOURCE_LABEL[reel.source]}
-            </Text>
+            <View style={styles.authorText}>
+              <View style={styles.nameRow}>
+                <Text style={styles.name} numberOfLines={1}>
+                  {reel.authorName}
+                </Text>
+                <View style={[styles.authorTick, { backgroundColor: colors.accent }]} />
+              </View>
+              <Text style={styles.handleLine} numberOfLines={1}>
+                @{reel.authorHandle} · {REEL_SOURCE_LABEL[reel.source]}
+              </Text>
+            </View>
           </Pressable>
 
           {caption ? (
@@ -514,70 +618,106 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
     paddingHorizontal: spacing.lg,
   },
-  sidebar: {
+  rail: {
     position: 'absolute',
     right: spacing.md,
-    bottom: spacing.xl + 44,
+    bottom: spacing.xl + 52,
     alignItems: 'center',
     gap: spacing.xl,
   },
-  sideBtn: {
+  fab: {
+    alignItems: 'center',
+    gap: 5,
+  },
+  fabScrim: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
     alignItems: 'center',
     justifyContent: 'center',
-    // Ombre douce unique pour la lisibilité sur vidéo claire — pas de pastille.
+    backgroundColor: 'rgba(10,12,16,0.32)',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.5,
-    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.4,
+    shadowRadius: 6,
+  },
+  fabLabel: {
+    color: '#FFFFFF',
+    fontFamily: fontFamily.bold,
+    fontSize: 12,
+    letterSpacing: 0.2,
+    textShadowColor: 'rgba(0,0,0,0.6)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
+  },
+  soundBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: -spacing.sm,
   },
   meta: {
-    paddingRight: 68,
-    gap: spacing.sm,
+    paddingRight: 84,
+    gap: spacing.md,
   },
   authorRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
+    gap: spacing.md,
   },
   avatar: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: 'rgba(255,255,255,0.16)',
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255,255,255,0.14)',
+    borderWidth: 1.5,
     alignItems: 'center',
     justifyContent: 'center',
   },
   avatarLetter: {
     color: '#fff',
-    fontSize: 14,
-    fontWeight: '800',
+    fontFamily: fontFamily.extrabold,
+    fontSize: 18,
   },
-  handle: {
+  authorText: {
+    flexShrink: 1,
+    gap: 2,
+  },
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  name: {
     color: '#fff',
-    fontWeight: '800',
-    fontSize: 15,
-    letterSpacing: -0.2,
-    textShadowColor: 'rgba(0,0,0,0.55)',
+    fontFamily: fontFamily.displayBold,
+    fontSize: 18,
+    letterSpacing: -0.4,
+    flexShrink: 1,
+    textShadowColor: 'rgba(0,0,0,0.5)',
     textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 3,
+    textShadowRadius: 4,
   },
   authorTick: {
-    width: 14,
-    height: 2,
-    borderRadius: 1,
+    width: 16,
+    height: 2.5,
+    borderRadius: 2,
   },
-  source: {
-    color: 'rgba(255,255,255,0.55)',
-    fontSize: 12,
-    fontWeight: '600',
+  handleLine: {
+    color: 'rgba(255,255,255,0.6)',
+    fontFamily: fontFamily.semibold,
+    fontSize: 13,
+    letterSpacing: 0.1,
   },
   caption: {
-    color: 'rgba(255,255,255,0.92)',
-    fontSize: 14,
-    lineHeight: 20,
-    fontWeight: '400',
-    textShadowColor: 'rgba(0,0,0,0.55)',
+    color: 'rgba(255,255,255,0.94)',
+    fontFamily: fontFamily.regular,
+    fontSize: 15,
+    lineHeight: 22,
+    textShadowColor: 'rgba(0,0,0,0.5)',
     textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 3,
+    textShadowRadius: 4,
   },
 });

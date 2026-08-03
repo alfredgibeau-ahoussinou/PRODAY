@@ -14,6 +14,7 @@ import { ReelFavoritesSheet } from './ReelFavoritesSheet';
 import { ReelUploadSheet } from './ReelUploadSheet';
 import { ReelsEmptyState } from './ReelsEmptyState';
 import { ReelCollectionSheet } from './ReelCollectionSheet';
+import { ReelCommentsSheet } from './ReelCommentsSheet';
 import { useReelsPlaylist } from '../../hooks/useReelsPlaylist';
 import type { PlaybackReel } from '../../content/footballReels';
 import { polesForUniverse, type ReelPoleId, type ReelSeed } from '../../content/reelSeedCatalog';
@@ -33,6 +34,8 @@ import {
   type ReelBookmarkEntry,
 } from '../../utils/reelBookmarks';
 import { loadReelLikes, toggleReelLike } from '../../utils/reelLikes';
+import { loadReelFollows, reelAuthorKey, toggleReelFollow } from '../../utils/reelFollows';
+import { loadReelCommentCounts } from '../../utils/reelComments';
 import { loadHiddenReels } from '../../utils/reelReports';
 import { loadReelResume, saveReelResume } from '../../utils/reelResume';
 import { spacing } from '../../theme/designTokens';
@@ -48,6 +51,9 @@ import { pickReelVideo } from '../../utils/pickReelVideo';
 import { storageService } from '../../services/storage.service';
 
 const POLE_CHIP_IDS: ReelPoleId[] = ['foot', 'mercato', 'sante'];
+
+/** Largeur max de la scène verticale — au-delà, marges atmosphériques (desktop/tablette). */
+const STAGE_MAX_WIDTH = 480;
 
 type ReelsFeedProps = {
   productLine: ProductLineId;
@@ -85,6 +91,9 @@ export const ReelsFeed: React.FC<ReelsFeedProps> = ({ productLine }) => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [bookmarks, setBookmarks] = useState<Set<string>>(() => new Set());
   const [likes, setLikes] = useState<Set<string>>(() => new Set());
+  const [follows, setFollows] = useState<Set<string>>(() => new Set());
+  const [commentCounts, setCommentCounts] = useState<Record<string, number>>(() => ({}));
+  const [commentsReel, setCommentsReel] = useState<PlaybackReel | null>(null);
   const [hiddenKeys, setHiddenKeys] = useState<Set<string>>(() => new Set());
   const [bookmarkEntries, setBookmarkEntries] = useState<ReelBookmarkEntry[]>([]);
   const [extraSeeds, setExtraSeeds] = useState<ReelSeed[]>([]);
@@ -150,6 +159,8 @@ export const ReelsFeed: React.FC<ReelsFeedProps> = ({ productLine }) => {
   });
 
   const slideHeight = windowH - TAB_BAR_CONTENT_INSET;
+  const stageWidth = Math.min(windowW, STAGE_MAX_WIDTH);
+  const isWide = windowW > stageWidth + 24;
 
   const listExtraData = useMemo(
     () =>
@@ -183,9 +194,11 @@ export const ReelsFeed: React.FC<ReelsFeedProps> = ({ productLine }) => {
     setActorSeedsLoading(true);
     void (async () => {
       try {
-        const [bm, lk, hidden, resume, actorSeeds] = await Promise.all([
+        const [bm, lk, fl, counts, hidden, resume, actorSeeds] = await Promise.all([
           loadReelBookmarks(),
           loadReelLikes(),
+          loadReelFollows(),
+          loadReelCommentCounts(),
           loadHiddenReels(),
           loadReelResume(productLine, pole, theme),
           fetchActorReelSeeds({
@@ -195,6 +208,8 @@ export const ReelsFeed: React.FC<ReelsFeedProps> = ({ productLine }) => {
         ]);
         setBookmarks(bm);
         setLikes(lk);
+        setFollows(fl);
+        setCommentCounts(counts);
         setHiddenKeys(hidden);
         setBookmarkEntries(await loadReelBookmarkEntries());
         setResumeBookmarkKey(resume?.bookmarkKey);
@@ -245,6 +260,20 @@ export const ReelsFeed: React.FC<ReelsFeedProps> = ({ productLine }) => {
       return next;
     });
     if (persisted) trackV3Event('reel_like', { bookmarkKey });
+  }, []);
+
+  const onFollowToggle = useCallback((authorKey: string, next: boolean) => {
+    setFollows((prev) => {
+      const set = new Set(prev);
+      if (next) set.add(authorKey);
+      else set.delete(authorKey);
+      return set;
+    });
+    void toggleReelFollow(authorKey);
+  }, []);
+
+  const onCommentCountChange = useCallback((bookmarkKey: string, count: number) => {
+    setCommentCounts((prev) => ({ ...prev, [bookmarkKey]: count }));
   }, []);
 
   const onReported = useCallback(
@@ -361,12 +390,16 @@ export const ReelsFeed: React.FC<ReelsFeedProps> = ({ productLine }) => {
         reel={item}
         isActive={index === activeIndex}
         height={slideHeight}
-        width={windowW}
+        width={stageWidth}
         bookmarked={bookmarks.has(item.bookmarkKey)}
         liked={likes.has(item.bookmarkKey)}
+        following={follows.has(reelAuthorKey(item))}
+        commentCount={commentCounts[item.bookmarkKey] ?? 0}
         reporterUid={profile?.uid}
         onBookmarkToggle={(key) => onBookmarkToggle(key, item)}
         onLikeToggle={onLikeToggle}
+        onFollowToggle={onFollowToggle}
+        onOpenComments={setCommentsReel}
         onReported={onReported}
         onRetry={() => retryReel(item.id)}
       />
@@ -374,12 +407,15 @@ export const ReelsFeed: React.FC<ReelsFeedProps> = ({ productLine }) => {
     [
       activeIndex,
       slideHeight,
-      windowW,
+      stageWidth,
       bookmarks,
       likes,
+      follows,
+      commentCounts,
       profile?.uid,
       onBookmarkToggle,
       onLikeToggle,
+      onFollowToggle,
       onReported,
       retryReel,
     ],
@@ -391,91 +427,136 @@ export const ReelsFeed: React.FC<ReelsFeedProps> = ({ productLine }) => {
     </View>
   ) : null;
 
+  const commentSig = useMemo(
+    () => Object.values(commentCounts).reduce((sum, n) => sum + n, 0),
+    [commentCounts],
+  );
+
   return (
     <ProDayScreenCanvas immersive>
-      <FlatList
-        ref={listRef}
-        data={reels}
-        keyExtractor={(item) => item.id}
-        renderItem={renderItem}
-        pagingEnabled
-        showsVerticalScrollIndicator={false}
-        snapToInterval={slideHeight}
-        snapToAlignment="start"
-        decelerationRate="fast"
-        disableIntervalMomentum
-        onViewableItemsChanged={onViewableItemsChanged}
-        viewabilityConfig={viewabilityConfig}
-        getItemLayout={(_, index) => ({
-          length: slideHeight,
-          offset: slideHeight * index,
-          index,
-        })}
-        removeClippedSubviews={false}
-        windowSize={11}
-        maxToRenderPerBatch={6}
-        initialNumToRender={4}
-        initialScrollIndex={resumeIndex > 0 ? resumeIndex : undefined}
-        onScrollToIndexFailed={() => {}}
-        extraData={`${activeIndex}|${pole}|${theme}|${bookmarks.size}|${likes.size}|${listExtraData}`}
-        ListFooterComponent={ListFooter}
-        key={`${productLine}-${pole}-${theme}-${slideHeight}`}
-        style={styles.list}
-      />
-
-      {/* Voile haut — la marque et le contrôle restent lisibles sur vidéo claire */}
-      <LinearGradient
-        colors={['rgba(0,0,0,0.55)', 'transparent']}
-        style={[styles.topScrim, { height: insets.top + 96 }]}
-        pointerEvents="none"
-      />
-
-      <View style={[styles.topBar, { top: insets.top + spacing.sm }]} pointerEvents="box-none">
-        <View style={styles.brandRow} pointerEvents="none">
-          <ProDayText variant="brand" inverse style={styles.brandWord}>
-            {t('reels.title')}
-          </ProDayText>
-          <View style={[styles.brandTick, { backgroundColor: colors.accent }]} />
+      {/* Marges atmosphériques ProDay (noir + cyan) autour de la scène sur grand écran */}
+      {isWide ? (
+        <View style={StyleSheet.absoluteFill} pointerEvents="none">
+          <LinearGradient
+            colors={[
+              'rgba(34,211,238,0.10)',
+              'transparent',
+              'transparent',
+              'rgba(34,211,238,0.10)',
+            ]}
+            locations={[0, 0.32, 0.68, 1]}
+            start={{ x: 0, y: 0.5 }}
+            end={{ x: 1, y: 0.5 }}
+            style={StyleSheet.absoluteFill}
+          />
         </View>
+      ) : null}
 
-        <View style={styles.topActions}>
-          <PressableSpring
-            style={styles.collection}
-            scaleTo={0.97}
-            haptic
-            onPress={() => setCollectionOpen(true)}
-            accessibilityRole="button"
-            accessibilityLabel={t('reels.collection.title')}
-          >
-            <ProDayText variant="caption" inverse style={styles.collectionText} numberOfLines={1}>
-              {collectionLabel}
-            </ProDayText>
-            <Icon name="chevron-down" size={15} color="rgba(255,255,255,0.75)" />
-          </PressableSpring>
+      <View style={styles.stageWrap}>
+        <View
+          style={[styles.stage, { width: stageWidth }, isWide && styles.stageFramed]}
+          pointerEvents="box-none"
+        >
+          <FlatList
+            ref={listRef}
+            data={reels}
+            keyExtractor={(item) => item.id}
+            renderItem={renderItem}
+            pagingEnabled
+            showsVerticalScrollIndicator={false}
+            snapToInterval={slideHeight}
+            snapToAlignment="start"
+            decelerationRate="fast"
+            disableIntervalMomentum
+            onViewableItemsChanged={onViewableItemsChanged}
+            viewabilityConfig={viewabilityConfig}
+            getItemLayout={(_, index) => ({
+              length: slideHeight,
+              offset: slideHeight * index,
+              index,
+            })}
+            removeClippedSubviews={false}
+            windowSize={11}
+            maxToRenderPerBatch={6}
+            initialNumToRender={4}
+            initialScrollIndex={resumeIndex > 0 ? resumeIndex : undefined}
+            onScrollToIndexFailed={() => {}}
+            extraData={`${activeIndex}|${pole}|${theme}|${bookmarks.size}|${likes.size}|${follows.size}|${commentSig}|${listExtraData}`}
+            ListFooterComponent={ListFooter}
+            key={`${productLine}-${pole}-${theme}-${slideHeight}-${stageWidth}`}
+            style={styles.list}
+          />
 
-          {canUpload ? (
-            <PressableSpring
-              style={styles.create}
-              scaleTo={0.9}
-              haptic
-              onPress={() => setUploadOpen(true)}
-              accessibilityRole="button"
-              accessibilityLabel={t('reels.create')}
-            >
-              <Icon name="add" size={26} color="#fff" />
-            </PressableSpring>
+          {/* Voile haut — la marque et le contrôle restent lisibles sur vidéo claire */}
+          <LinearGradient
+            colors={['rgba(0,0,0,0.55)', 'transparent']}
+            style={[styles.topScrim, { height: insets.top + 96 }]}
+            pointerEvents="none"
+          />
+
+          <View style={[styles.topBar, { top: insets.top + spacing.sm }]} pointerEvents="box-none">
+            <View style={styles.brandRow} pointerEvents="none">
+              <ProDayText variant="brand" inverse style={styles.brandWord}>
+                {t('reels.title')}
+              </ProDayText>
+              <View style={[styles.brandTick, { backgroundColor: colors.accent }]} />
+            </View>
+
+            <View style={styles.topActions}>
+              <PressableSpring
+                style={styles.collection}
+                scaleTo={0.97}
+                haptic
+                onPress={() => setCollectionOpen(true)}
+                accessibilityRole="button"
+                accessibilityLabel={t('reels.collection.title')}
+              >
+                <ProDayText
+                  variant="caption"
+                  inverse
+                  style={styles.collectionText}
+                  numberOfLines={1}
+                >
+                  {collectionLabel}
+                </ProDayText>
+                <Icon name="chevron-down" size={15} color="rgba(255,255,255,0.75)" />
+              </PressableSpring>
+
+              {canUpload ? (
+                <PressableSpring
+                  style={styles.create}
+                  scaleTo={0.9}
+                  haptic
+                  onPress={() => setUploadOpen(true)}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('reels.create')}
+                >
+                  <Icon name="add" size={26} color="#fff" />
+                </PressableSpring>
+              ) : null}
+            </View>
+          </View>
+
+          {actorSeedsLoading || (hasSeeds && reels.length === 0) ? (
+            <ReelsEmptyState loading />
+          ) : !hasSeeds ? (
+            <ReelsEmptyState
+              canPublish={Boolean(canUpload)}
+              onPublish={() => setUploadOpen(true)}
+            />
           ) : null}
         </View>
       </View>
 
-      {actorSeedsLoading || (hasSeeds && reels.length === 0) ? (
-        <ReelsEmptyState loading />
-      ) : !hasSeeds ? (
-        <ReelsEmptyState
-          canPublish={Boolean(canUpload)}
-          onPublish={() => setUploadOpen(true)}
-        />
-      ) : null}
+      <ReelCommentsSheet
+        visible={Boolean(commentsReel)}
+        bookmarkKey={commentsReel?.bookmarkKey}
+        authorName={commentsReel?.authorName}
+        currentUserName={profile?.display_name}
+        currentUserUid={profile?.uid}
+        onClose={() => setCommentsReel(null)}
+        onCountChange={onCommentCountChange}
+      />
 
       <ReelCollectionSheet
         visible={collectionOpen}
@@ -526,6 +607,22 @@ export const ReelsFeed: React.FC<ReelsFeedProps> = ({ productLine }) => {
 };
 
 const styles = StyleSheet.create({
+  stageWrap: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stage: {
+    flex: 1,
+    alignSelf: 'center',
+    backgroundColor: '#000',
+  },
+  stageFramed: {
+    borderRadius: 30,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(34,211,238,0.16)',
+  },
   list: { flex: 1, backgroundColor: '#000' },
   footer: {
     alignItems: 'center',
