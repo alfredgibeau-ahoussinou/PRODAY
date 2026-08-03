@@ -16,7 +16,7 @@ export interface MatchRatingInput {
 }
 
 /**
- * Note Pulse ProDay (style Tonsser) — score 1.0–10.0 par match.
+ * Cote ProDay (note match) — score 1.0–10.0 par match.
  * Basée uniquement sur des données déclarées (pas de tracking GPS).
  */
 export function computeMatchPulseRating(input: MatchRatingInput): number {

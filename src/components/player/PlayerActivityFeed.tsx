@@ -142,7 +142,9 @@ export const PlayerActivityFeed: React.FC<PlayerActivityFeedProps> = ({
                   <ProDayText variant="caption" style={styles.rowTitle}>
                     {formatDate(act.date)} · {act.duration_min} min
                     {act.rating_pulse != null
-                      ? ` · Pulse ${formatPulseRating(act.rating_pulse)}`
+                      ? ` · ${t('activity.feed.pulseLabel', {
+                          score: formatPulseRating(act.rating_pulse),
+                        })}`
                       : ''}
                   </ProDayText>
                   {act.type === 'match' &&

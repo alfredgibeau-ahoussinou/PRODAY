@@ -114,7 +114,7 @@ export const playerPulseLeaderboardService = {
     }
   },
 
-  /** Team of the Week — joueurs mis à jour depuis le début de semaine, tri Pulse. */
+  /** Team of the Week — joueurs mis à jour depuis le début de semaine, tri cote. */
   async teamOfTheWeek(max = 11): Promise<PlayerPulseEntry[]> {
     if (!isFirebaseConfigured()) return [];
     const database = getDb();
