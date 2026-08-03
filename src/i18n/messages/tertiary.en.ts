@@ -102,6 +102,9 @@ export const TERTIARY_EN: MessageCatalog = {
   'signup.form.emailOAuthLocked':
     'Email from your Google or Apple sign-in — it cannot be changed here.',
   'signup.form.emailPlaceholder': 'you@example.com',
+  'signup.form.referralCode': 'Referral code (optional)',
+  'signup.form.referralCodePlaceholder': 'e.g. ABCD2345',
+  'signup.form.referralCodeHint': 'If a friend invited you, enter their code here.',
   'signup.form.cityRequired': 'City *',
   'signup.form.position': 'Position *',
   'signup.form.level': 'Level *',
@@ -406,6 +409,8 @@ export const TERTIARY_EN: MessageCatalog = {
   'profile.club.teamCalendar': 'Team calendar',
   'profile.diploma.badgeActive': 'Active badge',
   'profile.privacy': 'Privacy',
+  'profile.referral': 'Referrals',
+  'profile.referralSub': 'Invite 2 friends, earn 1 month Pro',
   'profile.section.cvSub': 'Your sports showcase — no PDF needed',
   'profile.section.position': 'My position',
   'profile.section.positionSub': 'Tap your zone on the pitch',

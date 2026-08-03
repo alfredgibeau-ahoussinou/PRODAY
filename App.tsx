@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { View, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, ActivityIndicator, Linking } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
 import {
@@ -80,6 +80,7 @@ import { isMedicalPractitionerRole } from './src/content/medicalExperience';
 import type { UserRole } from './src/models/User';
 import type { ProductLineId } from './src/models/ProductLine';
 import { trafficService } from './src/services/traffic.service';
+import { referralService } from './src/services/referral.service';
 
 void SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -116,6 +117,16 @@ export default function App() {
     if (!fontsLoaded) return;
     trafficService.recordAppOpenOnce();
   }, [fontsLoaded]);
+
+  useEffect(() => {
+    const capture = (url: string | null) => {
+      if (!url) return;
+      void referralService.savePendingCodeFromUrl(url);
+    };
+    void Linking.getInitialURL().then(capture);
+    const sub = Linking.addEventListener('url', ({ url }) => capture(url));
+    return () => sub.remove();
+  }, []);
 
   if (!fontsLoaded) {
     return null;

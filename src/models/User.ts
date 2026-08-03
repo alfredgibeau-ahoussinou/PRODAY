@@ -234,6 +234,18 @@ export interface User {
    * Voir `agentLaunchPricing.ts`.
    */
   agent_launch_offer?: boolean;
+
+  /** Code de parrainage unique (généré serveur). */
+  referral_code?: string;
+  /** Parrain (uid) — défini une fois à l’inscription via Cloud Function. */
+  referred_by_uid?: string;
+  referred_by_code?: string;
+  /** Progression vers la prochaine récompense (0 ou 1 ; reset après 2 filleuls abonnés). */
+  referral_progress?: number;
+  /** Nombre total de filleuls ayant souscrit. */
+  referral_total_subscribed?: number;
+  /** Nombre de mois Pro offerts déjà accordés. */
+  referral_rewards_earned?: number;
 }
 
 // Rôles nécessitant une vérification obligatoire (document + revue IA / admin)

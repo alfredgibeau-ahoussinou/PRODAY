@@ -6,6 +6,7 @@ import { BETA_PITCH } from "@/lib/content";
 import { IOS_BETA_LAUNCH_LABEL } from "@/lib/betaIosLaunch";
 import { BETA_ROLE_LABELS, type BetaRoleId } from "@/lib/betaWelcomeEmail";
 import { Reveal } from "./Reveal";
+import { readStoredReferralCode } from "./ReferralCapture";
 
 type WaitlistFormProps = {
   fullPage?: boolean;
@@ -44,7 +45,11 @@ export function WaitlistForm({ fullPage, compact, minimal, initialRole }: Waitli
       const res = await fetch("/api/beta", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: value, role }),
+        body: JSON.stringify({
+          email: value,
+          role,
+          referral_code: readStoredReferralCode() ?? undefined,
+        }),
       });
       const data = (await res.json().catch(() => ({}))) as {
         error?: string;

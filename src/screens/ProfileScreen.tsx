@@ -20,6 +20,8 @@ import { MyApplicationsScreen } from './MyApplicationsScreen';
 import { PlayerProfileScreen } from './PlayerProfileScreen';
 import { LegalDocumentScreen } from './LegalDocumentScreen';
 import type { LegalDocumentId } from '../content/legalDocuments';
+import { ReferralScreen } from './ReferralScreen';
+import { referralService } from '../services/referral.service';
 import { PlayerCvEditorScreen } from './PlayerCvEditorScreen';
 import { useOrganizerReminders } from '../hooks/useOrganizerReminders';
 import { teamEventsService } from '../services/teamEvents.service';
@@ -81,6 +83,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
   const [showPublicProfile, setShowPublicProfile] = useState(false);
   const [showCvEditor, setShowCvEditor] = useState(false);
   const [legalDocument, setLegalDocument] = useState<LegalDocumentId | null>(null);
+  const [showReferral, setShowReferral] = useState(false);
 
   useEffect(() => {
     maybeRecordProfileCompletion(profile);
@@ -442,6 +445,9 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
         <LegalDocumentScreen documentId={legalDocument} onBack={() => setLegalDocument(null)} />
       );
     }
+    if (showReferral && referralService.isEligibleRole(profile.role)) {
+      return <ReferralScreen onBack={() => setShowReferral(false)} />;
+    }
     return null;
   };
 
@@ -459,7 +465,8 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
     (showPublicProfile && profile.role === 'player') ||
     (showCvEditor && profile.role === 'player') ||
     (showApplications && profile.role === 'player') ||
-    legalDocument != null;
+    legalDocument != null ||
+    showReferral;
 
   return (
     <>
@@ -510,6 +517,11 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
         onJoinClub={() => setShowJoinClub(true)}
         onVerificationSuccess={() => setShowVerificationSuccess(true)}
         onLegal={(id) => setLegalDocument(id)}
+        onReferral={
+          referralService.isEligibleRole(profile.role)
+            ? () => setShowReferral(true)
+            : undefined
+        }
         onSignOut={handleSignOutPress}
         onSetAppSpace={(space) => void setAppSpace(space)}
         onGalleryAdd={handleGalleryAdd}

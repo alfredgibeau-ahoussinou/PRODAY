@@ -328,6 +328,8 @@ export const TERTIARY_FR: MessageCatalog = {
   'profile.pitch.hint': 'Appuyez sur votre zone pour définir votre position.',
   'profile.position.hint': 'Définissez votre position pour améliorer la visibilité du Mercato.',
   'profile.privacy': 'Confidentialité',
+  'profile.referral': 'Parrainage',
+  'profile.referralSub': 'Invitez 2 amis, gagnez 1 mois Pro',
   'profile.role.physio': 'Centre de santé',
   'profile.section.career': 'Parcours professionnel',
   'profile.section.careerSub': 'Expérience et qualifications',
@@ -407,6 +409,9 @@ export const TERTIARY_FR: MessageCatalog = {
   'signup.form.emailOAuthLocked':
     'Email fourni par votre connexion Google ou Apple. Il ne peut pas être modifié ici.',
   'signup.form.emailPlaceholder': 'vous@exemple.com',
+  'signup.form.referralCode': 'Code parrainage (optionnel)',
+  'signup.form.referralCodePlaceholder': 'Ex. ABCD2345',
+  'signup.form.referralCodeHint': 'Si un ami vous a invité, saisissez son code ici.',
   'signup.form.finalize': 'Finaliser mon accès',
   'signup.form.fixFields': 'Corrigez les champs en surbrillance avant de créer le compte.',
   'signup.form.guardianConsentMan': 'Je confirme que je suis mineur et que mon tuteur accepte la supervision du compte ProDay.',

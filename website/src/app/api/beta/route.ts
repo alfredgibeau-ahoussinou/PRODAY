@@ -10,7 +10,7 @@ import { applySecurityHeaders } from "@/lib/securityHeaders";
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const WAITLIST_RESPONSE_KEYS = ["ok", "status", "message", "error"] as const;
 
-type BetaPayload = { email?: string; role?: string };
+type BetaPayload = { email?: string; role?: string; referral_code?: string };
 
 const RATE_LIMIT = 10;
 const RATE_WINDOW_MS = 60_000;
@@ -65,6 +65,11 @@ export async function POST(request: Request) {
     .toLowerCase()
     .slice(0, MAX_BETA_EMAIL_LENGTH);
   const role = String(body.role ?? "player").trim().slice(0, 32);
+  const referralCode = String(body.referral_code ?? "")
+    .trim()
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, "")
+    .slice(0, 12);
 
   if (!EMAIL_RE.test(email)) {
     return jsonResponse({ error: "Email invalide" }, { status: 400 });
@@ -87,7 +92,11 @@ export async function POST(request: Request) {
   const upstream = await fetch(functionUrl, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, role }),
+    body: JSON.stringify({
+      email,
+      role,
+      ...(referralCode.length >= 6 ? { referral_code: referralCode } : {}),
+    }),
   });
   const data = (await upstream.json().catch(() => ({}))) as Record<
     string,

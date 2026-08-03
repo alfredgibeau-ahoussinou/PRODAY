@@ -97,6 +97,7 @@ export interface ProfileHomeScreenProps {
   onJoinClub: () => void;
   onVerificationSuccess: () => void;
   onLegal: (id: 'terms' | 'privacy') => void;
+  onReferral?: () => void;
   onSignOut: () => void;
   onSetAppSpace: (space: AppSpaceId) => void;
   onGalleryAdd: () => void;
@@ -538,6 +539,16 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
                 title=""
                 colors={colors}
                 items={[
+                  ...(props.onReferral
+                    ? [
+                        {
+                          icon: 'people' as const,
+                          title: t('profile.referral'),
+                          subtitle: t('profile.referralSub'),
+                          onPress: props.onReferral,
+                        },
+                      ]
+                    : []),
                   {
                     icon: 'document',
                     title: t('legal.terms'),

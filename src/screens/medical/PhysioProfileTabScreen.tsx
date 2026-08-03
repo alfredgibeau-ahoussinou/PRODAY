@@ -17,6 +17,7 @@ import { ProfileSubscriptionCard } from '../../components/profile/ProfileSubscri
 import { EditProfileScreen } from '../EditProfileScreen';
 import { VerificationFlowScreen } from '../VerificationFlowScreen';
 import { LegalDocumentScreen } from '../LegalDocumentScreen';
+import { ReferralScreen } from '../ReferralScreen';
 import { PhysioAvailabilityScreen } from './PhysioAvailabilityScreen';
 import type { LegalDocumentId } from '../../content/legalDocuments';
 import { isPhysioBookingEnabled } from '../../services/medicalAppointments.service';
@@ -39,6 +40,7 @@ export const PhysioProfileTabScreen: React.FC = () => {
   const [showVerification, setShowVerification] = useState(false);
   const [showAvailability, setShowAvailability] = useState(false);
   const [legalDocument, setLegalDocument] = useState<LegalDocumentId | null>(null);
+  const [showReferral, setShowReferral] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
   if (!profile) {
@@ -104,6 +106,12 @@ export const PhysioProfileTabScreen: React.FC = () => {
   ];
 
   const accountItems: ProfileMenuItem[] = [
+    {
+      title: 'Parrainage',
+      subtitle: 'Invitez 2 amis, gagnez 1 mois Pro',
+      icon: 'people',
+      onPress: () => setShowReferral(true),
+    },
     {
       title: 'Conditions générales',
       icon: 'document',
@@ -197,7 +205,9 @@ export const PhysioProfileTabScreen: React.FC = () => {
         </TouchableOpacity>
       </ScrollView>
 
-      <PushScreenTransition active={showEdit || showVerification || legalDocument != null || showAvailability}>
+      <PushScreenTransition
+        active={showEdit || showVerification || legalDocument != null || showAvailability || showReferral}
+      >
         {showEdit ? (
           <EditProfileScreen
             user={profile}
@@ -213,6 +223,8 @@ export const PhysioProfileTabScreen: React.FC = () => {
             onBack={() => setShowVerification(false)}
             initialSuccess={verified}
           />
+        ) : showReferral ? (
+          <ReferralScreen onBack={() => setShowReferral(false)} />
         ) : legalDocument ? (
           <LegalDocumentScreen
             documentId={legalDocument}
