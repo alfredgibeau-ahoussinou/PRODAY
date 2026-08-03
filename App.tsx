@@ -119,6 +119,12 @@ export default function App() {
   }, [fontsLoaded]);
 
   useEffect(() => {
+    void import('./src/services/revenueCat.service').then(({ revenueCatService }) => {
+      void revenueCatService.init();
+    });
+  }, []);
+
+  useEffect(() => {
     const capture = (url: string | null) => {
       if (!url) return;
       void referralService.savePendingCodeFromUrl(url);

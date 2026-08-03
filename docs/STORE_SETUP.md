@@ -58,9 +58,11 @@ Vérification automatique : `npm test -- iapProducts`
 2. Importer les **16 produits** (mêmes IDs que ci-dessus) depuis App Store Connect / Play Console.
 3. Créer un entitlement **`pro`** et y attacher tous les produits d’abonnement.
 4. (Optionnel) Offerings par rôle — l’app peut aussi acheter par `productIdentifier` direct.
-5. Clés publiques SDK → `.env` / EAS secrets :
-   - `EXPO_PUBLIC_REVENUECAT_IOS_API_KEY=appl_…`
-   - `EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY=goog_…`
+5. Clés publiques SDK → `.env` local (gitignoré) + **EAS secrets** (pas dans le repo) :
+   - Sandbox : `EXPO_PUBLIC_REVENUECAT_*_API_KEY=test_…`
+   - Prod : iOS `appl_…` / Android `goog_…`
+   - EAS : `eas secret:create --name EXPO_PUBLIC_REVENUECAT_IOS_API_KEY --value …` (idem Android)
+   - L’app appelle `revenueCatService.init()` au démarrage (`App.tsx`) → un seul `Purchases.configure` dans `revenueCat.service.ts` (`LOG_LEVEL.VERBOSE` uniquement en `__DEV__`).
 6. Webhook :
    - URL : `https://REGION-PROJECT.cloudfunctions.net/revenueCatWebhook`
    - Authorization : valeur = `REVENUECAT_WEBHOOK_AUTH` (functions `.env.<projectId>`)
