@@ -21,7 +21,7 @@ export interface PlayerActivity {
   minutes_played?: number;
   clean_sheet?: boolean;
   match_result?: MatchResult;
-  /** Note Pulse ProDay (algo type Tonsser) 1–10. */
+  /** Cote ProDay (algo note match) 1–10. */
   rating_pulse?: number;
   rating_self?: number;
   notes?: string;

@@ -33,7 +33,7 @@ const TYPES: PlayerActivityType[] = ['training', 'match', 'recovery'];
 const RESULTS: MatchResult[] = ['win', 'draw', 'loss'];
 const DRILL_PRESETS = ['technique', 'physique', 'tactique', 'gardien', 'set_pieces'] as const;
 
-/** Formulaire journal d'activité — match Tonsser-like + voix + Pulse. */
+/** Formulaire journal d'activité — match + voix + cote. */
 export const LogActivityScreen: React.FC<LogActivityScreenProps> = ({
   visible,
   uid,
