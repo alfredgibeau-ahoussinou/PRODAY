@@ -33,8 +33,8 @@ export const HomeIaHeader: React.FC<HomeIaHeaderProps> = ({
 }) => {
   const insets = useSafeAreaInsets();
   const { colors, productLine } = useAppTheme();
-  const { t } = useTranslation();
   const styles = useMemo(() => createStyles(colors), [colors]);
+  const { t } = useTranslation();
   const brand = brandForProductLine(productLine);
   const firstName = profile.display_name.split(' ')[0];
 
@@ -43,44 +43,58 @@ export const HomeIaHeader: React.FC<HomeIaHeaderProps> = ({
       <View style={styles.shell}>
         <ProDayGradient kind="cta" style={styles.accentBar} />
         <View style={[styles.wrap, { paddingTop: Math.max(insets.top, spacing.sm) }]}>
-          <View style={styles.left}>
+          <View style={styles.topBar}>
+            <ProDayText variant="caption" muted style={styles.caption} numberOfLines={1}>
+              {brand.name}
+            </ProDayText>
+            <View style={styles.actions}>
+              <View
+                style={[
+                  styles.scorePill,
+                  { backgroundColor: colors.accentSoft, borderColor: colors.accentMuted },
+                ]}
+              >
+                <ProDayText variant="caption" accent style={styles.scoreLabel}>
+                  {t('home.pulse')}
+                </ProDayText>
+                <ProDayText variant="section" accent style={styles.scoreValue}>
+                  {globalScore}
+                </ProDayText>
+              </View>
+              <ProDayShopButton compact />
+              <TopIconBtn
+                icon="notifications"
+                onPress={onNotificationsPress}
+                badge={notificationCount}
+              />
+            </View>
+          </View>
+
+          <View style={styles.identity}>
             <ProfileAvatarButton
               displayName={profile.display_name}
               avatarUrl={profile.avatar_url}
               onPress={onAvatarPress}
-              size={44}
+              size={52}
             />
             <View style={styles.copy}>
-              <ProDayText variant="caption" muted style={styles.caption}>
-                {brand.name}
-              </ProDayText>
-              <ProDayText variant="hero" style={styles.title}>
+              <ProDayText
+                variant="title"
+                style={styles.title}
+                numberOfLines={2}
+                adjustsFontSizeToFit
+                minimumFontScale={0.75}
+              >
                 {t('home.greeting', { name: firstName })}
               </ProDayText>
               {profile.city ? (
                 <PressableSpring onPress={onLocationPress} scaleTo={0.98}>
-                  <ProDayText variant="caption" accent style={styles.city}>
+                  <ProDayText variant="caption" accent style={styles.city} numberOfLines={1}>
                     {profile.city}
                   </ProDayText>
                 </PressableSpring>
               ) : null}
             </View>
-          </View>
-          <View style={styles.actions}>
-            <View style={[styles.scorePill, { backgroundColor: colors.accentSoft, borderColor: colors.accentMuted }]}>
-              <ProDayText variant="caption" accent style={styles.scoreLabel}>
-                {t('home.pulse')}
-              </ProDayText>
-              <ProDayText variant="section" accent style={styles.scoreValue}>
-                {globalScore}
-              </ProDayText>
-            </View>
-            <ProDayShopButton compact />
-            <TopIconBtn
-              icon="notifications"
-              onPress={onNotificationsPress}
-              badge={notificationCount}
-            />
           </View>
         </View>
       </View>
@@ -118,18 +132,27 @@ function createStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
     shell: { marginBottom: spacing.md },
     accentBar: { height: 4, width: '100%' },
     wrap: {
-      flexDirection: 'row',
-      alignItems: 'flex-start',
-      justifyContent: 'space-between',
       paddingHorizontal: spacing.lg,
       gap: spacing.md,
     },
-    left: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: spacing.sm, minWidth: 0 },
-    copy: { flex: 1, minWidth: 0, gap: 2 },
-    caption: { textTransform: 'uppercase', letterSpacing: 1, fontSize: 10 },
-    title: { fontWeight: '800', letterSpacing: -0.5 },
-    city: { fontWeight: '600', marginTop: 2 },
-    actions: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
+    topBar: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: spacing.sm,
+    },
+    caption: {
+      flexShrink: 1,
+      textTransform: 'uppercase',
+      letterSpacing: 1,
+      fontSize: 10,
+    },
+    actions: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      flexShrink: 0,
+      gap: spacing.xs,
+    },
     scorePill: {
       alignItems: 'center',
       paddingHorizontal: spacing.sm,
@@ -140,6 +163,25 @@ function createStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
     },
     scoreLabel: { fontSize: 9, fontWeight: '700', letterSpacing: 0.5 },
     scoreValue: { fontWeight: '800', lineHeight: 20 },
+    identity: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.md,
+      minWidth: 0,
+    },
+    copy: {
+      flex: 1,
+      flexShrink: 1,
+      minWidth: 0,
+      gap: 2,
+      justifyContent: 'center',
+    },
+    title: {
+      fontWeight: '800',
+      letterSpacing: -0.4,
+      flexShrink: 1,
+    },
+    city: { fontWeight: '600', marginTop: 2 },
   });
 }
 
