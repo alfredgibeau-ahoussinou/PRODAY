@@ -109,7 +109,7 @@ export default function SantePage() {
               Pôle santé Pro
             </h2>
             <p className={`mt-2 text-sm ${styles.textMuted}`}>
-              Formule découverte gratuite. Formule Pro pour la visibilité prioritaire.
+              Formule Pro : téléconsultation, agenda et visibilité prioritaire près des clubs.
             </p>
             <div className="mt-10">
               <PlanDetailCard plan={physioPlan} yearly={false} styles={styles} />
