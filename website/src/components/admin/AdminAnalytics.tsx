@@ -68,7 +68,7 @@ export function AdminAnalytics() {
     >
 
       {/* Sélecteur de période */}
-      <section className="mt-8 flex items-center justify-between">
+      <section className="flex items-center justify-between">
         <div className="flex gap-2">
           {(["7d", "30d", "90d"] as const).map((period) => (
             <button
@@ -91,7 +91,7 @@ export function AdminAnalytics() {
       </section>
 
       {/* KPIs principaux */}
-      <section className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
           <div className="flex items-center gap-3">
             <div className="rounded-full bg-blue-500/20 p-3">
@@ -109,8 +109,8 @@ export function AdminAnalytics() {
 
         <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
           <div className="flex items-center gap-3">
-            <div className="rounded-full bg-purple-500/20 p-3">
-              <Users className="text-purple-400" size={20} />
+            <div className="rounded-full bg-[#0054F0]/20 p-3">
+              <Users className="text-[#7AA7FF]" size={20} />
             </div>
             <div>
               <p className="text-sm text-white/60">Visiteurs uniques</p>
@@ -154,7 +154,7 @@ export function AdminAnalytics() {
       </section>
 
       {/* Pages les plus visitées */}
-      <section className="mt-8">
+      <section>
         <h2 className="mb-4 font-display text-lg font-semibold text-white">Pages les plus visitées</h2>
         <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03]">
           <table className="w-full">
@@ -205,7 +205,7 @@ export function AdminAnalytics() {
       </section>
 
       {/* Sources de trafic et appareils */}
-      <section className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <section className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
           <h3 className="mb-4 font-display text-lg font-semibold text-white">Sources de trafic</h3>
           <div className="space-y-4">
@@ -217,7 +217,7 @@ export function AdminAnalytics() {
                 </div>
                 <div className="h-2 rounded-full bg-white/10">
                   <div
-                    className="h-2 rounded-full bg-gradient-to-r from-blue-500 to-purple-500"
+                    className="h-2 rounded-full bg-gradient-to-r from-[#0038B0] to-[#0054F0]"
                     style={{ width: `${source.percentage}%` }}
                   />
                 </div>
@@ -248,7 +248,7 @@ export function AdminAnalytics() {
       </section>
 
       {/* Évolution journalière */}
-      <section className="mt-8">
+      <section>
         <h2 className="mb-4 font-display text-lg font-semibold text-white">Évolution journalière</h2>
         <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
           <div className="flex items-end gap-2 h-48">
@@ -264,7 +264,7 @@ export function AdminAnalytics() {
                       title={`${stat.views} vues`}
                     />
                     <div
-                      className="w-full rounded-b bg-purple-500/60 hover:bg-purple-500 transition cursor-pointer"
+                      className="w-full rounded-b bg-sky-500/50 transition hover:bg-sky-400 cursor-pointer"
                       style={{ height: `${height * 0.3}%` }}
                       title={`${stat.visitors} visiteurs`}
                     />
@@ -282,7 +282,7 @@ export function AdminAnalytics() {
               <span className="text-xs text-white/60">Vues</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="h-3 w-3 rounded bg-purple-500/60" />
+              <div className="h-3 w-3 rounded bg-sky-500/60" />
               <span className="text-xs text-white/60">Visiteurs</span>
             </div>
           </div>

@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
+import { AdminButton, AdminInput } from "@/components/admin/adminUi";
 
 export function AdminPinGate() {
   const router = useRouter();
@@ -37,51 +38,69 @@ export function AdminPinGate() {
   }
 
   return (
-    <main className="relative mx-auto flex min-h-[70vh] w-full max-w-md flex-col justify-center px-6 py-16">
-      <p className="font-[family-name:var(--font-syne)] text-xs font-semibold uppercase tracking-[0.22em] text-[#4C8BFF]">
-        ProDay · Fondateurs
-      </p>
-      <h1 className="mt-3 font-[family-name:var(--font-syne)] text-3xl font-bold tracking-tight text-white">
-        Espace admin bêta
-      </h1>
-      <p className="mt-3 text-sm leading-relaxed text-white/60">
-        Accès réservé aux 4 membres de l&apos;équipe. Saisissez le minicode
-        partagé pour ouvrir le tableau de bord fondateurs.
-      </p>
+    <main className="admin-shell relative flex min-h-screen items-center justify-center overflow-hidden px-5 py-16">
+      <div className="pointer-events-none absolute inset-0 bg-[#05070d]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(0,84,240,0.22),transparent_55%),radial-gradient(ellipse_at_bottom_right,rgba(10,20,48,0.65),transparent_45%)]" />
+      <div className="pointer-events-none absolute inset-0 opacity-[0.3] [background-image:linear-gradient(rgba(255,255,255,0.015)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.015)_1px,transparent_1px)] [background-size:64px_64px]" />
 
-      <form onSubmit={onSubmit} className="mt-10 space-y-5">
-        <label className="block">
-          <span className="mb-2 block text-xs font-medium uppercase tracking-wide text-white/50">
-            Minicode
+      <div className="relative w-full max-w-md overflow-hidden rounded-2xl border border-white/[0.09] bg-[#080b14]/92 p-7 shadow-[0_32px_90px_-30px_rgba(0,0,0,0.95),inset_0_1px_0_rgba(255,255,255,0.05)] backdrop-blur-sm sm:p-8">
+        <div className="mb-7 flex items-center gap-3">
+          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0054F0] text-xs font-bold tracking-wide text-white shadow-[0_0_0_1px_rgba(76,139,255,0.35),0_10px_28px_-10px_rgba(0,84,240,0.75)]">
+            PD
           </span>
-          <input
-            type="password"
-            inputMode="numeric"
-            autoComplete="one-time-code"
-            name="pin"
-            value={pin}
-            onChange={(e) => setPin(e.target.value)}
-            maxLength={32}
-            required
-            className="w-full rounded-xl border border-white/15 bg-white/[0.04] px-4 py-3.5 text-center font-[family-name:var(--font-syne)] text-2xl tracking-[0.35em] text-white outline-none transition focus:border-[#0054F0]/70 focus:ring-2 focus:ring-[#0054F0]/25"
-            placeholder="••••••"
-          />
-        </label>
+          <div>
+            <p className="font-display text-sm font-bold tracking-[0.14em] text-white">
+              PRODAY
+            </p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#7AA7FF]">
+              Admin fondateurs
+            </p>
+          </div>
+        </div>
 
-        {error ? (
-          <p className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-200">
-            {error}
-          </p>
-        ) : null}
+        <h1 className="font-display text-2xl font-bold tracking-tight text-white sm:text-[1.75rem]">
+          Espace admin bêta
+        </h1>
+        <p className="mt-2.5 text-sm leading-relaxed text-white/50">
+          Accès réservé aux 4 membres de l&apos;équipe. Saisissez le minicode
+          partagé pour ouvrir le tableau de bord.
+        </p>
 
-        <button
-          type="submit"
-          disabled={loading || !pin.trim()}
-          className="w-full rounded-full bg-[#0054F0] px-6 py-3.5 text-sm font-bold uppercase tracking-wide text-white transition hover:bg-[#2a6fff] disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {loading ? "Vérification…" : "Entrer"}
-        </button>
-      </form>
+        <form onSubmit={onSubmit} className="mt-8 space-y-5">
+          <label className="block">
+            <span className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.14em] text-white/40">
+              Minicode
+            </span>
+            <AdminInput
+              type="password"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              name="pin"
+              value={pin}
+              onChange={(e) => setPin(e.target.value)}
+              maxLength={32}
+              required
+              className="py-3.5 text-center font-display text-2xl tracking-[0.35em]"
+              placeholder="••••••"
+            />
+          </label>
+
+          {error ? (
+            <p className="rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2.5 text-sm text-red-200">
+              {error}
+            </p>
+          ) : null}
+
+          <AdminButton
+            type="submit"
+            variant="primary"
+            disabled={loading || !pin.trim()}
+            className="w-full py-3.5"
+          >
+            {loading ? "Vérification…" : "Entrer"}
+          </AdminButton>
+        </form>
+      </div>
     </main>
   );
 }

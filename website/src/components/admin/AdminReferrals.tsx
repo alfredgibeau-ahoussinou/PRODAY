@@ -5,6 +5,7 @@ import { Search } from "lucide-react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import {
   AdminBanner,
+  AdminInput,
   AdminKpiCard,
   AdminMockBadge,
   AdminTableShell,
@@ -67,7 +68,7 @@ export function AdminReferrals() {
         <code className="text-white/80">referrals</code> + stats user.
       </AdminBanner>
 
-      <section className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <section className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <AdminKpiCard label="Codes actifs (démo)" value={MOCK.length} accent="blue" />
         <AdminKpiCard
           label="Conversions"
@@ -77,44 +78,44 @@ export function AdminReferrals() {
         <AdminKpiCard
           label="Récompenses"
           value={MOCK.reduce((a, r) => a + r.rewardsEarned, 0)}
-          accent="violet"
+          accent="navy"
         />
       </section>
 
-      <div className="relative mt-8 max-w-md">
+      <div className="relative max-w-md">
         <Search
           size={16}
           className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-white/35"
         />
-        <input
+        <AdminInput
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Rechercher code ou email…"
-          className="w-full rounded-xl border border-white/10 bg-white/[0.04] py-2.5 pl-10 pr-3 text-sm text-white outline-none placeholder:text-white/35 focus:border-[#0054F0]/50"
+          className="pl-10"
         />
       </div>
 
       <AdminTableShell>
-        <table className="mt-4 w-full min-w-[760px] text-left text-sm">
-          <thead className="border-b border-white/10 text-xs uppercase tracking-wide text-white/40">
+        <table className="min-w-[760px]">
+          <thead>
             <tr>
-              <th className="px-4 py-3">Code</th>
-              <th className="px-4 py-3">Parrain</th>
-              <th className="px-4 py-3">Progression</th>
-              <th className="px-4 py-3">Abonnés</th>
-              <th className="px-4 py-3">Récompenses</th>
-              <th className="px-4 py-3">Maj</th>
+              <th>Code</th>
+              <th>Parrain</th>
+              <th>Progression</th>
+              <th>Abonnés</th>
+              <th>Récompenses</th>
+              <th>Maj</th>
             </tr>
           </thead>
           <tbody>
             {rows.map((r) => (
-              <tr key={r.id} className="border-b border-white/5">
-                <td className="px-4 py-3 font-mono font-semibold text-[#4C8BFF]">{r.code}</td>
-                <td className="px-4 py-3 text-white/80">{r.ownerEmail}</td>
-                <td className="px-4 py-3 text-white/70">{r.progress}/2</td>
-                <td className="px-4 py-3 text-white/70">{r.totalSubscribed}</td>
-                <td className="px-4 py-3 text-white/70">{r.rewardsEarned}</td>
-                <td className="px-4 py-3 text-white/50">{formatAdminDate(r.updatedAt)}</td>
+              <tr key={r.id}>
+                <td className="font-mono font-semibold text-[#7AA7FF]">{r.code}</td>
+                <td className="text-white/70">{r.ownerEmail}</td>
+                <td className="text-white/65">{r.progress}/2</td>
+                <td className="text-white/65">{r.totalSubscribed}</td>
+                <td className="text-white/65">{r.rewardsEarned}</td>
+                <td className="whitespace-nowrap text-white/45">{formatAdminDate(r.updatedAt)}</td>
               </tr>
             ))}
           </tbody>
