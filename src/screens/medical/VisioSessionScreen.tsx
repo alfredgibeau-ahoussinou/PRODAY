@@ -14,8 +14,11 @@ import { openExternalUrl } from '../../utils/calComBooking';
 import { PressableSpring } from '../../components/motion';
 import { ProDayText } from '../../components/ui/ProDayText';
 import { useAuth } from '../../context/AuthContext';
-import { resolveVisioJoinUrl } from '../../services/visio.service';
+import { resolveVisioJoinSession } from '../../services/visio.service';
 import { getCallableErrorMessage } from '../../lib/firebaseFunctions';
+import { isDailyMeetingLink } from '../../utils/visioMeetingLink';
+import { DailyVisioCall } from '../../components/medical/visio/DailyVisioCall';
+import { parseDailyJoinCredentials } from '../../components/medical/visio/parseDailyJoinCredentials';
 import type { MedicalAppointment } from '../../models/MedicalAppointment';
 
 type VisioSessionScreenProps = {
@@ -28,9 +31,8 @@ type VisioSessionScreenProps = {
 };
 
 /**
- * Téléconsultation santé.
- * Sur natif, Daily/Cal Video s'ouvrent dans le navigateur in-app (le WebView iOS
- * casse Daily avec about:srcdoc → « meeting does not exist »).
+ * Téléconsultation santé — Daily Call Object in-app (cam/mic/écran/chat).
+ * Cal Video reste en iframe (web) / navigateur (natif) en secours.
  */
 export const VisioSessionScreen: React.FC<VisioSessionScreenProps> = ({
   appointment,
@@ -40,11 +42,15 @@ export const VisioSessionScreen: React.FC<VisioSessionScreenProps> = ({
   const { profile } = useAuth();
   const { colors: c, rootStyle } = useMedicalStyles();
   const styles = useMemo(() => createStyles(c), [c]);
+  const [reloadKey, setReloadKey] = useState(0);
   const [loading, setLoading] = useState(true);
   const [failed, setFailed] = useState(false);
-  const [opened, setOpened] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [joinUrl, setJoinUrl] = useState<string | null>(null);
+  const [provider, setProvider] = useState<'daily' | 'cal' | null>(null);
+  const [roomUrl, setRoomUrl] = useState<string | null>(null);
+  const [token, setToken] = useState<string | null>(null);
+  const [callError, setCallError] = useState<string | null>(null);
 
   const fallbackLink =
     appointment.meeting_link?.trim() ||
@@ -55,18 +61,19 @@ export const VisioSessionScreen: React.FC<VisioSessionScreenProps> = ({
   const displayName = profile?.display_name?.trim() || 'Participant';
   const userEmail = profile?.email?.trim();
 
-  const openJoinUrl = useCallback(async (url: string) => {
-    if (Platform.OS === 'web') return;
+  const openExternalJoin = useCallback(async (url: string) => {
+    if (Platform.OS === 'web') {
+      await openExternalUrl(url).catch(() => undefined);
+      return;
+    }
     try {
       await WebBrowser.openBrowserAsync(url, {
         enableBarCollapsing: true,
         showTitle: true,
         controlsColor: MEDICAL_THEME.primary,
       });
-      setOpened(true);
     } catch {
       await openExternalUrl(url);
-      setOpened(true);
     }
   }, []);
 
@@ -83,11 +90,11 @@ export const VisioSessionScreen: React.FC<VisioSessionScreenProps> = ({
 
       setLoading(true);
       setFailed(false);
-      setOpened(false);
       setErrorMessage(null);
+      setCallError(null);
 
       try {
-        const url = await resolveVisioJoinUrl({
+        const session = await resolveVisioJoinSession({
           appointmentId: appointment.id,
           meetingLink: fallbackLink || `daily://${appointment.id}`,
           visioProvider: appointment.visio_provider,
@@ -98,12 +105,19 @@ export const VisioSessionScreen: React.FC<VisioSessionScreenProps> = ({
         });
         if (cancelled) return;
 
-        setJoinUrl(url);
-        setLoading(false);
+        setJoinUrl(session.joinUrl);
+        setProvider(session.provider === 'daily' ? 'daily' : 'cal');
+        setRoomUrl(session.roomUrl ?? null);
+        setToken(session.token ?? null);
 
-        if (Platform.OS !== 'web') {
-          await openJoinUrl(url);
+        if (session.provider !== 'daily') {
+          // Cal Video : pas de Call Object — iframe web / navigateur natif.
+          if (Platform.OS !== 'web') {
+            await openExternalJoin(session.joinUrl);
+          }
         }
+
+        setLoading(false);
       } catch (e) {
         if (!cancelled) {
           setFailed(true);
@@ -123,23 +137,30 @@ export const VisioSessionScreen: React.FC<VisioSessionScreenProps> = ({
     displayName,
     fallbackLink,
     isHost,
-    openJoinUrl,
+    openExternalJoin,
     profile?.uid,
+    reloadKey,
     userEmail,
   ]);
+
+  const dailyCredentials = useMemo(() => {
+    if (roomUrl && isDailyMeetingLink(roomUrl)) {
+      return { roomUrl, token };
+    }
+    if (joinUrl) return parseDailyJoinCredentials(joinUrl);
+    return null;
+  }, [joinUrl, roomUrl, token]);
+
+  const useDailyInApp = provider === 'daily' && Boolean(dailyCredentials?.roomUrl);
 
   const reopen = () => {
     const url = joinUrl ?? fallbackLink;
     if (!url) return;
-    if (Platform.OS === 'web') {
-      void openExternalUrl(url).catch(() => undefined);
-      return;
-    }
-    void openJoinUrl(url);
+    void openExternalJoin(url);
   };
 
-  const webIframe =
-    Platform.OS === 'web' && joinUrl ? (
+  const webCalIframe =
+    Platform.OS === 'web' && joinUrl && provider === 'cal' ? (
       React.createElement('iframe', {
         title: 'Consultation vidéo',
         src: joinUrl,
@@ -151,7 +172,6 @@ export const VisioSessionScreen: React.FC<VisioSessionScreenProps> = ({
           borderRadius: 12,
           backgroundColor: MEDICAL_THEME.primaryBg,
         },
-        onLoad: () => setLoading(false),
       })
     ) : null;
 
@@ -176,7 +196,16 @@ export const VisioSessionScreen: React.FC<VisioSessionScreenProps> = ({
               {errorMessage ??
                 'La salle n’a pas pu être créée. Réessayez dans un instant.'}
             </ProDayText>
-            <PressableSpring style={styles.fallbackBtn} onPress={reopen} scaleTo={0.97} haptic>
+            <PressableSpring
+              style={styles.fallbackBtn}
+              onPress={() => {
+                setFailed(false);
+                setErrorMessage(null);
+                setReloadKey((k) => k + 1);
+              }}
+              scaleTo={0.97}
+              haptic
+            >
               <ProDayText variant="caption" inverse style={styles.fallbackBtnText}>
                 Réessayer
               </ProDayText>
@@ -184,25 +213,41 @@ export const VisioSessionScreen: React.FC<VisioSessionScreenProps> = ({
           </View>
         ) : null}
 
-        {!failed && !loading && Platform.OS !== 'web' ? (
+        {!failed && !loading && useDailyInApp && dailyCredentials && profile?.uid ? (
+          <DailyVisioCall
+            roomUrl={dailyCredentials.roomUrl}
+            token={dailyCredentials.token}
+            joinUrl={joinUrl ?? undefined}
+            userName={displayName}
+            userId={profile.uid}
+            onLeft={onBack}
+            onFatalError={setCallError}
+          />
+        ) : null}
+
+        {!failed && !loading && !useDailyInApp && Platform.OS !== 'web' && provider === 'cal' ? (
           <View style={styles.fallback}>
-            <ProDayText variant="section">
-              {opened ? 'Visio ouverte' : 'Prêt à rejoindre'}
-            </ProDayText>
+            <ProDayText variant="section">Visio Cal Video</ProDayText>
             <ProDayText variant="body" muted style={styles.fallbackBody}>
-              {opened
-                ? 'La consultation s’est ouverte dans le navigateur. Autorisez caméra et micro, puis revenez ici à la fin.'
-                : 'Appuyez pour entrer directement dans la salle vidéo.'}
+              La consultation s’ouvre dans le navigateur. Autorisez caméra et micro.
             </ProDayText>
             <PressableSpring style={styles.fallbackBtn} onPress={reopen} scaleTo={0.97} haptic>
               <ProDayText variant="caption" inverse style={styles.fallbackBtnText}>
-                {opened ? 'Rouvrir la visio' : 'Rejoindre la visio'}
+                Rouvrir la visio
               </ProDayText>
             </PressableSpring>
           </View>
         ) : null}
 
-        {!failed && webIframe}
+        {!failed && webCalIframe}
+
+        {callError ? (
+          <View style={styles.callErrorBanner}>
+            <ProDayText variant="caption" style={styles.callErrorText}>
+              {callError}
+            </ProDayText>
+          </View>
+        ) : null}
       </View>
     </View>
   );
@@ -225,6 +270,7 @@ function createStyles(c: import('../../theme/universeTheme').AppColors) {
       alignItems: 'center',
       justifyContent: 'center',
       gap: spacing.sm,
+      zIndex: 2,
     },
     loaderText: { marginTop: spacing.xs },
     fallback: {
@@ -243,5 +289,16 @@ function createStyles(c: import('../../theme/universeTheme').AppColors) {
       paddingVertical: spacing.sm + 2,
     },
     fallbackBtnText: { fontWeight: '800' },
+    callErrorBanner: {
+      position: 'absolute',
+      top: spacing.sm,
+      left: spacing.sm,
+      right: spacing.sm,
+      backgroundColor: 'rgba(127, 29, 29, 0.92)',
+      borderRadius: radius.md,
+      padding: spacing.sm,
+      zIndex: 5,
+    },
+    callErrorText: { color: '#FFF', textAlign: 'center' },
   });
 }

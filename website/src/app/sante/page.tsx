@@ -29,7 +29,7 @@ const SANTE_PILLARS = [
   {
     num: "03",
     title: "Téléconsultation HDS",
-    body: "Visio via partenaire conforme (Cal.com / Whereby). Distinct des vidéos éducatives.",
+    body: "Visio Daily sécurisée dans l’app (caméra, micro, écran, chat). Distinct des vidéos éducatives.",
   },
   {
     num: "04",

@@ -52,7 +52,7 @@ const COMMON_ENTRIES: HelpEntry[] = [
     id: "sante-hds",
     question: "Qui reçoit les rendez-vous santé ?",
     answer:
-      "Les professionnels du pôle Santé (chacun son Cal.com). Les joueurs / sportifs n’ont pas besoin de compte Cal.com. Ils réservent comme invités. Visio conforme (Cal.com / Whereby), pas Zoom.",
+      "Les professionnels du pôle Santé (chacun son Cal.com). Les joueurs / sportifs n’ont pas besoin de compte Cal.com. Ils réservent comme invités. Visio Daily sécurisée dans l’app (pas Zoom).",
     href: `${ROUTES.sante}#teleconsultation`,
     hrefLabel: "Voir la téléconsultation",
   },

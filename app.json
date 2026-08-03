@@ -18,7 +18,13 @@
       "associatedDomains": [
         "applinks:proday75.fr",
         "applinks:www.proday75.fr"
-      ]
+      ],
+      "infoPlist": {
+        "UIBackgroundModes": ["voip", "audio"],
+        "NSCameraUsageDescription": "ProDay utilise la caméra pour la téléconsultation Santé et la vérification d’identité.",
+        "NSMicrophoneUsageDescription": "ProDay utilise le micro pour la téléconsultation Santé (audio de l’appel).",
+        "NSLocalNetworkUsageDescription": "ProDay utilise le réseau local pour améliorer la qualité de la téléconsultation."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -36,10 +42,18 @@
     "plugins": [
       "expo-apple-authentication",
       [
+        "@daily-co/config-plugin-rn-daily-js",
+        {
+          "enableCamera": true,
+          "enableMicrophone": true,
+          "enableScreenShare": true
+        }
+      ],
+      [
         "expo-image-picker",
         {
           "photosPermission": "ProDay accède à vos photos pour votre avatar et votre galerie joueur.",
-          "cameraPermission": "ProDay utilise la caméra pour photographier votre pièce d'identité ou passeport lors de la vérification."
+          "cameraPermission": "ProDay utilise la caméra pour la téléconsultation Santé et la vérification d’identité."
         }
       ],
       [

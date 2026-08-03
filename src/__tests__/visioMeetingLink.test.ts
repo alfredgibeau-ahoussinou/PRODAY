@@ -132,3 +132,22 @@ describe('visioMeetingLink', () => {
     expect(isJoinableVisioMeetingLink('https://cal.com/cabinet?date=2026-07-20')).toBe(false);
   });
 });
+
+describe('parseDailyJoinCredentials', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { parseDailyJoinCredentials } = require('../components/medical/visio/parseDailyJoinCredentials');
+
+  it('extrait roomUrl et token', () => {
+    const parsed = parseDailyJoinCredentials(
+      'https://proday.daily.co/proday-rdv-42?t=tok123&userName=Jean&enablePrejoinUI=false'
+    );
+    expect(parsed).toEqual({
+      roomUrl: 'https://proday.daily.co/proday-rdv-42',
+      token: 'tok123',
+    });
+  });
+
+  it('ignore les URLs non Daily', () => {
+    expect(parseDailyJoinCredentials('https://app.cal.com/video/abc')).toBeNull();
+  });
+});
