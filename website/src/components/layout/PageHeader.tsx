@@ -29,6 +29,7 @@ const ACCENT_GRADIENTS: Record<PageAccent, string> = {
   pro: "bg-gradient-to-br from-[#002478] via-black to-black text-white",
   pro_club: "bg-gradient-to-br from-[#002478] via-black to-black text-white",
   pro_staff: "bg-gradient-to-br from-[#001848] via-black to-black text-white",
+  evenements: "bg-gradient-to-br from-[#0e4a5c] via-black to-black text-white",
   sante: "bg-gradient-to-br from-[#006C60] via-black to-black text-white",
   sponsor: "bg-gradient-to-br from-[#0c0a06] via-[#1a1508] to-black text-white",
 };
@@ -42,6 +43,7 @@ const ACCENT_OVERLAYS: Record<PageAccent, string> = {
   pro: "bg-gradient-to-r from-[#002478]/92 via-black/50 to-transparent",
   pro_club: "bg-gradient-to-r from-[#002478]/92 via-black/50 to-transparent",
   pro_staff: "bg-gradient-to-r from-[#001848]/92 via-black/50 to-transparent",
+  evenements: "bg-gradient-to-r from-[#0e4a5c]/92 via-black/50 to-transparent",
   sante: "bg-gradient-to-r from-[#006C60]/92 via-black/50 to-transparent",
   sponsor: "bg-gradient-to-r from-[#0c0a06]/95 via-black/60 to-transparent",
 };
@@ -55,6 +57,7 @@ const ACCENT_KICKER: Record<PageAccent, string> = {
   pro: "text-[#006CFC]",
   pro_club: "text-[#006CFC]",
   pro_staff: "text-[#3B5BFF]",
+  evenements: "text-[#22D3EE]",
   sante: "text-[#00CCB4]",
   sponsor: "text-[#D4AF37]",
 };
@@ -68,6 +71,7 @@ const ACCENT_RULE: Record<PageAccent, string> = {
   pro: "bg-[#006CFC]",
   pro_club: "bg-[#006CFC]",
   pro_staff: "bg-[#3B5BFF]",
+  evenements: "bg-[#0891B2]",
   sante: "bg-[#00CCB4]",
   sponsor: "bg-[#D4AF37]",
 };

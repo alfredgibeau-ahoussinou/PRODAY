@@ -206,19 +206,26 @@ const BY_POLE: Record<DemoPoleId, Partial<Record<MainTabId, DemoScreenMock>>> = 
       title: "Événements",
       subtitle: "Tournois, académies, camps et détections.",
       focus: [
-        { title: "Tournoi U15", body: "Inscriptions ouvertes (démo)." },
-        { title: "Détection samedi", body: "Liste d’attente illustrative." },
+        { title: "Créer un événement", body: "Type, capacité, prix inscription." },
+        { title: "Tournoi U15", body: "Inscriptions ouvertes · Stripe." },
+        { title: "Détection samedi", body: "Liste d’attente auto." },
       ],
     },
     matchs: {
       title: "Calendrier",
       subtitle: "Vos événements publiés.",
-      focus: [{ title: "Showcase · dim.", body: "Stade municipal." }],
+      focus: [
+        { title: "Showcase · dim.", body: "Stade municipal." },
+        { title: "Résultats", body: "Publier le classement." },
+      ],
     },
     recrutement: {
       title: "Inscriptions",
       subtitle: "Listes et capacités.",
-      focus: [{ title: "42 inscrits", body: "8 en waitlist." }],
+      focus: [
+        { title: "42 inscrits", body: "8 en waitlist." },
+        { title: "Paiements", body: "Checkout ou marquage manuel." },
+      ],
     },
     messages: {
       title: "Messages",
@@ -228,7 +235,10 @@ const BY_POLE: Record<DemoPoleId, Partial<Record<MainTabId, DemoScreenMock>>> = 
     profil: {
       title: "Orga",
       subtitle: "Profil organisateur.",
-      focus: [{ title: "Compte vérifié", body: "Statut illustratif." }],
+      focus: [
+        { title: "Compte vérifié", body: "Statut illustratif." },
+        { title: "Médias", body: "Liens photo / vidéo partagés." },
+      ],
     },
   },
 };

@@ -12,6 +12,7 @@ export type PageAccent =
   | "pro"
   | "pro_club"
   | "pro_staff"
+  | "evenements"
   | "sante"
   | "sponsor";
 
@@ -110,7 +111,7 @@ export const SITE_PAGES: Record<string, PageMeta> = {
     path: ROUTES.evenements,
     poleId: "evenements",
     category: "pole",
-    accent: "pro",
+    accent: "evenements",
     siblingLinks: ECOSYSTEM_SIBLINGS.filter((l) => l.href !== ROUTES.evenements),
   },
   [ROUTES.pro]: {

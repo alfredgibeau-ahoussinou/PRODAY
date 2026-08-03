@@ -41,9 +41,11 @@ ProDay = écosystème foot complet : joueurs, clubs, agents, staff, académies, 
 - Joueur ↔ agent → `pending` jusqu’à accept / refuse
 - Conversation active seulement si `accepted`
 
-### 8. Pôle Événements (scaffolding)
+### 8. Pôle Événements
 - Carousel + page `/evenements` + modèle `OrganizerEvent` / `EventRegistration`
-- TODO : paiements Stripe/IAP, listes live, résultats, médias natifs
+- Service Firestore (`organizer_events`, `event_registrations`) + rules/indexes
+- App : création, inscriptions, listes, résultats, médias, partage
+- Paiements : callable `createEventRegistrationCheckoutSession` (Stripe) + marquage manuel
 
 ## Fichiers clés
 
@@ -54,10 +56,12 @@ ProDay = écosystème foot complet : joueurs, clubs, agents, staff, académies, 
 | Privacy | `src/models/ContactPrivacy.ts`, `src/utils/contactPrivacyVisibility.ts` |
 | Messaging | `src/models/MessageRequest.ts`, `src/utils/messageRequestState.ts` |
 | Pipeline | `src/models/ClubApplicationPipeline.ts`, `src/utils/clubApplicationPipeline.ts` |
-| Events | `src/models/EventOrganizer.ts` |
+| Events | `src/models/EventOrganizer.ts`, `src/services/eventOrganizer.service.ts` |
+| Events UI | `CreateOrganizerEventScreen`, `OrganizerEventsScreen`, `OrganizerEventDetailScreen` |
+| Events pay | `functions/src/eventRegistrationPayments.ts` |
 | Carousel app | `src/models/CarouselPole.ts` |
 | Site | `website/src/lib/poles.ts`, `routes.ts`, `/joueur`, `/evenements` |
-| Tests | `src/__tests__/ecosystemPolesEvolution.test.ts` |
+| Tests | `src/__tests__/ecosystemPolesEvolution.test.ts`, `eventOrganizerScaffold.test.ts` |
 
 ## Suivi produit (suite)
 
@@ -66,10 +70,12 @@ ProDay = écosystème foot complet : joueurs, clubs, agents, staff, académies, 
 2. Firestore rules + indexes : `message_requests`, `request_status` sur threads, `player_level`
 3. Compteur seats agent : callable `claimAgentLaunchSeat` + hook `activateStoreSubscription` (`platform_config/agent_launch`)
 4. Migration : `npm run migrate:joueur-pole -- --dry-run` puis `--confirm`
-5. Événements : helpers listes/résultats (`eventOrganizerScaffold`) — paiements toujours TODO
+5. Événements : helpers listes/résultats (`eventOrganizerScaffold`)
+6. Événements produit : CRUD + inscriptions + Stripe Checkout + résultats/médias (branche `feature/pole-evenements`)
 
 ### Restant
-- Paiements Pôle Événements (Stripe / IAP)
-- UI organisateur native (création événement, listes live)
+- Upload média natif (galerie appareil) — aujourd’hui liens URL
+- Deep-link return handler `proday://events` (marquer UI après Checkout)
+- Export CSV listes d’inscrits
 - Déployer rules/indexes/functions (`firebase deploy --only firestore,functions`)
 - Affiner `canResolveRequests` (vérifier recipient_uid vs requester_uid côté UI)
