@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -45,9 +45,19 @@ import {
 import { useAppTheme } from '../../context/ProductLineContext';
 import { useTranslation } from '../../context/LocaleContext';
 import { TAB_BAR_CONTENT_INSET } from '../../navigation/tabBarLayout';
-import { SkeletonList, InteractiveListItem } from '../motion';
+import { SkeletonList, InteractiveListItem, PressableSpring } from '../motion';
 import { spacing } from '../../theme/designTokens';
 import { TabScreenShell } from '../app/TabScreenShell';
+import { CarpoolDiscoverDeck } from './CarpoolDiscoverDeck';
+import { CarpoolLiveMission } from './CarpoolLiveMission';
+import { CarpoolModeSwitcher, type CarpoolHubMode } from './CarpoolModeSwitcher';
+import {
+  findActiveCarpoolTripsForUser,
+  type ActiveCarpoolTripRef,
+} from '../../utils/carpoolActiveTrips';
+import { isTripActive } from '../../utils/carpoolLiveTrip';
+import { carpoolOffersService } from '../../services/carpoolOffers.service';
+import { teamEventsService } from '../../services/teamEvents.service';
 import {
   buildCarpoolRideRecommendations,
   sortCarpoolRides,
@@ -118,6 +128,33 @@ export const CarpoolHomeScreen: React.FC<CarpoolHomeScreenProps> = ({
   const [standaloneClubOnly, setStandaloneClubOnly] = useState(false);
   const [myTripsTab, setMyTripsTab] = useState<'upcoming' | 'past'>('upcoming');
   const [refreshing, setRefreshing] = useState(false);
+
+  // Le hub (Passager / Conducteur / Live) reflète le chapitre actif et le pilote,
+  // sans écraser le chapitre initial au montage.
+  const hubMode: CarpoolHubMode =
+    chapter === 'proposer'
+      ? 'drive'
+      : chapter === 'mes_trajets' || chapter === 'equipe'
+        ? 'live'
+        : 'ride';
+
+  const setHubMode = useCallback((mode: CarpoolHubMode) => {
+    if (mode === 'ride') setChapter('reserver');
+    else if (mode === 'drive') setChapter('proposer');
+    else setChapter('mes_trajets');
+  }, []);
+
+  const activeTrips = useMemo(() => {
+    if (!profile) return [] as ActiveCarpoolTripRef[];
+    return findActiveCarpoolTripsForUser(
+      profile.uid,
+      events,
+      standaloneAllOffers.length ? standaloneAllOffers : standaloneOffers,
+    );
+  }, [profile, events, standaloneAllOffers, standaloneOffers]);
+
+  const hasLiveTrip = activeTrips.some((trip) => isTripActive(trip.tripStatus));
+
 
   const upcoming = useMemo(() => {
     const now = Date.now() - 6 * 60 * 60 * 1000;
@@ -262,8 +299,75 @@ export const CarpoolHomeScreen: React.FC<CarpoolHomeScreenProps> = ({
     keyboardShouldPersistTaps: 'handled' as const,
   };
 
-  const openReserveTab = () => setChapter('reserver');
-  const openProposerTab = () => setChapter('proposer');
+  const openReserveTab = () => {
+    setHubMode('ride');
+    setChapter('reserver');
+  };
+  const openProposerTab = () => {
+    setHubMode('drive');
+    setChapter('proposer');
+  };
+
+  const startActiveTrip = useCallback(
+    async (ref: ActiveCarpoolTripRef) => {
+      if (ref.kind === 'standalone') {
+        await carpoolOffersService.startTrip(ref.offer.id, ref.driverUid);
+      } else {
+        await teamEventsService.startCarpoolTrip(ref.event.id, ref.driverUid);
+      }
+      onRefresh();
+    },
+    [onRefresh],
+  );
+
+  const endActiveTrip = useCallback(
+    async (ref: ActiveCarpoolTripRef) => {
+      if (ref.kind === 'standalone') {
+        await carpoolOffersService.endTrip(ref.offer.id, ref.driverUid);
+      } else {
+        await teamEventsService.endCarpoolTrip(ref.event.id, ref.driverUid);
+      }
+      onRefresh();
+    },
+    [onRefresh],
+  );
+
+  const liveMissionProps = useCallback(
+    (ref: ActiveCarpoolTripRef) => {
+      const common = {
+        tripId: ref.tripId,
+        viewerUid: profile?.uid ?? '',
+        driverUid: ref.driverUid,
+        driverName: ref.driverName,
+        tripStatus: ref.tripStatus,
+        onStartTrip: () => startActiveTrip(ref),
+        onEndTrip: () => endActiveTrip(ref),
+        onTripChanged: onRefresh,
+      };
+      if (ref.kind === 'standalone') {
+        return {
+          ...common,
+          passengers: ref.offer.passengers,
+          title: ref.offer.title,
+          meetingPlace: ref.offer.meeting_place,
+          meetingLocation: ref.offer.meeting_location,
+          destinationLabel: ref.offer.destination_label,
+          destinationLocation: ref.offer.destination_location,
+        };
+      }
+      return {
+        ...common,
+        passengers: ref.slot.passengers,
+        title: ref.event.title,
+        meetingPlace: ref.slot.meeting_place,
+        meetingLocation: ref.slot.meeting_location,
+        destinationLabel: [ref.event.location_label, ref.event.city]
+          .filter(Boolean)
+          .join(' · '),
+      };
+    },
+    [profile?.uid, startActiveTrip, endActiveTrip, onRefresh],
+  );
 
   const pages = useMemo(
     () => [
@@ -377,16 +481,16 @@ export const CarpoolHomeScreen: React.FC<CarpoolHomeScreenProps> = ({
                   value={standaloneClubOnly ? 'club' : 'all'}
                   onChange={(id) => setStandaloneClubOnly(id === 'club')}
                 />
-                {bookableStandalone.map((offer, index) => (
-                  <InteractiveListItem key={`standalone-${offer.id}`} index={index}>
-                    <StandaloneCarpoolRideCard
-                      offer={offer}
+                {bookableStandalone.length > 0 ? (
+                  <View style={styles.deckBleed}>
+                    <CarpoolDiscoverDeck
+                      offers={bookableStandalone}
                       profile={profile}
                       driverHistory={standaloneAllOffers}
                       onUpdated={onRefresh}
                     />
-                  </InteractiveListItem>
-                ))}
+                  </View>
+                ) : null}
                 {sortedAvailableRides.map(({ event, slot }, index) => {
                 const rec = findCarpoolRec(carpoolRecs, event.id, slot.driver_uid);
                 const trip = summarizeCarpoolTrip({
@@ -503,6 +607,7 @@ export const CarpoolHomeScreen: React.FC<CarpoolHomeScreenProps> = ({
       loading,
       standaloneLoading,
       standaloneOffers,
+      standaloneAllOffers,
       filtered,
       myTrips,
       myStandaloneTrips,
@@ -538,6 +643,20 @@ export const CarpoolHomeScreen: React.FC<CarpoolHomeScreenProps> = ({
 
   const body = (
     <>
+      <View style={styles.hub}>
+        <CarpoolModeSwitcher mode={hubMode} onChange={setHubMode} liveActive={hasLiveTrip} />
+        {profile && activeTrips.length > 0 ? (
+          <View style={styles.liveHero}>
+            <ProDayText variant="caption" accent style={styles.liveHeroLabel}>
+              {t('carpool.hub.activeSection', { n: activeTrips.length })}
+            </ProDayText>
+            {activeTrips.slice(0, 2).map((ref) => (
+              <CarpoolLiveMission key={ref.tripId} {...liveMissionProps(ref)} compact />
+            ))}
+          </View>
+        ) : null}
+      </View>
+
       {reminderEvents.length > 0 ? (
         <CarpoolReminderBanner
           count={reminderEvents.length}
@@ -586,4 +705,13 @@ export const CarpoolHomeScreen: React.FC<CarpoolHomeScreenProps> = ({
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
+  hub: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.sm,
+    gap: spacing.sm,
+  },
+  liveHero: { gap: spacing.sm },
+  liveHeroLabel: { fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.5 },
+  deckBleed: { marginHorizontal: -spacing.lg, marginBottom: spacing.sm },
 });
