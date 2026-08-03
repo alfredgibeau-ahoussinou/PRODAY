@@ -29,8 +29,19 @@ export const PhysioScreenHeader: React.FC<PhysioScreenHeaderProps> = ({
         <Icon name="heart" size={14} color={c.accent} variant="filled" />
         <Text style={styles.badgeText}>{label}</Text>
       </View>
-      <Text style={styles.title}>{title}</Text>
-      {subtitle ? <Text style={styles.sub}>{subtitle}</Text> : null}
+      <Text
+        style={styles.title}
+        numberOfLines={2}
+        adjustsFontSizeToFit
+        minimumFontScale={0.75}
+      >
+        {title}
+      </Text>
+      {subtitle ? (
+        <Text style={styles.sub} numberOfLines={3}>
+          {subtitle}
+        </Text>
+      ) : null}
     </View>
   );
 };
@@ -64,9 +75,11 @@ function createStyles(c: AppColors) {
       textTransform: 'uppercase',
     },
     title: {
-      fontSize: 24,
-      fontWeight: '900',
+      fontSize: 20,
+      lineHeight: 24,
+      fontWeight: '800',
       color: c.text,
+      flexShrink: 1,
     },
     sub: {
       fontSize: 14,

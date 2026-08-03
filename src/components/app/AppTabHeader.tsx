@@ -45,15 +45,21 @@ export const AppTabHeader: React.FC<AppTabHeaderProps> = ({
       <View style={styles.row}>
         <View style={styles.copy}>
           {caption ? (
-            <ProDayText variant="caption" muted style={styles.caption}>
+            <ProDayText variant="caption" muted style={styles.caption} numberOfLines={1}>
               {caption}
             </ProDayText>
           ) : null}
-          <ProDayText variant="hero" style={styles.title}>
+          <ProDayText
+            variant="title"
+            style={styles.title}
+            numberOfLines={2}
+            adjustsFontSizeToFit
+            minimumFontScale={0.75}
+          >
             {title}
           </ProDayText>
           {subtitle ? (
-            <ProDayText variant="body" muted style={styles.subtitle}>
+            <ProDayText variant="body" muted style={styles.subtitle} numberOfLines={3}>
               {subtitle}
             </ProDayText>
           ) : null}
@@ -91,19 +97,19 @@ function createStyles(c: { surface: string; border: string; background: string }
       alignItems: 'flex-start',
       gap: spacing.md,
     },
-    copy: { flex: 1, minWidth: 0 },
+    copy: { flex: 1, flexShrink: 1, minWidth: 0 },
     caption: {
       fontWeight: '700',
       textTransform: 'uppercase',
       letterSpacing: 0.5,
       fontSize: 11,
       marginBottom: 2,
+      flexShrink: 1,
     },
     title: {
-      fontSize: 28,
-      lineHeight: 32,
       fontWeight: '800',
-      letterSpacing: -0.6,
+      letterSpacing: -0.4,
+      flexShrink: 1,
     },
     subtitle: {
       marginTop: 4,
@@ -113,6 +119,7 @@ function createStyles(c: { surface: string; border: string; background: string }
     right: {
       flexDirection: 'row',
       alignItems: 'center',
+      flexShrink: 0,
       gap: spacing.xs,
       paddingTop: 4,
     },

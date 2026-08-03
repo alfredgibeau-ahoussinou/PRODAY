@@ -88,7 +88,7 @@ export const ProfileIdentityHeader: React.FC<ProfileIdentityHeaderProps> = ({
             size={avatarSize}
           />
           <View style={styles.compactCopy}>
-            <ProDayText variant="section" numberOfLines={1} style={styles.compactName}>
+            <ProDayText variant="section" numberOfLines={2} adjustsFontSizeToFit minimumFontScale={0.8} style={styles.compactName}>
               {profile.display_name}
             </ProDayText>
             <ProDayText variant="caption" muted numberOfLines={1}>
@@ -151,10 +151,10 @@ export const ProfileIdentityHeader: React.FC<ProfileIdentityHeaderProps> = ({
       <View style={[styles.shell, { paddingTop: Math.max(insets.top, spacing.sm) }]}>
         <View style={styles.topRow}>
           <View style={styles.titleBlock}>
-            <ProDayText variant="caption" muted style={styles.caption}>
+            <ProDayText variant="caption" muted style={styles.caption} numberOfLines={1}>
               {brand.productName}
             </ProDayText>
-            <ProDayText variant="hero" style={styles.screenTitle}>
+            <ProDayText variant="title" style={styles.screenTitle} numberOfLines={1}>
               Profil
             </ProDayText>
           </View>
@@ -181,7 +181,13 @@ export const ProfileIdentityHeader: React.FC<ProfileIdentityHeaderProps> = ({
               size={avatarSize}
             />
             <View style={styles.copy}>
-              <ProDayText variant="title" numberOfLines={2} style={styles.heroName}>
+              <ProDayText
+                variant="title"
+                numberOfLines={2}
+                adjustsFontSizeToFit
+                minimumFontScale={0.75}
+                style={styles.heroName}
+              >
                 {profile.display_name}
               </ProDayText>
               <ProDayText variant="caption" muted numberOfLines={1}>
@@ -315,8 +321,8 @@ function createStyles(c: AppColors, compact: boolean) {
       alignItems: 'center',
       gap: spacing.sm,
     },
-    compactCopy: { flex: 1, minWidth: 0, gap: 1 },
-    compactName: { fontWeight: '900', fontSize: 16 },
+    compactCopy: { flex: 1, flexShrink: 1, minWidth: 0, gap: 1 },
+    compactName: { fontWeight: '900', fontSize: 16, flexShrink: 1 },
     iconBtn: {
       width: 36,
       height: 36,
@@ -357,10 +363,11 @@ function createStyles(c: AppColors, compact: boolean) {
       marginBottom: 2,
     },
     screenTitle: {
-      fontSize: compact ? 22 : 24,
-      lineHeight: compact ? 26 : 28,
-      fontWeight: '900',
-      letterSpacing: -0.6,
+      fontSize: compact ? 20 : 22,
+      lineHeight: compact ? 24 : 26,
+      fontWeight: '800',
+      letterSpacing: -0.4,
+      flexShrink: 1,
     },
     editChip: {
       flexDirection: 'row',
@@ -386,9 +393,10 @@ function createStyles(c: AppColors, compact: boolean) {
       flexDirection: 'row',
       alignItems: 'center',
       gap: spacing.sm,
+      minWidth: 0,
     },
-    copy: { flex: 1, minWidth: 0, gap: 2 },
-    heroName: { fontWeight: '900', fontSize: 17, lineHeight: 21 },
+    copy: { flex: 1, flexShrink: 1, minWidth: 0, gap: 2 },
+    heroName: { fontWeight: '800', fontSize: 17, lineHeight: 21, flexShrink: 1 },
     pillRow: {
       flexDirection: 'row',
       flexWrap: 'wrap',

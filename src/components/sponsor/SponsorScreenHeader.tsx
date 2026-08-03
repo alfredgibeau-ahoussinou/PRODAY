@@ -29,8 +29,19 @@ export const SponsorScreenHeader: React.FC<SponsorScreenHeaderProps> = ({
         </View>
         <Text style={styles.badgeText}>{label}</Text>
       </View>
-      <Text style={styles.title}>{title}</Text>
-      {subtitle ? <Text style={styles.sub}>{subtitle}</Text> : null}
+      <Text
+        style={styles.title}
+        numberOfLines={2}
+        adjustsFontSizeToFit
+        minimumFontScale={0.75}
+      >
+        {title}
+      </Text>
+      {subtitle ? (
+        <Text style={styles.sub} numberOfLines={3}>
+          {subtitle}
+        </Text>
+      ) : null}
     </View>
   </View>
 );
@@ -51,6 +62,8 @@ const styles = StyleSheet.create({
   },
   body: {
     flex: 1,
+    flexShrink: 1,
+    minWidth: 0,
     padding: spacing.md,
   },
   badge: {
@@ -66,9 +79,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     padding: 2,
     overflow: 'hidden',
+    flexShrink: 0,
   },
   badgeLogoImage: { width: '100%', height: '100%' },
   badgeText: {
+    flexShrink: 1,
     fontSize: 11,
     fontWeight: '800',
     letterSpacing: 0.8,
@@ -76,10 +91,12 @@ const styles = StyleSheet.create({
     color: SPONSOR_THEME.primary,
   },
   title: {
-    fontSize: 22,
-    fontWeight: '900',
+    fontSize: 20,
+    lineHeight: 24,
+    fontWeight: '800',
     color: SPONSOR_THEME.text,
     letterSpacing: -0.3,
+    flexShrink: 1,
   },
   sub: {
     marginTop: spacing.xs,

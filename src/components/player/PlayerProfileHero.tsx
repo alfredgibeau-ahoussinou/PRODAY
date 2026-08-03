@@ -64,7 +64,12 @@ export const PlayerProfileHero: React.FC<PlayerProfileHeroProps> = ({
 
           <View style={styles.heroInfo}>
             <View style={styles.nameRow}>
-              <Text style={styles.heroName} numberOfLines={2}>
+              <Text
+                style={styles.heroName}
+                numberOfLines={2}
+                adjustsFontSizeToFit
+                minimumFontScale={0.75}
+              >
                 {player.display_name}
               </Text>
               {verified ? <Icon name="checkmark-circle" size={20} color="#A7F3D0" /> : null}
@@ -287,7 +292,16 @@ const styles = StyleSheet.create({
   avatarLetter: { fontSize: 32, fontWeight: '800', color: '#FFFFFF' },
   heroInfo: { flex: 1, minWidth: 0 },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  heroName: { flex: 1, fontSize: 22, fontWeight: '900', color: '#FFFFFF', letterSpacing: -0.4 },
+  heroName: {
+    flex: 1,
+    flexShrink: 1,
+    minWidth: 0,
+    fontSize: 20,
+    lineHeight: 24,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    letterSpacing: -0.4,
+  },
   heroSub: { color: 'rgba(255,255,255,0.9)', fontSize: 13, marginTop: 4, lineHeight: 18 },
   headline: {
     color: 'rgba(255,255,255,0.82)',

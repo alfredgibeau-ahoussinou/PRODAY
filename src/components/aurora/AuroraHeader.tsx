@@ -35,15 +35,21 @@ export const AuroraHeader: React.FC<AuroraHeaderProps> = ({
         <View style={[styles.wrap, { paddingTop: Math.max(insets.top, spacing.sm) }]}>
           <View style={styles.copy}>
             {eyebrow ? (
-              <ProDayText variant="caption" muted style={styles.eyebrow}>
+              <ProDayText variant="caption" muted style={styles.eyebrow} numberOfLines={1}>
                 {eyebrow}
               </ProDayText>
             ) : null}
-            <ProDayText variant="hero" style={styles.title}>
+            <ProDayText
+              variant="title"
+              style={styles.title}
+              numberOfLines={2}
+              adjustsFontSizeToFit
+              minimumFontScale={0.75}
+            >
               {title}
             </ProDayText>
             {subtitle ? (
-              <ProDayText variant="body" muted>
+              <ProDayText variant="body" muted numberOfLines={3}>
                 {subtitle}
               </ProDayText>
             ) : null}
@@ -74,9 +80,9 @@ function createStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
       paddingBottom: spacing.sm,
       gap: spacing.md,
     },
-    copy: { flex: 1, minWidth: 0, gap: 2 },
-    eyebrow: { textTransform: 'uppercase', letterSpacing: 1.2, fontSize: 10 },
-    title: { fontWeight: '800', letterSpacing: -0.5 },
+    copy: { flex: 1, flexShrink: 1, minWidth: 0, gap: 2 },
+    eyebrow: { textTransform: 'uppercase', letterSpacing: 1.2, fontSize: 10, flexShrink: 1 },
+    title: { fontWeight: '800', letterSpacing: -0.4, flexShrink: 1 },
     right: { flexShrink: 0 },
     footer: { paddingHorizontal: spacing.lg, paddingBottom: spacing.sm },
   });

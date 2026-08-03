@@ -110,7 +110,13 @@ export const ProfilePassportHeader: React.FC<ProfilePassportHeaderProps> = ({
           </View>
         </PressableSpring>
 
-        <ProDayText variant="title" style={styles.name} numberOfLines={2}>
+        <ProDayText
+          variant="title"
+          style={styles.name}
+          numberOfLines={2}
+          adjustsFontSizeToFit
+          minimumFontScale={0.75}
+        >
           {profile.display_name}
         </ProDayText>
 
@@ -260,10 +266,13 @@ function createStyles(_c: AppColors) {
     },
     name: {
       fontWeight: '800',
-      letterSpacing: -0.5,
+      letterSpacing: -0.4,
       textAlign: 'center',
-      fontSize: 22,
-      lineHeight: 26,
+      fontSize: 20,
+      lineHeight: 24,
+      flexShrink: 1,
+      alignSelf: 'stretch',
+      paddingHorizontal: spacing.sm,
     },
     meta: { textAlign: 'center', marginTop: 2, fontSize: 13 },
     pillRow: {

@@ -89,17 +89,25 @@ export const DashboardHomeHeader: React.FC<DashboardHomeHeaderProps> = ({
       </View>
 
       <View style={styles.greetBlock}>
-        <ProDayText variant="eyebrow">{dashMeta.eyebrow}</ProDayText>
-        <ProDayText variant="hero" style={styles.greeting}>
+        <ProDayText variant="eyebrow" numberOfLines={1}>
+          {dashMeta.eyebrow}
+        </ProDayText>
+        <ProDayText
+          variant="title"
+          style={styles.greeting}
+          numberOfLines={2}
+          adjustsFontSizeToFit
+          minimumFontScale={0.75}
+        >
           Bonjour, {firstName}
         </ProDayText>
-        <ProDayText variant="body" style={styles.tagline}>
+        <ProDayText variant="body" style={styles.tagline} numberOfLines={3}>
           {dashMeta.tagline}
         </ProDayText>
         <View style={styles.meta}>
           <ProDayGradientPill label={roleLabel} colors={colors} />
           {profile.city ? (
-            <ProDayText variant="caption" muted>
+            <ProDayText variant="caption" muted numberOfLines={1}>
               {profile.city}
             </ProDayText>
           ) : null}
@@ -204,9 +212,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingTop: spacing.md,
     marginBottom: spacing.md,
+    minWidth: 0,
   },
   greeting: {
     marginTop: 4,
+    fontWeight: '800',
+    letterSpacing: -0.4,
+    flexShrink: 1,
   },
   tagline: {
     marginTop: 6,
