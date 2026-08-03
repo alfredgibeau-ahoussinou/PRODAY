@@ -55,6 +55,7 @@ import { useTranslation } from '../../context/LocaleContext';
 import { getRoleSignupPhases } from './signupRoleExperience';
 import { submitSponsorSignup } from '../../services/sponsorSignup.service';
 import { resolveSignupOAuthState } from '../../utils/authOAuthLink';
+import { referralService } from '../../services/referral.service';
 
 export type { SignupPageId, SignupFlowKind };
 
@@ -133,11 +134,19 @@ export function useSignupForm(initial?: {
   const [guardianEmail, setGuardianEmail] = useState('');
   const [guardianConsent, setGuardianConsent] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [referralCode, setReferralCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [createdDisplayName, setCreatedDisplayName] = useState('');
   const [createdWithEmailPassword, setCreatedWithEmailPassword] = useState(false);
+
+  useEffect(() => {
+    void referralService.getPendingCode().then((pending) => {
+      if (pending && !referralCode.trim()) setReferralCode(pending);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- hydrate once from deep link / website
+  }, []);
 
   const parsedAge = useMemo(() => parseAgeInput(age), [age]);
   const isMinor = useMemo(
@@ -791,6 +800,10 @@ export function useSignupForm(initial?: {
           : await authService.signUp({ ...common, password });
 
         await refreshProfile();
+        void referralService.bootstrapAfterSignup({
+          codeFromForm: referralCode,
+          role,
+        });
         if (role === 'sponsor') {
           void submitSponsorSignup({
             companyName: structureName.trim(),
@@ -848,6 +861,7 @@ export function useSignupForm(initial?: {
       appSpace,
       guardianName,
       guardianEmail,
+      referralCode,
       guardianConsent,
       acceptedTerms,
       isOAuthCompletion,
@@ -891,6 +905,8 @@ export function useSignupForm(initial?: {
     setDisplayName,
     email,
     setEmail,
+    referralCode,
+    setReferralCode,
     password,
     setPassword,
     confirmPassword,

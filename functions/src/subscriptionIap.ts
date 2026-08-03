@@ -2,6 +2,7 @@ import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
 import { planIdForIapSku, isKnownIapSku } from './iapSkus';
 import { claimAgentLaunchSeatInTransaction } from './agentLaunchSeats';
+import { processReferralOnSubscribe } from './referral';
 
 const db = admin.firestore();
 
@@ -43,6 +44,11 @@ export const activateStoreSubscription = functions.https.onCall(
     const purchaseRef = db.collection('subscription_purchases').doc(purchaseKey);
     const existing = await purchaseRef.get();
     if (existing.exists && existing.data()?.uid === uid) {
+      try {
+        await processReferralOnSubscribe(uid);
+      } catch (e) {
+        console.warn('[activateStoreSubscription] referral retry:', e);
+      }
       return { ok: true, message: 'Abonnement déjà actif sur ce compte.' };
     }
     if (existing.exists && existing.data()?.uid !== uid) {
@@ -87,10 +93,18 @@ export const activateStoreSubscription = functions.https.onCall(
       }
     }
 
+    let referralReward: Awaited<ReturnType<typeof processReferralOnSubscribe>> | null = null;
+    try {
+      referralReward = await processReferralOnSubscribe(uid);
+    } catch (e) {
+      console.warn('[activateStoreSubscription] referral:', e);
+    }
+
     return {
       ok: true,
       message: 'Abonnement activé. Profitez de vos avantages Pro.',
       agentLaunch: launch,
+      referral: referralReward,
     };
   }
 );

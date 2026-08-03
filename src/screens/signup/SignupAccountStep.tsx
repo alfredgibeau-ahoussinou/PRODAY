@@ -91,6 +91,18 @@ export const SignupAccountStep: React.FC<SignupAccountStepProps> = ({
           <Text style={styles.emailHint}>{t('signup.form.emailOAuthLocked')}</Text>
         ) : null}
       </StaggerReveal>
+      <StaggerReveal index={2}>
+        <AuthTextField
+          label={t('signup.form.referralCode')}
+          icon="people"
+          placeholder={t('signup.form.referralCodePlaceholder')}
+          value={form.referralCode}
+          onChangeText={form.setReferralCode}
+          autoCapitalize="characters"
+          autoCorrect={false}
+        />
+        <Text style={styles.emailHint}>{t('signup.form.referralCodeHint')}</Text>
+      </StaggerReveal>
     </SignupFormCard>
     {form.role === 'sponsor' ? (
       <View>

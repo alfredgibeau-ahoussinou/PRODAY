@@ -3,6 +3,7 @@ import { ActivityIndicator, Image, StyleSheet, View } from 'react-native';
 import { HomeScreen } from '../HomeScreen';
 import { ClubAnnouncementsScreen } from '../ClubAnnouncementsScreen';
 import { EditProfileScreen } from '../EditProfileScreen';
+import { ReferralScreen } from '../ReferralScreen';
 import { ClubShell } from './clubShell';
 import { ProDaySurface } from '../../components/ui/ProDaySurface';
 import { ProDayText } from '../../components/ui/ProDayText';
@@ -20,7 +21,7 @@ import { pickGalleryImage } from '../../utils/pickMedia';
 import { profileService } from '../../services/profile.service';
 import { radius, spacing } from '../../theme/designTokens';
 
-type VitrineOverlay = 'announcements' | 'edit' | null;
+type VitrineOverlay = 'announcements' | 'edit' | 'referral' | null;
 
 /** Onglet Vitrine — profil public du club (galerie, annonces, identité). */
 export const ClubVitrineScreen: React.FC = () => {
@@ -180,6 +181,14 @@ export const ClubVitrineScreen: React.FC = () => {
                   {t('club.vitrine.editProfile')}
                 </ProDayText>
               </PressableSpring>
+              <PressableSpring
+                onPress={() => setOverlay('referral')}
+                style={[styles.actionBtn, { borderColor: colors.border, backgroundColor: colors.surface }]}
+              >
+                <ProDayText variant="caption" muted>
+                  Parrainage
+                </ProDayText>
+              </PressableSpring>
             </View>
           </>
         )}
@@ -208,6 +217,12 @@ export const ClubVitrineScreen: React.FC = () => {
               setOverlay(null);
             }}
           />
+        ) : null}
+      </PushScreenTransition>
+
+      <PushScreenTransition active={overlay === 'referral'}>
+        {overlay === 'referral' ? (
+          <ReferralScreen onBack={() => setOverlay(null)} />
         ) : null}
       </PushScreenTransition>
     </>

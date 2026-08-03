@@ -30,6 +30,7 @@ import {
 import { onV3BrainWrite } from './v3Brain';
 import { activateStoreSubscription } from './subscriptionIap';
 import { claimAgentLaunchSeat } from './agentLaunchSeats';
+import { ensureReferralCode, claimReferralCode } from './referral';
 import {
   onSponsorOfferCreated,
   onSponsorOfferUpdated,
@@ -57,6 +58,7 @@ export { onTeamEventUpdated, syncTeamEventActivities };
 export { analyzeActivityHighlight };
 export { activateStoreSubscription };
 export { claimAgentLaunchSeat };
+export { ensureReferralCode, claimReferralCode };
 export { onPlatformFeedCreated, onChatMessageCreated };
 export { onRecruitmentPostCreated };
 export { onV3BrainWrite };

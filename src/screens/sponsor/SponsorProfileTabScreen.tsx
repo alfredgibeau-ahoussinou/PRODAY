@@ -16,6 +16,7 @@ import { ProfileSubscriptionCard } from '../../components/profile/ProfileSubscri
 import { EditProfileScreen } from '../EditProfileScreen';
 import { LegalDocumentScreen } from '../LegalDocumentScreen';
 import type { LegalDocumentId } from '../../content/legalDocuments';
+import { ReferralScreen } from '../ReferralScreen';
 import { useTabNavigationActions } from '../../hooks/useTabNavigationActions';
 import { useSponsorShellOptional, sponsorTabRoute } from '../../context/SponsorShellContext';
 import { TAB_BAR_CONTENT_INSET } from '../../components/navigation/BottomTabBar';
@@ -42,6 +43,7 @@ export const SponsorProfileTabScreen: React.FC<{ shellMode?: boolean }> = ({
   const { analytics, stats } = useSponsorDashboard(profile?.uid, company);
   const [showEdit, setShowEdit] = useState(false);
   const [legalDocument, setLegalDocument] = useState<LegalDocumentId | null>(null);
+  const [showReferral, setShowReferral] = useState(false);
 
   if (!profile) {
     return <SponsorGuestGate message="Connectez-vous pour gérer votre marque, formules et réglages." />;
@@ -89,6 +91,12 @@ export const SponsorProfileTabScreen: React.FC<{ shellMode?: boolean }> = ({
   ];
 
   const accountItems: ProfileMenuItem[] = [
+    {
+      title: 'Parrainage',
+      subtitle: 'Invitez 2 amis, gagnez 1 mois Pro',
+      icon: 'people',
+      onPress: () => setShowReferral(true),
+    },
     { title: 'Conditions générales', icon: 'document', onPress: () => setLegalDocument('terms') },
     { title: 'Confidentialité', icon: 'lock', onPress: () => setLegalDocument('privacy') },
   ];
@@ -147,7 +155,7 @@ export const SponsorProfileTabScreen: React.FC<{ shellMode?: boolean }> = ({
         <Text style={styles.logoutText}>Se déconnecter</Text>
       </TouchableOpacity>
       </ScrollView>
-      <PushScreenTransition active={showEdit || legalDocument != null}>
+      <PushScreenTransition active={showEdit || legalDocument != null || showReferral}>
         {showEdit ? (
           <EditProfileScreen
             user={profile}
@@ -157,6 +165,8 @@ export const SponsorProfileTabScreen: React.FC<{ shellMode?: boolean }> = ({
               setShowEdit(false);
             }}
           />
+        ) : showReferral ? (
+          <ReferralScreen onBack={() => setShowReferral(false)} />
         ) : legalDocument ? (
           <LegalDocumentScreen documentId={legalDocument} onBack={() => setLegalDocument(null)} />
         ) : null}

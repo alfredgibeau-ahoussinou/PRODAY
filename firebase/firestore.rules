@@ -154,7 +154,25 @@ service cloud.firestore {
           // Serveur / admin uniquement
           'agent_launch_offer',
           'club_certification_verified',
+          // Parrainage — Cloud Functions uniquement
+          'referral_code',
+          'referred_by_uid',
+          'referred_by_code',
+          'referral_progress',
+          'referral_total_subscribed',
+          'referral_rewards_earned',
         ]);
+    }
+
+    function referralFieldsAbsentOnCreate() {
+      return !request.resource.data.keys().hasAny([
+        'referral_code',
+        'referred_by_uid',
+        'referred_by_code',
+        'referral_progress',
+        'referral_total_subscribed',
+        'referral_rewards_earned',
+      ]);
     }
 
     function validPlayerLevel() {
@@ -335,7 +353,8 @@ service cloud.firestore {
         && request.resource.data.verification_status in ['PENDING', 'NOT_REQUIRED']
         && validUserRole(request.resource.data.role)
         && playerSeasonStatsEmptyOnCreate()
-        && ownerProfileGenderValid();
+        && ownerProfileGenderValid()
+        && referralFieldsAbsentOnCreate();
       allow update: if isAdmin()
         || canStaffWritePlayerSeasonStats()
         || isGuardianParentalUpdate()
@@ -360,6 +379,21 @@ service cloud.firestore {
 
     match /users/{userId}/subscription_usage/{periodId} {
       allow read: if isOwner(userId);
+      allow write: if false;
+    }
+
+    match /users/{userId}/referral_rewards/{rewardId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow write: if false;
+    }
+
+    match /referral_codes/{code} {
+      allow read, write: if false;
+    }
+
+    match /referrals/{referralId} {
+      allow read: if isSignedIn()
+        && (resource.data.referrer_uid == request.auth.uid || isAdmin());
       allow write: if false;
     }
 

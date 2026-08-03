@@ -183,6 +183,19 @@ export function userFromFirestore(uid: string, data: Record<string, unknown>): U
       ? toDate(data.sponsor_territorial_approved_at)
       : undefined,
     sponsor_approved: data.sponsor_approved === true ? true : data.sponsor_approved === false ? false : undefined,
+    referral_code: data.referral_code ? String(data.referral_code) : undefined,
+    referred_by_uid: data.referred_by_uid ? String(data.referred_by_uid) : undefined,
+    referred_by_code: data.referred_by_code ? String(data.referred_by_code) : undefined,
+    referral_progress:
+      typeof data.referral_progress === 'number' ? data.referral_progress : undefined,
+    referral_total_subscribed:
+      typeof data.referral_total_subscribed === 'number'
+        ? data.referral_total_subscribed
+        : undefined,
+    referral_rewards_earned:
+      typeof data.referral_rewards_earned === 'number'
+        ? data.referral_rewards_earned
+        : undefined,
   };
 }
 

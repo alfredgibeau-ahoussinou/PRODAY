@@ -43,11 +43,16 @@ export function createSubmitBetaWaitlistHandler(db: admin.firestore.Firestore) {
       return;
     }
 
-    const body = (req.body ?? {}) as { email?: string; role?: string };
+    const body = (req.body ?? {}) as { email?: string; role?: string; referral_code?: string };
     const email = String(body.email ?? '')
       .trim()
       .toLowerCase();
     const role = String(body.role ?? 'player').trim();
+    const referralCode = String(body.referral_code ?? '')
+      .trim()
+      .toUpperCase()
+      .replace(/[^A-Z0-9]/g, '')
+      .slice(0, 12);
 
     if (!EMAIL_RE.test(email)) {
       res.status(400).json({ error: 'Email invalide' });
@@ -82,6 +87,7 @@ export function createSubmitBetaWaitlistHandler(db: admin.firestore.Firestore) {
         status: 'pending',
         source: 'website',
         welcome_email_sent: false,
+        ...(referralCode.length >= 6 ? { referral_code: referralCode } : {}),
         created_at: now,
         updated_at: now,
       });
@@ -106,6 +112,7 @@ export function createSubmitBetaWaitlistHandler(db: admin.firestore.Firestore) {
         role,
         role_label: roleLabel,
         access_token: accessToken,
+        ...(referralCode.length >= 6 ? { referral_code: referralCode } : {}),
         updated_at: now,
       });
       void sendIosPreAnnouncementAfterSignup(db, docRef).catch((err) => {

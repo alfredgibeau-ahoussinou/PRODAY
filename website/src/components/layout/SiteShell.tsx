@@ -6,6 +6,7 @@ import { Suspense, lazy } from "react";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteVisitTracker } from "@/components/analytics/SiteVisitTracker";
 import { BackToTop } from "@/components/BackToTop";
+import { ReferralCapture } from "@/components/ReferralCapture";
 import { PoleContextBar } from "./PoleContextBar";
 import { PageTransition } from "./PageTransition";
 import { ScrollToHash } from "./ScrollToHash";
@@ -75,6 +76,9 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
         )}
         <div className="relative z-10">
           <ScrollToHash />
+          <Suspense fallback={null}>
+            <ReferralCapture />
+          </Suspense>
           <SiteNav />
           <div className={`overflow-x-clip ${isHome ? "surface-dark" : ""}`}>
             {showPoleBar && <PoleContextBar />}
