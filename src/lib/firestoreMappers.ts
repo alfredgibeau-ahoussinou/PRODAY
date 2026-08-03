@@ -793,6 +793,17 @@ export function playerActivityFromFirestore(
   id: string,
   data: Record<string, unknown>
 ): PlayerActivity {
+  const matchResult =
+    data.match_result === 'win' || data.match_result === 'draw' || data.match_result === 'loss'
+      ? data.match_result
+      : undefined;
+  const reactionsRaw = data.reactions;
+  const reactions =
+    reactionsRaw && typeof reactionsRaw === 'object' && !Array.isArray(reactionsRaw)
+      ? Object.fromEntries(
+          Object.entries(reactionsRaw as Record<string, unknown>).map(([k, v]) => [k, String(v)])
+        )
+      : undefined;
   return {
     id,
     player_uid: String(data.player_uid ?? ''),
@@ -801,8 +812,20 @@ export function playerActivityFromFirestore(
     duration_min: Number(data.duration_min ?? 0),
     goals: data.goals != null ? Number(data.goals) : undefined,
     assists: data.assists != null ? Number(data.assists) : undefined,
+    yellow_cards: data.yellow_cards != null ? Number(data.yellow_cards) : undefined,
+    red_cards: data.red_cards != null ? Number(data.red_cards) : undefined,
+    minutes_played: data.minutes_played != null ? Number(data.minutes_played) : undefined,
+    clean_sheet: data.clean_sheet === true ? true : data.clean_sheet === false ? false : undefined,
+    match_result: matchResult,
+    rating_pulse: data.rating_pulse != null ? Number(data.rating_pulse) : undefined,
     rating_self: data.rating_self != null ? Number(data.rating_self) : undefined,
     notes: data.notes != null ? String(data.notes) : undefined,
+    voice_reflection_url:
+      data.voice_reflection_url != null ? String(data.voice_reflection_url) : undefined,
+    drills: Array.isArray(data.drills)
+      ? (data.drills as unknown[]).map(String).filter(Boolean)
+      : undefined,
+    intensity: data.intensity != null ? Number(data.intensity) : undefined,
     video_url: data.video_url != null ? String(data.video_url) : undefined,
     thumbnail_url: data.thumbnail_url != null ? String(data.thumbnail_url) : undefined,
     analysis_status:
@@ -830,6 +853,7 @@ export function playerActivityFromFirestore(
           PERFORMANCE_TAGS.includes(t as PerformanceTag)
         )
       : undefined,
+    reactions,
     source: (data.source as PlayerActivitySource) ?? 'manual',
     team_event_id: data.team_event_id != null ? String(data.team_event_id) : undefined,
     created_at: toDate(data.created_at),

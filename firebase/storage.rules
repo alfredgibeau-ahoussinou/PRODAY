@@ -58,6 +58,13 @@ service firebase.storage {
       allow write: if isOwner(userId) && isSafeImageUpload();
     }
 
+    match /voice_reflections/{userId}/{fileName} {
+      allow read: if request.auth != null;
+      allow write: if isOwner(userId)
+        && request.resource.size < 15 * 1024 * 1024
+        && request.resource.contentType.matches('audio/(m4a|mp4|aac|mpeg|wav|x-m4a|cafe)');
+    }
+
     // APK bêta — lecture publique (lien sur proday75.fr/beta/installer)
     match /beta/{fileName} {
       allow read: if true;

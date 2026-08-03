@@ -499,12 +499,21 @@ service cloud.firestore {
         && request.resource.data.duration_min > 0
         && validActivityCreateAnalysis();
       allow update: if isSignedIn()
-        && resource.data.player_uid == request.auth.uid
-        && request.resource.data.player_uid == request.auth.uid
-        && request.resource.data.type in ['match', 'training', 'recovery']
-        && request.resource.data.duration_min is int
-        && request.resource.data.duration_min > 0
-        && activityAnalysisFieldsUnchanged();
+        && (
+          (
+            resource.data.player_uid == request.auth.uid
+            && request.resource.data.player_uid == request.auth.uid
+            && request.resource.data.type in ['match', 'training', 'recovery']
+            && request.resource.data.duration_min is int
+            && request.resource.data.duration_min > 0
+            && activityAnalysisFieldsUnchanged()
+          )
+          || (
+            request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reactions'])
+            && request.resource.data.player_uid == resource.data.player_uid
+            && request.resource.data.type == resource.data.type
+          )
+        );
       allow delete: if isSignedIn() && resource.data.player_uid == request.auth.uid;
     }
 
@@ -1113,6 +1122,46 @@ service cloud.firestore {
         && request.resource.data.bookmark_key is string
         && request.resource.data.reason is string;
       allow update, delete: if isAdmin();
+    }
+
+    /** Endorsements compétences (style Tonsser) */
+    match /skill_endorsements/{endorsementId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn()
+        && request.resource.data.endorser_uid == request.auth.uid
+        && request.resource.data.endorsed_uid is string
+        && request.resource.data.endorsed_uid != request.auth.uid
+        && request.resource.data.skill in [
+          'dribbling', 'passing', 'defending', 'finishing', 'pace', 'vision', 'leadership'
+        ]
+        && request.resource.data.endorser_name is string;
+      allow delete: if isSignedIn()
+        && resource.data.endorser_uid == request.auth.uid;
+      allow update: if false;
+    }
+
+    /** Votes Homme du match */
+    match /motm_votes/{voteId} {
+      allow read: if isSignedIn();
+      allow create, update: if isSignedIn()
+        && request.resource.data.voter_uid == request.auth.uid
+        && request.resource.data.nominee_uid is string
+        && request.resource.data.nominee_uid != request.auth.uid
+        && request.resource.data.team_event_id is string
+        && request.resource.data.nominee_name is string;
+      allow delete: if isSignedIn()
+        && resource.data.voter_uid == request.auth.uid;
+    }
+
+    /** Classement Pulse / Team of the Week */
+    match /player_pulse/{uid} {
+      allow read: if isSignedIn();
+      allow create, update: if isSignedIn()
+        && request.auth.uid == uid
+        && request.resource.data.display_name is string
+        && request.resource.data.pulse_avg is number
+        && request.resource.data.matches_count is int;
+      allow delete: if isAdmin();
     }
   }
 }

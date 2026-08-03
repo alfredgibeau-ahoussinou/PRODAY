@@ -267,6 +267,18 @@ export const storageService = {
     return getDownloadURL(storageRef);
   },
 
+  async uploadVoiceReflection(uid: string, activityId: string, localUri: string): Promise<string> {
+    const storage = getFirebaseStorage();
+    if (!storage) {
+      throw new Error('Firebase Storage non configuré pour les réflexions vocales.');
+    }
+    const contentType = 'audio/m4a';
+    const path = `voice_reflections/${uid}/${activityId}-${Date.now()}.m4a`;
+    const storageRef = ref(storage, path);
+    await uploadFileToStorageRef(storageRef, localUri, contentType, 'voice-reflection');
+    return getDownloadURL(storageRef);
+  },
+
   async uploadCommunityReel(uid: string, file: UploadFileInput): Promise<string> {
     const storage = getFirebaseStorage();
     if (!storage) {
