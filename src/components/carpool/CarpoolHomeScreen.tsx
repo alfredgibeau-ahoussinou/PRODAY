@@ -47,7 +47,8 @@ import { useTranslation } from '../../context/LocaleContext';
 import { TAB_BAR_CONTENT_INSET } from '../../navigation/tabBarLayout';
 import { SkeletonList, InteractiveListItem, PressableSpring } from '../motion';
 import { spacing } from '../../theme/designTokens';
-import { TabScreenShell } from '../app/TabScreenShell';
+import { ProDayScreenCanvas } from '../ui/ProDayScreenCanvas';
+import { CarpoolHero } from './CarpoolHero';
 import { CarpoolDiscoverDeck } from './CarpoolDiscoverDeck';
 import { CarpoolLiveMission } from './CarpoolLiveMission';
 import { CarpoolModeSwitcher, type CarpoolHubMode } from './CarpoolModeSwitcher';
@@ -692,19 +693,28 @@ export const CarpoolHomeScreen: React.FC<CarpoolHomeScreenProps> = ({
   );
 
   return (
-    <TabScreenShell
-      caption={t('carpool.caption')}
-      title={t('carpool.title')}
-      subtitle={subtitle}
-      flat
-    >
-      {body}
-    </TabScreenShell>
+    <ProDayScreenCanvas flat>
+      <View style={styles.root}>
+        <CarpoolHero
+          eyebrow={t('carpool.caption')}
+          headline={t('carpool.hero.member.headline')}
+          support={subtitle}
+          minHeight={216}
+          compact
+          actions={[
+            { label: t('carpool.cta.viewSeats'), icon: 'car', onPress: openReserveTab },
+            { label: t('carpool.cta.proposeTrip'), tone: 'ghost', onPress: openProposerTab },
+          ]}
+        />
+        <View style={styles.body}>{body}</View>
+      </View>
+    </ProDayScreenCanvas>
   );
 };
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
+  body: { flex: 1, minHeight: 0 },
   hub: {
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.sm,

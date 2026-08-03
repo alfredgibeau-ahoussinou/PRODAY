@@ -5,7 +5,7 @@ import { ProDayText } from '../ui/ProDayText';
 import { Icon } from '../ui/Icon';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { useTranslation } from '../../context/LocaleContext';
-import { spacing, radius } from '../../theme/designTokens';
+import { spacing } from '../../theme/designTokens';
 import { prodayHaptics } from '../../utils/prodayHaptics';
 
 export type CarpoolHubMode = 'ride' | 'drive' | 'live';
@@ -22,7 +22,10 @@ const MODES: { id: CarpoolHubMode; icon: 'car' | 'walk' | 'location' }[] = [
   { id: 'live', icon: 'location' },
 ];
 
-/** Basculer Passager / Conducteur / Live — hub covoiturage. */
+/**
+ * Sélecteur Passager / Conducteur / Live — voies droites façon marquage au sol,
+ * repère actif souligné (pas de pilule pleine).
+ */
 export const CarpoolModeSwitcher: React.FC<CarpoolModeSwitcherProps> = ({
   mode,
   onChange,
@@ -34,7 +37,7 @@ export const CarpoolModeSwitcher: React.FC<CarpoolModeSwitcherProps> = ({
 
   return (
     <View style={[styles.wrap, { backgroundColor: colors.surfaceMuted, borderColor: colors.border }]}>
-      {MODES.map((item) => {
+      {MODES.map((item, index) => {
         const active = mode === item.id;
         return (
           <PressableSpring
@@ -43,32 +46,36 @@ export const CarpoolModeSwitcher: React.FC<CarpoolModeSwitcherProps> = ({
               prodayHaptics.tabSwitch();
               onChange(item.id);
             }}
-            scaleTo={0.96}
-            style={[
-              styles.chip,
-              active && { backgroundColor: colors.accent, borderColor: colors.accent },
-            ]}
+            scaleTo={0.97}
+            style={[styles.lane, index > 0 && { borderLeftColor: colors.border, borderLeftWidth: StyleSheet.hairlineWidth }]}
             accessibilityRole="button"
             accessibilityState={{ selected: active }}
           >
-            <View>
-              <Icon
-                name={item.icon}
-                size={16}
-                color={active ? '#000' : colors.textMuted}
-                variant={active ? 'filled' : 'outline'}
-              />
-              {item.id === 'live' && liveActive ? (
-                <View style={[styles.liveDot, { backgroundColor: colors.error ?? '#EF4444' }]} />
-              ) : null}
+            <View style={styles.laneInner}>
+              <View>
+                <Icon
+                  name={item.icon}
+                  size={16}
+                  color={active ? colors.accent : colors.textMuted}
+                  variant={active ? 'filled' : 'outline'}
+                />
+                {item.id === 'live' && liveActive ? (
+                  <View style={[styles.liveDot, { backgroundColor: colors.error ?? '#EF4444' }]} />
+                ) : null}
+              </View>
+              <ProDayText
+                variant="caption"
+                style={[styles.label, active ? { color: colors.accent } : { color: colors.textMuted }]}
+              >
+                {t(`carpool.hub.mode.${item.id}`)}
+              </ProDayText>
             </View>
-            <ProDayText
-              variant="caption"
-              style={[styles.label, active && styles.labelActive]}
-              inverse={active}
-            >
-              {t(`carpool.hub.mode.${item.id}`)}
-            </ProDayText>
+            <View
+              style={[
+                styles.marker,
+                { backgroundColor: active ? colors.accent : 'transparent' },
+              ]}
+            />
           </PressableSpring>
         );
       })}
@@ -76,28 +83,34 @@ export const CarpoolModeSwitcher: React.FC<CarpoolModeSwitcherProps> = ({
   );
 };
 
-function createStyles(colors: { error?: string }) {
+function createStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
   return StyleSheet.create({
     wrap: {
       flexDirection: 'row',
-      padding: 4,
-      borderRadius: radius.pill,
+      borderRadius: 6,
       borderWidth: StyleSheet.hairlineWidth,
-      gap: 4,
+      overflow: 'hidden',
     },
-    chip: {
+    lane: {
       flex: 1,
+      paddingTop: 12,
+    },
+    laneInner: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
       gap: 6,
-      paddingVertical: 10,
-      borderRadius: radius.pill,
-      borderWidth: 1,
-      borderColor: 'transparent',
+      paddingBottom: 10,
     },
-    label: { fontWeight: '700', fontSize: 12 },
-    labelActive: { fontWeight: '900' },
+    label: {
+      fontWeight: '800',
+      fontSize: 12,
+      letterSpacing: 0.3,
+    },
+    marker: {
+      height: 3,
+      width: '100%',
+    },
     liveDot: {
       position: 'absolute',
       top: -2,
@@ -106,7 +119,7 @@ function createStyles(colors: { error?: string }) {
       height: 7,
       borderRadius: 4,
       borderWidth: 1,
-      borderColor: '#000',
+      borderColor: colors.surfaceMuted,
     },
   });
 }

@@ -1,93 +1,77 @@
 import React, { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { ProDayGradient } from '../ui/ProDayGradient';
-import { ProDaySurface } from '../ui/ProDaySurface';
 import { ProDayText } from '../ui/ProDayText';
-import { Icon } from '../ui/Icon';
-import { PressableSpring } from '../motion';
+import { Icon, type IconName } from '../ui/Icon';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { useTranslation } from '../../context/LocaleContext';
-import { spacing, radius } from '../../theme/designTokens';
+import { spacing } from '../../theme/designTokens';
+import { CarpoolHero } from './CarpoolHero';
 
 interface CarpoolGuestPromptProps {
   onLogin: () => void;
   onSignup: () => void;
 }
 
+const VALUE_ITEMS: { icon: IconName; key: string }[] = [
+  { icon: 'car', key: 'carpool.guest.value.rides' },
+  { icon: 'location', key: 'carpool.guest.value.live' },
+  { icon: 'people', key: 'carpool.guest.value.crew' },
+];
+
 export const CarpoolGuestPrompt: React.FC<CarpoolGuestPromptProps> = ({ onLogin, onSignup }) => {
   const { colors } = useAppTheme();
   const { t } = useTranslation();
-  const styles = useMemo(() => createStyles(), []);
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   return (
     <View style={styles.wrap}>
-      <ProDaySurface variant="module" style={[styles.card, { borderColor: colors.border }]}>
-        <Icon name="car" size={36} color={colors.accent} variant="filled" />
-        <ProDayText variant="section" style={styles.title}>
-          {t('carpool.guest.title')}
-        </ProDayText>
-        <ProDayText variant="body" muted style={styles.body}>
-          {t('carpool.guest.body')}
-        </ProDayText>
-        <PressableSpring onPress={onLogin} scaleTo={0.97} haptic>
-          <ProDayGradient kind="cta" style={styles.primary}>
-            <ProDayText variant="caption" inverse style={styles.btnText}>
-              {t('common.login')}
+      <CarpoolHero
+        eyebrow={t('carpool.caption')}
+        headline={t('carpool.hero.guest.headline')}
+        support={t('carpool.hero.guest.support')}
+        minHeight={340}
+        actions={[
+          { label: t('common.login'), icon: 'chevron-forward', onPress: onLogin },
+          { label: t('common.guest.signup'), tone: 'ghost', onPress: onSignup },
+        ]}
+      />
+
+      <View style={styles.values}>
+        {VALUE_ITEMS.map((item) => (
+          <View key={item.key} style={styles.valueItem}>
+            <View style={[styles.valueIcon, { borderColor: colors.border }]}>
+              <Icon name={item.icon} size={18} color={colors.accent} />
+            </View>
+            <ProDayText variant="caption" muted style={styles.valueLabel}>
+              {t(item.key)}
             </ProDayText>
-          </ProDayGradient>
-        </PressableSpring>
-        <PressableSpring
-          onPress={onSignup}
-          scaleTo={0.98}
-          haptic
-          style={[
-            styles.secondary,
-            { borderColor: colors.borderStrong, backgroundColor: colors.surfaceMuted },
-          ]}
-        >
-          <ProDayText variant="caption" accent style={styles.link}>
-            {t('common.guest.signup')}
-          </ProDayText>
-        </PressableSpring>
-      </ProDaySurface>
+          </View>
+        ))}
+      </View>
     </View>
   );
 };
 
-function createStyles() {
+function createStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
   return StyleSheet.create({
-    wrap: {
-      flex: 1,
-      justifyContent: 'center',
-      paddingHorizontal: spacing.lg,
-      paddingBottom: spacing.xl,
+    wrap: { flex: 1 },
+    values: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      gap: spacing.md,
+      paddingHorizontal: spacing.xl,
+      paddingTop: spacing.xl,
     },
-    card: {
-      alignItems: 'center',
-      gap: spacing.sm,
-      padding: spacing.xl,
+    valueItem: { flex: 1, alignItems: 'center', gap: spacing.sm },
+    valueIcon: {
+      width: 46,
+      height: 46,
+      borderRadius: 8,
       borderWidth: 1,
-    },
-    title: { textAlign: 'center' },
-    body: { textAlign: 'center', lineHeight: 21 },
-    primary: {
-      marginTop: spacing.md,
-      paddingHorizontal: spacing.xl,
-      paddingVertical: spacing.md,
-      borderRadius: radius.pill,
-      minWidth: 220,
       alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: colors.surfaceMuted,
     },
-    btnText: { fontWeight: '800' },
-    secondary: {
-      marginTop: spacing.sm,
-      paddingHorizontal: spacing.xl,
-      paddingVertical: spacing.md,
-      borderRadius: radius.pill,
-      borderWidth: 1.5,
-      minWidth: 220,
-      alignItems: 'center',
-    },
-    link: { fontWeight: '800' },
+    valueLabel: { textAlign: 'center', lineHeight: 16 },
   });
 }
