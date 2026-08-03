@@ -118,7 +118,7 @@ Reporter les montants de `src/content/subscriptionPlans.ts` et `src/content/spon
 | Recruteur Pro | 7,99 |
 | Coach Pro | 7,99 |
 | Club Pro | 11,99 |
-| Agent Elite | 99,99 |
+| Agent Elite | 29,99 (lancement 19,99 × 20 premiers) |
 | Pôle santé Pro | 19,99 |
 | Organisateur Pro | 14,99 |
 | National Pro (sponsor) | 99,00 |
