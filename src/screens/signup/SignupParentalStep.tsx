@@ -82,6 +82,9 @@ export const SignupParentalStep: React.FC<SignupParentalStepProps> = ({
                   : 'signup.parental.playersMan'
               ),
             })}
+            {'\n\n'}
+            Un compte Parent indépendant sera créé avec cet e-mail. Le parent recevra un lien pour
+            définir son mot de passe et accéder au portail Famille.
           </Text>
         </View>
       </View>

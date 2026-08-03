@@ -165,6 +165,9 @@ export function userFromFirestore(uid: string, data: Record<string, unknown>): U
           ? false
           : undefined,
     contact_privacy: data.contact_privacy as User['contact_privacy'],
+    parent_of: Array.isArray(data.parent_of)
+      ? (data.parent_of as unknown[]).map((id) => String(id)).filter(Boolean)
+      : undefined,
     agent_launch_offer:
       data.agent_launch_offer === true
         ? true

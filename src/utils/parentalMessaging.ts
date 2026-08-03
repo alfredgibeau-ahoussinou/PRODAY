@@ -44,7 +44,9 @@ export function evaluateMessagingPermission(
   }
 
   if (isMinorUser(sender)) {
-    const filterOn = sender.parental_settings?.contacts_filter_enabled !== false;
+    const restricted = sender.parental_settings?.messaging_restricted !== false;
+    const filterOn =
+      restricted || sender.parental_settings?.contacts_filter_enabled !== false;
     if (filterOn && !isApprovedContactForMinor(sender, recipient.uid)) {
       return {
         allowed: false,
@@ -64,7 +66,9 @@ export function evaluateMessagingPermission(
           'Les conversations avec les comptes mineurs nécessitent un profil vérifié (badge vert).',
       };
     }
-    const filterOn = recipient.parental_settings?.contacts_filter_enabled !== false;
+    const restricted = recipient.parental_settings?.messaging_restricted !== false;
+    const filterOn =
+      restricted || recipient.parental_settings?.contacts_filter_enabled !== false;
     if (filterOn && !isApprovedContactForMinor(recipient, sender.uid)) {
       return {
         allowed: false,

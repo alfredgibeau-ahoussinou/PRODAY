@@ -17,6 +17,7 @@ const LINE_SUFFIX: Record<ProductLineId, string> = {
   pro_staff: 'pro_staff',
   sponsor: 'sponsor',
   sante: 'sante',
+  parent: 'parent',
 };
 
 function lineKey(line: ProductLineId, base: string): string {

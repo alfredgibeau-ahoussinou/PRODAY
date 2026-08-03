@@ -67,6 +67,12 @@ export const ROLE_OPTIONS: {
     description: 'Matchs, réels et fil communautaire',
     icon: 'star-four-points',
   },
+  {
+    value: 'parent',
+    label: 'Parent',
+    description: 'Supervision du compte mineur lié',
+    icon: 'people',
+  },
 ];
 
 interface AuthRolePickerProps {

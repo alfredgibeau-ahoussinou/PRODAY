@@ -71,4 +71,5 @@ export const ROLE_DASHBOARD_TAGLINE: Record<UserRole, string> = {
   sponsor: 'Soutenez les clubs de votre territoire.',
   supporter: 'Matchs, réels et communauté. Votre tribune ProDay.',
   physio: 'Kiné, ostéo, médecin du sport. Fil ProDay.',
+  parent: 'Supervisez profil, messages, agenda et trajets.',
 };

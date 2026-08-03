@@ -6,6 +6,8 @@ export type ProductLineId =
   | 'supporter'
   | 'sante'
   | 'sponsor'
+  /** Portail parent / tuteur — supervision d’un compte mineur lié. */
+  | 'parent'
   /** @deprecated Stockage legacy — migré vers pro_player | pro_club | pro_staff */
   | 'pro'
   | 'pro_player'
@@ -125,6 +127,16 @@ export const PRODAY_SANTE_BRAND = {
   entryCta: 'Espace Santé',
 } as const;
 
+export const PRODAY_PARENT_BRAND = {
+  name: 'Pro Day Famille',
+  logoLine1: 'Pro Day',
+  logoLine2Lead: '',
+  logoLine2Accent: 'Famille',
+  tagline: 'SUPERVISER • PROTÉGER • ACCOMPAGNER',
+  shortTagline: 'Portail parent. Profil, messages, agenda et trajets de votre enfant',
+  entryCta: 'Espace Parent',
+} as const;
+
 /** @deprecated Utiliser PRODAY_WOMAN_BRAND */
 export const PRODAY_GIRL_BRAND = PRODAY_WOMAN_BRAND;
 
@@ -194,6 +206,7 @@ export function normalizeStoredProductLine(stored: string | null): ProductLineId
   if (stored === 'supporter') return 'supporter';
   if (stored === 'sponsor') return 'sponsor';
   if (stored === 'sante' || stored === 'health') return 'sante';
+  if (stored === 'parent' || stored === 'famille') return 'parent';
   if (stored === 'homme' || stored === 'standard') return 'homme';
   return null;
 }
@@ -208,19 +221,25 @@ export function brandForProductLine(line: ProductLineId) {
   if (line === 'supporter') return PRODAY_SUPPORTER_BRAND;
   if (line === 'sponsor') return PRODAY_SPONSOR_BRAND;
   if (line === 'sante') return PRODAY_SANTE_BRAND;
+  if (line === 'parent') return PRODAY_PARENT_BRAND;
   return PRODAY_HOMME_BRAND;
 }
 
-/** Étend un Record partiel pro avec pro_player, pro_club, pro_staff (+ sponsor optionnel). */
+export function isParentProductLine(line: ProductLineId): boolean {
+  return line === 'parent';
+}
+
+/** Étend un Record partiel pro avec pro_player, pro_club, pro_staff (+ sponsor / parent optionnels). */
 export function withProFamilyRecord<T>(
-  map: Record<string, T> & { pro: T; sponsor?: T },
+  map: Record<string, T> & { pro: T; sponsor?: T; parent?: T },
 ): Record<ProductLineId, T> {
-  const { pro, sponsor } = map;
+  const { pro, sponsor, parent } = map;
   return {
     ...map,
     pro_player: pro,
     pro_club: pro,
     pro_staff: pro,
     sponsor: sponsor ?? pro,
+    parent: parent ?? map.amateur ?? map.supporter ?? pro,
   } as Record<ProductLineId, T>;
 }

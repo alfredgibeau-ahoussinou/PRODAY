@@ -258,7 +258,7 @@ export function getPlanForRole(role: UserRole): SubscriptionPlanDefinition | nul
 }
 
 /** Rôles sans formule store — tribune supporter 100 % gratuite. */
-export const ROLES_WITHOUT_STORE_PLAN: UserRole[] = ['supporter'];
+export const ROLES_WITHOUT_STORE_PLAN: UserRole[] = ['supporter', 'parent'];
 
 export const FREE_TIER_LABEL = 'Gratuit';
 export const PRO_TIER_LABEL = 'Pro';

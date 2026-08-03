@@ -36,7 +36,9 @@ export type UserRole =
   | 'organizer'
   | 'sponsor'
   | 'supporter'
-  | 'physio';
+  | 'physio'
+  /** Compte parent / tuteur — indépendant du compte mineur, lié via parental_settings. */
+  | 'parent';
 export type VerificationStatus = 'PENDING' | 'VERIFIED' | 'REJECTED' | 'NOT_REQUIRED';
 
 /**
@@ -228,6 +230,12 @@ export interface User {
 
   /** Qui peut voir téléphone, email et autres contacts. */
   contact_privacy?: ContactPrivacySettings;
+
+  /**
+   * Comptes enfants liés (rôle `parent` uniquement).
+   * UIDs distincts du parent — jamais égaux à `uid`.
+   */
+  parent_of?: string[];
 
   /**
    * Offre lancement agent (19,99 €) grandfathered.

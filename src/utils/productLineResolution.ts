@@ -46,7 +46,9 @@ export function canonicalizeUserProductLine(
   if (role === 'physio') return 'sante';
   if (role === 'supporter') return 'supporter';
   if (role === 'sponsor') return 'sponsor';
+  if (role === 'parent') return 'parent';
   if (line === 'sponsor') return 'sponsor';
+  if (line === 'parent') return 'parent';
 
   // Split pro stale : réeligner si le rôle ne correspond plus à la ligne stockée
   if (line === 'pro_player' || line === 'pro_club' || line === 'pro_staff') {

@@ -36,6 +36,7 @@ const LEFT_PRIORITY_BY_LINE: Record<ProductLineId, MainTabId[]> = {
   sponsor: ['home', 'matchs', 'messages', 'profil'],
   supporter: ['matchs', 'feed', 'messages', 'reels'],
   sante: ['home', 'matchs', 'feed', 'messages'],
+  parent: ['home', 'messages', 'matchs', 'profil'],
 };
 
 const LEFT_PRIORITY_BY_PRO_ROLE: Partial<Record<UserRole, MainTabId[]>> = {
