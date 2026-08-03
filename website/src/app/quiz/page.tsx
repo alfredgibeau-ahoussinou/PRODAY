@@ -5,8 +5,9 @@ import { PremiumSection } from "@/components/layout/PremiumSection";
 import { ROUTES } from "@/lib/routes";
 
 export const metadata: Metadata = {
-  title: "Quiz profil",
-  description: "5 questions pour trouver votre pôle. Joueur, Pro, Santé ou Partenaires.",
+  title: "Vous êtes ?",
+  description:
+    "Choisissez votre rôle pour accéder au bon pôle ProDay : Joueur, Supporter, Club, Coach, Recruteur, Santé, Sponsor ou Organisateur.",
 };
 
 export default function QuizPage() {
@@ -14,16 +15,16 @@ export default function QuizPage() {
     <>
       <PageHeader
         pathname={ROUTES.quiz}
-        kicker="QUIZ"
-        title="Quel pôle ProDay vous correspond ?"
-        description="5 questions. On vous oriente vers le bon pôle : Joueur, Pro, Santé ou Partenaires."
+        kicker="RÔLE"
+        title="Vous êtes ?"
+        description="Un clic pour rejoindre le pôle qui vous correspond."
         image="/showcase/classic-exp-discover.jpg"
         dark
       />
       <PremiumSection
-        kicker="4 PÔLES"
-        title="Joueur · Pro · Santé · Partenaires"
-        description="Le quiz oriente vers le bon pôle : Joueur, Pro, Santé ou Partenaires."
+        kicker="PÔLES"
+        title="Choisissez votre rôle"
+        description="Joueur, Supporter, Club, Coach, Recruteur / Agent, Santé, Sponsor ou Organisateur."
         bordered={false}
       >
         <RoleQuiz />
