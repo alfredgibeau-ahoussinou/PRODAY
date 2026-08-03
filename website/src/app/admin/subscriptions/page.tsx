@@ -5,6 +5,7 @@ import {
   getAdminSessionFromCookies,
 } from "@/lib/adminSession";
 import { AdminSubscriptions } from "@/components/admin/AdminSubscriptions";
+import { fetchAdminPlatformStats } from "@/lib/adminPlatformApi";
 
 export const metadata: Metadata = {
   title: "Abonnements Admin - ProDay",
@@ -15,5 +16,16 @@ export default async function AdminSubscriptionsPage() {
   if (!(await getAdminSessionFromCookies())) {
     redirect(ADMIN_LOGIN_PATH);
   }
-  return <AdminSubscriptions />;
+
+  const result = await fetchAdminPlatformStats();
+
+  return (
+    <AdminSubscriptions
+      items={result.data.subscriptions.items}
+      proCount={result.data.subscriptions.pro_count}
+      activeOrTrialing={result.data.subscriptions.active_or_trialing}
+      pastDue={result.data.subscriptions.past_due}
+      error={result.ok ? null : (result.error ?? "Chargement impossible")}
+    />
+  );
 }

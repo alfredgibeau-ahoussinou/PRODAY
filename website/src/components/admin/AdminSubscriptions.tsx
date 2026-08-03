@@ -8,91 +8,71 @@ import {
   AdminEmptyState,
   AdminInput,
   AdminKpiCard,
-  AdminMockBadge,
   AdminStatusBadge,
   AdminTableShell,
   formatAdminDate,
 } from "@/components/admin/adminUi";
+import type { AdminPlatformSubscription } from "@/lib/adminPlatformApi";
 
-type SubStatus = "active" | "trialing" | "canceled" | "past_due";
-
-type SubscriptionRow = {
-  id: string;
-  email: string;
-  plan: string;
-  status: SubStatus;
-  mrr: number;
-  renewsAt: string;
-};
-
-/** Données démo — brancher Stripe Billing / Firestore `subscriptions`. */
-const MOCK: SubscriptionRow[] = [
-  {
-    id: "sub_1",
-    email: "lea.moreau@example.com",
-    plan: "Pro Joueur",
-    status: "active",
-    mrr: 9.99,
-    renewsAt: "2026-09-01T00:00:00Z",
-  },
-  {
-    id: "sub_2",
-    email: "club.paris@example.com",
-    plan: "Pro Club",
-    status: "trialing",
-    mrr: 49,
-    renewsAt: "2026-08-15T00:00:00Z",
-  },
-  {
-    id: "sub_3",
-    email: "agent.martin@example.com",
-    plan: "Pro Staff",
-    status: "past_due",
-    mrr: 29,
-    renewsAt: "2026-08-05T00:00:00Z",
-  },
-];
-
-const STATUS_LABEL: Record<SubStatus, string> = {
+const STATUS_LABEL: Record<string, string> = {
   active: "Actif",
   trialing: "Essai",
   canceled: "Annulé",
   past_due: "Impayé",
+  none: "—",
 };
 
-export function AdminSubscriptions() {
+type Props = {
+  items: AdminPlatformSubscription[];
+  proCount: number;
+  activeOrTrialing: number;
+  pastDue: number;
+  error?: string | null;
+};
+
+export function AdminSubscriptions({
+  items,
+  proCount,
+  activeOrTrialing,
+  pastDue,
+  error = null,
+}: Props) {
   const [q, setQ] = useState("");
   const rows = useMemo(() => {
     const needle = q.trim().toLowerCase();
-    if (!needle) return MOCK;
-    return MOCK.filter(
+    if (!needle) return items;
+    return items.filter(
       (r) =>
-        r.email.includes(needle) ||
+        r.email.toLowerCase().includes(needle) ||
         r.plan.toLowerCase().includes(needle) ||
-        STATUS_LABEL[r.status].toLowerCase().includes(needle),
+        (STATUS_LABEL[r.status] ?? r.status).toLowerCase().includes(needle),
     );
-  }, [q]);
-
-  const mrr = MOCK.filter((r) => r.status === "active" || r.status === "trialing").reduce(
-    (a, r) => a + r.mrr,
-    0,
-  );
+  }, [q, items]);
 
   return (
     <AdminShell
       title="Abonnements"
-      subtitle="Plans Free / Pro. Brancher Stripe customers + invoices pour le revenu réel."
-      actions={<AdminMockBadge />}
+      subtitle="Champs Firestore `subscription_tier` / `subscription_status`. MRR Stripe non branché."
     >
+      {error ? <AdminBanner tone="warning">{error}</AdminBanner> : null}
       <AdminBanner tone="info">
-        Hook prévu : <code className="text-white/80">GET /api/admin/subscriptions</code> → Stripe
-        Billing ou collection Firestore <code className="text-white/80">subscriptions</code>.
+        Le MRR / revenu Stripe n’est pas calculé ici. Les euros inventés ont été retirés.
       </AdminBanner>
 
       <section className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <AdminKpiCard label="Abonnements actifs" value={2} accent="emerald" />
-        <AdminKpiCard label="MRR (démo)" value={`${mrr.toFixed(2)} €`} accent="blue" />
-        <AdminKpiCard label="Impayés" value={1} accent="amber" />
+        <AdminKpiCard label="Comptes Pro" value={proCount} accent="emerald" />
+        <AdminKpiCard
+          label="MRR Stripe"
+          value="Non disponible"
+          hint="Nécessite Stripe Billing API"
+          accent="blue"
+        />
+        <AdminKpiCard
+          label="Actifs / essai (champ)"
+          value={activeOrTrialing}
+          hint={pastDue > 0 ? `${pastDue} impayé(s)` : undefined}
+          accent="navy"
+        />
       </section>
 
       <div className="relative max-w-md">
@@ -116,14 +96,25 @@ export function AdminSubscriptions() {
               <th>Plan</th>
               <th>Statut</th>
               <th>MRR</th>
-              <th>Renouvellement</th>
+              <th>Fin de période</th>
             </tr>
           </thead>
           <tbody>
             {rows.length === 0 ? (
               <tr>
                 <td colSpan={5} className="!p-0">
-                  <AdminEmptyState title="Aucun abonnement" />
+                  <AdminEmptyState
+                    title={
+                      error
+                        ? "Source abonnements indisponible"
+                        : "Aucun abonnement Pro / statut renseigné"
+                    }
+                    description={
+                      error
+                        ? "Connectez websiteAdminStats."
+                        : "Les comptes Free sans statut ne sont pas listés."
+                    }
+                  />
                 </td>
               </tr>
             ) : (
@@ -141,11 +132,13 @@ export function AdminSubscriptions() {
                     <td className="font-medium text-white">{r.email}</td>
                     <td className="text-white/65">{r.plan}</td>
                     <td>
-                      <AdminStatusBadge tone={tone}>{STATUS_LABEL[r.status]}</AdminStatusBadge>
+                      <AdminStatusBadge tone={tone}>
+                        {STATUS_LABEL[r.status] ?? r.status}
+                      </AdminStatusBadge>
                     </td>
-                    <td className="tabular-nums text-white/65">{r.mrr.toFixed(2)} €</td>
+                    <td className="tabular-nums text-white/45">—</td>
                     <td className="whitespace-nowrap text-white/45">
-                      {formatAdminDate(r.renewsAt)}
+                      {r.renewsAt ? formatAdminDate(r.renewsAt) : "—"}
                     </td>
                   </tr>
                 );

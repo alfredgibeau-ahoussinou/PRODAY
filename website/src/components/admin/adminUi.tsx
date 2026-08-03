@@ -200,7 +200,7 @@ export function AdminBanner({
 export function AdminMockBadge() {
   return (
     <span className="rounded-md border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-amber-200">
-      Données démo · API à brancher
+      Source non branchée
     </span>
   );
 }

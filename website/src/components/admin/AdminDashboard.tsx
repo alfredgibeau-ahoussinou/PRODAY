@@ -34,30 +34,44 @@ type VisitStats = {
   siteWeek?: number;
 };
 
+type PlatformStats = {
+  users: number;
+  pro: number;
+  referrals: number;
+  reportsOpen: number;
+};
+
 type Props = {
   betaCounts: BetaCounts;
   visitStats: VisitStats;
+  platformStats: PlatformStats | null;
   betaError?: string | null;
   visitsError?: string | null;
+  platformError?: string | null;
 };
 
 export function AdminDashboard({
   betaCounts,
   visitStats,
+  platformStats,
   betaError,
   visitsError,
+  platformError,
 }: Props) {
   return (
     <AdminShell
       title="Dashboard"
-      subtitle="Vue d’ensemble des inscriptions bêta, du trafic et des files d’attente fondateurs."
+      subtitle="Vue d’ensemble des inscriptions bêta, du trafic et des comptes réels."
       pendingBetaCount={betaCounts.pending}
     >
-      {(betaError || visitsError) && (
+      {(betaError || visitsError || platformError) && (
         <div className="space-y-2">
           {betaError ? <AdminBanner tone="warning">Bêta : {betaError}</AdminBanner> : null}
           {visitsError ? (
             <AdminBanner tone="warning">Visites : {visitsError}</AdminBanner>
+          ) : null}
+          {platformError ? (
+            <AdminBanner tone="warning">Plateforme : {platformError}</AdminBanner>
           ) : null}
         </div>
       )}
@@ -65,7 +79,7 @@ export function AdminDashboard({
       <section>
         <AdminSectionHeading
           title="Indicateurs clés"
-          description="Priorité : file d’attente bêta et trafic."
+          description="Uniquement des compteurs branchés (bêta, trafic, Firestore)."
         />
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <AdminKpiCard
@@ -97,6 +111,33 @@ export function AdminDashboard({
             accent="cyan"
           />
         </div>
+      </section>
+
+      <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <AdminKpiCard
+          label="Comptes utilisateurs"
+          value={platformStats ? platformStats.users : "—"}
+          hint={platformStats ? "Firestore" : "Non disponible"}
+          accent="blue"
+        />
+        <AdminKpiCard
+          label="Comptes Pro"
+          value={platformStats ? platformStats.pro : "—"}
+          hint={platformStats ? "subscription_tier" : "Non disponible"}
+          accent="emerald"
+        />
+        <AdminKpiCard
+          label="Codes parrainage"
+          value={platformStats ? platformStats.referrals : "—"}
+          hint={platformStats ? "Champs referral_*" : "Non disponible"}
+          accent="navy"
+        />
+        <AdminKpiCard
+          label="Signalements ouverts"
+          value={platformStats ? platformStats.reportsOpen : "—"}
+          hint={platformStats ? "reel_reports" : "Non disponible"}
+          accent="amber"
+        />
       </section>
 
       <section>
@@ -146,19 +187,19 @@ export function AdminDashboard({
               href: ROUTES.adminUsers,
               icon: Users,
               title: "Utilisateurs",
-              desc: "Comptes, rôles et suspension",
+              desc: "Comptes Firestore (lecture)",
             },
             {
               href: ROUTES.adminSubscriptions,
               icon: CreditCard,
               title: "Abonnements",
-              desc: "Plans Free / Pro (hooks Stripe)",
+              desc: "Tiers Pro — MRR Stripe non dispo",
             },
             {
               href: ROUTES.adminReferrals,
               icon: Gift,
               title: "Parrainage",
-              desc: "Codes et récompenses",
+              desc: "Codes et récompenses réels",
             },
             {
               href: ROUTES.adminVisites,
@@ -170,7 +211,7 @@ export function AdminDashboard({
               href: ROUTES.adminReports,
               icon: AlertCircle,
               title: "Modération",
-              desc: "Signalements et files",
+              desc: "Signalements reel_reports",
             },
           ].map((item) => (
             <Link key={item.href} href={item.href} className="group block">
@@ -196,15 +237,15 @@ export function AdminDashboard({
 
       <section className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <AdminKpiCard
-          label="Abonnements (Stripe)"
+          label="Abonnements (Stripe MRR)"
           value="—"
-          hint="À brancher sur Stripe"
+          hint="Non disponible — pas d’API Billing"
           accent="blue"
         />
         <AdminKpiCard
           label="Revenu estimé"
           value="—"
-          hint="Nécessite Stripe Billing API"
+          hint="Non disponible"
           accent="navy"
         />
       </section>

@@ -6,6 +6,7 @@ import {
 } from "@/lib/adminSession";
 import { AdminDashboard } from "@/components/admin/AdminDashboard";
 import { fetchBetaWaitlistAdmin } from "@/lib/adminBetaApi";
+import { fetchAdminPlatformStats } from "@/lib/adminPlatformApi";
 import { fetchTrafficStatsAdmin } from "@/lib/adminTrafficApi";
 
 export const metadata: Metadata = {
@@ -19,9 +20,10 @@ export default async function AdminDashboardPage() {
     redirect(ADMIN_LOGIN_PATH);
   }
 
-  const [beta, visits] = await Promise.all([
+  const [beta, visits, platform] = await Promise.all([
     fetchBetaWaitlistAdmin(),
     fetchTrafficStatsAdmin(),
+    fetchAdminPlatformStats(),
   ]);
 
   const days = visits.data.days ?? [];
@@ -42,12 +44,25 @@ export default async function AdminDashboardPage() {
       betaCounts={beta.counts}
       betaError={beta.ok ? null : (beta.error ?? "Chargement bêta impossible")}
       visitsError={visits.ok ? null : (visits.error ?? "Chargement visites impossible")}
+      platformError={
+        platform.ok ? null : (platform.error ?? "Chargement plateforme impossible")
+      }
       visitStats={{
         siteVisits: visits.data.totals.site_visits,
         appOpens: visits.data.totals.app_opens,
         siteToday,
         siteWeek,
       }}
+      platformStats={
+        platform.ok
+          ? {
+              users: platform.data.users.total,
+              pro: platform.data.subscriptions.pro_count,
+              referrals: platform.data.referrals.codes,
+              reportsOpen: platform.data.reports.open,
+            }
+          : null
+      }
     />
   );
 }
