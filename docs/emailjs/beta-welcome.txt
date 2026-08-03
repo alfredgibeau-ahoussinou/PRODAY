@@ -29,6 +29,6 @@ Si le lien ne fonctionne pas, copiez-le dans votre navigateur.
 
 —
 L'équipe ProDay
-support@proday.app · {{site_url}}
+proday.admin@gmail.com · {{site_url}}
 
 Vous recevez cet email car vous vous êtes inscrit à la bêta sur ProDay.

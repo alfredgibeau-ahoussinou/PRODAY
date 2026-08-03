@@ -203,7 +203,7 @@ export function BetaInstallerContent() {
                 items={[
                   "Mettez à jour Android si possible (version 10 minimum recommandée).",
                   "Désinstallez une éventuelle ancienne version bêta, puis réinstallez.",
-                  "Contactez support@proday.app avec le modèle de téléphone et une capture d'écran.",
+                  "Contactez proday.admin@gmail.com avec le modèle de téléphone et une capture d'écran.",
                 ]}
               />
               <TroubleshootBlock
@@ -251,14 +251,14 @@ export function BetaInstallerContent() {
                 items={[
                   "Vérifiez les spams et l'onglet Promotions de Mail.",
                   "L'invitation est envoyée à l'adresse exacte de votre inscription bêta.",
-                  "Attendez 24–48 h après confirmation, puis contactez support@proday.app.",
+                  "Attendez 24–48 h après confirmation, puis contactez proday.admin@gmail.com.",
                 ]}
               />
               <TroubleshootBlock
                 title="Le lien d'invitation a expiré"
                 items={[
                   "Les invitations TestFlight expirent après 90 jours.",
-                  "Écrivez à support@proday.app pour recevoir une nouvelle invitation.",
+                  "Écrivez à proday.admin@gmail.com pour recevoir une nouvelle invitation.",
                 ]}
               />
               <TroubleshootBlock
@@ -291,8 +291,8 @@ export function BetaInstallerContent() {
               utilisez uniquement TestFlight Apple. N&apos;installez jamais un APK provenant
               d&apos;une source tierce. En cas de
               doute, contactez{" "}
-              <a href="mailto:support@proday.app" className="text-[var(--proday-accent)] underline">
-                support@proday.app
+              <a href="mailto:proday.admin@gmail.com" className="text-[var(--proday-accent)] underline">
+                proday.admin@gmail.com
               </a>
               .
             </p>

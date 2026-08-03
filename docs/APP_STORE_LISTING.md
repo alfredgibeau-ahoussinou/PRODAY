@@ -79,7 +79,7 @@ ProDay remplace les groupes éparpillés par un calendrier unifié, un CV vivant
 
 Rejoignez la liste d'attente sur proday75.fr si l'app n'est pas encore disponible dans votre région.
 
-Support : partenaires@proday.app
+Support : proday.admin@gmail.com
 Site : https://proday75.fr
 ```
 

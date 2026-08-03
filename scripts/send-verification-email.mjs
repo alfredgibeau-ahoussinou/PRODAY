@@ -89,7 +89,7 @@ function buildVerificationEmail(link, targetEmail) {
     '',
     'Ce lien expire après quelques heures.',
     '',
-    '— ProDay · contact@proday.app',
+    '— ProDay · proday.admin@gmail.com',
   ].join('\n');
   const html = `<!DOCTYPE html><html lang="fr"><body style="font-family:sans-serif;background:#0a0a0a;color:#fff;padding:24px">
 <h1 style="color:#22d3ee">ProDay</h1>

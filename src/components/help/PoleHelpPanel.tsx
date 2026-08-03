@@ -296,7 +296,7 @@ export const PoleHelpPanel: React.FC<PoleHelpPanelProps> = ({
                       {POLE_HELP_OTHER_QUESTION.question}
                     </ProDayText>
                     <ProDayText variant="caption" muted style={panelStyles.otherQuestionHint}>
-                      Contacter support@proday.app
+                      Contacter proday.admin@gmail.com
                     </ProDayText>
                   </View>
                   <Icon name="chevron-forward" size={14} color={colors.brand} />
@@ -316,7 +316,7 @@ export const PoleHelpPanel: React.FC<PoleHelpPanelProps> = ({
           ]}
         >
           <ProDayText variant="caption" muted style={panelStyles.footerText}>
-            Besoin d’aide ? support@proday.app
+            Besoin d’aide ? proday.admin@gmail.com
           </ProDayText>
         </View>
       </View>

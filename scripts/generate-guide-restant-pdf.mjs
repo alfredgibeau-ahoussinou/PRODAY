@@ -157,7 +157,7 @@ Ces tâches ne nécessitent \\textbf{pas} de savoir coder~:
   \\item \\textbf{Remplir les annexes} du pacte encore vides~: fiches de poste (A), indicateurs KPI (B), tableau des apports (C), etc.
   \\item \\textbf{Tester l'application} sur de vrais téléphones (iPhone et Android) avec des scénarios réalistes (inscription, annonce, match, message).
   \\item \\textbf{Rédiger la recette MVP}~: procès-verbal signé par au moins trois associés lorsque les critères du pacte sont remplis.
-  \\item \\textbf{Préparer la communication}~: nom de domaine, e-mail support (ex. contact@proday.app), textes pour les fiches App Store / Google Play.
+  \\item \\textbf{Préparer la communication}~: nom de domaine, e-mail support (ex. proday.admin@gmail.com), textes pour les fiches App Store / Google Play.
   \\item \\textbf{Publier en ligne} la politique de confidentialité et les CGU (fichiers déjà rédigés dans le dossier legal — il faut une \\textbf{URL publique}).
   \\item \\textbf{Ouvrir les comptes développeur} Apple (99~€/an) et Google Play (25~€ une fois).
   \\item \\textbf{Fournir les captures d'écran} et descriptions pour les stores (6,7″, 5,5″, etc.).

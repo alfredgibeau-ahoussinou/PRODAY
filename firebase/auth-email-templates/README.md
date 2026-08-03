@@ -61,7 +61,7 @@ Créer **deux** templates (vérification et reset — texte fixe, comme les fich
    - **To Email** : `{{email}}`
    - **From Name** : `{{app_name}}`
    - **Subject** : `Confirmez votre adresse e-mail ProDay` *(fixe)*
-   - **Reply To** : `contact@proday.app`
+   - **Reply To** : `proday.admin@gmail.com`
 3. **Content** : copier-coller **tout** le HTML de `docs/emailjs/auth-verification.html`
 4. *(Optionnel)* **Plain Text** : `docs/emailjs/auth-verification.txt` (`{{message_text}}`)
 5. Noter le **Template ID** (ex. `template_verif_xxxxxx`)
@@ -73,7 +73,7 @@ Créer **deux** templates (vérification et reset — texte fixe, comme les fich
    - **To Email** : `{{email}}`
    - **From Name** : `{{app_name}}`
    - **Subject** : `Réinitialisez votre mot de passe ProDay` *(fixe)*
-   - **Reply To** : `contact@proday.app`
+   - **Reply To** : `proday.admin@gmail.com`
 3. **Content** : copier-coller **tout** le HTML de `docs/emailjs/auth-password-reset.html`
 4. *(Optionnel)* **Plain Text** : `docs/emailjs/auth-password-reset.txt` (`{{message_text}}`)
 5. Noter le **Template ID** (ex. `template_reset_xxxxxx`)
@@ -162,8 +162,8 @@ Si le HTML s'affiche mal (balises visibles, styles ignorés), basculer vers `ver
 
 | Template Console | Objet | Message (fichier) | Expéditeur | Reply-to | URL d'action |
 | --- | --- | --- | --- | --- | --- |
-| **Validation de l'adresse e-mail** | `Confirmez votre adresse e-mail ProDay` | `verification.html` *(fallback : `verification.txt`)* | `ProDay` | `contact@proday.app` | `%LINK%` (défaut) |
-| **Réinitialisation du mot de passe** | `Réinitialisez votre mot de passe ProDay` | `password-reset.html` *(fallback : `password-reset.txt`)* | `ProDay` | `contact@proday.app` | `%LINK%` (défaut) |
+| **Validation de l'adresse e-mail** | `Confirmez votre adresse e-mail ProDay` | `verification.html` *(fallback : `verification.txt`)* | `ProDay` | `proday.admin@gmail.com` | `%LINK%` (défaut) |
+| **Réinitialisation du mot de passe** | `Réinitialisez votre mot de passe ProDay` | `password-reset.html` *(fallback : `password-reset.txt`)* | `ProDay` | `proday.admin@gmail.com` | `%LINK%` (défaut) |
 
 ## Étapes copier-coller (Console débloquée)
 
@@ -190,7 +190,7 @@ Si le HTML s'affiche mal (balises visibles, styles ignorés), basculer vers `ver
 │  │  └─────────────────────────┘  │  │
 │  │                               │  │
 │  │  Lien secours %LINK% (petit)  │  │
-│  │  — ProDay · contact@proday.app│  │
+│  │  — ProDay · proday.admin@gmail.com│  │
 │  └───────────────────────────────┘  │
 └─────────────────────────────────────┘
 ```

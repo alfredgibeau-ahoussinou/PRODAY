@@ -1551,7 +1551,7 @@ export const SPONSOR_VALUE_PILLARS = [
   },
 ] as const;
 
-export const SPONSOR_PARTNER_CONTACT_EMAIL = "partenaires@proday.app";
+export const SPONSOR_PARTNER_CONTACT_EMAIL = "proday.admin@gmail.com";
 
 export const SUBSCRIPTION_PLANS_WEB = [
   {

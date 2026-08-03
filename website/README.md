@@ -41,7 +41,7 @@ Hero plein écran + téléphone interactif centré sur les **six pôles carousel
 - URL `?p=amateur|supporter|sante|pro_joueur|pro_club|pro_staff` (legacy `?u=` redirigé)
 - Onglets alignés sur les shells app ; contenu illustratif
 - Lien **« Voir la démo »** depuis chaque page univers
-- Contact partenaires : **partenaires@proday.app** — CTA `/beta/inscription?role=sponsor`
+- Contact partenaires : **proday.admin@gmail.com** — CTA `/beta/inscription?role=sponsor`
 
 ## Lancer en local
 

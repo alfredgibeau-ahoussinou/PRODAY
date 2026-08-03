@@ -77,7 +77,7 @@ Voir `docs/PRICING_STRATEGY.md` § Phase déploiement.
 
 ## 7. Canal retours
 
-- Email : contact@proday.app
+- Email : proday.admin@gmail.com
 - Collecter bugs via messages in-app ou formulaire externe
 
 ## 8. Go / no-go

@@ -108,7 +108,7 @@ export function getShopCopy(line: ProductLineId): ShopCopy {
     subtitle,
     preorderNote:
       'Précommande ouverte. Livraison estimée sous 3 à 4 semaines. Paiement sécurisé par carte dans l’app.',
-    contactEmail: 'shop@proday.app',
+    contactEmail: 'proday.admin@gmail.com',
   };
 }
 

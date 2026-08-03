@@ -90,7 +90,7 @@ export const POLE_HELP_OTHER_QUESTION: PoleHelpEntry = {
   category: 'pole',
   question: 'Autre question',
   answer:
-    'Pour toute autre demande, contactez support@proday.app. Notre équipe vous répond sous 24 h.',
+    'Pour toute autre demande, contactez proday.admin@gmail.com. Notre équipe vous répond sous 24 h.',
 };
 
 const AMATEUR_HELP: PoleHelpContent = {
@@ -319,7 +319,7 @@ const AMATEUR_HELP: PoleHelpContent = {
         id: 'annuler-achat',
         question: 'Comment annuler ou contester un achat ?',
         answer:
-          'Consulte l’historique dans Moi > Paramètres ou écris à support@proday.app avec ton reçu pour toute demande de remboursement.',
+          'Consulte l’historique dans Moi > Paramètres ou écris à proday.admin@gmail.com avec ton reçu pour toute demande de remboursement.',
         navigate: { kind: 'profile' },
         navigateLabel: 'Voir mon compte',
       },
@@ -443,7 +443,7 @@ const SANTE_HELP: PoleHelpContent = {
     ]),
     ...withCategory('mercato', [
       { id: 'recrutement-medical', question: 'Comment être visible auprès des clubs ?', answer: 'Complète ton profil praticien : spécialité, zone et certifications visibles dans l’annuaire santé ProDay.', navigate: { kind: 'profile' }, navigateLabel: 'Compléter mon profil' },
-      { id: 'partenariat-club', question: 'Comment devenir praticien référent d’un club ?', answer: 'Contacte le club via Messages ou demande la mise en relation via support@proday.app.', navigate: { kind: 'tab', tab: 'messages' }, navigateLabel: 'Contacter un club' },
+      { id: 'partenariat-club', question: 'Comment devenir praticien référent d’un club ?', answer: 'Contacte le club via Messages ou demande la mise en relation via proday.admin@gmail.com.', navigate: { kind: 'tab', tab: 'messages' }, navigateLabel: 'Contacter un club' },
       { id: 'annuaire-sante', question: 'Où apparaît mon profil dans l’annuaire ?', answer: 'Les joueurs et clubs peuvent te trouver via l’annuaire santé une fois ton profil praticien complété et validé.', navigate: { kind: 'profile' }, navigateLabel: 'Voir mon profil' },
     ]),
     ...withCategory('messages', [
@@ -463,7 +463,7 @@ const SANTE_HELP: PoleHelpContent = {
     ]),
     ...withCategory('paiement', [
       { id: 'facturation', question: 'Où suivre ma facturation ?', answer: 'L’historique des consultations facturées et les exports sont accessibles depuis ton profil ou l’accueil selon ton offre.', navigate: { kind: 'profile' }, navigateLabel: 'Ouvrir mon profil' },
-      { id: 'paiement', question: 'Comment gérer mon abonnement praticien ?', answer: 'Offre, renouvellement et factures sont dans Profil > Paramètres ou via support@proday.app pour toute question contractuelle.', navigate: { kind: 'profile' }, navigateLabel: 'Voir mon abonnement' },
+      { id: 'paiement', question: 'Comment gérer mon abonnement praticien ?', answer: 'Offre, renouvellement et factures sont dans Profil > Paramètres ou via proday.admin@gmail.com pour toute question contractuelle.', navigate: { kind: 'profile' }, navigateLabel: 'Voir mon abonnement' },
     ]),
     ...withCategory('pole', [
       { id: 'rdv', question: 'Où voir mes rendez-vous ?', answer: 'Ton agenda et tes créneaux à venir sont sur l’accueil Santé. Tu peux filtrer par jour et accéder au détail de chaque consultation.', navigate: { kind: 'tab', tab: 'home' }, navigateLabel: 'Ouvrir l’agenda' },
@@ -576,14 +576,14 @@ const PRO_CLUB_HELP: PoleHelpContent = {
       { id: 'bilan-saison', question: 'Où voir le bilan de saison ?', answer: 'Structure ou Calendrier > Saison : synthèse des résultats, buts et classements par équipe.', navigate: { kind: 'matchs', homeTab: 'season' }, navigateLabel: 'Bilan saison' },
     ]),
     ...withCategory('paiement', [
-      { id: 'paiement', question: 'Où gérer l’abonnement club ?', answer: 'Facturation, sièges staff et options premium sont dans Vitrine > Paramètres ou contacte support@proday.app.', navigate: { kind: 'profile' }, navigateLabel: 'Voir l’abonnement' },
+      { id: 'paiement', question: 'Où gérer l’abonnement club ?', answer: 'Facturation, sièges staff et options premium sont dans Vitrine > Paramètres ou contacte proday.admin@gmail.com.', navigate: { kind: 'profile' }, navigateLabel: 'Voir l’abonnement' },
       { id: 'partenaires', question: 'Comment mettre en avant mes partenaires ?', answer: 'La vitrine club et la boutique ProDay permettent d’afficher logos partenaires et offres liées à ton club.', navigate: { kind: 'profile' }, navigateLabel: 'Modifier la vitrine' },
     ]),
     ...withCategory('pole', [
       { id: 'equipes-multiples', question: 'Comment gérer plusieurs équipes ?', answer: 'Structure > Équipes : crée ou modifie tes catégories (U19, réserve, pro…) et assigne staff et joueurs.', navigate: { kind: 'tab', tab: 'home' }, navigateLabel: 'Mes équipes' },
       { id: 'staff-roles', question: 'Comment attribuer des rôles au staff ?', answer: 'Structure > Staff : invite des membres et définis leurs droits (convocations, Mercato, documents).', navigate: { kind: 'tab', tab: 'home' }, navigateLabel: 'Gérer le staff' },
       { id: 'licences', question: 'Où suivre les licences joueurs ?', answer: 'Structure > Effectif : consulte le statut licence et les documents obligatoires par joueur.', navigate: { kind: 'tab', tab: 'home' }, navigateLabel: 'Licences' },
-      { id: 'partenariat-proday', question: 'Comment contacter ProDay pour le club ?', answer: 'Écris à support@proday.app ou utilise Vitrine > Aide pour toute demande institutionnelle.', navigate: { kind: 'profile' }, navigateLabel: 'Aide club' },
+      { id: 'partenariat-proday', question: 'Comment contacter ProDay pour le club ?', answer: 'Écris à proday.admin@gmail.com ou utilise Vitrine > Aide pour toute demande institutionnelle.', navigate: { kind: 'profile' }, navigateLabel: 'Aide club' },
     ]),
   ],
 };
@@ -780,7 +780,7 @@ const SPONSOR_HELP: PoleHelpContent = {
         id: 'facture-sponsor',
         question: 'Où trouver mes factures Sponsor ?',
         answer:
-          'Marque > Facturation (ou support@proday.app). Les formules payantes y listent historique et reçus.',
+          'Marque > Facturation (ou proday.admin@gmail.com). Les formules payantes y listent historique et reçus.',
         navigate: { kind: 'profile' },
         navigateLabel: 'Facturation',
       },
@@ -814,7 +814,7 @@ const SPONSOR_HELP: PoleHelpContent = {
         id: 'support-sponsor',
         question: 'Comment contacter le support partenaires ?',
         answer:
-          'Écrivez à support@proday.app en indiquant le nom de votre marque. Pour l’upgrade Territorial / National, utilisez aussi le bouton Formules.',
+          'Écrivez à proday.admin@gmail.com en indiquant le nom de votre marque. Pour l’upgrade Territorial / National, utilisez aussi le bouton Formules.',
         navigate: { kind: 'profile' },
         navigateLabel: 'Mon profil marque',
       },
@@ -873,7 +873,7 @@ const PRO_STAFF_HELP: PoleHelpContent = {
       { id: 'rapport-scouting', question: 'Où rédiger un rapport de scouting ?', answer: 'Depuis la fiche joueur ou ton dossier, ajoute notes et évaluation visible dans ton mandat.', navigate: { kind: 'tab', tab: 'home' }, navigateLabel: 'Rapport scouting' },
     ]),
     ...withCategory('paiement', [
-      { id: 'paiement', question: 'Où gérer mon abonnement staff ?', answer: 'Offre pro, visibilité Mercato et factures sont dans Profil > Paramètres ou via support@proday.app.', navigate: { kind: 'profile' }, navigateLabel: 'Voir mon abonnement' },
+      { id: 'paiement', question: 'Où gérer mon abonnement staff ?', answer: 'Offre pro, visibilité Mercato et factures sont dans Profil > Paramètres ou via proday.admin@gmail.com.', navigate: { kind: 'profile' }, navigateLabel: 'Voir mon abonnement' },
       { id: 'facturation-mandats', question: 'Comment suivre la facturation de mes mandats ?', answer: 'Profil > Facturation : historique et exports selon ton offre staff ProDay.', navigate: { kind: 'profile' }, navigateLabel: 'Ma facturation' },
     ]),
     ...withCategory('pole', [

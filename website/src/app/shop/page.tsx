@@ -42,8 +42,8 @@ export default function ShopPage() {
         </div>
         <p className="mt-10 text-sm text-white/45">
           Livraison estimée 3 à 5 semaines · Contact :{" "}
-          <a href="mailto:shop@proday.app" className="font-medium text-white underline">
-            shop@proday.app
+          <a href="mailto:proday.admin@gmail.com" className="font-medium text-white underline">
+            proday.admin@gmail.com
           </a>
         </p>
         <div className="mt-8">

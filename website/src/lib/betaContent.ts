@@ -122,6 +122,6 @@ export const BETA_FAQ = [
   {
     question: "Je n'ai pas reçu l'email de bienvenue",
     answer:
-      "Vérifiez les spams et l'onglet Promotions. Si rien n'apparaît sous 24 h, écrivez à support@proday.app depuis l'adresse utilisée lors de l'inscription.",
+      "Vérifiez les spams et l'onglet Promotions. Si rien n'apparaît sous 24 h, écrivez à proday.admin@gmail.com depuis l'adresse utilisée lors de l'inscription.",
   },
 ] as const;
