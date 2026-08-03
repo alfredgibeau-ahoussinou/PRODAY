@@ -107,6 +107,28 @@ export const SubscriptionPlanView: React.FC<SubscriptionPlanViewProps> = ({
     }
   }, [plan, billing, refresh]);
 
+  const handleManage = useCallback(async () => {
+    try {
+      await iapService.openManageSubscriptions();
+    } catch {
+      Alert.alert(
+        'Gestion abonnement',
+        'Ouvrez Réglages → Abonnements (iOS) ou Play Store → Paiements et abonnements (Android).'
+      );
+    }
+  }, []);
+
+  const handleRestore = useCallback(async () => {
+    setUpgrading(true);
+    try {
+      const res = await iapService.restorePurchases();
+      Alert.alert(res.ok ? 'Restauré' : 'Restauration', res.message);
+      if (res.ok) await refresh();
+    } finally {
+      setUpgrading(false);
+    }
+  }, [refresh]);
+
   if (!visual || !plan) {
     return (
       <ProDayScreenCanvas>
@@ -161,6 +183,11 @@ export const SubscriptionPlanView: React.FC<SubscriptionPlanViewProps> = ({
                 <ProDayText variant="caption" muted>
                   {visual.proHighlight ?? plan.proIncludes[0]}
                 </ProDayText>
+                {subscription?.status === 'canceled' ? (
+                  <ProDayText variant="caption" muted>
+                    Renouvellement annulé — accès jusqu’à la fin de période.
+                  </ProDayText>
+                ) : null}
               </View>
             </ProDaySurface>
           ) : (
@@ -287,17 +314,35 @@ export const SubscriptionPlanView: React.FC<SubscriptionPlanViewProps> = ({
             <ProDayText variant="caption" muted style={styles.footnote}>
               {plan.pricing.storeAvailable
                 ? iapReady
-                  ? 'Paiement sécurisé App Store / Google Play'
+                  ? iapService.usesRevenueCat()
+                    ? 'Paiement sécurisé App Store / Google Play (RevenueCat)'
+                    : 'Paiement sécurisé App Store / Google Play'
                   : 'Accès gratuit pendant la bêta. Achats store via build EAS'
                 : 'Accès gratuit pendant la bêta. Abonnements store à venir'}
             </ProDayText>
+            {iapReady ? (
+              <TouchableOpacity style={styles.refreshLink} onPress={() => void handleRestore()} disabled={upgrading}>
+                <ProDayText variant="caption" muted>
+                  Restaurer un achat
+                </ProDayText>
+              </TouchableOpacity>
+            ) : null}
           </View>
         ) : (
-          <TouchableOpacity style={styles.refreshLink} onPress={() => void refresh()}>
-            <ProDayText variant="caption" muted>
-              Actualiser mon abonnement
-            </ProDayText>
-          </TouchableOpacity>
+          <View style={[styles.footer, { borderTopColor: colors.border, backgroundColor: colors.surface }]}>
+            <TouchableOpacity onPress={() => void handleManage()} activeOpacity={0.9}>
+              <ProDayGradient kind="cta" style={styles.cta}>
+                <ProDayText variant="caption" inverse style={styles.ctaText}>
+                  Gérer / annuler / renouveler
+                </ProDayText>
+              </ProDayGradient>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.refreshLink} onPress={() => void refresh()}>
+              <ProDayText variant="caption" muted>
+                Actualiser mon abonnement
+              </ProDayText>
+            </TouchableOpacity>
+          </View>
         )}
       </SafeAreaView>
     </ProDayScreenCanvas>

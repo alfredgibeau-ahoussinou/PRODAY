@@ -113,7 +113,7 @@ type ReportRow = {
 
 /**
  * Agrégats Firestore pour l’admin site (secret partagé).
- * Pas de MRR Stripe inventé — uniquement champs users / referrals / reel_reports.
+ * Pas de MRR Stripe inventé — abonnements via RevenueCat / stores ; stats users / referrals / reel_reports.
  */
 export function createWebsiteAdminStatsHandler(db: admin.firestore.Firestore) {
   return async (req: functions.https.Request, res: functions.Response): Promise<void> => {
@@ -312,7 +312,7 @@ export function createWebsiteAdminStatsHandler(db: admin.firestore.Firestore) {
           items: userRows.slice(0, LIST_CAP),
         },
         subscriptions: {
-          /** MRR Stripe réel non branché — ne jamais inventer d’euros. */
+          /** MRR store via RevenueCat — ne jamais inventer d’euros ici. */
           mrr_available: false,
           mrr: null,
           pro_count: byTier.pro ?? 0,

@@ -15,6 +15,7 @@ export type RuntimeConfig = {
   email?: RuntimeConfigSection;
   mistral?: RuntimeConfigSection;
   stripe?: RuntimeConfigSection;
+  revenuecat?: RuntimeConfigSection;
   visio?: RuntimeConfigSection;
 };
 
@@ -110,6 +111,9 @@ function buildConfigFromEnv(): RuntimeConfig {
     stripe: {
       secret_key: readEnv('STRIPE_SECRET_KEY'),
       webhook_secret: readEnv('STRIPE_WEBHOOK_SECRET'),
+    },
+    revenuecat: {
+      webhook_auth: readEnv('REVENUECAT_WEBHOOK_AUTH', 'REVENUECAT_WEBHOOK_SECRET'),
     },
     visio: {
       daily_api_key: readEnv('DAILY_API_KEY', 'VISIO_DAILY_API_KEY'),

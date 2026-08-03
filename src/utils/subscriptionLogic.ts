@@ -24,16 +24,35 @@ export function currentUsagePeriod(date = new Date()): string {
   return `${y}-${m}`;
 }
 
+/** Accès Pro effectif : respecte status + fin de période (webhooks RevenueCat). */
+export function isSubscriptionAccessActive(data: {
+  subscription_tier?: string;
+  subscription_status?: string;
+  subscription_period_end?: Date;
+}): boolean {
+  if (data.subscription_tier !== 'pro') return false;
+  const status = data.subscription_status;
+  if (status === 'past_due') return false;
+  if (status && !['active', 'trialing', 'canceled'].includes(status)) return false;
+  if (data.subscription_period_end) {
+    const end =
+      data.subscription_period_end instanceof Date
+        ? data.subscription_period_end
+        : new Date(data.subscription_period_end);
+    if (!Number.isNaN(end.getTime()) && end.getTime() < Date.now()) return false;
+  }
+  return true;
+}
+
 export function subscriptionFromUserFields(data: {
   subscription_tier?: string;
   subscription_plan_id?: string;
   subscription_status?: string;
   subscription_period_end?: Date;
 }): { tier: SubscriptionTier; plan_id?: SubscriptionPlanId; status?: string; period_end?: Date } {
-  const tier =
-    data.subscription_tier === 'pro' ? 'pro' : ('free' as SubscriptionTier);
+  const active = isSubscriptionAccessActive(data);
   return {
-    tier,
+    tier: active ? 'pro' : 'free',
     plan_id: data.subscription_plan_id as SubscriptionPlanId | undefined,
     status: data.subscription_status,
     period_end: data.subscription_period_end,

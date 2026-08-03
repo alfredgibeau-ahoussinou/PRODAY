@@ -58,7 +58,7 @@ export const ROUTES = {
   adminEmails: "/admin/emails",
   /** Logs et audit trail. */
   adminLogs: "/admin/logs",
-  /** Abonnements (Stripe / plans). */
+  /** Abonnements Pro (RevenueCat / stores). */
   adminSubscriptions: "/admin/subscriptions",
   /** Rôles et permissions. */
   adminRoles: "/admin/roles",

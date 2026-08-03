@@ -99,6 +99,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       unsubProfile = undefined;
       setFirebaseUser(user);
       if (user) {
+        void import('../services/revenueCat.service').then(({ revenueCatService }) => {
+          if (revenueCatService.isAvailable()) {
+            void revenueCatService.identify(user.uid);
+          }
+        });
         const loaded = await usersService.getById(user.uid);
         const migrated = loaded
           ? await productLineMigrationService.migrateUserIfNeeded(loaded)
@@ -136,6 +141,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           }
         }
       } else {
+        void import('../services/revenueCat.service').then(({ revenueCatService }) => {
+          void revenueCatService.logOut();
+        });
         setProfile(null);
         setIsAdmin(false);
       }
@@ -169,6 +177,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     const name = profile?.display_name;
     if (name) {
       await playAuthGreeting('goodbye', name);
+    }
+    try {
+      const { revenueCatService } = await import('../services/revenueCat.service');
+      await revenueCatService.logOut();
+    } catch {
+      // optional
     }
     await authService.signOut();
     userStateStore.reset();

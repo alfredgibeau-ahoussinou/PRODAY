@@ -212,7 +212,7 @@ export const subscriptionService = {
     );
   },
 
-  /** Paiement store — IAP natif si disponible, sinon message bêta. */
+  /** Paiement store — RevenueCat (préféré) ou expo-iap ; pas de Stripe Billing. */
   async requestUpgrade(
     planId: SubscriptionPlanId,
     billing: 'monthly' | 'yearly' = 'monthly'

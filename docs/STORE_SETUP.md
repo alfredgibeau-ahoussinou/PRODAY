@@ -1,6 +1,8 @@
-# Configuration App Store & Google Play — IAP ProDay
+# Configuration App Store & Google Play — IAP + RevenueCat
 
 Ce guide aligne **exactement** les SKU des stores avec le code (`src/content/iapProducts.ts` et `functions/src/iapSkus.ts`).
+
+**Décision architecture (2026-08)** : pas de Stripe Billing pour les abonnements Pro (jamais implémenté). Stripe Checkout reste pour shop + cotisations. Les abonnements récurrents passent par **RevenueCat** au-dessus d’App Store / Play (`react-native-purchases`), avec webhook → Firestore `subscription_*`. `expo-iap` reste un repli si les clés RC publiques sont absentes.
 
 Bundle / package : **`com.proday.app`**
 
@@ -50,6 +52,30 @@ Vérification automatique : `npm test -- iapProducts`
 
 ---
 
+## RevenueCat (obligatoire en prod)
+
+1. Créer un projet [RevenueCat](https://app.revenuecat.com) + apps iOS / Android (`com.proday.app`).
+2. Importer les **16 produits** (mêmes IDs que ci-dessus) depuis App Store Connect / Play Console.
+3. Créer un entitlement **`pro`** et y attacher tous les produits d’abonnement.
+4. (Optionnel) Offerings par rôle — l’app peut aussi acheter par `productIdentifier` direct.
+5. Clés publiques SDK → `.env` / EAS secrets :
+   - `EXPO_PUBLIC_REVENUECAT_IOS_API_KEY=appl_…`
+   - `EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY=goog_…`
+6. Webhook :
+   - URL : `https://REGION-PROJECT.cloudfunctions.net/revenueCatWebhook`
+   - Authorization : valeur = `REVENUECAT_WEBHOOK_AUTH` (functions `.env.<projectId>`)
+   - Événements : INITIAL_PURCHASE, RENEWAL, CANCELLATION, UNCANCELLATION, EXPIRATION, PRODUCT_CHANGE, BILLING_ISSUE
+7. L’app appelle `Purchases.logIn(firebaseUid)` pour lier l’utilisateur (voir `revenueCat.service.ts`).
+
+Déploiement functions :
+
+```bash
+cd functions && npm run build
+firebase deploy --only functions:activateStoreSubscription,functions:revenueCatWebhook
+```
+
+---
+
 ## App Store Connect (iOS)
 
 1. **App** : créer l’app `com.proday.app` si ce n’est pas déjà fait.
@@ -67,8 +93,8 @@ Vérification automatique : `npm test -- iapProducts`
 - Créer des **comptes Sandbox** (Utilisateurs et accès → Sandbox).
 - Sur l’appareil de test : Réglages → App Store → Compte sandbox (iOS 18+) ou se connecter lors du premier achat.
 - **TestFlight** : les builds distribués utilisent l’environnement sandbox pour les IAP ; aucun prélèvement réel.
-- Vérifier que `activateStoreSubscription` (Cloud Function) est déployée et que l’utilisateur est authentifié Firebase avant l’achat.
-- Annuler / renouveler les abonnements sandbox accélérés : [documentation Apple](https://developer.apple.com/documentation/storekit/in-app_purchase/testing_in-app_purchases_with_sandbox).
+- Vérifier que `activateStoreSubscription` + `revenueCatWebhook` sont déployés et que l’utilisateur est authentifié Firebase avant l’achat.
+- Annuler / renouveler : deep link in-app « Gérer / annuler / renouveler » ou [sandbox Apple](https://developer.apple.com/documentation/storekit/in-app_purchase/testing_in-app_purchases_with_sandbox).
 
 ---
 
@@ -87,91 +113,57 @@ Vérification automatique : `npm test -- iapProducts`
 - **Piste de test interne** : publier un AAB signé, ajouter des testeurs (liste e-mails).
 - **Licence de test** : Paramètres → Licence de test → ajouter les comptes Google des testeurs (achats sans facturation réelle).
 - Les achats de test expirent plus vite ; utiliser « Annuler l’abonnement » dans Play Store pour réinitialiser.
-- `expo-iap` attend `type: 'subs'` et le SKU exact côté Google.
+- RevenueCat (ou `expo-iap` en repli) attend le SKU exact côté Google.
 
 ---
 
-## Validation serveur (`activateStoreSubscription`)
+## Validation serveur
 
-Fonction callable : **`activateStoreSubscription`** (`functions/src/subscriptionIap.ts`).
+### Achat immédiat — `activateStoreSubscription`
 
-Flux :
+Callable (`functions/src/subscriptionIap.ts`) après achat client (RC ou expo-iap) :
 
-1. L’app achète via `expo-iap` (`src/services/iap.service.ts`).
-2. Après `purchaseUpdatedListener`, appel callable avec `planId`, `productId`, `platform`, `transactionId`, `purchaseToken` (Android).
-3. Le serveur vérifie que `productId` est un SKU connu (`iapSkus.ts`) et que `planId` correspond — **y compris `sponsor_pro`**.
-4. Écrit `subscription_purchases/{platform}_{transactionId}` et met à jour `users/{uid}` :
+1. Vérifie SKU connu + cohérence `planId`.
+2. Écrit `subscription_purchases/{…}` et `users/{uid}` :
    - `subscription_tier: 'pro'`
-   - `subscription_plan_id: <planId>`
+   - `subscription_plan_id`
    - `subscription_status: 'active'`
-   - `subscription_period_end` (+1 mois ou +1 an)
+   - `subscription_period_end`
 
-Déploiement :
+### Renouvellements / annulations — `revenueCatWebhook`
 
-```bash
-cd functions && npm run build
-firebase deploy --only functions:activateStoreSubscription
-```
+HTTP (`functions/src/revenueCatWebhook.ts`) :
+
+| Événement RC | Effet Firestore |
+|--------------|-----------------|
+| INITIAL_PURCHASE / RENEWAL / UNCANCELLATION / PRODUCT_CHANGE | tier `pro`, status `active`, period_end |
+| CANCELLATION | status `canceled` (accès jusqu’à period_end) |
+| BILLING_ISSUE | status `past_due` |
+| EXPIRATION | tier `free`, status `canceled` |
+
+L’app applique aussi `period_end` / `status` via `isSubscriptionAccessActive` (`subscriptionLogic.ts`).
 
 ---
 
 ## Checklist avant mise en prod
 
 ### App Store Connect (16 abonnements)
+- [ ] Groupe d’abonnements + 16 produits
+- [ ] Prix alignés (agent launch 19,99 → 29,99)
+- [ ] Sandbox OK
 
-- [ ] Groupe d’abonnements créé (ex. `proday_pro`)
-- [ ] `com.proday.app.player_plus.monthly` — 2,99 €/mois
-- [ ] `com.proday.app.player_plus.yearly` — annuel −20 %
-- [ ] `com.proday.app.recruiter_pro.monthly` — 7,99 €/mois
-- [ ] `com.proday.app.recruiter_pro.yearly`
-- [ ] `com.proday.app.coach_pro.monthly` — 7,99 €/mois
-- [ ] `com.proday.app.coach_pro.yearly`
-- [ ] `com.proday.app.club_pro.monthly` — 11,99 €/mois
-- [ ] `com.proday.app.club_pro.yearly`
-- [ ] `com.proday.app.agent_elite.monthly` — 29,99 €/mois (offre lancement 19,99 € pour 20 premiers via `claimAgentLaunchSeat`)
-- [ ] `com.proday.app.agent_elite.yearly`
-- [ ] `com.proday.app.physio_pro.monthly` — 19,99 €/mois
-- [ ] `com.proday.app.physio_pro.yearly`
-- [ ] `com.proday.app.organizer_pro.monthly` — 14,99 €/mois
-- [ ] `com.proday.app.organizer_pro.yearly`
-- [ ] `com.proday.app.sponsor_pro.monthly` — 99,00 €/mois
-- [ ] `com.proday.app.sponsor_pro.yearly`
-- [ ] Contrat fiscal / bancaire actif
-- [ ] Capacité In-App Purchase sur l’App ID
-- [ ] Localisations FR (nom + description par plan)
-- [ ] Fiche store : [APP_STORE_LISTING.md](./APP_STORE_LISTING.md)
+### Google Play (16 abonnements)
+- [ ] 16 abonnements + licence test
 
-### Google Play Console (16 abonnements)
+### RevenueCat
+- [ ] Produits + entitlement `pro`
+- [ ] Clés `EXPO_PUBLIC_REVENUECAT_*` en EAS
+- [ ] Webhook + `REVENUECAT_WEBHOOK_AUTH`
+- [ ] `activateStoreSubscription` + `revenueCatWebhook` déployés
 
-- [ ] `com.proday.app.player_plus.monthly` — 2,99 €/mois
-- [ ] `com.proday.app.player_plus.yearly`
-- [ ] `com.proday.app.recruiter_pro.monthly` — 7,99 €/mois
-- [ ] `com.proday.app.recruiter_pro.yearly`
-- [ ] `com.proday.app.coach_pro.monthly` — 7,99 €/mois
-- [ ] `com.proday.app.coach_pro.yearly`
-- [ ] `com.proday.app.club_pro.monthly` — 11,99 €/mois
-- [ ] `com.proday.app.club_pro.yearly`
-- [ ] `com.proday.app.agent_elite.monthly` — 29,99 €/mois (lancement 19,99 € × 20)
-- [ ] `com.proday.app.agent_elite.yearly`
-- [ ] `com.proday.app.physio_pro.monthly` — 19,99 €/mois
-- [ ] `com.proday.app.physio_pro.yearly`
-- [ ] `com.proday.app.organizer_pro.monthly` — 14,99 €/mois
-- [ ] `com.proday.app.organizer_pro.yearly`
-- [ ] `com.proday.app.sponsor_pro.monthly` — 99,00 €/mois
-- [ ] `com.proday.app.sponsor_pro.yearly`
-- [ ] Compte marchand Google Payments lié
-- [ ] Piste test interne + comptes licence test
-- [ ] Fiche store : [APP_STORE_LISTING.md](./APP_STORE_LISTING.md)
+### App
+- [ ] Build EAS (pas Expo Go)
+- [ ] Bouton « Gérer / annuler / renouveler » → stores
+- [ ] Restaurer un achat
 
-### Code & serveur
-
-- [ ] Prix cohérents app / site / consoles
-- [ ] `activateStoreSubscription` déployée (plan Blaze)
-- [ ] Test achat sandbox iOS + licence test Android pour au moins `player_plus` et `sponsor_pro`
-- [ ] `npm test -- iapProducts` passe (alignement code)
-
-## Formule sponsor Territorial (hors IAP)
-
-La formule **Territorial** (49 €) n’est **pas** un SKU store : demande commerciale + validation admin (`sponsor_upgrade_requests`). L’activation écrit `sponsor_tier: 'territorial'` sur le profil utilisateur — voir `sponsorUpgrade.service.ts`.
-
-La formule **National Pro** (`sponsor_pro`) passe par IAP / `activateStoreSubscription`.
+La formule **National Pro** (`sponsor_pro`) passe par le store / RevenueCat. Territorial reste commercial (devis).

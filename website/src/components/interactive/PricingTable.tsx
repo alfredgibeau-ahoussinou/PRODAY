@@ -286,7 +286,7 @@ export function PricingTable({
         </div>
         <div className="border-t border-white/8 bg-[#050505] p-6 text-center">
           <p className="text-sm text-white/50">
-            IAP en cours de déploiement. bêta gratuite. Inscrits informés
+            Abonnements store via RevenueCat. bêta gratuite. Inscrits informés
             quotidiennement de l&apos;avancement.
           </p>
           <Link
