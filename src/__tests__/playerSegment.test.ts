@@ -48,7 +48,8 @@ describe('playerSegment', () => {
     const colors = getThemedColorsForLine('pro_player', 'male');
     expect(colors.accent).toBe('#60A5FA');
     const chrome = getPoleTabBarChrome('pro_player', 'player', 'female');
-    expect(chrome.overflowKicker).toBe('PRO JOUEUSE');
+    expect(chrome.overflowKicker).toBe('Plus');
+    expect(chrome.cleanStyle).toBe(true);
   });
 
   it('déduit mineur depuis parental_settings', () => {
