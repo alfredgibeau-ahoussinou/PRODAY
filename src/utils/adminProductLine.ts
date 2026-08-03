@@ -85,7 +85,6 @@ export function resolveAdminProductLine(
     return 'pro_player';
   }
   if (role === 'club') return 'pro_club';
-  if (role === 'coach' && preferred === 'amateur') return 'amateur';
   if (['coach', 'agent', 'recruiter', 'organizer'].includes(role)) {
     return 'pro_staff';
   }

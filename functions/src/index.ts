@@ -560,7 +560,7 @@ export const adminCreateUser = functions.https.onCall(async (data, context) => {
         if (role === 'player' && product_line === 'amateur') return 'amateur';
         if (role === 'player') return product_line === 'pro_player' ? 'pro_player' : product_line === 'amateur' ? 'amateur' : 'pro_player';
         if (['coach', 'agent', 'recruiter', 'organizer'].includes(role)) {
-          return product_line === 'amateur' && role === 'coach' ? 'amateur' : 'pro_staff';
+          return 'pro_staff';
         }
         return product_line;
       }

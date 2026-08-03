@@ -974,23 +974,15 @@ export const AMATEUR_MODULES = [
     title: "Espace joueur",
     subtitle: "CV & candidatures",
     description:
-      "Profil, CV foot, candidatures Mercato Amateur et RSVP. Foot M ou F dès l'inscription.",
+      "Profil, CV foot, candidatures Mercato et RSVP. Homme ou Femme, badges Amateur / Centre / Pro.",
     image: "/showcase/classic-profile.jpg",
   },
   {
-    id: "coach-amateur",
-    title: "Espace coach",
-    subtitle: "Effectif & feuille",
-    description:
-      "Diplôme vérifié, effectif, convocations et stats saison. Du district au régional.",
-    image: "/showcase/classic-staff.jpg",
-  },
-  {
     id: "mercato-amateur",
-    title: "Mercato Amateur",
-    subtitle: "Recrutement de proximité",
+    title: "Mercato",
+    subtitle: "Recrutement & filtres",
     description:
-      "Annonces locales, candidatures et réponses suivies. Sans la complexité du Mercato Pro.",
+      "Annonces, candidatures et filtres recruteur (genre, badge). Coach et staff : Pôle Staff.",
     image: "/images/football-mercato-01.jpg",
   },
   {
@@ -1006,7 +998,7 @@ export const AMATEUR_MODULES = [
     title: "Réseau de zone",
     subtitle: "Messagerie locale",
     description:
-      "Contacts vérifiés avec joueurs, clubs et coachs du secteur. Un fil propre à la place de dix groupes.",
+      "Contacts vérifiés avec joueurs et clubs du secteur. Un fil propre à la place de dix groupes.",
     image: "/showcase/classic-exp-messages.jpg",
   },
   {
@@ -1090,7 +1082,7 @@ export const UNIVERSE_PAGE_CONFIG = {
     modules: MAN_MODULES as readonly UniverseModule[],
     journeyIds: ["player"] as const,
     audienceNote:
-      "Même pôle Amateur pour joueurs et coachs. Coach ou staff pro ? Direction Pro Day Pro.",
+      "Pôle Joueur : joueurs uniquement. Coach ou staff ? Direction Pro Staff.",
     showPulse: true,
     showVerification: false,
     pricingPlanIds: ["player_plus"] as const,
@@ -1121,7 +1113,7 @@ export const UNIVERSE_PAGE_CONFIG = {
     modules: WOMAN_MODULES as readonly UniverseModule[],
     journeyIds: ["player"] as const,
     audienceNote:
-      "Même pôle Amateur pour joueuses et coachs F. Staff pro ou club ? L'univers Pro Day Pro.",
+      "Pôle Joueur : joueuses uniquement. Coach ou staff ? Direction Pro Staff.",
     showPulse: true,
     showVerification: false,
     pricingPlanIds: ["player_plus"] as const,
@@ -1141,27 +1133,27 @@ export const UNIVERSE_PAGE_CONFIG = {
       image: "/images/football-amateur-01.jpg",
     },
     highlights: [
-      { label: "Pour qui", value: "Joueurs & coachs" },
-      { label: "Recrutement", value: "Mercato de zone" },
-      { label: "Saison", value: "Matchs & effectif" },
-      { label: "Terrain", value: "District → régional" },
+      { label: "Pour qui", value: "Joueurs" },
+      { label: "Recrutement", value: "Mercato" },
+      { label: "Saison", value: "Matchs & CV" },
+      { label: "Badges", value: "Amateur → Pro" },
     ],
-    modulesTitle: "Tout le week-end amateur",
+    modulesTitle: "Tout pour votre carrière joueur",
     modulesSubtitle:
-      "Deux espaces dans une même coque : joueur (CV, candidatures) et coach (effectif, convocations). Distinct du pôle Pro.",
+      "Un seul espace joueur : CV, candidatures, matchs et badges. Coach ? Pôle Staff.",
     modules: AMATEUR_MODULES as readonly UniverseModule[],
-    journeyIds: ["player", "coach"] as const,
+    journeyIds: ["player"] as const,
     audienceNote:
-      "Foot M ou F : vous choisissez à l'inscription. Staff pro, agent ou DS ? Direction les pôles Pro.",
+      "Homme ou Femme à l'inscription. Coach, agent ou recruteur ? Direction Pro Staff.",
     showPulse: true,
     showVerification: true,
-    pricingPlanIds: ["player_plus", "coach_pro"] as const,
-    pricingTitle: "Formules Amateur",
+    pricingPlanIds: ["player_plus"] as const,
+    pricingTitle: "Formule Joueur",
     cta: {
-      title: "Rejoindre le pôle Amateur",
+      title: "Rejoindre le Pôle Joueur",
       description:
-        "Joueur ou coach. Inscription rapide. Validation diplôme pour les coachs. Mercato local dès le premier profil.",
-      beta: "Liste d'attente Amateur",
+        "Inscription joueur rapide. Mercato et CV dès le premier profil. Coach ? Inscription Pro Staff.",
+      beta: "Liste d'attente Joueur",
     },
   },
   supporter: {
@@ -1183,7 +1175,7 @@ export const UNIVERSE_PAGE_CONFIG = {
     modules: SUPPORTER_MODULES as readonly UniverseModule[],
     journeyIds: ["supporter"] as const,
     audienceNote:
-      "Vous jouez ou vous coachez ? Pôle Amateur ou Pro. Vous représentez une marque ? Pôle Sponsor.",
+      "Vous jouez ? Pôle Joueur. Vous coachez ? Pôle Staff. Vous représentez une marque ? Pôle Sponsor.",
     showPulse: false,
     showVerification: false,
     pricingPlanIds: [] as const,
@@ -1586,7 +1578,7 @@ export const SUBSCRIPTION_PLANS_WEB = [
     tagline: "Calendrier structure, convocations et multi-équipes",
     monthlyEur: 7.99,
     storeAvailable: true,
-    universes: ["pro", "amateur"] as ProductLineWeb[],
+    universes: ["pro"] as ProductLineWeb[],
     freeIncludes: [
       "Profil staff et vérification",
       "1 équipe liée",
@@ -1912,7 +1904,7 @@ export const TESTIMONIALS = [
     quote:
       "Enfin une app qui regroupe convocations, matchs et recrutement. Notre U17 ne jongle plus entre cinq groupes.",
     author: "Marc D.",
-    role: "Coach amateur, Île-de-France",
+    role: "Coach, Pro Staff",
   },
   {
     quote:

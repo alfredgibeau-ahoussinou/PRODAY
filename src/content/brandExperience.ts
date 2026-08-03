@@ -67,12 +67,12 @@ export const AMATEUR_IDENTITY: UniverseIdentity = {
   tagline: PRODAY_AMATEUR_BRAND.tagline,
   heroLine: 'Le foot amateur,\nconnecté.',
   mission:
-    'Joueurs et coachs amateur. Mercato local, matchs, effectif et convocations au même endroit.',
+    'Joueurs uniquement. Mercato local, matchs, CV et carrière — du district au badge Pro.',
   accentLabel: 'Pro Day Amateur',
   mercatoLabel: 'Mercato Amateur',
   playerLabel: 'Joueur amateur',
   cvLabel: 'CV foot en ligne',
-  entrySub: 'Joueur ou coach amateur. District, régional et club local',
+  entrySub: 'Joueur Homme ou Femme. Badges Amateur, Centre ou Pro',
 };
 
 export const SUPPORTER_IDENTITY: UniverseIdentity = {
@@ -198,11 +198,11 @@ export function getDiscoverHomeCopy(line: ProductLineId) {
       heroTitle: brand.heroLine,
       heroSub: brand.mission,
       trustText:
-        'Profils vérifiés pour le foot amateur. Joueurs et coachs, messagerie sécurisée après validation.',
-      ctaText: 'Créer mon compte Pro Day Amateur',
-      sectionExplore: 'Découvrir Pro Day Amateur',
+        'Profils joueurs vérifiés. Messagerie sécurisée après validation. Coach ? Direction Pro Staff.',
+      ctaText: 'Créer mon compte Joueur',
+      sectionExplore: 'Découvrir le Pôle Joueur',
       secondaryMercato: 'Mercato Amateur',
-      playersStatLabel: 'Joueurs & coachs',
+      playersStatLabel: 'Joueurs',
     };
   }
 
@@ -252,8 +252,7 @@ export const ACCOUNT_TYPES_BY_LINE = {
     { role: 'player' as const, label: 'Joueuse', description: 'CV en ligne, stats, Mercato F' },
   ],
   amateur: [
-    { role: 'player' as const, label: 'Joueur amateur', description: 'CV, Mercato Amateur, matchs' },
-    { role: 'coach' as const, label: 'Coach amateur', description: 'Effectif, convocations, Mercato local' },
+    { role: 'player' as const, label: 'Joueur', description: 'CV, Mercato, matchs — badges Amateur / Centre / Pro' },
   ],
   supporter: [
     { role: 'supporter' as const, label: 'Supporter', description: 'Matchs, réels et fil communautaire' },

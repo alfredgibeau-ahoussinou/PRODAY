@@ -15,19 +15,14 @@ const POLE_GROUPS: {
   journeyIds: string[];
 }[] = [
   {
-    pole: "amateur",
-    label: "Pôle Amateur",
-    journeyIds: ["player", "coach", "parent"],
+    pole: "joueur",
+    label: "Pôle Joueur",
+    journeyIds: ["player", "parent"],
   },
   {
     pole: "supporter",
     label: "Pôle Supporter",
     journeyIds: ["supporter"],
-  },
-  {
-    pole: "pro_joueur",
-    label: "Pôle Pro Joueur",
-    journeyIds: ["player"],
   },
   {
     pole: "pro_club",

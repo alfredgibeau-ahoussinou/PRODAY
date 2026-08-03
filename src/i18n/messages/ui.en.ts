@@ -60,13 +60,13 @@ export const UI_EN: MessageCatalog = {
 
   'discover.hero.amateur': 'The all-in-one\namateur football app.',
   'discover.mission.amateur':
-    'Players and coaches. Find a club, manage your team and organize matches.',
+    'Players only. Find a club, manage your season and organize matches.',
   'discover.trust.amateur':
-    'Verified amateur profiles — players and coaches, secure messaging after validation.',
-  'discover.cta.amateur': 'Create an Amateur account',
-  'discover.sectionExplore.amateur': 'Pro Day Amateur space',
+    'Verified player profiles — secure messaging after validation. Coach? Go to Pro Staff.',
+  'discover.cta.amateur': 'Create a Player account',
+  'discover.sectionExplore.amateur': 'Explore the Player pole',
   'discover.secondaryMercato.amateur': 'Amateur Transfer',
-  'discover.playersStat.amateur': 'Amateurs',
+  'discover.playersStat.amateur': 'Players',
 
   'discover.hero.supporter': 'Football,\ntogether.',
   'discover.mission.supporter':

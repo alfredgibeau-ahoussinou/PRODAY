@@ -63,13 +63,13 @@ export const UI_FR: MessageCatalog = {
 
   'discover.hero.amateur': 'L\'application tout-en-un\ndu football amateur.',
   'discover.mission.amateur':
-    'Joueurs et coachs. Trouvez un club, gérez votre équipe et organisez vos matchs.',
+    'Joueurs uniquement. Trouvez un club, gérez votre saison et organisez vos matchs.',
   'discover.trust.amateur':
-    'Profils vérifiés pour le foot amateur. Joueurs et coachs, messagerie sécurisée après validation.',
-  'discover.cta.amateur': 'Créer mon compte Pro Day Amateur',
-  'discover.sectionExplore.amateur': 'Découvrir Pro Day Amateur',
+    'Profils joueurs vérifiés. Messagerie sécurisée après validation. Coach ? Direction Pro Staff.',
+  'discover.cta.amateur': 'Créer mon compte Joueur',
+  'discover.sectionExplore.amateur': 'Découvrir le Pôle Joueur',
   'discover.secondaryMercato.amateur': 'Mercato Amateur',
-  'discover.playersStat.amateur': 'Joueurs & coachs',
+  'discover.playersStat.amateur': 'Joueurs',
 
   'discover.hero.supporter': 'Le foot,\nensemble.',
   'discover.mission.supporter':
@@ -259,7 +259,7 @@ export const UI_FR: MessageCatalog = {
   'auth.signupSub.woman':
     'Créez votre compte joueuse. Mercato F, stats et visibilité clubs.',
   'auth.signupSub.amateur':
-    'Créez votre compte Pro Day Amateur. Joueur ou coach, Mercato local, matchs et effectif.',
+    'Créez votre compte Joueur. Mercato local, matchs et CV — badges Amateur, Centre ou Pro.',
   'auth.signupSub.supporter':
     'Créez votre compte supporter. Matchs, réels et fil communautaire.',
   'auth.signupSub.pro':

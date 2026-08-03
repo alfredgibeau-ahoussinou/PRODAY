@@ -17,11 +17,13 @@ describe('poleExperience', () => {
     expect(getSignupRoleGroups('woman')).toEqual([]);
   });
 
-  it('regroupe joueurs et coachs sur Amateur', () => {
-    expect(rolesForProductLine('amateur')).toEqual(['player', 'coach']);
+  it('limite Amateur / Joueur aux joueurs (coach → Staff)', () => {
+    expect(rolesForProductLine('amateur')).toEqual(['player']);
     const amateurRoles = getSignupRoleGroups('amateur').flatMap((g) => g.roles);
-    expect(amateurRoles).toEqual(expect.arrayContaining(['player', 'coach']));
-    expect(amateurRoles).toHaveLength(2);
+    expect(amateurRoles).toEqual(['player']);
+    expect(rolesForProductLine('pro_staff')).toEqual(
+      expect.arrayContaining(['coach', 'agent', 'recruiter', 'organizer']),
+    );
   });
 
   it('regroupe les supporters sur Supporter', () => {

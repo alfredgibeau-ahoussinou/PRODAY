@@ -95,8 +95,8 @@ export function getDiscoverCarouselCopy(line: ProductLineId): {
   if (resolved === 'amateur') {
     return {
       label: 'Univers Amateur',
-      title: 'Joueur ou coach amateur',
-      subtitle: 'Club, déplacements, convocations et Mercato local',
+      title: 'Pôle Joueur',
+      subtitle: 'Amateur, Centre ou Pro. Homme / Femme, Mercato et CV',
     };
   }
   if (resolved === 'supporter') {

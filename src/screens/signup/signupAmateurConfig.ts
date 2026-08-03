@@ -36,7 +36,7 @@ export function getAmateurWelcomeCopy(t?: TranslateFn) {
       : `Bienvenue sur ${PRODAY_AMATEUR_BRAND.name}`,
     subtitle: t
       ? t('signup.amateur.welcome.subtitle')
-      : 'Joueur ou coach amateur. Mercato local, matchs et effectif.',
+      : 'Espace joueur. Mercato local, matchs, CV et badges Amateur → Pro.',
   };
 }
 

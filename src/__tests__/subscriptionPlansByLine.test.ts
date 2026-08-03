@@ -47,17 +47,19 @@ describe('subscriptionPlansByLine', () => {
     expect(plansForProductLine('sante')).toHaveLength(1);
   });
 
-  it('expose les plans joueur et coach sur Amateur', () => {
+  it('expose le plan joueur seul sur Joueur / Amateur (coach → Staff)', () => {
     const coach = getPlanForRoleAndLine('coach', 'amateur');
     const player = getPlanForRoleAndLine('player', 'amateur');
+    const coachStaff = getPlanForRoleAndLine('coach', 'pro_staff');
 
-    expect(coach?.label).toBe('Coach Amateur');
+    expect(coach).toBeNull();
     expect(player?.label).toBe('Joueur Amateur');
-    expect(coach?.freeIncludes.some((i) => i.includes('Mercato Amateur'))).toBe(true);
     expect(player?.freeIncludes.some((i) => i.includes('Mercato Amateur'))).toBe(true);
-    expect(plansForProductLine('amateur')).toHaveLength(2);
-    expect(isPlanAvailableOnLine('coach_pro', 'amateur')).toBe(true);
+    expect(plansForProductLine('amateur')).toHaveLength(1);
+    expect(isPlanAvailableOnLine('coach_pro', 'amateur')).toBe(false);
     expect(isPlanAvailableOnLine('player_plus', 'amateur')).toBe(true);
+    expect(isPlanAvailableOnLine('coach_pro', 'pro_staff')).toBe(true);
+    expect(coachStaff?.role).toBe('coach');
     expect(isPlanAvailableOnLine('coach_pro', 'homme')).toBe(false);
   });
 

@@ -66,6 +66,8 @@ export function canonicalizeUserProductLine(
   if (!line && role !== 'player' && isProDeducedRole(role)) {
     return splitLegacyProByRole(role);
   }
+  // Comptes coach encore stockés en `amateur` → Pôle Staff (hors Joueur).
+  if (line === 'amateur' && role === 'coach') return 'pro_staff';
   if (line === 'amateur' || line === 'sante') {
     return line;
   }
@@ -120,6 +122,7 @@ export function resolvePersistedProductLine(
   line: ProductLineId,
   role: UserRole,
 ): ProductLineId {
+  if (role === 'coach' && line === 'amateur') return 'pro_staff';
   if (isProSplitLine(line)) return line;
   if (line === 'pro' || line === 'homme' || line === 'woman') {
     return canonicalizeUserProductLine(line, role);

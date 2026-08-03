@@ -8,8 +8,8 @@ export const HOMME_PRODUCT_ROLES: UserRole[] = ['player'];
 /** Rôles ProDay Woman — joueuses uniquement (foot féminin). */
 export const WOMAN_PRODUCT_ROLES: UserRole[] = ['player'];
 
-/** Rôles ProDay Amateur — joueurs et coachs amateur (district, régional, club local). */
-export const AMATEUR_PRODUCT_ROLES: UserRole[] = ['player', 'coach'];
+/** Rôles Pôle Joueur (stockage `amateur`) — joueurs uniquement. Coach → Pro Staff. */
+export const AMATEUR_PRODUCT_ROLES: UserRole[] = ['player'];
 
 /** Rôles ProDay Supporter — fans et communauté. */
 export const SUPPORTER_PRODUCT_ROLES: UserRole[] = ['supporter'];
@@ -78,8 +78,8 @@ export function isRoleAllowedForProductLine(role: UserRole, line: ProductLineId)
 export function getIncompatibleProductLines(role: UserRole): ProductLineId[] {
   switch (role) {
     case 'coach':
-      // Coaches belong to Staff pole, cannot access Club pole
-      return ['pro_club'];
+      // Coach = Pro Staff — hors Pôle Joueur / Club
+      return ['pro_club', 'amateur', 'homme', 'woman', 'pro_player'];
     case 'club':
       // Club belongs to Club pole, cannot access Staff pole
       return ['pro_staff'];
@@ -161,6 +161,16 @@ export function resolveSignupProductLine(
   role: UserRole,
 ): ProductLineId {
   if (role === 'sponsor' || carouselOrContextLine === 'sponsor') return 'sponsor';
+  // Coach n’appartient plus au Pôle Joueur / Amateur — toujours Staff.
+  if (
+    role === 'coach' &&
+    (carouselOrContextLine === 'amateur' ||
+      carouselOrContextLine === 'homme' ||
+      carouselOrContextLine === 'woman' ||
+      carouselOrContextLine === 'pro_player')
+  ) {
+    return 'pro_staff';
+  }
   if (carouselOrContextLine === 'pro_player' || carouselOrContextLine === 'pro_club' || carouselOrContextLine === 'pro_staff') {
     return carouselOrContextLine;
   }
