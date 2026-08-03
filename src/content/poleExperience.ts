@@ -264,7 +264,7 @@ export function getTabShortLabel(
 ): string {
   if (line === 'amateur') {
     if (tab === 'home') return 'Équipe';
-    if (tab === 'covoiturage') return 'Déplacements';
+    if (tab === 'covoiturage') return 'Covoiturage';
     if (tab === 'recrutement') return 'Club';
     if (tab === 'shop') return 'Shop';
     if (tab === 'profil') return 'Moi';
@@ -281,6 +281,7 @@ export function getTabShortLabel(
   }
   if (isProFamilyLine(line) && role === 'club') {
     if (tab === 'home') return 'Structure';
+    if (tab === 'covoiturage') return 'Covoiturage';
     if (tab === 'recrutement') return 'Recrutement';
     if (tab === 'matchs') return 'Calendrier';
     if (tab === 'messages') return 'Communication';
@@ -288,6 +289,7 @@ export function getTabShortLabel(
   }
   if (isProFamilyLine(line) && role === 'coach') {
     if (tab === 'home') return 'Équipe';
+    if (tab === 'covoiturage') return 'Covoiturage';
     if (tab === 'matchs') return 'Calendrier';
   }
   if (isProFamilyLine(line) && role === 'agent') {
@@ -298,6 +300,7 @@ export function getTabShortLabel(
   }
   if (isProFamilyLine(line) && role === 'organizer') {
     if (tab === 'home') return 'Arena';
+    if (tab === 'covoiturage') return 'Covoiturage';
   }
   if (isProFamilyLine(line) && role === 'player') {
     if (tab === 'home') return 'Carrière';

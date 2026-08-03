@@ -21,3 +21,13 @@ export const CARPOOL_EVENT_FILTERS: { id: CarpoolEventFilter; label: string }[] 
   { id: 'offering', label: 'Je conduis' },
   { id: 'booked', label: 'Réservé' },
 ];
+
+/** Filtre métier : événement / match / entraînement (lieu via recherche). */
+export type CarpoolScopeFilter = 'all' | 'match' | 'training' | 'event';
+
+export const CARPOOL_SCOPE_FILTERS: { id: CarpoolScopeFilter; label: string }[] = [
+  { id: 'all', label: 'Tous types' },
+  { id: 'match', label: 'Match' },
+  { id: 'training', label: 'Entraînement' },
+  { id: 'event', label: 'Événement' },
+];

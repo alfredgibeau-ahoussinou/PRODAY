@@ -21,8 +21,10 @@ import { ProDayText } from '../ui/ProDayText';
 import { Icon } from '../ui/Icon';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { useTranslation } from '../../context/LocaleContext';
+import { useTabNavigationOptional } from '../../context/TabNavigationContext';
 import { spacing, radius, shadows } from '../../theme/designTokens';
 import { CarpoolCardAccent } from './carpoolUi';
+import { openCarpoolDriverChat } from '../../utils/openCarpoolDriverChat';
 
 interface CarpoolRideCardProps {
   event: TeamEvent;
@@ -47,7 +49,9 @@ export const CarpoolRideCard: React.FC<CarpoolRideCardProps> = ({
 }) => {
   const { colors } = useAppTheme();
   const { t } = useTranslation();
+  const tabNav = useTabNavigationOptional();
   const [busy, setBusy] = useState(false);
+  const [contactBusy, setContactBusy] = useState(false);
   const [pickupPlace, setPickupPlace] = useState('');
   const [pickupLocation, setPickupLocation] = useState<
     import('../../models/User').GeoPoint | undefined
@@ -62,6 +66,21 @@ export const CarpoolRideCard: React.FC<CarpoolRideCardProps> = ({
     !isMine &&
     !myBooking &&
     (available === null || available > 0);
+
+  const handleContactDriver = async () => {
+    if (!tabNav) return;
+    setContactBusy(true);
+    try {
+      await openCarpoolDriverChat(
+        profile,
+        slot.driver_uid,
+        slot.driver_name,
+        tabNav.openChat,
+      );
+    } finally {
+      setContactBusy(false);
+    }
+  };
 
   const handleBook = async () => {
     if (!pickupPlace.trim() && !pickupLocation) {
@@ -203,6 +222,28 @@ export const CarpoolRideCard: React.FC<CarpoolRideCardProps> = ({
         ) : null}
 
         <View style={styles.actions}>
+          {!isMine && tabNav ? (
+            <PressableSpring
+              style={[
+                styles.ghostBtn,
+                { borderColor: colors.borderStrong, backgroundColor: colors.surfaceMuted },
+              ]}
+              onPress={() => void handleContactDriver()}
+              disabled={contactBusy}
+              scaleTo={0.97}
+            >
+              {contactBusy ? (
+                <ActivityIndicator color={colors.accent} size="small" />
+              ) : (
+                <>
+                  <Icon name="chat" size={14} color={colors.accent} />
+                  <ProDayText variant="caption" accent style={styles.btnText}>
+                    {t('carpool.ride.contactDriver')}
+                  </ProDayText>
+                </>
+              )}
+            </PressableSpring>
+          ) : null}
           {bookedHere ? (
             <PressableSpring
               style={[
@@ -314,11 +355,15 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
   },
   ghostBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
     alignSelf: 'flex-start',
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: radius.pill,
     borderWidth: 1.5,
+    marginBottom: spacing.xs,
   },
   btnText: { fontWeight: '800' },
 });

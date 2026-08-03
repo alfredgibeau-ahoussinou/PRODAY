@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import {
   ArrowRight,
   CalendarDays,
+  Car,
   CreditCard,
   ListChecks,
   Share2,
@@ -18,10 +19,10 @@ import { pricingHrefForPole } from "@/lib/poles";
 export const metadata: Metadata = {
   title: "Pôle Événements — Organisateurs",
   description:
-    "Tournois associatifs et de quartier, académies, camps, détections et showcases. Créez, inscrivez, encaissez et partagez.",
+    "Tournois, académies, camps, détections et covoiturage. Créez, inscrivez, encaissez et coordonnez les trajets.",
 };
 
-const ICONS = [CalendarDays, ListChecks, CreditCard, Share2];
+const ICONS = [CalendarDays, Car, ListChecks, CreditCard, Share2];
 
 export default function EvenementsPolePage() {
   return (

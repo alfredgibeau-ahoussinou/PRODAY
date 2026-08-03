@@ -35,6 +35,7 @@ const BADGES = [
 
 const FEATURES = [
   "Inscription : choix du genre (Homme / Femme) — un seul Pôle Joueur",
+  "Covoiturage en onglet principal : proposer, chercher, réserver, contacter le conducteur",
   "Mercato avec filtres recruteur : genre, badges Amateur / Centre / Pro",
   "Badge Joueur vérifié (licence ou certification club)",
   "Confidentialité contacts : choisissez qui voit téléphone et email",

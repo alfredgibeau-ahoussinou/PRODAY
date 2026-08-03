@@ -67,6 +67,10 @@ export const ClubHomeDashboard: React.FC<StaffRoleHomeProps> = ({
       nav.openDashboard('gestion');
       return;
     }
+    if (action.title === 'Covoiturage') {
+      nav.openCarpool();
+      return;
+    }
     if (action.title === 'Gestion effectif') {
       nav.openDashboard('gestion');
       return;

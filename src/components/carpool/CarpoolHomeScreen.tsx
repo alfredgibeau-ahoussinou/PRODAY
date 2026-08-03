@@ -11,12 +11,14 @@ import type { StandaloneCarpoolOffer } from '../../models/StandaloneCarpoolOffer
 import {
   type CarpoolChapterId,
   type CarpoolEventFilter,
+  type CarpoolScopeFilter,
 } from '../../content/carpoolChapters';
-import { getCarpoolChapters, getCarpoolEventFilters } from '../../i18n/localizedChapters';
+import { getCarpoolChapters, getCarpoolEventFilters, getCarpoolScopeFilters } from '../../i18n/localizedChapters';
 import {
   carpoolAvailableSeats,
   carpoolEventSummaryForUser,
   findCarpoolBooking,
+  matchesCarpoolScopeFilter,
 } from '../../utils/carpoolBalance';
 import { ProDayText } from '../ui/ProDayText';
 import { SearchBar } from '../ui/SearchBar';
@@ -89,6 +91,7 @@ export const CarpoolHomeScreen: React.FC<CarpoolHomeScreenProps> = ({
   const { t } = useTranslation();
   const chapters = useMemo(() => getCarpoolChapters(t), [t]);
   const eventFilters = useMemo(() => getCarpoolEventFilters(t), [t]);
+  const scopeFilters = useMemo(() => getCarpoolScopeFilters(t), [t]);
   const reserveScopeFilters = useMemo(
     () => [
       { id: 'all' as const, label: t('carpool.reserve.filter.all') },
@@ -110,6 +113,7 @@ export const CarpoolHomeScreen: React.FC<CarpoolHomeScreenProps> = ({
   }, [initialChapter]);
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<CarpoolEventFilter>('all');
+  const [scope, setScope] = useState<CarpoolScopeFilter>('all');
   const [standaloneCity, setStandaloneCity] = useState('');
   const [standaloneClubOnly, setStandaloneClubOnly] = useState(false);
   const [myTripsTab, setMyTripsTab] = useState<'upcoming' | 'past'>('upcoming');
@@ -126,6 +130,7 @@ export const CarpoolHomeScreen: React.FC<CarpoolHomeScreenProps> = ({
     const q = search.trim().toLowerCase();
     const uid = profile?.uid ?? '';
     return upcoming.filter((event) => {
+      if (!matchesCarpoolScopeFilter(event, scope)) return false;
       if (q) {
         const hay = [event.title, event.city, event.location_label, event.organizer_name]
           .filter(Boolean)
@@ -140,7 +145,7 @@ export const CarpoolHomeScreen: React.FC<CarpoolHomeScreenProps> = ({
       if (filter === 'needs_ride') return !s.isDriver && !s.myBookingDriverUid;
       return true;
     });
-  }, [upcoming, search, filter, profile?.uid]);
+  }, [upcoming, search, filter, scope, profile?.uid]);
 
   const myTrips = useMemo(() => {
     if (!profile) return [];
@@ -186,6 +191,7 @@ export const CarpoolHomeScreen: React.FC<CarpoolHomeScreenProps> = ({
     if (!profile) return [];
     const list: RideOffer[] = [];
     for (const event of upcoming) {
+      if (!matchesCarpoolScopeFilter(event, scope)) continue;
       const myBooking = findCarpoolBooking(event, profile.uid);
       if (myBooking) continue;
       for (const slot of event.carpool_slots ?? []) {
@@ -197,7 +203,7 @@ export const CarpoolHomeScreen: React.FC<CarpoolHomeScreenProps> = ({
       }
     }
     return list;
-  }, [upcoming, profile]);
+  }, [upcoming, profile, scope]);
 
   const carpoolRecs = useMemo(
     () =>
@@ -278,6 +284,11 @@ export const CarpoolHomeScreen: React.FC<CarpoolHomeScreenProps> = ({
               embedded
             />
             <CarpoolFilterChips
+              options={scopeFilters}
+              value={scope}
+              onChange={setScope}
+            />
+            <CarpoolFilterChips
               options={eventFilters}
               value={filter}
               onChange={setFilter}
@@ -355,6 +366,11 @@ export const CarpoolHomeScreen: React.FC<CarpoolHomeScreenProps> = ({
                   onChangeText={setStandaloneCity}
                   placeholder={t('carpool.reserve.filter.city')}
                   embedded
+                />
+                <CarpoolFilterChips
+                  options={scopeFilters}
+                  value={scope}
+                  onChange={setScope}
                 />
                 <CarpoolFilterChips
                   options={reserveScopeFilters}
@@ -495,6 +511,7 @@ export const CarpoolHomeScreen: React.FC<CarpoolHomeScreenProps> = ({
       profile,
       search,
       filter,
+      scope,
       refreshing,
       upcoming,
       onOpenEvent,
@@ -510,6 +527,7 @@ export const CarpoolHomeScreen: React.FC<CarpoolHomeScreenProps> = ({
       t,
       chapters,
       eventFilters,
+      scopeFilters,
       reserveScopeFilters,
       tripsTabFilters,
     ]

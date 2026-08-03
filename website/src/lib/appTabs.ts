@@ -107,11 +107,11 @@ export function getVisibleMainTabsForDemoPole(pole: DemoPoleId): MainTabId[] {
     case "sante":
       return ["home", "matchs", "feed", "reels", "messages", "profil"];
     case "pro_club":
-      return ["home", "recrutement", "matchs", "messages", "shop", "profil"];
+      return ["home", "covoiturage", "recrutement", "matchs", "messages", "shop", "profil"];
     case "pro_staff":
-      return ["home", "matchs", "recrutement", "covoiturage", "messages", "shop", "profil"];
+      return ["home", "covoiturage", "matchs", "recrutement", "messages", "shop", "profil"];
     case "evenements":
-      return ["home", "matchs", "recrutement", "messages", "shop", "profil"];
+      return ["home", "covoiturage", "matchs", "recrutement", "messages", "shop", "profil"];
   }
 }
 
@@ -187,7 +187,7 @@ export function getTabLabelForDemoPole(tab: MainTabId, pole: DemoPoleId): string
   }
   if (pole === "joueur") {
     if (tab === "home") return "Carrière";
-    if (tab === "covoiturage") return "Trajets";
+    if (tab === "covoiturage") return "Covoiturage";
     if (tab === "recrutement") return "Mercato";
     if (tab === "matchs") return "Matchs";
     if (tab === "profil") return "Moi";
@@ -201,12 +201,14 @@ export function getTabLabelForDemoPole(tab: MainTabId, pole: DemoPoleId): string
   }
   if (pole === "evenements") {
     if (tab === "home") return "Événements";
+    if (tab === "covoiturage") return "Covoiturage";
     if (tab === "matchs") return "Calendrier";
     if (tab === "recrutement") return "Inscriptions";
     if (tab === "profil") return "Orga";
   }
   if (pole === "pro_club") {
     if (tab === "home") return "Structure";
+    if (tab === "covoiturage") return "Covoiturage";
     if (tab === "recrutement") return "Recrutement";
     if (tab === "matchs") return "Calendrier";
     if (tab === "messages") return "Comm.";
@@ -214,6 +216,7 @@ export function getTabLabelForDemoPole(tab: MainTabId, pole: DemoPoleId): string
   }
   if (pole === "pro_staff") {
     if (tab === "home") return "Équipe";
+    if (tab === "covoiturage") return "Covoiturage";
     if (tab === "matchs") return "Calendrier";
     if (tab === "recrutement") return "Mercato";
   }

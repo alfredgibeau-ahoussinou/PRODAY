@@ -5,6 +5,7 @@ import {
   isCarpoolPassenger,
   totalCarpoolSeats,
   isCarpoolDriver,
+  matchesCarpoolScopeFilter,
 } from '../utils/carpoolBalance';
 import type { TeamEvent } from '../models/TeamEvent';
 
@@ -66,5 +67,15 @@ describe('carpoolBalance', () => {
       carpool_slots: [slot],
     } as TeamEvent;
     expect(findCarpoolBooking(ev, 'p2')?.driverUid).toBe('p1');
+  });
+
+  it('filtre par type match / entraînement / événement', () => {
+    expect(matchesCarpoolScopeFilter({ event_type: 'friendly' }, 'match')).toBe(true);
+    expect(matchesCarpoolScopeFilter({ event_type: 'tournament' }, 'match')).toBe(true);
+    expect(matchesCarpoolScopeFilter({ event_type: 'training' }, 'match')).toBe(false);
+    expect(matchesCarpoolScopeFilter({ event_type: 'training' }, 'training')).toBe(true);
+    expect(matchesCarpoolScopeFilter({ event_type: 'detection' }, 'event')).toBe(true);
+    expect(matchesCarpoolScopeFilter({ event_type: 'meeting' }, 'event')).toBe(true);
+    expect(matchesCarpoolScopeFilter({ event_type: 'friendly' }, 'all')).toBe(true);
   });
 });

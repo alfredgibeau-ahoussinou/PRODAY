@@ -1,9 +1,10 @@
 import { getTabShortLabel, getVisibleMainTabs } from '../content/poleExperience';
 
 describe('club et staff shells', () => {
-  it('applique les onglets architecture club (avec Shop)', () => {
+  it('applique les onglets architecture club (avec Shop et Covoiturage)', () => {
     expect(getVisibleMainTabs('pro', 'club')).toEqual([
       'home',
+      'covoiturage',
       'recrutement',
       'matchs',
       'messages',
@@ -11,6 +12,7 @@ describe('club et staff shells', () => {
       'profil',
     ]);
     expect(getTabShortLabel('home', 'pro', 'club')).toBe('Structure');
+    expect(getTabShortLabel('covoiturage', 'pro', 'club')).toBe('Covoiturage');
     expect(getTabShortLabel('recrutement', 'pro', 'club')).toBe('Recrutement');
     expect(getTabShortLabel('matchs', 'pro', 'club')).toBe('Calendrier');
     expect(getTabShortLabel('messages', 'pro', 'club')).toBe('Communication');
@@ -24,9 +26,12 @@ describe('club et staff shells', () => {
     const organizerTabs = getVisibleMainTabs('pro', 'organizer');
 
     expect(coachTabs).toContain('covoiturage');
+    expect(coachTabs.indexOf('covoiturage')).toBeLessThan(coachTabs.indexOf('matchs'));
     expect(agentTabs).toContain('feed');
     expect(recruiterTabs).toContain('feed');
     expect(organizerTabs).toContain('feed');
+    expect(organizerTabs).toContain('covoiturage');
+    expect(organizerTabs.indexOf('covoiturage')).toBeLessThan(organizerTabs.indexOf('matchs'));
     expect(coachTabs).not.toContain('feed');
     expect(coachTabs).toContain('shop');
     expect(agentTabs).toContain('shop');
@@ -37,11 +42,13 @@ describe('club et staff shells', () => {
   it('expose un shell pro joueur dédié', () => {
     expect(getVisibleMainTabs('pro', 'player')).toEqual([
       'home',
-      'recrutement',
       'reels',
       'matchs',
-      'shop',
       'profil',
+      'sante',
+      'messages',
+      'recrutement',
+      'shop',
     ]);
     expect(getTabShortLabel('home', 'pro', 'player')).toBe('Carrière');
     expect(getTabShortLabel('recrutement', 'pro', 'player')).toBe('Opportunités');

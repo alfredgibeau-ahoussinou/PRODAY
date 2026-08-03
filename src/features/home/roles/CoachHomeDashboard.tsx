@@ -59,6 +59,10 @@ export const CoachHomeDashboard: React.FC<StaffRoleHomeProps> = ({
       nav.openMatchs({ homeTab: 'convocations' });
       return;
     }
+    if (action.title === 'Covoiturage') {
+      nav.openCarpool();
+      return;
+    }
     if (action.title === 'Recrutement') {
       nav.openMercato('create_post');
       return;
@@ -141,6 +145,10 @@ export const CoachHomeDashboard: React.FC<StaffRoleHomeProps> = ({
         onAction={(action) => {
           if (action.title === 'Calendrier équipe') {
             handleQuickAction(action);
+            return;
+          }
+          if (action.title === 'Covoiturage') {
+            nav.openCarpool();
             return;
           }
           if (action.title === 'Recrutement') {

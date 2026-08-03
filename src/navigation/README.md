@@ -11,7 +11,7 @@
 
 ## Shells
 
-- **Joueur** : onglets Accueil, Mercato, Matchs, Covoiturage, Santé, Feed, Messages, Profil
+- **Joueur** : onglets Accueil, Covoiturage, Mercato, Matchs, Santé, Feed, Messages, Profil
 - **Sponsor** : menu latéral (pilotage, offres, réseau…)
 - **Admin** : console plateforme (`screens/admin/`)
 - **V3** : `EXPO_PUBLIC_V3_SHELL=1` → `V3TabShell`

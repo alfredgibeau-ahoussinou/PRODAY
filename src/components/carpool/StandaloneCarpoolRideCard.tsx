@@ -24,8 +24,10 @@ import { PressableSpring } from '../motion';
 import { prodayHaptics } from '../../utils/prodayHaptics';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { useTranslation } from '../../context/LocaleContext';
+import { useTabNavigationOptional } from '../../context/TabNavigationContext';
 import { spacing, radius, shadows } from '../../theme/designTokens';
 import { CarpoolCardAccent } from './carpoolUi';
+import { openCarpoolDriverChat } from '../../utils/openCarpoolDriverChat';
 
 interface StandaloneCarpoolRideCardProps {
   offer: StandaloneCarpoolOffer;
@@ -42,7 +44,9 @@ export const StandaloneCarpoolRideCard: React.FC<StandaloneCarpoolRideCardProps>
 }) => {
   const { colors } = useAppTheme();
   const { t } = useTranslation();
+  const tabNav = useTabNavigationOptional();
   const [busy, setBusy] = useState(false);
+  const [contactBusy, setContactBusy] = useState(false);
   const [pickupPlace, setPickupPlace] = useState('');
   const [pickupLocation, setPickupLocation] = useState<
     import('../../models/User').GeoPoint | undefined
@@ -55,6 +59,21 @@ export const StandaloneCarpoolRideCard: React.FC<StandaloneCarpoolRideCardProps>
   const available = standaloneAvailableSeats(offer);
   const canBook = !isMine && !bookedHere && available > 0 && offer.status === 'open';
   const tripsDone = driverCompletedTripsCount(driverHistory, offer.driver_uid);
+
+  const handleContactDriver = async () => {
+    if (!tabNav) return;
+    setContactBusy(true);
+    try {
+      await openCarpoolDriverChat(
+        profile,
+        offer.driver_uid,
+        offer.driver_name,
+        tabNav.openChat,
+      );
+    } finally {
+      setContactBusy(false);
+    }
+  };
 
   const handleBook = () => {
     const minorWarning = minorCarpoolBookingWarning(profile);
@@ -197,6 +216,27 @@ export const StandaloneCarpoolRideCard: React.FC<StandaloneCarpoolRideCardProps>
 
       {canBook ? (
         <View style={styles.bookBlock}>
+          {!isMine && tabNav ? (
+            <PressableSpring
+              onPress={() => void handleContactDriver()}
+              disabled={contactBusy}
+              scaleTo={0.97}
+              haptic
+            >
+              <View style={[styles.contactBtn, { borderColor: colors.border }]}>
+                {contactBusy ? (
+                  <ActivityIndicator color={colors.accent} size="small" />
+                ) : (
+                  <>
+                    <Icon name="chat" size={14} color={colors.accent} />
+                    <ProDayText variant="caption" accent style={styles.ctaText}>
+                      {t('carpool.ride.contactDriver')}
+                    </ProDayText>
+                  </>
+                )}
+              </View>
+            </PressableSpring>
+          ) : null}
           <CarpoolLocationCapture
             label={t('carpool.standalone.pickupLabel')}
             place={pickupPlace}
@@ -218,6 +258,28 @@ export const StandaloneCarpoolRideCard: React.FC<StandaloneCarpoolRideCardProps>
             </ProDayGradient>
           </PressableSpring>
         </View>
+      ) : null}
+
+      {!canBook && !isMine && tabNav ? (
+        <PressableSpring
+          onPress={() => void handleContactDriver()}
+          disabled={contactBusy}
+          scaleTo={0.97}
+          haptic
+        >
+          <View style={[styles.contactBtn, { borderColor: colors.border }]}>
+            {contactBusy ? (
+              <ActivityIndicator color={colors.accent} size="small" />
+            ) : (
+              <>
+                <Icon name="chat" size={14} color={colors.accent} />
+                <ProDayText variant="caption" accent style={styles.ctaText}>
+                  {t('carpool.ride.contactDriver')}
+                </ProDayText>
+              </>
+            )}
+          </View>
+        </PressableSpring>
       ) : null}
 
       {bookedHere ? (
@@ -305,6 +367,17 @@ const styles = StyleSheet.create({
   meeting: { lineHeight: 18 },
   mapLink: { fontWeight: '700' },
   bookBlock: { gap: spacing.sm, marginTop: spacing.sm },
+  contactBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    alignSelf: 'flex-start',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: radius.pill,
+    borderWidth: 1.5,
+    marginTop: spacing.xs,
+  },
   cta: {
     alignItems: 'center',
     justifyContent: 'center',

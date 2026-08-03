@@ -178,7 +178,7 @@ export const EVENEMENTS_BRAND = {
   logo: UNIVERSE_LOGOS.pro,
   tagline: "Tournois · Académies · Détections",
   mission:
-    "Espace organisateurs : créez des événements, inscriptions en ligne, paiements, listes, résultats et partage média.",
+    "Espace organisateurs : créez des événements, inscriptions, paiements, covoiturage vers le site et partage média.",
   accent: "#0891B2",
   accentDark: "#0e4a5c",
 } as const;
@@ -198,7 +198,7 @@ export const PRO_CLUB_BRAND = {
   logo: UNIVERSE_LOGOS.pro,
   tagline: "U13 → Seniors · Une structure",
   mission:
-    "Équipes, coachs, adhésions, recrutement et page publique. Pour présidents, DS et secrétariat.",
+    "Équipes, coachs, adhésions, recrutement, covoiturage club et page publique. Pour présidents, DS et secrétariat.",
   accent: "#006CFC",
   accentDark: "#002478",
 } as const;
@@ -266,9 +266,9 @@ export const MODULES = [
   {
     id: "carpool",
     title: "Covoiturage",
-    subtitle: "Trajets match & détection",
+    subtitle: "Différenciateur ProDay",
     description:
-      "Coachs et joueurs proposent ou réservent des places. Lié aux événements et convocations.",
+      "Proposez un trajet, cherchez des places, filtrez par match / entraînement / événement ou lieu, réservez et contactez le conducteur en messagerie.",
     image: "/images/football-pitch-01.jpg",
     color: "#737373",
   },
@@ -857,6 +857,14 @@ export const PRO_CLUB_MODULES = [
     image: "/images/football-club-01.jpg",
   },
   {
+    id: "covoiturage-club",
+    title: "Covoiturage club",
+    subtitle: "Différenciateur ProDay",
+    description:
+      "Proposez ou réservez des places vers matchs, entraînements et détections. Places visibles, contact conducteur en messagerie sécurisée.",
+    image: "/images/football-pitch-01.jpg",
+  },
+  {
     id: "recrutement-club",
     title: "Recrutement club",
     subtitle: "Annonces & shortlist",
@@ -908,6 +916,14 @@ export const PRO_STAFF_MODULES = [
     image: "/showcase/classic-staff.jpg",
   },
   {
+    id: "covoiturage-staff",
+    title: "Covoiturage staff",
+    subtitle: "Différenciateur ProDay",
+    description:
+      "Onglet dédié pour coachs : proposer un trajet, voir les places, filtrer match / entraînement / événement, contacter le conducteur.",
+    image: "/images/football-pitch-01.jpg",
+  },
+  {
     id: "agent",
     title: "Agent Elite",
     subtitle: "CRM & mandats · 19,99 € lancement",
@@ -941,6 +957,14 @@ export const EVENEMENTS_MODULES = [
     description:
       "Publiez tournois, académies, stages, détections, showcases ou événements partenaires depuis l’app organisateur.",
     image: "/showcase/classic-arena.jpg",
+  },
+  {
+    id: "covoiturage-events",
+    title: "Covoiturage événement",
+    subtitle: "Différenciateur ProDay",
+    description:
+      "Coordonnez les trajets vers tournois et détections : places disponibles, réservation et messagerie conducteur.",
+    image: "/images/football-pitch-01.jpg",
   },
   {
     id: "registration",
@@ -1384,9 +1408,9 @@ export const ALL_PILLARS = [
   {
     id: "carpool-pillar",
     title: "Covoiturage",
-    subtitle: "Trajets partagés",
+    subtitle: "Différenciateur ProDay",
     description:
-      "Proposez ou réservez une place pour matchs et détections.",
+      "Proposez, cherchez, réservez une place et contactez le conducteur — lié aux matchs, entraînements et événements.",
   },
   {
     id: "health-pillar",
