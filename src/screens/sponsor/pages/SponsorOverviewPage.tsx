@@ -68,17 +68,32 @@ export const SponsorOverviewPage: React.FC = () => {
           style={StyleSheet.absoluteFill}
         />
         <View style={styles.heroInner}>
-          <View style={styles.heroLogo}>
-            <Image
-              source={SPONSOR_BRANDING_LOGOS.picto}
-              style={styles.heroLogoImage}
-              resizeMode="contain"
-              accessibilityLabel="Pro Day Sponsor"
-            />
+          <View style={styles.heroRow}>
+            <View style={styles.heroLogo}>
+              <Image
+                source={SPONSOR_BRANDING_LOGOS.picto}
+                style={styles.heroLogoImage}
+                resizeMode="contain"
+                accessibilityLabel="Pro Day Sponsor"
+              />
+            </View>
+            <View style={styles.heroCopy}>
+              <Text style={styles.eyebrow} numberOfLines={1}>
+                Pro Day Sponsor
+              </Text>
+              <Text
+                style={styles.greeting}
+                numberOfLines={2}
+                adjustsFontSizeToFit
+                minimumFontScale={0.75}
+              >
+                Bonjour, {companyName}
+              </Text>
+              <Text style={styles.sub} numberOfLines={2}>
+                {t('sponsor.dashboard.subtitle')}
+              </Text>
+            </View>
           </View>
-          <Text style={styles.eyebrow}>Pro Day Sponsor</Text>
-          <Text style={styles.greeting}>Bonjour, {companyName}</Text>
-          <Text style={styles.sub}>{t('sponsor.dashboard.subtitle')}</Text>
         </View>
       </View>
 
@@ -259,7 +274,7 @@ function createStyles() {
       justifyContent: 'center',
       borderWidth: 1,
       borderColor: sponsorChrome.gold,
-      marginBottom: spacing.sm,
+      flexShrink: 0,
     },
     heroLogoImage: { width: 36, height: 36 },
     eyebrow: {
@@ -268,13 +283,16 @@ function createStyles() {
       letterSpacing: 1.4,
       textTransform: 'uppercase',
       color: sponsorChrome.gold,
-      marginBottom: spacing.xs,
+      marginBottom: 2,
+      flexShrink: 1,
     },
     greeting: {
-      fontSize: 28,
-      fontWeight: '900',
+      fontSize: 22,
+      lineHeight: 26,
+      fontWeight: '800',
       color: '#FAFAF9',
-      letterSpacing: -0.5,
+      letterSpacing: -0.4,
+      flexShrink: 1,
     },
     sub: {
       fontSize: 14,
@@ -286,8 +304,9 @@ function createStyles() {
       flexDirection: 'row',
       alignItems: 'center',
       gap: spacing.md,
+      minWidth: 0,
     },
-    heroCopy: { flex: 1 },
+    heroCopy: { flex: 1, flexShrink: 1, minWidth: 0, justifyContent: 'center' },
     onboardingCard: {
       backgroundColor: sponsorChrome.overlayStrong,
       borderRadius: radius.lg,

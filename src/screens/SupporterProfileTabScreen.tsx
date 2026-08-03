@@ -147,7 +147,14 @@ export const SupporterProfileTabScreen: React.FC = () => {
             <ProDayText variant="eyebrow" muted>
               {t('supporter.profile.account')}
             </ProDayText>
-            <ProDayText variant="section">{profile.display_name}</ProDayText>
+            <ProDayText
+              variant="section"
+              numberOfLines={2}
+              adjustsFontSizeToFit
+              minimumFontScale={0.8}
+            >
+              {profile.display_name}
+            </ProDayText>
             <ProDayText variant="caption" muted>
               {profile.email}
             </ProDayText>

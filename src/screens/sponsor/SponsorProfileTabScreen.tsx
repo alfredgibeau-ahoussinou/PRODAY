@@ -127,8 +127,19 @@ export const SponsorProfileTabScreen: React.FC<{ shellMode?: boolean }> = ({
             <Icon name="briefcase" size={22} color={SPONSOR_THEME.primary} variant="filled" />
           </View>
           <View style={styles.identityBody}>
-            <Text style={styles.identityName}>{company}</Text>
-            {zone ? <Text style={styles.identityZone}>{zone}</Text> : null}
+            <Text
+              style={styles.identityName}
+              numberOfLines={2}
+              adjustsFontSizeToFit
+              minimumFontScale={0.75}
+            >
+              {company}
+            </Text>
+            {zone ? (
+              <Text style={styles.identityZone} numberOfLines={1}>
+                {zone}
+              </Text>
+            ) : null}
             <View style={styles.statusPill}>
               <Text style={styles.statusText}>Compte sponsor vérifié</Text>
             </View>
@@ -196,8 +207,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  identityBody: { flex: 1 },
-  identityName: { fontSize: 18, fontWeight: '900', color: SPONSOR_THEME.text },
+  identityBody: { flex: 1, flexShrink: 1, minWidth: 0 },
+  identityName: {
+    fontSize: 18,
+    lineHeight: 22,
+    fontWeight: '800',
+    color: SPONSOR_THEME.text,
+    flexShrink: 1,
+  },
   identityZone: { fontSize: 13, color: SPONSOR_THEME.textSecondary, marginTop: 4 },
   statusPill: {
     alignSelf: 'flex-start',

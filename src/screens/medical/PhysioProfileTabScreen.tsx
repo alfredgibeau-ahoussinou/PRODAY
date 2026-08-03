@@ -152,7 +152,14 @@ export const PhysioProfileTabScreen: React.FC = () => {
           </TouchableOpacity>
 
           <View style={styles.identityCopy}>
-            <Text style={styles.name}>{profile.display_name}</Text>
+            <Text
+              style={styles.name}
+              numberOfLines={2}
+              adjustsFontSizeToFit
+              minimumFontScale={0.75}
+            >
+              {profile.display_name}
+            </Text>
             <View style={styles.specialtyRow}>
               <Icon name="heart" size={14} color={c.accent} variant="filled" />
               <Text style={styles.specialty}>{specialty}</Text>
@@ -286,8 +293,8 @@ function createStyles(c: AppColors) {
       borderWidth: 2,
       borderColor: c.surface,
     },
-    identityCopy: { flex: 1, justifyContent: 'center' },
-    name: { fontSize: 20, fontWeight: '900', color: c.text },
+    identityCopy: { flex: 1, flexShrink: 1, minWidth: 0, justifyContent: 'center' },
+    name: { fontSize: 18, lineHeight: 22, fontWeight: '800', color: c.text, flexShrink: 1 },
     specialtyRow: {
       flexDirection: 'row',
       alignItems: 'center',
