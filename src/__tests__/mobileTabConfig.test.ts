@@ -9,10 +9,12 @@ describe('mobileTabConfig', () => {
     expect(rail.right).toContain('profil');
   });
 
-  it('canonise joueur homme vers shell pro joueur plat', () => {
+  it('canonise joueur homme vers shell pro joueur plat Instagram-like', () => {
     const rail = getMobileRailLayout('homme', 'player');
-    expect(rail.flat).toEqual(['home', 'covoiturage', 'reels', 'matchs', 'profil']);
-    expect(rail.overflow).toEqual(expect.arrayContaining(['sante', 'messages', 'recrutement', 'shop']));
+    expect(rail.flat).toEqual(['home', 'reels', 'matchs', 'messages', 'profil']);
+    expect(rail.overflow).toEqual(
+      expect.arrayContaining(['covoiturage', 'sante', 'recrutement', 'shop'])
+    );
     expect(rail.center).toBeNull();
   });
 
@@ -25,10 +27,12 @@ describe('mobileTabConfig', () => {
     expect(rail.right).toEqual([]);
   });
 
-  it('affiche le menu amateur joueur en rangée plate avec overflow', () => {
+  it('affiche le menu amateur joueur Instagram-like avec overflow', () => {
     const rail = getMobileRailLayout('amateur', 'player');
-    expect(rail.flat).toEqual(['home', 'covoiturage', 'recrutement', 'profil']);
-    expect(rail.overflow).toEqual(expect.arrayContaining(['messages', 'reels', 'sante', 'shop']));
+    expect(rail.flat).toEqual(['home', 'reels', 'matchs', 'messages', 'profil']);
+    expect(rail.overflow).toEqual(
+      expect.arrayContaining(['covoiturage', 'recrutement', 'sante', 'shop'])
+    );
     expect(rail.center).toBeNull();
   });
 
@@ -88,11 +92,12 @@ describe('mobileTabConfig', () => {
     ]);
   });
 
-  it('affiche le menu pro joueur en rangée plate avec covoiturage', () => {
+  it('affiche le menu pro joueur Instagram-like (sans covoiturage en dock)', () => {
     const rail = getMobileRailLayout('pro', 'player');
-    expect(rail.flat).toEqual(['home', 'covoiturage', 'reels', 'matchs', 'profil']);
-    expect(rail.flat?.[1]).toBe('covoiturage');
-    expect(rail.overflow).toEqual(expect.arrayContaining(['sante', 'messages', 'recrutement', 'shop']));
+    expect(rail.flat).toEqual(['home', 'reels', 'matchs', 'messages', 'profil']);
+    expect(rail.overflow).toEqual(
+      expect.arrayContaining(['covoiturage', 'sante', 'recrutement', 'shop'])
+    );
     expect(rail.center).toBeNull();
   });
 });

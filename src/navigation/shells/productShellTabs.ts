@@ -1,17 +1,22 @@
 import type { MainTabId } from '../mainTabConfig';
 
+/**
+ * Menus joueur type Instagram : 5 onglets primaires + overflow (⋯).
+ * Autres rôles : shells métier inchangés.
+ */
+
 export const AMATEUR_PLAYER_SHELL_TABS: MainTabId[] = [
-  'home', // Équipe
-  'covoiturage', // Différenciateur — trajets match / entraînement
-  'recrutement', // Club
+  'home', // Accueil
+  'reels', // Reels
+  'matchs', // Matchs
+  'messages', // Messages
   'profil', // Moi
 ];
 
-/** Onglets accessibles via le menu overflow (doc §4.1). */
+/** Secondaires joueur amateur — menu ⋯ */
 export const AMATEUR_PLAYER_OVERFLOW_TABS: MainTabId[] = [
-  'matchs',
-  'messages',
-  'reels',
+  'covoiturage',
+  'recrutement', // Club
   'sante',
   'feed',
   'shop',
@@ -49,17 +54,17 @@ export const PRO_CLUB_SHELL_TABS: MainTabId[] = [
 
 export const PRO_PLAYER_SHELL_TABS: MainTabId[] = [
   'home', // Carrière
-  'covoiturage', // Différenciateur — trajets match / entraînement
-  'reels', // Réels
-  'matchs', // Groupe
+  'reels', // Reels
+  'matchs', // Matchs
+  'messages', // Messages
   'profil', // Moi
 ];
 
-/** Onglets joueur pro accessibles via le menu (RDV santé, messages…). */
+/** Secondaires joueur pro — menu ⋯ */
 export const PRO_PLAYER_OVERFLOW_TABS: MainTabId[] = [
+  'covoiturage',
+  'recrutement', // Opportunités
   'sante',
-  'messages',
-  'recrutement',
   'shop',
 ];
 
@@ -103,4 +108,3 @@ export const PRO_ORGANIZER_SHELL_TABS: MainTabId[] = [
   'shop',
   'profil',
 ];
-
