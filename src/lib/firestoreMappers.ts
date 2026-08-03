@@ -2,6 +2,7 @@ import type {
   User,
   UserRole,
   VerificationStatus,
+  Gender,
   GeoPoint,
   WorkExperience,
   DiplomaRecord,
@@ -69,6 +70,12 @@ function toGeoPoint(value: unknown): GeoPoint | undefined {
   return undefined;
 }
 
+/** Firestore `profile.gender` — enum stable: men | women | minor. */
+function toProfileGender(value: unknown): Gender | undefined {
+  if (value === 'men' || value === 'women' || value === 'minor') return value;
+  return undefined;
+}
+
 export function userFromFirestore(uid: string, data: Record<string, unknown>): User {
   const profile = (data.profile as Record<string, unknown>) ?? {};
 
@@ -99,6 +106,7 @@ export function userFromFirestore(uid: string, data: Record<string, unknown>): U
       position: profile.position as string | undefined,
       category: profile.category as string | undefined,
       level: profile.level as string | undefined,
+      gender: toProfileGender(profile.gender),
       strong_foot: profile.strong_foot as User['profile']['strong_foot'],
       height_cm: profile.height_cm as number | undefined,
       weight_kg: profile.weight_kg as number | undefined,

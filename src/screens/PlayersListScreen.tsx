@@ -21,7 +21,9 @@ import {
   countActiveFilters,
   filterPlayers,
   nextPlayerBadgeFilter,
+  nextPlayerGenderFilter,
   playerBadgeFilterLabel,
+  playerGenderFilterLabel,
   type PlayerListFilters,
 } from '../utils/playerFilters';
 import { spacing, radius } from '../theme/designTokens';
@@ -159,6 +161,22 @@ export const PlayersListScreen: React.FC<PlayersListScreenProps> = ({
           )}
           value={filters.level !== 'Tous' ? filters.level : undefined}
         />
+        {isStaff ? (
+          <FilterChip
+            label="Genre"
+            active={filters.gender !== 'all'}
+            colors={themeColors}
+            onPress={() =>
+              setFilters((f) => ({
+                ...f,
+                gender: nextPlayerGenderFilter(f.gender),
+              }))
+            }
+            value={
+              filters.gender !== 'all' ? playerGenderFilterLabel(filters.gender) : undefined
+            }
+          />
+        ) : null}
         {isStaff ? (
           <FilterChip
             label="Badge"

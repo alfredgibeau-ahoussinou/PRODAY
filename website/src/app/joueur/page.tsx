@@ -34,7 +34,8 @@ const BADGES = [
 ];
 
 const FEATURES = [
-  "Mercato avec filtres recruteur : tous / amateurs / pros / centres",
+  "Inscription : choix du genre (Homme / Femme) — un seul Pôle Joueur",
+  "Mercato avec filtres recruteur : genre, badges Amateur / Centre / Pro",
   "Badge Joueur vérifié (licence ou certification club)",
   "Confidentialité contacts : choisissez qui voit téléphone et email",
   "Demandes de message agent (accept / refuse avant conversation)",
@@ -73,7 +74,7 @@ export default function JoueurPolePage() {
           id="modules"
           pole="joueur"
           title="Ce que vous gagnez"
-          description="Carrière continue. Les recruteurs filtrent par niveau ; vous gardez votre historique."
+          description="Carrière continue. Les recruteurs filtrent par genre et badge ; vous gardez votre historique."
         >
           <ul className="mt-6 space-y-3">
             {FEATURES.map((f) => (

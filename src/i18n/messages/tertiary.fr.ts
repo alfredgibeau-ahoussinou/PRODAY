@@ -422,7 +422,7 @@ export const TERTIARY_FR: MessageCatalog = {
   'signup.form.repeatPassword': 'Répéter le mot de passe',
   'signup.form.selectGender': 'Sélectionnez votre genre pour continuer',
   'signup.form.selectSpace': 'Sélectionnez un espace ProDay pour continuer',
-  'signup.form.gender.title': 'Votre genre',
+  'signup.form.gender.title': 'Genre',
   'signup.form.gender.men': 'Homme',
   'signup.form.gender.women': 'Femme',
   'signup.form.gender.minor': 'Mineur (-18 ans)',
