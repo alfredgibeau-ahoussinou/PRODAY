@@ -86,25 +86,27 @@ def draw_shadowed_text_centered(img, draw, y, text, font, fill, max_width, shado
 def make_caption(cfg, out_path, title, subtitle):
     W, H = cfg["width"], cfg["height"]
     img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-    add_text_backdrop(img)
+    add_text_backdrop(img, top_ratio=cfg.get("backdropTopRatio", 0.52))
     draw = ImageDraw.Draw(img)
 
-    title_font = load_font(cfg["fonts"]["title"], 92)
-    sub_font = load_font(cfg["fonts"]["body"], 38)
+    title_size = int(cfg.get("titleFontSize", 92))
+    body_size = int(cfg.get("bodyFontSize", 38))
+    title_font = load_font(cfg["fonts"]["title"], title_size)
+    sub_font = load_font(cfg["fonts"]["body"], body_size)
 
     # Zone de texte centrée avec marges latérales confortables.
-    side_margin = 72
+    side_margin = int(cfg.get("sideMargin", 72))
     max_text_w = W - side_margin * 2
 
     tw, t_h, t_off = text_size(draw, title, title_font)
     # Réduire le titre si trop large.
-    title_size = 92
-    while tw > max_text_w and title_size > 64:
+    min_title = int(cfg.get("minTitleFontSize", 64))
+    while tw > max_text_w and title_size > min_title:
         title_size -= 4
         title_font = load_font(cfg["fonts"]["title"], title_size)
         tw, t_h, t_off = text_size(draw, title, title_font)
 
-    block_y = int(H * 0.62)
+    block_y = int(H * float(cfg.get("captionBlockYRatio", 0.62)))
     bar_w = 64
     bar_x = (W - bar_w) // 2
     rounded_bar(img, bar_x, block_y, bar_w, 8, (46, 99, 255, 255))
@@ -136,11 +138,11 @@ def make_endcard(cfg, out_path):
 
     # Logo (fond blanc d'origine -> fusion parfaite sur carte blanche).
     logo = Image.open(cfg["logo"]).convert("RGBA")
-    lw = int(W * 0.72)
+    lw = int(W * float(cfg.get("logoWidthRatio", 0.72)))
     lh = int(lw * logo.height / logo.width)
     logo = logo.resize((lw, lh), Image.LANCZOS)
     lx = (W - lw) // 2
-    ly = H // 2 - lh // 2 - 40
+    ly = H // 2 - lh // 2 - int(cfg.get("logoYOffset", 40))
     img.alpha_composite(logo, (lx, ly))
 
     draw = ImageDraw.Draw(img)
@@ -152,9 +154,21 @@ def make_endcard(cfg, out_path):
 
     # Accroche.
     tag = cfg["tagline"]
-    tag_font = load_font(cfg["fonts"]["body"], 40)
+    tag_font = load_font(cfg["fonts"]["body"], int(cfg.get("endcardFontSize", 40)))
     tw, th, toff = text_size(draw, tag, tag_font)
-    draw.text(((W - tw) // 2, logo_bottom + 52 - toff), tag, font=tag_font, fill=(10, 26, 58, 255))
+    tag_y = logo_bottom + 52 - toff
+    draw.text(((W - tw) // 2, tag_y), tag, font=tag_font, fill=(10, 26, 58, 255))
+
+    subtitle = cfg.get("endcardSubtitle")
+    if subtitle:
+        sub_font = load_font(cfg["fonts"]["body"], int(cfg.get("endcardSubtitleFontSize", 28)))
+        sw, sh, soff = text_size(draw, subtitle, sub_font)
+        draw.text(
+            ((W - sw) // 2, tag_y + th + 18 - soff),
+            subtitle,
+            font=sub_font,
+            fill=(46, 99, 255, 255),
+        )
 
     img.convert("RGB").save(out_path)
 

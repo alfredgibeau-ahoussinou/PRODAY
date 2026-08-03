@@ -32,15 +32,16 @@ const CFG = {
   width: W,
   height: H,
   logo: join(ROOT, 'assets/branding/logo-proday-official.png'),
-  tagline: 'Bienvenue sur ProDay',
+  tagline: 'CONNECTER • PROGRESSER • RÉUSSIR',
+  endcardSubtitle: 'Bêta iOS · 11 août 2026',
   fonts: {
     title: '/System/Library/Fonts/Supplemental/Arial Black.ttf',
     body: '/System/Library/Fonts/Supplemental/Arial Bold.ttf',
   },
   captions: [
-    { title: 'CONNECTE-TOI', subtitle: 'Ton équipe, tes matchs, ta communauté' },
-    { title: 'PROGRESSE', subtitle: 'Monte en niveau à chaque match' },
-    { title: 'RÉUSSIS', subtitle: 'Fais-toi repérer, vis ta passion' },
+    { title: 'CONNECTER', subtitle: 'Ton équipe, tes matchs, ta communauté' },
+    { title: 'PROGRESSER', subtitle: 'Pôle Joueur · Amateur → Pro' },
+    { title: 'RÉUSSIR', subtitle: '7 pôles · covoiturage · carrière' },
   ],
 };
 
@@ -51,6 +52,25 @@ const CLIP_SEQUENCE = [
 ];
 
 const N = CLIP_SEQUENCE.length;
+
+function resolvePython() {
+  const candidates = [
+    join(ROOT, '.venv-intro/bin/python3'),
+    join(ROOT, '.venv-intro/bin/python'),
+    'python3',
+  ];
+  for (const bin of candidates) {
+    const probe = spawnSync(bin, ['-c', 'from PIL import Image'], {
+      stdio: ['ignore', 'ignore', 'ignore'],
+    });
+    if (probe.status === 0) return bin;
+  }
+  console.error(
+    '✗ Pillow introuvable. Installez-le :\n' +
+      '  python3 -m venv .venv-intro && .venv-intro/bin/pip install Pillow',
+  );
+  process.exit(1);
+}
 
 function run(cmd, args) {
   const res = spawnSync(cmd, args, { stdio: ['ignore', 'inherit', 'inherit'] });
@@ -65,7 +85,7 @@ function main() {
   mkdirSync(TMP, { recursive: true });
 
   console.log('→ Génération des overlays (textes + carte logo)…');
-  run('python3', [join(ROOT, 'scripts/build-intro-overlays.py'), TMP, JSON.stringify(CFG)]);
+  run(resolvePython(), [join(ROOT, 'scripts/build-intro-overlays.py'), TMP, JSON.stringify(CFG)]);
 
   // Inputs.
   const inputs = [];

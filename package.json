@@ -40,6 +40,7 @@
     "docs:open-mockups": "open docs/design/mockups/index.html",
     "docs:open-brief": "open docs/design/ProDay_Brief.html",
     "intro:build": "node scripts/build-intro-video.mjs",
+    "intro:build:website": "node scripts/build-website-intro-video.mjs",
     "branding:logos": "node scripts/generate-transparent-logos.mjs",
     "branding:logos:woman": "node scripts/generate-woman-logos.mjs",
     "branding:logos:universes": "node scripts/generate-universe-logos.mjs",
