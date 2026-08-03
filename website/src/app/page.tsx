@@ -29,9 +29,9 @@ export default function HomePage() {
         <div className="mx-auto max-w-5xl px-4 sm:px-6">
           <div className="mb-8 text-center">
             <h2 className="font-display text-3xl font-extrabold uppercase tracking-[-0.03em] text-white">
-              Quel pôle vous correspond ?
+              Vous êtes ?
             </h2>
-            <p className="mt-2 text-sm text-white/50">5 questions. Réponse directe.</p>
+            <p className="mt-2 text-sm text-white/50">Choisissez votre rôle. Accès direct au pôle.</p>
           </div>
           <div className="overflow-hidden rounded-3xl border border-white/10 bg-[#0c0c10] p-2 sm:p-4">
             <RoleQuiz inline />

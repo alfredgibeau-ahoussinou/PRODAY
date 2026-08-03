@@ -16,6 +16,8 @@ import { filterRealUsers } from '../utils/realUserFilter';
 import { sanitizePublicUser } from '../utils/sanitizePublicUser';
 import { distanceBetween } from '../utils/geoLocation';
 import type { GeoPoint } from '../models/User';
+import type { RecruiterPlayerLevelFilter } from '../models/PlayerLevel';
+import { playerLevelMatchesFilter, resolvePlayerLevel } from '../utils/playerLevelBadge';
 
 const PAGE_SIZE = 25;
 
@@ -26,6 +28,8 @@ export type PlayersDirectoryQuery = {
   city?: string;
   radiusKm?: number;
   viewerLocation?: GeoPoint | null;
+  /** Filtre badge Pôle Joueur (recruteurs). */
+  playerBadge?: RecruiterPlayerLevelFilter;
   cursor?: PlayersDirectoryCursor;
   pageSize?: number;
 };
@@ -97,6 +101,11 @@ export const playersDirectoryService = {
       }
       if (options.radiusKm && options.viewerLocation) {
         users = users.filter((u) => matchesRadius(u, options.viewerLocation!, options.radiusKm!));
+      }
+      if (options.playerBadge && options.playerBadge !== 'all') {
+        users = users.filter((u) =>
+          playerLevelMatchesFilter(resolvePlayerLevel(u), options.playerBadge!),
+        );
       }
 
       const lastDoc = snap.docs.length > 0 ? snap.docs[snap.docs.length - 1] : null;

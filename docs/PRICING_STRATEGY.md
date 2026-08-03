@@ -20,7 +20,7 @@ ProDay vise le **foot amateur connecté** (Mercato + saison + CV + Arena), pas u
 | **Joueur Plus** | 2,99 € | 24,99 € | −67 % | −79 % |
 | **Coach Pro** | 7,99 € | 59,99 € | — | Sous stack club SportEasy+ |
 | **Club Pro** | 11,99 € | 89,99 € | — | Sous Assoconnect (29 €) |
-| **Agent Elite** | 24,99 € | 199,99 € | — | CRM pro accessible |
+| **Agent Elite** | 19,99 € (20 premiers) puis 29,99 € | annuel = mensuel ×12 − remise | — | Offre lancement puis tarif standard |
 
 ## Gratuit (freemium crédible)
 

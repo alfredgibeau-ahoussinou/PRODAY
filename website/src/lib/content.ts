@@ -122,16 +122,18 @@ export const HOMME_BRAND = {
 } as const;
 
 export const AMATEUR_BRAND = {
-  name: "Pro Day Amateur",
-  shortName: "Amateur",
-  fullName: "Pro Day Amateur",
+  name: "Pro Day Joueur",
+  shortName: "Joueur",
+  fullName: "Pro Day Joueur",
   logo: UNIVERSE_LOGOS.amateur,
-  tagline: "District · Régional · Passion",
+  tagline: "Amateur · Centre · Pro",
   mission:
-    "Le terrain du dimanche, sans le chaos WhatsApp. Mercato local, convocations, effectif coach et CV joueur. Pour le foot M et F amateur.",
-  accent: "#F03000",
-  accentDark: "#841800",
+    "Un seul Pôle Joueur. Badges Amateur, Centre de formation / Aspirant ou Professionnel. Mercato, CV et carrière — signature pro sans changer d'environnement.",
+  accent: "#0054F0",
+  accentDark: "#001854",
 } as const;
+
+export const JOUEUR_BRAND = AMATEUR_BRAND;
 
 export const SUPPORTER_BRAND = {
   name: "Pro Day Supporter",
@@ -158,15 +160,27 @@ export const PRO_BRAND = {
 } as const;
 
 export const PRO_JOUEUR_BRAND = {
-  name: "Pro Day Pro Joueur",
-  shortName: "Pro Joueur",
-  fullName: "Pro Day Pro Joueur",
+  name: "Pro Day Joueur",
+  shortName: "Joueur",
+  fullName: "Pro Day Joueur",
   logo: UNIVERSE_LOGOS.homme,
-  tagline: "Contrat · Essais · Scouting",
+  tagline: "Amateur → Pro · Badges",
   mission:
-    "Portfolio scouting, alertes clubs, stats validées par le coach et mandat agent. Pour le joueur sous contrat.",
+    "Même profil du district au contrat pro. Badge Professionnel (jaune) à la signature. Portfolio, essais, scouting et mandat agent.",
   accent: "#0054F0",
   accentDark: "#001854",
+} as const;
+
+export const EVENEMENTS_BRAND = {
+  name: "Pro Day Événements",
+  shortName: "Événements",
+  fullName: "Pro Day Événements",
+  logo: UNIVERSE_LOGOS.pro,
+  tagline: "Tournois · Académies · Détections",
+  mission:
+    "Espace organisateurs : créez des événements, inscriptions en ligne, paiements, listes, résultats et partage média.",
+  accent: "#0891B2",
+  accentDark: "#0e4a5c",
 } as const;
 
 export const PRO_CLUB_BRAND = {
@@ -843,12 +857,12 @@ export const PRO_CLUB_MODULES = [
     image: "/showcase/classic-mercato.jpg",
   },
   {
-    id: "calendrier-club",
-    title: "Calendrier structure",
-    subtitle: "Saison multi-équipes",
+    id: "pipeline-club",
+    title: "Pipeline candidatures",
+    subtitle: "Kanban recrutement",
     description:
-      "Vue agrégée matchs et entraînements. Lecture seule sur les feuilles coach. Vision globale pour le bureau.",
-    image: "/images/football-match-01.jpg",
+      "Boîte de réception → revue → shortlist → essai → offre → recruté. Suivi simple pour le bureau et la DS.",
+    image: "/showcase/classic-mercato.jpg",
   },
   {
     id: "communication-club",
@@ -863,7 +877,7 @@ export const PRO_CLUB_MODULES = [
     title: "Vitrine publique",
     subtitle: "Page club",
     description:
-      "Logo, palmarès, catégories. Visible des supporters et des recruteurs du territoire.",
+      "Logo, palmarès, catégories. Visible des supporters et des recruteurs du territoire. Calendrier & convocations : Pôle Staff.",
     image: "/images/football-stadium-night-01.jpg",
   },
 ] as const;
@@ -880,34 +894,69 @@ export const PRO_STAFF_MODULES = [
   {
     id: "coach",
     title: "Coach Pro",
-    subtitle: "Effectifs & convocations",
+    subtitle: "Effectifs, calendrier & convocations",
     description:
-      "Multi-équipes, convocations, stats candidatures et profil staff vérifié.",
+      "Multi-équipes, calendrier structure, convocations premium et stats. Le calendrier club vit ici — plus dans le Club freemium.",
     image: "/showcase/classic-staff.jpg",
   },
   {
     id: "agent",
     title: "Agent Elite",
-    subtitle: "CRM & mandats",
+    subtitle: "CRM & mandats · 19,99 € lancement",
     description:
-      "CRM joueurs, alertes géolocalisées, contacts clubs et suivi des mandats jusqu'à la signature.",
+      "CRM joueurs, alertes géo, demandes de message (accept/refuse) et mandats. 19,99 €/mois pour les 20 premiers, puis 29,99 €.",
     image: "/images/football-mercato-01.jpg",
   },
   {
-    id: "organizer",
-    title: "Organisateur Arena",
-    subtitle: "Tournois & poules",
+    id: "calendrier-staff",
+    title: "Calendrier structure",
+    subtitle: "Saison multi-équipes",
     description:
-      "Création tournoi, inscriptions, poules, scores et classements.",
-    image: "/showcase/classic-arena.jpg",
+      "Vue agrégée matchs et entraînements de la structure. Porté par le Staff, plus par le Club free.",
+    image: "/images/football-match-01.jpg",
   },
   {
     id: "reseau",
     title: "Réseau Pro vérifié",
     subtitle: "Messagerie tracée",
     description:
-      "Contacts validés entre staff, agents et structures. Échanges professionnels. Plus de fils non tracés.",
+      "Contacts validés entre staff, agents et structures. Demandes joueur↔agent avant conversation active.",
     image: "/showcase/classic-exp-messages.jpg",
+  },
+] as const;
+
+export const EVENEMENTS_MODULES = [
+  {
+    id: "create-events",
+    title: "Créer un événement",
+    subtitle: "Tournois · camps · détections",
+    description:
+      "Publiez tournois, académies, stages, détections, showcases ou événements partenaires.",
+    image: "/showcase/classic-arena.jpg",
+  },
+  {
+    id: "registration",
+    title: "Inscriptions en ligne",
+    subtitle: "Listes & capacités",
+    description:
+      "Ouverture / fermeture des inscriptions, liste d'attente et export participants.",
+    image: "/showcase/classic-exp-team.jpg",
+  },
+  {
+    id: "payments",
+    title: "Paiements",
+    subtitle: "Bientôt",
+    description:
+      "Encaissement des droits d'inscription. TODO : Stripe / IAP — scaffolding prêt côté modèle.",
+    image: "/images/football-mercato-01.jpg",
+  },
+  {
+    id: "results-media",
+    title: "Résultats & médias",
+    subtitle: "Partage",
+    description:
+      "Scores, classements et galerie. Partagez les moments forts avec clubs et joueurs.",
+    image: "/images/football-stadium-night-01.jpg",
   },
 ] as const;
 
@@ -1553,20 +1602,20 @@ export const SUBSCRIPTION_PLANS_WEB = [
       "Profil club et vérification",
       "1 équipe",
       "2 annonces Mercato Pro actives",
-      "Gestion convocations (base)",
+      "Vitrine publique (sans convocations)",
     ],
     proIncludes: [
       "Annonces actives illimitées",
       "Multi-équipes",
       "Priorité dans le fil Mercato Pro",
-      "Exports candidatures",
+      "Pipeline candidatures kanban",
     ],
   },
   {
     id: "agent_elite",
     label: "Agent Elite",
-    tagline: "CRM joueurs, mandats et pipeline. Formule premium",
-    monthlyEur: 99.99,
+    tagline: "Lancement 19,99 € (20 premiers) puis 29,99 €/mois",
+    monthlyEur: 29.99,
     storeAvailable: true,
     premium: true,
     universes: ["pro"] as ProductLineWeb[],
@@ -1574,6 +1623,7 @@ export const SUBSCRIPTION_PLANS_WEB = [
       "Profil agent et vérification",
       "10 contacts recrutement / mois",
       "Mercato en lecture",
+      "Demandes de message joueurs",
     ],
     proIncludes: [
       "Contacts illimités",
@@ -1838,7 +1888,7 @@ export const FAQ_ITEMS = [
   },
   {
     q: "Quel tarif pour Agent Elite ?",
-    a: `Agent Elite est la formule premium agents : ${faqPricing("agent_elite")}. CRM joueurs, alertes géolocalisées, pipeline mandats et contacts illimités.`,
+    a: `Agent Elite : offre de lancement 19,99 €/mois pour les 20 premiers agents, puis 29,99 €/mois (${faqPricing("agent_elite")} après lancement). CRM joueurs, alertes géo, demandes de message et mandats.`,
   },
   {
     q: "Quel tarif pour le pôle santé ?",

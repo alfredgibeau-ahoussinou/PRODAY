@@ -29,6 +29,7 @@ import {
 } from './sponsorQuoteAdmin';
 import { onV3BrainWrite } from './v3Brain';
 import { activateStoreSubscription } from './subscriptionIap';
+import { claimAgentLaunchSeat } from './agentLaunchSeats';
 import {
   onSponsorOfferCreated,
   onSponsorOfferUpdated,
@@ -55,6 +56,7 @@ export { getVisioJoinUrl };
 export { onTeamEventUpdated, syncTeamEventActivities };
 export { analyzeActivityHighlight };
 export { activateStoreSubscription };
+export { claimAgentLaunchSeat };
 export { onPlatformFeedCreated, onChatMessageCreated };
 export { onRecruitmentPostCreated };
 export { onV3BrainWrite };

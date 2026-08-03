@@ -44,14 +44,16 @@ export const PRODAY_WOMAN_BRAND = {
 } as const;
 
 export const PRODAY_AMATEUR_BRAND = {
-  name: 'Pro Day Amateur',
+  name: 'Pro Day Joueur',
   logoLine1: 'Pro Day',
   logoLine2Lead: '',
-  logoLine2Accent: 'Amateur',
-  tagline: 'JOUER • ENCADRER • PARTAGER',
-  shortTagline: 'Joueurs et coachs amateur. Mercato local, matchs et effectif',
-  entryCta: 'Espace Amateur',
+  logoLine2Accent: 'Joueur',
+  tagline: 'AMATEUR • CENTRE • PRO',
+  shortTagline: 'Pôle Joueur unifié. Badges Amateur, Centre / Aspirant ou Professionnel',
+  entryCta: 'Espace Joueur',
 } as const;
+
+export const PRODAY_JOUEUR_BRAND = PRODAY_AMATEUR_BRAND;
 
 export const PRODAY_SUPPORTER_BRAND = {
   name: 'Pro Day Supporter',
@@ -74,32 +76,32 @@ export const PRODAY_PRO_BRAND = {
 } as const;
 
 export const PRODAY_PRO_PLAYER_BRAND = {
-  name: 'Pro Day Pro Joueur',
+  name: 'Pro Day Joueur',
   logoLine1: 'Pro Day',
-  logoLine2Lead: 'Pro ',
+  logoLine2Lead: '',
   logoLine2Accent: 'Joueur',
-  tagline: 'CARRIÈRE • OPPORTUNITÉS • PERFORMANCE',
-  shortTagline: 'Joueur professionnel. Carrière, portfolio et groupe',
-  entryCta: 'Espace Pro Joueur',
+  tagline: 'AMATEUR • CENTRE • PRO',
+  shortTagline: 'Même profil du district au contrat. Badge Professionnel à la signature',
+  entryCta: 'Espace Joueur',
 } as const;
 
 export const PRODAY_PRO_CLUB_BRAND = {
-  name: 'Pro Day Pro Club',
+  name: 'Pro Day Club',
   logoLine1: 'Pro Day',
-  logoLine2Lead: 'Pro ',
+  logoLine2Lead: '',
   logoLine2Accent: 'Club',
-  tagline: 'STRUCTURE • RECRUTEMENT • CALENDRIER',
-  shortTagline: 'Club et structure. Équipes, recrutement et communication',
+  tagline: 'STRUCTURE • RECRUTEMENT • VITRINE',
+  shortTagline: 'Club et structure. Pipeline candidatures et communication',
   entryCta: 'Espace Club',
 } as const;
 
 export const PRODAY_PRO_STAFF_BRAND = {
-  name: 'Pro Day Pro Staff',
+  name: 'Pro Day Staff',
   logoLine1: 'Pro Day',
-  logoLine2Lead: 'Pro ',
+  logoLine2Lead: '',
   logoLine2Accent: 'Staff',
-  tagline: 'MANDATS • SCOUTING • ENCADREMENT',
-  shortTagline: 'Coach, agent, recruteur et organisateur',
+  tagline: 'MANDATS • SCOUTING • CONVOCATIONS',
+  shortTagline: 'Coach, agent, recruteur. Calendrier structure et convocations premium',
   entryCta: 'Espace Staff',
 } as const;
 

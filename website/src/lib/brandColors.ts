@@ -15,11 +15,18 @@ export const OFFICIAL_BRAND = {
 
 /** Accents par pôle. échantillons réels des pictos. */
 export const POLE_BRAND_COLORS = {
+  joueur: {
+    deep: "#001854",
+    accent: "#0054F0",
+    soft: "rgba(0, 84, 240, 0.14)",
+    glow: "rgba(0, 84, 240, 0.35)",
+  },
+  /** @deprecated → joueur */
   amateur: {
-    deep: "#841800",
-    accent: "#F03000",
-    soft: "rgba(240, 48, 0, 0.14)",
-    glow: "rgba(240, 48, 0, 0.35)",
+    deep: "#001854",
+    accent: "#0054F0",
+    soft: "rgba(0, 84, 240, 0.14)",
+    glow: "rgba(0, 84, 240, 0.35)",
   },
   supporter: {
     deep: "#180078",
@@ -33,7 +40,7 @@ export const POLE_BRAND_COLORS = {
     soft: "rgba(0, 204, 180, 0.14)",
     glow: "rgba(0, 204, 180, 0.35)",
   },
-  /** Picto monochrome → bleu officiel ProDay */
+  /** @deprecated → joueur */
   pro_joueur: {
     deep: "#001854",
     accent: "#0054F0",
@@ -46,12 +53,17 @@ export const POLE_BRAND_COLORS = {
     soft: "rgba(0, 108, 252, 0.14)",
     glow: "rgba(0, 108, 252, 0.35)",
   },
-  /** Même famille logo pro, nuance un cran plus indigo */
   pro_staff: {
     deep: "#001848",
     accent: "#3B5BFF",
     soft: "rgba(59, 91, 255, 0.14)",
     glow: "rgba(59, 91, 255, 0.35)",
+  },
+  evenements: {
+    deep: "#0e4a5c",
+    accent: "#0891B2",
+    soft: "rgba(8, 145, 178, 0.14)",
+    glow: "rgba(8, 145, 178, 0.35)",
   },
   sponsor: {
     deep: "#070605",

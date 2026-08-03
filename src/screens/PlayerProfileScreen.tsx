@@ -29,6 +29,7 @@ import {
   PlayerGalleryGrid,
   PlayerIdentityDetails,
   PlayerProfileHero,
+  type VisibleProfileContacts,
 } from '../components/player/PlayerProfileHero';
 import { getProfileCompletion } from '../utils/profileCompletion';
 import { availabilityLabel } from '../utils/playerProfileLabels';
@@ -38,6 +39,7 @@ import { usePlayerActivities, useCareerProgression, usePlayerActivitiesForStaff,
 import { CareerScoreCard } from '../components/player/CareerScoreCard';
 import { PlayerActivityPublicSummary } from '../components/player/PlayerActivityPublicSummary';
 import { TAB_BAR_CONTENT_INSET } from '../navigation/tabBarLayout';
+import { usersService } from '../services/users.service';
 
 interface PlayerProfileScreenProps {
   player: User;
@@ -150,6 +152,51 @@ export const PlayerProfileScreen: React.FC<PlayerProfileScreenProps> = ({
     [isStaffView, player, staffActivities]
   );
   const [galleryExpanded, setGalleryExpanded] = useState(false);
+  const [visibleContacts, setVisibleContacts] = useState<VisibleProfileContacts | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (isOwnProfile) {
+      setVisibleContacts({
+        phone: player.phone,
+        email: player.email,
+        other_contact: player.other_contact,
+      });
+      return () => {
+        cancelled = true;
+      };
+    }
+    setVisibleContacts(null);
+    void usersService
+      .getPublicById(player.uid, {
+        viewerUid: myProfile?.uid,
+        viewerRole: myProfile?.role,
+        isConnection: favorited,
+      })
+      .then((publicUser) => {
+        if (cancelled || !publicUser) return;
+        setVisibleContacts({
+          phone: publicUser.phone,
+          email: publicUser.email,
+          other_contact: publicUser.other_contact,
+        });
+      })
+      .catch(() => {
+        if (!cancelled) setVisibleContacts(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    favorited,
+    isOwnProfile,
+    myProfile?.role,
+    myProfile?.uid,
+    player.email,
+    player.other_contact,
+    player.phone,
+    player.uid,
+  ]);
 
   const scouting = useMemo(() => {
     if (!isStaffView || !myProfile) return null;
@@ -186,7 +233,11 @@ export const PlayerProfileScreen: React.FC<PlayerProfileScreenProps> = ({
       case 'identity':
         return (
           <View style={{ gap: spacing.md }}>
-            <PlayerIdentityDetails player={player} colors={themeColors} />
+            <PlayerIdentityDetails
+              player={player}
+              colors={themeColors}
+              visibleContacts={visibleContacts}
+            />
             {gallery.length > 0 ? (
               <>
                 <View style={styles.galleryHeader}>

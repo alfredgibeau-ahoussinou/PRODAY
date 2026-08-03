@@ -20,6 +20,8 @@ import {
   PLAYER_POSITIONS_FILTER,
   countActiveFilters,
   filterPlayers,
+  nextPlayerBadgeFilter,
+  playerBadgeFilterLabel,
   type PlayerListFilters,
 } from '../utils/playerFilters';
 import { spacing, radius } from '../theme/designTokens';
@@ -55,15 +57,16 @@ export const PlayersListScreen: React.FC<PlayersListScreenProps> = ({
   const { profile } = useAuth();
   const { isFavorite, toggle } = useFavorites(profile?.uid);
   const { colors: themeColors, isWoman } = useAppTheme();
+  const isStaff = isSubScreenShellEnabled(profile, 'staff');
   const directory = usePlayersDirectory({
     search: query,
     city: filters.city,
+    playerBadge: isStaff ? filters.playerBadge : undefined,
     radiusKm: nearMe && profile?.location ? 50 : undefined,
     viewerLocation: nearMe ? profile?.location ?? null : null,
   });
   const { users: rawUsers, loading, loadingMore, hasMore, loadMore } = directory;
   const listTitle = isWoman ? 'Joueuses' : 'Joueurs';
-  const isStaff = isSubScreenShellEnabled(profile, 'staff');
 
   useEffect(() => {
     setQuery(initialQuery);
@@ -156,6 +159,24 @@ export const PlayersListScreen: React.FC<PlayersListScreenProps> = ({
           )}
           value={filters.level !== 'Tous' ? filters.level : undefined}
         />
+        {isStaff ? (
+          <FilterChip
+            label="Badge"
+            active={filters.playerBadge !== 'all'}
+            colors={themeColors}
+            onPress={() =>
+              setFilters((f) => ({
+                ...f,
+                playerBadge: nextPlayerBadgeFilter(f.playerBadge),
+              }))
+            }
+            value={
+              filters.playerBadge !== 'all'
+                ? playerBadgeFilterLabel(filters.playerBadge)
+                : undefined
+            }
+          />
+        ) : null}
         <FilterChip
           label="Ville"
           active={Boolean(filters.city.trim())}

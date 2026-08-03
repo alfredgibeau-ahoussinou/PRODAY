@@ -4,12 +4,14 @@ import {
   playersDirectoryService,
   type PlayersDirectoryCursor,
 } from '../services/playersDirectory.service';
+import type { RecruiterPlayerLevelFilter } from '../models/PlayerLevel';
 
 export function usePlayersDirectory(options: {
   search?: string;
   city?: string;
   radiusKm?: number;
   viewerLocation?: GeoPoint | null;
+  playerBadge?: RecruiterPlayerLevelFilter;
 }) {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -25,12 +27,19 @@ export function usePlayersDirectory(options: {
       city: options.city,
       radiusKm: options.radiusKm,
       viewerLocation: options.viewerLocation,
+      playerBadge: options.playerBadge,
     });
     cursorRef.current = page.cursor;
     setUsers(page.users);
     setHasMore(page.hasMore);
     setLoading(false);
-  }, [options.city, options.radiusKm, options.search, options.viewerLocation]);
+  }, [
+    options.city,
+    options.playerBadge,
+    options.radiusKm,
+    options.search,
+    options.viewerLocation,
+  ]);
 
   const loadMore = useCallback(async () => {
     if (!hasMore || loadingMore || !cursorRef.current) return;
@@ -40,6 +49,7 @@ export function usePlayersDirectory(options: {
       city: options.city,
       radiusKm: options.radiusKm,
       viewerLocation: options.viewerLocation,
+      playerBadge: options.playerBadge,
       cursor: cursorRef.current,
     });
     cursorRef.current = page.cursor;
@@ -49,7 +59,15 @@ export function usePlayersDirectory(options: {
     });
     setHasMore(page.hasMore);
     setLoadingMore(false);
-  }, [hasMore, loadingMore, options.city, options.radiusKm, options.search, options.viewerLocation]);
+  }, [
+    hasMore,
+    loadingMore,
+    options.city,
+    options.playerBadge,
+    options.radiusKm,
+    options.search,
+    options.viewerLocation,
+  ]);
 
   useEffect(() => {
     void loadFirst();

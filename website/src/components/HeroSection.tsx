@@ -13,12 +13,14 @@ import { ROUTES } from "@/lib/routes";
 import { VideoDemoModal } from "@/components/home/VideoDemoModal";
 
 const HERO_LABELS: Record<PoleId, string> = {
-  amateur: "Amateur",
+  joueur: "Joueur",
+  amateur: "Joueur",
   supporter: "Supporter",
   sante: "Santé",
-  pro_joueur: "Pro Joueur",
-  pro_club: "Pro Club",
-  pro_staff: "Pro Staff",
+  pro_joueur: "Joueur",
+  pro_club: "Club",
+  pro_staff: "Staff",
+  evenements: "Événements",
   sponsor: "Partenaires",
 };
 

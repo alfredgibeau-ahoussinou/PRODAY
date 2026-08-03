@@ -20,12 +20,14 @@ import { ROUTES } from "@/lib/routes";
 import { scrollToHashElement } from "@/lib/scrollToHash";
 
 const POLE_NAV_LABELS: Record<PoleId, string> = {
-  amateur: "Amateur",
+  joueur: "Joueur",
+  amateur: "Joueur",
   supporter: "Supporter",
   sante: "Santé",
-  pro_joueur: "Pro Joueur",
-  pro_club: "Pro Club",
-  pro_staff: "Pro Staff",
+  pro_joueur: "Joueur",
+  pro_club: "Club",
+  pro_staff: "Staff",
+  evenements: "Événements",
   sponsor: "Partenaires",
 };
 
@@ -35,12 +37,14 @@ const POLE_NAV: { id: PoleId; label: string }[] = POLES.map((p) => ({
 }));
 
 const DOT_ACTIVE: Record<PoleId, string> = {
-  amateur: "bg-[#F03000]",
+  joueur: "bg-[#0054F0]",
+  amateur: "bg-[#0054F0]",
   supporter: "bg-[#3C00F0]",
   sante: "bg-[#00CCB4]",
   pro_joueur: "bg-[#0054F0]",
   pro_club: "bg-[#006CFC]",
   pro_staff: "bg-[#3B5BFF]",
+  evenements: "bg-[#0891B2]",
   sponsor: "bg-[#D4AF37]",
 };
 
@@ -151,7 +155,7 @@ function PolePricingPanel({ poleId, yearly }: PolePricingPanelProps) {
 
 export function PolesPricingLayout() {
   const [yearly, setYearly] = useState(false);
-  const [activePole, setActivePole] = useState<PoleId>("amateur");
+  const [activePole, setActivePole] = useState<PoleId>("joueur");
   const [direction, setDirection] = useState(1);
 
   useEffect(() => {

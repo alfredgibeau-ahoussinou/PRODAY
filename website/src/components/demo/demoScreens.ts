@@ -26,13 +26,13 @@ const SHARED: Partial<Record<MainTabId, DemoScreenMock>> = {
 };
 
 const BY_POLE: Record<DemoPoleId, Partial<Record<MainTabId, DemoScreenMock>>> = {
-  amateur: {
+  joueur: {
     home: {
-      title: "Équipe",
-      subtitle: "Votre semaine : convocations, entraînements, déplacements.",
+      title: "Carrière",
+      subtitle: "Amateur → Pro. Badges, saison et opportunités.",
       focus: [
-        { title: "Sam. 15h. Stade Nord", body: "Convocation confirmée · amical loisir." },
-        { title: "Covoiturage", body: "2 places restantes pour le match." },
+        { title: "Badge Amateur", body: "Bleu. Passez Centre (vert) ou Pro (jaune) sans changer de profil." },
+        { title: "Visibilité 72", body: "Score de profil. Stats + activité." },
       ],
     },
     covoiturage: {
@@ -41,8 +41,8 @@ const BY_POLE: Record<DemoPoleId, Partial<Record<MainTabId, DemoScreenMock>>> = 
       focus: [{ title: "Départ parking club", body: "Sam. 13h30 · 2 places." }],
     },
     recrutement: {
-      title: "Club",
-      subtitle: "Mercato local et annonces de votre secteur.",
+      title: "Mercato",
+      subtitle: "Filtres recruteur : amateurs / centres / pros.",
       focus: [{ title: "Attaquant · Régional", body: "FC Nord. Paris 75." }],
     },
     matchs: {
@@ -52,7 +52,7 @@ const BY_POLE: Record<DemoPoleId, Partial<Record<MainTabId, DemoScreenMock>>> = 
     },
     reels: {
       title: "Reels",
-      subtitle: "Moments d’équipe. Format vertical.",
+      subtitle: "Highlights pour votre vitrine.",
       focus: [{ title: "Highlight entraînement", body: "Séquence illustrative pour la démo." }],
     },
     sante: {
@@ -62,13 +62,13 @@ const BY_POLE: Record<DemoPoleId, Partial<Record<MainTabId, DemoScreenMock>>> = 
     },
     feed: {
       title: "Fil",
-      subtitle: "Actualités du réseau amateur.",
+      subtitle: "Actualités du réseau joueur.",
       focus: [{ title: "Question hebdo", body: "Objectif de saison. Réponses illustratives." }],
     },
     profil: {
       title: "Moi",
-      subtitle: "Profil, Visibilité et CV.",
-      focus: [{ title: "Visibilité 72", body: "Score de profil. Indiquez stats et bio." }],
+      subtitle: "Profil, badge, privacy contacts et CV.",
+      focus: [{ title: "Joueur vérifié", body: "Licence ou certification club." }],
     },
   },
   supporter: {
@@ -141,43 +141,13 @@ const BY_POLE: Record<DemoPoleId, Partial<Record<MainTabId, DemoScreenMock>>> = 
       focus: [{ title: "Cal.com connecté", body: "Username praticien. Obligatoire à l’inscription." }],
     },
   },
-  pro_joueur: {
-    home: {
-      title: "Carrière",
-      subtitle: "Visibilité, saison et opportunités en un coup d’œil.",
-      focus: [
-        { title: "Visibilité 78", body: "Score ProDay. Profil + stats + activité." },
-        { title: "3 opportunités", body: "Annonces Mercato ciblées." },
-      ],
-    },
-    recrutement: {
-      title: "Opportunités",
-      subtitle: "Mercato pro. Clubs et essais.",
-      focus: [{ title: "Essai · National", body: "Club illustratif. Candidature." }],
-    },
-    reels: {
-      title: "Réels",
-      subtitle: "Highlights pour votre vitrine.",
-      focus: [{ title: "Skill du jour", body: "Ajoutez au portfolio (démo)." }],
-    },
-    matchs: {
-      title: "Groupe",
-      subtitle: "Calendrier et convocations.",
-      focus: [{ title: "Convocation dim.", body: "RSVP illustrative." }],
-    },
-    profil: {
-      title: "Moi",
-      subtitle: "CV, galerie et Visibilité.",
-      focus: [{ title: "CV exportable", body: "Stats saison et highlights." }],
-    },
-  },
   pro_club: {
     home: {
       title: "Structure",
-      subtitle: "Pilotage club. Recrutement et calendrier.",
+      subtitle: "Pipeline recrutement et vitrine. Calendrier côté Staff.",
       focus: [
-        { title: "Pipeline candidatures", body: "12 dossiers en revue (illustratif)." },
-        { title: "Matchs du week-end", body: "Deux rencontres à confirmer." },
+        { title: "Kanban candidatures", body: "Inbox → shortlist → essai (illustratif)." },
+        { title: "Vitrine publique", body: "Logo, catégories, contacts." },
       ],
     },
     recrutement: {
@@ -186,8 +156,8 @@ const BY_POLE: Record<DemoPoleId, Partial<Record<MainTabId, DemoScreenMock>>> = 
       focus: [{ title: "Poste milieu", body: "Annonce ouverte. Démo." }],
     },
     matchs: {
-      title: "Calendrier",
-      subtitle: "Saison et événements club.",
+      title: "Saison",
+      subtitle: "Vue lecture — édition calendrier en Staff.",
       focus: [{ title: "Amical sam.", body: "Stade domicile." }],
     },
     messages: {
@@ -206,13 +176,13 @@ const BY_POLE: Record<DemoPoleId, Partial<Record<MainTabId, DemoScreenMock>>> = 
       title: "Équipe",
       subtitle: "Cockpit coach / agent / recruteur.",
       focus: [
-        { title: "Effectif du jour", body: "Présences et absences illustratives." },
+        { title: "Convocations premium", body: "Gestion Staff — hors Club free." },
         { title: "Mercato à traiter", body: "3 profils shortlistés." },
       ],
     },
     matchs: {
       title: "Calendrier",
-      subtitle: "Séances, matchs et détections.",
+      subtitle: "Calendrier structure, séances et matchs.",
       focus: [{ title: "Séance mar. 19h", body: "Thème : transitions." }],
     },
     recrutement: {
@@ -229,6 +199,36 @@ const BY_POLE: Record<DemoPoleId, Partial<Record<MainTabId, DemoScreenMock>>> = 
       title: "Profil",
       subtitle: "Badge staff et vérifications.",
       focus: [{ title: "Compte vérifié", body: "Licence / diplôme. Statut illustratif." }],
+    },
+  },
+  evenements: {
+    home: {
+      title: "Événements",
+      subtitle: "Tournois, académies, camps et détections.",
+      focus: [
+        { title: "Tournoi U15", body: "Inscriptions ouvertes (démo)." },
+        { title: "Détection samedi", body: "Liste d’attente illustrative." },
+      ],
+    },
+    matchs: {
+      title: "Calendrier",
+      subtitle: "Vos événements publiés.",
+      focus: [{ title: "Showcase · dim.", body: "Stade municipal." }],
+    },
+    recrutement: {
+      title: "Inscriptions",
+      subtitle: "Listes et capacités.",
+      focus: [{ title: "42 inscrits", body: "8 en waitlist." }],
+    },
+    messages: {
+      title: "Messages",
+      subtitle: "Relances participants.",
+      focus: [{ title: "Rappel J-1", body: "Message illustratif." }],
+    },
+    profil: {
+      title: "Orga",
+      subtitle: "Profil organisateur.",
+      focus: [{ title: "Compte vérifié", body: "Statut illustratif." }],
     },
   },
 };

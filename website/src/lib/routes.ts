@@ -14,13 +14,18 @@ export const ROUTES = {
   /** @deprecated Redirige vers /amateur. conservé pour liens legacy. */
   homme: "/homme",
   amateur: "/amateur",
+  /** Pôle Joueur unifié (amateur → pro). */
+  joueur: "/joueur",
   supporter: "/supporter",
   /** @deprecated Redirige vers /amateur. conservé pour liens legacy. */
   woman: "/woman",
+  /** @deprecated Redirige vers /joueur. */
   proJoueur: "/pro-joueur",
   proClub: "/pro-club",
   proStaff: "/pro-staff",
-  /** @deprecated Hub legacy. voir pro-joueur, pro-club, pro-staff. */
+  /** Pôle Événements (organisateurs). */
+  evenements: "/evenements",
+  /** @deprecated Hub legacy. voir joueur, pro-club, pro-staff. */
   pro: "/pro",
   /** Hub bêta legacy. redirect vers programme si cookie. */
   beta: "/beta",
@@ -72,12 +77,12 @@ export const ROUTES = {
 export type RouteKey = keyof typeof ROUTES;
 
 export const POLE_NAV_ITEMS = [
-  { href: ROUTES.amateur, label: "Amateur" },
+  { href: ROUTES.joueur, label: "Joueur" },
   { href: ROUTES.supporter, label: "Supporter" },
   { href: ROUTES.sante, label: "Santé" },
-  { href: ROUTES.proJoueur, label: "Pro Joueur" },
-  { href: ROUTES.proClub, label: "Pro Club" },
-  { href: ROUTES.proStaff, label: "Pro Staff" },
+  { href: ROUTES.proClub, label: "Club" },
+  { href: ROUTES.proStaff, label: "Staff" },
+  { href: ROUTES.evenements, label: "Événements" },
   { href: ROUTES.sponsor, label: "Sponsor" },
 ] as const;
 
@@ -94,12 +99,12 @@ export const NAV_ITEMS = [
 ] as const;
 
 export const POLE_FOOTER_LINKS = [
-  { href: ROUTES.amateur, label: "Pôle Amateur", subtitle: "Joueurs & coachs · district & régional" },
+  { href: ROUTES.joueur, label: "Pôle Joueur", subtitle: "Amateur → Centre → Pro · un seul profil" },
   { href: ROUTES.supporter, label: "Pôle Supporter", subtitle: "Fans & communauté" },
   { href: ROUTES.sante, label: "Pôle Santé", subtitle: "Kiné · Mental · Nutrition" },
-  { href: ROUTES.proJoueur, label: "Pôle Pro Joueur", subtitle: "Carrière · visibilité · opportunités" },
-  { href: ROUTES.proClub, label: "Pôle Pro Club", subtitle: "Structures · équipes · recrutement" },
-  { href: ROUTES.proStaff, label: "Pôle Pro Staff", subtitle: "Agent · Recruteur · Coach · Orga" },
+  { href: ROUTES.proClub, label: "Pôle Club", subtitle: "Structures · équipes · recrutement" },
+  { href: ROUTES.proStaff, label: "Pôle Staff", subtitle: "Agent · Recruteur · Coach · calendrier" },
+  { href: ROUTES.evenements, label: "Pôle Événements", subtitle: "Tournois · stages · détections" },
   { href: ROUTES.sponsor, label: "Pôle Sponsor", subtitle: "Marques & visibilité mesurée" },
 ] as const;
 
@@ -141,10 +146,10 @@ export const EXPLORE_CARDS = [
   },
   {
     href: ROUTES.quiz,
-    title: "Quiz profil",
-    description: "5 questions. Man, Woman ou Pro : quel pôle vous correspond.",
+    title: "Vous êtes ?",
+    description: "Choisissez votre rôle. Accès direct au bon pôle ProDay.",
     image: "/showcase/classic-exp-discover.jpg",
-    tag: "Quiz",
+    tag: "Rôle",
   },
   {
     href: routeWithHash(ROUTES.trust, "verification"),
@@ -190,40 +195,48 @@ export const EXPLORE_CARDS = [
     accent: true,
   },
   {
-    href: routeWithHash(ROUTES.pricing, "amateur"),
+    href: routeWithHash(ROUTES.pricing, "joueur"),
     title: "Tarifs",
-    description: "Gratuit et offres Pro. 7 pôles : Amateur, Supporter, Santé, Pro et Sponsor.",
+    description: "Gratuit et offres Pro. Joueur, Club, Staff, Événements, Santé, Supporter, Sponsor.",
     image: "/showcase/classic-exp-messages.jpg",
     tag: "Tarifs",
   },
   {
-    href: routeWithHash(ROUTES.proJoueur, "modules"),
-    title: "Pôle Pro Joueur",
-    description: "Carrière, visibilité scouting, portfolio et opportunités.",
+    href: routeWithHash(ROUTES.joueur, "modules"),
+    title: "Pôle Joueur",
+    description: "Amateur, centre de formation ou pro — badges, Mercato et carrière dans un seul espace.",
     image: "/images/football-pro-01.jpg",
-    tag: "Pro Joueur",
+    tag: "Joueur",
     accent: true,
   },
   {
     href: routeWithHash(ROUTES.proClub, "modules"),
-    title: "Pôle Pro Club",
-    description: "Structures, équipes, recrutement et vitrine.",
+    title: "Pôle Club",
+    description: "Structures, équipes, recrutement kanban et vitrine.",
     image: "/images/football-club-01.jpg",
-    tag: "Pro Club",
+    tag: "Club",
     accent: true,
   },
   {
     href: routeWithHash(ROUTES.proStaff, "modules"),
-    title: "Pôle Pro Staff",
-    description: "Agent, recruteur, coach pro et organisateur. Mercato Pro et réseau vérifié.",
+    title: "Pôle Staff",
+    description: "Agent, recruteur, coach. Calendrier structure, convocations premium et Mercato.",
     image: "/showcase/classic-staff.jpg",
-    tag: "Pro Staff",
+    tag: "Staff",
     accent: true,
   },
   {
-    href: routeWithHash(ROUTES.amateur, "modules"),
+    href: routeWithHash(ROUTES.evenements, "modules"),
+    title: "Pôle Événements",
+    description: "Tournois, académies, camps, détections et showcases pour organisateurs.",
+    image: "/showcase/classic-arena.jpg",
+    tag: "Événements",
+    accent: true,
+  },
+  {
+    href: routeWithHash(ROUTES.joueur, "modules"),
     title: "Pro Day Man",
-    description: "Foot masculin amateur. Mercato M, matchs et CV joueur.",
+    description: "Foot masculin. Mercato, matchs et CV joueur — badge Amateur ou Pro.",
     image: "/images/football-amateur-01.jpg",
     tag: "Man",
   },
@@ -268,11 +281,11 @@ export function routeWithHash(route: string, sectionId: string): string {
 /** URL de la démo interactive pour un univers legacy → pôle `?p=`. */
 export function demoUrlForUniverse(line: ProductLineWeb): string {
   const poleByLine: Record<ProductLineWeb, string> = {
-    amateur: "amateur",
+    amateur: "joueur",
     supporter: "supporter",
     sante: "sante",
-    homme: "pro_joueur",
-    woman: "pro_joueur",
+    homme: "joueur",
+    woman: "joueur",
     pro: "pro_staff",
   };
   return `${ROUTES.demo}?p=${poleByLine[line]}`;

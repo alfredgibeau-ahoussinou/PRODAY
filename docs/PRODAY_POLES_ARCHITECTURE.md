@@ -13,6 +13,9 @@ lang: fr
 **Document de référence produit — version détaillée**  
 **Juin 2026 — Usage interne équipe produit, design et technique**
 
+> **Mise à jour août 2026** — fondations livrées dans [ECOSYSTEM_POLES_EVOLUTION.md](./ECOSYSTEM_POLES_EVOLUTION.md) :
+> Pôle Joueur unifié (badges Amateur / Centre / Pro), calendrier & convocations côté Staff, pipeline candidatures kanban, offre agent 19,99 € (20 premiers) puis 29,99 €, Joueur vérifié, privacy contacts, demandes de message, scaffolding Pôle Événements.
+
 ---
 
 ## Table des matières

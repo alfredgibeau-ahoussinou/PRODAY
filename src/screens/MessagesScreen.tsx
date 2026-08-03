@@ -18,6 +18,7 @@ import type { SocialProfileSuggestion } from '../features/v3/engines/socialRecom
 import { openContactConversation } from '../utils/openContactConversation';
 import { usersService } from '../services/users.service';
 import { networkSuggestionsService } from '../services/networkSuggestions.service';
+import { messagesService } from '../services/messages.service';
 import { evaluateMessagingPermission } from '../utils/parentalMessaging';
 import { isPlayerProfileRole } from '../utils/isPlayerProfileRole';
 import { trackV3Event } from '../core/analytics/v3Events';
@@ -101,11 +102,29 @@ export const MessagesScreen: React.FC = () => {
     void networkSuggestionsService.loadDismissedIds(profile.uid).then(setDismissedIds);
   }, [profile?.uid]);
 
+  const pendingRequestThreads = useMemo(
+    () =>
+      threads.filter(
+        (t) =>
+          t.request_status === 'pending' ||
+          (t.thread_kind === 'message_request' && t.request_status !== 'accepted'),
+      ),
+    [threads],
+  );
+
   const filteredThreads = useMemo(() => {
     const q = search.trim().toLowerCase();
     return threads.filter((t) => {
       if (threadFilter === 'unread' && !t.unread) return false;
       if (threadFilter === 'care' && !t.thread_kind?.startsWith('physio')) return false;
+      if (threadFilter === 'requests') {
+        if (
+          t.request_status !== 'pending' &&
+          !(t.thread_kind === 'message_request' && t.request_status !== 'accepted')
+        ) {
+          return false;
+        }
+      }
       if (!q) return true;
       return (
         t.participant_name.toLowerCase().includes(q) ||
@@ -113,6 +132,22 @@ export const MessagesScreen: React.FC = () => {
       );
     });
   }, [threads, search, threadFilter]);
+
+  const resolveRequest = useCallback(
+    async (threadId: string, action: 'accept' | 'refuse') => {
+      if (!profile?.uid) return;
+      try {
+        await messagesService.resolveThreadRequest(threadId, profile.uid, action);
+        refresh();
+      } catch (e) {
+        Alert.alert(
+          'Demande',
+          e instanceof Error ? e.message : 'Impossible de traiter la demande.',
+        );
+      }
+    },
+    [profile?.uid, refresh],
+  );
 
   useEffect(() => {
     if (pendingChatThreadId) {
@@ -299,6 +334,7 @@ export const MessagesScreen: React.FC = () => {
         authLoading={authLoading}
         threads={threads}
         filteredThreads={filteredThreads}
+        pendingRequestThreads={pendingRequestThreads}
         loading={loading}
         refreshing={refreshing}
         search={search}
@@ -315,6 +351,8 @@ export const MessagesScreen: React.FC = () => {
         onRestoreHiddenNetwork={() => void restoreHiddenNetwork()}
         onSocialSuggestion={openNetworkSheet}
         onOpenThread={setActiveThreadId}
+        onAcceptRequest={(id) => void resolveRequest(id, 'accept')}
+        onRefuseRequest={(id) => void resolveRequest(id, 'refuse')}
         onRefresh={() => void onRefresh()}
         onLogin={() => openAuth('login')}
         onSignup={() => openAuth('signup')}

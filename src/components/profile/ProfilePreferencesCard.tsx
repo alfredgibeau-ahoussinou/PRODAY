@@ -17,6 +17,8 @@ import { useProDayBrain } from '../../hooks/useProDayBrain';
 import { trackV3Event } from '../../core/analytics/v3Events';
 import { PressableSpring } from '../motion';
 import { LanguageSettingControl } from '../settings/LanguageSettingControl';
+import { ContactPrivacySettingsCard } from './ContactPrivacySettingsCard';
+import { PlayerLevelSettingsCard } from './PlayerLevelSettingsCard';
 
 interface ProfilePreferencesCardProps {
   profile: User;
@@ -103,6 +105,13 @@ export const ProfilePreferencesCard: React.FC<ProfilePreferencesCardProps> = ({ 
 
   return (
     <>
+      {profile.role === 'player' ? (
+        <>
+          <PlayerLevelSettingsCard profile={profile} />
+          <ContactPrivacySettingsCard profile={profile} />
+        </>
+      ) : null}
+
       <ProDaySurface variant="module" style={[styles.card, { borderColor: colors.border }]}>
         <View style={styles.head}>
           <Icon name="settings" size={18} color={colors.accent} />

@@ -4,22 +4,24 @@ import { getPlayerStepMeta } from '../screens/signup/signupPlayerStepMeta';
 import { getSignupRoleGroups, getVisibleMainTabs } from '../content/poleExperience';
 import { carouselPoleSignupPresetRole, carouselPoleToProductLine } from '../models/CarouselPole';
 
-describe('migration carousel Amateur (doc architecture §1.4)', () => {
+describe('migration carousel Pôle Joueur (écosystème)', () => {
   it('retire homme et woman du carousel pré-connexion', () => {
     expect(UNIVERSE_CHOICE_ORDER).not.toContain('homme');
     expect(UNIVERSE_CHOICE_ORDER).not.toContain('woman');
   });
 
-  it('expose 7 pôles dont pro_player, pro_club, pro_staff et sponsor', () => {
+  it('expose Joueur unifié + Événements (plus Amateur/Pro Joueur séparés)', () => {
     expect(UNIVERSE_CHOICE_ORDER).toEqual([
-      'amateur',
+      'joueur',
       'supporter',
-      'pro_player',
       'pro_club',
       'pro_staff',
+      'evenements',
       'sponsor',
       'sante',
     ]);
+    expect(UNIVERSE_CHOICE_ORDER).not.toContain('amateur');
+    expect(UNIVERSE_CHOICE_ORDER).not.toContain('pro_player');
   });
 
   it('mappe le pôle sponsor vers product_line sponsor dédié', () => {
@@ -28,9 +30,11 @@ describe('migration carousel Amateur (doc architecture §1.4)', () => {
   });
 
   it('mappe les pôles carousel vers product_line stocké', () => {
-    expect(carouselPoleToProductLine('pro_player')).toBe('pro_player');
+    expect(carouselPoleToProductLine('joueur')).toBe('amateur');
+    expect(carouselPoleToProductLine('pro_player')).toBe('amateur');
     expect(carouselPoleToProductLine('pro_club')).toBe('pro_club');
     expect(carouselPoleToProductLine('pro_staff')).toBe('pro_staff');
+    expect(carouselPoleToProductLine('evenements')).toBe('pro_staff');
     expect(carouselPoleToProductLine('sponsor')).toBe('sponsor');
   });
 

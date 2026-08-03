@@ -1,5 +1,8 @@
 import type { CarouselPoleId } from '../../../models/CarouselPole';
-import { productLineToCarouselPole } from '../../../models/CarouselPole';
+import {
+  normalizeCarouselPole,
+  productLineToCarouselPole,
+} from '../../../models/CarouselPole';
 import type { ProductLineId } from '../../../models/ProductLine';
 import type { UserRole } from '../../../models/User';
 
@@ -19,5 +22,5 @@ export function shouldSkipPoleTransition(
 ): boolean {
   if (!isManualReopen || currentLine == null) return false;
   const currentPole = productLineToCarouselPole(currentLine, currentRole);
-  return chosenPole === currentPole;
+  return normalizeCarouselPole(chosenPole) === normalizeCarouselPole(currentPole);
 }

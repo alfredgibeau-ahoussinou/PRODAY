@@ -3,6 +3,8 @@
 
 import type { ParentalRuntime, ParentalSettings } from './ParentalSettings';
 import type { AppSpaceId } from './AppSpace';
+import type { ContactPrivacySettings } from './ContactPrivacy';
+import type { PlayerLevelId } from './PlayerLevel';
 import type { ProductLineId } from './ProductLine';
 
 export type PlayerVerificationCheckId = 'identity' | 'club_license' | 'parental_consent';
@@ -144,6 +146,8 @@ export interface User {
   display_name: string;
   email: string;
   phone?: string;
+  /** Contact alternatif (Instagram, site…) — soumis à `contact_privacy.other`. */
+  other_contact?: string;
   avatar_url?: string;
   role: UserRole;
 
@@ -212,6 +216,24 @@ export interface User {
 
   /** Vérifications joueur (identité, licence club, etc.) */
   player_verification?: PlayerVerificationState;
+
+  /**
+   * Badge Pôle Joueur unifié (amateur / centre / professionnel).
+   * Signature pro : même profil, seul ce champ évolue.
+   */
+  player_level?: PlayerLevelId;
+
+  /** Certification club validée → contribue au badge « Joueur vérifié ». */
+  club_certification_verified?: boolean;
+
+  /** Qui peut voir téléphone, email et autres contacts. */
+  contact_privacy?: ContactPrivacySettings;
+
+  /**
+   * Offre lancement agent (19,99 €) grandfathered.
+   * Voir `agentLaunchPricing.ts`.
+   */
+  agent_launch_offer?: boolean;
 }
 
 // Rôles nécessitant une vérification obligatoire (document + revue IA / admin)

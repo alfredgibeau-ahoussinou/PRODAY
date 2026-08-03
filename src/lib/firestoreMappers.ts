@@ -76,6 +76,7 @@ export function userFromFirestore(uid: string, data: Record<string, unknown>): U
     display_name: String(data.display_name ?? data.displayName ?? ''),
     email: String(data.email ?? ''),
     phone: data.phone as string | undefined,
+    other_contact: data.other_contact as string | undefined,
     avatar_url: (data.avatar_url ?? data.avatarUrl) as string | undefined,
     role: (data.role as UserRole) ?? 'player',
     email_verified: Boolean(data.email_verified ?? data.emailVerified ?? false),
@@ -147,6 +148,20 @@ export function userFromFirestore(uid: string, data: Record<string, unknown>): U
       return normalized ? canonicalizeUserProductLine(normalized, role) : undefined;
     })(),
     player_verification: data.player_verification as PlayerVerificationState | undefined,
+    player_level: data.player_level as User['player_level'],
+    club_certification_verified:
+      data.club_certification_verified === true
+        ? true
+        : data.club_certification_verified === false
+          ? false
+          : undefined,
+    contact_privacy: data.contact_privacy as User['contact_privacy'],
+    agent_launch_offer:
+      data.agent_launch_offer === true
+        ? true
+        : data.agent_launch_offer === false
+          ? false
+          : undefined,
     subscription_tier:
       data.subscription_tier === 'pro' ? 'pro' : data.subscription_tier === 'free' ? 'free' : undefined,
     subscription_plan_id: data.subscription_plan_id as string | undefined,
@@ -564,8 +579,13 @@ export interface MessageThread {
   last_message: string;
   updated_at: Date;
   unread: boolean;
-  thread_kind?: 'standard' | 'physio_care' | 'team_group';
+  thread_kind?: 'standard' | 'physio_care' | 'team_group' | 'message_request';
   thread_title?: string;
+  /** Demande joueur↔agent : pending jusqu'à acceptation. */
+  request_status?: 'pending' | 'accepted' | 'refused' | 'cancelled';
+  request_id?: string;
+  request_requester_uid?: string;
+  request_recipient_uid?: string;
 }
 
 export function messageThreadFromFirestore(
@@ -584,6 +604,7 @@ export function messageThreadFromFirestore(
   const threadKind = data.thread_kind as MessageThread['thread_kind'] | undefined;
   const threadTitle = data.thread_title ? String(data.thread_title) : undefined;
   const isTeam = threadKind === 'team_group';
+  const requestStatus = data.request_status as MessageThread['request_status'] | undefined;
 
   return {
     id,
@@ -594,8 +615,23 @@ export function messageThreadFromFirestore(
     last_message: String(data.last_message ?? ''),
     updated_at: toDate(data.updated_at),
     unread: unreadBy.includes(currentUid) || Boolean(data.unread),
-    thread_kind: threadKind === 'physio_care' ? 'physio_care' : threadKind === 'team_group' ? 'team_group' : 'standard',
+    thread_kind:
+      threadKind === 'physio_care'
+        ? 'physio_care'
+        : threadKind === 'team_group'
+          ? 'team_group'
+          : threadKind === 'message_request'
+            ? 'message_request'
+            : 'standard',
     thread_title: threadTitle,
+    request_status: requestStatus,
+    request_id: data.request_id ? String(data.request_id) : undefined,
+    request_requester_uid: data.request_requester_uid
+      ? String(data.request_requester_uid)
+      : undefined,
+    request_recipient_uid: data.request_recipient_uid
+      ? String(data.request_recipient_uid)
+      : undefined,
   };
 }
 

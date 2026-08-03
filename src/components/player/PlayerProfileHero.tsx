@@ -165,10 +165,18 @@ const InfoRow: React.FC<{
   </View>
 );
 
-export const PlayerIdentityDetails: React.FC<{ player: User; colors: AppColors }> = ({
-  player,
-  colors: c,
-}) => {
+export type VisibleProfileContacts = {
+  phone?: string;
+  email?: string;
+  other_contact?: string;
+};
+
+export const PlayerIdentityDetails: React.FC<{
+  player: User;
+  colors: AppColors;
+  /** Coordonnées déjà filtrées selon `contact_privacy` + relation viewer. */
+  visibleContacts?: VisibleProfileContacts | null;
+}> = ({ player, colors: c, visibleContacts }) => {
   const p = player.profile;
   const rows: { icon: IconName; label: string; value: string }[] = [];
 
@@ -186,6 +194,15 @@ export const PlayerIdentityDetails: React.FC<{ player: User; colors: AppColors }
       label: 'Expérience',
       value: `${p.years_experience} an${p.years_experience > 1 ? 's' : ''}`,
     });
+  }
+  if (visibleContacts?.phone) {
+    rows.push({ icon: 'call', label: 'Téléphone', value: visibleContacts.phone });
+  }
+  if (visibleContacts?.email) {
+    rows.push({ icon: 'mail', label: 'E-mail', value: visibleContacts.email });
+  }
+  if (visibleContacts?.other_contact) {
+    rows.push({ icon: 'globe', label: 'Autre contact', value: visibleContacts.other_contact });
   }
 
   if (rows.length === 0) {
