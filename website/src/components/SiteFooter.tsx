@@ -9,11 +9,15 @@ import { PRODAY_LOGO_OFFICIAL } from "@/lib/brandingAssets";
 import { POLE_BRAND_HEX, POLE_NAV_POLE_IDS, pricingHrefForPath } from "@/lib/poles";
 import { POLE_FOOTER_LINKS, ROUTES, UTILITY_NAV_ITEMS } from "@/lib/routes";
 
+/** Portfolio / CV d'Alfred — hub analytics `cv-portfolio`. */
+const FOUNDER_PORTFOLIO_URL =
+  "https://alfredgibeau-ahoussinou-portfolio.vercel.app";
+
 const SOCIAL_LINKS = [
   { href: "https://github.com/alfredgibeau-ahoussinou/PRODAY", icon: Link2, label: "GitHub" },
   { href: ROUTES.betaWaitlist, icon: Mail, label: "Contact" },
   { href: ROUTES.home, icon: Share2, label: "Réseaux" },
-  { href: ROUTES.home, icon: Globe, label: "Site" },
+  { href: FOUNDER_PORTFOLIO_URL, icon: Globe, label: "Portfolio" },
 ];
 
 export function SiteFooter() {
@@ -152,7 +156,15 @@ export function SiteFooter() {
               Admin bêta
             </Link>
           </p>
-          <p className="font-signature text-xl italic text-white/45">Alfred Ahoussinou</p>
+          <Link
+            href={FOUNDER_PORTFOLIO_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-signature text-xl italic text-white/45 transition hover:text-white"
+            aria-label="Portfolio Alfred Ahoussinou"
+          >
+            Alfred Ahoussinou
+          </Link>
         </div>
       </div>
     </footer>
