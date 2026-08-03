@@ -26,7 +26,7 @@ export type PlaybackReel = {
 export const REEL_UNIVERSE_LABEL: Record<ProductLineId, string> = withProFamilyRecord({
   homme: 'Foot masculin',
   woman: 'Foot féminin',
-  amateur: 'Coach amateur',
+  amateur: 'Pôle Joueur',
   supporter: 'Tribune supporter',
   pro: 'Foot pro & staff',
   sante: 'Santé & performance',

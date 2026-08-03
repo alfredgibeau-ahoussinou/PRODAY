@@ -97,15 +97,8 @@ export const AuthRolePicker: React.FC<AuthRolePickerProps> = ({
       if (line === 'amateur' && r.value === 'player') {
         return {
           ...r,
-          label: 'Joueur amateur',
-          description: 'CV, Mercato Amateur, matchs et covoiturage',
-        };
-      }
-      if (line === 'amateur' && r.value === 'coach') {
-        return {
-          ...r,
-          label: 'Coach amateur',
-          description: 'Effectif, convocations et Mercato local',
+          label: 'Joueur',
+          description: 'CV, Mercato, matchs — badges Amateur / Centre / Pro',
         };
       }
       return r;

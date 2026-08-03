@@ -36,7 +36,7 @@ const SECONDARY_PRIORITY: MainTabId[] = [
 /** Rôles par défaut pour la démo web. alignés sur `getVisibleMainTabs`. */
 function defaultRoleForUniverse(universe: ProductLineWeb): "player" | "coach" | "physio" {
   if (universe === "sante") return "physio";
-  if (universe === "pro" || universe === "amateur") return "coach";
+  if (universe === "pro") return "coach";
   return "player";
 }
 

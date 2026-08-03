@@ -265,16 +265,16 @@ const UNIVERSE_OVERRIDES: Record<
   },
   amateur: {
     home: {
-      caption: "Pro Day Amateur",
+      caption: "Pro Day Joueur",
       title: "Accueil",
-      subtitle: "Joueur ou coach. Mercato local, matchs et effectif.",
+      subtitle: "Mercato, matchs et CV — badges Amateur → Pro.",
     },
-    recrutement: { title: "Mercato Amateur" },
+    recrutement: { title: "Mercato" },
     reels: {
       subtitle: "Coulisses d'équipe et moments forts. Format vertical.",
     },
     feed: {
-      subtitle: "Actualités réseau amateur. Joueurs et coachs.",
+      subtitle: "Actualités réseau joueur. Clubs et opportunités.",
     },
     sante: { title: "Santé" },
   },

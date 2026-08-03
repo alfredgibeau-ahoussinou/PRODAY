@@ -22,7 +22,7 @@ export const PLAN_IDS_BY_LINE: Record<ProductLineId, SubscriptionPlanId[]> =
   withProFamilyRecord({
   homme: ['player_plus'],
   woman: ['player_plus'],
-  amateur: ['player_plus', 'coach_pro'],
+  amateur: ['player_plus'],
   supporter: [],
   pro: [
     'recruiter_pro',
@@ -96,23 +96,6 @@ const LINE_PLAN_PATCHES: Record<
         'Mise en avant auprès des clubs locaux',
         'Alertes nouvelles annonces Mercato Amateur',
         'Export PDF optionnel',
-      ],
-    },
-    coach_pro: {
-      label: 'Coach Amateur',
-      tagline: 'Banc technique. Effectif et Mercato local',
-      mercatoQuotaLabel: 'Messages Mercato Amateur',
-      freeIncludes: [
-        'Profil coach amateur vérifié',
-        '1 équipe liée',
-        '5 messages Mercato Amateur / mois',
-        'Annonces Mercato local en lecture',
-      ],
-      proIncludes: [
-        'Équipes illimitées',
-        'Messages Mercato Amateur illimités',
-        'Annonces Mercato local actives',
-        'Statistiques effectif',
       ],
     },
   },

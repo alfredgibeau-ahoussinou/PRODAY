@@ -10,9 +10,9 @@ export const SECONDARY_FR: MessageCatalog = {
   'auth.teaser.woman.1': 'CV joueuse, stats et Mercato F',
   'auth.teaser.woman.2': 'Email confirmé. Accès à votre espace Woman',
 
-  'auth.teaser.amateur.0': 'Joueur ou coach amateur',
-  'auth.teaser.amateur.1': 'CV, effectif, Mercato local et matchs',
-  'auth.teaser.amateur.2': 'Email confirmé. Accès à votre espace Pro Day Amateur',
+  'auth.teaser.amateur.0': 'Créez votre profil joueur',
+  'auth.teaser.amateur.1': 'CV, Mercato local et matchs',
+  'auth.teaser.amateur.2': 'Email confirmé. Accès à votre espace Joueur',
 
   'auth.teaser.supporter.0': 'Rejoignez la communauté',
   'auth.teaser.supporter.1': 'Matchs, réels et fil communautaire',
@@ -218,7 +218,7 @@ export const SECONDARY_FR: MessageCatalog = {
   'signup.amateur.phase.profile': 'Profil',
   'signup.amateur.welcome.title': 'Bienvenue sur {{brand}}',
   'signup.amateur.welcome.subtitle':
-    'Joueur ou coach. Mercato local, matchs, effectif et convocations au même endroit.',
+    'Espace joueur. Mercato local, matchs, CV et badges Amateur → Centre → Pro.',
   'signup.amateur.step.space.title': 'Votre genre et votre espace foot',
   'signup.amateur.step.space.subtitle':
     'Genre et catégorie d’âge. Mercato Amateur et matchs adaptés à votre profil.',

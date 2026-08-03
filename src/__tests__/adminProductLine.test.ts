@@ -14,9 +14,9 @@ describe('adminProductLine', () => {
     expect(resolveAdminProductLine('supporter', 'pro_player')).toBe('supporter');
   });
 
-  it('conserve amateur pour joueur ou coach', () => {
+  it('oriente coach vers Staff même si univers Joueur demandé', () => {
     expect(resolveAdminProductLine('player', 'amateur')).toBe('amateur');
-    expect(resolveAdminProductLine('coach', 'amateur')).toBe('amateur');
+    expect(resolveAdminProductLine('coach', 'amateur')).toBe('pro_staff');
   });
 
   it('oriente les rôles pro vers le bon split', () => {
@@ -32,7 +32,7 @@ describe('adminProductLine', () => {
       'recruiter',
       'organizer',
     ]);
-    expect(adminRolesForProductLine('amateur')).toEqual(['player', 'coach']);
+    expect(adminRolesForProductLine('amateur')).toEqual(['player']);
     expect(adminRolesForProductLine('sponsor')).toEqual(['sponsor']);
   });
 

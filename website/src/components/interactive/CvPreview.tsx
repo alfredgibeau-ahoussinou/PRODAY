@@ -40,12 +40,12 @@ const CV_COPY: Record<
     image: "/showcase/woman/woman-profile.jpg",
   },
   amateur: {
-    headerLabel: "PROFIL COACH PRODAY AMATEUR",
-    name: "Marc Lefèvre",
-    role: "Coach · Régional · Toulouse",
+    headerLabel: "CV JOUEUR PRODAY",
+    name: "Alex Martin",
+    role: "Milieu · Amateur · Toulouse",
     footer:
-      "Effectif, convocations et Mercato local. Profil coach amateur vérifié pour le district.",
-    image: "/showcase/classic-staff.jpg",
+      "Profil joueur, Mercato et badges Amateur → Centre → Pro. Stats saison et export PDF.",
+    image: "/showcase/classic-profile.jpg",
   },
   supporter: {
     headerLabel: "PROFIL SUPPORTER PRODAY",

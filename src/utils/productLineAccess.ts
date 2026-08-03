@@ -86,7 +86,8 @@ export function getEffectiveRoleForProductLine(
   }
   if (isUniversalPoleTestAccount(user.email)) {
     if (activeLine === 'sante') return 'physio';
-    if (isProFamilyLine(activeLine) || activeLine === 'amateur') return 'coach';
+    if (isProFamilyLine(activeLine)) return 'coach';
+    if (activeLine === 'amateur') return 'player';
     return 'player';
   }
   return user.role;

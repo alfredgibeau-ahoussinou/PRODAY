@@ -90,15 +90,15 @@ describe('productLineAccess', () => {
     expect(profileMatchesActiveLine(amateurPlayer, 'homme')).toBe(false);
   });
 
-  it('lit amateur coach depuis product_line explicite', () => {
+  it('canonise coach stocké en amateur vers pro_staff (hors Pôle Joueur)', () => {
     const amateurCoach = {
       ...baseUser,
       role: 'coach' as const,
       product_line: 'amateur' as const,
     } as User;
-    expect(getUserProductLine(amateurCoach)).toBe('amateur');
-    expect(profileMatchesActiveLine(amateurCoach, 'amateur')).toBe(true);
-    expect(profileMatchesActiveLine(amateurCoach, 'pro_staff')).toBe(false);
+    expect(getUserProductLine(amateurCoach)).toBe('pro_staff');
+    expect(profileMatchesActiveLine(amateurCoach, 'amateur')).toBe(false);
+    expect(profileMatchesActiveLine(amateurCoach, 'pro_staff')).toBe(true);
   });
 
   it('lit supporter depuis product_line explicite', () => {
