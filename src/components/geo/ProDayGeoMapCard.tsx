@@ -133,9 +133,18 @@ export const ProDayGeoMapCard: React.FC<ProDayGeoMapCardProps> = ({
         </View>
 
         {locError ? (
-          <Pressable onPress={onRefreshLocation}>
-            <ProDayText variant="caption" style={{ color: colors.error }}>
-              {locError}. Réessayer
+          <Pressable
+            onPress={onRefreshLocation}
+            style={[styles.locError, { backgroundColor: colors.surfaceMuted }]}
+            accessibilityRole="button"
+            accessibilityLabel="Réessayer la géolocalisation"
+          >
+            <Icon name="location" size={16} color={colors.textMuted} />
+            <ProDayText variant="caption" muted style={styles.locErrorText}>
+              {locError}
+            </ProDayText>
+            <ProDayText variant="caption" accent style={styles.locRetry}>
+              Réessayer
             </ProDayText>
           </Pressable>
         ) : null}
@@ -284,6 +293,16 @@ function createStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
       gap: spacing.xs,
     },
     radiusHint: { marginLeft: 'auto', fontSize: 10 },
+    locError: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.xs,
+      paddingHorizontal: spacing.sm,
+      paddingVertical: spacing.sm,
+      borderRadius: radius.md,
+    },
+    locErrorText: { flex: 1, lineHeight: 18 },
+    locRetry: { fontWeight: '700', fontSize: 12 },
     empty: {
       alignItems: 'center',
       gap: spacing.xs,

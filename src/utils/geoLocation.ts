@@ -1,28 +1,84 @@
 import { Linking, Platform } from 'react-native';
+import * as ExpoLocation from 'expo-location';
 import type { GeoPoint } from '../models/User';
 import { distanceKm } from './geofencing';
 
+const LOCATION_UNAVAILABLE =
+  "La géolocalisation n'est pas disponible sur cet appareil ou dans cet environnement.";
+const LOCATION_DENIED = 'Autorisez la localisation pour partager votre position.';
+const LOCATION_DENIED_TRIP =
+  'Autorisez la localisation pour partager votre position pendant le trajet.';
+const LOCATION_FAILED = 'Impossible de récupérer votre position. Réessayez dans un moment.';
+
+type LocationApi = typeof ExpoLocation;
+
+/**
+ * Metro can surface expo-location named exports on the namespace or under `.default`
+ * depending on interop. Resolve once and fail with a user-facing message if the
+ * permission API is missing (web/Expo Go limits, incomplete native module).
+ */
+function getLocationApi(): LocationApi {
+  const mod = ExpoLocation as LocationApi & { default?: LocationApi };
+  if (typeof mod.requestForegroundPermissionsAsync === 'function') {
+    return mod;
+  }
+  if (mod.default && typeof mod.default.requestForegroundPermissionsAsync === 'function') {
+    return mod.default;
+  }
+  throw new Error(LOCATION_UNAVAILABLE);
+}
+
+function toFriendlyLocationError(error: unknown, fallback: string): Error {
+  if (error instanceof Error) {
+    if (
+      error.message === LOCATION_UNAVAILABLE ||
+      error.message === LOCATION_DENIED ||
+      error.message === LOCATION_DENIED_TRIP ||
+      error.message === LOCATION_FAILED
+    ) {
+      return error;
+    }
+    // Native / Hermes: "X is not a function (it is undefined)"
+    if (
+      /is not a function/i.test(error.message) ||
+      /UnavailabilityError/i.test(error.name) ||
+      /not available/i.test(error.message)
+    ) {
+      return new Error(LOCATION_UNAVAILABLE);
+    }
+  }
+  return new Error(fallback);
+}
+
 export async function requestForegroundLocationPermission(): Promise<boolean> {
-  const Location = await import('expo-location');
-  const { status } = await Location.requestForegroundPermissionsAsync();
-  return status === 'granted';
+  try {
+    const Location = getLocationApi();
+    const { status } = await Location.requestForegroundPermissionsAsync();
+    return status === 'granted';
+  } catch (error) {
+    throw toFriendlyLocationError(error, LOCATION_UNAVAILABLE);
+  }
 }
 
 export async function captureCurrentLocation(): Promise<GeoPoint> {
-  const granted = await requestForegroundLocationPermission();
-  if (!granted) {
-    throw new Error('Autorisez la localisation pour partager votre position.');
+  try {
+    const granted = await requestForegroundLocationPermission();
+    if (!granted) {
+      throw new Error(LOCATION_DENIED);
+    }
+
+    const Location = getLocationApi();
+    const position = await Location.getCurrentPositionAsync({
+      accuracy: Location.Accuracy.Balanced,
+    });
+
+    return {
+      latitude: position.coords.latitude,
+      longitude: position.coords.longitude,
+    };
+  } catch (error) {
+    throw toFriendlyLocationError(error, LOCATION_FAILED);
   }
-
-  const Location = await import('expo-location');
-  const position = await Location.getCurrentPositionAsync({
-    accuracy: Location.Accuracy.Balanced,
-  });
-
-  return {
-    latitude: position.coords.latitude,
-    longitude: position.coords.longitude,
-  };
 }
 
 export type TripLocationWatchHandle = {
@@ -42,41 +98,45 @@ export async function watchTripLocation(
   onUpdate: (sample: TripLocationSample) => void,
   onError?: (message: string) => void,
 ): Promise<TripLocationWatchHandle> {
-  const granted = await requestForegroundLocationPermission();
-  if (!granted) {
-    throw new Error('Autorisez la localisation pour partager votre position pendant le trajet.');
+  try {
+    const granted = await requestForegroundLocationPermission();
+    if (!granted) {
+      throw new Error(LOCATION_DENIED_TRIP);
+    }
+
+    const Location = getLocationApi();
+    const sub = await Location.watchPositionAsync(
+      {
+        accuracy: Location.Accuracy.Balanced,
+        timeInterval: 8_000,
+        distanceInterval: 25,
+      },
+      (position) => {
+        onUpdate({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+          heading:
+            typeof position.coords.heading === 'number' && position.coords.heading >= 0
+              ? position.coords.heading
+              : undefined,
+          accuracy_m:
+            typeof position.coords.accuracy === 'number' ? position.coords.accuracy : undefined,
+        });
+      },
+    );
+
+    return {
+      remove: () => {
+        try {
+          sub.remove();
+        } catch {
+          onError?.('Arrêt du suivi GPS impossible.');
+        }
+      },
+    };
+  } catch (error) {
+    throw toFriendlyLocationError(error, LOCATION_DENIED_TRIP);
   }
-
-  const Location = await import('expo-location');
-  const sub = await Location.watchPositionAsync(
-    {
-      accuracy: Location.Accuracy.Balanced,
-      timeInterval: 8_000,
-      distanceInterval: 25,
-    },
-    (position) => {
-      onUpdate({
-        latitude: position.coords.latitude,
-        longitude: position.coords.longitude,
-        heading:
-          typeof position.coords.heading === 'number' && position.coords.heading >= 0
-            ? position.coords.heading
-            : undefined,
-        accuracy_m:
-          typeof position.coords.accuracy === 'number' ? position.coords.accuracy : undefined,
-      });
-    },
-  );
-
-  return {
-    remove: () => {
-      try {
-        sub.remove();
-      } catch {
-        onError?.('Arrêt du suivi GPS impossible.');
-      }
-    },
-  };
 }
 
 export function formatCoordinates(loc: GeoPoint): string {
