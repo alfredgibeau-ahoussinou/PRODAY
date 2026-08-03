@@ -42,8 +42,8 @@ export function BetaAideContent({ session }: BetaAideContentProps) {
         </a>
         <p className="mt-4 text-xs text-white/35">
           Ou répondez directement à l&apos;email de bienvenue bêta ·{" "}
-          <a href="mailto:support@proday.app" className="underline hover:text-white/55">
-            support@proday.app
+          <a href="mailto:proday.admin@gmail.com" className="underline hover:text-white/55">
+            proday.admin@gmail.com
           </a>
         </p>
       </div>
@@ -98,8 +98,8 @@ export function BetaAideContent({ session }: BetaAideContentProps) {
         <SectionKicker>Contact support</SectionKicker>
         <p className="mt-4 text-sm leading-relaxed text-white/60">
           Pour toute question non couverte par la FAQ, écrivez à{" "}
-          <a href="mailto:support@proday.app" className="text-[var(--proday-accent)] underline">
-            support@proday.app
+          <a href="mailto:proday.admin@gmail.com" className="text-[var(--proday-accent)] underline">
+            proday.admin@gmail.com
           </a>{" "}
           depuis l&apos;adresse <span className="font-semibold text-white">{session.email}</span>{" "}
           afin que nous puissions retrouver votre inscription.

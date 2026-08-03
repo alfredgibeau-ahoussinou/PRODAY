@@ -34,7 +34,7 @@ export function buildAppointmentPlainText(params: Record<string, string>): strin
     params.meeting_link ? `\nLien visio : ${params.meeting_link}` : '',
     '',
     `— ${params.app_name}`,
-    'support@proday.app',
+    'proday.admin@gmail.com',
   ].join('\n');
 }
 

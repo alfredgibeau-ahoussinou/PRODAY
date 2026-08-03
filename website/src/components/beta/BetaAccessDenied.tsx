@@ -25,10 +25,10 @@ export function BetaAccessDenied() {
             Retour à l&apos;accueil
           </Link>
           <a
-            href="mailto:support@proday.app"
+            href="mailto:proday.admin@gmail.com"
             className="text-xs text-white/35 underline hover:text-white/55"
           >
-            support@proday.app
+            proday.admin@gmail.com
           </a>
         </div>
       </div>

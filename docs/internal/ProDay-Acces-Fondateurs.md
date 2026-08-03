@@ -56,10 +56,10 @@ Pour lire et répondre aux messages reçus par ProDay (contact, candidatures, et
 | Élément | Valeur |
 |---------|--------|
 | Adresse principale (Gmail) | proday.admin@gmail.com |
-| Adresse contact affichée | contact@proday.app |
+| Adresse contact affichée | proday.admin@gmail.com |
 | Mot de passe boîte mail ProDay | `Proday2026@` |
 
-**Comment faire :** ouvrez Gmail avec `proday.admin@gmail.com` et le mot de passe ci-dessus. Les messages envoyés à `contact@proday.app` arrivent aussi de ce côté.
+**Comment faire :** ouvrez Gmail avec `proday.admin@gmail.com` et le mot de passe ci-dessus. Les messages envoyés à `proday.admin@gmail.com` arrivent aussi de ce côté.
 
 **Important :** ce mot de passe est **réservé aux 4 fondateurs**. Ne le communiquez à personne d’extérieur.
 
@@ -87,7 +87,7 @@ Pour ouvrir l’**application ProDay en mode admin** (TestFlight, téléphone, o
 
 | Usage | Adresse |
 |-------|---------|
-| Contact | contact@proday.app |
+| Contact | proday.admin@gmail.com |
 | Admin / suivi | proday.admin@gmail.com |
 
 ---

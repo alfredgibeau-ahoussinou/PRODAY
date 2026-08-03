@@ -83,7 +83,7 @@ export async function BetaProtectedLayout({ children }: { children: ReactNode })
 }
 
 export function buildBetaFeedbackMailto(session: BetaAccessSession): string {
-  return `mailto:support@proday.app?subject=${encodeURIComponent("Retour bêta ProDay")}&body=${encodeURIComponent(
+  return `mailto:proday.admin@gmail.com?subject=${encodeURIComponent("Retour bêta ProDay")}&body=${encodeURIComponent(
     `Email bêta : ${session.email}\nProfil : ${session.roleLabel}\n\nDécrivez votre retour (bug, idée, UX…) :\n\n`,
   )}`;
 }

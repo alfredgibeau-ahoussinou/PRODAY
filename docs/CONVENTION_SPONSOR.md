@@ -2,7 +2,7 @@
 
 **Entre :**
 
-- **ProDay** (la Plateforme), contact : contact@proday.app — site : https://proday75.fr
+- **ProDay** (la Plateforme), contact : proday.admin@gmail.com — site : https://proday75.fr
 - **Le Partenaire** : [Raison sociale, SIRET, adresse, représentant légal]
 
 ## Objet

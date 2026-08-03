@@ -82,7 +82,7 @@ describe('poleHelpContent', () => {
   it('expose 4 suggestions rapides et un fallback support', () => {
     const content = getPoleHelpContent('supporter');
     expect(getPoleHelpQuickSuggestions(content)).toHaveLength(4);
-    expect(POLE_HELP_OTHER_QUESTION.answer).toContain('support@proday.app');
+    expect(POLE_HELP_OTHER_QUESTION.answer).toContain('proday.admin@gmail.com');
   });
 
   it('utilise la valise uniquement pour pro_staff et rôles staff legacy', () => {

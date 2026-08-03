@@ -80,4 +80,4 @@ L’application affiche aussi ces textes dans **Profil → Informations légales
 
 ## Contact support store
 
-Email suggéré dans les fiches : `contact@proday.app` (à adapter).
+Email suggéré dans les fiches : `proday.admin@gmail.com` (à adapter).

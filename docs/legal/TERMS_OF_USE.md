@@ -1,7 +1,7 @@
 # Conditions générales d’utilisation (CGU) — ProDay
 
 **Dernière mise à jour :** 19 juin 2026  
-**Contact :** contact@proday.app  
+**Contact :** proday.admin@gmail.com  
 **Version en ligne :** https://proday75.fr/cgu
 
 ## 1. Objet et périmètre
@@ -65,7 +65,7 @@ Droit français. Tribunaux français, sous réserve des règles impératives de 
 
 ## 15. Contact
 
-**contact@proday.app**
+**proday.admin@gmail.com**
 
 ---
 

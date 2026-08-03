@@ -2,7 +2,7 @@
 
 **Dernière mise à jour :** 19 juin 2026  
 **Éditeur :** ProDay  
-**Contact :** contact@proday.app  
+**Contact :** proday.admin@gmail.com  
 **Version en ligne :** https://proday75.fr/confidentialite
 
 ## 1. Introduction
@@ -44,11 +44,11 @@ Compte actif : durée d’utilisation. Suppression : sous 90 jours sauf obligati
 
 ## 7. Vos droits
 
-Accès, rectification, effacement, limitation, opposition, portabilité — **contact@proday.app** (réponse sous un mois). Réclamation CNIL : www.cnil.fr.
+Accès, rectification, effacement, limitation, opposition, portabilité — **proday.admin@gmail.com** (réponse sous un mois). Réclamation CNIL : www.cnil.fr.
 
 ## 8. Sécurité
 
-Règles Firestore, HTTPS, authentification. Signalement faille : contact@proday.app.
+Règles Firestore, HTTPS, authentification. Signalement faille : proday.admin@gmail.com.
 
 ## 9. Mineurs et contrôle parental
 

@@ -96,7 +96,7 @@ export const SPONSOR_VALUE_PILLARS = [
   },
 ];
 
-/** Contact commercial sponsors (alias historique partenaires@). */
-export const SPONSOR_CONTACT_EMAIL = 'partenaires@proday.app';
+/** Contact commercial sponsors (unique adresse publique). */
+export const SPONSOR_CONTACT_EMAIL = 'proday.admin@gmail.com';
 /** @deprecated Utiliser SPONSOR_CONTACT_EMAIL */
 export const SPONSOR_PARTNER_CONTACT_EMAIL = SPONSOR_CONTACT_EMAIL;

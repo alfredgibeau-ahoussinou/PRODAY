@@ -35,7 +35,7 @@ Symptômes : page blanche, « trop de redirections », ou retour sur « Accéder
 ## 1. Compte EmailJS
 
 1. [emailjs.com](https://www.emailjs.com/) → créer un compte
-2. **Email Services** → connecter Gmail (ou autre) — ex. `contact@proday.app`
+2. **Email Services** → connecter Gmail (ou autre) — ex. `proday.admin@gmail.com`
 3. **Account → Security** → activer **Allow EmailJS API for non-browser applications**
 
 ## 2. Template « Bêta ProDay » (`template_zkbezzh`)
@@ -55,7 +55,7 @@ Style ProDay sombre (fond `#0a0f1a`, accent cyan `#22d3ee` / `#06b6d4`) — comp
 | **To Email** | `{{email}}` |
 | **From Name** | `ProDay` |
 | **Subject** | `{{subject}}` |
-| **Reply To** | `support@proday.app` |
+| **Reply To** | `proday.admin@gmail.com` |
 | **Content** | HTML de `docs/emailjs/beta-welcome.html` |
 
 ### Variables EmailJS (envoyées par le code)
@@ -165,7 +165,7 @@ firebase deploy --only functions:websiteBetaWaitlistAdmin
   - Hero « Bienvenue dans la bêta ProDay »
   - Explication du programme, sept pôles testables, modules transverses
   - Téléchargement **iOS TestFlight** et **Android APK** (liens optionnels via env, sinon « bientôt » + email)
-  - Retours par email (`support@proday.app`), timeline des prochaines étapes
+  - Retours par email (`proday.admin@gmail.com`), timeline des prochaines étapes
 - Email de bienvenue : CTA **« Accéder à la bêta »** → `{{beta_url}}` (`/beta/programme?token=…`)
 
 ### Variables téléchargement (optionnelles)

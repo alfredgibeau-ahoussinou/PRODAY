@@ -47,7 +47,7 @@ flowchart LR
 5. **Validation** — Le middleware intercepte `?token=` sur `/beta` ou `/beta/programme` (et toute URL `/beta/*`) et redirige vers `/api/beta/access`.
 6. **Session** — L'API valide le jeton, pose un cookie httpOnly `proday_beta_session` (90 jours, path `/beta`), redirige vers `/beta/programme`.
 7. **Programme** — Le beta-testeur voit directement le programme (7 pôles) ; nav latérale vers Installer et Aide.
-8. **App mobile** — Liens TestFlight / APK (env ou email ultérieur) ; retours via `/beta/aide` ou `support@proday.app`.
+8. **App mobile** — Liens TestFlight / APK (env ou email ultérieur) ; retours via `/beta/aide` ou `proday.admin@gmail.com`.
 
 ### Visite ultérieure avec cookie
 

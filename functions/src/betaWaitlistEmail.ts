@@ -78,7 +78,7 @@ export function buildBetaWelcomeEmail(params: BetaWelcomeEmailParams): {
     '',
     '—',
     'Vous recevez cet email car vous vous êtes inscrit à la bêta sur proday75.fr.',
-    'Contact : support@proday.app',
+    'Contact : proday.admin@gmail.com',
   ].join('\n');
 
   const html = `<!DOCTYPE html>
@@ -139,7 +139,7 @@ export function buildBetaWelcomeEmail(params: BetaWelcomeEmailParams): {
             <td style="padding:20px 32px 28px;border-top:1px solid #e2e8f0;">
               <p style="margin:0;font-size:12px;line-height:1.6;color:#94a3b8;">
                 Inscription enregistrée pour ${params.email}.<br />
-                Questions ? <a href="mailto:support@proday.app" style="color:#475569;">support@proday.app</a>
+                Questions ? <a href="mailto:proday.admin@gmail.com" style="color:#475569;">proday.admin@gmail.com</a>
               </p>
             </td>
           </tr>
@@ -182,7 +182,7 @@ export function buildBetaRejectEmail(params: BetaRejectEmailParams): {
     'L’équipe ProDay',
     '',
     '—',
-    'Contact : support@proday.app',
+    'Contact : proday.admin@gmail.com',
   ].join('\n');
 
   const html = `<!DOCTYPE html>
@@ -225,7 +225,7 @@ export function buildBetaRejectEmail(params: BetaRejectEmailParams): {
             <td style="padding:20px 32px 28px;border-top:1px solid #e2e8f0;">
               <p style="margin:0;font-size:12px;line-height:1.6;color:#94a3b8;">
                 Message envoyé à ${params.email}.<br />
-                Questions ? <a href="mailto:support@proday.app" style="color:#475569;">support@proday.app</a>
+                Questions ? <a href="mailto:proday.admin@gmail.com" style="color:#475569;">proday.admin@gmail.com</a>
               </p>
             </td>
           </tr>

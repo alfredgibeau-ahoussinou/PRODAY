@@ -78,7 +78,7 @@ export function buildDefaultQuoteHtml(input: {
           </div>
           <p style="margin:0 0 16px;">Cette offre inclut l'accès à votre tableau de bord sponsor, la publication d'offres ciblées et un accompagnement par notre équipe partenaires.</p>
           <p style="margin:0 0 8px;">Pour valider ou ajuster cette proposition, répondez directement à cet email.</p>
-          <p style="margin:24px 0 0;color:#94a3b8;">Cordialement,<br/><strong style="color:#e2e8f0;">L'équipe ProDay Partenaires</strong><br/>partenaires@proday.app</p>
+          <p style="margin:24px 0 0;color:#94a3b8;">Cordialement,<br/><strong style="color:#e2e8f0;">L'équipe ProDay Partenaires</strong><br/>proday.admin@gmail.com</p>
         </td></tr>
       </table>
     </td></tr>
@@ -113,7 +113,7 @@ export function buildDefaultQuoteText(input: {
     '',
     'Cordialement,',
     "L'équipe ProDay Partenaires",
-    'partenaires@proday.app',
+    'proday.admin@gmail.com',
   );
   return lines.join('\n');
 }

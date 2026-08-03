@@ -3,7 +3,7 @@
  * URLs stores : /confidentialite et /cgu sur le site vitrine.
  */
 export const LEGAL_META = {
-  contactEmail: 'contact@proday.app',
+  contactEmail: 'proday.admin@gmail.com',
   publisher: 'ProDay',
   siteUrl: 'https://proday75.fr',
   privacyPath: '/confidentialite',
@@ -104,7 +104,7 @@ export const PRIVACY_SECTIONS: LegalSectionContent[] = [
     title: 'Vos droits',
     paragraphs: [
       'Vous disposez des droits d’accès, de rectification, d’effacement, de limitation, d’opposition et de portabilité sur vos données personnelles, dans les limites prévues par la loi.',
-      'Pour exercer vos droits : écrivez à contact@proday.app en précisant votre demande et l’e-mail du compte concerné. Nous répondrons dans un délai maximal d’un mois.',
+      'Pour exercer vos droits : écrivez à proday.admin@gmail.com en précisant votre demande et l’e-mail du compte concerné. Nous répondrons dans un délai maximal d’un mois.',
       'Réclamation auprès de la CNIL : www.cnil.fr.',
     ],
   },
@@ -112,7 +112,7 @@ export const PRIVACY_SECTIONS: LegalSectionContent[] = [
     id: 'securite',
     title: 'Sécurité',
     paragraphs: [
-      'Nous appliquons des règles d’accès strictes (Firestore Security Rules), le chiffrement en transit (HTTPS/TLS) et des mécanismes d’authentification. Aucun système n’est invulnérable : signalez toute faille suspectée à contact@proday.app.',
+      'Nous appliquons des règles d’accès strictes (Firestore Security Rules), le chiffrement en transit (HTTPS/TLS) et des mécanismes d’authentification. Aucun système n’est invulnérable : signalez toute faille suspectée à proday.admin@gmail.com.',
     ],
   },
   {
@@ -250,7 +250,7 @@ export const TERMS_SECTIONS: LegalSectionContent[] = [
     id: 'resiliation',
     title: 'Résiliation',
     paragraphs: [
-      'Vous pouvez supprimer votre compte depuis l’application ou en contactant contact@proday.app. ProDay peut résilier ou suspendre l’accès en cas de manquement grave, avec ou sans préavis selon la gravité et les obligations légales.',
+      'Vous pouvez supprimer votre compte depuis l’application ou en contactant proday.admin@gmail.com. ProDay peut résilier ou suspendre l’accès en cas de manquement grave, avec ou sans préavis selon la gravité et les obligations légales.',
     ],
   },
   {
@@ -263,7 +263,7 @@ export const TERMS_SECTIONS: LegalSectionContent[] = [
   {
     id: 'contact',
     title: 'Contact',
-    paragraphs: ['Pour toute question relative aux CGU : contact@proday.app'],
+    paragraphs: ['Pour toute question relative aux CGU : proday.admin@gmail.com'],
   },
 ];
 

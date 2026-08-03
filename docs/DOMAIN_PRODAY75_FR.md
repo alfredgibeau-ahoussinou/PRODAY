@@ -355,7 +355,7 @@ URLs publiques du site migrées vers `https://proday75.fr` :
 - Fallbacks bêta / auth Cloud Functions
 - Redirects `netlify.toml`
 
-Les adresses e-mail (`contact@proday.app`, etc.) et le bundle iOS/Android `com.proday.app` restent inchangés (identifiants app / messagerie distincts du domaine web).
+Les adresses e-mail (`proday.admin@gmail.com`, etc.) et le bundle iOS/Android `com.proday.app` restent inchangés (identifiants app / messagerie distincts du domaine web).
 
 ## Références
 

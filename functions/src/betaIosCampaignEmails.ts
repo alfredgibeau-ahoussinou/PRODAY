@@ -57,7 +57,7 @@ function emailShell(subject: string, bodyHtml: string): string {
             <td style="padding:20px 32px 28px;border-top:1px solid #e2e8f0;">
               <p style="margin:0;font-size:12px;line-height:1.6;color:#94a3b8;">
                 Vous recevez cet email car vous êtes inscrit à la bêta ProDay.<br />
-                Questions ? <a href="mailto:support@proday.app" style="color:#475569;">support@proday.app</a>
+                Questions ? <a href="mailto:proday.admin@gmail.com" style="color:#475569;">proday.admin@gmail.com</a>
               </p>
             </td>
           </tr>
@@ -160,7 +160,7 @@ export function buildBetaIosLaunchEmail(params: BetaCampaignEmailParams): {
     '',
     `Guide complet : ${buildBetaInstallerUrl(site, params.accessToken)}`,
     '',
-    'Vos retours nous aident à améliorer l\'app avant le lancement public. Répondez à cet email ou écrivez à support@proday.app.',
+    'Vos retours nous aident à améliorer l\'app avant le lancement public. Répondez à cet email ou écrivez à proday.admin@gmail.com.',
     '',
     'L\'équipe ProDay',
   ].join('\n');
@@ -329,7 +329,7 @@ export const BETA_ENGAGEMENT_TOPICS: EngagementTopic[] = [
     title: 'Envoyez vos retours',
     lead: 'Bug, idée, suggestion — chaque message est lu par l\'équipe ProDay.',
     bullets: [
-      'Répondez à cet email ou écrivez à support@proday.app',
+      'Répondez à cet email ou écrivez à proday.admin@gmail.com',
       'Indiquez votre profil, version et capture d\'écran',
       'Signalez les blocages sur TestFlight ou l\'APK Android',
     ],

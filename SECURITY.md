@@ -6,7 +6,7 @@ Si vous découvrez une vulnérabilité de sécurité affectant ProDay (applicati
 site proday75.fr, Firebase, Cloud Functions ou infrastructure associée), merci de nous
 la signaler de manière responsable.
 
-**Contact :** [contact@proday.app](mailto:contact@proday.app)  
+**Contact :** [proday.admin@gmail.com](mailto:proday.admin@gmail.com)  
 **Objet suggéré :** `[Sécurité ProDay] Description courte`
 
 ### Ce que nous attendons

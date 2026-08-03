@@ -320,7 +320,7 @@ def build():
         kv_table(
             [
                 ("Adresse principale (Gmail)", "proday.admin@gmail.com"),
-                ("Adresse contact affichée", "contact@proday.app"),
+                ("Adresse contact affichée", "proday.admin@gmail.com"),
                 ("Mot de passe boîte mail ProDay", "<b>Proday2026@</b>"),
             ],
             s,
@@ -329,7 +329,7 @@ def build():
     story.append(
         Paragraph(
             "Ouvrez Gmail avec <b>proday.admin@gmail.com</b> et le mot de passe ci-dessus. "
-            "Les messages envoyés à <b>contact@proday.app</b> arrivent aussi de ce côté.",
+            "Les messages envoyés à <b>proday.admin@gmail.com</b> arrivent aussi de ce côté.",
             s["small"],
         )
     )
@@ -385,7 +385,7 @@ def build():
     story.append(
         kv_table(
             [
-                ("Contact", "contact@proday.app"),
+                ("Contact", "proday.admin@gmail.com"),
                 ("Admin / suivi", "proday.admin@gmail.com"),
             ],
             s,

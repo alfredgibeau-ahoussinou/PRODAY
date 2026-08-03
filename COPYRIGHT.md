@@ -19,8 +19,8 @@ l'identité ProDay ne peuvent être utilisés sans accord explicite.
 
 ## Contact
 
-- **Général :** [contact@proday.app](mailto:contact@proday.app)
-- **Partenaires :** [partenaires@proday.app](mailto:partenaires@proday.app)
+- **Général :** [proday.admin@gmail.com](mailto:proday.admin@gmail.com)
+- **Partenaires :** [proday.admin@gmail.com](mailto:proday.admin@gmail.com)
 - **Sécurité :** voir [SECURITY.md](./SECURITY.md)
 
 ## Limites réalistes

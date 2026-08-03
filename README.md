@@ -591,6 +591,6 @@ Inscrivez-vous sur [proday75.fr/beta/inscription](https://proday75.fr/beta/inscr
 
 ## Contact
 
-[proday75.fr](https://proday75.fr) · [contact@proday.app](mailto:contact@proday.app) · [partenaires@proday.app](mailto:partenaires@proday.app) · [Code source — dépôt **privé**](https://github.com/alfredgibeau-ahoussinou/PRODAY) · [Documentation publique — PRODAY-docs](https://github.com/alfredgibeau-ahoussinou/PRODAY-docs)
+[proday75.fr](https://proday75.fr) · [proday.admin@gmail.com](mailto:proday.admin@gmail.com) · [proday.admin@gmail.com](mailto:proday.admin@gmail.com) · [Code source — dépôt **privé**](https://github.com/alfredgibeau-ahoussinou/PRODAY) · [Documentation publique — PRODAY-docs](https://github.com/alfredgibeau-ahoussinou/PRODAY-docs)
 
 **ProDay © 2026** — Tous droits réservés · Code propriétaire — reproduction interdite sans autorisation · [LICENSE](./LICENSE) · [SECURITY.md](./SECURITY.md)
