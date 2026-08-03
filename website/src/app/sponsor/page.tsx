@@ -1,12 +1,10 @@
 import type { Metadata } from "next";
-import { Suspense } from "react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { PageCtaBand } from "@/components/layout/PageCtaBand";
 import { PremiumSection } from "@/components/layout/PremiumSection";
 import { SponsorCapabilitiesGrid } from "@/components/sponsor/SponsorCapabilitiesGrid";
 import { SponsorFaqAccordion } from "@/components/sponsor/SponsorFaqAccordion";
 import { SponsorPricingSection } from "@/components/sponsor/SponsorPricingSection";
-import { SponsorSignupWizard } from "@/components/sponsor/SponsorSignupWizard";
 import { PremiumButton } from "@/components/ui/PremiumButton";
 import { SPONSOR_PARTNER_CONTACT_EMAIL } from "@/lib/content";
 import { SPONSOR_BRAND, SPONSOR_HERO } from "@/lib/sponsorContent";
@@ -55,27 +53,29 @@ export default function SponsorPolePage() {
       </PremiumSection>
 
       <PremiumSection
-        id="inscription"
-        kicker="INSCRIPTION"
-        title="Parlez-nous de votre projet"
-        description="Formulaire en 5 étapes. Réponse sous 48 h ouvrées."
+        id="devis"
+        kicker="DEVIS"
+        title="Demandez votre devis"
+        description="Parcours en 5 pages. Entreprise, contact, formule, projet, envoi. Réponse sous 48 h ouvrées."
         pole="sponsor"
-        centered={false}
       >
-        <div className="mx-auto max-w-3xl">
-          <Suspense fallback={<div className="py-12 text-center text-white/50">Chargement du formulaire…</div>}>
-            <SponsorSignupWizard />
-          </Suspense>
-        </div>
-        <p className="mx-auto mt-8 max-w-3xl text-center text-sm text-white/40">
-          Échange direct :{" "}
-          <a
-            href={`mailto:${SPONSOR_PARTNER_CONTACT_EMAIL}?subject=Demande%20sponsor%20ProDay`}
-            className="font-medium text-amber-400/80 underline hover:text-amber-300"
+        <div className="mx-auto max-w-2xl text-center">
+          <PremiumButton
+            href={ROUTES.sponsorDevis}
+            className="!bg-gradient-to-r !from-amber-500 !to-amber-400 !text-slate-950"
           >
-            {SPONSOR_PARTNER_CONTACT_EMAIL}
-          </a>
-        </p>
+            Demander un devis
+          </PremiumButton>
+          <p className="mt-6 text-sm text-white/40">
+            La demande est envoyée à{" "}
+            <a
+              href={`mailto:${SPONSOR_PARTNER_CONTACT_EMAIL}`}
+              className="font-medium text-amber-400/80 underline hover:text-amber-300"
+            >
+              {SPONSOR_PARTNER_CONTACT_EMAIL}
+            </a>
+          </p>
+        </div>
       </PremiumSection>
 
       <PremiumSection
@@ -96,11 +96,18 @@ export default function SponsorPolePage() {
           Convention partenaire et conditions commerciales : documentation légale ProDay.
         </p>
         <div className="flex flex-wrap justify-center gap-3 sm:justify-end">
-          <PremiumButton href={ROUTES.partenairesConvention} variant="outline" className="!border-amber-400/30 !text-amber-200">
+          <PremiumButton
+            href={ROUTES.partenairesConvention}
+            variant="outline"
+            className="!border-amber-400/30 !text-amber-200"
+          >
             Convention sponsor
           </PremiumButton>
-          <PremiumButton href="#inscription" className="!bg-gradient-to-r !from-amber-500 !to-amber-400 !text-slate-950">
-            S&apos;inscrire
+          <PremiumButton
+            href={ROUTES.sponsorDevis}
+            className="!bg-gradient-to-r !from-amber-500 !to-amber-400 !text-slate-950"
+          >
+            Demander un devis
           </PremiumButton>
         </div>
       </PageCtaBand>

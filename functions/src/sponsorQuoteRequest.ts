@@ -70,6 +70,7 @@ export function parseSponsorQuotePayload(body: Record<string, unknown>): ParsedS
     company_name: trimStr(body.companyName ?? body.company_name),
     contact_email: trimStr(body.contactEmail ?? body.contact_email ?? body.email, 254).toLowerCase(),
     contact_name: trimStr(body.contactName ?? body.contact_name),
+    contact_role: trimStr(body.contactRole ?? body.contact_role) || undefined,
     phone: trimStr(body.phone, 32) || undefined,
     budget: trimStr(body.budget) || undefined,
     goals: trimArray(body.goals),
@@ -110,6 +111,7 @@ export async function createSponsorQuoteRequest(
   };
 
   if (payload.phone) data.phone = payload.phone;
+  if (payload.contact_role) data.contact_role = payload.contact_role;
   if (payload.budget) data.budget = payload.budget;
   if (payload.goals?.length) data.goals = payload.goals;
   if (payload.audience?.length) data.audience = payload.audience;

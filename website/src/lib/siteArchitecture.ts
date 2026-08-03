@@ -362,7 +362,12 @@ export function isNavActive(href: string, pathname: string): boolean {
     return path === ROUTES.proStaff || path === ROUTES.pro || path.startsWith(`${ROUTES.pro}/`);
   }
   if (targetPath === ROUTES.sponsor) {
-    return path === ROUTES.sponsor || path === ROUTES.partenaires || path.startsWith(`${ROUTES.partenaires}/`);
+    return (
+      path === ROUTES.sponsor ||
+      path.startsWith(`${ROUTES.sponsor}/`) ||
+      path === ROUTES.partenaires ||
+      path.startsWith(`${ROUTES.partenaires}/`)
+    );
   }
 
   return path === targetPath;

@@ -7,6 +7,7 @@ export interface SponsorQuoteRequest {
   company_name: string;
   contact_email: string;
   contact_name: string;
+  contact_role?: string;
   phone?: string;
   budget?: string;
   goals?: string[];
