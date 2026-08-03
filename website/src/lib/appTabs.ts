@@ -64,20 +64,20 @@ export function getVisibleMainTabsForWeb(universe: ProductLineWeb): MainTabId[] 
   } else if (universe === "supporter") {
     tabs = ["home", "matchs", "reels", "feed", "messages", "shop", "profil"];
   } else if (universe === "amateur") {
-    tabs = ["home", "recrutement", "matchs", "reels", "covoiturage", "shop", "messages", "profil"];
+    tabs = ["home", "reels", "matchs", "messages", "profil", "covoiturage", "recrutement", "sante", "feed", "shop"];
   } else if (universe === "pro") {
-    tabs = ["home", "recrutement", "matchs", "reels", "covoiturage", "shop", "messages", "profil"];
+    tabs = ["home", "reels", "matchs", "messages", "profil", "covoiturage", "recrutement", "sante", "shop"];
   } else if (role === "player") {
     tabs = [
       "home",
-      "recrutement",
-      "matchs",
       "reels",
-      "covoiturage",
-      "sante",
-      "shop",
+      "matchs",
       "messages",
       "profil",
+      "covoiturage",
+      "recrutement",
+      "sante",
+      "shop",
     ];
   } else {
     tabs = ["home", "recrutement", "matchs", "reels", "feed", "shop", "messages", "profil"];
@@ -92,15 +92,15 @@ export function getVisibleMainTabsForDemoPole(pole: DemoPoleId): MainTabId[] {
     case "joueur":
       return [
         "home",
-        "covoiturage",
-        "recrutement",
-        "shop",
-        "profil",
+        "reels",
         "matchs",
         "messages",
-        "reels",
+        "profil",
+        "covoiturage",
+        "recrutement",
         "sante",
         "feed",
+        "shop",
       ];
     case "supporter":
       return ["home", "matchs", "feed", "messages", "reels", "shop", "profil"];

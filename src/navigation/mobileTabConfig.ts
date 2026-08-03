@@ -25,12 +25,12 @@ const SECONDARY_PRIORITY: MainTabId[] = [
 ];
 
 const LEFT_PRIORITY_BY_LINE: Record<ProductLineId, MainTabId[]> = {
-  // Legacy homme/woman : même rail que Amateur (migration live).
+  // Legacy homme/woman : priorité rail classique (coach). Joueurs passent par FLAT_RAIL_RULES.
   homme: ['home', 'covoiturage', 'matchs', 'recrutement'],
   woman: ['home', 'covoiturage', 'matchs', 'recrutement'],
   amateur: ['home', 'covoiturage', 'matchs', 'recrutement'],
   pro: ['home', 'covoiturage', 'matchs', 'recrutement'],
-  pro_player: ['home', 'covoiturage', 'reels', 'matchs'],
+  pro_player: ['home', 'reels', 'matchs', 'messages'],
   pro_club: ['home', 'covoiturage', 'recrutement', 'matchs'],
   pro_staff: ['home', 'covoiturage', 'matchs', 'recrutement'],
   sponsor: ['home', 'matchs', 'messages', 'profil'],
@@ -40,7 +40,7 @@ const LEFT_PRIORITY_BY_LINE: Record<ProductLineId, MainTabId[]> = {
 };
 
 const LEFT_PRIORITY_BY_PRO_ROLE: Partial<Record<UserRole, MainTabId[]>> = {
-  player: ['home', 'covoiturage', 'reels', 'matchs'],
+  player: ['home', 'reels', 'matchs', 'messages'],
   club: ['home', 'covoiturage', 'recrutement', 'matchs'],
   coach: ['home', 'covoiturage', 'matchs', 'recrutement'],
   agent: ['home', 'recrutement', 'matchs', 'feed'],
@@ -62,8 +62,8 @@ const FLAT_RAIL_RULES: FlatRailRule[] = [
   },
   {
     match: (line, role) => line === 'amateur' && role === 'player',
-    primary: ['home', 'covoiturage', 'recrutement', 'profil'],
-    overflow: ['matchs', 'messages', 'reels', 'sante', 'feed', 'shop'],
+    primary: ['home', 'reels', 'matchs', 'messages', 'profil'],
+    overflow: ['covoiturage', 'recrutement', 'sante', 'feed', 'shop'],
   },
   {
     match: (line, role) => line === 'amateur' && role === 'coach',
@@ -80,8 +80,8 @@ const FLAT_RAIL_RULES: FlatRailRule[] = [
         line === 'homme' ||
         line === 'woman' ||
         isProProductLine(line)),
-    primary: ['home', 'covoiturage', 'reels', 'matchs', 'profil'],
-    overflow: ['sante', 'messages', 'recrutement', 'shop'],
+    primary: ['home', 'reels', 'matchs', 'messages', 'profil'],
+    overflow: ['covoiturage', 'recrutement', 'sante', 'shop'],
   },
   {
     match: (line, role) =>

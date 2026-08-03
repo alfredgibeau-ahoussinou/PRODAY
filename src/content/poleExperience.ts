@@ -263,12 +263,16 @@ export function getTabShortLabel(
   translate?: (key: string) => string
 ): string {
   if (line === 'amateur') {
-    if (tab === 'home') return 'Équipe';
+    if (tab === 'home') return 'Accueil';
+    if (tab === 'reels') return 'Reels';
+    if (tab === 'matchs') return 'Matchs';
+    if (tab === 'messages') return 'Messages';
     if (tab === 'covoiturage') return 'Covoiturage';
     if (tab === 'recrutement') return 'Club';
     if (tab === 'shop') return 'Shop';
     if (tab === 'profil') return 'Moi';
-    if (tab === 'sante') return 'RDV Santé';
+    if (tab === 'sante') return 'Santé';
+    if (tab === 'feed') return 'Fil';
   }
   if (line === 'supporter') {
     if (tab === 'home') return 'Tribune';
@@ -304,13 +308,14 @@ export function getTabShortLabel(
   }
   if (isProFamilyLine(line) && role === 'player') {
     if (tab === 'home') return 'Carrière';
+    if (tab === 'reels') return 'Reels';
+    if (tab === 'matchs') return 'Matchs';
+    if (tab === 'messages') return 'Messages';
     if (tab === 'covoiturage') return 'Covoiturage';
     if (tab === 'recrutement') return 'Opportunités';
-    if (tab === 'reels') return 'Réels';
-    if (tab === 'matchs') return 'Groupe';
     if (tab === 'shop') return 'Shop';
     if (tab === 'profil') return 'Moi';
-    if (tab === 'sante') return 'RDV Santé';
+    if (tab === 'sante') return 'Santé';
   }
   if (role === 'player' && tab === 'sante') return 'RDV Santé';
   if (translate) {
