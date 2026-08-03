@@ -179,11 +179,11 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionPlanId, SubscriptionPlanDefi
       'Profil praticien et vérification',
       'Spécialité et zone d\'intervention',
       'Visibilité annuaire (base)',
-      'Téléconsultation visio 15/30 min (gratuite)',
-      'Prise de rendez-vous via l\'app',
       'Messagerie limitée',
     ],
     proIncludes: [
+      'Téléconsultation visio 15/30 min',
+      'Prise de rendez-vous via l\'app',
       'Visibilité prioritaire près des clubs',
       'Messagerie complète après vérif.',
       'Mise en avant annuaire',
