@@ -40,6 +40,8 @@ type PolePalette = {
 export type PoleTabBarChrome = {
   layout: PoleTabBarLayout;
   flatLayout: boolean;
+  /** Style Instagram : barre flush, icônes, sans pilule ni bandeau. */
+  cleanStyle: boolean;
   accent: string;
   activeIcon: string;
   inactiveIcon: string;
@@ -71,42 +73,52 @@ function makeChrome(
     overflowKicker: string;
     layout: PoleTabBarLayout;
     flatLayout?: boolean;
+    cleanStyle?: boolean;
     accent?: string;
     activeIcon?: string;
+    inactiveIcon?: string;
     barBackground?: string;
     barBorderColor?: string;
     topAccentColor?: string;
+    topAccentHeight?: number;
     centerButtonIdle?: string;
     centerButtonLift?: number;
     centerButtonSize?: number;
     badgeColor?: string;
+    barBorderRadius?: number;
+    barShadow?: boolean;
   },
 ): PoleTabBarChrome {
   const flat = config.flatLayout ?? false;
+  const clean = config.cleanStyle ?? flat;
   const accent = config.accent ?? palette.accent;
   return {
     layout: config.layout,
     flatLayout: flat,
+    cleanStyle: clean,
     accent,
-    activeIcon: config.activeIcon ?? accent,
-    inactiveIcon: FLASH_INACTIVE,
-    barBackground: config.barBackground ?? FLASH_DOCK_BG,
-    barBorderColor: config.barBorderColor ?? FLASH_DOCK_BORDER,
-    rootBackground: palette.background || '#000000',
+    activeIcon: config.activeIcon ?? (clean ? '#FAFAFA' : accent),
+    inactiveIcon: config.inactiveIcon ?? (clean ? '#737373' : FLASH_INACTIVE),
+    barBackground: config.barBackground ?? (clean ? '#000000' : FLASH_DOCK_BG),
+    barBorderColor: config.barBorderColor ?? (clean ? 'rgba(255,255,255,0.12)' : FLASH_DOCK_BORDER),
+    rootBackground: clean ? '#000000' : palette.background || '#000000',
     centerButtonIdle: config.centerButtonIdle ?? accent,
     centerButtonBorder: palette.accentSoft,
     centerButtonBorderWidth: flat ? 0 : 3,
     centerButtonLift: config.centerButtonLift ?? (flat ? 0 : -14),
     centerButtonSize: config.centerButtonSize ?? (flat ? 0 : 56),
-    barBorderRadius: config.layout === 'dock' ? 18 : 22,
-    barBorderWidth: 1,
+    barBorderRadius: config.barBorderRadius ?? (clean ? 0 : config.layout === 'dock' ? 18 : 22),
+    barBorderWidth: clean ? StyleSheetHairline : 1,
     topAccentColor: config.topAccentColor ?? accent,
-    topAccentHeight: flat ? 2 : 3,
-    barShadow: true,
+    topAccentHeight: config.topAccentHeight ?? (clean ? 0 : flat ? 2 : 3),
+    barShadow: config.barShadow ?? !clean,
     badgeColor: config.badgeColor ?? accent,
     overflowKicker: config.overflowKicker,
   };
 }
+
+/** hairline without importing StyleSheet into theme — numeric  StyleSheet.hairlineWidth ≈ 1/pixel ratio; use 0.5 */
+const StyleSheetHairline = 0.5;
 
 const HOMME_PALETTE: PolePalette = {
   accent: hommeColorOverrides.accent ?? '#4ADE80',
@@ -201,28 +213,26 @@ const CHROME_BY_LINE: Record<ProductLineId, PoleTabBarChrome> = {
   amateur: makeChrome(AMATEUR_PALETTE, {
     layout: 'dock',
     flatLayout: true,
-    overflowKicker: 'PRO DAY AMATEUR',
-    topAccentColor: AMATEUR_PALETTE.accent,
-    barBorderColor: AMATEUR_PALETTE.borderStrong,
+    cleanStyle: true,
+    overflowKicker: 'Plus',
   }),
   supporter: makeChrome(SUPPORTER_PALETTE, {
     layout: 'dock',
     flatLayout: true,
-    overflowKicker: 'TRIBUNE SUPPORTER',
-    topAccentColor: SUPPORTER_PALETTE.accent,
-    barBorderColor: SUPPORTER_PALETTE.borderStrong,
+    cleanStyle: true,
+    overflowKicker: 'Tribune',
   }),
   sante: makeChrome(SANTE_PALETTE, {
     layout: 'dock',
     flatLayout: true,
-    overflowKicker: 'PRO DAY SANTÉ',
-    topAccentColor: SANTE_PALETTE.accentLight ?? SANTE_PALETTE.accent,
-    barBorderColor: SANTE_PALETTE.borderStrong,
+    cleanStyle: true,
+    overflowKicker: 'Cabinet',
   }),
   pro: makeChrome(PRO_PALETTE, {
     layout: 'dock',
     flatLayout: false,
-    overflowKicker: 'PRO DAY PRO',
+    cleanStyle: false,
+    overflowKicker: 'Pro',
     centerButtonLift: -12,
     centerButtonSize: 54,
     topAccentColor: PRO_PALETTE.accent,
@@ -230,27 +240,25 @@ const CHROME_BY_LINE: Record<ProductLineId, PoleTabBarChrome> = {
   pro_player: makeChrome(PRO_PLAYER_MALE_PALETTE, {
     layout: 'dock',
     flatLayout: true,
-    overflowKicker: 'PRO JOUEUR',
+    cleanStyle: true,
+    overflowKicker: 'Plus',
     accent: PRO_PLAYER_MALE_PALETTE.accent,
-    topAccentColor: PRO_PLAYER_MALE_PALETTE.accent,
-    barBorderColor: PRO_PLAYER_MALE_PALETTE.borderStrong,
   }),
   pro_club: makeChrome(PRO_PALETTE, {
     layout: 'dock',
     flatLayout: true,
-    overflowKicker: 'PRO CLUB',
+    cleanStyle: true,
+    overflowKicker: 'Club',
     accent: '#38BDF8',
-    centerButtonIdle: '#38BDF8',
-    topAccentColor: '#38BDF8',
-    barBorderColor: 'rgba(56, 189, 248, 0.35)',
+    activeIcon: '#FAFAFA',
   }),
   pro_staff: makeChrome(PRO_PALETTE, {
     layout: 'dock',
     flatLayout: true,
-    overflowKicker: 'PRO STAFF',
+    cleanStyle: true,
+    overflowKicker: 'Staff',
     accent: '#818CF8',
-    topAccentColor: '#818CF8',
-    barBorderColor: 'rgba(129, 140, 248, 0.35)',
+    activeIcon: '#FAFAFA',
   }),
   sponsor: makeChrome(
     {
@@ -270,19 +278,18 @@ const CHROME_BY_LINE: Record<ProductLineId, PoleTabBarChrome> = {
     {
       layout: 'dock',
       flatLayout: true,
-      overflowKicker: 'PRO DAY SPONSOR',
+      cleanStyle: true,
+      overflowKicker: 'Sponsor',
       accent: '#D4AF37',
-      topAccentColor: '#D4AF37',
-      barBorderColor: 'rgba(212, 175, 55, 0.35)',
+      activeIcon: '#FAFAFA',
     },
   ),
   parent: makeChrome(AMATEUR_PALETTE, {
     layout: 'dock',
     flatLayout: true,
-    overflowKicker: 'PRO DAY FAMILLE',
+    cleanStyle: true,
+    overflowKicker: 'Famille',
     accent: '#0F766E',
-    topAccentColor: '#0F766E',
-    barBorderColor: 'rgba(15, 118, 110, 0.35)',
   }),
 };
 
@@ -290,46 +297,36 @@ const CHROME_BY_SEGMENT: Partial<Record<string, PoleTabBarChrome>> = {
   pro_player_male: makeChrome(PRO_PLAYER_MALE_PALETTE, {
     layout: 'dock',
     flatLayout: true,
-    overflowKicker: 'PRO JOUEUR',
+    cleanStyle: true,
+    overflowKicker: 'Plus',
     accent: PRO_PLAYER_MALE_PALETTE.accent,
-    topAccentColor: PRO_PLAYER_MALE_PALETTE.accent,
-    barBorderColor: PRO_PLAYER_MALE_PALETTE.borderStrong,
   }),
   pro_player_female: makeChrome(PRO_PLAYER_FEMALE_PALETTE, {
     layout: 'dock',
     flatLayout: true,
-    overflowKicker: 'PRO JOUEUSE',
+    cleanStyle: true,
+    overflowKicker: 'Plus',
     accent: PRO_PLAYER_FEMALE_PALETTE.accent,
-    activeIcon: PRO_PLAYER_FEMALE_PALETTE.accent,
-    centerButtonIdle: PRO_PLAYER_FEMALE_PALETTE.accent,
-    topAccentColor: PRO_PLAYER_FEMALE_PALETTE.accent,
-    barBorderColor: PRO_PLAYER_FEMALE_PALETTE.borderStrong,
-    badgeColor: PRO_PLAYER_FEMALE_PALETTE.accent,
   }),
   amateur_male: makeChrome(AMATEUR_PALETTE, {
     layout: 'dock',
     flatLayout: true,
-    overflowKicker: 'PRO DAY AMATEUR',
-    topAccentColor: AMATEUR_PALETTE.accent,
-    barBorderColor: AMATEUR_PALETTE.borderStrong,
+    cleanStyle: true,
+    overflowKicker: 'Plus',
   }),
   amateur_female: makeChrome(AMATEUR_FEMALE_PALETTE, {
     layout: 'dock',
     flatLayout: true,
-    overflowKicker: 'AMATEUR FÉMININ',
+    cleanStyle: true,
+    overflowKicker: 'Plus',
     accent: AMATEUR_FEMALE_PALETTE.accent,
-    topAccentColor: AMATEUR_FEMALE_PALETTE.accent,
-    barBorderColor: AMATEUR_FEMALE_PALETTE.borderStrong,
-    badgeColor: AMATEUR_FEMALE_PALETTE.accent,
   }),
   amateur_minor: makeChrome(AMATEUR_MINOR_PALETTE, {
     layout: 'dock',
     flatLayout: true,
-    overflowKicker: 'AMATEUR JEUNES',
+    cleanStyle: true,
+    overflowKicker: 'Plus',
     accent: AMATEUR_MINOR_PALETTE.accent,
-    topAccentColor: AMATEUR_MINOR_PALETTE.accent,
-    barBorderColor: AMATEUR_MINOR_PALETTE.borderStrong,
-    badgeColor: AMATEUR_MINOR_PALETTE.accent,
   }),
 };
 
@@ -362,7 +359,7 @@ export function getPoleTabBarChrome(
     // est trop sombre sur le dock FLASH noir.
     return {
       ...CHROME_BY_LINE.sante,
-      overflowKicker: 'CABINET SANTÉ',
+      overflowKicker: 'Santé',
     };
   }
   return base;

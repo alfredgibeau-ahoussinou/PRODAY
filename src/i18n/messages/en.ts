@@ -49,11 +49,11 @@ export const en: MessageCatalog = {
   'profile.chapters.activity': 'Activity',
   'profile.chapters.settings': 'Settings',
 
-  'nav.overflow': 'Navigation',
-  'nav.overflowHint': 'Access secondary sections of the app.',
-  'nav.overflowActive': 'Active section',
-  'nav.menu': 'Menu',
-  'nav.menuA11y': 'Navigation menu',
+  'nav.overflow': 'More',
+  'nav.overflowHint': 'Carpool, club, health and more.',
+  'nav.overflowActive': 'Open',
+  'nav.menu': 'More',
+  'nav.menuA11y': 'More tabs',
 
   'tabs.home': 'Home',
   'tabs.recrutement': 'Transfer',
