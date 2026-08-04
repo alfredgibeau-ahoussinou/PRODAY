@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   StyleSheet,
   View,
+  useWindowDimensions,
   type LayoutChangeEvent,
 } from 'react-native';
 import Svg, {
@@ -67,8 +68,10 @@ export const ReelsEmptyState: React.FC<ReelsEmptyStateProps> = ({
   onPublish,
 }) => {
   const insets = useSafeAreaInsets();
+  const { width: screenWidth } = useWindowDimensions();
+  const compact = screenWidth <= 402;
   const { t } = useTranslation();
-  const styles = useMemo(() => createStyles(insets.top), [insets.top]);
+  const styles = useMemo(() => createStyles(insets.top, compact), [insets.top, compact]);
   const [size, setSize] = useState({ width: 0, height: 0 });
 
   const glow = useSharedValue(0);
@@ -123,7 +126,13 @@ export const ReelsEmptyState: React.FC<ReelsEmptyStateProps> = ({
             <View style={styles.brandRule} />
           </View>
 
-          <ProDayText variant="hero" style={styles.headline}>
+          <ProDayText
+            variant="hero"
+            style={styles.headline}
+            numberOfLines={3}
+            adjustsFontSizeToFit
+            minimumFontScale={0.78}
+          >
             {canPublish ? t('reels.empty.title') : t('reels.guest.headline')}
           </ProDayText>
           <ProDayText variant="body" style={styles.support}>
@@ -148,20 +157,20 @@ export const ReelsEmptyState: React.FC<ReelsEmptyStateProps> = ({
   );
 };
 
-function createStyles(topInset: number) {
+function createStyles(topInset: number, compact: boolean) {
   return StyleSheet.create({
     root: {
       ...StyleSheet.absoluteFillObject,
       alignItems: 'center',
       justifyContent: 'flex-end',
       backgroundColor: INK_BOTTOM,
-      paddingHorizontal: reelsTheme.space.xl,
+      paddingHorizontal: compact ? reelsTheme.space.md : reelsTheme.space.xl,
       paddingTop: topInset + reelsTheme.space.xxl,
-      paddingBottom: '22%',
+      paddingBottom: compact ? '18%' : '22%',
     },
     stage: {
       width: '100%',
-      maxWidth: 460,
+      maxWidth: compact ? 360 : 440,
       gap: reelsTheme.space.md,
     },
     brandRow: {
@@ -182,15 +191,17 @@ function createStyles(topInset: number) {
     headline: {
       color: reelsTheme.color.text,
       fontFamily: reelsTheme.type.display.fontFamily,
-      fontSize: reelsTheme.type.display.fontSize,
-      lineHeight: reelsTheme.type.display.lineHeight,
-      letterSpacing: reelsTheme.type.display.letterSpacing,
+      fontSize: compact ? 28 : reelsTheme.type.display.fontSize,
+      lineHeight: compact ? 32 : reelsTheme.type.display.lineHeight,
+      letterSpacing: compact ? -0.4 : reelsTheme.type.display.letterSpacing,
+      maxWidth: '100%',
+      flexShrink: 1,
     },
     support: {
       color: reelsTheme.color.textDim,
-      fontSize: 15,
-      lineHeight: 23,
-      maxWidth: 380,
+      fontSize: compact ? 14 : 15,
+      lineHeight: compact ? 20 : 23,
+      maxWidth: compact ? 320 : 380,
     },
     cta: {
       alignSelf: 'flex-start',

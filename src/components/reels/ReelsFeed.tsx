@@ -386,7 +386,7 @@ export const ReelsFeed: React.FC<ReelsFeedProps> = ({ productLine }) => {
           theme: uploadTheme,
           club_id: profile.profile?.club_id,
           video_url,
-        });
+        }, profile.email);
         setPickedVideo(null);
         trackV3Event('reel_upload_submitted', { theme: uploadTheme });
       } catch (error) {

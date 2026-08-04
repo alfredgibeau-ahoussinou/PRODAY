@@ -3,6 +3,7 @@ import { getDb } from '../lib/firebase';
 import { isFirebaseConfigured } from '../config/firebase';
 
 export type AdminAuditAction =
+  | 'reel_submitted'
   | 'reel_approved'
   | 'reel_rejected'
   | 'reel_deleted'

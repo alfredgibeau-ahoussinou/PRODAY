@@ -9,6 +9,7 @@ import { spacing, radius } from '../../theme/designTokens';
 import { formatRelativeTime } from '../../utils/formatRelativeTime';
 
 const ACTION_LABEL: Record<string, string> = {
+  reel_submitted: 'Nouveau reel publié',
   reel_approved: 'Reel approuvé',
   reel_rejected: 'Reel refusé',
   reel_deleted: 'Reel supprimé',
