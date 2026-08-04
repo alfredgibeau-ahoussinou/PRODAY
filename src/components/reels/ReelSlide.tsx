@@ -41,9 +41,8 @@ import { reelAuthorKey, toggleReelFollow } from '../../utils/reelFollows';
 import { reportReel } from '../../utils/reelReports';
 import { trackV3Event } from '../../core/analytics/v3Events';
 import { useTranslation } from '../../context/LocaleContext';
-import { useAppTheme } from '../../context/ProductLineContext';
 import { motion } from '../../theme/motion';
-import { spacing } from '../../theme/designTokens';
+import { reelsTheme, REEL_BOTTOM_SCRIM } from './reelsTheme';
 
 type ReelSlideProps = {
   reel: PlaybackReel;
@@ -134,7 +133,6 @@ export const ReelSlide: React.FC<ReelSlideProps> = ({
 }) => {
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
-  const { colors } = useAppTheme();
   const lastTapRef = useRef(0);
   const [userMuted, setUserMuted] = useState(false);
   const [paused, setPaused] = useState(false);
@@ -154,7 +152,7 @@ export const ReelSlide: React.FC<ReelSlideProps> = ({
   const showLoader = isActive && !canPlay && !reel.failed && !embedFailed;
   const showError = isActive && (reel.failed || embedFailed);
   const caption = reel.caption.trim();
-  const bottomPad = Math.max(insets.bottom, spacing.md) + spacing.xl;
+  const bottomPad = Math.max(insets.bottom, reelsTheme.space.md) + reelsTheme.space.xl;
 
   // Motion : révélation douce des éléments quand la vidéo devient active.
   const reveal = useSharedValue(isActive ? 1 : 0);
@@ -370,7 +368,7 @@ iframe{border:0;width:100%;height:100%}</style></head>
 
       {showLoader ? (
         <View style={styles.loader} pointerEvents="none">
-          <ActivityIndicator color="rgba(255,255,255,0.85)" size="large" />
+          <ActivityIndicator color={reelsTheme.color.amber} size="large" />
         </View>
       ) : null}
 
@@ -401,17 +399,17 @@ iframe{border:0;width:100%;height:100%}</style></head>
 
       <Animated.View style={[styles.pauseBadge, pauseStyle]} pointerEvents="none">
         <View style={styles.pauseGlyph}>
-          <Icon name="play" size={30} color="rgba(255,255,255,0.95)" variant="filled" />
+          <Icon name="play" size={26} color={reelsTheme.color.text} variant="filled" />
         </View>
       </Animated.View>
 
       <ReelLikeBurst visible={showBurst} onDone={() => setShowBurst(false)} />
 
-      {/* Voile bas — atmosphère issue de la vidéo, sans carte ni barre */}
+      {/* Voile bas réchauffé — atmosphère issue de la vidéo, sans carte ni barre */}
       <LinearGradient
-        colors={['transparent', 'rgba(0,0,0,0.28)', 'rgba(0,0,0,0.88)']}
+        colors={REEL_BOTTOM_SCRIM}
         locations={[0, 0.45, 1]}
-        style={[styles.scrim, { height: height * 0.48 }]}
+        style={[styles.scrim, { height: height * 0.5 }]}
         pointerEvents="none"
       />
 
@@ -421,7 +419,7 @@ iframe{border:0;width:100%;height:100%}</style></head>
           saved={saved}
           muted={userMuted}
           commentCount={commentCount}
-          accent={colors.accent}
+          accent={reelsTheme.color.amber}
           labels={{
             like: t('reels.like'),
             comment: t('reels.comments.title'),
@@ -448,7 +446,7 @@ iframe{border:0;width:100%;height:100%}</style></head>
           sourceLabel={REEL_SOURCE_LABEL[reel.source]}
           caption={caption}
           following={following}
-          accent={colors.accent}
+          accent={reelsTheme.color.amber}
           labels={{ follow: t('reels.follow'), following: t('reels.following') }}
           onOpenProfile={onOpenProfile}
           onToggleFollow={onToggleFollow}
@@ -461,7 +459,7 @@ iframe{border:0;width:100%;height:100%}</style></head>
 const styles = StyleSheet.create({
   slide: {
     overflow: 'hidden',
-    backgroundColor: '#000',
+    backgroundColor: reelsTheme.color.stage,
   },
   media: {
     ...StyleSheet.absoluteFillObject,
@@ -481,34 +479,37 @@ const styles = StyleSheet.create({
     bottom: 0,
     alignSelf: 'center',
     justifyContent: 'center',
-    left: spacing.xl,
-    right: spacing.xl,
+    left: reelsTheme.space.xl,
+    right: reelsTheme.space.xl,
     alignItems: 'center',
-    gap: spacing.md,
+    gap: reelsTheme.space.md,
   },
   errorText: {
-    color: '#fff',
-    fontSize: 15,
-    fontWeight: '600',
+    color: reelsTheme.color.text,
+    fontFamily: reelsTheme.type.name.fontFamily,
+    fontSize: 16,
+    letterSpacing: -0.2,
     textAlign: 'center',
   },
   errorActions: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'center',
-    gap: spacing.sm,
+    gap: reelsTheme.space.sm,
   },
   errorBtn: {
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.55)',
-    borderRadius: 10,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: 9,
+    borderColor: reelsTheme.color.amberLine,
+    borderRadius: reelsTheme.radius.sm,
+    paddingHorizontal: reelsTheme.space.lg,
+    paddingVertical: 10,
   },
   errorBtnText: {
-    color: '#fff',
-    fontSize: 13,
-    fontWeight: '700',
+    color: reelsTheme.color.amber,
+    fontFamily: reelsTheme.type.kicker.fontFamily,
+    fontSize: 12,
+    letterSpacing: 1.4,
+    textTransform: 'uppercase',
   },
   pauseBadge: {
     ...StyleSheet.absoluteFillObject,
@@ -516,13 +517,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   pauseGlyph: {
-    width: 76,
-    height: 76,
-    borderRadius: 38,
+    width: 72,
+    height: 72,
+    borderRadius: 36,
     alignItems: 'center',
     justifyContent: 'center',
     paddingLeft: 3,
-    backgroundColor: 'rgba(0,0,0,0.34)',
+    backgroundColor: reelsTheme.color.backdrop,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: reelsTheme.color.hairlineStrong,
   },
   scrim: {
     position: 'absolute',
@@ -532,14 +535,14 @@ const styles = StyleSheet.create({
   },
   rail: {
     position: 'absolute',
-    right: spacing.lg,
+    right: reelsTheme.space.md,
   },
   creator: {
     position: 'absolute',
     left: 0,
     right: 0,
     bottom: 0,
-    paddingHorizontal: spacing.lg,
-    paddingRight: 80,
+    paddingHorizontal: reelsTheme.space.md,
+    paddingRight: 78,
   },
 });

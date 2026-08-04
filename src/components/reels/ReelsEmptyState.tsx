@@ -22,9 +22,8 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ProDayText } from '../ui/ProDayText';
 import { AnimatedEntrance, PressableSpring } from '../motion';
-import { useAppTheme } from '../../context/ProductLineContext';
 import { useTranslation } from '../../context/LocaleContext';
-import { spacing } from '../../theme/designTokens';
+import { reelsTheme } from './reelsTheme';
 
 type ReelsEmptyStateProps = {
   loading?: boolean;
@@ -32,10 +31,10 @@ type ReelsEmptyStateProps = {
   onPublish?: () => void;
 };
 
-const INK_TOP = '#0B0D10';
+const INK_TOP = reelsTheme.color.ink;
 const INK_BOTTOM = '#000000';
 
-/** Rideau cinéma — un noir profond, un seul halo cyan, une trame de pellicule très discrète. */
+/** Rideau de stade — noir réchauffé, un seul halo de projecteur ambre, trame discrète. */
 const ReelBackdrop: React.FC<{ width: number; height: number; accent: string }> = ({
   width,
   height,
@@ -68,7 +67,6 @@ export const ReelsEmptyState: React.FC<ReelsEmptyStateProps> = ({
   onPublish,
 }) => {
   const insets = useSafeAreaInsets();
-  const { colors } = useAppTheme();
   const { t } = useTranslation();
   const styles = useMemo(() => createStyles(insets.top), [insets.top]);
   const [size, setSize] = useState({ width: 0, height: 0 });
@@ -95,11 +93,11 @@ export const ReelsEmptyState: React.FC<ReelsEmptyStateProps> = ({
       <View style={styles.root} onLayout={onLayout} pointerEvents="none">
         {size.width > 0 ? (
           <Animated.View style={[StyleSheet.absoluteFill, glowStyle]}>
-            <ReelBackdrop width={size.width} height={size.height} accent={colors.accent} />
+            <ReelBackdrop width={size.width} height={size.height} accent={reelsTheme.color.amber} />
           </Animated.View>
         ) : null}
         <View style={styles.loaderWrap}>
-          <ActivityIndicator color={colors.accent} size="small" />
+          <ActivityIndicator color={reelsTheme.color.amber} size="small" />
           <ProDayText variant="caption" inverse muted style={styles.loaderText}>
             {t('reels.empty.loading')}
           </ProDayText>
@@ -112,17 +110,17 @@ export const ReelsEmptyState: React.FC<ReelsEmptyStateProps> = ({
     <View style={styles.root} onLayout={onLayout} pointerEvents="box-none">
       {size.width > 0 ? (
         <Animated.View style={[StyleSheet.absoluteFill, glowStyle]} pointerEvents="none">
-          <ReelBackdrop width={size.width} height={size.height} accent={colors.accent} />
+          <ReelBackdrop width={size.width} height={size.height} accent={reelsTheme.color.amber} />
         </Animated.View>
       ) : null}
 
       <AnimatedEntrance kind="fadeDown">
         <View style={styles.stage}>
           <View style={styles.brandRow}>
-            <ProDayText variant="brand" style={styles.brandWord}>
-              ProDay
+            <ProDayText variant="eyebrow" style={styles.kicker}>
+              PRODAY · REELS
             </ProDayText>
-            <View style={[styles.brandTick, { backgroundColor: colors.accent }]} />
+            <View style={styles.brandRule} />
           </View>
 
           <ProDayText variant="hero" style={styles.headline}>
@@ -137,10 +135,10 @@ export const ReelsEmptyState: React.FC<ReelsEmptyStateProps> = ({
               onPress={onPublish}
               scaleTo={0.97}
               haptic
-              style={[styles.cta, { backgroundColor: colors.accent }]}
+              style={styles.cta}
             >
               <ProDayText variant="caption" style={styles.ctaText}>
-                {t('reels.empty.cta')}
+                {t('reels.empty.cta').toUpperCase()}
               </ProDayText>
             </PressableSpring>
           ) : null}
@@ -157,63 +155,66 @@ function createStyles(topInset: number) {
       alignItems: 'center',
       justifyContent: 'flex-end',
       backgroundColor: INK_BOTTOM,
-      paddingHorizontal: spacing.xl,
-      paddingTop: topInset + spacing.xxl,
+      paddingHorizontal: reelsTheme.space.xl,
+      paddingTop: topInset + reelsTheme.space.xxl,
       paddingBottom: '22%',
     },
     stage: {
       width: '100%',
       maxWidth: 460,
-      gap: spacing.md,
+      gap: reelsTheme.space.md,
     },
     brandRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: spacing.sm,
+      gap: reelsTheme.space.sm,
     },
-    brandWord: {
-      color: '#FFFFFF',
-      fontSize: 16,
+    kicker: {
+      color: reelsTheme.color.amber,
+      fontSize: reelsTheme.type.kicker.fontSize,
+      letterSpacing: reelsTheme.type.kicker.letterSpacing,
     },
-    brandTick: {
-      width: 22,
-      height: 2,
-      borderRadius: 1,
+    brandRule: {
+      flex: 1,
+      height: StyleSheet.hairlineWidth,
+      backgroundColor: reelsTheme.color.hairlineStrong,
     },
     headline: {
-      color: '#FFFFFF',
-      fontSize: 34,
-      lineHeight: 37,
-      letterSpacing: -1,
+      color: reelsTheme.color.text,
+      fontFamily: reelsTheme.type.display.fontFamily,
+      fontSize: reelsTheme.type.display.fontSize,
+      lineHeight: reelsTheme.type.display.lineHeight,
+      letterSpacing: reelsTheme.type.display.letterSpacing,
     },
     support: {
-      color: 'rgba(255,255,255,0.68)',
+      color: reelsTheme.color.textDim,
       fontSize: 15,
-      lineHeight: 22,
+      lineHeight: 23,
       maxWidth: 380,
     },
     cta: {
       alignSelf: 'flex-start',
-      marginTop: spacing.sm,
-      paddingHorizontal: spacing.xl,
+      marginTop: reelsTheme.space.sm,
+      paddingHorizontal: reelsTheme.space.xl,
       paddingVertical: 15,
-      borderRadius: 14,
+      borderRadius: reelsTheme.radius.sm,
+      backgroundColor: reelsTheme.color.amber,
     },
     ctaText: {
-      color: '#04110F',
-      fontWeight: '800',
-      fontSize: 14,
-      letterSpacing: 0.3,
+      color: reelsTheme.color.onAmber,
+      fontFamily: reelsTheme.type.kicker.fontFamily,
+      fontSize: 12.5,
+      letterSpacing: 1.6,
     },
     loaderWrap: {
       position: 'absolute',
       alignSelf: 'center',
       top: '46%',
       alignItems: 'center',
-      gap: spacing.sm,
+      gap: reelsTheme.space.sm,
     },
     loaderText: {
-      color: 'rgba(255,255,255,0.6)',
+      color: reelsTheme.color.textDim,
       letterSpacing: 0.4,
     },
   });

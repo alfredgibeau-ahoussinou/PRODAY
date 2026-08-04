@@ -10,8 +10,7 @@ import Animated, {
 import { Icon } from '../ui/Icon';
 import { PressableSpring } from '../motion/PressableSpring';
 import { motion } from '../../theme/motion';
-import { fontFamily } from '../../theme/typography';
-import { spacing, radius } from '../../theme/designTokens';
+import { reelsTheme } from './reelsTheme';
 
 const AnimatedView = Animated.createAnimatedComponent(View);
 
@@ -27,14 +26,16 @@ type ReelCreatorBarProps = {
   onToggleFollow: () => void;
 };
 
-/** Bloc créateur — avatar, identité et suivi réunis calmement en bas de la scène. */
+/**
+ * Bloc créateur — un tiers-inférieur éditorial : filet ambre vertical, vignette
+ * carrée, identité en une et légende traitée comme un sous-titre de diffusion.
+ */
 export const ReelCreatorBar: React.FC<ReelCreatorBarProps> = ({
   name,
   handle,
   sourceLabel,
   caption,
   following,
-  accent,
   labels,
   onOpenProfile,
   onToggleFollow,
@@ -44,7 +45,7 @@ export const ReelCreatorBar: React.FC<ReelCreatorBarProps> = ({
 
   useEffect(() => {
     followScale.value = withSequence(
-      withSpring(following ? 1.06 : 0.94, motion.spring.bouncy),
+      withSpring(following ? 1.05 : 0.95, motion.spring.bouncy),
       withSpring(1, motion.spring.snappy),
     );
   }, [following, followScale]);
@@ -53,161 +54,172 @@ export const ReelCreatorBar: React.FC<ReelCreatorBarProps> = ({
 
   return (
     <View style={styles.wrap}>
-      <View style={styles.identityRow}>
-        <Pressable style={styles.authorRow} onPress={onOpenProfile}>
-          <View style={[styles.avatarRing, { borderColor: 'rgba(255,255,255,0.9)' }]}>
+      <View style={styles.rule} />
+
+      <View style={styles.body}>
+        <View style={styles.identityRow}>
+          <Pressable style={styles.authorRow} onPress={onOpenProfile}>
             <LinearGradient
-              colors={['#1B2027', '#0A0C10']}
+              colors={['#221D16', '#0C0A08']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={styles.avatar}
             >
               <Text style={styles.avatarLetter}>{initial}</Text>
             </LinearGradient>
-          </View>
 
-          <View style={styles.identityText}>
-            <View style={styles.nameRow}>
-              <Text style={styles.name} numberOfLines={1}>
-                {name}
+            <View style={styles.identityText}>
+              <View style={styles.nameRow}>
+                <Text style={styles.name} numberOfLines={1}>
+                  {name}
+                </Text>
+                <View style={styles.tick} />
+              </View>
+              <Text style={styles.meta} numberOfLines={1}>
+                @{handle} · {sourceLabel}
               </Text>
-              <View style={[styles.tick, { backgroundColor: accent }]} />
             </View>
-            <Text style={styles.handle} numberOfLines={1}>
-              @{handle} · {sourceLabel}
-            </Text>
-          </View>
-        </Pressable>
+          </Pressable>
 
-        <PressableSpring
-          scaleTo={0.94}
-          haptic
-          onPress={onToggleFollow}
-          accessibilityRole="button"
-          accessibilityLabel={following ? labels.following : labels.follow}
-        >
-          <AnimatedView
-            style={[
-              styles.follow,
-              following
-                ? styles.followOn
-                : { borderColor: accent, backgroundColor: 'rgba(255,255,255,0.06)' },
-              followStyle,
-            ]}
+          <PressableSpring
+            scaleTo={0.94}
+            haptic
+            onPress={onToggleFollow}
+            accessibilityRole="button"
+            accessibilityLabel={following ? labels.following : labels.follow}
           >
-            {following ? (
-              <Icon name="checkmark-circle" size={15} color="rgba(255,255,255,0.92)" />
-            ) : null}
-            <Text
-              style={[
-                styles.followText,
-                { color: following ? 'rgba(255,255,255,0.92)' : accent },
-              ]}
+            <AnimatedView
+              style={[styles.follow, following ? styles.followOn : styles.followOff, followStyle]}
             >
-              {following ? labels.following : labels.follow}
-            </Text>
-          </AnimatedView>
-        </PressableSpring>
-      </View>
+              {following ? (
+                <Icon name="checkmark-circle" size={14} color={reelsTheme.color.text} />
+              ) : null}
+              <Text
+                style={[
+                  styles.followText,
+                  { color: following ? reelsTheme.color.text : reelsTheme.color.amber },
+                ]}
+              >
+                {(following ? labels.following : labels.follow).toUpperCase()}
+              </Text>
+            </AnimatedView>
+          </PressableSpring>
+        </View>
 
-      {caption ? (
-        <Text style={styles.caption} numberOfLines={2}>
-          {caption}
-        </Text>
-      ) : null}
+        {caption ? (
+          <Text style={styles.caption} numberOfLines={2}>
+            {caption}
+          </Text>
+        ) : null}
+      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   wrap: {
-    gap: spacing.md,
+    flexDirection: 'row',
+    gap: reelsTheme.space.sm,
+  },
+  rule: {
+    width: 2.5,
+    borderRadius: 2,
+    backgroundColor: reelsTheme.color.amber,
+    marginTop: 4,
+    marginBottom: 4,
+  },
+  body: {
+    flex: 1,
+    gap: reelsTheme.space.sm,
   },
   identityRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: spacing.md,
+    gap: reelsTheme.space.sm,
   },
   authorRow: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.md,
-  },
-  avatarRing: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    borderWidth: 1.5,
-    padding: 2,
+    gap: reelsTheme.space.sm,
   },
   avatar: {
-    flex: 1,
-    borderRadius: 22,
+    width: 44,
+    height: 44,
+    borderRadius: reelsTheme.radius.avatar,
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: reelsTheme.color.hairlineStrong,
   },
   avatarLetter: {
-    color: '#FFFFFF',
-    fontFamily: fontFamily.displayBold,
+    color: reelsTheme.color.text,
+    fontFamily: reelsTheme.type.name.fontFamily,
     fontSize: 18,
   },
   identityText: {
     flexShrink: 1,
-    gap: 3,
+    gap: 4,
   },
   nameRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
+    gap: reelsTheme.space.xs,
   },
   name: {
-    color: '#FFFFFF',
-    fontFamily: fontFamily.displayBold,
-    fontSize: 18,
-    letterSpacing: -0.4,
+    color: reelsTheme.color.text,
+    fontFamily: reelsTheme.type.name.fontFamily,
+    fontSize: reelsTheme.type.name.fontSize,
+    letterSpacing: reelsTheme.type.name.letterSpacing,
     flexShrink: 1,
     textShadowColor: 'rgba(0,0,0,0.5)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 4,
   },
   tick: {
-    width: 16,
-    height: 2.5,
+    width: 7,
+    height: 7,
     borderRadius: 2,
+    backgroundColor: reelsTheme.color.amber,
+    transform: [{ rotate: '45deg' }],
   },
-  handle: {
-    color: 'rgba(255,255,255,0.62)',
-    fontFamily: fontFamily.semibold,
-    fontSize: 13,
-    letterSpacing: 0.1,
+  meta: {
+    color: reelsTheme.color.amberBright,
+    fontFamily: reelsTheme.type.kicker.fontFamily,
+    fontSize: reelsTheme.type.kicker.fontSize,
+    letterSpacing: reelsTheme.type.kicker.letterSpacing,
+    textTransform: 'uppercase',
   },
   follow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    paddingHorizontal: spacing.md,
+    paddingHorizontal: reelsTheme.space.md,
     height: 34,
-    borderRadius: radius.pill,
+    borderRadius: reelsTheme.radius.sm,
     borderWidth: 1,
   },
+  followOff: {
+    borderColor: reelsTheme.color.amberLine,
+    backgroundColor: 'transparent',
+  },
   followOn: {
-    borderColor: 'rgba(255,255,255,0.24)',
-    backgroundColor: 'rgba(255,255,255,0.12)',
+    borderColor: reelsTheme.color.hairlineStrong,
+    backgroundColor: 'rgba(245,240,230,0.10)',
   },
   followText: {
-    fontFamily: fontFamily.bold,
-    fontSize: 13,
-    letterSpacing: 0.2,
+    fontFamily: reelsTheme.type.kicker.fontFamily,
+    fontSize: 11,
+    letterSpacing: 1.6,
   },
   caption: {
-    color: 'rgba(255,255,255,0.94)',
-    fontFamily: fontFamily.regular,
-    fontSize: 15,
-    lineHeight: 22,
-    textShadowColor: 'rgba(0,0,0,0.5)',
+    color: reelsTheme.color.text,
+    fontFamily: reelsTheme.type.caption.fontFamily,
+    fontSize: reelsTheme.type.caption.fontSize,
+    lineHeight: reelsTheme.type.caption.lineHeight,
+    textShadowColor: 'rgba(0,0,0,0.55)',
     textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 4,
+    textShadowRadius: 5,
   },
 });

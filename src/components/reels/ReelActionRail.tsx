@@ -9,8 +9,7 @@ import Animated, {
 import { Icon, type IconName } from '../ui/Icon';
 import { PressableSpring } from '../motion/PressableSpring';
 import { motion } from '../../theme/motion';
-import { fontFamily } from '../../theme/typography';
-import { spacing } from '../../theme/designTokens';
+import { reelsTheme } from './reelsTheme';
 
 const AnimatedView = Animated.createAnimatedComponent(View);
 
@@ -36,8 +35,8 @@ const RailAction: React.FC<RailActionProps> = ({
   icon,
   onPress,
   accessibilityLabel,
-  color = '#FFFFFF',
-  size = 28,
+  color = reelsTheme.color.text,
+  size = 27,
   filled,
   count,
   pop,
@@ -47,7 +46,7 @@ const RailAction: React.FC<RailActionProps> = ({
   useEffect(() => {
     if (pop) {
       scale.value = withSequence(
-        withSpring(1.24, motion.spring.bouncy),
+        withSpring(1.22, motion.spring.bouncy),
         withSpring(1, motion.spring.snappy),
       );
     }
@@ -97,13 +96,15 @@ type ReelActionRailProps = {
   onToggleMute: () => void;
 };
 
-/** Rail social — Like · Commenter · Partager · Enregistrer, plus une bascule son discrète. */
+/**
+ * Rail social — Like · Commenter · Partager · Enregistrer, plus une bascule son.
+ * Glyphes nus, espacement large et intentionnel, états actifs en braise/ambre.
+ */
 export const ReelActionRail: React.FC<ReelActionRailProps> = ({
   liked,
   saved,
   muted,
   commentCount,
-  accent,
   labels,
   onLike,
   onComment,
@@ -115,33 +116,36 @@ export const ReelActionRail: React.FC<ReelActionRailProps> = ({
     <RailAction
       icon={liked ? 'heart' : 'heart-outline'}
       onPress={onLike}
-      color={liked ? '#FF3B5C' : '#FFFFFF'}
+      color={liked ? reelsTheme.color.ember : reelsTheme.color.text}
       filled={liked}
-      size={31}
+      size={30}
       pop={liked}
       accessibilityLabel={labels.like}
     />
     <RailAction
       icon="chat"
       onPress={onComment}
-      size={28}
+      size={27}
       count={commentCount}
       accessibilityLabel={labels.comment}
     />
     <RailAction
       icon="share"
       onPress={onShare}
-      size={27}
+      size={26}
       accessibilityLabel={labels.share}
     />
     <RailAction
       icon={saved ? 'bookmark' : 'bookmark-outline'}
       onPress={onSave}
-      color={saved ? accent : '#FFFFFF'}
-      size={27}
+      color={saved ? reelsTheme.color.amber : reelsTheme.color.text}
+      size={26}
       pop={saved}
       accessibilityLabel={labels.save}
     />
+
+    <View style={styles.divider} />
+
     <PressableSpring
       style={styles.mute}
       scaleTo={0.86}
@@ -153,7 +157,7 @@ export const ReelActionRail: React.FC<ReelActionRailProps> = ({
       <Icon
         name={muted ? 'volume-mute' : 'volume-high'}
         size={17}
-        color="rgba(255,255,255,0.72)"
+        color={reelsTheme.color.textDim}
       />
     </PressableSpring>
   </View>
@@ -162,35 +166,39 @@ export const ReelActionRail: React.FC<ReelActionRailProps> = ({
 const styles = StyleSheet.create({
   rail: {
     alignItems: 'center',
-    gap: spacing.xl,
+    gap: reelsTheme.space.lg,
   },
   action: {
     alignItems: 'center',
-    gap: 6,
+    gap: 7,
   },
   glyph: {
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.5,
-    shadowRadius: 5,
+    shadowOpacity: 0.55,
+    shadowRadius: 6,
   },
   count: {
-    color: '#FFFFFF',
-    fontFamily: fontFamily.bold,
-    fontSize: 12.5,
-    letterSpacing: 0.2,
+    color: reelsTheme.color.text,
+    fontFamily: reelsTheme.type.count.fontFamily,
+    fontSize: reelsTheme.type.count.fontSize,
+    letterSpacing: reelsTheme.type.count.letterSpacing,
     textShadowColor: 'rgba(0,0,0,0.6)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 3,
   },
+  divider: {
+    width: 22,
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: reelsTheme.color.hairlineStrong,
+    marginVertical: reelsTheme.space.xxs,
+  },
   mute: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 34,
+    height: 34,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: -spacing.xs,
   },
 });

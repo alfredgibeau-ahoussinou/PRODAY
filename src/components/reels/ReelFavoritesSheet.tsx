@@ -11,7 +11,7 @@ import { Icon } from '../ui/Icon';
 import { PressableSpring } from '../motion';
 import { useTranslation } from '../../context/LocaleContext';
 import type { ReelBookmarkEntry } from '../../utils/reelBookmarks';
-import { spacing, radius } from '../../theme/designTokens';
+import { reelsTheme } from './reelsTheme';
 
 interface ReelFavoritesSheetProps {
   visible: boolean;
@@ -39,7 +39,7 @@ export const ReelFavoritesSheet: React.FC<ReelFavoritesSheetProps> = ({
               {t('reels.favorites.title')}
             </ProDayText>
             <Pressable onPress={onClose} hitSlop={12}>
-              <Icon name="close" size={22} color="rgba(255,255,255,0.7)" />
+              <Icon name="close" size={22} color={reelsTheme.color.textDim} />
             </Pressable>
           </View>
           <ScrollView contentContainerStyle={styles.list} showsVerticalScrollIndicator={false}>
@@ -65,12 +65,12 @@ export const ReelFavoritesSheet: React.FC<ReelFavoritesSheetProps> = ({
                     <ProDayText variant="caption" style={styles.rowCaption} numberOfLines={2}>
                       {entry.caption || entry.bookmarkKey}
                     </ProDayText>
-                    <ProDayText variant="caption" accent style={styles.resume}>
-                      {t('reels.favorites.resume')}
+                    <ProDayText variant="caption" style={styles.resume}>
+                      {t('reels.favorites.resume').toUpperCase()}
                     </ProDayText>
                   </PressableSpring>
                   <Pressable onPress={() => onRemove(entry.bookmarkKey)} hitSlop={8}>
-                    <Icon name="close" size={18} color="rgba(255,255,255,0.45)" />
+                    <Icon name="close" size={18} color={reelsTheme.color.textFaint} />
                   </Pressable>
                 </View>
               ))
@@ -86,46 +86,51 @@ const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
     justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0,0,0,0.6)',
+    backgroundColor: reelsTheme.color.backdrop,
   },
   sheet: {
     maxHeight: '70%',
-    backgroundColor: '#0B0D10',
-    borderTopLeftRadius: radius.xxl,
-    borderTopRightRadius: radius.xxl,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
-    padding: spacing.xl,
-    gap: spacing.md,
+    backgroundColor: reelsTheme.color.surface,
+    borderTopLeftRadius: reelsTheme.radius.lg,
+    borderTopRightRadius: reelsTheme.radius.lg,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: reelsTheme.color.hairline,
+    padding: reelsTheme.space.lg,
+    gap: reelsTheme.space.md,
   },
   handle: {
     alignSelf: 'center',
     width: 40,
     height: 4,
     borderRadius: 2,
-    backgroundColor: 'rgba(255,255,255,0.18)',
-    marginBottom: spacing.xs,
+    backgroundColor: reelsTheme.color.hairlineStrong,
+    marginBottom: reelsTheme.space.xs,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  headerTitle: { color: '#FFFFFF' },
-  list: { gap: spacing.sm, paddingBottom: spacing.xl },
-  empty: { textAlign: 'center', lineHeight: 22, color: 'rgba(255,255,255,0.6)' },
+  headerTitle: { color: reelsTheme.color.text },
+  list: { gap: reelsTheme.space.sm, paddingBottom: reelsTheme.space.lg },
+  empty: { textAlign: 'center', lineHeight: 22, color: reelsTheme.color.textDim },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
-    borderRadius: radius.md,
-    padding: spacing.md,
-    backgroundColor: 'rgba(255,255,255,0.03)',
+    gap: reelsTheme.space.sm,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: reelsTheme.color.hairline,
+    borderRadius: reelsTheme.radius.md,
+    padding: reelsTheme.space.md,
+    backgroundColor: reelsTheme.color.surfaceRaised,
   },
   rowMain: { flex: 1, gap: 2 },
-  rowTitle: { fontWeight: '800', color: '#FFFFFF' },
-  rowCaption: { color: 'rgba(255,255,255,0.55)' },
-  resume: { fontWeight: '700', marginTop: 4 },
+  rowTitle: { fontWeight: '800', color: reelsTheme.color.text },
+  rowCaption: { color: reelsTheme.color.textDim },
+  resume: {
+    fontFamily: reelsTheme.type.kicker.fontFamily,
+    color: reelsTheme.color.amber,
+    letterSpacing: 1.2,
+    marginTop: 6,
+  },
 });

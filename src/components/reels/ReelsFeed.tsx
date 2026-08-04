@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   FlatList,
   StyleSheet,
+  Text,
   View,
   useWindowDimensions,
   type ViewToken,
@@ -23,9 +24,7 @@ import type { ProductLineId } from '../../models/ProductLine';
 import { TAB_BAR_CONTENT_INSET } from '../navigation/BottomTabBar';
 import { PressableSpring } from '../motion';
 import { ProDayScreenCanvas } from '../ui/ProDayScreenCanvas';
-import { ProDayText } from '../ui/ProDayText';
 import { Icon } from '../ui/Icon';
-import { useAppTheme } from '../../context/ProductLineContext';
 import { prodayHaptics } from '../../utils/prodayHaptics';
 import {
   loadReelBookmarkEntries,
@@ -49,6 +48,12 @@ import { fetchActorReelSeeds } from '../../services/actorReels.service';
 import { communityReelsService } from '../../services/communityReels.service';
 import { pickReelVideo } from '../../utils/pickReelVideo';
 import { storageService } from '../../services/storage.service';
+import {
+  reelsTheme,
+  REEL_TOP_SCRIM,
+  REEL_STAGE_ATMOSPHERE,
+  REEL_STAGE_GLOW,
+} from './reelsTheme';
 
 const POLE_CHIP_IDS: ReelPoleId[] = ['foot', 'mercato', 'sante'];
 
@@ -62,7 +67,6 @@ type ReelsFeedProps = {
 export const ReelsFeed: React.FC<ReelsFeedProps> = ({ productLine }) => {
   const { width: windowW, height: windowH } = useWindowDimensions();
   const insets = useSafeAreaInsets();
-  const { colors } = useAppTheme();
   const { profile } = useAuth();
   const { t } = useTranslation();
   const brain = useProDayBrain(profile, productLine);
@@ -414,7 +418,7 @@ export const ReelsFeed: React.FC<ReelsFeedProps> = ({ productLine }) => {
 
   const ListFooter = loadingMore ? (
     <View style={[styles.footer, { height: slideHeight * 0.08 }]}>
-      <ActivityIndicator color="#fff" size="small" />
+      <ActivityIndicator color={reelsTheme.color.amber} size="small" />
     </View>
   ) : null;
 
@@ -425,15 +429,15 @@ export const ReelsFeed: React.FC<ReelsFeedProps> = ({ productLine }) => {
 
   return (
     <ProDayScreenCanvas immersive>
-      {/* Atmosphère desktop/tablette — noir profond et halo cyan derrière la scène verticale */}
+      {/* Atmosphère desktop/tablette — noir réchauffé et halo de projecteur ambre derrière la scène */}
       {isWide ? (
         <View style={StyleSheet.absoluteFill} pointerEvents="none">
           <LinearGradient
-            colors={['#05070A', '#000000']}
+            colors={REEL_STAGE_ATMOSPHERE}
             style={StyleSheet.absoluteFill}
           />
           <LinearGradient
-            colors={['rgba(34,211,238,0.14)', 'transparent']}
+            colors={REEL_STAGE_GLOW}
             locations={[0, 0.6]}
             start={{ x: 0.5, y: 0 }}
             end={{ x: 0.5, y: 1 }}
@@ -481,19 +485,18 @@ export const ReelsFeed: React.FC<ReelsFeedProps> = ({ productLine }) => {
             style={styles.list}
           />
 
-          {/* Voile haut — la marque et le contrôle restent lisibles sur vidéo claire */}
+          {/* Voile haut réchauffé — le bandeau et le contrôle restent lisibles sur vidéo claire */}
           <LinearGradient
-            colors={['rgba(0,0,0,0.5)', 'transparent']}
-            style={[styles.topScrim, { height: insets.top + 88 }]}
+            colors={REEL_TOP_SCRIM}
+            style={[styles.topScrim, { height: insets.top + 96 }]}
             pointerEvents="none"
           />
 
           <View style={[styles.topBar, { top: insets.top + spacing.sm }]} pointerEvents="box-none">
-            <View style={styles.brandRow} pointerEvents="none">
-              <ProDayText variant="brand" inverse style={styles.brandWord}>
-                {t('reels.title')}
-              </ProDayText>
-              <View style={[styles.brandTick, { backgroundColor: colors.accent }]} />
+            <View style={styles.masthead} pointerEvents="none">
+              <Text style={styles.kicker}>PRODAY</Text>
+              <Text style={styles.brandWord}>{t('reels.title').toUpperCase()}</Text>
+              <View style={styles.brandRule} />
             </View>
 
             <PressableSpring
@@ -504,7 +507,7 @@ export const ReelsFeed: React.FC<ReelsFeedProps> = ({ productLine }) => {
               accessibilityRole="button"
               accessibilityLabel={t('reels.collection.title')}
             >
-              <Icon name="tune" size={20} color="#FFFFFF" />
+              <Icon name="tune" size={19} color={reelsTheme.color.text} />
             </PressableSpring>
           </View>
 
@@ -592,25 +595,25 @@ const styles = StyleSheet.create({
   stage: {
     flex: 1,
     alignSelf: 'center',
-    backgroundColor: '#000',
+    backgroundColor: reelsTheme.color.stage,
   },
   stageFramed: {
     flex: 0,
-    borderRadius: 34,
+    borderRadius: 20,
     overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: reelsTheme.color.hairline,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 24 },
-    shadowOpacity: 0.6,
-    shadowRadius: 48,
+    shadowOffset: { width: 0, height: 28 },
+    shadowOpacity: 0.7,
+    shadowRadius: 56,
     elevation: 16,
   },
-  list: { flex: 1, backgroundColor: '#000' },
+  list: { flex: 1, backgroundColor: reelsTheme.color.stage },
   footer: {
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#000',
+    backgroundColor: reelsTheme.color.stage,
   },
   topScrim: {
     position: 'absolute',
@@ -624,31 +627,43 @@ const styles = StyleSheet.create({
     right: 0,
     paddingHorizontal: spacing.lg,
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     justifyContent: 'space-between',
   },
-  brandRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
+  masthead: {
+    alignItems: 'flex-start',
+    gap: 3,
+  },
+  kicker: {
+    color: reelsTheme.color.amber,
+    fontFamily: reelsTheme.type.kicker.fontFamily,
+    fontSize: reelsTheme.type.kicker.fontSize,
+    letterSpacing: reelsTheme.type.kicker.letterSpacing,
   },
   brandWord: {
-    color: '#fff',
-    fontSize: 20,
+    color: reelsTheme.color.text,
+    fontFamily: reelsTheme.type.masthead.fontFamily,
+    fontSize: reelsTheme.type.masthead.fontSize,
+    letterSpacing: reelsTheme.type.masthead.letterSpacing,
+    textShadowColor: 'rgba(0,0,0,0.5)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
   },
-  brandTick: {
-    width: 20,
+  brandRule: {
+    marginTop: 2,
+    width: 30,
     height: 2,
     borderRadius: 1,
+    backgroundColor: reelsTheme.color.amber,
   },
   control: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
+    width: 40,
+    height: 40,
+    borderRadius: reelsTheme.radius.sm,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.14)',
+    backgroundColor: 'rgba(245,240,230,0.06)',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: reelsTheme.color.hairlineStrong,
   },
 });

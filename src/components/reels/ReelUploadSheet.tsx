@@ -11,11 +11,10 @@ import {
 import { ProDayText } from '../ui/ProDayText';
 import { Icon } from '../ui/Icon';
 import { PressableSpring } from '../motion';
-import { ProDayGradient } from '../ui/ProDayGradient';
 import type { ReelThemeId } from '../../content/reelThemes';
 import { REEL_THEME_CHIPS } from '../../content/reelThemes';
-import { spacing, radius } from '../../theme/designTokens';
 import { useTranslation } from '../../context/LocaleContext';
+import { reelsTheme } from './reelsTheme';
 
 interface ReelUploadSheetProps {
   visible: boolean;
@@ -65,7 +64,7 @@ export const ReelUploadSheet: React.FC<ReelUploadSheetProps> = ({
           <View style={styles.header}>
             <ProDayText variant="title" style={styles.title}>{t('reels.upload.title')}</ProDayText>
             <Pressable onPress={onClose} hitSlop={12}>
-              <Icon name="close" size={22} color="rgba(255,255,255,0.7)" />
+              <Icon name="close" size={22} color={reelsTheme.color.textDim} />
             </Pressable>
           </View>
 
@@ -75,8 +74,12 @@ export const ReelUploadSheet: React.FC<ReelUploadSheetProps> = ({
 
           <PressableSpring onPress={() => void onPickVideo()} scaleTo={0.98} haptic disabled={uploading}>
             <View style={[styles.pickBox, hasVideo && styles.pickBoxOn]}>
-              <Icon name="videocam" size={28} color={hasVideo ? '#22D3EE' : 'rgba(255,255,255,0.5)'} />
-              <ProDayText variant="caption" accent>
+              <Icon
+                name="videocam"
+                size={28}
+                color={hasVideo ? reelsTheme.color.amber : reelsTheme.color.textDim}
+              />
+              <ProDayText variant="caption" style={styles.pickLabel}>
                 {hasVideo ? t('reels.upload.changeVideo') : t('reels.upload.pickVideo')}
               </ProDayText>
             </View>
@@ -112,15 +115,15 @@ export const ReelUploadSheet: React.FC<ReelUploadSheetProps> = ({
           </View>
 
           <PressableSpring onPress={handleSubmit} disabled={uploading} scaleTo={0.97} haptic>
-            <ProDayGradient kind="cta" style={styles.cta}>
+            <View style={styles.cta}>
               {uploading ? (
-                <ActivityIndicator color="#fff" />
+                <ActivityIndicator color={reelsTheme.color.onAmber} />
               ) : (
-                <ProDayText variant="caption" inverse style={styles.ctaText}>
-                  {t('reels.upload.submit')}
+                <ProDayText variant="caption" style={styles.ctaText}>
+                  {t('reels.upload.submit').toUpperCase()}
                 </ProDayText>
               )}
-            </ProDayGradient>
+            </View>
           </PressableSpring>
         </View>
       </View>
@@ -132,72 +135,81 @@ const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
     justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0,0,0,0.6)',
+    backgroundColor: reelsTheme.color.backdrop,
   },
   sheet: {
-    backgroundColor: '#0B0D10',
-    borderTopLeftRadius: radius.xxl,
-    borderTopRightRadius: radius.xxl,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
-    padding: spacing.xl,
-    gap: spacing.md,
+    backgroundColor: reelsTheme.color.surface,
+    borderTopLeftRadius: reelsTheme.radius.lg,
+    borderTopRightRadius: reelsTheme.radius.lg,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: reelsTheme.color.hairline,
+    padding: reelsTheme.space.lg,
+    gap: reelsTheme.space.md,
   },
   handle: {
     alignSelf: 'center',
     width: 40,
     height: 4,
     borderRadius: 2,
-    backgroundColor: 'rgba(255,255,255,0.18)',
-    marginBottom: spacing.xs,
+    backgroundColor: reelsTheme.color.hairlineStrong,
+    marginBottom: reelsTheme.space.xs,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  title: { color: '#FFFFFF' },
-  disclaimer: { color: 'rgba(255,255,255,0.55)', lineHeight: 17 },
+  title: { color: reelsTheme.color.text },
+  disclaimer: { color: reelsTheme.color.textDim, lineHeight: 17 },
   pickBox: {
     alignItems: 'center',
-    gap: spacing.xs,
-    padding: spacing.lg,
-    borderRadius: radius.lg,
+    gap: reelsTheme.space.xs,
+    padding: reelsTheme.space.lg,
+    borderRadius: reelsTheme.radius.md,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.16)',
+    borderColor: reelsTheme.color.hairlineStrong,
     borderStyle: 'dashed',
-    backgroundColor: 'rgba(255,255,255,0.03)',
+    backgroundColor: reelsTheme.color.surfaceRaised,
   },
   pickBoxOn: {
-    borderColor: 'rgba(34,211,238,0.5)',
-    backgroundColor: 'rgba(34,211,238,0.06)',
+    borderColor: reelsTheme.color.amberLine,
+    backgroundColor: reelsTheme.color.amberSoft,
   },
+  pickLabel: { color: reelsTheme.color.amber, fontWeight: '700' },
   input: {
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
-    borderRadius: radius.md,
-    padding: spacing.md,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: reelsTheme.color.hairline,
+    borderRadius: reelsTheme.radius.md,
+    padding: reelsTheme.space.md,
     minHeight: 80,
     textAlignVertical: 'top',
     fontSize: 15,
-    color: '#FFFFFF',
-    backgroundColor: 'rgba(255,255,255,0.03)',
+    color: reelsTheme.color.text,
+    backgroundColor: reelsTheme.color.surfaceRaised,
   },
-  themeRow: { flexDirection: 'row', gap: spacing.sm, flexWrap: 'wrap' },
+  themeRow: { flexDirection: 'row', gap: reelsTheme.space.sm, flexWrap: 'wrap' },
   themeChip: {
-    paddingHorizontal: spacing.md,
+    paddingHorizontal: reelsTheme.space.md,
     paddingVertical: 7,
-    borderRadius: radius.pill,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.16)',
+    borderRadius: reelsTheme.radius.sm,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: reelsTheme.color.hairlineStrong,
   },
-  themeChipOn: { backgroundColor: '#FFFFFF', borderColor: '#FFFFFF' },
-  themeOn: { color: '#0B0D10', fontWeight: '800' },
-  themeOff: { color: 'rgba(255,255,255,0.75)' },
+  themeChipOn: {
+    backgroundColor: reelsTheme.color.amberSoft,
+    borderColor: reelsTheme.color.amberLine,
+  },
+  themeOn: { color: reelsTheme.color.amber, fontWeight: '800' },
+  themeOff: { color: reelsTheme.color.textDim },
   cta: {
     alignItems: 'center',
-    paddingVertical: spacing.md,
-    borderRadius: radius.lg,
+    paddingVertical: 15,
+    borderRadius: reelsTheme.radius.md,
+    backgroundColor: reelsTheme.color.amber,
   },
-  ctaText: { fontWeight: '800' },
+  ctaText: {
+    color: reelsTheme.color.onAmber,
+    fontFamily: reelsTheme.type.kicker.fontFamily,
+    letterSpacing: 1.4,
+  },
 });

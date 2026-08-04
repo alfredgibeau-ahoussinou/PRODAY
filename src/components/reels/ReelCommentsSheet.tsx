@@ -14,11 +14,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ProDayText } from '../ui/ProDayText';
 import { Icon } from '../ui/Icon';
 import { PressableSpring } from '../motion';
-import { useAppTheme } from '../../context/ProductLineContext';
 import { useTranslation } from '../../context/LocaleContext';
 import { prodayHaptics } from '../../utils/prodayHaptics';
-import { fontFamily } from '../../theme/typography';
-import { spacing, radius } from '../../theme/designTokens';
+import { reelsTheme } from './reelsTheme';
 import {
   addReelComment,
   loadReelComments,
@@ -57,9 +55,8 @@ export const ReelCommentsSheet: React.FC<ReelCommentsSheetProps> = ({
   onCountChange,
 }) => {
   const insets = useSafeAreaInsets();
-  const { colors } = useAppTheme();
   const { t } = useTranslation();
-  const styles = useMemo(() => createStyles(colors, insets.bottom), [colors, insets.bottom]);
+  const styles = useMemo(() => createStyles(insets.bottom), [insets.bottom]);
 
   const [comments, setComments] = useState<ReelComment[]>([]);
   const [draft, setDraft] = useState('');
@@ -127,7 +124,7 @@ export const ReelCommentsSheet: React.FC<ReelCommentsSheetProps> = ({
                 </ProDayText>
               </View>
               <Pressable onPress={onClose} hitSlop={12}>
-                <Icon name="close" size={22} color="rgba(255,255,255,0.7)" />
+                <Icon name="close" size={22} color={reelsTheme.color.textDim} />
               </Pressable>
             </View>
 
@@ -139,12 +136,12 @@ export const ReelCommentsSheet: React.FC<ReelCommentsSheetProps> = ({
             >
               {loading ? (
                 <View style={styles.loader}>
-                  <ActivityIndicator color={colors.accent} size="small" />
+                  <ActivityIndicator color={reelsTheme.color.amber} size="small" />
                 </View>
               ) : comments.length === 0 ? (
                 <View style={styles.emptyWrap}>
-                  <View style={[styles.emptyGlyph, { borderColor: colors.accent }]}>
-                    <Icon name="chat" size={26} color={colors.accent} />
+                  <View style={styles.emptyGlyph}>
+                    <Icon name="chat" size={26} color={reelsTheme.color.amber} />
                   </View>
                   <ProDayText variant="section" style={styles.emptyTitle}>
                     {t('reels.comments.emptyTitle')}
@@ -201,7 +198,11 @@ export const ReelCommentsSheet: React.FC<ReelCommentsSheetProps> = ({
                 haptic
                 style={[
                   styles.sendBtn,
-                  { backgroundColor: canSend ? colors.accent : 'rgba(255,255,255,0.08)' },
+                  {
+                    backgroundColor: canSend
+                      ? reelsTheme.color.amber
+                      : 'rgba(245,240,230,0.08)',
+                  },
                 ]}
                 accessibilityRole="button"
                 accessibilityLabel={t('reels.comments.send')}
@@ -209,7 +210,7 @@ export const ReelCommentsSheet: React.FC<ReelCommentsSheetProps> = ({
                 <Icon
                   name="chevron-up"
                   size={22}
-                  color={canSend ? '#04110F' : 'rgba(255,255,255,0.4)'}
+                  color={canSend ? reelsTheme.color.onAmber : reelsTheme.color.textFaint}
                 />
               </PressableSpring>
             </View>
@@ -220,149 +221,153 @@ export const ReelCommentsSheet: React.FC<ReelCommentsSheetProps> = ({
   );
 };
 
-function createStyles(colors: ReturnType<typeof useAppTheme>['colors'], bottomInset: number) {
+function createStyles(bottomInset: number) {
   return StyleSheet.create({
     backdrop: {
       flex: 1,
       justifyContent: 'flex-end',
-      backgroundColor: 'rgba(0,0,0,0.6)',
+      backgroundColor: reelsTheme.color.backdrop,
     },
     kav: { justifyContent: 'flex-end' },
     sheet: {
       height: '74%',
-      backgroundColor: '#0B0D10',
-      borderTopLeftRadius: radius.xxl,
-      borderTopRightRadius: radius.xxl,
-      borderWidth: 1,
-      borderColor: 'rgba(255,255,255,0.08)',
-      paddingHorizontal: spacing.xl,
-      paddingTop: spacing.md,
-      paddingBottom: Math.max(bottomInset, spacing.md),
+      backgroundColor: reelsTheme.color.surface,
+      borderTopLeftRadius: reelsTheme.radius.lg,
+      borderTopRightRadius: reelsTheme.radius.lg,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: reelsTheme.color.hairline,
+      paddingHorizontal: reelsTheme.space.lg,
+      paddingTop: reelsTheme.space.sm,
+      paddingBottom: Math.max(bottomInset, reelsTheme.space.md),
     },
     handle: {
       alignSelf: 'center',
       width: 40,
       height: 4,
       borderRadius: 2,
-      backgroundColor: 'rgba(255,255,255,0.18)',
-      marginBottom: spacing.md,
+      backgroundColor: reelsTheme.color.hairlineStrong,
+      marginBottom: reelsTheme.space.md,
     },
     headerRow: {
       flexDirection: 'row',
       alignItems: 'flex-start',
       justifyContent: 'space-between',
-      marginBottom: spacing.md,
+      marginBottom: reelsTheme.space.md,
     },
     headerText: { flex: 1, gap: 2 },
-    title: { color: '#FFFFFF' },
-    subtitle: { color: 'rgba(255,255,255,0.5)' },
+    title: { color: reelsTheme.color.text },
+    subtitle: { color: reelsTheme.color.textDim },
     list: { flex: 1 },
-    listContent: { paddingBottom: spacing.lg, gap: spacing.lg },
-    loader: { paddingVertical: spacing.xxl, alignItems: 'center' },
+    listContent: { paddingBottom: reelsTheme.space.lg, gap: reelsTheme.space.lg },
+    loader: { paddingVertical: reelsTheme.space.xxl, alignItems: 'center' },
     emptyWrap: {
       alignItems: 'center',
-      gap: spacing.sm,
-      paddingVertical: spacing.xxl,
+      gap: reelsTheme.space.sm,
+      paddingVertical: reelsTheme.space.xxl,
     },
     emptyGlyph: {
       width: 58,
       height: 58,
-      borderRadius: 29,
-      borderWidth: 1.5,
+      borderRadius: reelsTheme.radius.md,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: reelsTheme.color.amberLine,
+      backgroundColor: reelsTheme.color.amberSoft,
       alignItems: 'center',
       justifyContent: 'center',
-      marginBottom: spacing.xs,
+      marginBottom: reelsTheme.space.xs,
     },
-    emptyTitle: { color: '#FFFFFF' },
+    emptyTitle: { color: reelsTheme.color.text },
     emptyBody: {
-      color: 'rgba(255,255,255,0.55)',
+      color: reelsTheme.color.textDim,
       textAlign: 'center',
       maxWidth: 280,
     },
     commentRow: {
       flexDirection: 'row',
-      gap: spacing.md,
+      gap: reelsTheme.space.md,
       alignItems: 'flex-start',
     },
     commentAvatar: {
       width: 38,
       height: 38,
-      borderRadius: 19,
-      backgroundColor: 'rgba(34,211,238,0.14)',
-      borderWidth: 1,
-      borderColor: 'rgba(34,211,238,0.3)',
+      borderRadius: reelsTheme.radius.sm,
+      backgroundColor: reelsTheme.color.amberSoft,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: reelsTheme.color.amberLine,
       alignItems: 'center',
       justifyContent: 'center',
     },
     commentAvatarLetter: {
-      color: colors.accent,
-      fontFamily: fontFamily.extrabold,
+      color: reelsTheme.color.amber,
+      fontFamily: reelsTheme.type.name.fontFamily,
       fontSize: 15,
     },
     commentBody: { flex: 1, gap: 3 },
     commentMeta: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: spacing.sm,
+      gap: reelsTheme.space.sm,
     },
     commentName: {
-      color: '#FFFFFF',
-      fontFamily: fontFamily.bold,
+      color: reelsTheme.color.text,
+      fontFamily: reelsTheme.type.name.fontFamily,
       fontSize: 14,
+      letterSpacing: -0.2,
       flexShrink: 1,
     },
     commentTime: {
-      color: 'rgba(255,255,255,0.4)',
-      fontFamily: fontFamily.semibold,
-      fontSize: 12,
+      color: reelsTheme.color.textFaint,
+      fontFamily: reelsTheme.type.kicker.fontFamily,
+      fontSize: 11,
+      letterSpacing: 0.4,
     },
     commentText: {
-      color: 'rgba(255,255,255,0.82)',
-      fontFamily: fontFamily.regular,
+      color: reelsTheme.color.text,
+      fontFamily: reelsTheme.type.caption.fontFamily,
       fontSize: 15,
       lineHeight: 21,
     },
     composer: {
       flexDirection: 'row',
       alignItems: 'flex-end',
-      gap: spacing.sm,
-      paddingTop: spacing.md,
-      borderTopWidth: 1,
-      borderTopColor: 'rgba(255,255,255,0.08)',
+      gap: reelsTheme.space.sm,
+      paddingTop: reelsTheme.space.md,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: reelsTheme.color.hairline,
     },
     composerAvatar: {
       width: 34,
       height: 34,
-      borderRadius: 17,
-      backgroundColor: 'rgba(255,255,255,0.1)',
+      borderRadius: reelsTheme.radius.sm,
+      backgroundColor: 'rgba(245,240,230,0.10)',
       alignItems: 'center',
       justifyContent: 'center',
       marginBottom: 3,
     },
     composerAvatarLetter: {
-      color: '#FFFFFF',
-      fontFamily: fontFamily.bold,
+      color: reelsTheme.color.text,
+      fontFamily: reelsTheme.type.name.fontFamily,
       fontSize: 13,
     },
     input: {
       flex: 1,
       minHeight: 40,
       maxHeight: 110,
-      borderRadius: radius.lg,
-      paddingHorizontal: spacing.md,
+      borderRadius: reelsTheme.radius.md,
+      paddingHorizontal: reelsTheme.space.md,
       paddingTop: 10,
       paddingBottom: 10,
-      fontFamily: fontFamily.regular,
+      fontFamily: reelsTheme.type.caption.fontFamily,
       fontSize: 15,
-      color: '#FFFFFF',
-      backgroundColor: 'rgba(255,255,255,0.06)',
-      borderWidth: 1,
-      borderColor: 'rgba(255,255,255,0.1)',
+      color: reelsTheme.color.text,
+      backgroundColor: 'rgba(245,240,230,0.06)',
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: reelsTheme.color.hairline,
     },
     sendBtn: {
       width: 40,
       height: 40,
-      borderRadius: 20,
+      borderRadius: reelsTheme.radius.sm,
       alignItems: 'center',
       justifyContent: 'center',
       marginBottom: 1,

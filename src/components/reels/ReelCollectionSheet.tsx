@@ -4,10 +4,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ProDayText } from '../ui/ProDayText';
 import { Icon } from '../ui/Icon';
 import { PressableSpring } from '../motion';
-import { useAppTheme } from '../../context/ProductLineContext';
 import { useTranslation } from '../../context/LocaleContext';
 import { prodayHaptics } from '../../utils/prodayHaptics';
-import { spacing, radius } from '../../theme/designTokens';
+import { reelsTheme } from './reelsTheme';
 
 type Option<T extends string> = { id: T; label: string };
 
@@ -27,8 +26,8 @@ interface ReelCollectionSheetProps<P extends string, T extends string> {
 }
 
 /**
- * « Ta sélection » — une seule surface calme pour choisir le terrain et l'ambiance
- * du fil, plus l'accès aux favoris. Remplace les rangées de pilules en surimpression.
+ * « Ta sélection » — une seule surface calme, réchauffée, pour choisir le terrain
+ * et l'ambiance du fil, plus l'accès aux favoris. Skin Floodlight editorial.
  */
 export function ReelCollectionSheet<P extends string, T extends string>({
   visible,
@@ -45,9 +44,8 @@ export function ReelCollectionSheet<P extends string, T extends string>({
   onPublish,
 }: ReelCollectionSheetProps<P, T>) {
   const insets = useSafeAreaInsets();
-  const { colors } = useAppTheme();
   const { t } = useTranslation();
-  const styles = useMemo(() => createStyles(colors, insets.bottom), [colors, insets.bottom]);
+  const styles = useMemo(() => createStyles(insets.bottom), [insets.bottom]);
 
   const renderRow = <V extends string>(
     option: Option<V>,
@@ -67,11 +65,14 @@ export function ReelCollectionSheet<P extends string, T extends string>({
     >
       <ProDayText
         variant="section"
-        style={[styles.rowLabel, { color: active ? '#FFFFFF' : colors.textMuted }]}
+        style={[
+          styles.rowLabel,
+          { color: active ? reelsTheme.color.text : reelsTheme.color.textDim },
+        ]}
       >
         {option.label}
       </ProDayText>
-      {active ? <View style={[styles.tick, { backgroundColor: colors.accent }]} /> : null}
+      {active ? <View style={styles.tick} /> : null}
     </PressableSpring>
   );
 
@@ -86,7 +87,7 @@ export function ReelCollectionSheet<P extends string, T extends string>({
               {t('reels.collection.title')}
             </ProDayText>
             <Pressable onPress={onClose} hitSlop={12}>
-              <Icon name="close" size={22} color="rgba(255,255,255,0.7)" />
+              <Icon name="close" size={22} color={reelsTheme.color.textDim} />
             </Pressable>
           </View>
 
@@ -115,16 +116,16 @@ export function ReelCollectionSheet<P extends string, T extends string>({
               onOpenFavorites();
             }}
           >
-            <Icon name="bookmark" size={18} color={colors.accent} />
+            <Icon name="bookmark" size={18} color={reelsTheme.color.amber} />
             <ProDayText variant="caption" style={styles.favoritesText}>
               {t('reels.favorites', { n: favoritesCount })}
             </ProDayText>
-            <Icon name="chevron-forward" size={16} color="rgba(255,255,255,0.4)" />
+            <Icon name="chevron-forward" size={16} color={reelsTheme.color.textFaint} />
           </PressableSpring>
 
           {canPublish && onPublish ? (
             <PressableSpring
-              style={[styles.publish, { backgroundColor: colors.accent }]}
+              style={styles.publish}
               scaleTo={0.98}
               haptic
               onPress={() => {
@@ -134,9 +135,9 @@ export function ReelCollectionSheet<P extends string, T extends string>({
               accessibilityRole="button"
               accessibilityLabel={t('reels.upload.title')}
             >
-              <Icon name="videocam" size={18} color="#04110F" />
+              <Icon name="videocam" size={18} color={reelsTheme.color.onAmber} />
               <ProDayText variant="caption" style={styles.publishText}>
-                {t('reels.upload.title')}
+                {t('reels.upload.title').toUpperCase()}
               </ProDayText>
             </PressableSpring>
           ) : null}
@@ -146,42 +147,43 @@ export function ReelCollectionSheet<P extends string, T extends string>({
   );
 }
 
-function createStyles(colors: ReturnType<typeof useAppTheme>['colors'], bottomInset: number) {
+function createStyles(bottomInset: number) {
   return StyleSheet.create({
     backdrop: {
       flex: 1,
       justifyContent: 'flex-end',
-      backgroundColor: 'rgba(0,0,0,0.6)',
+      backgroundColor: reelsTheme.color.backdrop,
     },
     sheet: {
-      backgroundColor: '#0B0D10',
-      borderTopLeftRadius: radius.xxl,
-      borderTopRightRadius: radius.xxl,
-      borderWidth: 1,
-      borderColor: 'rgba(255,255,255,0.08)',
-      paddingHorizontal: spacing.xl,
-      paddingTop: spacing.md,
-      paddingBottom: bottomInset + spacing.xl,
-      gap: spacing.lg,
+      backgroundColor: reelsTheme.color.surface,
+      borderTopLeftRadius: reelsTheme.radius.lg,
+      borderTopRightRadius: reelsTheme.radius.lg,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: reelsTheme.color.hairline,
+      paddingHorizontal: reelsTheme.space.lg,
+      paddingTop: reelsTheme.space.sm,
+      paddingBottom: bottomInset + reelsTheme.space.lg,
+      gap: reelsTheme.space.md,
     },
     handle: {
       alignSelf: 'center',
       width: 40,
       height: 4,
       borderRadius: 2,
-      backgroundColor: 'rgba(255,255,255,0.18)',
-      marginBottom: spacing.xs,
+      backgroundColor: reelsTheme.color.hairlineStrong,
+      marginBottom: reelsTheme.space.xxs,
     },
     headerRow: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
     },
-    title: { color: '#FFFFFF' },
+    title: { color: reelsTheme.color.text },
     section: { gap: 2 },
     sectionLabel: {
-      color: colors.accent,
-      marginBottom: spacing.xs,
+      color: reelsTheme.color.amber,
+      letterSpacing: reelsTheme.type.kicker.letterSpacing,
+      marginBottom: reelsTheme.space.xs,
     },
     row: {
       flexDirection: 'row',
@@ -190,35 +192,42 @@ function createStyles(colors: ReturnType<typeof useAppTheme>['colors'], bottomIn
       paddingVertical: 11,
     },
     rowLabel: { fontSize: 19 },
-    tick: { width: 20, height: 3, borderRadius: 2 },
+    tick: {
+      width: 8,
+      height: 8,
+      borderRadius: 2,
+      backgroundColor: reelsTheme.color.amber,
+      transform: [{ rotate: '45deg' }],
+    },
     favorites: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: spacing.sm,
-      paddingVertical: spacing.md,
-      paddingHorizontal: spacing.lg,
-      borderRadius: radius.md,
-      borderWidth: 1,
-      borderColor: 'rgba(255,255,255,0.1)',
-      backgroundColor: 'rgba(255,255,255,0.04)',
+      gap: reelsTheme.space.sm,
+      paddingVertical: reelsTheme.space.md,
+      paddingHorizontal: reelsTheme.space.md,
+      borderRadius: reelsTheme.radius.md,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: reelsTheme.color.hairline,
+      backgroundColor: reelsTheme.color.surfaceRaised,
     },
     favoritesText: {
       flex: 1,
-      color: '#FFFFFF',
+      color: reelsTheme.color.text,
       fontWeight: '700',
     },
     publish: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      gap: spacing.sm,
+      gap: reelsTheme.space.sm,
       paddingVertical: 15,
-      borderRadius: radius.md,
+      borderRadius: reelsTheme.radius.md,
+      backgroundColor: reelsTheme.color.amber,
     },
     publishText: {
-      color: '#04110F',
-      fontWeight: '800',
-      letterSpacing: 0.2,
+      color: reelsTheme.color.onAmber,
+      fontFamily: reelsTheme.type.kicker.fontFamily,
+      letterSpacing: 1.4,
     },
   });
 }
