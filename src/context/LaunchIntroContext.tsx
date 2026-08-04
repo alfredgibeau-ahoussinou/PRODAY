@@ -18,7 +18,7 @@ import {
 } from '../models/CarouselPole';
 import { useAppLaunchIntro } from '../hooks/useAppLaunchIntro';
 import { useProductLine } from './ProductLineContext';
-import { useAuth } from './AuthContext';
+import { useAuthOptional } from './AuthContext';
 import { PushScreenTransition } from '../components/motion';
 import { StyleSheet, View } from 'react-native';
 
@@ -45,7 +45,8 @@ export const LaunchIntroProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const { visible: firstLaunchVisible, playKey, markIntroComplete } = useAppLaunchIntro();
-  const { profile } = useAuth();
+  const auth = useAuthOptional();
+  const profile = auth?.profile ?? null;
   const { productLine, setProductLine, setProSignupPresetRole } = useProductLine();
   const [manualOpen, setManualOpen] = useState(false);
   const [pickerSession, setPickerSession] = useState(0);

@@ -220,3 +220,8 @@ export function useAuth(): AuthContextValue {
   }
   return ctx;
 }
+
+/** Variante sûre pour les providers racine: retourne null hors AuthProvider. */
+export function useAuthOptional(): AuthContextValue | null {
+  return useContext(AuthContext);
+}
