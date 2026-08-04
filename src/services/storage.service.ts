@@ -27,6 +27,17 @@ export function normalizeImageMimeType(mimeType?: string | null): string {
   return 'image/jpeg';
 }
 
+/** Normalise les MIME vidéo pour matcher strictement les règles Storage. */
+export function normalizeVideoMimeType(mimeType?: string | null): string {
+  const raw = (mimeType ?? '').toLowerCase().trim();
+  if (!raw) return 'video/mp4';
+  if (raw.includes('quicktime') || raw.includes('mov')) return 'video/quicktime';
+  if (raw.includes('webm')) return 'video/webm';
+  if (raw.includes('mp4') || raw.includes('mpeg') || raw.includes('m4v')) return 'video/mp4';
+  if (raw.startsWith('video/')) return 'video/mp4';
+  return 'video/mp4';
+}
+
 function isRemoteUri(uri: string): boolean {
   return uri.startsWith('http://') || uri.startsWith('https://');
 }
@@ -94,7 +105,7 @@ async function uploadNativeFileViaRest(
     httpMethod: 'POST',
     uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
     headers: {
-      Authorization: `Firebase ${token}`,
+      Authorization: `Bearer ${token}`,
       'Content-Type': contentType,
     },
   });
@@ -103,7 +114,7 @@ async function uploadNativeFileViaRest(
     const bodyPreview = result.body?.slice(0, 240) ?? '';
     if (result.status === 403 || bodyPreview.includes('storage/unauthorized')) {
       throw new Error(
-        'Accès Storage refusé. Vérifiez que Firebase Storage est activé sur le projet et que les règles sont déployées (firebase deploy --only storage).'
+        'Accès Storage refusé. Vérifiez la session utilisateur, puis que Firebase Storage est activé et les règles déployées (firebase deploy --only storage).'
       );
     }
     if (result.status === 404 || bodyPreview.includes('storage/unknown')) {
@@ -168,7 +179,7 @@ function mapStorageUploadError(error: unknown): Error {
   const msg = error instanceof Error ? error.message : String(error);
   if (msg.includes('storage/unauthorized') || msg.includes('403')) {
     return new Error(
-      'Accès Storage refusé. Vérifiez que Firebase Storage est activé sur le projet et que les règles sont déployées (firebase deploy --only storage).'
+      'Accès Storage refusé. Vérifiez la session utilisateur, puis que Firebase Storage est activé et les règles déployées (firebase deploy --only storage).'
     );
   }
   if (msg.includes('storage/unknown') || msg.includes('404')) {
@@ -248,7 +259,7 @@ export const storageService = {
     if (!storage) {
       throw new Error('Firebase Storage non configuré pour les vidéos highlight.');
     }
-    const contentType = file.mimeType.includes('video') ? file.mimeType : 'video/mp4';
+    const contentType = normalizeVideoMimeType(file.mimeType);
     const path = `highlights/${uid}/${Date.now()}.mp4`;
     const storageRef = ref(storage, path);
     await uploadFileToStorageRef(storageRef, file.uri, contentType, 'highlight-video');
@@ -284,7 +295,7 @@ export const storageService = {
     if (!storage) {
       throw new Error('Firebase Storage non configuré pour les reels.');
     }
-    const contentType = file.mimeType.includes('video') ? file.mimeType : 'video/mp4';
+    const contentType = normalizeVideoMimeType(file.mimeType);
     const path = `community_reels/${uid}/${Date.now()}.mp4`;
     const storageRef = ref(storage, path);
     await uploadFileToStorageRef(storageRef, file.uri, contentType, 'community-reel');
