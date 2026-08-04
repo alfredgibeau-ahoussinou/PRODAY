@@ -5,7 +5,7 @@ import type { TeamEvent } from '../models/TeamEvent';
 import { TabScreenShell } from '../components/app/TabScreenShell';
 import { ScreenBackButton } from '../components/ui/ScreenBackButton';
 import { ProDayText } from '../components/ui/ProDayText';
-import { ProDaySurface } from '../components/ui/ProDaySurface';
+import { ListEmptyPanel } from '../components/ui/ListEmptyPanel';
 import { Icon, type IconName } from '../components/ui/Icon';
 import { PressableSpring } from '../components/motion';
 import { useAppTheme } from '../context/ProductLineContext';
@@ -57,7 +57,7 @@ export const ClubHubScreen: React.FC<ClubHubScreenProps> = ({
       caption="Communauté"
       title={clubName}
       subtitle="Salons équipe. Messagerie, mercato, trajets"
-      right={<ScreenBackButton onPress={onBack} />}
+      left={<ScreenBackButton onPress={onBack} />}
       flat
     >
       <ScrollView
@@ -93,11 +93,11 @@ export const ClubHubScreen: React.FC<ClubHubScreenProps> = ({
           Groupes événements
         </ProDayText>
         {upcoming.length === 0 ? (
-          <ProDaySurface variant="module" style={styles.empty}>
-            <ProDayText variant="body" muted>
-              Aucun événement à venir. Les groupes apparaissent après RSVP.
-            </ProDayText>
-          </ProDaySurface>
+          <ListEmptyPanel
+            icon="calendar"
+            title="Aucun événement à venir"
+            subtitle="Les groupes d'équipe apparaissent après RSVP sur une convocation."
+          />
         ) : (
           upcoming.map((event) => (
             <PressableSpring

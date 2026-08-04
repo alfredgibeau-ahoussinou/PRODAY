@@ -4,6 +4,7 @@ import Stripe from 'stripe';
 import { configStr } from './runtimeConfig';
 import { sendFcmToUser } from './messaging';
 import { handleShopCheckoutCompleted } from './shopPayments';
+import { handleTournamentCheckoutCompleted } from './tournamentPayments';
 
 const db = admin.firestore();
 
@@ -123,6 +124,12 @@ export const stripeWebhook = functions.https.onRequest(async (req, res) => {
 
     if (session.metadata?.type === 'shop_order') {
       await handleShopCheckoutCompleted(session);
+      res.json({ received: true });
+      return;
+    }
+
+    if (session.metadata?.type === 'tournament_registration') {
+      await handleTournamentCheckoutCompleted(session);
       res.json({ received: true });
       return;
     }

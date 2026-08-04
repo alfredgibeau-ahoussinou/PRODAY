@@ -14,6 +14,7 @@ import { usersService } from '../services/users.service';
 import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { PressableSpring, SkeletonList } from '../components/motion';
 import { ProDayText } from '../components/ui/ProDayText';
+import { ProDayButton } from '../components/ui/ProDayButton';
 import { Icon } from '../components/ui/Icon';
 import { useThemedScreen } from '../hooks/useThemedScreen';
 import { spacing, radius } from '../theme/designTokens';
@@ -21,6 +22,8 @@ import type { AppColors } from '../theme/universeTheme';
 import { useTranslation } from '../context/LocaleContext';
 import { PitchLineupView } from '../components/team/PitchLineupView';
 import type { EventLineupSlot } from '../models/TeamEvent';
+import * as WebBrowser from 'expo-web-browser';
+import { startTournamentEntryPayment } from '../services/tournamentPayment.service';
 
 interface TournamentDetailScreenProps {
   tournamentId: string;
@@ -90,11 +93,40 @@ export const TournamentDetailScreen: React.FC<TournamentDetailScreenProps> = ({
       });
       setRefreshSignal((n) => n + 1);
       await refresh();
-      Alert.alert(t('tournament.alert.registered.title'), t('tournament.alert.registered.body'));
+      if (tournament.entry_fee_cents > 0) {
+        Alert.alert(
+          t('tournament.alert.registered.title'),
+          'Inscription enregistrée. Réglez les frais pour finaliser.'
+        );
+      } else {
+        Alert.alert(t('tournament.alert.registered.title'), t('tournament.alert.registered.body'));
+      }
     } catch (e) {
       Alert.alert(
         t('feed.alert.error'),
         e instanceof Error ? e.message : t('tournament.alert.registerFailed')
+      );
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const payEntryFee = async () => {
+    if (!tournament || !myRegistration) return;
+    if (myRegistration.paid || tournament.entry_fee_cents <= 0) return;
+    setBusy(true);
+    try {
+      const { url } = await startTournamentEntryPayment(tournament.id, myRegistration.id);
+      const result = await WebBrowser.openAuthSessionAsync(url, 'proday://tournament');
+      setRefreshSignal((n) => n + 1);
+      await refresh();
+      if (result.type === 'success') {
+        Alert.alert('Paiement', 'Si le paiement est confirmé, le statut se met à jour sous peu.');
+      }
+    } catch (e) {
+      Alert.alert(
+        t('feed.alert.error'),
+        e instanceof Error ? e.message : 'Paiement impossible pour le moment.'
       );
     } finally {
       setBusy(false);
@@ -227,21 +259,12 @@ export const TournamentDetailScreen: React.FC<TournamentDetailScreenProps> = ({
               })}
             </View>
 
-            <PressableSpring
-              style={[styles.primaryBtn, { backgroundColor: c.brand }]}
-              disabled={busy}
+            <ProDayButton
+              label={t('tournament.register.cta')}
               onPress={() => void registerTeam()}
-              scaleTo={0.98}
-              haptic
-            >
-              {busy ? (
-                <ActivityIndicator color={c.brandInverse} />
-              ) : (
-                <ProDayText variant="caption" inverse style={styles.btnText}>
-                  {t('tournament.register.cta')}
-                </ProDayText>
-              )}
-            </PressableSpring>
+              loading={busy}
+              disabled={busy}
+            />
           </View>
         ) : null}
 
@@ -251,22 +274,31 @@ export const TournamentDetailScreen: React.FC<TournamentDetailScreenProps> = ({
             <ProDayText variant="caption" muted>
               {myRegistration.club_name} · {myRegistration.player_uids.length}{' '}
               {t('tournament.myTeam.players')}
+              {tournament.entry_fee_cents > 0
+                ? myRegistration.paid
+                  ? ' · Payé'
+                  : ' · En attente de paiement'
+                : ''}
             </ProDayText>
+            {tournament.entry_fee_cents > 0 && !myRegistration.paid ? (
+              <ProDayButton
+                label={`Payer ${fee}`}
+                onPress={() => void payEntryFee()}
+                loading={busy}
+                disabled={busy}
+                style={{ marginTop: spacing.md }}
+              />
+            ) : null}
           </View>
         ) : null}
 
         {isOrganizer && tournament.pools.length === 0 && tournament.registrations.length >= 2 ? (
-          <PressableSpring
-            style={[styles.primaryBtn, { backgroundColor: c.brand }]}
-            disabled={busy}
+          <ProDayButton
+            label={t('tournament.organizer.generatePools')}
             onPress={() => void generatePools()}
-            scaleTo={0.98}
-            haptic
-          >
-            <ProDayText variant="caption" inverse style={styles.btnText}>
-              {t('tournament.organizer.generatePools')}
-            </ProDayText>
-          </PressableSpring>
+            loading={busy}
+            disabled={busy}
+          />
         ) : null}
 
         {tournament.pools.map((pool) => (

@@ -39,6 +39,9 @@ import { ProDayText } from '../../../components/ui/ProDayText';
 import { ProDayGradient } from '../../../components/ui/ProDayGradient';
 import { Icon, type IconName } from '../../../components/ui/Icon';
 import { PressableSpring, StaggerReveal } from '../../../components/motion';
+import { CareerPathwayPanel } from '../../../components/player/CareerPathwayPanel';
+import { clubAnnouncementsService } from '../../../services/clubAnnouncements.service';
+import type { ClubAnnouncement } from '../../../models/ClubAnnouncement';
 import { spacing, radius } from '../../../theme/designTokens';
 
 const RSVP_OPTIONS: { status: RsvpStatus; labelKey: string }[] = [
@@ -90,6 +93,7 @@ export const AmateurPlayerHomeDashboard: React.FC<StaffRoleHomeProps> = ({
   const [membership, setMembership] = useState<Membership | null>(null);
   const [membershipLoading, setMembershipLoading] = useState(true);
   const [rsvpBusy, setRsvpBusy] = useState(false);
+  const [coachAnnouncements, setCoachAnnouncements] = useState<ClubAnnouncement[]>([]);
 
   const loadMembership = useCallback(async () => {
     setMembershipLoading(true);
@@ -103,6 +107,20 @@ export const AmateurPlayerHomeDashboard: React.FC<StaffRoleHomeProps> = ({
     }
   }, [profile.uid]);
 
+  const loadCoachFeed = useCallback(async () => {
+    const clubId = profile.profile.club_id ?? membership?.club_id;
+    if (!clubId) {
+      setCoachAnnouncements([]);
+      return;
+    }
+    try {
+      const list = await clubAnnouncementsService.listByClub(clubId, 3);
+      setCoachAnnouncements(list);
+    } catch {
+      setCoachAnnouncements([]);
+    }
+  }, [profile.profile.club_id, membership?.club_id]);
+
   const visibleEvents = useMemo(
     () => data.teamEvents.filter((e) => canViewTeamEventAsPlayer(profile, membership, e)),
     [data.teamEvents, profile, membership],
@@ -113,6 +131,10 @@ export const AmateurPlayerHomeDashboard: React.FC<StaffRoleHomeProps> = ({
   useEffect(() => {
     void loadMembership();
   }, [loadMembership]);
+
+  useEffect(() => {
+    void loadCoachFeed();
+  }, [loadCoachFeed]);
 
   const matchCarpoolSeats = useMemo(
     () => (nextMatch ? countRemainingCarpoolSeats(nextMatch) : null),
@@ -128,9 +150,9 @@ export const AmateurPlayerHomeDashboard: React.FC<StaffRoleHomeProps> = ({
   const showConvocations = membershipActive || visibleEvents.length > 0;
 
   const handleRefresh = useCallback(async () => {
-    await Promise.all([refresh(), loadMembership()]);
+    await Promise.all([refresh(), loadMembership(), loadCoachFeed()]);
     await onRefresh?.();
-  }, [refresh, loadMembership, onRefresh]);
+  }, [refresh, loadMembership, loadCoachFeed, onRefresh]);
 
   const handleRsvp = async (status: RsvpStatus) => {
     if (!nextEvent) return;
@@ -207,6 +229,12 @@ export const AmateurPlayerHomeDashboard: React.FC<StaffRoleHomeProps> = ({
           </ProDayText>
         </GlassCard>
       ) : null}
+
+      <CareerPathwayPanel
+        player={profile}
+        pulseScore={data.pulse.score}
+        pendingApplications={data.myApplications.length}
+      />
 
       {showConvocations ? (
         <>
@@ -300,11 +328,34 @@ export const AmateurPlayerHomeDashboard: React.FC<StaffRoleHomeProps> = ({
         title={t('roleHome.amateurPlayer.coachFeedTitle')}
         subtitle={t('roleHome.amateurPlayer.coachFeedSub')}
       />
-      <GlassCard style={styles.coachCard}>
-        <ProDayText variant="body" muted>
-          {t('roleHome.amateurPlayer.coachFeedPlaceholder')}
-        </ProDayText>
-      </GlassCard>
+      {coachAnnouncements.length > 0 ? (
+        coachAnnouncements.map((ann, index) => (
+          <StaffListCard
+            key={ann.id}
+            index={index + 10}
+            title={ann.title}
+            subtitle={ann.body}
+            meta={ann.author_name}
+            onPress={() => nav.setActiveTab('messages')}
+          />
+        ))
+      ) : (
+        <GlassCard style={styles.coachCard}>
+          <ProDayText variant="body" muted>
+            {t('roleHome.amateurPlayer.coachFeedPlaceholder')}
+          </ProDayText>
+          <PressableSpring
+            style={[styles.coachCta, { backgroundColor: colors.accent }]}
+            onPress={() => nav.setActiveTab('messages')}
+            scaleTo={0.97}
+            haptic
+          >
+            <ProDayText variant="caption" inverse style={{ fontWeight: '800' }}>
+              {t('roleHome.amateurPlayer.openMessages')}
+            </ProDayText>
+          </PressableSpring>
+        </GlassCard>
+      )}
 
       <StaffSectionTitle title={t('roleHome.quickActions')} />
       <View style={styles.quickGrid}>
@@ -364,6 +415,13 @@ const styles = StyleSheet.create({
   coachCard: {
     padding: spacing.md,
     marginBottom: spacing.md,
+    gap: spacing.sm,
+  },
+  coachCta: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: radius.pill,
   },
   quickGrid: {
     flexDirection: 'row',

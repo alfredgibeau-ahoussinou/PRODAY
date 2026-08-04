@@ -5,7 +5,9 @@ import { processScheduledEventReminders } from './eventReminders';
 import { sendFcmToUser } from './messaging';
 import { createPaymentCheckoutSession, stripeWebhook } from './stripePayments';
 import { createShopCheckoutSession } from './shopPayments';
+import { createTournamentCheckoutSession } from './tournamentPayments';
 import { onRecruitmentPostCreated } from './mercatoAlerts';
+import { onPlayerAvailabilityChanged } from './availabilityAlerts';
 import { runMistralDocumentVerification, verifyOnboardingDocumentEphemeral } from './mistralVerification';
 import { onPlatformFeedCreated, onChatMessageCreated } from './feedNotifications';
 import { createValidateBetaAccessHandler } from './betaAccess';
@@ -54,6 +56,7 @@ import { incrementSubscriptionUsage } from './subscriptionUsage';
 import { sendSponsorClubMessage } from './sendSponsorClubMessage';
 
 export { createPaymentCheckoutSession, stripeWebhook, createShopCheckoutSession };
+export { createTournamentCheckoutSession };
 export { sendAuthVerificationEmail, sendAuthPasswordResetEmail };
 export { onMinorUserCreatedProvisionParent, provisionParentAccount };
 export { incrementSubscriptionUsage };
@@ -69,6 +72,7 @@ export { claimAgentLaunchSeat };
 export { ensureReferralCode, claimReferralCode };
 export { onPlatformFeedCreated, onChatMessageCreated };
 export { onRecruitmentPostCreated };
+export { onPlayerAvailabilityChanged };
 export { onV3BrainWrite };
 
 const db = admin.firestore();
@@ -434,11 +438,22 @@ export const updateApplicationStatus = functions.https.onCall(async (data, conte
     throw new functions.https.HttpsError('unauthenticated', 'Connexion requise');
   }
 
-  const { applicationId, status, rejectionReason } = data as {
-    applicationId: string;
-    status: 'VIEWED' | 'IN_PROGRESS' | 'ACCEPTED' | 'REJECTED';
-    rejectionReason?: string;
-  };
+  const { applicationId, status, rejectionReason, trialDateIso, pipelineStage, sharedDocuments } =
+    data as {
+      applicationId: string;
+      status: 'VIEWED' | 'IN_PROGRESS' | 'ACCEPTED' | 'REJECTED';
+      rejectionReason?: string;
+      trialDateIso?: string;
+      pipelineStage?: string;
+      sharedDocuments?: Array<{
+        id: string;
+        label: string;
+        url: string;
+        uploaded_by: string;
+        kind?: string;
+        created_at?: string;
+      }>;
+    };
 
   if (!applicationId || !status) {
     throw new functions.https.HttpsError('invalid-argument', 'applicationId et status requis');
@@ -479,11 +494,46 @@ export const updateApplicationStatus = functions.https.onCall(async (data, conte
     throw new functions.https.HttpsError('permission-denied', 'Accès refusé');
   }
 
-  await appRef.update({
+  const patch: Record<string, unknown> = {
     status,
     rejection_reason: status === 'REJECTED' ? String(rejectionReason ?? '').trim() : null,
     updated_at: admin.firestore.FieldValue.serverTimestamp(),
-  });
+  };
+
+  if (pipelineStage) {
+    patch.pipeline_stage = String(pipelineStage);
+  } else if (status === 'VIEWED') {
+    patch.pipeline_stage = 'reviewing';
+  } else if (status === 'IN_PROGRESS') {
+    patch.pipeline_stage = 'shortlist';
+  } else if (status === 'ACCEPTED') {
+    patch.pipeline_stage = 'hired';
+  } else if (status === 'REJECTED') {
+    patch.pipeline_stage = 'rejected';
+  }
+
+  if (trialDateIso) {
+    const trial = new Date(trialDateIso);
+    if (!Number.isNaN(trial.getTime())) {
+      patch.trial_date = admin.firestore.Timestamp.fromDate(trial);
+      if (!pipelineStage) patch.pipeline_stage = 'trial';
+    }
+  }
+
+  if (Array.isArray(sharedDocuments)) {
+    patch.shared_documents = sharedDocuments.map((docItem) => ({
+      id: String(docItem.id),
+      label: String(docItem.label ?? 'Document'),
+      url: String(docItem.url),
+      uploaded_by: String(docItem.uploaded_by ?? callerUid),
+      kind: docItem.kind ? String(docItem.kind) : 'other',
+      created_at: docItem.created_at
+        ? admin.firestore.Timestamp.fromDate(new Date(docItem.created_at))
+        : admin.firestore.FieldValue.serverTimestamp(),
+    }));
+  }
+
+  await appRef.update(patch);
 
   const postTitle = String(post.title ?? post.position ?? 'Annonce mercato');
   const playerUid = String(app.player_uid ?? '');

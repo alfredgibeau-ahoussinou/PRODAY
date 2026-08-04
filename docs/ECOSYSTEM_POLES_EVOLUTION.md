@@ -43,7 +43,8 @@ ProDay = écosystème foot complet : joueurs, clubs, agents, staff, académies, 
 
 ### 8. Pôle Événements (scaffolding)
 - Carousel + page `/evenements` + modèle `OrganizerEvent` / `EventRegistration`
-- TODO : paiements Stripe/IAP, listes live, résultats, médias natifs
+- **Paiements tournoi Arena :** Checkout Stripe plateforme (`createTournamentCheckoutSession`) — pas Connect / pas IAP
+- Listes live / résultats / médias natifs : suite produit
 
 ## Fichiers clés
 
@@ -66,7 +67,7 @@ ProDay = écosystème foot complet : joueurs, clubs, agents, staff, académies, 
 2. Firestore rules + indexes : `message_requests`, `request_status` sur threads, `player_level`
 3. Compteur seats agent : callable `claimAgentLaunchSeat` + hook `activateStoreSubscription` (`platform_config/agent_launch`)
 4. Migration : `npm run migrate:joueur-pole -- --dry-run` puis `--confirm`
-5. Événements : helpers listes/résultats (`eventOrganizerScaffold`) — paiements toujours TODO
+5. Événements : helpers listes/résultats (`eventOrganizerScaffold`) + Checkout inscription tournoi (`createTournamentCheckoutSession`)
 
 ### Restant
 - Paiements / UI organisateur native : branche `feature/pole-evenements` (PR #18) — hors scope « prévoir futur » (scaffolding main suffit)

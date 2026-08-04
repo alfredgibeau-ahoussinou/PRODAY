@@ -45,8 +45,8 @@ import { trackV3Event } from '../../core/analytics/v3Events';
 import { recordV3UserAction } from '../../utils/recordV3Action';
 import { fetchActorReelSeeds } from '../../services/actorReels.service';
 import { communityReelsService } from '../../services/communityReels.service';
-import { pickReelVideo } from '../../utils/pickReelVideo';
 import { storageService } from '../../services/storage.service';
+import type { UploadFileInput } from '../../services/storage.service';
 import {
   reelsTheme,
   REEL_TOP_SCRIM,
@@ -109,7 +109,7 @@ export const ReelsFeed: React.FC<ReelsFeedProps> = ({ productLine }) => {
   const [favoritesOpen, setFavoritesOpen] = useState(false);
   const [collectionOpen, setCollectionOpen] = useState(false);
   const [uploadOpen, setUploadOpen] = useState(false);
-  const [pickedVideo, setPickedVideo] = useState<{ uri: string; mimeType: string } | null>(null);
+  const [pickedVideo, setPickedVideo] = useState<UploadFileInput | null>(null);
   const [uploading, setUploading] = useState(false);
 
   const canUpload = Boolean(profile && ['player', 'club', 'coach'].includes(profile.role));
@@ -366,13 +366,6 @@ export const ReelsFeed: React.FC<ReelsFeedProps> = ({ productLine }) => {
     itemVisiblePercentThreshold: 75,
   }).current;
 
-  const handlePickVideo = useCallback(async () => {
-    const file = await pickReelVideo();
-    if (!file) return false;
-    setPickedVideo(file);
-    return true;
-  }, []);
-
   const handleUpload = useCallback(
     async (caption: string, uploadTheme: Exclude<ReelThemeId, 'all'>) => {
       if (!profile || !pickedVideo) {
@@ -535,6 +528,7 @@ export const ReelsFeed: React.FC<ReelsFeedProps> = ({ productLine }) => {
               </PressableSpring>
               {canUpload ? (
                 <PressableSpring
+                  testID="reels-upload-open"
                   style={styles.control}
                   scaleTo={0.9}
                   haptic
@@ -607,8 +601,10 @@ export const ReelsFeed: React.FC<ReelsFeedProps> = ({ productLine }) => {
           setUploadOpen(false);
           setPickedVideo(null);
         }}
-        onPickVideo={handlePickVideo}
-        hasVideo={Boolean(pickedVideo)}
+        onVideoReady={setPickedVideo}
+        onClearVideo={() => setPickedVideo(null)}
+        videoUri={pickedVideo?.uri ?? null}
+        allowDemoVideo={__DEV__}
         uploading={uploading}
         onSubmit={handleUpload}
       />

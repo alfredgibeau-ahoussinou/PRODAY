@@ -141,6 +141,7 @@ export const ReelsEmptyState: React.FC<ReelsEmptyStateProps> = ({
 
           {canPublish && onPublish ? (
             <PressableSpring
+              testID="reels-empty-publish"
               onPress={onPublish}
               scaleTo={0.97}
               haptic

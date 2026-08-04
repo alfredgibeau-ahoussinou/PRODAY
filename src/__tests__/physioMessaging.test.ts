@@ -13,7 +13,7 @@ describe('physioMessaging', () => {
 
   it('assigne le type de fil physio_care', () => {
     expect(threadKindForParticipants('physio', 'player')).toBe('physio_care');
-    expect(threadKindForParticipants('agent', 'player')).toBe('standard');
+    expect(threadKindForParticipants('agent', 'player')).toBe('message_request');
   });
 
   it('libellé badge suivi kiné', () => {

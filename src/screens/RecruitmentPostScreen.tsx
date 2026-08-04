@@ -43,6 +43,9 @@ import { getPostMercatoFit } from '../features/v3/engines/mercatoPostDetail.engi
 import { buildOneClickCoverLetter } from '../utils/recruitmentOneClick';
 import { RecruiterRecommendationsPanel } from '../components/recruitment/RecruiterRecommendationsPanel';
 import { useRecruiterRecommendations } from '../hooks/useRecruiterRecommendations';
+import { ApplicationDocsSheet } from '../components/recruitment/ApplicationDocsSheet';
+import { useTabNavigationActions } from '../hooks/useTabNavigationActions';
+import type { ApplicationSharedDocument } from '../models/Player';
 
 const MAX_LETTER = 600;
 
@@ -67,10 +70,12 @@ export const RecruitmentPostScreen: React.FC<RecruitmentPostScreenProps> = ({
   const [applications, setApplications] = useState<Application[]>([]);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [applicationPulse, setApplicationPulse] = useState<Record<string, number>>({});
+  const [docsApp, setDocsApp] = useState<Application | null>(null);
   const subscriptionCtx = useSubscriptionOptional();
   const { colors: c, productLine, isWoman } = useThemedScreen();
   const { requireAuth } = useRequireAuth();
   const { openAuth } = useTabNavigation();
+  const nav = useTabNavigationActions();
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -254,7 +259,7 @@ export const RecruitmentPostScreen: React.FC<RecruitmentPostScreenProps> = ({
       <TabScreenShell
         caption="Mercato"
         title="Annonce"
-        right={<ScreenBackButton onPress={onBack} />}
+        left={<ScreenBackButton onPress={onBack} />}
         flat
       >
         <View style={styles.loader}>
@@ -269,7 +274,7 @@ export const RecruitmentPostScreen: React.FC<RecruitmentPostScreenProps> = ({
       <TabScreenShell
         caption="Mercato"
         title="Annonce"
-        right={<ScreenBackButton onPress={onBack} />}
+        left={<ScreenBackButton onPress={onBack} />}
         flat
       >
         <View style={styles.loader}>
@@ -350,11 +355,45 @@ export const RecruitmentPostScreen: React.FC<RecruitmentPostScreenProps> = ({
                     onMarkInProgress={() => updateStatus(app, 'IN_PROGRESS')}
                     onAccept={() => updateStatus(app, 'ACCEPTED')}
                     onReject={(reason) => updateStatus(app, 'REJECTED', reason)}
+                    onOpenDocs={() => setDocsApp(app)}
+                    onScheduleTrial={async () => {
+                      setUpdatingId(app.id);
+                      try {
+                        const trial = new Date();
+                        trial.setDate(trial.getDate() + 7);
+                        await recruitmentService.updateApplicationDetails(app.id, {
+                          status: 'IN_PROGRESS',
+                          trialDate: trial,
+                          pipelineStage: 'trial',
+                        });
+                        await load();
+                      } finally {
+                        setUpdatingId(null);
+                      }
+                    }}
+                    onOpenCarpool={() => nav.openCarpool({ chapter: 'proposer' })}
                   />
                 </InteractiveListItem>
               ))
             )}
           </ProDaySurface>
+          {docsApp && profile ? (
+            <ApplicationDocsSheet
+              visible={Boolean(docsApp)}
+              onClose={() => setDocsApp(null)}
+              application={docsApp}
+              uploaderUid={profile.uid}
+              onSave={async (docs: ApplicationSharedDocument[]) => {
+                await recruitmentService.updateApplicationDetails(docsApp.id, {
+                  status: docsApp.status === 'PENDING' ? 'VIEWED' : docsApp.status,
+                  sharedDocuments: docs,
+                  pipelineStage: docsApp.pipeline_stage,
+                });
+                setDocsApp(null);
+                await load();
+              }}
+            />
+          ) : null}
           </>
         ) : profile?.role === 'player' ? (
           <ProDaySurface variant="elevated" accentBar style={styles.applyBlock}>
@@ -501,7 +540,7 @@ export const RecruitmentPostScreen: React.FC<RecruitmentPostScreenProps> = ({
       caption={post.club_name}
       title={postTitle}
       subtitle={postSubtitle}
-      right={<ScreenBackButton onPress={onBack} />}
+      left={<ScreenBackButton onPress={onBack} />}
       flat
     >
       {detailScroll}

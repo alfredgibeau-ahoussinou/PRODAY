@@ -1,5 +1,8 @@
 import React from 'react';
-import { ProDayGeoMapCard } from '../../../components/geo/ProDayGeoMapCard';
+import {
+  ProDayGeoMapCard,
+  type ProDayGeoMapVariant,
+} from '../../../components/geo/ProDayGeoMapCard';
 import type { GeoDensitySummary, GeoMarker, GeoRadiusKm } from '../../../core/types/geo';
 import type { GeoPoint } from '../../../models/User';
 
@@ -13,6 +16,7 @@ interface GeoMapPreviewProps {
   onMarkerPress: (marker: GeoMarker) => void;
   locating?: boolean;
   locError?: string | null;
+  variant?: ProDayGeoMapVariant;
 }
 
 /** Carte géolocalisation accueil — carte OSM active. */

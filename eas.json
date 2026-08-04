@@ -28,6 +28,17 @@
         "EXPO_PUBLIC_APP_ENV": "production",
         "EXPO_PUBLIC_V3_SHELL": "1"
       }
+    },
+    "testflight": {
+      "extends": "production",
+      "distribution": "store",
+      "ios": {
+        "resourceClass": "m-medium"
+      },
+      "env": {
+        "EXPO_PUBLIC_APP_ENV": "production",
+        "EXPO_PUBLIC_V3_SHELL": "1"
+      }
     }
   },
   "submit": {

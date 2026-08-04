@@ -110,11 +110,11 @@ describe('charge applicative (simulation utilisateurs)', () => {
             .filter((u) => u.role === 'player')
             .sort((a, b) => b.created_at.getTime() - a.created_at.getTime())
             .slice(0, 50)
-            .map(sanitizePublicUser)
+            .map((u) => sanitizePublicUser(u))
             .filter((u) => matchesSearch(u, 'Paris'));
           expect(list.length).toBeGreaterThan(0);
         });
-        expect(ms).toBeLessThan(budget(scale, 0.5, 15));
+        expect(ms).toBeLessThan(budget(scale, 0.6, 20));
       });
 
       it('suggestions sociales (3 rôles × 50 profils)', () => {

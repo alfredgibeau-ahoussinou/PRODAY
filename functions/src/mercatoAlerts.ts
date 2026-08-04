@@ -1,4 +1,4 @@
-import * as functions from 'firebase-functions';
+import { onDocumentCreated } from 'firebase-functions/v2/firestore';
 import * as admin from 'firebase-admin';
 import { sendFcmToUser } from './messaging';
 
@@ -99,10 +99,12 @@ export function postMatchesMercatoAlert(
   return postMatchesTextSearch(post, String(alert.search ?? ''));
 }
 
-/** Nouvelle annonce mercato → push aux joueurs avec alerte active correspondante */
-export const onRecruitmentPostCreated = functions.firestore
-  .document('recruitment_posts/{postId}')
-  .onCreate(async (snap) => {
+/** Nouvelle annonce mercato → push (Gen2, europe-west1 / Firestore eur3). */
+export const onRecruitmentPostCreated = onDocumentCreated(
+  { document: 'recruitment_posts/{postId}', region: 'europe-west1' },
+  async (event) => {
+    const snap = event.data;
+    if (!snap) return;
     const post = snap.data();
     if (String(post.status ?? 'OPEN') !== 'OPEN') return;
 
@@ -135,4 +137,5 @@ export const onRecruitmentPostCreated = functions.firestore
     }
 
     console.log(`[onRecruitmentPostCreated] ${snap.id} → ${sent} push(es)`);
-  });
+  }
+);

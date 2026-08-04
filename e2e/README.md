@@ -43,6 +43,7 @@ Les flows Maestro vivent dans `.maestro/`. Ils ne tournent **pas en CI** (pas d�
 3. **Comptes de test** (mots de passe hors repo) :
    | Usage | Email par défaut | Script setup |
    |-------|------------------|--------------|
+   | Joueur (Reels) | `alfredgibeauahoussinou@gmail.com` | `npm run test-account:setup` |
    | Shell sponsor | `part@gmail.com` | `npm run partner-account:setup` |
    | Console admin | `proday.admin@gmail.com` | `npm run admin:setup` |
 
@@ -50,6 +51,8 @@ Les flows Maestro vivent dans `.maestro/`. Ils ne tournent **pas en CI** (pas d�
 
 | Variable | Description |
 |----------|-------------|
+| `MAESTRO_PLAYER_EMAIL` | Compte joueur (Reels publish) |
+| `MAESTRO_PLAYER_PASSWORD` | Mot de passe joueur |
 | `MAESTRO_SPONSOR_EMAIL` | Compte partenaire / sponsor |
 | `MAESTRO_SPONSOR_PASSWORD` | Mot de passe sponsor |
 | `MAESTRO_ADMIN_EMAIL` | Compte admin plateforme |
@@ -58,6 +61,8 @@ Les flows Maestro vivent dans `.maestro/`. Ils ne tournent **pas en CI** (pas d�
 Exemple :
 
 ```bash
+export MAESTRO_PLAYER_EMAIL=alfredgibeauahoussinou@gmail.com
+export MAESTRO_PLAYER_PASSWORD='votre-mot-de-passe'
 export MAESTRO_SPONSOR_EMAIL=part@gmail.com
 export MAESTRO_SPONSOR_PASSWORD='votre-mot-de-passe'
 export MAESTRO_ADMIN_EMAIL=proday.admin@gmail.com
@@ -69,6 +74,7 @@ npm run test:e2e:maestro
 Ou un flow isolé :
 
 ```bash
+maestro test .maestro/reels-publish.yaml
 maestro test .maestro/sponsor-tabs.yaml
 ```
 
@@ -76,9 +82,12 @@ maestro test .maestro/sponsor-tabs.yaml
 
 | Fichier | Scénario |
 |---------|----------|
+| `reels-smoke.yaml` | Onglet Reels → empty state → sheet publication |
+| `reels-publish.yaml` | Login joueur → vidéo démo bundle → publish → « Reel publié » |
 | `sponsor-tabs.yaml` | Connexion sponsor → menu latéral → pilotage / offres / réseau |
 | `admin-gate.yaml` | Connexion admin → smoke gate **ou** accueil console si claim actif |
 | `sponsor-prospect-smoke.yaml` | (Optionnel) Segment Prospects dans Réseau |
+| `subflows/player-login.yaml` | Sous-flow connexion joueur |
 | `subflows/sponsor-login.yaml` | Sous-flow connexion sponsor (réutilisé) |
 | `subflows/admin-login.yaml` | Sous-flow connexion admin (réutilisé) |
 
@@ -86,6 +95,14 @@ maestro test .maestro/sponsor-tabs.yaml
 
 | testID | Composant |
 |--------|-----------|
+| `reels-empty-publish` | CTA empty state Reels |
+| `reels-upload-open` | FAB + ouvrir sheet publish |
+| `reels-upload-pick-video` | Choisir une vidéo (Photos) |
+| `reels-upload-demo-video` | Vidéo démo bundle (`__DEV__` only) |
+| `reels-upload-caption` | Champ légende |
+| `reels-upload-theme-{id}` | Chip thème (`skills`, …) |
+| `reels-upload-submit` | Bouton publier |
+| `main-tab-{id}` | Onglet barre basse (`reels`, `home`, …) |
 | `sponsor-top-bar` | Barre supérieure shell sponsor |
 | `sponsor-menu-button` | Bouton menu hamburger |
 | `sponsor-drawer` | Panneau menu latéral |

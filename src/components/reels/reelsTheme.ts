@@ -1,29 +1,28 @@
-import { Easing } from 'react-native-reanimated';
 import { fontFamily } from '../../theme/typography';
+import { spacing as globalSpacing, radius as globalRadius } from '../../theme/designTokens';
 
 /**
  * ProDay Reels — skin « Night glass ».
- *
- * Direction premium immersive: scène noire profonde, accents glaciaux cyan,
- * surfaces verre fumé, hiérarchie type nette et aérée.
+ * Spacing / radius aliasent les tokens globaux (+ pas aéré via xxl).
  */
 export const reelsTheme = {
   color: {
-    /** Base sombre premium */
     stage: '#000000',
     ink: '#070B12',
     surface: '#101722',
     surfaceRaised: '#182232',
 
-    /** Accent ProDay froid */
+    /** Accent glacial (FLASH-adjacent) — anciennement mal nommé « amber » */
+    cyan: '#45E6FF',
+    cyanSoft: 'rgba(69, 230, 255, 0.16)',
+    cyanLine: 'rgba(69, 230, 255, 0.42)',
+    onCyan: '#00141A',
+    /** @deprecated alias → cyan */
     amber: '#45E6FF',
-    amberBright: '#8CF1FF',
-    amberDim: '#2CA4B8',
     amberSoft: 'rgba(69, 230, 255, 0.16)',
     amberLine: 'rgba(69, 230, 255, 0.42)',
     onAmber: '#00141A',
 
-    /** Like actif */
     ember: '#FF4F7A',
 
     text: '#F3F8FF',
@@ -39,27 +38,23 @@ export const reelsTheme = {
     backdrop: 'rgba(2, 4, 8, 0.7)',
   },
 
-  /** Échelle d'espacement plus intentionnelle que les tokens globaux. */
   space: {
-    xxs: 4,
-    xs: 8,
-    sm: 12,
-    md: 18,
-    lg: 24,
-    xl: 34,
+    xxs: globalSpacing.xs,
+    xs: globalSpacing.sm,
+    sm: globalSpacing.md,
+    md: globalSpacing.lg + 2, // 18 — lecture immersive
+    lg: globalSpacing.xl,
+    xl: globalSpacing.xxl + 2, // 34
     xxl: 48,
   },
 
   radius: {
-    xs: 6,
-    sm: 12,
-    md: 16,
-    lg: 24,
-    avatar: 14,
-    pill: 999,
+    sm: globalRadius.sm + 2, // 12
+    md: globalRadius.md + 2, // 16
+    lg: globalRadius.xl, // 24 — sheets
+    avatar: globalRadius.md,
   },
 
-  /** Hiérarchie premium (Syne + Inter) */
   type: {
     masthead: {
       fontFamily: fontFamily.displayBold,
@@ -93,23 +88,15 @@ export const reelsTheme = {
       lineHeight: 42,
     },
   },
-
-  motion: {
-    reveal: 460,
-    easing: Easing.out(Easing.cubic),
-  },
 } as const;
 
-/** Voile bas de scène — sombre et réchauffé, sans carte ni barre. */
 export const REEL_BOTTOM_SCRIM = [
   'transparent',
   reelsTheme.color.scrimSoft,
   reelsTheme.color.scrimStrong,
 ] as const;
 
-/** Voile haut — garde le bandeau lisible sur vidéo claire. */
 export const REEL_TOP_SCRIM = [reelsTheme.color.scrimTop, 'transparent'] as const;
 
-/** Atmosphère desktop/tablette */
 export const REEL_STAGE_ATMOSPHERE = ['#060A12', '#000000'] as const;
 export const REEL_STAGE_GLOW = ['rgba(69, 230, 255, 0.16)', 'transparent'] as const;

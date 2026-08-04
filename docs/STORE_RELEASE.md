@@ -9,6 +9,7 @@ Guide pour construire et soumettre l’application mobile sur l’App Store et G
 3. Compte **Google Play Console** (25 € unique) pour Android
 4. Variables `.env` remplies (voir `docs/FIREBASE_SETUP.md`)
 5. Firebase en production : règles, index, Storage, Functions (plan Blaze si besoin)
+6. Secrets EAS alignés avec `.env.example` (Firebase, Google OAuth, RevenueCat, EAS project id)
 
 ## Installation EAS CLI
 
@@ -23,10 +24,16 @@ Copiez l’`projectId` affiché dans `app.config.js` (champ `extra.eas.projectId
 ## Builds
 
 ```bash
-# APK de test interne (Android)
-npm run eas:build:preview -- --platform android
+# APK de test interne (Android) — distribution interne, pas TestFlight
+npm run eas:build:android:apk
 
-# Build production (AAB + IPA)
+# AAB Google Play
+npm run eas:build:android:aab
+
+# IPA → App Store Connect / TestFlight
+npm run eas:build:testflight
+
+# Les deux plateformes (profil production)
 npm run eas:build:production -- --platform all
 ```
 
@@ -35,18 +42,22 @@ Profils définis dans `eas.json` :
 | Profil | Usage |
 |--------|--------|
 | `development` | Client de développement + simulateur iOS |
-| `preview` | Tests internes (APK Android) |
-| `production` | Stores — version auto-incrémentée |
+| `preview` | APK Android interne (`distribution: internal`) |
+| `production` | Stores (AAB + IPA) — version auto-incrémentée |
+| `testflight` | Alias iOS store (étend `production`) → soumission TestFlight |
+
+> **Important :** le profil `preview` n’envoie **pas** vers TestFlight. Pour TestFlight utilisez `testflight` ou `production` (distribution store).
 
 ## Soumission stores
 
-1. Renseignez `eas.json` → section `submit.production` (Apple ID, ASC App ID, clé Google Play).
+1. Renseignez `eas.json` → section `submit.production` (Apple ID, ASC App ID).
 2. Placez la clé de service Google Play dans `secrets/google-play-service-account.json` (ne pas committer).
-3. Lancez :
+3. Assurez-vous que les secrets EAS (Firebase, RevenueCat, Daily, Google OAuth) sont configurés sur le projet Expo.
+4. Lancez :
 
 ```bash
-eas submit --platform ios --latest
-eas submit --platform android --latest
+npm run eas:submit:testflight
+eas submit --platform android --latest --profile production
 ```
 
 ## Fiches store — textes légaux
@@ -77,6 +88,9 @@ L’application affiche aussi ces textes dans **Profil → Informations légales
 - [ ] Classification d’âge (sport — en général 4+ / PEGI 3 avec messagerie modérée)
 - [ ] Compte démo pour la revue Apple (email + mot de passe test)
 - [ ] Politique de confidentialité et CGU accessibles en ligne
+- [ ] `EXPO_PUBLIC_APP_ENV=production` et `EXPO_PUBLIC_V3_SHELL=1` (forcés dans les profils EAS)
+- [ ] Push : entitlements `aps-environment=production` sur le build store (EAS gère le profil)
+- [ ] RevenueCat keys + produits App Store / Play configurés
 
 ## Contact support store
 

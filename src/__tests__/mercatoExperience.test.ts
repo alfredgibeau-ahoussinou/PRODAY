@@ -32,13 +32,15 @@ describe('getMercatoExperienceConfig', () => {
     expect(cfg.showFavoritesHeader).toBe(false);
   });
 
-  it('expose les 4 raccourcis Mercato', () => {
+  it('expose les raccourcis Mercato staff (radar + compare)', () => {
     const cfg = getMercatoExperienceConfig('homme', 'coach', 'men');
     expect(cfg.quickTiles.map((t) => t.id)).toEqual([
       'players',
       'clubs',
       'detections',
       'stages',
+      'talent_radar',
+      'compare',
     ]);
   });
 });

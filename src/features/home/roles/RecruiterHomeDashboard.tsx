@@ -11,6 +11,7 @@ import {
 import { useDashboardData } from '../../../hooks/useDashboardData';
 import { useStaffMercatoPipeline } from '../../../hooks/useStaffMercatoPipeline';
 import { useRecruiterRecommendations } from '../../../hooks/useRecruiterRecommendations';
+import { useSmartMatch } from '../../../hooks/useSmartMatch';
 import { useTabNavigationActions } from '../../../hooks/useTabNavigationActions';
 import { useTranslation } from '../../../context/LocaleContext';
 import { recruitmentService } from '../../../services/recruitment.service';
@@ -19,6 +20,7 @@ import type { RolePanelAction } from '../../../content/roleDashboardExperience';
 import { PressableSpring } from '../../../components/motion';
 import { ProDayText } from '../../../components/ui/ProDayText';
 import { GlassCard } from '../../../components/aurora/GlassCard';
+import { SmartMatchPanel } from '../../../components/recruitment/SmartMatchPanel';
 import { spacing } from '../../../theme/designTokens';
 import { StyleSheet } from 'react-native';
 
@@ -39,6 +41,7 @@ export const RecruiterHomeDashboard: React.FC<StaffRoleHomeProps> = ({
 
   const latestPost = posts[0] ?? null;
   const recommendations = useRecruiterRecommendations(latestPost);
+  const smartMatch = useSmartMatch(profile);
 
   const loadPipeline = useCallback(async () => {
     setExtraLoading(true);
@@ -69,10 +72,10 @@ export const RecruiterHomeDashboard: React.FC<StaffRoleHomeProps> = ({
   }, [loadPipeline]);
 
   const handleRefresh = useCallback(async () => {
-    await Promise.all([refresh(), loadPipeline()]);
+    await Promise.all([refresh(), loadPipeline(), smartMatch.refresh()]);
     await recommendations.refresh();
     await onRefresh?.();
-  }, [refresh, loadPipeline, recommendations, onRefresh]);
+  }, [refresh, loadPipeline, recommendations, onRefresh, smartMatch]);
 
   const pendingCount = useMemo(
     () => applications.filter((a) => a.status === 'PENDING').length,
@@ -85,7 +88,7 @@ export const RecruiterHomeDashboard: React.FC<StaffRoleHomeProps> = ({
       return;
     }
     if (action.title === 'Scouting') {
-      nav.openMercato('home');
+      nav.openMercato('talent_radar');
       return;
     }
     if (action.title === 'Covoiturage') {
@@ -154,10 +157,19 @@ export const RecruiterHomeDashboard: React.FC<StaffRoleHomeProps> = ({
             title={match.player.display_name}
             subtitle={`${match.player.profile.position ?? ''} · ${match.player.city ?? ''}`.trim()}
             meta={`${match.score}%`}
-            onPress={() => nav.openMercato('home')}
+            onPress={() => nav.openMercato('players')}
           />
         ))
       )}
+
+      <StaffSectionTitle title={t('smartMatch.title')} subtitle={t('smartMatch.subtitle')} />
+      <SmartMatchPanel
+        edges={smartMatch.edges}
+        loading={smartMatch.loading}
+        onOpenMercato={() => nav.openMercato('talent_radar')}
+        onOpenPlayer={() => nav.openMercato('players')}
+        onOpenPost={() => nav.openMercato('home')}
+      />
 
       <GlassCard variant="accent" style={styles.cta}>
         <ProDayText variant="section">{t('roleHome.recruiter.mercatoCta')}</ProDayText>

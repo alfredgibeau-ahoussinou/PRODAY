@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   View,
   TouchableOpacity,
@@ -22,6 +22,8 @@ import { DetectionEventsScreen } from './DetectionEventsScreen';
 import { StagesListScreen } from './StagesListScreen';
 import { StageDetailScreen } from './StageDetailScreen';
 import { CreateStageScreen } from './CreateStageScreen';
+import { TalentRadarScreen } from './TalentRadarScreen';
+import { PlayerCompareScreen } from './PlayerCompareScreen';
 import { canPublishRecruitmentPost, canPublishStages } from '../utils/roleCapabilities';
 import { useMercatoHome, useUserProfile } from '../hooks/useRecruitmentData';
 import { useAuth } from '../context/AuthContext';
@@ -45,6 +47,8 @@ import {
 } from '../content/mercatoExperience';
 import { usePlatformFeatureFlags } from '../hooks/usePlatformFeatureFlags';
 import { FeatureDisabledPanel } from '../components/platform/FeatureDisabledPanel';
+import { favoritesService } from '../services/favorites.service';
+import { usersService } from '../services/users.service';
 
 type MercatoView =
   | 'home'
@@ -60,7 +64,9 @@ type MercatoView =
   | 'detections'
   | 'stages'
   | 'stage_detail'
-  | 'create_stage';
+  | 'create_stage'
+  | 'talent_radar'
+  | 'compare';
 
 import type { MercatoPostScope } from '../utils/mercatoPostFilters';
 import {
@@ -84,6 +90,7 @@ export const MercatoScreen: React.FC<MercatoScreenProps> = ({ postScope }) => {
   const [selectedStageId, setSelectedStageId] = useState<string | null>(null);
   const [returnView, setReturnView] = useState<MercatoView>('home');
   const [applicationsCount, setApplicationsCount] = useState(0);
+  const [compareCandidates, setCompareCandidates] = useState<User[]>([]);
 
   const { user: selectedPlayer, loading: loadingPlayer } =
     useUserProfile(selectedPlayerId);
@@ -173,6 +180,14 @@ export const MercatoScreen: React.FC<MercatoScreenProps> = ({ postScope }) => {
       setView('create_post');
     } else if (pendingMercatoView === 'stages') {
       if (stagesEnabled) setView('stages');
+    } else if (pendingMercatoView === 'players') {
+      setView('players');
+    } else if (pendingMercatoView === 'favorites') {
+      setView('favorites');
+    } else if (pendingMercatoView === 'talent_radar') {
+      setView('talent_radar');
+    } else if (pendingMercatoView === 'compare') {
+      setView('compare');
     }
     clearPendingMercato();
   }, [pendingMercatoView, clearPendingMercato, profile, stagesEnabled]);
@@ -186,6 +201,22 @@ export const MercatoScreen: React.FC<MercatoScreenProps> = ({ postScope }) => {
       setApplicationsCount(apps.length);
     });
   }, [profile]);
+
+  const loadCompareCandidates = useCallback(async () => {
+    if (!profile?.uid) {
+      setCompareCandidates([]);
+      return;
+    }
+    const ids = await favoritesService.listIds(profile.uid);
+    const loaded = (
+      await Promise.all(ids.map((id) => usersService.getPublicById(id)))
+    ).filter((u): u is User => u != null && u.role === 'player');
+    setCompareCandidates(loaded);
+  }, [profile?.uid]);
+
+  useEffect(() => {
+    if (view === 'compare') void loadCompareCandidates();
+  }, [view, loadCompareCandidates]);
 
   const handleContact = async (target: User) => {
     if (!requireAuth(t('mercato.auth.contactProfile')) || !profile) return;
@@ -353,6 +384,31 @@ export const MercatoScreen: React.FC<MercatoScreenProps> = ({ postScope }) => {
             setReturnView('favorites');
             setView('staff_profile');
           }
+        }}
+      />
+    );
+  } else if (view === 'talent_radar' && profile) {
+    subView = (
+      <TalentRadarScreen
+        viewer={profile}
+        onBack={() => setView('home')}
+        onSelectPlayer={(p) => {
+          setSelectedPlayerId(p.uid);
+          setReturnView('talent_radar');
+          setView('player_profile');
+        }}
+      />
+    );
+  } else if (view === 'compare' && profile) {
+    subView = (
+      <PlayerCompareScreen
+        viewer={profile}
+        candidates={compareCandidates}
+        onBack={() => setView('home')}
+        onSelectPlayer={(p) => {
+          setSelectedPlayerId(p.uid);
+          setReturnView('compare');
+          setView('player_profile');
         }}
       />
     );

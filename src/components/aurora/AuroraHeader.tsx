@@ -12,6 +12,8 @@ interface AuroraHeaderProps {
   eyebrow?: string;
   title: string;
   subtitle?: string;
+  /** Action gauche (ex. retour). */
+  left?: React.ReactNode;
   right?: React.ReactNode;
   footer?: React.ReactNode;
 }
@@ -21,6 +23,7 @@ export const AuroraHeader: React.FC<AuroraHeaderProps> = ({
   eyebrow,
   title,
   subtitle,
+  left,
   right,
   footer,
 }) => {
@@ -33,6 +36,7 @@ export const AuroraHeader: React.FC<AuroraHeaderProps> = ({
       <View style={styles.shell}>
         <ProDayGradient kind="cta" style={styles.accentBar} />
         <View style={[styles.wrap, { paddingTop: Math.max(insets.top, spacing.sm) }]}>
+          {left ? <View style={styles.left}>{left}</View> : null}
           <View style={styles.copy}>
             {eyebrow ? (
               <ProDayText variant="caption" muted style={styles.eyebrow} numberOfLines={1}>
@@ -83,6 +87,7 @@ function createStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
     copy: { flex: 1, flexShrink: 1, minWidth: 0, gap: 2 },
     eyebrow: { textTransform: 'uppercase', letterSpacing: 1.2, fontSize: 10, flexShrink: 1 },
     title: { fontWeight: '800', letterSpacing: -0.4, flexShrink: 1 },
+    left: { flexShrink: 0, paddingTop: 2 },
     right: { flexShrink: 0 },
     footer: { paddingHorizontal: spacing.lg, paddingBottom: spacing.sm },
   });

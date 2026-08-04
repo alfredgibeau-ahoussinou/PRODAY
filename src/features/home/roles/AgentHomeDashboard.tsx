@@ -20,6 +20,8 @@ import { FeedPublishModal } from '../../../components/feed/FeedPublishModal';
 import { PressableSpring } from '../../../components/motion';
 import { ProDayText } from '../../../components/ui/ProDayText';
 import { GlassCard } from '../../../components/aurora/GlassCard';
+import { SmartMatchPanel } from '../../../components/recruitment/SmartMatchPanel';
+import { useSmartMatch } from '../../../hooks/useSmartMatch';
 import { spacing, radius } from '../../../theme/designTokens';
 import { StyleSheet, View } from 'react-native';
 
@@ -66,6 +68,7 @@ export const AgentHomeDashboard: React.FC<StaffRoleHomeProps> = ({
   const [rows, setRows] = useState<MandateRow[]>([]);
   const [extraLoading, setExtraLoading] = useState(true);
   const [publishOpen, setPublishOpen] = useState(false);
+  const smartMatch = useSmartMatch(profile);
 
   const loadMandates = useCallback(async () => {
     setExtraLoading(true);
@@ -102,13 +105,13 @@ export const AgentHomeDashboard: React.FC<StaffRoleHomeProps> = ({
   }, [loadMandates]);
 
   const handleRefresh = useCallback(async () => {
-    await Promise.all([refresh(), loadMandates()]);
+    await Promise.all([refresh(), loadMandates(), smartMatch.refresh()]);
     await onRefresh?.();
-  }, [refresh, loadMandates, onRefresh]);
+  }, [refresh, loadMandates, onRefresh, smartMatch]);
 
   const handleQuickAction = (action: RolePanelAction) => {
     if (action.title === 'Repérage') {
-      nav.openMercato('home');
+      nav.openMercato('talent_radar');
       return;
     }
     if (action.title === 'Mandats') {
@@ -197,6 +200,14 @@ export const AgentHomeDashboard: React.FC<StaffRoleHomeProps> = ({
             ))}
           </GlassCard>
         )}
+
+        <StaffSectionTitle title={t('smartMatch.title')} subtitle={t('smartMatch.subtitle')} />
+        <SmartMatchPanel
+          edges={smartMatch.edges}
+          loading={smartMatch.loading}
+          onOpenMercato={() => nav.openMercato('talent_radar')}
+          onOpenPlayer={() => nav.openMercato('players')}
+        />
 
         <GlassCard variant="accent" style={styles.cta}>
           <ProDayText variant="section">{t('roleHome.agent.publishTitle')}</ProDayText>

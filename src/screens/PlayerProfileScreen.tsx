@@ -9,6 +9,7 @@ import {
 import type { User } from '../models/User';
 import { PressableSpring } from '../components/motion';
 import { Icon, type IconName } from '../components/ui/Icon';
+import { ProDayButton } from '../components/ui/ProDayButton';
 import { spacing, radius } from '../theme/designTokens';
 import type { AppColors } from '../theme/universeTheme';
 import { useAppTheme } from '../context/ProductLineContext';
@@ -21,6 +22,7 @@ import { isSubScreenShellEnabled } from '../hooks/useSubScreenShell';
 import { TabScreenShell } from '../components/app/TabScreenShell';
 import { ScreenBackButton } from '../components/ui/ScreenBackButton';
 import { scorePlayerForScouting } from '../features/v3/engines/playerScouting.engine';
+import { computeOpportunityScore } from '../core/recruitment/opportunityScore.engine';
 import { AnimatedEntrance } from '../components/motion';
 import { ProDayText } from '../components/ui/ProDayText';
 import { trackV3Event } from '../core/analytics/v3Events';
@@ -35,6 +37,10 @@ import { getProfileCompletion } from '../utils/profileCompletion';
 import { availabilityLabel } from '../utils/playerProfileLabels';
 import { PlayerBadgesRow } from '../components/player/PlayerBadgesRow';
 import { PlayerScoutingShortlistPanel } from '../components/player/PlayerScoutingShortlistPanel';
+import { PlayerScoutReportsPanel } from '../components/player/PlayerScoutReportsPanel';
+import { PlayerOneClickRecruitmentPanel } from '../components/player/PlayerOneClickRecruitmentPanel';
+import { HighlightAnnotationSheet } from '../components/player/HighlightAnnotationSheet';
+import type { HighlightAnnotation } from '../core/recruitment/highlightAnnotation.engine';
 import { usePlayerActivities, useCareerProgression, usePlayerActivitiesForStaff, computePlayerCareerForStaff } from '../hooks/useCareerProgression';
 import { CareerScoreCard } from '../components/player/CareerScoreCard';
 import { PlayerActivityPublicSummary } from '../components/player/PlayerActivityPublicSummary';
@@ -104,28 +110,6 @@ function createStyles(c: AppColors) {
       borderTopWidth: 1,
       borderTopColor: c.border,
     },
-    btnPrimary: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: spacing.sm,
-      backgroundColor: c.brand,
-      borderRadius: radius.pill,
-      paddingVertical: 15,
-    },
-    btnPrimaryText: { color: '#FFFFFF', fontWeight: '800', fontSize: 15 },
-    btnOutline: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: spacing.sm,
-      borderWidth: 1,
-      borderColor: c.brand,
-      borderRadius: radius.pill,
-      paddingVertical: 15,
-      backgroundColor: c.surface,
-    },
-    btnOutlineText: { color: c.brand, fontWeight: '800', fontSize: 15 },
   });
 }
 
@@ -153,6 +137,9 @@ export const PlayerProfileScreen: React.FC<PlayerProfileScreenProps> = ({
     [isStaffView, player, staffActivities]
   );
   const [galleryExpanded, setGalleryExpanded] = useState(false);
+  const [highlightSheetOpen, setHighlightSheetOpen] = useState(false);
+  const [highlightAnnotations, setHighlightAnnotations] = useState<HighlightAnnotation[]>([]);
+  const highlightUrl = player.profile.highlight_video_urls?.filter(Boolean)[0];
   const [visibleContacts, setVisibleContacts] = useState<VisibleProfileContacts | null>(null);
 
   useEffect(() => {
@@ -202,6 +189,11 @@ export const PlayerProfileScreen: React.FC<PlayerProfileScreenProps> = ({
   const scouting = useMemo(() => {
     if (!isStaffView || !myProfile) return null;
     return scorePlayerForScouting(myProfile, player);
+  }, [isStaffView, myProfile, player]);
+
+  const opportunity = useMemo(() => {
+    if (!isStaffView || !myProfile) return null;
+    return computeOpportunityScore({ player, viewer: myProfile });
   }, [isStaffView, myProfile, player]);
 
   const completion = useMemo(
@@ -270,9 +262,21 @@ export const PlayerProfileScreen: React.FC<PlayerProfileScreenProps> = ({
         );
       case 'videos':
         return highlights.length > 0 ? (
-          <Text style={styles.bodyText}>
-            {highlights.length} vidéo highlight enregistrée{highlights.length > 1 ? 's' : ''}
-          </Text>
+          <View style={{ gap: spacing.sm }}>
+            <Text style={styles.bodyText}>
+              {highlights.length} vidéo highlight enregistrée{highlights.length > 1 ? 's' : ''}
+            </Text>
+            {isStaffView && highlightUrl ? (
+              <PressableSpring onPress={() => setHighlightSheetOpen(true)}>
+                <Text style={[styles.link, { color: themeColors.brand }]}>
+                  Annoter le highlight
+                  {highlightAnnotations.length > 0
+                    ? ` · ${highlightAnnotations.length}`
+                    : ''}
+                </Text>
+              </PressableSpring>
+            ) : null}
+          </View>
         ) : (
           <Text style={styles.emptyText}>Aucune vidéo highlight</Text>
         );
@@ -311,15 +315,25 @@ export const PlayerProfileScreen: React.FC<PlayerProfileScreenProps> = ({
         <AnimatedEntrance kind="fade">
           <View style={[styles.scoutingBox, { backgroundColor: themeColors.accentSoft, borderColor: themeColors.accentMuted }]}>
             <ProDayText variant="caption" accent style={{ fontWeight: '800' }}>
-              Pertinence scouting {scouting.score}%. {scouting.label}
+              Opportunity Score {opportunity?.score ?? scouting.score}%
+              {opportunity ? ` · ${opportunity.label}` : ` · ${scouting.label}`}
             </ProDayText>
+            {opportunity && opportunity.reasons.length > 0 ? (
+              <ProDayText variant="caption" muted numberOfLines={2} style={{ marginTop: 4 }}>
+                {opportunity.reasons.join(' · ')}
+              </ProDayText>
+            ) : null}
           </View>
           {myProfile ? (
-            <PlayerScoutingShortlistPanel
-              staff={myProfile}
-              player={player}
-              scoutingScore={scouting.score}
-            />
+            <>
+              <PlayerScoutingShortlistPanel
+                staff={myProfile}
+                player={player}
+                scoutingScore={opportunity?.score ?? scouting.score}
+              />
+              <PlayerScoutReportsPanel staff={myProfile} player={player} />
+              <PlayerOneClickRecruitmentPanel staff={myProfile} player={player} />
+            </>
           ) : null}
         </AnimatedEntrance>
       ) : null}
@@ -373,42 +387,32 @@ export const PlayerProfileScreen: React.FC<PlayerProfileScreenProps> = ({
   const footer = (
     <View style={styles.footer}>
       {isOwnProfile ? (
-        <PressableSpring style={styles.btnPrimary} onPress={handleExportCv}>
-          <Icon name="share" size={18} color="#FFFFFF" />
-          <Text style={styles.btnPrimaryText}>Exporter mon CV (PDF)</Text>
-        </PressableSpring>
+        <ProDayButton label="Exporter mon CV (PDF)" icon="share" onPress={handleExportCv} />
       ) : (
         <>
-          <PressableSpring
-            style={styles.btnPrimary}
+          <ProDayButton
+            label="Contacter"
+            icon="mail"
             onPress={() => {
               if (!requireAuth('Connectez-vous pour contacter ce joueur.')) return;
               onContact?.(player);
             }}
-          >
-            <Icon name="mail" size={18} color="#FFFFFF" />
-            <Text style={styles.btnPrimaryText}>Contacter</Text>
-          </PressableSpring>
-          <PressableSpring
-            style={styles.btnOutline}
-            onPress={async () => {
-              if (!requireAuth('Connectez-vous pour enregistrer des favoris.') || !myProfile) return;
-              try {
-                await toggle(player.uid, 'player');
-              } catch (e) {
-                Alert.alert('Erreur', e instanceof Error ? e.message : 'Action impossible.');
-              }
+          />
+          <ProDayButton
+            label={favorited ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+            icon={favorited ? 'heart' : 'heart-outline'}
+            variant="secondary"
+            onPress={() => {
+              void (async () => {
+                if (!requireAuth('Connectez-vous pour enregistrer des favoris.') || !myProfile) return;
+                try {
+                  await toggle(player.uid, 'player');
+                } catch (e) {
+                  Alert.alert('Erreur', e instanceof Error ? e.message : 'Action impossible.');
+                }
+              })();
             }}
-          >
-            <Icon
-              name={favorited ? 'heart' : 'heart-outline'}
-              size={18}
-              color={themeColors.brand}
-            />
-            <Text style={styles.btnOutlineText}>
-              {favorited ? 'Retirer des favoris' : 'Ajouter aux favoris'}
-            </Text>
-          </PressableSpring>
+          />
         </>
       )}
     </View>
@@ -426,17 +430,29 @@ export const PlayerProfileScreen: React.FC<PlayerProfileScreenProps> = ({
       caption={shellCaption}
       title={shellTitle}
       subtitle={
-        scouting
-          ? `${scouting.label} · ${scouting.score}%`
-          : isOwnProfile && completion
-            ? `Profil ${completion.percent}% complété`
-            : [p.position, p.level, player.city].filter(Boolean).join(' · ') || undefined
+        opportunity
+          ? `${opportunity.label} · ${opportunity.score}%`
+          : scouting
+            ? `${scouting.label} · ${scouting.score}%`
+            : isOwnProfile && completion
+              ? `Profil ${completion.percent}% complété`
+              : [p.position, p.level, player.city].filter(Boolean).join(' · ') || undefined
       }
-      right={<ScreenBackButton onPress={onBack} />}
+      left={<ScreenBackButton onPress={onBack} />}
       flat
     >
       {profileScroll}
       {footer}
+      {highlightUrl && myProfile ? (
+        <HighlightAnnotationSheet
+          visible={highlightSheetOpen}
+          onClose={() => setHighlightSheetOpen(false)}
+          mediaUrl={highlightUrl}
+          authorUid={myProfile.uid}
+          annotations={highlightAnnotations}
+          onChange={setHighlightAnnotations}
+        />
+      ) : null}
     </TabScreenShell>
   );
 };

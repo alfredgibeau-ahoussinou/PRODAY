@@ -26,8 +26,8 @@ interface ReelCollectionSheetProps<P extends string, T extends string> {
 }
 
 /**
- * « Ta sélection » — une seule surface calme, réchauffée, pour choisir le terrain
- * et l'ambiance du fil, plus l'accès aux favoris. Skin Floodlight editorial.
+ * « Ta sélection » — une seule surface calme pour choisir le terrain
+ * et l'ambiance du fil, plus l'accès aux favoris. Skin Night glass.
  */
 export function ReelCollectionSheet<P extends string, T extends string>({
   visible,

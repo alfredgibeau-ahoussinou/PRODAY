@@ -58,8 +58,8 @@ export const SponsorProfileTabScreen: React.FC<{ shellMode?: boolean }> = ({
       );
       return;
     }
-    if (tab === 'offres') nav.setActiveTab('matchs');
-    else if (tab === 'reseau') nav.setActiveTab('messages');
+    // Hors shell sponsor : home = pilotage, messages = réseau (pas Matchs).
+    if (tab === 'reseau') nav.setActiveTab('messages');
     else nav.setActiveTab('home');
   };
 

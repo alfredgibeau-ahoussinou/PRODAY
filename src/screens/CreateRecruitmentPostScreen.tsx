@@ -62,7 +62,7 @@ export const CreateRecruitmentPostScreen: React.FC<CreateRecruitmentPostScreenPr
       <TabScreenShell
         caption="Mercato"
         title="Publier une annonce"
-        right={<ScreenBackButton onPress={onBack} />}
+        left={<ScreenBackButton onPress={onBack} />}
         flat
       >
         <View style={styles.deniedBody}>
@@ -179,7 +179,7 @@ export const CreateRecruitmentPostScreen: React.FC<CreateRecruitmentPostScreenPr
       caption="Mercato"
       title="Publier une annonce"
       subtitle="Visible dans les recherches joueurs compatibles"
-      right={<ScreenBackButton onPress={onBack} />}
+      left={<ScreenBackButton onPress={onBack} />}
       flat
     >
       {form}

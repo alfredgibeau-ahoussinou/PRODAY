@@ -55,10 +55,16 @@ export const colors = {
   successBg: 'rgba(22, 163, 74, 0.15)',
   warning: '#EA580C',
   warningBg: 'rgba(234, 88, 12, 0.15)',
+  warningText: '#9A3412',
   pending: '#A3A3A3',
   pendingBg: 'rgba(163, 163, 163, 0.12)',
   error: '#EF4444',
   errorBg: 'rgba(239, 68, 68, 0.15)',
+  /** Favoris / bookmark */
+  bookmark: '#F59E0B',
+  /** Status admin / presence */
+  statusOk: '#34D399',
+  statusBusy: '#FBBF24',
 
   /** Modules */
   tone1: FLASH_CYAN,
@@ -100,6 +106,7 @@ export const typography = {
     semibold: '600' as const,
     bold: '700' as const,
     extrabold: '800' as const,
+    black: '900' as const,
   },
 } as const;
 

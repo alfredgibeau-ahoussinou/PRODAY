@@ -248,6 +248,44 @@ export const recruitmentService = {
       { success: boolean }
     >('updateApplicationStatus', { applicationId, status, rejectionReason });
   },
+
+  async updateApplicationDetails(
+    applicationId: string,
+    patch: {
+      status?: Application['status'];
+      rejectionReason?: string;
+      trialDate?: Date;
+      pipelineStage?: Application['pipeline_stage'];
+      sharedDocuments?: Application['shared_documents'];
+    }
+  ): Promise<void> {
+    const status = patch.status ?? 'IN_PROGRESS';
+    await callFunction<
+      {
+        applicationId: string;
+        status: Application['status'];
+        rejectionReason?: string;
+        trialDateIso?: string;
+        pipelineStage?: string;
+        sharedDocuments?: Array<Record<string, string>>;
+      },
+      { success: boolean }
+    >('updateApplicationStatus', {
+      applicationId,
+      status,
+      rejectionReason: patch.rejectionReason,
+      trialDateIso: patch.trialDate?.toISOString(),
+      pipelineStage: patch.pipelineStage,
+      sharedDocuments: patch.sharedDocuments?.map((d) => ({
+        id: d.id,
+        label: d.label,
+        url: d.url,
+        uploaded_by: d.uploaded_by,
+        kind: d.kind ?? 'other',
+        created_at: d.created_at.toISOString(),
+      })),
+    });
+  },
 };
 
 /** Temps relatif depuis created_at */

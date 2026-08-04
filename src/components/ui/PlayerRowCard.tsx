@@ -75,7 +75,7 @@ export const PlayerRowCard: React.FC<PlayerRowCardProps> = ({
         ) : null}
         {scoutingScore != null ? (
           <Text style={[styles.scouting, { color: colors.accent }]}>
-            Match {scoutingScore}%
+            Opportunité {scoutingScore}%
             {scoutingLabel ? ` · ${scoutingLabel}` : ''}
           </Text>
         ) : null}
@@ -86,7 +86,7 @@ export const PlayerRowCard: React.FC<PlayerRowCardProps> = ({
           <Icon
             name={bookmarked ? 'bookmark' : 'bookmark-outline'}
             size={22}
-            color={bookmarked ? '#F59E0B' : colors.textMuted}
+            color={bookmarked ? colors.bookmark : colors.textMuted}
           />
         </TouchableOpacity>
       ) : (

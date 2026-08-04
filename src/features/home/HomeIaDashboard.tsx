@@ -35,6 +35,7 @@ import { ActivityFeedStrip } from './components/ActivityFeedStrip';
 import { HealthProgramCard } from './components/HealthProgramCard';
 import { MentalProgramCard } from './components/MentalProgramCard';
 import { CareerScoreCard } from '../../components/player/CareerScoreCard';
+import { CareerPathwayPanel } from '../../components/player/CareerPathwayPanel';
 import { CareerTimelineCard } from '../../components/player/CareerTimelineCard';
 import { WeeklyGoalSettings } from '../../components/player/WeeklyGoalSettings';
 import { PlayerActivityFeed } from '../../components/player/PlayerActivityFeed';
@@ -334,6 +335,14 @@ export const HomeIaDashboard: React.FC<HomeIaDashboardProps> = ({
           {!isStaffHome && career ? <CareerScoreCard career={career} /> : null}
 
           {!isStaffHome ? (
+            <CareerPathwayPanel
+              player={profile}
+              pulseScore={dashboardData.pulse.score}
+              pendingApplications={dashboardData.myApplications.length}
+            />
+          ) : null}
+
+          {!isStaffHome ? (
             <CareerTimelineCard activities={activities} loading={activitiesLoading} />
           ) : null}
 
@@ -372,6 +381,7 @@ export const HomeIaDashboard: React.FC<HomeIaDashboardProps> = ({
 
           {isStaffHome ? (
             <GeoMapPreview
+              variant="network"
               userLocation={userLocation}
               markers={brain.geoMarkers}
               density={brain.geoDensity}

@@ -39,7 +39,7 @@ function getVariantStyles(
     warning: {
       bg: c.warningBg,
       border: c.warning,
-      text: '#9A3412',
+      text: c.warningText ?? c.warning,
       icon: 'warning',
       iconColor: c.warning,
     },

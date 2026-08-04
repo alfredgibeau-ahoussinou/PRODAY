@@ -10,6 +10,8 @@ export interface TournamentRegistration {
   player_names: string[];
   paid: boolean;
   registered_at: Date;
+  stripe_checkout_session_id?: string;
+  paid_at?: Date;
 }
 
 export interface TournamentPool {

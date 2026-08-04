@@ -1,0 +1,21 @@
+appId: com.proday.app
+---
+# Smoke Reels: ouverture onglet + état vide + ouverture caméra publish.
+- assertVisible: Reels
+- tapOn: Reels
+
+# Vérifie que la page Reels monte sans crash.
+- assertVisible:
+    text: "Aucun réel pour l'instant|The feed awaits your first reels"
+
+# Vérifie l'entrée publication → écran caméra (Instagram-like).
+- assertVisible:
+    text: "Publier mon premier réel|Publish my first reel"
+- tapOn:
+    text: "Publier mon premier réel|Publish my first reel"
+- extendedWaitUntil:
+    visible:
+      id: reels-upload-camera
+    timeout: 12000
+- assertVisible:
+    id: reels-upload-camera

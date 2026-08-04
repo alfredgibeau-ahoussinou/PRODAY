@@ -139,7 +139,7 @@ export const CoachProfileScreen: React.FC<CoachProfileScreenProps> = ({
         caption="Mercato"
         title={profileTitle}
         subtitle={staff.display_name}
-        right={<ScreenBackButton onPress={onBack} />}
+        left={<ScreenBackButton onPress={onBack} />}
         
         flat
       >

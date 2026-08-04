@@ -27,6 +27,7 @@ import type { SponsorOffer } from '../../models/SponsorOffer';
 import { TabScreenShell } from '../../components/app/TabScreenShell';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { PushScreenTransition } from '../../components/motion';
+import { useSponsorShellOptional, sponsorTabRoute } from '../../context/SponsorShellContext';
 
 interface SponsorDashboardScreenProps {
   profile: User;
@@ -35,9 +36,32 @@ interface SponsorDashboardScreenProps {
 export const SponsorDashboardScreen: React.FC<SponsorDashboardScreenProps> = ({ profile }) => {
   const { t } = useTranslation();
   const nav = useTabNavigationActions();
+  const sponsorShell = useSponsorShellOptional();
   const { productLine } = useAppTheme();
   const { count: unreadCount } = useUnreadMessageCount();
   const company = profile.profile.job_title ?? profile.display_name;
+
+  const goOffers = () => {
+    if (sponsorShell) {
+      sponsorShell.navigate(sponsorTabRoute('offres'));
+      return;
+    }
+    nav.setActiveTab('home');
+  };
+  const goCampaigns = () => {
+    if (sponsorShell) {
+      sponsorShell.navigate(sponsorTabRoute('offres'));
+      return;
+    }
+    nav.setActiveTab('home');
+  };
+  const goTarifs = () => {
+    if (sponsorShell) {
+      sponsorShell.navigate(sponsorTabRoute('tarifs'));
+      return;
+    }
+    nav.openDashboard('sponsors');
+  };
   const {
     activeOffers,
     myOffers,
@@ -75,10 +99,10 @@ export const SponsorDashboardScreen: React.FC<SponsorDashboardScreenProps> = ({ 
       {analytics ? <SponsorAnalyticsPanel analytics={analytics} /> : null}
 
       <View style={styles.quickRow}>
-        <QuickAction icon="add" label="Offre" onPress={() => nav.setActiveTab('matchs')} />
-        <QuickAction icon="briefcase" label="Campagnes" onPress={() => nav.setActiveTab('matchs')} />
+        <QuickAction icon="add" label="Offre" onPress={goOffers} />
+        <QuickAction icon="briefcase" label="Campagnes" onPress={goCampaigns} />
         <QuickAction icon="chat" label={t('sponsor.network')} onPress={() => nav.setActiveTab('messages')} />
-        <QuickAction icon="star-four-points" label="Tarifs" onPress={() => nav.openDashboard('sponsors')} />
+        <QuickAction icon="star-four-points" label="Tarifs" onPress={goTarifs} />
       </View>
 
       <SponsorActivityFeed items={activity} />
@@ -93,7 +117,7 @@ export const SponsorDashboardScreen: React.FC<SponsorDashboardScreenProps> = ({ 
           <Text style={styles.emptySub}>
             Équipement, visibilité ou financement. Touchez les clubs de votre zone.
           </Text>
-          <TouchableOpacity style={styles.cta} onPress={() => nav.setActiveTab('matchs')}>
+          <TouchableOpacity style={styles.cta} onPress={goOffers}>
             <Text style={styles.ctaText}>Créer une offre</Text>
           </TouchableOpacity>
         </View>
