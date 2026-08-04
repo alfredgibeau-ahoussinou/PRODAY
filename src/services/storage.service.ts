@@ -101,31 +101,47 @@ async function uploadNativeFileViaRest(
     `https://firebasestorage.googleapis.com/v0/b/${bucket}/o` +
     `?uploadType=media&name=${encodeURIComponent(objectPath)}`;
 
-  const result = await FileSystem.uploadAsync(uploadUrl, localUri, {
-    httpMethod: 'POST',
-    uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': contentType,
-    },
-  });
+  const doUpload = async (authorizationValue: string) =>
+    FileSystem.uploadAsync(uploadUrl, localUri, {
+      httpMethod: 'POST',
+      uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
+      headers: {
+        Authorization: authorizationValue,
+        'Content-Type': contentType,
+      },
+    });
 
-  if (result.status < 200 || result.status >= 300) {
-    const bodyPreview = result.body?.slice(0, 240) ?? '';
-    if (result.status === 403 || bodyPreview.includes('storage/unauthorized')) {
-      throw new Error(
-        'Accès Storage refusé. Vérifiez la session utilisateur, puis que Firebase Storage est activé et les règles déployées (firebase deploy --only storage).'
-      );
-    }
-    if (result.status === 404 || bodyPreview.includes('storage/unknown')) {
-      throw new Error(
-        'Firebase Storage n’est pas activé. Console Firebase → Storage → Commencer, puis relancez l’app.'
-      );
-    }
+  // Firebase Storage REST accepte classiquement "Firebase <idToken>".
+  // Sur certains environnements, "Bearer <token>" peut aussi fonctionner.
+  let result = await doUpload(`Firebase ${token}`);
+  const firstBody = result.body?.slice(0, 240) ?? '';
+  const shouldRetryWithBearer =
+    (result.status === 401 || result.status === 403) &&
+    (firstBody.includes('Unauth') ||
+      firstBody.includes('auth') ||
+      firstBody.includes('token') ||
+      firstBody.includes('storage/unauthorized'));
+
+  if (shouldRetryWithBearer) {
+    result = await doUpload(`Bearer ${token}`);
+  }
+
+  if (result.status >= 200 && result.status < 300) return;
+
+  const bodyPreview = result.body?.slice(0, 240) ?? '';
+  if (result.status === 403 || bodyPreview.includes('storage/unauthorized')) {
     throw new Error(
-      `Upload Storage échoué (${result.status})${bodyPreview ? `: ${bodyPreview}` : ''}`
+      'Accès Storage refusé. Vérifiez la session utilisateur, puis que Firebase Storage est activé et les règles déployées (firebase deploy --only storage).'
     );
   }
+  if (result.status === 404 || bodyPreview.includes('storage/unknown')) {
+    throw new Error(
+      'Firebase Storage n’est pas activé. Console Firebase → Storage → Commencer, puis relancez l’app.'
+    );
+  }
+  throw new Error(
+    `Upload Storage échoué (${result.status})${bodyPreview ? `: ${bodyPreview}` : ''}`
+  );
 }
 
 async function uploadWebBlob(
