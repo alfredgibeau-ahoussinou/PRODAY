@@ -20,6 +20,7 @@
         "applinks:www.proday75.fr"
       ],
       "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
         "UIBackgroundModes": ["voip", "audio"],
         "NSCameraUsageDescription": "ProDay utilise la caméra pour filmer vos reels, la téléconsultation Santé et la vérification d’identité.",
         "NSMicrophoneUsageDescription": "ProDay utilise le micro pour filmer vos reels et pour la téléconsultation Santé.",
