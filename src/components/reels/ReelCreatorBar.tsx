@@ -24,12 +24,10 @@ type ReelCreatorBarProps = {
   labels: { follow: string; following: string };
   onOpenProfile: () => void;
   onToggleFollow: () => void;
+  compact?: boolean;
 };
 
-/**
- * Bloc créateur — un tiers-inférieur éditorial : filet ambre vertical, vignette
- * carrée, identité en une et légende traitée comme un sous-titre de diffusion.
- */
+/** Bloc créateur premium: identité claire + légende, sans surcharge. */
 export const ReelCreatorBar: React.FC<ReelCreatorBarProps> = ({
   name,
   handle,
@@ -39,6 +37,7 @@ export const ReelCreatorBar: React.FC<ReelCreatorBarProps> = ({
   labels,
   onOpenProfile,
   onToggleFollow,
+  compact = false,
 }) => {
   const initial = (name?.trim().charAt(0) || 'P').toUpperCase();
   const followScale = useSharedValue(1);
@@ -54,8 +53,6 @@ export const ReelCreatorBar: React.FC<ReelCreatorBarProps> = ({
 
   return (
     <View style={styles.wrap}>
-      <View style={styles.rule} />
-
       <View style={styles.body}>
         <View style={styles.identityRow}>
           <Pressable style={styles.authorRow} onPress={onOpenProfile}>
@@ -70,12 +67,22 @@ export const ReelCreatorBar: React.FC<ReelCreatorBarProps> = ({
 
             <View style={styles.identityText}>
               <View style={styles.nameRow}>
-                <Text style={styles.name} numberOfLines={1}>
+                <Text
+                  style={[styles.name, compact && styles.nameCompact]}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                  minimumFontScale={0.82}
+                >
                   {name}
                 </Text>
                 <View style={styles.tick} />
               </View>
-              <Text style={styles.meta} numberOfLines={1}>
+              <Text
+                style={[styles.meta, compact && styles.metaCompact]}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.8}
+              >
                 @{handle} · {sourceLabel}
               </Text>
             </View>
@@ -97,8 +104,12 @@ export const ReelCreatorBar: React.FC<ReelCreatorBarProps> = ({
               <Text
                 style={[
                   styles.followText,
+                  compact && styles.followTextCompact,
                   { color: following ? reelsTheme.color.text : reelsTheme.color.amber },
                 ]}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.8}
               >
                 {(following ? labels.following : labels.follow).toUpperCase()}
               </Text>
@@ -107,7 +118,7 @@ export const ReelCreatorBar: React.FC<ReelCreatorBarProps> = ({
         </View>
 
         {caption ? (
-          <Text style={styles.caption} numberOfLines={2}>
+          <Text style={[styles.caption, compact && styles.captionCompact]} numberOfLines={2}>
             {caption}
           </Text>
         ) : null}
@@ -118,15 +129,11 @@ export const ReelCreatorBar: React.FC<ReelCreatorBarProps> = ({
 
 const styles = StyleSheet.create({
   wrap: {
-    flexDirection: 'row',
-    gap: reelsTheme.space.sm,
-  },
-  rule: {
-    width: 2.5,
-    borderRadius: 2,
-    backgroundColor: reelsTheme.color.amber,
-    marginTop: 4,
-    marginBottom: 4,
+    borderRadius: reelsTheme.radius.lg,
+    borderWidth: 1,
+    borderColor: reelsTheme.color.hairline,
+    backgroundColor: reelsTheme.color.backdrop,
+    padding: reelsTheme.space.md,
   },
   body: {
     flex: 1,
@@ -177,6 +184,10 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 4,
   },
+  nameCompact: {
+    fontSize: 17,
+    letterSpacing: -0.25,
+  },
   tick: {
     width: 7,
     height: 7,
@@ -185,11 +196,15 @@ const styles = StyleSheet.create({
     transform: [{ rotate: '45deg' }],
   },
   meta: {
-    color: reelsTheme.color.amberBright,
+    color: reelsTheme.color.textDim,
     fontFamily: reelsTheme.type.kicker.fontFamily,
     fontSize: reelsTheme.type.kicker.fontSize,
     letterSpacing: reelsTheme.type.kicker.letterSpacing,
     textTransform: 'uppercase',
+  },
+  metaCompact: {
+    fontSize: 10,
+    letterSpacing: 1.2,
   },
   follow: {
     flexDirection: 'row',
@@ -201,8 +216,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   followOff: {
-    borderColor: reelsTheme.color.amberLine,
-    backgroundColor: 'transparent',
+    borderColor: reelsTheme.color.hairlineStrong,
+    backgroundColor: reelsTheme.color.surfaceRaised,
   },
   followOn: {
     borderColor: reelsTheme.color.hairlineStrong,
@@ -213,6 +228,10 @@ const styles = StyleSheet.create({
     fontSize: 11,
     letterSpacing: 1.6,
   },
+  followTextCompact: {
+    fontSize: 10,
+    letterSpacing: 1.15,
+  },
   caption: {
     color: reelsTheme.color.text,
     fontFamily: reelsTheme.type.caption.fontFamily,
@@ -221,5 +240,9 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(0,0,0,0.55)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 5,
+  },
+  captionCompact: {
+    fontSize: 14,
+    lineHeight: 20,
   },
 });

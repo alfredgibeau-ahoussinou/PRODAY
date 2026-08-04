@@ -153,6 +153,8 @@ export const ReelSlide: React.FC<ReelSlideProps> = ({
   const showError = isActive && (reel.failed || embedFailed);
   const caption = reel.caption.trim();
   const bottomPad = Math.max(insets.bottom, reelsTheme.space.md) + reelsTheme.space.xl;
+  const compactText = width <= 400;
+  const creatorRightPad = compactText ? 92 : 82;
 
   // Motion : révélation douce des éléments quand la vidéo devient active.
   const reveal = useSharedValue(isActive ? 1 : 0);
@@ -437,7 +439,7 @@ iframe{border:0;width:100%;height:100%}</style></head>
       </Animated.View>
 
       <Animated.View
-        style={[styles.creator, { paddingBottom: bottomPad }, overlayStyle]}
+        style={[styles.creator, { paddingBottom: bottomPad, paddingRight: creatorRightPad }, overlayStyle]}
         pointerEvents="box-none"
       >
         <ReelCreatorBar
@@ -450,6 +452,7 @@ iframe{border:0;width:100%;height:100%}</style></head>
           labels={{ follow: t('reels.follow'), following: t('reels.following') }}
           onOpenProfile={onOpenProfile}
           onToggleFollow={onToggleFollow}
+          compact={compactText}
         />
       </Animated.View>
     </Pressable>
@@ -543,6 +546,5 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     paddingHorizontal: reelsTheme.space.md,
-    paddingRight: 78,
   },
 });

@@ -21,7 +21,6 @@ import type { PlaybackReel } from '../../content/footballReels';
 import { polesForUniverse, type ReelPoleId, type ReelSeed } from '../../content/reelSeedCatalog';
 import { REEL_THEME_CHIPS, type ReelThemeId } from '../../content/reelThemes';
 import type { ProductLineId } from '../../models/ProductLine';
-import { TAB_BAR_CONTENT_INSET } from '../navigation/BottomTabBar';
 import { PressableSpring } from '../motion';
 import { ProDayScreenCanvas } from '../ui/ProDayScreenCanvas';
 import { Icon } from '../ui/Icon';
@@ -59,6 +58,10 @@ const POLE_CHIP_IDS: ReelPoleId[] = ['foot', 'mercato', 'sante'];
 
 /** Largeur max de la scène verticale — au-delà, marges atmosphériques (desktop/tablette). */
 const STAGE_MAX_WIDTH = 480;
+const STAGE_SIDE_GUTTER = 24;
+const STAGE_TOP_GUTTER = 18;
+const STAGE_BOTTOM_GUTTER = 18;
+const REEL_ASPECT_RATIO = 9 / 16;
 
 type ReelsFeedProps = {
   productLine: ProductLineId;
@@ -153,9 +156,21 @@ export const ReelsFeed: React.FC<ReelsFeedProps> = ({ productLine }) => {
     resumeBookmarkKey,
   });
 
-  const slideHeight = windowH - TAB_BAR_CONTENT_INSET;
-  const stageWidth = Math.min(windowW, STAGE_MAX_WIDTH);
-  const isWide = windowW > stageWidth + 24;
+  const fullHeight = windowH;
+  const availableWideHeight = Math.max(
+    fullHeight - (insets.top + insets.bottom + STAGE_TOP_GUTTER + STAGE_BOTTOM_GUTTER),
+    0,
+  );
+  const wideMaxByWidth = Math.max(windowW - STAGE_SIDE_GUTTER * 2, 0);
+  const wideWidth = Math.min(
+    STAGE_MAX_WIDTH,
+    wideMaxByWidth,
+    Math.floor(availableWideHeight * REEL_ASPECT_RATIO),
+  );
+  const isWide = windowW >= STAGE_MAX_WIDTH + STAGE_SIDE_GUTTER * 2 && wideWidth > 0;
+  const stageWidth = isWide ? wideWidth : windowW;
+  const slideHeight = isWide ? Math.round(stageWidth / REEL_ASPECT_RATIO) : fullHeight;
+  const compactHeader = stageWidth <= 400;
 
   const listExtraData = useMemo(
     () =>
@@ -360,11 +375,13 @@ export const ReelsFeed: React.FC<ReelsFeedProps> = ({ productLine }) => {
 
   const handleUpload = useCallback(
     async (caption: string, uploadTheme: Exclude<ReelThemeId, 'all'>) => {
-      if (!profile || !pickedVideo) return;
+      if (!profile || !pickedVideo) {
+        throw new Error(t('reels.upload.videoRequired'));
+      }
       setUploading(true);
       try {
         const video_url = await storageService.uploadCommunityReel(profile.uid, pickedVideo);
-        await communityReelsService.submit(profile.uid, profile.display_name, {
+        await communityReelsService.submit(profile.uid, profile.display_name || 'ProDay User', {
           caption,
           theme: uploadTheme,
           club_id: profile.profile?.club_id,
@@ -372,11 +389,13 @@ export const ReelsFeed: React.FC<ReelsFeedProps> = ({ productLine }) => {
         });
         setPickedVideo(null);
         trackV3Event('reel_upload_submitted', { theme: uploadTheme });
+      } catch (error) {
+        throw error instanceof Error ? error : new Error(t('common.error'));
       } finally {
         setUploading(false);
       }
     },
-    [profile, pickedVideo],
+    [profile, pickedVideo, t],
   );
 
   const renderItem = useCallback(
@@ -450,7 +469,7 @@ export const ReelsFeed: React.FC<ReelsFeedProps> = ({ productLine }) => {
         <View
           style={[
             styles.stage,
-            { width: stageWidth, height: isWide ? slideHeight : undefined },
+            { width: stageWidth, height: slideHeight },
             isWide && styles.stageFramed,
           ]}
           pointerEvents="box-none"
@@ -494,21 +513,39 @@ export const ReelsFeed: React.FC<ReelsFeedProps> = ({ productLine }) => {
 
           <View style={[styles.topBar, { top: insets.top + spacing.sm }]} pointerEvents="box-none">
             <View style={styles.masthead} pointerEvents="none">
-              <Text style={styles.kicker}>PRODAY</Text>
-              <Text style={styles.brandWord}>{t('reels.title').toUpperCase()}</Text>
-              <View style={styles.brandRule} />
+              <Text
+                style={[styles.brandWord, compactHeader && styles.brandWordCompact]}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.84}
+              >
+                PRODAY {t('reels.title').toUpperCase()}
+              </Text>
             </View>
-
-            <PressableSpring
-              style={styles.control}
-              scaleTo={0.9}
-              haptic
-              onPress={() => setCollectionOpen(true)}
-              accessibilityRole="button"
-              accessibilityLabel={t('reels.collection.title')}
-            >
-              <Icon name="tune" size={19} color={reelsTheme.color.text} />
-            </PressableSpring>
+            <View style={styles.topActions}>
+              <PressableSpring
+                style={styles.control}
+                scaleTo={0.9}
+                haptic
+                onPress={() => setCollectionOpen(true)}
+                accessibilityRole="button"
+                accessibilityLabel={t('reels.collection.title')}
+              >
+                <Icon name="tune" size={18} color={reelsTheme.color.text} />
+              </PressableSpring>
+              {canUpload ? (
+                <PressableSpring
+                  style={styles.control}
+                  scaleTo={0.9}
+                  haptic
+                  onPress={() => setUploadOpen(true)}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('reels.upload.title')}
+                >
+                  <Icon name="add" size={18} color={reelsTheme.color.text} />
+                </PressableSpring>
+              ) : null}
+            </View>
           </View>
 
           {actorSeedsLoading || (hasSeeds && reels.length === 0) ? (
@@ -632,38 +669,38 @@ const styles = StyleSheet.create({
   },
   masthead: {
     alignItems: 'flex-start',
-    gap: 3,
-  },
-  kicker: {
-    color: reelsTheme.color.amber,
-    fontFamily: reelsTheme.type.kicker.fontFamily,
-    fontSize: reelsTheme.type.kicker.fontSize,
-    letterSpacing: reelsTheme.type.kicker.letterSpacing,
+    justifyContent: 'center',
   },
   brandWord: {
     color: reelsTheme.color.text,
     fontFamily: reelsTheme.type.masthead.fontFamily,
     fontSize: reelsTheme.type.masthead.fontSize,
     letterSpacing: reelsTheme.type.masthead.letterSpacing,
-    textShadowColor: 'rgba(0,0,0,0.5)',
+    textShadowColor: 'rgba(0,0,0,0.45)',
     textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 4,
+    textShadowRadius: 6,
   },
-  brandRule: {
-    marginTop: 2,
-    width: 30,
-    height: 2,
-    borderRadius: 1,
-    backgroundColor: reelsTheme.color.amber,
+  brandWordCompact: {
+    fontSize: 14,
+    letterSpacing: 2.1,
+  },
+  topActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: reelsTheme.space.xs,
   },
   control: {
-    width: 40,
-    height: 40,
-    borderRadius: reelsTheme.radius.sm,
+    width: 42,
+    height: 42,
+    borderRadius: reelsTheme.radius.md,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(245,240,230,0.06)',
-    borderWidth: StyleSheet.hairlineWidth,
+    backgroundColor: reelsTheme.color.backdrop,
+    borderWidth: 1,
     borderColor: reelsTheme.color.hairlineStrong,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.24,
+    shadowRadius: 12,
   },
 });

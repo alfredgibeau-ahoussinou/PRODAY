@@ -30,7 +30,7 @@ function formatCount(n: number): string {
   return `${Math.round(n / 1000)}k`;
 }
 
-/** Un geste du rail — glyphe nu posé sur la vidéo, ombre douce pour la lisibilité. */
+/** Bouton flottant premium: verre fumé + accent à l'état actif. */
 const RailAction: React.FC<RailActionProps> = ({
   icon,
   onPress,
@@ -63,7 +63,7 @@ const RailAction: React.FC<RailActionProps> = ({
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
     >
-      <AnimatedView style={[styles.glyph, style]}>
+      <AnimatedView style={[styles.glyph, style, filled && styles.glyphActive]}>
         <Icon name={icon} size={size} color={color} variant={filled ? 'filled' : undefined} />
       </AnimatedView>
       {count && count > 0 ? (
@@ -164,21 +164,28 @@ export const ReelActionRail: React.FC<ReelActionRailProps> = ({
 );
 
 const styles = StyleSheet.create({
-  rail: {
-    alignItems: 'center',
-    gap: reelsTheme.space.lg,
-  },
+  rail: { alignItems: 'center', gap: reelsTheme.space.md },
   action: {
     alignItems: 'center',
-    gap: 7,
+    gap: reelsTheme.space.xs,
   },
   glyph: {
+    width: 46,
+    height: 46,
+    borderRadius: reelsTheme.radius.md,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: reelsTheme.color.backdrop,
+    borderWidth: 1,
+    borderColor: reelsTheme.color.hairline,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.55,
-    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.28,
+    shadowRadius: 12,
+  },
+  glyphActive: {
+    borderColor: reelsTheme.color.amberLine,
+    backgroundColor: reelsTheme.color.amberSoft,
   },
   count: {
     color: reelsTheme.color.text,
@@ -196,8 +203,12 @@ const styles = StyleSheet.create({
     marginVertical: reelsTheme.space.xxs,
   },
   mute: {
-    width: 34,
-    height: 34,
+    width: 38,
+    height: 38,
+    borderRadius: reelsTheme.radius.sm,
+    borderWidth: 1,
+    borderColor: reelsTheme.color.hairline,
+    backgroundColor: reelsTheme.color.backdrop,
     alignItems: 'center',
     justifyContent: 'center',
   },

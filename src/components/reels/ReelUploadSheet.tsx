@@ -46,14 +46,20 @@ export const ReelUploadSheet: React.FC<ReelUploadSheetProps> = ({
       Alert.alert(t('reels.upload.captionRequired'));
       return;
     }
-    void onSubmit(caption.trim(), theme).then(() => {
-      setCaption('');
-      onClose();
-      Alert.alert(
-        t('reels.upload.sent.title'),
-        t('reels.upload.sent.body'),
-      );
-    });
+    void (async () => {
+      try {
+        await onSubmit(caption.trim(), theme);
+        setCaption('');
+        onClose();
+        Alert.alert(t('reels.upload.sent.title'), t('reels.upload.sent.body'));
+      } catch (error) {
+        const message =
+          error instanceof Error && error.message.trim().length > 0
+            ? error.message
+            : t('common.error');
+        Alert.alert(t('common.error'), message);
+      }
+    })();
   };
 
   return (

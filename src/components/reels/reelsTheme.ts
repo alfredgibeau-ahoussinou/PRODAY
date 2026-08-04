@@ -2,48 +2,41 @@ import { Easing } from 'react-native-reanimated';
 import { fontFamily } from '../../theme/typography';
 
 /**
- * ProDay Reels — skin « Floodlight editorial ».
+ * ProDay Reels — skin « Night glass ».
  *
- * Une seule scène quasi-noire réchauffée, un accent ambre de projecteur de stade
- * (jamais de cyan), une typographie de une de magazine sportif et des légendes
- * traitées comme des sous-titres de diffusion. Tous les éléments Reels (rail,
- * bloc créateur, coque du fil, état vide, feuilles) consomment ces tokens afin
- * que l'ensemble se lise comme un même produit — et non plus l'ancien skin
- * « noir + pilules cyan ».
+ * Direction premium immersive: scène noire profonde, accents glaciaux cyan,
+ * surfaces verre fumé, hiérarchie type nette et aérée.
  */
 export const reelsTheme = {
   color: {
-    /** Encres — noir de scène pur pour la vidéo, noirs réchauffés pour le chrome/feuilles. */
+    /** Base sombre premium */
     stage: '#000000',
-    ink: '#0B0908',
-    surface: '#141110',
-    surfaceRaised: '#1E1A16',
+    ink: '#070B12',
+    surface: '#101722',
+    surfaceRaised: '#182232',
 
-    /** Ambre projecteur — l'unique accent. */
-    amber: '#FFB627',
-    amberBright: '#FFD37A',
-    amberDim: '#B87E23',
-    amberSoft: 'rgba(255, 182, 39, 0.14)',
-    amberLine: 'rgba(255, 182, 39, 0.40)',
-    onAmber: '#160F02',
+    /** Accent ProDay froid */
+    amber: '#45E6FF',
+    amberBright: '#8CF1FF',
+    amberDim: '#2CA4B8',
+    amberSoft: 'rgba(69, 230, 255, 0.16)',
+    amberLine: 'rgba(69, 230, 255, 0.42)',
+    onAmber: '#00141A',
 
-    /** Braise chaude — un « j'aime » actif, distinct de l'ambre sans virer au rouge générique. */
-    ember: '#FF7A4D',
+    /** Like actif */
+    ember: '#FF4F7A',
 
-    /** Textes chauds sur vidéo et sur feuilles. */
-    text: '#F5F0E6',
-    textDim: 'rgba(245, 240, 230, 0.66)',
-    textFaint: 'rgba(245, 240, 230, 0.40)',
+    text: '#F3F8FF',
+    textDim: 'rgba(243, 248, 255, 0.68)',
+    textFaint: 'rgba(243, 248, 255, 0.42)',
 
-    /** Filets fins réchauffés. */
-    hairline: 'rgba(245, 240, 230, 0.12)',
-    hairlineStrong: 'rgba(245, 240, 230, 0.22)',
+    hairline: 'rgba(243, 248, 255, 0.12)',
+    hairlineStrong: 'rgba(243, 248, 255, 0.24)',
 
-    /** Voiles — noirs légèrement réchauffés pour lier la vidéo au chrome. */
-    scrimTop: 'rgba(8, 6, 4, 0.55)',
-    scrimSoft: 'rgba(6, 5, 3, 0.30)',
-    scrimStrong: 'rgba(5, 4, 2, 0.90)',
-    backdrop: 'rgba(4, 3, 2, 0.68)',
+    scrimTop: 'rgba(4, 8, 14, 0.56)',
+    scrimSoft: 'rgba(4, 8, 14, 0.28)',
+    scrimStrong: 'rgba(3, 6, 12, 0.9)',
+    backdrop: 'rgba(2, 4, 8, 0.7)',
   },
 
   /** Échelle d'espacement plus intentionnelle que les tokens globaux. */
@@ -51,59 +44,53 @@ export const reelsTheme = {
     xxs: 4,
     xs: 8,
     sm: 12,
-    md: 16,
-    lg: 22,
-    xl: 30,
-    xxl: 44,
+    md: 18,
+    lg: 24,
+    xl: 34,
+    xxl: 48,
   },
 
   radius: {
     xs: 6,
-    sm: 10,
-    md: 14,
-    lg: 20,
-    avatar: 12,
+    sm: 12,
+    md: 16,
+    lg: 24,
+    avatar: 14,
     pill: 999,
   },
 
-  /** Hiérarchie typographique éditoriale (Syne en une, Inter en corps). */
+  /** Hiérarchie premium (Syne + Inter) */
   type: {
-    /** Bandeau de marque en capitales très espacées. */
     masthead: {
       fontFamily: fontFamily.displayBold,
-      fontSize: 15,
-      letterSpacing: 4,
+      fontSize: 16,
+      letterSpacing: 3,
     },
-    /** Sur-titre / méta en capitales — @handle · source, labels de section. */
     kicker: {
       fontFamily: fontFamily.bold,
-      fontSize: 10.5,
-      letterSpacing: 2.2,
+      fontSize: 11,
+      letterSpacing: 2,
     },
-    /** Nom du créateur / titres de feuille. */
     name: {
       fontFamily: fontFamily.displayBold,
-      fontSize: 19,
+      fontSize: 20,
       letterSpacing: -0.4,
     },
-    /** Légende façon sous-titre de diffusion. */
     caption: {
       fontFamily: fontFamily.regular,
-      fontSize: 15.5,
-      lineHeight: 23,
+      fontSize: 15,
+      lineHeight: 22,
     },
-    /** Compteurs du rail. */
     count: {
       fontFamily: fontFamily.bold,
       fontSize: 12,
       letterSpacing: 0.4,
     },
-    /** Grand titre éditorial (état vide / invité). */
     display: {
       fontFamily: fontFamily.displayBold,
-      fontSize: 38,
-      letterSpacing: -1.2,
-      lineHeight: 40,
+      fontSize: 40,
+      letterSpacing: -1,
+      lineHeight: 42,
     },
   },
 
@@ -123,6 +110,6 @@ export const REEL_BOTTOM_SCRIM = [
 /** Voile haut — garde le bandeau lisible sur vidéo claire. */
 export const REEL_TOP_SCRIM = [reelsTheme.color.scrimTop, 'transparent'] as const;
 
-/** Atmosphère desktop/tablette — noir réchauffé avec halo de projecteur ambre. */
-export const REEL_STAGE_ATMOSPHERE = ['#0A0806', '#000000'] as const;
-export const REEL_STAGE_GLOW = ['rgba(255, 182, 39, 0.13)', 'transparent'] as const;
+/** Atmosphère desktop/tablette */
+export const REEL_STAGE_ATMOSPHERE = ['#060A12', '#000000'] as const;
+export const REEL_STAGE_GLOW = ['rgba(69, 230, 255, 0.16)', 'transparent'] as const;
