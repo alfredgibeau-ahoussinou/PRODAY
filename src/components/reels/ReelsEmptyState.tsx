@@ -11,7 +11,6 @@ import Svg, {
   LinearGradient as SvgLinearGradient,
   Stop,
   Rect,
-  Line,
 } from 'react-native-svg';
 import Animated, {
   Easing,
@@ -44,7 +43,6 @@ const ReelBackdrop: React.FC<{ width: number; height: number; accent: string }> 
 }) => {
   const w = Math.max(width, 1);
   const h = Math.max(height, 1);
-  const cx = w / 2;
   return (
     <Svg width={w} height={h} style={StyleSheet.absoluteFill} pointerEvents="none">
       <Defs>
@@ -60,17 +58,6 @@ const ReelBackdrop: React.FC<{ width: number; height: number; accent: string }> 
       </Defs>
       <Rect x="0" y="0" width={w} height={h} fill="url(#reelInk)" />
       <Rect x="0" y="0" width={w} height={h} fill="url(#reelGlow)" />
-      {/* Colonne centrale — la pellicule verticale, à peine visible */}
-      <Line x1={cx} y1={0} x2={cx} y2={h} stroke="rgba(255,255,255,0.04)" strokeWidth={1} />
-      <Line
-        x1={cx}
-        y1={h * 0.12}
-        x2={cx}
-        y2={h * 0.88}
-        stroke="rgba(255,255,255,0.06)"
-        strokeWidth={2}
-        strokeDasharray="2 26"
-      />
     </Svg>
   );
 };
@@ -209,8 +196,8 @@ function createStyles(topInset: number) {
       alignSelf: 'flex-start',
       marginTop: spacing.sm,
       paddingHorizontal: spacing.xl,
-      paddingVertical: 14,
-      borderRadius: 4,
+      paddingVertical: 15,
+      borderRadius: 14,
     },
     ctaText: {
       color: '#04110F',

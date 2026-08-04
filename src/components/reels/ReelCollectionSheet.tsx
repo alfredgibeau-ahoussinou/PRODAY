@@ -22,6 +22,8 @@ interface ReelCollectionSheetProps<P extends string, T extends string> {
   onThemeChange: (id: T) => void;
   favoritesCount: number;
   onOpenFavorites: () => void;
+  canPublish?: boolean;
+  onPublish?: () => void;
 }
 
 /**
@@ -39,6 +41,8 @@ export function ReelCollectionSheet<P extends string, T extends string>({
   onThemeChange,
   favoritesCount,
   onOpenFavorites,
+  canPublish,
+  onPublish,
 }: ReelCollectionSheetProps<P, T>) {
   const insets = useSafeAreaInsets();
   const { colors } = useAppTheme();
@@ -117,6 +121,25 @@ export function ReelCollectionSheet<P extends string, T extends string>({
             </ProDayText>
             <Icon name="chevron-forward" size={16} color="rgba(255,255,255,0.4)" />
           </PressableSpring>
+
+          {canPublish && onPublish ? (
+            <PressableSpring
+              style={[styles.publish, { backgroundColor: colors.accent }]}
+              scaleTo={0.98}
+              haptic
+              onPress={() => {
+                onClose();
+                onPublish();
+              }}
+              accessibilityRole="button"
+              accessibilityLabel={t('reels.upload.title')}
+            >
+              <Icon name="videocam" size={18} color="#04110F" />
+              <ProDayText variant="caption" style={styles.publishText}>
+                {t('reels.upload.title')}
+              </ProDayText>
+            </PressableSpring>
+          ) : null}
         </Pressable>
       </Pressable>
     </Modal>
@@ -183,6 +206,19 @@ function createStyles(colors: ReturnType<typeof useAppTheme>['colors'], bottomIn
       flex: 1,
       color: '#FFFFFF',
       fontWeight: '700',
+    },
+    publish: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: spacing.sm,
+      paddingVertical: 15,
+      borderRadius: radius.md,
+    },
+    publishText: {
+      color: '#04110F',
+      fontWeight: '800',
+      letterSpacing: 0.2,
     },
   });
 }

@@ -35,6 +35,8 @@ export type IconName =
   | 'settings'
   | 'add'
   | 'close'
+  | 'play'
+  | 'tune'
   | 'share'
   | 'star'
   | 'star-outline'
@@ -108,6 +110,8 @@ const MAP: Record<IconName, keyof typeof Ionicons.glyphMap> = {
   settings: 'options-outline',
   add: 'add',
   close: 'close',
+  play: 'play',
+  tune: 'options-outline',
   share: 'share-outline',
   star: 'star',
   'star-outline': 'star-outline',

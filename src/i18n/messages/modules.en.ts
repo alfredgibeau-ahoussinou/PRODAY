@@ -345,6 +345,11 @@ export const MODULES_EN: MessageCatalog = {
   'reels.comments.now': 'just now',
   'reels.comments.emptyTitle': 'Be the first to react',
   'reels.comments.emptyBody': 'Cheer the creator on, ask a question or drop some praise.',
+  'reels.error.unavailable': 'Video unavailable',
+  'reels.error.retry': 'Try again',
+  'reels.favorites.title': 'My favorites',
+  'reels.favorites.empty': 'No saved reels yet. Tap the bookmark while watching to keep one here.',
+  'reels.favorites.resume': 'Resume here',
 
   'shop.sort.featured': 'Featured',
   'shop.sort.priceAsc': 'Price ↑',

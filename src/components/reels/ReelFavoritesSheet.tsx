@@ -9,6 +9,7 @@ import {
 import { ProDayText } from '../ui/ProDayText';
 import { Icon } from '../ui/Icon';
 import { PressableSpring } from '../motion';
+import { useTranslation } from '../../context/LocaleContext';
 import type { ReelBookmarkEntry } from '../../utils/reelBookmarks';
 import { spacing, radius } from '../../theme/designTokens';
 
@@ -26,55 +27,60 @@ export const ReelFavoritesSheet: React.FC<ReelFavoritesSheetProps> = ({
   onClose,
   onResume,
   onRemove,
-}) => (
-  <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-    <View style={styles.backdrop}>
-      <View style={styles.sheet}>
-        <View style={styles.handle} />
-        <View style={styles.header}>
-          <ProDayText variant="title" style={styles.headerTitle}>Mes favoris</ProDayText>
-          <Pressable onPress={onClose} hitSlop={12}>
-            <Icon name="close" size={22} color="rgba(255,255,255,0.7)" />
-          </Pressable>
-        </View>
-        <ScrollView contentContainerStyle={styles.list}>
-          {entries.length === 0 ? (
-            <ProDayText variant="body" style={styles.empty}>
-              Aucun reel en favori. Appuyez sur l’icône signet pendant la lecture.
+}) => {
+  const { t } = useTranslation();
+  return (
+    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
+      <Pressable style={styles.backdrop} onPress={onClose}>
+        <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
+          <View style={styles.handle} />
+          <View style={styles.header}>
+            <ProDayText variant="title" style={styles.headerTitle}>
+              {t('reels.favorites.title')}
             </ProDayText>
-          ) : (
-            entries.map((entry) => (
-              <View key={entry.bookmarkKey} style={styles.row}>
-                <PressableSpring
-                  style={styles.rowMain}
-                  onPress={() => {
-                    onResume(entry.bookmarkKey);
-                    onClose();
-                  }}
-                  scaleTo={0.98}
-                  haptic
-                >
-                  <ProDayText variant="caption" style={styles.rowTitle}>
-                    @{entry.authorName}
-                  </ProDayText>
-                  <ProDayText variant="caption" style={styles.rowCaption} numberOfLines={2}>
-                    {entry.caption || entry.bookmarkKey}
-                  </ProDayText>
-                  <ProDayText variant="caption" accent style={styles.resume}>
-                    Reprendre ici
-                  </ProDayText>
-                </PressableSpring>
-                <Pressable onPress={() => onRemove(entry.bookmarkKey)} hitSlop={8}>
-                  <Icon name="close" size={18} color="rgba(255,255,255,0.45)" />
-                </Pressable>
-              </View>
-            ))
-          )}
-        </ScrollView>
-      </View>
-    </View>
-  </Modal>
-);
+            <Pressable onPress={onClose} hitSlop={12}>
+              <Icon name="close" size={22} color="rgba(255,255,255,0.7)" />
+            </Pressable>
+          </View>
+          <ScrollView contentContainerStyle={styles.list} showsVerticalScrollIndicator={false}>
+            {entries.length === 0 ? (
+              <ProDayText variant="body" style={styles.empty}>
+                {t('reels.favorites.empty')}
+              </ProDayText>
+            ) : (
+              entries.map((entry) => (
+                <View key={entry.bookmarkKey} style={styles.row}>
+                  <PressableSpring
+                    style={styles.rowMain}
+                    onPress={() => {
+                      onResume(entry.bookmarkKey);
+                      onClose();
+                    }}
+                    scaleTo={0.98}
+                    haptic
+                  >
+                    <ProDayText variant="caption" style={styles.rowTitle}>
+                      @{entry.authorName}
+                    </ProDayText>
+                    <ProDayText variant="caption" style={styles.rowCaption} numberOfLines={2}>
+                      {entry.caption || entry.bookmarkKey}
+                    </ProDayText>
+                    <ProDayText variant="caption" accent style={styles.resume}>
+                      {t('reels.favorites.resume')}
+                    </ProDayText>
+                  </PressableSpring>
+                  <Pressable onPress={() => onRemove(entry.bookmarkKey)} hitSlop={8}>
+                    <Icon name="close" size={18} color="rgba(255,255,255,0.45)" />
+                  </Pressable>
+                </View>
+              ))
+            )}
+          </ScrollView>
+        </Pressable>
+      </Pressable>
+    </Modal>
+  );
+};
 
 const styles = StyleSheet.create({
   backdrop: {

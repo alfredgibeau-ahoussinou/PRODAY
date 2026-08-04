@@ -345,6 +345,11 @@ export const MODULES_FR: MessageCatalog = {
   'reels.comments.now': 'à l\'instant',
   'reels.comments.emptyTitle': 'Sois le premier à réagir',
   'reels.comments.emptyBody': 'Encourage le créateur, pose une question ou lâche un compliment.',
+  'reels.error.unavailable': 'Vidéo indisponible',
+  'reels.error.retry': 'Réessayer',
+  'reels.favorites.title': 'Mes favoris',
+  'reels.favorites.empty': 'Aucun réel en favori. Appuie sur le signet pendant la lecture pour en garder un ici.',
+  'reels.favorites.resume': 'Reprendre ici',
 
   'shop.sort.featured': 'Sélection',
   'shop.sort.priceAsc': 'Prix ↑',

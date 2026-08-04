@@ -105,16 +105,7 @@ export const ReelsFeed: React.FC<ReelsFeedProps> = ({ productLine }) => {
   const [pickedVideo, setPickedVideo] = useState<{ uri: string; mimeType: string } | null>(null);
   const [uploading, setUploading] = useState(false);
 
-  const canUpload = profile && ['player', 'club', 'coach'].includes(profile.role);
-
-  const currentThemeLabel = useMemo(
-    () => REEL_THEME_CHIPS.find((c) => c.id === theme)?.label ?? '',
-    [theme],
-  );
-  const collectionLabel = t('reels.collection.current', {
-    focus: poleLabels[pole],
-    theme: currentThemeLabel,
-  });
+  const canUpload = Boolean(profile && ['player', 'club', 'coach'].includes(profile.role));
 
   const rankSeeds = useCallback(
     (seeds: ReelSeed[]) => {
@@ -434,27 +425,30 @@ export const ReelsFeed: React.FC<ReelsFeedProps> = ({ productLine }) => {
 
   return (
     <ProDayScreenCanvas immersive>
-      {/* Marges atmosphériques ProDay (noir + cyan) autour de la scène sur grand écran */}
+      {/* Atmosphère desktop/tablette — noir profond et halo cyan derrière la scène verticale */}
       {isWide ? (
         <View style={StyleSheet.absoluteFill} pointerEvents="none">
           <LinearGradient
-            colors={[
-              'rgba(34,211,238,0.10)',
-              'transparent',
-              'transparent',
-              'rgba(34,211,238,0.10)',
-            ]}
-            locations={[0, 0.32, 0.68, 1]}
-            start={{ x: 0, y: 0.5 }}
-            end={{ x: 1, y: 0.5 }}
+            colors={['#05070A', '#000000']}
             style={StyleSheet.absoluteFill}
+          />
+          <LinearGradient
+            colors={['rgba(34,211,238,0.14)', 'transparent']}
+            locations={[0, 0.6]}
+            start={{ x: 0.5, y: 0 }}
+            end={{ x: 0.5, y: 1 }}
+            style={styles.atmosphere}
           />
         </View>
       ) : null}
 
       <View style={styles.stageWrap}>
         <View
-          style={[styles.stage, { width: stageWidth }, isWide && styles.stageFramed]}
+          style={[
+            styles.stage,
+            { width: stageWidth, height: isWide ? slideHeight : undefined },
+            isWide && styles.stageFramed,
+          ]}
           pointerEvents="box-none"
         >
           <FlatList
@@ -489,8 +483,8 @@ export const ReelsFeed: React.FC<ReelsFeedProps> = ({ productLine }) => {
 
           {/* Voile haut — la marque et le contrôle restent lisibles sur vidéo claire */}
           <LinearGradient
-            colors={['rgba(0,0,0,0.55)', 'transparent']}
-            style={[styles.topScrim, { height: insets.top + 96 }]}
+            colors={['rgba(0,0,0,0.5)', 'transparent']}
+            style={[styles.topScrim, { height: insets.top + 88 }]}
             pointerEvents="none"
           />
 
@@ -502,48 +496,22 @@ export const ReelsFeed: React.FC<ReelsFeedProps> = ({ productLine }) => {
               <View style={[styles.brandTick, { backgroundColor: colors.accent }]} />
             </View>
 
-            <View style={styles.topActions}>
-              <PressableSpring
-                style={styles.collection}
-                scaleTo={0.97}
-                haptic
-                onPress={() => setCollectionOpen(true)}
-                accessibilityRole="button"
-                accessibilityLabel={t('reels.collection.title')}
-              >
-                <ProDayText
-                  variant="caption"
-                  inverse
-                  style={styles.collectionText}
-                  numberOfLines={1}
-                >
-                  {collectionLabel}
-                </ProDayText>
-                <Icon name="chevron-down" size={15} color="rgba(255,255,255,0.75)" />
-              </PressableSpring>
-
-              {canUpload ? (
-                <PressableSpring
-                  style={styles.create}
-                  scaleTo={0.9}
-                  haptic
-                  onPress={() => setUploadOpen(true)}
-                  accessibilityRole="button"
-                  accessibilityLabel={t('reels.create')}
-                >
-                  <Icon name="add" size={26} color="#fff" />
-                </PressableSpring>
-              ) : null}
-            </View>
+            <PressableSpring
+              style={styles.control}
+              scaleTo={0.9}
+              haptic
+              onPress={() => setCollectionOpen(true)}
+              accessibilityRole="button"
+              accessibilityLabel={t('reels.collection.title')}
+            >
+              <Icon name="tune" size={20} color="#FFFFFF" />
+            </PressableSpring>
           </View>
 
           {actorSeedsLoading || (hasSeeds && reels.length === 0) ? (
             <ReelsEmptyState loading />
           ) : !hasSeeds ? (
-            <ReelsEmptyState
-              canPublish={Boolean(canUpload)}
-              onPublish={() => setUploadOpen(true)}
-            />
+            <ReelsEmptyState canPublish={canUpload} onPublish={() => setUploadOpen(true)} />
           ) : null}
         </View>
       </View>
@@ -576,6 +544,8 @@ export const ReelsFeed: React.FC<ReelsFeedProps> = ({ productLine }) => {
         }}
         favoritesCount={bookmarkEntries.length}
         onOpenFavorites={() => setFavoritesOpen(true)}
+        canPublish={canUpload}
+        onPublish={() => setUploadOpen(true)}
       />
 
       <ReelFavoritesSheet
@@ -607,6 +577,13 @@ export const ReelsFeed: React.FC<ReelsFeedProps> = ({ productLine }) => {
 };
 
 const styles = StyleSheet.create({
+  atmosphere: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: '55%',
+  },
   stageWrap: {
     flex: 1,
     alignItems: 'center',
@@ -618,10 +595,16 @@ const styles = StyleSheet.create({
     backgroundColor: '#000',
   },
   stageFramed: {
-    borderRadius: 30,
+    flex: 0,
+    borderRadius: 34,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: 'rgba(34,211,238,0.16)',
+    borderColor: 'rgba(255,255,255,0.08)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 24 },
+    shadowOpacity: 0.6,
+    shadowRadius: 48,
+    elevation: 16,
   },
   list: { flex: 1, backgroundColor: '#000' },
   footer: {
@@ -658,28 +641,14 @@ const styles = StyleSheet.create({
     height: 2,
     borderRadius: 1,
   },
-  topActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-  },
-  collection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    maxWidth: 180,
-  },
-  collectionText: {
-    color: 'rgba(255,255,255,0.9)',
-    fontWeight: '700',
-    letterSpacing: 0.2,
-  },
-  create: {
+  control: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.5,
-    shadowRadius: 4,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.14)',
   },
 });

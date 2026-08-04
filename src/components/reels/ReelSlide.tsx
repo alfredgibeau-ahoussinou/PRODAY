@@ -21,9 +21,11 @@ import Animated, {
 } from 'react-native-reanimated';
 import { ReelNativeVideo } from './ReelNativeVideo';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Icon, type IconName } from '../ui/Icon';
+import { Icon } from '../ui/Icon';
 import { PressableSpring } from '../motion/PressableSpring';
 import { ReelLikeBurst } from './ReelLikeBurst';
+import { ReelActionRail } from './ReelActionRail';
+import { ReelCreatorBar } from './ReelCreatorBar';
 import {
   embedUrlForReel,
   playbackSourceForReel,
@@ -41,7 +43,6 @@ import { trackV3Event } from '../../core/analytics/v3Events';
 import { useTranslation } from '../../context/LocaleContext';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { motion } from '../../theme/motion';
-import { fontFamily } from '../../theme/typography';
 import { spacing } from '../../theme/designTokens';
 
 type ReelSlideProps = {
@@ -114,40 +115,6 @@ const ReelEmbed: React.FC<ReelEmbedProps> = ({ embedUrl, html, reelId }) => {
   );
 };
 
-const AnimatedView = Animated.createAnimatedComponent(View);
-
-/** Un bouton flottant du rail — glyphe minimal sur voile doux, cible large et espacée. */
-const Fab: React.FC<{
-  icon: IconName;
-  onPress: () => void;
-  color?: string;
-  size?: number;
-  filled?: boolean;
-  label?: string;
-  accessibilityLabel: string;
-  animatedStyle?: ReturnType<typeof useAnimatedStyle>;
-}> = ({ icon, onPress, color = '#FFFFFF', size = 28, filled, label, accessibilityLabel, animatedStyle }) => (
-  <PressableSpring
-    style={styles.fab}
-    scaleTo={0.84}
-    haptic
-    onPress={onPress}
-    accessibilityRole="button"
-    accessibilityLabel={accessibilityLabel}
-  >
-    <View style={styles.fabScrim}>
-      <AnimatedView style={animatedStyle}>
-        <Icon name={icon} size={size} color={color} variant={filled ? 'filled' : undefined} />
-      </AnimatedView>
-    </View>
-    {label ? (
-      <Text style={styles.fabLabel} numberOfLines={1}>
-        {label}
-      </Text>
-    ) : null}
-  </PressableSpring>
-);
-
 export const ReelSlide: React.FC<ReelSlideProps> = ({
   reel,
   isActive,
@@ -189,27 +156,33 @@ export const ReelSlide: React.FC<ReelSlideProps> = ({
   const caption = reel.caption.trim();
   const bottomPad = Math.max(insets.bottom, spacing.md) + spacing.xl;
 
-  // Motion : révélation douce de la légende quand la vidéo devient active.
+  // Motion : révélation douce des éléments quand la vidéo devient active.
   const reveal = useSharedValue(isActive ? 1 : 0);
-  const likeScale = useSharedValue(1);
-  const followScale = useSharedValue(1);
+  const pausePop = useSharedValue(0);
 
   useEffect(() => {
     reveal.value = withTiming(isActive ? 1 : 0, { duration: 360, easing: motion.easing.out });
   }, [isActive, reveal]);
 
-  const metaStyle = useAnimatedStyle(() => ({
-    opacity: 0.2 + reveal.value * 0.8,
-    transform: [{ translateY: (1 - reveal.value) * 16 }],
+  const overlayStyle = useAnimatedStyle(() => ({
+    opacity: 0.25 + reveal.value * 0.75,
+    transform: [{ translateY: (1 - reveal.value) * 14 }],
   }));
   const railStyle = useAnimatedStyle(() => ({
-    opacity: 0.4 + reveal.value * 0.6,
-    transform: [{ translateX: (1 - reveal.value) * 20 }],
+    opacity: 0.35 + reveal.value * 0.65,
+    transform: [{ translateX: (1 - reveal.value) * 22 }],
   }));
-  const likeStyle = useAnimatedStyle(() => ({ transform: [{ scale: likeScale.value }] }));
-  const followStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: followScale.value }],
+  const pauseStyle = useAnimatedStyle(() => ({
+    opacity: pausePop.value,
+    transform: [{ scale: 0.85 + pausePop.value * 0.15 }],
   }));
+
+  useEffect(() => {
+    pausePop.value = withTiming(paused && isActive && canPlay ? 1 : 0, {
+      duration: 160,
+      easing: motion.easing.out,
+    });
+  }, [paused, isActive, canPlay, pausePop]);
 
   useEffect(() => {
     setPaused(false);
@@ -256,10 +229,6 @@ export const ReelSlide: React.FC<ReelSlideProps> = ({
   const profileUrl = authorProfileUrl(reel);
 
   const applyLike = async (nextLiked: boolean) => {
-    likeScale.value = withSpring(nextLiked ? 1.28 : 1, motion.spring.bouncy);
-    setTimeout(() => {
-      likeScale.value = withSpring(1, motion.spring.snappy);
-    }, 130);
     if (onLikeToggle) {
       await onLikeToggle(reel.bookmarkKey, nextLiked);
       setLiked(nextLiked);
@@ -278,14 +247,9 @@ export const ReelSlide: React.FC<ReelSlideProps> = ({
     void applyLike(true);
   };
 
-  // Motion : confirmation du suivi — pop du bouton + apparition du check.
   const onToggleFollow = () => {
     const next = !following;
     setFollowing(next);
-    followScale.value = withSequence(
-      withSpring(next ? 1.3 : 0.88, motion.spring.bouncy),
-      withSpring(1, motion.spring.snappy),
-    );
     if (next) prodayHaptics.confirm();
     const authorKey = reelAuthorKey(reel);
     if (onFollowToggle) {
@@ -314,7 +278,7 @@ export const ReelSlide: React.FC<ReelSlideProps> = ({
     }, DOUBLE_TAP_MS);
   };
 
-  const onOpenSource = () => {
+  const onShare = () => {
     void Share.share({
       message: `${reel.caption || 'Reel ProDay'}\n${reel.sourceUrl}`,
       url: reel.sourceUrl,
@@ -337,7 +301,7 @@ export const ReelSlide: React.FC<ReelSlideProps> = ({
 
   const onOpenProfile = () => {
     if (profileUrl) void Linking.openURL(profileUrl);
-    else onOpenSource();
+    else onShare();
   };
 
   const doReport = () => {
@@ -353,7 +317,7 @@ export const ReelSlide: React.FC<ReelSlideProps> = ({
     })();
   };
 
-  // Appui long — options discrètes (signaler / ouvrir la source), sans encombrer le rail.
+  // Appui long — options discrètes (ouvrir la source / signaler), sans encombrer l'écran.
   const onLongPress = () => {
     prodayHaptics.tabSwitch();
     Alert.alert(reel.authorName, undefined, [
@@ -377,9 +341,6 @@ export const ReelSlide: React.FC<ReelSlideProps> = ({
 iframe{border:0;width:100%;height:100%}</style></head>
 <body><div id="w"><iframe src="${embedUrl}" allow="autoplay;encrypted-media;fullscreen" allowfullscreen></iframe></div></body></html>`
     : null;
-
-  const initial = reel.authorName.charAt(0).toUpperCase();
-  const commentLabel = commentCount > 0 ? String(commentCount) : undefined;
 
   return (
     <Pressable
@@ -409,13 +370,13 @@ iframe{border:0;width:100%;height:100%}</style></head>
 
       {showLoader ? (
         <View style={styles.loader} pointerEvents="none">
-          <ActivityIndicator color="#fff" size="large" />
+          <ActivityIndicator color="rgba(255,255,255,0.85)" size="large" />
         </View>
       ) : null}
 
       {showError ? (
         <View style={styles.errorPanel} pointerEvents="auto">
-          <Text style={styles.errorText}>Vidéo indisponible</Text>
+          <Text style={styles.errorText}>{t('reels.error.unavailable')}</Text>
           <View style={styles.errorActions}>
             {onRetry ? (
               <PressableSpring
@@ -428,116 +389,71 @@ iframe{border:0;width:100%;height:100%}</style></head>
                   onRetry();
                 }}
               >
-                <Text style={styles.errorBtnText}>Réessayer</Text>
+                <Text style={styles.errorBtnText}>{t('reels.error.retry')}</Text>
               </PressableSpring>
             ) : null}
             <PressableSpring style={styles.errorBtn} scaleTo={0.96} haptic onPress={onOpenExternal}>
-              <Text style={styles.errorBtnText}>Ouvrir la source</Text>
+              <Text style={styles.errorBtnText}>{t('reels.openSource')}</Text>
             </PressableSpring>
           </View>
         </View>
       ) : null}
 
-      {paused && isActive && canPlay ? (
-        <View style={styles.pauseBadge} pointerEvents="none">
-          <View style={styles.pauseGlyph}>
-            <Icon name="football" size={30} color="rgba(255,255,255,0.92)" />
-          </View>
+      <Animated.View style={[styles.pauseBadge, pauseStyle]} pointerEvents="none">
+        <View style={styles.pauseGlyph}>
+          <Icon name="play" size={30} color="rgba(255,255,255,0.95)" variant="filled" />
         </View>
-      ) : null}
+      </Animated.View>
 
       <ReelLikeBurst visible={showBurst} onDone={() => setShowBurst(false)} />
 
-      {/* Voile bas — atmosphère issue de la vidéo, pas de carte ni de barre */}
+      {/* Voile bas — atmosphère issue de la vidéo, sans carte ni barre */}
       <LinearGradient
-        colors={['transparent', 'rgba(0,0,0,0.32)', 'rgba(0,0,0,0.9)']}
-        locations={[0, 0.5, 1]}
-        style={[styles.scrim, { height: height * 0.46 }]}
+        colors={['transparent', 'rgba(0,0,0,0.28)', 'rgba(0,0,0,0.88)']}
+        locations={[0, 0.45, 1]}
+        style={[styles.scrim, { height: height * 0.48 }]}
         pointerEvents="none"
       />
 
-      <View style={[styles.overlay, { paddingBottom: bottomPad }]} pointerEvents="box-none">
-        {/* Rail flottant — social premium, glyphes espacés */}
-        <Animated.View style={[styles.rail, railStyle]}>
-          <Fab
-            icon={following ? 'checkmark-circle' : 'add'}
-            onPress={onToggleFollow}
-            color={following ? colors.accent : '#FFFFFF'}
-            filled={following}
-            size={26}
-            accessibilityLabel={following ? t('reels.following') : t('reels.follow')}
-            animatedStyle={followStyle}
-          />
-          <Fab
-            icon={liked ? 'heart' : 'heart-outline'}
-            onPress={() => void applyLike(!liked)}
-            color={liked ? '#FF3B5C' : '#FFFFFF'}
-            filled={liked}
-            size={30}
-            accessibilityLabel={t('reels.like')}
-            animatedStyle={likeStyle}
-          />
-          <Fab
-            icon="chat"
-            onPress={() => onOpenComments?.(reel)}
-            size={27}
-            label={commentLabel}
-            accessibilityLabel={t('reels.comments.title')}
-          />
-          <Fab
-            icon="share"
-            onPress={onOpenSource}
-            size={26}
-            accessibilityLabel={t('reels.share')}
-          />
-          <Fab
-            icon={saved ? 'bookmark' : 'bookmark-outline'}
-            onPress={() => void onToggleSave()}
-            size={26}
-            accessibilityLabel={t('reels.save')}
-          />
-          <PressableSpring
-            style={styles.soundBtn}
-            scaleTo={0.84}
-            haptic
-            onPress={() => setUserMuted((m) => !m)}
-            accessibilityRole="button"
-            accessibilityLabel={userMuted ? t('reels.sound.off') : t('reels.sound.on')}
-          >
-            <Icon
-              name={userMuted ? 'volume-mute' : 'volume-high'}
-              size={20}
-              color="rgba(255,255,255,0.75)"
-            />
-          </PressableSpring>
-        </Animated.View>
+      <Animated.View style={[styles.rail, { bottom: bottomPad + 4 }, railStyle]} pointerEvents="box-none">
+        <ReelActionRail
+          liked={liked}
+          saved={saved}
+          muted={userMuted}
+          commentCount={commentCount}
+          accent={colors.accent}
+          labels={{
+            like: t('reels.like'),
+            comment: t('reels.comments.title'),
+            share: t('reels.share'),
+            save: t('reels.save'),
+            soundOn: t('reels.sound.on'),
+            soundOff: t('reels.sound.off'),
+          }}
+          onLike={() => void applyLike(!liked)}
+          onComment={() => onOpenComments?.(reel)}
+          onShare={onShare}
+          onSave={() => void onToggleSave()}
+          onToggleMute={() => setUserMuted((m) => !m)}
+        />
+      </Animated.View>
 
-        {/* Créateur — avatar + nom + club/source, épuré, sans carte */}
-        <Animated.View style={[styles.meta, metaStyle]}>
-          <Pressable onPress={onOpenProfile} style={styles.authorRow}>
-            <View style={[styles.avatar, { borderColor: colors.accent }]}>
-              <Text style={styles.avatarLetter}>{initial}</Text>
-            </View>
-            <View style={styles.authorText}>
-              <View style={styles.nameRow}>
-                <Text style={styles.name} numberOfLines={1}>
-                  {reel.authorName}
-                </Text>
-                <View style={[styles.authorTick, { backgroundColor: colors.accent }]} />
-              </View>
-              <Text style={styles.handleLine} numberOfLines={1}>
-                @{reel.authorHandle} · {REEL_SOURCE_LABEL[reel.source]}
-              </Text>
-            </View>
-          </Pressable>
-
-          {caption ? (
-            <Text style={styles.caption} numberOfLines={2}>
-              {caption}
-            </Text>
-          ) : null}
-        </Animated.View>
-      </View>
+      <Animated.View
+        style={[styles.creator, { paddingBottom: bottomPad }, overlayStyle]}
+        pointerEvents="box-none"
+      >
+        <ReelCreatorBar
+          name={reel.authorName}
+          handle={reel.authorHandle}
+          sourceLabel={REEL_SOURCE_LABEL[reel.source]}
+          caption={caption}
+          following={following}
+          accent={colors.accent}
+          labels={{ follow: t('reels.follow'), following: t('reels.following') }}
+          onOpenProfile={onOpenProfile}
+          onToggleFollow={onToggleFollow}
+        />
+      </Animated.View>
     </Pressable>
   );
 };
@@ -552,27 +468,27 @@ const styles = StyleSheet.create({
   },
   loader: {
     position: 'absolute',
-    bottom: '42%',
-    alignSelf: 'center',
+    top: 0,
+    bottom: 0,
     left: 0,
     right: 0,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   errorPanel: {
     position: 'absolute',
-    bottom: '38%',
+    top: 0,
+    bottom: 0,
     alignSelf: 'center',
-    left: spacing.lg,
-    right: spacing.lg,
+    justifyContent: 'center',
+    left: spacing.xl,
+    right: spacing.xl,
     alignItems: 'center',
-    gap: spacing.sm,
-    padding: spacing.md,
-    borderRadius: 12,
-    backgroundColor: 'rgba(0,0,0,0.55)',
+    gap: spacing.md,
   },
   errorText: {
     color: '#fff',
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '600',
     textAlign: 'center',
   },
@@ -584,10 +500,10 @@ const styles = StyleSheet.create({
   },
   errorBtn: {
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.7)',
-    borderRadius: 8,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 8,
+    borderColor: 'rgba(255,255,255,0.55)',
+    borderRadius: 10,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: 9,
   },
   errorBtnText: {
     color: '#fff',
@@ -600,12 +516,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   pauseGlyph: {
-    width: 74,
-    height: 74,
-    borderRadius: 37,
+    width: 76,
+    height: 76,
+    borderRadius: 38,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(0,0,0,0.32)',
+    paddingLeft: 3,
+    backgroundColor: 'rgba(0,0,0,0.34)',
   },
   scrim: {
     position: 'absolute',
@@ -613,111 +530,16 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
   },
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: 'flex-end',
-    paddingHorizontal: spacing.lg,
-  },
   rail: {
     position: 'absolute',
-    right: spacing.md,
-    bottom: spacing.xl + 52,
-    alignItems: 'center',
-    gap: spacing.xl,
+    right: spacing.lg,
   },
-  fab: {
-    alignItems: 'center',
-    gap: 5,
-  },
-  fabScrim: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(10,12,16,0.32)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.4,
-    shadowRadius: 6,
-  },
-  fabLabel: {
-    color: '#FFFFFF',
-    fontFamily: fontFamily.bold,
-    fontSize: 12,
-    letterSpacing: 0.2,
-    textShadowColor: 'rgba(0,0,0,0.6)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 3,
-  },
-  soundBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: -spacing.sm,
-  },
-  meta: {
-    paddingRight: 84,
-    gap: spacing.md,
-  },
-  authorRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-  },
-  avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(255,255,255,0.14)',
-    borderWidth: 1.5,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarLetter: {
-    color: '#fff',
-    fontFamily: fontFamily.extrabold,
-    fontSize: 18,
-  },
-  authorText: {
-    flexShrink: 1,
-    gap: 2,
-  },
-  nameRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  name: {
-    color: '#fff',
-    fontFamily: fontFamily.displayBold,
-    fontSize: 18,
-    letterSpacing: -0.4,
-    flexShrink: 1,
-    textShadowColor: 'rgba(0,0,0,0.5)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 4,
-  },
-  authorTick: {
-    width: 16,
-    height: 2.5,
-    borderRadius: 2,
-  },
-  handleLine: {
-    color: 'rgba(255,255,255,0.6)',
-    fontFamily: fontFamily.semibold,
-    fontSize: 13,
-    letterSpacing: 0.1,
-  },
-  caption: {
-    color: 'rgba(255,255,255,0.94)',
-    fontFamily: fontFamily.regular,
-    fontSize: 15,
-    lineHeight: 22,
-    textShadowColor: 'rgba(0,0,0,0.5)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 4,
+  creator: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    paddingHorizontal: spacing.lg,
+    paddingRight: 80,
   },
 });
