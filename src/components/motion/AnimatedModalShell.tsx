@@ -9,6 +9,7 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { motion } from '../../theme/motion';
 import { useAppTheme } from '../../context/ProductLineContext';
+import { useTranslation } from '../../context/LocaleContext';
 import { spacing, radius } from '../../theme/designTokens';
 import type { AppColors } from '../../theme/universeTheme';
 
@@ -27,7 +28,6 @@ interface AnimatedModalShellProps {
 }
 
 const COMPACT_SHEET_MAX_HEIGHT = '58%';
-const COMPACT_SHEET_TOP_RADIUS = 20;
 
 /**
  * Modal avec backdrop animé + sheet qui monte depuis le bas.
@@ -36,13 +36,15 @@ export const AnimatedModalShell: React.FC<AnimatedModalShellProps> = ({
   visible,
   onClose,
   children,
-  closeLabel = 'Fermer',
+  closeLabel,
   presentationStyle = 'overFullScreen',
   variant = 'full',
   handleOnly = false,
 }) => {
   const insets = useSafeAreaInsets();
   const { colors: c } = useAppTheme();
+  const { t } = useTranslation();
+  const resolvedCloseLabel = closeLabel ?? t('common.close');
   const styles = useMemo(() => createStyles(c), [c]);
   const backdrop = useSharedValue(0);
   const sheetY = useSharedValue(80);
@@ -78,7 +80,7 @@ export const AnimatedModalShell: React.FC<AnimatedModalShellProps> = ({
       onRequestClose={onClose}
     >
       <View style={styles.root}>
-        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel="Fermer">
+        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel={resolvedCloseLabel}>
           <Animated.View style={[styles.backdrop, backdropStyle]} />
         </Pressable>
 
@@ -99,7 +101,7 @@ export const AnimatedModalShell: React.FC<AnimatedModalShellProps> = ({
             <View style={styles.handleRow}>
               <View style={styles.handle} />
               <Pressable onPress={onClose} hitSlop={12} style={styles.closeBtn}>
-                <Text style={styles.closeText}>{closeLabel}</Text>
+                <Text style={styles.closeText}>{resolvedCloseLabel}</Text>
               </Pressable>
             </View>
           )}
@@ -133,8 +135,8 @@ function createStyles(c: AppColors) {
       flexGrow: 0,
     },
     sheetCompactRadius: {
-      borderTopLeftRadius: COMPACT_SHEET_TOP_RADIUS,
-      borderTopRightRadius: COMPACT_SHEET_TOP_RADIUS,
+      borderTopLeftRadius: radius.xl,
+      borderTopRightRadius: radius.xl,
     },
     handleOnlyRow: {
       alignItems: 'center',

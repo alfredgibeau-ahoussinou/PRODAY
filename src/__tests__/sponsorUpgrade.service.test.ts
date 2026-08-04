@@ -18,6 +18,11 @@ jest.mock('../lib/firebase', () => ({
 jest.mock('../config/firebase', () => ({
   isFirebaseConfigured: jest.fn(),
 }));
+jest.mock('../services/sponsorQuote.service', () => ({
+  sponsorQuoteService: {
+    submitQuoteRequest: jest.fn().mockResolvedValue({ ok: true }),
+  },
+}));
 
 import { addDoc, collection, doc, getDoc, getDocs, updateDoc, writeBatch } from 'firebase/firestore';
 import { getDb } from '../lib/firebase';

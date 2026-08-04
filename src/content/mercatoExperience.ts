@@ -20,7 +20,13 @@ const tr = (t: TranslateFn | undefined, key: string, fallback: string) => {
   return value === key ? fallback : value;
 };
 
-export type MercatoQuickTileId = 'players' | 'clubs' | 'detections' | 'stages';
+export type MercatoQuickTileId =
+  | 'players'
+  | 'clubs'
+  | 'detections'
+  | 'stages'
+  | 'talent_radar'
+  | 'compare';
 
 export interface MercatoQuickTile {
   id: MercatoQuickTileId;
@@ -84,6 +90,18 @@ function getQuickTiles(
       icon: 'calendar',
       title: tr(t, 'mercato.tile.stages', 'Stages'),
       hint: tr(t, 'mercato.tile.stagesHint', 'Camps & stages'),
+    },
+    {
+      id: 'talent_radar',
+      icon: 'star-four-points',
+      title: tr(t, 'mercato.tile.radar', 'Radar'),
+      hint: tr(t, 'mercato.tile.radarHint', 'Talents émergents'),
+    },
+    {
+      id: 'compare',
+      icon: 'tune',
+      title: tr(t, 'mercato.tile.compare', 'Comparer'),
+      hint: tr(t, 'mercato.tile.compareHint', '2 profils côte à côte'),
     },
   ];
 }
@@ -201,6 +219,13 @@ export function getMercatoExperienceConfig(
     ? tr(t, 'mercato.tile.players.woman', 'Joueuses')
     : tr(t, 'mercato.tile.players', 'Joueurs');
   const isPlayer = r === 'player';
+  const staffRoles = new Set(['coach', 'agent', 'recruiter', 'club', 'organizer']);
+  const tiles = getQuickTiles(line, t, playerSegment).filter((tile) => {
+    if (tile.id === 'talent_radar' || tile.id === 'compare') {
+      return staffRoles.has(r);
+    }
+    return true;
+  });
 
   return {
     eyebrow: `${identity.accentLabel} · ${tabLabel}`,
@@ -218,7 +243,7 @@ export function getMercatoExperienceConfig(
     postsEmptySpace: `Aucune annonce ouverte pour ${APP_SPACE_LABELS[appSpace]} pour le moment.`,
     postsEmptyFiltered: tr(t, 'mercato.posts.empty.title', 'Aucune annonce'),
     fabLabel: tr(t, 'mercato.fab.publish', 'Publier une annonce'),
-    quickTiles: getQuickTiles(line, t, playerSegment),
+    quickTiles: tiles,
     showFavoritesHeader: isPlayer,
     showDetectionsHeader: !isPlayer,
     showFavoritesRow: !!role && !isPlayer,

@@ -170,7 +170,7 @@ export const MyApplicationsScreen: React.FC<MyApplicationsScreenProps> = ({
             ? `${pendingCount} en attente de réponse`
             : `${items.length} candidature(s) envoyée(s)`
         }
-        right={<ScreenBackButton onPress={onBack} />}
+        left={<ScreenBackButton onPress={onBack} />}
         
         flat
       >

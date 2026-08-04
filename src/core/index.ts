@@ -45,3 +45,68 @@ export type {
   SmartActionRecommendation,
 } from './types/recommendation';
 export type { GeoMarker, GeoDensitySummary, GeoRadiusKm } from './types/geo';
+
+/** Recruitment intelligence — Opportunity Score, Talent Radar, Smart Match. */
+export {
+  computeOpportunityScore,
+  rankByOpportunityScore,
+} from './recruitment/opportunityScore.engine';
+export type {
+  OpportunityScoreResult,
+  OpportunityBand,
+  OpportunityScoreBreakdown,
+} from './recruitment/opportunityScore.engine';
+export {
+  buildTalentRadar,
+  talentRadarTierLabel,
+} from './recruitment/talentRadar.engine';
+export type {
+  TalentRadarHit,
+  TalentRadarTier,
+  TalentRadarSignals,
+} from './recruitment/talentRadar.engine';
+export {
+  buildSmartMatchGraph,
+  matchPlayersToPosts,
+  matchPlayersToAgents,
+  matchRecruitersToTalent,
+} from './recruitment/smartMatch.engine';
+export type { SmartMatchEdge, SmartMatchGraph, SmartMatchKind } from './recruitment/smartMatch.engine';
+export {
+  buildOneClickRecruitmentPlan,
+  oneClickProgress,
+} from './recruitment/oneClickRecruitment.engine';
+export type {
+  OneClickRecruitmentPlan,
+  OneClickStep,
+  OneClickStepId,
+} from './recruitment/oneClickRecruitment.engine';
+export {
+  buildScoutReportDraft,
+  averageAttributeRating,
+  recommendFromOpportunityBand,
+  isScoutReportComplete,
+  emptyScoutAttributes,
+} from './recruitment/scoutReport.engine';
+export {
+  filterPlayersAdvanced,
+  playerMatchesAdvancedFilters,
+  countActiveAdvancedFilters,
+} from './recruitment/advancedPlayerSearch.engine';
+export type { AdvancedPlayerSearchFilters } from './recruitment/advancedPlayerSearch.engine';
+export {
+  buildHighlightAnnotation,
+  formatAnnotationTimestamp,
+  sortAnnotations,
+  annotationsForMedia,
+} from './recruitment/highlightAnnotation.engine';
+export type {
+  HighlightAnnotation,
+  HighlightAnnotationKind,
+} from './recruitment/highlightAnnotation.engine';
+export { buildCareerPathwayPlan } from './recruitment/careerPathway.engine';
+export type {
+  CareerPathwayKind,
+  CareerPathwayPlan,
+  CareerPathwayStep,
+} from './recruitment/careerPathway.engine';

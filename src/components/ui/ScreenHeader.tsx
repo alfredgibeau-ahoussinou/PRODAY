@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { spacing, radius, shadows } from '../../theme/designTokens';
 import { SPONSOR_THEME } from '../../content/sponsorExperience';
@@ -77,9 +77,13 @@ export const ScreenHeader: React.FC<ScreenHeaderProps> = ({
           ) : (
             <View style={styles.side} />
           )}
-          <Text style={[styles.barTitle, { color: ink }]} numberOfLines={1}>
+          <ProDayText
+            variant="section"
+            numberOfLines={1}
+            style={[styles.barTitle, { color: ink }]}
+          >
             {title}
-          </Text>
+          </ProDayText>
           {rightAction ??
             (onMenu ? (
               <TouchableOpacity onPress={onMenu} style={styles.side} hitSlop={12}>
@@ -90,7 +94,9 @@ export const ScreenHeader: React.FC<ScreenHeaderProps> = ({
             ))}
         </View>
         {subtitle ? (
-          <Text style={[styles.subtitle, { color: subInk }]}>{subtitle}</Text>
+          <ProDayText variant="body" style={[styles.subtitle, { color: subInk }]}>
+            {subtitle}
+          </ProDayText>
         ) : null}
       </View>
     );
@@ -196,8 +202,6 @@ function createStyles(c: AppColors) {
   barTitle: {
     flex: 1,
     textAlign: 'center',
-    fontSize: 17,
-    fontWeight: '700',
   },
   row: {
     flexDirection: 'row',
@@ -214,19 +218,10 @@ function createStyles(c: AppColors) {
     paddingBottom: spacing.xs,
   },
   titles: { flex: 1 },
-  title: {
-    fontSize: 26,
-    fontWeight: '800',
-    letterSpacing: -0.5,
-  },
   subtitleInline: {
-    fontSize: 14,
     marginTop: 4,
-    lineHeight: 20,
   },
   subtitle: {
-    fontSize: 14,
-    lineHeight: 20,
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.sm,
   },

@@ -1,13 +1,13 @@
 import React, { useMemo } from 'react';
 import {
   View,
-  Text,
   Image,
   ImageSourcePropType,
   StyleSheet,
   ViewStyle,
 } from 'react-native';
 import { PressableSpring } from '../motion';
+import { ProDayText } from './ProDayText';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { spacing, radius, surfaces } from '../../theme/designTokens';
 import type { AppColors } from '../../theme/universeTheme';
@@ -37,8 +37,12 @@ export const RichEmptyState: React.FC<RichEmptyStateProps> = ({
       {image ? (
         <Image source={image} style={styles.image} resizeMode="cover" />
       ) : null}
-      <Text style={styles.title}>{title}</Text>
-      <Text style={styles.subtitle}>{subtitle}</Text>
+      <ProDayText variant="section" style={styles.title}>
+        {title}
+      </ProDayText>
+      <ProDayText variant="body" muted style={styles.subtitle}>
+        {subtitle}
+      </ProDayText>
       {actionLabel && onAction ? (
         <PressableSpring
           onPress={onAction}
@@ -46,7 +50,9 @@ export const RichEmptyState: React.FC<RichEmptyStateProps> = ({
           haptic
           style={styles.actionBtn}
         >
-          <Text style={styles.action}>{actionLabel} →</Text>
+          <ProDayText variant="caption" accent style={styles.action}>
+            {actionLabel} →
+          </ProDayText>
         </PressableSpring>
       ) : null}
     </View>
@@ -68,16 +74,10 @@ function createStyles(c: AppColors) {
       marginBottom: spacing.md,
     },
     title: {
-      fontSize: 17,
-      fontWeight: '800',
-      color: c.text,
       textAlign: 'center',
     },
     subtitle: {
-      fontSize: 13,
-      color: c.textSecondary,
       textAlign: 'center',
-      lineHeight: 19,
       marginTop: spacing.sm,
     },
     actionBtn: {
@@ -90,9 +90,7 @@ function createStyles(c: AppColors) {
       backgroundColor: c.surfaceMuted,
     },
     action: {
-      fontSize: 14,
       fontWeight: '800',
-      color: c.accent,
     },
   });
 }

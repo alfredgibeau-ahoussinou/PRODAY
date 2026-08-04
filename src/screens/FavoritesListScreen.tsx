@@ -20,7 +20,7 @@ import { TabScreenShell } from '../components/app/TabScreenShell';
 import { ScreenBackButton } from '../components/ui/ScreenBackButton';
 import { useSectionIntelligence } from '../hooks/useSectionIntelligence';
 import { isSubScreenShellEnabled } from '../hooks/useSubScreenShell';
-import { scoutingScoreMap } from '../features/v3/engines/playerScouting.engine';
+import { computeOpportunityScore } from '../core/recruitment/opportunityScore.engine';
 import { StaggerReveal } from '../components/motion';
 import { TAB_BAR_CONTENT_INSET } from '../navigation/tabBarLayout';
 
@@ -42,8 +42,13 @@ export const FavoritesListScreen: React.FC<FavoritesListScreenProps> = ({
   const isStaff = isSubScreenShellEnabled(profile, 'staff');
   const playerFavorites = useMemo(() => users.filter((u) => u.role === 'player'), [users]);
   const scores = useMemo(() => {
-    if (!profile || !isStaff) return new Map();
-    return scoutingScoreMap(profile, playerFavorites);
+    if (!profile || !isStaff) return new Map<string, { score: number; label: string }>();
+    return new Map(
+      playerFavorites.map((player) => {
+        const opportunity = computeOpportunityScore({ player, viewer: profile });
+        return [player.uid, { score: opportunity.score, label: opportunity.label }] as const;
+      })
+    );
   }, [profile, isStaff, playerFavorites]);
   const intelligence = useSectionIntelligence('recrutement', profile ?? null, productLine, {
     staffMode: isStaff,
@@ -127,7 +132,7 @@ export const FavoritesListScreen: React.FC<FavoritesListScreenProps> = ({
         caption="Mercato"
         title="Mes favoris"
         subtitle={`${users.length} profil(s) enregistré(s)`}
-        right={<ScreenBackButton onPress={onBack} />}
+        left={<ScreenBackButton onPress={onBack} />}
         
         flat
       >

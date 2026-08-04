@@ -58,6 +58,11 @@ export const RecruiterRecommendationsPanel: React.FC<RecruiterRecommendationsPan
                   {match.reasons.join(' · ')}
                 </ProDayText>
               ) : null}
+              {match.opportunityLabel ? (
+                <ProDayText variant="caption" accent numberOfLines={1}>
+                  {match.opportunityLabel}
+                </ProDayText>
+              ) : null}
             </View>
             <View style={[styles.scoreBadge, { backgroundColor: colors.accentSoft }]}>
               <ProDayText variant="caption" accent style={styles.scoreText}>

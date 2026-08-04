@@ -141,7 +141,7 @@ export const StagesListScreen: React.FC<StagesListScreenProps> = ({
         caption="Mercato"
         title="Stages & camps"
         subtitle={`${filtered.length} offre(s) ouverte(s)`}
-        right={<ScreenBackButton onPress={onBack} />}
+        left={<ScreenBackButton onPress={onBack} />}
         
         flat
       >

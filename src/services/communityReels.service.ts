@@ -12,6 +12,7 @@ import {
 import { getDb } from '../lib/firebase';
 import { isFirebaseConfigured } from '../config/firebase';
 import type { CommunityReel, CreateCommunityReelInput } from '../models/CommunityReel';
+import { adminAuditService } from './adminAudit.service';
 
 const COL = 'community_reels';
 
@@ -64,6 +65,7 @@ export const communityReelsService = {
     authorUid: string,
     authorName: string,
     input: CreateCommunityReelInput,
+    actorEmail?: string,
   ): Promise<string> {
     const database = getDb();
     if (!database) throw new Error('Firebase non configuré');
@@ -78,9 +80,17 @@ export const communityReelsService = {
       poster_url: input.poster_url ?? null,
       caption: input.caption.trim(),
       theme: input.theme,
-      status: 'pending',
+      status: 'approved',
       created_at: serverTimestamp(),
       updated_at: serverTimestamp(),
+    });
+    await adminAuditService.log({
+      action: 'reel_submitted',
+      actor_uid: authorUid,
+      actor_email: actorEmail,
+      target_type: 'community_reel',
+      target_id: ref.id,
+      summary: `Nouveau reel publié par ${authorName || 'utilisateur ProDay'}`,
     });
     return ref.id;
   },

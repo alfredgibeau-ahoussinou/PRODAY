@@ -161,13 +161,29 @@ export const MercatoStaffHome: React.FC<MercatoStaffHomeProps> = ({
               onPress: () => onQuickTile('stages'),
             }
           : null,
+        config.quickTiles.some((tile) => tile.id === 'talent_radar')
+          ? {
+              id: 'talent_radar',
+              label: 'Talent Radar',
+              icon: 'star-four-points' as const,
+              onPress: () => onQuickTile('talent_radar'),
+            }
+          : null,
+        config.quickTiles.some((tile) => tile.id === 'compare')
+          ? {
+              id: 'compare',
+              label: 'Comparer',
+              icon: 'tune' as const,
+              onPress: () => onQuickTile('compare'),
+            }
+          : null,
         onCreatePost
           ? { id: 'create', label: config.fabLabel, icon: 'add' as const, onPress: onCreatePost }
           : null,
       ].filter(Boolean) as {
         id: string;
         label: string;
-        icon: 'bookmark' | 'football' | 'calendar' | 'add';
+        icon: 'bookmark' | 'football' | 'calendar' | 'add' | 'star-four-points' | 'tune';
         onPress: () => void;
       }[],
     [config, onFavorites, onQuickTile, onCreatePost, t]

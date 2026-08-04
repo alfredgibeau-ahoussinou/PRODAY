@@ -96,6 +96,7 @@ export const MobileTabBar: React.FC<MobileTabBarProps> = ({
     return (
       <PressableSpring
         key={tab}
+        testID={`main-tab-${tab}`}
         style={[
           styles.sideTab,
           compact && styles.sideTabCompact,
@@ -260,6 +261,7 @@ export const MobileTabBar: React.FC<MobileTabBarProps> = ({
 
               {centerTab ? (
                 <PressableSpring
+                  testID={`main-tab-${centerTab}`}
                   style={styles.centerWrap}
                   onPress={() => onTabPress(centerTab)}
                   scaleTo={0.94}

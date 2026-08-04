@@ -21,7 +21,7 @@ import { PRO_SIGNUP_PRESET_ROLE_KEY } from '../models/CarouselPole';
 import type { UserRole } from '../models/User';
 import { getThemedColorsForLine, type AppColors } from '../theme/universeTheme';
 import { BRAND, colors as defaultColors } from '../theme/designTokens';
-import { useAuth } from './AuthContext';
+import { useAuthOptional } from './AuthContext';
 import { getUserProductLine } from '../utils/productLineAccess';
 import { resolvePlayerSegment, type PlayerSegment } from '../utils/playerSegment';
 import {
@@ -69,7 +69,8 @@ const ProductLineContext = createContext<ProductLineContextValue | null>(null);
 export const ProductLineProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const { profile } = useAuth();
+  const auth = useAuthOptional();
+  const profile = auth?.profile ?? null;
   // Défaut Amateur (cible doc architecture §1.4) — fusion homme/woman au carousel.
   const [productLine, setLineState] = useState<ProductLineId>('amateur');
   const [womanSpaceActive, setWomanSpaceActive] = useState(false);

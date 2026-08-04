@@ -1,22 +1,45 @@
 import React from 'react';
-import { TouchableOpacity } from 'react-native';
-import { Icon } from './Icon';
+import { Pressable, StyleSheet } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useAppTheme } from '../../context/ProductLineContext';
+import { useTranslation } from '../../context/LocaleContext';
+import { radius } from '../../theme/designTokens';
+import { prodayHaptics } from '../../utils/prodayHaptics';
 
 interface ScreenBackButtonProps {
   onPress: () => void;
+  accessibilityLabel?: string;
 }
 
-export const ScreenBackButton: React.FC<ScreenBackButtonProps> = ({ onPress }) => {
+/** Bouton retour unifié — pill brandSoft + chevron (aligné ScreenHeader). */
+export const ScreenBackButton: React.FC<ScreenBackButtonProps> = ({
+  onPress,
+  accessibilityLabel,
+}) => {
   const { colors } = useAppTheme();
+  const { t } = useTranslation();
   return (
-    <TouchableOpacity
+    <Pressable
       hitSlop={12}
-      onPress={onPress}
+      onPress={() => {
+        prodayHaptics.press();
+        onPress();
+      }}
       accessibilityRole="button"
-      accessibilityLabel="Retour"
+      accessibilityLabel={accessibilityLabel ?? t('common.back')}
+      style={[styles.btn, { backgroundColor: colors.brandSoft }]}
     >
-      <Icon name="arrow-back" size={22} color={colors.text} />
-    </TouchableOpacity>
+      <Ionicons name="chevron-back" size={22} color={colors.brand} />
+    </Pressable>
   );
 };
+
+const styles = StyleSheet.create({
+  btn: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+});

@@ -2,6 +2,7 @@
 # Variables : MAESTRO_ADMIN_EMAIL, MAESTRO_ADMIN_PASSWORD
 # Avec claim admin (npm run admin:setup) → console complète.
 # Sans claim → écran gate (si routage App vers AdminAppShell pour email plateforme).
+appId: com.proday.app
 ---
 - launchApp:
     clearState: false

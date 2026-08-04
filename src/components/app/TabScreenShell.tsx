@@ -8,6 +8,7 @@ export type TabScreenShellProps = {
   caption?: string;
   title: string;
   subtitle?: string;
+  left?: React.ReactNode;
   right?: React.ReactNode;
   stats?: AppStatChip[];
   flat?: boolean;
@@ -20,6 +21,7 @@ export const TabScreenShell: React.FC<TabScreenShellProps> = ({
   caption,
   title,
   subtitle,
+  left,
   right,
   stats,
   flat = false,
@@ -33,6 +35,7 @@ export const TabScreenShell: React.FC<TabScreenShellProps> = ({
         eyebrow={caption}
         title={title}
         subtitle={subtitle}
+        left={left}
         right={right}
         footer={stats && stats.length > 0 ? <AppStatChips items={stats} /> : undefined}
       />

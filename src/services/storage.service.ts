@@ -27,6 +27,17 @@ export function normalizeImageMimeType(mimeType?: string | null): string {
   return 'image/jpeg';
 }
 
+/** Normalise les MIME vidéo pour matcher strictement les règles Storage. */
+export function normalizeVideoMimeType(mimeType?: string | null): string {
+  const raw = (mimeType ?? '').toLowerCase().trim();
+  if (!raw) return 'video/mp4';
+  if (raw.includes('quicktime') || raw.includes('mov')) return 'video/quicktime';
+  if (raw.includes('webm')) return 'video/webm';
+  if (raw.includes('mp4') || raw.includes('mpeg') || raw.includes('m4v')) return 'video/mp4';
+  if (raw.startsWith('video/')) return 'video/mp4';
+  return 'video/mp4';
+}
+
 function isRemoteUri(uri: string): boolean {
   return uri.startsWith('http://') || uri.startsWith('https://');
 }
@@ -90,31 +101,47 @@ async function uploadNativeFileViaRest(
     `https://firebasestorage.googleapis.com/v0/b/${bucket}/o` +
     `?uploadType=media&name=${encodeURIComponent(objectPath)}`;
 
-  const result = await FileSystem.uploadAsync(uploadUrl, localUri, {
-    httpMethod: 'POST',
-    uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
-    headers: {
-      Authorization: `Firebase ${token}`,
-      'Content-Type': contentType,
-    },
-  });
+  const doUpload = async (authorizationValue: string) =>
+    FileSystem.uploadAsync(uploadUrl, localUri, {
+      httpMethod: 'POST',
+      uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
+      headers: {
+        Authorization: authorizationValue,
+        'Content-Type': contentType,
+      },
+    });
 
-  if (result.status < 200 || result.status >= 300) {
-    const bodyPreview = result.body?.slice(0, 240) ?? '';
-    if (result.status === 403 || bodyPreview.includes('storage/unauthorized')) {
-      throw new Error(
-        'Accès Storage refusé. Vérifiez que Firebase Storage est activé sur le projet et que les règles sont déployées (firebase deploy --only storage).'
-      );
-    }
-    if (result.status === 404 || bodyPreview.includes('storage/unknown')) {
-      throw new Error(
-        'Firebase Storage n’est pas activé. Console Firebase → Storage → Commencer, puis relancez l’app.'
-      );
-    }
+  // Firebase Storage REST accepte classiquement "Firebase <idToken>".
+  // Sur certains environnements, "Bearer <token>" peut aussi fonctionner.
+  let result = await doUpload(`Firebase ${token}`);
+  const firstBody = result.body?.slice(0, 240) ?? '';
+  const shouldRetryWithBearer =
+    (result.status === 401 || result.status === 403) &&
+    (firstBody.includes('Unauth') ||
+      firstBody.includes('auth') ||
+      firstBody.includes('token') ||
+      firstBody.includes('storage/unauthorized'));
+
+  if (shouldRetryWithBearer) {
+    result = await doUpload(`Bearer ${token}`);
+  }
+
+  if (result.status >= 200 && result.status < 300) return;
+
+  const bodyPreview = result.body?.slice(0, 240) ?? '';
+  if (result.status === 403 || bodyPreview.includes('storage/unauthorized')) {
     throw new Error(
-      `Upload Storage échoué (${result.status})${bodyPreview ? `: ${bodyPreview}` : ''}`
+      'Accès Storage refusé. Vérifiez la session utilisateur, puis que Firebase Storage est activé et les règles déployées (firebase deploy --only storage).'
     );
   }
+  if (result.status === 404 || bodyPreview.includes('storage/unknown')) {
+    throw new Error(
+      'Firebase Storage n’est pas activé. Console Firebase → Storage → Commencer, puis relancez l’app.'
+    );
+  }
+  throw new Error(
+    `Upload Storage échoué (${result.status})${bodyPreview ? `: ${bodyPreview}` : ''}`
+  );
 }
 
 async function uploadWebBlob(
@@ -168,7 +195,7 @@ function mapStorageUploadError(error: unknown): Error {
   const msg = error instanceof Error ? error.message : String(error);
   if (msg.includes('storage/unauthorized') || msg.includes('403')) {
     return new Error(
-      'Accès Storage refusé. Vérifiez que Firebase Storage est activé sur le projet et que les règles sont déployées (firebase deploy --only storage).'
+      'Accès Storage refusé. Vérifiez la session utilisateur, puis que Firebase Storage est activé et les règles déployées (firebase deploy --only storage).'
     );
   }
   if (msg.includes('storage/unknown') || msg.includes('404')) {
@@ -248,7 +275,7 @@ export const storageService = {
     if (!storage) {
       throw new Error('Firebase Storage non configuré pour les vidéos highlight.');
     }
-    const contentType = file.mimeType.includes('video') ? file.mimeType : 'video/mp4';
+    const contentType = normalizeVideoMimeType(file.mimeType);
     const path = `highlights/${uid}/${Date.now()}.mp4`;
     const storageRef = ref(storage, path);
     await uploadFileToStorageRef(storageRef, file.uri, contentType, 'highlight-video');
@@ -284,7 +311,7 @@ export const storageService = {
     if (!storage) {
       throw new Error('Firebase Storage non configuré pour les reels.');
     }
-    const contentType = file.mimeType.includes('video') ? file.mimeType : 'video/mp4';
+    const contentType = normalizeVideoMimeType(file.mimeType);
     const path = `community_reels/${uid}/${Date.now()}.mp4`;
     const storageRef = ref(storage, path);
     await uploadFileToStorageRef(storageRef, file.uri, contentType, 'community-reel');

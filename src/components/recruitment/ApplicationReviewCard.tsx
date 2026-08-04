@@ -25,6 +25,9 @@ interface ApplicationReviewCardProps {
   onMarkInProgress?: () => Promise<void>;
   onAccept: () => Promise<void>;
   onReject: (reason: string) => Promise<void>;
+  onScheduleTrial?: () => Promise<void>;
+  onOpenDocs?: () => void;
+  onOpenCarpool?: () => void;
   busy?: boolean;
 }
 
@@ -122,7 +125,7 @@ function createStyles(c: AppColors) {
 }
 
 const ActionBtn: React.FC<{
-  icon: 'eye' | 'checkmark-circle' | 'close' | 'time';
+  icon: 'eye' | 'checkmark-circle' | 'close' | 'time' | 'calendar' | 'document' | 'car';
   label: string;
   onPress: () => void;
   primary?: boolean;
@@ -162,6 +165,9 @@ export const ApplicationReviewCard: React.FC<ApplicationReviewCardProps> = ({
   onMarkInProgress,
   onAccept,
   onReject,
+  onScheduleTrial,
+  onOpenDocs,
+  onOpenCarpool,
   busy = false,
 }) => {
   const { colors, isWoman } = useAppTheme();
@@ -221,6 +227,19 @@ export const ApplicationReviewCard: React.FC<ApplicationReviewCardProps> = ({
 
       <Text style={styles.letter}>{application.cover_letter}</Text>
 
+      {application.trial_date ? (
+        <Text style={[styles.meta, { marginTop: spacing.sm }]}>
+          Essai prévu · {application.trial_date.toLocaleDateString('fr-FR')}
+        </Text>
+      ) : null}
+      {(application.shared_documents?.length ?? 0) > 0 ? (
+        <Text style={[styles.meta, { marginTop: 4 }]}>
+          {application.shared_documents!.length} document
+          {application.shared_documents!.length > 1 ? 's' : ''} partagé
+          {application.shared_documents!.length > 1 ? 's' : ''}
+        </Text>
+      ) : null}
+
       {application.rejection_reason ? (
         <Text style={styles.rejectNote}>Motif : {application.rejection_reason}</Text>
       ) : null}
@@ -231,6 +250,36 @@ export const ApplicationReviewCard: React.FC<ApplicationReviewCardProps> = ({
             icon="eye"
             label="Profil"
             onPress={onViewProfile}
+            disabled={loading}
+            styles={styles}
+            colors={colors}
+          />
+        ) : null}
+        {onOpenDocs ? (
+          <ActionBtn
+            icon="document"
+            label="Docs"
+            onPress={onOpenDocs}
+            disabled={loading}
+            styles={styles}
+            colors={colors}
+          />
+        ) : null}
+        {onScheduleTrial && !isFinal ? (
+          <ActionBtn
+            icon="calendar"
+            label="Essai"
+            onPress={() => run(onScheduleTrial)}
+            disabled={loading}
+            styles={styles}
+            colors={colors}
+          />
+        ) : null}
+        {onOpenCarpool && application.trial_date ? (
+          <ActionBtn
+            icon="car"
+            label="Covoit"
+            onPress={onOpenCarpool}
             disabled={loading}
             styles={styles}
             colors={colors}

@@ -182,7 +182,7 @@ export const DetectionEventsScreen: React.FC<DetectionEventsScreenProps> = ({
           caption="Scouting"
           title="Journées détection"
           subtitle={`${events.length} session(s) à venir`}
-          right={<ScreenBackButton onPress={onBack} />}
+          left={<ScreenBackButton onPress={onBack} />}
           flat
         >
           {listContent}

@@ -1055,7 +1055,7 @@ service cloud.firestore {
       allow write: if false;
     }
 
-    /** Reels communautaires — modération avant publication */
+    /** Reels communautaires — publication immédiate (approved) + lecture publique approuvée */
     match /community_reels/{reelId} {
       allow read: if isAdmin()
         || (isSignedIn() && resource.data.status == 'approved')
@@ -1063,7 +1063,7 @@ service cloud.firestore {
       allow create: if isSignedIn()
         && request.resource.data.author_uid == request.auth.uid
         && userDoc(request.auth.uid).data.role in ['player', 'club', 'coach']
-        && request.resource.data.status == 'pending'
+        && request.resource.data.status in ['pending', 'approved']
         && request.resource.data.theme in ['skills', 'motivation', 'nutrition'];
       allow update: if isAdmin();
       allow delete: if isAdmin()
@@ -1102,15 +1102,39 @@ service cloud.firestore {
       allow read: if isAdmin()
         || (isSignedIn()
             && userDoc(request.auth.uid).data.profile.club_id == clubId
-            && userDoc(request.auth.uid).data.role in ['coach', 'club', 'agent', 'organizer']);
+            && userDoc(request.auth.uid).data.role in ['coach', 'club', 'agent', 'organizer', 'recruiter']);
       allow create, update: if isSignedIn()
         && userDoc(request.auth.uid).data.profile.club_id == clubId
-        && userDoc(request.auth.uid).data.role in ['coach', 'club', 'agent', 'organizer']
+        && userDoc(request.auth.uid).data.role in ['coach', 'club', 'agent', 'organizer', 'recruiter']
         && request.resource.data.staff_uid == request.auth.uid
-        && request.resource.data.club_id == clubId;
+        && request.resource.data.club_id == clubId
+        && request.resource.data.player_uid == playerUid;
       allow delete: if isAdmin()
         || (isSignedIn()
             && resource.data.staff_uid == request.auth.uid
+            && userDoc(request.auth.uid).data.profile.club_id == clubId);
+    }
+
+    /** Rapports scout club — évaluations structurées staff */
+    match /club_scout_reports/{clubId}/reports/{reportId} {
+      allow read: if isAdmin()
+        || (isSignedIn()
+            && userDoc(request.auth.uid).data.profile.club_id == clubId
+            && userDoc(request.auth.uid).data.role in ['coach', 'club', 'agent', 'organizer', 'recruiter']);
+      allow create: if isSignedIn()
+        && userDoc(request.auth.uid).data.profile.club_id == clubId
+        && userDoc(request.auth.uid).data.role in ['coach', 'club', 'agent', 'organizer', 'recruiter']
+        && request.resource.data.author_uid == request.auth.uid
+        && request.resource.data.club_id == clubId
+        && request.resource.data.player_uid is string;
+      allow update: if isAdmin()
+        || (isSignedIn()
+            && resource.data.author_uid == request.auth.uid
+            && userDoc(request.auth.uid).data.profile.club_id == clubId
+            && request.resource.data.author_uid == request.auth.uid);
+      allow delete: if isAdmin()
+        || (isSignedIn()
+            && resource.data.author_uid == request.auth.uid
             && userDoc(request.auth.uid).data.profile.club_id == clubId);
     }
 

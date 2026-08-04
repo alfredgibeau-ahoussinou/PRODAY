@@ -1,6 +1,7 @@
 # Connexion compte sponsor (partenaire).
 # Variables : MAESTRO_SPONSOR_EMAIL, MAESTRO_SPONSOR_PASSWORD
 # Défauts documentés dans e2e/README.md — part@gmail.com après npm run partner-account:setup
+appId: com.proday.app
 ---
 - launchApp:
     clearState: false

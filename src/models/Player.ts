@@ -39,6 +39,17 @@ export interface Application {
   club_notes?: string;
   trial_date?: Date;
   rejection_reason?: string;
+  /** Documents partagés club↔joueur (coffre candidature). */
+  shared_documents?: ApplicationSharedDocument[];
+}
+
+export interface ApplicationSharedDocument {
+  id: string;
+  label: string;
+  url: string;
+  uploaded_by: string;
+  created_at: Date;
+  kind?: 'cv' | 'license' | 'medical' | 'parental' | 'other';
 }
 
 export interface RecruitmentFilters {

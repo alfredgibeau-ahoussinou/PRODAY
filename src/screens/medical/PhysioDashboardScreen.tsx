@@ -31,6 +31,7 @@ import type { AppColors } from '../../theme/universeTheme';
 import { TabScreenShell } from '../../components/app/TabScreenShell';
 import { useSanteVisioEnabled } from '../../hooks/useSanteVisioEnabled';
 import { SanteVisioBetaBanner } from '../../components/medical/SanteVisioBetaBanner';
+import { useTranslation } from '../../context/LocaleContext';
 
 interface PhysioDashboardScreenProps {
   profile: User;
@@ -39,6 +40,7 @@ interface PhysioDashboardScreenProps {
 export const PhysioDashboardScreen: React.FC<PhysioDashboardScreenProps> = ({ profile }) => {
   const { colors: c, rootStyle } = useMedicalStyles();
   const styles = useMemo(() => createStyles(c), [c]);
+  const { t } = useTranslation();
   const nav = useTabNavigationActions();
   const { count: unreadCount } = useUnreadMessageCount();
   const { appointments, todayAppointments, pendingCount, loading, refresh } =
@@ -79,13 +81,13 @@ export const PhysioDashboardScreen: React.FC<PhysioDashboardScreenProps> = ({ pr
       });
       await refresh();
     } catch (e) {
-      Alert.alert('Erreur', e instanceof Error ? e.message : 'Action impossible.');
+      Alert.alert(t('common.error'), e instanceof Error ? e.message : t('physio.dashboard.errorFallback'));
     }
   };
 
   const goMessages = () => nav.setActiveTab('messages');
-  const goAgenda = () => nav.setActiveTab('matchs');
-  const goRequests = () => nav.setActiveTab('feed');
+  const goAgenda = () => nav.setActiveTab('matchs'); // PhysioAgendaScreen via resolveMainTabScreen
+  const goRequests = () => nav.setActiveTab('feed'); // PhysioRequestsScreen
   const goProfile = () => nav.openProfile();
 
   const StatCard: React.FC<{
@@ -105,7 +107,7 @@ export const PhysioDashboardScreen: React.FC<PhysioDashboardScreenProps> = ({ pr
     onPress: () => void;
   }> = ({ icon, label, onPress }) => (
     <PressableSpring style={styles.quickAction} onPress={onPress} scaleTo={0.96} haptic>
-      <Icon name={icon} size={18} color="#0F766E" />
+      <Icon name={icon} size={18} color={MEDICAL_THEME.primary} />
       <Text style={styles.quickLabel}>{label}</Text>
     </PressableSpring>
   );
@@ -118,7 +120,7 @@ export const PhysioDashboardScreen: React.FC<PhysioDashboardScreenProps> = ({ pr
         <RefreshControl
           refreshing={refreshing}
           onRefresh={() => void onRefresh()}
-          tintColor="#0F766E"
+          tintColor={MEDICAL_THEME.primary}
         />
       }
     >
@@ -130,11 +132,11 @@ export const PhysioDashboardScreen: React.FC<PhysioDashboardScreenProps> = ({ pr
       />
 
       <View style={styles.bookingBanner}>
-        <Icon name="calendar" size={18} color={bookingOnline ? '#0F766E' : c.textMuted} />
+        <Icon name="calendar" size={18} color={bookingOnline ? MEDICAL_THEME.primary : c.textMuted} />
         <Text style={styles.bookingBannerText}>
           {bookingOnline
-            ? 'RDV en ligne actifs. Les joueurs peuvent réserver'
-            : 'RDV en ligne désactivés. Activez vos créneaux'}
+            ? t('physio.dashboard.bookingOnline')
+            : t('physio.dashboard.bookingOffline')}
         </Text>
         <PressableSpring
           style={styles.bookingBannerBtn}
@@ -142,29 +144,27 @@ export const PhysioDashboardScreen: React.FC<PhysioDashboardScreenProps> = ({ pr
           scaleTo={0.96}
           haptic
         >
-          <Text style={styles.bookingBannerBtnText}>Créneaux</Text>
+          <Text style={styles.bookingBannerBtnText}>{t('physio.dashboard.slots')}</Text>
         </PressableSpring>
       </View>
 
       <View style={styles.quickRow}>
-        <QuickAction icon="people" label="Patients" onPress={() => setShowPatients(true)} />
-        <QuickAction icon="calendar" label="Agenda" onPress={goAgenda} />
-        <QuickAction icon="notifications" label="Demandes" onPress={goRequests} />
+        <QuickAction icon="people" label={t('physio.dashboard.patients')} onPress={() => setShowPatients(true)} />
+        <QuickAction icon="calendar" label={t('physio.dashboard.agenda')} onPress={goAgenda} />
+        <QuickAction icon="notifications" label={t('physio.dashboard.requests')} onPress={goRequests} />
       </View>
 
       {loading ? <SkeletonList count={2} variant="card" /> : null}
 
-      <Text style={styles.sectionTitle}>Rendez-vous du jour</Text>
+      <Text style={styles.sectionTitle}>{t('physio.dashboard.todayTitle')}</Text>
       {!visioEnabled ? <SanteVisioBetaBanner compact /> : null}
       {todayAppointments.length === 0 ? (
         <View style={styles.emptyCard}>
           <Icon name="calendar" size={28} color={c.textMuted} />
-          <Text style={styles.emptyTitle}>Aucun RDV aujourd'hui</Text>
-          <Text style={styles.emptySub}>
-            Les joueurs réservent depuis l'onglet Santé. Consultez l'agenda pour la semaine.
-          </Text>
+          <Text style={styles.emptyTitle}>{t('physio.dashboard.emptyTitle')}</Text>
+          <Text style={styles.emptySub}>{t('physio.dashboard.emptySub')}</Text>
           <PressableSpring style={styles.agendaLink} onPress={goAgenda} scaleTo={0.97} haptic>
-            <Text style={styles.agendaLinkText}>Voir l'agenda</Text>
+            <Text style={styles.agendaLinkText}>{t('physio.dashboard.viewAgenda')}</Text>
           </PressableSpring>
         </View>
       ) : (
@@ -189,7 +189,7 @@ export const PhysioDashboardScreen: React.FC<PhysioDashboardScreenProps> = ({ pr
 
       {pendingCount > 0 ? (
         <>
-          <Text style={[styles.sectionTitle, styles.sectionGap]}>Demandes à traiter</Text>
+          <Text style={[styles.sectionTitle, styles.sectionGap]}>{t('physio.dashboard.pendingTitle')}</Text>
           {appointments
             .filter((a) => requiresPhysioConfirmation(a))
             .map((appt, index) => (
@@ -207,16 +207,16 @@ export const PhysioDashboardScreen: React.FC<PhysioDashboardScreenProps> = ({ pr
 
       {uniquePatients.length > 0 ? (
         <>
-          <Text style={[styles.sectionTitle, styles.sectionGap]}>Sportifs suivis</Text>
+          <Text style={[styles.sectionTitle, styles.sectionGap]}>{t('physio.dashboard.followedTitle')}</Text>
           {uniquePatients.map((p, index) => (
             <StaggerReveal key={p.uid} index={index}>
               <PressableSpring style={styles.patientRow} onPress={() => setShowPatients(true)} scaleTo={0.98} haptic>
                 <View style={styles.patientAvatar}>
-                  <Icon name="person" size={18} color="#0F766E" />
+                  <Icon name="person" size={18} color={MEDICAL_THEME.primary} />
                 </View>
                 <View style={styles.patientCopy}>
                   <Text style={styles.patientName}>{p.name}</Text>
-                  <Text style={styles.patientSub}>Ouvrir la messagerie de suivi</Text>
+                  <Text style={styles.patientSub}>{t('physio.dashboard.patientSub')}</Text>
                 </View>
                 <Icon name="chevron-forward" size={16} color={c.textMuted} />
               </PressableSpring>
@@ -230,9 +230,9 @@ export const PhysioDashboardScreen: React.FC<PhysioDashboardScreenProps> = ({ pr
   return (
     <View style={[styles.root, rootStyle]}>
       <TabScreenShell
-        caption="Cabinet Santé"
-        title={`Bonjour, ${profile.display_name}`}
-        subtitle={`${specialty}${profile.city ? ` · ${profile.city}` : ''}. Votre journée de consultations.`}
+        caption={t('physio.dashboard.caption')}
+        title={t('physio.dashboard.greeting', { name: profile.display_name })}
+        subtitle={`${specialty}${profile.city ? ` · ${profile.city}` : ''}. ${t('physio.dashboard.subtitleDay')}`}
         flat
       >
         {dashboardScroll}
@@ -293,7 +293,7 @@ function createStyles(c: AppColors) {
       alignItems: 'center',
     },
     statCardHighlight: { borderColor: '#F59E0B', backgroundColor: '#FFFBEB' },
-    statValue: { fontSize: 22, fontWeight: '900', color: '#0F766E' },
+    statValue: { fontSize: 22, fontWeight: '900', color: MEDICAL_THEME.primary },
     statValueHighlight: { color: '#B45309' },
     statLabel: {
       fontSize: 10,
@@ -315,7 +315,7 @@ function createStyles(c: AppColors) {
     },
     bookingBannerText: { flex: 1, fontSize: 12, color: c.textSecondary, fontWeight: '600' },
     bookingBannerBtn: {
-      backgroundColor: '#0F766E',
+      backgroundColor: MEDICAL_THEME.primary,
       borderRadius: radius.md,
       paddingHorizontal: spacing.sm,
       paddingVertical: 6,

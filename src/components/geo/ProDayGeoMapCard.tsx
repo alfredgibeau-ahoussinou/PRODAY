@@ -14,6 +14,8 @@ import { spacing, radius } from '../../theme/designTokens';
 
 const RADII: GeoRadiusKm[] = [1, 5, 10];
 
+export type ProDayGeoMapVariant = 'nearby' | 'network';
+
 export interface ProDayGeoMapCardProps {
   userLocation?: GeoPoint;
   markers: GeoMarker[];
@@ -25,6 +27,8 @@ export interface ProDayGeoMapCardProps {
   locating?: boolean;
   locError?: string | null;
   footer?: React.ReactNode;
+  /** `network` = vue staff (réseau régional). */
+  variant?: ProDayGeoMapVariant;
 }
 
 /** Carte géolocalisée — carte plein cadre + contrôles flottants. */
@@ -39,18 +43,21 @@ export const ProDayGeoMapCard: React.FC<ProDayGeoMapCardProps> = ({
   locating = false,
   locError,
   footer,
+  variant = 'nearby',
 }) => {
   const { colors } = useAppTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const visibleMarkers = useMemo(() => filterByRadius(markers, radiusKm), [markers, radiusKm]);
+  const isNetwork = variant === 'network';
+  const badgeLabel = isNetwork ? 'Réseau régional' : 'Autour de vous';
 
   const mapOverlay = (
     <>
       <View style={styles.topBadge}>
         <View style={[styles.badgePill, { backgroundColor: colors.surface }]}>
-          <Icon name="location" size={14} color={colors.accent} />
+          <Icon name={isNetwork ? 'people' : 'location'} size={14} color={colors.accent} />
           <ProDayText variant="caption" style={styles.badgeTitle}>
-            Autour de vous
+            {badgeLabel}
           </ProDayText>
         </View>
       </View>
@@ -116,7 +123,25 @@ export const ProDayGeoMapCard: React.FC<ProDayGeoMapCardProps> = ({
       />
 
       <View style={styles.body}>
+        {isNetwork ? (
+          <View style={styles.networkIntro}>
+            <ProDayText variant="section" style={styles.networkTitle}>
+              Activité près de votre club
+            </ProDayText>
+            <ProDayText variant="caption" muted>
+              Matchs amicaux, convocations et signaux locaux pour scouting & logistique.
+            </ProDayText>
+          </View>
+        ) : null}
+
         <View style={styles.statsRow}>
+          {isNetwork && density.usersNearby > 0 ? (
+            <StatPill
+              icon="people"
+              label={`${density.usersNearby} profil${density.usersNearby > 1 ? 's' : ''}`}
+              colors={colors}
+            />
+          ) : null}
           <StatPill
             icon="football"
             label={`${density.matchesNearby} match${density.matchesNearby > 1 ? 's' : ''}`}
@@ -127,6 +152,13 @@ export const ProDayGeoMapCard: React.FC<ProDayGeoMapCardProps> = ({
             label={`${density.eventsNearby} événement${density.eventsNearby > 1 ? 's' : ''}`}
             colors={colors}
           />
+          {isNetwork && density.fieldsNearby > 0 ? (
+            <StatPill
+              icon="location"
+              label={`${density.fieldsNearby} terrain${density.fieldsNearby > 1 ? 's' : ''}`}
+              colors={colors}
+            />
+          ) : null}
           <ProDayText variant="caption" muted style={styles.radiusHint}>
             Rayon {radiusKm} km
           </ProDayText>
@@ -151,13 +183,15 @@ export const ProDayGeoMapCard: React.FC<ProDayGeoMapCardProps> = ({
 
         {visibleMarkers.length === 0 ? (
           <View style={[styles.empty, { backgroundColor: colors.surfaceMuted }]}>
-            <Icon name="football-outline" size={22} color={colors.textMuted} />
+            <Icon name={isNetwork ? 'people' : 'football-outline'} size={22} color={colors.textMuted} />
             <ProDayText variant="caption" muted style={styles.emptyText}>
-              Rien à proximité pour l'instant. Élargissez le rayon ou revenez plus tard.
+              {isNetwork
+                ? 'Aucun signal dans ce rayon. Passez à 10 km pour élargir le scouting local.'
+                : "Rien à proximité pour l'instant. Élargissez le rayon ou revenez plus tard."}
             </ProDayText>
           </View>
         ) : (
-          visibleMarkers.slice(0, 4).map((m) => (
+          visibleMarkers.slice(0, isNetwork ? 6 : 4).map((m) => (
             <PressableSpring
               key={m.id}
               onPress={() => onMarkerPress(m)}
@@ -165,7 +199,17 @@ export const ProDayGeoMapCard: React.FC<ProDayGeoMapCardProps> = ({
               style={[styles.nearbyCard, { backgroundColor: colors.surfaceMuted, borderColor: colors.border }]}
             >
               <View style={[styles.nearbyIcon, { backgroundColor: colors.surface }]}>
-                <Icon name={m.kind === 'event' ? 'calendar' : 'football'} size={18} color={colors.accent} />
+                <Icon
+                  name={
+                    m.kind === 'event'
+                      ? 'calendar'
+                      : m.kind === 'user'
+                        ? 'person'
+                        : 'football'
+                  }
+                  size={18}
+                  color={colors.accent}
+                />
               </View>
               <View style={styles.nearbyCopy}>
                 <ProDayText variant="caption" numberOfLines={1} style={styles.nearbyTitle}>
@@ -173,6 +217,7 @@ export const ProDayGeoMapCard: React.FC<ProDayGeoMapCardProps> = ({
                 </ProDayText>
                 <ProDayText variant="caption" muted numberOfLines={1}>
                   {m.city} · {formatDistanceKm(m.distanceKm)}
+                  {isNetwork && m.subtitle ? ` · ${m.subtitle}` : ''}
                 </ProDayText>
               </View>
               <Icon name="chevron-forward" size={16} color={colors.textMuted} />
@@ -187,7 +232,7 @@ export const ProDayGeoMapCard: React.FC<ProDayGeoMapCardProps> = ({
 };
 
 const StatPill: React.FC<{
-  icon: 'football' | 'calendar';
+  icon: 'football' | 'calendar' | 'people' | 'location';
   label: string;
   colors: ReturnType<typeof useAppTheme>['colors'];
 }> = ({ icon, label, colors }) => (
@@ -226,6 +271,8 @@ function createStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
       padding: spacing.lg,
       gap: spacing.sm,
     },
+    networkIntro: { gap: 2, marginBottom: spacing.xs },
+    networkTitle: { fontSize: 16 },
     topBadge: {
       alignItems: 'flex-start',
     },

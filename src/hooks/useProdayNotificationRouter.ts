@@ -3,12 +3,12 @@ import { Platform } from 'react-native';
 import Constants from 'expo-constants';
 import type { MainTabId } from '../navigation/mainTabConfig';
 import type { ProdayNotificationData } from '../services/prodayLocalNotifications.service';
-import type { MatchsDeepLink } from '../utils/navigationDeepLink';
+import type { MatchsDeepLink, MercatoDeepLink } from '../utils/navigationDeepLink';
 
 type RouterActions = {
   openMatchs: (link?: MatchsDeepLink) => void;
   openCarpool: (link?: { chapter?: 'reserver'; eventId?: string }) => void;
-  openMercato: (view: 'detections' | 'create_post' | 'stages') => void;
+  openMercato: (view: MercatoDeepLink) => void;
   openProfile: () => void;
   openSponsors?: () => void;
   setActiveTab: (tab: MainTabId) => void;
@@ -49,6 +49,9 @@ function routeNotificationData(data: ProdayNotificationData, actions: RouterActi
       break;
     case 'mercato_alert':
       actions.openMercato('detections');
+      break;
+    case 'availability_alert':
+      actions.openMercato('favorites');
       break;
     case 'mercato_profile':
       actions.openProfile();

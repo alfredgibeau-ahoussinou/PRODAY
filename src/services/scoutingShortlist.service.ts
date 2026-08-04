@@ -80,6 +80,7 @@ export const scoutingShortlistService = {
       doc(database, 'club_shortlists', clubId, 'players', playerUid),
       {
         club_id: clubId,
+        player_uid: playerUid,
         staff_uid: staffUid,
         notes: patch.notes ?? '',
         scouting_score: patch.scouting_score ?? null,

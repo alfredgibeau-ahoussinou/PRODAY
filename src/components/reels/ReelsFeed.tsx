@@ -1,31 +1,29 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
   StyleSheet,
+  Text,
   View,
   useWindowDimensions,
   type ViewToken,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ReelSlide } from './ReelSlide';
 import { ReelFavoritesSheet } from './ReelFavoritesSheet';
 import { ReelUploadSheet } from './ReelUploadSheet';
 import { ReelsEmptyState } from './ReelsEmptyState';
+import { ReelCollectionSheet } from './ReelCollectionSheet';
+import { ReelCommentsSheet } from './ReelCommentsSheet';
 import { useReelsPlaylist } from '../../hooks/useReelsPlaylist';
 import type { PlaybackReel } from '../../content/footballReels';
 import { polesForUniverse, type ReelPoleId, type ReelSeed } from '../../content/reelSeedCatalog';
 import { REEL_THEME_CHIPS, type ReelThemeId } from '../../content/reelThemes';
 import type { ProductLineId } from '../../models/ProductLine';
-import { TAB_BAR_CONTENT_INSET } from '../navigation/BottomTabBar';
 import { PressableSpring } from '../motion';
 import { ProDayScreenCanvas } from '../ui/ProDayScreenCanvas';
-import { ProDayText } from '../ui/ProDayText';
-import { ProDayGradient } from '../ui/ProDayGradient';
 import { Icon } from '../ui/Icon';
-import { UniverseBadge } from '../branding/UniverseBadge';
-import { useAppTheme } from '../../context/ProductLineContext';
 import { prodayHaptics } from '../../utils/prodayHaptics';
 import {
   loadReelBookmarkEntries,
@@ -34,9 +32,11 @@ import {
   type ReelBookmarkEntry,
 } from '../../utils/reelBookmarks';
 import { loadReelLikes, toggleReelLike } from '../../utils/reelLikes';
+import { loadReelFollows, reelAuthorKey, toggleReelFollow } from '../../utils/reelFollows';
+import { loadReelCommentCounts } from '../../utils/reelComments';
 import { loadHiddenReels } from '../../utils/reelReports';
 import { loadReelResume, saveReelResume } from '../../utils/reelResume';
-import { spacing, radius } from '../../theme/designTokens';
+import { spacing } from '../../theme/designTokens';
 import { useAuth } from '../../context/AuthContext';
 import { useTranslation } from '../../context/LocaleContext';
 import { useProDayBrain } from '../../hooks/useProDayBrain';
@@ -45,10 +45,23 @@ import { trackV3Event } from '../../core/analytics/v3Events';
 import { recordV3UserAction } from '../../utils/recordV3Action';
 import { fetchActorReelSeeds } from '../../services/actorReels.service';
 import { communityReelsService } from '../../services/communityReels.service';
-import { pickReelVideo } from '../../utils/pickReelVideo';
 import { storageService } from '../../services/storage.service';
+import type { UploadFileInput } from '../../services/storage.service';
+import {
+  reelsTheme,
+  REEL_TOP_SCRIM,
+  REEL_STAGE_ATMOSPHERE,
+  REEL_STAGE_GLOW,
+} from './reelsTheme';
 
 const POLE_CHIP_IDS: ReelPoleId[] = ['foot', 'mercato', 'sante'];
+
+/** Largeur max de la scène verticale — au-delà, marges atmosphériques (desktop/tablette). */
+const STAGE_MAX_WIDTH = 480;
+const STAGE_SIDE_GUTTER = 24;
+const STAGE_TOP_GUTTER = 18;
+const STAGE_BOTTOM_GUTTER = 18;
+const REEL_ASPECT_RATIO = 9 / 16;
 
 type ReelsFeedProps = {
   productLine: ProductLineId;
@@ -57,43 +70,49 @@ type ReelsFeedProps = {
 export const ReelsFeed: React.FC<ReelsFeedProps> = ({ productLine }) => {
   const { width: windowW, height: windowH } = useWindowDimensions();
   const insets = useSafeAreaInsets();
-  const { colors } = useAppTheme();
   const { profile } = useAuth();
   const { t } = useTranslation();
   const brain = useProDayBrain(profile, productLine);
   const listRef = useRef<FlatList<PlaybackReel>>(null);
 
   const allowedPoles = useMemo(() => polesForUniverse(productLine), [productLine]);
-  const poleChips = useMemo(() => {
-    const poleLabels: Record<ReelPoleId, string> = {
+  const poleLabels = useMemo<Record<ReelPoleId, string>>(
+    () => ({
       foot: t('reels.pole.foot'),
       mercato: t('reels.pole.mercato'),
       sante: t('reels.pole.sante'),
-    };
-    return POLE_CHIP_IDS.filter((id) => allowedPoles.includes(id)).map((id) => ({
-      id,
-      label: poleLabels[id],
-    }));
-  }, [allowedPoles, t]);
+    }),
+    [t],
+  );
+  const poleOptions = useMemo(
+    () =>
+      POLE_CHIP_IDS.filter((id) => allowedPoles.includes(id)).map((id) => ({
+        id,
+        label: poleLabels[id],
+      })),
+    [allowedPoles, poleLabels],
+  );
 
   const [pole, setPole] = useState<ReelPoleId>(() => polesForUniverse(productLine)[0] ?? 'foot');
   const [theme, setTheme] = useState<ReelThemeId>('all');
   const [activeIndex, setActiveIndex] = useState(0);
   const [bookmarks, setBookmarks] = useState<Set<string>>(() => new Set());
   const [likes, setLikes] = useState<Set<string>>(() => new Set());
+  const [follows, setFollows] = useState<Set<string>>(() => new Set());
+  const [commentCounts, setCommentCounts] = useState<Record<string, number>>(() => ({}));
+  const [commentsReel, setCommentsReel] = useState<PlaybackReel | null>(null);
   const [hiddenKeys, setHiddenKeys] = useState<Set<string>>(() => new Set());
   const [bookmarkEntries, setBookmarkEntries] = useState<ReelBookmarkEntry[]>([]);
   const [extraSeeds, setExtraSeeds] = useState<ReelSeed[]>([]);
   const [actorSeedsLoading, setActorSeedsLoading] = useState(true);
   const [resumeBookmarkKey, setResumeBookmarkKey] = useState<string | undefined>();
   const [favoritesOpen, setFavoritesOpen] = useState(false);
+  const [collectionOpen, setCollectionOpen] = useState(false);
   const [uploadOpen, setUploadOpen] = useState(false);
-  const [pickedVideo, setPickedVideo] = useState<{ uri: string; mimeType: string } | null>(null);
+  const [pickedVideo, setPickedVideo] = useState<UploadFileInput | null>(null);
   const [uploading, setUploading] = useState(false);
 
-  const canUpload =
-    profile &&
-    ['player', 'club', 'coach'].includes(profile.role);
+  const canUpload = Boolean(profile && ['player', 'club', 'coach'].includes(profile.role));
 
   const rankSeeds = useCallback(
     (seeds: ReelSeed[]) => {
@@ -137,7 +156,21 @@ export const ReelsFeed: React.FC<ReelsFeedProps> = ({ productLine }) => {
     resumeBookmarkKey,
   });
 
-  const slideHeight = windowH - TAB_BAR_CONTENT_INSET;
+  const fullHeight = windowH;
+  const availableWideHeight = Math.max(
+    fullHeight - (insets.top + insets.bottom + STAGE_TOP_GUTTER + STAGE_BOTTOM_GUTTER),
+    0,
+  );
+  const wideMaxByWidth = Math.max(windowW - STAGE_SIDE_GUTTER * 2, 0);
+  const wideWidth = Math.min(
+    STAGE_MAX_WIDTH,
+    wideMaxByWidth,
+    Math.floor(availableWideHeight * REEL_ASPECT_RATIO),
+  );
+  const isWide = windowW >= STAGE_MAX_WIDTH + STAGE_SIDE_GUTTER * 2 && wideWidth > 0;
+  const stageWidth = isWide ? wideWidth : windowW;
+  const slideHeight = isWide ? Math.round(stageWidth / REEL_ASPECT_RATIO) : fullHeight;
+  const compactHeader = stageWidth <= 400;
 
   const listExtraData = useMemo(
     () =>
@@ -171,9 +204,11 @@ export const ReelsFeed: React.FC<ReelsFeedProps> = ({ productLine }) => {
     setActorSeedsLoading(true);
     void (async () => {
       try {
-        const [bm, lk, hidden, resume, actorSeeds] = await Promise.all([
+        const [bm, lk, fl, counts, hidden, resume, actorSeeds] = await Promise.all([
           loadReelBookmarks(),
           loadReelLikes(),
+          loadReelFollows(),
+          loadReelCommentCounts(),
           loadHiddenReels(),
           loadReelResume(productLine, pole, theme),
           fetchActorReelSeeds({
@@ -183,6 +218,8 @@ export const ReelsFeed: React.FC<ReelsFeedProps> = ({ productLine }) => {
         ]);
         setBookmarks(bm);
         setLikes(lk);
+        setFollows(fl);
+        setCommentCounts(counts);
         setHiddenKeys(hidden);
         setBookmarkEntries(await loadReelBookmarkEntries());
         setResumeBookmarkKey(resume?.bookmarkKey);
@@ -233,6 +270,20 @@ export const ReelsFeed: React.FC<ReelsFeedProps> = ({ productLine }) => {
       return next;
     });
     if (persisted) trackV3Event('reel_like', { bookmarkKey });
+  }, []);
+
+  const onFollowToggle = useCallback((authorKey: string, next: boolean) => {
+    setFollows((prev) => {
+      const set = new Set(prev);
+      if (next) set.add(authorKey);
+      else set.delete(authorKey);
+      return set;
+    });
+    void toggleReelFollow(authorKey);
+  }, []);
+
+  const onCommentCountChange = useCallback((bookmarkKey: string, count: number) => {
+    setCommentCounts((prev) => ({ ...prev, [bookmarkKey]: count }));
   }, []);
 
   const onReported = useCallback(
@@ -315,32 +366,29 @@ export const ReelsFeed: React.FC<ReelsFeedProps> = ({ productLine }) => {
     itemVisiblePercentThreshold: 75,
   }).current;
 
-  const handlePickVideo = useCallback(async () => {
-    const file = await pickReelVideo();
-    if (!file) return false;
-    setPickedVideo(file);
-    return true;
-  }, []);
-
   const handleUpload = useCallback(
     async (caption: string, uploadTheme: Exclude<ReelThemeId, 'all'>) => {
-      if (!profile || !pickedVideo) return;
+      if (!profile || !pickedVideo) {
+        throw new Error(t('reels.upload.videoRequired'));
+      }
       setUploading(true);
       try {
         const video_url = await storageService.uploadCommunityReel(profile.uid, pickedVideo);
-        await communityReelsService.submit(profile.uid, profile.display_name, {
+        await communityReelsService.submit(profile.uid, profile.display_name || 'ProDay User', {
           caption,
           theme: uploadTheme,
           club_id: profile.profile?.club_id,
           video_url,
-        });
+        }, profile.email);
         setPickedVideo(null);
         trackV3Event('reel_upload_submitted', { theme: uploadTheme });
+      } catch (error) {
+        throw error instanceof Error ? error : new Error(t('common.error'));
       } finally {
         setUploading(false);
       }
     },
-    [profile, pickedVideo],
+    [profile, pickedVideo, t],
   );
 
   const renderItem = useCallback(
@@ -349,12 +397,16 @@ export const ReelsFeed: React.FC<ReelsFeedProps> = ({ productLine }) => {
         reel={item}
         isActive={index === activeIndex}
         height={slideHeight}
-        width={windowW}
+        width={stageWidth}
         bookmarked={bookmarks.has(item.bookmarkKey)}
         liked={likes.has(item.bookmarkKey)}
+        following={follows.has(reelAuthorKey(item))}
+        commentCount={commentCounts[item.bookmarkKey] ?? 0}
         reporterUid={profile?.uid}
         onBookmarkToggle={(key) => onBookmarkToggle(key, item)}
         onLikeToggle={onLikeToggle}
+        onFollowToggle={onFollowToggle}
+        onOpenComments={setCommentsReel}
         onReported={onReported}
         onRetry={() => retryReel(item.id)}
       />
@@ -362,12 +414,15 @@ export const ReelsFeed: React.FC<ReelsFeedProps> = ({ productLine }) => {
     [
       activeIndex,
       slideHeight,
-      windowW,
+      stageWidth,
       bookmarks,
       likes,
+      follows,
+      commentCounts,
       profile?.uid,
       onBookmarkToggle,
       onLikeToggle,
+      onFollowToggle,
       onReported,
       retryReel,
     ],
@@ -375,149 +430,157 @@ export const ReelsFeed: React.FC<ReelsFeedProps> = ({ productLine }) => {
 
   const ListFooter = loadingMore ? (
     <View style={[styles.footer, { height: slideHeight * 0.08 }]}>
-      <ActivityIndicator color="#fff" size="small" />
+      <ActivityIndicator color={reelsTheme.color.amber} size="small" />
     </View>
   ) : null;
 
+  const commentSig = useMemo(
+    () => Object.values(commentCounts).reduce((sum, n) => sum + n, 0),
+    [commentCounts],
+  );
+
   return (
     <ProDayScreenCanvas immersive>
-      <FlatList
-        ref={listRef}
-        data={reels}
-        keyExtractor={(item) => item.id}
-        renderItem={renderItem}
-        pagingEnabled
-        showsVerticalScrollIndicator={false}
-        snapToInterval={slideHeight}
-        snapToAlignment="start"
-        decelerationRate="fast"
-        disableIntervalMomentum
-        onViewableItemsChanged={onViewableItemsChanged}
-        viewabilityConfig={viewabilityConfig}
-        getItemLayout={(_, index) => ({
-          length: slideHeight,
-          offset: slideHeight * index,
-          index,
-        })}
-        removeClippedSubviews={false}
-        windowSize={11}
-        maxToRenderPerBatch={6}
-        initialNumToRender={4}
-        initialScrollIndex={resumeIndex > 0 ? resumeIndex : undefined}
-        onScrollToIndexFailed={() => {}}
-        extraData={`${activeIndex}|${pole}|${theme}|${bookmarks.size}|${likes.size}|${listExtraData}`}
-        ListFooterComponent={ListFooter}
-        key={`${productLine}-${pole}-${theme}-${slideHeight}`}
-        style={styles.list}
-      />
-
-      <View style={[styles.header, { top: insets.top + spacing.sm }]} pointerEvents="box-none">
-        <View style={styles.headerRow}>
-          <ProDayText variant="brand" inverse style={styles.brandTitle}>
-            {t('reels.title')}
-          </ProDayText>
-          <UniverseBadge productLine={productLine} colors={colors} compact />
+      {/* Atmosphère desktop/tablette — noir réchauffé et halo de projecteur ambre derrière la scène */}
+      {isWide ? (
+        <View style={StyleSheet.absoluteFill} pointerEvents="none">
+          <LinearGradient
+            colors={REEL_STAGE_ATMOSPHERE}
+            style={StyleSheet.absoluteFill}
+          />
+          <LinearGradient
+            colors={REEL_STAGE_GLOW}
+            locations={[0, 0.6]}
+            start={{ x: 0.5, y: 0 }}
+            end={{ x: 0.5, y: 1 }}
+            style={styles.atmosphere}
+          />
         </View>
-        <ProDayGradient
-          kind="cta"
-          style={styles.headerLine}
-          start={{ x: 0, y: 0.5 }}
-          end={{ x: 1, y: 0.5 }}
-        />
-        <ProDayText variant="caption" inverse muted style={styles.headerSub}>
-          {t('reels.subtitle')}
-        </ProDayText>
+      ) : null}
 
-        <View style={styles.poleRow}>
-          {poleChips.length > 1
-            ? poleChips.map((chip) => {
-                const on = chip.id === pole;
-                return (
-                  <PressableSpring
-                    key={chip.id}
-                    style={[styles.poleChip, on && styles.poleChipOn]}
-                    onPress={() => {
-                      prodayHaptics.tabSwitch();
-                      setPole(chip.id);
-                      setResumeBookmarkKey(undefined);
-                    }}
-                    scaleTo={0.94}
-                    haptic
-                  >
-                    <ProDayText
-                      variant="caption"
-                      inverse={on}
-                      style={on ? styles.poleTextOn : styles.poleText}
-                    >
-                      {chip.label}
-                    </ProDayText>
-                  </PressableSpring>
-                );
-              })
-            : null}
-        </View>
+      <View style={styles.stageWrap}>
+        <View
+          style={[
+            styles.stage,
+            { width: stageWidth, height: slideHeight },
+            isWide && styles.stageFramed,
+          ]}
+          pointerEvents="box-none"
+        >
+          <FlatList
+            ref={listRef}
+            data={reels}
+            keyExtractor={(item) => item.id}
+            renderItem={renderItem}
+            pagingEnabled
+            showsVerticalScrollIndicator={false}
+            snapToInterval={slideHeight}
+            snapToAlignment="start"
+            decelerationRate="fast"
+            disableIntervalMomentum
+            onViewableItemsChanged={onViewableItemsChanged}
+            viewabilityConfig={viewabilityConfig}
+            getItemLayout={(_, index) => ({
+              length: slideHeight,
+              offset: slideHeight * index,
+              index,
+            })}
+            removeClippedSubviews={false}
+            windowSize={11}
+            maxToRenderPerBatch={6}
+            initialNumToRender={4}
+            initialScrollIndex={resumeIndex > 0 ? resumeIndex : undefined}
+            onScrollToIndexFailed={() => {}}
+            extraData={`${activeIndex}|${pole}|${theme}|${bookmarks.size}|${likes.size}|${follows.size}|${commentSig}|${listExtraData}`}
+            ListFooterComponent={ListFooter}
+            key={`${productLine}-${pole}-${theme}-${slideHeight}-${stageWidth}`}
+            style={styles.list}
+          />
 
-        <View style={styles.poleRow}>
-          {REEL_THEME_CHIPS.map((chip) => {
-            const on = chip.id === theme;
-            return (
-              <PressableSpring
-                key={chip.id}
-                style={[styles.themeChip, on && styles.poleChipOn]}
-                onPress={() => {
-                  prodayHaptics.tabSwitch();
-                  setTheme(chip.id);
-                  setResumeBookmarkKey(undefined);
-                }}
-                scaleTo={0.94}
-                haptic
+          {/* Voile haut réchauffé — le bandeau et le contrôle restent lisibles sur vidéo claire */}
+          <LinearGradient
+            colors={REEL_TOP_SCRIM}
+            style={[styles.topScrim, { height: insets.top + 96 }]}
+            pointerEvents="none"
+          />
+
+          <View style={[styles.topBar, { top: insets.top + spacing.sm }]} pointerEvents="box-none">
+            <View style={styles.masthead} pointerEvents="none">
+              <Text
+                style={[styles.brandWord, compactHeader && styles.brandWordCompact]}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.84}
               >
-                <ProDayText
-                  variant="caption"
-                  inverse={on}
-                  style={on ? styles.poleTextOn : styles.poleText}
-                >
-                  {chip.label}
-                </ProDayText>
+                PRODAY {t('reels.title').toUpperCase()}
+              </Text>
+            </View>
+            <View style={styles.topActions}>
+              <PressableSpring
+                style={styles.control}
+                scaleTo={0.9}
+                haptic
+                onPress={() => setCollectionOpen(true)}
+                accessibilityRole="button"
+                accessibilityLabel={t('reels.collection.title')}
+              >
+                <Icon name="tune" size={18} color={reelsTheme.color.text} />
               </PressableSpring>
-            );
-          })}
-        </View>
+              {canUpload ? (
+                <PressableSpring
+                  testID="reels-upload-open"
+                  style={styles.control}
+                  scaleTo={0.9}
+                  haptic
+                  onPress={() => setUploadOpen(true)}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('reels.upload.title')}
+                >
+                  <Icon name="add" size={18} color={reelsTheme.color.text} />
+                </PressableSpring>
+              ) : null}
+            </View>
+          </View>
 
-        <View style={styles.actionRow}>
-          <PressableSpring
-            style={styles.actionBtn}
-            onPress={() => setFavoritesOpen(true)}
-            scaleTo={0.96}
-            haptic
-          >
-            <ProDayText variant="caption" inverse style={styles.actionText}>
-              {t('reels.favorites', { n: bookmarkEntries.length })}
-            </ProDayText>
-          </PressableSpring>
-          {canUpload ? (
-            <PressableSpring
-              style={styles.actionBtn}
-              onPress={() => setUploadOpen(true)}
-              scaleTo={0.96}
-              haptic
-            >
-              <ProDayText variant="caption" inverse style={styles.actionText}>
-                {t('reels.publish')}
-              </ProDayText>
-            </PressableSpring>
+          {actorSeedsLoading || (hasSeeds && reels.length === 0) ? (
+            <ReelsEmptyState loading />
+          ) : !hasSeeds ? (
+            <ReelsEmptyState canPublish={canUpload} onPublish={() => setUploadOpen(true)} />
           ) : null}
         </View>
       </View>
 
-      {actorSeedsLoading || (hasSeeds && reels.length === 0) ? (
-        <ReelsEmptyState loading />
-      ) : !hasSeeds ? (
-        <ReelsEmptyState
-          canPublish={Boolean(canUpload)}
-          onPublish={() => setUploadOpen(true)}
-        />
-      ) : null}
+      <ReelCommentsSheet
+        visible={Boolean(commentsReel)}
+        bookmarkKey={commentsReel?.bookmarkKey}
+        authorName={commentsReel?.authorName}
+        currentUserName={profile?.display_name}
+        currentUserUid={profile?.uid}
+        onClose={() => setCommentsReel(null)}
+        onCountChange={onCommentCountChange}
+      />
+
+      <ReelCollectionSheet
+        visible={collectionOpen}
+        onClose={() => setCollectionOpen(false)}
+        poleOptions={poleOptions}
+        pole={pole}
+        onPoleChange={(id) => {
+          prodayHaptics.tabSwitch();
+          setPole(id);
+          setResumeBookmarkKey(undefined);
+        }}
+        themeOptions={REEL_THEME_CHIPS}
+        theme={theme}
+        onThemeChange={(id) => {
+          setTheme(id);
+          setResumeBookmarkKey(undefined);
+        }}
+        favoritesCount={bookmarkEntries.length}
+        onOpenFavorites={() => setFavoritesOpen(true)}
+        canPublish={canUpload}
+        onPublish={() => setUploadOpen(true)}
+      />
 
       <ReelFavoritesSheet
         visible={favoritesOpen}
@@ -538,107 +601,102 @@ export const ReelsFeed: React.FC<ReelsFeedProps> = ({ productLine }) => {
           setUploadOpen(false);
           setPickedVideo(null);
         }}
-        onPickVideo={handlePickVideo}
-        hasVideo={Boolean(pickedVideo)}
+        onVideoReady={setPickedVideo}
+        onClearVideo={() => setPickedVideo(null)}
+        videoUri={pickedVideo?.uri ?? null}
+        allowDemoVideo={__DEV__}
         uploading={uploading}
         onSubmit={handleUpload}
       />
-
-      {canUpload ? (
-        <PressableSpring
-          style={[styles.fab, { bottom: TAB_BAR_CONTENT_INSET + spacing.md }]}
-          onPress={() => setUploadOpen(true)}
-          scaleTo={0.92}
-          haptic
-          accessibilityRole="button"
-          accessibilityLabel={t('reels.publish')}
-        >
-          <ProDayGradient kind="cta" style={styles.fabInner}>
-            <Icon name="add" size={28} color="#fff" />
-          </ProDayGradient>
-        </PressableSpring>
-      ) : null}
     </ProDayScreenCanvas>
   );
 };
 
 const styles = StyleSheet.create({
-  list: { flex: 1, backgroundColor: '#000' },
+  atmosphere: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: '55%',
+  },
+  stageWrap: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stage: {
+    flex: 1,
+    alignSelf: 'center',
+    backgroundColor: reelsTheme.color.stage,
+  },
+  stageFramed: {
+    flex: 0,
+    borderRadius: 20,
+    overflow: 'hidden',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: reelsTheme.color.hairline,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 28 },
+    shadowOpacity: 0.7,
+    shadowRadius: 56,
+    elevation: 16,
+  },
+  list: { flex: 1, backgroundColor: reelsTheme.color.stage },
   footer: {
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#000',
+    backgroundColor: reelsTheme.color.stage,
   },
-  header: {
+  topScrim: {
     position: 'absolute',
-    alignSelf: 'center',
-    alignItems: 'center',
-    gap: 6,
+    top: 0,
+    left: 0,
+    right: 0,
+  },
+  topBar: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
     paddingHorizontal: spacing.lg,
-    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
   },
-  headerRow: {
+  masthead: {
+    alignItems: 'flex-start',
+    justifyContent: 'center',
+  },
+  brandWord: {
+    color: reelsTheme.color.text,
+    fontFamily: reelsTheme.type.masthead.fontFamily,
+    fontSize: reelsTheme.type.masthead.fontSize,
+    letterSpacing: reelsTheme.type.masthead.letterSpacing,
+    textShadowColor: 'rgba(0,0,0,0.45)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 6,
+  },
+  brandWordCompact: {
+    fontSize: 14,
+    letterSpacing: 2.1,
+  },
+  topActions: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
+    gap: reelsTheme.space.xs,
   },
-  brandTitle: { color: '#fff' },
-  headerLine: { width: 48, height: 3, borderRadius: 2 },
-  headerSub: { color: 'rgba(255,255,255,0.65)', textAlign: 'center' },
-  poleRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    gap: spacing.xs,
-    marginTop: spacing.xs,
-  },
-  poleChip: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: 6,
-    borderRadius: radius.pill,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.55)',
-    backgroundColor: 'rgba(0,0,0,0.42)',
-  },
-  themeChip: {
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 5,
-    borderRadius: radius.pill,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.45)',
-    backgroundColor: 'rgba(0,0,0,0.35)',
-  },
-  poleChipOn: {
-    backgroundColor: 'rgba(255,255,255,0.92)',
-    borderColor: 'rgba(255,255,255,0.92)',
-  },
-  poleText: { color: 'rgba(255,255,255,0.95)', fontWeight: '700' },
-  poleTextOn: { color: '#111', fontWeight: '800' },
-  actionRow: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.xs },
-  actionBtn: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: 6,
-    borderRadius: radius.pill,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.35)',
-  },
-  actionText: { fontWeight: '800' },
-  fab: {
-    position: 'absolute',
-    right: spacing.lg,
-    zIndex: 10,
-  },
-  fabInner: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
+  control: {
+    width: 42,
+    height: 42,
+    borderRadius: reelsTheme.radius.md,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: reelsTheme.color.backdrop,
+    borderWidth: 1,
+    borderColor: reelsTheme.color.hairlineStrong,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35,
-    shadowRadius: 8,
-    elevation: 6,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.24,
+    shadowRadius: 12,
   },
 });

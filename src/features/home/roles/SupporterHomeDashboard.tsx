@@ -115,7 +115,9 @@ export const SupporterHomeDashboard: React.FC<SupporterHomeProps> = ({
   const nav = useTabNavigationActions();
 
   const [overlay, setOverlay] = useState<SupporterOverlay>(null);
-  const [playerReturnOverlay, setPlayerReturnOverlay] = useState<SupporterOverlay>('players');
+  const [playerReturnOverlay, setPlayerReturnOverlay] = useState<
+    Exclude<SupporterOverlay, 'player_profile'>
+  >('players');
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
   const [follows, setFollows] = useState<Follow[]>([]);
   const { user: selectedPlayer } = useUserProfile(selectedPlayerId);
@@ -174,13 +176,14 @@ export const SupporterHomeDashboard: React.FC<SupporterHomeProps> = ({
         nav.setActiveTab('reels');
         break;
       case 'feed':
+        // Supporter: messages tab = Tribune feed
         nav.setActiveTab('messages');
         break;
       case 'discovery':
         setOverlay('players');
         break;
       case 'favorites':
-        nav.setActiveTab('feed');
+        setOverlay('favorites');
         break;
       case 'shop':
         nav.openShop();
@@ -315,7 +318,11 @@ export const SupporterHomeDashboard: React.FC<SupporterHomeProps> = ({
               index={index + 7}
               title={follow.target_label ?? follow.target_id}
               subtitle={t('supporter.followType.player')}
-              onPress={() => nav.setActiveTab('feed')}
+              onPress={() => {
+                setSelectedPlayerId(follow.target_id);
+                setPlayerReturnOverlay(null);
+                setOverlay('player_profile');
+              }}
             />
           ))
         )}

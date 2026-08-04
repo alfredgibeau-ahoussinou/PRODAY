@@ -19,6 +19,7 @@ export type ProdayNotificationData = {
     | 'friendly_nearby'
     | 'mercato_alert'
     | 'mercato_profile'
+    | 'availability_alert'
     | 'weekly_question'
     | 'medical_j1'
     | 'sponsor_offer'
@@ -31,6 +32,7 @@ export type ProdayNotificationData = {
   matchId?: string;
   offerId?: string;
   activityId?: string;
+  playerUid?: string;
 };
 
 export type EngagementNotificationHints = {

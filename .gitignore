@@ -5,6 +5,8 @@ website/.next/
 dist/
 android/local.properties
 android/app/build/
+android/build/
+ios/build/
 .env
 .env.local
 .env.*.local

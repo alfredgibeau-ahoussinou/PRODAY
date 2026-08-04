@@ -299,7 +299,7 @@ export const carpoolOffersService = {
     const offer = await this.getById(offerId);
     if (!offer) throw new Error('Trajet introuvable.');
     if (offer.status !== 'open') throw new Error('Ce trajet n’est plus disponible.');
-    if (offer.trip_status === 'in_progress' || offer.status === 'in_progress') {
+    if (offer.trip_status === 'in_progress') {
       throw new Error('Ce trajet est déjà en cours.');
     }
     if (offer.driver_uid === passengerUid) {

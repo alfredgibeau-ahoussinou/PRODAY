@@ -42,20 +42,20 @@ describe('club et staff shells', () => {
   it('expose un shell pro joueur dédié', () => {
     expect(getVisibleMainTabs('pro', 'player')).toEqual([
       'home',
-      'covoiturage',
       'reels',
       'matchs',
-      'profil',
-      'sante',
       'messages',
+      'profil',
+      'covoiturage',
       'recrutement',
+      'sante',
       'shop',
     ]);
     expect(getTabShortLabel('home', 'pro', 'player')).toBe('Carrière');
     expect(getTabShortLabel('covoiturage', 'pro', 'player')).toBe('Covoiturage');
     expect(getTabShortLabel('recrutement', 'pro', 'player')).toBe('Opportunités');
-    expect(getTabShortLabel('reels', 'pro', 'player')).toBe('Réels');
-    expect(getTabShortLabel('matchs', 'pro', 'player')).toBe('Groupe');
+    expect(getTabShortLabel('reels', 'pro', 'player')).toBe('Reels');
+    expect(getTabShortLabel('matchs', 'pro', 'player')).toBe('Matchs');
     expect(getTabShortLabel('profil', 'pro', 'player')).toBe('Moi');
   });
 });

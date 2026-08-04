@@ -14,6 +14,12 @@ import { normalizeStoredProductLine } from '../models/ProductLine';
 import { canonicalizeUserProductLine } from '../utils/productLineResolution';
 import type { PlayerVerificationState } from '../models/User';
 import type { RecruitmentPost, Application } from '../models/Player';
+import type {
+  ScoutReport,
+  ScoutReportAttribute,
+  ScoutReportRecommendation,
+  ScoutReportVisibility,
+} from '../models/ScoutReport';
 import { legacyStatusToPipelineStage } from '../utils/clubApplicationPipeline';
 import type { FriendlyMatch } from '../models/FriendlyMatch';
 import type {
@@ -27,6 +33,8 @@ import type {
   TeamEvent,
   RsvpStatus,
   AttendanceMark,
+  CarpoolSlot,
+  CarpoolPassenger,
   PlayerMatchSheetStat,
   TeamEventType,
   EventLineup,
@@ -262,6 +270,74 @@ export function applicationFromFirestore(
     club_notes: data.club_notes as string | undefined,
     trial_date: data.trial_date ? toDate(data.trial_date) : undefined,
     rejection_reason: data.rejection_reason as string | undefined,
+    shared_documents: Array.isArray(data.shared_documents)
+      ? (data.shared_documents as Record<string, unknown>[])
+          .map((row) => {
+            if (!row?.url || !row?.id) return null;
+            return {
+              id: String(row.id),
+              label: String(row.label ?? 'Document'),
+              url: String(row.url),
+              uploaded_by: String(row.uploaded_by ?? ''),
+              created_at: row.created_at ? toDate(row.created_at) : new Date(),
+              kind: row.kind as
+                | 'cv'
+                | 'license'
+                | 'medical'
+                | 'parental'
+                | 'other'
+                | undefined,
+            };
+          })
+          .filter((d): d is NonNullable<typeof d> => d != null)
+      : undefined,
+  };
+}
+
+export function scoutReportFromFirestore(
+  id: string,
+  data: Record<string, unknown>
+): ScoutReport {
+  const attributesRaw = Array.isArray(data.attributes) ? data.attributes : [];
+  const attributes: ScoutReportAttribute[] = [];
+  for (const raw of attributesRaw) {
+    if (!raw || typeof raw !== 'object') continue;
+    const row = raw as Record<string, unknown>;
+    const rating = typeof row.rating === 'number' ? row.rating : Number(row.rating);
+    if (!row.id || !Number.isFinite(rating)) continue;
+    attributes.push({
+      id: String(row.id) as ScoutReportAttribute['id'],
+      rating,
+      ...(typeof row.note === 'string' ? { note: row.note } : {}),
+    });
+  }
+
+  return {
+    id,
+    player_uid: String(data.player_uid ?? ''),
+    author_uid: String(data.author_uid ?? ''),
+    club_id: data.club_id ? String(data.club_id) : undefined,
+    match_event_id: data.match_event_id ? String(data.match_event_id) : undefined,
+    application_id: data.application_id ? String(data.application_id) : undefined,
+    pipeline_stage: data.pipeline_stage as ScoutReport['pipeline_stage'],
+    title: String(data.title ?? 'Rapport de scouting'),
+    observed_at: toDate(data.observed_at),
+    created_at: toDate(data.created_at),
+    updated_at: toDate(data.updated_at),
+    attributes,
+    overall_rating:
+      typeof data.overall_rating === 'number' ? data.overall_rating : Number(data.overall_rating) || 0,
+    recommendation: (data.recommendation as ScoutReportRecommendation) ?? 'need_more_data',
+    summary: String(data.summary ?? ''),
+    strengths: Array.isArray(data.strengths) ? data.strengths.map(String) : [],
+    weaknesses: Array.isArray(data.weaknesses) ? data.weaknesses.map(String) : [],
+    media_urls: Array.isArray(data.media_urls) ? data.media_urls.map(String) : undefined,
+    visibility: (data.visibility as ScoutReportVisibility) ?? 'club',
+    opportunity_score_snapshot:
+      typeof data.opportunity_score_snapshot === 'number'
+        ? data.opportunity_score_snapshot
+        : undefined,
+    tags: Array.isArray(data.tags) ? data.tags.map(String) : undefined,
   };
 }
 
@@ -373,7 +449,7 @@ function mapCarpoolTripStatus(
   return undefined;
 }
 
-function mapCarpoolSlots(raw: unknown) {
+function mapCarpoolSlots(raw: unknown): CarpoolSlot[] | undefined {
   if (!Array.isArray(raw)) return undefined;
   return raw.map((item) => {
     const s = item as Record<string, unknown>;
@@ -389,14 +465,14 @@ function mapCarpoolSlots(raw: unknown) {
       volunteered: s.volunteered === true,
       trip_status: mapCarpoolTripStatus(s.trip_status),
       passengers: Array.isArray(passengersRaw)
-        ? passengersRaw.map((p) => {
+        ? passengersRaw.map((p): CarpoolPassenger => {
             const row = p as Record<string, unknown>;
-            const status =
+            const status: CarpoolPassenger['status'] =
               row.status === 'pending' ||
               row.status === 'confirmed' ||
               row.status === 'rejected' ||
               row.status === 'cancelled'
-                ? row.status
+                ? (row.status as CarpoolPassenger['status'])
                 : undefined;
             return {
               uid: String(row.uid ?? ''),
@@ -512,8 +588,12 @@ function mapTournamentRegistration(raw: Record<string, unknown>): TournamentRegi
     captain_name: String(raw.captain_name ?? ''),
     player_uids: Array.isArray(raw.player_uids) ? raw.player_uids.map(String) : [],
     player_names: Array.isArray(raw.player_names) ? raw.player_names.map(String) : [],
-    paid: raw.paid !== false,
+    paid: raw.paid === true,
     registered_at: toDate(raw.registered_at),
+    stripe_checkout_session_id: raw.stripe_checkout_session_id
+      ? String(raw.stripe_checkout_session_id)
+      : undefined,
+    paid_at: raw.paid_at ? toDate(raw.paid_at) : undefined,
   };
 }
 

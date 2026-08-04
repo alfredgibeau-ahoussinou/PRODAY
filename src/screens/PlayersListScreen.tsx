@@ -11,6 +11,7 @@ import {
 import type { User } from '../models/User';
 import { SearchBar } from '../components/ui/SearchBar';
 import { PlayerRowCard } from '../components/ui/PlayerRowCard';
+import { ListEmptyPanel } from '../components/ui/ListEmptyPanel';
 import { usePlayersDirectory } from '../hooks/usePlayersDirectory';
 import { useAuth } from '../context/AuthContext';
 import { useFavorites } from '../hooks/useFavorites';
@@ -26,21 +27,43 @@ import {
   playerGenderFilterLabel,
   type PlayerListFilters,
 } from '../utils/playerFilters';
+import {
+  computeOpportunityScore,
+  type OpportunityScoreResult,
+} from '../core/recruitment/opportunityScore.engine';
+import { filterPlayersAdvanced } from '../core/recruitment/advancedPlayerSearch.engine';
 import { spacing, radius } from '../theme/designTokens';
 import type { AppColors } from '../theme/universeTheme';
 import { useAppTheme } from '../context/ProductLineContext';
 import { TabScreenShell } from '../components/app/TabScreenShell';
 import { ScreenBackButton } from '../components/ui/ScreenBackButton';
-import {
-  scoutingScoreMap,
-  sortPlayersByScouting,
-  type PlayerScoutingScore,
-} from '../features/v3/engines/playerScouting.engine';
 import { trackV3Event } from '../core/analytics/v3Events';
 import { TAB_BAR_CONTENT_INSET } from '../navigation/tabBarLayout';
 import { Icon } from '../components/ui/Icon';
 import { isSubScreenShellEnabled } from '../hooks/useSubScreenShell';
 import { isSyntheticUser } from '../utils/realUserFilter';
+
+type AvailabilityFilter = 'all' | 'available' | 'negotiating' | 'unavailable';
+
+const AVAILABILITY_CYCLE: AvailabilityFilter[] = [
+  'all',
+  'available',
+  'negotiating',
+  'unavailable',
+];
+
+function availabilityFilterLabel(v: AvailabilityFilter): string {
+  switch (v) {
+    case 'available':
+      return 'Libre';
+    case 'negotiating':
+      return 'Négociation';
+    case 'unavailable':
+      return 'Sous contrat';
+    default:
+      return 'Tous';
+  }
+}
 
 interface PlayersListScreenProps {
   onBack: () => void;
@@ -56,6 +79,9 @@ export const PlayersListScreen: React.FC<PlayersListScreenProps> = ({
   const [query, setQuery] = useState(initialQuery);
   const [filters, setFilters] = useState<PlayerListFilters>(DEFAULT_PLAYER_FILTERS);
   const [nearMe, setNearMe] = useState(false);
+  const [availability, setAvailability] = useState<AvailabilityFilter>('all');
+  const [verifiedOnly, setVerifiedOnly] = useState(false);
+  const [minOpportunity, setMinOpportunity] = useState(false);
   const { profile } = useAuth();
   const { isFavorite, toggle } = useFavorites(profile?.uid);
   const { colors: themeColors, isWoman } = useAppTheme();
@@ -84,35 +110,67 @@ export const PlayersListScreen: React.FC<PlayersListScreenProps> = ({
     ) {
       base = [profile, ...base];
     }
+    if (isStaff && profile) {
+      base = filterPlayersAdvanced(base, {
+        availability: availability === 'all' ? undefined : [availability],
+        verified_only: verifiedOnly || undefined,
+        min_opportunity_score: minOpportunity ? 55 : undefined,
+        viewer: profile,
+        origin: nearMe ? profile.location : undefined,
+        max_distance_km: nearMe ? 50 : undefined,
+      });
+    }
     return base;
-  }, [rawUsers, filters, profile]);
+  }, [
+    rawUsers,
+    filters,
+    profile,
+    isStaff,
+    availability,
+    verifiedOnly,
+    minOpportunity,
+    nearMe,
+  ]);
 
-  const users = useMemo(() => {
-    const base = filteredUsers;
-    if (!isStaff || !profile) return base;
-    return sortPlayersByScouting(profile, base);
+  const opportunityByUid = useMemo(() => {
+    const map = new Map<string, OpportunityScoreResult>();
+    if (!profile || !isStaff) return map;
+    for (const player of filteredUsers) {
+      map.set(player.uid, computeOpportunityScore({ player, viewer: profile }));
+    }
+    return map;
   }, [filteredUsers, profile, isStaff]);
 
-  const scores = useMemo(() => {
-    if (!profile || !isStaff) return new Map<string, PlayerScoutingScore>();
-    return scoutingScoreMap(profile, users);
-  }, [profile, users, isStaff]);
+  const users = useMemo(() => {
+    if (!isStaff || !profile) return filteredUsers;
+    return [...filteredUsers].sort(
+      (a, b) =>
+        (opportunityByUid.get(b.uid)?.score ?? 0) - (opportunityByUid.get(a.uid)?.score ?? 0)
+    );
+  }, [filteredUsers, profile, isStaff, opportunityByUid]);
 
-  const activeFilterCount = countActiveFilters(filters);
+  const activeFilterCount =
+    countActiveFilters(filters) +
+    (availability !== 'all' ? 1 : 0) +
+    (verifiedOnly ? 1 : 0) +
+    (minOpportunity ? 1 : 0);
   const soloProfile =
     profile?.role === 'player' && users.length === 1 && users[0]?.uid === profile.uid;
 
   const resetFilters = () => {
     setFilters(DEFAULT_PLAYER_FILTERS);
     setNearMe(false);
+    setAvailability('all');
+    setVerifiedOnly(false);
+    setMinOpportunity(false);
   };
 
   const handleSelectPlayer = (player: User) => {
     if (isStaff) {
-      const scouting = scores.get(player.uid);
+      const opportunity = opportunityByUid.get(player.uid);
       trackV3Event('staff_player_tap', {
         playerUid: player.uid,
-        scoutingScore: scouting?.score ?? 0,
+        scoutingScore: opportunity?.score ?? 0,
       });
     }
     onSelectPlayer(player);
@@ -214,6 +272,40 @@ export const PlayersListScreen: React.FC<PlayersListScreenProps> = ({
             value={nearMe ? 'Autour de moi' : undefined}
           />
         ) : null}
+        {isStaff ? (
+          <FilterChip
+            label="Dispo"
+            active={availability !== 'all'}
+            colors={themeColors}
+            onPress={() =>
+              setAvailability((prev) => {
+                const idx = AVAILABILITY_CYCLE.indexOf(prev);
+                return AVAILABILITY_CYCLE[(idx + 1) % AVAILABILITY_CYCLE.length] ?? 'all';
+              })
+            }
+            value={
+              availability !== 'all' ? availabilityFilterLabel(availability) : undefined
+            }
+          />
+        ) : null}
+        {isStaff ? (
+          <FilterChip
+            label="Vérifié"
+            active={verifiedOnly}
+            colors={themeColors}
+            onPress={() => setVerifiedOnly((v) => !v)}
+            value={verifiedOnly ? 'Oui' : undefined}
+          />
+        ) : null}
+        {isStaff ? (
+          <FilterChip
+            label="Opp. ≥55%"
+            active={minOpportunity}
+            colors={themeColors}
+            onPress={() => setMinOpportunity((v) => !v)}
+            value={minOpportunity ? 'Oui' : undefined}
+          />
+        ) : null}
         {activeFilterCount > 0 || nearMe ? (
           <TouchableOpacity onPress={resetFilters} style={[styles.resetChip, { borderColor: themeColors.border }]}>
             <Text style={[styles.resetChipText, { color: themeColors.brand }]}>Réinitialiser</Text>
@@ -224,7 +316,7 @@ export const PlayersListScreen: React.FC<PlayersListScreenProps> = ({
       {!loading && users.length > 0 ? (
         <Text style={[styles.countLine, { color: themeColors.textMuted }]}>
           {users.length} profil{users.length > 1 ? 's' : ''}
-          {isStaff ? '. Tri par pertinence scouting' : ''}
+          {isStaff ? ' · Tri Opportunity Score' : ''}
         </Text>
       ) : null}
     </View>
@@ -248,7 +340,7 @@ export const PlayersListScreen: React.FC<PlayersListScreenProps> = ({
       }}
       onEndReachedThreshold={0.4}
       renderItem={({ item }) => {
-        const scouting = scores.get(item.uid);
+        const opportunity = opportunityByUid.get(item.uid);
         const isOwn = profile?.uid === item.uid;
         return (
           <PlayerRowCard
@@ -256,30 +348,30 @@ export const PlayersListScreen: React.FC<PlayersListScreenProps> = ({
             onPress={handleSelectPlayer}
             bookmarked={isFavorite(item.uid)}
             onBookmark={isOwn ? undefined : () => profile && toggle(item.uid, 'player')}
-            scoutingScore={scouting?.score}
-            scoutingLabel={scouting?.label}
+            scoutingScore={opportunity?.score}
+            scoutingLabel={opportunity?.label}
             isOwnProfile={isOwn}
           />
         );
       }}
       ListEmptyComponent={
-        <View style={styles.emptyWrap}>
-          <Icon name="people" size={40} color={themeColors.textMuted} />
-          <Text style={[styles.emptyTitle, { color: themeColors.text }]}>
-            {activeFilterCount > 0 || query.trim()
+        <ListEmptyPanel
+          icon="people"
+          title={
+            activeFilterCount > 0 || query.trim()
               ? 'Aucun résultat'
-              : 'Annuaire vide'}
-          </Text>
-          <Text style={[styles.empty, { color: themeColors.textMuted }]}>
-            {activeFilterCount > 0 || query.trim()
+              : 'Annuaire vide'
+          }
+          subtitle={
+            activeFilterCount > 0 || query.trim()
               ? isWoman
                 ? 'Aucune joueuse ne correspond à vos critères.'
                 : 'Aucun joueur ne correspond à vos critères.'
               : isWoman
                 ? 'Aucune joueuse inscrite pour le moment.'
-                : 'Aucun joueur inscrit pour le moment.'}
-          </Text>
-        </View>
+                : 'Aucun joueur inscrit pour le moment.'
+          }
+        />
       }
     />
   );
@@ -295,7 +387,7 @@ export const PlayersListScreen: React.FC<PlayersListScreenProps> = ({
             ? `${users.length} profil(s) actif(s)`
             : 'Recherche et filtres'
       }
-      right={<ScreenBackButton onPress={onBack} />}
+      left={<ScreenBackButton onPress={onBack} />}
       flat
     >
       {listBody}

@@ -1,0 +1,91 @@
+appId: com.proday.app
+---
+# Publish Reels E2E : login → caméra Instagram-like → démo → légende → publier.
+# Prérequis : Dev Client / __DEV__ (bouton Demo), compte joueur connecté.
+- runFlow: subflows/player-login.yaml
+
+- waitForAnimationToEnd:
+    timeout: 5000
+
+- extendedWaitUntil:
+    visible: "Bonjour Alfred|Accueil|PRO DAY"
+    timeout: 20000
+    optional: true
+
+- tapOn:
+    point: "16%,93%"
+- waitForAnimationToEnd:
+    timeout: 3000
+
+- runFlow:
+    when:
+      notVisible: "Aucun réel pour l'instant|Publier mon premier réel|Publish my first reel|PRODAY · REELS|PRODAY RÉELS"
+    commands:
+      - tapOn:
+          id: main-tab-reels
+      - waitForAnimationToEnd:
+          timeout: 3000
+      - tapOn:
+          point: "97,816"
+      - waitForAnimationToEnd:
+          timeout: 3000
+
+- extendedWaitUntil:
+    visible:
+      text: "Aucun réel pour l'instant|The feed awaits your first reels|Publier mon premier réel|Publish my first reel|PRODAY · REELS"
+    timeout: 25000
+
+- tapOn:
+    id: reels-empty-publish
+    optional: true
+- tapOn:
+    text: "Publier mon premier réel|Publish my first reel"
+    optional: true
+- tapOn:
+    id: reels-upload-open
+    optional: true
+
+# Écran caméra plein écran
+- extendedWaitUntil:
+    visible:
+      id: reels-upload-camera
+    timeout: 15000
+
+# Vidéo démo (évite record + permissions flaky en CI locale)
+- tapOn:
+    id: reels-upload-demo-video
+
+- extendedWaitUntil:
+    visible:
+      id: reels-upload-compose
+    timeout: 15000
+
+- tapOn:
+    id: reels-upload-caption
+- inputText: "Maestro E2E reel publish"
+- pressKey: Enter
+- swipe:
+    direction: DOWN
+    duration: 400
+- tapOn:
+    point: "50%,20%"
+- waitForAnimationToEnd:
+    timeout: 2000
+
+- tapOn:
+    id: reels-upload-theme-skills
+    optional: true
+
+- tapOn:
+    id: reels-upload-submit
+- tapOn:
+    text: "PUBLIER LE RÉEL|PUBLISH REEL"
+    optional: true
+
+- extendedWaitUntil:
+    visible:
+      text: "Reel publié|Reel published|Erreur|Error"
+    timeout: 120000
+
+- assertVisible:
+    text: "Reel publié|Reel published"

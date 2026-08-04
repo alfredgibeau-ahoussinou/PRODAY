@@ -156,6 +156,14 @@ firebase functions:config:set stripe.secret_key="sk_test_..." stripe.webhook_sec
 Dans le dashboard Stripe, ajouter l’endpoint webhook :
 `https://<region>-<project>.cloudfunctions.net/stripeWebhook`
 
+### Callable `createTournamentCheckoutSession`
+
+- **Entrée :** `{ tournamentId, registrationId }` — capitaine de l’inscription (ou organisateur)
+- **Sortie :** `{ url, sessionId, tournamentId, registrationId }`
+- **Métadonnées Checkout :** `type: tournament_registration`
+- **Webhook :** `stripeWebhook` → `handleTournamentCheckoutCompleted` → `registrations[].paid = true`, `paid_at`
+- **Client :** `src/services/tournamentPayment.service.ts` + CTA « Payer » sur `TournamentDetailScreen`
+
 ## `recruitment_applications` (Firestore)
 
 | Champ | Description |

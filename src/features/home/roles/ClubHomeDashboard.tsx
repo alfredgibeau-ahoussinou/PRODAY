@@ -149,6 +149,7 @@ export const ClubHomeDashboard: React.FC<StaffRoleHomeProps> = ({
               title={goal.title}
               subtitle={goal.description}
               meta={`${goal.raised_amount_eur}€ / ${goal.target_amount_eur}€`}
+              onPress={() => nav.openDashboard('sponsors')}
             />
           ))
         )}

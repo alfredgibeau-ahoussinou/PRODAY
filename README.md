@@ -398,7 +398,7 @@ flowchart TB
 | **Serveur** | Cloud Functions TypeScript | IAP validation, analyse IA, sync activités, emails Auth brandés, waitlist |
 | **IA** | Mistral (via CF) | Analyse des highlights de séance enregistrés dans le journal |
 | **Paiements** | expo-iap · 16 SKU | Abonnements Joueur Plus, Coach Pro, Agent Elite, etc. — déploiement progressif |
-| **Builds store** | EAS Build · `com.proday.app` | TestFlight (preview) et production |
+| **Builds store** | EAS Build · `com.proday.app` | APK interne (`preview`) · TestFlight/AAB (`production` / `testflight`) |
 | **Tests** | Jest · Maestro | Unitaires + E2E mobile (`.maestro/`) |
 | **CI** | GitHub Actions | Checks, déploiement site |
 
@@ -523,7 +523,10 @@ Voir [docs/ADMIN_SETUP.md](docs/ADMIN_SETUP.md) pour la console admin in-app.
 | `npm run beta:check` | Checklist bêta (env, tests, règles, légal) |
 | `npm run firebase:deploy` | Déploie règles + index Firestore |
 | `npm run firebase:deploy:functions` | Déploie Cloud Functions |
-| `npm run eas:build:preview` | Build TestFlight / APK interne |
+| `npm run eas:build:android:apk` | APK Android signé (profil `preview`, distribution interne) |
+| `npm run eas:build:android:aab` | AAB Google Play (profil `production`) |
+| `npm run eas:build:testflight` | IPA iOS store → TestFlight (profil `testflight`) |
+| `npm run eas:build:production` | Build store iOS+Android (profil `production`) |
 | `npm run typecheck` | Vérification TypeScript |
 | `npm test` | Tests Jest unitaires |
 | `npm run test:e2e:maestro` | Flows E2E mobile (Maestro) |

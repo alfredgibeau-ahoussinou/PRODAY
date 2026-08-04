@@ -3,6 +3,7 @@ import { StyleSheet } from 'react-native';
 import { spacing, radius, typography, shadows, surfaces } from './designTokens';
 import { useAppTheme } from '../context/ProductLineContext';
 import type { AppColors } from './universeTheme';
+import { TAB_BAR_CONTENT_INSET } from '../navigation/tabBarLayout';
 
 /** Styles partagés — toutes les pages (ProDay v2) */
 export function createAppStyles(c: AppColors) {
@@ -15,7 +16,7 @@ export function createAppStyles(c: AppColors) {
       paddingBottom: spacing.xl,
     },
     contentWithTabBar: {
-      paddingBottom: 72,
+      paddingBottom: TAB_BAR_CONTENT_INSET,
     },
     sectionLabel: {
       fontSize: 11,

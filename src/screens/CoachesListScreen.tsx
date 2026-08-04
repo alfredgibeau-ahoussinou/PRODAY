@@ -164,7 +164,7 @@ export const CoachesListScreen: React.FC<CoachesListScreenProps> = ({
             ? `${users.length} coach(s) disponibles`
             : `${users.length} agent(s) disponibles`
         }
-        right={<ScreenBackButton onPress={onBack} />}
+        left={<ScreenBackButton onPress={onBack} />}
         flat
       >
         {listBody}
