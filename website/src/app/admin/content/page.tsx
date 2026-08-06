@@ -1,21 +1,12 @@
-import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { ROUTES } from "@/lib/routes";
 import {
   ADMIN_LOGIN_PATH,
   getAdminSessionFromCookies,
 } from "@/lib/adminSession";
-import { AdminContent } from "@/components/admin/AdminContent";
 
-export const metadata: Metadata = {
-  title: "Gestion Contenu - ProDay",
-  robots: { index: false, follow: false },
-};
-
-export default async function AdminContentPage() {
-  const ok = await getAdminSessionFromCookies();
-  if (!ok) {
-    redirect(ADMIN_LOGIN_PATH);
-  }
-
-  return <AdminContent />;
+/** Stub retiré de la nav — redirige vers le dashboard. */
+export default async function AdminContentRedirectPage() {
+  if (!(await getAdminSessionFromCookies())) redirect(ADMIN_LOGIN_PATH);
+  redirect(ROUTES.adminDashboard);
 }

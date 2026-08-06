@@ -1,21 +1,11 @@
-import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { ROUTES } from "@/lib/routes";
 import {
   ADMIN_LOGIN_PATH,
   getAdminSessionFromCookies,
 } from "@/lib/adminSession";
-import { AdminPoles } from "@/components/admin/AdminPoles";
 
-export const metadata: Metadata = {
-  title: "Gestion Pôles - ProDay",
-  robots: { index: false, follow: false },
-};
-
-export default async function AdminPolesPage() {
-  const ok = await getAdminSessionFromCookies();
-  if (!ok) {
-    redirect(ADMIN_LOGIN_PATH);
-  }
-
-  return <AdminPoles />;
+export default async function AdminPolesRedirectPage() {
+  if (!(await getAdminSessionFromCookies())) redirect(ADMIN_LOGIN_PATH);
+  redirect(ROUTES.adminDashboard);
 }

@@ -1,16 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import {
-  Activity,
-  AlertCircle,
-  ArrowUpRight,
-  CheckCircle,
-  ClipboardList,
-  CreditCard,
-  Gift,
-  Users,
-} from "lucide-react";
+import { ArrowUpRight, CheckCircle, AlertCircle } from "lucide-react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import {
   AdminBanner,
@@ -50,6 +41,15 @@ type Props = {
   platformError?: string | null;
 };
 
+const SHORTCUTS = [
+  { href: ROUTES.adminBeta, title: "Liste d’attente", desc: "Approuver / refuser" },
+  { href: ROUTES.adminFeedback, title: "Retours bêta", desc: "Tickets feedback" },
+  { href: ROUTES.adminUsers, title: "Utilisateurs", desc: "Comptes Firestore" },
+  { href: ROUTES.adminVisites, title: "Visites", desc: "Site + app" },
+  { href: ROUTES.adminReports, title: "Modération", desc: "Signalements" },
+  { href: ROUTES.adminLogs, title: "Journal", desc: "Audit admin" },
+];
+
 export function AdminDashboard({
   betaCounts,
   visitStats,
@@ -58,197 +58,145 @@ export function AdminDashboard({
   visitsError,
   platformError,
 }: Props) {
+  const reportsOpen = platformStats?.reportsOpen ?? 0;
+
   return (
     <AdminShell
       title="Dashboard"
-      subtitle="Vue d’ensemble des inscriptions bêta, du trafic et des comptes réels."
+      subtitle="Ops fondateurs — bêta, trafic, plateforme."
       pendingBetaCount={betaCounts.pending}
     >
       {(betaError || visitsError || platformError) && (
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           {betaError ? <AdminBanner tone="warning">Bêta : {betaError}</AdminBanner> : null}
-          {visitsError ? (
-            <AdminBanner tone="warning">Visites : {visitsError}</AdminBanner>
-          ) : null}
+          {visitsError ? <AdminBanner tone="warning">Visites : {visitsError}</AdminBanner> : null}
           {platformError ? (
             <AdminBanner tone="warning">Plateforme : {platformError}</AdminBanner>
           ) : null}
         </div>
       )}
 
-      <section>
-        <AdminSectionHeading
-          title="Indicateurs clés"
-          description="Uniquement des compteurs branchés (bêta, trafic, Firestore)."
+      <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
+        <AdminKpiCard
+          label="Bêta total"
+          value={betaCounts.all}
+          hint={`${betaCounts.approved} ok · ${betaCounts.rejected} refus`}
+          accent="blue"
         />
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <AdminKpiCard
-            label="Inscriptions bêta"
-            value={betaCounts.all}
-            hint={`${betaCounts.approved} approuvés · ${betaCounts.rejected} refusés`}
-            accent="blue"
-          />
-          <AdminKpiCard
-            label="En attente"
-            value={betaCounts.pending}
-            hint="Action prioritaire"
-            accent="amber"
-          />
-          <AdminKpiCard
-            label="Visites site"
-            value={visitStats.siteVisits}
-            hint={
-              visitStats.siteWeek != null
-                ? `${visitStats.siteWeek} sur 7 jours`
-                : "Total suivi"
-            }
-            accent="navy"
-          />
-          <AdminKpiCard
-            label="Ouvertures app"
-            value={visitStats.appOpens}
-            hint="Tracking Firebase"
-            accent="cyan"
-          />
+        <AdminKpiCard
+          label="En attente"
+          value={betaCounts.pending}
+          hint="Priorité"
+          accent="amber"
+        />
+        <AdminKpiCard
+          label="Visites site"
+          value={visitStats.siteVisits}
+          hint={
+            visitStats.siteWeek != null ? `${visitStats.siteWeek} / 7j` : "Total"
+          }
+          accent="navy"
+        />
+        <AdminKpiCard
+          label="Utilisateurs"
+          value={platformStats ? platformStats.users : "—"}
+          hint={
+            platformStats
+              ? `${platformStats.pro} Pro · ${visitStats.appOpens} opens app`
+              : "—"
+          }
+          accent="emerald"
+        />
+      </div>
+
+      <AdminPanel title="À traiter" description="Actions en file.">
+        <ul className="divide-y divide-white/10">
+          <li>
+            <Link
+              href={ROUTES.adminBeta}
+              className="flex items-center gap-3 px-0 py-2.5 text-sm transition hover:bg-white/[0.02]"
+            >
+              {betaCounts.pending > 0 ? (
+                <AlertCircle size={15} className="shrink-0 text-amber-400" />
+              ) : (
+                <CheckCircle size={15} className="shrink-0 text-emerald-400" />
+              )}
+              <div className="min-w-0 flex-1">
+                <p className="font-medium text-white">
+                  {betaCounts.pending > 0
+                    ? `${betaCounts.pending} inscription${betaCounts.pending > 1 ? "s" : ""} bêta`
+                    : "Aucune inscription en attente"}
+                </p>
+                <p className="text-[11px] text-white/40">Liste d’attente</p>
+              </div>
+              <ArrowUpRight size={14} className="text-white/25" />
+            </Link>
+          </li>
+          <li>
+            <Link
+              href={ROUTES.adminReports}
+              className="flex items-center gap-3 px-0 py-2.5 text-sm transition hover:bg-white/[0.02]"
+            >
+              {reportsOpen > 0 ? (
+                <AlertCircle size={15} className="shrink-0 text-amber-400" />
+              ) : (
+                <CheckCircle size={15} className="shrink-0 text-emerald-400" />
+              )}
+              <div className="min-w-0 flex-1">
+                <p className="font-medium text-white">
+                  {reportsOpen > 0
+                    ? `${reportsOpen} signalement${reportsOpen > 1 ? "s" : ""} ouvert${reportsOpen > 1 ? "s" : ""}`
+                    : "Aucun signalement ouvert"}
+                </p>
+                <p className="text-[11px] text-white/40">Modération</p>
+              </div>
+              <ArrowUpRight size={14} className="text-white/25" />
+            </Link>
+          </li>
+        </ul>
+      </AdminPanel>
+
+      <section>
+        <AdminSectionHeading title="Raccourcis" />
+        <div className="border border-white/10 bg-[#111114]">
+          <ul className="divide-y divide-white/10">
+            {SHORTCUTS.map((item) => (
+              <li key={item.href}>
+                <Link
+                  href={item.href}
+                  className="flex items-center gap-3 px-3 py-2 text-sm transition hover:bg-white/[0.03]"
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-white">{item.title}</p>
+                    <p className="text-[11px] text-white/40">{item.desc}</p>
+                  </div>
+                  <ArrowUpRight size={14} className="text-white/25" />
+                </Link>
+              </li>
+            ))}
+          </ul>
         </div>
       </section>
 
-      <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <AdminKpiCard
-          label="Comptes utilisateurs"
-          value={platformStats ? platformStats.users : "—"}
-          hint={platformStats ? "Firestore" : "Non disponible"}
-          accent="blue"
-        />
+      <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
         <AdminKpiCard
           label="Comptes Pro"
           value={platformStats ? platformStats.pro : "—"}
-          hint={platformStats ? "subscription_tier" : "Non disponible"}
           accent="emerald"
         />
         <AdminKpiCard
-          label="Codes parrainage"
+          label="Parrainage"
           value={platformStats ? platformStats.referrals : "—"}
-          hint={platformStats ? "Champs referral_*" : "Non disponible"}
           accent="navy"
         />
+        <AdminKpiCard label="App opens" value={visitStats.appOpens} accent="cyan" />
         <AdminKpiCard
-          label="Signalements ouverts"
-          value={platformStats ? platformStats.reportsOpen : "—"}
-          hint={platformStats ? "reel_reports" : "Non disponible"}
-          accent="amber"
-        />
-      </section>
-
-      <section>
-        {betaCounts.pending > 0 ? (
-          <AdminBanner tone="warning">
-            <div className="flex items-start gap-3">
-              <AlertCircle className="mt-0.5 shrink-0" size={18} />
-              <div>
-                <p className="font-medium text-amber-50">
-                  {betaCounts.pending} inscription
-                  {betaCounts.pending > 1 ? "s" : ""} en attente d’accès bêta
-                </p>
-                <Link
-                  href={ROUTES.adminBeta}
-                  className="mt-1 inline-flex items-center gap-1 text-sm font-medium text-amber-200 transition hover:text-white"
-                >
-                  Ouvrir la liste d’attente
-                  <ArrowUpRight size={14} />
-                </Link>
-              </div>
-            </div>
-          </AdminBanner>
-        ) : (
-          <AdminBanner tone="success">
-            <div className="flex items-center gap-2">
-              <CheckCircle size={16} />
-              Aucune inscription en attente.
-            </div>
-          </AdminBanner>
-        )}
-      </section>
-
-      <section>
-        <AdminSectionHeading
-          title="Raccourcis"
-          description="Accès rapide aux modules fondateurs."
-        />
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-          {[
-            {
-              href: ROUTES.adminBeta,
-              icon: ClipboardList,
-              title: "Liste d’attente",
-              desc: "Approuver / refuser avec note interne",
-            },
-            {
-              href: ROUTES.adminUsers,
-              icon: Users,
-              title: "Utilisateurs",
-              desc: "Comptes Firestore (lecture)",
-            },
-            {
-              href: ROUTES.adminSubscriptions,
-              icon: CreditCard,
-              title: "Abonnements",
-              desc: "Tiers Pro — RevenueCat / stores",
-            },
-            {
-              href: ROUTES.adminReferrals,
-              icon: Gift,
-              title: "Parrainage",
-              desc: "Codes et récompenses réels",
-            },
-            {
-              href: ROUTES.adminVisites,
-              icon: Activity,
-              title: "Visites",
-              desc: "Trafic site et ouvertures app",
-            },
-            {
-              href: ROUTES.adminReports,
-              icon: AlertCircle,
-              title: "Modération",
-              desc: "Signalements reel_reports",
-            },
-          ].map((item) => (
-            <Link key={item.href} href={item.href} className="group block">
-              <AdminPanel className="h-full p-5 transition group-hover:border-[#0054F0]/35 group-hover:bg-white/[0.04]">
-                <div className="flex items-start justify-between gap-3">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0054F0]/15 text-[#7AA7FF] ring-1 ring-[#0054F0]/20 transition group-hover:bg-[#0054F0] group-hover:text-white">
-                    <item.icon size={18} />
-                  </span>
-                  <ArrowUpRight
-                    size={16}
-                    className="text-white/25 transition group-hover:text-[#7AA7FF]"
-                  />
-                </div>
-                <h3 className="mt-4 font-display text-base font-semibold tracking-tight text-white">
-                  {item.title}
-                </h3>
-                <p className="mt-1 text-sm leading-relaxed text-white/45">{item.desc}</p>
-              </AdminPanel>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      <section className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <AdminKpiCard
-          label="Abonnements (RevenueCat)"
+          label="MRR"
           value="—"
-          hint="MRR dans le dashboard RevenueCat"
+          hint="RevenueCat"
           accent="blue"
         />
-        <AdminKpiCard
-          label="Revenu estimé"
-          value="—"
-          hint="Voir App Store / Play / RevenueCat"
-          accent="navy"
-        />
-      </section>
+      </div>
     </AdminShell>
   );
 }

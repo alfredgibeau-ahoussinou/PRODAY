@@ -4,6 +4,7 @@ import { AdminShell } from "@/components/admin/AdminShell";
 import {
   AdminBanner,
   AdminEmptyState,
+  AdminMockBadge,
   AdminPanel,
 } from "@/components/admin/adminUi";
 
@@ -12,6 +13,7 @@ export function AdminContent() {
     <AdminShell
       title="Contenu"
       subtitle="FAQ et témoignages du site vitrine."
+      actions={<AdminMockBadge />}
     >
       <AdminBanner tone="info">
         Aucune source CMS branchée. Les fiches démo ont été retirées.

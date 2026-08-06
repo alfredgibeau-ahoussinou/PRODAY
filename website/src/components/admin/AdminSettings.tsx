@@ -1,65 +1,65 @@
 "use client";
 
 import { AdminShell } from "@/components/admin/AdminShell";
-import { AdminBanner, AdminPanel } from "@/components/admin/adminUi";
+import {
+  AdminBanner,
+  AdminPanel,
+  AdminStatusBadge,
+  AdminTableShell,
+} from "@/components/admin/adminUi";
+import type { AdminConfigCheck } from "@/lib/adminConfigHealth";
 
-export function AdminSettings() {
-  const configured = [
-    {
-      label: "Session admin (PIN)",
-      hint: "BETA_ADMIN_PIN / ADMIN_MINICODE",
-      ok: true,
-    },
-    {
-      label: "Secret waitlist site",
-      hint: "BETA_WEBSITE_ADMIN_SECRET",
-      ok: true,
-    },
-    {
-      label: "URL Cloud Function waitlist",
-      hint: "BETA_WAITLIST_ADMIN_FUNCTION_URL",
-      ok: true,
-    },
-    {
-      label: "Transport email (Brevo / EmailJS)",
-      hint: "email.brevo_api_key ou beta.emailjs_*",
-      ok: true,
-    },
-  ];
+export function AdminSettings({ checks }: { checks: AdminConfigCheck[] }) {
+  const missing = checks.filter((c) => !c.ok).length;
 
   return (
     <AdminShell
       title="Paramètres"
-      subtitle="Configuration fondateurs. Les secrets restent côté serveur / Netlify / Firebase."
+      subtitle="Santé de configuration. Les secrets restent côté serveur."
     >
-      <AdminBanner tone="info">
-        L’auth admin site reste le minicode partagé. Pas de changement de modèle de session dans
-        cette refonte.
-      </AdminBanner>
+      {missing > 0 ? (
+        <AdminBanner tone="error">
+          {missing} variable{missing > 1 ? "s" : ""} manquante
+          {missing > 1 ? "s" : ""}. Les proxys admin / bêta peuvent échouer.
+        </AdminBanner>
+      ) : (
+        <AdminBanner tone="success">
+          Variables critiques présentes. Vérifie aussi Firebase
+          (`BETA_WEBSITE_ADMIN_SECRET`).
+        </AdminBanner>
+      )}
 
-      <div className="grid gap-4 md:grid-cols-2">
-        {configured.map((item) => (
-          <AdminPanel key={item.label} className="p-5">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <h2 className="font-semibold text-white">{item.label}</h2>
-                <p className="mt-1 font-mono text-xs text-white/40">{item.hint}</p>
-              </div>
-              <span className="rounded-md border border-emerald-500/25 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-emerald-200">
-                Requis
-              </span>
-            </div>
-          </AdminPanel>
-        ))}
-      </div>
+      <AdminTableShell>
+        <table>
+          <thead>
+            <tr>
+              <th>Variable</th>
+              <th>Hint</th>
+              <th>État</th>
+            </tr>
+          </thead>
+          <tbody>
+            {checks.map((item) => (
+              <tr key={item.id}>
+                <td className="font-medium text-white">{item.label}</td>
+                <td className="font-mono text-[11px] text-white/40">{item.hint}</td>
+                <td>
+                  <AdminStatusBadge tone={item.ok ? "success" : "danger"}>
+                    {item.ok ? "OK" : "Manquant"}
+                  </AdminStatusBadge>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </AdminTableShell>
 
-      <AdminPanel className="p-5 sm:p-6">
-        <h2 className="font-display text-lg font-bold tracking-tight text-white">
-          Campagne iOS
-        </h2>
-        <p className="mt-2 text-sm text-white/55">
-          Ouverture TestFlight prévue le 11 août 2026 à 18 h. Les actions de campagne restent dans
-          Liste d’attente bêta.
+      <AdminPanel
+        title="Campagne iOS"
+        description="Ouverture TestFlight prévue le 11 août 2026 à 18 h. Actions dans Liste d’attente."
+      >
+        <p className="text-xs text-white/45">
+          Les boutons campagne (annonce, lancement, engagement) sont sur la page Bêta.
         </p>
       </AdminPanel>
     </AdminShell>

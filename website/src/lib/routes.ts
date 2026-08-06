@@ -6,6 +6,7 @@ export const ROUTES = {
   joueurs: "/joueurs",
   features: "/fonctionnalites",
   demo: "/demo",
+  cards: "/cartes",
   pulse: "/pulse",
   journeys: "/parcours",
   trust: "/confiance",
@@ -23,10 +24,13 @@ export const ROUTES = {
   /** @deprecated Redirige vers /joueur. */
   proJoueur: "/pro-joueur",
   proClub: "/pro-club",
+  /** Pôle Coach (ex-Staff). */
+  coach: "/coach",
+  /** @deprecated Redirige vers /coach. */
   proStaff: "/pro-staff",
-  /** Pôle Événements (organisateurs). */
+  /** @deprecated Organisateur intégré au Club — redirige vers /pro-club. */
   evenements: "/evenements",
-  /** @deprecated Hub legacy. voir joueur, pro-club, pro-staff. */
+  /** @deprecated Hub legacy. voir joueur, pro-club, coach. */
   pro: "/pro",
   /** Hub bêta legacy. redirect vers programme si cookie. */
   beta: "/beta",
@@ -38,6 +42,8 @@ export const ROUTES = {
   betaAide: "/beta/aide",
   /** Liste d'attente publique (formulaire d'inscription). */
   betaWaitlist: "/beta/inscription",
+  /** Statut post-inscription (en attente / approuvé / refusé). */
+  betaStatut: "/beta/statut",
   /** Espace admin fondateurs (protégé par minicode). */
   admin: "/admin",
   adminLogin: "/admin/login",
@@ -58,6 +64,8 @@ export const ROUTES = {
   adminEmails: "/admin/emails",
   /** Logs et audit trail. */
   adminLogs: "/admin/logs",
+  /** Retours beta-testeurs. */
+  adminFeedback: "/admin/feedback",
   /** Abonnements Pro (RevenueCat / stores). */
   adminSubscriptions: "/admin/subscriptions",
   /** Rôles et permissions. */
@@ -91,23 +99,24 @@ export const ROUTES = {
   ecosystem: "/ecosysteme",
   shop: "/shop",
   sante: "/sante",
+  parent: "/parent",
 } as const;
 
 export type RouteKey = keyof typeof ROUTES;
 
+/** Nav vitrine GTM — 5 pôles. Santé / Agent / Recruteur / Organisateur = rôles. */
 export const POLE_NAV_ITEMS = [
   { href: ROUTES.joueur, label: "Joueur" },
-  { href: ROUTES.supporter, label: "Supporter" },
-  { href: ROUTES.sante, label: "Santé" },
   { href: ROUTES.proClub, label: "Club" },
-  { href: ROUTES.proStaff, label: "Staff" },
-  { href: ROUTES.evenements, label: "Événements" },
+  { href: ROUTES.coach, label: "Coach" },
+  { href: ROUTES.supporter, label: "Supporter" },
   { href: ROUTES.sponsor, label: "Sponsor" },
 ] as const;
 
 export const UTILITY_NAV_ITEMS = [
   { href: ROUTES.pricing, label: "Tarifs" },
   { href: ROUTES.features, label: "Fonctionnalités" },
+  { href: ROUTES.cards, label: "Cartes" },
   { href: ROUTES.faq, label: "FAQ" },
 ] as const;
 
@@ -118,13 +127,12 @@ export const NAV_ITEMS = [
 ] as const;
 
 export const POLE_FOOTER_LINKS = [
-  { href: ROUTES.joueur, label: "Pôle Joueur", subtitle: "Amateur → Centre → Pro · un seul profil" },
+  { href: ROUTES.joueur, label: "Pôle Joueur", subtitle: "Amateur → Centre → Pro · Pass Premium 3,99 €" },
+  { href: ROUTES.proClub, label: "Pôle Club", subtitle: "Cœur ProDay · Amateur / Essentiel / Premium" },
+  { href: ROUTES.coach, label: "Pôle Coach", subtitle: "Smart Tactics · IA · effectif" },
   { href: ROUTES.supporter, label: "Pôle Supporter", subtitle: "Fans & communauté" },
-  { href: ROUTES.sante, label: "Pôle Santé", subtitle: "Kiné · Mental · Nutrition" },
-  { href: ROUTES.proClub, label: "Pôle Club", subtitle: "Structures · équipes · recrutement" },
-  { href: ROUTES.proStaff, label: "Pôle Staff", subtitle: "Agent · Recruteur · Coach · calendrier" },
-  { href: ROUTES.evenements, label: "Pôle Événements", subtitle: "Tournois · stages · détections" },
   { href: ROUTES.sponsor, label: "Pôle Sponsor", subtitle: "Marques & visibilité mesurée" },
+  { href: ROUTES.sante, label: "Rôle Santé", subtitle: "Intégré · hors vitrine pôles" },
 ] as const;
 
 export const EXPLORE_CARDS = [
@@ -141,6 +149,13 @@ export const EXPLORE_CARDS = [
     description: "Naviguez les 9 onglets. Fil, Reels, Mercato et plus.",
     image: "/images/football-action-01.jpg",
     tag: "Essayer",
+  },
+  {
+    href: ROUTES.cards,
+    title: "Cartes ProDay",
+    description: "Passeports numériques style Ultimate Team pour chaque profil.",
+    image: "/images/football-pro-01.jpg",
+    tag: "Cartes",
   },
   {
     href: ROUTES.pulse,
@@ -216,14 +231,14 @@ export const EXPLORE_CARDS = [
   {
     href: routeWithHash(ROUTES.pricing, "joueur"),
     title: "Tarifs",
-    description: "Gratuit et offres Pro. Joueur, Club, Staff, Événements, Santé, Supporter, Sponsor.",
+    description: "Gratuit et offres Pro. Joueur, Club, Coach, Supporter, Sponsor.",
     image: "/showcase/classic-exp-messages.jpg",
     tag: "Tarifs",
   },
   {
     href: routeWithHash(ROUTES.joueur, "modules"),
     title: "Pôle Joueur",
-    description: "Amateur, centre de formation ou pro — badges, Mercato et carrière dans un seul espace.",
+    description: "Amateur, centre de formation ou pro. Badges, Mercato et carrière dans un seul espace.",
     image: "/images/football-pro-01.jpg",
     tag: "Joueur",
     accent: true,
@@ -237,25 +252,25 @@ export const EXPLORE_CARDS = [
     accent: true,
   },
   {
-    href: routeWithHash(ROUTES.proStaff, "modules"),
-    title: "Pôle Staff",
-    description: "Agent, recruteur, coach. Calendrier structure, convocations premium et Mercato.",
+    href: routeWithHash(ROUTES.coach, "modules"),
+    title: "Pôle Coach",
+    description: "Smart Tactics, IA, effectif et préparation match. Rattaché au club.",
     image: "/showcase/classic-staff.jpg",
-    tag: "Staff",
+    tag: "Coach",
     accent: true,
   },
   {
-    href: routeWithHash(ROUTES.evenements, "modules"),
-    title: "Pôle Événements",
-    description: "Tournois, académies, camps, détections et showcases pour organisateurs.",
+    href: routeWithHash(ROUTES.proClub, "modules"),
+    title: "Tournois & détections",
+    description: "Rôle organisateur intégré au Club — Arena, stages et inscriptions.",
     image: "/showcase/classic-arena.jpg",
-    tag: "Événements",
+    tag: "Club",
     accent: true,
   },
   {
     href: routeWithHash(ROUTES.joueur, "modules"),
     title: "Pro Day Man",
-    description: "Foot masculin. Mercato, matchs et CV joueur — badge Amateur ou Pro.",
+    description: "Foot masculin. Mercato, matchs et CV joueur. Badge Amateur ou Pro.",
     image: "/images/football-amateur-01.jpg",
     tag: "Man",
   },
@@ -305,7 +320,7 @@ export function demoUrlForUniverse(line: ProductLineWeb): string {
     sante: "sante",
     homme: "joueur",
     woman: "joueur",
-    pro: "pro_staff",
+    pro: "coach",
   };
   return `${ROUTES.demo}?p=${poleByLine[line]}`;
 }

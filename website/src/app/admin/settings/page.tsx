@@ -5,6 +5,7 @@ import {
   getAdminSessionFromCookies,
 } from "@/lib/adminSession";
 import { AdminSettings } from "@/components/admin/AdminSettings";
+import { getAdminConfigHealth } from "@/lib/adminConfigHealth";
 
 export const metadata: Metadata = {
   title: "Paramètres Admin - ProDay",
@@ -15,5 +16,5 @@ export default async function AdminSettingsPage() {
   if (!(await getAdminSessionFromCookies())) {
     redirect(ADMIN_LOGIN_PATH);
   }
-  return <AdminSettings />;
+  return <AdminSettings checks={getAdminConfigHealth()} />;
 }

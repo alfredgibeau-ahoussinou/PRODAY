@@ -8,10 +8,8 @@ import {
   BarChart3,
   ClipboardList,
   CreditCard,
-  FileText,
   Gift,
   LayoutDashboard,
-  Layers,
   LogOut,
   Mail,
   Menu,
@@ -21,6 +19,7 @@ import {
   UsersRound,
   X,
 } from "lucide-react";
+import { AdminPageHeader } from "@/components/admin/adminUi";
 import { ROUTES } from "@/lib/routes";
 
 type NavItem = {
@@ -41,6 +40,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { href: ROUTES.adminDashboard, label: "Dashboard", icon: LayoutDashboard },
       { href: ROUTES.adminBeta, label: "Liste d’attente", icon: ClipboardList, badge: "pending" },
+      { href: ROUTES.adminFeedback, label: "Retours bêta", icon: Mail },
       { href: ROUTES.adminVisites, label: "Visites", icon: Activity },
       { href: ROUTES.adminAnalytics, label: "Analytics", icon: BarChart3 },
     ],
@@ -50,18 +50,15 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { href: ROUTES.adminUsers, label: "Utilisateurs", icon: Users },
       { href: ROUTES.adminSubscriptions, label: "Abonnements", icon: CreditCard },
-      { href: ROUTES.adminRoles, label: "Rôles & droits", icon: Shield },
       { href: ROUTES.adminReferrals, label: "Parrainage", icon: Gift },
       { href: ROUTES.adminReports, label: "Modération", icon: UsersRound },
     ],
   },
   {
-    label: "Contenu & ops",
+    label: "Ops",
     items: [
-      { href: ROUTES.adminContent, label: "Contenu", icon: FileText },
-      { href: ROUTES.adminPoles, label: "Pôles", icon: Layers },
-      { href: ROUTES.adminEmails, label: "Emails", icon: Mail },
-      { href: ROUTES.adminLogs, label: "Journal d’activité", icon: ClipboardList },
+      { href: ROUTES.adminLogs, label: "Journal", icon: ClipboardList },
+      { href: ROUTES.adminRoles, label: "Rôles", icon: Shield },
       { href: ROUTES.adminSettings, label: "Paramètres", icon: Settings },
     ],
   },
@@ -93,6 +90,10 @@ export function AdminShell({
   const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
     if (!mobileOpen) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") setMobileOpen(false);
@@ -112,29 +113,27 @@ export function AdminShell({
   }
 
   const sidebar = (
-    <div className="flex h-full flex-col">
-      <div className="border-b border-white/[0.07] px-4 py-5">
-        <Link href={ROUTES.adminDashboard} className="group block px-1">
-          <div className="flex items-center gap-3">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#0054F0] text-[11px] font-bold tracking-wide text-white shadow-[0_0_0_1px_rgba(76,139,255,0.35),0_8px_24px_-8px_rgba(0,84,240,0.7)]">
-              PD
-            </span>
-            <div className="min-w-0">
-              <p className="font-display text-[15px] font-bold tracking-[0.1em] text-white">
-                PRODAY
-              </p>
-              <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#7AA7FF]/90">
-                Admin fondateurs
-              </p>
-            </div>
+    <div className="flex h-full min-h-0 flex-col">
+      <div className="border-b border-white/10 px-3 py-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
+        <Link
+          href={ROUTES.adminDashboard}
+          onClick={() => setMobileOpen(false)}
+          className="flex min-h-11 items-center gap-2.5 px-1"
+        >
+          <span className="flex h-8 w-8 items-center justify-center bg-[var(--proday-accent)] text-[10px] font-bold tracking-wide text-white">
+            PD
+          </span>
+          <div className="min-w-0">
+            <p className="text-[13px] font-semibold tracking-tight text-white">ProDay</p>
+            <p className="font-mono text-[9px] uppercase tracking-[0.14em] text-white/35">Admin</p>
           </div>
         </Link>
       </div>
 
-      <nav className="flex-1 space-y-7 overflow-y-auto px-3 py-5" aria-label="Admin">
+      <nav className="flex-1 space-y-4 overflow-y-auto overscroll-contain px-2 py-3" aria-label="Admin">
         {NAV_GROUPS.map((group) => (
           <div key={group.label}>
-            <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/30">
+            <p className="mb-1 px-2 font-mono text-[9px] uppercase tracking-[0.14em] text-white/30">
               {group.label}
             </p>
             <ul className="space-y-0.5">
@@ -150,38 +149,16 @@ export function AdminShell({
                     <Link
                       href={item.href}
                       onClick={() => setMobileOpen(false)}
-                      className={`group relative flex items-center gap-2.5 rounded-xl px-2.5 py-2 text-[13px] transition ${
+                      className={`flex min-h-11 items-center gap-2.5 rounded px-2.5 py-2 text-[13px] transition active:bg-white/[0.06] ${
                         active
-                          ? "bg-[#0054F0]/18 text-white"
-                          : "text-white/55 hover:bg-white/[0.045] hover:text-white"
+                          ? "bg-[var(--proday-accent)]/20 text-white"
+                          : "text-white/55 hover:bg-white/[0.04] hover:text-white"
                       }`}
                     >
-                      {active ? (
-                        <span
-                          aria-hidden
-                          className="absolute inset-y-1.5 left-0 w-[3px] rounded-full bg-[#4C8BFF]"
-                        />
-                      ) : null}
-                      <span
-                        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition ${
-                          active
-                            ? "bg-[#0054F0] text-white shadow-[0_0_0_1px_rgba(76,139,255,0.35)]"
-                            : "bg-white/[0.04] text-white/55 group-hover:bg-white/[0.07] group-hover:text-white"
-                        }`}
-                      >
-                        <Icon size={15} strokeWidth={active ? 2.25 : 2} />
-                      </span>
-                      <span className="flex-1 truncate font-medium tracking-tight">
-                        {item.label}
-                      </span>
+                      <Icon size={16} strokeWidth={active ? 2.25 : 2} className="shrink-0 opacity-80" />
+                      <span className="flex-1 truncate font-medium">{item.label}</span>
                       {showBadge ? (
-                        <span
-                          className={`min-w-[1.35rem] rounded-md px-1.5 py-0.5 text-center text-[10px] font-bold tabular-nums ${
-                            active
-                              ? "bg-white/20 text-white"
-                              : "bg-amber-500/20 text-amber-100"
-                          }`}
-                        >
+                        <span className="min-w-[1.35rem] rounded bg-amber-500/20 px-1.5 py-0.5 text-center text-[10px] font-bold tabular-nums text-amber-100">
                           {pendingBetaCount}
                         </span>
                       ) : null}
@@ -194,15 +171,13 @@ export function AdminShell({
         ))}
       </nav>
 
-      <div className="border-t border-white/[0.07] p-3">
+      <div className="border-t border-white/10 p-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
         <button
           type="button"
           onClick={() => void logout()}
-          className="flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-[13px] text-white/45 transition hover:bg-white/[0.045] hover:text-white"
+          className="flex min-h-11 w-full items-center gap-2.5 rounded px-2.5 py-2 text-[13px] text-white/45 transition hover:bg-white/[0.04] hover:text-white active:bg-white/[0.06]"
         >
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/[0.04]">
-            <LogOut size={15} />
-          </span>
+          <LogOut size={16} />
           Quitter
         </button>
       </div>
@@ -210,44 +185,49 @@ export function AdminShell({
   );
 
   return (
-    <div className="admin-shell relative min-h-screen bg-[#05070d] text-white">
-      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(0,84,240,0.16),transparent_48%),radial-gradient(ellipse_at_bottom_right,rgba(10,20,48,0.55),transparent_42%)]" />
-      <div className="pointer-events-none fixed inset-0 opacity-[0.35] [background-image:linear-gradient(rgba(255,255,255,0.015)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.015)_1px,transparent_1px)] [background-size:64px_64px]" />
-
-      {/* Mobile top bar */}
-      <div className="sticky top-0 z-30 flex items-center justify-between border-b border-white/[0.07] bg-[#05070d]/92 px-4 py-3 backdrop-blur-md lg:hidden">
+    <div className="admin-shell relative min-h-screen bg-[#0a0a0c] text-white">
+      <div className="admin-mobile-bar sticky top-0 z-30 flex items-center gap-2 border-b border-white/10 bg-[#0a0a0c]/95 px-3 py-2 pt-[max(0.5rem,env(safe-area-inset-top))] backdrop-blur-md lg:hidden">
         <button
           type="button"
           onClick={() => setMobileOpen(true)}
-          className="rounded-xl border border-white/10 bg-white/[0.03] p-2 text-white/80 transition hover:bg-white/[0.06]"
+          className="flex h-10 w-10 shrink-0 items-center justify-center border border-white/10 text-white/75 active:bg-white/[0.06]"
           aria-label="Ouvrir le menu"
         >
           <Menu size={18} />
         </button>
-        <div className="text-center">
-          <p className="font-display text-sm font-bold tracking-[0.12em]">PRODAY</p>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#7AA7FF]/80">
-            Admin
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-[13px] font-semibold tracking-tight text-white">{title}</p>
+          <p className="font-mono text-[9px] uppercase tracking-[0.14em] text-white/35">
+            ProDay Admin
           </p>
         </div>
-        <div className="w-9" />
+        {typeof pendingBetaCount === "number" && pendingBetaCount > 0 ? (
+          <Link
+            href={ROUTES.adminBeta}
+            className="shrink-0 rounded bg-amber-500/20 px-2 py-1 font-mono text-[10px] font-bold tabular-nums text-amber-100"
+            aria-label={`${pendingBetaCount} en attente`}
+          >
+            {pendingBetaCount}
+          </Link>
+        ) : (
+          <div className="w-6 shrink-0" />
+        )}
       </div>
 
-      {/* Mobile drawer */}
       {mobileOpen ? (
         <div className="fixed inset-0 z-40 lg:hidden">
           <button
             type="button"
-            className="absolute inset-0 bg-black/65 backdrop-blur-[1px]"
+            className="absolute inset-0 bg-black/70"
             aria-label="Fermer le menu"
             onClick={() => setMobileOpen(false)}
           />
-          <aside className="admin-drawer absolute inset-y-0 left-0 flex w-[min(300px,88vw)] flex-col border-r border-white/[0.08] bg-[#080b14] shadow-[20px_0_60px_-20px_rgba(0,0,0,0.8)]">
-            <div className="absolute right-2 top-2 z-10">
+          <aside className="admin-drawer absolute inset-y-0 left-0 flex w-[min(280px,88vw)] flex-col border-r border-white/10 bg-[#0a0a0c] shadow-2xl">
+            <div className="absolute right-1 top-[max(0.25rem,env(safe-area-inset-top))] z-10">
               <button
                 type="button"
                 onClick={() => setMobileOpen(false)}
-                className="rounded-lg p-2 text-white/50 transition hover:bg-white/[0.06] hover:text-white"
+                className="flex h-10 w-10 items-center justify-center text-white/50 active:text-white"
                 aria-label="Fermer"
               >
                 <X size={18} />
@@ -259,30 +239,30 @@ export function AdminShell({
       ) : null}
 
       <div className="relative mx-auto flex min-h-screen w-full max-w-[1600px]">
-        <aside className="sticky top-0 hidden h-screen w-[268px] shrink-0 border-r border-white/[0.07] bg-[#080b14]/90 backdrop-blur-sm lg:block">
+        <aside className="sticky top-0 hidden h-screen w-[220px] shrink-0 border-r border-white/10 bg-[#0a0a0c] lg:block">
           {sidebar}
         </aside>
 
-        <div className="min-w-0 flex-1 px-4 py-6 sm:px-6 lg:px-9 lg:py-8">
-          <header className="mb-7 flex flex-col gap-4 border-b border-white/[0.07] pb-6 sm:flex-row sm:items-end sm:justify-between">
-            <div className="min-w-0">
-              <p className="font-display text-[11px] font-semibold uppercase tracking-[0.22em] text-[#7AA7FF]">
-                Admin · ProDay
-              </p>
-              <h1 className="mt-2 font-display text-[1.85rem] font-bold tracking-tight text-white sm:text-3xl">
-                {title}
-              </h1>
-              {subtitle ? (
-                <p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/48">
-                  {subtitle}
-                </p>
-              ) : null}
-            </div>
-            {actions ? (
-              <div className="flex flex-wrap items-center gap-2 sm:justify-end">{actions}</div>
-            ) : null}
-          </header>
-          <div className="admin-page space-y-6">{children}</div>
+        <div className="admin-main min-w-0 flex-1 px-3 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 sm:px-5 sm:pt-4 lg:px-6 lg:py-5">
+          <div className="lg:hidden">
+            {/* Title already in sticky bar — keep actions + subtitle only */}
+            {(subtitle || actions) && (
+              <div className="mb-3 flex flex-col gap-2 border-b border-white/10 pb-3">
+                {subtitle ? (
+                  <p className="text-xs leading-relaxed text-white/45">{subtitle}</p>
+                ) : null}
+                {actions ? (
+                  <div className="flex flex-wrap items-stretch gap-1.5 [&_button]:min-h-10 [&_button]:flex-1 sm:[&_button]:flex-none">
+                    {actions}
+                  </div>
+                ) : null}
+              </div>
+            )}
+          </div>
+          <div className="hidden lg:block">
+            <AdminPageHeader title={title} subtitle={subtitle} actions={actions} />
+          </div>
+          <div className="admin-page space-y-3 sm:space-y-4">{children}</div>
         </div>
       </div>
     </div>

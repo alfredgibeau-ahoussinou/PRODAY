@@ -21,7 +21,7 @@ export default async function AdminDashboardPage() {
   }
 
   const [beta, visits, platform] = await Promise.all([
-    fetchBetaWaitlistAdmin(),
+    fetchBetaWaitlistAdmin({ pageSize: 1 }),
     fetchTrafficStatsAdmin(),
     fetchAdminPlatformStats(),
   ]);

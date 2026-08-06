@@ -5,6 +5,7 @@ import { AdminShell } from "@/components/admin/AdminShell";
 import {
   AdminBanner,
   AdminEmptyState,
+  AdminFilterChip,
   AdminKpiCard,
   AdminTableShell,
   formatAdminDate,
@@ -38,18 +39,15 @@ export function AdminReports({ items, total, error = null }: Props) {
         <AdminKpiCard label="Résolus" value="—" hint="Non suivi" accent="emerald" />
       </section>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-1.5">
         {(["all", "open"] as const).map((id) => (
-          <button
+          <AdminFilterChip
             key={id}
-            type="button"
+            active={filter === id}
             onClick={() => setFilter(id)}
-            className={`rounded-full px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wide ${
-              filter === id ? "bg-white text-black" : "bg-white/[0.06] text-white/60"
-            }`}
           >
             {id === "all" ? "Tous" : "Ouverts"}
-          </button>
+          </AdminFilterChip>
         ))}
       </div>
 

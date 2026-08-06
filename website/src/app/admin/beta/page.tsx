@@ -17,13 +17,17 @@ export default async function AdminBetaPage() {
     redirect(ADMIN_LOGIN_PATH);
   }
 
-  const result = await fetchBetaWaitlistAdmin();
+  const result = await fetchBetaWaitlistAdmin({ pageSize: 50 });
 
   return (
     <AdminBetaDashboard
       initialEntries={result.entries}
       initialCounts={result.counts}
       initialError={result.ok ? null : (result.error ?? "Chargement impossible")}
+      initialTruncated={result.truncated === true}
+      initialListCap={result.listCap}
+      initialNextCursor={result.nextCursor ?? null}
+      initialHasMore={result.hasMore === true}
     />
   );
 }

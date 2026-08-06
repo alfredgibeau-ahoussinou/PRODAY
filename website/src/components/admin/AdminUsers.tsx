@@ -191,8 +191,8 @@ export function AdminUsers({
                   <tr key={user.id}>
                     <td>
                       <div className="flex items-center gap-3">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#0054F0]/15 text-[#7AA7FF] ring-1 ring-[#0054F0]/20">
-                          <User size={16} />
+                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded border border-[var(--proday-accent)]/25 bg-[var(--proday-accent-muted)] text-[var(--proday-accent-bright)]">
+                          <User size={14} />
                         </div>
                         <div>
                           <p className="font-medium text-white">{user.name}</p>

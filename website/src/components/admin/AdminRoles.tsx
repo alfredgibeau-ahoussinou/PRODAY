@@ -35,23 +35,20 @@ export function AdminRoles() {
   return (
     <AdminShell
       title="Rôles & permissions"
-      subtitle="Cible produit. Aujourd’hui le site utilise un minicode fondateur unique — pas de comptes rôles live."
+      subtitle="Cible produit. Aujourd’hui : minicode fondateur unique."
     >
       <AdminBanner tone="info">
-        Auth actuelle : session PIN fondateur. Cette page décrit la matrice prévue, pas des
-        utilisateurs fictifs.
+        Auth actuelle : session PIN. Cette page décrit la matrice prévue.
       </AdminBanner>
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-2 md:grid-cols-2">
         {ROLES.map((role) => (
-          <AdminPanel key={role.id} className="p-5">
-            <h2 className="font-display text-lg font-bold text-white">{role.label}</h2>
-            <p className="mt-1 text-xs uppercase tracking-wide text-white/40">{role.id}</p>
-            <ul className="mt-4 space-y-1.5">
+          <AdminPanel key={role.id} title={role.label} description={role.id}>
+            <ul className="flex flex-wrap gap-1">
               {role.perms.map((p) => (
                 <li
                   key={p}
-                  className="rounded-lg bg-white/[0.04] px-3 py-2 font-mono text-xs text-[#4C8BFF]"
+                  className="rounded border border-white/10 bg-white/[0.03] px-2 py-1 font-mono text-[10px] text-white/60"
                 >
                   {p}
                 </li>
@@ -80,9 +77,9 @@ export function AdminRoles() {
             ].map(([perm, a, b, c]) => (
               <tr key={perm}>
                 <td className="text-white">{perm}</td>
-                <td className="text-white/65">{a}</td>
-                <td className="text-white/65">{b}</td>
-                <td className="text-white/65">{c}</td>
+                <td>{a}</td>
+                <td>{b}</td>
+                <td>{c}</td>
               </tr>
             ))}
           </tbody>

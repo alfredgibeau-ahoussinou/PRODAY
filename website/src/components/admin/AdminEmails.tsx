@@ -4,6 +4,7 @@ import { AdminShell } from "@/components/admin/AdminShell";
 import {
   AdminBanner,
   AdminEmptyState,
+  AdminMockBadge,
   AdminPanel,
 } from "@/components/admin/adminUi";
 
@@ -12,10 +13,11 @@ export function AdminEmails() {
     <AdminShell
       title="Emails"
       subtitle="Templates et journaux d’envoi."
+      actions={<AdminMockBadge />}
     >
       <AdminBanner tone="info">
-        Pas de journal email admin exposé. Les templates / logs démo ont été retirés.
-        Les envois bêta restent gérés depuis Liste d’attente.
+        Pas de journal email admin exposé. Les envois bêta restent gérés depuis Liste
+        d’attente.
       </AdminBanner>
       <AdminPanel className="p-0">
         <AdminEmptyState

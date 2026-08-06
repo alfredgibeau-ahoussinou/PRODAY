@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { AdminLogs } from "@/components/admin/AdminLogs";
+import { fetchAdminAuditLogs } from "@/lib/adminBetaApi";
 import {
   ADMIN_LOGIN_PATH,
   getAdminSessionFromCookies,
 } from "@/lib/adminSession";
-import { AdminLogs } from "@/components/admin/AdminLogs";
 
 export const metadata: Metadata = {
   title: "Logs et Audit - ProDay",
@@ -12,10 +13,16 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminLogsPage() {
-  const ok = await getAdminSessionFromCookies();
-  if (!ok) {
+  if (!(await getAdminSessionFromCookies())) {
     redirect(ADMIN_LOGIN_PATH);
   }
 
-  return <AdminLogs />;
+  const result = await fetchAdminAuditLogs();
+
+  return (
+    <AdminLogs
+      initialEntries={result.entries}
+      initialError={result.ok ? null : (result.error ?? "Chargement impossible")}
+    />
+  );
 }

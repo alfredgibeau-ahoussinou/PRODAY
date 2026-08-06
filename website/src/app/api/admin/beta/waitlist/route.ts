@@ -12,7 +12,7 @@ function jsonResponse(body: Record<string, unknown>, init?: ResponseInit) {
   return response;
 }
 
-/** Liste waitlist bêta. session admin requise. */
+/** Liste waitlist bêta paginée. session admin requise. */
 export async function GET(request: Request) {
   const site = request.headers.get("sec-fetch-site");
   const sameSiteFetch =
@@ -37,7 +37,15 @@ export async function GET(request: Request) {
     );
   }
 
-  const result = await fetchBetaWaitlistAdmin();
+  const url = new URL(request.url);
+  const rawSize = url.searchParams.get("pageSize");
+  const cursor = url.searchParams.get("cursor")?.trim() || undefined;
+  const pageSize = rawSize ? Number(rawSize) : undefined;
+
+  const result = await fetchBetaWaitlistAdmin({
+    ...(Number.isFinite(pageSize) ? { pageSize } : {}),
+    ...(cursor ? { cursor } : {}),
+  });
   if (!result.ok) {
     return jsonResponse(
       { error: result.error ?? "Erreur" },
@@ -49,5 +57,10 @@ export async function GET(request: Request) {
     ok: true,
     entries: result.entries,
     counts: result.counts,
+    truncated: result.truncated === true,
+    list_cap: result.listCap,
+    page_size: result.pageSize,
+    next_cursor: result.nextCursor ?? null,
+    has_more: result.hasMore === true,
   });
 }

@@ -2,7 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
-import { AdminButton, AdminInput } from "@/components/admin/adminUi";
+import { AdminBanner, AdminButton, AdminInput } from "@/components/admin/adminUi";
 
 export function AdminPinGate() {
   const router = useRouter();
@@ -38,66 +38,49 @@ export function AdminPinGate() {
   }
 
   return (
-    <main className="admin-shell relative flex min-h-screen items-center justify-center overflow-hidden px-5 py-16">
-      <div className="pointer-events-none absolute inset-0 bg-[#05070d]" />
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(0,84,240,0.22),transparent_55%),radial-gradient(ellipse_at_bottom_right,rgba(10,20,48,0.65),transparent_45%)]" />
-      <div className="pointer-events-none absolute inset-0 opacity-[0.3] [background-image:linear-gradient(rgba(255,255,255,0.015)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.015)_1px,transparent_1px)] [background-size:64px_64px]" />
-
-      <div className="relative w-full max-w-md overflow-hidden rounded-2xl border border-white/[0.09] bg-[#080b14]/92 p-7 shadow-[0_32px_90px_-30px_rgba(0,0,0,0.95),inset_0_1px_0_rgba(255,255,255,0.05)] backdrop-blur-sm sm:p-8">
-        <div className="mb-7 flex items-center gap-3">
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0054F0] text-xs font-bold tracking-wide text-white shadow-[0_0_0_1px_rgba(76,139,255,0.35),0_10px_28px_-10px_rgba(0,84,240,0.75)]">
+    <main className="flex min-h-[100dvh] items-center justify-center bg-[#0a0a0c] px-4 py-12 pb-[max(3rem,env(safe-area-inset-bottom))] pt-[max(3rem,env(safe-area-inset-top))]">
+      <div className="w-full max-w-sm border border-white/10 bg-[#111114] p-4">
+        <div className="mb-4 flex items-center gap-2.5">
+          <span className="flex h-8 w-8 items-center justify-center bg-[var(--proday-accent)] text-[10px] font-bold text-white">
             PD
           </span>
           <div>
-            <p className="font-display text-sm font-bold tracking-[0.14em] text-white">
-              PRODAY
-            </p>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#7AA7FF]">
+            <p className="text-sm font-semibold text-white">ProDay</p>
+            <p className="font-mono text-[9px] uppercase tracking-[0.14em] text-white/35">
               Admin fondateurs
             </p>
           </div>
         </div>
 
-        <h1 className="font-display text-2xl font-bold tracking-tight text-white sm:text-[1.75rem]">
-          Espace admin bêta
+        <h1 className="font-display text-lg font-medium tracking-[-0.02em] text-white">
+          Connexion
         </h1>
-        <p className="mt-2.5 text-sm leading-relaxed text-white/50">
-          Accès réservé aux 4 membres de l&apos;équipe. Saisissez le minicode
-          partagé pour ouvrir le tableau de bord.
+        <p className="mt-1 text-xs leading-relaxed text-white/45">
+          Minicode partagé — accès console site (bêta, trafic, plateforme).
         </p>
 
-        <form onSubmit={onSubmit} className="mt-8 space-y-5">
+        <form onSubmit={onSubmit} className="mt-4 space-y-3">
           <label className="block">
-            <span className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.14em] text-white/40">
+            <span className="mb-1 block font-mono text-[9px] uppercase tracking-[0.14em] text-white/35">
               Minicode
             </span>
             <AdminInput
               type="password"
-              inputMode="numeric"
-              autoComplete="one-time-code"
               name="pin"
+              autoComplete="current-password"
+              inputMode="numeric"
+              enterKeyHint="go"
               value={pin}
               onChange={(e) => setPin(e.target.value)}
-              maxLength={32}
+              placeholder="••••••••"
               required
-              className="py-3.5 text-center font-display text-2xl tracking-[0.35em]"
-              placeholder="••••••"
             />
           </label>
 
-          {error ? (
-            <p className="rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2.5 text-sm text-red-200">
-              {error}
-            </p>
-          ) : null}
+          {error ? <AdminBanner tone="error">{error}</AdminBanner> : null}
 
-          <AdminButton
-            type="submit"
-            variant="primary"
-            disabled={loading || !pin.trim()}
-            className="w-full py-3.5"
-          >
-            {loading ? "Vérification…" : "Entrer"}
+          <AdminButton type="submit" variant="primary" className="w-full min-h-11" disabled={loading}>
+            {loading ? "Connexion…" : "Entrer"}
           </AdminButton>
         </form>
       </div>

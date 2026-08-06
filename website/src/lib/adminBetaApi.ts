@@ -28,6 +28,11 @@ type UpstreamList = {
   ok?: boolean;
   entries?: BetaAdminWaitlistEntry[];
   counts?: BetaAdminCounts;
+  truncated?: boolean;
+  list_cap?: number;
+  page_size?: number;
+  next_cursor?: string | null;
+  has_more?: boolean;
   error?: string;
 };
 
@@ -55,7 +60,7 @@ function getAdminFunctionConfig(): { url: string; secret: string } | null {
   return { url, secret };
 }
 
-async function callAdminFunction(
+  async function callAdminFunction(
   body: {
     action:
       | "list"
@@ -65,11 +70,22 @@ async function callAdminFunction(
       | "bulk_approve"
       | "broadcast_ios_pre_announcement"
       | "trigger_ios_launch"
-      | "send_engagement_round";
+      | "send_engagement_round"
+      | "list_audit"
+      | "list_feedback"
+      | "submit_feedback"
+      | "resolve_feedback";
     entryId?: string;
     entryIds?: string[];
     admin_note?: string;
     round?: number;
+    category?: string;
+    message?: string;
+    email?: string;
+    role_label?: string;
+    feedbackId?: string;
+    pageSize?: number;
+    cursor?: string;
   },
 ): Promise<{ status: number; data: Record<string, unknown> }> {
   const config = getAdminFunctionConfig();
@@ -100,14 +116,26 @@ async function callAdminFunction(
   return { status: upstream.status, data };
 }
 
-export async function fetchBetaWaitlistAdmin(): Promise<{
+export async function fetchBetaWaitlistAdmin(opts?: {
+  pageSize?: number;
+  cursor?: string;
+}): Promise<{
   ok: boolean;
   status: number;
   entries: BetaAdminWaitlistEntry[];
   counts: BetaAdminCounts;
+  truncated?: boolean;
+  listCap?: number;
+  pageSize?: number;
+  nextCursor?: string | null;
+  hasMore?: boolean;
   error?: string;
 }> {
-  const { status, data } = await callAdminFunction({ action: "list" });
+  const { status, data } = await callAdminFunction({
+    action: "list",
+    ...(typeof opts?.pageSize === "number" ? { pageSize: opts.pageSize } : {}),
+    ...(opts?.cursor?.trim() ? { cursor: opts.cursor.trim() } : {}),
+  });
   const parsed = data as UpstreamList;
   if (!upstreamOk(status, parsed)) {
     return {
@@ -129,7 +157,126 @@ export async function fetchBetaWaitlistAdmin(): Promise<{
       approved: 0,
       rejected: 0,
     },
+    truncated: parsed.truncated === true || parsed.has_more === true,
+    listCap: typeof parsed.list_cap === "number" ? parsed.list_cap : undefined,
+    pageSize: typeof parsed.page_size === "number" ? parsed.page_size : undefined,
+    nextCursor:
+      typeof parsed.next_cursor === "string"
+        ? parsed.next_cursor
+        : parsed.next_cursor === null
+          ? null
+          : undefined,
+    hasMore: parsed.has_more === true,
   };
+}
+
+export type AdminAuditEntry = {
+  id: string;
+  action: string;
+  actor_uid: string;
+  actor_email: string | null;
+  target_type: string;
+  target_id: string;
+  summary: string;
+  created_at: string | null;
+};
+
+export async function fetchAdminAuditLogs(): Promise<{
+  ok: boolean;
+  status: number;
+  entries: AdminAuditEntry[];
+  error?: string;
+}> {
+  const { status, data } = await callAdminFunction({ action: "list_audit" });
+  if (status < 200 || status >= 300 || data.error) {
+    return {
+      ok: false,
+      status,
+      entries: [],
+      error: String(data.error ?? "Impossible de charger le journal"),
+    };
+  }
+  const entries = Array.isArray(data.entries)
+    ? (data.entries as AdminAuditEntry[])
+    : [];
+  return { ok: true, status, entries };
+}
+
+export type BetaFeedbackItem = {
+  id: string;
+  email: string;
+  role_label: string;
+  category: string;
+  message: string;
+  status: "open" | "resolved";
+  created_at: string | null;
+  resolved_at: string | null;
+};
+
+export async function fetchBetaFeedbackAdmin(): Promise<{
+  ok: boolean;
+  status: number;
+  items: BetaFeedbackItem[];
+  counts: { all: number; open: number; resolved: number };
+  error?: string;
+}> {
+  const { status, data } = await callAdminFunction({ action: "list_feedback" });
+  if (status < 200 || status >= 300 || data.error) {
+    return {
+      ok: false,
+      status,
+      items: [],
+      counts: { all: 0, open: 0, resolved: 0 },
+      error: String(data.error ?? "Impossible de charger les retours"),
+    };
+  }
+  const items = Array.isArray(data.items) ? (data.items as BetaFeedbackItem[]) : [];
+  const counts = (data.counts as { all: number; open: number; resolved: number } | undefined) ?? {
+    all: items.length,
+    open: items.filter((i) => i.status === "open").length,
+    resolved: items.filter((i) => i.status === "resolved").length,
+  };
+  return { ok: true, status, items, counts };
+}
+
+export async function submitBetaFeedbackAdmin(input: {
+  email: string;
+  role_label: string;
+  category: string;
+  message: string;
+}): Promise<{ ok: boolean; status: number; id?: string; error?: string }> {
+  const { status, data } = await callAdminFunction({
+    action: "submit_feedback",
+    email: input.email,
+    role_label: input.role_label,
+    category: input.category,
+    message: input.message,
+  });
+  if (status < 200 || status >= 300 || data.error) {
+    return {
+      ok: false,
+      status,
+      error: String(data.error ?? "Envoi impossible"),
+    };
+  }
+  return { ok: true, status, id: typeof data.id === "string" ? data.id : undefined };
+}
+
+export async function resolveBetaFeedbackAdmin(
+  feedbackId: string,
+): Promise<{ ok: boolean; status: number; error?: string }> {
+  const { status, data } = await callAdminFunction({
+    action: "resolve_feedback",
+    feedbackId,
+  });
+  if (status < 200 || status >= 300 || data.error) {
+    return {
+      ok: false,
+      status,
+      error: String(data.error ?? "Résolution impossible"),
+    };
+  }
+  return { ok: true, status };
 }
 
 export async function approveBetaWaitlistAdmin(

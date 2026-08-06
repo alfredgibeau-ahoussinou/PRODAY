@@ -134,8 +134,8 @@ export function AdminAnalytics({
             />
           </AdminPanel>
         ) : (
-          <AdminPanel className="p-6">
-            <div className="flex h-48 items-end gap-1.5">
+          <AdminPanel className="p-3">
+            <div className="flex h-40 items-end gap-1">
               {chartRows.map((stat) => {
                 const total = stat.site_visits + stat.app_opens;
                 const height = Math.max(4, (total / maxBar) * 100);
@@ -144,37 +144,37 @@ export function AdminAnalytics({
                 return (
                   <div
                     key={stat.day_key}
-                    className="flex flex-1 flex-col items-center gap-2"
+                    className="flex flex-1 flex-col items-center gap-1.5"
                     title={`${stat.day_key}: ${stat.site_visits} site · ${stat.app_opens} app`}
                   >
                     <div
-                      className="flex w-full flex-col justify-end overflow-hidden rounded-t bg-white/5"
+                      className="flex w-full flex-col justify-end overflow-hidden bg-white/5"
                       style={{ height: `${height}%` }}
                     >
                       <div
-                        className="w-full bg-blue-500/70"
+                        className="w-full bg-[var(--proday-accent)]/75"
                         style={{ height: `${siteShare}%` }}
                       />
                       <div
-                        className="w-full bg-cyan-500/60"
+                        className="w-full bg-sky-400/55"
                         style={{ height: `${100 - siteShare}%` }}
                       />
                     </div>
-                    <span className="text-[10px] text-white/35">
+                    <span className="font-mono text-[9px] text-white/35">
                       {stat.day_key.slice(5)}
                     </span>
                   </div>
                 );
               })}
             </div>
-            <div className="mt-4 flex items-center justify-center gap-6">
-              <div className="flex items-center gap-2">
-                <Globe size={12} className="text-blue-400" />
-                <span className="text-xs text-white/55">Site</span>
+            <div className="mt-3 flex items-center justify-center gap-4">
+              <div className="flex items-center gap-1.5">
+                <Globe size={11} className="text-[var(--proday-accent-bright)]" />
+                <span className="text-[11px] text-white/50">Site</span>
               </div>
-              <div className="flex items-center gap-2">
-                <Smartphone size={12} className="text-cyan-400" />
-                <span className="text-xs text-white/55">App</span>
+              <div className="flex items-center gap-1.5">
+                <Smartphone size={11} className="text-sky-300" />
+                <span className="text-[11px] text-white/50">App</span>
               </div>
             </div>
           </AdminPanel>
@@ -219,21 +219,25 @@ export function AdminAnalytics({
         </AdminTableShell>
       </section>
 
-      <section className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <AdminPanel className="flex items-center gap-3 p-5">
-          <Eye className="text-[#7AA7FF]" size={18} />
+      <section className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+        <AdminPanel className="flex items-center gap-3 p-3">
+          <Eye className="text-[var(--proday-accent-bright)]" size={16} />
           <div>
-            <p className="text-sm text-white/50">Total site (depuis tracking)</p>
-            <p className="font-display text-xl font-semibold text-white">
+            <p className="font-mono text-[9px] uppercase tracking-[0.14em] text-white/40">
+              Total site
+            </p>
+            <p className="mt-0.5 font-display text-lg font-medium tabular-nums text-white">
               {totals.site_visits.toLocaleString("fr-FR")}
             </p>
           </div>
         </AdminPanel>
-        <AdminPanel className="flex items-center gap-3 p-5">
-          <Smartphone className="text-cyan-300" size={18} />
+        <AdminPanel className="flex items-center gap-3 p-3">
+          <Smartphone className="text-sky-300" size={16} />
           <div>
-            <p className="text-sm text-white/50">Total ouvertures app</p>
-            <p className="font-display text-xl font-semibold text-white">
+            <p className="font-mono text-[9px] uppercase tracking-[0.14em] text-white/40">
+              Total ouvertures app
+            </p>
+            <p className="mt-0.5 font-display text-lg font-medium tabular-nums text-white">
               {totals.app_opens.toLocaleString("fr-FR")}
             </p>
           </div>

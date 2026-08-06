@@ -4,6 +4,7 @@ import { AdminShell } from "@/components/admin/AdminShell";
 import {
   AdminBanner,
   AdminEmptyState,
+  AdminMockBadge,
   AdminPanel,
 } from "@/components/admin/adminUi";
 
@@ -12,10 +13,10 @@ export function AdminPoles() {
     <AdminShell
       title="Pôles & fonctionnalités"
       subtitle="Configuration produit des pôles."
+      actions={<AdminMockBadge />}
     >
       <AdminBanner tone="info">
-        Pas de backend de configuration pôles pour le site admin. Les pôles / features
-        démo ont été retirés.
+        Pas de backend de configuration pôles pour le site admin.
       </AdminBanner>
       <AdminPanel className="p-0">
         <AdminEmptyState

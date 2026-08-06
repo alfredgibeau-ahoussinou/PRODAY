@@ -12,7 +12,6 @@ import {
   AdminKpiCard,
   AdminModal,
   AdminPanel,
-  AdminSectionHeading,
   AdminStatusBadge,
   AdminTableShell,
   displayNameFromEmail,
@@ -42,12 +41,20 @@ type Props = {
   initialEntries: BetaAdminWaitlistEntry[];
   initialCounts: BetaAdminCounts;
   initialError?: string | null;
+  initialTruncated?: boolean;
+  initialListCap?: number;
+  initialNextCursor?: string | null;
+  initialHasMore?: boolean;
 };
 
 export function AdminBetaDashboard({
   initialEntries,
   initialCounts,
   initialError = null,
+  initialTruncated = false,
+  initialListCap,
+  initialNextCursor = null,
+  initialHasMore = false,
 }: Props) {
   const router = useRouter();
   const [filter, setFilter] = useState<Filter>("pending");
@@ -56,6 +63,11 @@ export function AdminBetaDashboard({
   const [counts, setCounts] = useState(initialCounts);
   const [error, setError] = useState<string | null>(initialError);
   const [message, setMessage] = useState<string | null>(null);
+  const [truncated, setTruncated] = useState(initialTruncated);
+  const [listCap, setListCap] = useState(initialListCap);
+  const [nextCursor, setNextCursor] = useState<string | null>(initialNextCursor);
+  const [hasMore, setHasMore] = useState(initialHasMore);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [actionId, setActionId] = useState<string | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [modal, setModal] = useState<DecisionModal | null>(null);
@@ -112,7 +124,9 @@ export function AdminBetaDashboard({
 
   async function refreshList() {
     setError(null);
-    const res = await fetch("/api/admin/beta/waitlist", { cache: "no-store" });
+    const res = await fetch("/api/admin/beta/waitlist?pageSize=50", {
+      cache: "no-store",
+    });
     if (res.status === 401) {
       router.replace("/admin/login");
       return;
@@ -121,6 +135,10 @@ export function AdminBetaDashboard({
       error?: string;
       entries?: BetaAdminWaitlistEntry[];
       counts?: BetaAdminCounts;
+      truncated?: boolean;
+      list_cap?: number;
+      next_cursor?: string | null;
+      has_more?: boolean;
     };
     if (!res.ok) {
       setError(data.error ?? "Chargement impossible");
@@ -128,7 +146,56 @@ export function AdminBetaDashboard({
     }
     setEntries(data.entries ?? []);
     setCounts(data.counts ?? { all: 0, pending: 0, approved: 0, rejected: 0 });
+    setTruncated(data.truncated === true || data.has_more === true);
+    setListCap(typeof data.list_cap === "number" ? data.list_cap : undefined);
+    setNextCursor(
+      typeof data.next_cursor === "string" ? data.next_cursor : null,
+    );
+    setHasMore(data.has_more === true);
     setSelected(new Set());
+  }
+
+  async function loadMore() {
+    if (!hasMore || !nextCursor || loadingMore) return;
+    setLoadingMore(true);
+    setError(null);
+    try {
+      const res = await fetch(
+        `/api/admin/beta/waitlist?pageSize=50&cursor=${encodeURIComponent(nextCursor)}`,
+        { cache: "no-store" },
+      );
+      if (res.status === 401) {
+        router.replace("/admin/login");
+        return;
+      }
+      const data = (await res.json().catch(() => ({}))) as {
+        error?: string;
+        entries?: BetaAdminWaitlistEntry[];
+        counts?: BetaAdminCounts;
+        truncated?: boolean;
+        list_cap?: number;
+        next_cursor?: string | null;
+        has_more?: boolean;
+      };
+      if (!res.ok) {
+        setError(data.error ?? "Chargement impossible");
+        return;
+      }
+      setEntries((prev) => {
+        const seen = new Set(prev.map((e) => e.id));
+        const appended = (data.entries ?? []).filter((e) => !seen.has(e.id));
+        return [...prev, ...appended];
+      });
+      if (data.counts) setCounts(data.counts);
+      setTruncated(data.has_more === true);
+      setListCap(typeof data.list_cap === "number" ? data.list_cap : undefined);
+      setNextCursor(
+        typeof data.next_cursor === "string" ? data.next_cursor : null,
+      );
+      setHasMore(data.has_more === true);
+    } finally {
+      setLoadingMore(false);
+    }
   }
 
   async function submitDecision() {
@@ -304,7 +371,7 @@ export function AdminBetaDashboard({
         </AdminButton>
       }
     >
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
         {(
           [
             ["pending", "En attente", counts.pending, "amber"],
@@ -325,12 +392,11 @@ export function AdminBetaDashboard({
         ))}
       </div>
 
-      <AdminPanel className="p-5 sm:p-6">
-        <AdminSectionHeading
-          title="Campagne bêta iOS"
-          description="Ouverture TestFlight le 11 août 2026 à 18 h. Emails d'engagement automatiques tous les 2 jours après le lancement."
-        />
-        <div className="flex flex-wrap gap-2">
+      <AdminPanel
+        title="Campagne bêta iOS"
+        description="TestFlight 11 août 2026 · 18 h. Engagement auto tous les 2 jours après lancement."
+      >
+        <div className="flex flex-wrap gap-1.5">
           <AdminButton
             variant="primary"
             onClick={() =>
@@ -366,7 +432,7 @@ export function AdminBetaDashboard({
         </div>
       </AdminPanel>
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div className="relative min-w-0 flex-1 sm:max-w-md">
           <Search
             size={16}
@@ -382,6 +448,7 @@ export function AdminBetaDashboard({
         {selectedPending.length > 0 ? (
           <AdminButton
             variant="primary"
+            className="w-full sm:w-auto"
             onClick={() =>
               setModal({
                 mode: "bulk_approve",
@@ -390,13 +457,19 @@ export function AdminBetaDashboard({
               })
             }
           >
-            Approuver la sélection ({selectedPending.length})
+            Approuver ({selectedPending.length})
           </AdminButton>
         ) : null}
       </div>
 
       {message ? <AdminBanner tone="success">{message}</AdminBanner> : null}
       {error ? <AdminBanner tone="error">{error}</AdminBanner> : null}
+      {truncated && hasMore ? (
+        <AdminBanner tone="warning">
+          Page de {listCap ?? 50} inscriptions. Charge la suite pour voir plus loin
+          dans la liste.
+        </AdminBanner>
+      ) : null}
 
       <AdminTableShell>
         <table className="min-w-[860px]">
@@ -545,6 +618,18 @@ export function AdminBetaDashboard({
         </table>
       </AdminTableShell>
 
+      {hasMore ? (
+        <div className="mt-4 flex justify-center">
+          <AdminButton
+            variant="primary"
+            disabled={loadingMore}
+            onClick={() => void loadMore()}
+          >
+            {loadingMore ? "Chargement…" : "Charger plus"}
+          </AdminButton>
+        </div>
+      ) : null}
+
       {modal ? (
         <AdminModal
           title={
@@ -589,7 +674,7 @@ export function AdminBetaDashboard({
               maxLength={500}
               rows={3}
               placeholder="Ex. profil coach prioritaire, suivi commercial…"
-              className="admin-field w-full rounded-xl border border-white/10 bg-white/[0.035] px-3 py-2.5 text-sm text-white outline-none transition placeholder:text-white/30 focus:border-[#0054F0]/55 focus:ring-2 focus:ring-[#0054F0]/20"
+              className="admin-field h-20 w-full rounded border border-white/15 bg-[#0c0c0e] px-3 py-2 text-sm text-white outline-none transition placeholder:text-white/30 focus:border-[var(--proday-accent)]/55"
             />
           </label>
           <p className="mt-3 text-xs leading-relaxed text-white/40">
