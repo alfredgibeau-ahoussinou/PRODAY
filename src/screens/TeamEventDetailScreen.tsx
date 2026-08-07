@@ -16,6 +16,8 @@ import {
   countRsvpYes,
   userRsvp,
   getPendingInviteeUids,
+  RSVP_STATUS_LABELS,
+  isLateRsvp,
 } from '../models/TeamEvent';
 import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { teamEventsService } from '../services/teamEvents.service';
@@ -26,6 +28,7 @@ import { EventLineupScreen } from './EventLineupScreen';
 import { EventLiveStatsScreen } from './EventLiveStatsScreen';
 import { EventAttendancePanel } from '../components/team/EventAttendancePanel';
 import { EventCarpoolPanel } from '../components/team/EventCarpoolPanel';
+import { LateReportControl } from '../components/team/LateReportControl';
 import { spacing, radius } from '../theme/designTokens';
 import { useThemedScreen } from '../hooks/useThemedScreen';
 import { PushScreenTransition } from '../components/motion';
@@ -234,17 +237,12 @@ export const TeamEventDetailScreen: React.FC<TeamEventDetailScreenProps> = ({
           <>
             <View style={[styles.summary, surfaceCard]}>
               <Text style={[styles.summaryTitle, { color: c.text }]}>Réponses</Text>
-              {(['yes', 'maybe', 'no', 'pending'] as RsvpStatus[]).map((st) => {
+              {(['yes', 'late_under_10', 'late_over_10', 'late_unknown', 'maybe', 'no', 'pending'] as RsvpStatus[]).map((st) => {
                 const n = Object.values(event.rsvps).filter((s) => s === st).length;
-                const labels: Record<RsvpStatus, string> = {
-                  yes: 'Présents',
-                  maybe: 'Peut-être',
-                  no: 'Absents',
-                  pending: 'En attente',
-                };
+                if (n === 0 && isLateRsvp(st)) return null;
                 return (
                   <Text key={st} style={[styles.summaryLine, { color: c.textSecondary }]}>
-                    {labels[st]} : {n}
+                    {RSVP_STATUS_LABELS[st]} : {n}
                   </Text>
                 );
               })}
@@ -405,6 +403,15 @@ export const TeamEventDetailScreen: React.FC<TeamEventDetailScreenProps> = ({
               <Text style={[styles.myNote, { color: c.textMuted }]}>
                 Votre motif : {event.rsvp_notes[profile.uid]}
               </Text>
+            ) : null}
+            {profile ? (
+              <LateReportControl
+                eventId={event.id}
+                playerUid={profile.uid}
+                playerName={profile.display_name}
+                currentRsvp={myStatus}
+                onReported={() => void load()}
+              />
             ) : null}
           </>
         )}

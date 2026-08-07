@@ -37,7 +37,7 @@ export const UI_FR: MessageCatalog = {
   'universe.pro': 'Pro Day Pro',
   'universe.pro_player': 'Pro Day Pro Joueur',
   'universe.pro_club': 'Pro Day Pro Club',
-  'universe.pro_staff': 'Pro Day Pro Staff',
+  'universe.pro_staff': 'Pro Day Coach',
   'universe.sponsor': 'Pro Day Sponsor',
   'universe.sante': 'Pro Day Santé',
 
@@ -65,7 +65,7 @@ export const UI_FR: MessageCatalog = {
   'discover.mission.amateur':
     'Joueurs uniquement. Trouvez un club, gérez votre saison et organisez vos matchs.',
   'discover.trust.amateur':
-    'Profils joueurs vérifiés. Messagerie sécurisée après validation. Coach ? Direction Pro Staff.',
+    'Profils joueurs vérifiés. Messagerie sécurisée après validation. Coach ? Direction Pôle Coach.',
   'discover.cta.amateur': 'Créer mon compte Joueur',
   'discover.sectionExplore.amateur': 'Découvrir le Pôle Joueur',
   'discover.secondaryMercato.amateur': 'Mercato Amateur',
@@ -111,15 +111,15 @@ export const UI_FR: MessageCatalog = {
   'discover.secondaryMercato.pro_club': 'Recrutement',
   'discover.playersStat.pro_club': 'Clubs',
 
-  'discover.hero.pro_staff': 'Le staff\nau centre.',
+  'discover.hero.pro_staff': 'Votre banc\nde touche.',
   'discover.mission.pro_staff':
-    'Coach, agent, recruteur ou organisateur. Mandats, scouting et réseau pro vérifié.',
+    'Profil coach, Smart Tactics, IA et effectif. Agent et recruteur en rôles réseau.',
   'discover.trust.pro_staff':
-    'Profils staff vérifiés. Messagerie sécurisée après validation métier.',
-  'discover.cta.pro_staff': 'Créer mon compte Pro Day Pro Staff',
-  'discover.sectionExplore.pro_staff': 'Découvrir Pro Day Pro Staff',
+    'Diplômes et parcours vérifiés. Smart Tactics selon l’offre club / coach.',
+  'discover.cta.pro_staff': 'Créer mon compte Pro Day Coach',
+  'discover.sectionExplore.pro_staff': 'Découvrir Pro Day Coach',
   'discover.secondaryMercato.pro_staff': 'Réseau pro',
-  'discover.playersStat.pro_staff': 'Staff',
+  'discover.playersStat.pro_staff': 'Coach',
 
   'discover.hero.sponsor': 'Votre marque\nsur le terrain.',
   'discover.mission.sponsor':
@@ -197,12 +197,12 @@ export const UI_FR: MessageCatalog = {
   'journey.season.title.pro_club': 'Calendrier',
   'journey.season.body.pro_club': 'Matchs & équipes',
 
-  'journey.profile.title.pro_staff': 'Profil métier',
-  'journey.profile.body.pro_staff': 'Coach, agent, recruteur',
-  'journey.mercato.title.pro_staff': 'Mercato Pro',
-  'journey.mercato.body.pro_staff': 'Scouting & mandats',
+  'journey.profile.title.pro_staff': 'Profil coach',
+  'journey.profile.body.pro_staff': 'Parcours & diplômes',
+  'journey.mercato.title.pro_staff': 'Smart Tactics',
+  'journey.mercato.body.pro_staff': 'Compositions & IA',
   'journey.season.title.pro_staff': 'Saison',
-  'journey.season.body.pro_staff': 'Convocations & réseau',
+  'journey.season.body.pro_staff': 'Convocations & matchs',
 
   'journey.profile.title.sponsor': 'Espace marque',
   'journey.profile.body.sponsor': 'Identité & offres',
@@ -217,6 +217,8 @@ export const UI_FR: MessageCatalog = {
   'modules.matchs.subtitle': 'Amicaux',
   'modules.gestion.title': 'Gestion équipe',
   'modules.gestion.subtitle': 'Planning · présences · stats',
+  'modules.smart_tactics.title': 'Smart Tactics',
+  'modules.smart_tactics.subtitle': 'Board · readiness · IA · vidéo',
   'modules.sponsors.title': 'Sponsors',
   'modules.sponsors.subtitle': 'Depuis l’Accueil · offres & financement',
 
@@ -250,7 +252,7 @@ export const UI_FR: MessageCatalog = {
   'auth.loginSub.pro': 'Connectez-vous à Pro Day Pro. Staff, structures et sponsors.',
   'auth.loginSub.pro_player': 'Connectez-vous à votre espace Pro Joueur.',
   'auth.loginSub.pro_club': 'Connectez-vous à votre espace Pro Club.',
-  'auth.loginSub.pro_staff': 'Connectez-vous à votre espace Pro Staff.',
+  'auth.loginSub.pro_staff': 'Connectez-vous à votre espace Coach.',
   'auth.loginSub.sponsor': 'Connectez-vous à votre espace Pro Day Sponsor.',
   'auth.loginSub.sante': 'Connectez-vous à votre espace Pro Day Santé.',
 
@@ -259,7 +261,7 @@ export const UI_FR: MessageCatalog = {
   'auth.signupSub.woman':
     'Créez votre compte joueuse. Mercato F, stats et visibilité clubs.',
   'auth.signupSub.amateur':
-    'Créez votre compte Joueur. Mercato local, matchs et CV — badges Amateur, Centre ou Pro.',
+    'Créez votre compte Joueur. Mercato local, matchs et CV — football amateur.',
   'auth.signupSub.supporter':
     'Créez votre compte supporter. Matchs, réels et fil communautaire.',
   'auth.signupSub.pro':
@@ -474,7 +476,7 @@ export const UI_FR: MessageCatalog = {
   'roleHome.club.addOfficial': 'Ajouter un arbitre',
   'roleHome.club.addOfficialSub': 'Gérer les contacts arbitraux',
 
-  'roleHome.recruiter.pipelineTitle': 'Pipeline recrutement',
+  'roleHome.recruiter.pipelineTitle': 'Suivi des recrutements',
   'roleHome.recruiter.pipelineSub': 'Annonces actives et candidatures',
   'roleHome.recruiter.activePosts': 'Annonces',
   'roleHome.recruiter.pendingApps': 'En attente',
@@ -559,6 +561,10 @@ export const UI_FR: MessageCatalog = {
   'roleHome.amateurPlayer.coachFeedSub': 'Dernier message staff',
   'roleHome.amateurPlayer.coachFeedPlaceholder': 'Les messages staff apparaîtront ici dès qu’un coach publiera une consigne équipe.',
   'roleHome.amateurPlayer.openMessages': 'Ouvrir les messages',
+  'roleHome.amateurPlayer.action.train': 'Je veux m’entraîner',
+  'roleHome.amateurPlayer.action.trainSub': 'Maison · famille · coach à l’heure',
+  'roleHome.amateurPlayer.trainHero': 'Je veux m’entraîner',
+  'roleHome.amateurPlayer.trainHeroSub': 'À la maison · Avec ma famille · Avec un coach',
   'roleHome.amateurPlayer.action.carpool': 'Covoiturage',
   'roleHome.amateurPlayer.action.carpoolSub': 'Proposer, chercher, réserver',
   'roleHome.amateurPlayer.action.club': 'Mon club',
@@ -673,9 +679,14 @@ export const UI_FR: MessageCatalog = {
   'supporter.debates.guestBody': 'Parcourez les matchs en invité. Connectez-vous pour débattre et réagir.',
   'supporter.debates.guestSignup': 'Créer un compte gratuit',
 
-  'clubStructure.shell.caption': 'STRUCTURE',
-  'clubStructure.title': 'Structure club',
-  'clubStructure.subtitle': 'Équipes, staff et adhésions',
+  'clubStructure.shell.caption': 'DIRIGEANTS',
+  'clubStructure.title': 'Espace dirigeants',
+  'clubStructure.subtitle': 'Vue club — équipes, staff, effectifs et validations',
+  'clubStructure.overview': 'Vue d’ensemble',
+  'clubStructure.kpiTeams': 'Équipes',
+  'clubStructure.kpiPlayers': 'Joueurs',
+  'clubStructure.kpiCoaches': 'Coachs',
+  'clubStructure.kpiPending': 'À valider',
   'clubStructure.teams': 'ÉQUIPES',
   'clubStructure.licensedCount': '{{n}} licenciés',
   'clubStructure.coach': 'Coach {{name}}',
@@ -784,6 +795,9 @@ export const UI_FR: MessageCatalog = {
   'parent.rsvp.no': 'Absent',
   'parent.rsvp.maybe': 'Peut-être',
   'parent.rsvp.pending': 'En attente',
+  'parent.rsvp.late_under_10': 'Retard < 10 min',
+  'parent.rsvp.late_over_10': 'Retard ≥ 10 min',
+  'parent.rsvp.late_unknown': 'Retard (durée inconnue)',
   'parent.agenda.title': 'Agenda de {{name}}',
   'parent.agenda.subtitle': 'Matchs, entraînements et convocations.',
   'parent.agenda.empty': 'Aucun événement à venir.',

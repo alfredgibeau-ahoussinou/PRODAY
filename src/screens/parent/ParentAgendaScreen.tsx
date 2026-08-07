@@ -8,7 +8,8 @@ import { spacing, radius } from '../../theme/designTokens';
 import { useParentShell } from '../../navigation/parentShellContext';
 import { parentPortalService } from '../../services/parentPortal.service';
 import type { TeamEvent } from '../../models/TeamEvent';
-import { EVENT_TYPE_LABELS, type RsvpStatus } from '../../models/TeamEvent';
+import { EVENT_TYPE_LABELS, RSVP_STATUS_LABELS, type RsvpStatus } from '../../models/TeamEvent';
+import { LateReportControl } from '../../components/team/LateReportControl';
 
 export const ParentAgendaScreen: React.FC = () => {
   const { colors: c } = useThemedScreen();
@@ -19,8 +20,7 @@ export const ParentAgendaScreen: React.FC = () => {
   const [refreshing, setRefreshing] = useState(false);
 
   const rsvpLabel = (status: RsvpStatus): string => {
-    const key = `parent.rsvp.${status}` as const;
-    return t(key as Parameters<typeof t>[0]) ?? status;
+    return RSVP_STATUS_LABELS[status] ?? status;
   };
 
   const load = useCallback(async () => {
@@ -110,6 +110,14 @@ export const ParentAgendaScreen: React.FC = () => {
                   {t('parent.agenda.rsvp', { status: rsvpLabel(rsvp) })}
                 </ProDayText>
               ) : null}
+              <LateReportControl
+                eventId={event.id}
+                playerUid={selected.uid}
+                playerName={selected.display_name}
+                currentRsvp={rsvp}
+                reportedByParent
+                onReported={() => void load()}
+              />
             </ProDaySurface>
           );
         })

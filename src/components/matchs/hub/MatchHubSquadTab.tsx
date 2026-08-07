@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import type { TeamEvent } from '../../../models/TeamEvent';
 import type { User } from '../../../models/User';
-import { userRsvp } from '../../../models/TeamEvent';
+import { isLateRsvp, RSVP_STATUS_LABELS, userRsvp } from '../../../models/TeamEvent';
 import { usersService } from '../../../services/users.service';
 import { EventAttendancePanel } from '../../team/EventAttendancePanel';
 import { ProDaySurface } from '../../ui/ProDaySurface';
@@ -10,12 +10,15 @@ import { ProDayText } from '../../ui/ProDayText';
 import { useAppTheme } from '../../../context/ProductLineContext';
 import { spacing } from '../../../theme/designTokens';
 
-const RSVP_LABEL = {
-  yes: 'Présent',
-  maybe: 'Peut-être',
-  no: 'Absent',
-  pending: 'En attente',
-} as const;
+const GROUP_ORDER = [
+  'yes',
+  'late_under_10',
+  'late_over_10',
+  'late_unknown',
+  'maybe',
+  'no',
+  'pending',
+] as const;
 
 interface MatchHubSquadTabProps {
   event: TeamEvent;
@@ -44,7 +47,7 @@ export const MatchHubSquadTab: React.FC<MatchHubSquadTabProps> = ({
     })();
   }, [event.id, event.invitee_uids.join(',')]);
 
-  const groups = (['yes', 'maybe', 'no', 'pending'] as const).map((status) => ({
+  const groups = GROUP_ORDER.map((status) => ({
     status,
     uids: event.invitee_uids.filter((uid) => userRsvp(event, uid) === status),
   }));
@@ -64,7 +67,8 @@ export const MatchHubSquadTab: React.FC<MatchHubSquadTabProps> = ({
               style={[styles.group, { borderColor: colors.border }]}
             >
               <ProDayText variant="eyebrow" accent>
-                {RSVP_LABEL[g.status]} ({g.uids.length})
+                {isLateRsvp(g.status) ? `⏰ ${RSVP_STATUS_LABELS[g.status]}` : RSVP_STATUS_LABELS[g.status]}{' '}
+                ({g.uids.length})
               </ProDayText>
               {g.uids.map((uid) => {
                 const note = event.rsvp_notes?.[uid];

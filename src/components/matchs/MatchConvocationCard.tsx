@@ -4,40 +4,40 @@ import { PressableSpring } from '../motion/PressableSpring';
 import { prodayHaptics } from '../../utils/prodayHaptics';
 import type { TeamEvent } from '../../models/TeamEvent';
 import type { RsvpStatus } from '../../models/TeamEvent';
-import { EVENT_TYPE_LABELS } from '../../models/TeamEvent';
+import { EVENT_TYPE_LABELS, RSVP_STATUS_LABELS } from '../../models/TeamEvent';
 import { userRsvp } from '../../models/TeamEvent';
 import { resolveLiveState, isInMatchWindow } from '../../utils/matchLive';
 import { ProDayGradient } from '../ui/ProDayGradient';
 import { ProDayText } from '../ui/ProDayText';
 import { Icon } from '../ui/Icon';
+import { LateReportControl } from '../team/LateReportControl';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { spacing, radius, shadows } from '../../theme/designTokens';
 
 interface MatchConvocationCardProps {
   event: TeamEvent;
   profileUid: string;
+  playerName?: string;
   pending?: boolean;
   onOpen: () => void;
   onRsvp?: (status: RsvpStatus) => void;
   rsvpBusy?: boolean;
   onOpenCarpool?: () => void;
+  onLateReported?: () => void;
+  reportedByParent?: boolean;
 }
-
-const RSVP_LABEL: Record<RsvpStatus, string> = {
-  pending: 'En attente',
-  yes: 'Présent',
-  no: 'Absent',
-  maybe: 'Peut-être',
-};
 
 export const MatchConvocationCard: React.FC<MatchConvocationCardProps> = ({
   event,
   profileUid,
+  playerName,
   pending,
   onOpen,
   onRsvp,
   rsvpBusy,
   onOpenCarpool,
+  onLateReported,
+  reportedByParent,
 }) => {
   const { colors } = useAppTheme();
   const status = userRsvp(event, profileUid);
@@ -98,7 +98,7 @@ export const MatchConvocationCard: React.FC<MatchConvocationCardProps> = ({
         {!pending ? (
           <View style={[styles.statusPill, { backgroundColor: colors.surfaceMuted }]}>
             <ProDayText variant="caption" accent>
-              {RSVP_LABEL[status]}
+              {RSVP_STATUS_LABELS[status]}
             </ProDayText>
           </View>
         ) : null}
@@ -162,6 +162,16 @@ export const MatchConvocationCard: React.FC<MatchConvocationCardProps> = ({
             </PressableSpring>
           </View>
         ) : null}
+
+        <LateReportControl
+          eventId={event.id}
+          playerUid={profileUid}
+          playerName={playerName}
+          currentRsvp={status}
+          reportedByParent={reportedByParent}
+          compact
+          onReported={onLateReported}
+        />
       </View>
     </PressableSpring>
   );

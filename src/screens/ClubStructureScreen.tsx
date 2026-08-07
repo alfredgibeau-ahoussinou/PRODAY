@@ -26,6 +26,9 @@ import {
   formatTeamRowLabel,
 } from '../utils/clubStructureView';
 import { radius, spacing } from '../theme/designTokens';
+import { ProDayFutCard } from '../components/cards/ProDayFutCard';
+import { teamToProDayCard } from '../utils/prodayFutCard';
+import { ClubHubSections } from '../components/club/ClubHubSections';
 
 /** Onglet Structure du shell club pro — arbre équipes, adhésions, staff. */
 export const ClubStructureScreen: React.FC = () => {
@@ -136,8 +139,64 @@ export const ClubStructureScreen: React.FC = () => {
             </ProDaySurface>
 
             <ProDayText variant="eyebrow" muted>
+              {t('clubStructure.overview')}
+            </ProDayText>
+            <View style={styles.kpiRow}>
+              {[
+                { label: t('clubStructure.kpiTeams'), value: String(teams.length) },
+                { label: t('clubStructure.kpiPlayers'), value: String(members.length) },
+                { label: t('clubStructure.kpiCoaches'), value: String(staff.coachCount) },
+                { label: t('clubStructure.kpiPending'), value: String(pending.length) },
+              ].map((kpi) => (
+                <ProDaySurface
+                  key={kpi.label}
+                  variant="module"
+                  style={[styles.kpiCard, { borderColor: colors.border }]}
+                >
+                  <ProDayText variant="title">{kpi.value}</ProDayText>
+                  <ProDayText variant="caption" muted numberOfLines={1}>
+                    {kpi.label}
+                  </ProDayText>
+                </ProDaySurface>
+              ))}
+            </View>
+
+            <ClubHubSections
+              clubId={clubId ?? profile.uid}
+              profile={profile}
+              members={members}
+              teamsCount={teams.length}
+              playersCount={members.length}
+              coachesCount={staff.coachCount}
+              pendingCount={pending.length}
+            />
+
+            <ProDayText variant="eyebrow" muted>
               {t('clubStructure.teams')}
             </ProDayText>
+            {teams.length > 0 ? (
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.teamCardsRow}
+              >
+                {teams.slice(0, 6).map((team) => {
+                  const row = teamRows.find((r) => r.teamId === team.id);
+                  return (
+                    <View key={`card_${team.id}`} style={styles.teamCardSlot}>
+                      <ProDayFutCard
+                        width={148}
+                        card={teamToProDayCard(team, {
+                          clubName: club?.name,
+                          coachName: row?.coachNames[0],
+                          playersCount: row?.licensedCount ?? 0,
+                        })}
+                      />
+                    </View>
+                  );
+                })}
+              </ScrollView>
+            ) : null}
             {teamRows.length > 0 ? (
               teamRows.map((row, index) => (
                 <View key={row.teamId} style={styles.treeRow}>
@@ -280,6 +339,23 @@ const styles = StyleSheet.create({
     gap: 4,
     marginBottom: spacing.sm,
   },
+  kpiRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+    marginBottom: spacing.md,
+  },
+  kpiCard: {
+    flexGrow: 1,
+    flexBasis: '22%',
+    minWidth: 72,
+    borderWidth: 1,
+    borderRadius: radius.md,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.xs,
+    alignItems: 'center',
+    gap: 2,
+  },
   treeRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -295,6 +371,14 @@ const styles = StyleSheet.create({
     borderRadius: radius.lg,
     padding: spacing.md,
     gap: 4,
+  },
+  teamCardsRow: {
+    gap: spacing.sm,
+    paddingVertical: spacing.sm,
+    paddingRight: spacing.md,
+  },
+  teamCardSlot: {
+    marginRight: spacing.xs,
   },
   staffCard: {
     borderWidth: 1,

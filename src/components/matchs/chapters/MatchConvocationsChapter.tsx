@@ -78,10 +78,12 @@ export const MatchConvocationsChapter: React.FC<MatchConvocationsChapterProps> =
               <MatchConvocationCard
                 event={event}
                 profileUid={profile?.uid ?? ''}
+                playerName={profile?.display_name}
                 pending
                 onOpen={() => onOpenEvent(event.id)}
                 onRsvp={(status) => onRsvp(event.id, status)}
                 rsvpBusy={rsvpBusy}
+                onLateReported={onRefresh}
                 onOpenCarpool={
                   onOpenCarpoolForEvent ? () => onOpenCarpoolForEvent(event.id) : undefined
                 }
@@ -114,7 +116,9 @@ export const MatchConvocationsChapter: React.FC<MatchConvocationsChapterProps> =
               <MatchConvocationCard
                 event={event}
                 profileUid={profile?.uid ?? ''}
+                playerName={profile?.display_name}
                 onOpen={() => onOpenEvent(event.id)}
+                onLateReported={onRefresh}
                 onOpenCarpool={
                   onOpenCarpoolForEvent ? () => onOpenCarpoolForEvent(event.id) : undefined
                 }

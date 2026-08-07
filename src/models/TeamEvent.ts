@@ -1,5 +1,7 @@
 import type { GeoPoint } from './User';
 import type { CarpoolTripStatus } from './CarpoolLiveTrip';
+import type { CarpoolVehicleType } from './CarpoolVehicle';
+import type { TrainingSessionPlan } from './CoachEvaluation';
 
 export type TeamEventType =
   | 'training'
@@ -7,10 +9,37 @@ export type TeamEventType =
   | 'meeting'
   | 'friendly'
   | 'tournament'
+  | 'competition'
   | 'other';
 
-export type RsvpStatus = 'pending' | 'yes' | 'no' | 'maybe';
+export type RsvpStatus =
+  | 'pending'
+  | 'yes'
+  | 'no'
+  | 'maybe'
+  | 'late_under_10'
+  | 'late_over_10'
+  | 'late_unknown';
 export type AttendanceMark = 'present' | 'late' | 'excused' | 'absent';
+
+/** Retard déclaré par le joueur / parent (avant pointage staff). */
+export type LateIntent = 'under_10' | 'over_10' | 'unknown';
+
+export const LATE_INTENT_TO_RSVP: Record<LateIntent, RsvpStatus> = {
+  under_10: 'late_under_10',
+  over_10: 'late_over_10',
+  unknown: 'late_unknown',
+};
+
+export const RSVP_STATUS_LABELS: Record<RsvpStatus, string> = {
+  pending: 'En attente',
+  yes: 'Présent',
+  no: 'Absent',
+  maybe: 'Peut-être',
+  late_under_10: 'Retard < 10 min',
+  late_over_10: 'Retard ≥ 10 min',
+  late_unknown: 'Retard (durée inconnue)',
+};
 
 export interface EventLineupSlot {
   uid: string;
@@ -60,6 +89,7 @@ export interface EventTask {
   kind: EventTaskKind;
   label: string;
   assignee_uids: string[];
+  done?: boolean;
 }
 
 /** Passager ayant réservé une place chez un conducteur */
@@ -79,6 +109,8 @@ export interface CarpoolSlot {
   driver_uid: string;
   driver_name: string;
   seats?: number;
+  /** Type de véhicule (citadine, SUV…). */
+  vehicle_type?: CarpoolVehicleType;
   meeting_time?: string;
   meeting_place?: string;
   /** Coordonnées GPS du point de rendez-vous conducteur */
@@ -116,7 +148,20 @@ export const LIVE_ACTION_LABELS: Record<LiveActionType, string> = {
   sub_out: 'Sortie',
 };
 
-export const FORMATIONS = ['4-3-3', '4-4-2', '3-5-2', '4-2-3-1', '5-3-2'] as const;
+export const FORMATIONS = [
+  '4-3-3',
+  '4-4-2',
+  '3-5-2',
+  '4-2-3-1',
+  '5-3-2',
+  '4-1-4-1',
+  '3-4-3',
+  '4-5-1',
+  '5-4-1',
+  '4-3-2-1',
+  '3-4-2-1',
+  '4-4-1-1',
+] as const;
 
 export type MatchLiveStatus = 'scheduled' | 'live' | 'halftime' | 'finished';
 
@@ -142,6 +187,8 @@ export interface TeamEvent {
   tournament_id?: string;
   /** Lien match amical — évite les doublons de convocation */
   friendly_match_id?: string;
+  /** Lien fixture compétition saison */
+  competition_fixture_id?: string;
   starts_at: Date;
   ends_at?: Date;
   city: string;
@@ -168,6 +215,8 @@ export interface TeamEvent {
   match_report_finalized_at?: Date;
   /** Tâches assignées (covoiturage, matériel…) */
   event_tasks?: EventTask[];
+  /** Plan de séance (entraînements). */
+  session_plan?: TrainingSessionPlan;
   /** Conducteurs désignés + places / RDV */
   carpool_slots?: CarpoolSlot[];
   /** Fil de coordination covoiturage (messagerie événement) */
@@ -196,6 +245,7 @@ export interface CreateTeamEventInput {
   club_name?: string;
   tournament_id?: string;
   friendly_match_id?: string;
+  competition_fixture_id?: string;
   starts_at: Date;
   ends_at?: Date;
   city: string;
@@ -212,11 +262,25 @@ export const EVENT_TYPE_LABELS: Record<TeamEventType, string> = {
   meeting: 'Réunion',
   friendly: 'Match / convocation',
   tournament: 'Tournoi',
+  competition: 'Compétition',
   other: 'Autre',
 };
 
 export function countRsvpYes(event: TeamEvent): number {
-  return Object.values(event.rsvps).filter((s) => s === 'yes').length;
+  return Object.values(event.rsvps).filter((s) => isComingRsvp(s)).length;
+}
+
+export function isLateRsvp(status: RsvpStatus): boolean {
+  return (
+    status === 'late_under_10' ||
+    status === 'late_over_10' ||
+    status === 'late_unknown'
+  );
+}
+
+/** Présent ou en retard annoncé = compte dans l’effectif attendu. */
+export function isComingRsvp(status: RsvpStatus): boolean {
+  return status === 'yes' || isLateRsvp(status);
 }
 
 export function countAttendanceMark(

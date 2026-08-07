@@ -17,6 +17,8 @@ export type ProdayNotificationData = {
     | 'convocation_h2'
     | 'carpool_seat'
     | 'friendly_nearby'
+    | 'friendly_invite'
+    | 'friendly_counter'
     | 'mercato_alert'
     | 'mercato_profile'
     | 'availability_alert'
@@ -24,15 +26,18 @@ export type ProdayNotificationData = {
     | 'medical_j1'
     | 'sponsor_offer'
     | 'player_activity_analysis'
-    | 'guardian_minor_invite';
+    | 'guardian_minor_invite'
+    | 'internal_move'
+    | 'player_late';
   guardianEmail?: string;
   eventId?: string;
   hubChapter?: 'apercu' | 'live' | 'composition' | 'stats' | 'effectif';
-  homeTab?: 'season' | 'matches' | 'convocations' | 'centre' | 'stats' | 'feed';
+  homeTab?: 'season' | 'matches' | 'convocations' | 'centre' | 'stats' | 'feed' | 'home';
   matchId?: string;
   offerId?: string;
   activityId?: string;
   playerUid?: string;
+  moveId?: string;
 };
 
 export type EngagementNotificationHints = {

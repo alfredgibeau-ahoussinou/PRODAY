@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { PressableSpring, StaggerReveal } from '../motion';
 import type { TeamEvent, AttendanceMark, RsvpStatus } from '../../models/TeamEvent';
-import { userRsvp } from '../../models/TeamEvent';
+import { isLateRsvp, RSVP_STATUS_LABELS, userRsvp } from '../../models/TeamEvent';
 import type { User } from '../../models/User';
 import { usersService } from '../../services/users.service';
 import { teamEventsService } from '../../services/teamEvents.service';
@@ -10,12 +10,19 @@ import { useAppTheme } from '../../context/ProductLineContext';
 import type { AppColors } from '../../theme/universeTheme';
 import { spacing, radius } from '../../theme/designTokens';
 
-const RSVP_LABELS: Record<RsvpStatus, string> = {
-  yes: 'Oui',
-  no: 'Non',
-  maybe: 'Peut-être',
-  pending: 'En attente',
-};
+function presenceDot(rsvp: RsvpStatus, mark?: AttendanceMark): string {
+  if (mark === 'present') return '🟢 Présent';
+  if (mark === 'absent') return '🔴 Absent';
+  if (mark === 'excused') return '⚪ Excusé';
+  if (mark === 'late') return '🟠 Retard (pointé)';
+  if (rsvp === 'late_under_10') return '🟡 Retard < 10 min';
+  if (rsvp === 'late_over_10') return '🟠 Retard ≥ 10 min';
+  if (rsvp === 'late_unknown') return '🟠 Retard';
+  if (rsvp === 'yes') return '🟢 Présent (annoncé)';
+  if (rsvp === 'no') return '🔴 Absent';
+  if (rsvp === 'maybe') return '⚪ Peut-être';
+  return '⚪ En attente';
+}
 
 const MARKS: { mark: AttendanceMark; label: string }[] = [
   { mark: 'present', label: 'Présent' },
@@ -79,8 +86,8 @@ export const EventAttendancePanel: React.FC<EventAttendancePanelProps> = ({
             <View style={styles.rowHead}>
               <Text style={styles.name}>{names[uid] ?? '…'}</Text>
               <Text style={styles.rsvp}>
-                RSVP : {RSVP_LABELS[rsvp]}
-                {note ? ` · ${note}` : ''}
+                {presenceDot(rsvp, mark)}
+                {isLateRsvp(rsvp) || note ? ` · ${note ?? RSVP_STATUS_LABELS[rsvp]}` : ''}
               </Text>
               {mark ? <Text style={styles.mark}>Pointage : {mark}</Text> : null}
             </View>

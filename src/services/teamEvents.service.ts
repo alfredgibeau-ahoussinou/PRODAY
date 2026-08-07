@@ -13,7 +13,6 @@ import {
   Timestamp,
   type Firestore,
 } from 'firebase/firestore';
-import { teamChatService } from './teamChat.service';
 import { getDb } from '../lib/firebase';
 import { isFirebaseConfigured } from '../config/firebase';
 import { teamEventFromFirestore } from '../lib/firestoreMappers';
@@ -28,6 +27,7 @@ import type {
   LiveMatchAction,
   LiveActionType,
 } from '../models/TeamEvent';
+import { isLateRsvp } from '../models/TeamEvent';
 import type { CarpoolSlot, EventTask, CarpoolMessage, MatchLiveState } from '../models/TeamEvent';
 import type { GeoPoint } from '../models/User';
 import {
@@ -274,6 +274,7 @@ export const teamEventsService = {
       club_name: input.club_name ?? null,
       tournament_id: input.tournament_id ?? null,
       friendly_match_id: input.friendly_match_id ?? null,
+      competition_fixture_id: input.competition_fixture_id ?? null,
       starts_at: Timestamp.fromDate(input.starts_at),
       ends_at: input.ends_at ? Timestamp.fromDate(input.ends_at) : null,
       city: input.city.trim(),
@@ -367,6 +368,7 @@ export const teamEventsService = {
     await updateDoc(doc(database, COL, eventId), payload);
     if (status === 'yes') {
       const updated = { ...event, rsvps: { ...event.rsvps, [uid]: status } };
+      const { teamChatService } = await import('./teamChat.service');
       await teamChatService.ensureTeamThread(updated);
       await syncPlayerActivityFromEvent(updated, uid);
     }
@@ -391,7 +393,7 @@ export const teamEventsService = {
     };
     if (!event.invitee_uids.includes(uid)) payload.invitee_uids = arrayUnion(uid);
     await updateDoc(doc(database, COL, eventId), payload);
-    if (status === 'yes') {
+    if (status === 'yes' || status === 'late_under_10' || status === 'late_over_10' || status === 'late_unknown') {
       const updated = {
         ...event,
         rsvps: { ...event.rsvps, [uid]: status },
@@ -399,8 +401,49 @@ export const teamEventsService = {
           ? { ...event.rsvp_notes, [uid]: reason.trim() }
           : event.rsvp_notes,
       };
-      await teamChatService.ensureTeamThread(updated);
+      await (await import('./teamChat.service')).teamChatService.ensureTeamThread(updated);
       await syncPlayerActivityFromEvent(updated, uid);
+    }
+  },
+
+  async reportLate(
+    eventId: string,
+    uid: string,
+    intent: 'under_10' | 'over_10' | 'unknown',
+    opts?: { note?: string; reportedByParent?: boolean; playerName?: string },
+  ): Promise<void> {
+    const { LATE_INTENT_TO_RSVP } = await import('../models/TeamEvent');
+    const status = LATE_INTENT_TO_RSVP[intent];
+    const label =
+      intent === 'under_10'
+        ? 'moins de 10 min de retard'
+        : intent === 'over_10'
+          ? '10 min ou plus de retard'
+          : 'un retard (durée inconnue)';
+    const who = opts?.reportedByParent
+      ? `Retard signalé par le parent de ${opts.playerName ?? 'joueur'}`
+      : `Retard signalé`;
+    const note = [who, label, opts?.note?.trim()].filter(Boolean).join(' · ');
+    await this.updateRsvpWithReason(eventId, uid, status, note);
+
+    try {
+      const event = await this.getById(eventId);
+      const name = opts?.playerName ?? 'Un joueur';
+      await scheduleProdayLocalNotification({
+        identifier: `late-${eventId}-${uid}`,
+        title: '⏰ Retard signalé',
+        body: opts?.reportedByParent
+          ? `👨‍👩‍👦 Retard signalé par le parent de ${name} : ${label}${event ? ` · ${event.title}` : ''}.`
+          : `${name} arrivera avec ${label}${event ? ` à ${event.title}` : ''}.`,
+        data: {
+          type: 'player_late',
+          eventId,
+          homeTab: 'convocations',
+          playerUid: uid,
+        },
+      });
+    } catch {
+      // best-effort
     }
   },
 
@@ -418,14 +461,34 @@ export const teamEventsService = {
     await updateDoc(doc(database, COL, eventId), {
       [`attendance_marks.${uid}`]: mark,
       updated_at: serverTimestamp(),
+      ...(mark === 'present' && isLateRsvp(event.rsvps[uid] ?? 'pending')
+        ? { [`rsvps.${uid}`]: 'yes' }
+        : {}),
     });
     if (mark === 'present' || mark === 'late') {
+      const wasLate = isLateRsvp(event.rsvps[uid] ?? 'pending');
       const updated = {
         ...event,
         attendance_marks: { ...event.attendance_marks, [uid]: mark },
+        rsvps:
+          mark === 'present' && wasLate
+            ? { ...event.rsvps, [uid]: 'yes' as const }
+            : event.rsvps,
       };
       await syncPlayerActivityFromEvent(updated, uid);
       await syncTeamEventActivitiesOnServer(eventId);
+      if (mark === 'present' && wasLate) {
+        try {
+          await scheduleProdayLocalNotification({
+            identifier: `arrived-${eventId}-${uid}`,
+            title: 'Présent',
+            body: `Un joueur annoncé en retard est maintenant pointé présent · ${event.title}.`,
+            data: { type: 'player_late', eventId, homeTab: 'convocations', playerUid: uid },
+          });
+        } catch {
+          // best-effort
+        }
+      }
     }
   },
 
@@ -464,6 +527,68 @@ export const teamEventsService = {
       await syncPlayerActivityFromEvent(updated, slot.uid);
     }
     await syncTeamEventActivitiesOnServer(eventId);
+  },
+
+  async updateSessionPlan(
+    eventId: string,
+    sessionPlan: import('../models/CoachEvaluation').TrainingSessionPlan | null,
+    actor: TeamEventActor,
+  ): Promise<void> {
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+    const event = await this.getById(eventId);
+    if (!event) throw new Error('Événement introuvable');
+    assertManage(event, actor);
+    await updateDoc(doc(database, COL, eventId), {
+      session_plan: sessionPlan
+        ? {
+            focus: sessionPlan.focus?.trim() || null,
+            notes: sessionPlan.notes?.trim() || null,
+            duration_min: sessionPlan.duration_min ?? null,
+            objective_ids: sessionPlan.objective_ids ?? [],
+          }
+        : null,
+      updated_at: serverTimestamp(),
+    });
+  },
+
+  async updateEventTasks(
+    eventId: string,
+    tasks: EventTask[],
+    actor: TeamEventActor,
+  ): Promise<void> {
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+    const event = await this.getById(eventId);
+    if (!event) throw new Error('Événement introuvable');
+    assertManage(event, actor);
+    await updateDoc(doc(database, COL, eventId), {
+      event_tasks: tasks,
+      updated_at: serverTimestamp(),
+    });
+  },
+
+  /** Crée N copies hebdomadaires d’un entraînement (récurrence simple). */
+  async createWeeklyRecurrence(
+    base: CreateTeamEventInput,
+    weeks: number,
+  ): Promise<string[]> {
+    const count = Math.min(12, Math.max(1, weeks));
+    const ids: string[] = [];
+    for (let i = 0; i < count; i++) {
+      const starts = new Date(base.starts_at.getTime() + i * 7 * 24 * 60 * 60 * 1000);
+      const ends = base.ends_at
+        ? new Date(base.ends_at.getTime() + i * 7 * 24 * 60 * 60 * 1000)
+        : undefined;
+      const id = await this.create({
+        ...base,
+        title: i === 0 ? base.title : `${base.title} (S+${i})`,
+        starts_at: starts,
+        ends_at: ends,
+      });
+      ids.push(id);
+    }
+    return ids;
   },
 
   async addLiveAction(
@@ -910,6 +1035,7 @@ export const teamEventsService = {
           driver_uid: d.uid,
           driver_name: d.name,
           seats: prev?.seats,
+          vehicle_type: prev?.vehicle_type,
           meeting_time: prev?.meeting_time,
           meeting_place: prev?.meeting_place,
           meeting_location: prev?.meeting_location,
@@ -935,7 +1061,10 @@ export const teamEventsService = {
     uid: string,
     name: string,
     patch: Partial<
-      Pick<CarpoolSlot, 'seats' | 'meeting_time' | 'meeting_place' | 'meeting_location' | 'notes'>
+      Pick<
+        CarpoolSlot,
+        'seats' | 'vehicle_type' | 'meeting_time' | 'meeting_place' | 'meeting_location' | 'notes'
+      >
     >
   ): Promise<void> {
     const event = await this.getById(eventId);
@@ -954,7 +1083,10 @@ export const teamEventsService = {
     eventId: string,
     driverUid: string,
     patch: Partial<
-      Pick<CarpoolSlot, 'seats' | 'meeting_time' | 'meeting_place' | 'meeting_location' | 'notes'>
+      Pick<
+        CarpoolSlot,
+        'seats' | 'vehicle_type' | 'meeting_time' | 'meeting_place' | 'meeting_location' | 'notes'
+      >
     >
   ): Promise<void> {
     const database = getDb();

@@ -297,6 +297,17 @@ service cloud.firestore {
         );
     }
 
+    /** Parent lié au patient avec consentement médical parental explicite. */
+    function isParentWithMedicalAccess(patientUid) {
+      return isSignedIn()
+        && userDoc(request.auth.uid).data.role == 'parent'
+        && parentOfUids().hasAny([patientUid])
+        && userDoc(patientUid).data
+            .get('parental_settings', {})
+            .get('privacy', {})
+            .get('parent_can_access_medical', false) == true;
+    }
+
     /** Profils visibles dans annuaires / reels (requêtes role + is_active). */
     function isPublicDiscoverableUser() {
       return resource.data.get('is_active', false) == true
@@ -549,6 +560,57 @@ service cloud.firestore {
       allow read: if isSignedIn();
       allow create, update: if isSignedIn();
       allow delete: if isAdmin();
+    }
+
+    match /competitions/{competitionId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn()
+        && request.resource.data.created_by == request.auth.uid;
+      allow update: if isSignedIn()
+        && (isAdmin()
+            || request.auth.uid in resource.data.organizer_uids
+            || request.auth.uid in request.resource.data.organizer_uids);
+      allow delete: if isAdmin()
+        || (isSignedIn() && request.auth.uid in resource.data.organizer_uids);
+    }
+
+    match /competition_seasons/{seasonId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isSignedIn()
+        && (isAdmin() || request.auth.uid in resource.data.organizer_uids);
+      allow delete: if isAdmin();
+    }
+
+    match /competition_teams/{teamId} {
+      allow read: if isSignedIn();
+      allow create, update: if isSignedIn();
+      allow delete: if isAdmin();
+    }
+
+    match /competition_fixtures/{fixtureId} {
+      allow read: if isSignedIn();
+      allow create, update: if isSignedIn();
+      allow delete: if isAdmin();
+    }
+
+    match /competition_standings/{seasonId} {
+      allow read: if isSignedIn();
+      allow create, update: if isSignedIn();
+      allow delete: if isAdmin();
+    }
+
+    match /player_competition_stats/{statsId} {
+      allow read: if isSignedIn();
+      allow create, update: if isSignedIn();
+      allow delete: if isAdmin();
+    }
+
+    match /competition_result_claims/{claimId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn()
+        && request.resource.data.actor_uid == request.auth.uid;
+      allow update, delete: if isAdmin();
     }
 
     match /team_events/{eventId} {
@@ -928,6 +990,32 @@ service cloud.firestore {
       allow create, update, delete: if isAdmin();
     }
 
+    /** Profils coach ouverts à la réservation horaire */
+    match /coach_hourly_profiles/{coachId} {
+      allow read: if isSignedIn();
+      allow create, update: if isSignedIn()
+        && (request.auth.uid == coachId
+            || request.resource.data.coach_uid == request.auth.uid
+            || isAdmin());
+      allow delete: if isAdmin()
+        || (isSignedIn() && resource.data.coach_uid == request.auth.uid);
+    }
+
+    /** Réservations séances coaching à l’heure */
+    match /coach_session_bookings/{bookingId} {
+      allow read: if isSignedIn()
+        && (resource.data.player_uid == request.auth.uid
+            || resource.data.coach_uid == request.auth.uid
+            || isAdmin());
+      allow create: if isSignedIn()
+        && request.resource.data.player_uid == request.auth.uid;
+      allow update: if isSignedIn()
+        && (resource.data.player_uid == request.auth.uid
+            || resource.data.coach_uid == request.auth.uid
+            || isAdmin());
+      allow delete: if isAdmin();
+    }
+
     /** Fil d'actualité ProDay + sondages agents */
     match /stage_offers/{offerId} {
       allow read: if true;
@@ -1030,12 +1118,13 @@ service cloud.firestore {
       allow write: if false;
     }
 
-    /** Rendez-vous pôle santé — praticien ↔ joueur */
+    /** Rendez-vous pôle santé — praticien ↔ joueur (+ parent si consentement médical) */
     match /medical_appointments/{appointmentId} {
       allow read: if isAdmin()
         || (isSignedIn()
             && (resource.data.physio_uid == request.auth.uid
-                || resource.data.patient_uid == request.auth.uid));
+                || resource.data.patient_uid == request.auth.uid
+                || isParentWithMedicalAccess(resource.data.patient_uid)));
       allow create: if isSignedIn()
         && request.resource.data.patient_uid == request.auth.uid
         && userDoc(request.auth.uid).data.role == 'player'
@@ -1046,8 +1135,70 @@ service cloud.firestore {
         || (isSignedIn()
             && resource.data.physio_uid == request.auth.uid
             && request.resource.data.diff(resource.data).affectedKeys()
-              .hasOnly(['status', 'notes', 'updated_at', 'meeting_link', 'visio_provider']));
+              .hasOnly(['status', 'notes', 'updated_at', 'meeting_link', 'visio_provider', 'treating_access_revoked']));
       allow delete: if isAdmin();
+    }
+
+    /** Coffre documents personnels — propriétaire (+ lecture admin). Partage via CF signed URL. */
+    match /personal_documents/{docId} {
+      allow read: if isAdmin()
+        || (isSignedIn() && resource.data.owner_uid == request.auth.uid);
+      allow create: if isSignedIn()
+        && request.resource.data.owner_uid == request.auth.uid
+        && request.resource.data.visibility == 'private';
+      allow update, delete: if isSignedIn()
+        && resource.data.owner_uid == request.auth.uid;
+    }
+
+    /** Coffre médical — patient, parent (flag), admin. Praticiens via CF + grants. */
+    match /medical_documents/{docId} {
+      allow read: if isAdmin()
+        || (isSignedIn() && resource.data.patient_uid == request.auth.uid)
+        || (isSignedIn() && isParentWithMedicalAccess(resource.data.patient_uid));
+      allow create: if isSignedIn()
+        && request.resource.data.visibility == 'private'
+        && (
+          request.resource.data.patient_uid == request.auth.uid
+          || (
+            userDoc(request.auth.uid).data.role == 'physio'
+            && request.resource.data.uploaded_by_uid == request.auth.uid
+          )
+        );
+      allow update, delete: if isAdmin()
+        || (isSignedIn() && resource.data.patient_uid == request.auth.uid);
+    }
+
+    /** Autorisations d'accès patient-controlled */
+    match /privacy_access_grants/{grantId} {
+      allow read: if isAdmin()
+        || (isSignedIn()
+            && (resource.data.owner_uid == request.auth.uid
+                || resource.data.grantee_uid == request.auth.uid));
+      allow create: if isSignedIn()
+        && request.resource.data.owner_uid == request.auth.uid
+        && request.resource.data.grantee_uid is string
+        && request.resource.data.scope in ['resource', 'all_medical', 'all_personal'];
+      allow update: if isSignedIn()
+        && resource.data.owner_uid == request.auth.uid
+        && request.resource.data.owner_uid == resource.data.owner_uid
+        && request.resource.data.grantee_uid == resource.data.grantee_uid;
+      allow delete: if isAdmin()
+        || (isSignedIn() && resource.data.owner_uid == request.auth.uid);
+    }
+
+    /** Journal d'audit privacy — append-only (acteur = soi ou admin) */
+    match /privacy_audit_log/{entryId} {
+      allow read: if isAdmin()
+        || (isSignedIn()
+            && (resource.data.actor_uid == request.auth.uid
+                || resource.data.owner_uid == request.auth.uid));
+      allow create: if isSignedIn()
+        && request.resource.data.actor_uid == request.auth.uid
+        && request.resource.data.action in [
+          'view', 'download', 'create', 'update', 'delete',
+          'grant', 'revoke', 'notice_ack', 'admin_break_glass'
+        ];
+      allow update, delete: if false;
     }
 
     match /subscription_purchases/{purchaseId} {
@@ -1095,6 +1246,12 @@ service cloud.firestore {
       allow read: if isAdmin();
       allow create: if isAdmin();
       allow update, delete: if false;
+    }
+
+    /** Retours beta-testeurs (écriture via Admin SDK / Cloud Functions) */
+    match /beta_feedback/{entryId} {
+      allow read: if isAdmin();
+      allow write: if false;
     }
 
     /** Shortlist scouting club — notes staff privées */
@@ -1186,6 +1343,238 @@ service cloud.firestore {
         && request.resource.data.pulse_avg is number
         && request.resource.data.matches_count is int;
       allow delete: if isAdmin();
+    }
+
+    function isSameClub(clubId) {
+      return isSignedIn()
+        && userDoc(request.auth.uid).data.get('profile', {}).get('club_id', '') == clubId;
+    }
+
+    /** Évaluations coach */
+    match /coach_evaluations/{id} {
+      allow read: if isSignedIn()
+        && (
+          isAdmin()
+          || resource.data.coach_uid == request.auth.uid
+          || resource.data.player_uid == request.auth.uid
+          || isSameClub(resource.data.club_id)
+        );
+      allow create: if isSignedIn()
+        && request.resource.data.coach_uid == request.auth.uid
+        && request.resource.data.club_id is string
+        && request.resource.data.player_uid is string;
+      allow update: if isSignedIn()
+        && (resource.data.coach_uid == request.auth.uid || isAdmin());
+      allow delete: if isAdmin() || (isSignedIn() && resource.data.coach_uid == request.auth.uid);
+    }
+
+    /** Objectifs de saison coach */
+    match /coach_season_objectives/{id} {
+      allow read: if isSignedIn()
+        && (isAdmin() || isSameClub(resource.data.club_id));
+      allow create: if isSignedIn()
+        && request.resource.data.created_by == request.auth.uid
+        && request.resource.data.club_id is string
+        && request.resource.data.title is string;
+      allow update: if isSignedIn()
+        && (resource.data.created_by == request.auth.uid || isClubStaffForClub(resource.data.club_id) || isAdmin());
+      allow delete: if isAdmin() || (isSignedIn() && resource.data.created_by == request.auth.uid);
+    }
+
+    /** Documents équipe (hors vault médical) */
+    match /team_documents/{id} {
+      allow read: if isSignedIn()
+        && (isAdmin() || isSameClub(resource.data.club_id));
+      allow create: if isSignedIn()
+        && request.resource.data.uploaded_by == request.auth.uid
+        && request.resource.data.club_id is string
+        && request.resource.data.storage_path is string;
+      allow update, delete: if isAdmin()
+        || (isSignedIn() && resource.data.uploaded_by == request.auth.uid)
+        || (isSignedIn() && isClubStaffForClub(resource.data.club_id));
+    }
+
+    /** Staff collaboratif équipe */
+    match /team_staff/{id} {
+      allow read: if isSignedIn()
+        && (isAdmin() || isSameClub(resource.data.club_id));
+      allow create: if isSignedIn()
+        && request.resource.data.club_id is string
+        && request.resource.data.uid is string
+        && (isClubStaffForClub(request.resource.data.club_id) || isAdmin());
+      allow update, delete: if isAdmin() || (isSignedIn() && isClubStaffForClub(resource.data.club_id));
+    }
+
+    /** ProDay Smart Tactics — plans, rapports, tags live, jobs VO */
+    match /smart_tactics_plans/{id} {
+      allow read: if isSignedIn()
+        && (isAdmin() || isSameClub(resource.data.club_id));
+      allow create: if isSignedIn()
+        && request.resource.data.created_by == request.auth.uid
+        && request.resource.data.club_id is string
+        && request.resource.data.title is string;
+      allow update: if isSignedIn()
+        && (resource.data.created_by == request.auth.uid || isClubStaffForClub(resource.data.club_id) || isAdmin());
+      allow delete: if isAdmin() || (isSignedIn() && resource.data.created_by == request.auth.uid);
+    }
+
+    match /smart_tactics_reports/{id} {
+      allow read: if isSignedIn()
+        && (isAdmin() || !('club_id' in resource.data) || isSameClub(resource.data.club_id));
+      allow create: if isSignedIn()
+        && request.resource.data.created_by == request.auth.uid
+        && request.resource.data.event_id is string;
+      allow update, delete: if isAdmin()
+        || (isSignedIn() && resource.data.created_by == request.auth.uid);
+    }
+
+    match /smart_tactics_live_tags/{id} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn()
+        && request.resource.data.created_by == request.auth.uid
+        && request.resource.data.event_id is string
+        && request.resource.data.kind is string;
+      allow update, delete: if isAdmin()
+        || (isSignedIn() && resource.data.created_by == request.auth.uid);
+    }
+
+    match /smart_tactics_video_jobs/{id} {
+      allow read: if isSignedIn()
+        && (isAdmin()
+          || resource.data.uploader_uid == request.auth.uid
+          || (!('club_id' in resource.data) || isSameClub(resource.data.club_id)));
+      allow create: if isSignedIn()
+        && request.resource.data.uploader_uid == request.auth.uid;
+      allow update: if isSignedIn()
+        && (resource.data.uploader_uid == request.auth.uid || isAdmin());
+      allow delete: if isAdmin()
+        || (isSignedIn() && resource.data.uploader_uid == request.auth.uid);
+    }
+
+    /** Check-ins wellness quotidiens → Smart Tactics readiness */
+    match /wellness_checkins/{id} {
+      allow read: if isSignedIn()
+        && (isAdmin()
+          || resource.data.uid == request.auth.uid
+          || (!('club_id' in resource.data) || isSameClub(resource.data.club_id)));
+      allow create: if isSignedIn()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.date_key is string;
+      allow update, delete: if isAdmin()
+        || (isSignedIn() && resource.data.uid == request.auth.uid);
+    }
+
+    /** Tournois club (générateur + live + page publique si public==true) */
+    match /club_tournaments/{id} {
+      allow read: if resource.data.public == true
+        || (isSignedIn() && (isAdmin() || isSameClub(resource.data.club_id)));
+      allow create: if isSignedIn()
+        && request.resource.data.created_by == request.auth.uid
+        && request.resource.data.club_id is string;
+      allow update: if isSignedIn()
+        && (isAdmin()
+          || resource.data.created_by == request.auth.uid
+          || isSameClub(resource.data.club_id));
+      allow delete: if isAdmin()
+        || (isSignedIn() && resource.data.created_by == request.auth.uid);
+    }
+
+    /** Fiches d'essai — accès staff autorisé / coach auteur */
+    match /club_trial_sheets/{id} {
+      allow read: if isSignedIn()
+        && (isAdmin()
+          || resource.data.coach_uid == request.auth.uid
+          || request.auth.uid in resource.data.authorized_uids
+          || isSameClub(resource.data.club_id));
+      allow create: if isSignedIn()
+        && request.resource.data.coach_uid == request.auth.uid
+        && request.resource.data.club_id is string;
+      allow update: if isSignedIn()
+        && (isAdmin()
+          || resource.data.coach_uid == request.auth.uid
+          || request.auth.uid in resource.data.authorized_uids);
+      allow delete: if isAdmin()
+        || (isSignedIn() && resource.data.coach_uid == request.auth.uid);
+    }
+
+    /** Marketplace équipement — membres du même club */
+    match /club_equipment_listings/{id} {
+      allow read: if isSignedIn()
+        && (isAdmin() || isSameClub(resource.data.club_id));
+      allow create: if isSignedIn()
+        && request.resource.data.author_uid == request.auth.uid
+        && request.resource.data.club_id is string
+        && request.resource.data.visibility == 'club_members';
+      allow update: if isSignedIn()
+        && (isAdmin()
+          || resource.data.author_uid == request.auth.uid
+          || isSameClub(resource.data.club_id));
+      allow delete: if isAdmin()
+        || (isSignedIn() && resource.data.author_uid == request.auth.uid);
+    }
+
+    /** Causeries match */
+    match /match_talk_briefs/{id} {
+      allow read: if isSignedIn()
+        && (isAdmin()
+          || resource.data.created_by == request.auth.uid
+          || (!('club_id' in resource.data) || isSameClub(resource.data.club_id)));
+      allow create: if isSignedIn()
+        && request.resource.data.created_by == request.auth.uid
+        && request.resource.data.event_id is string;
+      allow update: if isSignedIn()
+        && (isAdmin() || resource.data.created_by == request.auth.uid);
+      allow delete: if isAdmin()
+        || (isSignedIn() && resource.data.created_by == request.auth.uid);
+    }
+
+    /** Bourse de recrutement — besoins d’effectif (interne / entre clubs) */
+    match /club_roster_needs/{id} {
+      allow read: if isSignedIn()
+        && (isAdmin()
+          || resource.data.scope == 'external'
+          || isSameClub(resource.data.club_id));
+      allow create: if isSignedIn()
+        && request.resource.data.created_by_uid == request.auth.uid
+        && request.resource.data.club_id is string
+        && request.resource.data.team_id is string;
+      allow update: if isSignedIn()
+        && (isAdmin()
+          || resource.data.created_by_uid == request.auth.uid
+          || isSameClub(resource.data.club_id));
+      allow delete: if isAdmin()
+        || (isSignedIn() && resource.data.created_by_uid == request.auth.uid);
+    }
+
+    /** Propositions de transfert / montée interne */
+    match /club_internal_moves/{id} {
+      allow read: if isSignedIn()
+        && (isAdmin()
+          || isSameClub(resource.data.club_id)
+          || resource.data.player_uid == request.auth.uid
+          || resource.data.proposed_by_uid == request.auth.uid);
+      allow create: if isSignedIn()
+        && request.resource.data.proposed_by_uid == request.auth.uid
+        && request.resource.data.club_id is string
+        && request.resource.data.player_uid is string;
+      allow update: if isSignedIn()
+        && (isAdmin()
+          || isSameClub(resource.data.club_id)
+          || resource.data.proposed_by_uid == request.auth.uid);
+      allow delete: if isAdmin();
+    }
+
+    /** Consignes tactiques partagées */
+    match /tactical_shares/{id} {
+      allow read: if isSignedIn()
+        && (isAdmin()
+          || resource.data.author_uid == request.auth.uid
+          || request.auth.uid in resource.data.recipient_uids);
+      allow create: if isSignedIn()
+        && request.resource.data.author_uid == request.auth.uid
+        && request.resource.data.title is string;
+      allow update, delete: if isAdmin()
+        || (isSignedIn() && resource.data.author_uid == request.auth.uid);
     }
   }
 }
