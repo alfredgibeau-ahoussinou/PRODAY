@@ -4,6 +4,7 @@ import {
   FutBackDetails,
   FutCardShell,
   FutFaceLayout,
+  StatBar,
   StatChip,
   clampStat,
   nationCode,
@@ -30,6 +31,23 @@ export function ProDayFutCard({ card, onAction, formationLabel }: Props) {
     case "sponsor":
       return <SponsorFutCard card={card} onAction={onAction} formationLabel={formationLabel} />;
   }
+}
+
+function BadgeRow({ badges, ink }: { badges: string[]; ink: string }) {
+  if (!badges.length) return null;
+  return (
+    <div className="mt-2 flex flex-wrap justify-center gap-1">
+      {badges.slice(0, 5).map((b) => (
+        <span
+          key={b}
+          className="rounded-full px-2 py-0.5 text-[7px] font-black uppercase tracking-wide"
+          style={{ background: "rgba(0,0,0,0.16)", color: ink }}
+        >
+          {b}
+        </span>
+      ))}
+    </div>
+  );
 }
 
 function PlayerFutCard({
@@ -70,24 +88,32 @@ function PlayerFutCard({
           ink={t.ink}
           inkMuted={t.inkMuted}
           divider={t.divider}
-          plateColor={t.id === "gold" ? "rgba(236, 200, 72, 0.94)" : undefined}
           upgrade={Math.max(0, card.potential - card.overall)}
         />
       }
       back={
         <FutBackDetails ink={t.ink}>
-          <p className="text-[10px] font-black uppercase tracking-[0.16em] opacity-60">Détails</p>
-          <p className="mt-1 text-lg font-black uppercase leading-tight">{card.displayName}</p>
-          <p className="mt-1 text-[9px] font-semibold opacity-70">
-            {card.age} ans · {card.strongFoot} · {card.heightCm} cm
+          <p className="text-[10px] font-black uppercase tracking-[0.16em] opacity-55">
+            {card.editionLabel ?? "Passeport"}
           </p>
-          <div className="mt-3 grid grid-cols-2 gap-1.5 px-1">
-            <StatChip label="Matchs" value={card.matches} />
-            <StatChip label="Buts" value={card.goals} accent="#fbbf24" />
-            <StatChip label="Passes" value={card.assists} />
-            <StatChip label="Minutes" value={card.minutesPlayed} />
+          <p className="mt-1 text-xl font-black uppercase leading-tight">{card.displayName}</p>
+          <p className="mt-1 text-[10px] font-semibold opacity-70">
+            {card.age} ans · {card.strongFoot} · {card.heightCm} cm · {card.weightKg} kg
+          </p>
+          <div className="mt-4 grid grid-cols-2 gap-2">
+            <StatChip label="Matchs" value={card.matches} animate />
+            <StatChip label="Buts" value={card.goals} accent="#fbbf24" animate />
+            <StatChip label="Passes" value={card.assists} animate />
+            <StatChip label="Minutes" value={card.minutesPlayed} animate />
           </div>
-          <p className="mt-auto pt-2 text-[8px] font-bold opacity-80">{card.recruitmentStatus}</p>
+          <div className="mt-4 space-y-2">
+            {stats.slice(0, 4).map((s) => (
+              <StatBar key={s.label} label={s.label} value={Number(s.value)} ink={t.ink} />
+            ))}
+          </div>
+          <BadgeRow badges={card.skillBadges} ink={t.ink} />
+          <p className="mt-3 text-[9px] font-bold opacity-75">{card.progressLabel}</p>
+          <p className="mt-auto pt-2 text-[9px] font-bold opacity-70">{card.recruitmentStatus}</p>
         </FutBackDetails>
       }
     />
@@ -133,12 +159,21 @@ function CoachFutCard({
       }
       back={
         <FutBackDetails ink={t.ink}>
-          <p className="text-lg font-black uppercase">{card.displayName}</p>
-          <p className="mt-1 text-[9px] opacity-70">{card.coachLevel}</p>
-          <p className="mt-3 text-[11px] font-semibold leading-snug">{card.philosophy}</p>
-          <p className="mt-4 text-[9px] opacity-70">
+          <p className="text-[10px] font-black uppercase tracking-[0.16em] opacity-55">
+            {card.editionLabel ?? "Coach"}
+          </p>
+          <p className="mt-1 text-xl font-black uppercase">{card.displayName}</p>
+          <p className="mt-1 text-[10px] opacity-70">{card.coachLevel}</p>
+          <p className="mt-3 text-[12px] font-semibold leading-snug">{card.philosophy}</p>
+          <p className="mt-3 text-[10px] opacity-70">
             {card.clubName} · {card.preferredFormation}
           </p>
+          <div className="mt-4 space-y-2">
+            <StatBar label="Victoires %" value={card.winRatePct} max={100} ink={t.ink} />
+            <StatBar label="Réputation" value={card.reputation} ink={t.ink} />
+          </div>
+          <p className="mt-3 text-[9px] opacity-65">{card.modulesUsed.slice(0, 3).join(" · ")}</p>
+          <BadgeRow badges={card.skillBadges} ink={t.ink} />
         </FutBackDetails>
       }
     />
@@ -184,12 +219,24 @@ function ClubFutCard({
       }
       back={
         <FutBackDetails ink={t.ink}>
-          <p className="text-lg font-black uppercase">{card.displayName}</p>
-          <p className="mt-2 text-[10px]">
+          <p className="text-[10px] font-black uppercase tracking-[0.16em] opacity-55">
+            {card.editionLabel ?? "Club"}
+          </p>
+          <p className="mt-1 text-xl font-black uppercase">{card.displayName}</p>
+          <p className="mt-2 text-[11px]">
             {card.city}, {card.country}
           </p>
-          <p className="mt-3 text-[11px]">Stade · {card.stadium}</p>
+          <p className="mt-2 text-[12px]">Stade · {card.stadium}</p>
           <p className="mt-2 text-[10px] opacity-75">{card.historyLine}</p>
+          <div className="mt-4 grid grid-cols-3 gap-1.5">
+            <StatChip label="Licenciés" value={card.licensedCount} animate />
+            <StatChip label="Équipes" value={card.teamsCount} animate />
+            <StatChip label="Coachs" value={card.coachesCount} animate />
+          </div>
+          {card.trophies[0] ? (
+            <p className="mt-3 text-[10px] font-bold">🏆 {card.trophies[0]}</p>
+          ) : null}
+          <BadgeRow badges={card.skillBadges} ink={t.ink} />
         </FutBackDetails>
       }
     />
@@ -223,9 +270,9 @@ function SupporterFutCard({
           stats={[
             { label: "PTS", value: card.points },
             { label: "EVT", value: card.eventsAttended },
+            { label: "MAT", value: card.matchesFollowed },
             { label: "REF", value: card.referrals },
             { label: "BDG", value: card.badges.length },
-            { label: "RWD", value: card.rewards.length },
             { label: "LOY", value: (card.loyaltyLevel.split(" ").pop() ?? "—").slice(0, 4) },
           ]}
           ink={t.ink}
@@ -235,9 +282,21 @@ function SupporterFutCard({
       }
       back={
         <FutBackDetails ink={t.ink}>
-          <p className="text-lg font-black uppercase">{card.displayName}</p>
-          <p className="mt-2 text-[10px]">Club · {card.favoriteClub}</p>
-          <p className="mt-1 text-[10px] font-bold">{card.loyaltyLevel}</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.16em] opacity-55">
+            {card.editionLabel ?? "Supporter"}
+          </p>
+          <p className="mt-1 text-xl font-black uppercase">{card.displayName}</p>
+          <p className="mt-2 text-[11px]">Club · {card.favoriteClub}</p>
+          <p className="mt-1 text-[11px] font-bold">{card.loyaltyLevel}</p>
+          <div className="mt-4 space-y-2">
+            <StatBar
+              label="Points fidélité"
+              value={Math.min(99, Math.round(card.points / 50))}
+              ink={t.ink}
+            />
+            <StatBar label="Matchs suivis" value={Math.min(99, card.matchesFollowed)} ink={t.ink} />
+          </div>
+          <BadgeRow badges={card.badges} ink={t.ink} />
         </FutBackDetails>
       }
     />
@@ -283,15 +342,23 @@ function SponsorFutCard({
       }
       back={
         <FutBackDetails ink={t.ink}>
-          <p className="text-lg font-black uppercase">{card.company}</p>
-          <p className="mt-2 text-[10px] opacity-75">{card.sector}</p>
-          <ul className="mt-3 space-y-1">
+          <p className="text-[10px] font-black uppercase tracking-[0.16em] opacity-55">
+            {card.editionLabel ?? "Sponsor"}
+          </p>
+          <p className="mt-1 text-xl font-black uppercase">{card.company}</p>
+          <p className="mt-2 text-[11px] opacity-75">{card.sector}</p>
+          <ul className="mt-4 space-y-1.5">
             {card.partnerClubs.map((c) => (
-              <li key={c} className="text-[11px] font-semibold">
+              <li key={c} className="text-[12px] font-semibold">
                 {c}
               </li>
             ))}
           </ul>
+          <div className="mt-4 grid grid-cols-2 gap-2">
+            <StatChip label="Clubs" value={card.partnerClubs.length} animate />
+            <StatChip label="Events" value={card.sponsoredEvents} animate />
+          </div>
+          <BadgeRow badges={card.skillBadges} ink={t.ink} />
         </FutBackDetails>
       }
     />

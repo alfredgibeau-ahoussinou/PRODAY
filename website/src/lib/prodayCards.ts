@@ -17,7 +17,8 @@ export type ProDayCardActionId =
   | "follow"
   | "invite"
   | "recruit"
-  | "view_club";
+  | "view_club"
+  | "share";
 
 export type ProDayCardBase = {
   id: string;
@@ -31,6 +32,8 @@ export type ProDayCardBase = {
   actions: ProDayCardActionId[];
   /** Skin FUT premium (planche 12 designs). */
   skinId?: import("./futSkins").FutSkinId;
+  /** Édition collection (Rookie, Gold, Elite…). */
+  editionLabel?: string;
 };
 
 export type ProDayPlayerCardData = ProDayCardBase & {
@@ -82,6 +85,8 @@ export type ProDayCoachCardData = ProDayCardBase & {
   playersDeveloped: number;
   coachLevel: string;
   reputation: number;
+  modulesUsed: string[];
+  skillBadges: string[];
 };
 
 export type ProDayClubCardData = ProDayCardBase & {
@@ -98,6 +103,9 @@ export type ProDayClubCardData = ProDayCardBase & {
   primaryColor: string;
   secondaryColor: string;
   historyLine: string;
+  trophies: string[];
+  partners: string[];
+  skillBadges: string[];
 };
 
 export type ProDaySupporterCardData = ProDayCardBase & {
@@ -109,6 +117,7 @@ export type ProDaySupporterCardData = ProDayCardBase & {
   rewards: string[];
   points: number;
   badges: string[];
+  matchesFollowed: number;
 };
 
 export type ProDaySponsorCardData = ProDayCardBase & {
@@ -118,6 +127,7 @@ export type ProDaySponsorCardData = ProDayCardBase & {
   location: string;
   partnerClubs: string[];
   sponsoredEvents: number;
+  skillBadges: string[];
 };
 
 export type ProDayCardData =
@@ -130,21 +140,29 @@ export type ProDayCardData =
 export const CARD_ACTION_LABELS: Record<ProDayCardActionId, string> = {
   view_profile: "Voir le profil",
   message: "Message",
-  follow: "Suivre",
+  follow: "Favori",
   invite: "Inviter",
   recruit: "Recruter",
   view_club: "Voir le club",
+  share: "Partager",
 };
+
+/** Actions promises — visibles mais non actives en V1. */
+export const CARD_SOON_ACTIONS = [
+  { id: "pdf", label: "PDF" },
+  { id: "qr", label: "QR Code" },
+  { id: "compare", label: "Comparer" },
+] as const;
 
 export const CARD_ROLE_META: Record<
   ProDayCardRole,
-  { label: string; accent: string; deep: string }
+  { label: string; accent: string; deep: string; poleHref: string }
 > = {
-  player: { label: "Joueur", accent: "#0054F0", deep: "#001854" },
-  coach: { label: "Coach", accent: "#3B5BFF", deep: "#001848" },
-  club: { label: "Club", accent: "#006CFC", deep: "#002478" },
-  supporter: { label: "Supporter", accent: "#3C00F0", deep: "#180078" },
-  sponsor: { label: "Sponsor", accent: "#D4AF37", deep: "#070605" },
+  player: { label: "Joueur", accent: "#0054F0", deep: "#001854", poleHref: "/joueur" },
+  coach: { label: "Coach", accent: "#E11D48", deep: "#4C0519", poleHref: "/coach" },
+  club: { label: "Club", accent: "#16A34A", deep: "#052E16", poleHref: "/pro-club" },
+  supporter: { label: "Supporter", accent: "#EA580C", deep: "#431407", poleHref: "/supporter" },
+  sponsor: { label: "Sponsor", accent: "#7C3AED", deep: "#2E1065", poleHref: "/sponsor" },
 };
 
 export const TIER_GLOW: Record<ProDayCardTier, string> = {
@@ -218,7 +236,6 @@ export const TIER_FIFA: Record<
   },
 };
 
-
 export const DEMO_PLAYER_CARD: ProDayPlayerCardData = {
   id: "player-amine",
   role: "player",
@@ -228,10 +245,11 @@ export const DEMO_PLAYER_CARD: ProDayPlayerCardData = {
   lastName: "Khelifi",
   photoUrl: "/images/card-player-01.jpg",
   verified: true,
-  accentHex: "#0054F0",
-  deepHex: "#001854",
-  actions: ["view_profile", "message", "recruit", "follow"],
+  accentHex: CARD_ROLE_META.player.accent,
+  deepHex: CARD_ROLE_META.player.deep,
+  actions: ["view_profile", "message", "recruit", "follow", "share"],
   skinId: "gold",
+  editionLabel: "Édition Gold",
   age: 22,
   gender: "M",
   nationality: "France",
@@ -255,10 +273,32 @@ export const DEMO_PLAYER_CARD: ProDayPlayerCardData = {
   lastMatchLabel: "Victoire 2-1 · Sam.",
   maxSpeedKmh: 32.4,
   progressLabel: "+4 OVR cette saison",
-  skillBadges: ["Vision", "Pressing", "Leadership"],
-  aiObjectives: ["Finitions dans la surface", "Duels aériens"],
+  skillBadges: [
+    "MVP",
+    "Espoir",
+    "En forme",
+    "Leader",
+    "Fair Play",
+    "Progression Rapide",
+    "Joueur Certifié",
+  ],
+  aiObjectives: ["Finitions dans la surface", "Duels aériens", "Cadence de passes"],
   recruitmentStatus: "Ouvert aux contacts",
   heatmapHint: "Couloir central · 2e ballon",
+};
+
+/** Variante collection — Elite / TOTW. */
+export const DEMO_PLAYER_CARD_ELITE: ProDayPlayerCardData = {
+  ...DEMO_PLAYER_CARD,
+  id: "player-amine-elite",
+  tier: "elite",
+  skinId: "totw",
+  editionLabel: "Joueur du mois",
+  overall: 89,
+  formPct: 94,
+  potential: 93,
+  skillBadges: ["Joueur du Mois", "Meilleur Passeur", "MVP", "Talent"],
+  progressLabel: "+7 OVR · mois en feu",
 };
 
 export const DEMO_COACH_CARD: ProDayCoachCardData = {
@@ -268,10 +308,11 @@ export const DEMO_COACH_CARD: ProDayCoachCardData = {
   displayName: "Sarah Morel",
   photoUrl: "/images/card-coach-01.jpg",
   verified: true,
-  accentHex: "#3B5BFF",
-  deepHex: "#001848",
-  actions: ["view_profile", "message", "invite"],
+  accentHex: CARD_ROLE_META.coach.accent,
+  deepHex: CARD_ROLE_META.coach.deep,
+  actions: ["view_profile", "message", "invite", "share"],
   skinId: "totw",
+  editionLabel: "Elite Coach",
   clubName: "FC ProDay",
   category: "U19",
   diplomas: ["BEF", "CFF3"],
@@ -286,6 +327,25 @@ export const DEMO_COACH_CARD: ProDayCoachCardData = {
   playersDeveloped: 18,
   coachLevel: "Coach Premium",
   reputation: 86,
+  modulesUsed: [
+    "Smart Tactics",
+    "IA",
+    "Analyse vidéo",
+    "Préparation match",
+    "Analyse adverse",
+  ],
+  skillBadges: ["Expert Tactique", "Coach Certifié", "Développeur", "Formateur"],
+};
+
+export const DEMO_COACH_CARD_GOLD: ProDayCoachCardData = {
+  ...DEMO_COACH_CARD,
+  id: "coach-sarah-gold",
+  tier: "gold",
+  skinId: "gold",
+  editionLabel: "Champion",
+  reputation: 91,
+  winRatePct: 64,
+  skillBadges: ["Champion", "Elite Coach", "Expert Tactique"],
 };
 
 export const DEMO_CLUB_CARD: ProDayClubCardData = {
@@ -295,10 +355,11 @@ export const DEMO_CLUB_CARD: ProDayClubCardData = {
   displayName: "FC ProDay",
   photoUrl: "/images/card-club-01.jpg",
   verified: true,
-  accentHex: "#006CFC",
-  deepHex: "#002478",
-  actions: ["view_club", "follow", "message"],
+  accentHex: CARD_ROLE_META.club.accent,
+  deepHex: CARD_ROLE_META.club.deep,
+  actions: ["view_club", "follow", "message", "share"],
   skinId: "special-blue",
+  editionLabel: "Club Certifié",
   city: "Paris",
   country: "France",
   licensedCount: 420,
@@ -308,9 +369,22 @@ export const DEMO_CLUB_CARD: ProDayClubCardData = {
   levelLabel: "Régional",
   league: "R1 IDF",
   standingLabel: "3e · 28 pts",
-  primaryColor: "#006CFC",
+  primaryColor: "#16A34A",
   secondaryColor: "#FFFFFF",
   historyLine: "Fondé 2012 · 2 titres régionaux",
+  trophies: ["Coupe IDF 2023", "Champion R2 2019"],
+  partners: ["Nord Equip", "Ville de Paris"],
+  skillBadges: ["Club Formateur", "Club Certifié", "Académie"],
+};
+
+export const DEMO_CLUB_CARD_ELITE: ProDayClubCardData = {
+  ...DEMO_CLUB_CARD,
+  id: "club-proday-elite",
+  tier: "elite",
+  skinId: "totw",
+  editionLabel: "Club Elite",
+  standingLabel: "1er · 41 pts",
+  skillBadges: ["Club Elite", "Club Formateur", "Académie"],
 };
 
 export const DEMO_SUPPORTER_CARD: ProDaySupporterCardData = {
@@ -320,17 +394,31 @@ export const DEMO_SUPPORTER_CARD: ProDaySupporterCardData = {
   displayName: "Léa Martin",
   photoUrl: "/images/card-supporter-01.jpg",
   verified: false,
-  accentHex: "#3C00F0",
-  deepHex: "#180078",
-  actions: ["view_profile", "follow", "message"],
+  accentHex: CARD_ROLE_META.supporter.accent,
+  deepHex: CARD_ROLE_META.supporter.deep,
+  actions: ["view_profile", "follow", "message", "share"],
   skinId: "special-pink",
+  editionLabel: "Tribune Or",
   favoriteClub: "FC ProDay",
   loyaltyLevel: "Tribune Or",
   eventsAttended: 14,
   referrals: 3,
   rewards: ["Maillot 2025", "Accès live"],
   points: 2450,
-  badges: ["Fidèle", "Ambassadeur", "Derby"],
+  badges: ["Fidèle", "Ambassadeur", "Derby", "Ambassadeur Covoiturage"],
+  matchesFollowed: 26,
+};
+
+export const DEMO_SUPPORTER_CARD_GOLD: ProDaySupporterCardData = {
+  ...DEMO_SUPPORTER_CARD,
+  id: "sup-lea-gold",
+  tier: "gold",
+  skinId: "gold",
+  verified: true,
+  editionLabel: "Ultras Gold",
+  points: 4820,
+  loyaltyLevel: "Loge Diamant",
+  badges: ["Fidèle", "Ultras", "Derby", "Ambassadeur"],
 };
 
 export const DEMO_SPONSOR_CARD: ProDaySponsorCardData = {
@@ -340,21 +428,39 @@ export const DEMO_SPONSOR_CARD: ProDaySponsorCardData = {
   displayName: "Nord Equip",
   photoUrl: "/images/card-sponsor-01.jpg",
   verified: true,
-  accentHex: "#D4AF37",
-  deepHex: "#070605",
-  actions: ["view_profile", "message"],
+  accentHex: CARD_ROLE_META.sponsor.accent,
+  deepHex: CARD_ROLE_META.sponsor.deep,
+  actions: ["view_profile", "message", "share"],
   skinId: "marble",
+  editionLabel: "Partenaire Vérifié",
   company: "Nord Equip",
   sector: "Équipement sportif",
   location: "Lille · Hauts-de-France",
   partnerClubs: ["FC ProDay", "US Nord", "Olympique Amiens"],
   sponsoredEvents: 7,
+  skillBadges: ["Vérifié", "Partenaire Elite", "Événements"],
 };
 
+export const DEMO_SPONSOR_CARD_GOLD: ProDaySponsorCardData = {
+  ...DEMO_SPONSOR_CARD,
+  id: "sponsor-nord-gold",
+  tier: "gold",
+  skinId: "gold",
+  editionLabel: "Platinum Partner",
+  sponsoredEvents: 12,
+  skillBadges: ["Vérifié", "Platinum", "Multi-clubs"],
+};
+
+/** Collection démo — 2 éditions par rôle pour sentir la collection. */
 export const DEMO_CARDS: ProDayCardData[] = [
   DEMO_PLAYER_CARD,
+  DEMO_PLAYER_CARD_ELITE,
   DEMO_COACH_CARD,
+  DEMO_COACH_CARD_GOLD,
   DEMO_CLUB_CARD,
+  DEMO_CLUB_CARD_ELITE,
   DEMO_SUPPORTER_CARD,
+  DEMO_SUPPORTER_CARD_GOLD,
   DEMO_SPONSOR_CARD,
+  DEMO_SPONSOR_CARD_GOLD,
 ];

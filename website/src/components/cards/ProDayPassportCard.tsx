@@ -15,7 +15,7 @@ import {
   type PassportTierId,
 } from "@/lib/prodayPassport";
 import type { ProDayCardActionId, ProDayPlayerCardData } from "@/lib/prodayCards";
-import { CARD_ACTION_LABELS } from "@/lib/prodayCards";
+import { CARD_ACTION_LABELS, CARD_SOON_ACTIONS } from "@/lib/prodayCards";
 import { nationCode } from "@/components/cards/FutCardShell";
 
 type Props = {
@@ -489,7 +489,7 @@ export function ProDayPassportCard({
                         onAction?.(action);
                         if (action === "view_profile") setOpen(false);
                       }}
-                      className="rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-wide text-white"
+                      className="min-h-11 rounded-full px-4 py-2.5 text-xs font-semibold uppercase tracking-wide text-white"
                       style={{
                         background:
                           action === "view_profile" || action === "recruit"
@@ -500,6 +500,23 @@ export function ProDayPassportCard({
                       {CARD_ACTION_LABELS[action]}
                     </button>
                   ))}
+                </div>
+                <div className="mt-4 border-t border-white/10 pt-4">
+                  <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-white/35">
+                    Bientôt
+                  </p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {CARD_SOON_ACTIONS.map((a) => (
+                      <button
+                        key={a.id}
+                        type="button"
+                        disabled
+                        className="min-h-11 cursor-not-allowed rounded-full border border-white/10 px-4 py-2.5 text-xs font-semibold uppercase tracking-wide text-white/30"
+                      >
+                        {a.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
             </motion.div>
@@ -544,7 +561,7 @@ export function PassportTierPicker({
     "premium",
   ];
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:flex-wrap sm:overflow-visible">
       {ids.map((id) => {
         const label = id === "auto" ? "Auto" : PASSPORT_TIERS[id].label;
         const on = value === id;
@@ -554,7 +571,7 @@ export function PassportTierPicker({
             key={id}
             type="button"
             onClick={() => onChange(id)}
-            className={`rounded-full px-3 py-1.5 text-[10px] font-bold uppercase tracking-wide ${
+            className={`min-h-11 shrink-0 rounded-full px-3.5 py-2 text-[10px] font-bold uppercase tracking-wide ${
               on ? "text-black" : "border border-white/15 text-white/60"
             }`}
             style={on ? { background: accent } : undefined}
