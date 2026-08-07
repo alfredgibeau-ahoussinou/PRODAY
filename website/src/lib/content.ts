@@ -866,28 +866,44 @@ export const PRO_CLUB_MODULES = [
     image: "/images/football-club-01.jpg",
   },
   {
-    id: "covoiturage-club",
-    title: "Covoiturage club",
-    subtitle: "Différenciateur ProDay",
+    id: "bourse-club",
+    title: "Bourse de recrutement",
+    subtitle: "Vivier interne d’abord",
     description:
-      "Proposez ou réservez des places vers matchs, entraînements et détections. Places visibles, contact conducteur en messagerie sécurisée.",
-    image: "/images/football-pitch-01.jpg",
-  },
-  {
-    id: "recrutement-club",
-    title: "Recrutement club",
-    subtitle: "Annonces & shortlist",
-    description:
-      "Publiez « Cherche gardien U17 F », recevez les candidatures et constituez votre shortlist locale.",
+      "Besoins d’équipe, matching indicatif sur les licenciés du club, propositions de montée — avant de chercher dehors.",
     image: "/showcase/classic-mercato.jpg",
   },
   {
     id: "pipeline-club",
-    title: "Suivi des candidatures",
-    subtitle: "Kanban recrutement",
+    title: "Mercato & candidatures",
+    subtitle: "Observé → Intégré",
     description:
-      "Boîte de réception → revue → shortlist → essai → offre → recruté. Suivi simple pour le bureau et la DS.",
+      "Après le vivier interne : annonces, shortlist, essai et suivi kanban pour le bureau et la DS.",
     image: "/showcase/classic-mercato.jpg",
+  },
+  {
+    id: "convocations-club",
+    title: "Convocations & retards",
+    subtitle: "Présences centralisées",
+    description:
+      "RSVP, retard annoncé en 1–2 clics (joueur ou parent), feuille de présence visible par le coach — sans WhatsApp.",
+    image: "/showcase/classic-exp-messages.jpg",
+  },
+  {
+    id: "covoiturage-club",
+    title: "Covoiturage club",
+    subtitle: "Matchs & entraînements",
+    description:
+      "Proposez ou réservez des places. Places visibles, contact conducteur en messagerie sécurisée, suivi pour les parents.",
+    image: "/images/football-pitch-01.jpg",
+  },
+  {
+    id: "tournois-club",
+    title: "Tournois",
+    subtitle: "Poules · Live · QR",
+    description:
+      "Générateur de poules, Live Hub, classements auto et page publique. Organisateur = rôle intégré au Club.",
+    image: "/images/football-stadium-night-01.jpg",
   },
   {
     id: "communication-club",
@@ -899,10 +915,10 @@ export const PRO_CLUB_MODULES = [
   },
   {
     id: "vitrine-club",
-    title: "Vitrine publique",
-    subtitle: "Page club",
+    title: "Vitrine & écosystème",
+    subtitle: "Page club · équipements · caméras",
     description:
-      "Logo, palmarès, catégories. Visible des supporters et des recruteurs du territoire.",
+      "Logo, palmarès, marketplace, et Caméras & Vidéo multi-marques (Veo, XbotGo, import…).",
     image: "/images/football-stadium-night-01.jpg",
   },
 ] as const;
@@ -1309,7 +1325,7 @@ export const UNIVERSE_PAGE_CONFIG = {
     ],
     modulesTitle: "Piloter le club",
     modulesSubtitle:
-      "Équipes, licenciés, compétitions, convocations, covoiturage et permissions. Cœur de ProDay.",
+      "Équipes, bourse interne, convocations, covoiturage, tournois et permissions. Cœur de ProDay.",
     modules: PRO_CLUB_MODULES as readonly UniverseModule[],
     journeyIds: ["club"] as const,
     audienceNote:

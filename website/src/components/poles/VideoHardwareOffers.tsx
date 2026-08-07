@@ -16,7 +16,7 @@ import { ROUTES } from "@/lib/routes";
 const ease = [0.22, 1, 0.36, 1] as const;
 const offer = VIDEO_OFFERS.proday_pro_camera;
 
-/** Module vidéo flexible + offre Pro + Veo — matériel jamais obligatoire. */
+/** Module vidéo flexible + offre Pro + Veo : matériel jamais obligatoire. */
 export function VideoHardwareOffers() {
   const reduce = useReducedMotion();
 
@@ -30,7 +30,7 @@ export function VideoHardwareOffers() {
           Module vidéo
         </p>
         <h2 className="mt-3 max-w-2xl font-display text-[clamp(1.8rem,4vw,2.8rem)] font-medium tracking-[-0.03em] text-white">
-          Filmez comme vous voulez.
+          Vous avez une caméra ? Connectez-la.
         </h2>
         <p className="mt-3 max-w-xl text-sm leading-relaxed text-white/55">
           {VIDEO_MODULE_PRINCIPLE}
@@ -47,7 +47,8 @@ export function VideoHardwareOffers() {
           ))}
         </div>
         <p className="mt-3 text-xs text-white/40">
-          Couche d’intégration multi-fabricants — jamais limitée à Veo.
+          Architecture multi-marques : API officielle quand elle existe, sinon import vidéo.
+          Le club n’est jamais obligé d’acheter une caméra spécifique.
         </p>
 
         <motion.div

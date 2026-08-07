@@ -1564,6 +1564,40 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    /** Caméras club — multi-marques (Veo, XbotGo, Spiideo…) */
+    match /club_cameras/{id} {
+      allow read: if isSignedIn()
+        && (isAdmin() || isSameClub(resource.data.club_id));
+      allow create: if isSignedIn()
+        && request.resource.data.created_by_uid == request.auth.uid
+        && request.resource.data.club_id is string
+        && request.resource.data.vendor is string;
+      allow update: if isSignedIn()
+        && (isAdmin()
+          || resource.data.created_by_uid == request.auth.uid
+          || isSameClub(resource.data.club_id));
+      allow delete: if isAdmin()
+        || (isSignedIn() && resource.data.created_by_uid == request.auth.uid);
+    }
+
+    /** Vidéos de match (API caméra ou import) */
+    match /club_match_videos/{id} {
+      allow read: if isSignedIn()
+        && (isAdmin()
+          || isSameClub(resource.data.club_id)
+          || request.auth.uid in resource.data.player_uids);
+      allow create: if isSignedIn()
+        && request.resource.data.created_by_uid == request.auth.uid
+        && request.resource.data.club_id is string
+        && request.resource.data.title is string;
+      allow update: if isSignedIn()
+        && (isAdmin()
+          || resource.data.created_by_uid == request.auth.uid
+          || isSameClub(resource.data.club_id));
+      allow delete: if isAdmin()
+        || (isSignedIn() && resource.data.created_by_uid == request.auth.uid);
+    }
+
     /** Consignes tactiques partagées */
     match /tactical_shares/{id} {
       allow read: if isSignedIn()

@@ -54,6 +54,12 @@ Chaîne : Carte Joueur → Données sportives → Besoins → Matching → Propo
 
 Sur convocation (match, entraînement, foot / futsal) : **« Je vais être en retard »** en 1–2 clics (&lt; 10 min · ≥ 10 min · je ne sais pas). Notification immédiate au coach (et mention parent si applicable). Feuille de présence : présent · retard · absent · en attente. Arrivée pointée → passage automatique en présent.
 
+## Module : Caméras & Vidéo
+
+> Vous avez une caméra ? Connectez-la à ProDay.
+
+Multi-marques (Veo, XbotGo, Spiideo, Pixellot, Trace, smartphone, import). API quand disponible, sinon import fichier. Jamais d’obligation d’acheter une caméra spécifique. Vidéo reliée au match, à l’équipe et aux joueurs selon les données / autorisations.
+
 ## Tarification club
 
 Afficher **Sur devis** (selon adhérents / équipes / options). Bouton **Demander mon devis**. Pas de 39,99 €/mois fixe.

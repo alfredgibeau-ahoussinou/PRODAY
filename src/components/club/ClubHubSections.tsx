@@ -7,6 +7,7 @@ import { ClubEventOrganization } from './ClubEventOrganization';
 import { ClubTrialSheetsPanel } from './ClubTrialSheetsPanel';
 import { ClubEquipmentMarketPanel } from './ClubEquipmentMarketPanel';
 import { ClubRosterBoardPanel } from './ClubRosterBoardPanel';
+import { ClubCamerasPanel } from './ClubCamerasPanel';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { useTabNavigationActions } from '../../hooks/useTabNavigationActions';
 import { radius, spacing } from '../../theme/designTokens';
@@ -18,6 +19,7 @@ type HubSection =
   | 'events'
   | 'bourse'
   | 'mercato'
+  | 'cameras'
   | 'equipment'
   | 'sponsors';
 
@@ -43,6 +45,7 @@ export const ClubHubSections: React.FC<{
     { id: 'events', label: 'Organisation' },
     { id: 'bourse', label: 'Bourse' },
     { id: 'mercato', label: 'Mercato' },
+    { id: 'cameras', label: 'Caméras' },
     { id: 'equipment', label: 'Équipements' },
     { id: 'sponsors', label: 'Sponsors' },
   ];
@@ -93,6 +96,11 @@ export const ClubHubSections: React.FC<{
               Bourse de recrutement interne
             </ProDayText>
           </PressableSpring>
+          <PressableSpring onPress={() => setSection('cameras')} scaleTo={0.96} haptic>
+            <ProDayText variant="caption" accent style={styles.link}>
+              Caméras & Vidéo
+            </ProDayText>
+          </PressableSpring>
           <PressableSpring onPress={() => nav.openMatchs()} scaleTo={0.96} haptic>
             <ProDayText variant="caption" accent style={styles.link}>
               Match Center
@@ -138,6 +146,10 @@ export const ClubHubSections: React.FC<{
           </ProDaySurface>
           <ClubTrialSheetsPanel clubId={clubId} profile={profile} />
         </View>
+      ) : null}
+
+      {section === 'cameras' ? (
+        <ClubCamerasPanel clubId={clubId} profile={profile} />
       ) : null}
 
       {section === 'equipment' ? (

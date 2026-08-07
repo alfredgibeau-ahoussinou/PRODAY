@@ -114,37 +114,53 @@ const CLUB_ZONES: Zone[] = [
     id: "equipes",
     label: "01",
     title: "Équipes & licenciés",
-    body: "Catégories, coachs, dirigeants, bénévoles et parents — permissions par invitation.",
-    x: "18%",
-    y: "28%",
+    body: "Catégories, coachs, dirigeants, bénévoles et parents : permissions par invitation.",
+    x: "16%",
+    y: "26%",
   },
   {
     id: "sport",
     label: "02",
-    title: "Compétitions",
-    body: "Calendrier, résultats, classements automatiques, stats et joueur du match.",
+    title: "Matchs & compétitions",
+    body: "Invitations club ↔ club, amicaux, calendrier, résultats, classements et joueur du match.",
     x: "72%",
-    y: "24%",
+    y: "22%",
+  },
+  {
+    id: "bourse",
+    label: "03",
+    title: "Bourse de recrutement",
+    body: "Besoins d’équipe, matching sur le vivier interne, puis recherche entre clubs ProDay.",
+    x: "48%",
+    y: "42%",
   },
   {
     id: "covoit",
-    label: "03",
+    label: "04",
     title: "Covoiturage",
     body: "Matchs, entraînements, stages et détections. Suivi live pour les parents.",
-    x: "28%",
+    x: "22%",
     y: "68%",
   },
   {
+    id: "hub",
+    label: "05",
+    title: "Direction du club",
+    body: "Ce qui va bien, à surveiller, décisions : adhésions, sponsors, tournois.",
+    x: "58%",
+    y: "70%",
+  },
+  {
     id: "comms",
-    label: "04",
-    title: "Communication",
-    body: "Annonces, messagerie structure et pipeline recrutement — sans tableurs.",
-    x: "68%",
-    y: "72%",
+    label: "06",
+    title: "Présences & comms",
+    body: "Convocations, retards annoncés, annonces structure — sans tableurs ni WhatsApp.",
+    x: "82%",
+    y: "58%",
   },
 ];
 
-/** Interactive pitch zones — one job: explore club capabilities. */
+/** Interactive pitch zones : one job: explore club capabilities. */
 export function ClubPitchMap() {
   const [active, setActive] = useState(CLUB_ZONES[0]!.id);
   const current = CLUB_ZONES.find((z) => z.id === active) ?? CLUB_ZONES[0]!;
@@ -157,13 +173,13 @@ export function ClubPitchMap() {
           Cockpit club
         </p>
         <h2 className="mt-3 max-w-xl font-display text-[clamp(1.65rem,4vw,2.8rem)] font-medium tracking-[-0.03em] text-white">
-          Un terrain. Quatre commandes.
+          Un terrain. Six commandes.
         </h2>
         <p className="mt-3 max-w-md text-sm text-white/55">
-          Explorez les zones — chaque point ouvre une capacité du club.
+          Explorez les zones : chaque point ouvre une capacité du club.
         </p>
 
-        {/* Mobile zone chips — easier than tiny map hits */}
+        {/* Mobile zone chips : easier than tiny map hits */}
         <div className="mt-6 flex gap-2 overflow-x-auto pb-1 lg:hidden">
           {CLUB_ZONES.map((z) => {
             const on = z.id === active;
@@ -318,7 +334,7 @@ export function CoachTacticsBoard() {
           Composez. Touchez. Consignez.
         </h2>
         <p className="mt-3 max-w-md text-sm text-white/55">
-          Sélectionnez un poste — consignes individuelles et collectives dans le même board.
+          Sélectionnez un poste : consignes individuelles et collectives dans le même board.
         </p>
 
         <div className="mt-12 grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
