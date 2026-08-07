@@ -1,11 +1,15 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { BETA_PITCH } from "@/lib/content";
 import { IOS_BETA_LAUNCH_LABEL } from "@/lib/betaIosLaunch";
 import { BETA_ROLE_LABELS, type BetaRoleId } from "@/lib/betaWelcomeEmail";
-import { Reveal } from "./Reveal";
+import { POLE_BRAND_COLORS } from "@/lib/brandColors";
+import { ROUTES } from "@/lib/routes";
+import { saveWaitlistStatus } from "@/lib/waitlistStatusStorage";
 import { readStoredReferralCode } from "./ReferralCapture";
 
 type WaitlistFormProps = {
@@ -18,7 +22,62 @@ type WaitlistFormProps = {
 type SubmitState = "idle" | "loading" | "success" | "error";
 type WaitlistStatus = "pending" | "approved" | "rejected";
 
-export function WaitlistForm({ fullPage, compact, minimal, initialRole }: WaitlistFormProps) {
+const ROLES: { id: BetaRoleId; label: string }[] = [
+  { id: "player", label: "Joueur" },
+  { id: "supporter", label: "Supporter" },
+  { id: "coach", label: "Coach" },
+  { id: "club", label: "Club" },
+  { id: "recruiter", label: "Recruteur" },
+  { id: "agent", label: "Agent" },
+  { id: "organizer", label: "Organisateur" },
+  { id: "physio", label: "Santé" },
+  { id: "sponsor", label: "Sponsor" },
+];
+
+/** Couleur pôle officielle par rôle bêta. */
+const ROLE_POLE_COLOR: Record<BetaRoleId, string> = {
+  player: POLE_BRAND_COLORS.joueur.accent,
+  supporter: POLE_BRAND_COLORS.supporter.accent,
+  coach: POLE_BRAND_COLORS.pro_staff.accent,
+  club: POLE_BRAND_COLORS.pro_club.accent,
+  recruiter: POLE_BRAND_COLORS.joueur.accent,
+  agent: POLE_BRAND_COLORS.pro_staff.accent,
+  organizer: POLE_BRAND_COLORS.evenements.accent,
+  physio: POLE_BRAND_COLORS.sante.accent,
+  sponsor: POLE_BRAND_COLORS.sponsor.accent,
+};
+
+function roleTextOnAccent(role: BetaRoleId): string {
+  return role === "sponsor" ? "#0A0A0A" : "#FFFFFF";
+}
+
+const fieldClass =
+  "min-h-12 w-full rounded-full border border-white/15 bg-transparent px-5 py-3 text-sm text-white caret-[#4C8BFF] placeholder:text-white/35 outline-none transition focus:border-[#4C8BFF]/55 disabled:opacity-60";
+
+/** Champs densifiés pour la page inscription dédiée. */
+const fieldClassDense =
+  "min-h-11 w-full border border-white/15 bg-[#0c0c0e] px-3.5 py-2.5 text-base text-white caret-[var(--proday-accent)] placeholder:text-white/35 outline-none transition focus:border-[var(--proday-accent)]/55 disabled:opacity-60 sm:min-h-10 sm:text-sm";
+
+function primaryButtonStyle(role: BetaRoleId): React.CSSProperties {
+  return {
+    backgroundColor: ROLE_POLE_COLOR[role],
+    color: roleTextOnAccent(role),
+  };
+}
+
+const primaryBtnClass =
+  "inline-flex min-h-12 w-full items-center justify-center rounded-full px-8 py-3.5 font-mono text-[11px] font-semibold uppercase tracking-[0.18em] transition hover:brightness-110 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto sm:min-w-[11rem]";
+
+const primaryBtnClassDense =
+  "inline-flex min-h-11 w-full items-center justify-center px-6 py-3 font-mono text-[11px] font-semibold uppercase tracking-[0.14em] transition hover:brightness-110 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-10";
+
+export function WaitlistForm({
+  fullPage,
+  compact,
+  minimal,
+  initialRole,
+}: WaitlistFormProps) {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<BetaRoleId>(initialRole ?? "player");
   const [state, setState] = useState<SubmitState>("idle");
@@ -30,10 +89,9 @@ export function WaitlistForm({ fullPage, compact, minimal, initialRole }: Waitli
     const value = email.trim();
     if (!value) return;
 
-    // Basic email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(value)) {
-      setErrorMessage("Email invalide. Vérifiez le format.");
+      setErrorMessage("Email invalide. Vérifie le format.");
       setState("error");
       return;
     }
@@ -58,7 +116,7 @@ export function WaitlistForm({ fullPage, compact, minimal, initialRole }: Waitli
       };
 
       if (!res.ok) {
-        setErrorMessage(data.error ?? "Inscription impossible. Réessayez.");
+        setErrorMessage(data.error ?? "Inscription impossible. Réessaie.");
         setState("error");
         return;
       }
@@ -68,83 +126,60 @@ export function WaitlistForm({ fullPage, compact, minimal, initialRole }: Waitli
           ? data.status
           : "pending";
       setWaitlistStatus(status);
+      saveWaitlistStatus({ email: value, role, status });
+      if (fullPage) {
+        router.push(ROUTES.betaStatut);
+        return;
+      }
       setState("success");
     } catch {
-      setErrorMessage("Connexion impossible. Vérifiez votre réseau.");
+      setErrorMessage("Connexion impossible. Vérifie ton réseau.");
       setState("error");
     }
   }
 
-  const roles: { id: BetaRoleId; label: string }[] = [
-    { id: "player", label: "Joueur" },
-    { id: "recruiter", label: "Recruteur" },
-    { id: "coach", label: "Coach" },
-    { id: "club", label: "Club" },
-    { id: "agent", label: "Agent" },
-    { id: "organizer", label: "Organisateur" },
-    { id: "physio", label: "Pôle santé" },
-    { id: "sponsor", label: "Partenaire" },
-  ];
-
   if (minimal) {
     return (
       <section id="inscription" className="scroll-mt-28 py-16 sm:py-20">
-        <div className="mx-auto max-w-4xl px-4 sm:px-6">
+        <div className="mx-auto max-w-3xl px-4 sm:px-6">
           <div className="mb-8 text-center">
-            <p className="font-signature text-2xl italic text-[var(--proday-accent)]">
+            <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-[#4C8BFF]">
               Bêta
             </p>
-            <h2 className="font-display mt-2 text-3xl font-extrabold uppercase tracking-[-0.03em] text-white">
-              Liste d&apos;attente
+            <h2 className="font-display mt-3 text-3xl font-medium tracking-[-0.03em] text-white sm:text-4xl">
+              Rejoins ProDay
             </h2>
-            <p className="mx-auto mt-3 max-w-lg text-sm text-white/45">
+            <p className="mx-auto mt-3 max-w-lg text-sm text-white/55">
               {BETA_PITCH.summary}
             </p>
           </div>
           {state === "success" ? (
-            <div className="rounded-3xl border border-[var(--proday-accent)]/25 bg-[var(--proday-accent-muted)] p-6 text-white">
-              <p className="font-semibold">Merci. Inscription enregistrée.</p>
-              <p className="mt-1 text-sm text-white/75">
-                {email} · {BETA_ROLE_LABELS[role]}
-                {waitlistStatus === "approved"
-                  ? ". Consultez votre boîte mail pour l'accès bêta."
-                  : `. Bêta iOS le ${IOS_BETA_LAUNCH_LABEL} — email de confirmation envoyé.`}
-              </p>
-            </div>
+            <SuccessCard
+              email={email}
+              role={role}
+              waitlistStatus={waitlistStatus}
+            />
           ) : (
-            <form
-              onSubmit={handleSubmit}
-              className="mx-auto w-full max-w-2xl space-y-3 rounded-3xl border border-white/10 bg-white/[0.03] p-5 sm:p-6"
-            >
+            <form onSubmit={handleSubmit} className="mx-auto max-w-2xl space-y-4">
+              <RolePills role={role} onChange={setRole} disabled={state === "loading"} />
               <div className="flex flex-col gap-3 sm:flex-row">
-                <select
-                  value={role}
-                  onChange={(e) => setRole(e.target.value as BetaRoleId)}
-                  disabled={state === "loading"}
-                  className="min-h-11 rounded-full border-0 bg-white/10 px-4 py-3 text-sm text-white focus:outline focus:outline-2 focus:outline-[var(--proday-accent)]/50 disabled:opacity-60"
-                >
-                  {roles.map((r) => (
-                    <option key={r.id} value={r.id} className="bg-neutral-900">
-                      {r.label}
-                    </option>
-                  ))}
-                </select>
                 <input
                   type="email"
                   required
-                  placeholder="votre@email.fr"
+                  placeholder="ton@email.fr"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={state === "loading"}
                   aria-label="Adresse email"
-                  className="min-h-11 flex-1 rounded-full border-0 bg-white/10 px-5 py-3 text-white caret-white placeholder:text-white/50 focus:outline focus:outline-2 focus:outline-[var(--proday-accent)]/50 disabled:opacity-60"
+                  className={`${fieldClass} flex-1`}
                 />
                 <button
                   type="submit"
                   disabled={state === "loading"}
-                  className="min-h-11 shrink-0 rounded-full bg-[var(--proday-accent)] px-6 py-3 text-sm font-bold text-white transition hover:bg-[#2a6fff] disabled:opacity-60"
+                  className={primaryBtnClass}
+                  style={primaryButtonStyle(role)}
                 >
-                  {state === "loading" ? "Envoi…" : "S'inscrire"}
+                  {state === "loading" ? "Envoi…" : "Je m'inscris"}
                 </button>
               </div>
               {state === "error" && errorMessage ? (
@@ -157,126 +192,250 @@ export function WaitlistForm({ fullPage, compact, minimal, initialRole }: Waitli
     );
   }
 
+  const inputClass = fullPage ? fieldClassDense : fieldClass;
+  const submitClass = fullPage ? primaryBtnClassDense : primaryBtnClass;
+
   return (
     <section
       id={fullPage ? undefined : "inscription"}
-      className={fullPage ? "py-12" : compact ? "scroll-mt-24 py-14 md:py-16" : "scroll-mt-24 py-24"}
+      className={
+        fullPage
+          ? ""
+          : compact
+            ? "scroll-mt-24 border-b border-white/10 bg-black py-14 md:py-16"
+            : "scroll-mt-24 border-b border-white/10 bg-black py-20 sm:py-24"
+      }
     >
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className={`relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-[#0c0c12] via-[#0a0a0f] to-[#030303] text-white ${
-            compact ? "px-6 py-10 sm:px-10" : "px-8 py-16 sm:px-14"
-          }`}
-        >
-          <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-white/5 blur-2xl" />
-          <div className="absolute -bottom-16 -left-16 h-48 w-48 rounded-full bg-white/5 blur-2xl" />
+      <div className={fullPage ? "" : "mx-auto max-w-3xl px-4 sm:px-6"}>
+        {!fullPage ? (
+          <div className="mb-10">
+            <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[#4C8BFF]">
+              Bêta
+            </p>
+            <h2 className="mt-4 font-display text-[clamp(1.75rem,4vw,2.75rem)] font-medium tracking-[-0.035em] text-white">
+              Viens tester ProDay
+            </h2>
+            <p className="mt-4 max-w-lg text-sm leading-relaxed text-white/55">
+              {BETA_PITCH.summary}
+            </p>
+          </div>
+        ) : null}
 
-          <Reveal>
-            {!fullPage ? (
-              <>
-                <h2 className="font-display text-3xl font-bold sm:text-4xl">
-                  Liste d&apos;attente ProDay
-                </h2>
-                <p className="mt-4 max-w-lg text-white/75">{BETA_PITCH.summary}</p>
-                <p className="mt-3 max-w-lg text-sm text-white/50">
-                  {BETA_PITCH.dailyUpdates}
-                </p>
-              </>
-            ) : (
-              <ul className="max-w-lg space-y-2 text-sm text-white/80">
-                <li className="flex gap-2">
-                  <span className="text-white/40">·</span>
-                  {BETA_PITCH.dailyUpdates}
-                </li>
-                <li className="flex gap-2">
-                  <span className="text-white/40">·</span>
-                  {BETA_PITCH.launch}
-                </li>
-                <li className="flex gap-2">
-                  <span className="text-white/40">·</span>
-                  Validation par l&apos;équipe ProDay, puis email d&apos;accès à
-                  l&apos;espace bêta
-                </li>
-              </ul>
-            )}
-          </Reveal>
-
-          {state === "success" ? (
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              className="mt-10 rounded-2xl bg-white/10 p-6"
-            >
-              <p className="text-lg font-semibold">Merci !</p>
-              <p className="mt-2 text-white/80">
-                Inscription confirmée pour <strong>{email}</strong> (
-                {BETA_ROLE_LABELS[role]}).
-                {waitlistStatus === "approved" ? (
-                  <>
-                    {" "}
-                    Votre accès est déjà validé. Consultez votre boîte mail
-                    (et les spams) pour le lien vers l&apos;espace bêta.
-                  </>
-                ) : (
-                  <>
-                    {" "}
-                    Bêta iOS le {IOS_BETA_LAUNCH_LABEL}. Un email de confirmation vient de vous
-                    être envoyé.
-                  </>
-                )}
+        {state === "success" ? (
+          <SuccessCard
+            email={email}
+            role={role}
+            waitlistStatus={waitlistStatus}
+          />
+        ) : (
+          <motion.form
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            onSubmit={handleSubmit}
+            className={fullPage ? "space-y-5" : "space-y-7"}
+          >
+            <div>
+              <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-white/40 sm:text-[10px] sm:tracking-[0.2em]">
+                {fullPage ? "1 · Qui es-tu ?" : "Qui es-tu ?"}
               </p>
-            </motion.div>
-          ) : (
-            <form onSubmit={handleSubmit} className="mt-10 max-w-lg space-y-4">
-              <div className="flex flex-wrap gap-2">
-                {roles.map((r) => (
-                  <button
-                    key={r.id}
-                    type="button"
-                    onClick={() => setRole(r.id)}
-                    className={`min-h-11 rounded-full px-4 py-2 text-sm transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--proday-accent)]/50 ${
-                      role === r.id
-                        ? "bg-[var(--proday-accent)] font-semibold text-black"
-                        : "bg-white/10 text-white hover:bg-white/20 active:bg-white/25"
-                    }`}
-                  >
-                    {r.label}
-                  </button>
-                ))}
+              <div className={fullPage ? "mt-2.5" : "mt-4"}>
+                <RolePills
+                  role={role}
+                  onChange={setRole}
+                  disabled={state === "loading"}
+                  dense={fullPage}
+                />
               </div>
-              <div className="flex flex-col gap-3 sm:flex-row">
+            </div>
+
+            <div>
+              <label
+                htmlFor="beta-email"
+                className="font-mono text-[9px] uppercase tracking-[0.16em] text-white/40 sm:text-[10px] sm:tracking-[0.2em]"
+              >
+                {fullPage ? "2 · Email" : "Email"}
+              </label>
+              <div
+                className={`mt-2.5 flex flex-col gap-2.5 ${
+                  fullPage ? "" : "sm:mt-3 sm:flex-row sm:items-stretch sm:gap-3"
+                }`}
+              >
                 <input
+                  id="beta-email"
                   type="email"
                   required
-                  placeholder="votre@email.fr"
+                  autoComplete="email"
+                  enterKeyHint="go"
+                  placeholder="ton@email.fr"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={state === "loading"}
                   aria-label="Adresse email"
-                  className="flex-1 rounded-full border-0 bg-white/10 px-5 py-3.5 text-white caret-white placeholder:text-white/50 focus:outline focus:outline-2 focus:outline-[var(--proday-accent)]/50 disabled:opacity-60"
+                  className={`${inputClass} flex-1`}
                 />
+                {!fullPage ? (
+                  <button
+                    type="submit"
+                    disabled={state === "loading"}
+                    className={submitClass}
+                    style={primaryButtonStyle(role)}
+                  >
+                    {state === "loading" ? "Envoi…" : "Je m'inscris"}
+                  </button>
+                ) : null}
+              </div>
+            </div>
+
+            {state === "error" && errorMessage ? (
+              <p className="text-sm text-red-300">{errorMessage}</p>
+            ) : null}
+
+            {fullPage ? (
+              <div className="sticky bottom-0 z-10 -mx-4 border-t border-white/10 bg-[#111114]/95 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur-md sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:p-0 sm:backdrop-blur-none">
                 <button
                   type="submit"
                   disabled={state === "loading"}
-                  className="min-h-11 rounded-full bg-[var(--proday-accent)] px-8 py-3.5 font-bold text-white transition hover:bg-[#2a6fff] active:bg-[#0046cc] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--proday-accent)]/50 disabled:opacity-60"
+                  className={submitClass}
+                  style={primaryButtonStyle(role)}
                 >
-                  {state === "loading" ? "Envoi…" : "S'inscrire"}
+                  {state === "loading" ? "Envoi…" : "Je m'inscris"}
                 </button>
+                <p className="mt-2 text-[10px] leading-relaxed text-white/30 sm:mt-3 sm:text-[11px] sm:text-white/35">
+                  En t&apos;inscrivant, tu acceptes de recevoir des emails sur la
+                  liste d&apos;attente ProDay. Désinscription possible à tout moment.
+                </p>
               </div>
-              {state === "error" && errorMessage ? (
-                <p className="text-sm text-red-300">{errorMessage}</p>
-              ) : null}
-              <p className="text-xs text-white/50">
-                En vous inscrivant, vous acceptez de recevoir des emails sur la
+            ) : (
+              <p className="text-[11px] leading-relaxed text-white/35 sm:text-xs">
+                En t&apos;inscrivant, tu acceptes de recevoir des emails sur la
                 liste d&apos;attente ProDay. Désinscription possible à tout moment.
               </p>
-            </form>
-          )}
-        </motion.div>
+            )}
+          </motion.form>
+        )}
       </div>
     </section>
+  );
+}
+
+function RolePills({
+  role,
+  onChange,
+  disabled,
+  dense = false,
+}: {
+  role: BetaRoleId;
+  onChange: (id: BetaRoleId) => void;
+  disabled?: boolean;
+  dense?: boolean;
+}) {
+  return (
+    <div
+      className={
+        dense
+          ? "grid grid-cols-3 gap-1.5"
+          : "grid grid-cols-2 gap-2 sm:grid-cols-3"
+      }
+      role="group"
+      aria-label="Rôle"
+    >
+      {ROLES.map((r) => {
+        const active = role === r.id;
+        const accent = ROLE_POLE_COLOR[r.id];
+        return (
+          <button
+            key={r.id}
+            type="button"
+            disabled={disabled}
+            onClick={() => onChange(r.id)}
+            className={`min-h-10 px-2 font-mono text-[9px] uppercase tracking-[0.1em] transition disabled:opacity-60 sm:min-h-11 sm:px-3 sm:text-[10px] sm:tracking-[0.12em] ${
+              dense ? "rounded-none py-2" : "rounded-full py-2.5"
+            } ${
+              active
+                ? "font-semibold shadow-[0_0_0_1px_rgba(255,255,255,0.12)]"
+                : "border bg-transparent text-white/55 hover:text-white"
+            }`}
+            style={
+              active
+                ? {
+                    backgroundColor: accent,
+                    color: roleTextOnAccent(r.id),
+                    borderColor: accent,
+                  }
+                : {
+                    borderColor: `${accent}55`,
+                  }
+            }
+            onMouseEnter={(e) => {
+              if (active || disabled) return;
+              e.currentTarget.style.borderColor = accent;
+              e.currentTarget.style.color = accent;
+            }}
+            onMouseLeave={(e) => {
+              if (active || disabled) return;
+              e.currentTarget.style.borderColor = `${accent}55`;
+              e.currentTarget.style.color = "";
+            }}
+          >
+            {r.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function SuccessCard({
+  email,
+  role,
+  waitlistStatus,
+}: {
+  email: string;
+  role: BetaRoleId;
+  waitlistStatus: WaitlistStatus;
+}) {
+  const accent = ROLE_POLE_COLOR[role];
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="border p-6 sm:p-8"
+      style={{
+        borderColor: `${accent}55`,
+        backgroundColor: `${accent}14`,
+      }}
+    >
+      <p
+        className="font-mono text-[10px] uppercase tracking-[0.22em]"
+        style={{ color: accent }}
+      >
+        Confirmé
+      </p>
+      <p className="mt-3 font-display text-2xl font-medium tracking-[-0.02em] text-white">
+        C&apos;est noté.
+      </p>
+      <p className="mt-3 text-sm leading-relaxed text-white/60">
+        Inscription confirmée pour <span className="text-white">{email}</span> (
+        {BETA_ROLE_LABELS[role]}).
+        {waitlistStatus === "approved" ? (
+          <> Check ta boîte mail (et les spams) pour le lien d&apos;accès à l&apos;espace bêta.</>
+        ) : waitlistStatus === "rejected" ? (
+          <> Cette adresse n&apos;est plus sur la liste. Contacte proday.admin@gmail.com si besoin.</>
+        ) : (
+          <>
+            {" "}
+            Statut : <span className="text-white">en attente</span>. Tu recevras un email dès
+            validation, avec le lien programme / installer. Bêta iOS le{" "}
+            {IOS_BETA_LAUNCH_LABEL}.
+          </>
+        )}
+      </p>
+      <Link
+        href={ROUTES.betaStatut}
+        className="mt-5 inline-flex text-sm font-medium text-[#4C8BFF] underline-offset-4 hover:underline"
+      >
+        Voir mon statut
+      </Link>
+    </motion.div>
   );
 }
