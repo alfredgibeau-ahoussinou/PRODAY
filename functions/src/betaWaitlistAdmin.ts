@@ -1,7 +1,7 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
 import { generateBetaAccessToken } from './betaAccessToken';
-import { BETA_ROLE_LABELS, isBetaRoleId } from './betaWaitlistEmail';
+import { betaRoleLabel } from './betaWaitlistEmail';
 import {
   markRejectEmailSent,
   markWelcomeEmailSent,
@@ -42,7 +42,7 @@ function resolveRoleLabel(data: admin.firestore.DocumentData): string {
     return data.role_label.trim();
   }
   const role = String(data.role ?? 'player');
-  return isBetaRoleId(role) ? BETA_ROLE_LABELS[role] : role;
+  return betaRoleLabel(role);
 }
 
 /** Approuve une inscription bêta et envoie l'email de bienvenue. */

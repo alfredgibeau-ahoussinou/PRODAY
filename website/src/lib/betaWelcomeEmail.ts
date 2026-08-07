@@ -2,29 +2,38 @@
 
 export const BETA_MEMBER_ROLE = "Beta-testeur";
 
+/** Rôles waitlist = les 5 pôles vitrine (pas les rôles réseau intégrés). */
 export type BetaRoleId =
   | "player"
+  | "supporter"
   | "coach"
   | "club"
-  | "agent"
-  | "recruiter"
-  | "organizer"
-  | "physio"
   | "sponsor";
 
 export const BETA_ROLE_LABELS: Record<BetaRoleId, string> = {
   player: "Joueur",
+  supporter: "Supporter",
   coach: "Coach",
   club: "Club",
+  sponsor: "Sponsor",
+};
+
+/** Anciens rôles encore en base — affichage admin / statut uniquement. */
+const LEGACY_BETA_ROLE_LABELS: Record<string, string> = {
   agent: "Agent",
   recruiter: "Recruteur",
   organizer: "Organisateur",
-  physio: "Pôle santé",
-  sponsor: "Partenaire",
+  physio: "Santé",
+  partenaire: "Sponsor",
 };
 
 export function isBetaRoleId(value: string): value is BetaRoleId {
   return value in BETA_ROLE_LABELS;
+}
+
+export function betaRoleLabel(role: string): string {
+  if (isBetaRoleId(role)) return BETA_ROLE_LABELS[role];
+  return LEGACY_BETA_ROLE_LABELS[role] ?? role;
 }
 
 export type BetaWelcomeEmailParams = {

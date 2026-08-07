@@ -26,8 +26,8 @@ export function SanteTeleconsultSection() {
           <strong className="font-semibold text-white/85">praticien</strong> lie son agenda
           (Cal.com) à sa fiche ProDay. Les{" "}
           <strong className="font-semibold text-white/85">sportifs</strong> réservent depuis
-          l&apos;annuaire, puis rejoignent une salle Daily privée (lien unique + token) —
-          caméra, micro, partage d&apos;écran et chat pendant la consultation.
+          l&apos;annuaire, puis rejoignent une salle Daily privée (lien unique + token).
+          Caméra, micro, partage d&apos;écran et chat pendant la consultation.
         </p>
 
         <div className="mt-8 grid gap-4 sm:grid-cols-3">
@@ -76,14 +76,14 @@ export function SanteTeleconsultSection() {
             <li className="flex gap-3">
               <span className="font-bold text-teal-300">3.</span>
               Une fois le RDV confirmé, praticien et joueur appuient sur{" "}
-              <em className="not-italic text-white/85">Rejoindre la visio</em> — salle privée
+              <em className="not-italic text-white/85">Rejoindre la visio</em>. Salle privée
               Daily, contrôles caméra / micro / écran / chat, puis fin d&apos;appel.
             </li>
           </ol>
 
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             <Link
-              href={`${ROUTES.betaWaitlist}?role=physio`}
+              href={ROUTES.betaWaitlist}
               className="inline-flex min-h-11 items-center rounded-full bg-teal-600 px-6 py-2.5 text-sm font-bold text-white transition hover:bg-teal-500"
             >
               Je suis praticien · rejoindre la bêta

@@ -15,7 +15,7 @@ import { isBrevoConfigured, sendTransactionalEmail } from './emailTransport';
 import { configStr } from './runtimeConfig';
 import { resolveBetaWaitlistStatus } from './betaWaitlistStatus';
 import { generateBetaAccessToken } from './betaAccessToken';
-import { isBetaRoleId, BETA_ROLE_LABELS } from './betaWaitlistEmail';
+import { betaRoleLabel } from './betaWaitlistEmail';
 
 export type CampaignSendResult = {
   sent: number;
@@ -70,7 +70,7 @@ function resolveRoleLabel(data: admin.firestore.DocumentData): string {
     return data.role_label.trim();
   }
   const role = String(data.role ?? 'player');
-  return isBetaRoleId(role) ? BETA_ROLE_LABELS[role] : role;
+  return betaRoleLabel(role);
 }
 
 function resolveAccessToken(data: admin.firestore.DocumentData): string {

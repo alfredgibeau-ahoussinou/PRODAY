@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { BETA_PITCH } from "@/lib/content";
 import { IOS_BETA_LAUNCH_LABEL } from "@/lib/betaIosLaunch";
-import { BETA_ROLE_LABELS, type BetaRoleId } from "@/lib/betaWelcomeEmail";
+import { betaRoleLabel, type BetaRoleId } from "@/lib/betaWelcomeEmail";
 import { POLE_BRAND_COLORS } from "@/lib/brandColors";
 import { ROUTES } from "@/lib/routes";
 import { saveWaitlistStatus } from "@/lib/waitlistStatusStorage";
@@ -27,10 +27,6 @@ const ROLES: { id: BetaRoleId; label: string }[] = [
   { id: "supporter", label: "Supporter" },
   { id: "coach", label: "Coach" },
   { id: "club", label: "Club" },
-  { id: "recruiter", label: "Recruteur" },
-  { id: "agent", label: "Agent" },
-  { id: "organizer", label: "Organisateur" },
-  { id: "physio", label: "Santé" },
   { id: "sponsor", label: "Sponsor" },
 ];
 
@@ -40,10 +36,6 @@ const ROLE_POLE_COLOR: Record<BetaRoleId, string> = {
   supporter: POLE_BRAND_COLORS.supporter.accent,
   coach: POLE_BRAND_COLORS.pro_staff.accent,
   club: POLE_BRAND_COLORS.pro_club.accent,
-  recruiter: POLE_BRAND_COLORS.joueur.accent,
-  agent: POLE_BRAND_COLORS.pro_staff.accent,
-  organizer: POLE_BRAND_COLORS.evenements.accent,
-  physio: POLE_BRAND_COLORS.sante.accent,
   sponsor: POLE_BRAND_COLORS.sponsor.accent,
 };
 
@@ -339,7 +331,7 @@ function RolePills({
     <div
       className={
         dense
-          ? "grid grid-cols-3 gap-1.5"
+          ? "grid grid-cols-2 gap-1.5 sm:grid-cols-3"
           : "grid grid-cols-2 gap-2 sm:grid-cols-3"
       }
       role="group"
@@ -423,7 +415,7 @@ function SuccessCard({
       </p>
       <p className="mt-3 text-sm leading-relaxed text-white/60">
         Inscription confirmée pour <span className="text-white">{email}</span> (
-        {BETA_ROLE_LABELS[role]}).
+        {betaRoleLabel(role)}).
         {waitlistStatus === "approved" ? (
           <> Check ta boîte mail (et les spams) pour le lien d&apos;accès à l&apos;espace bêta.</>
         ) : waitlistStatus === "rejected" ? (

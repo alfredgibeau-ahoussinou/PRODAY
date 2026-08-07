@@ -1,7 +1,5 @@
 import {
-  BETA_ROLE_LABELS,
-  isBetaRoleId,
-  type BetaRoleId,
+  betaRoleLabel,
 } from "@/lib/betaWelcomeEmail";
 import {
   createSignedBetaAccessToken,
@@ -21,7 +19,7 @@ export type BetaAccessSession = {
 };
 
 function roleLabelFor(role: string): string {
-  return isBetaRoleId(role) ? BETA_ROLE_LABELS[role as BetaRoleId] : role;
+  return betaRoleLabel(role);
 }
 
 export function buildBetaAccessUrl(siteUrl: string, accessToken?: string): string {
