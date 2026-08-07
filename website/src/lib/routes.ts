@@ -28,7 +28,7 @@ export const ROUTES = {
   coach: "/coach",
   /** @deprecated Redirige vers /coach. */
   proStaff: "/pro-staff",
-  /** @deprecated Organisateur intégré au Club — redirige vers /pro-club. */
+  /** @deprecated Organisateur intégré au Club : redirige vers /pro-club. */
   evenements: "/evenements",
   /** @deprecated Hub legacy. voir joueur, pro-club, coach. */
   pro: "/pro",
@@ -88,6 +88,8 @@ export const ROUTES = {
   sponsorDevisProjet: "/sponsor/devis/projet",
   sponsorDevisRecap: "/sponsor/devis/recap",
   sponsorDevisConfirmation: "/sponsor/devis/confirmation",
+  /** Devis offre Club Tout inclus. */
+  clubDevis: "/pro-club/devis",
   partenaires: "/partenaires",
   partenairesConvention: "/partenaires/convention",
   faq: "/faq",
@@ -104,7 +106,7 @@ export const ROUTES = {
 
 export type RouteKey = keyof typeof ROUTES;
 
-/** Nav vitrine GTM — 5 pôles. Santé / Agent / Recruteur / Organisateur = rôles. */
+/** Nav vitrine GTM : 5 pôles. Santé / Agent / Recruteur / Organisateur = rôles. */
 export const POLE_NAV_ITEMS = [
   { href: ROUTES.joueur, label: "Joueur" },
   { href: ROUTES.proClub, label: "Club" },
@@ -127,12 +129,11 @@ export const NAV_ITEMS = [
 ] as const;
 
 export const POLE_FOOTER_LINKS = [
-  { href: ROUTES.joueur, label: "Pôle Joueur", subtitle: "Amateur → Centre → Pro · Pass Premium 3,99 €" },
-  { href: ROUTES.proClub, label: "Pôle Club", subtitle: "Cœur ProDay · Amateur / Essentiel / Premium" },
-  { href: ROUTES.coach, label: "Pôle Coach", subtitle: "Smart Tactics · IA · effectif" },
+  { href: ROUTES.joueur, label: "Espace Joueur", subtitle: "Carte, entraînement, Mercato · Pass optionnel 3,99 €" },
+  { href: ROUTES.proClub, label: "Espace Club", subtitle: "Cœur ProDay · Sur devis selon adhérents" },
+  { href: ROUTES.coach, label: "Espace Coach", subtitle: "Entraînements · Smart Tactics · invitations" },
   { href: ROUTES.supporter, label: "Pôle Supporter", subtitle: "Fans & communauté" },
-  { href: ROUTES.sponsor, label: "Pôle Sponsor", subtitle: "Marques & visibilité mesurée" },
-  { href: ROUTES.sante, label: "Rôle Santé", subtitle: "Intégré · hors vitrine pôles" },
+  { href: ROUTES.sponsor, label: "Pôle Sponsor", subtitle: "Marques & micro-sponsoring local" },
 ] as const;
 
 export const EXPLORE_CARDS = [
@@ -153,7 +154,7 @@ export const EXPLORE_CARDS = [
   {
     href: ROUTES.cards,
     title: "Cartes ProDay",
-    description: "Passeports numériques style Ultimate Team pour chaque profil.",
+    description: "Fiche sportive réelle du joueur : sans note artificielle ni badge de prestige.",
     image: "/images/football-pro-01.jpg",
     tag: "Cartes",
   },
@@ -174,7 +175,7 @@ export const EXPLORE_CARDS = [
   {
     href: routeWithHash(ROUTES.journeys, "parcours"),
     title: "Étapes par rôle",
-    description: "Joueur, recruteur, santé, organisateur ou parent. Étape par étape.",
+    description: "Joueur, recruteur, organisateur ou parent. Étape par étape.",
     image: "/images/football-team-01.jpg",
     tag: "Rôles",
   },
@@ -262,7 +263,7 @@ export const EXPLORE_CARDS = [
   {
     href: routeWithHash(ROUTES.proClub, "modules"),
     title: "Tournois & détections",
-    description: "Rôle organisateur intégré au Club — Arena, stages et inscriptions.",
+    description: "Rôle organisateur intégré au Club : Arena, stages et inscriptions.",
     image: "/showcase/classic-arena.jpg",
     tag: "Club",
     accent: true,
@@ -280,14 +281,6 @@ export const EXPLORE_CARDS = [
     description: "Foot féminin. Mercato F, tournois et profil joueuse.",
     image: "/showcase/woman/woman-discover-hero.jpg",
     tag: "Woman",
-    accent: true,
-  },
-  {
-    href: routeWithHash(ROUTES.sante, "modules"),
-    title: "Pro Day Santé",
-    description: "Kinés, coach mental et nutrition. Annuaire vérifié et RDV en ligne.",
-    image: "/images/football-health-01.jpg",
-    tag: "Santé",
     accent: true,
   },
   {

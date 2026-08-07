@@ -290,7 +290,6 @@ export const POLE_HUB_LABELS: Record<string, string> = {
   [ROUTES.joueur]: "Pôle Joueur",
   [ROUTES.amateur]: "Pôle Joueur",
   [ROUTES.supporter]: "Pôle Supporter",
-  [ROUTES.sante]: "Rôle Santé",
   [ROUTES.proJoueur]: "Pôle Joueur",
   [ROUTES.proClub]: "Pôle Club",
   [ROUTES.coach]: "Pôle Coach",

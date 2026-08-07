@@ -11,7 +11,6 @@ const NODES = [
   { id: "recruiter", label: "Recruteur", x: 72, y: 38 },
   { id: "club", label: "Club", x: 12, y: 68 },
   { id: "organizer", label: "Organisateur", x: 82, y: 78 },
-  { id: "health", label: "Pôle santé", x: 28, y: 18 },
   { id: "arena", label: "Arena", x: 72, y: 12 },
   { id: "pulse", label: "Visibilité", x: 50, y: 85 },
 ] as const;
@@ -27,8 +26,6 @@ const EDGES: [string, string][] = [
   ["player", "pulse"],
   ["coach", "club"],
   ["agent", "club"],
-  ["player", "health"],
-  ["coach", "health"],
 ];
 
 export function EcosystemMap() {

@@ -40,6 +40,9 @@ const nextConfig: NextConfig = {
       { source: "/woman", destination: "/joueur", permanent: true },
       { source: "/woman/:path*", destination: "/joueur", permanent: true },
       { source: "/partenaires", destination: "/sponsor", permanent: true },
+      // Rôle Santé retiré de la vitrine
+      { source: "/sante", destination: "/joueur", permanent: true },
+      { source: "/sante/:path*", destination: "/joueur", permanent: true },
     ];
   },
 };

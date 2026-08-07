@@ -9,7 +9,7 @@ import {
 import { ROUTES } from "./routes";
 
 /**
- * Pôles marketing site — architecture cible.
+ * Pôles marketing site : architecture cible.
  * Vitrine : Joueur · Club · Coach · Supporter · Sponsor.
  * Santé / Agent / Recruteur / Organisateur = rôles intégrés (pas des pôles).
  */
@@ -43,16 +43,16 @@ export type PoleDefinition = {
   planIds: WebSubscriptionPlanBase["id"][];
 };
 
-/** Vitrine GTM — 5 pôles principaux. */
+/** Vitrine GTM : 5 pôles principaux. */
 export const CAROUSEL_POLES: PoleDefinition[] = [
   {
     id: "joueur",
-    kicker: "PÔLE JOUEUR",
+    kicker: "ESPACE JOUEUR",
     navLabel: "Joueur",
-    title: "Amateur → Pro",
-    subtitle: "Profil · Stats · Covoiturage",
+    title: "Progresser chaque jour",
+    subtitle: "Carte · Stats · Entraînement",
     description:
-      "Profil, réseau, stats de base, convocations et covoiturage. Pass Premium 3,99 € : entraînements IA, heatmaps, analyse vidéo et passeport recruteur.",
+      "Carte joueur réelle, réseau, stats, convocations et covoiturage. Pass optionnel 3,99 € : programmes, vidéo et contenu avancé. Sans badge de prestige.",
     href: ROUTES.joueur,
     pricingHash: "joueur",
     logo: "/branding/logo-man-picto.png",
@@ -60,12 +60,12 @@ export const CAROUSEL_POLES: PoleDefinition[] = [
   },
   {
     id: "pro_club",
-    kicker: "PÔLE CLUB",
+    kicker: "ESPACE CLUB",
     navLabel: "Club",
     title: "Le cœur de ProDay",
-    subtitle: "Équipes · Compétitions · Permissions",
+    subtitle: "Équipes · Matchs · Président",
     description:
-      "Équipes, catégories, licenciés, coachs, dirigeants, bénévoles, parents, convocations, présences, calendriers, compétitions, covoiturage et communications. Offres Amateur, Essentiel, Premium + packs vidéo Essentiel / Pro+Veo.",
+      "Équipes, licenciés, coachs, dirigeants, invitations de match, événements, tournois, covoiturage et communications. Sur devis selon la taille du club. Caméra en option.",
     href: ROUTES.proClub,
     pricingHash: "pro_club",
     logo: "/branding/logo-pro-picto.png",
@@ -73,12 +73,12 @@ export const CAROUSEL_POLES: PoleDefinition[] = [
   },
   {
     id: "coach",
-    kicker: "PÔLE COACH",
+    kicker: "ESPACE COACH",
     navLabel: "Coach",
     title: "Banc de touche digital",
-    subtitle: "Smart Tactics · IA · Effectif",
+    subtitle: "Entraînements · Tactique · Invitations",
     description:
-      "Profil coach rattaché au club : parcours, diplômes, Smart Tactics, assistant IA, analyse vidéo, convocations et préparation match. Agent & recruteur restent des rôles réseau.",
+      "Profil coach rattaché au club : entraînements, Smart Tactics, IA, vidéo, convocations et propositions de match. Séances individuelles à l’heure.",
     href: ROUTES.coach,
     pricingHash: "coach",
     logo: "/branding/logo-pro-picto.png",
@@ -113,19 +113,19 @@ export const SPONSOR_POLE: PoleDefinition = {
   planIds: ["sponsor_pro"],
 };
 
-/** Hors carousel — rôle médical intégré, page sur invitation. */
+/** @deprecated Rôle Santé retiré de la vitrine — /sante redirige vers /joueur. */
 export const SANTE_POLE: PoleDefinition = {
   id: "sante",
-  kicker: "RÔLE SANTÉ · INTÉGRÉ",
+  kicker: "RÉSERVÉ",
   navLabel: "Santé",
   title: "Praticiens & staff médical",
-  subtitle: "Rôle intégré · hors vitrine pôles",
+  subtitle: "Retiré de la vitrine",
   description:
-    "Kiné, médecin et staff médical : annuaire, agenda et téléconsultation. Plus un pôle indépendant — un rôle dans l’écosystème Club / Joueur.",
-  href: ROUTES.sante,
-  pricingHash: "sante",
+    "Le rôle Santé n’est plus proposé comme espace public ProDay.",
+  href: ROUTES.joueur,
+  pricingHash: "joueur",
   logo: "/branding/logo-sante-picto.png",
-  planIds: ["physio_pro"],
+  planIds: [],
 };
 
 /** @deprecated Conservé pour redirections / liens legacy. */
@@ -160,10 +160,9 @@ export const LEGACY_EVENEMENTS_POLE: PoleDefinition = {
 /** Pôles vitrine (carousel + Sponsor). */
 export const SHOWCASE_POLES: PoleDefinition[] = [...CAROUSEL_POLES, SPONSOR_POLE];
 
-/** Tous les pôles produit (vitrine + Santé + legacy aliases). */
+/** Tous les pôles produit (vitrine + legacy aliases). Santé retiré de la vitrine. */
 export const POLES: PoleDefinition[] = [
   ...SHOWCASE_POLES,
-  SANTE_POLE,
   LEGACY_STAFF_POLE,
   LEGACY_EVENEMENTS_POLE,
 ];

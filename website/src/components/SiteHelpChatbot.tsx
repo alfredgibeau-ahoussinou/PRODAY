@@ -41,22 +41,6 @@ const COMMON_ENTRIES: HelpEntry[] = [
     hrefLabel: "Voir le Shop",
   },
   {
-    id: "sante-video",
-    question: "Y a-t-il des vidéos dans le pôle Santé ?",
-    answer:
-      "Oui. Onglet Vidéos pour du contenu éducatif. La téléconsultation : le praticien a son Cal.com à l’inscription ; le sportif réserve sans compte Cal.com.",
-    href: `${ROUTES.sante}#teleconsultation`,
-    hrefLabel: "Téléconsultation Santé",
-  },
-  {
-    id: "sante-hds",
-    question: "Qui reçoit les rendez-vous santé ?",
-    answer:
-      "Les professionnels du pôle Santé (chacun son Cal.com). Les joueurs / sportifs n’ont pas besoin de compte Cal.com. Ils réservent comme invités. Visio Daily sécurisée dans l’app (pas Zoom).",
-    href: `${ROUTES.sante}#teleconsultation`,
-    hrefLabel: "Voir la téléconsultation",
-  },
-  {
     id: "demo",
     question: "Comment tester l'app ?",
     answer:
@@ -68,7 +52,7 @@ const COMMON_ENTRIES: HelpEntry[] = [
     id: "cartes",
     question: "C’est quoi les cartes ProDay ?",
     answer:
-      "Des passeports numériques animés (style Ultimate Team) pour Joueur, Coach, Club, Supporter et Sponsor. Stats, badges et note évoluent après chaque match.",
+      "Des fiches sportives digitales pour Joueur et Coach : stats, postes, vidéos. Sans note artificielle ni badge Elite.",
     href: ROUTES.cards,
     hrefLabel: "Voir les cartes",
   },
@@ -94,7 +78,7 @@ function entriesForPath(pathname: string, pricingHref: string): HelpEntry[] {
       id: "pole-joueur",
       question: "Que regroupe le Pôle Joueur ?",
       answer:
-        "Un seul espace Amateur → Centre → Pro. Badges, Mercato, CV, confidentialité contacts et demandes de message agent.",
+      "Un seul espace Joueur : carte sportive, Mercato, CV, confidentialité contacts et demandes de message. Sans badge de prestige.",
       href: ROUTES.joueur,
       hrefLabel: "Pôle Joueur",
     });
@@ -109,19 +93,17 @@ function entriesForPath(pathname: string, pricingHref: string): HelpEntry[] {
       id: "pole-pro",
       question: "Club ou Coach ?",
       answer:
-        "Club : cœur ProDay (équipes, compétitions, permissions, covoiturage). Coach : Smart Tactics, IA, effectif. Agent / recruteur = rôles réseau.",
+        "Club : équipes, invitations de match entre clubs, compétitions, permissions, covoiturage. Coach : Smart Tactics, IA, effectif, et proposition de match pour son équipe.",
       href: ROUTES.coach,
       hrefLabel: "Pôle Coach",
     });
-  }
-  if (pathname.startsWith("/sante")) {
     poleHint.push({
-      id: "pole-sante",
-      question: "Le rôle Santé, c’est quoi ?",
+      id: "match-invite",
+      question: "Comment proposer un match à un autre club ?",
       answer:
-        "Rôle médical intégré (pas un pôle) : Accueil, Agenda, Demandes, Vidéos, Messages et Cabinet.",
-      href: ROUTES.sante,
-      hrefLabel: "Rôle Santé",
+        "Dans l’app : Matchs → + Proposer un match. Recherchez le club (ville, distance, catégorie), envoyez l’invitation. Le destinataire accepte, refuse ou propose une autre date. Confirmé = calendriers + convocations.",
+      href: ROUTES.proClub,
+      hrefLabel: "Pôle Club",
     });
   }
   if (pathname.startsWith("/supporter")) {

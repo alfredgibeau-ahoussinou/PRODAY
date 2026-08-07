@@ -35,11 +35,6 @@ const POLE_GROUPS: {
     journeyIds: ["coach", "recruiter", "agent"],
   },
   {
-    pole: "sante",
-    label: "Rôle Santé",
-    journeyIds: ["medical"],
-  },
-  {
     pole: "sponsor",
     label: "Pôle Partenaires",
     journeyIds: [],

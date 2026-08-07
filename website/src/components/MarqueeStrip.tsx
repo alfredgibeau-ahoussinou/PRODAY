@@ -10,7 +10,7 @@ const ITEMS = [
   "Arena",
   "Matchs",
   "Covoiturage",
-  "Pôle santé",
+  "Caméras & Vidéo",
   "Visibilité ProDay",
   "Live Stats",
   "Famille",

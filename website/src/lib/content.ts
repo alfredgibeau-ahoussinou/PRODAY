@@ -1925,7 +1925,7 @@ export const FAQ_ITEMS = [
   {
     category: "general",
     q: "Quels sont les cinq pôles ?",
-    a: "Joueur, Club, Coach, Supporter et Sponsor. Santé, agent, recruteur et organisateur sont des rôles intégrés : pas des pôles vitrine.",
+    a: "Joueur, Club, Coach, Supporter et Sponsor. Agent, recruteur et organisateur sont des rôles intégrés : pas des pôles vitrine.",
   },
   {
     category: "general",
@@ -2069,11 +2069,6 @@ export const FAQ_ITEMS = [
   },
   {
     category: "roles",
-    q: "Où est passé le pôle Santé ?",
-    a: "Santé est un rôle intégré : kinés, médecins du sport, coach mental, nutritionnistes. Diplômes validés avant messagerie complète. Agenda et RDV restent dans l'app.",
-  },
-  {
-    category: "roles",
     q: "Qui peut publier sur le Mercato ?",
     a: "Clubs, coachs, agents et recruteurs (rôles réseau). Les joueurs candidatent sans publier d'annonces.",
   },
@@ -2175,7 +2170,7 @@ export const COMPARISON_ROWS = [
   { feature: "Tournois Arena", proday: true, whatsapp: false, excel: "partial" as const },
   { feature: "Visibilité visibilité", proday: true, whatsapp: false, excel: false },
   { feature: "Covoiturage matchs", proday: true, whatsapp: "partial" as const, excel: false },
-  { feature: "Pôle santé & coach mental", proday: true, whatsapp: false, excel: false },
+  { feature: "Convocations & retards centralisés", proday: true, whatsapp: "partial" as const, excel: false },
   { feature: "ProDay Shop intégré", proday: true, whatsapp: false, excel: false },
   { feature: "Recruteurs Mercato (club/coach/agent)", proday: true, whatsapp: false, excel: "partial" as const },
   { feature: "Reels & Fil communauté", proday: true, whatsapp: false, excel: false },

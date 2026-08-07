@@ -6,7 +6,7 @@ import { ROUTES } from "@/lib/routes";
 export const metadata: Metadata = {
   title: "Étapes par rôle",
   description:
-    "Joueur, recruteur, santé, organisateur ou parent. Les premières actions dans ProDay, par pôle.",
+    "Joueur, recruteur, organisateur ou parent. Les premières actions dans ProDay, par pôle.",
 };
 
 export default function JourneysPage() {

@@ -38,7 +38,7 @@ export function SiteFooter() {
               Amateur &amp; semi-pro.
             </p>
             <p className="mt-5 max-w-md text-sm leading-relaxed text-white/45">
-              Un système pour connecter joueurs, clubs, staff, santé, événements et
+              Un système pour connecter joueurs, clubs, staff, événements et
               sponsors.
             </p>
           </div>

@@ -16,7 +16,6 @@ const searchItems = [
   { title: "Pôle Coach", href: ROUTES.coach, category: "Pôles" },
   { title: "Supporter", href: ROUTES.supporter, category: "Pôles" },
   { title: "Sponsor", href: ROUTES.sponsor, category: "Pôles" },
-  { title: "Rôle Santé", href: ROUTES.sante, category: "Rôles" },
   { title: "Espace Parent", href: ROUTES.parent, category: "Rôles" },
   { title: "Tarifs", href: ROUTES.pricing, category: "Information" },
   { title: "Fonctionnalités", href: ROUTES.features, category: "Information" },

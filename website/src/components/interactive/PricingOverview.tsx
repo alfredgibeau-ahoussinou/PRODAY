@@ -45,7 +45,9 @@ export function PricingOverview() {
             </tr>
           </thead>
           <tbody className="divide-y divide-white/8">
-            {appPlans.map((plan) => {
+            {appPlans
+              .filter((plan) => plan.id !== "physio_pro")
+              .map((plan) => {
               const yearly = yearlyPriceFromMonthly(plan.monthlyEur);
               const universes = plan.universes.map((u) => UNIVERSE_LABELS[u]).join(" · ");
               return (
