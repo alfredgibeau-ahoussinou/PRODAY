@@ -108,11 +108,11 @@ export function AppTabBar({
         key={tab}
         type="button"
         onClick={() => onTabPress(tab)}
-        className="relative flex min-h-[52px] min-w-[64px] flex-col items-center justify-center gap-1 px-1"
+        className="relative flex min-h-[50px] min-w-[58px] flex-col items-center justify-center gap-1 px-0.5 min-[390px]:min-w-[62px] min-[430px]:min-w-[64px] sm:min-h-[52px] sm:px-1"
         aria-label={label}
         aria-pressed={active}
       >
-        <span className="relative flex h-8 w-9 items-center justify-center">
+        <span className="relative flex h-7 w-8 items-center justify-center min-[430px]:h-8 min-[430px]:w-9">
           {active ? (
             <span
               className="absolute inset-0 rounded-2xl transition-colors"
@@ -123,7 +123,7 @@ export function AppTabBar({
             />
           ) : null}
           <Icon
-            size={26}
+            size={24}
             className={active ? tabActiveClass : tabInactiveClass}
             style={ink ? { color: ink } : undefined}
             strokeWidth={active ? 2.5 : 2}
@@ -142,7 +142,7 @@ export function AppTabBar({
           ) : null}
         </span>
         <span
-          className={`max-w-[72px] truncate text-center text-[11px] font-semibold ${
+          className={`max-w-[64px] truncate text-center text-[10px] font-semibold min-[390px]:max-w-[68px] min-[390px]:text-[10.5px] min-[430px]:max-w-[72px] min-[430px]:text-[11px] ${
             active ? "font-extrabold" : ""
           } ${active ? tabActiveClass : tabInactiveClass}`}
           style={ink ? { color: ink } : undefined}
@@ -159,11 +159,11 @@ export function AppTabBar({
   return (
     <>
       <div
-        className={`px-2 pt-1 ${immersive ? "bg-black" : ""}`}
+        className={`px-1.5 pt-1 min-[390px]:px-2 ${immersive ? "bg-black" : ""}`}
         style={{ paddingBottom: 6 }}
       >
         <div
-          className={`flex min-h-[62px] items-end border px-1 pb-1 ${
+          className={`flex min-h-[60px] items-end border px-0.5 pb-1 min-[390px]:min-h-[62px] min-[390px]:px-1 ${
             immersive
               ? "rounded-none border-white/10 bg-black/95"
               : `rounded-[18px] border-white/10 ${dockSurfaceClass}`
@@ -180,12 +180,12 @@ export function AppTabBar({
             <button
               type="button"
               onClick={() => onTabPress(centerTab)}
-              className="-mt-3.5 flex w-20 flex-col items-center gap-1"
+              className="-mt-3.5 flex w-[70px] flex-col items-center gap-1 min-[390px]:w-[76px] min-[430px]:w-20"
               aria-label={labelFor(centerTab)}
               aria-pressed={centerActive}
             >
               <span
-                className={`flex h-14 w-14 items-center justify-center rounded-full border-[3px] shadow-lg ${
+                className={`flex h-12 w-12 items-center justify-center rounded-full border-[3px] shadow-lg min-[390px]:h-[52px] min-[390px]:w-[52px] min-[430px]:h-14 min-[430px]:w-14 ${
                   centerActive || immersive ? "" : "border-[#111816] bg-neutral-900"
                 }`}
                 style={{
@@ -202,13 +202,13 @@ export function AppTabBar({
                 }}
               >
                 <Video
-                  size={30}
+                  size={26}
                   className={centerActive || immersive ? "text-white" : tabInactiveClass}
                   fill="currentColor"
                 />
               </span>
               <span
-                className={`text-[11px] font-bold ${centerActive ? "font-extrabold" : ""} ${
+                className={`text-[10px] font-bold min-[390px]:text-[10.5px] min-[430px]:text-[11px] ${centerActive ? "font-extrabold" : ""} ${
                   centerActive ? tabActiveClass : tabInactiveClass
                 }`}
                 style={
@@ -223,7 +223,7 @@ export function AppTabBar({
               </span>
             </button>
           ) : (
-            <div className="w-20" />
+            <div className="w-[70px] min-[390px]:w-[76px] min-[430px]:w-20" />
           )}
 
           <div className="flex flex-1 justify-evenly">
@@ -232,12 +232,12 @@ export function AppTabBar({
               <button
                 type="button"
                 onClick={() => setMenuOpen(true)}
-                className="flex min-h-[52px] min-w-[64px] flex-col items-center justify-center gap-1 px-1"
+                className="flex min-h-[50px] min-w-[58px] flex-col items-center justify-center gap-1 px-0.5 min-[390px]:min-w-[62px] min-[430px]:min-w-[64px] sm:min-h-[52px] sm:px-1"
                 aria-label="Menu navigation"
                 aria-pressed={menuActive}
               >
                 <Menu
-                  size={26}
+                  size={24}
                   className={menuActive ? tabActiveClass : tabInactiveClass}
                   style={{
                     color: menuActive
@@ -249,7 +249,7 @@ export function AppTabBar({
                   strokeWidth={menuActive ? 2.5 : 2}
                 />
                 <span
-                  className={`text-[11px] font-semibold ${
+                  className={`text-[10px] font-semibold min-[390px]:text-[10.5px] min-[430px]:text-[11px] ${
                     menuActive ? "font-extrabold" : ""
                   } ${menuActive ? tabActiveClass : tabInactiveClass}`}
                   style={{

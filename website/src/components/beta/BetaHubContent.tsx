@@ -19,7 +19,7 @@ const HUB_CARDS = [
     href: ROUTES.betaProgramme,
     icon: BookOpen,
     title: "Programme",
-    description: "Calendrier, sept pôles et modules à tester selon votre profil.",
+    description: "Calendrier, cinq pôles et modules à tester selon votre profil.",
   },
   {
     href: ROUTES.betaInstaller,
@@ -49,10 +49,10 @@ export function BetaHubContent({ session }: BetaHubContentProps) {
       title="Bienvenue dans la bêta ProDay"
       description={`Vous êtes inscrit en tant que ${session.roleLabel}. Ce hub regroupe tout ce dont vous avez besoin : programme, installation et support.`}
     >
-      <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-8">
+      <div className="border border-white/10 bg-transparent p-8">
         <SectionKicker>Votre espace beta-testeur</SectionKicker>
         <p className="mt-4 max-w-3xl text-sm leading-relaxed text-white/65">
-          Merci de faire partie des premiers à tester ProDay. Ouvrez les sept pôles, téléchargez
+          Merci de faire partie des premiers à tester ProDay. Explorez les cinq pôles, téléchargez
           l&apos;APK Android depuis l&apos;onglet Installer et envoyez vos retours. Chaque message
           est lu par l&apos;équipe produit avant le lancement public.
         </p>
@@ -64,7 +64,7 @@ export function BetaHubContent({ session }: BetaHubContentProps) {
           ].map(({ icon: Icon, label, detail }) => (
             <div
               key={label}
-              className="rounded-2xl border border-white/10 bg-black/40 px-4 py-4"
+              className="border border-white/10 bg-black/40 px-4 py-4"
             >
               <Icon className="text-[var(--proday-accent)]" size={20} />
               <p className="mt-2 text-sm font-semibold text-white">{label}</p>
@@ -79,12 +79,12 @@ export function BetaHubContent({ session }: BetaHubContentProps) {
           <Link
             key={href}
             href={href}
-            className="group flex flex-col rounded-3xl border border-white/10 bg-white/[0.03] p-6 transition hover:border-[var(--proday-accent)]/40 hover:bg-white/[0.05]"
+            className="group flex flex-col border border-white/10 bg-transparent p-6 transition hover:border-[var(--proday-accent)]/40 hover:bg-white/[0.05]"
           >
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-white/10 bg-white/5">
+            <div className="flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-black/40">
               <Icon className="text-[var(--proday-accent)]" size={22} />
             </div>
-            <h2 className="font-display mt-4 text-lg font-bold uppercase tracking-wide text-white group-hover:text-[#93c5fd]">
+            <h2 className="font-display mt-4 text-lg font-medium tracking-[-0.02em] text-white">
               {title}
             </h2>
             <p className="mt-2 flex-1 text-sm leading-relaxed text-white/55">{description}</p>
@@ -96,7 +96,7 @@ export function BetaHubContent({ session }: BetaHubContentProps) {
         ))}
       </div>
 
-      <div className="mt-8 rounded-3xl border border-white/10 bg-white/[0.03] p-8">
+      <div className="mt-8 border border-white/10 bg-transparent p-8">
         <SectionKicker>Où en est la bêta ?</SectionKicker>
         <ol className="mt-6 space-y-5">
           {timeline.map(({ step, title, description, done }) => (
@@ -104,7 +104,7 @@ export function BetaHubContent({ session }: BetaHubContentProps) {
               <div
                 className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold ${
                   done
-                    ? "bg-[var(--proday-accent)] text-black"
+                    ? "bg-accent-gradient text-white"
                     : "border border-white/15 bg-white/5 text-white/50"
                 }`}
               >
@@ -119,11 +119,11 @@ export function BetaHubContent({ session }: BetaHubContentProps) {
         </ol>
       </div>
 
-      <div className="mt-8 rounded-3xl border border-white/10 bg-white/[0.03] p-8 sm:flex sm:items-center sm:justify-between sm:gap-6">
+      <div className="mt-8 border border-white/10 bg-transparent p-8 sm:flex sm:items-center sm:justify-between sm:gap-6">
         <div>
           <SectionKicker>En attendant l&apos;app</SectionKicker>
           <p className="mt-2 max-w-xl text-sm text-white/65">
-            Démo interactive, Mercato, Visibilité, feuille de route et les sept pôles sur proday75.fr.
+            Démo interactive, Mercato, Visibilité, feuille de route et les cinq pôles sur proday75.fr.
           </p>
         </div>
         <div className="mt-6 flex flex-wrap gap-3 sm:mt-0">

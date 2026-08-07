@@ -2,19 +2,17 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BookOpen, Download, HelpCircle, Home } from "lucide-react";
+import { BookOpen, Download, HelpCircle } from "lucide-react";
 import { ROUTES } from "@/lib/routes";
 import { clsx } from "clsx";
 
 const NAV_ITEMS = [
-  { href: ROUTES.betaProgramme, label: "Accueil", icon: Home, exact: true },
-  { href: ROUTES.betaProgramme, label: "Programme", icon: BookOpen, exact: false },
-  { href: ROUTES.betaInstaller, label: "Installer", icon: Download, exact: false },
-  { href: ROUTES.betaAide, label: "Aide", icon: HelpCircle, exact: false },
+  { href: ROUTES.betaProgramme, label: "Programme", icon: BookOpen },
+  { href: ROUTES.betaInstaller, label: "Installer", icon: Download },
+  { href: ROUTES.betaAide, label: "Aide", icon: HelpCircle },
 ] as const;
 
-function isActive(pathname: string, href: string, exact: boolean): boolean {
-  if (exact) return pathname === href;
+function isActive(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
@@ -23,50 +21,26 @@ export function BetaMiniSiteNav() {
 
   return (
     <nav aria-label="Navigation bêta" className="w-full">
-      {/* Tabs mobile / tablette */}
-      <div className="scroll-snap-x -mx-4 flex gap-1 overflow-x-auto border-b border-white/10 px-4 pb-px sm:-mx-6 sm:px-6 lg:hidden">
-        {NAV_ITEMS.map(({ href, label, icon: Icon, exact }) => {
-          const active = isActive(pathname, href, exact);
+      <div className="flex flex-wrap gap-2 lg:flex-col lg:gap-1.5">
+        {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
+          const active = isActive(pathname, href);
           return (
             <Link
-              key={label}
+              key={href}
               href={href}
               className={clsx(
-                "flex shrink-0 snap-start items-center gap-2 border-b-2 px-3 py-3 text-sm font-semibold transition sm:px-4",
+                "inline-flex min-h-10 items-center gap-2 rounded-full px-4 py-2.5 font-mono text-[10px] uppercase tracking-[0.14em] transition",
                 active
-                  ? "border-[var(--proday-accent)] text-[var(--proday-accent)]"
-                  : "border-transparent text-white/50 hover:text-white/80",
+                  ? "bg-accent-gradient text-white"
+                  : "border border-white/15 text-white/55 hover:border-white/30 hover:text-white",
               )}
             >
-              <Icon size={16} />
+              <Icon size={14} />
               {label}
             </Link>
           );
         })}
       </div>
-
-      {/* Nav latérale desktop */}
-      <ul className="hidden space-y-1 lg:block">
-        {NAV_ITEMS.map(({ href, label, icon: Icon, exact }) => {
-          const active = isActive(pathname, href, exact);
-          return (
-            <li key={href}>
-              <Link
-                href={href}
-                className={clsx(
-                  "flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition",
-                  active
-                    ? "bg-[var(--proday-accent)]/10 text-[var(--proday-accent)]"
-                    : "text-white/55 hover:bg-white/[0.04] hover:text-white",
-                )}
-              >
-                <Icon size={18} className={active ? "text-[var(--proday-accent)]" : "text-white/40"} />
-                {label}
-              </Link>
-            </li>
-          );
-        })}
-      </ul>
     </nav>
   );
 }

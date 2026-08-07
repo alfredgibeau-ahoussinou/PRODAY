@@ -4,7 +4,7 @@ import { getBetaSession } from "@/lib/getBetaSession";
 
 export const metadata: Metadata = {
   title: "Programme bêta",
-  description: "Calendrier, sept pôles et modules à tester pendant la bêta ProDay.",
+  description: "Calendrier, cinq pôles et modules à tester pendant la bêta ProDay.",
   robots: { index: false, follow: false },
 };
 

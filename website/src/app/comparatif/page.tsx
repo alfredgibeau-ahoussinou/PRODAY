@@ -6,7 +6,8 @@ import { ROUTES } from "@/lib/routes";
 
 export const metadata: Metadata = {
   title: "Comparatif des pôles",
-  description: "Comparez les fonctionnalités de chaque pôle ProDay : Joueur, Pro, Santé, Partenaires et Supporter.",
+  description:
+    "Comparez les fonctionnalités de chaque pôle ProDay : Joueur, Pro, Santé, Partenaires et Supporter.",
 };
 
 export default function ComparePage() {

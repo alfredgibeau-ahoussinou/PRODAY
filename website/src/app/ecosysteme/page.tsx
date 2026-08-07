@@ -17,7 +17,7 @@ export default function EcosystemPage() {
         pathname={ROUTES.ecosystem}
         kicker="ACTEURS"
         title="Tous les acteurs, un même réseau"
-        description="Cliquez sur les nœuds. Comment ProDay relie votre saison à travers les 7 pôles."
+        description="Cliquez sur les nœuds. Comment ProDay relie votre saison à travers les cinq pôles et les rôles intégrés."
         image="/images/football-club-01.jpg"
         dark
       />

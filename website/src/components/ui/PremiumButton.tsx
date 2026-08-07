@@ -23,24 +23,23 @@ export function PremiumButton({
     <Link
       href={href}
       className={clsx(
-        "inline-flex items-center justify-center gap-2 rounded-full px-7 py-3.5 text-sm font-bold uppercase tracking-wide transition-all duration-300",
-        "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2",
-        "hover:scale-105 active:scale-95",
+        "cta-lift inline-flex items-center justify-center gap-2 rounded-md px-6 py-3 text-[13px] font-semibold uppercase tracking-[0.08em] transition-all",
+        "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0054F0]",
         variant === "primary" &&
-          "cta-lift bg-[var(--proday-accent)] text-white shadow-[0_0_0_1px_rgba(0,84,240,0.45),0_12px_40px_-12px_rgba(0,84,240,0.55)] hover:bg-[#2a6fff] hover:shadow-[0_0_0_1px_rgba(76,139,255,0.5),0_16px_48px_-12px_rgba(0,84,240,0.55)] active:translate-y-0 active:bg-[#0046cc] focus-visible:outline-[var(--proday-accent)]/60",
+          "bg-accent-gradient text-white hover:brightness-110",
         variant === "ghost" &&
-          "bg-white/[0.04] text-white backdrop-blur-sm hover:bg-[var(--proday-accent-muted)] hover:text-[var(--proday-accent)] active:bg-white/10 focus-visible:outline-[var(--proday-accent)]/40",
+          "bg-white text-black hover:bg-[#f0f0ea]",
         variant === "outline" &&
-          "border border-white/18 text-white hover:border-[var(--proday-accent)]/70 hover:text-[var(--proday-accent)] hover:shadow-[0_0_28px_rgba(0,84,240,0.18)] active:bg-white/[0.04] focus-visible:outline-[var(--proday-accent)]/40",
+          "border border-white/30 text-white hover:border-[#0054F0] hover:text-[#4C8BFF]",
         variant === "sponsor" &&
-          "bg-[#D4AF37] text-[#0a0a0a] shadow-[0_12px_40px_-12px_rgba(212,175,55,0.45)] hover:bg-[#E0C04A] active:bg-[#C4A030] focus-visible:outline-[#D4AF37]/60",
+          "bg-[#D4AF37] text-[#0a0a0a] hover:bg-[#E0C04A]",
         className,
       )}
       onMouseDown={() => setIsPressed(true)}
       onMouseUp={() => setIsPressed(false)}
       onMouseLeave={() => setIsPressed(false)}
       style={{
-        transform: isPressed ? "scale(0.95)" : undefined,
+        transform: isPressed ? "scale(0.97)" : undefined,
       }}
     >
       {children}

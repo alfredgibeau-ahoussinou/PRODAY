@@ -1,0 +1,128 @@
+/**
+ * Miroir site — module vidéo (BYO dans Premium) + Pro + Veo optionnel.
+ */
+
+export type VideoOfferId = "proday_pro_camera";
+
+export type VideoCameraVendor =
+  | "smartphone"
+  | "tablet"
+  | "veo"
+  | "trace"
+  | "pixellot"
+  | "spiideo"
+  | "generic";
+
+export type VideoHardwareAcquisition = "own_camera" | "lease" | "purchase";
+
+export type VideoAnalysisCapability =
+  | "auto_clip"
+  | "highlights"
+  | "goals"
+  | "saves"
+  | "cards"
+  | "substitutions"
+  | "heatmaps"
+  | "stats"
+  | "ai_reports";
+
+export type VideoOfferDefinition = {
+  id: VideoOfferId;
+  label: string;
+  tagline: string;
+  audience: string;
+  cameraRequired: false;
+  hardwareIncluded: boolean;
+  annualEur: number | null;
+  priceLabel: string;
+  priceNote: string;
+  includes: string[];
+  hardwareExtras?: string[];
+  supportedInputs: VideoCameraVendor[];
+  hardwareAcquisition?: VideoHardwareAcquisition[];
+};
+
+export const VIDEO_VENDORS: { id: VideoCameraVendor; label: string }[] = [
+  { id: "smartphone", label: "Smartphone" },
+  { id: "tablet", label: "Tablette" },
+  { id: "veo", label: "Caméra Veo" },
+  { id: "trace", label: "Trace" },
+  { id: "pixellot", label: "Pixellot" },
+  { id: "spiideo", label: "Spiideo" },
+  { id: "generic", label: "Futures caméras" },
+];
+
+export const VIDEO_ANALYSIS_LABELS: { id: VideoAnalysisCapability; label: string }[] = [
+  { id: "auto_clip", label: "Découpage automatique" },
+  { id: "highlights", label: "Temps forts" },
+  { id: "goals", label: "Buts" },
+  { id: "saves", label: "Arrêts" },
+  { id: "cards", label: "Cartons" },
+  { id: "substitutions", label: "Remplacements" },
+  { id: "heatmaps", label: "Heatmaps" },
+  { id: "stats", label: "Statistiques" },
+  { id: "ai_reports", label: "Rapports IA" },
+];
+
+export const VIDEO_HARDWARE_OPTIONS: Record<
+  VideoHardwareAcquisition,
+  { title: string; body: string }
+> = {
+  own_camera: {
+    title: "Caméra déjà possédée",
+    body: "ProDay se connecte à votre Veo (ou compatible). Aucun achat forcé.",
+  },
+  lease: {
+    title: "Location via ProDay",
+    body: "Clé en main : caméra, trépied, installation, formation, cloud. Loyer configurable en admin.",
+  },
+  purchase: {
+    title: "Achat via ProDay",
+    body: "Achat caméra + pack installation. Prix catalogue modifiable depuis l’administration.",
+  },
+};
+
+export const VIDEO_OFFERS: Record<VideoOfferId, VideoOfferDefinition> = {
+  proday_pro_camera: {
+    id: "proday_pro_camera",
+    label: "ProDay Pro + Veo",
+    tagline: "Formule Premium clé en main",
+    audience:
+      "Club Premium + pack caméra, cloud et analyse IA — ou connexion de votre Veo déjà en place.",
+    cameraRequired: false,
+    hardwareIncluded: true,
+    annualEur: null,
+    priceLabel: "Sur devis",
+    priceNote: "Achat ou location · prix admin",
+    includes: [
+      "Toutes les fonctions Club Premium",
+      "Analyse vidéo smartphone / tablette / caméra existante",
+      "Tableau tactique, IA, entraînements, admin",
+    ],
+    hardwareExtras: [
+      "Caméra Veo (achat ou location)",
+      "Trépied professionnel",
+      "Installation & configuration",
+      "Formation des éducateurs",
+      "Synchronisation automatique ProDay",
+      "Stockage cloud & traitement vidéo",
+      "Analyse IA & découpage automatique",
+      "Bibliothèque vidéo & export des séquences",
+    ],
+    supportedInputs: [
+      "smartphone",
+      "tablet",
+      "veo",
+      "trace",
+      "pixellot",
+      "spiideo",
+      "generic",
+    ],
+    hardwareAcquisition: ["own_camera", "lease", "purchase"],
+  },
+};
+
+export const VIDEO_OFFER_ORDER: VideoOfferId[] = ["proday_pro_camera"];
+
+export const VIDEO_MODULE_PRINCIPLE =
+  "Le matériel n’est jamais obligatoire. Club Premium filme au smartphone ; Pro + Veo ajoute le pack caméra clé en main.";

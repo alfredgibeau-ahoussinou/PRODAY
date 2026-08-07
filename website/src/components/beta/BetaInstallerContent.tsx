@@ -41,7 +41,7 @@ function DownloadButton({ href, label }: { href: string; label: string }) {
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="mt-6 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-[var(--proday-accent)] px-6 py-3 text-sm font-bold text-white transition hover:bg-[#2a6fff] sm:w-auto"
+      className="mt-6 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-accent-gradient px-6 py-3 font-mono text-[11px] font-semibold uppercase tracking-[0.16em] text-white transition hover:brightness-110 sm:w-auto"
     >
       {label}
       <ExternalLink size={14} />
@@ -51,7 +51,7 @@ function DownloadButton({ href, label }: { href: string; label: string }) {
 
 function TestFlightPendingNotice() {
   return (
-    <p className="mt-6 rounded-2xl border border-dashed border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-white/45">
+    <p className="mt-6 border border-dashed border-white/15 bg-transparent px-4 py-3 text-sm text-white/45">
       La bêta iOS via TestFlight sera disponible à partir du{" "}
       <strong className="text-white/70">{IOS_BETA_LAUNCH_LABEL}</strong>. Vous recevrez le lien
       TestFlight par email dès l&apos;ouverture.
@@ -61,7 +61,7 @@ function TestFlightPendingNotice() {
 
 function TroubleshootBlock({ title, items }: { title: string; items: string[] }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-black/40 p-5">
+    <div className="border border-white/10 bg-black/40 p-5">
       <p className="text-sm font-semibold text-white">{title}</p>
       <ul className="mt-3 space-y-2">
         {items.map((item) => (
@@ -92,27 +92,27 @@ function PlatformSection({
 }) {
   return (
     <section
-      className={`rounded-3xl border p-8 ${
+      className={`border p-8 ${
         platform === "ios"
-          ? "border-white/10 bg-gradient-to-br from-[#0c0c12] via-[#0a0a0f] to-[#030303]"
-          : "border-[var(--proday-accent)]/20 bg-[#001854]/35"
+          ? "border-white/10 bg-transparent"
+          : "border-[var(--proday-accent)]/25 bg-[var(--proday-accent-muted)]"
       }`}
     >
       <div className="flex items-start gap-4">
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/5">
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-white/10 bg-black/40">
           {icon}
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h2 className="font-display text-xl font-bold uppercase tracking-wide text-white">
+            <h2 className="font-display text-xl font-medium tracking-[-0.02em] text-white">
               {title}
             </h2>
             {available ? (
-              <span className="rounded-full bg-emerald-500/15 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-400">
+              <span className="rounded-full bg-emerald-500/15 px-2.5 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-emerald-400">
                 Disponible
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1 rounded-full bg-white/5 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white/45">
+              <span className="inline-flex items-center gap-1 rounded-full border border-white/10 px-2.5 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-white/45">
                 <Clock size={10} />
                 {platform === "android" ? "Bientôt ici" : "Invitation email"}
               </span>
@@ -142,11 +142,11 @@ export function BetaInstallerContent() {
       <p className="mb-8 max-w-3xl text-sm leading-relaxed text-white/65">
         Les builds mobiles sont distribués en dehors des stores publics pendant la bêta. Sur Android,
         téléchargez l&apos;APK directement depuis cette page. Sur iOS, la bêta TestFlight ouvre le{" "}
-        {IOS_BETA_LAUNCH_LABEL} — lien envoyé par email à tous les inscrits.
+        {IOS_BETA_LAUNCH_LABEL}. Lien envoyé par email à tous les inscrits.
       </p>
 
       {apkUrl ? (
-        <div className="mb-8 rounded-3xl border border-[var(--proday-accent)]/30 bg-[#001854]/40 p-6">
+        <div className="mb-8 border border-[var(--proday-accent)]/30 bg-[var(--proday-accent-muted)] p-6">
           <p className="text-sm font-semibold text-white">APK Android prêt à télécharger</p>
           <p className="mt-1 text-sm text-white/55">
             Téléchargez directement depuis cette page. Aucun email requis.
@@ -172,7 +172,7 @@ export function BetaInstallerContent() {
             ]}
           />
 
-          <p className="mt-4 text-xs font-medium uppercase tracking-wider text-[#4C8BFF]/80">
+          <p className="mt-4 font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--proday-accent-bright)]">
             Build bêta · v{BETA_APP_VERSION}
           </p>
           <DownloadButton href={apkUrl} label="Télécharger l'APK Android" />
@@ -281,7 +281,7 @@ export function BetaInstallerContent() {
         </PlatformSection>
       </div>
 
-      <div className="mt-8 rounded-3xl border border-[var(--proday-accent)]/20 bg-[#001854]/35 p-6">
+      <div className="mt-8 border border-[var(--proday-accent)]/30 bg-[var(--proday-accent-muted)] p-6">
         <div className="flex items-start gap-3">
           <Shield size={22} className="shrink-0 text-[var(--proday-accent)]" />
           <div>

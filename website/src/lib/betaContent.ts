@@ -46,7 +46,7 @@ const BETA_TIMELINE_BASE = [
     step: 2,
     title: "Installation de l'app",
     description:
-      "Android : APK sur l'onglet Installer. iOS : bêta TestFlight disponible à partir du 11 août 2026 à 18 h — lien envoyé par email à l'ouverture.",
+      "Android : APK sur l'onglet Installer. iOS : bêta TestFlight disponible à partir du 11 août 2026 à 18 h. Lien envoyé par email à l'ouverture.",
     done: false,
   },
   {

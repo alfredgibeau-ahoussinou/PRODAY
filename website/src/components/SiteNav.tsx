@@ -13,13 +13,11 @@ import {
   type CSSProperties,
 } from "react";
 import { createPortal } from "react-dom";
-import { ArrowUpRight, ChevronDown, Menu, X, Search } from "lucide-react";
-import { navBrandForPath } from "@/components/universe/universeTheme";
-import { PRODAY_LOGO_OFFICIAL, PRODAY_OFFICIAL_LOGO_ASPECT } from "@/lib/brandingAssets";
-import { isNavActive, poleForPath } from "@/lib/siteArchitecture";
-import { POLE_BRAND_HEX, POLES, pricingHrefForPath, type PoleId } from "@/lib/poles";
+import { ChevronDown, Menu, X } from "lucide-react";
+import { PRODAY_LOGO_OFFICIAL } from "@/lib/brandingAssets";
+import { isNavActive } from "@/lib/siteArchitecture";
+import { POLE_BRAND_HEX, SHOWCASE_POLES, pricingHrefForPath } from "@/lib/poles";
 import { POLE_NAV_ITEMS, ROUTES, UTILITY_NAV_ITEMS } from "@/lib/routes";
-import { SearchModal } from "@/components/SearchModal";
 
 const easeOut = [0.22, 1, 0.36, 1] as const;
 
@@ -39,17 +37,11 @@ function NavLink({
       href={href}
       onClick={onClick}
       aria-current={active ? "page" : undefined}
-      className={`group relative px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] transition-colors duration-200 xl:px-3.5 ${
-        active ? "text-white" : "text-white/45 hover:text-white"
+      className={`rounded-full px-3.5 py-2 text-[13px] font-medium tracking-[-0.01em] transition-colors ${
+        active ? "text-white" : "text-white/55 hover:text-white"
       }`}
     >
       {label}
-      <span
-        className={`absolute inset-x-3 -bottom-0.5 h-[2px] origin-left rounded-full bg-[var(--proday-accent)] transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
-          active ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
-        }`}
-        aria-hidden
-      />
     </Link>
   );
 }
@@ -57,24 +49,22 @@ function NavLink({
 function PolesMegaMenu({ pathname }: { pathname: string }) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
-  const panelRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const menuId = useId();
-  const polesActive = POLE_NAV_ITEMS.some((item) => isNavActive(item.href, pathname));
+  const polesActive = POLE_NAV_ITEMS.some((item) =>
+    isNavActive(item.href, pathname),
+  );
   const [panelStyle, setPanelStyle] = useState<CSSProperties>({});
   const [mounted, setMounted] = useState(false);
-
   const close = useCallback(() => setOpen(false), []);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  useEffect(() => setMounted(true), []);
 
   const placePanel = useCallback(() => {
     const btn = triggerRef.current;
     if (!btn) return;
     const rect = btn.getBoundingClientRect();
-    const width = Math.min(560, window.innerWidth - 24);
+    const width = Math.min(480, window.innerWidth - 24);
     let left = rect.left + rect.width / 2 - width / 2;
     left = Math.max(12, Math.min(left, window.innerWidth - width - 12));
     setPanelStyle({
@@ -89,134 +79,92 @@ function PolesMegaMenu({ pathname }: { pathname: string }) {
   useEffect(() => {
     if (!open) return;
     placePanel();
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") close();
+    };
+    const onClick = (e: MouseEvent) => {
+      if (
+        rootRef.current &&
+        !rootRef.current.contains(e.target as Node) &&
+        !(e.target as HTMLElement).closest?.("[data-poles-panel]")
+      ) {
         close();
-        triggerRef.current?.focus();
       }
     };
-    const onPointerDown = (event: MouseEvent | TouchEvent) => {
-      const target = event.target as Node;
-      if (rootRef.current?.contains(target)) return;
-      if (panelRef.current?.contains(target)) return;
-      close();
-    };
-    const onScroll = () => placePanel();
-    window.addEventListener("keydown", onKeyDown);
-    window.addEventListener("mousedown", onPointerDown);
-    window.addEventListener("touchstart", onPointerDown);
+    window.addEventListener("keydown", onKey);
+    window.addEventListener("mousedown", onClick);
     window.addEventListener("resize", placePanel);
-    window.addEventListener("scroll", onScroll, true);
     return () => {
-      window.removeEventListener("keydown", onKeyDown);
-      window.removeEventListener("mousedown", onPointerDown);
-      window.removeEventListener("touchstart", onPointerDown);
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("mousedown", onClick);
       window.removeEventListener("resize", placePanel);
-      window.removeEventListener("scroll", onScroll, true);
     };
-  }, [close, open, placePanel]);
+  }, [open, close, placePanel]);
 
-  const panel = mounted
-    ? createPortal(
-        <AnimatePresence>
-          {open ? (
+  const panel =
+    mounted && open
+      ? createPortal(
+          <AnimatePresence>
             <motion.div
-              key="univers-menu"
-              ref={panelRef}
-              id={`${menuId}-menu`}
-              role="menu"
-              aria-labelledby={`${menuId}-trigger`}
-              initial={{ opacity: 0, y: 8, scale: 0.98 }}
+              data-poles-panel
+              initial={{ opacity: 0, y: 6, scale: 0.98 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 6, scale: 0.98 }}
-              transition={{ duration: 0.2, ease: easeOut }}
+              exit={{ opacity: 0, y: 4, scale: 0.98 }}
+              transition={{ duration: 0.18, ease: easeOut }}
               style={panelStyle}
-              className="rounded-2xl border border-white/15 bg-[#0a0a0c]/98 p-3 shadow-[0_32px_80px_-20px_rgba(0,0,0,0.9)] backdrop-blur-xl"
+              className="overflow-hidden rounded-2xl border border-white/12 bg-[#0a0a0a]/92 p-2 shadow-[0_24px_60px_-24px_rgba(0,0,0,0.85)] backdrop-blur-2xl"
+              role="menu"
             >
-              <div className="mb-2 flex items-end justify-between px-2 pb-2">
-                <div>
-                  <p className="font-signature text-lg italic text-white/85">Sept univers</p>
-                  <p className="text-[10px] uppercase tracking-[0.22em] text-white/35">
-                    ProDay · sept pôles
-                  </p>
-                </div>
-                <Link
-                  href={ROUTES.pricing}
-                  onClick={close}
-                  className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--proday-accent)] transition-opacity duration-200 hover:opacity-80"
-                >
-                  Tarifs <ArrowUpRight size={12} />
-                </Link>
-              </div>
-              <div className="grid gap-1.5 sm:grid-cols-2">
-                {POLES.map((pole) => {
+              <div className="grid gap-0.5 sm:grid-cols-2">
+                {SHOWCASE_POLES.map((pole) => {
+                  const color = POLE_BRAND_HEX[pole.id];
                   const active = isNavActive(pole.href, pathname);
-                  const color = POLE_BRAND_HEX[pole.id as PoleId];
                   return (
                     <Link
-                      key={pole.id}
+                      key={pole.href}
                       href={pole.href}
                       role="menuitem"
                       onClick={close}
-                      className={`flex items-center gap-3 rounded-xl border px-3 py-3 transition-[background-color,border-color,transform] duration-200 ${
-                        active
-                          ? "border-white/20 bg-white/[0.08]"
-                          : "border-white/5 hover:border-white/15 hover:bg-white/[0.05] active:scale-[0.99]"
-                      }`}
+                      className="flex items-center gap-3 rounded-xl border border-transparent px-3 py-2.5 transition hover:border-white/10 hover:bg-white/[0.06]"
                     >
                       <span
-                        className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white p-0.5"
-                        style={{ boxShadow: `0 0 0 1px ${color}66` }}
+                        className="h-2 w-2 shrink-0 rounded-full"
+                        style={{ background: color }}
+                      />
+                      <span
+                        className="text-[13px] font-medium"
+                        style={{ color: active ? color : "rgba(255,255,255,0.9)" }}
                       >
-                        <Image
-                          src={pole.logo}
-                          alt=""
-                          width={36}
-                          height={36}
-                          className="h-8 w-8 object-contain"
-                        />
-                      </span>
-                      <span className="min-w-0 text-left">
-                        <span
-                          className="block text-[10px] font-bold uppercase tracking-[0.16em]"
-                          style={{ color }}
-                        >
-                          {pole.kicker.replace("PÔLE ", "")}
-                        </span>
-                        <span className="mt-0.5 block truncate text-sm font-semibold text-white">
-                          {pole.title}
-                        </span>
+                        {pole.navLabel}
                       </span>
                     </Link>
                   );
                 })}
               </div>
             </motion.div>
-          ) : null}
-        </AnimatePresence>,
-        document.body,
-      )
-    : null;
+          </AnimatePresence>,
+          document.body,
+        )
+      : null;
 
   return (
     <div ref={rootRef} className="relative">
       <button
         ref={triggerRef}
         type="button"
-        id={`${menuId}-trigger`}
-        aria-haspopup="menu"
         aria-expanded={open}
         aria-controls={`${menuId}-menu`}
-        onClick={() => setOpen((value) => !value)}
-        className={`inline-flex items-center gap-1.5 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] transition-colors duration-200 ${
-          polesActive || open ? "text-white" : "text-white/45 hover:text-white"
+        onClick={() => setOpen((v) => !v)}
+        className={`inline-flex items-center gap-1 rounded-full px-3.5 py-2 text-[13px] font-medium tracking-[-0.01em] transition-colors ${
+          polesActive || open
+            ? "text-white"
+            : "text-white/55 hover:text-white"
         }`}
       >
-        Univers
+        Pôles
         <ChevronDown
           size={13}
-          className={`shrink-0 transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${open ? "rotate-180" : ""}`}
-          aria-hidden
+          className={`opacity-70 transition ${open ? "rotate-180" : ""}`}
         />
       </button>
       {panel}
@@ -224,26 +172,21 @@ function PolesMegaMenu({ pathname }: { pathname: string }) {
   );
 }
 
-export function SiteNav() {
+/** Terminal-style floating capsule nav */
+export function SiteNav({ light: _light }: { light?: boolean } = {}) {
+  void _light;
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [searchOpen, setSearchOpen] = useState(false);
-
-  const brand = navBrandForPath(pathname);
-  const isHome = pathname === ROUTES.home;
-  const currentPole = poleForPath(pathname);
-  const accent = currentPole ? POLE_BRAND_HEX[currentPole] : "#0054F0";
-
-  const close = useCallback(() => setOpen(false), []);
   const pricingHref = pricingHrefForPath(pathname);
+  const close = useCallback(() => setOpen(false), []);
 
   useEffect(() => {
     close();
   }, [pathname, close]);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 50);
+    const onScroll = () => setScrolled(window.scrollY > 24);
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
@@ -252,122 +195,73 @@ export function SiteNav() {
   useEffect(() => {
     if (!open) return;
     document.body.classList.add("nav-lock");
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") close();
-      if (event.key === "k" && (event.metaKey || event.ctrlKey)) {
-        event.preventDefault();
-        setSearchOpen(true);
-      }
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => {
-      document.body.classList.remove("nav-lock");
-      window.removeEventListener("keydown", onKeyDown);
-    };
-  }, [open, close]);
+    return () => document.body.classList.remove("nav-lock");
+  }, [open]);
 
   return (
     <>
-      <SearchModal isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
-      <div className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-[#050507]/95 backdrop-blur-lg">
-        <header className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-          <Link href={ROUTES.home} className="group flex items-center gap-2.5">
-            <span className="shrink-0 overflow-hidden rounded-lg bg-white p-0.5 shadow-md transition-transform duration-200 group-hover:scale-105">
+      <div className="pointer-events-none fixed inset-x-0 top-0 z-50 flex justify-center px-3 pt-3 sm:px-5 sm:pt-5">
+        <nav
+          aria-label="Principal"
+          className={`site-nav-dock pointer-events-auto flex w-full max-w-[52rem] items-center gap-1 rounded-full pl-2 pr-2 py-1 sm:gap-1 sm:pl-2.5 sm:pr-2 sm:py-1.5 ${
+            scrolled ? "is-scrolled" : ""
+          }`}
+        >
+          <Link
+            href={ROUTES.home}
+            className="flex shrink-0 items-center gap-2 rounded-full py-1 pl-1 pr-2"
+            aria-label="ProDay, accueil"
+          >
+            <span className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border border-white/12 bg-black/45 min-[390px]:h-9 min-[390px]:w-9">
               <Image
-                src={isHome ? PRODAY_LOGO_OFFICIAL : brand.logo}
-                alt={isHome ? "ProDay" : brand.name}
-                width={isHome ? Math.round(36 * PRODAY_OFFICIAL_LOGO_ASPECT) : 34}
-                height={36}
-                className="h-9 w-auto"
+                src={PRODAY_LOGO_OFFICIAL}
+                alt=""
+                width={20}
+                height={20}
+                className="h-5 w-5 rounded-sm object-cover min-[390px]:h-[22px] min-[390px]:w-[22px]"
                 priority
               />
             </span>
-            <span className="hidden min-w-0 flex-col sm:flex">
-              <span className="font-display truncate text-[15px] font-extrabold tracking-[-0.03em] text-white">
-                {isHome
-                  ? "ProDay"
-                  : brand.name.replace(/^Pro Day /, "").replace(/^ProDay /, "")}
-              </span>
-              <span className="font-signature text-[13px] italic leading-none text-white/40">
-                {isHome ? "Connecter · Progresser" : "Univers officiel"}
-              </span>
+            <span className="hidden font-display text-[14px] font-semibold tracking-tight text-white sm:inline">
+              ProDay
             </span>
           </Link>
 
-          <div className="hidden min-w-0 flex-1 items-center justify-center lg:flex">
-            <div className="flex items-center gap-1">
-              <PolesMegaMenu pathname={pathname} />
-              {UTILITY_NAV_ITEMS.map((item) => (
-                <NavLink
-                  key={item.href}
-                  href={item.href === ROUTES.pricing ? pricingHref : item.href}
-                  label={item.label}
-                  active={pathname === item.href}
-                />
-              ))}
-            </div>
+          <div className="mx-auto hidden min-w-0 flex-1 items-center justify-center gap-0.5 md:flex">
+            <PolesMegaMenu pathname={pathname} />
+            {UTILITY_NAV_ITEMS.map((item) => (
+              <NavLink
+                key={item.href}
+                href={item.href === ROUTES.pricing ? pricingHref : item.href}
+                label={item.label}
+                active={pathname === item.href}
+              />
+            ))}
+            <NavLink
+              href={ROUTES.demo}
+              label="Démo"
+              active={pathname === ROUTES.demo}
+            />
           </div>
 
-          <div className="hidden shrink-0 items-center gap-3 lg:flex">
-            <button
-              onClick={() => setSearchOpen(true)}
-              className="p-2 text-white/45 transition-colors hover:text-white"
-              aria-label="Rechercher"
-              title="Rechercher (Cmd/Ctrl + K)"
-            >
-              <Search size={18} />
-            </button>
-            <Link
-              href={ROUTES.demo}
-              className="px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-white/45 transition-colors duration-200 hover:text-white"
-            >
-              Démo
-            </Link>
+          <div className="ml-auto flex items-center gap-1.5">
             <Link
               href={ROUTES.betaWaitlist}
-              className="inline-flex items-center gap-1.5 rounded-full bg-white px-4 py-2.5 text-[11px] font-bold uppercase tracking-[0.14em] text-black transition-[background-color,color,transform] duration-200 hover:bg-[var(--proday-accent)] hover:text-white active:scale-[0.98]"
+              className="bg-accent-gradient hidden items-center rounded-full px-5 py-2.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-white transition hover:brightness-110 md:inline-flex"
             >
-              Rejoindre la bêta
-              <ArrowUpRight size={13} />
+              Tester
             </Link>
+            <button
+              type="button"
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-white/12 bg-white/[0.03] text-white/80 transition hover:bg-white/10 hover:text-white min-[390px]:h-10 min-[390px]:w-10 md:hidden"
+              onClick={() => setOpen((v) => !v)}
+              aria-expanded={open}
+              aria-label={open ? "Fermer" : "Menu"}
+            >
+              {open ? <X size={18} /> : <Menu size={18} />}
+            </button>
           </div>
-
-          <button
-            type="button"
-            className="flex min-h-10 min-w-10 shrink-0 items-center justify-center rounded-lg border border-white/10 text-white transition-[background-color,border-color,transform] duration-200 hover:bg-white/5 active:scale-95 lg:hidden"
-            onClick={() => setOpen((value) => !value)}
-            aria-expanded={open}
-            aria-label={open ? "Fermer le menu" : "Ouvrir le menu"}
-          >
-            <span className="relative flex h-5 w-5 items-center justify-center">
-              <AnimatePresence mode="wait" initial={false}>
-                {open ? (
-                  <motion.span
-                    key="close"
-                    initial={{ opacity: 0, rotate: -45, scale: 0.8 }}
-                    animate={{ opacity: 1, rotate: 0, scale: 1 }}
-                    exit={{ opacity: 0, rotate: 45, scale: 0.8 }}
-                    transition={{ duration: 0.16, ease: easeOut }}
-                    className="absolute"
-                  >
-                    <X size={20} />
-                  </motion.span>
-                ) : (
-                  <motion.span
-                    key="menu"
-                    initial={{ opacity: 0, rotate: 45, scale: 0.8 }}
-                    animate={{ opacity: 1, rotate: 0, scale: 1 }}
-                    exit={{ opacity: 0, rotate: -45, scale: 0.8 }}
-                    transition={{ duration: 0.16, ease: easeOut }}
-                    className="absolute"
-                  >
-                    <Menu size={20} />
-                  </motion.span>
-                )}
-              </AnimatePresence>
-            </span>
-          </button>
-        </header>
+        </nav>
       </div>
 
       <AnimatePresence>
@@ -378,98 +272,85 @@ export function SiteNav() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.22, ease: easeOut }}
-              className="fixed inset-0 z-40 bg-black/75 backdrop-blur-sm lg:hidden"
-              aria-label="Fermer le menu"
+              className="fixed inset-0 z-40 bg-black/75 md:hidden"
+              aria-label="Fermer"
               onClick={close}
             />
             <motion.div
-              initial={{ opacity: 0, y: -16, scale: 0.98 }}
+              initial={{ opacity: 0, y: -10, scale: 0.98 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -10, scale: 0.98 }}
-              transition={{ duration: 0.26, ease: easeOut }}
-              className="fixed inset-x-3 top-[4.5rem] z-50 max-h-[calc(100dvh-5.5rem)] overflow-y-auto overscroll-contain rounded-2xl border border-white/12 bg-[#0a0a0c]/98 p-4 shadow-2xl backdrop-blur-xl lg:hidden"
+              exit={{ opacity: 0, y: -8, scale: 0.98 }}
+              transition={{ duration: 0.2, ease: easeOut }}
+              className="fixed inset-x-3 top-[4.4rem] z-50 max-h-[calc(100dvh-5.3rem)] overflow-y-auto rounded-[1.5rem] border border-white/10 bg-[#0a0a0a]/88 p-3.5 shadow-[0_24px_60px_-26px_rgba(0,0,0,0.85)] backdrop-blur-2xl min-[390px]:rounded-[1.75rem] min-[390px]:p-4 md:hidden"
             >
-              <p className="font-signature text-xl italic text-white/70">Univers</p>
-              <div className="mt-3 grid gap-2">
-                {POLES.map((pole, i) => {
-                  const color = POLE_BRAND_HEX[pole.id];
-                  const active = isNavActive(pole.href, pathname);
-                  return (
-                    <motion.div
-                      key={pole.href}
-                      initial={{ opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.03 + i * 0.025, duration: 0.22, ease: easeOut }}
-                    >
+              <div className="rounded-2xl border border-white/10 p-2">
+                <p className="px-2 font-mono text-[10px] uppercase tracking-[0.22em] text-white/35">
+                  Pôles
+                </p>
+                <div className="mt-2 grid gap-0.5">
+                  {SHOWCASE_POLES.map((pole) => {
+                    const color = POLE_BRAND_HEX[pole.id];
+                    const active = isNavActive(pole.href, pathname);
+                    return (
                       <Link
+                        key={pole.href}
                         href={pole.href}
                         onClick={close}
-                        aria-current={active ? "page" : undefined}
-                        className={`flex min-h-12 items-center gap-3 rounded-xl border px-3 py-2.5 transition-[background-color,border-color,transform] duration-200 active:scale-[0.99] ${
-                          active
-                            ? "border-white/20 bg-white/[0.06]"
-                            : "border-white/8 hover:border-white/15 hover:bg-white/[0.04]"
-                        }`}
+                        className="flex items-center gap-3 rounded-xl border border-transparent px-3 py-3 text-[15px] font-medium transition hover:border-white/10 hover:bg-white/[0.06]"
+                        style={{ color: active ? color : "rgba(255,255,255,0.9)" }}
                       >
-                        <Image
-                          src={pole.logo}
-                          alt=""
-                          width={32}
-                          height={32}
-                          className="rounded-md bg-white p-0.5"
-                        />
-                        <span className="text-sm font-semibold text-white">{pole.title}</span>
                         <span
-                          className="ml-auto h-2 w-2 rounded-full"
+                          className="h-2 w-2 shrink-0 rounded-full"
                           style={{ background: color }}
                         />
+                        {pole.navLabel}
                       </Link>
-                    </motion.div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
-              <div className="mt-5 border-t border-white/10 pt-4">
-                <button
-                  onClick={() => {
-                    setSearchOpen(true);
-                    close();
-                  }}
-                  className="flex min-h-12 items-center gap-3 text-sm tracking-wide text-white/65 transition-colors duration-200 hover:text-white"
-                >
-                  <Search size={18} />
-                  Rechercher
-                </button>
-                {UTILITY_NAV_ITEMS.map((item) => (
+
+              <div className="mt-3 rounded-2xl border border-white/10 p-2">
+                <p className="px-2 font-mono text-[10px] uppercase tracking-[0.22em] text-white/35">
+                  Navigation
+                </p>
+                <div className="mt-2">
+                  {UTILITY_NAV_ITEMS.map((item) => (
+                    <Link
+                      key={item.href}
+                      href={item.href === ROUTES.pricing ? pricingHref : item.href}
+                      onClick={close}
+                      className="flex min-h-11 items-center rounded-xl border border-transparent px-3 text-[15px] text-white/70 transition hover:border-white/10 hover:bg-white/[0.06] hover:text-white"
+                    >
+                      {item.label}
+                    </Link>
+                  ))}
                   <Link
-                    key={item.href}
-                    href={item.href === ROUTES.pricing ? pricingHref : item.href}
-                    aria-current={pathname === item.href ? "page" : undefined}
-                    className={`flex min-h-12 items-center text-sm tracking-wide transition-colors duration-200 ${
-                      pathname === item.href
-                        ? "font-semibold text-white"
-                        : "text-white/65 hover:text-white"
-                    }`}
+                    href={ROUTES.demo}
                     onClick={close}
+                    className="flex min-h-11 items-center rounded-xl border border-transparent px-3 text-[15px] text-white/70 transition hover:border-white/10 hover:bg-white/[0.06] hover:text-white"
                   >
-                    {item.label}
+                    Démo
                   </Link>
-                ))}
+                </div>
+              </div>
+
+              <div className="mt-4 grid gap-2">
+                <Link
+                  href={ROUTES.betaWaitlist}
+                  onClick={close}
+                  className="bg-accent-gradient flex min-h-12 items-center justify-center rounded-full text-[12px] font-semibold uppercase tracking-[0.12em] text-white"
+                >
+                  Tester
+                </Link>
                 <Link
                   href={ROUTES.demo}
-                  className="flex min-h-12 items-center text-sm tracking-wide text-white/65 transition-colors duration-200 hover:text-white"
                   onClick={close}
+                  className="flex min-h-11 items-center justify-center rounded-full border border-white/20 text-[12px] font-semibold uppercase tracking-[0.12em] text-white/80 transition hover:border-white/40 hover:text-white"
                 >
-                  Démo
+                  Ouvrir la démo
                 </Link>
               </div>
-              <Link
-                href={ROUTES.betaWaitlist}
-                className="mt-4 flex min-h-12 items-center justify-center rounded-full bg-white text-sm font-bold uppercase tracking-[0.14em] text-black transition-[transform,background-color] duration-200 active:scale-[0.98] hover:bg-[var(--proday-accent)] hover:text-white"
-                onClick={close}
-              >
-                Rejoindre la bêta
-              </Link>
             </motion.div>
           </>
         ) : null}

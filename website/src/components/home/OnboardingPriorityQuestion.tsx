@@ -15,7 +15,7 @@ const CHOICES = [
   {
     id: "coach",
     title: "Coach",
-    subtitle: "Gérer une équipe et recruter",
+    subtitle: "Gérer une équipe et les matchs",
     icon: "🏆",
     href: ROUTES.proStaff,
   },
@@ -27,11 +27,11 @@ const CHOICES = [
     href: ROUTES.proClub,
   },
   {
-    id: "health",
-    title: "Santé",
-    subtitle: "Kinés, médecins et praticiens",
-    icon: "❤️",
-    href: ROUTES.sante,
+    id: "supporter",
+    title: "Supporter",
+    subtitle: "Suivre clubs, scores et communauté",
+    icon: "📣",
+    href: ROUTES.supporter,
   },
 ];
 

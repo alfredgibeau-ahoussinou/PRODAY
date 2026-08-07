@@ -4,66 +4,64 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { PRODUCT_LINES } from "@/lib/content";
-import { UNIVERSE_THEME } from "@/components/universe/universeTheme";
+import { POLE_BRAND_HEX, POLE_IMAGES, SHOWCASE_POLES } from "@/lib/poles";
 import { Section } from "@/components/ui/Section";
 
 export function UniversePromoGrid() {
   return (
     <Section
-      kicker="UNIVERS"
-      title="Cinq lignes, une app"
-      description="Man, Woman, Amateur, Supporter ou Pro. Vous choisissez à l'inscription."
+      kicker="PÔLES"
+      title="Cinq portes, une app"
+      description="Joueur, Club, Coach, Supporter ou Sponsor. Tu choisis ton entrée — le reste du réseau reste accessible."
       className="bg-[#030303]"
     >
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        {PRODUCT_LINES.map((line, i) => {
-          const theme = UNIVERSE_THEME[line.id];
+        {SHOWCASE_POLES.map((pole, i) => {
+          const hex = POLE_BRAND_HEX[pole.id];
           return (
             <motion.div
-              key={line.id}
+              key={pole.id}
               whileInView={{ opacity: 1, y: 0 }}
               initial={{ opacity: 0, y: 24 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.08 }}
-              className={`card-flash group relative overflow-hidden rounded-3xl ${theme.pricingCard}`}
+              className="card-flash group relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.03]"
             >
               <div className="relative h-36 overflow-hidden">
                 <Image
-                  src={line.image}
+                  src={POLE_IMAGES[pole.id]}
                   alt=""
                   fill
                   className="object-cover opacity-80 transition duration-500 group-hover:scale-105"
                 />
-                <div className={`absolute inset-0 bg-gradient-to-t ${theme.imageGradient}`} />
+                <div
+                  className="absolute inset-0 bg-gradient-to-t to-transparent"
+                  style={{
+                    backgroundImage: `linear-gradient(to top, #000 0%, ${hex}40 45%, transparent 100%)`,
+                  }}
+                />
               </div>
               <div className="p-6">
-                <div className="flex items-start gap-4">
-                  <Image
-                    src={line.logo}
-                    alt={line.brand.fullName}
-                    width={48}
-                    height={48}
-                    className={`shrink-0 rounded-xl bg-white/10 ${theme.imageRing}`}
-                  />
-                  <div>
-                    <p className={`text-xs font-semibold tracking-widest ${theme.highlightLabel}`}>
-                      {line.brand.tagline}
-                    </p>
-                    <h3 className="font-display mt-1 text-xl font-bold uppercase text-white sm:text-2xl">
-                      {line.brand.fullName}
-                    </h3>
-                  </div>
-                </div>
-                <p className="mt-4 text-sm leading-relaxed text-white/60">
-                  {line.brand.mission}
+                <p
+                  className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em]"
+                  style={{ color: hex }}
+                >
+                  {pole.kicker}
+                </p>
+                <h3 className="mt-2 font-display text-xl font-medium tracking-[-0.02em] text-white">
+                  {pole.navLabel}
+                </h3>
+                <p className="mt-1 text-sm text-white/50">{pole.subtitle}</p>
+                <p className="mt-3 text-sm leading-relaxed text-white/60 line-clamp-3">
+                  {pole.description}
                 </p>
                 <Link
-                  href={line.href}
-                  className={`mt-5 inline-flex min-h-11 items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition hover:scale-[1.02] ${theme.ctaBtn}`}
+                  href={pole.href}
+                  className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-white transition hover:opacity-80"
+                  style={{ color: hex }}
                 >
-                  {line.cta}
-                  <ArrowRight size={16} />
+                  Explorer
+                  <ArrowRight size={14} />
                 </Link>
               </div>
             </motion.div>

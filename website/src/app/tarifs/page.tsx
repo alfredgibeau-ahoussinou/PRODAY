@@ -1,35 +1,43 @@
 import type { Metadata } from "next";
-import { PageHeader } from "@/components/layout/PageHeader";
+import { ImmersivePoleHero } from "@/components/poles/immersivePoleExperience";
 import { PolesPricingLayout } from "@/components/pricing/PolesPricingLayout";
+import { TerminalCta, TerminalPage } from "@/components/terminal";
+import { getRoleVisuals } from "@/lib/roleVisuals";
 import { ROUTES } from "@/lib/routes";
 
 export const metadata: Metadata = {
-  title: "Tarifs",
+  title: "Tarifs ProDay",
   description:
-    "Sept pôles : Amateur, Supporter, Santé, Pro Joueur, Pro Club, Pro Staff, Sponsor. Gratuit et Pro.",
+    "Joueur (Pass 3,99 €), Club Amateur / Essentiel / Premium, Coach, Supporter gratuit, Sponsor. Mensuel ou annuel −20 %.",
 };
 
 export default function PricingPage() {
+  const visuals = getRoleVisuals("tarifs");
+
   return (
-    <>
-      <PageHeader
-        pathname={ROUTES.pricing}
-        kicker="TARIFS"
-        title="Tarifs par pôle"
-        description="Joueur, Pro, Santé et Partenaires. Comparez les offres découverte et Pro. Mensuel au tarif de base, annuel avec 20 % de remise."
-        image="/showcase/classic-exp-messages.jpg"
-        dark
+    <TerminalPage>
+      <ImmersivePoleHero
+        brand="Pro Day Tarifs"
+        headline="Un pôle. Un prix."
+        support="Pas de forfait fourre-tout. Tu ouvres l’espace dont tu as besoin — Joueur, Club, Coach, Supporter ou Sponsor."
+        video={visuals.heroVideo}
+        poster={visuals.hero}
+        primaryHref={ROUTES.betaWaitlist}
+        primaryLabel="Liste d’attente"
+        secondaryHref="#joueur"
+        secondaryLabel="Voir les pôles"
       />
-      <section className="mx-auto max-w-4xl px-4 pb-4 pt-8 sm:px-6">
-        <p className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-white/60">
-          <span className="font-semibold text-white/85">Parrainage :</span> invitez
-          2 nouveaux membres qui s&apos;abonnent à une offre payante et gagnez 1 mois
-          Pro offert. Partagez votre lien{' '}
-          <code className="text-white/80">proday75.fr/?ref=VOTRECODE</code> depuis
-          l&apos;app (Profil → Parrainage).
-        </p>
-      </section>
+
       <PolesPricingLayout />
-    </>
+
+      <TerminalCta
+        title="La bêta est ouverte."
+        description="Teste l’app. Les abonnements store suivent le même modèle."
+        primaryHref={ROUTES.betaWaitlist}
+        primaryLabel="Rejoindre la bêta"
+        secondaryHref={ROUTES.faq}
+        secondaryLabel="FAQ tarifs"
+      />
+    </TerminalPage>
   );
 }

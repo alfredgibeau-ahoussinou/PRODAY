@@ -1,5 +1,4 @@
 import type { PoleId } from "@/lib/poles";
-import { POLE_STYLES } from "@/lib/poles";
 import { Kicker } from "@/components/ui/Kicker";
 
 type PremiumSectionProps = {
@@ -19,43 +18,38 @@ export function PremiumSection({
   title,
   description,
   children,
-  pole,
+  pole: _pole,
   className = "",
   id,
   bordered = true,
-  centered = true,
+  centered = false,
 }: PremiumSectionProps) {
-  const poleStyles = pole ? POLE_STYLES[pole] : null;
+  void _pole;
 
   return (
     <section
       id={id}
-      className={`relative py-16 md:py-24 ${id ? "scroll-mt-24" : ""} ${
-        poleStyles ? `${poleStyles.surface} ${poleStyles.accentTop}` : "bg-black text-white"
-      } ${bordered ? "border-b border-white/8" : ""} ${className}`}
+      className={`relative bg-black py-14 text-white md:py-20 ${id ? "scroll-mt-24" : ""} ${
+        bordered ? "border-b border-white/10" : ""
+      } ${className}`}
     >
       <div className="relative mx-auto max-w-6xl px-4 sm:px-6">
         <div
           className={`mb-10 max-w-2xl ${centered ? "section-header-centered mx-auto text-center" : ""}`}
         >
-          {kicker && (
-            <Kicker
-              className={poleStyles ? poleStyles.textMuted : ""}
-              centered={centered}
-            >
+          {kicker ? (
+            <Kicker className="font-mono text-[#4C8BFF]" centered={centered}>
               {kicker}
             </Kicker>
-          )}
-          <h2
-            className={`font-display mt-3 text-3xl font-bold tracking-tight sm:text-4xl ${
-              poleStyles ? "text-white" : centered ? "text-[var(--proday-accent)] uppercase tracking-wide" : "text-white"
-            }`}
-          >
+          ) : null}
+          <h2 className="font-display mt-3 text-3xl font-medium tracking-[-0.03em] text-white sm:text-4xl">
             {title}
           </h2>
-          {description && (
-            <p className="mt-4 text-lg leading-relaxed text-white/55">{description}</p>
-          )}
+          {description ? (
+            <p className="mt-4 text-base leading-relaxed text-white/55 sm:text-lg">
+              {description}
+            </p>
+          ) : null}
         </div>
         {children}
       </div>

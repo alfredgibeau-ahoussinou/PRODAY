@@ -26,17 +26,17 @@ const POLE_GROUPS: {
   },
   {
     pole: "pro_club",
-    label: "Pôle Pro Club",
-    journeyIds: ["club"],
+    label: "Pôle Club",
+    journeyIds: ["club", "organizer"],
   },
   {
-    pole: "pro_staff",
-    label: "Pôle Pro Staff",
-    journeyIds: ["coach", "recruiter", "agent", "organizer"],
+    pole: "coach",
+    label: "Pôle Coach",
+    journeyIds: ["coach", "recruiter", "agent"],
   },
   {
     pole: "sante",
-    label: "Pôle Santé",
+    label: "Rôle Santé",
     journeyIds: ["medical"],
   },
   {

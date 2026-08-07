@@ -22,6 +22,8 @@ type PlanDetailCardProps = {
   yearly: boolean;
   styles: PoleStyle;
   variantLabel?: string;
+  /** Official pole accent hex for Terminal chrome */
+  accent?: string;
 };
 
 export function PlanDetailCard({
@@ -29,6 +31,7 @@ export function PlanDetailCard({
   yearly,
   styles,
   variantLabel,
+  accent = "#0054F0",
 }: PlanDetailCardProps) {
   const premium = isPremiumWebPlan(plan);
   const fullYear = fullAnnualPrice(plan.monthlyEur);
@@ -37,100 +40,116 @@ export function PlanDetailCard({
 
   return (
     <motion.article
-      initial={{ opacity: 0, y: 16 }}
+      initial={{ opacity: 0, y: 12 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      className={`overflow-hidden rounded-3xl ${styles.card} ${
-        premium ? styles.cardHighlight : ""
+      className={`flex flex-col border bg-transparent ${
+        premium ? "border-[color:var(--plan-accent)]/45" : "border-white/10"
       }`}
+      style={{ ["--plan-accent" as string]: accent }}
     >
-      <div className="border-b border-white/10 p-6 sm:p-8">
-        <div className="flex flex-wrap items-end justify-between gap-6">
+      <div className="border-b border-white/10 p-6 sm:p-7">
+        <div className="flex flex-wrap items-start justify-between gap-6">
           <div>
-            {variantLabel && (
-              <span className={`inline-block rounded-full px-3 py-1 text-xs font-semibold ${styles.badge}`}>
-                {variantLabel}
-              </span>
-            )}
-            {premium && (
-              <span className="ml-2 inline-block rounded-full bg-amber-400 px-3 py-1 text-xs font-bold uppercase tracking-wider text-slate-950">
-                Elite
-              </span>
-            )}
-            <h3 className="mt-3 font-display text-2xl font-bold tracking-tight text-white">
+            <div className="flex flex-wrap items-center gap-2">
+              {variantLabel ? (
+                <span
+                  className="rounded-full px-3 py-1 font-mono text-[10px] uppercase tracking-[0.14em]"
+                  style={{
+                    backgroundColor: `${accent}22`,
+                    color: accent,
+                  }}
+                >
+                  {variantLabel}
+                </span>
+              ) : null}
+              {premium ? (
+                <span
+                  className="rounded-full px-3 py-1 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-black"
+                  style={{ backgroundColor: accent }}
+                >
+                  Pro
+                </span>
+              ) : null}
+            </div>
+            <h3 className="mt-3 font-display text-xl font-medium tracking-[-0.02em] text-white sm:text-2xl">
               {plan.label}
             </h3>
             <p className={`mt-1 text-sm ${styles.textMuted}`}>{plan.tagline}</p>
           </div>
-          <div className="text-right">
+
+          <div className="text-left sm:text-right">
             {yearly ? (
               <>
-                <p className="text-xs font-semibold uppercase tracking-wider text-white/50">
-                  Annuel · −{ANNUAL_DISCOUNT_PERCENT} %
+                <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-white/40">
+                  Annuel · −{ANNUAL_DISCOUNT_PERCENT}%
                 </p>
-                <p className="mt-1 tabular-nums">
-                  <span className="text-4xl font-black text-white">
+                <p className="mt-2 tabular-nums">
+                  <span className="font-display text-4xl font-medium tracking-[-0.03em] text-white">
                     {formatPriceEur(plan.yearlyEur)} €
                   </span>
-                  <span className="text-lg text-white/50"> /an</span>
+                  <span className="text-sm text-white/40"> /an</span>
                 </p>
-                <p className={`mt-1 text-sm ${styles.textMuted}`}>
+                <p className="mt-1 text-sm text-white/45">
                   soit {formatPriceEur(monthlyFromYearly)} €/mois
                 </p>
-                <p className="mt-1 text-xs text-emerald-300">
+                <p className="mt-1 text-xs text-emerald-300/90">
                   −{formatPriceEur(savings)} € vs {formatPriceEur(fullYear)} €
                 </p>
               </>
             ) : (
               <>
-                <p className="text-xs font-semibold uppercase tracking-wider text-white/50">
+                <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-white/40">
                   Mensuel
                 </p>
-                <p className="mt-1 tabular-nums">
-                  <span className="text-4xl font-black text-white">
+                <p className="mt-2 tabular-nums">
+                  <span className="font-display text-4xl font-medium tracking-[-0.03em] text-white">
                     {formatPriceEur(plan.monthlyEur)} €
                   </span>
-                  <span className="text-lg text-white/50"> /mois</span>
+                  <span className="text-sm text-white/40"> /mois</span>
                 </p>
               </>
             )}
-            {"commissionPercent" in plan && plan.commissionPercent != null && (
-              <p className="mt-2 text-xs font-medium text-amber-200">
+            {"commissionPercent" in plan && plan.commissionPercent != null ? (
+              <p className="mt-2 text-xs font-medium text-amber-200/90">
                 + {plan.commissionPercent} % par RDV via l&apos;app
               </p>
-            )}
+            ) : null}
           </div>
         </div>
       </div>
 
-      {"commissionNote" in plan && plan.commissionNote && (
-        <div className="border-b border-white/10 bg-white/5 px-6 py-3 sm:px-8">
-          <p className="text-center text-sm text-white/70">{plan.commissionNote}</p>
+      {"commissionNote" in plan && plan.commissionNote ? (
+        <div className="border-b border-white/10 px-6 py-3 sm:px-7">
+          <p className="text-center text-sm text-white/55">{plan.commissionNote}</p>
         </div>
-      )}
+      ) : null}
 
-      <div className="grid gap-0 sm:grid-cols-2">
-        <div className="border-b border-white/10 p-6 sm:border-b-0 sm:border-r sm:p-8">
-          <p className="text-xs font-semibold uppercase tracking-wider text-white/40">
+      <div className="grid flex-1 gap-0 sm:grid-cols-2">
+        <div className="border-b border-white/10 p-6 sm:border-b-0 sm:border-r sm:p-7">
+          <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-white/35">
             Gratuit
           </p>
           <ul className="mt-4 space-y-2.5">
             {plan.freeIncludes.map((f) => (
-              <li key={f} className="flex gap-2 text-sm text-white/75">
-                <Check size={16} className="mt-0.5 shrink-0 text-white/30" />
+              <li key={f} className="flex gap-2 text-sm text-white/60">
+                <Check size={15} className="mt-0.5 shrink-0 text-white/25" />
                 {f}
               </li>
             ))}
           </ul>
         </div>
-        <div className="p-6 sm:p-8">
-          <p className="text-xs font-semibold uppercase tracking-wider text-white/80">
+        <div className="p-6 sm:p-7">
+          <p
+            className="font-mono text-[10px] uppercase tracking-[0.18em]"
+            style={{ color: accent }}
+          >
             Pro
           </p>
           <ul className="mt-4 space-y-2.5">
             {plan.proIncludes.map((f) => (
-              <li key={f} className="flex gap-2 text-sm font-medium text-white">
-                <Check size={16} className="mt-0.5 shrink-0 text-emerald-400" />
+              <li key={f} className="flex gap-2 text-sm text-white/85">
+                <Check size={15} className="mt-0.5 shrink-0" style={{ color: accent }} />
                 {f}
               </li>
             ))}
@@ -138,15 +157,16 @@ export function PlanDetailCard({
         </div>
       </div>
 
-      <div className="border-t border-white/10 p-6 text-center">
-        <p className={`text-sm ${styles.textMuted}`}>
-          Abonnements App Store / Google Play. Accès gratuit pour les inscrits.
+      <div className="mt-auto border-t border-white/10 p-6 text-center sm:p-7">
+        <p className="text-xs text-white/40">
+          Abonnements App Store / Google Play
         </p>
         <Link
           href={ROUTES.betaWaitlist}
-          className={`mt-4 inline-block rounded-full px-8 py-3 text-sm font-semibold transition hover:scale-[1.02] ${styles.cta}`}
+          className="mt-4 inline-flex min-h-11 items-center justify-center rounded-full px-7 py-2.5 font-mono text-[11px] font-semibold uppercase tracking-[0.16em] text-white transition hover:brightness-110"
+          style={{ backgroundColor: accent }}
         >
-          Rejoindre la bêta
+          Liste d&apos;attente
         </Link>
       </div>
     </motion.article>

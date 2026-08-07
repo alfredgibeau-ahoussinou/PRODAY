@@ -4,7 +4,6 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import { useState } from "react";
 import { Reveal } from "./Reveal";
-import { UNIVERSE_THEME } from "@/components/universe/universeTheme";
 import { MODULES } from "@/lib/content";
 
 type ModuleExplorerProps = {
@@ -14,21 +13,20 @@ type ModuleExplorerProps = {
 export function ModuleExplorer({ compact }: ModuleExplorerProps) {
   const [active, setActive] = useState(0);
   const mod = MODULES[active];
-  const theme = UNIVERSE_THEME.homme;
 
   return (
     <section
       id={compact ? undefined : "modules"}
-      className={compact ? "" : "scroll-mt-24 bg-[#030303] py-24"}
+      className={compact ? "" : "scroll-mt-24 bg-white py-16 sm:py-20"}
     >
       <div className={compact ? "" : "mx-auto max-w-6xl px-4 sm:px-6"}>
         {!compact && (
           <Reveal>
-            <p className="text-sm font-medium tracking-widest text-white/40">MODULES</p>
-            <h2 className="font-display mt-2 text-3xl font-bold text-white sm:text-4xl">
+            <p className="text-sm font-medium tracking-widest text-[#FF5A1F]">Modules</p>
+            <h2 className="font-display mt-2 text-3xl font-extrabold text-[#0f1f17] sm:text-4xl">
               Dix modules pour la saison
             </h2>
-            <p className="mt-3 max-w-xl text-white/55">
+            <p className="mt-3 max-w-xl text-[#4a6356]">
               Mercato, Reels, Fil, Arena, partenaires, santé. Les briques de ProDay.
             </p>
           </Reveal>
@@ -46,19 +44,19 @@ export function ModuleExplorer({ compact }: ModuleExplorerProps) {
                 whileHover={{ x: 4 }}
                 className={`rounded-2xl border p-5 text-left transition ${
                   active === i
-                    ? theme.moduleActive
-                    : `${theme.moduleIdle} text-white/80`
+                    ? "border-[#00A8C4]/40 bg-[#00A8C4]/10 text-[#0f1f17]"
+                    : "border-[#0f1f17]/10 bg-[#eef6f1] text-[#0f1f17]/80 hover:border-[#0f1f17]/20"
                 }`}
               >
-                <span className="mt-1 block text-xs font-semibold uppercase tracking-wider text-white/40">
+                <span className="mt-1 block text-xs font-semibold uppercase tracking-wider text-[#4a6356]">
                   {m.subtitle}
                 </span>
-                <span className="mt-1 block text-xl font-bold text-white">{m.title}</span>
+                <span className="mt-1 block text-xl font-bold text-[#0f1f17]">{m.title}</span>
                 {active === i && (
                   <motion.p
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: "auto" }}
-                    className={`mt-2 text-sm ${theme.moduleDesc}`}
+                    className="mt-2 text-sm text-[#4a6356]"
                   >
                     {m.description}
                   </motion.p>
@@ -82,7 +80,7 @@ export function ModuleExplorer({ compact }: ModuleExplorerProps) {
               sizes="(max-width: 768px) 100vw, 50vw"
               loading="lazy"
             />
-            <div className={`absolute inset-0 bg-gradient-to-t ${theme.imageGradient}`} />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#0f1f17]/85 via-[#0f1f17]/25 to-transparent" />
             <div className="absolute inset-x-0 bottom-0 p-8 pt-20">
               <motion.h3
                 initial={{ y: 20, opacity: 0 }}

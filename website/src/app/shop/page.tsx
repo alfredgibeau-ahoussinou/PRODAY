@@ -47,7 +47,7 @@ export default function ShopPage() {
           </a>
         </p>
         <div className="mt-8">
-          <PremiumButton href={ROUTES.betaWaitlist}>Voir la liste d'attente</PremiumButton>
+          <PremiumButton href={ROUTES.betaWaitlist}>Voir la liste d&apos;attente</PremiumButton>
         </div>
       </PremiumSection>
     </>

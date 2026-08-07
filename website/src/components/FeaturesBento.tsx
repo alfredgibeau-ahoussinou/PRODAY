@@ -74,10 +74,10 @@ export function FeaturesBento({ extended, compact }: FeaturesBentoProps) {
             <p className="text-xs font-bold uppercase tracking-wider text-[var(--proday-accent)]/70">
               {p.subtitle}
             </p>
-            <h3 className="font-display mt-1 text-lg font-bold uppercase text-white">
+            <h3 className="font-display mt-1 text-lg font-bold uppercase text-[#0f1f17]">
               {p.title}
             </h3>
-            <p className="mt-2 text-sm leading-relaxed text-white/55">{p.description}</p>
+            <p className="mt-2 text-sm leading-relaxed text-[#4a6356]">{p.description}</p>
           </motion.article>
         );
       })}
@@ -86,12 +86,12 @@ export function FeaturesBento({ extended, compact }: FeaturesBentoProps) {
 
   if (extended) {
     return (
-      <section className="border-t border-white/8 bg-black py-16 sm:py-24">
+      <section className="border-t border-[#0f1f17]/8 bg-white py-16 sm:py-20">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <p className="text-center text-xs font-bold uppercase tracking-[0.28em] text-[var(--proday-accent)]">
+          <p className="text-center text-xs font-bold uppercase tracking-[0.28em] text-[#FF5A1F]">
             Piliers
           </p>
-          <h2 className="font-display mt-3 text-center text-3xl font-bold uppercase tracking-wide text-[var(--proday-accent)]">
+          <h2 className="font-display mt-3 text-center text-3xl font-extrabold tracking-[-0.03em] text-[#0f1f17]">
             12 piliers produit
           </h2>
           <div className="mt-12">{grid}</div>
@@ -105,7 +105,7 @@ export function FeaturesBento({ extended, compact }: FeaturesBentoProps) {
       kicker="FONCTIONNALITÉS"
       title="Tout ce qui fait ProDay"
       description="Recrutement, saison, santé, communauté et partenaires. Pour le foot amateur et semi-pro."
-      className="bg-black"
+      className="bg-[#eef6f1]"
       compact={compact}
     >
       {grid}

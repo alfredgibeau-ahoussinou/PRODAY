@@ -12,8 +12,8 @@ Code source : [src/README.md](src/README.md) · Carte monorepo : [docs/STRUCTURE
 | `/homme` | Univers **Man** — modules, parcours, tarifs, Pulse |
 | `/woman` | Univers **Woman** — foot féminin |
 | `/pro` | Univers **Pro** — staff, recrutement vérifié |
-| `/fonctionnalites` | 11 piliers produit + modules (Fil, Reels, Sponsors…) |
-| `/demo` | Démo interactive **6 pôles carousel** (+ Sponsor) (`?p=amateur\|supporter\|sante\|pro_joueur\|pro_club\|pro_staff`) |
+| `/fonctionnalites` | Modules produit par pôle (Joueur, Club, Coach, Supporter, Sponsor) |
+| `/demo` | Démo interactive **5 pôles** (`?p=joueur\|pro_club\|coach\|supporter\|sponsor`) |
 | `/pulse` | Simulateur Pulse (thème par univers) |
 | `/live-stats` | Saisie match en direct |
 | `/cv` | Aperçu CV PDF (`?u=` pour le thème) |
@@ -23,20 +23,20 @@ Code source : [src/README.md](src/README.md) · Carte monorepo : [docs/STRUCTURE
 | `/ecosysteme` | Carte interactive des acteurs |
 | `/confiance` | Vérification diplômes |
 | `/roadmap` | Livré / en cours / à venir |
-| `/tarifs` | Plans Gratuit & Pro (`?u=` pour filtrer par univers) + grille partenaires |
-| `/partenaires` | Espace Partenaires — Découverte 0 €, Territorial 49 €, National Pro 99 €/mois |
+| `/tarifs` | Plans par pôle + grille partenaires |
+| `/partenaires` | Espace Partenaires — Découverte, Territorial, National |
 | `/shop` | ProDay Shop |
 | `/faq` | Questions fréquentes |
 | `/beta/inscription` | Liste d'attente publique + email de bienvenue (`?role=sponsor` pour partenaires) |
 | `/beta` | Hub bêta privé (lien email avec `?token=`) |
-| `/beta/programme` | Programme bêta — sept pôles (protégé) |
+| `/beta/programme` | Programme bêta — cinq pôles (protégé) |
 | `/beta/installer` | Guides APK / TestFlight (protégé) |
 | `/beta/aide` | FAQ et support bêta (protégé) |
 | `/a-propos` | Vision produit |
 
 ### Démo interactive (`/demo`)
 
-Hero plein écran + téléphone interactif centré sur les **six pôles carousel** (Amateur, Supporter, Santé, Pro Joueur, Pro Club, Pro Staff) + Sponsor.
+Hero plein écran + téléphone interactif centré sur les **cinq pôles** (Joueur, Club, Coach, Supporter, Sponsor).
 
 - URL `?p=amateur|supporter|sante|pro_joueur|pro_club|pro_staff` (legacy `?u=` redirigé)
 - Onglets alignés sur les shells app ; contenu illustratif

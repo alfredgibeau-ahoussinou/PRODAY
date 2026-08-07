@@ -18,7 +18,7 @@ export function Section({
   description,
   children,
   className = "",
-  dark = true,
+  dark = false,
   id,
   centered = true,
   compact = false,
@@ -26,7 +26,9 @@ export function Section({
   return (
     <section
       id={id}
-      className={`relative ${compact ? "py-10 md:py-14" : "py-16 md:py-24"} ${id ? "scroll-mt-24" : ""} ${dark ? "bg-black text-white" : "bg-[#030303] text-white"} ${className}`}
+      className={`relative ${compact ? "py-10 md:py-14" : "py-14 md:py-20"} ${id ? "scroll-mt-24" : ""} ${
+        dark ? "bg-[#0f1f17] text-white" : "bg-transparent text-[#0f1f17]"
+      } ${className}`}
     >
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
         {(kicker || title) && (
@@ -34,24 +36,20 @@ export function Section({
             className={`${compact ? "mb-8" : "mb-12"} max-w-2xl ${centered ? "section-header-centered mx-auto text-center" : ""}`}
           >
             {kicker && (
-              <Kicker className={dark ? "" : "text-neutral-500"} centered={centered}>
+              <Kicker className={dark ? "text-[#5eead4]" : "text-[#FF5A1F]"} centered={centered}>
                 {kicker}
               </Kicker>
             )}
             <h2
-              className={`font-display mt-3 text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl ${
-                dark
-                  ? centered
-                    ? "text-[var(--proday-accent)] uppercase tracking-wide"
-                    : "text-white"
-                  : "text-neutral-950"
+              className={`font-display mt-3 text-3xl font-extrabold tracking-[-0.03em] sm:text-4xl lg:text-5xl ${
+                dark ? "text-white" : "text-[#0f1f17]"
               }`}
             >
               {title}
             </h2>
             {description && (
               <p
-                className={`mt-4 text-lg leading-relaxed ${dark ? "text-white/60" : "text-neutral-600"}`}
+                className={`mt-4 text-lg leading-relaxed ${dark ? "text-white/60" : "text-[#4a6356]"}`}
               >
                 {description}
               </p>

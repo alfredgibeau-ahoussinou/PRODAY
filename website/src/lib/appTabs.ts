@@ -108,10 +108,10 @@ export function getVisibleMainTabsForDemoPole(pole: DemoPoleId): MainTabId[] {
       return ["home", "matchs", "feed", "reels", "messages", "profil"];
     case "pro_club":
       return ["home", "covoiturage", "recrutement", "matchs", "messages", "shop", "profil"];
-    case "pro_staff":
+    case "coach":
       return ["home", "covoiturage", "matchs", "recrutement", "messages", "shop", "profil"];
-    case "evenements":
-      return ["home", "covoiturage", "matchs", "recrutement", "messages", "shop", "profil"];
+    case "sponsor":
+      return ["home", "feed", "matchs", "messages", "shop", "profil"];
   }
 }
 
@@ -199,13 +199,6 @@ export function getTabLabelForDemoPole(tab: MainTabId, pole: DemoPoleId): string
     if (tab === "reels") return "Moments";
     if (tab === "profil") return "Compte";
   }
-  if (pole === "evenements") {
-    if (tab === "home") return "Événements";
-    if (tab === "covoiturage") return "Covoiturage";
-    if (tab === "matchs") return "Calendrier";
-    if (tab === "recrutement") return "Inscriptions";
-    if (tab === "profil") return "Orga";
-  }
   if (pole === "pro_club") {
     if (tab === "home") return "Structure";
     if (tab === "covoiturage") return "Covoiturage";
@@ -214,11 +207,18 @@ export function getTabLabelForDemoPole(tab: MainTabId, pole: DemoPoleId): string
     if (tab === "messages") return "Comm.";
     if (tab === "profil") return "Vitrine";
   }
-  if (pole === "pro_staff") {
-    if (tab === "home") return "Équipe";
+  if (pole === "coach") {
+    if (tab === "home") return "Cockpit";
     if (tab === "covoiturage") return "Covoiturage";
     if (tab === "matchs") return "Calendrier";
     if (tab === "recrutement") return "Mercato";
+  }
+  if (pole === "sponsor") {
+    if (tab === "home") return "Campagnes";
+    if (tab === "feed") return "Inventaire";
+    if (tab === "matchs") return "Terrain";
+    if (tab === "messages") return "Contact";
+    if (tab === "profil") return "Marque";
   }
   return DEFAULT_LABELS[tab];
 }

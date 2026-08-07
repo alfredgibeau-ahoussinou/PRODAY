@@ -11,7 +11,7 @@ const LINKS: Record<string, string> = {
   reels: ROUTES.demo,
   feed: ROUTES.demo,
   partners: routeWithHash(ROUTES.sponsor, "formules"),
-  family: routeWithHash(ROUTES.trust, "verification"),
+  family: ROUTES.parent,
   tournaments: routeWithHash(ROUTES.features, "modules"),
   auth: ROUTES.demo,
 };
@@ -22,7 +22,7 @@ export function SpotlightGrid() {
       id="decouvrir"
       kicker="SIGNATURE"
       title="Les fondations de la plateforme"
-      description="Reels, communauté, partenaires, famille et compétition. Structurés autour de sept pôles distincts."
+      description="Reels, communauté, partenaires, famille et compétition. Structurés autour de cinq pôles : Joueur, Club, Coach, Supporter, Sponsor."
       className="bg-black"
     >
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

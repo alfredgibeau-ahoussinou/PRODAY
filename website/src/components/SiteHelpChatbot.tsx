@@ -28,7 +28,7 @@ const COMMON_ENTRIES: HelpEntry[] = [
     id: "sponsors",
     question: "Où sont les sponsors ?",
     answer:
-      "Pas d'onglet Sponsors dans la barre de l'app : ouvrez l'Accueil puis le module Sponsors. Sur le site, c'est la page Partenaires.",
+      "Pas d'onglet Sponsors dans la barre de l'app : ouvrez l'Accueil puis le module Sponsors. Sur le site, c'est la page Sponsor (/sponsor).",
     href: ROUTES.sponsor,
     hrefLabel: "Pôle Sponsor",
   },
@@ -36,7 +36,7 @@ const COMMON_ENTRIES: HelpEntry[] = [
     id: "shop",
     question: "Qui a accès au Shop ?",
     answer:
-      "Le Shop est dans le menu de chaque pôle (Amateur, Supporter, Pro Joueur, Club, Staff…), sauf le pôle Santé praticien et les sponsors marque.",
+      "Le Shop est dans le menu de chaque pôle (Joueur, Club, Coach, Supporter…), sauf le parcours praticien santé et les campagnes sponsor marque.",
     href: ROUTES.shop,
     hrefLabel: "Voir le Shop",
   },
@@ -60,9 +60,17 @@ const COMMON_ENTRIES: HelpEntry[] = [
     id: "demo",
     question: "Comment tester l'app ?",
     answer:
-      "La démo interactive reprend la navigation réelle des pôles (Amateur, Supporter, Santé, Pro Joueur, Club, Staff, Sponsor). Téléphone et onglets, sans compte.",
+      "La démo interactive reprend la navigation réelle des cinq pôles (Joueur, Club, Coach, Supporter, Sponsor). Téléphone et onglets, sans compte.",
     href: ROUTES.demo,
     hrefLabel: "Ouvrir la démo",
+  },
+  {
+    id: "cartes",
+    question: "C’est quoi les cartes ProDay ?",
+    answer:
+      "Des passeports numériques animés (style Ultimate Team) pour Joueur, Coach, Club, Supporter et Sponsor. Stats, badges et note évoluent après chaque match.",
+    href: ROUTES.cards,
+    hrefLabel: "Voir les cartes",
   },
   {
     id: "beta",
@@ -91,23 +99,29 @@ function entriesForPath(pathname: string, pricingHref: string): HelpEntry[] {
       hrefLabel: "Pôle Joueur",
     });
   }
-  if (pathname.startsWith("/pro-club") || pathname.startsWith("/pro-staff") || pathname === "/pro") {
+  if (
+    pathname.startsWith("/pro-club") ||
+    pathname.startsWith("/coach") ||
+    pathname.startsWith("/pro-staff") ||
+    pathname === "/pro"
+  ) {
     poleHint.push({
       id: "pole-pro",
-      question: "Club ou Staff ?",
+      question: "Club ou Coach ?",
       answer:
-        "Club : structure, recrutement kanban et vitrine. Staff : calendrier structure, convocations premium, agent et Mercato Pro.",
-      href: ROUTES.proStaff,
-      hrefLabel: "Pôle Staff",
+        "Club : cœur ProDay (équipes, compétitions, permissions, covoiturage). Coach : Smart Tactics, IA, effectif. Agent / recruteur = rôles réseau.",
+      href: ROUTES.coach,
+      hrefLabel: "Pôle Coach",
     });
   }
   if (pathname.startsWith("/sante")) {
     poleHint.push({
       id: "pole-sante",
-      question: "Quels onglets pour un praticien ?",
-      answer: "Accueil, Agenda, Demandes, Vidéos, Messages et Cabinet. Sans Shop ni Mercato (profil praticien).",
+      question: "Le rôle Santé, c’est quoi ?",
+      answer:
+        "Rôle médical intégré (pas un pôle) : Accueil, Agenda, Demandes, Vidéos, Messages et Cabinet.",
       href: ROUTES.sante,
-      hrefLabel: "Pôle Santé",
+      hrefLabel: "Rôle Santé",
     });
   }
   if (pathname.startsWith("/supporter")) {
@@ -144,7 +158,7 @@ export function SiteHelpChatbot() {
   if (pathname.startsWith("/beta")) return null;
 
   return (
-    <div className="pointer-events-none fixed bottom-5 right-4 z-[60] flex flex-col items-end gap-3 sm:bottom-6 sm:right-6">
+    <div className="pointer-events-none fixed bottom-5 left-4 z-[60] flex flex-col items-start gap-3 sm:bottom-6 sm:left-6">
       {open ? (
         <div className="pointer-events-auto flex max-h-[min(70vh,520px)] w-[min(100vw-2rem,22rem)] flex-col overflow-hidden rounded-2xl border border-white/15 bg-[#0a0a0f]/95 shadow-2xl shadow-black/50 backdrop-blur-xl">
           <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
@@ -208,7 +222,7 @@ export function SiteHelpChatbot() {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="pointer-events-auto inline-flex items-center gap-2 rounded-full bg-[var(--proday-accent)] px-4 py-3 text-sm font-bold text-black shadow-lg shadow-[0_12px_32px_-10px_rgba(0,84,240,0.35)] transition hover:bg-[#2a6fff]"
+        className="bg-accent-gradient pointer-events-auto inline-flex items-center gap-2 rounded-full px-4 py-3 text-sm font-bold text-white shadow-lg shadow-[0_12px_32px_-10px_rgba(0,84,240,0.45)] transition hover:brightness-110"
         aria-expanded={open}
         aria-label={open ? "Fermer l'aide" : "Ouvrir l'aide ProDay"}
       >

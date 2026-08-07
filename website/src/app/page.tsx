@@ -1,48 +1,25 @@
-import Image from "next/image";
 import Link from "next/link";
-import { HeroSection } from "@/components/HeroSection";
-import { RoleQuiz } from "@/components/interactive/RoleQuiz";
-import { WaitlistForm } from "@/components/WaitlistForm";
-import { OnboardingPriorityQuestion } from "@/components/home/OnboardingPriorityQuestion";
-import { POLES, POLE_BRAND_HEX } from "@/lib/poles";
-import { Testimonials } from "@/components/Testimonials";
-
-const POLE_SHORT: Record<string, string> = {
-  amateur: "Amateur",
-  supporter: "Supporter",
-  sante: "Santé",
-  pro_joueur: "Pro Joueur",
-  pro_club: "Pro Club",
-  pro_staff: "Pro Staff",
-  sponsor: "Partenaires",
-};
+import { ScrollVideoStage, UniverseScroll } from "@/components/immersive";
+import { ROUTES } from "@/lib/routes";
 
 export default function HomePage() {
   return (
     <>
-      <HeroSection />
+      <ScrollVideoStage />
+      <UniverseScroll />
 
-      <section
-        id="decouvrir"
-        className="scroll-mt-28 bg-black py-14 sm:py-16"
-      >
-        <div className="mx-auto max-w-5xl px-4 sm:px-6">
-          <div className="mb-8 text-center">
-            <h2 className="font-display text-3xl font-extrabold uppercase tracking-[-0.03em] text-white">
-              Vous êtes ?
-            </h2>
-            <p className="mt-2 text-sm text-white/50">Choisissez votre rôle. Accès direct au pôle.</p>
-          </div>
-          <div className="overflow-hidden rounded-3xl border border-white/10 bg-[#0c0c10] p-2 sm:p-4">
-            <RoleQuiz inline />
-          </div>
+      <section className="bg-accent-gradient py-20 text-white sm:py-24">
+        <div className="mx-auto flex max-w-4xl flex-col items-start justify-between gap-10 px-5 sm:flex-row sm:items-end sm:px-8">
+          <h2 className="max-w-md font-display text-3xl font-medium tracking-[-0.035em] sm:text-4xl">
+            Commencer prend 30 secondes.
+          </h2>
+          <Link
+            href={ROUTES.betaWaitlist}
+            className="inline-flex items-center rounded-full bg-black px-7 py-3.5 text-[12px] font-semibold uppercase tracking-[0.12em] text-white transition hover:bg-[#050A30]"
+          >
+            Commencer
+          </Link>
         </div>
-      </section>
-
-      <Testimonials />
-
-      <section className="border-t border-white/10 bg-[#050507]">
-        <WaitlistForm minimal />
       </section>
     </>
   );

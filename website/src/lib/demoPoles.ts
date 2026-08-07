@@ -1,8 +1,7 @@
-import { CAROUSEL_POLES, POLE_IMAGES, type PoleId } from "@/lib/poles";
+import { SHOWCASE_POLES, POLE_IMAGES, type PoleId } from "@/lib/poles";
 import { ROUTES } from "@/lib/routes";
 import {
   AMATEUR_BRAND,
-  EVENEMENTS_BRAND,
   PRO_CLUB_BRAND,
   PRO_JOUEUR_BRAND,
   PRO_STAFF_BRAND,
@@ -11,18 +10,26 @@ import {
 } from "@/lib/content";
 import type { UniverseThemeId } from "@/components/universe/universeTheme";
 
-/** Pôles exposés dans la démo (hors Partenaires). */
-export type DemoPoleId = Exclude<PoleId, "sponsor" | "amateur" | "pro_joueur">;
+/** Pôles exposés dans la démo vitrine (5) + Santé legacy URL. */
+export type DemoPoleId =
+  | "joueur"
+  | "supporter"
+  | "pro_club"
+  | "coach"
+  | "sponsor"
+  | "sante";
 
-export const DEMO_POLE_IDS: DemoPoleId[] = CAROUSEL_POLES.map((p) => p.id as DemoPoleId);
+export const DEMO_POLE_IDS: DemoPoleId[] = SHOWCASE_POLES.map(
+  (p) => p.id as DemoPoleId,
+);
 
 export const DEMO_POLE_SHORT_LABEL: Record<DemoPoleId, string> = {
   joueur: "Joueur",
   supporter: "Supporter",
   sante: "Santé",
   pro_club: "Club",
-  pro_staff: "Staff",
-  evenements: "Événements",
+  coach: "Coach",
+  sponsor: "Sponsor",
 };
 
 export function isDemoPoleId(value: string | undefined): value is DemoPoleId {
@@ -31,8 +38,8 @@ export function isDemoPoleId(value: string | undefined): value is DemoPoleId {
     value === "supporter" ||
     value === "sante" ||
     value === "pro_club" ||
-    value === "pro_staff" ||
-    value === "evenements"
+    value === "coach" ||
+    value === "sponsor"
   );
 }
 
@@ -48,7 +55,13 @@ export function demoPoleFromUniverseParam(u: string | undefined): DemoPoleId | n
     case "sante":
       return "sante";
     case "pro":
-      return "pro_staff";
+    case "pro_staff":
+      return "coach";
+    case "evenements":
+      return "pro_club";
+    case "sponsor":
+    case "partenaires":
+      return "sponsor";
     default:
       return null;
   }
@@ -56,6 +69,9 @@ export function demoPoleFromUniverseParam(u: string | undefined): DemoPoleId | n
 
 export function parseDemoPoleParam(p?: string, u?: string): DemoPoleId {
   if (p === "amateur" || p === "pro_joueur") return "joueur";
+  if (p === "pro_staff") return "coach";
+  if (p === "evenements") return "pro_club";
+  if (p === "partenaires") return "sponsor";
   if (isDemoPoleId(p)) return p;
   return demoPoleFromUniverseParam(u) ?? "joueur";
 }
@@ -66,7 +82,9 @@ export function demoUrlForPole(pole: DemoPoleId): string {
 
 export function themeIdForDemoPole(pole: DemoPoleId): UniverseThemeId {
   if (pole === "joueur") return "pro_joueur";
-  if (pole === "evenements") return "pro_staff";
+  if (pole === "coach") return "pro_staff";
+  if (pole === "sponsor") return "pro";
+  if (pole === "sante") return "sante";
   return pole;
 }
 
@@ -80,17 +98,17 @@ export function brandForDemoPole(pole: DemoPoleId): { name: string; logo: string
       return { name: SANTE_BRAND.name, logo: SANTE_BRAND.logo };
     case "pro_club":
       return { name: PRO_CLUB_BRAND.name, logo: PRO_CLUB_BRAND.logo };
-    case "pro_staff":
-      return { name: PRO_STAFF_BRAND.name, logo: PRO_STAFF_BRAND.logo };
-    case "evenements":
-      return { name: EVENEMENTS_BRAND.name, logo: EVENEMENTS_BRAND.logo };
+    case "coach":
+      return { name: "Pro Day Coach", logo: PRO_STAFF_BRAND.logo };
+    case "sponsor":
+      return { name: "Pro Day Sponsor", logo: "/branding/logo-sponsor-picto.png" };
     default:
       return { name: AMATEUR_BRAND.name, logo: AMATEUR_BRAND.logo };
   }
 }
 
 export function imageForDemoPole(pole: DemoPoleId): string {
-  return POLE_IMAGES[pole];
+  return POLE_IMAGES[pole as PoleId] ?? POLE_IMAGES.joueur;
 }
 
 /** Alias historique pour DemoHero. */

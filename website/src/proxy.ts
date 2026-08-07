@@ -27,7 +27,7 @@ function hasAdminCookie(request: NextRequest): boolean {
 }
 
 /** Protège /admin/* (minicode) et gère les jetons bêta /beta. */
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname, searchParams } = request.nextUrl;
 
   if (pathname.startsWith("/admin")) {

@@ -145,7 +145,7 @@ export function SponsorPricingSection({
       </div>
       )}
 
-      <div className="mt-10 grid gap-6 lg:grid-cols-3">
+      <div className={`grid gap-4 lg:grid-cols-3 ${compact ? "mt-0" : "mt-10"}`}>
         {SPONSOR_PRICING_TIERS.map((tier) => {
           const highlighted = tier.highlighted === true;
           const detail = tierPriceDetail(tier, yearly);
@@ -160,38 +160,38 @@ export function SponsorPricingSection({
               initial={{ opacity: 0, y: 12 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className={`flex flex-col rounded-3xl border p-6 sm:p-8 ${
+              className={`flex flex-col border p-6 sm:p-7 ${
                 highlighted
-                  ? "border-amber-400/40 bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900 text-white shadow-xl ring-1 ring-amber-400/40"
+                  ? "border-[#D4AF37]/45 bg-transparent text-white"
                   : dark
-                    ? "card-premium text-white"
-                    : "border-neutral-200 bg-white shadow-sm"
+                    ? "border-white/10 bg-transparent text-white"
+                    : "rounded-2xl border-neutral-200 bg-white shadow-sm"
               }`}
             >
               {tier.badge ? (
-                <span className="mb-3 inline-block w-fit rounded-full bg-amber-400 px-3 py-1 text-xs font-bold uppercase tracking-wider text-slate-950">
+                <span className="mb-3 inline-block w-fit rounded-full bg-[#D4AF37] px-3 py-1 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-black">
                   {tier.badge}
                 </span>
               ) : null}
-              <h3 className="font-display text-xl font-bold">{tier.name}</h3>
+              <h3 className="font-display text-xl font-medium tracking-[-0.02em]">
+                {tier.name}
+              </h3>
               <p
                 className={
-                  highlighted
-                    ? "mt-1 text-blue-100"
-                    : dark
-                      ? "mt-1 text-white/50"
-                      : "mt-1 text-neutral-500"
+                  dark ? "mt-1 text-sm text-white/50" : "mt-1 text-neutral-500"
                 }
               >
                 {tier.tagline}
               </p>
               <p className="mt-6">
-                <span className="text-4xl font-black tabular-nums">{tierPrice(tier, yearly)}</span>
+                <span className="font-display text-4xl font-medium tracking-[-0.03em] tabular-nums">
+                  {tierPrice(tier, yearly)}
+                </span>
               </p>
               {detail ? (
                 <p
                   className={`mt-2 text-sm ${
-                    highlighted ? "text-blue-200/90" : dark ? "text-white/45" : "text-neutral-500"
+                    dark ? "text-white/45" : "text-neutral-500"
                   }`}
                 >
                   {detail}
@@ -201,22 +201,22 @@ export function SponsorPricingSection({
                 {tier.features.map((feature) => (
                   <li key={feature} className="flex gap-2 text-sm">
                     <Check
-                      size={16}
+                      size={15}
                       className={`mt-0.5 shrink-0 ${
-                        highlighted ? "text-amber-300" : "text-emerald-500"
+                        highlighted ? "text-[#D4AF37]" : "text-emerald-400"
                       }`}
                     />
-                    <span>{feature}</span>
+                    <span className={dark ? "text-white/75" : ""}>{feature}</span>
                   </li>
                 ))}
               </ul>
               <Link
                 href={ctaHref}
-                className={`mt-8 block rounded-full px-6 py-3 text-center text-sm font-semibold transition ${
+                className={`mt-8 inline-flex min-h-11 items-center justify-center rounded-full px-6 py-2.5 text-center font-mono text-[11px] font-semibold uppercase tracking-[0.16em] transition ${
                   highlighted
-                    ? "bg-amber-400 text-slate-950 hover:bg-amber-300"
+                    ? "bg-[#D4AF37] text-black hover:brightness-110"
                     : dark
-                      ? "border border-[var(--proday-accent)]/30 bg-[var(--proday-accent-muted)] text-black hover:bg-[#2a6fff]"
+                      ? "border border-white/15 text-white hover:border-white/30"
                       : "bg-proday-ink text-white hover:bg-neutral-800"
                 }`}
               >

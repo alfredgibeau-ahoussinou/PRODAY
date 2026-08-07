@@ -24,7 +24,7 @@ export function isTestFlightAvailable(now: Date = new Date()): boolean {
 
 export function getIosBetaStatusMessage(now: Date = new Date()): string {
   if (isTestFlightAvailable(now)) {
-    return "La bêta iOS est ouverte — installez ProDay via TestFlight.";
+    return "La bêta iOS est ouverte. Installez ProDay via TestFlight.";
   }
   return `La bêta iOS sera disponible à partir du ${IOS_BETA_LAUNCH_LABEL}.`;
 }

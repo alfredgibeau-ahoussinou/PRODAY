@@ -1,10 +1,10 @@
 import Link from "next/link";
-import { ChevronDown, Mail, MessageSquare } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import {
   BetaPageFrame,
   SectionKicker,
-  buildBetaFeedbackMailto,
 } from "@/components/beta/BetaSiteShell";
+import { BetaFeedbackForm } from "@/components/beta/BetaFeedbackForm";
 import type { BetaAccessSession } from "@/lib/betaAccess";
 import { BETA_FAQ } from "@/lib/betaContent";
 import { ROUTES } from "@/lib/routes";
@@ -14,8 +14,6 @@ type BetaAideContentProps = {
 };
 
 export function BetaAideContent({ session }: BetaAideContentProps) {
-  const feedbackMailto = buildBetaFeedbackMailto(session);
-
   return (
     <BetaPageFrame
       pathname={ROUTES.betaAide}
@@ -23,32 +21,9 @@ export function BetaAideContent({ session }: BetaAideContentProps) {
       title="FAQ, support et retours"
       description="Réponses aux questions fréquentes, contact support et envoi de feedback produit."
     >
-      <div className="rounded-3xl border border-[var(--proday-accent)]/20 bg-[#001854]/35 p-8">
-        <MessageSquare className="text-[var(--proday-accent)]" size={28} />
-        <h2 className="font-display mt-4 text-xl font-bold uppercase tracking-wide text-white">
-          Envoyer un retour
-        </h2>
-        <p className="mt-3 max-w-2xl text-sm leading-relaxed text-white/60">
-          Bug bloquant, idée de fonctionnalité ou retour UX : écrivez-nous avec votre profil (
-          {session.roleLabel}), la version testée et une capture d&apos;écran si possible. Nous
-          lisons chaque message avant le lancement public.
-        </p>
-        <a
-          href={feedbackMailto}
-          className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-full bg-[var(--proday-accent)] px-6 py-3 text-sm font-bold text-white transition hover:bg-[#2a6fff]"
-        >
-          <Mail size={16} />
-          Envoyer un retour
-        </a>
-        <p className="mt-4 text-xs text-white/35">
-          Ou répondez directement à l&apos;email de bienvenue bêta ·{" "}
-          <a href="mailto:proday.admin@gmail.com" className="underline hover:text-white/55">
-            proday.admin@gmail.com
-          </a>
-        </p>
-      </div>
+      <BetaFeedbackForm session={session} />
 
-      <div className="mt-8 rounded-3xl border border-white/10 bg-white/[0.03] p-8">
+      <div className="mt-8 border border-white/10 bg-transparent p-8">
         <SectionKicker>Questions fréquentes</SectionKicker>
         <div className="mt-6 divide-y divide-white/10">
           {BETA_FAQ.map(({ question, answer }) => (
@@ -67,7 +42,7 @@ export function BetaAideContent({ session }: BetaAideContentProps) {
       </div>
 
       <div className="mt-8 grid gap-6 sm:grid-cols-2">
-        <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-6">
+        <div className="border border-white/10 bg-transparent p-6">
           <SectionKicker>Installation</SectionKicker>
           <p className="mt-3 text-sm leading-relaxed text-white/55">
             Problème avec l&apos;APK Android ou TestFlight iOS ? Consultez le guide détaillé avec
@@ -80,10 +55,10 @@ export function BetaAideContent({ session }: BetaAideContentProps) {
             Guide d&apos;installation →
           </Link>
         </div>
-        <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-6">
+        <div className="border border-white/10 bg-transparent p-6">
           <SectionKicker>Programme</SectionKicker>
           <p className="mt-3 text-sm leading-relaxed text-white/55">
-            Calendrier, sept pôles et modules à tester selon votre profil beta-testeur.
+            Calendrier, cinq pôles et modules à tester selon votre profil beta-testeur.
           </p>
           <Link
             href={ROUTES.betaProgramme}
@@ -94,7 +69,7 @@ export function BetaAideContent({ session }: BetaAideContentProps) {
         </div>
       </div>
 
-      <div className="mt-8 rounded-3xl border border-white/10 bg-white/[0.03] p-8">
+      <div className="mt-8 border border-white/10 bg-transparent p-8">
         <SectionKicker>Contact support</SectionKicker>
         <p className="mt-4 text-sm leading-relaxed text-white/60">
           Pour toute question non couverte par la FAQ, écrivez à{" "}

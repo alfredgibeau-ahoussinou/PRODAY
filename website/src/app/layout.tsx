@@ -1,27 +1,20 @@
 import type { Metadata, Viewport } from "next";
-import { Cormorant_Garamond, Inter, Syne } from "next/font/google";
+import { JetBrains_Mono, Space_Grotesk } from "next/font/google";
 import { SiteShell } from "@/components/layout/SiteShell";
 import "./globals.css";
 
-const inter = Inter({
-  variable: "--font-inter",
+const space = Space_Grotesk({
+  variable: "--font-space",
   subsets: ["latin"],
   display: "swap",
+  weight: ["400", "500", "600", "700"],
 });
 
-const syne = Syne({
-  variable: "--font-syne",
-  subsets: ["latin"],
-  display: "swap",
-  weight: ["500", "600", "700", "800"],
-});
-
-const cormorant = Cormorant_Garamond({
-  variable: "--font-cormorant",
+const mono = JetBrains_Mono({
+  variable: "--font-mono",
   subsets: ["latin"],
   display: "swap",
   weight: ["400", "500", "600"],
-  style: ["normal", "italic"],
 });
 
 export const metadata: Metadata = {
@@ -29,12 +22,12 @@ export const metadata: Metadata = {
     process.env.NEXT_PUBLIC_SITE_URL ?? "https://proday75.fr",
   ),
   title: {
-    default: "ProDay · L'app pour le foot · Connecter · Progresser · Réussir",
+    default: "ProDay · L'OS du foot amateur & semi-pro",
     template: "%s · ProDay",
   },
   description:
-    "ProDay, l'app pour le foot. Ton profil, tes matchs, ton club. Tout au même endroit. Que tu sois joueur, coach, club ou supporter, ProDay t'accompagne.",
-  keywords: ["foot", "football", "app", "application", "joueur", "coach", "club", "supporter", "matchs", "profil", "équipe"],
+    "Une app pour connecter joueurs, clubs, coachs et communauté. Matchs, mercato, covoit. Un seul système. Bêta ouverte.",
+  keywords: ["foot", "football", "app", "joueur", "coach", "club", "matchs", "mercato"],
   authors: [{ name: "ProDay" }],
   creator: "ProDay",
   publisher: "ProDay",
@@ -58,42 +51,29 @@ export const metadata: Metadata = {
     type: "website",
     locale: "fr_FR",
     url: "https://proday75.fr",
-    title: "ProDay · L'app pour le foot",
+    title: "ProDay · L'OS du foot",
     description:
-      "ProDay, l'app pour le foot. Ton profil, tes matchs, ton club. Tout au même endroit.",
+      "Joueurs, clubs, coachs, santé, sponsors. Un système connecté pour le terrain.",
     siteName: "ProDay",
     images: [
       {
         url: "/branding/logo-proday-official.png",
         width: 1200,
         height: 630,
-        alt: "ProDay - L'app pour le foot",
+        alt: "ProDay",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "ProDay · L'app pour le foot",
+    title: "ProDay · L'OS du foot",
     description:
-      "ProDay, l'app pour le foot. Ton profil, tes matchs, ton club. Tout au même endroit.",
+      "Joueurs, clubs, coachs, santé, sponsors. Un système connecté pour le terrain.",
     images: ["/branding/logo-proday-official.png"],
   },
   robots: {
     index: true,
     follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      "max-video-preview": -1,
-      "max-image-preview": "large",
-      "max-snippet": -1,
-    },
-  },
-  verification: {
-    google: "google-site-verification",
-  },
-  other: {
-    copyright: "© ProDay 2026 · Tous droits réservés",
   },
 };
 
@@ -110,11 +90,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="fr" className={`${inter.variable} ${syne.variable} ${cormorant.variable} scroll-smooth`}>
-      <body className="min-h-screen antialiased pt-16">
+    <html lang="fr" className={`${space.variable} ${mono.variable} scroll-smooth`}>
+      <body className="min-h-screen antialiased">
         <a
           href="#main-content"
-          className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-white focus:px-4 focus:py-2 focus:text-black"
+          className="bg-accent-gradient sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:px-4 focus:py-2 focus:text-white"
         >
           Aller au contenu principal
         </a>

@@ -267,7 +267,7 @@ const UNIVERSE_OVERRIDES: Record<
     home: {
       caption: "Pro Day Joueur",
       title: "Accueil",
-      subtitle: "Mercato, matchs et CV — badges Amateur → Pro.",
+      subtitle: "Mercato, matchs et CV. Badges Amateur → Pro.",
     },
     recrutement: { title: "Mercato" },
     reels: {

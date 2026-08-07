@@ -1,122 +1,112 @@
 import type { Metadata } from "next";
-import { PageHeader } from "@/components/layout/PageHeader";
-import { PremiumSection } from "@/components/layout/PremiumSection";
-import { PlanDetailCard } from "@/components/poles/PlanDetailCard";
-import { PoleFullBleed } from "@/components/poles/PoleFullBleed";
-import { SanteTeleconsultSection } from "@/components/sante/SanteTeleconsultSection";
-import { PremiumButton } from "@/components/ui/PremiumButton";
-import { SANTE_BRAND, getWebPlanById } from "@/lib/content";
-import { POLE_STYLES, pricingHrefForPole } from "@/lib/poles";
+import { TerminalProductPage } from "@/components/terminal";
+import { SANTE_BRAND } from "@/lib/content";
+import { pricingHrefForPole } from "@/lib/poles";
 import { ROUTES } from "@/lib/routes";
 
 export const metadata: Metadata = {
-  title: "Pro Day Santé",
+  title: "Rôle Santé · Intégré à ProDay",
   description:
-    "Kinés, coach mental et nutrition. Annuaire près des clubs, agenda et téléconsultation HDS.",
+    "Kiné, médecin et staff médical : annuaire, agenda et téléconsultation. Rôle intégré — plus un pôle indépendant.",
 };
 
-const SANTE_PILLARS = [
-  {
-    num: "01",
-    title: "Annuaire vérifié",
-    body: "Kinés, coachs mental, nutritionnistes. Visibles des joueurs et clubs de votre zone.",
-  },
-  {
-    num: "02",
-    title: "Agenda dans l'app",
-    body: "Prise de rendez-vous, rappels et suivi. Sans multiplier les outils.",
-  },
-  {
-    num: "03",
-    title: "Téléconsultation HDS",
-    body: "Visio Daily sécurisée dans l’app (caméra, micro, écran, chat). Distinct des vidéos éducatives.",
-  },
-  {
-    num: "04",
-    title: "Contenus éducatifs",
-    body: "Prévention, étirements, récupération. Pour le public. Pas pour remplacer une consultation.",
-  },
-] as const;
-
 export default function SantePage() {
-  const physioPlan = getWebPlanById("physio_pro");
-  const styles = POLE_STYLES.sante;
-
   return (
-    <>
-      <PageHeader
-        pathname={ROUTES.sante}
-        kicker={SANTE_BRAND.tagline}
-        title="Soigner près du terrain."
-        description={SANTE_BRAND.mission}
-        image="/images/football-health-01.jpg"
-        logo={SANTE_BRAND.logo}
-        logoAlt={SANTE_BRAND.fullName}
-        accent="sante"
-        dark
-      />
-
-      <section className="border-b border-white/10 bg-gradient-to-b from-[#006C60]/30 to-[#050507]">
-        <div className="mx-auto grid max-w-6xl grid-cols-2 lg:grid-cols-4">
-          {SANTE_PILLARS.map((p, i) => (
-            <div
-              key={p.num}
-              className="border-white/10 px-5 py-8 sm:px-7 sm:py-10 [&:nth-child(odd)]:border-r lg:border-r lg:[&:nth-child(4n)]:border-r-0"
-              style={{ borderBottomWidth: i < 2 ? 1 : undefined }}
-            >
-              <span className="font-display text-3xl font-extrabold tabular-nums text-[#00CCB4]/40 sm:text-4xl">
-                {p.num}
-              </span>
-              <p className="mt-4 text-[10px] font-bold uppercase tracking-[0.2em] text-[#00CCB4]">
-                {p.title}
-              </p>
-              <p className="mt-2 text-sm leading-relaxed text-white/65">{p.body}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <PremiumSection
-        kicker="PÔLE SANTÉ"
-        title="Praticiens vérifiés près des clubs"
-        description="Pôle distinct du Pro Staff. Agenda, téléconsultation et vidéos éducatives."
-        pole="sante"
-        bordered={false}
-      >
-        <div className="flex flex-wrap gap-4">
-          <PremiumButton
-            href={`${ROUTES.betaWaitlist}?role=physio`}
-            className="!bg-[#00CCB4] !text-black hover:!bg-[#00e0c4]"
-          >
-            Rejoindre la bêta Santé
-          </PremiumButton>
-          <PremiumButton href="#teleconsultation" variant="outline">
-            Téléconsultation
-          </PremiumButton>
-          <PremiumButton href={pricingHrefForPole("sante")} variant="outline">
-            Voir les tarifs
-          </PremiumButton>
-        </div>
-      </PremiumSection>
-
-      <SanteTeleconsultSection />
-
-      {physioPlan && (
-        <PoleFullBleed className={`${styles.section} py-20`}>
-          <div className="mx-auto max-w-3xl px-4 sm:px-6">
-            <p className="font-signature text-2xl italic text-[#00CCB4]">Tarif praticien</p>
-            <h2 className="font-display mt-1 text-3xl font-extrabold uppercase tracking-[-0.03em] text-white">
-              Pôle santé Pro
-            </h2>
-            <p className={`mt-2 text-sm ${styles.textMuted}`}>
-              Formule Pro : téléconsultation, agenda et visibilité prioritaire près des clubs.
-            </p>
-            <div className="mt-10">
-              <PlanDetailCard plan={physioPlan} yearly={false} styles={styles} />
-            </div>
-          </div>
-        </PoleFullBleed>
-      )}
-    </>
+    <TerminalProductPage
+      pathname={ROUTES.sante}
+      visualId="sante"
+      accent="sante"
+      kicker="RÔLE SANTÉ · INTÉGRÉ"
+      title="Soigner près du terrain."
+      description={SANTE_BRAND.mission}
+      logo={SANTE_BRAND.logo}
+      logoAlt={SANTE_BRAND.fullName}
+      story={{
+        title: "Un rôle dans l’écosystème. Pas un pôle à part.",
+        body: "Les praticiens restent sur ProDay pour l’annuaire, l’agenda et la visio — reliés aux joueurs et clubs, sans carousel marketing dédié.",
+      }}
+      breakdownTitle="Ce que le rôle Santé couvre"
+      features={[
+        {
+          eyebrow: "Annuaire",
+          title: "Praticiens vérifiés",
+          body: "Visibles des joueurs et clubs de votre zone.",
+        },
+        {
+          eyebrow: "Agenda",
+          title: "RDV dans l'app",
+          body: "Prise de rendez-vous, rappels et suivi.",
+        },
+        {
+          eyebrow: "Visio",
+          title: "Téléconsultation",
+          body: "Créneaux 15 / 30 min pour le suivi à distance.",
+        },
+        {
+          eyebrow: "Confidentialité",
+          title: "Données protégées",
+          body: "Accès médical encadré. Commission uniquement si RDV conclu.",
+        },
+      ]}
+      platformTitle="Branché sur Club et Joueur."
+      platformDescription="Les cinq pôles restent Joueur, Club, Coach, Supporter et Sponsor. Santé s’y accroche."
+      modules={[
+        {
+          id: "annuaire",
+          label: "Annuaire",
+          title: "Près des clubs",
+          body: "Spécialité, zone et vérification.",
+        },
+        {
+          id: "agenda",
+          label: "Agenda",
+          title: "Créneaux ouverts",
+          body: "Les joueurs réservent depuis l’app.",
+        },
+        {
+          id: "visio",
+          label: "Visio",
+          title: "Suivi à distance",
+          body: "Téléconsultation intégrée.",
+        },
+        {
+          id: "cabinet",
+          label: "Cabinet",
+          title: "Profil praticien",
+          body: "Messages et mise en avant annuaire (offre Pro).",
+        },
+      ]}
+      value={{
+        title: "Santé du foot, sans silo.",
+        pillars: [
+          {
+            metric: "Rôle",
+            metricLabel: "intégré",
+            title: "Plus un pôle",
+            body: "Hors vitrine des 5 pôles principaux.",
+          },
+          {
+            metric: "10 %",
+            metricLabel: "si RDV",
+            title: "Commission claire",
+            body: "Uniquement sur les consultations conclues via ProDay.",
+          },
+          {
+            metric: "Club",
+            metricLabel: "proche",
+            title: "Territoire",
+            body: "Visibilité prioritaire près des structures.",
+          },
+        ],
+      }}
+      cta={{
+        title: "Rejoindre en tant que praticien",
+        description: "Sur invitation. Architecture conservée, positionnement rôle.",
+        primaryHref: ROUTES.betaWaitlist,
+        primaryLabel: "Demander l’accès",
+        secondaryHref: pricingHrefForPole("sante"),
+        secondaryLabel: "Tarif Santé Pro",
+      }}
+    />
   );
 }

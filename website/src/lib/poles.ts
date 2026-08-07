@@ -9,18 +9,21 @@ import {
 import { ROUTES } from "./routes";
 
 /**
- * Pôles marketing site.
- * Amateur + Pro Joueur → Pôle Joueur unifié.
- * Nouveau : Pôle Événements.
+ * Pôles marketing site — architecture cible.
+ * Vitrine : Joueur · Club · Coach · Supporter · Sponsor.
+ * Santé / Agent / Recruteur / Organisateur = rôles intégrés (pas des pôles).
  */
 export type PoleId =
   | "joueur"
   | "supporter"
   | "sante"
   | "pro_club"
-  | "pro_staff"
-  | "evenements"
+  | "coach"
   | "sponsor"
+  /** @deprecated → coach */
+  | "pro_staff"
+  /** @deprecated → pro_club */
+  | "evenements"
   /** @deprecated → joueur */
   | "amateur"
   /** @deprecated → joueur */
@@ -29,6 +32,8 @@ export type PoleId =
 export type PoleDefinition = {
   id: PoleId;
   kicker: string;
+  /** Short menu label (Joueur, Coach…). */
+  navLabel: string;
   title: string;
   subtitle: string;
   description: string;
@@ -38,25 +43,53 @@ export type PoleDefinition = {
   planIds: WebSubscriptionPlanBase["id"][];
 };
 
-/** Les 6 pôles du carousel marketing (+ Sponsor hors carousel). */
+/** Vitrine GTM — 5 pôles principaux. */
 export const CAROUSEL_POLES: PoleDefinition[] = [
   {
     id: "joueur",
     kicker: "PÔLE JOUEUR",
+    navLabel: "Joueur",
     title: "Amateur → Pro",
-    subtitle: "Badges · Mercato · Carrière",
+    subtitle: "Profil · Stats · Covoiturage",
     description:
-      "Un seul espace joueur. Badges Amateur (bleu), Centre / Aspirant (vert), Professionnel (jaune). Signature pro : même profil, badge mis à jour.",
+      "Profil, réseau, stats de base, convocations et covoiturage. Pass Premium 3,99 € : entraînements IA, heatmaps, analyse vidéo et passeport recruteur.",
     href: ROUTES.joueur,
     pricingHash: "joueur",
     logo: "/branding/logo-man-picto.png",
     planIds: ["player_plus"],
   },
   {
+    id: "pro_club",
+    kicker: "PÔLE CLUB",
+    navLabel: "Club",
+    title: "Le cœur de ProDay",
+    subtitle: "Équipes · Compétitions · Permissions",
+    description:
+      "Équipes, catégories, licenciés, coachs, dirigeants, bénévoles, parents, convocations, présences, calendriers, compétitions, covoiturage et communications. Offres Amateur, Essentiel, Premium + packs vidéo Essentiel / Pro+Veo.",
+    href: ROUTES.proClub,
+    pricingHash: "pro_club",
+    logo: "/branding/logo-pro-picto.png",
+    planIds: ["club_amateur", "club_pro", "club_premium", "club_video_pro"],
+  },
+  {
+    id: "coach",
+    kicker: "PÔLE COACH",
+    navLabel: "Coach",
+    title: "Banc de touche digital",
+    subtitle: "Smart Tactics · IA · Effectif",
+    description:
+      "Profil coach rattaché au club : parcours, diplômes, Smart Tactics, assistant IA, analyse vidéo, convocations et préparation match. Agent & recruteur restent des rôles réseau.",
+    href: ROUTES.coach,
+    pricingHash: "coach",
+    logo: "/branding/logo-pro-picto.png",
+    planIds: ["coach_pro"],
+  },
+  {
     id: "supporter",
     kicker: "PÔLE SUPPORTER",
+    navLabel: "Supporter",
     title: "Fans & communauté",
-    subtitle: "Live · Suivis · Débats · 0 €",
+    subtitle: "Live · Clubs suivis · Débats",
     description:
       "Tribune 100 % gratuite. Scores live, suivis illimités, débats et moments.",
     href: ROUTES.supporter,
@@ -64,61 +97,14 @@ export const CAROUSEL_POLES: PoleDefinition[] = [
     logo: "/branding/logo-supporter-picto.png",
     planIds: [],
   },
-  {
-    id: "sante",
-    kicker: "PÔLE SANTÉ",
-    title: "Praticiens & staff médical",
-    subtitle: "Kiné · Ostéo · Médecin · Prépa · Mental · Nutrition · Podologue",
-    description:
-      "Soigner près du terrain. 7 métiers, annuaire vérifié, agenda et téléconsultation HDS.",
-    href: ROUTES.sante,
-    pricingHash: "sante",
-    logo: "/branding/logo-sante-picto.png",
-    planIds: ["physio_pro"],
-  },
-  {
-    id: "pro_club",
-    kicker: "PÔLE CLUB",
-    title: "Structures & équipes",
-    subtitle: "U13 → Seniors · Recrutement",
-    description:
-      "Catégories, recrutement kanban et vitrine publique. Calendrier structure et convocations : Pôle Staff (premium).",
-    href: ROUTES.proClub,
-    pricingHash: "pro_club",
-    logo: "/branding/logo-pro-picto.png",
-    planIds: ["club_pro"],
-  },
-  {
-    id: "pro_staff",
-    kicker: "PÔLE STAFF",
-    title: "Métiers du foot",
-    subtitle: "Agent · Recruteur · Coach · Calendrier",
-    description:
-      "Mercato, mandats, shortlists, calendrier structure et convocations premium. Offre agent lancement 19,99 €.",
-    href: ROUTES.proStaff,
-    pricingHash: "pro_staff",
-    logo: "/branding/logo-pro-picto.png",
-    planIds: ["recruiter_pro", "coach_pro", "agent_elite"],
-  },
-  {
-    id: "evenements",
-    kicker: "PÔLE ÉVÉNEMENTS",
-    title: "Organisateurs",
-    subtitle: "Tournois · Académies · Détections",
-    description:
-      "Créez tournois, stages, détections et showcases. Inscriptions en ligne, listes, résultats et médias.",
-    href: ROUTES.evenements,
-    pricingHash: "evenements",
-    logo: "/branding/logo-pro-picto.png",
-    planIds: ["organizer_pro"],
-  },
 ];
 
 export const SPONSOR_POLE: PoleDefinition = {
   id: "sponsor",
   kicker: "PÔLE SPONSOR",
+  navLabel: "Sponsor",
   title: "Marques & sponsors",
-  subtitle: "Visibilité · ROI · Terrain",
+  subtitle: "Visibilité · Contact local · Terrain",
   description:
     "Campagnes ciblées auprès de clubs et joueurs actifs. KPIs lisibles. Vitrine vérifiée.",
   href: ROUTES.sponsor,
@@ -127,13 +113,67 @@ export const SPONSOR_POLE: PoleDefinition = {
   planIds: ["sponsor_pro"],
 };
 
-/** Tous les pôles produit (6 carousel + Sponsor). */
-export const POLES: PoleDefinition[] = [...CAROUSEL_POLES, SPONSOR_POLE];
+/** Hors carousel — rôle médical intégré, page sur invitation. */
+export const SANTE_POLE: PoleDefinition = {
+  id: "sante",
+  kicker: "RÔLE SANTÉ · INTÉGRÉ",
+  navLabel: "Santé",
+  title: "Praticiens & staff médical",
+  subtitle: "Rôle intégré · hors vitrine pôles",
+  description:
+    "Kiné, médecin et staff médical : annuaire, agenda et téléconsultation. Plus un pôle indépendant — un rôle dans l’écosystème Club / Joueur.",
+  href: ROUTES.sante,
+  pricingHash: "sante",
+  logo: "/branding/logo-sante-picto.png",
+  planIds: ["physio_pro"],
+};
+
+/** @deprecated Conservé pour redirections / liens legacy. */
+export const LEGACY_STAFF_POLE: PoleDefinition = {
+  id: "pro_staff",
+  kicker: "PÔLE COACH",
+  navLabel: "Coach",
+  title: "Banc de touche digital",
+  subtitle: "Smart Tactics · IA · Effectif",
+  description: "Redirigé vers le Pôle Coach.",
+  href: ROUTES.coach,
+  pricingHash: "coach",
+  logo: "/branding/logo-pro-picto.png",
+  planIds: ["coach_pro", "recruiter_pro", "agent_elite"],
+};
+
+/** @deprecated Organisateur = rôle intégré au Club. */
+export const LEGACY_EVENEMENTS_POLE: PoleDefinition = {
+  id: "evenements",
+  kicker: "RÔLE ORGANISATEUR",
+  navLabel: "Organisateur",
+  title: "Tournois & détections",
+  subtitle: "Rôle intégré au Club",
+  description:
+    "Tournois, détections et stages : rôle organisateur, plus un pôle indépendant.",
+  href: ROUTES.proClub,
+  pricingHash: "pro_club",
+  logo: "/branding/logo-pro-picto.png",
+  planIds: ["organizer_pro"],
+};
+
+/** Pôles vitrine (carousel + Sponsor). */
+export const SHOWCASE_POLES: PoleDefinition[] = [...CAROUSEL_POLES, SPONSOR_POLE];
+
+/** Tous les pôles produit (vitrine + Santé + legacy aliases). */
+export const POLES: PoleDefinition[] = [
+  ...SHOWCASE_POLES,
+  SANTE_POLE,
+  LEGACY_STAFF_POLE,
+  LEGACY_EVENEMENTS_POLE,
+];
 
 export function normalizePoleId(id: string): PoleId | null {
   if (id === "amateur" || id === "pro_joueur" || id === "pro" || id === "joueur") {
     return "joueur";
   }
+  if (id === "pro_staff" || id === "coach") return "coach";
+  if (id === "evenements") return "pro_club";
   if (POLES.some((p) => p.id === id)) return id as PoleId;
   return null;
 }
@@ -145,8 +185,9 @@ export const POLE_NAV_POLE_IDS: Record<string, PoleId> = {
   [ROUTES.sante]: "sante",
   [ROUTES.proJoueur]: "joueur",
   [ROUTES.proClub]: "pro_club",
-  [ROUTES.proStaff]: "pro_staff",
-  [ROUTES.evenements]: "evenements",
+  [ROUTES.coach]: "coach",
+  [ROUTES.proStaff]: "coach",
+  [ROUTES.evenements]: "pro_club",
   [ROUTES.sponsor]: "sponsor",
   [ROUTES.partenaires]: "sponsor",
 };
@@ -159,8 +200,9 @@ export const POLE_NAV_STRIPE: Record<PoleId, string> = {
   sante: "bg-[#00CCB4]",
   pro_joueur: "bg-[#0054F0]",
   pro_club: "bg-[#006CFC]",
+  coach: "bg-[#3B5BFF]",
   pro_staff: "bg-[#3B5BFF]",
-  evenements: "bg-[#0891B2]",
+  evenements: "bg-[#006CFC]",
   sponsor: "bg-[#D4AF37]",
 };
 
@@ -172,23 +214,23 @@ export const POLE_BRAND_HEX: Record<PoleId, string> = {
   sante: "#00CCB4",
   pro_joueur: "#0054F0",
   pro_club: "#006CFC",
+  coach: "#3B5BFF",
   pro_staff: "#3B5BFF",
-  evenements: "#0891B2",
+  evenements: "#006CFC",
   sponsor: "#D4AF37",
 };
 
 const JOUEUR_STYLES = {
-  nav: "text-[#0054F0]/85 hover:text-white",
+  nav: "text-white/70 hover:text-[#0054F0]",
   navActive: "bg-[#0054F0] text-white",
-  section:
-    "bg-gradient-to-b from-[#000814] via-[#001854]/55 to-black text-white",
-  surface: "bg-[#050505] text-white",
-  accentTop: "border-t-2 border-[#0054F0]/40",
-  card: "border border-[#0054F0]/25 bg-white/[0.04] backdrop-blur-md shadow-[0_24px_48px_-20px_rgba(0,84,240,0.28)]",
-  cardHighlight: "ring-2 ring-[#0054F0]/55 border-[#0054F0]/40",
-  badge: "bg-[#0054F0]/18 text-[#93c5fd]",
-  textMuted: "text-[#60a5fa]/80",
-  cta: "bg-[#0054F0] text-white hover:bg-[#2a6fff] shadow-[0_12px_32px_-10px_rgba(0,84,240,0.55)]",
+  section: "bg-black text-white",
+  surface: "bg-black text-white",
+  accentTop: "border-t border-white/10",
+  card: "border border-white/10 bg-white/[0.03]",
+  cardHighlight: "ring-1 ring-[#0054F0]/40 border-[#0054F0]/30",
+  badge: "bg-[#0054F0]/12 text-[#0054F0]",
+  textMuted: "text-white/55",
+  cta: "bg-[#0054F0] text-white hover:brightness-110",
 } as const;
 
 export const POLE_STYLES: Record<
@@ -210,82 +252,60 @@ export const POLE_STYLES: Record<
   amateur: JOUEUR_STYLES,
   pro_joueur: JOUEUR_STYLES,
   supporter: {
-    nav: "text-[#3C00F0]/80 hover:text-white",
+    ...JOUEUR_STYLES,
+    nav: "text-white/70 hover:text-[#3C00F0]",
     navActive: "bg-[#3C00F0] text-white",
-    section:
-      "bg-gradient-to-b from-[#060018] via-[#180078]/50 to-black text-white",
-    surface: "bg-[#050505] text-white",
-    accentTop: "border-t-2 border-[#3C00F0]/40",
-    card: "border border-[#3C00F0]/25 bg-white/[0.04] backdrop-blur-md shadow-[0_24px_48px_-20px_rgba(60,0,240,0.25)]",
-    cardHighlight: "ring-2 ring-[#3C00F0]/55 border-[#3C00F0]/40",
-    badge: "bg-[#3C00F0]/18 text-[#c4b5fd]",
-    textMuted: "text-[#a78bfa]/80",
-    cta: "bg-[#3C00F0] text-white hover:bg-[#5a2aff] shadow-[0_12px_32px_-10px_rgba(60,0,240,0.55)]",
+    cardHighlight: "ring-1 ring-[#3C00F0]/40 border-[#3C00F0]/30",
+    badge: "bg-[#3C00F0]/12 text-[#3C00F0]",
+    cta: "bg-[#3C00F0] text-white hover:brightness-110",
   },
   sante: {
-    nav: "text-[#00CCB4]/80 hover:text-white",
-    navActive: "bg-[#00CCB4] text-[#003530]",
-    section:
-      "bg-gradient-to-b from-[#001412] via-[#006C60]/45 to-black text-white",
-    surface: "bg-[#050505] text-white",
-    accentTop: "border-t-2 border-[#00CCB4]/40",
-    card: "border border-[#00CCB4]/25 bg-white/[0.04] backdrop-blur-md shadow-[0_24px_48px_-20px_rgba(0,204,180,0.22)]",
-    cardHighlight: "ring-2 ring-[#00CCB4]/50",
-    badge: "bg-[#00CCB4]/18 text-[#99f6e4]",
-    textMuted: "text-[#5eead4]/75",
-    cta: "bg-[#00CCB4] text-[#003530] hover:bg-[#33d9c6] shadow-[0_12px_32px_-10px_rgba(0,204,180,0.5)]",
+    ...JOUEUR_STYLES,
+    nav: "text-white/70 hover:text-[#00CCB4]",
+    navActive: "bg-[#00CCB4] text-black",
+    cardHighlight: "ring-1 ring-[#00CCB4]/40 border-[#00CCB4]/30",
+    badge: "bg-[#00CCB4]/12 text-[#00CCB4]",
+    cta: "bg-[#00CCB4] text-black hover:brightness-110",
   },
   pro_club: {
-    nav: "text-[#006CFC]/85 hover:text-white",
+    ...JOUEUR_STYLES,
+    nav: "text-white/70 hover:text-[#006CFC]",
     navActive: "bg-[#006CFC] text-white",
-    section:
-      "bg-gradient-to-b from-[#000a1a] via-[#002478]/50 to-black text-white",
-    surface: "bg-[#050505] text-white",
-    accentTop: "border-t-2 border-[#006CFC]/40",
-    card: "border border-[#006CFC]/25 bg-white/[0.04] backdrop-blur-md shadow-[0_24px_48px_-20px_rgba(0,108,252,0.28)]",
-    cardHighlight: "ring-2 ring-[#006CFC]/55 border-[#006CFC]/40",
-    badge: "bg-[#006CFC]/18 text-[#93c5fd]",
-    textMuted: "text-[#60a5fa]/80",
-    cta: "bg-[#006CFC] text-white hover:bg-[#3388ff] shadow-[0_12px_32px_-10px_rgba(0,108,252,0.55)]",
+    cardHighlight: "ring-1 ring-[#006CFC]/40 border-[#006CFC]/30",
+    badge: "bg-[#006CFC]/12 text-[#006CFC]",
+    cta: "bg-[#006CFC] text-white hover:brightness-110",
+  },
+  coach: {
+    ...JOUEUR_STYLES,
+    nav: "text-white/70 hover:text-[#3B5BFF]",
+    navActive: "bg-[#3B5BFF] text-white",
+    cardHighlight: "ring-1 ring-[#3B5BFF]/40 border-[#3B5BFF]/30",
+    badge: "bg-[#3B5BFF]/12 text-[#3B5BFF]",
+    cta: "bg-[#3B5BFF] text-white hover:brightness-110",
   },
   pro_staff: {
-    nav: "text-[#3B5BFF]/85 hover:text-white",
+    ...JOUEUR_STYLES,
+    nav: "text-white/70 hover:text-[#3B5BFF]",
     navActive: "bg-[#3B5BFF] text-white",
-    section:
-      "bg-gradient-to-b from-[#000612] via-[#001848]/55 to-black text-white",
-    surface: "bg-[#050505] text-white",
-    accentTop: "border-t-2 border-[#3B5BFF]/40",
-    card: "border border-[#3B5BFF]/25 bg-white/[0.04] backdrop-blur-md shadow-[0_24px_48px_-20px_rgba(59,91,255,0.28)]",
-    cardHighlight: "ring-2 ring-[#3B5BFF]/55 border-[#3B5BFF]/40",
-    badge: "bg-[#3B5BFF]/18 text-[#a5b4fc]",
-    textMuted: "text-[#818cf8]/80",
-    cta: "bg-[#3B5BFF] text-white hover:bg-[#5c76ff] shadow-[0_12px_32px_-10px_rgba(59,91,255,0.55)]",
+    cardHighlight: "ring-1 ring-[#3B5BFF]/40 border-[#3B5BFF]/30",
+    badge: "bg-[#3B5BFF]/12 text-[#3B5BFF]",
+    cta: "bg-[#3B5BFF] text-white hover:brightness-110",
   },
   evenements: {
-    nav: "text-[#0891B2]/85 hover:text-white",
-    navActive: "bg-[#0891B2] text-white",
-    section:
-      "bg-gradient-to-b from-[#001018] via-[#0e4a5c]/50 to-black text-white",
-    surface: "bg-[#050505] text-white",
-    accentTop: "border-t-2 border-[#0891B2]/40",
-    card: "border border-[#0891B2]/25 bg-white/[0.04] backdrop-blur-md shadow-[0_24px_48px_-20px_rgba(8,145,178,0.28)]",
-    cardHighlight: "ring-2 ring-[#0891B2]/55 border-[#0891B2]/40",
-    badge: "bg-[#0891B2]/18 text-[#67e8f9]",
-    textMuted: "text-[#22d3ee]/80",
-    cta: "bg-[#0891B2] text-white hover:bg-[#06b6d4] shadow-[0_12px_32px_-10px_rgba(8,145,178,0.55)]",
+    ...JOUEUR_STYLES,
+    nav: "text-white/70 hover:text-[#006CFC]",
+    navActive: "bg-[#006CFC] text-white",
+    cardHighlight: "ring-1 ring-[#006CFC]/40 border-[#006CFC]/30",
+    badge: "bg-[#006CFC]/12 text-[#006CFC]",
+    cta: "bg-[#006CFC] text-white hover:brightness-110",
   },
   sponsor: {
-    nav: "text-[#D4AF37]/85 hover:text-[#F5D76E]",
-    navActive: "bg-gradient-to-r from-[#92700C] to-[#D4AF37] text-[#0a0a0a]",
-    section:
-      "bg-gradient-to-b from-[#070605] via-[#1a1508]/80 to-[#030303] text-white",
-    surface: "bg-[#070605] text-white",
-    accentTop: "border-t-2 border-[#D4AF37]/45",
-    card: "border border-[#D4AF37]/22 bg-gradient-to-br from-[#D4AF37]/[0.06] to-transparent backdrop-blur-md",
-    cardHighlight: "ring-2 ring-[#D4AF37]/50 border-[#D4AF37]/35",
-    badge: "bg-[#D4AF37]/15 text-[#F5D76E] ring-1 ring-[#D4AF37]/25",
-    textMuted: "text-[#D4AF37]/65",
-    cta: "bg-gradient-to-r from-[#92700C] to-[#D4AF37] text-[#0a0a0a] hover:from-[#D4AF37] hover:to-[#F5D76E]",
+    ...JOUEUR_STYLES,
+    nav: "text-white/70 hover:text-[#D4AF37]",
+    navActive: "bg-[#D4AF37] text-black",
+    cardHighlight: "ring-1 ring-[#D4AF37]/40 border-[#D4AF37]/30",
+    badge: "bg-[#D4AF37]/12 text-[#D4AF37]",
+    cta: "bg-[#D4AF37] text-black hover:brightness-110",
   },
 };
 
@@ -298,6 +318,7 @@ export const POLE_IMAGES: Record<PoleId, string> = {
   sante: "/images/football-health-01.jpg",
   pro_joueur: "/images/football-pro-01.jpg",
   pro_club: "/images/football-club-01.jpg",
+  coach: "/showcase/classic-staff.jpg",
   pro_staff: "/showcase/classic-staff.jpg",
   evenements: "/showcase/classic-arena.jpg",
   sponsor: "/showcase/classic-exp-sponsors.jpg",
@@ -305,7 +326,7 @@ export const POLE_IMAGES: Record<PoleId, string> = {
 
 export function plansForPole(poleId: PoleId): WebSubscriptionPlan[] {
   const resolved = normalizePoleId(poleId) ?? poleId;
-  const pole = POLES.find((p) => p.id === resolved);
+  const pole = POLES.find((p) => p.id === resolved) ?? POLES.find((p) => p.id === poleId);
   if (!pole) return [];
 
   if (resolved === "joueur") {
@@ -323,7 +344,7 @@ export function plansForPole(poleId: PoleId): WebSubscriptionPlan[] {
 
 export function poleById(id: PoleId): PoleDefinition {
   const resolved = normalizePoleId(id) ?? id;
-  const pole = POLES.find((p) => p.id === resolved);
+  const pole = POLES.find((p) => p.id === resolved) ?? POLES.find((p) => p.id === id);
   if (!pole) throw new Error(`Pôle inconnu : ${id}`);
   return pole;
 }
@@ -346,7 +367,7 @@ const PATH_TO_PRICING_POLE: Record<string, PoleId> = {
   ...POLE_NAV_POLE_IDS,
   [ROUTES.homme]: "joueur",
   [ROUTES.woman]: "joueur",
-  [ROUTES.pro]: "pro_staff",
+  [ROUTES.pro]: "coach",
 };
 
 /** Tarifs contextualisés depuis la page courante (nav, footer). */
@@ -362,11 +383,12 @@ const UNIVERSE_TO_POLE: Record<string, PoleId> = {
   amateur: "joueur",
   joueur: "joueur",
   supporter: "supporter",
-  pro: "pro_staff",
+  pro: "coach",
   pro_joueur: "joueur",
   pro_club: "pro_club",
-  pro_staff: "pro_staff",
-  evenements: "evenements",
+  coach: "coach",
+  pro_staff: "coach",
+  evenements: "pro_club",
 };
 
 /** Tarifs depuis une page univers / pôle (UniversePage). */
@@ -380,7 +402,7 @@ const PRODUCT_LINE_TO_POLE: Record<ProductLineWeb, PoleId> = {
   woman: "joueur",
   amateur: "joueur",
   supporter: "supporter",
-  pro: "pro_staff",
+  pro: "coach",
   sante: "sante",
 };
 

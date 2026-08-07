@@ -14,12 +14,12 @@ type PolesHubGridProps = {
 export function PolesHubGrid({ compact = false }: PolesHubGridProps) {
   return (
     <Section
-      kicker="PÔLES POPULAIRES"
-      title="Six univers, une plateforme"
+      kicker="PÔLES PRIORITAIRES"
+      title="Carrière, club, matchs d’abord"
       description={
         compact
-          ? "Joueur, Supporter, Santé, Club, Staff ou Événements. Choisissez votre pôle."
-          : "Joueur, Supporter, Santé, Club, Staff ou Événements. Chaque pôle a sa page, ses tarifs et son identité."
+          ? "Joueur, Club et Coach au cœur. Supporter et Sponsor en extensions."
+          : "ProDay = carrière + club + coach. Smart Tactics, compétitions et covoiturage sur le même graphe."
       }
       className="bg-black"
       compact={compact}

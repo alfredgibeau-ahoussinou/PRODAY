@@ -12,7 +12,7 @@ export function PageTransition({
   const reduceMotion = useReducedMotion();
 
   return (
-    <motion.main
+    <motion.div
       key={pathname}
       initial={reduceMotion ? false : { opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
@@ -23,6 +23,6 @@ export function PageTransition({
       }
     >
       {children}
-    </motion.main>
+    </motion.div>
   );
 }

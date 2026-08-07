@@ -6,11 +6,15 @@
 export const OFFICIAL_BRAND = {
   /** Bleu électrique « Day » / bas du P */
   accent: "#0054F0",
+  /** Bleu clair lisible sur fond sombre */
+  bright: "#4C8BFF",
   /** Navy profond haut du P */
-  deep: "#001854",
+  deep: "#001F6B",
   navy: "#000C30",
   black: "#0A0A0A",
   white: "#FFFFFF",
+  /** Gradient logo P (navy → électrique) */
+  gradient: "linear-gradient(135deg, #001F6B 0%, #0054F0 48%, #4C8BFF 100%)",
 } as const;
 
 /** Accents par pôle. échantillons réels des pictos. */
@@ -53,6 +57,12 @@ export const POLE_BRAND_COLORS = {
     soft: "rgba(0, 108, 252, 0.14)",
     glow: "rgba(0, 108, 252, 0.35)",
   },
+  coach: {
+    deep: "#001848",
+    accent: "#3B5BFF",
+    soft: "rgba(59, 91, 255, 0.14)",
+    glow: "rgba(59, 91, 255, 0.35)",
+  },
   pro_staff: {
     deep: "#001848",
     accent: "#3B5BFF",
@@ -86,3 +96,39 @@ export const POLE_BRAND_COLORS = {
 } as const;
 
 export type PoleBrandKey = keyof typeof POLE_BRAND_COLORS;
+
+/** Resolve official pole palette from a page accent / pole id. */
+export function getPoleBrandColors(
+  key: string | null | undefined,
+): (typeof POLE_BRAND_COLORS)[PoleBrandKey] {
+  if (!key) return POLE_BRAND_COLORS.joueur;
+  if (key === "pro" || key === "default") return POLE_BRAND_COLORS.joueur;
+  if (key === "parent") return POLE_BRAND_COLORS.supporter;
+  if (key === "confiance" || key === "fonctionnalites" || key === "demo" || key === "beta" || key === "faq" || key === "tarifs") {
+    return POLE_BRAND_COLORS.joueur;
+  }
+  if (key in POLE_BRAND_COLORS) {
+    return POLE_BRAND_COLORS[key as PoleBrandKey];
+  }
+  return POLE_BRAND_COLORS.joueur;
+}
+
+/** CSS variables for a pole page (overrides SiteShell blues). */
+export function poleAccentCssVars(
+  key: string | null | undefined,
+): Record<string, string> {
+  const c = getPoleBrandColors(key);
+  return {
+    "--pole-accent": c.accent,
+    "--pole-accent-deep": c.deep,
+    "--pole-accent-soft": c.soft,
+    "--pole-accent-glow": c.glow,
+    "--proday-accent": c.accent,
+    "--proday-accent-bright": c.accent,
+    "--proday-accent-dim": c.accent,
+    "--proday-accent-deep": c.deep,
+    "--proday-accent-glow": c.glow,
+    "--proday-accent-muted": c.soft,
+    "--proday-accent-gradient": `linear-gradient(135deg, ${c.deep} 0%, ${c.accent} 100%)`,
+  };
+}

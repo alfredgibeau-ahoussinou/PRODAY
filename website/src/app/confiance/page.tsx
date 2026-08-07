@@ -1,9 +1,16 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { PageHeader } from "@/components/layout/PageHeader";
-import { PremiumSection } from "@/components/layout/PremiumSection";
 import { VerificationTimeline } from "@/components/VerificationTimeline";
-import { PremiumButton } from "@/components/ui/PremiumButton";
+import {
+  TerminalCta,
+  TerminalFeatureGrid,
+  TerminalPage,
+  TerminalSection,
+  TerminalStory,
+  TerminalValue,
+} from "@/components/terminal";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { RoleAccentStage } from "@/components/immersive/RoleAccentStage";
+import { getRoleVisuals } from "@/lib/roleVisuals";
 import { ROUTES } from "@/lib/routes";
 
 export const metadata: Metadata = {
@@ -13,45 +20,97 @@ export const metadata: Metadata = {
 };
 
 export default function TrustPage() {
+  const visuals = getRoleVisuals("confiance");
+
   return (
-    <>
+    <TerminalPage>
       <PageHeader
         pathname={ROUTES.trust}
-        kicker="CONFIANCE"
-        title="Staff certifié, joueurs vérifiés, familles rassurées"
-        description="Diplômes et licences validés avant messagerie complète. Badge joueur vérifié (licence ou club). Contrôle parental pour les comptes mineurs."
-        image="/showcase/classic-staff.jpg"
+        kicker="Confiance"
+        title="Staff certifié. Joueurs vérifiés. Familles rassurées."
+        description="Diplômes et licences validés avant messagerie complète. Badge joueur vérifié. Contrôle parental pour les comptes mineurs."
+        image={visuals.hero}
+        video={visuals.heroVideo}
         dark
       />
-      <VerificationTimeline fullPage id="verification" />
-      <PremiumSection
-        kicker="JOUEUR"
-        title="Badge joueur vérifié"
-        description="Licence ou certification club. Les recruteurs filtrent aussi par badge Amateur / Centre / Professionnel."
-        bordered
+      <RoleAccentStage
+        role="confiance"
+        kicker={visuals.accentKicker}
+        title={visuals.accentTitle}
+      />
+      <TerminalStory
+        title="Un cadre avant la conversation."
+        body="Vérification staff, badge joueur et espace famille. Moins de bruit. Plus de signal pour le terrain."
+        image={visuals.story}
+      />
+      <TerminalSection
+        kicker="Parcours"
+        title="Comment ça se vérifie"
+        description="Les étapes avant l'accès complet."
+        bordered={false}
       >
-        <p className="mx-auto max-w-2xl text-center text-sm text-white/70">
-          Confidentialité contacts : choisissez qui voit téléphone et email. Les agents passent par une demande de message (accept / refuse) avant conversation.
-        </p>
-        <div className="mt-6 text-center">
-          <Link
-            href={ROUTES.joueur}
-            className="text-sm font-semibold text-[var(--proday-accent)] hover:underline"
-          >
-            Voir le Pôle Joueur
-          </Link>
-        </div>
-      </PremiumSection>
-      <PremiumSection
-        kicker="REJOINDRE"
+        <VerificationTimeline fullPage id="verification" />
+      </TerminalSection>
+      <TerminalFeatureGrid
+        title="Trois piliers de confiance"
+        features={[
+          {
+            eyebrow: "Staff",
+            title: "Diplômes et licences",
+            body: "Validés avant messagerie complète. Coach et agent dans le même cadre.",
+          },
+          {
+            eyebrow: "Joueur",
+            title: "Badge vérifié",
+            body: "Licence ou certification club. Les recruteurs filtrent aussi Amateur / Centre / Pro.",
+            href: ROUTES.joueur,
+            linkLabel: "Pôle Joueur",
+          },
+          {
+            eyebrow: "Famille",
+            title: "Espace Parent",
+            body: "Contacts approuvés et limites de temps pour les comptes mineurs.",
+            href: ROUTES.parent,
+            linkLabel: "Espace Parent",
+          },
+          {
+            eyebrow: "Contacts",
+            title: "Confidentialité",
+            body: "Qui voit téléphone et email. Demandes agent en accept / refuse.",
+          },
+        ]}
+      />
+      <TerminalValue
+        title="La confiance, dans l'OS."
+        pillars={[
+          {
+            metric: "1",
+            metricLabel: "cadre",
+            title: "Staff",
+            body: "Validation avant conversation.",
+          },
+          {
+            metric: "1",
+            metricLabel: "badge",
+            title: "Joueur",
+            body: "Licence ou club. Visible, pas exposant.",
+          },
+          {
+            metric: "1",
+            metricLabel: "espace",
+            title: "Parent",
+            body: "Supervision sans étouffer le jeu.",
+          },
+        ]}
+      />
+      <TerminalCta
         title="Prêt pour un cadre de confiance ?"
-        description="Inscrivez-vous sur la liste d'attente. Vérification staff, badge joueur et espace famille dès l'ouverture."
-        bordered
-      >
-        <div className="text-center">
-          <PremiumButton href={ROUTES.betaWaitlist}>S&apos;inscrire</PremiumButton>
-        </div>
-      </PremiumSection>
-    </>
+        description="Liste d'attente ouverte."
+        primaryHref={ROUTES.betaWaitlist}
+        primaryLabel="S'inscrire"
+        secondaryHref={ROUTES.parent}
+        secondaryLabel="Espace Parent"
+      />
+    </TerminalPage>
   );
 }

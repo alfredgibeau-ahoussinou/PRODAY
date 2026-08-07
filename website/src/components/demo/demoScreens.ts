@@ -143,22 +143,27 @@ const BY_POLE: Record<DemoPoleId, Partial<Record<MainTabId, DemoScreenMock>>> = 
   },
   pro_club: {
     home: {
-      title: "Structure",
-      subtitle: "Pipeline recrutement et vitrine. Calendrier côté Staff.",
+      title: "Cockpit club",
+      subtitle: "Équipes, compétitions et permissions.",
       focus: [
-        { title: "Kanban candidatures", body: "Inbox → shortlist → essai (illustratif)." },
-        { title: "Vitrine publique", body: "Logo, catégories, contacts." },
+        { title: "3 équipes actives", body: "U17 · U19 · Seniors. Illustratif." },
+        { title: "Convocations envoyées", body: "Match sam. · 18 confirmés." },
       ],
     },
     recrutement: {
       title: "Recrutement",
-      subtitle: "Annonces et shortlists.",
+      subtitle: "Pipeline et annonces.",
       focus: [{ title: "Poste milieu", body: "Annonce ouverte. Démo." }],
     },
     matchs: {
       title: "Saison",
-      subtitle: "Vue lecture — édition calendrier en Staff.",
+      subtitle: "Calendrier, résultats et classements.",
       focus: [{ title: "Amical sam.", body: "Stade domicile." }],
+    },
+    covoiturage: {
+      title: "Covoiturage",
+      subtitle: "Matchs, entraînements, stages.",
+      focus: [{ title: "Départ club", body: "Sam. 13h · 3 places." }],
     },
     messages: {
       title: "Communication",
@@ -167,27 +172,27 @@ const BY_POLE: Record<DemoPoleId, Partial<Record<MainTabId, DemoScreenMock>>> = 
     },
     profil: {
       title: "Vitrine",
-      subtitle: "Identité club et plans.",
+      subtitle: "Identité club et offres Amateur / Essentiel / Premium.",
       focus: [{ title: "Page publique", body: "Logo, couleurs, contacts." }],
     },
   },
-  pro_staff: {
+  coach: {
     home: {
-      title: "Équipe",
-      subtitle: "Cockpit coach / agent / recruteur.",
+      title: "Cockpit coach",
+      subtitle: "Smart Tactics, effectif et matchs.",
       focus: [
-        { title: "Convocations premium", body: "Gestion Staff — hors Club free." },
-        { title: "Mercato à traiter", body: "3 profils shortlistés." },
+        { title: "Smart Tactics", body: "Composition 4-3-3 · consignes banc." },
+        { title: "État de forme", body: "3 joueurs à surveiller." },
       ],
     },
     matchs: {
       title: "Calendrier",
-      subtitle: "Calendrier structure, séances et matchs.",
+      subtitle: "Séances, matchs et préparation.",
       focus: [{ title: "Séance mar. 19h", body: "Thème : transitions." }],
     },
     recrutement: {
       title: "Mercato",
-      subtitle: "Repérage et annonces ciblées.",
+      subtitle: "Repérage (rôles réseau agent / recruteur).",
       focus: [{ title: "Profil latéral", body: "Alert scouting. Démo." }],
     },
     covoiturage: {
@@ -196,49 +201,39 @@ const BY_POLE: Record<DemoPoleId, Partial<Record<MainTabId, DemoScreenMock>>> = 
       focus: [{ title: "Bus match", body: "Départ 12h30." }],
     },
     profil: {
-      title: "Profil",
-      subtitle: "Badge staff et vérifications.",
+      title: "Profil coach",
+      subtitle: "Parcours, diplômes et philosophie.",
       focus: [{ title: "Compte vérifié", body: "Licence / diplôme. Statut illustratif." }],
     },
   },
-  evenements: {
+  sponsor: {
     home: {
-      title: "Événements",
-      subtitle: "Tournois, académies, camps et détections.",
+      title: "Campagnes",
+      subtitle: "Visibilité mesurée auprès des clubs actifs.",
       focus: [
-        { title: "Créer un événement", body: "Type, capacité, prix inscription." },
-        { title: "Tournoi U15", body: "Inscriptions ouvertes · Stripe." },
-        { title: "Détection samedi", body: "Liste d’attente auto." },
+        { title: "Tier Territorial", body: "3 clubs · 2 matchs ce week-end." },
+        { title: "KPI impressions", body: "12,4 k · démo illustrative." },
       ],
+    },
+    feed: {
+      title: "Inventaire",
+      subtitle: "Emplacements et formats disponibles.",
+      focus: [{ title: "Bandeau tribune", body: "Match sam. · U19." }],
     },
     matchs: {
-      title: "Calendrier",
-      subtitle: "Vos événements publiés.",
-      focus: [
-        { title: "Showcase · dim.", body: "Stade municipal." },
-        { title: "Résultats", body: "Publier le classement." },
-      ],
-    },
-    recrutement: {
-      title: "Inscriptions",
-      subtitle: "Listes et capacités.",
-      focus: [
-        { title: "42 inscrits", body: "8 en waitlist." },
-        { title: "Paiements", body: "Checkout ou marquage manuel." },
-      ],
+      title: "Terrain",
+      subtitle: "Événements où votre marque apparaît.",
+      focus: [{ title: "Finale départementale", body: "Activation prévue." }],
     },
     messages: {
-      title: "Messages",
-      subtitle: "Relances participants.",
-      focus: [{ title: "Rappel J-1", body: "Message illustratif." }],
+      title: "Contact",
+      subtitle: "Clubs et organisateurs.",
+      focus: [{ title: "FC Nord", body: "Demande de devis. Démo." }],
     },
     profil: {
-      title: "Orga",
-      subtitle: "Profil organisateur.",
-      focus: [
-        { title: "Compte vérifié", body: "Statut illustratif." },
-        { title: "Médias", body: "Liens photo / vidéo partagés." },
-      ],
+      title: "Marque",
+      subtitle: "Vitrine partenaire vérifiée.",
+      focus: [{ title: "Badge Sponsor", body: "Profil public illustratif." }],
     },
   },
 };

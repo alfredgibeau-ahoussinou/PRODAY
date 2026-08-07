@@ -13,16 +13,19 @@ const searchItems = [
   { title: "FAQ", href: ROUTES.faq, category: "Aide" },
   { title: "Pôle Joueur", href: ROUTES.joueur, category: "Pôles" },
   { title: "Pôle Club", href: ROUTES.proClub, category: "Pôles" },
-  { title: "Pôle Staff", href: ROUTES.proStaff, category: "Pôles" },
-  { title: "Pôle Événements", href: ROUTES.evenements, category: "Pôles" },
+  { title: "Pôle Coach", href: ROUTES.coach, category: "Pôles" },
   { title: "Supporter", href: ROUTES.supporter, category: "Pôles" },
-  { title: "Santé", href: ROUTES.sante, category: "Pôles" },
-  { title: "Partenaires", href: ROUTES.sponsor, category: "Pôles" },
+  { title: "Sponsor", href: ROUTES.sponsor, category: "Pôles" },
+  { title: "Rôle Santé", href: ROUTES.sante, category: "Rôles" },
+  { title: "Espace Parent", href: ROUTES.parent, category: "Rôles" },
   { title: "Tarifs", href: ROUTES.pricing, category: "Information" },
   { title: "Fonctionnalités", href: ROUTES.features, category: "Information" },
+  { title: "Cartes ProDay", href: ROUTES.cards, category: "Outils" },
   { title: "Vision", href: ROUTES.vision, category: "Information" },
   { title: "À propos", href: ROUTES.about, category: "Information" },
   { title: "Inscription bêta", href: ROUTES.betaWaitlist, category: "Action" },
+  { title: "Espace bêta", href: ROUTES.beta, category: "Action" },
+  { title: "Admin", href: ROUTES.admin, category: "Action" },
 ];
 
 export function SearchModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {

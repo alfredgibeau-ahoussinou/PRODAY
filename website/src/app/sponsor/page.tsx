@@ -1,116 +1,52 @@
 import type { Metadata } from "next";
-import { PageHeader } from "@/components/layout/PageHeader";
-import { PageCtaBand } from "@/components/layout/PageCtaBand";
-import { PremiumSection } from "@/components/layout/PremiumSection";
-import { SponsorCapabilitiesGrid } from "@/components/sponsor/SponsorCapabilitiesGrid";
-import { SponsorFaqAccordion } from "@/components/sponsor/SponsorFaqAccordion";
-import { SponsorPricingSection } from "@/components/sponsor/SponsorPricingSection";
-import { PremiumButton } from "@/components/ui/PremiumButton";
-import { SPONSOR_PARTNER_CONTACT_EMAIL } from "@/lib/content";
-import { SPONSOR_BRAND, SPONSOR_HERO } from "@/lib/sponsorContent";
+import { RoleAccentStage } from "@/components/immersive/RoleAccentStage";
+import { ImmersivePoleHero } from "@/components/poles/immersivePoleExperience";
+import {
+  SponsorCapabilityPlay,
+  SponsorTiersCompare,
+  SponsorWarmCta,
+} from "@/components/poles/sponsorImmersive";
+import { TerminalPage } from "@/components/terminal";
+import { poleAccentCssVars } from "@/lib/brandColors";
+import { getRoleVisuals } from "@/lib/roleVisuals";
 import { ROUTES } from "@/lib/routes";
+import { SPONSOR_HERO } from "@/lib/sponsorContent";
 
 export const metadata: Metadata = {
-  title: "Pôle Sponsor · Pro Day",
+  title: "Pôle Sponsor · Visibilité mesurée",
   description:
-    "Marques et sponsors sur ProDay. Visibilité mesurée, campagnes locales et tableau de bord.",
+    "Découverte, Territorial, National Pro. Offres géolocalisées, ROI et contact clubs sur ProDay.",
 };
 
 export default function SponsorPolePage() {
+  const visuals = getRoleVisuals("sponsor");
+  const accentStyle = poleAccentCssVars("sponsor");
+
   return (
-    <div className="sponsor-pole">
-      <PageHeader
-        pathname={ROUTES.sponsor}
-        kicker={SPONSOR_HERO.kicker}
-        title={SPONSOR_HERO.title}
-        description={SPONSOR_HERO.description}
-        image={SPONSOR_HERO.image}
-        logo={SPONSOR_BRAND.logo}
-        logoAlt={SPONSOR_BRAND.name}
-        accent="sponsor"
-        dark
+    <TerminalPage accentStyle={accentStyle}>
+      <ImmersivePoleHero
+        brand="Pro Day Sponsor"
+        headline={SPONSOR_HERO.title}
+        support="Clubs et joueurs actifs. Offres locales, dashboard ROI, messagerie directe — sans campagne hors-sol."
+        video={visuals.heroVideo}
+        poster={visuals.hero}
+        primaryHref={ROUTES.sponsorDevis}
+        primaryLabel="Demander un devis"
+        secondaryHref={`${ROUTES.pricing}#sponsor`}
+        secondaryLabel="Voir les formules"
       />
 
-      <PremiumSection
-        id="capacites"
-        kicker="OUTILS"
-        title="Ce que votre marque peut faire"
-        description="Offres, push géo, tableau de bord et vitrine vérifiée. Pour les équipes marketing."
-        pole="sponsor"
-        bordered={false}
-      >
-        <SponsorCapabilitiesGrid />
-      </PremiumSection>
+      <SponsorCapabilityPlay />
 
-      <PremiumSection
-        id="formules"
-        kicker="FORMULES"
-        title="Trois niveaux"
-        description="Découverte pour tester. Territorial pour le local. National Pro pour aller plus loin."
-        pole="sponsor"
-      >
-        <SponsorPricingSection dark />
-      </PremiumSection>
+      <RoleAccentStage
+        role="sponsor"
+        kicker="Marque"
+        title="Visibilité mesurée."
+      />
 
-      <PremiumSection
-        id="devis"
-        kicker="DEVIS"
-        title="Demandez votre devis"
-        description="Parcours en 5 pages. Entreprise, contact, formule, projet, envoi. Réponse sous 48 h ouvrées."
-        pole="sponsor"
-      >
-        <div className="mx-auto max-w-2xl text-center">
-          <PremiumButton
-            href={ROUTES.sponsorDevis}
-            className="!bg-gradient-to-r !from-amber-500 !to-amber-400 !text-slate-950"
-          >
-            Demander un devis
-          </PremiumButton>
-          <p className="mt-6 text-sm text-white/40">
-            La demande est envoyée à{" "}
-            <a
-              href={`mailto:${SPONSOR_PARTNER_CONTACT_EMAIL}`}
-              className="font-medium text-amber-400/80 underline hover:text-amber-300"
-            >
-              {SPONSOR_PARTNER_CONTACT_EMAIL}
-            </a>
-          </p>
-        </div>
-      </PremiumSection>
+      <SponsorTiersCompare />
 
-      <PremiumSection
-        id="faq"
-        kicker="FAQ"
-        title="Questions fréquentes"
-        description="Avant de rejoindre le pôle Sponsor."
-        pole="sponsor"
-        centered={false}
-      >
-        <div className="mx-auto max-w-3xl">
-          <SponsorFaqAccordion />
-        </div>
-      </PremiumSection>
-
-      <PageCtaBand pole="sponsor" align="between">
-        <p className="max-w-xl text-center text-white/55 sm:text-left">
-          Convention partenaire et conditions commerciales : documentation légale ProDay.
-        </p>
-        <div className="flex flex-wrap justify-center gap-3 sm:justify-end">
-          <PremiumButton
-            href={ROUTES.partenairesConvention}
-            variant="outline"
-            className="!border-amber-400/30 !text-amber-200"
-          >
-            Convention sponsor
-          </PremiumButton>
-          <PremiumButton
-            href={ROUTES.sponsorDevis}
-            className="!bg-gradient-to-r !from-amber-500 !to-amber-400 !text-slate-950"
-          >
-            Demander un devis
-          </PremiumButton>
-        </div>
-      </PageCtaBand>
-    </div>
+      <SponsorWarmCta />
+    </TerminalPage>
   );
 }

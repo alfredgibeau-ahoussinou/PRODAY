@@ -1,358 +1,557 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import Image from "next/image";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
-import { PlanDetailCard } from "@/components/poles/PlanDetailCard";
-import { SponsorPricingSection } from "@/components/sponsor/SponsorPricingSection";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { Check, ArrowRight } from "lucide-react";
+import { Fragment } from "react";
+import { getPoleBrandColors } from "@/lib/brandColors";
+import { SPONSOR_PRICING_TIERS } from "@/lib/content";
 import {
-  POLES,
-  POLE_STYLES,
+  SHOWCASE_POLES,
   plansForPole,
-  poleById,
   resolvePricingPoleFromHash,
   type PoleId,
+  type PoleDefinition,
 } from "@/lib/poles";
-import { ANNUAL_DISCOUNT_PERCENT } from "@/lib/pricing";
+import {
+  ANNUAL_DISCOUNT_PERCENT,
+  formatPriceEur,
+  monthlyEquivalentFromYearly,
+  yearlyPriceFromMonthly,
+} from "@/lib/pricing";
 import { ROUTES } from "@/lib/routes";
-import { scrollToHashElement } from "@/lib/scrollToHash";
+import { PricingPoleAccent } from "@/components/pricing/PricingPoleAccent";
+import { VeoCameraMark } from "@/components/poles/VeoCameraMark";
+import type { ReactNode } from "react";
 
-const POLE_NAV_LABELS: Record<PoleId, string> = {
-  joueur: "Joueur",
-  amateur: "Joueur",
-  supporter: "Supporter",
-  sante: "Santé",
-  pro_joueur: "Joueur",
-  pro_club: "Club",
-  pro_staff: "Staff",
-  evenements: "Événements",
-  sponsor: "Partenaires",
-};
+const ease = [0.22, 1, 0.36, 1] as const;
 
-const POLE_NAV: { id: PoleId; label: string }[] = POLES.map((p) => ({
-  id: p.id,
-  label: POLE_NAV_LABELS[p.id],
-}));
-
-const DOT_ACTIVE: Record<PoleId, string> = {
-  joueur: "bg-[#0054F0]",
-  amateur: "bg-[#0054F0]",
-  supporter: "bg-[#3C00F0]",
-  sante: "bg-[#00CCB4]",
-  pro_joueur: "bg-[#0054F0]",
-  pro_club: "bg-[#006CFC]",
-  pro_staff: "bg-[#3B5BFF]",
-  evenements: "bg-[#0891B2]",
-  sponsor: "bg-[#D4AF37]",
-};
-
-const VARIANT_LABELS: Record<string, string> = {};
-
-const SLIDE_OFFSET = 56;
-
-const slideVariants = {
-  enter: (direction: number) => ({
-    x: direction > 0 ? SLIDE_OFFSET : -SLIDE_OFFSET,
-    opacity: 0,
-  }),
-  center: {
-    x: 0,
-    opacity: 1,
-  },
-  exit: (direction: number) => ({
-    x: direction > 0 ? -SLIDE_OFFSET : SLIDE_OFFSET,
-    opacity: 0,
-  }),
-};
-
-function poleIndex(id: PoleId): number {
-  return POLE_NAV.findIndex((p) => p.id === id);
+function brandKeyForPole(poleId: PoleId): string {
+  if (poleId === "amateur" || poleId === "pro_joueur") return "joueur";
+  if (poleId === "pro_staff") return "coach";
+  if (poleId === "evenements") return "pro_club";
+  return poleId;
 }
 
-type PolePricingPanelProps = {
-  poleId: PoleId;
-  yearly: boolean;
-};
-
-function PolePricingPanel({ poleId, yearly }: PolePricingPanelProps) {
-  const pole = poleById(poleId);
-  const styles = POLE_STYLES[poleId];
+function leadPriceLabel(poleId: PoleId, yearly: boolean): { amount: string; unit: string; note: string } {
+  if (poleId === "supporter") {
+    return { amount: "0", unit: "€", note: "Toujours gratuit · pas d’abonnement store" };
+  }
+  if (poleId === "sponsor") {
+    const paid = SPONSOR_PRICING_TIERS.find((t) => t.monthlyEur > 0);
+    const starter = SPONSOR_PRICING_TIERS[0];
+    if (!paid || !starter) return { amount: "0", unit: "€", note: "Sur devis" };
+    return {
+      amount: yearly
+        ? formatPriceEur(yearlyPriceFromMonthly(paid.monthlyEur))
+        : formatPriceEur(paid.monthlyEur),
+      unit: yearly ? "€ / an" : "€ / mois",
+      note: `Dès ${starter.name} gratuit · 3 formules`,
+    };
+  }
   const plans = plansForPole(poleId);
+  const plan = plans[0];
+  if (!plan) return { amount: "—", unit: "", note: "" };
+  return {
+    amount: yearly ? formatPriceEur(plan.yearlyEur) : formatPriceEur(plan.monthlyEur),
+    unit: yearly ? "€ / an" : "€ / mois",
+    note: yearly
+      ? `soit ${formatPriceEur(monthlyEquivalentFromYearly(plan.yearlyEur))} €/mois`
+      : plans.length > 1
+        ? `${plans.length} formules`
+        : `ou ${formatPriceEur(plan.yearlyEur)} €/an (−${ANNUAL_DISCOUNT_PERCENT} %)`,
+  };
+}
+
+export function PolesPricingLayout() {
+  const [yearly, setYearly] = useState(false);
+  const [activePole, setActivePole] = useState<PoleId>(SHOWCASE_POLES[0]!.id);
+
+  useEffect(() => {
+    const fromHash = resolvePricingPoleFromHash(window.location.hash);
+    if (fromHash && SHOWCASE_POLES.some((p) => p.id === fromHash)) {
+      setActivePole(fromHash);
+      const el = document.getElementById(fromHash);
+      if (el) {
+        window.setTimeout(() => {
+          el.scrollIntoView({ behavior: "smooth", block: "start" });
+        }, 80);
+      }
+    }
+  }, []);
 
   return (
-    <div
-      id={poleId}
-      className={`relative min-h-[480px] scroll-mt-32 overflow-hidden rounded-3xl border border-white/10 ${styles.section} p-6 sm:p-10 lg:p-12`}
-    >
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_50%_40%_at_10%_0%,rgba(34,211,238,0.06),transparent)]" />
-      <div className="relative flex flex-col items-center gap-6 text-center sm:flex-row sm:items-start sm:text-left">
-        <Image
-          src={pole.logo}
-          alt=""
-          width={64}
-          height={64}
-          className="rounded-2xl bg-white/10 ring-1 ring-white/20"
-        />
-        <div className="min-w-0 flex-1">
-          <p className={`text-xs font-semibold tracking-[0.22em] ${styles.textMuted}`}>
-            {pole.kicker}
-          </p>
-          <h2 className="font-display mt-2 text-3xl font-bold uppercase tracking-tight text-white sm:text-4xl">
-            {pole.title}
-          </h2>
-          <p className={`mt-1 text-sm font-medium ${styles.textMuted}`}>{pole.subtitle}</p>
-          <p className="mt-4 max-w-2xl text-sm leading-relaxed text-white/70">
-            {pole.description}
-          </p>
-          <Link
-            href={pole.href}
-            className="mt-4 inline-block text-sm font-semibold text-white/75 underline decoration-white/25 underline-offset-4 transition hover:text-[var(--proday-accent)] hover:decoration-[var(--proday-accent)]/50"
+    <div className="bg-black text-white">
+      {/* Sticky controls */}
+      <div className="sticky top-[4.1rem] z-30 border-b border-white/10 bg-black/70 backdrop-blur-xl sm:top-16">
+        <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-3 sm:px-6">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/50">
+              {yearly
+                ? `Annuel · −${ANNUAL_DISCOUNT_PERCENT} %`
+                : "Mensuel · tarif de base"}
+            </p>
+            <div className="inline-flex rounded-full border border-white/15 p-1">
+              <button
+                type="button"
+                onClick={() => setYearly(false)}
+                className={`rounded-full px-4 py-2 font-mono text-[10px] uppercase tracking-[0.14em] transition ${
+                  !yearly ? "bg-white text-black" : "text-white/55 hover:text-white"
+                }`}
+              >
+                Mensuel
+              </button>
+              <button
+                type="button"
+                onClick={() => setYearly(true)}
+                className={`rounded-full px-4 py-2 font-mono text-[10px] uppercase tracking-[0.14em] transition ${
+                  yearly ? "bg-white text-black" : "text-white/55 hover:text-white"
+                }`}
+              >
+                Annuel −{ANNUAL_DISCOUNT_PERCENT}%
+              </button>
+            </div>
+          </div>
+
+          <div
+            className="flex gap-2 overflow-x-auto pb-1"
+            role="tablist"
+            aria-label="Pôles"
           >
-            En savoir plus
-          </Link>
+            {SHOWCASE_POLES.map((pole) => {
+              const on = pole.id === activePole;
+              const brand = getPoleBrandColors(brandKeyForPole(pole.id));
+              return (
+                <button
+                  key={pole.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={on}
+                  onClick={() => {
+                    setActivePole(pole.id);
+                    const el = document.getElementById(pole.id);
+                    el?.scrollIntoView({ behavior: "smooth", block: "start" });
+                    window.history.replaceState(null, "", `#${pole.id}`);
+                  }}
+                  className={`shrink-0 rounded-full px-4 py-2 text-sm font-semibold transition ${
+                    on ? "text-black" : "border border-white/15 text-white/65 hover:border-white/30"
+                  }`}
+                  style={on ? { backgroundColor: brand.accent } : undefined}
+                >
+                  {pole.navLabel}
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 
-      {poleId === "sponsor" ? (
-        <div className="relative mt-10">
-          <SponsorPricingSection compact showPillars dark yearly={yearly} hideToggle />
-        </div>
-      ) : (
-        <div
-          className={`relative mt-10 grid gap-6 ${
-            plans.length > 2 ? "lg:grid-cols-2 xl:grid-cols-3" : "lg:grid-cols-2"
-          }`}
-        >
-          {plans.length > 0 ? (
-            plans.map((plan) => (
-              <PlanDetailCard
-                key={`${poleId}-${plan.id}-${plan.label}`}
-                plan={plan}
-                yearly={yearly}
-                styles={styles}
-                variantLabel={VARIANT_LABELS[plan.label]}
-              />
-            ))
-          ) : poleId === "supporter" ? (
-            <div className="card-premium rounded-2xl border border-violet-400/25 p-8 lg:col-span-2">
-              <p className="text-xs font-semibold uppercase tracking-wider text-violet-300">
-                0 € / mois
-              </p>
-              <p className="mt-3 font-display text-2xl font-bold text-white">Tribune 100 % gratuite</p>
-              <p className="mt-3 max-w-xl text-sm leading-relaxed text-white/70">
-                Matchs live, suivis illimités, débats, réels et shop. sans abonnement ni paywall.
-              </p>
-            </div>
-          ) : null}
-        </div>
-      )}
+      {SHOWCASE_POLES.map((pole, index) => (
+        <PolePricingChapter
+          key={pole.id}
+          pole={pole}
+          index={index}
+          yearly={yearly}
+          highlighted={pole.id === activePole}
+          onFocus={() => setActivePole(pole.id)}
+        />
+      ))}
     </div>
   );
 }
 
-
-export function PolesPricingLayout() {
-  const [yearly, setYearly] = useState(false);
-  const [activePole, setActivePole] = useState<PoleId>("joueur");
-  const [direction, setDirection] = useState(1);
-
-  useEffect(() => {
-    const fromHash = resolvePricingPoleFromHash(window.location.hash);
-    if (fromHash) {
-      setActivePole((current) => {
-        if (current !== fromHash) {
-          setDirection(poleIndex(fromHash) > poleIndex(current) ? 1 : -1);
-        }
-        return fromHash;
-      });
-    }
-  }, []);
-
-  const goToPole = useCallback((id: PoleId, dir?: number) => {
-    setActivePole((current) => {
-      if (current !== id) {
-        setDirection(dir ?? (poleIndex(id) > poleIndex(current) ? 1 : -1));
-      }
-      return id;
-    });
-    window.history.replaceState(null, "", `${ROUTES.pricing}#${id}`);
-  }, []);
-
-  const goNext = useCallback(() => {
-    const idx = poleIndex(activePole);
-    const next = POLE_NAV[(idx + 1) % POLE_NAV.length];
-    goToPole(next.id, 1);
-  }, [activePole, goToPole]);
-
-  const goPrev = useCallback(() => {
-    const idx = poleIndex(activePole);
-    const prev = POLE_NAV[(idx - 1 + POLE_NAV.length) % POLE_NAV.length];
-    goToPole(prev.id, -1);
-  }, [activePole, goToPole]);
-
-  useEffect(() => {
-    const onHashChange = () => {
-      const fromHash = resolvePricingPoleFromHash(window.location.hash);
-      if (fromHash) goToPole(fromHash);
-    };
-
-    window.addEventListener("hashchange", onHashChange);
-    return () => window.removeEventListener("hashchange", onHashChange);
-  }, [goToPole]);
-
-  useEffect(() => {
-    const hash = window.location.hash.replace("#", "");
-    if (!resolvePricingPoleFromHash(window.location.hash)) return;
-
-    let attempts = 0;
-    let frame = 0;
-
-    const scroll = () => {
-      if (scrollToHashElement(`#${hash}`)) return;
-      attempts += 1;
-      if (attempts < 24) frame = requestAnimationFrame(scroll);
-    };
-
-    const timeout = window.setTimeout(() => {
-      frame = requestAnimationFrame(scroll);
-    }, 120);
-
-    return () => {
-      window.clearTimeout(timeout);
-      cancelAnimationFrame(frame);
-    };
-  }, [activePole]);
-
-  const activeStyles = POLE_STYLES[activePole];
-  const activeIndex = poleIndex(activePole);
+function PolePricingChapter({
+  pole,
+  index,
+  yearly,
+  highlighted,
+  onFocus,
+}: {
+  pole: PoleDefinition;
+  index: number;
+  yearly: boolean;
+  highlighted: boolean;
+  onFocus: () => void;
+}) {
+  const reduce = useReducedMotion();
+  const brand = getPoleBrandColors(brandKeyForPole(pole.id));
+  const plans = plansForPole(pole.id);
+  const lead = leadPriceLabel(pole.id, yearly);
+  const num = String(index + 1).padStart(2, "0");
 
   return (
-    <div className="surface-dark -mt-px pb-16">
-      <div className="sticky top-16 z-40 border-b border-white/10 bg-[#030303]/88 backdrop-blur-xl backdrop-saturate-150">
-        <div className="mx-auto flex max-w-6xl flex-col items-center gap-3 px-4 py-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-4 sm:px-6">
-          <nav
-            className="scroll-snap-x -mx-4 flex w-full gap-1 overflow-x-auto px-4 pb-1 sm:mx-0 sm:w-auto sm:flex-wrap sm:overflow-visible sm:px-0"
-            aria-label="Pôles tarifaires"
-          >
-            {POLE_NAV.map((item) => {
-              const styles = POLE_STYLES[item.id];
-              const isActive = activePole === item.id;
-              return (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => goToPole(item.id)}
-                  aria-current={isActive ? "true" : undefined}
-                  className={`shrink-0 snap-start rounded-full px-4 py-2.5 text-sm font-medium transition sm:shrink ${
-                    isActive ? styles.navActive : styles.nav
-                  }`}
-                >
-                  {item.label}
-                </button>
-              );
-            })}
-          </nav>
-          <div className="inline-flex rounded-full border border-white/10 bg-white/[0.04] p-1">
-            <button
-              type="button"
-              onClick={() => setYearly(false)}
-              className={`rounded-full px-4 py-2 text-sm font-medium transition ${
-                !yearly ? "bg-[var(--proday-accent)] text-black" : "text-white/60 hover:text-white"
-              }`}
-            >
-              Mensuel
-            </button>
-            <button
-              type="button"
-              onClick={() => setYearly(true)}
-              className={`rounded-full px-4 py-2 text-sm font-medium transition ${
-                yearly ? "bg-[var(--proday-accent)] text-black" : "text-white/60"
-              }`}
-            >
-              Annuel (−{ANNUAL_DISCOUNT_PERCENT} %)
-            </button>
-          </div>
-        </div>
-      </div>
+    <section
+      id={pole.id}
+      onMouseEnter={onFocus}
+      className="scroll-mt-36 border-b border-white/10"
+      style={
+        {
+          ["--pole-accent" as string]: brand.accent,
+          ["--pole-accent-soft" as string]: brand.soft,
+        } as React.CSSProperties
+      }
+    >
+      <div
+        className={`relative mx-auto max-w-6xl px-4 py-16 transition sm:px-6 sm:py-24 ${
+          highlighted ? "opacity-100" : "opacity-90"
+        }`}
+      >
+        <div
+          className="pointer-events-none absolute inset-0 -z-10 opacity-40"
+          style={{
+            background: `radial-gradient(ellipse 50% 40% at 0% 0%, ${brand.soft}, transparent 70%)`,
+          }}
+        />
 
-      <div className="mx-auto max-w-6xl px-4 pt-8 sm:px-6 sm:pt-10">
-        <div className="mb-6 flex items-center justify-between gap-4">
-          <button
-            type="button"
-            onClick={goPrev}
-            aria-label="Pôle précédent"
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/15 text-white/70 transition hover:border-white/30 hover:bg-white/5 hover:text-white"
-          >
-            <ChevronLeft size={22} />
-          </button>
-
-          <div className="flex flex-col items-center gap-2 text-center">
-            <p className={`text-xs font-semibold tracking-[0.2em] ${activeStyles.textMuted}`}>
-              {poleById(activePole).kicker}
+        <div className="grid gap-12 lg:grid-cols-[0.95fr_1.05fr] lg:gap-16">
+          <div>
+            <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-[var(--pole-accent)]">
+              {num} · {pole.kicker}
             </p>
-            <div className="flex items-center gap-2">
-              {POLE_NAV.map((item, i) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => goToPole(item.id)}
-                  aria-label={item.label}
-                  className={`h-1.5 rounded-full transition-all ${
-                    i === activeIndex
-                      ? `w-8 ${DOT_ACTIVE[item.id]}`
-                      : "w-1.5 bg-white/25 hover:bg-white/40"
-                  }`}
-                />
-              ))}
+            <h2 className="mt-4 font-display text-[clamp(2rem,4.5vw,3.25rem)] font-medium leading-[1.0] tracking-[-0.04em] text-white">
+              {pole.navLabel}
+            </h2>
+            <p className="mt-4 max-w-md text-sm leading-relaxed text-white/55 sm:text-base">
+              {pole.description}
+            </p>
+
+            <div className="mt-8 lg:hidden">
+              <PricingPoleAccent poleId={pole.id} />
+            </div>
+
+            <div className="mt-10">
+              <p className="font-display text-[clamp(3.5rem,12vw,6rem)] font-medium leading-[0.88] tracking-[-0.06em] text-white">
+                {lead.amount}
+                <span className="ml-2 align-baseline text-[clamp(1rem,2vw,1.4rem)] tracking-[-0.02em] text-white/35">
+                  {lead.unit}
+                </span>
+              </p>
+              <p className="mt-3 font-mono text-[10px] uppercase tracking-[0.18em] text-white/40">
+                {lead.note}
+              </p>
+            </div>
+
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Link
+                href={
+                  pole.id === "sponsor" ? ROUTES.sponsorDevis : ROUTES.betaWaitlist
+                }
+                className="inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-semibold text-black transition hover:brightness-110"
+                style={{ backgroundColor: brand.accent }}
+              >
+                {pole.id === "sponsor" ? "Demander un devis" : "Liste d’attente"}
+                <ArrowRight size={14} />
+              </Link>
+              <Link
+                href={pole.href}
+                className="inline-flex items-center gap-2 rounded-full border border-white/25 px-6 py-3 text-sm font-semibold text-white/80 transition hover:border-white/50"
+              >
+                Voir le pôle
+              </Link>
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={goNext}
-            aria-label="Pôle suivant"
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/15 text-white/70 transition hover:border-white/30 hover:bg-white/5 hover:text-white"
-          >
-            <ChevronRight size={22} />
-          </button>
-        </div>
+          <div className="border-t border-white/10 pt-10 lg:border-l lg:border-t-0 lg:pl-12 lg:pt-0">
+            <div className="mb-8 hidden lg:block">
+              <PricingPoleAccent poleId={pole.id} />
+            </div>
 
-        <div className="relative overflow-hidden">
-          <AnimatePresence mode="wait" custom={direction}>
-            <motion.div
-              key={activePole}
-              custom={direction}
-              variants={slideVariants}
-              initial="enter"
-              animate="center"
-              exit="exit"
-              transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
-            >
-              <PolePricingPanel poleId={activePole} yearly={yearly} />
-            </motion.div>
-          </AnimatePresence>
+            {pole.id === "supporter" ? (
+              <InclusionList
+                title="Tout inclus · 0 €"
+                items={[
+                  "Matchs et scores live",
+                  "Suivis illimités",
+                  "Débats et réels",
+                  "Shop communauté",
+                  "Sans paywall store",
+                ]}
+              />
+            ) : pole.id === "sponsor" ? (
+              <SponsorTierCards yearly={yearly} />
+            ) : pole.id === "pro_club" ? (
+              <ClubPlansCompare yearly={yearly} plans={plans} />
+            ) : plans[0] ? (
+              <FreeVsPro
+                free={plans[0].freeIncludes}
+                pro={plans[0].proIncludes}
+                proLabel={plans[0].label}
+                reduce={!!reduce}
+              />
+            ) : null}
+          </div>
         </div>
-
-        <p className="mt-10 text-center text-xs text-white/35">
-          Tarifs et quotas affichés à titre informatif. Pas de métriques d&apos;audience live.
-        </p>
-        <p className="mt-4 text-center text-sm text-white/45">
-          Questions sur les formules ?{" "}
-          <Link href={ROUTES.faq} className="font-medium text-white/70 underline hover:text-white">
-            FAQ
-          </Link>{" "}
-          ·{" "}
-          <Link href={ROUTES.sponsor} className="font-medium text-white/70 underline hover:text-white">
-            Sponsor
-          </Link>{" "}
-          ·{" "}
-          <Link href={ROUTES.betaWaitlist} className="font-medium text-white/70 underline hover:text-white">
-            Liste d&apos;attente
-          </Link>
-        </p>
       </div>
+    </section>
+  );
+}
+
+function InclusionList({ title, items }: { title: string; items: string[] }) {
+  return (
+    <div>
+      <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-[var(--pole-accent)]">
+        {title}
+      </p>
+      <ul className="mt-5 divide-y divide-white/10 border-y border-white/10">
+        {items.map((item) => (
+          <li key={item} className="flex gap-3 py-3.5 text-sm text-white/70">
+            <Check size={16} className="mt-0.5 shrink-0 text-[var(--pole-accent)]" />
+            {item}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function FreeVsPro({
+  free,
+  pro,
+  proLabel,
+  reduce,
+}: {
+  free: readonly string[];
+  pro: readonly string[];
+  proLabel: string;
+  reduce: boolean;
+}) {
+  const [tier, setTier] = useState<"free" | "pro">("pro");
+  const items = tier === "free" ? free : pro;
+
+  return (
+    <div>
+      <div className="inline-flex rounded-full border border-white/15 p-1" role="tablist">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={tier === "free"}
+          onClick={() => setTier("free")}
+          className={`rounded-full px-4 py-2 text-xs font-semibold transition ${
+            tier === "free" ? "bg-white text-black" : "text-white/55"
+          }`}
+        >
+          Gratuit
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={tier === "pro"}
+          onClick={() => setTier("pro")}
+          className={`rounded-full px-4 py-2 text-xs font-semibold transition ${
+            tier === "pro" ? "text-black" : "text-white/55"
+          }`}
+          style={tier === "pro" ? { backgroundColor: "var(--pole-accent)" } : undefined}
+        >
+          {proLabel}
+        </button>
+      </div>
+      <AnimatePresence mode="wait">
+        <motion.ul
+          key={tier}
+          initial={reduce ? false : { opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={reduce ? undefined : { opacity: 0 }}
+          transition={{ duration: 0.25, ease }}
+          className="mt-6 divide-y divide-white/10 border-y border-white/10"
+          role="tabpanel"
+        >
+          {items.map((item) => (
+            <li key={item} className="flex gap-3 py-3.5 text-sm text-white/70">
+              <Check size={16} className="mt-0.5 shrink-0 text-[var(--pole-accent)]" />
+              {item}
+            </li>
+          ))}
+        </motion.ul>
+      </AnimatePresence>
+    </div>
+  );
+}
+
+type WebPlan = ReturnType<typeof plansForPole>[number];
+
+function ClubPlansCompare({
+  yearly,
+  plans,
+}: {
+  yearly: boolean;
+  plans: WebPlan[];
+}) {
+  const order = [
+    "club_amateur",
+    "club_pro",
+    "club_premium",
+    "club_video_pro",
+  ] as const;
+  const sorted = order
+    .map((id) => plans.find((p) => p.id === id))
+    .filter((p): p is WebPlan => p != null);
+
+  type Cell = boolean | string;
+  const rows: { feature: string; group?: string; cells: Cell[] }[] = [
+    {
+      group: "Gestion",
+      feature: "Licenciés, convocations, calendrier",
+      cells: [true, true, true, true],
+    },
+    { feature: "Covoiturage", cells: [true, true, true, true] },
+    { feature: "Résultats & classements", cells: [true, true, true, true] },
+    {
+      group: "Avancé",
+      feature: "Compétitions & admin",
+      cells: [false, true, true, true],
+    },
+    {
+      feature: "Smart Tactics / IA / vidéo (votre matériel)",
+      cells: [false, "Coach abo.", true, true],
+    },
+    {
+      feature: "Pack caméra clé en main",
+      cells: [false, false, false, true],
+    },
+    {
+      feature: "Coachs inclus (0 €)",
+      cells: [false, false, true, true],
+    },
+    {
+      feature: "Pass joueur optionnel",
+      cells: ["3,99 €", "3,99 €", "3,99 €", "3,99 €"],
+    },
+  ];
+
+  function priceLabel(p: WebPlan): string {
+    if ("quoteOnly" in p && p.quoteOnly) return "Sur devis";
+    if (yearly) return `${formatPriceEur(p.yearlyEur)} €/an`;
+    return `${formatPriceEur(p.monthlyEur)} €`;
+  }
+
+  function shortLabel(p: WebPlan): ReactNode {
+    if (p.id === "club_video_pro") {
+      return (
+        <span className="inline-flex flex-col items-center gap-1">
+          <VeoCameraMark size="md" caption={false} className="mx-auto" />
+          <span>
+            Pro + <span className="sr-only">Veo</span>
+          </span>
+        </span>
+      );
+    }
+    return p.label.replace("Club ", "").replace("ProDay ", "");
+  }
+
+  return (
+    <div>
+      <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-[var(--pole-accent)]">
+        Comparatif Club · 4 formules
+      </p>
+      <p className="mt-2 text-xs text-white/45">
+        Premium inclut la vidéo avec votre matériel. Pro + Veo = option clé en main.
+      </p>
+      <div className="mt-5 overflow-x-auto rounded-sm border border-white/10">
+        <table className="w-full min-w-[640px] border-collapse text-left">
+          <thead>
+            <tr className="border-b border-white/10 bg-black/40">
+              <th className="px-3 py-3 text-xs text-white/40">Offre</th>
+              {sorted.map((p) => (
+                <th key={p.id} className="px-2 py-3 text-center sm:px-3">
+                  <span className="block text-xs font-semibold text-white sm:text-sm">
+                    {shortLabel(p)}
+                  </span>
+                  <span className="mt-1 block font-display text-sm text-[var(--pole-accent)] sm:text-base">
+                    {priceLabel(p)}
+                  </span>
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row) => (
+              <Fragment key={`${row.group ?? ""}-${row.feature}`}>
+                {row.group ? (
+                  <tr className="border-t border-white/10 bg-white/[0.03]">
+                    <td
+                      colSpan={5}
+                      className="px-3 py-2 font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--pole-accent)]"
+                    >
+                      {row.group}
+                    </td>
+                  </tr>
+                ) : null}
+                <tr className="border-t border-white/[0.06]">
+                  <th scope="row" className="px-3 py-2.5 text-left text-xs font-medium text-white/75">
+                    {row.feature}
+                  </th>
+                  {row.cells.map((cell, i) => (
+                    <td key={i} className="px-2 py-2.5 text-center text-xs text-white/70 sm:px-3">
+                      {cell === true ? (
+                        <Check size={16} className="mx-auto text-[var(--pole-accent)]" />
+                      ) : cell === false ? (
+                        <span className="text-white/25">—</span>
+                      ) : (
+                        cell
+                      )}
+                    </td>
+                  ))}
+                </tr>
+              </Fragment>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <Link
+        href={`${ROUTES.proClub}#video`}
+        className="mt-4 inline-flex text-xs font-semibold text-[var(--pole-accent)] hover:opacity-80"
+      >
+        Détail module vidéo →
+      </Link>
+    </div>
+  );
+}
+
+function SponsorTierCards({ yearly }: { yearly: boolean }) {
+  return (
+    <div className="space-y-6">
+      {SPONSOR_PRICING_TIERS.map((tier) => {
+        const price =
+          tier.monthlyEur === 0
+            ? "Gratuit"
+            : yearly
+              ? `${formatPriceEur(yearlyPriceFromMonthly(tier.monthlyEur))} €/an`
+              : `${formatPriceEur(tier.monthlyEur)} €/mois`;
+        return (
+          <div
+            key={tier.id}
+            className={`border-b border-white/10 pb-6 last:border-0 ${
+              "highlighted" in tier && tier.highlighted
+                ? "rounded-sm bg-[var(--pole-accent)]/10 px-4 pt-4"
+                : ""
+            }`}
+          >
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-[var(--pole-accent)]">
+                {tier.name}
+              </p>
+              <p className="font-display text-xl font-medium text-white">{price}</p>
+            </div>
+            <p className="mt-1 text-sm text-white/45">{tier.tagline}</p>
+            <ul className="mt-3 space-y-1.5">
+              {tier.features.slice(0, 3).map((f) => (
+                <li key={f} className="flex gap-2 text-xs text-white/65">
+                  <Check size={14} className="mt-0.5 shrink-0 text-[var(--pole-accent)]" />
+                  {f}
+                </li>
+              ))}
+            </ul>
+          </div>
+        );
+      })}
+      <Link
+        href={ROUTES.sponsorDevis}
+        className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--pole-accent)]"
+      >
+        Comparer & demander un devis
+        <ArrowRight size={14} />
+      </Link>
     </div>
   );
 }

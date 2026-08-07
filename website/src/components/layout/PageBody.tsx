@@ -1,5 +1,4 @@
 import type { PoleId } from "@/lib/poles";
-import { POLE_STYLES } from "@/lib/poles";
 
 type PageBodyProps = {
   children: React.ReactNode;
@@ -18,22 +17,19 @@ export function PageBody({
   className = "",
   narrow = false,
   tone = "base",
-  pole,
+  pole: _pole,
   py = "default",
   bordered = false,
 }: PageBodyProps) {
-  const poleStyles = pole ? POLE_STYLES[pole] : null;
-  const bg =
-    tone === "elevated"
-      ? "bg-[#050505]"
-      : poleStyles?.surface ?? "bg-[#030303]";
+  void _pole;
+  const bg = tone === "elevated" ? "bg-[#050505]" : "bg-black";
   const pyClass =
     py === "none" ? "" : py === "sm" ? "py-12 md:py-16" : "py-16 md:py-24";
   const maxW = narrow ? "max-w-2xl" : "max-w-6xl";
 
   return (
     <section
-      className={`text-white ${bg} ${poleStyles?.accentTop ?? ""} ${pyClass} ${
+      className={`text-white ${bg} ${pyClass} ${
         bordered ? "border-b border-white/8" : ""
       } ${className}`}
     >
