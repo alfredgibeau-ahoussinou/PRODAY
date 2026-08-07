@@ -235,8 +235,11 @@ export function WaitlistForm({
             className={fullPage ? "space-y-5" : "space-y-7"}
           >
             <div>
-              <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-white/40 sm:text-[10px] sm:tracking-[0.2em]">
-                {fullPage ? "1 · Qui es-tu ?" : "Qui es-tu ?"}
+              <p
+                id="beta-role-label"
+                className="font-mono text-[9px] uppercase tracking-[0.16em] text-white/40 sm:text-[10px] sm:tracking-[0.2em]"
+              >
+                Qui es-tu ?
               </p>
               <div className={fullPage ? "mt-2.5" : "mt-4"}>
                 <RolePills
@@ -244,6 +247,7 @@ export function WaitlistForm({
                   onChange={setRole}
                   disabled={state === "loading"}
                   dense={fullPage}
+                  labelledBy="beta-role-label"
                 />
               </div>
             </div>
@@ -253,7 +257,7 @@ export function WaitlistForm({
                 htmlFor="beta-email"
                 className="font-mono text-[9px] uppercase tracking-[0.16em] text-white/40 sm:text-[10px] sm:tracking-[0.2em]"
               >
-                {fullPage ? "2 · Email" : "Email"}
+                Email
               </label>
               <div
                 className={`mt-2.5 flex flex-col gap-2.5 ${
@@ -323,11 +327,13 @@ function RolePills({
   onChange,
   disabled,
   dense = false,
+  labelledBy,
 }: {
   role: BetaRoleId;
   onChange: (id: BetaRoleId) => void;
   disabled?: boolean;
   dense?: boolean;
+  labelledBy?: string;
 }) {
   return (
     <div
@@ -337,7 +343,8 @@ function RolePills({
           : "grid grid-cols-2 gap-2 sm:grid-cols-3"
       }
       role="group"
-      aria-label="Rôle"
+      aria-labelledby={labelledBy}
+      aria-label={labelledBy ? undefined : "Rôle"}
     >
       {ROLES.map((r) => {
         const active = role === r.id;
