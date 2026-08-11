@@ -41,7 +41,7 @@ export function buildSectionIntelligence(input: SectionIntelligenceInput): Secti
       label: 'Récupération',
       detail: input.coachMessage ?? 'Charge élevée. Adaptez votre activité.',
       priority: 95,
-      tab: 'sante',
+      tab: 'home',
     });
   }
 

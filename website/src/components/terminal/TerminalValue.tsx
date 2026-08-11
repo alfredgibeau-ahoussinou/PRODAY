@@ -18,7 +18,7 @@ type TerminalValueProps = {
   id?: string;
 };
 
-/** Value band with animated metrics — no decorative side art. */
+/** Value band with animated metrics : no decorative side art. */
 export function TerminalValue({
   kicker = "Our Value",
   title,

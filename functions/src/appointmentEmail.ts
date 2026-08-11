@@ -102,7 +102,7 @@ export function buildAppointmentEmailJsParams(input: {
     `Heure : ${timeLabel}`,
     `Durée : ${input.durationMin} min`,
     input.locationLabel ? `Lieu : ${input.locationLabel}` : '',
-    input.motif ? `Motif : ${input.motif}` : '',
+    // Motif clinique volontairement omis des emails (secret médical / RGPD)
   ]
     .filter(Boolean)
     .join('\n');

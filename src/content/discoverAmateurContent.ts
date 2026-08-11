@@ -1,4 +1,4 @@
-import type { IconName } from '../components/ui/Icon';
+import type { IconName } from '../components/ui/iconNames';
 import type { IntroSlideAction } from './discoverChapters';
 import { SHOWCASE_IMAGES } from './showcaseAssets';
 
@@ -45,7 +45,7 @@ export const DISCOVER_INTRO_SLIDES_AMATEUR: DiscoverIntroSlideAmateur[] = [
     id: 'join',
     kicker: 'REJOINDRE',
     title: 'Compte\ngratuit.',
-    body: 'Inscription joueur (Homme / Femme) en quelques minutes. Coach ? Pôle Staff.',
+    body: 'Inscription joueur (Homme / Femme) en quelques minutes. Coach ? Pôle Coach.',
     image: SHOWCASE_IMAGES.playerProfile,
     icon: 'person',
     cta: 'Créer mon compte',

@@ -52,21 +52,15 @@ export const AdminWorkQueue: React.FC<AdminWorkQueueProps> = ({
       <View style={styles.empty}>
         <Icon name="checkmark-circle" size={28} color={c.success} />
         <Text style={styles.emptyTitle}>File vide</Text>
-        <Text style={styles.emptySub}>Aucune action prioritaire en attente.</Text>
+        <Text style={styles.emptySub}>Aucune action prioritaire.</Text>
       </View>
     );
   }
 
   return (
     <View style={styles.list}>
-      {visible.map((item) => (
-        <PressableSpring
-          key={item.id}
-          onPress={() => onPressItem?.(item)}
-          disabled={!onPressItem}
-          scaleTo={0.98}
-          haptic={Boolean(onPressItem)}
-        >
+      {visible.map((item) => {
+        const row = (
           <View style={[styles.row, compact && styles.rowCompact]}>
             <View style={[styles.stripe, { backgroundColor: PRIORITY_COLOR(c, item.priority) }]} />
             <View style={styles.iconBox}>
@@ -87,8 +81,18 @@ export const AdminWorkQueue: React.FC<AdminWorkQueueProps> = ({
             </View>
             {onPressItem ? <Icon name="chevron-forward" size={16} color={c.textMuted} /> : null}
           </View>
-        </PressableSpring>
-      ))}
+        );
+
+        if (!onPressItem) {
+          return <View key={item.id}>{row}</View>;
+        }
+
+        return (
+          <PressableSpring key={item.id} onPress={() => onPressItem(item)} scaleTo={0.98} haptic>
+            {row}
+          </PressableSpring>
+        );
+      })}
     </View>
   );
 };

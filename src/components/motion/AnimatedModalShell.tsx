@@ -25,6 +25,8 @@ interface AnimatedModalShellProps {
   variant?: AnimatedModalShellVariant;
   /** Poignée centrée seule, sans bouton « Fermer » (header custom dans le contenu). */
   handleOnly?: boolean;
+  /** Override palette (ex. admin clair + teal, hors thème produit). */
+  themeColors?: AppColors;
 }
 
 const COMPACT_SHEET_MAX_HEIGHT = '58%';
@@ -40,9 +42,11 @@ export const AnimatedModalShell: React.FC<AnimatedModalShellProps> = ({
   presentationStyle = 'overFullScreen',
   variant = 'full',
   handleOnly = false,
+  themeColors,
 }) => {
   const insets = useSafeAreaInsets();
-  const { colors: c } = useAppTheme();
+  const { colors: appColors } = useAppTheme();
+  const c = themeColors ?? appColors;
   const { t } = useTranslation();
   const resolvedCloseLabel = closeLabel ?? t('common.close');
   const styles = useMemo(() => createStyles(c), [c]);

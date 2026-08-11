@@ -19,7 +19,7 @@ const STATUS_LABEL: Record<string, string> = {
   trialing: "Essai",
   canceled: "Annulé",
   past_due: "Impayé",
-  none: "—",
+  none: "…",
 };
 
 type Props = {
@@ -137,9 +137,9 @@ export function AdminSubscriptions({
                         {STATUS_LABEL[r.status] ?? r.status}
                       </AdminStatusBadge>
                     </td>
-                    <td className="tabular-nums text-white/45">—</td>
+                    <td className="tabular-nums text-white/45">…</td>
                     <td className="whitespace-nowrap text-white/45">
-                      {r.renewsAt ? formatAdminDate(r.renewsAt) : "—"}
+                      {r.renewsAt ? formatAdminDate(r.renewsAt) : "…"}
                     </td>
                   </tr>
                 );

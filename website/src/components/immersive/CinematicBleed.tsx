@@ -8,7 +8,7 @@ import { clsx } from "clsx";
 type CinematicBleedProps = {
   src: string;
   className?: string;
-  /** 0–1 opacity of the photo */
+  /** 0 : 1 opacity of the photo */
   opacity?: number;
   priority?: boolean;
   /** Soft vertical vignette toward black */
@@ -17,7 +17,7 @@ type CinematicBleedProps = {
 
 /**
  * Full-bleed cinematic photo plane.
- * Subtle parallax only — no cards, badges, or float loops.
+ * Subtle parallax only : no cards, badges, or float loops.
  */
 export function CinematicBleed({
   src,

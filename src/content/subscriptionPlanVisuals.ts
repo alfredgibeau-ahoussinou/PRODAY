@@ -1,4 +1,4 @@
-import type { IconName } from '../components/ui/Icon';
+import type { IconName } from '../components/ui/iconNames';
 import type { ProductLineId } from '../models/ProductLine';
 import type { UserRole } from '../models/User';
 import type { PlayerSegment } from '../utils/playerSegment';
@@ -123,19 +123,19 @@ const VISUALS: Record<SubscriptionVisualVariant, SubscriptionPlanVisual> = {
     onPrimary: '#422006',
     rootBg: '#FFFBEB',
     freeColumnTitle: 'Recruteur gratuit',
-    compareTitle: 'Comparer Pipeline scouting',
+    compareTitle: 'Comparer le suivi scouting',
     quotaTitle: 'Messages scouting',
     ctaVerb: 'Activer Recruteur Pro',
     featureIconFree: 'search',
     featureIconPro: 'star-four-points',
     priceStyle: 'standard',
-    proHighlight: 'Pipeline candidatures',
+    proHighlight: 'Suivi des candidatures',
   },
   club: {
     variant: 'club',
     icon: 'business',
     eyebrow: 'Structure club',
-    screenTitle: 'Club Pro',
+    screenTitle: 'Offres Club',
     heroMode: 'dark',
     primary: '#334155',
     primarySoft: '#E2E8F0',
@@ -147,7 +147,7 @@ const VISUALS: Record<SubscriptionVisualVariant, SubscriptionPlanVisual> = {
     freeColumnTitle: 'Club gratuit',
     compareTitle: 'Comparer Annonces club',
     quotaTitle: 'Annonces actives',
-    ctaVerb: 'Activer Club Pro',
+    ctaVerb: 'Souscrire',
     featureIconFree: 'business',
     featureIconPro: 'star',
     priceStyle: 'standard',
@@ -254,7 +254,9 @@ const PLAN_VARIANT: Record<SubscriptionPlanId, SubscriptionVisualVariant> = {
   player_plus: 'man_player',
   recruiter_pro: 'recruiter',
   coach_pro: 'coach',
+  club_amateur: 'club',
   club_pro: 'club',
+  club_premium: 'club',
   agent_elite: 'agent_premium',
   physio_pro: 'medical',
   organizer_pro: 'organizer',

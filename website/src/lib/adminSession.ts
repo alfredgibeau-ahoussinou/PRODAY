@@ -19,23 +19,24 @@ type AdminSessionPayload = {
   exp: number;
 };
 
+/** Accès dynamique : évite l’inline build-time Next (PIN local ≠ env Netlify). */
+function runtimeEnv(name: string): string {
+  return String(process.env[name] ?? "").trim();
+}
+
 function getAdminPin(): string | null {
-  const pin =
-    process.env.BETA_ADMIN_PIN?.trim() ||
-    process.env.ADMIN_MINICODE?.trim() ||
-    "";
+  const pin = runtimeEnv("BETA_ADMIN_PIN") || runtimeEnv("ADMIN_MINICODE");
   return pin || null;
 }
 
 function getSessionSecret(): string | null {
   const secret =
-    process.env.BETA_ADMIN_SESSION_SECRET?.trim() ||
-    process.env.BETA_ACCESS_SECRET?.trim() ||
-    process.env.BETA_WEBSITE_ADMIN_SECRET?.trim() ||
-    "";
+    runtimeEnv("BETA_ADMIN_SESSION_SECRET") ||
+    runtimeEnv("BETA_ACCESS_SECRET") ||
+    runtimeEnv("BETA_WEBSITE_ADMIN_SECRET");
   if (secret.length >= 16) return secret;
   const pin = getAdminPin();
-  if (pin && process.env.NODE_ENV !== "production") {
+  if (pin && runtimeEnv("NODE_ENV") !== "production") {
     return `dev-admin-session:${pin}`;
   }
   return secret || null;
@@ -106,8 +107,8 @@ export async function getAdminSessionFromCookies(): Promise<boolean> {
 export function adminSessionCookieOptions(maxAge = ADMIN_SESSION_MAX_AGE) {
   return {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax" as const,
+    secure: true,
+    sameSite: "strict" as const,
     maxAge,
     path: "/",
   };

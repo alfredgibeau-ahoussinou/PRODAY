@@ -14,7 +14,7 @@ import { AnimatedDialogShell } from '../motion/AnimatedDialogShell';
 import type { User, UserRole, VerificationStatus } from '../../models/User';
 import { ROLES_REQUIRING_VERIFICATION } from '../../models/User';
 import type { ProductLineId } from '../../models/ProductLine';
-import { useAdminStyles } from './adminStyles';
+import { useAdminStyles, ADMIN_COLORS } from './adminStyles';
 import { spacing, radius } from '../../theme/designTokens';
 import type { AppColors } from '../../theme/universeTheme';
 import {
@@ -39,6 +39,13 @@ import { PlayerLevelBadgePill } from '../player/PlayerLevelBadgePill';
 import { isJoueurProductLine, playerLevelBadgeFor } from '../../utils/playerLevelBadge';
 
 const VERIFY: VerificationStatus[] = ['NOT_REQUIRED', 'PENDING', 'VERIFIED', 'REJECTED'];
+
+const VERIFY_LABEL: Record<VerificationStatus, string> = {
+  NOT_REQUIRED: 'Non requise',
+  PENDING: 'En attente',
+  VERIFIED: 'Vérifié',
+  REJECTED: 'Rejeté',
+};
 
 export type AdminUserEditPatch = {
   display_name: string;
@@ -141,18 +148,29 @@ export const AdminUserEditModal: React.FC<AdminUserEditModalProps> = ({
     role === 'physio';
 
   return (
-    <AnimatedModalShell visible={visible} onClose={onClose} closeLabel="Fermer">
+    <AnimatedModalShell
+      visible={visible}
+      onClose={onClose}
+      closeLabel="Fermer"
+      themeColors={ADMIN_COLORS}
+    >
       <View style={styles.sheetInner}>
+        <Text style={styles.eyebrow}>Administration</Text>
         <Text style={styles.title}>Modifier l&apos;utilisateur</Text>
         <Text style={styles.sub}>{user.email}</Text>
-        <ScrollView keyboardShouldPersistTaps="handled">
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
           {(user.role === 'player' || user.profile?.gender != null) && (
             <View style={styles.readOnlyBlock}>
               <Text style={styles.label}>Genre (lecture seule)</Text>
               <Text style={styles.readOnlyValue}>{adminGenderLabel(user.profile?.gender)}</Text>
               {user.role === 'player' ? (
                 <>
-                  <Text style={styles.label}>Badge niveau joueur (lecture seule)</Text>
+                  <Text style={[styles.label, styles.labelFollow]}>Badge niveau joueur (lecture seule)</Text>
                   <View style={styles.readOnlyBadgeRow}>
                     <PlayerLevelBadgePill user={user} showVerified={false} />
                     <Text style={styles.readOnlyHint}>
@@ -164,70 +182,76 @@ export const AdminUserEditModal: React.FC<AdminUserEditModalProps> = ({
             </View>
           )}
 
-          <Text style={styles.label}>Nom affiché</Text>
-          <TextInput
-            style={styles.input}
-            value={displayName}
-            onChangeText={setDisplayName}
-            placeholderTextColor={c.textMuted}
-          />
-          <Text style={styles.label}>Ville</Text>
-          <TextInput
-            style={styles.input}
-            value={city}
-            onChangeText={setCity}
-            placeholderTextColor={c.textMuted}
-          />
-
-          <Text style={styles.label}>Univers</Text>
-          <View style={styles.chipRow}>
-            {ADMIN_PRODUCT_LINES.map((line) => {
-              const active = isJoueurProductLine(line)
-                ? isJoueurProductLine(productLine)
-                : productLine === line;
-              return (
-                <TouchableOpacity
-                  key={line}
-                  style={[styles.chip, active && styles.chipOn]}
-                  onPress={() => applyProductLine(line)}
-                >
-                  <Text style={[styles.chipText, active && styles.chipTextOn]}>
-                    {adminProductLineLabel(line)}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
+          <View style={styles.section}>
+            <Text style={styles.label}>Nom affiché</Text>
+            <TextInput
+              style={styles.input}
+              value={displayName}
+              onChangeText={setDisplayName}
+              placeholderTextColor={c.textMuted}
+            />
+            <Text style={[styles.label, styles.labelFollow]}>Ville</Text>
+            <TextInput
+              style={styles.input}
+              value={city}
+              onChangeText={setCity}
+              placeholderTextColor={c.textMuted}
+            />
           </View>
 
-          <Text style={styles.label}>Rôle métier</Text>
-          <Text style={styles.hint}>
-            Rôles compatibles avec {adminProductLineLabel(productLine)}
-          </Text>
-          <View style={styles.roleList}>
-            {metierRoles.map((r) => {
-              const active = role === r;
-              const hint = adminRoleHint(r);
-              return (
-                <TouchableOpacity
-                  key={r}
-                  style={[styles.roleCard, active && styles.roleCardOn]}
-                  onPress={() => applyRole(r)}
-                >
-                  <Text style={[styles.roleCardTitle, active && styles.roleCardTitleOn]}>
-                    {getRoleLabel(r, t)}
-                  </Text>
-                  {hint ? (
-                    <Text style={[styles.roleCardHint, active && styles.roleCardHintOn]}>
-                      {hint}
+          <View style={styles.section}>
+            <Text style={styles.label}>Univers</Text>
+            <View style={styles.chipRow}>
+              {ADMIN_PRODUCT_LINES.map((line) => {
+                const active = isJoueurProductLine(line)
+                  ? isJoueurProductLine(productLine)
+                  : productLine === line;
+                return (
+                  <TouchableOpacity
+                    key={line}
+                    style={[styles.chip, active && styles.chipOn]}
+                    onPress={() => applyProductLine(line)}
+                  >
+                    <Text style={[styles.chipText, active && styles.chipTextOn]}>
+                      {adminProductLineLabel(line)}
                     </Text>
-                  ) : null}
-                </TouchableOpacity>
-              );
-            })}
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.label}>Rôle métier</Text>
+            <Text style={styles.hint}>
+              Rôles compatibles avec {adminProductLineLabel(productLine)}
+            </Text>
+            <View style={styles.roleList}>
+              {metierRoles.map((r) => {
+                const active = role === r;
+                const hint = adminRoleHint(r);
+                return (
+                  <TouchableOpacity
+                    key={r}
+                    style={[styles.roleCard, active && styles.roleCardOn]}
+                    onPress={() => applyRole(r)}
+                  >
+                    <Text style={[styles.roleCardTitle, active && styles.roleCardTitleOn]}>
+                      {getRoleLabel(r, t)}
+                    </Text>
+                    {hint ? (
+                      <Text style={[styles.roleCardHint, active && styles.roleCardHintOn]}>
+                        {hint}
+                      </Text>
+                    ) : null}
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
           </View>
 
           {role === 'physio' || productLine === 'sante' ? (
-            <>
+            <View style={styles.section}>
               <Text style={styles.label}>Spécialité santé</Text>
               <Text style={styles.hint}>
                 Les 7 métiers du pôle Santé. Précise le profil visible dans l’app
@@ -251,11 +275,11 @@ export const AdminUserEditModal: React.FC<AdminUserEditModalProps> = ({
                   );
                 })}
               </View>
-            </>
+            </View>
           ) : null}
 
           {showJobTitle ? (
-            <>
+            <View style={styles.section}>
               <Text style={styles.label}>Intitulé métier (profil)</Text>
               <TextInput
                 style={styles.input}
@@ -264,11 +288,11 @@ export const AdminUserEditModal: React.FC<AdminUserEditModalProps> = ({
                 placeholder="Ex. Coach U17, Agent FIFA, Kiné du sport…"
                 placeholderTextColor={c.textMuted}
               />
-            </>
+            </View>
           ) : null}
 
           {needsVerifyUi ? (
-            <>
+            <View style={styles.section}>
               <Text style={styles.label}>Vérification</Text>
               <View style={styles.chipRow}>
                 {VERIFY.map((v) => (
@@ -283,12 +307,12 @@ export const AdminUserEditModal: React.FC<AdminUserEditModalProps> = ({
                         verificationStatus === v && styles.chipTextOn,
                       ]}
                     >
-                      {v}
+                      {VERIFY_LABEL[v]}
                     </Text>
                   </TouchableOpacity>
                 ))}
               </View>
-            </>
+            </View>
           ) : null}
 
           {role === 'sponsor' ? (
@@ -303,6 +327,7 @@ export const AdminUserEditModal: React.FC<AdminUserEditModalProps> = ({
                 value={sponsorApproved}
                 onValueChange={setSponsorApproved}
                 trackColor={{ false: c.border, true: c.accent }}
+                thumbColor={c.surface}
               />
             </View>
           ) : null}
@@ -401,6 +426,7 @@ function createStyles(c: AppColors) {
   return StyleSheet.create({
     sheetInner: {
       flex: 1,
+      backgroundColor: c.backgroundAlt,
       paddingHorizontal: spacing.lg,
       paddingBottom: spacing.lg,
     },
@@ -409,16 +435,33 @@ function createStyles(c: AppColors) {
       padding: spacing.lg,
       borderWidth: 1,
       borderColor: c.border,
+      backgroundColor: c.surface,
     },
-    title: { fontSize: 20, fontWeight: '900', color: c.text },
-    sub: { fontSize: 13, color: c.textMuted, marginBottom: spacing.md },
-    readOnlyBlock: {
-      marginBottom: spacing.sm,
-      padding: spacing.md,
-      borderRadius: radius.md,
+    eyebrow: {
+      fontSize: 11,
+      fontWeight: '700',
+      letterSpacing: 1,
+      textTransform: 'uppercase',
+      color: c.brand,
+      marginBottom: spacing.xs,
+    },
+    title: { fontSize: 22, fontWeight: '800', color: c.text, letterSpacing: -0.3 },
+    sub: { fontSize: 13, color: c.textMuted, marginBottom: spacing.md, marginTop: 2 },
+    scroll: { flex: 1 },
+    scrollContent: { paddingBottom: spacing.md, gap: spacing.sm },
+    section: {
+      backgroundColor: c.surface,
+      borderRadius: radius.lg,
       borderWidth: 1,
       borderColor: c.border,
-      backgroundColor: c.surfaceMuted,
+      padding: spacing.md,
+    },
+    readOnlyBlock: {
+      padding: spacing.md,
+      borderRadius: radius.lg,
+      borderWidth: 1,
+      borderColor: c.border,
+      backgroundColor: c.surface,
     },
     readOnlyValue: { fontSize: 15, fontWeight: '800', color: c.text, marginBottom: spacing.xs },
     readOnlyBadgeRow: {
@@ -431,16 +474,19 @@ function createStyles(c: AppColors) {
     readOnlyHint: { fontSize: 11, color: c.textMuted, fontWeight: '600' },
     label: {
       fontSize: 11,
-      fontWeight: '800',
-      color: c.textSecondary,
-      marginTop: spacing.sm,
+      fontWeight: '700',
+      letterSpacing: 0.6,
+      textTransform: 'uppercase',
+      color: c.textMuted,
       marginBottom: spacing.xs,
     },
+    labelFollow: { marginTop: spacing.sm },
     hint: {
-      fontSize: 11,
+      fontSize: 12,
       color: c.textMuted,
       marginBottom: spacing.sm,
       marginTop: -2,
+      lineHeight: 16,
     },
     input: {
       borderWidth: 1,
@@ -449,52 +495,61 @@ function createStyles(c: AppColors) {
       padding: spacing.md,
       fontSize: 15,
       color: c.text,
-      backgroundColor: c.background,
+      backgroundColor: c.backgroundAlt,
+      marginBottom: spacing.sm,
     },
     textArea: { minHeight: 88, textAlignVertical: 'top' },
-    chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs, marginBottom: spacing.sm },
+    chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs, marginBottom: 2 },
     chip: {
       paddingHorizontal: spacing.sm,
-      paddingVertical: 6,
-      borderRadius: radius.pill,
+      paddingVertical: 8,
+      borderRadius: radius.md,
       borderWidth: 1,
       borderColor: c.border,
+      backgroundColor: c.backgroundAlt,
     },
     chipOn: { backgroundColor: c.accent, borderColor: c.accent },
-    chipText: { fontSize: 11, fontWeight: '700', color: c.textSecondary },
+    chipText: { fontSize: 12, fontWeight: '700', color: c.textSecondary },
     chipTextOn: { color: c.brandInverse },
-    roleList: { gap: spacing.xs, marginBottom: spacing.sm },
+    roleList: { gap: spacing.xs },
     roleCard: {
       borderWidth: 1,
       borderColor: c.border,
       borderRadius: radius.md,
       paddingVertical: spacing.sm,
       paddingHorizontal: spacing.md,
-      backgroundColor: c.background,
+      backgroundColor: c.backgroundAlt,
     },
     roleCardOn: {
-      backgroundColor: c.accent,
-      borderColor: c.accent,
+      backgroundColor: c.brandSoft,
+      borderColor: c.brand,
     },
     roleCardTitle: { fontSize: 14, fontWeight: '800', color: c.text },
-    roleCardTitleOn: { color: c.brandInverse },
+    roleCardTitleOn: { color: c.brand },
     roleCardHint: { fontSize: 11, color: c.textMuted, marginTop: 2 },
-    roleCardHintOn: { color: c.brandInverse, opacity: 0.85 },
+    roleCardHintOn: { color: c.textSecondary },
     switchRow: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: spacing.md,
-      marginTop: spacing.md,
       padding: spacing.md,
-      borderRadius: radius.md,
+      borderRadius: radius.lg,
       borderWidth: 1,
       borderColor: c.border,
-      backgroundColor: c.surfaceMuted,
+      backgroundColor: c.surface,
     },
     switchCopy: { flex: 1 },
     switchTitle: { fontSize: 13, fontWeight: '800', color: c.text },
     switchSub: { fontSize: 11, color: c.textMuted, marginTop: 2, lineHeight: 15 },
-    actions: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.lg },
+    actions: {
+      flexDirection: 'row',
+      gap: spacing.sm,
+      marginTop: spacing.md,
+      paddingTop: spacing.md,
+      borderTopWidth: 1,
+      borderTopColor: c.border,
+      backgroundColor: c.backgroundAlt,
+    },
     cancelBtn: {
       flex: 1,
       padding: spacing.md,
@@ -502,10 +557,11 @@ function createStyles(c: AppColors) {
       borderWidth: 1,
       borderColor: c.border,
       alignItems: 'center',
+      backgroundColor: c.surface,
     },
     cancelText: { fontWeight: '800', color: c.text },
     saveBtn: {
-      flex: 1,
+      flex: 1.2,
       padding: spacing.md,
       borderRadius: radius.md,
       backgroundColor: c.accent,

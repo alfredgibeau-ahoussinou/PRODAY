@@ -37,6 +37,8 @@ export interface MedicalAppointment {
   motif?: string;
   location_label?: string;
   notes?: string;
+  /** Patient a révoqué l’accès soignant hors grant explicite */
+  treating_access_revoked?: boolean;
   created_at: Date;
   updated_at?: Date;
 }

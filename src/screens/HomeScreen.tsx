@@ -16,18 +16,34 @@ import { getUserProductLine } from '../utils/productLineAccess';
 import { TeamManagementScreen } from './TeamManagementScreen';
 import { SponsorsScreen } from './SponsorsScreen';
 import { SponsorHubScreen } from './sponsor/SponsorHubScreen';
+import { SmartTacticsPortalScreen } from './smartTactics/SmartTacticsPortalScreen';
+import { TrainHubScreen } from './training/TrainHubScreen';
+import { JoueurTacticsCoachScreen } from './joueur/JoueurTacticsCoachScreen';
+import { JoueurWhoAreYouGateScreen } from './joueur/JoueurWhoAreYouGateScreen';
 import { CrossfadeSwitch, PushScreenTransition } from '../components/motion';
 import { ProDayScreenCanvas } from '../components/ui/ProDayScreenCanvas';
 import { WeeklyQuestionHomePopup } from '../components/weeklyQuestion/WeeklyQuestionHomePopup';
 import { canParticipateWeeklyQuestion } from '../utils/weeklyQuestionAccess';
+import {
+  type JoueurGateProfile,
+} from '../utils/joueurGateStorage';
+import { useJoueurSession } from '../context/JoueurSessionContext';
+import { isJoueurPolePlayer } from '../utils/joueurPoleAccess';
 
-type HomeOverlay = 'team' | 'sponsors' | 'partner-hub' | null;
+type HomeOverlay =
+  | 'team'
+  | 'sponsors'
+  | 'partner-hub'
+  | 'smart_tactics'
+  | 'train'
+  | 'tactics_coach'
+  | null;
 
 /**
  * Accueil : découverte interactive avant connexion, dashboard personnel après.
  */
 export const HomeScreen: React.FC = () => {
-  const { loading } = useAuth();
+  const { loading, refreshProfile } = useAuth();
   const profile = useSessionProfile();
   const { colors } = useAppTheme();
   const { productLine } = useAppTheme();
@@ -36,12 +52,23 @@ export const HomeScreen: React.FC = () => {
   const { pendingDashboardView, clearPendingDashboard } = useTabNavigation();
   const [refreshing, setRefreshing] = useState(false);
   const [overlay, setOverlay] = useState<HomeOverlay>(null);
+  const joueurSession = useJoueurSession();
+
+  const userLine = profile ? getUserProductLine(profile) : null;
+  const isJoueurPlayer = isJoueurPolePlayer(profile);
+  const isAmateurPlayer = isJoueurPlayer;
+
+  const joueurGate = joueurSession?.gate ?? null;
+  const joueurGateReady = !isJoueurPlayer || Boolean(joueurSession?.ready);
+  const needsJoueurGate = Boolean(isJoueurPlayer && joueurSession?.needsGate);
 
   useEffect(() => {
     if (!pendingDashboardView || !profile) return;
     if (pendingDashboardView === 'gestion') setOverlay('team');
+    else if (pendingDashboardView === 'smart_tactics') setOverlay('smart_tactics');
+    else if (pendingDashboardView === 'train') setOverlay('train');
+    else if (pendingDashboardView === 'tactics_coach') setOverlay('tactics_coach');
     else if (pendingDashboardView === 'sponsors') {
-      // Hub partenaire or réservé au rôle sponsor — sinon offres clubs (pas l’espace marque).
       setOverlay(profile.role === 'sponsor' ? 'partner-hub' : 'sponsors');
     }
     clearPendingDashboard();
@@ -56,16 +83,23 @@ export const HomeScreen: React.FC = () => {
     }
   }, [refresh]);
 
-  if (loading) {
+  if (loading || (isAmateurPlayer && !joueurGateReady)) {
     return (
-      <View
-        style={[
-          styles.loader,
-          { backgroundColor: colors.background },
-        ]}
-      >
+      <View style={[styles.loader, { backgroundColor: colors.background }]}>
         <ActivityIndicator size="large" color={colors.brand} />
       </View>
+    );
+  }
+
+  if (profile && needsJoueurGate) {
+    return (
+      <JoueurWhoAreYouGateScreen
+        uid={profile.uid}
+        onComplete={(gate: JoueurGateProfile) => {
+          joueurSession?.completeGate(gate);
+          void refreshProfile();
+        }}
+      />
     );
   }
 
@@ -86,17 +120,14 @@ export const HomeScreen: React.FC = () => {
         />
       );
     }
-    const userLine = getUserProductLine(profile);
-    if (
-      profile.role === 'player' &&
-      (userLine === 'amateur' || userLine === 'homme' || userLine === 'woman')
-    ) {
+    if (isAmateurPlayer) {
       return (
         <AmateurPlayerHomeDashboard
           profile={profile}
           unreadMessages={unreadMessages}
           onRefresh={handleRefresh}
           refreshing={refreshing}
+          joueurGate={joueurGate}
         />
       );
     }
@@ -138,6 +169,24 @@ export const HomeScreen: React.FC = () => {
           <PushScreenTransition active={overlay === 'team'}>
             {overlay === 'team' ? (
               <TeamManagementScreen profile={profile} onBack={() => setOverlay(null)} />
+            ) : null}
+          </PushScreenTransition>
+
+          <PushScreenTransition active={overlay === 'smart_tactics'}>
+            {overlay === 'smart_tactics' ? (
+              <SmartTacticsPortalScreen onBack={() => setOverlay(null)} />
+            ) : null}
+          </PushScreenTransition>
+
+          <PushScreenTransition active={overlay === 'train'}>
+            {overlay === 'train' ? (
+              <TrainHubScreen onBack={() => setOverlay(null)} />
+            ) : null}
+          </PushScreenTransition>
+
+          <PushScreenTransition active={overlay === 'tactics_coach'}>
+            {overlay === 'tactics_coach' ? (
+              <JoueurTacticsCoachScreen onBack={() => setOverlay(null)} />
             ) : null}
           </PushScreenTransition>
 

@@ -10,7 +10,7 @@ import { useAppTheme } from '../../context/ProductLineContext';
 import { spacing, radius } from '../../theme/designTokens';
 
 const REACTIONS: { kind: WeeklyReactionKind; emoji: string; label: string }[] = [
-  { kind: 'like', emoji: '👍', label: 'Like' },
+  { kind: 'like', emoji: '👍', label: "J'aime" },
   { kind: 'fire', emoji: '🔥', label: 'Feu' },
   { kind: 'clap', emoji: '👏', label: 'Bravo' },
 ];

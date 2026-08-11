@@ -11,7 +11,7 @@ function jsonResponse(body: Record<string, unknown>, init?: ResponseInit) {
   return response;
 }
 
-/** Stats trafic — réservé à la session admin fondateurs. */
+/** Stats trafic : réservé à la session admin fondateurs. */
 export async function GET(request: Request) {
   if (!(await getAdminSessionFromCookies())) {
     return jsonResponse({ error: "Non autorisé" }, { status: 401 });

@@ -20,6 +20,8 @@ const SiteHelpChatbot = lazy(() =>
 export function SiteShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isAdmin = pathname.startsWith("/admin");
+  const isJoueurWorld =
+    pathname === "/joueur" || pathname.startsWith("/joueur/");
 
   if (isAdmin) {
     return (
@@ -40,6 +42,47 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
           }
         >
           <div className="relative z-10">{children}</div>
+        </div>
+      </MotionConfig>
+    );
+  }
+
+  /** Monde Joueur 3D/4D : menu toujours au-dessus, contenu isolé en dessous. */
+  if (isJoueurWorld) {
+    return (
+      <MotionConfig reducedMotion="user">
+        <SiteVisitTracker />
+        <div
+          className="page-joueur-world relative min-h-screen overflow-x-clip bg-[#020617] text-white"
+          style={
+            {
+              ["--proday-accent" as string]: "#0054F0",
+              ["--proday-accent-bright" as string]: "#4C8BFF",
+              ["--proday-accent-deep" as string]: "#001F6B",
+              ["--proday-accent-dim" as string]: "#1A68FF",
+              ["--proday-accent-glow" as string]: "rgba(0, 84, 240, 0.5)",
+              ["--proday-accent-muted" as string]: "rgba(0, 84, 240, 0.2)",
+              ["--proday-accent-gradient" as string]:
+                "linear-gradient(135deg, #001F6B 0%, #0054F0 48%, #4C8BFF 100%)",
+            } as React.CSSProperties
+          }
+        >
+          <ScrollToHash />
+          <Suspense fallback={null}>
+            <ReferralCapture />
+          </Suspense>
+          {/* Nav hors du stacking du main pour rester cliquable et visible */}
+          <div className="relative z-[110]">
+            <SiteNav />
+          </div>
+          <main
+            id="main-content"
+            tabIndex={-1}
+            className="relative z-0 isolate overflow-x-clip"
+          >
+            <PageTransition pathname={pathname}>{children}</PageTransition>
+          </main>
+          <BackToTop />
         </div>
       </MotionConfig>
     );

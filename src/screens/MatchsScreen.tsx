@@ -5,6 +5,7 @@ import { openSeasonCalendarItem } from '../utils/navigationDeepLink';
 import { useTabNavigationActions } from '../hooks/useTabNavigationActions';
 import { useFriendlyMatches, useSeasonCalendar } from '../hooks/useAppData';
 import { useTournaments } from '../hooks/useTournaments';
+import { useCompetitions } from '../hooks/useCompetitions';
 import { useMatchScreenData } from '../hooks/useMatchScreenData';
 import { useMatchActions } from '../hooks/useMatchActions';
 import { useMatchJoinGuard } from '../hooks/useMatchJoinGuard';
@@ -20,10 +21,16 @@ import type { MatchChapterId } from '../content/matchChapters';
 import type { SeasonCalendarItem } from '../utils/seasonCalendar';
 import { ProposeMatchScreen } from './ProposeMatchScreen';
 import { SearchMatchScreen } from './SearchMatchScreen';
+import { MatchOrganizeScreen } from './MatchOrganizeScreen';
 import { CreateTournamentScreen } from './CreateTournamentScreen';
 import { CreateTeamEventScreen } from './CreateTeamEventScreen';
 import { TournamentDetailScreen } from './TournamentDetailScreen';
 import { MatchEventHubScreen } from './MatchEventHubScreen';
+import { CompetitionOrganizeScreen } from './competition/CompetitionOrganizeScreen';
+import { CompetitionDashboardScreen } from './competition/CompetitionDashboardScreen';
+import { CompetitionStandingsScreen } from './competition/CompetitionStandingsScreen';
+import { CompetitionFixtureDetailScreen } from './competition/CompetitionFixtureDetailScreen';
+import { CompetitionStatsScreen } from './competition/CompetitionStatsScreen';
 import type { MatchHubChapterId } from '../content/matchHubChapters';
 import { prodayHaptics } from '../utils/prodayHaptics';
 import { isInMatchWindow } from '../utils/matchLive';
@@ -31,23 +38,36 @@ import { useRequireAuth } from '../hooks/useRequireAuth';
 import { useTranslation } from '../context/LocaleContext';
 import { PushScreenTransition } from '../components/motion';
 import { userCanManageConvocations } from '../utils/clubFeatureAccess';
+import { useClubCoversCoach } from '../hooks/useClubCoversCoach';
 
 type MatchView =
   | 'home'
   | 'propose'
   | 'search'
+  | 'organize'
   | 'create_event'
   | 'create_tournament'
   | 'tournament_detail'
-  | 'event_detail';
+  | 'event_detail'
+  | 'competition_organize'
+  | 'competition_dashboard'
+  | 'competition_standings'
+  | 'competition_fixture'
+  | 'competition_stats';
 
-export const MatchsScreen: React.FC = () => {
+export const MatchsScreen: React.FC<{
+  defaultChapter?: MatchChapterId;
+  embeddedInShell?: boolean;
+}> = ({ defaultChapter = 'calendrier', embeddedInShell = false }) => {
   const [view, setView] = React.useState<MatchView>('home');
-  const [initialChapter, setInitialChapter] = React.useState<MatchChapterId>('calendrier');
+  const [initialChapter, setInitialChapter] = React.useState<MatchChapterId>(defaultChapter);
   const [selectedEventId, setSelectedEventId] = React.useState<string | null>(null);
   const [selectedTournamentId, setSelectedTournamentId] = React.useState<string | null>(null);
+  const [selectedSeasonId, setSelectedSeasonId] = React.useState<string | null>(null);
+  const [selectedFixtureId, setSelectedFixtureId] = React.useState<string | null>(null);
   const [hubChapter, setHubChapter] = React.useState<MatchHubChapterId>('apercu');
   const [rsvpBusy, setRsvpBusy] = React.useState(false);
+  const [competitionRefresh, setCompetitionRefresh] = React.useState(0);
   const { profile } = useAuth();
   const { productLine } = useAppTheme();
   const { requireAuth } = useRequireAuth();
@@ -68,10 +88,21 @@ export const MatchsScreen: React.FC = () => {
     loading: loadingTournaments,
     refresh: refreshTournaments,
   } = useTournaments();
+  const {
+    competitions,
+    seasons: competitionSeasons,
+    fixtures: competitionFixtures,
+    loading: loadingCompetitions,
+    refresh: refreshCompetitions,
+  } = useCompetitions(competitionRefresh);
   const { acceptMatch, cancelMatch, markPlayed, canAccept } = useMatchActions(profile);
   const { guardAcceptMatch, guardRsvpYes, getMatchIaScore, checkMatch } =
     useMatchJoinGuard(profile);
   const [myClubId, setMyClubId] = React.useState<string | null>(null);
+  const canAcceptForClub = useCallback(
+    (match: Parameters<typeof canAccept>[0]) => canAccept(match, myClubId),
+    [canAccept, myClubId],
+  );
 
   const { pendingConvocations, myUpcomingEvents, nextItem } = useMatchScreenData(
     profile,
@@ -85,8 +116,9 @@ export const MatchsScreen: React.FC = () => {
     liveMatches: events.filter((e) => isInMatchWindow(e)).length,
   });
 
-  /** Convocations = Staff premium ; tournois = organisateur / staff coach. */
-  const canManageConvocations = userCanManageConvocations(profile);
+  /** Convocations = coach pro ou club Tout inclus (coachs inclus). */
+  const clubCoversCoach = useClubCoversCoach(clubId);
+  const canManageConvocations = userCanManageConvocations(profile, { clubCoversCoach });
   const canManageTournaments = Boolean(
     profile &&
       (profile.role === 'organizer' ||
@@ -95,11 +127,30 @@ export const MatchsScreen: React.FC = () => {
   );
 
   React.useEffect(() => {
+    setInitialChapter(defaultChapter);
+  }, [defaultChapter]);
+
+  React.useEffect(() => {
     setMyClubId(profile ? profile.profile.club_id ?? profile.uid : null);
   }, [profile]);
 
   React.useEffect(() => {
     if (!pendingMatchsLink) return;
+    if (pendingMatchsLink.view === 'organize') {
+      setView('organize');
+      clearPendingMatchs();
+      return;
+    }
+    if (pendingMatchsLink.view === 'propose') {
+      setView('propose');
+      clearPendingMatchs();
+      return;
+    }
+    if (pendingMatchsLink.view === 'search') {
+      setView('search');
+      clearPendingMatchs();
+      return;
+    }
     if (pendingMatchsLink.homeTab === 'matches') {
       setInitialChapter('amicaux');
     } else if (pendingMatchsLink.homeTab === 'convocations') {
@@ -110,6 +161,8 @@ export const MatchsScreen: React.FC = () => {
       setInitialChapter('stats');
     } else if (pendingMatchsLink.homeTab === 'tournois') {
       setInitialChapter('tournois');
+    } else if (pendingMatchsLink.homeTab === 'competitions') {
+      setInitialChapter('competitions');
     } else {
       setInitialChapter('calendrier');
     }
@@ -125,6 +178,8 @@ export const MatchsScreen: React.FC = () => {
     refreshCalendar();
     refreshMatches();
     void refreshTournaments();
+    setCompetitionRefresh((n) => n + 1);
+    void refreshCompetitions();
   };
 
   const recordMatchJoin = useCallback(() => {
@@ -190,6 +245,11 @@ export const MatchsScreen: React.FC = () => {
       setView('event_detail');
       return;
     }
+    if (item.competition_fixture_id) {
+      setSelectedFixtureId(item.competition_fixture_id);
+      setView('competition_fixture');
+      return;
+    }
     openSeasonCalendarItem(item, navActions);
   };
 
@@ -220,6 +280,13 @@ export const MatchsScreen: React.FC = () => {
           refreshAll();
           setInitialChapter('amicaux');
         }}
+      />
+    );
+  } else if (view === 'organize') {
+    subView = (
+      <MatchOrganizeScreen
+        onBack={() => setView('home')}
+        onPropose={() => setView('propose')}
       />
     );
   } else if (view === 'create_tournament' && profile && canManageTournaments) {
@@ -271,6 +338,65 @@ export const MatchsScreen: React.FC = () => {
         }
       />
     );
+  } else if (view === 'competition_organize' && profile) {
+    subView = (
+      <CompetitionOrganizeScreen
+        profile={profile}
+        onBack={() => setView('home')}
+        onCreated={(seasonId) => {
+          refreshAll();
+          setSelectedSeasonId(seasonId);
+          setInitialChapter('competitions');
+          setView('competition_dashboard');
+        }}
+      />
+    );
+  } else if (view === 'competition_dashboard' && selectedSeasonId) {
+    subView = (
+      <CompetitionDashboardScreen
+        seasonId={selectedSeasonId}
+        onBack={() => {
+          setView('home');
+          refreshAll();
+        }}
+        onOpenStandings={() => setView('competition_standings')}
+        onOpenStats={() => setView('competition_stats')}
+        onOpenFixture={(id) => {
+          setSelectedFixtureId(id);
+          setView('competition_fixture');
+        }}
+      />
+    );
+  } else if (view === 'competition_standings' && selectedSeasonId) {
+    subView = (
+      <CompetitionStandingsScreen
+        seasonId={selectedSeasonId}
+        onBack={() => setView('competition_dashboard')}
+      />
+    );
+  } else if (view === 'competition_stats' && selectedSeasonId) {
+    subView = (
+      <CompetitionStatsScreen
+        seasonId={selectedSeasonId}
+        onBack={() => setView('competition_dashboard')}
+      />
+    );
+  } else if (view === 'competition_fixture' && profile && selectedFixtureId) {
+    subView = (
+      <CompetitionFixtureDetailScreen
+        fixtureId={selectedFixtureId}
+        profile={profile}
+        onBack={() => {
+          if (selectedSeasonId) setView('competition_dashboard');
+          else setView('home');
+          refreshAll();
+        }}
+        onOpenTeamEvent={(eventId) => {
+          setSelectedEventId(eventId);
+          setView('event_detail');
+        }}
+      />
+    );
   }
 
   return (
@@ -282,6 +408,10 @@ export const MatchsScreen: React.FC = () => {
         matches={matches}
         tournaments={tournaments}
         loadingTournaments={loadingTournaments}
+        competitions={competitions}
+        competitionSeasons={competitionSeasons}
+        competitionFixtures={competitionFixtures}
+        loadingCompetitions={loadingCompetitions}
         pendingConvocations={pendingConvocations}
         myUpcomingEvents={myUpcomingEvents}
         nextItem={nextItem}
@@ -291,8 +421,9 @@ export const MatchsScreen: React.FC = () => {
         canManageTournaments={canManageTournaments}
         myClubId={myClubId}
         initialChapter={initialChapter}
+        embeddedInShell={embeddedInShell}
         rsvpBusy={rsvpBusy}
-        canAccept={canAccept}
+        canAccept={canAcceptForClub}
         intelligence={intelligence}
         getMatchIaScore={getMatchIaScore}
         getMatchHealthWarning={getMatchHealthWarning}
@@ -303,6 +434,10 @@ export const MatchsScreen: React.FC = () => {
         onSearch={() => {
           if (!requireAuth(t('matchs.auth.search'))) return;
           setView('search');
+        }}
+        onOrganize={() => {
+          if (!requireAuth(t('matchs.auth.organize'))) return;
+          setView('organize');
         }}
         onCreateEvent={() => {
           if (!requireAuth(t('matchs.auth.createEvent'))) return;
@@ -316,6 +451,20 @@ export const MatchsScreen: React.FC = () => {
         onCreateTournament={() => {
           if (!requireAuth(t('matchs.auth.createTournament'))) return;
           setView('create_tournament');
+        }}
+        onOpenCompetitionSeason={(id) => {
+          if (!requireAuth('Connectez-vous pour voir la compétition')) return;
+          setSelectedSeasonId(id);
+          setView('competition_dashboard');
+        }}
+        onOpenCompetitionFixture={(id) => {
+          if (!requireAuth('Connectez-vous pour voir le match')) return;
+          setSelectedFixtureId(id);
+          setView('competition_fixture');
+        }}
+        onOrganizeCompetition={() => {
+          if (!requireAuth('Connectez-vous pour organiser')) return;
+          setView('competition_organize');
         }}
         onOpenCalendarItem={openCalendarItem}
         onOpenEvent={(id, hubChapter) => openEvent(id, hubChapter ?? 'apercu')}

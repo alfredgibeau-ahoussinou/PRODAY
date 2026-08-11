@@ -122,10 +122,10 @@ export function explainHealthScores(
   if (snapshot.injuryRisk !== 'low') {
     recoveryFactors.push({
       id: 'risk',
-      label: 'Risque blessure',
+      label: 'Prudence charge',
       detail:
         snapshot.injuryRisk === 'high'
-          ? 'Charge élevée. Priorité récupération'
+          ? 'Charge élevée sur une période courte. Adaptez l’intensité'
           : 'Surveillez la charge cette semaine',
       impact: 'negative',
       weight: snapshot.injuryRisk === 'high' ? 20 : 10,
@@ -135,15 +135,15 @@ export function explainHealthScores(
   const summary =
     input.wearableConnected
       ? `${snapshot.state === 'INJURY_RISK' || snapshot.state === 'OVERLOADED'
-          ? 'Votre corps signale une surcharge.'
+          ? 'Charge élevée détectée — adaptez la disponibilité si besoin.'
           : snapshot.state === 'FATIGUED'
-            ? 'Fatigue modérée détectée.'
-            : 'Équilibre charge/récupération favorable.'} Scores ProDay ajustés avec vos données ${getWearablePlatformLabel()}.`
+            ? 'Fatigue déclarée / estimée modérée.'
+            : 'Équilibre charge/récupération favorable.'} Scores ProDay ajustés avec vos données ${getWearablePlatformLabel()}. Suivi opérationnel, pas un diagnostic médical.`
       : snapshot.state === 'INJURY_RISK' || snapshot.state === 'OVERLOADED'
-      ? 'Votre corps signale une surcharge. Privilégiez repos et soins avant l’intensité.'
+      ? 'Charge élevée détectée. Adaptez l’intensité et consultez un professionnel de santé en cas de douleur. ProDay ne pose aucun diagnostic.'
       : snapshot.state === 'FATIGUED'
         ? 'Fatigue modérée : allégez la semaine et favorisez la récupération active.'
-        : 'Votre équilibre charge/récupération permet de performer en sécurité. Les scores ci-dessous sont estimés depuis votre activité ProDay (connectez Apple Santé ou Google Health pour plus de précision).';
+        : 'Votre équilibre charge/récupération permet de performer. Les scores ci-dessous sont estimés depuis votre activité ProDay (connectez Apple Santé ou Google Health pour plus de précision).';
 
   return { fatigueFactors, recoveryFactors, summary };
 }

@@ -1,4 +1,4 @@
-import type { IconName } from '../components/ui/Icon';
+import type { IconName } from '../components/ui/iconNames';
 import type { TranslateFn } from './types';
 import type { MatchChapterId, CalendarKindFilter, AmicauxStatusFilter } from '../content/matchChapters';
 import type { MessagesChapterId, MessagesThreadFilter } from '../content/messagesChapters';
@@ -22,8 +22,8 @@ export function getMatchChapters(t: TranslateFn) {
     },
     {
       id: 'centre' as const,
-      label: tr(t, 'matchs.chapter.centre', 'Centre'),
-      shortLabel: tr(t, 'matchs.chapter.centreShort', 'Live'),
+      label: tr(t, 'matchs.chapter.centre', 'Centre Match'),
+      shortLabel: tr(t, 'matchs.chapter.centreShort', 'Center'),
       icon: 'football' as IconName,
     },
     {
@@ -50,6 +50,12 @@ export function getMatchChapters(t: TranslateFn) {
       shortLabel: tr(t, 'matchs.chapter.tournois', 'Tournois'),
       icon: 'trophy' as IconName,
     },
+    {
+      id: 'competitions' as const,
+      label: tr(t, 'matchs.chapter.competitions', 'Compétitions'),
+      shortLabel: tr(t, 'matchs.chapter.competitionsShort', 'Compét.'),
+      icon: 'shield' as IconName,
+    },
   ] satisfies {
     id: MatchChapterId;
     label: string;
@@ -63,6 +69,10 @@ export function getCalendarKindFilters(t: TranslateFn) {
     { id: 'all' as const, label: tr(t, 'matchs.filter.calendar.all', 'Tout') },
     { id: 'team_event' as const, label: tr(t, 'matchs.filter.calendar.convocs', 'Convocs') },
     { id: 'friendly_match' as const, label: tr(t, 'matchs.filter.calendar.matches', 'Matchs') },
+    {
+      id: 'competition_fixture' as const,
+      label: tr(t, 'matchs.filter.calendar.competitions', 'Compét.'),
+    },
   ] satisfies { id: CalendarKindFilter; label: string }[];
 }
 

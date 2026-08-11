@@ -54,7 +54,7 @@
 | [BETA_GUIDE.md](./BETA_GUIDE.md) | Guide opérateur bêta |
 | [BETA_WAITLIST.md](./BETA_WAITLIST.md) | Liste d'attente + EmailJS |
 | [BETA_LAUNCH.md](./BETA_LAUNCH.md) | Lancement bêta |
-| [BETA_IOS_LAUNCH.md](./BETA_IOS_LAUNCH.md) | Campagne iOS — 11 août 2026 18 h + TestFlight + emails |
+| [BETA_IOS_LAUNCH.md](./BETA_IOS_LAUNCH.md) | Campagne iOS — 15 août 2026 18 h + report + TestFlight + emails |
 | [DOMAIN_PRODAY75_FR.md](./DOMAIN_PRODAY75_FR.md) | Domaine proday75.fr |
 
 ## Design

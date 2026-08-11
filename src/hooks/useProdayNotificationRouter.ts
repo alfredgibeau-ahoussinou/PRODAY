@@ -17,7 +17,7 @@ type RouterActions = {
 function matchsHomeTab(
   tab: ProdayNotificationData['homeTab'],
 ): MatchsDeepLink['homeTab'] | undefined {
-  if (!tab || tab === 'feed') return undefined;
+  if (!tab || tab === 'feed' || tab === 'home') return undefined;
   return tab;
 }
 
@@ -64,6 +64,15 @@ function routeNotificationData(data: ProdayNotificationData, actions: RouterActi
       break;
     case 'player_activity_analysis':
       actions.openProfile();
+      break;
+    case 'coach_session_request':
+    case 'player_late':
+    case 'parent_pickup_late':
+      actions.setActiveTab('home');
+      break;
+    case 'friendly_invite':
+    case 'friendly_counter':
+      actions.openMatchs({ homeTab: 'matches' });
       break;
     default:
       break;

@@ -98,8 +98,8 @@ export const CreateTeamEventScreen: React.FC<CreateTeamEventScreenProps> = ({
     if (!profile) return;
     if (!userCanManageConvocations(profile)) {
       Alert.alert(
-        'Pôle Staff',
-        'Les convocations sont réservées au coach Pro (Pôle Staff). Le Club free n’y a plus accès.',
+        'Convocations',
+        'Les convocations sont réservées au coach Premium (ou couvert par un Tout inclus). Activez votre offre Coach ou demandez à votre club.',
       );
       return;
     }

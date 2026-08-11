@@ -97,6 +97,8 @@ export const UI_ES: MessageCatalog = {
   'modules.matchs.subtitle': 'Amistosos',
   'modules.gestion.title': 'Gestión de equipo',
   'modules.gestion.subtitle': 'Planificación · asistencia · stats',
+  'modules.smart_tactics.title': 'Smart Tactics',
+  'modules.smart_tactics.subtitle': 'Board · readiness · IA · vídeo',
   'modules.sponsors.title': 'Patrocinadores',
   'modules.sponsors.subtitle': 'Patrocinadores',
 

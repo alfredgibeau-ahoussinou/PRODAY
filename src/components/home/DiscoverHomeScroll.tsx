@@ -57,11 +57,8 @@ export const DiscoverHomeScroll: React.FC<DiscoverHomeScrollProps> = ({
       { id: 'matchs', label: 'Matchs', icon: 'handshake', onPress: onSignup },
       { id: 'covoiturage', label: 'Covoiturage', icon: 'car', onPress: onSignup },
     ];
-    if (productLine !== 'pro') {
-      items.push({ id: 'sante', label: 'Santé', icon: 'heart', onPress: onSignup });
-    }
     return items;
-  }, [copy.secondaryMercato, onSignup, productLine]);
+  }, [copy.secondaryMercato, onSignup]);
 
   return (
     <ScrollView

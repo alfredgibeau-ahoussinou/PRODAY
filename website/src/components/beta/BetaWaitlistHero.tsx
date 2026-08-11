@@ -50,6 +50,15 @@ export function BetaWaitlistHero({ video, poster }: Props) {
           {BETA_PITCH.summary}
         </motion.p>
 
+        <motion.p
+          initial={reduce ? false : { opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: reduce ? 0 : 0.16 }}
+          className="mt-3 max-w-lg border-l border-white/20 pl-3 text-sm leading-relaxed text-white/50"
+        >
+          {BETA_PITCH.delayNotice}
+        </motion.p>
+
         <motion.div
           initial={reduce ? false : { opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}

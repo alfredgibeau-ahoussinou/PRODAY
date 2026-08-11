@@ -15,6 +15,7 @@ import {
   countWeekEvents,
 } from '../../utils/matchFilters';
 import { TabScreenShell } from '../app/TabScreenShell';
+import { ImmersivePoleHero } from '../poles';
 import { MatchPager } from './MatchPager';
 import { MatchCenterPanel } from './MatchCenterPanel';
 import { MatchSeasonStatsPanel } from './MatchSeasonStatsPanel';
@@ -30,9 +31,14 @@ import { MatchCalendarChapter } from './chapters/MatchCalendarChapter';
 import { MatchConvocationsChapter } from './chapters/MatchConvocationsChapter';
 import { MatchAmicauxChapter } from './chapters/MatchAmicauxChapter';
 import { MatchTournamentsChapter } from './chapters/MatchTournamentsChapter';
+import { MatchCompetitionsChapter } from './chapters/MatchCompetitionsChapter';
 import { MATCH_CHAPTER_PAD } from './chapters/matchChapterLayout';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { useTranslation } from '../../context/LocaleContext';
+import { useJoueurSession } from '../../context/JoueurSessionContext';
+import { useJoueurProgress } from '../../context/JoueurProgressContext';
+import { playJoueurSfxFireAndForget } from '../../features/joueur/joueurSfx';
+import type { Competition, CompetitionFixture, CompetitionSeason } from '../../models/Competition';
 
 interface MatchHomeScreenProps {
   profile: User | null;
@@ -41,6 +47,10 @@ interface MatchHomeScreenProps {
   matches: FriendlyMatch[];
   tournaments: Tournament[];
   loadingTournaments: boolean;
+  competitions?: Competition[];
+  competitionSeasons?: CompetitionSeason[];
+  competitionFixtures?: CompetitionFixture[];
+  loadingCompetitions?: boolean;
   pendingConvocations: TeamEvent[];
   myUpcomingEvents: TeamEvent[];
   nextItem: SeasonCalendarItem | null;
@@ -57,6 +67,7 @@ interface MatchHomeScreenProps {
   canAccept: (m: FriendlyMatch) => boolean;
   onPropose: () => void;
   onSearch: () => void;
+  onOrganize?: () => void;
   onCreateEvent: () => void;
   onOpenCalendarItem: (item: SeasonCalendarItem) => void;
   onOpenEvent: (eventId: string, hubChapter?: 'apercu' | 'live' | 'composition' | 'stats' | 'effectif') => void;
@@ -66,11 +77,16 @@ interface MatchHomeScreenProps {
   onMarkPlayed: (m: FriendlyMatch) => void;
   onOpenTournament: (id: string) => void;
   onCreateTournament?: () => void;
+  onOpenCompetitionSeason?: (seasonId: string) => void;
+  onOpenCompetitionFixture?: (fixtureId: string) => void;
+  onOrganizeCompetition?: () => void;
   onRefresh: () => void;
   onOpenCarpoolForEvent?: (eventId: string) => void;
   intelligence?: SectionIntelligence | null;
   getMatchIaScore?: (matchId: string) => number | undefined;
   getMatchHealthWarning?: (matchId: string) => string | undefined;
+  /** Dans CoachPageFrame : pas de double hero immersif. */
+  embeddedInShell?: boolean;
 }
 
 export const MatchHomeScreen: React.FC<MatchHomeScreenProps> = ({
@@ -80,6 +96,10 @@ export const MatchHomeScreen: React.FC<MatchHomeScreenProps> = ({
   matches,
   tournaments,
   loadingTournaments,
+  competitions = [],
+  competitionSeasons = [],
+  competitionFixtures = [],
+  loadingCompetitions = false,
   pendingConvocations,
   myUpcomingEvents,
   nextItem,
@@ -94,6 +114,7 @@ export const MatchHomeScreen: React.FC<MatchHomeScreenProps> = ({
   canAccept,
   onPropose,
   onSearch,
+  onOrganize,
   onCreateEvent,
   onOpenCalendarItem,
   onOpenEvent,
@@ -103,11 +124,15 @@ export const MatchHomeScreen: React.FC<MatchHomeScreenProps> = ({
   onMarkPlayed,
   onOpenTournament,
   onCreateTournament,
+  onOpenCompetitionSeason,
+  onOpenCompetitionFixture,
+  onOrganizeCompetition,
   onRefresh,
   onOpenCarpoolForEvent,
   intelligence,
   getMatchIaScore,
   getMatchHealthWarning,
+  embeddedInShell = false,
 }) => {
   const { colors } = useAppTheme();
   const { t } = useTranslation();
@@ -126,6 +151,10 @@ export const MatchHomeScreen: React.FC<MatchHomeScreenProps> = ({
 
   const weekDays = useMemo(() => countWeekEvents(items), [items]);
   const openMatchesCount = matches.filter((m) => m.status === 'OPEN').length;
+  const weekEventCount = useMemo(
+    () => weekDays.reduce((sum, d) => sum + d.count, 0),
+    [weekDays],
+  );
   const liveMatchCount = useMemo(
     () => teamEvents.filter((e) => isInMatchWindow(e)).length,
     [teamEvents]
@@ -256,6 +285,7 @@ export const MatchHomeScreen: React.FC<MatchHomeScreenProps> = ({
           ) : (
             <MatchCenterPanel
               events={teamEvents}
+              onCreateEvent={canManageEvents ? onCreateEvent : undefined}
               onOpenEvent={(id) => {
                 const ev = teamEvents.find((e) => e.id === id);
                 onOpenEvent(id, ev && isInMatchWindow(ev) ? 'live' : 'apercu');
@@ -317,6 +347,7 @@ export const MatchHomeScreen: React.FC<MatchHomeScreenProps> = ({
           {...chapterRefresh}
           onPropose={onPropose}
           onSearch={onSearch}
+          onOrganize={onOrganize}
           onAcceptMatch={onAcceptMatch}
           onCancelMatch={onCancelMatch}
           onMarkPlayed={onMarkPlayed}
@@ -342,28 +373,118 @@ export const MatchHomeScreen: React.FC<MatchHomeScreenProps> = ({
         />
       ),
     },
+    {
+      id: 'competitions' as const,
+      render: () => (
+        <MatchCompetitionsChapter
+          profile={profile}
+          competitions={competitions}
+          seasons={competitionSeasons}
+          fixtures={competitionFixtures}
+          loading={loadingCompetitions}
+          refreshing={refreshing}
+          onRefresh={handleRefresh}
+          onOpenSeason={(id) => onOpenCompetitionSeason?.(id)}
+          onOpenFixture={(id) => onOpenCompetitionFixture?.(id)}
+          onOrganize={
+            (canManageTournaments ?? canManageEvents) ? onOrganizeCompetition : undefined
+          }
+        />
+      ),
+    },
   ];
+
+  const isClubOps = profile?.role === 'club';
+  const joueurSession = useJoueurSession();
+  const joueurProgress = useJoueurProgress();
+  const isJoueur =
+    Boolean(joueurSession?.isJoueurPlayer && joueurSession.ready && !joueurSession.needsGate);
+  const hidePoleHero = isClubOps || embeddedInShell || isJoueur;
+
+  useEffect(() => {
+    if (!isJoueur || !joueurProgress?.ready) return;
+    void joueurProgress.claimDaily('daily-match', 25, 1);
+  }, [isJoueur, joueurProgress?.ready]);
+
+  const matchCopy = useMemo(() => {
+    if (!isJoueur || !joueurSession) {
+      return {
+        caption: t('matchs.caption'),
+        title: t('matchs.title'),
+        subtitle: t('matchs.subtitle'),
+      };
+    }
+    const g = joueurSession.ageGroup;
+    if (g === 'youth') {
+      return {
+        caption: 'STAGE MATCH',
+        title: 'Arena',
+        subtitle: 'Fixture · Callout · Live — joue ta semaine.',
+      };
+    }
+    if (g === 'teen') {
+      return {
+        caption: 'RANKED MATCH',
+        title: 'Match stages',
+        subtitle: 'Convocs, stats, missions terrain.',
+      };
+    }
+    return {
+      caption: 'ULTIMATE MATCH',
+      title: 'Centre Match',
+      subtitle: 'Stages : Fixture · Live · League.',
+    };
+  }, [isJoueur, joueurSession, t]);
 
   const body = (
     <>
       <OfflineCacheBanner visible={fromCache} onRefresh={onRefresh} />
+      {!hidePoleHero ? (
+        <View style={{ paddingHorizontal: 16, paddingTop: 4 }}>
+          <ImmersivePoleHero
+            kicker={t('matchs.caption')}
+            title={t('matchs.title')}
+            support={
+              weekEventCount > 0
+                ? `${weekEventCount} rendez-vous cette semaine · calendrier, convocations, amicaux.`
+                : t('matchs.subtitle')
+            }
+            primaryLabel={canManageEvents ? 'Organiser' : 'Proposer'}
+            onPrimaryPress={canManageEvents && onOrganize ? onOrganize : onPropose}
+            secondaryLabel="Chercher"
+            onSecondaryPress={onSearch}
+            mood="dynamic_competitive"
+            accentHex={colors.accent}
+          />
+        </View>
+      ) : null}
       <MatchPager
         pages={pages}
         activeChapter={chapter}
-        onChapterChange={setChapter}
+        onChapterChange={(id) => {
+          if (isJoueur) playJoueurSfxFireAndForget('whoosh');
+          setChapter(id);
+        }}
         amicauxBadge={openMatchesCount}
         convocationsBadge={pendingConvocations.length}
         centreBadge={liveMatchCount > 0 ? 'LIVE' : undefined}
+        gameMode={isJoueur}
       />
     </>
   );
 
   return (
     <TabScreenShell
-      caption={t('matchs.caption')}
-      title={t('matchs.title')}
-      subtitle={t('matchs.subtitle')}
-      flat
+      caption={matchCopy.caption}
+      title={matchCopy.title}
+      subtitle={
+        weekEventCount > 0 && (isClubOps || embeddedInShell || isJoueur)
+          ? `${weekEventCount} rendez-vous cette semaine`
+          : matchCopy.subtitle
+      }
+      flat={hidePoleHero}
+      hideHeader={embeddedInShell}
+      atmosphere={hidePoleHero ? undefined : 'dynamic_competitive'}
     >
       {body}
     </TabScreenShell>

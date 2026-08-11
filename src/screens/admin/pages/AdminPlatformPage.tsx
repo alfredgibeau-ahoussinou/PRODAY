@@ -3,6 +3,7 @@ import { Alert, Text } from 'react-native';
 import { useAdminData } from '../../../context/AdminDataContext';
 import { useTranslation } from '../../../context/LocaleContext';
 import { adminService } from '../../../services/admin.service';
+import { recruitmentService } from '../../../services/recruitment.service';
 import { sponsorUpgradeService } from '../../../services/sponsorUpgrade.service';
 import type { SponsorUpgradeRequest, SponsorUpgradeRequestStatus } from '../../../models/SponsorUpgradeRequest';
 import { AdminPageScaffold } from '../../../components/admin/AdminPageScaffold';
@@ -11,6 +12,7 @@ import { AdminSectionHeader } from '../../../components/admin/AdminSectionHeader
 import { AdminEmptyState } from '../../../components/admin/AdminEmptyState';
 import { AdminFilterChips } from '../../../components/admin/AdminFilterChips';
 import { AdminKpiStrip } from '../../../components/admin/AdminKpiStrip';
+import { AdminPageHero } from '../../../components/admin/AdminPageHero';
 import { AdminPlatformFeedPanel } from '../../../components/admin/AdminPlatformFeedPanel';
 import { AdminSponsorQuotePanel } from '../../../components/admin/AdminSponsorQuotePanel';
 import { adminConfirmDelete } from '../../../utils/adminConfirm';
@@ -157,6 +159,15 @@ export const AdminPlatformPage: React.FC<AdminPlatformPageProps> = ({
 
   return (
     <AdminPageScaffold loading={loading}>
+      <AdminPageHero
+        kicker="PLATEFORME"
+        title="Contenu live"
+        subtitle="Événements · Mercato · Matchs · Paiements · Sponsors"
+        actions={[
+          { label: 'Événements', icon: 'calendar', onPress: () => handleSegment('events') },
+          { label: 'Mercato', icon: 'briefcase', variant: 'ghost', onPress: () => handleSegment('mercato') },
+        ]}
+      />
       {stats ? (
         <AdminKpiStrip
           items={[
@@ -165,18 +176,21 @@ export const AdminPlatformPage: React.FC<AdminPlatformPageProps> = ({
               label: 'Événements',
               value: stats.teamEvents,
               icon: 'calendar',
+              onPress: () => handleSegment('events'),
             },
             {
               key: 'posts',
               label: 'Annonces Mercato',
               value: stats.recruitmentPosts,
               icon: 'briefcase',
+              onPress: () => handleSegment('mercato'),
             },
             {
               key: 'apps',
               label: 'Candidatures',
               value: stats.applications,
               icon: 'document',
+              onPress: () => handleSegment('applications'),
             },
             {
               key: 'pay',
@@ -184,6 +198,7 @@ export const AdminPlatformPage: React.FC<AdminPlatformPageProps> = ({
               value: stats.pendingPayments,
               icon: 'bag',
               alert: stats.pendingPayments > 0,
+              onPress: () => handleSegment('payments'),
             },
           ]}
         />
@@ -276,6 +291,30 @@ export const AdminPlatformPage: React.FC<AdminPlatformPageProps> = ({
                 title={a.player_name ?? a.player_uid}
                 subtitle={a.cover_letter.slice(0, 100) || '…'}
                 meta={`${a.status} · post ${a.post_id.slice(0, 8)}…`}
+                primaryLabel={a.status === 'PENDING' || a.status === 'VIEWED' ? 'Accepter' : undefined}
+                onPrimary={
+                  a.status === 'PENDING' || a.status === 'VIEWED'
+                    ? () =>
+                        void recruitmentService
+                          .updateApplicationStatus(a.id, 'ACCEPTED')
+                          .then(() => refresh())
+                          .catch((err) =>
+                            Alert.alert('Erreur', err instanceof Error ? err.message : 'Action impossible'),
+                          )
+                    : undefined
+                }
+                secondaryLabel={a.status === 'PENDING' || a.status === 'VIEWED' ? 'Refuser' : undefined}
+                onSecondary={
+                  a.status === 'PENDING' || a.status === 'VIEWED'
+                    ? () =>
+                        void recruitmentService
+                          .updateApplicationStatus(a.id, 'REJECTED')
+                          .then(() => refresh())
+                          .catch((err) =>
+                            Alert.alert('Erreur', err instanceof Error ? err.message : 'Action impossible'),
+                          )
+                    : undefined
+                }
                 onDelete={() =>
                   adminConfirmDelete('Supprimer', 'Candidature', () => adminService.deleteApplication(a.id), refresh)
                 }

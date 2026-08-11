@@ -5,6 +5,7 @@ import type { User } from '../../../models/User';
 import { getPresentInviteeUids } from '../../../models/TeamEvent';
 import { getMyMatchStat } from '../../../utils/matchLive';
 import { MotmVotePanel } from './MotmVotePanel';
+import { CoachMatchDebriefPanel } from './CoachMatchDebriefPanel';
 import { ProDaySurface } from '../../ui/ProDaySurface';
 import { ProDayText } from '../../ui/ProDayText';
 import { Icon } from '../../ui/Icon';
@@ -14,9 +15,14 @@ import { spacing, radius } from '../../../theme/designTokens';
 interface MatchHubStatsTabProps {
   event: TeamEvent;
   profile: User;
+  onUpdated?: () => void;
 }
 
-export const MatchHubStatsTab: React.FC<MatchHubStatsTabProps> = ({ event, profile }) => {
+export const MatchHubStatsTab: React.FC<MatchHubStatsTabProps> = ({
+  event,
+  profile,
+  onUpdated,
+}) => {
   const { colors } = useAppTheme();
   const myStat = getMyMatchStat(event, profile.uid);
   const season = profile.profile.season_stats;
@@ -115,6 +121,8 @@ export const MatchHubStatsTab: React.FC<MatchHubStatsTabProps> = ({ event, profi
           ))}
         </ProDaySurface>
       )}
+
+      <CoachMatchDebriefPanel event={event} profile={profile} onUpdated={onUpdated} />
 
       <MotmVotePanel
         teamEventId={event.id}

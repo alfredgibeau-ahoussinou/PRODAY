@@ -4,7 +4,7 @@ import { PressableSpring } from '../motion';
 import { Icon } from '../ui/Icon';
 import { CAROUSEL_POLE_ORDER } from '../../models/CarouselPole';
 import { getCarouselPoleIdentity } from '../../content/carouselPoleExperience';
-import { useAdminStyles, adminChrome } from './adminStyles';
+import { useAdminStyles } from './adminStyles';
 import { spacing, radius } from '../../theme/designTokens';
 import type { AppColors } from '../../theme/universeTheme';
 
@@ -37,7 +37,7 @@ export const AdminPlatformBrief: React.FC<AdminPlatformBriefProps> = ({ compact 
           <Icon name="globe" size={18} color={c.brand} />
         </View>
         <View style={styles.headText}>
-          <Text style={styles.eyebrow}>ProDay · plateforme</Text>
+          <Text style={styles.eyebrow}>Plateforme</Text>
           <Text style={styles.title}>7 pôles · production</Text>
         </View>
       </View>
@@ -59,7 +59,7 @@ export const AdminPlatformBrief: React.FC<AdminPlatformBriefProps> = ({ compact 
 
       {!compact ? (
         <>
-          <Text style={styles.sectionLabel}>Pôles carousel</Text>
+          <Text style={styles.sectionLabel}>Pôles</Text>
           <View style={styles.poleGrid}>
             {poles.map((item) => (
               <View key={item.pole} style={styles.poleChip}>
@@ -78,13 +78,10 @@ export const AdminPlatformBrief: React.FC<AdminPlatformBriefProps> = ({ compact 
       )}
 
       <View style={styles.statusRow}>
-        <StatusDot label="DNS public" level="ok" styles={styles} colors={c} />
-        <StatusDot label="TLS proday75.fr" level="mid" styles={styles} colors={c} />
-        <StatusDot label="Console admin" level="ok" styles={styles} colors={c} />
+        <StatusDot label="DNS" level="ok" styles={styles} colors={c} />
+        <StatusDot label="TLS" level="mid" styles={styles} colors={c} />
+        <StatusDot label="Admin" level="ok" styles={styles} colors={c} />
       </View>
-      <Text style={styles.footerNote}>
-        {ADMIN_PLATFORM_STATUS.tlsHint}. {ADMIN_PLATFORM_STATUS.appHint}.
-      </Text>
     </View>
   );
 };
@@ -110,7 +107,7 @@ function createStyles(c: AppColors) {
       backgroundColor: c.surface,
       borderRadius: radius.lg,
       borderWidth: 1,
-      borderColor: adminChrome.shellBorder,
+      borderColor: c.border,
       padding: spacing.md,
       gap: spacing.sm,
     },
@@ -122,18 +119,16 @@ function createStyles(c: AppColors) {
       backgroundColor: c.brandSoft,
       alignItems: 'center',
       justifyContent: 'center',
-      borderWidth: 1,
-      borderColor: c.accentMuted,
     },
     headText: { flex: 1 },
     eyebrow: {
       fontSize: 10,
       fontWeight: '700',
-      letterSpacing: 1.2,
+      letterSpacing: 1,
       textTransform: 'uppercase',
-      color: c.brand,
+      color: c.textMuted,
     },
-    title: { fontSize: 16, fontWeight: '800', color: c.text, marginTop: 2 },
+    title: { fontSize: 15, fontWeight: '800', color: c.text, marginTop: 2 },
     siteRow: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -150,7 +145,7 @@ function createStyles(c: AppColors) {
     sectionLabel: {
       fontSize: 10,
       fontWeight: '700',
-      letterSpacing: 1.1,
+      letterSpacing: 1,
       textTransform: 'uppercase',
       color: c.textMuted,
       marginTop: spacing.xs,
@@ -174,6 +169,5 @@ function createStyles(c: AppColors) {
     statusChip: { flexDirection: 'row', alignItems: 'center', gap: 6 },
     statusDot: { width: 6, height: 6, borderRadius: 3 },
     statusLabel: { fontSize: 10, fontWeight: '700', color: c.textMuted },
-    footerNote: { fontSize: 11, color: c.textMuted, lineHeight: 16 },
   });
 }

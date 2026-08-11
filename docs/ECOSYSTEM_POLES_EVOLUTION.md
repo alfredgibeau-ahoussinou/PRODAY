@@ -1,11 +1,15 @@
 # Évolution stratégique des pôles — fondations
 
+> **Cible août 2026 :** voir [`PRODAY_PLATFORM_ARCHITECTURE.md`](./PRODAY_PLATFORM_ARCHITECTURE.md)  
+> Pôles vitrine : **Joueur · Club · Coach · Supporter · Sponsor**.  
+> Santé / Agent / Recruteur / Organisateur = rôles intégrés.
+
 **Branche :** `feature/ecosystem-poles-evolution`  
 **Date :** août 2026
 
 ## Vision
 
-ProDay = écosystème foot complet : joueurs, clubs, agents, staff, académies, organisateurs d’événements — **amateur → pro sans changer d’environnement**.
+ProDay = écosystème foot complet : joueurs, clubs, coachs, supporters, sponsors — **amateur → pro sans changer d’environnement**. Le Club est le cœur ; le Coach un pôle dédié rattaché au club.
 
 ## Livré (fondations)
 

@@ -30,7 +30,7 @@ type PricingPoleAccentProps = {
   className?: string;
 };
 
-/** Lazy WebGL accent for a pricing chapter — mounts only when near viewport. */
+/** Lazy WebGL accent for a pricing chapter : mounts only when near viewport. */
 export function PricingPoleAccent({ poleId, className = "" }: PricingPoleAccentProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(false);

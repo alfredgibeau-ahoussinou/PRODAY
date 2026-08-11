@@ -5,7 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { clsx } from "clsx";
 import { LivePulse } from "@/components/motion/AliveMotion";
 
-const TABS = ["Live", "Compo", "Stats"] as const;
+const TABS = ["Direct", "Compo", "Stats"] as const;
 
 const EVENTS = [
   { min: "12'", text: "But · Amine (ProDay FC)", tone: "goal" },
@@ -29,9 +29,9 @@ const STATS = [
   { label: "Corners", home: 5, away: 3 },
 ] as const;
 
-/** Match center interactif — mock local. */
+/** Match center interactif : mock local. */
 export function AliveMatchCenter() {
-  const [tab, setTab] = useState<(typeof TABS)[number]>("Live");
+  const [tab, setTab] = useState<(typeof TABS)[number]>("Direct");
   const [minute, setMinute] = useState(67);
   const [score, setScore] = useState({ home: 2, away: 1 });
 
@@ -68,7 +68,7 @@ export function AliveMatchCenter() {
         <div className="rounded-2xl bg-[#f3f2ec] px-4 py-2 text-center">
           <p className="font-display text-3xl font-extrabold tracking-tight text-[#052424] sm:text-4xl">
             {score.home}
-            <span className="mx-1 text-[#052424]/40">–</span>
+            <span className="mx-1 text-[#052424]/40">…</span>
             {score.away}
           </p>
         </div>
@@ -105,7 +105,7 @@ export function AliveMatchCenter() {
             exit={{ opacity: 0, y: -6 }}
             transition={{ duration: 0.22 }}
           >
-            {tab === "Live" ? (
+            {tab === "Direct" ? (
               <ul className="space-y-2.5">
                 {EVENTS.map((e) => (
                   <li

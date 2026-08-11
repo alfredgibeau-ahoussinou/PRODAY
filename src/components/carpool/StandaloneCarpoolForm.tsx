@@ -14,15 +14,19 @@ import {
   standalonePassengerCount,
 } from '../../utils/standaloneCarpool';
 import { CarpoolSeatPicker } from './CarpoolSeatPicker';
-import { ProDaySurface } from '../ui/ProDaySurface';
+import { CarpoolVehicleTypePicker } from './CarpoolVehicleTypePicker';
+import type { CarpoolVehicleType } from '../../models/CarpoolVehicle';
+import {
+  defaultSeatsForVehicleType,
+  seatPickerMaxForVehicleType,
+} from '../../models/CarpoolVehicle';
 import { ProDayText } from '../ui/ProDayText';
-import { ProDayGradient } from '../ui/ProDayGradient';
 import { Icon } from '../ui/Icon';
 import { PressableSpring } from '../motion';
 import { prodayHaptics } from '../../utils/prodayHaptics';
-import { useAppTheme } from '../../context/ProductLineContext';
 import { useTranslation } from '../../context/LocaleContext';
-import { spacing, radius, shadows } from '../../theme/designTokens';
+import { spacing } from '../../theme/designTokens';
+import { CARPOOL_SITE } from '../../content/carpoolSite';
 
 interface StandaloneCarpoolFormProps {
   profile: User;
@@ -39,7 +43,6 @@ export const StandaloneCarpoolForm: React.FC<StandaloneCarpoolFormProps> = ({
   onToggle,
   onSaved,
 }) => {
-  const { colors } = useAppTheme();
   const { t } = useTranslation();
   const isEditing = Boolean(offer);
 
@@ -49,10 +52,18 @@ export const StandaloneCarpoolForm: React.FC<StandaloneCarpoolFormProps> = ({
   const [meetingTime, setMeetingTime] = useState('');
   const [meetingPlace, setMeetingPlace] = useState('');
   const [meetingLocation, setMeetingLocation] = useState<GeoPoint | undefined>();
-  const [seats, setSeats] = useState('');
+  const [seats, setSeats] = useState(String(defaultSeatsForVehicleType('berline')));
+  const [vehicleType, setVehicleType] = useState<CarpoolVehicleType | undefined>('berline');
   const [notes, setNotes] = useState('');
   const [clubOnly, setClubOnly] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  const takenSeats = offer ? standalonePassengerCount(offer) : 0;
+
+  const applyVehicleType = (type: CarpoolVehicleType) => {
+    setVehicleType(type);
+    setSeats(String(defaultSeatsForVehicleType(type, takenSeats)));
+  };
 
   useEffect(() => {
     if (!expanded) return;
@@ -64,6 +75,7 @@ export const StandaloneCarpoolForm: React.FC<StandaloneCarpoolFormProps> = ({
       setMeetingPlace(offer.meeting_place ?? '');
       setMeetingLocation(offer.meeting_location);
       setSeats(String(offer.seats));
+      setVehicleType(offer.vehicle_type);
       setNotes(offer.notes ?? '');
       setClubOnly(offer.club_only === true);
     } else {
@@ -73,7 +85,8 @@ export const StandaloneCarpoolForm: React.FC<StandaloneCarpoolFormProps> = ({
       setMeetingTime('');
       setMeetingPlace('');
       setMeetingLocation(undefined);
-      setSeats('');
+      setVehicleType('berline');
+      setSeats(String(defaultSeatsForVehicleType('berline')));
       setNotes('');
       setClubOnly(false);
     }
@@ -87,6 +100,10 @@ export const StandaloneCarpoolForm: React.FC<StandaloneCarpoolFormProps> = ({
     }
     if (!Number.isFinite(seatsNum) || seatsNum < 1) {
       Alert.alert(t('carpool.standalone.form.seatsRequired'), t('carpool.standalone.form.seatsRequiredBody'));
+      return;
+    }
+    if (!vehicleType) {
+      Alert.alert(t('carpool.vehicle.required'), t('carpool.vehicle.requiredBody'));
       return;
     }
     const departsAt = parseFrenchDeparture(departureDate, meetingTime);
@@ -109,6 +126,7 @@ export const StandaloneCarpoolForm: React.FC<StandaloneCarpoolFormProps> = ({
         meeting_place: meetingPlace.trim() || undefined,
         meeting_location: meetingLocation,
         seats: seatsNum,
+        vehicle_type: vehicleType,
         notes: notes.trim() || undefined,
         city: profile.city,
         club_id: profile.profile.club_id,
@@ -157,71 +175,71 @@ export const StandaloneCarpoolForm: React.FC<StandaloneCarpoolFormProps> = ({
   };
 
   return (
-    <ProDaySurface
-      variant="module"
-      style={[styles.card, { borderColor: colors.border }, shadows.soft]}
-    >
+    <View style={styles.card}>
       <PressableSpring style={styles.header} onPress={onToggle} scaleTo={0.98} haptic>
         <View style={styles.headerCopy}>
-          <View style={[styles.kindPill, { backgroundColor: colors.accentSoft }]}>
-            <ProDayText variant="caption" accent style={styles.kindText}>
-              Trajet libre
-            </ProDayText>
-          </View>
-          <ProDayText variant="section">
+          <ProDayText variant="caption" style={styles.kindText}>
+            Trajet libre
+          </ProDayText>
+          <ProDayText variant="section" style={styles.title}>
             {isEditing ? offer!.title : t('carpool.standalone.form.editTitle')}
           </ProDayText>
-          <ProDayText variant="caption" muted>
+          <ProDayText variant="caption" style={styles.meta}>
             {isEditing
               ? `${formatFrenchDepartureDate(offer!.departs_at)} · ${standaloneAvailableSeats(offer!)} place(s) restante(s)`
               : 'Places, horaire, RDV et destination. Sans convocation'}
           </ProDayText>
         </View>
-        <Icon name={expanded ? 'chevron-up' : 'chevron-down'} size={18} color={colors.textMuted} />
+        <Icon name={expanded ? 'chevron-up' : 'chevron-down'} size={18} color={CARPOOL_SITE.inkDim} />
       </PressableSpring>
 
       {expanded ? (
         <View style={styles.form}>
           <TextInput
-            style={[styles.input, { borderColor: colors.border, color: colors.ink }]}
+            style={styles.input}
             placeholder={t('carpool.standalone.form.titlePlaceholder')}
-            placeholderTextColor={colors.textMuted}
+            placeholderTextColor={CARPOOL_SITE.inkDim}
             value={title}
             onChangeText={setTitle}
           />
           <TextInput
-            style={[styles.input, { borderColor: colors.border, color: colors.ink }]}
+            style={styles.input}
             placeholder={t('carpool.standalone.form.destinationPlaceholder')}
-            placeholderTextColor={colors.textMuted}
+            placeholderTextColor={CARPOOL_SITE.inkDim}
             value={destination}
             onChangeText={setDestination}
           />
           <View style={styles.row}>
             <TextInput
-              style={[styles.input, styles.half, { borderColor: colors.border, color: colors.ink }]}
+              style={[styles.input, styles.half]}
               placeholder={t('carpool.standalone.form.datePlaceholder')}
-              placeholderTextColor={colors.textMuted}
+              placeholderTextColor={CARPOOL_SITE.inkDim}
               value={departureDate}
               onChangeText={setDepartureDate}
             />
             <TextInput
-              style={[styles.input, styles.half, { borderColor: colors.border, color: colors.ink }]}
+              style={[styles.input, styles.half]}
               placeholder={t('carpool.standalone.form.timePlaceholder')}
-              placeholderTextColor={colors.textMuted}
+              placeholderTextColor={CARPOOL_SITE.inkDim}
               value={meetingTime}
               onChangeText={setMeetingTime}
             />
           </View>
+          <CarpoolVehicleTypePicker
+            value={vehicleType}
+            onChange={applyVehicleType}
+            disabled={saving}
+          />
           <CarpoolSeatPicker
             seats={parseInt(seats, 10) || 0}
-            maxSeats={6}
-            taken={offer ? standalonePassengerCount(offer) : 0}
+            maxSeats={seatPickerMaxForVehicleType(vehicleType, takenSeats)}
+            taken={takenSeats}
             onChange={(n) => setSeats(String(n))}
           />
           <TextInput
-            style={[styles.input, { borderColor: colors.border, color: colors.ink }]}
+            style={styles.input}
             placeholder={t('carpool.propose.meetingPlaceholder')}
-            placeholderTextColor={colors.textMuted}
+            placeholderTextColor={CARPOOL_SITE.inkDim}
             value={meetingPlace}
             onChangeText={setMeetingPlace}
           />
@@ -240,15 +258,15 @@ export const StandaloneCarpoolForm: React.FC<StandaloneCarpoolFormProps> = ({
               scaleTo={0.96}
               haptic
             >
-              <ProDayText variant="caption" accent style={styles.mapLink}>
+              <ProDayText variant="caption" style={styles.mapLink}>
                 Voir le RDV sur la carte
               </ProDayText>
             </PressableSpring>
           ) : null}
           <TextInput
-            style={[styles.input, styles.inputMulti, { borderColor: colors.border, color: colors.ink }]}
+            style={[styles.input, styles.inputMulti]}
             placeholder={t('carpool.standalone.form.detailsPlaceholder')}
-            placeholderTextColor={colors.textMuted}
+            placeholderTextColor={CARPOOL_SITE.inkDim}
             value={notes}
             onChangeText={setNotes}
             multiline
@@ -256,53 +274,53 @@ export const StandaloneCarpoolForm: React.FC<StandaloneCarpoolFormProps> = ({
 
           {profile.profile.club_id ? (
             <View style={styles.clubRow}>
-              <ProDayText variant="caption" muted style={{ flex: 1 }}>
+              <ProDayText variant="caption" style={[styles.meta, { flex: 1 }]}>
                 Trajet visible uniquement par mon club
               </ProDayText>
               <Switch
                 value={clubOnly}
                 onValueChange={setClubOnly}
-                trackColor={{ false: colors.border, true: colors.accentSoft }}
-                thumbColor={clubOnly ? colors.accent : colors.surface}
+                trackColor={{ false: CARPOOL_SITE.lane, true: CARPOOL_SITE.signalSoft }}
+                thumbColor={clubOnly ? CARPOOL_SITE.signal : CARPOOL_SITE.inkDim}
               />
             </View>
           ) : null}
 
-          <PressableSpring onPress={() => void publish()} disabled={saving} scaleTo={0.96} haptic>
-            <ProDayGradient kind="cta" style={styles.publishBtn}>
-              {saving ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <ProDayText variant="caption" inverse style={styles.publishText}>
-                  {isEditing ? t('common.update') : t('carpool.standalone.form.publish')}
-                </ProDayText>
-              )}
-            </ProDayGradient>
+          <PressableSpring onPress={() => void publish()} disabled={saving} scaleTo={0.96} haptic style={styles.publishBtn}>
+            {saving ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <ProDayText variant="caption" style={styles.publishText}>
+                {isEditing ? t('common.update') : t('carpool.standalone.form.publish')}
+              </ProDayText>
+            )}
           </PressableSpring>
 
           {isEditing ? (
             <PressableSpring
-              style={[styles.withdrawBtn, { borderColor: colors.border }]}
+              style={styles.withdrawBtn}
               onPress={remove}
               disabled={saving}
               scaleTo={0.96}
               haptic
             >
-              <ProDayText variant="caption" muted style={styles.withdrawText}>
+              <ProDayText variant="caption" style={styles.withdrawText}>
                 Supprimer ce trajet
               </ProDayText>
             </PressableSpring>
           ) : null}
         </View>
       ) : null}
-    </ProDaySurface>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   card: {
-    borderWidth: 1,
-    borderRadius: radius.xl,
+    borderWidth: 1.5,
+    borderColor: CARPOOL_SITE.fog,
+    backgroundColor: CARPOOL_SITE.surface,
+    borderRadius: 18,
     marginBottom: spacing.sm,
     overflow: 'hidden',
   },
@@ -313,31 +331,36 @@ const styles = StyleSheet.create({
     padding: spacing.md,
   },
   headerCopy: { flex: 1, gap: 4 },
-  kindPill: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 2,
-    borderRadius: radius.pill,
+  kindText: {
+    fontWeight: '800',
+    fontSize: 10,
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    color: CARPOOL_SITE.signal,
   },
-  kindText: { fontWeight: '800', fontSize: 10 },
+  title: { color: CARPOOL_SITE.ink, fontFamily: CARPOOL_SITE.display },
+  meta: { color: CARPOOL_SITE.inkMuted },
   form: {
     paddingHorizontal: spacing.md,
     paddingBottom: spacing.md,
     gap: spacing.sm,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: 'rgba(0,0,0,0.08)',
+    borderTopColor: CARPOOL_SITE.fog,
   },
   row: { flexDirection: 'row', gap: spacing.sm },
   half: { flex: 1 },
   input: {
-    borderWidth: 1,
-    borderRadius: radius.md,
+    borderWidth: 1.5,
+    borderColor: CARPOOL_SITE.fog,
+    backgroundColor: CARPOOL_SITE.surfaceMuted,
+    borderRadius: 12,
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    fontSize: 15,
+    paddingVertical: 12,
+    fontSize: 14,
+    color: CARPOOL_SITE.ink,
   },
   inputMulti: { minHeight: 72, textAlignVertical: 'top' },
-  mapLink: { fontWeight: '700' },
+  mapLink: { fontWeight: '700', color: CARPOOL_SITE.signalDeep },
   clubRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -348,15 +371,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: spacing.md,
-    borderRadius: radius.lg,
     marginTop: spacing.xs,
+    backgroundColor: CARPOOL_SITE.asphalt,
+    borderRadius: 999,
   },
-  publishText: { fontWeight: '800' },
+  publishText: { fontWeight: '800', color: '#fff' },
   withdrawBtn: {
     alignItems: 'center',
     paddingVertical: spacing.sm,
-    borderRadius: radius.md,
-    borderWidth: 1,
+    borderWidth: 1.5,
+    borderColor: CARPOOL_SITE.fog,
+    borderRadius: 999,
   },
-  withdrawText: { fontWeight: '700' },
+  withdrawText: { fontWeight: '700', color: CARPOOL_SITE.inkMuted },
 });

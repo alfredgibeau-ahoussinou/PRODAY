@@ -1,4 +1,4 @@
-import type { IconName } from '../components/ui/Icon';
+import type { IconName } from '../components/ui/iconNames';
 import type { IntroSlideAction } from './discoverChapters';
 import type { DiscoverUniverseCard } from './discoverChapters';
 import { SHOWCASE_IMAGES } from './showcaseAssets';

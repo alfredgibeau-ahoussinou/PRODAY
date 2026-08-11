@@ -1,7 +1,8 @@
 import React, { useMemo } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
+import { PressableSpring } from '../motion';
 import { Icon, type IconName } from '../ui/Icon';
-import { useAdminStyles } from './adminStyles';
+import { useAdminStyles, adminChrome } from './adminStyles';
 import { spacing, radius, shadows } from '../../theme/designTokens';
 import type { AppColors } from '../../theme/universeTheme';
 
@@ -34,7 +35,7 @@ export const AdminEntityCard: React.FC<AdminEntityCardProps> = ({
   return (
     <View style={styles.card}>
       <View style={styles.iconWrap}>
-        <Icon name={icon} size={20} color={c.brand} />
+        <Icon name={icon} size={20} color={adminChrome.accentHot} />
       </View>
       <View style={styles.copy}>
         <Text style={styles.title} numberOfLines={2}>
@@ -47,19 +48,19 @@ export const AdminEntityCard: React.FC<AdminEntityCardProps> = ({
       </View>
       <View style={styles.actionsCol}>
         {onPrimary && primaryLabel ? (
-          <TouchableOpacity style={styles.primaryBtn} onPress={onPrimary} activeOpacity={0.85}>
+          <PressableSpring style={styles.primaryBtn} onPress={onPrimary} scaleTo={0.96} haptic>
             <Text style={styles.primaryText}>{primaryLabel}</Text>
-          </TouchableOpacity>
+          </PressableSpring>
         ) : null}
         {onSecondary && secondaryLabel ? (
-          <TouchableOpacity style={styles.secondaryBtn} onPress={onSecondary} activeOpacity={0.85}>
+          <PressableSpring style={styles.secondaryBtn} onPress={onSecondary} scaleTo={0.96} haptic>
             <Text style={styles.secondaryText}>{secondaryLabel}</Text>
-          </TouchableOpacity>
+          </PressableSpring>
         ) : null}
         {onDelete ? (
-          <TouchableOpacity style={styles.deleteBtn} onPress={onDelete} activeOpacity={0.85}>
+          <PressableSpring style={styles.deleteBtn} onPress={onDelete} scaleTo={0.94} haptic>
             <Icon name="close" size={16} color={c.error} />
-          </TouchableOpacity>
+          </PressableSpring>
         ) : null}
       </View>
     </View>
@@ -73,7 +74,7 @@ function createStyles(c: AppColors) {
       alignItems: 'flex-start',
       gap: spacing.md,
       backgroundColor: c.surface,
-      borderRadius: radius.lg,
+      borderRadius: radius.xl,
       padding: spacing.md,
       marginBottom: spacing.sm,
       borderWidth: 1,
@@ -83,41 +84,39 @@ function createStyles(c: AppColors) {
     iconWrap: {
       width: 42,
       height: 42,
-      borderRadius: radius.md,
+      borderRadius: 12,
       backgroundColor: c.brandSoft,
       alignItems: 'center',
       justifyContent: 'center',
     },
-    copy: { flex: 1, minWidth: 0 },
-    title: { fontSize: 15, fontWeight: '800', color: c.text, lineHeight: 20 },
-    subtitle: { fontSize: 12, color: c.textSecondary, marginTop: 4, lineHeight: 17 },
-    meta: { fontSize: 11, color: c.textMuted, marginTop: 4, fontWeight: '600' },
-    actionsCol: { alignItems: 'flex-end', gap: spacing.xs },
+    copy: { flex: 1, gap: 3 },
+    title: { fontSize: 14, fontWeight: '800', color: c.text, letterSpacing: -0.2 },
+    subtitle: { fontSize: 12, color: c.textSecondary, lineHeight: 17 },
+    meta: { fontSize: 10, fontWeight: '700', color: c.textMuted, marginTop: 2 },
+    actionsCol: { gap: spacing.xs, alignItems: 'flex-end' },
     primaryBtn: {
-      paddingHorizontal: spacing.sm,
-      paddingVertical: 6,
-      borderRadius: radius.sm,
-      backgroundColor: c.brand,
+      backgroundColor: adminChrome.accent,
+      paddingHorizontal: spacing.md,
+      paddingVertical: 9,
+      borderRadius: radius.md,
     },
-    primaryText: { fontSize: 10, fontWeight: '800', color: c.brandInverse },
+    primaryText: { color: '#FFFFFF', fontSize: 11, fontWeight: '800' },
     secondaryBtn: {
-      paddingHorizontal: spacing.sm,
-      paddingVertical: 6,
-      borderRadius: radius.sm,
+      backgroundColor: c.surfaceMuted,
       borderWidth: 1,
       borderColor: c.border,
-      backgroundColor: c.surfaceMuted,
+      paddingHorizontal: spacing.md,
+      paddingVertical: 9,
+      borderRadius: radius.md,
     },
-    secondaryText: { fontSize: 10, fontWeight: '700', color: c.text },
+    secondaryText: { color: c.text, fontSize: 11, fontWeight: '700' },
     deleteBtn: {
       width: 34,
       height: 34,
-      borderRadius: radius.sm,
+      borderRadius: radius.md,
       backgroundColor: c.errorBg,
       alignItems: 'center',
       justifyContent: 'center',
-      borderWidth: 1,
-      borderColor: c.errorBg,
     },
   });
 }

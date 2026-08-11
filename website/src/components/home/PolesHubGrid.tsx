@@ -19,7 +19,7 @@ export function PolesHubGrid({ compact = false }: PolesHubGridProps) {
       description={
         compact
           ? "Joueur, Club et Coach au cœur. Supporter et Sponsor en extensions."
-          : "ProDay = carrière + club + coach. Smart Tactics, compétitions et covoiturage sur le même graphe."
+          : "ProDay = carrière + club + coach. Tactique IA, compétitions et covoiturage sur le même graphe."
       }
       className="bg-black"
       compact={compact}

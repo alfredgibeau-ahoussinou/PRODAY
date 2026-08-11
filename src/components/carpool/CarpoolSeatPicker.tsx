@@ -1,11 +1,10 @@
 import React, { useMemo } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Text } from 'react-native';
 import { PressableSpring } from '../motion';
-import { ProDayText } from '../ui/ProDayText';
 import { Icon } from '../ui/Icon';
-import { useAppTheme } from '../../context/ProductLineContext';
 import { useTranslation } from '../../context/LocaleContext';
-import { spacing, radius } from '../../theme/designTokens';
+import { spacing } from '../../theme/designTokens';
+import { CARPOOL_SITE } from '../../content/carpoolSite';
 import { prodayHaptics } from '../../utils/prodayHaptics';
 
 interface CarpoolSeatPickerProps {
@@ -16,9 +15,7 @@ interface CarpoolSeatPickerProps {
   label?: string;
 }
 
-/**
- * Sélecteur de places interactif — schéma voiture (conducteur fixe + places).
- */
+/** Cabine interactive — taper une place pour régler le nombre. */
 export const CarpoolSeatPicker: React.FC<CarpoolSeatPickerProps> = ({
   seats,
   maxSeats = 4,
@@ -26,29 +23,25 @@ export const CarpoolSeatPicker: React.FC<CarpoolSeatPickerProps> = ({
   onChange,
   label,
 }) => {
-  const { colors } = useAppTheme();
   const { t } = useTranslation();
-  const styles = useMemo(() => createStyles(colors), [colors]);
-  const free = Math.max(0, seats - taken);
+  const styles = useMemo(() => createStyles(), []);
+  const safeSeats = Math.max(0, seats);
+  const free = Math.max(0, safeSeats - taken);
 
   return (
     <View style={styles.wrap}>
-      <ProDayText variant="caption" accent style={styles.title}>
-        {label ?? t('carpool.hub.seatsTitle')}
-      </ProDayText>
-      <View style={[styles.cabin, { borderColor: colors.border, backgroundColor: colors.surfaceMuted }]}>
-        <View style={styles.row}>
-          <View style={[styles.seat, styles.driver, { backgroundColor: colors.accentSoft, borderColor: colors.accent }]}>
-            <Icon name="person" size={14} color={colors.accent} variant="filled" />
-            <ProDayText variant="caption" accent style={styles.seatLabel}>
-              {t('carpool.hub.driverSeat')}
-            </ProDayText>
+      <Text style={styles.title}>{label ?? t('carpool.hub.seatsTitle')}</Text>
+      <View style={styles.cabin}>
+        <View style={styles.driverRow}>
+          <View style={styles.driver}>
+            <Icon name="person" size={14} color={CARPOOL_SITE.asphalt} variant="filled" />
+            <Text style={styles.seatLabel}>{t('carpool.hub.driverSeat')}</Text>
           </View>
         </View>
-        <View style={styles.row}>
+        <View style={styles.seatsGrid}>
           {Array.from({ length: maxSeats }, (_, i) => {
             const n = i + 1;
-            const selected = n <= seats;
+            const selected = n <= safeSeats;
             const occupied = n <= taken;
             return (
               <PressableSpring
@@ -57,66 +50,155 @@ export const CarpoolSeatPicker: React.FC<CarpoolSeatPickerProps> = ({
                   prodayHaptics.press();
                   onChange(Math.max(1, n));
                 }}
-                scaleTo={0.92}
+                scaleTo={0.9}
+                haptic
                 style={[
                   styles.seat,
-                  {
-                    borderColor: selected ? colors.accent : colors.border,
-                    backgroundColor: occupied
-                      ? colors.accent
-                      : selected
-                        ? colors.accentSoft
-                        : colors.background,
-                  },
+                  selected && styles.seatOn,
+                  occupied && styles.seatTaken,
                 ]}
               >
-                <Icon
-                  name={occupied ? 'person' : selected ? 'checkmark-circle' : 'add'}
-                  size={16}
-                  color={occupied ? '#000' : selected ? colors.accent : colors.textMuted}
-                  variant={selected ? 'filled' : 'outline'}
-                />
-                <ProDayText
-                  variant="caption"
-                  style={{ fontWeight: '800', color: occupied ? '#000' : colors.text }}
+                {occupied || selected ? (
+                  <Icon
+                    name={occupied ? 'person' : 'checkmark-circle'}
+                    size={16}
+                    color={occupied ? '#fff' : CARPOOL_SITE.asphalt}
+                    variant="filled"
+                  />
+                ) : null}
+                <Text
+                  style={[
+                    styles.seatNum,
+                    selected && styles.seatNumOn,
+                    occupied && styles.seatNumTaken,
+                  ]}
                 >
                   {n}
-                </ProDayText>
+                </Text>
               </PressableSpring>
             );
           })}
         </View>
+        <View style={styles.stepper}>
+          <PressableSpring
+            onPress={() => {
+              prodayHaptics.press();
+              onChange(Math.max(1, safeSeats - 1));
+            }}
+            scaleTo={0.92}
+            haptic
+            style={styles.stepBtn}
+          >
+            <Text style={styles.stepText}>−</Text>
+          </PressableSpring>
+          <Text style={styles.stepValue}>{safeSeats}</Text>
+          <PressableSpring
+            onPress={() => {
+              prodayHaptics.press();
+              onChange(Math.min(maxSeats, safeSeats + 1));
+            }}
+            scaleTo={0.92}
+            haptic
+            style={styles.stepBtn}
+          >
+            <Text style={styles.stepText}>+</Text>
+          </PressableSpring>
+        </View>
       </View>
-      <ProDayText variant="caption" muted style={styles.meta}>
-        {t('carpool.hub.seatsMeta', { seats, free })}
-      </ProDayText>
+      <Text style={styles.meta}>
+        {safeSeats < 1
+          ? t('carpool.hub.seatsPickHint')
+          : t('carpool.hub.seatsMeta', { seats: safeSeats, free })}
+      </Text>
     </View>
   );
 };
 
-function createStyles(_colors: unknown) {
+function createStyles() {
   return StyleSheet.create({
     wrap: { gap: spacing.sm },
-    title: { fontWeight: '800' },
+    title: {
+      fontSize: 12,
+      fontWeight: '800',
+      letterSpacing: 0.8,
+      textTransform: 'uppercase',
+      color: CARPOOL_SITE.ink,
+    },
     cabin: {
-      borderWidth: 1,
-      borderRadius: radius.xl,
+      borderWidth: 1.5,
+      borderColor: CARPOOL_SITE.fog,
+      backgroundColor: CARPOOL_SITE.surfaceMuted,
+      borderRadius: 18,
       padding: spacing.md,
       gap: spacing.sm,
     },
-    row: { flexDirection: 'row', justifyContent: 'center', gap: spacing.sm },
+    driverRow: { alignItems: 'center' },
+    driver: {
+      minWidth: 130,
+      minHeight: 44,
+      borderRadius: 999,
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 6,
+      paddingHorizontal: 14,
+      flexDirection: 'row',
+      backgroundColor: CARPOOL_SITE.signal,
+    },
+    seatsGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      justifyContent: 'center',
+      gap: spacing.sm,
+    },
     seat: {
-      width: 64,
-      minHeight: 56,
-      borderRadius: radius.md,
+      width: '22%',
+      maxWidth: 72,
+      minWidth: 48,
+      minHeight: 52,
+      borderRadius: 14,
       borderWidth: 1.5,
+      borderColor: CARPOOL_SITE.fog,
       alignItems: 'center',
       justifyContent: 'center',
       gap: 2,
-      paddingVertical: spacing.xs,
+      backgroundColor: CARPOOL_SITE.surface,
     },
-    driver: { width: 120 },
-    seatLabel: { fontWeight: '700', fontSize: 10 },
-    meta: { textAlign: 'center' },
+    seatOn: {
+      borderColor: CARPOOL_SITE.signal,
+      backgroundColor: CARPOOL_SITE.signalSoft,
+    },
+    seatTaken: {
+      backgroundColor: CARPOOL_SITE.asphalt,
+      borderColor: CARPOOL_SITE.asphalt,
+    },
+    seatLabel: { fontWeight: '700', fontSize: 11, color: CARPOOL_SITE.asphalt },
+    seatNum: { fontWeight: '800', color: CARPOOL_SITE.inkMuted, fontSize: 12 },
+    seatNumOn: { color: CARPOOL_SITE.signalDeep },
+    seatNumTaken: { color: '#fff' },
+    stepper: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 16,
+      marginTop: 4,
+    },
+    stepBtn: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: CARPOOL_SITE.asphalt,
+    },
+    stepText: { color: '#fff', fontSize: 22, fontWeight: '700', lineHeight: 24 },
+    stepValue: {
+      fontFamily: CARPOOL_SITE.display,
+      fontSize: 22,
+      fontWeight: '800',
+      color: CARPOOL_SITE.ink,
+      minWidth: 28,
+      textAlign: 'center',
+    },
+    meta: { textAlign: 'center', color: CARPOOL_SITE.inkMuted, fontSize: 12 },
   });
 }

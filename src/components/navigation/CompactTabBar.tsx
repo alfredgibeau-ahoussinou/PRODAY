@@ -21,6 +21,8 @@ import {
   getPoleTabBarChrome,
   resolveTabBarAccent,
 } from '../../theme/poleTabBarTheme';
+import { useJoueurSession } from '../../context/JoueurSessionContext';
+import { JOUEUR_SITE } from '../../content/joueurPageIdentity';
 
 type CompactTabBarProps = {
   activeTab: MainTabId;
@@ -39,6 +41,7 @@ export const CompactTabBar: React.FC<CompactTabBarProps> = ({
   const { colors, productLine, playerSegment } = useAppTheme();
   const { t } = useTranslation();
   const sessionProfile = useSessionProfile();
+  const joueurSession = useJoueurSession();
   const insets = useSafeAreaInsets();
   const immersive = activeTab === 'reels';
 
@@ -59,12 +62,16 @@ export const CompactTabBar: React.FC<CompactTabBarProps> = ({
   );
   const accentInk = isSponsor
     ? SPONSOR_THEME.primary
-    : resolveTabBarAccent(productLine, role, colors, playerSegment);
+    : joueurSession?.isJoueurPlayer && !joueurSession.needsGate
+      ? joueurSession.identity.accent
+      : resolveTabBarAccent(productLine, role, colors, playerSegment);
 
   const styles = useMemo(
     () => createStyles(colors, immersive, chrome),
     [colors, immersive, chrome],
   );
+  const joueurLive =
+    Boolean(joueurSession?.isJoueurPlayer && !joueurSession.needsGate);
 
   return (
     <View
@@ -72,7 +79,11 @@ export const CompactTabBar: React.FC<CompactTabBarProps> = ({
         styles.root,
         {
           paddingBottom: Math.max(insets.bottom, spacing.xs),
-          backgroundColor: immersive ? '#000' : chrome.rootBackground,
+          backgroundColor: immersive
+            ? '#000'
+            : joueurLive
+              ? JOUEUR_SITE.bg
+              : chrome.rootBackground,
         },
       ]}
     >

@@ -30,7 +30,7 @@ import { AdminEntityCard } from './AdminEntityCard';
 import { AdminKpiStrip } from './AdminKpiStrip';
 import { getCallableErrorMessage } from '../../lib/firebaseFunctions';
 import { formatCalendarDate } from '../../utils/seasonCalendar';
-import { useAdminStyles } from './adminStyles';
+import { useAdminStyles, ADMIN_COLORS } from './adminStyles';
 import { spacing, radius } from '../../theme/designTokens';
 import type { AppColors } from '../../theme/universeTheme';
 
@@ -201,7 +201,12 @@ export const AdminSponsorQuotePanel: React.FC = () => {
         ))
       )}
 
-      <AnimatedModalShell visible={selected !== null} onClose={closeComposer} closeLabel="Fermer">
+      <AnimatedModalShell
+        visible={selected !== null}
+        onClose={closeComposer}
+        closeLabel="Fermer"
+        themeColors={ADMIN_COLORS}
+      >
         {selected ? (
           <ScrollView style={styles.modalScroll} keyboardShouldPersistTaps="handled">
             <Text style={styles.modalTitle}>Envoyer le devis</Text>

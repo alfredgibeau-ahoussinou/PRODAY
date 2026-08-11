@@ -72,7 +72,7 @@ export function buildActionRecommendations(
       label: 'Planifier une récupération',
       reason: health.coachMessage,
       priority: 90,
-      tab: 'sante',
+      tab: 'home',
     });
   }
 
@@ -82,7 +82,7 @@ export function buildActionRecommendations(
       label: 'Séance légère aujourd’hui',
       reason: 'Charge élevée. Privilégiez l’entretien.',
       priority: 82,
-      tab: 'sante',
+      tab: 'home',
     });
   }
 
@@ -92,7 +92,7 @@ export function buildActionRecommendations(
       label: 'Compléter mon suivi sommeil',
       reason: 'Score global bas. Améliorez votre récupération.',
       priority: 75,
-      tab: 'sante',
+      tab: 'home',
     });
   }
 

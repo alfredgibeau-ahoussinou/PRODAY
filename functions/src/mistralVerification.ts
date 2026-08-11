@@ -1,9 +1,10 @@
 import { configStr } from './runtimeConfig';
 import * as admin from 'firebase-admin';
 import { sendFcmToUser } from './messaging';
+import { MISTRAL_VISION_MODEL } from './mistralModels';
 
 const AUTO_APPROVE_CONFIDENCE = 0.88;
-const MISTRAL_MODEL = 'pixtral-12b-2409';
+const MISTRAL_MODEL = MISTRAL_VISION_MODEL;
 
 interface MistralVerdict {
   approved: boolean;

@@ -1118,6 +1118,31 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    /** Demandes de devis Club (Tout inclus / Pro+Veo) — création app, lecture admin */
+    match /club_quote_requests/{requestId} {
+      allow create: if isSignedIn()
+        && request.resource.data.email is string
+        && request.resource.data.club_name is string
+        && request.resource.data.owner_name is string
+        && request.resource.data.status == 'pending';
+      allow read: if isAdmin()
+        || (isSignedIn() && resource.data.requester_uid == request.auth.uid);
+      allow update, delete: if isAdmin();
+    }
+
+    /** Inbox staff (coach / club) — retards, invitations, etc. */
+    match /staff_notifications/{notifId} {
+      allow read: if isSignedIn() && resource.data.recipient_uid == request.auth.uid;
+      allow create: if isSignedIn()
+        && request.resource.data.recipient_uid is string
+        && request.resource.data.title is string
+        && request.resource.data.body is string;
+      allow update: if isSignedIn()
+        && resource.data.recipient_uid == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read_at']);
+      allow delete: if isAdmin();
+    }
+
     /** Rendez-vous pôle santé — praticien ↔ joueur (+ parent si consentement médical) */
     match /medical_appointments/{appointmentId} {
       allow read: if isAdmin()
@@ -1203,7 +1228,13 @@ service cloud.firestore {
 
     match /subscription_purchases/{purchaseId} {
       allow read: if isAdmin();
-      allow write: if false;
+      /** Cadeaux / transitions console admin — le reste (store, Stripe) via Admin SDK. */
+      allow create: if isAdmin()
+        && request.resource.data.keys().hasAll(['user_uid', 'product_id', 'status', 'source', 'created_at'])
+        && request.resource.data.source == 'admin_gift'
+        && request.resource.data.user_uid is string
+        && request.resource.data.user_uid.size() > 0;
+      allow update, delete: if false;
     }
 
     /** Reels communautaires — publication immédiate (approved) + lecture publique approuvée */

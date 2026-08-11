@@ -144,6 +144,16 @@ export const ClubCamerasPanel: React.FC<ClubCamerasPanelProps> = ({ profile, clu
       <ProDayText variant="caption" muted>
         {VIDEO_MODULE_PRINCIPLE}
       </ProDayText>
+      <ProDaySurface variant="module" style={[styles.card, { borderColor: c.border }]}>
+        <ProDayText variant="caption" accent style={{ fontWeight: '800' }}>
+          État fabricants
+        </ProDayText>
+        <ProDayText variant="caption" muted>
+          Architecture multi-vendeurs (Veo, XbotGo, smartphone…). Les connecteurs OAuth / API
+          fabricants sont « à connecter » : l’app enregistre la config club et les imports, sans
+          inventer de highlights automatiques réels.
+        </ProDayText>
+      </ProDaySurface>
 
       <View style={styles.actions}>
         {(

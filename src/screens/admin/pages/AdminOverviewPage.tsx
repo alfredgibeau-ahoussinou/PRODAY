@@ -3,6 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import { PressableSpring } from '../../../components/motion';
 import { useAdminData } from '../../../context/AdminDataContext';
 import { AdminPageScaffold } from '../../../components/admin/AdminPageScaffold';
+import { AdminCommandHero } from '../../../components/admin/AdminCommandHero';
 import { AdminKpiStrip } from '../../../components/admin/AdminKpiStrip';
 import { AdminWorkQueue } from '../../../components/admin/AdminWorkQueue';
 import { AdminRoleBreakdown } from '../../../components/admin/AdminRoleBreakdown';
@@ -31,7 +32,7 @@ export const AdminOverviewPage: React.FC<AdminOverviewPageProps> = ({ onNavigate
 
   return (
     <AdminPageScaffold loading={loading}>
-      <AdminPlatformBrief />
+      <AdminCommandHero onOpenInbox={() => onNavigate('inbox')} />
 
       {stats ? (
         <>
@@ -43,6 +44,7 @@ export const AdminOverviewPage: React.FC<AdminOverviewPageProps> = ({ onNavigate
                 value: stats.users,
                 previous: prev?.users,
                 icon: 'people',
+                onPress: () => onNavigate('users'),
               },
               {
                 key: 'events',
@@ -50,6 +52,15 @@ export const AdminOverviewPage: React.FC<AdminOverviewPageProps> = ({ onNavigate
                 value: stats.teamEvents,
                 previous: prev?.teamEvents,
                 icon: 'calendar',
+                onPress: () => onNavigate('plateforme', {
+                  id: 'kpi-events',
+                  kind: 'post',
+                  priority: 'low',
+                  title: 'Événements',
+                  subtitle: '',
+                  targetTab: 'plateforme',
+                  contentSegment: 'events',
+                }),
               },
               {
                 key: 'apps',
@@ -57,6 +68,15 @@ export const AdminOverviewPage: React.FC<AdminOverviewPageProps> = ({ onNavigate
                 value: stats.applications,
                 previous: prev?.applications,
                 icon: 'document',
+                onPress: () => onNavigate('plateforme', {
+                  id: 'kpi-apps',
+                  kind: 'application',
+                  priority: 'low',
+                  title: 'Candidatures',
+                  subtitle: '',
+                  targetTab: 'plateforme',
+                  contentSegment: 'applications',
+                }),
               },
               {
                 key: 'inbox',
@@ -64,38 +84,43 @@ export const AdminOverviewPage: React.FC<AdminOverviewPageProps> = ({ onNavigate
                 value: workQueue.length,
                 icon: 'warning',
                 alert: workQueue.length > 0,
+                onPress: () => onNavigate('inbox'),
               },
             ]}
           />
 
+          <Text style={styles.sectionEyebrow}>Santé</Text>
           <View style={styles.healthRow}>
             <HealthPill
-              label="Charge modération"
+              label="Modération"
               value={moderationScore}
               level={moderationScore > 20 ? 'high' : moderationScore > 8 ? 'mid' : 'ok'}
               styles={styles}
               colors={c}
+              onPress={() => onNavigate('moderation')}
             />
             <HealthPill
-              label="Vérif. en attente"
+              label="Vérifications"
               value={stats.pendingVerifications}
               level={stats.pendingVerifications > 0 ? 'high' : 'ok'}
               styles={styles}
               colors={c}
+              onPress={() => onNavigate('users')}
             />
             <HealthPill
-              label="Paiements pending"
+              label="Paiements"
               value={stats.pendingPayments}
               level={stats.pendingPayments > 0 ? 'mid' : 'ok'}
               styles={styles}
               colors={c}
+              onPress={() => onNavigate('plateforme')}
             />
           </View>
 
           <View style={styles.sectionHead}>
-            <Text style={styles.sectionEyebrowInline}>Priorités immédiates</Text>
+            <Text style={styles.sectionEyebrowInline}>Priorités</Text>
             <PressableSpring onPress={() => onNavigate('inbox')} scaleTo={0.97} haptic>
-              <Text style={styles.link}>Voir tout ({workQueue.length})</Text>
+              <Text style={styles.link}>Tout ({workQueue.length})</Text>
             </PressableSpring>
           </View>
           <AdminWorkQueue
@@ -105,37 +130,62 @@ export const AdminOverviewPage: React.FC<AdminOverviewPageProps> = ({ onNavigate
             onPressItem={(item) => onNavigate(item.targetTab, item)}
           />
 
-          <Text style={styles.sectionEyebrow}>Accès rapides</Text>
-          <View style={styles.grid}>
-            <NavTile icon="mail" label="Inbox" hint={`${workQueue.length} action(s)`} onPress={() => onNavigate('inbox')} styles={styles} brand={c.brand} />
-            <NavTile icon="people" label="Utilisateurs" hint={`${stats.pendingVerifications} vérif.`} onPress={() => onNavigate('users')} styles={styles} brand={c.brand} />
-            <NavTile icon="time" label="Modération" hint={`${moderationPending} file(s)`} onPress={() => onNavigate('moderation')} styles={styles} brand={c.brand} />
-            <NavTile icon="briefcase" label="Plateforme" hint="Événements · Mercato" onPress={() => onNavigate('plateforme')} styles={styles} brand={c.brand} />
-            <NavTile icon="star-four-points" label="Analytics" hint="Tendances 14j" onPress={() => onNavigate('analytics')} styles={styles} brand={c.brand} />
-            <NavTile icon="business" label="Clubs" hint={`${stats.clubs} structures`} onPress={() => onNavigate('clubs')} styles={styles} brand={c.brand} />
-            <NavTile icon="settings" label="Système" hint="Ops & preview" onPress={() => onNavigate('system')} styles={styles} brand={c.brand} />
+          <Text style={styles.sectionEyebrow}>Raccourcis</Text>
+          <View style={styles.missionGrid}>
+            {(
+              [
+                { icon: 'mail' as const, label: 'Inbox', hint: `${workQueue.length}`, tab: 'inbox' as const, alert: workQueue.length > 0 },
+                { icon: 'people' as const, label: 'Users', hint: `${stats.pendingVerifications} vérif.`, tab: 'users' as const, alert: stats.pendingVerifications > 0 },
+                { icon: 'time' as const, label: 'Modération', hint: `${moderationPending}`, tab: 'moderation' as const, alert: moderationPending > 0 },
+                { icon: 'briefcase' as const, label: 'Plateforme', hint: 'Ops', tab: 'plateforme' as const },
+                { icon: 'star-four-points' as const, label: 'Analytics', hint: '14 j', tab: 'analytics' as const },
+                { icon: 'business' as const, label: 'Clubs', hint: `${stats.clubs}`, tab: 'clubs' as const },
+                { icon: 'settings' as const, label: 'Système', hint: 'Config', tab: 'system' as const },
+                { icon: 'star-four-points' as const, label: 'Beta', hint: 'Waitlist', tab: 'beta' as const },
+              ] as const
+            ).map((m) => (
+              <PressableSpring
+                key={m.label}
+                onPress={() => onNavigate(m.tab)}
+                scaleTo={0.96}
+                haptic
+                style={styles.missionCell}
+              >
+                <View style={[styles.tile, 'alert' in m && m.alert ? styles.tileAlert : null]}>
+                  <Icon name={m.icon} size={18} color={c.brand} />
+                  <Text style={styles.tileLabel}>{m.label}</Text>
+                  <Text style={styles.tileHint}>{m.hint}</Text>
+                </View>
+              </PressableSpring>
+            ))}
           </View>
 
           <AdminRoleBreakdown rows={roleBreakdown.slice(0, 6)} total={stats.users} />
+          <AdminPlatformBrief compact />
 
-          <View style={styles.summaryCard}>
-            <Text style={styles.summaryTitle}>Synthèse plateforme</Text>
+          <PressableSpring
+            onPress={() => onNavigate('analytics')}
+            style={styles.summaryCard}
+            scaleTo={0.98}
+            haptic
+          >
+            <View style={styles.summaryHead}>
+              <Text style={styles.summaryTitle}>Synthèse</Text>
+              <Icon name="chevron-forward" size={16} color={c.brand} />
+            </View>
             <Text style={styles.summaryLine}>
               {stats.users} comptes · {stats.players} joueurs · {stats.coaches} coachs · {stats.clubs} clubs
             </Text>
             <Text style={styles.summaryLine}>
-              {stats.teamEvents} événements · {stats.friendlyMatches} matchs · {stats.recruitmentPosts} annonces Mercato
+              {stats.teamEvents} events · {stats.recruitmentPosts} annonces · {stats.applications} candidatures
             </Text>
-            <Text style={styles.summaryLine}>
-              {stats.applications} candidatures · {stats.pendingCommunityReels} reels en attente · {stats.reelReports} signalements
-            </Text>
-          </View>
+          </PressableSpring>
         </>
       ) : (
         <AdminEmptyState
           icon="warning"
-          title="Données plateforme indisponibles"
-          subtitle="Impossible de charger les statistiques Firestore. Vérifiez la connexion Firebase, les règles admin et votre claim, puis tirez pour rafraîchir."
+          title="Données indisponibles"
+          subtitle="Impossible de charger les stats. Tirez pour rafraîchir."
         />
       )}
     </AdminPageScaffold>
@@ -148,51 +198,33 @@ const HealthPill: React.FC<{
   level: 'ok' | 'mid' | 'high';
   styles: ReturnType<typeof createStyles>;
   colors: AppColors;
-}> = ({ label, value, level, styles, colors: c }) => {
+  onPress: () => void;
+}> = ({ label, value, level, styles, colors: c, onPress }) => {
   const bg =
     level === 'high' ? c.errorBg : level === 'mid' ? c.warningBg : c.successBg;
   const fg = level === 'high' ? c.error : level === 'mid' ? c.warning : c.success;
   return (
-    <View style={[styles.healthPill, { backgroundColor: bg, borderColor: fg }]}>
-      <Text style={[styles.healthValue, { color: fg }]}>{value}</Text>
-      <Text style={styles.healthLabel}>{label}</Text>
-    </View>
+    <PressableSpring onPress={onPress} scaleTo={0.96} haptic style={{ flex: 1, minWidth: '30%' }}>
+      <View style={[styles.healthPill, { backgroundColor: bg, borderColor: fg }]}>
+        <Text style={[styles.healthValue, { color: fg }]}>{value}</Text>
+        <Text style={styles.healthLabel}>{label}</Text>
+      </View>
+    </PressableSpring>
   );
 };
 
-type OverviewStyles = ReturnType<typeof createStyles>;
-
-const NavTile: React.FC<{
-  icon: 'mail' | 'people' | 'time' | 'star-four-points' | 'business' | 'settings' | 'briefcase';
-  label: string;
-  hint: string;
-  onPress: () => void;
-  brand: string;
-  styles: OverviewStyles;
-}> = ({ icon, label, hint, onPress, brand, styles }) => (
-  <PressableSpring onPress={onPress} scaleTo={0.97} haptic>
-    <View style={styles.tile}>
-      <Icon name={icon} size={20} color={brand} />
-      <Text style={styles.tileLabel}>{label}</Text>
-      <Text style={styles.tileHint}>{hint}</Text>
-    </View>
-  </PressableSpring>
-);
-
 function createStyles(c: AppColors) {
   return StyleSheet.create({
-    healthRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginBottom: spacing.md },
+    healthRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
     healthPill: {
-      flex: 1,
-      minWidth: '30%',
       borderRadius: radius.md,
       borderWidth: 1,
-      padding: spacing.sm,
+      padding: spacing.sm + 2,
       alignItems: 'center',
       gap: 2,
     },
     healthValue: { fontSize: 20, fontWeight: '800' },
-    healthLabel: { fontSize: 9, fontWeight: '700', color: c.textMuted, textAlign: 'center' },
+    healthLabel: { fontSize: 10, fontWeight: '700', color: c.textMuted, textAlign: 'center' },
     sectionHead: {
       flexDirection: 'row',
       justifyContent: 'space-between',
@@ -203,46 +235,58 @@ function createStyles(c: AppColors) {
     sectionEyebrowInline: {
       fontSize: 11,
       fontWeight: '700',
-      letterSpacing: 1.2,
+      letterSpacing: 1,
       textTransform: 'uppercase',
-      color: c.brand,
+      color: c.textMuted,
     },
     sectionEyebrow: {
       fontSize: 11,
       fontWeight: '700',
-      letterSpacing: 1.2,
+      letterSpacing: 1,
       textTransform: 'uppercase',
-      color: c.brand,
+      color: c.textMuted,
       marginBottom: spacing.sm,
-      marginTop: spacing.md,
+      marginTop: spacing.sm,
     },
     link: { fontSize: 12, fontWeight: '800', color: c.brand },
-    grid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginBottom: spacing.lg },
+    missionGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: spacing.sm,
+      marginBottom: spacing.md,
+    },
+    missionCell: { width: '47%', flexGrow: 1 },
     tile: {
-      width: '31%',
-      minWidth: 100,
-      flexGrow: 1,
       backgroundColor: c.surface,
       borderRadius: radius.lg,
       padding: spacing.md,
       borderWidth: 1,
       borderColor: c.border,
       gap: 4,
+      minHeight: 96,
       ...shadows.card,
     },
-    tileLabel: { fontSize: 12, fontWeight: '800', color: c.text },
-    tileHint: { fontSize: 10, color: c.textMuted, fontWeight: '600' },
+    tileAlert: {
+      borderColor: c.brand,
+    },
+    tileLabel: { fontSize: 14, fontWeight: '800', color: c.text },
+    tileHint: { fontSize: 11, color: c.textMuted, fontWeight: '600' },
     summaryCard: {
       padding: spacing.md,
       gap: spacing.xs,
       borderWidth: 1,
       borderColor: c.border,
-      marginTop: spacing.md,
       backgroundColor: c.surface,
       borderRadius: radius.lg,
       ...shadows.card,
     },
-    summaryTitle: { fontSize: 15, fontWeight: '800', color: c.text, marginBottom: spacing.xs },
+    summaryHead: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: spacing.xs,
+    },
+    summaryTitle: { fontSize: 15, fontWeight: '800', color: c.text },
     summaryLine: { fontSize: 13, color: c.textSecondary, lineHeight: 20 },
   });
 }

@@ -273,7 +273,7 @@ function SupporterFutCard({
             { label: "MAT", value: card.matchesFollowed },
             { label: "REF", value: card.referrals },
             { label: "BDG", value: card.badges.length },
-            { label: "LOY", value: (card.loyaltyLevel.split(" ").pop() ?? "—").slice(0, 4) },
+            { label: "LOY", value: (card.loyaltyLevel.split(" ").pop() ?? "…").slice(0, 4) },
           ]}
           ink={t.ink}
           inkMuted={t.inkMuted}

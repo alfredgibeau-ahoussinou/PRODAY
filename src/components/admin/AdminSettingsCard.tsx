@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
+import { PressableSpring } from '../motion';
 import { Icon, type IconName } from '../ui/Icon';
 import { useAdminStyles } from './adminStyles';
 import { spacing, radius, shadows } from '../../theme/designTokens';
@@ -32,21 +33,22 @@ export const AdminSettingsCard: React.FC<AdminSettingsCardProps> = ({
       <View style={styles.head}>
         {icon ? (
           <View style={styles.iconWrap}>
-            <Icon name={icon} size={18} color={c.brand} />
+            <Icon name={icon} size={18} color={variant === 'danger' ? c.error : c.brand} />
           </View>
         ) : null}
         <Text style={styles.title}>{title}</Text>
       </View>
       <View style={styles.body}>{children}</View>
       {actionLabel && onAction ? (
-        <TouchableOpacity
+        <PressableSpring
           style={[styles.action, actionDisabled && styles.actionDisabled]}
           onPress={onAction}
           disabled={actionDisabled}
-          activeOpacity={0.85}
+          scaleTo={0.97}
+          haptic={!actionDisabled}
         >
           <Text style={styles.actionText}>{actionLabel}</Text>
-        </TouchableOpacity>
+        </PressableSpring>
       ) : null}
     </View>
   );
@@ -58,7 +60,7 @@ function createStyles(c: AppColors, variant: 'default' | 'danger') {
       backgroundColor: c.surface,
       borderRadius: radius.lg,
       borderWidth: 1,
-      borderColor: variant === 'danger' ? c.errorBg : c.border,
+      borderColor: variant === 'danger' ? c.error : c.border,
       padding: spacing.md,
       marginBottom: spacing.md,
       ...shadows.card,
@@ -68,7 +70,7 @@ function createStyles(c: AppColors, variant: 'default' | 'danger') {
       width: 32,
       height: 32,
       borderRadius: radius.sm,
-      backgroundColor: c.brandSoft,
+      backgroundColor: variant === 'danger' ? c.errorBg : c.brandSoft,
       alignItems: 'center',
       justifyContent: 'center',
     },
@@ -76,7 +78,7 @@ function createStyles(c: AppColors, variant: 'default' | 'danger') {
     body: { gap: spacing.xs },
     action: {
       marginTop: spacing.md,
-      backgroundColor: c.brand,
+      backgroundColor: variant === 'danger' ? c.error : c.brand,
       borderRadius: radius.md,
       padding: spacing.md,
       alignItems: 'center',

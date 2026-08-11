@@ -141,14 +141,14 @@ export function DevisRecapStep() {
               ["Marque", form.companyName],
               ["Secteur", form.sector],
               ["Contact", form.contactName],
-              ["Fonction", form.contactRole || "—"],
+              ["Fonction", form.contactRole || "…"],
               ["Email", form.email],
-              ["Téléphone", form.phone || "—"],
+              ["Téléphone", form.phone || "…"],
               ["Budget", form.budget],
-              ["Objectifs", form.goals.join(", ") || "—"],
-              ["Public cible", form.audience.join(", ") || "—"],
-              ["Régions", form.regions.join(", ") || "—"],
-              ["Sports", form.sports.join(", ") || "—"],
+              ["Objectifs", form.goals.join(", ") || "…"],
+              ["Public cible", form.audience.join(", ") || "…"],
+              ["Régions", form.regions.join(", ") || "…"],
+              ["Sports", form.sports.join(", ") || "…"],
             ] as const
           ).map(([label, value]) => (
             <div key={label} className="rounded-xl border border-white/8 bg-white/[0.02] p-4">

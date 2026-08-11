@@ -5,6 +5,7 @@ import {
   ScrollView,
   StyleSheet,
   Linking,
+  TextInput,
 } from 'react-native';
 import { PressableSpring, StaggerReveal } from '../motion';
 import type { User, UserRole } from '../../models/User';
@@ -51,6 +52,19 @@ import { PlayerActivityFeed } from '../player/PlayerActivityFeed';
 import { CareerScoreCard } from '../player/CareerScoreCard';
 import { WeeklyGoalSettings } from '../player/WeeklyGoalSettings';
 import { usePlayerActivities, useCareerProgression } from '../../hooks/useCareerProgression';
+import { JoueurProfileHub } from '../player/JoueurProfileHub';
+import {
+  JoueurActivitePanel,
+  JoueurParamsPanel,
+  JoueurVitrinePanel,
+} from '../player/JoueurAccountPanels';
+import { computeHealthSnapshot } from '../../core/health/healthState.engine';
+import { useJoueurSession } from '../../context/JoueurSessionContext';
+import {
+  resolveJoueurAgeGroup,
+  resolveJoueurGenderVisual,
+} from '../../utils/joueurExperienceTheme';
+import { resolveJoueurPageIdentity } from '../../content/joueurPageIdentity';
 
 export interface ProfileHomeScreenProps {
   profile: User;
@@ -103,6 +117,7 @@ export interface ProfileHomeScreenProps {
   onGalleryAdd: () => void;
   onGalleryRemove: (url: string) => void;
   onPositionChange?: (position: string) => void | Promise<void>;
+  onJerseyNumberChange?: (jersey: number | null) => void | Promise<void>;
   savingPosition?: boolean;
   quickActions: ProfileQuickAction[];
   initialChapter?: ProfileChapterId;
@@ -138,12 +153,54 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
     [props.profile]
   );
   const isPlayer = props.profile.role === 'player';
+  const joueurSession = useJoueurSession();
+  const joueurAccent = useMemo(() => {
+    if (!isPlayer) return colors.accent;
+    const ageGroup =
+      joueurSession?.ageGroup ??
+      resolveJoueurAgeGroup({
+        age: joueurSession?.ageYears ?? props.profile.profile.age,
+        gender: joueurSession?.gate?.gender ?? props.profile.profile.gender,
+        birthDate: props.profile.profile.birth_date,
+      });
+    const gender = resolveJoueurGenderVisual(
+      joueurSession?.gate?.gender ?? props.profile.profile.gender,
+    );
+    return resolveJoueurPageIdentity({ ageGroup, gender }).accent;
+  }, [
+    isPlayer,
+    colors.accent,
+    joueurSession?.ageGroup,
+    joueurSession?.ageYears,
+    joueurSession?.gate?.gender,
+    props.profile.profile.age,
+    props.profile.profile.gender,
+    props.profile.profile.birth_date,
+  ]);
   const { activities, loading: activitiesLoading, refresh: refreshActivities } =
     usePlayerActivities(isPlayer ? props.profile.uid : undefined);
   const career = useCareerProgression(isPlayer ? props.profile : null, {
     activities,
     streakDays: props.progression?.streakDays,
   });
+
+  const playerHealth = useMemo(
+    () =>
+      computeHealthSnapshot({
+        globalScore: props.pulse.score,
+        upcomingEventsCount: 0,
+        pendingConvocations: 0,
+        recentMatchCount: props.stats?.matches ?? 0,
+        streakDays: props.progression?.streakDays ?? 0,
+        profileCompletion: completionPercent,
+      }),
+    [
+      props.pulse.score,
+      props.stats?.matches,
+      props.progression?.streakDays,
+      completionPercent,
+    ],
+  );
 
   const handleCompletionItem = (itemId: string) => {
     if (itemId === 'position' && props.profile.role === 'player') {
@@ -163,170 +220,140 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
       {
         id: 'apercu' as const,
         render: () => (
-          <ScrollView contentContainerStyle={pagePad} {...scrollProps}>
-            {props.needsDocumentUpload && props.onDocumentVerification ? (
-              <ProfileSection
-                title={t('profile.verify.title')}
-                subtitle={t('profile.verify.documentsRequired')}
-                first
-              >
-                <AlertCard
-                  title={t('profile.verify.sendDocuments')}
-                  body={t('profile.verify.player.body')}
-                  cta={t('profile.verify.complete')}
-                  onPress={props.onDocumentVerification}
-                  colors={colors}
-                />
-              </ProfileSection>
-            ) : null}
-
-            <ProfileSection
-              title={t('profile.section.preferences')}
-              subtitle={t('profile.section.preferencesSub')}
-              first={!props.needsDocumentUpload}
-            >
-              <ProfilePreferencesCard profile={props.profile} />
-            </ProfileSection>
-
-            <ProfileSection title={t('profile.section.shortcuts')} subtitle={t('profile.section.shortcutsSub')}>
-              <ProfileQuickGrid actions={props.quickActions} compact />
-            </ProfileSection>
-
-            {props.onSubscriptionPress ? (
-              <ProfileSection title={t('profile.section.subscription')} subtitle={t('profile.section.subscriptionSub')}>
-                <ProfileSubscriptionCard
-                  profile={props.profile}
-                  tier={props.subscriptionTier}
-                  usage={props.subscriptionUsage ?? null}
-                  onPress={props.onSubscriptionPress}
-                />
-              </ProfileSection>
-            ) : null}
-
-            <ProfileSection title={t('profile.section.completion')} subtitle={t('profile.section.completionSub')}>
-              <ProfileCompletionPanel
-                user={props.profile}
-                onCompletePress={props.onEdit}
-                onItemPress={handleCompletionItem}
+          <ScrollView
+            contentContainerStyle={isPlayer ? { paddingBottom: spacing.xl } : pagePad}
+            {...scrollProps}
+          >
+            {isPlayer ? (
+              <JoueurProfileHub
+                profile={props.profile}
+                health={playerHealth}
+                gateAge={joueurSession?.ageYears ?? props.profile.profile.age}
+                gateGender={
+                  joueurSession?.gate?.gender ?? props.profile.profile.gender
+                }
+                gateAgeGroup={joueurSession?.ageGroup}
+                onEdit={props.onEdit}
               />
-              {props.profile.role === 'player' ? (
-                <MercatoVisibilityChecklist profile={props.profile} />
-              ) : null}
-            </ProfileSection>
+            ) : (
+              <>
+                {props.needsDocumentUpload && props.onDocumentVerification ? (
+                  <ProfileSection
+                    title={t('profile.verify.title')}
+                    subtitle={t('profile.verify.documentsRequired')}
+                    first
+                  >
+                    <AlertCard
+                      title={t('profile.verify.sendDocuments')}
+                      body={t('profile.verify.player.body')}
+                      cta={t('profile.verify.complete')}
+                      onPress={props.onDocumentVerification}
+                      colors={colors}
+                    />
+                  </ProfileSection>
+                ) : null}
 
-            {props.progression ? (
-              <ProfileSection title={t('profile.section.progression')} subtitle={t('profile.section.progressionSub')}>
-                <ProgressionBlock
-                  progression={props.progression}
-                  weeklyGoalPercent={career?.weeklyGoalPercent ?? 0}
-                />
-              </ProfileSection>
-            ) : null}
+                <ProfileSection
+                  title={t('profile.section.preferences')}
+                  subtitle={t('profile.section.preferencesSub')}
+                  first={!props.needsDocumentUpload}
+                >
+                  <ProfilePreferencesCard profile={props.profile} />
+                </ProfileSection>
 
-            {isPlayer && career ? (
-              <ProfileSection title={t('career.score.title')} subtitle={t('activity.log.subtitle')}>
-                <CareerScoreCard career={career} />
-                <WeeklyGoalSettings
-                  target={career.weeklySessionTarget}
-                  sessionCount={career.weeklySessionCount}
-                  onChangeTarget={career.setWeeklySessionTarget}
-                />
-                <PlayerActivityFeed
-                  uid={props.profile.uid}
-                  activities={activities}
-                  highlightVideoUrls={props.profile.profile.highlight_video_urls}
-                  highlightGalleryUrls={props.profile.profile.gallery_urls}
-                  loading={activitiesLoading}
-                  onActivityLogged={() => void refreshActivities()}
-                />
-              </ProfileSection>
-            ) : null}
+                <ProfileSection
+                  title={t('profile.section.shortcuts')}
+                  subtitle={t('profile.section.shortcutsSub')}
+                >
+                  <ProfileQuickGrid actions={props.quickActions} compact />
+                </ProfileSection>
 
-            {props.isOrganizer ? (
-              <ProfileSection title={t('profile.section.organization')} subtitle={t('profile.section.organizationSub')}>
-                <OrganizerReminderCard
-                  items={props.reminderItems}
-                  loading={props.loadingReminders}
-                  onPress={props.onOrganizerPress}
-                  onRemind={props.onRemind}
-                  remindingId={props.remindingId}
-                />
-              </ProfileSection>
-            ) : null}
+                {props.onSubscriptionPress ? (
+                  <ProfileSection
+                    title={t('profile.section.subscription')}
+                    subtitle={t('profile.section.subscriptionSub')}
+                  >
+                    <ProfileSubscriptionCard
+                      profile={props.profile}
+                      tier={props.subscriptionTier}
+                      usage={props.subscriptionUsage ?? null}
+                      onPress={props.onSubscriptionPress}
+                    />
+                  </ProfileSection>
+                ) : null}
+
+                <ProfileSection
+                  title={t('profile.section.completion')}
+                  subtitle={t('profile.section.completionSub')}
+                >
+                  <ProfileCompletionPanel
+                    user={props.profile}
+                    onCompletePress={props.onEdit}
+                    onItemPress={handleCompletionItem}
+                  />
+                </ProfileSection>
+
+                {props.progression ? (
+                  <ProfileSection
+                    title={t('profile.section.progression')}
+                    subtitle={t('profile.section.progressionSub')}
+                  >
+                    <ProgressionBlock
+                      progression={props.progression}
+                      weeklyGoalPercent={career?.weeklyGoalPercent ?? 0}
+                    />
+                  </ProfileSection>
+                ) : null}
+
+                {props.isOrganizer ? (
+                  <ProfileSection
+                    title={t('profile.section.organization')}
+                    subtitle={t('profile.section.organizationSub')}
+                  >
+                    <OrganizerReminderCard
+                      items={props.reminderItems}
+                      loading={props.loadingReminders}
+                      onPress={props.onOrganizerPress}
+                      onRemind={props.onRemind}
+                      remindingId={props.remindingId}
+                    />
+                  </ProfileSection>
+                ) : null}
+              </>
+            )}
           </ScrollView>
         ),
       },
       {
         id: 'cv' as const,
         render: () => (
-          <ScrollView contentContainerStyle={pagePad} {...scrollProps}>
+          <ScrollView contentContainerStyle={isPlayer ? styles.managementPad : pagePad} {...scrollProps}>
             {props.profile.role === 'player' ? (
-              <>
-                <ProfileSection
-                  title={t('profile.section.position')}
-                  subtitle={t('profile.section.positionSub')}
-                  first
-                >
-                  <PlayerPositionPitchPicker
-                    value={p.position ?? ''}
-                    onChange={(position) => void props.onPositionChange?.(position)}
-                    saving={props.savingPosition}
-                    hint={p.position ? undefined : t('profile.position.hint')}
+              <JoueurVitrinePanel
+                profile={props.profile}
+                colors={colors}
+                productLine={props.productLine}
+                accent={joueurAccent}
+                gallery={props.gallery}
+                videos={props.videos}
+                uploadingGallery={props.uploadingGallery}
+                savingPosition={props.savingPosition}
+                hasStats={props.hasStats}
+                stats={props.stats}
+                onPositionChange={props.onPositionChange}
+                onJerseyNumberChange={props.onJerseyNumberChange}
+                onCvEditor={props.onCvEditor}
+                onGalleryAdd={props.onGalleryAdd}
+                onGalleryRemove={props.onGalleryRemove}
+                JerseyField={
+                  <JerseyNumberField
+                    value={p.jersey_number}
+                    onCommit={(jersey) => void props.onJerseyNumberChange?.(jersey)}
+                    colors={colors}
+                    style={styles.jerseyInput}
                   />
-                </ProfileSection>
-                <ProfileSection
-                  title={brand.cvLabel}
-                  subtitle={t('profile.section.cvSub')}
-                >
-                  <PlayerCvLivePreview user={props.profile} colors={colors} />
-                  <PressableSpring onPress={props.onCvEditor} scaleTo={0.97} haptic>
-                    <ProDayGradient kind="cta" style={styles.cvCta}>
-                      <Icon name="document" size={18} color="#FFFFFF" />
-                      <ProDayText variant="caption" inverse style={styles.cvCtaText}>
-                        {t('profile.completeCv')}
-                      </ProDayText>
-                    </ProDayGradient>
-                  </PressableSpring>
-                </ProfileSection>
-                {props.hasStats && props.stats ? (
-                  <ProfileSection title={t('profile.section.season')} subtitle={t('profile.section.seasonSub')}>
-                    <View style={styles.statsRow}>
-                      <StatChip value={String(props.stats.matches)} label={t('profile.stats.matches')} colors={colors} />
-                      <StatChip value={String(props.stats.goals)} label={t('profile.stats.goals')} colors={colors} />
-                      <StatChip value={String(props.stats.assists)} label={t('profile.stats.assists')} colors={colors} />
-                    </View>
-                  </ProfileSection>
-                ) : null}
-                <ProfileSection title={t('profile.section.gallery')} subtitle={t('profile.section.gallerySub')}>
-                  <ProfileGalleryEditor
-                    urls={props.gallery}
-                    productLine={props.productLine}
-                    uploading={props.uploadingGallery}
-                    onAdd={props.onGalleryAdd}
-                    onRemove={props.onGalleryRemove}
-                  />
-                  {props.videos.length > 0 ? (
-                    props.videos.map((url, index) => (
-                      <StaggerReveal key={url} index={index}>
-                        <PressableSpring
-                          style={[styles.videoRow, { borderColor: colors.border }]}
-                          onPress={() => Linking.openURL(url).catch(() => {})}
-                          scaleTo={0.99}
-                        >
-                          <Icon name="time" size={18} color={colors.accent} />
-                          <Text style={[styles.videoLink, { color: colors.textSecondary }]} numberOfLines={1}>
-                            {url}
-                          </Text>
-                        </PressableSpring>
-                      </StaggerReveal>
-                    ))
-                  ) : (
-                    <ProDayText variant="caption" muted>
-                      {t('profile.videos.addHint')}
-                    </ProDayText>
-                  )}
-                </ProfileSection>
-              </>
+                }
+              />
             ) : (
               <ProfileSection title={t('profile.section.career')} subtitle={t('profile.section.careerSub')} first>
                 <InfoLine label={t('profile.field.title')} value={p.job_title} colors={colors} />
@@ -345,242 +372,247 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
       {
         id: 'activite' as const,
         render: () => (
-          <ScrollView contentContainerStyle={pagePad} {...scrollProps}>
+          <ScrollView contentContainerStyle={isPlayer ? styles.managementPad : pagePad} {...scrollProps}>
             {props.profile.role === 'player' ? (
-              <ProfileSection title={t('profile.section.mercato')} subtitle={t('profile.section.mercatoSub')} first>
-                <ProDaySurface variant="module" style={[styles.activityCard, { borderColor: colors.border }]}>
-                  <PressableSpring
-                    style={styles.activityRow}
-                    onPress={props.onApplications}
-                    scaleTo={0.98}
-                    haptic
-                  >
-                    <View style={[styles.activityIcon, { backgroundColor: colors.accentSoft }]}>
-                      <Icon name="briefcase" size={20} color={colors.accent} />
-                    </View>
-                    <View style={styles.activityCopy}>
-                      <ProDayText variant="section">{t('profile.mercato.applications')}</ProDayText>
-                      <ProDayText variant="caption" muted>
-                        {t('profile.mercato.applicationsSub')}
-                      </ProDayText>
-                    </View>
-                    <Icon name="chevron-forward" size={18} color={colors.textMuted} />
-                  </PressableSpring>
-                </ProDaySurface>
+              <JoueurActivitePanel
+                accent={joueurAccent}
+                productLine={props.productLine}
+                clubId={props.profile.profile.club_id}
+                appSpace={props.appSpace}
+                selectableAppSpaces={props.selectableAppSpaces}
+                canManageClub={props.canManageClub}
+                onApplications={props.onApplications}
+                onAnnouncements={props.onAnnouncements}
+                onTeamManagement={props.onTeamManagement}
+                onSetAppSpace={props.onSetAppSpace}
+              />
+            ) : (
+              <ProfileSection
+                title={t('profile.section.club')}
+                subtitle={
+                  props.profile.profile.club_id
+                    ? t('profile.club.linked')
+                    : t('profile.club.join')
+                }
+                first
+              >
+                {props.profile.profile.club_id ? (
+                  <ProfileMenuSection
+                    title=""
+                    colors={colors}
+                    items={[
+                      ...(props.canManageClub && props.onTeamManagement
+                        ? [
+                            {
+                              icon: 'people' as const,
+                              title: t('profile.team.manage'),
+                              subtitle: t('profile.team.manageSub'),
+                              onPress: props.onTeamManagement,
+                            },
+                          ]
+                        : []),
+                      {
+                        icon: 'notifications',
+                        title: t('profile.club.announcements'),
+                        subtitle: t('profile.club.news'),
+                        onPress: props.onAnnouncements,
+                      },
+                    ]}
+                  />
+                ) : (
+                  <ProDaySurface variant="flat" style={styles.hint}>
+                    <Icon name="people" size={18} color={colors.textMuted} />
+                    <ProDayText variant="caption" muted style={styles.hintText}>
+                      {t('profile.club.joinHint')}
+                    </ProDayText>
+                  </ProDaySurface>
+                )}
               </ProfileSection>
-            ) : null}
-
-            {isAmateurProductLine(props.productLine) &&
-            props.profile.role === 'player' ? (
-              <ProfileSection title={t('profile.section.mercatoUniverse')} subtitle={t('profile.section.mercatoUniverseSub')}>
-                <View style={styles.spacePills}>
-                  {props.selectableAppSpaces.map((space) => (
-                    <AppSpacePill
-                      key={space}
-                      space={space}
-                      active={props.appSpace === space}
-                      onPress={() => props.onSetAppSpace(space)}
-                    />
-                  ))}
-                </View>
-                <ProDayText variant="caption" muted>
-                  {t('profile.mercato.filterHint', { space: APP_SPACE_LABELS[props.appSpace] })}
-                </ProDayText>
-              </ProfileSection>
-            ) : null}
-
-            <ProfileSection
-              title={t('profile.section.club')}
-              subtitle={
-                props.profile.profile.club_id
-                  ? t('profile.club.linked')
-                  : t('profile.club.join')
-              }
-              first={props.profile.role !== 'player'}
-            >
-              {props.profile.profile.club_id ? (
-                <ProfileMenuSection
-                  title=""
-                  colors={colors}
-                  items={[
-                    ...(props.canManageClub && props.onTeamManagement
-                      ? [
-                          {
-                            icon: 'people' as const,
-                            title: t('profile.team.manage'),
-                            subtitle: t('profile.team.manageSub'),
-                            onPress: props.onTeamManagement,
-                          },
-                        ]
-                      : []),
-                    {
-                      icon: 'notifications',
-                      title: t('profile.club.announcements'),
-                      subtitle: t('profile.club.news'),
-                      onPress: props.onAnnouncements,
-                    },
-                  ]}
-                />
-              ) : (
-                <ProDaySurface variant="flat" style={styles.hint}>
-                  <Icon name="people" size={18} color={colors.textMuted} />
-                  <ProDayText variant="caption" muted style={styles.hintText}>
-                    {t('profile.club.joinHint')}
-                  </ProDayText>
-                </ProDaySurface>
-              )}
-            </ProfileSection>
+            )}
           </ScrollView>
         ),
       },
       {
         id: 'reglages' as const,
         render: () => (
-          <ScrollView contentContainerStyle={pagePad} {...scrollProps}>
-            <ProfileSection title={t('preferences.language')} subtitle={t('preferences.languageHint')} first>
-              <LanguageSettingControl variant="card" />
-            </ProfileSection>
-
-            {props.showPlayerVerificationReminder && props.playerVerifyLabel ? (
-              <ProfileSection
-                title={t('profile.verify.title')}
-                subtitle={t('profile.verify.staffSubtitle')}
-              >
-                <AlertCard
-                  title={t('profile.verify.playerReminderTitle', {
-                    label: props.playerVerifyLabel,
-                  })}
-                  body={t('profile.verify.identityHint')}
-                  cta={t('profile.verify.complete')}
-                  onPress={props.onPlayerVerification}
-                  colors={colors}
-                />
-              </ProfileSection>
-            ) : null}
-            {props.pendingVerify ? (
-              <ProfileSection
-                title={t('profile.verify.title')}
-                subtitle={t('profile.verify.staffSubtitle')}
-              >
-                <AlertCard
-                  title={t('profile.verify.staff.title')}
-                  body={t('profile.verify.staff.body')}
-                  cta={props.docLoading ? t('verification.upload.sending') : t('profile.verify.complete')}
-                  onPress={props.onPickDocument}
-                  colors={colors}
-                  secondaryCta={t('profile.verify.tracking')}
-                  onSecondaryPress={props.onVerificationFlow}
-                />
-              </ProfileSection>
-            ) : null}
-
-            {(props.canManageClub || props.verifiedStaff) ? (
-              <ProfileSection
-                title={t('profile.section.structure')}
-                subtitle={t('profile.section.structureSub')}
-              >
-                <ProfileMenuSection
-                  title=""
-                  colors={colors}
-                  items={[
-                    ...(props.canManageClub && props.profile.profile.club_id && props.onTeamManagement
-                      ? [
-                          {
-                            icon: 'people' as const,
-                            title: t('profile.team.manage'),
-                            subtitle: t('profile.team.manageSub'),
-                            onPress: props.onTeamManagement,
-                          },
-                        ]
-                      : []),
-                    ...(props.canManageClub && !props.profile.profile.club_id
-                      ? [
-                          {
-                            icon: 'business' as const,
-                            title: t('profile.club.create'),
-                            subtitle: t('profile.club.joinActionSub'),
-                            onPress: props.onCreateClub,
-                          },
-                          {
-                            icon: 'people' as const,
-                            title: t('profile.club.joinAction'),
-                            subtitle: t('profile.club.convocationsSub'),
-                            onPress: props.onJoinClub,
-                          },
-                        ]
-                      : []),
-                    ...(!props.profile.profile.club_id && props.profile.role === 'player'
-                      ? [
-                          {
-                            icon: 'people' as const,
-                            title: t('profile.club.joinMyClub'),
-                            subtitle: t('profile.club.teamCalendar'),
-                            onPress: props.onJoinClub,
-                          },
-                        ]
-                      : []),
-                    ...(props.verifiedStaff
-                      ? [
-                          {
-                            icon: 'shield' as const,
-                            title: t('profile.diploma.verified'),
-                            subtitle: t('profile.diploma.badgeActive'),
-                            onPress: props.onVerificationSuccess,
-                          },
-                        ]
-                      : []),
-                  ]}
-                />
-              </ProfileSection>
-            ) : null}
-
-            <ProfileSection title={t('profile.section.legal')} subtitle={t('profile.section.legalSub')}>
-              <ProfileMenuSection
-                title=""
+          <ScrollView contentContainerStyle={isPlayer ? styles.managementPad : pagePad} {...scrollProps}>
+            {isPlayer ? (
+              <JoueurParamsPanel
+                accent={joueurAccent}
                 colors={colors}
-                items={[
-                  ...(props.onReferral
-                    ? [
-                        {
-                          icon: 'people' as const,
-                          title: t('profile.referral'),
-                          subtitle: t('profile.referralSub'),
-                          onPress: props.onReferral,
-                        },
-                      ]
-                    : []),
-                  {
-                    icon: 'document',
-                    title: t('legal.terms'),
-                    onPress: () => props.onLegal('terms'),
-                  },
-                  { icon: 'lock', title: t('profile.privacy'), onPress: () => props.onLegal('privacy') },
-                ]}
+                AlertCard={AlertCard}
+                showPlayerVerificationReminder={props.showPlayerVerificationReminder}
+                playerVerifyLabel={props.playerVerifyLabel}
+                pendingVerify={props.pendingVerify}
+                docLoading={props.docLoading}
+                canManageClub={props.canManageClub}
+                verifiedStaff={props.verifiedStaff}
+                clubId={props.profile.profile.club_id}
+                isPlayer
+                onPlayerVerification={props.onPlayerVerification}
+                onPickDocument={props.onPickDocument}
+                onVerificationFlow={props.onVerificationFlow}
+                onTeamManagement={props.onTeamManagement}
+                onCreateClub={props.onCreateClub}
+                onJoinClub={props.onJoinClub}
+                onVerificationSuccess={props.onVerificationSuccess}
+                onReferral={props.onReferral}
+                onLegal={props.onLegal}
+                onSignOut={props.onSignOut}
               />
-            </ProfileSection>
+            ) : (
+              <>
+                <ProfileSection title={t('preferences.language')} subtitle={t('preferences.languageHint')} first>
+                  <LanguageSettingControl variant="card" />
+                </ProfileSection>
 
-            <ProfileSection title={t('profile.section.session')}>
-              <PressableSpring
-                style={[
-                  styles.logoutBtn,
-                  { borderColor: colors.error, backgroundColor: colors.errorBg },
-                ]}
-                onPress={props.onSignOut}
-                scaleTo={0.97}
-              >
-                <ProDayText variant="caption" style={{ color: colors.error, fontWeight: '800' }}>
-                  {t('profile.logout')}
-                </ProDayText>
-              </PressableSpring>
-            </ProfileSection>
+                {props.showPlayerVerificationReminder && props.playerVerifyLabel ? (
+                  <ProfileSection
+                    title={t('profile.verify.title')}
+                    subtitle={t('profile.verify.staffSubtitle')}
+                  >
+                    <AlertCard
+                      title={t('profile.verify.playerReminderTitle', {
+                        label: props.playerVerifyLabel,
+                      })}
+                      body={t('profile.verify.identityHint')}
+                      cta={t('profile.verify.complete')}
+                      onPress={props.onPlayerVerification}
+                      colors={colors}
+                    />
+                  </ProfileSection>
+                ) : null}
+                {props.pendingVerify ? (
+                  <ProfileSection
+                    title={t('profile.verify.title')}
+                    subtitle={t('profile.verify.staffSubtitle')}
+                  >
+                    <AlertCard
+                      title={t('profile.verify.staff.title')}
+                      body={t('profile.verify.staff.body')}
+                      cta={props.docLoading ? t('verification.upload.sending') : t('profile.verify.complete')}
+                      onPress={props.onPickDocument}
+                      colors={colors}
+                      secondaryCta={t('profile.verify.tracking')}
+                      onSecondaryPress={props.onVerificationFlow}
+                    />
+                  </ProfileSection>
+                ) : null}
+
+                {(props.canManageClub || props.verifiedStaff) ? (
+                  <ProfileSection
+                    title={t('profile.section.structure')}
+                    subtitle={t('profile.section.structureSub')}
+                  >
+                    <ProfileMenuSection
+                      title=""
+                      colors={colors}
+                      items={[
+                        ...(props.canManageClub && props.profile.profile.club_id && props.onTeamManagement
+                          ? [
+                              {
+                                icon: 'people' as const,
+                                title: t('profile.team.manage'),
+                                subtitle: t('profile.team.manageSub'),
+                                onPress: props.onTeamManagement,
+                              },
+                            ]
+                          : []),
+                        ...(props.canManageClub && !props.profile.profile.club_id
+                          ? [
+                              {
+                                icon: 'business' as const,
+                                title: t('profile.club.create'),
+                                subtitle: t('profile.club.joinActionSub'),
+                                onPress: props.onCreateClub,
+                              },
+                              {
+                                icon: 'people' as const,
+                                title: t('profile.club.joinAction'),
+                                subtitle: t('profile.club.convocationsSub'),
+                                onPress: props.onJoinClub,
+                              },
+                            ]
+                          : []),
+                        ...(props.verifiedStaff
+                          ? [
+                              {
+                                icon: 'shield' as const,
+                                title: t('profile.diploma.verified'),
+                                subtitle: t('profile.diploma.badgeActive'),
+                                onPress: props.onVerificationSuccess,
+                              },
+                            ]
+                          : []),
+                      ]}
+                    />
+                  </ProfileSection>
+                ) : null}
+
+                <ProfileSection title={t('profile.section.legal')} subtitle={t('profile.section.legalSub')}>
+                  <ProfileMenuSection
+                    title=""
+                    colors={colors}
+                    items={[
+                      ...(props.onReferral
+                        ? [
+                            {
+                              icon: 'people' as const,
+                              title: t('profile.referral'),
+                              subtitle: t('profile.referralSub'),
+                              onPress: props.onReferral,
+                            },
+                          ]
+                        : []),
+                      {
+                        icon: 'document',
+                        title: t('legal.terms'),
+                        onPress: () => props.onLegal('terms'),
+                      },
+                      { icon: 'lock', title: t('profile.privacy'), onPress: () => props.onLegal('privacy') },
+                    ]}
+                  />
+                </ProfileSection>
+
+                <ProfileSection title={t('profile.section.session')}>
+                  <PressableSpring
+                    style={[
+                      styles.logoutBtn,
+                      { borderColor: colors.error, backgroundColor: colors.errorBg },
+                    ]}
+                    onPress={props.onSignOut}
+                    scaleTo={0.97}
+                  >
+                    <ProDayText variant="caption" style={{ color: colors.error, fontWeight: '800' }}>
+                      {t('profile.logout')}
+                    </ProDayText>
+                  </PressableSpring>
+                </ProfileSection>
+              </>
+            )}
           </ScrollView>
         ),
       },
     ],
-    [props, colors, brand, p, roleLabel, t]
+    [
+      props,
+      colors,
+      brand,
+      p,
+      roleLabel,
+      t,
+      isPlayer,
+      joueurAccent,
+      playerHealth,
+      career,
+      activities,
+      activitiesLoading,
+      refreshActivities,
+      handleCompletionItem,
+    ]
   );
 
-  const identityHeader = (
+  const identityHeader = isPlayer ? null : (
     <ProfileIdentityHeader
       profile={props.profile}
       productLine={props.productLine}
@@ -603,7 +635,8 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
         activeChapter={chapter}
         onChapterChange={setChapter}
         showFooter={false}
-        variant="pills"
+        variant={isPlayer ? 'rail' : 'pills'}
+        compact={isPlayer}
         badges={{
           reglages:
             props.pendingVerify || props.showPlayerVerificationReminder ? 1 : undefined,
@@ -615,8 +648,38 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
   return (
     <View style={styles.root}>
       {identityHeader}
-      {pager}
+      <View style={isPlayer ? styles.playerPager : undefined}>{pager}</View>
     </View>
+  );
+};
+
+const JerseyNumberField: React.FC<{
+  value?: number;
+  onCommit: (jersey: number | null) => void;
+  colors: AppColors;
+  style: object;
+}> = ({ value, onCommit, colors, style }) => {
+  const [draft, setDraft] = useState(value != null ? String(value) : '');
+  return (
+    <TextInput
+      value={draft}
+      onChangeText={(raw) => setDraft(raw.replace(/[^\d]/g, '').slice(0, 2))}
+      onEndEditing={() => {
+        if (!draft.trim()) {
+          onCommit(null);
+          return;
+        }
+        const n = Number(draft);
+        if (Number.isFinite(n) && n >= 0 && n <= 99) onCommit(n);
+      }}
+      keyboardType="number-pad"
+      placeholder="Ex. 10"
+      placeholderTextColor={colors.textMuted}
+      style={[
+        style,
+        { borderColor: colors.border, color: colors.text, backgroundColor: colors.surface },
+      ]}
+    />
   );
 };
 
@@ -713,6 +776,53 @@ function createStyles(_c: AppColors) {
   return StyleSheet.create({
     root: { flex: 1, minHeight: 0 },
     pager: { flex: 1, minHeight: 0, marginTop: spacing.xs },
+    playerPager: { flex: 1, minHeight: 0 },
+    managementPad: {
+      paddingHorizontal: spacing.md,
+      paddingTop: spacing.sm,
+      paddingBottom: spacing.xl + 24,
+      gap: spacing.xs,
+    },
+    managementScreen: {
+      gap: spacing.sm,
+      marginBottom: spacing.sm,
+    },
+    managementHero: {
+      borderRadius: radius.xl,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.md,
+      marginBottom: spacing.sm,
+      gap: 6,
+    },
+    managementKicker: {
+      color: '#DDEAFE',
+      fontSize: 10,
+      fontWeight: '900',
+      letterSpacing: 2.2,
+    },
+    managementTitle: {
+      color: '#FFFFFF',
+      fontWeight: '800',
+      fontSize: 18,
+      lineHeight: 22,
+    },
+    managementBody: {
+      color: 'rgba(226,232,240,0.92)',
+      lineHeight: 18,
+    },
+    managementSectionCard: {
+      borderWidth: 1.2,
+      borderColor: 'rgba(148,163,184,0.22)',
+      borderRadius: radius.xl,
+      backgroundColor: 'rgba(8,14,24,0.84)',
+    },
+    managementSectionKicker: {
+      color: 'rgba(148,163,184,0.95)',
+      fontWeight: '900',
+      letterSpacing: 1.4,
+      fontSize: 10,
+      marginBottom: spacing.xs,
+    },
     cvCta: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -721,6 +831,14 @@ function createStyles(_c: AppColors) {
       paddingVertical: spacing.md,
       borderRadius: radius.lg,
       marginTop: spacing.md,
+    },
+    jerseyInput: {
+      borderWidth: 1,
+      borderRadius: radius.md,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      fontSize: 16,
+      fontWeight: '700',
     },
     cvCtaText: { fontWeight: '800' },
     statsRow: { flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.md },
@@ -732,7 +850,7 @@ function createStyles(_c: AppColors) {
       borderBottomWidth: StyleSheet.hairlineWidth,
     },
     videoLink: { flex: 1, fontSize: 13 },
-    activityCard: { borderWidth: 1, marginBottom: spacing.md },
+    activityCard: { borderWidth: 1, marginBottom: spacing.md, borderRadius: radius.lg },
     activityRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
     activityIcon: {
       width: 44,

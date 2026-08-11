@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import {
+  broadcastIosDelayNoticeAdmin,
   broadcastIosPreAnnouncementAdmin,
   sendEngagementRoundAdmin,
   triggerIosLaunchAdmin,
@@ -11,6 +12,7 @@ import { applySecurityHeaders } from "@/lib/securityHeaders";
 
 type CampaignAction =
   | "broadcast_ios_pre_announcement"
+  | "broadcast_ios_delay_notice"
   | "trigger_ios_launch"
   | "send_engagement_round";
 
@@ -21,7 +23,7 @@ function jsonResponse(body: Record<string, unknown>, init?: ResponseInit) {
   return response;
 }
 
-/** Actions campagne bêta iOS — session admin requise. */
+/** Actions campagne bêta iOS : session admin requise. */
 export async function POST(request: Request) {
   if (!isSameOriginBrowserRequest(request)) {
     return jsonResponse({ error: "Origine non autorisée" }, { status: 403 });
@@ -53,6 +55,7 @@ export async function POST(request: Request) {
   const action = body.action;
   if (
     action !== "broadcast_ios_pre_announcement" &&
+    action !== "broadcast_ios_delay_notice" &&
     action !== "trigger_ios_launch" &&
     action !== "send_engagement_round"
   ) {
@@ -62,6 +65,8 @@ export async function POST(request: Request) {
   let result;
   if (action === "broadcast_ios_pre_announcement") {
     result = await broadcastIosPreAnnouncementAdmin();
+  } else if (action === "broadcast_ios_delay_notice") {
+    result = await broadcastIosDelayNoticeAdmin();
   } else if (action === "trigger_ios_launch") {
     result = await triggerIosLaunchAdmin();
   } else {

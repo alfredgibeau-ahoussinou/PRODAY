@@ -13,8 +13,8 @@ import { spacing } from '../../theme/designTokens';
 type OpsSegment = 'subscriptions' | 'shop';
 
 const SEGMENTS: { id: OpsSegment; label: string }[] = [
-  { id: 'subscriptions', label: 'Abonnements' },
-  { id: 'shop', label: 'Commandes shop' },
+  { id: 'subscriptions', label: 'Achats abonnements' },
+  { id: 'shop', label: 'Commandes boutique' },
 ];
 
 export const AdminOpsDataPanel: React.FC = () => {
@@ -62,7 +62,7 @@ export const AdminOpsDataPanel: React.FC = () => {
             <AdminEmptyState
               icon="bag"
               title="Aucun achat"
-              subtitle="Historique App Store / Play (écriture serveur uniquement)."
+              subtitle="Historique boutique et cadeaux admin (écriture serveur)."
             />
           ) : (
             subscriptions.map((purchase) => (

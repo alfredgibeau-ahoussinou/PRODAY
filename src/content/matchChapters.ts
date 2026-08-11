@@ -1,4 +1,4 @@
-import type { IconName } from '../components/ui/Icon';
+import type { IconName } from '../components/ui/iconNames';
 
 export type MatchChapterId =
   | 'calendrier'
@@ -6,7 +6,8 @@ export type MatchChapterId =
   | 'convocations'
   | 'stats'
   | 'amicaux'
-  | 'tournois';
+  | 'tournois'
+  | 'competitions';
 
 export const MATCH_CHAPTERS: {
   id: MatchChapterId;
@@ -15,19 +16,21 @@ export const MATCH_CHAPTERS: {
   icon: IconName;
 }[] = [
   { id: 'calendrier', label: 'Calendrier', shortLabel: 'Agenda', icon: 'calendar' },
-  { id: 'centre', label: 'Centre', shortLabel: 'Live', icon: 'football' },
+  { id: 'centre', label: 'Centre Match', shortLabel: 'Centre', icon: 'football' },
   { id: 'convocations', label: 'Convocations', shortLabel: 'Convocs', icon: 'mail' },
   { id: 'stats', label: 'Stats', shortLabel: 'Stats', icon: 'trophy' },
   { id: 'amicaux', label: 'Amicaux', shortLabel: 'Amicaux', icon: 'handshake' },
   { id: 'tournois', label: 'Tournois', shortLabel: 'Tournois', icon: 'trophy' },
+  { id: 'competitions', label: 'Compétitions', shortLabel: 'Compét.', icon: 'shield' },
 ];
 
-export type CalendarKindFilter = 'all' | 'team_event' | 'friendly_match';
+export type CalendarKindFilter = 'all' | 'team_event' | 'friendly_match' | 'competition_fixture';
 
 export const CALENDAR_KIND_FILTERS: { id: CalendarKindFilter; label: string }[] = [
   { id: 'all', label: 'Tout' },
   { id: 'team_event', label: 'Convocs' },
   { id: 'friendly_match', label: 'Matchs' },
+  { id: 'competition_fixture', label: 'Compét.' },
 ];
 
 export type AmicauxStatusFilter = 'all' | 'open' | 'confirmed' | 'mine';

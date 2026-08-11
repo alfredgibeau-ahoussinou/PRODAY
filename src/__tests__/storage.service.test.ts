@@ -2,8 +2,12 @@ jest.mock('expo-file-system/legacy', () => ({
   readAsStringAsync: jest.fn(),
   downloadAsync: jest.fn(),
   uploadAsync: jest.fn(),
+  copyAsync: jest.fn(),
+  deleteAsync: jest.fn(),
+  getInfoAsync: jest.fn(),
   cacheDirectory: 'file:///cache/',
   FileSystemUploadType: { BINARY_CONTENT: 0, MULTIPART: 1 },
+  FileSystemSessionType: { BACKGROUND: 0, FOREGROUND: 1 },
 }));
 
 jest.mock('firebase/storage', () => ({
@@ -21,6 +25,7 @@ jest.mock('../lib/firebase', () => ({
   getFirebaseStorage: jest.fn(() => ({})),
   getFirebaseAuth: jest.fn(() => ({
     currentUser: {
+      uid: 'uid-1',
       getIdToken: jest.fn().mockResolvedValue('mock-id-token'),
     },
   })),
@@ -50,6 +55,8 @@ describe('storage.service', () => {
       status: 200,
       body: '{"name":"avatars/uid-1/1.jpg"}',
     });
+    (FileSystem.copyAsync as jest.Mock).mockResolvedValue(undefined);
+    (FileSystem.deleteAsync as jest.Mock).mockResolvedValue(undefined);
   });
 
   afterEach(() => {
@@ -62,8 +69,12 @@ describe('storage.service', () => {
     expect(normalizeImageMimeType(null)).toBe('image/jpeg');
   });
 
-  it('upload RN file:// via REST uploadAsync (pas uploadString ni Blob)', async () => {
+  it('upload RN file:// via SDK uploadBytes (auth Firebase)', async () => {
     Object.defineProperty(Platform, 'OS', { configurable: true, value: 'ios' });
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      arrayBuffer: async () => new Uint8Array([1, 2, 3]).buffer,
+    }) as unknown as typeof fetch;
 
     const url = await storageService.uploadProfileImage(
       'uid-1',
@@ -71,26 +82,22 @@ describe('storage.service', () => {
       'avatars'
     );
 
-    expect(FileSystem.uploadAsync).toHaveBeenCalledWith(
-      expect.stringContaining('firebasestorage.googleapis.com/v0/b/test-bucket.appspot.com/o'),
-      'file:///tmp/photo.jpg',
-      expect.objectContaining({
-        httpMethod: 'POST',
-        uploadType: 0,
-        headers: expect.objectContaining({
-          Authorization: 'Firebase mock-id-token',
-          'Content-Type': 'image/jpeg',
-        }),
-      })
+    expect(FileSystem.copyAsync).toHaveBeenCalled();
+    expect(uploadBytes).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.any(Uint8Array),
+      expect.objectContaining({ contentType: 'image/jpeg' })
     );
-    expect(FileSystem.readAsStringAsync).not.toHaveBeenCalled();
     expect(uploadString).not.toHaveBeenCalled();
-    expect(uploadBytes).not.toHaveBeenCalled();
     expect(url).toBe('https://cdn.test/avatar.jpg');
   });
 
-  it('upload RN content:// galerie via REST uploadAsync', async () => {
+  it('upload RN content:// galerie via SDK uploadBytes', async () => {
     Object.defineProperty(Platform, 'OS', { configurable: true, value: 'android' });
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      arrayBuffer: async () => new Uint8Array([1, 2, 3]).buffer,
+    }) as unknown as typeof fetch;
 
     await storageService.uploadProfileImage(
       'uid-1',
@@ -98,35 +105,36 @@ describe('storage.service', () => {
       'gallery'
     );
 
-    expect(FileSystem.uploadAsync).toHaveBeenCalledWith(
-      expect.any(String),
-      'content://media/external/images/media/42',
-      expect.any(Object)
-    );
+    expect(uploadBytes).toHaveBeenCalled();
     expect(uploadString).not.toHaveBeenCalled();
-    expect(uploadBytes).not.toHaveBeenCalled();
   });
 
-  it('upload RN highlight video via REST uploadAsync', async () => {
+  it('upload RN highlight video via SDK uploadBytes', async () => {
     Object.defineProperty(Platform, 'OS', { configurable: true, value: 'ios' });
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      arrayBuffer: async () => new Uint8Array([1, 2, 3]).buffer,
+    }) as unknown as typeof fetch;
 
     await storageService.uploadProfileHighlightVideo('uid-1', {
       uri: 'file:///tmp/highlight.mp4',
       mimeType: 'video/mp4',
     });
 
-    expect(FileSystem.uploadAsync).toHaveBeenCalledWith(
-      expect.stringContaining('name=highlights%2Fuid-1%2F'),
-      'file:///tmp/highlight.mp4',
-      expect.objectContaining({
-        headers: expect.objectContaining({ 'Content-Type': 'video/mp4' }),
-      })
+    expect(uploadBytes).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.any(Uint8Array),
+      expect.objectContaining({ contentType: 'video/mp4' })
     );
     expect(uploadString).not.toHaveBeenCalled();
   });
 
-  it('upload RN URL distante via downloadAsync + REST uploadAsync', async () => {
+  it('upload RN URL distante via downloadAsync + SDK uploadBytes', async () => {
     Object.defineProperty(Platform, 'OS', { configurable: true, value: 'ios' });
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      arrayBuffer: async () => new Uint8Array([1, 2, 3]).buffer,
+    }) as unknown as typeof fetch;
 
     await storageService.uploadActivityThumbnail(
       'uid-1',
@@ -138,11 +146,7 @@ describe('storage.service', () => {
       'https://cdn.test/video-frame.jpg',
       expect.stringMatching(/^file:\/\/\/cache\/upload_\d+$/)
     );
-    expect(FileSystem.uploadAsync).toHaveBeenCalledWith(
-      expect.any(String),
-      'file:///cache/upload_123',
-      expect.any(Object)
-    );
+    expect(uploadBytes).toHaveBeenCalled();
     expect(uploadString).not.toHaveBeenCalled();
   });
 
@@ -164,13 +168,16 @@ describe('storage.service', () => {
 
   it('upload web via uploadBytes', async () => {
     if (Platform.OS !== 'web') {
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: true,
+        arrayBuffer: async () => new Uint8Array([1, 2, 3]).buffer,
+      }) as unknown as typeof fetch;
       await storageService.uploadProfileImage(
         'uid-1',
         { uri: 'https://example.com/photo.jpg', mimeType: 'image/jpeg' },
         'avatars'
       );
-      expect(FileSystem.uploadAsync).toHaveBeenCalled();
-      expect(uploadBytes).not.toHaveBeenCalled();
+      expect(uploadBytes).toHaveBeenCalled();
       return;
     }
 

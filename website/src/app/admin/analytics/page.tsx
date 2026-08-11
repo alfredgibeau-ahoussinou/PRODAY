@@ -9,7 +9,7 @@ import { fetchAdminPlatformStats } from "@/lib/adminPlatformApi";
 import { fetchTrafficStatsAdmin } from "@/lib/adminTrafficApi";
 
 export const metadata: Metadata = {
-  title: "Analytics - ProDay",
+  title: "Analytics : ProDay",
   robots: { index: false, follow: false },
 };
 

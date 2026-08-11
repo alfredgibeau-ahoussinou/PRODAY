@@ -3,6 +3,10 @@
 import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
 import type { RoleVisualId } from "@/lib/roleVisuals";
+import type {
+  JoueurPositionGroup,
+  JoueurSceneKind,
+} from "@/lib/joueurExperienceTheme";
 
 const RoleAccentCanvas = dynamic(
   () => import("./RoleAccentCanvas").then((m) => m.RoleAccentCanvas),
@@ -18,6 +22,12 @@ type RoleAccentStageProps = {
   role: RoleVisualId;
   kicker?: string;
   title?: string;
+  support?: string;
+  sceneKind?: JoueurSceneKind;
+  position?: JoueurPositionGroup;
+  animationIntensity?: "soft" | "medium" | "high";
+  motifs?: string[];
+  positionMotif?: string;
 };
 
 /**
@@ -28,6 +38,12 @@ export function RoleAccentStage({
   role,
   kicker = "Immersion",
   title = "Le terrain, en volume.",
+  support,
+  sceneKind,
+  position,
+  animationIntensity = "medium",
+  motifs,
+  positionMotif,
 }: RoleAccentStageProps) {
   const ref = useRef<HTMLElement>(null);
   const [active, setActive] = useState(false);
@@ -60,7 +76,7 @@ export function RoleAccentStage({
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            "radial-gradient(ellipse 70% 60% at 50% 42%, color-mix(in srgb, var(--pole-accent, #4C8BFF) 18%, transparent), transparent 70%)",
+            "radial-gradient(ellipse 70% 60% at 50% 42%, color-mix(in srgb, var(--pole-accent, #4C8BFF) 18%, transparent), transparent 70%), radial-gradient(ellipse 40% 40% at 80% 20%, var(--joueur-scene-tint, transparent), transparent 55%)",
         }}
       />
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-black to-transparent" />
@@ -68,7 +84,13 @@ export function RoleAccentStage({
       <div className="relative mx-auto max-w-6xl px-4 sm:px-6">
         <div className="relative h-[380px] sm:h-[420px] lg:h-[460px]">
           {active ? (
-            <RoleAccentCanvas role={role} className="absolute inset-0 h-full w-full" />
+            <RoleAccentCanvas
+              role={role}
+              className="absolute inset-0 h-full w-full"
+              sceneKind={sceneKind}
+              position={position}
+              animationIntensity={animationIntensity}
+            />
           ) : (
             <div
               className="absolute inset-0"
@@ -86,6 +108,26 @@ export function RoleAccentStage({
             <h2 className="mt-3 max-w-lg font-display text-[clamp(1.45rem,3.4vw,2.15rem)] font-medium leading-[1.1] tracking-[-0.03em] text-white">
               {title}
             </h2>
+            {support ? (
+              <p className="mt-2 max-w-md text-sm text-white/50">{support}</p>
+            ) : null}
+            {(motifs?.length || positionMotif) && (
+              <div className="mt-4 flex flex-wrap gap-2">
+                {motifs?.map((m) => (
+                  <span
+                    key={m}
+                    className="border border-white/12 bg-black/30 px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.14em] text-white/60"
+                  >
+                    {m}
+                  </span>
+                ))}
+                {positionMotif ? (
+                  <span className="border border-[var(--pole-accent,#4C8BFF)]/35 px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.14em] text-white/75">
+                    {positionMotif}
+                  </span>
+                ) : null}
+              </div>
+            )}
           </div>
         </div>
       </div>

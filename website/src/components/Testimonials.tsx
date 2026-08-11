@@ -38,7 +38,7 @@ const stories = [
   },
 ] as const;
 
-/** Illustrations produit — pas des avis clients certifiés. */
+/** Illustrations produit : pas des avis clients certifiés. */
 export function Testimonials() {
   return (
     <section className="relative bg-[#e8f3ec] py-16 sm:py-20">

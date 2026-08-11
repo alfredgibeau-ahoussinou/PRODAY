@@ -37,6 +37,24 @@ import { SubscriptionShell } from './src/components/subscription/SubscriptionShe
 import { AppSpaceProvider } from './src/context/AppSpaceContext';
 import { ProductLineProvider, useProductLine } from './src/context/ProductLineContext';
 import { LaunchIntroProvider } from './src/context/LaunchIntroContext';
+import { JoueurSessionProvider } from './src/context/JoueurSessionContext';
+import { JoueurProgressProvider } from './src/context/JoueurProgressContext';
+import { JoueurLevelUpOverlay } from './src/features/joueur/JoueurLevelUpOverlay';
+import {
+  JoueurGateGuard,
+  useJoueurGateBlocksTabs,
+} from './src/features/joueur/JoueurGateGuard';
+
+function JoueurTabBarSlot(props: {
+  activeTab: MainTabId;
+  onTabPress: (tab: MainTabId) => void;
+  unreadCount: number;
+  visibleTabs: MainTabId[];
+}) {
+  const blocked = useJoueurGateBlocksTabs();
+  if (blocked) return null;
+  return <BottomTabBar {...props} />;
+}
 import { AppErrorBoundary } from './src/components/AppErrorBoundary';
 import { BottomTabBar } from './src/components/navigation/BottomTabBar';
 import { WomanSpaceDefaults } from './src/components/appSpace/WomanSpaceDefaults';
@@ -49,6 +67,8 @@ import { SponsorAppShell } from './src/navigation/SponsorAppShell';
 import { SupporterAppShell } from './src/navigation/SupporterAppShell';
 import { ParentAppShell } from './src/navigation/ParentAppShell';
 import { parentPortalService } from './src/services/parentPortal.service';
+import { ClubAppShell } from './src/features/club/shell/ClubAppShell';
+import { CoachAppShell } from './src/features/coach/shell/CoachAppShell';
 import { AdminPreviewBanner } from './src/components/admin/AdminPreviewBanner';
 import { PoleHelpChatbot } from './src/components/help/PoleHelpChatbot';
 import { useIsAdmin } from './src/hooks/useIsAdmin';
@@ -409,6 +429,9 @@ function AppShell() {
     santeVisioBlocked || (disabledFlag != null && !isEnabled(disabledFlag));
   const blockedFlag = santeVisioBlocked ? 'sante_visio' : disabledFlag;
   const isSponsor = isSponsorRole(sessionProfile?.role);
+  const isClubShell = sessionProfile?.role === 'club';
+  const isCoachShell = sessionProfile?.role === 'coach';
+  const usesRoleShell = isClubShell || isCoachShell;
   const shellBackground = isSponsor ? SPONSOR_THEME.background : themeColors.background;
 
   if (!localeReady) {
@@ -423,6 +446,8 @@ function AppShell() {
   }
 
   const mainApp = (
+    <JoueurSessionProvider profile={sessionProfile ?? profile}>
+    <JoueurProgressProvider profile={sessionProfile ?? profile}>
     <AppSpaceProvider>
       <WomanSpaceDefaults />
       {profile ? <MinorYouthSpaceBridge profile={profile} productLine={productLine} /> : null}
@@ -544,27 +569,40 @@ function AppShell() {
           {profile ? <ProdayCalendarSyncBridge /> : null}
           {profile ? <PoleHelpChatbot /> : null}
           <View style={styles.screen}>
-            <AnimatedTabContent activeTab={activeTab} tabOrder={screenTabs}>
-              {tabFeatureBlocked && blockedFlag ? (
-                blockedFlag === 'sante_visio' ? (
-                  <FeatureBlockedScreen flag="sante_visio" />
-                ) : (
-                  <FeatureDisabledPanel flag={blockedFlag} />
-                )
+            <JoueurGateGuard>
+              {isClubShell ? (
+                <ClubAppShell activeTab={activeTab} onTabChange={handleTabPress} />
+              ) : isCoachShell ? (
+                <CoachAppShell activeTab={activeTab} onTabChange={handleTabPress} />
               ) : (
-                <Screen />
+                <AnimatedTabContent activeTab={activeTab} tabOrder={screenTabs}>
+                  {tabFeatureBlocked && blockedFlag ? (
+                    blockedFlag === 'sante_visio' ? (
+                      <FeatureBlockedScreen flag="sante_visio" />
+                    ) : (
+                      <FeatureDisabledPanel flag={blockedFlag} />
+                    )
+                  ) : (
+                    <Screen />
+                  )}
+                </AnimatedTabContent>
               )}
-            </AnimatedTabContent>
+            </JoueurGateGuard>
           </View>
-          <BottomTabBar
-            activeTab={activeTab}
-            onTabPress={handleTabPress}
-            unreadCount={unreadCount}
-            visibleTabs={screenTabs}
-          />
+          {usesRoleShell ? null : (
+            <JoueurTabBarSlot
+              activeTab={activeTab}
+              onTabPress={handleTabPress}
+              unreadCount={unreadCount}
+              visibleTabs={screenTabs}
+            />
+          )}
         </SafeAreaView>
       </TabNavigationProvider>
+      <JoueurLevelUpOverlay />
     </AppSpaceProvider>
+    </JoueurProgressProvider>
+    </JoueurSessionProvider>
   );
 
   if (profile) {

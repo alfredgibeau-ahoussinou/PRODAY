@@ -62,8 +62,8 @@ export function AdminDashboard({
 
   return (
     <AdminShell
-      title="Dashboard"
-      subtitle="Ops fondateurs — bêta, trafic, plateforme."
+      title="Tableau de bord"
+      subtitle="Ops fondateurs : bêta, trafic, plateforme."
       pendingBetaCount={betaCounts.pending}
     >
       {(betaError || visitsError || platformError) && (
@@ -99,11 +99,11 @@ export function AdminDashboard({
         />
         <AdminKpiCard
           label="Utilisateurs"
-          value={platformStats ? platformStats.users : "—"}
+          value={platformStats ? platformStats.users : "…"}
           hint={
             platformStats
               ? `${platformStats.pro} Pro · ${visitStats.appOpens} opens app`
-              : "—"
+              : "…"
           }
           accent="emerald"
         />
@@ -181,18 +181,18 @@ export function AdminDashboard({
       <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
         <AdminKpiCard
           label="Comptes Pro"
-          value={platformStats ? platformStats.pro : "—"}
+          value={platformStats ? platformStats.pro : "…"}
           accent="emerald"
         />
         <AdminKpiCard
           label="Parrainage"
-          value={platformStats ? platformStats.referrals : "—"}
+          value={platformStats ? platformStats.referrals : "…"}
           accent="navy"
         />
         <AdminKpiCard label="App opens" value={visitStats.appOpens} accent="cyan" />
         <AdminKpiCard
           label="MRR"
-          value="—"
+          value="…"
           hint="RevenueCat"
           accent="blue"
         />

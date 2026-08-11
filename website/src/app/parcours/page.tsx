@@ -16,7 +16,7 @@ export default function JourneysPage() {
         pathname={ROUTES.journeys}
         kicker="PAR RÔLE"
         title="Chaque rôle, un chemin clair"
-        description="De l'inscription au CV PDF, au tournoi Arena ou aux offres partenaires. Selon votre pôle."
+        description="De l'inscription au CV PDF, au tournoi Arène ou aux offres partenaires. Selon votre pôle."
         image="/images/football-team-01.jpg"
         dark
       />

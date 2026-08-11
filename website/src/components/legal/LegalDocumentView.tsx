@@ -20,7 +20,7 @@ export function LegalDocumentView({ doc, pathname, kicker, pdfHref, parties }: L
         pathname={pathname}
         kicker={kicker}
         title={doc.title}
-        description={`Dernière mise à jour : ${doc.updatedAt} — Contact : ${doc.contact}`}
+        description={`Dernière mise à jour : ${doc.updatedAt} : Contact : ${doc.contact}`}
         dark
       />
       <PageBody narrow tone="elevated">

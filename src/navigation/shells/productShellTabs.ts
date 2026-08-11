@@ -5,31 +5,50 @@ import type { MainTabId } from '../mainTabConfig';
  * Autres rôles : shells métier inchangés.
  */
 
+/** Accueil · Équipe · Matchs · Performance · Profil (+ overflow) */
 export const AMATEUR_PLAYER_SHELL_TABS: MainTabId[] = [
   'home', // Accueil
-  'reels', // Reels
+  'recrutement', // Équipe (club)
   'matchs', // Matchs
-  'messages', // Messages
+  'feed', // Performance
   'profil', // Moi
 ];
 
 /** Secondaires joueur amateur — menu ⋯ */
 export const AMATEUR_PLAYER_OVERFLOW_TABS: MainTabId[] = [
+  'reels',
+  'messages',
   'covoiturage',
-  'recrutement', // Club
-  'sante',
-  'feed',
   'shop',
 ];
 
 export const AMATEUR_COACH_SHELL_TABS: MainTabId[] = [
-  'home', // Équipe
-  'covoiturage',
-  'matchs',
-  'recrutement', // Club
+  'home', // Équipe (portail coach)
+  'matchs', // Matchs
+  'feed', // Performance (Smart Tactics)
   'messages',
-  'shop',
   'profil', // Moi
+];
+
+export const AMATEUR_COACH_OVERFLOW_TABS: MainTabId[] = [
+  'covoiturage',
+  'recrutement',
+  'shop',
+];
+
+/** Dirigeants club amateur — Accueil · Recrut. · Matchs · Comm. · Vitrine */
+export const AMATEUR_CLUB_SHELL_TABS: MainTabId[] = [
+  'home',
+  'recrutement',
+  'matchs',
+  'messages',
+  'profil',
+];
+
+export const AMATEUR_CLUB_OVERFLOW_TABS: MainTabId[] = [
+  'feed',
+  'covoiturage',
+  'shop',
 ];
 
 export const SUPPORTER_SHELL_TABS: MainTabId[] = [
@@ -43,28 +62,31 @@ export const SUPPORTER_SHELL_TABS: MainTabId[] = [
 ];
 
 export const PRO_CLUB_SHELL_TABS: MainTabId[] = [
-  'home', // Structure
-  'covoiturage',
-  'recrutement', // Recrutement
-  'matchs', // Calendrier
+  'home', // Accueil cockpit A→Z
+  'recrutement', // Pipeline + annonces
+  'matchs', // Match Center
   'messages', // Communication
-  'shop',
   'profil', // Vitrine
 ];
 
-export const PRO_PLAYER_SHELL_TABS: MainTabId[] = [
-  'home', // Carrière
-  'reels', // Reels
-  'matchs', // Matchs
-  'messages', // Messages
-  'profil', // Moi
+export const PRO_CLUB_OVERFLOW_TABS: MainTabId[] = [
+  'covoiturage',
+  'shop',
 ];
 
-/** Secondaires joueur pro — menu ⋯ */
+export const PRO_PLAYER_SHELL_TABS: MainTabId[] = [
+  'home', // PLAY
+  'recrutement', // SQUAD / opportunités
+  'matchs', // MATCH
+  'feed', // PERF / Smart Tactics
+  'profil', // CARD
+];
+
+/** Secondaires joueur pro — menu PAUSE */
 export const PRO_PLAYER_OVERFLOW_TABS: MainTabId[] = [
+  'reels',
+  'messages',
   'covoiturage',
-  'recrutement', // Opportunités
-  'sante',
   'shop',
 ];
 

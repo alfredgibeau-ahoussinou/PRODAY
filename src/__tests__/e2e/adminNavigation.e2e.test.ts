@@ -1,71 +1,122 @@
 import {
-  ADMIN_NAV_ITEMS,
-  ADMIN_NAV_SECTIONS,
-  adminRouteKey,
-  isAdminRouteActive,
-  resolveAdminPageMeta,
-  type AdminMainTabId,
+  ADMIN_HQ_MODES,
+  ADMIN_GESTION_ATELIERS,
+  adminHqRouteKey,
+  hqRouteFromLegacyTab,
 } from '../../navigation/adminTabConfig';
+import {
+  ADMIN_FOC_NAV,
+  ADMIN_FOC_TABS,
+  type AdminFocSectionId,
+} from '../../navigation/adminFocConfig';
 
-describe('e2e. Navigation shell admin', () => {
-  const mainTabs: AdminMainTabId[] = [
-    'pilotage',
-    'inbox',
-    'users',
-    'clubs',
-    'moderation',
-    'plateforme',
-    'analytics',
-    'beta',
-    'system',
-  ];
+describe('e2e. Navigation shell admin console', () => {
+  /* ── Legacy HQ modes (bridge conservé) ── */
 
-  it('expose les onglets principaux de la console', () => {
-    for (const tab of mainTabs) {
-      expect(ADMIN_NAV_ITEMS.some((item) => item.tab === tab)).toBe(true);
+  it('expose exactement 5 modes', () => {
+    expect(ADMIN_HQ_MODES.map((m) => m.id)).toEqual([
+      'pilotage',
+      'decisions',
+      'gestion',
+      'abonnements',
+      'systeme',
+    ]);
+    expect(ADMIN_HQ_MODES.map((m) => m.label)).toEqual([
+      'Pilotage',
+      'Décisions',
+      'Gestion',
+      'Abonnements',
+      'Système',
+    ]);
+  });
+
+  it('gestion couvre les ateliers clés', () => {
+    const ids = ADMIN_GESTION_ATELIERS.map((s) => s.id);
+    expect(ids).toEqual(
+      expect.arrayContaining([
+        'comptes',
+        'clubs',
+        'publications',
+        'fil',
+        'messages',
+        'devis',
+        'matchs',
+        'stages',
+      ]),
+    );
+  });
+
+  it('clés de route', () => {
+    expect(adminHqRouteKey({ mode: 'decisions' })).toBe('decisions');
+    expect(adminHqRouteKey({ mode: 'gestion', atelier: 'comptes' })).toBe('gestion:comptes');
+    expect(adminHqRouteKey({ mode: 'abonnements' })).toBe('abonnements');
+  });
+
+  it('mappe les anciens onglets', () => {
+    expect(hqRouteFromLegacyTab('pilotage')).toEqual({ mode: 'pilotage' });
+    expect(hqRouteFromLegacyTab('inbox')).toEqual({ mode: 'decisions' });
+    expect(hqRouteFromLegacyTab('users')).toEqual({
+      mode: 'gestion',
+      atelier: 'comptes',
+    });
+    expect(hqRouteFromLegacyTab('plateforme', 'sponsors')).toEqual({
+      mode: 'gestion',
+      atelier: 'devis',
+    });
+    expect(hqRouteFromLegacyTab('system')).toEqual({ mode: 'systeme' });
+  });
+
+  /* ── Football Operations Center (FOC) nav ── */
+
+  it('ADMIN_FOC_NAV contient les 11 sections attendues', () => {
+    const sectionIds: AdminFocSectionId[] = ADMIN_FOC_NAV.map((n) => n.id);
+    expect(sectionIds).toEqual(
+      expect.arrayContaining([
+        'dashboard',
+        'adherents',
+        'clubs',
+        'matchs',
+        'competitions',
+        'recrutement',
+        'performance',
+        'communication',
+        'finances',
+        'video',
+        'parametres',
+      ] as AdminFocSectionId[]),
+    );
+    expect(sectionIds).toHaveLength(11);
+  });
+
+  it('chaque section FOC a des sous-onglets dans ADMIN_FOC_TABS', () => {
+    for (const section of ADMIN_FOC_NAV) {
+      const tabs = ADMIN_FOC_TABS[section.id];
+      expect(Array.isArray(tabs)).toBe(true);
+      expect(tabs.length).toBeGreaterThan(0);
     }
   });
 
-  it('résout les métadonnées gate et pilotage', () => {
-    const pilotage = resolveAdminPageMeta('pilotage');
-    expect(pilotage.title).toBe('Accueil');
-    expect(pilotage.subtitle).toMatch(/Pilotage/i);
+  it('ADMIN_FOC_TABS.adherents contient le tab à valider', () => {
+    const tabs = ADMIN_FOC_TABS.adherents.map((t) => t.id);
+    expect(tabs).toContain('decisions');
+    expect(tabs).toEqual(
+      expect.arrayContaining(['all', 'player', 'youth', 'teen', 'adult', 'decisions']),
+    );
   });
 
-  it('segments modération. Reels et signalements', () => {
-    expect(resolveAdminPageMeta('moderation', 'reels').title).toBe('Reels');
-    expect(resolveAdminPageMeta('moderation', 'reports').title).toBe('Signalements');
-    expect(
-      isAdminRouteActive({ tab: 'moderation', segment: 'reels' }, 'moderation', 'reels'),
-    ).toBe(true);
+  it('ADMIN_FOC_TABS.finances contient abonnements et paiements', () => {
+    const tabs = ADMIN_FOC_TABS.finances.map((t) => t.id);
+    expect(tabs).toContain('abonnements');
+    expect(tabs).toContain('paiements');
   });
 
-  it('segment sponsors sous plateforme', () => {
-    expect(resolveAdminPageMeta('plateforme', 'sponsors').title).toBe('Sponsors');
-    expect(
-      isAdminRouteActive({ tab: 'plateforme', segment: 'sponsors' }, 'plateforme', 'sponsors'),
-    ).toBe(true);
+  it('ADMIN_FOC_TABS.parametres contient systeme, audit et beta', () => {
+    const tabs = ADMIN_FOC_TABS.parametres.map((t) => t.id);
+    expect(tabs).toEqual(expect.arrayContaining(['personnaliser', 'systeme', 'audit', 'beta']));
   });
 
-  it('clés de route pour le drawer admin', () => {
-    expect(adminRouteKey({ tab: 'inbox' })).toBe('inbox');
-    expect(adminRouteKey({ tab: 'plateforme', segment: 'mercato' })).toBe('plateforme:mercato');
-  });
-
-  it('résout les métadonnées du programme bêta', () => {
-    const beta = resolveAdminPageMeta('beta');
-    expect(beta.title).toBe('Programme bêta');
-    expect(beta.subtitle).toMatch(/Waitlist/i);
-  });
-
-  it('sections couvrent la file inbox et la modération', () => {
-    const inboxItem = ADMIN_NAV_ITEMS.find((i) => i.tab === 'inbox');
-    expect(inboxItem?.section).toBe('overview');
-    const reelsItem = ADMIN_NAV_ITEMS.find((i) => i.id === 'reels');
-    expect(reelsItem?.section).toBe('moderation');
-    const sectionIds = new Set(ADMIN_NAV_SECTIONS.map((s) => s.id));
-    for (const item of ADMIN_NAV_ITEMS) {
-      expect(sectionIds.has(item.section)).toBe(true);
-    }
+  it('ADMIN_FOC_TABS.communication contient question semaine', () => {
+    const tabs = ADMIN_FOC_TABS.communication.map((t) => t.id);
+    expect(tabs).toContain('questions');
   });
 });

@@ -1,5 +1,5 @@
 /**
- * Passeport numérique ProDay — niveaux, badges performance, stats.
+ * Passeport numérique ProDay : niveaux, badges performance, stats.
  * Identité propre (pas une copie FIFA) : UT × dashboard × passeport.
  */
 
@@ -153,7 +153,7 @@ export const PASSPORT_BADGE_META: Record<
   marathon: { label: "Marathonien", icon: "🏃" },
 };
 
-/** Silhouette ProDay — découpe moderne (pas un bouclier FIFA). */
+/** Silhouette ProDay : découpe moderne (pas un bouclier FIFA). */
 export const PASSPORT_CLIP =
   "polygon(8% 0%, 92% 0%, 100% 8%, 100% 88%, 92% 100%, 8% 100%, 0% 88%, 0% 8%)";
 

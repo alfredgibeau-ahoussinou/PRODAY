@@ -24,7 +24,7 @@ const POLE_BLURB: Record<DemoPoleId, string> = {
   supporter: "Tribune gratuite : live, suivis et débats. Aucun paywall.",
   pro_club:
     "Équipes, convocations, compétitions et permissions. Amateur → Premium.",
-  coach: "Smart Tactics, effectif, IA et préparation match.",
+  coach: "Tactique IA, effectif, IA et préparation match.",
   sponsor: "Campagnes, inventaire et contact clubs. KPIs lisibles.",
   sante: "Rôle intégré : agenda cabinet et demandes de sportifs.",
 };
@@ -56,7 +56,7 @@ export function DemoPageContent({ pole }: DemoPageContentProps) {
           Choisis un pôle. Touche l’écran.
         </h2>
         <p className="mt-3 max-w-lg text-sm text-white/55">
-          Contenu illustratif — aucune donnée réelle. Navigue comme dans l’app, puis rejoins la
+          Contenu illustratif : aucune donnée réelle. Navigue comme dans l’app, puis rejoins la
           bêta.
         </p>
 

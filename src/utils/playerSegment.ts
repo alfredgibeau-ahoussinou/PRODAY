@@ -1,6 +1,6 @@
 import type { ProductLineId } from '../models/ProductLine';
 import type { Gender, User } from '../models/User';
-import { isYouthAppSpace } from './minorYouthSpace';
+import { isYouthAppSpace } from './youthAppSpaces';
 import { isMinorAge } from './minor';
 
 /** Segment joueur — pilote thème UI et chrome pôle (homme/femme/mineur). */

@@ -1,10 +1,12 @@
 import React, { useMemo, useState } from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { useAdminData } from '../../../context/AdminDataContext';
 import { AdminPageScaffold } from '../../../components/admin/AdminPageScaffold';
 import { AdminTrendChart } from '../../../components/admin/AdminTrendChart';
 import { AdminRoleBreakdown } from '../../../components/admin/AdminRoleBreakdown';
 import { AdminStatGrid } from '../../../components/admin/AdminStatGrid';
+import { AdminFilterChips } from '../../../components/admin/AdminFilterChips';
+import { AdminPageHero } from '../../../components/admin/AdminPageHero';
 import { useAdminStyles } from '../../../components/admin/adminStyles';
 import { spacing, radius, shadows } from '../../../theme/designTokens';
 import type { AppColors } from '../../../theme/universeTheme';
@@ -84,29 +86,22 @@ export const AdminAnalyticsPage: React.FC = () => {
 
   return (
     <AdminPageScaffold loading={loading}>
+      <AdminPageHero
+        kicker="SIGNAL"
+        title="Analytics"
+        subtitle={`Trafic réel · ${formatStartedAt(trafficTotals.tracking_started_at)}`}
+      />
+
       <Text style={styles.section}>Visites site & app</Text>
       <Text style={styles.trafficHint}>
         Compteurs réels · {formatStartedAt(trafficTotals.tracking_started_at)}
       </Text>
 
-      <View style={styles.periodRow}>
-        {TRAFFIC_PERIODS.map((p) => (
-          <Pressable
-            key={p.id}
-            onPress={() => setTrafficPeriod(p.id)}
-            style={[styles.periodChip, trafficPeriod === p.id && styles.periodChipActive]}
-          >
-            <Text
-              style={[
-                styles.periodChipText,
-                trafficPeriod === p.id && styles.periodChipTextActive,
-              ]}
-            >
-              {p.label}
-            </Text>
-          </Pressable>
-        ))}
-      </View>
+      <AdminFilterChips
+        options={TRAFFIC_PERIODS}
+        value={trafficPeriod}
+        onChange={setTrafficPeriod}
+      />
 
       <View style={styles.scoreRow}>
         <ScoreCard
@@ -208,7 +203,7 @@ function createStyles(c: AppColors) {
       gap: 2,
       ...shadows.card,
     },
-    scoreValue: { fontSize: 28, fontWeight: '800', color: c.text },
+    scoreValue: { fontSize: 26, fontWeight: '800', color: c.text, letterSpacing: -0.4 },
     scoreLabel: { fontSize: 12, fontWeight: '800', color: c.text },
     scoreHint: { fontSize: 10, color: c.textMuted, fontWeight: '600' },
     section: {
@@ -216,42 +211,17 @@ function createStyles(c: AppColors) {
       marginBottom: spacing.sm,
       fontSize: 11,
       fontWeight: '700',
-      letterSpacing: 1.2,
+      letterSpacing: 1,
       textTransform: 'uppercase',
-      color: c.brand,
+      color: c.textMuted,
     },
     trafficHint: {
       marginTop: -4,
       marginBottom: spacing.sm,
-      fontSize: 11,
+      fontSize: 12,
       color: c.textMuted,
       fontWeight: '600',
     },
-    periodRow: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      gap: spacing.xs,
-      marginBottom: spacing.sm,
-    },
-    periodChip: {
-      borderRadius: radius.pill,
-      borderWidth: 1,
-      borderColor: c.border,
-      paddingHorizontal: spacing.sm,
-      paddingVertical: 6,
-      backgroundColor: c.surface,
-    },
-    periodChipActive: {
-      backgroundColor: c.text,
-      borderColor: c.text,
-    },
-    periodChipText: {
-      fontSize: 11,
-      fontWeight: '700',
-      color: c.textSecondary,
-      textTransform: 'uppercase',
-    },
-    periodChipTextActive: { color: c.surface },
     snapCard: {
       backgroundColor: c.surface,
       borderRadius: radius.lg,

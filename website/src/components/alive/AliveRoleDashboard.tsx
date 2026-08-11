@@ -39,7 +39,7 @@ const ROLES = [
       { title: "Équipes", value: "6", hint: "U15 → Seniors" },
       { title: "Matchs", value: "3", hint: "ce weekend" },
       { title: "Licences", value: "148", hint: "à jour" },
-      { title: "Shop", value: "12", hint: "commandes" },
+      { title: "Boutique", value: "12", hint: "commandes" },
     ],
     href: ROUTES.proClub,
   },
@@ -49,7 +49,7 @@ const ROLES = [
     emoji: "📣",
     tiles: [
       { title: "Club suivi", value: "ProDay FC", hint: "fil actif" },
-      { title: "Live", value: "2–1", hint: "67'" },
+      { title: "Direct", value: "2 à 1", hint: "67'" },
       { title: "Events", value: "1", hint: "fan day" },
       { title: "Reels", value: "8", hint: "nouveaux" },
     ],

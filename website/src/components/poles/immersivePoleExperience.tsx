@@ -130,7 +130,7 @@ const CLUB_ZONES: Zone[] = [
     id: "bourse",
     label: "03",
     title: "Bourse de recrutement",
-    body: "Besoins d’équipe, matching sur le vivier interne, puis recherche entre clubs ProDay.",
+    body: "Poste manquant : vivier équipe B, réserve, autre catégorie, puis entre clubs ProDay.",
     x: "48%",
     y: "42%",
   },
@@ -328,7 +328,7 @@ export function CoachTacticsBoard() {
     <section className="relative overflow-hidden border-t border-white/10 bg-black px-4 py-20 sm:px-6 sm:py-28">
       <div className="mx-auto max-w-6xl">
         <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--pole-accent,#3B5BFF)]">
-          Smart Tactics
+          Tactique IA
         </p>
         <h2 className="mt-3 max-w-xl font-display text-[clamp(1.8rem,4vw,2.8rem)] font-medium tracking-[-0.03em] text-white">
           Composez. Touchez. Consignez.
@@ -419,7 +419,8 @@ export function CoachTacticsBoard() {
               </div>
             </div>
             <p className="text-sm text-white/50">
-              État de forme : sommeil, fatigue, stress, douleurs, minutes et présences.
+              Analyse de forme : sommeil, fatigue, stress, récupération déclarée,
+              minutes et présences — indicateurs, pas de diagnostic.
             </p>
           </div>
         </div>

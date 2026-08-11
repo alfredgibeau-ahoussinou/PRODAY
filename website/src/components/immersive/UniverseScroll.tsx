@@ -14,7 +14,7 @@ const UNIVERSES = [...CAROUSEL_POLES, SPONSOR_POLE].map((p, i) => ({
 
 /**
  * Scroll narrative:
- * 1) Pin the question — “Quel univers t’intéresse ?”
+ * 1) Pin the question : “Quel univers t’intéresse ?”
  * 2) Reveal each ProDay universe as you keep scrolling
  */
 export function UniverseScroll() {
@@ -31,7 +31,7 @@ export function UniverseScroll() {
 
   return (
     <>
-      {/* Question — pinned, breathing room */}
+      {/* Question : pinned, breathing room */}
       <section
         ref={questionRef}
         id="univers"
@@ -43,13 +43,14 @@ export function UniverseScroll() {
             className="mx-auto w-full max-w-4xl px-5 sm:px-8"
           >
             <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[#052424]/40">
-              Commencer en 30 sec
+              Quatre espaces
             </p>
             <h2 className="mt-6 font-display text-[clamp(2.1rem,6vw,4rem)] font-medium leading-[1.05] tracking-[-0.04em] text-[#052424]">
-              Tu joues où ce week-end&nbsp;?
+              Joueur. Coach. Club. Dirigeant.
             </h2>
             <p className="mt-5 max-w-md text-base leading-relaxed text-[#052424]/55">
-              Choisis ton profil et entre direct. Pas de setup compliqué.
+              Avant, pendant et après le match. Choisis ton espace et entre
+              direct. Pas de setup compliqué.
             </p>
           </motion.div>
         </div>

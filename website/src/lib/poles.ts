@@ -10,7 +10,7 @@ import { ROUTES } from "./routes";
 
 /**
  * Pôles marketing site : architecture cible.
- * Vitrine : Joueur · Club · Coach · Supporter · Sponsor.
+ * Vitrine : Joueur · Club · Coach · Parent · Supporter · Sponsor.
  * Santé / Agent / Recruteur / Organisateur = rôles intégrés (pas des pôles).
  */
 export type PoleId =
@@ -19,6 +19,7 @@ export type PoleId =
   | "sante"
   | "pro_club"
   | "coach"
+  | "parent"
   | "sponsor"
   /** @deprecated → coach */
   | "pro_staff"
@@ -50,9 +51,9 @@ export const CAROUSEL_POLES: PoleDefinition[] = [
     kicker: "ESPACE JOUEUR",
     navLabel: "Joueur",
     title: "Progresser chaque jour",
-    subtitle: "Carte · Stats · Entraînement",
+    subtitle: "Ma forme · Stats · Entraînement",
     description:
-      "Carte joueur réelle, réseau, stats, convocations et covoiturage. Pass optionnel 3,99 € : programmes, vidéo et contenu avancé. Sans badge de prestige.",
+      "Analyse de forme personnelle, carte joueur, stats, convocations et covoiturage. Pass optionnel 3,99 € : programmes, vidéo et contenu avancé.",
     href: ROUTES.joueur,
     pricingHash: "joueur",
     logo: "/branding/logo-man-picto.png",
@@ -63,9 +64,9 @@ export const CAROUSEL_POLES: PoleDefinition[] = [
     kicker: "ESPACE CLUB",
     navLabel: "Club",
     title: "Le cœur de ProDay",
-    subtitle: "Équipes · Matchs · Président",
+    subtitle: "Équipes · Forme · Président",
     description:
-      "Équipes, licenciés, coachs, dirigeants, invitations de match, événements, tournois, covoiturage et communications. Sur devis selon la taille du club. Caméra en option.",
+      "Équipes, analyse de forme, licenciés, coachs, dirigeants, invitations, tournois et covoiturage. À partir de 3 € / adhérent (sur devis). Caméra en option.",
     href: ROUTES.proClub,
     pricingHash: "pro_club",
     logo: "/branding/logo-pro-picto.png",
@@ -76,20 +77,33 @@ export const CAROUSEL_POLES: PoleDefinition[] = [
     kicker: "ESPACE COACH",
     navLabel: "Coach",
     title: "Banc de touche digital",
-    subtitle: "Entraînements · Tactique · Invitations",
+    subtitle: "Analyse de forme · Tactique · Matchs",
     description:
-      "Profil coach rattaché au club : entraînements, Smart Tactics, IA, vidéo, convocations et propositions de match. Séances individuelles à l’heure.",
+      "Analyse de forme de l’effectif, entraînements, Tactique IA, IA, vidéo et convocations. Séances individuelles à l’heure.",
     href: ROUTES.coach,
     pricingHash: "coach",
     logo: "/branding/logo-pro-picto.png",
     planIds: ["coach_pro"],
   },
   {
+    id: "parent",
+    kicker: "PÔLE PARENT",
+    navLabel: "Parent",
+    title: "Accompagner sans étouffer",
+    subtitle: "Supervision · Messages · Agenda",
+    description:
+      "Espace dédié aux parents : messages, agenda, retards coach, temps d’écran et trajets — lié au compte joueur de l’enfant.",
+    href: ROUTES.parent,
+    pricingHash: "parent",
+    logo: "/branding/logo-sante-picto.png",
+    planIds: [],
+  },
+  {
     id: "supporter",
     kicker: "PÔLE SUPPORTER",
     navLabel: "Supporter",
     title: "Fans & communauté",
-    subtitle: "Live · Clubs suivis · Débats",
+    subtitle: "Direct · Clubs suivis · Débats",
     description:
       "Tribune 100 % gratuite. Scores live, suivis illimités, débats et moments.",
     href: ROUTES.supporter,
@@ -134,7 +148,7 @@ export const LEGACY_STAFF_POLE: PoleDefinition = {
   kicker: "PÔLE COACH",
   navLabel: "Coach",
   title: "Banc de touche digital",
-  subtitle: "Smart Tactics · IA · Effectif",
+  subtitle: "Tactique IA · IA · Effectif",
   description: "Redirigé vers le Pôle Coach.",
   href: ROUTES.coach,
   pricingHash: "coach",
@@ -182,6 +196,7 @@ export const POLE_NAV_POLE_IDS: Record<string, PoleId> = {
   [ROUTES.joueur]: "joueur",
   [ROUTES.supporter]: "supporter",
   [ROUTES.sante]: "sante",
+  [ROUTES.parent]: "parent",
   [ROUTES.proJoueur]: "joueur",
   [ROUTES.proClub]: "pro_club",
   [ROUTES.coach]: "coach",
@@ -197,6 +212,7 @@ export const POLE_NAV_STRIPE: Record<PoleId, string> = {
   amateur: "bg-[#0054F0]",
   supporter: "bg-[#3C00F0]",
   sante: "bg-[#00CCB4]",
+  parent: "bg-[#0F766E]",
   pro_joueur: "bg-[#0054F0]",
   pro_club: "bg-[#006CFC]",
   coach: "bg-[#3B5BFF]",
@@ -211,6 +227,7 @@ export const POLE_BRAND_HEX: Record<PoleId, string> = {
   amateur: "#0054F0",
   supporter: "#3C00F0",
   sante: "#00CCB4",
+  parent: "#0F766E",
   pro_joueur: "#0054F0",
   pro_club: "#006CFC",
   coach: "#3B5BFF",
@@ -266,6 +283,14 @@ export const POLE_STYLES: Record<
     badge: "bg-[#00CCB4]/12 text-[#00CCB4]",
     cta: "bg-[#00CCB4] text-black hover:brightness-110",
   },
+  parent: {
+    ...JOUEUR_STYLES,
+    nav: "text-white/70 hover:text-[#14B8A6]",
+    navActive: "bg-[#0F766E] text-white",
+    cardHighlight: "ring-1 ring-[#14B8A6]/40 border-[#14B8A6]/30",
+    badge: "bg-[#0F766E]/12 text-[#14B8A6]",
+    cta: "bg-[#0F766E] text-white hover:brightness-110",
+  },
   pro_club: {
     ...JOUEUR_STYLES,
     nav: "text-white/70 hover:text-[#006CFC]",
@@ -315,6 +340,7 @@ export const POLE_IMAGES: Record<PoleId, string> = {
   amateur: "/images/football-amateur-01.jpg",
   supporter: "/images/football-supporter-01.jpg",
   sante: "/images/football-health-01.jpg",
+  parent: "/images/football-team-01.jpg",
   pro_joueur: "/images/football-pro-01.jpg",
   pro_club: "/images/football-club-01.jpg",
   coach: "/showcase/classic-staff.jpg",
@@ -382,6 +408,7 @@ const UNIVERSE_TO_POLE: Record<string, PoleId> = {
   amateur: "joueur",
   joueur: "joueur",
   supporter: "supporter",
+  parent: "parent",
   pro: "coach",
   pro_joueur: "joueur",
   pro_club: "pro_club",

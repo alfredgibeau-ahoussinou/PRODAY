@@ -254,8 +254,8 @@ export function AdminBetaDashboard({
         if (data.emailSent) {
           setMessage(
             modal.mode === "approve"
-              ? "Approuvé — email de bienvenue envoyé."
-              : "Refusé — email de notification envoyé.",
+              ? "Approuvé : email de bienvenue envoyé."
+              : "Refusé : email de notification envoyé.",
           );
         } else if (data.emailError) {
           setMessage(`Action OK. Email non envoyé : ${data.emailError}`);
@@ -309,6 +309,7 @@ export function AdminBetaDashboard({
   async function runCampaignAction(
     action:
       | "broadcast_ios_pre_announcement"
+      | "broadcast_ios_delay_notice"
       | "trigger_ios_launch"
       | "send_engagement_round",
     confirmLabel: string,
@@ -340,7 +341,7 @@ export function AdminBetaDashboard({
       ].filter(Boolean);
       setMessage(
         parts.length
-          ? `Campagne OK — ${parts.join(", ")}.${data.testflightUrl ? ` TestFlight : ${data.testflightUrl}` : ""}`
+          ? `Campagne OK : ${parts.join(", ")}.${data.testflightUrl ? ` TestFlight : ${data.testflightUrl}` : ""}`
           : "Campagne exécutée.",
       );
     } catch {
@@ -394,15 +395,25 @@ export function AdminBetaDashboard({
 
       <AdminPanel
         title="Campagne bêta iOS"
-        description="TestFlight 11 août 2026 · 18 h. Engagement auto tous les 2 jours après lancement."
+        description="TestFlight 15 août 2026 · 18 h (reportée). Engagement auto tous les 2 jours après lancement."
       >
         <div className="flex flex-wrap gap-1.5">
           <AdminButton
             variant="primary"
             onClick={() =>
               void runCampaignAction(
+                "broadcast_ios_delay_notice",
+                "Envoyer l'email d'info « bêta décalée au 15 août 2026 » à tous les inscrits non refusés ?",
+              )
+            }
+          >
+            Email report 15 août
+          </AdminButton>
+          <AdminButton
+            onClick={() =>
+              void runCampaignAction(
                 "broadcast_ios_pre_announcement",
-                "Envoyer l'email d'annonce iOS (11 août 18 h) à tous les inscrits non refusés ?",
+                "Envoyer l'email d'annonce iOS (15 août 18 h) à tous les inscrits non refusés ?",
               )
             }
           >
@@ -529,7 +540,7 @@ export function AdminBetaDashboard({
                     <td className="font-medium text-white">{name}</td>
                     <td className="text-white/65">{entry.email}</td>
                     <td className="text-white/65">
-                      {entry.role_label || entry.role || "—"}
+                      {entry.role_label || entry.role || "…"}
                     </td>
                     <td className="whitespace-nowrap text-white/45">
                       {formatAdminDate(entry.created_at)}
@@ -550,7 +561,7 @@ export function AdminBetaDashboard({
                       ) : null}
                     </td>
                     <td className="max-w-[160px] truncate text-white/40">
-                      {entry.admin_note || "—"}
+                      {entry.admin_note || "…"}
                     </td>
                     <td>
                       <div className="flex flex-wrap gap-1.5">

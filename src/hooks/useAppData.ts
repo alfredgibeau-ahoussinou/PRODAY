@@ -11,8 +11,10 @@ import {
 import { sponsorsService } from '../services/sponsors.service';
 import { messagesService } from '../services/messages.service';
 import { recruitmentService } from '../services/recruitment.service';
+import { competitionsService } from '../services/competitions.service';
 import type { RecruitmentPost } from '../models/Player';
 import type { FriendlyMatch } from '../models/FriendlyMatch';
+import type { CompetitionFixture } from '../models/Competition';
 import type { SponsorOffer, ClubFundingGoal } from '../models/SponsorOffer';
 import type { MessageThread } from '../lib/firestoreMappers';
 
@@ -80,12 +82,21 @@ export function useTeamEvents(uid?: string, clubId?: string) {
 
 export function useSeasonCalendar(uid?: string, clubId?: string) {
   const [cachedItems, setCachedItems] = useState<SeasonCalendarItem[] | null>(null);
+  const [fixtures, setFixtures] = useState<CompetitionFixture[]>([]);
   const { events, loading: loadingEvents, refresh: refreshEvents } = useTeamEvents(
     uid,
     clubId
   );
   const { matches, loading: loadingMatches, refresh: refreshMatches } =
     useFriendlyMatches();
+
+  const refreshFixtures = useCallback(async () => {
+    setFixtures(await competitionsService.listUpcomingFixtures(40));
+  }, []);
+
+  useEffect(() => {
+    void refreshFixtures();
+  }, [refreshFixtures]);
 
   useEffect(() => {
     if (!uid) {
@@ -96,8 +107,8 @@ export function useSeasonCalendar(uid?: string, clubId?: string) {
   }, [uid]);
 
   const liveItems = useMemo(
-    () => mergeSeasonCalendar(events, matches),
-    [events, matches]
+    () => mergeSeasonCalendar(events, matches, fixtures),
+    [events, matches, fixtures]
   );
   const hasLive = liveItems.length > 0;
   const hasCache = (cachedItems?.length ?? 0) > 0;
@@ -106,8 +117,8 @@ export function useSeasonCalendar(uid?: string, clubId?: string) {
   const fromCache = !hasLive && hasCache && !loading ? true : loading && hasCache && !hasLive;
 
   const refresh = useCallback(async () => {
-    await Promise.all([refreshEvents(), refreshMatches()]);
-  }, [refreshEvents, refreshMatches]);
+    await Promise.all([refreshEvents(), refreshMatches(), refreshFixtures()]);
+  }, [refreshEvents, refreshMatches, refreshFixtures]);
 
   useEffect(() => {
     if (!uid || liveItems.length === 0) return;
@@ -124,7 +135,7 @@ export function useSeasonCalendar(uid?: string, clubId?: string) {
     });
   }, [uid, liveItems]);
 
-  return { items, events, matches, loading, fromCache, refresh };
+  return { items, events, matches, fixtures, loading, fromCache, refresh };
 }
 
 export function useDetectionEvents() {

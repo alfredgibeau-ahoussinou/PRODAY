@@ -1,4 +1,4 @@
-import type { IconName } from '../components/ui/Icon';
+import type { IconName } from '../components/ui/iconNames';
 import type { ProductLineId } from '../models/ProductLine';
 import { getUniverseIdentity } from './brandExperience';
 
@@ -12,13 +12,14 @@ export type DiscoverJourneyStep = {
 };
 
 export function getDiscoverGuestJourneySteps(line: ProductLineId): DiscoverJourneyStep[] {
-  const brand = getUniverseIdentity(line);
+  const brand = getUniverseIdentity(line === 'sante' ? 'amateur' : line);
 
+  // Legacy deep-link pôle Santé → parcours guest Joueur (sans module Soins).
   if (line === 'sante') {
     return [
-      { id: 'profile', title: 'Cabinet', body: 'Profil praticien', icon: 'heart' },
-      { id: 'mercato', title: 'Annuaire', body: 'Clubs & sportifs', icon: 'search' },
-      { id: 'season', title: 'Agenda', body: 'Rendez-vous', icon: 'calendar' },
+      { id: 'profile', title: 'Profil joueur', body: 'Identité & CV', icon: 'person' },
+      { id: 'mercato', title: brand.mercatoLabel, body: 'Club & opportunités', icon: 'search' },
+      { id: 'season', title: 'Saison', body: 'Matchs & entraînements', icon: 'calendar' },
     ];
   }
 

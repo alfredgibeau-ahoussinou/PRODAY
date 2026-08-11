@@ -156,7 +156,7 @@ const DEFAULT_LABELS: Record<MainTabId, string> = {
   recrutement: "Mercato",
   matchs: "Matchs",
   covoiturage: "Covoiturage",
-  shop: "Shop",
+  shop: "Boutique",
   sante: "Santé",
   feed: "Fil",
   reels: "Reels",

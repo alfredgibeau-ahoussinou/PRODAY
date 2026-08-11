@@ -1,6 +1,7 @@
 import * as admin from 'firebase-admin';
 import {
   buildBetaEngagementEmail,
+  buildBetaIosDelayNoticeEmail,
   buildBetaIosLaunchEmail,
   buildBetaIosPreAnnouncementEmail,
   getEngagementTopic,
@@ -26,6 +27,7 @@ export type CampaignSendResult = {
 
 export type CampaignState = {
   ios_pre_announcement_broadcast_at?: admin.firestore.Timestamp;
+  ios_delay_notice_broadcast_at?: admin.firestore.Timestamp;
   ios_launch_executed_at?: admin.firestore.Timestamp;
   testflight_url?: string;
   engagement_round?: number;
@@ -141,6 +143,64 @@ export async function broadcastIosPreAnnouncement(
   await db.doc(BETA_CAMPAIGN_STATE_DOC).set(
     {
       ios_pre_announcement_broadcast_at: admin.firestore.FieldValue.serverTimestamp(),
+      updated_at: admin.firestore.FieldValue.serverTimestamp(),
+    },
+    { merge: true },
+  );
+
+  return result;
+}
+
+export async function sendIosDelayNoticeToEntry(
+  db: admin.firestore.Firestore,
+  doc: admin.firestore.QueryDocumentSnapshot,
+): Promise<'sent' | 'skipped' | 'failed'> {
+  const data = doc.data();
+  if (data.ios_delay_notice_sent_at) return 'skipped';
+
+  const email = String(data.email ?? '').trim().toLowerCase();
+  if (!email) return 'skipped';
+
+  const siteUrl = getBetaSiteUrl();
+  const { subject, html, text } = buildBetaIosDelayNoticeEmail({
+    email,
+    roleLabel: resolveRoleLabel(data),
+    siteUrl,
+    accessToken: resolveAccessToken(data),
+  });
+
+  try {
+    await sendCampaignEmail(email, subject, html, text);
+    await doc.ref.update({
+      ios_delay_notice_sent_at: admin.firestore.FieldValue.serverTimestamp(),
+      updated_at: admin.firestore.FieldValue.serverTimestamp(),
+    });
+    return 'sent';
+  } catch (e) {
+    console.error('[betaIosCampaign] delay notice failed', email, e);
+    return 'failed';
+  }
+}
+
+export async function broadcastIosDelayNotice(
+  db: admin.firestore.Firestore,
+): Promise<CampaignSendResult> {
+  const result: CampaignSendResult = { sent: 0, skipped: 0, failed: 0, errors: [] };
+  const docs = await getEligibleWaitlistDocs(db);
+
+  for (const doc of docs) {
+    const outcome = await sendIosDelayNoticeToEntry(db, doc);
+    if (outcome === 'sent') result.sent += 1;
+    else if (outcome === 'skipped') result.skipped += 1;
+    else {
+      result.failed += 1;
+      result.errors.push(String(doc.data().email ?? doc.id));
+    }
+  }
+
+  await db.doc(BETA_CAMPAIGN_STATE_DOC).set(
+    {
+      ios_delay_notice_broadcast_at: admin.firestore.FieldValue.serverTimestamp(),
       updated_at: admin.firestore.FieldValue.serverTimestamp(),
     },
     { merge: true },

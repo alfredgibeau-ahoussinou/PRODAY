@@ -8,47 +8,62 @@ import {
   ADMIN_HOME_PATH,
   ADMIN_LOGIN_PATH,
   ADMIN_SESSION_COOKIE,
-  hasAdminSessionCookieValue,
 } from "@/lib/adminSessionConstants";
+import { hasValidAdminSessionCookie } from "@/lib/adminSessionEdge";
 import {
   applySecurityHeaders,
   NO_REFERRER_HEADER,
 } from "@/lib/securityHeaders";
 
-function withSecurityHeaders(response: NextResponse): NextResponse {
+function withSecurityHeaders(
+  response: NextResponse,
+  opts?: { noStore?: boolean; noIndex?: boolean },
+): NextResponse {
   applySecurityHeaders(response);
+  if (opts?.noStore) {
+    response.headers.set("Cache-Control", "no-store, max-age=0");
+    response.headers.set("Pragma", "no-cache");
+  }
+  if (opts?.noIndex) {
+    response.headers.set("X-Robots-Tag", "noindex, nofollow");
+  }
   return response;
 }
 
-function hasAdminCookie(request: NextRequest): boolean {
-  return hasAdminSessionCookieValue(
-    request.cookies.get(ADMIN_SESSION_COOKIE)?.value,
-  );
-}
-
-/** Protège /admin/* (minicode) et gère les jetons bêta /beta. */
-export function proxy(request: NextRequest) {
+/** Protège /admin/* (session HMAC) et gère les jetons bêta /beta. */
+export async function proxy(request: NextRequest) {
   const { pathname, searchParams } = request.nextUrl;
 
   if (pathname.startsWith("/admin")) {
     const isLogin = pathname === ADMIN_LOGIN_PATH;
-    const authed = hasAdminCookie(request);
+    const authed = await hasValidAdminSessionCookie(
+      request.cookies.get(ADMIN_SESSION_COOKIE)?.value,
+    );
 
     if (isLogin && authed) {
       const url = request.nextUrl.clone();
       url.pathname = ADMIN_HOME_PATH;
       url.search = "";
-      return withSecurityHeaders(NextResponse.redirect(url));
+      return withSecurityHeaders(NextResponse.redirect(url), {
+        noStore: true,
+        noIndex: true,
+      });
     }
 
     if (!isLogin && !authed) {
       const url = request.nextUrl.clone();
       url.pathname = ADMIN_LOGIN_PATH;
       url.search = "";
-      return withSecurityHeaders(NextResponse.redirect(url));
+      return withSecurityHeaders(NextResponse.redirect(url), {
+        noStore: true,
+        noIndex: true,
+      });
     }
 
-    return withSecurityHeaders(NextResponse.next());
+    return withSecurityHeaders(NextResponse.next(), {
+      noStore: true,
+      noIndex: true,
+    });
   }
 
   if (pathname === "/beta/inscription") {

@@ -1,14 +1,35 @@
-# Configuration App Store & Google Play — IAP + RevenueCat
+# Abonnements Pro + stores — Stripe (prioritaire) + IAP de secours
 
-Ce guide aligne **exactement** les SKU des stores avec le code (`src/content/iapProducts.ts` et `functions/src/iapSkus.ts`).
+**Décision architecture (2026-08, mise à jour)** : les abonnements Pro passent par **Stripe Checkout** (`mode: subscription`) — même modèle que la boutique. RevenueCat / `expo-iap` restent un **repli** si Stripe n’est pas configuré côté functions.
 
-**Décision architecture (2026-08)** : pas de Stripe Billing pour les abonnements Pro (jamais implémenté). Stripe Checkout reste pour shop + cotisations. Les abonnements récurrents passent par **RevenueCat** au-dessus d’App Store / Play (`react-native-purchases`), avec webhook → Firestore `subscription_*`. `expo-iap` reste un repli si les clés RC publiques sont absentes.
+Stripe one-shot (inchangé) : shop, tournois, cotisations club.
 
 Bundle / package : **`com.proday.app`**
 
 **Fiche marketing store** : [APP_STORE_LISTING.md](./APP_STORE_LISTING.md) (description FR, sous-titre, mots-clés).
 
-## Plans payants (8 × 2 cycles = 16 SKU)
+## Stripe Billing (Pro)
+
+1. `STRIPE_SECRET_KEY` + `STRIPE_WEBHOOK_SECRET` dans `functions/.env.<projectId>`.
+2. Déployer :
+   ```bash
+   cd functions && npm run build
+   firebase deploy --only functions:createSubscriptionCheckoutSession,functions:createBillingPortalSession,functions:stripeWebhook
+   ```
+3. Dans le Dashboard Stripe → Developers → Webhooks, s’assurer que `stripeWebhook` reçoit :
+   - `checkout.session.completed`
+   - `customer.subscription.updated`
+   - `customer.subscription.deleted`
+4. Activer le **Customer Portal** (Settings → Billing → Customer portal) pour « Gérer / annuler ».
+5. Catalogue prix : `functions/src/subscriptionStripeCatalog.ts` (aligné sur `src/content/subscriptionPlans.ts`).
+
+Flux app : `subscriptionService.requestUpgrade` → `createSubscriptionCheckoutSession` → WebBrowser → webhook active `users.subscription_*`.
+
+> **App Store** : Apple peut exiger l’IAP pour du contenu digital débloqué dans l’app iOS. Stripe Checkout (navigateur) est le chemin produit actuel ; valider la conformité avant soumission iOS.
+
+---
+
+## Plans payants (8 × 2 cycles = 16 SKU store — repli IAP)
 
 | Plan ID | Mensuel (€) | SKU mensuel | SKU annuel |
 |---------|-------------|-------------|------------|
@@ -52,7 +73,9 @@ Vérification automatique : `npm test -- iapProducts`
 
 ---
 
-## RevenueCat (obligatoire en prod)
+## RevenueCat / IAP (repli)
+
+Si `createSubscriptionCheckoutSession` échoue (`Stripe non configuré`), l’app bascule sur RevenueCat puis expo-iap.
 
 1. Créer un projet [RevenueCat](https://app.revenuecat.com) + apps iOS / Android (`com.proday.app`).
 2. Importer les **16 produits** (mêmes IDs que ci-dessus) depuis App Store Connect / Play Console.
@@ -66,15 +89,15 @@ Vérification automatique : `npm test -- iapProducts`
    - `app.config.js` expose aussi les clés dans `extra.revenueCat` (lues via `expo-constants` en secours de `process.env`).
    - EAS : `eas secret:create --name EXPO_PUBLIC_REVENUECAT_IOS_API_KEY --value …` (idem Android).
      Les secrets du même nom sont injectés au build ; **ne pas** les mettre vides dans `eas.json` `env` (ça écraserait les secrets).
-   - L’app appelle `revenueCatService.init()` au démarrage (`App.tsx`) → un seul `Purchases.configure` dans `revenueCat.service.ts` (`LOG_LEVEL.VERBOSE` uniquement en `__DEV__`).
-   - Si RC n’est pas configurable, `iap.service` bascule sur **expo-iap** (pas d’alerte « clés manquantes » bloquante).
+   - L’app appelle `revenueCatService.init()` au démarrage (`App.tsx`) → un seul `Purchases.configure` dans `revenueCat.service.ts`.
+   - Si RC n’est pas configurable, `iap.service` bascule sur **expo-iap**.
 6. Webhook :
    - URL : `https://REGION-PROJECT.cloudfunctions.net/revenueCatWebhook`
    - Authorization : valeur = `REVENUECAT_WEBHOOK_AUTH` (functions `.env.<projectId>`)
    - Événements : INITIAL_PURCHASE, RENEWAL, CANCELLATION, UNCANCELLATION, EXPIRATION, PRODUCT_CHANGE, BILLING_ISSUE
 7. L’app appelle `Purchases.logIn(firebaseUid)` pour lier l’utilisateur (voir `revenueCat.service.ts`).
 
-Déploiement functions :
+Déploiement functions IAP :
 
 ```bash
 cd functions && npm run build

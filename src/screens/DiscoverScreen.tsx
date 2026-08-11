@@ -76,6 +76,7 @@ export const DiscoverScreen: React.FC = () => {
     if (id === 'sponsors') setGuestModule('partner-hub');
     else if (id === 'recrutement') openMercato('home');
     else if (id === 'matchs') openMatchs({ homeTab: 'season' });
+    else if (id === 'smart_tactics') goSignup();
     else goSignup();
   };
 

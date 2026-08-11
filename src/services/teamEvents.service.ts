@@ -27,7 +27,7 @@ import type {
   LiveMatchAction,
   LiveActionType,
 } from '../models/TeamEvent';
-import { isLateRsvp } from '../models/TeamEvent';
+import { isLateRsvp, EVENT_TYPE_LABELS } from '../models/TeamEvent';
 import type { CarpoolSlot, EventTask, CarpoolMessage, MatchLiveState } from '../models/TeamEvent';
 import type { GeoPoint } from '../models/User';
 import {
@@ -61,6 +61,7 @@ import { playerActivityService } from './playerActivity.service';
 import type { User } from '../models/User';
 import { parentalGuardianService } from './parentalGuardian.service';
 import { scheduleProdayLocalNotification } from './prodayLocalNotifications.service';
+import { staffNotificationsService } from './staffNotifications.service';
 
 export type TeamEventActor = {
   user: User;
@@ -410,8 +411,15 @@ export const teamEventsService = {
     eventId: string,
     uid: string,
     intent: 'under_10' | 'over_10' | 'unknown',
-    opts?: { note?: string; reportedByParent?: boolean; playerName?: string },
+    opts?: {
+      note?: string;
+      reportedByParent?: boolean;
+      playerName?: string;
+      /** arrival = enfant en retard à la séance · pickup = parent en retard pour récupérer */
+      lateKind?: 'arrival' | 'pickup';
+    },
   ): Promise<void> {
+    const lateKind = opts?.lateKind ?? 'arrival';
     const { LATE_INTENT_TO_RSVP } = await import('../models/TeamEvent');
     const status = LATE_INTENT_TO_RSVP[intent];
     const label =
@@ -420,6 +428,75 @@ export const teamEventsService = {
         : intent === 'over_10'
           ? '10 min ou plus de retard'
           : 'un retard (durée inconnue)';
+
+    if (lateKind === 'pickup') {
+      const who = `Récupération signalée par le parent de ${opts?.playerName ?? 'joueur'}`;
+      const note = [who, label, opts?.note?.trim()].filter(Boolean).join(' · ');
+      // Ne change pas le RSVP présence : l’enfant est déjà là / prévu.
+      try {
+        const event = await this.getById(eventId);
+        if (event) {
+          const notes = { ...(event.rsvp_notes ?? {}) };
+          const key = `${uid}__pickup`;
+          notes[key] = note;
+          const database = getDb();
+          if (database) {
+            await updateDoc(doc(database, 'team_events', eventId), {
+              rsvp_notes: notes,
+              updated_at: serverTimestamp(),
+            });
+          }
+        }
+      } catch {
+        // best-effort note
+      }
+
+      try {
+        const event = await this.getById(eventId);
+        const name = opts?.playerName ?? 'Un joueur';
+        const contextLabel = event
+          ? EVENT_TYPE_LABELS[event.event_type] ?? event.event_type
+          : 'séance';
+        const title = 'Retard récupération';
+        const body = `Le parent de ${name} sera en retard (${label}) pour récupérer après ${contextLabel}${event ? ` · ${event.title}` : ''}.`;
+
+        await scheduleProdayLocalNotification({
+          identifier: `pickup-late-${eventId}-${uid}`,
+          title: `🚗 ${title}`,
+          body,
+          data: {
+            type: 'parent_pickup_late',
+            eventId,
+            homeTab: 'convocations',
+            playerUid: uid,
+          },
+        });
+
+        if (event?.club_id) {
+          const members = await usersService.listMembersByClubId(event.club_id);
+          const staffUids = members
+            .filter((m) => m.role === 'coach' || m.role === 'club')
+            .map((m) => m.uid)
+            .filter((staffUid) => staffUid !== uid);
+          if (event.organizer_uid && event.organizer_uid !== uid) {
+            staffUids.push(event.organizer_uid);
+          }
+          await staffNotificationsService.notifyRecipients({
+            recipient_uids: staffUids,
+            type: 'parent_pickup_late',
+            title,
+            body,
+            event_id: eventId,
+            club_id: event.club_id,
+            player_uid: uid,
+          });
+        }
+      } catch {
+        // best-effort
+      }
+      return;
+    }
+
     const who = opts?.reportedByParent
       ? `Retard signalé par le parent de ${opts.playerName ?? 'joueur'}`
       : `Retard signalé`;
@@ -429,12 +506,18 @@ export const teamEventsService = {
     try {
       const event = await this.getById(eventId);
       const name = opts?.playerName ?? 'Un joueur';
+      const contextLabel = event
+        ? EVENT_TYPE_LABELS[event.event_type] ?? event.event_type
+        : 'séance';
+      const title = 'Retard signalé';
+      const body = opts?.reportedByParent
+        ? `${name} sera en retard (${label}) pour ${contextLabel}${event ? ` · ${event.title}` : ''}. Signalé par le parent.`
+        : `${name} sera en retard (${label}) pour ${contextLabel}${event ? ` · ${event.title}` : ''}.`;
+
       await scheduleProdayLocalNotification({
         identifier: `late-${eventId}-${uid}`,
-        title: '⏰ Retard signalé',
-        body: opts?.reportedByParent
-          ? `👨‍👩‍👦 Retard signalé par le parent de ${name} : ${label}${event ? ` · ${event.title}` : ''}.`
-          : `${name} arrivera avec ${label}${event ? ` à ${event.title}` : ''}.`,
+        title: `⏰ ${title}`,
+        body,
         data: {
           type: 'player_late',
           eventId,
@@ -442,6 +525,27 @@ export const teamEventsService = {
           playerUid: uid,
         },
       });
+
+      // Notifie réellement le staff club (coach / compte club), pas seulement l’appareil du joueur.
+      if (event?.club_id) {
+        const members = await usersService.listMembersByClubId(event.club_id);
+        const staffUids = members
+          .filter((m) => m.role === 'coach' || m.role === 'club')
+          .map((m) => m.uid)
+          .filter((staffUid) => staffUid !== uid);
+        if (event.organizer_uid && event.organizer_uid !== uid) {
+          staffUids.push(event.organizer_uid);
+        }
+        await staffNotificationsService.notifyRecipients({
+          recipient_uids: staffUids,
+          type: 'player_late',
+          title,
+          body,
+          event_id: eventId,
+          club_id: event.club_id,
+          player_uid: uid,
+        });
+      }
     } catch {
       // best-effort
     }

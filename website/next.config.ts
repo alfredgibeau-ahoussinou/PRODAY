@@ -12,6 +12,8 @@ const nextConfig: NextConfig = {
   images: {
     unoptimized: true,
   },
+  poweredByHeader: false,
+  productionBrowserSourceMaps: false,
   async headers() {
     return [
       {
@@ -20,6 +22,21 @@ const nextConfig: NextConfig = {
           key,
           value,
         })),
+      },
+      {
+        source: "/admin/:path*",
+        headers: [
+          { key: "Cache-Control", value: "no-store, max-age=0" },
+          { key: "Pragma", value: "no-cache" },
+          { key: "X-Robots-Tag", value: "noindex, nofollow" },
+        ],
+      },
+      {
+        source: "/api/:path*",
+        headers: [
+          { key: "Cache-Control", value: "no-store, max-age=0" },
+          { key: "Pragma", value: "no-cache" },
+        ],
       },
     ];
   },

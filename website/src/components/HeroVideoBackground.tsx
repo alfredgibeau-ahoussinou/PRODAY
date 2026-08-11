@@ -7,7 +7,7 @@ type HeroVideoBackgroundProps = {
   sources: string[];
   poster: string;
   className?: string;
-  /** Opacité de la vidéo sous les overlays (0–1). */
+  /** Opacité de la vidéo sous les overlays (0 : 1). */
   opacity?: number;
 };
 

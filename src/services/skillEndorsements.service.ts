@@ -58,6 +58,24 @@ export const skillEndorsementsService = {
       const snap = await getDocs(q);
       return snap.docs.map((d) => mapDoc(d.id, d.data() as Record<string, unknown>));
     } catch (error) {
+      // Composite index missing → fallback without orderBy, sort client-side
+      const message = error instanceof Error ? error.message : String(error);
+      if (message.includes('requires an index') || message.includes('FAILED_PRECONDITION')) {
+        try {
+          const q = query(
+            collection(database, COL),
+            where('endorsed_uid', '==', endorsedUid),
+            limit(max)
+          );
+          const snap = await getDocs(q);
+          return snap.docs
+            .map((d) => mapDoc(d.id, d.data() as Record<string, unknown>))
+            .sort((a, b) => b.created_at.getTime() - a.created_at.getTime());
+        } catch (fallbackError) {
+          console.error('[skillEndorsementsService] listForPlayer fallback:', fallbackError);
+          return [];
+        }
+      }
       console.error('[skillEndorsementsService] listForPlayer:', error);
       return [];
     }

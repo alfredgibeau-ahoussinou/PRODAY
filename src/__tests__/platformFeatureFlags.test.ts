@@ -33,7 +33,7 @@ describe('platformFeatureFlags', () => {
     expect(featureFlagForTab('home')).toBeNull();
   });
 
-  it('laisse l’onglet Santé visible même si sante_visio OFF', () => {
+  it('ne masque pas sante via filterTabs (flag dédié sante_visio)', () => {
     const flags = {
       ...DEFAULT_PLATFORM_CONFIG.feature_flags,
       sante_visio: false,

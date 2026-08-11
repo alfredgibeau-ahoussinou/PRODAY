@@ -1,8 +1,8 @@
 import React, { useMemo } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
 import { useIsAdmin } from '../../hooks/useIsAdmin';
-import { Icon } from '../../components/ui/Icon';
+import { PressableSpring } from '../../components/motion';
 import { PLATFORM_ADMIN_EMAIL } from '../../config/admin';
 import { useAdminStyles, adminChrome } from '../../components/admin/adminStyles';
 import { spacing, radius } from '../../theme/designTokens';
@@ -11,14 +11,14 @@ import type { AppColors } from '../../theme/universeTheme';
 export const AdminGateScreen: React.FC = () => {
   const { profile, refreshAdminClaim } = useAuth();
   const { claimLoading, needsSetup } = useIsAdmin();
-  const { styles: baseStyles, colors: c } = useAdminStyles();
+  const { colors: c } = useAdminStyles();
   const styles = useMemo(() => createStyles(c), [c]);
 
   if (claimLoading) {
     return (
       <View style={styles.loaderRoot} testID="admin-gate-loading">
         <ActivityIndicator size="large" color={c.brand} />
-        <Text style={styles.loaderText}>Vérification des droits admin…</Text>
+        <Text style={styles.loaderText}>Vérification des droits…</Text>
       </View>
     );
   }
@@ -27,28 +27,32 @@ export const AdminGateScreen: React.FC = () => {
     <View style={styles.root} testID="admin-gate">
       <View style={styles.hero}>
         <View style={styles.logoMark}>
-          <Icon name="shield" size={28} color={c.brandInverse} />
+          <Text style={styles.logoLetter}>P</Text>
         </View>
-        <Text style={styles.eyebrow}>ProDay Console</Text>
+        <Text style={styles.brand}>ProDay</Text>
         <Text style={styles.heroTitle}>{needsSetup ? 'Configuration requise' : 'Accès refusé'}</Text>
       </View>
       <View style={styles.body}>
-        <Text style={styles.title}>Droits administrateur requis</Text>
-        <Text style={styles.sub}>
-          {needsSetup
-            ? `Votre compte (${PLATFORM_ADMIN_EMAIL}) est reconnu, mais le token Firebase n’a pas encore le claim admin.\n\nExécutez npm run admin:setup sur votre Mac, puis déconnectez-vous et reconnectez-vous.`
-            : `Connectez-vous avec le compte administrateur (${PLATFORM_ADMIN_EMAIL}) pour accéder à cet espace.`}
-        </Text>
-        <TouchableOpacity
-          style={baseStyles.btn}
-          onPress={() => refreshAdminClaim()}
-          testID="admin-gate-refresh"
-        >
-          <Text style={baseStyles.btnText}>Rafraîchir le token</Text>
-        </TouchableOpacity>
-        {profile?.email ? (
-          <Text style={styles.email}>Connecté : {profile.email}</Text>
-        ) : null}
+        <View style={styles.card}>
+          <Text style={styles.title}>Droits administrateur requis</Text>
+          <Text style={styles.sub}>
+            {needsSetup
+              ? `Votre compte (${PLATFORM_ADMIN_EMAIL}) est reconnu, mais le jeton Firebase n’a pas encore le droit administrateur.\n\nExécutez npm run admin:setup, puis reconnectez-vous.`
+              : `Connectez-vous avec le compte administrateur (${PLATFORM_ADMIN_EMAIL}).`}
+          </Text>
+          <PressableSpring
+            style={styles.btn}
+            onPress={() => refreshAdminClaim()}
+            scaleTo={0.97}
+            haptic
+            testID="admin-gate-refresh"
+          >
+            <Text style={styles.btnText}>Rafraîchir le jeton</Text>
+          </PressableSpring>
+          {profile?.email ? (
+            <Text style={styles.email}>Connecté : {profile.email}</Text>
+          ) : null}
+        </View>
       </View>
     </View>
   );
@@ -56,38 +60,39 @@ export const AdminGateScreen: React.FC = () => {
 
 function createStyles(c: AppColors) {
   return StyleSheet.create({
-    root: { flex: 1, backgroundColor: adminChrome.shell },
+    root: { flex: 1, backgroundColor: c.background },
     loaderRoot: {
       flex: 1,
       alignItems: 'center',
       justifyContent: 'center',
       gap: spacing.md,
-      backgroundColor: adminChrome.shell,
+      backgroundColor: c.background,
     },
-    loaderText: { color: adminChrome.textMuted, fontSize: 14 },
+    loaderText: { color: c.textMuted, fontSize: 14 },
     hero: {
       alignItems: 'center',
-      paddingTop: spacing.xxl,
+      paddingTop: spacing.xxl + spacing.lg,
       paddingBottom: spacing.xl,
       paddingHorizontal: spacing.lg,
-      borderBottomWidth: 1,
+      backgroundColor: adminChrome.shellElevated,
+      borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: adminChrome.shellBorder,
     },
     logoMark: {
       width: 56,
       height: 56,
-      borderRadius: radius.lg,
-      backgroundColor: c.brand,
+      borderRadius: 16,
+      backgroundColor: adminChrome.accent,
       alignItems: 'center',
       justifyContent: 'center',
       marginBottom: spacing.md,
     },
-    eyebrow: {
-      color: c.brandLight,
-      fontSize: 11,
-      fontWeight: '700',
-      letterSpacing: 1.4,
-      textTransform: 'uppercase',
+    logoLetter: { color: '#FFFFFF', fontSize: 26, fontWeight: '900' },
+    brand: {
+      color: adminChrome.accent,
+      fontSize: 12,
+      fontWeight: '900',
+      letterSpacing: 2,
       marginBottom: spacing.xs,
     },
     heroTitle: {
@@ -99,23 +104,36 @@ function createStyles(c: AppColors) {
     body: {
       flex: 1,
       padding: spacing.lg,
-      alignItems: 'center',
-      justifyContent: 'center',
+      marginTop: -spacing.lg,
+    },
+    card: {
+      backgroundColor: '#FFFFFF',
+      borderRadius: radius.xl,
+      borderWidth: 1,
+      borderColor: c.border,
+      padding: spacing.lg,
+      gap: spacing.md,
     },
     title: {
-      fontSize: 18,
+      fontSize: 17,
       fontWeight: '800',
-      color: adminChrome.text,
+      color: c.text,
       textAlign: 'center',
-      marginBottom: spacing.sm,
     },
     sub: {
       fontSize: 14,
-      color: adminChrome.textMuted,
+      color: c.textMuted,
       textAlign: 'center',
       lineHeight: 22,
-      marginBottom: spacing.lg,
     },
-    email: { marginTop: spacing.lg, fontSize: 12, color: adminChrome.textMuted },
+    btn: {
+      backgroundColor: adminChrome.accent,
+      borderRadius: radius.lg,
+      paddingVertical: spacing.md,
+      paddingHorizontal: spacing.xl,
+      alignItems: 'center',
+    },
+    btnText: { color: '#FFFFFF', fontWeight: '800', fontSize: 14 },
+    email: { fontSize: 12, color: c.textMuted, textAlign: 'center' },
   });
 }

@@ -1,17 +1,23 @@
 import React, { useEffect, useState } from 'react';
+import { View } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import { useTabNavigation } from '../context/TabNavigationContext';
 import type { CarpoolChapterId } from '../content/carpoolChapters';
 import { useTeamEvents } from '../hooks/useAppData';
 import { useCarpoolOffers } from '../hooks/useCarpoolOffers';
-import { ProDayScreenCanvas } from '../components/ui/ProDayScreenCanvas';
 import { CarpoolHomeScreen } from '../components/carpool/CarpoolHomeScreen';
 import { CarpoolEventDetailScreen } from '../components/carpool/CarpoolEventDetailScreen';
 import { CarpoolGuestPrompt } from '../components/carpool/CarpoolGuestPrompt';
 import { PushScreenTransition } from '../components/motion';
+import { useJoueurSession } from '../context/JoueurSessionContext';
+import { JOUEUR_SITE } from '../content/joueurPageIdentity';
 
 export const CarpoolScreen: React.FC = () => {
   const { profile } = useAuth();
+  const joueurSession = useJoueurSession();
+  const joueurLive =
+    Boolean(joueurSession?.isJoueurPlayer && joueurSession.ready && !joueurSession.needsGate);
+  const screenBg = joueurLive ? JOUEUR_SITE.bg : '#E8F4F8';
   const { pendingCarpoolLink, clearPendingCarpool, openAuth } = useTabNavigation();
   const clubId = profile?.profile.club_id;
   const { events, loading, refresh } = useTeamEvents(profile?.uid, clubId);
@@ -38,17 +44,17 @@ export const CarpoolScreen: React.FC = () => {
 
   if (!profile) {
     return (
-      <ProDayScreenCanvas flat>
+      <View style={{ flex: 1, backgroundColor: screenBg }}>
         <CarpoolGuestPrompt
           onLogin={() => openAuth('login')}
           onSignup={() => openAuth('signup')}
         />
-      </ProDayScreenCanvas>
+      </View>
     );
   }
 
   return (
-    <ProDayScreenCanvas flat>
+    <View style={{ flex: 1, backgroundColor: screenBg }}>
       <CarpoolHomeScreen
         profile={profile}
         events={events}
@@ -73,6 +79,6 @@ export const CarpoolScreen: React.FC = () => {
           />
         ) : null}
       </PushScreenTransition>
-    </ProDayScreenCanvas>
+    </View>
   );
 };

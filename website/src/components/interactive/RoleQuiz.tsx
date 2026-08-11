@@ -11,7 +11,7 @@ const ROLE_CHOICES = [
   { label: "Coach", emoji: "📋", href: ROUTES.proStaff },
   { label: "Club", emoji: "🏟️", href: ROUTES.proClub },
   { label: "Supporter", emoji: "📣", href: ROUTES.supporter },
-  { label: "Parent", emoji: "👨‍👧", href: ROUTES.joueur },
+  { label: "Parent", emoji: "👨‍👧", href: ROUTES.parent },
   { label: "Agent", emoji: "🤝", href: ROUTES.proStaff },
   { label: "Organisateur", emoji: "🏆", href: ROUTES.proClub },
 ] as const;

@@ -4,189 +4,99 @@ import Link from "next/link";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import { useState } from "react";
+import type { JoueurWeekBeat } from "@/lib/joueurExperienceTheme";
 import { ROUTES } from "@/lib/routes";
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
-type BadgeId = "amateur" | "centre" | "pro";
-
-const BADGES: {
-  id: BadgeId;
-  label: string;
-  color: string;
-  soft: string;
-  vibe: string;
-  line: string;
-}[] = [
-  {
-    id: "amateur",
-    label: "Amateur",
-    color: "#2563EB",
-    soft: "rgba(37, 99, 235, 0.2)",
-    vibe: "Le dimanche, sans prise de tête",
-    line: "Tu joues pour le plaisir, l’équipe et les après-match. Ton profil suit ta saison — stats, convocations, covoit.",
-  },
-  {
-    id: "centre",
-    label: "Centre / Aspirant",
-    color: "#16A34A",
-    soft: "rgba(22, 163, 74, 0.2)",
-    vibe: "Tu montes d’un cran",
-    line: "Formation, rythme plus haut. Même app, badge vert. Les recruteurs te trouvent sans que tu changes d’outil.",
-  },
-  {
-    id: "pro",
-    label: "Professionnel",
-    color: "#EAB308",
-    soft: "rgba(234, 179, 8, 0.22)",
-    vibe: "Le contrat change. Pas l’app.",
-    line: "Signature pro : même historique, badge jaune. Tu restes dans ProDay — pas de migration, pas de reset.",
-  },
-];
-
-/** Interactive badge picker — warm, not corporate. */
-export function JoueurBadgePlayground() {
-  const [active, setActive] = useState<BadgeId>("amateur");
-  const badge = BADGES.find((b) => b.id === active) ?? BADGES[0]!;
-  const reduce = useReducedMotion();
-
-  return (
-    <section className="relative overflow-hidden border-t border-white/10 bg-black px-4 py-20 sm:px-6 sm:py-28">
-      <div
-        className="pointer-events-none absolute inset-0 opacity-40 transition-colors duration-500"
-        style={{
-          background: `radial-gradient(ellipse 60% 50% at 30% 40%, ${badge.soft}, transparent 70%)`,
-        }}
-      />
-      <div className="relative mx-auto max-w-6xl">
-        <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--pole-accent,#0054F0)]">
-          Ton badge
-        </p>
-        <h2 className="mt-3 max-w-xl font-display text-[clamp(1.9rem,4.5vw,3rem)] font-medium tracking-[-0.03em] text-white">
-          Trois niveaux.
-          <br />
-          <span className="text-white/45">Un seul toi.</span>
-        </h2>
-        <p className="mt-4 max-w-md text-base text-white/55">
-          Tape un badge. Rien ne se perd quand tu progresses — c’est le même profil.
-        </p>
-
-        <div className="mt-12 flex flex-wrap gap-3">
-          {BADGES.map((b) => {
-            const on = b.id === active;
-            return (
-              <button
-                key={b.id}
-                type="button"
-                onClick={() => setActive(b.id)}
-                className="rounded-full px-5 py-3 text-sm font-semibold transition"
-                style={{
-                  background: on ? b.color : "transparent",
-                  color: on ? (b.id === "pro" ? "#0a0a0a" : "#fff") : "rgba(255,255,255,0.7)",
-                  border: on ? `2px solid ${b.color}` : "2px solid rgba(255,255,255,0.15)",
-                  boxShadow: on ? `0 0 32px ${b.soft}` : undefined,
-                }}
-              >
-                {b.label}
-              </button>
-            );
-          })}
-        </div>
-
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={badge.id}
-            initial={reduce ? false : { opacity: 0, y: 14 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={reduce ? undefined : { opacity: 0, y: -8 }}
-            transition={{ duration: 0.35, ease }}
-            className="mt-12 grid gap-8 border-t border-white/10 pt-10 lg:grid-cols-[auto_1fr] lg:items-center"
-          >
-            <div
-              className="flex h-28 w-28 items-center justify-center rounded-full font-display text-sm font-bold uppercase tracking-wide sm:h-36 sm:w-36 sm:text-base"
-              style={{
-                background: badge.soft,
-                color: badge.color,
-                boxShadow: `inset 0 0 0 3px ${badge.color}`,
-              }}
-            >
-              {badge.label.split(" ")[0]}
-            </div>
-            <div>
-              <p className="text-lg font-medium text-white sm:text-xl">{badge.vibe}</p>
-              <p className="mt-3 max-w-lg text-base leading-relaxed text-white/60">{badge.line}</p>
-            </div>
-          </motion.div>
-        </AnimatePresence>
-      </div>
-    </section>
-  );
-}
-
-const WEEK_BEATS: {
-  id: string;
-  day: string;
-  title: string;
-  body: string;
-  free: boolean;
-}[] = [
+const DEFAULT_WEEK: JoueurWeekBeat[] = [
   {
     id: "lun",
     day: "Lun",
-    title: "Convoc tombe",
-    body: "Tu vois qui joue. Tu confirmes en un tap. Simple.",
-    free: true,
+    chip: "Objectif",
+    title: "Objectifs de la semaine",
+    body: "Développe ton potentiel avec des cibles mesurables.",
+  },
+  {
+    id: "mar",
+    day: "Mar",
+    chip: "Séance",
+    title: "Préparation",
+    body: "Charge, consignes, présence. Optimise ta performance.",
   },
   {
     id: "mer",
     day: "Mer",
-    title: "Séance + covoit",
-    body: "Qui prend la voiture ? Places restantes, chat conducteur.",
-    free: true,
+    chip: "Logistique",
+    title: "Covoiturage & planning",
+    body: "Trajets liés aux séances. Moins de friction, plus de focus.",
   },
   {
     id: "jeu",
     day: "Jeu",
-    title: "Petit coup d’œil stats",
-    body: "Buts, passes, minutes. Ou heatmaps si tu as le Pass.",
-    free: true,
+    chip: "Data",
+    title: "Statistiques",
+    body: "Minutes, heatmaps, tendances. Analyse tes données.",
+  },
+  {
+    id: "ven",
+    day: "Ven",
+    chip: "Prépa",
+    title: "Préparation match",
+    body: "Activation, matériel, briefing. Environnement de performance.",
   },
   {
     id: "sam",
     day: "Sam",
-    title: "Match day",
-    body: "Le score, les potes, le fil. Tu joues — l’app suit.",
-    free: true,
+    chip: "Match",
+    title: "Performance du dernier match",
+    body: "Score, actions clés, historique. Les données suivent le terrain.",
   },
   {
     id: "dim",
     day: "Dim",
-    title: "Après-match",
-    body: "Message d’équipe, photos, et demain on recommence.",
-    free: true,
+    chip: "Revue",
+    title: "Analyse & progression",
+    body: "Bilan, objectifs, et préparation du cycle suivant.",
   },
 ];
 
-/** Interactive week timeline — feels like amateur football life. */
-export function JoueurWeekStory() {
-  const [active, setActive] = useState(WEEK_BEATS[0]!.id);
-  const beat = WEEK_BEATS.find((b) => b.id === active) ?? WEEK_BEATS[0]!;
+type WeekProps = {
+  kicker?: string;
+  title?: string;
+  subtitle?: string;
+  beats?: JoueurWeekBeat[];
+};
+
+/** Interactive week timeline — copy pilotée par le thème âge. */
+export function JoueurWeekStory({
+  kicker = "Une semaine type",
+  title = "Juste ton foot.",
+  subtitle,
+  beats = DEFAULT_WEEK,
+}: WeekProps) {
+  const [active, setActive] = useState(beats[0]?.id ?? "lun");
+  const beat = beats.find((b) => b.id === active) ?? beats[0]!;
   const reduce = useReducedMotion();
 
   return (
     <section className="border-t border-white/10 bg-[#07070a] px-4 py-20 sm:px-6 sm:py-28">
       <div className="mx-auto max-w-6xl">
         <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--pole-accent,#0054F0)]">
-          Une semaine type
+          {kicker}
         </p>
         <h2 className="mt-3 max-w-lg font-display text-[clamp(1.9rem,4.5vw,3rem)] font-medium tracking-[-0.03em] text-white">
-          Pas un logiciel RH.
-          <br />
-          <span className="text-white/40">Juste ton foot.</span>
+          {title}
+          {subtitle ? (
+            <>
+              <br />
+              <span className="text-white/40">{subtitle}</span>
+            </>
+          ) : null}
         </h2>
 
         <div className="mt-12 flex gap-2 overflow-x-auto pb-2">
-          {WEEK_BEATS.map((b) => {
+          {beats.map((b) => {
             const on = b.id === active;
             return (
               <button
@@ -202,7 +112,9 @@ export function JoueurWeekStory() {
                 <span className="font-mono text-[10px] uppercase tracking-wider opacity-80">
                   {b.day}
                 </span>
-                <span className="mt-1 text-xs font-semibold">{b.title.split(" ")[0]}</span>
+                <span className="mt-1 text-center text-xs font-semibold leading-tight">
+                  {b.chip}
+                </span>
               </button>
             );
           })}
@@ -249,8 +161,18 @@ const PASS_PERKS = [
   "Objectifs & comparaisons",
 ];
 
-/** Friendly free vs Pass toggle — not a sales deck. */
-export function JoueurFreeVsPass() {
+type FreePassProps = {
+  kicker?: string;
+  title?: string;
+  subtitle?: string;
+};
+
+/** Friendly free vs Pass toggle. */
+export function JoueurFreeVsPass({
+  kicker = "Clair et net",
+  title = "Gratuit pour jouer.",
+  subtitle = "Pass si tu veux aller plus loin.",
+}: FreePassProps) {
   const [tier, setTier] = useState<Tier>("free");
   const reduce = useReducedMotion();
   const perks = tier === "free" ? FREE_PERKS : PASS_PERKS;
@@ -259,16 +181,14 @@ export function JoueurFreeVsPass() {
     <section className="border-t border-white/10 bg-black px-4 py-20 sm:px-6 sm:py-28">
       <div className="mx-auto max-w-6xl">
         <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--pole-accent,#0054F0)]">
-          Clair et net
+          {kicker}
         </p>
         <h2 className="mt-3 max-w-xl font-display text-[clamp(1.9rem,4.5vw,3rem)] font-medium tracking-[-0.03em] text-white">
-          Gratuit pour jouer.
+          {title}
           <br />
           <span className="text-white/40">Pass si tu veux aller plus loin.</span>
         </h2>
-        <p className="mt-4 max-w-md text-sm text-white/55">
-          Personne ne te force. Le Pass à 3,99 €, c’est optionnel — quand tu as envie.
-        </p>
+        <p className="mt-4 max-w-md text-sm text-white/55">{subtitle}</p>
 
         <div
           className="mt-10 inline-flex rounded-full border border-white/15 p-1"
@@ -348,29 +268,41 @@ export function JoueurFreeVsPass() {
   );
 }
 
-/** Soft closing band — approachable CTA. */
-export function JoueurWarmCta() {
+type CtaProps = {
+  kicker?: string;
+  title?: string;
+  body?: string;
+};
+
+/** Soft closing band. */
+export function JoueurWarmCta({
+  kicker = "On y va",
+  title = "Crée ton compte.\nRejoins ton équipe.",
+  body = "Gratuit pour démarrer. Pas besoin d’être pro pour te sentir chez toi.",
+}: CtaProps) {
+  const lines = title.split("\n");
   return (
     <section className="relative overflow-hidden border-t border-white/10 bg-black px-4 py-24 sm:px-6 sm:py-32">
       <div
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            "radial-gradient(ellipse 70% 60% at 50% 80%, rgba(0,84,240,0.28), transparent 60%)",
+            "radial-gradient(ellipse 70% 60% at 50% 80%, var(--joueur-glow, rgba(0,84,240,0.28)), transparent 60%)",
         }}
       />
       <div className="relative mx-auto max-w-3xl text-center">
         <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--pole-accent,#0054F0)]">
-          On y va
+          {kicker}
         </p>
         <h2 className="mt-4 font-display text-[clamp(2rem,5vw,3.2rem)] font-medium leading-[1.05] tracking-[-0.035em] text-white">
-          Crée ton compte.
-          <br />
-          Rejoins ton équipe.
+          {lines.map((line, i) => (
+            <span key={i}>
+              {i > 0 ? <br /> : null}
+              {line}
+            </span>
+          ))}
         </h2>
-        <p className="mx-auto mt-5 max-w-md text-base text-white/55">
-          Gratuit pour démarrer. Pas besoin d’être pro pour te sentir chez toi.
-        </p>
+        <p className="mx-auto mt-5 max-w-md text-base text-white/55">{body}</p>
         <div className="mt-10 flex flex-wrap justify-center gap-3">
           <Link
             href={ROUTES.betaWaitlist}

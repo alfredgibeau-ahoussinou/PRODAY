@@ -5,18 +5,34 @@ import {
   StyleSheet,
   ActivityIndicator,
   Alert,
-  Pressable,
+  RefreshControl,
 } from 'react-native';
 import { ProDayText } from '../../components/ui/ProDayText';
-import { ProDaySurface } from '../../components/ui/ProDaySurface';
-import { Icon } from '../../components/ui/Icon';
+import { PressableSpring } from '../../components/motion';
 import { useThemedScreen } from '../../hooks/useThemedScreen';
 import { useTranslation } from '../../context/LocaleContext';
 import { spacing, radius } from '../../theme/designTokens';
+import { ParentPageFrame } from '../../components/parent/ParentPageFrame';
+import {
+  ParentActionButton,
+  ParentAlertChip,
+  ParentQuickGrid,
+  ParentSectionCard,
+} from '../../components/parent/parentPortalUi';
+import { ParentUnlockCard } from '../../components/parent/ParentUnlockCard';
+import { PARENT_PAGES } from '../../content/parentPageIdentity';
 import { useParentShell, type ParentTabId } from '../../navigation/parentShellContext';
-import { parentalGuardianService } from '../../services/parentalGuardian.service';
+import {
+  parentalGuardianService,
+  type GuardianNotification,
+} from '../../services/parentalGuardian.service';
+import { parentPortalService } from '../../services/parentPortal.service';
 import { useAuth } from '../../context/AuthContext';
 import { normalizeGuardianEmail } from '../../utils/guardianEmail';
+import { LateReportControl } from '../../components/team/LateReportControl';
+import type { TeamEvent } from '../../models/TeamEvent';
+import { EVENT_TYPE_LABELS } from '../../models/TeamEvent';
+import { getScreenTimeDayKey } from '../../utils/parentalScreenTime';
 
 interface Props {
   onOpenTab: (tab: ParentTabId) => void;
@@ -28,25 +44,83 @@ export const ParentHomeScreen: React.FC<Props> = ({ onOpenTab }) => {
   const { profile } = useAuth();
   const { children, selected, setSelectedUid, loading, reload } = useParentShell();
   const email = normalizeGuardianEmail(profile?.email);
-  const [notifCount, setNotifCount] = useState(0);
+  const [notifs, setNotifs] = useState<GuardianNotification[]>([]);
+  const [nextEvent, setNextEvent] = useState<TeamEvent | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const [bonusBusy, setBonusBusy] = useState(false);
 
   useEffect(() => {
     if (!email) return;
-    return parentalGuardianService.subscribeGuardianNotifications(email, (items) => {
-      setNotifCount(items.filter((n) => !n.read_at).length);
-    });
+    return parentalGuardianService.subscribeGuardianNotifications(email, setNotifs);
   }, [email]);
+
+  const unreadNotifs = useMemo(() => notifs.filter((n) => !n.read_at), [notifs]);
+
+  const refreshEvent = useCallback(async () => {
+    if (!selected) {
+      setNextEvent(null);
+      return;
+    }
+    const events = await parentPortalService.listChildEvents(selected.uid);
+    const upcoming = events
+      .filter((e) => e.starts_at.getTime() >= Date.now() - 2 * 60 * 60 * 1000)
+      .sort((a, b) => a.starts_at.getTime() - b.starts_at.getTime());
+    setNextEvent(upcoming[0] ?? null);
+  }, [selected]);
+
+  useEffect(() => {
+    void refreshEvent();
+  }, [refreshEvent]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await reload();
+      await refreshEvent();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [reload, refreshEvent]);
 
   const markNotifs = useCallback(async () => {
     if (!email) return;
     try {
       await parentalGuardianService.markGuardianNotificationsRead(email);
     } catch (e) {
-      Alert.alert(t('common.error'), e instanceof Error ? e.message : t('physio.dashboard.errorFallback'));
+      Alert.alert(t('common.error'), e instanceof Error ? e.message : 'Erreur');
     }
   }, [email, t]);
 
-  if (loading) {
+  const grantBonus = useCallback(async () => {
+    if (!selected || !email) return;
+    setBonusBusy(true);
+    try {
+      await parentPortalService.grantScreenTimeBonus(selected.uid, email, 15);
+      Alert.alert('Bonus accordé', `+15 min pour ${selected.display_name} aujourd’hui.`);
+      await reload();
+    } catch (e) {
+      Alert.alert('Erreur', e instanceof Error ? e.message : 'Impossible d’accorder le bonus');
+    } finally {
+      setBonusBusy(false);
+    }
+  }, [selected, email, reload]);
+
+  const usageLabel = useMemo(() => {
+    if (!selected) return null;
+    const limit = selected.settings.daily_limit_minutes ?? 90;
+    const bonus =
+      selected.settings.screen_time_bonus_day === getScreenTimeDayKey()
+        ? selected.settings.screen_time_bonus_minutes ?? 0
+        : 0;
+    return `${selected.minutesUsedToday} / ${limit + bonus} min`;
+  }, [selected]);
+
+  const pendingContacts = useMemo(
+    () => (selected?.settings.approved_contacts ?? []).filter((x) => !x.approved),
+    [selected],
+  );
+
+  if (loading && children.length === 0) {
     return (
       <View style={styles.center}>
         <ActivityIndicator color={c.brand} />
@@ -55,97 +129,258 @@ export const ParentHomeScreen: React.FC<Props> = ({ onOpenTab }) => {
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.content}>
-      <ProDaySurface variant="module" style={styles.hero}>
-        <Icon name="shield" size={28} color={c.brand} />
-        <ProDayText variant="section">{t('parent.home.title')}</ProDayText>
-        <ProDayText variant="body" muted style={styles.heroBody}>
-          {t('parent.home.heroBody')}
-        </ProDayText>
-        {notifCount > 0 ? (
-          <Pressable onPress={() => void markNotifs()} style={[styles.pill, { backgroundColor: c.accentSoft }]}>
-            <ProDayText variant="caption" accent>
-              {t('parent.home.notifCta', { n: notifCount })}
-            </ProDayText>
-          </Pressable>
-        ) : null}
-      </ProDaySurface>
+    <ParentPageFrame identity={PARENT_PAGES.home}>
+      <ScrollView
+        contentContainerStyle={styles.content}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => void onRefresh()}
+            tintColor={c.brand}
+          />
+        }
+      >
+        {children.length === 0 ? (
+          <ParentSectionCard
+            title={t('parent.home.noChildren.title')}
+            subtitle={t('parent.home.noChildren.body')}
+          >
+            <ParentActionButton
+              label={t('parent.home.refresh')}
+              onPress={() => void reload()}
+              icon="tune"
+            />
+            <ParentActionButton
+              label="Lier avec un code"
+              tone="ghost"
+              onPress={() => onOpenTab('reglages')}
+              icon="add"
+            />
+          </ParentSectionCard>
+        ) : (
+          <>
+            <ParentQuickGrid
+              items={[
+                {
+                  id: 'agenda',
+                  label: 'Agenda & retards',
+                  icon: 'calendar',
+                  onPress: () => onOpenTab('agenda'),
+                },
+                {
+                  id: 'messages',
+                  label: 'Messages',
+                  icon: 'chat',
+                  onPress: () => onOpenTab('messages'),
+                },
+                {
+                  id: 'trajet',
+                  label: 'Trajet live',
+                  icon: 'car',
+                  onPress: () => onOpenTab('trajet'),
+                },
+                {
+                  id: 'controls',
+                  label: 'Contrôles',
+                  icon: 'settings',
+                  onPress: () => onOpenTab('reglages'),
+                },
+              ]}
+            />
 
-      {children.length === 0 ? (
-        <ProDaySurface variant="module" style={styles.card}>
-          <ProDayText variant="section">{t('parent.home.noChildren.title')}</ProDayText>
-          <ProDayText variant="body" muted>
-            {t('parent.home.noChildren.body')}
-          </ProDayText>
-          <Pressable onPress={() => void reload()}>
-            <ProDayText variant="caption" accent style={styles.link}>
-              {t('parent.home.refresh')}
-            </ProDayText>
-          </Pressable>
-        </ProDaySurface>
-      ) : (
-        children.map((child) => (
-          <ProDaySurface key={child.uid} variant="module" style={styles.card}>
-            <Pressable
-              onPress={() => {
-                setSelectedUid(child.uid);
-                onOpenTab('profil');
-              }}
-            >
-              <ProDayText variant="section">{child.display_name}</ProDayText>
-              <ProDayText variant="caption" muted>
-                {t('parent.home.todayUsage', { n: child.minutesUsedToday })} ·{' '}
-                {child.alerts.length > 0
-                  ? t('parent.home.alerts', { n: child.alerts.length })
-                  : t('parent.home.allOk')}
-              </ProDayText>
-            </Pressable>
-            {child.alerts.map((a) => (
-              <ProDayText key={a} variant="caption" accent>
-                · {a}
-              </ProDayText>
-            ))}
-            <View style={styles.row}>
-              <Pressable onPress={() => { setSelectedUid(child.uid); onOpenTab('messages'); }}>
-                <ProDayText variant="caption" accent style={styles.link}>
-                  {t('parent.home.tab.messages')}
-                </ProDayText>
-              </Pressable>
-              <Pressable onPress={() => { setSelectedUid(child.uid); onOpenTab('agenda'); }}>
-                <ProDayText variant="caption" accent style={styles.link}>
-                  {t('parent.home.tab.agenda')}
-                </ProDayText>
-              </Pressable>
-              <Pressable onPress={() => { setSelectedUid(child.uid); onOpenTab('trajet'); }}>
-                <ProDayText variant="caption" accent style={styles.link}>
-                  {t('parent.home.tab.trajet')}
-                </ProDayText>
-              </Pressable>
-              <Pressable onPress={() => { setSelectedUid(child.uid); onOpenTab('reglages'); }}>
-                <ProDayText variant="caption" accent style={styles.link}>
-                  {t('parent.home.tab.reglages')}
-                </ProDayText>
-              </Pressable>
-            </View>
-            {selected?.uid === child.uid ? (
-              <ProDayText variant="caption" muted>
-                {t('parent.home.selectedChild')}
-              </ProDayText>
+            {children.length > 1 ? (
+              <ParentSectionCard title="Enfants liés" subtitle="Touchez pour basculer la supervision">
+                <View style={styles.childChips}>
+                  {children.map((child) => {
+                    const active = selected?.uid === child.uid;
+                    return (
+                      <PressableSpring
+                        key={child.uid}
+                        onPress={() => setSelectedUid(child.uid)}
+                        scaleTo={0.97}
+                        haptic
+                        style={[
+                          styles.chip,
+                          {
+                            backgroundColor: active ? c.brandSoft : c.surfaceMuted,
+                            borderColor: active ? c.brand : c.border,
+                          },
+                        ]}
+                      >
+                        <ProDayText
+                          variant="caption"
+                          style={{ fontWeight: '800', color: active ? c.brand : c.text }}
+                        >
+                          {child.display_name}
+                        </ProDayText>
+                        {child.alerts.length > 0 ? (
+                          <View style={[styles.dot, { backgroundColor: c.accent }]} />
+                        ) : null}
+                      </PressableSpring>
+                    );
+                  })}
+                </View>
+              </ParentSectionCard>
             ) : null}
-          </ProDaySurface>
-        ))
-      )}
-    </ScrollView>
+
+            {selected && email ? (
+              <ParentUnlockCard child={selected} guardianEmail={email} onDone={reload} />
+            ) : null}
+
+            {selected && selected.alerts.length > 0 ? (
+              <ParentSectionCard title="Alertes" subtitle={`Supervision de ${selected.display_name}`}>
+                {selected.alerts.map((alert) => (
+                  <ParentAlertChip key={alert} label={alert} />
+                ))}
+                {pendingContacts.length > 0 ? (
+                  <ParentActionButton
+                    label={`Traiter ${pendingContacts.length} contact(s)`}
+                    onPress={() => onOpenTab('messages')}
+                    icon="chat"
+                  />
+                ) : null}
+              </ParentSectionCard>
+            ) : null}
+
+            {unreadNotifs.length > 0 ? (
+              <ParentSectionCard
+                title="Notifications"
+                subtitle={`${unreadNotifs.length} non lue${unreadNotifs.length > 1 ? 's' : ''}`}
+              >
+                {unreadNotifs.slice(0, 4).map((n) => (
+                  <View key={n.id} style={styles.notifRow}>
+                    <ProDayText variant="body">{n.event_title}</ProDayText>
+                    <ProDayText variant="caption" muted>
+                      Invitation ·{' '}
+                      {n.event_starts_at
+                        ? n.event_starts_at.toLocaleString('fr-FR', {
+                            weekday: 'short',
+                            day: 'numeric',
+                            month: 'short',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })
+                        : 'date à confirmer'}
+                    </ProDayText>
+                  </View>
+                ))}
+                <View style={styles.row}>
+                  <ParentActionButton
+                    label="Marquer comme lues"
+                    tone="ghost"
+                    onPress={() => void markNotifs()}
+                  />
+                  <ParentActionButton
+                    label="Voir l’agenda"
+                    onPress={() => onOpenTab('agenda')}
+                    icon="calendar"
+                  />
+                </View>
+              </ParentSectionCard>
+            ) : null}
+
+            {selected && nextEvent ? (
+              <ParentSectionCard
+                title="Prochaine séance"
+                subtitle="Prévenir le coach en un tap"
+              >
+                <ProDayText variant="section">{nextEvent.title}</ProDayText>
+                <ProDayText variant="caption" muted>
+                  {EVENT_TYPE_LABELS[nextEvent.event_type] ?? nextEvent.event_type}
+                  {' · '}
+                  {nextEvent.starts_at.toLocaleString('fr-FR', {
+                    weekday: 'short',
+                    day: 'numeric',
+                    month: 'short',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
+                </ProDayText>
+                <LateReportControl
+                  eventId={nextEvent.id}
+                  playerUid={selected.uid}
+                  playerName={selected.display_name}
+                  currentRsvp={nextEvent.rsvps?.[selected.uid]}
+                  reportedByParent
+                  enablePickupLate
+                  onReported={() => void refreshEvent()}
+                />
+              </ParentSectionCard>
+            ) : null}
+
+            {selected ? (
+              <ParentSectionCard
+                title="Temps d’écran"
+                subtitle={`${selected.display_name} · ${usageLabel}`}
+              >
+                <View style={styles.progressTrack}>
+                  <View
+                    style={[
+                      styles.progressFill,
+                      {
+                        backgroundColor: c.brand,
+                        width: `${Math.min(
+                          100,
+                          Math.round(
+                            (selected.minutesUsedToday /
+                              Math.max(1, selected.settings.daily_limit_minutes ?? 90)) *
+                              100,
+                          ),
+                        )}%`,
+                      },
+                    ]}
+                  />
+                </View>
+                <View style={styles.row}>
+                  <ParentActionButton
+                    label="+15 min"
+                    onPress={() => void grantBonus()}
+                    loading={bonusBusy}
+                    icon="time"
+                  />
+                  <ParentActionButton
+                    label="Limiter"
+                    tone="ghost"
+                    onPress={() => onOpenTab('reglages')}
+                    icon="settings"
+                  />
+                  <ParentActionButton
+                    label="Profil"
+                    tone="ghost"
+                    onPress={() => onOpenTab('profil')}
+                    icon="person"
+                  />
+                </View>
+              </ParentSectionCard>
+            ) : null}
+          </>
+        )}
+      </ScrollView>
+    </ParentPageFrame>
   );
 };
 
 const styles = StyleSheet.create({
   content: { padding: spacing.lg, gap: spacing.md, paddingBottom: spacing.xl },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  hero: { alignItems: 'center', gap: spacing.sm, padding: spacing.lg },
-  heroBody: { textAlign: 'center', lineHeight: 22 },
-  pill: { paddingHorizontal: spacing.md, paddingVertical: spacing.xs, borderRadius: radius.pill },
-  card: { padding: spacing.lg, gap: spacing.sm, borderRadius: radius.lg },
-  row: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md, marginTop: spacing.xs },
-  link: { fontWeight: '700' },
+  childChips: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  chip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+  },
+  dot: { width: 7, height: 7, borderRadius: 4 },
+  notifRow: { gap: 2, paddingVertical: spacing.xs },
+  row: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  progressTrack: {
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    overflow: 'hidden',
+  },
+  progressFill: { height: '100%', borderRadius: 4 },
 });

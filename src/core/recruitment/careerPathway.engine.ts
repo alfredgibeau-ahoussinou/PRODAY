@@ -133,14 +133,6 @@ export function buildCareerPathwayPlan(input: {
     });
   }
 
-  steps.push({
-    id: 'book_health',
-    title: 'Préparer la charge (santé)',
-    reason: 'Un RDV kiné / suivi limite les blessures en période de détection.',
-    priority: 40,
-    tab: 'sante',
-  });
-
   const ordered = [...steps].sort((a, b) => b.priority - a.priority).slice(0, 5);
 
   let readiness = 35;

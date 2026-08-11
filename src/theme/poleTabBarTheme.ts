@@ -249,7 +249,7 @@ const CHROME_BY_LINE: Record<ProductLineId, PoleTabBarChrome> = {
     flatLayout: true,
     cleanStyle: true,
     overflowKicker: 'Club',
-    accent: '#38BDF8',
+    accent: '#006CFC',
     activeIcon: '#FAFAFA',
   }),
   pro_staff: makeChrome(PRO_PALETTE, {
@@ -288,7 +288,7 @@ const CHROME_BY_LINE: Record<ProductLineId, PoleTabBarChrome> = {
     layout: 'dock',
     flatLayout: true,
     cleanStyle: true,
-    overflowKicker: 'Famille',
+    overflowKicker: 'Parent',
     accent: '#0F766E',
   }),
 };

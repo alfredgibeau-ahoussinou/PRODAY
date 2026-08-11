@@ -50,8 +50,9 @@ export const PRODAY_AMATEUR_BRAND = {
   logoLine1: 'Pro Day',
   logoLine2Lead: '',
   logoLine2Accent: 'Joueur',
-  tagline: 'AMATEUR • CENTRE • PRO',
-  shortTagline: 'Pôle Joueur unifié. Badges Amateur, Centre / Aspirant ou Professionnel',
+  tagline: 'CLUB • PROGRESSER • JOUER',
+  shortTagline:
+    'Les outils des clubs structurés, pour le football amateur et semi-pro',
   entryCta: 'Espace Joueur',
 } as const;
 
@@ -68,13 +69,13 @@ export const PRODAY_SUPPORTER_BRAND = {
 } as const;
 
 export const PRODAY_PRO_BRAND = {
-  name: 'Pro Day Pro',
+  name: 'Pro Day Coach',
   logoLine1: 'Pro Day',
   logoLine2Lead: '',
-  logoLine2Accent: 'Pro',
-  tagline: 'EXPERTISE • RÉSEAU • PERFORMANCE',
-  shortTagline: 'Coach, agent et staff. Le réseau pro du foot',
-  entryCta: 'Espace Pro',
+  logoLine2Accent: 'Coach',
+  tagline: 'TACTIQUE • EFFECTIF • PERFORMANCE',
+  shortTagline: 'Pôle Coach. Tactique IA, IA et gestion d’équipes',
+  entryCta: 'Espace Coach',
 } as const;
 
 export const PRODAY_PRO_PLAYER_BRAND = {
@@ -82,8 +83,9 @@ export const PRODAY_PRO_PLAYER_BRAND = {
   logoLine1: 'Pro Day',
   logoLine2Lead: '',
   logoLine2Accent: 'Joueur',
-  tagline: 'AMATEUR • CENTRE • PRO',
-  shortTagline: 'Même profil du district au contrat. Badge Professionnel à la signature',
+  tagline: 'CLUB • PROGRESSER • JOUER',
+  shortTagline:
+    'Profil, stats et progression — du district au haut niveau, sans changer d’app',
   entryCta: 'Espace Joueur',
 } as const;
 
@@ -92,20 +94,25 @@ export const PRODAY_PRO_CLUB_BRAND = {
   logoLine1: 'Pro Day',
   logoLine2Lead: '',
   logoLine2Accent: 'Club',
-  tagline: 'STRUCTURE • RECRUTEMENT • VITRINE',
-  shortTagline: 'Club et structure. Pipeline candidatures et communication',
+  tagline: 'STRUCTURE • ÉQUIPES • ÉCOSYSTÈME',
+  shortTagline:
+    'Cœur de ProDay. Équipes, licenciés, compétitions, covoiturage et permissions',
   entryCta: 'Espace Club',
 } as const;
 
 export const PRODAY_PRO_STAFF_BRAND = {
-  name: 'Pro Day Staff',
+  name: 'Pro Day Coach',
   logoLine1: 'Pro Day',
   logoLine2Lead: '',
-  logoLine2Accent: 'Staff',
-  tagline: 'MANDATS • SCOUTING • CONVOCATIONS',
-  shortTagline: 'Coach, agent, recruteur. Calendrier structure et convocations premium',
-  entryCta: 'Espace Staff',
+  logoLine2Accent: 'Coach',
+  tagline: 'TACTIQUE • CONVOCATIONS • IA',
+  shortTagline:
+    'Profil coach rattaché au club. Tactique IA, préparation match et effectif',
+  entryCta: 'Espace Coach',
 } as const;
+
+/** Alias marketing — même ligne produit que pro_staff. */
+export const PRODAY_COACH_BRAND = PRODAY_PRO_STAFF_BRAND;
 
 export const PRODAY_SPONSOR_BRAND = {
   name: 'Pro Day Sponsor',
@@ -123,17 +130,18 @@ export const PRODAY_SANTE_BRAND = {
   logoLine2Lead: '',
   logoLine2Accent: 'Santé',
   tagline: 'SOIGNER • ACCOMPAGNER • PERFORMER',
-  shortTagline: 'Kiné, médecin et staff médical. Le pôle santé du foot',
+  shortTagline:
+    'Rôle médical intégré (pas un pôle). Annuaire, agenda et téléconsultation',
   entryCta: 'Espace Santé',
 } as const;
 
 export const PRODAY_PARENT_BRAND = {
-  name: 'Pro Day Famille',
+  name: 'Pro Day Parent',
   logoLine1: 'Pro Day',
   logoLine2Lead: '',
-  logoLine2Accent: 'Famille',
+  logoLine2Accent: 'Parent',
   tagline: 'SUPERVISER • PROTÉGER • ACCOMPAGNER',
-  shortTagline: 'Portail parent. Profil, messages, agenda et trajets de votre enfant',
+  shortTagline: 'Pôle Parent. Profil, messages, agenda et trajets de votre enfant',
   entryCta: 'Espace Parent',
 } as const;
 

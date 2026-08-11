@@ -12,6 +12,7 @@ import {
   isProProductLine,
   normalizeStoredProductLine,
   PRODUCT_LINE_STORAGE_KEY,
+  PRODAY_PARENT_BRAND,
   PRODAY_SPONSOR_BRAND,
   WOMAN_SPACE_ACTIVE_KEY,
   type ProductLineId,
@@ -26,6 +27,7 @@ import { getUserProductLine } from '../utils/productLineAccess';
 import { resolvePlayerSegment, type PlayerSegment } from '../utils/playerSegment';
 import {
   colorsForAuthContext,
+  isParentAuthPreset,
   isSponsorAuthPreset,
   reconcileProSignupPreset,
 } from '../utils/authBrandContext';
@@ -39,6 +41,7 @@ interface ProductLineContextValue {
   isAmateur: boolean;
   isSupporter: boolean;
   isSante: boolean;
+  isParent: boolean;
   /** @deprecated Préférer isWoman */
   isGirl: boolean;
   brandName: string;
@@ -46,6 +49,8 @@ interface ProductLineContextValue {
   colors: AppColors;
   /** Invité sur parcours Sponsor (carousel / CTA) — chrome or sans polluer un user connecté Pro. */
   isSponsorAuthChrome: boolean;
+  /** Invité sur parcours Parent (carousel). */
+  isParentAuthChrome: boolean;
   /** Segment joueur actif (thème homme/femme/mineur). */
   playerSegment: PlayerSegment | null;
   setProductLine: (line: ProductLineId) => Promise<void>;
@@ -56,6 +61,7 @@ interface ProductLineContextValue {
   enterAmateurSpace: () => Promise<void>;
   enterSupporterSpace: () => Promise<void>;
   enterSanteSpace: () => Promise<void>;
+  enterParentSpace: () => Promise<void>;
   enterSponsorSpace: () => Promise<void>;
   exitWomanSpace: () => Promise<void>;
   /** Rôle présélectionné après choix carousel pro_player / pro_club / pro_staff. */
@@ -200,6 +206,14 @@ export const ProductLineProvider: React.FC<{ children: React.ReactNode }> = ({
     await persistLine('sponsor');
   }, [persistLine]);
 
+  const enterParentSpace = useCallback(async () => {
+    setWomanSpaceActive(false);
+    setLineState('parent');
+    setProSignupPresetRoleState('parent');
+    await AsyncStorage.setItem(PRO_SIGNUP_PRESET_ROLE_KEY, 'parent');
+    await persistLine('parent');
+  }, [persistLine]);
+
   const exitWomanSpace = useCallback(async () => {
     await enterAmateurSpace();
   }, [enterAmateurSpace]);
@@ -214,13 +228,22 @@ export const ProductLineProvider: React.FC<{ children: React.ReactNode }> = ({
       
       if (line === 'woman' || line === 'homme') await enterAmateurSpace();
       else if (line === 'sponsor') await enterSponsorSpace();
+      else if (line === 'parent') await enterParentSpace();
       else if (isProProductLine(line)) await enterProLine(line);
       else if (line === 'amateur') await enterAmateurSpace();
       else if (line === 'supporter') await enterSupporterSpace();
       else if (line === 'sante') await enterSanteSpace();
       else await enterAmateurSpace();
     },
-    [enterProLine, enterAmateurSpace, enterSupporterSpace, enterSanteSpace, enterSponsorSpace, profile]
+    [
+      enterProLine,
+      enterAmateurSpace,
+      enterSupporterSpace,
+      enterSanteSpace,
+      enterSponsorSpace,
+      enterParentSpace,
+      profile,
+    ],
   );
 
   useEffect(() => {
@@ -237,18 +260,25 @@ export const ProductLineProvider: React.FC<{ children: React.ReactNode }> = ({
   const isAmateur = productLine === 'amateur';
   const isSupporter = productLine === 'supporter';
   const isSante = productLine === 'sante';
+  const isParent = productLine === 'parent';
   const guestSponsorAuth =
     !profile && (productLine === 'sponsor' || isSponsorAuthPreset(proSignupPresetRole));
+  const guestParentAuth =
+    !profile && (productLine === 'parent' || isParentAuthPreset(proSignupPresetRole));
   const brand = guestSponsorAuth || productLine === 'sponsor'
     ? PRODAY_SPONSOR_BRAND
-    : brandForProductLine(productLine);
+    : guestParentAuth || productLine === 'parent'
+      ? PRODAY_PARENT_BRAND
+      : brandForProductLine(productLine);
 
   const themedColors = useMemo(
     () =>
       productLine === 'sponsor' || guestSponsorAuth
         ? colorsForAuthContext('sponsor', 'sponsor')
-        : getThemedColorsForLine(productLine, playerSegment),
-    [guestSponsorAuth, productLine, playerSegment],
+        : productLine === 'parent' || guestParentAuth
+          ? colorsForAuthContext('parent', 'parent')
+          : getThemedColorsForLine(productLine, playerSegment),
+    [guestSponsorAuth, guestParentAuth, productLine, playerSegment],
   );
 
   const value = useMemo(
@@ -261,11 +291,13 @@ export const ProductLineProvider: React.FC<{ children: React.ReactNode }> = ({
       isAmateur,
       isSupporter,
       isSante,
+      isParent,
       isGirl: isWoman,
       brandName: brand.name,
       tagline: brand.tagline,
       colors: themedColors,
       isSponsorAuthChrome: guestSponsorAuth,
+      isParentAuthChrome: guestParentAuth,
       playerSegment,
       setProductLine,
       enterHommeSpace,
@@ -275,6 +307,7 @@ export const ProductLineProvider: React.FC<{ children: React.ReactNode }> = ({
       enterAmateurSpace,
       enterSupporterSpace,
       enterSanteSpace,
+      enterParentSpace,
       enterSponsorSpace,
       exitWomanSpace,
       proSignupPresetRole,
@@ -290,10 +323,12 @@ export const ProductLineProvider: React.FC<{ children: React.ReactNode }> = ({
       isAmateur,
       isSupporter,
       isSante,
+      isParent,
       brand.name,
       brand.tagline,
       themedColors,
       guestSponsorAuth,
+      guestParentAuth,
       playerSegment,
       setProductLine,
       enterHommeSpace,
@@ -303,6 +338,7 @@ export const ProductLineProvider: React.FC<{ children: React.ReactNode }> = ({
       enterAmateurSpace,
       enterSupporterSpace,
       enterSanteSpace,
+      enterParentSpace,
       enterSponsorSpace,
       exitWomanSpace,
       proSignupPresetRole,
@@ -331,6 +367,7 @@ export function useAppTheme() {
     isAmateur,
     isSupporter,
     isSante,
+    isParent,
     isGirl,
     brandName,
     tagline,
@@ -342,9 +379,11 @@ export function useAppTheme() {
     enterAmateurSpace,
     enterSupporterSpace,
     enterSanteSpace,
+    enterParentSpace,
     exitWomanSpace,
     womanSpaceActive,
     isSponsorAuthChrome,
+    isParentAuthChrome,
     proSignupPresetRole,
     setProSignupPresetRole,
     playerSegment,
@@ -357,6 +396,7 @@ export function useAppTheme() {
     isAmateur,
     isSupporter,
     isSante,
+    isParent,
     isGirl,
     brandName,
     tagline,
@@ -369,9 +409,11 @@ export function useAppTheme() {
     enterAmateurSpace,
     enterSupporterSpace,
     enterSanteSpace,
+    enterParentSpace,
     exitWomanSpace,
     womanSpaceActive,
     isSponsorAuthChrome,
+    isParentAuthChrome,
     proSignupPresetRole,
     setProSignupPresetRole,
   };

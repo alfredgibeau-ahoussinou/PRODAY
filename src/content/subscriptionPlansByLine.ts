@@ -27,7 +27,9 @@ export const PLAN_IDS_BY_LINE: Record<ProductLineId, SubscriptionPlanId[]> =
   pro: [
     'recruiter_pro',
     'coach_pro',
+    'club_amateur',
     'club_pro',
+    'club_premium',
     'agent_elite',
     'organizer_pro',
     'sponsor_pro',
@@ -102,7 +104,7 @@ const LINE_PLAN_PATCHES: Record<
   pro: {
     recruiter_pro: {
       label: 'Recruteur Pro',
-      tagline: 'Scouting, Mercato Pro et pipeline candidatures',
+      tagline: 'Scouting, Mercato Pro et suivi des candidatures',
       mercatoQuotaLabel: 'Messages Mercato Pro',
       freeIncludes: [
         'Profil recruteur vérifié',
@@ -112,7 +114,7 @@ const LINE_PLAN_PATCHES: Record<
       ],
       proIncludes: [
         'Annonces Mercato Pro actives',
-        'Pipeline candidatures',
+        'Suivi des candidatures',
         'Messages recrutement illimités',
         'Statistiques scouting & candidatures',
       ],
@@ -148,7 +150,7 @@ const LINE_PLAN_PATCHES: Record<
         'Annonces Mercato Pro illimitées',
         'Multi-équipes',
         'Priorité dans le fil Mercato Pro',
-        'Pipeline candidatures kanban',
+        'Suivi des candidatures',
       ],
     },
     agent_elite: {
@@ -164,7 +166,7 @@ const LINE_PLAN_PATCHES: Record<
       proIncludes: [
         'Contacts Mercato Pro illimités',
         'Alertes géolocalisées',
-        'Pipeline mandats',
+        'Suivi des mandats',
         'Exports et rapports',
       ],
     },

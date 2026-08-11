@@ -19,7 +19,7 @@ export default function PricingPage() {
       <ImmersivePoleHero
         brand="Pro Day Tarifs"
         headline="Un pôle. Un prix."
-        support="Pas de forfait fourre-tout. Tu ouvres l’espace dont tu as besoin — Joueur, Club, Coach, Supporter ou Sponsor."
+        support="Pas de forfait fourre-tout. Tu ouvres l’espace dont tu as besoin : Joueur, Club, Coach, Supporter ou Sponsor."
         video={visuals.heroVideo}
         poster={visuals.hero}
         primaryHref={ROUTES.betaWaitlist}

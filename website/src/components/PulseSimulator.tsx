@@ -17,7 +17,7 @@ const SLIDERS: { key: SliderKey; label: string; hint: string }[] = [
 ];
 
 function scoreLabel(score: number): string {
-  if (score >= 85) return "Élite visible";
+  if (score >= 85) return "Très visible";
   if (score >= 70) return "Très visible";
   if (score >= 50) return "En progression";
   return "À compléter";

@@ -30,6 +30,17 @@ import type {
   PoolStandingRow,
 } from '../models/Tournament';
 import type {
+  Competition,
+  CompetitionFixture,
+  CompetitionSeason,
+  CompetitionStandingsDoc,
+  CompetitionTeam,
+  PlayerCompetitionStats,
+  CompetitionRules,
+  CompetitionFixtureStatus,
+} from '../models/Competition';
+import { DEFAULT_COMPETITION_RULES } from '../models/Competition';
+import type {
   TeamEvent,
   RsvpStatus,
   AttendanceMark,
@@ -41,6 +52,7 @@ import type {
   LiveMatchAction,
   LiveActionType,
 } from '../models/TeamEvent';
+import { isCarpoolVehicleType } from '../models/CarpoolVehicle';
 import type { SponsorOffer, ClubFundingGoal } from '../models/SponsorOffer';
 import type { ClubAnnouncement } from '../models/ClubAnnouncement';
 import type { StageOffer, StageApplication } from '../models/Stage';
@@ -116,10 +128,17 @@ export function userFromFirestore(uid: string, data: Record<string, unknown>): U
       level: profile.level as string | undefined,
       gender: toProfileGender(profile.gender),
       strong_foot: profile.strong_foot as User['profile']['strong_foot'],
+      jersey_number:
+        profile.jersey_number != null ? Number(profile.jersey_number) : undefined,
       height_cm: profile.height_cm as number | undefined,
       weight_kg: profile.weight_kg as number | undefined,
       highlight_video_urls: profile.highlight_video_urls as string[] | undefined,
       gallery_urls: profile.gallery_urls as string[] | undefined,
+      /** Source de vérité pour les univers joueur (-13 / ado / adulte). */
+      birth_date:
+        typeof profile.birth_date === 'string' && profile.birth_date.trim()
+          ? profile.birth_date.trim()
+          : undefined,
       age: profile.age as number | undefined,
       years_experience: profile.years_experience as number | undefined,
       availability: profile.availability as User['profile']['availability'],
@@ -394,6 +413,7 @@ export function teamEventFromFirestore(
     club_name: data.club_name as string | undefined,
     tournament_id: data.tournament_id as string | undefined,
     friendly_match_id: data.friendly_match_id as string | undefined,
+    competition_fixture_id: data.competition_fixture_id as string | undefined,
     starts_at: toDate(data.starts_at),
     ends_at: data.ends_at ? toDate(data.ends_at) : undefined,
     city: String(data.city ?? ''),
@@ -422,6 +442,7 @@ export function teamEventFromFirestore(
       ? toDate(data.match_report_finalized_at)
       : undefined,
     event_tasks: mapEventTasks(data.event_tasks),
+    session_plan: mapSessionPlan(data.session_plan),
     carpool_slots: mapCarpoolSlots(data.carpool_slots),
     carpool_messages: mapCarpoolMessages(data.carpool_messages),
     created_at: toDate(data.created_at),
@@ -438,8 +459,22 @@ function mapEventTasks(raw: unknown) {
       kind: (t.kind as import('../models/TeamEvent').EventTaskKind) ?? 'other',
       label: String(t.label ?? ''),
       assignee_uids: (t.assignee_uids as string[]) ?? [],
+      done: t.done === true,
     };
   });
+}
+
+function mapSessionPlan(raw: unknown): import('../models/CoachEvaluation').TrainingSessionPlan | undefined {
+  if (!raw || typeof raw !== 'object') return undefined;
+  const o = raw as Record<string, unknown>;
+  return {
+    focus: o.focus ? String(o.focus) : undefined,
+    notes: o.notes ? String(o.notes) : undefined,
+    duration_min: typeof o.duration_min === 'number' ? o.duration_min : undefined,
+    objective_ids: Array.isArray(o.objective_ids)
+      ? o.objective_ids.map(String)
+      : undefined,
+  };
 }
 
 function mapCarpoolTripStatus(
@@ -458,6 +493,7 @@ function mapCarpoolSlots(raw: unknown): CarpoolSlot[] | undefined {
       driver_uid: String(s.driver_uid ?? ''),
       driver_name: String(s.driver_name ?? ''),
       seats: typeof s.seats === 'number' ? s.seats : undefined,
+      vehicle_type: isCarpoolVehicleType(s.vehicle_type) ? s.vehicle_type : undefined,
       meeting_time: s.meeting_time ? String(s.meeting_time) : undefined,
       meeting_place: s.meeting_place ? String(s.meeting_place) : undefined,
       meeting_location: toGeoPoint(s.meeting_location),
@@ -558,6 +594,7 @@ export function friendlyMatchFromFirestore(
   id: string,
   data: Record<string, unknown>
 ): FriendlyMatch {
+  const rawCounter = data.counter_proposal as Record<string, unknown> | undefined;
   return {
     id,
     requester_uid: data.requester_uid as string | undefined,
@@ -565,6 +602,12 @@ export function friendlyMatchFromFirestore(
     requester_club_name: String(data.requester_club_name ?? ''),
     opponent_club_id: data.opponent_club_id as string | undefined,
     opponent_club_name: data.opponent_club_name as string | undefined,
+    requester_team_id: data.requester_team_id
+      ? String(data.requester_team_id)
+      : undefined,
+    requester_team_label: data.requester_team_label
+      ? String(data.requester_team_label)
+      : undefined,
     location: toGeoPoint(data.location),
     city: String(data.city ?? ''),
     date: toDate(data.date),
@@ -572,10 +615,28 @@ export function friendlyMatchFromFirestore(
     category: String(data.category ?? ''),
     level: String(data.level ?? ''),
     level_type: (data.level_type as FriendlyMatch['level_type']) ?? 'loisir',
+    match_kind: (data.match_kind as FriendlyMatch['match_kind']) ?? 'amical',
+    venue_side: (data.venue_side as FriendlyMatch['venue_side']) ?? undefined,
     has_pitch: Boolean(data.has_pitch),
     message: data.message as string | undefined,
     status: (data.status as FriendlyMatch['status']) ?? 'OPEN',
+    counter_proposal: rawCounter
+      ? {
+          proposed_by_club_id: String(rawCounter.proposed_by_club_id ?? ''),
+          proposed_by_club_name: String(rawCounter.proposed_by_club_name ?? ''),
+          date: toDate(rawCounter.date),
+          time_label: String(rawCounter.time_label ?? ''),
+          city: String(rawCounter.city ?? ''),
+          venue_side: rawCounter.venue_side as FriendlyMatch['venue_side'],
+          team_label: rawCounter.team_label
+            ? String(rawCounter.team_label)
+            : undefined,
+          message: rawCounter.message ? String(rawCounter.message) : undefined,
+          created_at: toDate(rawCounter.created_at),
+        }
+      : undefined,
     created_at: toDate(data.created_at),
+    updated_at: data.updated_at ? toDate(data.updated_at) : undefined,
   };
 }
 
@@ -661,6 +722,158 @@ export function tournamentFromFirestore(id: string, data: Record<string, unknown
     fixtures,
     standings,
     created_at: toDate(data.created_at),
+    updated_at: toDate(data.updated_at),
+  };
+}
+
+function mapCompetitionRules(raw: unknown): CompetitionRules {
+  const r = (raw ?? {}) as Record<string, unknown>;
+  return {
+    points_win: Number(r.points_win ?? DEFAULT_COMPETITION_RULES.points_win),
+    points_draw: Number(r.points_draw ?? DEFAULT_COMPETITION_RULES.points_draw),
+    points_loss: Number(r.points_loss ?? DEFAULT_COMPETITION_RULES.points_loss),
+    contest_hours: Number(r.contest_hours ?? DEFAULT_COMPETITION_RULES.contest_hours),
+  };
+}
+
+export function competitionFromFirestore(id: string, data: Record<string, unknown>): Competition {
+  return {
+    id,
+    name: String(data.name ?? ''),
+    format: data.format === 'cup' ? 'cup' : 'league',
+    category: data.category ? String(data.category) : undefined,
+    season_label: String(data.season_label ?? ''),
+    organizer_uids: Array.isArray(data.organizer_uids) ? data.organizer_uids.map(String) : [],
+    club_ids: Array.isArray(data.club_ids) ? data.club_ids.map(String) : [],
+    rules: mapCompetitionRules(data.rules),
+    created_by: String(data.created_by ?? ''),
+    created_at: toDate(data.created_at),
+    updated_at: toDate(data.updated_at),
+  };
+}
+
+export function competitionSeasonFromFirestore(
+  id: string,
+  data: Record<string, unknown>,
+): CompetitionSeason {
+  const statusRaw = String(data.status ?? 'draft');
+  const status =
+    statusRaw === 'active' || statusRaw === 'closed' ? statusRaw : 'draft';
+  return {
+    id,
+    competition_id: String(data.competition_id ?? ''),
+    competition_name: String(data.competition_name ?? ''),
+    label: String(data.label ?? ''),
+    starts_at: toDate(data.starts_at),
+    ends_at: data.ends_at ? toDate(data.ends_at) : null,
+    status,
+    organizer_uids: Array.isArray(data.organizer_uids) ? data.organizer_uids.map(String) : [],
+    external_provider: data.external_provider ? String(data.external_provider) : null,
+    external_season_id: data.external_season_id ? String(data.external_season_id) : null,
+    created_at: toDate(data.created_at),
+    updated_at: toDate(data.updated_at),
+  };
+}
+
+export function competitionTeamFromFirestore(
+  id: string,
+  data: Record<string, unknown>,
+): CompetitionTeam {
+  return {
+    id,
+    season_id: String(data.season_id ?? ''),
+    competition_id: String(data.competition_id ?? ''),
+    club_id: String(data.club_id ?? ''),
+    team_id: data.team_id ? String(data.team_id) : null,
+    display_name: String(data.display_name ?? ''),
+    created_at: toDate(data.created_at),
+  };
+}
+
+export function competitionFixtureFromFirestore(
+  id: string,
+  data: Record<string, unknown>,
+): CompetitionFixture {
+  const status = (data.status as CompetitionFixtureStatus) ?? 'scheduled';
+  return {
+    id,
+    season_id: String(data.season_id ?? ''),
+    competition_id: String(data.competition_id ?? ''),
+    matchday: Number(data.matchday ?? 1),
+    home_team_id: String(data.home_team_id ?? ''),
+    away_team_id: String(data.away_team_id ?? ''),
+    home_name: String(data.home_name ?? ''),
+    away_name: String(data.away_name ?? ''),
+    kickoff_at: toDate(data.kickoff_at),
+    status,
+    home_score: typeof data.home_score === 'number' ? data.home_score : null,
+    away_score: typeof data.away_score === 'number' ? data.away_score : null,
+    team_event_id: data.team_event_id ? String(data.team_event_id) : null,
+    source: data.source === 'external' ? 'external' : 'proday',
+    validated_at: data.validated_at ? toDate(data.validated_at) : null,
+    validated_by: data.validated_by ? String(data.validated_by) : null,
+    contested_at: data.contested_at ? toDate(data.contested_at) : null,
+    contested_by: data.contested_by ? String(data.contested_by) : null,
+    contest_reason: data.contest_reason ? String(data.contest_reason) : null,
+    contest_deadline_at: data.contest_deadline_at ? toDate(data.contest_deadline_at) : null,
+    auto_potm_uid: data.auto_potm_uid ? String(data.auto_potm_uid) : null,
+    auto_potm_name: data.auto_potm_name ? String(data.auto_potm_name) : null,
+    ai_summary: data.ai_summary ? String(data.ai_summary) : null,
+    highlight_urls: Array.isArray(data.highlight_urls)
+      ? data.highlight_urls.map(String)
+      : undefined,
+    external_fixture_id: data.external_fixture_id ? String(data.external_fixture_id) : null,
+    created_at: toDate(data.created_at),
+    updated_at: toDate(data.updated_at),
+  };
+}
+
+export function competitionStandingsFromFirestore(
+  id: string,
+  data: Record<string, unknown>,
+): CompetitionStandingsDoc {
+  const rowsRaw = Array.isArray(data.rows) ? (data.rows as Record<string, unknown>[]) : [];
+  return {
+    id,
+    season_id: String(data.season_id ?? id),
+    competition_id: String(data.competition_id ?? ''),
+    rows: rowsRaw.map((r) => ({
+      team_id: String(r.team_id ?? ''),
+      display_name: String(r.display_name ?? ''),
+      played: Number(r.played ?? 0),
+      won: Number(r.won ?? 0),
+      drawn: Number(r.drawn ?? 0),
+      lost: Number(r.lost ?? 0),
+      goals_for: Number(r.goals_for ?? 0),
+      goals_against: Number(r.goals_against ?? 0),
+      goal_difference: Number(r.goal_difference ?? 0),
+      points: Number(r.points ?? 0),
+    })),
+    updated_at: toDate(data.updated_at),
+  };
+}
+
+export function playerCompetitionStatsFromFirestore(
+  id: string,
+  data: Record<string, unknown>,
+): PlayerCompetitionStats {
+  return {
+    id,
+    season_id: String(data.season_id ?? ''),
+    competition_id: String(data.competition_id ?? ''),
+    uid: String(data.uid ?? ''),
+    display_name: String(data.display_name ?? ''),
+    team_id: data.team_id ? String(data.team_id) : null,
+    matches: Number(data.matches ?? 0),
+    minutes: Number(data.minutes ?? 0),
+    goals: Number(data.goals ?? 0),
+    assists: Number(data.assists ?? 0),
+    clean_sheets: Number(data.clean_sheets ?? 0),
+    yellow_cards: Number(data.yellow_cards ?? 0),
+    red_cards: Number(data.red_cards ?? 0),
+    rating_sum: Number(data.rating_sum ?? 0),
+    rating_count: Number(data.rating_count ?? 0),
+    motm: Number(data.motm ?? 0),
     updated_at: toDate(data.updated_at),
   };
 }

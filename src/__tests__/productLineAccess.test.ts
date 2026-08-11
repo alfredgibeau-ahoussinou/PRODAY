@@ -87,7 +87,22 @@ describe('productLineAccess', () => {
     } as User;
     expect(getUserProductLine(amateurPlayer)).toBe('amateur');
     expect(profileMatchesActiveLine(amateurPlayer, 'amateur')).toBe(true);
-    expect(profileMatchesActiveLine(amateurPlayer, 'homme')).toBe(false);
+    // Pôle Joueur unifié : Amateur ↔ Pro Joueur / carousel homme
+    expect(profileMatchesActiveLine(amateurPlayer, 'pro_player')).toBe(true);
+    expect(profileMatchesActiveLine(amateurPlayer, 'homme')).toBe(true);
+  });
+
+  it('autorise un compte Pro Joueur sur l’espace Amateur (Pôle Joueur)', () => {
+    const proPlayer = {
+      ...baseUser,
+      email: 'player.demo@proday.app',
+      role: 'player' as const,
+      product_line: 'pro_player' as const,
+    } as User;
+    expect(profileMatchesActiveLine(proPlayer, 'amateur')).toBe(true);
+    expect(profileMatchesActiveLine(proPlayer, 'pro_player')).toBe(true);
+    expect(profileMatchesActiveLine(proPlayer, 'pro_club')).toBe(false);
+    expect(profileMatchesActiveLine(proPlayer, 'pro_staff')).toBe(false);
   });
 
   it('canonise coach stocké en amateur vers pro_staff (hors Pôle Joueur)', () => {
@@ -127,7 +142,8 @@ describe('productLineAccess', () => {
     expect(profileMatchesActiveLine(womanPlayer, 'homme')).toBe(false);
     expect(profileMatchesActiveLine(womanPlayer, 'pro_player')).toBe(true);
     expect(profileMatchesActiveLine(womanPlayer, 'woman')).toBe(true);
-    expect(getProductLineMismatchMessage('amateur', 'pro_player')).toMatch(/Pro Day Amateur/);
+    expect(getProductLineMismatchMessage('amateur', 'sante')).toMatch(/Pro Day/);
+    expect(getProductLineMismatchMessage('amateur', 'pro_club')).toMatch(/Club|Amateur|Joueur/);
   });
 
   it('refuse le compte joueur standard hors de son pôle', () => {

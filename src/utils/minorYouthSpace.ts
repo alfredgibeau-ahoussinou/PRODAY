@@ -5,12 +5,9 @@ import type { User } from '../models/User';
 import { getSelectableAppSpaces } from './appSpaceProductLine';
 import { isMinorUser } from './minor';
 import { isFemalePresentationForUser, resolvePlayerSegment } from './playerSegment';
+import { isYouthAppSpace } from './youthAppSpaces';
 
-const YOUTH_SPACES: AppSpaceId[] = ['under_u13', 'boys', 'girls'];
-
-export function isYouthAppSpace(space: AppSpaceId): boolean {
-  return YOUTH_SPACES.includes(space);
-}
+export { isYouthAppSpace, YOUTH_APP_SPACES } from './youthAppSpaces';
 
 /** Espace jeunes imposé pour un compte mineur selon âge et pôle. */
 export function resolveYouthAppSpaceForMinor(

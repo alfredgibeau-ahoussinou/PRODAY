@@ -147,7 +147,7 @@ export const ProfilePassportHeader: React.FC<ProfilePassportHeaderProps> = ({
               muted={subscriptionTier !== 'pro'}
               style={styles.tierText}
             >
-              {subscriptionTier === 'pro' ? 'Pro' : 'Free'}
+              {subscriptionTier === 'pro' ? 'Pro' : 'Gratuit'}
             </ProDayText>
           </View>
           {verified ? <VerificationBadge user={profile} /> : null}

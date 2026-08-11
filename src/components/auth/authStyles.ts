@@ -65,8 +65,9 @@ export function createAuthStyles(c: AppColors) {
     },
     brandRow: {
       alignItems: 'center',
-      marginBottom: spacing.lg,
+      marginBottom: spacing.xl,
       paddingHorizontal: spacing.lg,
+      overflow: 'visible',
     },
     hero: {
       paddingHorizontal: spacing.lg,

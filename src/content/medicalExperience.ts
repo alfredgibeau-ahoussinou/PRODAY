@@ -1,4 +1,4 @@
-import type { IconName } from '../components/ui/Icon';
+import type { IconName } from '../components/ui/iconNames';
 import type { MainTabId } from '../navigation/mainTabConfig';
 import type { UserRole } from '../models/User';
 

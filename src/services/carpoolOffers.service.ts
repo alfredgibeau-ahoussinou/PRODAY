@@ -36,6 +36,7 @@ import {
 } from '../utils/carpoolLiveTrip';
 import { carpoolLiveTripService } from './carpoolLiveTrip.service';
 import type { CarpoolTripStatus } from '../models/CarpoolLiveTrip';
+import { isCarpoolVehicleType } from '../models/CarpoolVehicle';
 
 const COL = 'carpool_offers';
 
@@ -124,6 +125,7 @@ function offerFromFirestore(id: string, data: Record<string, unknown>): Standalo
     meeting_place: data.meeting_place as string | undefined,
     meeting_location: mapGeoPoint(data.meeting_location),
     seats: Number(data.seats ?? 0),
+    vehicle_type: isCarpoolVehicleType(data.vehicle_type) ? data.vehicle_type : undefined,
     notes: data.notes as string | undefined,
     passengers: mapPassengers(data.passengers),
     status,
@@ -237,6 +239,7 @@ export const carpoolOffersService = {
       meeting_place: input.meeting_place?.trim() || null,
       meeting_location: input.meeting_location ?? null,
       seats: input.seats,
+      vehicle_type: input.vehicle_type ?? null,
       notes: input.notes?.trim() || null,
       passengers: [],
       status: 'open',
@@ -272,6 +275,9 @@ export const carpoolOffersService = {
         ? { meeting_location: patch.meeting_location ?? null }
         : {}),
       ...(patch.seats != null ? { seats: patch.seats } : {}),
+      ...(patch.vehicle_type !== undefined
+        ? { vehicle_type: patch.vehicle_type ?? null }
+        : {}),
       ...(patch.notes !== undefined ? { notes: patch.notes?.trim() || null } : {}),
       ...(patch.status ? { status: patch.status } : {}),
       ...(patch.club_only !== undefined ? { club_only: patch.club_only === true } : {}),

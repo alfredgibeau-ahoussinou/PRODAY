@@ -18,9 +18,17 @@ export const IAP_SKUS: Partial<
     monthly: 'com.proday.app.coach_pro.monthly',
     yearly: 'com.proday.app.coach_pro.yearly',
   },
+  club_amateur: {
+    monthly: 'com.proday.app.club_amateur.monthly',
+    yearly: 'com.proday.app.club_amateur.yearly',
+  },
   club_pro: {
     monthly: 'com.proday.app.club_pro.monthly',
     yearly: 'com.proday.app.club_pro.yearly',
+  },
+  club_premium: {
+    monthly: 'com.proday.app.club_premium.monthly',
+    yearly: 'com.proday.app.club_premium.yearly',
   },
   agent_elite: {
     monthly: 'com.proday.app.agent_elite.monthly',

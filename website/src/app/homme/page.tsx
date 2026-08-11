@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
-import { ROUTES } from "@/lib/routes";
+import { joueurGateHref } from "@/lib/joueurProfileStorage";
 
-/** @deprecated Pro Day Man fusionné dans Pôle Joueur. */
+/** @deprecated Pro Day Man → porte Joueur (genre joueur pré-sélectionné). */
 export default function HommeRedirectPage() {
-  redirect(ROUTES.joueur);
+  redirect(joueurGateHref({ gender: "men" }));
 }

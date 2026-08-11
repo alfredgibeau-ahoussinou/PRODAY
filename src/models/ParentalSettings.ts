@@ -36,6 +36,11 @@ export interface ParentalPrivacySettings {
   share_live_carpool?: boolean;
   /** Le parent peut consulter les messages (métadonnées + contenus) */
   parent_can_read_messages?: boolean;
+  /**
+   * Accès au coffre / RDV médicaux du mineur.
+   * Défaut false — le patient (ou tuteur via paramètres) doit activer explicitement.
+   */
+  parent_can_access_medical?: boolean;
 }
 
 export interface ParentalSettings {
@@ -89,5 +94,6 @@ export const DEFAULT_PARENTAL_SETTINGS: ParentalSettings = {
   privacy: {
     share_live_carpool: true,
     parent_can_read_messages: true,
+    parent_can_access_medical: false,
   },
 };

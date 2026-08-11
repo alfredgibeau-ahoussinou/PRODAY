@@ -71,7 +71,7 @@ export function ProDayCardsGallery({
   initialRole = "all",
   hideFilters = false,
   title = "Cinq identités. Une collection.",
-          support = "Joueur, Coach, Club, Supporter, Sponsor — cartes carrées interactives : tilt 3D, glare, flip et actions.",
+          support = "Joueur, Coach, Club, Supporter, Sponsor : cartes carrées interactives : tilt 3D, glare, flip et actions.",
   showMoreLink = false,
   id = "cartes",
   showSkinPicker = true,
@@ -120,7 +120,7 @@ export function ProDayCardsGallery({
     }
 
     flash(
-      `${name} · ${CARD_ACTION_LABELS[action]} — dispo dans l’app. Rejoins la bêta.`,
+      `${name} · ${CARD_ACTION_LABELS[action]} : dispo dans l’app. Rejoins la bêta.`,
     );
   }
 

@@ -22,7 +22,7 @@ const CHOICES = [
   {
     id: "club",
     title: "Club",
-    subtitle: "Effectifs, recrutement et pipeline",
+    subtitle: "Effectifs, recrutement et suivi",
     icon: "🏟️",
     href: ROUTES.proClub,
   },

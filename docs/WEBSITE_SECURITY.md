@@ -2,6 +2,12 @@
 
 Configuration appliquée dans `website/netlify.toml`, `netlify.toml` (monorepo) et `website/next.config.ts`.
 
+## Ce que la sécurité web peut (et ne peut pas) faire
+
+**Impossible :** empêcher « Inspecter » / DevTools, masquer le HTML/CSS/JS envoyé au navigateur, ou rendre un piratage « littéralement impossible ». Tout code exécuté côté client est visible et modifiable par l’utilisateur.
+
+**Efficace :** protéger les secrets et actions côté serveur, sessions admin cryptographiques, CSRF, rate limits, HTTPS/HSTS, CSP, cookies `HttpOnly`/`Secure`/`__Host-`, et ne jamais exposer de `NEXT_PUBLIC_*` sensibles.
+
 ## En-têtes HTTP
 
 | En-tête | Valeur |
@@ -10,11 +16,14 @@ Configuration appliquée dans `website/netlify.toml`, `netlify.toml` (monorepo) 
 | `X-Frame-Options` | `DENY` |
 | `X-Content-Type-Options` | `nosniff` |
 | `Referrer-Policy` | `strict-origin-when-cross-origin` (sauf redirection jeton bêta → `no-referrer`) |
-| `Permissions-Policy` | Capteurs, caméra, micro, géoloc, paiement, USB, etc. désactivés (liste exhaustive dans `netlify.toml`) |
-| `X-Permitted-Cross-Domain-Policies` | `none` |
+| `Permissions-Policy` | Capteurs restreints ; caméra/micro autorisés seulement pour Cal.com / Whereby (santé) |
+| `Content-Security-Policy` | `default-src 'self'` + Fonts + EmailJS + Cloud Functions + `frame-ancestors 'none'` |
 | `Cross-Origin-Opener-Policy` | `same-origin` |
 | `Cross-Origin-Resource-Policy` | `same-origin` |
-| `Content-Security-Policy` | `default-src 'self'` + Google Fonts + EmailJS + Cloud Functions + `upgrade-insecure-requests` |
+| `X-Robots-Tag` (admin) | `noindex, nofollow` |
+| `Cache-Control` (admin + API) | `no-store` |
+
+`poweredByHeader` désactivé ; `productionBrowserSourceMaps: false` (pas de source maps navigateur en prod).
 
 ## Routes API bêta
 
@@ -23,9 +32,10 @@ Configuration appliquée dans `website/netlify.toml`, `netlify.toml` (monorepo) 
 
 ## Routes API admin fondateurs (`/admin`)
 
-- Accès UI : middleware + cookie `proday_admin_session` (HMAC, 7 jours) après `POST /api/admin/login` avec minicode.
-- Rate limit PIN : 5 tentatives / 15 min / IP.
-- `GET /api/admin/beta/waitlist`, `POST …/approve|reject|resend` : session requise, `Origin`/`Referer` (CSRF), proxy vers CF `websiteBetaWaitlistAdmin` avec secret serveur.
+- Accès UI : **proxy Edge vérifie le HMAC** du cookie `proday_admin_session` quand le bundler Edge est OK ; les pages/API admin **vérifient toujours** le HMAC côté serveur Node.
+- Cookie : `HttpOnly` + `Secure` + `SameSite=Strict` + Path `/` (12 h).
+- Login : `POST /api/admin/login` — rate limit **3 / 15 min / IP**, délai anti-bruteforce ~450 ms sur échec, contrôle Origin/Referer.
+- APIs admin : session HMAC Node + CSRF Origin/Referer + proxy secret vers Cloud Functions.
 - Ne jamais préfixer `BETA_ADMIN_PIN`, `BETA_ADMIN_SESSION_SECRET`, `BETA_WEBSITE_ADMIN_SECRET` par `NEXT_PUBLIC_`.
 
 ## Secrets (serveur uniquement)
@@ -40,6 +50,11 @@ Ne jamais préfixer par `NEXT_PUBLIC_` :
 
 Variables publiques autorisées : `NEXT_PUBLIC_SITE_URL`, liens APK/TestFlight optionnels.
 
+## Surfaces publiques
+
+- `robots.txt` : disallow `/admin`, `/api/`
+- `/.well-known/security.txt` : contact sécurité
+
 ## Actions manuelles (dashboard)
 
 1. **Netlify** — vérifier que les variables serveur sont définies (pas exposées au build client sauf `NEXT_PUBLIC_*`).
@@ -52,3 +67,4 @@ Variables publiques autorisées : `NEXT_PUBLIC_SITE_URL`, liens APK/TestFlight o
 - Jeton bêta transité brièvement dans l’URL (`?token=`) avant pose du cookie — éviter de logger les query strings côté Netlify/analytics.
 - Rate limiting en mémoire (non partagé entre instances serverless) — suffisant pour la bêta, à remplacer par Redis/Upstash si abus massifs.
 - CSP autorise `'unsafe-inline'` / `'unsafe-eval'` (contrainte Next.js) — durcir avec nonces si besoin ultérieur.
+- Le JS/CSS/HTML public reste lisible dans DevTools : c’est normal ; la protection porte sur les secrets et les APIs.

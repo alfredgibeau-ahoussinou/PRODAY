@@ -26,7 +26,9 @@ import { useAppTheme } from '../../context/ProductLineContext';
 import { useTranslation } from '../../context/LocaleContext';
 import { useTabNavigationOptional } from '../../context/TabNavigationContext';
 import { spacing, radius, shadows } from '../../theme/designTokens';
+import { CARPOOL_SITE } from '../../content/carpoolSite';
 import { CarpoolCardAccent } from './carpoolUi';
+import { CarpoolTripTicket } from './CarpoolTripTicket';
 import { openCarpoolDriverChat } from '../../utils/openCarpoolDriverChat';
 import { CarpoolLiveTripPanel } from './CarpoolLiveTripPanel';
 import {
@@ -40,6 +42,7 @@ interface StandaloneCarpoolRideCardProps {
   profile: User;
   driverHistory?: StandaloneCarpoolOffer[];
   onUpdated: () => void;
+  compact?: boolean;
 }
 
 export const StandaloneCarpoolRideCard: React.FC<StandaloneCarpoolRideCardProps> = ({
@@ -47,6 +50,7 @@ export const StandaloneCarpoolRideCard: React.FC<StandaloneCarpoolRideCardProps>
   profile,
   driverHistory = [],
   onUpdated,
+  compact = false,
 }) => {
   const { colors } = useAppTheme();
   const { t } = useTranslation();
@@ -155,6 +159,143 @@ export const StandaloneCarpoolRideCard: React.FC<StandaloneCarpoolRideCardProps>
     ]);
   };
 
+  const fromLabel = offer.meeting_place?.trim() || t('carpool.ride.meetingTbd');
+  const toLabel = offer.destination_label?.trim() || offer.title;
+  const seatsLabel = t('carpool.standalone.seats', { n: available });
+  const driverLabel = `${offer.driver_name}${tripsDone >= 3 ? t('carpool.standalone.verified') : ''}`;
+
+  const ticketFooter = (
+    <View style={styles.ticketActions}>
+      {canBook ? (
+        <>
+          {!isMine && tabNav ? (
+            <PressableSpring
+              onPress={() => void handleContactDriver()}
+              disabled={contactBusy}
+              scaleTo={0.97}
+              haptic
+              style={styles.ticketGhost}
+            >
+              {contactBusy ? (
+                <ActivityIndicator color={CARPOOL_SITE.signal} size="small" />
+              ) : (
+                <>
+                  <Icon name="chat" size={14} color={CARPOOL_SITE.signal} />
+                  <ProDayText variant="caption" style={styles.ticketGhostText}>
+                    {t('carpool.ride.contactDriver')}
+                  </ProDayText>
+                </>
+              )}
+            </PressableSpring>
+          ) : null}
+          <CarpoolLocationCapture
+            label={t('carpool.standalone.pickupLabel')}
+            place={pickupPlace}
+            location={pickupLocation}
+            onPlaceChange={setPickupPlace}
+            onLocationChange={setPickupLocation}
+            disabled={busy}
+            compact
+          />
+          <PressableSpring onPress={handleBook} disabled={busy} scaleTo={0.96} haptic style={styles.ticketCta}>
+            {busy ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <ProDayText variant="caption" style={styles.ticketCtaText}>
+                {t('carpool.standalone.requestSeat')}
+              </ProDayText>
+            )}
+          </PressableSpring>
+        </>
+      ) : null}
+
+      {!canBook && !isMine && tabNav ? (
+        <PressableSpring
+          onPress={() => void handleContactDriver()}
+          disabled={contactBusy}
+          scaleTo={0.97}
+          haptic
+          style={styles.ticketGhost}
+        >
+          {contactBusy ? (
+            <ActivityIndicator color={CARPOOL_SITE.signal} size="small" />
+          ) : (
+            <>
+              <Icon name="chat" size={14} color={CARPOOL_SITE.signal} />
+              <ProDayText variant="caption" style={styles.ticketGhostText}>
+                {t('carpool.ride.contactDriver')}
+              </ProDayText>
+            </>
+          )}
+        </PressableSpring>
+      ) : null}
+
+      {bookedHere ? (
+        <PressableSpring onPress={handleCancel} disabled={busy} scaleTo={0.96} haptic style={styles.ticketGhost}>
+          <Icon
+            name={pendingHere ? 'time' : 'checkmark-circle'}
+            size={16}
+            color={pendingHere ? CARPOOL_SITE.signal : CARPOOL_SITE.ink}
+          />
+          <ProDayText variant="caption" style={styles.ticketGhostText}>
+            {pendingHere ? t('carpool.standalone.pending') : t('carpool.standalone.confirmed')}
+          </ProDayText>
+        </PressableSpring>
+      ) : null}
+
+      {isMine ? (
+        <View style={styles.mineBlock}>
+          <ProDayText variant="caption" style={styles.ticketGhostText}>
+            {t('carpool.standalone.passengersConfirmed', {
+              n: (offer.passengers ?? []).filter((p) => p.status === 'confirmed' || !p.status).length,
+            })}
+            {standalonePendingCount(offer) > 0
+              ? t('carpool.standalone.passengersPendingSuffix', { n: standalonePendingCount(offer) })
+              : ''}
+          </ProDayText>
+          {(offer.passengers ?? [])
+            .filter((p) => p.status === 'pending')
+            .map((p) => (
+              <View key={p.uid} style={styles.ticketPassengerRow}>
+                <View style={{ flex: 1 }}>
+                  <ProDayText variant="caption" style={styles.ticketGhostText}>
+                    {p.name}
+                  </ProDayText>
+                </View>
+                <PressableSpring onPress={() => handleRespond(p.uid, true)} scaleTo={0.97} haptic>
+                  <ProDayText variant="caption" style={styles.ticketAccept}>
+                    {t('carpool.standalone.accept')}
+                  </ProDayText>
+                </PressableSpring>
+                <PressableSpring onPress={() => handleRespond(p.uid, false)} scaleTo={0.97}>
+                  <ProDayText variant="caption" style={{ color: CARPOOL_SITE.inkDim }}>
+                    {t('carpool.standalone.decline')}
+                  </ProDayText>
+                </PressableSpring>
+              </View>
+            ))}
+        </View>
+      ) : null}
+    </View>
+  );
+
+  if (compact) {
+    return (
+      <CarpoolTripTicket
+        meta={`${formatFrenchDepartureDate(offer.departs_at)}${
+          offer.meeting_time ? t('carpool.standalone.departure', { time: offer.meeting_time }) : ''
+        }`}
+        metaRight={offer.club_only ? t('carpool.standalone.clubOnly') : t('carpool.standalone.freeTrip')}
+        from={fromLabel}
+        to={toLabel}
+        driver={driverLabel}
+        seatsLabel={seatsLabel}
+        timeLabel={offer.meeting_time || null}
+        footer={ticketFooter}
+      />
+    );
+  }
+
   return (
     <View style={[styles.card, { borderColor: colors.border, backgroundColor: colors.surface }, shadows.soft]}>
       <CarpoolCardAccent kind="cta" />
@@ -182,6 +323,11 @@ export const StandaloneCarpoolRideCard: React.FC<StandaloneCarpoolRideCardProps>
         {offer.destination_label ? (
           <ProDayText variant="caption" muted>
             → {offer.destination_label}
+          </ProDayText>
+        ) : null}
+        {offer.vehicle_type ? (
+          <ProDayText variant="caption" muted>
+            {t('carpool.vehicle.label')}: {t(`carpool.vehicle.${offer.vehicle_type}`)}
           </ProDayText>
         ) : null}
         <ProDayText variant="caption" accent style={styles.driver}>
@@ -342,7 +488,7 @@ export const StandaloneCarpoolRideCard: React.FC<StandaloneCarpoolRideCardProps>
         </View>
       ) : null}
 
-      {isMine || isStandaloneConfirmedPassenger(offer, profile.uid) ? (
+      {!compact && (isMine || isStandaloneConfirmedPassenger(offer, profile.uid)) ? (
         <CarpoolLiveTripPanel
           tripId={standaloneTripId(offer.id)}
           viewerUid={profile.uid}
@@ -426,4 +572,33 @@ const styles = StyleSheet.create({
   },
   passengerName: { fontWeight: '700' },
   action: { fontWeight: '700' },
+  ticketActions: { gap: spacing.sm },
+  ticketGhost: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    alignSelf: 'flex-start',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderWidth: 1.5,
+    borderColor: CARPOOL_SITE.fog,
+    borderRadius: 999,
+    backgroundColor: CARPOOL_SITE.surfaceMuted,
+  },
+  ticketGhostText: { fontWeight: '800', color: CARPOOL_SITE.ink },
+  ticketCta: {
+    alignSelf: 'stretch',
+    alignItems: 'center',
+    paddingVertical: 14,
+    borderRadius: 999,
+    backgroundColor: CARPOOL_SITE.asphalt,
+  },
+  ticketCtaText: { fontWeight: '800', color: '#fff' },
+  ticketPassengerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    paddingVertical: spacing.xs,
+  },
+  ticketAccept: { fontWeight: '800', color: CARPOOL_SITE.signalDeep },
 });

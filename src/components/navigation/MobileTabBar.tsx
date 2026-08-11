@@ -23,6 +23,8 @@ import {
   getPoleTabBarChrome,
   resolveTabBarAccent,
 } from '../../theme/poleTabBarTheme';
+import { useJoueurSession } from '../../context/JoueurSessionContext';
+import { JOUEUR_SITE } from '../../content/joueurPageIdentity';
 
 const BAR_HEIGHT = 56;
 const SIDE_ICON = 26;
@@ -46,12 +48,15 @@ export const MobileTabBar: React.FC<MobileTabBarProps> = ({
   const { colors, productLine, playerSegment } = useAppTheme();
   const { t } = useTranslation();
   const sessionProfile = useSessionProfile();
+  const joueurSession = useJoueurSession();
   const insets = useSafeAreaInsets();
   const [menuOpen, setMenuOpen] = useState(false);
 
   const role = sessionProfile?.role;
   const isSponsor = isSponsorRole(role);
   const immersive = activeTab === 'reels';
+  const joueurLive =
+    Boolean(joueurSession?.isJoueurPlayer && joueurSession.ready && !joueurSession.needsGate);
 
   const rail = useMemo(
     () => getMobileRailLayout(productLine, role, visibleTabs),
@@ -70,16 +75,26 @@ export const MobileTabBar: React.FC<MobileTabBarProps> = ({
   const clean = chrome.cleanStyle && !immersive;
   const accentInk = isSponsor
     ? SPONSOR_THEME.primary
-    : resolveTabBarAccent(productLine, role, colors, playerSegment);
+    : joueurLive
+      ? joueurSession!.identity.accent
+      : resolveTabBarAccent(productLine, role, colors, playerSegment);
 
   const menuLabel = t('nav.menu');
   const menuA11y = t('nav.menuA11y');
 
-  const dockBg = immersive ? 'rgba(0,0,0,0.94)' : chrome.barBackground;
-  const dockBorder = immersive ? 'rgba(255,255,255,0.1)' : chrome.barBorderColor;
-  const rootBg = immersive ? '#000' : chrome.rootBackground;
-  const inactiveInk = chrome.inactiveIcon;
-  const activeInk = chrome.activeIcon;
+  const dockBg = immersive
+    ? 'rgba(0,0,0,0.94)'
+    : joueurLive
+      ? 'rgba(6,10,16,0.96)'
+      : chrome.barBackground;
+  const dockBorder = immersive
+    ? 'rgba(255,255,255,0.1)'
+    : joueurLive
+      ? joueurSession!.identity.accent
+      : chrome.barBorderColor;
+  const rootBg = immersive || joueurLive ? JOUEUR_SITE.bg : chrome.rootBackground;
+  const inactiveInk = joueurLive ? 'rgba(244,247,255,0.42)' : chrome.inactiveIcon;
+  const activeInk = joueurLive ? accentInk : chrome.activeIcon;
 
   const styles = useMemo(
     () => createStyles(colors, immersive, accentInk, chrome),

@@ -1,4 +1,4 @@
-import type { IconName } from '../components/ui/Icon';
+import type { IconName } from '../components/ui/iconNames';
 import type { HealthPoleGroupId } from '../utils/healthPoleSpecialties';
 
 export type HealthServiceCard = {

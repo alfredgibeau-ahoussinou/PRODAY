@@ -44,3 +44,19 @@ Pas de `NEXT_PUBLIC_SANTE_BOOKING_EMBED_URL` obligatoire. CSP conserve `frame-sr
 ## HDS / RGPD
 
 Visio via **Daily.co** (salle privée + token in-app) — Cal Video en secours. Voir [DAILY_VISIO_SETUP.md](./DAILY_VISIO_SETUP.md).
+
+## Confidentialité médicale (coffre ProDay)
+
+ProDay n’est **pas** un hébergeur de données de santé (HDS) certifié. Les mesures techniques de cette phase :
+
+| Mesure | Détail |
+|--------|--------|
+| Storage privé | Préfixes `personal_vault/` et `medical_vault/` — lecture propriétaire / admin uniquement |
+| RBAC | Patient, praticien traitant, parent si `parent_can_access_medical`, grants explicites ; club/coach/recruteur/agent refusés |
+| Téléchargement | Callable `getSensitiveDocumentUrl` — URL signée courte durée + audit |
+| Notice | Modal de confidentialité avant consultation des données santé |
+| Audit | Collection `privacy_audit_log` (view / download / grant / revoke / notice_ack / admin_break_glass) |
+| Mercato | Interdiction de partager des docs `kind: medical` via URL publique |
+| Emails RDV | Motif clinique retiré des templates e-mail |
+
+Les notes de consultation restent dans `medical_appointments` (accès patient / praticien / parent consentant). Pas de dossier hospitalier complet dans cette version.

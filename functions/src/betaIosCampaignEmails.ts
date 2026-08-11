@@ -1,6 +1,7 @@
 import {
   IOS_BETA_LAUNCH_LABEL,
   IOS_BETA_LAUNCH_LABEL_SHORT,
+  IOS_BETA_LAUNCH_PREVIOUS_LABEL_SHORT,
 } from './betaIosCampaignConstants';
 
 export type BetaCampaignEmailParams = {
@@ -126,6 +127,82 @@ export function buildBetaIosPreAnnouncementEmail(params: BetaCampaignEmailParams
       </table>
       <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#334155;">
         En attendant, l&apos;APK Android reste disponible depuis l&apos;onglet Installer de votre espace bêta.
+      </p>
+      ${ctaButton(buildBetaAccessUrl(site, params.accessToken), 'Accéder à l\'espace bêta')}
+      ${ctaButton(`${site}/beta/inscription`, 'Page bêta', false)}
+    `,
+  );
+
+  return { subject, html, text };
+}
+
+/** Email d'information : report de la bêta au 15 août 2026. */
+export function buildBetaIosDelayNoticeEmail(params: BetaCampaignEmailParams): {
+  subject: string;
+  html: string;
+  text: string;
+} {
+  const site = siteBase(params.siteUrl);
+  const roleLine = params.roleLabel
+    ? `Merci pour votre inscription en tant que ${params.roleLabel}.`
+    : 'Merci pour votre inscription à la bêta ProDay.';
+  const subject = `ProDay — bêta décalée au ${IOS_BETA_LAUNCH_LABEL_SHORT}`;
+
+  const text = [
+    'Bonjour,',
+    '',
+    roleLine,
+    '',
+    `Information importante : la bêta ProDay initialement prévue le ${IOS_BETA_LAUNCH_PREVIOUS_LABEL_SHORT} a été décalée au ${IOS_BETA_LAUNCH_LABEL}.`,
+    '',
+    "Ce report est dû à des améliorations nécessaires au bon développement de l'application.",
+    '',
+    'Ce qui ne change pas :',
+    '• Votre inscription reste valide — aucune action n\'est requise.',
+    `• Ouverture iOS (TestFlight) : ${IOS_BETA_LAUNCH_LABEL}.`,
+    '• Vous recevrez un email avec le lien TestFlight dès l\'ouverture.',
+    '• Android : l\'APK reste disponible depuis votre espace bêta (onglet Installer).',
+    '',
+    `Espace bêta : ${buildBetaAccessUrl(site, params.accessToken)}`,
+    `Page bêta : ${site}/beta/inscription`,
+    '',
+    'Merci pour votre patience et votre confiance,',
+    "L'équipe ProDay",
+  ].join('\n');
+
+  const html = emailShell(
+    subject,
+    `
+      <h1 style="margin:0 0 16px;font-size:22px;line-height:1.3;color:#0a0a0a;">Bêta décalée au ${IOS_BETA_LAUNCH_LABEL_SHORT}</h1>
+      <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#334155;">${roleLine}</p>
+      <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#334155;">
+        La bêta ProDay initialement prévue le <strong>${IOS_BETA_LAUNCH_PREVIOUS_LABEL_SHORT}</strong>
+        a été décalée au <strong>${IOS_BETA_LAUNCH_LABEL}</strong>.
+      </p>
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:20px 0;background:#f8fafc;border-radius:12px;border:1px solid #e2e8f0;">
+        <tr>
+          <td style="padding:20px 24px;">
+            <p style="margin:0;font-size:13px;font-weight:700;color:#0054F0;text-transform:uppercase;letter-spacing:0.06em;">Pourquoi ce report ?</p>
+            <p style="margin:8px 0 0;font-size:15px;line-height:1.6;color:#334155;">
+              Des améliorations sont nécessaires au bon développement de l&apos;application pour la version bêta.
+              Nous préférons ouvrir une expérience plus solide.
+            </p>
+          </td>
+        </tr>
+      </table>
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:20px 0;background:#eff6ff;border-radius:12px;border:1px solid #bfdbfe;">
+        <tr>
+          <td style="padding:20px 24px;">
+            <p style="margin:0;font-size:13px;font-weight:700;color:#0054F0;text-transform:uppercase;letter-spacing:0.06em;">Nouvelle date</p>
+            <p style="margin:8px 0 0;font-size:20px;font-weight:700;color:#0a0a0a;">${IOS_BETA_LAUNCH_LABEL}</p>
+            <p style="margin:8px 0 0;font-size:14px;line-height:1.6;color:#475569;">
+              Votre inscription reste valide. Aucune action n&apos;est requise de votre part.
+            </p>
+          </td>
+        </tr>
+      </table>
+      <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#334155;">
+        Dès l&apos;ouverture, vous recevrez le lien TestFlight par email. L&apos;APK Android reste disponible depuis l&apos;onglet Installer.
       </p>
       ${ctaButton(buildBetaAccessUrl(site, params.accessToken), 'Accéder à l\'espace bêta')}
       ${ctaButton(`${site}/beta/inscription`, 'Page bêta', false)}

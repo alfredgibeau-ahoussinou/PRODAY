@@ -4,6 +4,8 @@ import { defaultCategoriesForAppSpace } from '../../constants/appSpaces';
 import { AuthTextField } from '../../components/auth/AuthTextField';
 import { SignupOptionPicker } from '../../components/signup/SignupOptionPicker';
 import { SignupPressable } from '../../components/signup/SignupPressable';
+import { BirthDateFields, birthPartsToIso } from '../../components/player/BirthDateFields';
+import { JOUEUR_UNIVERSE_LABELS, isValidPlayerBirthDate } from '../../utils/joueurBirthAge';
 
 import { SignupStepLayout } from './SignupStepLayout';
 import { SignupFooterButton } from './SignupFooterButton';
@@ -45,12 +47,18 @@ export const SignupSportStep: React.FC<SignupSportStepProps> = ({
 
   const isFeminineSpace = form.gender === 'women';
   const suggestedSpace = useMemo(() => {
-    const parsed = parseInt(form.age.replace(/\D/g, ''), 10);
-    if (!Number.isFinite(parsed) || parsed < 5) return null;
+    if (form.parsedAge == null || form.parsedAge < 5) return null;
     return isFeminineSpace
-      ? suggestFeminineAppSpaceFromAge(parsed)
-      : suggestAppSpaceFromAge(parsed);
-  }, [form.age, isFeminineSpace]);
+      ? suggestFeminineAppSpaceFromAge(form.parsedAge)
+      : suggestAppSpaceFromAge(form.parsedAge);
+  }, [form.parsedAge, isFeminineSpace]);
+
+  const universeHint = useMemo(() => {
+    const iso = birthPartsToIso(form.birthDay, form.birthMonth, form.birthYear);
+    const v = isValidPlayerBirthDate(iso);
+    if (!v.ok) return null;
+    return JOUEUR_UNIVERSE_LABELS[v.ageGroup];
+  }, [form.birthDay, form.birthMonth, form.birthYear]);
 
   useEffect(() => {
     if (form.category && !categoryOptions.includes(form.category)) {
@@ -125,14 +133,23 @@ export const SignupSportStep: React.FC<SignupSportStepProps> = ({
         />
       </View>
       <View>
-        <AuthTextField
-          label={t('signup.form.age')}
-          placeholder="Ex. 17"
-          value={form.age}
-          onChangeText={form.setAge}
-          keyboardType="number-pad"
+        <BirthDateFields
+          variant="light"
+          day={form.birthDay}
+          month={form.birthMonth}
+          year={form.birthYear}
+          onDay={form.setBirthDay}
+          onMonth={form.setBirthMonth}
+          onYear={form.setBirthYear}
+          accent={c.accent}
           error={form.fieldErrors.age}
+          hint="L’univers (-13 / ado / 18+) évolue automatiquement à chaque anniversaire."
         />
+        {universeHint ? (
+          <Text style={styles.minorHint}>
+            {universeHint.title} · {universeHint.range}
+          </Text>
+        ) : null}
         {willNeedParental ? (
           <Text style={styles.minorHint}>Étape « Famille » prévue ensuite.</Text>
         ) : null}

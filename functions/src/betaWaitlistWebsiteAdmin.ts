@@ -10,6 +10,7 @@ import {
   sendBetaWelcomeEmailToEntry,
 } from './betaWaitlistMail';
 import {
+  broadcastIosDelayNotice,
   broadcastIosPreAnnouncement,
   executeIosBetaLaunch,
   sendEngagementRound,
@@ -52,6 +53,7 @@ type AdminAction =
   | 'resend'
   | 'bulk_approve'
   | 'broadcast_ios_pre_announcement'
+  | 'broadcast_ios_delay_notice'
   | 'trigger_ios_launch'
   | 'send_engagement_round'
   | 'list_audit'
@@ -565,6 +567,7 @@ export function createWebsiteBetaWaitlistAdminHandler(db: admin.firestore.Firest
           'resend',
           'bulk_approve',
           'broadcast_ios_pre_announcement',
+          'broadcast_ios_delay_notice',
           'trigger_ios_launch',
           'send_engagement_round',
           'list_audit',
@@ -674,6 +677,19 @@ export function createWebsiteBetaWaitlistAdminHandler(db: admin.firestore.Firest
           target_type: 'beta_campaign',
           target_id: 'pre_announcement',
           summary: 'Broadcast pré-annonce iOS',
+          meta: result as Record<string, unknown>,
+        });
+        res.status(200).json({ ok: true, ...result });
+        return;
+      }
+
+      if (action === 'broadcast_ios_delay_notice') {
+        const result = await broadcastIosDelayNotice(db);
+        await writeWebsiteAdminAudit(db, {
+          action: 'beta_ios_delay_notice',
+          target_type: 'beta_campaign',
+          target_id: 'delay_notice',
+          summary: 'Broadcast report bêta 15 août 2026',
           meta: result as Record<string, unknown>,
         });
         res.status(200).json({ ok: true, ...result });

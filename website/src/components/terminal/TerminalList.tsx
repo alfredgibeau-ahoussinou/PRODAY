@@ -3,7 +3,7 @@ type TerminalListProps = {
   className?: string;
 };
 
-/** Sparse feature lines — no icons, no cards. */
+/** Sparse feature lines : no icons, no cards. */
 export function TerminalList({ items, className = "" }: TerminalListProps) {
   return (
     <ul className={`divide-y divide-white/10 border-y border-white/10 ${className}`}>

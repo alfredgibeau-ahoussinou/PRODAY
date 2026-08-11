@@ -52,8 +52,9 @@ function DownloadButton({ href, label }: { href: string; label: string }) {
 function TestFlightPendingNotice() {
   return (
     <p className="mt-6 border border-dashed border-white/15 bg-transparent px-4 py-3 text-sm text-white/45">
-      La bêta iOS via TestFlight sera disponible à partir du{" "}
-      <strong className="text-white/70">{IOS_BETA_LAUNCH_LABEL}</strong>. Vous recevrez le lien
+      La bêta iOS via TestFlight a été décalée au{" "}
+      <strong className="text-white/70">{IOS_BETA_LAUNCH_LABEL}</strong>{" "}
+      (améliorations nécessaires au bon développement). Vous recevrez le lien
       TestFlight par email dès l&apos;ouverture.
     </p>
   );
@@ -141,8 +142,8 @@ export function BetaInstallerContent() {
       <BetaIosLaunchBanner />
       <p className="mb-8 max-w-3xl text-sm leading-relaxed text-white/65">
         Les builds mobiles sont distribués en dehors des stores publics pendant la bêta. Sur Android,
-        téléchargez l&apos;APK directement depuis cette page. Sur iOS, la bêta TestFlight ouvre le{" "}
-        {IOS_BETA_LAUNCH_LABEL}. Lien envoyé par email à tous les inscrits.
+        téléchargez l&apos;APK directement depuis cette page. Sur iOS, la bêta TestFlight a été décalée
+        au {IOS_BETA_LAUNCH_LABEL} (améliorations nécessaires). Lien envoyé par email à tous les inscrits.
       </p>
 
       {apkUrl ? (
@@ -251,7 +252,7 @@ export function BetaInstallerContent() {
                 items={[
                   "Vérifiez les spams et l'onglet Promotions de Mail.",
                   "L'invitation est envoyée à l'adresse exacte de votre inscription bêta.",
-                  "Attendez 24–48 h après confirmation, puis contactez proday.admin@gmail.com.",
+                  "Attendez 24 à 48 h après confirmation, puis contactez proday.admin@gmail.com.",
                 ]}
               />
               <TroubleshootBlock

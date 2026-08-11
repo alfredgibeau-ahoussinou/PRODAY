@@ -1,8 +1,9 @@
 import React, { useMemo } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
+import { PressableSpring } from '../motion';
 import { Icon } from '../ui/Icon';
-import { useAdminStyles } from './adminStyles';
-import { spacing } from '../../theme/designTokens';
+import { useAdminStyles, adminChrome } from './adminStyles';
+import { spacing, radius } from '../../theme/designTokens';
 import type { AppColors } from '../../theme/universeTheme';
 
 interface AdminHeroProps {
@@ -26,31 +27,27 @@ export const AdminHero: React.FC<AdminHeroProps> = ({
   return (
     <View style={styles.wrap}>
       <View style={styles.topRow}>
-        <TouchableOpacity style={styles.backBtn} onPress={onBack} accessibilityLabel={backLabel ?? 'Retour'}>
-          <Icon name="arrow-back" size={22} color={c.brandInverse} />
+        <PressableSpring style={styles.backBtn} onPress={onBack} scaleTo={0.96} haptic>
+          <Icon name="arrow-back" size={20} color="#FFFFFF" />
           {backLabel ? <Text style={styles.backLabel}>{backLabel}</Text> : null}
-        </TouchableOpacity>
+        </PressableSpring>
         {onRefresh ? (
-          <TouchableOpacity style={styles.refreshBtn} onPress={onRefresh} disabled={refreshing}>
-            <Icon name="time" size={20} color={c.brandInverse} />
-          </TouchableOpacity>
+          <PressableSpring
+            style={styles.refreshBtn}
+            onPress={onRefresh}
+            disabled={refreshing}
+            scaleTo={0.94}
+            haptic
+          >
+            <Icon name="time" size={18} color={adminChrome.accent} />
+          </PressableSpring>
         ) : null}
       </View>
 
-      <View style={styles.brandRow}>
-        <View style={styles.brandMark}>
-          <Text style={styles.brandText}>PRODAY</Text>
-        </View>
-        <View style={styles.adminPill}>
-          <Icon name="shield" size={12} color={c.brandInverse} />
-          <Text style={styles.adminPillText}>ADMIN</Text>
-        </View>
-      </View>
-
-      <Text style={styles.title}>Console de pilotage</Text>
-      <Text style={styles.subtitle}>Gestion plateforme · utilisateurs · contenus</Text>
+      <Text style={styles.brand}>ProDay</Text>
+      <Text style={styles.title}>Admin</Text>
+      <Text style={styles.subtitle}>Utilisateurs · contenus · ops</Text>
       {email ? <Text style={styles.email}>{email}</Text> : null}
-      <View style={styles.accentLine} />
     </View>
   );
 };
@@ -58,12 +55,10 @@ export const AdminHero: React.FC<AdminHeroProps> = ({
 function createStyles(c: AppColors) {
   return StyleSheet.create({
     wrap: {
-      backgroundColor: c.surfaceInverse,
+      backgroundColor: '#0F172A',
       paddingHorizontal: spacing.lg,
       paddingTop: spacing.md,
       paddingBottom: spacing.xl,
-      borderBottomWidth: 3,
-      borderBottomColor: c.brand,
     },
     topRow: {
       flexDirection: 'row',
@@ -75,78 +70,47 @@ function createStyles(c: AppColors) {
       flexDirection: 'row',
       alignItems: 'center',
       gap: spacing.sm,
-      paddingHorizontal: spacing.sm,
-      height: 44,
-      borderRadius: 22,
+      paddingHorizontal: spacing.md,
+      height: 40,
+      borderRadius: radius.pill,
       borderWidth: 1,
-      borderColor: 'rgba(255,255,255,0.35)',
+      borderColor: 'rgba(255,255,255,0.2)',
+      backgroundColor: 'rgba(255,255,255,0.08)',
     },
-    backLabel: { color: c.brandInverse, fontWeight: '800', fontSize: 13 },
+    backLabel: { color: '#FFFFFF', fontWeight: '800', fontSize: 13 },
     refreshBtn: {
-      width: 44,
-      height: 44,
-      borderRadius: 22,
+      width: 40,
+      height: 40,
+      borderRadius: 20,
       borderWidth: 1,
-      borderColor: c.brand,
-      backgroundColor: 'rgba(0,51,153,0.4)',
+      borderColor: 'rgba(255,255,255,0.2)',
+      backgroundColor: 'rgba(255,255,255,0.08)',
       alignItems: 'center',
       justifyContent: 'center',
     },
-    brandRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: spacing.sm,
-      marginBottom: spacing.md,
-    },
-    brandMark: {
-      borderWidth: 1,
-      borderColor: c.brandInverse,
-      paddingHorizontal: spacing.sm,
-      paddingVertical: 4,
-    },
-    brandText: {
-      color: c.brandInverse,
+    brand: {
+      color: adminChrome.accent,
+      fontSize: 12,
       fontWeight: '900',
-      fontSize: 11,
-      letterSpacing: 3,
-    },
-    adminPill: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 4,
-      backgroundColor: c.brand,
-      paddingHorizontal: 10,
-      paddingVertical: 5,
-    },
-    adminPillText: {
-      color: c.brandInverse,
-      fontSize: 10,
-      fontWeight: '900',
-      letterSpacing: 1,
+      letterSpacing: 1.6,
+      marginBottom: 4,
     },
     title: {
-      color: c.brandInverse,
-      fontSize: 26,
-      fontWeight: '900',
+      color: '#FFFFFF',
+      fontSize: 28,
+      fontWeight: '800',
       letterSpacing: -0.5,
     },
     subtitle: {
-      color: c.heroMuted,
+      color: 'rgba(255,255,255,0.55)',
       fontSize: 13,
       marginTop: 6,
-      lineHeight: 18,
     },
     email: {
-      color: c.heroMuted,
+      color: 'rgba(255,255,255,0.45)',
       fontSize: 12,
       marginTop: spacing.sm,
       fontWeight: '600',
-    },
-    accentLine: {
-      height: 4,
-      width: 48,
-      backgroundColor: c.brand,
-      marginTop: spacing.lg,
     },
   });
 }

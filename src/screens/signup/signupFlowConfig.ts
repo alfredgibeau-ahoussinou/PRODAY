@@ -2,7 +2,7 @@ import type { AppSpaceId } from '../../models/AppSpace';
 import { isUnderU13AppSpace } from '../../models/AppSpace';
 import type { UserRole } from '../../models/User';
 import { ROLES_REQUIRING_VERIFICATION } from '../../models/User';
-import type { IconName } from '../../components/ui/Icon';
+import type { IconName } from '../../components/ui/iconNames';
 import { tr } from '../../i18n/translate';
 import type { TranslateFn } from '../../i18n/types';
 import { getRoleWelcomeCopy, getRoleSignupPhases, getRoleLaunchCopy } from './signupRoleExperience';

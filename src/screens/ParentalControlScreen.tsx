@@ -403,6 +403,36 @@ export const ParentalControlScreen: React.FC<ParentalControlScreenProps> = ({
               />
             </TouchableOpacity>
 
+            <Text style={styles.sectionTitle}>Confidentialité médicale</Text>
+            <View style={[styles.menuCard, shadows.card]}>
+              <View style={styles.menuIcon}>
+                <Icon name="heart" size={22} color={c.brand} />
+              </View>
+              <View style={styles.menuText}>
+                <Text style={styles.menuTitle}>Accès parent aux données santé</Text>
+                <Text style={styles.menuSub}>
+                  {settings.privacy?.parent_can_access_medical
+                    ? 'Le tuteur peut consulter le coffre et les RDV médicaux'
+                    : 'Désactivé — secret médical respecté (recommandé)'}
+                </Text>
+              </View>
+              <Switch
+                value={settings.privacy?.parent_can_access_medical === true}
+                onValueChange={(parent_can_access_medical) =>
+                  patch({
+                    privacy: {
+                      ...settings.privacy,
+                      parent_can_access_medical,
+                    },
+                  })
+                }
+                trackColor={{ false: c.border, true: c.brandSoft }}
+                thumbColor={
+                  settings.privacy?.parent_can_access_medical ? c.brand : c.surface
+                }
+              />
+            </View>
+
             <Text style={styles.sectionTitle}>Protections actives</Text>
             <ProtectionCard
               styles={styles}

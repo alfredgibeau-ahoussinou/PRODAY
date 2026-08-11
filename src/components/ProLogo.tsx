@@ -1,6 +1,10 @@
 import React, { useMemo } from 'react';
 import { View, Text, Image, StyleSheet, Platform } from 'react-native';
-import { PRODAY_PRO_BRAND } from '../models/ProductLine';
+import {
+  brandForProductLine,
+  PRODAY_PRO_BRAND,
+  type ProductLineId,
+} from '../models/ProductLine';
 import { PRO_BRANDING_LOGOS } from '../content/brandingAssets';
 import type { LogoBackground } from './Logo';
 
@@ -18,26 +22,31 @@ interface ProLogoProps {
   background?: LogoBackground;
   opacity?: number;
   watermark?: boolean;
+  /** pro_player | pro_club | pro_staff — évite d’afficher « Coach » sur Club. */
+  productLine?: ProductLineId;
 }
 
 /**
- * Logo Pro Day Pro — picto P bleu + mot-symbole + tagline (même structure que Woman).
+ * Logo famille Pro — picto + mot-symbole selon la ligne (Joueur / Club / Coach).
  */
 export const ProLogo: React.FC<ProLogoProps> = ({
   width = 200,
   background = 'light',
   opacity = 1,
   watermark = false,
+  productLine = 'pro_staff',
 }) => {
   const onDark = background === 'dark' || background === 'photo';
+  const brand = brandForProductLine(productLine);
 
   const layout = useMemo(() => {
     const pictoW = width * (watermark ? 1 : 0.76);
     const pictoH = pictoW / PICTO_ASPECT;
     const line1 = width * 0.1;
     const line2 = width * 0.115;
-    const tagSize = width * 0.076;
-    const height = pictoH + line1 + line2 + tagSize * 2.2 + width * 0.05;
+    const tagSize = width * 0.065;
+    // Picto + wordmark only — tagline affichée sous le logo dans AuthScreen (évite le double / overlap).
+    const height = pictoH + line1 + line2 + width * 0.06;
     return { pictoW, pictoH, line1, line2, tagSize, height };
   }, [width, watermark]);
 
@@ -47,7 +56,7 @@ export const ProLogo: React.FC<ProLogoProps> = ({
         source={PRO_BRANDING_LOGOS.picto}
         style={{ width: layout.pictoW, height: layout.pictoH, opacity: opacity * 0.14 }}
         resizeMode="contain"
-        accessibilityLabel={PRODAY_PRO_BRAND.name}
+        accessibilityLabel={brand.name}
       />
     );
   }
@@ -68,10 +77,10 @@ export const ProLogo: React.FC<ProLogoProps> = ({
         style={{ width: layout.pictoW, height: layout.pictoH }}
         resizeMode="contain"
         accessibilityRole="image"
-        accessibilityLabel={PRODAY_PRO_BRAND.name}
+        accessibilityLabel={brand.name}
       />
 
-      <View style={[styles.wordBlock, { marginTop: width * 0.024 }]}>
+      <View style={[styles.wordBlock, { marginTop: width * 0.028 }]}>
         <Text
           style={[
             styles.wordLine1,
@@ -80,10 +89,10 @@ export const ProLogo: React.FC<ProLogoProps> = ({
           ]}
           allowFontScaling={false}
         >
-          {PRODAY_PRO_BRAND.logoLine1}
+          {brand.logoLine1 || PRODAY_PRO_BRAND.logoLine1}
         </Text>
         <View style={styles.wordLine2Row}>
-          {PRODAY_PRO_BRAND.logoLine2Lead ? (
+          {brand.logoLine2Lead ? (
             <Text
               style={[
                 styles.wordLine2,
@@ -92,7 +101,7 @@ export const ProLogo: React.FC<ProLogoProps> = ({
               ]}
               allowFontScaling={false}
             >
-              {PRODAY_PRO_BRAND.logoLine2Lead}
+              {brand.logoLine2Lead}
             </Text>
           ) : null}
           <Text
@@ -103,24 +112,10 @@ export const ProLogo: React.FC<ProLogoProps> = ({
             ]}
             allowFontScaling={false}
           >
-            {PRODAY_PRO_BRAND.logoLine2Accent}
+            {brand.logoLine2Accent}
           </Text>
         </View>
       </View>
-
-      <Text
-        style={[
-          styles.tagline,
-          {
-            fontSize: layout.tagSize,
-            color: onDark ? PRO_COLORS.taglineDark : PRO_COLORS.taglineLight,
-            marginTop: width * 0.032,
-          },
-        ]}
-        allowFontScaling={false}
-      >
-        {PRODAY_PRO_BRAND.tagline}
-      </Text>
     </View>
   );
 };
@@ -130,8 +125,7 @@ export function proLogoAspect(width: number): number {
   const pictoH = pictoW / PICTO_ASPECT;
   const line1 = width * 0.1;
   const line2 = width * 0.115;
-  const tagSize = width * 0.076;
-  const height = pictoH + line1 + line2 + tagSize * 2.2 + width * 0.05;
+  const height = pictoH + line1 + line2 + width * 0.06;
   return width / height;
 }
 
@@ -155,12 +149,5 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     letterSpacing: -0.6,
     textAlign: 'center',
-  },
-  tagline: {
-    fontWeight: '700',
-    letterSpacing: 2.4,
-    textTransform: 'uppercase',
-    textAlign: 'center',
-    ...Platform.select({ android: { includeFontPadding: false } }),
   },
 });

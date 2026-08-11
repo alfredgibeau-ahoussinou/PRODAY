@@ -176,9 +176,14 @@ export const clubRosterBoardService = {
     try {
       await scheduleProdayLocalNotification({
         identifier: `internal-move-${ref.id}`,
-        title: 'Proposition interne',
-        body: `${input.proposed_by_name} propose ${input.player_name} pour ${input.to_team_label}.`,
-        data: { type: 'internal_move', homeTab: 'home', moveId: ref.id },
+        title: 'Bourse de recrutement',
+        body: `${input.proposed_by_name} propose ${input.player_name} (${input.from_team_label} vers ${input.to_team_label}).`,
+        data: {
+          type: 'internal_move',
+          homeTab: 'home',
+          moveId: ref.id,
+          playerUid: input.player_uid,
+        },
       });
     } catch {
       // best-effort
@@ -208,12 +213,48 @@ export const clubRosterBoardService = {
     }
   },
 
-  async setMoveStatus(moveId: string, status: InternalMoveStatus): Promise<void> {
+  async setMoveStatus(
+    moveId: string,
+    status: InternalMoveStatus,
+    notify?: {
+      playerUid: string;
+      playerName: string;
+      toTeamLabel: string;
+      actorName: string;
+    },
+  ): Promise<void> {
     const database = getDb();
     if (!database) throw new Error('Firebase non configuré');
     await updateDoc(doc(database, 'club_internal_moves', moveId), {
       status,
       updated_at: serverTimestamp(),
     });
+
+    if (!notify) return;
+    try {
+      const body =
+        status === 'accepted'
+          ? `${notify.actorName} a validé votre intégration vers ${notify.toTeamLabel}.`
+          : status === 'completed'
+            ? `Intégration effectuée : ${notify.playerName} vers ${notify.toTeamLabel}.`
+            : status === 'declined'
+              ? `Proposition refusée pour ${notify.toTeamLabel}.`
+              : null;
+      if (body) {
+        await scheduleProdayLocalNotification({
+          identifier: `internal-move-${moveId}-${status}`,
+          title: 'Bourse de recrutement',
+          body,
+          data: {
+            type: 'internal_move',
+            homeTab: 'home',
+            moveId,
+            playerUid: notify.playerUid,
+          },
+        });
+      }
+    } catch {
+      // best-effort
+    }
   },
 };

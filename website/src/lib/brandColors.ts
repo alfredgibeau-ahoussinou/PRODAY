@@ -38,6 +38,12 @@ export const POLE_BRAND_COLORS = {
     soft: "rgba(60, 0, 240, 0.14)",
     glow: "rgba(60, 0, 240, 0.35)",
   },
+  parent: {
+    deep: "#042f2e",
+    accent: "#0F766E",
+    soft: "rgba(15, 118, 110, 0.14)",
+    glow: "rgba(20, 184, 166, 0.35)",
+  },
   sante: {
     deep: "#006C60",
     accent: "#00CCB4",
@@ -103,7 +109,6 @@ export function getPoleBrandColors(
 ): (typeof POLE_BRAND_COLORS)[PoleBrandKey] {
   if (!key) return POLE_BRAND_COLORS.joueur;
   if (key === "pro" || key === "default") return POLE_BRAND_COLORS.joueur;
-  if (key === "parent") return POLE_BRAND_COLORS.supporter;
   if (key === "confiance" || key === "fonctionnalites" || key === "demo" || key === "beta" || key === "faq" || key === "tarifs") {
     return POLE_BRAND_COLORS.joueur;
   }

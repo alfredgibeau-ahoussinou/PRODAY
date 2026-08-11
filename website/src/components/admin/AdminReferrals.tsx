@@ -104,7 +104,7 @@ export function AdminReferrals({
                   <td className="text-white/65">{r.totalSubscribed}</td>
                   <td className="text-white/65">{r.rewardsEarned}</td>
                   <td className="whitespace-nowrap text-white/45">
-                    {r.updatedAt ? formatAdminDate(r.updatedAt) : "—"}
+                    {r.updatedAt ? formatAdminDate(r.updatedAt) : "…"}
                   </td>
                 </tr>
               ))

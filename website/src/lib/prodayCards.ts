@@ -1,5 +1,5 @@
 /**
- * Cartes ProDay (site) — types miroir + démos + palettes.
+ * Cartes ProDay (site) : types miroir + démos + palettes.
  */
 
 export type ProDayCardRole =
@@ -147,7 +147,7 @@ export const CARD_ACTION_LABELS: Record<ProDayCardActionId, string> = {
   share: "Partager",
 };
 
-/** Actions promises — visibles mais non actives en V1. */
+/** Actions promises : visibles mais non actives en V1. */
 export const CARD_SOON_ACTIONS = [
   { id: "pdf", label: "PDF" },
   { id: "qr", label: "QR Code" },
@@ -265,7 +265,7 @@ export const DEMO_PLAYER_CARD: ProDayPlayerCardData = {
   overall: 84,
   formPct: 88,
   potential: 91,
-  estimatedValueLabel: "12–18 k€",
+  estimatedValueLabel: "12 à 18 k€",
   matches: 18,
   goals: 6,
   assists: 9,
@@ -287,7 +287,7 @@ export const DEMO_PLAYER_CARD: ProDayPlayerCardData = {
   heatmapHint: "Couloir central · 2e ballon",
 };
 
-/** Variante collection — Elite / TOTW. */
+/** Variante collection : Elite / TOTW. */
 export const DEMO_PLAYER_CARD_ELITE: ProDayPlayerCardData = {
   ...DEMO_PLAYER_CARD,
   id: "player-amine-elite",
@@ -328,7 +328,7 @@ export const DEMO_COACH_CARD: ProDayCoachCardData = {
   coachLevel: "Coach Premium",
   reputation: 86,
   modulesUsed: [
-    "Smart Tactics",
+    "Tactique IA",
     "IA",
     "Analyse vidéo",
     "Préparation match",
@@ -451,7 +451,7 @@ export const DEMO_SPONSOR_CARD_GOLD: ProDaySponsorCardData = {
   skillBadges: ["Vérifié", "Platinum", "Multi-clubs"],
 };
 
-/** Collection démo — 2 éditions par rôle pour sentir la collection. */
+/** Collection démo : 2 éditions par rôle pour sentir la collection. */
 export const DEMO_CARDS: ProDayCardData[] = [
   DEMO_PLAYER_CARD,
   DEMO_PLAYER_CARD_ELITE,

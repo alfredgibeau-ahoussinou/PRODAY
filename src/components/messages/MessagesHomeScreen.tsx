@@ -5,6 +5,7 @@ import type { SocialProfileSuggestion } from '../../features/v3/engines/socialRe
 import type { MessagesChapterId } from '../../content/messagesChapters';
 import type { MessagesThreadFilter } from '../../content/messagesChapters';
 import { TabScreenShell } from '../app/TabScreenShell';
+import { useJoueurSession } from '../../context/JoueurSessionContext';
 import { useTranslation } from '../../context/LocaleContext';
 import { MessagesPager } from './MessagesPager';
 import { MessagesInboxPage } from './chapters/MessagesInboxPage';
@@ -47,14 +48,41 @@ export interface MessagesHomeScreenProps {
 
 export const MessagesHomeScreen: React.FC<MessagesHomeScreenProps> = (props) => {
   const { t } = useTranslation();
+  const joueurSession = useJoueurSession();
+  const joueurLive =
+    Boolean(joueurSession?.isJoueurPlayer && joueurSession.ready && !joueurSession.needsGate);
   const [chapter, setChapter] = useState<MessagesChapterId>('inbox');
 
+  const joueurTitles = useMemo(() => {
+    if (!joueurLive || !joueurSession) return null;
+    if (joueurSession.ageGroup === 'youth') {
+      return {
+        caption: 'Messages',
+        title: 'Discute',
+        subtitle: 'Club, coach, potes — en sécurité.',
+      };
+    }
+    if (joueurSession.ageGroup === 'teen') {
+      return {
+        caption: 'Inbox',
+        title: 'Messages',
+        subtitle: 'Réseau, club, staff.',
+      };
+    }
+    return {
+      caption: 'Messages',
+      title: 'Messagerie',
+      subtitle: 'Club, réseau, opportunités.',
+    };
+  }, [joueurLive, joueurSession]);
+
   const subtitle = useMemo(() => {
+    if (joueurTitles) return joueurTitles.subtitle;
     if (props.unreadCount > 0) {
       return t('messages.subtitle.unread', { n: props.unreadCount });
     }
     return t('messages.subtitle.default');
-  }, [props.unreadCount, t]);
+  }, [props.unreadCount, t, joueurTitles]);
 
   const pages = useMemo(
     () => [
@@ -124,8 +152,8 @@ export const MessagesHomeScreen: React.FC<MessagesHomeScreenProps> = (props) => 
 
   return (
     <TabScreenShell
-      caption={t('messages.caption')}
-      title={t('messages.title')}
+      caption={joueurTitles?.caption ?? t('messages.caption')}
+      title={joueurTitles?.title ?? t('messages.title')}
       subtitle={subtitle}
       flat
     >

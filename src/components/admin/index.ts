@@ -1,5 +1,6 @@
-export { AdminHero } from './AdminHero';
-export { AdminTabs, type AdminTabId } from './AdminTabs';
+export { AdminHqRail } from './hq/AdminHqRail';
+export { AdminInspector } from './hq/AdminInspector';
+export { AdminDataRow } from './hq/AdminDataRow';
 export { AdminStatGrid } from './AdminStatGrid';
 export { AdminUserCard } from './AdminUserCard';
 export { AdminEntityCard } from './AdminEntityCard';
@@ -8,3 +9,7 @@ export { AdminEmptyState } from './AdminEmptyState';
 export { AdminSearchField } from './AdminSearchField';
 export { AdminCreateUserPanel } from './AdminCreateUserPanel';
 export { AdminUserEditModal, AdminRejectModal } from './AdminUserModals';
+/** @deprecated Legacy chrome */
+export { AdminHero } from './AdminHero';
+export { AdminTabs, type AdminTabId } from './AdminTabs';
+export { AdminSidebar } from './AdminSidebar';

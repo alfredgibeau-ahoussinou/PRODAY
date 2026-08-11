@@ -35,8 +35,15 @@ function brandKeyForPole(poleId: PoleId): string {
 }
 
 function leadPriceLabel(poleId: PoleId, yearly: boolean): { amount: string; unit: string; note: string } {
-  if (poleId === "supporter") {
-    return { amount: "0", unit: "€", note: "Toujours gratuit · pas d’abonnement store" };
+  if (poleId === "supporter" || poleId === "parent") {
+    return {
+      amount: "0",
+      unit: "€",
+      note:
+        poleId === "parent"
+          ? "Pôle Parent gratuit · lié au compte enfant"
+          : "Toujours gratuit · pas d’abonnement store",
+    };
   }
   if (poleId === "sponsor") {
     const paid = SPONSOR_PRICING_TIERS.find((t) => t.monthlyEur > 0);
@@ -52,7 +59,7 @@ function leadPriceLabel(poleId: PoleId, yearly: boolean): { amount: string; unit
   }
   const plans = plansForPole(poleId);
   const plan = plans[0];
-  if (!plan) return { amount: "—", unit: "", note: "" };
+  if (!plan) return { amount: "…", unit: "", note: "" };
   return {
     amount: yearly ? formatPriceEur(plan.yearlyEur) : formatPriceEur(plan.monthlyEur),
     unit: yearly ? "€ / an" : "€ / mois",
@@ -235,12 +242,18 @@ function PolePricingChapter({
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
                 href={
-                  pole.id === "sponsor" ? ROUTES.sponsorDevis : ROUTES.betaWaitlist
+                  pole.id === "sponsor" || pole.id === "pro_club"
+                    ? pole.id === "sponsor"
+                      ? ROUTES.sponsorDevis
+                      : ROUTES.clubDevis
+                    : ROUTES.betaWaitlist
                 }
                 className="inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-semibold text-black transition hover:brightness-110"
                 style={{ backgroundColor: brand.accent }}
               >
-                {pole.id === "sponsor" ? "Demander un devis" : "Liste d’attente"}
+                {pole.id === "sponsor" || pole.id === "pro_club"
+                  ? "Demander un devis"
+                  : "Liste d’attente"}
                 <ArrowRight size={14} />
               </Link>
               <Link
@@ -257,16 +270,26 @@ function PolePricingChapter({
               <PricingPoleAccent poleId={pole.id} />
             </div>
 
-            {pole.id === "supporter" ? (
+            {pole.id === "supporter" || pole.id === "parent" ? (
               <InclusionList
-                title="Tout inclus · 0 €"
-                items={[
-                  "Matchs et scores live",
-                  "Suivis illimités",
-                  "Débats et réels",
-                  "Shop communauté",
-                  "Sans paywall store",
-                ]}
+                title={pole.id === "parent" ? "Tout inclus · 0 €" : "Tout inclus · 0 €"}
+                items={
+                  pole.id === "parent"
+                    ? [
+                        "Supervision du compte enfant",
+                        "Messages et approbation contacts",
+                        "Agenda et alertes retard coach",
+                        "Temps d’écran et contrôles",
+                        "Trajet live (si activé)",
+                      ]
+                    : [
+                        "Matchs et scores live",
+                        "Suivis illimités",
+                        "Débats et réels",
+                        "Shop communauté",
+                        "Sans paywall store",
+                      ]
+                }
               />
             ) : pole.id === "sponsor" ? (
               <SponsorTierCards yearly={yearly} />
@@ -402,7 +425,11 @@ function ClubPlansCompare({
       cells: [false, true, true, true],
     },
     {
-      feature: "Smart Tactics / IA / vidéo (votre matériel)",
+      feature: "Analyse de forme",
+      cells: [true, true, true, true],
+    },
+    {
+      feature: "Tactique IA / IA / vidéo (votre matériel)",
       cells: [false, "Coach abo.", true, true],
     },
     {
@@ -420,7 +447,9 @@ function ClubPlansCompare({
   ];
 
   function priceLabel(p: WebPlan): string {
-    if ("quoteOnly" in p && p.quoteOnly) return "Sur devis";
+    if ("quoteOnly" in p && p.quoteOnly) {
+      return "Sur devis · À partir de 3 € / adhérent";
+    }
     if (yearly) return `${formatPriceEur(p.yearlyEur)} €/an`;
     return `${formatPriceEur(p.monthlyEur)} €`;
   }
@@ -486,7 +515,7 @@ function ClubPlansCompare({
                       {cell === true ? (
                         <Check size={16} className="mx-auto text-[var(--pole-accent)]" />
                       ) : cell === false ? (
-                        <span className="text-white/25">—</span>
+                        <span className="text-white/25">…</span>
                       ) : (
                         cell
                       )}

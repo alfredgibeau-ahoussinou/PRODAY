@@ -11,11 +11,19 @@ export type MercatoDeepLink =
   | 'talent_radar'
   | 'compare';
 export type ProfileDeepLink = 'applications' | 'cv';
-export type DashboardDeepLink = 'sponsors' | 'feed' | 'gestion';
+export type DashboardDeepLink =
+  | 'sponsors'
+  | 'feed'
+  | 'gestion'
+  | 'smart_tactics'
+  | 'train'
+  | 'tactics_coach';
 export type MatchsDeepLink = {
   eventId?: string;
-  homeTab?: 'season' | 'matches' | 'convocations' | 'centre' | 'stats' | 'tournois';
+  homeTab?: 'season' | 'matches' | 'convocations' | 'centre' | 'stats' | 'tournois' | 'competitions';
   hubChapter?: 'apercu' | 'live' | 'composition' | 'stats' | 'effectif';
+  /** Ouvre directement Matchs à organiser / proposer / chercher. */
+  view?: 'organize' | 'propose' | 'search';
 };
 
 export type CarpoolDeepLink = {
@@ -26,7 +34,7 @@ export type CarpoolDeepLink = {
 export interface TabNavigationActions {
   setActiveTab: (tab: MainTabId) => void;
   openTeamEvent: (eventId: string) => void;
-  openMatchs: (opts?: { homeTab?: 'season' | 'matches' | 'convocations' | 'tournois' }) => void;
+  openMatchs: (opts?: MatchsDeepLink) => void;
   openMercato: (view?: MercatoDeepLink) => void;
   openProfile: (view?: ProfileDeepLink) => void;
   openDashboard: (view: DashboardDeepLink) => void;

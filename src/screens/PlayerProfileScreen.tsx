@@ -36,6 +36,11 @@ import {
 import { getProfileCompletion } from '../utils/profileCompletion';
 import { availabilityLabel } from '../utils/playerProfileLabels';
 import { PlayerBadgesRow } from '../components/player/PlayerBadgesRow';
+import { ProDayFutCard } from '../components/cards/ProDayFutCard';
+import { userToProDayCard } from '../utils/prodayFutCard';
+import type { ProDayCardActionId } from '../models/ProDayCard';
+import { useTabNavigationActions } from '../hooks/useTabNavigationActions';
+import { PlayerTacticalInbox } from '../components/player/PlayerTacticalInbox';
 import { PlayerScoutingShortlistPanel } from '../components/player/PlayerScoutingShortlistPanel';
 import { PlayerScoutReportsPanel } from '../components/player/PlayerScoutReportsPanel';
 import { PlayerOneClickRecruitmentPanel } from '../components/player/PlayerOneClickRecruitmentPanel';
@@ -122,6 +127,7 @@ export const PlayerProfileScreen: React.FC<PlayerProfileScreenProps> = ({
   const styles = useMemo(() => createStyles(themeColors), [themeColors]);
   const { profile: myProfile } = useAuth();
   const { requireAuth } = useRequireAuth();
+  const nav = useTabNavigationActions();
   const { isFavorite, toggle } = useFavorites(myProfile?.uid);
   const favorited = isFavorite(player.uid);
   const isOwnProfile = myProfile?.uid === player.uid;
@@ -339,6 +345,36 @@ export const PlayerProfileScreen: React.FC<PlayerProfileScreenProps> = ({
       ) : null}
 
       {isOwnProfile ? <PlayerBadgesRow user={player} /> : null}
+
+      <AnimatedEntrance kind="fadeUp">
+        <View style={{ alignItems: 'center', marginVertical: spacing.sm }}>
+          <ProDayFutCard
+            card={userToProDayCard(player)}
+            width={200}
+            onAction={(action: ProDayCardActionId) => {
+              if (action === 'view_profile') return;
+              if (action === 'message') {
+                if (isOwnProfile) nav.setActiveTab('messages');
+                else onContact?.(player);
+                return;
+              }
+              if (action === 'view_club' || action === 'recruit') {
+                nav.openMercato('home');
+                return;
+              }
+              if (action === 'invite') {
+                nav.openMatchs();
+                return;
+              }
+              if (action === 'follow') {
+                void toggle(player.uid);
+              }
+            }}
+          />
+        </View>
+      </AnimatedEntrance>
+
+      {isOwnProfile ? <PlayerTacticalInbox uid={player.uid} /> : null}
 
       <AnimatedEntrance kind="fadeUp">
         <SkillEndorsementsCard

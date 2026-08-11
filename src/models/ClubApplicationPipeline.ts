@@ -39,12 +39,12 @@ export interface ClubApplicationPipelineItem {
 }
 
 export const CLUB_APPLICATION_STAGE_LABELS: Record<ClubApplicationStage, string> = {
-  inbox: 'Boîte de réception',
-  reviewing: 'En revue',
-  shortlist: 'Shortlist',
+  inbox: 'Observé',
+  reviewing: 'Contacté',
+  shortlist: 'Pré-sélection',
   trial: 'Essai',
-  offer: 'Offre',
-  hired: 'Recruté',
+  offer: 'Proposition',
+  hired: 'Intégré',
   rejected: 'Refusé',
   withdrawn: 'Retiré',
 };
@@ -62,4 +62,30 @@ export const CLUB_APPLICATION_TERMINAL_STAGES: ClubApplicationStage[] = [
   'hired',
   'rejected',
   'withdrawn',
+];
+
+/**
+ * Colonnes kanban amateur : Observé → Contacté → Essai → Intégré
+ * (stages techniques regroupés pour une UI club simple).
+ */
+export const AMATEUR_RECRUITMENT_COLUMNS: {
+  key: 'observed' | 'contacted' | 'trial' | 'integrated';
+  label: string;
+  stages: ClubApplicationStage[];
+  advanceTo?: ClubApplicationStage;
+}[] = [
+  { key: 'observed', label: 'Observé', stages: ['inbox'], advanceTo: 'reviewing' },
+  {
+    key: 'contacted',
+    label: 'Contacté',
+    stages: ['reviewing', 'shortlist'],
+    advanceTo: 'trial',
+  },
+  {
+    key: 'trial',
+    label: 'Essai',
+    stages: ['trial', 'offer'],
+    advanceTo: 'hired',
+  },
+  { key: 'integrated', label: 'Intégré', stages: ['hired'] },
 ];

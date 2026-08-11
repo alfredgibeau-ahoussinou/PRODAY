@@ -9,12 +9,12 @@ import { ROUTES } from "@/lib/routes";
 const ease = [0.22, 1, 0.36, 1] as const;
 
 const LIVE_MATCHES = [
-  { id: "1", home: "U18 A", away: "Rivaux FC", score: "2 — 1", minute: "67'" },
-  { id: "2", home: "Seniors", away: "AS Nord", score: "0 — 0", minute: "12'" },
-  { id: "3", home: "Féminines", away: "Olympic", score: "1 — 1", minute: "HT" },
+  { id: "1", home: "U18 A", away: "Rivaux FC", score: "2 : 1", minute: "67'" },
+  { id: "2", home: "Seniors", away: "AS Nord", score: "0 : 0", minute: "12'" },
+  { id: "3", home: "Féminines", away: "Olympic", score: "1 : 1", minute: "HT" },
 ];
 
-/** Fake live board — tap a match to “cheer”. */
+/** Fake live board : tap a match to “cheer”. */
 export function SupporterLiveBoard() {
   const [active, setActive] = useState(LIVE_MATCHES[0]!.id);
   const match = LIVE_MATCHES.find((m) => m.id === active) ?? LIVE_MATCHES[0]!;
@@ -39,7 +39,7 @@ export function SupporterLiveBoard() {
           <span className="text-white/40">Sans payer un centime.</span>
         </h2>
         <p className="mt-4 max-w-md text-base text-white/55">
-          Choisis un match. La tribune s’ouvre — clubs ProDay et scores du monde.
+          Choisis un match. La tribune s’ouvre : clubs ProDay et scores du monde.
         </p>
 
         <div className="mt-12 grid gap-4 sm:grid-cols-3">

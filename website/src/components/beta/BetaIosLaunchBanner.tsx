@@ -2,6 +2,7 @@
 
 import { Clock, Smartphone } from "lucide-react";
 import {
+  IOS_BETA_DELAY_NOTICE,
   IOS_BETA_LAUNCH_LABEL,
   getIosBetaStatusMessage,
   isIosBetaLaunched,
@@ -29,7 +30,7 @@ export function BetaIosLaunchBanner({ compact = false }: { compact?: boolean }) 
           )}
           <div className="min-w-0 flex-1">
             <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-[var(--proday-accent-bright)]">
-              {testflightLive ? "iOS ouverte" : "iOS · date confirmée"}
+              {testflightLive ? "iOS ouverte" : "Bêta · reportée"}
               {!launched ? ` · ${IOS_BETA_LAUNCH_LABEL}` : ""}
             </p>
             <p className="mt-0.5 truncate text-[11px] leading-snug text-white/50">
@@ -61,20 +62,22 @@ export function BetaIosLaunchBanner({ compact = false }: { compact?: boolean }) 
         </div>
         <div>
           <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-[var(--proday-accent-bright)]">
-            {testflightLive ? "iOS ouverte" : "iOS · date confirmée"}
+            {testflightLive ? "iOS ouverte" : "Bêta · décalée au 15 août 2026"}
           </p>
           <p className="mt-2 text-sm leading-relaxed text-white/55">
-            {getIosBetaStatusMessage()}
             {!launched ? (
               <>
-                {" "}
-                Tu recevras un email avec le lien TestFlight dès l&apos;ouverture.
+                {IOS_BETA_DELAY_NOTICE} Ouverture iOS via TestFlight le{" "}
+                <strong className="font-medium text-white/75">{IOS_BETA_LAUNCH_LABEL}</strong>.
+                Tu recevras un email avec le lien dès l&apos;ouverture.
               </>
-            ) : null}
+            ) : (
+              getIosBetaStatusMessage()
+            )}
           </p>
           {!launched ? (
             <p className="mt-2.5 font-mono text-[10px] uppercase tracking-[0.18em] text-white/35">
-              {IOS_BETA_LAUNCH_LABEL}
+              Nouvelle date · {IOS_BETA_LAUNCH_LABEL}
             </p>
           ) : null}
         </div>

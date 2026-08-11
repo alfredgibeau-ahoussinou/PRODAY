@@ -70,10 +70,14 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
   const { compact, logoWidth, headerTopPad, tabBarScrollInset: tabInset } = useAuthLayout();
   const { loading: authLoading, configured, refreshProfile } = useAuth();
   const { setActiveTab } = useTabNavigation();
-  const { productLine, colors, proSignupPresetRole } = useAppTheme();
+  const { productLine, colors, proSignupPresetRole, isParentAuthChrome } = useAppTheme();
   const activeBrand = brandForAuthContext(productLine, proSignupPresetRole);
   const isSponsorAuth =
     productLine === 'sponsor' || isSponsorAuthPreset(proSignupPresetRole);
+  const isParentAuth =
+    productLine === 'parent' ||
+    isParentAuthChrome ||
+    proSignupPresetRole === 'parent';
   const { openSpacePicker } = useLaunchIntro();
   const { t } = useTranslation();
   const { isEnabled, disabledCopy } = usePlatformFeatureFlags();
@@ -84,6 +88,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
   const screenCopy = getLocalizedAuthCopy(productLine, tab, t, {
     brandName: activeBrand.name,
     sponsor: isSponsorAuth,
+    parent: isParentAuth,
   });
   const signupTeaser = useMemo(
     () => getAuthSignupTeaser(productLine, t, proSignupPresetRole),
@@ -270,6 +275,10 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                     backgroundColor: 'rgba(212, 175, 55, 0.14)',
                     borderColor: 'rgba(212, 175, 55, 0.45)',
                   },
+                  isParentAuth && {
+                    backgroundColor: 'rgba(20, 184, 166, 0.14)',
+                    borderColor: 'rgba(20, 184, 166, 0.45)',
+                  },
                 ]}
                 onPress={openSpacePicker}
                 scaleTo={0.96}
@@ -279,12 +288,15 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                 <Icon
                   name="star-four-points"
                   size={14}
-                  color={isSponsorAuth ? '#D4AF37' : colors.accent}
+                  color={
+                    isSponsorAuth ? '#D4AF37' : isParentAuth ? '#14B8A6' : colors.accent
+                  }
                 />
                 <Text
                   style={[
                     authStyles.universeChipText,
                     isSponsorAuth && { color: '#F5D76E' },
+                    isParentAuth && { color: '#5EEAD4' },
                   ]}
                 >
                   {activeBrand.name}
@@ -292,7 +304,13 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                 <Icon
                   name="chevron-down"
                   size={14}
-                  color={isSponsorAuth ? '#D4AF37' : colors.textMuted}
+                  color={
+                    isSponsorAuth
+                      ? '#D4AF37'
+                      : isParentAuth
+                        ? '#14B8A6'
+                        : colors.textMuted
+                  }
                 />
               </PressableSpring>
             </View>
@@ -301,7 +319,10 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
 
         <AnimatedEntrance index={1} kind="fadeUp">
           <View style={authStyles.brandRow}>
-            <AuthBrandHeader width={logoWidth} tone={isSponsorAuth ? 'dark' : 'light'} />
+            <AuthBrandHeader
+              width={logoWidth}
+              tone={isSponsorAuth || isParentAuth ? 'dark' : 'light'}
+            />
           </View>
         </AnimatedEntrance>
 

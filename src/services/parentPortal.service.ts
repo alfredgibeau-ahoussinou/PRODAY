@@ -26,13 +26,14 @@ import {
   type ParentalPrivacySettings,
 } from '../models/ParentalSettings';
 import { parentalGuardianService, type LinkedMinorProfile } from './parentalGuardian.service';
+import { buildParentalAlerts } from '../utils/parentalAlerts';
 import { teamEventsService } from './teamEvents.service';
 import type { TeamEvent } from '../models/TeamEvent';
 import type { CarpoolLiveTripDoc } from '../models/CarpoolLiveTrip';
 import { carpoolLiveTripService } from './carpoolLiveTrip.service';
 import { callFunction } from '../lib/firebaseFunctions';
 import { normalizeGuardianEmail } from '../utils/guardianEmail';
-import { resolveRuntimeMinutesUsed } from '../utils/parentalScreenTime';
+import { getScreenTimeDayKey, resolveRuntimeMinutesUsed } from '../utils/parentalScreenTime';
 
 export type ParentChildBundle = LinkedMinorProfile & {
   profile: User;
@@ -44,13 +45,17 @@ function mapBundle(user: User): ParentChildBundle {
     ...user.parental_settings,
     is_minor: true as const,
   };
-  return {
+  const base: LinkedMinorProfile = {
     uid: user.uid,
     display_name: user.display_name,
     settings,
     runtime: user.parental_runtime,
     minutesUsedToday: resolveRuntimeMinutesUsed(user.parental_runtime),
     alerts: [],
+  };
+  return {
+    ...base,
+    alerts: buildParentalAlerts(base),
     profile: user,
   };
 }
@@ -102,8 +107,13 @@ export const parentPortalService = {
     return Array.from(byUid.values());
   },
 
-  async listChildThreads(childUid: string, max = 40): Promise<MessageThread[]> {
+  async listChildThreads(
+    childUid: string,
+    max = 40,
+    opts?: { allowRead?: boolean },
+  ): Promise<MessageThread[]> {
     if (!isFirebaseConfigured() || !childUid) return [];
+    if (opts?.allowRead === false) return [];
     const database = getDb();
     if (!database) return [];
     try {
@@ -123,8 +133,13 @@ export const parentPortalService = {
     }
   },
 
-  async listChildMessages(threadId: string, max = 80): Promise<ChatMessage[]> {
+  async listChildMessages(
+    threadId: string,
+    max = 80,
+    opts?: { allowRead?: boolean },
+  ): Promise<ChatMessage[]> {
     if (!isFirebaseConfigured() || !threadId) return [];
+    if (opts?.allowRead === false) return [];
     const database = getDb();
     if (!database) return [];
     try {
@@ -142,6 +157,11 @@ export const parentPortalService = {
       console.error('[parentPortalService] listChildMessages:', error);
       return [];
     }
+  },
+
+  canParentReadMessages(child: ParentChildBundle | null | undefined): boolean {
+    if (!child) return false;
+    return child.settings.privacy?.parent_can_read_messages !== false;
   },
 
   async setContactApproval(
@@ -249,7 +269,29 @@ export const parentPortalService = {
   ): Promise<void> {
     await parentalGuardianService.updateChildScreenTime(childUid, guardianEmail, {
       messaging_restricted,
-      contacts_filter_enabled: true,
+    });
+  },
+
+  async updateContactsFilter(
+    childUid: string,
+    guardianEmail: string,
+    contacts_filter_enabled: boolean,
+  ): Promise<void> {
+    await parentalGuardianService.updateChildScreenTime(childUid, guardianEmail, {
+      contacts_filter_enabled,
+    });
+  },
+
+  /** Accorde +N min aujourd’hui (hors demande unlock). */
+  async grantScreenTimeBonus(
+    childUid: string,
+    guardianEmail: string,
+    minutes = 15,
+  ): Promise<void> {
+    await parentalGuardianService.updateChildScreenTime(childUid, guardianEmail, {
+      screen_time_enabled: true,
+      screen_time_bonus_minutes: minutes,
+      screen_time_bonus_day: getScreenTimeDayKey(),
     });
   },
 };

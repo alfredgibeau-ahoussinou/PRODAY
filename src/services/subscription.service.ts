@@ -212,12 +212,28 @@ export const subscriptionService = {
     );
   },
 
-  /** Paiement store — RevenueCat (préféré) ou expo-iap ; pas de Stripe Billing. */
+  /** Paiement Pro — Stripe Checkout (prioritaire), sinon App Store / Play (RC / expo-iap). */
   async requestUpgrade(
     planId: SubscriptionPlanId,
     billing: 'monthly' | 'yearly' = 'monthly'
   ): Promise<{ ok: boolean; message: string }> {
     const plan = getPlanDefinition(planId);
+
+    try {
+      const { startSubscriptionCheckout } = await import('./subscriptionPayment.service');
+      return await startSubscriptionCheckout(planId, billing);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      const canFallbackToStore =
+        /Stripe non configuré/i.test(msg) ||
+        /Cloud Function introuvable/i.test(msg) ||
+        /Cloud Functions indisponibles/i.test(msg) ||
+        /Firebase Functions non configurées/i.test(msg);
+
+      if (!canFallbackToStore) {
+        return { ok: false, message: msg || 'Paiement Stripe impossible.' };
+      }
+    }
 
     if (plan?.pricing.storeAvailable) {
       const { iapService } = await import('./iap.service');
@@ -230,13 +246,13 @@ export const subscriptionService = {
       return {
         ok: false,
         message:
-          'L’abonnement sera disponible très prochainement sur l’App Store et Google Play. En attendant, votre compte gratuit reste actif avec les quotas indiqués.',
+          'L’abonnement sera disponible très prochainement. En attendant, votre compte gratuit reste actif avec les quotas indiqués.',
       };
     }
     return {
       ok: false,
       message:
-        'Installez l’application via TestFlight ou Google Play (build EAS) pour souscrire. Expo Go ne prend pas en charge les achats in-app.',
+        'Stripe n’est pas configuré côté serveur, et les achats store nécessitent un build EAS (pas Expo Go).',
     };
   },
 };

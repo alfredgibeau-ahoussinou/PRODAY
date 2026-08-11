@@ -60,7 +60,7 @@ export function DemoHero({ pole }: DemoHeroProps) {
           className="mt-6 max-w-md text-base leading-relaxed text-white/70 sm:text-lg"
         >
           Cinq pôles. Navigation réelle. Zéro compte. Choisis Joueur, Club, Coach, Supporter ou
-          Sponsor — puis entre dans le téléphone.
+          Sponsor : puis entre dans le téléphone.
         </motion.p>
         <motion.div
           initial={reduce ? false : { opacity: 0, y: 14 }}

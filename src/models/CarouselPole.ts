@@ -3,46 +3,65 @@ import type { UserRole } from './User';
 import { resolveProProductSegmentFromRole, type ProProductSegment } from './ProductLine';
 
 /**
- * Pôles carousel pré-connexion.
- * Amateur + Pro Joueur → Pôle Joueur unifié (badges de niveau).
- * Nouveau : Pôle Événements (organisateurs).
+ * Pôles carousel pré-connexion — architecture cible.
+ * Vitrine : Joueur · Club · Coach · Parent · Supporter · Sponsor.
+ * Santé / Agent / Recruteur / Organisateur = rôles intégrés (pas des pôles).
  */
 export type CarouselPoleId =
   | 'joueur'
   | 'supporter'
   | 'pro_club'
-  | 'pro_staff'
-  | 'evenements'
+  | 'coach'
+  | 'parent'
   | 'sponsor'
   | 'sante'
+  /** @deprecated → coach */
+  | 'pro_staff'
+  /** @deprecated → pro_club (organisateurs intégrés au Club) */
+  | 'evenements'
   /** @deprecated → joueur */
   | 'amateur'
   /** @deprecated → joueur */
   | 'pro_player';
 
-export const CAROUSEL_POLE_ORDER: CarouselPoleId[] = [
+/** Carousel marketing / choix univers — 6 pôles principaux. */
+export const CAROUSEL_SHOWCASE_POLE_ORDER: CarouselPoleId[] = [
   'joueur',
-  'supporter',
   'pro_club',
-  'pro_staff',
-  'evenements',
+  'coach',
+  'parent',
+  'supporter',
   'sponsor',
-  'sante',
 ];
+
+/** Hors vitrine GTM — rôle médical intégré, page sur invitation. */
+export const CAROUSEL_PARKED_POLE_ORDER: CarouselPoleId[] = ['sante'];
+
+/** Catalogue complet (admin / mappings). Préférer SHOWCASE pour l’UI pré-connexion. */
+export const CAROUSEL_POLE_ORDER: CarouselPoleId[] = [
+  ...CAROUSEL_SHOWCASE_POLE_ORDER,
+  ...CAROUSEL_PARKED_POLE_ORDER,
+];
+
+export function isCarouselParkedPole(pole: CarouselPoleId): boolean {
+  return CAROUSEL_PARKED_POLE_ORDER.includes(normalizeCarouselPole(pole));
+}
+
+export function isCarouselShowcasePole(pole: CarouselPoleId): boolean {
+  return CAROUSEL_SHOWCASE_POLE_ORDER.includes(normalizeCarouselPole(pole));
+}
 
 export const PRO_SIGNUP_PRESET_ROLE_KEY = 'proday_pro_signup_preset_role';
 
 export function isCarouselProPole(pole: CarouselPoleId): boolean {
   const normalized = normalizeCarouselPole(pole);
-  return (
-    normalized === 'pro_club' ||
-    normalized === 'pro_staff' ||
-    normalized === 'evenements'
-  );
+  return normalized === 'pro_club' || normalized === 'coach';
 }
 
 export function normalizeCarouselPole(pole: CarouselPoleId): CarouselPoleId {
   if (pole === 'amateur' || pole === 'pro_player') return 'joueur';
+  if (pole === 'pro_staff') return 'coach';
+  if (pole === 'evenements') return 'pro_club';
   return pole;
 }
 
@@ -50,9 +69,9 @@ export function carouselPoleToProductLine(pole: CarouselPoleId): ProductLineId {
   const normalized = normalizeCarouselPole(pole);
   if (normalized === 'joueur') return 'amateur';
   if (normalized === 'pro_club') return 'pro_club';
-  if (normalized === 'pro_staff') return 'pro_staff';
-  if (normalized === 'evenements') return 'pro_staff';
+  if (normalized === 'coach') return 'pro_staff';
   if (normalized === 'sponsor') return 'sponsor';
+  if (normalized === 'parent') return 'parent';
   return normalized as ProductLineId;
 }
 
@@ -60,7 +79,7 @@ export function carouselPoleToProSegment(pole: CarouselPoleId): ProProductSegmen
   const normalized = normalizeCarouselPole(pole);
   if (normalized === 'joueur') return 'pro_player';
   if (normalized === 'pro_club') return 'pro_club';
-  if (normalized === 'pro_staff' || normalized === 'evenements') return 'pro_staff';
+  if (normalized === 'coach') return 'pro_staff';
   return null;
 }
 
@@ -71,10 +90,10 @@ export function carouselPoleSignupPresetRole(pole: CarouselPoleId): UserRole | n
       return 'player';
     case 'pro_club':
       return 'club';
-    case 'pro_staff':
+    case 'coach':
       return 'coach';
-    case 'evenements':
-      return 'organizer';
+    case 'parent':
+      return 'parent';
     case 'sponsor':
       return 'sponsor';
     default:
@@ -88,24 +107,24 @@ export function productLineToCarouselPole(
   role?: UserRole | null,
 ): CarouselPoleId {
   if (line === 'sponsor') return 'sponsor';
+  if (line === 'parent') return 'parent';
   if (line === 'pro_player' || line === 'amateur' || line === 'homme' || line === 'woman') {
     return 'joueur';
   }
   if (line === 'pro_club') return 'pro_club';
   if (line === 'pro_staff') {
-    if (role === 'organizer') return 'evenements';
-    return 'pro_staff';
+    // Agent / recruteur / organisateur restent des rôles sous le pôle Coach (écosystème).
+    return 'coach';
   }
   if (line === 'pro') {
     const segment = resolveProProductSegmentFromRole(role);
     if (segment === 'pro_club') return 'pro_club';
-    if (segment === 'pro_staff') {
-      return role === 'organizer' ? 'evenements' : 'pro_staff';
-    }
+    if (segment === 'pro_staff') return 'coach';
     return 'joueur';
   }
   if (line === 'supporter' || line === 'sante') {
     return line;
   }
+  if (role === 'parent') return 'parent';
   return 'joueur';
 }

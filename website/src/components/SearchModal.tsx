@@ -16,7 +16,7 @@ const searchItems = [
   { title: "Pôle Coach", href: ROUTES.coach, category: "Pôles" },
   { title: "Supporter", href: ROUTES.supporter, category: "Pôles" },
   { title: "Sponsor", href: ROUTES.sponsor, category: "Pôles" },
-  { title: "Espace Parent", href: ROUTES.parent, category: "Rôles" },
+  { title: "Pro Day Parent", href: ROUTES.parent, category: "Pôles" },
   { title: "Tarifs", href: ROUTES.pricing, category: "Information" },
   { title: "Fonctionnalités", href: ROUTES.features, category: "Information" },
   { title: "Cartes ProDay", href: ROUTES.cards, category: "Outils" },

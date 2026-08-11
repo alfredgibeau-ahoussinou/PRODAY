@@ -71,7 +71,7 @@ const applications: Application[] = [
 ];
 
 describe('Phase 10. Mercato staff + bienvenue V3', () => {
-  it('résume le pipeline staff Mercato', () => {
+  it('résume le suivi staff Mercato', () => {
     const summary = summarizeStaffMercato({
       posts,
       authorUid: 'staff-1',

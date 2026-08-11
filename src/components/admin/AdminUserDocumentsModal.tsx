@@ -12,7 +12,7 @@ import {
 import { AnimatedModalShell } from '../motion/AnimatedModalShell';
 import type { User } from '../../models/User';
 import { adminService, type AdminUserDocument } from '../../services/admin.service';
-import { useAdminStyles } from './adminStyles';
+import { useAdminStyles, ADMIN_COLORS } from './adminStyles';
 import { Icon } from '../ui/Icon';
 import { spacing, radius } from '../../theme/designTokens';
 import type { AppColors } from '../../theme/universeTheme';
@@ -68,7 +68,12 @@ export const AdminUserDocumentsModal: React.FC<AdminUserDocumentsModalProps> = (
   };
 
   return (
-    <AnimatedModalShell visible={visible} onClose={onClose} closeLabel="Fermer">
+    <AnimatedModalShell
+      visible={visible}
+      onClose={onClose}
+      closeLabel="Fermer"
+      themeColors={ADMIN_COLORS}
+    >
       <View style={styles.sheet}>
         <Text style={styles.title}>Documents · {user.display_name}</Text>
         <Text style={styles.sub}>{user.email}</Text>
@@ -107,11 +112,12 @@ function createStyles(c: AppColors) {
   return StyleSheet.create({
     sheet: {
       flex: 1,
+      backgroundColor: c.backgroundAlt,
       paddingHorizontal: spacing.lg,
       paddingBottom: spacing.lg,
     },
-    title: { fontSize: 20, fontWeight: '900', color: c.text },
-    sub: { fontSize: 13, color: c.textMuted, marginBottom: spacing.md },
+    title: { fontSize: 22, fontWeight: '800', color: c.text, letterSpacing: -0.3 },
+    sub: { fontSize: 13, color: c.textMuted, marginBottom: spacing.md, marginTop: 2 },
     loader: { marginVertical: spacing.xl },
     empty: {
       fontSize: 14,
@@ -124,15 +130,18 @@ function createStyles(c: AppColors) {
       flexDirection: 'row',
       alignItems: 'center',
       gap: spacing.sm,
-      paddingVertical: spacing.md,
-      borderBottomWidth: StyleSheet.hairlineWidth,
-      borderBottomColor: c.border,
+      padding: spacing.md,
+      borderRadius: radius.lg,
+      borderWidth: 1,
+      borderColor: c.border,
+      backgroundColor: c.surface,
+      marginBottom: spacing.sm,
     },
     rowIcon: {
       width: 40,
       height: 40,
-      borderRadius: radius.sm,
-      backgroundColor: c.accentSoft,
+      borderRadius: radius.md,
+      backgroundColor: c.brandSoft,
       alignItems: 'center',
       justifyContent: 'center',
     },

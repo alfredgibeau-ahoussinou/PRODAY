@@ -122,7 +122,7 @@ const features = [
   { id: "stats", label: "Stats de match", category: "Performance" },
   { id: "mercato", label: "Mercato & recrutement", category: "Recrutement" },
   { id: "matches", label: "Gestion des matchs", category: "Compétition" },
-  { id: "arena", label: "Tournois Arena", category: "Compétition" },
+  { id: "arena", label: "Tournois Arène", category: "Compétition" },
   { id: "covoiturage", label: "Covoiturage", category: "Logistique" },
   { id: "messaging", label: "Messagerie", category: "Communication" },
   { id: "calendar", label: "Calendrier", category: "Organisation" },

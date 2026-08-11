@@ -129,18 +129,23 @@ const ParentAppShellInner: React.FC = () => {
         style={[styles.root, rootStyle, { backgroundColor: c.background }]}
         edges={['top', 'left', 'right']}
       >
-        <StatusBar style="dark" />
+        <StatusBar style="light" />
         <View style={styles.header}>
           <View>
             <ProDayText variant="caption" muted>
-              Portail Parent
+              Pôle Parent
             </ProDayText>
-            <ProDayText variant="section">ProDay Famille</ProDayText>
+            <ProDayText variant="section">Pro Day Parent</ProDayText>
           </View>
           {selected ? (
-            <ProDayText variant="caption" accent>
-              {selected.display_name}
-            </ProDayText>
+            <Pressable
+              onPress={() => setActiveTab('profil')}
+              style={[styles.childPill, { borderColor: c.brand, backgroundColor: c.brandSoft }]}
+            >
+              <ProDayText variant="caption" accent style={{ fontWeight: '800' }}>
+                {selected.display_name}
+              </ProDayText>
+            </Pressable>
           ) : null}
         </View>
         <View style={styles.content}>{screen}</View>
@@ -187,6 +192,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+  },
+  childPill: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    borderRadius: radius.pill,
+    borderWidth: 1,
   },
   content: { flex: 1 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },

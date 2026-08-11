@@ -14,7 +14,6 @@ import {
   Mail,
   Menu,
   Settings,
-  Shield,
   Users,
   UsersRound,
   X,
@@ -36,13 +35,19 @@ type NavGroup = {
 
 const NAV_GROUPS: NavGroup[] = [
   {
-    label: "Vue d’ensemble",
+    label: "Opérations",
     items: [
-      { href: ROUTES.adminDashboard, label: "Dashboard", icon: LayoutDashboard },
+      { href: ROUTES.adminDashboard, label: "Tableau de bord", icon: LayoutDashboard },
       { href: ROUTES.adminBeta, label: "Liste d’attente", icon: ClipboardList, badge: "pending" },
       { href: ROUTES.adminFeedback, label: "Retours bêta", icon: Mail },
+    ],
+  },
+  {
+    label: "Croissance",
+    items: [
       { href: ROUTES.adminVisites, label: "Visites", icon: Activity },
       { href: ROUTES.adminAnalytics, label: "Analytics", icon: BarChart3 },
+      { href: ROUTES.adminReferrals, label: "Parrainage", icon: Gift },
     ],
   },
   {
@@ -50,15 +55,13 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { href: ROUTES.adminUsers, label: "Utilisateurs", icon: Users },
       { href: ROUTES.adminSubscriptions, label: "Abonnements", icon: CreditCard },
-      { href: ROUTES.adminReferrals, label: "Parrainage", icon: Gift },
       { href: ROUTES.adminReports, label: "Modération", icon: UsersRound },
     ],
   },
   {
-    label: "Ops",
+    label: "Contrôle",
     items: [
       { href: ROUTES.adminLogs, label: "Journal", icon: ClipboardList },
-      { href: ROUTES.adminRoles, label: "Rôles", icon: Shield },
       { href: ROUTES.adminSettings, label: "Paramètres", icon: Settings },
     ],
   },
@@ -245,7 +248,7 @@ export function AdminShell({
 
         <div className="admin-main min-w-0 flex-1 px-3 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 sm:px-5 sm:pt-4 lg:px-6 lg:py-5">
           <div className="lg:hidden">
-            {/* Title already in sticky bar — keep actions + subtitle only */}
+            {/* Title already in sticky bar : keep actions + subtitle only */}
             {(subtitle || actions) && (
               <div className="mb-3 flex flex-col gap-2 border-b border-white/10 pb-3">
                 {subtitle ? (

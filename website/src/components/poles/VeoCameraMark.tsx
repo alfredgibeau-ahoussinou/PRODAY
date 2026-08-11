@@ -10,7 +10,7 @@ type VeoCameraMarkProps = {
 };
 
 /**
- * Real Veo camera mark (lime dome on mast) — matches product hardware.
+ * Real Veo camera mark (lime dome on mast) : matches product hardware.
  */
 export function VeoCameraMark({
   className = "",
@@ -26,7 +26,7 @@ export function VeoCameraMark({
   return (
     <div
       className={`inline-flex flex-col items-center gap-2 ${className}`}
-      title="Veo — caméra automatique de terrain"
+      title="Veo : caméra automatique de terrain"
     >
       <motion.div
         className={`relative overflow-hidden rounded-2xl border border-[#c8f000]/35 bg-[#0a1620] shadow-[0_12px_40px_-12px_rgba(200,240,0,0.45)] ${dim}`}

@@ -23,7 +23,7 @@ export default function FaqPage() {
       <ImmersivePoleHero
         brand="Pro Day FAQ"
         headline="Avant d’entrer."
-        support="Tarifs, pôles, Smart Tactics, rôles intégrés. Les réponses les plus demandées — filtrées par thème."
+        support="Tarifs, pôles, Tactique IA, rôles intégrés. Les réponses les plus demandées : filtrées par thème."
         video={visuals.heroVideo}
         poster={visuals.hero}
         primaryHref="#reponses"

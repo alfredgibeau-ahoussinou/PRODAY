@@ -1,4 +1,8 @@
 import type { ProductLineWeb } from "./content";
+import {
+  joueurExperienceHref,
+  joueurGateHref,
+} from "./joueurProfileStorage";
 
 export const ROUTES = {
   home: "/",
@@ -12,14 +16,22 @@ export const ROUTES = {
   trust: "/confiance",
   privacy: "/confidentialite",
   terms: "/cgu",
-  /** @deprecated Redirige vers /joueur. conservé pour liens legacy. */
+  /** @deprecated Redirige vers /joueur?gender=men. */
   homme: "/homme",
   /** @deprecated Redirige vers /joueur. */
   amateur: "/amateur",
-  /** Pôle Joueur unifié (amateur → pro). */
+  /** Pôle Joueur — porte « Qui es-tu ? » (genre + âge). */
   joueur: "/joueur",
+  /** Expérience immersive 3D dédiée (après la question). */
+  joueurExperience: "/joueur/experience",
+  /** Raccourcis vers la porte avec genre pré-sélectionné. */
+  joueurWoman: joueurGateHref({ gender: "women" }),
+  joueurMan: joueurGateHref({ gender: "men" }),
+  joueurYouth: joueurExperienceHref({ age: 11, gender: "men" }),
+  joueurTeen: joueurExperienceHref({ age: 15, gender: "men" }),
+  joueurAdult: joueurExperienceHref({ age: 22, gender: "men" }),
   supporter: "/supporter",
-  /** @deprecated Redirige vers /joueur. conservé pour liens legacy. */
+  /** @deprecated Redirige vers /joueur?gender=women. */
   woman: "/woman",
   /** @deprecated Redirige vers /joueur. */
   proJoueur: "/pro-joueur",
@@ -106,11 +118,12 @@ export const ROUTES = {
 
 export type RouteKey = keyof typeof ROUTES;
 
-/** Nav vitrine GTM : 5 pôles. Santé / Agent / Recruteur / Organisateur = rôles. */
+/** Nav vitrine GTM : 6 pôles. Santé = rôle intégré. */
 export const POLE_NAV_ITEMS = [
   { href: ROUTES.joueur, label: "Joueur" },
   { href: ROUTES.proClub, label: "Club" },
   { href: ROUTES.coach, label: "Coach" },
+  { href: ROUTES.parent, label: "Parent" },
   { href: ROUTES.supporter, label: "Supporter" },
   { href: ROUTES.sponsor, label: "Sponsor" },
 ] as const;
@@ -130,8 +143,9 @@ export const NAV_ITEMS = [
 
 export const POLE_FOOTER_LINKS = [
   { href: ROUTES.joueur, label: "Espace Joueur", subtitle: "Carte, entraînement, Mercato · Pass optionnel 3,99 €" },
-  { href: ROUTES.proClub, label: "Espace Club", subtitle: "Cœur ProDay · Sur devis selon adhérents" },
-  { href: ROUTES.coach, label: "Espace Coach", subtitle: "Entraînements · Smart Tactics · invitations" },
+  { href: ROUTES.proClub, label: "Espace Club", subtitle: "À partir de 3 € / adhérent · Sur devis" },
+  { href: ROUTES.coach, label: "Espace Coach", subtitle: "Entraînements · Tactique IA · invitations" },
+  { href: ROUTES.parent, label: "Pôle Parent", subtitle: "Supervision · messages · agenda · gratuit" },
   { href: ROUTES.supporter, label: "Pôle Supporter", subtitle: "Fans & communauté" },
   { href: ROUTES.sponsor, label: "Pôle Sponsor", subtitle: "Marques & micro-sponsoring local" },
 ] as const;
@@ -140,7 +154,7 @@ export const EXPLORE_CARDS = [
   {
     href: routeWithHash(ROUTES.features, "modules"),
     title: "Fonctionnalités",
-    description: "Mercato, Fil, Reels, Arena, Sponsors et le reste.",
+    description: "Mercato, Fil, Reels, Arène, Sponsors et le reste.",
     image: "/showcase/classic-mercato.jpg",
     tag: "Produit",
   },
@@ -167,7 +181,7 @@ export const EXPLORE_CARDS = [
   },
   {
     href: ROUTES.liveStats,
-    title: "Live Stats",
+    title: "Stats en direct",
     description: "Saisissez buts et passes. Voyez le profil se mettre à jour.",
     image: "/images/football-match-01.jpg",
     tag: "Match",
@@ -255,7 +269,7 @@ export const EXPLORE_CARDS = [
   {
     href: routeWithHash(ROUTES.coach, "modules"),
     title: "Pôle Coach",
-    description: "Smart Tactics, IA, effectif et préparation match. Rattaché au club.",
+    description: "Tactique IA, IA, effectif et préparation match. Rattaché au club.",
     image: "/showcase/classic-staff.jpg",
     tag: "Coach",
     accent: true,
@@ -263,20 +277,20 @@ export const EXPLORE_CARDS = [
   {
     href: routeWithHash(ROUTES.proClub, "modules"),
     title: "Tournois & détections",
-    description: "Rôle organisateur intégré au Club : Arena, stages et inscriptions.",
+    description: "Rôle organisateur intégré au Club : Arène, stages et inscriptions.",
     image: "/showcase/classic-arena.jpg",
     tag: "Club",
     accent: true,
   },
   {
-    href: routeWithHash(ROUTES.joueur, "modules"),
+    href: ROUTES.joueurMan,
     title: "Pro Day Man",
     description: "Foot masculin. Mercato, matchs et CV joueur. Badge Amateur ou Pro.",
     image: "/images/football-amateur-01.jpg",
     tag: "Man",
   },
   {
-    href: ROUTES.woman,
+    href: ROUTES.joueurWoman,
     title: "ProDay Woman",
     description: "Foot féminin. Mercato F, tournois et profil joueuse.",
     image: "/showcase/woman/woman-discover-hero.jpg",
@@ -285,10 +299,10 @@ export const EXPLORE_CARDS = [
   },
   {
     href: ROUTES.shop,
-    title: "ProDay Shop",
+    title: "Boutique ProDay",
     description: "Trépieds, t-shirts et maillots officiels. Man, Woman et Pro.",
     image: "/images/football-training-01.jpg",
-    tag: "Shop",
+    tag: "Boutique",
   },
   {
     href: ROUTES.faq,

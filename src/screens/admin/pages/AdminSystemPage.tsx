@@ -1,12 +1,13 @@
 import React, { useMemo, useState } from 'react';
 import { useTranslation } from '../../../context/LocaleContext';
-import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, Text, StyleSheet, Alert } from 'react-native';
 import { useAuth } from '../../../context/AuthContext';
 import { useIsAdmin } from '../../../hooks/useIsAdmin';
 import { useAdminData } from '../../../context/AdminDataContext';
 import { adminService } from '../../../services/admin.service';
 import { adminAuditService } from '../../../services/adminAudit.service';
 import { AdminPageScaffold } from '../../../components/admin/AdminPageScaffold';
+import { AdminPageHero } from '../../../components/admin/AdminPageHero';
 import { AdminAuditLogPanel } from '../../../components/admin/AdminAuditLogPanel';
 import { AdminPlatformConfigPanel } from '../../../components/admin/AdminPlatformConfigPanel';
 import { AdminOpsDataPanel } from '../../../components/admin/AdminOpsDataPanel';
@@ -18,8 +19,9 @@ import {
   ADMIN_SITE_URL,
 } from '../../../components/admin/AdminPlatformBrief';
 import { Icon } from '../../../components/ui/Icon';
+import { PressableSpring } from '../../../components/motion';
 import { PLATFORM_ADMIN_EMAIL } from '../../../config/admin';
-import { useAdminStyles } from '../../../components/admin/adminStyles';
+import { useAdminStyles, adminChrome } from '../../../components/admin/adminStyles';
 import { spacing, radius, shadows } from '../../../theme/designTokens';
 import type { AppColors } from '../../../theme/universeTheme';
 
@@ -75,6 +77,25 @@ export const AdminSystemPage: React.FC<AdminSystemPageProps> = ({ onPreviewUserA
 
   return (
     <AdminPageScaffold loading={loading}>
+      <AdminPageHero
+        kicker="SYSTÈME"
+        title="Ops & config"
+        subtitle="Snapshots, token admin, preview app et audit."
+        actions={[
+          {
+            label: systemBusy ? 'Busy…' : 'Forcer snapshot',
+            icon: 'star-four-points',
+            onPress: () => void handleForceSnapshot(),
+          },
+          {
+            label: 'Preview app',
+            icon: 'eye',
+            variant: 'ghost',
+            onPress: onPreviewUserApp,
+          },
+        ]}
+      />
+
       <AdminPlatformBrief compact />
 
       <AdminPlatformConfigPanel />
@@ -165,7 +186,7 @@ export const AdminSystemPage: React.FC<AdminSystemPageProps> = ({ onPreviewUserA
 
       <AdminSectionHeader title={t('admin.system.session')} />
 
-      <TouchableOpacity style={styles.previewBtn} onPress={onPreviewUserApp} activeOpacity={0.88}>
+      <PressableSpring style={styles.previewBtn} onPress={onPreviewUserApp} scaleTo={0.98} haptic>
         <View style={styles.previewIcon}>
           <Icon name="eye" size={20} color={c.brand} />
         </View>
@@ -174,10 +195,12 @@ export const AdminSystemPage: React.FC<AdminSystemPageProps> = ({ onPreviewUserA
           <Text style={styles.previewSub}>Interface membre sans quitter la session admin</Text>
         </View>
         <Icon name="chevron-forward" size={18} color={c.textMuted} />
-      </TouchableOpacity>
+      </PressableSpring>
 
-      <TouchableOpacity
+      <PressableSpring
         style={styles.signOutBtn}
+        scaleTo={0.97}
+        haptic
         onPress={() => {
           Alert.alert(t('admin.system.logout.title'), t('admin.system.logout.body'), [
             { text: 'Annuler', style: 'cancel' },
@@ -186,7 +209,7 @@ export const AdminSystemPage: React.FC<AdminSystemPageProps> = ({ onPreviewUserA
         }}
       >
         <Text style={styles.signOutText}>Se déconnecter</Text>
-      </TouchableOpacity>
+      </PressableSpring>
 
       <AdminAuditLogPanel />
     </AdminPageScaffold>
@@ -202,10 +225,10 @@ function createStyles(c: AppColors) {
       alignItems: 'center',
       gap: spacing.md,
       backgroundColor: c.surface,
-      borderRadius: radius.lg,
+      borderRadius: radius.xl,
       padding: spacing.md,
       borderWidth: 1,
-      borderColor: c.border,
+      borderColor: adminChrome.shellBorder,
       marginBottom: spacing.md,
       ...shadows.card,
     },
@@ -224,7 +247,7 @@ function createStyles(c: AppColors) {
       alignItems: 'center',
       justifyContent: 'center',
       padding: spacing.md,
-      borderRadius: radius.md,
+      borderRadius: radius.lg,
       borderWidth: 1,
       borderColor: c.error,
       backgroundColor: c.errorBg,

@@ -37,7 +37,8 @@ import { ProDaySurface } from '../ui/ProDaySurface';
 import { ProDayText } from '../ui/ProDayText';
 import { ProDayGradient } from '../ui/ProDayGradient';
 import { TAB_BAR_CONTENT_INSET } from '../../navigation/tabBarLayout';
-import { spacing, radius, shadows } from '../../theme/designTokens';
+import { radius, spacing, shadows } from '../../theme/designTokens';
+import { ClubQuoteRequestScreen } from '../../screens/club/ClubQuoteRequestScreen';
 
 type BillingCycle = 'monthly' | 'yearly';
 
@@ -60,6 +61,7 @@ export const SubscriptionPlanView: React.FC<SubscriptionPlanViewProps> = ({
   const visual = getSubscriptionPlanVisual(profile.role, productLine, playerSegment);
   const [upgrading, setUpgrading] = useState(false);
   const [billing, setBilling] = useState<BillingCycle>('monthly');
+  const [showClubQuote, setShowClubQuote] = useState(false);
 
   const isPro = subscription?.tier === 'pro';
   const noStorePlan = ROLES_WITHOUT_STORE_PLAN.includes(profile.role);
@@ -97,10 +99,14 @@ export const SubscriptionPlanView: React.FC<SubscriptionPlanViewProps> = ({
 
   const handleUpgrade = useCallback(async () => {
     if (!plan) return;
+    if (plan.pricing.quoteOnly) {
+      setShowClubQuote(true);
+      return;
+    }
     setUpgrading(true);
     try {
       const res = await subscriptionService.requestUpgrade(plan.id, billing);
-      Alert.alert(res.ok ? 'Abonnement activé' : 'Bêta ProDay', res.message);
+      Alert.alert(res.ok ? 'Abonnement' : 'Paiement', res.message);
       if (res.ok) await refresh();
     } finally {
       setUpgrading(false);
@@ -109,11 +115,18 @@ export const SubscriptionPlanView: React.FC<SubscriptionPlanViewProps> = ({
 
   const handleManage = useCallback(async () => {
     try {
+      const { openStripeBillingPortal } = await import('../../services/subscriptionPayment.service');
+      await openStripeBillingPortal();
+      return;
+    } catch {
+      // pas de client Stripe → portail store
+    }
+    try {
       await iapService.openManageSubscriptions();
     } catch {
       Alert.alert(
         'Gestion abonnement',
-        'Ouvrez Réglages → Abonnements (iOS) ou Play Store → Paiements et abonnements (Android).'
+        'Ouvrez le portail Stripe (si vous avez payé par carte), ou Réglages → Abonnements (iOS) / Play Store (Android).'
       );
     }
   }, []);
@@ -128,6 +141,15 @@ export const SubscriptionPlanView: React.FC<SubscriptionPlanViewProps> = ({
       setUpgrading(false);
     }
   }, [refresh]);
+
+  if (showClubQuote) {
+    return (
+      <ClubQuoteRequestScreen
+        onBack={() => setShowClubQuote(false)}
+        initialClubName={profile.display_name}
+      />
+    );
+  }
 
   if (!visual || !plan) {
     return (
@@ -189,6 +211,19 @@ export const SubscriptionPlanView: React.FC<SubscriptionPlanViewProps> = ({
                   </ProDayText>
                 ) : null}
               </View>
+            </ProDaySurface>
+          ) : plan.pricing.quoteOnly ? (
+            <ProDaySurface variant="elevated" style={[styles.priceCard, { borderColor: colors.border }]}>
+              <ProDayText variant="eyebrow" muted>
+                {plan.label}
+              </ProDayText>
+              <ProDayText variant="hero" style={{ color: visual.primary }}>
+                Sur devis
+              </ProDayText>
+              <ProDayText variant="caption" muted style={styles.billedLabel}>
+                {plan.pricing.priceHint ??
+                  'À partir de 3 € / adhérent — tarif adapté selon la taille du club'}
+              </ProDayText>
             </ProDaySurface>
           ) : (
             <>
@@ -271,9 +306,11 @@ export const SubscriptionPlanView: React.FC<SubscriptionPlanViewProps> = ({
                 </View>
                 {!isPro ? (
                   <ProDayText variant="caption" style={{ color: visual.primary, fontWeight: '800' }}>
-                    {billing === 'monthly'
-                      ? `${formatEur(plan.pricing.monthlyEur)} €/mois`
-                      : `${formatEur(plan.pricing.yearlyEur)} €/an`}
+                    {plan.pricing.quoteOnly
+                      ? 'Sur devis'
+                      : billing === 'monthly'
+                        ? `${formatEur(plan.pricing.monthlyEur)} €/mois`
+                        : `${formatEur(plan.pricing.yearlyEur)} €/an`}
                   </ProDayText>
                 ) : null}
               </View>
@@ -304,26 +341,20 @@ export const SubscriptionPlanView: React.FC<SubscriptionPlanViewProps> = ({
                   <ActivityIndicator size="small" color="#FFFFFF" />
                 ) : (
                   <ProDayText variant="caption" inverse style={styles.ctaText}>
-                    {plan.pricing.storeAvailable && iapReady
-                      ? visual.ctaVerb
-                      : 'Infos abonnement'}
+                    {plan.pricing.quoteOnly ? 'Demander un devis' : visual.ctaVerb}
                   </ProDayText>
                 )}
               </ProDayGradient>
             </TouchableOpacity>
             <ProDayText variant="caption" muted style={styles.footnote}>
-              {plan.pricing.storeAvailable
-                ? iapReady
-                  ? iapService.usesRevenueCat()
-                    ? 'Paiement sécurisé App Store / Google Play (RevenueCat)'
-                    : 'Paiement sécurisé App Store / Google Play'
-                  : 'Accès gratuit pendant la bêta. Achats store via build EAS'
-                : 'Accès gratuit pendant la bêta. Abonnements store à venir'}
+              {plan.pricing.quoteOnly
+                ? 'Tarif personnalisé selon adhérents, équipes, coachs et options.'
+                : 'Paiement sécurisé par carte (Stripe). Repli App Store / Play si Stripe indisponible.'}
             </ProDayText>
             {iapReady ? (
               <TouchableOpacity style={styles.refreshLink} onPress={() => void handleRestore()} disabled={upgrading}>
                 <ProDayText variant="caption" muted>
-                  Restaurer un achat
+                  Restaurer un achat store
                 </ProDayText>
               </TouchableOpacity>
             ) : null}

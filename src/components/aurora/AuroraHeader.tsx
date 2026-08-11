@@ -9,6 +9,8 @@ import { spacing } from '../../theme/designTokens';
 
 interface AuroraHeaderProps {
   variant?: 'sport' | 'default';
+  /** `night` = texte clair sur atmosphère terrain. */
+  tone?: 'default' | 'night';
   eyebrow?: string;
   title: string;
   subtitle?: string;
@@ -26,10 +28,12 @@ export const AuroraHeader: React.FC<AuroraHeaderProps> = ({
   left,
   right,
   footer,
+  tone = 'default',
 }) => {
   const insets = useSafeAreaInsets();
   const { colors } = useAppTheme();
-  const styles = useMemo(() => createStyles(colors), [colors]);
+  const night = tone === 'night';
+  const styles = useMemo(() => createStyles(colors, night), [colors, night]);
 
   return (
     <AnimatedEntrance kind="fadeDown">
@@ -39,21 +43,29 @@ export const AuroraHeader: React.FC<AuroraHeaderProps> = ({
           {left ? <View style={styles.left}>{left}</View> : null}
           <View style={styles.copy}>
             {eyebrow ? (
-              <ProDayText variant="caption" muted style={styles.eyebrow} numberOfLines={1}>
+              <ProDayText
+                variant="caption"
+                muted={!night}
+                style={[styles.eyebrow, night && styles.inkMuted]}
+                numberOfLines={1}
+              >
                 {eyebrow}
               </ProDayText>
             ) : null}
             <ProDayText
               variant="title"
-              style={styles.title}
+              style={[styles.title, night && styles.ink]}
               numberOfLines={2}
-              adjustsFontSizeToFit
-              minimumFontScale={0.75}
             >
               {title}
             </ProDayText>
             {subtitle ? (
-              <ProDayText variant="body" muted numberOfLines={3}>
+              <ProDayText
+                variant="body"
+                muted={!night}
+                style={night ? styles.inkMuted : undefined}
+                numberOfLines={3}
+              >
                 {subtitle}
               </ProDayText>
             ) : null}
@@ -66,15 +78,19 @@ export const AuroraHeader: React.FC<AuroraHeaderProps> = ({
   );
 };
 
-function createStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
+function createStyles(
+  _colors: ReturnType<typeof useAppTheme>['colors'],
+  night: boolean,
+) {
   return StyleSheet.create({
-    shell: { position: 'relative' },
+    shell: { position: 'relative', zIndex: 2 },
     accentBar: {
       position: 'absolute',
       top: 0,
       left: 0,
       right: 0,
       height: 4,
+      opacity: night ? 0.85 : 1,
     },
     wrap: {
       flexDirection: 'row',
@@ -87,6 +103,8 @@ function createStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
     copy: { flex: 1, flexShrink: 1, minWidth: 0, gap: 2 },
     eyebrow: { textTransform: 'uppercase', letterSpacing: 1.2, fontSize: 10, flexShrink: 1 },
     title: { fontWeight: '800', letterSpacing: -0.4, flexShrink: 1 },
+    ink: { color: '#F7FBF8' },
+    inkMuted: { color: 'rgba(247,251,248,0.72)' },
     left: { flexShrink: 0, paddingTop: 2 },
     right: { flexShrink: 0 },
     footer: { paddingHorizontal: spacing.lg, paddingBottom: spacing.sm },

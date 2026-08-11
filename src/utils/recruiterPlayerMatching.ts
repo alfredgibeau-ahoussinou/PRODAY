@@ -1,6 +1,10 @@
 import type { User } from '../models/User';
 import type { RecruitmentPost } from '../models/Player';
 import { computeOpportunityScore } from '../core/recruitment/opportunityScore.engine';
+import {
+  competitionFormMatchingBoost,
+  type RecruitmentFormSignal,
+} from './competitionExclusives';
 
 export interface RecruiterPlayerMatch {
   player: User;
@@ -15,14 +19,20 @@ export interface RecruiterPlayerMatch {
 export function scorePlayerForRecruitmentPost(
   player: User,
   post: RecruitmentPost,
-  pulseScore?: number
+  pulseScore?: number,
+  formSignal?: RecruitmentFormSignal,
 ): RecruiterPlayerMatch {
   const opportunity = computeOpportunityScore({ player, post, pulseScore });
+  const boost = competitionFormMatchingBoost(formSignal);
+  const reasons = [...opportunity.reasons];
+  if (boost > 0 && formSignal) {
+    reasons.push(formSignal.note);
+  }
 
   return {
     player,
-    score: opportunity.score,
-    reasons: opportunity.reasons,
+    score: Math.min(100, opportunity.score + boost),
+    reasons,
     opportunityBand: opportunity.band,
     opportunityLabel: opportunity.label,
   };
@@ -33,13 +43,19 @@ export function rankPlayersForRecruitmentPost(
   post: RecruitmentPost,
   excludeUids: string[] = [],
   max = 8,
-  pulseByUid?: Record<string, number>
+  pulseByUid?: Record<string, number>,
+  formSignalsByUid?: Record<string, RecruitmentFormSignal>,
 ): RecruiterPlayerMatch[] {
   const excluded = new Set(excludeUids);
   return players
     .filter((p) => p.role === 'player' && !excluded.has(p.uid))
     .map((player) =>
-      scorePlayerForRecruitmentPost(player, post, pulseByUid?.[player.uid])
+      scorePlayerForRecruitmentPost(
+        player,
+        post,
+        pulseByUid?.[player.uid],
+        formSignalsByUid?.[player.uid],
+      ),
     )
     .filter((m) => m.score >= 40)
     .sort((a, b) => b.score - a.score)

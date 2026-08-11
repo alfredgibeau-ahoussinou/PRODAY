@@ -59,7 +59,7 @@ export const en: MessageCatalog = {
   'tabs.recrutement': 'Transfer',
   'tabs.matchs': 'Matches',
   'tabs.covoiturage': 'Carpool',
-  'tabs.sante': 'Health',
+  'tabs.sante': 'Care',
   'tabs.feed': 'Feed',
   'tabs.reels': 'Reels',
   'tabs.famille': 'Family',

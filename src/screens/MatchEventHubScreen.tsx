@@ -258,7 +258,7 @@ export const MatchEventHubScreen: React.FC<MatchEventHubScreenProps> = ({
       id: 'stats' as const,
       render: () => (
         <ScrollView contentContainerStyle={pagePad} showsVerticalScrollIndicator={false}>
-          <MatchHubStatsTab event={event} profile={profile} />
+          <MatchHubStatsTab event={event} profile={profile} onUpdated={load} />
         </ScrollView>
       ),
     },

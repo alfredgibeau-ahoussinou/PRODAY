@@ -49,6 +49,7 @@ export interface ApplicationSharedDocument {
   url: string;
   uploaded_by: string;
   created_at: Date;
+  /** `medical` est interdit côté Mercato — pas de partage de documents médicaux via candidature. */
   kind?: 'cv' | 'license' | 'medical' | 'parental' | 'other';
 }
 

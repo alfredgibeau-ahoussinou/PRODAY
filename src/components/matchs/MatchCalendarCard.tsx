@@ -2,9 +2,9 @@ import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { PressableSpring } from '../motion/PressableSpring';
 import { ProDayText } from '../ui/ProDayText';
-import { Icon } from '../ui/Icon';
 import { useAppTheme } from '../../context/ProductLineContext';
-import { spacing, radius, shadows } from '../../theme/designTokens';
+import { MATCH_SITE } from '../../content/matchPageIdentity';
+import { spacing } from '../../theme/designTokens';
 
 interface MatchCalendarCardProps {
   kindLabel: string;
@@ -29,33 +29,30 @@ export const MatchCalendarCard: React.FC<MatchCalendarCardProps> = ({
 
   return (
     <PressableSpring
-      style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }, shadows.soft]}
+      style={[styles.card, { borderColor: MATCH_SITE.border }]}
       onPress={onPress}
       scaleTo={0.98}
       haptic
     >
-      <View style={[styles.dateCol, { backgroundColor: colors.accentSoft }]}>
-        <ProDayText variant="caption" accent style={styles.dateText}>
-          {dateLabel.split(' ').slice(0, 2).join('\n')}
-        </ProDayText>
-      </View>
+      <View style={[styles.bar, { backgroundColor: colors.accent }]} />
       <View style={styles.body}>
         <View style={styles.top}>
-          <View style={[styles.kindPill, { backgroundColor: colors.surfaceMuted }]}>
-            <ProDayText variant="caption" muted style={styles.kindText}>
-              {kindLabel}
-            </ProDayText>
-          </View>
+          <ProDayText variant="caption" style={[styles.kind, { color: colors.accent }]}>
+            {kindLabel}
+          </ProDayText>
+          <ProDayText variant="caption" style={styles.date}>
+            {dateLabel}
+          </ProDayText>
         </View>
         <ProDayText variant="section" numberOfLines={2} style={styles.title}>
           {title}
         </ProDayText>
-        <ProDayText variant="caption" muted numberOfLines={1}>
+        <ProDayText variant="caption" style={styles.meta} numberOfLines={1}>
           {subtitle} · {city}
         </ProDayText>
-      </View>
-      <View style={styles.chevron}>
-        <Icon name="chevron-forward" size={18} color={colors.textMuted} />
+        <ProDayText variant="caption" style={[styles.link, { color: colors.accent }]}>
+          {linkLabel}
+        </ProDayText>
       </View>
     </PressableSpring>
   );
@@ -64,43 +61,36 @@ export const MatchCalendarCard: React.FC<MatchCalendarCardProps> = ({
 const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
-    alignItems: 'stretch',
-    borderRadius: radius.lg,
-    borderWidth: 1,
+    borderWidth: StyleSheet.hairlineWidth,
+    backgroundColor: MATCH_SITE.surface,
+    marginBottom: 2,
     overflow: 'hidden',
-    marginBottom: spacing.sm,
-    minHeight: 88,
   },
-  dateCol: {
-    width: 72,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: spacing.xs,
-  },
-  dateText: {
-    fontWeight: '800',
-    fontSize: 11,
-    textAlign: 'center',
-    lineHeight: 15,
-    textTransform: 'capitalize',
-  },
+  bar: { width: 3 },
   body: {
     flex: 1,
     paddingVertical: spacing.md,
-    paddingRight: spacing.xs,
+    paddingHorizontal: spacing.md,
     gap: 4,
-    justifyContent: 'center',
   },
-  top: { flexDirection: 'row', marginBottom: 2 },
-  kindPill: {
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 2,
-    borderRadius: radius.pill,
+  top: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
   },
-  kindText: { fontWeight: '700', fontSize: 10 },
-  title: { fontWeight: '700', fontSize: 15 },
-  chevron: {
-    justifyContent: 'center',
-    paddingRight: spacing.sm,
+  kind: {
+    fontWeight: '800',
+    fontSize: 10,
+    textTransform: 'uppercase',
+    letterSpacing: 1.2,
   },
+  date: { color: MATCH_SITE.muted, fontSize: 11 },
+  title: {
+    fontWeight: '800',
+    letterSpacing: -0.3,
+    color: MATCH_SITE.foreground,
+  },
+  meta: { color: MATCH_SITE.muted },
+  link: { fontWeight: '800', marginTop: 2 },
 });

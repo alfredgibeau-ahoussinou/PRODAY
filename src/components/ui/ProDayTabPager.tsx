@@ -41,8 +41,8 @@ interface ProDayTabPagerProps<T extends string> {
   showFooter?: boolean;
   /** Rail d’onglets plus bas (40 px). */
   compact?: boolean;
-  /** Rail souligné (défaut) ou pills scrollables. */
-  variant?: 'rail' | 'pills';
+  /** Rail souligné (défaut), pills scrollables, ou bandeau jeu. */
+  variant?: 'rail' | 'pills' | 'game';
 }
 
 export function ProDayTabPager<T extends string>({

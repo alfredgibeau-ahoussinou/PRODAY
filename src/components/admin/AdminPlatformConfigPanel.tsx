@@ -114,7 +114,7 @@ export const AdminPlatformConfigPanel: React.FC = () => {
         {config.maintenance_mode ? (
           <View style={styles.liveBanner}>
             <Text style={styles.liveBannerText}>
-              Maintenance ACTIVE. Les utilisateurs voient l’écran de coupure en direct.
+              Maintenance active. Les utilisateurs voient l’écran de coupure en direct.
             </Text>
           </View>
         ) : null}
@@ -147,7 +147,7 @@ export const AdminPlatformConfigPanel: React.FC = () => {
         {!santeVisioOn ? (
           <View style={styles.liveBanner}>
             <Text style={styles.liveBannerText}>
-              Visio Santé COUPÉE. Pôle Santé et praticiens voient l’écran de coupure en
+              Visio Santé coupée. Pôle Santé et praticiens voient l’écran de coupure en
               direct (comme la maintenance).
             </Text>
           </View>
@@ -166,13 +166,12 @@ export const AdminPlatformConfigPanel: React.FC = () => {
           />
         </View>
         <Text style={styles.hint}>
-          OFF = écran plein « {santeVisioMeta.disabledTitle} » pour le pôle Santé et les
-          praticiens (admins exclus). Sur les autres pôles, l’onglet Santé reste visible
-          mais affiche le même écran de coupure.
+          Désactivé = écran plein « {santeVisioMeta.disabledTitle} » pour le pôle Santé et les
+          praticiens (admins exclus). Les comptes joueur n’ont plus d’onglet Santé.
         </Text>
       </AdminSettingsCard>
 
-      <AdminSettingsCard icon="settings" title="Feature flags">
+      <AdminSettingsCard icon="settings" title="Fonctionnalités">
         <Text style={[styles.hint, { marginBottom: spacing.sm }]}>
           Les changements s’appliquent en direct via{' '}
           <Text style={styles.mono}>platform_config/main</Text> (écoute live).

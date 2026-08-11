@@ -17,7 +17,7 @@ const ITEMS = [
   'CV FOOT',
   'MATCHS',
   'VÉRIFIÉ',
-  'ARENA',
+  'ARÈNE',
   'PRODAY',
   'SAISON',
   'COMMUNAUTÉ',

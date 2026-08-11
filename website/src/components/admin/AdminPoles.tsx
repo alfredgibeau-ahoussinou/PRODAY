@@ -21,7 +21,7 @@ export function AdminPoles() {
       <AdminPanel className="p-0">
         <AdminEmptyState
           title="Connectez la source"
-          description="La config pôles vit dans le code app — pas de table admin live pour l’instant."
+          description="La config pôles vit dans le code app : pas de table admin live pour l’instant."
         />
       </AdminPanel>
     </AdminShell>

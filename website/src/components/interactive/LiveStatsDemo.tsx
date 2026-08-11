@@ -117,7 +117,7 @@ export function LiveStatsDemo() {
           />
         </div>
         <p className="mt-2 text-xs text-white/45">
-          Complétion profil Live Stats : {Math.min(100, total * 12)}%
+          Complétion profil Stats en direct : {Math.min(100, total * 12)}%
         </p>
       </motion.div>
     </div>

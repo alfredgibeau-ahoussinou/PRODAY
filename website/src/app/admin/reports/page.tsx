@@ -8,7 +8,7 @@ import { AdminReports } from "@/components/admin/AdminReports";
 import { fetchAdminPlatformStats } from "@/lib/adminPlatformApi";
 
 export const metadata: Metadata = {
-  title: "Modération Admin - ProDay",
+  title: "Modération Admin : ProDay",
   robots: { index: false, follow: false },
 };
 

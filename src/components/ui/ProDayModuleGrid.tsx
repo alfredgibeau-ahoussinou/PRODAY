@@ -18,12 +18,14 @@ function getModuleAccents(c: AppColors) {
       recrutement: c.tone1,
       matchs: c.tone2,
       gestion: c.brand,
+      smart_tactics: c.tone2,
       sponsors: c.tone4,
     } as Record<ProDayModuleId, string>,
     bg: {
       recrutement: c.brandSoft,
       matchs: c.backgroundAlt,
       gestion: c.surfaceMuted,
+      smart_tactics: c.accentSoft,
       sponsors: c.brandSoft,
     } as Record<ProDayModuleId, string>,
   };

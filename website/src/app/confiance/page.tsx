@@ -62,7 +62,7 @@ export default function TrustPage() {
           {
             eyebrow: "Joueur",
             title: "Badge vérifié",
-            body: "Licence ou certification club. Les recruteurs filtrent aussi Amateur / Centre / Pro.",
+            body: "Licence ou certification club. Les recruteurs filtrent par poste, catégorie et zone : pas par badge de prestige.",
             href: ROUTES.joueur,
             linkLabel: "Pôle Joueur",
           },

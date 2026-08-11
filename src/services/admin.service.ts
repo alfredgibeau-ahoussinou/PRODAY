@@ -13,6 +13,9 @@ import {
   serverTimestamp,
   where,
   writeBatch,
+  deleteField,
+  arrayUnion,
+  arrayRemove,
 } from 'firebase/firestore';
 import type { User, UserRole, VerificationStatus, PlayerVerificationCheckId } from '../models/User';
 import {
@@ -57,6 +60,10 @@ import {
   type BetaWaitlistStatus as BetaWaitlistStatusUtil,
 } from '../utils/betaWaitlistStatus';
 import { getErrorCode } from '../utils/errors';
+import {
+  boostDisplayedDailySiteVisits,
+  boostDisplayedSiteVisitsTotal,
+} from '../utils/trafficDisplayBoost';
 import { statsService } from './stats.service';
 import { adminAuditService } from './adminAudit.service';
 import { platformConfigService } from './platformConfig.service';
@@ -137,8 +144,21 @@ export interface SubscriptionPurchase {
   product_id: string;
   status: string;
   amount_eur?: number;
+  source?: string;
   created_at: Date;
 }
+
+export type AdminSubscriptionStatus = 'active' | 'trialing' | 'canceled' | 'past_due';
+
+export type AdminSetSubscriptionInput = {
+  tier: 'free' | 'pro';
+  planId?: string | null;
+  status?: AdminSubscriptionStatus | null;
+  periodEnd?: Date | null;
+  billing?: 'monthly' | 'yearly' | null;
+  reason: string;
+  logPurchase?: boolean;
+};
 
 export interface AdminTeam {
   id: string;
@@ -177,6 +197,11 @@ export interface AdminUserDocument {
   url?: string;
   type?: string;
   verification_check?: PlayerVerificationCheckId;
+  /** Résultat analyse Mistral (si présent). */
+  ai_status?: string;
+  ai_summary?: string;
+  ai_confidence?: number;
+  ai_approved?: boolean;
 }
 
 export interface AdminCreateUserInput {
@@ -187,6 +212,12 @@ export interface AdminCreateUserInput {
   city?: string;
   product_line?: ProductLineId;
   medical_specialty?: string;
+  /** Profil joueur — genre déclaré (men / women). */
+  gender?: 'men' | 'women';
+  /** ISO `YYYY-MM-DD` — pilote l’univers -13 / ado / adulte. */
+  birth_date?: string;
+  age?: number;
+  app_space?: string;
 }
 
 export type AdminUserUpdatePatch = {
@@ -203,10 +234,54 @@ export type AdminUserUpdatePatch = {
   sponsor_tier?: 'starter' | 'territorial' | 'national' | null;
   job_title?: string;
   medical_specialty?: string | null;
+  /** Parcours joueur (amateur / formation / haut niveau). */
+  player_level?: 'amateur' | 'academy' | 'professional' | null;
+  position?: string | null;
+  level?: string | null;
+  /** Genre déclaré — men / women (legacy minor accepté en lecture). */
+  gender?: 'men' | 'women' | 'minor' | null;
+  /** Date de naissance ISO — source de vérité univers joueur. */
+  birth_date?: string | null;
+  /** Âge dérivé (resynchronisé depuis birth_date côté admin). */
+  age?: number | null;
+  /** Communauté AppSpace (under_u13 / boys / men / girls / women). */
+  app_space?: string | null;
+  category?: string | null;
+  jersey_number?: number | null;
+  bio?: string | null;
+  /** UIDs enfants liés (compte parent). */
+  parent_of?: string[] | null;
+  strong_foot?: 'left' | 'right' | 'both' | null;
 };
 
 export const adminService = {
-  async listAllUsers(max = 200): Promise<User[]> {
+  async getUser(uid: string): Promise<User | null> {
+    if (!isFirebaseConfigured() || !uid) return null;
+    const database = getDb();
+    if (!database) return null;
+    const snap = await getDoc(doc(database, 'users', uid));
+    if (!snap.exists()) return null;
+    return userFromFirestore(snap.id, snap.data() as Record<string, unknown>);
+  },
+
+  async findUserByEmail(email: string): Promise<User | null> {
+    if (!isFirebaseConfigured()) return null;
+    const database = getDb();
+    if (!database) return null;
+    const normalized = email.trim().toLowerCase();
+    if (!normalized) return null;
+    const q = query(
+      collection(database, 'users'),
+      where('email', '==', normalized),
+      limit(1),
+    );
+    const snap = await getDocs(q);
+    if (snap.empty) return null;
+    const d = snap.docs[0]!;
+    return userFromFirestore(d.id, d.data() as Record<string, unknown>);
+  },
+
+  async listAllUsers(max = 500): Promise<User[]> {
     if (!isFirebaseConfigured()) return [];
     const database = getDb();
     if (!database) return [];
@@ -261,6 +336,43 @@ export const adminService = {
     if (patch.medical_specialty !== undefined) {
       update['profile.medical_specialty'] = patch.medical_specialty || null;
     }
+    if (patch.player_level !== undefined) {
+      update.player_level = patch.player_level || null;
+    }
+    if (patch.position !== undefined) {
+      update['profile.position'] = patch.position || null;
+    }
+    if (patch.level !== undefined) {
+      update['profile.level'] = patch.level || null;
+    }
+    if (patch.gender !== undefined) {
+      update['profile.gender'] = patch.gender || null;
+    }
+    if (patch.birth_date !== undefined) {
+      update['profile.birth_date'] = patch.birth_date || null;
+    }
+    if (patch.age !== undefined) {
+      update['profile.age'] = patch.age == null ? null : patch.age;
+    }
+    if (patch.app_space !== undefined) {
+      update.app_space = patch.app_space || null;
+    }
+    if (patch.category !== undefined) {
+      update['profile.category'] = patch.category || null;
+    }
+    if (patch.jersey_number !== undefined) {
+      update['profile.jersey_number'] =
+        patch.jersey_number == null ? null : patch.jersey_number;
+    }
+    if (patch.bio !== undefined) {
+      update['profile.bio'] = patch.bio || null;
+    }
+    if (patch.strong_foot !== undefined) {
+      update['profile.strong_foot'] = patch.strong_foot || null;
+    }
+    if (patch.parent_of !== undefined) {
+      update.parent_of = patch.parent_of ?? [];
+    }
 
     if (patch.product_line !== undefined || patch.role !== undefined) {
       let role = patch.role;
@@ -285,6 +397,81 @@ export const adminService = {
     }
 
     await updateDoc(doc(database, 'users', uid), update);
+  },
+
+  /**
+   * Lie un enfant mineur à un compte parent (parent_of + parental_settings.parent_uid).
+   */
+  async linkParentToChild(parentUid: string, childUid: string): Promise<void> {
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+    const parentRef = doc(database, 'users', parentUid);
+    const childRef = doc(database, 'users', childUid);
+    const [parentSnap, childSnap] = await Promise.all([
+      getDoc(parentRef),
+      getDoc(childRef),
+    ]);
+    if (!parentSnap.exists()) throw new Error('Compte parent introuvable.');
+    if (!childSnap.exists()) throw new Error('Compte enfant introuvable.');
+    const parent = parentSnap.data() as Record<string, unknown>;
+    const child = childSnap.data() as Record<string, unknown>;
+    if (parent.role !== 'parent') throw new Error('Le compte source n’est pas un parent.');
+    const parental =
+      (child.parental_settings as Record<string, unknown> | undefined) ?? {};
+    const batch = writeBatch(database);
+    batch.update(parentRef, {
+      parent_of: arrayUnion(childUid),
+      product_line: 'parent',
+      updated_at: serverTimestamp(),
+    });
+    batch.update(childRef, {
+      parental_settings: {
+        ...parental,
+        is_minor: true,
+        parent_uid: parentUid,
+        guardian_email:
+          typeof parental.guardian_email === 'string' && parental.guardian_email
+            ? parental.guardian_email
+            : String(parent.email ?? '').trim().toLowerCase(),
+        guardian_name:
+          typeof parental.guardian_name === 'string' && parental.guardian_name
+            ? parental.guardian_name
+            : String(parent.display_name ?? 'Parent'),
+        supervision_enabled: parental.supervision_enabled !== false,
+      },
+      updated_at: serverTimestamp(),
+    });
+    await batch.commit();
+  },
+
+  async unlinkParentFromChild(parentUid: string, childUid: string): Promise<void> {
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+    const parentRef = doc(database, 'users', parentUid);
+    const childRef = doc(database, 'users', childUid);
+    const childSnap = await getDoc(childRef);
+    const parental =
+      childSnap.exists()
+        ? ((childSnap.data() as Record<string, unknown>).parental_settings as
+            | Record<string, unknown>
+            | undefined)
+        : undefined;
+    const batch = writeBatch(database);
+    batch.update(parentRef, {
+      parent_of: arrayRemove(childUid),
+      updated_at: serverTimestamp(),
+    });
+    if (childSnap.exists() && parental) {
+      const next = { ...parental };
+      if (next.parent_uid === parentUid) {
+        next.parent_uid = null;
+      }
+      batch.update(childRef, {
+        parental_settings: next,
+        updated_at: serverTimestamp(),
+      });
+    }
+    await batch.commit();
   },
 
   async deleteUserFirestore(uid: string): Promise<void> {
@@ -561,12 +748,26 @@ export const adminService = {
       const data = d.data() as Record<string, unknown>;
       const type = String(data.type ?? data.document_type ?? 'document');
       const check = data.verification_check as PlayerVerificationCheckId | undefined;
+      const ai =
+        data.ai_verification && typeof data.ai_verification === 'object'
+          ? (data.ai_verification as Record<string, unknown>)
+          : null;
+      const confidenceRaw = ai?.confidence;
       return {
         id: d.id,
         name: String(data.name ?? data.file_name ?? type),
         url: (data.storage_url ?? data.url) as string | undefined,
         type,
         verification_check: check,
+        ai_status: ai?.status != null ? String(ai.status) : undefined,
+        ai_summary: ai?.summary_fr != null ? String(ai.summary_fr) : undefined,
+        ai_confidence:
+          typeof confidenceRaw === 'number'
+            ? confidenceRaw
+            : confidenceRaw != null
+              ? Number(confidenceRaw)
+              : undefined,
+        ai_approved: typeof ai?.approved === 'boolean' ? ai.approved : undefined,
       };
     });
   },
@@ -819,15 +1020,15 @@ export const adminService = {
       reelReports,
     ] = await Promise.all([
       this.listAllUsers(300),
-      this.listAllTeamEvents(200),
-      this.listAllFriendlyMatches(200),
-      this.listAllRecruitmentPosts(200),
-      this.listAllClubs(200),
-      this.listAllPaymentRequests(200),
-      this.listAllApplications(200),
-      this.listAllClubAnnouncements(200),
-      this.listCommunityReels(200),
-      this.listReelReports(200),
+      this.listAllTeamEvents(500),
+      this.listAllFriendlyMatches(500),
+      this.listAllRecruitmentPosts(500),
+      this.listAllClubs(500),
+      this.listAllPaymentRequests(500),
+      this.listAllApplications(500),
+      this.listAllClubAnnouncements(500),
+      this.listCommunityReels(500),
+      this.listReelReports(500),
     ]);
 
     const stats = {
@@ -922,10 +1123,14 @@ export const adminService = {
       const snap = await getDoc(doc(database, 'traffic_stats', 'totals'));
       if (!snap.exists()) return empty;
       const data = snap.data();
+      const trackingStartedAt = data.tracking_started_at?.toDate?.() ?? null;
       return {
-        site_visits: Number(data.site_visits ?? 0),
+        site_visits: boostDisplayedSiteVisitsTotal(
+          Number(data.site_visits ?? 0),
+          trackingStartedAt,
+        ),
         app_opens: Number(data.app_opens ?? 0),
-        tracking_started_at: data.tracking_started_at?.toDate?.() ?? null,
+        tracking_started_at: trackingStartedAt,
         updated_at: data.updated_at?.toDate?.() ?? null,
       };
     } catch {
@@ -949,7 +1154,7 @@ export const adminService = {
         const data = d.data();
         return {
           day_key: String(data.day_key ?? d.id),
-          site_visits: Number(data.site_visits ?? 0),
+          site_visits: boostDisplayedDailySiteVisits(Number(data.site_visits ?? 0)),
           app_opens: Number(data.app_opens ?? 0),
         };
       });
@@ -1283,6 +1488,7 @@ export const adminService = {
           product_id: String(data.product_id ?? data.plan_id ?? '…'),
           status: String(data.status ?? 'unknown'),
           amount_eur: data.amount_eur != null ? Number(data.amount_eur) : undefined,
+          source: data.source ? String(data.source) : undefined,
           created_at:
             data.created_at && typeof data.created_at === 'object' && 'toDate' in data.created_at
               ? (data.created_at as { toDate: () => Date }).toDate()
@@ -1291,6 +1497,124 @@ export const adminService = {
       })
       .sort((a, b) => b.created_at.getTime() - a.created_at.getTime())
       .slice(0, max);
+  },
+
+  /**
+   * Transition abonnement depuis la console admin (gratuit ↔ payant).
+   * Écrit les champs users/* protégés côté client (seuls les admins peuvent).
+   */
+  async setUserSubscription(uid: string, input: AdminSetSubscriptionInput): Promise<void> {
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+
+    const update: Record<string, unknown> = {
+      updated_at: serverTimestamp(),
+      subscription_tier: input.tier,
+    };
+
+    if (input.tier === 'free') {
+      update.subscription_status = input.status ?? 'canceled';
+      update.subscription_plan_id = input.planId == null ? deleteField() : input.planId;
+      update.subscription_period_end =
+        input.periodEnd == null ? deleteField() : input.periodEnd;
+      if (input.billing == null) update.subscription_billing = deleteField();
+      else update.subscription_billing = input.billing;
+    } else {
+      if (!input.planId) throw new Error('Formule requise pour un abonnement payant.');
+      update.subscription_plan_id = input.planId;
+      update.subscription_status = input.status ?? 'active';
+      if (input.periodEnd) update.subscription_period_end = input.periodEnd;
+      else if (input.periodEnd === null) update.subscription_period_end = deleteField();
+      if (input.billing) update.subscription_billing = input.billing;
+      else if (input.billing === null) update.subscription_billing = deleteField();
+    }
+
+    await updateDoc(doc(database, 'users', uid), update);
+
+    if (input.logPurchase && input.tier === 'pro' && input.planId) {
+      const purchaseId = `admin_${uid}_${Date.now()}`;
+      try {
+        await setDoc(doc(database, 'subscription_purchases', purchaseId), {
+          user_uid: uid,
+          uid,
+          product_id: input.planId,
+          plan_id: input.planId,
+          status: input.status ?? 'active',
+          source: 'admin_gift',
+          reason: input.reason,
+          created_at: serverTimestamp(),
+        });
+      } catch {
+        // L’abonnement est déjà appliqué sur users/* — le journal d’achat est secondaire.
+      }
+    }
+  },
+
+  async grantProSubscription(
+    uid: string,
+    planId: string,
+    months: number,
+    reason: string,
+    asTrial = false,
+  ): Promise<void> {
+    const end = new Date();
+    end.setMonth(end.getMonth() + Math.max(1, months));
+    await this.setUserSubscription(uid, {
+      tier: 'pro',
+      planId,
+      status: asTrial ? 'trialing' : 'active',
+      periodEnd: end,
+      billing: 'monthly',
+      reason,
+      logPurchase: true,
+    });
+  },
+
+  async revokeToFreeSubscription(uid: string, reason: string, hard = true): Promise<void> {
+    if (hard) {
+      await this.setUserSubscription(uid, {
+        tier: 'free',
+        planId: null,
+        status: 'canceled',
+        periodEnd: null,
+        billing: null,
+        reason,
+      });
+      return;
+    }
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+    await updateDoc(doc(database, 'users', uid), {
+      subscription_status: 'canceled',
+      updated_at: serverTimestamp(),
+    });
+    void reason;
+  },
+
+  async extendSubscription(uid: string, days: number, reason: string): Promise<void> {
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+    const snap = await getDoc(doc(database, 'users', uid));
+    if (!snap.exists()) throw new Error('Compte introuvable');
+    const data = snap.data() as Record<string, unknown>;
+    const currentEnd =
+      data.subscription_period_end &&
+      typeof data.subscription_period_end === 'object' &&
+      'toDate' in data.subscription_period_end
+        ? (data.subscription_period_end as { toDate: () => Date }).toDate()
+        : new Date();
+    const base = currentEnd.getTime() > Date.now() ? currentEnd : new Date();
+    const next = new Date(base);
+    next.setDate(next.getDate() + Math.max(1, days));
+    const planId = data.subscription_plan_id ? String(data.subscription_plan_id) : null;
+    if (!planId) throw new Error('Aucune formule à prolonger. Passe d’abord en payant.');
+    await this.setUserSubscription(uid, {
+      tier: 'pro',
+      planId,
+      status: (data.subscription_status as AdminSubscriptionStatus) || 'trialing',
+      periodEnd: next,
+      reason,
+    });
   },
 
   async listShopOrders(max = 100): Promise<ShopOrder[]> {
@@ -1428,5 +1752,42 @@ export const adminService = {
     const database = getDb();
     if (!database) throw new Error('Firebase non configuré');
     await deleteDoc(doc(database, 'tournaments', tournamentId));
+  },
+
+  async listAllClubCameras(max = 120): Promise<import('../models/ClubCameras').ClubCamera[]> {
+    if (!isFirebaseConfigured()) return [];
+    const database = getDb();
+    if (!database) return [];
+    const snap = await getDocs(collection(database, 'club_cameras'));
+    return snap.docs
+      .map((d) => {
+        const data = d.data() as Record<string, unknown>;
+        return {
+          id: d.id,
+          club_id: String(data.club_id ?? ''),
+          vendor: (data.vendor as import('../models/ClubCameras').ClubCamera['vendor']) ?? 'generic',
+          brand_label: String(data.brand_label ?? ''),
+          model: String(data.model ?? ''),
+          status:
+            (data.status as import('../models/ClubCameras').ClubCamera['status']) ?? 'disconnected',
+          team_id: data.team_id ? String(data.team_id) : undefined,
+          team_label: data.team_label ? String(data.team_label) : undefined,
+          last_match_title: data.last_match_title ? String(data.last_match_title) : undefined,
+          last_match_at: undefined,
+          storage_used_mb: Number(data.storage_used_mb ?? 0),
+          storage_quota_mb:
+            data.storage_quota_mb != null ? Number(data.storage_quota_mb) : undefined,
+          sync_status:
+            (data.sync_status as import('../models/ClubCameras').ClubCamera['sync_status']) ??
+            'idle',
+          external_device_id: data.external_device_id
+            ? String(data.external_device_id)
+            : undefined,
+          created_by_uid: String(data.created_by_uid ?? ''),
+          created_at: new Date(0),
+          updated_at: undefined,
+        };
+      })
+      .slice(0, max);
   },
 };

@@ -1,9 +1,10 @@
 import type { FriendlyMatch } from '../models/FriendlyMatch';
 import type { TeamEvent, TeamEventType } from '../models/TeamEvent';
+import type { CompetitionFixture } from '../models/Competition';
 import { EVENT_TYPE_LABELS } from '../models/TeamEvent';
 import { formatMatchTeams } from './matchDisplay';
 
-export type CalendarItemKind = 'team_event' | 'friendly_match';
+export type CalendarItemKind = 'team_event' | 'friendly_match' | 'competition_fixture';
 
 export interface SeasonCalendarItem {
   id: string;
@@ -15,6 +16,7 @@ export interface SeasonCalendarItem {
   event_type?: TeamEventType;
   team_event_id?: string;
   friendly_match_id?: string;
+  competition_fixture_id?: string;
 }
 
 export function teamEventsToCalendarItems(events: TeamEvent[]): SeasonCalendarItem[] {
@@ -27,6 +29,7 @@ export function teamEventsToCalendarItems(events: TeamEvent[]): SeasonCalendarIt
     city: e.city,
     event_type: e.event_type,
     team_event_id: e.id,
+    competition_fixture_id: e.competition_fixture_id,
   }));
 }
 
@@ -44,13 +47,30 @@ export function friendlyMatchesToCalendarItems(
   }));
 }
 
+export function competitionFixturesToCalendarItems(
+  fixtures: CompetitionFixture[],
+): SeasonCalendarItem[] {
+  return fixtures.map((f) => ({
+    id: `comp-${f.id}`,
+    kind: 'competition_fixture' as const,
+    title: `${f.home_name} vs ${f.away_name}`,
+    subtitle: `Compétition · J${f.matchday}`,
+    starts_at: f.kickoff_at,
+    city: '',
+    competition_fixture_id: f.id,
+    team_event_id: f.team_event_id ?? undefined,
+  }));
+}
+
 export function mergeSeasonCalendar(
   events: TeamEvent[],
-  matches: FriendlyMatch[]
+  matches: FriendlyMatch[],
+  fixtures: CompetitionFixture[] = [],
 ): SeasonCalendarItem[] {
   return [
     ...teamEventsToCalendarItems(events),
     ...friendlyMatchesToCalendarItems(matches),
+    ...competitionFixturesToCalendarItems(fixtures),
   ].sort((a, b) => a.starts_at.getTime() - b.starts_at.getTime());
 }
 

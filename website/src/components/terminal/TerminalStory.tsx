@@ -9,7 +9,7 @@ type TerminalStoryProps = {
   className?: string;
 };
 
-/** Full-bleed story band — centered copy over one cinematic photo. */
+/** Full-bleed story band : centered copy over one cinematic photo. */
 export function TerminalStory({
   title,
   body,

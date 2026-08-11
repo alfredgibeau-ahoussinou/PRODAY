@@ -146,7 +146,7 @@ export const AdminBetaProgramPanel: React.FC = () => {
             } else {
               Alert.alert(
                 'Erreur',
-                result.emailError ?? 'Envoi email impossible. Vérifiez la config EmailJS.',
+                result.emailError ?? 'Envoi e-mail impossible. Vérifiez la configuration d’envoi.',
               );
             }
           }),
@@ -232,7 +232,7 @@ export const AdminBetaProgramPanel: React.FC = () => {
         />
       ) : null}
 
-      <AdminSectionHeader title="Inscriptions waitlist" count={waitlistCounts.all} />
+      <AdminSectionHeader title="Inscriptions liste d’attente" count={waitlistCounts.all} />
 
       {loading ? (
         <ActivityIndicator color={c.brand} style={{ marginVertical: spacing.lg }} />

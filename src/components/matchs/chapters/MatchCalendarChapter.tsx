@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { View, ScrollView, StyleSheet, RefreshControl } from 'react-native';
 import type { User } from '../../../models/User';
 import type { CalendarKindFilter } from '../../../content/matchChapters';
+import { MATCH_SITE } from '../../../content/matchPageIdentity';
 import { getCalendarKindFilters } from '../../../i18n/localizedChapters';
 import {
   formatCalendarDate,
@@ -16,11 +17,11 @@ import { MatchNextUpCard } from '../MatchNextUpCard';
 import { MatchWeekStrip } from '../MatchWeekStrip';
 import { MatchCalendarCard } from '../MatchCalendarCard';
 import { SkeletonList, InteractiveListItem } from '../../motion';
-import { ListEmptyPanel } from '../../ui/ListEmptyPanel';
 import { useAppTheme } from '../../../context/ProductLineContext';
 import { useTranslation } from '../../../context/LocaleContext';
-import { spacing, radius } from '../../../theme/designTokens';
+import { spacing } from '../../../theme/designTokens';
 import { MATCH_CHAPTER_PAD } from './matchChapterLayout';
+import { MatchEmptyState, MatchFilterBar, MatchKpiRow } from '../matchCenterUi';
 
 const scrollProps = {
   showsVerticalScrollIndicator: false,
@@ -97,29 +98,41 @@ export const MatchCalendarChapter: React.FC<MatchCalendarChapterProps> = ({
   const { t } = useTranslation();
   const calendarKindFilters = useMemo(() => getCalendarKindFilters(t), [t]);
 
+  const weekEventCount = useMemo(
+    () => weekDays.reduce((sum, d) => sum + d.count, 0),
+    [weekDays],
+  );
+
   const emptySubtitle = !profile
     ? t('matchs.calendar.empty.guest')
     : items.length > 0
       ? t('matchs.calendar.empty.filtered')
       : t('matchs.calendar.empty.suggest');
 
-  const emptyPrimaryCta = !profile
-    ? { label: t('matchs.calendar.cta.login'), onPress: onLogin }
-    : items.length === 0
-      ? { label: t('matchs.calendar.cta.propose'), onPress: onPropose }
-      : undefined;
-
   return (
     <ScrollView
-      contentContainerStyle={MATCH_CHAPTER_PAD}
+      contentContainerStyle={[MATCH_CHAPTER_PAD, styles.stack]}
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent} />
       }
       {...scrollProps}
     >
       <MatchChapterIntro
+        kicker="Agenda"
         title={t('matchs.calendar.intro.title')}
         subtitle={t('matchs.calendar.intro.subtitle')}
+      />
+
+      <MatchKpiRow
+        items={[
+          { label: 'Semaine', value: String(weekEventCount), tone: colors.accent },
+          { label: 'À venir', value: String(filteredCalendar.length), tone: MATCH_SITE.foreground },
+          {
+            label: 'Prochain',
+            value: nextItem ? '1' : '0',
+            tone: nextItem ? MATCH_SITE.warn : MATCH_SITE.muted,
+          },
+        ]}
       />
 
       {nextItem ? (
@@ -132,7 +145,7 @@ export const MatchCalendarChapter: React.FC<MatchCalendarChapterProps> = ({
 
       <MatchWeekStrip days={weekDays} selectedDate={selectedDay} onSelectDay={onSelectDay} />
 
-      <View style={[styles.filters, { backgroundColor: colors.surfaceMuted, borderColor: colors.border }]}>
+      <MatchFilterBar>
         <SearchBar
           placeholder={t('matchs.calendar.search')}
           value={calendarSearch}
@@ -146,21 +159,27 @@ export const MatchCalendarChapter: React.FC<MatchCalendarChapterProps> = ({
           onChange={onCalendarKindChange}
           inset={false}
         />
-      </View>
+      </MatchFilterBar>
 
       {loadingCalendar ? (
         <SkeletonList count={4} variant="card" />
       ) : filteredCalendar.length === 0 ? (
-        <ListEmptyPanel
-          icon="calendar"
+        <MatchEmptyState
           title={t('matchs.calendar.empty.title')}
-          subtitle={emptySubtitle}
-          primaryCta={emptyPrimaryCta}
+          body={emptySubtitle}
+          cta={
+            !profile
+              ? t('matchs.calendar.cta.login')
+              : items.length === 0
+                ? t('matchs.calendar.cta.propose')
+                : undefined
+          }
+          onPress={!profile ? onLogin : items.length === 0 ? onPropose : undefined}
         />
       ) : (
         staggeredCalendarGroups.map((group) => (
           <View key={group.key} style={styles.monthBlock}>
-            <ProDayText variant="caption" muted style={styles.monthTitle}>
+            <ProDayText variant="caption" style={styles.monthTitle}>
               {group.label}
             </ProDayText>
             {group.items.map(({ item, staggerIndex }) => (
@@ -184,19 +203,14 @@ export const MatchCalendarChapter: React.FC<MatchCalendarChapterProps> = ({
 };
 
 const styles = StyleSheet.create({
-  filters: {
-    borderRadius: radius.lg,
-    borderWidth: StyleSheet.hairlineWidth,
-    padding: spacing.sm,
-    marginBottom: spacing.lg,
-    gap: spacing.xs,
-  },
-  monthBlock: { marginBottom: spacing.lg },
+  stack: { gap: spacing.md, paddingTop: spacing.sm },
+  monthBlock: { gap: spacing.xs },
   monthTitle: {
-    marginBottom: spacing.sm,
     fontWeight: '800',
-    textTransform: 'capitalize',
-    fontSize: 12,
-    letterSpacing: 0.3,
+    textTransform: 'uppercase',
+    fontSize: 10,
+    letterSpacing: 1.8,
+    color: MATCH_SITE.muted,
+    marginBottom: 4,
   },
 });

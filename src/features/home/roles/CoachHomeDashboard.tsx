@@ -140,6 +140,30 @@ export const CoachHomeDashboard: React.FC<StaffRoleHomeProps> = ({
       ) : null}
 
       <StaffSectionTitle title={t('roleHome.quickActions')} />
+      <StaffListCard
+        index={1}
+        title="Créer séance"
+        subtitle="Planning · entraînement IA"
+        onPress={() => nav.openDashboard('smart_tactics')}
+      />
+      <StaffListCard
+        index={2}
+        title="Composer équipe"
+        subtitle={nextEvent ? nextEvent.title : 'Ouvrir le Centre Match'}
+        onPress={() => {
+          if (nextEvent) openEvent(nextEvent.id, 'composition');
+          else nav.openMatchs();
+        }}
+      />
+      <StaffListCard
+        index={3}
+        title="Compte rendu"
+        subtitle="Debrief post-match"
+        onPress={() => {
+          if (nextEvent) tabNav.openMatchs({ eventId: nextEvent.id, hubChapter: 'stats' });
+          else nav.openMatchs();
+        }}
+      />
       <StaffQuickActions
         role="coach"
         onAction={(action) => {

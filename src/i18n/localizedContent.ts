@@ -81,6 +81,11 @@ export function getLocalizedModules(
       subtitle: t('modules.gestion.subtitle'),
     },
     {
+      id: 'smart_tactics',
+      title: t('modules.smart_tactics.title'),
+      subtitle: t('modules.smart_tactics.subtitle'),
+    },
+    {
       id: 'sponsors',
       title: t('modules.sponsors.title'),
       subtitle: t('modules.sponsors.subtitle'),
@@ -122,7 +127,7 @@ export function getLocalizedAuthCopy(
   line: ProductLineId,
   tab: AuthTabId,
   t: TranslateFn,
-  opts?: { brandName?: string; sponsor?: boolean },
+  opts?: { brandName?: string; sponsor?: boolean; parent?: boolean },
 ): { title: string; sub: string } {
   const brandName = opts?.brandName ?? brandForProductLine(line).name;
   if (tab === 'login') {
@@ -130,13 +135,17 @@ export function getLocalizedAuthCopy(
       title: t('auth.welcomeBack'),
       sub: opts?.sponsor
         ? t('auth.loginSub.sponsor')
-        : t(lineKey(line, 'auth.loginSub')),
+        : opts?.parent
+          ? t('auth.loginSub.parent')
+          : t(lineKey(line, 'auth.loginSub')),
     };
   }
   return {
     title: t('auth.signupTitle', { brand: brandName }),
     sub: opts?.sponsor
       ? t('auth.signupSub.sponsor')
-      : t(lineKey(line, 'auth.signupSub')),
+      : opts?.parent
+        ? t('auth.signupSub.parent')
+        : t(lineKey(line, 'auth.signupSub')),
   };
 }

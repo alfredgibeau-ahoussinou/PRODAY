@@ -150,7 +150,7 @@ export const CandidatureScreen: React.FC<CandidatureScreenProps> = ({
       title={config.screenTitle}
       subtitle={config.screenSubtitle}
       right={applicationsBadge}
-      flat
+      atmosphere="warm_playful"
     >
       {pager}
     </TabScreenShell>

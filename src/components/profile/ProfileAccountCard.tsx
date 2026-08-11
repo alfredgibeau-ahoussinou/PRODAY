@@ -84,6 +84,17 @@ export const ProfileAccountCard: React.FC<ProfileAccountCardProps> = ({
   if (p.position) {
     rows.push({ icon: 'football', label: 'Poste', value: p.position });
   }
+  if (p.jersey_number != null && Number.isFinite(p.jersey_number)) {
+    rows.push({ icon: 'shirt', label: 'Numéro', value: String(p.jersey_number) });
+  }
+  if (p.strong_foot) {
+    rows.push({
+      icon: 'walk',
+      label: 'Pied fort',
+      value:
+        p.strong_foot === 'left' ? 'Gauche' : p.strong_foot === 'right' ? 'Droit' : 'Les deux',
+    });
+  }
   if (p.level) {
     rows.push({ icon: 'star-four-points', label: 'Niveau', value: p.level });
   }

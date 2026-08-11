@@ -35,8 +35,8 @@ export function AdminReports({ items, total, error = null }: Props) {
       <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <AdminKpiCard label="Ouverts" value={total} accent="amber" />
         <AdminKpiCard label="Total" value={total} accent="blue" />
-        <AdminKpiCard label="En cours" value="—" hint="Non suivi" accent="cyan" />
-        <AdminKpiCard label="Résolus" value="—" hint="Non suivi" accent="emerald" />
+        <AdminKpiCard label="En cours" value="…" hint="Non suivi" accent="cyan" />
+        <AdminKpiCard label="Résolus" value="…" hint="Non suivi" accent="emerald" />
       </section>
 
       <div className="flex flex-wrap gap-1.5">
@@ -88,7 +88,7 @@ export function AdminReports({ items, total, error = null }: Props) {
                   <td className="text-white/70">{r.reporter}</td>
                   <td className="text-white/70">Ouvert</td>
                   <td className="text-white/50">
-                    {r.createdAt ? formatAdminDate(r.createdAt) : "—"}
+                    {r.createdAt ? formatAdminDate(r.createdAt) : "…"}
                   </td>
                 </tr>
               ))

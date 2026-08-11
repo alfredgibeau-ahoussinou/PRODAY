@@ -10,7 +10,7 @@ export function adminGenderLabel(gender: Gender | null | undefined): string {
   return '—';
 }
 
-/** Libellé court du badge niveau (Amateur / Centre / Pro) pour listes admin. */
+/** Libellé court du badge niveau (Amateur / Formation / Haut niveau) pour listes admin. */
 export function adminPlayerLevelLabel(
   level: PlayerLevelId | null | undefined,
   opts?: { short?: boolean },

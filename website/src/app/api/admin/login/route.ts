@@ -10,21 +10,26 @@ import {
 } from "@/lib/adminSession";
 import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 import { isSameOriginBrowserRequest } from "@/lib/requestSecurity";
-import { applySecurityHeaders } from "@/lib/securityHeaders";
+import { applySensitiveRouteHeaders } from "@/lib/securityHeaders";
 
-const PIN_RATE_LIMIT = 5;
+const PIN_RATE_LIMIT = 3;
 const PIN_RATE_WINDOW_MS = 15 * 60_000;
+const FAIL_DELAY_MS = 450;
 
 function jsonResponse(body: Record<string, unknown>, init?: ResponseInit) {
   const response = NextResponse.json(body, init);
-  applySecurityHeaders(response);
-  response.headers.set("Cache-Control", "no-store");
+  applySensitiveRouteHeaders(response);
   return response;
 }
 
-/** Connexion admin fondateurs. minicode (PIN) → cookie httpOnly 7 jours. */
+async function delay(ms: number): Promise<void> {
+  await new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/** Connexion admin fondateurs. minicode → cookie httpOnly Secure 12 h. */
 export async function POST(request: Request) {
   if (!isSameOriginBrowserRequest(request)) {
+    await delay(FAIL_DELAY_MS);
     return jsonResponse({ error: "Origine non autorisée" }, { status: 403 });
   }
 
@@ -44,6 +49,7 @@ export async function POST(request: Request) {
     PIN_RATE_WINDOW_MS,
   );
   if (!rate.allowed) {
+    await delay(FAIL_DELAY_MS);
     return jsonResponse(
       { error: "Trop de tentatives. Réessayez dans quelques minutes." },
       {
@@ -59,15 +65,18 @@ export async function POST(request: Request) {
   try {
     body = (await request.json()) as { pin?: string };
   } catch {
+    await delay(FAIL_DELAY_MS);
     return jsonResponse({ error: "Corps JSON invalide" }, { status: 400 });
   }
 
   const pin = String(body.pin ?? "").trim();
-  if (!pin || pin.length > 32) {
+  if (!pin || pin.length > 64) {
+    await delay(FAIL_DELAY_MS);
     return jsonResponse({ error: "Minicode invalide" }, { status: 400 });
   }
 
   if (!verifyAdminPin(pin)) {
+    await delay(FAIL_DELAY_MS);
     return jsonResponse({ error: "Minicode incorrect" }, { status: 401 });
   }
 

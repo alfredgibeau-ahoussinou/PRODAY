@@ -83,7 +83,7 @@ export function UniversePage({ universe }: UniversePageProps) {
               body: "Tribune complète. Pas d'abonnement store.",
             },
             {
-              metric: "Live",
+              metric: "Direct",
               metricLabel: "jour J",
               title: "Matchs",
               body: "PRODAY et monde via API.",
@@ -96,7 +96,7 @@ export function UniversePage({ universe }: UniversePageProps) {
             },
           ]
         : config.highlights.slice(0, 3).map((h) => ({
-            metric: h.value.split(" ")[0] ?? "—",
+            metric: h.value.split(" ")[0] ?? "…",
             metricLabel: h.label,
             title: h.label,
             body: h.value,

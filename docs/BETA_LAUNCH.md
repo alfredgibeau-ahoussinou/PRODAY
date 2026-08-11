@@ -2,7 +2,7 @@
 
 > **Guide opérateur complet :** `docs/BETA_GUIDE.md` (architecture, URLs, variables env).
 >
-> **Bêta iOS :** ouverture **11 août 2026 à 18 h** (TestFlight) — voir [`docs/BETA_IOS_LAUNCH.md`](./BETA_IOS_LAUNCH.md).
+> **Bêta iOS :** ouverture **15 août 2026 à 18 h** (TestFlight) — reportée depuis le 11 août — voir [`docs/BETA_IOS_LAUNCH.md`](./BETA_IOS_LAUNCH.md).
 
 Checklist pour distribuer l'app aux testeurs inscrits sur la waitlist (50–200 personnes).
 

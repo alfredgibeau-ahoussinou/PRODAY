@@ -4,7 +4,7 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { ROUTES } from "@/lib/routes";
 
 export const metadata: Metadata = {
-  title: "Live Stats",
+  title: "Stats en direct",
   description: "Saisie en direct. Buts, passes, cartons. Votre profil se met à jour.",
 };
 

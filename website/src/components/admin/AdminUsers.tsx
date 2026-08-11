@@ -86,7 +86,7 @@ export function AdminUsers({
   });
 
   const formatDate = (dateString: string | null) => {
-    if (!dateString) return "—";
+    if (!dateString) return "…";
     return new Date(dateString).toLocaleDateString("fr-FR", {
       day: "2-digit",
       month: "short",
@@ -102,7 +102,7 @@ export function AdminUsers({
       {error ? <AdminBanner tone="warning">{error}</AdminBanner> : null}
       {truncated ? (
         <AdminBanner tone="info">
-          Scan plafonné — les totaux reflètent les {totals.total} derniers profils
+          Scan plafonné : les totaux reflètent les {totals.total} derniers profils
           lus.
         </AdminBanner>
       ) : null}
@@ -196,7 +196,7 @@ export function AdminUsers({
                         </div>
                         <div>
                           <p className="font-medium text-white">{user.name}</p>
-                          <p className="text-xs text-white/45">{user.email || "—"}</p>
+                          <p className="text-xs text-white/45">{user.email || "…"}</p>
                         </div>
                       </div>
                     </td>
@@ -208,13 +208,13 @@ export function AdminUsers({
                     <td className="text-white/65">
                       {user.gender
                         ? (GENDER_LABELS[user.gender] ?? user.gender)
-                        : "—"}
+                        : "…"}
                     </td>
                     <td>
                       {level ? (
                         <AdminStatusBadge tone={level.tone}>{level.label}</AdminStatusBadge>
                       ) : (
-                        <span className="text-white/35">—</span>
+                        <span className="text-white/35">…</span>
                       )}
                     </td>
                     <td>
@@ -225,7 +225,7 @@ export function AdminUsers({
                     <td className="text-white/65">
                       {user.subscription_tier === "pro"
                         ? `Pro${user.subscription_status ? ` · ${user.subscription_status}` : ""}`
-                        : "Free"}
+                        : "Gratuit"}
                     </td>
                     <td className="whitespace-nowrap text-white/45">
                       {formatDate(user.last_active_at)}

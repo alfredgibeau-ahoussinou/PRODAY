@@ -9,6 +9,7 @@ export type PageAccent =
   | "woman"
   | "amateur"
   | "supporter"
+  | "parent"
   | "pro"
   | "pro_club"
   | "coach"
@@ -30,6 +31,7 @@ const ECOSYSTEM_SIBLINGS = [
   { href: ROUTES.joueur, label: "Joueur" },
   { href: ROUTES.proClub, label: "Club" },
   { href: ROUTES.coach, label: "Coach" },
+  { href: ROUTES.parent, label: "Parent" },
   { href: ROUTES.supporter, label: "Supporter" },
   { href: ROUTES.sponsor, label: "Sponsor" },
 ] as const;
@@ -90,9 +92,11 @@ export const SITE_PAGES: Record<string, PageMeta> = {
   },
   [ROUTES.parent]: {
     path: ROUTES.parent,
-    poleId: null,
-    category: "platform",
-    accent: "default",
+    poleId: "parent",
+    category: "pole",
+    accent: "parent",
+    poleHubPath: ROUTES.parent,
+    siblingLinks: ECOSYSTEM_SIBLINGS.filter((l) => l.href !== ROUTES.parent),
   },
   [ROUTES.proJoueur]: {
     path: ROUTES.proJoueur,
@@ -290,6 +294,7 @@ export const POLE_HUB_LABELS: Record<string, string> = {
   [ROUTES.joueur]: "Pôle Joueur",
   [ROUTES.amateur]: "Pôle Joueur",
   [ROUTES.supporter]: "Pôle Supporter",
+  [ROUTES.parent]: "Pôle Parent",
   [ROUTES.proJoueur]: "Pôle Joueur",
   [ROUTES.proClub]: "Pôle Club",
   [ROUTES.coach]: "Pôle Coach",
@@ -348,6 +353,7 @@ export function poleHubForPath(pathname: string): string | null {
   if (meta.poleId === "coach" || meta.poleId === "pro_staff") return ROUTES.coach;
   if (meta.poleId === "evenements") return ROUTES.proClub;
   if (meta.poleId === "sponsor") return ROUTES.sponsor;
+  if (meta.poleId === "parent") return ROUTES.parent;
   return null;
 }
 

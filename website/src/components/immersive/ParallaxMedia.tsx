@@ -15,7 +15,7 @@ type ParallaxMediaProps = {
   overlay?: boolean;
 };
 
-/** Lazy parallax image plane — CSS transform only. */
+/** Lazy parallax image plane : CSS transform only. */
 export function ParallaxMedia({
   src,
   alt = "",

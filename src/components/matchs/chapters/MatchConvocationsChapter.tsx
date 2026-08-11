@@ -2,15 +2,16 @@ import React from 'react';
 import { View, ScrollView, StyleSheet, RefreshControl } from 'react-native';
 import type { User } from '../../../models/User';
 import type { TeamEvent, RsvpStatus } from '../../../models/TeamEvent';
+import { MATCH_SITE } from '../../../content/matchPageIdentity';
 import { MatchChapterIntro } from '../MatchChapterIntro';
 import { ProDayText } from '../../ui/ProDayText';
 import { MatchConvocationCard } from '../MatchConvocationCard';
 import { SkeletonList, InteractiveListItem } from '../../motion';
-import { ListEmptyPanel } from '../../ui/ListEmptyPanel';
 import { useAppTheme } from '../../../context/ProductLineContext';
 import { useTranslation } from '../../../context/LocaleContext';
 import { spacing } from '../../../theme/designTokens';
 import { MATCH_CHAPTER_PAD } from './matchChapterLayout';
+import { MatchEmptyState, MatchKpiRow } from '../matchCenterUi';
 
 const scrollProps = {
   showsVerticalScrollIndicator: false,
@@ -50,29 +51,38 @@ export const MatchConvocationsChapter: React.FC<MatchConvocationsChapterProps> =
 
   return (
     <ScrollView
-      contentContainerStyle={MATCH_CHAPTER_PAD}
+      contentContainerStyle={[MATCH_CHAPTER_PAD, styles.stack]}
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent} />
       }
       {...scrollProps}
     >
       <MatchChapterIntro
+        kicker="Convocations"
         title={t('matchs.chapter.convocations')}
         subtitle={t('matchs.convocations.intro.subtitle')}
       />
 
+      <MatchKpiRow
+        items={[
+          {
+            label: t('matchs.convocations.pending'),
+            value: String(pendingConvocations.length),
+            tone: pendingConvocations.length > 0 ? MATCH_SITE.warn : MATCH_SITE.muted,
+          },
+          {
+            label: 'À venir',
+            value: String(myUpcomingEvents.length),
+            tone: colors.accent,
+          },
+        ]}
+      />
+
       {pendingConvocations.length > 0 ? (
         <View style={styles.section}>
-          <View style={styles.sectionHead}>
-            <ProDayText variant="eyebrow" accent>
-              {t('matchs.convocations.pending')}
-            </ProDayText>
-            <View style={[styles.countPill, { backgroundColor: colors.accent }]}>
-              <ProDayText variant="caption" inverse style={styles.countText}>
-                {pendingConvocations.length}
-              </ProDayText>
-            </View>
-          </View>
+          <ProDayText variant="caption" style={[styles.sectionKicker, { color: MATCH_SITE.warn }]}>
+            {t('matchs.convocations.pending')} · {pendingConvocations.length}
+          </ProDayText>
           {pendingConvocations.map((event, index) => (
             <InteractiveListItem key={event.id} index={index}>
               <MatchConvocationCard
@@ -94,21 +104,21 @@ export const MatchConvocationsChapter: React.FC<MatchConvocationsChapterProps> =
       ) : null}
 
       <View style={styles.section}>
-        <ProDayText variant="eyebrow" accent style={styles.sectionTitle}>
+        <ProDayText variant="caption" style={[styles.sectionKicker, { color: colors.accent }]}>
           Mes prochains événements
         </ProDayText>
         {loadingCalendar ? (
           <SkeletonList count={3} variant="card" />
         ) : myUpcomingEvents.length === 0 ? (
-          <ListEmptyPanel
-            icon={profile ? 'checkmark-circle' : 'mail'}
-            title={profile ? t('matchs.convocations.empty.upToDate') : t('matchs.chapter.convocations')}
-            subtitle={
-              profile
-                ? t('match.convocations.empty.auth')
-                : t('match.convocations.empty.guest')
+          <MatchEmptyState
+            title={
+              profile ? t('matchs.convocations.empty.upToDate') : t('matchs.chapter.convocations')
             }
-            primaryCta={!profile ? { label: t('common.login'), onPress: onLogin } : undefined}
+            body={
+              profile ? t('match.convocations.empty.auth') : t('match.convocations.empty.guest')
+            }
+            cta={!profile ? t('common.login') : undefined}
+            onPress={!profile ? onLogin : undefined}
           />
         ) : (
           myUpcomingEvents.map((event, index) => (
@@ -132,21 +142,13 @@ export const MatchConvocationsChapter: React.FC<MatchConvocationsChapterProps> =
 };
 
 const styles = StyleSheet.create({
-  section: { marginBottom: spacing.lg },
-  sectionHead: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    marginBottom: spacing.sm,
+  stack: { gap: spacing.md, paddingTop: spacing.sm },
+  section: { gap: spacing.xs },
+  sectionKicker: {
+    textTransform: 'uppercase',
+    letterSpacing: 1.8,
+    fontSize: 10,
+    fontWeight: '800',
+    marginBottom: 4,
   },
-  sectionTitle: { marginBottom: spacing.sm },
-  countPill: {
-    minWidth: 22,
-    height: 22,
-    borderRadius: 11,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 6,
-  },
-  countText: { fontWeight: '900', fontSize: 11 },
 });

@@ -6,57 +6,55 @@ export const fontFamily = {
   bold: 'Inter_700Bold',
   extrabold: 'Inter_800ExtraBold',
   black: 'Inter_900Black',
+  /** Display marketing uniquement (pas les titres d’écran UI). */
   display: 'Syne_700Bold',
   displayBold: 'Syne_800ExtraBold',
 } as const;
 
+/**
+ * Titres d’app = Inter (lisible).
+ * Syne réservé à `brand` / moments marketing.
+ * Pas de fontWeight numérique : chaque graisse = fichier Expo.
+ */
 export const textVariants = {
   hero: {
-    fontFamily: fontFamily.displayBold,
+    fontFamily: fontFamily.extrabold,
     fontSize: tokens.sizes.hero,
-    fontWeight: '800' as const,
-    letterSpacing: -0.9,
+    letterSpacing: -0.6,
     lineHeight: 34,
   },
   title: {
-    fontFamily: fontFamily.displayBold,
+    fontFamily: fontFamily.extrabold,
     fontSize: tokens.sizes.title,
-    fontWeight: '800' as const,
-    letterSpacing: -0.5,
+    letterSpacing: -0.35,
     lineHeight: 28,
   },
   section: {
-    fontFamily: fontFamily.display,
+    fontFamily: fontFamily.bold,
     fontSize: tokens.sizes.section,
-    fontWeight: '700' as const,
-    letterSpacing: -0.3,
+    letterSpacing: -0.2,
     lineHeight: 22,
   },
   eyebrow: {
     fontFamily: fontFamily.bold,
     fontSize: 10,
-    fontWeight: '700' as const,
-    letterSpacing: 1.6,
+    letterSpacing: 1.4,
     textTransform: 'uppercase' as const,
   },
   body: {
     fontFamily: fontFamily.regular,
     fontSize: tokens.sizes.body,
-    fontWeight: '400' as const,
     lineHeight: 23,
   },
   caption: {
     fontFamily: fontFamily.semibold,
     fontSize: tokens.sizes.caption,
-    fontWeight: '600' as const,
-    lineHeight: 16,
+    lineHeight: 18,
   },
   brand: {
     fontFamily: fontFamily.displayBold,
     fontSize: 18,
-    fontWeight: '800' as const,
-    letterSpacing: -0.4,
-    transform: [{ skewX: tokens.brandSlant }],
+    letterSpacing: -0.3,
   },
 } as const;
 

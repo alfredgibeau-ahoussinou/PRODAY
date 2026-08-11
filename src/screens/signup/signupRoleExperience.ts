@@ -1,4 +1,4 @@
-import type { IconName } from '../../components/ui/Icon';
+import type { IconName } from '../../components/ui/iconNames';
 import type { UserRole } from '../../models/User';
 import { tr } from '../../i18n/translate';
 import type { TranslateFn } from '../../i18n/types';
@@ -218,7 +218,7 @@ const ROLE_EXPERIENCES: Record<UserRole, RoleSignupExperience> = {
   recruiter: {
     id: 'recruiter',
     welcomeTitle: 'Espace recruteur',
-    welcomeSubtitle: 'Scouting, annonces Mercato et pipeline candidatures. Profil vérifié.',
+    welcomeSubtitle: 'Scouting, annonces Mercato et suivi des candidatures. Profil vérifié.',
     previewSteps: ['Profil recruteur', 'Identité', 'Sécurité', 'Lancement'],
     phases: [
       { id: 'vous', label: 'Recrutement' },

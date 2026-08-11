@@ -61,7 +61,7 @@ export const TalentRadarScreen: React.FC<TalentRadarScreenProps> = ({
   return (
     <TabScreenShell
       caption="Scouting"
-      title="Talent Radar"
+      title="Radar talents"
       subtitle="Profils émergents avant qu’ils soient trop visibles"
       left={<ScreenBackButton onPress={onBack} />}
       flat

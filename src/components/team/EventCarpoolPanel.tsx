@@ -26,6 +26,9 @@ import {
 } from '../../utils/carpoolBalance';
 import { Icon } from '../ui/Icon';
 import { CarpoolLocationCapture } from '../carpool/CarpoolLocationCapture';
+import { CarpoolVehicleTypePicker } from '../carpool/CarpoolVehicleTypePicker';
+import type { CarpoolVehicleType } from '../../models/CarpoolVehicle';
+import { defaultSeatsForVehicleType } from '../../models/CarpoolVehicle';
 import { CarpoolLiveTripPanel } from '../carpool/CarpoolLiveTripPanel';
 import { openMapsAt } from '../../utils/geoLocation';
 import { pickupDistanceFromMeeting } from '../../utils/carpoolGeo';
@@ -35,6 +38,7 @@ import {
 } from '../../utils/carpoolLiveTrip';
 import { prodayHaptics } from '../../utils/prodayHaptics';
 import { spacing, radius } from '../../theme/designTokens';
+import { useTranslation } from '../../context/LocaleContext';
 
 interface EventCarpoolPanelProps {
   event: TeamEvent;
@@ -50,13 +54,15 @@ export const EventCarpoolPanel: React.FC<EventCarpoolPanelProps> = ({
   onUpdated,
 }) => {
   const { colors: c } = useAppTheme();
+  const { t } = useTranslation();
   const styles = useMemo(() => createStyles(c), [c]);
   const [names, setNames] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
   const [pickMode, setPickMode] = useState(false);
   const [selectedUids, setSelectedUids] = useState<Set<string>>(new Set());
   const [messageDraft, setMessageDraft] = useState('');
-  const [editSeats, setEditSeats] = useState('');
+  const [editSeats, setEditSeats] = useState(String(defaultSeatsForVehicleType('berline')));
+  const [editVehicleType, setEditVehicleType] = useState<CarpoolVehicleType | undefined>('berline');
   const [editTime, setEditTime] = useState('');
   const [editPlace, setEditPlace] = useState('');
   const [editMeetingLocation, setEditMeetingLocation] = useState<
@@ -75,6 +81,13 @@ export const EventCarpoolPanel: React.FC<EventCarpoolPanelProps> = ({
   const canManage = isStaff || profile.uid === event.organizer_uid;
   const canParticipate =
     profile.uid === event.organizer_uid || event.invitee_uids.includes(profile.uid);
+
+  const applyEditVehicleType = (type: CarpoolVehicleType) => {
+    const taken = mySlot?.passengers?.length ?? 0;
+    setEditVehicleType(type);
+    setEditSeats(String(defaultSeatsForVehicleType(type, taken)));
+  };
+
   const candidateUids = useMemo(
     () => [...new Set([...event.invitee_uids, event.organizer_uid, profile.uid])],
     [event.invitee_uids, event.organizer_uid, profile.uid]
@@ -96,6 +109,7 @@ export const EventCarpoolPanel: React.FC<EventCarpoolPanelProps> = ({
   useEffect(() => {
     if (mySlot) {
       setEditSeats(mySlot.seats != null ? String(mySlot.seats) : '');
+      setEditVehicleType(mySlot.vehicle_type ?? 'berline');
       setEditTime(mySlot.meeting_time ?? '');
       setEditPlace(mySlot.meeting_place ?? '');
       setEditMeetingLocation(mySlot.meeting_location);
@@ -104,6 +118,7 @@ export const EventCarpoolPanel: React.FC<EventCarpoolPanelProps> = ({
   }, [
     mySlot?.driver_uid,
     mySlot?.seats,
+    mySlot?.vehicle_type,
     mySlot?.meeting_time,
     mySlot?.meeting_place,
     mySlot?.meeting_location,
@@ -213,6 +228,7 @@ export const EventCarpoolPanel: React.FC<EventCarpoolPanelProps> = ({
       }
       await teamEventsService.updateCarpoolSlot(event.id, profile.uid, {
         seats,
+        vehicle_type: editVehicleType,
         meeting_time: editTime.trim() || undefined,
         meeting_place: editPlace.trim() || undefined,
         meeting_location: editMeetingLocation,
@@ -432,6 +448,12 @@ export const EventCarpoolPanel: React.FC<EventCarpoolPanelProps> = ({
                   <Text style={styles.slotLine}>Départ {slot.meeting_time}</Text>
                 ) : null}
 
+                {slot.vehicle_type ? (
+                  <Text style={styles.slotLine}>
+                    {t('carpool.vehicle.label')} · {t(`carpool.vehicle.${slot.vehicle_type}`)}
+                  </Text>
+                ) : null}
+
                 {slot.seats != null ? (
                   <Text style={styles.slotLine}>
                     {available === 0
@@ -526,6 +548,11 @@ export const EventCarpoolPanel: React.FC<EventCarpoolPanelProps> = ({
             keyboardType="number-pad"
             value={editSeats}
             onChangeText={setEditSeats}
+          />
+          <CarpoolVehicleTypePicker
+            value={editVehicleType}
+            onChange={applyEditVehicleType}
+            disabled={saving}
           />
           <TextInput
             style={styles.input}

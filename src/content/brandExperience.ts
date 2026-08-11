@@ -10,6 +10,7 @@ import {
   PRODAY_PRO_BRAND,
   PRODAY_SANTE_BRAND,
   PRODAY_SPONSOR_BRAND,
+  PRODAY_PARENT_BRAND,
   PRODAY_WOMAN_BRAND,
   brandForProductLine,
 } from '../models/ProductLine';
@@ -37,14 +38,14 @@ export const HOMME_IDENTITY: UniverseIdentity = {
   id: 'homme',
   productName: PRODAY_HOMME_BRAND.name,
   tagline: PRODAY_HOMME_BRAND.tagline,
-  heroLine: 'Le foot masculin,\namateur pro.',
+  heroLine: 'Le foot masculin,\namateur & club.',
   mission:
-    'CV en ligne, Mercato M, matchs, covoiturage équipe et saison amateur.',
+    'CV en ligne, Mercato, matchs, covoiturage équipe et saison de club.',
   accentLabel: 'Pro Day Man',
   mercatoLabel: 'Mercato',
   playerLabel: 'Joueur',
   cvLabel: 'CV foot en ligne',
-  entrySub: 'Football masculin & jeunes. Joueurs, clubs, sponsors',
+  entrySub: 'Football masculin & jeunes. Joueurs, clubs, coachs',
 };
 
 export const WOMAN_IDENTITY: UniverseIdentity = {
@@ -67,12 +68,12 @@ export const AMATEUR_IDENTITY: UniverseIdentity = {
   tagline: PRODAY_AMATEUR_BRAND.tagline,
   heroLine: 'Le foot amateur,\nconnecté.',
   mission:
-    'Joueurs uniquement. Mercato local, matchs, CV et carrière — du district au badge Pro.',
-  accentLabel: 'Pro Day Amateur',
-  mercatoLabel: 'Mercato Amateur',
-  playerLabel: 'Joueur amateur',
+    'Joueurs uniquement. Mercato local, matchs, CV et progression en club.',
+  accentLabel: 'Pro Day Joueur',
+  mercatoLabel: 'Mercato',
+  playerLabel: 'Joueur',
   cvLabel: 'CV foot en ligne',
-  entrySub: 'Joueur Homme ou Femme. Badges Amateur, Centre ou Pro',
+  entrySub: 'Joueur Homme ou Femme — football amateur et club',
 };
 
 export const SUPPORTER_IDENTITY: UniverseIdentity = {
@@ -93,28 +94,28 @@ export const PRO_IDENTITY: UniverseIdentity = {
   id: 'pro',
   productName: PRODAY_PRO_BRAND.name,
   tagline: PRODAY_PRO_BRAND.tagline,
-  heroLine: 'Les pros\ndu foot.',
+  heroLine: 'Le club\net le banc.',
   mission:
-    'Coach, club et staff. Mercato Pro, convocations, covoiturage et réseau vérifié.',
-  accentLabel: 'Pro Day Pro',
-  mercatoLabel: 'Mercato Pro',
-  playerLabel: 'Professionnel',
-  cvLabel: 'Profil professionnel',
-  entrySub: 'Coach · Agent · Recruteur · Club',
+    'Club, coach et staff. Matchs, convocations, covoiturage et outils sportifs — pour le foot amateur et semi-pro.',
+  accentLabel: 'Pro Day Club',
+  mercatoLabel: 'Recrutement',
+  playerLabel: 'Structure',
+  cvLabel: 'Profil club',
+  entrySub: 'Club · Coach · Dirigeants',
 };
 
 export const SANTE_IDENTITY: UniverseIdentity = {
   id: 'sante',
   productName: PRODAY_SANTE_BRAND.name,
-  tagline: PRODAY_SANTE_BRAND.tagline,
+  tagline: 'SUR INVITATION',
   heroLine: 'La santé\nau service du jeu.',
   mission:
-    'Agenda, messagerie patients et visibilité auprès des clubs et joueurs.',
+    'Pôle conservé en architecture. Hors vitrine GTM : conformité et stabilité d’abord, pas de push marketing.',
   accentLabel: 'Pro Day Santé',
   mercatoLabel: 'Annuaire santé',
   playerLabel: 'Praticien',
   cvLabel: 'Profil cabinet',
-  entrySub: 'Kiné · Ostéo · Médecin · Prépa · Mental · Nutrition · Podologue',
+  entrySub: 'Sur invitation · annuaire · agenda',
 };
 
 export const SPONSOR_IDENTITY: UniverseIdentity = {
@@ -150,6 +151,20 @@ export function getUniverseIdentity(line: ProductLineId): UniverseIdentity {
       return SANTE_IDENTITY;
     case 'sponsor':
       return SPONSOR_IDENTITY;
+    case 'parent':
+      return {
+        id: 'parent',
+        productName: PRODAY_PARENT_BRAND.name,
+        tagline: PRODAY_PARENT_BRAND.tagline,
+        heroLine: 'Accompagner\nsans étouffer.',
+        mission:
+          'Superviser le parcours de votre enfant : messages, agenda, retards coach, temps d’écran et trajets.',
+        accentLabel: 'Parent',
+        mercatoLabel: 'Famille',
+        playerLabel: 'Enfant',
+        cvLabel: 'Contrôle parental',
+        entrySub: 'Pôle dédié — lié au compte joueur mineur',
+      };
     default:
       return AMATEUR_IDENTITY;
   }
@@ -198,7 +213,7 @@ export function getDiscoverHomeCopy(line: ProductLineId) {
       heroTitle: brand.heroLine,
       heroSub: brand.mission,
       trustText:
-        'Profils joueurs vérifiés. Messagerie sécurisée après validation. Coach ? Direction Pro Staff.',
+        'Profils joueurs vérifiés. Messagerie sécurisée après validation. Coach ? Direction Pôle Coach.',
       ctaText: 'Créer mon compte Joueur',
       sectionExplore: 'Découvrir le Pôle Joueur',
       secondaryMercato: 'Mercato Amateur',
@@ -252,18 +267,19 @@ export const ACCOUNT_TYPES_BY_LINE = {
     { role: 'player' as const, label: 'Joueuse', description: 'CV en ligne, stats, Mercato F' },
   ],
   amateur: [
-    { role: 'player' as const, label: 'Joueur', description: 'CV, Mercato, matchs — badges Amateur / Centre / Pro' },
+    { role: 'player' as const, label: 'Joueur', description: 'Profil, matchs, stats et vie d’équipe' },
   ],
   supporter: [
     { role: 'supporter' as const, label: 'Supporter', description: 'Matchs, réels et fil communautaire' },
   ],
   pro: [
-    { role: 'coach' as const, label: 'Coach', description: 'Effectif, convocations, recrutement' },
-    { role: 'agent' as const, label: 'Agent', description: 'Mandats, repérage, réseau clubs' },
-    { role: 'recruiter' as const, label: 'Recruteur', description: 'Scouting, Mercato Pro, candidatures' },
-    { role: 'club' as const, label: 'Club', description: 'Annonces, équipes, candidatures' },
-    { role: 'organizer' as const, label: 'Organisateur', description: 'Événements & détections' },
-    { role: 'sponsor' as const, label: 'Sponsor', description: 'Visibilité marque & clubs pro' },
+    { role: 'club' as const, label: 'Club / Dirigeant', description: 'Équipes, licenciés, matchs, recrutement' },
+    { role: 'coach' as const, label: 'Coach', description: 'Effectif, convocations, tactique' },
+    { role: 'player' as const, label: 'Joueur', description: 'Profil, stats, matchs' },
+    { role: 'agent' as const, label: 'Agent (intégré)', description: 'Mandats — intégré au club' },
+    { role: 'recruiter' as const, label: 'Recruteur (intégré)', description: 'Scouting — intégré au club' },
+    { role: 'organizer' as const, label: 'Événements (intégré)', description: 'Tournois — depuis l’espace Club' },
+    { role: 'sponsor' as const, label: 'Sponsor', description: 'Visibilité marque & clubs' },
   ],
   sante: [
     { role: 'physio' as const, label: 'Praticien', description: 'Kiné, médecin, prépa, nutrition…' },

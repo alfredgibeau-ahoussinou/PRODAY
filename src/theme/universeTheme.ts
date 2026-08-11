@@ -4,6 +4,7 @@ import { womanColorOverrides } from './prodayWomanTheme';
 import { amateurColorOverrides } from './prodayAmateurTheme';
 import { supporterColorOverrides } from './prodaySupporterTheme';
 import { santeColorOverrides } from './prodaySanteTheme';
+import { parentColorOverrides } from './prodayParentTheme';
 import type { PlayerSegment } from '../utils/playerSegment';
 import { getThemedColorsForSegment } from './playerSegmentTheme';
 import { proColorOverrides } from './proThemeColors';
@@ -45,6 +46,7 @@ export function getThemedColorsForLine(
     return { ...baseColors, ...proColorOverrides };
   }
   if (line === 'sante') return { ...baseColors, ...santeColorOverrides };
+  if (line === 'parent') return { ...baseColors, ...parentColorOverrides };
   return { ...baseColors, ...amateurColorOverrides };
 }
 
@@ -57,3 +59,4 @@ export { womanColorOverrides, womanGradients } from './prodayWomanTheme';
 export { amateurColorOverrides, amateurGradients } from './prodayAmateurTheme';
 export { supporterColorOverrides, supporterGradients } from './prodaySupporterTheme';
 export { santeColorOverrides, santeGradients } from './prodaySanteTheme';
+export { parentColorOverrides, parentGradients } from './prodayParentTheme';

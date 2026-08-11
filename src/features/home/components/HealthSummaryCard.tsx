@@ -37,8 +37,8 @@ const STATE_LABELS: Record<HealthSnapshot['state'], string> = {
   OPTIMAL: 'Optimal',
   ACTIVE: 'Actif',
   FATIGUED: 'Fatigué',
-  OVERLOADED: 'Surchargé',
-  INJURY_RISK: 'Risque blessure',
+  OVERLOADED: 'Charge élevée',
+  INJURY_RISK: 'Charge à surveiller',
   RECOVERY: 'Récupération',
 };
 
@@ -75,7 +75,7 @@ export const HealthSummaryCard: React.FC<HealthSummaryCardProps> = ({
           <Icon name="heart" size={18} color={colors.accent} />
         </View>
         <View style={styles.copy}>
-          <ProDayText variant="section">État santé</ProDayText>
+          <ProDayText variant="section">Analyse de forme</ProDayText>
           <ProDayText variant="caption" muted>
             {STATE_LABELS[health.state]}
             {scoresFromWearable ? ` · ajusté avec ${sourceLabel}` : ' · estimé ProDay'}

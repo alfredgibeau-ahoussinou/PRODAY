@@ -35,14 +35,14 @@ function simulateExpert(
           expert,
           reason: health.coachMessage,
           weight: EXPERT_WEIGHTS.health,
-          primaryTab: 'sante',
+          primaryTab: 'home',
         };
       }
       return {
         expert,
         reason: health.dailyPlanHint,
         weight: EXPERT_WEIGHTS.health * 0.6,
-        primaryTab: 'sante',
+        primaryTab: 'home',
       };
     case 'geo':
       if (input.nearbyMatchCount > 0) {
@@ -122,7 +122,6 @@ function arbitrate(votes: ExpertVote[]): { state: HeroIaState; tab: MainTabId; r
   let state: HeroIaState = 'TRAINING_RECOMMENDATION';
 
   if (tab === 'matchs') state = 'MATCH_RECOMMENDATION';
-  else if (tab === 'sante') state = 'REST_RECOMMENDATION';
   else if (tab === 'messages') state = 'SOCIAL_RECOMMENDATION';
   else if (top.expert === 'health') state = 'REST_RECOMMENDATION';
 
@@ -134,7 +133,7 @@ const CTA_BY_TAB: Record<MainTabId, string> = {
   matchs: 'Voir les matchs',
   recrutement: 'Ouvrir le Mercato',
   covoiturage: 'Covoiturage',
-  sante: 'Plan santé',
+  sante: 'Espace praticien',
   feed: 'Fil communauté',
   reels: 'Voir les réels',
   famille: 'Espace famille',
@@ -181,7 +180,11 @@ export function runAiCore(
       : decision.reason;
 
   const secondaryTab: MainTabId | undefined =
-    decision.tab === 'matchs' ? 'sante' : decision.tab === 'sante' ? 'matchs' : 'profil';
+    decision.tab === 'matchs'
+      ? 'home'
+      : decision.state === 'REST_RECOMMENDATION'
+        ? 'matchs'
+        : 'profil';
 
   const maxMatchIntensity: AiCoreOutput['contentFilter']['maxMatchIntensity'] =
     health.state === 'INJURY_RISK' || health.state === 'OVERLOADED'

@@ -3,17 +3,24 @@ import { ScrollView, StyleSheet, RefreshControl, View } from 'react-native';
 import type { User } from '../../../models/User';
 import type { FriendlyMatch } from '../../../models/FriendlyMatch';
 import type { AmicauxStatusFilter } from '../../../content/matchChapters';
+import { MATCH_SITE } from '../../../content/matchPageIdentity';
 import { getAmicauxStatusFilters } from '../../../i18n/localizedChapters';
 import { SearchBar } from '../../ui/SearchBar';
 import { ProDaySelect } from '../../ui/ProDaySelect';
 import { MatchChapterIntro } from '../MatchChapterIntro';
 import { MatchFriendlyCard } from '../MatchFriendlyCard';
 import { SkeletonList, InteractiveListItem } from '../../motion';
-import { ListEmptyPanel } from '../../ui/ListEmptyPanel';
+import { ProDayText } from '../../ui/ProDayText';
 import { useAppTheme } from '../../../context/ProductLineContext';
 import { useTranslation } from '../../../context/LocaleContext';
-import { spacing, radius } from '../../../theme/designTokens';
+import { spacing } from '../../../theme/designTokens';
 import { MATCH_CHAPTER_PAD } from './matchChapterLayout';
+import {
+  MatchActionRow,
+  MatchEmptyState,
+  MatchFilterBar,
+  MatchKpiRow,
+} from '../matchCenterUi';
 
 const scrollProps = {
   showsVerticalScrollIndicator: false,
@@ -36,6 +43,7 @@ export interface MatchAmicauxChapterProps {
   onRefresh: () => void;
   onPropose: () => void;
   onSearch: () => void;
+  onOrganize?: () => void;
   onAcceptMatch: (match: FriendlyMatch) => void;
   onCancelMatch: (match: FriendlyMatch) => void;
   onMarkPlayed: (match: FriendlyMatch) => void;
@@ -58,6 +66,7 @@ export const MatchAmicauxChapter: React.FC<MatchAmicauxChapterProps> = ({
   onRefresh,
   onPropose,
   onSearch,
+  onOrganize,
   onAcceptMatch,
   onCancelMatch,
   onMarkPlayed,
@@ -67,21 +76,43 @@ export const MatchAmicauxChapter: React.FC<MatchAmicauxChapterProps> = ({
   const { colors } = useAppTheme();
   const { t } = useTranslation();
   const amicauxStatusFilters = useMemo(() => getAmicauxStatusFilters(t), [t]);
+  const openCount = matches.filter((m) => m.status === 'OPEN').length;
 
   return (
     <ScrollView
-      contentContainerStyle={MATCH_CHAPTER_PAD}
+      contentContainerStyle={[MATCH_CHAPTER_PAD, styles.stack]}
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent} />
       }
       {...scrollProps}
     >
       <MatchChapterIntro
+        kicker="Amicaux"
         title={t('matchs.friendly.intro.title')}
         subtitle={t('matchs.friendly.intro.subtitle')}
       />
 
-      <View style={[styles.filters, { backgroundColor: colors.surfaceMuted, borderColor: colors.border }]}>
+      <MatchKpiRow
+        items={[
+          { label: 'Ouverts', value: String(openCount), tone: MATCH_SITE.warn },
+          {
+            label: 'Liste',
+            value: String(filteredMatches.length),
+            tone: colors.accent,
+          },
+        ]}
+      />
+
+      <MatchActionRow
+        primary={t('matchs.friendly.cta.proposeMatch')}
+        onPrimary={onPropose}
+        secondary={
+          onOrganize ? t('matchs.friendly.cta.organize') : t('matchs.friendly.cta.search')
+        }
+        onSecondary={onOrganize ?? onSearch}
+      />
+
+      <MatchFilterBar>
         <SearchBar
           placeholder={t('matchs.friendly.search')}
           value={amicauxSearch}
@@ -95,58 +126,60 @@ export const MatchAmicauxChapter: React.FC<MatchAmicauxChapterProps> = ({
           onChange={onAmicauxStatusChange}
           inset={false}
         />
-      </View>
+      </MatchFilterBar>
 
       {loadingMatches ? (
         <SkeletonList count={3} variant="card" />
       ) : filteredMatches.length === 0 ? (
-        <ListEmptyPanel
-          icon="handshake"
+        <MatchEmptyState
           title={t('matchs.friendly.empty.title')}
-          subtitle={
+          body={
             matches.length > 0
               ? t('matchs.friendly.empty.filtered')
               : t('matchs.friendly.empty.default')
           }
-          primaryCta={
-            matches.length === 0 ? { label: t('matchs.friendly.cta.propose'), onPress: onPropose } : undefined
-          }
-          secondaryCta={
-            matches.length === 0 ? { label: t('matchs.friendly.cta.search'), onPress: onSearch } : undefined
-          }
+          cta={matches.length === 0 ? t('matchs.friendly.cta.propose') : undefined}
+          onPress={matches.length === 0 ? onPropose : undefined}
         />
       ) : (
-        filteredMatches.map((m, index) => {
-          const isMine =
-            myClubId != null &&
-            (m.requester_club_id === myClubId || m.opponent_club_id === myClubId);
-          const showAccept = canAccept(m) && !isMine && Boolean(profile);
-          return (
-            <InteractiveListItem key={m.id} index={index}>
-              <MatchFriendlyCard
-                match={m}
-                isMine={isMine}
-                showAccept={showAccept}
-                iaScore={getMatchIaScore?.(m.id)}
-                healthWarning={getMatchHealthWarning?.(m.id)}
-                onAccept={() => onAcceptMatch(m)}
-                onCancel={() => onCancelMatch(m)}
-                onMarkPlayed={() => onMarkPlayed(m)}
-              />
-            </InteractiveListItem>
-          );
-        })
+        <View style={styles.list}>
+          <ProDayText variant="caption" style={[styles.sectionKicker, { color: colors.accent }]}>
+            Offres · {filteredMatches.length}
+          </ProDayText>
+          {filteredMatches.map((m, index) => {
+            const isMine =
+              myClubId != null &&
+              (m.requester_club_id === myClubId || m.opponent_club_id === myClubId);
+            const showAccept = canAccept(m) && Boolean(profile);
+            return (
+              <InteractiveListItem key={m.id} index={index}>
+                <MatchFriendlyCard
+                  match={m}
+                  isMine={isMine}
+                  showAccept={showAccept}
+                  iaScore={getMatchIaScore?.(m.id)}
+                  healthWarning={getMatchHealthWarning?.(m.id)}
+                  onAccept={() => onAcceptMatch(m)}
+                  onCancel={() => onCancelMatch(m)}
+                  onMarkPlayed={() => onMarkPlayed(m)}
+                />
+              </InteractiveListItem>
+            );
+          })}
+        </View>
       )}
     </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
-  filters: {
-    borderRadius: radius.lg,
-    borderWidth: StyleSheet.hairlineWidth,
-    padding: spacing.sm,
-    marginBottom: spacing.lg,
-    gap: spacing.xs,
+  stack: { gap: spacing.md, paddingTop: spacing.sm },
+  list: { gap: spacing.xs },
+  sectionKicker: {
+    textTransform: 'uppercase',
+    letterSpacing: 1.8,
+    fontSize: 10,
+    fontWeight: '800',
+    marginBottom: 4,
   },
 });

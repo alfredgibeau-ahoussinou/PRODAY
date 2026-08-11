@@ -4,7 +4,8 @@ import { PressableSpring } from '../motion/PressableSpring';
 import { prodayHaptics } from '../../utils/prodayHaptics';
 import { ProDayText } from '../ui/ProDayText';
 import { useAppTheme } from '../../context/ProductLineContext';
-import { spacing, radius } from '../../theme/designTokens';
+import { MATCH_SITE } from '../../content/matchPageIdentity';
+import { spacing } from '../../theme/designTokens';
 
 type WeekDay = { date: Date; count: number; isToday: boolean };
 
@@ -20,11 +21,11 @@ export const MatchWeekStrip: React.FC<MatchWeekStripProps> = ({
   onSelectDay,
 }) => {
   const { colors } = useAppTheme();
-  const styles = useMemo(() => createStyles(colors), [colors]);
+  const styles = useMemo(() => createStyles(colors.accent), [colors.accent]);
 
   return (
-    <View style={[styles.panel, { backgroundColor: colors.surfaceMuted, borderColor: colors.border }]}>
-      <ProDayText variant="caption" muted style={styles.label}>
+    <View style={styles.panel}>
+      <ProDayText variant="caption" style={styles.label}>
         Cette semaine
       </ProDayText>
       <ScrollView
@@ -43,10 +44,8 @@ export const MatchWeekStrip: React.FC<MatchWeekStripProps> = ({
               key={day.date.toISOString()}
               style={[
                 styles.chip,
-                {
-                  backgroundColor: selected ? colors.accent : colors.surface,
-                  borderColor: day.isToday ? colors.accent : 'transparent',
-                },
+                selected && styles.chipOn,
+                day.isToday && !selected && styles.chipToday,
               ]}
               onPress={() => {
                 prodayHaptics.tabSwitch();
@@ -57,32 +56,23 @@ export const MatchWeekStrip: React.FC<MatchWeekStripProps> = ({
             >
               <ProDayText
                 variant="caption"
-                inverse={Boolean(selected)}
-                style={!selected ? { color: colors.textMuted, fontSize: 10 } : { fontSize: 10 }}
+                style={[styles.weekday, selected ? styles.textOn : styles.textOff]}
               >
                 {weekday}
               </ProDayText>
-              <ProDayText variant="section" inverse={Boolean(selected)} style={styles.dom}>
+              <ProDayText
+                variant="section"
+                style={[styles.dom, selected ? styles.textOn : styles.domOff]}
+              >
                 {dom}
               </ProDayText>
               {day.count > 0 ? (
-                <View
-                  style={[
-                    styles.dot,
-                    { backgroundColor: selected ? colors.brandInverse : colors.accentSoft },
-                  ]}
+                <ProDayText
+                  variant="caption"
+                  style={[styles.count, selected ? styles.textOn : { color: colors.accent }]}
                 >
-                  <ProDayText
-                    variant="caption"
-                    style={{
-                      color: selected ? colors.accent : colors.accent,
-                      fontWeight: '900',
-                      fontSize: 9,
-                    }}
-                  >
-                    {day.count}
-                  </ProDayText>
-                </View>
+                  {day.count}
+                </ProDayText>
               ) : (
                 <View style={styles.dotPlaceholder} />
               )}
@@ -94,45 +84,54 @@ export const MatchWeekStrip: React.FC<MatchWeekStripProps> = ({
   );
 };
 
-function createStyles(_colors: ReturnType<typeof useAppTheme>['colors']) {
+function createStyles(accent: string) {
   return StyleSheet.create({
     panel: {
-      borderRadius: radius.lg,
       borderWidth: StyleSheet.hairlineWidth,
+      borderColor: MATCH_SITE.border,
       padding: spacing.sm,
-      marginBottom: spacing.lg,
       gap: spacing.xs,
+      backgroundColor: MATCH_SITE.surface,
     },
     label: {
-      fontWeight: '700',
+      fontWeight: '800',
       paddingHorizontal: spacing.xs,
       textTransform: 'uppercase',
-      letterSpacing: 0.5,
+      letterSpacing: 1.6,
       fontSize: 10,
+      color: MATCH_SITE.muted,
     },
     row: {
-      gap: spacing.xs,
+      gap: 4,
       paddingHorizontal: 2,
     },
     chip: {
-      width: 52,
+      width: 48,
       alignItems: 'center',
       paddingVertical: spacing.sm,
-      paddingHorizontal: spacing.xs,
-      borderRadius: radius.md,
-      borderWidth: 1.5,
+      paddingHorizontal: 4,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: MATCH_SITE.border,
       gap: 1,
+      backgroundColor: 'transparent',
     },
+    chipOn: {
+      borderColor: accent,
+      backgroundColor: MATCH_SITE.soft,
+    },
+    chipToday: {
+      borderColor: accent,
+    },
+    weekday: {
+      fontSize: 10,
+      fontWeight: '700',
+      textTransform: 'uppercase',
+    },
+    textOn: { color: accent },
+    textOff: { color: MATCH_SITE.muted },
     dom: { fontWeight: '800', fontSize: 17, lineHeight: 20 },
-    dot: {
-      minWidth: 16,
-      height: 16,
-      borderRadius: 8,
-      alignItems: 'center',
-      justifyContent: 'center',
-      paddingHorizontal: 3,
-      marginTop: 2,
-    },
-    dotPlaceholder: { height: 16, marginTop: 2 },
+    domOff: { color: MATCH_SITE.foreground },
+    count: { fontWeight: '900', fontSize: 9, marginTop: 2 },
+    dotPlaceholder: { height: 12, marginTop: 2 },
   });
 }

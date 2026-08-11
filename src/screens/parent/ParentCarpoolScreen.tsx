@@ -1,22 +1,31 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { View, ScrollView, StyleSheet, ActivityIndicator, Linking } from 'react-native';
+import { View, ScrollView, StyleSheet, ActivityIndicator, Linking, Alert } from 'react-native';
 import { ProDayText } from '../../components/ui/ProDayText';
-import { ProDaySurface } from '../../components/ui/ProDaySurface';
-import { PressableSpring } from '../../components/motion';
 import { useThemedScreen } from '../../hooks/useThemedScreen';
 import { useTranslation } from '../../context/LocaleContext';
-import { spacing, radius } from '../../theme/designTokens';
+import { spacing } from '../../theme/designTokens';
 import { useParentShell } from '../../navigation/parentShellContext';
 import { parentPortalService } from '../../services/parentPortal.service';
 import type { CarpoolLiveTripDoc } from '../../models/CarpoolLiveTrip';
 import { carpoolLiveTripService } from '../../services/carpoolLiveTrip.service';
+import { ParentPageFrame } from '../../components/parent/ParentPageFrame';
+import {
+  ParentActionButton,
+  ParentSectionCard,
+} from '../../components/parent/parentPortalUi';
+import { PARENT_PAGES } from '../../content/parentPageIdentity';
+import { useAuth } from '../../context/AuthContext';
+import { normalizeGuardianEmail } from '../../utils/guardianEmail';
 
 export const ParentCarpoolScreen: React.FC = () => {
   const { colors: c } = useThemedScreen();
   const { t } = useTranslation();
-  const { selected } = useParentShell();
+  const { profile } = useAuth();
+  const { selected, reload } = useParentShell();
+  const email = normalizeGuardianEmail(profile?.email);
   const [trips, setTrips] = useState<CarpoolLiveTripDoc[]>([]);
   const [loading, setLoading] = useState(false);
+  const [privacyBusy, setPrivacyBusy] = useState(false);
 
   const load = useCallback(async () => {
     if (!selected) {
@@ -35,7 +44,6 @@ export const ParentCarpoolScreen: React.FC = () => {
     void load();
   }, [load]);
 
-  // Live subscribe first active trip
   useEffect(() => {
     const tripId = trips[0]?.trip_id;
     if (!tripId) return;
@@ -49,117 +57,142 @@ export const ParentCarpoolScreen: React.FC = () => {
   }, [trips[0]?.trip_id]);
 
   const openMaps = (lat: number, lng: number) => {
-    const url = `https://maps.apple.com/?ll=${lat},${lng}&q=Position`;
-    void Linking.openURL(url);
+    void Linking.openURL(`https://maps.apple.com/?ll=${lat},${lng}&q=Position`);
   };
 
   if (!selected) {
     return (
-      <View style={styles.center}>
-        <ProDayText variant="body" muted>
-          {t('parent.selectChild')}
-        </ProDayText>
-      </View>
+      <ParentPageFrame identity={PARENT_PAGES.trajet}>
+        <View style={styles.center}>
+          <ProDayText variant="body" muted>
+            {t('parent.selectChild')}
+          </ProDayText>
+        </View>
+      </ParentPageFrame>
     );
   }
 
   const privacyOk = selected.settings.privacy?.share_live_carpool !== false;
 
   return (
-    <ScrollView contentContainerStyle={styles.content}>
-      <ProDayText variant="section">
-        {t('parent.carpool.title', { name: selected.display_name })}
-      </ProDayText>
-      <ProDayText variant="caption" muted>
-        {t('parent.carpool.subtitle')}
-      </ProDayText>
+    <ParentPageFrame identity={PARENT_PAGES.trajet}>
+      <ScrollView contentContainerStyle={styles.content}>
+        <ParentSectionCard
+          title={t('parent.carpool.title', { name: selected.display_name })}
+          subtitle={t('parent.carpool.subtitle')}
+        >
+          {!privacyOk ? (
+            <>
+              <ProDayText variant="body" muted>
+                {t('parent.carpool.privacyDisabled')}
+              </ProDayText>
+              <ParentActionButton
+                label="Activer le partage live"
+                icon="checkmark-circle"
+                loading={privacyBusy}
+                onPress={() => {
+                  if (!email) return;
+                  setPrivacyBusy(true);
+                  void parentPortalService
+                    .updatePrivacy(selected.uid, email, {
+                      ...selected.settings.privacy,
+                      share_live_carpool: true,
+                    })
+                    .then(reload)
+                    .catch((e) =>
+                      Alert.alert('Erreur', e instanceof Error ? e.message : 'Échec'),
+                    )
+                    .finally(() => setPrivacyBusy(false));
+                }}
+              />
+            </>
+          ) : (
+            <ParentActionButton
+              label="Désactiver le partage"
+              tone="ghost"
+              loading={privacyBusy}
+              onPress={() => {
+                if (!email) return;
+                setPrivacyBusy(true);
+                void parentPortalService
+                  .updatePrivacy(selected.uid, email, {
+                    ...selected.settings.privacy,
+                    share_live_carpool: false,
+                  })
+                  .then(reload)
+                  .catch((e) =>
+                    Alert.alert('Erreur', e instanceof Error ? e.message : 'Échec'),
+                  )
+                  .finally(() => setPrivacyBusy(false));
+              }}
+            />
+          )}
+        </ParentSectionCard>
 
-      {!privacyOk ? (
-        <ProDaySurface variant="module" style={styles.card}>
-          <ProDayText variant="body" muted>
-            {t('parent.carpool.privacyDisabled')}
-          </ProDayText>
-        </ProDaySurface>
-      ) : null}
-
-      {loading ? (
-        <ActivityIndicator color={c.brand} />
-      ) : trips.length === 0 ? (
-        <ProDaySurface variant="module" style={styles.card}>
-          <ProDayText variant="body" muted>
-            {t('parent.carpool.empty')}
-          </ProDayText>
-        </ProDaySurface>
-      ) : (
-        trips.map((trip) => (
-          <ProDaySurface key={trip.trip_id} variant="module" style={styles.card}>
-            <ProDayText variant="caption" accent>
-              {trip.active ? t('parent.carpool.enRoute') : t('parent.carpool.finished')} ·{' '}
-              {trip.kind === 'event' ? t('parent.carpool.kindEvent') : t('parent.carpool.kindFree')}
-            </ProDayText>
-            <ProDayText variant="section">{t('parent.carpool.departure')}</ProDayText>
+        {loading ? (
+          <ActivityIndicator color={c.brand} />
+        ) : trips.length === 0 ? (
+          <ParentSectionCard title={t('parent.carpool.empty')}>
             <ProDayText variant="caption" muted>
-              {trip.started_at
-                ? trip.started_at.toLocaleString('fr-FR')
-                : t('parent.carpool.waiting')}
+              Dès qu’un trajet live démarre pour {selected.display_name}, la position apparaît ici.
             </ProDayText>
-            <ProDayText variant="section">{t('parent.carpool.position')}</ProDayText>
-            {trip.location ? (
-              <>
-                <ProDayText variant="body">
-                  {trip.location.latitude.toFixed(5)}, {trip.location.longitude.toFixed(5)}
-                  {trip.accuracy_m != null ? ` (±${Math.round(trip.accuracy_m)} m)` : ''}
-                </ProDayText>
-                <PressableSpring
-                  onPress={() => openMaps(trip.location!.latitude, trip.location!.longitude)}
-                  scaleTo={0.97}
-                  haptic
-                  style={[styles.mapBtn, { borderColor: c.border, backgroundColor: c.surfaceMuted }]}
-                >
-                  <ProDayText variant="caption" accent style={{ fontWeight: '800' }}>
-                    {t('parent.carpool.openMaps')}
+            <ParentActionButton label="Actualiser" tone="ghost" icon="tune" onPress={() => void load()} />
+          </ParentSectionCard>
+        ) : (
+          trips.map((trip) => (
+            <ParentSectionCard
+              key={trip.trip_id}
+              title={t('parent.carpool.departure')}
+              subtitle={`${trip.active ? t('parent.carpool.enRoute') : t('parent.carpool.finished')} · ${
+                trip.kind === 'event' ? t('parent.carpool.kindEvent') : t('parent.carpool.kindFree')
+              }`}
+            >
+              <ProDayText variant="caption" muted>
+                {trip.started_at
+                  ? trip.started_at.toLocaleString('fr-FR')
+                  : t('parent.carpool.waiting')}
+              </ProDayText>
+              <ProDayText variant="section">{t('parent.carpool.position')}</ProDayText>
+              {trip.location ? (
+                <>
+                  <ProDayText variant="body">
+                    {trip.location.latitude.toFixed(5)}, {trip.location.longitude.toFixed(5)}
+                    {trip.accuracy_m != null ? ` (±${Math.round(trip.accuracy_m)} m)` : ''}
                   </ProDayText>
-                </PressableSpring>
-              </>
-            ) : (
-              <ProDayText variant="caption" muted>
-                {t('parent.carpool.noLocation')}
-              </ProDayText>
-            )}
-            {trip.ended_at ? (
-              <>
-                <ProDayText variant="section">{t('parent.carpool.arrival')}</ProDayText>
+                  <ParentActionButton
+                    label={t('parent.carpool.openMaps')}
+                    icon="location"
+                    onPress={() => openMaps(trip.location!.latitude, trip.location!.longitude)}
+                  />
+                </>
+              ) : (
                 <ProDayText variant="caption" muted>
-                  {trip.ended_at.toLocaleString('fr-FR')}
+                  {t('parent.carpool.noLocation')}
                 </ProDayText>
-              </>
-            ) : (
+              )}
+              {trip.ended_at ? (
+                <ProDayText variant="caption" muted>
+                  {t('parent.carpool.arrival')} · {trip.ended_at.toLocaleString('fr-FR')}
+                </ProDayText>
+              ) : (
+                <ProDayText variant="caption" muted>
+                  {t('parent.carpool.arrivalInProgress')}
+                </ProDayText>
+              )}
               <ProDayText variant="caption" muted>
-                {t('parent.carpool.arrivalInProgress')}
+                {t('parent.carpool.updatedAt', {
+                  time: trip.updated_at ? trip.updated_at.toLocaleTimeString('fr-FR') : '—',
+                })}
               </ProDayText>
-            )}
-            <ProDayText variant="caption" muted>
-              {t('parent.carpool.updatedAt', {
-                time: trip.updated_at ? trip.updated_at.toLocaleTimeString('fr-FR') : '—',
-              })}
-            </ProDayText>
-          </ProDaySurface>
-        ))
-      )}
-    </ScrollView>
+            </ParentSectionCard>
+          ))
+        )}
+      </ScrollView>
+    </ParentPageFrame>
   );
 };
 
 const styles = StyleSheet.create({
   content: { padding: spacing.lg, gap: spacing.md, paddingBottom: spacing.xl },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing.lg },
-  card: { padding: spacing.md, borderRadius: radius.md, gap: spacing.xs },
-  mapBtn: {
-    alignSelf: 'flex-start',
-    marginTop: spacing.xs,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: radius.pill,
-    borderWidth: 1,
-  },
 });

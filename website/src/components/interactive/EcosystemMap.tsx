@@ -11,7 +11,7 @@ const NODES = [
   { id: "recruiter", label: "Recruteur", x: 72, y: 38 },
   { id: "club", label: "Club", x: 12, y: 68 },
   { id: "organizer", label: "Organisateur", x: 82, y: 78 },
-  { id: "arena", label: "Arena", x: 72, y: 12 },
+  { id: "arena", label: "Arène", x: 72, y: 12 },
   { id: "pulse", label: "Visibilité", x: 50, y: 85 },
 ] as const;
 
@@ -95,11 +95,11 @@ const DESCRIPTIONS: Record<string, string> = {
   mercato:
     "Recrutement : annonces, candidatures, filtres poste / niveau / ville. Publié par les recruteurs Pro.",
   player: "Profil, Visibilité, stats, CV PDF, santé, covoiturage et candidatures Mercato.",
-  coach: "Vérification diplôme, effectif, convocations et Live Stats équipe.",
+  coach: "Vérification diplôme, effectif, convocations et Stats en direct équipe.",
   agent: "Mandats joueurs, repérage et contacts clubs sur Mercato Pro.",
   recruiter: "Scouting, annonces Mercato Pro et suivi candidatures.",
   club: "Annonces actives, multi-équipes, exports candidatures.",
-  organizer: "Tournois Arena. Inscriptions et palmarès publiés.",
+  organizer: "Tournois Arène. Inscriptions et palmarès publiés.",
   health: "Kinés, coach mental, nutrition. Annuaire vérifié et messagerie sécurisée.",
   arena: "Compétitions locales intégrées au calendrier saison.",
   pulse: "Score de visibilité. Profil, activité et confiance.",

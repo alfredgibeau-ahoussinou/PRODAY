@@ -7,7 +7,7 @@ type TerminalPageProps = {
   accentStyle?: CSSProperties;
 };
 
-/** Full-bleed black body under PageHeader — Terminal cinema shell. */
+/** Full-bleed black body under PageHeader : Terminal cinema shell. */
 export function TerminalPage({
   children,
   className = "",

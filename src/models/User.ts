@@ -95,10 +95,18 @@ export interface UserProfile {
   /** Genre déclaré à l'inscription — dimension, pas un pôle (cible doc architecture §1.4). */
   gender?: Gender;
   strong_foot?: 'left' | 'right' | 'both';
+  /** Numéro de maillot (équipe). */
+  jersey_number?: number;
   height_cm?: number;
   weight_kg?: number;
   highlight_video_urls?: string[];
   gallery_urls?: string[];
+  /**
+   * Date de naissance ISO `YYYY-MM-DD` — source de vérité pour l’âge.
+   * L’univers joueur (youth / teen / adult) évolue à l’anniversaire.
+   */
+  birth_date?: string;
+  /** Âge dérivé (peut être resynchronisé depuis `birth_date`). */
   age?: number;
   years_experience?: number;
   availability?: 'available' | 'unavailable' | 'negotiating';

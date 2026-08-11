@@ -21,28 +21,28 @@ const POLE_CAPABILITIES: Record<
   joueur: {
     title: "Ce que fait le joueur",
     items: [
-      "Profil, badge Amateur → Centre → Pro",
-      "Stats de base, convocations, covoiturage",
+      "Analyse de forme personnelle (Ma forme)",
+      "Carte joueur, stats, convocations, covoiturage",
       "Mercato & candidatures",
-      "Pass 3,99 € : IA, heatmaps, vidéo, passeport",
+      "Pass 3,99 € optionnel : programmes, vidéo, contenu avancé",
     ],
   },
   pro_club: {
     title: "Ce que fait le club",
     items: [
-      "Équipes, licenciés, permissions",
-      "Convocations, présences, calendrier",
-      "Compétitions & classements auto",
-      "Amateur · Essentiel · Premium",
+      "Analyse de forme incluse dans l’offre",
+      "Équipes, licenciés, espace président",
+      "Invitations, tournois, covoiturage",
+      "À partir de 3 € / adhérent (sur devis)",
     ],
   },
   coach: {
     title: "Ce que fait le coach",
     items: [
-      "Smart Tactics & compositions",
-      "Assistant IA & rapports",
-      "Analyse vidéo & préparation match",
-      "Effectif, convocations, multi-équipes",
+      "Analyse de forme de l’effectif",
+      "Entraînements & générateur IA",
+      "Tactique IA & consignes joueurs",
+      "Convocations, comptes rendus, invitations",
     ],
   },
   supporter: {
@@ -104,7 +104,7 @@ export function FeaturesImmersive() {
       <ImmersivePoleHero
         brand="Pro Day"
         headline="Ce que fait ProDay."
-        support="Cinq portes. Un seul système. Joueur, Club, Coach, Supporter, Sponsor — les modules suivent le métier."
+        support="Cinq portes. Un seul système. Joueur, Club, Coach, Supporter, Sponsor : les modules suivent le métier."
         video={visuals.heroVideo}
         poster={visuals.hero}
         primaryHref={ROUTES.demo}
@@ -126,7 +126,7 @@ export function FeaturesImmersive() {
             Choisis ton entrée.
           </h2>
           <p className="mt-3 max-w-lg text-sm text-white/55">
-            Santé, agent, recruteur et organisateur restent des rôles intégrés — pas des pôles
+            Santé, agent, recruteur et organisateur restent des rôles intégrés : pas des pôles
             vitrine.
           </p>
 
@@ -239,7 +239,7 @@ export function FeaturesImmersive() {
             Les briques du terrain.
           </h2>
           <p className="mt-3 max-w-md text-sm text-white/55">
-            Smart Tactics, Mercato, matchs, covoiturage, fil, reels — selon ton pôle.
+            Tactique IA, Mercato, matchs, covoiturage, fil, reels : selon ton pôle.
           </p>
 
           <div className="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -307,7 +307,7 @@ export function FeaturesImmersive() {
             {[
               {
                 title: "Pôles clairs",
-                body: "Cinq portes marketing. Santé, agent et recruteur restent des rôles intégrés — sans diluer la vitrine.",
+                body: "Cinq portes marketing. Santé, agent et recruteur restent des rôles intégrés : sans diluer la vitrine.",
               },
               {
                 title: "Club au centre",
@@ -315,7 +315,7 @@ export function FeaturesImmersive() {
               },
               {
                 title: "Prix par pôle",
-                body: "Pass Joueur 3,99 €. Club Amateur / Essentiel / Premium. Option Pro + Veo (caméra clé en main). Coach Premium. Supporter gratuit.",
+                body: "Pass Joueur optionnel 3,99 €. Club sur devis selon adhérents. Caméra en option. Coach Premium. Supporter gratuit.",
               },
             ].map((item) => (
               <li

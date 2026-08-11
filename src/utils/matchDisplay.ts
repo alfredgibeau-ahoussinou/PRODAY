@@ -29,7 +29,16 @@ export function matchStatusStyle(
     case 'PLAYED':
       return { label: 'Joué', color: c.textMuted, bg: c.surfaceMuted };
     case 'CANCELLED':
-      return { label: 'Annulé', color: c.error, bg: c.errorBg };
+    case 'DECLINED':
+      return {
+        label: status === 'DECLINED' ? 'Refusé' : 'Annulé',
+        color: c.error,
+        bg: c.errorBg,
+      };
+    case 'INVITED':
+      return { label: 'Invitation', color: c.pending, bg: c.pendingBg };
+    case 'COUNTERED':
+      return { label: 'Contre-proposition', color: c.pending, bg: c.pendingBg };
     case 'OPEN':
     default:
       return { label: 'En attente', color: c.pending, bg: c.pendingBg };

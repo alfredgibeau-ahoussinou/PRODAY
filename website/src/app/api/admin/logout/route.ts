@@ -4,12 +4,11 @@ import {
   adminSessionCookieOptions,
 } from "@/lib/adminSession";
 import { isSameOriginBrowserRequest } from "@/lib/requestSecurity";
-import { applySecurityHeaders } from "@/lib/securityHeaders";
+import { applySensitiveRouteHeaders } from "@/lib/securityHeaders";
 
 function jsonResponse(body: Record<string, unknown>, init?: ResponseInit) {
   const response = NextResponse.json(body, init);
-  applySecurityHeaders(response);
-  response.headers.set("Cache-Control", "no-store");
+  applySensitiveRouteHeaders(response);
   return response;
 }
 

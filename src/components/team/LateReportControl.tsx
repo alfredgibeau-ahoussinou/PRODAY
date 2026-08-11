@@ -15,6 +15,8 @@ const LATE_OPTIONS: { intent: LateIntent; label: string }[] = [
   { intent: 'unknown', label: 'Je ne sais pas encore' },
 ];
 
+export type LateReportKind = 'arrival' | 'pickup';
+
 interface LateReportControlProps {
   eventId: string;
   playerUid: string;
@@ -22,44 +24,53 @@ interface LateReportControlProps {
   currentRsvp?: RsvpStatus;
   /** Parent / tuteur qui signale pour l’enfant. */
   reportedByParent?: boolean;
+  /** Si true (défaut quand reportedByParent), propose aussi « retard récupération ». */
+  enablePickupLate?: boolean;
   compact?: boolean;
   onReported?: () => void;
 }
 
-/** CTA rapide « Je vais être en retard » — 1–2 clics. */
+/** CTA rapide retard — joueur ou parent (arrivée / récupération). */
 export const LateReportControl: React.FC<LateReportControlProps> = ({
   eventId,
   playerUid,
   playerName,
   currentRsvp,
   reportedByParent,
+  enablePickupLate,
   compact,
   onReported,
 }) => {
   const { colors: c } = useAppTheme();
   const styles = useMemo(() => createStyles(c), [c]);
-  const [open, setOpen] = useState(false);
+  const [mode, setMode] = useState<LateReportKind | null>(null);
   const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);
+  const [pickupDone, setPickupDone] = useState(false);
 
+  const showPickup = Boolean(reportedByParent && enablePickupLate !== false);
   const alreadyLate = currentRsvp ? isLateRsvp(currentRsvp) : false;
 
-  const submit = async (intent: LateIntent) => {
+  const submit = async (intent: LateIntent, lateKind: LateReportKind) => {
     setBusy(true);
     try {
       await teamEventsService.reportLate(eventId, playerUid, intent, {
         note: note.trim() || undefined,
         reportedByParent,
         playerName,
+        lateKind,
       });
-      setOpen(false);
+      setMode(null);
       setNote('');
+      if (lateKind === 'pickup') setPickupDone(true);
       onReported?.();
       Alert.alert(
-        'Retard signalé',
-        reportedByParent
-          ? `Le coach a été prévenu (signalement parent).`
-          : 'Le coach a été prévenu.',
+        lateKind === 'pickup' ? 'Récupération signalée' : 'Retard signalé',
+        lateKind === 'pickup'
+          ? 'Le coach a été prévenu : tu seras en retard pour récupérer ton enfant.'
+          : reportedByParent
+            ? 'Le coach a été prévenu (enfant en retard).'
+            : 'Le coach a été prévenu.',
       );
     } catch (e) {
       Alert.alert('Erreur', e instanceof Error ? e.message : 'Impossible de signaler le retard.');
@@ -68,34 +79,61 @@ export const LateReportControl: React.FC<LateReportControlProps> = ({
     }
   };
 
-  if (alreadyLate && currentRsvp) {
-    return (
-      <View style={[styles.pill, { backgroundColor: c.surfaceMuted }]}>
-        <ProDayText variant="caption" accent>
-          ⏰ {RSVP_STATUS_LABELS[currentRsvp]}
-        </ProDayText>
-      </View>
-    );
-  }
-
   return (
     <View style={styles.wrap}>
-      <PressableSpring
-        style={[styles.cta, { borderColor: c.border, backgroundColor: c.surfaceMuted }]}
-        onPress={() => setOpen((v) => !v)}
-        scaleTo={0.97}
-        haptic
-      >
-        <ProDayText variant="caption" accent style={styles.ctaText}>
-          ⏰ {open ? 'Fermer' : 'Je vais être en retard'}
-        </ProDayText>
-      </PressableSpring>
+      {alreadyLate && currentRsvp ? (
+        <View style={[styles.pill, { backgroundColor: c.surfaceMuted }]}>
+          <ProDayText variant="caption" accent>
+            Enfant · {RSVP_STATUS_LABELS[currentRsvp]}
+          </ProDayText>
+        </View>
+      ) : (
+        <PressableSpring
+          style={[styles.cta, { borderColor: c.border, backgroundColor: c.surfaceMuted }]}
+          onPress={() => setMode((m) => (m === 'arrival' ? null : 'arrival'))}
+          scaleTo={0.97}
+          haptic
+        >
+          <ProDayText variant="caption" accent style={styles.ctaText}>
+            {reportedByParent
+              ? mode === 'arrival'
+                ? 'Fermer'
+                : 'Enfant en retard'
+              : mode === 'arrival'
+                ? 'Fermer'
+                : 'Je vais être en retard'}
+          </ProDayText>
+        </PressableSpring>
+      )}
 
-      {open ? (
+      {showPickup ? (
+        pickupDone ? (
+          <View style={[styles.pill, { backgroundColor: c.surfaceMuted }]}>
+            <ProDayText variant="caption" accent>
+              Récupération · coach prévenu
+            </ProDayText>
+          </View>
+        ) : (
+          <PressableSpring
+            style={[styles.ctaAlt, { borderColor: c.border, backgroundColor: c.surface }]}
+            onPress={() => setMode((m) => (m === 'pickup' ? null : 'pickup'))}
+            scaleTo={0.97}
+            haptic
+          >
+            <ProDayText variant="caption" style={styles.ctaText}>
+              {mode === 'pickup' ? 'Fermer' : 'Je suis en retard pour le récupérer'}
+            </ProDayText>
+          </PressableSpring>
+        )
+      ) : null}
+
+      {mode ? (
         <View style={[styles.panel, { borderColor: c.border, backgroundColor: c.surface }]}>
           {!compact ? (
             <ProDayText variant="caption" muted>
-              Le coach sera notifié immédiatement.
+              {mode === 'pickup'
+                ? 'Le coach sera notifié immédiatement (récupération).'
+                : 'Le coach sera notifié immédiatement.'}
             </ProDayText>
           ) : null}
           {LATE_OPTIONS.map((opt) => (
@@ -103,7 +141,7 @@ export const LateReportControl: React.FC<LateReportControlProps> = ({
               key={opt.intent}
               style={[styles.opt, { borderColor: c.border }]}
               disabled={busy}
-              onPress={() => void submit(opt.intent)}
+              onPress={() => void submit(opt.intent, mode)}
               scaleTo={0.97}
               haptic
             >
@@ -116,7 +154,11 @@ export const LateReportControl: React.FC<LateReportControlProps> = ({
           ))}
           <TextInput
             style={[styles.input, { borderColor: c.border, color: c.text }]}
-            placeholder="Message optionnel (ex. j’arrive dans 15 min)"
+            placeholder={
+              mode === 'pickup'
+                ? 'Message optionnel (ex. embouteillage, 15 min)'
+                : 'Message optionnel (ex. j’arrive dans 15 min)'
+            }
             placeholderTextColor={c.textMuted}
             value={note}
             onChangeText={setNote}
@@ -135,7 +177,14 @@ function createStyles(c: AppColors) {
       alignSelf: 'flex-start',
       paddingHorizontal: spacing.md,
       paddingVertical: spacing.sm,
-      borderRadius: radius.pill,
+      borderRadius: radius.md,
+      borderWidth: 1,
+    },
+    ctaAlt: {
+      alignSelf: 'flex-start',
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      borderRadius: radius.md,
       borderWidth: 1,
     },
     ctaText: { fontWeight: '800' },
@@ -144,7 +193,7 @@ function createStyles(c: AppColors) {
       marginTop: spacing.sm,
       paddingHorizontal: spacing.sm,
       paddingVertical: 4,
-      borderRadius: radius.pill,
+      borderRadius: radius.md,
     },
     panel: {
       borderWidth: StyleSheet.hairlineWidth,

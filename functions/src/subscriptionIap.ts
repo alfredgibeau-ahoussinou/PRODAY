@@ -15,9 +15,9 @@ type ActivatePayload = {
 };
 
 /**
- * Active l’abonnement Pro après achat store (RevenueCat ou expo-iap).
- * Renouvellements / annulations / expirations : webhook `revenueCatWebhook`.
- * Stripe Billing n’est pas utilisé pour les abonnements récurrents.
+ * Active l’abonnement Pro après achat store (RevenueCat ou expo-iap) — chemin de repli.
+ * Chemin prioritaire : Stripe Checkout (`createSubscriptionCheckoutSession` + `stripeWebhook`).
+ * Renouvellements store : webhook `revenueCatWebhook`.
  */
 export const activateStoreSubscription = functions.https.onCall(
   async (data: ActivatePayload, context) => {

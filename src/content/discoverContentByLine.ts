@@ -21,16 +21,14 @@ import {
   DISCOVER_UNIVERSE_CARDS_SUPPORTER,
 } from './discoverSupporterContent';
 import {
-  DISCOVER_INTRO_SLIDES_SANTE,
-  DISCOVER_UNIVERSE_CARDS_SANTE,
-} from './discoverSanteContent';
-import {
   DISCOVER_INTRO_SLIDES_SPONSOR,
   DISCOVER_UNIVERSE_CARDS_SPONSOR,
 } from './discoverSponsorContent';
 
 function resolveDiscoverLine(line: ProductLineId): ProductLineId {
   if (line === 'homme' || line === 'woman' || line === 'pro') return 'amateur';
+  // Santé n’est plus un pôle vitrine : soins intégrés au parcours Joueur.
+  if (line === 'sante') return 'amateur';
   if (line === 'pro_player' || line === 'pro_club' || line === 'pro_staff') return line;
   if (line === 'sponsor') return 'sponsor';
   if (isProFamilyLine(line)) return 'pro_player';
@@ -44,7 +42,7 @@ export function getDiscoverIntroSlides(line: ProductLineId): DiscoverIntroSlide[
   if (resolved === 'pro_staff') return DISCOVER_INTRO_SLIDES_PRO_STAFF;
   if (resolved === 'amateur') return DISCOVER_INTRO_SLIDES_AMATEUR;
   if (resolved === 'supporter') return DISCOVER_INTRO_SLIDES_SUPPORTER;
-  if (resolved === 'sante') return [...DISCOVER_INTRO_SLIDES_SANTE] as unknown as DiscoverIntroSlide[];
+  // sante → amateur via resolveDiscoverLine
   if (resolved === 'sponsor') {
     return [...DISCOVER_INTRO_SLIDES_SPONSOR] as unknown as DiscoverIntroSlide[];
   }
@@ -58,7 +56,6 @@ export function getDiscoverUniverseCards(line: ProductLineId) {
   }
   if (resolved === 'amateur') return DISCOVER_UNIVERSE_CARDS_AMATEUR;
   if (resolved === 'supporter') return DISCOVER_UNIVERSE_CARDS_SUPPORTER;
-  if (resolved === 'sante') return DISCOVER_UNIVERSE_CARDS_SANTE;
   if (resolved === 'sponsor') return DISCOVER_UNIVERSE_CARDS_SPONSOR;
   return DISCOVER_UNIVERSE_CARDS;
 }
@@ -80,23 +77,23 @@ export function getDiscoverCarouselCopy(line: ProductLineId): {
   }
   if (resolved === 'pro_club') {
     return {
-      label: 'Pro Club',
-      title: 'Structure et recrutement',
-      subtitle: 'Équipes, calendrier et communication club',
+      label: 'Club',
+      title: 'Cœur de ProDay',
+      subtitle: 'Équipes, compétitions, permissions et covoiturage',
     };
   }
   if (resolved === 'pro_staff') {
     return {
-      label: 'Pro Staff',
-      title: 'Métier du foot pro',
-      subtitle: 'Coach, agent, recruteur. Outils métier dédiés',
+      label: 'Coach',
+      title: 'Banc de touche digital',
+      subtitle: 'Tactique IA, IA, effectif — rôles réseau optionnels',
     };
   }
   if (resolved === 'amateur') {
     return {
       label: 'Univers Amateur',
       title: 'Pôle Joueur',
-      subtitle: 'Amateur, Centre ou Pro. Homme / Femme, Mercato et CV',
+      subtitle: 'Amateur, Formation ou Haut niveau. Homme / Femme, Mercato et CV',
     };
   }
   if (resolved === 'supporter') {
@@ -104,13 +101,6 @@ export function getDiscoverCarouselCopy(line: ProductLineId): {
       label: 'Univers Supporter',
       title: 'Fans et communauté',
       subtitle: 'Matchs live, suivis, débats et boutique tribune',
-    };
-  }
-  if (resolved === 'sante') {
-    return {
-      label: 'Univers Santé',
-      title: 'Cabinet et sportifs',
-      subtitle: 'Agenda, demandes et messagerie soignants',
     };
   }
   if (resolved === 'sponsor') {

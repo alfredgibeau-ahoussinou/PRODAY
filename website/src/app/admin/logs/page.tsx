@@ -8,7 +8,7 @@ import {
 } from "@/lib/adminSession";
 
 export const metadata: Metadata = {
-  title: "Logs et Audit - ProDay",
+  title: "Logs et Audit : ProDay",
   robots: { index: false, follow: false },
 };
 

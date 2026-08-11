@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "ProDay",
     short_name: "ProDay",
     description:
-      "Plateforme foot amateur et semi-pro : Mercato, Matchs, Arena, Reels et communauté.",
+      "Plateforme foot amateur et semi-pro : Mercato, Matchs, Arène, Reels et communauté.",
     start_url: "/",
     display: "standalone",
     orientation: "portrait",

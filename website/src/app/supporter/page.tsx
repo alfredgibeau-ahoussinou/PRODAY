@@ -27,7 +27,7 @@ export default function SupporterPage() {
       <ImmersivePoleHero
         brand="Pro Day Supporter"
         headline="La tribune. Point."
-        support="Scores, suivis, débats. Zéro abonnement. Tu viens pour le match — pas pour un outil pro."
+        support="Scores, suivis, débats. Zéro abonnement. Tu viens pour le match : pas pour un outil pro."
         video={visuals.heroVideo}
         poster={visuals.hero}
         primaryHref={`${ROUTES.betaWaitlist}?role=supporter`}

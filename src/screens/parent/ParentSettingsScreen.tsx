@@ -5,11 +5,9 @@ import {
   StyleSheet,
   Switch,
   Alert,
-  Pressable,
   TextInput,
 } from 'react-native';
 import { ProDayText } from '../../components/ui/ProDayText';
-import { ProDaySurface } from '../../components/ui/ProDaySurface';
 import { useThemedScreen } from '../../hooks/useThemedScreen';
 import { spacing, radius } from '../../theme/designTokens';
 import { useParentShell } from '../../navigation/parentShellContext';
@@ -20,7 +18,14 @@ import { ParentalActivityReportScreen } from '../ParentalActivityReportScreen';
 import { useAuth } from '../../context/AuthContext';
 import { normalizeGuardianEmail } from '../../utils/guardianEmail';
 import type { ParentalEmergencyContact } from '../../models/ParentalSettings';
-import { PushScreenTransition } from '../../components/motion';
+import { PushScreenTransition, PressableSpring } from '../../components/motion';
+import { ParentPageFrame } from '../../components/parent/ParentPageFrame';
+import {
+  ParentActionButton,
+  ParentSectionCard,
+} from '../../components/parent/parentPortalUi';
+import { ParentUnlockCard } from '../../components/parent/ParentUnlockCard';
+import { PARENT_PAGES } from '../../content/parentPageIdentity';
 
 interface Props {
   onSignOut: () => Promise<void> | void;
@@ -39,6 +44,7 @@ export const ParentSettingsScreen: React.FC<Props> = ({ onSignOut }) => {
   const [emName, setEmName] = useState('');
   const [emPhone, setEmPhone] = useState('');
   const [emRelation, setEmRelation] = useState('');
+  const [bonusBusy, setBonusBusy] = useState(false);
 
   const emergency = useMemo(
     () => selected?.settings.emergency_contacts ?? [],
@@ -92,205 +98,265 @@ export const ParentSettingsScreen: React.FC<Props> = ({ onSignOut }) => {
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.content}>
-      <ProDayText variant="section">Permissions & confidentialité</ProDayText>
+    <ParentPageFrame identity={PARENT_PAGES.reglages}>
+      <ScrollView contentContainerStyle={styles.content}>
+        {!selected ? (
+          <ParentSectionCard title="Aucun enfant sélectionné">
+            <ProDayText variant="body" muted>
+              Sélectionnez un enfant depuis l’accueil pour gérer les réglages.
+            </ProDayText>
+          </ParentSectionCard>
+        ) : (
+          <>
+            {email ? (
+              <ParentUnlockCard child={selected} guardianEmail={email} onDone={reload} />
+            ) : null}
 
-      {!selected ? (
-        <ProDayText variant="body" muted>
-          Sélectionnez un enfant pour gérer les réglages.
-        </ProDayText>
-      ) : (
-        <>
-          <ProDaySurface variant="module" style={styles.card}>
-            <Row
-              label="Temps d’écran"
-              value={!!selected.settings.screen_time_enabled}
-              disabled={saving}
-              onChange={(screen_time_enabled) => void patch({ screen_time_enabled })}
-              colors={c}
-            />
-            <Row
-              label="Restriction messagerie"
-              value={selected.settings.messaging_restricted !== false}
-              disabled={saving}
-              onChange={(messaging_restricted) =>
-                void parentPortalService
-                  .updateMessagingRestriction(selected.uid, email!, messaging_restricted)
-                  .then(reload)
-              }
-              colors={c}
-            />
-            <Row
-              label="Partage trajet live"
-              value={selected.settings.privacy?.share_live_carpool !== false}
-              disabled={saving}
-              onChange={(share_live_carpool) =>
-                void parentPortalService
-                  .updatePrivacy(selected.uid, email!, {
-                    ...selected.settings.privacy,
-                    share_live_carpool,
-                  })
-                  .then(reload)
-              }
-              colors={c}
-            />
-            <Row
-              label="Lecture des messages"
-              value={selected.settings.privacy?.parent_can_read_messages !== false}
-              disabled={saving}
-              onChange={(parent_can_read_messages) =>
-                void parentPortalService
-                  .updatePrivacy(selected.uid, email!, {
-                    ...selected.settings.privacy,
-                    parent_can_read_messages,
-                  })
-                  .then(reload)
-              }
-              colors={c}
-            />
-            <Pressable onPress={() => setMode('time')}>
-              <ProDayText variant="caption" accent style={styles.link}>
-                Configurer les limites de temps
-              </ProDayText>
-            </Pressable>
-            <Pressable onPress={() => setMode('report')}>
-              <ProDayText variant="caption" accent style={styles.link}>
-                Historique d’activité
-              </ProDayText>
-            </Pressable>
-          </ProDaySurface>
-
-          <ProDaySurface variant="module" style={styles.card}>
-            <ProDayText variant="section">Contacts d’urgence</ProDayText>
-            {emergency.map((contact) => (
-              <View key={contact.id} style={styles.emRow}>
-                <View style={{ flex: 1 }}>
-                  <ProDayText variant="body">{contact.name}</ProDayText>
-                  <ProDayText variant="caption" muted>
-                    {contact.phone}
-                    {contact.relation ? ` · ${contact.relation}` : ''}
-                  </ProDayText>
-                </View>
-                <Pressable
-                  onPress={() =>
-                    void parentPortalService
-                      .updateEmergencyContacts(
-                        selected.uid,
-                        email!,
-                        emergency.filter((e) => e.id !== contact.id),
-                      )
-                      .then(reload)
-                  }
-                >
-                  <ProDayText variant="caption" muted>
-                    Retirer
-                  </ProDayText>
-                </Pressable>
-              </View>
-            ))}
-            <TextInput
-              value={emName}
-              onChangeText={setEmName}
-              placeholder="Nom"
-              placeholderTextColor={c.textMuted}
-              style={[styles.input, { borderColor: c.border, color: c.text }]}
-            />
-            <TextInput
-              value={emPhone}
-              onChangeText={setEmPhone}
-              placeholder="Téléphone"
-              keyboardType="phone-pad"
-              placeholderTextColor={c.textMuted}
-              style={[styles.input, { borderColor: c.border, color: c.text }]}
-            />
-            <TextInput
-              value={emRelation}
-              onChangeText={setEmRelation}
-              placeholder="Lien (ex. grand-mère)"
-              placeholderTextColor={c.textMuted}
-              style={[styles.input, { borderColor: c.border, color: c.text }]}
-            />
-            <Pressable
-              onPress={() => {
-                if (!emName.trim() || !emPhone.trim()) {
-                  Alert.alert('Champs requis', 'Indiquez un nom et un téléphone.');
-                  return;
-                }
-                const next: ParentalEmergencyContact[] = [
-                  ...emergency,
-                  {
-                    id: `em_${Date.now()}`,
-                    name: emName.trim(),
-                    phone: emPhone.trim(),
-                    relation: emRelation.trim() || undefined,
-                  },
-                ];
-                void parentPortalService
-                  .updateEmergencyContacts(selected.uid, email!, next)
-                  .then(() => {
-                    setEmName('');
-                    setEmPhone('');
-                    setEmRelation('');
-                    return reload();
-                  });
-              }}
+            <ParentSectionCard
+              title="Temps d’écran"
+              subtitle={`${selected.display_name} · ${selected.minutesUsedToday} / ${selected.settings.daily_limit_minutes ?? 90} min`}
             >
-              <ProDayText variant="caption" accent style={styles.link}>
-                Ajouter le contact
-              </ProDayText>
-            </Pressable>
-          </ProDaySurface>
-        </>
-      )}
+              <Row
+                label="Activer la limite"
+                value={!!selected.settings.screen_time_enabled}
+                disabled={saving}
+                onChange={(screen_time_enabled) => void patch({ screen_time_enabled })}
+                colors={c}
+              />
+              <View style={styles.rowActions}>
+                <ParentActionButton
+                  label="Configurer les jours"
+                  tone="ghost"
+                  icon="time"
+                  onPress={() => setMode('time')}
+                />
+                <ParentActionButton
+                  label="+15 min aujourd’hui"
+                  icon="add"
+                  loading={bonusBusy}
+                  onPress={() => {
+                    if (!email) return;
+                    setBonusBusy(true);
+                    void parentPortalService
+                      .grantScreenTimeBonus(selected.uid, email, 15)
+                      .then(() => {
+                        Alert.alert('Bonus', '+15 min accordées.');
+                        return reload();
+                      })
+                      .catch((e) =>
+                        Alert.alert('Erreur', e instanceof Error ? e.message : 'Échec'),
+                      )
+                      .finally(() => setBonusBusy(false));
+                  }}
+                />
+                <ParentActionButton
+                  label="Historique"
+                  tone="ghost"
+                  icon="document"
+                  onPress={() => setMode('report')}
+                />
+              </View>
+            </ParentSectionCard>
 
-      <ProDaySurface variant="module" style={styles.card}>
-        <ProDayText variant="section">Lier un autre enfant</ProDayText>
-        <ProDayText variant="caption" muted>
-          Code à 6 chiffres affiché sur le téléphone de l’enfant.
-        </ProDayText>
-        <TextInput
-          value={inviteCode}
-          onChangeText={setInviteCode}
-          keyboardType="number-pad"
-          maxLength={6}
-          placeholder="123456"
-          placeholderTextColor={c.textMuted}
-          style={[styles.input, { borderColor: c.border, color: c.text }]}
-        />
-        <Pressable
-          onPress={() => {
-            if (!email) return;
-            void parentalGuardianService
-              .linkWithInviteCode(email, inviteCode)
-              .then((name) => {
-                setInviteCode('');
-                Alert.alert('Lié', `${name} est maintenant lié à votre compte.`);
-                return reload();
-              })
-              .catch((e) =>
-                Alert.alert('Liaison impossible', e instanceof Error ? e.message : 'Code invalide'),
-              );
-          }}
+            <ParentSectionCard
+              title="Confidentialité & messagerie"
+              subtitle="Chaque interrupteur s’applique immédiatement"
+            >
+              <Row
+                label="Restriction messagerie"
+                value={selected.settings.messaging_restricted !== false}
+                disabled={saving}
+                onChange={(messaging_restricted) =>
+                  void parentPortalService
+                    .updateMessagingRestriction(selected.uid, email!, messaging_restricted)
+                    .then(reload)
+                }
+                colors={c}
+              />
+              <Row
+                label="Filtre contacts"
+                value={selected.settings.contacts_filter_enabled !== false}
+                disabled={saving}
+                onChange={(contacts_filter_enabled) =>
+                  void parentPortalService
+                    .updateContactsFilter(selected.uid, email!, contacts_filter_enabled)
+                    .then(reload)
+                }
+                colors={c}
+              />
+              <Row
+                label="Partage trajet live"
+                value={selected.settings.privacy?.share_live_carpool !== false}
+                disabled={saving}
+                onChange={(share_live_carpool) =>
+                  void parentPortalService
+                    .updatePrivacy(selected.uid, email!, {
+                      ...selected.settings.privacy,
+                      share_live_carpool,
+                    })
+                    .then(reload)
+                }
+                colors={c}
+              />
+              <Row
+                label="Lecture des messages"
+                value={selected.settings.privacy?.parent_can_read_messages !== false}
+                disabled={saving}
+                onChange={(parent_can_read_messages) =>
+                  void parentPortalService
+                    .updatePrivacy(selected.uid, email!, {
+                      ...selected.settings.privacy,
+                      parent_can_read_messages,
+                    })
+                    .then(reload)
+                }
+                colors={c}
+              />
+              <Row
+                label="Accès dossier médical"
+                value={selected.settings.privacy?.parent_can_access_medical === true}
+                disabled={saving}
+                onChange={(parent_can_access_medical) =>
+                  void parentPortalService
+                    .updatePrivacy(selected.uid, email!, {
+                      ...selected.settings.privacy,
+                      parent_can_access_medical,
+                    })
+                    .then(reload)
+                }
+                colors={c}
+              />
+            </ParentSectionCard>
+
+            <ParentSectionCard title="Contacts d’urgence">
+              {emergency.map((contact) => (
+                <View key={contact.id} style={styles.emRow}>
+                  <View style={{ flex: 1 }}>
+                    <ProDayText variant="body">{contact.name}</ProDayText>
+                    <ProDayText variant="caption" muted>
+                      {contact.phone}
+                      {contact.relation ? ` · ${contact.relation}` : ''}
+                    </ProDayText>
+                  </View>
+                  <PressableSpring
+                    onPress={() =>
+                      void parentPortalService
+                        .updateEmergencyContacts(
+                          selected.uid,
+                          email!,
+                          emergency.filter((e) => e.id !== contact.id),
+                        )
+                        .then(reload)
+                    }
+                    haptic
+                  >
+                    <ProDayText variant="caption" muted>
+                      Retirer
+                    </ProDayText>
+                  </PressableSpring>
+                </View>
+              ))}
+              <TextInput
+                value={emName}
+                onChangeText={setEmName}
+                placeholder="Nom"
+                placeholderTextColor={c.textMuted}
+                style={[styles.input, { borderColor: c.border, color: c.text }]}
+              />
+              <TextInput
+                value={emPhone}
+                onChangeText={setEmPhone}
+                placeholder="Téléphone"
+                keyboardType="phone-pad"
+                placeholderTextColor={c.textMuted}
+                style={[styles.input, { borderColor: c.border, color: c.text }]}
+              />
+              <TextInput
+                value={emRelation}
+                onChangeText={setEmRelation}
+                placeholder="Lien (ex. grand-mère)"
+                placeholderTextColor={c.textMuted}
+                style={[styles.input, { borderColor: c.border, color: c.text }]}
+              />
+              <ParentActionButton
+                label="Ajouter le contact"
+                icon="add"
+                onPress={() => {
+                  if (!emName.trim() || !emPhone.trim()) {
+                    Alert.alert('Champs requis', 'Indiquez un nom et un téléphone.');
+                    return;
+                  }
+                  const next: ParentalEmergencyContact[] = [
+                    ...emergency,
+                    {
+                      id: `em_${Date.now()}`,
+                      name: emName.trim(),
+                      phone: emPhone.trim(),
+                      relation: emRelation.trim() || undefined,
+                    },
+                  ];
+                  void parentPortalService
+                    .updateEmergencyContacts(selected.uid, email!, next)
+                    .then(() => {
+                      setEmName('');
+                      setEmPhone('');
+                      setEmRelation('');
+                      return reload();
+                    });
+                }}
+              />
+            </ParentSectionCard>
+          </>
+        )}
+
+        <ParentSectionCard
+          title="Lier un autre enfant"
+          subtitle="Code à 6 chiffres affiché sur le téléphone de l’enfant"
         >
-          <ProDayText variant="caption" accent style={styles.link}>
-            Valider le code
-          </ProDayText>
-        </Pressable>
-      </ProDaySurface>
+          <TextInput
+            value={inviteCode}
+            onChangeText={setInviteCode}
+            keyboardType="number-pad"
+            maxLength={6}
+            placeholder="123456"
+            placeholderTextColor={c.textMuted}
+            style={[styles.input, { borderColor: c.border, color: c.text }]}
+          />
+          <ParentActionButton
+            label="Valider le code"
+            icon="checkmark-circle"
+            onPress={() => {
+              if (!email) return;
+              void parentalGuardianService
+                .linkWithInviteCode(email, inviteCode)
+                .then((name) => {
+                  setInviteCode('');
+                  Alert.alert('Lié', `${name} est maintenant lié à votre compte.`);
+                  return reload();
+                })
+                .catch((e) =>
+                  Alert.alert(
+                    'Liaison impossible',
+                    e instanceof Error ? e.message : 'Code invalide',
+                  ),
+                );
+            }}
+          />
+        </ParentSectionCard>
 
-      <Pressable
-        onPress={() =>
-          Alert.alert('Déconnexion', 'Quitter le portail parent ?', [
-            { text: 'Annuler', style: 'cancel' },
-            { text: 'Déconnexion', style: 'destructive', onPress: () => void onSignOut() },
-          ])
-        }
-      >
-        <ProDayText variant="caption" muted style={styles.link}>
-          Se déconnecter
-        </ProDayText>
-      </Pressable>
-    </ScrollView>
+        <ParentActionButton
+          label="Se déconnecter"
+          tone="danger"
+          icon="log-out"
+          onPress={() =>
+            Alert.alert('Déconnexion', 'Quitter le portail parent ?', [
+              { text: 'Annuler', style: 'cancel' },
+              { text: 'Déconnexion', style: 'destructive', onPress: () => void onSignOut() },
+            ])
+          }
+        />
+      </ScrollView>
+    </ParentPageFrame>
   );
 };
 
@@ -299,7 +365,7 @@ function Row({
   value,
   onChange,
   disabled,
-  colors: c,
+  colors: theme,
 }: {
   label: string;
   value: boolean;
@@ -316,8 +382,8 @@ function Row({
         value={value}
         disabled={disabled}
         onValueChange={onChange}
-        trackColor={{ false: c.border, true: c.brandSoft }}
-        thumbColor={value ? c.brand : c.surface}
+        trackColor={{ false: theme.border, true: theme.brandSoft }}
+        thumbColor={value ? theme.brand : theme.surface}
       />
     </View>
   );
@@ -325,8 +391,8 @@ function Row({
 
 const styles = StyleSheet.create({
   content: { padding: spacing.lg, gap: spacing.md, paddingBottom: spacing.xl },
-  card: { padding: spacing.lg, gap: spacing.sm, borderRadius: radius.lg },
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  rowActions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   emRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   input: {
     borderWidth: 1,
@@ -335,5 +401,4 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     fontSize: 15,
   },
-  link: { fontWeight: '700' },
 });

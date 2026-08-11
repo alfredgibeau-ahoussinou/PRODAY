@@ -8,7 +8,7 @@ import { AdminUsers } from "@/components/admin/AdminUsers";
 import { fetchAdminPlatformStats } from "@/lib/adminPlatformApi";
 
 export const metadata: Metadata = {
-  title: "Gestion Utilisateurs - ProDay",
+  title: "Gestion Utilisateurs : ProDay",
   robots: { index: false, follow: false },
 };
 

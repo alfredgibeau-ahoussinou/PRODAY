@@ -28,16 +28,19 @@ export type ProdayNotificationData = {
     | 'player_activity_analysis'
     | 'guardian_minor_invite'
     | 'internal_move'
-    | 'player_late';
+    | 'player_late'
+    | 'parent_pickup_late'
+    | 'coach_session_request';
   guardianEmail?: string;
   eventId?: string;
   hubChapter?: 'apercu' | 'live' | 'composition' | 'stats' | 'effectif';
-  homeTab?: 'season' | 'matches' | 'convocations' | 'centre' | 'stats' | 'feed' | 'home';
+  homeTab?: 'season' | 'matches' | 'convocations' | 'centre' | 'stats' | 'feed' | 'home' | 'tournois' | 'competitions';
   matchId?: string;
   offerId?: string;
   activityId?: string;
   playerUid?: string;
   moveId?: string;
+  bookingId?: string;
 };
 
 export type EngagementNotificationHints = {

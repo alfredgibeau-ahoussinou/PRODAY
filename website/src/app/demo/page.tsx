@@ -9,7 +9,7 @@ import { ROUTES } from "@/lib/routes";
 export const metadata: Metadata = {
   title: "Démo interactive",
   description:
-    "Explorez ProDay comme dans l’app : Joueur, Club, Coach, Supporter ou Sponsor — sans compte.",
+    "Explorez ProDay comme dans l’app : Joueur, Club, Coach, Supporter ou Sponsor : sans compte.",
 };
 
 export default async function DemoPage({

@@ -6,65 +6,66 @@ import {
   SUPPORTER_IDENTITY,
 } from './brandExperience';
 import {
+  PRODAY_COACH_BRAND,
+  PRODAY_PARENT_BRAND,
   PRODAY_PRO_CLUB_BRAND,
-  PRODAY_PRO_STAFF_BRAND,
   PRODAY_SPONSOR_BRAND,
 } from '../models/ProductLine';
 
 const JOUEUR_IDENTITY: UniverseIdentity = {
   id: 'amateur',
   productName: 'Pro Day Joueur',
-  tagline: 'AMATEUR · CENTRE · PRO',
-  heroLine: 'Amateur\n→ Pro.',
+  tagline: 'CLUB · PROGRESSER · JOUER',
+  heroLine: 'Ton club.\nTon jeu.',
   mission:
-    'Un seul espace joueur. Badges Amateur, Centre / Aspirant ou Professionnel. Signature pro : même profil, badge mis à jour.',
+    'Profil, stats, convocations et covoiturage. Pass Premium optionnel pour les entraînements individuels avancés.',
   accentLabel: 'Joueur',
   mercatoLabel: 'Mercato',
   playerLabel: 'Joueur',
   cvLabel: 'CV & portfolio',
-  entrySub: 'Du district au contrat — sans changer d\'environnement',
+  entrySub: 'Pensé pour le football amateur et semi-professionnel',
 };
 
 const PRO_CLUB_IDENTITY: UniverseIdentity = {
   id: 'pro',
   productName: PRODAY_PRO_CLUB_BRAND.name,
   tagline: PRODAY_PRO_CLUB_BRAND.tagline,
-  heroLine: 'Votre structure\nconnectée.',
+  heroLine: 'Le club\nau centre.',
   mission:
-    'Équipes, pipeline candidatures kanban et vitrine. Calendrier & convocations : Pôle Staff.',
+    'Équipes, catégories, licenciés, compétitions, convocations, covoiturage et permissions. Le cœur de ProDay.',
   accentLabel: 'Club',
   mercatoLabel: 'Recrutement',
   playerLabel: 'Structure',
   cvLabel: 'Vitrine club',
-  entrySub: 'Dirigeants et staff administratif. Structure, effectifs et annonces',
+  entrySub: 'Dirigeants, staff et bénévoles — un seul cockpit',
 };
 
-const PRO_STAFF_IDENTITY: UniverseIdentity = {
+const COACH_IDENTITY: UniverseIdentity = {
   id: 'pro',
-  productName: PRODAY_PRO_STAFF_BRAND.name,
-  tagline: PRODAY_PRO_STAFF_BRAND.tagline,
-  heroLine: 'Le staff\nau centre.',
+  productName: PRODAY_COACH_BRAND.name,
+  tagline: PRODAY_COACH_BRAND.tagline,
+  heroLine: 'Votre banc\nde touche.',
   mission:
-    'Coach, agent, recruteur. Calendrier structure, convocations premium, mandats et scouting.',
-  accentLabel: 'Staff',
-  mercatoLabel: 'Réseau pro',
-  playerLabel: 'Staff',
-  cvLabel: 'Profil métier',
-  entrySub: 'Coach · Agent · Recruteur · Calendrier',
+    'Profil coach, Tactique IA, préparation match, convocations, IA et analyse vidéo. Rattaché à un club.',
+  accentLabel: 'Coach',
+  mercatoLabel: 'Réseau',
+  playerLabel: 'Coach',
+  cvLabel: 'Parcours & diplômes',
+  entrySub: 'Tactique IA · effectif · matchs · IA',
 };
 
-const EVENEMENTS_IDENTITY: UniverseIdentity = {
-  id: 'pro',
-  productName: 'Pro Day Événements',
-  tagline: 'TOURNOIS · ACADÉMIES · DÉTECTIONS',
-  heroLine: 'Vos événements\nfootball.',
+const PARENT_IDENTITY: UniverseIdentity = {
+  id: 'parent',
+  productName: PRODAY_PARENT_BRAND.name,
+  tagline: PRODAY_PARENT_BRAND.tagline,
+  heroLine: 'Accompagner\nsans étouffer.',
   mission:
-    'Créez tournois, stages, détections et showcases. Inscriptions, listes, résultats et médias.',
-  accentLabel: 'Événements',
-  mercatoLabel: 'Inscriptions',
-  playerLabel: 'Organisateur',
-  cvLabel: 'Événement',
-  entrySub: 'Organisateurs · tournois · camps · showcases',
+    'Superviser le parcours de votre enfant : messages, agenda, retards coach, temps d’écran et trajets.',
+  accentLabel: 'Parent',
+  mercatoLabel: 'Famille',
+  playerLabel: 'Enfant',
+  cvLabel: 'Contrôle parental',
+  entrySub: 'Pôle dédié — lié au compte joueur mineur',
 };
 
 const SPONSOR_IDENTITY: UniverseIdentity = {
@@ -90,11 +91,13 @@ export function getCarouselPoleIdentity(pole: CarouselPoleId): UniverseIdentity 
     case 'supporter':
       return SUPPORTER_IDENTITY;
     case 'pro_club':
-      return PRO_CLUB_IDENTITY;
-    case 'pro_staff':
-      return PRO_STAFF_IDENTITY;
     case 'evenements':
-      return EVENEMENTS_IDENTITY;
+      return PRO_CLUB_IDENTITY;
+    case 'coach':
+    case 'pro_staff':
+      return COACH_IDENTITY;
+    case 'parent':
+      return PARENT_IDENTITY;
     case 'sponsor':
       return SPONSOR_IDENTITY;
     case 'sante':

@@ -7,12 +7,11 @@ import type { RsvpStatus } from '../../models/TeamEvent';
 import { EVENT_TYPE_LABELS, RSVP_STATUS_LABELS } from '../../models/TeamEvent';
 import { userRsvp } from '../../models/TeamEvent';
 import { resolveLiveState, isInMatchWindow } from '../../utils/matchLive';
-import { ProDayGradient } from '../ui/ProDayGradient';
 import { ProDayText } from '../ui/ProDayText';
-import { Icon } from '../ui/Icon';
 import { LateReportControl } from '../team/LateReportControl';
 import { useAppTheme } from '../../context/ProductLineContext';
-import { spacing, radius, shadows } from '../../theme/designTokens';
+import { MATCH_SITE } from '../../content/matchPageIdentity';
+import { spacing } from '../../theme/designTokens';
 
 interface MatchConvocationCardProps {
   event: TeamEvent;
@@ -55,64 +54,49 @@ export const MatchConvocationCard: React.FC<MatchConvocationCardProps> = ({
   });
 
   return (
-    <PressableSpring
-      style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }, shadows.soft]}
-      onPress={onOpen}
-      scaleTo={0.98}
-      haptic
-    >
+    <PressableSpring style={styles.card} onPress={onOpen} scaleTo={0.98} haptic>
+      <View style={[styles.bar, { backgroundColor: pending ? MATCH_SITE.warn : colors.accent }]} />
       <View style={styles.body}>
         <View style={styles.top}>
-          <View style={[styles.kindPill, { backgroundColor: colors.accentSoft }]}>
-            <ProDayText variant="caption" accent style={styles.kindText}>
-              {EVENT_TYPE_LABELS[event.event_type]}
-            </ProDayText>
-          </View>
-          <ProDayText variant="caption" muted>
+          <ProDayText variant="caption" style={[styles.kind, { color: colors.accent }]}>
+            {EVENT_TYPE_LABELS[event.event_type]}
+          </ProDayText>
+          <ProDayText variant="caption" style={styles.muted}>
             {dateLabel}
           </ProDayText>
         </View>
 
-        <ProDayText variant="section" numberOfLines={2}>
+        <ProDayText variant="section" numberOfLines={2} style={styles.title}>
           {event.title}
         </ProDayText>
-        <ProDayText variant="body" muted numberOfLines={1}>
+        <ProDayText variant="caption" style={styles.muted} numberOfLines={1}>
           {event.organizer_name} · {event.city}
         </ProDayText>
 
         {showScore ? (
-          <View style={[styles.scoreRow, { backgroundColor: colors.accentSoft }]}>
-            <ProDayText variant="caption" accent style={styles.scoreText}>
-              {live.home_label} {live.home_score} - {live.away_score} {live.opponent_name}
-              {isInMatchWindow(event) && live.minute != null ? ` · ${live.minute}'` : ''}
-            </ProDayText>
-          </View>
+          <ProDayText variant="caption" style={[styles.score, { color: colors.accent }]}>
+            {live.home_label} {live.home_score} — {live.away_score} {live.opponent_name}
+            {isInMatchWindow(event) && live.minute != null ? ` · ${live.minute}'` : ''}
+          </ProDayText>
         ) : null}
 
         {event.lineup ? (
-          <ProDayText variant="caption" muted>
-            Compo {event.lineup.formation} · {event.lineup.slots.filter((s) => s.role === 'starter').length} titulaires
+          <ProDayText variant="caption" style={styles.muted}>
+            Compo {event.lineup.formation} ·{' '}
+            {event.lineup.slots.filter((s) => s.role === 'starter').length} titulaires
           </ProDayText>
         ) : null}
 
         {!pending ? (
-          <View style={[styles.statusPill, { backgroundColor: colors.surfaceMuted }]}>
-            <ProDayText variant="caption" accent>
-              {RSVP_STATUS_LABELS[status]}
-            </ProDayText>
-          </View>
+          <ProDayText variant="caption" style={[styles.rsvpStatus, { color: colors.accent }]}>
+            {RSVP_STATUS_LABELS[status]}
+          </ProDayText>
         ) : null}
 
         {onOpenCarpool ? (
-          <PressableSpring
-            style={[styles.carpoolBtn, { borderColor: colors.border, backgroundColor: colors.surfaceMuted }]}
-            onPress={onOpenCarpool}
-            scaleTo={0.98}
-            haptic
-          >
-            <Icon name="car" size={14} color={colors.accent} />
-            <ProDayText variant="caption" accent style={styles.carpoolText}>
-              Trajet / covoiturage
+          <PressableSpring onPress={onOpenCarpool} scaleTo={0.98} haptic style={styles.linkBtn}>
+            <ProDayText variant="caption" style={[styles.link, { color: colors.accent }]}>
+              Trajet / covoiturage →
             </ProDayText>
           </PressableSpring>
         ) : null}
@@ -122,41 +106,33 @@ export const MatchConvocationCard: React.FC<MatchConvocationCardProps> = ({
             <PressableSpring
               disabled={rsvpBusy}
               scaleTo={0.96}
+              style={[styles.rsvpPrimary, { backgroundColor: colors.accent }]}
               onPress={() => {
                 prodayHaptics.confirm();
                 onRsvp('yes');
               }}
             >
-              <ProDayGradient kind="cta" style={styles.rsvpBtn}>
-                <Icon name="checkmark-circle" size={14} color="#FFFFFF" />
-                <ProDayText variant="caption" inverse style={styles.rsvpText}>
-                  Oui
-                </ProDayText>
-              </ProDayGradient>
+              <ProDayText variant="caption" style={styles.rsvpPrimaryText}>
+                Oui
+              </ProDayText>
             </PressableSpring>
             <PressableSpring
-              style={[
-                styles.rsvpGhost,
-                { borderColor: colors.borderStrong, backgroundColor: colors.surfaceMuted },
-              ]}
+              style={styles.rsvpGhost}
               disabled={rsvpBusy}
               scaleTo={0.97}
               onPress={() => onRsvp('maybe')}
             >
-              <ProDayText variant="caption" accent style={styles.rsvpText}>
+              <ProDayText variant="caption" style={[styles.link, { color: colors.accent }]}>
                 Peut-être
               </ProDayText>
             </PressableSpring>
             <PressableSpring
-              style={[
-                styles.rsvpGhost,
-                { borderColor: colors.borderStrong, backgroundColor: colors.surfaceMuted },
-              ]}
+              style={styles.rsvpGhost}
               disabled={rsvpBusy}
               scaleTo={0.97}
               onPress={() => onRsvp('no')}
             >
-              <ProDayText variant="caption" accent style={styles.rsvpText}>
+              <ProDayText variant="caption" style={[styles.link, { color: colors.accent }]}>
                 Non
               </ProDayText>
             </PressableSpring>
@@ -179,70 +155,60 @@ export const MatchConvocationCard: React.FC<MatchConvocationCardProps> = ({
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    marginBottom: spacing.sm,
+    flexDirection: 'row',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: MATCH_SITE.border,
+    backgroundColor: MATCH_SITE.surface,
+    marginBottom: 2,
+    overflow: 'hidden',
   },
-  body: { padding: spacing.md },
+  bar: { width: 3 },
+  body: {
+    flex: 1,
+    padding: spacing.md,
+    gap: 4,
+  },
   top: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: spacing.sm,
     gap: spacing.sm,
   },
-  kindPill: {
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 3,
-    borderRadius: radius.pill,
+  kind: {
+    fontWeight: '800',
+    fontSize: 10,
+    textTransform: 'uppercase',
+    letterSpacing: 1.2,
   },
-  kindText: { fontWeight: '800', fontSize: 10 },
-  scoreRow: {
-    alignSelf: 'flex-start',
-    marginTop: spacing.xs,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 4,
-    borderRadius: radius.pill,
+  title: {
+    fontWeight: '800',
+    color: MATCH_SITE.foreground,
+    letterSpacing: -0.3,
   },
-  scoreText: { fontWeight: '800' },
-  statusPill: {
-    alignSelf: 'flex-start',
-    marginTop: spacing.sm,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 4,
-    borderRadius: radius.pill,
-  },
-  carpoolBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-    alignSelf: 'flex-start',
-    marginTop: spacing.sm,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: radius.pill,
-    borderWidth: 1,
-  },
-  carpoolText: { fontWeight: '800' },
+  muted: { color: MATCH_SITE.muted },
+  score: { fontWeight: '800', marginTop: 2 },
+  rsvpStatus: { fontWeight: '800', marginTop: 2 },
+  linkBtn: { alignSelf: 'flex-start', marginTop: 4 },
+  link: { fontWeight: '800' },
   rsvpRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: spacing.xs,
-    marginTop: spacing.md,
+    marginTop: spacing.sm,
   },
-  rsvpBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
+  rsvpPrimary: {
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
-    borderRadius: radius.pill,
+    minHeight: 40,
+    justifyContent: 'center',
   },
+  rsvpPrimaryText: { color: '#fff', fontWeight: '800' },
   rsvpGhost: {
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
-    borderRadius: radius.pill,
-    borderWidth: 1.5,
+    minHeight: 40,
+    justifyContent: 'center',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: MATCH_SITE.border,
   },
-  rsvpText: { fontWeight: '800' },
 });

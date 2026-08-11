@@ -1,11 +1,11 @@
 /**
- * Niveau joueur — badges du Pôle Joueur unifié (amateur → centre → pro).
- * Le profil reste le même ; seul le badge évolue à la signature pro.
+ * Contexte joueur pour filtres Mercato (poste / parcours) — pas un badge de prestige.
+ * IDs stables Firestore. UI : jamais « Pro », « Aspirant », « Elite ».
  */
 
 export type PlayerLevelId = 'amateur' | 'academy' | 'professional';
 
-/** Filtres recruteur sur le Mercato / annuaire joueurs. */
+/** Filtres recruteur / club sur l’annuaire joueurs. */
 export type RecruiterPlayerLevelFilter =
   | 'all'
   | 'amateurs'
@@ -20,31 +20,34 @@ export interface PlayerLevelBadge {
   /** Libellé court UI (pill). */
   shortLabel: string;
   tone: PlayerLevelBadgeTone;
-  /** Hex officiel badge. */
+  /** Hex officiel — palette ProDay bleu. */
   colorHex: string;
 }
 
+/**
+ * Libellés descriptifs (parcours), pas des titres honorifiques.
+ */
 export const PLAYER_LEVEL_BADGES: Record<PlayerLevelId, PlayerLevelBadge> = {
   amateur: {
     id: 'amateur',
-    label: 'Amateur',
+    label: 'Football amateur',
     shortLabel: 'Amateur',
     tone: 'blue',
-    colorHex: '#2563EB',
+    colorHex: '#0054F0',
   },
   academy: {
     id: 'academy',
-    label: 'Centre de formation / Aspirant',
-    shortLabel: 'Centre / Aspirant',
-    tone: 'green',
-    colorHex: '#16A34A',
+    label: 'Formation / Jeunes',
+    shortLabel: 'Formation',
+    tone: 'blue',
+    colorHex: '#1A68FF',
   },
   professional: {
     id: 'professional',
-    label: 'Professionnel',
-    shortLabel: 'Pro',
-    tone: 'yellow',
-    colorHex: '#EAB308',
+    label: 'Semi-pro / Haut niveau',
+    shortLabel: 'Haut niveau',
+    tone: 'blue',
+    colorHex: '#001F6B',
   },
 };
 
@@ -55,6 +58,6 @@ export const RECRUITER_PLAYER_LEVEL_FILTERS: {
 }[] = [
   { id: 'all', label: 'Tous', matches: 'all' },
   { id: 'amateurs', label: 'Amateurs', matches: ['amateur'] },
-  { id: 'centres_de_formation', label: 'Centres de formation', matches: ['academy'] },
-  { id: 'professionnels', label: 'Professionnels', matches: ['professional'] },
+  { id: 'centres_de_formation', label: 'Formation / Jeunes', matches: ['academy'] },
+  { id: 'professionnels', label: 'Haut niveau', matches: ['professional'] },
 ];

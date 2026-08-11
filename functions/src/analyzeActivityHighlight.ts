@@ -2,11 +2,11 @@ import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
 import { configStr } from './runtimeConfig';
 import { sendFcmToUser } from './messaging';
+import { MISTRAL_TEXT_FAST_MODEL, MISTRAL_VISION_MODEL } from './mistralModels';
 
 const db = admin.firestore();
 const ACTIVITIES_COL = 'player_activities';
-const MISTRAL_VISION_MODEL = 'pixtral-12b-2409';
-const MISTRAL_TEXT_MODEL = 'mistral-small-latest';
+const MISTRAL_TEXT_MODEL = MISTRAL_TEXT_FAST_MODEL;
 
 export interface ActivityAnalysisPayload {
   summary_fr: string;

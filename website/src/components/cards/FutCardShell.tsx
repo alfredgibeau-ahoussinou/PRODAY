@@ -29,7 +29,7 @@ import { resolveFutSkin, type FutSkinMeta } from "@/lib/futSkins";
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
-/** Legacy FUT silhouette — kept for any external refs. */
+/** Legacy FUT silhouette : kept for any external refs. */
 export const FUT_PATH =
   "M22 14 C22 8 28 4 40 4 L160 4 C172 4 178 8 178 14 L178 18 C178 26 184 32 192 36 L196 42 C198 48 198 56 198 64 L198 168 C198 208 158 242 100 272 C42 242 2 208 2 168 L2 64 C2 56 2 48 4 42 L8 36 C16 32 22 26 22 18 Z";
 
@@ -157,7 +157,7 @@ export function FutCardShell({
                 skin={skin}
                 accent={card.accentHex}
                 onActivate={flip}
-                ariaLabel={`${card.displayName} — ${meta.label}. Toucher pour retourner.`}
+                ariaLabel={`${card.displayName} : ${meta.label}. Toucher pour retourner.`}
               >
                 {front}
                 {!reduce ? (
@@ -419,7 +419,7 @@ function FacePattern({ skin, uid }: { skin: FutSkinMeta; uid: string }) {
 }
 
 /**
- * Square face layout — rating badge, photo hero, name, 6 stats.
+ * Square face layout : rating badge, photo hero, name, 6 stats.
  */
 export function FutFaceLayout({
   rating,

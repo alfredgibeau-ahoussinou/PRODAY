@@ -1,6 +1,8 @@
 @import "tailwindcss";
 
 :root {
+  --font-space: "Space Grotesk", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
   --proday-ink: #052424;
   --proday-ink-muted: rgba(5, 36, 36, 0.62);
   --proday-bg: #000000;
@@ -49,7 +51,7 @@
   --color-proday-warning: var(--proday-warning);
   --font-sans: var(--font-space);
   --font-display: var(--font-space);
-  --font-mono: var(--font-mono);
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
 }
 
 html {
@@ -136,6 +138,31 @@ body {
   box-shadow:
     0 1px 0 rgba(255, 255, 255, 0.04) inset,
     0 14px 30px -22px rgba(0, 0, 0, 0.55);
+}
+
+/* Monde Joueur : scènes 3D isolées, jamais au-dessus du menu */
+.page-joueur-world {
+  --joueur-nav-offset: calc(4.75rem + env(safe-area-inset-top, 0px));
+}
+@media (min-width: 640px) {
+  .page-joueur-world {
+    --joueur-nav-offset: calc(5.5rem + env(safe-area-inset-top, 0px));
+  }
+}
+.page-joueur-world .joueur-3d-stage {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  contain: paint layout;
+  transform: translateZ(0);
+  z-index: 0;
+}
+.page-joueur-world .joueur-3d-stage canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100%;
+  max-height: 100%;
 }
 
 .cta-lift {

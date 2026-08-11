@@ -3,7 +3,6 @@ import { View, StyleSheet } from 'react-native';
 import { PressableSpring } from '../motion/PressableSpring';
 import { prodayHaptics } from '../../utils/prodayHaptics';
 import type { FriendlyMatch } from '../../models/FriendlyMatch';
-import { ProDayGradient } from '../ui/ProDayGradient';
 import { ProDayText } from '../ui/ProDayText';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { useTranslation } from '../../context/LocaleContext';
@@ -13,7 +12,8 @@ import {
   matchStatusStyle,
 } from '../../utils/matchDisplay';
 import { tr } from '../../i18n/translate';
-import { spacing, radius, shadows } from '../../theme/designTokens';
+import { MATCH_SITE } from '../../content/matchPageIdentity';
+import { spacing } from '../../theme/designTokens';
 
 const LEVEL_TYPE_FALLBACK: Record<FriendlyMatch['level_type'], string> = {
   loisir: 'Loisir',
@@ -55,104 +55,91 @@ export const MatchFriendlyCard: React.FC<MatchFriendlyCardProps> = ({
 
   return (
     <PressableSpring
-      style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }, shadows.soft]}
+      style={styles.card}
       onPress={onPress ?? (() => prodayHaptics.press())}
       scaleTo={0.98}
       haptic
     >
+      <View style={[styles.bar, { backgroundColor: st.color ?? colors.accent }]} />
       <View style={styles.body}>
         <View style={styles.top}>
-          <ProDayText variant="caption" muted style={styles.date}>
+          <ProDayText variant="caption" style={styles.date}>
             {formatMatchDateTime(match.date, match.time_label)}
           </ProDayText>
           <View style={styles.topBadges}>
             {iaScore != null ? (
-              <View style={[styles.iaBadge, { backgroundColor: colors.accentSoft }]}>
-                <ProDayText variant="caption" accent style={styles.iaText}>
-                  {iaScore}%
-                </ProDayText>
-              </View>
-            ) : null}
-            <View style={[styles.badge, { backgroundColor: st.bg }]}>
-              <ProDayText variant="caption" style={{ color: st.color, fontWeight: '800' }}>
-                {st.label}
+              <ProDayText variant="caption" style={[styles.metaAccent, { color: colors.accent }]}>
+                {iaScore}%
               </ProDayText>
-            </View>
-          </View>
-        </View>
-
-        <ProDayText variant="section">{formatMatchTeams(match)}</ProDayText>
-        <View style={styles.metaRow}>
-          <ProDayText variant="body" muted style={styles.metaText}>
-            {match.city}
-            {match.level ? ` · ${match.level}` : ''}
-          </ProDayText>
-          <View style={[styles.levelPill, { backgroundColor: colors.accentSoft }]}>
-            <ProDayText variant="caption" accent style={styles.levelText}>
-              {match.category} · {levelLabels[match.level_type]}
+            ) : null}
+            <ProDayText variant="caption" style={{ color: st.color, fontWeight: '800' }}>
+              {st.label}
             </ProDayText>
           </View>
         </View>
+
+        <ProDayText variant="section" style={styles.title}>
+          {formatMatchTeams(match)}
+        </ProDayText>
+        <ProDayText variant="caption" style={styles.muted}>
+          {match.city}
+          {match.level ? ` · ${match.level}` : ''} · {match.category} ·{' '}
+          {levelLabels[match.level_type]}
+        </ProDayText>
         {match.has_pitch ? (
-          <ProDayText variant="caption" muted style={styles.pitch}>
+          <ProDayText variant="caption" style={styles.muted}>
             Terrain disponible
           </ProDayText>
         ) : null}
         {healthWarning ? (
-          <ProDayText variant="caption" muted style={styles.healthWarn}>
+          <ProDayText variant="caption" style={[styles.muted, styles.warn]}>
             {healthWarning}
           </ProDayText>
         ) : null}
         {match.message ? (
-          <ProDayText variant="body" muted numberOfLines={2} style={styles.message}>
+          <ProDayText variant="caption" style={[styles.muted, styles.message]} numberOfLines={2}>
             « {match.message} »
           </ProDayText>
         ) : null}
 
-        {(showAccept || (isMine && match.status === 'OPEN') || (isMine && match.status === 'ACCEPTED')) ? (
+        {(showAccept ||
+          (isMine && match.status === 'OPEN') ||
+          (isMine && match.status === 'INVITED') ||
+          (isMine && match.status === 'COUNTERED') ||
+          (isMine && match.status === 'ACCEPTED')) ? (
           <View style={styles.actions}>
             {showAccept && onAccept ? (
               <PressableSpring
                 scaleTo={0.96}
                 haptic
+                style={[styles.btnPrimary, { backgroundColor: colors.accent }]}
                 onPress={() => {
                   prodayHaptics.confirm();
                   onAccept();
                 }}
               >
-                <ProDayGradient kind="cta" style={styles.btnPrimary}>
-                  <ProDayText variant="caption" inverse style={styles.btnText}>
-                    {t('matchs.friendly.accept')}
-                  </ProDayText>
-                </ProDayGradient>
+                <ProDayText variant="caption" style={styles.btnPrimaryText}>
+                  {t('matchs.friendly.accept')}
+                </ProDayText>
               </PressableSpring>
             ) : null}
-            {isMine && match.status === 'OPEN' && onCancel ? (
-              <PressableSpring
-                style={[
-                  styles.btnGhost,
-                  { borderColor: colors.borderStrong, backgroundColor: colors.surfaceMuted },
-                ]}
-                scaleTo={0.97}
-                haptic
-                onPress={onCancel}
-              >
-                <ProDayText variant="caption" accent style={styles.btnGhostText}>
+            {isMine &&
+            (match.status === 'OPEN' || match.status === 'INVITED') &&
+            onCancel ? (
+              <PressableSpring style={styles.btnGhost} scaleTo={0.97} haptic onPress={onCancel}>
+                <ProDayText variant="caption" style={[styles.link, { color: colors.accent }]}>
                   {t('matchs.friendly.cancel')}
                 </ProDayText>
               </PressableSpring>
             ) : null}
             {isMine && match.status === 'ACCEPTED' && onMarkPlayed ? (
               <PressableSpring
-                style={[
-                  styles.btnGhost,
-                  { borderColor: colors.borderStrong, backgroundColor: colors.surfaceMuted },
-                ]}
+                style={styles.btnGhost}
                 scaleTo={0.97}
                 haptic
                 onPress={onMarkPlayed}
               >
-                <ProDayText variant="caption" accent style={styles.btnGhostText}>
+                <ProDayText variant="caption" style={[styles.link, { color: colors.accent }]}>
                   {t('matchs.friendly.markPlayed')}
                 </ProDayText>
               </PressableSpring>
@@ -166,66 +153,48 @@ export const MatchFriendlyCard: React.FC<MatchFriendlyCardProps> = ({
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: radius.lg,
-    borderWidth: 1,
+    flexDirection: 'row',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: MATCH_SITE.border,
+    backgroundColor: MATCH_SITE.surface,
+    marginBottom: 2,
     overflow: 'hidden',
-    marginBottom: spacing.sm,
   },
-  body: { padding: spacing.md },
+  bar: { width: 3 },
+  body: { flex: 1, padding: spacing.md, gap: 4 },
   top: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: spacing.sm,
     gap: spacing.sm,
   },
-  date: { fontWeight: '800', letterSpacing: 0.3, flex: 1 },
-  metaRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    alignItems: 'center',
-    gap: spacing.xs,
-    marginTop: 2,
-  },
-  metaText: { flexShrink: 1 },
-  levelPill: {
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 3,
-    borderRadius: radius.pill,
-  },
-  levelText: { fontWeight: '800', fontSize: 10 },
-  pitch: { marginTop: 4, fontWeight: '700' },
-  message: { marginTop: spacing.sm, fontStyle: 'italic' },
-  badge: {
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 3,
-    borderRadius: radius.pill,
-  },
+  date: { fontWeight: '800', letterSpacing: 0.3, flex: 1, color: MATCH_SITE.muted },
   topBadges: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
-  iaBadge: {
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 3,
-    borderRadius: radius.pill,
-  },
-  iaText: { fontWeight: '800', fontSize: 10 },
-  healthWarn: { marginTop: spacing.xs, fontStyle: 'italic' },
+  metaAccent: { fontWeight: '800', fontSize: 10 },
+  title: { fontWeight: '800', color: MATCH_SITE.foreground, letterSpacing: -0.3 },
+  muted: { color: MATCH_SITE.muted },
+  warn: { fontStyle: 'italic' },
+  message: { fontStyle: 'italic', marginTop: 2 },
   actions: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: spacing.sm,
-    marginTop: spacing.md,
+    marginTop: spacing.sm,
   },
   btnPrimary: {
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.sm,
-    borderRadius: radius.pill,
+    minHeight: 40,
+    justifyContent: 'center',
   },
-  btnText: { fontWeight: '800' },
+  btnPrimaryText: { color: '#fff', fontWeight: '800' },
   btnGhost: {
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.sm,
-    borderRadius: radius.pill,
-    borderWidth: 1.5,
+    minHeight: 40,
+    justifyContent: 'center',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: MATCH_SITE.border,
   },
-  btnGhostText: { fontWeight: '800' },
+  link: { fontWeight: '800' },
 });

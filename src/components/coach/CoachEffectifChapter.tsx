@@ -18,23 +18,36 @@ import { TEAM_STAFF_ROLE_LABELS } from '../../models/TeamStaffMember';
 import { countAttendanceMark, countRsvpYes } from '../../models/TeamEvent';
 import { canManageClubEntity } from '../../utils/roleCapabilities';
 import { useTabNavigation } from '../../context/TabNavigationContext';
+import { useTabNavigationActions } from '../../hooks/useTabNavigationActions';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { useTranslation } from '../../context/LocaleContext';
 import { radius, spacing } from '../../theme/designTokens';
 import { ClubRosterBoardPanel } from '../club/ClubRosterBoardPanel';
+import { ClubTeamStadiumPanel } from '../club/ClubTeamStadiumPanel';
+import { ImmersivePoleHero } from '../poles';
+import { coachingSessionsService } from '../../services/homeTraining.service';
+import type { CoachSessionBooking } from '../../models/HomeTraining';
+import { teamsService } from '../../services/teams.service';
+import type { Team } from '../../models/Team';
+
 export const CoachEffectifChapter: React.FC<CoachChapterCommonProps> = ({
   profile,
   events,
   members,
   onRefresh,
+  onOpenSmartTactics,
 }) => {
   const { colors } = useAppTheme();
   const { t } = useTranslation();
   const { openChat } = useTabNavigation();
+  const nav = useTabNavigationActions();
   const clubId = profile.profile.club_id;
   const canManage = canManageClubEntity(profile.role);
   const [pending, setPending] = useState<Membership[]>([]);
   const [staff, setStaff] = useState<TeamStaffMember[]>([]);
+  const [sessionRequests, setSessionRequests] = useState<CoachSessionBooking[]>([]);
+  const [teams, setTeams] = useState<Team[]>([]);
+  const [memberships, setMemberships] = useState<Membership[]>([]);
   const [search, setSearch] = useState('');
   const [results, setResults] = useState<User[]>([]);
   const [staffUid, setStaffUid] = useState('');
@@ -42,11 +55,19 @@ export const CoachEffectifChapter: React.FC<CoachChapterCommonProps> = ({
   const [staffRole, setStaffRole] = useState<TeamStaffRole>('assistant');
 
   useEffect(() => {
+    void coachingSessionsService.listForCoach(profile.uid).then((rows) => {
+      setSessionRequests(rows.filter((b) => b.status === 'requested').slice(0, 8));
+    });
+  }, [profile.uid]);
+
+  useEffect(() => {
     if (!clubId) return;
     void membershipsService.listByClub(clubId).then((rows) => {
       setPending(rows.filter((m) => m.status === 'pending'));
+      setMemberships(rows);
     });
     void teamStaffService.listForClub(clubId).then(setStaff);
+    void teamsService.listByClubId(clubId).then(setTeams).catch(() => setTeams([]));
   }, [clubId, members.length]);
 
   const attendanceRollup = useMemo(() => {
@@ -133,17 +154,124 @@ export const CoachEffectifChapter: React.FC<CoachChapterCommonProps> = ({
 
   return (
     <CoachChapterScroll>
+      <ImmersivePoleHero
+        kicker="Effectif · Bourse"
+        title="Besoin pour samedi ? Proposez une montée."
+        support={t('coach.portal.effectif.bourseHint')}
+        primaryLabel="Tactique IA"
+        onPrimaryPress={() => onOpenSmartTactics?.()}
+      />
       <ProDayText variant="section">{t('coach.portal.effectif.title')}</ProDayText>
       <ProDayText variant="caption" muted>
         {t('coach.portal.effectif.subtitle', { n: members.length })}
       </ProDayText>
 
+      {clubId && teams.length > 0 ? (
+        <ClubTeamStadiumPanel
+          teams={teams}
+          memberships={memberships}
+          members={members}
+        />
+      ) : null}
+
       <ClubRosterBoardPanel
         clubId={clubId}
         profile={profile}
         members={members}
+        audience="coach"
         defaultTeamLabel={profile.profile.category}
+        onOpenMercato={() => nav.openMercato('home')}
       />
+
+      <ProDaySurface variant="module" style={[styles.card, { borderColor: colors.border }]}>
+        <ProDayText variant="caption" accent style={styles.section}>
+          Coaching à l’heure
+        </ProDayText>
+        <ProDayText variant="caption" muted>
+          Ouvre tes créneaux pour les joueurs (Train Hub). Tarif indicatif ~30 €/h, tu fixes le tien.
+        </ProDayText>
+        <PressableSpring
+          onPress={() => {
+            void (async () => {
+              try {
+                await coachingSessionsService.upsertHourlyProfile({
+                  coach_uid: profile.uid,
+                  display_name: profile.display_name,
+                  bio: profile.profile.bio,
+                  specialties: profile.profile.specialties ?? [],
+                  age_categories: profile.profile.category
+                    ? [profile.profile.category]
+                    : [],
+                  positions_coached: [],
+                  city: profile.city ?? 'France',
+                  hourly_rate_eur: 30,
+                  club_id: profile.profile.club_id,
+                  available: true,
+                });
+                Alert.alert(
+                  'Créneaux ouverts',
+                  'Tu es visible dans Train Hub à 30 €/h. Modifie ton tarif plus tard dans ton profil.',
+                );
+              } catch (e) {
+                Alert.alert(
+                  t('common.error'),
+                  e instanceof Error ? e.message : t('common.saveFailed'),
+                );
+              }
+            })();
+          }}
+          scaleTo={0.96}
+          haptic
+        >
+          <ProDayText variant="caption" accent style={styles.link}>
+            Ouvrir mes créneaux (30 €/h)
+          </ProDayText>
+        </PressableSpring>
+        {sessionRequests.length > 0 ? (
+          <View style={{ gap: 4, marginTop: spacing.xs }}>
+            <ProDayText variant="caption" style={{ fontWeight: '800' }}>
+              Demandes en attente
+            </ProDayText>
+            {sessionRequests.map((b) => (
+              <View key={b.id} style={styles.row}>
+                <ProDayText variant="caption" style={{ flex: 1 }} numberOfLines={2}>
+                  {b.player_name} · {b.duration_min} min · {b.price_eur} € ·{' '}
+                  {b.starts_at.toLocaleDateString('fr-FR')}
+                </ProDayText>
+                <PressableSpring
+                  onPress={() => {
+                    void coachingSessionsService.setStatus(b.id, 'accepted').then(() => {
+                      setSessionRequests((prev) => prev.filter((x) => x.id !== b.id));
+                      Alert.alert(
+                        'Séance acceptée',
+                        'Le joueur est notifié et peut payer la séance par carte.',
+                      );
+                    });
+                  }}
+                  scaleTo={0.96}
+                  haptic
+                >
+                  <ProDayText variant="caption" accent style={styles.link}>
+                    Accepter
+                  </ProDayText>
+                </PressableSpring>
+                <PressableSpring
+                  onPress={() => {
+                    void coachingSessionsService.setStatus(b.id, 'declined').then(() => {
+                      setSessionRequests((prev) => prev.filter((x) => x.id !== b.id));
+                    });
+                  }}
+                  scaleTo={0.96}
+                >
+                  <ProDayText variant="caption" muted>
+                    Refuser
+                  </ProDayText>
+                </PressableSpring>
+              </View>
+            ))}
+          </View>
+        ) : null}
+      </ProDaySurface>
 
       {members.length > 0 ? (
         <ScrollView

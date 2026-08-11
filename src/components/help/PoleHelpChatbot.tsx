@@ -1,9 +1,11 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { usePoleHelpChatbot } from '../../hooks/usePoleHelpChatbot';
 import { getPoleHelpQuestionCount } from '../../content/poleHelpContent';
 import { PoleHelpPanel } from './PoleHelpPanel';
 import { PoleHelpWidget } from './PoleHelpWidget';
+import { registerClubHelpOpener } from '../../features/club/shell/clubHelpOpen';
+import { registerCoachHelpOpener } from '../../features/coach/shell/coachHelpOpen';
 
 export const PoleHelpChatbot: React.FC = () => {
   const { colors, productLine } = useAppTheme();
@@ -20,6 +22,15 @@ export const PoleHelpChatbot: React.FC = () => {
   const closeChat = useCallback(() => {
     setOpen(false);
   }, []);
+
+  useEffect(() => {
+    registerClubHelpOpener(openChat);
+    registerCoachHelpOpener(openChat);
+    return () => {
+      registerClubHelpOpener(null);
+      registerCoachHelpOpener(null);
+    };
+  }, [openChat]);
 
   if (!visible) return null;
 

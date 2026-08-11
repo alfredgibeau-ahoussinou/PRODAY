@@ -1,4 +1,5 @@
 import { getMobileRailLayout } from '../navigation/mobileTabConfig';
+import { getJoueurGameTabLabel } from '../content/joueurGameMenu';
 
 describe('mobileTabConfig', () => {
   it('place Accueil + Matchs à gauche et Reels au centre pour coach Homme legacy', () => {
@@ -9,12 +10,13 @@ describe('mobileTabConfig', () => {
     expect(rail.right).toContain('profil');
   });
 
-  it('canonise joueur homme vers shell pro joueur plat Instagram-like', () => {
+  it('canonise joueur homme vers dock jeu (JOUER / GROUPE / MATCH / DÉFI / CARTE)', () => {
     const rail = getMobileRailLayout('homme', 'player');
-    expect(rail.flat).toEqual(['home', 'reels', 'matchs', 'messages', 'profil']);
+    expect(rail.flat).toEqual(['home', 'recrutement', 'matchs', 'feed', 'profil']);
     expect(rail.overflow).toEqual(
-      expect.arrayContaining(['covoiturage', 'sante', 'recrutement', 'shop'])
+      expect.arrayContaining(['covoiturage', 'reels', 'messages', 'shop']),
     );
+    expect(rail.overflow).not.toContain('sante');
     expect(rail.center).toBeNull();
   });
 
@@ -27,12 +29,13 @@ describe('mobileTabConfig', () => {
     expect(rail.right).toEqual([]);
   });
 
-  it('affiche le menu amateur joueur Instagram-like avec overflow', () => {
+  it('affiche le menu amateur joueur en dock jeu', () => {
     const rail = getMobileRailLayout('amateur', 'player');
-    expect(rail.flat).toEqual(['home', 'reels', 'matchs', 'messages', 'profil']);
+    expect(rail.flat).toEqual(['home', 'recrutement', 'matchs', 'feed', 'profil']);
     expect(rail.overflow).toEqual(
-      expect.arrayContaining(['covoiturage', 'recrutement', 'sante', 'shop'])
+      expect.arrayContaining(['covoiturage', 'reels', 'messages', 'shop']),
     );
+    expect(rail.overflow).not.toContain('sante');
     expect(rail.center).toBeNull();
   });
 
@@ -57,19 +60,11 @@ describe('mobileTabConfig', () => {
     expect(rail.overflow).toEqual([]);
   });
 
-  it('affiche le menu club pro en rangée plate avec covoiturage', () => {
+  it('affiche le menu club pro en rangée plate', () => {
     const rail = getMobileRailLayout('pro', 'club');
-    expect(rail.flat).toEqual([
-      'home',
-      'covoiturage',
-      'recrutement',
-      'matchs',
-      'messages',
-      'shop',
-      'profil',
-    ]);
+    expect(rail.flat).toEqual(['home', 'recrutement', 'matchs', 'messages', 'profil']);
+    expect(rail.overflow).toEqual(expect.arrayContaining(['covoiturage', 'shop']));
     expect(rail.center).toBeNull();
-    expect(rail.overflow).toEqual([]);
   });
 
   it('affiche le menu organisateur avec covoiturage en 2e position', () => {
@@ -92,12 +87,25 @@ describe('mobileTabConfig', () => {
     ]);
   });
 
-  it('affiche le menu pro joueur Instagram-like (sans covoiturage en dock)', () => {
+  it('affiche le menu pro joueur en dock jeu', () => {
     const rail = getMobileRailLayout('pro', 'player');
-    expect(rail.flat).toEqual(['home', 'reels', 'matchs', 'messages', 'profil']);
+    expect(rail.flat).toEqual(['home', 'recrutement', 'matchs', 'feed', 'profil']);
     expect(rail.overflow).toEqual(
-      expect.arrayContaining(['covoiturage', 'sante', 'recrutement', 'shop'])
+      expect.arrayContaining(['covoiturage', 'reels', 'messages', 'shop']),
     );
+    expect(rail.overflow).not.toContain('sante');
     expect(rail.center).toBeNull();
+  });
+});
+
+describe('joueurGameMenu labels', () => {
+  it('exposes arcade short labels', () => {
+    expect(getJoueurGameTabLabel('home', 'youth')).toBe('JOUER');
+    expect(getJoueurGameTabLabel('recrutement', 'adult')).toBe('CLUB');
+    expect(getJoueurGameTabLabel('recrutement', 'teen')).toBe('GROUPE');
+    expect(getJoueurGameTabLabel('matchs', 'youth')).toBe('MATCH');
+    expect(getJoueurGameTabLabel('feed', 'teen')).toBe('TACTIQUE');
+    expect(getJoueurGameTabLabel('profil', 'teen')).toBe('CARTE');
+    expect(getJoueurGameTabLabel('profil', 'adult')).toBe('CARTE');
   });
 });

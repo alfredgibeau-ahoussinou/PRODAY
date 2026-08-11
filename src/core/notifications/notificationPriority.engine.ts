@@ -51,7 +51,7 @@ export function buildNotificationCandidates(params: {
       title: 'Alerte récupération',
       body: 'Votre charge suggère une journée de repos.',
       priority: scoreNotification('health', 10),
-      tab: 'sante',
+      tab: 'home',
       createdAt: now,
     });
   }

@@ -7,6 +7,7 @@ import { AmateurLogo } from '../AmateurLogo';
 import { SupporterLogo } from '../SupporterLogo';
 import { ProSegmentLogo } from './ProSegmentLogo';
 import { SanteLogo } from '../SanteLogo';
+import { ParentLogo } from '../ParentLogo';
 import { WomanLogo } from '../WomanLogo';
 import { SponsorLogo } from '../SponsorLogo';
 
@@ -40,6 +41,9 @@ export const ProductLineLogo: React.FC<ProductLineLogoProps> = ({
   }
   if (line === 'sponsor') {
     return <SponsorLogo width={width} background={background} centered={centered} />;
+  }
+  if (line === 'parent') {
+    return <ParentLogo width={width} background={background} centered={centered} />;
   }
   if (line === 'pro' || isCarouselProPole(line as CarouselPoleId)) {
     return (

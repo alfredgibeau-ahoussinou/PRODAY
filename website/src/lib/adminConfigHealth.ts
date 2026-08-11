@@ -7,7 +7,7 @@ export type AdminConfigCheck = {
   ok: boolean;
 };
 
-/** Presence-only checks — never expose secret values. */
+/** Presence-only checks : never expose secret values. */
 export function getAdminConfigHealth(): AdminConfigCheck[] {
   const pinOk = isAdminPinConfigured();
   const sessionOk = Boolean(

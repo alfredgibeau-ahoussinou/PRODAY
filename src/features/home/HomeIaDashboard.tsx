@@ -23,6 +23,7 @@ import { hasWearableData } from '../../services/wearableHealth/formatWearableMet
 import { buildRecoverySuggestions } from '../../services/wearableHealth/recoverySuggestions';
 import { buildHealthReportHtml } from '../../utils/healthReportPdf';
 import { HealthSummaryCard } from './components/HealthSummaryCard';
+import { PlayerMaFormeCard } from '../../components/player/PlayerMaFormeCard';
 import { ProgressionBlock } from './components/ProgressionBlock';
 import { ReelsPreviewStrip } from './components/ReelsPreviewStrip';
 import { WeeklyQuestionHomeCard } from '../../components/weeklyQuestion/WeeklyQuestionHomeCard';
@@ -32,7 +33,6 @@ import type { StaffPriorityItem } from '../v3/engines/staffHome.engine';
 import { useDashboardData } from '../../hooks/useDashboardData';
 import { useStaffMercatoPipeline } from '../../hooks/useStaffMercatoPipeline';
 import { ActivityFeedStrip } from './components/ActivityFeedStrip';
-import { HealthProgramCard } from './components/HealthProgramCard';
 import { MentalProgramCard } from './components/MentalProgramCard';
 import { CareerScoreCard } from '../../components/player/CareerScoreCard';
 import { CareerPathwayPanel } from '../../components/player/CareerPathwayPanel';
@@ -182,6 +182,9 @@ export const HomeIaDashboard: React.FC<HomeIaDashboardProps> = ({
         case 'gestion':
           nav.openDashboard('gestion');
           break;
+        case 'smart_tactics':
+          nav.openDashboard('smart_tactics');
+          break;
         case 'sponsors':
           nav.openDashboard('sponsors');
           break;
@@ -306,7 +309,15 @@ export const HomeIaDashboard: React.FC<HomeIaDashboardProps> = ({
           ) : null}
 
           {!isStaffHome ? (
-            <HealthSummaryCard
+            <>
+              <PlayerMaFormeCard
+                uid={profile.uid}
+                displayName={profile.display_name}
+                health={brain.ai.health}
+                onExplainPress={() => setHealthExplainOpen(true)}
+                onOpenTraining={() => nav.openDashboard('smart_tactics')}
+              />
+              <HealthSummaryCard
               health={brain.ai.health}
               onExplainPress={() => setHealthExplainOpen(true)}
               wearableConnected={wearable.connected}
@@ -320,14 +331,7 @@ export const HomeIaDashboard: React.FC<HomeIaDashboardProps> = ({
               recoverySuggestions={recoverySuggestions}
               onExportHealthReport={handleExportHealthReport}
             />
-          ) : null}
-
-          {!isStaffHome ? (
-            <HealthProgramCard
-              uid={profile.uid}
-              healthState={brain.ai.health.state}
-              onOpenHealth={() => nav.setActiveTab('sante')}
-            />
+            </>
           ) : null}
 
           {!isStaffHome ? <MentalProgramCard uid={profile.uid} /> : null}

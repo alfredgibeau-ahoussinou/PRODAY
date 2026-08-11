@@ -28,7 +28,9 @@ export function filterFriendlyMatches(
   const q = opts.search?.trim().toLowerCase() ?? '';
 
   return matches.filter((m) => {
-    if (opts.status === 'open' && m.status !== 'OPEN') return false;
+    if (opts.status === 'open' && m.status !== 'OPEN' && m.status !== 'INVITED' && m.status !== 'COUNTERED') {
+      return false;
+    }
     if (opts.status === 'confirmed' && m.status !== 'ACCEPTED') return false;
     if (opts.status === 'mine' && opts.myClubId) {
       const mine =

@@ -3,9 +3,9 @@ import { TerminalProductPage } from "@/components/terminal";
 import { ROUTES } from "@/lib/routes";
 
 export const metadata: Metadata = {
-  title: "Espace Parent",
+  title: "Pro Day Parent",
   description:
-    "Supervision, contacts approuvés et limites de temps pour les comptes mineurs sur ProDay.",
+    "Pôle Parent ProDay : supervision, contacts approuvés et limites de temps pour les comptes mineurs.",
 };
 
 export default function ParentPortalPage() {
@@ -13,14 +13,14 @@ export default function ParentPortalPage() {
     <TerminalProductPage
       pathname={ROUTES.parent}
       visualId="parent"
-      kicker="Famille · Sécurité"
-      title="Espace Parent"
+      kicker="Pôle Parent"
+      title="Pro Day Parent"
       description="Supervision, contacts approuvés et limites de temps. Pour accompagner un mineur sans étouffer le jeu."
       story={{
         title: "Voir sans envahir.",
-        body: "L'espace Parent donne un cadre clair : qui peut contacter, combien de temps, quelles alertes. Branché au Pôle Confiance et au profil joueur.",
+        body: "Le Pôle Parent donne un cadre clair : qui peut contacter, combien de temps, quelles alertes. Branché au compte joueur de l’enfant.",
       }}
-      breakdownTitle="Décomposer l'espace Parent"
+      breakdownTitle="Décomposer le Pôle Parent"
       features={[
         {
           eyebrow: "Supervision",

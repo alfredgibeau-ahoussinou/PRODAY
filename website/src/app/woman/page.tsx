@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
-import { ROUTES } from "@/lib/routes";
+import { joueurGateHref } from "@/lib/joueurProfileStorage";
 
-/** @deprecated ProDay Woman fusionné dans Pôle Joueur. */
+/** @deprecated ProDay Woman → porte Joueur (genre joueuse pré-sélectionné). */
 export default function WomanRedirectPage() {
-  redirect(ROUTES.joueur);
+  redirect(joueurGateHref({ gender: "women" }));
 }

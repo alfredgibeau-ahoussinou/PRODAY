@@ -17,8 +17,10 @@ import type { SponsorOffer, ClubFundingGoal } from '../models/SponsorOffer';
 import type { CommunityReel } from '../models/CommunityReel';
 import type { ReelReport } from '../models/ReelReport';
 import type { SponsorQuoteRequest } from '../models/SponsorQuoteRequest';
+import type { StageOffer } from '../models/Stage';
 import {
   adminService,
+  type AdminTournament,
   type PlatformStats,
   type PlatformDailySnapshot,
   type TrafficTotals,
@@ -57,6 +59,8 @@ interface AdminDataContextValue {
   communityReels: CommunityReel[];
   reelReports: ReelReport[];
   sponsorQuoteRequests: SponsorQuoteRequest[];
+  stageOffers: StageOffer[];
+  tournaments: AdminTournament[];
   userDocCounts: Record<string, number>;
   refresh: () => Promise<void>;
 }
@@ -91,6 +95,8 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({
   const [communityReels, setCommunityReels] = useState<CommunityReel[]>([]);
   const [reelReports, setReelReports] = useState<ReelReport[]>([]);
   const [sponsorQuoteRequests, setSponsorQuoteRequests] = useState<SponsorQuoteRequest[]>([]);
+  const [stageOffers, setStageOffers] = useState<StageOffer[]>([]);
+  const [tournaments, setTournaments] = useState<AdminTournament[]>([]);
   const [userDocCounts, setUserDocCounts] = useState<Record<string, number>>({});
 
   const load = useCallback(async () => {
@@ -112,6 +118,8 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({
       quotes,
       trafficT,
       trafficD,
+      stages,
+      tourneys,
     ] = await Promise.all([
       adminService.getPlatformStats(),
       adminService.listAllUsers(),
@@ -130,6 +138,8 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({
       sponsorQuoteService.listForAdmin('pending', 30),
       adminService.getTrafficTotals(),
       adminService.listTrafficDaily(30),
+      adminService.listAllStageOffers(100),
+      adminService.listAllTournaments(100),
     ]);
     setStats(s);
     setDailySnapshots(snapshots);
@@ -148,6 +158,8 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({
     setCommunityReels(reels);
     setReelReports(reports);
     setSponsorQuoteRequests(quotes);
+    setStageOffers(stages);
+    setTournaments(tourneys);
     setLastRefreshedAt(new Date());
 
     const pendingReview = u.filter((x) => userNeedsAdminVerificationReview(x));
@@ -222,6 +234,8 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({
       communityReels,
       reelReports,
       sponsorQuoteRequests,
+      stageOffers,
+      tournaments,
       userDocCounts,
       refresh,
     }),
@@ -249,6 +263,8 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({
       communityReels,
       reelReports,
       sponsorQuoteRequests,
+      stageOffers,
+      tournaments,
       userDocCounts,
       refresh,
     ],

@@ -1,11 +1,12 @@
 import React, { useMemo } from 'react';
 import { useTranslation } from '../../context/LocaleContext';
-import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, Image, StyleSheet } from 'react-native';
 import type { User } from '../../models/User';
 import { userNeedsAdminVerificationReview } from '../../utils/adminUserVerification';
 import { Icon } from '../ui/Icon';
-import { useAdminStyles } from './adminStyles';
-import { spacing, radius } from '../../theme/designTokens';
+import { PressableSpring } from '../motion';
+import { useAdminStyles, adminChrome } from './adminStyles';
+import { spacing, radius, shadows } from '../../theme/designTokens';
 import type { AppColors } from '../../theme/universeTheme';
 import { getRoleLabel } from '../../screens/signup/signupFlowConfig';
 import { adminProductLineLabel } from '../../utils/adminProductLine';
@@ -60,8 +61,8 @@ export const AdminUserCard: React.FC<AdminUserCardProps> = ({
   const showGender = user.role === 'player' || user.profile?.gender != null;
 
   return (
-    <View style={styles.card}>
-      <View style={styles.accentStripe} />
+    <View style={[styles.card, showVerify && styles.cardPending]}>
+      <View style={[styles.accentStripe, showVerify && styles.accentStripeAlert]} />
       <View style={styles.body}>
         <View style={styles.headRow}>
           {user.avatar_url ? (
@@ -112,11 +113,14 @@ export const AdminUserCard: React.FC<AdminUserCardProps> = ({
                   </Text>
                 </View>
               ) : null}
-              {user.city ? (
-                <Text style={styles.city}>{user.city}</Text>
-              ) : null}
+              {user.city ? <Text style={styles.city}>{user.city}</Text> : null}
             </View>
           </View>
+          {onEdit ? (
+            <PressableSpring onPress={onEdit} style={styles.quickEdit} scaleTo={0.92} haptic>
+              <Icon name="settings" size={16} color={adminChrome.accentHot} />
+            </PressableSpring>
+          ) : null}
         </View>
 
         {user.verification_status !== 'NOT_REQUIRED' && (
@@ -144,16 +148,7 @@ export const AdminUserCard: React.FC<AdminUserCardProps> = ({
 
         <View style={styles.actions}>
           {onViewDocuments ? (
-            <AdminAction
-              icon="document"
-              label="Documents"
-              onPress={onViewDocuments}
-              styles={styles}
-              c={c}
-            />
-          ) : null}
-          {onEdit ? (
-            <AdminAction icon="settings" label="Modifier" onPress={onEdit} styles={styles} c={c} />
+            <AdminAction icon="document" label="Documents" onPress={onViewDocuments} styles={styles} c={c} />
           ) : null}
           {showVerify && onApprove && onReject ? (
             <>
@@ -206,7 +201,7 @@ const AdminAction: React.FC<{
   styles: CardStyles;
   c: AppColors;
 }> = ({ icon, label, onPress, primary, danger, disabled, styles, c }) => (
-  <TouchableOpacity
+  <PressableSpring
     style={[
       styles.actionBtn,
       primary && styles.actionPrimary,
@@ -214,13 +209,14 @@ const AdminAction: React.FC<{
       disabled && styles.actionDisabled,
     ]}
     onPress={onPress}
-    activeOpacity={0.85}
+    scaleTo={0.96}
+    haptic={!disabled}
     disabled={disabled}
   >
     <Icon
       name={icon}
       size={14}
-      color={primary || danger ? c.brandInverse : c.text}
+      color={primary || danger ? '#FFFFFF' : c.text}
     />
     <Text
       style={[
@@ -230,7 +226,7 @@ const AdminAction: React.FC<{
     >
       {label}
     </Text>
-  </TouchableOpacity>
+  </PressableSpring>
 );
 
 function createStyles(c: AppColors) {
@@ -238,37 +234,58 @@ function createStyles(c: AppColors) {
     card: {
       flexDirection: 'row',
       backgroundColor: c.surface,
-      borderRadius: radius.lg,
+      borderRadius: radius.xl,
       marginBottom: spacing.md,
       borderWidth: 1,
       borderColor: c.border,
       overflow: 'hidden',
+      ...shadows.card,
     },
-    accentStripe: { width: 4, backgroundColor: c.brand },
+    cardPending: {
+      borderColor: adminChrome.accentMuted,
+    },
+    accentStripe: { width: 4, backgroundColor: adminChrome.accent },
+    accentStripeAlert: { backgroundColor: c.warning },
     body: { flex: 1, padding: spacing.md },
     headRow: { flexDirection: 'row', gap: spacing.md, alignItems: 'center' },
-    avatar: { width: 52, height: 52, borderRadius: 26, borderWidth: 1, borderColor: c.brand },
+    avatar: {
+      width: 52,
+      height: 52,
+      borderRadius: 16,
+      borderWidth: 2,
+      borderColor: adminChrome.accentMuted,
+    },
     avatarPh: {
       width: 52,
       height: 52,
-      borderRadius: 26,
-      backgroundColor: c.accent,
+      borderRadius: 16,
+      backgroundColor: adminChrome.accent,
       alignItems: 'center',
       justifyContent: 'center',
-      borderWidth: 1,
-      borderColor: c.brand,
     },
-    avatarLetter: { color: c.brandInverse, fontSize: 22, fontWeight: '900' },
+    avatarLetter: { color: '#FFFFFF', fontSize: 22, fontWeight: '900' },
     headCopy: { flex: 1, minWidth: 0 },
-    name: { fontSize: 16, fontWeight: '900', color: c.text },
-    email: { fontSize: 12, color: c.textMuted, marginTop: 2 },
-    badgeRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: spacing.sm, marginTop: 6 },
-    roleBadge: { backgroundColor: c.accentSoft, paddingHorizontal: 8, paddingVertical: 2 },
+    name: { fontSize: 16, fontWeight: '800', color: c.text, letterSpacing: -0.2 },
+    email: { fontSize: 12, color: c.textMuted, marginTop: 2, fontWeight: '500' },
+    badgeRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      flexWrap: 'wrap',
+      gap: 6,
+      marginTop: 8,
+    },
+    roleBadge: {
+      backgroundColor: c.brandSoft,
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+      borderRadius: radius.pill,
+    },
     roleBadgeText: { fontSize: 10, fontWeight: '800', color: c.brand },
     lineBadge: {
       backgroundColor: c.surfaceMuted,
       paddingHorizontal: 8,
-      paddingVertical: 2,
+      paddingVertical: 3,
+      borderRadius: radius.pill,
       borderWidth: 1,
       borderColor: c.border,
     },
@@ -276,26 +293,33 @@ function createStyles(c: AppColors) {
     metaBadge: {
       backgroundColor: c.surfaceMuted,
       paddingHorizontal: 8,
-      paddingVertical: 2,
-      borderWidth: 1,
-      borderColor: c.border,
+      paddingVertical: 3,
+      borderRadius: radius.pill,
     },
     metaBadgeText: { fontSize: 10, fontWeight: '700', color: c.textSecondary },
-    sponsorBadge: { paddingHorizontal: 8, paddingVertical: 2 },
-    sponsorOk: { backgroundColor: c.accentSoft },
+    sponsorBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: radius.pill },
+    sponsorOk: { backgroundColor: c.brandSoft },
     sponsorWait: { backgroundColor: c.warningBg },
     sponsorBadgeText: { fontSize: 10, fontWeight: '800', color: c.text },
     city: { fontSize: 11, color: c.textSecondary, fontWeight: '600' },
+    quickEdit: {
+      width: 36,
+      height: 36,
+      borderRadius: 12,
+      backgroundColor: c.brandSoft,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
     statusRow: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 6,
       marginTop: spacing.sm,
       padding: spacing.sm,
-      borderRadius: radius.sm,
+      borderRadius: radius.md,
       backgroundColor: c.surfaceMuted,
     },
-    statusOk: { backgroundColor: c.accentSoft },
+    statusOk: { backgroundColor: c.brandSoft },
     statusPending: { backgroundColor: c.warningBg },
     statusBad: { backgroundColor: c.errorBg },
     statusText: { fontSize: 11, fontWeight: '700', color: c.textSecondary },
@@ -304,7 +328,7 @@ function createStyles(c: AppColors) {
       marginTop: spacing.sm,
       padding: spacing.sm,
       backgroundColor: c.warningBg,
-      borderRadius: radius.sm,
+      borderRadius: radius.md,
       borderWidth: 1,
       borderColor: c.border,
     },
@@ -321,18 +345,18 @@ function createStyles(c: AppColors) {
     actionBtn: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 4,
-      paddingHorizontal: spacing.sm,
-      paddingVertical: 8,
-      borderRadius: radius.sm,
+      gap: 5,
+      paddingHorizontal: 10,
+      paddingVertical: 9,
+      borderRadius: radius.md,
       borderWidth: 1,
       borderColor: c.border,
-      backgroundColor: c.background,
+      backgroundColor: c.surfaceMuted,
     },
-    actionPrimary: { backgroundColor: c.brand, borderColor: c.brand },
-    actionDanger: { backgroundColor: c.accent, borderColor: c.accent },
+    actionPrimary: { backgroundColor: adminChrome.accent, borderColor: adminChrome.accent },
+    actionDanger: { backgroundColor: c.error, borderColor: c.error },
     actionDisabled: { opacity: 0.5 },
     actionLabel: { fontSize: 11, fontWeight: '800', color: c.text },
-    actionLabelLight: { color: c.brandInverse },
+    actionLabelLight: { color: '#FFFFFF' },
   });
 }

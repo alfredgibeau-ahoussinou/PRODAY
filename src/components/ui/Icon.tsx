@@ -2,62 +2,9 @@ import React from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { FootIcon, FOOT_ICON_NAMES, type FootIconName } from './footIcons/FootIcon';
+import type { IconName } from './iconNames';
 
-export type IconName =
-  | 'home'
-  | 'search'
-  | 'chat'
-  | 'notifications'
-  | 'person'
-  | 'handshake'
-  | 'calendar'
-  | 'location'
-  | 'time'
-  | 'shirt'
-  | 'football'
-  | 'football-outline'
-  | 'walk'
-  | 'car'
-  | 'heart'
-  | 'heart-outline'
-  | 'mail'
-  | 'briefcase'
-  | 'bookmark'
-  | 'bookmark-outline'
-  | 'checkmark-circle'
-  | 'warning'
-  | 'shield'
-  | 'school'
-  | 'chevron-forward'
-  | 'chevron-down'
-  | 'chevron-up'
-  | 'menu'
-  | 'settings'
-  | 'add'
-  | 'close'
-  | 'play'
-  | 'tune'
-  | 'share'
-  | 'star'
-  | 'star-outline'
-  | 'image'
-  | 'people'
-  | 'business'
-  | 'trophy'
-  | 'star-four-points'
-  | 'lock'
-  | 'eye'
-  | 'eye-off'
-  | 'arrow-back'
-  | 'alert-circle'
-  | 'document'
-  | 'camera'
-  | 'videocam'
-  | 'volume-high'
-  | 'volume-mute'
-  | 'bag'
-  | 'globe'
-  | 'call';
+export type { IconName } from './iconNames';
 
 const FOOT_ALIAS: Partial<Record<IconName, FootIconName>> = {
   home: 'home',
@@ -133,6 +80,8 @@ const MAP: Record<IconName, keyof typeof Ionicons.glyphMap> = {
   bag: 'bag-outline',
   globe: 'globe-outline',
   call: 'call-outline',
+  'log-out': 'log-out-outline',
+  help: 'help-circle-outline',
 };
 
 const FILLED_MAP: Partial<Record<IconName, keyof typeof Ionicons.glyphMap>> = {

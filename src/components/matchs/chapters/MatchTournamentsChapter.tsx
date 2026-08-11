@@ -1,19 +1,23 @@
 import React, { useMemo, useState } from 'react';
-import { ScrollView, RefreshControl, View } from 'react-native';
+import { ScrollView, RefreshControl, View, StyleSheet } from 'react-native';
 import type { User } from '../../../models/User';
 import type { Tournament } from '../../../models/Tournament';
+import { MATCH_SITE } from '../../../content/matchPageIdentity';
 import { SearchBar } from '../../ui/SearchBar';
 import { MatchChapterIntro } from '../MatchChapterIntro';
 import { MatchTournamentCard } from '../MatchTournamentCard';
 import { SkeletonList } from '../../motion';
-import { ListEmptyPanel } from '../../ui/ListEmptyPanel';
-import { PressableSpring } from '../../motion';
 import { ProDayText } from '../../ui/ProDayText';
-import { Icon } from '../../ui/Icon';
 import { useAppTheme } from '../../../context/ProductLineContext';
 import { useTranslation } from '../../../context/LocaleContext';
-import { spacing, radius } from '../../../theme/designTokens';
+import { spacing } from '../../../theme/designTokens';
 import { MATCH_CHAPTER_PAD } from './matchChapterLayout';
+import {
+  MatchActionRow,
+  MatchEmptyState,
+  MatchFilterBar,
+  MatchKpiRow,
+} from '../matchCenterUi';
 
 interface MatchTournamentsChapterProps {
   profile: User | null;
@@ -57,7 +61,7 @@ export const MatchTournamentsChapter: React.FC<MatchTournamentsChapterProps> = (
 
   return (
     <ScrollView
-      contentContainerStyle={MATCH_CHAPTER_PAD}
+      contentContainerStyle={[MATCH_CHAPTER_PAD, styles.stack]}
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={c.accent} />
       }
@@ -66,49 +70,49 @@ export const MatchTournamentsChapter: React.FC<MatchTournamentsChapterProps> = (
       keyboardShouldPersistTaps="handled"
     >
       <MatchChapterIntro
+        kicker="Tournois"
         title={t('tournament.intro.title')}
         subtitle={t('tournament.intro.subtitle')}
       />
 
+      <MatchKpiRow
+        items={[
+          { label: 'Total', value: String(tournaments.length), tone: c.accent },
+          {
+            label: 'Liste',
+            value: String(filtered.length),
+            tone: MATCH_SITE.foreground,
+          },
+        ]}
+      />
+
       {canOrganize && onCreateTournament ? (
-        <PressableSpring
-          onPress={onCreateTournament}
-          scaleTo={0.98}
-          haptic
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: spacing.sm,
-            backgroundColor: c.brand,
-            borderRadius: radius.md,
-            paddingVertical: spacing.md,
-            marginBottom: spacing.md,
-          }}
-        >
-          <Icon name="add" size={18} color={c.brandInverse} />
-          <ProDayText variant="caption" inverse style={{ fontWeight: '800' }}>
-            {t('tournament.create.cta')}
-          </ProDayText>
-        </PressableSpring>
+        <MatchActionRow
+          primary={t('tournament.create.cta')}
+          onPrimary={onCreateTournament}
+        />
       ) : null}
 
-      <SearchBar
-        placeholder={t('tournament.search')}
-        value={search}
-        onChangeText={setSearch}
-      />
+      <MatchFilterBar>
+        <SearchBar
+          placeholder={t('tournament.search')}
+          value={search}
+          onChangeText={setSearch}
+        />
+      </MatchFilterBar>
 
       {loading ? (
         <SkeletonList count={3} variant="card" />
       ) : filtered.length === 0 ? (
-        <ListEmptyPanel
-          icon="trophy"
+        <MatchEmptyState
           title={t('tournament.empty.title')}
-          subtitle={t('tournament.empty.body')}
+          body={t('tournament.empty.body')}
         />
       ) : (
-        <View style={{ gap: spacing.sm }}>
+        <View style={styles.list}>
+          <ProDayText variant="caption" style={[styles.sectionKicker, { color: c.accent }]}>
+            Tournois · {filtered.length}
+          </ProDayText>
           {filtered.map((tournament) => {
             const registered = Boolean(
               myClubId &&
@@ -129,3 +133,15 @@ export const MatchTournamentsChapter: React.FC<MatchTournamentsChapterProps> = (
     </ScrollView>
   );
 };
+
+const styles = StyleSheet.create({
+  stack: { gap: spacing.md, paddingTop: spacing.sm },
+  list: { gap: spacing.xs },
+  sectionKicker: {
+    textTransform: 'uppercase',
+    letterSpacing: 1.8,
+    fontSize: 10,
+    fontWeight: '800',
+    marginBottom: 4,
+  },
+});

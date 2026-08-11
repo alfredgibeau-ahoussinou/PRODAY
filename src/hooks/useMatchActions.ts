@@ -29,39 +29,86 @@ export function useMatchActions(profile: User | null) {
       if (!requireAuth('Connectez-vous pour accepter ce match amical.') || !profile) return;
       const club = await getClubIdentity();
       if (!club) return;
-      if (match.requester_club_id === club.id) {
+
+      const isRequester = match.requester_club_id === club.id;
+      const acceptingCounter = match.status === 'COUNTERED' && isRequester;
+      if (isRequester && !acceptingCounter) {
         Alert.alert('Info', 'Vous ne pouvez pas accepter votre propre proposition.');
         return;
       }
+
       try {
         await friendlyMatchesService.acceptMatch(match.id, club.id, club.name);
 
+        const counter = match.counter_proposal;
+        const startsAt =
+          acceptingCounter && counter?.date ? counter.date : match.date;
+        const city =
+          acceptingCounter && counter?.city ? counter.city : match.city;
+        const timeLabel =
+          acceptingCounter && counter?.time_label
+            ? counter.time_label
+            : match.time_label;
         const categories = match.category ? [match.category] : undefined;
 
-        if (profile.profile.club_id) {
-          const accepterMembers = await usersService.listMembersByClubId(profile.profile.club_id);
+        const opponentForAccepter = acceptingCounter
+          ? match.opponent_club_name ?? club.name
+          : match.requester_club_name;
+        const opponentForRequester = acceptingCounter
+          ? match.requester_club_name
+          : match.opponent_club_name ?? club.name;
+
+        // Club qui valide (destinataire d’une invitation, ou demandeur sur une contre-proposition)
+        const accepterClubId = acceptingCounter
+          ? match.opponent_club_id ?? club.id
+          : profile.profile.club_id ?? club.id;
+        const accepterClubName = acceptingCounter
+          ? match.opponent_club_name ?? club.name
+          : club.name;
+
+        if (accepterClubId) {
+          const accepterMembers = await usersService.listMembersByClubId(accepterClubId);
           const filtered = filterMembersByCategory(accepterMembers, categories);
-          const inviteeUids = memberUidsExcluding(filtered, profile.uid);
-          await teamEventsService.createFriendlyConvocation({
-            matchId: match.id,
-            opponentName: match.requester_club_name,
-            organizerUid: profile.uid,
-            organizerName: profile.display_name,
-            clubId: profile.profile.club_id,
-            clubName: club.name,
-            startsAt: match.date,
-            city: match.city,
-            locationLabel: match.time_label,
-            inviteeUids,
-            categories,
-          });
+          const inviteeUids = memberUidsExcluding(
+            filtered,
+            acceptingCounter ? match.requester_uid : profile.uid,
+          );
+          const organizerUid = acceptingCounter
+            ? accepterMembers.find(
+                (m) =>
+                  m.role === 'coach' ||
+                  m.role === 'organizer' ||
+                  m.role === 'agent' ||
+                  m.role === 'club',
+              )?.uid ?? accepterMembers[0]?.uid
+            : profile.uid;
+          if (organizerUid && inviteeUids.length > 0) {
+            const organizer =
+              accepterMembers.find((m) => m.uid === organizerUid) ??
+              (await usersService.getPublicById(organizerUid));
+            await teamEventsService.createFriendlyConvocation({
+              matchId: match.id,
+              opponentName: acceptingCounter
+                ? match.requester_club_name
+                : opponentForAccepter,
+              organizerUid,
+              organizerName: organizer?.display_name ?? accepterClubName,
+              clubId: accepterClubId,
+              clubName: accepterClubName,
+              startsAt,
+              city,
+              locationLabel: timeLabel,
+              inviteeUids,
+              categories,
+            });
+          }
         }
 
         const requesterMembers = await usersService.listMembersByClubId(match.requester_club_id);
         const requesterFiltered = filterMembersByCategory(requesterMembers, categories);
         const requesterInvitees = memberUidsExcluding(
           requesterFiltered,
-          match.requester_uid
+          match.requester_uid,
         );
         const requesterOrganizerUid =
           match.requester_uid ??
@@ -70,7 +117,7 @@ export function useMatchActions(profile: User | null) {
               m.role === 'coach' ||
               m.role === 'organizer' ||
               m.role === 'agent' ||
-              m.role === 'club'
+              m.role === 'club',
           )?.uid ??
           requesterMembers[0]?.uid;
 
@@ -80,31 +127,32 @@ export function useMatchActions(profile: User | null) {
             (await usersService.getPublicById(requesterOrganizerUid));
           await teamEventsService.createFriendlyConvocation({
             matchId: match.id,
-            opponentName: match.opponent_club_name ?? club.name,
+            opponentName: acceptingCounter
+              ? match.opponent_club_name ?? club.name
+              : opponentForRequester,
             organizerUid: requesterOrganizerUid,
-            organizerName: requesterOrganizer?.display_name ?? match.requester_club_name,
+            organizerName:
+              requesterOrganizer?.display_name ?? match.requester_club_name,
             clubId: match.requester_club_id,
             clubName: match.requester_club_name,
-            startsAt: match.date,
-            city: match.city,
-            locationLabel: match.time_label,
+            startsAt,
+            city,
+            locationLabel: timeLabel,
             inviteeUids: requesterInvitees,
             categories,
           });
         }
 
         Alert.alert(
-          'Match accepté',
-          profile.profile.club_id
-            ? `Convocations créées pour les deux clubs. ${match.requester_club_name}.`
-            : `Vous affrontez ${match.requester_club_name}.`
+          'Match confirmé',
+          'Le match est créé dans les calendriers des deux clubs. Les joueurs peuvent recevoir la convocation.',
         );
         onDone?.();
       } catch (e) {
         Alert.alert('Erreur', e instanceof Error ? e.message : 'Action impossible.');
       }
     },
-    [profile, getClubIdentity, requireAuth]
+    [profile, getClubIdentity, requireAuth],
   );
 
   const cancelMatch = useCallback(
@@ -163,14 +211,94 @@ export function useMatchActions(profile: User | null) {
   );
 
   const canAccept = useCallback(
-    (match: FriendlyMatch) => match.status === 'OPEN',
-    []
+    (match: FriendlyMatch, clubId?: string | null) => {
+      if (!clubId) {
+        return match.status === 'OPEN';
+      }
+      if (match.requester_club_id === clubId) {
+        return match.status === 'COUNTERED';
+      }
+      if (match.status === 'INVITED') {
+        return !match.opponent_club_id || match.opponent_club_id === clubId;
+      }
+      return match.status === 'OPEN';
+    },
+    [],
+  );
+
+  const declineMatch = useCallback(
+    async (match: FriendlyMatch, onDone?: () => void) => {
+      if (!requireAuth('Connectez-vous pour répondre.') || !profile) return;
+      const club = await getClubIdentity();
+      if (!club) return;
+      Alert.alert('Refuser', 'Refuser cette proposition de match ?', [
+        { text: 'Annuler', style: 'cancel' },
+        {
+          text: 'Refuser',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await friendlyMatchesService.declineMatch(match.id, club.id);
+              onDone?.();
+            } catch (e) {
+              Alert.alert('Erreur', e instanceof Error ? e.message : 'Échec.');
+            }
+          },
+        },
+      ]);
+    },
+    [profile, getClubIdentity, requireAuth],
+  );
+
+  const counterPropose = useCallback(
+    async (
+      match: FriendlyMatch,
+      patch: {
+        date: Date;
+        time_label: string;
+        city: string;
+        message?: string;
+      },
+      onDone?: () => void,
+    ) => {
+      if (!requireAuth('Connectez-vous pour proposer une autre date.') || !profile) return;
+      const club = await getClubIdentity();
+      if (!club) return;
+      try {
+        await friendlyMatchesService.counterPropose({
+          matchId: match.id,
+          clubId: club.id,
+          clubName: club.name,
+          date: patch.date,
+          time_label: patch.time_label,
+          city: patch.city,
+          message: patch.message,
+        });
+        Alert.alert(
+          'Contre-proposition envoyée',
+          'Le club adverse pourra accepter ou refuser votre nouvelle proposition.',
+        );
+        onDone?.();
+      } catch (e) {
+        Alert.alert('Erreur', e instanceof Error ? e.message : 'Échec.');
+      }
+    },
+    [profile, getClubIdentity, requireAuth],
   );
 
   const isRequester = useCallback(
     (match: FriendlyMatch, clubId: string) => match.requester_club_id === clubId,
-    []
+    [],
   );
 
-  return { acceptMatch, cancelMatch, markPlayed, canAccept, isRequester, getClubIdentity };
+  return {
+    acceptMatch,
+    cancelMatch,
+    markPlayed,
+    declineMatch,
+    counterPropose,
+    canAccept,
+    isRequester,
+    getClubIdentity,
+  };
 }

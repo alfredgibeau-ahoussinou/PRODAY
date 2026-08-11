@@ -96,7 +96,9 @@ describe('subscriptionPlans — modèle cible', () => {
     expect(SUBSCRIPTION_PLANS.club_pro.label).toBe('Club Essentiel');
     expect(SUBSCRIPTION_PLANS.club_premium.label).toBe('Tout inclus');
     expect(SUBSCRIPTION_PLANS.club_premium.pricing.quoteOnly).toBe(true);
-    expect(formatClubOfferPrice(CLUB_OFFERS.club_premium)).toBe('Sur devis');
+    expect(formatClubOfferPrice(CLUB_OFFERS.club_premium)).toBe(
+      'Sur devis · À partir de 3 € / adhérent',
+    );
   });
 });
 

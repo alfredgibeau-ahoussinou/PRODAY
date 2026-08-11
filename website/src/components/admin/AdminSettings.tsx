@@ -56,7 +56,7 @@ export function AdminSettings({ checks }: { checks: AdminConfigCheck[] }) {
 
       <AdminPanel
         title="Campagne iOS"
-        description="Ouverture TestFlight prévue le 11 août 2026 à 18 h. Actions dans Liste d’attente."
+        description="Ouverture TestFlight reportée au 15 août 2026 à 18 h. Actions dans Liste d’attente."
       >
         <p className="text-xs text-white/45">
           Les boutons campagne (annonce, lancement, engagement) sont sur la page Bêta.

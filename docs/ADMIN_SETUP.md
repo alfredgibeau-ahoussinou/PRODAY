@@ -1,64 +1,79 @@
-# Console Admin ProDay
+# Console Admin ProDay — Football Operations Center
 
-## Compte administrateur
+## Modèle
 
-- Email plateforme : `proday.admin@gmail.com`
-- Le mot de passe **ne doit pas** être stocké dans le dépôt Git.
+L'interface admin est le **Football Operations Center (FOC)** — thème clair, sidebar rétractable,
+navigation par sections et feuilles. Les 5 modes HQ (`pilotage`, `decisions`, `gestion`,
+`abonnements`, `systeme`) sont conservés comme bridge interne.
 
-## 1. Clé service account (une fois)
+### Sections FOC (sidebar)
 
-1. [Firebase Console](https://console.firebase.google.com) → Paramètres projet → **Comptes de service**
-2. **Générer une nouvelle clé privée**
-3. Enregistrer le fichier sous `firebase/service-account.json` (déjà dans `.gitignore`)
+| Section | Contenu |
+|---------|---------|
+| **Tableau de bord** | Vue d'ensemble de la plateforme |
+| **Adhérents** | Joueurs, parents, coachs, éducateurs, dirigeants |
+| **Clubs & équipes** | Clubs, équipes, effectifs, saisons |
+| **Matchs** | Calendrier, résultats, invitations, feuilles de match |
+| **Compétitions** | Événements, tournois, plateaux, organisation, live |
+| **Recrutement** | Bassin, détections, mobilité, essais |
+| **Performance** | Stats, vidéo, analyse, entraînements, progression |
+| **Communication** | Notifications, messages, annonces |
+| **Finances** | Abonnements, paiements, revenus, commissions, sponsors |
+| **Caméras & vidéo** | Caméras, matchs filmés, vidéos |
+| **Paramètres** | Personnaliser l'espace, système plateforme |
 
-## 2. Créer / mettre à jour l’admin
+### Thème et layout
 
-Dans `.env` (local uniquement) :
+- **Thème clair** (`adminChrome.shell = #FFFFFF`) — `StatusBar style="dark"`
+- **Desktop** (≥ 900 px) : sidebar rétractable + colonne TopBar + contenu
+- **Mobile** : TopBar avec bouton menu → sidebar en overlay modal
+- Sidebar largeur : 268 px développée, 72 px réduite (`ADMIN_FOC_SIDEBAR_WIDTH/COLLAPSED`)
+
+### Personnalisation (`param_personnaliser`)
+
+L'écran **Personnaliser mon espace** permet :
+- Couleur principale (presets : ProDay `#006CFC`, Terrain, Nuit, Ambre, Rouge)
+- Accent terrain (verts pelouse)
+- Nom d'affichage dans la sidebar
+- Densité : Confortable / Compact
+- Masquer / afficher des sections de la sidebar
+- Réordonner les blocs du tableau de bord (Monter / Descendre)
+
+Préférences persistées en AsyncStorage (`proday_admin_foc_prefs_v1:{uid}`)
+via `loadAdminFocPreferences` / `saveAdminFocPreferences` (`src/services/adminPreferences.service.ts`).
+
+## Abonnements
+
+Depuis **Finances → Abonnements** (ou directement depuis Gestion → compte → Gérer l'abonnement) :
+
+- Voir l'état effectif **Gratuit** / **Payant**
+- Catalogue des formules (inclus gratuit vs payant)
+- Passer en payant / offrir un essai / prolonger / changer de formule
+- Résilier en fin de période ou couper immédiatement
+- Historique des achats (store + cadeaux admin)
+
+Les écritures vont sur `users/{uid}` (`subscription_*`) + journal d'audit.
+
+## Auth
+
+- Droit Firebase `admin: true`
+- Liste d'e-mails autorisés → écran d'accès seulement
+- Site `/admin` = code fondateur (bêta / trafic), surface séparée
+
+## Setup
 
 ```bash
 ADMIN_SETUP_EMAIL=proday.admin@gmail.com
-ADMIN_SETUP_PASSWORD=votre-mot-de-passe-securise
-```
-
-Puis :
-
-```bash
+ADMIN_SETUP_PASSWORD=…
 npm run admin:setup
 ```
 
-Le script :
-- crée ou met à jour le compte **Authentication**
-- applique le custom claim `{ admin: true }`
-- crée le profil Firestore `users/{uid}`
-
-**Important :** déconnectez-vous puis reconnectez-vous dans l’app pour recharger le token admin.
-
-## 3. Déployer règles + Functions
+Puis reconnecte-toi dans l'app pour recharger le jeton.
 
 ```bash
 firebase deploy --only firestore:rules,storage,functions
 ```
 
-Sans **Blaze**, les Functions ne se déploient pas : la console admin peut quand même **lister / modifier / supprimer** dans Firestore, mais **créer** ou **supprimer** un compte Auth complet nécessite les callables `adminCreateUser` et `adminDeleteUser`.
-
-## 4. Accès dans l’app
-
-1. Connexion avec le compte admin (`proday.admin@gmail.com` + mot de passe défini dans `.env`)
-2. L’app ouvre automatiquement l’**espace Admin** (claim `admin: true` requis)
-3. Onglets : **Pilotage**, **Utilisateurs**, **Modération**, **Clubs**, **Système**
-4. **Prévisualiser l’app utilisateur** : onglet Système → mode prévisualisation (bandeau en haut)
-
-## Mot de passe
-
-Le mot de passe n’est **pas** stocké dans Git. Définissez-le uniquement dans `.env` :
-
-```bash
-ADMIN_SETUP_PASSWORD=votre-mot-de-passe-securise
-```
-
-Puis `npm run admin:setup` pour créer ou réinitialiser le compte Auth.
-
 ## Sécurité
 
-- Les droits réels passent par `request.auth.token.admin == true` (Firestore + Storage + Functions).
-- Ne partagez pas le mot de passe admin en production ; changez-le après les tests initiaux.
+`request.auth.token.admin == true` sur Firestore / Storage / Functions.

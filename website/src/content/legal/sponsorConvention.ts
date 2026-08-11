@@ -1,15 +1,15 @@
-/** Modèle convention partenariat sponsor — PDF / docs. */
+/** Modèle convention partenariat sponsor : PDF / docs. */
 import type { LegalSectionContent } from './fr';
 
 export const SPONSOR_CONVENTION_META = {
   title: 'Convention de partenariat sponsor',
-  subtitle: 'Modèle indicatif — à faire valider par un conseil juridique avant signature',
+  subtitle: 'Modèle indicatif : à faire valider par un conseil juridique avant signature',
   updatedAt: '19 juin 2026',
   contact: 'proday.admin@gmail.com',
 } as const;
 
 export const SPONSOR_CONVENTION_PARTIES = [
-  'ProDay (la Plateforme), contact : proday.admin@gmail.com — site : https://proday75.fr',
+  'ProDay (la Plateforme), contact : proday.admin@gmail.com : site : https://proday75.fr',
   'Le Partenaire : [Raison sociale, SIRET, adresse, représentant légal]',
 ];
 

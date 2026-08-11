@@ -1,15 +1,14 @@
 import React, { useMemo } from 'react';
 import { ScrollView, StyleSheet, Platform, View } from 'react-native';
 import type { MatchChapterId } from '../../content/matchChapters';
+import { MATCH_SITE } from '../../content/matchPageIdentity';
 import { useTranslation } from '../../context/LocaleContext';
 import { getMatchChapters } from '../../i18n/localizedChapters';
 import { PressableSpring } from '../motion';
 import { prodayHaptics } from '../../utils/prodayHaptics';
 import { ProDayText } from '../ui/ProDayText';
-import { Icon } from '../ui/Icon';
 import { useAppTheme } from '../../context/ProductLineContext';
-import { spacing, radius } from '../../theme/designTokens';
-import { fontFamily } from '../../theme/typography';
+import { spacing } from '../../theme/designTokens';
 
 interface MatchChapterRailProps {
   active: MatchChapterId;
@@ -17,20 +16,33 @@ interface MatchChapterRailProps {
   amicauxBadge?: number;
   convocationsBadge?: number;
   centreBadge?: number | string;
+  /** Labels stages type jeu vidéo (pôle Joueur). */
+  gameMode?: boolean;
 }
 
-/** Navigation Matchs — pilules horizontales avec icônes. */
+const GAME_STAGE_LABELS: Partial<Record<MatchChapterId, string>> = {
+  calendrier: 'FIXTURE',
+  centre: 'LIVE',
+  convocations: 'CALLOUT',
+  stats: 'STATS',
+  amicaux: 'FRIENDLY',
+  tournois: 'CUP',
+  competitions: 'LEAGUE',
+};
+
+/** Navigation Match Center — onglets terminal (hairline, pas de pills). */
 export const MatchChapterRail: React.FC<MatchChapterRailProps> = ({
   active,
   onSelect,
   amicauxBadge,
   convocationsBadge,
   centreBadge,
+  gameMode = false,
 }) => {
   const { colors } = useAppTheme();
   const { t } = useTranslation();
   const chapters = useMemo(() => getMatchChapters(t), [t]);
-  const styles = useMemo(() => createStyles(colors), [colors]);
+  const styles = useMemo(() => createStyles(colors.accent, gameMode), [colors.accent, gameMode]);
 
   return (
     <ScrollView
@@ -38,6 +50,7 @@ export const MatchChapterRail: React.FC<MatchChapterRailProps> = ({
       showsHorizontalScrollIndicator={false}
       contentContainerStyle={styles.scroll}
       style={styles.wrap}
+      bounces={false}
     >
       {chapters.map((ch) => {
         const on = ch.id === active;
@@ -49,64 +62,42 @@ export const MatchChapterRail: React.FC<MatchChapterRailProps> = ({
               : ch.id === 'centre' && centreBadge
                 ? centreBadge
                 : null;
+        const label = gameMode ? GAME_STAGE_LABELS[ch.id] ?? ch.shortLabel : ch.shortLabel;
 
         return (
           <PressableSpring
             key={ch.id}
-            style={[
-              styles.pill,
-              {
-                backgroundColor: on ? colors.accent : colors.surface,
-                borderColor: on ? colors.accent : colors.border,
-              },
-            ]}
+            style={[styles.tab, on && styles.tabOn]}
             onPress={() => {
               if (!on) {
                 prodayHaptics.tabSwitch();
                 onSelect(ch.id);
               }
             }}
-            scaleTo={0.96}
+            scaleTo={0.97}
           >
-            <View
-              style={[
-                styles.iconWrap,
-                { backgroundColor: on ? 'rgba(255,255,255,0.16)' : colors.accentSoft },
-              ]}
-            >
-              <Icon
-                name={ch.icon}
-                size={15}
-                color={on ? colors.brandInverse : colors.accent}
-                variant={on ? 'filled' : 'outline'}
-              />
-            </View>
             <ProDayText
               variant="caption"
-              inverse={on}
-              style={[styles.label, !on && { color: colors.text }]}
+              style={[styles.label, on ? styles.labelOn : styles.labelOff]}
             >
-              {ch.shortLabel}
+              {label}
             </ProDayText>
             {badge ? (
               <View
                 style={[
                   styles.badge,
-                  { backgroundColor: on ? colors.brandInverse : colors.accent },
+                  {
+                    backgroundColor:
+                      ch.id === 'centre' ? MATCH_SITE.live : on ? colors.accent : MATCH_SITE.elevated,
+                  },
                 ]}
               >
-                <ProDayText
-                  variant="caption"
-                  style={{
-                    color: on ? colors.accent : colors.brandInverse,
-                    fontWeight: '900',
-                    fontSize: 10,
-                  }}
-                >
+                <ProDayText variant="caption" style={styles.badgeText}>
                   {typeof badge === 'number' && badge > 9 ? '9+' : badge}
                 </ProDayText>
               </View>
             ) : null}
+            {on ? <View style={[styles.underline, { backgroundColor: colors.accent }]} /> : null}
           </PressableSpring>
         );
       })}
@@ -114,47 +105,67 @@ export const MatchChapterRail: React.FC<MatchChapterRailProps> = ({
   );
 };
 
-function createStyles(c: { surface: string }) {
+function createStyles(accent: string, gameMode = false) {
   return StyleSheet.create({
     wrap: {
       flexGrow: 0,
-      backgroundColor: c.surface,
+      flexShrink: 0,
+      maxHeight: gameMode ? 52 : 48,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: MATCH_SITE.border,
+      backgroundColor: 'transparent',
     },
     scroll: {
       paddingHorizontal: spacing.lg,
-      paddingTop: spacing.sm,
-      paddingBottom: spacing.md,
-      gap: spacing.sm,
+      paddingTop: spacing.xs,
+      paddingBottom: 0,
+      gap: gameMode ? 6 : 2,
+      alignItems: 'center',
     },
-    pill: {
+    tab: {
+      position: 'relative',
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 8,
-      paddingVertical: 8,
+      gap: 6,
+      paddingVertical: 10,
       paddingHorizontal: spacing.md,
-      borderRadius: radius.pill,
-      borderWidth: StyleSheet.hairlineWidth,
+      borderBottomWidth: gameMode ? 0 : 2,
+      borderBottomColor: 'transparent',
+      borderRadius: gameMode ? 10 : 0,
+      borderWidth: gameMode ? StyleSheet.hairlineWidth : 0,
+      borderColor: gameMode ? 'rgba(255,255,255,0.1)' : 'transparent',
     },
-    iconWrap: {
-      width: 28,
-      height: 28,
-      borderRadius: 14,
-      alignItems: 'center',
-      justifyContent: 'center',
+    tabOn: {
+      backgroundColor: gameMode ? `${accent}28` : MATCH_SITE.soft,
     },
     label: {
-      fontFamily: fontFamily.extrabold,
       fontWeight: '800',
-      fontSize: 13,
+      fontSize: gameMode ? 10 : 12,
+      letterSpacing: gameMode ? 1.1 : 0.3,
       ...Platform.select({ android: { includeFontPadding: false } }),
     },
+    labelOn: { color: accent },
+    labelOff: { color: MATCH_SITE.muted },
     badge: {
       minWidth: 18,
-      height: 18,
-      borderRadius: 9,
+      height: 16,
+      paddingHorizontal: 4,
       alignItems: 'center',
       justifyContent: 'center',
-      paddingHorizontal: 4,
+      borderRadius: 2,
+    },
+    badgeText: {
+      color: '#fff',
+      fontWeight: '900',
+      fontSize: 9,
+      letterSpacing: 0.4,
+    },
+    underline: {
+      position: 'absolute',
+      left: spacing.md,
+      right: spacing.md,
+      bottom: 0,
+      height: 2,
     },
   });
 }

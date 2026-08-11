@@ -6,6 +6,15 @@ import { sendFcmToUser } from './messaging';
 import { createPaymentCheckoutSession, stripeWebhook } from './stripePayments';
 import { createShopCheckoutSession } from './shopPayments';
 import { createTournamentCheckoutSession } from './tournamentPayments';
+import {
+  createCoachSessionCheckoutSession,
+  onCoachSessionBookingUpdated,
+} from './coachSessionPayments';
+import { onStaffNotificationCreated } from './staffPush';
+import {
+  createSubscriptionCheckoutSession,
+  createBillingPortalSession,
+} from './subscriptionPayments';
 import { onRecruitmentPostCreated } from './mercatoAlerts';
 import { onPlayerAvailabilityChanged } from './availabilityAlerts';
 import { runMistralDocumentVerification, verifyOnboardingDocumentEphemeral } from './mistralVerification';
@@ -42,6 +51,8 @@ import {
 } from './sponsorGeoPush';
 import { onTeamEventUpdated, syncTeamEventActivities } from './teamEventActivitySync';
 import { analyzeActivityHighlight } from './analyzeActivityHighlight';
+import { clubAssistantChat } from './clubAssistantChat';
+import { playerTacticsChat } from './playerTacticsChat';
 import { sendAuthPasswordResetEmail, sendAuthVerificationEmail } from './authCustomEmails';
 import {
   onMinorUserCreatedProvisionParent,
@@ -55,8 +66,13 @@ import { getVisioJoinUrl } from './getVisioJoinUrl';
 import { incrementSubscriptionUsage } from './subscriptionUsage';
 import { sendSponsorClubMessage } from './sendSponsorClubMessage';
 
+export { onCompetitionFixtureValidated, syncExternalCompetitions } from './competitionEngine';
+export { getSensitiveDocumentUrl, onMedicalDocumentWrite } from './privacyDocuments';
 export { createPaymentCheckoutSession, stripeWebhook, createShopCheckoutSession };
 export { createTournamentCheckoutSession };
+export { createCoachSessionCheckoutSession, onCoachSessionBookingUpdated };
+export { onStaffNotificationCreated };
+export { createSubscriptionCheckoutSession, createBillingPortalSession };
 export { sendAuthVerificationEmail, sendAuthPasswordResetEmail };
 export { onMinorUserCreatedProvisionParent, provisionParentAccount };
 export { incrementSubscriptionUsage };
@@ -66,6 +82,10 @@ export { onMedicalAppointmentCreated, onMedicalAppointmentUpdated };
 export { getVisioJoinUrl };
 export { onTeamEventUpdated, syncTeamEventActivities };
 export { analyzeActivityHighlight };
+export { clubAssistantChat };
+export { playerTacticsChat };
+export { smartTacticsMatchPrep } from './smartTacticsMatchPrep';
+export { onSmartTacticsVideoJobCreated } from './smartTacticsVideoJobs';
 export { activateStoreSubscription };
 export { revenueCatWebhook };
 export { claimAgentLaunchSeat };
@@ -209,7 +229,7 @@ export const scheduledEventReminders = functions.pubsub
   });
 
 /**
- * Campagne bêta iOS : lancement TestFlight (11 août 2026 18 h Paris)
+ * Campagne bêta iOS : lancement TestFlight (15 août 2026 18 h Paris)
  * + emails d'engagement tous les 2 jours après ouverture.
  *
  * Déployer : firebase deploy --only functions:scheduledBetaIosCampaign
@@ -574,7 +594,19 @@ export const adminCreateUser = functions.https.onCall(async (data, context) => {
   if (!context.auth?.token?.admin) {
     throw new functions.https.HttpsError('permission-denied', 'Admin only');
   }
-  const { email, password, display_name, role, city, product_line, medical_specialty } = data as {
+  const {
+    email,
+    password,
+    display_name,
+    role,
+    city,
+    product_line,
+    medical_specialty,
+    gender,
+    birth_date,
+    age,
+    app_space,
+  } = data as {
     email: string;
     password: string;
     display_name: string;
@@ -582,6 +614,10 @@ export const adminCreateUser = functions.https.onCall(async (data, context) => {
     city?: string;
     product_line?: string;
     medical_specialty?: string;
+    gender?: string;
+    birth_date?: string;
+    age?: number;
+    app_space?: string;
   };
   if (!email?.trim() || !password || password.length < 6) {
     throw new functions.https.HttpsError('invalid-argument', 'email et password requis');
@@ -596,12 +632,14 @@ export const adminCreateUser = functions.https.onCall(async (data, context) => {
     'sponsor',
     'physio',
     'supporter',
+    'parent',
   ];
   if (!allowed.includes(role)) {
     throw new functions.https.HttpsError('invalid-argument', 'role invalide');
   }
 
   const resolveLine = (): string => {
+    if (role === 'parent') return 'parent';
     if (role === 'sponsor') return 'sponsor';
     if (role === 'physio') return 'sante';
     if (role === 'supporter') return 'supporter';
@@ -614,6 +652,7 @@ export const adminCreateUser = functions.https.onCall(async (data, context) => {
         'pro_staff',
         'sponsor',
         'sante',
+        'parent',
       ];
       if (allowedLines.includes(product_line)) {
         if (role === 'club') return 'pro_club';
@@ -649,6 +688,29 @@ export const adminCreateUser = functions.https.onCall(async (data, context) => {
       ? medical_specialty.trim()
       : null;
 
+  const profile: Record<string, unknown> = {};
+  if (specialty) {
+    profile.medical_specialty = specialty;
+    profile.job_title = specialty;
+  }
+  if (role === 'player') {
+    if (gender === 'men' || gender === 'women') {
+      profile.gender = gender;
+    }
+    if (typeof birth_date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(birth_date.trim())) {
+      profile.birth_date = birth_date.trim();
+    }
+    if (typeof age === 'number' && Number.isFinite(age) && age >= 5 && age <= 80) {
+      profile.age = Math.floor(age);
+    }
+  }
+
+  const allowedSpaces = ['under_u13', 'boys', 'men', 'girls', 'women'];
+  const space =
+    role === 'player' && typeof app_space === 'string' && allowedSpaces.includes(app_space)
+      ? app_space
+      : null;
+
   await db.doc(`users/${userRecord.uid}`).set({
     display_name: display_name.trim(),
     email: email.trim().toLowerCase(),
@@ -659,9 +721,8 @@ export const adminCreateUser = functions.https.onCall(async (data, context) => {
     verification_status: requiresVerification ? 'PENDING' : 'NOT_REQUIRED',
     sponsor_approved: role === 'sponsor' ? false : null,
     is_active: true,
-    profile: specialty
-      ? { medical_specialty: specialty, job_title: specialty }
-      : {},
+    ...(space ? { app_space: space } : {}),
+    profile,
     created_at: admin.firestore.FieldValue.serverTimestamp(),
     updated_at: admin.firestore.FieldValue.serverTimestamp(),
   });

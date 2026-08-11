@@ -110,7 +110,7 @@ export function BetaStatutContent() {
         ) : (
           <div className="mt-8 rounded-2xl border border-white/12 bg-white/[0.03] p-5 text-sm text-white/55">
             Pas de détail d’inscription sur cet appareil. Si tu viens de t’inscrire,
-            repars depuis le formulaire — sinon vérifie ta boîte mail.
+            repars depuis le formulaire : sinon vérifie ta boîte mail.
           </div>
         )}
 

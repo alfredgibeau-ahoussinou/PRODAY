@@ -89,7 +89,7 @@ export const ProfileIdentityHeader: React.FC<ProfileIdentityHeaderProps> = ({
             size={avatarSize}
           />
           <View style={styles.compactCopy}>
-            <ProDayText variant="section" numberOfLines={2} adjustsFontSizeToFit minimumFontScale={0.8} style={styles.compactName}>
+            <ProDayText variant="section" numberOfLines={2} style={styles.compactName}>
               {profile.display_name}
             </ProDayText>
             <ProDayText variant="caption" muted numberOfLines={1}>
@@ -127,7 +127,7 @@ export const ProfileIdentityHeader: React.FC<ProfileIdentityHeaderProps> = ({
           <StatChip label="Visibilité" value={String(pulse.score)} colors={c} />
           <StatChip
             label="Plan"
-            value={subscriptionTier === 'pro' ? 'Pro' : 'Free'}
+            value={subscriptionTier === 'pro' ? 'Pro' : 'Gratuit'}
             colors={c}
             accent={subscriptionTier === 'pro'}
           />
@@ -185,8 +185,6 @@ export const ProfileIdentityHeader: React.FC<ProfileIdentityHeaderProps> = ({
               <ProDayText
                 variant="title"
                 numberOfLines={2}
-                adjustsFontSizeToFit
-                minimumFontScale={0.75}
                 style={styles.heroName}
               >
                 {profile.display_name}
@@ -218,7 +216,7 @@ export const ProfileIdentityHeader: React.FC<ProfileIdentityHeaderProps> = ({
             <View style={[styles.metricDivider, { backgroundColor: c.border }]} />
             <MetricCell
               label="Plan"
-              value={subscriptionTier === 'pro' ? 'Pro' : 'Free'}
+              value={subscriptionTier === 'pro' ? 'Pro' : 'Gratuit'}
               colors={c}
               accent={subscriptionTier === 'pro'}
             />

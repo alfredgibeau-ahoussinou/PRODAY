@@ -3,10 +3,13 @@ import { useTranslation } from '../../../context/LocaleContext';
 import { useAdminData } from '../../../context/AdminDataContext';
 import { adminService, type AdminTeam } from '../../../services/admin.service';
 import { AdminPageScaffold } from '../../../components/admin/AdminPageScaffold';
+import { AdminPageHero } from '../../../components/admin/AdminPageHero';
 import { AdminEntityCard } from '../../../components/admin/AdminEntityCard';
 import { AdminSectionHeader } from '../../../components/admin/AdminSectionHeader';
 import { AdminEmptyState } from '../../../components/admin/AdminEmptyState';
 import { AdminFilterChips } from '../../../components/admin/AdminFilterChips';
+import { AdminKpiStrip } from '../../../components/admin/AdminKpiStrip';
+import { AdminSearchField } from '../../../components/admin/AdminSearchField';
 import { adminConfirmDelete } from '../../../utils/adminConfirm';
 
 type ClubsSegment = 'clubs' | 'teams' | 'announcements';
@@ -17,12 +20,20 @@ const SEGMENTS: { id: ClubsSegment; label: string }[] = [
   { id: 'announcements', label: 'Annonces' },
 ];
 
-export const AdminClubsPage: React.FC = () => {
+export const AdminClubsPage: React.FC<{ initialQuery?: string }> = ({ initialQuery }) => {
   const { t } = useTranslation();
   const { loading, clubs, announcements, refresh } = useAdminData();
   const [segment, setSegment] = useState<ClubsSegment>('clubs');
   const [teams, setTeams] = useState<AdminTeam[]>([]);
   const [teamsLoading, setTeamsLoading] = useState(false);
+  const [search, setSearch] = useState(initialQuery ?? '');
+
+  useEffect(() => {
+    if (initialQuery != null && initialQuery.length > 0) {
+      setSearch(initialQuery);
+      setSegment('clubs');
+    }
+  }, [initialQuery]);
 
   const loadTeams = useCallback(async () => {
     setTeamsLoading(true);
@@ -37,17 +48,77 @@ export const AdminClubsPage: React.FC = () => {
     if (segment === 'teams') void loadTeams();
   }, [segment, loadTeams]);
 
+  const verifiedClubs = useMemo(() => clubs.filter((c) => c.verified).length, [clubs]);
+  const filteredClubs = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return clubs;
+    return clubs.filter(
+      (c) => c.name.toLowerCase().includes(q) || c.city.toLowerCase().includes(q),
+    );
+  }, [clubs, search]);
+
   return (
     <AdminPageScaffold loading={loading}>
+      <AdminPageHero
+        kicker="STRUCTURES"
+        title="Clubs"
+        subtitle={`${clubs.length} clubs · ${verifiedClubs} vérifiés`}
+        actions={[
+          { label: 'Clubs', icon: 'business', onPress: () => setSegment('clubs') },
+          { label: 'Équipes', icon: 'people', variant: 'ghost', onPress: () => setSegment('teams') },
+        ]}
+      />
+
+      <AdminKpiStrip
+        items={[
+          {
+            key: 'clubs',
+            label: 'Clubs',
+            value: clubs.length,
+            icon: 'business',
+            onPress: () => setSegment('clubs'),
+          },
+          {
+            key: 'verified',
+            label: 'Vérifiés',
+            value: verifiedClubs,
+            icon: 'star-four-points',
+            onPress: () => setSegment('clubs'),
+          },
+          {
+            key: 'teams',
+            label: 'Équipes',
+            value: teams.length,
+            icon: 'people',
+            onPress: () => setSegment('teams'),
+          },
+          {
+            key: 'ann',
+            label: 'Annonces',
+            value: announcements.length,
+            icon: 'document',
+            onPress: () => setSegment('announcements'),
+          },
+        ]}
+      />
+
       <AdminFilterChips options={SEGMENTS} value={segment} onChange={setSegment} />
+
+      {segment === 'clubs' ? (
+        <AdminSearchField
+          value={search}
+          onChangeText={setSearch}
+          placeholder="Filtrer clubs par nom ou ville…"
+        />
+      ) : null}
 
       {segment === 'clubs' && (
         <>
-          <AdminSectionHeader title="Clubs" count={clubs.length} />
-          {clubs.length === 0 ? (
+          <AdminSectionHeader title="Clubs" count={filteredClubs.length} />
+          {filteredClubs.length === 0 ? (
             <AdminEmptyState icon="business" title={t('admin.clubs.empty')} subtitle={t('admin.clubs.emptySub')} />
           ) : (
-            clubs.map((club) => (
+            filteredClubs.map((club) => (
               <AdminEntityCard
                 key={club.id}
                 icon="business"

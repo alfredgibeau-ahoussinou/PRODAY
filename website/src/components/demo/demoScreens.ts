@@ -9,7 +9,7 @@ export type DemoScreenMock = {
 
 const SHARED: Partial<Record<MainTabId, DemoScreenMock>> = {
   shop: {
-    title: "Shop",
+    title: "Boutique",
     subtitle: "Équipement et merch ProDay. Catalogue lié à votre pôle.",
     focus: [
       { title: "Pack entraînement", body: "Maillot, short et accessoires (démo)." },
@@ -47,8 +47,11 @@ const BY_POLE: Record<DemoPoleId, Partial<Record<MainTabId, DemoScreenMock>>> = 
     },
     matchs: {
       title: "Matchs",
-      subtitle: "Calendrier, RSVP et scores.",
-      focus: [{ title: "Cette semaine", body: "Entraînement mar. · match sam." }],
+      subtitle: "Invitations club, RSVP et scores.",
+      focus: [
+        { title: "Invitation reçue", body: "FC Nord vous propose un amical U15 · sam. 15h." },
+        { title: "Cette semaine", body: "Entraînement mar. · match sam." },
+      ],
     },
     reels: {
       title: "Reels",
@@ -152,7 +155,7 @@ const BY_POLE: Record<DemoPoleId, Partial<Record<MainTabId, DemoScreenMock>>> = 
     },
     recrutement: {
       title: "Recrutement",
-      subtitle: "Pipeline et annonces.",
+      subtitle: "Suivi et annonces.",
       focus: [{ title: "Poste milieu", body: "Annonce ouverte. Démo." }],
     },
     matchs: {
@@ -179,10 +182,10 @@ const BY_POLE: Record<DemoPoleId, Partial<Record<MainTabId, DemoScreenMock>>> = 
   coach: {
     home: {
       title: "Cockpit coach",
-      subtitle: "Smart Tactics, effectif et matchs.",
+      subtitle: "Tactique IA, effectif et matchs.",
       focus: [
-        { title: "Smart Tactics", body: "Composition 4-3-3 · consignes banc." },
-        { title: "État de forme", body: "3 joueurs à surveiller." },
+        { title: "Tactique IA", body: "Composition 4-3-3 · consignes banc." },
+        { title: "Analyse de forme", body: "3 joueurs à surveiller." },
       ],
     },
     matchs: {

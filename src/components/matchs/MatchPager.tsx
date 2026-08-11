@@ -8,12 +8,13 @@ import {
 } from 'react-native';
 import Animated, { useAnimatedScrollHandler, useSharedValue } from 'react-native-reanimated';
 import type { MatchChapterId } from '../../content/matchChapters';
+import { MATCH_SITE } from '../../content/matchPageIdentity';
 import { MatchChapterRail } from './MatchChapterRail';
 import { CarouselDot } from '../discover/CarouselDot';
 import { ProDayText } from '../ui/ProDayText';
 import { PagerPage } from '../motion/PagerPage';
 import { useAppTheme } from '../../context/ProductLineContext';
-import { spacing, radius } from '../../theme/designTokens';
+import { spacing } from '../../theme/designTokens';
 
 export interface MatchPage {
   id: MatchChapterId;
@@ -27,6 +28,7 @@ interface MatchPagerProps {
   amicauxBadge?: number;
   convocationsBadge?: number;
   centreBadge?: number | string;
+  gameMode?: boolean;
 }
 
 export const MatchPager: React.FC<MatchPagerProps> = ({
@@ -36,9 +38,10 @@ export const MatchPager: React.FC<MatchPagerProps> = ({
   amicauxBadge,
   convocationsBadge,
   centreBadge,
+  gameMode = false,
 }) => {
   const { colors } = useAppTheme();
-  const styles = useMemo(() => createStyles(colors), [colors]);
+  const styles = useMemo(() => createStyles(colors.accent), [colors.accent]);
   const { width: pageWidth } = useWindowDimensions();
   const scrollRef = useRef<Animated.ScrollView>(null);
   const scrollX = useSharedValue(0);
@@ -132,6 +135,7 @@ export const MatchPager: React.FC<MatchPagerProps> = ({
         amicauxBadge={amicauxBadge}
         convocationsBadge={convocationsBadge}
         centreBadge={centreBadge}
+        gameMode={gameMode}
       />
 
       <Animated.ScrollView
@@ -168,7 +172,7 @@ export const MatchPager: React.FC<MatchPagerProps> = ({
             />
           ))}
         </View>
-        <ProDayText variant="caption" muted style={styles.hint}>
+        <ProDayText variant="caption" style={styles.hint}>
           Glissez · {pageNum}/{pages.length}
         </ProDayText>
       </View>
@@ -176,22 +180,25 @@ export const MatchPager: React.FC<MatchPagerProps> = ({
   );
 };
 
-function createStyles(c: { surfaceMuted: string; border: string }) {
+function createStyles(_accent: string) {
   return StyleSheet.create({
     root: { flex: 1, minHeight: 0 },
     pager: { flex: 1, minHeight: 0 },
     footer: {
       alignItems: 'center',
       paddingVertical: spacing.sm,
-      gap: 4,
+      gap: 2,
       marginHorizontal: spacing.lg,
       marginBottom: spacing.xs,
-      borderRadius: radius.lg,
-      backgroundColor: c.surfaceMuted,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: c.border,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: MATCH_SITE.border,
     },
     dots: { flexDirection: 'row', gap: 6, alignItems: 'center' },
-    hint: { fontSize: 10, fontWeight: '600' },
+    hint: {
+      fontSize: 10,
+      fontWeight: '600',
+      color: MATCH_SITE.muted,
+      letterSpacing: 0.4,
+    },
   });
 }

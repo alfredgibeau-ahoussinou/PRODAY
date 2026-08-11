@@ -50,6 +50,8 @@ export async function registerPushTokenIfPossible(uid: string): Promise<void> {
       await profileService.updateFcmToken(uid, token);
     }
   } catch (e) {
-    console.warn('[pushToken] registration skipped:', e);
+    if (__DEV__) {
+      console.warn('[pushToken] registration skipped:', e);
+    }
   }
 }

@@ -1,5 +1,5 @@
 /**
- * Textes juridiques ProDay — source unique (app, site, docs).
+ * Textes juridiques ProDay : source unique (app, site, docs).
  * URLs stores : /confidentialite et /cgu sur le site vitrine.
  */
 export const LEGAL_META = {
@@ -34,10 +34,10 @@ export const PRIVACY_SECTIONS: LegalSectionContent[] = [
     bullets: [
       'Compte : adresse e-mail, nom affiché, rôle (joueur, coach, recruteur, agent, organisateur, kinésithérapeute, partenaire, parent/tuteur), ville, photo de profil, langue.',
       'Profil sportif : poste, catégorie d’âge, niveau, statistiques, CV joueur, badges, historique d’activité (matchs, candidatures, Visibilité).',
-      'Vérification : pièces d’identité, licences, diplômes ou justificatifs selon le rôle — analyse automatisée possible pour accélérer la validation.',
+      'Vérification : pièces d’identité, licences, diplômes ou justificatifs selon le rôle : analyse automatisée possible pour accélérer la validation.',
       'Contenus : annonces Mercato, messages, publications fil d’actualité, réponses à la question de la semaine, photos et vidéos (réels).',
       'Événements équipe : convocations, présences, compositions, stats live, covoiturage (lieux de rendez-vous).',
-      'Santé (pôle dédié) : informations que vous choisissez de partager avec un professionnel (rendez-vous, échanges) — pas de dossier médical hospitalier.',
+      'Santé (pôle dédié) : informations que vous choisissez de partager avec un professionnel (rendez-vous, échanges) : pas de dossier médical hospitalier.',
       'Technique : identifiant Firebase, jetons de notification push (FCM / Expo), logs techniques, type d’appareil, version de l’app.',
       'Géolocalisation : uniquement si vous l’autorisez (covoiturage, suggestions locales, campagnes partenaires géo-ciblées).',
       'Paiements : identifiants de transaction et abonnements via Apple App Store ou Google Play (nous ne stockons pas vos coordonnées bancaires complètes).',

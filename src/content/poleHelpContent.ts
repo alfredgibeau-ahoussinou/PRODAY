@@ -18,7 +18,7 @@ export type PoleHelpPoleKey =
 
 export type PoleHelpNavigateAction =
   | { kind: 'tab'; tab: MainTabId }
-  | { kind: 'matchs'; homeTab?: 'season' | 'matches' | 'convocations' | 'tournois' }
+  | { kind: 'matchs'; homeTab?: 'season' | 'matches' | 'convocations' | 'tournois' | 'competitions' }
   | { kind: 'mercato'; view?: MercatoDeepLink }
   | { kind: 'profile'; view?: ProfileDeepLink }
   | { kind: 'dashboard'; view: DashboardDeepLink }
@@ -113,7 +113,7 @@ const AMATEUR_HELP: PoleHelpContent = {
         id: 'barre-bas',
         question: 'À quoi sert la barre du bas ?',
         answer:
-          'Elle regroupe tes onglets principaux : équipe, matchs, club, messages, shop et profil. Les autres modules (Reels, Santé…) sont dans le menu overflow.',
+          'Elle regroupe tes onglets principaux : équipe, matchs, club, messages, shop et profil. Les autres modules (Reels, covoiturage…) sont dans le menu overflow.',
         navigate: { kind: 'tab', tab: 'home' },
         navigateLabel: 'Voir l’accueil',
       },
@@ -427,7 +427,7 @@ const SANTE_HELP: PoleHelpContent = {
       { id: 'navigation', question: 'Comment naviguer dans l’espace santé ?', answer: 'Accueil pour le cockpit cabinet, Agenda pour le planning, Demandes pour les sollicitations, Vidéos pour vos contenus éducatifs, Messages et Cabinet pour le reste.', navigate: { kind: 'tab', tab: 'home' }, navigateLabel: 'Retour accueil' },
       { id: 'onglets-sante', question: 'À quoi servent les onglets santé ?', answer: 'Accueil (cockpit), Agenda (RDV), Demandes, Vidéos (conseils & prévention), Messages sécurisés et Cabinet (profil pro).', navigate: { kind: 'tab', tab: 'home' }, navigateLabel: 'Voir l’accueil' },
       { id: 'videos-sante', question: 'Où publier mes vidéos santé ?', answer: 'Onglet Vidéos : clips éducatifs publics (prévention, étirements). Ce n’est pas la téléconsultation médicale. Celle-ci passe par un partenaire conforme (Cal.com / Whereby), pas Zoom.', navigate: { kind: 'tab', tab: 'reels' }, navigateLabel: 'Ouvrir Vidéos' },
-      { id: 'teleconsult-hds', question: 'Comment marche la téléconsultation ?', answer: 'Les sportifs réservent depuis l’annuaire Santé. La téléconsultation (15 ou 30 min) ouvre une salle Daily privée dans l’app : caméra, micro, partage d’écran et chat. L’honoraire du praticien s’applique selon son tarif. Inclus dans l’offre Cabinet Pro. Jamais Zoom pour des données de santé.', navigate: { kind: 'tab', tab: 'matchs' }, navigateLabel: 'Voir mon agenda' },
+      { id: 'teleconsult-hds', question: 'Comment marche la téléconsultation ?', answer: 'La téléconsultation (15 ou 30 min) ouvre une salle Daily privée dans l’app : caméra, micro, partage d’écran et chat. L’honoraire du praticien s’applique selon son tarif. Inclus dans l’offre Cabinet Pro. Jamais Zoom pour des données de santé.', navigate: { kind: 'tab', tab: 'matchs' }, navigateLabel: 'Voir mon agenda' },
       { id: 'recherche-rapide', question: 'Comment retrouver une info rapidement ?', answer: 'Utilise la recherche patient depuis l’accueil ou filtre ton agenda par date pour accéder vite au bon dossier.', navigate: { kind: 'tab', tab: 'home' }, navigateLabel: 'Ouvrir l’accueil' },
     ]),
     ...withCategory('profil', [
@@ -444,7 +444,7 @@ const SANTE_HELP: PoleHelpContent = {
     ...withCategory('mercato', [
       { id: 'recrutement-medical', question: 'Comment être visible auprès des clubs ?', answer: 'Complète ton profil praticien : spécialité, zone et certifications visibles dans l’annuaire santé ProDay.', navigate: { kind: 'profile' }, navigateLabel: 'Compléter mon profil' },
       { id: 'partenariat-club', question: 'Comment devenir praticien référent d’un club ?', answer: 'Contacte le club via Messages ou demande la mise en relation via proday.admin@gmail.com.', navigate: { kind: 'tab', tab: 'messages' }, navigateLabel: 'Contacter un club' },
-      { id: 'annuaire-sante', question: 'Où apparaît mon profil dans l’annuaire ?', answer: 'Les joueurs et clubs peuvent te trouver via l’annuaire santé une fois ton profil praticien complété et validé.', navigate: { kind: 'profile' }, navigateLabel: 'Voir mon profil' },
+      { id: 'annuaire-sante', question: 'Où apparaît mon profil dans l’annuaire ?', answer: 'Les clubs partenaires peuvent te trouver via l’annuaire santé une fois ton profil praticien complété et validé. Les comptes joueur n’ont plus d’accès à cet annuaire.', navigate: { kind: 'profile' }, navigateLabel: 'Voir mon profil' },
     ]),
     ...withCategory('messages', [
       { id: 'messages', question: 'Où est la messagerie ?', answer: 'L’onglet Messages regroupe tes échanges avec joueurs, staff et autres praticiens. Les notifications t’alertent des nouveaux messages.', navigate: { kind: 'tab', tab: 'messages' }, navigateLabel: 'Ouvrir Messages' },
@@ -452,9 +452,9 @@ const SANTE_HELP: PoleHelpContent = {
       { id: 'message-urgent', question: 'Comment recevoir les messages urgents ?', answer: 'Active les notifications push et la priorité « messages urgents » dans Profil > Paramètres.', navigate: { kind: 'profile' }, navigateLabel: 'Alertes urgentes' },
     ]),
     ...withCategory('club', [
-      { id: 'patients-club', question: 'Comment voir les patients d’un club ?', answer: 'Depuis l’accueil, filtre par club ou équipe pour accéder aux dossiers des joueurs rattachés.', navigate: { kind: 'tab', tab: 'home' }, navigateLabel: 'Liste patients' },
+      { id: 'patients-club', question: 'Comment voir les patients d’un club ?', answer: 'Tu ne vois que les sportifs avec qui tu as un rendez-vous (praticien traitant). Les clubs n’ouvrent pas l’accès médical : seul le consentement patient compte.', navigate: { kind: 'tab', tab: 'home' }, navigateLabel: 'Liste patients' },
       { id: 'staff-club', question: 'Comment contacter le staff médical d’un club ?', answer: 'Utilise Messages pour échanger avec le staff ou les autres praticiens du club partenaire.', navigate: { kind: 'tab', tab: 'messages' }, navigateLabel: 'Messagerie staff' },
-      { id: 'autorisations-club', question: 'Comment gérer les autorisations club ?', answer: 'Dans chaque fiche patient, vérifie les droits accordés par le joueur et le club pour partager les dossiers.', navigate: { kind: 'tab', tab: 'home' }, navigateLabel: 'Fiches patients' },
+      { id: 'autorisations-club', question: 'Comment gérer les autorisations club ?', answer: 'Clubs, coachs et recruteurs n’accèdent pas aux données médicales. Seul le consentement patient (et le parent si activé) compte, journalisé dans le dossier.', navigate: { kind: 'tab', tab: 'home' }, navigateLabel: 'Fiches patients' },
     ]),
     ...withCategory('stats', [
       { id: 'stats', question: 'Où voir mes statistiques de suivi ?', answer: 'L’accueil Santé résume consultations du mois, patients actifs et rappels en attente pour piloter ton activité.', navigate: { kind: 'tab', tab: 'home' }, navigateLabel: 'Ouvrir l’accueil' },
@@ -470,7 +470,7 @@ const SANTE_HELP: PoleHelpContent = {
       { id: 'patients', question: 'Comment retrouver un patient ?', answer: 'Depuis l’accueil, accède à la liste de tes patients suivis et à leur historique de suivi. Utilise la recherche si tu as beaucoup de dossiers.', navigate: { kind: 'tab', tab: 'home' }, navigateLabel: 'Voir mes patients' },
       { id: 'disponibilites', question: 'Comment gérer mes disponibilités ?', answer: 'Depuis l’agenda ou ton profil, définis tes créneaux ouverts à la prise de rendez-vous et tes indisponibilités récurrentes.', navigate: { kind: 'tab', tab: 'home' }, navigateLabel: 'Ouvrir l’agenda' },
       { id: 'documents', question: 'Où déposer des documents médicaux ?', answer: 'Dans la fiche patient, tu peux joindre comptes rendus, ordonnances ou certificats selon les droits accordés par le joueur.', navigate: { kind: 'tab', tab: 'home' }, navigateLabel: 'Voir mes patients' },
-      { id: 'confidentialite', question: 'Comment protéger les données patients ?', answer: 'Les dossiers respectent le consentement du joueur. Vérifie les autorisations dans chaque fiche et les paramètres de confidentialité.', navigate: { kind: 'profile' }, navigateLabel: 'Voir la confidentialité' },
+      { id: 'confidentialite', question: 'Comment protéger les données patients ?', answer: 'Secret médical : accès limité au patient, au praticien traitant, et au parent si le patient active parent_can_access_medical. Chaque accès est journalisé. Les clubs / coachs / agents n’ont pas accès sans grant explicite.', navigate: { kind: 'profile' }, navigateLabel: 'Voir la confidentialité' },
     ]),
   ],
 };
@@ -535,55 +535,268 @@ const PRO_PLAYER_HELP: PoleHelpContent = {
 
 const PRO_CLUB_HELP: PoleHelpContent = {
   poleKey: 'pro_club',
-  title: 'Aide Pro Club',
-  bubbleTeaser: 'Une question sur votre club ?',
-  welcome: 'Bonjour ! Gère ton club sereinement : structure, recrutement et calendrier.',
+  title: 'Aide Pôle Club',
+  bubbleTeaser: 'Besoin d’aide sur votre club ?',
+  welcome:
+    'Bonjour ! Menu dossiers à gauche (Accueil, Organisation, Sport, Communication, Ressources). L’Assistant IA et ce chatbot vous guident selon votre formule.',
   entries: [
     ...withCategory('navigation', [
-      { id: 'navigation', question: 'Comment naviguer dans l’espace pro club ?', answer: 'Structure pour l’organisation, Recrutement pour le Mercato, Calendrier pour les matchs, Communication pour les messages, Vitrine pour ta présentation.', navigate: { kind: 'tab', tab: 'home' }, navigateLabel: 'Ouvrir Structure' },
-      { id: 'onglets-club', question: 'À quoi servent les onglets club ?', answer: 'Chaque onglet couvre un volet : équipes (Structure), annonces (Recrutement), planning (Calendrier), échanges (Communication) et image (Vitrine).', navigate: { kind: 'tab', tab: 'home' }, navigateLabel: 'Vue d’ensemble' },
-      { id: 'dashboard-club', question: 'Où voir le tableau de bord club ?', answer: 'L’accueil Structure résume effectifs, prochains matchs, candidatures Mercato et alertes staff.', navigate: { kind: 'tab', tab: 'home' }, navigateLabel: 'Tableau de bord' },
+      {
+        id: 'navigation',
+        question: 'Comment naviguer dans le Pôle Club ?',
+        answer:
+          'Sidebar type Finder : Accueil (Aujourd’hui, Assistant IA, Terrain), Organisation (Structure, Vivier, Pipeline), Sport (Calendrier, Invitations, Tournois), Communication, Ressources (Offres, Covoiturage, Vidéo…). Sur mobile, ouvrez le menu hamburger.',
+        navigate: { kind: 'tab', tab: 'home' },
+        navigateLabel: 'Ouvrir Aujourd’hui',
+      },
+      {
+        id: 'assistant-ia',
+        question: 'Où est l’Assistant IA et le chatbot ?',
+        answer:
+          'Accueil > Assistant IA : briefing, suggestions selon votre formule, et bouton pour ouvrir ce chatbot. La bulle d’aide reste aussi disponible en bas de l’écran.',
+        navigate: { kind: 'tab', tab: 'home' },
+        navigateLabel: 'Accueil Club',
+      },
+      {
+        id: 'formules',
+        question: 'Quelles formules Club existent ?',
+        answer:
+          'Amateur (essentiels), Essentiel (+ compétitions / admin), Tout inclus (IA, vidéo BYO, coachs inclus), Pro + Veo (Tout inclus + option caméra). Ressources > Offres & formule pour comparer.',
+        navigate: { kind: 'tab', tab: 'home' },
+        navigateLabel: 'Voir le cockpit',
+      },
+      {
+        id: 'modules-verrouilles',
+        question: 'Pourquoi un module est-il verrouillé ?',
+        answer:
+          'Le cadenas indique un module hors formule (ex. Tournois dès Essentiel, Vidéo dès Tout inclus). Ouvrez-le pour l’upsell, ou allez dans Offres & formule.',
+        navigate: { kind: 'tab', tab: 'home' },
+        navigateLabel: 'Aujourd’hui',
+      },
     ]),
     ...withCategory('profil', [
-      { id: 'profil', question: 'Comment mettre à jour la vitrine club ?', answer: 'Onglet Vitrine : logo, présentation, palmarès et informations visibles par les joueurs et partenaires.', navigate: { kind: 'profile' }, navigateLabel: 'Ouvrir la vitrine' },
-      { id: 'logo-club', question: 'Comment changer le logo du club ?', answer: 'Vitrine > Identité visuelle : importe un nouveau logo et mets à jour les couleurs officielles.', navigate: { kind: 'profile' }, navigateLabel: 'Identité club' },
-      { id: 'compte-club', question: 'Comment gérer le compte administrateur ?', answer: 'Vitrine > Paramètres : admins, rôles staff et accès aux sections sensibles du club.', navigate: { kind: 'profile' }, navigateLabel: 'Admins club' },
+      {
+        id: 'profil',
+        question: 'Comment mettre à jour la vitrine club ?',
+        answer:
+          'Communication > Vitrine : logo, présentation, galerie et annonces visibles par joueurs et partenaires.',
+        navigate: { kind: 'profile' },
+        navigateLabel: 'Ouvrir la vitrine',
+      },
+      {
+        id: 'logo-club',
+        question: 'Comment changer le logo du club ?',
+        answer: 'Vitrine > Identité / galerie : importez un nouveau logo et mettez à jour les visuels.',
+        navigate: { kind: 'profile' },
+        navigateLabel: 'Identité club',
+      },
+      {
+        id: 'compte-club',
+        question: 'Comment gérer le compte administrateur ?',
+        answer:
+          'Vitrine et Structure : admins, rôles staff et accès. Les droits sensibles suivent votre formule Club.',
+        navigate: { kind: 'profile' },
+        navigateLabel: 'Admins club',
+      },
     ]),
     ...withCategory('matchs', [
-      { id: 'calendrier', question: 'Où est le calendrier du club ?', answer: 'L’onglet Calendrier regroupe matchs, entraînements, tournois et convocations de toutes tes équipes.', navigate: { kind: 'matchs', homeTab: 'season' }, navigateLabel: 'Ouvrir le calendrier' },
-      { id: 'convocations', question: 'Comment envoyer des convocations ?', answer: 'Depuis Calendrier, sélectionne un match ou entraînement et envoie la convocation à l’effectif. Les réponses arrivent en temps réel.', navigate: { kind: 'matchs', homeTab: 'convocations' }, navigateLabel: 'Gérer les convocations' },
-      { id: 'tournois', question: 'Comment organiser un tournoi ?', answer: 'Calendrier > Tournois : crée un événement, ouvre les inscriptions et publie le programme aux équipes participantes.', navigate: { kind: 'matchs', homeTab: 'tournois' }, navigateLabel: 'Créer un tournoi' },
-      { id: 'entrainements', question: 'Comment planifier les entraînements ?', answer: 'Calendrier > Créer : ajoute séances récurrentes ou ponctuelles et convoque l’effectif concerné.', navigate: { kind: 'matchs', homeTab: 'season' }, navigateLabel: 'Planifier séances' },
+      {
+        id: 'calendrier',
+        question: 'Où est le calendrier du club ?',
+        answer:
+          'Sport > Calendrier : matchs, entraînements, convocations. Invitations et Tournois sont des dossiers séparés.',
+        navigate: { kind: 'matchs', homeTab: 'season' },
+        navigateLabel: 'Ouvrir le calendrier',
+      },
+      {
+        id: 'convocations',
+        question: 'Comment envoyer des convocations ?',
+        answer:
+          'Depuis Calendrier, ouvrez un match / entraînement et envoyez la convocation. Inclus dès Amateur.',
+        navigate: { kind: 'matchs', homeTab: 'convocations' },
+        navigateLabel: 'Gérer les convocations',
+      },
+      {
+        id: 'tournois',
+        question: 'Comment organiser un tournoi ?',
+        answer:
+          'Sport > Tournois & Live (dès Essentiel) : créez l’événement, poules, QR et live. Sur Amateur, le module reste verrouillé avec upsell.',
+        navigate: { kind: 'matchs', homeTab: 'tournois' },
+        navigateLabel: 'Créer un tournoi',
+      },
+      {
+        id: 'invitations',
+        question: 'Comment inviter un autre club à un match ?',
+        answer:
+          'Sport > Invitations : proposez ou organisez un match club ↔ club, puis suivez les réponses.',
+        navigate: { kind: 'matchs', homeTab: 'season' },
+        navigateLabel: 'Invitations',
+      },
     ]),
     ...withCategory('mercato', [
-      { id: 'recrutement', question: 'Comment recruter des joueurs ou du staff ?', answer: 'L’onglet Recrutement permet de publier des annonces, suivre les candidatures et contacter des profils.', navigate: { kind: 'mercato', view: 'home' }, navigateLabel: 'Ouvrir Recrutement' },
-      { id: 'publier-annonce', question: 'Comment publier une annonce recrutement ?', answer: 'Recrutement > Publier : décris le poste, le profil recherché et la zone. L’annonce est visible des joueurs correspondants.', navigate: { kind: 'mercato', view: 'home' }, navigateLabel: 'Publier une annonce' },
-      { id: 'candidatures-recues', question: 'Où voir les candidatures reçues ?', answer: 'Recrutement > Mes annonces : consulte les profils intéressés, filtre par poste et contacte les candidats.', navigate: { kind: 'mercato', view: 'home' }, navigateLabel: 'Candidatures reçues' },
+      {
+        id: 'bourse-interne',
+        question: 'Comment recruter un joueur manquant dans mon club ?',
+        answer:
+          'Organisation > Vivier / Bourse : déclarez le poste, scannez équipe B / réserve, proposez une montée. Ensuite seulement Pipeline (Mercato externe).',
+        navigate: { kind: 'tab', tab: 'home' },
+        navigateLabel: 'Ouvrir le vivier',
+      },
+      {
+        id: 'recrutement',
+        question: 'Comment recruter hors club ?',
+        answer:
+          'Après la bourse interne, Organisation > Pipeline recrutement : Observé → Intégré, annonces et candidatures.',
+        navigate: { kind: 'mercato', view: 'home' },
+        navigateLabel: 'Ouvrir le pipeline',
+      },
+      {
+        id: 'publier-annonce',
+        question: 'Comment publier une annonce recrutement ?',
+        answer:
+          'Pipeline > Publier / Annonces : poste, profil, zone. Visible des joueurs correspondants.',
+        navigate: { kind: 'mercato', view: 'home' },
+        navigateLabel: 'Publier une annonce',
+      },
+      {
+        id: 'candidatures-recues',
+        question: 'Où voir les candidatures reçues ?',
+        answer: 'Pipeline > Mes annonces : profils, filtres et contact.',
+        navigate: { kind: 'mercato', view: 'home' },
+        navigateLabel: 'Candidatures reçues',
+      },
     ]),
     ...withCategory('messages', [
-      { id: 'communication', question: 'Comment communiquer avec mon effectif ?', answer: 'Utilise l’onglet Communication pour envoyer des messages groupés ou individuels à tes joueurs et staff.', navigate: { kind: 'tab', tab: 'messages' }, navigateLabel: 'Ouvrir Communication' },
-      { id: 'notifications', question: 'Comment régler les alertes club ?', answer: 'Vitrine > Paramètres : candidatures Mercato, messages staff et rappels calendrier pour ton organisation.', navigate: { kind: 'profile' }, navigateLabel: 'Ouvrir les paramètres' },
-      { id: 'message-groupe', question: 'Comment envoyer un message à toute une équipe ?', answer: 'Communication > Nouveau : sélectionne une équipe et rédige ton message groupé.', navigate: { kind: 'tab', tab: 'messages' }, navigateLabel: 'Message groupe' },
+      {
+        id: 'communication',
+        question: 'Comment communiquer avec mon effectif ?',
+        answer:
+          'Communication > Messages : échanges individuels ou d’équipe avec joueurs et staff.',
+        navigate: { kind: 'tab', tab: 'messages' },
+        navigateLabel: 'Ouvrir Messages',
+      },
+      {
+        id: 'notifications',
+        question: 'Comment régler les alertes club ?',
+        answer: 'Vitrine > Paramètres : candidatures, messages staff et rappels calendrier.',
+        navigate: { kind: 'profile' },
+        navigateLabel: 'Ouvrir les paramètres',
+      },
+      {
+        id: 'message-groupe',
+        question: 'Comment envoyer un message à toute une équipe ?',
+        answer: 'Messages > Nouveau : sélectionnez une équipe et rédigez le message groupé.',
+        navigate: { kind: 'tab', tab: 'messages' },
+        navigateLabel: 'Message groupe',
+      },
     ]),
     ...withCategory('club', [
-      { id: 'structure', question: 'Où gérer la structure du club ?', answer: 'L’accueil Structure centralise équipes, staff, documents et vue d’ensemble de ton organisation.', navigate: { kind: 'tab', tab: 'home' }, navigateLabel: 'Ouvrir Structure' },
-      { id: 'effectif', question: 'Où gérer mon effectif ?', answer: 'Depuis Structure, accède aux listes par équipe, transferts internes et statuts des joueurs (blessure, prêt, etc.).', navigate: { kind: 'tab', tab: 'home' }, navigateLabel: 'Mon effectif' },
-      { id: 'documents', question: 'Où stocker les documents du club ?', answer: 'Structure propose un espace documents (statuts, licences, contrats) accessible au staff autorisé.', navigate: { kind: 'tab', tab: 'home' }, navigateLabel: 'Documents club' },
+      {
+        id: 'structure',
+        question: 'Où gérer la structure du club ?',
+        answer:
+          'Organisation > Structure : arbre des catégories, coachs, validation des adhésions.',
+        navigate: { kind: 'tab', tab: 'home' },
+        navigateLabel: 'Ouvrir Structure',
+      },
+      {
+        id: 'terrain',
+        question: 'À quoi sert le Terrain ?',
+        answer:
+          'Accueil > Terrain : cockpit « six commandes » (équipes, sport, bourse, etc.) aligné sur le site Pro Club.',
+        navigate: { kind: 'tab', tab: 'home' },
+        navigateLabel: 'Cockpit',
+      },
+      {
+        id: 'effectif',
+        question: 'Où gérer mon effectif ?',
+        answer:
+          'Structure pour les listes par équipe ; Vivier pour les besoins internes avant Mercato.',
+        navigate: { kind: 'tab', tab: 'home' },
+        navigateLabel: 'Mon effectif',
+      },
+      {
+        id: 'video',
+        question: 'Où gérer la vidéo / les caméras ?',
+        answer:
+          'Ressources > Vidéo & caméras (Tout inclus / Pro + Veo). Sur formules inférieures, le dossier est verrouillé avec devis.',
+        navigate: { kind: 'tab', tab: 'home' },
+        navigateLabel: 'Ressources',
+      },
     ]),
     ...withCategory('stats', [
-      { id: 'stats', question: 'Où voir les stats de mes équipes ?', answer: 'Calendrier > Saison ou Matchs : stats collectives, feuilles de match et indicateurs par équipe quand disponibles.', navigate: { kind: 'matchs', homeTab: 'season' }, navigateLabel: 'Voir les stats' },
-      { id: 'feuilles-match', question: 'Comment consulter les feuilles de match ?', answer: 'Calendrier > Matchs passés : accède aux feuilles, compositions et stats individuelles par rencontre.', navigate: { kind: 'matchs', homeTab: 'matches' }, navigateLabel: 'Feuilles de match' },
-      { id: 'bilan-saison', question: 'Où voir le bilan de saison ?', answer: 'Structure ou Calendrier > Saison : synthèse des résultats, buts et classements par équipe.', navigate: { kind: 'matchs', homeTab: 'season' }, navigateLabel: 'Bilan saison' },
+      {
+        id: 'stats',
+        question: 'Où voir les stats de mes équipes ?',
+        answer:
+          'Calendrier > Saison ou Matchs : stats collectives et feuilles quand disponibles.',
+        navigate: { kind: 'matchs', homeTab: 'season' },
+        navigateLabel: 'Voir les stats',
+      },
+      {
+        id: 'feuilles-match',
+        question: 'Comment consulter les feuilles de match ?',
+        answer: 'Calendrier > Matchs passés : feuilles, compositions et stats.',
+        navigate: { kind: 'matchs', homeTab: 'matches' },
+        navigateLabel: 'Feuilles de match',
+      },
+      {
+        id: 'bilan-saison',
+        question: 'Où voir le bilan de saison ?',
+        answer: 'Calendrier > Saison : résultats et classements par équipe.',
+        navigate: { kind: 'matchs', homeTab: 'season' },
+        navigateLabel: 'Bilan saison',
+      },
     ]),
     ...withCategory('paiement', [
-      { id: 'paiement', question: 'Où gérer l’abonnement club ?', answer: 'Facturation, sièges staff et options premium sont dans Vitrine > Paramètres ou contacte proday.admin@gmail.com.', navigate: { kind: 'profile' }, navigateLabel: 'Voir l’abonnement' },
-      { id: 'partenaires', question: 'Comment mettre en avant mes partenaires ?', answer: 'La vitrine club et la boutique ProDay permettent d’afficher logos partenaires et offres liées à ton club.', navigate: { kind: 'profile' }, navigateLabel: 'Modifier la vitrine' },
+      {
+        id: 'paiement',
+        question: 'Où gérer l’abonnement club ?',
+        answer:
+          'Ressources > Offres & formule pour comparer et demander un devis. Facturation aussi via Vitrine / contact proday.admin@gmail.com.',
+        navigate: { kind: 'profile' },
+        navigateLabel: 'Voir l’abonnement',
+      },
+      {
+        id: 'partenaires',
+        question: 'Comment mettre en avant mes partenaires ?',
+        answer:
+          'Ressources > Sponsors (dès Essentiel) et Vitrine pour logos / offres partenaires.',
+        navigate: { kind: 'profile' },
+        navigateLabel: 'Modifier la vitrine',
+      },
     ]),
     ...withCategory('pole', [
-      { id: 'equipes-multiples', question: 'Comment gérer plusieurs équipes ?', answer: 'Structure > Équipes : crée ou modifie tes catégories (U19, réserve, pro…) et assigne staff et joueurs.', navigate: { kind: 'tab', tab: 'home' }, navigateLabel: 'Mes équipes' },
-      { id: 'staff-roles', question: 'Comment attribuer des rôles au staff ?', answer: 'Structure > Staff : invite des membres et définis leurs droits (convocations, Mercato, documents).', navigate: { kind: 'tab', tab: 'home' }, navigateLabel: 'Gérer le staff' },
-      { id: 'licences', question: 'Où suivre les licences joueurs ?', answer: 'Structure > Effectif : consulte le statut licence et les documents obligatoires par joueur.', navigate: { kind: 'tab', tab: 'home' }, navigateLabel: 'Licences' },
-      { id: 'partenariat-proday', question: 'Comment contacter ProDay pour le club ?', answer: 'Écris à proday.admin@gmail.com ou utilise Vitrine > Aide pour toute demande institutionnelle.', navigate: { kind: 'profile' }, navigateLabel: 'Aide club' },
+      {
+        id: 'equipes-multiples',
+        question: 'Comment gérer plusieurs équipes ?',
+        answer: 'Structure > Gérer équipes & coachs : créez U13 → Seniors et assignez le staff.',
+        navigate: { kind: 'tab', tab: 'home' },
+        navigateLabel: 'Mes équipes',
+      },
+      {
+        id: 'staff-roles',
+        question: 'Comment attribuer des rôles au staff ?',
+        answer:
+          'Structure : invitez et affectez les coachs. Les droits avancés suivent Essentiel / Tout inclus.',
+        navigate: { kind: 'tab', tab: 'home' },
+        navigateLabel: 'Gérer le staff',
+      },
+      {
+        id: 'licences',
+        question: 'Où suivre les licences joueurs ?',
+        answer: 'Structure > Effectif / adhésions : statut et documents par joueur.',
+        navigate: { kind: 'tab', tab: 'home' },
+        navigateLabel: 'Licences',
+      },
+      {
+        id: 'partenariat-proday',
+        question: 'Comment contacter ProDay pour le club ?',
+        answer:
+          'Assistant IA > chatbot, ou proday.admin@gmail.com pour devis Tout inclus / Pro + Veo.',
+        navigate: { kind: 'profile' },
+        navigateLabel: 'Aide club',
+      },
     ]),
   ],
 };
@@ -796,9 +1009,9 @@ const SPONSOR_HELP: PoleHelpContent = {
     ...withCategory('pole', [
       {
         id: 'diff-staff',
-        question: 'En quoi Sponsor diffère de Pro Staff ?',
+        question: 'En quoi Sponsor diffère du Pôle Coach ?',
         answer:
-          'Sponsor est pour marques et partenaires (offres, ROI, clubs). Pro Staff sert coaches, agents et recruteurs (Mercato, mandats).',
+          'Sponsor est pour marques et partenaires. Le Pôle Coach porte Tactique IA et l’effectif ; agent / recruteur restent des rôles réseau.',
         navigate: { kind: 'tab', tab: 'home' },
         navigateLabel: 'Espace Sponsor',
       },
@@ -832,7 +1045,7 @@ const SPONSOR_HELP: PoleHelpContent = {
 
 const PRO_STAFF_HELP: PoleHelpContent = {
   poleKey: 'pro_staff',
-  title: 'Aide Pro Staff',
+  title: 'Aide Coach',
   bubbleTeaser: 'Je peux vous guider',
   welcome: 'Salut ! Coach, agent ou recruteur. Mercato, réseau et calendrier à portée de main.',
   entries: [
@@ -840,6 +1053,14 @@ const PRO_STAFF_HELP: PoleHelpContent = {
       { id: 'navigation', question: 'Comment naviguer dans l’espace staff ?', answer: 'Accueil pour les mandats, Mercato pour le recrutement, Calendrier pour les événements, Messages pour le réseau, Profil pour tes réglages.', navigate: { kind: 'tab', tab: 'home' }, navigateLabel: 'Retour accueil' },
       { id: 'onglets-staff', question: 'À quoi servent les onglets staff ?', answer: 'Mandats (Accueil), annonces et scouting (Mercato), planning (Calendrier), réseau (Messages) et identité pro (Profil).', navigate: { kind: 'tab', tab: 'home' }, navigateLabel: 'Explorer l’accueil' },
       { id: 'vue-mandats', question: 'Où voir tous mes mandats actifs ?', answer: 'L’accueil regroupe tes missions en cours avec raccourcis vers dossiers, calendrier et messages.', navigate: { kind: 'tab', tab: 'home' }, navigateLabel: 'Mes mandats' },
+      {
+        id: 'bourse-coach',
+        question: 'Comment trouver un joueur manquant dans mon effectif ?',
+        answer:
+          'Portail Coach > Effectif et bourse : déclare le poste manquant, scanne le vivier du club (équipe B, réserve, catégorie voisine), propose une montée. Le club valide.',
+        navigate: { kind: 'tab', tab: 'home' },
+        navigateLabel: 'Ouvrir Effectif',
+      },
     ]),
     ...withCategory('profil', [
       { id: 'profil', question: 'Comment mettre à jour mon profil staff ?', answer: 'Onglet Profil : spécialité, certifications, zone géographique et visibilité auprès des clubs.', navigate: { kind: 'profile' }, navigateLabel: 'Modifier mon profil' },

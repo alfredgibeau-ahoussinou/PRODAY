@@ -27,9 +27,11 @@ export const BETA_APP_VERSION = process.env.NEXT_PUBLIC_BETA_APP_VERSION?.trim()
 
 export const BETA_FEATURES = [
   "Mercato : annonces, candidatures et suivi des réponses",
+  "Invitations de match entre clubs : proposer, accepter, contre-proposer",
+  "Entraînement à domicile + coaching humain à l’heure",
   "Matchs et tournois : convocations, RSVP et calendrier",
   "Visibilité : score et dynamique de profil",
-  "Fil, Reels et Arena : communauté, contenus et événements",
+  "Fil, Reels et Arène : communauté, contenus et événements",
   "CV joueur : profil alimenté par vos matchs et stats",
   "Étapes selon votre rôle : joueur, coach, staff ou autre",
 ] as const;
@@ -46,7 +48,7 @@ const BETA_TIMELINE_BASE = [
     step: 2,
     title: "Installation de l'app",
     description:
-      "Android : APK sur l'onglet Installer. iOS : bêta TestFlight disponible à partir du 11 août 2026 à 18 h. Lien envoyé par email à l'ouverture.",
+      "Android : APK sur l'onglet Installer. iOS : bêta TestFlight décalée au 15 août 2026 à 18 h (améliorations nécessaires). Lien envoyé par email à l'ouverture.",
     done: false,
   },
   {
@@ -73,7 +75,7 @@ export function getBetaTimeline() {
   );
 }
 
-/** Étape courante (1–4) pour affichage dans le programme. */
+/** Étape courante (1 : 4) pour affichage dans le programme. */
 export function getBetaCurrentStep(): number {
   const timeline = getBetaTimeline();
   const firstPending = timeline.find((item) => !item.done);
@@ -92,7 +94,7 @@ export const BETA_FAQ = [
   {
     question: "Comment télécharger l'application ?",
     answer:
-      "Android : connectez-vous à l'espace bêta et téléchargez l'APK depuis Installer. iOS : bêta TestFlight à partir du 11 août 2026 à 18 h — vous recevrez le lien par email à l'ouverture.",
+      "Android : connectez-vous à l'espace bêta et téléchargez l'APK depuis Installer. iOS : bêta TestFlight décalée au 15 août 2026 à 18 h (améliorations nécessaires au bon développement) : vous recevrez le lien par email à l'ouverture.",
   },
   {
     question: "Puis-je tester sur iPhone et Android ?",

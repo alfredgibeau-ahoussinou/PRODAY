@@ -1,5 +1,5 @@
 /**
- * Skins FUT ProDay — styles CSS propres (type Ultimate Team).
+ * Skins FUT ProDay : styles CSS propres (type Ultimate Team).
  * Pas de découpes d’image : gradients + motifs fidèles.
  */
 

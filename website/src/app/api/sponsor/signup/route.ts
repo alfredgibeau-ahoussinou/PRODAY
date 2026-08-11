@@ -57,7 +57,7 @@ function formatSponsorSummary(payload: SponsorSignupPayload): string {
     `Secteur : ${payload.sector}`,
     `Contact : ${payload.contactName}`,
     `Email : ${payload.email}`,
-    `Téléphone : ${payload.phone || "—"}`,
+    `Téléphone : ${payload.phone || " : "}`,
     `Budget : ${payload.budget}`,
     "",
     `Objectifs : ${payload.goals.join(", ")}`,

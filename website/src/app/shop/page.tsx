@@ -6,7 +6,7 @@ import { SHOP_HIGHLIGHTS } from "@/lib/content";
 import { ROUTES } from "@/lib/routes";
 
 export const metadata: Metadata = {
-  title: "ProDay Shop",
+  title: "Boutique ProDay",
   description:
     "Trépieds, t-shirts et maillots officiels ProDay. Man, Woman et Pro.",
 };

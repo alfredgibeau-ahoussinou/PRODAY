@@ -56,7 +56,7 @@ export function AdminPinGate() {
           Connexion
         </h1>
         <p className="mt-1 text-xs leading-relaxed text-white/45">
-          Minicode partagé — accès console site (bêta, trafic, plateforme).
+          Minicode partagé : accès console site (bêta, trafic, plateforme).
         </p>
 
         <form onSubmit={onSubmit} className="mt-4 space-y-3">

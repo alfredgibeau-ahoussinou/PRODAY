@@ -11,7 +11,7 @@ export const BRAND = {
   /** Phrase d’accueil : ce que fait l’app, en une ligne. */
   mission: "Le football amateur, enfin réuni au même endroit.",
   heroSupport:
-    "Joueurs, coachs, clubs et familles : entraînez, organisez, progressez et faites vivre votre club depuis une seule application.",
+    "Joueurs, coachs, clubs et familles : entraînez, organisez, suivez l’analyse de forme et faites vivre votre club depuis une seule application.",
 } as const;
 
 /** Pitch honnête : capacités réelles vs ambition long terme. Pas de métriques fictives. */
@@ -30,20 +30,21 @@ export const PRODUCT_VISION = {
       "Entraînement à domicile (seul / famille) et coaching humain à l’heure",
       "Analyse IA des highlights de séance (miniature vidéo ou poster + tags et notes)",
       "Mercato : annonces, candidatures et suivi staff",
-      "Matchs, invitations entre clubs, convocations RSVP, Live Stats",
-      "Organisation d’événements et tournois (générateur, Live Hub)",
+      "Matchs, invitations entre clubs, convocations RSVP, Stats en direct",
+      "Organisation d’événements et tournois (générateur, Hub en direct)",
       "Fil communauté, Reels et question hebdo",
       "Espace partenaires / micro-sponsoring local",
       "Covoiturage, contrôle parental et espace famille",
+      "Analyse de forme : effectif (coach) et suivi personnel (joueur)",
       "Espace président : vision globale du club",
-      "Smart Tactics : board, readiness, IA match, entraînements et vidéo",
+      "Tactique IA : tableau, disponibilité, IA match, entraînements et vidéo",
     ],
   },
   tomorrow: {
     title: "Demain",
     lead: "Ambitions produit. Pas encore livrées. Pas de promesse marketing ici.",
     items: [
-      "Marketplace coaching humain généralisée (Stripe Connect)",
+      "Place de marché coaching humain généralisée (Stripe Connect)",
       "Analyse vidéo frame-by-frame avancée",
       "Causerie vidéo IA (« 3 choses à retenir »)",
       "Bourse aux équipements et micro-sponsoring généralisés",
@@ -84,7 +85,7 @@ export const SPOTLIGHT_FEATURES = [
   },
   {
     id: "tournaments",
-    title: "Tournois Arena",
+    title: "Tournois Arène",
     tagline: "Compétition",
     description: "Création, inscriptions, tableaux et palmarès pour votre saison.",
     accent: "from-amber-600/30 to-amber-900/10",
@@ -116,7 +117,7 @@ export const HOMME_BRAND = {
   logo: UNIVERSE_LOGOS.homme,
   tagline: "CONNECTER • PROGRESSER • RÉUSSIR",
   mission:
-    "Le foot masculin amateur. Mercato M, matchs, Arena, Visibilité, CV joueur, covoiturage, santé et Shop. Réservé aux joueurs.",
+    "Le foot masculin amateur. Mercato M, matchs, Arène, Visibilité, CV joueur, covoiturage, santé et Boutique. Réservé aux joueurs.",
   accent: "#0054F0",
   accentDark: "#001854",
 } as const;
@@ -178,7 +179,7 @@ export const EVENEMENTS_BRAND = {
   logo: UNIVERSE_LOGOS.pro,
   tagline: "Tournois · Détections · Stages",
   mission:
-    "Rôle intégré au Club : tournois Arena, détections et stages. Plus un pôle indépendant.",
+    "Rôle intégré au Club : tournois Arène, détections et stages. Plus un pôle indépendant.",
   accent: "#0891B2",
   accentDark: "#0e4a5c",
 } as const;
@@ -208,9 +209,9 @@ export const PRO_STAFF_BRAND = {
   shortName: "Coach",
   fullName: "Pro Day Coach",
   logo: UNIVERSE_LOGOS.pro,
-  tagline: "Smart Tactics · IA · Effectif",
+  tagline: "Tactique IA · IA · Effectif",
   mission:
-    "Profil coach rattaché au club : parcours, diplômes, Smart Tactics, assistant IA, analyse vidéo et préparation match.",
+    "Profil coach rattaché au club : parcours, diplômes, Tactique IA, assistant IA, analyse vidéo et préparation match.",
   accent: "#3B5BFF",
   accentDark: "#001848",
 } as const;
@@ -218,21 +219,23 @@ export const PRO_STAFF_BRAND = {
 /** Message waitlist / page beta */
 export const BETA_PITCH = {
   summary:
-    "Laisse ton email. Bêta iOS (TestFlight) à partir du 11 août 2026 à 18 h. Gratuit pour les inscrits.",
+    "Laisse ton email. Bêta décalée au 15 août 2026 (améliorations en cours). iOS TestFlight à 18 h. Gratuit pour les inscrits.",
   dailyUpdates:
-    "Les inscrits reçoivent des emails réguliers : date iOS, ouverture TestFlight, astuces et nouveautés (tous les 2 jours après le lancement).",
+    "Les inscrits reçoivent des emails réguliers : report de date, ouverture TestFlight, astuces et nouveautés (tous les 2 jours après le lancement).",
   launch:
-    "Bêta iOS ouverte le 11 août 2026 à 18 h. Lien TestFlight envoyé par email. APK Android disponible dès validation.",
-  iosLaunchLabel: "11 août 2026 à 18 h",
+    "Bêta iOS ouverte le 15 août 2026 à 18 h. Lien TestFlight envoyé par email. APK Android disponible dès validation.",
+  iosLaunchLabel: "15 août 2026 à 18 h",
+  delayNotice:
+    "La bêta a été décalée au 15 août 2026 en raison d'améliorations nécessaires au bon développement de l'application.",
 } as const;
 
 export const MODULES = [
   {
     id: "smart-tactics",
-    title: "Smart Tactics",
-    subtitle: "Board · readiness · IA",
+    title: "Tactique IA",
+    subtitle: "Tableau · disponibilité · IA",
     description:
-      "Board tactique interactif, lineup, readiness match, préparation IA, entraînements collectifs et individuels, tagging live et analyse vidéo smartphone.",
+      "Tableau tactique interactif, lineup, disponibilité match, préparation IA, entraînements collectifs et individuels, tagging en direct et analyse vidéo smartphone.",
     image: "/images/football-tactics-01.jpg",
     color: "#1B5E20",
   },
@@ -256,7 +259,7 @@ export const MODULES = [
   },
   {
     id: "arena",
-    title: "Arena",
+    title: "Arène",
     subtitle: "Tournois locaux",
     description:
       "Inscriptions club, tableaux et palmarès publiés.",
@@ -292,7 +295,7 @@ export const MODULES = [
   },
   {
     id: "shop",
-    title: "ProDay Shop",
+    title: "Boutique ProDay",
     subtitle: "Équipement & textile",
     description:
       "Trépieds, t-shirts et maillots officiels par univers. Précommande depuis l'app.",
@@ -352,7 +355,7 @@ export const PILLARS = [
   },
   {
     id: "live",
-    title: "Live Stats",
+    title: "Stats en direct",
     subtitle: "Match vers profil",
     description:
       "Buts, passes, cartons en direct. Votre saison et votre CV se mettent à jour.",
@@ -457,7 +460,7 @@ export const JOURNEYS = [
     id: "organizer",
     role: "Organisateur",
     steps: [
-      "Créer un tournoi Arena",
+      "Créer un tournoi Arène",
       "Ouvrir les inscriptions",
       "Gérer poules & scores",
       "Publier le palmarès",
@@ -554,7 +557,7 @@ export const WOMAN_BRAND = {
   logo: UNIVERSE_LOGOS.woman,
   tagline: "JOUER • BRILLER • GRANDIR",
   mission:
-    "Le foot au féminin. Mercato F, matchs, Arena, Visibilité, CV joueuse, covoiturage, santé et Shop. Réservé aux joueuses.",
+    "Le foot au féminin. Mercato F, matchs, Arène, Visibilité, CV joueuse, covoiturage, santé et Boutique. Réservé aux joueuses.",
   accent: "#F00000",
   accentDark: "#540000",
 } as const;
@@ -596,7 +599,7 @@ export const MAN_MODULES = [
   },
   {
     id: "arena",
-    title: "Arena",
+    title: "Arène",
     subtitle: "Tournois locaux",
     description:
       "Inscriptions, tableaux et palmarès pour la saison amateur masculine.",
@@ -628,7 +631,7 @@ export const MAN_MODULES = [
   },
   {
     id: "shop",
-    title: "ProDay Shop Man",
+    title: "Boutique ProDay Man",
     subtitle: "Équipement & textile",
     description:
       "Trépieds, t-shirts et maillots logo Pro Day Man. Précommande depuis l'app.",
@@ -655,7 +658,7 @@ export const WOMAN_MODULES = [
   },
   {
     id: "arena-f",
-    title: "Arena",
+    title: "Arène",
     subtitle: "Tournois filles & F",
     description:
       "Inscriptions, tableaux et palmarès pour les tournois foot féminin.",
@@ -687,7 +690,7 @@ export const WOMAN_MODULES = [
   },
   {
     id: "shop-f",
-    title: "ProDay Shop Woman",
+    title: "Boutique ProDay Woman",
     subtitle: "Équipement & textile",
     description:
       "Trépieds, t-shirts et maillots logo ProDay Woman. Précommande depuis l'app.",
@@ -700,7 +703,7 @@ export const PRODUCT_LINES = [
     id: "homme" as const,
     brand: HOMME_BRAND,
     logo: UNIVERSE_LOGOS.homme,
-    href: "/homme",
+    href: "/joueur?gender=men",
     image: "/showcase/classic-discover-hero.jpg",
     cta: "Pro Day Man",
   },
@@ -708,7 +711,7 @@ export const PRODUCT_LINES = [
     id: "woman" as const,
     brand: WOMAN_BRAND,
     logo: UNIVERSE_LOGOS.woman,
-    href: "/woman",
+    href: "/joueur?gender=women",
     image: "/showcase/woman/woman-discover-hero.jpg",
     cta: "ProDay Woman",
   },
@@ -840,10 +843,10 @@ export const PRO_JOUEUR_MODULES = [
   },
   {
     id: "shop-pro-joueur",
-    title: "Shop joueur",
+    title: "Boutique joueur",
     subtitle: "Équipement & merch",
     description:
-      "La boutique ProDay depuis l'onglet Shop. Même catalogue que la communauté.",
+      "La boutique ProDay depuis l'onglet Boutique. Même catalogue que la communauté.",
     image: "/images/football-pitch-01.jpg",
   },
   {
@@ -870,7 +873,7 @@ export const PRO_CLUB_MODULES = [
     title: "Bourse de recrutement",
     subtitle: "Vivier interne d’abord",
     description:
-      "Besoins d’équipe, matching indicatif sur les licenciés du club, propositions de montée — avant de chercher dehors.",
+      "Poste manquant : matching sur équipe B, réserve et catégories voisines, propositions de montée (coach + club), avant de chercher dehors.",
     image: "/showcase/classic-mercato.jpg",
   },
   {
@@ -900,9 +903,9 @@ export const PRO_CLUB_MODULES = [
   {
     id: "tournois-club",
     title: "Tournois",
-    subtitle: "Poules · Live · QR",
+    subtitle: "Poules · Direct · QR",
     description:
-      "Générateur de poules, Live Hub, classements auto et page publique. Organisateur = rôle intégré au Club.",
+      "Générateur de poules, Hub en direct, classements auto et page publique. Organisateur = rôle intégré au Club.",
     image: "/images/football-stadium-night-01.jpg",
   },
   {
@@ -926,10 +929,10 @@ export const PRO_CLUB_MODULES = [
 export const PRO_STAFF_MODULES = [
   {
     id: "coach",
-    title: "Smart Tactics",
+    title: "Tactique IA",
     subtitle: "Tableau · formations · IA",
     description:
-      "Board interactif, compositions, banc, consignes et plans de jeu. Préparation match et débriefs automatiques.",
+      "Tableau interactif, compositions, banc, consignes et plans de jeu. Préparation match et débriefs automatiques.",
     image: "/images/football-tactics-01.jpg",
   },
   {
@@ -1052,10 +1055,10 @@ export const AMATEUR_MODULES = [
   },
   {
     id: "shop-amateur",
-    title: "Shop Amateur",
+    title: "Boutique Amateur",
     subtitle: "Équipement & merch",
     description:
-      "Maillots, entraînement et goodies ProDay. Depuis l'onglet Shop.",
+      "Maillots, entraînement et goodies ProDay. Depuis l'onglet Boutique.",
     image: "/images/football-pitch-01.jpg",
   },
   {
@@ -1122,12 +1125,12 @@ export const UNIVERSE_PAGE_CONFIG = {
     highlights: [
       { label: "Public", value: "Joueurs M" },
       { label: "Mercato", value: "Mercato M" },
-      { label: "Saison", value: "Matchs & Arena" },
+      { label: "Saison", value: "Matchs & Arène" },
       { label: "Visibilité", value: "Visibilité & CV" },
     ],
     modulesTitle: "Tout pour votre saison",
     modulesSubtitle:
-      "Mercato M, matchs, Arena, Visibilité, covoiturage, santé et Shop.",
+      "Mercato M, matchs, Arène, Visibilité, covoiturage, santé et Boutique.",
     modules: MAN_MODULES as readonly UniverseModule[],
     journeyIds: ["player"] as const,
     audienceNote:
@@ -1153,12 +1156,12 @@ export const UNIVERSE_PAGE_CONFIG = {
     highlights: [
       { label: "Public", value: "Joueuses F" },
       { label: "Mercato", value: "Mercato F" },
-      { label: "Saison", value: "Matchs & Arena" },
+      { label: "Saison", value: "Matchs & Arène" },
       { label: "Visibilité", value: "Visibilité & CV F" },
     ],
     modulesTitle: "Tout pour votre saison",
     modulesSubtitle:
-      "Mercato F, matchs, Arena, Visibilité, covoiturage, santé et Shop.",
+      "Mercato F, matchs, Arène, Visibilité, covoiturage, santé et Boutique.",
     modules: WOMAN_MODULES as readonly UniverseModule[],
     journeyIds: ["player"] as const,
     audienceNote:
@@ -1214,7 +1217,7 @@ export const UNIVERSE_PAGE_CONFIG = {
     },
     highlights: [
       { label: "Prix", value: "Toujours 0 €" },
-      { label: "Live", value: "PRODAY + monde" },
+      { label: "Direct", value: "PRODAY + monde" },
       { label: "Favoris", value: "Suivis illimités" },
       { label: "Voix", value: "Débats & moments" },
     ],
@@ -1232,7 +1235,7 @@ export const UNIVERSE_PAGE_CONFIG = {
     cta: {
       title: "Entrer dans la tribune",
       description:
-        "Compte supporter gratuit. Live le jour J, suivis sans limite, débats et shop.",
+        "Compte supporter gratuit. Direct le jour J, suivis sans limite, débats et boutique.",
       beta: "Liste d'attente Supporter",
     },
   },
@@ -1349,14 +1352,14 @@ export const UNIVERSE_PAGE_CONFIG = {
       image: "/showcase/classic-staff.jpg",
     },
     highlights: [
-      { label: "Cœur", value: "Smart Tactics" },
+      { label: "Cœur", value: "Tactique IA" },
       { label: "Effectif", value: "Convocations" },
       { label: "IA", value: "Rapports auto" },
       { label: "Réseau", value: "Rôles optionnels" },
     ],
     modulesTitle: "Outils du Pôle Coach",
     modulesSubtitle:
-      "Smart Tactics, effectif, vidéo et IA. Agent et recruteur restent des rôles réseau.",
+      "Tactique IA, effectif, vidéo et IA. Agent et recruteur restent des rôles réseau.",
     modules: PRO_STAFF_MODULES as readonly UniverseModule[],
     journeyIds: ["coach", "recruiter", "agent", "organizer"] as const,
     audienceNote:
@@ -1373,7 +1376,7 @@ export const UNIVERSE_PAGE_CONFIG = {
     cta: {
       title: "Rejoindre le Pôle Coach",
       description:
-        "Smart Tactics, effectif et IA. Agent / recruteur restent des rôles réseau optionnels.",
+        "Tactique IA, effectif et IA. Agent / recruteur restent des rôles réseau optionnels.",
       beta: "Liste d'attente Coach",
     },
   },
@@ -1388,7 +1391,7 @@ export const VISION_PILLARS = [
   },
   {
     title: "Aujourd'hui",
-    body: "Profil, Mercato, score carrière, journal, analyse IA des highlights, sponsors, Arena, admin et contrôle parental. Dans une app React Native / Expo.",
+    body: "Profil, Mercato, score carrière, journal, analyse IA des highlights, sponsors, Arène, admin et contrôle parental. Dans une app React Native / Expo.",
   },
   {
     title: "IA honnête",
@@ -1418,7 +1421,7 @@ export const ALL_PILLARS = [
   },
   {
     id: "matches-pillar",
-    title: "Matchs & Arena",
+    title: "Matchs & Arène",
     subtitle: "Réseau d’adversaires",
     description:
       "Invitations de match entre clubs, amicaux, tournois locaux et palmarès intégrés au calendrier.",
@@ -1446,7 +1449,7 @@ export const ALL_PILLARS = [
   },
   {
     id: "shop-pillar",
-    title: "ProDay Shop",
+    title: "Boutique ProDay",
     subtitle: "Équipement officiel",
     description:
       "Trépieds, t-shirts et maillots par univers. Précommande depuis l'app.",
@@ -1625,7 +1628,7 @@ export const SUBSCRIPTION_PLANS_WEB = [
   {
     id: "coach_pro",
     label: "Coach Premium",
-    tagline: "Smart Tactics, IA, vidéo et préparation match",
+    tagline: "Tactique IA, IA, vidéo et préparation match",
     monthlyEur: 7.99,
     storeAvailable: true,
     universes: ["pro"] as ProductLineWeb[],
@@ -1635,7 +1638,7 @@ export const SUBSCRIPTION_PLANS_WEB = [
       "Calendrier & communication de base",
     ],
     proIncludes: [
-      "Smart Tactics (tableau, formations, banc)",
+      "Tactique IA (tableau, formations, banc)",
       "Assistant IA & rapports automatiques",
       "Analyse vidéo & adversaires",
       "Préparation des matchs",
@@ -1681,7 +1684,7 @@ export const SUBSCRIPTION_PLANS_WEB = [
       "Calendrier, communication, covoiturage",
       "Compétitions & classements",
       "Multi-équipes & suivi des candidatures",
-      "Coachs : souscription individuelle Smart Tactics",
+      "Coachs : souscription individuelle Tactique IA",
     ],
   },
   {
@@ -1698,10 +1701,11 @@ export const SUBSCRIPTION_PLANS_WEB = [
     ],
     proIncludes: [
       "Tous les coachs, staff, dirigeants et joueurs",
-      "Smart Tactics, IA, analyse vidéo",
+      "Tactique IA, IA, analyse vidéo",
       "Statistiques, convocations, présences",
       "Calendrier, communication, covoiturage",
-      "Entraînements IA & état de forme",
+      "Analyse de forme & entraînements IA",
+      "Suivi de charge & récupération déclarée",
       "Administration complète",
       "Pass Joueur Premium optionnel à 3,99 €/mois",
     ],
@@ -1787,7 +1791,7 @@ export const SUBSCRIPTION_PLANS_WEB = [
       "Calendrier local",
     ],
     proIncludes: [
-      "Tournois Arena illimités",
+      "Tournois Arène illimités",
       "Visibilité sponsors intégrée",
       "Relances participants",
       "Priorité fil événements",
@@ -1898,7 +1902,7 @@ export function webPlanMonthlyPrice(id: WebSubscriptionPlanBase["id"]): number {
 /** Tarif Pro Day Pro pour partenaire / sponsor. Dérivé du plan store. */
 export const PRO_ESSENTIAL_MONTHLY_EUR = webPlanMonthlyPrice("sponsor_pro");
 
-/** Organisateur Arena. Dérivé du plan store. */
+/** Organisateur Arène. Dérivé du plan store. */
 export const ORGANIZER_PRO_MONTHLY_EUR = webPlanMonthlyPrice("organizer_pro");
 
 /** Pôle santé. Dérivé du plan store. */
@@ -1930,12 +1934,12 @@ export const FAQ_ITEMS = [
   {
     category: "general",
     q: "Comment fonctionne la bêta ?",
-    a: "Inscrivez-vous sur la liste d'attente. Les accès sont délivrés progressivement. Vous recevez un email d'invitation quand votre tour arrive.",
+    a: "Inscrivez-vous sur la liste d'attente. La bêta a été décalée au 15 août 2026 en raison d'améliorations nécessaires au bon développement de l'application. Les accès iOS (TestFlight) ouvrent à cette date ; Android via APK selon validation.",
   },
   {
     category: "general",
     q: "Puis-je changer de pôle après inscription ?",
-    a: "Oui, dans les paramètres du compte. Certaines fonctionnalités restent liées au rôle (ex. Smart Tactics pour le coach ou offre Tout inclus).",
+    a: "Oui, dans les paramètres du compte. Certaines fonctionnalités restent liées au rôle (ex. Tactique IA pour le coach ou offre Tout inclus).",
   },
   {
     category: "general",
@@ -1970,12 +1974,12 @@ export const FAQ_ITEMS = [
   {
     category: "tarifs",
     q: "Quels tarifs pour le Club ?",
-    a: `Club Amateur ${faqPricing("club_amateur")} : licenciés, convocations, calendrier. Club Essentiel ${faqPricing("club_pro")} : compétitions, multi-équipes (coachs en abo individuel). Tout inclus ${faqPricing("club_premium")} : Smart Tactics + vidéo avec votre matériel, sur devis selon le nombre d’adhérents. Option ProDay Pro + Veo (sur devis) pour le pack caméra clé en main.`,
+    a: `Club Amateur ${faqPricing("club_amateur")} : licenciés, convocations, calendrier, analyse de forme. Club Essentiel ${faqPricing("club_pro")} : compétitions, multi-équipes (coachs en abo individuel). Tout inclus ${faqPricing("club_premium")} : Sur devis · À partir de 3 € / adhérent — Tactique IA + vidéo avec votre matériel. Option ProDay Pro + Veo (sur devis) pour le pack caméra clé en main.`,
   },
   {
     category: "tarifs",
     q: "Quel tarif pour Coach Premium ?",
-    a: `Coach Premium : ${faqPricing("coach_pro")}. Smart Tactics, assistant IA, analyse vidéo, préparation match et multi-équipes.`,
+    a: `Coach Premium : ${faqPricing("coach_pro")}. Tactique IA, assistant IA, analyse vidéo, préparation match et multi-équipes.`,
   },
   {
     category: "tarifs",
@@ -2034,8 +2038,8 @@ export const FAQ_ITEMS = [
   },
   {
     category: "club",
-    q: "Qui paie Smart Tactics dans le club ?",
-    a: "En Club Essentiel (mensuel), les coachs s'abonnent individuellement. En Tout inclus et Pro + Veo, Smart Tactics, IA et vidéo sont inclus pour le staff.",
+    q: "Qui paie Tactique IA dans le club ?",
+    a: "En Club Essentiel (mensuel), les coachs s'abonnent individuellement. En Tout inclus et Pro + Veo, Tactique IA, IA et vidéo sont inclus pour le staff.",
   },
   {
     category: "coach",
@@ -2049,8 +2053,8 @@ export const FAQ_ITEMS = [
   },
   {
     category: "coach",
-    q: "Qu'est-ce que Smart Tactics ?",
-    a: "Board tactique, formations, banc, readiness match, assistant IA, entraînements et analyse vidéo smartphone : le banc de touche digital.",
+    q: "Qu'est-ce que Tactique IA ?",
+    a: "Tableau tactique, formations, banc, disponibilité match, assistant IA, entraînements et analyse vidéo smartphone : le banc de touche digital.",
   },
   {
     category: "coach",
@@ -2110,7 +2114,7 @@ export const TESTIMONIALS = [
   },
   {
     quote:
-      "Arena pour notre tournoi local : inscriptions et palmarès sur l'app, zéro tableur.",
+      "Arène pour notre tournoi local : inscriptions et palmarès sur l'app, zéro tableur.",
     author: "Karim B.",
     role: "Organisateur tournoi",
   },
@@ -2121,18 +2125,18 @@ export const ROADMAP_ITEMS = [
     phase: "Livré",
     status: "done" as const,
     items: [
-      "Dashboard & accueil IA",
+      "Tableau de bord & accueil IA",
       "Profil, Visibilité & CV en ligne",
       "Score carrière & timeline",
       "Journal d'activités",
       "Analyse IA highlights séance",
       "Mercato & candidatures",
-      "Matchs & Live Stats",
+      "Matchs & Stats en direct",
       "Gestion équipe",
       "Covoiturage",
       "Pôle santé",
-      "ProDay Shop",
-      "Arena (tournois)",
+      "Boutique ProDay",
+      "Arène (tournois)",
       "Contrôle parental",
       "Fil communauté & Reels",
       "Espace partenaires / sponsors",
@@ -2165,13 +2169,13 @@ export const COMPARISON_ROWS = [
   { feature: "Recrutement ciblé", proday: true, whatsapp: false, excel: false },
   { feature: "CV vivant + PDF", proday: true, whatsapp: false, excel: false },
   { feature: "Convocations RSVP", proday: true, whatsapp: "partial" as const, excel: false },
-  { feature: "Live Stats vers profil", proday: true, whatsapp: false, excel: false },
+  { feature: "Stats en direct vers profil", proday: true, whatsapp: false, excel: false },
   { feature: "Vérification staff", proday: true, whatsapp: false, excel: false },
-  { feature: "Tournois Arena", proday: true, whatsapp: false, excel: "partial" as const },
+  { feature: "Tournois Arène", proday: true, whatsapp: false, excel: "partial" as const },
   { feature: "Visibilité visibilité", proday: true, whatsapp: false, excel: false },
   { feature: "Covoiturage matchs", proday: true, whatsapp: "partial" as const, excel: false },
   { feature: "Convocations & retards centralisés", proday: true, whatsapp: "partial" as const, excel: false },
-  { feature: "ProDay Shop intégré", proday: true, whatsapp: false, excel: false },
+  { feature: "Boutique ProDay intégré", proday: true, whatsapp: false, excel: false },
   { feature: "Recruteurs Mercato (club/coach/agent)", proday: true, whatsapp: false, excel: "partial" as const },
   { feature: "Reels & Fil communauté", proday: true, whatsapp: false, excel: false },
   { feature: "Espace partenaires & sponsors", proday: true, whatsapp: false, excel: false },
@@ -2244,7 +2248,7 @@ export const QUIZ_RESULTS: Record<
   },
   coach: {
     title: "Profil Coach",
-    description: "Smart Tactics, effectif, convocations, IA et analyse vidéo. Pôle Coach.",
+    description: "Tactique IA, effectif, convocations, IA et analyse vidéo. Pôle Coach.",
     thought: "Un coach, c'est bien plus qu'un tacticien. C'est un mentor, un guide qui façonne les caractères et construit les champions de demain. Ta vision mérite d'être structurée et reconnue.",
     href: "/coach",
     cta: "Voir le Pôle Coach",
@@ -2278,11 +2282,11 @@ export const QUIZ_RESULTS: Record<
     cta: "Voir le pôle Joueur",
   },
   parent: {
-    title: "Espace Parent",
-    description: "Supervision, contacts approuvés et limites de temps.",
+    title: "Pro Day Parent",
+    description: "Pôle Parent — supervision, contacts approuvés et limites de temps.",
     thought: "Voir son enfant s'épanouir sur le terrain, c'est une fierté immense. L'accompagner dans son parcours demande du temps, de l'écoute et les bons outils. ProDay facilite ce rôle de guide.",
     href: "/parent",
-    cta: "Espace Parent",
+    cta: "Ouvrir le Pôle Parent",
   },
   agent: {
     title: "Profil Agent",
@@ -2293,7 +2297,7 @@ export const QUIZ_RESULTS: Record<
   },
   homme: {
     title: "Pro Day Man",
-    description: "Foot masculin. Mercato, matchs, Arena et CV dans le Pôle Joueur.",
+    description: "Foot masculin. Mercato, matchs, Arène et CV dans le Pôle Joueur.",
     thought: "Le foot amateur, c'est la passion pure. Sans pression, juste le plaisir de jouer et de progresser. ProDay te permet de vivre cette passion avec des outils professionnels.",
     href: "/joueur",
     cta: "Voir le pôle Joueur",

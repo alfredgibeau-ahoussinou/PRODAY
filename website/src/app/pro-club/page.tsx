@@ -7,6 +7,8 @@ import {
 import { ClubMatchInviteSection } from "@/components/poles/ClubMatchInviteSection";
 import { ClubModulesSection } from "@/components/poles/ClubModulesSection";
 import { ClubPresidentHub } from "@/components/poles/ClubPresidentHub";
+import { RosterBourseSection } from "@/components/poles/RosterBourseSection";
+import { FormAnalysisFeature } from "@/components/poles/FormAnalysisFeature";
 import { VideoHardwareOffers } from "@/components/poles/VideoHardwareOffers";
 import { TerminalCta, TerminalPage } from "@/components/terminal";
 import { poleAccentCssVars } from "@/lib/brandColors";
@@ -14,9 +16,9 @@ import { getRoleVisuals } from "@/lib/roleVisuals";
 import { ROUTES } from "@/lib/routes";
 
 export const metadata: Metadata = {
-  title: "Pôle Club · Cœur de ProDay",
+  title: "Pôle Club, Cœur de ProDay",
   description:
-    "Équipes, bourse de recrutement interne, invitations de match, covoiturage et direction du club. Offres Amateur / Essentiel / Tout inclus.",
+    "Équipes, analyse de forme, bourse interne, tournois et covoiturage. À partir de 3 € / adhérent sur devis.",
 };
 
 export default function ProClubPage() {
@@ -28,16 +30,20 @@ export default function ProClubPage() {
       <ImmersivePoleHero
         brand="Pro Day Club"
         headline="Le club au centre."
-        support="Équipes, bourse de recrutement, invitations de match et covoiturage — le QG du foot amateur avant de chercher dehors."
+        support="Équipes, analyse de forme, bourse interne et covoiturage. À partir de 3 € / adhérent."
         video={visuals.heroVideo}
         poster={visuals.hero}
         primaryHref={ROUTES.betaWaitlist}
         primaryLabel="Structurer mon club"
-        secondaryHref="#president"
-        secondaryLabel="Espace président"
+        secondaryHref="#analyse-de-forme"
+        secondaryLabel="Analyse de forme"
       />
 
       <ClubPresidentHub />
+
+      <FormAnalysisFeature audience="club" />
+
+      <RosterBourseSection audience="club" />
 
       <ClubModulesSection />
 
@@ -51,7 +57,7 @@ export default function ProClubPage() {
 
       <TerminalCta
         title="Faites du club le cockpit."
-        description="Quatre formules Club : mensuel ou Pro + Veo. Le matériel reste un choix, jamais une contrainte."
+        description="À partir de 3 € / adhérent sur devis. Analyse de forme, matchs, recrutements et caméra en option."
         primaryHref={ROUTES.betaWaitlist}
         primaryLabel="Rejoindre la bêta Club"
         secondaryHref={ROUTES.coach}

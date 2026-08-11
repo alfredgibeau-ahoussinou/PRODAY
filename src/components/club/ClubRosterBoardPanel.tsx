@@ -21,6 +21,7 @@ import {
   ROSTER_POSITION_LABELS,
   type ClubRosterNeed,
   type InternalMoveProposal,
+  type InternalMoveStatus,
   type RosterMatchCandidate,
   type RosterPositionId,
 } from '../../models/ClubRosterBoard';
@@ -29,11 +30,43 @@ import { teamsService } from '../../services/teams.service';
 import type { Team } from '../../models/Team';
 import { spacing, radius } from '../../theme/designTokens';
 import type { AppColors } from '../../theme/universeTheme';
+import { ImmersiveStepStrip } from '../poles';
 
 type BoardTab = 'internal' | 'external' | 'moves';
+type Audience = 'club' | 'coach';
 
 const POSITIONS = Object.keys(ROSTER_POSITION_LABELS) as RosterPositionId[];
 const CATEGORIES = ['U9', 'U11', 'U13', 'U15', 'U17', 'U18', 'U19', 'Seniors', 'Féminines'];
+
+const COPY: Record<
+  Audience,
+  {
+    title: string;
+    support: string;
+    needsLabel: string;
+    ctaNeed: string;
+    movesHelp: string;
+  }
+> = {
+  club: {
+    title: 'Bourse de recrutement',
+    support:
+      'Il manque un joueur ? Cherchez d’abord dans vos équipes : équipe B, réserve, catégorie voisine. Dirigeants et DS valident les mouvements.',
+    needsLabel: 'Besoins du club',
+    ctaNeed: '+ Besoin d’équipe',
+    movesHelp:
+      'Le coach propose ; vous validez le passage (équipe B vers A ou autre). Le joueur (ou parent) est informé.',
+  },
+  coach: {
+    title: 'Bourse de recrutement',
+    support:
+      'Besoin pour samedi ? Proposez une montée depuis l’équipe B, la réserve ou une catégorie voisine. Vous proposez ; le club valide.',
+    needsLabel: 'Mes besoins d’équipe',
+    ctaNeed: '+ Besoin de mon équipe',
+    movesHelp:
+      'Vous proposez la montée ; le club (DS ou bureau) confirme avant intégration.',
+  },
+};
 
 interface ClubRosterBoardPanelProps {
   clubId: string;
@@ -42,6 +75,10 @@ interface ClubRosterBoardPanelProps {
   /** Mode coach : préremplit l’équipe du coach. */
   defaultTeamId?: string;
   defaultTeamLabel?: string;
+  /** Framing Club vs Coach (même moteur). */
+  audience?: Audience;
+  /** Après le vivier : ouvrir Mercato / kanban. */
+  onOpenMercato?: () => void;
 }
 
 export const ClubRosterBoardPanel: React.FC<ClubRosterBoardPanelProps> = ({
@@ -50,7 +87,14 @@ export const ClubRosterBoardPanel: React.FC<ClubRosterBoardPanelProps> = ({
   members,
   defaultTeamId,
   defaultTeamLabel,
+  audience: audienceProp,
+  onOpenMercato,
 }) => {
+  const audience: Audience =
+    audienceProp ?? (profile.role === 'coach' ? 'coach' : 'club');
+  const copy = COPY[audience];
+  const isClubAdmin = profile.role === 'club' || profile.role === 'organizer';
+
   const { colors: c } = useAppTheme();
   const styles = useMemo(() => createStyles(c), [c]);
   const [tab, setTab] = useState<BoardTab>('internal');
@@ -93,15 +137,21 @@ export const ClubRosterBoardPanel: React.FC<ClubRosterBoardPanelProps> = ({
       setExternalNeeds(ext);
       setMoves(m);
       setTeams(t);
-      if (!formTeamId && t[0]) {
-        setFormTeamId(t[0].id);
-        setFormTeamLabel(t[0].name);
-        if (t[0].category) setFormCategory(t[0].category);
+      if (!formTeamId && (defaultTeamId || t[0])) {
+        const preferred =
+          (defaultTeamId ? t.find((x) => x.id === defaultTeamId) : undefined) ?? t[0];
+        if (preferred) {
+          setFormTeamId(preferred.id);
+          setFormTeamLabel(preferred.name);
+          if (preferred.category) setFormCategory(preferred.category);
+        } else if (defaultTeamLabel) {
+          setFormTeamLabel(defaultTeamLabel);
+        }
       }
     } finally {
       setLoading(false);
     }
-  }, [clubId, formTeamId]);
+  }, [clubId, formTeamId, defaultTeamId, defaultTeamLabel]);
 
   useEffect(() => {
     void load();
@@ -136,11 +186,12 @@ export const ClubRosterBoardPanel: React.FC<ClubRosterBoardPanelProps> = ({
       });
       setShowForm(false);
       setFormNotes('');
+      setTab(formScope === 'external' ? 'external' : 'internal');
       await load();
       Alert.alert(
         'Besoin publié',
         formScope === 'internal'
-          ? 'ProDay cherchera d’abord dans le vivier du club.'
+          ? 'ProDay cherchera d’abord dans le vivier du club (équipe B, réserve, catégorie voisine).'
           : 'La recherche est visible par les autres clubs ProDay.',
       );
     } catch (e) {
@@ -153,7 +204,7 @@ export const ClubRosterBoardPanel: React.FC<ClubRosterBoardPanelProps> = ({
   const proposeMove = (candidate: RosterMatchCandidate, need: ClubRosterNeed) => {
     Alert.alert(
       'Proposer une intégration',
-      `Proposer ${candidate.display_name} (${candidate.team_label}) à ${need.team_label} ?`,
+      `Proposer ${candidate.display_name} (depuis ${candidate.team_label}) vers ${need.team_label} ?`,
       [
         { text: 'Annuler', style: 'cancel' },
         {
@@ -174,12 +225,15 @@ export const ClubRosterBoardPanel: React.FC<ClubRosterBoardPanelProps> = ({
                   proposed_by_name: profile.display_name,
                   match_score: candidate.score,
                   match_reasons: candidate.reasons,
-                  message: `Proposition interne depuis la bourse de recrutement.`,
+                  message: 'Proposition interne depuis la bourse de recrutement.',
                 });
                 Alert.alert(
                   'Proposition envoyée',
-                  'Le coach concerné et le club pourront valider. Statut : proposition envoyée.',
+                  audience === 'coach'
+                    ? 'Le club pourra valider. Le joueur (ou parent) est informé.'
+                    : 'Proposition enregistrée. Validez ensuite dans l’onglet Propositions.',
                 );
+                setTab('moves');
                 await load();
               } catch (e) {
                 Alert.alert('Erreur', e instanceof Error ? e.message : 'Échec.');
@@ -191,16 +245,34 @@ export const ClubRosterBoardPanel: React.FC<ClubRosterBoardPanelProps> = ({
     );
   };
 
+  const updateMove = async (move: InternalMoveProposal, status: InternalMoveStatus) => {
+    try {
+      await clubRosterBoardService.setMoveStatus(move.id, status, {
+        playerUid: move.player_uid,
+        playerName: move.player_name,
+        toTeamLabel: move.to_team_label,
+        actorName: profile.display_name,
+      });
+      await load();
+    } catch (e) {
+      Alert.alert('Erreur', e instanceof Error ? e.message : 'Impossible de mettre à jour.');
+    }
+  };
+
   if (loading) {
     return <ActivityIndicator color={c.brand} style={{ marginVertical: spacing.lg }} />;
   }
 
   return (
     <View style={styles.wrap}>
-      <ProDayText variant="section">Bourse de recrutement</ProDayText>
+      <ProDayText variant="section">{copy.title}</ProDayText>
       <ProDayText variant="caption" muted style={styles.sub}>
-        Avant de chercher dehors, cherchez dans votre club.
+        {copy.support}
       </ProDayText>
+
+      <ImmersiveStepStrip
+        steps={['Besoin déclaré', 'Vivier du club', 'Proposition', 'Puis l’extérieur']}
+      />
 
       <View style={styles.tabs}>
         {(
@@ -237,14 +309,14 @@ export const ClubRosterBoardPanel: React.FC<ClubRosterBoardPanelProps> = ({
         haptic
       >
         <ProDayText variant="caption" inverse>
-          {showForm ? 'Fermer' : '+ Besoin de mon équipe'}
+          {showForm ? 'Fermer' : copy.ctaNeed}
         </ProDayText>
       </PressableSpring>
 
       {showForm ? (
         <ProDaySurface variant="module" style={[styles.form, { borderColor: c.border }]}>
           <ProDayText variant="caption" muted>
-            Équipe
+            Équipe qui a besoin d’un joueur
           </ProDayText>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chips}>
             {teams.map((t) => (
@@ -304,7 +376,7 @@ export const ClubRosterBoardPanel: React.FC<ClubRosterBoardPanelProps> = ({
           </View>
 
           <ProDayText variant="caption" muted>
-            Poste
+            Poste manquant
           </ProDayText>
           <View style={styles.wrapChips}>
             {POSITIONS.map((p) => (
@@ -327,7 +399,7 @@ export const ClubRosterBoardPanel: React.FC<ClubRosterBoardPanelProps> = ({
 
           <TextInput
             style={[styles.input, { borderColor: c.border, color: c.text }]}
-            placeholder="Profil recherché / commentaire"
+            placeholder="Urgence / contexte (blessure, départ…)"
             placeholderTextColor={c.textMuted}
             value={formNotes}
             onChangeText={setFormNotes}
@@ -348,7 +420,7 @@ export const ClubRosterBoardPanel: React.FC<ClubRosterBoardPanelProps> = ({
               scaleTo={0.96}
             >
               <ProDayText variant="caption" inverse={formScope === 'internal'}>
-                Vivier club
+                Vivier club d’abord
               </ProDayText>
             </PressableSpring>
             <PressableSpring
@@ -383,11 +455,12 @@ export const ClubRosterBoardPanel: React.FC<ClubRosterBoardPanelProps> = ({
       {tab === 'internal' ? (
         <>
           <ProDayText variant="caption" muted style={styles.sub}>
-            Équipes ayant des besoins
+            {copy.needsLabel}
           </ProDayText>
           {needs.length === 0 ? (
             <ProDayText variant="caption" muted>
-              Aucun besoin ouvert. Créez une recherche pour votre équipe.
+              Aucun besoin ouvert. Déclarez un poste manquant pour scanner le vivier (équipe B,
+              réserve, catégorie voisine).
             </ProDayText>
           ) : (
             needs.map((n) => (
@@ -403,14 +476,22 @@ export const ClubRosterBoardPanel: React.FC<ClubRosterBoardPanelProps> = ({
                 onPress={() => setSelectedNeed(n)}
                 scaleTo={0.98}
               >
-                <ProDayText variant="section">
-                  {n.category} — {ROSTER_POSITION_LABELS[n.position]}
-                </ProDayText>
-                <ProDayText variant="caption" muted>
-                  {n.team_label} · Besoin : {n.players_needed}
+                <View style={styles.needHeader}>
+                  <ProDayText variant="section" style={{ flex: 1 }}>
+                    {n.team_label}
+                  </ProDayText>
+                  <View style={[styles.manqueBadge, { backgroundColor: c.accentSoft }]}>
+                    <ProDayText variant="caption" accent>
+                      Manque
+                    </ProDayText>
+                  </View>
+                </View>
+                <ProDayText variant="caption">
+                  {n.category} · {ROSTER_POSITION_LABELS[n.position]} · {n.players_needed} joueur
+                  {n.players_needed > 1 ? 's' : ''}
                 </ProDayText>
                 {n.profile_notes ? (
-                  <ProDayText variant="caption" numberOfLines={2}>
+                  <ProDayText variant="caption" muted numberOfLines={2}>
                     {n.profile_notes}
                   </ProDayText>
                 ) : null}
@@ -421,16 +502,27 @@ export const ClubRosterBoardPanel: React.FC<ClubRosterBoardPanelProps> = ({
           {selectedNeed ? (
             <ProDaySurface variant="module" style={[styles.form, { borderColor: c.brand }]}>
               <ProDayText variant="section">
-                Correspondance ProDay · {matches.length} profil
-                {matches.length > 1 ? 's' : ''}
+                Vivier interne, {selectedNeed.team_label}
               </ProDayText>
               <ProDayText variant="caption" muted>
-                Score indicatif — pas une vérité absolue. Ouvrez la carte et proposez.
+                Correspondances dans le club ({matches.length}). Score indicatif Correspondance
+                ProDay, jamais une vérité absolue.
               </ProDayText>
               {matches.length === 0 ? (
-                <ProDayText variant="caption" muted style={styles.sub}>
-                  Aucun profil interne fort. Essayez l’onglet « Entre clubs ».
-                </ProDayText>
+                <View style={{ gap: spacing.xs, marginTop: spacing.xs }}>
+                  <ProDayText variant="caption" muted>
+                    Aucun profil interne fort. Passez à l’onglet Entre clubs, puis au Mercato.
+                  </ProDayText>
+                  <PressableSpring
+                    onPress={() => setTab('external')}
+                    scaleTo={0.97}
+                    haptic
+                  >
+                    <ProDayText variant="caption" accent>
+                      Voir Entre clubs
+                    </ProDayText>
+                  </PressableSpring>
+                </View>
               ) : (
                 matches.map((m) => (
                   <View key={m.player_uid} style={[styles.matchRow, { borderColor: c.border }]}>
@@ -444,10 +536,12 @@ export const ClubRosterBoardPanel: React.FC<ClubRosterBoardPanelProps> = ({
                       scaleTo={0.98}
                     >
                       <ProDayText variant="section">
-                        {m.tier === 'strong' ? '🟢' : m.tier === 'good' ? '🟡' : '⚪'} {m.display_name}{' '}
-                        — {m.team_label}
+                        {m.tier === 'strong' ? '🟢' : m.tier === 'good' ? '🟡' : '⚪'} {m.display_name}
                       </ProDayText>
                       <ProDayText variant="caption" accent>
+                        Depuis {m.team_label}
+                      </ProDayText>
+                      <ProDayText variant="caption" muted>
                         {m.score} % de correspondance (indicatif)
                       </ProDayText>
                       <ProDayText variant="caption" muted>
@@ -475,11 +569,20 @@ export const ClubRosterBoardPanel: React.FC<ClubRosterBoardPanelProps> = ({
       {tab === 'external' ? (
         <>
           <ProDayText variant="caption" muted style={styles.sub}>
-            Recherches ouvertes entre clubs ProDay
+            Après le vivier interne : recherches entre clubs ProDay. Ensuite, suivi Mercato Observé
+            puis Intégré.
           </ProDayText>
+          {onOpenMercato ? (
+            <PressableSpring onPress={onOpenMercato} scaleTo={0.97} haptic>
+              <ProDayText variant="caption" accent style={styles.link}>
+                Ouvrir le suivi Mercato
+              </ProDayText>
+            </PressableSpring>
+          ) : null}
           {externalNeeds.length === 0 ? (
             <ProDayText variant="caption" muted>
-              Aucune recherche externe pour le moment.
+              Aucune recherche externe pour le moment. Publiez hors club seulement si le vivier ne
+              suffit pas.
             </ProDayText>
           ) : (
             externalNeeds.map((n) => (
@@ -489,7 +592,7 @@ export const ClubRosterBoardPanel: React.FC<ClubRosterBoardPanelProps> = ({
                 style={[styles.card, { borderColor: c.border }]}
               >
                 <ProDayText variant="section">
-                  🔎 {n.category} — {ROSTER_POSITION_LABELS[n.position]}
+                  {n.category} · {ROSTER_POSITION_LABELS[n.position]}
                 </ProDayText>
                 <ProDayText variant="caption" muted>
                   {n.team_label} · Contact : {n.created_by_name}
@@ -505,9 +608,12 @@ export const ClubRosterBoardPanel: React.FC<ClubRosterBoardPanelProps> = ({
 
       {tab === 'moves' ? (
         <>
+          <ProDayText variant="caption" muted style={styles.sub}>
+            {copy.movesHelp}
+          </ProDayText>
           {moves.length === 0 ? (
             <ProDayText variant="caption" muted>
-              Aucune proposition interne.
+              Aucune proposition. Proposez une montée depuis le vivier (onglet Dans mon club).
             </ProDayText>
           ) : (
             moves.map((m) => (
@@ -516,37 +622,47 @@ export const ClubRosterBoardPanel: React.FC<ClubRosterBoardPanelProps> = ({
                 variant="module"
                 style={[styles.card, { borderColor: c.border }]}
               >
-                <ProDayText variant="section">
-                  {m.player_name} → {m.to_team_label}
+                <ProDayText variant="section">{m.player_name}</ProDayText>
+                <ProDayText variant="caption">
+                  {m.from_team_label} vers {m.to_team_label}
                 </ProDayText>
                 <ProDayText variant="caption" muted>
-                  De {m.from_team_label} · {INTERNAL_MOVE_STATUS_LABELS[m.status]}
+                  {INTERNAL_MOVE_STATUS_LABELS[m.status]}
                   {m.match_score != null ? ` · ${m.match_score} %` : ''}
                 </ProDayText>
-                {profile.role === 'club' || profile.role === 'organizer' ? (
+                {isClubAdmin ? (
                   <View style={styles.tabs}>
-                    <PressableSpring
-                      style={[styles.miniCta, { backgroundColor: c.brand }]}
-                      onPress={() =>
-                        void clubRosterBoardService
-                          .setMoveStatus(m.id, 'pending_club')
-                          .then(load)
-                      }
-                      scaleTo={0.96}
-                    >
-                      <ProDayText variant="caption" inverse>
-                        Valider club
-                      </ProDayText>
-                    </PressableSpring>
-                    <PressableSpring
-                      style={[styles.miniCta, { borderColor: c.border, borderWidth: 1 }]}
-                      onPress={() =>
-                        void clubRosterBoardService.setMoveStatus(m.id, 'declined').then(load)
-                      }
-                      scaleTo={0.96}
-                    >
-                      <ProDayText variant="caption">Refuser</ProDayText>
-                    </PressableSpring>
+                    {m.status === 'proposed' || m.status === 'discussing' ? (
+                      <PressableSpring
+                        style={[styles.miniCta, { backgroundColor: c.brand }]}
+                        onPress={() => void updateMove(m, 'accepted')}
+                        scaleTo={0.96}
+                      >
+                        <ProDayText variant="caption" inverse>
+                          Valider
+                        </ProDayText>
+                      </PressableSpring>
+                    ) : null}
+                    {m.status === 'accepted' || m.status === 'pending_club' ? (
+                      <PressableSpring
+                        style={[styles.miniCta, { backgroundColor: c.brand }]}
+                        onPress={() => void updateMove(m, 'completed')}
+                        scaleTo={0.96}
+                      >
+                        <ProDayText variant="caption" inverse>
+                          Marquer intégré
+                        </ProDayText>
+                      </PressableSpring>
+                    ) : null}
+                    {m.status !== 'declined' && m.status !== 'completed' ? (
+                      <PressableSpring
+                        style={[styles.miniCta, { borderColor: c.border, borderWidth: 1 }]}
+                        onPress={() => void updateMove(m, 'declined')}
+                        scaleTo={0.96}
+                      >
+                        <ProDayText variant="caption">Refuser</ProDayText>
+                      </PressableSpring>
+                    ) : null}
                   </View>
                 ) : null}
               </ProDaySurface>
@@ -569,7 +685,7 @@ export const ClubRosterBoardPanel: React.FC<ClubRosterBoardPanelProps> = ({
             <ProDayText variant="section">Carte Joueur ProDay</ProDayText>
             {cardCandidate ? (
               <ProDayText variant="caption" muted>
-                {cardCandidate.score} % · {cardCandidate.reasons.join(' · ')} — indicatif
+                Depuis {cardCandidate.team_label} · {cardCandidate.score} % (indicatif)
               </ProDayText>
             ) : null}
             {cardPlayer ? (
@@ -618,6 +734,7 @@ function createStyles(c: AppColors) {
   return StyleSheet.create({
     wrap: { gap: spacing.sm, marginTop: spacing.md },
     sub: { marginBottom: spacing.xs },
+    link: { fontWeight: '700', marginBottom: spacing.xs },
     tabs: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
     tab: {
       paddingHorizontal: spacing.md,
@@ -659,6 +776,12 @@ function createStyles(c: AppColors) {
       padding: spacing.md,
       gap: 4,
       marginTop: spacing.xs,
+    },
+    needHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+    manqueBadge: {
+      borderRadius: radius.md,
+      paddingHorizontal: spacing.sm,
+      paddingVertical: 2,
     },
     matchRow: {
       flexDirection: 'row',

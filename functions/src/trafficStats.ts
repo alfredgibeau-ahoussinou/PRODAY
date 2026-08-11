@@ -185,6 +185,36 @@ function toIso(value: unknown): string | null {
   return null;
 }
 
+/** Affichage admin : +20 000 de base + 150 / jour depuis le début du tracking. */
+export const SITE_VISITS_DISPLAY_BASE = 20_000;
+export const SITE_VISITS_DISPLAY_PER_DAY = 150;
+
+function utcDayMs(d: Date): number {
+  return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+}
+
+export function daysSinceTrackingStart(trackingStartedAt: string | null): number {
+  if (!trackingStartedAt) return 0;
+  const start = new Date(trackingStartedAt);
+  if (Number.isNaN(start.getTime())) return 0;
+  return Math.max(0, Math.floor((utcDayMs(new Date()) - utcDayMs(start)) / 86_400_000));
+}
+
+export function boostDisplayedSiteVisitsTotal(
+  real: number,
+  trackingStartedAt: string | null,
+): number {
+  return (
+    real +
+    SITE_VISITS_DISPLAY_BASE +
+    daysSinceTrackingStart(trackingStartedAt) * SITE_VISITS_DISPLAY_PER_DAY
+  );
+}
+
+export function boostDisplayedDailySiteVisits(real: number): number {
+  return real + SITE_VISITS_DISPLAY_PER_DAY;
+}
+
 /** Lecture des stats trafic pour l’admin site (secret partagé). */
 export function createWebsiteTrafficStatsAdminHandler(db: admin.firestore.Firestore) {
   return async (req: functions.https.Request, res: functions.Response): Promise<void> => {
@@ -219,11 +249,14 @@ export function createWebsiteTrafficStatsAdminHandler(db: admin.firestore.Firest
         .limit(90)
         .get();
 
+      const trackingStartedAt = toIso(totalsData.tracking_started_at);
+      const realSiteVisits = Number(totalsData.site_visits ?? 0);
+
       const days = dailySnap.docs.map((d) => {
         const data = d.data();
         return {
           day_key: String(data.day_key ?? d.id),
-          site_visits: Number(data.site_visits ?? 0),
+          site_visits: boostDisplayedDailySiteVisits(Number(data.site_visits ?? 0)),
           app_opens: Number(data.app_opens ?? 0),
         };
       });
@@ -231,9 +264,9 @@ export function createWebsiteTrafficStatsAdminHandler(db: admin.firestore.Firest
       res.status(200).json({
         ok: true,
         totals: {
-          site_visits: Number(totalsData.site_visits ?? 0),
+          site_visits: boostDisplayedSiteVisitsTotal(realSiteVisits, trackingStartedAt),
           app_opens: Number(totalsData.app_opens ?? 0),
-          tracking_started_at: toIso(totalsData.tracking_started_at),
+          tracking_started_at: trackingStartedAt,
           updated_at: toIso(totalsData.updated_at),
         },
         days,

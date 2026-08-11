@@ -2,12 +2,9 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { View, ScrollView, StyleSheet, ActivityIndicator } from 'react-native';
 import { TabScreenShell } from '../components/app/TabScreenShell';
 import { ProDayText } from '../components/ui/ProDayText';
-import { ProDaySurface } from '../components/ui/ProDaySurface';
-import { Icon } from '../components/ui/Icon';
 import { PressableSpring, PushScreenTransition } from '../components/motion';
 import { useSessionProfile } from '../hooks/useSessionProfile';
-import { useAppTheme } from '../context/ProductLineContext';
-import { spacing, radius } from '../theme/designTokens';
+import { useJoueurSession } from '../context/JoueurSessionContext';
 import { TAB_BAR_CONTENT_INSET } from '../navigation/tabBarLayout';
 import { membershipsService } from '../services/memberships.service';
 import { clubsService } from '../services/clubs.service';
@@ -18,13 +15,21 @@ import type { ClubAnnouncement } from '../models/ClubAnnouncement';
 import { JoinClubScreen } from './JoinClubScreen';
 import { ClubAnnouncementsScreen } from './ClubAnnouncementsScreen';
 import { PlayersListScreen } from './PlayersListScreen';
+import {
+  JoueurPageFrame,
+  JoueurSectionCard,
+  JoueurActionRow,
+  JoueurEmptyState,
+} from '../components/player/joueurPortalUi';
+import { JOUEUR_SITE, resolveJoueurPageIdentity } from '../content/joueurPageIdentity';
+import { spacing } from '../theme/designTokens';
 
 type Overlay = 'join' | 'announcements' | 'roster' | null;
 
-/** Onglet Club du shell amateur joueur — actus, effectif, adhésion. */
+/** Onglet Club — chrome univers joueur (âge × genre). */
 export const AmateurClubScreen: React.FC = () => {
   const profile = useSessionProfile();
-  const { colors } = useAppTheme();
+  const session = useJoueurSession();
   const [loading, setLoading] = useState(true);
   const [membership, setMembership] = useState<Membership | null>(null);
   const [club, setClub] = useState<Club | null>(null);
@@ -64,6 +69,55 @@ export const AmateurClubScreen: React.FC = () => {
     void load();
   }, [load]);
 
+  const identity = useMemo(
+    () =>
+      session?.identity ??
+      resolveJoueurPageIdentity({
+        ageGroup: 'adult',
+        gender: 'neutral',
+        displayName: profile?.display_name,
+      }),
+    [session?.identity, profile?.display_name],
+  );
+
+  const copy = useMemo(() => {
+    const g = session?.ageGroup ?? 'adult';
+    if (g === 'youth') {
+      return {
+        caption: 'Mon club',
+        title: club?.name ?? 'Mon équipe',
+        subtitle: 'Annonces et potes du club',
+        statusKicker: 'Statut',
+        annonces: 'Messages du club',
+        effectif: 'Mes potes',
+        effectifSub: 'Voir qui joue avec toi',
+        join: 'Rejoindre un club',
+      };
+    }
+    if (g === 'teen') {
+      return {
+        caption: 'Club · XP',
+        title: club?.name ?? 'Mon club',
+        subtitle: 'Annonces, effectif, missions club',
+        statusKicker: 'Licence',
+        annonces: 'Feed club',
+        effectif: 'Effectif',
+        effectifSub: 'Coéquipiers et staff',
+        join: 'Trouver un club',
+      };
+    }
+    return {
+      caption: 'Club',
+      title: club?.name ?? 'Mon club',
+      subtitle: 'Annonces, effectif, vie du club',
+      statusKicker: 'Statut',
+      annonces: 'Annonces',
+      effectif: 'Effectif',
+      effectifSub: 'Coéquipiers et staff',
+      join: 'Rejoindre un club',
+    };
+  }, [session?.ageGroup, club?.name]);
+
   const statusLabel = useMemo(() => {
     if (!membership) return 'Sans club';
     if (membership.status === 'pending') return 'Demande en attente';
@@ -76,86 +130,77 @@ export const AmateurClubScreen: React.FC = () => {
   return (
     <View style={styles.root}>
       <TabScreenShell
-        caption="Club"
-        title={club?.name ?? 'Mon club'}
-        subtitle="Annonces, effectif et vie du club"
+        caption={copy.caption}
+        title={copy.title}
+        subtitle={copy.subtitle}
         flat
       >
         {loading ? (
-          <ActivityIndicator color={colors.brand} style={styles.loader} />
+          <ActivityIndicator color={identity.accent} style={styles.loader} />
         ) : (
           <ScrollView
             contentContainerStyle={[styles.scroll, { paddingBottom: TAB_BAR_CONTENT_INSET }]}
             showsVerticalScrollIndicator={false}
           >
-            <ProDaySurface style={styles.statusCard}>
-              <ProDayText variant="eyebrow" muted>
-                Statut
-              </ProDayText>
-              <ProDayText variant="section">{statusLabel}</ProDayText>
-              {club?.city ? (
-                <ProDayText variant="caption" muted>
-                  {club.city}
-                </ProDayText>
-              ) : null}
-              {!membership || membership.status !== 'active' ? (
-                <PressableSpring
-                  style={[styles.cta, { backgroundColor: colors.brand }]}
-                  onPress={() => setOverlay('join')}
-                  haptic
+            <JoueurPageFrame identity={identity} showHero={false}>
+              <View style={styles.stack}>
+                <JoueurSectionCard
+                  kicker={copy.statusKicker}
+                  title={statusLabel}
+                  body={club?.city ?? undefined}
                 >
-                  <Icon name="add" size={18} color={colors.brandInverse} />
-                  <ProDayText variant="caption" style={{ color: colors.brandInverse }}>
-                    Rejoindre un club
-                  </ProDayText>
-                </PressableSpring>
-              ) : null}
-            </ProDaySurface>
+                  {!membership || membership.status !== 'active' ? (
+                    <JoueurActionRow
+                      primary={copy.join}
+                      onPrimary={() => setOverlay('join')}
+                    />
+                  ) : null}
+                </JoueurSectionCard>
 
-            <ProDayText variant="eyebrow" muted style={styles.section}>
-              Annonces
-            </ProDayText>
-            {announcements.length === 0 ? (
-              <ProDaySurface style={styles.empty}>
-                <ProDayText variant="body" muted>
-                  Aucune annonce pour le moment.
-                </ProDayText>
-              </ProDaySurface>
-            ) : (
-              announcements.map((item) => (
-                <ProDaySurface key={item.id} style={styles.announcement}>
-                  <ProDayText variant="caption">{item.title}</ProDayText>
-                  <ProDayText variant="caption" muted numberOfLines={2}>
-                    {item.body}
-                  </ProDayText>
-                </ProDaySurface>
-              ))
-            )}
-            {club ? (
-              <PressableSpring onPress={() => setOverlay('announcements')} haptic>
-                <ProDayText variant="caption" style={{ color: colors.accent }}>
-                  Voir toutes les annonces
-                </ProDayText>
-              </PressableSpring>
-            ) : null}
+                {announcements.length === 0 ? (
+                  <JoueurEmptyState
+                    title={copy.annonces}
+                    body="Aucune annonce pour le moment."
+                    cta={club ? 'Ouvrir le fil' : undefined}
+                    onPress={club ? () => setOverlay('announcements') : undefined}
+                  />
+                ) : (
+                  <JoueurSectionCard kicker="Club" title={copy.annonces}>
+                    <View style={styles.list}>
+                      {announcements.map((item) => (
+                        <PressableSpring
+                          key={item.id}
+                          onPress={() => setOverlay('announcements')}
+                          style={styles.annItem}
+                        >
+                          <ProDayText variant="caption" style={styles.annTitle}>
+                            {item.title}
+                          </ProDayText>
+                          <ProDayText variant="caption" style={styles.annBody} numberOfLines={2}>
+                            {item.body}
+                          </ProDayText>
+                        </PressableSpring>
+                      ))}
+                    </View>
+                    <JoueurActionRow
+                      primary="Toutes les annonces"
+                      onPrimary={() => setOverlay('announcements')}
+                    />
+                  </JoueurSectionCard>
+                )}
 
-            <ProDayText variant="eyebrow" muted style={styles.section}>
-              Effectif
-            </ProDayText>
-            <PressableSpring
-              style={[styles.rowAction, { borderColor: colors.border, backgroundColor: colors.surface }]}
-              onPress={() => setOverlay('roster')}
-              haptic
-            >
-              <Icon name="people" size={20} color={colors.accent} />
-              <View style={styles.rowBody}>
-                <ProDayText variant="caption">Voir l'effectif</ProDayText>
-                <ProDayText variant="caption" muted>
-                  Coéquipiers et staff du club
-                </ProDayText>
+                <JoueurSectionCard
+                  kicker="Groupe"
+                  title={copy.effectif}
+                  body={copy.effectifSub}
+                >
+                  <JoueurActionRow
+                    primary="Voir l’effectif"
+                    onPrimary={() => setOverlay('roster')}
+                  />
+                </JoueurSectionCard>
               </View>
-              <Icon name="chevron-forward" size={18} color={colors.textMuted} />
-            </PressableSpring>
+            </JoueurPageFrame>
           </ScrollView>
         )}
       </TabScreenShell>
@@ -172,13 +217,11 @@ export const AmateurClubScreen: React.FC = () => {
           />
         ) : null}
       </PushScreenTransition>
-
       <PushScreenTransition active={overlay === 'announcements'}>
         {overlay === 'announcements' ? (
           <ClubAnnouncementsScreen profile={profile} onBack={() => setOverlay(null)} />
         ) : null}
       </PushScreenTransition>
-
       <PushScreenTransition active={overlay === 'roster'}>
         {overlay === 'roster' ? (
           <PlayersListScreen onBack={() => setOverlay(null)} onSelectPlayer={() => undefined} />
@@ -189,29 +232,21 @@ export const AmateurClubScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  root: { flex: 1 },
+  root: { flex: 1, backgroundColor: JOUEUR_SITE.bg },
   loader: { marginTop: spacing.xl },
-  scroll: { padding: spacing.lg, gap: spacing.md },
-  statusCard: { gap: spacing.xs, padding: spacing.lg },
-  cta: {
-    marginTop: spacing.sm,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.xs,
-    paddingVertical: spacing.sm,
-    borderRadius: radius.md,
-  },
-  section: { marginTop: spacing.md },
-  empty: { padding: spacing.lg },
-  announcement: { padding: spacing.md, gap: spacing.xs },
-  rowAction: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  scroll: { flexGrow: 1 },
+  stack: {
+    paddingHorizontal: spacing.md,
     gap: spacing.md,
-    padding: spacing.md,
-    borderRadius: radius.lg,
-    borderWidth: StyleSheet.hairlineWidth,
+    paddingBottom: spacing.lg,
   },
-  rowBody: { flex: 1, gap: 2 },
+  list: { gap: spacing.sm, marginTop: spacing.xs },
+  annItem: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: JOUEUR_SITE.border,
+    paddingTop: spacing.sm,
+    gap: 2,
+  },
+  annTitle: { color: JOUEUR_SITE.foreground, fontWeight: '700' },
+  annBody: { color: JOUEUR_SITE.muted },
 });

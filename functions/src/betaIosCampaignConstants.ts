@@ -1,9 +1,12 @@
-/** Bêta iOS — 11 août 2026 à 18 h (Europe/Paris, CEST UTC+2). */
-export const IOS_BETA_LAUNCH_ISO = '2026-08-11T16:00:00.000Z';
+/** Bêta iOS — 15 août 2026 à 18 h (Europe/Paris, CEST UTC+2). */
+export const IOS_BETA_LAUNCH_ISO = '2026-08-15T16:00:00.000Z';
 
-export const IOS_BETA_LAUNCH_LABEL = '11 août 2026 à 18 h';
+export const IOS_BETA_LAUNCH_LABEL = '15 août 2026 à 18 h';
 
-export const IOS_BETA_LAUNCH_LABEL_SHORT = '11 août 2026';
+export const IOS_BETA_LAUNCH_LABEL_SHORT = '15 août 2026';
+
+/** Date initialement annoncée, avant report. */
+export const IOS_BETA_LAUNCH_PREVIOUS_LABEL_SHORT = '11 août 2026';
 
 export const BETA_CAMPAIGN_STATE_DOC = 'beta_campaign/state';
 

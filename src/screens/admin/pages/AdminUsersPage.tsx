@@ -1,11 +1,12 @@
-import React, { useMemo, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import { View, Text, StyleSheet, Alert } from 'react-native';
 import { useTranslation } from '../../../context/LocaleContext';
 import { AdminFilterChips } from '../../../components/admin/AdminFilterChips';
 import type { User, UserRole } from '../../../models/User';
 import { useAdminData } from '../../../context/AdminDataContext';
 import { adminService } from '../../../services/admin.service';
 import { AdminPageScaffold } from '../../../components/admin/AdminPageScaffold';
+import { AdminPageHero } from '../../../components/admin/AdminPageHero';
 import { AdminUserCard } from '../../../components/admin/AdminUserCard';
 import { AdminSearchField } from '../../../components/admin/AdminSearchField';
 import { AdminKpiStrip } from '../../../components/admin/AdminKpiStrip';
@@ -20,10 +21,11 @@ import { AdminUserDocumentsModal } from '../../../components/admin/AdminUserDocu
 import { adminConfirmDelete, adminActionErrorAlert } from '../../../utils/adminConfirm';
 import { userNeedsAdminVerificationReview } from '../../../utils/adminUserVerification';
 import { getErrorMessage } from '../../../utils/errors';
-import { useAdminStyles } from '../../../components/admin/adminStyles';
+import { PressableSpring } from '../../../components/motion';
+import { Icon } from '../../../components/ui/Icon';
+import { useAdminStyles, adminChrome } from '../../../components/admin/adminStyles';
 import { spacing, radius } from '../../../theme/designTokens';
 import type { AppColors } from '../../../theme/universeTheme';
-
 import { getRoleLabel } from '../../signup/signupFlowConfig';
 import {
   ADMIN_EDIT_ROLES,
@@ -49,14 +51,14 @@ const EMPTY_FORM: CreateUserFormState = {
   product_line: 'amateur',
 };
 
-export const AdminUsersPage: React.FC = () => {
+export const AdminUsersPage: React.FC<{ initialQuery?: string }> = ({ initialQuery }) => {
   const { t } = useTranslation();
   const { loading, users, userDocCounts, refresh, stats } = useAdminData();
   const { colors: c } = useAdminStyles();
   const styles = useMemo(() => createStyles(c), [c]);
   const [listFilter, setListFilter] = useState<UserListFilter>('all');
   const [filterScope, setFilterScope] = useState<FilterScope>('status');
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState(initialQuery ?? '');
   const [showCreate, setShowCreate] = useState(false);
   const [createForm, setCreateForm] = useState<CreateUserFormState>(EMPTY_FORM);
   const [creating, setCreating] = useState(false);
@@ -66,6 +68,13 @@ export const AdminUsersPage: React.FC = () => {
   const [documentsUser, setDocumentsUser] = useState<User | null>(null);
   const [rejecting, setRejecting] = useState(false);
   const [approvingUid, setApprovingUid] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (initialQuery != null && initialQuery.length > 0) {
+      setSearch(initialQuery);
+      setListFilter('all');
+    }
+  }, [initialQuery]);
 
   const filterOptions = useMemo(() => {
     if (filterScope === 'universe') {
@@ -172,29 +181,81 @@ export const AdminUsersPage: React.FC = () => {
 
   return (
     <AdminPageScaffold loading={loading}>
+      <AdminPageHero
+        kicker="COMPTES"
+        title="Utilisateurs"
+        subtitle={
+          pendingCount > 0
+            ? `${pendingCount} vérification${pendingCount > 1 ? 's' : ''} en attente · ${users.length} chargés`
+            : `${users.length} comptes chargés · ${activeCount} actifs`
+        }
+        actions={[
+          {
+            label: showCreate ? 'Fermer création' : 'Créer un compte',
+            icon: showCreate ? 'close' : 'people',
+            onPress: () => setShowCreate(!showCreate),
+          },
+          ...(pendingCount > 0
+            ? [
+                {
+                  label: `Vérifs (${pendingCount})`,
+                  icon: 'warning' as const,
+                  variant: 'ghost' as const,
+                  onPress: () => {
+                    setFilterScope('status');
+                    setListFilter('pending');
+                  },
+                },
+              ]
+            : []),
+        ]}
+      />
+
       <AdminKpiStrip
         items={[
-          { key: 'all', label: 'Comptes chargés', value: users.length, icon: 'people' },
-          { key: 'active', label: 'Actifs', value: activeCount, icon: 'people' },
+          {
+            key: 'all',
+            label: 'Comptes chargés',
+            value: users.length,
+            icon: 'people',
+            onPress: () => {
+              setFilterScope('status');
+              setListFilter('all');
+            },
+          },
+          {
+            key: 'active',
+            label: 'Actifs',
+            value: activeCount,
+            icon: 'people',
+            onPress: () => {
+              setFilterScope('status');
+              setListFilter('all');
+            },
+          },
           {
             key: 'pending',
             label: 'Vérif. en attente',
             value: pendingCount,
             icon: 'warning',
             alert: pendingCount > 0,
+            onPress: () => {
+              setFilterScope('status');
+              setListFilter('pending');
+            },
           },
           {
             key: 'platform',
             label: 'Total plateforme',
             value: stats?.users ?? users.length,
             icon: 'document',
+            onPress: () => {
+              setFilterScope('status');
+              setListFilter('all');
+            },
           },
         ]}
       />
-
-      <TouchableOpacity style={styles.fab} onPress={() => setShowCreate(!showCreate)}>
-        <Text style={styles.fabText}>{showCreate ? t('admin.users.createToggle.close') : t('admin.users.createToggle.open')}</Text>
-      </TouchableOpacity>
 
       <AdminCreateUserPanel
         visible={showCreate}
@@ -205,38 +266,45 @@ export const AdminUsersPage: React.FC = () => {
         submitting={creating}
       />
 
-      <AdminSearchField value={search} onChangeText={setSearch} placeholder="Nom, email, ville…" />
+      <View style={styles.toolbar}>
+        <View style={styles.searchSlot}>
+          <AdminSearchField value={search} onChangeText={setSearch} placeholder="Nom, email, ville…" />
+        </View>
+        <View style={styles.scopeRow}>
+          {(
+            [
+              { id: 'status' as const, label: 'Statut', icon: 'shield' as const },
+              { id: 'universe' as const, label: 'Univers', icon: 'star-four-points' as const },
+              { id: 'role' as const, label: 'Rôle', icon: 'people' as const },
+            ] as const
+          ).map((s) => {
+            const on = filterScope === s.id;
+            return (
+              <PressableSpring
+                key={s.id}
+                style={[styles.scopeChip, on && styles.scopeChipOn]}
+                onPress={() => setScope(s.id)}
+                scaleTo={0.96}
+                haptic
+              >
+                <Icon name={s.icon} size={13} color={on ? '#FFFFFF' : adminChrome.accentHot} />
+                <Text style={[styles.scopeText, on && styles.scopeTextOn]}>{s.label}</Text>
+              </PressableSpring>
+            );
+          })}
+        </View>
 
-      <View style={styles.scopeRow}>
-        {(
-          [
-            { id: 'status' as const, label: 'Statut' },
-            { id: 'universe' as const, label: 'Univers' },
-            { id: 'role' as const, label: 'Rôle' },
-          ] as const
-        ).map((s) => (
-          <TouchableOpacity
-            key={s.id}
-            style={[styles.scopeChip, filterScope === s.id && styles.scopeChipOn]}
-            onPress={() => setScope(s.id)}
-          >
-            <Text style={[styles.scopeText, filterScope === s.id && styles.scopeTextOn]}>
-              {s.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
+        <AdminFilterChips options={filterOptions} value={listFilter} onChange={setListFilter} />
       </View>
 
-      <AdminFilterChips
-        options={filterOptions}
-        value={listFilter}
-        onChange={setListFilter}
+      <AdminSectionHeader
+        title="Comptes"
+        count={filtered.length}
+        hint={search.trim() ? `Filtré · « ${search.trim()} »` : 'Touchez une carte pour agir'}
       />
 
-      <AdminSectionHeader title="Comptes" count={filtered.length} />
-
       {filtered.length === 0 ? (
-        <AdminEmptyState icon="people" title="Aucun utilisateur" subtitle="Modifiez les filtres." />
+        <AdminEmptyState icon="people" title="Aucun utilisateur" subtitle="Modifiez les filtres ou la recherche." />
       ) : (
         filtered.map((u) => (
           <AdminUserCard
@@ -247,9 +315,7 @@ export const AdminUsersPage: React.FC = () => {
             onEdit={() => setEditUser(u)}
             onViewDocuments={() => setDocumentsUser(u)}
             onApprove={
-              userNeedsAdminVerificationReview(u)
-                ? () => void handleApprove(u)
-                : undefined
+              userNeedsAdminVerificationReview(u) ? () => void handleApprove(u) : undefined
             }
             onReject={
               userNeedsAdminVerificationReview(u) ? () => setRejectUser(u) : undefined
@@ -342,32 +408,39 @@ export const AdminUsersPage: React.FC = () => {
 
 function createStyles(c: AppColors) {
   return StyleSheet.create({
-    fab: {
-      backgroundColor: c.brand,
-      borderRadius: radius.md,
-      padding: spacing.md,
-      alignItems: 'center',
-      marginBottom: spacing.md,
-    },
-    fabText: { color: c.brandInverse, fontWeight: '800', fontSize: 14 },
-    scopeRow: {
-      flexDirection: 'row',
-      gap: spacing.xs,
-      marginBottom: spacing.sm,
-    },
-    scopeChip: {
-      paddingHorizontal: spacing.md,
-      paddingVertical: spacing.sm,
-      borderRadius: radius.pill,
+    toolbar: {
+      backgroundColor: c.surface,
+      borderRadius: radius.xl,
       borderWidth: 1,
       borderColor: c.border,
-      backgroundColor: c.surface,
+      padding: spacing.md,
+      marginBottom: spacing.sm,
+      gap: spacing.sm,
+    },
+    searchSlot: {
+      marginBottom: -spacing.sm,
+    },
+    scopeRow: {
+      flexDirection: 'row',
+      gap: 4,
+      backgroundColor: c.surfaceMuted,
+      borderRadius: radius.lg,
+      padding: 4,
+    },
+    scopeChip: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 6,
+      paddingHorizontal: spacing.sm,
+      paddingVertical: 10,
+      borderRadius: radius.md,
     },
     scopeChipOn: {
-      backgroundColor: c.brand,
-      borderColor: c.brand,
+      backgroundColor: adminChrome.accent,
     },
-    scopeText: { fontSize: 12, fontWeight: '800', color: c.textSecondary },
-    scopeTextOn: { color: c.brandInverse },
+    scopeText: { fontSize: 12, fontWeight: '800', color: c.textMuted },
+    scopeTextOn: { color: '#FFFFFF' },
   });
 }

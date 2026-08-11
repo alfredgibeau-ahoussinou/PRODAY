@@ -26,7 +26,7 @@ const BLOCKS = [
   },
 ] as const;
 
-/** Trois blocs terrain — ton jeune, pas corporate. */
+/** Trois blocs terrain : ton jeune, pas corporate. */
 export function HomeTerrainStrip() {
   return (
     <section

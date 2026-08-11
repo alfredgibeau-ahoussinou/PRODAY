@@ -78,6 +78,8 @@ export const UI_DE: MessageCatalog = {
   'modules.matchs.subtitle': 'Freundschaftsspiele',
   'modules.gestion.title': 'Teamleitung',
   'modules.gestion.subtitle': 'Zeitplan · Anwesenheit · Statistiken',
+  'modules.smart_tactics.title': 'Smart Tactics',
+  'modules.smart_tactics.subtitle': 'Board · Readiness · KI · Video',
   'modules.sponsors.title': 'Sponsoren',
   'modules.sponsors.subtitle': 'Sponsoren',
 

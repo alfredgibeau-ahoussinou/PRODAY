@@ -43,7 +43,7 @@ const BASE_SCREENS: Record<MainTabId, ScreenMock> = {
       },
       {
         title: "Modules",
-        body: "Mercato, Matchs, Reels, Fil, Arena. Accès rapide.",
+        body: "Mercato, Matchs, Reels, Fil, Arène. Accès rapide.",
         chips: ["Reels", "Question hebdo"],
       },
     ],
@@ -53,7 +53,7 @@ const BASE_SCREENS: Record<MainTabId, ScreenMock> = {
     title: "Candidater",
     subtitle: "Annonces live, filtres poste et suivi candidatures.",
     stats: [
-      { value: "24", label: "Live" },
+      { value: "24", label: "Direct" },
       { value: "8", label: "Clubs" },
       { value: "2", label: "Envoyées", highlight: true },
     ],
@@ -107,8 +107,8 @@ const BASE_SCREENS: Record<MainTabId, ScreenMock> = {
       },
       {
         title: "Highlight match",
-        body: "But en direct remonté depuis Live Stats vers votre CV.",
-        chips: ["Live"],
+        body: "But en direct remonté depuis Stats en direct vers votre CV.",
+        chips: ["Direct"],
       },
     ],
   },
@@ -130,7 +130,7 @@ const BASE_SCREENS: Record<MainTabId, ScreenMock> = {
       },
       {
         title: "Actualités ProDay",
-        body: "Nouveautés Arena, Mercato et partenaires.",
+        body: "Nouveautés Arène, Mercato et partenaires.",
         chips: ["Actualités"],
       },
     ],
@@ -212,7 +212,7 @@ const BASE_SCREENS: Record<MainTabId, ScreenMock> = {
     stats: [
       { value: "86%", label: "Profil" },
       { value: "72", label: "Visibilité" },
-      { value: "Free", label: "Plan" },
+      { value: "Gratuit", label: "Offre" },
     ],
     cards: [
       {
@@ -224,7 +224,7 @@ const BASE_SCREENS: Record<MainTabId, ScreenMock> = {
     ],
   },
   shop: {
-    caption: "Shop",
+    caption: "Boutique",
     title: "Boutique",
     subtitle: "Équipements, abonnements et offres partenaires.",
     stats: [

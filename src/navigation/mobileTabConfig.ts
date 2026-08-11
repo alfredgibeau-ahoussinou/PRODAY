@@ -31,7 +31,7 @@ const LEFT_PRIORITY_BY_LINE: Record<ProductLineId, MainTabId[]> = {
   amateur: ['home', 'covoiturage', 'matchs', 'recrutement'],
   pro: ['home', 'covoiturage', 'matchs', 'recrutement'],
   pro_player: ['home', 'reels', 'matchs', 'messages'],
-  pro_club: ['home', 'covoiturage', 'recrutement', 'matchs'],
+  pro_club: ['home', 'recrutement', 'matchs', 'messages'],
   pro_staff: ['home', 'covoiturage', 'matchs', 'recrutement'],
   sponsor: ['home', 'matchs', 'messages', 'profil'],
   supporter: ['matchs', 'feed', 'messages', 'reels'],
@@ -41,7 +41,7 @@ const LEFT_PRIORITY_BY_LINE: Record<ProductLineId, MainTabId[]> = {
 
 const LEFT_PRIORITY_BY_PRO_ROLE: Partial<Record<UserRole, MainTabId[]>> = {
   player: ['home', 'reels', 'matchs', 'messages'],
-  club: ['home', 'covoiturage', 'recrutement', 'matchs'],
+  club: ['home', 'recrutement', 'matchs', 'messages'],
   coach: ['home', 'covoiturage', 'matchs', 'recrutement'],
   agent: ['home', 'recrutement', 'matchs', 'feed'],
   recruiter: ['home', 'recrutement', 'matchs', 'feed'],
@@ -62,12 +62,18 @@ const FLAT_RAIL_RULES: FlatRailRule[] = [
   },
   {
     match: (line, role) => line === 'amateur' && role === 'player',
-    primary: ['home', 'reels', 'matchs', 'messages', 'profil'],
-    overflow: ['covoiturage', 'recrutement', 'sante', 'feed', 'shop'],
+    primary: ['home', 'recrutement', 'matchs', 'feed', 'profil'],
+    overflow: ['reels', 'messages', 'covoiturage', 'shop', 'famille'],
   },
   {
     match: (line, role) => line === 'amateur' && role === 'coach',
-    primary: ['home', 'covoiturage', 'matchs', 'recrutement', 'messages', 'shop', 'profil'],
+    primary: ['home', 'matchs', 'feed', 'messages', 'profil'],
+    overflow: ['covoiturage', 'recrutement', 'shop'],
+  },
+  {
+    match: (line, role) => line === 'amateur' && role === 'club',
+    primary: ['home', 'recrutement', 'matchs', 'messages', 'profil'],
+    overflow: ['feed', 'covoiturage', 'shop'],
   },
   {
     match: (line, role) => line === 'sante' && role === 'physio',
@@ -80,13 +86,14 @@ const FLAT_RAIL_RULES: FlatRailRule[] = [
         line === 'homme' ||
         line === 'woman' ||
         isProProductLine(line)),
-    primary: ['home', 'reels', 'matchs', 'messages', 'profil'],
-    overflow: ['covoiturage', 'recrutement', 'sante', 'shop'],
+    primary: ['home', 'recrutement', 'matchs', 'feed', 'profil'],
+    overflow: ['reels', 'messages', 'covoiturage', 'shop', 'famille'],
   },
   {
     match: (line, role) =>
       line === 'pro_club' || (isProProductLine(line) && role === 'club'),
-    primary: ['home', 'covoiturage', 'recrutement', 'matchs', 'messages', 'shop', 'profil'],
+    primary: ['home', 'recrutement', 'matchs', 'messages', 'profil'],
+    overflow: ['covoiturage', 'shop'],
   },
   {
     match: (line, role) => isProProductLine(line) && role === 'coach',
@@ -112,8 +119,21 @@ function buildFlatRailLayout(
   overflowOrder: MainTabId[] = [],
 ): MobileRailLayout {
   const flat = primary.filter((id) => visible.includes(id));
-  const overflow = overflowOrder.filter((id) => visible.includes(id) && !flat.includes(id));
-  return { left: [], center: null, right: [], overflow, flat };
+  const overflowOrdered = overflowOrder.filter(
+    (id) => visible.includes(id) && !flat.includes(id),
+  );
+  /** Onglets injectés (ex. famille mineurs) hors allowlist overflow. */
+  const PRESERVE_EXTRA: MainTabId[] = ['famille'];
+  const overflowExtra = PRESERVE_EXTRA.filter(
+    (id) => visible.includes(id) && !flat.includes(id) && !overflowOrdered.includes(id),
+  );
+  return {
+    left: [],
+    center: null,
+    right: [],
+    overflow: [...overflowOrdered, ...overflowExtra],
+    flat,
+  };
 }
 
 function buildClassicRailLayout(

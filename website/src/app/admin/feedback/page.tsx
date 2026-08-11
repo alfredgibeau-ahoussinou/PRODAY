@@ -8,7 +8,7 @@ import {
 } from "@/lib/adminSession";
 
 export const metadata: Metadata = {
-  title: "Retours bêta Admin - ProDay",
+  title: "Retours bêta Admin : ProDay",
   robots: { index: false, follow: false },
 };
 

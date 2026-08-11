@@ -1,7 +1,8 @@
 import React, { useMemo } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, StyleSheet } from 'react-native';
+import { PressableSpring } from '../motion';
 import { Icon, type IconName } from '../ui/Icon';
-import { useAdminStyles } from './adminStyles';
+import { useAdminStyles, adminChrome } from './adminStyles';
 import { spacing, radius } from '../../theme/designTokens';
 import type { AppColors } from '../../theme/universeTheme';
 
@@ -53,43 +54,46 @@ export const AdminTabs: React.FC<AdminTabsProps> = ({
 
   return (
     <View style={styles.wrap}>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.rail}
-      >
-        {TABS.map((t) => {
-          const isActive = active === t.id;
-          const count =
-            t.id === 'users' && pendingVerifications > 0
-              ? pendingVerifications
-              : t.countKey && counts
-                ? counts[t.countKey as keyof typeof counts]
-                : undefined;
-          return (
-            <TouchableOpacity
-              key={t.id}
-              style={[styles.tab, isActive && styles.tabActive]}
-              onPress={() => onChange(t.id)}
-              activeOpacity={0.85}
-            >
-              <Icon
-                name={t.icon}
-                size={16}
-                color={isActive ? c.brandInverse : c.textMuted}
-              />
-              <Text style={[styles.tabLabel, isActive && styles.tabLabelActive]}>{t.label}</Text>
-              {count !== undefined && count > 0 ? (
-                <View style={[styles.countBadge, isActive && styles.countBadgeActive]}>
-                  <Text style={[styles.countText, isActive && styles.countTextActive]}>
-                    {count > 99 ? '99+' : count}
-                  </Text>
-                </View>
-              ) : null}
-            </TouchableOpacity>
-          );
-        })}
-      </ScrollView>
+      <View style={styles.track}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.rail}
+        >
+          {TABS.map((t) => {
+            const isActive = active === t.id;
+            const count =
+              t.id === 'users' && pendingVerifications > 0
+                ? pendingVerifications
+                : t.countKey && counts
+                  ? counts[t.countKey as keyof typeof counts]
+                  : undefined;
+            return (
+              <PressableSpring
+                key={t.id}
+                style={[styles.tab, isActive && styles.tabActive]}
+                onPress={() => onChange(t.id)}
+                scaleTo={0.96}
+                haptic
+              >
+                <Icon
+                  name={t.icon}
+                  size={15}
+                  color={isActive ? '#FFFFFF' : c.textMuted}
+                />
+                <Text style={[styles.tabLabel, isActive && styles.tabLabelActive]}>{t.label}</Text>
+                {count !== undefined && count > 0 ? (
+                  <View style={[styles.countBadge, isActive && styles.countBadgeActive]}>
+                    <Text style={[styles.countText, isActive && styles.countTextActive]}>
+                      {count > 99 ? '99+' : count}
+                    </Text>
+                  </View>
+                ) : null}
+              </PressableSpring>
+            );
+          })}
+        </ScrollView>
+      </View>
     </View>
   );
 };
@@ -97,52 +101,49 @@ export const AdminTabs: React.FC<AdminTabsProps> = ({
 function createStyles(c: AppColors) {
   return StyleSheet.create({
     wrap: {
-      backgroundColor: c.surface,
+      backgroundColor: '#FFFFFF',
       borderBottomWidth: 1,
       borderBottomColor: c.border,
       paddingVertical: spacing.sm,
+      paddingHorizontal: spacing.md,
+    },
+    track: {
+      backgroundColor: c.surfaceMuted,
+      borderRadius: radius.xl,
+      padding: 4,
+      borderWidth: 1,
+      borderColor: c.border,
     },
     rail: {
-      paddingHorizontal: spacing.lg,
-      gap: spacing.sm,
+      gap: 4,
+      alignItems: 'center',
     },
     tab: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 6,
-      paddingHorizontal: spacing.md,
-      paddingVertical: spacing.sm,
-      borderRadius: radius.pill,
-      borderWidth: 1,
-      borderColor: c.border,
-      backgroundColor: c.background,
+      paddingHorizontal: 14,
+      paddingVertical: 10,
+      borderRadius: radius.lg,
     },
     tabActive: {
-      backgroundColor: c.accent,
-      borderColor: c.brand,
+      backgroundColor: adminChrome.accent,
     },
-    tabLabel: {
-      fontSize: 12,
-      fontWeight: '800',
-      color: c.text,
-    },
-    tabLabelActive: { color: c.brandInverse },
+    tabLabel: { fontSize: 12, fontWeight: '700', color: c.textMuted },
+    tabLabelActive: { color: '#FFFFFF' },
     countBadge: {
       minWidth: 18,
       height: 18,
       borderRadius: 9,
-      backgroundColor: c.accentSoft,
+      backgroundColor: '#FFFFFF',
       alignItems: 'center',
       justifyContent: 'center',
       paddingHorizontal: 4,
-      borderWidth: 1,
-      borderColor: c.brand,
     },
     countBadgeActive: {
-      backgroundColor: c.brand,
-      borderColor: c.brandInverse,
+      backgroundColor: 'rgba(255,255,255,0.25)',
     },
-    countText: { fontSize: 9, fontWeight: '900', color: c.brand },
-    countTextActive: { color: c.brandInverse },
+    countText: { fontSize: 10, fontWeight: '800', color: c.brand },
+    countTextActive: { color: '#FFFFFF' },
   });
 }

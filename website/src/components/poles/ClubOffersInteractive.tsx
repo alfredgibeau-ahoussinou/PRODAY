@@ -12,6 +12,7 @@ type OfferCol = {
   price: string;
   unit: string;
   tagline: string;
+  priceHint?: string;
   highlight?: boolean;
   /** Show mini 3D Veo camera instead of spelling “Veo”. */
   showVeoMark?: boolean;
@@ -34,10 +35,11 @@ const CLUB_OFFER_COLS: OfferCol[] = [
   },
   {
     id: "premium",
-    label: "Premium",
-    price: "39,99 €",
-    unit: "/ mois",
-    tagline: "Tout inclus · votre matériel",
+    label: "Tout inclus",
+    price: "Sur devis",
+    unit: "",
+    tagline: "Votre matériel",
+    priceHint: "À partir de 3 € / adhérent",
     highlight: true,
   },
   {
@@ -46,6 +48,7 @@ const CLUB_OFFER_COLS: OfferCol[] = [
     price: "Sur devis",
     unit: "",
     tagline: "Clé en main",
+    priceHint: "À partir de 3 € / adhérent",
     showVeoMark: true,
   },
 ];
@@ -90,12 +93,20 @@ const CLUB_COMPARE_ROWS: CompareRow[] = [
     cells: ["Basique", true, true, true],
   },
   {
-    feature: "Pipeline recrutement kanban",
+    feature: "Suivi des recrutements",
     cells: [false, true, true, true],
   },
   {
+    feature: "Analyse de forme",
+    cells: [true, true, true, true],
+  },
+  {
+    feature: "Suivi de charge & récupération",
+    cells: [true, true, true, true],
+  },
+  {
     group: "Performance",
-    feature: "Smart Tactics (tableau, formations)",
+    feature: "Tactique IA (tableau, formations)",
     cells: [false, "Coach abo.", true, true],
   },
   {
@@ -107,7 +118,7 @@ const CLUB_COMPARE_ROWS: CompareRow[] = [
     cells: [false, "Coach abo.", true, true],
   },
   {
-    feature: "Entraînements IA & état de forme",
+    feature: "Entraînements IA (collectifs & individuels)",
     cells: [false, "Coach abo.", true, true],
   },
   {
@@ -156,7 +167,7 @@ function CompareCell({ value }: { value: Cell }) {
   if (value === false) {
     return (
       <span className="text-white/25" aria-label="Non inclus">
-        —
+        …
       </span>
     );
   }
@@ -227,10 +238,11 @@ export function ClubOffersInteractive() {
           Quatre formules Club
         </h2>
         <p className="mt-3 max-w-lg text-sm text-white/55">
-          Amateur · Essentiel · Premium · Pro + Veo. La caméra n’est jamais obligatoire.
+          Amateur · Essentiel · Tout inclus · Pro + Veo. Analyse de forme incluse.
+          Sur devis = à partir de 3 € / adhérent. Caméra jamais obligatoire.
         </p>
 
-        {/* —— Mobile: plan picker + feature card —— */}
+        {/* Mobile: plan picker + feature card */}
         <div className="mt-8 md:hidden">
           <div
             className="flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
@@ -298,6 +310,11 @@ export function ClubOffersInteractive() {
                 {activeCol.unit ? (
                   <p className="text-[10px] text-white/40">{activeCol.unit}</p>
                 ) : null}
+                {activeCol.priceHint ? (
+                  <p className="mt-1 max-w-[9rem] text-[10px] leading-snug text-white/45">
+                    {activeCol.priceHint}
+                  </p>
+                ) : null}
               </div>
             </div>
 
@@ -325,10 +342,21 @@ export function ClubOffersInteractive() {
                 </div>
               ))}
             </div>
+            <Link
+              href={
+                activeCol.price === "Sur devis"
+                  ? ROUTES.clubDevis
+                  : ROUTES.betaWaitlist
+              }
+              className="mt-6 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-[var(--pole-accent,#006CFC)] px-5 text-sm font-semibold text-white"
+            >
+              {activeCol.price === "Sur devis" ? "Demander un devis" : "Commencer"}
+              <ArrowRight size={16} />
+            </Link>
           </article>
         </div>
 
-        {/* —— Desktop / tablet: comparison table —— */}
+        {/* Desktop / tablet: comparison table */}
         <div className="mt-12 hidden overflow-x-auto rounded-sm border border-white/10 md:block">
           <table className="w-full min-w-[820px] border-collapse text-left">
             <thead>
@@ -384,6 +412,11 @@ export function ClubOffersInteractive() {
                         </span>
                       ) : null}
                     </span>
+                    {col.priceHint ? (
+                      <span className="mt-1 block text-[10px] font-normal leading-snug text-white/45">
+                        {col.priceHint}
+                      </span>
+                    ) : null}
                   </th>
                 ))}
               </tr>
@@ -429,14 +462,14 @@ export function ClubOffersInteractive() {
 
         <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
           <p className="max-w-xl text-xs leading-relaxed text-white/40">
-            « Coach abo. » = Smart Tactics / IA / vidéo via abonnement Coach individuel. Pro + Veo :
+            « Coach abo. » = Tactique IA / IA / vidéo via abonnement Coach individuel. Pro + Veo :
             prix catalogue ajustable depuis l’administration.
           </p>
           <Link
-            href={`${ROUTES.pricing}#pro_club`}
-            className="inline-flex min-h-11 items-center justify-center gap-2 text-sm font-semibold text-[var(--pole-accent,#4C8BFF)] transition hover:opacity-80 sm:min-h-0"
+            href={ROUTES.clubDevis}
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-[var(--pole-accent,#006CFC)] px-5 text-sm font-semibold text-white transition hover:brightness-110 sm:min-h-0"
           >
-            Voir les tarifs
+            Demander un devis
             <ArrowRight size={16} />
           </Link>
         </div>

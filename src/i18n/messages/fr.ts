@@ -60,7 +60,7 @@ export const fr: MessageCatalog = {
   'tabs.recrutement': 'Mercato',
   'tabs.matchs': 'Matchs',
   'tabs.covoiturage': 'Covoiturage',
-  'tabs.sante': 'Santé',
+  'tabs.sante': 'Soins',
   'tabs.feed': 'Fil',
   'tabs.reels': 'Réels',
   'tabs.famille': 'Famille',

@@ -8,6 +8,11 @@ import { getFirebaseAuth } from '../../lib/firebase';
 import { authService } from '../../services/auth.service';
 import { isMinorAge, parseAgeInput } from '../../utils/minor';
 import {
+  ageYearsAsOf,
+  isValidPlayerBirthDate,
+  toBirthDateIso,
+} from '../../utils/joueurBirthAge';
+import {
   validateAccountStepFields,
   validateParentalStepFields,
   validatePlayerStepFields,
@@ -128,6 +133,9 @@ export function useSignupForm(initial?: {
   const [category, setCategory] = useState('');
   const [level, setLevel] = useState('');
   const [age, setAge] = useState('');
+  const [birthDay, setBirthDay] = useState('');
+  const [birthMonth, setBirthMonth] = useState('');
+  const [birthYear, setBirthYear] = useState('');
   const [statMatches, setStatMatches] = useState('');
   const [statGoals, setStatGoals] = useState('');
   const [statAssists, setStatAssists] = useState('');
@@ -149,7 +157,22 @@ export function useSignupForm(initial?: {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- hydrate once from deep link / website
   }, []);
 
-  const parsedAge = useMemo(() => parseAgeInput(age), [age]);
+  const birthDateIso = useMemo(() => {
+    const d = parseInt(birthDay, 10);
+    const m = parseInt(birthMonth, 10);
+    const y = parseInt(birthYear, 10);
+    if (!Number.isFinite(d) || !Number.isFinite(m) || !Number.isFinite(y)) return null;
+    return toBirthDateIso(y, m, d);
+  }, [birthDay, birthMonth, birthYear]);
+
+  const parsedAge = useMemo(() => {
+    if (birthDateIso) {
+      const valid = isValidPlayerBirthDate(birthDateIso);
+      if (valid.ok) return valid.age;
+      return ageYearsAsOf(birthDateIso);
+    }
+    return parseAgeInput(age);
+  }, [birthDateIso, age]);
   const isMinor = useMemo(
     () => (parsedAge != null ? isMinorAge(parsedAge) : false),
     [parsedAge]
@@ -247,6 +270,9 @@ export function useSignupForm(initial?: {
     setCategory('');
     setLevel('');
     setAge('');
+    setBirthDay('');
+    setBirthMonth('');
+    setBirthYear('');
     setStatMatches('');
     setStatGoals('');
     setStatAssists('');
@@ -533,6 +559,13 @@ export function useSignupForm(initial?: {
 
   const validateSport = () => {
     if (!validateProgram()) return false;
+    if (role === 'player' && (isAmateurProduct || isProPlayerSignup)) {
+      const valid = isValidPlayerBirthDate(birthDateIso);
+      if (!valid.ok) {
+        setFieldErrors({ age: valid.reason });
+        return false;
+      }
+    }
     const all = validatePlayerStepFields({
       position,
       category,
@@ -699,6 +732,7 @@ export function useSignupForm(initial?: {
     category: category.trim(),
     level: level.trim(),
     age: parsedAge ?? undefined,
+    birth_date: birthDateIso ?? undefined,
     gender:
       isAmateurProduct || isProPlayerSignup || (isProProduct && role === 'player')
         ? gender
@@ -799,6 +833,26 @@ export function useSignupForm(initial?: {
         const user = isOAuthCompletion
           ? await authService.completeProfile(common)
           : await authService.signUp({ ...common, password });
+
+        if (
+          role === 'player' &&
+          birthDateIso &&
+          (gender === 'men' || gender === 'women') &&
+          parsedAge != null
+        ) {
+          try {
+            const { writeJoueurGate } = await import('../../utils/joueurGateStorage');
+            const { joueurAgeGroupFromYears } = await import('../../utils/joueurBirthAge');
+            await writeJoueurGate(user.uid, {
+              gender,
+              age: parsedAge,
+              ageGroup: joueurAgeGroupFromYears(parsedAge),
+              birthDate: birthDateIso,
+            });
+          } catch {
+            // Gate pourra être complétée à l’accueil
+          }
+        }
 
         await refreshProfile();
         void referralService.bootstrapAfterSignup({
@@ -951,6 +1005,13 @@ export function useSignupForm(initial?: {
     setLevel,
     age,
     setAge,
+    birthDay,
+    setBirthDay,
+    birthMonth,
+    setBirthMonth,
+    birthYear,
+    setBirthYear,
+    birthDateIso,
     statMatches,
     setStatMatches,
     statGoals,
@@ -968,6 +1029,7 @@ export function useSignupForm(initial?: {
     isMinor,
     parentalRequired,
     ageSpaceMismatch,
+    parsedAge,
     pageIndex,
     steps,
     currentPage,

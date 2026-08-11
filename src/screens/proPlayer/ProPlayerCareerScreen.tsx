@@ -170,15 +170,6 @@ export const ProPlayerCareerScreen: React.FC = () => {
         <Icon name="briefcase" size={18} color={colors.accent} />
         <ProDayText variant="caption">Voir les opportunités</ProDayText>
       </PressableSpring>
-
-      <PressableSpring
-        style={[styles.link, { borderColor: colors.border }]}
-        onPress={() => nav.setActiveTab('sante')}
-        haptic
-      >
-        <Icon name="heart" size={18} color={colors.accent} />
-        <ProDayText variant="caption">Prendre rendez-vous</ProDayText>
-      </PressableSpring>
     </ProPlayerShell>
   );
 };

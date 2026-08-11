@@ -20,7 +20,7 @@ type TerminalFeatureGridProps = {
   id?: string;
 };
 
-/** Numbered feature grid — text only, Terminal YOS pattern. */
+/** Numbered feature grid : text only, Terminal YOS pattern. */
 export function TerminalFeatureGrid({
   kicker = "Système",
   title,

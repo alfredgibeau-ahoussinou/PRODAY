@@ -33,7 +33,7 @@ const HUB_BLOCKS = [
   },
   {
     title: "Bourse de recrutement",
-    body: "Avant de chercher dehors : besoins d’équipe, matching sur le vivier interne, propositions de montée, puis publication entre clubs ProDay.",
+    body: "Avant de chercher dehors : besoins d’équipe, matching sur le vivier (équipe B, réserve, catégorie voisine), propositions de montée, puis publication entre clubs ProDay.",
   },
   {
     title: "Mercato club",
@@ -41,11 +41,11 @@ const HUB_BLOCKS = [
   },
   {
     title: "Tournois",
-    body: "Générateur de poules, Live Hub, classements auto, QR public. Organisateur = rôle intégré au Club.",
+    body: "Générateur de poules, Hub en direct, classements auto, QR public. Organisateur = rôle intégré au Club.",
   },
   {
     title: "Écosystème local",
-    body: "Marketplace équipements entre membres, micro-sponsoring commerces, cagnottes avec règles du club.",
+    body: "Place de marché équipements entre membres, micro-sponsoring commerces, cagnottes avec règles du club.",
   },
 ];
 
@@ -146,6 +146,12 @@ export function ClubPresidentHub() {
                 className="inline-flex items-center justify-center bg-[var(--pole-accent,#006CFC)] px-5 py-3 text-sm font-semibold text-white transition hover:brightness-110"
               >
                 Rejoindre la bêta Club
+              </Link>
+              <Link
+                href="#bourse"
+                className="inline-flex items-center justify-center border border-white/25 px-5 py-3 text-sm font-semibold text-white/80 transition hover:border-white/50"
+              >
+                Voir la bourse
               </Link>
               <Link
                 href="#modules"

@@ -1,11 +1,7 @@
 import { redirect } from "next/navigation";
 import { ROUTES } from "@/lib/routes";
-import {
-  ADMIN_LOGIN_PATH,
-  getAdminSessionFromCookies,
-} from "@/lib/adminSession";
 
-export default async function AdminEmailsRedirectPage() {
-  if (!(await getAdminSessionFromCookies())) redirect(ADMIN_LOGIN_PATH);
+/** Stub retiré du nav HQ — redirige vers le dashboard. */
+export default function AdminEmailsPage() {
   redirect(ROUTES.adminDashboard);
 }

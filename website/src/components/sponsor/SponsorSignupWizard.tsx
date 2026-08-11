@@ -534,7 +534,7 @@ export function SponsorSignupWizard() {
                     ["Contact", form.contactName],
                     ["Budget", form.budget],
                     ["Email", form.email],
-                    ["Téléphone", form.phone || "—"],
+                    ["Téléphone", form.phone || "…"],
                     ["Objectifs", form.goals.join(", ")],
                     ["Public cible", form.audience.join(", ")],
                     ["Régions", form.regions.join(", ")],

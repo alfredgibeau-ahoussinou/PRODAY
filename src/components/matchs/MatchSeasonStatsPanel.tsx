@@ -2,16 +2,15 @@ import React, { useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
 import type { TeamEvent } from '../../models/TeamEvent';
 import type { User } from '../../models/User';
-import { ProDaySurface } from '../ui/ProDaySurface';
 import { MatchChapterIntro } from './MatchChapterIntro';
 import { ProDayText } from '../ui/ProDayText';
-import { ProDayGradient } from '../ui/ProDayGradient';
-import { Icon } from '../ui/Icon';
 import { PressableSpring } from '../motion';
 import { useTabNavigation } from '../../context/TabNavigationContext';
 import { useTranslation } from '../../context/LocaleContext';
 import { useAppTheme } from '../../context/ProductLineContext';
-import { spacing, radius } from '../../theme/designTokens';
+import { MATCH_SITE } from '../../content/matchPageIdentity';
+import { spacing } from '../../theme/designTokens';
+import { MatchEmptyState, MatchKpiRow, MatchLightPanel } from './matchCenterUi';
 
 interface MatchSeasonStatsPanelProps {
   profile: User | null;
@@ -64,71 +63,83 @@ export const MatchSeasonStatsPanel: React.FC<MatchSeasonStatsPanelProps> = ({
 
   if (!profile) {
     return (
-      <ProDaySurface variant="module" style={styles.empty}>
-        <Icon name="trophy" size={32} color={colors.textMuted} />
-        <ProDayText variant="section">{t('matchs.stats.intro.title')}</ProDayText>
-        <ProDayText variant="body" muted style={styles.emptySub}>
-          Connectez-vous pour suivre vos buts, passes et notes de match.
-        </ProDayText>
-        <PressableSpring onPress={() => openAuth('login')} scaleTo={0.97} haptic>
-          <ProDayGradient kind="cta" style={styles.guestCta}>
-            <ProDayText variant="caption" inverse style={styles.guestCtaText}>
-              {t('common.login')}
-            </ProDayText>
-          </ProDayGradient>
-        </PressableSpring>
+      <View style={styles.wrap}>
+        <MatchChapterIntro
+          kicker="Stats"
+          title={t('matchs.stats.intro.title')}
+          subtitle="Connectez-vous pour suivre buts, passes et notes de match."
+        />
+        <MatchEmptyState
+          title={t('matchs.stats.intro.title')}
+          body="Vos stats de saison apparaissent ici après connexion."
+          cta={t('common.login')}
+          onPress={() => openAuth('login')}
+        />
         <PressableSpring onPress={() => openAuth('signup')} scaleTo={0.98} haptic>
-          <ProDayText variant="caption" accent style={styles.guestLink}>
+          <ProDayText variant="caption" style={[styles.guestLink, { color: colors.accent }]}>
             {t('common.guest.signup')}
           </ProDayText>
         </PressableSpring>
-      </ProDaySurface>
+      </View>
     );
   }
 
   return (
     <View style={styles.wrap}>
       <MatchChapterIntro
+        kicker="Stats"
         title={t('matchs.stats.intro.title')}
         subtitle={t('matchs.stats.intro.subtitle')}
       />
 
-      <ProDaySurface variant="accent" style={[styles.hero, { borderColor: colors.border }]}>
-        <View style={styles.heroGrid}>
-          <StatBlock label="Matchs" value={String(season?.matches ?? totals?.matches ?? 0)} />
-          <StatBlock label="Buts" value={String(season?.goals ?? totals?.goals ?? 0)} highlight />
-          <StatBlock label="Passes" value={String(season?.assists ?? totals?.assists ?? 0)} />
-          <StatBlock label="Note moy." value={totals?.avgRating ?? '…'} />
-        </View>
-        {totals && totals.minutes > 0 ? (
-          <ProDayText variant="caption" muted style={styles.minutes}>
-            {totals.minutes} minutes jouées (feuilles ProDay)
-          </ProDayText>
-        ) : null}
-      </ProDaySurface>
+      <MatchKpiRow
+        items={[
+          {
+            label: 'Matchs',
+            value: String(season?.matches ?? totals?.matches ?? 0),
+            tone: colors.accent,
+          },
+          {
+            label: 'Buts',
+            value: String(season?.goals ?? totals?.goals ?? 0),
+            tone: MATCH_SITE.warn,
+          },
+          {
+            label: 'Passes',
+            value: String(season?.assists ?? totals?.assists ?? 0),
+          },
+          {
+            label: 'Note',
+            value: totals?.avgRating ?? '…',
+          },
+        ]}
+      />
 
-      <ProDayText variant="section">{t('matchs.stats.history')}</ProDayText>
+      {totals && totals.minutes > 0 ? (
+        <ProDayText variant="caption" style={styles.minutes}>
+          {totals.minutes} minutes jouées (feuilles ProDay)
+        </ProDayText>
+      ) : null}
+
+      <ProDayText variant="caption" style={[styles.sectionKicker, { color: colors.accent }]}>
+        {t('matchs.stats.history')}
+      </ProDayText>
+
       {matchHistory.length === 0 ? (
-        <ProDaySurface variant="module" style={[styles.empty, { borderColor: colors.border }]}>
-          <Icon name="trophy" size={32} color={colors.textMuted} />
-          <ProDayText variant="body" muted style={styles.emptySub}>
-            Jouez des matchs convoqués. Le staff renseignera vos notes et stats ici.
-          </ProDayText>
-        </ProDaySurface>
+        <MatchEmptyState
+          title="Pas encore de feuille"
+          body="Jouez des matchs convoqués. Le staff renseignera notes et stats ici."
+        />
       ) : (
         matchHistory.map((e) => {
           const s = e.player_match_stats![profile.uid];
           return (
-            <ProDaySurface
-              key={e.id}
-              variant="module"
-              style={[styles.row, { borderColor: colors.border }]}
-            >
+            <MatchLightPanel key={e.id} style={styles.row}>
               <View style={styles.rowMain}>
-                <ProDayText variant="section" numberOfLines={1}>
+                <ProDayText variant="section" numberOfLines={1} style={styles.rowTitle}>
                   {e.title}
                 </ProDayText>
-                <ProDayText variant="caption" muted>
+                <ProDayText variant="caption" style={styles.muted}>
                   {e.starts_at.toLocaleDateString('fr-FR', {
                     day: 'numeric',
                     month: 'short',
@@ -137,14 +148,14 @@ export const MatchSeasonStatsPanel: React.FC<MatchSeasonStatsPanelProps> = ({
                 </ProDayText>
               </View>
               <View style={styles.rowStats}>
-                <ProDayText variant="caption" accent style={styles.statNum}>
+                <ProDayText variant="caption" style={[styles.statNum, { color: colors.accent }]}>
                   {s.rating?.toFixed(1) ?? '…'}
                 </ProDayText>
-                <ProDayText variant="caption" muted>
+                <ProDayText variant="caption" style={styles.muted}>
                   {s.goals ?? 0}B · {s.assists ?? 0}P
                 </ProDayText>
               </View>
-            </ProDaySurface>
+            </MatchLightPanel>
           );
         })
       )}
@@ -152,57 +163,24 @@ export const MatchSeasonStatsPanel: React.FC<MatchSeasonStatsPanelProps> = ({
   );
 };
 
-const StatBlock: React.FC<{ label: string; value: string; highlight?: boolean }> = ({
-  label,
-  value,
-  highlight,
-}) => (
-  <View style={styles.statBlock}>
-    <ProDayText variant="hero" accent={highlight}>
-      {value}
-    </ProDayText>
-    <ProDayText variant="caption" muted>
-      {label}
-    </ProDayText>
-  </View>
-);
-
 const styles = StyleSheet.create({
   wrap: { gap: spacing.md },
-  lead: { marginBottom: spacing.sm },
-  hero: { borderWidth: 1, gap: spacing.sm },
-  heroGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-around',
-    gap: spacing.md,
+  minutes: { textAlign: 'center', color: MATCH_SITE.muted },
+  sectionKicker: {
+    textTransform: 'uppercase',
+    letterSpacing: 1.8,
+    fontSize: 10,
+    fontWeight: '800',
   },
-  statBlock: { alignItems: 'center', minWidth: 72 },
-  minutes: { textAlign: 'center' },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1,
-    borderRadius: radius.lg,
-    padding: spacing.md,
-    marginBottom: spacing.xs,
+    gap: spacing.sm,
   },
   rowMain: { flex: 1, gap: 2 },
+  rowTitle: { color: MATCH_SITE.foreground, fontWeight: '800' },
   rowStats: { alignItems: 'flex-end' },
   statNum: { fontWeight: '900', fontSize: 16 },
-  empty: {
-    alignItems: 'center',
-    gap: spacing.sm,
-    padding: spacing.xl,
-    borderWidth: 1,
-  },
-  emptySub: { textAlign: 'center' },
-  guestCta: {
-    marginTop: spacing.sm,
-    paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.md,
-    borderRadius: radius.pill,
-  },
-  guestCtaText: { fontWeight: '800' },
-  guestLink: { marginTop: spacing.xs, fontWeight: '700' },
+  muted: { color: MATCH_SITE.muted },
+  guestLink: { fontWeight: '700', textAlign: 'center' },
 });

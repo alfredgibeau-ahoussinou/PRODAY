@@ -1,10 +1,6 @@
 /**
- * RevenueCat entitlement layer over App Store / Play Billing.
- *
- * Decision (audit 2026-08): no Stripe Billing path existed for Pro — Stripe is
- * one-time Checkout only (shop + club dues). IAP via expo-iap grants Pro but
- * lacked renewals/cancel sync. RevenueCat is the sole recurring provider;
- * expo-iap remains a fallback when RC API keys are unset or SDK configure fails.
+ * RevenueCat entitlement layer over App Store / Play Billing (repli IAP).
+ * Abonnements Pro prioritaires : Stripe Checkout — voir subscriptionPayment.service.ts.
  */
 import { Linking, Platform } from 'react-native';
 import Constants, { ExecutionEnvironment } from 'expo-constants';
@@ -56,6 +52,11 @@ function platformApiKey(): string {
   return '';
 }
 
+/** Clés sandbox RC (`test_…`) vs prod store (`appl_…` / `goog_…`). */
+export function isRevenueCatTestStoreKey(apiKey: string): boolean {
+  return apiKey.startsWith('test_') || apiKey.startsWith('rcb_');
+}
+
 function isNativeStoreBuild(): boolean {
   if (Platform.OS === 'web') return false;
   return Constants.executionEnvironment !== ExecutionEnvironment.StoreClient;
@@ -63,6 +64,8 @@ function isNativeStoreBuild(): boolean {
 
 let configured = false;
 let configurePromise: Promise<boolean> | null = null;
+/** Dernier appUserID synchronisé avec Purchases.logIn — évite les logIn redondants. */
+let identifiedAppUserId: string | null = null;
 
 async function ensureConfigured(appUserId?: string): Promise<boolean> {
   if (!isNativeStoreBuild() || !isFirebaseConfigured()) return false;
@@ -70,10 +73,11 @@ async function ensureConfigured(appUserId?: string): Promise<boolean> {
   if (!apiKey) return false;
 
   if (configured) {
-    if (appUserId) {
+    if (appUserId && appUserId !== identifiedAppUserId) {
       try {
         const Purchases = (await import('react-native-purchases')).default;
         await Purchases.logIn(appUserId);
+        identifiedAppUserId = appUserId;
       } catch {
         // keep prior session
       }
@@ -87,13 +91,24 @@ async function ensureConfigured(appUserId?: string): Promise<boolean> {
         const PurchasesMod = await import('react-native-purchases');
         const Purchases = PurchasesMod.default;
         if (__DEV__) {
-          Purchases.setLogLevel(PurchasesMod.LOG_LEVEL.VERBOSE);
+          // WARN : moins de bruit Paywalls V2 / ui_config que INFO/VERBOSE.
+          Purchases.setLogLevel(PurchasesMod.LOG_LEVEL.WARN);
+        } else {
+          Purchases.setLogLevel(PurchasesMod.LOG_LEVEL.ERROR);
         }
+
+        if (!__DEV__ && isRevenueCatTestStoreKey(apiKey)) {
+          console.warn(
+            '[RevenueCat] Clé Test Store détectée dans un build non-__DEV__. Utilisez appl_… / goog_… (EAS secrets production).'
+          );
+        }
+
         Purchases.configure({
           apiKey,
           appUserID: appUserId || undefined,
         });
         configured = true;
+        identifiedAppUserId = appUserId ?? null;
         return true;
       } catch {
         configurePromise = null;
@@ -139,6 +154,12 @@ export const revenueCatService = {
     return Boolean(platformApiKey());
   },
 
+  /** True si la clé courante est une clé sandbox / Test Store. */
+  isUsingTestStoreKey(): boolean {
+    const key = platformApiKey();
+    return Boolean(key) && isRevenueCatTestStoreKey(key);
+  },
+
   /** Call once at app startup — configures SDK if keys are present (no duplicate configure). */
   async init(): Promise<void> {
     if (!this.isAvailable()) return;
@@ -154,9 +175,16 @@ export const revenueCatService = {
     if (!configured) return;
     try {
       const Purchases = (await import('react-native-purchases')).default;
+      const info = await Purchases.getCustomerInfo();
+      // RC logue une ERROR si on logOut un user déjà anonyme (bruit LogBox).
+      if (info.originalAppUserId.startsWith('$RCAnonymousID:')) {
+        identifiedAppUserId = null;
+        return;
+      }
       await Purchases.logOut();
+      identifiedAppUserId = null;
     } catch {
-      // anonymous reset optional
+      // anonymous / SDK non prêt — ignore
     }
   },
 

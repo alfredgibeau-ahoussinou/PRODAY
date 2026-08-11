@@ -1,12 +1,15 @@
 import type { UserRole } from '../models/User';
 import { yearlyPriceFromMonthly } from '../utils/subscriptionPricing';
+import { PLAYER_PASS_PREMIUM_EUR } from './clubOffers';
 
 /** Identifiant produit store (IAP App Store / Play — build EAS requis). */
 export type SubscriptionPlanId =
   | 'player_plus'
   | 'recruiter_pro'
   | 'coach_pro'
+  | 'club_amateur'
   | 'club_pro'
+  | 'club_premium'
   | 'agent_elite'
   | 'physio_pro'
   | 'organizer_pro'
@@ -20,13 +23,20 @@ export type SubscriptionFeatureId =
   | 'sponsor_club_message'
   | 'sponsor_active_offer'
   | 'club_active_post'
-  | 'club_team';
+  | 'club_team'
+  | 'smart_tactics'
+  | 'ai_training'
+  | 'video_analysis'
+  | 'form_analysis';
 
 export interface PlanPricing {
   monthlyEur: number;
   yearlyEur: number;
   /** IAP App Store / Play — build EAS requis (pas Expo Go). */
   storeAvailable: boolean;
+  /** Offre Club Tout inclus : pas de prix fixe, devis personnalisé. */
+  quoteOnly?: boolean;
+  priceHint?: string;
 }
 
 export interface PlanLimits {
@@ -46,7 +56,7 @@ export interface SubscriptionPlanDefinition {
   limits: PlanLimits;
   freeIncludes: string[];
   proIncludes: string[];
-  /** Commission sur prestations réservées via l'app (ex. pôle santé). */
+  /** Commission sur prestations réservées via l'app (ex. rôle santé). */
   bookingCommissionPercent?: number;
   bookingCommissionNote?: string;
 }
@@ -63,29 +73,30 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionPlanId, SubscriptionPlanDefi
   player_plus: {
     id: 'player_plus',
     role: 'player',
-    label: 'Joueur Plus',
-    tagline: 'CV en ligne, visibilité et Mercato',
-    pricing: planPricing(2.99, true),
+    label: 'Pass Joueur Premium',
+    tagline: 'Entraînements IA, stats avancées et passeport recruteur',
+    pricing: planPricing(PLAYER_PASS_PREMIUM_EUR, true),
     limits: { mercato_apply_per_month: 1 },
     freeIncludes: [
-      'Profil, Visibilité et CV en ligne',
-      'Galerie et stats saison',
-      'Mercato en lecture',
-      '1 candidature / mois',
-      'Calendrier et RSVP équipe',
+      'Profil & réseau',
+      'Statistiques de base',
+      'Événements & messagerie',
+      'Convocations & covoiturage',
     ],
     proIncludes: [
-      'Candidatures Mercato illimitées',
-      'Mise en avant dans les recherches',
-      'Alertes nouvelles annonces',
-      'Export PDF optionnel',
+      'Entraînements personnalisés IA',
+      'Statistiques avancées & heatmaps',
+      'Analyse vidéo',
+      'Passeport recruteur',
+      'Objectifs personnalisés & historique',
+      'Comparaison avec d’autres joueurs',
     ],
   },
   recruiter_pro: {
     id: 'recruiter_pro',
     role: 'recruiter',
     label: 'Recruteur Pro',
-    tagline: 'Scouting, Mercato Pro et pipeline candidatures',
+    tagline: 'Rôle intégré — scouting et suivi (pas un pôle)',
     pricing: planPricing(7.99, true),
     limits: { recruitment_messages_per_month: 5 },
     freeIncludes: [
@@ -96,7 +107,7 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionPlanId, SubscriptionPlanDefi
     ],
     proIncludes: [
       'Annonces Mercato Pro actives',
-      'Pipeline candidatures',
+      'Suivi des candidatures',
       'Messages recrutement illimités',
       'Statistiques scouting & candidatures',
     ],
@@ -104,31 +115,52 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionPlanId, SubscriptionPlanDefi
   coach_pro: {
     id: 'coach_pro',
     role: 'coach',
-    label: 'Coach Pro',
-    tagline: 'Recrutement et gestion multi-équipes',
+    label: 'Coach Premium',
+    tagline: 'Tactique IA, IA, vidéo et préparation match',
     pricing: planPricing(7.99, true),
     limits: {
       club_teams: 1,
       recruitment_messages_per_month: 5,
     },
     freeIncludes: [
-      'Profil staff et vérification',
+      'Profil coach (parcours, diplômes, philosophie)',
       '1 équipe liée',
-      '5 messages recrutement / mois',
-      'Annonces Mercato en lecture',
+      'Calendrier & communication de base',
     ],
     proIncludes: [
-      'Équipes illimitées',
-      'Messages recrutement illimités',
-      'Annonces Mercato actives',
-      'Statistiques candidatures',
+      'Tactique IA (tableau, formations, banc)',
+      'Assistant IA & rapports automatiques',
+      'Analyse vidéo & adversaires',
+      'Préparation des matchs',
+      'Entraînements IA (collectifs & individuels)',
+      'Convocations, présences, multi-équipes',
+    ],
+  },
+  club_amateur: {
+    id: 'club_amateur',
+    role: 'club',
+    label: 'Club Amateur',
+    tagline: 'Gestion essentielle pour petits clubs',
+    pricing: planPricing(4.99, true),
+    limits: { club_teams: 2, club_active_posts: 1 },
+    freeIncludes: [
+      'Profil club',
+      '1 équipe',
+      'Covoiturage lecture',
+    ],
+    proIncludes: [
+      'Gestion des licenciés',
+      'Convocations & présences',
+      'Calendrier & communication',
+      'Covoiturage',
+      'Résultats & classements automatiques',
     ],
   },
   club_pro: {
     id: 'club_pro',
     role: 'club',
-    label: 'Club Pro',
-    tagline: 'Annonces et structure club',
+    label: 'Club Essentiel',
+    tagline: 'Gestion club ; coachs en abonnement individuel',
     pricing: planPricing(11.99, true),
     limits: { club_teams: 1, club_active_posts: 2 },
     freeIncludes: [
@@ -138,17 +170,45 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionPlanId, SubscriptionPlanDefi
       'Vitrine publique',
     ],
     proIncludes: [
-      'Annonces actives illimitées',
-      'Multi-équipes',
-      'Priorité dans le fil Mercato',
-      'Exports candidatures & pipeline kanban',
+      'Gestion, convocations, présences',
+      'Calendrier, communication, covoiturage',
+      'Compétitions & classements',
+      'Multi-équipes & suivi des candidatures',
+      'Coachs : souscription individuelle Tactique IA',
+    ],
+  },
+  club_premium: {
+    id: 'club_premium',
+    role: 'club',
+    label: 'Tout inclus',
+    tagline: 'Votre matériel',
+    pricing: {
+      monthlyEur: 0,
+      yearlyEur: 0,
+      storeAvailable: false,
+      quoteOnly: true,
+      priceHint: 'À partir de 3 € / adhérent — tarif adapté selon la taille du club',
+    },
+    limits: { club_teams: 99, club_active_posts: 99 },
+    freeIncludes: [
+      'Profil club',
+      'Vitrine publique',
+    ],
+    proIncludes: [
+      'Tous les coachs, staff, dirigeants et joueurs',
+      'Tactique IA, IA, analyse vidéo',
+      'Statistiques, convocations, présences',
+      'Calendrier, communication, covoiturage',
+      'Entraînements IA & analyse de forme',
+      'Administration complète',
+      'Pass Joueur Premium optionnel à 3,99 €/mois',
     ],
   },
   agent_elite: {
     id: 'agent_elite',
     role: 'agent',
     label: 'Agent Elite',
-    tagline: 'CRM joueurs, mandats et pipeline. Offre lancement 19,99 € (20 premiers)',
+    tagline: 'Rôle intégré — CRM et mandats (pas un pôle)',
     /** Tarif standard post-lancement ; voir agentLaunchPricing pour 19,99 €. */
     pricing: planPricing(29.99, true),
     limits: { recruitment_messages_per_month: 10 },
@@ -161,15 +221,15 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionPlanId, SubscriptionPlanDefi
     proIncludes: [
       'Contacts illimités',
       'Alertes géolocalisées',
-      'Pipeline mandats',
+      'Suivi des mandats',
       'Exports et rapports',
     ],
   },
   physio_pro: {
     id: 'physio_pro',
     role: 'physio',
-    label: 'Pôle santé Pro',
-    tagline: 'Abonnement léger + visibilité clubs. Commission sur les RDV',
+    label: 'Santé Pro',
+    tagline: 'Rôle médical intégré — abonnement + commission RDV',
     pricing: planPricing(19.99, true),
     limits: {},
     bookingCommissionPercent: 10,
@@ -194,7 +254,7 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionPlanId, SubscriptionPlanDefi
     id: 'organizer_pro',
     role: 'organizer',
     label: 'Organisateur Pro',
-    tagline: 'Événements, détections et visibilité locale',
+    tagline: 'Rôle intégré — tournois et détections (pas un pôle)',
     pricing: planPricing(14.99, true),
     limits: {},
     freeIncludes: [
@@ -263,5 +323,5 @@ export const ROLES_WITHOUT_STORE_PLAN: UserRole[] = ['supporter', 'parent'];
 export const FREE_TIER_LABEL = 'Gratuit';
 export const PRO_TIER_LABEL = 'Pro';
 
-/** Commission ProDay sur RDV pôle santé réservés via l'app (profils éligibles). */
+/** Commission ProDay sur RDV rôle santé réservés via l'app (profils éligibles). */
 export const PHYSIO_BOOKING_COMMISSION_PERCENT = 10;

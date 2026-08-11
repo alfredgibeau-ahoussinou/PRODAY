@@ -14,6 +14,13 @@ export interface PlatformConfig {
   maintenance_mode: boolean;
   maintenance_message: string;
   feature_flags: PlatformFeatureFlags;
+  /** Commissions coaching à l’heure (admin). */
+  coaching_commission?: {
+    proday_percent: number;
+    club_percent: number;
+    hourly_rate_min_eur: number;
+    hourly_rate_max_eur: number;
+  };
   updated_at?: Date;
   updated_by_uid?: string;
 }

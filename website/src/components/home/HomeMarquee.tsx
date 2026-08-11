@@ -13,7 +13,7 @@ const WORDS = [
   "Pulse",
 ];
 
-/** Bandeau défilant — énergie jeune. */
+/** Bandeau défilant : énergie jeune. */
 export function HomeMarquee() {
   const loop = [...WORDS, ...WORDS];
   return (

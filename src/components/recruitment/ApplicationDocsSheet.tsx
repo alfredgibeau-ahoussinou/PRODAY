@@ -49,6 +49,13 @@ export const ApplicationDocsSheet: React.FC<ApplicationDocsSheetProps> = ({
   };
 
   const save = async () => {
+    if (docs.some((d) => d.kind === 'medical')) {
+      Alert.alert(
+        'Document médical interdit',
+        'Les documents médicaux ne peuvent pas être partagés via le Mercato.',
+      );
+      return;
+    }
     setBusy(true);
     try {
       await onSave(docs);

@@ -8,7 +8,7 @@ import { AdminReferrals } from "@/components/admin/AdminReferrals";
 import { fetchAdminPlatformStats } from "@/lib/adminPlatformApi";
 
 export const metadata: Metadata = {
-  title: "Parrainage Admin - ProDay",
+  title: "Parrainage Admin : ProDay",
   robots: { index: false, follow: false },
 };
 

@@ -12,6 +12,7 @@ import { isJoueurProductLine } from './playerLevelBadge';
 export const ADMIN_PRODUCT_LINES: ProductLineId[] = [
   'amateur',
   'supporter',
+  'parent',
   'pro_club',
   'pro_staff',
   'sponsor',
@@ -24,12 +25,14 @@ export function adminProductLineLabel(line: ProductLineId): string {
   switch (line) {
     case 'supporter':
       return 'Supporter';
+    case 'parent':
+      return 'Parent';
     case 'sponsor':
       return 'Sponsor';
     case 'pro_club':
       return 'Pro Club';
     case 'pro_staff':
-      return 'Pro Staff';
+      return 'Coach';
     case 'sante':
       return 'Santé';
     default:
@@ -62,6 +65,7 @@ const ROLE_HINTS: Partial<Record<UserRole, string>> = {
   organizer: 'Événements & tournois',
   sponsor: 'Marque & campagnes',
   supporter: 'Fan & communauté',
+  parent: 'Supervision · messages · agenda',
   physio: 'Pôle santé · 7 spécialités',
 };
 
@@ -79,6 +83,7 @@ export function resolveAdminProductLine(
   if (role === 'sponsor') return 'sponsor';
   if (role === 'physio') return 'sante';
   if (role === 'supporter') return 'supporter';
+  if (role === 'parent') return 'parent';
 
   if (role === 'player') {
     if (preferred === 'amateur') return 'amateur';
@@ -105,4 +110,5 @@ export const ADMIN_EDIT_ROLES: UserRole[] = [
   'physio',
   'sponsor',
   'supporter',
+  'parent',
 ];

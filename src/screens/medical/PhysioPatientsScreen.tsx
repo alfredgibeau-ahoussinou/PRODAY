@@ -12,6 +12,8 @@ import { PressableSpring, StaggerReveal } from '../../components/motion';
 import { useTabNavigationActions } from '../../hooks/useTabNavigationActions';
 import { useTranslation } from '../../context/LocaleContext';
 import type { AppColors } from '../../theme/universeTheme';
+import { useMedicalConfidentialityGate } from '../../components/medical/MedicalConfidentialityNotice';
+import { privacyAuditService } from '../../services/privacyGrants.service';
 
 interface PhysioPatientsScreenProps {
   profile: User;
@@ -25,6 +27,7 @@ export const PhysioPatientsScreen: React.FC<PhysioPatientsScreenProps> = ({ prof
   const styles = useMemo(() => createStyles(c), [c]);
   const nav = useTabNavigationActions();
   const { appointments, loading } = usePhysioAppointments(profile.uid, 90);
+  const gate = useMedicalConfidentialityGate(profile.uid);
 
   const patients = useMemo(() => {
     const map = new Map<string, { name: string; lastVisit: Date }>();
@@ -42,12 +45,18 @@ export const PhysioPatientsScreen: React.FC<PhysioPatientsScreenProps> = ({ prof
 
   return (
     <View style={[styles.root, rootStyle]}>
+      {gate.Notice}
       <ScreenHeader
         title={t('medical.patients.title')}
         subtitle={t('medical.patients.subtitle')}
         onBack={onBack}
         centered
       />
+      {!gate.gateOpen ? (
+        <Text style={styles.empty}>
+          Acceptez la notice de confidentialité médicale pour consulter la liste des patients.
+        </Text>
+      ) : (
       <ScrollView contentContainerStyle={styles.content}>
         {loading ? (
           <Text style={styles.empty}>{t('medical.patients.loading')}</Text>
@@ -58,7 +67,17 @@ export const PhysioPatientsScreen: React.FC<PhysioPatientsScreenProps> = ({ prof
             <StaggerReveal key={patient.uid} index={index}>
               <PressableSpring
                 style={styles.row}
-                onPress={() => nav.setActiveTab('messages')}
+                onPress={() => {
+                  void privacyAuditService.log({
+                    actor_uid: profile.uid,
+                    action: 'view',
+                    resource_type: 'medical_appointment',
+                    resource_id: patient.uid,
+                    owner_uid: patient.uid,
+                    context: 'physio_patients_list',
+                  });
+                  nav.setActiveTab('messages');
+                }}
                 scaleTo={0.98}
                 haptic
               >
@@ -79,6 +98,7 @@ export const PhysioPatientsScreen: React.FC<PhysioPatientsScreenProps> = ({ prof
           ))
         )}
       </ScrollView>
+      )}
     </View>
   );
 };

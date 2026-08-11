@@ -482,7 +482,7 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
                   <Text style={styles.empty}>
                     {canCreateConvocations
                       ? 'Aucun événement planifié pour le moment.'
-                      : 'Aucun événement. Les convocations sont gérées par le Pôle Staff (coach Pro).'}
+                      : 'Aucun événement. Les convocations sont gérées par le coach Premium (ou Tout inclus).'}
                   </Text>
                   {canCreateConvocations ? (
                     <PressableSpring style={styles.createEventBtn} onPress={() => setHubView('create')} scaleTo={0.97} haptic>

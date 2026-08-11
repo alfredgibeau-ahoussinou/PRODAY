@@ -93,7 +93,7 @@ function entriesForPath(pathname: string, pricingHref: string): HelpEntry[] {
       id: "pole-pro",
       question: "Club ou Coach ?",
       answer:
-        "Club : équipes, invitations de match entre clubs, compétitions, permissions, covoiturage. Coach : Smart Tactics, IA, effectif, et proposition de match pour son équipe.",
+        "Club : équipes, invitations de match entre clubs, compétitions, permissions, covoiturage. Coach : Tactique IA, IA, effectif, et proposition de match pour son équipe.",
       href: ROUTES.coach,
       hrefLabel: "Pôle Coach",
     });

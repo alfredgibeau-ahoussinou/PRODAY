@@ -23,6 +23,7 @@ export function DownloadSection() {
               Bientôt sur iOS & Android
             </h2>
             <p className="mt-3 leading-relaxed text-white/55">{BETA_PITCH.summary}</p>
+            <p className="mt-2 text-sm leading-relaxed text-white/45">{BETA_PITCH.delayNotice}</p>
             <p className="mt-2 text-sm text-white/35">{BETA_PITCH.dailyUpdates}</p>
           </div>
           <div className="mt-8 flex flex-col justify-center gap-3 sm:mt-0">

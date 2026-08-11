@@ -11,7 +11,7 @@ const BASE = [
   { label: "Profils actifs", value: 31, suffix: "%" },
 ] as const;
 
-/** Stats qui « vivent » — tick léger pour l’énergie match. */
+/** Stats qui « vivent » : tick léger pour l’énergie match. */
 export function AliveStatStrip() {
   const [vals, setVals] = useState<number[]>(() => BASE.map((b) => b.value));
 

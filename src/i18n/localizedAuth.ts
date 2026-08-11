@@ -9,6 +9,7 @@ function resolveAuthTeaserPrefix(
   presetRole?: UserRole | null,
 ): string {
   if (line === 'sponsor' || isSponsorAuthPreset(presetRole)) return 'auth.teaser.sponsor';
+  if (line === 'parent' || presetRole === 'parent') return 'auth.teaser.parent';
   if (line === 'woman') return 'auth.teaser.woman';
   if (line === 'sante') return 'auth.teaser.sante';
   if (line === 'supporter') return 'auth.teaser.supporter';

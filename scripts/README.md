@@ -9,6 +9,9 @@
 | Script | Commande npm | Rôle |
 |--------|--------------|------|
 | `seed-firestore.mjs` | `firebase:seed` | Données de démo Firestore |
+| `seed-demo-club.mjs` | `seed:demo-club` | Club démo complet (équipes + stade) |
+| `seed-demo-player.mjs` | `seed:demo-player` | Compte joueur démo Lucas (Pro Day Joueur) |
+| `seed-demo-parent.mjs` | `seed:demo-parent` | Parent démo lié à Lucas (Pôle Parent) |
 | `firebase-health.mjs` | `firebase:health` · `firebase:deploy:check` | Santé projet |
 | `firestore-rules.test.mjs` | `firebase:rules:test` | Tests règles (émulateur) |
 | `cleanup-demo-data.mjs` | `cleanup:demo` | Nettoyage données démo |

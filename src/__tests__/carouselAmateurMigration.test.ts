@@ -10,18 +10,20 @@ describe('migration carousel Pôle Joueur (écosystème)', () => {
     expect(UNIVERSE_CHOICE_ORDER).not.toContain('woman');
   });
 
-  it('expose Joueur unifié + Événements (plus Amateur/Pro Joueur séparés)', () => {
+  it('expose Joueur · Club · Coach · Parent · Supporter · Sponsor', () => {
     expect(UNIVERSE_CHOICE_ORDER).toEqual([
       'joueur',
-      'supporter',
       'pro_club',
-      'pro_staff',
-      'evenements',
+      'coach',
+      'parent',
+      'supporter',
       'sponsor',
-      'sante',
     ]);
     expect(UNIVERSE_CHOICE_ORDER).not.toContain('amateur');
     expect(UNIVERSE_CHOICE_ORDER).not.toContain('pro_player');
+    expect(UNIVERSE_CHOICE_ORDER).not.toContain('pro_staff');
+    expect(UNIVERSE_CHOICE_ORDER).not.toContain('evenements');
+    expect(UNIVERSE_CHOICE_ORDER).not.toContain('sante');
   });
 
   it('mappe le pôle sponsor vers product_line sponsor dédié', () => {
@@ -29,13 +31,20 @@ describe('migration carousel Pôle Joueur (écosystème)', () => {
     expect(carouselPoleSignupPresetRole('sponsor')).toBe('sponsor');
   });
 
+  it('mappe le pôle parent vers product_line parent', () => {
+    expect(carouselPoleToProductLine('parent')).toBe('parent');
+    expect(carouselPoleSignupPresetRole('parent')).toBe('parent');
+  });
+
   it('mappe les pôles carousel vers product_line stocké', () => {
     expect(carouselPoleToProductLine('joueur')).toBe('amateur');
     expect(carouselPoleToProductLine('pro_player')).toBe('amateur');
     expect(carouselPoleToProductLine('pro_club')).toBe('pro_club');
+    expect(carouselPoleToProductLine('coach')).toBe('pro_staff');
     expect(carouselPoleToProductLine('pro_staff')).toBe('pro_staff');
-    expect(carouselPoleToProductLine('evenements')).toBe('pro_staff');
+    expect(carouselPoleToProductLine('evenements')).toBe('pro_club');
     expect(carouselPoleToProductLine('sponsor')).toBe('sponsor');
+    expect(carouselPoleToProductLine('parent')).toBe('parent');
   });
 
   it('filtre l’inscription pro selon le preset carousel', () => {

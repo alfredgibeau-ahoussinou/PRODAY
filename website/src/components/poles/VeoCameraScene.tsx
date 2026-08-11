@@ -101,7 +101,7 @@ function VeoCameraMesh() {
   );
 }
 
-/** Optional WebGL Veo — lime triangular body on black mast. */
+/** Optional WebGL Veo : lime triangular body on black mast. */
 export function VeoCameraScene() {
   return (
     <Canvas

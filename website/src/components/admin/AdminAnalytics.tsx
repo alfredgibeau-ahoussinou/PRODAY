@@ -104,20 +104,20 @@ export function AdminAnalytics({
         />
         <AdminKpiCard
           label="Comptes utilisateurs"
-          value={userTotal == null ? "—" : userTotal}
+          value={userTotal == null ? "…" : userTotal}
           hint={userTotal == null ? "Non disponible" : "Firestore"}
           accent="navy"
         />
         <AdminKpiCard
           label="Comptes Pro"
-          value={proCount == null ? "—" : proCount}
+          value={proCount == null ? "…" : proCount}
           hint={proCount == null ? "Non disponible" : "subscription_tier"}
           accent="emerald"
         />
       </section>
 
       <AdminBanner tone="info">
-        Durée de session, taux de rebond, sources et appareils ne sont pas trackés —
+        Durée de session, taux de rebond, sources et appareils ne sont pas trackés :
         cartes retirées (plus de valeurs démo).
       </AdminBanner>
 

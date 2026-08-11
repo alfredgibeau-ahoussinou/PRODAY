@@ -22,6 +22,24 @@ service firebase.storage {
         && request.resource.contentType.matches('image/(jpeg|png|webp|heic|heif)|application/pdf');
     }
 
+    /** Coffre personnel — jamais public ; grantees via CF signed URL */
+    match /personal_vault/{userId}/{fileName} {
+      allow read: if request.auth != null
+        && (isOwner(userId) || isAdmin());
+      allow write: if isOwner(userId)
+        && request.resource.size < 10 * 1024 * 1024
+        && request.resource.contentType.matches('image/(jpeg|png|webp|heic|heif)|application/pdf');
+    }
+
+    /** Coffre médical — propriétaire + admin uniquement au niveau Storage */
+    match /medical_vault/{userId}/{fileName} {
+      allow read: if request.auth != null
+        && (isOwner(userId) || isAdmin());
+      allow write: if isOwner(userId)
+        && request.resource.size < 10 * 1024 * 1024
+        && request.resource.contentType.matches('image/(jpeg|png|webp|heic|heif)|application/pdf');
+    }
+
     match /avatars/{userId}/{fileName} {
       allow read: if request.auth != null;
       allow write: if isOwner(userId)
@@ -38,14 +56,14 @@ service firebase.storage {
       allow read: if request.auth != null;
       allow write: if isOwner(userId)
         && request.resource.size < 80 * 1024 * 1024
-        && request.resource.contentType.matches('video/(mp4|quicktime|webm)');
+        && request.resource.contentType.matches('video/.*');
     }
 
     match /community_reels/{userId}/{fileName} {
       allow read: if request.auth != null;
       allow write: if isOwner(userId)
         && request.resource.size < 80 * 1024 * 1024
-        && request.resource.contentType.matches('video/(mp4|quicktime|webm)');
+        && request.resource.contentType.matches('video/.*');
     }
 
     match /feed/{userId}/{fileName} {
@@ -63,6 +81,14 @@ service firebase.storage {
       allow write: if isOwner(userId)
         && request.resource.size < 15 * 1024 * 1024
         && request.resource.contentType.matches('audio/(m4a|mp4|aac|mpeg|wav|x-m4a|cafe)');
+    }
+
+    /** Documents partagés équipe — staff club (chemin clubId) */
+    match /team_vault/{clubId}/{fileName} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null
+        && request.resource.size < 15 * 1024 * 1024
+        && request.resource.contentType.matches('image/(jpeg|png|webp|heic|heif)|application/pdf|text/plain');
     }
 
     // APK bêta — lecture publique (lien sur proday75.fr/beta/installer)

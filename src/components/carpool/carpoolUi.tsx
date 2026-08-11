@@ -1,12 +1,10 @@
 import React, { useMemo } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
-import { PressableSpring } from '../motion';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { PressableSpring, AnimatedEntrance } from '../motion';
 import { Icon, type IconName } from '../ui/Icon';
-import { ProDayText } from '../ui/ProDayText';
-import { ProDayGradient } from '../ui/ProDayGradient';
-import { useAppTheme } from '../../context/ProductLineContext';
+import { CARPOOL_SITE } from '../../content/carpoolSite';
 import { useTranslation } from '../../context/LocaleContext';
-import { spacing, radius } from '../../theme/designTokens';
+import { spacing } from '../../theme/designTokens';
 
 type CarpoolEmptyStateProps = {
   icon: IconName;
@@ -23,32 +21,23 @@ export const CarpoolEmptyState: React.FC<CarpoolEmptyStateProps> = ({
   ctaLabel,
   onCta,
 }) => {
-  const { colors } = useAppTheme();
-  const styles = useMemo(() => createEmptyStyles(colors), [colors]);
+  const styles = useMemo(() => createEmptyStyles(), []);
 
   return (
-    <View style={styles.wrap}>
-      <View style={styles.iconRing}>
-        <ProDayGradient kind="card" style={styles.iconBg}>
-          <Icon name={icon} size={28} color={colors.accent} variant="filled" />
-        </ProDayGradient>
+    <AnimatedEntrance kind="fadeUp">
+      <View style={styles.wrap}>
+        <View style={styles.iconMark}>
+          <Icon name={icon} size={24} color={CARPOOL_SITE.asphalt} variant="filled" />
+        </View>
+        <Text style={styles.title}>{title}</Text>
+        <Text style={styles.sub}>{subtitle}</Text>
+        {ctaLabel && onCta ? (
+          <PressableSpring onPress={onCta} scaleTo={0.96} haptic style={styles.cta}>
+            <Text style={styles.ctaText}>{ctaLabel}</Text>
+          </PressableSpring>
+        ) : null}
       </View>
-      <ProDayText variant="section" style={styles.title}>
-        {title}
-      </ProDayText>
-      <ProDayText variant="body" muted style={styles.sub}>
-        {subtitle}
-      </ProDayText>
-      {ctaLabel && onCta ? (
-        <PressableSpring onPress={onCta} scaleTo={0.96} haptic>
-          <ProDayGradient kind="cta" style={styles.cta}>
-            <ProDayText variant="caption" inverse style={styles.ctaText}>
-              {ctaLabel}
-            </ProDayText>
-          </ProDayGradient>
-        </PressableSpring>
-      ) : null}
-    </View>
+    </AnimatedEntrance>
   );
 };
 
@@ -59,24 +48,16 @@ type CarpoolSectionIntroProps = {
 };
 
 export const CarpoolSectionIntro: React.FC<CarpoolSectionIntroProps> = ({
-  icon,
   title,
   subtitle,
 }) => {
-  const { colors } = useAppTheme();
-  const styles = useMemo(() => createIntroStyles(colors), [colors]);
+  const styles = useMemo(() => createIntroStyles(), []);
 
   return (
     <View style={styles.wrap}>
-      <View style={[styles.iconChip, { backgroundColor: colors.accentSoft }]}>
-        <Icon name={icon} size={18} color={colors.accent} />
-      </View>
-      <View style={styles.copy}>
-        <ProDayText variant="section">{title}</ProDayText>
-        <ProDayText variant="body" muted style={styles.sub}>
-          {subtitle}
-        </ProDayText>
-      </View>
+      <View style={styles.rule} />
+      <Text style={styles.title}>{title}</Text>
+      <Text style={styles.sub}>{subtitle}</Text>
     </View>
   );
 };
@@ -92,8 +73,7 @@ export function CarpoolFilterChips<T extends string>({
   value,
   onChange,
 }: CarpoolFilterChipsProps<T>) {
-  const { colors } = useAppTheme();
-  const styles = useMemo(() => createChipStyles(colors), [colors]);
+  const styles = useMemo(() => createChipStyles(), []);
 
   return (
     <ScrollView
@@ -107,32 +87,17 @@ export function CarpoolFilterChips<T extends string>({
           <PressableSpring
             key={opt.id}
             onPress={() => onChange(opt.id)}
-            scaleTo={0.96}
+            scaleTo={0.95}
             haptic
+            style={[styles.chip, on && styles.chipOn]}
           >
-            <View
-              style={[
-                styles.chip,
-                on
-                  ? { backgroundColor: colors.accent, borderColor: colors.accent }
-                  : { backgroundColor: colors.surfaceMuted, borderColor: colors.border },
-              ]}
-            >
-              <ProDayText
-                variant="caption"
-                inverse={on}
-                accent={!on}
-                style={styles.chipText}
-              >
-                {opt.label}
-              </ProDayText>
-            </View>
+            <Text style={[styles.chipText, on && styles.chipTextOn]}>{opt.label}</Text>
           </PressableSpring>
         );
       })}
     </ScrollView>
   );
-};
+}
 
 type CarpoolReminderBannerProps = {
   count: number;
@@ -145,52 +110,32 @@ export const CarpoolReminderBanner: React.FC<CarpoolReminderBannerProps> = ({
   onReserve,
   onPropose,
 }) => {
-  const { colors } = useAppTheme();
   const { t } = useTranslation();
-  const styles = useMemo(() => createBannerStyles(colors), [colors]);
+  const styles = useMemo(() => createBannerStyles(), []);
 
   return (
     <View style={styles.shell}>
-      <ProDayGradient kind="cta" style={styles.gradient} />
-      <View style={styles.content}>
-        <View style={styles.left}>
-          <View style={styles.badge}>
-            <ProDayText variant="caption" inverse style={styles.badgeText}>
-              {count}
-            </ProDayText>
-          </View>
-          <View style={styles.copy}>
-            <ProDayText variant="caption" inverse style={styles.title}>
-              {t('carpool.reminder.title')}
-            </ProDayText>
-            <ProDayText variant="caption" inverse muted style={styles.hint}>
-              {t('carpool.reminder.hint')}
-            </ProDayText>
-          </View>
+      <View style={styles.left}>
+        <Text style={styles.count}>{count}</Text>
+        <View style={styles.copy}>
+          <Text style={styles.title}>{t('carpool.reminder.title')}</Text>
+          <Text style={styles.hint}>{t('carpool.reminder.hint')}</Text>
         </View>
-        <View style={styles.actions}>
-          <PressableSpring onPress={onReserve} scaleTo={0.96} haptic>
-            <View style={styles.actionBtn}>
-              <ProDayText variant="caption" inverse style={styles.actionText}>
-                {t('carpool.reminder.reserve')}
-              </ProDayText>
-            </View>
-          </PressableSpring>
-          <PressableSpring onPress={onPropose} scaleTo={0.96} haptic>
-            <View style={[styles.actionBtn, styles.actionGhost]}>
-              <ProDayText variant="caption" inverse style={styles.actionText}>
-                {t('carpool.reminder.propose')}
-              </ProDayText>
-            </View>
-          </PressableSpring>
-        </View>
+      </View>
+      <View style={styles.actions}>
+        <PressableSpring onPress={onReserve} scaleTo={0.96} haptic style={styles.actionBtn}>
+          <Text style={styles.actionText}>{t('carpool.reminder.reserve')}</Text>
+        </PressableSpring>
+        <PressableSpring onPress={onPropose} scaleTo={0.96} haptic style={styles.actionGhost}>
+          <Text style={styles.actionGhostText}>{t('carpool.reminder.propose')}</Text>
+        </PressableSpring>
       </View>
     </View>
   );
 };
 
-export const CarpoolCardAccent: React.FC<{ kind?: 'cta' | 'card' }> = ({ kind = 'card' }) => (
-  <ProDayGradient kind={kind} style={cardAccentStyles.bar} />
+export const CarpoolCardAccent: React.FC<{ kind?: 'cta' | 'card' }> = () => (
+  <View style={cardAccentStyles.bar} />
 );
 
 const cardAccentStyles = StyleSheet.create({
@@ -200,132 +145,172 @@ const cardAccentStyles = StyleSheet.create({
     top: 0,
     bottom: 0,
     width: 4,
-    borderTopLeftRadius: radius.xl,
-    borderBottomLeftRadius: radius.xl,
+    backgroundColor: CARPOOL_SITE.signal,
+    borderTopLeftRadius: 18,
+    borderBottomLeftRadius: 18,
   },
 });
 
-function createEmptyStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
+function createEmptyStyles() {
   return StyleSheet.create({
     wrap: {
       alignItems: 'center',
       paddingVertical: spacing.xl,
       paddingHorizontal: spacing.lg,
       gap: spacing.sm,
-      borderRadius: radius.xl,
+      borderRadius: 20,
       borderWidth: 1,
-      borderColor: colors.border,
-      backgroundColor: colors.surface,
+      borderColor: CARPOOL_SITE.fog,
+      backgroundColor: CARPOOL_SITE.surface,
     },
-    iconRing: {
-      padding: 3,
-      borderRadius: 40,
-      borderWidth: 1,
-      borderColor: colors.border,
-      marginBottom: spacing.xs,
-    },
-    iconBg: {
-      width: 64,
-      height: 64,
-      borderRadius: 32,
+    iconMark: {
+      width: 56,
+      height: 56,
+      borderRadius: 28,
       alignItems: 'center',
       justifyContent: 'center',
+      backgroundColor: CARPOOL_SITE.signal,
+      marginBottom: spacing.xs,
     },
-    title: { fontWeight: '800', textAlign: 'center' },
-    sub: { textAlign: 'center', lineHeight: 22 },
+    title: {
+      fontFamily: CARPOOL_SITE.display,
+      fontSize: 22,
+      lineHeight: 26,
+      color: CARPOOL_SITE.ink,
+      fontWeight: '800',
+      textAlign: 'center',
+    },
+    sub: {
+      fontSize: 14,
+      lineHeight: 21,
+      color: CARPOOL_SITE.inkMuted,
+      textAlign: 'center',
+    },
     cta: {
       marginTop: spacing.sm,
       paddingHorizontal: spacing.xl,
-      paddingVertical: spacing.md,
-      borderRadius: radius.pill,
+      paddingVertical: 14,
+      borderRadius: 999,
+      backgroundColor: CARPOOL_SITE.asphalt,
     },
-    ctaText: { fontWeight: '800' },
+    ctaText: {
+      fontFamily: CARPOOL_SITE.display,
+      fontSize: 14,
+      fontWeight: '800',
+      color: '#fff',
+    },
   });
 }
 
-function createIntroStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
+function createIntroStyles() {
   return StyleSheet.create({
     wrap: {
-      flexDirection: 'row',
-      alignItems: 'flex-start',
-      gap: spacing.md,
-      marginBottom: spacing.lg,
-      padding: spacing.md,
-      borderRadius: radius.lg,
-      backgroundColor: colors.surfaceMuted,
-      borderWidth: 1,
-      borderColor: colors.border,
+      gap: 8,
+      marginBottom: spacing.md,
+      paddingBottom: spacing.md,
     },
-    iconChip: {
+    rule: {
       width: 40,
-      height: 40,
-      borderRadius: 12,
-      alignItems: 'center',
-      justifyContent: 'center',
+      height: 4,
+      borderRadius: 2,
+      backgroundColor: CARPOOL_SITE.signal,
     },
-    copy: { flex: 1, gap: 4 },
-    sub: { lineHeight: 20 },
+    title: {
+      fontFamily: CARPOOL_SITE.display,
+      fontSize: 24,
+      lineHeight: 28,
+      color: CARPOOL_SITE.ink,
+      fontWeight: '800',
+    },
+    sub: {
+      fontSize: 14,
+      lineHeight: 21,
+      color: CARPOOL_SITE.inkMuted,
+    },
   });
 }
 
-function createChipStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
+function createChipStyles() {
   return StyleSheet.create({
     row: {
       flexDirection: 'row',
-      gap: spacing.xs,
+      gap: 8,
       paddingVertical: spacing.xs,
       marginBottom: spacing.md,
     },
     chip: {
-      paddingHorizontal: spacing.md,
-      paddingVertical: 8,
-      borderRadius: radius.pill,
-      borderWidth: 1,
+      paddingHorizontal: 14,
+      paddingVertical: 10,
+      borderRadius: 999,
+      borderWidth: 1.5,
+      borderColor: CARPOOL_SITE.fog,
+      backgroundColor: CARPOOL_SITE.surface,
     },
-    chipText: { fontWeight: '800' },
+    chipOn: {
+      backgroundColor: CARPOOL_SITE.asphalt,
+      borderColor: CARPOOL_SITE.asphalt,
+    },
+    chipText: {
+      fontSize: 13,
+      fontWeight: '700',
+      color: CARPOOL_SITE.inkMuted,
+    },
+    chipTextOn: {
+      color: '#fff',
+      fontWeight: '800',
+    },
   });
 }
 
-function createBannerStyles(_colors: ReturnType<typeof useAppTheme>['colors']) {
+function createBannerStyles() {
   return StyleSheet.create({
     shell: {
       marginHorizontal: spacing.lg,
       marginBottom: spacing.md,
-      borderRadius: radius.lg,
-      overflow: 'hidden',
-    },
-    gradient: { ...StyleSheet.absoluteFillObject },
-    content: {
       padding: spacing.md,
       gap: spacing.sm,
+      borderRadius: 16,
+      backgroundColor: CARPOOL_SITE.surface,
+      borderWidth: 1,
+      borderColor: CARPOOL_SITE.signal,
     },
     left: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-    badge: {
+    count: {
+      fontFamily: CARPOOL_SITE.display,
+      fontSize: 28,
+      color: CARPOOL_SITE.signalDeep,
+      fontWeight: '800',
       minWidth: 36,
-      height: 36,
-      borderRadius: 18,
-      backgroundColor: 'rgba(255,255,255,0.22)',
-      alignItems: 'center',
-      justifyContent: 'center',
-      paddingHorizontal: spacing.xs,
     },
-    badgeText: { fontWeight: '900', fontSize: 15 },
     copy: { flex: 1, gap: 2 },
-    title: { fontWeight: '800' },
-    hint: { opacity: 0.88 },
+    title: { fontWeight: '800', color: CARPOOL_SITE.ink, fontSize: 14 },
+    hint: { color: CARPOOL_SITE.inkMuted, fontSize: 12 },
     actions: { flexDirection: 'row', gap: spacing.sm },
     actionBtn: {
       flex: 1,
       alignItems: 'center',
-      paddingVertical: spacing.sm,
-      borderRadius: radius.pill,
-      backgroundColor: 'rgba(255,255,255,0.2)',
+      paddingVertical: 12,
+      borderRadius: 999,
+      backgroundColor: CARPOOL_SITE.signal,
     },
     actionGhost: {
-      backgroundColor: 'rgba(0,0,0,0.15)',
-      borderWidth: 1,
-      borderColor: 'rgba(255,255,255,0.35)',
+      flex: 1,
+      alignItems: 'center',
+      paddingVertical: 12,
+      borderRadius: 999,
+      borderWidth: 1.5,
+      borderColor: CARPOOL_SITE.fog,
+      backgroundColor: CARPOOL_SITE.surfaceMuted,
     },
-    actionText: { fontWeight: '800' },
+    actionText: {
+      fontWeight: '800',
+      color: CARPOOL_SITE.asphalt,
+      fontSize: 12,
+    },
+    actionGhostText: {
+      fontWeight: '800',
+      color: CARPOOL_SITE.ink,
+      fontSize: 12,
+    },
   });
 }

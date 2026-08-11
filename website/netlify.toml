@@ -62,3 +62,16 @@
     Content-Type = "application/vnd.android.package-archive"
     Content-Disposition = "attachment; filename=\"proday-beta.apk\""
     Cache-Control = "public, max-age=3600"
+
+[[headers]]
+  for = "/admin/*"
+  [headers.values]
+    Cache-Control = "no-store, max-age=0"
+    Pragma = "no-cache"
+    X-Robots-Tag = "noindex, nofollow"
+
+[[headers]]
+  for = "/api/*"
+  [headers.values]
+    Cache-Control = "no-store, max-age=0"
+    Pragma = "no-cache"

@@ -7,6 +7,7 @@ import type { CommunityReel } from '../models/CommunityReel';
 import type { ReelReport } from '../models/ReelReport';
 import type { TeamPaymentRequest } from '../models/TeamFinance';
 import { userNeedsAdminVerificationReview } from './adminUserVerification';
+import { getRoleLabel } from '../screens/signup/signupFlowConfig';
 
 export type AdminWorkPriority = 'critical' | 'high' | 'medium' | 'low';
 
@@ -19,6 +20,7 @@ export type AdminWorkItem = {
   meta?: string;
   targetTab: AdminMainTabId;
   contentSegment?: AdminContentSegment;
+  entityId?: string;
   createdAt?: Date;
 };
 
@@ -61,9 +63,10 @@ export function buildAdminWorkQueue(input: {
       kind: 'verification',
       priority: 'critical',
       title: `Vérifier ${u.display_name}`,
-      subtitle: `${u.role} · ${u.email}`,
+      subtitle: `${getRoleLabel(u.role)} · ${u.email}`,
       meta: u.city ?? undefined,
       targetTab: 'users',
+      entityId: u.uid,
       createdAt: u.created_at,
     });
   }
@@ -73,7 +76,7 @@ export function buildAdminWorkQueue(input: {
       id: `reel-${reel.id}`,
       kind: 'reel',
       priority: 'high',
-      title: `Modérer reel · ${reel.author_name}`,
+      title: `Modérer publication · ${reel.author_name}`,
       subtitle: reel.caption?.slice(0, 80) || 'Sans légende',
       meta: reel.theme,
       targetTab: 'moderation',
@@ -87,7 +90,7 @@ export function buildAdminWorkQueue(input: {
       id: `report-${report.id}`,
       kind: 'report',
       priority: 'high',
-      title: 'Signalement reel',
+      title: 'Signalement publication',
       subtitle: report.reason,
       meta: report.bookmark_key.slice(0, 24),
       targetTab: 'moderation',
@@ -128,7 +131,7 @@ export function buildAdminWorkQueue(input: {
       id: `quote-${quote.id}`,
       kind: 'quote',
       priority: 'high',
-      title: `Devis sponsor · ${quote.company_name}`,
+      title: `Devis partenaire · ${quote.company_name}`,
       subtitle: `${quote.contact_name} · ${quote.contact_email}`,
       meta: quote.package_tier,
       targetTab: 'plateforme',
@@ -175,6 +178,9 @@ export type GlobalSearchResult = {
   title: string;
   subtitle: string;
   targetTab: AdminMainTabId;
+  targetSegment?: AdminContentSegment;
+  entityId?: string;
+  focusQuery?: string;
 };
 
 export function globalAdminSearch(
@@ -202,8 +208,10 @@ export function globalAdminSearch(
         id: `u-${u.uid}`,
         kind: 'user',
         title: u.display_name,
-        subtitle: `${u.role} · ${u.email}`,
+        subtitle: `${getRoleLabel(u.role)} · ${u.email}`,
         targetTab: 'users',
+        entityId: u.uid,
+        focusQuery: u.display_name,
       });
     }
   }
@@ -216,6 +224,8 @@ export function globalAdminSearch(
         title: c.name,
         subtitle: c.city,
         targetTab: 'clubs',
+        entityId: c.id,
+        focusQuery: c.name,
       });
     }
   }
@@ -232,6 +242,9 @@ export function globalAdminSearch(
         title: p.title,
         subtitle: `${p.club_name} · ${p.city}`,
         targetTab: 'plateforme',
+        targetSegment: 'mercato',
+        entityId: p.id,
+        focusQuery: p.title,
       });
     }
   }
@@ -244,6 +257,9 @@ export function globalAdminSearch(
         title: e.title,
         subtitle: e.city,
         targetTab: 'plateforme',
+        targetSegment: 'events',
+        entityId: e.id,
+        focusQuery: e.title,
       });
     }
   }

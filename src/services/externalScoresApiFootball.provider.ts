@@ -4,7 +4,7 @@ import type {
   ExternalFixtureStatus,
   ExternalScoresProvider,
   ExternalScoresProviderState,
-} from './externalScores.service';
+} from './externalScores.types';
 
 const DEFAULT_BASE_URL = 'https://v3.football.api-sports.io';
 const CACHE_TTL_MS = 60_000;

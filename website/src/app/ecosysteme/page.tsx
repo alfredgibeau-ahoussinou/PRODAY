@@ -7,7 +7,7 @@ import { ROUTES } from "@/lib/routes";
 export const metadata: Metadata = {
   title: "Carte des acteurs",
   description:
-    "Joueurs, clubs, coachs, recruteurs et organisateurs. Reliés par Mercato et Arena.",
+    "Joueurs, clubs, coachs, recruteurs et organisateurs. Reliés par Mercato et Arène.",
 };
 
 export default function EcosystemPage() {

@@ -1,5 +1,6 @@
 import {
   brandForProductLine,
+  PRODAY_PARENT_BRAND,
   PRODAY_SPONSOR_BRAND,
   type ProductLineId,
 } from '../models/ProductLine';
@@ -13,11 +14,17 @@ export function isSponsorAuthPreset(role: UserRole | null | undefined): boolean 
   return role === 'sponsor';
 }
 
+/** Parcours auth / signup Parent (carousel Pôle Parent). */
+export function isParentAuthPreset(role: UserRole | null | undefined): boolean {
+  return role === 'parent';
+}
+
 export function brandForAuthContext(
   line: ProductLineId,
   presetRole?: UserRole | null,
 ) {
   if (line === 'sponsor' || isSponsorAuthPreset(presetRole)) return PRODAY_SPONSOR_BRAND;
+  if (line === 'parent' || isParentAuthPreset(presetRole)) return PRODAY_PARENT_BRAND;
   return brandForProductLine(line);
 }
 
@@ -27,15 +34,19 @@ export function colorsForAuthContext(
   playerSegment?: PlayerSegment | null,
 ): AppColors {
   if (line === 'sponsor' || isSponsorAuthPreset(presetRole)) return getSponsorAppColors();
+  if (line === 'parent' || isParentAuthPreset(presetRole)) {
+    return getThemedColorsForLine('parent', playerSegment);
+  }
   return getThemedColorsForLine(line, playerSegment);
 }
 
-/** Alignement preset ↔ ligne produit (évite fuite Sponsor ↔ Staff). */
+/** Alignement preset ↔ ligne produit (évite fuite Sponsor ↔ Staff / Parent ↔ Joueur). */
 export function reconcileProSignupPreset(
   line: ProductLineId,
   preset: UserRole | null,
 ): UserRole | null {
   if (line === 'sponsor') return 'sponsor';
+  if (line === 'parent') return 'parent';
   if (!preset) return null;
   if (line === 'pro_player') return 'player';
   if (line === 'pro_club') return 'club';
@@ -48,7 +59,7 @@ export function reconcileProSignupPreset(
     ) {
       return preset;
     }
-    // Ancien preset sponsor ne doit plus rester sous Staff
+    // Ancien preset sponsor / parent ne doit plus rester sous Staff
     return 'coach';
   }
   return null;

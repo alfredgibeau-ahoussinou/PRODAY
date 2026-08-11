@@ -1,5 +1,5 @@
 import type { PlayerActivity, PlayerActivityType } from '../models/PlayerActivity';
-import type { IconName } from '../components/ui/Icon';
+import type { IconName } from '../components/ui/iconNames';
 
 export function formatActivityScoreSnippet(activity: PlayerActivity): string | null {
   if (activity.type !== 'match') return null;

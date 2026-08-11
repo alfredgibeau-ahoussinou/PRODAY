@@ -68,6 +68,9 @@ export function gradientsForLine(line: ProductLineId): {
   if (line === 'sponsor') {
     return sponsorGradients;
   }
+  if (line === 'parent') {
+    return parentGradients;
+  }
   return {
     hero: hommeGradients.hero,
     heroDark: hommeGradients.heroDark,
@@ -82,11 +85,11 @@ export function ctaGradient(line: ProductLineId): GradientStops {
 }
 
 const proClubGradients = {
-  hero: ['#000000', '#0C4A6E'] as const,
-  heroDark: ['#000000', '#082f49'] as const,
-  card: ['#1A1A1A', '#0A0A0A'] as const,
-  cta: ['#0369A1', '#38BDF8'] as const,
-  ambient: ['rgba(56, 189, 248, 0.14)', '#0A0A0A', '#000000'] as const,
+  hero: ['#000000', '#020814'] as const,
+  heroDark: ['#000000', '#002478'] as const,
+  card: ['#0c0c0c', '#000000'] as const,
+  cta: ['#002478', '#006CFC'] as const,
+  ambient: ['rgba(0, 108, 252, 0.35)', '#020814', '#000000'] as const,
 };
 
 const proStaffGradients = {
@@ -103,6 +106,14 @@ const sponsorGradients = {
   card: ['#14110a', '#0c0a06'] as const,
   cta: ['#92700C', '#D4AF37'] as const,
   ambient: ['rgba(212, 175, 55, 0.2)', '#070605', '#030303'] as const,
+};
+
+const parentGradients = {
+  hero: ['#042f2e', '#0F766E'] as const,
+  heroDark: ['#022c22', '#134e4a'] as const,
+  card: ['#0f1f1e', '#042f2e'] as const,
+  cta: ['#0F766E', '#2DD4BF'] as const,
+  ambient: ['rgba(45, 212, 191, 0.18)', '#042f2e', '#000000'] as const,
 };
 
 /** Ambient FLASH générique (cyan) */
@@ -122,6 +133,7 @@ export function gradientsForCarouselPole(pole: CarouselPoleId): {
   if (pole === 'pro_club') return proClubGradients;
   if (pole === 'pro_staff') return proStaffGradients;
   if (pole === 'sponsor') return sponsorGradients;
+  if (pole === 'parent') return parentGradients;
   if (pole === 'pro_player') {
     return {
       hero: proGradients.hero,
@@ -131,7 +143,8 @@ export function gradientsForCarouselPole(pole: CarouselPoleId): {
       ambient: ['rgba(96, 165, 250, 0.14)', '#0A0A0A', '#000000'] as const,
     };
   }
-  const line = pole === 'amateur' || pole === 'supporter' || pole === 'sante' ? pole : 'pro';
+  const line =
+    pole === 'amateur' || pole === 'supporter' || pole === 'sante' ? pole : 'pro';
   return gradientsForLine(line);
 }
 

@@ -36,6 +36,7 @@ export const SignupFlowProvider: React.FC<{
     enterSupporterSpace,
     enterSanteSpace,
     enterSponsorSpace,
+    enterParentSpace,
     setProSignupPresetRole,
   } = useProductLine();
   const isProSignup = isProProductLine(productLine);
@@ -44,6 +45,7 @@ export const SignupFlowProvider: React.FC<{
   const isSupporterSignup = productLine === 'supporter';
   const isSanteSignup = productLine === 'sante';
   const isSponsorSignup = experienceRole === 'sponsor' || productLine === 'sponsor';
+  const isParentSignup = experienceRole === 'parent' || productLine === 'parent';
 
   const playerSegment: PlayerSegment | null = useMemo(() => {
     if (!signupGender) return null;
@@ -74,6 +76,11 @@ export const SignupFlowProvider: React.FC<{
         await enterSupporterSpace();
         return;
       }
+      if (isParentSignup) {
+        await setProSignupPresetRole('parent');
+        if (!cancelled) await enterParentSpace();
+        return;
+      }
       if (isSponsorSignup) {
         await setProSignupPresetRole('sponsor');
         if (!cancelled) await enterSponsorSpace();
@@ -90,6 +97,7 @@ export const SignupFlowProvider: React.FC<{
     };
   }, [
     isSponsorSignup,
+    isParentSignup,
     isSanteSignup,
     isAmateurSignup,
     isSupporterSignup,
@@ -101,6 +109,7 @@ export const SignupFlowProvider: React.FC<{
     enterAmateurSpace,
     enterSupporterSpace,
     enterSponsorSpace,
+    enterParentSpace,
     enterProLine,
   ]);
 

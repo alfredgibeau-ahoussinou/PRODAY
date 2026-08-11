@@ -194,6 +194,18 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
     }
   };
 
+  const handleJerseyNumberChange = async (jersey: number | null) => {
+    if ((profile.profile.jersey_number ?? null) === jersey) return;
+    try {
+      await profileService.updateProfile(profile.uid, {
+        profile: { jersey_number: jersey ?? undefined },
+      });
+      await onRefresh();
+    } catch (e) {
+      Alert.alert('Erreur', e instanceof Error ? e.message : 'Mise à jour impossible.');
+    }
+  };
+
   const handlePickDocument = async () => {
     const file = (await pickVerificationFromGallery()) ?? (await pickVerificationPdf());
     if (!file) return;
@@ -527,6 +539,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
         onGalleryAdd={handleGalleryAdd}
         onGalleryRemove={handleGalleryRemove}
         onPositionChange={handlePositionChange}
+        onJerseyNumberChange={handleJerseyNumberChange}
         savingPosition={savingPosition}
         quickActions={quickActions}
         intelligence={intelligence}

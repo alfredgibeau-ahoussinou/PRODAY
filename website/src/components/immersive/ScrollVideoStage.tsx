@@ -5,10 +5,12 @@ import {
   useScroll,
   useSpring,
   useTransform,
-  type MotionValue,
 } from "framer-motion";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { BRAND } from "@/lib/content";
+import { ROUTES } from "@/lib/routes";
 
 const FootballImpactCanvas = dynamic(
   () => import("./FootballImpactCanvas").then((m) => m.FootballImpactCanvas),
@@ -30,36 +32,7 @@ function usePrefersReducedMotion() {
   return reduced;
 }
 
-function Beat({
-  progress,
-  range,
-  line,
-}: {
-  progress: MotionValue<number>;
-  range: readonly [number, number];
-  line: string;
-}) {
-  const [a, b] = range;
-  const opacity = useTransform(
-    progress,
-    [a, a + 0.08, b - 0.1, b],
-    a === 0 ? [1, 1, 1, 0] : [0, 1, 1, 0],
-  );
-  const y = useTransform(progress, [a, a + 0.1, b], [12, 0, -8]);
-
-  return (
-    <motion.div
-      style={{ opacity, y }}
-      className="pointer-events-none absolute inset-x-0 bottom-[18%] z-20 px-5 sm:px-8 lg:px-12"
-    >
-      <h1 className="mx-auto max-w-3xl whitespace-pre-line font-display text-[clamp(1.75rem,4.6vw,3.1rem)] font-medium leading-[1.08] tracking-[-0.04em] text-white">
-        {line}
-      </h1>
-    </motion.div>
-  );
-}
-
-/** Short cinematic intro — ball lands, then we ask which universe. */
+/** Short cinematic intro : ball lands, then brand mission. */
 export function ScrollVideoStage() {
   const containerRef = useRef<HTMLDivElement>(null);
   const reduced = usePrefersReducedMotion();
@@ -77,6 +50,12 @@ export function ScrollVideoStage() {
 
   const hintOpacity = useTransform(progress, [0, 0.12, 0.22], [1, 0.7, 0]);
   const brandOpacity = useTransform(progress, [0, 0.15, 0.28], [1, 1, 0]);
+  const copyOpacity = useTransform(
+    progress,
+    reduced ? [0, 0.01] : [0.05, 0.18, 0.55, 0.72],
+    reduced ? [1, 1] : [0, 1, 1, 0],
+  );
+  const copyY = useTransform(progress, [0.05, 0.2], [16, 0]);
 
   return (
     <section
@@ -98,7 +77,7 @@ export function ScrollVideoStage() {
         )}
 
         <div
-          className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-[40%] bg-gradient-to-t from-[#07100c] via-[#07100c]/75 to-transparent"
+          className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-[55%] bg-gradient-to-t from-[#07100c] via-[#07100c]/85 to-transparent"
           aria-hidden
         />
 
@@ -109,25 +88,52 @@ export function ScrollVideoStage() {
           ProDay
         </motion.p>
 
-        {!reduced && (
-          <Beat
-            progress={progress}
-            range={[0, 0.72]}
-            line={"Le foot dans\nune app simple."}
-          />
-        )}
-
-        {reduced && (
-          <div className="absolute inset-x-0 bottom-[22%] z-20 px-5 sm:px-8">
-            <h1 className="mx-auto max-w-3xl whitespace-pre-line font-display text-[clamp(1.75rem,4.6vw,3.1rem)] font-medium leading-[1.08] tracking-[-0.04em] text-white">
-              {"Le foot dans\nune app simple."}
+        {/* One stacked block: headline → support → CTAs (no absolute overlap). */}
+        <motion.div
+          style={{
+            opacity: reduced ? 1 : copyOpacity,
+            y: reduced ? 0 : copyY,
+          }}
+          className="absolute inset-x-0 bottom-0 z-30 flex flex-col justify-end px-5 pb-[max(5.5rem,calc(env(safe-area-inset-bottom)+4.5rem))] pt-8 sm:px-8 sm:pb-24 lg:px-12"
+        >
+          <div className="mx-auto w-full max-w-xl">
+            <h1 className="whitespace-pre-line font-display text-[clamp(1.55rem,6.2vw,3.1rem)] font-medium leading-[1.12] tracking-[-0.04em] text-white">
+              {"Le football amateur,\nenfin réuni au même endroit."}
             </h1>
+            <p className="mt-3 text-[13px] leading-relaxed text-white/65 sm:mt-4 sm:text-[15px]">
+              {BRAND.heroSupport}
+            </p>
+            <div className="mt-4 flex flex-wrap gap-2.5 sm:mt-5">
+              <Link
+                href={ROUTES.proClub}
+                className="inline-flex flex-col items-start rounded-full bg-[#0054F0] px-5 py-2.5 text-white transition hover:bg-[#1A68FF]"
+              >
+                <span className="text-[11px] font-semibold uppercase tracking-[0.1em]">
+                  Créer mon club
+                </span>
+                <span className="mt-0.5 text-[9px] font-medium normal-case tracking-normal text-white/80">
+                  Dès 3 € / adhérent
+                </span>
+              </Link>
+              <Link
+                href={ROUTES.joueur}
+                className="inline-flex items-center rounded-full border border-white/35 bg-white/5 px-5 py-2.5 text-[11px] font-semibold uppercase tracking-[0.1em] text-white backdrop-blur-sm transition hover:border-white/60"
+              >
+                Je suis joueur
+              </Link>
+              <Link
+                href={`${ROUTES.coach}#analyse-de-forme`}
+                className="inline-flex items-center rounded-full border border-white/35 bg-white/5 px-5 py-2.5 text-[11px] font-semibold uppercase tracking-[0.1em] text-white backdrop-blur-sm transition hover:border-white/60"
+              >
+                Je suis coach
+              </Link>
+            </div>
           </div>
-        )}
+        </motion.div>
 
         <motion.p
           style={{ opacity: hintOpacity }}
-          className="absolute bottom-7 left-1/2 z-20 -translate-x-1/2 font-mono text-[9px] uppercase tracking-[0.32em] text-white/35"
+          className="pointer-events-none absolute bottom-3 left-1/2 z-20 -translate-x-1/2 font-mono text-[9px] uppercase tracking-[0.32em] text-white/35 sm:bottom-5"
         >
           Scroll
         </motion.p>

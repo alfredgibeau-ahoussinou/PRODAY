@@ -8,7 +8,7 @@ type TerminalBeatsProps = {
   className?: string;
 };
 
-/** Numbered 01 / 02 / 03 rows — Terminal About pattern. */
+/** Numbered 01 / 02 / 03 rows : Terminal About pattern. */
 export function TerminalBeats({ beats, className = "" }: TerminalBeatsProps) {
   return (
     <ul className={`divide-y divide-white/10 border-y border-white/10 ${className}`}>

@@ -24,6 +24,10 @@ export type AdminAuditAction =
   | 'beta_rejected'
   | 'beta_deleted'
   | 'sponsor_quote_sent'
+  | 'subscription_granted'
+  | 'subscription_revoked'
+  | 'subscription_changed'
+  | 'subscription_extended'
   | 'other';
 
 export interface AdminAuditEntry {

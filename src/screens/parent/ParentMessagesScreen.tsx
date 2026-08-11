@@ -1,12 +1,12 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   View,
   ScrollView,
   StyleSheet,
   ActivityIndicator,
   Alert,
-  Pressable,
   Switch,
+  RefreshControl,
 } from 'react-native';
 import { ProDayText } from '../../components/ui/ProDayText';
 import { ProDaySurface } from '../../components/ui/ProDaySurface';
@@ -17,6 +17,13 @@ import { parentPortalService } from '../../services/parentPortal.service';
 import type { MessageThread } from '../../lib/firestoreMappers';
 import { useAuth } from '../../context/AuthContext';
 import { normalizeGuardianEmail } from '../../utils/guardianEmail';
+import { ParentPageFrame } from '../../components/parent/ParentPageFrame';
+import {
+  ParentActionButton,
+  ParentSectionCard,
+} from '../../components/parent/parentPortalUi';
+import { PARENT_PAGES } from '../../content/parentPageIdentity';
+import { PressableSpring } from '../../components/motion';
 
 export const ParentMessagesScreen: React.FC = () => {
   const { colors: c } = useThemedScreen();
@@ -24,6 +31,7 @@ export const ParentMessagesScreen: React.FC = () => {
   const { selected, reload } = useParentShell();
   const [threads, setThreads] = useState<MessageThread[]>([]);
   const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [openThreadId, setOpenThreadId] = useState<string | null>(null);
   const [messages, setMessages] = useState<{ id: string; body: string; sender_id: string }[]>([]);
   const email = normalizeGuardianEmail(profile?.email);
@@ -35,7 +43,10 @@ export const ParentMessagesScreen: React.FC = () => {
     }
     setLoading(true);
     try {
-      setThreads(await parentPortalService.listChildThreads(selected.uid));
+      const allow = parentPortalService.canParentReadMessages(selected);
+      setThreads(
+        await parentPortalService.listChildThreads(selected.uid, 40, { allowRead: allow }),
+      );
     } finally {
       setLoading(false);
     }
@@ -45,9 +56,26 @@ export const ParentMessagesScreen: React.FC = () => {
     void load();
   }, [load]);
 
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await reload();
+      await load();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [reload, load]);
+
   const openThread = async (threadId: string) => {
+    if (!parentPortalService.canParentReadMessages(selected)) {
+      Alert.alert(
+        'Messages masqués',
+        'Active « Lecture des messages » dans Réglages pour consulter les conversations.',
+      );
+      return;
+    }
     setOpenThreadId(threadId);
-    const msgs = await parentPortalService.listChildMessages(threadId);
+    const msgs = await parentPortalService.listChildMessages(threadId, 80, { allowRead: true });
     setMessages(msgs.map((m) => ({ id: m.id, body: m.body, sender_id: m.sender_id })));
   };
 
@@ -73,150 +101,214 @@ export const ParentMessagesScreen: React.FC = () => {
     }
   };
 
+  const contacts = selected?.settings.approved_contacts ?? [];
+  const pendingContacts = useMemo(
+    () => contacts.filter((contact) => !contact.approved),
+    [contacts],
+  );
+  const pendingThreads = useMemo(
+    () => threads.filter((thread) => thread.request_status === 'pending'),
+    [threads],
+  );
+
   if (!selected) {
     return (
-      <View style={styles.center}>
-        <ProDayText variant="body" muted>
-          Sélectionnez un enfant.
-        </ProDayText>
-      </View>
+      <ParentPageFrame identity={PARENT_PAGES.messages}>
+        <View style={styles.center}>
+          <ProDayText variant="body" muted>
+            Sélectionnez un enfant.
+          </ProDayText>
+        </View>
+      </ParentPageFrame>
     );
   }
 
   if (openThreadId) {
     return (
-      <View style={styles.root}>
-        <Pressable onPress={() => setOpenThreadId(null)} style={styles.back}>
-          <ProDayText variant="caption" accent>
-            ← Retour aux conversations
-          </ProDayText>
-        </Pressable>
-        <ScrollView contentContainerStyle={styles.content}>
-          {messages.length === 0 ? (
-            <ProDayText variant="body" muted>
-              Aucun message dans cette conversation.
+      <ParentPageFrame identity={PARENT_PAGES.messages} showHero={false}>
+        <View style={styles.root}>
+          <PressableSpring onPress={() => setOpenThreadId(null)} style={styles.back} haptic>
+            <ProDayText variant="caption" accent>
+              ← Retour aux conversations
             </ProDayText>
-          ) : (
-            messages.map((m) => (
-              <ProDaySurface key={m.id} variant="module" style={styles.msg}>
-                <ProDayText variant="caption" muted>
-                  {m.sender_id === selected.uid ? selected.display_name : 'Correspondant'}
-                </ProDayText>
-                <ProDayText variant="body">{m.body}</ProDayText>
-              </ProDaySurface>
-            ))
-          )}
-        </ScrollView>
-      </View>
+          </PressableSpring>
+          <ScrollView contentContainerStyle={styles.content}>
+            {messages.length === 0 ? (
+              <ProDayText variant="body" muted>
+                Aucun message dans cette conversation.
+              </ProDayText>
+            ) : (
+              messages.map((m) => (
+                <ProDaySurface key={m.id} variant="module" style={styles.msg}>
+                  <ProDayText variant="caption" muted>
+                    {m.sender_id === selected.uid ? selected.display_name : 'Correspondant'}
+                  </ProDayText>
+                  <ProDayText variant="body">{m.body}</ProDayText>
+                </ProDaySurface>
+              ))
+            )}
+          </ScrollView>
+        </View>
+      </ParentPageFrame>
     );
   }
 
-  const contacts = selected.settings.approved_contacts ?? [];
-
   return (
-    <ScrollView contentContainerStyle={styles.content}>
-      <ProDayText variant="section">Messages de {selected.display_name}</ProDayText>
-      <ProDayText variant="caption" muted>
-        Consultation des conversations + approbation / blocage des contacts.
-      </ProDayText>
+    <ParentPageFrame identity={PARENT_PAGES.messages}>
+      <ScrollView
+        contentContainerStyle={styles.content}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => void onRefresh()}
+            tintColor={c.brand}
+          />
+        }
+      >
+        {!parentPortalService.canParentReadMessages(selected) ? (
+          <ParentSectionCard title="Lecture désactivée">
+            <ProDayText variant="body">
+              Active « Lecture des messages » dans Réglages pour voir le contenu des conversations.
+              Vous pouvez toujours approuver ou bloquer des contacts.
+            </ProDayText>
+          </ParentSectionCard>
+        ) : null}
 
-      <ProDaySurface variant="module" style={styles.card}>
-        <ProDayText variant="section">Contacts approuvés</ProDayText>
-        {contacts.length === 0 ? (
-          <ProDayText variant="caption" muted>
-            Aucun contact enregistré.
-          </ProDayText>
-        ) : (
-          contacts.map((contact) => (
-            <View key={contact.uid} style={styles.contactRow}>
-              <View style={{ flex: 1 }}>
+        {pendingContacts.length > 0 || pendingThreads.length > 0 ? (
+          <ParentSectionCard
+            title="À valider"
+            subtitle="Demandes et contacts en attente"
+          >
+            {pendingContacts.map((contact) => (
+              <View key={contact.uid} style={styles.pendingBlock}>
                 <ProDayText variant="body">{contact.name}</ProDayText>
                 <ProDayText variant="caption" muted>
-                  {contact.role}
+                  {contact.role ?? 'contact'} · en attente
                 </ProDayText>
+                <View style={styles.row}>
+                  <ParentActionButton
+                    label="Approuver"
+                    icon="checkmark-circle"
+                    onPress={() => void toggleContact(contact.uid, contact.name, true)}
+                  />
+                  <ParentActionButton
+                    label="Bloquer"
+                    tone="ghost"
+                    icon="close"
+                    onPress={() => void toggleContact(contact.uid, contact.name, false)}
+                  />
+                </View>
               </View>
-              <Switch
-                value={contact.approved}
-                onValueChange={(v) => void toggleContact(contact.uid, contact.name, v)}
-                trackColor={{ false: c.border, true: c.brandSoft }}
-                thumbColor={contact.approved ? c.brand : c.surface}
-              />
-            </View>
-          ))
-        )}
-      </ProDaySurface>
-
-      {loading ? (
-        <ActivityIndicator color={c.brand} />
-      ) : threads.length === 0 ? (
-        <ProDayText variant="body" muted>
-          Aucune conversation pour le moment.
-        </ProDayText>
-      ) : (
-        threads.map((thread) => {
-          const otherUid = thread.other_user_id;
-          const otherName = thread.participant_name || 'Contact';
-          const pending = thread.request_status === 'pending';
-          return (
-            <ProDaySurface key={thread.id} variant="module" style={styles.card}>
-              <Pressable onPress={() => void openThread(thread.id)}>
-                <ProDayText variant="section">{otherName}</ProDayText>
+            ))}
+            {pendingThreads.map((thread) => (
+              <View key={thread.id} style={styles.pendingBlock}>
+                <ProDayText variant="body">{thread.participant_name || 'Contact'}</ProDayText>
                 <ProDayText variant="caption" muted numberOfLines={2}>
-                  {thread.last_message ?? '—'}
+                  {thread.last_message ?? 'Demande de conversation'}
                 </ProDayText>
-                {pending ? (
-                  <ProDayText variant="caption" accent>
-                    Demande en attente
-                  </ProDayText>
-                ) : null}
-              </Pressable>
-              <View style={styles.row}>
-                <Pressable
-                  onPress={() => void toggleContact(otherUid, String(otherName), true)}
-                >
-                  <ProDayText variant="caption" accent style={styles.link}>
-                    Approuver
-                  </ProDayText>
-                </Pressable>
-                <Pressable
-                  onPress={() => void toggleContact(otherUid, String(otherName), false)}
-                >
-                  <ProDayText variant="caption" muted style={styles.link}>
-                    Bloquer
-                  </ProDayText>
-                </Pressable>
-                {pending && thread.request_id ? (
-                  <>
-                    <Pressable
-                      onPress={() =>
-                        void parentPortalService
-                          .resolveMessageRequest(thread.request_id!, 'accepted')
-                          .then(load)
-                      }
-                    >
-                      <ProDayText variant="caption" accent style={styles.link}>
-                        Accepter demande
-                      </ProDayText>
-                    </Pressable>
-                    <Pressable
-                      onPress={() =>
-                        void parentPortalService
-                          .resolveMessageRequest(thread.request_id!, 'refused')
-                          .then(load)
-                      }
-                    >
-                      <ProDayText variant="caption" muted style={styles.link}>
-                        Refuser
-                      </ProDayText>
-                    </Pressable>
-                  </>
-                ) : null}
+                <View style={styles.row}>
+                  {thread.request_id ? (
+                    <>
+                      <ParentActionButton
+                        label="Accepter"
+                        icon="checkmark-circle"
+                        onPress={() =>
+                          void parentPortalService
+                            .resolveMessageRequest(thread.request_id!, 'accepted')
+                            .then(load)
+                        }
+                      />
+                      <ParentActionButton
+                        label="Refuser"
+                        tone="ghost"
+                        onPress={() =>
+                          void parentPortalService
+                            .resolveMessageRequest(thread.request_id!, 'refused')
+                            .then(load)
+                        }
+                      />
+                    </>
+                  ) : null}
+                  <ParentActionButton
+                    label="Ouvrir"
+                    tone="ghost"
+                    onPress={() => void openThread(thread.id)}
+                  />
+                </View>
               </View>
-            </ProDaySurface>
-          );
-        })
-      )}
-    </ScrollView>
+            ))}
+          </ParentSectionCard>
+        ) : null}
+
+        <ParentSectionCard title="Contacts approuvés">
+          {contacts.length === 0 ? (
+            <ProDayText variant="caption" muted>
+              Aucun contact enregistré. Ils apparaîtront dès qu’une conversation démarre.
+            </ProDayText>
+          ) : (
+            contacts.map((contact) => (
+              <View key={contact.uid} style={styles.contactRow}>
+                <View style={{ flex: 1 }}>
+                  <ProDayText variant="body">{contact.name}</ProDayText>
+                  <ProDayText variant="caption" muted>
+                    {contact.role}
+                  </ProDayText>
+                </View>
+                <Switch
+                  value={contact.approved}
+                  onValueChange={(v) => void toggleContact(contact.uid, contact.name, v)}
+                  trackColor={{ false: c.border, true: c.brandSoft }}
+                  thumbColor={contact.approved ? c.brand : c.surface}
+                />
+              </View>
+            ))
+          )}
+        </ParentSectionCard>
+
+        <ParentSectionCard title={`Conversations de ${selected.display_name}`}>
+          {loading && !refreshing ? (
+            <ActivityIndicator color={c.brand} />
+          ) : threads.length === 0 ? (
+            <ProDayText variant="body" muted>
+              Aucune conversation pour le moment.
+            </ProDayText>
+          ) : (
+            threads.map((thread) => {
+              const otherUid = thread.other_user_id;
+              const otherName = thread.participant_name || 'Contact';
+              const pending = thread.request_status === 'pending';
+              return (
+                <View key={thread.id} style={styles.threadBlock}>
+                  <PressableSpring onPress={() => void openThread(thread.id)} haptic>
+                    <ProDayText variant="section">{otherName}</ProDayText>
+                    <ProDayText variant="caption" muted numberOfLines={2}>
+                      {thread.last_message ?? '—'}
+                    </ProDayText>
+                    {pending ? (
+                      <ProDayText variant="caption" accent>
+                        Demande en attente
+                      </ProDayText>
+                    ) : null}
+                  </PressableSpring>
+                  <View style={styles.row}>
+                    <ParentActionButton
+                      label="Approuver"
+                      tone="ghost"
+                      onPress={() => void toggleContact(otherUid, String(otherName), true)}
+                    />
+                    <ParentActionButton
+                      label="Bloquer"
+                      tone="ghost"
+                      onPress={() => void toggleContact(otherUid, String(otherName), false)}
+                    />
+                  </View>
+                </View>
+              );
+            })
+          )}
+        </ParentSectionCard>
+      </ScrollView>
+    </ParentPageFrame>
   );
 };
 
@@ -224,7 +316,6 @@ const styles = StyleSheet.create({
   root: { flex: 1 },
   content: { padding: spacing.lg, gap: spacing.md, paddingBottom: spacing.xl },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing.lg },
-  card: { padding: spacing.lg, gap: spacing.sm, borderRadius: radius.lg },
   msg: { padding: spacing.md, gap: 4, borderRadius: radius.md },
   contactRow: {
     flexDirection: 'row',
@@ -232,7 +323,8 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     paddingVertical: spacing.xs,
   },
-  row: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },
-  link: { fontWeight: '700' },
+  row: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  pendingBlock: { gap: spacing.xs, paddingVertical: spacing.xs },
+  threadBlock: { gap: spacing.sm, paddingVertical: spacing.xs },
   back: { paddingHorizontal: spacing.lg, paddingTop: spacing.sm },
 });

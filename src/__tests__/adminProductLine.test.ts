@@ -8,10 +8,11 @@ import {
 import { adminGenderLabel, adminPlayerLevelLabel } from '../utils/adminUserDisplay';
 
 describe('adminProductLine', () => {
-  it('force sponsor / sante / supporter selon le rôle', () => {
+  it('force sponsor / sante / supporter / parent selon le rôle', () => {
     expect(resolveAdminProductLine('sponsor', 'pro_staff')).toBe('sponsor');
     expect(resolveAdminProductLine('physio', 'amateur')).toBe('sante');
     expect(resolveAdminProductLine('supporter', 'pro_player')).toBe('supporter');
+    expect(resolveAdminProductLine('parent', 'amateur')).toBe('parent');
   });
 
   it('oriente coach vers Staff même si univers Joueur demandé', () => {
@@ -34,11 +35,13 @@ describe('adminProductLine', () => {
     ]);
     expect(adminRolesForProductLine('amateur')).toEqual(['player']);
     expect(adminRolesForProductLine('sponsor')).toEqual(['sponsor']);
+    expect(adminRolesForProductLine('parent')).toEqual(['parent']);
   });
 
   it('expose les pôles admin actuels (Joueur unifié, sans doublon pro_player)', () => {
     expect(ADMIN_PRODUCT_LINES).toContain('sponsor');
     expect(ADMIN_PRODUCT_LINES).toContain('amateur');
+    expect(ADMIN_PRODUCT_LINES).toContain('parent');
     expect(ADMIN_PRODUCT_LINES).not.toContain('pro_player');
     expect(ADMIN_PRODUCT_LINES).not.toContain('pro');
   });
@@ -48,6 +51,7 @@ describe('adminProductLine', () => {
     expect(adminProductLineLabel('pro_player')).toBe('Joueur');
     expect(adminProductLineLabel('woman')).toBe('Joueur');
     expect(adminProductLineLabel('sante')).toBe('Santé');
+    expect(adminProductLineLabel('parent')).toBe('Parent');
   });
 
   it('filtre Joueur couvre amateur et pro_player', () => {
@@ -67,9 +71,9 @@ describe('adminUserDisplay', () => {
   });
 
   it('libellé badge niveau', () => {
-    expect(adminPlayerLevelLabel('amateur')).toBe('Amateur');
-    expect(adminPlayerLevelLabel('academy', { short: true })).toBe('Centre / Aspirant');
-    expect(adminPlayerLevelLabel('professional')).toBe('Professionnel');
+    expect(adminPlayerLevelLabel('amateur')).toBe('Football amateur');
+    expect(adminPlayerLevelLabel('academy', { short: true })).toBe('Formation');
+    expect(adminPlayerLevelLabel('professional')).toBe('Semi-pro / Haut niveau');
     expect(adminPlayerLevelLabel(undefined)).toBeNull();
   });
 });

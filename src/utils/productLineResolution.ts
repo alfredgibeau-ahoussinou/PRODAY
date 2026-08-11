@@ -113,10 +113,25 @@ export function productLinesEquivalent(
   activeLine: ProductLineId,
   role: UserRole,
 ): boolean {
-  return (
-    canonicalizeUserProductLine(userLine, role) ===
-    canonicalizeActiveProductLine(activeLine, role)
-  );
+  const userCanonical = canonicalizeUserProductLine(userLine, role);
+  const activeCanonical = canonicalizeActiveProductLine(activeLine, role);
+  if (userCanonical === activeCanonical) return true;
+
+  // Pôle Joueur unifié : Amateur ↔ Pro Joueur (même espace joueur).
+  if (
+    role === 'player' &&
+    isPlayerJoueurLine(userCanonical) &&
+    isPlayerJoueurLine(activeCanonical)
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
+/** Lignes du Pôle Joueur (amateur + pro joueur). */
+function isPlayerJoueurLine(line: ProductLineId): boolean {
+  return line === 'amateur' || line === 'pro_player';
 }
 
 /** Valeur à persister en Firestore pour un nouvel inscrit ou une migration. */

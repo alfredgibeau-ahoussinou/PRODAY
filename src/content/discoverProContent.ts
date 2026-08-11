@@ -1,4 +1,4 @@
-import type { IconName } from '../components/ui/Icon';
+import type { IconName } from '../components/ui/iconNames';
 import type { IntroSlideAction } from './discoverChapters';
 import { SHOWCASE_IMAGES } from './showcaseAssets';
 
@@ -82,7 +82,7 @@ export const DISCOVER_INTRO_SLIDES_PRO_CLUB: DiscoverIntroSlidePro[] = [
 export const DISCOVER_INTRO_SLIDES_PRO_STAFF: DiscoverIntroSlidePro[] = [
   {
     id: 'welcome',
-    kicker: 'PRO STAFF',
+    kicker: 'COACH',
     title: 'Le staff\nau centre.',
     body: 'Coach, agent, recruteur ou organisateur. Mandats, scouting et réseau pro vérifié.',
     image: SHOWCASE_IMAGES.coachFounder,
@@ -103,7 +103,7 @@ export const DISCOVER_INTRO_SLIDES_PRO_STAFF: DiscoverIntroSlidePro[] = [
   {
     id: 'join',
     kicker: 'REJOINDRE',
-    title: 'Votre compte\nPro Staff.',
+    title: 'Votre compte\nCoach.',
     body: 'Inscription coach, agent ou recruteur. Validation métier incluse.',
     image: SHOWCASE_IMAGES.expMessages,
     icon: 'person',

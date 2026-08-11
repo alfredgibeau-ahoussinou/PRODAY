@@ -5,6 +5,11 @@ import { configStr } from './runtimeConfig';
 import { sendFcmToUser } from './messaging';
 import { handleShopCheckoutCompleted } from './shopPayments';
 import { handleTournamentCheckoutCompleted } from './tournamentPayments';
+import {
+  handleProSubscriptionCheckoutCompleted,
+  handleStripeSubscriptionLifecycle,
+} from './subscriptionPayments';
+import { handleCoachSessionCheckoutCompleted } from './coachSessionPayments';
 
 const db = admin.firestore();
 
@@ -122,6 +127,12 @@ export const stripeWebhook = functions.https.onRequest(async (req, res) => {
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object as Stripe.Checkout.Session;
 
+    if (session.metadata?.type === 'pro_subscription') {
+      await handleProSubscriptionCheckoutCompleted(session);
+      res.json({ received: true });
+      return;
+    }
+
     if (session.metadata?.type === 'shop_order') {
       await handleShopCheckoutCompleted(session);
       res.json({ received: true });
@@ -130,6 +141,12 @@ export const stripeWebhook = functions.https.onRequest(async (req, res) => {
 
     if (session.metadata?.type === 'tournament_registration') {
       await handleTournamentCheckoutCompleted(session);
+      res.json({ received: true });
+      return;
+    }
+
+    if (session.metadata?.type === 'coach_session') {
+      await handleCoachSessionCheckoutCompleted(session);
       res.json({ received: true });
       return;
     }
@@ -157,6 +174,14 @@ export const stripeWebhook = functions.https.onRequest(async (req, res) => {
         }
       }
     }
+  }
+
+  if (
+    event.type === 'customer.subscription.updated' ||
+    event.type === 'customer.subscription.deleted'
+  ) {
+    const subscription = event.data.object as Stripe.Subscription;
+    await handleStripeSubscriptionLifecycle(subscription);
   }
 
   res.json({ received: true });

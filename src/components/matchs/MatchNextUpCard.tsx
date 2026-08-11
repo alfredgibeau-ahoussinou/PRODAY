@@ -3,11 +3,10 @@ import { StyleSheet, View } from 'react-native';
 import { PressableSpring, AnimatedEntrance } from '../motion';
 import type { SeasonCalendarItem } from '../../utils/seasonCalendar';
 import { formatCalendarDate } from '../../utils/seasonCalendar';
-import { ProDayGradient } from '../ui/ProDayGradient';
 import { ProDayText } from '../ui/ProDayText';
-import { Icon } from '../ui/Icon';
 import { useAppTheme } from '../../context/ProductLineContext';
-import { spacing, radius } from '../../theme/designTokens';
+import { MATCH_SITE } from '../../content/matchPageIdentity';
+import { spacing } from '../../theme/designTokens';
 
 interface MatchNextUpCardProps {
   item: SeasonCalendarItem;
@@ -19,51 +18,52 @@ export const MatchNextUpCard: React.FC<MatchNextUpCardProps> = ({ item, onPress 
 
   return (
     <AnimatedEntrance kind="zoom" delayStep={0}>
-      <PressableSpring onPress={onPress} scaleTo={0.98} haptic>
-        <ProDayGradient kind="hero" style={styles.wrap}>
-          <View style={styles.top}>
-            <View style={styles.badge}>
-              <Icon name="time" size={14} color={colors.brandInverse} />
-              <ProDayText variant="caption" inverse style={styles.badgeText}>
-                Prochain rendez-vous
-              </ProDayText>
-            </View>
-            <Icon name="chevron-forward" size={20} color="rgba(255,255,255,0.85)" />
-          </View>
-          <ProDayText variant="section" inverse numberOfLines={2} style={styles.title}>
+      <PressableSpring onPress={onPress} scaleTo={0.98} haptic style={styles.card}>
+        <View style={[styles.bar, { backgroundColor: colors.accent }]} />
+        <View style={styles.body}>
+          <ProDayText variant="caption" style={[styles.kicker, { color: colors.accent }]}>
+            Prochain rendez-vous
+          </ProDayText>
+          <ProDayText variant="section" numberOfLines={2} style={styles.title}>
             {item.title}
           </ProDayText>
-          <ProDayText variant="caption" inverse style={styles.meta}>
+          <ProDayText variant="caption" style={styles.meta}>
             {formatCalendarDate(item.starts_at)} · {item.city}
           </ProDayText>
-        </ProDayGradient>
+          <ProDayText variant="caption" style={[styles.cta, { color: colors.accent }]}>
+            Ouvrir →
+          </ProDayText>
+        </View>
       </PressableSpring>
     </AnimatedEntrance>
   );
 };
 
 const styles = StyleSheet.create({
-  wrap: {
-    borderRadius: radius.xl,
-    padding: spacing.lg,
-    marginBottom: spacing.lg,
-    gap: spacing.sm,
-  },
-  top: {
+  card: {
     flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: MATCH_SITE.border,
+    backgroundColor: MATCH_SITE.elevated,
+    overflow: 'hidden',
   },
-  badge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 4,
-    borderRadius: radius.pill,
-    backgroundColor: 'rgba(255,255,255,0.16)',
+  bar: { width: 3 },
+  body: {
+    flex: 1,
+    padding: spacing.md,
+    gap: 4,
   },
-  badgeText: { fontWeight: '800', fontSize: 11 },
-  title: { fontWeight: '800', letterSpacing: -0.2 },
-  meta: { opacity: 0.88, fontWeight: '600' },
+  kicker: {
+    fontWeight: '800',
+    fontSize: 10,
+    textTransform: 'uppercase',
+    letterSpacing: 1.6,
+  },
+  title: {
+    fontWeight: '800',
+    letterSpacing: -0.3,
+    color: MATCH_SITE.foreground,
+  },
+  meta: { color: MATCH_SITE.muted, fontWeight: '600' },
+  cta: { fontWeight: '800', marginTop: 2 },
 });

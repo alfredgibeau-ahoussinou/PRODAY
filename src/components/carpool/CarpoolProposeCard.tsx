@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
   View,
+  Text,
   TextInput,
   StyleSheet,
   ActivityIndicator,
@@ -14,16 +15,17 @@ import { formatCalendarDate } from '../../utils/seasonCalendar';
 import { carpoolSlotForDriver } from '../../utils/carpoolBalance';
 import { teamEventsService } from '../../services/teamEvents.service';
 import { CarpoolLocationCapture } from './CarpoolLocationCapture';
+import { CarpoolVehicleTypePicker } from './CarpoolVehicleTypePicker';
+import type { CarpoolVehicleType } from '../../models/CarpoolVehicle';
+import { defaultSeatsForVehicleType } from '../../models/CarpoolVehicle';
 import { openMapsAt } from '../../utils/geoLocation';
-import { ProDaySurface } from '../ui/ProDaySurface';
 import { ProDayText } from '../ui/ProDayText';
-import { ProDayGradient } from '../ui/ProDayGradient';
 import { Icon } from '../ui/Icon';
 import { PressableSpring } from '../motion';
 import { prodayHaptics } from '../../utils/prodayHaptics';
-import { useAppTheme } from '../../context/ProductLineContext';
 import { useTranslation } from '../../context/LocaleContext';
-import { spacing, radius, shadows } from '../../theme/designTokens';
+import { spacing } from '../../theme/designTokens';
+import { CARPOOL_SITE } from '../../content/carpoolSite';
 
 interface CarpoolProposeCardProps {
   event: TeamEvent;
@@ -42,26 +44,43 @@ export const CarpoolProposeCard: React.FC<CarpoolProposeCardProps> = ({
   onPublished,
   onOpenDetail,
 }) => {
-  const { colors } = useAppTheme();
   const { t } = useTranslation();
   const slot = carpoolSlotForDriver(event, profile.uid);
   const isEditing = Boolean(slot);
 
-  const [seats, setSeats] = useState('');
+  const [seats, setSeats] = useState(String(defaultSeatsForVehicleType('berline')));
+  const [vehicleType, setVehicleType] = useState<CarpoolVehicleType | undefined>('berline');
   const [meetingTime, setMeetingTime] = useState('');
   const [meetingPlace, setMeetingPlace] = useState('');
   const [meetingLocation, setMeetingLocation] = useState<GeoPoint | undefined>();
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
 
+  const takenSeats = slot?.passengers?.length ?? 0;
+
+  const applyVehicleType = (type: CarpoolVehicleType) => {
+    setVehicleType(type);
+    setSeats(String(defaultSeatsForVehicleType(type, takenSeats)));
+  };
+
   useEffect(() => {
     if (!expanded) return;
-    setSeats(slot?.seats != null ? String(slot.seats) : '');
+    setSeats(slot?.seats != null ? String(slot.seats) : String(defaultSeatsForVehicleType('berline')));
+    setVehicleType(slot?.vehicle_type ?? 'berline');
     setMeetingTime(slot?.meeting_time ?? '');
     setMeetingPlace(slot?.meeting_place ?? '');
     setMeetingLocation(slot?.meeting_location);
     setNotes(slot?.notes ?? '');
-  }, [expanded, slot?.driver_uid, slot?.seats, slot?.meeting_time, slot?.meeting_place, slot?.meeting_location, slot?.notes]);
+  }, [
+    expanded,
+    slot?.driver_uid,
+    slot?.seats,
+    slot?.vehicle_type,
+    slot?.meeting_time,
+    slot?.meeting_place,
+    slot?.meeting_location,
+    slot?.notes,
+  ]);
 
   const destination = [event.location_label, event.city].filter(Boolean).join(' · ');
 
@@ -69,6 +88,10 @@ export const CarpoolProposeCard: React.FC<CarpoolProposeCardProps> = ({
     const seatsNum = seats.trim() ? parseInt(seats, 10) : undefined;
     if (!seats.trim() || !Number.isFinite(seatsNum) || (seatsNum ?? 0) < 1) {
       Alert.alert(t('carpool.propose.seatsRequired'), t('carpool.propose.seatsRequiredBody'));
+      return;
+    }
+    if (!vehicleType) {
+      Alert.alert(t('carpool.vehicle.required'), t('carpool.vehicle.requiredBody'));
       return;
     }
     if (!meetingPlace.trim() && !meetingLocation) {
@@ -84,6 +107,7 @@ export const CarpoolProposeCard: React.FC<CarpoolProposeCardProps> = ({
         profile.display_name,
         {
           seats: seatsNum,
+          vehicle_type: vehicleType,
           meeting_time: meetingTime.trim() || undefined,
           meeting_place: meetingPlace.trim() || undefined,
           meeting_location: meetingLocation,
@@ -131,55 +155,51 @@ export const CarpoolProposeCard: React.FC<CarpoolProposeCardProps> = ({
   };
 
   return (
-    <ProDaySurface
-      variant="module"
-      style={[styles.card, { borderColor: colors.border }, shadows.soft]}
-    >
+    <View style={styles.card}>
       <PressableSpring style={styles.header} onPress={onToggle} scaleTo={0.98} haptic>
         <View style={styles.headerCopy}>
-          <View style={[styles.kindPill, { backgroundColor: colors.accentSoft }]}>
-            <ProDayText variant="caption" accent style={styles.kindText}>
-              {EVENT_TYPE_LABELS[event.event_type]}
-            </ProDayText>
-          </View>
-          <ProDayText variant="section">{event.title}</ProDayText>
-          <ProDayText variant="caption" muted>
+          <Text style={styles.kind}>{EVENT_TYPE_LABELS[event.event_type]}</Text>
+          <ProDayText variant="section" style={styles.title}>
+            {event.title}
+          </ProDayText>
+          <ProDayText variant="caption" style={styles.meta}>
             {formatCalendarDate(event.starts_at)} · {destination || event.city}
           </ProDayText>
           {isEditing ? (
-            <ProDayText variant="caption" accent style={styles.liveBadge}>
+            <ProDayText variant="caption" style={styles.liveBadge}>
               {t('carpool.propose.activeTrip', { n: slot?.seats ?? '?' })}
             </ProDayText>
           ) : null}
         </View>
-        <Icon name={expanded ? 'chevron-up' : 'chevron-down'} size={18} color={colors.textMuted} />
+        <Icon name={expanded ? 'chevron-up' : 'chevron-down'} size={18} color={CARPOOL_SITE.inkDim} />
       </PressableSpring>
 
       {expanded ? (
         <View style={styles.form}>
-          <ProDayText variant="caption" muted style={styles.formLead}>
+          <ProDayText variant="caption" style={styles.formLead}>
             {t('carpool.propose.destination', { dest: destination || event.city })}
           </ProDayText>
 
           <TextInput
-            style={[styles.input, { borderColor: colors.border, color: colors.ink }]}
+            style={styles.input}
             placeholder={t('carpool.propose.seatsPlaceholder')}
-            placeholderTextColor={colors.textMuted}
+            placeholderTextColor={CARPOOL_SITE.inkDim}
             keyboardType="number-pad"
             value={seats}
             onChangeText={setSeats}
           />
+          <CarpoolVehicleTypePicker value={vehicleType} onChange={applyVehicleType} disabled={saving} />
           <TextInput
-            style={[styles.input, { borderColor: colors.border, color: colors.ink }]}
+            style={styles.input}
             placeholder={t('carpool.propose.departurePlaceholder')}
-            placeholderTextColor={colors.textMuted}
+            placeholderTextColor={CARPOOL_SITE.inkDim}
             value={meetingTime}
             onChangeText={setMeetingTime}
           />
           <TextInput
-            style={[styles.input, { borderColor: colors.border, color: colors.ink }]}
+            style={styles.input}
             placeholder={t('carpool.propose.meetingPlaceholder')}
-            placeholderTextColor={colors.textMuted}
+            placeholderTextColor={CARPOOL_SITE.inkDim}
             value={meetingPlace}
             onChangeText={setMeetingPlace}
           />
@@ -195,62 +215,62 @@ export const CarpoolProposeCard: React.FC<CarpoolProposeCardProps> = ({
 
           {slot?.meeting_location ? (
             <PressableSpring onPress={() => openMapsAt(slot.meeting_location!, slot.meeting_place)} scaleTo={0.96} haptic>
-              <ProDayText variant="caption" accent style={styles.mapLink}>
+              <ProDayText variant="caption" style={styles.mapLink}>
                 {t('carpool.propose.viewMeetingMap')}
               </ProDayText>
             </PressableSpring>
           ) : null}
 
           <TextInput
-            style={[styles.input, styles.inputMulti, { borderColor: colors.border, color: colors.ink }]}
+            style={[styles.input, styles.inputMulti]}
             placeholder={t('carpool.propose.notesPlaceholder')}
-            placeholderTextColor={colors.textMuted}
+            placeholderTextColor={CARPOOL_SITE.inkDim}
             value={notes}
             onChangeText={setNotes}
             multiline
           />
 
-          <PressableSpring onPress={() => void publish()} disabled={saving} scaleTo={0.96} haptic>
-            <ProDayGradient kind="cta" style={styles.publishBtn}>
-              {saving ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <ProDayText variant="caption" inverse style={styles.publishText}>
-                  {isEditing ? t('carpool.propose.updateTrip') : t('carpool.propose.publishTrip')}
-                </ProDayText>
-              )}
-            </ProDayGradient>
+          <PressableSpring onPress={() => void publish()} disabled={saving} scaleTo={0.96} haptic style={styles.publishBtn}>
+            {saving ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <ProDayText variant="caption" style={styles.publishText}>
+                {isEditing ? t('carpool.propose.updateTrip') : t('carpool.propose.publishTrip')}
+              </ProDayText>
+            )}
           </PressableSpring>
 
           {isEditing && slot?.volunteered ? (
             <PressableSpring
-              style={[styles.withdrawBtn, { borderColor: colors.border }]}
+              style={styles.withdrawBtn}
               onPress={withdraw}
               disabled={saving}
               scaleTo={0.96}
               haptic
             >
-              <ProDayText variant="caption" muted style={styles.withdrawText}>
+              <ProDayText variant="caption" style={styles.withdrawText}>
                 {t('carpool.propose.withdraw')}
               </ProDayText>
             </PressableSpring>
           ) : null}
 
           <PressableSpring onPress={onOpenDetail} scaleTo={0.96} haptic>
-            <ProDayText variant="caption" accent style={styles.detailLink}>
+            <ProDayText variant="caption" style={styles.detailLink}>
               {t('carpool.propose.viewEvent')}
             </ProDayText>
           </PressableSpring>
         </View>
       ) : null}
-    </ProDaySurface>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   card: {
-    borderWidth: 1,
-    borderRadius: radius.xl,
+    borderWidth: 1.5,
+    borderColor: CARPOOL_SITE.fog,
+    backgroundColor: CARPOOL_SITE.surface,
+    borderRadius: 18,
     marginBottom: spacing.sm,
     overflow: 'hidden',
   },
@@ -261,45 +281,57 @@ const styles = StyleSheet.create({
     padding: spacing.md,
   },
   headerCopy: { flex: 1, gap: 4 },
-  kindPill: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 2,
-    borderRadius: radius.pill,
+  kind: {
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    color: CARPOOL_SITE.signal,
   },
-  kindText: { fontWeight: '800', fontSize: 10 },
-  liveBadge: { fontWeight: '700', marginTop: 4 },
+  title: { color: CARPOOL_SITE.ink, fontFamily: CARPOOL_SITE.display },
+  meta: { color: CARPOOL_SITE.inkMuted },
+  liveBadge: { fontWeight: '700', marginTop: 4, color: CARPOOL_SITE.signal },
   form: {
     paddingHorizontal: spacing.md,
     paddingBottom: spacing.md,
     gap: spacing.sm,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: 'rgba(0,0,0,0.08)',
+    borderTopColor: CARPOOL_SITE.fog,
   },
-  formLead: { marginBottom: spacing.xs },
+  formLead: { marginBottom: spacing.xs, color: CARPOOL_SITE.inkMuted },
   input: {
-    borderWidth: 1,
-    borderRadius: radius.md,
+    borderWidth: 1.5,
+    borderColor: CARPOOL_SITE.fog,
+    backgroundColor: CARPOOL_SITE.surfaceMuted,
+    borderRadius: 12,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     fontSize: 15,
+    color: CARPOOL_SITE.ink,
   },
   inputMulti: { minHeight: 72, textAlignVertical: 'top' },
-  mapLink: { fontWeight: '700' },
+  mapLink: { fontWeight: '700', color: CARPOOL_SITE.signalDeep },
   publishBtn: {
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: spacing.md,
-    borderRadius: radius.lg,
     marginTop: spacing.xs,
+    backgroundColor: CARPOOL_SITE.asphalt,
+    borderRadius: 999,
   },
-  publishText: { fontWeight: '800' },
+  publishText: { fontWeight: '800', color: '#fff' },
   withdrawBtn: {
     alignItems: 'center',
     paddingVertical: spacing.sm,
-    borderRadius: radius.md,
-    borderWidth: 1,
+    borderWidth: 1.5,
+    borderColor: CARPOOL_SITE.fog,
+    borderRadius: 999,
   },
-  withdrawText: { fontWeight: '700' },
-  detailLink: { fontWeight: '700', textAlign: 'center', marginTop: spacing.xs },
+  withdrawText: { fontWeight: '700', color: CARPOOL_SITE.inkMuted },
+  detailLink: {
+    fontWeight: '700',
+    textAlign: 'center',
+    marginTop: spacing.xs,
+    color: CARPOOL_SITE.signalDeep,
+  },
 });

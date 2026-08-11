@@ -1,6 +1,6 @@
 import { tr } from '../../i18n/translate';
 import type { TranslateFn } from '../../i18n/types';
-import type { IconName } from '../../components/ui/Icon';
+import type { IconName } from '../../components/ui/iconNames';
 import type { MedicalSpecialtyId } from './signupRoleExperience';
 
 export const MEDICAL_SPECIALTY_IDS: MedicalSpecialtyId[] = [

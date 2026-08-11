@@ -200,7 +200,7 @@ export function SiteNav({ light: _light }: { light?: boolean } = {}) {
 
   return (
     <>
-      <div className="pointer-events-none fixed inset-x-0 top-0 z-50 flex justify-center px-3 pt-3 sm:px-5 sm:pt-5">
+      <div className="pointer-events-none fixed inset-x-0 top-0 z-[110] flex justify-center px-3 pt-3 sm:px-5 sm:pt-5">
         <nav
           aria-label="Principal"
           className={`site-nav-dock pointer-events-auto flex w-full max-w-[52rem] items-center gap-1 rounded-full pl-2 pr-2 py-1 sm:gap-1 sm:pl-2.5 sm:pr-2 sm:py-1.5 ${
@@ -272,7 +272,7 @@ export function SiteNav({ light: _light }: { light?: boolean } = {}) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-40 bg-black/75 md:hidden"
+              className="fixed inset-0 z-[105] bg-black/75 md:hidden"
               aria-label="Fermer"
               onClick={close}
             />
@@ -281,7 +281,7 @@ export function SiteNav({ light: _light }: { light?: boolean } = {}) {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -8, scale: 0.98 }}
               transition={{ duration: 0.2, ease: easeOut }}
-              className="fixed inset-x-3 top-[4.4rem] z-50 max-h-[calc(100dvh-5.3rem)] overflow-y-auto rounded-[1.5rem] border border-white/10 bg-[#0a0a0a]/88 p-3.5 shadow-[0_24px_60px_-26px_rgba(0,0,0,0.85)] backdrop-blur-2xl min-[390px]:rounded-[1.75rem] min-[390px]:p-4 md:hidden"
+              className="fixed inset-x-3 top-[4.4rem] z-[110] max-h-[calc(100dvh-5.3rem)] overflow-y-auto rounded-[1.5rem] border border-white/10 bg-[#0a0a0a]/88 p-3.5 shadow-[0_24px_60px_-26px_rgba(0,0,0,0.85)] backdrop-blur-2xl min-[390px]:rounded-[1.75rem] min-[390px]:p-4 md:hidden"
             >
               <div className="rounded-2xl border border-white/10 p-2">
                 <p className="px-2 font-mono text-[10px] uppercase tracking-[0.22em] text-white/35">

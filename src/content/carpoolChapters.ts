@@ -5,6 +5,9 @@ export type CarpoolChapterId =
   | 'mes_trajets'
   | 'equipe';
 
+/** Modes hub A→Z — une seule barre de navigation. */
+export type CarpoolHubMode = 'ride' | 'drive' | 'trips';
+
 export const CARPOOL_CHAPTERS: { id: CarpoolChapterId; label: string }[] = [
   { id: 'evenements', label: 'Événements' },
   { id: 'reserver', label: 'Réserver' },
@@ -31,3 +34,16 @@ export const CARPOOL_SCOPE_FILTERS: { id: CarpoolScopeFilter; label: string }[] 
   { id: 'training', label: 'Entraînement' },
   { id: 'event', label: 'Événement' },
 ];
+
+/** Deep-link chapter → mode hub (rétrocompat). */
+export function carpoolChapterToHubMode(chapter: CarpoolChapterId): CarpoolHubMode {
+  if (chapter === 'proposer') return 'drive';
+  if (chapter === 'mes_trajets' || chapter === 'equipe') return 'trips';
+  return 'ride';
+}
+
+export function carpoolHubModeToChapter(mode: CarpoolHubMode): CarpoolChapterId {
+  if (mode === 'drive') return 'proposer';
+  if (mode === 'trips') return 'mes_trajets';
+  return 'reserver';
+}

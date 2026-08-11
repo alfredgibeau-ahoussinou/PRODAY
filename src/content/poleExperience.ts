@@ -29,11 +29,15 @@ import { canParticipateWeeklyQuestion } from '../utils/weeklyQuestionAccess';
 import { injectFamilyTab } from './familyExperience';
 import type { User } from '../models/User';
 import {
+  AMATEUR_CLUB_OVERFLOW_TABS,
+  AMATEUR_CLUB_SHELL_TABS,
+  AMATEUR_COACH_OVERFLOW_TABS,
   AMATEUR_COACH_SHELL_TABS,
   AMATEUR_PLAYER_OVERFLOW_TABS,
   AMATEUR_PLAYER_SHELL_TABS,
   PRO_AGENT_SHELL_TABS,
   PRO_CLUB_SHELL_TABS,
+  PRO_CLUB_OVERFLOW_TABS,
   PRO_COACH_SHELL_TABS,
   PRO_ORGANIZER_SHELL_TABS,
   PRO_PLAYER_SHELL_TABS,
@@ -54,7 +58,7 @@ const AMATEUR_SIGNUP_GROUPS: SignupRoleGroup[] = [
   {
     id: 'player',
     label: 'Joueurs',
-    hint: 'CV, Mercato, matchs — badges Amateur / Centre / Pro',
+    hint: 'Profil, matchs, stats et vie d’équipe — football amateur',
     roles: ['player'],
   },
 ];
@@ -70,28 +74,34 @@ const SUPPORTER_SIGNUP_GROUPS: SignupRoleGroup[] = [
 
 const PRO_SIGNUP_GROUPS: SignupRoleGroup[] = [
   {
+    id: 'structure',
+    label: 'Club / Dirigeants',
+    hint: 'Cœur ProDay — équipes, licenciés, compétitions, recrutement interne',
+    roles: ['club'],
+  },
+  {
+    id: 'coach',
+    label: 'Coachs',
+    hint: 'Effectif, Tactique IA, matchs et séances — inclus ou abonnement Coach',
+    roles: ['coach'],
+  },
+  {
     id: 'pro_player',
-    label: 'Joueurs pro',
-    hint: 'Carrière, opportunités, portfolio et groupe',
+    label: 'Joueurs',
+    hint: 'Carrière club, stats, convocations et progression',
     roles: ['player'],
   },
   {
-    id: 'recruiter',
-    label: 'Recruteurs',
-    hint: 'Scouting, annonces Mercato et pipeline candidatures',
-    roles: ['recruiter'],
+    id: 'staff_network',
+    label: 'Réseau (intégré)',
+    hint: 'Agent & recruteur — outils intégrés au club, pas des pôles séparés',
+    roles: ['agent', 'recruiter'],
   },
   {
-    id: 'staff',
-    label: 'Staff',
-    hint: 'Coach et agent. Encadrement et mandats',
-    roles: ['coach', 'agent'],
-  },
-  {
-    id: 'structure',
-    label: 'Structures',
-    hint: 'Club, annonces Mercato Pro et événements',
-    roles: ['club', 'organizer'],
+    id: 'events',
+    label: 'Événements (intégré)',
+    hint: 'Tournois et stages — gérés depuis l’espace Club',
+    roles: ['organizer'],
   },
   {
     id: 'partner',
@@ -105,7 +115,7 @@ const SANTE_SIGNUP_GROUPS: SignupRoleGroup[] = [
   {
     id: 'medical',
     label: 'Praticiens',
-    hint: 'Kiné, médecin, prépa, nutrition, podologue…',
+    hint: 'Rôle médical intégré — kiné, médecin, prépa…',
     roles: ['physio'],
   },
 ];
@@ -126,6 +136,7 @@ export function getSignupRoleGroups(
       roles: g.roles.filter((r) => r === 'club'),
     }));
   } else if (line === 'pro_staff') {
+    // Coach d’abord ; agent/recruteur/orga en couches fines (rôles conservés).
     groups = PRO_SIGNUP_GROUPS.filter((g) =>
       g.roles.some((r) => ['coach', 'agent', 'recruiter', 'organizer'].includes(r)),
     );
@@ -150,8 +161,17 @@ export function getSignupRoleGroups(
       .filter((g) => g.roles.includes('club'))
       .map((g) => ({ ...g, roles: g.roles.filter((r) => r === 'club') }));
   }
+  if (presetRole === 'organizer') {
+    return groups.filter((g) => g.roles.includes('organizer'));
+  }
   if (presetRole === 'sponsor' || line === 'sponsor') {
     return groups.filter((g) => g.roles.includes('sponsor'));
+  }
+  if (presetRole === 'coach') {
+    return groups.filter((g) => g.roles.includes('coach'));
+  }
+  if (presetRole === 'agent' || presetRole === 'recruiter') {
+    return groups.filter((g) => g.roles.includes(presetRole));
   }
   return groups.filter((g) =>
     g.roles.some((r) => ['coach', 'agent', 'recruiter', 'organizer'].includes(r)),
@@ -201,8 +221,12 @@ export function getVisibleMainTabs(
   } else if (effectiveLine === 'amateur') {
     if (r === 'player') {
       tabs = [...AMATEUR_PLAYER_SHELL_TABS, ...AMATEUR_PLAYER_OVERFLOW_TABS];
+    } else if (r === 'club') {
+      tabs = [...AMATEUR_CLUB_SHELL_TABS, ...AMATEUR_CLUB_OVERFLOW_TABS];
+    } else if (r === 'coach') {
+      tabs = [...AMATEUR_COACH_SHELL_TABS, ...AMATEUR_COACH_OVERFLOW_TABS];
     } else {
-      tabs = [...AMATEUR_COACH_SHELL_TABS];
+      tabs = [...AMATEUR_COACH_SHELL_TABS, ...AMATEUR_COACH_OVERFLOW_TABS];
     }
   } else if (effectiveLine === 'supporter') {
     tabs = [...SUPPORTER_SHELL_TABS];
@@ -216,7 +240,7 @@ export function getVisibleMainTabs(
     } else if (r === 'coach') {
       tabs = [...PRO_COACH_SHELL_TABS];
     } else if (r === 'club') {
-      tabs = [...PRO_CLUB_SHELL_TABS];
+      tabs = [...PRO_CLUB_SHELL_TABS, ...PRO_CLUB_OVERFLOW_TABS];
     } else if (r === 'agent') {
       tabs = [...PRO_AGENT_SHELL_TABS];
     } else if (r === 'recruiter') {
@@ -231,7 +255,6 @@ export function getVisibleMainTabs(
       'matchs',
       'reels',
       'covoiturage',
-      'sante',
       'messages',
       'profil',
     ];
@@ -251,7 +274,12 @@ export function getVisibleMainTabs(
         r === 'recruiter' ||
         r === 'organizer'));
   const withCommunity = keepExplicitShell ? tabs : injectCommunityFeedTab(tabs, r);
-  return injectFamilyTab(withCommunity, profile, effectiveLine);
+  const withFamily = injectFamilyTab(withCommunity, profile, effectiveLine);
+  // Pôle Joueur : plus d’onglet / module Santé (annuaire RDV).
+  if (r === 'player') {
+    return withFamily.filter((tab) => tab !== 'sante');
+  }
+  return withFamily;
 }
 
 export { getMercatoTabLabel } from './mercatoTabLabel';
@@ -263,16 +291,36 @@ export function getTabShortLabel(
   translate?: (key: string) => string
 ): string {
   if (line === 'amateur') {
+    if (role === 'club') {
+      if (tab === 'home') return 'Accueil';
+      if (tab === 'recrutement') return 'Recrut.';
+      if (tab === 'matchs') return 'Matchs';
+      if (tab === 'feed') return 'Perf.';
+      if (tab === 'profil') return 'Vitrine';
+      if (tab === 'messages') return 'Comm.';
+      if (tab === 'covoiturage') return 'Covoit';
+      if (tab === 'shop') return 'Shop';
+    }
+    if (role === 'coach') {
+      if (tab === 'home') return 'Équipe';
+      if (tab === 'matchs') return 'Matchs';
+      if (tab === 'feed') return 'Perf.';
+      if (tab === 'messages') return 'Messages';
+      if (tab === 'profil') return 'Moi';
+      if (tab === 'covoiturage') return 'Covoit';
+      if (tab === 'recrutement') return 'Club';
+      if (tab === 'shop') return 'Shop';
+    }
     if (tab === 'home') return 'Accueil';
     if (tab === 'reels') return 'Reels';
     if (tab === 'matchs') return 'Matchs';
     if (tab === 'messages') return 'Messages';
     if (tab === 'covoiturage') return 'Covoiturage';
-    if (tab === 'recrutement') return 'Club';
+    if (tab === 'recrutement') return 'Équipe';
     if (tab === 'shop') return 'Shop';
     if (tab === 'profil') return 'Moi';
     if (tab === 'sante') return 'Santé';
-    if (tab === 'feed') return 'Fil';
+    if (tab === 'feed') return 'Perf.';
   }
   if (line === 'supporter') {
     if (tab === 'home') return 'Tribune';
@@ -284,12 +332,13 @@ export function getTabShortLabel(
     if (tab === 'shop') return 'Shop';
   }
   if (isProFamilyLine(line) && role === 'club') {
-    if (tab === 'home') return 'Structure';
-    if (tab === 'covoiturage') return 'Covoiturage';
-    if (tab === 'recrutement') return 'Recrutement';
-    if (tab === 'matchs') return 'Calendrier';
-    if (tab === 'messages') return 'Communication';
+    if (tab === 'home') return 'Accueil';
+    if (tab === 'covoiturage') return 'Covoit';
+    if (tab === 'recrutement') return 'Recrut.';
+    if (tab === 'matchs') return 'Matchs';
+    if (tab === 'messages') return 'Comm.';
     if (tab === 'profil') return 'Vitrine';
+    if (tab === 'shop') return 'Shop';
   }
   if (isProFamilyLine(line) && role === 'coach') {
     if (tab === 'home') return 'Équipe';
@@ -300,7 +349,7 @@ export function getTabShortLabel(
     if (tab === 'home') return 'Mandats';
   }
   if (isProFamilyLine(line) && role === 'recruiter') {
-    if (tab === 'home') return 'Pipeline';
+    if (tab === 'home') return 'Suivi';
   }
   if (isProFamilyLine(line) && role === 'organizer') {
     if (tab === 'home') return 'Arena';
@@ -315,9 +364,7 @@ export function getTabShortLabel(
     if (tab === 'recrutement') return 'Opportunités';
     if (tab === 'shop') return 'Shop';
     if (tab === 'profil') return 'Moi';
-    if (tab === 'sante') return 'Santé';
   }
-  if (role === 'player' && tab === 'sante') return 'RDV Santé';
   if (translate) {
     const key = `tabs.${tab}`;
     const translated = translate(key);
@@ -387,15 +434,7 @@ export function getDashboardFocusTabLabels(
 }
 
 /** Publication annonces Mercato — joueurs exclus. */
-export function canPublishRecruitmentPost(role: UserRole): boolean {
-  return (
-    role === 'club' ||
-    role === 'coach' ||
-    role === 'agent' ||
-    role === 'recruiter' ||
-    role === 'organizer'
-  );
-}
+export { canPublishRecruitmentPost } from '../utils/roleCapabilities';
 
 export function canAccessSponsorsModule(line: ProductLineId, role: UserRole): boolean {
   return role === 'sponsor' && (line === 'sponsor' || line === 'pro_staff' || line === 'pro');
@@ -503,7 +542,7 @@ export function getDashboardMetaForLine(
       recruiter: 'RECRUTEUR PRO',
       sponsor: 'SPONSORS PRO',
       club: 'QG CLUB PRO',
-      organizer: 'ARENA PRO',
+      organizer: 'ARÈNE PRO',
     };
     return {
       ...meta,

@@ -164,7 +164,7 @@ export const MercatoStaffHome: React.FC<MercatoStaffHomeProps> = ({
         config.quickTiles.some((tile) => tile.id === 'talent_radar')
           ? {
               id: 'talent_radar',
-              label: 'Talent Radar',
+              label: 'Radar talents',
               icon: 'star-four-points' as const,
               onPress: () => onQuickTile('talent_radar'),
             }
@@ -348,7 +348,7 @@ export const MercatoStaffHome: React.FC<MercatoStaffHomeProps> = ({
         title={config.screenTitle}
         subtitle={config.screenSubtitle}
         right={headerRight}
-        flat
+        atmosphere="dynamic_competitive"
       >
         {tabPager}
         {fab}

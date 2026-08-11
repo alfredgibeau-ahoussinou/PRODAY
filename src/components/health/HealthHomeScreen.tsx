@@ -29,6 +29,7 @@ import { useAppTheme } from '../../context/ProductLineContext';
 import { TAB_BAR_CONTENT_INSET } from '../../navigation/tabBarLayout';
 import { spacing, radius, shadows } from '../../theme/designTokens';
 import { fontFamily } from '../../theme/typography';
+import { ImmersivePoleHero } from '../poles';
 import type { AppColors } from '../../theme/universeTheme';
 
 interface HealthHomeScreenProps {
@@ -121,19 +122,20 @@ export const HealthHomeScreen: React.FC<HealthHomeScreenProps> = ({
   if (step.kind === 'care') {
     return (
       <View style={[styles.root, { backgroundColor: colors.background }]}>
-        <View style={[styles.careHeader, { paddingTop: Math.max(insets.top, spacing.md) }]}>
-          <ProDayText variant="hero" style={styles.careTitle}>
-            Prendre rendez-vous
-          </ProDayText>
-        </View>
-
         <ScrollView
           contentContainerStyle={[
             styles.careScroll,
-            { paddingBottom: TAB_BAR_CONTENT_INSET + spacing.xl },
+            { paddingTop: Math.max(insets.top, spacing.md), paddingBottom: TAB_BAR_CONTENT_INSET + spacing.xl },
           ]}
           showsVerticalScrollIndicator={false}
         >
+          <ImmersivePoleHero
+            kicker="Soins"
+            title="Prendre rendez-vous"
+            support="Kinés, médecins du sport et praticiens du réseau ProDay — près de ton club."
+            mood="precise_performance"
+            accentHex={colors.accent}
+          />
           {BOOKING_CHAPTERS.map((ch) => (
             <PressableSpring
               key={ch.id}

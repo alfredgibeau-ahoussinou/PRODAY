@@ -64,10 +64,13 @@ const basePlayer = {
 } as User;
 
 describe('ecosystem — Pôle Joueur badges', () => {
-  it('expose Amateur bleu, Centre vert, Pro jaune', () => {
-    expect(PLAYER_LEVEL_BADGES.amateur.colorHex).toBe('#2563EB');
-    expect(PLAYER_LEVEL_BADGES.academy.colorHex).toBe('#16A34A');
-    expect(PLAYER_LEVEL_BADGES.professional.colorHex).toBe('#EAB308');
+  it('expose Amateur / Formation / Haut niveau en bleu ProDay', () => {
+    expect(PLAYER_LEVEL_BADGES.amateur.shortLabel).toBe('Amateur');
+    expect(PLAYER_LEVEL_BADGES.academy.shortLabel).toBe('Formation');
+    expect(PLAYER_LEVEL_BADGES.professional.shortLabel).toBe('Haut niveau');
+    expect(PLAYER_LEVEL_BADGES.amateur.colorHex).toBe('#0054F0');
+    expect(PLAYER_LEVEL_BADGES.academy.colorHex).toBe('#1A68FF');
+    expect(PLAYER_LEVEL_BADGES.professional.colorHex).toBe('#001F6B');
   });
 
   it('promotes to professional without changing other fields', () => {
@@ -79,7 +82,7 @@ describe('ecosystem — Pôle Joueur badges', () => {
     const amateur = { ...basePlayer, player_level: 'amateur' as const };
     const academy = { ...basePlayer, player_level: 'academy' as const };
     expect(resolvePlayerLevel(amateur)).toBe('amateur');
-    expect(playerLevelBadgeFor(academy).tone).toBe('green');
+    expect(playerLevelBadgeFor(academy).tone).toBe('blue');
     expect(playerLevelMatchesFilter('amateur', 'amateurs')).toBe(true);
     expect(playerLevelMatchesFilter('professional', 'amateurs')).toBe(false);
     expect(playerLevelMatchesFilter('academy', 'centres_de_formation')).toBe(true);
@@ -189,47 +192,66 @@ describe('ecosystem — joueur vérifié & club features', () => {
     expect(hasJoueurVerifieBadge(byClub)).toBe(true);
   });
 
-  it('retire les convocations du Club free ; Staff pro les gère', () => {
+  it('Club Essentiel gère convocations ; Coach Premium aussi', () => {
     expect(clubFreeTierIncludesConvocations()).toBe(false);
     expect(canManageConvocations({ role: 'club', tier: 'free' })).toBe(false);
+    expect(
+      canManageConvocations({ role: 'club', tier: 'pro', clubOfferId: 'club_essentiel' }),
+    ).toBe(true);
     expect(canManageConvocations({ role: 'coach', tier: 'pro' })).toBe(true);
     expect(canEditStructureCalendar({ role: 'coach', tier: 'pro' })).toBe(true);
-    expect(canEditStructureCalendar({ role: 'club', tier: 'pro' })).toBe(false);
     expect(
-      userCanManageConvocations({ role: 'club', subscription_tier: 'pro' } as User),
-    ).toBe(false);
+      canEditStructureCalendar({ role: 'club', tier: 'pro', clubOfferId: 'club_essentiel' }),
+    ).toBe(true);
+    expect(
+      userCanManageConvocations({
+        role: 'club',
+        subscription_tier: 'pro',
+        subscription_plan_id: 'club_pro',
+      } as User),
+    ).toBe(true);
     expect(
       userCanManageConvocations({ role: 'coach', subscription_tier: 'pro' } as User),
     ).toBe(true);
   });
 
   it('expose les labels pipeline kanban pour les candidatures club', () => {
-    expect(applicationPipelineLabel({ status: 'PENDING' })).toBe('Boîte de réception');
+    expect(applicationPipelineLabel({ status: 'PENDING' })).toBe('Observé');
     expect(applicationPipelineLabel({ status: 'VIEWED', pipeline_stage: 'reviewing' })).toBe(
-      'En revue',
+      'Contacté',
     );
     expect(applicationPipelineLabel({ status: 'IN_PROGRESS', pipeline_stage: 'shortlist' })).toBe(
-      'Shortlist',
+      'Pré-sélection',
+    );
+    expect(applicationPipelineLabel({ status: 'ACCEPTED', pipeline_stage: 'hired' })).toBe(
+      'Intégré',
     );
   });
 });
 
 describe('ecosystem — carousel poles', () => {
-  it('unifie Amateur/Pro Joueur et expose Événements', () => {
+  it('expose les 6 pôles cibles (Parent + Coach remplace Staff / Événements)', () => {
     expect(CAROUSEL_POLE_ORDER).toEqual([
       'joueur',
-      'supporter',
       'pro_club',
-      'pro_staff',
-      'evenements',
+      'coach',
+      'parent',
+      'supporter',
       'sponsor',
       'sante',
     ]);
     expect(normalizeCarouselPole('amateur')).toBe('joueur');
     expect(normalizeCarouselPole('pro_player')).toBe('joueur');
+    expect(normalizeCarouselPole('pro_staff')).toBe('coach');
+    expect(normalizeCarouselPole('evenements')).toBe('pro_club');
     expect(carouselPoleToProductLine('joueur')).toBe('amateur');
-    expect(carouselPoleSignupPresetRole('evenements')).toBe('organizer');
+    expect(carouselPoleToProductLine('coach')).toBe('pro_staff');
+    expect(carouselPoleToProductLine('parent')).toBe('parent');
+    expect(carouselPoleSignupPresetRole('coach')).toBe('coach');
+    expect(carouselPoleSignupPresetRole('parent')).toBe('parent');
+    expect(carouselPoleSignupPresetRole('evenements')).toBe('club');
     expect(productLineToCarouselPole('pro_player')).toBe('joueur');
-    expect(productLineToCarouselPole('pro_staff', 'organizer')).toBe('evenements');
+    expect(productLineToCarouselPole('parent')).toBe('parent');
+    expect(productLineToCarouselPole('pro_staff', 'organizer')).toBe('coach');
   });
 });

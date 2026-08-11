@@ -9,15 +9,15 @@ export { adminChrome, ADMIN_COLORS };
 
 export function createAdminStyles(c: AppColors) {
   return StyleSheet.create({
-    root: { flex: 1, backgroundColor: c.backgroundAlt },
-    rootAlt: { flex: 1, backgroundColor: c.background },
+    root: { flex: 1, backgroundColor: c.background },
+    rootAlt: { flex: 1, backgroundColor: c.backgroundAlt },
     header: {
-      backgroundColor: adminChrome.shell,
+      backgroundColor: c.surface,
       paddingHorizontal: spacing.lg,
       paddingTop: spacing.md,
       paddingBottom: spacing.lg,
       borderBottomWidth: 1,
-      borderBottomColor: adminChrome.shellBorder,
+      borderBottomColor: c.border,
     },
     headerBrand: {
       color: c.brand,
@@ -26,13 +26,13 @@ export function createAdminStyles(c: AppColors) {
       letterSpacing: 1.6,
       marginBottom: spacing.sm,
     },
-    headerTitle: { color: adminChrome.text, fontSize: 22, fontWeight: '800' },
+    headerTitle: { color: c.text, fontSize: 22, fontWeight: '800' },
     pageEyebrow: {
       fontSize: 11,
       fontWeight: '700',
-      letterSpacing: 1.4,
+      letterSpacing: 1,
       textTransform: 'uppercase',
-      color: c.brand,
+      color: c.textMuted,
       marginBottom: spacing.xs,
     },
     pageTitle: {
@@ -74,19 +74,19 @@ export function createAdminStyles(c: AppColors) {
     sectionLabel: {
       fontSize: 11,
       fontWeight: '700',
-      letterSpacing: 1.2,
+      letterSpacing: 1,
       textTransform: 'uppercase',
       color: c.textMuted,
       marginBottom: spacing.sm,
     },
     btn: {
-      backgroundColor: c.brand,
+      backgroundColor: c.accent,
       borderRadius: radius.md,
       paddingHorizontal: spacing.xl,
       paddingVertical: spacing.md,
       alignItems: 'center',
     },
-    btnText: { color: c.brandInverse, fontWeight: '800', fontSize: 14 },
+    btnText: { color: '#FFFFFF', fontWeight: '800', fontSize: 14 },
     btnGhost: {
       backgroundColor: c.surface,
       borderRadius: radius.md,
@@ -116,11 +116,11 @@ export function createAdminStyles(c: AppColors) {
       backgroundColor: c.surface,
     },
     chipActive: {
-      backgroundColor: c.brand,
-      borderColor: c.brand,
+      backgroundColor: c.accent,
+      borderColor: c.accent,
     },
     chipText: { fontSize: 12, fontWeight: '700', color: c.textSecondary },
-    chipTextActive: { color: c.brandInverse },
+    chipTextActive: { color: '#FFFFFF' },
     emptyTitle: { fontSize: 16, fontWeight: '800', color: c.text, textAlign: 'center' },
     emptySub: { fontSize: 13, color: c.textSecondary, textAlign: 'center', lineHeight: 20 },
     statValue: { fontSize: 24, fontWeight: '800', color: c.text },

@@ -9,10 +9,10 @@ import { spacing, radius } from '../../theme/designTokens';
 import { formatRelativeTime } from '../../utils/formatRelativeTime';
 
 const ACTION_LABEL: Record<string, string> = {
-  reel_submitted: 'Nouveau reel publié',
-  reel_approved: 'Reel approuvé',
-  reel_rejected: 'Reel refusé',
-  reel_deleted: 'Reel supprimé',
+  reel_submitted: 'Nouvelle publication',
+  reel_approved: 'Publication approuvée',
+  reel_rejected: 'Publication refusée',
+  reel_deleted: 'Publication supprimée',
   user_verified: 'Profil vérifié',
   user_rejected: 'Profil refusé',
   user_deleted: 'Compte supprimé',
@@ -24,7 +24,11 @@ const ACTION_LABEL: Record<string, string> = {
   thread_deleted: 'Conversation supprimée',
   weekly_response_deleted: 'Réponse fil supprimée',
   payment_marked_paid: 'Paiement validé',
-  snapshot_recorded: 'Snapshot enregistré',
+  snapshot_recorded: 'Instantané enregistré',
+  subscription_granted: 'Abonnement accordé',
+  subscription_revoked: 'Abonnement retiré',
+  subscription_changed: 'Formule modifiée',
+  subscription_extended: 'Abonnement prolongé',
   other: 'Action',
 };
 

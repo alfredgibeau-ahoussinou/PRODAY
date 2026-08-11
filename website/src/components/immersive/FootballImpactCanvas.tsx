@@ -40,7 +40,7 @@ function Football({ impactRef }: { impactRef: MutableRefObject<number> }) {
 
     let y: number;
     let squash = 1;
-    // No idle yaw — keep the ProDay badge facing the camera until impact
+    // No idle yaw : keep the ProDay badge facing the camera until impact
     const spin = THREE.MathUtils.smoothstep(p, 0.48, 1) * Math.PI * 1.65;
 
     if (p < 0.45) {

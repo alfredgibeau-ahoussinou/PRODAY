@@ -1,4 +1,4 @@
-import type { IconName } from '../components/ui/Icon';
+import type { IconName } from '../components/ui/iconNames';
 import type { ProductLineId } from '../models/ProductLine';
 import type { UserRole } from '../models/User';
 import type { AppSpaceId } from '../models/AppSpace';
@@ -138,7 +138,7 @@ function getRoleSubtitle(
   }
 
   if (r === 'recruiter') {
-    return 'Scouting, pipeline candidatures et annonces Mercato Pro.';
+    return 'Scouting, suivi des candidatures et annonces Mercato Pro.';
   }
 
   if (r === 'coach' || r === 'agent') {

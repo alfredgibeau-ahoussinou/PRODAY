@@ -1,4 +1,4 @@
-import type { IconName } from '../components/ui/Icon';
+import type { IconName } from '../components/ui/iconNames';
 import type { ProDayModuleId } from './prodayModules';
 import { SHOWCASE_IMAGES } from './showcaseAssets';
 
@@ -18,7 +18,7 @@ export interface DiscoverChapter {
 export const DISCOVER_CHAPTERS: DiscoverChapter[] = [
   { id: 'welcome', label: 'Accueil', short: '1' },
   { id: 'explore', label: 'Pôles', short: '2' },
-  { id: 'live', label: 'Live', short: '3' },
+  { id: 'live', label: 'Direct', short: '3' },
   { id: 'journey', label: 'Parcours', short: '4' },
   { id: 'join', label: 'Rejoindre', short: '5' },
 ];
@@ -94,6 +94,14 @@ export const DISCOVER_UNIVERSE_CARDS: DiscoverUniverseCard[] = [
     image: SHOWCASE_IMAGES.friendlyMatch,
     icon: 'handshake',
     accent: '#262626',
+  },
+  {
+    id: 'smart_tactics',
+    title: 'Tactique IA',
+    subtitle: 'Board · readiness · IA',
+    image: SHOWCASE_IMAGES.coachFounder,
+    icon: 'football',
+    accent: '#1B5E20',
   },
   {
     id: 'sponsors',

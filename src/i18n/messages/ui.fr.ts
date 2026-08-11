@@ -113,9 +113,9 @@ export const UI_FR: MessageCatalog = {
 
   'discover.hero.pro_staff': 'Votre banc\nde touche.',
   'discover.mission.pro_staff':
-    'Profil coach, Smart Tactics, IA et effectif. Agent et recruteur en rôles réseau.',
+    'Profil coach, Tactique IA, IA et effectif. Agent et recruteur en rôles réseau.',
   'discover.trust.pro_staff':
-    'Diplômes et parcours vérifiés. Smart Tactics selon l’offre club / coach.',
+    'Diplômes et parcours vérifiés. Tactique IA selon l’offre club / coach.',
   'discover.cta.pro_staff': 'Créer mon compte Pro Day Coach',
   'discover.sectionExplore.pro_staff': 'Découvrir Pro Day Coach',
   'discover.secondaryMercato.pro_staff': 'Réseau pro',
@@ -199,7 +199,7 @@ export const UI_FR: MessageCatalog = {
 
   'journey.profile.title.pro_staff': 'Profil coach',
   'journey.profile.body.pro_staff': 'Parcours & diplômes',
-  'journey.mercato.title.pro_staff': 'Smart Tactics',
+  'journey.mercato.title.pro_staff': 'Tactique IA',
   'journey.mercato.body.pro_staff': 'Compositions & IA',
   'journey.season.title.pro_staff': 'Saison',
   'journey.season.body.pro_staff': 'Convocations & matchs',
@@ -217,7 +217,7 @@ export const UI_FR: MessageCatalog = {
   'modules.matchs.subtitle': 'Amicaux',
   'modules.gestion.title': 'Gestion équipe',
   'modules.gestion.subtitle': 'Planning · présences · stats',
-  'modules.smart_tactics.title': 'Smart Tactics',
+  'modules.smart_tactics.title': 'Tactique IA',
   'modules.smart_tactics.subtitle': 'Board · readiness · IA · vidéo',
   'modules.sponsors.title': 'Sponsors',
   'modules.sponsors.subtitle': 'Depuis l’Accueil · offres & financement',
@@ -247,14 +247,16 @@ export const UI_FR: MessageCatalog = {
 
   'auth.loginSub.homme': 'Connectez-vous à votre espace Pro Day Man.',
   'auth.loginSub.woman': 'Connectez-vous à votre espace foot féminin.',
-  'auth.loginSub.amateur': 'Connectez-vous à votre espace Pro Day Amateur.',
+  'auth.loginSub.amateur': 'Connectez-vous à votre espace Pro Day Joueur.',
   'auth.loginSub.supporter': 'Connectez-vous à votre tribune Pro Day Supporter.',
   'auth.loginSub.pro': 'Connectez-vous à Pro Day Pro. Staff, structures et sponsors.',
-  'auth.loginSub.pro_player': 'Connectez-vous à votre espace Pro Joueur.',
+  'auth.loginSub.pro_player': 'Connectez-vous à votre espace Pro Day Joueur.',
   'auth.loginSub.pro_club': 'Connectez-vous à votre espace Pro Club.',
   'auth.loginSub.pro_staff': 'Connectez-vous à votre espace Coach.',
   'auth.loginSub.sponsor': 'Connectez-vous à votre espace Pro Day Sponsor.',
   'auth.loginSub.sante': 'Connectez-vous à votre espace Pro Day Santé.',
+  'auth.loginSub.parent':
+    'Connectez-vous à votre Pôle Parent. Messages, agenda et supervision.',
 
   'auth.signupSub.homme':
     'Créez votre compte joueur. CV en ligne, Mercato M et matchs.',
@@ -276,6 +278,8 @@ export const UI_FR: MessageCatalog = {
     'Créez votre compte marque. Campagnes, ROI et vitrine clubs sur Pro Day Sponsor.',
   'auth.signupSub.sante':
     'Créez votre compte praticien. Agenda, messagerie et visibilité.',
+  'auth.signupSub.parent':
+    'Créez votre compte Parent. Liez l’enfant, messages, retards et contrôles.',
 
   'profile.section.preferences': 'Préférences',
   'profile.section.preferencesSub': 'Calendrier et réglages ProDay',
@@ -732,7 +736,7 @@ export const UI_FR: MessageCatalog = {
   'medical.requests.subtitle': '{{n}} demande(s) en attente',
   'medical.requests.loading': 'Chargement…',
   'medical.requests.emptyTitle': 'Aucune demande',
-  'medical.requests.emptySub': 'Les joueurs réservent depuis l’onglet Santé ou vous contactent en messagerie.',
+  'medical.requests.emptySub': 'Les sportifs vous contactent en messagerie ou via un club partenaire.',
   'medical.patients.title': 'Patients',
   'medical.patients.subtitle': 'Sportifs suivis depuis vos consultations',
   'medical.patients.loading': 'Chargement…',
@@ -843,7 +847,7 @@ export const UI_FR: MessageCatalog = {
   'physio.dashboard.pendingTitle': 'Demandes à traiter',
   'physio.dashboard.followedTitle': 'Sportifs suivis',
   'physio.dashboard.emptyTitle': "Aucun RDV aujourd'hui",
-  'physio.dashboard.emptySub': "Les joueurs réservent depuis l'onglet Santé. Consultez l'agenda pour la semaine.",
+  'physio.dashboard.emptySub': "Les demandes arrivent via messagerie ou club partenaire. Consultez l'agenda pour la semaine.",
   'physio.dashboard.viewAgenda': "Voir l'agenda",
   'physio.dashboard.patientSub': 'Ouvrir la messagerie de suivi',
   'physio.dashboard.errorFallback': 'Action impossible.',

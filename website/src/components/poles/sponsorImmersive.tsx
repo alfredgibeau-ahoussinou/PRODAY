@@ -129,7 +129,7 @@ function CellView({ value }: { value: Cell }) {
     );
   }
   if (value === false) {
-    return <span className="text-white/25">—</span>;
+    return <span className="text-white/25">…</span>;
   }
   return <span className="text-xs font-medium text-white/75">{value}</span>;
 }
@@ -152,7 +152,7 @@ export function SponsorTiersCompare() {
           <span className="text-white/40">Un seul terrain.</span>
         </h2>
         <p className="mt-4 max-w-lg text-sm text-white/55">
-          Comparez Découverte, Territorial et National Pro — puis demandez un devis.
+          Comparez Découverte, Territorial et National Pro : puis demandez un devis.
         </p>
 
         <div className="mt-10 flex flex-wrap gap-2" role="tablist">
@@ -280,7 +280,7 @@ const CAPS = [
     id: "geo",
     label: "Geo",
     title: "Près du terrain",
-    body: "Ciblez une ville, un département ou le national. Vos offres touchent clubs et joueurs actifs — pas une audience hors-sol.",
+    body: "Ciblez une ville, un département ou le national. Vos offres touchent clubs et joueurs actifs : pas une audience hors-sol.",
   },
   {
     id: "roi",

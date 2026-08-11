@@ -65,7 +65,7 @@ const STEP_COPY: Record<OneClickStepId, { title: string; description: string }> 
   },
   schedule_trial: {
     title: 'Planifier un essai',
-    description: 'Passe le pipeline en essai et propose un créneau + covoiturage.',
+    description: 'Passe le suivi en essai et propose un créneau + covoiturage.',
   },
   share_docs: {
     title: 'Partager documents',

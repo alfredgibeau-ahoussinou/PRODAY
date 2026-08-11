@@ -7,7 +7,7 @@ import {
   AdminTableShell,
 } from "@/components/admin/adminUi";
 
-/** Matrice documentaire des droits futurs — pas des stats inventées. */
+/** Matrice documentaire des droits futurs : pas des stats inventées. */
 const ROLES = [
   {
     id: "founder",

@@ -16,8 +16,8 @@ const FEED = [
     id: "2",
     emoji: "⚽",
     title: "But validé",
-    body: "Amine · 2–1 à la 54' · stats profil mises à jour",
-    tag: "Live",
+    body: "Amine · 2 à 1 à la 54' · stats profil mises à jour",
+    tag: "Direct",
   },
   {
     id: "3",
@@ -42,7 +42,7 @@ const FEED = [
   },
 ] as const;
 
-const FILTERS = ["Tous", "Matchs", "Live", "Équipe", "Mercato", "Santé"] as const;
+const FILTERS = ["Tous", "Matchs", "Direct", "Équipe", "Mercato", "Santé"] as const;
 
 export function AliveActivityFeed() {
   const [filter, setFilter] = useState<(typeof FILTERS)[number]>("Tous");

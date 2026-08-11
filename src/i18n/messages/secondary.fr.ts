@@ -27,16 +27,20 @@ export const SECONDARY_FR: MessageCatalog = {
   'auth.teaser.pro_player.2': 'Profil vérifié. Accès à votre espace Pro Joueur',
 
   'auth.teaser.pro_club.0': 'Club ou structure',
-  'auth.teaser.pro_club.1': 'Effectifs, recrutement et pipeline candidatures',
+  'auth.teaser.pro_club.1': 'Effectifs, recrutement et suivi des candidatures',
   'auth.teaser.pro_club.2': 'Profil vérifié. Accès à votre espace Pro Club',
 
   'auth.teaser.pro_staff.0': 'Coach, agent, recruteur ou organisateur',
   'auth.teaser.pro_staff.1': 'Mandats, scouting et réseau pro',
-  'auth.teaser.pro_staff.2': 'Profil vérifié. Accès à votre espace Pro Staff',
+  'auth.teaser.pro_staff.2': 'Profil vérifié. Accès à votre espace Coach',
 
   'auth.teaser.sponsor.0': 'Marque ou sponsor',
   'auth.teaser.sponsor.1': 'Campagnes géo, ROI et vitrine clubs vérifiée',
   'auth.teaser.sponsor.2': 'Profil validé. Accès à votre espace Sponsor',
+
+  'auth.teaser.parent.0': 'Compte parent / tuteur',
+  'auth.teaser.parent.1': 'Messages, agenda, retards et trajets de l’enfant',
+  'auth.teaser.parent.2': 'Lien validé. Accès au Pôle Parent',
 
   'auth.teaser.sante.0': 'Kinés, médecins et praticiens du sport',
   'auth.teaser.sante.1': 'Agenda, messagerie et visibilité patients',
@@ -218,7 +222,7 @@ export const SECONDARY_FR: MessageCatalog = {
   'signup.amateur.phase.profile': 'Profil',
   'signup.amateur.welcome.title': 'Bienvenue sur {{brand}}',
   'signup.amateur.welcome.subtitle':
-    'Espace joueur. Mercato local, matchs, CV et badges Amateur → Centre → Pro.',
+    'Espace joueur. Mercato local, matchs, CV et progression en club.',
   'signup.amateur.step.space.title': 'Votre genre et votre espace foot',
   'signup.amateur.step.space.subtitle':
     'Genre et catégorie d’âge. Mercato Amateur et matchs adaptés à votre profil.',

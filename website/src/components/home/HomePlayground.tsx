@@ -29,7 +29,7 @@ const TABS = [
   },
   {
     id: "live",
-    label: "Live",
+    label: "Direct",
     emoji: "📱",
     image: "/showcase/classic-exp-pulse.jpg",
     caption: "Stats qui nourrissent ton profil. Visibilité en vrai.",

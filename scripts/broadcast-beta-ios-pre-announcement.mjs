@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Broadcast email « bêta iOS le 11 août 2026 à 18 h » à tous les inscrits waitlist.
+ * Broadcast email « bêta iOS le 15 août 2026 à 18 h » à tous les inscrits waitlist.
  *
  * Usage :
  *   BETA_WAITLIST_ADMIN_FUNCTION_URL=https://…/websiteBetaWaitlistAdmin \

@@ -47,10 +47,6 @@ export const CareerPathwayPanel: React.FC<CareerPathwayPanelProps> = ({
       nav.openMatchs({ homeTab: 'tournois' });
       return;
     }
-    if (step.tab === 'sante') {
-      nav.setActiveTab('sante');
-      return;
-    }
     if (step.tab === 'profil') {
       nav.openProfile();
       return;

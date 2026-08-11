@@ -97,15 +97,17 @@ export function computeHealthSnapshot(input: HealthEngineInput): HealthSnapshot 
     },
     OVERLOADED: {
       hint: 'Repos actif uniquement',
-      message: 'Charge élevée détectée. Évitez les matchs intenses.',
+      message:
+        'Charge élevée détectée. Vérifiez la disponibilité et adaptez l’intensité si nécessaire.',
     },
     INJURY_RISK: {
-      hint: 'Repos + bilan kiné si douleur',
-      message: 'Risque blessure élevé. Les matchs intenses sont déconseillés.',
+      hint: 'Repos + surveillance de la charge',
+      message:
+        'Charge très élevée sur une période courte. Adaptez la charge et consultez un professionnel de santé en cas de douleur.',
     },
     RECOVERY: {
       hint: 'Réactivation progressive',
-      message: 'Reprenez doucement : échauffement long et match loisir.',
+      message: 'Reprenez doucement : échauffement long et charge progressive.',
     },
   };
 
@@ -117,6 +119,7 @@ export function computeHealthSnapshot(input: HealthEngineInput): HealthSnapshot 
     recoveryScore,
     trainingLoad,
     injuryRisk,
+    loadCaution: injuryRisk,
     allowIntenseMatch,
     dailyPlanHint: coach.hint,
     coachMessage: coach.message,

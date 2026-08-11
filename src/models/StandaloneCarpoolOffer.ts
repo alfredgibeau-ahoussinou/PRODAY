@@ -1,6 +1,7 @@
 import type { GeoPoint } from './User';
 import type { CarpoolPassenger } from './TeamEvent';
 import type { CarpoolTripStatus } from './CarpoolLiveTrip';
+import type { CarpoolVehicleType } from './CarpoolVehicle';
 
 /** Proposition de covoiturage sans événement / convocation liée. */
 export interface StandaloneCarpoolOffer {
@@ -17,6 +18,8 @@ export interface StandaloneCarpoolOffer {
   meeting_place?: string;
   meeting_location?: GeoPoint;
   seats: number;
+  /** Type de véhicule (citadine, SUV…). */
+  vehicle_type?: CarpoolVehicleType;
   notes?: string;
   passengers?: CarpoolPassenger[];
   /** Réservation : open/closed ; trajet : in_progress/completed/cancelled */
@@ -38,6 +41,7 @@ export interface CreateStandaloneCarpoolInput {
   meeting_place?: string;
   meeting_location?: GeoPoint;
   seats: number;
+  vehicle_type?: CarpoolVehicleType;
   notes?: string;
   city?: string;
   club_id?: string;

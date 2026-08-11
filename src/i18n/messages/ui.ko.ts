@@ -78,6 +78,8 @@ export const UI_KO: MessageCatalog = {
   'modules.matchs.subtitle': '친선경기',
   'modules.gestion.title': '팀 관리',
   'modules.gestion.subtitle': '일정·출석·통계',
+  'modules.smart_tactics.title': 'Smart Tactics',
+  'modules.smart_tactics.subtitle': '보드 · 준비도 · AI · 비디오',
   'modules.sponsors.title': '후원자',
   'modules.sponsors.subtitle': '후원자',
 

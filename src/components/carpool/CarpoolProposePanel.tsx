@@ -12,9 +12,9 @@ import { CarpoolEmptyState, CarpoolSectionIntro } from './carpoolUi';
 import { CarpoolProposeCard } from './CarpoolProposeCard';
 import { StandaloneCarpoolForm } from './StandaloneCarpoolForm';
 import { isUpcomingStandaloneOffer } from '../../utils/standaloneCarpool';
-import { useAppTheme } from '../../context/ProductLineContext';
 import { useTranslation } from '../../context/LocaleContext';
 import { spacing } from '../../theme/designTokens';
+import { CARPOOL_SITE } from '../../content/carpoolSite';
 
 interface CarpoolProposePanelProps {
   profile: User | null;
@@ -47,7 +47,6 @@ export const CarpoolProposePanel: React.FC<CarpoolProposePanelProps> = ({
   pagePad,
   onLoginRequired,
 }) => {
-  const { colors } = useAppTheme();
   const { t } = useTranslation();
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [standaloneExpanded, setStandaloneExpanded] = useState<string | 'new' | null>('new');
@@ -111,18 +110,18 @@ export const CarpoolProposePanel: React.FC<CarpoolProposePanelProps> = ({
     <ScrollView
       contentContainerStyle={pagePad}
       refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent} />
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={CARPOOL_SITE.signal} />
       }
       {...scrollProps}
     >
       <CarpoolSectionIntro
         icon="add"
-        title={t('carpool.propose.title')}
-        subtitle={t('carpool.propose.subtitle')}
+        title={t('carpool.hub.driveTitle')}
+        subtitle={t('carpool.hub.driveSupport')}
       />
 
       {standaloneLoading ? (
-        <ActivityIndicator color={colors.accent} style={styles.loader} />
+        <ActivityIndicator color={CARPOOL_SITE.signal} style={styles.loader} />
       ) : (
         <>
           <ProDayText variant="section" style={styles.sectionTitle}>
@@ -157,15 +156,15 @@ export const CarpoolProposePanel: React.FC<CarpoolProposePanelProps> = ({
       </ProDayText>
 
       {bookedElsewhere > 0 ? (
-        <View style={[styles.hint, { borderColor: colors.border, backgroundColor: colors.accentSoft }]}>
-          <ProDayText variant="caption" accent>
+        <View style={styles.hint}>
+          <ProDayText variant="caption" style={styles.hintText}>
             {t('carpool.propose.bookedElsewhere', { n: bookedElsewhere })}
           </ProDayText>
         </View>
       ) : null}
 
       {loading ? (
-        <ActivityIndicator color={colors.accent} style={styles.loader} />
+        <ActivityIndicator color={CARPOOL_SITE.signal} style={styles.loader} />
       ) : proposeEvents.length === 0 ? (
         <CarpoolEmptyState
           icon="calendar"
@@ -234,9 +233,16 @@ const styles = StyleSheet.create({
   hint: {
     padding: spacing.md,
     marginBottom: spacing.md,
-    borderWidth: 1,
-    borderRadius: 12,
+    borderLeftWidth: 3,
+    borderLeftColor: CARPOOL_SITE.signal,
+    backgroundColor: CARPOOL_SITE.signalSoft,
   },
-  sectionTitle: { marginBottom: spacing.sm, marginTop: spacing.xs },
+  hintText: { color: CARPOOL_SITE.ink, fontWeight: '700' },
+  sectionTitle: {
+    marginBottom: spacing.sm,
+    marginTop: spacing.xs,
+    color: CARPOOL_SITE.ink,
+    fontFamily: CARPOOL_SITE.display,
+  },
   loader: { marginVertical: spacing.xl },
 });

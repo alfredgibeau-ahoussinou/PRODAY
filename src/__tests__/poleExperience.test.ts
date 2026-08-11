@@ -5,6 +5,7 @@ import {
   getDashboardLayoutKind,
   getMercatoTabLabel,
   getSignupRoleGroups,
+  getTabShortLabel,
   getVisibleMainTabs,
 } from '../content/poleExperience';
 import { rolesForProductLine } from '../content/universeRoles';
@@ -71,17 +72,17 @@ describe('poleExperience', () => {
 
     expect(getVisibleMainTabs('homme', 'player')).toEqual([
       'home',
-      'reels',
-      'matchs',
-      'messages',
-      'profil',
-      'covoiturage',
       'recrutement',
-      'sante',
+      'matchs',
+      'feed',
+      'profil',
+      'reels',
+      'messages',
+      'covoiturage',
       'shop',
     ]);
     expect(getVisibleMainTabs('homme', 'player', playerProfile)).not.toContain('famille');
-    expect(getVisibleMainTabs('homme', 'player')).not.toContain('feed');
+    expect(getVisibleMainTabs('homme', 'player')).toContain('feed');
     expect(getVisibleMainTabs('pro', 'coach')).not.toContain('feed');
     expect(getVisibleMainTabs('sante', 'physio')).toContain('feed');
     expect(getVisibleMainTabs('pro', 'sponsor')).toEqual([
@@ -103,25 +104,26 @@ describe('poleExperience', () => {
     expect(getVisibleMainTabs('sante', 'physio')).not.toContain('shop');
     expect(getVisibleMainTabs('pro', 'club')).toEqual([
       'home',
-      'covoiturage',
       'recrutement',
       'matchs',
       'messages',
-      'shop',
       'profil',
+      'covoiturage',
+      'shop',
     ]);
     expect(getVisibleMainTabs('pro', 'player')).toEqual([
       'home',
-      'reels',
-      'matchs',
-      'messages',
-      'profil',
-      'covoiturage',
       'recrutement',
-      'sante',
+      'matchs',
+      'feed',
+      'profil',
+      'reels',
+      'messages',
+      'covoiturage',
       'shop',
     ]);
-    expect(getVisibleMainTabs('pro', 'player').indexOf('reels')).toBe(1);
+    expect(getVisibleMainTabs('pro', 'player')).not.toContain('sante');
+    expect(getVisibleMainTabs('pro', 'player').indexOf('feed')).toBe(3);
     expect(getVisibleMainTabs('pro', 'recruiter')).toContain('recrutement');
     expect(getVisibleMainTabs('pro', 'recruiter')).toContain('feed');
     expect(getVisibleMainTabs('pro', 'agent')).toContain('feed');
@@ -130,19 +132,36 @@ describe('poleExperience', () => {
     expect(getVisibleMainTabs('pro', 'coach')).toContain('covoiturage');
     expect(getVisibleMainTabs('amateur', 'coach')).toEqual([
       'home',
-      'covoiturage',
       'matchs',
-      'recrutement',
+      'feed',
       'messages',
-      'shop',
       'profil',
+      'covoiturage',
+      'recrutement',
+      'shop',
     ]);
-    expect(getVisibleMainTabs('amateur', 'player')).toContain('sante');
+    expect(getVisibleMainTabs('amateur', 'club')).toEqual([
+      'home',
+      'recrutement',
+      'matchs',
+      'messages',
+      'profil',
+      'feed',
+      'covoiturage',
+      'shop',
+    ]);
+    expect(getVisibleMainTabs('amateur', 'player')).not.toContain('sante');
+    expect(getVisibleMainTabs('pro_player', 'player')).not.toContain('sante');
+    expect(getVisibleMainTabs('pro', 'player')).not.toContain('sante');
     expect(getVisibleMainTabs('amateur', 'player')).toContain('covoiturage');
     expect(getVisibleMainTabs('amateur', 'player')).toContain('recrutement');
-    expect(getVisibleMainTabs('amateur', 'player')).toContain('reels');
+    expect(getVisibleMainTabs('amateur', 'player')).toContain('feed');
     expect(getVisibleMainTabs('amateur', 'player')).toContain('messages');
     expect(getVisibleMainTabs('amateur', 'player')).toContain('shop');
+    expect(getVisibleMainTabs('amateur', 'player')).toContain('reels');
+    expect(getTabShortLabel('recrutement', 'amateur', 'player')).toBe('Équipe');
+    expect(getTabShortLabel('feed', 'amateur', 'coach')).toBe('Perf.');
+    expect(getTabShortLabel('home', 'amateur', 'club')).toBe('Accueil');
     expect(getVisibleMainTabs('supporter', 'supporter')).toEqual([
       'home',
       'matchs',

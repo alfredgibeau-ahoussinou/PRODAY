@@ -11,6 +11,7 @@ import { AdminEmptyState } from '../../../components/admin/AdminEmptyState';
 import { AdminFilterChips } from '../../../components/admin/AdminFilterChips';
 import { AdminWeeklyQuestionPanel } from '../../../components/admin/AdminWeeklyQuestionPanel';
 import { AdminKpiStrip } from '../../../components/admin/AdminKpiStrip';
+import { AdminPageHero } from '../../../components/admin/AdminPageHero';
 import { adminConfirmDelete } from '../../../utils/adminConfirm';
 import { formatCalendarDate } from '../../../utils/seasonCalendar';
 import type { CommunityReelStatus } from '../../../models/CommunityReel';
@@ -78,6 +79,27 @@ export const AdminModerationPage: React.FC<AdminModerationPageProps> = ({
 
   return (
     <AdminPageScaffold loading={loading}>
+      <AdminPageHero
+        kicker="MODÉRATION"
+        title="Contenu & reports"
+        subtitle={`${stats?.pendingCommunityReels ?? 0} reels en attente · ${stats?.reelReports ?? 0} signalements`}
+        actions={[
+          {
+            label: 'Reels pending',
+            icon: 'time',
+            onPress: () => {
+              handleSegment('reels');
+              setReelFilter('pending');
+            },
+          },
+          {
+            label: 'Signalements',
+            icon: 'warning',
+            variant: 'ghost',
+            onPress: () => handleSegment('reports'),
+          },
+        ]}
+      />
       {stats ? (
         <AdminKpiStrip
           items={[
@@ -87,6 +109,10 @@ export const AdminModerationPage: React.FC<AdminModerationPageProps> = ({
               value: stats.pendingCommunityReels,
               icon: 'warning',
               alert: stats.pendingCommunityReels > 0,
+              onPress: () => {
+                handleSegment('reels');
+                setReelFilter('pending');
+              },
             },
             {
               key: 'reports',
@@ -94,18 +120,27 @@ export const AdminModerationPage: React.FC<AdminModerationPageProps> = ({
               value: stats.reelReports,
               icon: 'warning',
               alert: stats.reelReports > 0,
+              onPress: () => handleSegment('reports'),
             },
             {
               key: 'approved',
               label: 'Reels publiés',
               value: communityReels.filter((r) => r.status === 'approved').length,
               icon: 'time',
+              onPress: () => {
+                handleSegment('reels');
+                setReelFilter('approved');
+              },
             },
             {
               key: 'total',
               label: 'Total reels',
               value: communityReels.length,
               icon: 'document',
+              onPress: () => {
+                handleSegment('reels');
+                setReelFilter('all');
+              },
             },
           ]}
         />

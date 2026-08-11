@@ -21,6 +21,7 @@ import { AmateurLogo, amateurLogoAspect } from './AmateurLogo';
 import { SupporterLogo, supporterLogoAspect } from './SupporterLogo';
 import { ProLogo, proLogoAspect } from './ProLogo';
 import { SanteLogo, santeLogoAspect } from './SanteLogo';
+import { ParentLogo, parentLogoAspect } from './ParentLogo';
 import { WomanLogo, womanLogoAspect } from './WomanLogo';
 import { SponsorLogo, sponsorLogoAspect } from './SponsorLogo';
 
@@ -182,6 +183,7 @@ export const Logo: React.FC<LogoProps> = ({
         background={background}
         opacity={opacity}
         watermark={false}
+        productLine={line === 'pro' ? 'pro_staff' : line}
       />
     );
   }
@@ -222,6 +224,17 @@ export const Logo: React.FC<LogoProps> = ({
   if (line === 'sante') {
     return (
       <SanteLogo
+        width={width}
+        background={background}
+        opacity={opacity}
+        watermark={false}
+      />
+    );
+  }
+
+  if (line === 'parent') {
+    return (
+      <ParentLogo
         width={width}
         background={background}
         opacity={opacity}
@@ -277,6 +290,7 @@ export function logoDisplayAspect(
     return proLogoAspect(width);
   }
   if (line === 'sante') return santeLogoAspect(width);
+  if (line === 'parent') return parentLogoAspect(width);
   if (line === 'homme') return manLogoAspect(width);
   if (line === 'amateur') return amateurLogoAspect(width);
   if (line === 'supporter') return supporterLogoAspect(width);

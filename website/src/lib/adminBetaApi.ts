@@ -69,6 +69,7 @@ function getAdminFunctionConfig(): { url: string; secret: string } | null {
       | "resend"
       | "bulk_approve"
       | "broadcast_ios_pre_announcement"
+      | "broadcast_ios_delay_notice"
       | "trigger_ios_launch"
       | "send_engagement_round"
       | "list_audit"
@@ -334,6 +335,10 @@ export async function broadcastIosPreAnnouncementAdmin() {
   return callCampaignAction("broadcast_ios_pre_announcement");
 }
 
+export async function broadcastIosDelayNoticeAdmin() {
+  return callCampaignAction("broadcast_ios_delay_notice");
+}
+
 export async function triggerIosLaunchAdmin() {
   return callCampaignAction("trigger_ios_launch");
 }
@@ -359,7 +364,10 @@ export async function sendEngagementRoundAdmin(round?: number) {
 }
 
 async function callCampaignAction(
-  action: "broadcast_ios_pre_announcement" | "trigger_ios_launch",
+  action:
+    | "broadcast_ios_pre_announcement"
+    | "broadcast_ios_delay_notice"
+    | "trigger_ios_launch",
 ): Promise<{
   ok: boolean;
   status: number;

@@ -34,7 +34,7 @@ export const SignupSpaceStep: React.FC<SignupSpaceStepProps> = ({
   const showGenderStep =
     form.isAmateurProduct || form.isProPlayerSignup || (form.isProProduct && form.role === 'player');
   const genderOptions = form.isAmateurProduct
-    ? (['men', 'women', 'minor'] as const)
+    ? (['men', 'women'] as const)
     : (['men', 'women'] as const);
   const spaceGender = showGenderStep ? form.gender : 'men';
   const spaceGroups = getAppSpaceGroups(spaceGender, t);

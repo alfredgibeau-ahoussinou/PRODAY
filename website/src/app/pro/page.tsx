@@ -25,15 +25,15 @@ const PRO_BLURBS: Record<string, { hook: string; forWho: string }> = {
     forWho: "Amateur · Centre · Pro",
   },
   pro_club: {
-    hook: "Cœur de ProDay — équipes, compétitions, permissions.",
+    hook: "Cœur de ProDay : équipes, compétitions, permissions.",
     forWho: "Présidents · DS · secrétariat",
   },
   coach: {
-    hook: "Smart Tactics, IA, effectif et préparation match.",
+    hook: "Tactique IA, IA, effectif et préparation match.",
     forWho: "Coachs rattachés au club",
   },
   supporter: {
-    hook: "Tribune gratuite — live, suivis et débats.",
+    hook: "Tribune gratuite : live, suivis et débats.",
     forWho: "Fans & communauté",
   },
   sponsor: {
@@ -49,7 +49,7 @@ export default function ProHubPage() {
         pathname={ROUTES.pro}
         kicker="Cinq pôles"
         title="L’écosystème, clair et simple."
-        description="Joueur, Club, Coach, Supporter, Sponsor. Même app — parcours dédiés. Agent, recruteur, organisateur et santé en rôles intégrés."
+        description="Joueur, Club, Coach, Supporter, Sponsor. Même app : parcours dédiés. Agent, recruteur, organisateur et santé en rôles intégrés."
         image="/images/football-pro-01.jpg"
         logo={PRO_BRAND.logo}
         logoAlt={PRO_BRAND.fullName}

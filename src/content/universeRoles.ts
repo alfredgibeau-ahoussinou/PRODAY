@@ -153,23 +153,23 @@ export function productLineLabel(line: ProductLineId): string {
     case 'woman':
       return 'ProDay Woman';
     case 'amateur':
-      return 'Pro Day Amateur';
+      return 'Pro Day Joueur';
     case 'supporter':
       return 'Pro Day Supporter';
     case 'sponsor':
       return 'Pro Day Sponsor';
     case 'pro_player':
-      return 'Pro Day Pro Joueur';
+      return 'Pro Day Joueur';
     case 'pro_club':
-      return 'Pro Day Pro Club';
+      return 'Pro Day Club';
     case 'pro_staff':
-      return 'Pro Day Pro Staff';
+      return 'Pro Day Coach';
     case 'pro':
       return 'Pro Day Pro';
     case 'sante':
       return 'Pro Day Santé';
     case 'parent':
-      return 'Pro Day Famille';
+      return 'Pro Day Parent';
     default:
       return 'Pro Day Man';
   }

@@ -1,16 +1,24 @@
-# Configuration IA — Mistral (analyse highlight activité)
+# Configuration IA — Mistral
 
-L'analyse des séances joueur (`analyzeActivityHighlight`) utilise l'API Mistral (Pixtral pour la vision, Mistral Small pour le texte).
+ProDay utilise **Mistral Medium 3.5** (`mistral-medium-3-5`, avril 2026) pour :
+
+1. Analyse highlight activité joueur (`analyzeActivityHighlight`) — vision
+2. Vérification documents onboarding (`mistralVerification`) — vision
+3. **Copilote Club** — chat live (`clubAssistantChat`) + `reasoning_effort: high`
+
+Texte rapide (tags) : `mistral-small-latest` (Small 4, mars 2026).
+
+Modèles : `functions/src/mistralModels.ts`.
 
 ## Clé API
 
-### Production (Firebase Functions config)
+### Production
 
 ```bash
 firebase functions:config:set mistral.api_key="VOTRE_CLE_MISTRAL"
 ```
 
-La fonction lit `functions.config().mistral.api_key` (voir `functions/src/analyzeActivityHighlight.ts`).
+Ou variable Gen2 : `MISTRAL_API_KEY` (voir `functions/src/runtimeConfig.ts`).
 
 ### Développement local / émulateur
 
@@ -18,33 +26,34 @@ La fonction lit `functions.config().mistral.api_key` (voir `functions/src/analyz
 export MISTRAL_API_KEY="VOTRE_CLE_MISTRAL"
 ```
 
-Ou dans `functions/.env` si votre setup local le charge.
+Ou `functions/.env` si votre setup le charge.
 
 ## Déploiement
 
 ```bash
 cd functions && npm run build
-firebase deploy --only functions:analyzeActivityHighlight
+firebase deploy --only functions:analyzeActivityHighlight,functions:clubAssistantChat
 ```
 
-Déployez aussi les règles Storage si vous utilisez les miniatures activité :
+## Copilote Club (`clubAssistantChat`)
 
-```bash
-firebase deploy --only storage
-```
+- Callable `europe-west1`, Auth **rôle club**.
+- Dialogue libre (historique court) + contexte roster chargé serveur.
+- UI : `ClubAssistantPane` → `ClubLiveChat` (réponses générées, pas FAQ).
+- FAQ dossiers : lien secondaire via `PoleHelpChatbot`.
 
 ## Miniatures vidéo (vision MP4)
 
 - Le client génère une frame (`expo-video-thumbnails`) et l'upload dans `player_activity_thumbnails/{uid}/{activityId}.jpg`.
 - Sans miniature : poster profil (`gallery_urls` aligné sur `highlight_video_urls`) si disponible.
-- **Limite serveur** : pas d'extraction frame côté Cloud Function (pas de ffmpeg). Un MP4 sans `thumbnail_url` ni poster → analyse texte uniquement (tags + notes). Un HEAD HTTP sur l'URL vidéo peut détecter un `Content-Type: image/*` mal typé.
+- **Limite serveur** : pas d'extraction frame côté Cloud Function (pas de ffmpeg). Un MP4 sans `thumbnail_url` ni poster → analyse texte uniquement (tags + notes).
 
-## Notification
+## Notification (highlights)
 
-À la fin d'une analyse réussie, une push FCM/Expo est envoyée au joueur (`type: player_activity_analysis`). Le tap ouvre l'onglet Profil.
+À la fin d'une analyse réussie, une push FCM/Expo est envoyée au joueur (`type: player_activity_analysis`).
 
-## Vérification
+## Vérification highlight
 
 1. Créer une séance match avec highlight vidéo depuis l'app.
-2. Vérifier dans Firestore : `thumbnail_url`, puis `analysis_status: analyzed`.
-3. Contrôler les logs Functions : `[analyzeActivityHighlight]`.
+2. Vérifier Firestore : `thumbnail_url`, puis `analysis_status: analyzed`.
+3. Logs Functions : `[analyzeActivityHighlight]`.

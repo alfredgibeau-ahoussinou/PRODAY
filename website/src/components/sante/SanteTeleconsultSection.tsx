@@ -5,7 +5,7 @@ import { CalendarCheck, ShieldCheck, Stethoscope, Video } from "lucide-react";
 import { ROUTES } from "@/lib/routes";
 
 /**
- * Téléconsultation pôle Santé — salles Daily sécurisées in-app (cam/mic/écran/chat).
+ * Téléconsultation pôle Santé : salles Daily sécurisées in-app (cam/mic/écran/chat).
  * Cal.com reste l’agenda public du praticien ; la visio rejoint depuis l’app ProDay.
  */
 export function SanteTeleconsultSection() {

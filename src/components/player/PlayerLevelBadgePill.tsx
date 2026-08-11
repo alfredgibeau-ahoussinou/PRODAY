@@ -13,7 +13,7 @@ type Props = {
   compact?: boolean;
 };
 
-/** Pills Amateur (bleu) / Centre (vert) / Pro (jaune) + optionnel Joueur vérifié. */
+/** Pills Amateur / Formation / Haut niveau (bleu ProDay) + optionnel Joueur vérifié. */
 export function PlayerLevelBadgePill({ user, showVerified = true, compact }: Props) {
   if (user.role !== 'player') return null;
   const badge = playerLevelBadgeFor(user);

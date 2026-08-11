@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Text } from 'react-native';
 import { PressableSpring } from '../motion/PressableSpring';
 import { prodayHaptics } from '../../utils/prodayHaptics';
 import type { TeamEvent } from '../../models/TeamEvent';
@@ -8,14 +8,12 @@ import {
   carpoolEventSummaryForUser,
   totalCarpoolAvailableSeats,
 } from '../../utils/carpoolBalance';
-import { ProDayText } from '../ui/ProDayText';
 import { Icon } from '../ui/Icon';
-import { useAppTheme } from '../../context/ProductLineContext';
 import { useTranslation } from '../../context/LocaleContext';
 import type { TranslateFn } from '../../i18n/types';
 import { tr } from '../../i18n/translate';
-import { spacing, radius, shadows } from '../../theme/designTokens';
-import { CarpoolCardAccent } from './carpoolUi';
+import { spacing } from '../../theme/designTokens';
+import { CARPOOL_SITE } from '../../content/carpoolSite';
 
 interface CarpoolEventCardProps {
   event: TeamEvent;
@@ -49,7 +47,6 @@ export const CarpoolEventCard: React.FC<CarpoolEventCardProps> = ({
   onPress,
   onQuickBook,
 }) => {
-  const { colors } = useAppTheme();
   const { t } = useTranslation();
   const statusLabel = carpoolStatusLabel(event, profileUid, t);
   const summary = carpoolEventSummaryForUser(event, profileUid);
@@ -57,76 +54,49 @@ export const CarpoolEventCard: React.FC<CarpoolEventCardProps> = ({
   const needsRide = !summary.isDriver && !summary.myBookingDriverUid;
 
   return (
-    <PressableSpring
-      style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }, shadows.soft]}
-      onPress={onPress}
-      scaleTo={0.98}
-      haptic
-    >
-      <CarpoolCardAccent />
+    <PressableSpring style={styles.card} onPress={onPress} scaleTo={0.98} haptic>
+      <View style={styles.dateBlock}>
+        <Text style={styles.dateDay}>
+          {event.starts_at.toLocaleDateString('fr-FR', { day: 'numeric' })}
+        </Text>
+        <Text style={styles.dateMonth}>
+          {event.starts_at.toLocaleDateString('fr-FR', { month: 'short' })}
+        </Text>
+      </View>
       <View style={styles.body}>
-        <View style={styles.top}>
-          <View style={[styles.dateBlock, { backgroundColor: colors.accentSoft }]}>
-            <ProDayText variant="caption" accent style={styles.dateDay}>
-              {event.starts_at.toLocaleDateString('fr-FR', { day: 'numeric' })}
-            </ProDayText>
-            <ProDayText variant="caption" accent style={styles.dateMonth}>
-              {event.starts_at.toLocaleDateString('fr-FR', { month: 'short' })}
-            </ProDayText>
-          </View>
-          <View style={styles.topCopy}>
-            <View style={[styles.kindPill, { backgroundColor: colors.surfaceMuted }]}>
-              <ProDayText variant="caption" muted style={styles.kindText}>
-                {EVENT_TYPE_LABELS[event.event_type]}
-              </ProDayText>
-            </View>
-            <ProDayText variant="section" numberOfLines={2}>
-              {event.title}
-            </ProDayText>
-          </View>
-        </View>
-        <ProDayText variant="body" muted numberOfLines={1}>
+        <Text style={styles.kind}>{EVENT_TYPE_LABELS[event.event_type]}</Text>
+        <Text style={styles.title} numberOfLines={2}>
+          {event.title}
+        </Text>
+        <Text style={styles.place} numberOfLines={1}>
           {event.city}
           {event.location_label ? ` · ${event.location_label}` : ''}
-        </ProDayText>
+        </Text>
         <View style={styles.metaRow}>
-          <View style={[styles.metaPill, { backgroundColor: colors.surfaceMuted }]}>
-            <Icon name="car" size={12} color={colors.accent} />
-            <ProDayText variant="caption" muted>
+          <View style={styles.meta}>
+            <Icon name="car" size={12} color={CARPOOL_SITE.signal} />
+            <Text style={styles.metaText}>
               {summary.driverCount} conducteur{summary.driverCount !== 1 ? 's' : ''}
-            </ProDayText>
+            </Text>
           </View>
           {available != null && available > 0 ? (
-            <View style={[styles.metaPill, { backgroundColor: colors.accentSoft }]}>
-              <ProDayText variant="caption" accent style={styles.metaBold}>
-                {available} place{available !== 1 ? 's' : ''}
-              </ProDayText>
-            </View>
+            <Text style={styles.seats}>{available} place{available !== 1 ? 's' : ''}</Text>
           ) : null}
         </View>
-
-        <View style={[styles.statusRow, { borderTopColor: colors.border }]}>
-          <Icon name="car" size={16} color={colors.accent} variant="filled" />
-          <ProDayText variant="caption" style={styles.statusText}>
-            {statusLabel}
-          </ProDayText>
-          {needsRide && onQuickBook && (event.carpool_slots?.length ?? 0) > 0 ? (
-            <PressableSpring
-              onPress={() => {
-                prodayHaptics.confirm();
-                onQuickBook();
-              }}
-              scaleTo={0.96}
-              haptic
-            >
-              <ProDayText variant="caption" accent style={styles.quickBook}>
-                {t('carpool.event.book')}
-              </ProDayText>
-            </PressableSpring>
-          ) : (
-            <Icon name="chevron-forward" size={16} color={colors.textMuted} />
-          )}
-        </View>
+        <Text style={styles.status}>{statusLabel}</Text>
+        {needsRide && onQuickBook ? (
+          <PressableSpring
+            onPress={() => {
+              prodayHaptics.confirm();
+              onQuickBook();
+            }}
+            scaleTo={0.97}
+            haptic
+            style={styles.cta}
+          >
+            <Text style={styles.ctaText}>{t('carpool.event.book')}</Text>
+          </PressableSpring>
+        ) : null}
       </View>
     </PressableSpring>
   );
@@ -134,59 +104,77 @@ export const CarpoolEventCard: React.FC<CarpoolEventCardProps> = ({
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: radius.xl,
-    borderWidth: 1,
-    overflow: 'hidden',
-    marginBottom: spacing.sm,
-    paddingLeft: spacing.sm,
-  },
-  body: { padding: spacing.md, paddingLeft: spacing.sm },
-  top: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: spacing.sm,
-    gap: spacing.md,
+    marginBottom: spacing.md,
+    backgroundColor: CARPOOL_SITE.surface,
+    borderWidth: 1.5,
+    borderColor: CARPOOL_SITE.fog,
+    borderRadius: 18,
+    overflow: 'hidden',
   },
   dateBlock: {
-    width: 52,
+    width: 58,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: spacing.sm,
-    borderRadius: radius.md,
+    backgroundColor: CARPOOL_SITE.signal,
+    paddingVertical: spacing.md,
   },
-  dateDay: { fontWeight: '900', fontSize: 18, lineHeight: 20 },
-  dateMonth: { fontWeight: '800', fontSize: 11, textTransform: 'capitalize' },
-  topCopy: { flex: 1, gap: 4 },
-  kindPill: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 3,
-    borderRadius: radius.pill,
+  dateDay: {
+    fontFamily: CARPOOL_SITE.display,
+    fontSize: 22,
+    fontWeight: '800',
+    color: CARPOOL_SITE.asphalt,
   },
-  kindText: { fontWeight: '800', fontSize: 10 },
+  dateMonth: {
+    fontSize: 11,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+    color: CARPOOL_SITE.asphalt,
+  },
+  body: { flex: 1, padding: spacing.md, gap: 4 },
+  kind: {
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    color: CARPOOL_SITE.inkDim,
+  },
+  title: {
+    fontFamily: CARPOOL_SITE.display,
+    fontSize: 16,
+    lineHeight: 20,
+    fontWeight: '800',
+    color: CARPOOL_SITE.ink,
+  },
+  place: { fontSize: 13, color: CARPOOL_SITE.inkMuted },
   metaRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.xs,
-    marginTop: spacing.sm,
-  },
-  metaPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 4,
-    borderRadius: radius.pill,
-  },
-  metaBold: { fontWeight: '800' },
-  statusRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
-    marginTop: spacing.md,
-    paddingTop: spacing.sm,
-    borderTopWidth: StyleSheet.hairlineWidth,
+    marginTop: 4,
   },
-  statusText: { flex: 1, fontWeight: '700' },
-  quickBook: { fontWeight: '800' },
+  meta: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  metaText: { fontSize: 12, color: CARPOOL_SITE.inkMuted, fontWeight: '600' },
+  seats: {
+    fontSize: 11,
+    fontWeight: '900',
+    color: '#fff',
+    backgroundColor: CARPOOL_SITE.asphalt,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 999,
+    overflow: 'hidden',
+  },
+  status: { fontSize: 12, fontWeight: '700', color: CARPOOL_SITE.signalDeep, marginTop: 2 },
+  cta: {
+    alignSelf: 'flex-start',
+    marginTop: spacing.xs,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 8,
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: CARPOOL_SITE.signal,
+    backgroundColor: CARPOOL_SITE.signalSoft,
+  },
+  ctaText: { fontWeight: '800', fontSize: 12, color: CARPOOL_SITE.signalDeep },
 });

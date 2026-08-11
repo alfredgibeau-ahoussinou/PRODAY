@@ -1,4 +1,4 @@
-/** Template email bêta — garder aligné avec functions/src/betaWaitlistEmail.ts */
+/** Template email bêta : garder aligné avec functions/src/betaWaitlistEmail.ts */
 
 export const BETA_MEMBER_ROLE = "Beta-testeur";
 
@@ -18,7 +18,7 @@ export const BETA_ROLE_LABELS: Record<BetaRoleId, string> = {
   sponsor: "Sponsor",
 };
 
-/** Anciens rôles encore en base — affichage admin / statut uniquement. */
+/** Anciens rôles encore en base : affichage admin / statut uniquement. */
 const LEGACY_BETA_ROLE_LABELS: Record<string, string> = {
   agent: "Agent",
   recruiter: "Recruteur",

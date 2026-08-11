@@ -21,7 +21,7 @@ import type { AppSpaceId } from '../models/AppSpace';
 import type { RecruitmentPost, Application } from '../models/Player';
 import { callFunction } from '../lib/firebaseFunctions';
 import { subscriptionService } from './subscription.service';
-import { canPublishRecruitmentPost } from '../content/poleExperience';
+import { canPublishRecruitmentPost } from '../utils/roleCapabilities';
 import { profileService } from './profile.service';
 import { ROLES_REQUIRING_VERIFICATION } from '../models/User';
 import {
@@ -259,6 +259,11 @@ export const recruitmentService = {
       sharedDocuments?: Application['shared_documents'];
     }
   ): Promise<void> {
+    if (patch.sharedDocuments?.some((d) => d.kind === 'medical')) {
+      throw new Error(
+        'Les documents médicaux ne peuvent pas être partagés via le Mercato.',
+      );
+    }
     const status = patch.status ?? 'IN_PROGRESS';
     await callFunction<
       {

@@ -28,7 +28,7 @@ const CV_COPY: Record<
     name: "Alex Martin",
     role: "Milieu offensif · Régional · Paris",
     footer:
-      "Profil polyvalent, vision de jeu et volume physique. Alimenté par Live Stats ProDay. Chaque match met à jour ce document.",
+      "Profil polyvalent, vision de jeu et volume physique. Alimenté par Stats en direct ProDay. Chaque match met à jour ce document.",
     image: "/showcase/classic-profile.jpg",
   },
   woman: {
@@ -44,7 +44,7 @@ const CV_COPY: Record<
     name: "Alex Martin",
     role: "Milieu · Amateur · Toulouse",
     footer:
-      "Profil joueur, Mercato et badges Amateur → Centre → Pro. Stats saison et export PDF.",
+      "Profil joueur, Mercato et saison. Stats et export PDF. Sans badge de prestige.",
     image: "/showcase/classic-profile.jpg",
   },
   supporter: {

@@ -173,6 +173,8 @@ export const UI_EN: MessageCatalog = {
   'auth.loginSub.pro': 'Log in to Pro Day Pro — staff, clubs and sponsors.',
   'auth.loginSub.sponsor': 'Log in to your Pro Day Sponsor space.',
   'auth.loginSub.sante': 'Log in to your Pro Day Health space.',
+  'auth.loginSub.parent':
+    'Log in to your Parent pole — messages, schedule and supervision.',
 
   'auth.signupSub.homme':
     'Create your player account — online CV, Transfer M and matches.',
@@ -184,6 +186,8 @@ export const UI_EN: MessageCatalog = {
     'Create your brand account — campaigns, ROI and club showcase on Pro Day Sponsor.',
   'auth.signupSub.sante':
     'Create your practitioner account — agenda, messaging and visibility.',
+  'auth.signupSub.parent':
+    'Create your Parent account — link your child, messages, late alerts and controls.',
 
   'profile.section.preferences': 'Preferences',
   'profile.section.preferencesSub': 'Calendar and ProDay settings',
@@ -640,7 +644,7 @@ export const UI_EN: MessageCatalog = {
   'medical.requests.subtitle': '{{n}} pending request(s)',
   'medical.requests.loading': 'Loading…',
   'medical.requests.emptyTitle': 'No requests',
-  'medical.requests.emptySub': 'Players book from the Health tab or contact you via messages.',
+  'medical.requests.emptySub': 'Athletes contact you via messages or a partner club.',
   'medical.patients.title': 'Patients',
   'medical.patients.subtitle': 'Athletes you follow from appointments',
   'medical.patients.loading': 'Loading…',
@@ -751,7 +755,7 @@ export const UI_EN: MessageCatalog = {
   'physio.dashboard.pendingTitle': 'Pending requests',
   'physio.dashboard.followedTitle': 'Tracked athletes',
   'physio.dashboard.emptyTitle': 'No appointments today',
-  'physio.dashboard.emptySub': "Players book from the Health tab. Check the agenda for the week.",
+  'physio.dashboard.emptySub': 'Requests arrive via messages or a partner club. Check the agenda for the week.',
   'physio.dashboard.viewAgenda': 'View agenda',
   'physio.dashboard.patientSub': 'Open follow-up messaging',
   'physio.dashboard.errorFallback': 'Action failed.',

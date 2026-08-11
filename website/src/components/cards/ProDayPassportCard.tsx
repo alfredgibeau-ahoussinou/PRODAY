@@ -371,7 +371,7 @@ export function ProDayPassportCard({
         </div>
       </div>
 
-      {/* Detail modal — dashboard passeport */}
+      {/* Detail modal : dashboard passeport */}
       <AnimatePresence>
         {open ? (
           <motion.div

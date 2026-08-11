@@ -6,6 +6,10 @@ import { Suspense, useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import type { RoleVisualId } from "@/lib/roleVisuals";
 import { getPoleBrandColors } from "@/lib/brandColors";
+import type {
+  JoueurPositionGroup,
+  JoueurSceneKind,
+} from "@/lib/joueurExperienceTheme";
 
 function accentForRole(role: RoleVisualId): string {
   switch (role) {
@@ -44,7 +48,7 @@ function SlowYaw({
   return <group ref={ref}>{children}</group>;
 }
 
-/** Textured football — same assets as homepage impact canvas. */
+/** Textured football : same assets as homepage impact canvas. */
 function TexturedBall({ showBadge = true }: { showBadge?: boolean }) {
   const [map, bumpMap, logoBadge] = useLoader(THREE.TextureLoader, [
     "/textures/soccer_ball.png?v=2",
@@ -447,8 +451,156 @@ function SystemOrbit({ color }: { color: string }) {
   );
 }
 
-function SceneForRole({ role }: { role: RoleVisualId }) {
+/** Mini pitch + ball — youth / warm playful. */
+function PitchPlayful({ color, position }: { color: string; position?: JoueurPositionGroup }) {
+  const goal = position === "goalkeeper";
+  return (
+    <group>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.55, 0]} receiveShadow>
+        <planeGeometry args={[2.4, 1.6]} />
+        <meshStandardMaterial color="#1a5c2e" roughness={0.85} metalness={0.05} />
+      </mesh>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.54, 0]}>
+        <ringGeometry args={[0.28, 0.32, 48]} />
+        <meshBasicMaterial color="#ffffff55" />
+      </mesh>
+      {[0, 1, 2, 3].map((i) => (
+        <mesh key={i} position={[-0.75 + i * 0.5, -0.35, 0.55]} castShadow>
+          <sphereGeometry args={[0.05, 16, 16]} />
+          <meshStandardMaterial color={i % 2 === 0 ? color : "#facc15"} emissive={color} emissiveIntensity={0.25} />
+        </mesh>
+      ))}
+      {goal ? (
+        <mesh position={[0, -0.15, -0.65]}>
+          <boxGeometry args={[0.7, 0.45, 0.06]} />
+          <meshStandardMaterial color="#ffffff88" wireframe />
+        </mesh>
+      ) : null}
+      <group position={[0, 0.05, 0.15]} scale={0.72}>
+        <TexturedBall showBadge />
+      </group>
+    </group>
+  );
+}
+
+/** Dynamic pitch + speed rings — teen. */
+function PitchDynamic({ color, position }: { color: string; position?: JoueurPositionGroup }) {
+  const ref = useRef<THREE.Group>(null);
+  useFrame((_, dt) => {
+    if (!ref.current) return;
+    ref.current.rotation.z += dt * 0.35;
+  });
+  return (
+    <group>
+      <mesh rotation={[-Math.PI / 2.4, 0.15, 0.1]} position={[0, -0.45, 0]} receiveShadow>
+        <planeGeometry args={[2.6, 1.8]} />
+        <meshStandardMaterial color="#0f3d22" roughness={0.7} metalness={0.1} />
+      </mesh>
+      <group ref={ref}>
+        <mesh rotation={[Math.PI / 2, 0, 0]}>
+          <torusGeometry args={[1.05, 0.012, 8, 64]} />
+          <meshBasicMaterial color={color} transparent opacity={0.55} />
+        </mesh>
+        <mesh rotation={[Math.PI / 2.6, 0.4, 0]}>
+          <torusGeometry args={[0.75, 0.01, 8, 64]} />
+          <meshBasicMaterial color="#ffffff66" transparent opacity={0.4} />
+        </mesh>
+      </group>
+      {[0, 1, 2].map((i) => {
+        const a = (i / 3) * Math.PI * 2;
+        return (
+          <mesh
+            key={i}
+            position={[Math.cos(a) * 0.9, 0.15 + i * 0.08, Math.sin(a) * 0.9]}
+            castShadow
+          >
+            <boxGeometry args={[0.08, 0.22 + i * 0.06, 0.08]} />
+            <meshStandardMaterial color={color} metalness={0.4} roughness={0.3} />
+          </mesh>
+        );
+      })}
+      {position === "forward" ? (
+        <mesh position={[0.55, 0.2, 0.2]}>
+          <sphereGeometry args={[0.08, 20, 20]} />
+          <meshStandardMaterial color="#fff" emissive={color} emissiveIntensity={0.4} />
+        </mesh>
+      ) : null}
+      <group scale={0.78}>
+        <TexturedBall showBadge />
+      </group>
+    </group>
+  );
+}
+
+/** Data / heatmap style — adult performance. */
+function PitchData({ color, position }: { color: string; position?: JoueurPositionGroup }) {
+  return (
+    <group>
+      <mesh rotation={[-Math.PI / 2.2, 0, 0]} position={[0, -0.5, 0]} receiveShadow>
+        <planeGeometry args={[2.5, 1.7]} />
+        <meshStandardMaterial color="#0b1220" roughness={0.55} metalness={0.25} />
+      </mesh>
+      {Array.from({ length: 5 }).map((_, row) =>
+        Array.from({ length: 4 }).map((__, col) => {
+          const intensity = ((row + col) % 5) / 5;
+          return (
+            <mesh
+              key={`${row}-${col}`}
+              rotation={[-Math.PI / 2.2, 0, 0]}
+              position={[-0.9 + col * 0.55, -0.48, -0.55 + row * 0.28]}
+            >
+              <planeGeometry args={[0.45, 0.22]} />
+              <meshBasicMaterial
+                color={color}
+                transparent
+                opacity={0.12 + intensity * 0.35}
+              />
+            </mesh>
+          );
+        }),
+      )}
+      {[0.35, 0.55, 0.75, 0.45].map((h, i) => (
+        <mesh key={i} position={[-0.95 + i * 0.45, -0.35 + h / 2, 0.55]} castShadow>
+          <boxGeometry args={[0.12, h, 0.12]} />
+          <meshStandardMaterial
+            color={i === 2 ? color : "#94a3b8"}
+            metalness={0.35}
+            roughness={0.35}
+          />
+        </mesh>
+      ))}
+      {position === "midfielder" ? (
+        <mesh position={[0, 0.35, -0.2]} rotation={[0.2, 0.4, 0]}>
+          <torusGeometry args={[0.35, 0.015, 8, 48]} />
+          <meshBasicMaterial color={color} />
+        </mesh>
+      ) : null}
+      <group position={[0.15, 0.08, 0]} scale={0.7}>
+        <TexturedBall showBadge />
+      </group>
+    </group>
+  );
+}
+
+function SceneForRole({
+  role,
+  sceneKind,
+  position,
+}: {
+  role: RoleVisualId;
+  sceneKind?: JoueurSceneKind;
+  position?: JoueurPositionGroup;
+}) {
   const color = accentForRole(role);
+  if (role === "joueur" && sceneKind) {
+    if (sceneKind === "pitch_playful") {
+      return <PitchPlayful color={color} position={position} />;
+    }
+    if (sceneKind === "pitch_dynamic") {
+      return <PitchDynamic color={color} position={position} />;
+    }
+    return <PitchData color={color} position={position} />;
+  }
   switch (role) {
     case "joueur":
       return <TexturedBall />;
@@ -485,11 +637,24 @@ function SceneForRole({ role }: { role: RoleVisualId }) {
 type RoleAccentCanvasProps = {
   role: RoleVisualId;
   className?: string;
+  sceneKind?: JoueurSceneKind;
+  position?: JoueurPositionGroup;
+  animationIntensity?: "soft" | "medium" | "high";
 };
 
-/** Premium WebGL accent — transparent stage, textured ball, soft studio light. */
-export function RoleAccentCanvas({ role, className }: RoleAccentCanvasProps) {
+/** Premium WebGL accent : transparent stage, textured ball, soft studio light. */
+export function RoleAccentCanvas({
+  role,
+  className,
+  sceneKind,
+  position,
+  animationIntensity = "medium",
+}: RoleAccentCanvasProps) {
   const accent = accentForRole(role);
+  const floatSpeed =
+    animationIntensity === "high" ? 1.45 : animationIntensity === "soft" ? 0.85 : 1.1;
+  const yawSpeed =
+    animationIntensity === "high" ? 0.16 : animationIntensity === "soft" ? 0.07 : 0.1;
 
   return (
     <div className={className}>
@@ -521,10 +686,14 @@ export function RoleAccentCanvas({ role, className }: RoleAccentCanvasProps) {
           />
           <directionalLight position={[-2.5, 1.5, -1.5]} intensity={0.45} color={accent} />
           <Environment preset="city" />
-          <Float speed={1.1} rotationIntensity={0.18} floatIntensity={0.35}>
-            <SlowYaw speed={0.1}>
+          <Float
+            speed={floatSpeed}
+            rotationIntensity={animationIntensity === "high" ? 0.28 : 0.18}
+            floatIntensity={animationIntensity === "soft" ? 0.28 : 0.35}
+          >
+            <SlowYaw speed={yawSpeed}>
               <group position={[0, 0.05, 0]}>
-                <SceneForRole role={role} />
+                <SceneForRole role={role} sceneKind={sceneKind} position={position} />
               </group>
             </SlowYaw>
           </Float>

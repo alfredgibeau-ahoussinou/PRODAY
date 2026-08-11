@@ -21,7 +21,8 @@ import {
   buildGuardianScreenTimeSettings,
   type GuardianScreenTimePatch,
 } from '../utils/guardianParentalPatch';
-import { getScreenTimeDayKey, resolveRuntimeMinutesUsed } from '../utils/parentalScreenTime';
+import { resolveRuntimeMinutesUsed } from '../utils/parentalScreenTime';
+import { buildParentalAlerts } from '../utils/parentalAlerts';
 import {
   generateGuardianInviteCode,
   guardianEmailsMatch,
@@ -52,30 +53,8 @@ export interface GuardianNotification {
   created_at: Date;
 }
 
-function buildAlerts(child: LinkedMinorProfile): string[] {
-  const alerts: string[] = [];
-  const { settings, minutesUsedToday } = child;
-  const limit = settings.daily_limit_minutes ?? 90;
-  const bonus =
-    settings.screen_time_bonus_day === getScreenTimeDayKey()
-      ? settings.screen_time_bonus_minutes ?? 0
-      : 0;
-  const effectiveLimit = limit + bonus;
-
-  if (settings.unlock_request?.status === 'pending') {
-    alerts.push(`Demande de +${settings.unlock_request.minutes} min en attente`);
-  }
-  if (settings.screen_time_enabled && minutesUsedToday >= effectiveLimit) {
-    alerts.push('Limite de temps d’écran atteinte');
-  } else if (settings.screen_time_enabled && minutesUsedToday >= effectiveLimit * 0.9) {
-    alerts.push('Temps d’écran bientôt épuisé');
-  }
-  const pendingContacts = (settings.approved_contacts ?? []).filter((c) => !c.approved);
-  if (pendingContacts.length > 0) {
-    alerts.push(`${pendingContacts.length} contact(s) en attente d’approbation`);
-  }
-  return alerts;
-}
+/** @deprecated Préférer `utils/parentalAlerts` */
+export { buildParentalAlerts };
 
 function mapLinkedMinor(user: User): LinkedMinorProfile {
   const settings: ParentalSettings = {
@@ -91,7 +70,7 @@ function mapLinkedMinor(user: User): LinkedMinorProfile {
     minutesUsedToday: resolveRuntimeMinutesUsed(user.parental_runtime),
     alerts: [] as string[],
   };
-  return { ...base, alerts: buildAlerts(base) };
+  return { ...base, alerts: buildParentalAlerts(base) };
 }
 
 function toDateValue(value: unknown): Date | null {

@@ -8,7 +8,7 @@ import { AdminSettings } from "@/components/admin/AdminSettings";
 import { getAdminConfigHealth } from "@/lib/adminConfigHealth";
 
 export const metadata: Metadata = {
-  title: "Paramètres Admin - ProDay",
+  title: "Paramètres Admin : ProDay",
   robots: { index: false, follow: false },
 };
 

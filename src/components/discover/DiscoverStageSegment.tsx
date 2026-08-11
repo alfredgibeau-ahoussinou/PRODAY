@@ -15,7 +15,7 @@ export type DiscoverStageMode = 'explore' | 'live';
 
 const MODES: { id: DiscoverStageMode; label: string }[] = [
   { id: 'explore', label: 'Explorer' },
-  { id: 'live', label: 'Live' },
+  { id: 'live', label: 'Direct' },
 ];
 
 const PADDING = 4;
