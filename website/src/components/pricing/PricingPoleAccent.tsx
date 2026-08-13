@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
 import type { RoleVisualId } from "@/lib/roleVisuals";
 import type { PoleId } from "@/lib/poles";
+import { WebGlErrorBoundary } from "@/components/immersive/WebGlErrorBoundary";
 
 const RoleAccentCanvas = dynamic(
   () => import("@/components/immersive/RoleAccentCanvas").then((m) => m.RoleAccentCanvas),
@@ -18,7 +19,8 @@ export function poleIdToVisualRole(poleId: PoleId): RoleVisualId {
     poleId === "supporter" ||
     poleId === "sante" ||
     poleId === "pro_club" ||
-    poleId === "sponsor"
+    poleId === "sponsor" ||
+    poleId === "parent"
   ) {
     return poleId;
   }
@@ -56,7 +58,9 @@ export function PricingPoleAccent({ poleId, className = "" }: PricingPoleAccentP
       aria-hidden
     >
       {active ? (
-        <RoleAccentCanvas role={role} className="h-full w-full" />
+        <WebGlErrorBoundary>
+          <RoleAccentCanvas role={role} className="h-full w-full" />
+        </WebGlErrorBoundary>
       ) : (
         <div
           className="h-full w-full"

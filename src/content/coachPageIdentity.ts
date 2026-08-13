@@ -126,6 +126,15 @@ export const COACH_PAGE_IDENTITIES: Record<CoachNavItemId, CoachPageIdentity> = 
     icon: 'star-four-points',
     motif: 'grid',
   }),
+  mes_videos: page({
+    id: 'mes_videos',
+    eyebrow: 'Centre vidéo coach',
+    title: 'Mes vidéos',
+    support: 'Captation, Live Center, analyse IA et causeries.',
+    icon: 'videocam',
+    motif: 'stripes',
+    wash: [COACH_SITE.pitchDeep, COACH_SITE.bg],
+  }),
   forme: page({
     id: 'forme',
     eyebrow: 'Charge & récupération',

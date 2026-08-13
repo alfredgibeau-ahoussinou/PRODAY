@@ -35,14 +35,22 @@ export interface ClubCamera {
   vendor: VideoCameraVendor;
   brand_label: string;
   model: string;
+  /** Nom affiché (ex. « Veo 3 — Terrain d'honneur »). */
+  display_name?: string;
   status: ClubCameraConnectionStatus;
   team_id?: string;
   team_label?: string;
+  /** Multi-équipes : une caméra peut servir plusieurs catégories. */
+  team_ids?: string[];
+  team_labels?: string[];
   last_match_title?: string;
   last_match_at?: Date;
   storage_used_mb: number;
   storage_quota_mb?: number;
   sync_status: ClubCameraSyncStatus;
+  battery_pct?: number;
+  connection_label?: string;
+  last_sync_at?: Date;
   external_device_id?: string;
   created_by_uid: string;
   created_at: Date;
@@ -81,15 +89,46 @@ export interface ClubMatchVideo {
   event_id?: string;
   event_title?: string;
   title: string;
+  opponent?: string;
+  competition?: string;
+  match_type?: string;
+  venue?: string;
+  scheduled_at?: Date;
   storage_url?: string;
   duration_sec?: number;
   highlights_ready: boolean;
+  ai_ready?: boolean;
+  talk_ready?: boolean;
   clips: MatchVideoClip[];
   player_uids: string[];
   share_with: MatchVideoShareAudience[];
   created_by_uid: string;
   created_at: Date;
   updated_at?: Date;
+}
+
+export interface VideoCaptureScheduleInput {
+  club_id: string;
+  camera_id: string;
+  team_id?: string;
+  team_label?: string;
+  opponent: string;
+  event_title: string;
+  event_id?: string;
+  competition?: string;
+  match_type?: string;
+  venue?: string;
+  scheduled_at: Date;
+  created_by_uid: string;
+}
+
+export interface ClubVideoCenterStats {
+  matchesFilmedMonth: number;
+  matchesAiAnalyzed: number;
+  teamsEquipped: number;
+  camerasConnected: number;
+  storageUsedMb: number;
+  videosSharedWithPlayers: number;
 }
 
 export interface CreateMatchVideoInput {
@@ -125,6 +164,31 @@ export const MATCH_VIDEO_STATUS_LABELS: Record<MatchVideoStatus, string> = {
 
 export function vendorLabel(vendor: VideoCameraVendor): string {
   return VIDEO_VENDORS.find((v) => v.id === vendor)?.label ?? vendor;
+}
+
+export function computeClubVideoCenterStats(
+  cameras: ClubCamera[],
+  videos: ClubMatchVideo[],
+  now: Date = new Date(),
+): ClubVideoCenterStats {
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const filmedMonth = videos.filter((v) => v.created_at >= monthStart);
+  const teamKeys = new Set<string>();
+  for (const c of cameras) {
+    if (c.team_id) teamKeys.add(c.team_id);
+    c.team_ids?.forEach((id) => teamKeys.add(id));
+  }
+  for (const v of videos) {
+    if (v.team_id) teamKeys.add(v.team_id);
+  }
+  return {
+    matchesFilmedMonth: filmedMonth.length,
+    matchesAiAnalyzed: videos.filter((v) => v.ai_ready || v.highlights_ready).length,
+    teamsEquipped: teamKeys.size,
+    camerasConnected: cameras.filter((c) => c.status === 'connected').length,
+    storageUsedMb: cameras.reduce((sum, c) => sum + (c.storage_used_mb || 0), 0),
+    videosSharedWithPlayers: videos.filter((v) => v.share_with.includes('players')).length,
+  };
 }
 
 export function defaultModelForVendor(vendor: VideoCameraVendor): string {

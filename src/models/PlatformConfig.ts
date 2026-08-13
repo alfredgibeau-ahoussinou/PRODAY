@@ -6,8 +6,15 @@ export interface PlatformFeatureFlags {
   shop: boolean;
   stages: boolean;
   registration_open: boolean;
-  /** Téléconsultation Santé (Cal/Daily). Défaut OFF en bêta. */
+  /**
+   * Pôle Santé retiré — toujours OFF (ignoré si présent dans Firestore).
+   * Conservé pour compat FeatureBlockedScreen / anciens clients.
+   */
   sante_visio: boolean;
+  /** Admin : débloque Centre Vidéo Club (Veo / caméras) même hors formule Tout inclus. */
+  club_video: boolean;
+  /** Admin : débloque Mes vidéos Coach (captation · IA · causerie). */
+  coach_video: boolean;
 }
 
 export interface PlatformConfig {
@@ -36,5 +43,7 @@ export const DEFAULT_PLATFORM_CONFIG: PlatformConfig = {
     stages: true,
     registration_open: true,
     sante_visio: false,
+    club_video: false,
+    coach_video: false,
   },
 };

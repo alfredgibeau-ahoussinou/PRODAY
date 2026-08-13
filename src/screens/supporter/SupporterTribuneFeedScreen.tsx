@@ -1,18 +1,20 @@
 import React from 'react';
 import { FeedHomeScreen } from '../../components/feed/FeedHomeScreen';
-import { TabScreenShell } from '../../components/app/TabScreenShell';
+import { SupporterPageFrame } from '../../components/supporter/SupporterPageFrame';
+import { getSupporterPageIdentity } from '../../content/supporterPageIdentity';
 import { useAuth } from '../../context/AuthContext';
 import { useTabNavigation } from '../../context/TabNavigationContext';
 import { useTranslation } from '../../context/LocaleContext';
 import { ProDayText } from '../../components/ui/ProDayText';
-import { ProDayGradient } from '../../components/ui/ProDayGradient';
 import { PressableSpring } from '../../components/motion';
 import { View, StyleSheet, ActivityIndicator } from 'react-native';
 import { spacing } from '../../theme/designTokens';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { TAB_BAR_CONTENT_INSET } from '../../components/navigation/BottomTabBar';
+import { SUPPORTER_SITE } from '../../content/supporterPageIdentity';
+import { Icon } from '../../components/ui/Icon';
 
-/** Onglet Communauté tribune — débats, fil et question hebdo (100 % gratuit). */
+/** Onglet Fil tribune — question hebdo, réponses, actus. */
 export const SupporterTribuneFeedScreen: React.FC = () => {
   const { profile, loading } = useAuth();
   const { setActiveTab, openChat, openAuth } = useTabNavigation();
@@ -22,47 +24,74 @@ export const SupporterTribuneFeedScreen: React.FC = () => {
   if (loading) {
     return (
       <View style={[styles.centered, { backgroundColor: colors.background }]}>
-        <ActivityIndicator size="large" color={colors.accent} />
+        <ActivityIndicator size="large" color={SUPPORTER_SITE.accent} />
       </View>
     );
   }
 
   if (profile) {
     return (
-      <FeedHomeScreen
-        profile={profile}
-        onOpenChat={(threadId) => openChat(threadId)}
-        onOpenMessages={() => setActiveTab('messages')}
-      />
+      <SupporterPageFrame
+        identity={getSupporterPageIdentity('debats')}
+        showHero
+        badge="100 % gratuit"
+      >
+        <FeedHomeScreen
+          profile={profile}
+          embedded
+          variant="tribune"
+          onOpenChat={(threadId) => openChat(threadId)}
+          onOpenMessages={() => setActiveTab('messages')}
+        />
+      </SupporterPageFrame>
     );
   }
 
   return (
-    <TabScreenShell
-      caption={t('supporter.shell.caption')}
-      title={t('supporter.debates.title')}
-      subtitle={t('supporter.debates.subtitle')}
-      flat
-    >
+    <SupporterPageFrame identity={getSupporterPageIdentity('debats')} badge="Gratuit">
       <View style={styles.guestBody}>
-        <ProDayText variant="section">{t('supporter.debates.guestTitle')}</ProDayText>
-        <ProDayText variant="body" muted style={styles.guestSub}>
-          {t('supporter.debates.guestBody')}
+        <View style={styles.guestIcon}>
+          <Icon name="chat" size={28} color={SUPPORTER_SITE.accent} />
+        </View>
+        <ProDayText variant="title" style={styles.guestTitle}>
+          {t('supporter.fil.guestTitle')}
         </ProDayText>
-        <PressableSpring onPress={() => openAuth('login')} scaleTo={0.98} haptic>
-          <ProDayGradient kind="cta" style={styles.guestCta}>
-            <ProDayText variant="caption" inverse style={styles.guestCtaText}>
-              {t('common.login')}
-            </ProDayText>
-          </ProDayGradient>
+        <ProDayText variant="body" muted style={styles.guestSub}>
+          {t('supporter.fil.guestBody')}
+        </ProDayText>
+
+        <View style={styles.guestPoints}>
+          {[
+            t('supporter.fil.guestPoint1'),
+            t('supporter.fil.guestPoint2'),
+            t('supporter.fil.guestPoint3'),
+          ].map((line) => (
+            <View key={line} style={styles.guestPoint}>
+              <View style={styles.dot} />
+              <ProDayText variant="caption" style={styles.guestPointText}>
+                {line}
+              </ProDayText>
+            </View>
+          ))}
+        </View>
+
+        <PressableSpring
+          onPress={() => openAuth('signup')}
+          scaleTo={0.98}
+          haptic
+          style={styles.guestCta}
+        >
+          <ProDayText variant="caption" style={styles.guestCtaText}>
+            {t('supporter.fil.guestSignup')}
+          </ProDayText>
         </PressableSpring>
-        <PressableSpring onPress={() => openAuth('signup')} style={styles.guestSecondary}>
-          <ProDayText variant="caption" accent>
-            {t('supporter.debates.guestSignup')}
+        <PressableSpring onPress={() => openAuth('login')} style={styles.guestSecondary}>
+          <ProDayText variant="caption" style={styles.guestLogin}>
+            {t('common.login')}
           </ProDayText>
         </PressableSpring>
       </View>
-    </TabScreenShell>
+    </SupporterPageFrame>
   );
 };
 
@@ -79,20 +108,42 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: spacing.md,
   },
+  guestIcon: {
+    width: 56,
+    height: 56,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: SUPPORTER_SITE.border,
+    backgroundColor: SUPPORTER_SITE.soft,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  guestTitle: {
+    color: SUPPORTER_SITE.foreground,
+    fontWeight: '800',
+    fontSize: 28,
+    letterSpacing: -0.5,
+  },
   guestSub: {
     lineHeight: 22,
+    color: SUPPORTER_SITE.muted,
   },
+  guestPoints: { gap: 10, marginTop: spacing.xs },
+  guestPoint: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  dot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: SUPPORTER_SITE.accent,
+  },
+  guestPointText: { color: SUPPORTER_SITE.foreground, fontWeight: '600', flex: 1 },
   guestCta: {
     alignSelf: 'flex-start',
+    backgroundColor: SUPPORTER_SITE.accent,
     paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-    borderRadius: 999,
+    paddingVertical: 12,
+    marginTop: spacing.sm,
   },
-  guestCtaText: {
-    fontWeight: '700',
-  },
-  guestSecondary: {
-    alignSelf: 'flex-start',
-    paddingVertical: spacing.xs,
-  },
+  guestCtaText: { color: '#fff', fontWeight: '800' },
+  guestSecondary: { alignSelf: 'flex-start', paddingVertical: spacing.xs },
+  guestLogin: { color: SUPPORTER_SITE.bright, fontWeight: '700' },
 });

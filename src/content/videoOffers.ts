@@ -120,17 +120,16 @@ export const VIDEO_OFFERS: Record<VideoOfferId, VideoOfferDefinition> = {
       annualEur: null,
       adminPricingKey: 'video.pro_camera.display_price',
       adminConfigurable: true,
-      displayFallback: 'Achat ou location — prix admin',
+      displayFallback: 'Sur devis — adhérents, équipes & matériel',
     },
     includes: [
       'Toutes les fonctions Tout inclus',
       'Analyse vidéo BYO (smartphone / tablette / caméra existante)',
-      'Caméra Veo (achat ou location selon le choix du club)',
-      'Trépied professionnel',
-      'Installation, configuration, formation des éducateurs',
+      'Module Caméra : achat, location ou intégration (Veo, XbotGo…)',
+      'Trépied / installation / formation selon devis',
       'Synchronisation automatique & stockage cloud',
       'Traitement vidéo, analyse IA, découpage automatique',
-      'Bibliothèque vidéo & export des séquences',
+      'Bibliothèque vidéo, causeries & partage joueurs',
     ],
     supportedInputs: ALL_INPUTS,
     hardwareAcquisition: ['own_camera', 'lease', 'purchase'],
@@ -150,11 +149,11 @@ export const VIDEO_HARDWARE_ACQUISITION_LABELS: Record<
   },
   lease: {
     title: 'Location via ProDay',
-    body: 'Offre clé en main : caméra, trépied, installation, formation, cloud. Loyer mensuel configurable en admin.',
+    body: 'Offre clé en main sur devis : caméra, trépied, installation, formation, cloud — selon adhérents et équipes.',
   },
   purchase: {
     title: 'Achat via ProDay',
-    body: 'Achat caméra + pack installation / configuration / formation. Prix catalogue modifiable en admin.',
+    body: 'Achat caméra + pack installation / configuration / formation. Prix catalogue sur devis (pas de tarif fixe affiché).',
   },
 };
 

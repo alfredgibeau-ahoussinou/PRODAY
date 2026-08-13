@@ -16,6 +16,7 @@ import { PlayerCvLivePreview } from '../profile/PlayerCvLivePreview';
 import { ProfileGalleryEditor } from '../profile/ProfileGalleryEditor';
 import { LanguageSettingControl } from '../settings/LanguageSettingControl';
 import { AppSpacePill } from '../appSpace/AppSpaceBanner';
+import { JoueurMesVideosPanel } from './JoueurMesVideosPanel';
 import { spacing } from '../../theme/designTokens';
 
 type Accent = string;
@@ -205,6 +206,7 @@ export function JoueurVitrinePanel(props: VitrineProps) {
 type ActiviteProps = {
   accent: Accent;
   productLine: ProductLineId;
+  playerUid: string;
   clubId?: string | null;
   appSpace: AppSpaceId;
   selectableAppSpaces: AppSpaceId[];
@@ -227,6 +229,16 @@ export function JoueurActivitePanel(props: ActiviteProps) {
           onPress={props.onApplications}
         />
       </Block>
+
+      {props.clubId ? (
+        <Block accent={props.accent} label="VIDÉO">
+          <JoueurMesVideosPanel
+            clubId={props.clubId}
+            playerUid={props.playerUid}
+            accent={props.accent}
+          />
+        </Block>
+      ) : null}
 
       {isAmateurProductLine(props.productLine) ? (
         <Block accent={props.accent} label="UNIVERS">

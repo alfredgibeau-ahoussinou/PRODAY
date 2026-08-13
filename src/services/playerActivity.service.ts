@@ -45,7 +45,7 @@ export const playerActivityService = {
         playerActivityFromFirestore(d.id, d.data() as Record<string, unknown>)
       );
     } catch (error) {
-      console.error('[playerActivityService] listForPlayer:', error);
+      console.warn('[playerActivityService] listForPlayer:', error);
       return [];
     }
   },

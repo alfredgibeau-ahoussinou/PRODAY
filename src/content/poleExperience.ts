@@ -326,7 +326,7 @@ export function getTabShortLabel(
     if (tab === 'home') return 'Tribune';
     if (tab === 'matchs') return 'Matchs';
     if (tab === 'feed') return 'Suivis';
-    if (tab === 'messages') return 'Débats';
+    if (tab === 'messages') return 'Fil';
     if (tab === 'reels') return 'Moments';
     if (tab === 'profil') return 'Compte';
     if (tab === 'shop') return 'Shop';

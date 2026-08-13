@@ -1,18 +1,21 @@
 import React, { useMemo, useState } from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  StyleSheet,
-} from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import type { User } from '../models/User';
 import { canContactMinors } from '../models/User';
 import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { StarRating } from '../components/StarRating';
 import { Icon } from '../components/ui/Icon';
-import { spacing, radius, shadows } from '../theme/designTokens';
-import type { AppColors } from '../theme/universeTheme';
+import { ProDayText } from '../components/ui/ProDayText';
+import { PressableSpring } from '../components/motion';
+import {
+  CoachActionRow,
+  CoachEmptyState,
+  CoachKpiRow,
+  CoachSectionCard,
+} from '../components/coach/coachPortalUi';
+import { CoachPageFrame } from '../components/coach/CoachPageFrame';
+import { COACH_SITE, getCoachPageIdentity } from '../content/coachPageIdentity';
+import { spacing } from '../theme/designTokens';
 import { useAppTheme } from '../context/ProductLineContext';
 import { useAuth } from '../context/AuthContext';
 import { TabScreenShell } from '../components/app/TabScreenShell';
@@ -42,12 +45,11 @@ export const CoachProfileScreen: React.FC<CoachProfileScreenProps> = ({
   onContact,
   onHire,
 }) => {
-  const { colors: themeColors, productLine } = useAppTheme();
+  const { productLine } = useAppTheme();
   const { profile: myProfile } = useAuth();
-  const styles = useMemo(() => createCoachStyles(themeColors), [themeColors]);
   const useShellHeader =
     isSubScreenShellEnabled(myProfile, 'staff') && myProfile?.uid !== staff.uid;
-  const intelligence = useSectionIntelligence('recrutement', myProfile ?? null, productLine, {
+  useSectionIntelligence('recrutement', myProfile ?? null, productLine, {
     staffMode: true,
   });
   const [tab, setTab] = useState<TabId>('profil');
@@ -56,81 +58,233 @@ export const CoachProfileScreen: React.FC<CoachProfileScreenProps> = ({
   const roleLabel = staff.role === 'agent' ? 'Agent sportif' : 'Entraîneur principal';
   const verified = staff.is_verified && staff.verification_status === 'VERIFIED';
   const profileTitle = staff.role === 'agent' ? 'Profil agent' : 'Profil coach';
+  const identity = getCoachPageIdentity('profil');
+  const title = p.job_title?.trim() || roleLabel;
+  const experiences = p.experiences ?? [];
+  const diplomas = p.diplomas_list ?? [];
+  const reviews = p.reviews ?? [];
+  const initial = (staff.display_name?.trim()?.charAt(0) || 'C').toUpperCase();
 
   const scrollBody = (
-    <>
-      <ScrollView stickyHeaderIndices={[1]} showsVerticalScrollIndicator={false}>
-        <View style={styles.hero}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarLetter}>{staff.display_name.charAt(0)}</Text>
-          </View>
-          <View style={styles.nameRow}>
-            <Text style={styles.name}>{staff.display_name}</Text>
-            {verified && (
-              <Icon name="checkmark-circle" size={20} color={themeColors.brandLight} />
-            )}
-          </View>
-          <Text style={styles.jobTitle}>{p.job_title ?? roleLabel}</Text>
-          <View style={styles.locRow}>
-            <Icon name="location" size={14} color={themeColors.textMuted} />
-            <Text style={styles.meta}>
+    <CoachPageFrame identity={identity} showHero={false}>
+      <View style={styles.root}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scroll}
+        >
+          <View style={styles.hero}>
+            <View style={styles.heroTop}>
+              <ProDayText variant="caption" style={styles.kicker}>
+                {profileTitle}
+              </ProDayText>
+              {verified ? (
+                <View style={styles.verifiedPill}>
+                  <Icon name="checkmark-circle" size={12} color={COACH_SITE.accent} />
+                  <ProDayText variant="caption" style={styles.verifiedText}>
+                    Vérifié
+                  </ProDayText>
+                </View>
+              ) : null}
+            </View>
+            <View style={styles.avatar}>
+              <ProDayText variant="title" style={styles.avatarLetter}>
+                {initial}
+              </ProDayText>
+            </View>
+            <ProDayText variant="title" style={styles.name}>
+              {staff.display_name}
+            </ProDayText>
+            <ProDayText variant="caption" style={styles.job}>
+              {title}
+            </ProDayText>
+            <ProDayText variant="caption" style={styles.meta}>
               {staff.city ?? 'France'}
               {staff.department ? ` (${staff.department})` : ''}
-            </Text>
+            </ProDayText>
+            {p.rating != null ? (
+              <View style={styles.ratingWrap}>
+                <StarRating rating={p.rating} />
+              </View>
+            ) : null}
           </View>
-          {verified && (
-            <View style={styles.verifiedPill}>
-              <Text style={styles.verifiedText}>Vérifié</Text>
-            </View>
-          )}
-          {p.rating != null && (
-            <View style={styles.ratingWrap}>
-              <StarRating rating={p.rating} />
-            </View>
-          )}
-        </View>
 
-        <View style={styles.tabBar}>
-          {TABS.map((t) => (
-            <TouchableOpacity
-              key={t.id}
-              style={[styles.tab, tab === t.id && styles.tabActive]}
-              onPress={() => setTab(t.id)}
-            >
-              <Text style={[styles.tabText, tab === t.id && styles.tabTextActive]}>
-                {t.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+          <CoachKpiRow
+            items={[
+              { label: 'Exp.', value: String(experiences.length) },
+              { label: 'Diplômes', value: String(diplomas.length || (p.diploma ? 1 : 0)) },
+              { label: 'Avis', value: String(reviews.length) },
+              {
+                label: 'Note',
+                value: p.rating != null ? p.rating.toFixed(1) : '—',
+                tone: p.rating != null ? COACH_SITE.accent : undefined,
+              },
+            ]}
+          />
 
-        <View style={styles.tabContent}>
-          {tab === 'profil' && <TabProfil staff={staff} />}
-          {tab === 'experience' && <TabExperience staff={staff} />}
-          {tab === 'diplomes' && <TabDiplomes staff={staff} />}
-          {tab === 'avis' && <TabAvis staff={staff} />}
-        </View>
-      </ScrollView>
+          <View style={styles.tabBar}>
+            {TABS.map((item) => {
+              const on = tab === item.id;
+              return (
+                <PressableSpring
+                  key={item.id}
+                  onPress={() => setTab(item.id)}
+                  scaleTo={0.97}
+                  style={[styles.tab, on && styles.tabOn]}
+                >
+                  <ProDayText
+                    variant="caption"
+                    style={[styles.tabText, on && styles.tabTextOn]}
+                  >
+                    {item.label}
+                  </ProDayText>
+                </PressableSpring>
+              );
+            })}
+          </View>
 
-      <View style={styles.footer}>
-        <TouchableOpacity
-          style={[styles.btnOutline, !canContact && styles.btnDisabled]}
-          onPress={() => canContact && onContact?.(staff)}
-          disabled={!canContact}
-        >
-          <Icon name="mail" size={18} color={themeColors.brand} />
-          <Text style={styles.btnOutlineText}>Contacter</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.btnPrimary, !canContact && styles.btnDisabledPrimary]}
-          onPress={() => canContact && onHire?.(staff)}
-          disabled={!canContact}
-        >
-          <Icon name="briefcase" size={18} color="#FFFFFF" />
-          <Text style={styles.btnPrimaryText}>Engager</Text>
-        </TouchableOpacity>
+          {tab === 'profil' ? (
+            <CoachSectionCard kicker="À propos" title={title}>
+              <ProDayText variant="body" style={styles.body}>
+                {p.bio?.trim() ||
+                  'Coach passionné, formation et préparation physique.'}
+              </ProDayText>
+              {p.specialties?.length ? (
+                <View style={styles.tags}>
+                  {p.specialties.map((s) => (
+                    <View key={s} style={styles.tag}>
+                      <ProDayText variant="caption" style={styles.tagText}>
+                        {s}
+                      </ProDayText>
+                    </View>
+                  ))}
+                </View>
+              ) : null}
+              {p.diploma ? (
+                <ProDayText variant="caption" style={styles.diplomaLine}>
+                  Diplôme · {p.diploma}
+                </ProDayText>
+              ) : null}
+            </CoachSectionCard>
+          ) : null}
+
+          {tab === 'experience' ? (
+            experiences.length ? (
+              <CoachSectionCard kicker="Parcours" title="Expérience">
+                {experiences.map((exp, i) => (
+                  <View
+                    key={exp.id}
+                    style={[styles.timelineRow, i > 0 && styles.timelineBorder]}
+                  >
+                    <View style={styles.dot} />
+                    <View style={styles.timelineBody}>
+                      <ProDayText variant="section" style={styles.expTitle}>
+                        {exp.title}
+                      </ProDayText>
+                      <ProDayText variant="caption" style={styles.expOrg}>
+                        {exp.organization}
+                      </ProDayText>
+                      <ProDayText variant="caption" style={styles.expPeriod}>
+                        {exp.period}
+                      </ProDayText>
+                    </View>
+                  </View>
+                ))}
+              </CoachSectionCard>
+            ) : (
+              <CoachEmptyState
+                title="Aucune expérience"
+                body="Ce coach n’a pas encore renseigné son parcours."
+              />
+            )
+          ) : null}
+
+          {tab === 'diplomes' ? (
+            diplomas.length || p.diploma ? (
+              <CoachSectionCard kicker="Certifications" title="Diplômes">
+                {(diplomas.length
+                  ? diplomas
+                  : [
+                      {
+                        id: 'diploma',
+                        name: p.diploma!,
+                        institution: 'Renseigné',
+                        verified: verified,
+                      },
+                    ]
+                ).map((d) => (
+                  <View key={d.id} style={styles.diplomaRow}>
+                    <View style={styles.diplomaIcon}>
+                      <Icon name="school" size={16} color={COACH_SITE.accent} />
+                    </View>
+                    <View style={styles.diplomaInfo}>
+                      <ProDayText variant="section" style={styles.diplomaName}>
+                        {d.name}
+                      </ProDayText>
+                      <ProDayText variant="caption" style={styles.diplomaInst}>
+                        {d.institution}
+                      </ProDayText>
+                    </View>
+                    <ProDayText
+                      variant="caption"
+                      style={d.verified ? styles.badgeOk : styles.badgePending}
+                    >
+                      {d.verified ? 'Vérifié' : 'À vérifier'}
+                    </ProDayText>
+                  </View>
+                ))}
+              </CoachSectionCard>
+            ) : (
+              <CoachEmptyState
+                title="Aucun diplôme"
+                body="Pas encore de certification publiée."
+              />
+            )
+          ) : null}
+
+          {tab === 'avis' ? (
+            reviews.length ? (
+              <CoachSectionCard kicker="Retours" title="Avis">
+                {p.rating != null ? (
+                  <View style={styles.reviewSummary}>
+                    <ProDayText variant="title" style={styles.reviewAvg}>
+                      {p.rating.toFixed(1)}
+                    </ProDayText>
+                    <StarRating rating={p.rating} />
+                  </View>
+                ) : null}
+                {reviews.map((r) => (
+                  <View key={r.id} style={styles.reviewCard}>
+                    <ProDayText variant="section" style={styles.reviewAuthor}>
+                      {r.author_name}
+                    </ProDayText>
+                    <StarRating rating={r.rating} size="sm" />
+                    <ProDayText variant="body" style={styles.body}>
+                      {r.comment}
+                    </ProDayText>
+                  </View>
+                ))}
+              </CoachSectionCard>
+            ) : (
+              <CoachEmptyState title="Pas encore d’avis" body="Les retours apparaîtront ici." />
+            )
+          ) : null}
+        </ScrollView>
+
+        <View style={styles.footer}>
+          <CoachActionRow
+            primary="Engager"
+            onPrimary={() => canContact && onHire?.(staff)}
+            secondary="Contacter"
+            onSecondary={() => canContact && onContact?.(staff)}
+          />
+          {!canContact ? (
+            <ProDayText variant="caption" style={styles.footerHint}>
+              Contact limité pour ce profil.
+            </ProDayText>
+          ) : null}
+        </View>
       </View>
-    </>
+    </CoachPageFrame>
   );
 
   if (useShellHeader) {
@@ -140,294 +294,174 @@ export const CoachProfileScreen: React.FC<CoachProfileScreenProps> = ({
         title={profileTitle}
         subtitle={staff.display_name}
         left={<ScreenBackButton onPress={onBack} />}
-        
         flat
       >
-        <View style={styles.root}>{scrollBody}</View>
+        {scrollBody}
       </TabScreenShell>
     );
   }
 
   return (
-    <View style={styles.root}>
+    <View style={styles.screen}>
       <ScreenHeader title={profileTitle} onBack={onBack} onMenu={() => {}} centered />
       {scrollBody}
     </View>
   );
 };
 
-const TabProfil: React.FC<{ staff: User }> = ({ staff }) => {
-  const { colors } = useAppTheme();
-  const styles = useMemo(() => createCoachStyles(colors), [colors]);
-  const p = staff.profile;
-  return (
-    <>
-      <View style={[styles.block, shadows.card]}>
-        <Text style={styles.blockTitle}>À propos</Text>
-        <Text style={styles.bodyText}>
-          {p.bio ??
-            'Coach passionné avec une expérience en formation de jeunes talents et préparation physique.'}
-        </Text>
-      </View>
-      {p.specialties && p.specialties.length > 0 && (
-        <View style={[styles.block, shadows.card]}>
-          <Text style={styles.blockTitle}>Spécialités</Text>
-          <View style={styles.tags}>
-            {p.specialties.map((s) => (
-              <View key={s} style={styles.tag}>
-                <Text style={styles.tagText}>{s}</Text>
-              </View>
-            ))}
-          </View>
-        </View>
-      )}
-      <TabDiplomes staff={staff} />
-    </>
-  );
-};
-
-const TabExperience: React.FC<{ staff: User }> = ({ staff }) => {
-  const { colors } = useAppTheme();
-  const styles = useMemo(() => createCoachStyles(colors), [colors]);
-  const items = staff.profile.experiences ?? [];
-  if (!items.length) {
-    return <Text style={styles.empty}>Aucune expérience renseignée.</Text>;
-  }
-  return (
-    <View style={[styles.block, shadows.card]}>
-      <Text style={styles.blockTitle}>Expérience</Text>
-      {items.map((exp, i) => (
-        <View key={exp.id} style={[styles.timelineItem, i > 0 && styles.timelineBorder]}>
-          <View style={styles.timelineDot} />
-          <View style={styles.timelineBody}>
-            <Text style={styles.expTitle}>{exp.title}</Text>
-            <Text style={styles.expOrg}>{exp.organization}</Text>
-            <Text style={styles.expPeriod}>{exp.period}</Text>
-          </View>
-        </View>
-      ))}
-    </View>
-  );
-};
-
-const TabDiplomes: React.FC<{ staff: User }> = ({ staff }) => {
-  const { colors } = useAppTheme();
-  const styles = useMemo(() => createCoachStyles(colors), [colors]);
-  const items = staff.profile.diplomas_list ?? [
-    {
-      id: 'd1',
-      name: 'Brevet d\'Entraîneur de Football',
-      institution: 'FFF · 2019',
-      verified: staff.is_verified,
-    },
-    {
-      id: 'd2',
-      name: 'UEFA A Licence',
-      institution: 'UEFA · 2022',
-      verified: staff.is_verified,
-    },
-  ];
-  return (
-    <View style={[styles.block, shadows.card]}>
-      <Text style={styles.blockTitle}>Diplômes</Text>
-      {items.map((d) => (
-        <View key={d.id} style={styles.diplomaRow}>
-          <View style={styles.diplomaIcon}>
-            <Icon name="school" size={20} color={colors.brand} />
-          </View>
-          <View style={styles.diplomaInfo}>
-            <Text style={styles.diplomaName}>{d.name}</Text>
-            <Text style={styles.diplomaInst}>{d.institution}</Text>
-          </View>
-          {d.verified ? (
-            <View style={styles.diplomaVerified}>
-              <Text style={styles.diplomaVerifiedText}>Vérifié</Text>
-            </View>
-          ) : (
-            <View style={styles.diplomaPending}>
-              <Text style={styles.diplomaPendingText}>À vérifier</Text>
-            </View>
-          )}
-        </View>
-      ))}
-    </View>
-  );
-};
-
-const TabAvis: React.FC<{ staff: User }> = ({ staff }) => {
-  const { colors } = useAppTheme();
-  const styles = useMemo(() => createCoachStyles(colors), [colors]);
-  const items = staff.profile.reviews ?? [];
-  if (!items.length) {
-    return <Text style={styles.empty}>Pas encore d&apos;avis.</Text>;
-  }
-  return (
-    <>
-      {staff.profile.rating != null && (
-        <View style={[styles.block, shadows.card, styles.reviewSummary]}>
-          <Text style={styles.reviewAvg}>{staff.profile.rating.toFixed(1)}</Text>
-          <StarRating rating={staff.profile.rating} />
-        </View>
-      )}
-      {items.map((r) => (
-        <View key={r.id} style={[styles.block, shadows.card]}>
-          <Text style={styles.reviewAuthor}>{r.author_name}</Text>
-          <StarRating rating={r.rating} size="sm" />
-          <Text style={styles.bodyText}>{r.comment}</Text>
-        </View>
-      ))}
-    </>
-  );
-};
-
-function createCoachStyles(c: AppColors) {
-  return StyleSheet.create({
-  root: { flex: 1, backgroundColor: c.background },
+const styles = StyleSheet.create({
+  screen: { flex: 1, backgroundColor: COACH_SITE.bg },
+  root: { flex: 1, minHeight: 0 },
+  scroll: {
+    paddingHorizontal: spacing.md,
+    paddingBottom: 120,
+    gap: spacing.md,
+  },
   hero: {
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: COACH_SITE.border,
+    borderLeftWidth: 2,
+    borderLeftColor: COACH_SITE.accent,
+    padding: spacing.lg,
+    gap: spacing.xs,
+    backgroundColor: 'rgba(255,255,255,0.02)',
+  },
+  heroTop: {
+    flexDirection: 'row',
     alignItems: 'center',
-    padding: spacing.xl,
-    backgroundColor: c.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: c.border,
+    justifyContent: 'space-between',
+    marginBottom: spacing.sm,
+  },
+  kicker: {
+    color: COACH_SITE.accent,
+    textTransform: 'uppercase',
+    letterSpacing: 2.2,
+    fontSize: 10,
+    fontWeight: '800',
+  },
+  verifiedPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: `${COACH_SITE.accent}88`,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  verifiedText: {
+    color: COACH_SITE.accent,
+    fontWeight: '800',
+    fontSize: 10,
+    letterSpacing: 1,
+    textTransform: 'uppercase',
   },
   avatar: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    backgroundColor: c.brandSoft,
-    justifyContent: 'center',
+    width: 72,
+    height: 72,
     alignItems: 'center',
-    marginBottom: spacing.md,
-    borderWidth: 3,
-    borderColor: c.brand,
+    justifyContent: 'center',
+    backgroundColor: COACH_SITE.soft,
+    borderWidth: 1,
+    borderColor: `${COACH_SITE.accent}99`,
   },
-  avatarLetter: { fontSize: 36, fontWeight: '800', color: c.brand },
-  nameRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  name: { fontSize: 22, fontWeight: '800', color: c.text },
-  jobTitle: { color: c.brand, fontSize: 15, fontWeight: '600', marginTop: 4 },
-  locRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 },
-  meta: { color: c.textSecondary, fontSize: 14 },
-  verifiedPill: {
-    marginTop: spacing.md,
-    backgroundColor: c.successBg,
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: radius.pill,
+  avatarLetter: { color: COACH_SITE.foreground, fontWeight: '800' },
+  name: {
+    color: COACH_SITE.foreground,
+    fontWeight: '800',
+    letterSpacing: -0.5,
+    fontSize: 26,
+    marginTop: spacing.sm,
   },
-  verifiedText: { color: c.success, fontWeight: '700', fontSize: 12 },
-  ratingWrap: { marginTop: spacing.sm },
+  job: { color: COACH_SITE.accent, fontWeight: '700' },
+  meta: { color: COACH_SITE.muted },
+  ratingWrap: { marginTop: spacing.xs },
   tabBar: {
     flexDirection: 'row',
-    backgroundColor: c.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: c.border,
+    gap: 6,
   },
-  tab: { flex: 1, paddingVertical: spacing.md, alignItems: 'center' },
-  tabActive: { borderBottomWidth: 3, borderBottomColor: c.brand },
-  tabText: { color: c.textMuted, fontWeight: '600', fontSize: 13 },
-  tabTextActive: { color: c.brand, fontWeight: '700' },
-  tabContent: { padding: spacing.lg, paddingBottom: 100 },
-  block: {
-    backgroundColor: c.surface,
-    borderRadius: radius.lg,
-    padding: spacing.lg,
-    marginBottom: spacing.md,
-    borderWidth: 1,
-    borderColor: c.border,
+  tab: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 10,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: COACH_SITE.border,
+    backgroundColor: 'rgba(255,255,255,0.02)',
   },
-  blockTitle: { fontSize: 16, fontWeight: '700', color: c.text, marginBottom: spacing.md },
-  bodyText: { color: c.textSecondary, lineHeight: 22, fontSize: 15 },
-  tags: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  tabOn: {
+    borderColor: COACH_SITE.accent,
+    backgroundColor: COACH_SITE.soft,
+  },
+  tabText: {
+    color: COACH_SITE.muted,
+    fontWeight: '700',
+    fontSize: 11,
+    letterSpacing: 0.4,
+  },
+  tabTextOn: { color: COACH_SITE.foreground },
+  body: { color: COACH_SITE.muted, lineHeight: 20, marginTop: spacing.sm },
+  tags: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: spacing.sm },
   tag: {
-    backgroundColor: c.brandSoft,
-    borderRadius: radius.pill,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: `${COACH_SITE.accent}66`,
+    backgroundColor: COACH_SITE.soft,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
   },
-  tagText: { color: c.brand, fontSize: 12, fontWeight: '600' },
-  timelineItem: { flexDirection: 'row', paddingVertical: spacing.md },
-  timelineBorder: { borderTopWidth: 1, borderTopColor: c.border },
-  timelineDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: c.brand,
+  tagText: { color: COACH_SITE.foreground, fontWeight: '700', fontSize: 11 },
+  diplomaLine: { color: COACH_SITE.accent, marginTop: spacing.sm, fontWeight: '700' },
+  timelineRow: { flexDirection: 'row', gap: spacing.sm, paddingVertical: spacing.sm },
+  timelineBorder: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: COACH_SITE.border,
+  },
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: COACH_SITE.accent,
     marginTop: 6,
-    marginRight: spacing.md,
   },
-  timelineBody: { flex: 1 },
-  expTitle: { fontWeight: '700', color: c.text, fontSize: 15 },
-  expOrg: { color: c.brand, marginTop: 2, fontSize: 14 },
-  expPeriod: { color: c.textMuted, fontSize: 12, marginTop: 4 },
+  timelineBody: { flex: 1, gap: 2 },
+  expTitle: { color: COACH_SITE.foreground, fontWeight: '800' },
+  expOrg: { color: COACH_SITE.accent, fontWeight: '700' },
+  expPeriod: { color: COACH_SITE.muted },
   diplomaRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: c.border,
+    gap: spacing.sm,
+    paddingVertical: spacing.sm,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: COACH_SITE.border,
   },
   diplomaIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: c.brandSoft,
+    width: 36,
+    height: 36,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: spacing.md,
+    backgroundColor: COACH_SITE.soft,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: COACH_SITE.border,
   },
-  diplomaInfo: { flex: 1 },
-  diplomaName: { fontWeight: '700', color: c.text, fontSize: 14 },
-  diplomaInst: { color: c.textMuted, fontSize: 12, marginTop: 2 },
-  diplomaVerified: {
-    backgroundColor: c.successBg,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 6,
+  diplomaInfo: { flex: 1, gap: 2 },
+  diplomaName: { color: COACH_SITE.foreground, fontWeight: '800' },
+  diplomaInst: { color: COACH_SITE.muted },
+  badgeOk: { color: COACH_SITE.accent, fontWeight: '800', fontSize: 10 },
+  badgePending: { color: COACH_SITE.muted, fontWeight: '700', fontSize: 10 },
+  reviewSummary: { alignItems: 'center', gap: spacing.xs, marginBottom: spacing.sm },
+  reviewAvg: { color: COACH_SITE.foreground, fontWeight: '800', fontSize: 36 },
+  reviewCard: {
+    gap: spacing.xs,
+    paddingVertical: spacing.sm,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: COACH_SITE.border,
   },
-  diplomaVerifiedText: { color: c.success, fontWeight: '700', fontSize: 11 },
-  diplomaPending: {
-    backgroundColor: c.warningBg,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 6,
-  },
-  diplomaPendingText: { color: c.warning, fontSize: 11, fontWeight: '700' },
-  reviewSummary: { alignItems: 'center' },
-  reviewAvg: { fontSize: 36, fontWeight: '800', color: c.text },
-  reviewAuthor: { fontWeight: '700', color: c.text, marginBottom: spacing.sm },
-  empty: { color: c.textMuted, textAlign: 'center', marginTop: spacing.xl },
+  reviewAuthor: { color: COACH_SITE.foreground, fontWeight: '800' },
   footer: {
-    flexDirection: 'row',
-    gap: spacing.md,
-    padding: spacing.lg,
-    backgroundColor: c.surface,
-    borderTopWidth: 1,
-    borderTopColor: c.border,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: COACH_SITE.border,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    backgroundColor: COACH_SITE.bg,
   },
-  btnOutline: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.sm,
-    borderWidth: 1,
-    borderColor: c.brand,
-    borderRadius: radius.md,
-    paddingVertical: 14,
-  },
-  btnOutlineText: { color: c.brand, fontWeight: '700' },
-  btnPrimary: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.sm,
-    backgroundColor: c.brand,
-    borderRadius: radius.md,
-    paddingVertical: 14,
-  },
-  btnPrimaryText: { color: c.brandInverse, fontWeight: '700' },
-  btnDisabled: { opacity: 0.5 },
-  btnDisabledPrimary: { backgroundColor: c.textMuted },
+  footerHint: { color: COACH_SITE.muted, marginTop: spacing.xs },
 });
-}

@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Switch, TouchableOpacity, View } from 'react-native';
-import { TabScreenShell } from '../components/app/TabScreenShell';
+import { SupporterPageFrame } from '../components/supporter/SupporterPageFrame';
+import { getSupporterPageIdentity } from '../content/supporterPageIdentity';
 import { ProDayText } from '../components/ui/ProDayText';
 import { ProDaySurface } from '../components/ui/ProDaySurface';
 import { PressableSpring, PushScreenTransition } from '../components/motion';
@@ -107,12 +108,7 @@ export const SupporterProfileTabScreen: React.FC = () => {
 
   if (!profile) {
     return (
-      <TabScreenShell
-        caption={t('supporter.shell.caption')}
-        title={t('supporter.profile.title')}
-        subtitle={t('supporter.profile.guestSub')}
-        flat
-      >
+      <SupporterPageFrame identity={getSupporterPageIdentity('compte')} badge="Gratuit">
         <View style={styles.guest}>
           <ProDayText variant="body" muted>
             {t('supporter.profile.guestHint')}
@@ -121,18 +117,13 @@ export const SupporterProfileTabScreen: React.FC = () => {
             {t('supporter.profile.freeForever')}
           </ProDayText>
         </View>
-      </TabScreenShell>
+      </SupporterPageFrame>
     );
   }
 
   return (
     <>
-      <TabScreenShell
-        caption={t('supporter.shell.caption')}
-        title={t('supporter.profile.title')}
-        subtitle={profile.display_name}
-        flat
-      >
+      <SupporterPageFrame identity={getSupporterPageIdentity('compte')} badge="100 % gratuit">
         <ScrollView contentContainerStyle={styles.content}>
           <ProDaySurface variant="module" style={[styles.card, { borderColor: colors.accent }]}>
             <ProDayText variant="eyebrow" accent>
@@ -229,7 +220,7 @@ export const SupporterProfileTabScreen: React.FC = () => {
             </ProDayText>
           </TouchableOpacity>
         </ScrollView>
-      </TabScreenShell>
+      </SupporterPageFrame>
 
       <PushScreenTransition active={showEdit}>
         {showEdit ? (

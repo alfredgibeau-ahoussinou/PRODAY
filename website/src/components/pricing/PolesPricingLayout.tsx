@@ -94,11 +94,16 @@ export function PolesPricingLayout() {
       <div className="sticky top-[4.1rem] z-30 border-b border-white/10 bg-black/70 backdrop-blur-xl sm:top-16">
         <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-3 sm:px-6">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/50">
-              {yearly
-                ? `Annuel · −${ANNUAL_DISCOUNT_PERCENT} %`
-                : "Mensuel · tarif de base"}
-            </p>
+            <div className="min-w-0">
+              <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/50">
+                {yearly
+                  ? `Annuel · −${ANNUAL_DISCOUNT_PERCENT} % · sans engagement`
+                  : "Mensuel · sans engagement"}
+              </p>
+              <p className="mt-1 text-xs text-white/45">
+                Résiliation à tout moment. Parrainage possible via ton lien ou code.
+              </p>
+            </div>
             <div className="inline-flex rounded-full border border-white/15 p-1">
               <button
                 type="button"

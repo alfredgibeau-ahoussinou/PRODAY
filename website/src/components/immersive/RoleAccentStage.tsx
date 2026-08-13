@@ -7,6 +7,7 @@ import type {
   JoueurPositionGroup,
   JoueurSceneKind,
 } from "@/lib/joueurExperienceTheme";
+import { WebGlErrorBoundary } from "./WebGlErrorBoundary";
 
 const RoleAccentCanvas = dynamic(
   () => import("./RoleAccentCanvas").then((m) => m.RoleAccentCanvas),
@@ -84,13 +85,15 @@ export function RoleAccentStage({
       <div className="relative mx-auto max-w-6xl px-4 sm:px-6">
         <div className="relative h-[380px] sm:h-[420px] lg:h-[460px]">
           {active ? (
-            <RoleAccentCanvas
-              role={role}
-              className="absolute inset-0 h-full w-full"
-              sceneKind={sceneKind}
-              position={position}
-              animationIntensity={animationIntensity}
-            />
+            <WebGlErrorBoundary>
+              <RoleAccentCanvas
+                role={role}
+                className="absolute inset-0 h-full w-full"
+                sceneKind={sceneKind}
+                position={position}
+                animationIntensity={animationIntensity}
+              />
+            </WebGlErrorBoundary>
           ) : (
             <div
               className="absolute inset-0"

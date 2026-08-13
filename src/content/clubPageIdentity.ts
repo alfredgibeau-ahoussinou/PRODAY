@@ -209,9 +209,9 @@ export const CLUB_PAGE_IDENTITIES: Record<ClubNavItemId, ClubPageIdentity> = {
   }),
   video: page({
     id: 'video',
-    eyebrow: 'Analyse',
-    title: 'Vidéo & caméras',
-    support: 'BYO ou Pro + Veo — jamais obligatoire.',
+    eyebrow: 'Centre Vidéo',
+    title: 'Centre Vidéo',
+    support: 'Caméra → Match → IA → Clips → Causerie. Veo, XbotGo ou smartphone.',
     icon: 'videocam',
     layout: 'studio',
     motif: 'stripes',

@@ -24,6 +24,7 @@ export type CoachNavItemId =
   | 'matchs'
   | 'match_center'
   | 'smart_tactics'
+  | 'mes_videos'
   | 'forme'
   | 'messages'
   | 'com_staff'
@@ -39,6 +40,8 @@ export type CoachNavItem = {
   tab?: MainTabId;
   /** Soft-lock si pas d’accès Smart Tactics. */
   requiresSmartTactics?: boolean;
+  /** Soft-lock si flag admin `coach_video` OFF. */
+  requiresVideo?: boolean;
   lockMode?: 'soft' | 'hide';
   aiBadge?: boolean;
 };
@@ -135,6 +138,14 @@ export const COACH_NAV_FOLDERS: CoachNavFolder[] = [
         aiBadge: true,
       },
       {
+        id: 'mes_videos',
+        label: 'Mes vidéos',
+        hint: 'Captation · IA · causerie',
+        icon: 'videocam',
+        requiresVideo: true,
+        aiBadge: true,
+      },
+      {
         id: 'forme',
         label: 'Analyse de forme',
         hint: 'Charge · evals · objectifs',
@@ -214,6 +225,7 @@ export const COACH_PITCH_ZONES: {
   { id: 'effectif', label: 'Effectif', title: 'Effectif & stade', nav: 'effectif', x: 0.22, y: 0.38 },
   { id: 'planning', label: 'Plan', title: 'Planning', nav: 'planning', x: 0.78, y: 0.38 },
   { id: 'matchs', label: 'Match', title: 'Prochain match', nav: 'matchs', x: 0.5, y: 0.52 },
-  { id: 'st', label: 'ST', title: 'Tactique IA', nav: 'smart_tactics', x: 0.28, y: 0.72 },
-  { id: 'forme', label: 'Forme', title: 'Analyse de forme', nav: 'forme', x: 0.72, y: 0.72 },
+  { id: 'st', label: 'ST', title: 'Tactique IA', nav: 'smart_tactics', x: 0.22, y: 0.72 },
+  { id: 'video', label: 'Vidéo', title: 'Mes vidéos', nav: 'mes_videos', x: 0.5, y: 0.78 },
+  { id: 'forme', label: 'Forme', title: 'Analyse de forme', nav: 'forme', x: 0.78, y: 0.72 },
 ];

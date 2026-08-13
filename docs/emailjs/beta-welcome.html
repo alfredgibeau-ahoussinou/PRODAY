@@ -1,5 +1,5 @@
 <!--
-  ProDay — Email de bienvenue bêta-testeur
+  ProDay — Email de bienvenue bêta-testeur (style dark brand)
   EmailJS → template_zkbezzh → Content (HTML)
 
   Settings EmailJS :
@@ -8,16 +8,10 @@
   - Subject   : {{subject}}
   - Reply To  : proday.admin@gmail.com
 
-  Variables (envoyées par website/src/lib/betaEmailjs.ts et functions/src/betaWaitlistEmail.ts) :
-  - email          — destinataire (alias To Email)
-  - to_email       — email inscrit
-  - user_email     — idem (alias)
-  - member_role    — « Beta-testeur »
-  - profile_label  — rôle choisi (Joueur, Coach, Club…)
-  - role_label     — « Beta-testeur » (alias member_role)
-  - site_url       — ex. https://proday75.fr
-  - beta_url       — lien espace bêta (/beta/programme?token=…)
-  - subject        — objet dynamique
+  Variables :
+  - email, to_email, user_email
+  - member_role, profile_label, role_label
+  - site_url, beta_url, installer_url, subject
 -->
 <!DOCTYPE html>
 <html lang="fr">
@@ -27,228 +21,83 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <title>{{subject}}</title>
 </head>
-<body style="margin:0;padding:0;background-color:#0a0f1a;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;">
-
-  <!-- Preheader (aperçu boîte mail) -->
+<body style="margin:0;padding:0;background-color:#050505;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;">
   <div style="display:none;max-height:0;overflow:hidden;mso-hide:all;">
-    Bienvenue dans la bêta ProDay — accès prioritaire, programme bêta et builds iOS &amp; Android bientôt.
+    Bienvenue dans la bêta ProDay — accès prioritaire, programme et builds iOS &amp; Android.
   </div>
 
-  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0;padding:0;background-color:#0a0f1a;">
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0;padding:0;background-color:#050505;">
     <tr>
       <td align="center" style="padding:40px 16px;">
-
-        <!-- Conteneur principal -->
-        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" style="max-width:600px;width:100%;background-color:#111827;border-radius:16px;border:1px solid #1e293b;">
-
-          <!-- Header : logo texte + tagline -->
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="560" style="max-width:560px;width:100%;background-color:#0c0c0e;border:1px solid rgba(255,255,255,0.12);">
           <tr>
-            <td align="center" style="padding:40px 32px 24px 32px;border-bottom:1px solid #1e293b;">
-              <p style="margin:0 0 8px 0;font-family:Arial,Helvetica,sans-serif;font-size:26px;line-height:32px;font-weight:700;letter-spacing:0.14em;color:#ffffff;">
-                PRO<span style="color:#22d3ee;">DAY</span>
+            <td style="height:3px;background-color:#0054F0;font-size:0;line-height:0;">&nbsp;</td>
+          </tr>
+          <tr>
+            <td style="padding:28px 32px 22px;border-bottom:1px solid rgba(255,255,255,0.12);">
+              <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:22px;line-height:1;font-weight:700;letter-spacing:0.14em;color:#ffffff;">
+                PRO<span style="color:#4C8BFF;">DAY</span>
               </p>
-              <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:11px;line-height:16px;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:#64748b;">
-                Connecter &middot; Progresser &middot; R&eacute;ussir
+              <p style="margin:10px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:10px;line-height:14px;font-weight:600;letter-spacing:0.2em;text-transform:uppercase;color:#71717a;">
+                Connecter · Progresser · Réussir
               </p>
             </td>
           </tr>
 
-          <!-- Titre + message personnalisé -->
           <tr>
-            <td style="padding:32px 32px 8px 32px;">
-              <p style="margin:0 0 12px 0;font-family:Arial,Helvetica,sans-serif;font-size:11px;line-height:16px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#06b6d4;">
-                Programme b&ecirc;ta
+            <td style="padding:32px;">
+              <p style="margin:0 0 10px;font-family:Arial,Helvetica,sans-serif;font-size:10px;line-height:14px;font-weight:600;letter-spacing:0.22em;text-transform:uppercase;color:#4C8BFF;">
+                Programme bêta
               </p>
-              <h1 style="margin:0 0 20px 0;font-family:Arial,Helvetica,sans-serif;font-size:28px;line-height:36px;font-weight:700;color:#22d3ee;">
-                Bienvenue dans la b&ecirc;ta ProDay
+              <h1 style="margin:0 0 18px;font-family:Arial,Helvetica,sans-serif;font-size:26px;line-height:1.2;font-weight:600;letter-spacing:-0.02em;color:#ffffff;">
+                Bienvenue dans la bêta ProDay
               </h1>
-              <p style="margin:0 0 16px 0;font-family:Arial,Helvetica,sans-serif;font-size:17px;line-height:28px;color:#e2e8f0;">
+              <p style="margin:0 0 16px;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.65;color:#d4d4d8;">
                 Bonjour,
               </p>
-              <p style="margin:0 0 16px 0;font-family:Arial,Helvetica,sans-serif;font-size:17px;line-height:28px;color:#cbd5e1;">
+              <p style="margin:0 0 16px;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.65;color:#d4d4d8;">
                 Merci pour votre inscription en tant que <strong style="color:#ffffff;">{{profile_label}}</strong>.
-                Vous &ecirc;tes officiellement <strong style="color:#22d3ee;">{{member_role}}</strong> — parmi les premiers &agrave; fa&ccedil;onner ProDay sur le terrain.
+                Vous êtes officiellement <strong style="color:#ffffff;">{{member_role}}</strong> — parmi les premiers à façonner ProDay sur le terrain.
               </p>
-              <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:26px;color:#94a3b8;">
-                Inscription enregistr&eacute;e pour <span style="color:#22d3ee;word-break:break-all;">{{to_email}}</span>.
+              <p style="margin:0 0 24px;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.65;color:#a1a1aa;">
+                Inscription enregistrée pour <span style="color:#4C8BFF;word-break:break-all;">{{to_email}}</span>.
               </p>
-            </td>
-          </tr>
 
-          <!-- Badges statut -->
-          <tr>
-            <td style="padding:8px 32px 24px 32px;">
-              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 24px;background:#111114;border:1px solid rgba(255,255,255,0.12);">
                 <tr>
-                  <td width="48%" style="background-color:#0a0f1a;border:1px solid #1e293b;border-radius:12px;padding:16px 18px;">
-                    <p style="margin:0 0 4px 0;font-family:Arial,Helvetica,sans-serif;font-size:10px;line-height:14px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#64748b;">
-                      Votre statut
-                    </p>
-                    <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:22px;font-weight:700;color:#ffffff;">
-                      {{member_role}}
+                  <td style="width:3px;background:#0054F0;font-size:0;line-height:0;">&nbsp;</td>
+                  <td style="padding:18px 20px;">
+                    <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:10px;line-height:14px;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:#4C8BFF;">Votre accès</p>
+                    <p style="margin:8px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.65;color:#a1a1aa;">
+                      Ouvrez votre espace bêta pour le programme, l’installation Android et les guides iOS.
                     </p>
                   </td>
-                  <td width="4%">&nbsp;</td>
-                  <td width="48%" style="background-color:#0a0f1a;border:1px solid #164e63;border-radius:12px;padding:16px 18px;">
-                    <p style="margin:0 0 4px 0;font-family:Arial,Helvetica,sans-serif;font-size:10px;line-height:14px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#64748b;">
-                      Profil suivi
-                    </p>
-                    <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:22px;font-weight:700;color:#22d3ee;">
-                      {{profile_label}}
-                    </p>
+                </tr>
+              </table>
+
+              <table role="presentation" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td style="padding:0 10px 10px 0;">
+                    <a href="{{beta_url}}" style="display:inline-block;background:#0054F0;color:#ffffff;text-decoration:none;font-family:Arial,Helvetica,sans-serif;font-size:12px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;padding:14px 26px;border:1px solid #0054F0;">Espace bêta</a>
+                  </td>
+                  <td style="padding:0 0 10px 0;">
+                    <a href="{{installer_url}}" style="display:inline-block;background:transparent;color:#ffffff;text-decoration:none;font-family:Arial,Helvetica,sans-serif;font-size:12px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;padding:14px 26px;border:1px solid rgba(255,255,255,0.2);">Installer</a>
                   </td>
                 </tr>
               </table>
             </td>
           </tr>
 
-          <!-- Présentation ProDay -->
           <tr>
-            <td style="padding:0 32px 28px 32px;">
-              <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:26px;color:#94a3b8;">
-                <strong style="color:#ffffff;">ProDay</strong> r&eacute;unit Mercato, matchs, tournois, Pulse et CV joueur dans une seule app — pour le foot amateur et semi-pro, avec les univers Man, Woman et Pro.
+            <td style="padding:22px 32px 28px;border-top:1px solid rgba(255,255,255,0.12);background:#09090b;">
+              <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.65;color:#71717a;">
+                Vous recevez cet email car vous êtes inscrit à la bêta ProDay.<br />
+                Questions ? <a href="mailto:proday.admin@gmail.com" style="color:#4C8BFF;text-decoration:none;">proday.admin@gmail.com</a>
+                · <a href="{{site_url}}" style="color:#a1a1aa;text-decoration:none;">proday75.fr</a>
               </p>
             </td>
           </tr>
-
-          <!-- Étapes -->
-          <tr>
-            <td style="padding:0 32px 8px 32px;">
-              <p style="margin:0 0 20px 0;font-family:Arial,Helvetica,sans-serif;font-size:11px;line-height:16px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#06b6d4;">
-                Prochaines &eacute;tapes
-              </p>
-
-              <!-- Étape 1 -->
-              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0 0 20px 0;">
-                <tr>
-                  <td width="36" valign="top" style="padding:0 14px 0 0;">
-                    <table role="presentation" cellpadding="0" cellspacing="0" border="0">
-                      <tr>
-                        <td align="center" width="28" height="28" style="width:28px;height:28px;background-color:#06b6d4;border-radius:50%;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:28px;font-weight:700;color:#0a0f1a;">
-                          1
-                        </td>
-                      </tr>
-                    </table>
-                  </td>
-                  <td valign="top">
-                    <p style="margin:0 0 4px 0;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:22px;font-weight:700;color:#ffffff;">
-                      Cliquez sur le lien d'acc&egrave;s
-                    </p>
-                    <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:22px;color:#94a3b8;">
-                      Ouvrez votre espace b&ecirc;ta personnel pour d&eacute;couvrir le programme et les prochaines actions.
-                    </p>
-                  </td>
-                </tr>
-              </table>
-
-              <!-- Étape 2 -->
-              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0 0 20px 0;">
-                <tr>
-                  <td width="36" valign="top" style="padding:0 14px 0 0;">
-                    <table role="presentation" cellpadding="0" cellspacing="0" border="0">
-                      <tr>
-                        <td align="center" width="28" height="28" style="width:28px;height:28px;background-color:#164e63;border-radius:50%;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:28px;font-weight:700;color:#22d3ee;">
-                          2
-                        </td>
-                      </tr>
-                    </table>
-                  </td>
-                  <td valign="top">
-                    <p style="margin:0 0 4px 0;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:22px;font-weight:700;color:#ffffff;">
-                      Explorez le programme b&ecirc;ta
-                    </p>
-                    <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:22px;color:#94a3b8;">
-                      P&ocirc;les &agrave; tester, feuille de route et infos sur les builds &agrave; venir.
-                    </p>
-                  </td>
-                </tr>
-              </table>
-
-              <!-- Étape 3 -->
-              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0 0 8px 0;">
-                <tr>
-                  <td width="36" valign="top" style="padding:0 14px 0 0;">
-                    <table role="presentation" cellpadding="0" cellspacing="0" border="0">
-                      <tr>
-                        <td align="center" width="28" height="28" style="width:28px;height:28px;background-color:#164e63;border-radius:50%;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:28px;font-weight:700;color:#22d3ee;">
-                          3
-                        </td>
-                      </tr>
-                    </table>
-                  </td>
-                  <td valign="top">
-                    <p style="margin:0 0 4px 0;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:22px;font-weight:700;color:#ffffff;">
-                      APK &amp; TestFlight bient&ocirc;t
-                    </p>
-                    <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:22px;color:#94a3b8;">
-                      Vous serez contact&eacute; en priorit&eacute; pour t&eacute;l&eacute;charger l'app iOS (TestFlight) et Android (APK).
-                    </p>
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-
-          <!-- CTA principal -->
-          <tr>
-            <td align="center" style="padding:16px 32px 32px 32px;">
-              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#0a0f1a;border:1px solid #164e63;border-radius:14px;">
-                <tr>
-                  <td align="center" style="padding:28px 24px;">
-                    <p style="margin:0 0 20px 0;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:22px;color:#94a3b8;">
-                      Votre lien d'acc&egrave;s est pr&ecirc;t. Cliquez ci-dessous pour rejoindre l'espace b&ecirc;ta.
-                    </p>
-                    <table role="presentation" cellpadding="0" cellspacing="0" border="0">
-                      <tr>
-                        <td align="center" bgcolor="#22d3ee" style="border-radius:12px;background-color:#22d3ee;">
-                          <a href="{{beta_url}}" target="_blank" style="display:inline-block;padding:16px 36px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:22px;font-weight:700;color:#0a0f1a;text-decoration:none;border-radius:12px;">
-                            Acc&eacute;der &agrave; la b&ecirc;ta
-                          </a>
-                        </td>
-                      </tr>
-                    </table>
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-
-          <!-- Lien secours -->
-          <tr>
-            <td style="padding:0 32px 32px 32px;">
-              <p style="margin:0 0 10px 0;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:20px;color:#64748b;">
-                Si le bouton ne fonctionne pas, copiez ce lien dans votre navigateur&nbsp;:
-              </p>
-              <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:18px;color:#06b6d4;word-break:break-all;">
-                <a href="{{beta_url}}" target="_blank" style="color:#06b6d4;text-decoration:underline;">{{beta_url}}</a>
-              </p>
-            </td>
-          </tr>
-
-          <!-- Footer -->
-          <tr>
-            <td style="padding:24px 32px 36px 32px;border-top:1px solid #1e293b;">
-              <p style="margin:0 0 8px 0;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:22px;font-weight:600;color:#ffffff;">
-                L'&eacute;quipe ProDay
-              </p>
-              <p style="margin:0 0 16px 0;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:20px;color:#64748b;">
-                Des questions ou des retours ? R&eacute;pondez &agrave; cet email — nous lisons chaque message.
-              </p>
-              <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:22px;color:#64748b;">
-                <a href="mailto:proday.admin@gmail.com" style="color:#22d3ee;text-decoration:none;">proday.admin@gmail.com</a>
-                &nbsp;&middot;&nbsp;
-                <a href="{{site_url}}" style="color:#22d3ee;text-decoration:none;">proday75.fr</a>
-              </p>
-            </td>
-          </tr>
-
         </table>
-
-        <!-- Mention légale -->
-        <p style="margin:20px 0 0 0;font-family:Arial,Helvetica,sans-serif;font-size:11px;line-height:17px;color:#475569;text-align:center;max-width:600px;">
-          Email envoy&eacute; aux beta-testeurs inscrits sur ProDay. Vous recevez ce message car vous vous &ecirc;tes inscrit &agrave; la b&ecirc;ta sur {{site_url}}.
-        </p>
-
       </td>
     </tr>
   </table>

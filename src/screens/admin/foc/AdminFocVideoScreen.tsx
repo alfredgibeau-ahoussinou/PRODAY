@@ -7,6 +7,7 @@ import {
   View,
 } from 'react-native';
 import { AdminFocCard } from '../../../components/admin/foc';
+import { ADMIN_VIDEO_VEO_DEMO } from '../../../content/adminVideoVeoExplainer';
 import { adminService } from '../../../services/admin.service';
 import type { ClubCamera } from '../../../models/ClubCameras';
 import { vendorLabel } from '../../../models/ClubCameras';
@@ -64,6 +65,19 @@ export function AdminFocVideoScreen() {
             tintColor={adminChrome.accent}
           />
         }
+        ListHeaderComponent={
+          <View style={styles.explainCard}>
+            <AdminFocCard>
+              <Text style={styles.explainEyebrow}>{ADMIN_VIDEO_VEO_DEMO.eyebrow}</Text>
+              <Text style={styles.explainTitle}>{ADMIN_VIDEO_VEO_DEMO.title}</Text>
+              <Text style={styles.explainBody}>{ADMIN_VIDEO_VEO_DEMO.lead}</Text>
+              <Text style={styles.explainPitch}>{ADMIN_VIDEO_VEO_DEMO.pitch}</Text>
+              <Text style={styles.explainHint}>
+                Détail complet + script démo : Paramètres → Système.
+              </Text>
+            </AdminFocCard>
+          </View>
+        }
         ListEmptyComponent={
           <Text style={styles.empty}>
             Aucune caméra enregistrée. Les clubs connectent leurs appareils depuis l’espace Club.
@@ -106,6 +120,30 @@ function createStyles() {
     title: { color: adminChrome.text, fontSize: 22, fontWeight: '800' },
     sub: { color: adminChrome.textMuted, fontSize: 13, lineHeight: 18 },
     list: { padding: spacing.md, gap: spacing.sm, paddingBottom: spacing.xl * 2 },
+    explainCard: { marginBottom: spacing.sm },
+    explainEyebrow: {
+      color: adminChrome.accent,
+      fontSize: 10,
+      fontWeight: '800',
+      letterSpacing: 1.4,
+      textTransform: 'uppercase',
+      marginBottom: 4,
+    },
+    explainTitle: { color: adminChrome.text, fontWeight: '800', fontSize: 15, marginBottom: 4 },
+    explainBody: { color: adminChrome.textMuted, fontSize: 12, lineHeight: 17 },
+    explainPitch: {
+      color: adminChrome.text,
+      fontSize: 12,
+      lineHeight: 17,
+      fontWeight: '600',
+      marginTop: 8,
+    },
+    explainHint: {
+      color: adminChrome.accent,
+      fontSize: 11,
+      fontWeight: '700',
+      marginTop: 8,
+    },
     empty: { color: adminChrome.textMuted, padding: spacing.lg, lineHeight: 20 },
     row: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
     dot: { width: 10, height: 10, borderRadius: 5 },

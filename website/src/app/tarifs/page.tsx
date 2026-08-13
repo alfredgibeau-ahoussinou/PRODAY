@@ -8,7 +8,7 @@ import { ROUTES } from "@/lib/routes";
 export const metadata: Metadata = {
   title: "Tarifs ProDay",
   description:
-    "Joueur (Pass 3,99 €), Club Amateur / Essentiel / Premium, Coach, Supporter gratuit, Sponsor. Mensuel ou annuel −20 %.",
+    "Tarifs sans engagement. Mensuel ou annuel −20 %. Parrainage possible. Joueur, Club, Coach, Parent, Supporter, Sponsor.",
 };
 
 export default function PricingPage() {
@@ -19,7 +19,7 @@ export default function PricingPage() {
       <ImmersivePoleHero
         brand="Pro Day Tarifs"
         headline="Un pôle. Un prix."
-        support="Pas de forfait fourre-tout. Tu ouvres l’espace dont tu as besoin : Joueur, Club, Coach, Supporter ou Sponsor."
+        support="Sans engagement. Mensuel ou annuel (−20 %). Tu ouvres l’espace dont tu as besoin — et le parrainage est possible."
         video={visuals.heroVideo}
         poster={visuals.hero}
         primaryHref={ROUTES.betaWaitlist}
@@ -32,7 +32,7 @@ export default function PricingPage() {
 
       <TerminalCta
         title="La bêta est ouverte."
-        description="Teste l’app. Les abonnements store suivent le même modèle."
+        description="Sans engagement. Parrainage possible. Les abonnements store suivent le même modèle."
         primaryHref={ROUTES.betaWaitlist}
         primaryLabel="Rejoindre la bêta"
         secondaryHref={ROUTES.faq}

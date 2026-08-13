@@ -148,11 +148,11 @@ export const SupporterAppShell: React.FC = () => {
             style={[styles.root, { backgroundColor: themeColors.background }]}
             edges={['top', 'left', 'right']}
           >
-            <StatusBar style="dark" />
+            <StatusBar style="light" />
             <ProdayNotificationBridge />
             <ProdayBrainBridge />
             <PoleHelpChatbot />
-            <View style={styles.screen}>
+            <View style={[styles.screen, { backgroundColor: themeColors.background }]}>
               <AnimatedTabContent activeTab={activeTab} tabOrder={screenTabs}>
                 <Screen />
               </AnimatedTabContent>

@@ -23,7 +23,6 @@ const ROLE_LABELS: Record<string, string> = {
   organizer: "Organisateur",
   sponsor: "Sponsor",
   supporter: "Supporter",
-  physio: "Santé",
 };
 
 const GENDER_LABELS: Record<string, string> = {

@@ -46,7 +46,8 @@ describe('clubNavConfig', () => {
 });
 
 describe('resolveClubNavAccess', () => {
-  const allOn = () => true;
+  /** Flags plateforme « ouverts » sauf overrides vidéo admin. */
+  const allOn = (k: string) => k !== 'club_video' && k !== 'coach_video';
 
   it('Amateur : tournois et vidéo verrouillés, calendrier ouvert', () => {
     const folders = resolveClubNavFolders({
@@ -79,6 +80,16 @@ describe('resolveClubNavAccess', () => {
     });
     const items = folders.flatMap((f) => f.items);
     expect(items.find((i) => i.id === 'video')?.locked).toBe(false);
+  });
+
+  it('flag admin club_video débloque la vidéo hors formule', () => {
+    const folders = resolveClubNavFolders({
+      offerId: 'club_amateur',
+      isFeatureEnabled: (k) => k === 'club_video',
+    });
+    const items = folders.flatMap((f) => f.items);
+    expect(items.find((i) => i.id === 'video')?.locked).toBe(false);
+    expect(items.find((i) => i.id === 'events')?.locked).toBe(true);
   });
 
   it('masque boutique si flag shop off', () => {

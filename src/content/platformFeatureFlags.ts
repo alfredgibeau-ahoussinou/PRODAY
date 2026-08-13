@@ -66,12 +66,28 @@ export const PLATFORM_FEATURE_FLAG_META: Record<
   },
   sante_visio: {
     key: 'sante_visio',
-    label: 'Visio Santé',
-    adminHint:
-      'OFF = écran de coupure pour le pôle praticiens (plus d’onglet Santé joueur)',
-    disabledTitle: 'Visio Santé indisponible',
+    label: 'Pôle Santé (retiré)',
+    adminHint: 'Retiré — non configurable. Toujours OFF.',
+    disabledTitle: 'Pôle Santé indisponible',
     disabledMessage:
-      'La téléconsultation est momentanément fermée. L’équipe ProDay la réouvrira depuis l’admin.',
+      'Le pôle Santé n’est plus proposé sur ProDay. Les comptes concernés restent en lecture fermée.',
+  },
+  club_video: {
+    key: 'club_video',
+    label: 'Vidéo Club (Veo)',
+    adminHint:
+      'ON = Centre Vidéo débloqué pour tous les clubs (sinon : formule Tout inclus / Pro + Veo)',
+    disabledTitle: 'Centre Vidéo verrouillé',
+    disabledMessage:
+      'Le Centre Vidéo Club n’est pas activé. Demandez l’ouverture à ProDay ou passez en formule Tout inclus.',
+  },
+  coach_video: {
+    key: 'coach_video',
+    label: 'Vidéo Coach (Veo)',
+    adminHint: 'ON = Mes vidéos accessible aux coachs (captation, Live, IA, causerie)',
+    disabledTitle: 'Mes vidéos verrouillé',
+    disabledMessage:
+      'Le module vidéo Coach n’est pas encore ouvert. Réessayez quand ProDay l’aura activé.',
   },
 };
 

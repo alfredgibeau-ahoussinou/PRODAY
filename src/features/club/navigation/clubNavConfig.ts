@@ -222,8 +222,8 @@ export const CLUB_NAV_FOLDERS: ClubNavFolder[] = [
       },
       {
         id: 'video',
-        label: 'Vidéo & caméras',
-        hint: 'BYO ou Pro + Veo',
+        label: 'Centre Vidéo',
+        hint: 'Caméras · captation · IA',
         icon: 'videocam',
         chapter: 'outils',
         outilsFocus: 'video',

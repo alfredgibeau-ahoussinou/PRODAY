@@ -1,21 +1,22 @@
 import { getTabShortLabel, getVisibleMainTabs } from '../content/poleExperience';
+import {
+  PRO_CLUB_OVERFLOW_TABS,
+  PRO_CLUB_SHELL_TABS,
+  PRO_PLAYER_OVERFLOW_TABS,
+  PRO_PLAYER_SHELL_TABS,
+} from '../navigation/shells/productShellTabs';
 
 describe('club et staff shells', () => {
   it('applique les onglets architecture club (avec Shop et Covoiturage)', () => {
     expect(getVisibleMainTabs('pro', 'club')).toEqual([
-      'home',
-      'covoiturage',
-      'recrutement',
-      'matchs',
-      'messages',
-      'shop',
-      'profil',
+      ...PRO_CLUB_SHELL_TABS,
+      ...PRO_CLUB_OVERFLOW_TABS,
     ]);
-    expect(getTabShortLabel('home', 'pro', 'club')).toBe('Structure');
-    expect(getTabShortLabel('covoiturage', 'pro', 'club')).toBe('Covoiturage');
-    expect(getTabShortLabel('recrutement', 'pro', 'club')).toBe('Recrutement');
-    expect(getTabShortLabel('matchs', 'pro', 'club')).toBe('Calendrier');
-    expect(getTabShortLabel('messages', 'pro', 'club')).toBe('Communication');
+    expect(getTabShortLabel('home', 'pro', 'club')).toBe('Accueil');
+    expect(getTabShortLabel('covoiturage', 'pro', 'club')).toBe('Covoit');
+    expect(getTabShortLabel('recrutement', 'pro', 'club')).toBe('Recrut.');
+    expect(getTabShortLabel('matchs', 'pro', 'club')).toBe('Matchs');
+    expect(getTabShortLabel('messages', 'pro', 'club')).toBe('Comm.');
     expect(getTabShortLabel('profil', 'pro', 'club')).toBe('Vitrine');
   });
 
@@ -41,16 +42,10 @@ describe('club et staff shells', () => {
 
   it('expose un shell pro joueur dédié', () => {
     expect(getVisibleMainTabs('pro', 'player')).toEqual([
-      'home',
-      'reels',
-      'matchs',
-      'messages',
-      'profil',
-      'covoiturage',
-      'recrutement',
-      'sante',
-      'shop',
+      ...PRO_PLAYER_SHELL_TABS,
+      ...PRO_PLAYER_OVERFLOW_TABS,
     ]);
+    expect(getVisibleMainTabs('pro', 'player')).not.toContain('sante');
     expect(getTabShortLabel('home', 'pro', 'player')).toBe('Carrière');
     expect(getTabShortLabel('covoiturage', 'pro', 'player')).toBe('Covoiturage');
     expect(getTabShortLabel('recrutement', 'pro', 'player')).toBe('Opportunités');
@@ -59,4 +54,3 @@ describe('club et staff shells', () => {
     expect(getTabShortLabel('profil', 'pro', 'player')).toBe('Moi');
   });
 });
-

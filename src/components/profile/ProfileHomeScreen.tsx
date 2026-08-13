@@ -58,6 +58,12 @@ import {
   JoueurParamsPanel,
   JoueurVitrinePanel,
 } from '../player/JoueurAccountPanels';
+import { CoachProfileHub } from '../coach/CoachProfileHub';
+import {
+  CoachActivitePanel,
+  CoachParamsPanel,
+  CoachVitrinePanel,
+} from '../coach/CoachAccountPanels';
 import { computeHealthSnapshot } from '../../core/health/healthState.engine';
 import { useJoueurSession } from '../../context/JoueurSessionContext';
 import {
@@ -153,6 +159,8 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
     [props.profile]
   );
   const isPlayer = props.profile.role === 'player';
+  const isCoach = props.profile.role === 'coach';
+  const useHubChrome = isPlayer || isCoach;
   const joueurSession = useJoueurSession();
   const joueurAccent = useMemo(() => {
     if (!isPlayer) return colors.accent;
@@ -221,7 +229,7 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
         id: 'apercu' as const,
         render: () => (
           <ScrollView
-            contentContainerStyle={isPlayer ? { paddingBottom: spacing.xl } : pagePad}
+            contentContainerStyle={useHubChrome ? { paddingBottom: spacing.xl } : pagePad}
             {...scrollProps}
           >
             {isPlayer ? (
@@ -234,6 +242,15 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
                 }
                 gateAgeGroup={joueurSession?.ageGroup}
                 onEdit={props.onEdit}
+              />
+            ) : isCoach ? (
+              <CoachProfileHub
+                profile={props.profile}
+                subscriptionTier={props.subscriptionTier}
+                onEdit={props.onEdit}
+                onPublicProfile={props.onPublicProfile}
+                onAvatarPress={props.onAvatarPress}
+                onSubscriptionPress={props.onSubscriptionPress}
               />
             ) : (
               <>
@@ -327,7 +344,7 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
       {
         id: 'cv' as const,
         render: () => (
-          <ScrollView contentContainerStyle={isPlayer ? styles.managementPad : pagePad} {...scrollProps}>
+          <ScrollView contentContainerStyle={useHubChrome ? styles.managementPad : pagePad} {...scrollProps}>
             {props.profile.role === 'player' ? (
               <JoueurVitrinePanel
                 profile={props.profile}
@@ -354,6 +371,12 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
                   />
                 }
               />
+            ) : isCoach ? (
+              <CoachVitrinePanel
+                profile={props.profile}
+                onEdit={props.onEdit}
+                onPublicProfile={props.onPublicProfile}
+              />
             ) : (
               <ProfileSection title={t('profile.section.career')} subtitle={t('profile.section.careerSub')} first>
                 <InfoLine label={t('profile.field.title')} value={p.job_title} colors={colors} />
@@ -372,11 +395,12 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
       {
         id: 'activite' as const,
         render: () => (
-          <ScrollView contentContainerStyle={isPlayer ? styles.managementPad : pagePad} {...scrollProps}>
+          <ScrollView contentContainerStyle={useHubChrome ? styles.managementPad : pagePad} {...scrollProps}>
             {props.profile.role === 'player' ? (
               <JoueurActivitePanel
                 accent={joueurAccent}
                 productLine={props.productLine}
+                playerUid={props.profile.uid}
                 clubId={props.profile.profile.club_id}
                 appSpace={props.appSpace}
                 selectableAppSpaces={props.selectableAppSpaces}
@@ -385,6 +409,13 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
                 onAnnouncements={props.onAnnouncements}
                 onTeamManagement={props.onTeamManagement}
                 onSetAppSpace={props.onSetAppSpace}
+              />
+            ) : isCoach ? (
+              <CoachActivitePanel
+                profile={props.profile}
+                canManageClub={props.canManageClub}
+                onTeamManagement={props.onTeamManagement}
+                onAnnouncements={props.onAnnouncements}
               />
             ) : (
               <ProfileSection
@@ -435,7 +466,7 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
       {
         id: 'reglages' as const,
         render: () => (
-          <ScrollView contentContainerStyle={isPlayer ? styles.managementPad : pagePad} {...scrollProps}>
+          <ScrollView contentContainerStyle={useHubChrome ? styles.managementPad : pagePad} {...scrollProps}>
             {isPlayer ? (
               <JoueurParamsPanel
                 accent={joueurAccent}
@@ -458,6 +489,21 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
                 onVerificationSuccess={props.onVerificationSuccess}
                 onReferral={props.onReferral}
                 onLegal={props.onLegal}
+                onSignOut={props.onSignOut}
+              />
+            ) : isCoach ? (
+              <CoachParamsPanel
+                profile={props.profile}
+                verifiedStaff={props.verifiedStaff}
+                pendingVerify={props.pendingVerify}
+                showVerificationReminder={props.showPlayerVerificationReminder}
+                onVerificationFlow={props.onVerificationFlow}
+                onVerificationSuccess={props.onVerificationSuccess}
+                onPickDocument={props.onPickDocument}
+                onCreateClub={props.onCreateClub}
+                onJoinClub={props.onJoinClub}
+                onLegal={props.onLegal}
+                onReferral={props.onReferral}
                 onSignOut={props.onSignOut}
               />
             ) : (
@@ -602,6 +648,8 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
       roleLabel,
       t,
       isPlayer,
+      isCoach,
+      useHubChrome,
       joueurAccent,
       playerHealth,
       career,
@@ -612,7 +660,7 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
     ]
   );
 
-  const identityHeader = isPlayer ? null : (
+  const identityHeader = useHubChrome ? null : (
     <ProfileIdentityHeader
       profile={props.profile}
       productLine={props.productLine}
@@ -635,8 +683,8 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
         activeChapter={chapter}
         onChapterChange={setChapter}
         showFooter={false}
-        variant={isPlayer ? 'rail' : 'pills'}
-        compact={isPlayer}
+        variant={useHubChrome ? 'rail' : 'pills'}
+        compact={useHubChrome}
         badges={{
           reglages:
             props.pendingVerify || props.showPlayerVerificationReminder ? 1 : undefined,
@@ -648,7 +696,7 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
   return (
     <View style={styles.root}>
       {identityHeader}
-      <View style={isPlayer ? styles.playerPager : undefined}>{pager}</View>
+      <View style={useHubChrome ? styles.playerPager : undefined}>{pager}</View>
     </View>
   );
 };

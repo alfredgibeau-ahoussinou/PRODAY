@@ -1,4 +1,4 @@
-/** Template email bêta : garder aligné avec functions/src/betaWaitlistEmail.ts */
+/** Template email bêta : garder aligné avec functions/src/betaWaitlistEmail.ts + betaEmailLayout.ts */
 
 export const BETA_MEMBER_ROLE = "Beta-testeur";
 
@@ -57,6 +57,56 @@ function buildBetaInstallerUrl(site: string, accessToken?: string): string {
   return `${site}/beta/installer`;
 }
 
+/** Shell sombre ProDay (miroir de functions/src/betaEmailLayout.ts). */
+function buildProdayEmailShell(opts: {
+  subject: string;
+  bodyHtml: string;
+  footerNote: string;
+}): string {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>${opts.subject}</title>
+</head>
+<body style="margin:0;padding:0;background:#050505;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#ffffff;-webkit-text-size-adjust:100%;">
+  <div style="display:none;max-height:0;overflow:hidden;mso-hide:all;">Your ProDay beta access has been approved.</div>
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#050505;padding:40px 16px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;background:#0c0c0e;border:1px solid rgba(255,255,255,0.12);">
+          <tr>
+            <td style="height:3px;background:#0054F0;font-size:0;line-height:0;">&nbsp;</td>
+          </tr>
+          <tr>
+            <td style="padding:28px 32px 22px;border-bottom:1px solid rgba(255,255,255,0.12);">
+              <p style="margin:0;font-size:22px;line-height:1;font-weight:700;letter-spacing:0.14em;color:#ffffff;">PRO<span style="color:#4C8BFF;">DAY</span></p>
+              <p style="margin:10px 0 0;font-size:10px;line-height:14px;font-weight:600;letter-spacing:0.2em;text-transform:uppercase;color:#71717a;">Connecter · Progresser · Réussir</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:32px;">
+              ${opts.bodyHtml}
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:22px 32px 28px;border-top:1px solid rgba(255,255,255,0.12);background:#09090b;">
+              <p style="margin:0;font-size:12px;line-height:1.65;color:#71717a;">
+                ${opts.footerNote}<br />
+                Questions? <a href="mailto:proday.admin@gmail.com" style="color:#4C8BFF;text-decoration:none;">proday.admin@gmail.com</a>
+                · <a href="https://proday75.fr" style="color:#a1a1aa;text-decoration:none;">proday75.fr</a>
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+}
+
 export function buildBetaWelcomeEmail(params: BetaWelcomeEmailParams): {
   subject: string;
   html: string;
@@ -64,6 +114,7 @@ export function buildBetaWelcomeEmail(params: BetaWelcomeEmailParams): {
 } {
   const site = (params.siteUrl ?? "https://proday75.fr").replace(/\/$/, "");
   const accessUrl = buildBetaAccessUrl(site, params.accessToken);
+  const installerUrl = buildBetaInstallerUrl(site, params.accessToken);
   const subject = "Welcome to the ProDay Beta";
 
   const text = [
@@ -78,64 +129,30 @@ export function buildBetaWelcomeEmail(params: BetaWelcomeEmailParams): {
     "Welcome to ProDay!",
     "",
     `Access your beta space: ${accessUrl}`,
-    `Installer (Android APK): ${buildBetaInstallerUrl(site, params.accessToken)}`,
+    `Installer (Android APK): ${installerUrl}`,
   ].join("\n");
 
-  const html = `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>${subject}</title>
-</head>
-<body style="margin:0;padding:0;background:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#0a0a0a;">
-  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f1f5f9;padding:32px 16px;">
-    <tr>
-      <td align="center">
-        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;background:#ffffff;border-radius:16px;overflow:hidden;border:1px solid #e2e8f0;">
-          <tr>
-            <td style="background:#0a0a0a;padding:28px 32px;">
-              <p style="margin:0;font-size:22px;font-weight:700;color:#ffffff;letter-spacing:0.04em;">PRODAY</p>
-              <p style="margin:8px 0 0;font-size:12px;color:#94a3b8;letter-spacing:0.12em;text-transform:uppercase;">Connecter • Progresser • Réussir</p>
-            </td>
-          </tr>
-          <tr>
-            <td style="padding:32px;">
-              <h1 style="margin:0 0 16px;font-size:22px;line-height:1.3;color:#0a0a0a;">Welcome to the ProDay Beta</h1>
-              <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#334155;">
-                Congratulations!
-              </p>
-              <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#334155;">
-                Your beta access request has been approved.
-              </p>
-              <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#334155;">
-                You can now access ProDay and discover all of its features.
-              </p>
-              <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#334155;">
-                Our team will contact you again soon with additional information.
-              </p>
-              <p style="margin:0 0 24px;font-size:15px;line-height:1.6;color:#334155;">
-                Welcome to ProDay!
-              </p>
-              <a href="${accessUrl}" style="display:inline-block;background:#0a0a0a;color:#ffffff;text-decoration:none;font-size:14px;font-weight:600;padding:14px 28px;border-radius:999px;">
-                Access your beta space
-              </a>
-            </td>
-          </tr>
-          <tr>
-            <td style="padding:20px 32px 28px;border-top:1px solid #e2e8f0;">
-              <p style="margin:0;font-size:12px;line-height:1.6;color:#94a3b8;">
-                Message sent to ${params.email}.<br />
-                Questions? <a href="mailto:proday.admin@gmail.com" style="color:#475569;">proday.admin@gmail.com</a>
-              </p>
-            </td>
-          </tr>
-        </table>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>`;
+  const html = buildProdayEmailShell({
+    subject,
+    footerNote: `Message sent to ${params.email}.`,
+    bodyHtml: `
+      <p style="margin:0 0 10px;font-size:10px;line-height:14px;font-weight:600;letter-spacing:0.22em;text-transform:uppercase;color:#4C8BFF;">Approved</p>
+      <h1 style="margin:0 0 18px;font-size:26px;line-height:1.2;font-weight:600;letter-spacing:-0.02em;color:#ffffff;">Welcome to the ProDay Beta</h1>
+      <p style="margin:0 0 16px;font-size:15px;line-height:1.65;color:#d4d4d8;">Congratulations! Your beta access request has been approved.</p>
+      <p style="margin:0 0 16px;font-size:15px;line-height:1.65;color:#d4d4d8;">You can now access ProDay and discover all of its features. Our team will contact you again soon with additional information.</p>
+      <p style="margin:0 0 24px;font-size:15px;line-height:1.65;color:#d4d4d8;">Profile: <strong style="color:#ffffff;">${params.roleLabel}</strong></p>
+      <table role="presentation" cellspacing="0" cellpadding="0">
+        <tr>
+          <td style="padding:0 10px 10px 0;">
+            <a href="${accessUrl}" style="display:inline-block;background:#0054F0;color:#ffffff;text-decoration:none;font-size:12px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;padding:14px 26px;border:1px solid #0054F0;">Open beta space</a>
+          </td>
+          <td style="padding:0 0 10px 0;">
+            <a href="${installerUrl}" style="display:inline-block;background:transparent;color:#ffffff;text-decoration:none;font-size:12px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;padding:14px 26px;border:1px solid rgba(255,255,255,0.2);">Installer</a>
+          </td>
+        </tr>
+      </table>
+    `,
+  });
 
   return { subject, html, text };
 }

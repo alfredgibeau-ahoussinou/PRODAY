@@ -9,6 +9,7 @@ import {
 } from '../../content/platformFeatureFlags';
 import { AdminSectionHeader } from './AdminSectionHeader';
 import { AdminSettingsCard } from './AdminSettingsCard';
+import { AdminVideoVeoExplainer } from './AdminVideoVeoExplainer';
 import { useAdminStyles } from './adminStyles';
 import { spacing, radius } from '../../theme/designTokens';
 import type { AppColors } from '../../theme/universeTheme';
@@ -21,6 +22,8 @@ const FLAG_ROWS: PlatformFeatureFlagKey[] = [
   'supporter',
   'shop',
 ];
+
+const VIDEO_FLAG_ROWS: PlatformFeatureFlagKey[] = ['club_video', 'coach_video'];
 
 export const AdminPlatformConfigPanel: React.FC = () => {
   const { profile, firebaseUser } = useAuth();
@@ -67,7 +70,6 @@ export const AdminPlatformConfigPanel: React.FC = () => {
 
   const toggleMaintenance = async (value: boolean) => {
     if (!config) return;
-    // Optimistic — l’écoute live des autres clients se déclenche après Firestore.
     setConfig({ ...config, maintenance_mode: value });
     await save({
       maintenance_mode: value,
@@ -77,19 +79,12 @@ export const AdminPlatformConfigPanel: React.FC = () => {
     });
   };
 
-  const toggleSanteVisio = async (value: boolean) => {
+  const toggleFlag = async (key: keyof PlatformFeatureFlags, value: boolean) => {
     if (!config) return;
     setConfig({
       ...config,
-      feature_flags: { ...config.feature_flags, sante_visio: value },
+      feature_flags: { ...config.feature_flags, [key]: value },
     });
-    await save({
-      feature_flags: { ...config.feature_flags, sante_visio: value },
-    });
-  };
-
-  const toggleFlag = async (key: keyof PlatformFeatureFlags, value: boolean) => {
-    if (!config) return;
     await save({ feature_flags: { ...config.feature_flags, [key]: value } });
   };
 
@@ -97,12 +92,11 @@ export const AdminPlatformConfigPanel: React.FC = () => {
     return <ActivityIndicator color={c.brand} style={{ marginVertical: spacing.lg }} />;
   }
 
-  const santeVisioMeta = PLATFORM_FEATURE_FLAG_META.sante_visio;
-  const santeVisioOn = config.feature_flags.sante_visio;
-
   return (
     <View>
       <AdminSectionHeader title="Configuration plateforme" />
+
+      <AdminVideoVeoExplainer />
 
       <AdminSettingsCard
         icon="shield"
@@ -143,32 +137,31 @@ export const AdminPlatformConfigPanel: React.FC = () => {
         />
       </AdminSettingsCard>
 
-      <AdminSettingsCard icon="heart" title="Visio Santé">
-        {!santeVisioOn ? (
-          <View style={styles.liveBanner}>
-            <Text style={styles.liveBannerText}>
-              Visio Santé coupée. Pôle Santé et praticiens voient l’écran de coupure en
-              direct (comme la maintenance).
-            </Text>
-          </View>
-        ) : null}
-        <View style={styles.switchRow}>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.switchLabel}>{santeVisioMeta.label} ouverte</Text>
-            <Text style={styles.hint}>{santeVisioMeta.adminHint}</Text>
-          </View>
-          <Switch
-            value={santeVisioOn}
-            onValueChange={(v) => void toggleSanteVisio(v)}
-            trackColor={{ false: c.border, true: c.brandSoft }}
-            thumbColor={santeVisioOn ? c.brand : c.textMuted}
-            disabled={saving}
-          />
-        </View>
-        <Text style={styles.hint}>
-          Désactivé = écran plein « {santeVisioMeta.disabledTitle} » pour le pôle Santé et les
-          praticiens (admins exclus). Les comptes joueur n’ont plus d’onglet Santé.
+      <AdminSettingsCard icon="videocam" title="Vidéo Veo — pôles Club & Coach">
+        <Text style={[styles.hint, { marginBottom: spacing.sm }]}>
+          Active le Centre Vidéo (Veo, XbotGo, smartphone…) sans changer la formule
+          abonnement. Changements live via{' '}
+          <Text style={styles.mono}>platform_config/main</Text>.
         </Text>
+        {VIDEO_FLAG_ROWS.map((key) => {
+          const meta = PLATFORM_FEATURE_FLAG_META[key];
+          const on = config.feature_flags[key];
+          return (
+            <View key={key} style={styles.switchRow}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.switchLabel}>{meta.label}</Text>
+                <Text style={styles.hint}>{meta.adminHint}</Text>
+              </View>
+              <Switch
+                value={on}
+                onValueChange={(v) => void toggleFlag(key, v)}
+                trackColor={{ false: c.border, true: c.brandSoft }}
+                thumbColor={on ? c.brand : c.textMuted}
+                disabled={saving}
+              />
+            </View>
+          );
+        })}
       </AdminSettingsCard>
 
       <AdminSettingsCard icon="settings" title="Fonctionnalités">

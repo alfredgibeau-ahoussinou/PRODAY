@@ -55,11 +55,12 @@ export const SUPPORTER_SHELL_TABS: MainTabId[] = [
   'home', // Tribune
   'matchs',
   'feed', // Suivis
-  'messages', // Communauté
-  'reels', // Moments
-  'shop',
+  'messages', // Fil
   'profil', // Compte
 ];
+
+/** Secondaires tribune — accessibles depuis Tribune / Compte. */
+export const SUPPORTER_OVERFLOW_TABS: MainTabId[] = ['reels', 'shop'];
 
 export const PRO_CLUB_SHELL_TABS: MainTabId[] = [
   'home', // Accueil cockpit A→Z

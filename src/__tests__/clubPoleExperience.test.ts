@@ -29,7 +29,8 @@ describe('club pole experience (site parity)', () => {
 
   it('covers president hub blocks and invite funnel', () => {
     expect(CLUB_HUB_BLOCKS.length).toBeGreaterThanOrEqual(6);
-    expect(CLUB_MATCH_INVITE_STEPS).toHaveLength(3);
+    expect(CLUB_MATCH_INVITE_STEPS).toHaveLength(4);
+    expect(CLUB_MATCH_INVITE_STEPS[3]?.title).toBe('Filmer');
   });
 
   it('maps hub chips to site sections including offers and video', () => {

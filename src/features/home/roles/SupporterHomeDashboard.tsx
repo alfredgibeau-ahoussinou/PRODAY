@@ -1,38 +1,35 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { View, StyleSheet } from 'react-native';
-import type { User } from '../../../models/User';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
-  StaffRoleHomeShell,
-  StaffSectionTitle,
-  StaffListCard,
-  StaffEmptyCard,
-} from './staffRoleHomeShared';
+  ActivityIndicator,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  View,
+} from 'react-native';
+import type { User } from '../../../models/User';
 import { PressableSpring, StaggerReveal, PushScreenTransition } from '../../../components/motion';
 import { Icon, type IconName } from '../../../components/ui/Icon';
 import { ProDayText } from '../../../components/ui/ProDayText';
 import { useDashboardData } from '../../../hooks/useDashboardData';
 import { useTournaments } from '../../../hooks/useTournaments';
-import { useFavorites } from '../../../hooks/useFavorites';
 import { useProDayBrain } from '../../../hooks/useProDayBrain';
 import { useAppTheme } from '../../../context/ProductLineContext';
 import { useTabNavigationActions } from '../../../hooks/useTabNavigationActions';
-import { useTranslation } from '../../../context/LocaleContext';
 import { formatCalendarDate } from '../../../utils/seasonCalendar';
 import { ReelsPreviewStrip } from '../components/ReelsPreviewStrip';
 import { WeeklyQuestionHomeCard } from '../../../components/weeklyQuestion/WeeklyQuestionHomeCard';
-import { ActivityFeedStrip } from '../components/ActivityFeedStrip';
-import { buildActivityFeed } from '../../v3/engines/activityFeed.engine';
-import type { ActivityFeedItem } from '../../v3/engines/activityFeed.engine';
 import { PlayersListScreen } from '../../../screens/PlayersListScreen';
 import { PlayerProfileScreen } from '../../../screens/PlayerProfileScreen';
-import { FavoritesListScreen } from '../../../screens/FavoritesListScreen';
 import { useUserProfile } from '../../../hooks/useRecruitmentData';
-import { spacing, radius } from '../../../theme/designTokens';
-import type { AppColors } from '../../../theme/universeTheme';
+import { spacing } from '../../../theme/designTokens';
 import { trackV3Event } from '../../../core/analytics/v3Events';
 import { SupporterLiveScoresStrip } from '../../../components/supporter/SupporterLiveScoresStrip';
-import { followsService } from '../../../services/follows.service';
-import type { Follow } from '../../../models/Follow';
+import { SupporterPageFrame } from '../../../components/supporter/SupporterPageFrame';
+import { getSupporterPageIdentity } from '../../../content/supporterPageIdentity';
+import { SUPPORTER_SITE } from '../../../content/supporterPageIdentity';
+import { useFollows } from '../../../hooks/useFollows';
+import { useTranslation } from '../../../context/LocaleContext';
+import { TAB_BAR_CONTENT_INSET } from '../../../components/navigation/BottomTabBar';
 
 export interface SupporterHomeProps {
   profile: User;
@@ -41,76 +38,70 @@ export interface SupporterHomeProps {
   refreshing?: boolean;
 }
 
-type SupporterOverlay = 'players' | 'player_profile' | 'favorites' | null;
+type SupporterOverlay = 'players' | 'player_profile' | null;
 
-type SupporterQuickActionId =
-  | 'matchs'
-  | 'reels'
-  | 'feed'
-  | 'discovery'
-  | 'favorites'
-  | 'shop';
+type ZoneId = 'matchs' | 'suivis' | 'debats' | 'moments' | 'shop' | 'discovery';
 
-const QUICK_ACTIONS: {
-  id: SupporterQuickActionId;
+const ZONES: {
+  id: ZoneId;
   icon: IconName;
-  titleKey: string;
-  subKey: string;
+  title: string;
+  body: string;
   accent?: boolean;
 }[] = [
   {
     id: 'matchs',
-    icon: 'calendar',
-    titleKey: 'roleHome.supporter.action.matchs',
-    subKey: 'roleHome.supporter.action.matchsSub',
+    icon: 'football',
+    title: 'Matchs',
+    body: 'Live & calendrier',
     accent: true,
   },
   {
-    id: 'reels',
-    icon: 'videocam',
-    titleKey: 'roleHome.supporter.action.reels',
-    subKey: 'roleHome.supporter.action.reelsSub',
+    id: 'suivis',
+    icon: 'heart',
+    title: 'Suivis',
+    body: 'Clubs & joueurs',
   },
   {
-    id: 'feed',
-    icon: 'star-four-points',
-    titleKey: 'roleHome.supporter.action.feed',
-    subKey: 'roleHome.supporter.action.feedSub',
+    id: 'debats',
+    icon: 'chat',
+    title: 'Fil',
+    body: 'Question & réponses',
+  },
+  {
+    id: 'moments',
+    icon: 'videocam',
+    title: 'Moments',
+    body: 'Reels communauté',
   },
   {
     id: 'discovery',
     icon: 'search',
-    titleKey: 'roleHome.supporter.action.discovery',
-    subKey: 'roleHome.supporter.action.discoverySub',
-  },
-  {
-    id: 'favorites',
-    icon: 'heart',
-    titleKey: 'roleHome.supporter.action.favorites',
-    subKey: 'roleHome.supporter.action.favoritesSub',
+    title: 'Découvrir',
+    body: 'Joueurs à suivre',
   },
   {
     id: 'shop',
     icon: 'bag',
-    titleKey: 'roleHome.supporter.action.shop',
-    subKey: 'roleHome.supporter.action.shopSub',
+    title: 'Shop',
+    body: 'Merch ProDay',
   },
 ];
 
+/** Tribune home — composition cinéma, pas un dashboard staff. */
 export const SupporterHomeDashboard: React.FC<SupporterHomeProps> = ({
   profile,
   unreadMessages,
   onRefresh,
   refreshing,
 }) => {
-  const { t } = useTranslation();
-  const { colors, productLine } = useAppTheme();
-  const styles = useMemo(() => createActionStyles(colors), [colors]);
+  const { productLine } = useAppTheme();
+  const identity = getSupporterPageIdentity('tribune');
   const { data, refresh } = useDashboardData(profile);
-  const { tournaments, loading: tournamentsLoading, refresh: refreshTournaments } =
-    useTournaments();
-  const { ids: favoriteIds, loading: favoritesLoading, refresh: refreshFavorites } =
-    useFavorites(profile.uid);
+  const { tournaments, refresh: refreshTournaments } = useTournaments();
+  const { players: followedPlayerDocs, clubs: followedClubDocs, refresh: refreshFollows } =
+    useFollows(profile.uid);
+  const { t } = useTranslation();
   const brain = useProDayBrain(profile, productLine);
   const nav = useTabNavigationActions();
 
@@ -119,71 +110,46 @@ export const SupporterHomeDashboard: React.FC<SupporterHomeProps> = ({
     Exclude<SupporterOverlay, 'player_profile'>
   >('players');
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
-  const [follows, setFollows] = useState<Follow[]>([]);
   const { user: selectedPlayer } = useUserProfile(selectedPlayerId);
 
   const upcomingMatches = useMemo(
     () =>
       data.calendarItems
         .filter((item) => item.starts_at.getTime() > Date.now())
-        .slice(0, 4),
-    [data.calendarItems]
+        .slice(0, 3),
+    [data.calendarItems],
   );
 
   const upcomingTournaments = useMemo(
-    () => tournaments.filter((tournament) => tournament.starts_at.getTime() > Date.now()).slice(0, 3),
-    [tournaments]
-  );
-
-  const activityFeed = useMemo(
     () =>
-      buildActivityFeed({
-        uid: profile.uid,
-        teamEvents: data.teamEvents,
-        openMatches: data.openMatches,
-        applications: data.myApplications,
-      }),
-    [profile.uid, data.teamEvents, data.openMatches, data.myApplications]
+      tournaments
+        .filter((tournament) => tournament.starts_at.getTime() > Date.now())
+        .slice(0, 2),
+    [tournaments],
   );
 
   const handleRefresh = useCallback(async () => {
-    await Promise.all([
-      refresh(),
-      refreshTournaments(),
-      refreshFavorites(),
-      profile?.uid
-        ? followsService.listByFollower(profile.uid).then(setFollows).catch(() => setFollows([]))
-        : Promise.resolve(),
-    ]);
+    await Promise.all([refresh(), refreshTournaments(), refreshFollows()]);
     await onRefresh?.();
-  }, [refresh, refreshTournaments, refreshFavorites, onRefresh, profile?.uid]);
+  }, [refresh, refreshTournaments, refreshFollows, onRefresh]);
 
-  useEffect(() => {
-    if (!profile?.uid) return;
-    void followsService
-      .listByFollower(profile.uid)
-      .then(setFollows)
-      .catch(() => setFollows([]));
-  }, [profile?.uid]);
-
-  const handleQuickAction = (id: SupporterQuickActionId) => {
+  const openZone = (id: ZoneId) => {
     trackV3Event('supporter_home_action', { action: id });
     switch (id) {
       case 'matchs':
         nav.openMatchs({ homeTab: 'season' });
         break;
-      case 'reels':
-        nav.setActiveTab('reels');
+      case 'suivis':
+        nav.setActiveTab('feed');
         break;
-      case 'feed':
-        // Supporter: messages tab = Tribune feed
+      case 'debats':
         nav.setActiveTab('messages');
+        break;
+      case 'moments':
+        nav.setActiveTab('reels');
         break;
       case 'discovery':
         setOverlay('players');
-        break;
-      case 'favorites':
-        setOverlay('favorites');
         break;
       case 'shop':
         nav.openShop();
@@ -191,176 +157,172 @@ export const SupporterHomeDashboard: React.FC<SupporterHomeProps> = ({
     }
   };
 
-  const handleActivityPress = useCallback(
-    (item: ActivityFeedItem) => {
-      trackV3Event('activity_feed_tap', { kind: item.kind, tab: item.tab });
-      nav.setActiveTab(item.tab as Parameters<typeof nav.setActiveTab>[0]);
-    },
-    [nav]
-  );
-
-  const favoriteCount = favoriteIds.size;
-  const followedClubs = follows.filter((f) => f.target_type === 'club').slice(0, 4);
-  const followedPlayers = follows.filter((f) => f.target_type === 'player').slice(0, 4);
+  const followedClubs = followedClubDocs.slice(0, 3);
+  const followedPlayers = followedPlayerDocs.slice(0, 4);
 
   return (
     <>
-      <StaffRoleHomeShell
-        profile={profile}
-        role="supporter"
-        unreadMessages={unreadMessages}
-        globalScore={data.pulse.score}
-        loading={data.loading || tournamentsLoading || favoritesLoading}
-        onRefresh={() => void handleRefresh()}
-        refreshing={refreshing}
-      >
-        <StaffSectionTitle
-          title={t('roleHome.supporter.quickActions')}
-          subtitle={t('roleHome.supporter.quickActionsSub')}
-        />
-        <View style={styles.grid}>
-          {QUICK_ACTIONS.map((action, index) => (
-            <StaggerReveal key={action.id} index={index + 1} delayStep={40}>
-              <PressableSpring
-                style={[styles.tile, action.accent && { borderColor: colors.accent }]}
-                onPress={() => handleQuickAction(action.id)}
-                scaleTo={0.97}
-                haptic
-              >
-                <Icon
-                  name={action.icon}
-                  size={20}
-                  color={action.accent ? colors.accent : colors.text}
-                />
-                <ProDayText variant="body" style={styles.tileTitle}>
-                  {t(action.titleKey)}
-                </ProDayText>
-                <ProDayText variant="caption" muted numberOfLines={2}>
-                  {t(action.subKey)}
-                </ProDayText>
-              </PressableSpring>
-            </StaggerReveal>
-          ))}
-        </View>
-
-        <StaffSectionTitle
-          title={t('supporter.home.liveTitle')}
-          subtitle={t('supporter.home.liveSub')}
-        />
-        <SupporterLiveScoresStrip onViewAll={() => nav.openMatchs({ homeTab: 'season' })} />
-
-        <StaffSectionTitle
-          title={t('roleHome.supporter.matchesTitle')}
-          subtitle={t('roleHome.supporter.matchesSub')}
-        />
-        {upcomingMatches.length === 0 ? (
-          <StaffEmptyCard message={t('roleHome.supporter.noMatches')} />
-        ) : (
-          upcomingMatches.map((item, index) => (
-            <StaffListCard
-              key={item.id}
-              index={index + 1}
-              title={item.title}
-              subtitle={item.subtitle}
-              meta={formatCalendarDate(item.starts_at)}
-              onPress={() => nav.openMatchs({ homeTab: 'season' })}
+      <SupporterPageFrame identity={identity} badge="100 % gratuit">
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={styles.pad}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={Boolean(refreshing)}
+              onRefresh={() => void handleRefresh()}
+              tintColor={SUPPORTER_SITE.accent}
             />
-          ))
-        )}
-
-        <StaffSectionTitle
-          title={t('roleHome.supporter.tournamentsTitle')}
-          subtitle={t('roleHome.supporter.tournamentsSub')}
-        />
-        {upcomingTournaments.length === 0 ? (
-          <StaffEmptyCard message={t('roleHome.supporter.noTournaments')} />
-        ) : (
-          upcomingTournaments.map((tournament, index) => (
-            <StaffListCard
-              key={tournament.id}
-              index={index + 5}
-              title={tournament.title}
-              subtitle={tournament.city}
-              meta={formatCalendarDate(tournament.starts_at)}
-              onPress={() => nav.openMatchs({ homeTab: 'tournois' })}
-            />
-          ))
-        )}
-
-        <StaffSectionTitle
-          title={t('supporter.home.followedClubsTitle')}
-          subtitle={t('supporter.home.followedClubsSub')}
-        />
-        {followedClubs.length === 0 ? (
-          <StaffEmptyCard message={t('supporter.home.noFollowedClubs')} />
-        ) : (
-          followedClubs.map((follow, index) => (
-            <StaffListCard
-              key={follow.id}
-              index={index + 6}
-              title={follow.target_label ?? follow.target_id}
-              subtitle={t('supporter.followType.club')}
-              onPress={() => nav.setActiveTab('feed')}
-            />
-          ))
-        )}
-
-        <StaffSectionTitle
-          title={t('supporter.home.followedPlayersTitle')}
-          subtitle={t('supporter.home.followedPlayersSub')}
-        />
-        {followedPlayers.length === 0 ? (
-          <StaffEmptyCard message={t('supporter.home.noFollowedPlayers')} />
-        ) : (
-          followedPlayers.map((follow, index) => (
-            <StaffListCard
-              key={follow.id}
-              index={index + 7}
-              title={follow.target_label ?? follow.target_id}
-              subtitle={t('supporter.followType.player')}
-              onPress={() => {
-                setSelectedPlayerId(follow.target_id);
-                setPlayerReturnOverlay(null);
-                setOverlay('player_profile');
-              }}
-            />
-          ))
-        )}
-
-        <ReelsPreviewStrip
-          items={brain.reelPreviews}
-          onPress={() => nav.setActiveTab('reels')}
-        />
-
-        <WeeklyQuestionHomeCard profile={profile} onOpenFeed={() => nav.setActiveTab('messages')} />
-
-        <StaffSectionTitle
-          title={t('roleHome.supporter.favoritesTitle')}
-          subtitle={t('roleHome.supporter.favoritesSub')}
-        />
-        <StaffListCard
-          index={8}
-          title={
-            favoriteCount > 0
-              ? t('roleHome.supporter.favoritesCount', { n: favoriteCount })
-              : t('roleHome.supporter.favoritesEmpty')
           }
-          subtitle={t('roleHome.supporter.favoritesHint')}
-          meta={favoriteCount > 0 ? String(favoriteCount) : undefined}
-          onPress={() => setOverlay('favorites')}
-        />
+        >
+          {data.loading ? (
+            <ActivityIndicator color={SUPPORTER_SITE.accent} style={{ marginVertical: spacing.lg }} />
+          ) : null}
 
-        {activityFeed.length > 0 ? (
-          <ActivityFeedStrip items={activityFeed} onPressItem={handleActivityPress} />
-        ) : (
-          <StaffListCard
-            index={9}
-            title={t('roleHome.supporter.feedTeaser')}
-            subtitle={t('roleHome.supporter.feedTeaserSub')}
-            onPress={() => nav.setActiveTab('messages')}
+          <View style={styles.liveHead}>
+            <ProDayText variant="caption" style={styles.kicker}>
+              Jour J · Live
+            </ProDayText>
+            {unreadMessages > 0 ? (
+              <ProDayText variant="caption" style={styles.unread}>
+                {unreadMessages} débat(s)
+              </ProDayText>
+            ) : null}
+          </View>
+          <SupporterLiveScoresStrip onViewAll={() => nav.openMatchs({ homeTab: 'season' })} />
+
+          <ProDayText variant="caption" style={styles.kicker}>
+            Zones tribune
+          </ProDayText>
+          <View style={styles.zoneGrid}>
+            {ZONES.map((z, index) => (
+              <StaggerReveal key={z.id} index={index} delayStep={35}>
+                <PressableSpring
+                  onPress={() => openZone(z.id)}
+                  scaleTo={0.97}
+                  haptic
+                  style={[styles.zone, z.accent && styles.zoneAccent]}
+                >
+                  <Icon
+                    name={z.icon}
+                    size={18}
+                    color={z.accent ? SUPPORTER_SITE.accent : SUPPORTER_SITE.foreground}
+                  />
+                  <ProDayText variant="section" style={styles.zoneTitle}>
+                    {z.title}
+                  </ProDayText>
+                  <ProDayText variant="caption" style={styles.zoneBody}>
+                    {z.body}
+                  </ProDayText>
+                </PressableSpring>
+              </StaggerReveal>
+            ))}
+          </View>
+
+          <Section title="Prochains matchs" action="Tous" onAction={() => nav.openMatchs()}>
+            {upcomingMatches.length === 0 ? (
+              <Empty copy="Aucun match à venir. Suis un club pour remplir ta tribune." />
+            ) : (
+              upcomingMatches.map((item) => (
+                <Row
+                  key={item.id}
+                  title={item.title}
+                  meta={formatCalendarDate(item.starts_at)}
+                  onPress={() => nav.openMatchs({ homeTab: 'season' })}
+                />
+              ))
+            )}
+          </Section>
+
+          <Section
+            title="Tournois"
+            action="Voir"
+            onAction={() => nav.openMatchs({ homeTab: 'tournois' })}
+          >
+            {upcomingTournaments.length === 0 ? (
+              <Empty copy="Pas de tournoi annoncé pour l’instant." />
+            ) : (
+              upcomingTournaments.map((tournament) => (
+                <Row
+                  key={tournament.id}
+                  title={tournament.title}
+                  meta={`${tournament.city} · ${formatCalendarDate(tournament.starts_at)}`}
+                  onPress={() => nav.openMatchs({ homeTab: 'tournois' })}
+                />
+              ))
+            )}
+          </Section>
+
+          <Section title="Tes joueurs" action="Gérer" onAction={() => nav.setActiveTab('feed')}>
+            {followedPlayers.length === 0 ? (
+              <Empty copy="Aucun joueur suivi. Découvre des profils ou cherche dans Suivis." />
+            ) : (
+              followedPlayers.map((f) => {
+                const [name, ...rest] = (f.target_label ?? f.target_id).split(' · ');
+                return (
+                  <Row
+                    key={f.id}
+                    title={name}
+                    meta={rest.length ? rest.join(' · ') : t('supporter.home.followedPlayersMeta')}
+                    onPress={() => {
+                      setSelectedPlayerId(f.target_id);
+                      setPlayerReturnOverlay(null);
+                      setOverlay('player_profile');
+                    }}
+                  />
+                );
+              })
+            )}
+          </Section>
+
+          {followedClubs.length > 0 ? (
+            <Section title="Tes clubs" action="Suivis" onAction={() => nav.setActiveTab('feed')}>
+              {followedClubs.map((f) => (
+                <Row
+                  key={f.id}
+                  title={f.target_label ?? f.target_id}
+                  meta="Club"
+                  onPress={() => nav.setActiveTab('feed')}
+                />
+              ))}
+            </Section>
+          ) : null}
+
+          <ReelsPreviewStrip
+            items={brain.reelPreviews}
+            onPress={() => nav.setActiveTab('reels')}
           />
-        )}
-      </StaffRoleHomeShell>
+
+          <WeeklyQuestionHomeCard
+            profile={profile}
+            onOpenFeed={() => nav.setActiveTab('messages')}
+          />
+
+          <PressableSpring
+            onPress={() => setOverlay('players')}
+            scaleTo={0.98}
+            style={styles.favCard}
+          >
+            <Icon name="search" size={16} color={SUPPORTER_SITE.accent} />
+            <View style={styles.favCopy}>
+              <ProDayText variant="section" style={styles.zoneTitle}>
+                {t('supporter.home.discoverPlayers')}
+              </ProDayText>
+              <ProDayText variant="caption" style={styles.zoneBody}>
+                {followedPlayerDocs.length > 0
+                  ? `${followedPlayerDocs.length} joueur(s) suivi(s) · ${t('supporter.home.discoverPlayersSub')}`
+                  : t('supporter.home.discoverPlayersSub')}
+              </ProDayText>
+            </View>
+          </PressableSpring>
+
+          <View style={styles.freeStamp}>
+            <ProDayText variant="caption" style={styles.freeStampText}>
+              Tribune 100 % gratuite · pas de Mercato · pas de paywall
+            </ProDayText>
+          </View>
+        </ScrollView>
+      </SupporterPageFrame>
 
       <PushScreenTransition active={overlay === 'players'}>
         {overlay === 'players' ? (
@@ -386,45 +348,148 @@ export const SupporterHomeDashboard: React.FC<SupporterHomeProps> = ({
           />
         ) : null}
       </PushScreenTransition>
-
-      <PushScreenTransition active={overlay === 'favorites'}>
-        {overlay === 'favorites' ? (
-          <FavoritesListScreen
-            onBack={() => setOverlay(null)}
-            onSelectUser={(user) => {
-              if (user.role === 'player') {
-                setSelectedPlayerId(user.uid);
-                setPlayerReturnOverlay('favorites');
-                setOverlay('player_profile');
-              }
-            }}
-          />
-        ) : null}
-      </PushScreenTransition>
     </>
   );
 };
 
-const createActionStyles = (c: AppColors) =>
-  StyleSheet.create({
-    grid: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      gap: spacing.sm,
-      marginBottom: spacing.md,
-    },
-    tile: {
-      width: '48%',
-      flexGrow: 1,
-      minWidth: 140,
-      padding: spacing.md,
-      borderRadius: radius.lg,
-      borderWidth: 1,
-      borderColor: c.border,
-      backgroundColor: c.surface,
-      gap: spacing.xs,
-    },
-    tileTitle: {
-      fontWeight: '600',
-    },
-  });
+function Section({
+  title,
+  action,
+  onAction,
+  children,
+}: {
+  title: string;
+  action?: string;
+  onAction?: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <View style={styles.section}>
+      <View style={styles.sectionHead}>
+        <ProDayText variant="caption" style={styles.kicker}>
+          {title}
+        </ProDayText>
+        {action && onAction ? (
+          <PressableSpring onPress={onAction} scaleTo={0.97}>
+            <ProDayText variant="caption" style={styles.action}>
+              {action}
+            </ProDayText>
+          </PressableSpring>
+        ) : null}
+      </View>
+      {children}
+    </View>
+  );
+}
+
+function Row({
+  title,
+  meta,
+  onPress,
+}: {
+  title: string;
+  meta: string;
+  onPress: () => void;
+}) {
+  return (
+    <PressableSpring onPress={onPress} scaleTo={0.98} style={styles.row}>
+      <View style={styles.rowCopy}>
+        <ProDayText variant="section" style={styles.zoneTitle}>
+          {title}
+        </ProDayText>
+        <ProDayText variant="caption" style={styles.zoneBody}>
+          {meta}
+        </ProDayText>
+      </View>
+      <Icon name="chevron-forward" size={14} color={SUPPORTER_SITE.muted} />
+    </PressableSpring>
+  );
+}
+
+function Empty({ copy }: { copy: string }) {
+  return (
+    <ProDayText variant="caption" style={styles.empty}>
+      {copy}
+    </ProDayText>
+  );
+}
+
+const styles = StyleSheet.create({
+  scroll: { flex: 1 },
+  pad: {
+    paddingHorizontal: spacing.lg,
+    paddingBottom: TAB_BAR_CONTENT_INSET + spacing.xl,
+    gap: spacing.md,
+  },
+  liveHead: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  kicker: {
+    color: SUPPORTER_SITE.accent,
+    textTransform: 'uppercase',
+    letterSpacing: 2,
+    fontSize: 10,
+    fontWeight: '800',
+  },
+  unread: { color: SUPPORTER_SITE.live, fontWeight: '700', fontSize: 11 },
+  zoneGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  zone: {
+    width: '31%',
+    flexGrow: 1,
+    minWidth: 100,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: SUPPORTER_SITE.border,
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    padding: spacing.sm,
+    gap: 4,
+  },
+  zoneAccent: {
+    borderColor: SUPPORTER_SITE.accent,
+    backgroundColor: SUPPORTER_SITE.soft,
+  },
+  zoneTitle: { color: SUPPORTER_SITE.foreground, fontWeight: '800', fontSize: 13 },
+  zoneBody: { color: SUPPORTER_SITE.muted, fontSize: 11, lineHeight: 15 },
+  section: { gap: 6 },
+  sectionHead: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  action: { color: SUPPORTER_SITE.bright, fontWeight: '700' },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    paddingVertical: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: SUPPORTER_SITE.border,
+  },
+  rowCopy: { flex: 1, gap: 2 },
+  empty: { color: SUPPORTER_SITE.muted, lineHeight: 18, paddingVertical: 8 },
+  favCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: SUPPORTER_SITE.border,
+    borderLeftWidth: 2,
+    borderLeftColor: SUPPORTER_SITE.accent,
+    padding: spacing.md,
+  },
+  favCopy: { flex: 1, gap: 2 },
+  freeStamp: {
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(167, 139, 250, 0.35)',
+    padding: spacing.sm,
+    alignItems: 'center',
+    marginTop: spacing.sm,
+  },
+  freeStampText: {
+    color: SUPPORTER_SITE.free,
+    fontWeight: '700',
+    fontSize: 11,
+    textAlign: 'center',
+  },
+});

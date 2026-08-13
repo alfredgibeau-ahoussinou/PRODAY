@@ -336,7 +336,7 @@ export function ProDayTabPager<T extends string>({
 function createStyles(
   c: { surface: string; border: string; text: string; textMuted: string; surfaceMuted: string; accent: string },
   compact: boolean,
-  variant: 'rail' | 'pills',
+  variant: 'rail' | 'pills' | 'game',
 ) {
   return StyleSheet.create({
     root: { flex: 1, minHeight: 0 },

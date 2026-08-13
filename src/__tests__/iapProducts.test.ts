@@ -30,9 +30,14 @@ describe('iapProducts', () => {
     expect(isKnownIapSku('unknown.sku')).toBe(false);
   });
 
-  it('aligne storeAvailable sur tous les plans payants', () => {
+  it('aligne storeAvailable sur tous les plans payants store', () => {
     for (const planId of PAID_PLANS) {
-      expect(SUBSCRIPTION_PLANS[planId].pricing.storeAvailable).toBe(true);
+      const pricing = SUBSCRIPTION_PLANS[planId].pricing;
+      if (pricing.quoteOnly) {
+        expect(pricing.storeAvailable).toBe(false);
+        continue;
+      }
+      expect(pricing.storeAvailable).toBe(true);
     }
   });
 

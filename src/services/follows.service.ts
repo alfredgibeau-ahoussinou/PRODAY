@@ -2,6 +2,7 @@ import {
   collection,
   deleteDoc,
   doc,
+  getDoc,
   getDocs,
   limit,
   query,
@@ -96,6 +97,31 @@ export const followsService = {
     if (!database) throw new Error('Firebase non configuré');
     const id = followId(followerUid, targetType, targetId);
     await deleteDoc(doc(database, COL, id));
+  },
+
+  async isFollowing(
+    followerUid: string,
+    targetType: FollowTargetType,
+    targetId: string
+  ): Promise<boolean> {
+    if (!isFirebaseConfigured() || !followerUid || !targetId) return false;
+    const authUid = getFirebaseAuth()?.currentUser?.uid;
+    if (!authUid || authUid !== followerUid) return false;
+    const database = getDb();
+    if (!database) return false;
+    try {
+      const snap = await getDoc(doc(database, COL, followId(followerUid, targetType, targetId)));
+      return snap.exists();
+    } catch (error) {
+      // Fallback liste (ex. règles pas encore déployées / get inexistant).
+      try {
+        const all = await this.listByFollower(followerUid);
+        return all.some((f) => f.target_type === targetType && f.target_id === targetId);
+      } catch {
+        console.warn('[followsService] isFollowing:', error);
+        return false;
+      }
+    }
   },
 
   async toggle(

@@ -6,6 +6,8 @@ interface FeedHomeScreenProps {
   profile: User;
   onOpenChat: (threadId: string) => void;
   onOpenMessages: () => void;
+  embedded?: boolean;
+  variant?: 'default' | 'tribune';
 }
 
 export const FeedHomeScreen: React.FC<FeedHomeScreenProps> = (props) => (

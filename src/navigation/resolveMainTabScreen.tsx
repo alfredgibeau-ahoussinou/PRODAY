@@ -135,7 +135,7 @@ export function shouldInjectShopTab(
 ): boolean {
   if (isMedicalPractitionerRole(role) || line === 'sante') return false;
   if (isSponsorRole(role)) return false;
-  if (role === 'supporter' || line === 'supporter') return true;
+  if (role === 'supporter' || line === 'supporter') return false;
   if (line === 'amateur' || line === 'homme' || line === 'woman') return true;
   if (
     role === 'player' ||

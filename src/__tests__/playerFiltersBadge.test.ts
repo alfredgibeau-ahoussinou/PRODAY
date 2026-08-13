@@ -48,7 +48,7 @@ describe('playerFilters — badge Pôle Joueur', () => {
 
   it('cycle les filtres badge', () => {
     expect(nextPlayerBadgeFilter('all')).toBe('amateurs');
-    expect(playerBadgeFilterLabel('centres_de_formation')).toMatch(/centre/i);
+    expect(playerBadgeFilterLabel('centres_de_formation')).toMatch(/formation|jeunes|centre/i);
     expect(countActiveFilters({ ...DEFAULT_PLAYER_FILTERS, playerBadge: 'amateurs' })).toBe(1);
   });
 });

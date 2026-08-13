@@ -18,7 +18,10 @@ export function mapPlatformConfig(data: Record<string, unknown>): PlatformConfig
       shop: flags.shop !== false,
       stages: flags.stages !== false,
       registration_open: flags.registration_open !== false,
-      sante_visio: flags.sante_visio === true,
+      // Pôle Santé retiré — jamais réactivable depuis Firestore.
+      sante_visio: false,
+      club_video: flags.club_video === true,
+      coach_video: flags.coach_video === true,
     },
     updated_at:
       data.updated_at && typeof data.updated_at === 'object' && 'toDate' in data.updated_at

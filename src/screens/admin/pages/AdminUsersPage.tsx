@@ -37,7 +37,6 @@ import {
 import { adminGenderLabel } from '../../../utils/adminUserDisplay';
 import { getUserProductLine } from '../../../utils/productLineAccess';
 import type { ProductLineId } from '../../../models/ProductLine';
-import { MEDICAL_CANONICAL_LABELS } from '../../../screens/signup/signupMedicalI18n';
 
 type UserListFilter = 'all' | 'pending' | UserRole | `line:${ProductLineId}`;
 type FilterScope = 'status' | 'universe' | 'role';
@@ -144,18 +143,13 @@ export const AdminUsersPage: React.FC<{ initialQuery?: string }> = ({ initialQue
   };
 
   const handleCreate = async () => {
-    const { email, password, display_name, city, role, product_line, medical_specialty } =
-      createForm;
+    const { email, password, display_name, city, role, product_line } = createForm;
     if (!email.trim() || !password || !display_name.trim()) {
       Alert.alert('Champs requis', 'Email, mot de passe et nom sont obligatoires.');
       return;
     }
     setCreating(true);
     try {
-      const specialtyLabel =
-        role === 'physio'
-          ? MEDICAL_CANONICAL_LABELS[medical_specialty ?? 'kine']
-          : undefined;
       await adminService.createUser({
         email: email.trim(),
         password,
@@ -163,7 +157,6 @@ export const AdminUsersPage: React.FC<{ initialQuery?: string }> = ({ initialQue
         role,
         city: city.trim() || undefined,
         product_line: resolveAdminProductLine(role, product_line),
-        medical_specialty: specialtyLabel,
       });
       Alert.alert(t('admin.users.created'), t('admin.users.createdBody', { email }));
       setShowCreate(false);

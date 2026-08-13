@@ -33,7 +33,7 @@ describe('platformFeatureFlags', () => {
     expect(featureFlagForTab('home')).toBeNull();
   });
 
-  it('ne masque pas sante via filterTabs (flag dédié sante_visio)', () => {
+  it('ne masque pas sante via filterTabs (pôle retiré hors flags onglets)', () => {
     const flags = {
       ...DEFAULT_PLATFORM_CONFIG.feature_flags,
       sante_visio: false,
@@ -47,5 +47,9 @@ describe('platformFeatureFlags', () => {
     const flags = { ...DEFAULT_PLATFORM_CONFIG.feature_flags, supporter: false };
     expect(isPlatformFeatureEnabled(flags, 'supporter')).toBe(false);
     expect(isPlatformFeatureEnabled(flags, 'registration_open')).toBe(true);
+    expect(isPlatformFeatureEnabled(flags, 'club_video')).toBe(false);
+    expect(isPlatformFeatureEnabled({ ...flags, coach_video: true }, 'coach_video')).toBe(
+      true,
+    );
   });
 });

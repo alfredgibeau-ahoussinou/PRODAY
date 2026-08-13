@@ -18,25 +18,38 @@ export type CoachNavResolvedFolder = {
 
 export type CoachNavAccessInput = {
   canSmartTactics: boolean;
+  /** Flag admin `coach_video` — Mes vidéos. */
+  canVideo: boolean;
 };
 
-/** Résout le menu Coach (soft-lock Tactique IA). */
+function isEntitled(item: CoachNavItem, input: CoachNavAccessInput): boolean {
+  if (item.requiresSmartTactics && !input.canSmartTactics) return false;
+  if (item.requiresVideo && !input.canVideo) return false;
+  return true;
+}
+
+function lockReasonFor(item: CoachNavItem): string {
+  if (item.requiresVideo) {
+    return 'Vidéo Coach : activez « Vidéo Coach (Veo) » dans l’admin Paramètres.';
+  }
+  return 'Tactique IA inclus avec Coach Pro, ou si ton club a l’offre Tout inclus.';
+}
+
+/** Résout le menu Coach (soft-lock Tactique IA + Vidéo). */
 export function resolveCoachNavFolders(input: CoachNavAccessInput): CoachNavResolvedFolder[] {
   const folders: CoachNavResolvedFolder[] = [];
 
   for (const folder of COACH_NAV_FOLDERS) {
     const items: CoachNavResolvedItem[] = [];
     for (const item of folder.items) {
-      const entitled = !item.requiresSmartTactics || input.canSmartTactics;
+      const entitled = isEntitled(item, input);
       if (!entitled && (item.lockMode ?? 'soft') === 'hide') {
         continue;
       }
       items.push({
         ...item,
         locked: !entitled,
-        lockReason: entitled
-          ? undefined
-          : 'Tactique IA inclus avec Coach Pro, ou si ton club a l’offre Tout inclus.',
+        lockReason: entitled ? undefined : lockReasonFor(item),
       });
     }
     if (items.length > 0) {

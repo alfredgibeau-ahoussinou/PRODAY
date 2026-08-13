@@ -18,6 +18,7 @@ import { JoinClubScreen } from './JoinClubScreen';
 import { ClubAnnouncementsScreen } from './ClubAnnouncementsScreen';
 import { MyApplicationsScreen } from './MyApplicationsScreen';
 import { PlayerProfileScreen } from './PlayerProfileScreen';
+import { CoachProfileScreen } from './CoachProfileScreen';
 import { LegalDocumentScreen } from './LegalDocumentScreen';
 import type { LegalDocumentId } from '../content/legalDocuments';
 import { ReferralScreen } from './ReferralScreen';
@@ -435,6 +436,11 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
         <PlayerProfileScreen player={profile} onBack={() => setShowPublicProfile(false)} />
       );
     }
+    if (showPublicProfile && profile.role === 'coach') {
+      return (
+        <CoachProfileScreen staff={profile} onBack={() => setShowPublicProfile(false)} />
+      );
+    }
     if (showCvEditor && profile.role === 'player') {
       return (
         <PlayerCvEditorScreen
@@ -474,7 +480,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
     showCreateClub ||
     showJoinClub ||
     showAnnouncements ||
-    (showPublicProfile && profile.role === 'player') ||
+    (showPublicProfile && (profile.role === 'player' || profile.role === 'coach')) ||
     (showCvEditor && profile.role === 'player') ||
     (showApplications && profile.role === 'player') ||
     legalDocument != null ||

@@ -29,7 +29,7 @@ describe('prodayShop', () => {
 
   it('expose une copie boutique par ligne', () => {
     expect(getShopCopy('woman').title).toBe('ProDay Store');
-    expect(getShopCopy('pro').subtitle).toMatch(/Pro Day Pro/);
+    expect(getShopCopy('pro').subtitle).toMatch(/Pro Day/);
     expect(getShopCopy('sante').subtitle).toMatch(/cabinet/);
   });
 

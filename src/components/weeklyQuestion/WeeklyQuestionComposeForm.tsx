@@ -19,6 +19,7 @@ interface WeeklyQuestionComposeFormProps {
   submitting: boolean;
   onSubmit: (body: string) => Promise<void>;
   compact?: boolean;
+  tribune?: boolean;
 }
 
 export const WeeklyQuestionComposeForm: React.FC<WeeklyQuestionComposeFormProps> = ({
@@ -27,20 +28,37 @@ export const WeeklyQuestionComposeForm: React.FC<WeeklyQuestionComposeFormProps>
   submitting,
   onSubmit,
   compact = false,
+  tribune = false,
 }) => {
-  const styles = useMemo(() => createStyles(c, compact), [c, compact]);
+  const styles = useMemo(() => createStyles(c, compact, tribune), [c, compact, tribune]);
   const [draft, setDraft] = useState('');
   const canSubmit = draft.trim().length > 0 && !submitting;
+  const accent = tribune ? '#3C00F0' : c.brand;
 
   return (
-    <View style={[styles.wrap, { backgroundColor: c.surface, borderColor: c.border }]}>
-      <ProDayText variant="caption" style={styles.label}>
+    <View
+      style={[
+        styles.wrap,
+        {
+          backgroundColor: tribune ? 'rgba(255,255,255,0.03)' : c.surface,
+          borderColor: tribune ? 'rgba(255,255,255,0.1)' : c.border,
+        },
+      ]}
+    >
+      <ProDayText
+        variant="caption"
+        style={[styles.label, tribune && { color: accent }]}
+      >
         {t('feed.weekly.yourAnswer')}
       </ProDayText>
       <TextInput
         style={[
           styles.input,
-          { color: c.text, borderColor: c.border, backgroundColor: c.background },
+          {
+            color: c.text,
+            borderColor: tribune ? 'rgba(255,255,255,0.1)' : c.border,
+            backgroundColor: tribune ? 'rgba(0,0,0,0.35)' : c.background,
+          },
         ]}
         placeholder={t('feed.weekly.composePlaceholder')}
         placeholderTextColor={c.textMuted}
@@ -54,7 +72,10 @@ export const WeeklyQuestionComposeForm: React.FC<WeeklyQuestionComposeFormProps>
           {t('feed.weekly.charCount', { n: draft.length, max: MAX_LENGTH })}
         </ProDayText>
         <PressableSpring
-          style={[styles.submitBtn, { backgroundColor: canSubmit ? c.brand : c.surfaceMuted }]}
+          style={[
+            styles.submitBtn,
+            { backgroundColor: canSubmit ? accent : c.surfaceMuted },
+          ]}
           disabled={!canSubmit}
           onPress={() => {
             prodayHaptics.confirm();
@@ -80,12 +101,14 @@ export const WeeklyQuestionComposeForm: React.FC<WeeklyQuestionComposeFormProps>
   );
 };
 
-function createStyles(c: AppColors, compact: boolean) {
+function createStyles(c: AppColors, compact: boolean, tribune: boolean) {
   return StyleSheet.create({
     wrap: {
       marginHorizontal: spacing.md,
       borderWidth: 1,
-      borderRadius: radius.lg,
+      borderRadius: tribune ? 2 : radius.lg,
+      borderLeftWidth: tribune ? 2 : 1,
+      borderLeftColor: tribune ? '#3C00F0' : undefined,
       padding: spacing.md,
       gap: spacing.sm,
     },
@@ -93,7 +116,7 @@ function createStyles(c: AppColors, compact: boolean) {
     input: {
       minHeight: compact ? 88 : 110,
       borderWidth: 1,
-      borderRadius: radius.md,
+      borderRadius: tribune ? 2 : radius.md,
       padding: spacing.md,
       textAlignVertical: 'top',
       fontSize: 16,
@@ -106,7 +129,7 @@ function createStyles(c: AppColors, compact: boolean) {
       gap: spacing.sm,
     },
     submitBtn: {
-      borderRadius: radius.pill,
+      borderRadius: tribune ? 2 : radius.pill,
       paddingHorizontal: spacing.lg,
       paddingVertical: spacing.sm,
       minWidth: 100,

@@ -16,13 +16,16 @@ import { isFirebaseConfigured } from '../config/firebase';
 import type {
   ClubCamera,
   ClubMatchVideo,
+  ClubVideoCenterStats,
   CreateClubCameraInput,
   CreateMatchVideoInput,
   MatchVideoClip,
+  VideoCaptureScheduleInput,
 } from '../models/ClubCameras';
 import {
   defaultModelForVendor,
   vendorLabel,
+  computeClubVideoCenterStats,
 } from '../models/ClubCameras';
 import {
   getCameraProvider,
@@ -43,15 +46,25 @@ function cameraFromDoc(id: string, data: Record<string, unknown>): ClubCamera {
     vendor: (data.vendor as ClubCamera['vendor']) ?? 'generic',
     brand_label: String(data.brand_label ?? ''),
     model: String(data.model ?? ''),
+    display_name: data.display_name ? String(data.display_name) : undefined,
     status: (data.status as ClubCamera['status']) ?? 'disconnected',
     team_id: data.team_id ? String(data.team_id) : undefined,
     team_label: data.team_label ? String(data.team_label) : undefined,
+    team_ids: Array.isArray(data.team_ids) ? (data.team_ids as string[]) : undefined,
+    team_labels: Array.isArray(data.team_labels)
+      ? (data.team_labels as string[])
+      : undefined,
     last_match_title: data.last_match_title ? String(data.last_match_title) : undefined,
     last_match_at: data.last_match_at ? toDate(data.last_match_at) : undefined,
     storage_used_mb: Number(data.storage_used_mb ?? 0),
     storage_quota_mb:
       data.storage_quota_mb != null ? Number(data.storage_quota_mb) : undefined,
     sync_status: (data.sync_status as ClubCamera['sync_status']) ?? 'idle',
+    battery_pct: data.battery_pct != null ? Number(data.battery_pct) : undefined,
+    connection_label: data.connection_label
+      ? String(data.connection_label)
+      : undefined,
+    last_sync_at: data.last_sync_at ? toDate(data.last_sync_at) : undefined,
     external_device_id: data.external_device_id
       ? String(data.external_device_id)
       : undefined,
@@ -74,9 +87,16 @@ function videoFromDoc(id: string, data: Record<string, unknown>): ClubMatchVideo
     event_id: data.event_id ? String(data.event_id) : undefined,
     event_title: data.event_title ? String(data.event_title) : undefined,
     title: String(data.title ?? 'Match vidéo'),
+    opponent: data.opponent ? String(data.opponent) : undefined,
+    competition: data.competition ? String(data.competition) : undefined,
+    match_type: data.match_type ? String(data.match_type) : undefined,
+    venue: data.venue ? String(data.venue) : undefined,
+    scheduled_at: data.scheduled_at ? toDate(data.scheduled_at) : undefined,
     storage_url: data.storage_url ? String(data.storage_url) : undefined,
     duration_sec: data.duration_sec != null ? Number(data.duration_sec) : undefined,
     highlights_ready: Boolean(data.highlights_ready),
+    ai_ready: data.ai_ready != null ? Boolean(data.ai_ready) : Boolean(data.highlights_ready),
+    talk_ready: Boolean(data.talk_ready),
     clips: Array.isArray(data.clips) ? (data.clips as MatchVideoClip[]) : [],
     player_uids: Array.isArray(data.player_uids)
       ? (data.player_uids as string[])
@@ -286,6 +306,89 @@ export const clubCamerasService = {
       }
     }
     return clips;
+  },
+
+  computeCenterStats(
+    cameras: ClubCamera[],
+    videos: ClubMatchVideo[],
+    now: Date = new Date(),
+  ): ClubVideoCenterStats {
+    return computeClubVideoCenterStats(cameras, videos, now);
+  },
+
+  async setCameraTeams(
+    cameraId: string,
+    teams: { team_ids: string[]; team_labels: string[] },
+  ): Promise<void> {
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+    await updateDoc(doc(database, 'club_cameras', cameraId), {
+      team_ids: teams.team_ids,
+      team_labels: teams.team_labels,
+      team_id: teams.team_ids[0] ?? null,
+      team_label: teams.team_labels[0] ?? null,
+      updated_at: serverTimestamp(),
+    });
+  },
+
+  /** Programme une captation (fiche match + caméra associée). */
+  async scheduleCapture(
+    input: VideoCaptureScheduleInput,
+  ): Promise<{ id: string; message: string }> {
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+    const cameraSnap = await getDocs(
+      query(collection(database, 'club_cameras'), where('club_id', '==', input.club_id), limit(40)),
+    );
+    const camera = cameraSnap.docs
+      .map((d) => cameraFromDoc(d.id, d.data() as Record<string, unknown>))
+      .find((c) => c.id === input.camera_id);
+    if (!camera) throw new Error('Caméra introuvable');
+
+    const title =
+      input.event_title.trim() ||
+      `${input.team_label ?? 'Équipe'} vs ${input.opponent}`.trim();
+
+    const ref = await addDoc(collection(database, 'club_match_videos'), {
+      club_id: input.club_id,
+      camera_id: input.camera_id,
+      vendor: camera.vendor,
+      source: resolveMatchVideoSource(camera.vendor),
+      status: 'processing',
+      team_id: input.team_id ?? camera.team_id ?? null,
+      team_label: input.team_label ?? camera.team_label ?? null,
+      event_id: input.event_id ?? null,
+      event_title: title,
+      title,
+      opponent: input.opponent,
+      competition: input.competition ?? null,
+      match_type: input.match_type ?? null,
+      venue: input.venue ?? null,
+      scheduled_at: Timestamp.fromDate(input.scheduled_at),
+      storage_url: null,
+      duration_sec: null,
+      highlights_ready: false,
+      ai_ready: false,
+      talk_ready: false,
+      clips: [],
+      player_uids: [],
+      share_with: ['coaches'],
+      created_by_uid: input.created_by_uid,
+      created_at: serverTimestamp(),
+      updated_at: serverTimestamp(),
+    });
+
+    await updateDoc(doc(database, 'club_cameras', input.camera_id), {
+      last_match_title: title,
+      last_match_at: Timestamp.fromDate(input.scheduled_at),
+      sync_status: 'ok',
+      updated_at: serverTimestamp(),
+    });
+
+    return {
+      id: ref.id,
+      message: `Captation programmée · ${camera.display_name || camera.model}`,
+    };
   },
 };
 

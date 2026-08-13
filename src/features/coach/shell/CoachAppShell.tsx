@@ -29,6 +29,7 @@ import {
   getCoachPageIdentity,
 } from '../../../content/coachPageIdentity';
 import { CoachPortalScreen } from '../../../screens/coach/CoachPortalScreen';
+import { CoachMesVideosScreen } from '../../../screens/coach/CoachMesVideosScreen';
 import { SmartTacticsPortalScreen } from '../../../screens/smartTactics/SmartTacticsPortalScreen';
 import { TeamManagementScreen } from '../../../screens/TeamManagementScreen';
 import { MatchsScreen } from '../../../screens/MatchsScreen';
@@ -47,6 +48,7 @@ import {
   userCanAccessSmartTactics,
 } from '../../../utils/clubFeatureAccess';
 import { isSubscriptionAccessActive } from '../../../utils/subscriptionLogic';
+import { usePlatformFeatureFlags } from '../../../hooks/usePlatformFeatureFlags';
 import type { MainTabId } from '../../../navigation/mainTabConfig';
 import type { User } from '../../../models/User';
 import { spacing } from '../../../theme/designTokens';
@@ -97,6 +99,8 @@ export function CoachAppShell({ activeTab, onTabChange }: Props) {
     [members],
   );
   const canSmartTactics = userCanAccessSmartTactics(profile, { clubCoversCoach });
+  const { isEnabled } = usePlatformFeatureFlags();
+  const canVideo = isEnabled('coach_video');
   const formulaLabel = clubCoversCoach
     ? 'Couvert club'
     : profile && isSubscriptionAccessActive(profile)
@@ -104,8 +108,8 @@ export function CoachAppShell({ activeTab, onTabChange }: Props) {
       : 'Gratuit';
 
   const folders = useMemo(
-    () => resolveCoachNavFolders({ canSmartTactics }),
-    [canSmartTactics],
+    () => resolveCoachNavFolders({ canSmartTactics, canVideo }),
+    [canSmartTactics, canVideo],
   );
 
   const [navId, setNavId] = useState<CoachNavItemId>(() => coachNavFromTab(activeTab));
@@ -267,6 +271,8 @@ function renderCoachPane(navId: CoachNavItemId, profile: User | null | undefined
       return <CoachPortalScreen embedded hideRail chapter="communication" />;
     case 'smart_tactics':
       return <SmartTacticsPortalScreen />;
+    case 'mes_videos':
+      return profile ? <CoachMesVideosScreen profile={profile} /> : null;
     case 'gestion':
       return profile ? <CoachGestionPane profile={profile} /> : null;
     case 'match_center':

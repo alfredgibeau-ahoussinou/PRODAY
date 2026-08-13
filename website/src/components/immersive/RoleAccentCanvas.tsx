@@ -1,7 +1,7 @@
 "use client";
 
 import { Canvas, useFrame, useLoader } from "@react-three/fiber";
-import { ContactShadows, Environment, Float } from "@react-three/drei";
+import { ContactShadows, Float } from "@react-three/drei";
 import { Suspense, useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import type { RoleVisualId } from "@/lib/roleVisuals";
@@ -27,7 +27,7 @@ function accentForRole(role: RoleVisualId): string {
     case "sponsor":
       return getPoleBrandColors("sponsor").accent;
     case "parent":
-      return getPoleBrandColors("supporter").accent;
+      return getPoleBrandColors("parent").accent;
     default:
       return getPoleBrandColors("joueur").accent;
   }
@@ -685,7 +685,7 @@ export function RoleAccentCanvas({
             shadow-mapSize={[1024, 1024]}
           />
           <directionalLight position={[-2.5, 1.5, -1.5]} intensity={0.45} color={accent} />
-          <Environment preset="city" />
+          {/* Pas d'Environment CDN : bloqué par CSP et plantait le client. */}
           <Float
             speed={floatSpeed}
             rotationIntensity={animationIntensity === "high" ? 0.28 : 0.18}

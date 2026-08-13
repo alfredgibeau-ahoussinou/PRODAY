@@ -29,12 +29,6 @@ import { getUserProductLine } from '../../utils/productLineAccess';
 import { getRoleLabel } from '../../screens/signup/signupFlowConfig';
 import { defaultRoleForProductLine } from '../../content/universeRoles';
 import { useTranslation } from '../../context/LocaleContext';
-import type { MedicalSpecialtyId } from '../../screens/signup/signupRoleExperience';
-import {
-  MEDICAL_CANONICAL_LABELS,
-  getMedicalSpecialtyConfigs,
-  resolveMedicalSpecialtyId,
-} from '../../screens/signup/signupMedicalI18n';
 import { PlayerLevelBadgePill } from '../player/PlayerLevelBadgePill';
 import { isJoueurProductLine, playerLevelBadgeFor } from '../../utils/playerLevelBadge';
 
@@ -82,36 +76,25 @@ export const AdminUserEditModal: React.FC<AdminUserEditModalProps> = ({
   const [jobTitle, setJobTitle] = useState('');
   const [role, setRole] = useState<UserRole>('player');
   const [productLine, setProductLine] = useState<ProductLineId>('amateur');
-  const [medicalSpecialty, setMedicalSpecialty] = useState<MedicalSpecialtyId>('kine');
   const [verificationStatus, setVerificationStatus] = useState<VerificationStatus>('NOT_REQUIRED');
   const [sponsorApproved, setSponsorApproved] = useState(false);
-  const medicalConfigs = useMemo(() => getMedicalSpecialtyConfigs(t), [t]);
 
   useEffect(() => {
     if (!user) return;
     setDisplayName(user.display_name);
     setCity(user.city ?? '');
     setJobTitle(user.profile?.job_title ?? '');
-    setRole(user.role);
-    setProductLine(getUserProductLine(user));
+    setRole(user.role === 'physio' ? 'coach' : user.role);
+    const line = getUserProductLine(user);
+    setProductLine(line === 'sante' ? 'pro_staff' : line);
     setVerificationStatus(user.verification_status);
     setSponsorApproved(user.sponsor_approved === true);
-    const fromProfile =
-      resolveMedicalSpecialtyId(user.profile?.medical_specialty ?? '') ??
-      resolveMedicalSpecialtyId(user.profile?.job_title ?? '');
-    setMedicalSpecialty(fromProfile ?? 'kine');
   }, [user]);
 
   const applyRole = (next: UserRole) => {
     setRole(next);
     setProductLine(resolveAdminProductLine(next, productLine));
     if (next !== 'sponsor') setSponsorApproved(false);
-  };
-
-  const applySpecialty = (id: MedicalSpecialtyId) => {
-    setMedicalSpecialty(id);
-    const label = MEDICAL_CANONICAL_LABELS[id];
-    setJobTitle(label);
   };
 
   const applyProductLine = (line: ProductLineId) => {
@@ -144,8 +127,7 @@ export const AdminUserEditModal: React.FC<AdminUserEditModalProps> = ({
     role === 'recruiter' ||
     role === 'organizer' ||
     role === 'club' ||
-    role === 'sponsor' ||
-    role === 'physio';
+    role === 'sponsor';
 
   return (
     <AnimatedModalShell
@@ -250,34 +232,6 @@ export const AdminUserEditModal: React.FC<AdminUserEditModalProps> = ({
             </View>
           </View>
 
-          {role === 'physio' || productLine === 'sante' ? (
-            <View style={styles.section}>
-              <Text style={styles.label}>Spécialité santé</Text>
-              <Text style={styles.hint}>
-                Les 7 métiers du pôle Santé. Précise le profil visible dans l’app
-              </Text>
-              <View style={styles.roleList}>
-                {medicalConfigs.map((cfg) => {
-                  const active = medicalSpecialty === cfg.id;
-                  return (
-                    <TouchableOpacity
-                      key={cfg.id}
-                      style={[styles.roleCard, active && styles.roleCardOn]}
-                      onPress={() => applySpecialty(cfg.id)}
-                    >
-                      <Text style={[styles.roleCardTitle, active && styles.roleCardTitleOn]}>
-                        {cfg.label}
-                      </Text>
-                      <Text style={[styles.roleCardHint, active && styles.roleCardHintOn]}>
-                        {cfg.tagline}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-            </View>
-          ) : null}
-
           {showJobTitle ? (
             <View style={styles.section}>
               <Text style={styles.label}>Intitulé métier (profil)</Text>
@@ -348,12 +302,8 @@ export const AdminUserEditModal: React.FC<AdminUserEditModalProps> = ({
                 verification_status: verificationStatus,
                 is_verified: verificationStatus === 'VERIFIED',
                 sponsor_approved: role === 'sponsor' ? sponsorApproved : false,
-                job_title:
-                  role === 'physio'
-                    ? MEDICAL_CANONICAL_LABELS[medicalSpecialty]
-                    : jobTitle.trim(),
-                medical_specialty:
-                  role === 'physio' ? MEDICAL_CANONICAL_LABELS[medicalSpecialty] : null,
+                job_title: jobTitle.trim(),
+                medical_specialty: null,
               })
             }
           >

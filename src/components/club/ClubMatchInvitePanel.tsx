@@ -30,7 +30,8 @@ export function ClubMatchInvitePanel({ onOrganize, onPropose, onOpenConvocations
       <ProDayText variant="caption" muted>
         Clubs et coachs autorisés proposent un match dans ProDay : nom, ville, distance,
         catégorie. Espace « Matchs à organiser » : reçues, envoyées, contre-propositions,
-        confirmés.
+        confirmés. Une fois accepté, le match entre au calendrier des deux clubs — et une
+        captation peut être programmée depuis le Centre Vidéo si une caméra est disponible.
       </ProDayText>
 
       <View style={styles.steps}>

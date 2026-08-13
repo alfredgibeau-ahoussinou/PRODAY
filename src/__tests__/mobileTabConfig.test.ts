@@ -22,7 +22,7 @@ describe('mobileTabConfig', () => {
 
   it('affiche une rangée plate pour Supporter (sans Reels central)', () => {
     const rail = getMobileRailLayout('supporter', 'supporter');
-    expect(rail.flat).toEqual(['matchs', 'feed', 'messages', 'reels', 'shop', 'profil']);
+    expect(rail.flat).toEqual(['home', 'matchs', 'feed', 'messages', 'profil']);
     expect(rail.center).toBeNull();
     expect(rail.overflow).toEqual([]);
     expect(rail.left).toEqual([]);

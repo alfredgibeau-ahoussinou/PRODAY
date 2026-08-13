@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
-import { TabScreenShell } from '../components/app/TabScreenShell';
+import { SupporterPageFrame } from '../components/supporter/SupporterPageFrame';
+import { getSupporterPageIdentity } from '../content/supporterPageIdentity';
 import { SupporterFilterBar } from '../components/supporter/SupporterFilterBar';
 import { SupporterMatchCard } from '../components/supporter/SupporterMatchCard';
 import { PressableSpring } from '../components/motion';
@@ -325,12 +326,7 @@ export const SupporterMatchsScreen: React.FC = () => {
   }
 
   return (
-    <TabScreenShell
-      caption={t('supporter.shell.caption')}
-      title={t('supporter.matchs.title')}
-      subtitle={t('supporter.matchs.subtitle')}
-      flat
-    >
+    <SupporterPageFrame identity={getSupporterPageIdentity('matchs')} badge="100 % gratuit">
       <View style={styles.chips}>
         {CHAPTER_KEYS.map((entry) => {
           const active = entry.id === chapter;
@@ -355,7 +351,7 @@ export const SupporterMatchsScreen: React.FC = () => {
       </View>
       <SupporterFilterBar filters={filters} onChange={handleFiltersChange} />
       <ScrollView contentContainerStyle={styles.content}>{content}</ScrollView>
-    </TabScreenShell>
+    </SupporterPageFrame>
   );
 };
 

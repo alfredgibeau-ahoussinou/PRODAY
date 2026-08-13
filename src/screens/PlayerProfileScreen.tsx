@@ -16,7 +16,7 @@ import { useAppTheme } from '../context/ProductLineContext';
 import { buildPlayerCvHtmlFromUser } from '../utils/pdfGenerator';
 import { openPlayerCvHtml } from '../utils/openCvHtml';
 import { useAuth } from '../context/AuthContext';
-import { useFavorites } from '../hooks/useFavorites';
+import { useSupporterPlayerFollow } from '../hooks/useSupporterPlayerFollow';
 import { useRequireAuth } from '../hooks/useRequireAuth';
 import { isSubScreenShellEnabled } from '../hooks/useSubScreenShell';
 import { TabScreenShell } from '../components/app/TabScreenShell';
@@ -128,8 +128,8 @@ export const PlayerProfileScreen: React.FC<PlayerProfileScreenProps> = ({
   const { profile: myProfile } = useAuth();
   const { requireAuth } = useRequireAuth();
   const nav = useTabNavigationActions();
-  const { isFavorite, toggle } = useFavorites(myProfile?.uid);
-  const favorited = isFavorite(player.uid);
+  const { tribune, isFollowingPlayer, togglePlayer } = useSupporterPlayerFollow(myProfile);
+  const favorited = isFollowingPlayer(player.uid);
   const isOwnProfile = myProfile?.uid === player.uid;
   const isStaffView =
     isSubScreenShellEnabled(myProfile, 'staff') && !isOwnProfile;
@@ -367,7 +367,7 @@ export const PlayerProfileScreen: React.FC<PlayerProfileScreenProps> = ({
                 return;
               }
               if (action === 'follow') {
-                void toggle(player.uid);
+                void togglePlayer(player);
               }
             }}
           />
@@ -435,14 +435,31 @@ export const PlayerProfileScreen: React.FC<PlayerProfileScreenProps> = ({
             }}
           />
           <ProDayButton
-            label={favorited ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+            label={
+              tribune
+                ? favorited
+                  ? 'Ne plus suivre'
+                  : 'Suivre ce joueur'
+                : favorited
+                  ? 'Retirer des favoris'
+                  : 'Ajouter aux favoris'
+            }
             icon={favorited ? 'heart' : 'heart-outline'}
             variant="secondary"
             onPress={() => {
               void (async () => {
-                if (!requireAuth('Connectez-vous pour enregistrer des favoris.') || !myProfile) return;
+                if (
+                  !requireAuth(
+                    tribune
+                      ? 'Connectez-vous pour suivre ce joueur.'
+                      : 'Connectez-vous pour enregistrer des favoris.'
+                  ) ||
+                  !myProfile
+                ) {
+                  return;
+                }
                 try {
-                  await toggle(player.uid, 'player');
+                  await togglePlayer(player);
                 } catch (e) {
                   Alert.alert('Erreur', e instanceof Error ? e.message : 'Action impossible.');
                 }
@@ -454,7 +471,13 @@ export const PlayerProfileScreen: React.FC<PlayerProfileScreenProps> = ({
     </View>
   );
 
-  const shellCaption = isStaffView ? 'Scouting' : isOwnProfile ? 'Mon espace' : 'Mercato';
+  const shellCaption = isStaffView
+    ? 'Scouting'
+    : isOwnProfile
+      ? 'Mon espace'
+      : tribune
+        ? 'Tribune'
+        : 'Mercato';
   const shellTitle = isOwnProfile
     ? isWoman
       ? 'Ma fiche joueuse'

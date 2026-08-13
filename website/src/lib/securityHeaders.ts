@@ -7,9 +7,12 @@ export const CONTENT_SECURITY_POLICY = [
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com data:",
   "img-src 'self' data: blob: https:",
+  // Three.js / R3F : workers blob + assets locaux. Pas de CDN HDR externe.
+  "worker-src 'self' blob:",
   "connect-src 'self' https://api.emailjs.com https://*.cloudfunctions.net https://*.cal.com https://cal.com https://*.whereby.com https://whereby.com https://*.daily.co",
   "frame-src 'self' https://cal.com https://*.cal.com https://app.cal.com https://whereby.com https://*.whereby.com https://*.daily.co",
-  "media-src 'self' blob: https://*.daily.co https://*.whereby.com",
+  // Vidéos pôles (/videos/*) + blobs lecture locale
+  "media-src 'self' blob: data: https://*.daily.co https://*.whereby.com",
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",
@@ -26,8 +29,9 @@ export const SECURITY_RESPONSE_HEADERS: Readonly<Record<string, string>> = {
     "accelerometer=(), autoplay=(self), camera=(self \"https://cal.com\" \"https://*.cal.com\" \"https://app.cal.com\" \"https://whereby.com\" \"https://*.whereby.com\" \"https://*.daily.co\"), cross-origin-isolated=(), display-capture=(self \"https://cal.com\" \"https://*.cal.com\" \"https://whereby.com\" \"https://*.whereby.com\"), encrypted-media=(), fullscreen=(self \"https://cal.com\" \"https://*.cal.com\" \"https://app.cal.com\" \"https://whereby.com\" \"https://*.whereby.com\"), geolocation=(), gyroscope=(), magnetometer=(), microphone=(self \"https://cal.com\" \"https://*.cal.com\" \"https://app.cal.com\" \"https://whereby.com\" \"https://*.whereby.com\" \"https://*.daily.co\"), midi=(), payment=(), picture-in-picture=(self), publickey-credentials-get=(), screen-wake-lock=(), sync-xhr=(), usb=(), web-share=(), xr-spatial-tracking=()",
   "X-DNS-Prefetch-Control": "off",
   "X-Permitted-Cross-Domain-Policies": "none",
-  "Cross-Origin-Opener-Policy": "same-origin",
-  "Cross-Origin-Resource-Policy": "same-origin",
+  // allow-popups : évite de casser les previews / navigateurs intégrés tout en gardant l’isolation.
+  "Cross-Origin-Opener-Policy": "same-origin-allow-popups",
+  // Pas de CORP same-origin sur la vitrine : bloque certains clients (proxy, Browser IDE).
   "Content-Security-Policy": CONTENT_SECURITY_POLICY,
   "X-XSS-Protection": "0",
 };

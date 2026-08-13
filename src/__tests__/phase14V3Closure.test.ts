@@ -25,6 +25,8 @@ describe('Sub-screen shell audience', () => {
     expect(isSubScreenShellEnabled(baseUser({ uid: 'p1', role: 'player' }), 'staff')).toBe(false);
     expect(isSubScreenShellEnabled(baseUser({ uid: 'ph1', role: 'physio' }), 'staff')).toBe(false);
     expect(isSubScreenShellEnabled(baseUser({ uid: 'sp1', role: 'sponsor' }), 'staff')).toBe(false);
+    expect(isSubScreenShellEnabled(baseUser({ uid: 'su1', role: 'supporter' }), 'staff')).toBe(false);
+    expect(isSubScreenShellEnabled(baseUser({ uid: 'pa1', role: 'parent' }), 'staff')).toBe(false);
   });
 
   it('audience player réservée aux joueurs', () => {

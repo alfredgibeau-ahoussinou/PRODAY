@@ -14,7 +14,7 @@ import { PlayerRowCard } from '../components/ui/PlayerRowCard';
 import { ListEmptyPanel } from '../components/ui/ListEmptyPanel';
 import { usePlayersDirectory } from '../hooks/usePlayersDirectory';
 import { useAuth } from '../context/AuthContext';
-import { useFavorites } from '../hooks/useFavorites';
+import { useSupporterPlayerFollow } from '../hooks/useSupporterPlayerFollow';
 import {
   DEFAULT_PLAYER_FILTERS,
   PLAYER_LEVELS_FILTER,
@@ -83,7 +83,7 @@ export const PlayersListScreen: React.FC<PlayersListScreenProps> = ({
   const [verifiedOnly, setVerifiedOnly] = useState(false);
   const [minOpportunity, setMinOpportunity] = useState(false);
   const { profile } = useAuth();
-  const { isFavorite, toggle } = useFavorites(profile?.uid);
+  const { isFollowingPlayer, togglePlayer } = useSupporterPlayerFollow(profile);
   const { colors: themeColors, isWoman } = useAppTheme();
   const isStaff = isSubScreenShellEnabled(profile, 'staff');
   const directory = usePlayersDirectory({
@@ -346,8 +346,14 @@ export const PlayersListScreen: React.FC<PlayersListScreenProps> = ({
           <PlayerRowCard
             user={item}
             onPress={handleSelectPlayer}
-            bookmarked={isFavorite(item.uid)}
-            onBookmark={isOwn ? undefined : () => profile && toggle(item.uid, 'player')}
+            bookmarked={isFollowingPlayer(item.uid)}
+            onBookmark={
+              isOwn
+                ? undefined
+                : () => {
+                    void togglePlayer(item);
+                  }
+            }
             scoutingScore={opportunity?.score}
             scoutingLabel={opportunity?.label}
             isOwnProfile={isOwn}

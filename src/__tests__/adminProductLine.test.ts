@@ -8,9 +8,9 @@ import {
 import { adminGenderLabel, adminPlayerLevelLabel } from '../utils/adminUserDisplay';
 
 describe('adminProductLine', () => {
-  it('force sponsor / sante / supporter / parent selon le rôle', () => {
+  it('force sponsor / supporter / parent selon le rôle (santé retirée)', () => {
     expect(resolveAdminProductLine('sponsor', 'pro_staff')).toBe('sponsor');
-    expect(resolveAdminProductLine('physio', 'amateur')).toBe('sante');
+    expect(resolveAdminProductLine('physio', 'amateur')).toBe('pro_staff');
     expect(resolveAdminProductLine('supporter', 'pro_player')).toBe('supporter');
     expect(resolveAdminProductLine('parent', 'amateur')).toBe('parent');
   });
@@ -38,10 +38,13 @@ describe('adminProductLine', () => {
     expect(adminRolesForProductLine('parent')).toEqual(['parent']);
   });
 
-  it('expose les pôles admin actuels (Joueur unifié, sans doublon pro_player)', () => {
+  it('expose les pôles admin actuels (sans Santé, sans doublon pro_player)', () => {
     expect(ADMIN_PRODUCT_LINES).toContain('sponsor');
     expect(ADMIN_PRODUCT_LINES).toContain('amateur');
     expect(ADMIN_PRODUCT_LINES).toContain('parent');
+    expect(ADMIN_PRODUCT_LINES).toContain('pro_club');
+    expect(ADMIN_PRODUCT_LINES).toContain('pro_staff');
+    expect(ADMIN_PRODUCT_LINES).not.toContain('sante');
     expect(ADMIN_PRODUCT_LINES).not.toContain('pro_player');
     expect(ADMIN_PRODUCT_LINES).not.toContain('pro');
   });
@@ -50,7 +53,7 @@ describe('adminProductLine', () => {
     expect(adminProductLineLabel('amateur')).toBe('Joueur');
     expect(adminProductLineLabel('pro_player')).toBe('Joueur');
     expect(adminProductLineLabel('woman')).toBe('Joueur');
-    expect(adminProductLineLabel('sante')).toBe('Santé');
+    expect(adminProductLineLabel('sante')).toBe('Santé (retiré)');
     expect(adminProductLineLabel('parent')).toBe('Parent');
   });
 

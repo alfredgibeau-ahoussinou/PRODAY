@@ -26,6 +26,14 @@ export type ClubNavAccessInput = {
   isFeatureEnabled: (key: PlatformFeatureFlagKey) => boolean;
 };
 
+function isVideoNavItem(item: ClubNavItem): boolean {
+  return (
+    item.requiresAnyFeature?.some(
+      (f) => f === 'video_analysis' || f === 'byo_video' || f === 'hardware_kit',
+    ) ?? false
+  );
+}
+
 function hasRequiredFeature(
   offerId: ClubOfferId | null,
   required?: ClubOfferFeatureId[],
@@ -36,17 +44,15 @@ function hasRequiredFeature(
 }
 
 function lockReasonFor(item: ClubNavItem, offerId: ClubOfferId | null): string {
+  if (isVideoNavItem(item)) {
+    return 'Vidéo : activez « Vidéo Club (Veo) » dans l’admin, ou passez en Tout inclus / Pro + Veo.';
+  }
   if (!offerId) {
     return 'Abonnez votre club pour débloquer ce module.';
   }
   const offer = CLUB_OFFERS[offerId];
   if (item.requiresAnyFeature?.includes('competitions')) {
     return `Tournois inclus dès Club Essentiel (votre formule : ${offer.shortLabel}).`;
-  }
-  if (item.requiresAnyFeature?.some((f) =>
-    f === 'video_analysis' || f === 'byo_video' || f === 'hardware_kit',
-  )) {
-    return `Vidéo incluse dès Tout inclus / Pro + Veo (votre formule : ${offer.shortLabel}).`;
   }
   if (item.requiresAnyFeature?.includes('ai_assistant')) {
     return `Assistant IA avancé inclus dès Tout inclus (votre formule : ${offer.shortLabel}).`;
@@ -67,7 +73,9 @@ export function resolveClubNavFolders(input: ClubNavAccessInput): ClubNavResolve
       if (item.platformFlag && !input.isFeatureEnabled(item.platformFlag)) {
         continue;
       }
-      const entitled = hasRequiredFeature(input.offerId, item.requiresAnyFeature);
+      const offerOk = hasRequiredFeature(input.offerId, item.requiresAnyFeature);
+      const entitled =
+        offerOk || (isVideoNavItem(item) && input.isFeatureEnabled('club_video'));
       if (!entitled && (item.lockMode ?? 'soft') === 'hide') {
         continue;
       }

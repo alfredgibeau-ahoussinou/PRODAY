@@ -8,6 +8,7 @@ import { isJoueurProductLine } from './playerLevelBadge';
  * Lignes produit gérables dans l’espace admin (pôles actuels).
  * Pôle Joueur unifié : une seule entrée `amateur` (UI « Joueur ») —
  * `pro_player` / legacy homme·woman restent en stockage, filtrés via isJoueurProductLine.
+ * Pôle Santé retiré — plus proposé à la création / édition.
  */
 export const ADMIN_PRODUCT_LINES: ProductLineId[] = [
   'amateur',
@@ -16,7 +17,6 @@ export const ADMIN_PRODUCT_LINES: ProductLineId[] = [
   'pro_club',
   'pro_staff',
   'sponsor',
-  'sante',
 ];
 
 /** Libellé admin — préfère « Joueur » pour le pôle unifié (stockage inchangé). */
@@ -34,7 +34,7 @@ export function adminProductLineLabel(line: ProductLineId): string {
     case 'pro_staff':
       return 'Coach';
     case 'sante':
-      return 'Santé';
+      return 'Santé (retiré)';
     default:
       return productLineLabel(line);
   }
@@ -53,7 +53,7 @@ export function adminUserMatchesProductLineFilter(
 
 /** Rôles métier compatibles avec l’univers sélectionné en admin. */
 export function adminRolesForProductLine(line: ProductLineId): UserRole[] {
-  return rolesForProductLine(line);
+  return rolesForProductLine(line).filter((r) => r !== 'physio');
 }
 
 const ROLE_HINTS: Partial<Record<UserRole, string>> = {
@@ -66,7 +66,6 @@ const ROLE_HINTS: Partial<Record<UserRole, string>> = {
   sponsor: 'Marque & campagnes',
   supporter: 'Fan & communauté',
   parent: 'Supervision · messages · agenda',
-  physio: 'Pôle santé · 7 spécialités',
 };
 
 export function adminRoleHint(role: UserRole): string {
@@ -81,7 +80,8 @@ export function resolveAdminProductLine(
   preferred?: ProductLineId | null,
 ): ProductLineId {
   if (role === 'sponsor') return 'sponsor';
-  if (role === 'physio') return 'sante';
+  // Anciens comptes physio : bascule staff (pôle Santé retiré).
+  if (role === 'physio') return 'pro_staff';
   if (role === 'supporter') return 'supporter';
   if (role === 'parent') return 'parent';
 
@@ -107,7 +107,6 @@ export const ADMIN_EDIT_ROLES: UserRole[] = [
   'agent',
   'recruiter',
   'organizer',
-  'physio',
   'sponsor',
   'supporter',
   'parent',

@@ -80,14 +80,14 @@ export const SUPPORTER_IDENTITY: UniverseIdentity = {
   id: 'supporter',
   productName: PRODAY_SUPPORTER_BRAND.name,
   tagline: PRODAY_SUPPORTER_BRAND.tagline,
-  heroLine: 'Le foot,\nensemble.',
+  heroLine: 'Le score.\nEn direct.',
   mission:
-    'Fans et communauté. Matchs, réels et fil en direct, sans Mercato ni covoiturage.',
+    'Tribune 100 % gratuite. Scores live, suivis illimités, débats et moments — sans Mercato ni paywall.',
   accentLabel: 'Pro Day Supporter',
   mercatoLabel: 'Communauté',
   playerLabel: 'Supporter',
   cvLabel: 'Profil supporter',
-  entrySub: 'Fans de foot. Tribune numérique et fil communautaire',
+  entrySub: 'Fans de foot. Tribune numérique gratuite',
 };
 
 export const PRO_IDENTITY: UniverseIdentity = {

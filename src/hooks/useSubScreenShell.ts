@@ -9,7 +9,13 @@ export function isSubScreenShellEnabled(
 ): boolean {
   if (!profile) return false;
   if (audience === 'staff') {
-    return profile.role !== 'player' && profile.role !== 'physio' && profile.role !== 'sponsor';
+    return (
+      profile.role !== 'player' &&
+      profile.role !== 'physio' &&
+      profile.role !== 'sponsor' &&
+      profile.role !== 'supporter' &&
+      profile.role !== 'parent'
+    );
   }
   if (audience === 'player') return profile.role === 'player';
   return true;

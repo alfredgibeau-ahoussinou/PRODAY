@@ -148,7 +148,7 @@ export const CLUB_POLE_MODULES: {
     title: 'Vitrine & écosystème',
     subtitle: 'Page club · équipements · caméras',
     description:
-      'Logo, palmarès, marketplace, et Caméras & Vidéo multi-marques (Veo, XbotGo, import…).',
+      'Logo, palmarès, marketplace, et Centre Vidéo multi-marques (Veo, XbotGo, smartphone, import…).',
     section: 'video',
   },
 ];
@@ -233,6 +233,11 @@ export const CLUB_MATCH_INVITE_STEPS = [
     n: '03',
     title: 'Confirmer',
     body: 'Accord des deux côtés : match créé, calendriers synchronisés, coachs informés, convocations prêtes.',
+  },
+  {
+    n: '04',
+    title: 'Filmer',
+    body: 'Si une caméra est disponible, programmer automatiquement la captation depuis le Centre Vidéo.',
   },
 ] as const;
 

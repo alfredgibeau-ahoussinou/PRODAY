@@ -161,14 +161,11 @@ export const getVisioJoinUrl = onCall(
       throw new HttpsError('unauthenticated', 'Connexion requise');
     }
 
-    const platformSnap = await admin.firestore().doc('platform_config/main').get();
-    const flags = (platformSnap.data()?.feature_flags as Record<string, unknown> | undefined) ?? {};
-    if (flags.sante_visio !== true) {
-      throw new HttpsError(
-        'failed-precondition',
-        'Bêta actuelle — aucun accès à la visio. Réessayez quand l’équipe ProDay l’aura activée.',
-      );
-    }
+    // Pôle Santé retiré — la visio n’est plus activable.
+    throw new HttpsError(
+      'failed-precondition',
+      'Le pôle Santé n’est plus disponible sur ProDay.',
+    );
 
     const { appointmentId, isHost } = request.data as {
       appointmentId?: string;
