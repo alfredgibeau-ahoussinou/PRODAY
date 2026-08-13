@@ -57,9 +57,9 @@ Cockpit intelligent personnel : l’utilisateur ouvre l’app et sait **quoi fai
 | `DashboardScreen` (legacy) | ✅ Connecté joueur/staff | Remplacer par `HomeIaDashboard` (flag) |
 | `HomeIaDashboard` | ⚠️ Existe, non branché | **Écran principal V3** |
 | `PhysioDashboardScreen` | ✅ | Aligner shell V3 + Brain santé inversé (patients) |
-| `SponsorDashboardScreen` | ✅ | Idem |
+| `SponsorOverviewPage` | ✅ | Shell sponsor actuel (`SponsorAppShell`) |
 
-**Composants clés V3 (home)** : `HeroIaBlock`, `GeoMapPreview`, `MatchCarousel`, `HealthSummaryCard`, `ProgressionBlock`, `ReelsPreviewStrip`, `TransversalNavBar`, `SmartCalendarPeek`.
+**Composants clés V3 (home)** : `HeroIaBlock`, `GeoMapPreview`, `MatchCarousel`, `HealthSummaryCard`, `ProgressionBlock`, `ReelsPreviewStrip`, `SmartCalendarPeek`.
 
 ### KPIs produit
 

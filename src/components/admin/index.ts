@@ -9,7 +9,3 @@ export { AdminEmptyState } from './AdminEmptyState';
 export { AdminSearchField } from './AdminSearchField';
 export { AdminCreateUserPanel } from './AdminCreateUserPanel';
 export { AdminUserEditModal, AdminRejectModal } from './AdminUserModals';
-/** @deprecated Legacy chrome */
-export { AdminHero } from './AdminHero';
-export { AdminTabs, type AdminTabId } from './AdminTabs';
-export { AdminSidebar } from './AdminSidebar';

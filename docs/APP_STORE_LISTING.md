@@ -68,7 +68,7 @@ QUATRE PÔLES
 FORMULES (voir aussi l'app)
 
 Gratuit : profil, calendrier, limites Mercato selon le rôle.
-Abonnements Pro (mensuel ou annuel −20 %) : Joueur Plus, Coach Pro, Recruteur Pro, Club Pro, Agent Elite, Pôle santé Pro, Organisateur Pro, National Pro sponsors.
+Abonnements Pro (mensuel ou annuel −20 %) : Pass Joueur Premium, Coach Pro, Club Amateur / Essentiel, Organisateur Pro, National Pro sponsors. Formules Club Tout inclus et Pro + Veo : sur devis (à partir de 3 € / adhérent).
 La formule sponsor Territorial (49 €/mois) passe par un devis commercial — pas par l'App Store.
 
 HONNÊTETÉ PRODUIT
@@ -114,7 +114,7 @@ Reporter les montants de `src/content/subscriptionPlans.ts` et `src/content/spon
 
 | Plan | Mensuel (€) |
 |------|-------------|
-| Joueur Plus | 2,99 |
+| Pass Joueur Premium | 3,99 |
 | Recruteur Pro | 7,99 |
 | Coach Pro | 7,99 |
 | Club Pro | 11,99 |

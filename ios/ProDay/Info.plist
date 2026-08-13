@@ -62,11 +62,11 @@
     <key>NSCalendarsUsageDescription</key>
     <string>ProDay synchronise vos matchs et convocations avec votre calendrier.</string>
     <key>NSCameraUsageDescription</key>
-    <string>ProDay utilise la caméra pour filmer vos reels, la téléconsultation Santé et la vérification d’identité.</string>
+    <string>ProDay utilise la caméra pour filmer vos reels, capturer des clips match et la vérification d’identité.</string>
     <key>NSLocationWhenInUseUsageDescription</key>
     <string>ProDay utilise votre position pour organiser les points de rendez-vous et de prise en charge en covoiturage.</string>
     <key>NSMicrophoneUsageDescription</key>
-    <string>ProDay utilise le micro pour filmer vos reels et pour la téléconsultation Santé.</string>
+    <string>ProDay utilise le micro pour filmer vos reels et les clips vidéo.</string>
     <key>NSPhotoLibraryUsageDescription</key>
     <string>ProDay accède à vos photos pour votre avatar et votre galerie joueur.</string>
     <key>RCTNewArchEnabled</key>
@@ -74,7 +74,6 @@
     <key>UIBackgroundModes</key>
     <array>
       <string>audio</string>
-      <string>voip</string>
       <string>remote-notification</string>
     </array>
     <key>UILaunchStoryboardName</key>

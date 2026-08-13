@@ -2,7 +2,6 @@ jest.mock('../screens/HomeScreen', () => ({ HomeScreen: 'HomeScreen' }));
 jest.mock('../screens/MercatoScreen', () => ({ MercatoScreen: 'MercatoScreen' }));
 jest.mock('../screens/MatchsScreen', () => ({ MatchsScreen: 'MatchsScreen' }));
 jest.mock('../screens/MessagesScreen', () => ({ MessagesScreen: 'MessagesScreen' }));
-jest.mock('../screens/ClubStructureScreen', () => ({ ClubStructureScreen: 'ClubStructureScreen' }));
 jest.mock('../screens/club/ClubPortalScreen', () => ({ ClubPortalScreen: 'ClubPortalScreen' }));
 jest.mock('../screens/club/ClubRecruitmentScreen', () => ({
   ClubRecruitmentScreen: 'ClubRecruitmentScreen',
@@ -37,14 +36,8 @@ jest.mock('../screens/FamilleTabScreen', () => ({ FamilleTabScreen: 'FamilleTabS
 jest.mock('../screens/FeedTabScreen', () => ({ FeedTabScreen: 'FeedTabScreen' }));
 jest.mock('../screens/ShopScreen', () => ({ ShopScreen: 'ShopScreen' }));
 jest.mock('../screens/AmateurClubScreen', () => ({ AmateurClubScreen: 'AmateurClubScreen' }));
-jest.mock('../screens/proPlayer/ProPlayerCareerScreen', () => ({
-  ProPlayerCareerScreen: 'ProPlayerCareerScreen',
-}));
 jest.mock('../screens/proPlayer/ProPlayerSquadScreen', () => ({
   ProPlayerSquadScreen: 'ProPlayerSquadScreen',
-}));
-jest.mock('../screens/proPlayer/ProPlayerOpportunitiesScreen', () => ({
-  ProPlayerOpportunitiesScreen: 'ProPlayerOpportunitiesScreen',
 }));
 jest.mock('../screens/proPlayer/ProPlayerGroupScreen', () => ({
   ProPlayerGroupScreen: 'ProPlayerGroupScreen',

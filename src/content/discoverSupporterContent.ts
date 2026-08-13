@@ -1,5 +1,4 @@
 import type { IconName } from '../components/ui/iconNames';
-import type { IntroSlideAction } from './discoverChapters';
 import { SHOWCASE_IMAGES } from './showcaseAssets';
 
 export const SUPPORTER_VIOLET = {
@@ -8,39 +7,6 @@ export const SUPPORTER_VIOLET = {
   mid: '#6D28D9',
   light: '#8B5CF6',
 } as const;
-
-export const DISCOVER_INTRO_SLIDES_SUPPORTER = [
-  {
-    id: 'welcome',
-    kicker: 'PRO DAY SUPPORTER',
-    title: 'Le foot,\nensemble.',
-    body: 'Suivez les matchs, vibrez sur les réels et rejoignez la communauté.',
-    image: SHOWCASE_IMAGES.discoverHero,
-    icon: 'home' as IconName,
-    cta: 'Voir le live',
-    action: 'live' as IntroSlideAction,
-  },
-  {
-    id: 'modules',
-    kicker: 'TRIBUNE',
-    title: 'Matchs &\nréels.',
-    body: 'Calendrier, moments forts et fil communautaire. Votre place en tribune numérique.',
-    image: SHOWCASE_IMAGES.friendlyMatch,
-    icon: 'videocam' as IconName,
-    cta: 'Explorer la tribune',
-    action: 'modules' as IntroSlideAction,
-  },
-  {
-    id: 'join',
-    kicker: 'REJOINDRE',
-    title: 'Compte\ngratuit.',
-    body: 'Inscription supporter en quelques minutes.',
-    image: SHOWCASE_IMAGES.playerProfile,
-    icon: 'person' as IconName,
-    cta: 'Créer mon compte',
-    action: 'signup' as IntroSlideAction,
-  },
-];
 
 export const DISCOVER_UNIVERSE_CARDS_SUPPORTER = [
   {

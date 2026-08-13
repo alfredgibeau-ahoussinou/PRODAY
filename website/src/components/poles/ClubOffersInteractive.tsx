@@ -39,7 +39,7 @@ const CLUB_OFFER_COLS: OfferCol[] = [
     price: "Sur devis",
     unit: "",
     tagline: "Votre matériel",
-    priceHint: "À partir de 3 € / adhérent",
+    priceHint: "À partir de 3 € / adhérent · sur devis",
     highlight: true,
   },
   {
@@ -48,7 +48,7 @@ const CLUB_OFFER_COLS: OfferCol[] = [
     price: "Sur devis",
     unit: "",
     tagline: "Clé en main",
-    priceHint: "À partir de 3 € / adhérent",
+    priceHint: "À partir de 3 € / adhérent · sur devis (+ option caméra)",
     showVeoMark: true,
   },
 ];

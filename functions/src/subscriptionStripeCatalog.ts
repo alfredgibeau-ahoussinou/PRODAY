@@ -24,10 +24,16 @@ function monthlyCents(monthlyEur: number): number {
   return Math.round(monthlyEur * 100);
 }
 
-export const SUBSCRIPTION_STRIPE_CATALOG: Record<
-  StripeSubPlanId,
-  { label: string; monthlyEur: number; monthlyCents: number; yearlyCents: number }
-> = {
+export type StripeSubCatalogEntry = {
+  label: string;
+  /** Null = formule sur devis (pas de Checkout self-serve). */
+  monthlyEur: number | null;
+  monthlyCents: number | null;
+  yearlyCents: number | null;
+  quoteOnly?: boolean;
+};
+
+export const SUBSCRIPTION_STRIPE_CATALOG: Record<StripeSubPlanId, StripeSubCatalogEntry> = {
   player_plus: {
     label: 'ProDay Pass Joueur Premium',
     monthlyEur: 3.99,
@@ -58,11 +64,13 @@ export const SUBSCRIPTION_STRIPE_CATALOG: Record<
     monthlyCents: monthlyCents(11.99),
     yearlyCents: yearlyCentsFromMonthly(11.99),
   },
+  /** Tout inclus — à partir de 3 € / adhérent, tarif sur devis (plus de 39,99 € fixe). */
   club_premium: {
-    label: 'ProDay Club Premium',
-    monthlyEur: 39.99,
-    monthlyCents: monthlyCents(39.99),
-    yearlyCents: yearlyCentsFromMonthly(39.99),
+    label: 'ProDay Club Tout inclus',
+    monthlyEur: null,
+    monthlyCents: null,
+    yearlyCents: null,
+    quoteOnly: true,
   },
   agent_elite: {
     label: 'ProDay Agent Elite',
@@ -92,4 +100,8 @@ export const SUBSCRIPTION_STRIPE_CATALOG: Record<
 
 export function isStripeSubPlanId(value: string): value is StripeSubPlanId {
   return Object.prototype.hasOwnProperty.call(SUBSCRIPTION_STRIPE_CATALOG, value);
+}
+
+export function isStripeQuoteOnlyPlan(planId: StripeSubPlanId): boolean {
+  return SUBSCRIPTION_STRIPE_CATALOG[planId].quoteOnly === true;
 }

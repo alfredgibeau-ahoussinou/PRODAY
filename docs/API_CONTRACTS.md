@@ -130,7 +130,7 @@ Gestion des cotisations équipe / club.
 | `paid_at` | Date de paiement |
 | `created_by_uid` | Staff créateur |
 
-**Client :** `src/services/teamFinance.service.ts`
+**Client :** (service retiré — finances équipe non branchées côté app ; modèle `TeamFinance` conservé)
 
 | Méthode | Rôle |
 |---------|------|

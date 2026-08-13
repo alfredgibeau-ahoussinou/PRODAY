@@ -68,10 +68,6 @@
     "eas:submit:testflight": "eas submit --platform ios --latest --profile production"
   },
   "dependencies": {
-    "@daily-co/config-plugin-rn-daily-js": "^0.0.11",
-    "@daily-co/daily-js": "^0.85.0",
-    "@daily-co/react-native-daily-js": "^0.82.0",
-    "@daily-co/react-native-webrtc": "124.0.6-daily.1",
     "@expo-google-fonts/inter": "^0.4.2",
     "@expo-google-fonts/syne": "^0.4.2",
     "@expo/vector-icons": "^15.0.3",
@@ -107,7 +103,6 @@
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-native": "0.81.5",
-    "react-native-background-timer": "^2.4.1",
     "react-native-get-random-values": "^1.11.0",
     "react-native-health": "^1.19.0",
     "react-native-health-connect": "^3.5.3",

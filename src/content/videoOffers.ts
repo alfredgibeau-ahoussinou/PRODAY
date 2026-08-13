@@ -1,5 +1,6 @@
 /**
  * Module vidéo & offre matérielle optionnelle — jamais obligatoire.
+ * Source de vérité mobile ; miroir site : `website/src/lib/videoOffers.ts`.
  *
  * BYO (smartphone / tablette / caméra existante) : inclus dans Tout inclus
  * (et via abo Coach). Aucun pack « Essentiel 990 € » séparé.

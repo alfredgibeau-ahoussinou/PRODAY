@@ -1,6 +1,6 @@
 /**
- * Thème dynamique page Joueur — une identité ProDay, trois ambiances âge,
- * adaptation subtile genre / poste. Pas de pages séparées.
+ * Thème dynamique page Joueur — miroir de `src/utils/joueurExperienceTheme.ts`
+ * (source de vérité mobile). Aligner freePass / copy avant toute invention marketing.
  */
 
 export type JoueurAgeGroup = "youth" | "teen" | "adult";
@@ -475,8 +475,7 @@ function copyFor(
       stageTitle: "Défie-toi.",
       freePassKicker: "Clair et net",
       freePassTitle: "Gratuit pour jouer.",
-      freePassSubtitle:
-        "Pass 3,99 €/mois (entraînements IA). Coach humain ≈ 30 €/h, tarif séance.",
+      freePassSubtitle: "Pass 3,99 € optionnel : heatmaps, vidéo, objectifs avancés.",
       ctaKicker: "On y va",
       ctaTitle: "Crée ton compte.\nConstruis ta progression.",
       ctaBody: `Espace ${playerWord} ProDay — cool, sportif, immersif.`,
@@ -518,8 +517,7 @@ function copyFor(
     stageTitle: "Analyse ta performance.",
     freePassKicker: "Offre",
     freePassTitle: "Gratuit pour jouer.",
-    freePassSubtitle:
-      "Pass 3,99 €/mois = IA. Coach humain ≈ 30 €/h (exemple séance, sans abo forcé).",
+    freePassSubtitle: "Pass optionnel 3,99 € : heatmaps, analyse vidéo, passeport recruteur.",
     ctaKicker: "Démarrer",
     ctaTitle: "Crée ton compte.\nRejoins ton équipe.",
     ctaBody: `Environnement de performance pour ${playerWord}. Identité ProDay inchangée.`,

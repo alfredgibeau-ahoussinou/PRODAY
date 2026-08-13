@@ -1575,6 +1575,9 @@ export const SPONSOR_VALUE_PILLARS = [
 
 export const SPONSOR_PARTNER_CONTACT_EMAIL = "proday.admin@gmail.com";
 
+/** Miroir mobile : `src/content/clubOffers.ts` + `subscriptionPlans.ts`. */
+export const PLAYER_PASS_PREMIUM_EUR = 3.99;
+
 export const SUBSCRIPTION_PLANS_WEB = [
   {
     id: "player_plus",
@@ -1594,7 +1597,7 @@ export const SUBSCRIPTION_PLANS_WEB = [
       "Statistiques avancées & heatmaps",
       "Analyse vidéo",
       "Passeport recruteur",
-      "Objectifs & historique de progression",
+      "Objectifs personnalisés & historique",
       "Comparaison avec d’autres joueurs",
     ],
   },
@@ -1666,6 +1669,7 @@ export const SUBSCRIPTION_PLANS_WEB = [
     tagline: "Votre matériel",
     monthlyEur: 0,
     quoteOnly: true,
+    priceHint: "À partir de 3 € / adhérent · sur devis",
     storeAvailable: false,
     universes: ["pro"] as ProductLineWeb[],
     freeIncludes: [
@@ -1690,6 +1694,7 @@ export const SUBSCRIPTION_PLANS_WEB = [
     monthlyEur: 0,
     fixedAnnualEur: null,
     quoteOnly: true,
+    priceHint: "À partir de 3 € / adhérent · sur devis (+ option caméra)",
     storeAvailable: false,
     universes: ["pro"] as ProductLineWeb[],
     freeIncludes: [
@@ -1833,7 +1838,13 @@ export const ORGANIZER_PRO_MONTHLY_EUR = webPlanMonthlyPrice("organizer_pro");
 
 const faqPricing = (planId: WebSubscriptionPlanBase["id"]) => {
   const plan = SUBSCRIPTION_PLANS_WEB.find((p) => p.id === planId);
-  if (plan && planIsQuoteOnly(plan)) return "sur devis";
+  if (plan && planIsQuoteOnly(plan)) {
+    const hint =
+      "priceHint" in plan && typeof (plan as { priceHint?: string }).priceHint === "string"
+        ? (plan as { priceHint: string }).priceHint
+        : null;
+    return hint ?? "sur devis";
+  }
   return formatAnnualPricingLine(webPlanMonthlyPrice(planId));
 };
 

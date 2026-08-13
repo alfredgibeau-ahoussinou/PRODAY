@@ -29,10 +29,10 @@ ProDay = plateforme de référence du football amateur et semi-pro : **plus simp
 |-------|----------------|--------|
 | **Amateur** | 4,99 €/mois | Licenciés, convocations, présences, calendrier, com, covoit, résultats, classements |
 | **Essentiel** | 11,99 €/mois | Gestion club + compétitions ; coachs en abo individuel pour Smart Tactics |
-| **Premium** | 39,99 €/mois | Tous coachs / staff / joueurs ; Smart Tactics, IA, **vidéo BYO** (smartphone / tablette) |
-| **ProDay Pro + Veo** | Sur devis / admin | Premium + caméra (achat / location / déjà possédée), cloud, découpage auto |
+| **Tout inclus** | À partir de 3 € / adhérent · sur devis | Tous coachs / staff / joueurs ; Smart Tactics, IA, **vidéo BYO** (smartphone / tablette) |
+| **ProDay Pro + Veo** | Sur devis / admin | Tout inclus + caméra (achat / location / déjà possédée), cloud, découpage auto |
 
-Sous Club Premium et Pro + Veo, les coachs ne paient rien. Les joueurs peuvent activer le **Pass Premium** à **3,99 €/mois**.
+Sous Tout inclus et Pro + Veo, les coachs ne paient rien. Les joueurs peuvent activer le **Pass Premium** à **3,99 €/mois**.
 
 ## Pass Joueur
 
@@ -41,7 +41,7 @@ Sous Club Premium et Pro + Veo, les coachs ne paient rien. Les joueurs peuvent a
 
 ## Offres vidéo & matériel (optionnel)
 
-**Pas de pack « Essentiel 990 €/an » séparé** : filmer avec son matériel est inclus dans Club Premium (et via abo Coach).
+**Pas de pack « Essentiel 990 €/an » séparé** : filmer avec son matériel est inclus dans Tout inclus (et via abo Coach).
 
 **ProDay Pro + Veo** est l’option clé en main du catalogue Club.
 

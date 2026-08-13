@@ -6,6 +6,7 @@ import { sendFcmToUser } from './messaging';
 import { claimAgentLaunchSeatInTransaction } from './agentLaunchSeats';
 import { processReferralOnSubscribe } from './referral';
 import {
+  isStripeQuoteOnlyPlan,
   isStripeSubPlanId,
   SUBSCRIPTION_STRIPE_CATALOG,
   type StripeBillingCycle,
@@ -141,8 +142,20 @@ export const createSubscriptionCheckoutSession = functions.https.onCall(
       throw new functions.https.HttpsError('invalid-argument', 'Plan inconnu');
     }
     const planId: StripeSubPlanId = planIdRaw;
+    if (isStripeQuoteOnlyPlan(planId)) {
+      throw new functions.https.HttpsError(
+        'failed-precondition',
+        'Cette formule est sur devis (à partir de 3 € / adhérent). Utilisez la demande de devis club.'
+      );
+    }
     const catalog = SUBSCRIPTION_STRIPE_CATALOG[planId];
     const unitAmount = billing === 'yearly' ? catalog.yearlyCents : catalog.monthlyCents;
+    if (unitAmount == null || unitAmount <= 0) {
+      throw new functions.https.HttpsError(
+        'failed-precondition',
+        'Prix catalogue indisponible pour ce plan'
+      );
+    }
     const interval = billing === 'yearly' ? 'year' : 'month';
     const uid = context.auth.uid;
     const email =

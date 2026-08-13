@@ -8,7 +8,7 @@ export interface PlatformFeatureFlags {
   registration_open: boolean;
   /**
    * Pôle Santé retiré — toujours OFF (ignoré si présent dans Firestore).
-   * Conservé pour compat FeatureBlockedScreen / anciens clients.
+   * Conservé pour compat anciens clients / Remote Config.
    */
   sante_visio: boolean;
   /** Admin : débloque Centre Vidéo Club (Veo / caméras) même hors formule Tout inclus. */

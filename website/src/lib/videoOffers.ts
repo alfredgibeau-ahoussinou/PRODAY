@@ -1,5 +1,7 @@
 /**
- * Miroir site : module vidéo (BYO dans Premium) + Pro + Veo optionnel.
+ * Miroir site de `src/content/videoOffers.ts` (source de vérité mobile).
+ * Garder les libellés / prix alignés — ne pas inventer de tarifs catalogue ici.
+ * Schéma site volontairement aplati (priceLabel / priceNote) pour la vitrine.
  */
 
 export type VideoOfferId = "proday_pro_camera";
@@ -72,15 +74,15 @@ export const VIDEO_HARDWARE_OPTIONS: Record<
 > = {
   own_camera: {
     title: "Caméra déjà possédée",
-    body: "ProDay se connecte à votre Veo, XbotGo ou autre caméra compatible. Aucun achat forcé.",
+    body: "Le club a déjà une Veo, XbotGo ou autre caméra compatible. ProDay se connecte — pas d’achat forcé.",
   },
   lease: {
     title: "Location via ProDay",
-    body: "Clé en main sur devis : caméra, trépied, installation, formation, cloud — selon adhérents et équipes.",
+    body: "Offre clé en main sur devis : caméra, trépied, installation, formation, cloud — selon adhérents et équipes.",
   },
   purchase: {
     title: "Achat via ProDay",
-    body: "Achat caméra + pack installation. Prix catalogue sur devis (pas de tarif fixe affiché).",
+    body: "Achat caméra + pack installation / configuration / formation. Prix catalogue sur devis (pas de tarif fixe affiché).",
   },
 };
 
@@ -90,24 +92,24 @@ export const VIDEO_OFFERS: Record<VideoOfferId, VideoOfferDefinition> = {
     label: "ProDay Pro + Veo",
     tagline: "Formule Premium clé en main",
     audience:
-      "Tout inclus + pack caméra, cloud et analyse IA : ou connexion de votre Veo déjà en place.",
+      "Tout inclus + caméra (achat, location ou déjà possédée), cloud et découpage auto.",
     cameraRequired: false,
     hardwareIncluded: true,
     annualEur: null,
     priceLabel: "Sur devis",
-    priceNote: "Selon adhérents, équipes et matériel — pas de prix fixe catalogue",
+    priceNote: "Sur devis — adhérents, équipes & matériel",
     includes: [
       "Toutes les fonctions Tout inclus",
-      "Analyse vidéo smartphone / tablette / caméra existante",
+      "Analyse vidéo BYO (smartphone / tablette / caméra existante)",
       "Tableau tactique, IA, entraînements, admin",
     ],
     hardwareExtras: [
       "Module Caméra : achat, location ou intégration (Veo, XbotGo…)",
       "Trépied / installation / formation selon devis",
-      "Synchronisation automatique ProDay",
-      "Stockage cloud & traitement vidéo",
-      "Analyse IA, clips, causeries & partage joueurs",
-      "Bibliothèque vidéo & export des séquences",
+      "Synchronisation automatique & stockage cloud",
+      "Traitement vidéo, analyse IA, découpage automatique",
+      "Bibliothèque vidéo, causeries & partage joueurs",
+      "Export des séquences",
     ],
     supportedInputs: [
       "smartphone",
@@ -126,4 +128,4 @@ export const VIDEO_OFFERS: Record<VideoOfferId, VideoOfferDefinition> = {
 export const VIDEO_OFFER_ORDER: VideoOfferId[] = ["proday_pro_camera"];
 
 export const VIDEO_MODULE_PRINCIPLE =
-  "Vous avez une caméra ? Connectez-la à ProDay. Veo, XbotGo, Spiideo, Pixellot, Trace ou smartphone — jamais limité à une marque. Matériel jamais obligatoire.";
+  "Vous avez une caméra ? Connectez-la à ProDay. Veo, XbotGo, Spiideo, Pixellot, Trace, smartphone — jamais limité à une marque. Matériel jamais obligatoire.";

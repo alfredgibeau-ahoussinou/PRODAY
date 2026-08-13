@@ -1208,7 +1208,7 @@ Done:
   CTA « Rejoindre un club » si sans affiliation (`amateurPlayerHome.ts` + i18n
   `roleHome.amateurPlayer.*`).
 - **Écrans Pro joueur enrichis (§4.3)** :
-  - `ProPlayerCareerScreen` — jours contrat, consultations 7j, essais à venir
+  - `ProPlayerSquadScreen` — effectif / recrutement pro joueur (onglet)
   - `ProPlayerPortfolioScreen` — stats saison, badge « Validé coach », export PDF
   - `ProPlayerGroupScreen` — liste convocations staff (3–5) + transport groupe
   - Helpers : `proPlayerCareerMetrics.ts`
@@ -1221,7 +1221,7 @@ Done:
   - Helpers filtres : `supporterMatchFilters.ts` + tests `supporterMatchFilters.test.ts`
   - i18n `supporter.*` (`ui.fr.ts`, `ui.en.ts`)
 - **Structure Club §4.4 (juil. 2026)** :
-  - Écran dédié : `ClubStructureScreen.tsx` (arbre équipes, staff, adhésions pending)
+  - Portail club : `ClubPortalScreen.tsx` (structure équipes / staff via helpers)
   - Helpers agrégation : `clubStructureView.ts` + tests `clubStructureView.test.ts`
   - i18n `clubStructure.*` (`ui.fr.ts`, `ui.en.ts`)
 - **Affiliation club §5.2 (juil. 2026)** :

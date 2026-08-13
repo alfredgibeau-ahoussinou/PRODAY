@@ -1,5 +1,7 @@
 /**
  * Offres Club — modèle économique flexible.
+ * Source de vérité mobile ; miroir site : `website/src/lib/content.ts` (SUBSCRIPTION_PLANS_WEB)
+ * + `ClubOffersInteractive.tsx`.
  *
  * Mensuel : Amateur · Essentiel · Tout inclus (sur devis)
  * Option caméra : ProDay Pro + Veo (clé en main, sur devis)

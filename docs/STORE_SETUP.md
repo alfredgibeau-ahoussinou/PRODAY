@@ -33,7 +33,7 @@ Flux app : `subscriptionService.requestUpgrade` → `createSubscriptionCheckoutS
 
 | Plan ID | Mensuel (€) | SKU mensuel | SKU annuel |
 |---------|-------------|-------------|------------|
-| `player_plus` | 2,99 | `com.proday.app.player_plus.monthly` | `com.proday.app.player_plus.yearly` |
+| `player_plus` | 3,99 | `com.proday.app.player_plus.monthly` | `com.proday.app.player_plus.yearly` |
 | `recruiter_pro` | 7,99 | `com.proday.app.recruiter_pro.monthly` | `com.proday.app.recruiter_pro.yearly` |
 | `coach_pro` | 7,99 | `com.proday.app.coach_pro.monthly` | `com.proday.app.coach_pro.yearly` |
 | `club_pro` | 11,99 | `com.proday.app.club_pro.monthly` | `com.proday.app.club_pro.yearly` |

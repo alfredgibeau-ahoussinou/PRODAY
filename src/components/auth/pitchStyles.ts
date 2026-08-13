@@ -4,7 +4,7 @@ import { spacing, radius, shadows } from '../../theme/designTokens';
 import { useAppTheme } from '../../context/ProductLineContext';
 import type { AppColors } from '../../theme/universeTheme';
 
-/** Bandeau noir + feuille blanche — DiscoverStage legacy uniquement. */
+/** Bandeau noir + feuille blanche — chrome auth / PitchSheetChrome. */
 export function createPitchStyles(c: AppColors) {
   return StyleSheet.create({
     root: {

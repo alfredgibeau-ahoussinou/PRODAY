@@ -32,7 +32,7 @@ Compte test : `alfredgibeauahoussinou@gmail.com` (bypass onboarding si configur�
 ## Rôles dédiés (hors HomeIaDashboard joueur)
 
 - **Kiné** — `PhysioDashboardScreen` shell V3.
-- **Partenaire** — `SponsorDashboardScreen` shell V3.
+- **Partenaire** — `SponsorOverviewPage` via `SponsorAppShell`.
 - **Invité** — Discover + teaser V3 (pas de Brain).
 
 ## Persistance Brain

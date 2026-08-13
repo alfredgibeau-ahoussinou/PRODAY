@@ -334,7 +334,7 @@ firebase deploy --only functions
 2. Le joueur ouvre **Mes paiements** → **Payer en ligne**
 3. Carte test Stripe : `4242 4242 4242 4242` — date future — CVC quelconque
 
-> **Abonnements ProDay (Joueur Plus, Club Pro…)** : grille freemium en place dans l’app ; le paiement récurrent Stripe/IAP reste à brancher sur `subscription_tier: pro`.
+> **Abonnements ProDay (Pass Joueur Premium 3,99 €, Club Amateur / Essentiel, Coach…)** : grille freemium en place dans l’app ; Club Tout inclus / Pro + Veo sur devis (à partir de 3 € / adhérent).
 
 ---
 

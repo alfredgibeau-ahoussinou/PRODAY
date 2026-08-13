@@ -43,7 +43,7 @@ const LINE_PLAN_PATCHES: Record<
 > = withProFamilyRecord({
   homme: {
     player_plus: {
-      label: 'Joueur Plus',
+      label: 'Pass Joueur Premium',
       tagline: 'CV joueur, Visibilité et Mercato M',
       mercatoQuotaLabel: 'Candidatures Mercato M',
       freeIncludes: [
